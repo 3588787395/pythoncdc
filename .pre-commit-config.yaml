@@ -1,0 +1,33 @@
+repos:
+  - repo: local
+    hooks:
+      - id: cfg-patch-detection-light
+        name: CFG Patch Detection (Light)
+        entry: python core/cfg/patch_detector_enhanced.py --file core/cfg/region_analyzer.py --threshold 95 && python core/cfg/patch_detector_enhanced.py --file core/cfg/region_ast_generator.py --threshold 95
+        language: system
+        types: [python]
+        files: ^core/cfg/.*\.py$
+        pass_filenames: false
+
+      - id: cfg-method-size-check
+        name: CFG Method Size Check
+        entry: python scripts/check_method_compliance.py --directory core/cfg/ --max-length 100 --max-complexity 10
+        language: system
+        types: [python]
+        files: ^core/cfg/.*\.py$
+        pass_filenames: false
+
+      - id: method-signature-check
+        name: Method Signature Check (Anti-Patch)
+        entry: python scripts/validate_method_signatures.py
+        language: system
+        types: [python]
+        files: ^core/cfg/.*\.py$
+        pass_filenames: false
+
+      - id: cfg-quick-tests
+        name: CFG Quick Tests
+        entry: pytest tests/ -x -q --tb=line -k "not (deep or boundary or real_code)"
+        language: system
+        pass_names: false
+        always_run: true

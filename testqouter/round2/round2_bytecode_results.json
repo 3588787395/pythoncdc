@@ -1,0 +1,219 @@
+{
+  "summary": {
+    "total": 35,
+    "passed": 0,
+    "failed": 35
+  },
+  "results": [
+    {
+      "name": "test_a01_lambda_constant",
+      "status": "FAIL",
+      "jump_diffs": 0,
+      "true_diffs": 2
+    },
+    {
+      "name": "test_a02_lambda_with_args",
+      "status": "FAIL",
+      "jump_diffs": 0,
+      "true_diffs": 2
+    },
+    {
+      "name": "test_a03_lambda_with_default",
+      "status": "FAIL",
+      "jump_diffs": 0,
+      "true_diffs": 2
+    },
+    {
+      "name": "test_a04_lambda_in_expression",
+      "status": "FAIL",
+      "jump_diffs": 0,
+      "true_diffs": 2
+    },
+    {
+      "name": "test_a05_lambda_with_if_else",
+      "status": "FAIL",
+      "jump_diffs": 0,
+      "true_diffs": 2
+    },
+    {
+      "name": "test_a06_lambda_returned",
+      "status": "FAIL",
+      "jump_diffs": 0,
+      "true_diffs": 2
+    },
+    {
+      "name": "test_a07_lambda_capturing_loop_var",
+      "status": "FAIL",
+      "jump_diffs": 0,
+      "true_diffs": 2
+    },
+    {
+      "name": "test_a08_lambda_with_complex_body",
+      "status": "FAIL",
+      "jump_diffs": 0,
+      "true_diffs": 2
+    },
+    {
+      "name": "test_a09_nested_lambda",
+      "status": "FAIL",
+      "jump_diffs": 0,
+      "true_diffs": 2
+    },
+    {
+      "name": "test_a10_lambda_in_listcomp",
+      "status": "FAIL",
+      "jump_diffs": 0,
+      "true_diffs": 2
+    },
+    {
+      "name": "test_a11_lambda_with_and_or",
+      "status": "FAIL",
+      "jump_diffs": 0,
+      "true_diffs": 2
+    },
+    {
+      "name": "test_a12_lambda_closure_mutation",
+      "status": "FAIL",
+      "jump_diffs": 0,
+      "true_diffs": 2
+    },
+    {
+      "name": "test_d01_multiple_ternary",
+      "status": "FAIL",
+      "jump_diffs": 0,
+      "true_diffs": 2
+    },
+    {
+      "name": "test_d02_ternary_in_listcomp",
+      "status": "FAIL",
+      "jump_diffs": 0,
+      "true_diffs": 2
+    },
+    {
+      "name": "test_d03_ternary_in_lambda",
+      "status": "FAIL",
+      "jump_diffs": 0,
+      "true_diffs": 2
+    },
+    {
+      "name": "test_m01_listcomp_basic",
+      "status": "FAIL",
+      "jump_diffs": 0,
+      "true_diffs": 2
+    },
+    {
+      "name": "test_m02_listcomp_with_condition",
+      "status": "FAIL",
+      "jump_diffs": 0,
+      "true_diffs": 2
+    },
+    {
+      "name": "test_m03_listcomp_with_if_else",
+      "status": "FAIL",
+      "jump_diffs": 0,
+      "true_diffs": 2
+    },
+    {
+      "name": "test_m04_nested_listcomp",
+      "status": "FAIL",
+      "jump_diffs": 0,
+      "true_diffs": 2
+    },
+    {
+      "name": "test_m05_listcomp_multi_loop",
+      "status": "FAIL",
+      "jump_diffs": 0,
+      "true_diffs": 2
+    },
+    {
+      "name": "test_m06_setcomp",
+      "status": "FAIL",
+      "jump_diffs": 0,
+      "true_diffs": 2
+    },
+    {
+      "name": "test_m07_dictcomp",
+      "status": "FAIL",
+      "jump_diffs": 0,
+      "true_diffs": 2
+    },
+    {
+      "name": "test_m08_genexpr",
+      "status": "FAIL",
+      "jump_diffs": 0,
+      "true_diffs": 2
+    },
+    {
+      "name": "test_m09_multi_loop_with_condition",
+      "status": "FAIL",
+      "jump_diffs": 0,
+      "true_diffs": 2
+    },
+    {
+      "name": "test_m10_listcomp_with_method_call",
+      "status": "FAIL",
+      "jump_diffs": 0,
+      "true_diffs": 2
+    },
+    {
+      "name": "test_t01_ternary_basic",
+      "status": "FAIL",
+      "jump_diffs": 0,
+      "true_diffs": 2
+    },
+    {
+      "name": "test_t02_ternary_in_return",
+      "status": "FAIL",
+      "jump_diffs": 0,
+      "true_diffs": 2
+    },
+    {
+      "name": "test_t03_nested_ternary",
+      "status": "FAIL",
+      "jump_diffs": 0,
+      "true_diffs": 2
+    },
+    {
+      "name": "test_t04_method_chain",
+      "status": "FAIL",
+      "jump_diffs": 0,
+      "true_diffs": 2
+    },
+    {
+      "name": "test_t05_method_chain_compare",
+      "status": "FAIL",
+      "jump_diffs": 0,
+      "true_diffs": 2
+    },
+    {
+      "name": "test_t06_bool_short_circuit_and",
+      "status": "FAIL",
+      "jump_diffs": 0,
+      "true_diffs": 2
+    },
+    {
+      "name": "test_t07_bool_short_circuit_or",
+      "status": "FAIL",
+      "jump_diffs": 0,
+      "true_diffs": 2
+    },
+    {
+      "name": "test_t08_chained_comparison",
+      "status": "FAIL",
+      "jump_diffs": 0,
+      "true_diffs": 2
+    },
+    {
+      "name": "test_t09_multi_chained_comp",
+      "status": "FAIL",
+      "jump_diffs": 0,
+      "true_diffs": 2
+    },
+    {
+      "name": "test_t10_subscript_chain",
+      "status": "FAIL",
+      "jump_diffs": 0,
+      "true_diffs": 2
+    }
+  ]
+}

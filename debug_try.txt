@@ -1,0 +1,200 @@
+﻿.........FFF...F.....................F...F.F...F...FF..F....FFF...FF...F [ 31%]
+......................................FFFF......................F...FFFF [ 62%]
+................................FFF...FFF......FFF...FFF............F..F [ 93%]
+........FFFFFF                                                           [100%]
+================================== FAILURES ===================================
+_____________________ TestE04TryFinally_a.test_decompile ______________________
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\try_except\test_e04tryfinally_a.py:16: in test_decompile
+    self.verify_decompilation()
+tests\exhaustive\base.py:115: in verify_decompilation
+    self.verify_bytecode_equivalence()
+tests\control_flow_matrix\base.py:179: in verify_bytecode_equivalence
+    self.fail(error)
+E   AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 16 vs 18
+E   原始: ['RESUME', 'LOAD_FAST', 'LOAD_CONST', 'BINARY_SUBSCR', 'POP_TOP', 'BUILD_LIST', 'STORE_FAST', 'LOAD_CONST', 'RETURN_VALUE', 'PUSH_EXC_INFO', 'BUILD_LIST', 'STORE_FAST', 'RERAISE', 'COPY', 'POP_EXCEPT', 'RERAISE']
+E   重编: ['RESUME', 'LOAD_FAST', 'LOAD_CONST', 'BINARY_SUBSCR', 'POP_TOP', 'BUILD_LIST', 'STORE_FAST', 'BUILD_LIST', 'STORE_FAST', 'LOAD_CONST', 'RETURN_VALUE', 'PUSH_EXC_INFO', 'BUILD_LIST', 'STORE_FAST', 'RERAISE', 'COPY', 'POP_EXCEPT', 'RERAISE']
+_____________________ TestE04TryFinally_n.test_decompile ______________________
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\try_except\test_e04tryfinally_n.py:16: in test_decompile
+    self.verify_decompilation()
+tests\exhaustive\base.py:115: in verify_decompilation
+    self.verify_bytecode_equivalence()
+tests\control_flow_matrix\base.py:179: in verify_bytecode_equivalence
+    self.fail(error)
+E   AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 17 vs 19
+E   原始: ['RESUME', 'LOAD_GLOBAL', 'LOAD_FAST', 'PRECALL', 'CALL', 'POP_TOP', 'LOAD_CONST', 'STORE_FAST', 'LOAD_CONST', 'RETURN_VALUE', 'PUSH_EXC_INFO', 'LOAD_CONST', 'STORE_FAST', 'RERAISE', 'COPY', 'POP_EXCEPT', 'RERAISE']
+E   重编: ['RESUME', 'LOAD_GLOBAL', 'LOAD_FAST', 'PRECALL', 'CALL', 'POP_TOP', 'LOAD_CONST', 'STORE_FAST', 'LOAD_CONST', 'STORE_FAST', 'LOAD_CONST', 'RETURN_VALUE', 'PUSH_EXC_INFO', 'LOAD_CONST', 'STORE_FAST', 'RERAISE', 'COPY', 'POP_EXCEPT', 'RERAISE']
+_____________________ TestE04TryFinally_x.test_decompile ______________________
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\try_except\test_e04tryfinally_x.py:16: in test_decompile
+    self.verify_decompilation()
+tests\exhaustive\base.py:115: in verify_decompilation
+    self.verify_bytecode_equivalence()
+tests\control_flow_matrix\base.py:179: in verify_bytecode_equivalence
+    self.fail(error)
+E   AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 17 vs 19
+E   原始: ['RESUME', 'LOAD_GLOBAL', 'LOAD_FAST', 'PRECALL', 'CALL', 'POP_TOP', 'LOAD_CONST', 'STORE_FAST', 'LOAD_CONST', 'RETURN_VALUE', 'PUSH_EXC_INFO', 'LOAD_CONST', 'STORE_FAST', 'RERAISE', 'COPY', 'POP_EXCEPT', 'RERAISE']
+E   重编: ['RESUME', 'LOAD_GLOBAL', 'LOAD_FAST', 'PRECALL', 'CALL', 'POP_TOP', 'LOAD_CONST', 'STORE_FAST', 'LOAD_CONST', 'STORE_FAST', 'LOAD_CONST', 'RETURN_VALUE', 'PUSH_EXC_INFO', 'LOAD_CONST', 'STORE_FAST', 'RERAISE', 'COPY', 'POP_EXCEPT', 'RERAISE']
+__________________________ TestTE004.test_decompile ___________________________
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\try_except\test_te004.py:9: in test_decompile
+    self.verify_decompilation()
+tests\exhaustive\base.py:115: in verify_decompilation
+    self.verify_bytecode_equivalence()
+tests\control_flow_matrix\base.py:179: in verify_bytecode_equivalence
+    self.fail(error)
+E   AssertionError: 指令数不匹配: 14 vs 16
+E   原始: ['RESUME', 'LOAD_CONST', 'STORE_NAME', 'LOAD_CONST', 'STORE_NAME', 'LOAD_CONST', 'RETURN_VALUE', 'PUSH_EXC_INFO', 'LOAD_CONST', 'STORE_NAME', 'RERAISE', 'COPY', 'POP_EXCEPT', 'RERAISE']
+E   重编: ['RESUME', 'LOAD_CONST', 'STORE_NAME', 'LOAD_CONST', 'STORE_NAME', 'LOAD_CONST', 'STORE_NAME', 'LOAD_CONST', 'RETURN_VALUE', 'PUSH_EXC_INFO', 'LOAD_CONST', 'STORE_NAME', 'RERAISE', 'COPY', 'POP_EXCEPT', 'RERAISE']
+__________________________ TestTE023.test_decompile ___________________________
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\try_except\test_te023.py:9: in test_decompile
+    self.verify_decompilation()
+tests\exhaustive\base.py:115: in verify_decompilation
+    self.verify_bytecode_equivalence()
+tests\control_flow_matrix\base.py:179: in verify_bytecode_equivalence
+    self.fail(error)
+E   AssertionError: 指令数不匹配: 14 vs 16
+E   原始: ['RESUME', 'LOAD_CONST', 'STORE_NAME', 'LOAD_CONST', 'STORE_NAME', 'LOAD_CONST', 'RETURN_VALUE', 'PUSH_EXC_INFO', 'LOAD_CONST', 'STORE_NAME', 'RERAISE', 'COPY', 'POP_EXCEPT', 'RERAISE']
+E   重编: ['RESUME', 'LOAD_CONST', 'STORE_NAME', 'LOAD_CONST', 'STORE_NAME', 'LOAD_CONST', 'STORE_NAME', 'LOAD_CONST', 'RETURN_VALUE', 'PUSH_EXC_INFO', 'LOAD_CONST', 'STORE_NAME', 'RERAISE', 'COPY', 'POP_EXCEPT', 'RERAISE']
+__________________________ TestTE027.test_decompile ___________________________
+tests\control_flow_matrix\base.py:106: in verify_syntax
+    tree = ast.parse(decompiled_source)
+D:\Python\Lib\ast.py:50: in parse
+    return compile(source, filename, mode, flags,
+E     File "<unknown>", line 5
+E       y = 1
+E            ^
+E   SyntaxError: expected 'except' or 'finally' block
+
+During handling of the above exception, another exception occurred:
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\try_except\test_te027.py:9: in test_decompile
+    self.verify_decompilation()
+tests\exhaustive\base.py:107: in verify_decompilation
+    tree = self.verify_syntax(decompiled)
+tests\control_flow_matrix\base.py:109: in verify_syntax
+    self.fail(f"反编译结果语法错误:\n{e}\n\n源码:\n{decompiled_source}")
+E   AssertionError: 反编译结果语法错误:
+E   expected 'except' or 'finally' block (<unknown>, line 5)
+E   
+E   源码:
+E   try:
+E       while x < 3:
+E           x += 1
+E       else:
+E           y = 1
+__________________________ TestTE029.test_decompile ___________________________
+tests\control_flow_matrix\base.py:106: in verify_syntax
+    tree = ast.parse(decompiled_source)
+D:\Python\Lib\ast.py:50: in parse
+    return compile(source, filename, mode, flags,
+E     File "<unknown>", line 3
+E       x = f.read()
+E                   ^
+E   SyntaxError: expected 'except' or 'finally' block
+
+During handling of the above exception, another exception occurred:
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\try_except\test_te029.py:9: in test_decompile
+    self.verify_decompilation()
+tests\exhaustive\base.py:107: in verify_decompilation
+    tree = self.verify_syntax(decompiled)
+tests\control_flow_matrix\base.py:109: in verify_syntax
+    self.fail(f"反编译结果语法错误:\n{e}\n\n源码:\n{decompiled_source}")
+E   AssertionError: 反编译结果语法错误:
+E   expected 'except' or 'finally' block (<unknown>, line 3)
+E   
+E   源码:
+E   with open('f') as f:
+E       try:
+E           x = f.read()
+__________________________ TestTE030.test_decompile ___________________________
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\try_except\test_te030.py:9: in test_decompile
+    self.verify_decompilation()
+tests\exhaustive\base.py:115: in verify_decompilation
+    self.verify_bytecode_equivalence()
+tests\control_flow_matrix\base.py:179: in verify_bytecode_equivalence
+    self.fail(error)
+E   AssertionError: 指令数不匹配: 28 vs 18
+E   原始: ['RESUME', 'LOAD_CONST', 'STORE_NAME', 'LOAD_CONST', 'RETURN_VALUE', 'PUSH_EXC_INFO', 'LOAD_NAME', 'CHECK_EXC_MATCH', 'POP_TOP', 'LOAD_CONST', 'STORE_NAME', 'POP_EXCEPT', 'LOAD_CONST', 'RETURN_VALUE', 'RERAISE', 'COPY', 'POP_EXCEPT', 'RERAISE', 'PUSH_EXC_INFO', 'POP_TOP']
+E   重编: ['RESUME', 'LOAD_CONST', 'STORE_NAME', 'PUSH_EXC_INFO', 'LOAD_NAME', 'CHECK_EXC_MATCH', 'POP_TOP', 'LOAD_CONST', 'STORE_NAME', 'POP_EXCEPT', 'RERAISE', 'COPY', 'POP_EXCEPT', 'RERAISE', 'LOAD_CONST', 'STORE_NAME', 'LOAD_CONST', 'RETURN_VALUE']
+__________________________ TestTE034.test_decompile ___________________________
+tests\control_flow_matrix\base.py:106: in verify_syntax
+    tree = ast.parse(decompiled_source)
+D:\Python\Lib\ast.py:50: in parse
+    return compile(source, filename, mode, flags,
+E     File "<unknown>", line 4
+E       break
+E            ^
+E   SyntaxError: expected 'except' or 'finally' block
+
+During handling of the above exception, another exception occurred:
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\try_except\test_te034.py:9: in test_decompile
+    self.verify_decompilation()
+tests\exhaustive\base.py:107: in verify_decompilation
+    tree = self.verify_syntax(decompiled)
+tests\control_flow_matrix\base.py:109: in verify_syntax
+    self.fail(f"反编译结果语法错误:\n{e}\n\n源码:\n{decompiled_source}")
+E   AssertionError: 反编译结果语法错误:
+E   expected 'except' or 'finally' block (<unknown>, line 4)
+E   
+E   源码:
+E   try:
+E       for i in range(5):
+E           if i > 2:
+E               break
+__________________________ TestTE035.test_decompile ___________________________
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\try_except\test_te035.py:9: in test_decompile
+    self.verify_decompilation()
+tests\exhaustive\base.py:115: in verify_decompilation
+    self.verify_bytecode_equivalence()
+tests\control_flow_matrix\base.py:179: in verify_bytecode_equivalence
+    self.fail(error)
+E   AssertionError: 指令数不匹配: 26 vs 24
+E   原始: ['RESUME', 'LOAD_CONST', 'STORE_NAME', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_CONST', 'PRECALL', 'CALL', 'GET_ITER', 'STORE_NAME', 'LOAD_NAME', 'LOAD_NAME', 'BINARY_OP', 'STORE_NAME', 'LOAD_CONST', 'RETURN_VALUE', 'PUSH_EXC_INFO', 'POP_TOP', 'LOAD_CONST', 'STORE_NAME']
+E   重编: ['RESUME', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_CONST', 'PRECALL', 'CALL', 'GET_ITER', 'STORE_NAME', 'LOAD_NAME', 'LOAD_NAME', 'BINARY_OP', 'STORE_NAME', 'LOAD_CONST', 'RETURN_VALUE', 'PUSH_EXC_INFO', 'POP_TOP', 'LOAD_CONST', 'STORE_NAME', 'POP_EXCEPT', 'LOAD_CONST']
+__________________________ TestTE038.test_decompile ___________________________
+tests\control_flow_matrix\base.py:106: in verify_syntax
+    tree = ast.parse(decompiled_source)
+D:\Python\Lib\ast.py:50: in parse
+    return compile(source, filename, mode, flags,
+E     File "<unknown>", line 4
+E       lines = data.split('\n')
+E                               ^
+E   SyntaxError: expected 'except' or 'finally' block
+
+During handling of the above exception, another exception occurred:
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\try_except\test_te038.py:9: in test_decompile
+    self.verify_decompilation()
+tests\exhaustive\base.py:107: in verify_decompilation
+    tree = self.verify_syntax(decompiled)
+tests\control_flow_matrix\base.py:109: in verify_syntax
+    self.fail(f"反编译结果语法错误:\n{e}\n\n源码:\n{decompiled_source}")
+E   AssertionError: 反编译结果语法错误:
+E   expected 'except' or 'finally' block (<unknown>, line 4)
+E   
+E   源码:
+E   with open('f') as f:
+E       try:
+E           data = f.read()
+E           lines = data.split('\n')
+__________________________ TestTE040.test_decompile ___________________________
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\try_except\test_te040.py:9: in test_decompile
+    self.verify_decompilation()
+tests\exhaustive\base.py:115: in verify_decompilation
+    self.verify_bytecode_equivalence()
+tests\control_flow_matrix\base.py:179: in verify_bytecode_equivalence
+    self.fail(error)
+E   AssertionError: 指令4操作码不匹配: LOAD_CONST vs LOAD_NAME
+__________________________ TestTE041.test_decompile ___________________________
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\try_except\test_te041.py:9: in test_decompile
+    self.verify_decompilation()
+tests\exhaustive\base.py:115: in verify_decompilation
+    self.verify_bytecode_equivalence()
+tests\control_flow_matrix\base.py:179: in verify_bytecode_equivalence
+    self.fail(error)
+E   AssertionError: 指令数不匹配: 22 vs 20
+E   原始: ['RESUME', 'BUILD_MAP', 'STORE_NAME', 'LOAD_NAME', 'GET_ITER', 'STORE_NAME', 'LOAD_NAME', 'LOAD_NAME', 'BINARY_SUBSCR', 'STORE_NAME', 'LOAD_CONST', 'RETURN_VALUE', 'PUSH_EXC_INFO', 'POP_TOP', 'LOAD_CONST', 'STORE_NAME', 'POP_EXCEPT', 'LOAD_CONST', 'RETURN_VALUE', 'COPY']
+E   重编: ['RESUME', 'LOAD_NAME', 'GET_ITER', 'STORE_NAME', 'LOAD_NAME', 'LOAD_NAME', 'BINARY_SUBSCR', 'STORE_NAME', 'LOAD_CONST', 'RETURN_VALUE', 'PUSH_EXC_INFO', 'POP_TOP', 'LOAD_CONST', 'STORE_NAME', 'POP_EXCEPT', 'LOAD_CONST', 'RETURN_VALUE', 'COPY', 'POP_EXCEPT', 'RERAISE']
+__________________________ TestTE042.test_decompile ___________________________
+tests\control_flow_matrix\base.py:106: in verify_syntax
+    tree = ast.parse(decompiled_source)
+D:\Python\Lib\ast.py:50: in parse
+    return compile(source, filename, mode, flags,
+E     File "<unknown>", line 6
+E       i = 0

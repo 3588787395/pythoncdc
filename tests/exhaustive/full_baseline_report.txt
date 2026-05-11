@@ -1,0 +1,286 @@
+================================================================================
+Python 反编译器穷举测试报告
+================================================================================
+
+测试时间: 2026-05-02 13:34:18
+执行时长: 54.03 秒
+
+--------------------------------------------------------------------------------
+总体统计
+--------------------------------------------------------------------------------
+总测试数: 1257
+通过:     691 (55.0%)
+失败:     566
+跳过:     0
+
+--------------------------------------------------------------------------------
+各区域类型统计
+--------------------------------------------------------------------------------
+
+  basic:
+    总数:   104
+    通过:   85 (81.7%)
+    失败:   19
+    跳过:   0
+    失败的测试:
+      - test_b16returnnone.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\basic\test
+      - test_b19delete_a.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\basic\test
+      - test_b19delete_n.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\basic\test
+      - test_b19delete_x.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\basic\test
+      - test_b21nonlocal_a.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\basic\test
+      - test_b21nonlocal_n.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\basic\test
+      - test_b21nonlocal_x.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\basic\test
+      - test_b23yieldfrom_a.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\basic\test
+      - test_b23yieldfrom_n.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\basic\test
+      - test_b23yieldfrom_x.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\basic\test
+
+  if_region:
+    总数:   114
+    通过:   108 (94.7%)
+    失败:   6
+    跳过:   0
+    失败的测试:
+      - test_if07ifreturn_a.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\if_region\
+      - test_if07ifreturn_n.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\if_region\
+      - test_if07ifreturn_x.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\if_region\
+      - test_if26ifnone_a.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\if_region\
+      - test_if26ifnone_n.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\if_region\
+      - test_if26ifnone_x.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\if_region\
+
+  while_loop:
+    总数:   71
+    通过:   13 (18.3%)
+    失败:   58
+    跳过:   0
+    失败的测试:
+      - test_wl01simplewhile_a.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\while_loop
+      - test_wl01simplewhile_n.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\while_loop
+      - test_wl01simplewhile_x.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\while_loop
+      - test_wl02whileelse_a.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\while_loop
+      - test_wl02whileelse_n.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\while_loop
+      - test_wl02whileelse_x.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\while_loop
+      - test_wl05whiletrue.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\while_loop
+      - test_wl07nestedwhile_a_b.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\while_loop
+      - test_wl07nestedwhile_n_m.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\while_loop
+      - test_wl07nestedwhile_x_y.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\while_loop
+
+  for_loop:
+    总数:   84
+    通过:   60 (71.4%)
+    失败:   24
+    跳过:   0
+    失败的测试:
+      - test_fl09fordict_a_b.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\for_loop\t
+      - test_fl09fordict_n_m.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\for_loop\t
+      - test_fl09fordict_x_y.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\for_loop\t
+      - test_fl13forbreakelse_a.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\for_loop\t
+      - test_fl13forbreakelse_n.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\for_loop\t
+      - test_fl13forbreakelse_x.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\for_loop\t
+      - test_fl14forassign_a.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\for_loop\t
+      - test_fl14forassign_n.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\for_loop\t
+      - test_fl14forassign_x.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\for_loop\t
+      - test_fl18fortry_a_indexerror.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\for_loop\t
+
+  try_except:
+    总数:   198
+    通过:   103 (52.0%)
+    失败:   95
+    跳过:   0
+    失败的测试:
+      - test_te014.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\try_except
+      - test_te01tryexcept_indexerror.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\try_except
+      - test_te01tryexcept_stopiteration.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\try_except
+      - test_te01tryexcept_valueerror.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\try_except
+      - test_te026.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\try_except
+      - test_te02tryexceptas_indexerror_a.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\try_except
+      - test_te02tryexceptas_stopiteration_n.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\try_except
+      - test_te02tryexceptas_valueerror_x.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\try_except
+      - test_te030.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\try_except
+      - test_te033.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\try_except
+
+  with_region:
+    总数:   191
+    通过:   88 (46.1%)
+    失败:   103
+    跳过:   0
+    失败的测试:
+      - test_w002.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\with_regio
+      - test_w005.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\with_regio
+      - test_w006.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\with_regio
+      - test_w007.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\with_regio
+      - test_w008.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\with_regio
+      - test_w016.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\with_regio
+      - test_w01withas_a.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\with_regio
+      - test_w01withas_n.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\with_regio
+      - test_w01withas_x.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\with_regio
+      - test_w020.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\with_regio
+
+  match_region:
+    总数:   195
+    通过:   135 (69.2%)
+    失败:   60
+    跳过:   0
+    失败的测试:
+      - test_m002.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\match_regi
+      - test_m006.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\match_regi
+      - test_m009.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\match_regi
+      - test_m016.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\match_regi
+      - test_m029.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\..\..\test
+      - test_m031.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\match_regi
+      - test_m034.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\..\..\test
+      - test_m035.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\..\..\test
+      - test_m049.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\match_regi
+      - test_m052.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\match_regi
+
+  boolop:
+    总数:   120
+    通过:   30 (25.0%)
+    失败:   90
+    跳过:   0
+    失败的测试:
+      - test_bo01and_a_b.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\boolop\tes
+      - test_bo01and_n_m.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\boolop\tes
+      - test_bo01and_x_y.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\boolop\tes
+      - test_bo02or_a_b.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\boolop\tes
+      - test_bo02or_n_m.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\boolop\tes
+      - test_bo02or_x_y.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\boolop\tes
+      - test_bo03not_a.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\boolop\tes
+      - test_bo03not_n.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\boolop\tes
+      - test_bo03not_x.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\boolop\tes
+      - test_bo04andor_a_b_c.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\boolop\tes
+
+  ternary:
+    总数:   75
+    通过:   15 (20.0%)
+    失败:   60
+    跳过:   0
+    失败的测试:
+      - test_tn01simpleternary_a_3.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\ternary\te
+      - test_tn01simpleternary_n_42.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\ternary\te
+      - test_tn01simpleternary_x_0.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\ternary\te
+      - test_tn04nestedternary_a.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\ternary\te
+      - test_tn04nestedternary_n.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\ternary\te
+      - test_tn04nestedternary_x.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\ternary\te
+      - test_tn06ternarycompare_a_b.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\ternary\te
+      - test_tn06ternarycompare_n_m.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\ternary\te
+      - test_tn06ternarycompare_x_y.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\ternary\te
+      - test_tn07ternarybool_a_b.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\ternary\te
+
+  nested:
+    总数:   105
+    通过:   54 (51.4%)
+    失败:   51
+    跳过:   0
+    失败的测试:
+      - test_n01ifinwhile_a.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\nested\tes
+      - test_n01ifinwhile_n.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\nested\tes
+      - test_n01ifinwhile_x.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\nested\tes
+      - test_n04whileinif_a_b.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\nested\tes
+      - test_n04whileinif_n_m.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\nested\tes
+      - test_n04whileinif_x_y.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\nested\tes
+      - test_n05tryinfor_a_indexerror.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\nested\tes
+      - test_n05tryinfor_n_stopiteration.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\nested\tes
+      - test_n05tryinfor_x_valueerror.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\nested\tes
+      - test_n06forintry_a_indexerror.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\nested\tes
+
+--------------------------------------------------------------------------------
+
+总体通过率: 54.97%
+评估: ★★☆☆☆ 较差 (>=50%)
+================================================================================

@@ -1,0 +1,775 @@
+{
+  "summary": {
+    "total": 153,
+    "match": 0,
+    "mismatch": 0,
+    "error": 153
+  },
+  "results": [
+    {
+      "name": "<module>",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "getLogger",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "getLogger.Void",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "getLogger.Void.__getattr__",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "getLogger.Void.__setattr__",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "getLogger.Void.__call__",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "getLogger.Void.__repr__",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_quote",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_real_param",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_open_param",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_real_exrights_param",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_token",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "api_get",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "api_get_financial",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_kline",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_holiday_online",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "one_prod_to_dataframe",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "kline_to_dataframe",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "datetimeindex_astype",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "datetimeindex_astype.<lambda>",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "datetimeindex_astype.<lambda>",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "fill_minute_or_day_blank",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "load_minute_or_day_kline",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_minute_or_day_fill_time",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "build_future_fill_time",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "build_future_fill_time.<listcomp>",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "build_future_fill_time.<listcomp>",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "build_future_fill_time.<listcomp>",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "change_future_real_date",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "filter_duplicated_date",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "build_current_period_df",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "build_current_period_df.<lambda>",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "load_bars_from_hundsun",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "load_get_price",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "obtain_date",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_str_data",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "_is_same_type_date",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "change_his_to_forward",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "change_his_to_backward",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_exrights_data",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "load_get_exrights",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "load_get_exrights.choose_data_from_dict",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "load_get_index_stocks",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "load_get_industry_stocks",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_trading_day",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_all_trades_days",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_trade_days",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_price",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_history",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_date_and_count",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "valuation_new",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "valuation_new.get_IQE_code",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "valuation_new.<lambda>",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "valuation",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "balance_statement",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "income_statement",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "cashflow_statement",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "growth_ability",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "profit_ability",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "eps",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "cash_collection_ability",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "operating_ability",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "debt_paying_ability",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "share_change",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_balance_statement",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_income_statement",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_cashflow_statement",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_growth_ability",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_profit_ability",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_eps",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_cash_collection_ability",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_operating_ability",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_debt_paying_ability",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_share_change",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_valuation",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_valuation_new",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "isVaildDate",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_exrights",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "check_index_code",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_index_stocks",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_Ashares",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_Bshares",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_STshares",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_stock_status",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "check_industry_code",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_industry_stocks",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "check_stock",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "check_stocks",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "check_frequency",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "symbol",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "dict_to_dataframe",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "multi_prod_to_dataframe",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "market_list_to_dataframe",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "tick_to_dataframe",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "trend_to_dataframe",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "trend5day_to_dataframe",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "real_to_dataframe",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_market_list",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_market_list.<listcomp>",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_tick",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_block_info",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_market_detail",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_market_detail_online",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_klines",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_real",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_trend",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_trend5day",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "convert_to_list",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_fields",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_date_index",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_date_index.<lambda>",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "fill_missing_stock_data",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "date_convert",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_open_data",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_fundamentals",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_fundflow_day_single",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_fundflow_day",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_block_stocks",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_stock_blocks",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_stock_exrights",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_valuation_info",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_valuation_info.<lambda>",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_valuation_new_info",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_valuation_new_info.<lambda>",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_fundamentals_daily_info",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_fundamentals_daily_info.<lambda>",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_stock_name",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_stock_info",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_merged_data",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "is_ST_stock_real",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "is_ST_stock",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "is_halt_stock_real",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "is_halt_stock",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_industries",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_fundflow_order_rank",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_user_name",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_opt_objects",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_opt_last_dates",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_opt_contracts",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_contract_info",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_option_info",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_cb_info",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_cb_calender_info",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_cb_time_info",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_trend_data",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_reits_list",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "check_limit",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "check_jq_code",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "trans_jq_code",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_current_kline_count",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "filter_stock_by_status",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_trading_day_by_date",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    },
+    {
+      "name": "get_dominant_contract",
+      "status": "ERROR",
+      "error": "SyntaxError in decompiled source: wildcard makes remaining patterns unreachable (<decompiled>, line 95)"
+    }
+  ]
+}

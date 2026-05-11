@@ -1,0 +1,280 @@
+﻿......................................F.....F........................F.F [ 37%]
+FF................F.....F...F.................F...F.F.F...........FFF... [ 75%]
+........................FFF......FFF.........F.                          [100%]
+================================== FAILURES ===================================
+___________________________ TestW033.test_decompile ___________________________
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\with_region\test_w033.py:9: in test_decompile
+    self.verify_decompilation()
+tests\exhaustive\base.py:115: in verify_decompilation
+    self.verify_bytecode_equivalence()
+tests\control_flow_matrix\base.py:179: in verify_bytecode_equivalence
+    self.fail(error)
+E   AssertionError: 指令数不匹配: 35 vs 41
+E   原始: ['RESUME', 'LOAD_NAME', 'BEFORE_WITH', 'POP_TOP', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_CONST', 'PRECALL', 'CALL', 'GET_ITER', 'STORE_NAME', 'LOAD_NAME', 'LOAD_CONST', 'BINARY_OP', 'STORE_NAME', 'LOAD_CONST', 'LOAD_CONST', 'LOAD_CONST', 'PRECALL', 'CALL']
+E   重编: ['RESUME', 'LOAD_NAME', 'BEFORE_WITH', 'POP_TOP', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_CONST', 'PRECALL', 'CALL', 'POP_TOP', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_CONST', 'PRECALL', 'CALL', 'GET_ITER', 'STORE_NAME', 'LOAD_NAME', 'LOAD_CONST', 'BINARY_OP']
+___________________________ TestW039.test_decompile ___________________________
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\with_region\test_w039.py:9: in test_decompile
+    self.verify_decompilation()
+tests\exhaustive\base.py:115: in verify_decompilation
+    self.verify_bytecode_equivalence()
+tests\control_flow_matrix\base.py:179: in verify_bytecode_equivalence
+    self.fail(error)
+E   AssertionError: 指令数不匹配: 42 vs 48
+E   原始: ['RESUME', 'LOAD_NAME', 'BEFORE_WITH', 'POP_TOP', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_CONST', 'PRECALL', 'CALL', 'GET_ITER', 'STORE_NAME', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_CONST', 'PRECALL', 'CALL', 'GET_ITER', 'STORE_NAME', 'LOAD_NAME', 'LOAD_NAME']
+E   重编: ['RESUME', 'LOAD_NAME', 'BEFORE_WITH', 'POP_TOP', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_CONST', 'PRECALL', 'CALL', 'POP_TOP', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_CONST', 'PRECALL', 'CALL', 'GET_ITER', 'STORE_NAME', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_CONST']
+___________________________ TestW058.test_decompile ___________________________
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\with_region\test_w058.py:9: in test_decompile
+    self.verify_decompilation()
+tests\exhaustive\base.py:115: in verify_decompilation
+    self.verify_bytecode_equivalence()
+tests\control_flow_matrix\base.py:179: in verify_bytecode_equivalence
+    self.fail(error)
+E   AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 43 vs 28
+E   原始: ['RETURN_GENERATOR', 'POP_TOP', 'RESUME', 'LOAD_GLOBAL', 'BEFORE_ASYNC_WITH', 'GET_AWAITABLE', 'LOAD_CONST', 'YIELD_VALUE', 'RESUME', 'JUMP_BACKWARD_NO_INTERRUPT', 'STORE_FAST', 'LOAD_FAST', 'STORE_FAST', 'LOAD_CONST', 'LOAD_CONST', 'LOAD_CONST', 'PRECALL', 'CALL', 'GET_AWAITABLE', 'LOAD_CONST']
+E   重编: ['RETURN_GENERATOR', 'POP_TOP', 'RESUME', 'LOAD_GLOBAL', 'BEFORE_ASYNC_WITH', 'GET_AWAITABLE', 'LOAD_CONST', 'YIELD_VALUE', 'RESUME', 'JUMP_BACKWARD_NO_INTERRUPT', 'POP_TOP', 'PUSH_EXC_INFO', 'WITH_EXCEPT_START', 'GET_AWAITABLE', 'LOAD_CONST', 'YIELD_VALUE', 'RESUME', 'JUMP_BACKWARD_NO_INTERRUPT', 'RERAISE', 'COPY']
+_________________ TestW05WithTry_a_IndexError.test_decompile __________________
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\with_region\test_w05withtry_a_indexerror.py:16: in test_decompile
+    self.verify_decompilation()
+tests\exhaustive\base.py:111: in verify_decompilation
+    self.verify_region_type(self.REGION_TYPE)
+tests\exhaustive\base.py:76: in verify_region_type
+    self.fail(
+E   AssertionError: 反编译结果中未找到预期的区域类型 WITH_REGION (期望AST节点: ['With'])
+E   反编译结果:
+E   try:
+E       None(None, None)
+E   except IndexError: pass
+________________ TestW05WithTry_n_StopIteration.test_decompile ________________
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\with_region\test_w05withtry_n_stopiteration.py:16: in test_decompile
+    self.verify_decompilation()
+tests\exhaustive\base.py:111: in verify_decompilation
+    self.verify_region_type(self.REGION_TYPE)
+tests\exhaustive\base.py:76: in verify_region_type
+    self.fail(
+E   AssertionError: 反编译结果中未找到预期的区域类型 WITH_REGION (期望AST节点: ['With'])
+E   反编译结果:
+E   try:
+E       None(None, None)
+E   except StopIteration: pass
+_________________ TestW05WithTry_x_ValueError.test_decompile __________________
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\with_region\test_w05withtry_x_valueerror.py:16: in test_decompile
+    self.verify_decompilation()
+tests\exhaustive\base.py:111: in verify_decompilation
+    self.verify_region_type(self.REGION_TYPE)
+tests\exhaustive\base.py:76: in verify_region_type
+    self.fail(
+E   AssertionError: 反编译结果中未找到预期的区域类型 WITH_REGION (期望AST节点: ['With'])
+E   反编译结果:
+E   try:
+E       None(None, None)
+E   except ValueError: pass
+___________________________ TestW073.test_decompile ___________________________
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\with_region\test_w073.py:9: in test_decompile
+    self.verify_decompilation()
+tests\exhaustive\base.py:115: in verify_decompilation
+    self.verify_bytecode_equivalence()
+tests\control_flow_matrix\base.py:179: in verify_bytecode_equivalence
+    self.fail(error)
+E   AssertionError: 指令数不匹配: 39 vs 45
+E   原始: ['RESUME', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_CONST', 'PRECALL', 'CALL', 'BEFORE_WITH', 'STORE_NAME', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_NAME', 'PRECALL', 'CALL', 'GET_ITER', 'UNPACK_SEQUENCE', 'STORE_NAME', 'STORE_NAME', 'LOAD_NAME', 'STORE_NAME', 'LOAD_CONST']
+E   重编: ['RESUME', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_CONST', 'PRECALL', 'CALL', 'BEFORE_WITH', 'STORE_NAME', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_NAME', 'PRECALL', 'CALL', 'POP_TOP', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_NAME', 'PRECALL', 'CALL', 'GET_ITER']
+___________________________ TestW079.test_decompile ___________________________
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\with_region\test_w079.py:9: in test_decompile
+    self.verify_decompilation()
+tests\exhaustive\base.py:115: in verify_decompilation
+    self.verify_bytecode_equivalence()
+tests\control_flow_matrix\base.py:179: in verify_bytecode_equivalence
+    self.fail(error)
+E   AssertionError: 指令数不匹配: 41 vs 32
+E   原始: ['RESUME', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_CONST', 'PRECALL', 'CALL', 'GET_ITER', 'STORE_NAME', 'LOAD_NAME', 'BEFORE_WITH', 'POP_TOP', 'LOAD_NAME', 'LOAD_CONST', 'COMPARE_OP', 'LOAD_CONST', 'LOAD_CONST', 'LOAD_CONST', 'PRECALL', 'CALL', 'POP_TOP']
+E   重编: ['RESUME', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_CONST', 'PRECALL', 'CALL', 'GET_ITER', 'STORE_NAME', 'LOAD_NAME', 'BEFORE_WITH', 'POP_TOP', 'LOAD_NAME', 'LOAD_CONST', 'COMPARE_OP', 'LOAD_CONST', 'LOAD_CONST', 'LOAD_CONST', 'PRECALL', 'CALL', 'POP_TOP']
+___________________________ TestW080.test_decompile ___________________________
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\with_region\test_w080.py:9: in test_decompile
+    self.verify_decompilation()
+tests\exhaustive\base.py:115: in verify_decompilation
+    self.verify_bytecode_equivalence()
+tests\control_flow_matrix\base.py:179: in verify_bytecode_equivalence
+    self.fail(error)
+E   AssertionError: 指令数不匹配: 38 vs 39
+E   原始: ['RESUME', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_CONST', 'PRECALL', 'CALL', 'GET_ITER', 'STORE_NAME', 'LOAD_NAME', 'BEFORE_WITH', 'POP_TOP', 'LOAD_NAME', 'LOAD_CONST', 'COMPARE_OP', 'LOAD_CONST', 'LOAD_CONST', 'LOAD_CONST', 'PRECALL', 'CALL', 'POP_TOP']
+E   重编: ['RESUME', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_CONST', 'PRECALL', 'CALL', 'GET_ITER', 'STORE_NAME', 'LOAD_NAME', 'BEFORE_WITH', 'POP_TOP', 'LOAD_NAME', 'LOAD_CONST', 'COMPARE_OP', 'PUSH_NULL', 'LOAD_CONST', 'LOAD_CONST', 'LOAD_CONST', 'PRECALL', 'CALL']
+___________________________ TestW095.test_decompile ___________________________
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\with_region\test_w095.py:9: in test_decompile
+    self.verify_decompilation()
+tests\exhaustive\base.py:115: in verify_decompilation
+    self.verify_bytecode_equivalence()
+tests\control_flow_matrix\base.py:179: in verify_bytecode_equivalence
+    self.fail(error)
+E   AssertionError: 指令数不匹配: 31 vs 37
+E   原始: ['RESUME', 'LOAD_NAME', 'BEFORE_WITH', 'POP_TOP', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_CONST', 'PRECALL', 'CALL', 'GET_ITER', 'STORE_NAME', 'LOAD_CONST', 'LOAD_CONST', 'LOAD_CONST', 'PRECALL', 'CALL', 'POP_TOP', 'LOAD_CONST', 'RETURN_VALUE', 'PUSH_EXC_INFO']
+E   重编: ['RESUME', 'LOAD_NAME', 'BEFORE_WITH', 'POP_TOP', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_CONST', 'PRECALL', 'CALL', 'POP_TOP', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_CONST', 'PRECALL', 'CALL', 'GET_ITER', 'STORE_NAME', 'LOAD_CONST', 'LOAD_CONST', 'LOAD_CONST']
+___________________________ TestW099.test_decompile ___________________________
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\with_region\test_w099.py:9: in test_decompile
+    self.verify_decompilation()
+tests\exhaustive\base.py:115: in verify_decompilation
+    self.verify_bytecode_equivalence()
+tests\control_flow_matrix\base.py:179: in verify_bytecode_equivalence
+    self.fail(error)
+E   AssertionError: 指令数不匹配: 37 vs 43
+E   原始: ['RESUME', 'LOAD_NAME', 'BEFORE_WITH', 'POP_TOP', 'LOAD_CONST', 'STORE_NAME', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_CONST', 'PRECALL', 'CALL', 'GET_ITER', 'STORE_NAME', 'LOAD_NAME', 'LOAD_NAME', 'BINARY_OP', 'STORE_NAME', 'LOAD_CONST', 'LOAD_CONST', 'LOAD_CONST']
+E   重编: ['RESUME', 'LOAD_NAME', 'BEFORE_WITH', 'POP_TOP', 'LOAD_CONST', 'STORE_NAME', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_CONST', 'PRECALL', 'CALL', 'POP_TOP', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_CONST', 'PRECALL', 'CALL', 'GET_ITER', 'STORE_NAME', 'LOAD_NAME']
+___________________________ TestW100.test_decompile ___________________________
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\with_region\test_w100.py:9: in test_decompile
+    self.verify_decompilation()
+tests\exhaustive\base.py:115: in verify_decompilation
+    self.verify_bytecode_equivalence()
+tests\control_flow_matrix\base.py:179: in verify_bytecode_equivalence
+    self.fail(error)
+E   AssertionError: 指令数不匹配: 39 vs 45
+E   原始: ['RESUME', 'LOAD_NAME', 'BEFORE_WITH', 'POP_TOP', 'BUILD_LIST', 'STORE_NAME', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_CONST', 'PRECALL', 'CALL', 'GET_ITER', 'STORE_NAME', 'LOAD_NAME', 'LOAD_METHOD', 'LOAD_NAME', 'PRECALL', 'CALL', 'POP_TOP', 'LOAD_CONST']
+E   重编: ['RESUME', 'LOAD_NAME', 'BEFORE_WITH', 'POP_TOP', 'BUILD_LIST', 'STORE_NAME', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_CONST', 'PRECALL', 'CALL', 'POP_TOP', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_CONST', 'PRECALL', 'CALL', 'GET_ITER', 'STORE_NAME', 'LOAD_NAME']
+___________________________ TestW102.test_decompile ___________________________
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\with_region\test_w102.py:9: in test_decompile
+    self.verify_decompilation()
+tests\exhaustive\base.py:115: in verify_decompilation
+    self.verify_bytecode_equivalence()
+tests\control_flow_matrix\base.py:179: in verify_bytecode_equivalence
+    self.fail(error)
+E   AssertionError: 指令数不匹配: 54 vs 59
+E   原始: ['RESUME', 'LOAD_NAME', 'BEFORE_WITH', 'POP_TOP', 'LOAD_CONST', 'STORE_NAME', 'PUSH_NULL', 'LOAD_NAME', 'PRECALL', 'CALL', 'STORE_NAME', 'PUSH_EXC_INFO', 'POP_TOP', 'LOAD_CONST', 'STORE_NAME', 'POP_EXCEPT', 'COPY', 'POP_EXCEPT', 'RERAISE', 'PUSH_NULL']
+E   重编: ['RESUME', 'LOAD_NAME', 'BEFORE_WITH', 'POP_TOP', 'LOAD_CONST', 'STORE_NAME', 'PUSH_NULL', 'LOAD_NAME', 'PRECALL', 'CALL', 'STORE_NAME', 'PUSH_NULL', 'LOAD_NAME', 'PRECALL', 'CALL', 'POP_TOP', 'PUSH_EXC_INFO', 'POP_TOP', 'LOAD_CONST', 'STORE_NAME']
+_______________________ TestW13WithFor_a.test_decompile _______________________
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\with_region\test_w13withfor_a.py:14: in test_decompile
+    self.verify_decompilation()
+tests\exhaustive\base.py:115: in verify_decompilation
+    self.verify_bytecode_equivalence()
+tests\control_flow_matrix\base.py:179: in verify_bytecode_equivalence
+    self.fail(error)
+E   AssertionError: 指令数不匹配: 35 vs 41
+E   原始: ['RESUME', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_CONST', 'PRECALL', 'CALL', 'BEFORE_WITH', 'STORE_NAME', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_CONST', 'PRECALL', 'CALL', 'GET_ITER', 'STORE_NAME', 'LOAD_CONST', 'LOAD_CONST', 'LOAD_CONST', 'PRECALL', 'CALL']
+E   重编: ['RESUME', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_CONST', 'PRECALL', 'CALL', 'BEFORE_WITH', 'STORE_NAME', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_CONST', 'PRECALL', 'CALL', 'POP_TOP', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_CONST', 'PRECALL', 'CALL', 'GET_ITER']
+_______________________ TestW13WithFor_n.test_decompile _______________________
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\with_region\test_w13withfor_n.py:14: in test_decompile
+    self.verify_decompilation()
+tests\exhaustive\base.py:115: in verify_decompilation
+    self.verify_bytecode_equivalence()
+tests\control_flow_matrix\base.py:179: in verify_bytecode_equivalence
+    self.fail(error)
+E   AssertionError: 指令数不匹配: 35 vs 41
+E   原始: ['RESUME', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_CONST', 'PRECALL', 'CALL', 'BEFORE_WITH', 'STORE_NAME', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_CONST', 'PRECALL', 'CALL', 'GET_ITER', 'STORE_NAME', 'LOAD_CONST', 'LOAD_CONST', 'LOAD_CONST', 'PRECALL', 'CALL']
+E   重编: ['RESUME', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_CONST', 'PRECALL', 'CALL', 'BEFORE_WITH', 'STORE_NAME', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_CONST', 'PRECALL', 'CALL', 'POP_TOP', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_CONST', 'PRECALL', 'CALL', 'GET_ITER']
+_______________________ TestW13WithFor_x.test_decompile _______________________
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\with_region\test_w13withfor_x.py:14: in test_decompile
+    self.verify_decompilation()
+tests\exhaustive\base.py:115: in verify_decompilation
+    self.verify_bytecode_equivalence()
+tests\control_flow_matrix\base.py:179: in verify_bytecode_equivalence
+    self.fail(error)
+E   AssertionError: 指令数不匹配: 35 vs 41
+E   原始: ['RESUME', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_CONST', 'PRECALL', 'CALL', 'BEFORE_WITH', 'STORE_NAME', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_CONST', 'PRECALL', 'CALL', 'GET_ITER', 'STORE_NAME', 'LOAD_CONST', 'LOAD_CONST', 'LOAD_CONST', 'PRECALL', 'CALL']
+E   重编: ['RESUME', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_CONST', 'PRECALL', 'CALL', 'BEFORE_WITH', 'STORE_NAME', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_CONST', 'PRECALL', 'CALL', 'POP_TOP', 'PUSH_NULL', 'LOAD_NAME', 'LOAD_CONST', 'PRECALL', 'CALL', 'GET_ITER']
+________________ TestW23WithInTry_a_IndexError.test_decompile _________________
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\with_region\test_w23withintry_a_indexerror.py:16: in test_decompile
+    self.verify_decompilation()
+tests\exhaustive\base.py:111: in verify_decompilation
+    self.verify_region_type(self.REGION_TYPE)
+tests\exhaustive\base.py:76: in verify_region_type
+    self.fail(
+E   AssertionError: 反编译结果中未找到预期的区域类型 WITH_REGION (期望AST节点: ['With'])
+E   反编译结果:
+E   try:
+E       None(None, None)
+E   except IndexError: pass
+_______________ TestW23WithInTry_n_StopIteration.test_decompile _______________
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\with_region\test_w23withintry_n_stopiteration.py:16: in test_decompile
+    self.verify_decompilation()
+tests\exhaustive\base.py:111: in verify_decompilation
+    self.verify_region_type(self.REGION_TYPE)
+tests\exhaustive\base.py:76: in verify_region_type
+    self.fail(
+E   AssertionError: 反编译结果中未找到预期的区域类型 WITH_REGION (期望AST节点: ['With'])
+E   反编译结果:
+E   try:
+E       None(None, None)
+E   except StopIteration: pass
+________________ TestW23WithInTry_x_ValueError.test_decompile _________________
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\with_region\test_w23withintry_x_valueerror.py:16: in test_decompile
+    self.verify_decompilation()
+tests\exhaustive\base.py:111: in verify_decompilation
+    self.verify_region_type(self.REGION_TYPE)
+tests\exhaustive\base.py:76: in verify_region_type
+    self.fail(
+E   AssertionError: 反编译结果中未找到预期的区域类型 WITH_REGION (期望AST节点: ['With'])
+E   反编译结果:
+E   try:
+E       None(None, None)
+E   except ValueError: pass
+_____________________ TestW26WithInWhile_a.test_decompile _____________________
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\with_region\test_w26withinwhile_a.py:14: in test_decompile
+    self.verify_decompilation()
+tests\exhaustive\base.py:111: in verify_decompilation
+    self.verify_region_type(self.REGION_TYPE)
+tests\exhaustive\base.py:76: in verify_region_type
+    self.fail(
+E   AssertionError: 反编译结果中未找到预期的区域类型 WITH_REGION (期望AST节点: ['With'])
+E   反编译结果:
+E   while True:
+E       continue
+_____________________ TestW26WithInWhile_n.test_decompile _____________________
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\with_region\test_w26withinwhile_n.py:14: in test_decompile
+    self.verify_decompilation()
+tests\exhaustive\base.py:111: in verify_decompilation
+    self.verify_region_type(self.REGION_TYPE)
+tests\exhaustive\base.py:76: in verify_region_type
+    self.fail(
+E   AssertionError: 反编译结果中未找到预期的区域类型 WITH_REGION (期望AST节点: ['With'])
+E   反编译结果:
+E   while True:
+E       continue
+_____________________ TestW26WithInWhile_x.test_decompile _____________________
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\with_region\test_w26withinwhile_x.py:14: in test_decompile
+    self.verify_decompilation()
+tests\exhaustive\base.py:111: in verify_decompilation
+    self.verify_region_type(self.REGION_TYPE)
+tests\exhaustive\base.py:76: in verify_region_type
+    self.fail(
+E   AssertionError: 反编译结果中未找到预期的区域类型 WITH_REGION (期望AST节点: ['With'])
+E   反编译结果:
+E   while True:
+E       continue
+_____________________ TestW30WithCustomCtx.test_decompile _____________________
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\with_region\test_w30withcustomctx.py:16: in test_decompile
+    self.verify_decompilation()
+tests\exhaustive\base.py:115: in verify_decompilation
+    self.verify_bytecode_equivalence()
+tests\control_flow_matrix\base.py:179: in verify_bytecode_equivalence
+    self.fail(error)
+E   AssertionError: 指令数不匹配: 35 vs 38
+E   原始: ['RESUME', 'PUSH_NULL', 'LOAD_BUILD_CLASS', 'LOAD_CONST', 'MAKE_FUNCTION', 'LOAD_CONST', 'PRECALL', 'CALL', 'STORE_NAME', 'PUSH_NULL', 'LOAD_NAME', 'PRECALL', 'CALL', 'BEFORE_WITH', 'STORE_NAME', 'LOAD_CONST', 'LOAD_CONST', 'LOAD_CONST', 'PRECALL', 'CALL']
+E   重编: ['RESUME', 'LOAD_NAME', 'PUSH_NULL', 'LOAD_BUILD_CLASS', 'LOAD_CONST', 'MAKE_FUNCTION', 'LOAD_CONST', 'PRECALL', 'CALL', 'PRECALL', 'CALL', 'STORE_NAME', 'PUSH_NULL', 'LOAD_NAME', 'PRECALL', 'CALL', 'BEFORE_WITH', 'STORE_NAME', 'LOAD_CONST', 'LOAD_CONST']
+============================== warnings summary ===============================
+tests/exhaustive/with_region/test_w080.py::TestW080::test_decompile
+  <decompiled>:5: SyntaxWarning: 'NoneType' object is not callable; perhaps you missed a comma?
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/exhaustive/with_region/test_w033.py::TestW033::test_decompile - ...
+FAILED tests/exhaustive/with_region/test_w039.py::TestW039::test_decompile - ...
+FAILED tests/exhaustive/with_region/test_w058.py::TestW058::test_decompile - ...
+FAILED tests/exhaustive/with_region/test_w05withtry_a_indexerror.py::TestW05WithTry_a_IndexError::test_decompile
+FAILED tests/exhaustive/with_region/test_w05withtry_n_stopiteration.py::TestW05WithTry_n_StopIteration::test_decompile
+FAILED tests/exhaustive/with_region/test_w05withtry_x_valueerror.py::TestW05WithTry_x_ValueError::test_decompile
+FAILED tests/exhaustive/with_region/test_w073.py::TestW073::test_decompile - ...
+FAILED tests/exhaustive/with_region/test_w079.py::TestW079::test_decompile - ...
+FAILED tests/exhaustive/with_region/test_w080.py::TestW080::test_decompile - ...
+FAILED tests/exhaustive/with_region/test_w095.py::TestW095::test_decompile - ...
+FAILED tests/exhaustive/with_region/test_w099.py::TestW099::test_decompile - ...
+FAILED tests/exhaustive/with_region/test_w100.py::TestW100::test_decompile - ...
+FAILED tests/exhaustive/with_region/test_w102.py::TestW102::test_decompile - ...
+FAILED tests/exhaustive/with_region/test_w13withfor_a.py::TestW13WithFor_a::test_decompile
+FAILED tests/exhaustive/with_region/test_w13withfor_n.py::TestW13WithFor_n::test_decompile
+FAILED tests/exhaustive/with_region/test_w13withfor_x.py::TestW13WithFor_x::test_decompile
+FAILED tests/exhaustive/with_region/test_w23withintry_a_indexerror.py::TestW23WithInTry_a_IndexError::test_decompile
+FAILED tests/exhaustive/with_region/test_w23withintry_n_stopiteration.py::TestW23WithInTry_n_StopIteration::test_decompile
+FAILED tests/exhaustive/with_region/test_w23withintry_x_valueerror.py::TestW23WithInTry_x_ValueError::test_decompile
+FAILED tests/exhaustive/with_region/test_w26withinwhile_a.py::TestW26WithInWhile_a::test_decompile
+FAILED tests/exhaustive/with_region/test_w26withinwhile_n.py::TestW26WithInWhile_n::test_decompile
+FAILED tests/exhaustive/with_region/test_w26withinwhile_x.py::TestW26WithInWhile_x::test_decompile
+FAILED tests/exhaustive/with_region/test_w30withcustomctx.py::TestW30WithCustomCtx::test_decompile
+23 failed, 168 passed, 1 warning in 26.04s
+

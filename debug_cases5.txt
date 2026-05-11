@@ -1,0 +1,68 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.11.7, pytest-7.1.3, pluggy-1.6.0 -- D:\Python\python.exe
+cachedir: .pytest_cache
+hypothesis profile 'default' -> database=DirectoryBasedExampleDatabase('F:\\pythoncdc\\.hypothesis\\examples')
+rootdir: F:\pythoncdc, configfile: pytest.ini
+plugins: hypothesis-6.24.2
+collecting ... collected 5 items
+
+tests/exhaustive/match_region/test_m013.py::TestM013::test_decompile FAILED [ 20%]
+tests/exhaustive/match_region/test_m027.py::TestM027::test_decompile FAILED [ 40%]
+tests/exhaustive/match_region/test_m039.py::TestM039::test_decompile FAILED [ 60%]
+tests/exhaustive/match_region/test_m040.py::TestM040::test_decompile FAILED [ 80%]
+tests/exhaustive/match_region/test_m041.py::TestM041::test_decompile FAILED [100%]
+
+================================== FAILURES ===================================
+___________________________ TestM013.test_decompile ___________________________
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\match_region\test_m013.py:9: in test_decompile
+    self.verify_decompilation()
+tests\exhaustive\base.py:115: in verify_decompilation
+    self.verify_bytecode_equivalence()
+tests\control_flow_matrix\base.py:179: in verify_bytecode_equivalence
+    self.fail(error)
+E   AssertionError: 指令14操作码不匹配: RETURN_VALUE vs STORE_NAME
+___________________________ TestM027.test_decompile ___________________________
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\match_region\test_m027.py:9: in test_decompile
+    self.verify_decompilation()
+tests\exhaustive\base.py:115: in verify_decompilation
+    self.verify_bytecode_equivalence()
+tests\control_flow_matrix\base.py:179: in verify_bytecode_equivalence
+    self.fail(error)
+E   AssertionError: 指令数不匹配: 26 vs 31
+E   原始: ['RESUME', 'LOAD_NAME', 'MATCH_MAPPING', 'GET_LEN', 'LOAD_CONST', 'COMPARE_OP', 'LOAD_CONST', 'MATCH_KEYS', 'COPY', 'POP_JUMP_FORWARD_IF_NONE', 'UNPACK_SEQUENCE', 'SWAP', 'POP_TOP', 'POP_TOP', 'STORE_NAME', 'LOAD_NAME', 'STORE_NAME', 'LOAD_CONST', 'RETURN_VALUE', 'POP_TOP']
+E   重编: ['RESUME', 'LOAD_NAME', 'MATCH_MAPPING', 'GET_LEN', 'LOAD_CONST', 'COMPARE_OP', 'LOAD_CONST', 'MATCH_KEYS', 'COPY', 'POP_JUMP_FORWARD_IF_NONE', 'UNPACK_SEQUENCE', 'POP_TOP', 'BUILD_MAP', 'SWAP', 'DICT_UPDATE', 'UNPACK_SEQUENCE', 'COPY', 'SWAP', 'DELETE_SUBSCR', 'STORE_NAME']
+___________________________ TestM039.test_decompile ___________________________
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\match_region\test_m039.py:9: in test_decompile
+    self.verify_decompilation()
+tests\exhaustive\base.py:115: in verify_decompilation
+    self.verify_bytecode_equivalence()
+tests\control_flow_matrix\base.py:179: in verify_bytecode_equivalence
+    self.fail(error)
+E   AssertionError: 指令数不匹配: 22 vs 24
+E   原始: ['RESUME', 'LOAD_NAME', 'LOAD_NAME', 'LOAD_CONST', 'MATCH_CLASS', 'COPY', 'POP_JUMP_FORWARD_IF_NONE', 'UNPACK_SEQUENCE', 'STORE_NAME', 'STORE_NAME', 'LOAD_NAME', 'LOAD_NAME', 'COMPARE_OP', 'LOAD_CONST', 'STORE_NAME', 'LOAD_CONST', 'RETURN_VALUE', 'POP_TOP', 'LOAD_CONST', 'STORE_NAME']
+E   重编: ['RESUME', 'LOAD_NAME', 'LOAD_NAME', 'LOAD_CONST', 'MATCH_CLASS', 'COPY', 'POP_JUMP_FORWARD_IF_NONE', 'UNPACK_SEQUENCE', 'STORE_NAME', 'STORE_NAME', 'LOAD_NAME', 'LOAD_NAME', 'COMPARE_OP', 'LOAD_CONST', 'STORE_NAME', 'LOAD_CONST', 'RETURN_VALUE', 'LOAD_CONST', 'STORE_NAME', 'LOAD_CONST']
+___________________________ TestM040.test_decompile ___________________________
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\match_region\test_m040.py:9: in test_decompile
+    self.verify_decompilation()
+tests\exhaustive\base.py:115: in verify_decompilation
+    self.verify_bytecode_equivalence()
+tests\control_flow_matrix\base.py:179: in verify_bytecode_equivalence
+    self.fail(error)
+E   AssertionError: 指令数不匹配: 34 vs 40
+E   原始: ['RESUME', 'LOAD_NAME', 'COPY', 'MATCH_SEQUENCE', 'GET_LEN', 'LOAD_CONST', 'COMPARE_OP', 'UNPACK_SEQUENCE', 'LOAD_CONST', 'COMPARE_OP', 'LOAD_CONST', 'COMPARE_OP', 'POP_TOP', 'COPY', 'MATCH_SEQUENCE', 'GET_LEN', 'LOAD_CONST', 'COMPARE_OP', 'UNPACK_SEQUENCE', 'LOAD_CONST']
+E   重编: ['RESUME', 'LOAD_NAME', 'COPY', 'MATCH_SEQUENCE', 'GET_LEN', 'LOAD_CONST', 'COMPARE_OP', 'UNPACK_SEQUENCE', 'LOAD_CONST', 'COMPARE_OP', 'LOAD_CONST', 'COMPARE_OP', 'LOAD_CONST', 'COMPARE_OP', 'LOAD_CONST', 'COMPARE_OP', 'POP_TOP', 'LOAD_CONST', 'STORE_NAME', 'LOAD_CONST']
+___________________________ TestM041.test_decompile ___________________________
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\match_region\test_m041.py:9: in test_decompile
+    self.verify_decompilation()
+tests\exhaustive\base.py:115: in verify_decompilation
+    self.verify_bytecode_equivalence()
+tests\control_flow_matrix\base.py:179: in verify_bytecode_equivalence
+    self.fail(error)
+E   AssertionError: 指令15参数不匹配: None vs 2 (op=LOAD_CONST)
+=========================== short test summary info ===========================
+FAILED tests/exhaustive/match_region/test_m013.py::TestM013::test_decompile
+FAILED tests/exhaustive/match_region/test_m027.py::TestM027::test_decompile
+FAILED tests/exhaustive/match_region/test_m039.py::TestM039::test_decompile
+FAILED tests/exhaustive/match_region/test_m040.py::TestM040::test_decompile
+FAILED tests/exhaustive/match_region/test_m041.py::TestM041::test_decompile
+============================== 5 failed in 3.13s ==============================

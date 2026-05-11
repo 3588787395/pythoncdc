@@ -1,0 +1,588 @@
+================================================================================
+控制流完备性测试报告
+Control Flow Completeness Test Report
+================================================================================
+
+==================总体统计==================
+  总测试数: 231
+  通过数量: 169
+  失败数量: 62
+  错误数量: 0
+  通过率:   73.2%
+
+=================各层级详情==================
+
+  [✗] L1 基础控制流 (L1_basic)
+      总计: 118 | 通过: 90 | 失败: 28 | 通过率: 76.3%
+
+  [✗] L2 二层嵌套 (L2_nested_two)
+      总计: 71 | 通过: 49 | 失败: 22 | 通过率: 69.0%
+
+  [✗] L3 三层嵌套 (L3_nested_three)
+      总计: 42 | 通过: 30 | 失败: 12 | 通过率: 71.4%
+
+--------------------------------------------------------------------------------
+
+失败用例列表 (62 个):
+--------------------------------------------------------------------------------
+
+  1. TestB08_PassStatement
+     文件: tests/control_flow_completeness/L1_basic/test_b01_b08_statements.py
+
+  2. TestE01_TryExcept
+     文件: tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py
+
+  3. TestE03_TryExceptElse
+     文件: tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py
+
+  4. TestE04_TryFinally
+     文件: tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py
+
+  5. TestE05_TryExceptFinally
+     文件: tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py
+
+  6. TestE06_FullCombination
+     文件: tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py
+
+  7. TestE07_ExceptAs
+     文件: tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py
+
+  8. TestE08_BareExcept
+     文件: tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py
+
+  9. TestE09_NestedTry
+     文件: tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py
+
+  10. TestE11_LoopWithTry
+     文件: tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py
+
+  11. TestE13_IfWithTry
+     文件: tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py
+
+  12. TestL11_WhileBreak
+     文件: tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py
+
+  13. TestL14_WhileTrue
+     文件: tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py
+
+  14. TestW05_WithInnerTry
+     文件: tests/control_flow_completeness/L1_basic/test_w01_w06_with.py
+
+  15. TestCF1_IfWithFor
+     文件: tests/control_flow_completeness/L2_nested_two/test_all_combinations.py
+
+  16. TestCF2_IfWithWhile
+     文件: tests/control_flow_completeness/L2_nested_two/test_all_combinations.py
+
+  17. TestCE1_IfWithTry
+     文件: tests/control_flow_completeness/L2_nested_two/test_all_combinations.py
+
+  18. TestCW1_IfWithWith
+     文件: tests/control_flow_completeness/L2_nested_two/test_all_combinations.py
+
+  19. TestFT1_ForWithTry
+     文件: tests/control_flow_completeness/L2_nested_two/test_all_combinations.py
+
+  20. TestWT1_WhileWithTry
+     文件: tests/control_flow_completeness/L2_nested_two/test_all_combinations.py
+
+  21. TestWW1_WhileWithWith
+     文件: tests/control_flow_completeness/L2_nested_two/test_all_combinations.py
+
+  22. TestTT1_TryWithTry
+     文件: tests/control_flow_completeness/L2_nested_two/test_all_combinations.py
+
+  23. TestWF2_WithFor
+     文件: tests/control_flow_completeness/L2_nested_two/test_all_combinations.py
+
+  24. TestWT2_WithTry
+     文件: tests/control_flow_completeness/L2_nested_two/test_all_combinations.py
+
+  25. TestBC4_WhileBreak
+     文件: tests/control_flow_completeness/L2_nested_two/test_all_combinations.py
+
+  26. TestN05_WhileIfBreak
+     文件: tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py
+
+  27. TestN09_WhileWhileIfBreak
+     文件: tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py
+
+  28. TestN10_TryForIfExcept
+     文件: tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py
+
+  29. TestN11_TryWhileIfExcept
+     文件: tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py
+
+  30. TestN14_ForIfForIfBreak
+     文件: tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py
+
+  31. TestN15_WhileIfWhileIfBreak
+     文件: tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py
+
+  32. TestB08_PassStatement
+     文件: FAILED tests/control_flow_completeness/L1_basic/test_b01_b08_statements.py
+
+  33. TestE01_TryExcept
+     文件: FAILED tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py
+
+  34. TestE03_TryExceptElse
+     文件: FAILED tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py
+
+  35. TestE04_TryFinally
+     文件: FAILED tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py
+
+  36. TestE05_TryExceptFinally
+     文件: FAILED tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py
+
+  37. TestE06_FullCombination
+     文件: FAILED tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py
+
+  38. TestE07_ExceptAs
+     文件: FAILED tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py
+
+  39. TestE08_BareExcept
+     文件: FAILED tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py
+
+  40. TestE09_NestedTry
+     文件: FAILED tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py
+
+  41. TestE11_LoopWithTry
+     文件: FAILED tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py
+
+  42. TestE13_IfWithTry
+     文件: FAILED tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py
+
+  43. TestL11_WhileBreak
+     文件: FAILED tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py
+
+  44. TestL14_WhileTrue
+     文件: FAILED tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py
+
+  45. TestW05_WithInnerTry
+     文件: FAILED tests/control_flow_completeness/L1_basic/test_w01_w06_with.py
+
+  46. TestCF1_IfWithFor
+     文件: FAILED tests/control_flow_completeness/L2_nested_two/test_all_combinations.py
+
+  47. TestCF2_IfWithWhile
+     文件: FAILED tests/control_flow_completeness/L2_nested_two/test_all_combinations.py
+
+  48. TestCE1_IfWithTry
+     文件: FAILED tests/control_flow_completeness/L2_nested_two/test_all_combinations.py
+
+  49. TestCW1_IfWithWith
+     文件: FAILED tests/control_flow_completeness/L2_nested_two/test_all_combinations.py
+
+  50. TestFT1_ForWithTry
+     文件: FAILED tests/control_flow_completeness/L2_nested_two/test_all_combinations.py
+
+  51. TestWT1_WhileWithTry
+     文件: FAILED tests/control_flow_completeness/L2_nested_two/test_all_combinations.py
+
+  52. TestWW1_WhileWithWith
+     文件: FAILED tests/control_flow_completeness/L2_nested_two/test_all_combinations.py
+
+  53. TestTT1_TryWithTry
+     文件: FAILED tests/control_flow_completeness/L2_nested_two/test_all_combinations.py
+
+  54. TestWF2_WithFor
+     文件: FAILED tests/control_flow_completeness/L2_nested_two/test_all_combinations.py
+
+  55. TestWT2_WithTry
+     文件: FAILED tests/control_flow_completeness/L2_nested_two/test_all_combinations.py
+
+  56. TestBC4_WhileBreak
+     文件: FAILED tests/control_flow_completeness/L2_nested_two/test_all_combinations.py
+
+  57. TestN05_WhileIfBreak
+     文件: FAILED tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py
+
+  58. TestN09_WhileWhileIfBreak
+     文件: FAILED tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py
+
+  59. TestN10_TryForIfExcept
+     文件: FAILED tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py
+
+  60. TestN11_TryWhileIfExcept
+     文件: FAILED tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py
+
+  61. TestN14_ForIfForIfBreak
+     文件: FAILED tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py
+
+  62. TestN15_WhileIfWhileIfBreak
+     文件: FAILED tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py
+
+================================================================================
+
+原始输出:
+============================= test session starts =============================
+collecting ... collected 200 items
+
+tests/control_flow_completeness/L1_basic/test_b01_b08_statements.py::TestB01_SimpleAssignment::test_bytecode_equivalence PASSED [  0%]
+tests/control_flow_completeness/L1_basic/test_b01_b08_statements.py::TestB01_SimpleAssignment::test_syntax_valid PASSED [  1%]
+tests/control_flow_completeness/L1_basic/test_b01_b08_statements.py::TestB02_AugmentedAssignment::test_bytecode_equivalence PASSED [  1%]
+tests/control_flow_completeness/L1_basic/test_b01_b08_statements.py::TestB02_AugmentedAssignment::test_syntax_valid PASSED [  2%]
+tests/control_flow_completeness/L1_basic/test_b01_b08_statements.py::TestB03_MultiTargetAssignment::test_bytecode_equivalence PASSED [  2%]
+tests/control_flow_completeness/L1_basic/test_b01_b08_statements.py::TestB03_MultiTargetAssignment::test_syntax_valid PASSED [  3%]
+tests/control_flow_completeness/L1_basic/test_b01_b08_statements.py::TestB04_TupleUnpack::test_bytecode_equivalence PASSED [  3%]
+tests/control_flow_completeness/L1_basic/test_b01_b08_statements.py::TestB04_TupleUnpack::test_syntax_valid PASSED [  4%]
+tests/control_flow_completeness/L1_basic/test_b01_b08_statements.py::TestB05_ExpressionStatement::test_bytecode_equivalence PASSED [  4%]
+tests/control_flow_completeness/L1_basic/test_b01_b08_statements.py::TestB05_ExpressionStatement::test_syntax_valid PASSED [  5%]
+tests/control_flow_completeness/L1_basic/test_b01_b08_statements.py::TestB06_ReturnVariable::test_bytecode_equivalence PASSED [  5%]
+tests/control_flow_completeness/L1_basic/test_b01_b08_statements.py::TestB06_ReturnVariable::test_syntax_valid PASSED [  6%]
+tests/control_flow_completeness/L1_basic/test_b01_b08_statements.py::TestB07_ReturnNone::test_bytecode_equivalence PASSED [  6%]
+tests/control_flow_completeness/L1_basic/test_b01_b08_statements.py::TestB07_ReturnNone::test_syntax_valid PASSED [  7%]
+tests/control_flow_completeness/L1_basic/test_b01_b08_statements.py::TestB08_PassStatement::test_bytecode_equivalence FAILED [  7%]
+tests/control_flow_completeness/L1_basic/test_b01_b08_statements.py::TestB08_PassStatement::test_syntax_valid PASSED [  8%]
+tests/control_flow_completeness/L1_basic/test_c01_c07_conditionals.py::TestC01_IfThen::test_bytecode_equivalence PASSED [  8%]
+tests/control_flow_completeness/L1_basic/test_c01_c07_conditionals.py::TestC01_IfThen::test_syntax_valid PASSED [  9%]
+tests/control_flow_completeness/L1_basic/test_c01_c07_conditionals.py::TestC02_IfElse::test_bytecode_equivalence PASSED [  9%]
+tests/control_flow_completeness/L1_basic/test_c01_c07_conditionals.py::TestC02_IfElse::test_syntax_valid PASSED [ 10%]
+tests/control_flow_completeness/L1_basic/test_c01_c07_conditionals.py::TestC03_IfElif::test_bytecode_equivalence PASSED [ 10%]
+tests/control_flow_completeness/L1_basic/test_c01_c07_conditionals.py::TestC03_IfElif::test_syntax_valid PASSED [ 11%]
+tests/control_flow_completeness/L1_basic/test_c01_c07_conditionals.py::TestC04_IfElifElse::test_bytecode_equivalence PASSED [ 11%]
+tests/control_flow_completeness/L1_basic/test_c01_c07_conditionals.py::TestC04_IfElifElse::test_syntax_valid PASSED [ 12%]
+tests/control_flow_completeness/L1_basic/test_c01_c07_conditionals.py::TestC05_MultiElifChain::test_bytecode_equivalence PASSED [ 12%]
+tests/control_flow_completeness/L1_basic/test_c01_c07_conditionals.py::TestC05_MultiElifChain::test_syntax_valid PASSED [ 13%]
+tests/control_flow_completeness/L1_basic/test_c01_c07_conditionals.py::TestC06_NestedIf::test_bytecode_equivalence PASSED [ 13%]
+tests/control_flow_completeness/L1_basic/test_c01_c07_conditionals.py::TestC06_NestedIf::test_syntax_valid PASSED [ 14%]
+tests/control_flow_completeness/L1_basic/test_c01_c07_conditionals.py::TestC07_NestedIfElse::test_bytecode_equivalence PASSED [ 14%]
+tests/control_flow_completeness/L1_basic/test_c01_c07_conditionals.py::TestC07_NestedIfElse::test_syntax_valid PASSED [ 15%]
+tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py::TestE01_TryExcept::test_bytecode_equivalence FAILED [ 15%]
+tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py::TestE01_TryExcept::test_syntax_valid PASSED [ 16%]
+tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py::TestE02_TryMultiExcept::test_bytecode_equivalence PASSED [ 16%]
+tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py::TestE02_TryMultiExcept::test_syntax_valid PASSED [ 17%]
+tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py::TestE03_TryExceptElse::test_bytecode_equivalence FAILED [ 17%]
+tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py::TestE03_TryExceptElse::test_syntax_valid PASSED [ 18%]
+tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py::TestE04_TryFinally::test_bytecode_equivalence FAILED [ 18%]
+tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py::TestE04_TryFinally::test_syntax_valid PASSED [ 19%]
+tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py::TestE05_TryExceptFinally::test_bytecode_equivalence FAILED [ 19%]
+tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py::TestE05_TryExceptFinally::test_syntax_valid PASSED [ 20%]
+tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py::TestE06_FullCombination::test_bytecode_equivalence FAILED [ 20%]
+tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py::TestE06_FullCombination::test_syntax_valid PASSED [ 21%]
+tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py::TestE07_ExceptAs::test_bytecode_equivalence FAILED [ 21%]
+tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py::TestE07_ExceptAs::test_syntax_valid PASSED [ 22%]
+tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py::TestE08_BareExcept::test_bytecode_equivalence FAILED [ 22%]
+tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py::TestE08_BareExcept::test_syntax_valid PASSED [ 23%]
+tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py::TestE09_NestedTry::test_bytecode_equivalence FAILED [ 23%]
+tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py::TestE09_NestedTry::test_syntax_valid PASSED [ 24%]
+tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py::TestE10_TryWithLoop::test_bytecode_equivalence PASSED [ 24%]
+tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py::TestE10_TryWithLoop::test_syntax_valid PASSED [ 25%]
+tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py::TestE11_LoopWithTry::test_bytecode_equivalence FAILED [ 25%]
+tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py::TestE11_LoopWithTry::test_syntax_valid PASSED [ 26%]
+tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py::TestE12_TryWithIf::test_bytecode_equivalence PASSED [ 26%]
+tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py::TestE12_TryWithIf::test_syntax_valid PASSED [ 27%]
+tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py::TestE13_IfWithTry::test_bytecode_equivalence FAILED [ 27%]
+tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py::TestE13_IfWithTry::test_syntax_valid PASSED [ 28%]
+tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py::TestL01_SimpleFor::test_bytecode_equivalence PASSED [ 28%]
+tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py::TestL01_SimpleFor::test_syntax_valid PASSED [ 29%]
+tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py::TestL02_ForBreak::test_bytecode_equivalence PASSED [ 29%]
+tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py::TestL02_ForBreak::test_syntax_valid PASSED [ 30%]
+tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py::TestL03_ForContinue::test_bytecode_equivalence PASSED [ 30%]
+tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py::TestL03_ForContinue::test_syntax_valid PASSED [ 31%]
+tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py::TestL04_ForElse::test_bytecode_equivalence PASSED [ 31%]
+tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py::TestL04_ForElse::test_syntax_valid PASSED [ 32%]
+tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py::TestL05_ForBreakElse::test_bytecode_equivalence PASSED [ 32%]
+tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py::TestL05_ForBreakElse::test_syntax_valid PASSED [ 33%]
+tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py::TestL06_ForEnumerate::test_bytecode_equivalence PASSED [ 33%]
+tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py::TestL06_ForEnumerate::test_syntax_valid PASSED [ 34%]
+tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py::TestL07_ForZip::test_bytecode_equivalence PASSED [ 34%]
+tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py::TestL07_ForZip::test_syntax_valid PASSED [ 35%]
+tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py::TestL08_ForDict::test_bytecode_equivalence PASSED [ 35%]
+tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py::TestL08_ForDict::test_syntax_valid PASSED [ 36%]
+tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py::TestL09_ForRange::test_bytecode_equivalence PASSED [ 36%]
+tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py::TestL09_ForRange::test_syntax_valid PASSED [ 37%]
+tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py::TestL10_SimpleWhile::test_bytecode_equivalence PASSED [ 37%]
+tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py::TestL10_SimpleWhile::test_syntax_valid PASSED [ 38%]
+tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py::TestL11_WhileBreak::test_bytecode_equivalence FAILED [ 38%]
+tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py::TestL11_WhileBreak::test_syntax_valid PASSED [ 39%]
+tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py::TestL12_WhileContinue::test_bytecode_equivalence PASSED [ 39%]
+tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py::TestL12_WhileContinue::test_syntax_valid PASSED [ 40%]
+tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py::TestL13_WhileElse::test_bytecode_equivalence PASSED [ 40%]
+tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py::TestL13_WhileElse::test_syntax_valid PASSED [ 41%]
+tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py::TestL14_WhileTrue::test_bytecode_equivalence FAILED [ 41%]
+tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py::TestL14_WhileTrue::test_syntax_valid PASSED [ 42%]
+tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py::TestL15_NestedForFor::test_bytecode_equivalence PASSED [ 42%]
+tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py::TestL15_NestedForFor::test_syntax_valid PASSED [ 43%]
+tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py::TestL16_NestedForWhile::test_bytecode_equivalence PASSED [ 43%]
+tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py::TestL16_NestedForWhile::test_syntax_valid PASSED [ 44%]
+tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py::TestL17_NestedWhileFor::test_bytecode_equivalence PASSED [ 44%]
+tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py::TestL17_NestedWhileFor::test_syntax_valid PASSED [ 45%]
+tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py::TestL18_NestedWhileWhile::test_bytecode_equivalence PASSED [ 45%]
+tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py::TestL18_NestedWhileWhile::test_syntax_valid PASSED [ 46%]
+tests/control_flow_completeness/L1_basic/test_w01_w06_with.py::TestW01_SimpleWith::test_bytecode_equivalence PASSED [ 46%]
+tests/control_flow_completeness/L1_basic/test_w01_w06_with.py::TestW01_SimpleWith::test_syntax_valid PASSED [ 47%]
+tests/control_flow_completeness/L1_basic/test_w01_w06_with.py::TestW02_WithNoAs::test_bytecode_equivalence PASSED [ 47%]
+tests/control_flow_completeness/L1_basic/test_w01_w06_with.py::TestW02_WithNoAs::test_syntax_valid PASSED [ 48%]
+tests/control_flow_completeness/L1_basic/test_w01_w06_with.py::TestW03_MultiContextWith::test_bytecode_equivalence PASSED [ 48%]
+tests/control_flow_completeness/L1_basic/test_w01_w06_with.py::TestW03_MultiContextWith::test_syntax_valid PASSED [ 49%]
+tests/control_flow_completeness/L1_basic/test_w01_w06_with.py::TestW04_NestedWith::test_bytecode_equivalence PASSED [ 49%]
+tests/control_flow_completeness/L1_basic/test_w01_w06_with.py::TestW04_NestedWith::test_syntax_valid PASSED [ 50%]
+tests/control_flow_completeness/L1_basic/test_w01_w06_with.py::TestW05_WithInnerTry::test_bytecode_equivalence FAILED [ 50%]
+tests/control_flow_completeness/L1_basic/test_w01_w06_with.py::TestW05_WithInnerTry::test_syntax_valid PASSED [ 51%]
+tests/control_flow_completeness/L1_basic/test_w01_w06_with.py::TestW06_TryInnerWith::test_bytecode_equivalence PASSED [ 51%]
+tests/control_flow_completeness/L1_basic/test_w01_w06_with.py::TestW06_TryInnerWith::test_syntax_valid PASSED [ 52%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestCF1_IfWithFor::test_bytecode_equivalence FAILED [ 52%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestCF1_IfWithFor::test_syntax_valid PASSED [ 53%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestCF2_IfWithWhile::test_bytecode_equivalence FAILED [ 53%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestCF2_IfWithWhile::test_syntax_valid PASSED [ 54%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestCE1_IfWithTry::test_bytecode_equivalence FAILED [ 54%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestCE1_IfWithTry::test_syntax_valid PASSED [ 55%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestCW1_IfWithWith::test_bytecode_equivalence FAILED [ 55%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestCW1_IfWithWith::test_syntax_valid PASSED [ 56%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestCI1_DeepNestedIf::test_bytecode_equivalence PASSED [ 56%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestCI1_DeepNestedIf::test_syntax_valid PASSED [ 57%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestFC1_ForWithIf::test_bytecode_equivalence PASSED [ 57%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestFC1_ForWithIf::test_syntax_valid PASSED [ 58%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestFF1_ForWithFor::test_bytecode_equivalence PASSED [ 58%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestFF1_ForWithFor::test_syntax_valid PASSED [ 59%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestFT1_ForWithTry::test_bytecode_equivalence FAILED [ 59%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestFT1_ForWithTry::test_syntax_valid PASSED [ 60%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestFW1_ForWithWith::test_bytecode_equivalence PASSED [ 60%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestFW1_ForWithWith::test_syntax_valid PASSED [ 61%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestFB1_ForIfBreakContinue::test_bytecode_equivalence PASSED [ 61%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestFB1_ForIfBreakContinue::test_syntax_valid PASSED [ 62%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestWC1_WhileWithIf::test_bytecode_equivalence PASSED [ 62%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestWC1_WhileWithIf::test_syntax_valid PASSED [ 63%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestWF1_WhileWithFor::test_bytecode_equivalence PASSED [ 63%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestWF1_WhileWithFor::test_syntax_valid PASSED [ 64%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestWT1_WhileWithTry::test_bytecode_equivalence FAILED [ 64%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestWT1_WhileWithTry::test_syntax_valid PASSED [ 65%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestWW1_WhileWithWith::test_bytecode_equivalence FAILED [ 65%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestWW1_WhileWithWith::test_syntax_valid PASSED [ 66%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestWB1_WhileIfBreakContinue::test_bytecode_equivalence PASSED [ 66%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestWB1_WhileIfBreakContinue::test_syntax_valid PASSED [ 67%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestTF1_TryWithFor::test_bytecode_equivalence PASSED [ 67%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestTF1_TryWithFor::test_syntax_valid PASSED [ 68%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestTW1_TryWithWith::test_bytecode_equivalence PASSED [ 68%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestTW1_TryWithWith::test_syntax_valid PASSED [ 69%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestTI1_TryWithIf::test_bytecode_equivalence PASSED [ 69%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestTI1_TryWithIf::test_syntax_valid PASSED [ 70%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestTT1_TryWithTry::test_bytecode_equivalence FAILED [ 70%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestTT1_TryWithTry::test_syntax_valid PASSED [ 71%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestWF2_WithFor::test_bytecode_equivalence FAILED [ 71%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestWF2_WithFor::test_syntax_valid PASSED [ 72%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestWI2_WithIf::test_bytecode_equivalence PASSED [ 72%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestWI2_WithIf::test_syntax_valid PASSED [ 73%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestWT2_WithTry::test_bytecode_equivalence FAILED [ 73%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestWT2_WithTry::test_syntax_valid PASSED [ 74%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestWW2_NestedWith::test_bytecode_equivalence PASSED [ 74%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestWW2_NestedWith::test_syntax_valid PASSED [ 75%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestBC1_ForBreak::test_bytecode_equivalence PASSED [ 75%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestBC1_ForBreak::test_syntax_valid PASSED [ 76%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestBC2_ForContinue::test_bytecode_equivalence PASSED [ 76%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestBC2_ForContinue::test_syntax_valid PASSED [ 77%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestBC3_IfElseBreakInThen::test_bytecode_equivalence PASSED [ 77%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestBC3_IfElseBreakInThen::test_syntax_valid PASSED [ 78%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestBC4_WhileBreak::test_bytecode_equivalence FAILED [ 78%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestBC4_WhileBreak::test_syntax_valid PASSED [ 79%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestBC5_NestedForInnerBreak::test_bytecode_equivalence PASSED [ 79%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestBC5_NestedForInnerBreak::test_syntax_valid PASSED [ 80%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestBC6_NestedForInnerContinue::test_bytecode_equivalence PASSED [ 80%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestBC6_NestedForInnerContinue::test_syntax_valid PASSED [ 81%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestBC7_ForBreakElse::test_bytecode_equivalence PASSED [ 81%]
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestBC7_ForBreakElse::test_syntax_valid PASSED [ 82%]
+tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN01_ForIfBreak::test_bytecode_equivalence PASSED [ 82%]
+tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN01_ForIfBreak::test_syntax_valid PASSED [ 83%]
+tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN02_ForIfContinue::test_bytecode_equivalence PASSED [ 83%]
+tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN02_ForIfContinue::test_syntax_valid PASSED [ 84%]
+tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN03_ForForIfBreak::test_bytecode_equivalence PASSED [ 84%]
+tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN03_ForForIfBreak::test_syntax_valid PASSED [ 85%]
+tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN04_ForForIfContinue::test_bytecode_equivalence PASSED [ 85%]
+tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN04_ForForIfContinue::test_syntax_valid PASSED [ 86%]
+tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN05_WhileIfBreak::test_bytecode_equivalence FAILED [ 86%]
+tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN05_WhileIfBreak::test_syntax_valid PASSED [ 87%]
+tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN06_WhileIfContinue::test_bytecode_equivalence PASSED [ 87%]
+tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN06_WhileIfContinue::test_syntax_valid PASSED [ 88%]
+tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN07_WhileForIfBreak::test_bytecode_equivalence PASSED [ 88%]
+tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN07_WhileForIfBreak::test_syntax_valid PASSED [ 89%]
+tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN08_WhileForIfContinue::test_bytecode_equivalence PASSED [ 89%]
+tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN08_WhileForIfContinue::test_syntax_valid PASSED [ 90%]
+tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN09_WhileWhileIfBreak::test_bytecode_equivalence FAILED [ 90%]
+tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN09_WhileWhileIfBreak::test_syntax_valid PASSED [ 91%]
+tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN10_TryForIfExcept::test_bytecode_equivalence FAILED [ 91%]
+tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN10_TryForIfExcept::test_syntax_valid PASSED [ 92%]
+tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN11_TryWhileIfExcept::test_bytecode_equivalence FAILED [ 92%]
+tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN11_TryWhileIfExcept::test_syntax_valid PASSED [ 93%]
+tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN12_ForTryIfExcept::test_bytecode_equivalence PASSED [ 93%]
+tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN12_ForTryIfExcept::test_syntax_valid PASSED [ 94%]
+tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN13_WhileTryIfExcept::test_bytecode_equivalence PASSED [ 94%]
+tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN13_WhileTryIfExcept::test_syntax_valid PASSED [ 95%]
+tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN14_ForIfForIfBreak::test_bytecode_equivalence FAILED [ 95%]
+tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN14_ForIfForIfBreak::test_syntax_valid PASSED [ 96%]
+tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN15_WhileIfWhileIfBreak::test_bytecode_equivalence FAILED [ 96%]
+tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN15_WhileIfWhileIfBreak::test_syntax_valid PASSED [ 97%]
+tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN16_ForForIfBreak::test_bytecode_equivalence PASSED [ 97%]
+tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN16_ForForIfBreak::test_syntax_valid PASSED [ 98%]
+tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN17_ForTryIfExcept::test_bytecode_equivalence PASSED [ 98%]
+tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN17_ForTryIfExcept::test_syntax_valid PASSED [ 99%]
+tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN18_TryForIfTryExcept::test_bytecode_equivalence PASSED [ 99%]
+tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN18_TryForIfTryExcept::test_syntax_valid PASSED [100%]
+
+================================== FAILURES ===================================
+_______________ TestB08_PassStatement.test_bytecode_equivalence _______________
+tests\control_flow_completeness\L1_basic\test_b01_b08_statements.py:115: in test_bytecode_equivalence
+    self.assertTrue(self.verify_bytecode_equivalence())
+E   AssertionError: False is not true
+_________________ TestE01_TryExcept.test_bytecode_equivalence _________________
+tests\control_flow_completeness\L1_basic\test_e01_e13_exceptions.py:20: in test_bytecode_equivalence
+    self.assertTrue(self.verify_bytecode_equivalence())
+E   AssertionError: False is not true
+_______________ TestE03_TryExceptElse.test_bytecode_equivalence _______________
+tests\control_flow_completeness\L1_basic\test_e01_e13_exceptions.py:63: in test_bytecode_equivalence
+    self.assertTrue(self.verify_bytecode_equivalence())
+E   AssertionError: False is not true
+________________ TestE04_TryFinally.test_bytecode_equivalence _________________
+tests\control_flow_completeness\L1_basic\test_e01_e13_exceptions.py:81: in test_bytecode_equivalence
+    self.assertTrue(self.verify_bytecode_equivalence())
+E   AssertionError: False is not true
+_____________ TestE05_TryExceptFinally.test_bytecode_equivalence ______________
+tests\control_flow_completeness\L1_basic\test_e01_e13_exceptions.py:101: in test_bytecode_equivalence
+    self.assertTrue(self.verify_bytecode_equivalence())
+E   AssertionError: False is not true
+______________ TestE06_FullCombination.test_bytecode_equivalence ______________
+tests\control_flow_completeness\L1_basic\test_e01_e13_exceptions.py:122: in test_bytecode_equivalence
+    self.assertTrue(self.verify_bytecode_equivalence())
+E   AssertionError: False is not true
+_________________ TestE07_ExceptAs.test_bytecode_equivalence __________________
+tests\control_flow_completeness\L1_basic\test_e01_e13_exceptions.py:139: in test_bytecode_equivalence
+    self.assertTrue(self.verify_bytecode_equivalence())
+E   AssertionError: False is not true
+________________ TestE08_BareExcept.test_bytecode_equivalence _________________
+tests\control_flow_completeness\L1_basic\test_e01_e13_exceptions.py:159: in test_bytecode_equivalence
+    self.assertTrue(self.verify_bytecode_equivalence())
+E   AssertionError: False is not true
+_________________ TestE09_NestedTry.test_bytecode_equivalence _________________
+tests\control_flow_completeness\L1_basic\test_e01_e13_exceptions.py:181: in test_bytecode_equivalence
+    self.assertTrue(self.verify_bytecode_equivalence())
+E   AssertionError: False is not true
+________________ TestE11_LoopWithTry.test_bytecode_equivalence ________________
+tests\control_flow_completeness\L1_basic\test_e01_e13_exceptions.py:220: in test_bytecode_equivalence
+    self.assertTrue(self.verify_bytecode_equivalence())
+E   AssertionError: False is not true
+_________________ TestE13_IfWithTry.test_bytecode_equivalence _________________
+tests\control_flow_completeness\L1_basic\test_e01_e13_exceptions.py:266: in test_bytecode_equivalence
+    self.assertTrue(self.verify_bytecode_equivalence())
+E   AssertionError: False is not true
+________________ TestL11_WhileBreak.test_bytecode_equivalence _________________
+tests\control_flow_completeness\L1_basic\test_l01_l18_loops.py:200: in test_bytecode_equivalence
+    self.assertTrue(self.verify_bytecode_equivalence())
+E   AssertionError: False is not true
+_________________ TestL14_WhileTrue.test_bytecode_equivalence _________________
+tests\control_flow_completeness\L1_basic\test_l01_l18_loops.py:260: in test_bytecode_equivalence
+    self.assertTrue(self.verify_bytecode_equivalence())
+E   AssertionError: False is not true
+_______________ TestW05_WithInnerTry.test_bytecode_equivalence ________________
+tests\control_flow_completeness\L1_basic\test_w01_w06_with.py:98: in test_bytecode_equivalence
+    self.assertTrue(self.verify_bytecode_equivalence())
+E   AssertionError: False is not true
+_________________ TestCF1_IfWithFor.test_bytecode_equivalence _________________
+tests\control_flow_completeness\L2_nested_two\test_all_combinations.py:22: in test_bytecode_equivalence
+    self.assertTrue(self.verify_bytecode_equivalence())
+E   AssertionError: False is not true
+________________ TestCF2_IfWithWhile.test_bytecode_equivalence ________________
+tests\control_flow_completeness\L2_nested_two\test_all_combinations.py:41: in test_bytecode_equivalence
+    self.assertTrue(self.verify_bytecode_equivalence())
+E   AssertionError: False is not true
+_________________ TestCE1_IfWithTry.test_bytecode_equivalence _________________
+tests\control_flow_completeness\L2_nested_two\test_all_combinations.py:62: in test_bytecode_equivalence
+    self.assertTrue(self.verify_bytecode_equivalence())
+E   AssertionError: False is not true
+________________ TestCW1_IfWithWith.test_bytecode_equivalence _________________
+tests\control_flow_completeness\L2_nested_two\test_all_combinations.py:81: in test_bytecode_equivalence
+    self.assertTrue(self.verify_bytecode_equivalence())
+E   AssertionError: False is not true
+________________ TestFT1_ForWithTry.test_bytecode_equivalence _________________
+tests\control_flow_completeness\L2_nested_two\test_all_combinations.py:160: in test_bytecode_equivalence
+    self.assertTrue(self.verify_bytecode_equivalence())
+E   AssertionError: False is not true
+_______________ TestWT1_WhileWithTry.test_bytecode_equivalence ________________
+tests\control_flow_completeness\L2_nested_two\test_all_combinations.py:261: in test_bytecode_equivalence
+    self.assertTrue(self.verify_bytecode_equivalence())
+E   AssertionError: False is not true
+_______________ TestWW1_WhileWithWith.test_bytecode_equivalence _______________
+tests\control_flow_completeness\L2_nested_two\test_all_combinations.py:282: in test_bytecode_equivalence
+    self.assertTrue(self.verify_bytecode_equivalence())
+E   AssertionError: False is not true
+________________ TestTT1_TryWithTry.test_bytecode_equivalence _________________
+tests\control_flow_completeness\L2_nested_two\test_all_combinations.py:395: in test_bytecode_equivalence
+    self.assertTrue(self.verify_bytecode_equivalence())
+E   AssertionError: False is not true
+__________________ TestWF2_WithFor.test_bytecode_equivalence __________________
+tests\control_flow_completeness\L2_nested_two\test_all_combinations.py:417: in test_bytecode_equivalence
+    self.assertTrue(self.verify_bytecode_equivalence())
+E   AssertionError: False is not true
+__________________ TestWT2_WithTry.test_bytecode_equivalence __________________
+tests\control_flow_completeness\L2_nested_two\test_all_combinations.py:459: in test_bytecode_equivalence
+    self.assertTrue(self.verify_bytecode_equivalence())
+E   AssertionError: False is not true
+________________ TestBC4_WhileBreak.test_bytecode_equivalence _________________
+tests\control_flow_completeness\L2_nested_two\test_all_combinations.py:554: in test_bytecode_equivalence
+    self.assertTrue(self.verify_bytecode_equivalence())
+E   AssertionError: False is not true
+_______________ TestN05_WhileIfBreak.test_bytecode_equivalence ________________
+tests\control_flow_completeness\L3_nested_three\test_all_deep_nested.py:105: in test_bytecode_equivalence
+    self.assertTrue(self.verify_bytecode_equivalence())
+E   AssertionError: False is not true
+_____________ TestN09_WhileWhileIfBreak.test_bytecode_equivalence _____________
+tests\control_flow_completeness\L3_nested_three\test_all_deep_nested.py:194: in test_bytecode_equivalence
+    self.assertTrue(self.verify_bytecode_equivalence())
+E   AssertionError: False is not true
+______________ TestN10_TryForIfExcept.test_bytecode_equivalence _______________
+tests\control_flow_completeness\L3_nested_three\test_all_deep_nested.py:217: in test_bytecode_equivalence
+    self.assertTrue(self.verify_bytecode_equivalence())
+E   AssertionError: False is not true
+_____________ TestN11_TryWhileIfExcept.test_bytecode_equivalence ______________
+tests\control_flow_completeness\L3_nested_three\test_all_deep_nested.py:240: in test_bytecode_equivalence
+    self.assertTrue(self.verify_bytecode_equivalence())
+E   AssertionError: False is not true
+______________ TestN14_ForIfForIfBreak.test_bytecode_equivalence ______________
+tests\control_flow_completeness\L3_nested_three\test_all_deep_nested.py:310: in test_bytecode_equivalence
+    self.assertTrue(self.verify_bytecode_equivalence())
+E   AssertionError: False is not true
+---------------------------- Captured stdout call -----------------------------
+[N14 v3] Created GeneratorExp, pushed to stack
+____________ TestN15_WhileIfWhileIfBreak.test_bytecode_equivalence ____________
+tests\control_flow_completeness\L3_nested_three\test_all_deep_nested.py:343: in test_bytecode_equivalence
+    self.assertTrue(self.verify_bytecode_equivalence())
+E   AssertionError: False is not true
+---------------------------- Captured stdout call -----------------------------
+[N14 v3] Created GeneratorExp, pushed to stack
+============================== warnings summary ===============================
+tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestWF2_WithFor::test_bytecode_equivalence
+  <recompiled>:9: SyntaxWarning: 'NoneType' object is not callable; perhaps you missed a comma?
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/control_flow_completeness/L1_basic/test_b01_b08_statements.py::TestB08_PassStatement::test_bytecode_equivalence
+FAILED tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py::TestE01_TryExcept::test_bytecode_equivalence
+FAILED tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py::TestE03_TryExceptElse::test_bytecode_equivalence
+FAILED tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py::TestE04_TryFinally::test_bytecode_equivalence
+FAILED tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py::TestE05_TryExceptFinally::test_bytecode_equivalence
+FAILED tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py::TestE06_FullCombination::test_bytecode_equivalence
+FAILED tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py::TestE07_ExceptAs::test_bytecode_equivalence
+FAILED tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py::TestE08_BareExcept::test_bytecode_equivalence
+FAILED tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py::TestE09_NestedTry::test_bytecode_equivalence
+FAILED tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py::TestE11_LoopWithTry::test_bytecode_equivalence
+FAILED tests/control_flow_completeness/L1_basic/test_e01_e13_exceptions.py::TestE13_IfWithTry::test_bytecode_equivalence
+FAILED tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py::TestL11_WhileBreak::test_bytecode_equivalence
+FAILED tests/control_flow_completeness/L1_basic/test_l01_l18_loops.py::TestL14_WhileTrue::test_bytecode_equivalence
+FAILED tests/control_flow_completeness/L1_basic/test_w01_w06_with.py::TestW05_WithInnerTry::test_bytecode_equivalence
+FAILED tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestCF1_IfWithFor::test_bytecode_equivalence
+FAILED tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestCF2_IfWithWhile::test_bytecode_equivalence
+FAILED tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestCE1_IfWithTry::test_bytecode_equivalence
+FAILED tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestCW1_IfWithWith::test_bytecode_equivalence
+FAILED tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestFT1_ForWithTry::test_bytecode_equivalence
+FAILED tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestWT1_WhileWithTry::test_bytecode_equivalence
+FAILED tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestWW1_WhileWithWith::test_bytecode_equivalence
+FAILED tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestTT1_TryWithTry::test_bytecode_equivalence
+FAILED tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestWF2_WithFor::test_bytecode_equivalence
+FAILED tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestWT2_WithTry::test_bytecode_equivalence
+FAILED tests/control_flow_completeness/L2_nested_two/test_all_combinations.py::TestBC4_WhileBreak::test_bytecode_equivalence
+FAILED tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN05_WhileIfBreak::test_bytecode_equivalence
+FAILED tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN09_WhileWhileIfBreak::test_bytecode_equivalence
+FAILED tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN10_TryForIfExcept::test_bytecode_equivalence
+FAILED tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN11_TryWhileIfExcept::test_bytecode_equivalence
+FAILED tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN14_ForIfForIfBreak::test_bytecode_equivalence
+FAILED tests/control_flow_completeness/L3_nested_three/test_all_deep_nested.py::TestN15_WhileIfWhileIfBreak::test_bytecode_equivalence
+================== 31 failed, 169 passed, 1 warning in 2.13s ==================

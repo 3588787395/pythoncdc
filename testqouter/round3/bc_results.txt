@@ -1,0 +1,16 @@
+Bytecode: MATCH=0, MISMATCH=7, ERROR=3, Total=10
+Match rate: 0/10 = 0%
+
+Mismatches (7):
+  test_p01_with_open.py: 190orig vs 6deco
+  test_p04_nested_if_assign.py: 38orig vs 46deco
+  test_p05_for_if_subscr.py: 50orig vs 48deco
+  test_p06_for_append_return.py: 74orig vs 78deco
+  test_p07_multi_cond_chain.py: 34orig vs 34deco
+  test_p09_for_range_break.py: 72orig vs 102deco
+  test_p10_complex_return.py: 66orig vs 66deco
+
+Errors:
+  test_p02_if_not_none.py: ERROR - 'NoneType' object has no attribute 'co_code'
+  test_p03_if_true_assign.py: ERROR - 'bool' object has no attribute 'co_code'
+  test_p08_while_count.py: ERROR - 'int' object has no attribute 'co_code'

@@ -1,0 +1,13 @@
+import sys
+import os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..', '..'))
+from tests.exhaustive.base import ExhaustiveTestCase
+
+
+class TestIF28IfInList_x(ExhaustiveTestCase):
+    SOURCE_CODE = """if x in [1, 2, 3]:
+    x = 0"""
+    REGION_TYPE = "IF_REGION"
+
+    def test_decompile(self):
+        self.verify_decompilation()

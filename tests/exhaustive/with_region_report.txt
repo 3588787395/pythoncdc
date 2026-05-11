@@ -1,0 +1,105 @@
+================================================================================
+Python 反编译器穷举测试报告
+================================================================================
+
+测试时间: 2026-05-03 01:04:31
+执行时长: 20.01 秒
+
+--------------------------------------------------------------------------------
+总体统计
+--------------------------------------------------------------------------------
+总测试数: 191
+通过:     146 (76.4%)
+失败:     45
+跳过:     0
+
+--------------------------------------------------------------------------------
+各区域类型统计
+--------------------------------------------------------------------------------
+
+  basic:
+    总数:   0
+    通过:   0 (0.0%)
+    失败:   0
+    跳过:   0
+
+  if_region:
+    总数:   0
+    通过:   0 (0.0%)
+    失败:   0
+    跳过:   0
+
+  while_loop:
+    总数:   0
+    通过:   0 (0.0%)
+    失败:   0
+    跳过:   0
+
+  for_loop:
+    总数:   0
+    通过:   0 (0.0%)
+    失败:   0
+    跳过:   0
+
+  try_except:
+    总数:   0
+    通过:   0 (0.0%)
+    失败:   0
+    跳过:   0
+
+  with_region:
+    总数:   191
+    通过:   146 (76.4%)
+    失败:   45
+    跳过:   0
+    失败的测试:
+      - test_w003.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\with_regio
+      - test_w004.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\with_regio
+      - test_w006.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\with_regio
+      - test_w020.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\with_regio
+      - test_w024.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\with_regio
+      - test_w025.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\with_regio
+      - test_w030.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\with_regio
+      - test_w03multicontext_a_b.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\..\..\test
+      - test_w03multicontext_n_m.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\..\..\test
+      - test_w03multicontext_x_y.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\..\..\test
+
+  match_region:
+    总数:   0
+    通过:   0 (0.0%)
+    失败:   0
+    跳过:   0
+
+  boolop:
+    总数:   0
+    通过:   0 (0.0%)
+    失败:   0
+    跳过:   0
+
+  ternary:
+    总数:   0
+    通过:   0 (0.0%)
+    失败:   0
+    跳过:   0
+
+  nested:
+    总数:   0
+    通过:   0 (0.0%)
+    失败:   0
+    跳过:   0
+
+--------------------------------------------------------------------------------
+
+总体通过率: 76.44%
+评估: ★★★☆☆ 一般 (>=70%)
+================================================================================

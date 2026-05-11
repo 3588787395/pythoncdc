@@ -1,0 +1,47 @@
+import py_compile, sys, os
+
+ROOT_DIR = os.path.dirname(os.path.dirname(os.getcwd()))
+sys.path.insert(0, ROOT_DIR)
+sys.path.insert(0, '.')
+
+TEST_DIRS = []
+if len(sys.argv) > 1:
+    TEST_DIRS = [sys.argv[1]]
+else:
+    TEST_DIRS = ['.']
+
+for td in TEST_DIRS:
+    os.chdir(td)
+    TESTS = sorted([f for f in os.listdir('.') if f.startswith('test_') and f.endswith('.py')])
+    print(f'\nDirectory: {td} - {len(TESTS)} tests')
+    
+    statuses = {'PASS': 0, 'SYNTAX_ERROR': 0, 'DECOMP_ERROR': 0}
+    fails = []
+    
+    for tf in TESTS:
+        pyc_path = tf + 'c'
+        try:
+            py_compile.compile(tf, cfile=pyc_path, doraise=True)
+            from pycdc import decompile_pyc
+            src = decompile_pyc(pyc_path)
+            try:
+                compile(src, '<test>', 'exec')
+                statuses['PASS'] += 1
+            except SyntaxError as e:
+                statuses['SYNTAX_ERROR'] += 1
+                fails.append(f'{tf}: SYNTAX - {e}')
+        except Exception as e:
+            statuses['DECOMP_ERROR'] += 1
+            fails.append(f'{tf}: DECOMP - {e}')
+        finally:
+            if os.path.exists(pyc_path):
+                os.remove(pyc_path)
+    
+    total = len(TESTS)
+    print(f'Results: PASS={statuses["PASS"]}, SYNTAX={statuses["SYNTAX_ERROR"]}, DECOMP={statuses["DECOMP_ERROR"]}')
+    print(f'Pass rate: {statuses["PASS"]}/{total} = {statuses["PASS"]*100//total}%')
+    
+    if fails:
+        print('Failures:')
+        for f in fails:
+            print(f'  {f}')
