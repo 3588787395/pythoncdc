@@ -1504,15 +1504,20 @@ class RegionAnalyzer:
         sorted_loops = sorted(all_loops.items(), key=lambda x: self._get_dominance_depth(x[0]), reverse=True)
 
         seen_bodies = set()
+        processed_bodies = []
         regions = []
 
         for header, _ in sorted_loops:
+            has_for_iter = any(i.opname in ('FOR_ITER', 'GET_ANEXT') for i in header.instructions)
             back_edge_sources = [src for src, tgt in self.loop_analyzer.back_edges
                                 if tgt == header and self.dom_analyzer.is_dominator(header, src)]
             if not back_edge_sources:
-                continue
+                if has_for_iter:
+                    back_edge_sources = []
+                else:
+                    continue
 
-            body = self._collect_natural_loop_body(header, back_edge_sources)
+            body = self._collect_natural_loop_body(header, back_edge_sources, is_for_loop=has_for_iter)
 
             body_key = frozenset(body)
             if body_key in seen_bodies:
@@ -1522,6 +1527,16 @@ class RegionAnalyzer:
             is_fake_loop = self._is_fake_loop(header, body, back_edge_sources)
             if is_fake_loop:
                 continue
+
+            is_subset_of_existing = False
+            for existing_body in processed_bodies:
+                if body < existing_body:
+                    if not has_for_iter:
+                        is_subset_of_existing = True
+                        break
+            if is_subset_of_existing:
+                continue
+            processed_bodies.append(body)
 
             loop_type, for_iter_setup, for_iter_exit, for_iter_fall_through, is_while_true, is_yield_from = \
                 self._classify_loop_type(header, body)
@@ -1773,11 +1788,16 @@ class RegionAnalyzer:
                         for_iter_exit = next((s for s in successors if s != for_iter_fall_through), None)
                     for_iter_setup = None
                     for pred in sorted(header.predecessors, key=lambda p: p.start_offset):
+                        if pred == header:
+                            continue
                         if any(detector.is_iterator_setup_opcode(i) for i in pred.instructions) or \
                            any(i.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE') and
                                self.cfg.get_block_by_offset(i.argval) == header for i in pred.instructions):
                             for_iter_setup = pred
                             break
+                    header_has_get_iter = any(detector.is_iterator_setup_opcode(i) for i in header.instructions)
+                    if for_iter_setup is None and header_has_get_iter:
+                        for_iter_setup = header
                     return RegionType.FOR_LOOP, for_iter_setup, for_iter_exit, for_iter_fall_through, False, False
                 elif detector.is_get_anext(instr):
                     return RegionType.FOR_LOOP, None, None, None, False, False
@@ -2037,7 +2057,8 @@ class RegionAnalyzer:
 
 
     def _collect_natural_loop_body(self, header: BasicBlock,
-                                    back_edge_sources: List[BasicBlock]) -> Set[BasicBlock]:
+                                    back_edge_sources: List[BasicBlock],
+                                    is_for_loop: bool = False) -> Set[BasicBlock]:
         body = {header}
         stack = []
         for src in back_edge_sources:
@@ -2073,15 +2094,41 @@ class RegionAnalyzer:
                         ):
                             body.add(pred)
                             break
-        while_true_predecessor = None
-        for pred in sorted(header.predecessors, key=lambda p: p.start_offset):
-            if pred in body or pred in self.loop_analyzer.loop_headers:
-                continue
-            if all(i.opname in NOISE_OPS for i in pred.instructions) and pred.start_offset != 0:
-                while_true_predecessor = pred
-                break
-        if while_true_predecessor is not None:
-            body.add(while_true_predecessor)
+        
+        if len(body) == 1 and header in body and is_for_loop:
+            for_iter_instr = None
+            for instr in header.instructions:
+                if instr.opname == 'FOR_ITER':
+                    for_iter_instr = instr
+                    break
+            if for_iter_instr:
+                fall_through_offset = for_iter_instr.offset + 2
+                fall_through = self.cfg.get_block_by_offset(fall_through_offset)
+                if fall_through:
+                    body.add(fall_through)
+                    queue = [fall_through]
+                    exit_offset = for_iter_instr.argval
+                    exit_block = self.cfg.get_block_by_offset(exit_offset) if exit_offset else None
+                    while queue:
+                        current = queue.pop()
+                        for succ in current.successors:
+                            if succ == header or succ in body:
+                                continue
+                            if exit_block and succ == exit_block:
+                                continue
+                            body.add(succ)
+                            queue.append(succ)
+        
+        if not is_for_loop:
+            while_true_predecessor = None
+            for pred in sorted(header.predecessors, key=lambda p: p.start_offset):
+                if pred in body or pred in self.loop_analyzer.loop_headers:
+                    continue
+                if all(i.opname in NOISE_OPS for i in pred.instructions) and pred.start_offset != 0:
+                    while_true_predecessor = pred
+                    break
+            if while_true_predecessor is not None:
+                body.add(while_true_predecessor)
 
         return body
 
@@ -2932,14 +2979,16 @@ class RegionAnalyzer:
             )
             if is_cleanup_only:
                 if actual_handler_start != entry_target:
+                    if handler_type != 'finally':
+                        continue
                     actual_handler_block = self.cfg.get_block_by_offset(actual_handler_start)
                     if actual_handler_block and actual_handler_block.instructions:
-                        has_push_exc = any(i.opname == 'PUSH_EXC_INFO' for i in actual_handler_block.instructions)
-                        has_reraise = any(i.opname == 'RERAISE' for i in actual_handler_block.instructions)
-                        if has_push_exc and has_reraise:
+                        has_check = any(i.opname in ('CHECK_EXC_MATCH', 'CHECK_EG_MATCH') for i in actual_handler_block.instructions)
+                        if has_check:
                             continue
-                if handler_type != 'finally':
-                    continue
+                else:
+                    if handler_type != 'finally':
+                        continue
 
             range_key = (entry_start, entry_end, actual_handler_start)
             if range_key in seen:

@@ -4616,6 +4616,14 @@ class RegionASTGenerator:
                         _succ_role = self.region_analyzer.get_block_role(succ)
                         _is_cleanup_path = _succ_role in (BlockRole.WITH_EXIT_CLEANUP, BlockRole.WITH_STACK_CLEANUP, BlockRole.WITH_HANDLER)
                         if _is_cleanup_path and self._current_loop is not None:
+                            if self.region_analyzer._is_with_exit_leading_to_break(succ, self._current_loop, _break_visited):
+                                stmts = [{'type': 'Break'}]
+                                self._mark_with_cleanup_generated(succ)
+                                break
+                            if self.region_analyzer._is_with_exit_leading_to_continue(succ, self._current_loop, _continue_visited):
+                                stmts = [{'type': 'Continue'}]
+                                self._mark_with_cleanup_generated(succ)
+                                break
                             continue
                         if self.region_analyzer._is_with_exit_leading_to_break(succ, self._current_loop, _break_visited):
                             stmts = [{'type': 'Break'}]

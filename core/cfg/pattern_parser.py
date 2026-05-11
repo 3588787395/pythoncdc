@@ -472,6 +472,11 @@ class PatternParser:
         if not instrs:
             return False
 
+        # 如果只有POP_TOP（或全是noise指令），这不是pattern continuation
+        # POP_TOP单独出现表示在丢弃match失败的值，是隐式default的开始
+        if len(instrs) == 1 and instrs[0].opname == 'POP_TOP':
+            return False
+
         # 包含MATCH_*指令的是新的case header，不是pattern延续
         if any(i.opname in self.MATCH_OPS for i in instrs):
             return False
@@ -882,15 +887,10 @@ class PatternParser:
                     as_name = var_name
             elif instr.opname == 'LOAD_CONST' and idx + 1 < len(filtered) and filtered[idx + 1].opname == 'COMPARE_OP':
                 literal_val = instr.argval
-                if has_unpack or length_val is not None:
+                if has_unpack:
                     if in_unpack_context and unpack_stack:
                         slot = unpack_stack.pop()
                         slot_actions.setdefault(slot, {'type': 'literal', 'value': literal_val})
-                    else:
-                        for pi, p in enumerate(patterns):
-                            if isinstance(p, dict) and p.get('type') == 'MatchAs' and not p.get('name'):
-                                patterns[pi] = {'type': 'MatchValue', 'value': {'type': 'Constant', 'value': literal_val}}
-                                break
 
         if not has_unpack and length_val is not None:
             if length_compare_op == '==' or length_compare_op == 2:
