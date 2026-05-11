@@ -2384,12 +2384,11 @@ class RegionAnalyzer:
 
         natural_exit = self.dom_analyzer.find_nearest_common_post_dominator(set(loop_successors))
         if not natural_exit or natural_exit in body_set:
-            if not natural_exit and len(loop_successors) > 1:
-                non_return_successors = [s for s in loop_successors
-                                        if not self._check_block_has_trailing_return_none(s)]
-                if non_return_successors:
-                    else_blocks = sorted(non_return_successors, key=lambda b: b.start_offset)
-                    return else_blocks, None
+            non_return_successors = [s for s in loop_successors
+                                    if not self._check_block_has_trailing_return_none(s)]
+            if non_return_successors:
+                else_blocks = sorted(non_return_successors, key=lambda b: b.start_offset)
+                return else_blocks, None
             return None, natural_exit
 
         else_blocks = []
@@ -8276,6 +8275,32 @@ class RegionAnalyzer:
                 if boolop_region:
                     region.add_child(boolop_region)
                     boolop_regions.append(boolop_region)
+        for boolop_region in boolop_regions:
+            if len(boolop_region.op_chain) >= 2:
+                last_chain_block, _ = boolop_region.op_chain[-1]
+                last_instr = last_chain_block.get_last_instruction()
+                if (last_instr and last_instr.opname in SHORT_CIRCUIT_JUMP_OPS and
+                    last_instr.argval is not None):
+                    ft_succs = sorted(last_chain_block.conditional_successors, 
+                                     key=lambda s: s.start_offset)
+                    ft_succ = next((s for s in ft_succs 
+                                    if s.start_offset != last_instr.argval), None)
+                    chain_blocks_set = {b for b, _ in boolop_region.op_chain}
+                    if (ft_succ and ft_succ not in chain_blocks_set and
+                        ft_succ in self.block_to_region):
+                        existing_region = self.block_to_region.get(ft_succ)
+                        is_reclaimable = (existing_region and
+                                          hasattr(existing_region, 'region_type') and
+                                          existing_region.region_type in (RegionType.BASIC, RegionType.MATCH))
+                        if is_reclaimable:
+                            ft_last = ft_succ.get_last_instruction()
+                            is_value_block = (ft_last and
+                                            ft_last.opname not in SHORT_CIRCUIT_JUMP_OPS and
+                                            ft_last.opname not in FORWARD_CONDITIONAL_JUMP_OPS)
+                            if is_value_block:
+                                boolop_region.blocks.add(ft_succ)
+                                boolop_region.op_chain.append((ft_succ, boolop_region.op_chain[-1][1]))
+                                self.block_to_region[ft_succ] = boolop_region
         return boolop_regions
 
     def _detect_while_condition_boolop_chain(self, cond_block: BasicBlock, loop: LoopRegion) -> Optional[List[Tuple[BasicBlock, str]]]:

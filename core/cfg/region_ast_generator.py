@@ -1856,6 +1856,11 @@ class RegionASTGenerator:
 
         else_stmts = self._if_generate_branch_stmts(region.else_blocks) if region.else_blocks else []
 
+        if else_stmts and getattr(region, 'has_trailing_return_none', False):
+            _non_trivial = [s for s in else_stmts if not self._is_trailing_return_none_statement(s)]
+            if not _non_trivial:
+                else_stmts = []
+
         result = {
             'type': 'While',
             'test': condition if condition else {'type': 'Constant', 'value': True},
@@ -4068,18 +4073,36 @@ class RegionASTGenerator:
             _norm = normal_succ[0]
             _is_simple_if = False
             _should_skip_transform = False
-            if _norm not in (loop.back_edge_block, loop.header_block):
+            _norm_last = _norm.get_last_instruction()
+            _norm_is_backedge_recheck = (_norm_last is not None and
+                _norm_last.opname in ('POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE'))
+            if _norm not in (loop.back_edge_block, loop.header_block) and not _norm_is_backedge_recheck:
                 _has_post_if_stmts = False
+                _exit_roles = (BlockRole.RETURN, BlockRole.RETURN_NONE, BlockRole.PURE_JUMP)
                 for _nsucc in _norm.successors:
                     if _nsucc != continue_succ[0] and _nsucc != loop.back_edge_block:
+                        _nsucc_role = self.region_analyzer.get_block_role(_nsucc)
+                        if _nsucc_role in _exit_roles:
+                            continue
+                        _nsucc_last = _nsucc.get_last_instruction()
+                        if (_nsucc_last is not None and
+                            _nsucc_last.opname in ('POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE')):
+                            continue
                         if _nsucc not in loop_body_set or _nsucc.start_offset > block.start_offset:
                             _has_post_if_stmts = True
                             break
                 if not _has_post_if_stmts:
-                    _is_simple_if = True
+                    _norm_is_control_flow = (
+                        _norm_last is not None and
+                        _norm_last.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                    )
+                    if _norm_is_control_flow:
+                        pass
+                    else:
+                        _is_simple_if = True
                 else:
                     _should_skip_transform = True
-            if _is_simple_if:
+            if _is_simple_if and not _norm_is_backedge_recheck:
                 pre_stmts = []
                 cond_instrs = []
                 for instr in block.instructions:
@@ -4166,6 +4189,9 @@ class RegionASTGenerator:
         elif break_succ and continue_succ:
             target_succ = break_succ
             body_type = 'Break'
+        elif continue_succ:
+            target_succ = continue_succ
+            body_type = 'Continue'
         else:
             return None
 
@@ -4211,6 +4237,14 @@ class RegionASTGenerator:
         if target_succ[0] not in self.generated_blocks:
             self.generated_blocks.add(target_succ[0])
             self.generated_offsets.add(target_succ[0].start_offset)
+        if normal_succ:
+            _norm_blk = normal_succ[0]
+            _norm_last_instr = _norm_blk.get_last_instruction()
+            if (_norm_last_instr is not None and
+                _norm_last_instr.opname in ('POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE')):
+                if _norm_blk not in self.generated_blocks:
+                    self.generated_blocks.add(_norm_blk)
+                    self.generated_offsets.add(_norm_blk.start_offset)
         result = pre_stmts + [if_stmt] if pre_stmts else [if_stmt]
         return result
 
@@ -6712,7 +6746,13 @@ class RegionASTGenerator:
             if last_instr and last_instr.opname in STRIP_JUMP_OPS:
                 pure_instrs = [i for i in instrs if i != last_instr]
             else:
-                pure_instrs = list(instrs)
+                clean_instrs = []
+                for i in instrs:
+                    if i.opname in ('POP_TOP', 'RETURN_VALUE', 'RETURN_CONST',
+                                   'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'):
+                        break
+                    clean_instrs.append(i)
+                pure_instrs = clean_instrs if clean_instrs else list(instrs[:1]) if instrs else []
             if not pure_instrs:
                 continue
             sub_expr = self.expr_reconstructor.reconstruct(pure_instrs)
