@@ -123,11 +123,28 @@ class PatternParser:
         visited = {case_block}
 
         worklist = list(case_block.successors)
+        CASE_HEADER_OPS = frozenset({
+            'MATCH_CLASS', 'MATCH_SEQUENCE', 'MATCH_MAPPING',
+            'MATCH_KEYS', 'MATCH_MAPPING_KEYS',
+        })
+
         while worklist:
             current = worklist.pop()
             if current in visited:
                 continue
             if current not in all_blocks:
+                continue
+
+            meaningful = [i for i in current.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+            if not meaningful:
+                visited.add(current)
+                continue
+
+            if any(i.opname in CASE_HEADER_OPS for i in meaningful):
+                continue
+
+            first_meaningful = meaningful[0] if meaningful else None
+            if first_meaningful and first_meaningful.opname == 'COPY':
                 continue
 
             is_pattern_block = False
@@ -862,7 +879,7 @@ class PatternParser:
                 has_unpack = True
                 in_unpack_context = True
                 count = instr.argval if instr.argval is not None else 1
-                unpack_stack = list(range(count))
+                unpack_stack = list(reversed(range(count)))
                 for _ in range(count):
                     patterns.append({'type': 'MatchAs'})
             elif instr.opname == 'UNPACK_EX':
@@ -872,7 +889,7 @@ class PatternParser:
                 unpack_before = arg & 0xFF
                 unpack_after = (arg >> 8) & 0xFF
                 total = unpack_before + 1 + unpack_after
-                unpack_stack = list(range(total))
+                unpack_stack = list(reversed(range(total)))
                 for _ in range(unpack_before):
                     patterns.append({'type': 'MatchAs'})
                 patterns.append({'type': 'MatchStarred', 'pattern': {'type': 'MatchAs'}})

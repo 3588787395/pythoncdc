@@ -33,6 +33,11 @@ class DominatorAnalyzer:
         self._compute_dominated_blocks()
         self._compute_post_dominators()
         self._compute_immediate_post_dominators()
+
+    def dominates(self, a: 'BasicBlock', b: 'BasicBlock') -> bool:
+        if not hasattr(a, 'dominators'):
+            return a == b
+        return a in b.dominators
     
     def _compute_dominators(self) -> None:
         if not self.cfg.entry_block:

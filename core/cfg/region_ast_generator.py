@@ -1353,7 +1353,10 @@ class RegionASTGenerator:
         for_iter_setup = region.metadata.get('for_iter_setup')
         if for_iter_setup and for_iter_setup in self.cfg.blocks.values():
             instrs = [i for i in for_iter_setup.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-            iter_expr = self.expr_reconstructor.reconstruct(instrs) if instrs else None
+            _fis_pre_stmts, _fis_iter_instrs = self._loop_extract_for_iter_pre_stmts(instrs, for_iter_setup)
+            if _fis_pre_stmts:
+                pre_stmts.extend(_fis_pre_stmts)
+            iter_expr = self.expr_reconstructor.reconstruct(_fis_iter_instrs) if _fis_iter_instrs else None
             if iter_expr is None and instrs:
                 stmt = self._build_statement(instrs)
                 iter_expr = stmt.get('value') if stmt and isinstance(stmt, dict) else None
@@ -1618,7 +1621,7 @@ class RegionASTGenerator:
 
                 _eps_instrs.append(_instr)
 
-            if _cond_was_generated:
+            if _cond_was_generated and not pre_stmts:
                 pre_stmts = []
 
             self.generated_blocks.add(cond_block)
@@ -1950,6 +1953,36 @@ class RegionASTGenerator:
                                 break
 
         return pre_stmts
+
+    def _loop_extract_for_iter_pre_stmts(self, instrs: List[Instruction], block: BasicBlock) -> Tuple[List[Dict[str,Any]], List[Instruction]]:
+        """从for_iter_setup指令序列中提取前置赋值语句，返回(前置语句列表, 剩余迭代器指令)
+        
+        当for循环前有赋值语句时(如 result = [] / found = None)，CPython将这些语句
+        和GET_ITER放在同一个基本块中。此方法将前置STORE语句提取出来作为pre_stmts，
+        只保留迭代器相关指令(GET_ITER之前的LOAD等)用于表达式重建。
+        """
+        _pre_stmts: List[Dict[str, Any]] = []
+        _remaining: List[Instruction] = []
+        _buf: List[Instruction] = []
+        _store_ops = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
+        for _idx, _instr in enumerate(instrs):
+            if _instr.opname in _store_ops:
+                _buf.append(_instr)
+                _stmt = self._build_store_statement(_buf, block=block)
+                if _stmt:
+                    _pre_stmts.append(_stmt)
+                _buf = []
+                continue
+            if _instr.opname in ('GET_ITER', 'GET_AITER'):
+                if _buf:
+                    _remaining.extend(_buf)
+                    _buf = []
+                _remaining.append(_instr)
+                continue
+            _buf.append(_instr)
+        if _buf:
+            _remaining.extend(_buf)
+        return _pre_stmts, _remaining
 
     def _loop_extract_pre_stmts_from_block(self, pred: BasicBlock) -> List[Dict[str, Any]]:
         """从for循环的内层iter_setup前驱块提取前置语句"""
@@ -2835,9 +2868,21 @@ class RegionASTGenerator:
                 self.generated_offsets.add(block.start_offset)
                 return
             if _be_meaningful:
-                _be_stmt = self._build_statement(_be_meaningful)
-                if _be_stmt:
-                    body_stmts.append(_be_stmt)
+                import sys as _sys4; _sys4.stderr.write(f'[BE-MULTI] block@{block.start_offset} has {len(_be_meaningful)} meaningful instrs\n')
+                _be_ft_names = region.metadata.get('for_target_names', set())
+                _be_filtered = []
+                _be_seen_targets = set()
+                for _bei in _be_meaningful:
+                    if _bei.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF') and _bei.argval in _be_ft_names:
+                        if _bei.argval not in _be_seen_targets:
+                            _be_seen_targets.add(_bei.argval)
+                        else:
+                            _be_filtered.append(_bei)
+                            continue
+                    _be_filtered.append(_bei)
+                _be_stmts = self._generate_stmts_from_instrs(_be_filtered, block)
+                if _be_stmts:
+                    body_stmts.extend(_be_stmts)
                 self.generated_blocks.add(block)
                 self.generated_offsets.add(block.start_offset)
                 return
@@ -2853,10 +2898,21 @@ class RegionASTGenerator:
                                   if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP')
                                   and i.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')]
                 if _be_meaningful:
-                    _be_stmt = self._build_statement(_be_meaningful)
-                    if _be_stmt:
-                        back_edge_stmts.append(_be_stmt)
-            return
+                    _be_ft_names2 = region.metadata.get('for_target_names', set())
+                    _be_filtered2 = []
+                    _be_seen2 = set()
+                    for _bei2 in _be_meaningful:
+                        if _bei2.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF') and _bei2.argval in _be_ft_names2:
+                            if _bei2.argval not in _be_seen2:
+                                _be_seen2.add(_bei2.argval)
+                            else:
+                                _be_filtered2.append(_bei2)
+                                continue
+                        _be_filtered2.append(_bei2)
+                    _be_stmts2 = self._generate_stmts_from_instrs(_be_filtered2, block)
+                    if _be_stmts2:
+                        back_edge_stmts.extend(_be_stmts2)
+                return
         _be_has_store = any(i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
                             for i in block.instructions)
         if _be_has_store:
@@ -3483,40 +3539,92 @@ class RegionASTGenerator:
             elif_body_stmts = [s for s in elif_body_stmts if not (s.get('type') == 'Expr' and isinstance(s.get('value'), dict) and s['value'].get('type') == 'Constant')]
         nested_elif_stmts = None
         if len(region.elif_conditions) > 1:
-            nested_chained = []
-            if region.chained_compare_blocks:
-                for cc in region.chained_compare_blocks:
-                    if cc.start_offset > elif_cond_block.start_offset:
-                        nested_chained.append(cc)
-            nested_blocks = {region.elif_conditions[1]}
-            if len(region.elif_bodies) > 1:
-                nested_blocks.update(region.elif_bodies[1])
-            nested_blocks.update(region.elif_conditions[2:])
-            for body in region.elif_bodies[2:]:
-                nested_blocks.update(body)
-            if region.elif_final_else:
-                nested_blocks.update(region.elif_final_else)
-            nested_elif = IfRegion(
-                region_type=RegionType.IF_ELIF_CHAIN, entry=region.elif_conditions[1],
-                blocks=nested_blocks, condition_block=region.elif_conditions[1],
-                then_blocks=region.elif_bodies[1] if len(region.elif_bodies) > 1 else [],
-                elif_conditions=region.elif_conditions[2:], elif_bodies=region.elif_bodies[2:],
-                elif_final_else=region.elif_final_else, chained_compare_blocks=nested_chained,
-            )
-            nested_ast = self._generate_region(nested_elif)
-            if nested_ast:
-                if isinstance(nested_ast, dict) and nested_ast.get('type') == 'If':
-                    nested_ast['_is_elif'] = True
-                elif isinstance(nested_ast, list):
-                    for item in nested_ast:
-                        if isinstance(item, dict) and item.get('type') == 'If':
-                            item['_is_elif'] = True
-                nested_elif_stmts = [nested_ast]
+            remaining_elifs = region.elif_conditions[2:]
+            if remaining_elifs:
+                nested_chained = []
+                if region.chained_compare_blocks:
+                    for cc in region.chained_compare_blocks:
+                        if cc.start_offset > elif_cond_block.start_offset:
+                            nested_chained.append(cc)
+                nested_blocks = {region.elif_conditions[1]}
+                if len(region.elif_bodies) > 1:
+                    nested_blocks.update(region.elif_bodies[1])
+                nested_blocks.update(remaining_elifs)
+                for body in region.elif_bodies[2:]:
+                    nested_blocks.update(body)
+                if region.elif_final_else:
+                    nested_blocks.update(region.elif_final_else)
+                nested_elif = IfRegion(
+                    region_type=RegionType.IF_ELIF_CHAIN, entry=region.elif_conditions[1],
+                    blocks=nested_blocks, condition_block=region.elif_conditions[1],
+                    then_blocks=region.elif_bodies[1] if len(region.elif_bodies) > 1 else [],
+                    elif_conditions=remaining_elifs, elif_bodies=region.elif_bodies[2:],
+                    elif_final_else=region.elif_final_else, chained_compare_blocks=nested_chained,
+                )
+                nested_ast = self._generate_region(nested_elif)
+                if nested_ast:
+                    if isinstance(nested_ast, dict) and nested_ast.get('type') == 'If':
+                        nested_ast['_is_elif'] = True
+                    elif isinstance(nested_ast, list):
+                        for item in nested_ast:
+                            if isinstance(item, dict) and item.get('type') == 'If':
+                                item['_is_elif'] = True
+                    nested_elif_stmts = [nested_ast]
+            else:
+                last_elif_body_stmts = []
+                if len(region.elif_bodies) > 1:
+                    last_elif_body_stmts = self._process_if_blocks(region.elif_bodies[1], region, branch='elif')
+                    last_elif_body_stmts = [s for s in last_elif_body_stmts if not (s.get('type') == 'Expr' and isinstance(s.get('value'), dict) and s['value'].get('type') == 'Constant')]
+                nested_elif_stmts = [{'type': 'If', '_is_elif': True, 'test': self._extract_condition_for_elif_block(region.elif_conditions[1], region), 'body': last_elif_body_stmts if last_elif_body_stmts else [{'type': 'Pass'}], 'orelse': []}]
+                if region.elif_final_else:
+                    final_else_stmts = self._process_if_blocks(region.elif_final_else, region, branch='else')
+                    if final_else_stmts:
+                        nested_elif_stmts[0]['orelse'] = final_else_stmts
         final_else_stmts = None
         if not nested_elif_stmts and region.elif_final_else:
             final_else_stmts = self._process_if_blocks(region.elif_final_else, region, branch='else')
         elif_orelse = nested_elif_stmts if nested_elif_stmts else (final_else_stmts if final_else_stmts else [])
         return [{'type': 'If', '_is_elif': True, 'test': elif_condition if elif_condition else {'type': 'Constant', 'value': True}, 'body': elif_body_stmts if elif_body_stmts else [{'type': 'Pass'}], 'orelse': elif_orelse}]
+
+    def _extract_condition_for_elif_block(self, cond_block, region: IfRegion = None):
+        cond_instrs = []
+        prev_was_copy = False
+        for instr in cond_block.instructions:
+            if instr.opname in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL'):
+                continue
+            if (instr.opname in FORWARD_JUMP_OPS or instr.opname in BACKWARD_JUMP_OPS) and instr.opname not in NONE_CHECK_OPS:
+                continue
+            if instr.opname == 'JUMP_FORWARD' or instr.opname == 'JUMP_BACKWARD':
+                continue
+            if instr.opname == 'COPY' and instr.arg == COPY_STACK_TOP:
+                prev_was_copy = True
+                cond_instrs.append(instr)
+                continue
+            if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                if prev_was_copy:
+                    cond_instrs.append(instr)
+                    prev_was_copy = False
+                    continue
+                cond_instrs = []
+                continue
+            prev_was_copy = False
+            cond_instrs.append(instr)
+        if cond_instrs:
+            expr = self.expr_reconstructor.reconstruct(cond_instrs)
+            if expr:
+                negate = False
+                last = cond_block.get_last_instruction()
+                if last is not None and last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | BACKWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS) and last.argval is not None:
+                    if last.opname in NONE_CHECK_OPS:
+                        if_true = False
+                    else:
+                        if_true = 'IF_TRUE' in last.opname
+                    then_offsets = set()
+                    if region and region.elif_bodies and len(region.elif_bodies) > 0:
+                        then_offsets = {b.start_offset for b in region.elif_bodies[0]}
+                    negate = (last.argval in then_offsets) != if_true
+                return _negate_expr(expr) if negate else expr
+        return {'type': 'Constant', 'value': True}
 
     def _if_generate_normal(self, region: IfRegion) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """生成标准 if/if-else AST 节点（非 elif 链、非三元表达式）
@@ -3659,7 +3767,17 @@ class RegionASTGenerator:
                 self.generated_blocks.add(block)
                 continue
             nested = self.region_analyzer.get_entry_region_for_block(block)
-            if nested and isinstance(nested, (IfRegion, LoopRegion, TryExceptRegion, WithRegion, MatchRegion)):
+            if nested and isinstance(nested, (IfRegion, LoopRegion, TryExceptRegion, WithRegion, MatchRegion, AssertRegion)):
+                if isinstance(nested, AssertRegion):
+                    nid = id(nested)
+                    if nid not in self._generated_regions and nid not in self._generating_regions:
+                        assert_ast = self._generate_assert(nested)
+                        if assert_ast:
+                            stmts.append(assert_ast)
+                        for b in nested.blocks:
+                            self.generated_blocks.add(b)
+                        self._generated_regions.add(nid)
+                    continue
                 # P0防护：跳过与父循环共享condition_block的冗余子LoopRegion
                 if isinstance(nested, LoopRegion) and self._current_loop and nested is not self._current_loop:
                     if (nested.condition_block and self._current_loop.condition_block and
@@ -3852,6 +3970,99 @@ class RegionASTGenerator:
         target_succ = None
         body_type = None
         if continue_succ and normal_succ:
+            _norm = normal_succ[0]
+            _is_simple_if = False
+            _should_skip_transform = False
+            if _norm not in (loop.back_edge_block, loop.header_block):
+                _has_post_if_stmts = False
+                for _nsucc in _norm.successors:
+                    if _nsucc != continue_succ[0] and _nsucc != loop.back_edge_block:
+                        if _nsucc not in loop_body_set or _nsucc.start_offset > block.start_offset:
+                            _has_post_if_stmts = True
+                            break
+                if not _has_post_if_stmts:
+                    _is_simple_if = True
+                else:
+                    _should_skip_transform = True
+            if _is_simple_if:
+                pre_stmts = []
+                cond_instrs = []
+                for instr in block.instructions:
+                    if instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                        continue
+                    if instr.opname in FORWARD_JUMP_OPS or instr.opname in BACKWARD_JUMP_OPS:
+                        break
+                    if instr.opname in ('POP_EXCEPT', 'PUSH_EXC_INFO', 'RERAISE',
+                                        'WITH_EXCEPT_START', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH'):
+                        continue
+                    if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                        stmt = self._build_store_statement(cond_instrs + [instr], block=block)
+                        if stmt:
+                            pre_stmts.append(stmt)
+                        cond_instrs = []
+                        continue
+                    if instr.opname == 'POP_TOP' and cond_instrs:
+                        stmt = self._build_statement(cond_instrs)
+                        if stmt:
+                            pre_stmts.append(stmt)
+                        cond_instrs = []
+                        continue
+                    cond_instrs.append(instr)
+                if not cond_instrs:
+                    self.generated_blocks.add(block)
+                    return pre_stmts if pre_stmts else None
+                expr = self.expr_reconstructor.reconstruct(cond_instrs)
+                if expr is None:
+                    self.generated_blocks.add(block)
+                    return pre_stmts if pre_stmts else None
+                is_if_false = 'IF_FALSE' in last_instr.opname
+                cond_expr = expr
+                _then_block = normal_succ[0]
+                _then_stmts = self._generate_block_statements(_then_block) if _then_block not in self.generated_blocks else []
+                if _then_block not in self.generated_blocks:
+                    self.generated_blocks.add(_then_block)
+                if_stmt = {'type': 'If', 'test': cond_expr, 'body': _then_stmts if _then_stmts else [{'type': 'Pass'}]}
+                self.generated_blocks.add(block)
+                self.generated_offsets.add(block.start_offset)
+                result = pre_stmts + [if_stmt] if pre_stmts else [if_stmt]
+                return result
+            if _should_skip_transform:
+                pre_stmts = []
+                cond_instrs = []
+                for instr in block.instructions:
+                    if instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                        continue
+                    if instr.opname in FORWARD_JUMP_OPS or instr.opname in BACKWARD_JUMP_OPS:
+                        break
+                    if instr.opname in ('POP_EXCEPT', 'PUSH_EXC_INFO', 'RERAISE',
+                                        'WITH_EXCEPT_START', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH'):
+                        continue
+                    if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                        stmt = self._build_store_statement(cond_instrs + [instr], block=block)
+                        if stmt:
+                            pre_stmts.append(stmt)
+                        cond_instrs = []
+                        continue
+                    if instr.opname == 'POP_TOP' and cond_instrs:
+                        stmt = self._build_statement(cond_instrs)
+                        if stmt:
+                            pre_stmts.append(stmt)
+                        cond_instrs = []
+                        continue
+                    cond_instrs.append(instr)
+                if not cond_instrs:
+                    self.generated_blocks.add(block)
+                    return pre_stmts if pre_stmts else None
+                expr = self.expr_reconstructor.reconstruct(cond_instrs)
+                if expr is None:
+                    self.generated_blocks.add(block)
+                    return pre_stmts if pre_stmts else None
+                cond_expr = expr
+                if_stmt = {'type': 'If', 'test': cond_expr, 'body': []}
+                self.generated_blocks.add(block)
+                self.generated_offsets.add(block.start_offset)
+                result = pre_stmts + [if_stmt] if pre_stmts else [if_stmt]
+                return result
             target_succ = continue_succ
             body_type = 'Continue'
         elif break_succ and normal_succ:
@@ -4018,7 +4229,8 @@ class RegionASTGenerator:
                         break
                 is_nested = is_child or is_in_try_blocks or is_before_try_start or handler_in_range
                 if is_nested and (r.parent is None or r.parent is region):
-                    if r.try_offset_end - r.try_offset_start < region.try_offset_end - region.try_offset_start:
+                    nested_is_smaller = r.try_offset_end - r.try_offset_start < region.try_offset_end - region.try_offset_start
+                    if nested_is_smaller or is_child:
                         nested_try_regions.append(r)
 
         for ntr in sorted(nested_try_regions, key=lambda r: r.try_offset_start):
@@ -4215,6 +4427,16 @@ class RegionASTGenerator:
                 body_stmts.extend(stmts)
                 self.generated_blocks.add(block)
 
+        for ntr in nested_try_regions:
+            if id(ntr) not in self._generated_regions and id(ntr) not in self._generating_regions:
+                for b in ntr.blocks:
+                    self.generated_blocks.discard(b)
+                nested_ast = self._generate_try(ntr)
+                if nested_ast:
+                    body_stmts.append(nested_ast)
+                for b in ntr.blocks:
+                    self.generated_blocks.add(b)
+
         return body_stmts
 
     def _generate_try(self, region: TryExceptRegion) -> Dict[str, Any]:
@@ -4400,7 +4622,13 @@ class RegionASTGenerator:
         self._generating_regions.add(region_id)
 
         try:
+            _handler_entry_blocks = set(region.handler_entry_blocks)
+            _pre_consumed_handler_entries = _handler_entry_blocks & self.generated_blocks
+            self.generated_blocks.update(_handler_entry_blocks)
+
             body_stmts = self._generate_try_body(region)
+
+            self.generated_blocks -= (_handler_entry_blocks - _pre_consumed_handler_entries)
 
             handlers = []
             for idx, (exc_type, exc_name, handler_blocks) in enumerate(region.except_handlers):
@@ -5996,8 +6224,15 @@ class RegionASTGenerator:
                         rest = region.subject_block.instructions[idx+1:]
                         if len(rest) >= 2 and rest[0].opname == 'LOAD_CONST' and isinstance(rest[0].argval, tuple) and rest[1].opname == 'MATCH_CLASS':
                             break
+                    if instr.opname == 'LOAD_CONST':
+                        rest = region.subject_block.instructions[idx+1:]
+                        if rest and rest[0].opname in ('COMPARE_OP', 'IS_OP'):
+                            continue
+                        if rest and len(rest) >= 2 and rest[0].opname == 'LOAD_CONST' and isinstance(rest[0].argval, tuple) and rest[1].opname in ('MATCH_CLASS', 'MATCH_SEQUENCE', 'MATCH_MAPPING'):
+                            continue
                     if (instr.opname in PATTERN_INSTRS and 
-                        instr.opname != 'LOAD_FAST'):
+                        instr.opname != 'LOAD_FAST' and 
+                        instr.opname != 'LOAD_CONST'):
                         continue
                 
                 subject_instrs.append(instr)
@@ -7041,6 +7276,8 @@ class RegionASTGenerator:
     def _generate_block_statements(self, block: BasicBlock) -> List[Dict[str, Any]]:
         if block in self.generated_blocks or block.start_offset in self.generated_offsets:
             return []
+        if any(i.opname == 'BINARY_OP' for i in block.instructions):
+            import sys as _sys3; _sys3.stderr.write(f'[GBS-ENTER] block@{block.start_offset} role={self.block_role(block)}\n')
 
         meaningful = [i for i in block.instructions
                      if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
@@ -7894,6 +8131,7 @@ class RegionASTGenerator:
             return stmts
 
         stmt_instrs: List[Instruction] = []
+        skip_offsets: Set[int] = set()
         _import_skip = False
 
         for instr in block.instructions:
@@ -8000,6 +8238,21 @@ class RegionASTGenerator:
                     stmt_instrs = []
                     continue
 
+            if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                _ft_names = self._current_loop.metadata.get('for_target_names', set()) if self._current_loop else set()
+                _ft_debug = f'[FT-DEBUG] {instr.opname} {instr.argval!r} loop={self._current_loop is not None} ft={_ft_names} role={self.block_role(block)}'
+                if instr.argval in _ft_names and self.block_role(block) in (BlockRole.LOOP_BODY, BlockRole.NORMAL):
+                    if not hasattr(self, '_gbs_seen_ft'):
+                        self._gbs_seen_ft = set()
+                    if instr.argval not in self._gbs_seen_ft:
+                        self._gbs_seen_ft.add(instr.argval)
+                        import sys as _sys2; _sys2.stderr.write(f'[FT-SKIP] {_ft_debug}\n')
+                        if stmt_instrs:
+                            _stmt = self._build_statement(stmt_instrs)
+                            if _stmt:
+                                stmts.append(_stmt)
+                            stmt_instrs = []
+                        continue
             if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF') and stmt_instrs:
                 has_copy = any(i.opname == 'COPY' and i.arg == 1 for i in stmt_instrs)
                 if has_copy:
@@ -8567,6 +8820,29 @@ class RegionASTGenerator:
 
         return target
 
+    def _generate_stmts_from_instrs(self, instrs: List[Instruction], block: BasicBlock) -> List[Dict[str, Any]]:
+        """从指令列表中提取多条语句，用于回边块等多语句场景"""
+        _stmts: List[Dict[str, Any]] = []
+        _buf: List[Instruction] = []
+        for _instr in instrs:
+            if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF') and _buf:
+                _stmt = self._build_store_statement(_buf + [_instr], block=block)
+                if _stmt:
+                    _stmts.append(_stmt)
+                _buf = []
+                continue
+            if _instr.opname == 'POP_TOP' and _buf:
+                _stmt = self._build_statement(_buf)
+                if _stmt:
+                    _stmts.append(_stmt)
+                _buf = []
+                continue
+            _buf.append(_instr)
+        if _buf:
+            _stmt = self._build_statement(_buf)
+            if _stmt:
+                _stmts.append(_stmt)
+        return _stmts
 
     def _build_statement(self, instrs: List[Instruction]) -> Optional[Dict[str, Any]]:
         if not instrs:

@@ -521,9 +521,28 @@ class RegionAnalyzer:
         ternary_regions = [tr for tr in ternary_regions
                           if not (tr.entry and tr.entry in elif_chain_entries)]
 
+        # Phase 11修复: 移除与Ternary重叠的IfRegion和BoolOpRegion
+        #
+        # 问题: 当同一代码既可以被识别为Ternary又可以被识别为IfRegion/BoolOp时，
+        #       IfRegion(30)和BoolOp(20)会由于更高优先级而覆盖Ternary(15)
+        #
+        # 解决: 在合并到all_phase12_regions之前，移除被Ternary完全覆盖的区域
+        # 条件: 区域的entry与某个Ternary的entry相同
+        #
+        # 这确保了 `a if a and b else 0` 被正确识别为Ternary而非If/BoolOp
+        ternary_entries = {tr.entry for tr in ternary_regions if tr.entry}
+        filtered_conditional_regions = [
+            cr for cr in conditional_regions
+            if not (isinstance(cr, IfRegion) and cr.entry in ternary_entries)
+        ]
+        filtered_boolop_regions = [
+            br for br in boolop_regions
+            if not (br.entry in ternary_entries)
+        ]
+
         all_phase12_regions = (
             loop_regions + try_regions + with_regions +
-            match_regions + assert_regions + chained_compare_regions + boolop_regions + ternary_regions + conditional_regions
+            match_regions + assert_regions + chained_compare_regions + filtered_boolop_regions + ternary_regions + filtered_conditional_regions
         )
 
         #print(f"[DEBUG analyze] ({self.cfg.name}) chained_compare_regions count: {len(chained_compare_regions)}")
@@ -556,6 +575,15 @@ class RegionAnalyzer:
         hierarchy = self._build_region_hierarchy(regions=all_regions)
 
         self._annotate_all_roles(all_regions)
+
+        fake_loop_region_ids = self._detect_and_filter_conditional_recheck_fake_loops(loop_regions)
+        if fake_loop_region_ids:
+            self._fix_block_roles_after_fake_loop_removal(loop_regions, fake_loop_region_ids)
+            loop_regions = [r for r in loop_regions if id(r) not in fake_loop_region_ids]
+            all_regions = [r for r in all_regions if id(r) not in fake_loop_region_ids]
+            for block, region in list(self.block_to_region.items()):
+                if id(region) in fake_loop_region_ids:
+                    del self.block_to_region[block]
 
         self._precompute_all_generator_data(all_regions)
 
@@ -793,6 +821,22 @@ class RegionAnalyzer:
             if last.opname == 'RETURN_CONST' and last.argval is None:
                 return False
             if last.opname == 'LOAD_CONST' and last.argval is None:
+                # Phase 11增强: 可能是被POP_TOP截断前的None模式
+                # 尝试用原始指令重新检查
+                original = [i for i in block.instructions if i.opname not in NOISE_OPS]
+                # 移除末尾跳转和条件跳转
+                while original and original[-1].opname in (
+                    'JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'):
+                    original = original[:-1]
+                if original and original[-1].opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS):
+                    original = original[:-1]
+                # 检查是否是 [LOAD_CONST None, POP_TOP, LOAD_CONST None, RETURN] 模式
+                if (len(original) == 4 and
+                    original[0].opname == 'LOAD_CONST' and original[0].argval is None and
+                    original[1].opname == 'POP_TOP' and
+                    original[2].opname == 'LOAD_CONST' and original[2].argval is None and
+                    original[3].opname in ('RETURN_VALUE', 'RETURN_CONST')):
+                    return True
                 return False
 
         if len(effective) == 2:
@@ -808,7 +852,27 @@ class RegionAnalyzer:
                 # 真正的三元表达式值分支会 JUMP 到合并点而非直接 RETURN
                 # 此修复防止 TernaryRegion 抢占 IfRegion 的 if-elif-return 结构
                 # 影响范围: 修复 test_if33/40/59/63/75 等18个测试用例
-                return False
+                #
+                # Phase 11例外: 允许 LOAD_CONST None + RETURN_VALUE
+                # 这是 `x if cond else None` 模式的 false 分支特征
+                # 区分依据: if-elif-return 通常返回有意义的值（非None）
+                # 而 ternary 的 None 分支明确表示"无值"
+                if load_val is not None:
+                    return False
+                return True
+
+        # Phase 11增强: 支持3指令的 None 模式
+        #
+        # 对于 `x if cond else None` 的 false 分支，字节码可能是:
+        #   LOAD_CONST None, POP_TOP, LOAD_CONST None, RETURN_VALUE
+        # 移除 POP_TOP 后: [LOAD_CONST None, LOAD_CONST None, RETURN_VALUE]
+        #
+        # 这是有效的单表达式: 加载None（被丢弃），然后返回None
+        if len(effective) == 3:
+            if (effective[0].opname == 'LOAD_CONST' and effective[0].argval is None and
+                effective[1].opname == 'LOAD_CONST' and effective[1].argval is None and
+                effective[2].opname in ('RETURN_VALUE', 'RETURN_CONST')):
+                return True
 
         return True
 
@@ -1757,6 +1821,117 @@ class RegionAnalyzer:
                 region.condition_chain_blocks = chain
 
         return regions
+
+    def _fix_block_roles_after_fake_loop_removal(self, regions: List[Region], fake_loop_ids: Set[int]) -> None:
+        """
+        过滤条件重检假循环后，修复相关块的block_role
+        
+        假循环被过滤后，以下块的role需要修正：
+        1. 假循环的else_blocks (JUMP_BACKWARD块) → 应标记为CONTINUE/PURE_CONTINUE
+        2. 假循环的back_edge_block (POP_JUMP_BACKWARD_IF_*块) → 应标记为LOOP_BODY或LOOP_BACK_EDGE
+        """
+        loop_regions = [r for r in regions if isinstance(r, LoopRegion)]
+        
+        for region in loop_regions:
+            if id(region) not in fake_loop_ids:
+                continue
+            
+            for else_block in (region.else_blocks or []):
+                last_instr = else_block.get_last_instruction()
+                if last_instr and last_instr.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'):
+                    current_role = self.block_roles.get(else_block.start_offset)
+                    if current_role in (BlockRole.LOOP_BACK_EDGE, BlockRole.LOOP_ELSE, BlockRole.NORMAL):
+                        meaningful = [i for i in else_block.instructions
+                                    if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP')
+                                    and i.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')]
+                        if not meaningful:
+                            self.block_roles[else_block.start_offset] = BlockRole.PURE_CONTINUE
+                        else:
+                            self.block_roles[else_block.start_offset] = BlockRole.CONTINUE
+            
+            if region.back_edge_block:
+                be = region.back_edge_block
+                last_instr = be.get_last_instruction()
+                if last_instr and last_instr.opname in ('POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE'):
+                    current_role = self.block_roles.get(be.start_offset)
+                    if current_role in (BlockRole.CONTINUE, BlockRole.PURE_CONTINUE):
+                        meaningful = [i for i in be.instructions
+                                    if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP')
+                                    and i.opname not in ('POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE')]
+                        if meaningful:
+                            self.block_roles[be.start_offset] = BlockRole.LOOP_BODY
+                        else:
+                            self.block_roles[be.start_offset] = BlockRole.LOOP_BACK_EDGE
+
+    def _detect_and_filter_conditional_recheck_fake_loops(self, regions: List[Region]) -> Set[int]:
+        """
+        检测并过滤条件重检假循环（由continue语句导致的重叠LoopRegion）
+        
+        Python编译器为含continue的while循环生成特殊字节码模式：
+        - 外层循环：真正的while循环
+        - 内层"循环"：由条件重检(POP_JUMP_BACKWARD_IF_*) + continue形成的假循环
+        
+        假循环的特征：
+        1. 内层header在外层body_blocks中
+        2. 共享condition_block或内层condition_block==内层header
+        3. 内层else_blocks只包含纯JUMP_BACKWARD块（continue目标块）
+        4. 内层back_edge_block是POP_JUMP_BACKWARD_IF_*类型（条件重检特征）
+        
+        Returns:
+            需要被过滤的假循环region ID集合
+        """
+        fake_loop_region_ids = set()
+        loop_regions = [r for r in regions if isinstance(r, LoopRegion)]
+        
+        for inner in loop_regions:
+            if id(inner) in fake_loop_region_ids:
+                continue
+            if not inner.header_block:
+                continue
+                
+            for outer in loop_regions:
+                if inner is outer:
+                    continue
+                if id(outer) in fake_loop_region_ids:
+                    continue
+                if not outer.body_blocks:
+                    continue
+                
+                if inner.header_block not in outer.body_blocks:
+                    continue
+                
+                shared_condition = (
+                    (inner.condition_block == outer.condition_block) or
+                    (inner.condition_block == inner.header_block)
+                )
+                if not shared_condition:
+                    continue
+                
+                inner_else_blocks = set(inner.else_blocks or [])
+                if not inner_else_blocks:
+                    continue
+                
+                is_pure_continue_else = True
+                for block in inner_else_blocks:
+                    meaningful_instrs = [
+                        i for i in block.instructions
+                        if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP')
+                        and i.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                    ]
+                    if meaningful_instrs:
+                        is_pure_continue_else = False
+                        break
+                
+                if not is_pure_continue_else:
+                    continue
+                
+                if inner.back_edge_block:
+                    back_edge_last = inner.back_edge_block.get_last_instruction()
+                    if back_edge_last and back_edge_last.opname in ('POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE'):
+                        fake_loop_region_ids.add(id(inner))
+                        break
+        
+        return fake_loop_region_ids
 
 
     def _classify_loop_type(self, header: BasicBlock, body: Set[BasicBlock] = None) -> Tuple[RegionType, Optional[BasicBlock], Optional[BasicBlock], Optional[BasicBlock], bool, bool]:
@@ -6044,10 +6219,9 @@ class RegionAnalyzer:
             while j < len(case_blocks):
                 body_i_set = set(case_bodies[i])
                 body_j_set = set(case_bodies[j])
-                should_merge = (body_i_set and body_j_set and body_i_set == body_j_set)
+                should_merge = (body_i_set and body_j_set and self._mr_bodies_are_equivalent(body_i_set, body_j_set))
                 if should_merge:
                     orps.append(case_patterns[j])
-                    body |= body_j_set
                     j += 1
                 else:
                     break
@@ -6056,6 +6230,17 @@ class RegionAnalyzer:
             i = j
         merge_block = self._mr_compute_case_merge(merged_b)
         return case_blocks, merged_p, merged_b, merge_block, all_blocks
+
+    def _mr_bodies_are_equivalent(self, body_i_set, body_j_set):
+        if body_i_set == body_j_set:
+            return True
+        if not body_i_set or not body_j_set:
+            return False
+        sorted_i = sorted(body_i_set, key=lambda b: b.start_offset)
+        sorted_j = sorted(body_j_set, key=lambda b: b.start_offset)
+        if sorted_i[-1] == sorted_j[-1]:
+            return True
+        return False
 
     def _mr_compute_case_merge(self, case_bodies):
         all_bod = set()
@@ -7234,9 +7419,20 @@ class RegionAnalyzer:
             return True
 
         def _is_boolop_ternary_candidate(boolop_region):
+            # Phase 11修复: 支持两种boolop模式
+            #
+            # 模式A (短路跳转): JUMP_IF_FALSE_OR_POP / JUMP_IF_TRUE_OR_POP
+            #   用于: x and y, x or y (独立表达式)
+            #
+            # 模式B (前向条件跳转): POP_JUMP_FORWARD_IF_FALSE / POP_JUMP_FORWARD_IF_TRUE
+            #   用于: if x and y:, x if a and b else y (条件上下文)
+            #
+            # 两种模式都应该允许升级为ternary
+            BOOLOP_JUMP_OPS = SHORT_CIRCUIT_JUMP_OPS | FORWARD_CONDITIONAL_JUMP_OPS
+
             for chain_block, _ in reversed(boolop_region.op_chain):
                 last_instr = chain_block.get_last_instruction()
-                if last_instr and last_instr.opname in SHORT_CIRCUIT_JUMP_OPS and last_instr.argval is not None:
+                if last_instr and last_instr.opname in BOOLOP_JUMP_OPS and last_instr.argval is not None:
                     jt_block = self.cfg.get_block_by_offset(last_instr.argval)
                     if not jt_block:
                         return False
@@ -7348,8 +7544,33 @@ class RegionAnalyzer:
                                    if i.opname not in NOISE_OPS)
                 false_discards = any(i.opname == 'POP_TOP' for i in false_block.instructions
                                     if i.opname not in NOISE_OPS)
+
+                # Phase 11修复: 放宽POP_TOP检查
+                #
+                # 原始逻辑: 如果两个分支都有POP_TOP，则拒绝（认为不是ternary）
+                # 问题: 对于顶层三元表达式（如 `a if cond else b`），
+                #       Python编译器会在两个分支都生成POP_TOP（值未被使用）
+                #       这是正常模式，不应该拒绝
+                #
+                # 新逻辑: 只有当POP_TOP是唯一的非噪音指令时才拒绝
+                #         （表示空分支如 pass 或 ...）
+                #         如果分支还有其他有效指令（如LOAD），则允许
+                #
+                # 这解决了 tn20/tn21 类失败:
+                #   `a if a and b else 0` 的两个值分支都有POP_TOP，
+                #   但它们是有效的表达式求值+丢弃
                 if true_discards and false_discards:
-                    return None
+                    def has_meaningful_instructions(blk):
+                        effective = [i for i in blk.instructions if i.opname not in NOISE_OPS]
+                        non_pop = [i for i in effective if i.opname != 'POP_TOP']
+                        non_jump = [i for i in non_pop if not i.opname.startswith('JUMP_') and not i.opname.startswith('POP_JUMP_')]
+                        return len(non_jump) > 0
+
+                    true_has_content = has_meaningful_instructions(true_block)
+                    false_has_content = has_meaningful_instructions(false_block)
+
+                    if not (true_has_content and false_has_content):
+                        return None
             elif not _is_ternary_block(block):
                 false_is_ternary = False
                 false_existing = self.block_to_region.get(false_block)
@@ -7370,10 +7591,48 @@ class RegionAnalyzer:
             for cb in candidate_blocks:
                 existing = self.block_to_region.get(cb)
                 if isinstance(existing, BoolOpRegion):
-                    skip_ternary = True
-                    break
+                    # Phase 11优化: 允许BoolOp→Ternary升级
+                    #
+                    # 当 BoolOpRegion 是 ternary 条件链的一部分时，
+                    # 不应该阻止 ternary 识别。
+                    #
+                    # 判断依据:
+                    # 1. BoolOpRegion的entry是当前ternary header
+                    # 2. BoolOpRegion的merge_block是ternary的false_value_block
+                    # 3. BoolOpRegion的所有链式块都在条件链中（非值分支）
+                    #
+                    # 这解决了 tn20/tn21 类失败:
+                    #   `a if a and b else 0` 应该是 Ternary(BoolOp条件)
+                    #   而非独立的 BoolOp + IfRegion
+                    can_upgrade = (
+                        existing.entry == block and
+                        existing.merge_block == false_block and
+                        all(b in candidate_blocks for b, _ in existing.op_chain)
+                    )
+                    if not can_upgrade:
+                        skip_ternary = True
+                        break
             if skip_ternary:
                 return None
+
+            # Phase 11增强: 当BoolOp→Ternary升级时，保留操作符信息
+            #
+            # _build_ternary_boolop_condition 期望 condition_chain_blocks 是
+            # [(block, op), ...] 格式，但 _build_ternary_condition_chain 返回的是
+            # 纯 [block, ...] 列表。
+            #
+            # 当我们从 BoolOpRegion 升级时，需要从 BoolOpRegion.op_chain 中提取
+            # 操作符信息，以便正确生成 BoolOp AST 节点。
+            boolop_op_chain = None
+            for cb in candidate_blocks:
+                existing = self.block_to_region.get(cb)
+                if isinstance(existing, BoolOpRegion) and existing.entry == block:
+                    boolop_op_chain = existing.op_chain
+                    break
+
+            # 如果有 BoolOp op_chain，将其转换为 condition_chain_blocks 格式
+            if boolop_op_chain and len(chain_blocks) > 1:
+                chain_blocks = list(boolop_op_chain)  # 现在是 [(block, op), ...] 格式
 
             nested_ternary_regions = []
             for vb in (true_block, false_block):
@@ -7395,7 +7654,12 @@ class RegionAnalyzer:
                     break
 
             all_blocks = {block, true_block, false_block}
-            all_blocks.update(chain_blocks)
+            # Phase 11: chain_blocks 现在可能是 [(block, op), ...] 格式
+            # 需要只提取 block 对象添加到 all_blocks
+            if chain_blocks and isinstance(chain_blocks[0], tuple):
+                all_blocks.update(cb for cb, _ in chain_blocks)
+            else:
+                all_blocks.update(chain_blocks)
             if merge_block:
                 all_blocks.add(merge_block)
 
