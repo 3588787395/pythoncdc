@@ -155,24 +155,30 @@ class PatternParser:
                     is_pattern_block = True
 
             if not is_pattern_block:
-                has_store_only = all(
-                    i.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
-                                'LOAD_CONST', 'STORE_FAST', 'STORE_NAME',
-                                'STORE_GLOBAL', 'STORE_DEREF',
-                                'UNPACK_SEQUENCE', 'UNPACK_EX',
-                                'POP_TOP', 'COPY', 'SWAP',
-                                'RETURN_VALUE', 'RETURN_CONST',
-                                'JUMP_FORWARD', 'JUMP_ABSOLUTE',
-                                'EXTENDED_ARG')
-                    for i in current.instructions
-                )
-                if has_store_only:
-                    is_pattern_block = True
+                meaningful = [i for i in current.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                has_return = any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in meaningful)
+                if has_return:
+                    is_pattern_block = False
+                else:
+                    has_store_only = all(
+                        i.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
+                                    'LOAD_CONST', 'STORE_FAST', 'STORE_NAME',
+                                    'STORE_GLOBAL', 'STORE_DEREF',
+                                    'UNPACK_SEQUENCE', 'UNPACK_EX',
+                                    'POP_TOP', 'COPY', 'SWAP',
+                                    'JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                                    'EXTENDED_ARG')
+                        for i in current.instructions
+                    )
+                    if has_store_only:
+                        is_pattern_block = True
 
             if is_pattern_block:
                 visited.add(current)
                 blocks.append(current)
-                worklist.extend(current.successors)
+                for s in current.successors:
+                    if s not in visited:
+                        worklist.append(s)
 
         return blocks
 
@@ -235,7 +241,7 @@ class PatternParser:
                     if is_var_const:
                         compare_op = all_instrs[i + 2].argval
                         if compare_op == '==' or compare_op == 2:
-                            prev_instrs = all_instrs[search_start:i]
+                            prev_instrs = all_instrs[:i]
                             has_store_or_unpack = any(
                                 x.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
                                             'UNPACK_SEQUENCE', 'UNPACK_EX', 'MATCH_CLASS', 'MATCH_SEQUENCE',
@@ -799,8 +805,7 @@ class PatternParser:
         has_unpack = False
         unpack_before = 0
         unpack_after = 0
-        store_names = []
-        pop_top_slots = set()
+        slot_actions = {}
 
         filtered = [i for i in instrs if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
 
@@ -809,7 +814,7 @@ class PatternParser:
             return self._extract_starred_sequence_pattern(filtered)
 
         in_unpack_context = False
-        unpack_slot_idx = 0
+        unpack_stack = []
         seen_pattern_instr = False
         for idx, instr in enumerate(filtered):
             if instr.opname in ('MATCH_SEQUENCE', 'MATCH_CLASS', 'MATCH_MAPPING',
@@ -823,20 +828,25 @@ class PatternParser:
                 continue
             if instr.opname == 'RETURN_VALUE':
                 break
-            # 检测LOAD_CONST后跟STORE_的模式（如 case (0, y) 中 LOAD_CONST 0; STORE_FAST y）
-            # 这是body中的赋值，不是pattern的一部分
             if (instr.opname == 'LOAD_CONST' and idx + 1 < len(filtered) and
                 filtered[idx + 1].opname in self.STORE_OPS and
                 (has_unpack or length_val is not None)):
-                # 如果LOAD_CONST的值不是用于COMPARE_OP比较，则是body赋值
                 if idx + 2 < len(filtered) and filtered[idx + 2].opname == 'COMPARE_OP':
-                    pass  # 这是字面量比较，继续处理
+                    pass
                 else:
                     break
             if instr.opname == 'POP_TOP':
-                if in_unpack_context:
-                    pop_top_slots.add(unpack_slot_idx)
-                    unpack_slot_idx += 1
+                if in_unpack_context and unpack_stack:
+                    slot = unpack_stack.pop()
+                    slot_actions.setdefault(slot, {'type': 'wildcard'})
+                continue
+            if instr.opname == 'SWAP':
+                if in_unpack_context and len(unpack_stack) >= 2:
+                    n = instr.argval if instr.argval else 2
+                    if n == 2:
+                        unpack_stack[-1], unpack_stack[-2] = unpack_stack[-2], unpack_stack[-1]
+                    elif n > 2 and len(unpack_stack) >= n:
+                        unpack_stack[-1], unpack_stack[-n] = unpack_stack[-n], unpack_stack[-1]
                 continue
             if instr.opname == 'GET_LEN':
                 if idx + 2 < len(filtered) and filtered[idx + 1].opname == 'LOAD_CONST':
@@ -846,17 +856,18 @@ class PatternParser:
             elif instr.opname == 'UNPACK_SEQUENCE':
                 has_unpack = True
                 in_unpack_context = True
-                unpack_slot_idx = 0
                 count = instr.argval if instr.argval is not None else 1
+                unpack_stack = list(range(count))
                 for _ in range(count):
                     patterns.append({'type': 'MatchAs'})
             elif instr.opname == 'UNPACK_EX':
                 has_unpack = True
                 in_unpack_context = True
-                unpack_slot_idx = 0
                 arg = instr.argval if instr.argval is not None else 0
                 unpack_before = arg & 0xFF
                 unpack_after = (arg >> 8) & 0xFF
+                total = unpack_before + 1 + unpack_after
+                unpack_stack = list(range(total))
                 for _ in range(unpack_before):
                     patterns.append({'type': 'MatchAs'})
                 patterns.append({'type': 'MatchStarred', 'pattern': {'type': 'MatchAs'}})
@@ -864,16 +875,22 @@ class PatternParser:
                     patterns.append({'type': 'MatchAs'})
             elif instr.opname in self.STORE_OPS:
                 var_name = instr.argval if instr.argval else f'var_{instr.arg}'
-                store_names.append(var_name)
-                if in_unpack_context:
-                    unpack_slot_idx += 1
+                if in_unpack_context and unpack_stack:
+                    slot = unpack_stack.pop()
+                    slot_actions.setdefault(slot, {'type': 'capture', 'name': var_name})
+                else:
+                    as_name = var_name
             elif instr.opname == 'LOAD_CONST' and idx + 1 < len(filtered) and filtered[idx + 1].opname == 'COMPARE_OP':
                 literal_val = instr.argval
                 if has_unpack or length_val is not None:
-                    for pi, p in enumerate(patterns):
-                        if isinstance(p, dict) and p.get('type') == 'MatchAs' and not p.get('name'):
-                            patterns[pi] = {'type': 'MatchValue', 'value': {'type': 'Constant', 'value': literal_val}}
-                            break
+                    if in_unpack_context and unpack_stack:
+                        slot = unpack_stack.pop()
+                        slot_actions.setdefault(slot, {'type': 'literal', 'value': literal_val})
+                    else:
+                        for pi, p in enumerate(patterns):
+                            if isinstance(p, dict) and p.get('type') == 'MatchAs' and not p.get('name'):
+                                patterns[pi] = {'type': 'MatchValue', 'value': {'type': 'Constant', 'value': literal_val}}
+                                break
 
         if not has_unpack and length_val is not None:
             if length_compare_op == '==' or length_compare_op == 2:
@@ -885,30 +902,25 @@ class PatternParser:
                 else:
                     patterns.append({'type': 'MatchStarred', 'pattern': {'type': 'MatchAs'}})
 
-        # 将store_names分配到pattern槽位
-        # 算法：按顺序遍历patterns，将store_names依次分配给MatchAs和MatchStarred内部
-        store_idx = 0
-        for pi, p in enumerate(patterns):
-            if store_idx >= len(store_names):
-                break
-            if pi in pop_top_slots:
-                continue
-            if isinstance(p, dict):
-                if p.get('type') == 'MatchAs' and not p.get('name'):
-                    patterns[pi] = {'type': 'MatchAs', 'name': store_names[store_idx]}
-                    store_idx += 1
-                elif p.get('type') == 'MatchStarred':
-                    inner = p.get('pattern', {})
-                    if isinstance(inner, dict) and inner.get('type') == 'MatchAs' and not inner.get('name'):
-                        patterns[pi] = {
-                            'type': 'MatchStarred',
-                            'pattern': {'type': 'MatchAs', 'name': store_names[store_idx]}
-                        }
-                        store_idx += 1
-
-        # 如果还有剩余的store_names，最后一个可能是as绑定
-        if store_idx < len(store_names):
-            as_name = store_names[store_idx]
+        for slot, action in slot_actions.items():
+            if slot < len(patterns):
+                if action['type'] == 'capture':
+                    p = patterns[slot]
+                    if isinstance(p, dict) and p.get('type') == 'MatchAs':
+                        patterns[slot] = {'type': 'MatchAs', 'name': action['name']}
+                    elif isinstance(p, dict) and p.get('type') == 'MatchStarred':
+                        inner = p.get('pattern', {})
+                        if isinstance(inner, dict) and inner.get('type') == 'MatchAs':
+                            patterns[slot] = {
+                                'type': 'MatchStarred',
+                                'pattern': {'type': 'MatchAs', 'name': action['name']}
+                            }
+                elif action['type'] == 'literal':
+                    p = patterns[slot]
+                    if isinstance(p, dict) and p.get('type') == 'MatchAs':
+                        patterns[slot] = {'type': 'MatchValue', 'value': {'type': 'Constant', 'value': action['value']}}
+                elif action['type'] == 'wildcard':
+                    pass
 
         result = {
             'type': 'MatchSequence',
@@ -1289,22 +1301,16 @@ class PatternParser:
                     rest_name = instr.argval
                     break
         else:
-            # SWAP + POP_TOP + STORE_FAST模式：**rest（无DICT_UPDATE）
-            # 这种模式出现在只有键匹配没有值匹配的情况
-            for i, instr in enumerate(filtered):
-                if instr.opname == 'SWAP' and i + 1 < len(filtered) and filtered[i + 1].opname == 'POP_TOP':
-                    # 检查SWAP前是否已经有足够的key绑定
-                    last_store_before = -1
-                    for j in range(i):
-                        if filtered[j].opname in self.STORE_OPS:
-                            last_store_before = j
-                    if last_store_before >= 0 or len(key_names) > 0:
-                        # 在SWAP+POP_TOP后查找STORE_指令
+            # SWAP + POP_TOP + STORE_模式：仅在没有key绑定时检测**rest
+            # 有key绑定时，SWAP+POP_TOP后的STORE_是值绑定，不是rest
+            if len(key_names) == 0:
+                for i, instr in enumerate(filtered):
+                    if instr.opname == 'SWAP' and i + 1 < len(filtered) and filtered[i + 1].opname == 'POP_TOP':
                         for j in range(i + 2, len(filtered)):
                             if filtered[j].opname in self.STORE_OPS:
                                 rest_name = filtered[j].argval
                                 break
-                    break
+                        break
 
         result = {
             'type': 'MatchMapping',

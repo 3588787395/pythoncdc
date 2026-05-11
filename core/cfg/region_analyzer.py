@@ -947,8 +947,15 @@ class RegionAnalyzer:
                     continue
                 has_header_jump = any(succ == enclosing_loop.header_block for succ in block.successors)
                 if has_header_jump and block != enclosing_loop.back_edge_block:
-                    self._assign_region_role(offset, BlockRole.CONTINUE)
-                    continue
+                    non_jump_meaningful = [i for i in block.instructions
+                                           if i.opname not in NOISE_OPS
+                                           and i.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+                                                                'JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                                           and i.opname not in CONDITIONAL_JUMP_OPS
+                                           and i.opname not in SHORT_CIRCUIT_JUMP_OPS]
+                    if not non_jump_meaningful:
+                        self._assign_region_role(offset, BlockRole.CONTINUE)
+                        continue
 
             if not block.successors:
                 self._assign_region_role(offset, BlockRole.RETURN)
@@ -1152,8 +1159,15 @@ class RegionAnalyzer:
                         and self.cfg.get_block_by_offset(last_instr.argval) == loop.header_block
                     )
                     if is_unconditional_continue:
-                        self.block_roles[block.start_offset] = BlockRole.CONTINUE
-                        continue
+                        non_jump_meaningful = [i for i in block.instructions
+                                               if i.opname not in NOISE_OPS
+                                               and i.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+                                                                    'JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                                               and i.opname not in CONDITIONAL_JUMP_OPS
+                                               and i.opname not in SHORT_CIRCUIT_JUMP_OPS]
+                        if not non_jump_meaningful:
+                            self.block_roles[block.start_offset] = BlockRole.CONTINUE
+                            continue
                 self._assign_region_role(block.start_offset,
                                        BlockRole.LOOP_BODY)
         for block in loop.else_blocks:
@@ -1283,16 +1297,46 @@ class RegionAnalyzer:
                                 'WITH_EXCEPT_START', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH'):
                 continue
             result.append(instr)
-        while result:
-            last = result[-1]
-            if last.opname in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF',
-                               'LOAD_ATTR', 'LOAD_METHOD'):
-                has_iter = any(i.opname in ('GET_ITER', 'GET_AITER', 'FOR_ITER')
-                              for i in block.instructions if i.offset > last.offset)
-                if has_iter:
-                    result.pop()
-                    continue
-            break
+        has_get_iter = any(i.opname in ('GET_ITER', 'GET_AITER') for i in block.instructions)
+        if has_get_iter and result:
+            get_iter_idx = None
+            for idx, instr in enumerate(block.instructions):
+                if instr.opname in ('GET_ITER', 'GET_AITER'):
+                    get_iter_idx = idx
+                    break
+            if get_iter_idx is not None:
+                last_store_idx = -1
+                for idx in range(get_iter_idx):
+                    if block.instructions[idx].opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                        last_store_idx = idx
+                if last_store_idx >= 0:
+                    store_offset = block.instructions[last_store_idx].offset
+                    result = [instr for instr in result if instr.offset <= store_offset]
+                else:
+                    iter_expr_start = get_iter_idx - 1
+                    split_idx = 0
+                    while iter_expr_start >= 0:
+                        iname = block.instructions[iter_expr_start].opname
+                        if iname in NOISE_OPS:
+                            iter_expr_start -= 1
+                            continue
+                        if iname == 'PUSH_NULL':
+                            split_idx = iter_expr_start
+                            break
+                        if iname.startswith('LOAD_') or iname in (
+                            'PRECALL', 'CALL', 'CALL_FUNCTION', 'CALL_METHOD',
+                            'BINARY_OP', 'UNARY_OP', 'BUILD_TUPLE', 'BUILD_LIST',
+                            'BUILD_DICT', 'BUILD_SET', 'BUILD_STRING', 'BUILD_SLICE',
+                            'IS_OP', 'CONTAINS_OP', 'COMPARE_OP', 'BINARY_SUBSCR',
+                            'FORMAT_VALUE', 'CONVERT_VALUE', 'UNARY_NOT',
+                            'LOAD_BUILD_CLASS', 'GET_AWAITABLE', 'SWAP', 'COPY'):
+                            iter_expr_start -= 1
+                            continue
+                        split_idx = iter_expr_start + 1
+                        break
+                    if split_idx < len(block.instructions):
+                        split_offset = block.instructions[split_idx].offset
+                        result = [instr for instr in result if instr.offset < split_offset]
         return result
 
     def compute_chained_compare_operands(self, region: IfRegion) -> None:
@@ -1760,14 +1804,6 @@ class RegionAnalyzer:
         return RegionType.WHILE_LOOP, None, None, None, is_while_true, is_yield_from
 
     def _is_while_true(self, header: BasicBlock, body: Set[BasicBlock]) -> bool:
-        """检测 while True 循环
-
-        判断依据：
-        1. header块无有意义指令 → while True
-        2. header块无条件跳转 → while True
-        3. header块含STORE指令后跟条件跳转 → while True + break模式
-        4. header块仅有条件评估和条件跳转 → while <condition>
-        """
         meaningful = [i for i in header.instructions 
                     if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
         
@@ -1776,6 +1812,7 @@ class RegionAnalyzer:
         
         has_conditional_jump = False
         has_store_before_jump = False
+        cond_jump_instr = None
         for i in meaningful:
             if i.opname in ('POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_FORWARD_IF_FALSE',
                           'POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE',
@@ -1784,6 +1821,7 @@ class RegionAnalyzer:
                           'POP_JUMP_BACKWARD_IF_NONE', 'POP_JUMP_BACKWARD_IF_NOT_NONE',
                           'FORWARD_JUMP_IF_TRUE', 'FORWARD_JUMP_IF_FALSE'):
                 has_conditional_jump = True
+                cond_jump_instr = i
                 break
             if i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
                 has_store_before_jump = True
@@ -1793,6 +1831,13 @@ class RegionAnalyzer:
         
         if has_store_before_jump:
             return True
+
+        if cond_jump_instr is not None and cond_jump_instr.argval is not None:
+            jump_target = self.cfg.get_block_by_offset(cond_jump_instr.argval)
+            if jump_target is not None and jump_target in body:
+                return True
+            if jump_target is not None and jump_target == header:
+                return True
         
         return False
 
@@ -2634,6 +2679,10 @@ class RegionAnalyzer:
                             continue
                         if any(instr.opname == 'PUSH_EXC_INFO' for instr in block.instructions):
                             continue
+                        if any(instr.opname in ('BEFORE_WITH', 'BEFORE_ASYNC_WITH') for instr in block.instructions):
+                            before_with_offset = next((i.offset for i in block.instructions if i.opname in ('BEFORE_WITH', 'BEFORE_ASYNC_WITH')), None)
+                            if before_with_offset is not None and not (try_start_for_blocks <= before_with_offset < try_end_for_blocks):
+                                continue
                         pre_handler_blocks.append(block)
                     if pre_handler_blocks:
                         for phb in pre_handler_blocks:
@@ -2881,10 +2930,15 @@ class RegionAnalyzer:
                 and any(i.opname == 'POP_EXCEPT' for i in handler_block.instructions)
                 and any(i.opname == 'RERAISE' for i in handler_block.instructions)
             )
-            if is_cleanup_only and actual_handler_start == entry_target:
-                if handler_type == 'finally':
-                    is_cleanup_only = False
-                else:
+            if is_cleanup_only:
+                if actual_handler_start != entry_target:
+                    actual_handler_block = self.cfg.get_block_by_offset(actual_handler_start)
+                    if actual_handler_block and actual_handler_block.instructions:
+                        has_push_exc = any(i.opname == 'PUSH_EXC_INFO' for i in actual_handler_block.instructions)
+                        has_reraise = any(i.opname == 'RERAISE' for i in actual_handler_block.instructions)
+                        if has_push_exc and has_reraise:
+                            continue
+                if handler_type != 'finally':
                     continue
 
             range_key = (entry_start, entry_end, actual_handler_start)
@@ -4759,6 +4813,14 @@ class RegionAnalyzer:
                             break
                     if has_nop_prefix:
                         return True
+                has_none_check = last.opname in ('POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_IF_NOT_NONE',
+                                                  'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_IF_NONE')
+                if has_none_check:
+                    meaningful = [i for i in subject_block.instructions if i.opname not in NOISE_OPS]
+                    load_ops = [i for i in meaningful if i.opname in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF')]
+                    other_ops = [i for i in meaningful if i.opname not in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF') and i.opname not in CONDITIONAL_JUMP_OPS]
+                    if len(load_ops) == 1 and all(o.opname in ('POP_TOP',) for o in other_ops):
+                        return True
             return False
 
         # 提取subject变量名（从subject块的LOAD指令获取）
@@ -5107,23 +5169,12 @@ class RegionAnalyzer:
             orps, body = [case_patterns[i]], set(case_bodies[i])
             j = i + 1
             while j < len(case_blocks):
-                rbody = case_bodies[i][0] if case_bodies[i] else None
-                nrbody = case_bodies[j][0] if case_bodies[j] else None
-                should_merge = (rbody and nrbody and rbody == nrbody)
+                body_i_set = set(case_bodies[i])
+                body_j_set = set(case_bodies[j])
+                should_merge = (body_i_set and body_j_set and body_i_set == body_j_set)
                 if should_merge:
-                    current_block = case_blocks[i]
-                    next_block = case_blocks[j]
-                    has_structural_pattern_op = (
-                        any(i.opname in ('MATCH_CLASS', 'MATCH_SEQUENCE', 'MATCH_MAPPING',
-                                         'MATCH_KEYS', 'MATCH_MAPPING_KEYS')
-                            for i in current_block.instructions) or
-                        any(i.opname in ('MATCH_CLASS', 'MATCH_SEQUENCE', 'MATCH_MAPPING',
-                                         'MATCH_KEYS', 'MATCH_MAPPING_KEYS')
-                            for i in next_block.instructions))
-                    if has_structural_pattern_op:
-                        break
                     orps.append(case_patterns[j])
-                    body |= set(case_bodies[j])
+                    body |= body_j_set
                     j += 1
                 else:
                     break
@@ -5211,6 +5262,17 @@ class RegionAnalyzer:
                 break
             pat = self.pattern_parser.parse_case_pattern(current)
             guard_jump_target = None
+            pattern_jump_targets = set()
+            PATTERN_ONLY_OPS = frozenset({
+                'MATCH_CLASS', 'MATCH_SEQUENCE', 'MATCH_MAPPING',
+                'MATCH_KEYS', 'MATCH_MAPPING_KEYS',
+                'GET_LEN', 'UNPACK_SEQUENCE', 'UNPACK_EX',
+                'LOAD_CONST', 'COMPARE_OP', 'IS_OP',
+                'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+                'COPY', 'SWAP', 'POP_TOP',
+                'JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                'EXTENDED_ARG',
+            }) | NOISE_OPS | frozenset(CONDITIONAL_JUMP_OPS)
             for body_candidate in [success]:
                 worklist_g = [body_candidate]
                 visited_g = {current}
@@ -5219,26 +5281,27 @@ class RegionAnalyzer:
                     if gc in visited_g or gc == jt:
                         continue
                     visited_g.add(gc)
+                    is_pattern_only = all(i.opname in PATTERN_ONLY_OPS for i in gc.instructions)
                     gj = self._mr_find_case_jump_instruction(gc)
-                    if gj and gc != current:
-                        guard_jump_target = gj.argval
-                        break
-                    meaningful_g = [i for i in gc.instructions if i.opname not in NOISE_OPS]
-                    if all(i.opname in ('POP_TOP', 'LOAD_CONST', 'STORE_FAST', 'STORE_NAME',
-                                        'STORE_GLOBAL', 'STORE_DEREF', 'UNPACK_SEQUENCE', 'UNPACK_EX',
-                                        'COPY', 'SWAP', 'GET_LEN', 'COMPARE_OP', 'IS_OP',
-                                        'JUMP_FORWARD', 'JUMP_ABSOLUTE') or
-                           i.opname in CONDITIONAL_JUMP_OPS or
-                           i.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'EXTENDED_ARG')
-                           for i in gc.instructions):
+                    if gj:
+                        target_block = self.cfg.get_block_by_offset(gj.argval)
+                        if target_block and target_block != jt:
+                            pattern_jump_targets.add(target_block)
+                        if is_pattern_only:
+                            for s in gc.successors:
+                                if s not in visited_g:
+                                    worklist_g.append(s)
+                        else:
+                            if gc != current:
+                                guard_jump_target = gj.argval
+                            break
+                    elif is_pattern_only:
                         for s in gc.successors:
                             if s not in visited_g:
                                 worklist_g.append(s)
-                if guard_jump_target is not None:
-                    break
             resolved_success = self._mr_resolve_body_entry(success)
             if resolved_success and resolved_success != jt:
-                stop_set = visited | {jt}
+                stop_set = visited | {jt} | pattern_jump_targets
                 if guard_jump_target is not None:
                     guard_jt_block = self.cfg.get_block_by_offset(guard_jump_target)
                     if guard_jt_block:
@@ -5320,8 +5383,6 @@ class RegionAnalyzer:
                 has_nop_prefix = True
             elif instr.opname not in NOISE_OPS:
                 break
-        if not has_nop_prefix:
-            return False
         has_compare = any(i.opname in ('COMPARE_OP', 'IS_OP') for i in meaningful)
         has_none_check = last.opname in ('POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_IF_NOT_NONE',
                                           'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_IF_NONE')
@@ -5333,6 +5394,13 @@ class RegionAnalyzer:
             'POP_TOP', 'SWAP',
         }) | NOISE_OPS | CONDITIONAL_JUMP_OPS
         if not all(i.opname in simple_ops for i in meaningful):
+            return False
+        if not has_nop_prefix:
+            if has_none_check and not has_compare:
+                load_ops = [i for i in meaningful if i.opname in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF')]
+                other_ops = [i for i in meaningful if i.opname not in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF') and i.opname not in CONDITIONAL_JUMP_OPS]
+                if len(load_ops) == 1 and all(o.opname in ('POP_TOP',) for o in other_ops):
+                    return True
             return False
         return True
 

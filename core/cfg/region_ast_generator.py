@@ -2662,7 +2662,6 @@ class RegionASTGenerator:
     def _loop_handle_continue(self, block: BasicBlock, region: LoopRegion,
                               natural_back_edge: BasicBlock,
                               body_blocks_no_header: List[BasicBlock]) -> None:
-        """处理continue块"""
         in_if_branch = False
         is_if_else_fallthrough = False
         for r in region.iter_descendants((IfRegion,)):
@@ -2675,9 +2674,6 @@ class RegionASTGenerator:
                 is_if_else_fallthrough = True
         if block == natural_back_edge and not in_if_branch:
             body_blocks_no_header.append(block)
-            return
-        if self.region_analyzer.get_block_role(block) == BlockRole.PURE_CONTINUE and not in_if_branch and is_if_else_fallthrough:
-            self.generated_blocks.add(block)
             return
         body_blocks_no_header.append(block)
 
@@ -3406,6 +3402,11 @@ class RegionASTGenerator:
                 self.generated_blocks.add(block)
                 self.generated_offsets.add(block.start_offset)
                 continue
+            if role in (BlockRole.CONTINUE, BlockRole.PURE_CONTINUE):
+                stmts.append({'type': 'Continue'})
+                self.generated_blocks.add(block)
+                self.generated_offsets.add(block.start_offset)
+                continue
             if role == BlockRole.LOOP_BODY and self._current_loop:
                 cond_break = self._try_generate_conditional_break(block)
                 if cond_break is not None:
@@ -3442,6 +3443,9 @@ class RegionASTGenerator:
         return stmts
 
     def _try_generate_conditional_break(self, block: BasicBlock) -> Optional[List[Dict[str, Any]]]:
+        result = self._try_generate_conditional_break_or_continue(block)
+        if result is not None:
+            return result
         loop = self._current_loop
         if loop is None:
             return None
@@ -3513,9 +3517,9 @@ class RegionASTGenerator:
             return pre_stmts if pre_stmts else None
         is_if_false = 'IF_FALSE' in last_instr.opname
         if exit_succ == jump_target:
-            cond_expr = self._negate_condition(expr) if is_if_false else expr
+            cond_expr = _negate_expr(expr) if is_if_false else expr
         else:
-            cond_expr = expr if is_if_false else self._negate_condition(expr)
+            cond_expr = expr if is_if_false else _negate_expr(expr)
         exit_role = self.region_analyzer.get_block_role(exit_succ)
         if exit_role in (BlockRole.RETURN, BlockRole.RETURN_NONE) and exit_succ in loop_body_set:
             ret_stmts = self._generate_block_statements(exit_succ)
@@ -3527,6 +3531,129 @@ class RegionASTGenerator:
         if_stmt = {'type': 'If', 'test': cond_expr, 'body': body_stmts}
         self.generated_blocks.add(block)
         self.generated_offsets.add(block.start_offset)
+        result = pre_stmts + [if_stmt] if pre_stmts else [if_stmt]
+        return result
+
+    def _try_generate_conditional_break_or_continue(self, block: BasicBlock) -> Optional[List[Dict[str, Any]]]:
+        loop = self._current_loop
+        if loop is None:
+            return None
+        last_instr = block.get_last_instruction()
+        if last_instr is None:
+            return None
+        if last_instr.opname not in FORWARD_CONDITIONAL_JUMP_OPS:
+            return None
+        if last_instr.argval is None:
+            return None
+        loop_body_set = loop.metadata.get('loop_body_full_set', set(loop.body_blocks) | {loop.header_block})
+        if loop.condition_block:
+            loop_body_set.add(loop.condition_block)
+        jump_target = self.cfg.get_block_by_offset(last_instr.argval)
+        fall_through = None
+        for s in block.successors:
+            if s != jump_target:
+                fall_through = s
+                break
+        if jump_target is None and fall_through is None:
+            return None
+
+        def _is_continue_like(b):
+            if b is None:
+                return False
+            role = self.region_analyzer.get_block_role(b)
+            if role in (BlockRole.PURE_CONTINUE, BlockRole.LOOP_BACK_EDGE):
+                return True
+            if role == BlockRole.CONTINUE:
+                non_jump = [i for i in b.instructions
+                           if i.opname not in NOISE_OPS
+                           and i.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+                                                'JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                           and i.opname not in CONDITIONAL_JUMP_OPS
+                           and i.opname not in SHORT_CIRCUIT_JUMP_OPS]
+                if not non_jump:
+                    return True
+                return False
+            return False
+
+        def _is_break_like(b):
+            if b is None:
+                return False
+            role = self.region_analyzer.get_block_role(b)
+            if role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
+                return True
+            if b not in loop_body_set:
+                return True
+            return False
+
+        continue_succ = None
+        break_succ = None
+        normal_succ = None
+        for succ, is_jump_target in [(jump_target, True), (fall_through, False)]:
+            if succ is None:
+                continue
+            if _is_continue_like(succ):
+                continue_succ = (succ, is_jump_target)
+            elif _is_break_like(succ):
+                break_succ = (succ, is_jump_target)
+            else:
+                normal_succ = (succ, is_jump_target)
+
+        target_succ = None
+        body_type = None
+        if continue_succ and normal_succ:
+            target_succ = continue_succ
+            body_type = 'Continue'
+        elif break_succ and normal_succ:
+            target_succ = break_succ
+            body_type = 'Break'
+        elif break_succ and continue_succ:
+            target_succ = break_succ
+            body_type = 'Break'
+        else:
+            return None
+
+        pre_stmts = []
+        cond_instrs = []
+        for instr in block.instructions:
+            if instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                continue
+            if instr.opname in FORWARD_JUMP_OPS or instr.opname in BACKWARD_JUMP_OPS:
+                break
+            if instr.opname in ('POP_EXCEPT', 'PUSH_EXC_INFO', 'RERAISE',
+                                'WITH_EXCEPT_START', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH'):
+                continue
+            if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                stmt = self._build_store_statement(cond_instrs + [instr], block=block)
+                if stmt:
+                    pre_stmts.append(stmt)
+                cond_instrs = []
+                continue
+            if instr.opname == 'POP_TOP' and cond_instrs:
+                stmt = self._build_statement(cond_instrs)
+                if stmt:
+                    pre_stmts.append(stmt)
+                cond_instrs = []
+                continue
+            cond_instrs.append(instr)
+        if not cond_instrs:
+            self.generated_blocks.add(block)
+            return pre_stmts if pre_stmts else None
+        expr = self.expr_reconstructor.reconstruct(cond_instrs)
+        if expr is None:
+            self.generated_blocks.add(block)
+            return pre_stmts if pre_stmts else None
+        is_if_false = 'IF_FALSE' in last_instr.opname
+        target_is_jump = target_succ[1]
+        if target_is_jump:
+            cond_expr = _negate_expr(expr) if is_if_false else expr
+        else:
+            cond_expr = expr if is_if_false else _negate_expr(expr)
+        if_stmt = {'type': 'If', 'test': cond_expr, 'body': [{'type': body_type}]}
+        self.generated_blocks.add(block)
+        self.generated_offsets.add(block.start_offset)
+        if target_succ[0] not in self.generated_blocks:
+            self.generated_blocks.add(target_succ[0])
+            self.generated_offsets.add(target_succ[0].start_offset)
         result = pre_stmts + [if_stmt] if pre_stmts else [if_stmt]
         return result
 
