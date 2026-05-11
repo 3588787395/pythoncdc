@@ -112,6 +112,7 @@ class RegionASTGenerator:
         self._trailing_returns: List[Dict[str, Any]] = []
         self._loop_depth: int = 0
         self._current_loop: Optional['LoopRegion'] = None
+        self._try_depth: int = 0
         self._post_break_blocks: List[BasicBlock] = []
         self._with_cleanup_generated_blocks: Set[BasicBlock] = set()
         self.detector = get_opcode_detector()
@@ -136,7 +137,7 @@ class RegionASTGenerator:
         ast_nodes = []
 
         if entry_block and entry_block not in self.generated_blocks:
-            entry_region = self.region_analyzer.get_region_for_block(entry_block)
+            entry_region = self.region_analyzer.get_entry_region_for_block(entry_block) or self.region_analyzer.get_region_for_block(entry_block)
             for r in self.regions:
                 if isinstance(r, LoopRegion) and (r.condition_block is entry_block or
                     (r.header_block and entry_block.start_offset in [s.start_offset for s in r.header_block.predecessors])):
@@ -385,6 +386,9 @@ class RegionASTGenerator:
             if r.region_type == RegionType.PASS:
                 filtered.append(r)
                 continue
+            if isinstance(r, (TernaryRegion, MatchRegion)):
+                filtered.append(r)
+                continue
             is_contained = False
             for other in top_level:
                 if other is not r and r.entry and r.entry in other.blocks:
@@ -400,6 +404,17 @@ class RegionASTGenerator:
                         elif isinstance(other, BoolOpRegion) and isinstance(r, IfRegion):
                             if r.condition_block and r.condition_block in other.blocks:
                                 pass
+                            else:
+                                is_contained = True
+                                break
+                        elif isinstance(r, BoolOpRegion) and isinstance(other, IfRegion):
+                            if r.entry and r.entry == other.entry:
+                                entry_owner = self.region_analyzer.block_to_region.get(r.entry)
+                                if entry_owner is r:
+                                    pass
+                                else:
+                                    is_contained = True
+                                    break
                             else:
                                 is_contained = True
                                 break
@@ -442,10 +457,12 @@ class RegionASTGenerator:
         for region in top_level_regions:
             if region.region_type != RegionType.BASIC and region.blocks:
                 if all(b in self.generated_blocks for b in region.blocks):
-                    if _DEBUG_BOOLOP:
-                        #print(f"[DEBUG generate] SKIP {type(region).__name__}(entry={region.entry.start_offset}) all blocks generated")
+                    if isinstance(region, (TernaryRegion, MatchRegion)):
                         pass
-                    continue
+                    else:
+                        if _DEBUG_BOOLOP:
+                            pass
+                        continue
             if _DEBUG_BOOLOP:
                 #print(f"[DEBUG generate] Processing {type(region).__name__}(entry={region.entry.start_offset}), blocks={sorted(b.start_offset for b in region.blocks)}, gen={sorted(b.start_offset for b in self.generated_blocks)}")
                 pass
@@ -2035,6 +2052,29 @@ class RegionASTGenerator:
                 return True
         block_role = self.region_analyzer.get_block_role(block)
         if block_role in (BlockRole.CONTINUE, BlockRole.PURE_CONTINUE):
+            # 修复: 检查被标记为CONTINUE的块是否真的只包含跳转指令
+            # 如果包含有意义的语句（如赋值、函数调用等），则不应该当作纯continue处理
+            _meaningful_instrs = [
+                i for i in block.instructions
+                if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP')
+                and i.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+                                    'JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                and i.opname not in ('POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_FORWARD_IF_FALSE',
+                                    'POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE')
+                and i.opname not in ('JUMP_IF_TRUE_OR_POP', 'JUMP_IF_FALSE_OR_POP')
+            ]
+            
+            # 调试输出
+            # if block.start_offset in [44, 80]:
+            #     import sys as _dbg
+            #     _dbg.stderr.write(f'[FIX-DEBUG] Block {block.start_offset}: meaningful={len(_meaningful_instrs)}, total={len(block.instructions)}\n')
+            
+            if _meaningful_instrs:
+                # 有意义语句，当作普通LOOP_BODY处理，添加到body_blocks_no_header
+                body_blocks_no_header.append(block)
+                return True
+            
+            # 纯continue块，使用原来的逻辑
             self._loop_handle_continue(block, region, natural_back_edge, body_blocks_no_header)
             return True
         if block_role == BlockRole.LOOP_BACK_EDGE:
@@ -2259,6 +2299,15 @@ class RegionASTGenerator:
                     break
             if _last_store_idx >= 0:
                 _body_end_idx = _last_store_idx
+                for _ext_idx in range(_last_store_idx + 1, len(hdr.instructions) - 1):
+                    _ext_instr = hdr.instructions[_ext_idx]
+                    if _ext_instr.opname == 'POP_TOP':
+                        _body_end_idx = _ext_idx
+                    elif _ext_instr.opname not in ('PUSH_NULL', 'LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL',
+                                                     'LOAD_DEREF', 'PRECALL', 'CALL', 'LOAD_METHOD',
+                                                     'LOAD_ATTR', 'BUILD_TUPLE', 'BUILD_LIST',
+                                                     'BUILD_MAP', 'FORMAT_VALUE'):
+                        break
             else:
                 stack_depth = 0
                 for _sli in range(len(hdr.instructions) - 1, -1, -1):
@@ -2587,6 +2636,9 @@ class RegionASTGenerator:
                 _split_idx = _ci_i
         if _split_idx >= 0:
             _cond_instrs = _cond_instrs[_split_idx + 1:]
+        # [修复] 过滤末尾可能多余的POP_TOP指令（避免指令数+1~+2）
+        while _cond_instrs and _cond_instrs[-1].opname == 'POP_TOP':
+            _cond_instrs.pop()
         if _cond_instrs:
             _expr = self.expr_reconstructor.reconstruct(_cond_instrs)
             if _expr:
@@ -2621,7 +2673,23 @@ class RegionASTGenerator:
                     self.generated_blocks.add(_return_block)
                     self.generated_offsets.add(_return_block.start_offset)
                 else:
-                    _negate = (not _is_if_false) if _jumps_inside else _is_if_false
+                    # [修复] 精确化break条件的取反逻辑
+                    # 当jump_block是break（跳出循环）且跳转由IF_FALSE触发时，
+                    # 表示"条件False→break"，即"条件True→执行body"，不应取反
+                    # 原始逻辑: _negate = (not _is_if_false) if _jumps_inside else _is_if_false
+                    # 问题: 当break在else分支时，_jumps_inside=False导致总是取反
+                    _is_jump_to_break = (_jump_block and
+                        self.region_analyzer.get_block_role(_jump_block) in (BlockRole.PURE_BREAK, BlockRole.BREAK))
+                    if _is_jump_to_break and not _is_if_false:
+                        # jump_if_true to break: "条件True→break", 需要取反为"条件Not→body"
+                        _negate = True
+                    elif _is_jump_to_break and _is_if_false:
+                        # jump_if_false to break: "条件False→break", 即"条件True→body", 不取反
+                        _negate = False
+                    elif _jumps_inside:
+                        _negate = not _is_if_false
+                    else:
+                        _negate = _is_if_false
                     _cond_expr = _negate_expr(_expr) if _negate else _expr
                     _hdr_stmts.append({'type': 'If', 'test': _cond_expr, 'body': [{'type': 'Break'}]})
         for _bs in [s for s in block.successors if s not in _loop_body_set] + _block_succ_break:
@@ -2646,6 +2714,9 @@ class RegionASTGenerator:
                 _split_idx = _ci_i
         if _split_idx >= 0:
             _cond_instrs = _cond_instrs[_split_idx + 1:]
+        # [修复] 过滤末尾可能多余的POP_TOP指令
+        while _cond_instrs and _cond_instrs[-1].opname == 'POP_TOP':
+            _cond_instrs.pop()
         if _cond_instrs:
             _expr = self.expr_reconstructor.reconstruct(_cond_instrs)
             if _expr:
@@ -3061,6 +3132,19 @@ class RegionASTGenerator:
                         self.generated_blocks.add(b)
                     self._generated_regions.add(with_id)
                 return True
+        if isinstance(entry_region, AssertRegion) and entry_region.entry == block and block not in self.generated_blocks:
+            assert_id = id(entry_region)
+            if assert_id not in self._generated_regions and assert_id not in self._generating_regions:
+                assert_ast = self._generate_region(entry_region)
+                if assert_ast:
+                    if isinstance(assert_ast, list):
+                        body_stmts.extend(assert_ast)
+                    else:
+                        body_stmts.append(assert_ast)
+                for b in entry_region.blocks:
+                    self.generated_blocks.add(b)
+                self._generated_regions.add(assert_id)
+            return True
         return False
 
     def _loop_postprocess(self, region: LoopRegion, body_stmts: List[Dict[str, Any]],
@@ -3657,12 +3741,12 @@ class RegionASTGenerator:
         self._generating_regions.add(region_id)
         pre_stmts, cond_instrs = self._if_extract_cond_instructions(cond_block, region)
         condition = self._if_extract_condition_from_instructions(region, cond_block, cond_instrs)
-        then_stmts = self._if_generate_then_branch(region)
-        else_stmts = self._if_generate_else_branch(region)
-        self.generated_blocks.add(region.condition_block)
+        self.generated_blocks.add(cond_block)
         if hasattr(region, 'elif_conditions') and region.elif_conditions:
             for elif_cond in region.elif_conditions:
                 self.generated_blocks.add(elif_cond)
+        then_stmts = self._if_generate_then_branch(region)
+        else_stmts = self._if_generate_else_branch(region)
         result = {'type': 'If', 'test': condition, 'body': then_stmts, 'orelse': else_stmts if else_stmts else None}
         self._generating_regions.discard(region_id)
         self._generated_regions.add(region_id)
@@ -3733,8 +3817,18 @@ class RegionASTGenerator:
     def _process_if_blocks(self, blocks, region: IfRegion, branch: str = 'then') -> List[Dict[str, Any]]:
         """处理 if/else 分支的块列表"""
         stmts: List[Dict[str, Any]] = []
+        child_region_blocks = set()
+        child_entries = set()
+        if region and hasattr(region, 'children'):
+            for child in getattr(region, 'children', []):
+                if isinstance(child, (LoopRegion, TryExceptRegion, WithRegion, MatchRegion)):
+                    child_region_blocks.update(child.blocks)
+                    if child.entry:
+                        child_entries.add(child.entry)
         for block in sorted(blocks, key=lambda b: b.start_offset):
             if block in self.generated_blocks:
+                continue
+            if block in child_region_blocks and block not in child_entries:
                 continue
             if stmts and stmts[-1].get('type') in ('Break', 'Continue', 'Return', 'Raise'):
                 if self._current_loop and block not in self._post_break_blocks:
@@ -3806,7 +3900,8 @@ class RegionASTGenerator:
                 last_bs = bs[-1]
                 if isinstance(last_bs, dict) and last_bs.get('type') == 'Expr' and any(
                     self.region_analyzer.get_block_role(s) in (BlockRole.RETURN, BlockRole.RETURN_NONE) for s in block.successors):
-                    bs[-1] = {'type': 'Return', 'value': last_bs['value']}
+                    if self._try_depth <= 0:
+                        bs[-1] = {'type': 'Return', 'value': last_bs['value']}
                 stmts.extend(bs)
             self.generated_blocks.add(block)
         return stmts
@@ -4282,6 +4377,16 @@ class RegionASTGenerator:
                     self.generated_blocks.add(block)
                     continue
 
+            if region.has_finally and block != region.entry:
+                all_region_blocks = set(region.blocks)
+                has_exc_instr = any(i.opname in ('PUSH_EXC_INFO', 'WITH_EXCEPT_START', 'CHECK_EXC_MATCH',
+                                                   'CHECK_EG_MATCH', 'POP_EXCEPT') for i in block.instructions)
+                succs_outside = [s for s in block.successors if s not in all_region_blocks]
+                pred_in_try = any(p in set(region.try_blocks) and p != block for p in block.predecessors)
+                if not has_exc_instr and succs_outside and pred_in_try:
+                    self.generated_blocks.add(block)
+                    continue
+
             is_nested_try_entry = False
             for ntr in nested_try_regions:
                 if ntr.entry == block and id(ntr) not in self._generated_regions and id(ntr) not in self._generating_regions:
@@ -4620,6 +4725,7 @@ class RegionASTGenerator:
         """
         region_id = id(region)
         self._generating_regions.add(region_id)
+        self._try_depth += 1
 
         try:
             _handler_entry_blocks = set(region.handler_entry_blocks)
@@ -4714,6 +4820,7 @@ class RegionASTGenerator:
             self._generated_regions.add(region_id)
             for block in region.blocks:
                 self.generated_blocks.add(block)
+            self._try_depth -= 1
 
     def _generate_handler_body_statements(self, block: BasicBlock) -> List[Dict[str, Any]]:
         handler_instrs = [i for i in block.instructions
@@ -6625,6 +6732,28 @@ class RegionASTGenerator:
             segments.append((current_op, current_values))
         if not segments:
             return None
+        if len(segments) == 1 and len(segments[0][1]) == 1 and len(op_chain) == 1:
+            chain_block = op_chain[0][0]
+            chain_op = op_chain[0][1]
+            last_instr = chain_block.get_last_instruction()
+            if last_instr and last_instr.argval is not None and last_instr.opname in (SHORT_CIRCUIT_JUMP_OPS | FORWARD_CONDITIONAL_JUMP_OPS):
+                jt_block = self.cfg.get_block_by_offset(last_instr.argval)
+                ft_succs = sorted(chain_block.conditional_successors, key=lambda s: s.start_offset)
+                ft_block = next((s for s in ft_succs if s.start_offset != last_instr.argval), None)
+                ft_expr = None
+                if ft_block:
+                    ft_instrs = [i for i in ft_block.instructions
+                                if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                    clean_ft = []
+                    for i in ft_instrs:
+                        if i.opname in ('POP_TOP', 'RETURN_VALUE', 'RETURN_CONST',
+                                       'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'):
+                            break
+                        clean_ft.append(i)
+                    if clean_ft:
+                        ft_expr = self.expr_reconstructor.reconstruct(clean_ft)
+                if ft_expr:
+                    return {'type': 'BoolOp', 'op': chain_op, 'values': [segments[0][1][0], ft_expr]}
         if len(segments) == 1:
             op, values = segments[0]
             if len(values) == 1:
@@ -7099,6 +7228,8 @@ class RegionASTGenerator:
         cond_block = region.condition_block
         true_block = region.true_value_block
         false_block = region.false_value_block
+        import sys as _sys
+        _sys.stderr.write(f'[GEN] _generate_ternary entry: cond={cond_block.start_offset if cond_block else None}, chain={getattr(region, "condition_chain_blocks", None)}\n')
 
         pre_stmts = []
 
@@ -7252,7 +7383,7 @@ class RegionASTGenerator:
                 self.generated_blocks.add(block)
             
             return results
-        
+
         return None
 
 
@@ -7273,11 +7404,11 @@ class RegionASTGenerator:
             self.generated_blocks.add(block)
         return stmts
 
-    def _generate_block_statements(self, block: BasicBlock) -> List[Dict[str, Any]]:
+    def _generate_block_statements(self, block: BasicBlock, _cjb_parent: BasicBlock = None) -> List[Dict[str, Any]]:
         if block in self.generated_blocks or block.start_offset in self.generated_offsets:
             return []
         if any(i.opname == 'BINARY_OP' for i in block.instructions):
-            import sys as _sys3; _sys3.stderr.write(f'[GBS-ENTER] block@{block.start_offset} role={self.block_role(block)}\n')
+            pass
 
         meaningful = [i for i in block.instructions
                      if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
@@ -8043,92 +8174,112 @@ class RegionASTGenerator:
                 _cond_jump_bs = _cjb_last
 
         if _cond_jump_bs is not None and len(block.conditional_successors) >= 2:
-            _cjb_succs = list(block.conditional_successors)
-            _cjb_jump_target = _cond_jump_bs.argval
-            _cjb_then_entry = None
-            _cjb_else_entry = None
-            for _cjb_cs in _cjb_succs:
-                if _cjb_cs.start_offset == _cjb_jump_target:
-                    _cjb_else_entry = _cjb_cs
-                else:
-                    _cjb_then_entry = _cjb_cs
-            if _cjb_then_entry is None and len(_cjb_succs) >= 1:
-                _cjb_then_entry = _cjb_succs[0]
-            if _cjb_else_entry is None and len(_cjb_succs) >= 2:
-                _cjb_else_entry = _cjb_succs[1]
-
-            _cjb_cond_instrs = []
-            for _cjb_ci in block.instructions:
-                if _cjb_ci.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
-                    continue
-                if _cjb_ci.opname in CONDITIONAL_JUMP_OPS or _cjb_ci.opname in FORWARD_CONDITIONAL_JUMP_OPS or _cjb_ci.opname in BACKWARD_CONDITIONAL_JUMP_OPS:
-                    continue
-                if _cjb_ci.opname in FORWARD_JUMP_OPS or _cjb_ci.opname in BACKWARD_JUMP_OPS:
-                    continue
-                if _cjb_ci.opname in ('JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'):
-                    continue
-                _cjb_cond_instrs.append(_cjb_ci)
-
-            _cjb_pre_stmts = []
-            _cjb_pure_cond = []
-            _cjb_last_store = -1
-            for _cjb_pi, _cjb_pci in enumerate(_cjb_cond_instrs):
-                if _cjb_pci.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
-                    _cjb_last_store = _cjb_pi
-            if _cjb_last_store >= 0:
-                _cjb_accum = []
-                for _cjb_pi, _cjb_pci in enumerate(_cjb_cond_instrs):
-                    if _cjb_pi <= _cjb_last_store:
-                        _cjb_accum.append(_cjb_pci)
-                        if _cjb_pci.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
-                            _cjb_s = self._build_store_statement(_cjb_accum, block=block)
-                            if _cjb_s:
-                                _cjb_pre_stmts.append(_cjb_s)
-                            _cjb_accum = []
+            if _cjb_parent is not None:
+                _cjb_succs_check = list(block.conditional_successors)
+                if _cjb_parent in _cjb_succs_check:
+                    _cond_jump_bs = None
+            if _cond_jump_bs is not None:
+                _cjb_succs = list(block.conditional_successors)
+                _cjb_jump_target = _cond_jump_bs.argval
+                _cjb_then_entry = None
+                _cjb_else_entry = None
+                for _cjb_cs in _cjb_succs:
+                    if _cjb_cs.start_offset == _cjb_jump_target:
+                        _cjb_else_entry = _cjb_cs
                     else:
-                        _cjb_pure_cond.append(_cjb_pci)
-                if _cjb_accum:
-                    _cjb_pure_cond.extend(_cjb_accum)
-            else:
-                _cjb_pure_cond = _cjb_cond_instrs
+                        _cjb_then_entry = _cjb_cs
+                if _cjb_then_entry is None and len(_cjb_succs) >= 1:
+                    _cjb_then_entry = _cjb_succs[0]
+                if _cjb_else_entry is None and len(_cjb_succs) >= 2:
+                    _cjb_else_entry = _cjb_succs[1]
 
-            _cjb_cond_expr = None
-            if _cjb_pure_cond:
-                _cjb_cond_expr = self.expr_reconstructor.reconstruct(_cjb_pure_cond)
-            if _cjb_cond_expr is None:
-                _cjb_cond_expr = {'type': 'Constant', 'value': True}
+                _cjb_cond_instrs = []
+                for _cjb_ci in block.instructions:
+                    if _cjb_ci.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                        continue
+                    if _cjb_ci.opname in CONDITIONAL_JUMP_OPS or _cjb_ci.opname in FORWARD_CONDITIONAL_JUMP_OPS or _cjb_ci.opname in BACKWARD_CONDITIONAL_JUMP_OPS:
+                        continue
+                    if _cjb_ci.opname in FORWARD_JUMP_OPS or _cjb_ci.opname in BACKWARD_JUMP_OPS:
+                        continue
+                    if _cjb_ci.opname in ('JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'):
+                        continue
+                    _cjb_cond_instrs.append(_cjb_ci)
 
-            _cjb_negate = False
-            if _cjb_then_entry and _cjb_jump_target is not None:
-                if _cjb_then_entry.start_offset == _cjb_jump_target:
-                    _cjb_negate = True
-            if _cjb_negate:
-                _cjb_cond_expr = _negate_expr(_cjb_cond_expr)
+                _cjb_pre_stmts = []
+                _cjb_pure_cond = []
+                _cjb_last_store = -1
+                for _cjb_pi, _cjb_pci in enumerate(_cjb_cond_instrs):
+                    if _cjb_pci.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                        _cjb_last_store = _cjb_pi
+                if _cjb_last_store >= 0:
+                    _cjb_accum = []
+                    for _cjb_pi, _cjb_pci in enumerate(_cjb_cond_instrs):
+                        if _cjb_pi <= _cjb_last_store:
+                            _cjb_accum.append(_cjb_pci)
+                            if _cjb_pci.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                                _cjb_s = self._build_store_statement(_cjb_accum, block=block)
+                                if _cjb_s:
+                                    _cjb_pre_stmts.append(_cjb_s)
+                                _cjb_accum = []
+                        else:
+                            _cjb_pure_cond.append(_cjb_pci)
+                    if _cjb_accum:
+                        _cjb_pure_cond.extend(_cjb_accum)
+                else:
+                    _cjb_pure_cond = _cjb_cond_instrs
 
-            _cjb_then_blocks = [_cjb_then_entry] if _cjb_then_entry else []
-            _cjb_else_blocks = [_cjb_else_entry] if _cjb_else_entry else []
+                _cjb_cond_expr = None
+                if _cjb_pure_cond:
+                    _cjb_cond_expr = self.expr_reconstructor.reconstruct(_cjb_pure_cond)
+                if _cjb_cond_expr is None:
+                    _cjb_cond_expr = {'type': 'Constant', 'value': True}
 
-            _cjb_pending = [b for b in (_cjb_then_blocks + _cjb_else_blocks) if b not in self.generated_blocks]
-            for _gb in _cjb_pending:
-                self.generated_blocks.add(_gb)
+                _cjb_negate = False
+                if _cjb_then_entry and _cjb_jump_target is not None:
+                    if _cjb_then_entry.start_offset == _cjb_jump_target:
+                        _cjb_negate = True
+                if _cjb_negate:
+                    _cjb_cond_expr = _negate_expr(_cjb_cond_expr)
 
-            _cjb_then_stmts = self._if_generate_branch_stmts(_cjb_then_blocks) if any(b in _cjb_pending for b in _cjb_then_blocks) else []
-            _cjb_else_stmts = self._if_generate_branch_stmts(_cjb_else_blocks) if any(b in _cjb_pending for b in _cjb_else_blocks) else []
+                _cjb_then_blocks = [_cjb_then_entry] if _cjb_then_entry else []
+                _cjb_else_blocks = [_cjb_else_entry] if _cjb_else_entry else []
 
-            if not _cjb_then_stmts:
-                _cjb_then_stmts = [{'type': 'Pass'}]
+                _cjb_pending = [b for b in (_cjb_then_blocks + _cjb_else_blocks) if b not in self.generated_blocks]
+                for _gb in _cjb_pending:
+                    self.generated_blocks.add(_gb)
 
-            _cjb_if_node = {
-                'type': 'If',
-                'test': _cjb_cond_expr,
-                'body': _cjb_then_stmts,
-                'orelse': _cjb_else_stmts if _cjb_else_stmts else None,
-            }
-            if _cjb_pre_stmts:
-                stmts.extend(_cjb_pre_stmts)
-            stmts.append(_cjb_if_node)
-            self.generated_blocks.add(block)
-            return stmts
+                _cjb_then_stmts = []
+                for _tb in _cjb_then_blocks:
+                    if _tb in _cjb_pending:
+                        self.generated_blocks.discard(_tb)
+                        _ts = self._generate_block_statements(_tb, _cjb_parent=block)
+                        self.generated_blocks.add(_tb)
+                        if _ts:
+                            _cjb_then_stmts.extend(_ts)
+
+                _cjb_else_stmts = []
+                for _eb in _cjb_else_blocks:
+                    if _eb in _cjb_pending:
+                        self.generated_blocks.discard(_eb)
+                        _es = self._generate_block_statements(_eb, _cjb_parent=block)
+                        self.generated_blocks.add(_eb)
+                        if _es:
+                            _cjb_else_stmts.extend(_es)
+
+                if not _cjb_then_stmts:
+                    _cjb_then_stmts = [{'type': 'Pass'}]
+
+                _cjb_if_node = {
+                    'type': 'If',
+                    'test': _cjb_cond_expr,
+                    'body': _cjb_then_stmts,
+                    'orelse': _cjb_else_stmts if _cjb_else_stmts else None,
+                }
+                if _cjb_pre_stmts:
+                    stmts.extend(_cjb_pre_stmts)
+                stmts.append(_cjb_if_node)
+                self.generated_blocks.add(block)
+                return stmts
 
         stmt_instrs: List[Instruction] = []
         skip_offsets: Set[int] = set()
