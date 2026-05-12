@@ -4647,7 +4647,9 @@ class RegionASTGenerator:
                                                    'CHECK_EG_MATCH', 'POP_EXCEPT') for i in block.instructions)
                 succs_outside = [s for s in block.successors if s not in all_region_blocks]
                 pred_in_try = any(p in set(region.try_blocks) and p != block for p in block.predecessors)
-                if not has_exc_instr and succs_outside and pred_in_try:
+                _last_op = block.get_last_instruction()
+                is_terminal = _last_op is not None and _last_op.opname in ('RETURN_VALUE', 'RETURN_CONST')
+                if not has_exc_instr and (succs_outside or is_terminal) and pred_in_try:
                     self.generated_blocks.add(block)
                     continue
 

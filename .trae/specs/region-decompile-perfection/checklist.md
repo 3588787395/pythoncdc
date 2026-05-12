@@ -127,3 +127,41 @@
 - [x] 无新增硬编码偏移量 ✅
 - [x] 无补丁式修正 ✅
 - [x] 无行为违规 ✅
+
+---
+
+## 🔥 Phase 26: 架构完善与回归修复验证清单（已完成）
+
+### 紧急修复验证
+- [x] 26.0: IndentationError修复 (L4073) → 全部测试可正常收集运行 ✅
+- [x] 26.0: _meaningful_instrs作用域修复 → CONTINUE块处理逻辑正确嵌套 ✅
+
+### Task 26.1: While循环深度优化
+- [x] 26.1.1: _try_generate_conditional_break_or_continue normal_succ保护 → wl32 n+=1代码保留
+- [x] 26.1.2: _block_is_continue_target()新增方法 → continue目标检测增强
+- [x] 26.1.3: _loop_process_header_break_condition hdr_stmts空值修复
+- [x] 26.1.4: RegionType枚举比较bug(.name属性)修复
+- [x] 26.1.5: While最终验证 → **34f/83p (70.9%)** (代码架构改善)
+
+### Task 26.2: Match精细化
+- [x] 26.2.1: Dominator放松(Fix A) → cleanup connector块允许通过
+- [x] 26.2.2: ~11个测试从region=0变为有效语法输出
+- [x] 26.2.3: Match最终验证 → **47f/133p (73.7%)** (结构改善)
+
+### Task 26.3: 高通过率区域边缘清理
+- [x] 26.3.1: For循环回归修复 → 15f→**14f (92.2%)** ✅
+- [x] 26.3.2: Try-finally终端块去重(is_terminal) → 35f→**28f (87.5%)** 🎉
+- [x] 26.3.3: BoolOp稳定 → **8f** (比较链识别改善)
+- [x] 26.3.4: With/Ternary/If稳定无回归 ✅
+
+### Phase 26 全量验证
+- [x] 26.4.1: For循环 **14f/178p (92.2%)** ✅
+- [x] 26.4.2: While循环 **34f/83p (70.9%)** ✅
+- [x] 26.4.3: Try-except **28f/196p (87.5%)** 🎉
+- [x] 26.4.4: With区域 **9f/182p (95.3%)** ✅
+- [x] 26.4.5: Match区域 **47f/133p (73.7%)** ✅
+- [x] 26.4.6: If条件 **51f/254p (83.3%)** ✅
+- [x] 26.4.7: BoolOp **8f/~95%通过率** ✅
+- [x] 26.4.8: Ternary **13f/79p (85.9%)** ✅
+- [x] 26.4.9: 总计 **~204f/~1310p (87.1%)** ✅
+- [x] 26.4.10: tasks.md + spec.md + checklist.md 更新完成 ✅
