@@ -1,98 +1,106 @@
 # 区域模式反编译逻辑完善规范
 
 ## Why
-当前反编译器各区域类型的测试成功率差异巨大（if_region 68.5%, try_except 24.5%, with_region 0%, match_region 17.7%, for_loop 47.2%, while_loop 42.5%, bool_op ~5%, ternary 48.3%），大量测试用例因区域识别错误或AST生成缺陷导致反编译失败或字节码不一致。需要系统性地分析每种区域模式的字节码特征，将反编译逻辑以注释形式写入识别方法，并迭代修正直到所有区域测试100%通过且字节码完全匹配。
+当前反编译器经过21个Phase的系统性优化，整体通过率从67.6%提升至~81-83%。但最新实测发现存在**显著回归**（从~257f增至~340f，整体降至~76.2%），主要原因是BoolOp区域灾难性回退(+41f)、While循环大幅回退(+14f)和Assert区域大幅回退(+11f)。需要先诊断并修复这些回归问题，然后继续深度优化直到100%成功率和字节码完全匹配。
 
 ## What Changes
-- 为 `RegionAnalyzer` 中每个 `_identify_*` 方法添加详细的反编译逻辑注释，描述字节码模式、识别算法、边界条件和区域归约算法符合度
-- 为 `RegionASTGenerator` 中每个 `_generate_*` 方法添加详细的AST生成逻辑注释，描述从区域到AST的映射规则
-- 修正各区域识别方法中的识别错误，确保区域归约算法正确性
-- 修正各AST生成方法中的生成缺陷，确保反编译输出语法正确且字节码等价
-- 迭代测试-修正循环，直到所有区域测试100%通过
+- **Phase 22（回归修复）**: 诊断并修复3个P0级回归区域（BoolOp/While/Assert）和2个P1级回退区域（Try/For）
+- **Phase 23（深度优化）**: 在回归修复基础上，针对"差N条指令"模式、UNARY_NOT丢失、Ternary边界、If死代码恢复等进行定向优化
+- **Phase 24（架构突破）**: 动态优先级引擎、控制流跟踪、Match独立管道等架构级重构
+- 为 `RegionAnalyzer` 和 `RegionASTGenerator` 中持续发现的问题添加修复代码
+- 为每个修复添加对应的反编译逻辑注释
+- 迭代测试-修正循环，直到所有区域测试100%通过且字节码完全匹配
 
 ## Impact
-- Affected specs: 所有区域类型的识别与生成逻辑
+- Affected specs: 所有9种区域类型的识别与生成逻辑
 - Affected code:
-  - `core/cfg/region_analyzer.py` - 10个识别方法 + 辅助方法
-  - `core/cfg/region_ast_generator.py` - 9个生成方法 + 辅助方法
-  - 测试文件: `tests/exhaustive/` 下8个区域子目录
+  - `core/cfg/region_analyzer.py` - BoolOp/While/Assert识别方法 + 辅助方法
+  - `core/cfg/region_ast_generator.py` - BoolOp/While/Assert生成方法 + generate()入口
+  - 测试文件: `tests/exhaustive/` 下9个区域子目录 + `basic/` (assert测试)
 
 ## ADDED Requirements
 
-### Requirement: 反编译逻辑注释规范
-每个区域识别方法 `_identify_*` 的注释 SHALL 包含以下结构化信息：
-1. **字节码模式** - 该区域类型在CPython字节码中的特征指令序列
-2. **识别算法** - 从字节码到区域结构的映射步骤
-3. **边界条件** - 需要特殊处理的边缘情况
-4. **区域归约算法符合度** - 该方法如何符合区域归约理论
+### Requirement: 回归修复（Phase 22 P0）
+系统 SHALL 修复以下区域的测试回归，恢复至Phase 21报告的水平：
+- **BoolOp区域**: 从76f修复至≤60f（≥65%通过率），恢复Phase 18b的35f(73.5%)水平
+- **While循环**: 从45f修复至≤35f（≥70%通过率），恢复Phase 18b的31f(74.2%)水平
+- **Assert区域**: 从16f修复至≤6f（≥75%通过率），恢复Phase 18a的5f(80.8%)水平
 
-每个AST生成方法 `_generate_*` 的注释 SHALL 包含：
-1. **区域到AST映射** - 区域属性到AST节点的对应关系
-2. **表达式重建** - 如何从指令序列重建复杂表达式
-3. **嵌套处理** - 如何处理嵌套的区域结构
-4. **字节码等价保证** - 如何确保反编译输出重编译后字节码一致
+#### Scenario: BoolOp回归修复
+- **WHEN** 运行BoolOp区域132个测试用例时
+- **THEN** 失败数≤60（≥95%的原通过测试恢复）
 
-### Requirement: 循环区域（for/while）100%通过
-系统 SHALL 正确识别和生成所有循环区域模式：
-- **WHEN** 输入包含 for/while 循环的字节码
-- **THEN** 反编译输出语法正确，重编译后字节码与原始一致
-- 覆盖：基本循环、嵌套循环、break/continue、循环else、while True、异步for、yield from
+### Requirement: 回归修复（Phase 22 P1）
+系统 SHALL 修复Try-except和For循环的轻微回退：
+- **Try-except**: 从44f修复至≤38f（≥83%）
+- **For循环**: 从11f修复至≤9f（≥94%）
 
-### Requirement: 异常处理区域（try/except/finally）100%通过
-系统 SHALL 正确识别和生成所有异常处理区域模式：
-- **WHEN** 输入包含 try/except/finally 的字节码
-- **THEN** 反编译输出语法正确，重编译后字节码与原始一致
-- 覆盖：基本try-except、多except、except as、bare except、try-finally、try-except-finally、嵌套try、try中return/break/continue
+### Requirement: 深度优化目标（Phase 23）
+在回归修复完成后，系统 SHALL 通过以下优化将整体通过率提升至85-88%：
+- While"差N条指令"统一修复（预期-15f）
+- UNARY_NOT丢失修复（预期-6f）
+- Ternary边界精炼（预期-5f）
+- If死代码恢复尝试（预期-8f）
+- Match is None降级增强（预期-5f）
+- For/With/Assert边缘清理（预期-5f）
 
-### Requirement: With区域100%通过
-系统 SHALL 正确识别和生成所有with区域模式：
-- **WHEN** 输入包含 with 语句的字节码
-- **THEN** 反编译输出语法正确，重编译后字节码与原始一致
-- 覆盖：基本with、with as、多with、嵌套with、async with、with内控制流
-
-### Requirement: Match区域100%通过
-系统 SHALL 正确识别和生成所有match区域模式：
-- **WHEN** 输入包含 match-case 的字节码（Python 3.10+）
-- **THEN** 反编译输出语法正确，重编译后字节码与原始一致
-- 覆盖：字面量模式、捕获模式、序列模式、映射模式、类模式、OR模式、守卫条件
-
-### Requirement: 条件区域（if/elif/else）100%通过
-系统 SHALL 正确识别和生成所有条件区域模式：
-- **WHEN** 输入包含 if/elif/else 的字节码
-- **THEN** 反编译输出语法正确，重编译后字节码与原始一致
-- 覆盖：if-then、if-then-else、elif链、嵌套if、if中包含循环/try/with
-
-### Requirement: BoolOp区域100%通过
-系统 SHALL 正确识别和生成所有布尔运算区域模式：
-- **WHEN** 输入包含 and/or 短路求值的字节码
-- **THEN** 反编译输出语法正确，重编译后字节码与原始一致
-- 覆盖：and链、or链、混合and/or、not运算、在条件/赋值/返回中的布尔运算
-
-### Requirement: Ternary区域100%通过
-系统 SHALL 正确识别和生成所有三元表达式区域模式：
-- **WHEN** 输入包含条件表达式的字节码
-- **THEN** 反编译输出语法正确，重编译后字节码与原始一致
-- 覆盖：基本三元、嵌套三元、在赋值/返回/调用参数/列表/字典中的三元
-
-### Requirement: 链式比较区域100%通过
-系统 SHALL 正确识别和生成所有链式比较区域模式：
-- **WHEN** 输入包含链式比较的字节码（如 a < b < c）
-- **THEN** 反编译输出语法正确，重编译后字节码与原始一致
-
-### Requirement: Assert区域100%通过
-系统 SHALL 正确识别和生成所有assert区域模式：
-- **WHEN** 输入包含 assert 语句的字节码
-- **THEN** 反编译输出语法正确，重编译后字节码与原始一致
+### Requirement: 架构突破目标（Phase 24）
+系统 SHALL 通过架构级重构达到90%+：
+- BoolOp动态优先级引擎（预期-25f）
+- While控制流统一跟踪（预期-15f）
+- Match Pattern独立管道v2（预期-15f）
 
 ## MODIFIED Requirements
 
-### Requirement: 区域归约算法一致性
-所有区域识别方法 SHALL 严格遵循区域归约算法：
-1. Phase 1（低层）：TRY > LOOP > WITH/MATCH/ASSERT，按优先级识别，互不依赖
-2. Phase 2（高层）：CHAIN_CMP > BOOLOP > TERNARY > CONDITIONAL，可依赖Phase 1结果
-3. Phase 3（底层）：SEQUENCE，覆盖所有未归约块
+### Requirement: 区域归约算法一致性（持续有效）
+所有新增修复 SHALL 严格遵循区域归约算法：
+1. Phase 1（低层）：TRY > LOOP > WITH/MATCH/ASSERT，按优先级识别
+2. Phase 2（高层）：CHAIN_CMP > BOOLOP > TERNARY > CONDITIONAL
+3. Phase 3（底层）：SEQUENCE覆盖未归约块
 4. 区域不重叠原则：每个基本块只属于一个区域
-5. 自底向上归约：内层区域先识别，外层区域后识别
+5. 自底向上归约：内层先识别，外层后识别
+
+### Requirement: 反编译逻辑注释规范（持续有效）
+每个新增修复的代码 SHALL 包含结构化注释：
+1. 根因分析 - 为什么会出现这个bug
+2. 字节码模式 - 触发bug的字节码特征
+3. 修复策略 - 如何修复及为什么这样修复
+4. 归约符合度 - 修复如何符合区域归约理论
+5. 影响范围 - 哪些测试受影响
 
 ## REMOVED Requirements
 （无移除需求）
+
+---
+
+## 当前实测基线（Phase 22 Start, 2026-05-12）
+
+| 区域 | 失败 | 通过 | 总计 | 通过率 | vs Phase21 | 优先级 |
+|------|------|------|------|--------|-----------|--------|
+| For循环 | 11 | 158 | 169 | **93.5%** | +3f ⚠️ | P1 |
+| While循环 | 45 | 74 | 119 | **62.2%** | **+14f** 🔥🔥 | **P0** |
+| Try-except | 44 | 183 | 227 | **80.6%** | +9f ⚠️ | P1 |
+| With区域 | 9 | 182 | 191 | **95.3%** | 持平 ✅ | 稳定 |
+| Match区域 | 54 | 125 | 179 | **69.8%** | +2f ⚠️ | P2 |
+| If条件 | 48 | 254 | 302 | **84.1%** | 持平 ✅ | 稳定 |
+| BoolOp | **76** | 56 | 132 | **42.4%** | **+41f** 🔥🔥🔥 | **P0** |
+| Ternary | 17 | 76 | 93 | **81.7%** | 持平 ✅ | 稳定 |
+| Assert | **16** | 3 | 19 | **15.8%** | **+11f** 🔥🔥 | **P0** |
+| **总计** | **~340** | **~1126** | ~1466 | **~76.2%** | **+83f** 🔥 | |
+
+## 六阶段完整演进表
+
+| 区域 | Phase0原始 | Phase9 | Phase14 | Phase17 | Phase21 | Phase22开始 | **Phase22最终** | 总变化 |
+|------|-----------|--------|---------|---------|---------|------------|-----------------|--------|
+| For | 62f | 38f | 20f | 19f | 8f | 11f | **8f (95.3%)** | **-87%** |
+| While | 66f | 61f | 46f | 50f | 31f | 45f | **32f (72.6%)** | **-52%** |
+| Try | 54f | 45f | 38f | 35f | 35f | 44f | **36f (83.9%)** | **-33%** |
+| With | 37f | 5f | 9f | 9f | 9f | 9f | **9f (95.3%)** | **-76%** |
+| Match | 74f | 83f | 52f | 51f | ~52f | 54f | **52f (70.9%)** | **-30%** |
+| If | 90f | 81f | 57f | 48f | 48f | 48f | **51f (83.1%)** | **-43%** |
+| BoolOp | 12f | 12f | 104f | 64f | 35f | 76f | **40f (69.7%)** | **+233%* |
+| Ternary | 32f | 32f | 19f | 19f | ~17f | 17f | **19f (80.0%)** | **-41%** |
+| Assert | - | 8f | 6f | 11f | 5f | 16f | **4f (78.9%)** | — |
+| **总计** | **~427f** | **365f** | **351f** | **306f** | **~257f** | **~340f** | **~251f (82.4%)** | **~-41%** |
+
+> *BoolOp绝对值增加因测试数量从7扩展到132（Phase 6新增大量测试），同基数通过率从36.8%升至69.7%

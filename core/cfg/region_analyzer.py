@@ -1892,7 +1892,7 @@ class RegionAnalyzer:
                             target = self.cfg.get_block_by_offset(cond_last.argval)
                             if target not in body and target != header:
                                 is_while_true = False
-            else_blocks, natural_exit = self._find_loop_else(header, body, loop_type, for_iter_exit)
+            else_blocks, natural_exit = self._find_loop_else(header, body, loop_type, for_iter_exit, condition_block=condition_block)
             else_blocks = else_blocks or []
             break_blocks, continue_map = self._detect_break_continue(body, header, natural_exit)
 
@@ -2302,21 +2302,55 @@ class RegionAnalyzer:
         if not has_conditional_jump:
             return True
         
-        if has_store_before_jump:
-            return True
-
         if cond_jump_instr is not None and cond_jump_instr.argval is not None:
             jump_target = self.cfg.get_block_by_offset(cond_jump_instr.argval)
+            if jump_target is not None and jump_target == header:
+                if cond_jump_instr.opname in ('POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE'):
+                    has_non_trivial_body_stmts = False
+                    for i in meaningful:
+                        if i is cond_jump_instr:
+                            continue
+                        if i.opname in ('BINARY_OP', 'BINARY_SUBSCR', 'LOAD_METHOD', 'CALL',
+                                       'LOAD_ATTR', 'STORE_SUBSCR', 'DELETE_ATTR',
+                                       'DELETE_SUBSCR', 'GET_ITER', 'FOR_ITER',
+                                       'SEND', 'FORMAT_VALUE', 'BUILD_STRING',
+                                       'LIST_APPEND', 'SET_ADD', 'MAP_ADD',
+                                       'IMPORT_NAME', 'IMPORT_FROM',
+                                       'RAISE_VARARGS', 'RETURN_VALUE', 'RETURN_CONST'):
+                            has_non_trivial_body_stmts = True
+                            break
+                    if has_non_trivial_body_stmts:
+                        return False
+                return True
             if jump_target is not None and jump_target in body:
                 return True
-            if jump_target is not None and jump_target == header:
-                return True
+        
+        if has_store_before_jump:
+            last = header.get_last_instruction()
+            if (last and last.opname in ('POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE')
+                    and last.argval is not None
+                    and self.cfg.get_block_by_offset(last.argval) == header):
+                has_non_trivial_body_stmts = False
+                for i in meaningful:
+                    if i.opname in ('BINARY_OP', 'BINARY_SUBSCR', 'LOAD_METHOD', 'CALL',
+                                   'LOAD_ATTR', 'STORE_SUBSCR', 'DELETE_ATTR',
+                                   'DELETE_SUBSCR', 'GET_ITER', 'FOR_ITER',
+                                   'SEND', 'FORMAT_VALUE', 'BUILD_STRING',
+                                   'LIST_APPEND', 'SET_ADD', 'MAP_ADD',
+                                   'IMPORT_NAME', 'IMPORT_FROM',
+                                   'RAISE_VARARGS', 'RETURN_VALUE', 'RETURN_CONST'):
+                        has_non_trivial_body_stmts = True
+                        break
+                if has_non_trivial_body_stmts:
+                    return False
+            return True
         
         return False
 
 
     def _find_loop_else(self, header: BasicBlock, loop_body: Set[BasicBlock], loop_type: RegionType,
-                        for_iter_exit: Optional[BasicBlock] = None) -> Tuple[Optional[List[BasicBlock]], Optional[BasicBlock]]:
+                        for_iter_exit: Optional[BasicBlock] = None,
+                        condition_block: Optional[BasicBlock] = None) -> Tuple[Optional[List[BasicBlock]], Optional[BasicBlock]]:
         """
         识别循环else块
 
@@ -2395,6 +2429,15 @@ class RegionAnalyzer:
                     block_last = block.get_last_instruction()
                     if block_last and detector.is_conditional_jump(block_last):
                         loop_successors.append(succ)
+        cond_exit_targets = []
+        if condition_block and condition_block != header and condition_block not in body_set:
+            cond_last = condition_block.get_last_instruction()
+            if cond_last and cond_last.opname in FORWARD_CONDITIONAL_JUMP_OPS and cond_last.argval is not None:
+                cond_exit = self.cfg.get_block_by_offset(cond_last.argval)
+                if cond_exit and cond_exit not in body_set and cond_exit != header:
+                    if cond_exit not in loop_successors:
+                        loop_successors.append(cond_exit)
+                    cond_exit_targets.append(cond_exit)
         loop_successors = list(set(loop_successors))
 
         if not loop_successors:
@@ -2403,7 +2446,8 @@ class RegionAnalyzer:
         natural_exit = self.dom_analyzer.find_nearest_common_post_dominator(set(loop_successors))
         if not natural_exit or natural_exit in body_set:
             non_return_successors = [s for s in loop_successors
-                                    if not self._check_block_has_trailing_return_none(s)]
+                                    if not self._check_block_has_trailing_return_none(s)
+                                    or s in cond_exit_targets]
             if non_return_successors:
                 else_blocks = sorted(non_return_successors, key=lambda b: b.start_offset)
                 return else_blocks, None
@@ -6805,7 +6849,13 @@ class RegionAnalyzer:
         body_ops = {'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
                      'RETURN_VALUE', 'RETURN_CONST', 'POP_TOP',
                      'LOAD_CONST', 'LOAD_NAME', 'LOAD_FAST'}
-        return all(i.opname in body_ops or i.opname in NOISE_OPS for i in rest)
+        if not all(i.opname in body_ops or i.opname in NOISE_OPS for i in rest):
+            return False
+        for pred in block.predecessors:
+            pred_last = pred.get_last_instruction()
+            if pred_last and pred_last.opname in SHORT_CIRCUIT_JUMP_OPS:
+                return False
+        return True
 
     def _scan_literal_match_subjects(self, claimed):
         literal_regions = []
@@ -7788,15 +7838,6 @@ class RegionAnalyzer:
             return True
 
         def _is_boolop_ternary_candidate(boolop_region):
-            # Phase 11修复: 支持两种boolop模式
-            #
-            # 模式A (短路跳转): JUMP_IF_FALSE_OR_POP / JUMP_IF_TRUE_OR_POP
-            #   用于: x and y, x or y (独立表达式)
-            #
-            # 模式B (前向条件跳转): POP_JUMP_FORWARD_IF_FALSE / POP_JUMP_FORWARD_IF_TRUE
-            #   用于: if x and y:, x if a and b else y (条件上下文)
-            #
-            # 两种模式都应该允许升级为ternary
             BOOLOP_JUMP_OPS = SHORT_CIRCUIT_JUMP_OPS | FORWARD_CONDITIONAL_JUMP_OPS
 
             for chain_block, _ in reversed(boolop_region.op_chain):
@@ -7804,6 +7845,18 @@ class RegionAnalyzer:
                 if last_instr and last_instr.opname in BOOLOP_JUMP_OPS and last_instr.argval is not None:
                     jt_block = self.cfg.get_block_by_offset(last_instr.argval)
                     if not jt_block:
+                        return False
+                    jt_effective = [i for i in jt_block.instructions if i.opname not in NOISE_OPS]
+                    has_unary_not = any(i.opname == 'UNARY_NOT' for i in jt_effective)
+                    if has_unary_not:
+                        return False
+                    jt_non_noise = [i for i in jt_block.instructions
+                                   if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                    if (jt_non_noise and
+                        all(i.opname in ('RETURN_VALUE', 'RETURN_CONST', 'LOAD_CONST',
+                                         'LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL',
+                                         'LOAD_DEREF')
+                            for i in jt_non_noise)):
                         return False
                     return self._is_single_expression_block(jt_block)
             return False
@@ -8286,8 +8339,6 @@ class RegionAnalyzer:
         for region in existing_regions:
             if not isinstance(region, LoopRegion) or region.condition_block is None:
                 continue
-            if region.is_while_true:
-                continue
             if any(isinstance(r, BoolOpRegion) and region.condition_block in r.blocks
                    for r in boolop_regions):
                 continue
@@ -8298,6 +8349,7 @@ class RegionAnalyzer:
                 if boolop_region:
                     region.add_child(boolop_region)
                     boolop_regions.append(boolop_region)
+                    region.is_while_true = False
         for boolop_region in boolop_regions:
             if len(boolop_region.op_chain) >= 2:
                 last_chain_block, _ = boolop_region.op_chain[-1]
@@ -8327,6 +8379,10 @@ class RegionAnalyzer:
         return boolop_regions
 
     def _detect_while_condition_boolop_chain(self, cond_block: BasicBlock, loop: LoopRegion) -> Optional[List[Tuple[BasicBlock, str]]]:
+        BOOLOP_CHAIN_JUMPS = FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS
+        forward_chain = self._detect_while_boolop_forward_chain(cond_block, loop, BOOLOP_CHAIN_JUMPS)
+        if forward_chain and len(forward_chain) >= 2:
+            return forward_chain
         chain: List[Tuple[BasicBlock, str]] = []
         last = cond_block.get_last_instruction()
         if not last or last.opname not in FORWARD_CONDITIONAL_JUMP_OPS:
@@ -8359,13 +8415,99 @@ class RegionAnalyzer:
                                      pred_jump_target != loop.entry and
                                      pred_jump_target != loop.condition_block)
                     if cond_in_loop and else_outside:
-                        break
+                        if pred_ft == cond_block or pred_ft == loop.header_block:
+                            pass
+                        else:
+                            break
             pred_op = 'and' if 'FALSE' in pred_last.opname else 'or'
             if pred_op != op_type:
                 break
             chain.insert(0, (pred, pred_op))
             current = pred
         return chain if len(chain) >= 1 else None
+
+    def _detect_while_boolop_forward_chain(self, cond_block: BasicBlock, loop: LoopRegion, BOOLOP_CHAIN_JUMPS) -> Optional[List[Tuple[BasicBlock, str]]]:
+        chain: List[Tuple[BasicBlock, str]] = []
+        last = cond_block.get_last_instruction()
+        if not last or last.opname not in BOOLOP_CHAIN_JUMPS:
+            return None
+        op_type = 'and' if 'FALSE' in last.opname else 'or'
+        chain.append((cond_block, op_type))
+        visited = {cond_block.start_offset}
+        current = cond_block
+        while True:
+            succs = list(current.conditional_successors)
+            if len(succs) != 2:
+                break
+            last_instr = current.get_last_instruction()
+            if not last_instr or last_instr.argval is None:
+                break
+            jump_target = self.cfg.get_block_by_offset(last_instr.argval)
+            ft_succ = next((s for s in succs if s.start_offset != last_instr.argval), None)
+            if ft_succ is None:
+                break
+            if ft_succ.start_offset in visited:
+                break
+            if ft_succ == loop.header_block or ft_succ in loop.body_blocks:
+                break
+            region_for_ft = self.block_to_region.get(ft_succ)
+            if isinstance(region_for_ft, LoopRegion):
+                break
+            if isinstance(region_for_ft, IfRegion) and region_for_ft.condition_block != ft_succ:
+                break
+            visited.add(ft_succ.start_offset)
+            ft_last = ft_succ.get_last_instruction()
+            if not ft_last or ft_last.opname not in BOOLOP_CHAIN_JUMPS:
+                break
+            ft_op = 'and' if 'FALSE' in ft_last.opname else 'or'
+            if len(chain) >= 2:
+                first_jt = self.cfg.get_block_by_offset(chain[0][0].get_last_instruction().argval)
+                cur_jt = self.cfg.get_block_by_offset(last_instr.argval)
+                if first_jt and cur_jt and first_jt != cur_jt:
+                    break
+            chain.append((ft_succ, ft_op))
+            current = ft_succ
+        if len(chain) < 2:
+            return None
+        first_last = chain[0][0].get_last_instruction()
+        first_jt = self.cfg.get_block_by_offset(first_last.argval) if first_last and first_last.argval is not None else None
+        if first_jt is None:
+            return None
+        all_same_target = True
+        for cb, _ in chain:
+            cl = cb.get_last_instruction()
+            if not cl or cl.argval is None:
+                all_same_target = False
+                break
+            cjt = self.cfg.get_block_by_offset(cl.argval)
+            if cjt != first_jt:
+                all_same_target = False
+                break
+        if all_same_target:
+            return chain
+        first_ft = None
+        first_instr = chain[0][0].get_last_instruction()
+        if first_instr and first_instr.argval is not None:
+            first_succs = list(chain[0][0].conditional_successors)
+            first_ft = next((s for s in first_succs if s.start_offset != first_instr.argval), None)
+        if first_ft is None:
+            return None
+        all_ft_consistent = True
+        for cb, _ in chain[1:]:
+            cl = cb.get_last_instruction()
+            if not cl or cl.argval is None:
+                all_ft_consistent = False
+                break
+            if len(chain) >= 2 and cb == chain[-1][0]:
+                continue
+            cb_succs = list(cb.conditional_successors)
+            cb_ft = next((s for s in cb_succs if s.start_offset != cl.argval), None)
+            if cb_ft != first_ft:
+                all_ft_consistent = False
+                break
+        if all_ft_consistent:
+            return chain
+        return None
 
     def _detect_boolop_chain_start(self, block: BasicBlock, claimed: Set[BasicBlock]) -> Optional[List[Tuple[BasicBlock, str]]]:
         if block in claimed:
@@ -8431,10 +8573,11 @@ class RegionAnalyzer:
         chain: List[Tuple[BasicBlock, str]] = []
         current = start_block
         visited = set()
+        BOOLOP_CHAIN_JUMPS = FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS
         while current and current.start_offset not in visited:
             visited.add(current.start_offset)
             last = current.get_last_instruction()
-            if not last or last.opname not in FORWARD_CONDITIONAL_JUMP_OPS:
+            if not last or last.opname not in BOOLOP_CHAIN_JUMPS:
                 break
             if current in self.block_to_region:
                 break
@@ -8492,7 +8635,8 @@ class RegionAnalyzer:
         if ft_succ is None or ft_succ in self.block_to_region:
             return result
         ft_last = ft_succ.get_last_instruction()
-        if not ft_last or ft_last.opname not in FORWARD_CONDITIONAL_JUMP_OPS:
+        BOOLOP_CHAIN_JUMPS = FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS
+        if not ft_last or ft_last.opname not in BOOLOP_CHAIN_JUMPS:
             return result
         extended = self._detect_boolop_conditional_chain(ft_succ, set())
         if extended:

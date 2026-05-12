@@ -154,7 +154,15 @@ class RegionASTGenerator:
             elif isinstance(entry_region, TernaryRegion):
                 pass
             elif isinstance(entry_region, AssertRegion):
-                pass
+                assert_id = id(entry_region)
+                if assert_id not in self._generated_regions and assert_id not in self._generating_regions:
+                    assert_ast = self._generate_assert(entry_region)
+                    if assert_ast:
+                        ast_nodes.append(assert_ast)
+                    for b in entry_region.blocks:
+                        self.generated_blocks.add(b)
+                    self._generated_regions.add(assert_id)
+                self.generated_blocks.add(entry_block)
             else:
                 _entry_region = self.region_analyzer.get_region_for_block(entry_block)
                 entry_ast = []
@@ -393,6 +401,8 @@ class RegionASTGenerator:
             for other in self.regions:
                 if other is not r and r.entry and r.entry in other.blocks:
                     if other.region_type != RegionType.BASIC:
+                        if other.parent is r:
+                            continue
                         if len(r.blocks) > len(other.blocks):
                             continue
                         if isinstance(other, BoolOpRegion) and isinstance(r, LoopRegion):
@@ -453,6 +463,7 @@ class RegionASTGenerator:
         other_regions = [r for r in filtered if not isinstance(r, BoolOpRegion)]
         
         loop_condition_boolops = set()
+        ternary_absorbed_boolops = set()
         for br in boolop_regions:
             for lr in other_regions:
                 if isinstance(lr, LoopRegion):
@@ -464,9 +475,22 @@ class RegionASTGenerator:
                     if overlap > 0 and cond_match:
                         loop_condition_boolops.add(id(br))
                         break
+                elif isinstance(lr, TernaryRegion):
+                    if hasattr(lr, 'condition_chain_blocks') and lr.condition_chain_blocks:
+                        chain_block_objs = set()
+                        for item in lr.condition_chain_blocks:
+                            if hasattr(item, 'start_offset'):
+                                chain_block_objs.add(item)
+                            elif isinstance(item, tuple) and len(item) >= 1 and hasattr(item[0], 'start_offset'):
+                                chain_block_objs.add(item[0])
+                        boolop_chain_blocks = set(cb for cb, _ in br.op_chain)
+                        if chain_block_objs and boolop_chain_blocks and boolop_chain_blocks <= chain_block_objs:
+                            ternary_absorbed_boolops.add(id(br))
+                            break
 
         boolop_regions = [r for r in boolop_regions
-                          if id(r) not in loop_condition_boolops]
+                          if id(r) not in loop_condition_boolops
+                          and id(r) not in ternary_absorbed_boolops]
         
         sorted_other = sorted(other_regions, key=lambda r: r.entry.start_offset if r.entry else 0)
         top_level_regions = boolop_regions + sorted_other
@@ -1216,13 +1240,36 @@ class RegionASTGenerator:
         message = None
         if region.message_block:
             msg_instrs = []
-            for instr in region.message_block.instructions:
-                if instr.opname in ('RAISE_VARARGS', 'POP_EXCEPT', 'RERAISE',
-                                    'LOAD_ASSERTION_ERROR', 'PRECALL', 'CALL',
-                                    'RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
-                                    'COPY', 'SWAP'):
-                    continue
-                msg_instrs.append(instr)
+            instrs = region.message_block.instructions
+            has_build_string = any(i.opname == 'BUILD_STRING' for i in instrs)
+            base_skip = {'RAISE_VARARGS', 'POP_EXCEPT', 'RERAISE',
+                        'LOAD_ASSERTION_ERROR', 'RESUME', 'NOP', 'CACHE',
+                        'PUSH_NULL', 'COPY', 'SWAP'}
+            if has_build_string:
+                raise_call_start = len(instrs)
+                found_raise = False
+                for idx in range(len(instrs) - 1, -1, -1):
+                    op = instrs[idx].opname
+                    if op == 'RAISE_VARARGS':
+                        raise_call_start = idx
+                        found_raise = True
+                    elif found_raise and op in ('CALL', 'PRECALL', 'PUSH_NULL',
+                                                'COPY', 'SWAP', 'NOP', 'CACHE',
+                                                'RESUME'):
+                        raise_call_start = idx
+                    elif found_raise:
+                        break
+                for i, instr in enumerate(instrs):
+                    if instr.opname in base_skip:
+                        continue
+                    if i >= raise_call_start and instr.opname in ('PRECALL', 'CALL'):
+                        continue
+                    msg_instrs.append(instr)
+            else:
+                for instr in instrs:
+                    if instr.opname in base_skip or instr.opname in ('PRECALL', 'CALL'):
+                        continue
+                    msg_instrs.append(instr)
             if msg_instrs:
                 message = self.expr_reconstructor.reconstruct(msg_instrs)
         for block in region.blocks:
@@ -3873,6 +3920,22 @@ class RegionASTGenerator:
                 self.generated_offsets.add(block.start_offset)
                 continue
             if role in (BlockRole.CONTINUE, BlockRole.PURE_CONTINUE):
+                _meaningful_instrs = [
+                    i for i in block.instructions
+                    if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP')
+                    and i.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+                                        'JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                    and i.opname not in ('POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_FORWARD_IF_FALSE',
+                                        'POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE')
+                    and i.opname not in ('JUMP_IF_TRUE_OR_POP', 'JUMP_IF_FALSE_OR_POP')
+                ]
+                if _meaningful_instrs:
+                    bs = self._generate_block_statements(block)
+                    if bs:
+                        stmts.extend(bs)
+                    self.generated_blocks.add(block)
+                    self.generated_offsets.add(block.start_offset)
+                    continue
                 stmts.append({'type': 'Continue'})
                 self.generated_blocks.add(block)
                 self.generated_offsets.add(block.start_offset)
@@ -4079,6 +4142,13 @@ class RegionASTGenerator:
                 return True
             if role in (BlockRole.RETURN, BlockRole.RETURN_NONE):
                 return False
+            if role in (BlockRole.LOOP_ELSE,):
+                last = b.get_last_instruction()
+                if (last and last.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                        and last.argval is not None
+                        and loop.header_block is not None
+                        and self.cfg.get_block_by_offset(last.argval) == loop.header_block):
+                    return False
             if b not in loop_body_set:
                 return True
             return False
