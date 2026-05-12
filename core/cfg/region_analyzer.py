@@ -6824,7 +6824,7 @@ class RegionAnalyzer:
             if has_none_check and not has_compare:
                 load_ops = [i for i in meaningful if i.opname in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF')]
                 other_ops = [i for i in meaningful if i.opname not in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF') and i.opname not in CONDITIONAL_JUMP_OPS]
-                if len(load_ops) == 1 and other_ops and all(o.opname in ('POP_TOP',) for o in other_ops):
+                if len(load_ops) == 1 and (not other_ops or all(o.opname in ('POP_TOP',) for o in other_ops)):
                     return False
         return True
 
@@ -7886,10 +7886,15 @@ class RegionAnalyzer:
                     has_unary_not = any(i.opname == 'UNARY_NOT' for i in jt_effective)
                     if has_unary_not:
                         return False
+                    jt_non_noise = [i for i in jt_effective
+                                    if i.opname not in ('JUMP_FORWARD', 'JUMP_BACKWARD',
+                                                        'JUMP_ABSOLUTE')]
+                    if len(jt_non_noise) == 0:
+                        continue
                     if not self._is_single_expression_block(jt_block):
                         return False
                     return True
-            return False
+            return True
 
         def _is_ternary_block(block):
             succs = list(block.conditional_successors)
@@ -8043,26 +8048,30 @@ class RegionAnalyzer:
             for cb in candidate_blocks:
                 existing = self.block_to_region.get(cb)
                 if isinstance(existing, BoolOpRegion):
-                    # Phase 11优化: 允许BoolOp→Ternary升级
-                    #
-                    # 当 BoolOpRegion 是 ternary 条件链的一部分时，
-                    # 不应该阻止 ternary 识别。
-                    #
-                    # 判断依据:
-                    # 1. BoolOpRegion的entry是当前ternary header
-                    # 2. BoolOpRegion的merge_block是ternary的false_value_block
-                    # 3. BoolOpRegion的所有链式块都在条件链中（非值分支）
-                    #
-                    # 这解决了 tn20/tn21 类失败:
-                    #   `a if a and b else 0` 应该是 Ternary(BoolOp条件)
-                    #   而非独立的 BoolOp + IfRegion
-                    can_upgrade = (
-                        existing.entry == block and
-                        (existing.merge_block == false_block or
-                         (existing.merge_block is not None and false_block is not None and
-                          existing.merge_block.start_offset == false_block.start_offset)) and
-                        all(b in candidate_blocks for b, _ in existing.op_chain)
-                    )
+                    can_upgrade = False
+                    if existing.entry == block:
+                        header_last = block.get_last_instruction()
+                        if (header_last and
+                                header_last.opname in FORWARD_CONDITIONAL_JUMP_OPS and
+                                header_last.argval is not None):
+                            jump_target = header_last.argval
+                            if (jump_target == false_block or
+                                    (isinstance(jump_target, int) and
+                                     false_block is not None and
+                                     jump_target == false_block.start_offset)):
+                                can_upgrade = True
+                            elif (existing.merge_block and
+                                  existing.merge_block == false_block or
+                                  (existing.merge_block is not None and
+                                   false_block is not None and
+                                   existing.merge_block.start_offset ==
+                                   false_block.start_offset)):
+                                can_upgrade = True
+                            else:
+                                chain_only_in_candidate = all(
+                                    b in candidate_blocks for b, _ in existing.op_chain)
+                                if chain_only_in_candidate:
+                                    can_upgrade = True
                     if not can_upgrade:
                         skip_ternary = True
                         break
@@ -8681,6 +8690,28 @@ class RegionAnalyzer:
             visited.add(current.start_offset)
             last = current.get_last_instruction()
             if not last or last.opname not in SHORT_CIRCUIT_JUMP_OPS:
+                if chain and last and last.opname not in ('RETURN_VALUE', 'RETURN_CONST',
+                                                           'RAISE_VARARGS', 'RERAISE'):
+                    pure_instrs = [i for i in current.instructions
+                                   if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                    has_store = any(i.opname in ('STORE_NAME', 'STORE_FAST',
+                                                  'STORE_GLOBAL', 'STORE_DEREF')
+                                    for i in pure_instrs)
+                    succs = list(current.successors)
+                    if (not has_store and len(succs) == 1 and
+                            succs[0].start_offset not in visited and
+                            succs[0] not in self.block_to_region):
+                        next_last = succs[0].get_last_instruction()
+                        if (next_last and next_last.opname in SHORT_CIRCUIT_JUMP_OPS):
+                            current = succs[0]
+                            continue
+                        next_pure = [i for i in succs[0].instructions
+                                     if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                        if (len(next_pure) >= 1 and next_pure[0].opname == 'UNARY_NOT' and
+                                len(next_pure) >= 2 and
+                                next_last and next_last.opname in SHORT_CIRCUIT_JUMP_OPS):
+                            current = succs[0]
+                            continue
                 break
             if current in self.block_to_region:
                 break

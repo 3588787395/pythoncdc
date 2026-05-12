@@ -3084,7 +3084,6 @@ class RegionASTGenerator:
                 self.generated_offsets.add(block.start_offset)
                 return
             if _be_meaningful:
-                import sys as _sys4; _sys4.stderr.write(f'[BE-MULTI] block@{block.start_offset} has {len(_be_meaningful)} meaningful instrs\n')
                 _be_ft_names = region.metadata.get('for_target_names', set())
                 _be_filtered = []
                 _be_seen_targets = set()
@@ -7527,9 +7526,6 @@ class RegionASTGenerator:
         cond_block = region.condition_block
         true_block = region.true_value_block
         false_block = region.false_value_block
-        import sys as _sys
-        _sys.stderr.write(f'[GEN] _generate_ternary entry: cond={cond_block.start_offset if cond_block else None}, chain={getattr(region, "condition_chain_blocks", None)}\n')
-
         pre_stmts = []
 
         if region.condition_chain_blocks and len(region.condition_chain_blocks) > 1:
@@ -8696,7 +8692,6 @@ class RegionASTGenerator:
                         self._gbs_seen_ft = set()
                     if instr.argval not in self._gbs_seen_ft:
                         self._gbs_seen_ft.add(instr.argval)
-                        import sys as _sys2; _sys2.stderr.write(f'[FT-SKIP] {_ft_debug}\n')
                         if stmt_instrs:
                             _stmt = self._build_statement(stmt_instrs)
                             if _stmt:
