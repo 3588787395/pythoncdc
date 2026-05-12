@@ -390,7 +390,7 @@ class RegionASTGenerator:
                 filtered.append(r)
                 continue
             is_contained = False
-            for other in top_level:
+            for other in self.regions:
                 if other is not r and r.entry and r.entry in other.blocks:
                     if other.region_type != RegionType.BASIC:
                         if len(r.blocks) > len(other.blocks):
@@ -424,6 +424,10 @@ class RegionASTGenerator:
                             else:
                                 is_contained = True
                                 break
+                        elif isinstance(other, TernaryRegion) and isinstance(r, (BoolOpRegion, IfRegion)):
+                            if r.entry and r.entry in other.blocks:
+                                is_contained = True
+                                break
                         else:
                             is_contained = True
                             break
@@ -432,6 +436,19 @@ class RegionASTGenerator:
                     is_contained = True
             if not is_contained:
                 filtered.append(r)
+
+        for r in self.regions:
+            if isinstance(r, (TernaryRegion, MatchRegion)) and r.parent is not None:
+                if r not in filtered:
+                    parent = r.parent
+                    is_nested_in_tm_parent = False
+                    while parent:
+                        if isinstance(parent, (TernaryRegion, MatchRegion)):
+                            is_nested_in_tm_parent = True
+                            break
+                        parent = getattr(parent, 'parent', None)
+                    if not is_nested_in_tm_parent:
+                        filtered.append(r)
         boolop_regions = [r for r in filtered if isinstance(r, BoolOpRegion)]
         other_regions = [r for r in filtered if not isinstance(r, BoolOpRegion)]
         
@@ -2672,7 +2689,12 @@ class RegionASTGenerator:
                     _negate = (not _is_if_false) if _jumps_inside else _is_if_false
                     _cond_expr = _negate_expr(_expr) if _negate else _expr
                     _return_block = _block_succ_return[0]
-                    _return_stmts = self._generate_block_statements(_return_block)
+                    _return_role = self.region_analyzer.get_block_role(_return_block)
+                    if _return_role in (BlockRole.RETURN, BlockRole.RETURN_NONE):
+                        _ret_ast = self._generate_return_ast(_return_block)
+                        _return_stmts = [_ret_ast] if _ret_ast else [{'type': 'Return', 'value': {'type': 'Constant', 'value': None}}]
+                    else:
+                        _return_stmts = self._generate_block_statements(_return_block)
                     _return_body = _return_stmts if _return_stmts else [{'type': 'Return', 'value': {'type': 'Constant', 'value': None}}]
                     _hdr_stmts.append({'type': 'If', 'test': _cond_expr, 'body': _return_body})
                     self.generated_blocks.add(_return_block)
@@ -2766,8 +2788,13 @@ class RegionASTGenerator:
             if _then_succ in _block_succ_break:
                 _then_stmts = [{'type': 'Break'}]
             elif _then_succ in _block_succ_return:
-                _rs = self._generate_block_statements(_then_succ)
-                _then_stmts = _rs if _rs else [{'type': 'Return', 'value': {'type': 'Constant', 'value': None}}]
+                _then_role = self.region_analyzer.get_block_role(_then_succ)
+                if _then_role in (BlockRole.RETURN, BlockRole.RETURN_NONE):
+                    _ret_ast = self._generate_return_ast(_then_succ)
+                    _then_stmts = [_ret_ast] if _ret_ast else [{'type': 'Return', 'value': {'type': 'Constant', 'value': None}}]
+                else:
+                    _rs = self._generate_block_statements(_then_succ)
+                    _then_stmts = _rs if _rs else [{'type': 'Return', 'value': {'type': 'Constant', 'value': None}}]
                 self.generated_blocks.add(_then_succ)
                 self.generated_offsets.add(_then_succ.start_offset)
             else:
@@ -4050,6 +4077,8 @@ class RegionASTGenerator:
             role = self.region_analyzer.get_block_role(b)
             if role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
                 return True
+            if role in (BlockRole.RETURN, BlockRole.RETURN_NONE):
+                return False
             if b not in loop_body_set:
                 return True
             return False
@@ -4136,9 +4165,18 @@ class RegionASTGenerator:
                 is_if_false = 'IF_FALSE' in last_instr.opname
                 cond_expr = expr
                 _then_block = normal_succ[0]
-                _then_stmts = self._generate_block_statements(_then_block) if _then_block not in self.generated_blocks else []
-                if _then_block not in self.generated_blocks:
-                    self.generated_blocks.add(_then_block)
+                _then_role = self.region_analyzer.get_block_role(_then_block)
+                if _then_role in (BlockRole.RETURN, BlockRole.RETURN_NONE):
+                    _ret_ast = self._generate_return_ast(_then_block)
+                    _then_stmts = [_ret_ast] if _ret_ast else [{'type': 'Return', 'value': {'type': 'Constant', 'value': None}}]
+                    if _then_block not in self.generated_blocks:
+                        self.generated_blocks.add(_then_block)
+                elif _then_block not in self.generated_blocks:
+                    _then_stmts = self._generate_block_statements(_then_block)
+                    if _then_block not in self.generated_blocks:
+                        self.generated_blocks.add(_then_block)
+                else:
+                    _then_stmts = []
                 if_stmt = {'type': 'If', 'test': cond_expr, 'body': _then_stmts if _then_stmts else [{'type': 'Pass'}]}
                 self.generated_blocks.add(block)
                 self.generated_offsets.add(block.start_offset)

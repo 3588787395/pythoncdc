@@ -504,6 +504,24 @@ class RegionAnalyzer:
             boolop_regions=boolop_regions,
             conditional_regions=chained_compare_regions
         )
+
+        _ternary_block_sets = []
+        for tr in ternary_regions:
+            if tr.blocks:
+                _ternary_block_sets.append(tr.blocks)
+
+        if _ternary_block_sets:
+            def _region_overlaps_with_ternary(region):
+                for tb_set in _ternary_block_sets:
+                    if region.entry and region.entry in tb_set:
+                        return True
+                    if region.blocks & tb_set:
+                        return True
+                return False
+
+            match_regions = [r for r in match_regions if not _region_overlaps_with_ternary(r)]
+            assert_regions = [r for r in assert_regions if not _region_overlaps_with_ternary(r)]
+
         conditional_regions = self._identify_conditional_regions(
             loop_regions=loop_regions,
             assert_regions=assert_regions,
@@ -2458,7 +2476,7 @@ class RegionAnalyzer:
             for s in b.successors:
                 if s not in body_set and s != natural_exit:
                     if not any(i.opname in ('PUSH_EXC_INFO', 'WITH_EXCEPT_START') for i in s.instructions):
-                        if not any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in b.instructions):
+                        if not any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in s.instructions):
                             if is_back_edge_condition:
                                 continue
                             break_blocks_set.add(s)
@@ -8063,19 +8081,24 @@ class RegionAnalyzer:
                 for b in nested.blocks:
                     self.block_to_region[b] = region
 
-            # Remove overlapping IfRegions/BoolOpRegions that would steal blocks
+            # Remove overlapping regions that would steal blocks
             # during generation (causing TernaryRegion to be silently skipped)
+            # Must include MatchRegion/AssertRegion because they are identified
+            # in Phase 1 BEFORE ternary (Phase 2), and may falsely claim ternary value blocks
             to_remove = []
             for r in self.regions:
                 if r is region:
                     continue
-                if isinstance(r, (IfRegion, BoolOpRegion)):
+                if isinstance(r, (IfRegion, BoolOpRegion, MatchRegion, AssertRegion)):
                     if r.entry == region.entry or (r.entry and r.entry in region.blocks):
                         to_remove.append(r)
                     elif region.entry and region.entry in r.blocks:
                         to_remove.append(r)
             for r in to_remove:
                 self.regions.remove(r)
+                for b in r.blocks:
+                    if b in self.block_to_region and self.block_to_region[b] is r:
+                        del self.block_to_region[b]
 
             self.regions.append(region)
             for b in region.blocks:
