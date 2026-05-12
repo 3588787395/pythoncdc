@@ -7040,6 +7040,31 @@ class RegionASTGenerator:
                 current_values = [sub_expr]
         if current_values:
             segments.append((current_op, current_values))
+        chain_blocks = set(b for b, _ in op_chain)
+        if segments and len(op_chain) >= 1:
+            last_chain_block = op_chain[-1][0]
+            last_instr = last_chain_block.get_last_instruction()
+            if last_instr and last_instr.opname in STRIP_JUMP_OPS:
+                ft_succs = sorted(last_chain_block.conditional_successors, key=lambda s: s.start_offset)
+                ft_block = next((s for s in ft_succs
+                                 if s.start_offset != last_instr.argval
+                                 and s not in chain_blocks
+                                 and s != region.merge_block), None)
+                if ft_block and ft_block in region.blocks:
+                    ft_instrs = [i for i in ft_block.instructions
+                                 if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                    clean_ft = []
+                    for i in ft_instrs:
+                        if i.opname in ('POP_TOP', 'RETURN_VALUE', 'RETURN_CONST',
+                                       'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'):
+                            break
+                        clean_ft.append(i)
+                    if clean_ft:
+                        ft_expr = self.expr_reconstructor.reconstruct(clean_ft)
+                        if ft_expr:
+                            last_op, last_vals = segments[-1]
+                            last_vals.append(ft_expr)
+                            segments[-1] = (last_op, last_vals)
         if not segments:
             return None
         if len(segments) == 1 and len(segments[0][1]) == 1 and len(op_chain) == 1:

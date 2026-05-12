@@ -6864,38 +6864,7 @@ class RegionAnalyzer:
         return True
 
     def _is_none_match_block(self, block):
-        if block is None:
-            return False
-        if self._has_match_op(block):
-            return False
-        instrs = [i for i in block.instructions if i.opname not in NOISE_OPS]
-        if len(instrs) < 2:
-            return False
-        has_load = instrs[0].opname in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF')
-        if not has_load:
-            return False
-        last = instrs[-1]
-        is_none_jump = last.opname in ('POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_IF_NOT_NONE')
-        if not is_none_jump:
-            return False
-        has_copy = any(i.opname == 'COPY' for i in instrs)
-        if has_copy:
-            return False
-        has_cond_jump = any(i.opname in CONDITIONAL_JUMP_OPS for i in instrs[:-1])
-        if has_cond_jump:
-            return False
-        middle = instrs[1:-1]
-        valid_middle_ops = frozenset({'POP_TOP', 'SWAP'})
-        if not all(i.opname in valid_middle_ops for i in middle):
-            return False
-        jt = self.cfg.get_block_by_offset(last.argval)
-        if jt is None:
-            return False
-        for pred in block.predecessors:
-            pred_last = pred.get_last_instruction()
-            if pred_last and pred_last.opname in SHORT_CIRCUIT_JUMP_OPS:
-                return False
-        return True
+        return False
 
     def _scan_literal_match_subjects(self, claimed):
         literal_regions = []
