@@ -2420,6 +2420,7 @@ class RegionAnalyzer:
                 return [for_iter_exit], natural_exit
 
         loop_successors = [s for s in header.successors if s not in body_set and s != header]
+        loop_successors = [s for s in loop_successors if not any(i.opname == 'RAISE_VARARGS' for i in s.instructions)]
         detector = get_opcode_detector()
         for block in body_set:
             if block == header:
@@ -2428,6 +2429,8 @@ class RegionAnalyzer:
                 if succ not in body_set and succ != header and succ not in loop_successors:
                     block_last = block.get_last_instruction()
                     if block_last and detector.is_conditional_jump(block_last):
+                        if any(i.opname == 'RAISE_VARARGS' for i in succ.instructions):
+                            continue
                         loop_successors.append(succ)
         cond_exit_targets = []
         if condition_block and condition_block != header and condition_block not in body_set:
@@ -6821,7 +6824,7 @@ class RegionAnalyzer:
             if has_none_check and not has_compare:
                 load_ops = [i for i in meaningful if i.opname in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF')]
                 other_ops = [i for i in meaningful if i.opname not in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF') and i.opname not in CONDITIONAL_JUMP_OPS]
-                if len(load_ops) == 1 and all(o.opname in ('POP_TOP',) for o in other_ops):
+                if len(load_ops) == 1 and other_ops and all(o.opname in ('POP_TOP',) for o in other_ops):
                     return False
         return True
 
@@ -7371,14 +7374,25 @@ class RegionAnalyzer:
                     continue
             if loop_regions:
                 br_check = self.block_to_region.get(block)
-                if br_check is not None or any(block in lr.blocks for lr in loop_regions):
+                if isinstance(br_check, LoopRegion):
+                    if block != br_check.header_block and block != br_check.condition_block:
+                        pass
+                    else:
+                        continue
+                elif br_check is not None:
                     continue
                 cond_succs_check = list(block.conditional_successors)
                 if len(cond_succs_check) == 2:
                     block_in_loop = any(block in lr.blocks for lr in loop_regions)
                     if block_in_loop:
                         if any(s in lr.blocks or s == lr.header_block or s == lr.entry for lr in loop_regions for s in cond_succs_check):
-                            continue
+                            is_loop_backedge_target = any(
+                                any(su.start_offset >= lr.header_block.start_offset for su in block.successors)
+                                and any(i.opname.startswith('JUMP_BACKWARD') for i in block.instructions)
+                                for lr in loop_regions
+                            )
+                            if is_loop_backedge_target:
+                                continue
 
             if try_regions:
                 if any(instr.opname in ('PUSH_EXC_INFO', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH') for instr in block.instructions):
@@ -7395,6 +7409,13 @@ class RegionAnalyzer:
                 if isinstance(mr_check, MatchRegion):
                     continue
                 if any(block in mr.blocks for mr in match_regions):
+                    continue
+
+            if assert_regions:
+                ar_check = self.block_to_region.get(block)
+                if isinstance(ar_check, AssertRegion):
+                    continue
+                if any(block == ar.entry for ar in assert_regions):
                     continue
 
             br_check = self.block_to_region.get(block)
@@ -7527,6 +7548,21 @@ class RegionAnalyzer:
         """
         if else_blocks and all(self._is_trivial_block(b) for b in else_blocks):
             else_blocks = []
+        if else_blocks and merge is None:
+            then_block_set = set(then_blocks) if then_blocks else set()
+            else_block_set = set(else_blocks)
+            shared_or_reachable = False
+            for tb in then_blocks:
+                for succ in tb.successors:
+                    if succ in else_block_set:
+                        last_instr = tb.get_last_instruction()
+                        if last_instr and last_instr.opname not in ('RETURN_VALUE', 'RETURN_CONST', 'RAISE_VARARGS', 'RERAISE'):
+                            shared_or_reachable = True
+                            break
+                if shared_or_reachable:
+                    break
+            if shared_or_reachable:
+                else_blocks = []
         region_type = RegionType.IF_THEN_ELSE if else_blocks else RegionType.IF_THEN
         all_blocks = all_condition_blocks | set(then_blocks) | set(else_blocks)
         region = IfRegion(
@@ -7850,15 +7886,9 @@ class RegionAnalyzer:
                     has_unary_not = any(i.opname == 'UNARY_NOT' for i in jt_effective)
                     if has_unary_not:
                         return False
-                    jt_non_noise = [i for i in jt_block.instructions
-                                   if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                    if (jt_non_noise and
-                        all(i.opname in ('RETURN_VALUE', 'RETURN_CONST', 'LOAD_CONST',
-                                         'LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL',
-                                         'LOAD_DEREF')
-                            for i in jt_non_noise)):
+                    if not self._is_single_expression_block(jt_block):
                         return False
-                    return self._is_single_expression_block(jt_block)
+                    return True
             return False
 
         def _is_ternary_block(block):
