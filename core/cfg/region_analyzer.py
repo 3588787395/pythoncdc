@@ -6400,6 +6400,7 @@ class RegionAnalyzer:
             instrs = block.instructions
             idx = 0
             if block == region.subject_block:
+                _has_match_op_in_block = any(i.opname in MATCH_OPS for i in instrs)
                 while idx < len(instrs):
                     op = instrs[idx].opname
                     if op in NOISE:
@@ -6423,6 +6424,8 @@ class RegionAnalyzer:
                     if op in ('LOAD_CONST',) and idx + 1 < len(instrs) and instrs[idx + 1].opname in ('COMPARE_OP', 'IS_OP'):
                         break
                     if op in ('POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_IF_NOT_NONE'):
+                        break
+                    if op == 'POP_TOP' and not _has_match_op_in_block:
                         break
                     idx += 1
                     continue
@@ -6860,6 +6863,40 @@ class RegionAnalyzer:
                 return False
         return True
 
+    def _is_none_match_block(self, block):
+        if block is None:
+            return False
+        if self._has_match_op(block):
+            return False
+        instrs = [i for i in block.instructions if i.opname not in NOISE_OPS]
+        if len(instrs) < 2:
+            return False
+        has_load = instrs[0].opname in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF')
+        if not has_load:
+            return False
+        last = instrs[-1]
+        is_none_jump = last.opname in ('POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_IF_NOT_NONE')
+        if not is_none_jump:
+            return False
+        has_copy = any(i.opname == 'COPY' for i in instrs)
+        if has_copy:
+            return False
+        has_cond_jump = any(i.opname in CONDITIONAL_JUMP_OPS for i in instrs[:-1])
+        if has_cond_jump:
+            return False
+        middle = instrs[1:-1]
+        valid_middle_ops = frozenset({'POP_TOP', 'SWAP'})
+        if not all(i.opname in valid_middle_ops for i in middle):
+            return False
+        jt = self.cfg.get_block_by_offset(last.argval)
+        if jt is None:
+            return False
+        for pred in block.predecessors:
+            pred_last = pred.get_last_instruction()
+            if pred_last and pred_last.opname in SHORT_CIRCUIT_JUMP_OPS:
+                return False
+        return True
+
     def _scan_literal_match_subjects(self, claimed):
         literal_regions = []
         for block in self.cfg.get_blocks_in_order():
@@ -6868,7 +6905,8 @@ class RegionAnalyzer:
             is_copy_subject = self._is_match_subject_block(block)
             is_nop_case = self._is_simple_match_case_block(block)
             is_wildcard = self._is_wildcard_match_block(block)
-            if not is_copy_subject and not is_nop_case and not is_wildcard:
+            is_none_match = self._is_none_match_block(block)
+            if not is_copy_subject and not is_nop_case and not is_wildcard and not is_none_match:
                 continue
             if self.block_to_region.get(block) is not None:
                 continue
@@ -6882,6 +6920,19 @@ class RegionAnalyzer:
                 case_patterns_l.append({'type': 'MatchAs'})
                 case_bodies_l.append([block])
                 current = None
+            elif is_none_match:
+                case_blocks_l.append(block)
+                case_patterns_l.append({'type': 'MatchSingleton', 'value': None})
+                last_instr = block.get_last_instruction()
+                jt = self.cfg.get_block_by_offset(last_instr.argval) if last_instr else None
+                ft_successor = next((s for s in sorted(block.successors, key=lambda s: s.start_offset) if s != jt), None) if jt else (block.successors[0] if block.successors else None)
+                if ft_successor:
+                    body_set = {ft_successor}
+                    all_blocks_l.update(body_set)
+                else:
+                    body_set = set()
+                case_bodies_l.append(sorted(body_set, key=lambda b: b.start_offset))
+                current = jt
             else:
                 current = block
             merge_candidates = []
@@ -8635,9 +8686,8 @@ class RegionAnalyzer:
             if len(chain) >= 2:
                 first_jump_target = self.cfg.get_block_by_offset(chain[0][0].get_last_instruction().argval)
                 cur_jump_target = self.cfg.get_block_by_offset(last.argval)
-                if op_type == 'and' and first_jump_target and cur_jump_target and first_jump_target != cur_jump_target:
-                    break
-                if op_type == 'or' and first_jump_target and cur_jump_target and first_jump_target != cur_jump_target:
+                prev_op = chain[-2][1]
+                if op_type == prev_op and first_jump_target and cur_jump_target and first_jump_target != cur_jump_target:
                     break
             current = ft_succ
         if len(chain) < 2:
@@ -8647,6 +8697,7 @@ class RegionAnalyzer:
         if first_jt is None:
             return None
         all_same_target = True
+        target_groups = {}
         for cb, cop in chain:
             cl = cb.get_last_instruction()
             if not cl or cl.argval is None:
@@ -8655,11 +8706,18 @@ class RegionAnalyzer:
             cjt = self.cfg.get_block_by_offset(cl.argval)
             if cjt != first_jt:
                 all_same_target = False
-                break
+            target_groups.setdefault(id(cjt), set()).add(cop)
         if not all_same_target:
             unified_chain = self._try_unify_mixed_boolop_chain(chain, first_jt)
             if unified_chain and len(unified_chain) >= 2:
                 return unified_chain
+            has_operator_boundary = False
+            for idx in range(1, len(chain)):
+                if chain[idx][1] != chain[idx-1][1]:
+                    has_operator_boundary = True
+                    break
+            if has_operator_boundary and len(chain) >= 2:
+                return chain
             return None
         return chain
 
@@ -8727,7 +8785,8 @@ class RegionAnalyzer:
                 break
             if len(chain) >= 2:
                 prev_block = chain[-2][0]
-                if not self.dom_analyzer.dominates(prev_block, current):
+                prev_op = chain[-2][1]
+                if op_type == prev_op and not self.dom_analyzer.dominates(prev_block, current):
                     break
             current = ft_succ
         return chain if len(chain) >= 1 else None

@@ -4441,7 +4441,27 @@ class RegionASTGenerator:
             cond_expr = _negate_expr(expr) if is_if_false else expr
         else:
             cond_expr = expr if is_if_false else _negate_expr(expr)
-        if_stmt = {'type': 'If', 'test': cond_expr, 'body': [{'type': body_type}]}
+        _target_blk = target_succ[0]
+        _target_meaningful = [i for i in _target_blk.instructions
+            if i.opname not in ('RESUME','NOP','CACHE','PUSH_NULL')
+            and i.opname not in FORWARD_JUMP_OPS
+            and i.opname not in BACKWARD_JUMP_OPS
+            and i.opname not in ('RETURN_VALUE','RAISE_VARARGS','RERAISE','BREAK_LOOP','CONTINUE')
+            and i.opname not in ('POP_TOP','SWAP')]
+        if len(_target_meaningful) >= 3 and _target_blk not in self.generated_blocks:
+            _target_stmts = self._generate_block_statements(_target_blk)
+            if _target_blk not in self.generated_blocks:
+                self.generated_blocks.add(_target_blk)
+            if _target_stmts:
+                _has_break = any(s.get('type') in ('Break','Continue','Return') for s in _target_stmts)
+                if not _has_break and body_type in ('Break','Continue'):
+                    _target_stmts.append({'type': body_type})
+                _body_stmts = _target_stmts
+            else:
+                _body_stmts = [{'type': body_type}]
+        else:
+            _body_stmts = [{'type': body_type}]
+        if_stmt = {'type': 'If', 'test': cond_expr, 'body': _body_stmts}
         self.generated_blocks.add(block)
         self.generated_offsets.add(block.start_offset)
         if target_succ[0] not in self.generated_blocks:
@@ -6632,11 +6652,31 @@ class RegionASTGenerator:
             if guard is not None:
                 guard_pattern_blocks = self._collect_guard_pattern_blocks(region, i)
 
-            # 通配符match退化情况：subject_block和body_block是同一个块
-            # body应为空（pass），跳过body生成避免重复生成subject指令
+            # 通配符match特殊情况：subject_block和body_block可能是同一个块
+            # 不再跳过body生成，而是让后续的body_start索引逻辑正确提取body部分
             if is_wildcard_match and body and len(body) == 1 and body[0] == region.subject_block:
+                body_start = region.case_body_start_indices.get(body[0].start_offset, 0)
+                if body_start > 0:
+                    body_instrs = body[0].instructions[body_start:]
+                    _non_noise = [i for i in body_instrs if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
+                                                                'RETURN_VALUE', 'RETURN_CONST',
+                                                                'LOAD_CONST', 'JUMP_FORWARD', 'JUMP_ABSOLUTE')]
+                    if _non_noise:
+                        from .basic_block import BasicBlock as _BB
+                        virtual_block = _BB(body[0].instructions[body_start].offset)
+                        for instr in body_instrs:
+                            virtual_block.add_instruction(instr)
+                        stmts = self._generate_block_statements(virtual_block)
+                        if stmts:
+                            filtered = []
+                            for s in stmts:
+                                if s.get('type') == 'Expr' and isinstance(s.get('value'), dict):
+                                    val = s['value']
+                                    if val.get('type') == 'Constant' and val.get('value') is None:
+                                        continue
+                                filtered.append(s)
+                            body_stmts.extend(filtered)
                 self.generated_blocks.add(body[0])
-                body_stmts = []
 
             for block in body:
                 if block in self.generated_blocks:
