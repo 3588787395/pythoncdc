@@ -1487,17 +1487,9 @@ class ExpressionReconstructor:
         
         # [Python 3.10+] MATCH_KEYS - 映射键匹配
         elif opname == 'MATCH_KEYS':
-            # MATCH_KEYS 指令：检查映射中是否存在指定的键
-            # 参数指定键的数量
             if self.stack:
-                # 栈顶是键元组
                 keys = self.stack.pop()
-                match_keys = {
-                    'type': 'MatchKeys',
-                    'keys': keys,
-                    'lineno': instr.starts_line
-                }
-                self.stack.append(match_keys)
+                self.stack.append(keys if keys else {'type': 'Constant', 'value': None})
         
         # [Python 3.10+] MATCH_CLASS - 类模式匹配
         elif opname == 'MATCH_CLASS':

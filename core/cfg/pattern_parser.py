@@ -122,7 +122,22 @@ class PatternParser:
         blocks = [case_block]
         visited = {case_block}
 
-        worklist = list(case_block.successors)
+        last_instr = case_block.get_last_instruction()
+        jump_target_offset = None
+        if last_instr and last_instr.opname in self.COND_JUMP_OPS:
+            jump_target_offset = last_instr.argval
+
+        worklist = []
+        for succ in case_block.successors:
+            if jump_target_offset is not None and succ.start_offset == jump_target_offset:
+                continue
+            if succ not in visited:
+                worklist.append(succ)
+        CASE_HEADER_OPS = frozenset({
+            'MATCH_CLASS', 'MATCH_SEQUENCE', 'MATCH_MAPPING',
+            'MATCH_KEYS', 'MATCH_MAPPING_KEYS',
+        })
+
         while worklist:
             current = worklist.pop()
             if current in visited:
@@ -130,8 +145,21 @@ class PatternParser:
             if current not in all_blocks:
                 continue
 
+            meaningful = [i for i in current.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+            if not meaningful:
+                visited.add(current)
+                continue
+
+            if any(i.opname in CASE_HEADER_OPS for i in meaningful):
+                continue
+
+            first_meaningful = meaningful[0] if meaningful else None
+            if first_meaningful and first_meaningful.opname == 'COPY':
+                continue
+
             is_pattern_block = False
             has_definitive_pattern = False
+            is_guard_like = False
             DEFINITIVE_PATTERN_OPS = frozenset({
                 'MATCH_CLASS', 'MATCH_SEQUENCE', 'MATCH_MAPPING',
                 'MATCH_KEYS', 'MATCH_MAPPING_KEYS',
@@ -152,7 +180,24 @@ class PatternParser:
                                     'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_IF_TRUE') for i in meaningful)
                 )
                 if has_compare_and_jump:
-                    is_pattern_block = True
+                    BODY_OPS = frozenset({
+                        'BINARY_ADD', 'BINARY_SUBTRACT', 'BINARY_MULTIPLY',
+                        'BINARY_TRUE_DIVIDE', 'BINARY_FLOOR_DIVIDE', 'BINARY_MODULO',
+                        'BINARY_POWER', 'BINARY_LSHIFT', 'BINARY_RSHIFT',
+                        'BINARY_AND', 'BINARY_OR', 'BINARY_XOR',
+                        'BINARY_OP', 'INPLACE_ADD', 'INPLACE_SUBTRACT',
+                        'INPLACE_MULTIPLY', 'CALL', 'CALL_FUNCTION',
+                        'GET_ITER', 'FOR_ITER', 'SEND',
+                    })
+                    has_body_op = any(i.opname in BODY_OPS for i in meaningful)
+                    has_backward_jump = any(
+                        i.opname in ('POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE',
+                                     'JUMP_BACKWARD')
+                        for i in meaningful
+                    )
+                    if not has_body_op and not has_backward_jump:
+                        is_pattern_block = True
+                        is_guard_like = True
 
             if not is_pattern_block:
                 meaningful = [i for i in current.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
@@ -176,8 +221,29 @@ class PatternParser:
             if is_pattern_block:
                 visited.add(current)
                 blocks.append(current)
-                for s in current.successors:
-                    if s not in visited:
+                if not is_guard_like:
+                    for s in current.successors:
+                        if s not in visited:
+                            worklist.append(s)
+                else:
+                    cur_last = current.get_last_instruction()
+                    cur_jt_offset = None
+                    if cur_last and cur_last.opname in self.COND_JUMP_OPS:
+                        cur_jt_offset = cur_last.argval
+                    CASE_HEADER_OPS = frozenset({
+                        'MATCH_CLASS', 'MATCH_SEQUENCE', 'MATCH_MAPPING',
+                        'MATCH_KEYS', 'MATCH_MAPPING_KEYS',
+                    })
+                    for s in current.successors:
+                        if s in visited:
+                            continue
+                        if s.start_offset == jump_target_offset:
+                            continue
+                        if cur_jt_offset is not None and s.start_offset == cur_jt_offset:
+                            continue
+                        meaningful_s = [i for i in s.instructions if i.opname not in ('RESUME','NOP','CACHE','PUSH_NULL')]
+                        if meaningful_s and any(i.opname in CASE_HEADER_OPS for i in meaningful_s):
+                            continue
                         worklist.append(s)
 
         return blocks
@@ -264,21 +330,71 @@ class PatternParser:
                 left_name = guard_instrs[0].argval
                 compare_op = guard_instrs[2].argval
 
+                pattern_store_names = set()
+                pattern_loaded_names = set()
+                has_match_class = any(i.opname == 'MATCH_CLASS' for i in all_instrs[:guard_start])
+                for i in range(guard_start):
+                    if all_instrs[i].opname in self.STORE_OPS:
+                        pattern_store_names.add(all_instrs[i].argval)
+                    if has_match_class and all_instrs[i].opname in self.LOAD_VAR_OPS:
+                        pattern_loaded_names.add(all_instrs[i].argval)
+
+                if left_name not in pattern_store_names and left_name not in pattern_loaded_names:
+                    return None
+
+                jump_target = all_instrs[guard_end].argval
+                comparisons = []
+
                 if guard_instrs[1].opname == 'LOAD_CONST':
                     right_val = guard_instrs[1].argval
-                    result = {
+                    comparisons.append({
                         'type': 'Compare',
                         'left': {'type': 'Name', 'id': left_name},
                         'ops': [{'type': 'CompareOp', 'op': compare_op}],
                         'right': {'type': 'Constant', 'value': right_val}
-                    }
+                    })
                 else:
                     right_name = guard_instrs[1].argval
-                    result = {
+                    if right_name not in pattern_store_names:
+                        return None
+                    comparisons.append({
                         'type': 'Compare',
                         'left': {'type': 'Name', 'id': left_name},
                         'ops': [{'type': 'CompareOp', 'op': compare_op}],
                         'right': {'type': 'Name', 'id': right_name}
+                    })
+
+                pos = guard_end + 1
+                while pos + 3 < len(all_instrs):
+                    nxt = all_instrs[pos]
+                    if nxt.opname not in self.LOAD_VAR_OPS:
+                        break
+                    nxt_name = nxt.argval
+                    if (pos + 2 < len(all_instrs) and
+                        all_instrs[pos + 1].opname == 'LOAD_CONST' and
+                        all_instrs[pos + 2].opname == 'COMPARE_OP'):
+                        nxt_cmp_op = all_instrs[pos + 2].argval
+                        if (pos + 3 < len(all_instrs) and
+                            all_instrs[pos + 3].opname in ('POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_IF_FALSE')):
+                            if nxt_name not in pattern_store_names and nxt_name not in pattern_loaded_names:
+                                break
+                            comparisons.append({
+                                'type': 'Compare',
+                                'left': {'type': 'Name', 'id': nxt_name},
+                                'ops': [{'type': 'CompareOp', 'op': nxt_cmp_op}],
+                                'right': {'type': 'Constant', 'value': all_instrs[pos + 1].argval}
+                            })
+                            pos += 4
+                            continue
+                    break
+
+                if len(comparisons) == 1:
+                    result = comparisons[0]
+                else:
+                    result = {
+                        'type': 'BoolOp',
+                        'op': 'and',
+                        'values': comparisons
                     }
 
                 return result
@@ -531,14 +647,26 @@ class PatternParser:
         has_mapping = any(i.opname == 'MATCH_MAPPING' for i in instrs)
 
         has_literal_compare = False
+        literal_compare_pos = -1
         for i in range(len(instrs)):
             if (instrs[i].opname == 'LOAD_CONST' and
                 i + 1 < len(instrs) and
                 instrs[i + 1].opname in ('COMPARE_OP', 'IS_OP')):
                 has_literal_compare = True
+                literal_compare_pos = i
                 break
         has_copy = any(i.opname == 'COPY' for i in instrs)
         is_literal_match = has_literal_compare and not has_sequence and not has_class and not has_mapping
+
+        if is_literal_match and literal_compare_pos > 0:
+            pre_compare_instrs = instrs[:literal_compare_pos]
+            store_before_compare = [i for i in pre_compare_instrs if i.opname in self.STORE_OPS]
+            if store_before_compare:
+                store_target = store_before_compare[-1].argval
+                post_store_loads = [i for i in pre_compare_instrs[pre_compare_instrs.index(store_before_compare[-1]):]
+                                    if i.opname in self.LOAD_VAR_OPS and i.argval == store_target]
+                if post_store_loads:
+                    is_literal_match = False
 
         if is_literal_match:
             result = self._extract_or_or_literal_pattern(instrs)
@@ -605,6 +733,21 @@ class PatternParser:
         关键改进：as绑定的STORE_通常在所有pattern匹配之后、body之前，
         所以需要沿成功路径搜索更深的后继块。
         """
+        # 策略0：查找COMPARE_OP之前的capture pattern STORE_（case n if n > 0: 模式）
+        filtered = [i for i in case_block.instructions
+                   if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+        for i, instr in enumerate(filtered):
+            if instr.opname in self.STORE_OPS:
+                store_target = instr.argval
+                remaining = filtered[i + 1:]
+                has_guard_load = any(
+                    r.opname in self.LOAD_VAR_OPS and r.argval == store_target
+                    for r in remaining
+                )
+                has_compare = any(r.opname in ('COMPARE_OP', 'IS_OP') for r in remaining)
+                if has_guard_load and has_compare:
+                    return store_target
+
         # 策略1：在case_block内查找
         filtered = [i for i in case_block.instructions
                    if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
@@ -862,7 +1005,7 @@ class PatternParser:
                 has_unpack = True
                 in_unpack_context = True
                 count = instr.argval if instr.argval is not None else 1
-                unpack_stack = list(range(count))
+                unpack_stack = list(reversed(range(count)))
                 for _ in range(count):
                     patterns.append({'type': 'MatchAs'})
             elif instr.opname == 'UNPACK_EX':
@@ -872,7 +1015,7 @@ class PatternParser:
                 unpack_before = arg & 0xFF
                 unpack_after = (arg >> 8) & 0xFF
                 total = unpack_before + 1 + unpack_after
-                unpack_stack = list(range(total))
+                unpack_stack = list(reversed(range(total)))
                 for _ in range(unpack_before):
                     patterns.append({'type': 'MatchAs'})
                 patterns.append({'type': 'MatchStarred', 'pattern': {'type': 'MatchAs'}})
@@ -891,6 +1034,16 @@ class PatternParser:
                     if in_unpack_context and unpack_stack:
                         slot = unpack_stack.pop()
                         slot_actions.setdefault(slot, {'type': 'literal', 'value': literal_val})
+            elif instr.opname in ('MATCH_SEQUENCE', 'MATCH_CLASS'):
+                if in_unpack_context and unpack_stack:
+                    slot = unpack_stack.pop()
+                    nested_instrs = filtered[idx:]
+                    if instr.opname == 'MATCH_SEQUENCE':
+                        nested_pattern = self._extract_sequence_pattern(nested_instrs)
+                    else:
+                        nested_pattern = self._extract_class_pattern(nested_instrs)
+                    slot_actions[slot] = {'type': 'nested', 'pattern': nested_pattern}
+                    break
 
         if not has_unpack and length_val is not None:
             if length_compare_op == '==' or length_compare_op == 2:
@@ -919,6 +1072,9 @@ class PatternParser:
                     p = patterns[slot]
                     if isinstance(p, dict) and p.get('type') == 'MatchAs':
                         patterns[slot] = {'type': 'MatchValue', 'value': {'type': 'Constant', 'value': action['value']}}
+                elif action['type'] == 'nested':
+                    if slot < len(patterns):
+                        patterns[slot] = action['pattern']
                 elif action['type'] == 'wildcard':
                     pass
 
@@ -987,6 +1143,8 @@ class PatternParser:
                 store_names.append(instr.argval)
                 idx += 1
                 continue
+            if instr.opname == 'POP_TOP':
+                break
             idx += 1
 
         patterns = []
@@ -1147,6 +1305,7 @@ class PatternParser:
 
         i = 0
         last_compare_end = -1
+        capture_store_name = None
         while i < len(instrs):
             instr = instrs[i]
 
@@ -1163,8 +1322,18 @@ class PatternParser:
                 if i < first_copy_idx:
                     i += 1
                     continue
+                if capture_store_name and instr.argval == capture_store_name:
+                    i += 1
+                    continue
 
             if instr.opname == 'LOAD_CONST' and i + 1 < len(instrs) and instrs[i + 1].opname in ('COMPARE_OP', 'IS_OP'):
+                if capture_store_name:
+                    next_i = i + 2
+                    while next_i < len(instrs) and instrs[next_i].opname in self.COND_JUMP_OPS:
+                        next_i += 1
+                    last_compare_end = next_i - 1
+                    i = next_i
+                    continue
                 literal_val = instr.argval
                 next_i = i + 2
                 while next_i < len(instrs) and instrs[next_i].opname in self.COND_JUMP_OPS:
@@ -1193,6 +1362,10 @@ class PatternParser:
             elif instr.opname in self.STORE_OPS:
                 if last_compare_end >= 0 and i == last_compare_end + 1:
                     as_name = instr.argval if instr.argval else None
+                    i += 1
+                elif last_compare_end < 0:
+                    capture_store_name = instr.argval if instr.argval else None
+                    as_name = capture_store_name
                     i += 1
                 else:
                     i += 1
@@ -1261,31 +1434,43 @@ class PatternParser:
 
         if unpack_idx is not None:
             count = filtered[unpack_idx].argval if filtered[unpack_idx].argval is not None else 0
-            # 按属性数量逐个处理值pattern
-            attr_idx = 0
-            j = unpack_idx + 1
-            while j < len(filtered) and attr_idx < count and attr_idx < len(patterns):
-                instr = filtered[j]
-                if instr.opname == 'LOAD_CONST' and j + 1 < len(filtered) and filtered[j + 1].opname == 'COMPARE_OP':
-                    # 字面量值匹配：case {'key': 1}
-                    patterns[attr_idx] = {'type': 'MatchValue', 'value': {'type': 'Constant', 'value': instr.argval}}
-                    j += 2
-                    # 跳过条件跳转
-                    while j < len(filtered) and filtered[j].opname in self.COND_JUMP_OPS:
-                        j += 1
-                    attr_idx += 1
-                elif instr.opname in self.STORE_OPS:
-                    # 变量绑定：case {'key': x}
-                    patterns[attr_idx] = {'type': 'MatchAs', 'name': instr.argval}
-                    j += 1
-                    attr_idx += 1
-                elif instr.opname == 'POP_TOP':
-                    # 通配符：case {'key': _}
-                    patterns[attr_idx] = {'type': 'MatchAs'}
-                    j += 1
-                    attr_idx += 1
+            next_after_unpack = unpack_idx + 1
+            has_nested_structural = (
+                next_after_unpack < len(filtered) and
+                filtered[next_after_unpack].opname in ('MATCH_SEQUENCE', 'MATCH_CLASS')
+            )
+            if has_nested_structural and count == 1 and len(patterns) >= 1:
+                nested_op = filtered[next_after_unpack].opname
+                nested_instrs = filtered[next_after_unpack:]
+                if nested_op == 'MATCH_SEQUENCE':
+                    nested_pattern = self._extract_sequence_pattern(nested_instrs)
                 else:
-                    j += 1
+                    nested_pattern = self._extract_class_pattern(nested_instrs)
+                patterns[0] = nested_pattern
+            elif count > 0:
+                attr_idx = 0
+                j = unpack_idx + 1
+                while j < len(filtered) and attr_idx < count and attr_idx < len(patterns):
+                    instr = filtered[j]
+                    if instr.opname in ('SWAP', 'POP_TOP'):
+                        j += 1
+                        continue
+                    if instr.opname == 'LOAD_CONST' and j + 1 < len(filtered) and filtered[j + 1].opname == 'COMPARE_OP':
+                        patterns[attr_idx] = {'type': 'MatchValue', 'value': {'type': 'Constant', 'value': instr.argval}}
+                        j += 2
+                        while j < len(filtered) and filtered[j].opname in self.COND_JUMP_OPS:
+                            j += 1
+                        attr_idx += 1
+                    elif instr.opname in self.STORE_OPS:
+                        patterns[attr_idx] = {'type': 'MatchAs', 'name': instr.argval}
+                        j += 1
+                        attr_idx += 1
+                    elif instr.opname == 'POP_TOP':
+                        patterns[attr_idx] = {'type': 'MatchAs'}
+                        j += 1
+                        attr_idx += 1
+                    else:
+                        j += 1
 
         # 步骤3：检测**rest绑定
         has_dict_update = any(i.opname == 'DICT_UPDATE' for i in filtered)

@@ -528,7 +528,7 @@ class ComprehensionGenerator:
                 # - 三元条件：跳转目标在LIST_APPEND之前（跳转到false值）
                 # 三元条件不应被提取为过滤条件，而应作为元素表达式的一部分
                 if hasattr(instr, 'argval') and instr.argval is not None:
-                    if instr.argval < append_offset:
+                    if instr.argval < append_offset and 'BACKWARD' not in instr.opname:
                         # 跳转目标在LIST_APPEND之前 → 三元模式，不提取为过滤条件
                         # 重置elt_start_idx以包含条件指令
                         elt_start_idx = store_idx + 1
