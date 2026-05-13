@@ -1278,31 +1278,43 @@ class PatternParser:
 
         if unpack_idx is not None:
             count = filtered[unpack_idx].argval if filtered[unpack_idx].argval is not None else 0
-            # 按属性数量逐个处理值pattern
-            attr_idx = 0
-            j = unpack_idx + 1
-            while j < len(filtered) and attr_idx < count and attr_idx < len(patterns):
-                instr = filtered[j]
-                if instr.opname == 'LOAD_CONST' and j + 1 < len(filtered) and filtered[j + 1].opname == 'COMPARE_OP':
-                    # 字面量值匹配：case {'key': 1}
-                    patterns[attr_idx] = {'type': 'MatchValue', 'value': {'type': 'Constant', 'value': instr.argval}}
-                    j += 2
-                    # 跳过条件跳转
-                    while j < len(filtered) and filtered[j].opname in self.COND_JUMP_OPS:
-                        j += 1
-                    attr_idx += 1
-                elif instr.opname in self.STORE_OPS:
-                    # 变量绑定：case {'key': x}
-                    patterns[attr_idx] = {'type': 'MatchAs', 'name': instr.argval}
-                    j += 1
-                    attr_idx += 1
-                elif instr.opname == 'POP_TOP':
-                    # 通配符：case {'key': _}
-                    patterns[attr_idx] = {'type': 'MatchAs'}
-                    j += 1
-                    attr_idx += 1
+            next_after_unpack = unpack_idx + 1
+            has_nested_structural = (
+                next_after_unpack < len(filtered) and
+                filtered[next_after_unpack].opname in ('MATCH_SEQUENCE', 'MATCH_CLASS')
+            )
+            if has_nested_structural and count == 1 and len(patterns) >= 1:
+                nested_op = filtered[next_after_unpack].opname
+                nested_instrs = filtered[next_after_unpack:]
+                if nested_op == 'MATCH_SEQUENCE':
+                    nested_pattern = self._extract_sequence_pattern(nested_instrs)
                 else:
-                    j += 1
+                    nested_pattern = self._extract_class_pattern(nested_instrs)
+                patterns[0] = nested_pattern
+            elif count > 0:
+                attr_idx = 0
+                j = unpack_idx + 1
+                while j < len(filtered) and attr_idx < count and attr_idx < len(patterns):
+                    instr = filtered[j]
+                    if instr.opname in ('SWAP', 'POP_TOP'):
+                        j += 1
+                        continue
+                    if instr.opname == 'LOAD_CONST' and j + 1 < len(filtered) and filtered[j + 1].opname == 'COMPARE_OP':
+                        patterns[attr_idx] = {'type': 'MatchValue', 'value': {'type': 'Constant', 'value': instr.argval}}
+                        j += 2
+                        while j < len(filtered) and filtered[j].opname in self.COND_JUMP_OPS:
+                            j += 1
+                        attr_idx += 1
+                    elif instr.opname in self.STORE_OPS:
+                        patterns[attr_idx] = {'type': 'MatchAs', 'name': instr.argval}
+                        j += 1
+                        attr_idx += 1
+                    elif instr.opname == 'POP_TOP':
+                        patterns[attr_idx] = {'type': 'MatchAs'}
+                        j += 1
+                        attr_idx += 1
+                    else:
+                        j += 1
 
         # 步骤3：检测**rest绑定
         has_dict_update = any(i.opname == 'DICT_UPDATE' for i in filtered)

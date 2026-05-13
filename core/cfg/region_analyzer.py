@@ -2048,6 +2048,39 @@ class RegionAnalyzer:
                         break
                 region.condition_chain_blocks = chain
 
+        loop_regions = [r for r in regions if isinstance(r, LoopRegion)]
+        if len(loop_regions) >= 2:
+            removal_set = set()
+            for i, lr_a in enumerate(loop_regions):
+                if id(lr_a) in removal_set:
+                    continue
+                blocks_a = set(lr_a.blocks)
+                for j, lr_b in enumerate(loop_regions):
+                    if i == j or id(lr_b) in removal_set:
+                        continue
+                    blocks_b = set(lr_b.blocks)
+                    body_b_set = set(lr_b.body_blocks or [])
+                    cond_b = lr_b.condition_block
+                    body_a_set = set(lr_a.body_blocks or [])
+                    cond_a = lr_a.condition_block
+                    same_cond = (cond_a and cond_b and cond_a.start_offset == cond_b.start_offset)
+                    if not same_cond:
+                        continue
+                    if blocks_a < blocks_b and lr_a.header_block:
+                        removal_set.add(id(lr_a))
+                    elif blocks_b < blocks_a and lr_b.header_block:
+                        removal_set.add(id(lr_b))
+            if removal_set:
+                regions = [r for r in regions if id(r) not in removal_set]
+                self.regions = [r for r in self.regions if id(r) not in removal_set]
+                for rid in removal_set:
+                    for rr in loop_regions:
+                        if id(rr) == rid:
+                            for blk in list(rr.blocks or []):
+                                if blk in self.block_to_region and self.block_to_region[blk] is rr:
+                                    del self.block_to_region[blk]
+                            break
+
         return regions
 
     def _fix_block_roles_after_fake_loop_removal(self, regions: List[Region], fake_loop_ids: Set[int]) -> None:
@@ -6435,6 +6468,7 @@ class RegionAnalyzer:
                     idx += 1
                     continue
             saw_unpack = False
+            pattern_store_counts = {}
             while idx < len(instrs):
                 op = instrs[idx].opname
                 if op in NOISE or op in MATCH_OPS or op in COND_JUMPS or op == 'POP_TOP':
@@ -6451,9 +6485,12 @@ class RegionAnalyzer:
                         continue
                     store_name = instrs[idx].argval
                     if store_name in pattern_store_names:
-                        pattern_store_names.discard(store_name)
-                        idx += 1
-                        continue
+                        prev_count = pattern_store_counts.get(store_name, 0)
+                        if prev_count == 0:
+                            pattern_store_counts[store_name] = 1
+                            pattern_store_names.discard(store_name)
+                            idx += 1
+                            continue
                     break
                 if op == 'LOAD_CONST':
                     if idx + 1 < len(instrs) and instrs[idx + 1].opname in ('COMPARE_OP', 'IS_OP'):
@@ -8932,6 +8969,12 @@ class RegionAnalyzer:
                             if (child.region_type in dynamic_conflict_types and
                                 best_parent.region_type in dynamic_conflict_types):
                                 continue
+                        if isinstance(child, LoopRegion) and isinstance(best_parent, (IfRegion)):
+                            if child.blocks and best_parent.blocks:
+                                parent_in_child = set(best_parent.blocks) <= set(child.blocks)
+                                entry_in_body = best_parent.entry and best_parent.entry in (child.body_blocks or [])
+                                if parent_in_child or entry_in_body:
+                                    continue
                         best_parent.add_child(child)
 
         boolop_regions = [r for r in regions if isinstance(r, __import__('core.cfg.region_analyzer', fromlist=['BoolOpRegion']).BoolOpRegion)]

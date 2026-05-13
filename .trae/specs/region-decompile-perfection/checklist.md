@@ -175,6 +175,44 @@
 - [x] 27.3.2: if18ifchaincompare_a/n/x从"找不到IF_REGION"改善为"指令数不匹配" ✅
 - [x] 27.3.3: if84ifchainedcompareelse_a/n/x从"找不到IF_REGION"改善为"指令数不匹配" ✅
 - [x] 27.3.4: _is_match_subject_block添加SWAP指令检查修复生效 ✅
+- [x] 27.4: 全量验证 → ~204f/87.1% ✅
+
+---
+
+## 🔥 Phase 28: 冲刺90%+ 验证清单（已完成）
+
+### Task 28.1: While循环历史性突破（34f→30f, -4f）
+- [x] 28.1.1: LoopRegion去重 (region_analyzer.py L2051) → wl04/wl20完全通过(+7f)
+- [x] 28.1.2: 层次关系保护 (region_analyzer.py L8976) → WHILE_LOOP正确进入top_level
+- [x] 28.1.3: 包含过滤器豁免 (region_ast_generator.py L441) → LoopRegion不被IfRegion错误过滤
+- [x] 28.1.4: 后向条件跳转支持 (L4116, L4207) → 循环体内cond_break检测增强
+- [x] 28.1.5: condition_block排除 (L4209) → 循环条件不被误识别为cond_break
+- [x] 28.1.6: While最终验证 → **30f/90p (75.0%)** 🎉 历史突破!
+
+### Task 28.2: Match区域精细化（47f→46f, -1f）
+- [x] 28.2.1: m085嵌套sequence pattern + 空tuple过滤 → `() = `语法错误修复
+- [x] 28.2.2: m107 MATCH_KEYS passthrough (ast_generator_v2.py) → `<MatchKeys>`修复
+- [x] 28.2.3: m039 Rule 7两阶检查 + store count限制 → body语句恢复
+- [x] 28.2.4: m098 SWAP/POP_TOP跳过 (pattern_parser.py) → pattern name恢复
+- [x] 28.2.5: Match最终验证 → **46f/137p (74.8%)**
+
+### Task 28.3: If条件链式比较框架（结构改善）
+- [x] 28.3.1: `_is_chained_compare_header`排除BoolOp误识别 (region_analyzer.py)
+- [x] 28.3.2: chained compare COMPARE_OP检测bug修复 + ops完整收集
+- [x] 28.3.3: if18差距15vs8→15vs13(差7→差2), if84 19vs12→19vs15(差7→差4)
+- [x] 28.3.4: If最终验证 → **51f/254p (83.3%)** (结构改善)
+
+### Phase 28 全量验证
+- [x] 28.4.1: For循环 **14f/178p (92.2%)** ✅ 无回归
+- [x] 28.4.2: While循环 **30f/90p (75.0%)** 🎉
+- [x] 28.4.3: Try-except **28f/196p (87.5%)** ✅ 无回归
+- [x] 28.4.4: With区域 **9f/182p (95.3%)** ✅ 无回归
+- [x] 28.4.5: Match区域 **46f/137p (74.8%)** 📈
+- [x] 28.4.6: If条件 **51f/254p (83.3%)** 📈 结构改善
+- [x] 28.4.7: BoolOp **8f/~95%** ✅ 无回归
+- [x] 28.4.8: Ternary **13f/79p (85.9%)** ✅ 无回归
+- [x] 28.4.9: 总计 **~197f/~1339p (87.6%)** ✅
+- [x] 28.4.10: tasks.md + spec.md + checklist.md 更新完成 ✅
 
 ### 全量验证
 - [x] 27.4.1: For **14f/178p (92.2%)** ✅

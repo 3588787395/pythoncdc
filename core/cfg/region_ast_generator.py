@@ -4047,6 +4047,13 @@ class RegionASTGenerator:
                 if cond_break is not None:
                     stmts.extend(cond_break)
                     continue
+            if self._current_loop and block in (self._current_loop.body_blocks or []) and role != BlockRole.LOOP_BODY:
+                last_ib = block.get_last_instruction()
+                if last_ib and last_ib.opname in ('POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE'):
+                    cb_result = self._try_generate_conditional_break_or_continue(block)
+                    if cb_result is not None:
+                        stmts.extend(cb_result)
+                        continue
             effective = self.region_analyzer.effective_instructions.get(block.start_offset)
             if role == BlockRole.LOOP_BACK_EDGE and effective is not None:
                 if effective:
@@ -4113,7 +4120,7 @@ class RegionASTGenerator:
         last_instr = block.get_last_instruction()
         if last_instr is None:
             return None
-        if last_instr.opname not in FORWARD_CONDITIONAL_JUMP_OPS:
+        if last_instr.opname not in FORWARD_CONDITIONAL_JUMP_OPS and last_instr.opname not in BACKWARD_CONDITIONAL_JUMP_OPS:
             return None
         if last_instr.argval is None:
             return None
@@ -4199,10 +4206,12 @@ class RegionASTGenerator:
         loop = self._current_loop
         if loop is None:
             return None
+        if block == loop.condition_block or block == loop.header_block:
+            return None
         last_instr = block.get_last_instruction()
         if last_instr is None:
             return None
-        if last_instr.opname not in FORWARD_CONDITIONAL_JUMP_OPS:
+        if last_instr.opname not in FORWARD_CONDITIONAL_JUMP_OPS and last_instr.opname not in BACKWARD_CONDITIONAL_JUMP_OPS:
             return None
         if last_instr.argval is None:
             return None
@@ -6709,11 +6718,11 @@ class RegionASTGenerator:
                                'MATCH_KEYS', 'MATCH_MAPPING_KEYS',
                                'GET_LEN', 'UNPACK_SEQUENCE', 'UNPACK_EX',
                                'UNPACK_EXTRACT', 'BINARY_SUBSCR', 'BINARY_OP')
-                
+
                 has_only_pattern = all(
-                    instr.opname in PATTERN_OPS or 
-                    instr.opname in ('LOAD_CONST', 'STORE_FAST', 'STORE_NAME',
-                                'STORE_GLOBAL', 'STORE_DEREF',
+                    instr.opname in PATTERN_OPS or
+                    instr.opname in ('LOAD_CONST', 'LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF',
+                                'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
                                 'COMPARE_OP', 'IS_OP', 'POP_TOP', 'COPY', 'SWAP',
                                 'EXTENDED_ARG',
                                 ) or instr.opname in CONDITIONAL_JUMP_OPS or
@@ -6738,14 +6747,40 @@ class RegionASTGenerator:
                     if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
                         block_store_names.add(instr.argval)
                 if block_store_names and block_store_names.issubset(pattern_store_names):
-                    non_store_non_trivial = [i for i in block.instructions
-                                              if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
-                                                                  'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
-                                                                  'LOAD_CONST', 'RETURN_VALUE', 'RETURN_CONST',
-                                                                  'JUMP_FORWARD', 'JUMP_ABSOLUTE', 'POP_TOP')]
-                    if not non_store_non_trivial:
-                        self.generated_blocks.add(block)
-                        continue
+                    has_real_pattern_op = any(
+                        instr.opname in ('MATCH_CLASS', 'MATCH_SEQUENCE', 'MATCH_MAPPING',
+                                        'MATCH_KEYS', 'MATCH_MAPPING_KEYS',
+                                        'COMPARE_OP', 'IS_OP', 'GET_LEN',
+                                        'UNPACK_SEQUENCE', 'UNPACK_EX', 'UNPACK_EXTRACT')
+                        for instr in block.instructions
+                    )
+                    if has_real_pattern_op:
+                        non_store_non_trivial = [i for i in block.instructions
+                                                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
+                                                                      'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+                                                                      'LOAD_CONST', 'RETURN_VALUE', 'RETURN_CONST',
+                                                                      'JUMP_FORWARD', 'JUMP_ABSOLUTE', 'POP_TOP')]
+                        if not non_store_non_trivial:
+                            self.generated_blocks.add(block)
+                            continue
+                    else:
+                        meaningful = [i for i in block.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                        store_instrs = [i for i in meaningful if i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')]
+                        non_trivial = [i for i in meaningful if i.opname not in (
+                            'LOAD_CONST', 'LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF',
+                            'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+                            'RETURN_VALUE', 'RETURN_CONST', 'POP_TOP'
+                        )]
+                        is_simple_body_block = len(meaningful) >= 2 and len(store_instrs) >= 1 and len(non_trivial) == 0
+                        if not is_simple_body_block:
+                            non_store_non_trivial = [i for i in block.instructions
+                                                      if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
+                                                                          'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+                                                                          'LOAD_CONST', 'RETURN_VALUE', 'RETURN_CONST',
+                                                                          'JUMP_FORWARD', 'JUMP_ABSOLUTE', 'POP_TOP')]
+                            if not non_store_non_trivial:
+                                self.generated_blocks.add(block)
+                                continue
                 
                 nested_region = self.region_analyzer.get_entry_region_for_block(block)
                 if not nested_region:
@@ -6819,6 +6854,18 @@ class RegionASTGenerator:
                 'pattern': pattern if pattern else {'type': 'MatchAs'},
                 'body': body_stmts if body_stmts else [{'type': 'Pass'}],
             }
+            filtered_body = []
+            for s in case['body']:
+                if s.get('type') == 'Assign':
+                    targets = s.get('targets', [])
+                    has_empty_tuple = any(
+                        t.get('type') == 'Tuple' and not t.get('elts')
+                        for t in targets
+                    )
+                    if has_empty_tuple:
+                        continue
+                filtered_body.append(s)
+            case['body'] = filtered_body if filtered_body else [{'type': 'Pass'}]
             if guard:
                 if isinstance(guard, dict) and guard.get('type') == 'Compare':
                     if 'right' in guard and 'comparators' not in guard:
@@ -6892,6 +6939,7 @@ class RegionASTGenerator:
                                'MATCH_KEYS', 'MATCH_MAPPING_KEYS'))
         STORE_OPS = frozenset(('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'))
         saw_unpack = False
+        pattern_store_counts = {}
         while idx < len(instrs):
             op = instrs[idx].opname
             if op in NOISE or op in MATCH_OPS or op in CONDITIONAL_JUMP_OPS or op == 'POP_TOP' or op == 'EXTENDED_ARG':
@@ -6908,9 +6956,12 @@ class RegionASTGenerator:
                     continue
                 store_name = instrs[idx].argval
                 if store_name in pattern_store_names:
-                    pattern_store_names.discard(store_name)
-                    idx += 1
-                    continue
+                    prev_count = pattern_store_counts.get(store_name, 0)
+                    if prev_count == 0:
+                        pattern_store_counts[store_name] = 1
+                        pattern_store_names.discard(store_name)
+                        idx += 1
+                        continue
                 break
             if op == 'LOAD_CONST':
                 if idx + 1 < len(instrs) and instrs[idx + 1].opname in ('COMPARE_OP', 'IS_OP'):
