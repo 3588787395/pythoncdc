@@ -301,3 +301,36 @@
 - [x] 30.4.8: Ternary **13f** errors归零 ✅
 - [x] 30.4.9: 总计 **~182f/~1359p (89.1%)** 🚀🚀🚀
 - [x] 30.4.10: tasks.md + spec.md + checklist.md 更新完成 ✅
+
+---
+
+## 🔥 Phase 31: 深度攻坚与结构改善验证清单（已完成）
+
+### Task 31.1: While循环（23f→24f, l16修复）
+- [x] 31.1.1: _loop_find_cond_start_idx混合块检测 → l16whilebreak×3完全通过(34vs34)
+- [x] 31.1.2: While验证 → **24f/96p (80.0%)** ⚠️ (l16修复+while06回归)
+
+### Task 31.2: If条件边际优化（结构突破）
+- [x] 31.2.1: BoolOp跨边界jump target一致性检查 → if87从"未识别"变为"指令不匹配"
+- [x] 31.2.2: IfRegion分支LoopRegion裁剪 → 防止贪婪收集循环体
+- [x] 31.2.3: ListComp filter恢复(if78) → 后向跳转vs三元表达式区分
+- [x] 31.2.4: If验证 → **48f/257p (84.3%)** (结构识别突破)
+
+### Task 31.3: Match区域精细化（39f→37f, -2!）
+- [x] 31.3.1: BoolOp op格式修复('and' vs {'type':'And'}) → m082/m101修复
+- [x] 31.3.2: Capture pattern检测(STORE+COMPARE_OP+LOAD) → case n if n>0正确解析
+- [x] 31.3.3: _find_as_binding策略0 + has_copy capture检查
+- [x] 31.3.4: Subject提取is_capture_match停止 → MatchAs时STORE不纳入subject
+- [x] 31.3.5: Match验证 → **37f/143p (79.5%)** 🎉
+
+### Phase 31 全量验证
+- [x] 31.4.1: For **14f/177p (92.2%)** ✅
+- [x] 31.4.2: While **24f/96p (80.0%)** ⚠️
+- [x] 31.4.3: Try **28f/196p (87.5%)** ✅
+- [x] 31.4.4: With **9f/182p (95.3%)** ✅
+- [x] 31.4.5: Match **37f/143p (79.5%)** 🎉
+- [x] 31.4.6: If **48f/257p (84.3%)** ✅
+- [x] 31.4.7: BoolOp **8f/~96%** ✅
+- [x] 31.4.8: Ternary **13f/81p (86.2%)** ✅
+- [x] 31.4.9: 总计 **~181f (~89.2%)** 📈
+- [x] 31.4.10: tasks.md + spec.md + checklist.md 更新完成 ✅

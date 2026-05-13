@@ -3068,15 +3068,27 @@ class RegionASTGenerator:
         return True
 
     def _loop_find_cond_start_idx(self, block: BasicBlock) -> Optional[int]:
-        """找到回边块中条件判断指令的起始索引"""
         _nbe_cond_start_idx = None
+        _has_store = any(i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF') for i in block.instructions)
+        _has_call = any(i.opname in ('CALL', 'PRECALL', 'LOAD_METHOD') for i in block.instructions)
+        _needs_extended_trace = _has_store and _has_call
         for _nbci in range(len(block.instructions) - 2, -1, -1):
             _nbc_instr = block.instructions[_nbci]
             if _nbc_instr.opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP'):
-                for _nbci2 in range(_nbci - 1, -1, -1):
-                    if block.instructions[_nbci2].opname not in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF', 'LOAD_CONST', 'COPY'):
-                        break
-                    _nbe_cond_start_idx = _nbci2
+                if _needs_extended_trace:
+                    _extended_ops = ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF',
+                                   'LOAD_CONST', 'COPY', 'SWAP', 'TO_BOOL',
+                                   'CALL', 'PRECALL', 'LOAD_METHOD',
+                                   'BINARY_SUBSCR', 'GET_ITER')
+                    for _nbci2 in range(_nbci - 1, -1, -1):
+                        if block.instructions[_nbci2].opname not in _extended_ops:
+                            break
+                        _nbe_cond_start_idx = _nbci2
+                else:
+                    for _nbci2 in range(_nbci - 1, -1, -1):
+                        if block.instructions[_nbci2].opname not in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF', 'LOAD_CONST', 'COPY'):
+                            break
+                        _nbe_cond_start_idx = _nbci2
                 if _nbe_cond_start_idx is None:
                     _nbe_cond_start_idx = _nbci
                 return _nbe_cond_start_idx
@@ -6747,6 +6759,14 @@ class RegionASTGenerator:
                             break
                         if instr.opname not in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF', 'LOAD_CONST'):
                             break
+                    is_capture_match = (
+                        not is_wildcard_match and not is_literal_match and
+                        len(region.case_patterns) > 0 and
+                        region.case_patterns[0].get('type') == 'MatchAs' and
+                        region.case_patterns[0].get('name') is not None
+                    )
+                    if is_capture_match and instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                        break
                     if instr.opname in ('LOAD_NAME', 'LOAD_GLOBAL'):
                         rest = region.subject_block.instructions[idx+1:]
                         if len(rest) >= 2 and rest[0].opname == 'LOAD_CONST' and isinstance(rest[0].argval, tuple) and rest[1].opname == 'MATCH_CLASS':

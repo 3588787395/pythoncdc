@@ -7676,6 +7676,17 @@ class RegionAnalyzer:
                     break
             if shared_or_reachable:
                 else_blocks = []
+        _lre = set()
+        _lrbs = []
+        for _b, _r in self.block_to_region.items():
+            if type(_r).__name__ == 'LoopRegion':
+                _e = _r.condition_block or getattr(_r, 'header_block', None) or _r.entry
+                if _e:
+                    _lre.add(_e)
+                    _lrbs.append((_r.blocks, _e))
+        if _lre:
+            then_blocks = [b for b in then_blocks if b in _lre or not any(b in _lb and b != _le for _lb, _le in _lrbs)]
+            else_blocks = [b for b in else_blocks if b in _lre or not any(b in _lb and b != _le for _lb, _le in _lrbs)]
         region_type = RegionType.IF_THEN_ELSE if else_blocks else RegionType.IF_THEN
         all_blocks = all_condition_blocks | set(then_blocks) | set(else_blocks)
         region = IfRegion(
@@ -8589,7 +8600,10 @@ class RegionAnalyzer:
                                      pred_jump_target != loop.condition_block)
                     if cond_in_loop and else_outside:
                         if pred_ft == cond_block or pred_ft == loop.header_block:
-                            pass
+                            _cl2 = cond_block.get_last_instruction()
+                            _cjt2 = self.cfg.get_block_by_offset(_cl2.argval) if _cl2 and _cl2.argval is not None else None
+                            if _cjt2 and pred_jump_target != _cjt2:
+                                break
                         else:
                             break
             pred_op = 'and' if 'FALSE' in pred_last.opname else 'or'

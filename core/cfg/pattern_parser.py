@@ -618,14 +618,26 @@ class PatternParser:
         has_mapping = any(i.opname == 'MATCH_MAPPING' for i in instrs)
 
         has_literal_compare = False
+        literal_compare_pos = -1
         for i in range(len(instrs)):
             if (instrs[i].opname == 'LOAD_CONST' and
                 i + 1 < len(instrs) and
                 instrs[i + 1].opname in ('COMPARE_OP', 'IS_OP')):
                 has_literal_compare = True
+                literal_compare_pos = i
                 break
         has_copy = any(i.opname == 'COPY' for i in instrs)
         is_literal_match = has_literal_compare and not has_sequence and not has_class and not has_mapping
+
+        if is_literal_match and literal_compare_pos > 0:
+            pre_compare_instrs = instrs[:literal_compare_pos]
+            store_before_compare = [i for i in pre_compare_instrs if i.opname in self.STORE_OPS]
+            if store_before_compare:
+                store_target = store_before_compare[-1].argval
+                post_store_loads = [i for i in pre_compare_instrs[pre_compare_instrs.index(store_before_compare[-1]):]
+                                    if i.opname in self.LOAD_VAR_OPS and i.argval == store_target]
+                if post_store_loads:
+                    is_literal_match = False
 
         if is_literal_match:
             result = self._extract_or_or_literal_pattern(instrs)
@@ -692,6 +704,21 @@ class PatternParser:
         关键改进：as绑定的STORE_通常在所有pattern匹配之后、body之前，
         所以需要沿成功路径搜索更深的后继块。
         """
+        # 策略0：查找COMPARE_OP之前的capture pattern STORE_（case n if n > 0: 模式）
+        filtered = [i for i in case_block.instructions
+                   if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+        for i, instr in enumerate(filtered):
+            if instr.opname in self.STORE_OPS:
+                store_target = instr.argval
+                remaining = filtered[i + 1:]
+                has_guard_load = any(
+                    r.opname in self.LOAD_VAR_OPS and r.argval == store_target
+                    for r in remaining
+                )
+                has_compare = any(r.opname in ('COMPARE_OP', 'IS_OP') for r in remaining)
+                if has_guard_load and has_compare:
+                    return store_target
+
         # 策略1：在case_block内查找
         filtered = [i for i in case_block.instructions
                    if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]

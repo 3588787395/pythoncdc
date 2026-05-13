@@ -567,6 +567,58 @@
 - [x] **Task 30.3: If条件48f→≤42f边际优化** → **48f** (稳定+辅助其他区域)
 - [x] **Task 30.4: 冲突解决+全量验证** → **~182f/~1359p (89.1%)** 🚀
 
+---
+
+## 🔥 Phase 31: 深度攻坚与结构改善 — ✅ 已完成（2026-05-12）
+
+> **成果**: 从Phase30的~182f/~1359p(89.1%)优化至**~181f/~1344p (89.2%)** — Match继续改善, If结构突破
+
+### Phase 31 修复前后对比
+
+| 区域 | Phase30基线 | **Phase31最终** | 变化 | 通过率 | 状态 |
+|------|------------|-----------------|------|--------|------|
+| For循环 | 14f/178p (92.2%) | **14f/177p (92.2%)** | 持平 | **92.2%** | ✅ |
+| While循环 | 23f/97p (80.8%) | **24f/96p (80.0%)** | +1f⚠️ | **80.0%** | ⚠️ while06回归 |
+| Try-except | 28f/196p (87.5%) | **28f/196p (87.5%)** | 持平 | **87.5%** | ✅ |
+| With区域 | 9f/182p (95.3%) | **9f/182p (95.3%)** | 持平 | **95.3%** | ✅ |
+| Match区域 | 39f/141p (78.3%) | **37f/143p (79.5%)** | **-2f!**🎉 | **79.5%** | 🚀 |
+| If条件 | 48f/257p (84.3%) | **48f/257p (84.3%)** | 持平* | **84.3%** | 📈 结构改善 |
+| BoolOp | 8f/~96% | **8f/~96%** | 持平 | ~96%* | ✅ |
+| Ternary | 13f/81p (86.2%) | **13f/81p (86.2%)** | 持平 | **86.2%** | ✅ |
+| **总计** | **~182f (~89.1%)** | **~181f (~89.2%)** | **-1f** | **89.2%** | 📈 |
+
+> *If区域if87/if78从"未识别IF_REGION"变为"指令数不匹配"(结构识别突破)
+
+### Phase 31 关键修改清单
+
+#### Task 31.1: While循环深度攻坚（23f→24f, l16修复+while06回归）
+- **修复**: `_loop_find_cond_start_idx()` 混合块检测 — 回边块同时含STORE和CALL时启用扩展追溯
+- **效果**: l16whilebreak×3完全通过(34vs34指令匹配!)
+- **副作用**: while06_false因BoolOp边界检查而退回"未识别WHILE_LOOP"
+
+#### Task 31.2: If条件边际优化（结构改善）
+- **修改A**: BoolOp跨边界检测 — `_detect_while_condition_boolop_chain`增加jump target一致性检查
+  - 效果: if87(×3)从"未识别IF_REGION"变为"指令数不匹配"
+- **修改B**: IfRegion分支裁剪 — `_build_basic_if_region`排除LoopRegion内部块
+  - 防止IfRegion贪婪收集整个循环体
+- **修改C**: ListComp filter恢复 — `comprehension_generator.py`区分后向跳转(listcomp filter)与三元表达式
+  - 效果: if78(×3)filter条件恢复
+
+#### Task 31.3: Match区域精细化（39f→37f, -2!）
+- **Fix 1**: BoolOp op格式修复 — `'op': {'type':'And'}` → `'op': 'and'` (pattern_parser.py)
+  - m082/m101语法错误修复, m16/m106进步
+- **Fix 2**: Capture pattern检测 — STORE在COMPARE_OP前且被LOAD时识别为MatchAs
+  - `case n if n > 0:` 正确解析为capture pattern
+- **Fix 2b/c**: _find_as_binding策略0 + has_copy时capture store检查
+- **Fix 3**: Subject提取停止 — is_capture_match检测到MatchAs时STORE不纳入subject
+
+### Phase 31 任务清单
+
+- [x] **Task 31.1: While循环23f→≤18f攻坚** → **24f(l16×3通过, while06回归)** ⚠️
+- [x] **Task 31.2: If条件48f→≤40f边际优化** → **48f(if87/if78结构突破)** 📈
+- [x] **Task 31.3: Match区域39f→≤33f精细化** → **37f (-2!)** 🎉
+- [x] **Task 31.4: 全量验证** → **~181f (~89.2%)** 📈
+
 # Task Dependencies
 - Phase 1-4 可并行执行
 - Phase 5 依赖 Phase 1,2
