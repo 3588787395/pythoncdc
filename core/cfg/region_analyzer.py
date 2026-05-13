@@ -5684,6 +5684,11 @@ class RegionAnalyzer:
         if last.opname not in CONDITIONAL_JUMP_OPS:
             return False
 
+        # 如果有 SWAP 指令，很可能是链式比较 a < b < c，不是 match
+        has_swap = any(instr.opname == 'SWAP' for instr in instrs)
+        if has_swap:
+            return False
+
         # 查找 COPY 指令的位置
         copy_idx = None
         for i, instr in enumerate(instrs):
@@ -6801,6 +6806,10 @@ class RegionAnalyzer:
             return False
         last = meaningful[-1]
         if last.opname not in CONDITIONAL_JUMP_OPS:
+            return False
+        # 如果有 SWAP 指令，很可能是链式比较 a < b < c，不是 match
+        has_swap = any(instr.opname == 'SWAP' for instr in meaningful)
+        if has_swap:
             return False
         jt = self.cfg.get_block_by_offset(last.argval)
         if jt is None:
