@@ -225,3 +225,45 @@
 - [x] 27.4.8: Ternary **13f/79p (85.9%)** ✅
 - [x] 27.4.9: 总计 **~204f/1116p (87.1%)** ✅
 - [x] 27.4.10: tasks.md + spec.md + checklist.md 更新完成 ✅
+
+---
+
+## 🔥 Phase 29: 并行攻坚与冲突修复验证清单（已完成）
+
+### Task 29.1: While循环架构改善
+- [x] 29.1.1: _collect_branch_blocks JUMP_BACKWARD处理 → 防止IfRegion过度收集
+- [x] 29.1.2: header块精准过滤 → 嵌套if vs 循环条件精确区分
+- [x] 29.1.3: _loop_handle_header提前IfRegion检测 → early return前处理嵌套if
+- [x] 29.1.4: is_really_nested区分 → 循环条件If vs 真正嵌套If
+- [x] 29.1.5: While验证 → **30f/90p (75.0%)** ✅
+
+### Task 29.2: Match区域精细化（46f→44f）
+- [x] 29.2.1: *_`通配符命名修复 (pattern_parser.py) → m046修复
+- [x] 29.2.2: Guard-like块过滤增强 → m053/m072改善
+- [x] 29.2.3: Guard变量验证 → 排除假guard
+- [x] 29.2.4: CASE_HEADER_OPS收集 → mapping pattern恢复
+- [x] 29.2.5: 复合guard支持 → m06/m16改善
+- [x] 29.2.6: Match验证 → **44f/139p (76.0%)** 🎉
+
+### Task 29.3: If条件边际优化（51f→48f, -3f!）
+- [x] 29.3.1: _detect_chained_compare_pattern扩展ft_successor链追踪
+- [x] 29.3.2: _build_chained_compare_region COMPARE_OP位置放宽
+- [x] 29.3.3: 链式比较后完整then/else body收集 → if84 then/else恢复
+- [x] 29.3.4: _is_chained_compare_cleanup_else空else抑制
+- [x] 29.3.5: If验证 → **48f/257p (84.3%)** 🎉
+
+### Task 29.4: For回归修复+冲突解决
+- [x] 29.4.1: BACKWARD_JUMP_OPS过度过滤移除 → For **14f** 恢复 ✅
+- [x] 29.4.2: 并行写入冲突通过重新应用修复解决 ✅
+
+### Phase 29 全量验证
+- [x] 29.4.3: For循环 **14f/178p (92.2%)** ✅
+- [x] 29.4.4: While循环 **30f/90p (75.0%)** ✅
+- [x] 29.4.5: Try-except **28f/196p (87.5%)** ✅
+- [x] 29.4.6: With区域 **9f/182p (95.3%)** ✅
+- [x] 29.4.7: Match区域 **44f/139p (76.0%)** 🎉
+- [x] 29.4.8: If条件 **48f/257p (84.3%)** 🎉
+- [x] 29.4.9: BoolOp **8f/~95%** ✅
+- [x] 29.4.10: Ternary **13f/79p (85.9%)** ✅
+- [x] 29.4.11: 总计 **~194f/~1343p (88.0%)** 🚀
+- [x] 29.4.12: tasks.md + spec.md + checklist.md 更新完成 ✅

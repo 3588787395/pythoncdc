@@ -1964,7 +1964,9 @@ class RegionASTGenerator:
             if block in self.generated_blocks:
                 continue
             if block in region.else_blocks:
-                continue
+                is_in_child = any(block in r.blocks for r in (region.children or []))
+                if not is_in_child:
+                    continue
             if block == child_info.get('iter_setup_block'):
                 self.generated_blocks.add(block)
                 continue
@@ -2210,14 +2212,22 @@ class RegionASTGenerator:
             self.generated_blocks.add(header)
             self.generated_offsets.add(header.start_offset)
             return
+        _header_if_region = None
+        for _r in region.iter_descendants((IfRegion,)):
+            if _r.condition_block == block or _r.entry == block:
+                _header_if_region = _r
+                break
         if (region.region_type == RegionType.WHILE_LOOP
             and region.condition_block is not None
             and region.condition_block != header):
-            _self_loop_stmts = self._loop_extract_self_loop_stmts(header)
-            body_stmts.extend(_self_loop_stmts)
-            self.generated_blocks.add(header)
-            self.generated_offsets.add(header.start_offset)
-            return
+            if _header_if_region is not None:
+                pass
+            else:
+                _self_loop_stmts = self._loop_extract_self_loop_stmts(header)
+                body_stmts.extend(_self_loop_stmts)
+                self.generated_blocks.add(header)
+                self.generated_offsets.add(header.start_offset)
+                return
         if (region.region_type == RegionType.WHILE_LOOP and
             region.condition_block is None and
             header.instructions and
@@ -2226,14 +2236,17 @@ class RegionASTGenerator:
             self._loop_handle_header_no_condition(block, body_stmts)
             return
         _header_region = self.region_analyzer.get_region_for_block(block)
-        _header_if_region = None
-        for _r in region.iter_descendants((IfRegion,)):
-            if _r.condition_block == block:
-                _header_if_region = _r
-                break
+        if _header_if_region is None:
+            for _r in region.iter_descendants((IfRegion,)):
+                if _r.condition_block == block or _r.entry == block:
+                    _header_if_region = _r
+                    break
         if _header_if_region is not None:
-            if (_header_if_region.condition_block == region.condition_block or
-                _header_if_region.condition_block == region.header_block):
+            is_loop_cond_if = (_header_if_region.condition_block == region.condition_block or
+                _header_if_region.condition_block == region.header_block)
+            is_really_nested = (region.condition_block is not None and
+                region.condition_block not in _header_if_region.blocks)
+            if is_loop_cond_if and not is_really_nested:
                 instrs = [i for i in block.instructions
                          if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
                 jump_instr = None
@@ -3697,6 +3710,9 @@ class RegionASTGenerator:
         """生成 else 分支的语句列表"""
         if region.elif_conditions:
             return self._if_generate_elif_chain(region)
+        if region.chained_compare_blocks and region.else_blocks:
+            if self._is_chained_compare_cleanup_else(region):
+                return None
         if region.else_blocks:
             else_stmts = self._process_if_blocks(region.else_blocks, region, branch='else')
             for child in (region.children or []):
@@ -3724,6 +3740,23 @@ class RegionASTGenerator:
             else_stmts = self._process_if_blocks(region.elif_final_else, region, branch='else')
             return else_stmts if else_stmts else None
         return None
+
+    def _is_chained_compare_cleanup_else(self, region: IfRegion) -> bool:
+        if not region.else_blocks:
+            return False
+        for block in region.else_blocks:
+            for instr in block.instructions:
+                if instr.opname in ('RESUME', 'NOP', 'CACHE', 'COPY'):
+                    continue
+                if instr.opname not in ('POP_TOP', 'RETURN_VALUE', 'RETURN_CONST',
+                                         'JUMP_FORWARD', 'JUMP_BACKWARD',
+                                         'POP_JUMP_IF_FALSE', 'POP_JUMP_IF_TRUE',
+                                         'POP_JUMP_FORWARD_IF_FALSE',
+                                         'POP_JUMP_FORWARD_IF_TRUE',
+                                         'POP_JUMP_BACKWARD_IF_FALSE',
+                                         'POP_JUMP_BACKWARD_IF_TRUE'):
+                    return False
+        return True
 
     def _if_generate_elif_chain(self, region: IfRegion) -> List[Dict[str, Any]]:
         if not getattr(region, 'elif_conditions', None):

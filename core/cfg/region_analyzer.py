@@ -7441,10 +7441,31 @@ class RegionAnalyzer:
             if loop_regions:
                 br_check = self.block_to_region.get(block)
                 if isinstance(br_check, LoopRegion):
-                    if block != br_check.header_block and block != br_check.condition_block:
-                        pass
-                    else:
+                    if block == br_check.condition_block:
                         continue
+                    if block == br_check.header_block:
+                        if br_check.condition_block is None:
+                            continue
+                        cond_succs = list(block.conditional_successors)
+                        if len(cond_succs) == 2:
+                            both_in_loop = all(
+                                s in br_check.blocks and s != br_check.condition_block
+                                for s in cond_succs
+                            )
+                            if not both_in_loop:
+                                continue
+                            last_instr = block.get_last_instruction()
+                            if last_instr and last_instr.opname in FORWARD_CONDITIONAL_JUMP_OPS:
+                                has_body_stmt = any(
+                                    i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
+                                                'STORE_DEREF', 'BINARY_OP', 'DELETE_')
+                                    for i in block.instructions
+                                    if i.offset < last_instr.offset
+                                )
+                                if has_body_stmt:
+                                    continue
+                        else:
+                            continue
                 elif br_check is not None:
                     continue
                 cond_succs_check = list(block.conditional_successors)
@@ -7520,6 +7541,20 @@ class RegionAnalyzer:
                     block, condition_block, chain_blocks,
                     then_succ, else_succ, chained_compare_info)
                 if region is not None:
+                    extra_chain = chained_compare_info.get('extra_chain_blocks', [])
+                    all_cc_blocks = set(region.chained_compare_blocks) | set(extra_chain)
+                    cc_merge = self._find_nearest_common_post_dominator(then_succ, else_succ)
+                    cc_then = self._collect_branch_blocks(then_succ, cc_merge, {else_succ})
+                    cc_else = self._collect_branch_blocks(else_succ, cc_merge, {then_succ})
+                    if try_handler_blocks:
+                        cc_then = [b for b in cc_then if b not in try_handler_blocks]
+                        cc_else = [b for b in cc_else if b not in try_handler_blocks]
+                    region.then_blocks = cc_then
+                    region.else_blocks = cc_else
+                    region.merge_block = cc_merge
+                    region.blocks = {block, condition_block, then_succ, else_succ} | all_cc_blocks | set(chain_blocks) | set(cc_then) | set(cc_else)
+                    if cc_merge:
+                        region.blocks.add(cc_merge)
                     if_regions.append(region)
                     if boolop_region is not None:
                         if not (region.entry and region.entry == boolop_region.entry):
@@ -7749,7 +7784,7 @@ class RegionAnalyzer:
             if current_ft is None:
                 break
             ft_last = current_ft.get_last_instruction()
-            if not ft_last or ft_last.opname != "COMPARE_OP":
+            if not ft_last or not any(i.opname == "COMPARE_OP" for i in current_ft.instructions):
                 break
             all_compare_blocks.append(current_ft)
             if op_idx < len(compare_ops) - 1:
@@ -7797,8 +7832,11 @@ class RegionAnalyzer:
     def _detect_chained_compare_pattern(self, condition_block: BasicBlock) -> Optional[Dict]:
         """检测链式比较模式（COPY+COMPARE_OP指令对）
 
+        扩展检测：从单block扫描改为追踪ft_successor链中的额外COMPARE_OP块。
+        使用min(succs)取then分支（fallthrough）而非else分支。
+
         Returns:
-            Dict with 'compare_ops' key or None
+            Dict with 'compare_ops' and 'extra_chain_blocks' keys or None
         """
         if not condition_block.instructions:
             return None
@@ -7810,8 +7848,26 @@ class RegionAnalyzer:
                 instrs[i + 1].opname == 'COMPARE_OP'):
                 pair_count += 1
                 compare_ops.append(instrs[i + 1].argval)
-        if pair_count >= 1:
-            return {'compare_ops': compare_ops}
+        extra_chain_blocks = []
+        current_ft = condition_block
+        visited = {condition_block}
+        while True:
+            succs = list(current_ft.successors)
+            if len(succs) < 2:
+                break
+            ft_candidate = min(succs, key=lambda s: s.start_offset)
+            if ft_candidate in visited:
+                break
+            if not any(i.opname == 'COMPARE_OP' for i in ft_candidate.instructions):
+                break
+            extra_chain_blocks.append(ft_candidate)
+            visited.add(ft_candidate)
+            for i in ft_candidate.instructions:
+                if i.opname == 'COMPARE_OP':
+                    compare_ops.append(i.argval)
+            current_ft = ft_candidate
+        if pair_count >= 1 or extra_chain_blocks:
+            return {'compare_ops': compare_ops, 'extra_chain_blocks': extra_chain_blocks}
         return None
 
     def _find_merge_point(self, then_entry, else_entry):

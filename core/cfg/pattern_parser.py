@@ -141,7 +141,8 @@ class PatternParser:
                 continue
 
             if any(i.opname in CASE_HEADER_OPS for i in meaningful):
-                continue
+                is_pattern_block = True
+                has_definitive_pattern = True
 
             first_meaningful = meaningful[0] if meaningful else None
             if first_meaningful and first_meaningful.opname == 'COPY':
@@ -149,6 +150,7 @@ class PatternParser:
 
             is_pattern_block = False
             has_definitive_pattern = False
+            is_guard_like = False
             DEFINITIVE_PATTERN_OPS = frozenset({
                 'MATCH_CLASS', 'MATCH_SEQUENCE', 'MATCH_MAPPING',
                 'MATCH_KEYS', 'MATCH_MAPPING_KEYS',
@@ -169,7 +171,24 @@ class PatternParser:
                                     'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_IF_TRUE') for i in meaningful)
                 )
                 if has_compare_and_jump:
-                    is_pattern_block = True
+                    BODY_OPS = frozenset({
+                        'BINARY_ADD', 'BINARY_SUBTRACT', 'BINARY_MULTIPLY',
+                        'BINARY_TRUE_DIVIDE', 'BINARY_FLOOR_DIVIDE', 'BINARY_MODULO',
+                        'BINARY_POWER', 'BINARY_LSHIFT', 'BINARY_RSHIFT',
+                        'BINARY_AND', 'BINARY_OR', 'BINARY_XOR',
+                        'BINARY_OP', 'INPLACE_ADD', 'INPLACE_SUBTRACT',
+                        'INPLACE_MULTIPLY', 'CALL', 'CALL_FUNCTION',
+                        'GET_ITER', 'FOR_ITER', 'SEND',
+                    })
+                    has_body_op = any(i.opname in BODY_OPS for i in meaningful)
+                    has_backward_jump = any(
+                        i.opname in ('POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE',
+                                     'JUMP_BACKWARD')
+                        for i in meaningful
+                    )
+                    if not has_body_op and not has_backward_jump:
+                        is_pattern_block = True
+                        is_guard_like = True
 
             if not is_pattern_block:
                 meaningful = [i for i in current.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
@@ -193,9 +212,10 @@ class PatternParser:
             if is_pattern_block:
                 visited.add(current)
                 blocks.append(current)
-                for s in current.successors:
-                    if s not in visited:
-                        worklist.append(s)
+                if not is_guard_like:
+                    for s in current.successors:
+                        if s not in visited:
+                            worklist.append(s)
 
         return blocks
 
@@ -281,21 +301,71 @@ class PatternParser:
                 left_name = guard_instrs[0].argval
                 compare_op = guard_instrs[2].argval
 
+                pattern_store_names = set()
+                pattern_loaded_names = set()
+                has_match_class = any(i.opname == 'MATCH_CLASS' for i in all_instrs[:guard_start])
+                for i in range(guard_start):
+                    if all_instrs[i].opname in self.STORE_OPS:
+                        pattern_store_names.add(all_instrs[i].argval)
+                    if has_match_class and all_instrs[i].opname in self.LOAD_VAR_OPS:
+                        pattern_loaded_names.add(all_instrs[i].argval)
+
+                if left_name not in pattern_store_names and left_name not in pattern_loaded_names:
+                    return None
+
+                jump_target = all_instrs[guard_end].argval
+                comparisons = []
+
                 if guard_instrs[1].opname == 'LOAD_CONST':
                     right_val = guard_instrs[1].argval
-                    result = {
+                    comparisons.append({
                         'type': 'Compare',
                         'left': {'type': 'Name', 'id': left_name},
                         'ops': [{'type': 'CompareOp', 'op': compare_op}],
                         'right': {'type': 'Constant', 'value': right_val}
-                    }
+                    })
                 else:
                     right_name = guard_instrs[1].argval
-                    result = {
+                    if right_name not in pattern_store_names:
+                        return None
+                    comparisons.append({
                         'type': 'Compare',
                         'left': {'type': 'Name', 'id': left_name},
                         'ops': [{'type': 'CompareOp', 'op': compare_op}],
                         'right': {'type': 'Name', 'id': right_name}
+                    })
+
+                pos = guard_end + 1
+                while pos + 3 < len(all_instrs):
+                    nxt = all_instrs[pos]
+                    if nxt.opname not in self.LOAD_VAR_OPS:
+                        break
+                    nxt_name = nxt.argval
+                    if (pos + 2 < len(all_instrs) and
+                        all_instrs[pos + 1].opname == 'LOAD_CONST' and
+                        all_instrs[pos + 2].opname == 'COMPARE_OP'):
+                        nxt_cmp_op = all_instrs[pos + 2].argval
+                        if (pos + 3 < len(all_instrs) and
+                            all_instrs[pos + 3].opname in ('POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_IF_FALSE')):
+                            if nxt_name not in pattern_store_names and nxt_name not in pattern_loaded_names:
+                                break
+                            comparisons.append({
+                                'type': 'Compare',
+                                'left': {'type': 'Name', 'id': nxt_name},
+                                'ops': [{'type': 'CompareOp', 'op': nxt_cmp_op}],
+                                'right': {'type': 'Constant', 'value': all_instrs[pos + 1].argval}
+                            })
+                            pos += 4
+                            continue
+                    break
+
+                if len(comparisons) == 1:
+                    result = comparisons[0]
+                else:
+                    result = {
+                        'type': 'BoolOp',
+                        'op': {'type': 'And'},
+                        'values': comparisons
                     }
 
                 return result
@@ -1004,6 +1074,8 @@ class PatternParser:
                 store_names.append(instr.argval)
                 idx += 1
                 continue
+            if instr.opname == 'POP_TOP':
+                break
             idx += 1
 
         patterns = []
