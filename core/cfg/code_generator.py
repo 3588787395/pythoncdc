@@ -4433,10 +4433,14 @@ class CodeGenerator:
             # [关键修复] 处理生成器表达式
             return self._generate_gen_expr_from_dict(annotation)
         elif ann_type == 'Compare':
-            # [关键修复] 处理比较表达式（如 x is not None）
             left = annotation.get('left', {})
             ops = annotation.get('ops', [])
             comparators = annotation.get('comparators', [])
+            right = annotation.get('right')
+            
+            if not comparators and right is not None:
+                comparators = [right]
+                ops = [op.get('op', '==') if isinstance(op, dict) and op.get('type') == 'CompareOp' else op for op in ops]
             
             left_code = self._generate_annotation_from_dict(left)
             
@@ -4447,13 +4451,12 @@ class CodeGenerator:
                 else:
                     op_type = str(op)
                 
-                # 操作符映射
                 op_map = {
                     'Eq': '==', 'NotEq': '!=', 'Lt': '<', 'LtE': '<=',
                     'Gt': '>', 'GtE': '>=', 'Is': 'is', 'IsNot': 'is not',
                     'In': 'in', 'NotIn': 'not in'
                 }
-                op_str = op_map.get(op_type, op_type.lower())
+                op_str = op_map.get(op_type, op_type.lower() if isinstance(op_type, str) else str(op))
                 
                 comparator_code = self._generate_annotation_from_dict(comparator)
                 parts.append(f'{op_str} {comparator_code}')
@@ -4489,6 +4492,7 @@ class CodeGenerator:
         elif ann_type == 'UnaryOp':
             op_map = {
                 'Not': 'not ', 'UAdd': '+', 'USub': '-', 'Invert': '~',
+                '-': '-', '+': '+', '~': '~', 'not ': 'not ',
             }
             op = annotation.get('op', 'Not')
             if isinstance(op, dict):

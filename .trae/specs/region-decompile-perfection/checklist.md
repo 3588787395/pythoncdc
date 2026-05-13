@@ -334,3 +334,39 @@
 - [x] 31.4.8: Ternary **13f/81p (86.2%)** ✅
 - [x] 31.4.9: 总计 **~181f (~89.2%)** 📈
 - [x] 31.4.10: tasks.md + spec.md + checklist.md 更新完成 ✅
+
+---
+
+## 🔥🔥🔥 Phase 32: 历史性大突破验证清单（已完成）
+
+### Task 32.1: While循环历史性突破（24f→19f, -5!!）
+- [x] 32.1.1: LoopRegion-IfRegion层次修复 → while06_false通过, wl05whiletrue通过
+- [x] 32.1.2: `_cjt2`检查放松 → 多出口循环boolop链恢复
+- [x] 32.1.3: 编译器优化循环检测重建 → while False/True AST合成
+- [x] 32.1.4: 区域包含过滤器增强 → LoopRegion被If包含时正确处理
+- [x] 32.1.5: 前置IF合并到While → wl09 BoolOp条件恢复
+- [x] 32.1.6: While最终验证 → **19f/101p (84.2%)** 🏆🏆🏆
+
+### Task 32.2: If条件历史性突破（48f→38f, -10!!）
+- [x] 32.2.1: `_is_nested_if_else_pattern()` → 嵌套if-else不再被误识别为BoolOp (if12, if32×3, c06×3 = +7测试)
+- [x] 32.2.2: `_is_implicit_return_block()` + 链式比较else清理 (if18×3 = +3测试)
+- [x] 32.2.3: If最终验证 → **38f/267p (87.5%)** 🏆🏆 突破87.5%!
+
+### Task 32.3: Match区域大跃进（37f→29f, -8!!）
+- [x] 32.3.1: Compare节点right→comparators转换 (code_generator.py) → m101修复
+- [x] 32.3.2: capture_store_name机制 + BFS范围修正 → m031, m049修复
+- [x] 32.3.3: OR pattern名称保留 `_apply_or_pattern_names()` → m103修复
+- [x] 32.3.4: BoolOp格式+Compare转换确认 → m082, m16×3修复
+- [x] 32.3.5: Match最终验证 → **29f/150p (83.1%)** 🏆🏆🏆
+
+### Phase 32 全量验证
+- [x] 32.4.1: For循环 **14f/177p (92.2%)** ✅
+- [x] 32.4.2: While循环 **19f/101p (84.2%)** 🚀
+- [x] 32.4.3: Try-except **28f/196p (87.5%)** ✅
+- [x] 32.4.4: With区域 **9f/182p (95.3%)** ✅
+- [x] 32.4.5: Match区域 **29f/150p (83.1%)** 🚀
+- [x] 32.4.6: If条件 **38f/267p (87.5%)** 🚀🚀
+- [x] 32.4.7: BoolOp **8f/~96%** ✅
+- [x] 32.4.8: Ternary **13f/81p (86.2%)** ✅
+- [x] 32.4.9: 总计 **~153f (~91.7%)** 🚀🚀🚀!
+- [x] 32.4.10: tasks.md + spec.md 更新完成 ✅

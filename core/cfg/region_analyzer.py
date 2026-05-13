@@ -2487,6 +2487,8 @@ class RegionAnalyzer:
             non_return_successors = [s for s in loop_successors
                                     if not self._check_block_has_trailing_return_none(s)
                                     or s in cond_exit_targets]
+            if loop_type == RegionType.WHILE_LOOP:
+                non_return_successors = [s for s in non_return_successors if not self._is_early_return_block(s)]
             if non_return_successors:
                 else_blocks = sorted(non_return_successors, key=lambda b: b.start_offset)
                 return else_blocks, None
@@ -2501,8 +2503,46 @@ class RegionAnalyzer:
                 else_blocks.extend(path_blocks)
         else_blocks = list(set(else_blocks) - body_set)
 
+        if loop_type == RegionType.WHILE_LOOP:
+            else_blocks = [b for b in else_blocks if not self._is_early_return_block(b)]
+
         result = sorted(else_blocks, key=lambda b: b.start_offset) if else_blocks else None
         return result, natural_exit
+
+    def _is_early_return_block(self, block: BasicBlock) -> bool:
+        """Check if a block represents an early return from within a loop body.
+        
+        Bytecode pattern:
+        - Block contains RETURN_VALUE or RETURN_CONST with a non-None value
+        - Such blocks are targets of conditional jumps from within the loop body
+        - They represent 'if cond: return value' patterns, NOT else clauses
+        
+        Root cause (Phase 33 fix):
+        - _find_loop_else collected these blocks as else_blocks because they are
+          successors of body blocks outside the body set
+        - But semantically they are early exits via return, not normal loop exit paths
+        - Including them in else_blocks causes 'return' to become 'break + else: return'
+        
+        Returns True if block is an early return block (should be excluded from else).
+        """
+        if not block or not block.instructions:
+            return False
+        last_instr = block.get_last_instruction()
+        if last_instr is None:
+            return False
+        if last_instr.opname == 'RETURN_CONST' and last_instr.argval is not None:
+            return True
+        if last_instr.opname == 'RETURN_VALUE':
+            for i in reversed(block.instructions):
+                if i.opname == 'LOAD_CONST' and i.argval is not None:
+                    return True
+                if i.opname not in ('NOP', 'CACHE', 'POP_TOP'):
+                    break
+            has_load = any(i.opname.startswith('LOAD_') for i in block.instructions
+                          if i.opname not in ('LOAD_CONST',) or i.argval is not None)
+            if has_load:
+                return True
+        return False
 
     def _detect_break_continue(self, loop_body: Set[BasicBlock], header: BasicBlock,
                                natural_exit: Optional[BasicBlock] = None) -> Tuple[Set[BasicBlock], Dict[BasicBlock, str]]:
@@ -5950,7 +5990,10 @@ class RegionAnalyzer:
                     j += 1
                 else:
                     break
-            merged_p.append({'type': 'MatchOr', 'patterns': orps} if len(orps) > 1 else orps[0])
+            or_pattern = {'type': 'MatchOr', 'patterns': orps} if len(orps) > 1 else orps[0]
+            if isinstance(or_pattern, dict) and or_pattern.get('type') == 'MatchOr':
+                self._apply_or_capture_name(or_pattern, body)
+            merged_p.append(or_pattern)
             merged_b.append(sorted(body, key=lambda b: b.start_offset))
             i = j
 
@@ -6648,11 +6691,36 @@ class RegionAnalyzer:
                     j += 1
                 else:
                     break
-            merged_p.append({'type': 'MatchOr', 'patterns': orps} if len(orps) > 1 else orps[0])
+            or_pattern = {'type': 'MatchOr', 'patterns': orps} if len(orps) > 1 else orps[0]
+            if isinstance(or_pattern, dict) and or_pattern.get('type') == 'MatchOr':
+                self._apply_or_capture_name(or_pattern, body)
+            merged_p.append(or_pattern)
             merged_b.append(sorted(body, key=lambda b: b.start_offset))
             i = j
         merge_block = self._mr_compute_case_merge(merged_b)
         return case_blocks, merged_p, merged_b, merge_block, all_blocks
+
+    def _apply_or_capture_name(self, or_pattern: Dict[str, Any], body: Set[BasicBlock]):
+        STORE_OPS = frozenset({'STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF'})
+        for body_block in sorted(body, key=lambda b: b.start_offset):
+            for instr in body_block.instructions:
+                if instr.opname in STORE_OPS and instr.argval:
+                    self._set_or_pattern_names(or_pattern, instr.argval)
+                    return
+
+    def _set_or_pattern_names(self, pattern: Dict[str, Any], name: str):
+        if not isinstance(pattern, dict):
+            return
+        ptype = pattern.get('type', '')
+        if ptype == 'MatchAs' and not pattern.get('name'):
+            pattern['name'] = name
+        for key in ('pattern', 'patterns'):
+            val = pattern.get(key)
+            if isinstance(val, dict):
+                self._set_or_pattern_names(val, name)
+            elif isinstance(val, list):
+                for item in val:
+                    self._set_or_pattern_names(item, name)
 
     def _mr_bodies_are_equivalent(self, body_i_set, body_j_set):
         if body_i_set == body_j_set:
@@ -6922,7 +6990,30 @@ class RegionAnalyzer:
         return True
 
     def _is_none_match_block(self, block):
-        return False
+        if block is None:
+            return False
+        if self._has_match_op(block):
+            return False
+        instrs = [i for i in block.instructions if i.opname not in NOISE_OPS]
+        if len(instrs) < 2:
+            return False
+        has_load = instrs[0].opname in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF')
+        if not has_load:
+            return False
+        is_none_check = instrs[1].opname in ('POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_IF_NOT_NONE')
+        if not is_none_check:
+            return False
+        no_copy = not any(i.opname == 'COPY' for i in instrs)
+        if not no_copy:
+            return False
+        has_swap = any(instr.opname == 'SWAP' for instr in instrs)
+        if has_swap:
+            return False
+        for pred in block.predecessors:
+            pred_last = pred.get_last_instruction()
+            if pred_last and pred_last.opname in SHORT_CIRCUIT_JUMP_OPS:
+                return False
+        return True
 
     def _scan_literal_match_subjects(self, claimed):
         literal_regions = []
@@ -7030,7 +7121,10 @@ class RegionAnalyzer:
                         j += 1
                     else:
                         break
-                merged_p.append({'type': 'MatchOr', 'patterns': orps} if len(orps) > 1 else orps[0])
+                or_pattern = {'type': 'MatchOr', 'patterns': orps} if len(orps) > 1 else orps[0]
+                if isinstance(or_pattern, dict) and or_pattern.get('type') == 'MatchOr':
+                    self._apply_or_capture_name(or_pattern, body)
+                merged_p.append(or_pattern)
                 merged_b.append(sorted(body, key=lambda b: b.start_offset))
                 i = j
             case_blocks, case_patterns, case_bodies, merge, all_blocks = (
@@ -7133,6 +7227,19 @@ class RegionAnalyzer:
         for block in body_blocks:
             meaningful = [i for i in block.instructions if i.opname not in trivial_ops]
             if meaningful:
+                return False
+            has_non_none_return = False
+            for idx, i in enumerate(block.instructions):
+                if i.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                    prev_non_noise = None
+                    for j in range(idx - 1, -1, -1):
+                        if block.instructions[j].opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                            prev_non_noise = block.instructions[j]
+                            break
+                    if prev_non_noise and prev_non_noise.opname == 'LOAD_CONST' and prev_non_noise.argval is not None:
+                        has_non_none_return = True
+                        break
+            if has_non_none_return:
                 return False
         return True
 
@@ -7715,6 +7822,8 @@ class RegionAnalyzer:
                     pass
                 elif isinstance(existing, (TryExceptRegion, WithRegion)):
                     pass
+                elif isinstance(existing, BoolOpRegion):
+                    pass
                 else:
                     return None
 
@@ -7882,6 +7991,9 @@ class RegionAnalyzer:
             if ft_candidate in visited:
                 break
             if not any(i.opname == 'COMPARE_OP' for i in ft_candidate.instructions):
+                break
+            has_back_edge = any(s.start_offset <= ft_candidate.start_offset for s in ft_candidate.successors)
+            if has_back_edge:
                 break
             extra_chain_blocks.append(ft_candidate)
             visited.add(ft_candidate)
@@ -8603,7 +8715,16 @@ class RegionAnalyzer:
                             _cl2 = cond_block.get_last_instruction()
                             _cjt2 = self.cfg.get_block_by_offset(_cl2.argval) if _cl2 and _cl2.argval is not None else None
                             if _cjt2 and pred_jump_target != _cjt2:
-                                break
+                                _cjt2_is_exit = (_cjt2 not in loop.blocks and
+                                                  _cjt2 != loop.entry and
+                                                  _cjt2 != loop.condition_block)
+                                _pjt_is_exit = (pred_jump_target not in loop.blocks and
+                                                  pred_jump_target != loop.entry and
+                                                  pred_jump_target != loop.condition_block)
+                                if _cjt2_is_exit and _pjt_is_exit:
+                                    pass
+                                else:
+                                    break
                         else:
                             break
             pred_op = 'and' if 'FALSE' in pred_last.opname else 'or'
@@ -8805,18 +8926,56 @@ class RegionAnalyzer:
                 all_same_target = False
             target_groups.setdefault(id(cjt), set()).add(cop)
         if not all_same_target:
-            unified_chain = self._try_unify_mixed_boolop_chain(chain, first_jt)
-            if unified_chain and len(unified_chain) >= 2:
-                return unified_chain
             has_operator_boundary = False
             for idx in range(1, len(chain)):
                 if chain[idx][1] != chain[idx-1][1]:
                     has_operator_boundary = True
                     break
-            if has_operator_boundary and len(chain) >= 2:
-                return chain
+            if has_operator_boundary:
+                unified_chain = self._try_unify_mixed_boolop_chain(chain, first_jt)
+                if unified_chain and len(unified_chain) >= 2:
+                    return unified_chain
+            elif not self._is_nested_if_else_pattern(chain):
+                unified_chain = self._try_unify_mixed_boolop_chain(chain, first_jt)
+                if unified_chain and len(unified_chain) >= 2:
+                    return unified_chain
             return None
         return chain
+
+    def _is_nested_if_else_pattern(self, chain: List[Tuple[BasicBlock, str]]) -> bool:
+        last_block, _ = chain[-1]
+        last_instr = last_block.get_last_instruction()
+        if not last_instr or last_instr.argval is None:
+            return False
+        ft_succ = next((s for s in last_block.conditional_successors
+                        if s.start_offset != last_instr.argval), None)
+        jt_target = self.cfg.get_block_by_offset(last_instr.argval)
+        if ft_succ is None or jt_target is None:
+            return False
+        ft_has_store = any(i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
+                          for i in ft_succ.instructions
+                          if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'))
+        jt_has_store = any(i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
+                          for i in jt_target.instructions
+                          if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'))
+        if ft_has_store and jt_has_store:
+            return True
+        if ft_has_store and self._is_trivial_block(jt_target):
+            return True
+        first_block, _ = chain[0]
+        first_instr = first_block.get_last_instruction()
+        if first_instr and first_instr.argval is not None:
+            first_ft = next((s for s in first_block.conditional_successors
+                             if s.start_offset != first_instr.argval), None)
+            if first_ft and len(first_ft.instructions) <= 3:
+                meaningful = [i for i in first_ft.instructions
+                             if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                if meaningful and meaningful[0].opname in ('POP_JUMP_FORWARD_IF_FALSE',
+                                                           'POP_JUMP_BACKWARD_IF_FALSE',
+                                                           'POP_JUMP_FORWARD_IF_TRUE',
+                                                           'POP_JUMP_BACKWARD_IF_TRUE'):
+                    return True
+        return False
 
     def _try_unify_mixed_boolop_chain(self, initial_chain, outer_target):
         result = list(initial_chain)
@@ -9055,7 +9214,16 @@ class RegionAnalyzer:
                             if child.blocks and best_parent.blocks:
                                 parent_in_child = set(best_parent.blocks) <= set(child.blocks)
                                 entry_in_body = best_parent.entry and best_parent.entry in (child.body_blocks or [])
-                                if parent_in_child or entry_in_body:
+                                cond_is_loop_cond = (getattr(child, 'condition_block', None) and
+                                                    (best_parent.entry == child.condition_block or
+                                                     best_parent.entry in getattr(child, 'condition_chain_blocks', []) or
+                                                     getattr(best_parent, 'condition_block', None) == child.condition_block))
+                                loop_entry_in_if = (child.entry and child.entry in best_parent.blocks)
+                                loop_has_real_structure = (getattr(child, 'back_edge_blocks', None) or
+                                                         getattr(child, 'header_block', None))
+                                if (parent_in_child or entry_in_body or
+                                    (cond_is_loop_cond and loop_entry_in_if) or
+                                    (loop_entry_in_if and loop_has_real_structure)):
                                     continue
                         best_parent.add_child(child)
 

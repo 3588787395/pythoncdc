@@ -122,7 +122,17 @@ class PatternParser:
         blocks = [case_block]
         visited = {case_block}
 
-        worklist = list(case_block.successors)
+        last_instr = case_block.get_last_instruction()
+        jump_target_offset = None
+        if last_instr and last_instr.opname in self.COND_JUMP_OPS:
+            jump_target_offset = last_instr.argval
+
+        worklist = []
+        for succ in case_block.successors:
+            if jump_target_offset is not None and succ.start_offset == jump_target_offset:
+                continue
+            if succ not in visited:
+                worklist.append(succ)
         CASE_HEADER_OPS = frozenset({
             'MATCH_CLASS', 'MATCH_SEQUENCE', 'MATCH_MAPPING',
             'MATCH_KEYS', 'MATCH_MAPPING_KEYS',
@@ -141,8 +151,7 @@ class PatternParser:
                 continue
 
             if any(i.opname in CASE_HEADER_OPS for i in meaningful):
-                is_pattern_block = True
-                has_definitive_pattern = True
+                continue
 
             first_meaningful = meaningful[0] if meaningful else None
             if first_meaningful and first_meaningful.opname == 'COPY':
@@ -216,6 +225,26 @@ class PatternParser:
                     for s in current.successors:
                         if s not in visited:
                             worklist.append(s)
+                else:
+                    cur_last = current.get_last_instruction()
+                    cur_jt_offset = None
+                    if cur_last and cur_last.opname in self.COND_JUMP_OPS:
+                        cur_jt_offset = cur_last.argval
+                    CASE_HEADER_OPS = frozenset({
+                        'MATCH_CLASS', 'MATCH_SEQUENCE', 'MATCH_MAPPING',
+                        'MATCH_KEYS', 'MATCH_MAPPING_KEYS',
+                    })
+                    for s in current.successors:
+                        if s in visited:
+                            continue
+                        if s.start_offset == jump_target_offset:
+                            continue
+                        if cur_jt_offset is not None and s.start_offset == cur_jt_offset:
+                            continue
+                        meaningful_s = [i for i in s.instructions if i.opname not in ('RESUME','NOP','CACHE','PUSH_NULL')]
+                        if meaningful_s and any(i.opname in CASE_HEADER_OPS for i in meaningful_s):
+                            continue
+                        worklist.append(s)
 
         return blocks
 
@@ -364,7 +393,7 @@ class PatternParser:
                 else:
                     result = {
                         'type': 'BoolOp',
-                        'op': {'type': 'And'},
+                        'op': 'and',
                         'values': comparisons
                     }
 
@@ -1005,6 +1034,16 @@ class PatternParser:
                     if in_unpack_context and unpack_stack:
                         slot = unpack_stack.pop()
                         slot_actions.setdefault(slot, {'type': 'literal', 'value': literal_val})
+            elif instr.opname in ('MATCH_SEQUENCE', 'MATCH_CLASS'):
+                if in_unpack_context and unpack_stack:
+                    slot = unpack_stack.pop()
+                    nested_instrs = filtered[idx:]
+                    if instr.opname == 'MATCH_SEQUENCE':
+                        nested_pattern = self._extract_sequence_pattern(nested_instrs)
+                    else:
+                        nested_pattern = self._extract_class_pattern(nested_instrs)
+                    slot_actions[slot] = {'type': 'nested', 'pattern': nested_pattern}
+                    break
 
         if not has_unpack and length_val is not None:
             if length_compare_op == '==' or length_compare_op == 2:
@@ -1033,6 +1072,9 @@ class PatternParser:
                     p = patterns[slot]
                     if isinstance(p, dict) and p.get('type') == 'MatchAs':
                         patterns[slot] = {'type': 'MatchValue', 'value': {'type': 'Constant', 'value': action['value']}}
+                elif action['type'] == 'nested':
+                    if slot < len(patterns):
+                        patterns[slot] = action['pattern']
                 elif action['type'] == 'wildcard':
                     pass
 
@@ -1263,6 +1305,7 @@ class PatternParser:
 
         i = 0
         last_compare_end = -1
+        capture_store_name = None
         while i < len(instrs):
             instr = instrs[i]
 
@@ -1279,8 +1322,18 @@ class PatternParser:
                 if i < first_copy_idx:
                     i += 1
                     continue
+                if capture_store_name and instr.argval == capture_store_name:
+                    i += 1
+                    continue
 
             if instr.opname == 'LOAD_CONST' and i + 1 < len(instrs) and instrs[i + 1].opname in ('COMPARE_OP', 'IS_OP'):
+                if capture_store_name:
+                    next_i = i + 2
+                    while next_i < len(instrs) and instrs[next_i].opname in self.COND_JUMP_OPS:
+                        next_i += 1
+                    last_compare_end = next_i - 1
+                    i = next_i
+                    continue
                 literal_val = instr.argval
                 next_i = i + 2
                 while next_i < len(instrs) and instrs[next_i].opname in self.COND_JUMP_OPS:
@@ -1309,6 +1362,10 @@ class PatternParser:
             elif instr.opname in self.STORE_OPS:
                 if last_compare_end >= 0 and i == last_compare_end + 1:
                     as_name = instr.argval if instr.argval else None
+                    i += 1
+                elif last_compare_end < 0:
+                    capture_store_name = instr.argval if instr.argval else None
+                    as_name = capture_store_name
                     i += 1
                 else:
                     i += 1
