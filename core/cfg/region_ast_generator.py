@@ -8226,6 +8226,25 @@ class RegionASTGenerator:
         if any(i.opname == 'BINARY_OP' for i in block.instructions):
             pass
 
+        _block_role = self.region_analyzer.get_block_role(block)
+        if _block_role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
+            _meaningful = [i for i in block.instructions
+                           if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+            _is_trivial_ret = (len(_meaningful) == 2
+                                and _meaningful[0].opname == 'LOAD_CONST'
+                                and _meaningful[0].argval is None
+                                and _meaningful[1].opname in ('RETURN_VALUE', 'RETURN_CONST'))
+            if _is_trivial_ret:
+                _in_try_region = False
+                for _tr in self.region_analyzer.regions:
+                    if hasattr(_tr, 'try_blocks') and block in (_tr.try_blocks or []):
+                        _in_try_region = True
+                        break
+                if _in_try_region:
+                    self.generated_blocks.add(block)
+                    self.generated_offsets.add(block.start_offset)
+                    return [{'type': 'Break'}]
+
         meaningful = [i for i in block.instructions
                      if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
         if len(meaningful) == 2:

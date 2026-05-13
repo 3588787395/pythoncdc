@@ -417,6 +417,7 @@ class RegionAnalyzer:
         self.handler_infos: List[Dict[str, Any]] = []
         self.global_declarations: List[Dict[str, Any]] = []
         self._block_metadata: Dict[int, Dict[str, Any]] = {}
+        self._current_loop_blocks: Set[BasicBlock] = set()
 
     def _check_block_has_trailing_return_none(self, block: BasicBlock) -> bool:
         """检查单个块是否以Return None结尾
@@ -532,6 +533,36 @@ class RegionAnalyzer:
             ternary_regions=ternary_regions
         )
 
+        # Phase 2.5: 嵌套Match区域二次扫描
+        # 反编译逻辑：
+        # 当match语句嵌套在if/for/try等父区域中时，父区域的blocks会包含match的subject块和case块。
+        # 在Phase 1的_identify_match_regions()中，这些块已被标记为claimed（被父区域占用），
+        # 导致嵌套match无法被识别。
+        #
+        # 解决方案：在所有高层区域（if/for/try等）识别完成后，
+        # 对每个父区域内部进行二次match扫描，发现嵌套match时创建子MatchRegion。
+        #
+        # 字节码特征：
+        # - 嵌套match的字节码模式与顶层match完全相同
+        # - 区别仅在于subject块和case块已被父区域的block_to_region映射覆盖
+        #
+        # 处理策略：
+        # 1. 收集所有可能包含嵌套match的父区域（IfRegion、ForRegion、TryRegion、WithRegion）
+        # 2. 对每个父区域，扫描其blocks中未被match占用的块
+        # 3. 检测match特征：_has_match_op()或_is_match_subject_block()或_is_simple_match_case_block()
+        # 4. 收集完整的case链并创建子MatchRegion
+        # 5. 子MatchRegion的blocks可以与父区域重叠（作为子区域）
+        #
+        # 关键约束：
+        # - 子match不能跨越父区域边界
+        # - 子match的blocks必须是父区域blocks的子集
+        # - 需要更新block_to_region映射以反映父子关系
+        nested_match_regions = self._identify_nested_match_regions(
+            parent_regions=conditional_regions + loop_regions + try_regions + with_regions,
+            existing_match_regions=match_regions
+        )
+        match_regions = match_regions + nested_match_regions
+
         elif_chain_entries = set()
         for cr in conditional_regions:
             if isinstance(cr, IfRegion) and cr.region_type == RegionType.IF_ELIF_CHAIN:
@@ -595,6 +626,11 @@ class RegionAnalyzer:
         hierarchy = self._build_region_hierarchy(regions=all_regions)
 
         self._annotate_all_roles(all_regions)
+
+        for _lr in loop_regions:
+            if hasattr(_lr, 'break_blocks'):
+                for _bb in _lr.break_blocks:
+                    self.block_roles[_bb.start_offset] = BlockRole.BREAK
 
         fake_loop_region_ids = self._detect_and_filter_conditional_recheck_fake_loops(loop_regions)
         if fake_loop_region_ids:
@@ -1897,6 +1933,7 @@ class RegionAnalyzer:
                                 is_while_true = False
             else_blocks, natural_exit = self._find_loop_else(header, body, loop_type, for_iter_exit, condition_block=condition_block)
             else_blocks = else_blocks or []
+            self._current_loop_blocks = body
             break_blocks, continue_map = self._detect_break_continue(body, header, natural_exit)
 
             back_edges_for_header = [src for src, tgt in self.loop_analyzer.back_edges if tgt == header]
@@ -1944,6 +1981,8 @@ class RegionAnalyzer:
             region.init_blocks = []
             region.back_edge_blocks = {back_edge_block} if back_edge_block else set()
             region.break_blocks = sorted(verified_break_blocks, key=lambda b: b.start_offset)
+            for _bb in verified_break_blocks:
+                self.block_roles[_bb.start_offset] = BlockRole.BREAK
             region.metadata.update({'for_iter_setup': for_iter_setup, 'for_iter_exit': for_iter_exit,
                                    'for_iter_fall_through': for_iter_fall_through})
             if loop_type == RegionType.WHILE_LOOP and condition_block and condition_block == header:
@@ -2024,7 +2063,9 @@ class RegionAnalyzer:
                 chain = [cond_block]
                 visited = {cond_block}
                 cur = cond_block
+
                 while cur:
+
                     next_block = None
                     last_i = cur.get_last_instruction()
                     if not last_i or last_i.opname not in FORWARD_CONDITIONAL_JUMP_OPS:
@@ -2035,6 +2076,8 @@ class RegionAnalyzer:
                         if succ in region.body_blocks or succ == region.header_block:
                             continue
                         if any(i.opname in ('PUSH_EXC_INFO', 'WITH_EXCEPT_START') for i in succ.instructions):
+                            continue
+                        if succ in self.loop_analyzer.loop_headers:
                             continue
                         succ_last = succ.get_last_instruction()
                         if succ_last and succ_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS):
@@ -2602,8 +2645,32 @@ class RegionAnalyzer:
             )
             for s in b.successors:
                 if s not in body_set and s != natural_exit:
+                    if any(i.opname in ('RAISE_VARARGS', 'RERAISE') for i in s.instructions):
+                        continue
                     if not any(i.opname in ('PUSH_EXC_INFO', 'WITH_EXCEPT_START') for i in s.instructions):
-                        if not any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in s.instructions):
+                        if any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in s.instructions):
+                            s_meaningful = [i for i in s.instructions
+                                            if i.opname not in NOISE_OPS
+                                            and i.opname not in ('LOAD_CONST',)
+                                            and i.opname not in PURE_JUMP_OPS
+                                            and i.opname not in ('RETURN_VALUE', 'RETURN_CONST')]
+                            if not s_meaningful:
+                                _has_exc_handler = any(
+                                    any(i.opname in ('PUSH_EXC_INFO', 'WITH_EXCEPT_START') 
+                                        for i in _sb.instructions)
+                                    for _sb in b.successors if _sb != s
+                                ) or any(
+                                    any(i.opname in ('PUSH_EXC_INFO', 'WITH_EXCEPT_START')
+                                        for i in _sb.instructions)
+                                    for _sb in self.cfg.blocks.values()
+                                    if s in _sb.successors
+                                )
+                                if (_has_exc_handler 
+                                    and self.dom_analyzer.is_dominator(header, s)):
+                                    if is_back_edge_condition:
+                                        continue
+                                    break_blocks_set.add(s)
+                        else:
                             if is_back_edge_condition:
                                 continue
                             break_blocks_set.add(s)
@@ -6924,6 +6991,42 @@ class RegionAnalyzer:
         return True
 
     def _is_simple_match_case_block(self, block):
+        """
+        检测简单match/case模式块（无MATCH_CLASS等显式匹配指令的case分支）。
+        
+        === 反编译逻辑 ===
+        CPython为 match/case 语句生成两种模式：
+        1. 完整模式：使用 MATCH_CLASS/MATCH_SEQUENCE 等显式匹配指令（由 _has_match_op 检测）
+        2. 简单模式：仅用 COMPARE_OP/IS_OP + 条件跳转实现常量/类型匹配
+        
+        本方法检测第2种模式。关键字节码特征：
+        
+        [真match/case - 有NOP前缀]
+          Block@N: NOP              ← match case标记（Python 3.10+）
+                   COPY(subject)    ← 复制被匹配对象
+                   LOAD_CONST(pattern) ← 加载模式值
+                   COMPARE_OP(==)   ← 比较
+                   POP_JUMP_IF_FALSE → next_case_or_body
+                   
+        [假match - 链式比较chain block，如 a < b < c 的第二比较]
+          Block@N: LOAD_CONST(10)   ← 直接加载比较常数（无COPY，无subject load）
+                   COMPARE_OP(<)     ← 比较
+                   POP_JUMP_IF_FALSE → exit
+                   JUMP_FORWARD → body
+                   
+        [假match - 简单 if x is None]
+          Block@N: LOAD_FAST(x)
+                   POP_JUMP_IF_NOT_NONE → else_path
+                   (jump目标无NOP前缀)
+        
+        排除规则（按优先级）：
+        1. 有 MATCH_OP → False（完整模式，不归此类）
+        2. 无 meaningful 指令 → False
+        3. 最后一条非条件跳转 → False
+        4. 有 SWAP → False（链式比较 a < b < c 使用 SWAP 交换操作数）
+        5. 以 LOAD_CONST 开头且无 COPY/subject-load → False（链式比较chain block）
+        6. jump target 无 NOP 前缀 + 单 load op + is_none_check → False（简单 if x is None）
+        """
         if block is None:
             return False
         if self._has_match_op(block):
@@ -6938,6 +7041,13 @@ class RegionAnalyzer:
         has_swap = any(instr.opname == 'SWAP' for instr in meaningful)
         if has_swap:
             return False
+        # 如果以 LOAD_CONST 开头且无 COPY 和 subject-load，是链式比较chain block（如 a < b < c 的第二比较）
+        first_meaningful = meaningful[0]
+        if first_meaningful.opname == 'LOAD_CONST':
+            has_copy = any(i.opname == 'COPY' for i in meaningful)
+            has_subject_load = any(i.opname in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF') for i in meaningful)
+            if not has_copy and not has_subject_load:
+                return False
         jt = self.cfg.get_block_by_offset(last.argval)
         if jt is None:
             return False
@@ -7001,6 +7111,32 @@ class RegionAnalyzer:
         return True
 
     def _is_none_match_block(self, block):
+        """
+        检测 `match x: case None:` 模式的None匹配块。
+        
+        === 反编译逻辑 ===
+        CPython 对 `if x is None:` 和 `match x: case None:` 生成相似但可区分的字节码：
+        
+        [match x: case None: - 真正的match]
+          Block@N: LOAD_FAST(x)       ← 加载被匹配对象
+                   POP_JUMP_IF_NOT_NONE → offset_M
+          Block@M: NOP                ← match case 分隔标记（关键区分点！）
+                   ...case body...
+                   
+        [if x is None: - 普通条件语句]
+          Block@N: LOAD_FAST(x)       ← 加载变量
+                   POP_JUMP_IF_NOT_NONE → offset_M   (同上)
+          Block@M: LOAD_CONST(...)    ← 直接开始else/then体（无NOP！）
+                   ...body...
+        
+        核心区分特征：jump target (offset_M) 是否有 NOP 前缀。
+        - 有 NOP → match/case 的 case 分隔标记（Python 3.10+ 编译器生成）
+        - 无 NOP → 普通 if 语句的分支入口
+        
+        额外排除条件：
+        - 前驱块以短路跳转结尾（and/or短路求值）→ 不是 match
+        - 包含 COPY/SWAP → 复杂表达式，不是简单 None 匹配
+        """
         if block is None:
             return False
         if self._has_match_op(block):
@@ -7024,7 +7160,388 @@ class RegionAnalyzer:
             pred_last = pred.get_last_instruction()
             if pred_last and pred_last.opname in SHORT_CIRCUIT_JUMP_OPS:
                 return False
+        last_instr = block.get_last_instruction()
+        if last_instr and last_instr.argval is not None:
+            jt = self.cfg.get_block_by_offset(last_instr.argval)
+            if jt is not None:
+                has_nop_prefix = False
+                for instr in jt.instructions:
+                    if instr.opname == 'NOP':
+                        has_nop_prefix = True
+                    elif instr.opname not in NOISE_OPS:
+                        break
+                if not has_nop_prefix:
+                    return False
         return True
+
+    def _identify_nested_match_regions(self, parent_regions: List[Region], existing_match_regions: List[Region]) -> List[Region]:
+        """识别嵌套在父区域中的match语句区域
+
+        反编译逻辑：
+        ============
+        当match语句嵌套在if/for/try/with等控制结构中时，父区域会在Phase 1或Phase 2中先占用match的blocks，
+        导致Phase 1的_identify_match_regions()无法识别这些嵌套match。
+
+        本方法在所有父区域识别完成后进行二次扫描，专门处理嵌套match场景。
+
+        识别算法：
+        ----------
+        1. 遍历所有父区域（IfRegion、ForRegion、TryRegion、WithRegion等）
+        2. 对每个父区域的blocks进行match特征检测：
+           a. 结构型模式：_has_match_op(block) 检测MATCH_CLASS/SEQUENCE/MAPPING/KEYS
+           b. 字面量模式：_is_match_subject_block(block) 检测COPY+比较模式
+           c. 简单case块：_is_simple_match_case_block(block) 检测NOP前缀的case块
+           d. 通配符块：_is_wildcard_match_block(block)
+           e. None匹配块：_is_none_match_block(block)
+        3. 发现候选subject块后，收集完整的case链：
+           - 调用_mr_collect_case_body()（结构型）或内部逻辑（字面量型）
+        4. 验证嵌套约束：
+           - 所有match blocks必须是父区域blocks的子集
+           - match不能跨越父区域边界
+        5. 创建子MatchRegion并注册到block_to_region
+
+        字节码模式示例：
+        ----------------
+        例1: if True:
+                match a:
+                    case 1:
+                        pass
+
+        字节码布局：
+        Block0 (if条件):   LOAD_CONST True
+                           POP_JUMP_FORWARD_IF_FALSE -> EndBlock
+        Block1 (match subject): LOAD_NAME 'a'
+                                COPY
+                                LOAD_CONST 1
+                                COMPARE_OP ==
+                                POP_JUMP_FORWARD_IF_FALSE -> DefaultBlock
+        Block2 (case body): PASS
+                            JUMP_FORWARD -> MergeBlock
+        Block3 (default):  NOP (或直接进入body)
+                           ...
+        MergeBlock:
+        EndBlock:
+
+        关键观察：
+        - Block0被IfRegion占用（if条件判断）
+        - Block1-Block3和MergeBlock应该被MatchRegion占用
+        - 但在Phase 1时，Block1已被IfRegion标记为claimed，导致match无法识别
+
+        边界条件：
+        --------
+        1. 多层嵌套：match in if in for → 需要递归扫描（当前只处理一层）
+        2. match在循环体中：case body可能包含continue/break
+        3. match在try中：可能跨越except块（需要特殊处理）
+        4. match在with中：通常不跨越with边界
+
+        性能考虑：
+        - 只对父区域的blocks进行扫描，而非全局扫描
+        - 使用已有的match检测方法，避免重复逻辑
+        - 提前终止无效路径
+
+        Args:
+            parent_regions: 已识别的父区域列表（可能包含嵌套match的区域）
+            existing_match_regions: 已识别的顶层match区域列表
+
+        Returns:
+            嵌套MatchRegion列表
+        """
+        nested_regions = []
+        existing_match_blocks = set()
+        for mr in existing_match_regions:
+            existing_match_blocks.update(mr.blocks)
+
+        for parent_region in parent_regions:
+            if not parent_region or not parent_region.blocks:
+                continue
+
+            # 扫描父区域内的blocks，寻找未识别的match模式
+            parent_blocks = parent_region.blocks
+            for block in self.cfg.get_blocks_in_order():
+                if block not in parent_blocks:
+                    continue
+                if block in existing_match_blocks:
+                    continue
+                if self.block_to_region.get(block) and isinstance(self.block_to_region.get(block), MatchRegion):
+                    continue
+
+                # 检测match特征
+                is_structured = self._has_match_op(block)
+                is_case_pattern = self._is_case_pattern_block(block)
+                is_literal_subject = self._is_match_subject_block(block)
+                is_simple_case = self._is_simple_match_case_block(block)
+                is_wildcard = self._is_wildcard_match_block(block)
+                is_none_match = self._is_none_match_block(block)
+
+                if not (is_structured or is_case_pattern or is_literal_subject or is_simple_case or is_wildcard or is_none_match):
+                    continue
+
+                # 尝试收集match区域
+                nested_match = self._collect_nested_match_region(block, parent_blocks, existing_match_blocks)
+                if nested_match:
+                    nested_regions.append(nested_match)
+                    # 更新已占用blocks集合
+                    existing_match_blocks.update(nested_match.blocks)
+                    # 注册到block_to_region（允许与父区域重叠）
+                    for b in nested_match.blocks:
+                        existing = self.block_to_region.get(b)
+                        if existing is None or not isinstance(existing, MatchRegion):
+                            self.block_to_region[b] = nested_match
+
+        return nested_regions
+
+    def _collect_nested_match_region(self, candidate_block: 'BasicBlock', parent_blocks: set, exclude_blocks: set) -> Optional[MatchRegion]:
+        """从候选块开始收集嵌套match区域
+
+        反编译逻辑：
+        根据候选块的类型，使用不同的收集策略：
+        1. 结构型模式（有MATCH_*操作码）：调用_mr_collect_case_body()
+        2. 字面量模式（COPY+比较）：调用_scan_literal_match_subjects的单例版本
+        3. 简单case块（NOP前缀）：向前查找subject块再收集
+
+        Args:
+            candidate_block: 候选的match入口块
+            parent_blocks: 父区域的blocks集合（边界约束）
+            exclude_blocks: 已被其他match占用的blocks集合
+
+        Returns:
+            收集到的MatchRegion，如果无效则返回None
+        """
+        import dis
+
+        # 策略1: 结构型模式匹配
+        if self._has_match_op(candidate_block) or self._is_case_pattern_block(candidate_block):
+            subject_block = candidate_block
+            if self._is_case_pattern_block(candidate_block):
+                # 向前查找subject块
+                for pred in sorted(candidate_block.predecessors, key=lambda p: p.start_offset):
+                    last = pred.get_last_instruction()
+                    if last and last.opname in CONDITIONAL_JUMP_OPS:
+                        if (self._is_case_pattern_block(pred) or self._has_match_op(pred)) and pred in parent_blocks:
+                            subject_block = pred
+                            break
+
+            case_blocks, case_patterns, case_bodies, merge, all_raw_blocks = self._mr_collect_case_body(subject_block)
+            if not case_blocks:
+                return None
+
+            # 验证所有blocks都在父区域内
+            all_blocks = all_raw_blocks | {subject_block} | set(case_blocks)
+            for body in case_bodies:
+                all_blocks.update(body)
+            if merge:
+                all_blocks.add(merge)
+
+            # 检查是否超出父区域边界
+            if not all_blocks.issubset(parent_blocks):
+                # 放宽约束：允许部分超出（可能是汇合点）
+                core_blocks = {subject_block} | set(case_blocks)
+                for body in case_bodies:
+                    core_blocks.update(body)
+                if not core_blocks.issubset(parent_blocks):
+                    return None
+
+            # 创建MatchRegion
+            case_guards = [self.pattern_parser.parse_case_guard(
+                self.pattern_parser.collect_pattern_blocks(cb, all_blocks)) for cb in case_blocks]
+            region = MatchRegion(
+                region_type=RegionType.MATCH, entry=subject_block, blocks=all_blocks,
+                subject_block=subject_block, case_blocks=case_blocks,
+                case_patterns=case_patterns, case_guards=case_guards,
+                case_bodies=case_bodies, merge_block=merge)
+            region.case_body_start_indices = self._mr_compute_case_body_start_indices(region)
+            self.regions.append(region)
+            return region
+
+        # 策略2: 字面量模式匹配（COPY + LOAD_CONST + COMPARE_OP）
+        if self._is_match_subject_block(candidate_block):
+            return self._collect_nested_literal_match(candidate_block, parent_blocks, exclude_blocks)
+
+        # 策略3: 简单case块（NOP前缀的default case）
+        if self._is_simple_match_case_block(candidate_block) or self._is_wildcard_match_block(candidate_block) or self._is_none_match_block(candidate_block):
+            # 向前查找subject块
+            subject_block = self._find_nested_match_subject(candidate_block, parent_blocks)
+            if subject_block:
+                return self._collect_nested_literal_match(subject_block, parent_blocks, exclude_blocks)
+
+        return None
+
+    def _find_nested_match_subject(self, case_block: 'BasicBlock', parent_blocks: set) -> Optional['BasicBlock']:
+        """为简单case块查找对应的subject块
+
+        反编译逻辑：
+        从case块的前驱链中查找包含COPY指令的subject块。
+        字面量match的特征是subject块包含COPY+比较操作。
+
+        查找策略：
+        1. 直接前驱检查：查看case块的所有前驱是否是subject块
+        2. 间接前驱搜索：沿条件跳转链回溯
+        3. 偏移量推断：根据字节码布局，subject块应该在case块之前
+
+        Args:
+            case_block: 简单case块（NOP前缀或通配符块）
+            parent_blocks: 父区域blocks集合（约束边界）
+
+        Returns:
+            找到的subject块，未找到返回None
+        """
+        # 检查直接前驱
+        for pred in sorted(case_block.predecessors, key=lambda p: p.start_offset):
+            if pred not in parent_blocks:
+                continue
+            if self._is_match_subject_block(pred) and pred.start_offset < case_block.start_offset:
+                return pred
+            # 也检查是否有COPY指令但不是完整subject的情况
+            instrs = [i for i in pred.instructions if i.opname not in NOISE_OPS]
+            has_copy = any(i.opname == 'COPY' for i in instrs)
+            if has_copy and pred.start_offset < case_block.start_offset:
+                return pred
+
+        # 广度优先搜索
+        visited = {case_block}
+        queue = list(case_block.predecessors)
+        while queue:
+            current = queue.pop(0)
+            if current in visited or current not in parent_blocks:
+                continue
+            visited.add(current)
+
+            if self._is_match_subject_block(current) and current.start_offset < case_block.start_offset:
+                return current
+
+            # 继续搜索前驱
+            for pred in current.predecessors:
+                if pred not in visited and pred in parent_blocks:
+                    queue.append(pred)
+
+        return None
+
+    def _collect_nested_literal_match(self, subject_block: 'BasicBlock', parent_blocks: set, exclude_blocks: set) -> Optional[MatchRegion]:
+        """收集嵌套的字面量型match区域
+
+        反编译逻辑：
+        与_scan_literal_match_subjects()类似，但增加了父区域边界约束。
+        字面量match的特征是subject通过COPY复制给每个case进行比较。
+
+        收集流程：
+        1. 从subject块开始，沿条件跳转链收集case块
+        2. 对每个case块解析pattern并收集body
+        3. 验证所有blocks都在父区域内
+        4. 创建MatchRegion
+
+        Args:
+            subject_block: 包含COPY指令的subject块
+            parent_blocks: 父区域blocks集合
+            exclude_blocks: 已排除的blocks集合
+
+        Returns:
+            MatchRegion或None
+        """
+        case_blocks_l, case_patterns_l, case_bodies_l = [], [], []
+        all_blocks_l = {subject_block}
+        visited_l = set()
+
+        current = subject_block
+        merge_candidates = []
+
+        while current and current not in visited_l and current in parent_blocks:
+            visited_l.add(current)
+            all_blocks_l.add(current)
+
+            last = current.get_last_instruction()
+            if not last or last.opname not in CONDITIONAL_JUMP_OPS:
+                # 可能是default case
+                if self._is_literal_default_block(current, visited_l):
+                    default_body = self._mr_collect_simple_body_blocks(current, visited_l)
+                    if default_body:
+                        is_implicit_default = self._is_implicit_default_body(default_body)
+                        if not is_implicit_default:
+                            body_set = set(default_body)
+                            all_blocks_l.update(body_set)
+                            case_blocks_l.append(current)
+                            case_patterns_l.append({'type': 'MatchAs'})
+                            case_bodies_l.append(sorted(body_set, key=lambda b: b.start_offset))
+                        else:
+                            all_blocks_l.update(set(default_body))
+                break
+
+            jt = self.cfg.get_block_by_offset(last.argval)
+            if jt is None:
+                break
+
+            ft_successor = next((s for s in sorted(current.successors, key=lambda s: s.start_offset) if s != jt), None)
+            if not ft_successor:
+                break
+
+            pat = self.pattern_parser.parse_case_pattern(current)
+            body_entry = self._mr_resolve_body_entry(ft_successor)
+            body_set = set()
+            if body_entry and body_entry != jt:
+                body_set = self._collect_blocks_on_path(body_entry, jt, visited_l | {jt})
+                body_set = body_set - {jt}
+            all_blocks_l.update(body_set)
+
+            if body_set:
+                for b in body_set:
+                    for s in b.successors:
+                        if s not in body_set and s != current:
+                            merge_candidates.append(s)
+
+            case_blocks_l.append(current)
+            case_patterns_l.append(pat)
+            case_bodies_l.append(sorted(body_set, key=lambda b: b.start_offset))
+            current = jt
+
+        if not case_blocks_l or len(case_blocks_l) < 1:
+            return None
+
+        # 验证核心blocks都在父区域内
+        core_blocks = {subject_block} | set(case_blocks_l)
+        for body in case_bodies_l:
+            core_blocks.update(body)
+        if not core_blocks.issubset(parent_blocks):
+            return None
+
+        # 计算merge block
+        merge_block = self._mr_compute_case_merge(case_bodies_l)
+        if merge_block is None and merge_candidates:
+            from collections import Counter
+            counter = Counter(id(c) for c in merge_candidates)
+            most_common_id = counter.most_common(1)[0][0]
+            merge_block = next(c for c in merge_candidates if id(c) == most_common_id)
+        if merge_block:
+            all_blocks_l.add(merge_block)
+
+        # 验证字面量match链
+        if not self._verify_literal_match_chain(subject_block, case_blocks_l):
+            return None
+
+        # OR模式合并
+        merged_p, merged_b, i = [], [], 0
+        while i < len(case_blocks_l):
+            orps, body = [case_patterns_l[i]], set(case_bodies_l[i])
+            j = i + 1
+            while j < len(case_blocks_l):
+                body_i_set = set(case_bodies_l[i])
+                body_j_set = set(case_bodies_l[j])
+                if body_i_set == body_j_set:
+                    orps.append(case_patterns_l[j])
+                    body = body_i_set | body_j_set
+                    j += 1
+                else:
+                    break
+            merged_p.append({'type': 'MatchOr', 'patterns': orps} if len(orps) > 1 else orps[0])
+            merged_b.append(sorted(body, key=lambda b: b.start_offset))
+            i = j
+
+        region = MatchRegion(
+            region_type=RegionType.MATCH, entry=subject_block, blocks=all_blocks_l,
+            subject_block=subject_block, case_blocks=case_blocks_l,
+            case_patterns=merged_p, case_guards=[None] * len(merged_p),
+            case_bodies=merged_b, merge_block=merge_block)
+        region.case_body_start_indices = self._mr_compute_case_body_start_indices(region)
+        self.regions.append(region)
+        return region
 
     def _scan_literal_match_subjects(self, claimed):
         literal_regions = []
@@ -7893,6 +8410,48 @@ class RegionAnalyzer:
         elif_info = _check_elif_chain(block, else_blocks, merge)
         if elif_info is None:
             return None
+        if merge is None and len(then_blocks) > 1:
+            """
+            === 反编译逻辑：merge=None时的then_blocks过滤 ===
+            
+            当post-dominator分析无法找到then/else分支的共同后向支配点时（merge=None），
+            通常是因为某个分支以return/break/raise终止，导致不存在共同的汇合块。
+            
+            典型场景：
+                def f(a):
+                    if a > 0:        # then分支
+                        a = 1         # Block@14
+                        # fallthrough → Block@36 (return 0) ← 这是全函数的exit，不是if的then body!
+                    elif a < 0:      # elif分支
+                        return -1     # Block@32 (直接终止)
+                    return 0          # Block@36 (merge点缺失，因为elif branch不经过这里)
+            
+            问题：_collect_branch_blocks 在 merge=None 时会过度收集，
+            把Block@36 (return 0) 也收入 then_blocks。
+            
+            修复策略：
+            1. 计算 else_exit_blocks：else分支和elif条件块的"出口"后继块
+            2. 如果then_blocks中非首块出现在 else_exit_blocks 中且是RETURN终端块 → 过滤掉
+            3. 这些块属于整个if-elif链之后的代码，不属于任何单一分支
+            """
+            else_exit_blocks = set()
+            for eb in else_blocks:
+                for succ in eb.successors:
+                    if succ not in set(else_blocks) | {block}:
+                        else_exit_blocks.add(succ)
+            for cond in elif_info.get("conditions", []):
+                for succ in cond.successors:
+                    if succ not in set(elif_info.get("conditions", [])) | set(else_blocks) | {block}:
+                        else_exit_blocks.add(succ)
+            filtered_then = []
+            for tb in then_blocks:
+                if tb != then_blocks[0] and tb in else_exit_blocks:
+                    last = tb.get_last_instruction()
+                    if last and last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                        continue
+                filtered_then.append(tb)
+            if len(filtered_then) >= 1:
+                then_blocks = filtered_then
         all_blocks = all_condition_blocks | set(then_blocks) | set(else_blocks)
         for cond in elif_info["conditions"]:
             all_blocks.add(cond)

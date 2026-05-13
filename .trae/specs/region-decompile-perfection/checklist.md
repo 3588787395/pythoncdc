@@ -370,3 +370,41 @@
 - [x] 32.4.8: Ternary **13f/81p (86.2%)** ✅
 - [x] 32.4.9: 总计 **~153f (~91.7%)** 🚀🚀🚀!
 - [x] 32.4.10: tasks.md + spec.md 更新完成 ✅
+
+---
+
+## 🔥🔥🔥 Phase 33: 冲刺93%+ 验证清单（已完成）
+
+### Task 33.1: While循环历史性突破（19f→8f, -11!!）
+- [x] 33.1.1: 嵌套While条件链防护 → condition_chain_blocks跳过loop_header → l17×3通过
+- [x] 33.1.2: 反向BoolOp链污染修复 → 前驱fall-through=loop_header时break
+- [x] 33.1.3: RAISE_VARARGS/RERAISE排除 → raise不再误判为break
+- [x] 33.1.4: Try中Break检测增强 → RETURN_VALUE+PUSH_EXC_INFO三重条件 → wl30×2通过
+- [x] 33.1.5: BREAK角色强制设置 → annotate后重新设置防覆盖
+- [x] 33.1.6: AST端Break生成 → LOAD_CONST None+RETURN_VALUE→Break节点
+- [x] 33.1.7: _merge_compares生成器表达式bug修复
+- [x] 33.1.8: While最终验证 → **8f/101p (92.7%)** 🏆🏆🏆 历史最佳!
+
+### Task 33.2: If条件改善（38f→34f, -4f）
+- [x] 33.2.1: `_is_none_match_block` NOP前缀检查 → if15/if26/if66 = +9f
+- [x] 33.2.2: `_is_simple_match_case_block` 链式比较排除 → if18恢复 = +3f
+- [x] 33.2.3: `_build_elif_region` merge=None过滤 → if80 elif-break = +3f
+- [x] 33.2.4: If最终验证 → **34f/271p (87.1%)** ✅
+
+### Task 33.3: Match区域分析完善（29f→20f, -9f）
+- [x] 33.3.1: 完整20个失败测试根因分析完成
+- [x] 33.3.2: CPython match优化机制深入理解（单case vs 多case字节码差异）
+- [x] 33.3.3: Match验证 → **20f/159p (~88.8%)** 🏆 超额达标!
+
+### Phase 33 全量验证
+- [x] 33.5.1: For循环 **12f/180p (93.3%)** ✅
+- [x] 33.5.2: While循环 **8f/101p (92.7%)** 🚀🚀🚀
+- [x] 33.5.3: Try-except **23f/200p (87.0%)** ✅ (自然改善-5f)
+- [x] 33.5.4: With区域 **9f/182p (95.3%)** ✅ 稳定
+- [x] 33.5.5: Match区域 **20f/159p (~88.8%)** 🚀
+- [x] 33.5.6: If条件 **34f/271p (87.1%)** ✅
+- [x] 33.5.7: BoolOp **9f/** ⚠️ 测试数变化
+- [x] 33.5.8: Ternary **13f/** ⚠️ 测试数变化
+- [x] 33.5.9: Assert **1f/18p (94.7%)** 🎉
+- [x] 33.5.10: 总计 **~129f/~1203p (~90.3%)** 🚀! 净减少24个失败!
+- [x] 33.5.11: tasks.md + spec.md + checklist.md 更新完成 ✅
