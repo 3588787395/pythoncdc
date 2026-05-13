@@ -2533,6 +2533,10 @@ class RegionAnalyzer:
         if last_instr.opname == 'RETURN_CONST' and last_instr.argval is not None:
             return True
         if last_instr.opname == 'RETURN_VALUE':
+            has_store = any(i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
+                          for i in block.instructions)
+            if has_store:
+                return False
             for i in reversed(block.instructions):
                 if i.opname == 'LOAD_CONST' and i.argval is not None:
                     return True
@@ -2842,12 +2846,19 @@ class RegionAnalyzer:
         cond_instrs = filtered_instrs[:-1]
         
         store_idx = None
+        copy_before_store_idx = None
         for idx, instr in enumerate(cond_instrs):
+            if instr.opname == 'COPY' and instr.arg == 1:
+                copy_before_store_idx = idx
             if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
                 store_idx = idx
+                break
         
         if store_idx is not None:
-            cond_instrs = cond_instrs[store_idx + 1:]
+            if copy_before_store_idx is not None and copy_before_store_idx < store_idx:
+                cond_instrs = cond_instrs[copy_before_store_idx:]
+            else:
+                cond_instrs = cond_instrs[store_idx + 1:]
         
         compare_ops = ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP')
         last_compare_idx = None
@@ -8715,13 +8726,10 @@ class RegionAnalyzer:
                             _cl2 = cond_block.get_last_instruction()
                             _cjt2 = self.cfg.get_block_by_offset(_cl2.argval) if _cl2 and _cl2.argval is not None else None
                             if _cjt2 and pred_jump_target != _cjt2:
-                                _cjt2_is_exit = (_cjt2 not in loop.blocks and
-                                                  _cjt2 != loop.entry and
-                                                  _cjt2 != loop.condition_block)
                                 _pjt_is_exit = (pred_jump_target not in loop.blocks and
                                                   pred_jump_target != loop.entry and
                                                   pred_jump_target != loop.condition_block)
-                                if _cjt2_is_exit and _pjt_is_exit:
+                                if _pjt_is_exit:
                                     pass
                                 else:
                                     break

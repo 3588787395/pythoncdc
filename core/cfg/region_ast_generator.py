@@ -1695,6 +1695,11 @@ class RegionASTGenerator:
                     if skip_store_targets and _instr.argval in skip_store_targets:
                         _eps_instrs = []
                         continue
+                    _has_prev_copy = len(_eps_instrs) >= 1 and _eps_instrs[-1].opname == 'COPY' and _eps_instrs[-1].arg == 1
+                    if _has_prev_copy:
+                        _eps_instrs.append(_instr)
+                        prev_was_copy = True
+                        continue
                     if _eps_unpack_info is not None:
                         _is_starred = _eps_unpack_info.get('is_starred', False)
                         _starred_idx = _eps_unpack_info.get('starred_idx', -1)
@@ -1946,7 +1951,9 @@ class RegionASTGenerator:
                         cond_instrs.append(instr)
                         prev_was_copy = False
                         continue
-                    cond_instrs = []
+                    if not cond_instrs:
+                        continue
+                    prev_was_copy = False
                     continue
                 prev_was_copy = False
                 cond_instrs.append(instr)
@@ -2497,12 +2504,28 @@ class RegionASTGenerator:
         _cond_break_instr = None
         if _last_i and _last_i.opname in BACKWARD_CONDITIONAL_JUMP_OPS:
             _last_store_idx = -1
+            _last_store_is_walrus = False
+            _walrus_store_idx = -1
             for _sli in range(len(hdr.instructions) - 2, -1, -1):
                 _sl_instr = hdr.instructions[_sli]
                 if _sl_instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
-                    _last_store_idx = _sli
+                    if _sli > 0 and hdr.instructions[_sli - 1].opname == 'COPY' and hdr.instructions[_sli - 1].arg == 1:
+                        _walrus_store_idx = _sli
+                        _last_store_is_walrus = True
+                    else:
+                        _last_store_idx = _sli
                     break
-            if _last_store_idx >= 0:
+            if _walrus_store_idx >= 0 and _walrus_store_idx < len(hdr.instructions) - 1:
+                _next_idx = _walrus_store_idx + 1
+                _next_instrs = hdr.instructions[_next_idx:]
+                _is_pure_walrus_recheck = all(
+                    i.opname in ('PUSH_NULL', 'LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF',
+                                 'PRECALL', 'CALL', 'LOAD_METHOD', 'LOAD_ATTR', 'COPY', 'POP_TOP')
+                    for i in _next_instrs if i.opname not in ('RESUME', 'NOP', 'CACHE')
+                )
+                if _is_pure_walrus_recheck:
+                    _body_end_idx = _walrus_store_idx
+            if _body_end_idx is None and _last_store_idx >= 0:
                 _body_end_idx = _last_store_idx
                 for _ext_idx in range(_last_store_idx + 1, len(hdr.instructions) - 1):
                     _ext_instr = hdr.instructions[_ext_idx]
@@ -2513,7 +2536,7 @@ class RegionASTGenerator:
                                                      'LOAD_ATTR', 'BUILD_TUPLE', 'BUILD_LIST',
                                                      'BUILD_MAP', 'FORMAT_VALUE'):
                         break
-            else:
+            if _body_end_idx is None:
                 stack_depth = 0
                 for _sli in range(len(hdr.instructions) - 1, -1, -1):
                     _sl_instr = hdr.instructions[_sli]
@@ -2528,12 +2551,19 @@ class RegionASTGenerator:
         elif _last_i and _last_i.opname in FORWARD_CONDITIONAL_JUMP_OPS:
             _cond_break_instr = _last_i
             _last_store_idx = -1
+            _walrus_store_idx = -1
             for _sli in range(len(hdr.instructions) - 2, -1, -1):
                 _sl_instr = hdr.instructions[_sli]
                 if _sl_instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
-                    _last_store_idx = _sli
+                    if _sli > 0 and hdr.instructions[_sli - 1].opname == 'COPY' and hdr.instructions[_sli - 1].arg == 1:
+                        _walrus_store_idx = _sli
+                    else:
+                        _last_store_idx = _sli
                     break
-            if _last_store_idx >= 0:
+            if _walrus_store_idx >= 0:
+                _cond_break_start_idx = _walrus_store_idx + 1
+                _body_end_idx = _walrus_store_idx
+            elif _last_store_idx >= 0:
                 _body_end_idx = _last_store_idx
                 _cond_break_start_idx = _last_store_idx + 1
             else:
