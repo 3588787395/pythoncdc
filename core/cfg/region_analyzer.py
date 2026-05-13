@@ -964,6 +964,9 @@ class RegionAnalyzer:
                         innermost_size = size
         return innermost
 
+    def _get_loop_regions_for_boolop_check(self) -> List[LoopRegion]:
+        return [r for r in self.regions if isinstance(r, LoopRegion)]
+
     def _annotate_all_roles(self, all_regions: List[Region]) -> None:
         """统一的层次构建和角色标注流程
 
@@ -6491,6 +6494,9 @@ class RegionAnalyzer:
                             pattern_store_names.discard(store_name)
                             idx += 1
                             continue
+                    if not pattern_store_names:
+                        idx += 1
+                        continue
                     break
                 if op == 'LOAD_CONST':
                     if idx + 1 < len(instrs) and instrs[idx + 1].opname in ('COMPARE_OP', 'IS_OP'):
@@ -6513,6 +6519,11 @@ class RegionAnalyzer:
                            'BINARY_SUBSCR', 'LOAD_ATTR'):
                     idx += 1
                     continue
+                if op in ('RETURN_VALUE', 'RETURN_CONST'):
+                    if not pattern_store_names:
+                        idx += 1
+                        continue
+                    break
                 if op in LOAD_OPS:
                     if (idx + 2 < len(instrs) and instrs[idx + 1].opname == 'LOAD_CONST'
                             and isinstance(instrs[idx + 1].argval, tuple)
@@ -6865,6 +6876,7 @@ class RegionAnalyzer:
         simple_ops = frozenset({
             'COPY', 'LOAD_CONST', 'COMPARE_OP', 'IS_OP',
             'LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF',
+            'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
             'POP_TOP', 'SWAP',
         }) | NOISE_OPS | CONDITIONAL_JUMP_OPS
         if not all(i.opname in simple_ops for i in meaningful):

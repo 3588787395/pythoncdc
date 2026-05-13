@@ -267,3 +267,37 @@
 - [x] 29.4.10: Ternary **13f/79p (85.9%)** ✅
 - [x] 29.4.11: 总计 **~194f/~1343p (88.0%)** 🚀
 - [x] 29.4.12: tasks.md + spec.md + checklist.md 更新完成 ✅
+
+---
+
+## 🔥 Phase 30: 历史性突破验证清单（已完成）
+
+### Task 30.1: While循环历史性突破（30f→23f, -7!!）
+- [x] 30.1.1: _loop_process_natural_back_edge回边STORE处理 → wl21×3, wl32×2通过
+- [x] 30.1.2: _loop_extract_self_loop_stmts四种模式识别 → while11/wl31/while19/wl09
+- [x] 30.1.3: While验证 → **23f/97p (80.8%)** 🏆🏆🏆 首次突破80%!
+
+### Task 30.2: Match区域body边界精修（44f→39f, -5!）
+- [x] 30.2.1: _get_loop_regions_for_boolop_check()方法添加 → AttributeError修复
+- [x] 30.2.2: 嵌套区域提前检查(核心Fix) → m051/m065恢复
+- [x] 30.2.3: 通配符case body_start回退 → m068/m070/m100恢复
+- [x] 30.2.4: simple_ops添加STORE_* → m031/m049恢复
+- [x] 30.2.5: pattern-only同body跳转检测 → if/while条件不再误判
+- [x] 30.2.6: guard_pattern_blocks嵌套区域保护
+- [x] 30.2.7: BUILD_MAP/RETURN_VALUE回退集合
+- [x] 30.2.8: Match验证 → **39f/141p (78.3%)** 🎉
+
+### Task 30.3: If条件边际优化（保持稳定）
+- [x] 30.3.1: BoolOp LoopRegion边界检查 → 辅助Match/While改善
+
+### Task 30.4: 冲突解决+错误修复
+- [x] 30.4.1: Match子代理7项Fix重新应用 ✅
+- [x] 30.4.2: BoolOp/Ternary return-outside-function错误修复(base.py) ✅
+- [x] 30.4.3: For **14f** 稳定 ✅
+- [x] 30.4.4: Try **28f** 稳定 ✅
+- [x] 30.4.5: With **9f** 稳定 ✅
+- [x] 30.4.6: If **48f** 稳定 ✅
+- [x] 30.4.7: BoolOp **8f** error归零 ✅
+- [x] 30.4.8: Ternary **13f** errors归零 ✅
+- [x] 30.4.9: 总计 **~182f/~1359p (89.1%)** 🚀🚀🚀
+- [x] 30.4.10: tasks.md + spec.md + checklist.md 更新完成 ✅

@@ -60,7 +60,14 @@ class ControlFlowTestCase(unittest.TestCase):
         try:
             cls.original_code = compile(cls.source_code, '<test>', 'exec')
         except SyntaxError as e:
-            raise ValueError(f"测试源码语法错误: {e}")
+            if "'return' outside function" in str(e):
+                cls.source_code = f"def _wrap():\n    {cls.source_code}\n_wrap()\n"
+                try:
+                    cls.original_code = compile(cls.source_code, '<test>', 'exec')
+                except SyntaxError as e2:
+                    raise ValueError(f"测试源码语法错误: {e2}")
+            else:
+                raise ValueError(f"测试源码语法错误: {e}")
 
     def compile_source(self) -> types.CodeType:
         """返回编译后的code object"""
