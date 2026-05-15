@@ -8116,7 +8116,19 @@ class RegionAnalyzer:
                         continue
                     if block == br_check.header_block:
                         if br_check.condition_block is None:
-                            continue
+                            cond_succs = list(block.conditional_successors)
+                            if len(cond_succs) == 2:
+                                then_succ, else_succ = sorted(cond_succs, key=lambda s: s.start_offset)
+                                then_last = then_succ.get_last_instruction()
+                                else_last = else_succ.get_last_instruction()
+                                is_if_break_pattern = (
+                                    then_last and then_last.opname in ('RETURN_VALUE', 'RETURN_CONST') and
+                                    else_last and else_last.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                                )
+                                if not is_if_break_pattern:
+                                    continue
+                            else:
+                                continue
                         cond_succs = list(block.conditional_successors)
                         if len(cond_succs) == 2:
                             both_in_loop = all(
