@@ -2531,7 +2531,9 @@ class RegionAnalyzer:
                                     if not self._check_block_has_trailing_return_none(s)
                                     or s in cond_exit_targets]
             if loop_type == RegionType.WHILE_LOOP:
-                non_return_successors = [s for s in non_return_successors if not self._is_early_return_block(s)]
+                non_return_successors = [s for s in non_return_successors
+                                        if not self._is_early_return_block(s)
+                                        and not self._is_except_handler_block(s)]
             if non_return_successors:
                 else_blocks = sorted(non_return_successors, key=lambda b: b.start_offset)
                 return else_blocks, None
@@ -2547,7 +2549,8 @@ class RegionAnalyzer:
         else_blocks = list(set(else_blocks) - body_set)
 
         if loop_type == RegionType.WHILE_LOOP:
-            else_blocks = [b for b in else_blocks if not self._is_early_return_block(b)]
+            else_blocks = [b for b in else_blocks if not self._is_early_return_block(b)
+                          and not self._is_except_handler_block(b)]
 
         result = sorted(else_blocks, key=lambda b: b.start_offset) if else_blocks else None
         return result, natural_exit
@@ -2590,6 +2593,27 @@ class RegionAnalyzer:
             if has_load:
                 return True
         return False
+
+    def _is_except_handler_block(self, block: BasicBlock) -> bool:
+        """Check if a block is part of an except handler.
+
+        Bytecode pattern:
+        - Block contains PUSH_EXC_INFO (handler entry)
+        - Block contains CHECK_EXC_MATCH or CHECK_EG_MATCH (exception type check)
+        - Such blocks are part of exception handling, NOT loop else clauses
+
+        Root cause:
+        - _find_loop_else collected these blocks as else_blocks because they are
+          successors of body blocks outside the body set
+        - But semantically they are exception handlers, not normal loop exit paths
+
+        Returns True if block is an except handler block (should be excluded from else).
+        """
+        if not block or not block.instructions:
+            return False
+        return any(i.opname in ('PUSH_EXC_INFO', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH',
+                               'WITH_EXCEPT_START')
+                  for i in block.instructions)
 
     def _detect_break_continue(self, loop_body: Set[BasicBlock], header: BasicBlock,
                                natural_exit: Optional[BasicBlock] = None) -> Tuple[Set[BasicBlock], Dict[BasicBlock, str]]:
