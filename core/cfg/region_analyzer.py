@@ -9112,6 +9112,38 @@ class RegionAnalyzer:
                 new_ternary_regions.append(region)
         return new_ternary_regions
 
+    def _is_block_in_region_body(self, block: BasicBlock) -> bool:
+        if block not in self.block_to_region:
+            return False
+        region = self.block_to_region[block]
+        if isinstance(region, LoopRegion):
+            if block == region.header_block:
+                return False
+            if block == region.condition_block:
+                return False
+            if block in getattr(region, 'condition_chain_blocks', []):
+                return False
+            if block == region.back_edge_block:
+                return False
+            if block in getattr(region, 'back_edge_blocks', set()):
+                return False
+            last = block.get_last_instruction()
+            if last and last.opname in FORWARD_CONDITIONAL_JUMP_OPS:
+                return False
+            return True
+        if isinstance(region, WithRegion):
+            return True
+        if isinstance(region, MatchRegion):
+            if block == region.subject_block:
+                return False
+            return True
+        return False
+
+    def _is_block_available_for_boolop(self, block: BasicBlock, claimed: Set[BasicBlock]) -> bool:
+        if block not in claimed:
+            return True
+        return self._is_block_in_region_body(block)
+
     def _identify_boolop_regions(self, existing_regions: List[Region]) -> List[Region]:
         """识别布尔运算（and/or）短路求值区域
 
@@ -9289,7 +9321,9 @@ class RegionAnalyzer:
                                                   pred_jump_target != loop.entry and
                                                   pred_jump_target != loop.condition_block)
                                 if _pjt_is_exit:
-                                    pass
+                                    header_last = loop.header_block.get_last_instruction()
+                                    if header_last and header_last.opname in BACKWARD_CONDITIONAL_JUMP_OPS:
+                                        break
                                 else:
                                     break
                         else:
