@@ -599,9 +599,9 @@ class RegionASTGenerator:
                         if not _meaningful or len(_meaningful) <= 2:
                             _cond_val = _consts[0]
                             if _cond_val is True and len(_consts) == 2 and _consts[1] is None:
-                                ast_nodes = [{'type': 'While', 'test': {'type': 'Constant', 'value': True}, 'body': [{'type': 'Break'}]}]
+                                ast_nodes = [{'type': 'If', 'test': {'type': 'Constant', 'value': True}, 'body': [{'type': 'Pass'}], 'orelse': None}]
                             else:
-                                ast_nodes = [{'type': 'While', 'test': {'type': 'Constant', 'value': _cond_val}, 'body': [{'type': 'Pass'}]}]
+                                ast_nodes = [{'type': 'If', 'test': {'type': 'Constant', 'value': _cond_val}, 'body': [{'type': 'Pass'}], 'orelse': None}]
             
             code_obj = getattr(self.cfg, 'code', None)
             scope_decls = self.region_analyzer.global_declarations

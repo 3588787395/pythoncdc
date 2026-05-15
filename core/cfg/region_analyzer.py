@@ -8571,7 +8571,7 @@ class RegionAnalyzer:
                 if i.opname == 'COMPARE_OP':
                     compare_ops.append(i.argval)
             current_ft = ft_candidate
-        if pair_count >= 1 or extra_chain_blocks:
+        if pair_count >= 1 and extra_chain_blocks:
             return {'compare_ops': compare_ops, 'extra_chain_blocks': extra_chain_blocks}
         return None
 
@@ -8941,7 +8941,7 @@ class RegionAnalyzer:
                     if instr.opname in ('STORE_FAST', 'STORE_NAME',
                                         'STORE_GLOBAL', 'STORE_DEREF'):
                         value_target = instr.argval if instr.argval else f'var_{instr.arg}'
-                    break
+                        break
 
             all_blocks = {block, true_block, false_block}
             # Phase 11: chain_blocks 现在可能是 [(block, op), ...] 格式
