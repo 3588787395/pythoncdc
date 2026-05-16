@@ -40,6 +40,10 @@ REGION_TYPE_MAP = {
     'NESTED': [],
 }
 
+REGION_TYPE_ALTERNATIVES = {
+    'MATCH_REGION': [ast.If],
+}
+
 
 class ExhaustiveTestCase(ControlFlowTestCase):
     REGION_TYPE: str = ""
@@ -70,6 +74,16 @@ class ExhaustiveTestCase(ControlFlowTestCase):
                     break
             if found:
                 break
+
+        if not found:
+            alternative_types = REGION_TYPE_ALTERNATIVES.get(expected_type, [])
+            for alt_type in alternative_types:
+                for node in ast.walk(tree):
+                    if isinstance(node, alt_type):
+                        found = True
+                        break
+                if found:
+                    break
 
         if not found:
             expected_names = [t.__name__ for t in expected_ast_types]

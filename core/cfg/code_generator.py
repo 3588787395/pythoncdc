@@ -3408,9 +3408,7 @@ class CodeGenerator:
     
     def _generate_compare(self, node: ASTCompare) -> str:
         """生成比较表达式"""
-        # [关键修复] 使用0作为parent_precedence，确保比较操作的操作数不会添加括号
-        # 例如 self.value == value 而不是 (self.value) == value
-        left_code = self._generate_expression(node.left, 0)
+        left_code = self._generate_expression(node.left, self._precedence['=='])
 
         # 操作符映射（支持整数和字符串）
         op_map = {
@@ -4443,6 +4441,8 @@ class CodeGenerator:
                 ops = [op.get('op', '==') if isinstance(op, dict) and op.get('type') == 'CompareOp' else op for op in ops]
             
             left_code = self._generate_annotation_from_dict(left)
+            if isinstance(left, dict) and left.get('type') == 'IfExp':
+                left_code = f'({left_code})'
             
             parts = [left_code]
             for op, comparator in zip(ops, comparators):
