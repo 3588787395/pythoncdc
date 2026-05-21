@@ -145,6 +145,11 @@ class RegionASTGenerator:
                     break
             if isinstance(entry_region, LoopRegion) and (entry_region.condition_block == entry_block or
                 (entry_region.header_block and entry_block.start_offset in [s.start_offset for s in entry_region.header_block.predecessors])):
+                _wildcard_match = self._detect_undetected_wildcard_match(entry_block)
+                if _wildcard_match:
+                    _match_ast = self._generate_match(_wildcard_match)
+                    if _match_ast:
+                        ast_nodes.append(_match_ast)
                 self.generated_blocks.add(entry_block)
                 pass
             elif isinstance(entry_region, IfRegion) and entry_region.condition_block == entry_block:
@@ -351,6 +356,11 @@ class RegionASTGenerator:
                     self.generated_blocks.add(entry_block)
                     entry_ast = _pre_stmts
                 elif _entry_region and isinstance(_entry_region, TryExceptRegion):
+                    _wildcard_match = self._detect_undetected_wildcard_match(entry_block)
+                    if _wildcard_match:
+                        _match_ast = self._generate_match(_wildcard_match)
+                        if _match_ast:
+                            ast_nodes.append(_match_ast)
                     _pre_stmts: List[Dict[str, Any]] = []
                     _stmt_instrs: List[Instruction] = []
 
@@ -369,7 +379,11 @@ class RegionASTGenerator:
                     self.generated_blocks.add(entry_block)
                     entry_ast = _pre_stmts
                 else:
-                    entry_ast = self._generate_block_statements(entry_block)
+                    _wildcard_match = self._detect_undetected_wildcard_match(entry_block)
+                    if _wildcard_match:
+                        entry_ast = [self._generate_match(_wildcard_match)]
+                    else:
+                        entry_ast = self._generate_block_statements(entry_block)
 
                 if entry_ast:
                     ast_nodes.extend(entry_ast)
@@ -4162,9 +4176,24 @@ class RegionASTGenerator:
         elif_part = self._if_generate_elif_chain(region)
         self._generating_regions.discard(region_id)
         self._generated_regions.add(region_id)
+
+        trailing_return = None
+        if not self._current_loop and isinstance(elif_part, list) and len(elif_part) > 0:
+            last_elif = elif_part[-1]
+            if isinstance(last_elif, dict) and last_elif.get('type') == 'If':
+                orelse = last_elif.get('orelse', [])
+                if isinstance(orelse, list) and len(orelse) == 1 and isinstance(orelse[0], dict) and orelse[0].get('type') == 'Return':
+                    trailing_return = orelse[0]
+                    last_elif['orelse'] = []
+
         result = {'type': 'If', 'test': condition, 'body': then_stmts if then_stmts else [{'type': 'Pass'}], 'orelse': elif_part if isinstance(elif_part, list) else ([elif_part] if elif_part else [])}
         if pre_stmts:
             result = pre_stmts + [result]
+        if trailing_return is not None:
+            if isinstance(result, list):
+                result.append(trailing_return)
+            else:
+                result = [result, trailing_return]
         return result
 
     def _build_chained_compare_from_region_data(self, region: IfRegion) -> Optional[Dict[str, Any]]:
@@ -4688,6 +4717,13 @@ class RegionASTGenerator:
                 continue
             if block in child_region_blocks and block not in child_entries:
                 continue
+            if hasattr(region, 'region_type') and hasattr(region.region_type, 'name') and 'IF' in region.region_type.name and branch == 'then':
+                has_return = any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in block.instructions)
+                if has_return and len(block.predecessors) > 1:
+                    continue
+                if len(block.predecessors) > 1 and block not in (getattr(region, 'then_blocks', []) or []):
+                    if any(i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL') for i in block.instructions):
+                        continue
             if stmts and stmts[-1].get('type') in ('Break', 'Continue', 'Return', 'Raise'):
                 if self._current_loop and block not in self._post_break_blocks:
                     self._post_break_blocks.append(block)
@@ -7915,7 +7951,8 @@ class RegionASTGenerator:
             # 字面量match还可能以POP_JUMP_IF_NOT_NONE结尾（case None模式）
             if not is_literal_match and len(region.case_patterns) > 0:
                 first_pat = region.case_patterns[0]
-                if first_pat.get('type') == 'MatchAs' and first_pat.get('pattern', {}).get('type') == 'MatchSingleton':
+                _first_pat_pattern = first_pat.get('pattern') or {}
+                if first_pat.get('type') == 'MatchAs' and isinstance(_first_pat_pattern, dict) and _first_pat_pattern.get('type') == 'MatchSingleton':
                     is_literal_match = True
             
             # 通配符 match (case _: ...)：没有pattern匹配指令，
@@ -7923,7 +7960,7 @@ class RegionASTGenerator:
             is_wildcard_match = (
                 len(region.case_patterns) > 0 and
                 region.case_patterns[0].get('type') == 'MatchAs' and
-                region.case_patterns[0].get('name') is None and
+                region.case_patterns[0].get('name') in (None, '_') and
                 not region.case_patterns[0].get('pattern')
             )
             
@@ -8039,11 +8076,11 @@ class RegionASTGenerator:
             if is_wildcard_match and body and len(body) == 1 and body[0] == region.subject_block:
                 body_start = region.case_body_start_indices.get(body[0].start_offset, 0)
                 if body_start > 0:
-                    body_instrs = body[0].instructions[body_start:]
+                    body_instrs = body[0].instructions[body_start:] if body_start < len(body[0].instructions) else []
                     _non_noise = [i for i in body_instrs if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
                                                                 'RETURN_VALUE', 'RETURN_CONST',
                                                                 'LOAD_CONST', 'JUMP_FORWARD', 'JUMP_ABSOLUTE')]
-                    if _non_noise:
+                    if _non_noise or body_start >= len(body[0].instructions):
                         # 检查原始块上的嵌套区域，处理 body 内的控制流子结构
                         orig_block = body[0]
                         nested_found = False
@@ -8055,14 +8092,16 @@ class RegionASTGenerator:
                             cand_header = getattr(candidate_region, 'header_block', None)
                             # 检查嵌套区域的入口/条件/头块是否是原始块或其一部分
                             relevant_ref = None
-                            if cand_entry and (cand_entry == orig_block or (cand_entry.start_offset >= orig_block.instructions[body_start].offset if body_start < len(orig_block.instructions) else False)):
+                            _body_offset_threshold = orig_block.instructions[body_start].offset if body_start < len(orig_block.instructions) else (orig_block.instructions[-1].offset + 2 if orig_block.instructions else float('inf'))
+                            if cand_entry and (cand_entry == orig_block or cand_entry.start_offset >= _body_offset_threshold):
                                 relevant_ref = candidate_region
-                            elif cand_cond and (cand_cond == orig_block or (cand_cond.start_offset >= orig_block.instructions[body_start].offset if body_start < len(orig_block.instructions) else False)):
+                            elif cand_cond and (cand_cond == orig_block or cand_cond.start_offset >= _body_offset_threshold):
                                 relevant_ref = candidate_region
-                            elif cand_header and (cand_header == orig_block or (cand_header.start_offset >= orig_block.instructions[body_start].offset if body_start < len(orig_block.instructions) else False)):
+                            elif cand_header and (cand_header == orig_block or cand_header.start_offset >= _body_offset_threshold):
                                 relevant_ref = candidate_region
                             if relevant_ref:
                                 try:
+                                    self.generated_blocks.add(orig_block)
                                     if isinstance(relevant_ref, MatchRegion):
                                         nested_gen = self._generate_match(relevant_ref)
                                     else:
@@ -8082,20 +8121,21 @@ class RegionASTGenerator:
                                 except Exception:
                                     pass
                         if not nested_found:
-                            from .basic_block import BasicBlock as _BB
-                            virtual_block = _BB(body[0].instructions[body_start].offset)
-                            for instr in body_instrs:
-                                virtual_block.add_instruction(instr)
-                            stmts = self._generate_block_statements(virtual_block)
-                            if stmts:
-                                filtered = []
-                                for s in stmts:
-                                    if s.get('type') == 'Expr' and isinstance(s.get('value'), dict):
-                                        val = s['value']
-                                        if val.get('type') == 'Constant' and val.get('value') is None:
-                                            continue
-                                    filtered.append(s)
-                                body_stmts.extend(filtered)
+                            if body_start < len(body[0].instructions):
+                                from .basic_block import BasicBlock as _BB
+                                virtual_block = _BB(body[0].instructions[body_start].offset)
+                                for instr in body_instrs:
+                                    virtual_block.add_instruction(instr)
+                                stmts = self._generate_block_statements(virtual_block)
+                                if stmts:
+                                    filtered = []
+                                    for s in stmts:
+                                        if s.get('type') == 'Expr' and isinstance(s.get('value'), dict):
+                                            val = s['value']
+                                            if val.get('type') == 'Constant' and val.get('value') is None:
+                                                continue
+                                        filtered.append(s)
+                                    body_stmts.extend(filtered)
                 self.generated_blocks.add(body[0])
 
             for block in body:
@@ -8541,6 +8581,105 @@ class RegionASTGenerator:
             'subject': subject if subject else {'type': 'Name', 'id': '_'},
             'cases': cases,
         }
+
+    def _detect_undetected_wildcard_match(self, entry_block):
+        """检测未识别的通配符match语句（Phase 37.4修复 - 收紧版）
+
+        当match语句只有通配符case（case _:）且body包含控制流结构时，
+        region_analyzer可能只识别了内层区域（LoopRegion/IfRegion等），
+        而没有识别外层的MatchRegion。本方法检测这种情况并创建虚拟MatchRegion。
+
+        字节码特征：
+            RESUME
+            LOAD_NAME/LOAD_FAST/LOAD_GLOBAL v   # match subject
+            POP_TOP                             # wildcard pattern discard
+            <body instructions>                 # for/if/try等控制流
+
+        收紧版检测条件（仅当以下全部满足时才返回虚拟MatchRegion）:
+        1. 入口块以 LOAD_* + POP_TOP 开头（RESUME之后）
+        2. POP_TOP之后紧跟的内层区域是LoopRegion或TryExceptRegion
+        3. 内层区域的entry_block == entry_block 或 entry_block的fallthrough后继
+        4. 不存在已识别的MatchRegion覆盖此入口块
+        5. 入口块指令数 <= 5（避免在大块上误检）
+        """
+        if entry_block is None or len(entry_block.instructions) < 3:
+            return None
+
+        if len(entry_block.instructions) > 10:
+            return None
+
+        instructions = entry_block.instructions
+
+        _resume_idx = -1
+        _load_idx = -1
+        _pop_top_idx = -1
+
+        for idx, instr in enumerate(instructions):
+            if instr.opname == 'RESUME':
+                _resume_idx = idx
+            elif instr.opname in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF') and _load_idx == -1 and _resume_idx != -1:
+                _load_idx = idx
+            elif instr.opname == 'POP_TOP' and _pop_top_idx == -1 and _load_idx != -1:
+                _pop_top_idx = idx
+                break
+
+        if _load_idx == -1 or _pop_top_idx == -1 or _pop_top_idx <= _load_idx:
+            return None
+
+        _has_inner_region = False
+        _valid_inner_region = None
+
+        for r in self.regions:
+            if isinstance(r, (LoopRegion, TryExceptRegion)):
+                _check_offset = instructions[_pop_top_idx + 1].offset if _pop_top_idx + 1 < len(instructions) else instructions[_pop_top_idx].offset + 2
+                _offset_ok = (r.entry and r.entry.start_offset >= _check_offset) or \
+                             (r.header_block and r.header_block.start_offset >= _check_offset)
+                if _offset_ok:
+                    _has_inner_region = True
+                    _valid_inner_region = r
+                    break
+
+        _remaining = instructions[_pop_top_idx + 1:]
+        _meaningful_after_pop = [i for i in _remaining if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
+                                                                          'LOAD_CONST', 'RETURN_VALUE', 'RETURN_CONST',
+                                                                          'JUMP_FORWARD', 'JUMP_ABSOLUTE')]
+
+        if not _meaningful_after_pop and not _has_inner_region:
+            return None
+
+        for r in self.regions:
+            if isinstance(r, MatchRegion) and r.subject_block == entry_block:
+                return None
+
+        from core.cfg.region_analyzer import MatchRegion as _MR
+        _subject_instr = instructions[_load_idx]
+        _subject_expr = self.expr_reconstructor.reconstruct([_subject_instr])
+        if not _subject_expr:
+            _subject_expr = {'type': 'Name', 'id': str(_subject_instr.argval)}
+
+        _inner_blocks = set()
+        for r in self.regions:
+            if isinstance(r, (LoopRegion, IfRegion, TryExceptRegion, WithRegion)) and r.entry and r.entry.start_offset > _subject_instr.offset:
+                _inner_blocks.update(r.blocks)
+
+        _inner_blocks.discard(entry_block)
+
+        _virtual_mr = _MR(
+            subject_block=entry_block,
+            case_patterns=[{'type': 'MatchAs', 'name': '_'}],
+            case_guards=[None],
+            case_bodies=[[entry_block]],
+            merge_block=None,
+            blocks=set([entry_block]) | _inner_blocks,
+            case_body_start_indices={entry_block.start_offset: _pop_top_idx + 1},
+            parent=None,
+            region_type=None,
+            entry=entry_block,
+        )
+        if hasattr(_virtual_mr, 'metadata'):
+            _virtual_mr.metadata['is_virtual_wildcard'] = True
+
+        return _virtual_mr
 
     def _collect_guard_pattern_blocks(self, region, case_idx):
         guard_pattern_blocks = set()

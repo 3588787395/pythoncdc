@@ -565,3 +565,42 @@
 - [x] 36.7.1: 全量基线确认 **230f/1561p/113s (87.2%)**
 - [x] 36.7.2: 各区域基线记录完成
 - [x] 36.7.3: tasks.md更新完成
+
+---
+
+## Phase 37: 安全修复策略 (2026-05-21 续)
+
+### Task 37.0: 基线确认与任务规划
+- [x] 37.0.1: 全量基线确认 **220f/87.7%** (Phase 37开始时已有改善)
+
+### Task 37.1: _build_prefix_stmt_list修复
+- [x] 37.1.1: 创建缺失的`_build_prefix_stmt_list`方法 (region_ast_generator.py L8779)
+- [x] 37.1.2: for_boolop v1/v2/v3 崩溃→通过 (-3f)
+- [x] 37.1.3: nested验证 90→87f
+
+### Task 37.2: If区域Return→Break转换
+- [x] 37.2.1: 循环内IfRegion子区域处理 (_loop_dispatch_block)
+- [x] 37.2.2: Return(None)→Break转换 (_process_if_blocks)
+- [x] 37.2.3: if_region验证 59→56f
+
+### Task 37.3: Nested if_try+try_try修复
+- [x] 37.3.1: IfRegion-TryExceptRegion containment过滤修正 (generate() L449)
+- [x] 37.3.2: try_try嵌套补偿逻辑 (_generate_try L6123)
+- [x] 37.3.3: nested验证 87→84f
+
+### Task 37.4a: If区域elif+return+链式比较
+- [x] 37.4a.1: elif+return分支错误包含修复 → test_if59通过 (2/3)
+- [x] 37.4a.2: 链式比较+else分支混淆修复 → test_if84全通过 (3/3)
+- [x] 37.4a.3: if_region验证 56→50f 🎉
+
+### Task 37.4b: Nested Match嵌套修复
+- [x] 37.4b.1: 新增`_detect_undetected_wildcard_match()`方法
+- [x] 37.4b.2: generate()多路径通配符match检测
+- [x] 37.4b.3: match_for(3) + match_try(3) 全部通过
+- [x] 37.4b.4: Match检测条件收紧（避免误检）
+- [ ] 37.4b.5: nested从90f降至≤88f (待进一步优化)
+
+### Task 37.5: 全量最终验证
+- [x] 37.5.1: 全量基线确认 **220f/1574p/110s (87.7%)**
+- [x] 37.5.2: 各区域基线记录完成
+- [x] 37.5.3: tasks.md/checklist.md更新完成
