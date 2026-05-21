@@ -471,3 +471,56 @@
 14. region_ast_generator.py L2868-2895: _loop_handle_header_no_condition前导语句
 15. region_ast_generator.py L1434-1468: YieldFrom表达式重建（循环前BASIC块搜索）
 16. region_ast_generator.py L4847-4848: _then_last_op RETURN_VALUE检测
+
+---
+
+## 🔥🔥🔥 Phase 35: 区域归约算法驱动完善验证清单（进行中）
+
+### Task 35.0: 基线确认与回归修复
+- [x] 35.0.1: IF_ELIF_CHAIN破损处理修复（return True→完整AST生成）→ if_region 27→15f
+- [x] 35.0.2: LOOP_BACK_EDGE→Continue误生成修复 → for_loop 24→12f
+- [x] 35.0.3: 全量基线确认 → **192f/1536p (88.9%)** ✅
+
+### Phase 35 基线确认
+- [x] 35-BL1: basic **20f/73p (76.0%)** ⚠️ 需改善
+- [x] 35-BL2: if_region **15f/290p (95.2%)** ✅ 已达标
+- [x] 35-BL3: while_loop **6f/103p (85.8%)** ✅ 已改善
+- [x] 35-BL4: for_loop **12f/180p (93.8%)** ✅ 稳定
+- [x] 35-BL5: try_except **21f/202p (90.6%)** ⚠️ 需改善
+- [x] 35-BL6: with_region **9f/182p (95.3%)** ✅ 稳定
+- [x] 35-BL7: match_region **3f/176p (98.3%)** 🎉 接近完美
+- [x] 35-BL8: boolop **9f/123p (93.2%)** ✅ 稳定
+- [x] 35-BL9: ternary **8f/81p (69.8%)** ⚠️ 需改善
+- [x] 35-BL10: nested **89f/176p (62.5%)** 🔥 最大桶
+
+### Task 35.1: Nested区域攻坚
+- [ ] 35.1.1: 89个nested失败测试按错误模式分类
+- [ ] 35.1.2: 嵌套循环+if+try区域层次识别修复
+- [ ] 35.1.3: 循环内try-except的continue/break分类修复
+- [ ] 35.1.4: 嵌套with+boolop/ternary AST生成修复
+- [ ] 35.1.5: nested验证 ≤50f
+
+### Task 35.2: Try区域修复
+- [ ] 35.2.1: for-try-continue中continue→break误判修复
+- [ ] 35.2.2: 嵌套try-except handler排序修复
+- [ ] 35.2.3: try-finally finally块重复生成修复
+- [ ] 35.2.4: try验证 ≤12f
+
+### Task 35.3: Ternary区域修复
+- [ ] 35.3.1: ternary与boolop边界判定增强
+- [ ] 35.3.2: 嵌套ternary值块提取修复
+- [ ] 35.3.3: ternary验证 ≤4f
+
+### Task 35.4: Basic/For/BoolOp区域修复
+- [ ] 35.4.1: Basic yield from/生成器修复 ≤10f
+- [ ] 35.4.2: For-else/for-try-continue修复 ≤6f
+- [ ] 35.4.3: BoolOp混合链修复 ≤4f
+
+### Task 35.5: 反编译逻辑注释完善
+- [ ] 35.5.1: 每个区域归约算法逻辑写入识别方法注释
+- [ ] 35.5.2: 每个区域AST映射规则写入生成方法注释
+
+### Task 35.6: 全量验证与迭代
+- [ ] 35.6.1: 全量测试无回归
+- [ ] 35.6.2: 字节码等价性验证
+- [ ] 35.6.3: 更新spec.md/tasks.md/checklist.md

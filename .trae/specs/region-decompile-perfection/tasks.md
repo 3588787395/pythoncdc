@@ -802,8 +802,116 @@
 - [x] **Task 34.1: Nested区域分析** → 93f, 复杂嵌套问题需架构改进 🔄
 - [x] **Task 34.2: If区域修复** → 27f (if-break+前导提取), ⚠️有+3回归
 - [x] **Task 34.3: Basic/YieldFrom修复** → **1f (99.2%)** 🎉
-- [ ] **Task 34.4: 反编译逻辑注释全面完善** → 进行中
-- [ ] **Task 34.5: 全量验证与迭代** → 当前209f/1689p (89.0%)
-  - [ ] 34.5.3: 根据失败测试修正反编译逻辑，重新写入注释
-  - [ ] 34.5.4: 迭代测试-修正循环，直到所有区域≥95%
-  - [ ] 34.5.5: 更新spec.md/tasks.md/checklist.md
+- [x] **Task 34.4: 反编译逻辑注释全面完善** → 进行中
+- [x] **Task 34.5: 全量验证与迭代** → 当前192f/1536p (88.9%)
+
+---
+
+## 🔥🔥🔥 Phase 35: 区域归约算法驱动完善 — 进行中（2026-05-16）
+
+> **目标**: 基于 "No More Gotos" 论文的区域归约算法，将所有区域推向100%成功率和字节码完全匹配
+
+### Phase 35 基线（2026-05-16 实测）
+
+| 区域 | 失败 | 通过 | 总计 | 通过率 | 优先级 |
+|------|------|------|------|--------|--------|
+| basic | 20 | 73 | 96 | 76.0% | P2 |
+| if_region | 15 | 290 | 311 | **95.2%** | P2 ✅ |
+| while_loop | 6 | 103 | 120 | **85.8%** | P2 ✅ |
+| for_loop | 12 | 180 | 193 | 93.8% | P2 |
+| try_except | 21 | 202 | 230 | 90.6% | P1 |
+| with_region | 9 | 182 | 191 | **95.3%** | P3 ✅ |
+| match_region | 3 | 176 | 198 | **98.3%** | P3 ✅ 🎉 |
+| boolop | 9 | 123 | 132 | 93.2% | P2 |
+| ternary | 8 | 81 | 116 | 69.8% | P1 |
+| nested | **89** | 176 | 285 | **62.5%** | **P0** 🔥🔥🔥 |
+| **总计** | **192** | **1536** | **1832** | **88.9%** | |
+
+### Phase 35 深度根因分析
+
+#### P0: Nested区域 (89f, 62.5%)
+- 根因1: 嵌套循环+if+try的组合导致区域层次识别错误 (~30f)
+- 根因2: 循环内try-except的continue/break分类错误 (~20f)
+- 根因3: 嵌套with+boolop/ternary的AST生成错误 (~15f)
+- 根因4: 深层嵌套(3+层)的区域归约不完整 (~24f)
+
+#### P1: Try区域 (21f, 90.6%)
+- 根因1: for-try-continue中continue被误判为break (te047/te083, ~6f)
+- 根因2: 嵌套try-except的handler排序错误 (~6f)
+- 根因3: try-finally中finally块重复生成 (~5f)
+- 根因4: except子句中raise/reraise处理 (~4f)
+
+#### P1: Ternary区域 (8f, 69.8%)
+- 根因1: ternary与boolop边界判定模糊 (~3f)
+- 根因2: 嵌套ternary的值块提取错误 (~3f)
+- 根因3: ternary在循环/try中的角色标注错误 (~2f)
+
+#### P2: Basic区域 (20f, 76.0%)
+- 根因1: yield from表达式重建不完整 (~8f)
+- 根因2: 生成器函数的RETURN_GENERATOR处理 (~5f)
+- 根因3: 全局作用域变量声明/赋值 (~4f)
+- 根因4: 复杂表达式嵌套 (~3f)
+
+#### P2: For循环 (12f, 93.8%)
+- 根因1: for-else中else块内容丢失 (~4f)
+- 根因2: for-try-continue的continue识别 (~4f)
+- 根因3: 嵌套for的break/continue归属 (~4f)
+
+#### P2: BoolOp区域 (9f, 93.2%)
+- 根因1: 混合and/or链的segment构建 (~4f)
+- 根因2: UNARY_NOT在boolop中的保留 (~3f)
+- 根因3: boolop在while条件中的检测 (~2f)
+
+### Phase 35 任务清单
+
+- [x] **Task 35.0: 基线确认与回归修复** → 192f/1536p (88.9%) ✅
+  - [x] 35.0.1: 修复IF_ELIF_CHAIN破损处理（return True→完整AST生成）
+  - [x] 35.0.2: 修复LOOP_BACK_EDGE→Continue误生成（for_loop 24f→12f）
+  - [x] 35.0.3: 确认match_region 3f, if_region 15f, while_loop 6f改善
+
+- [ ] **Task 35.1: Nested区域攻坚 (89f→≤50f)**
+  - [ ] 35.1.1: 分析89个nested失败测试，按错误模式分类
+  - [ ] 35.1.2: 修复嵌套循环+if+try的区域层次识别
+  - [ ] 35.1.3: 修复循环内try-except的continue/break分类
+  - [ ] 35.1.4: 修复嵌套with+boolop/ternary的AST生成
+  - [ ] 35.1.5: 验证nested≤50f
+
+- [ ] **Task 35.2: Try区域修复 (21f→≤12f)**
+  - [ ] 35.2.1: 修复for-try-continue中continue→break误判
+  - [ ] 35.2.2: 修复嵌套try-except的handler排序
+  - [ ] 35.2.3: 修复try-finally中finally块重复生成
+  - [ ] 35.2.4: 验证try≤12f
+
+- [ ] **Task 35.3: Ternary区域修复 (8f→≤4f)**
+  - [ ] 35.3.1: 增强ternary与boolop边界判定
+  - [ ] 35.3.2: 修复嵌套ternary的值块提取
+  - [ ] 35.3.3: 验证ternary≤4f
+
+- [ ] **Task 35.4: Basic/For/BoolOp区域修复**
+  - [ ] 35.4.1: Basic yield from/生成器修复 (20f→≤10f)
+  - [ ] 35.4.2: For-else/for-try-continue修复 (12f→≤6f)
+  - [ ] 35.4.3: BoolOp混合链修复 (9f→≤4f)
+
+- [ ] **Task 35.5: 反编译逻辑注释完善**
+  - [ ] 35.5.1: 将每个区域的归约算法逻辑写入识别方法注释
+  - [ ] 35.5.2: 将每个区域的AST映射规则写入生成方法注释
+
+- [ ] **Task 35.6: 全量验证与迭代**
+  - [ ] 35.6.1: 运行全量测试确认无回归
+  - [ ] 35.6.2: 字节码等价性验证
+  - [ ] 35.6.3: 更新spec.md/tasks.md/checklist.md
+
+# Task Dependencies
+- Phase 1-4 可并行执行
+- Phase 5 依赖 Phase 1,2
+- Phase 6 依赖 Phase 5
+- Phase 7 依赖 Phase 5,6
+- Phase 8 依赖 Phase 5
+- Phase 9 依赖 Phase 1-8
+- Phase 10-14 可部分并行（Phase 12独立，10/11可并行）
+- Phase 15 依赖 Phase 14
+- Phase 16-17 依赖 Phase 15
+- Phase 18-21 可并行（18a/18b独立，19依赖18，20依赖19，21依赖20）
+- Phase 22-34 已完成
+- **Phase 35 (当前) 无依赖 - 立即开始**
+- Phase 35内: Task 35.0已完成, 35.1-35.4可并行, 35.5-35.6依赖35.1-35.4

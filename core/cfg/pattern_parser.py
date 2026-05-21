@@ -137,6 +137,9 @@ class PatternParser:
             'MATCH_CLASS', 'MATCH_SEQUENCE', 'MATCH_MAPPING',
             'MATCH_KEYS', 'MATCH_MAPPING_KEYS',
         })
+        NEW_CASE_OPS = frozenset({
+            'MATCH_CLASS', 'MATCH_SEQUENCE', 'MATCH_MAPPING',
+        })
 
         while worklist:
             current = worklist.pop()
@@ -151,6 +154,37 @@ class PatternParser:
                 continue
 
             if any(i.opname in CASE_HEADER_OPS for i in meaningful):
+                if any(i.opname in NEW_CASE_OPS for i in meaningful):
+                    _first_real = next((i for i in meaningful if i.opname not in ('POP_TOP',)), meaningful[0])
+                    if _first_real.opname in CASE_HEADER_OPS or _first_real.opname == 'COPY':
+                        continue
+                    if _first_real.opname in ('LOAD_NAME', 'LOAD_GLOBAL'):
+                        _rest = meaningful[meaningful.index(_first_real)+1:]
+                        if any(i.opname in NEW_CASE_OPS for i in _rest):
+                            continue
+                visited.add(current)
+                blocks.append(current)
+                cur_last = current.get_last_instruction()
+                cur_jt_offset = None
+                if cur_last and cur_last.opname in self.COND_JUMP_OPS:
+                    cur_jt_offset = cur_last.argval
+                for s in current.successors:
+                    if s in visited:
+                        continue
+                    if s.start_offset == jump_target_offset:
+                        continue
+                    if cur_jt_offset is not None and s.start_offset == cur_jt_offset:
+                        continue
+                    meaningful_s = [i for i in s.instructions if i.opname not in ('RESUME','NOP','CACHE','PUSH_NULL')]
+                    if meaningful_s and any(i.opname in NEW_CASE_OPS for i in meaningful_s):
+                        _first_real_s = next((i for i in meaningful_s if i.opname not in ('POP_TOP',)), meaningful_s[0])
+                        if _first_real_s.opname in CASE_HEADER_OPS or _first_real_s.opname == 'COPY':
+                            continue
+                        if _first_real_s.opname in ('LOAD_NAME', 'LOAD_GLOBAL'):
+                            _rest_s = meaningful_s[meaningful_s.index(_first_real_s)+1:]
+                            if any(i.opname in NEW_CASE_OPS for i in _rest_s):
+                                continue
+                    worklist.append(s)
                 continue
 
             first_meaningful = meaningful[0] if meaningful else None
@@ -195,7 +229,19 @@ class PatternParser:
                                      'JUMP_BACKWARD')
                         for i in meaningful
                     )
-                    if not has_body_op and not has_backward_jump:
+                    _cond_jump_target = None
+                    for i in meaningful:
+                        if i.opname in ('POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_IF_FALSE',
+                                        'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_IF_TRUE'):
+                            _cond_jump_target = i.argval
+                            break
+                    _jumps_within_body = (
+                        _cond_jump_target is not None and
+                        jump_target_offset is not None and
+                        _cond_jump_target < jump_target_offset and
+                        _cond_jump_target > current.start_offset
+                    )
+                    if not has_body_op and not has_backward_jump and not _jumps_within_body:
                         is_pattern_block = True
                         is_guard_like = True
 
@@ -326,6 +372,10 @@ class PatternParser:
         if guard_start is not None and guard_end is not None:
             guard_instrs = all_instrs[guard_start:guard_end + 1]
 
+            first_jump_is_true = (
+                all_instrs[guard_end].opname in ('POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_IF_TRUE')
+            )
+
             if len(guard_instrs) >= 4:
                 left_name = guard_instrs[0].argval
                 compare_op = guard_instrs[2].argval
@@ -364,6 +414,27 @@ class PatternParser:
                         'right': {'type': 'Name', 'id': right_name}
                     })
 
+                pos = 3
+                while pos + 2 < len(guard_instrs) - 1:
+                    if guard_instrs[pos].opname not in self.LOAD_VAR_OPS:
+                        break
+                    nxt_name = guard_instrs[pos].argval
+                    if (pos + 2 < len(guard_instrs) and
+                        guard_instrs[pos + 1].opname == 'LOAD_CONST' and
+                        guard_instrs[pos + 2].opname == 'COMPARE_OP'):
+                        nxt_cmp_op = guard_instrs[pos + 2].argval
+                        if nxt_name not in pattern_store_names and nxt_name not in pattern_loaded_names:
+                            break
+                        comparisons.append({
+                            'type': 'Compare',
+                            'left': {'type': 'Name', 'id': nxt_name},
+                            'ops': [{'type': 'CompareOp', 'op': nxt_cmp_op}],
+                            'right': {'type': 'Constant', 'value': guard_instrs[pos + 1].argval}
+                        })
+                        pos += 3
+                        continue
+                    break
+
                 pos = guard_end + 1
                 while pos + 3 < len(all_instrs):
                     nxt = all_instrs[pos]
@@ -393,11 +464,59 @@ class PatternParser:
                 else:
                     result = {
                         'type': 'BoolOp',
-                        'op': 'and',
+                        'op': 'or' if first_jump_is_true else 'and',
                         'values': comparisons
                     }
 
                 return result
+
+        if guard_start is None:
+            for i in range(search_start, len(all_instrs)):
+                instr = all_instrs[i]
+                if instr.opname in self.LOAD_VAR_OPS:
+                    if (i + 1 < len(all_instrs) and
+                        all_instrs[i + 1].opname in ('POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_IF_FALSE')):
+                        var_name = instr.argval
+                        _psn = set()
+                        for j in range(i):
+                            if all_instrs[j].opname in self.STORE_OPS:
+                                _psn.add(all_instrs[j].argval)
+                        if var_name in _psn:
+                            return {'type': 'Name', 'id': var_name}
+
+        if guard_start is None:
+            for i in range(search_start, len(all_instrs)):
+                instr = all_instrs[i]
+                if instr.opname in ('LOAD_NAME', 'LOAD_GLOBAL') and i + 1 < len(all_instrs):
+                    func_name = instr.argval
+                    call_idx = None
+                    for j in range(i + 1, min(i + 10, len(all_instrs))):
+                        if all_instrs[j].opname == 'CALL':
+                            call_idx = j
+                            break
+                        if all_instrs[j].opname in ('POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_IF_FALSE',
+                                                    'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_IF_TRUE'):
+                            break
+                    if call_idx is not None and call_idx + 3 < len(all_instrs):
+                        if (all_instrs[call_idx + 1].opname == 'LOAD_CONST' and
+                            all_instrs[call_idx + 2].opname == 'COMPARE_OP' and
+                            all_instrs[call_idx + 3].opname in ('POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_IF_FALSE')):
+                            compare_op = all_instrs[call_idx + 2].argval
+                            right_val = all_instrs[call_idx + 1].argval
+                            call_args = []
+                            for j in range(i + 1, call_idx):
+                                if all_instrs[j].opname in self.LOAD_VAR_OPS:
+                                    call_args.append({'type': 'Name', 'id': all_instrs[j].argval})
+                            return {
+                                'type': 'Compare',
+                                'left': {
+                                    'type': 'Call',
+                                    'func': {'type': 'Name', 'id': func_name},
+                                    'args': call_args
+                                },
+                                'ops': [{'type': 'CompareOp', 'op': compare_op}],
+                                'right': {'type': 'Constant', 'value': right_val}
+                            }
 
         return None
 
