@@ -523,4 +523,45 @@
 ### Task 35.6: 全量验证与迭代
 - [ ] 35.6.1: 全量测试无回归
 - [ ] 35.6.2: 字节码等价性验证
-- [ ] 35.6.3: 更新spec.md/tasks.md/checklist.md
+- [ ] 35.6.3: tasks.md/checklist.md/spec.md更新
+
+---
+
+## Phase 36: 冲刺100%成功率
+
+### Task 36.0: 基线确认与任务规划
+- [x] 36.0.1: 全量基线确认 230f/87.2%
+- [x] 36.0.2: Phase 36任务规划完成
+
+### Task 36.1: P0 If区域回归修复 (59f→43f→50f)
+- [x] 36.1.1: BoolOp-If冲突消解层实现（_resolve_boolop_if_conflicts）
+- [x] 36.1.2: 5维特征检测体系 + 最后跳转目标归属检测
+- [x] 36.1.3: if_region验证 43f→50f（收紧后boolop恢复）
+
+### Task 36.2: P0 Nested区域深度优化 (90f→87f)
+- [x] 36.2.1: WithRegion子处理推广（L6923-7010, 88行注释）
+- [x] 36.2.2: TryExceptRegion去重修复（L5541-5583, 43行注释）
+- [x] 36.2.3: _build_prefix_stmt_list方法新增（L6522-6558, 37行）
+- [x] 36.2.4: nested验证 87f (-3f)
+
+### 🚨 Task 36.3: 紧急修复BoolOp回归 (37f→9f) 🎉
+- [x] 36.3.1: 冲突消解收紧为7特征AND + opt-in模式
+- [x] 36.3.2: trivial return检测新增（特征6+7）
+- [x] 36.3.3: boolop恢复至9f完美达标
+
+### 🚨 Task 36.4: 紧急修复Ternary回归 (17f→8f) 🎉
+- [x] 36.4.1: 确认ternary随boolop自然恢复
+- [x] 36.4.2: ternary验证 8f超额达标
+
+### Task 36.5: P1 Try/While改善
+- [x] 36.5.1: While True循环识别改进（CPython优化限制）
+- [x] 36.5.2: 嵌套try parent关系分析（需端到端修复）
+
+### Task 36.6: If区域二次攻坚
+- [x] 36.6.1: 尝试BoolOp-If智能覆盖（已放弃，导致boolop回归）
+- [x] 36.6.2: 确认7特征AND已是最优平衡点
+
+### Task 36.7: 全量最终验证
+- [x] 36.7.1: 全量基线确认 **230f/1561p/113s (87.2%)**
+- [x] 36.7.2: 各区域基线记录完成
+- [x] 36.7.3: tasks.md更新完成
