@@ -446,6 +446,15 @@ class RegionASTGenerator:
                             else:
                                 is_contained = True
                                 break
+                        elif isinstance(r, IfRegion) and isinstance(other, TryExceptRegion):
+                            # if_try嵌套：IfRegion的entry在TryExceptRegion的entry之前，
+                            # 说明IfRegion是外层结构（if体内包含try），不应被标记为contained
+                            if (r.entry and other.entry and
+                                r.entry.start_offset < other.entry.start_offset):
+                                pass
+                            else:
+                                is_contained = True
+                                break
                         else:
                             is_contained = True
                             break
@@ -6109,6 +6118,63 @@ class RegionASTGenerator:
                 if exc_type:
                     handler_node['exc_type'] = {'type': 'Name', 'id': str(exc_type), 'ctx': 'Load'} if isinstance(exc_type, str) else exc_type
                 handlers.append(handler_node)
+
+            # try_try嵌套补偿：region_analyzer可能遗漏外层except handler
+            # 当异常表中有target指向try_offset_end位置的handler（不在当前handler_entry_blocks中），
+            # 说明存在外层except handler被遗漏。此时需要将当前handlers（内层）包装成嵌套Try AST，
+            # 并用外层handler作为当前Try AST的handlers。
+            # 关键条件：target_block不在当前region.blocks中（区分try_try与try/except/finally）
+            _existing_handler_offsets = set()
+            for heb in region.handler_entry_blocks:
+                _existing_handler_offsets.add(heb.start_offset)
+            _region_block_set = set(region.blocks)
+            _outer_handler_entries = []
+            if self.cfg.exception_table:
+                for entry in self.cfg.exception_table:
+                    target = entry.get('target', entry.get('handler_start', None))
+                    if target is not None and target not in _existing_handler_offsets:
+                        if target >= region.try_offset_end:
+                            target_block = self.cfg.get_block_by_offset(target)
+                            if (target_block and
+                                target_block not in self.generated_blocks and
+                                target_block not in _region_block_set):
+                                has_push_exc = any(
+                                    i.opname == 'PUSH_EXC_INFO'
+                                    for i in target_block.instructions
+                                )
+                                if has_push_exc:
+                                    _outer_handler_entries.append(target_block)
+            if _outer_handler_entries and handlers:
+                # 将内层try body + handlers 包装成嵌套的 Try AST
+                _inner_try = {
+                    'type': 'Try',
+                    'body': body_stmts if body_stmts else [{'type': 'Pass'}],
+                    'handlers': handlers,
+                }
+                body_stmts = [_inner_try]
+                # 生成外层 handlers
+                handlers = []
+                for _outer_block in sorted(_outer_handler_entries, key=lambda b: b.start_offset):
+                    if _outer_block in self.generated_blocks:
+                        continue
+                    _outer_body = self._generate_handler_body_statements(_outer_block)
+                    self.generated_blocks.add(_outer_block)
+                    for succ in _outer_block.successors:
+                        if succ not in self.generated_blocks:
+                            succ_has_pop_except = any(
+                                i.opname == 'POP_EXCEPT'
+                                for i in succ.instructions
+                            )
+                            if succ_has_pop_except:
+                                _succ_stmts = self._generate_handler_body_statements(succ)
+                                if _succ_stmts:
+                                    _outer_body.extend(_succ_stmts)
+                                self.generated_blocks.add(succ)
+                    _outer_handler = {
+                        'type': 'ExceptHandler',
+                        'body': _outer_body if _outer_body else [{'type': 'Pass'}]
+                    }
+                    handlers.append(_outer_handler)
 
             orelse_stmts = None
             if region.else_blocks and region.has_else:
