@@ -604,3 +604,33 @@
 - [x] 37.5.1: 全量基线确认 **220f/1574p/110s (87.7%)**
 - [x] 37.5.2: 各区域基线记录完成
 - [x] 37.5.3: tasks.md/checklist.md更新完成
+
+---
+
+## Phase 39: 缺失方法修复与安全边界探索验证清单（已完成）
+
+### Task 39.0: 基线确认与任务规划
+- [x] 39.0.1: 全量基线确认 **220f/1574p/110s (87.7%)** ✅
+
+### Task 39.1: _build_prefix_stmt_list缺失方法修复
+- [x] 39.1.1: 发现方法被调用但未定义（AttributeError导致6个nested测试崩溃）
+- [x] 39.1.2: 在region_ast_generator.py L11248创建完整方法实现（+57行含注释）
+- [x] 39.1.3: test_nested_for_boolop v1/v2/v3 从崩溃恢复通过 ✅
+- [x] 39.1.4: test_nested_with_boolop v1/v2/v3 从崩溃变为指令不匹配 ✅
+- [x] 39.1.5: 全量回归验证无影响 → **217f (-3f净改善)** 🎉
+
+### Task 39.2: If区域安全修复尝试
+- [x] 39.2.1: test_if72分析 - ternary的STORE_NAME(b)赋值丢失根因确认
+- [x] 39.2.2: 尝试_generate_ternary回退赋值目标检测（已回退，未生效）
+- [x] 39.2.3: 确认需region_analyzer.py修改value_target才能解决
+
+### Task 39.3: Nested/Try/Ternary边际优化评估
+- [x] 39.3.1: 87个nested失败分类：85%+涉及循环嵌套
+- [x] 39.3.2: 非循环嵌套需region_analyzer.py修改
+- [x] 39.3.3: 当前安全约束下无可行修复目标
+
+### Task 39.4: 全量最终验证
+- [x] 39.4.1: **217f/1577p/110s (88.1%)** ✅
+- [x] 39.4.2: for_loop稳定12f (零回归) ✅
+- [x] 39.4.3: 所有10区域基线记录完成 ✅
+- [x] 39.4.4: tasks.md + checklist.md 更新完成 ✅

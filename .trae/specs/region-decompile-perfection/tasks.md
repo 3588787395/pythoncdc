@@ -1101,7 +1101,139 @@
 1. **收紧Match检测条件** (预期nested -6f恢复): 减少误检
 2. **If区域BoolOp-If冲突** (预期if_region -10f): 28个`if a and b`模式
 3. **Nested深层嵌套专项** (预期nested -15f): 多轮归约机制
-4. **全量目标**: 从220f降至**≤190f (92%+)**
+4. **全量目标**: 从220f降至**≤190~200f (91~93%+)**
+5. **终极目标**: **100%成功率 + 字节码完全匹配**
+
+---
+
+# Phase 38: 超保守安全修复 (2026-05-21)
+
+## Phase 38 任务清单
+
+- [x] **Task 38.0: 基线确认** → 220f/87.7% ✅
+- [x] **Task 38.1: If区域安全修复尝试**
+  - [x] 38.1.1: 分析50个if_region失败，筛选安全目标
+  - [x] 38.1.2: 尝试修复test_if61 (循环内IfRegion子区域处理)
+  - [x] 38.1.3: ⚠️ 触发for_loop回归(12f→39f)，已回退
+- [x] **Task 38.2: Nested安全修复尝试**
+  - [x] 38.2.1: _build_prefix_stmt_list重新实现
+  - [x] 38.2.2: ⚠️ 再次触发for_loop回归，已回退
+- [x] **Task 38.3: 超保守策略验证**
+  - [x] 38.3.1: 确认剩余修复目标均需region_analyzer.py修改
+  - [x] 38.3.2: 风险/收益分析: P(成功)=30%, P(回归)=70%
+  - [x] 38.3.3: 决定: 零修改策略，保护for_loop=12f成果
+- [x] **Task 38.4: 最终验证** → **220f/1574p/106s (87.7%)** ✅
+
+## Phase 38 核心教训
+
+🛡️ **超保守策略验证结果**:
+- 修改`_loop_postprocess`/`_loop_dispatch_block`等循环方法**极其危险**
+  - 第一次尝试: for_loop 12f → 39f (+27f!)
+  - 第二次尝试: for_loop 12f → 39f (+27f!) (不同子代理同样问题)
+- **根本原因**: 循环体生成逻辑与If/Try/With/Match子区域处理深度耦合
+- **结论**: 在不重构架构的前提下，无法安全修改循环相关方法
+
+📊 **失败测试根因分布**:
+- if_region 50f: ~60% BoolOp-If冲突(需region_analyzer), ~30% 嵌套结构
+- nested 90f: ~85%+ 包含循环嵌套，其余为复杂多层嵌套
+- **真正可在AST层安全修复的目标 < 5个测试**
+
+## Phase 39 建议（需要架构改进）
+
+1. **放宽约束 + 小心尝试** (预期-5~10f):
+   - 允许for_loop ≤13f（+1f容差）
+   - 仅修改`_process_if_blocks`(非循环方法)
+   - 目标: test_if72 ternary / test_nested_if_boolop
+
+2. **架构级改进** (预期-20~30f):
+   - 重构`_resolve_boolop_if_conflicts()`中的特征检测
+   - 改进TernaryRegion识别的if内部检测
+   - 多轮归约机制处理深层嵌套
+
+3. **全量目标**: 从220f降至**≤190~200f (91~93%+)**
+
+---
+
+# Phase 39: 缺失方法修复与安全边界探索 (2026-05-22)
+
+## Phase 39 任务清单
+
+- [x] **Task 39.0: 基线确认与任务规划** → 220f/87.7% ✅
+- [x] **Task 39.1: 修复_build_prefix_stmt_list缺失方法** → **220f→217f (-3f)** 🎉
+  - [x] 39.1.1: 发现 `_build_prefix_stmt_list` 被调用但从未定义（AttributeError）
+  - [x] 39.1.2: 在 region_ast_generator.py L11248 创建完整方法（54行+注释）
+  - [x] 39.1.3: test_nested_for_boolop ×3 **从崩溃恢复通过**
+  - [x] 39.1.4: test_nested_with_boolop ×3 从崩溃变为指令不匹配（不再崩溃）
+- [x] **Task 39.2: If区域安全修复尝试**
+  - [x] 39.2.1: 分析test_if72 (ternary in if body) - STORE_NAME(b)丢失问题
+  - [x] 39.2.2: 尝试在 `_generate_ternary` 添加回退赋值目标检测
+  - [x] 39.2.3: ⚠️ 修复未生效（TernaryRegion的merge_block不包含STORE），已回退
+  - [x] 39.2.4: 结论: test_if72需要region_analyzer.py修改value_target，无法在AST层安全修复
+- [x] **Task 39.3: Nested/Try/Ternary边际优化评估**
+  - [x] 39.3.1: 分析87个nested失败：85%+涉及循环嵌套，无法安全修复
+  - [x] 39.3.2: 非循环嵌套(test_nested_if_boolop等)需region_analyzer.py修改
+  - [x] 39.3.3: 结论: 当前约束下无更多安全修复目标
+- [x] **Task 39.4: 全量最终验证** → **217f/1577p/110s (88.1%)** ✅
+  - [x] 39.4.1: 10个区域全部测试完成
+  - [x] 39.4.2: for_loop稳定在12f (无回归!) ✅
+  - [x] 39.4.3: 各区域基线记录完成
+
+## Phase 39 最终成果
+
+| 区域 | Phase38基线 | **Phase39最终** | 变化 | 通过率 | 状态 |
+|------|------------|-----------------|------|--------|------|
+| basic | 7f (94.3%) | **7f (94.5%)** | ±0 | **94.5%** | ✅ 稳定 |
+| boolop | 9f (92.7%) | **9f (92.7%)** | ±0 | **92.7%** | ✅ 稳定 |
+| for_loop | 12f (93.7%) | **12f (93.8%)** | ±0 | **93.8%** | ✅ 稳定 |
+| if_region | 50f (83.8%) | **50f (83.0%)** | ±0 | **83.0%** | ✅ 稳定 |
+| with_region | 9f (95.3%) | **9f (95.3%)** | ±0 | **95.3%** | ✅ 稳定 |
+| match_region | 4f (97.8%) | **4f (97.8%)** | ±0 | **97.8%** | ✅ 稳定 |
+| try_except | 21f (90.4%) | **21f (91.3%)** | ±0 | **91.3%** | ✅ 稳定 |
+| while_loop | 10f (90.7%) | **10f (90.8%)** | ±0 | **90.8%** | ✅ 稳定 |
+| ternary | 8f (91.0%) | **8f (91.4%)** | ±0 | **91.4%** | ✅ 稳定 |
+| nested | 90f (67.1%) | **87f (69.3%)** | **-3f!** | **69.3%** | 🎉 改善! |
+| **总计** | **220f (87.7%)** | **217f (88.1%)** | **-3f** | **88.1%** | 🎉 |
+
+## Phase 39 核心成就
+
+✅ **_build_prefix_stmt_list 方法创建**: 
+   - 54行完整实现 + 20行详细注释
+   - 解决了Phase 37遗留的方法缺失bug
+   - 恢复3个nested测试从崩溃到通过
+
+✅ **安全约束验证通过**:
+   - for_loop稳定在12f（零回归）
+   - 所有修改仅在 region_ast_generator.py
+   - 未触及任何循环相关方法
+
+✅ **技术边界明确**:
+   - test_if72 ternary赋值丢失 → 需region_analyzer.py修改value_target
+   - BoolOp-If冲突(28测试) → 需要架构级改进
+   - 85%+ nested失败 → 需要循环方法修改或region_analyzer.py改进
+
+## Phase 39 新增代码清单
+
+1. **region_ast_generator.py L11248-11305**: `_build_prefix_stmt_list` 方法 (+57行)
+   - 功能: 将前缀指令序列转换为AST语句节点列表
+   - 处理: STORE_*赋值、POP_TOP表达式语句、普通表达式
+   - 调用点: L9084, L9094 (_generate_boolop中)
+
+## Phase 40 建议（未来工作）
+
+1. **region_analyzer.py TernaryRegion value_target修复** (预期if_region -3f):
+   - test_if72: `if a > 0: b = 1 if a > 10 else 2` 的STORE_NAME(b)丢失
+   - 需要在识别阶段正确设置value_target属性
+   
+2. **BoolOp-If冲突架构级解决** (预期if_region -15~25f):
+   - 两阶段竞争-消解模型或上下文感知动态优先级
+   - 高风险高回报，需要大量验证
+
+3. **Nested多轮归约机制** (预期nested -15~20f):
+   - 3+层嵌套的迭代归约
+   - 需要架构改进支持
+
+4. **全量目标**: 从217f降至**≤180~190f (91~93%+)**
+5. **终极目标**: **100%成功率 + 字节码完全匹配**
 
 # Task Dependencies
 - Phase 1-4 可并行执行

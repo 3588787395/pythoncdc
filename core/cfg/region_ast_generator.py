@@ -11247,6 +11247,60 @@ class RegionASTGenerator:
                 _stmts.append(_stmt)
         return _stmts
 
+    def _build_prefix_stmt_list(self, pre_instrs: List[Instruction], block: BasicBlock) -> List[Dict[str, Any]]:
+        """
+        将前缀指令序列转换为AST语句节点列表。
+
+        区域归约算法符合度:
+        ─────────────────────
+        本方法服务于BoolOp/Ternary等表达式级区域的AST生成阶段。
+        在区域归约完成后，区域的前缀块(prefix_block)中可能包含需要在
+        表达式语句之前执行的赋值语句（如循环变量初始化、迭代器获取等）。
+        本方法将这些指令正确转换为AST语句，保证字节码等价性。
+
+        字节码模式:
+        ────────────
+        前缀指令通常包含:
+        - LOAD_* + STORE_*: 变量赋值 (x = ...)
+        - LOAD_* + CALL + POP_TOP: 表达式语句 (func())
+        - GET_ITER + STORE_*: 迭代器获取 (it = iter(x))
+        - FOR_ITER: 循环迭代（应在此前终止）
+
+        参数:
+            pre_instrs: identify_block_prefix_instructions返回的前缀指令列表
+            block: 前缀指令所属的基本块
+
+        返回:
+            AST语句字典列表，每个元素格式为 {'type': 'Assign'|'Expr', ...}
+        """
+        if not pre_instrs:
+            return []
+
+        stmts = []
+        buf = []
+
+        for instr in pre_instrs:
+            if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF') and buf:
+                _stmt = self._build_statement(buf + [instr])
+                if _stmt:
+                    stmts.append(_stmt)
+                buf = []
+                continue
+            if instr.opname == 'POP_TOP' and buf:
+                expr = self.expr_reconstructor.reconstruct(buf)
+                if expr:
+                    stmts.append({'type': 'Expr', 'value': expr})
+                buf = []
+                continue
+            buf.append(instr)
+
+        if buf:
+            _stmt = self._build_statement(buf)
+            if _stmt:
+                stmts.append(_stmt)
+
+        return stmts
+
     def _build_statement(self, instrs: List[Instruction]) -> Optional[Dict[str, Any]]:
         if not instrs:
             return None
