@@ -658,3 +658,34 @@
 - [x] 40.3.1: **217f/1577p/110s (88.1%)** ✅
 - [x] 40.3.2: 所有10区域基线稳定 ✅
 - [x] 40.3.3: tasks.md + checklist.md 更新完成 ✅
+
+---
+
+## Phase 41: 循环Return→Break误转换根因修复验证清单（已完成）
+
+### Task 41.0: 根因定位 — 精确找到Break生成的真实代码路径
+- [x] 41.0.1: 排除 `_loop_handle_header` 中两个Phase 41 fix（未触发）✅
+- [x] 41.0.2: 排除 `_generate_if` / `_if_generate_normal` 路径（未调用）✅
+- [x] 41.0.3: 发现真实路径: `_process_if_blocks([34])` → `_try_generate_conditional_break_or_continue` ✅
+- [x] 41.0.4: 确认Break生成点: L5424 `_body_stmts = [{'type': 'Break'}]` ✅
+- [x] 41.0.5: 根因确认: 块48角色=IF_THEN(非RETURN)，_is_break_like跳过return检测 ✅
+
+### Task 41.1: _try_generate_conditional_break_or_continue return值保持修复
+- [x] 41.1.1: L5424 else分支添加RETURN_VALUE/RETURN_CONST指令检测 ✅
+- [x] 41.1.2: 返回值提取: LOAD_FAST→Name, LOAD_CONST→Constant ✅
+- [x] 41.1.3: Return AST节点生成替代Break ✅
+- [x] 41.1.4: _try_generate_conditional_break L5119备用防护同步添加 ✅
+
+### Task 41.2: 目标测试验证 (5/6通过)
+- [x] 41.2.1: test_fl19forreturn_a — `if a==5: return a` 恢复正确 ✅
+- [x] 41.2.2: test_fl19forreturn_n ✅
+- [x] 41.2.3: test_fl19forreturn_x ✅
+- [x] 41.2.4: test_fl46forreturn_x ✅
+- [x] 41.2.5: test_for18_for_return ✅
+- [ ] 41.2.6: test_fl46forreturn_n ❌ (不同模式: 直接循环体return)
+
+### Task 41.3: 全量10区域回归测试
+- [x] 41.3.1: **212f/1580p/112s (88.2%)** ✅ (-5f净改进)
+- [x] 41.3.2: for_loop 12f→7f (**96.3% 历史最佳**) ✅
+- [x] 41.3.3: 其他9个区域零回归 ✅
+- [x] 41.3.4: tasks.md + checklist.md 更新完成 ✅

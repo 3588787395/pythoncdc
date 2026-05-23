@@ -2591,12 +2591,36 @@ class RegionASTGenerator:
                                 if test_expr and test_expr.get('type') == 'Expr':
                                     test_expr = test_expr.get('value')
                             if test_expr:
-                                body_stmts.append({
-                                    'type': 'If',
-                                    'test': test_expr,
-                                    'body': [{'type': 'Break'}],
-                                    'orelse': None
-                                })
+                                # Phase 41修复: 循环内if+return值保持为return而非break
+                                # 当循环中"if cond: return <value>"被误识别为"if cond: break"时，
+                                # 字节码会多出else: return None且丢失返回值。
+                                # 检测then_succ是否包含RETURN_VALUE/RETURN_CONST且有实际返回值。
+                                _then_jump_target = None
+                                _last_i = block.get_last_instruction()
+                                if _last_i and _last_i.argval is not None:
+                                    _then_jump_target = self.cfg.get_block_by_offset(_last_i.argval)
+                                _return_val = None
+                                if _then_jump_target:
+                                    _then_instrs = [i for i in _then_jump_target.instructions
+                                                   if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                                    if _then_instrs and _then_instrs[0].opname in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF'):
+                                        _return_val = {'type': 'Name', 'id': _then_instrs[0].argval, 'ctx': 'Load'}
+                                    elif _then_instrs and _then_instrs[0].opname == 'LOAD_CONST':
+                                        _return_val = {'type': 'Constant', 'value': _then_instrs[0].argval}
+                                if _return_val is not None:
+                                    body_stmts.append({
+                                        'type': 'If',
+                                        'test': test_expr,
+                                        'body': [{'type': 'Return', 'value': _return_val}],
+                                        'orelse': None
+                                    })
+                                else:
+                                    body_stmts.append({
+                                        'type': 'If',
+                                        'test': test_expr,
+                                        'body': [{'type': 'Break'}],
+                                        'orelse': None
+                                    })
                                 self.generated_blocks.add(block)
                 else:
                     instrs = [i for i in block.instructions
@@ -3073,12 +3097,30 @@ class RegionASTGenerator:
                                     if test_expr and test_expr.get('type') == 'Expr':
                                         test_expr = test_expr.get('value')
                                 if test_expr:
-                                    body_stmts.append({
-                                        'type': 'If',
-                                        'test': test_expr,
-                                        'body': [{'type': 'Break'}],
-                                        'orelse': None
-                                    })
+                                    # Phase 41修复: 循环内if+return值保持为return（for循环路径）
+                                    _then_ret_val = None
+                                    _then_target_block = then_succ
+                                    if _then_target_block:
+                                        _ti = [i for i in _then_target_block.instructions
+                                              if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                                        if _ti and _ti[0].opname in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF'):
+                                            _then_ret_val = {'type': 'Name', 'id': _ti[0].argval, 'ctx': 'Load'}
+                                        elif _ti and _ti[0].opname == 'LOAD_CONST':
+                                            _then_ret_val = {'type': 'Constant', 'value': _ti[0].argval}
+                                    if _then_ret_val is not None:
+                                        body_stmts.append({
+                                            'type': 'If',
+                                            'test': test_expr,
+                                            'body': [{'type': 'Return', 'value': _then_ret_val}],
+                                            'orelse': None
+                                        })
+                                    else:
+                                        body_stmts.append({
+                                            'type': 'If',
+                                            'test': test_expr,
+                                            'body': [{'type': 'Break'}],
+                                            'orelse': None
+                                        })
                                     self.generated_blocks.add(block)
                                     for b in then_succ.blocks if hasattr(then_succ, 'blocks') else [then_succ]:
                                         self.generated_blocks.add(b)
@@ -5080,8 +5122,21 @@ class RegionASTGenerator:
             body_stmts = ret_stmts if ret_stmts else [{'type': 'Return', 'value': {'type': 'Constant', 'value': None}}]
             self.generated_blocks.add(exit_succ)
         else:
-            body_stmts = [{'type': 'Break'}]
-            self.generated_blocks.add(exit_succ)
+            _exit_has_return = any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in exit_succ.instructions)
+            _ret_val = None
+            if _exit_has_return:
+                _exit_meaningful = [i for i in exit_succ.instructions
+                                   if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                if _exit_meaningful and _exit_meaningful[0].opname in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF'):
+                    _ret_val = {'type': 'Name', 'id': _exit_meaningful[0].argval, 'ctx': 'Load'}
+                elif _exit_meaningful and _exit_meaningful[0].opname == 'LOAD_CONST':
+                    _ret_val = {'type': 'Constant', 'value': _exit_meaningful[0].argval}
+            if _ret_val is not None:
+                body_stmts = [{'type': 'Return', 'value': _ret_val}]
+                self.generated_blocks.add(exit_succ)
+            else:
+                body_stmts = [{'type': 'Break'}]
+                self.generated_blocks.add(exit_succ)
         if_stmt = {'type': 'If', 'test': cond_expr, 'body': body_stmts}
         self.generated_blocks.add(block)
         self.generated_offsets.add(block.start_offset)
@@ -5367,7 +5422,22 @@ class RegionASTGenerator:
             else:
                 _body_stmts = [{'type': body_type}]
         else:
-            _body_stmts = [{'type': body_type}]
+            if body_type == 'Break':
+                _blk_has_ret = any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in _target_blk.instructions)
+                _ret_val = None
+                if _blk_has_ret:
+                    _blk_meaningful = [i for i in _target_blk.instructions
+                                       if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                    if _blk_meaningful and _blk_meaningful[0].opname in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF'):
+                        _ret_val = {'type': 'Name', 'id': _blk_meaningful[0].argval, 'ctx': 'Load'}
+                    elif _blk_meaningful and _blk_meaningful[0].opname == 'LOAD_CONST':
+                        _ret_val = {'type': 'Constant', 'value': _blk_meaningful[0].argval}
+                if _ret_val is not None:
+                    _body_stmts = [{'type': 'Return', 'value': _ret_val}]
+                else:
+                    _body_stmts = [{'type': body_type}]
+            else:
+                _body_stmts = [{'type': body_type}]
         if_stmt = {'type': 'If', 'test': cond_expr, 'body': _body_stmts}
         self.generated_blocks.add(block)
         self.generated_offsets.add(block.start_offset)
