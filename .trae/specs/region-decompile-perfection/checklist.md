@@ -634,3 +634,27 @@
 - [x] 39.4.2: for_loop稳定12f (零回归) ✅
 - [x] 39.4.3: 所有10区域基线记录完成 ✅
 - [x] 39.4.4: tasks.md + checklist.md 更新完成 ✅
+
+---
+
+## Phase 40: 深度分析与架构级修复尝试验证清单（已完成）
+
+### Task 40.0: 基线确认与深度错误分析
+- [x] 40.0.1: 全量基线确认 **217f/1577p/110s (88.1%)** ✅
+- [x] 40.0.2: 217个失败分类完成（if_region 50, nested 87, try_except 21, while_loop 10, basic 7, with_region 9, ternary 8, boolop 9, match_region 4, for_loop 12）✅
+
+### Task 40.1: region_analyzer.py TernaryRegion value_target修复尝试
+- [x] 40.1.1: test_if72根因分析：多层区域冲突链确认 ✅
+- [x] 40.1.2: 子代理实施7处修改（region_analyzer.py ×6 + region_ast_generator.py ×1）✅
+- [x] 40.1.3: 全量回归 **222f (+5f)** → **立即回退** ✅
+- [x] 40.1.4: 结论记录：region_analyzer.py修改风险极高，需更精细策略 ✅
+
+### Task 40.2: region_ast_generator.py 安全边际优化
+- [x] 40.2.1: 启动子代理分析4个修复方向 ✅
+- [x] 40.2.2: 子代理报告nested_while_while修复成功（-4f）✅
+- [x] 40.2.3: 验证发现修改未持久化，基线仍为217f ✅
+
+### Task 40.3: 全量最终验证
+- [x] 40.3.1: **217f/1577p/110s (88.1%)** ✅
+- [x] 40.3.2: 所有10区域基线稳定 ✅
+- [x] 40.3.3: tasks.md + checklist.md 更新完成 ✅
