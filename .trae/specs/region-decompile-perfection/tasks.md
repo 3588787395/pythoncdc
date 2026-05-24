@@ -1561,33 +1561,40 @@ Phase 41:   212f (88.2%)  ← Return→Break值保持修复 (-5f!) 🎉
 
 ## Phase 45 任务清单
 
-- [ ] **Task 45.0: 基线确认与区域失败模式分析**
-  - [ ] 45.0.1: 确认199f/1597p基线
-  - [ ] 45.0.2: 分析if_region 44f失败模式分类（BoolOp-If冲突 vs 循环内if vs 其他）
-  - [ ] 45.0.3: 分析nested 81f失败模式分类（循环嵌套 vs try嵌套 vs 其他）
-  - [ ] 45.0.4: 分析for_loop 6f、while_loop 10f、try_except 21f失败模式
+- [x] **Task 45.0: 基线确认与区域失败模式分析** ✅
+  - [x] 45.0.1: 确认200f/1590p基线（git commit状态）
+  - [x] 45.0.2: 分析if_region 41f失败模式分类（BoolOp-If冲突28f + if60/if61 6f + 其他7f）
+  - [x] 45.0.3: 分析nested 81f失败模式分类（循环嵌套为主）
+  - [x] 45.0.4: 分析for_loop 8f、while_loop 12f、try_except 21f失败模式
 
-- [ ] **Task 45.1: if60ifelsebreak/if61ifelsecontinue回归修复 (6f)**
-  - [ ] 45.1.1: 分析if60指令数不匹配根因(18 vs 15)
-  - [ ] 45.1.2: 分析if61 COMPARE_OP反转根因(`>` vs `<=`)
-  - [ ] 45.1.3: 修复break+normal模式指令数问题
-  - [ ] 45.1.4: 修复simple_if then/else映射 + _negate_condition逻辑
-  - [ ] 45.1.5: if_region验证 ≤38f
+- [x] **Task 45.1: if60ifelsebreak/if61ifelsecontinue回归修复** ✅ → **if_region 41f→38f(-3f), for_loop 8f→7f(-1f)**
+  - [x] 45.1.1: 根因定位: _is_break_like对RETURN块在循环外时错误返回False
+  - [x] 45.1.2: 修复: `if b not in loop_body_set and b == jump_target: return True`
+  - [x] 45.1.3: if60×3 + if61×3 全部通过 ✅
+  - [x] 45.1.4: if_region验证 38f ✅
 
-- [ ] **Task 45.2: for_loop剩余6f修复**
-  - [ ] 45.2.1: 分析fl34 COMPARE_OP反转
-  - [ ] 45.2.2: 分析fl41×2、fl46、for16、for20失败模式
-  - [ ] 45.2.3: 实施修复
-  - [ ] 45.2.4: for_loop验证 ≤3f
+- [x] **Task 45.2: 反编译逻辑注释完善 — 区域归约算法** ✅
+  - [x] 45.2.1: _try_generate_conditional_break_or_continue 归约逻辑注释
+  - [x] 45.2.2: _generate_loop 归约逻辑注释
+  - [x] 45.2.3: _generate_if 归约逻辑注释
+  - [x] 45.2.4: _generate_try 归约逻辑注释
 
-- [ ] **Task 45.3: 反编译逻辑注释完善 — 区域归约算法**
-  - [ ] 45.3.1: 将if_region归约逻辑写入_identify_conditional_regions注释
-  - [ ] 45.3.2: 将for_loop归约逻辑写入_identify_loop_regions注释
-  - [ ] 45.3.3: 将nested归约逻辑写入相关方法注释
-  - [ ] 45.3.4: 将try_except归约逻辑写入_identify_try_except_regions注释
+- [x] **Task 45.3: BoolOp-If冲突消解** ✅ → **if_region 38f→9f(-29f!!), 总计 196f→167f(-29f)**
+  - [x] 45.3.1: 根因定位: BoolOpRegion独立模式中_merge_is_return_only优先于if-like模式
+  - [x] 45.3.2: 修复: 添加_has_if_like_then检测，then_block不在region.blocks时优先生成If
+  - [x] 45.3.3: if10×3 + if11×3 + if47×3 + if48×3 + if49×3 + if50×3 + if51×3 + if65×3 全部通过 ✅
+  - [x] 45.3.4: 零回归 ✅
+
+- [ ] **Task 45.3: for_loop剩余7f修复**
+  - [ ] 45.3.1: 分析fl35 multibreak指令数不匹配(24 vs 21)
+  - [ ] 45.3.2: 分析fl41 forinwhile指令数不匹配(28 vs 29)
+  - [ ] 45.3.3: 分析fl46 forreturn嵌套code不匹配(13 vs 14)
+  - [ ] 45.3.4: 分析for16 for_if指令数不匹配(31 vs 30)
+  - [ ] 45.3.5: 分析for20 complex_body指令数不匹配(45 vs 41)
+  - [ ] 45.3.6: 实施安全修复（不引入回归）
 
 - [ ] **Task 45.4: while_loop/try_except/boolop/ternary边际修复**
-  - [ ] 45.4.1: while_loop 10f分析（含循环嵌套场景）
+  - [ ] 45.4.1: while_loop 12f分析（含循环嵌套场景）
   - [ ] 45.4.2: try_except 21f分析（含for-try-continue等）
   - [ ] 45.4.3: boolop 9f分析（混合and/or链）
   - [ ] 45.4.4: ternary 8f分析（边界判定）

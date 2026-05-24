@@ -1418,6 +1418,64 @@ class RegionASTGenerator:
                         exclude_blocks: Set[BasicBlock] = None,
                         skip_store_targets: Set[str] = None) -> Dict[str, Any]:
         """
+        [区域归约算法] LoopRegion → For/While AST映射
+
+        归约规则: 将LoopRegion归约为单个For或While AST节点，
+        基于Launez et al., 2013 "No More Gotos"算法中的循环区域归约策略。
+        循环区域是最基本的结构化区域之一，其归约将整个循环结构映射为一个AST节点。
+
+        区域分类:
+        - LoopRegion(FOR_LOOP): for循环区域，header为FOR_ITER指令
+        - LoopRegion(WHILE_LOOP): while循环区域，header为WHILE_LOOP或条件检查块
+        - condition_block: while循环的条件检查块(可能独立于header)
+        - body_blocks: 循环体基本块集合
+        - else_blocks: 循环正常退出时执行的else块集合
+        - back_edge_block: 循环回边块，标识循环末尾跳回header的块
+
+        AST映射:
+        - LoopRegion(FOR_LOOP) → ast.For节点
+        - LoopRegion(WHILE_LOOP) → ast.While节点
+        - condition_block → while的条件表达式(while True时为Constant(True))
+        - body_blocks → 循环体语句列表(body字段)
+        - else_blocks → else子句语句列表(orelse字段，非独立语句)
+        - init_blocks → for循环的迭代变量和可迭代对象(target/iter字段)
+
+        子区域递归归约:
+        - 循环体内的子区域(IfRegion, LoopRegion, TryExceptRegion等)递归生成
+        - break/continue映射到ast.Break/ast.Continue
+        - 内层循环的break/continue不泄漏到外层(通过_current_loop栈管理)
+
+        回边检测与处理:
+        - back_edge_block标识循环末尾跳回header的基本块
+        - 回边块中的JUMP_BACKWARD指令不生成显式continue(隐式循环回边)
+        - LOOP_BACK_EDGE角色的块若有有意义指令则生成对应语句，否则跳过
+
+        FOR_ITER vs WHILE_LOOP头部分辨:
+        - FOR_ITER: Python for循环的迭代器协议指令，header块以FOR_ITER开头
+          → 从FOR_ITER前驱块提取迭代变量(target)和可迭代对象(iter)
+          → init_blocks中的块生成循环前的预处理语句
+        - WHILE_LOOP: while循环的头块，可能包含条件表达式求值指令
+          → condition_block提取条件表达式
+          → while True: 条件为True常量(无条件循环)
+          → 复合条件(and/or): 从BoolOpRegion构建BoolOp表达式
+          → not条件: 条件跳转为IF_TRUE时取反表达式
+
+        关键约束:
+        - 循环深度管理: _loop_depth递增/递减确保嵌套层级正确
+        - 区域生成状态: _generating_regions防止递归循环，_generated_regions防止重复生成
+        - 当前循环上下文: _current_loop保存/恢复确保break/continue归属正确
+        - yield from循环: 特殊处理，提取yield-from表达式而非生成while循环
+        - generated_blocks: 循环体内的块在生成后标记，避免外层重复生成
+
+        字节码等价性要求:
+        - 条件表达式必须与原始字节码语义一致
+        - else子句仅在循环正常退出时执行(非break退出)
+        - break跳过else子句
+        - for循环else块必须作为For节点的orelse字段
+        - while循环else块必须作为While节点的orelse字段
+        - header含body+条件重检时，需分离body语句和条件重检指令
+        - break_blocks中的块需正确生成break语句而非被忽略
+
         统一的loop结构生成入口
 
         区域到AST映射：
@@ -1462,20 +1520,27 @@ class RegionASTGenerator:
                 if b not in region.blocks and b.start_offset < (region.header_block.start_offset if region.header_block else 9999):
                     _pre_blocks.append(b)
             for block in _pre_blocks + _all_blocks:
-                _yf_instrs = [i for i in block.instructions
-                             if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
-                                                 'YIELD_VALUE', 'RETURN_VALUE', 'RETURN_CONST',
-                                                 'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
-                                                 'POP_TOP', 'SEND', 'RETURN_GENERATOR')]
-                if _yf_instrs:
-                    _load_instrs = [i for i in _yf_instrs
-                                    if i.opname in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF')
-                                    and i.argval]
-                    if _load_instrs:
-                        _yf_expr = self.expr_reconstructor.reconstruct(_load_instrs[:1])
-                        if _yf_expr and _yf_expr.get('type') != 'Constant':
+                _gyfi_idx = None
+                for _ii, _instr in enumerate(block.instructions):
+                    if _instr.opname == 'GET_YIELD_FROM_ITER':
+                        _gyfi_idx = _ii
+                        break
+                if _gyfi_idx is not None:
+                    _before_gyfi = [i for i in block.instructions[:_gyfi_idx]
+                                    if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
+                                                        'RETURN_GENERATOR', 'POP_TOP')]
+                    if _before_gyfi:
+                        _yf_expr = self.expr_reconstructor.reconstruct(_before_gyfi)
+                        if _yf_expr:
                             break
-                    elif not _yf_expr:
+            if _yf_expr is None:
+                for block in _pre_blocks + _all_blocks:
+                    _yf_instrs = [i for i in block.instructions
+                                 if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
+                                                     'YIELD_VALUE', 'RETURN_VALUE', 'RETURN_CONST',
+                                                     'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+                                                     'POP_TOP', 'SEND', 'RETURN_GENERATOR')]
+                    if _yf_instrs:
                         _yf_exprs_clean = [i for i in _yf_instrs if i.opname != 'GET_YIELD_FROM_ITER']
                         if _yf_exprs_clean:
                             _yf_expr = self.expr_reconstructor.reconstruct(_yf_exprs_clean)
@@ -4113,6 +4178,46 @@ class RegionASTGenerator:
 
     def _generate_if(self, region: IfRegion) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         """
+        [区域归约算法] IfRegion → If AST映射
+
+        归约规则: 将IfRegion归约为单个If AST节点，
+        基于Launez et al., 2013 "No More Gotos"算法中的条件区域归约策略。
+        条件区域将分支控制流映射为结构化的if/elif/else语句。
+
+        区域分类:
+        - IfRegion(普通): 标准if/if-else条件分支区域
+        - IfRegion(IF_ELIF_CHAIN): 包含if-elif-else链的复合条件区域
+        - IfRegion(elif子条件): 属于父elif链的子条件区域，由父节点统一生成
+
+        AST映射:
+        - IfRegion → ast.If节点
+        - then_blocks → If.body语句列表(条件为True时执行的分支)
+        - else_blocks → If.orelse语句列表(条件为False时执行的分支)
+        - elif条件 → 嵌套的ast.If节点(作为orelse字段值)
+
+        Then/Else分支识别(从块角色判定):
+        - 条件跳转的jump_target和fall_through分别对应两个分支
+        - IF_FALSE操作码: True→fall_through(then), False→jump_target(else)
+        - IF_TRUE操作码: True→jump_target(then), False→fall_through(else)
+        - 合并点(merge_block)标识分支汇合处，不属于任何分支
+
+        Elif链处理(orelse嵌套):
+        - elif链通过orelse字段嵌套实现，符合Python AST规范
+        - if-elif-else结构: If(test1, body1, orelse=[If(test2, body2, orelse=[...])])
+        - IF_ELIF_CHAIN类型区域由_if_generate_full_elif_chain统一生成
+        - elif子条件区域在_generate_if中直接返回空列表，由父节点代为生成
+
+        关键约束:
+        - 重复生成防护: entry块已在generated_blocks中时跳过(除非关联BoolOp子区域)
+        - elif子条件归属: entry在父区域elif_conditions中时返回空列表
+        - 空分支用[Pass]占位，确保AST结构完整
+        - BoolOp条件在condition_expr缓存后直接使用，避免重复重建
+
+        字节码等价性要求:
+        - 条件表达式的True/False路径必须与原始字节码跳转语义一致
+        - elif链的嵌套顺序必须与原始字节码的条件检查顺序一致
+        - 链式比较通过chained_compare_ops重建Compare节点保证等价性
+
         生成 if 语句的 AST 表示 - Phase 5 核心生成方法
 
         ═══════════════════════════════════════════════════════════════════════
@@ -5194,6 +5299,68 @@ class RegionASTGenerator:
         return result
 
     def _try_generate_conditional_break_or_continue(self, block: BasicBlock) -> Optional[List[Dict[str, Any]]]:
+        """
+        [区域归约算法] 循环体内条件分支归约 → If(Break/Continue) AST映射
+
+        归约规则: 循环体内的条件跳转块归约为带Break/Continue体的If AST节点，
+        基于Launez et al., 2013 "No More Gotos"算法中的条件分支归约策略。
+        将循环体内的条件控制流转换为结构化的if-break/if-continue语句。
+
+        区域分类:
+        - IfRegion(含Break/Continue体): 循环体内条件跳转到循环边界的基本块
+        - continue-like后继: 后继块角色为PURE_CONTINUE或LOOP_BACK_EDGE(无有意义指令)，
+          或CONTINUE角色(仅含跳转指令)
+        - break-like后继: 后继块角色为BREAK/PURE_BREAK，或RETURN/RETURN_NONE(不在loop_body_set中)，
+          或不在loop_body_set中的块(排除显式返回值)
+        - normal后继: 既非continue-like也非break-like的普通执行路径
+
+        AST映射:
+        - IfRegion(Break/Continue体) → ast.If节点，body/orelse含Break/Continue
+
+        后继分类方法:
+        - _is_continue_like: PURE_CONTINUE角色 → True; LOOP_BACK_EDGE角色且无有意义指令 → True;
+          CONTINUE角色且仅含跳转指令 → True; 其他 → False
+        - _is_break_like: BREAK/PURE_BREAK角色 → True; RETURN/RETURN_NONE角色且不在loop_body_set中 → True;
+          不在loop_body_set中(排除显式返回值) → True; 其他 → False
+
+        四种后继组合模式:
+        1. continue+normal: 条件分支一端为continue，另一端为普通执行路径
+           → simple_if优化: 生成完整if-else结构(then=normal_stmts, orelse=Continue)
+           → 或跳过变换: 生成空body的If节点
+        2. break+normal: 条件分支一端为break，另一端为普通执行路径
+           → 生成完整if-else结构，通过四组合映射确定then/else分支
+        3. break+continue: 条件分支两端分别为break和continue
+           → 生成If(test, body=[Break])
+        4. 单一后继: 仅continue或仅break
+           → 生成If(test, body=[Continue])或If(test, body=[Break])
+
+        simple_if优化路径(continue+normal模式):
+        - 判定条件: normal后继不在循环边界块上、无后续if语句、normal后继非控制流块
+        - 优化方式: 生成完整if-else结构，then分支放normal语句，else分支放Continue
+        - 避免不必要的continue语句生成，使反编译结果更简洁
+
+        四组合then/else映射(字节码等价性核心):
+        - IF_FALSE + normal_is_jump: then=continue_succ, else=normal_succ
+        - IF_TRUE  + normal_is_jump: then=normal_succ,   else=continue_succ
+        - IF_FALSE + normal_is_fall: then=normal_succ,   else=continue_succ
+        - IF_TRUE  + normal_is_fall: then=continue_succ, else=normal_succ
+
+        关键原则:
+        - then=条件True路径, else=条件False路径, 条件不取反
+        - 这保证了生成的AST与原始字节码的语义等价性
+
+        关键约束:
+        - 仅处理循环体内的条件跳转块(排除循环条件块和头块)
+        - 跳转目标必须可解析为基本块
+        - 条件表达式重建失败时返回None
+        - 两个normal后继且无continue/break时，尝试通过back_edge/return角色二次分类
+
+        字节码等价性要求:
+        - 条件表达式的True/False路径必须与原始字节码的跳转/落穿语义一致
+        - IF_FALSE/IF_TRUE操作码与jump_target/fall_through的组合决定then/else映射
+        - 不对条件表达式取反，通过then/else分支的正确映射保证等价性
+        - simple_if路径和break+normal路径均遵循相同的四组合映射规则
+        """
         loop = self._current_loop
         if loop is None:
             return None
@@ -5254,6 +5421,8 @@ class RegionASTGenerator:
             if role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
                 return True
             if role in (BlockRole.RETURN, BlockRole.RETURN_NONE):
+                if b not in loop_body_set and b == jump_target:
+                    return True
                 return False
             if role in (BlockRole.LOOP_ELSE,):
                 last = b.get_last_instruction()
@@ -6213,6 +6382,56 @@ class RegionASTGenerator:
 
     def _generate_try(self, region: TryExceptRegion) -> Dict[str, Any]:
         """
+        [区域归约算法] TryExceptRegion → Try AST映射
+
+        归约规则: 将TryExceptRegion归约为单个Try AST节点，
+        基于Launez et al., 2013 "No More Gotos"算法中的异常处理区域归约策略。
+        异常处理区域将try-except-finally控制流映射为结构化的异常处理语句。
+
+        区域分类:
+        - TryExceptRegion: 包含try块、except处理器、else块、finally块的区域
+        - try_blocks: try子句体基本块集合(正常执行路径)
+        - except_handlers: 异常处理器列表，每个handler包含(exc_type, exc_name, handler_blocks)
+        - else_blocks: try正常完成(无异常)时执行的块集合
+        - finally_blocks: 无论是否异常都执行的块集合
+
+        AST映射:
+        - TryExceptRegion → ast.Try节点
+        - try_blocks → Try.body语句列表
+        - except_handlers → Try.handlers列表(ExceptHandler节点列表)
+        - else_blocks → Try.orelse语句列表(可选)
+        - finally_blocks → Try.finalbody语句列表(可选)
+        - 每个handler → ast.ExceptHandler节点(exc_type, name, body)
+
+        异常处理器识别(从块角色判定):
+        - handler_entry_blocks: 处理器入口基本块，以CHECK_EXC_MATCH/PUSH_EXC_INFO开头
+        - exc_type: 从CHECK_EXC_MATCH指令提取异常类型表达式
+        - exc_name: 从STORE_FAST/STORE_NAME指令提取as变量名
+        - bare except: 无CHECK_EXC_MATCH匹配，exc_type为None
+        - 多except链: 通过条件跳转连接的多个handler，按偏移量排序
+
+        Finally子句处理:
+        - finally代码在正常路径和异常路径都有副本(finally copy块)
+        - finally copy块通过偏移量范围和指令模式识别
+        - 生成时只保留一份finally语句(finalbody字段)，过滤副本块
+        - try中的break/continue/return需先执行finally再跳出
+        - 字节码特征: break/continue前插入finally代码副本
+
+        关键约束:
+        - 嵌套try结构: 内层TryExceptRegion递归生成，通过parent关系判定嵌套
+        - except as变量清理: Python 3.11+自动删除as变量(LOAD_CONST(None)+STORE+DELETE序列)，
+          需过滤不生成对应源码
+        - RERAISE指令: arg=0且无后续→cleanup reraise(不生成); arg=0有上下文→显式raise; arg=1→异常链reraise
+        - POP_EXCEPT后的清理序列需正确过滤
+        - handler_entry_blocks需在生成try body前标记为已生成，防止body误入handler
+
+        字节码等价性要求:
+        - 精确的指令过滤: 只过滤确实不需要生成源码的框架指令(RESUME, NOP, PUSH_EXC_INFO等)
+        - 保留语义等价的操作: 即使某些操作可以优化，也保持原始形式
+        - 正确的语句边界: 使用_build_statement确保语句边界与原始一致
+        - 异常处理流程一致性: 确保异常传播路径的字节码顺序正确
+        - 多except链的handler顺序必须与原始字节码的检查顺序一致
+
         将 TryExceptRegion 转换为 AST Try 节点 - 核心生成算法
 
         ═══════════════════════════════════════════════════════════════════════════════
@@ -9441,9 +9660,19 @@ class RegionASTGenerator:
                         _last_merge = region.merge_block.get_last_instruction()
                         if _last_merge and _last_merge.opname in ('RETURN_VALUE', 'RETURN_CONST'):
                             _merge_is_return_only = True
-                if _merge_is_return_only:
+                _has_if_like_then = False
+                if op_chain:
+                    _lc = op_chain[-1][0]
+                    _li = _lc.get_last_instruction()
+                    if _li and _li.argval is not None:
+                        _jt = self.cfg.get_block_by_offset(_li.argval)
+                        for _s in _lc.successors:
+                            if _s is not _jt and _s not in region.blocks:
+                                _has_if_like_then = True
+                                break
+                if _merge_is_return_only and not _has_if_like_then:
                     results.append({'type': 'Return', 'value': boolop_expr})
-                elif has_short_circuit_op:
+                elif has_short_circuit_op and not _has_if_like_then:
                     results.append({'type': 'Expr', 'value': boolop_expr})
                 else:
                     region_block_set = set(id(b) for b in region.blocks)

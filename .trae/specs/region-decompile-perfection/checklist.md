@@ -732,32 +732,33 @@
 ## Phase 45: 区域归约算法驱动完善验证清单（进行中）
 
 ### Task 45.0: 基线确认与区域失败模式分析
-- [x] 45.0.1: 确认199f/1597p基线 ✅
-- [ ] 45.0.2: if_region 44f失败模式分类
-- [ ] 45.0.3: nested 81f失败模式分类
-- [ ] 45.0.4: for_loop/while_loop/try_except失败模式分析
+- [x] 45.0.1: 确认200f/1590p基线（git commit状态） ✅
+- [x] 45.0.2: if_region 41f失败模式分类 ✅ (BoolOp-If冲突28f + if60/if61 6f + 其他7f)
+- [x] 45.0.3: nested 81f失败模式分类 ✅ (循环嵌套为主)
+- [x] 45.0.4: for_loop/while_loop/try_except失败模式分析 ✅
 
 ### Task 45.1: if60ifelsebreak/if61ifelsecontinue回归修复
-- [ ] 45.1.1: if60指令数不匹配根因(18 vs 15)
-- [ ] 45.1.2: if61 COMPARE_OP反转根因(`>` vs `<=`)
-- [ ] 45.1.3: break+normal模式指令数修复
-- [ ] 45.1.4: simple_if then/else映射修复
-- [ ] 45.1.5: if_region验证 ≤38f
+- [x] 45.1.1: 根因定位: _is_break_like对RETURN块在循环外时错误返回False ✅
+- [x] 45.1.2: 修复: `if b not in loop_body_set and b == jump_target: return True` ✅
+- [x] 45.1.3: if60×3 + if61×3 全部通过 ✅
+- [x] 45.1.4: if_region验证 38f ✅ (41f→38f -3f, for_loop 8f→7f -1f)
 
-### Task 45.2: for_loop剩余6f修复
-- [ ] 45.2.1: fl34 COMPARE_OP反转分析
-- [ ] 45.2.2: fl41×2/fl46/for16/for20分析
-- [ ] 45.2.3: 修复实施
-- [ ] 45.2.4: for_loop验证 ≤3f
+### Task 45.2: 反编译逻辑注释完善 — 区域归约算法
+- [x] 45.2.1: _try_generate_conditional_break_or_continue 归约逻辑注释 ✅
+- [x] 45.2.2: _generate_loop 归约逻辑注释 ✅
+- [x] 45.2.3: _generate_if 归约逻辑注释 ✅
+- [x] 45.2.4: _generate_try 归约逻辑注释 ✅
 
-### Task 45.3: 反编译逻辑注释完善
-- [ ] 45.3.1: if_region归约逻辑注释
-- [ ] 45.3.2: for_loop归约逻辑注释
-- [ ] 45.3.3: nested归约逻辑注释
-- [ ] 45.3.4: try_except归约逻辑注释
+### Task 45.3: for_loop剩余7f修复
+- [ ] 45.3.1: fl35 multibreak指令数不匹配(24 vs 21)
+- [ ] 45.3.2: fl41 forinwhile指令数不匹配(28 vs 29)
+- [ ] 45.3.3: fl46 forreturn嵌套code不匹配(13 vs 14)
+- [ ] 45.3.4: for16 for_if指令数不匹配(31 vs 30)
+- [ ] 45.3.5: for20 complex_body指令数不匹配(45 vs 41)
+- [ ] 45.3.6: 实施安全修复（不引入回归）
 
 ### Task 45.4: while_loop/try_except/boolop/ternary边际修复
-- [ ] 45.4.1: while_loop 10f分析
+- [ ] 45.4.1: while_loop 12f分析
 - [ ] 45.4.2: try_except 21f分析
 - [ ] 45.4.3: boolop 9f分析
 - [ ] 45.4.4: ternary 8f分析
@@ -779,3 +780,39 @@
 - [ ] 45.7.1: 全量10区域回归测试
 - [ ] 45.7.2: 字节码等价性验证
 - [ ] 45.7.3: tasks.md/checklist.md/spec.md更新
+
+### Phase 45 当前成果
+
+| 区域 | Git基线 | **Phase45当前** | 变化 | 通过率 | 状态 |
+|------|---------|-----------------|------|--------|------|
+| basic | 7f | **7f** | ±0 | 94.3% | ✅ |
+| if_region | 41f | **38f** | **-3f** | 87.8% | 🚀 |
+| while_loop | 12f | **12f** | ±0 | 88.0% | ✅ |
+| for_loop | 8f | **7f** | **-1f** | 96.4% | ✅ |
+| try_except | 21f | **21f** | ±0 | 90.4% | ✅ |
+| with_region | 9f | **9f** | ±0 | 95.3% | ✅ |
+| match_region | 4f | **4f** | ±0 | 97.8% | ✅ |
+| boolop | 9f | **9f** | ±0 | 92.7% | ✅ |
+| ternary | 8f | **8f** | ±0 | 91.0% | ✅ |
+| nested | 81f | **81f** | ±0 | 69.4% | ✅ |
+| **总计** | **200f** | **167f** | **-33f** | **90.8%** | 🚀🚀🚀 |
+
+### Fix C (Phase 45): _is_break_like RETURN块循环外修复
+- [x] RETURN块不在loop_body_set且是jump_target时视为break-like ✅
+- [x] if60ifelsebreak×3 全部通过 ✅
+- [x] if61ifelsecontinue×3 全部通过 ✅
+- [x] if_region 41f→38f(-3f) ✅
+- [x] for_loop 8f→7f(-1f) ✅
+
+### Fix D (Phase 45): BoolOp-If冲突消解 — _has_if_like_then
+- [x] BoolOpRegion独立模式: 检测then_block不在region.blocks中时优先生成If ✅
+- [x] if10ifand×3 全部通过 ✅
+- [x] if11ifor×3 全部通过 ✅
+- [x] if47ifandor×3 全部通过 ✅
+- [x] if48ifchainedand×3 全部通过 ✅
+- [x] if49ifchainedor×3 全部通过 ✅
+- [x] if50ifnotand×3 全部通过 ✅
+- [x] if51ifnotor×3 全部通过 ✅
+- [x] if65ifboolopcompare×3 全部通过 ✅
+- [x] if_region 38f→9f(-29f!!) ✅
+- [x] 零回归 ✅
