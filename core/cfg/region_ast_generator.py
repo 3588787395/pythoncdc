@@ -3727,6 +3727,18 @@ class RegionASTGenerator:
             body_blocks_no_header.append(block)
             return
         if block == natural_back_edge and block != region.header_block:
+            # Phase 42: 条件跳转fall-through后继检测
+            _is_cond_ft = False
+            for _pred in block.predecessors:
+                if _pred in (region.body_blocks or []) or _pred == region.header_block:
+                    _pred_last = _pred.get_last_instruction()
+                    if (_pred_last and _pred_last.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                            and _pred_last.argval != block.start_offset):
+                        _is_cond_ft = True
+                        break
+            if _is_cond_ft:
+                body_blocks_no_header.append(block)
+                return
             self._loop_process_back_edge_with_condition(block, region, back_edge_stmts)
             return
         _be_last = block.get_last_instruction()
@@ -3738,6 +3750,18 @@ class RegionASTGenerator:
                 self.generated_offsets.add(block.start_offset)
                 return
         elif _be_last and _be_last.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'):
+            # Phase 42: JUMP_BACKWARD分支前驱检测
+            _is_jmp_cond_ft = False
+            for _jpred in block.predecessors:
+                if _jpred in (region.body_blocks or []) or _jpred == region.header_block:
+                    _jpred_last = _jpred.get_last_instruction()
+                    if (_jpred_last and _jpred_last.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                            and _jpred_last.argval != block.start_offset):
+                        _is_jmp_cond_ft = True
+                        break
+            if _is_jmp_cond_ft:
+                body_blocks_no_header.append(block)
+                return
             _be_meaningful = [i for i in block.instructions
                               if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP')
                               and i.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')]
@@ -5171,6 +5195,17 @@ class RegionASTGenerator:
         def _is_continue_like(b):
             if b is None:
                 return False
+            # Phase 43前置: LOOP_BACK_EDGE含meaningful instrs→非continue-like
+            _lr = self.region_analyzer.get_block_role(b)
+            if _lr == BlockRole.LOOP_BACK_EDGE:
+                _lnj = [i for i in b.instructions
+                       if i.opname not in NOISE_OPS
+                       and i.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+                                            'JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                       and i.opname not in CONDITIONAL_JUMP_OPS
+                       and i.opname not in SHORT_CIRCUIT_JUMP_OPS]
+                if _lnj:
+                    return False
             role = self.region_analyzer.get_block_role(b)
             if role in (BlockRole.PURE_CONTINUE, BlockRole.LOOP_BACK_EDGE):
                 return True
@@ -5298,7 +5333,22 @@ class RegionASTGenerator:
                     return pre_stmts if pre_stmts else None
                 is_if_false = 'IF_FALSE' in last_instr.opname
                 cond_expr = expr
+                # Phase 42: IF_TRUE/IF_FALSE四组合then/else映射
+                _norm_is_jump = normal_succ[1]
                 _then_block = normal_succ[0]
+                _else_block = None
+                if is_if_false and _norm_is_jump:
+                    _then_block = continue_succ[0]
+                    _else_block = normal_succ[0]
+                elif not is_if_false and _norm_is_jump:
+                    _then_block = normal_succ[0]
+                    _else_block = continue_succ[0]
+                elif is_if_false and not _norm_is_jump:
+                    _else_block = normal_succ[0]
+                    _then_block = continue_succ[0]
+                else:
+                    _then_block = normal_succ[0]
+                    _else_block = continue_succ[0]
                 _then_role = self.region_analyzer.get_block_role(_then_block)
                 if _then_role in (BlockRole.RETURN, BlockRole.RETURN_NONE):
                     _ret_ast = self._generate_return_ast(_then_block)
@@ -5311,7 +5361,18 @@ class RegionASTGenerator:
                         self.generated_blocks.add(_then_block)
                 else:
                     _then_stmts = []
-                if_stmt = {'type': 'If', 'test': cond_expr, 'body': _then_stmts if _then_stmts else [{'type': 'Pass'}]}
+                # Phase 42: 生成完整的orelse分支
+                _else_stmts = []
+                if _else_block and _else_block not in self.generated_blocks:
+                    _else_role = self.region_analyzer.get_block_role(_else_block)
+                    if _else_role in (BlockRole.CONTINUE, BlockRole.PURE_CONTINUE):
+                        _else_stmts = [{'type': 'Continue'}]
+                        self.generated_blocks.add(_else_block)
+                    else:
+                        _else_stmts = self._generate_block_statements(_else_block)
+                        if _else_block not in self.generated_blocks:
+                            self.generated_blocks.add(_else_block)
+                if_stmt = {'type': 'If', 'test': cond_expr, 'body': _then_stmts if _then_stmts else [{'type': 'Pass'}], 'orelse': _else_stmts if _else_stmts else []}
                 self.generated_blocks.add(block)
                 self.generated_offsets.add(block.start_offset)
                 result = pre_stmts + [if_stmt] if pre_stmts else [if_stmt]
