@@ -1473,4 +1473,147 @@ Phase 41:   212f (88.2%)  ← Return→Break值保持修复 (-5f!) 🎉
 3. **全量目标**: 从212f降至**≤190~200f (91~93%+)**
 4. **终极目标**: **100%成功率 + 字节码完全匹配**
 
+---
+
+# Phase 42-44: 循环条件分支修复与后继分类 (2026-05-23~24)
+
+> **成果**: 从Phase 41的212f/1580p(88.2%)优化至**199f/1597p(88.9%)** — for_loop从23f回归修复至6f(-17f!)
+
+## Phase 42-44 基线与最终对比
+
+| 区域 | Phase41基线 | **Phase44最终** | 变化 | 通过率 | 状态 |
+|------|------------|-----------------|------|--------|------|
+| basic | 7f (94.5%) | **7f (94.5%)** | ±0 | **94.5%** | ✅ |
+| boolop | 9f (92.7%) | **9f (92.7%)** | ±0 | **92.7%** | ✅ |
+| **for_loop** | **7f (96.3%)** | **6f (96.9%)** | **-1f** | **96.9%** | 🚀 历史最佳! |
+| **if_region** | 50f (83.0%) | **44f (85.8%)** | **-6f** | **85.8%** | ⚠️ +3回归待修 |
+| with_region | 9f (95.3%) | **9f (95.3%)** | ±0 | **95.3%** | ✅ |
+| match_region | 4f (97.8%) | **4f (97.8%)** | ±0 | **97.8%** | ✅ |
+| try_except | 21f (91.3%) | **21f (90.4%)** | ±0 | **90.4%** | ✅ |
+| while_loop | 10f (90.8%) | **10f (90.5%)** | ±0 | **90.5%** | ✅ |
+| ternary | 8f (91.4%) | **8f (91.0%)** | ±0 | **91.0%** | ✅ |
+| **nested** | 87f (69.3%) | **81f (69.4%)** | **-6f** | **69.4%** | 🎉 改善 |
+| **总计** | **212f (88.2%)** | **199f (88.9%)** | **-13f** | **88.9%** | 🚀 |
+
+## Phase 42-44 关键修复清单
+
+### Fix 3: _is_continue_like LOOP_BACK_EDGE防护 (~L5198-5208)
+- LOOP_BACK_EDGE含meaningful instrs时返回False，防止含赋值的回边块被误判为continue
+- 效果: for_loop回归修复基础
+
+### Fix 4: simple_if then/else四组合映射 (~L5336-5375)
+- IF_TRUE/IF_FALSE × normal_is_jump 四组合映射，正确处理条件跳转方向
+- 效果: 循环内if-else分支方向正确
+
+### Fix 7: _norm_is_meaningful_backedge (~L5277-5287)
+- back_edge_block含meaningful instrs时允许simple_if路径
+- 效果: 含赋值的循环回边不再阻止simple_if识别
+
+### Fix 8: _negate_condition方法 (~L9805)
+- Compare操作符取反映射 + UnaryOp not回退
+- 效果: 条件取反时COMPARE_OP正确反转
+
+### Fix 10: _is_break_like RETURN_NONE处理 (~L5229-5231)
+- RETURN_NONE不在loop_body_set时视为break-like
+- 效果: `return None`在循环中正确识别为break
+
+### Fix A (Phase 44): UnboundLocalError修复 in break+normal模式 (~L5442-5490)
+- 原Phase 43 Fix 9使用`expr`变量但未定义，导致10个for_loop测试崩溃
+- 修复: 替换为自包含实现，自行计算条件表达式`_bn_expr`
+- 效果: 10个UnboundLocalError崩溃测试恢复
+
+### Fix B (Phase 44): 双normal后继分类修复 (~L5281-5310)
+- Phase 43 Fix 3导致两个后继都分类为"normal"，原代码用单一变量丢失第一个
+- 修复: 收集所有normal后继到`_normal_succs`列表，基于角色分类
+  - back_edge_block → continue_succ
+  - RETURN/RETURN_NONE → break_succ
+  - 其他 → normal_succ
+- 效果: 7个FOR_LOOP未找到测试恢复
+
+## Phase 42-44 未解决问题
+
+⚠️ **if60ifelsebreak** (3f): 指令数不匹配(18 vs 15)，break+normal模式生成额外指令
+⚠️ **if61ifelsecontinue** (3f): COMPARE_OP反转(`>` vs `<=`)，_negate_condition + orelse-Continue swap逻辑
+⚠️ **BoolOp-If冲突** (~28f): region_analyzer误分类If为BoolOp
+⚠️ **for_loop剩余** (6f): fl34, fl41×2, fl46, for16, for20
+
+---
+
+# Phase 45: 区域归约算法驱动完善 — 全区域推进 (2026-05-24)
+
+> **目标**: 基于 "No More Gotos" 论文的区域归约算法，分析每一区域的失败模式，规划反编译逻辑，写入识别方法注释，修复代码，迭代至100%成功率
+
+## Phase 45 基线（2026-05-24 实测）
+
+| 区域 | 失败 | 通过 | 跳过 | 通过率 | 优先级 |
+|------|------|------|------|--------|--------|
+| basic | 7 | 115 | 6 | 94.3% | P3 |
+| if_region | 44 | 267 | 0 | 85.8% | **P0** |
+| while_loop | 10 | 95 | 15 | 90.5% | P2 |
+| for_loop | 6 | 185 | 2 | 96.9% | P2 |
+| try_except | 21 | 198 | 11 | 90.4% | P1 |
+| with_region | 9 | 182 | 0 | 95.3% | P3 |
+| match_region | 4 | 176 | 18 | 97.8% | P3 ✅ |
+| boolop | 9 | 114 | 9 | 92.7% | P2 |
+| ternary | 8 | 81 | 27 | 91.0% | P2 |
+| nested | 81 | 184 | 20 | 69.4% | **P0** |
+| **总计** | **199** | **1597** | **108** | **88.9%** | |
+
+## Phase 45 任务清单
+
+- [ ] **Task 45.0: 基线确认与区域失败模式分析**
+  - [ ] 45.0.1: 确认199f/1597p基线
+  - [ ] 45.0.2: 分析if_region 44f失败模式分类（BoolOp-If冲突 vs 循环内if vs 其他）
+  - [ ] 45.0.3: 分析nested 81f失败模式分类（循环嵌套 vs try嵌套 vs 其他）
+  - [ ] 45.0.4: 分析for_loop 6f、while_loop 10f、try_except 21f失败模式
+
+- [ ] **Task 45.1: if60ifelsebreak/if61ifelsecontinue回归修复 (6f)**
+  - [ ] 45.1.1: 分析if60指令数不匹配根因(18 vs 15)
+  - [ ] 45.1.2: 分析if61 COMPARE_OP反转根因(`>` vs `<=`)
+  - [ ] 45.1.3: 修复break+normal模式指令数问题
+  - [ ] 45.1.4: 修复simple_if then/else映射 + _negate_condition逻辑
+  - [ ] 45.1.5: if_region验证 ≤38f
+
+- [ ] **Task 45.2: for_loop剩余6f修复**
+  - [ ] 45.2.1: 分析fl34 COMPARE_OP反转
+  - [ ] 45.2.2: 分析fl41×2、fl46、for16、for20失败模式
+  - [ ] 45.2.3: 实施修复
+  - [ ] 45.2.4: for_loop验证 ≤3f
+
+- [ ] **Task 45.3: 反编译逻辑注释完善 — 区域归约算法**
+  - [ ] 45.3.1: 将if_region归约逻辑写入_identify_conditional_regions注释
+  - [ ] 45.3.2: 将for_loop归约逻辑写入_identify_loop_regions注释
+  - [ ] 45.3.3: 将nested归约逻辑写入相关方法注释
+  - [ ] 45.3.4: 将try_except归约逻辑写入_identify_try_except_regions注释
+
+- [ ] **Task 45.4: while_loop/try_except/boolop/ternary边际修复**
+  - [ ] 45.4.1: while_loop 10f分析（含循环嵌套场景）
+  - [ ] 45.4.2: try_except 21f分析（含for-try-continue等）
+  - [ ] 45.4.3: boolop 9f分析（混合and/or链）
+  - [ ] 45.4.4: ternary 8f分析（边界判定）
+  - [ ] 45.4.5: 实施安全修复
+
+- [ ] **Task 45.5: if_region BoolOp-If冲突消解**
+  - [ ] 45.5.1: 分析28个BoolOp-If冲突测试的字节码特征
+  - [ ] 45.5.2: 设计基于上下文的动态优先级方案
+  - [ ] 45.5.3: 实施冲突消解层
+  - [ ] 45.5.4: if_region验证 ≤20f
+
+- [ ] **Task 45.6: nested区域深度优化**
+  - [ ] 45.6.1: 分析81个nested失败的嵌套层次
+  - [ ] 45.6.2: 设计多轮归约机制
+  - [ ] 45.6.3: 实施嵌套区域层次修复
+  - [ ] 45.6.4: nested验证 ≤50f
+
+- [ ] **Task 45.7: 全量回归验证与文档更新**
+  - [ ] 45.7.1: 全量10区域回归测试
+  - [ ] 45.7.2: 字节码等价性验证
+  - [ ] 45.7.3: tasks.md/checklist.md/spec.md更新
+
 # Task Dependencies
+
+```
+- Phase 1-44 已完成
+- **Phase 45 (当前) 无依赖 - 立即开始**
+- Phase 45内: Task 45.0先执行（基线+分析），45.1-45.2可并行（if/for修复），45.3依赖45.0，45.4-45.6依赖45.1-45.2
+```

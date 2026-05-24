@@ -2146,6 +2146,7 @@ class RegionASTGenerator:
         """纯角色分发器：根据block_role将每个body块分发给对应处理器"""
         body_stmts: List[Dict[str, Any]] = []
         back_edge_stmts: List[Dict[str, Any]] = []
+        back_edge_source_blocks: List[Tuple[BasicBlock, int]] = []
         header = region.header_block
         if header is None:
             return body_stmts
@@ -2172,11 +2173,12 @@ class RegionASTGenerator:
             handled = self._loop_dispatch_block(
                 block, region, child_info, boolop_for_while,
                 body_stmts, body_blocks_no_header, back_edge_stmts, natural_back_edge,
+                back_edge_source_blocks,
             )
             if not handled:
                 body_blocks_no_header.append(block)
 
-        self._loop_postprocess(region, body_stmts, body_blocks_no_header, back_edge_stmts, child_info)
+        self._loop_postprocess(region, body_stmts, body_blocks_no_header, back_edge_stmts, child_info, back_edge_source_blocks)
         return body_stmts
 
     def _loop_collect_child_regions(self, region: LoopRegion) -> Dict[str, Any]:
@@ -2310,7 +2312,8 @@ class RegionASTGenerator:
                              body_stmts: List[Dict[str, Any]],
                              body_blocks_no_header: List[BasicBlock],
                              back_edge_stmts: List[Dict[str, Any]],
-                             natural_back_edge: BasicBlock) -> bool:
+                             natural_back_edge: BasicBlock,
+                             back_edge_source_blocks: List[Tuple[BasicBlock, int]] = None) -> bool:
         """纯粹根据block_role分发到对应的处理器，返回是否已处理"""
         header = region.header_block
         if block == header:
@@ -2319,7 +2322,7 @@ class RegionASTGenerator:
         if block == region.condition_block:
             return True
         if block == natural_back_edge and block != header:
-            if self._loop_process_natural_back_edge(block, back_edge_stmts):
+            if self._loop_process_natural_back_edge(block, back_edge_stmts, back_edge_source_blocks):
                 return True
         block_role = self.region_analyzer.get_block_role(block)
         if block_role in (BlockRole.CONTINUE, BlockRole.PURE_CONTINUE):
@@ -2350,7 +2353,8 @@ class RegionASTGenerator:
             return True
         if block_role == BlockRole.LOOP_BACK_EDGE:
             self._loop_handle_back_edge(block, region, child_info, body_stmts,
-                                         body_blocks_no_header, back_edge_stmts, natural_back_edge)
+                                         body_blocks_no_header, back_edge_stmts, natural_back_edge,
+                                         back_edge_source_blocks)
             return True
         if block_role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
             """
@@ -3576,7 +3580,8 @@ class RegionASTGenerator:
         else:
             _hdr_stmts.append({'type': 'If', 'test': _cond_expr, 'body': _then_stmts})
 
-    def _loop_process_natural_back_edge(self, block: BasicBlock, back_edge_stmts: List[Dict[str, Any]]) -> bool:
+    def _loop_process_natural_back_edge(self, block: BasicBlock, back_edge_stmts: List[Dict[str, Any]],
+                                         back_edge_source_blocks: List[Tuple[BasicBlock, int]] = None) -> bool:
         """处理自然回边块（条件重检查），返回是否已处理"""
         _nbe_last = block.get_last_instruction()
         if not (_nbe_last and _nbe_last.opname in BACKWARD_CONDITIONAL_JUMP_OPS):
@@ -3693,7 +3698,8 @@ class RegionASTGenerator:
                                body_stmts: List[Dict[str, Any]],
                                body_blocks_no_header: List[BasicBlock],
                                back_edge_stmts: List[Dict[str, Any]],
-                               natural_back_edge: BasicBlock) -> None:
+                               natural_back_edge: BasicBlock,
+                               back_edge_source_blocks: List[Tuple[BasicBlock, int]] = None) -> None:
         """处理回边块（条件重检查）"""
         _child_region_for_be = None
         for _cr in (region.children or []):
@@ -3739,7 +3745,7 @@ class RegionASTGenerator:
             if _is_cond_ft:
                 body_blocks_no_header.append(block)
                 return
-            self._loop_process_back_edge_with_condition(block, region, back_edge_stmts)
+            self._loop_process_back_edge_with_condition(block, region, back_edge_stmts, back_edge_source_blocks)
             return
         _be_last = block.get_last_instruction()
         if _be_last and _be_last.opname in BACKWARD_CONDITIONAL_JUMP_OPS:
@@ -3790,7 +3796,8 @@ class RegionASTGenerator:
         body_blocks_no_header.append(block)
 
     def _loop_process_back_edge_with_condition(self, block: BasicBlock, region: LoopRegion,
-                                               back_edge_stmts: List[Dict[str, Any]]) -> None:
+                                               back_edge_stmts: List[Dict[str, Any]],
+                                               back_edge_source_blocks: List[Tuple[BasicBlock, int]] = None) -> None:
         """处理带回条件的回边块"""
         _be_last = block.get_last_instruction()
         if not (_be_last and _be_last.opname in BACKWARD_CONDITIONAL_JUMP_OPS):
@@ -3813,6 +3820,8 @@ class RegionASTGenerator:
                     _be_stmts2 = self._generate_stmts_from_instrs(_be_filtered2, block)
                     if _be_stmts2:
                         back_edge_stmts.extend(_be_stmts2)
+                        if back_edge_source_blocks is not None:
+                            back_edge_source_blocks.append((block, len(_be_stmts2)))
                 return
         _be_has_store = any(i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
                             for i in block.instructions)
@@ -4044,7 +4053,8 @@ class RegionASTGenerator:
     def _loop_postprocess(self, region: LoopRegion, body_stmts: List[Dict[str, Any]],
                           body_blocks_no_header: List[BasicBlock],
                           back_edge_stmts: List[Dict[str, Any]],
-                          child_info: Dict[str, Any]) -> None:
+                          child_info: Dict[str, Any],
+                          back_edge_source_blocks: List[Tuple[BasicBlock, int]] = None) -> None:
         """后处理：生成未处理的子区域、分支语句、回边语句"""
         child_try_regions = child_info['child_try_regions']
         child_with_regions = child_info['child_with_regions']
@@ -4082,7 +4092,23 @@ class RegionASTGenerator:
                 while branch_stmts and isinstance(branch_stmts[0], dict) and branch_stmts[0].get('type') == 'Continue':
                     branch_stmts.pop(0)
         body_stmts.extend(branch_stmts)
-        body_stmts.extend(back_edge_stmts)
+        if back_edge_source_blocks:
+            _filtered_back_edge: List[Dict[str, Any]] = []
+            _offset = 0
+            for _src_blk, _src_count in back_edge_source_blocks:
+                if _src_blk in self.generated_blocks:
+                    _offset += _src_count
+                    continue
+                for _ in range(_src_count):
+                    if _offset < len(back_edge_stmts):
+                        _filtered_back_edge.append(back_edge_stmts[_offset])
+                    _offset += 1
+            while _offset < len(back_edge_stmts):
+                _filtered_back_edge.append(back_edge_stmts[_offset])
+                _offset += 1
+            body_stmts.extend(_filtered_back_edge)
+        else:
+            body_stmts.extend(back_edge_stmts)
 
 
     def _generate_if(self, region: IfRegion) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
@@ -5255,6 +5281,7 @@ class RegionASTGenerator:
         continue_succ = None
         break_succ = None
         normal_succ = None
+        _normal_succs = []
         for succ, is_jump_target in [(jump_target, True), (fall_through, False)]:
             if succ is None:
                 continue
@@ -5263,7 +5290,26 @@ class RegionASTGenerator:
             elif _is_break_like(succ):
                 break_succ = (succ, is_jump_target)
             else:
-                normal_succ = (succ, is_jump_target)
+                _normal_succs.append((succ, is_jump_target))
+        if len(_normal_succs) == 2 and continue_succ is None and break_succ is None:
+            _s0_role = self.region_analyzer.get_block_role(_normal_succs[0][0])
+            _s1_role = self.region_analyzer.get_block_role(_normal_succs[1][0])
+            _s0_is_be = _normal_succs[0][0] == loop.back_edge_block
+            _s1_is_be = _normal_succs[1][0] == loop.back_edge_block
+            if _s0_is_be or _s1_is_be:
+                _be_idx = 0 if _s0_is_be else 1
+                continue_succ = _normal_succs[_be_idx]
+                normal_succ = _normal_succs[1 - _be_idx]
+            elif _s0_role in (BlockRole.RETURN, BlockRole.RETURN_NONE) and _s1_role not in (BlockRole.RETURN, BlockRole.RETURN_NONE):
+                break_succ = _normal_succs[0]
+                normal_succ = _normal_succs[1]
+            elif _s1_role in (BlockRole.RETURN, BlockRole.RETURN_NONE) and _s0_role not in (BlockRole.RETURN, BlockRole.RETURN_NONE):
+                break_succ = _normal_succs[1]
+                normal_succ = _normal_succs[0]
+            else:
+                normal_succ = _normal_succs[-1]
+        elif _normal_succs:
+            normal_succ = _normal_succs[-1]
 
         target_succ = None
         body_type = None
@@ -5274,7 +5320,16 @@ class RegionASTGenerator:
             _norm_last = _norm.get_last_instruction()
             _norm_is_backedge_recheck = (_norm_last is not None and
                 _norm_last.opname in ('POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE'))
-            if _norm not in (loop.back_edge_block, loop.header_block) and not _norm_is_backedge_recheck:
+            _norm_is_meaningful_backedge = (
+                _norm == loop.back_edge_block and
+                any(i.opname not in NOISE_OPS
+                    and i.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+                                         'JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                    and i.opname not in CONDITIONAL_JUMP_OPS
+                    and i.opname not in SHORT_CIRCUIT_JUMP_OPS
+                    for i in _norm.instructions)
+            )
+            if (_norm not in (loop.back_edge_block, loop.header_block) or _norm_is_meaningful_backedge) and not _norm_is_backedge_recheck:
                 _has_post_if_stmts = False
                 _exit_roles = (BlockRole.RETURN, BlockRole.RETURN_NONE, BlockRole.PURE_JUMP)
                 for _nsucc in _norm.successors:
@@ -5333,7 +5388,10 @@ class RegionASTGenerator:
                     return pre_stmts if pre_stmts else None
                 is_if_false = 'IF_FALSE' in last_instr.opname
                 cond_expr = expr
-                # Phase 42: IF_TRUE/IF_FALSE四组合then/else映射
+                # Phase 45: IF_TRUE/IF_FALSE四组合then/else映射（字节码等价）
+                # 核心原则: then=条件True路径, else=条件False路径, 条件不取反
+                # POP_JUMP_FORWARD_IF_FALSE: True→fall_through, False→jump_target
+                # POP_JUMP_FORWARD_IF_TRUE: True→jump_target, False→fall_through
                 _norm_is_jump = normal_succ[1]
                 _then_block = normal_succ[0]
                 _else_block = None
@@ -5344,11 +5402,11 @@ class RegionASTGenerator:
                     _then_block = normal_succ[0]
                     _else_block = continue_succ[0]
                 elif is_if_false and not _norm_is_jump:
-                    _else_block = normal_succ[0]
-                    _then_block = continue_succ[0]
-                else:
                     _then_block = normal_succ[0]
                     _else_block = continue_succ[0]
+                else:
+                    _then_block = continue_succ[0]
+                    _else_block = normal_succ[0]
                 _then_role = self.region_analyzer.get_block_role(_then_block)
                 if _then_role in (BlockRole.RETURN, BlockRole.RETURN_NONE):
                     _ret_ast = self._generate_return_ast(_then_block)
@@ -5417,8 +5475,103 @@ class RegionASTGenerator:
             target_succ = continue_succ
             body_type = 'Continue'
         elif break_succ and normal_succ:
-            target_succ = break_succ
-            body_type = 'Break'
+            # Phase 45: break+normal模式→完整if-else结构（字节码等价）
+            # 核心原则: then=条件True路径(normal_succ), else=Break, 条件不取反
+            # POP_JUMP_FORWARD_IF_FALSE: True→fall_through(normal), False→jump_target(break)
+            # POP_JUMP_FORWARD_IF_TRUE: True→jump_target(normal/break), False→fall_through
+            _bn_pre_stmts = []
+            _bn_cond_instrs = []
+            for instr in block.instructions:
+                if instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                    continue
+                if instr.opname in FORWARD_JUMP_OPS or instr.opname in BACKWARD_JUMP_OPS:
+                    break
+                if instr.opname in ('POP_EXCEPT', 'PUSH_EXC_INFO', 'RERAISE',
+                                    'WITH_EXCEPT_START', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH'):
+                    continue
+                if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                    stmt = self._build_store_statement(_bn_cond_instrs + [instr], block=block)
+                    if stmt:
+                        _bn_pre_stmts.append(stmt)
+                    _bn_cond_instrs = []
+                    continue
+                if instr.opname == 'POP_TOP' and _bn_cond_instrs:
+                    stmt = self._build_statement(_bn_cond_instrs)
+                    if stmt:
+                        _bn_pre_stmts.append(stmt)
+                    _bn_cond_instrs = []
+                    continue
+                _bn_cond_instrs.append(instr)
+            _bn_expr = self.expr_reconstructor.reconstruct(_bn_cond_instrs) if _bn_cond_instrs else None
+            if _bn_expr is None:
+                target_succ = break_succ
+                body_type = 'Break'
+            else:
+                _bn_is_if_false = 'IF_FALSE' in last_instr.opname
+                _bn_norm_is_jump = normal_succ[1]
+                # Phase 45: 四组合then/else映射（与continue+normal分支一致）
+                # then=条件True路径, else=条件False路径, 条件不取反
+                if _bn_is_if_false and _bn_norm_is_jump:
+                    _bn_then_block = break_succ[0]
+                    _bn_else_block = normal_succ[0]
+                elif not _bn_is_if_false and _bn_norm_is_jump:
+                    _bn_then_block = normal_succ[0]
+                    _bn_else_block = break_succ[0]
+                elif _bn_is_if_false and not _bn_norm_is_jump:
+                    _bn_then_block = normal_succ[0]
+                    _bn_else_block = break_succ[0]
+                else:
+                    _bn_then_block = break_succ[0]
+                    _bn_else_block = normal_succ[0]
+                _bn_then_stmts = []
+                _bn_else_stmts = [{'type': 'Break'}]
+                _bn_then_role = self.region_analyzer.get_block_role(_bn_then_block)
+                _bn_then_is_break = (_bn_then_block == break_succ[0])
+                if _bn_then_is_break:
+                    _bn_then_stmts = [{'type': 'Break'}]
+                    if _bn_then_block not in self.generated_blocks:
+                        self.generated_blocks.add(_bn_then_block)
+                elif _bn_then_role in (BlockRole.RETURN, BlockRole.RETURN_NONE):
+                    _ret_ast = self._generate_return_ast(_bn_then_block)
+                    _bn_then_stmts = [_ret_ast] if _ret_ast else [{'type': 'Return', 'value': {'type': 'Constant', 'value': None}}]
+                    if _bn_then_block not in self.generated_blocks:
+                        self.generated_blocks.add(_bn_then_block)
+                elif _bn_then_block not in self.generated_blocks:
+                    _bn_then_stmts = self._generate_block_statements(_bn_then_block)
+                    if _bn_then_block not in self.generated_blocks:
+                        self.generated_blocks.add(_bn_then_block)
+                else:
+                    _bn_then_stmts = []
+                _bn_else_role = self.region_analyzer.get_block_role(_bn_else_block)
+                _bn_else_is_break = (_bn_else_block == break_succ[0])
+                if _bn_else_is_break:
+                    _bn_else_stmts = [{'type': 'Break'}]
+                    if _bn_else_block not in self.generated_blocks:
+                        self.generated_blocks.add(_bn_else_block)
+                elif _bn_else_role in (BlockRole.RETURN, BlockRole.RETURN_NONE):
+                    _ret_ast = self._generate_return_ast(_bn_else_block)
+                    _bn_else_stmts = [_ret_ast] if _ret_ast else [{'type': 'Return', 'value': {'type': 'Constant', 'value': None}}]
+                    if _bn_else_block not in self.generated_blocks:
+                        self.generated_blocks.add(_bn_else_block)
+                elif _bn_else_role in (BlockRole.CONTINUE, BlockRole.PURE_CONTINUE):
+                    _bn_else_stmts = [{'type': 'Continue'}]
+                elif _bn_else_block not in self.generated_blocks:
+                    _bn_else_stmts = self._generate_block_statements(_bn_else_block)
+                    if not _bn_else_stmts:
+                        _bn_else_stmts = [{'type': 'Break'}]
+                    if _bn_else_block not in self.generated_blocks:
+                        self.generated_blocks.add(_bn_else_block)
+                _if_stmt = {'type': 'If', 'test': _bn_expr,
+                            'body': _bn_then_stmts if _bn_then_stmts else [{'type': 'Pass'}],
+                            'orelse': _bn_else_stmts}
+                self.generated_blocks.add(block)
+                self.generated_offsets.add(block.start_offset)
+                if break_succ[0] not in self.generated_blocks:
+                    self.generated_blocks.add(break_succ[0])
+                if normal_succ[0] not in self.generated_blocks:
+                    self.generated_blocks.add(normal_succ[0])
+                result = _bn_pre_stmts + [_if_stmt] if _bn_pre_stmts else [_if_stmt]
+                return result
         elif break_succ and continue_succ:
             target_succ = break_succ
             body_type = 'Break'

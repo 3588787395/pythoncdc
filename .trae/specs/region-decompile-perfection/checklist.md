@@ -689,3 +689,93 @@
 - [x] 41.3.2: for_loop 12f→7f (**96.3% 历史最佳**) ✅
 - [x] 41.3.3: 其他9个区域零回归 ✅
 - [x] 41.3.4: tasks.md + checklist.md 更新完成 ✅
+
+---
+
+## Phase 42-44: 循环条件分支修复与后继分类验证清单（已完成）
+
+### Fix 3: _is_continue_like LOOP_BACK_EDGE防护
+- [x] LOOP_BACK_EDGE含meaningful instrs时返回False ✅
+- [x] for_loop回归修复基础建立 ✅
+
+### Fix 4: simple_if then/else四组合映射
+- [x] IF_TRUE/IF_FALSE × normal_is_jump 四组合映射 ✅
+- [x] 循环内if-else分支方向正确 ✅
+
+### Fix 7: _norm_is_meaningful_backedge
+- [x] back_edge_block含meaningful instrs时允许simple_if ✅
+
+### Fix 8: _negate_condition方法
+- [x] Compare操作符取反映射 ✅
+- [x] UnaryOp not回退 ✅
+
+### Fix 10: _is_break_like RETURN_NONE处理
+- [x] RETURN_NONE不在loop_body_set时视为break-like ✅
+
+### Fix A (Phase 44): UnboundLocalError修复
+- [x] break+normal模式自包含实现 ✅
+- [x] 10个UnboundLocalError崩溃测试恢复 ✅
+
+### Fix B (Phase 44): 双normal后继分类修复
+- [x] _normal_succs列表收集 ✅
+- [x] 角色分类: back_edge→continue, RETURN→break ✅
+- [x] 7个FOR_LOOP未找到测试恢复 ✅
+
+### Phase 42-44 全量验证
+- [x] **199f/1597p/108s (88.9%)** ✅
+- [x] for_loop 6f (96.9%) ✅
+- [x] if_region 44f (85.8%) ⚠️ +3回归待修
+- [x] nested 81f (69.4%) ✅ -6f改善
+
+---
+
+## Phase 45: 区域归约算法驱动完善验证清单（进行中）
+
+### Task 45.0: 基线确认与区域失败模式分析
+- [x] 45.0.1: 确认199f/1597p基线 ✅
+- [ ] 45.0.2: if_region 44f失败模式分类
+- [ ] 45.0.3: nested 81f失败模式分类
+- [ ] 45.0.4: for_loop/while_loop/try_except失败模式分析
+
+### Task 45.1: if60ifelsebreak/if61ifelsecontinue回归修复
+- [ ] 45.1.1: if60指令数不匹配根因(18 vs 15)
+- [ ] 45.1.2: if61 COMPARE_OP反转根因(`>` vs `<=`)
+- [ ] 45.1.3: break+normal模式指令数修复
+- [ ] 45.1.4: simple_if then/else映射修复
+- [ ] 45.1.5: if_region验证 ≤38f
+
+### Task 45.2: for_loop剩余6f修复
+- [ ] 45.2.1: fl34 COMPARE_OP反转分析
+- [ ] 45.2.2: fl41×2/fl46/for16/for20分析
+- [ ] 45.2.3: 修复实施
+- [ ] 45.2.4: for_loop验证 ≤3f
+
+### Task 45.3: 反编译逻辑注释完善
+- [ ] 45.3.1: if_region归约逻辑注释
+- [ ] 45.3.2: for_loop归约逻辑注释
+- [ ] 45.3.3: nested归约逻辑注释
+- [ ] 45.3.4: try_except归约逻辑注释
+
+### Task 45.4: while_loop/try_except/boolop/ternary边际修复
+- [ ] 45.4.1: while_loop 10f分析
+- [ ] 45.4.2: try_except 21f分析
+- [ ] 45.4.3: boolop 9f分析
+- [ ] 45.4.4: ternary 8f分析
+- [ ] 45.4.5: 安全修复实施
+
+### Task 45.5: if_region BoolOp-If冲突消解
+- [ ] 45.5.1: BoolOp-If冲突测试字节码特征分析
+- [ ] 45.5.2: 动态优先级方案设计
+- [ ] 45.5.3: 冲突消解层实施
+- [ ] 45.5.4: if_region验证 ≤20f
+
+### Task 45.6: nested区域深度优化
+- [ ] 45.6.1: 81个nested失败嵌套层次分析
+- [ ] 45.6.2: 多轮归约机制设计
+- [ ] 45.6.3: 嵌套区域层次修复
+- [ ] 45.6.4: nested验证 ≤50f
+
+### Task 45.7: 全量回归验证与文档更新
+- [ ] 45.7.1: 全量10区域回归测试
+- [ ] 45.7.2: 字节码等价性验证
+- [ ] 45.7.3: tasks.md/checklist.md/spec.md更新
