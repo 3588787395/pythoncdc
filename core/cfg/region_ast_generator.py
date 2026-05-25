@@ -1516,9 +1516,14 @@ class RegionASTGenerator:
             _yf_expr = None
             _all_blocks = list(region.blocks)
             _pre_blocks = []
-            for b in self.cfg.blocks.values():
-                if b not in region.blocks and b.start_offset < (region.header_block.start_offset if region.header_block else 9999):
-                    _pre_blocks.append(b)
+            _header = region.header_block
+            if _header:
+                for _pred in _header.predecessors:
+                    if _pred not in region.blocks:
+                        _pre_blocks.append(_pred)
+                        for _pp in _pred.predecessors:
+                            if _pp not in region.blocks and _pp not in _pre_blocks:
+                                _pre_blocks.append(_pp)
             for block in _pre_blocks + _all_blocks:
                 _gyfi_idx = None
                 for _ii, _instr in enumerate(block.instructions):
@@ -1546,10 +1551,48 @@ class RegionASTGenerator:
                             _yf_expr = self.expr_reconstructor.reconstruct(_yf_exprs_clean)
                             if _yf_expr and _yf_expr.get('type') != 'Constant':
                                 break
+            _extra_stmts = []
+            for block in _pre_blocks:
+                _has_gyfi = any(i.opname == 'GET_YIELD_FROM_ITER' for i in block.instructions)
+                if _has_gyfi:
+                    _has_yield = any(i.opname == 'YIELD_VALUE' for i in block.instructions)
+                    if _has_yield:
+                        _gyfi_idx = None
+                        for _ii, _instr in enumerate(block.instructions):
+                            if _instr.opname == 'GET_YIELD_FROM_ITER':
+                                _gyfi_idx = _ii
+                                break
+                        if _gyfi_idx is not None:
+                            _before = [i for i in block.instructions[:_gyfi_idx]
+                                       if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
+                                                           'RETURN_GENERATOR', 'POP_TOP')]
+                            _i = 0
+                            while _i < len(_before):
+                                _instr = _before[_i]
+                                if _instr.opname == 'YIELD_VALUE':
+                                    _val_instrs = []
+                                    _j = _i - 1
+                                    while _j >= 0 and _before[_j].opname not in ('YIELD_VALUE',):
+                                        _val_instrs.insert(0, _before[_j])
+                                        _j -= 1
+                                    if _val_instrs:
+                                        _yv = self.expr_reconstructor.reconstruct(_val_instrs)
+                                        if _yv:
+                                            _extra_stmts.append({'type': 'Expr', 'value': {'type': 'Yield', 'value': _yv}})
+                                    _i += 1
+                                    continue
+                                _i += 1
+                        continue
+                    self.generated_blocks.add(block)
             for block in region.blocks:
                 self.generated_blocks.add(block)
             if _yf_expr:
-                return {'type': 'Expr', 'value': {'type': 'YieldFrom', 'value': _yf_expr}}
+                _result = {'type': 'Expr', 'value': {'type': 'YieldFrom', 'value': _yf_expr}}
+                if _extra_stmts:
+                    return _extra_stmts + [_result]
+                return _result
+            if _extra_stmts:
+                return _extra_stmts
             return {'type': 'Pass'}
 
         self._loop_depth += 1
@@ -1695,7 +1738,17 @@ class RegionASTGenerator:
         if not region.else_blocks:
             else_stmts = []
         else:
-            else_stmts = self._if_generate_branch_stmts(region.else_blocks)
+            _filtered_else_blocks = list(region.else_blocks)
+            if region.parent is not None and isinstance(region.parent, LoopRegion):
+                _parent_loop = region.parent
+                _exclude_blocks = set()
+                if _parent_loop.back_edge_block is not None:
+                    _exclude_blocks.add(_parent_loop.back_edge_block)
+                if _parent_loop.condition_block is not None:
+                    _exclude_blocks.add(_parent_loop.condition_block)
+                if _exclude_blocks:
+                    _filtered_else_blocks = [b for b in _filtered_else_blocks if b not in _exclude_blocks]
+            else_stmts = self._if_generate_branch_stmts(_filtered_else_blocks) if _filtered_else_blocks else []
 
         result = {
             'type': 'AsyncFor' if region.is_async else 'For',
@@ -2588,6 +2641,15 @@ class RegionASTGenerator:
             if _header_if_region is not None:
                 pass
             else:
+                _is_for_iter_setup = False
+                for _cr in region.iter_descendants((LoopRegion,)):
+                    if _cr.region_type == RegionType.FOR_LOOP and _cr.metadata.get('for_iter_setup') == header:
+                        _is_for_iter_setup = True
+                        break
+                if _is_for_iter_setup:
+                    self.generated_blocks.add(header)
+                    self.generated_offsets.add(header.start_offset)
+                    return
                 _self_loop_stmts = self._loop_extract_self_loop_stmts(header)
                 body_stmts.extend(_self_loop_stmts)
                 self.generated_blocks.add(header)
@@ -2712,15 +2774,21 @@ class RegionASTGenerator:
                                 acc = []
                     self.generated_blocks.add(block)
             else:
-                _if_ast = self._generate_region(_header_if_region)
-                if _if_ast:
-                    if isinstance(_if_ast, list):
-                        body_stmts.extend(_if_ast)
-                    else:
-                        body_stmts.append(_if_ast)
-                for b in _header_if_region.blocks:
-                    self.generated_blocks.add(b)
-                self.generated_blocks.add(block)
+                if (not _header_if_region.then_blocks and not _header_if_region.else_blocks):
+                    _self_loop_stmts = self._loop_extract_self_loop_stmts(block)
+                    body_stmts.extend(_self_loop_stmts)
+                    self.generated_blocks.add(block)
+                    self.generated_offsets.add(block.start_offset)
+                else:
+                    _if_ast = self._generate_region(_header_if_region)
+                    if _if_ast:
+                        if isinstance(_if_ast, list):
+                            body_stmts.extend(_if_ast)
+                        else:
+                            body_stmts.append(_if_ast)
+                    for b in _header_if_region.blocks:
+                        self.generated_blocks.add(b)
+                    self.generated_blocks.add(block)
         elif _header_region is not None and isinstance(_header_region, IfRegion) and _header_region.condition_block == block:
             if (_header_region.condition_block == region.condition_block or
                 _header_region.condition_block == region.header_block):
@@ -3113,6 +3181,73 @@ class RegionASTGenerator:
                                     'orelse': [],
                                 })
         return _self_loop_stmts
+
+    def _generate_elif_else_chain(self, cond_jump_instr, current_block):
+        if cond_jump_instr is None or cond_jump_instr.argval is None:
+            return None
+        if self._current_loop is None:
+            return None
+        _jt_offset = cond_jump_instr.argval
+        _jt_block = self.cfg.get_block_by_offset(_jt_offset)
+        if _jt_block is None:
+            return None
+        if _jt_block in self.generated_blocks:
+            return None
+        if _jt_block not in self._current_loop.body_blocks and _jt_block != self._current_loop.back_edge_block:
+            return None
+        _jt_last = _jt_block.get_last_instruction()
+        if not _jt_last:
+            return None
+        _is_elif = _jt_last.opname in FORWARD_CONDITIONAL_JUMP_OPS
+        if not _is_elif:
+            _else_stmts = self._generate_block_statements(_jt_block)
+            if _else_stmts:
+                self.generated_blocks.add(_jt_block)
+                self.generated_offsets.add(_jt_block.start_offset)
+                return _else_stmts
+            return None
+        _elif_cond_instrs = [i for i in _jt_block.instructions
+                             if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')
+                             and i != _jt_last]
+        if not _elif_cond_instrs:
+            return None
+        _elif_expr = self.expr_reconstructor.reconstruct(_elif_cond_instrs)
+        if _elif_expr is None:
+            return None
+        _negate = 'IF_TRUE' in _jt_last.opname or 'IF_NONE' in _jt_last.opname
+        _elif_cond = _negate_expr(_elif_expr) if _negate else _elif_expr
+        _elif_jt_offset = _jt_last.argval
+        _elif_ft_block = None
+        for _succ in _jt_block.successors:
+            if _succ.start_offset != _elif_jt_offset:
+                _elif_ft_block = _succ
+                break
+        _then_stmts = []
+        if _elif_ft_block is not None:
+            _ft_role = self.region_analyzer.get_block_role(_elif_ft_block)
+            if _ft_role in (BlockRole.IF_THEN, BlockRole.BREAK, BlockRole.PURE_BREAK):
+                _ft_last_i = _elif_ft_block.get_last_instruction()
+                if _ft_last_i and _ft_last_i.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                    _then_stmts = [{'type': 'Break'}]
+                else:
+                    _then_stmts = self._generate_block_statements(_elif_ft_block)
+            else:
+                _then_stmts = self._generate_block_statements(_elif_ft_block)
+            if _elif_ft_block not in self.generated_blocks:
+                self.generated_blocks.add(_elif_ft_block)
+                self.generated_offsets.add(_elif_ft_block.start_offset)
+        self.generated_blocks.add(_jt_block)
+        self.generated_offsets.add(_jt_block.start_offset)
+        _elif_result = {
+            'type': 'If',
+            'test': _elif_cond,
+            'body': _then_stmts if _then_stmts else [{'type': 'Pass'}],
+            'orelse': [],
+        }
+        _nested_chain = self._generate_elif_else_chain(_jt_last, _jt_block)
+        if _nested_chain is not None:
+            _elif_result['orelse'] = _nested_chain
+        return [_elif_result]
 
     def _loop_handle_header_no_condition(self, block: BasicBlock, body_stmts: List[Dict[str, Any]], region: LoopRegion = None) -> None:
         """处理无条件while header（如 while True 中带break的情形）"""
@@ -3972,6 +4107,13 @@ class RegionASTGenerator:
                         body_stmts.append(_loop_ast)
                 for b in entry_region.blocks:
                     self.generated_blocks.add(b)
+                if entry_region.region_type == RegionType.FOR_LOOP and isinstance(region, LoopRegion):
+                    _parent_be = region.back_edge_block
+                    _parent_cond = region.condition_block
+                    if _parent_be and _parent_be in self.generated_blocks and _parent_be in entry_region.else_blocks:
+                        self.generated_blocks.discard(_parent_be)
+                    if _parent_cond and _parent_cond in self.generated_blocks and _parent_cond in entry_region.else_blocks:
+                        self.generated_blocks.discard(_parent_cond)
                 self._generated_regions.add(_region_id)
             return True
         if isinstance(block_region, LoopRegion) and block_region is not region and block_region.header_block == block and block not in self.generated_blocks:
@@ -3989,6 +4131,13 @@ class RegionASTGenerator:
                         body_stmts.append(_loop_ast)
                 for b in block_region.blocks:
                     self.generated_blocks.add(b)
+                if block_region.region_type == RegionType.FOR_LOOP and isinstance(region, LoopRegion):
+                    _parent_be2 = region.back_edge_block
+                    _parent_cond2 = region.condition_block
+                    if _parent_be2 and _parent_be2 in self.generated_blocks and _parent_be2 in block_region.else_blocks:
+                        self.generated_blocks.discard(_parent_be2)
+                    if _parent_cond2 and _parent_cond2 in self.generated_blocks and _parent_cond2 in block_region.else_blocks:
+                        self.generated_blocks.discard(_parent_cond2)
                 self._generated_regions.add(_region_id)
             return True
         if isinstance(block_region, IfRegion) and block in child_if_blocks:
@@ -4912,6 +5061,23 @@ class RegionASTGenerator:
         for block in sorted(blocks, key=lambda b: b.start_offset):
             if block in self.generated_blocks:
                 continue
+            _has_gyfi = any(i.opname == 'GET_YIELD_FROM_ITER' for i in block.instructions)
+            if _has_gyfi:
+                _block_region = self.region_analyzer.get_region_for_block(block)
+                if isinstance(_block_region, LoopRegion) and _block_region.metadata.get('is_yield_from_loop'):
+                    self.generated_blocks.add(block)
+                    self.generated_offsets.add(block.start_offset)
+                    continue
+                _is_yf_pre = False
+                for _reg in self.region_analyzer.regions:
+                    if isinstance(_reg, LoopRegion) and _reg.metadata.get('is_yield_from_loop'):
+                        if _reg.header_block and block in _reg.header_block.predecessors:
+                            _is_yf_pre = True
+                            break
+                if _is_yf_pre:
+                    self.generated_blocks.add(block)
+                    self.generated_offsets.add(block.start_offset)
+                    continue
             if block in child_region_blocks and block not in child_entries:
                 continue
             if hasattr(region, 'region_type') and hasattr(region.region_type, 'name') and 'IF' in region.region_type.name and branch == 'then':
@@ -5181,6 +5347,11 @@ class RegionASTGenerator:
                         (stmts.append if isinstance(na, dict) else stmts.extend)(na)
                     for b in nested.blocks:
                         self.generated_blocks.add(b)
+                    if isinstance(nested, LoopRegion) and nested.metadata.get('is_yield_from_loop'):
+                        if nested.header_block:
+                            for _pred in nested.header_block.predecessors:
+                                if _pred not in nested.blocks:
+                                    self.generated_blocks.add(_pred)
                     continue
             bs = self._generate_block_statements(block)
             if bs:
@@ -5706,7 +5877,16 @@ class RegionASTGenerator:
                     if _bn_then_block not in self.generated_blocks:
                         self.generated_blocks.add(_bn_then_block)
                 elif _bn_then_block not in self.generated_blocks:
-                    _bn_then_stmts = self._generate_block_statements(_bn_then_block)
+                    _bn_then_last = _bn_then_block.get_last_instruction()
+                    _bn_then_cb_result = None
+                    if (_bn_then_last is not None
+                        and _bn_then_last.opname in FORWARD_CONDITIONAL_JUMP_OPS | BACKWARD_CONDITIONAL_JUMP_OPS
+                        and self._current_loop is not None):
+                        _bn_then_cb_result = self._try_generate_conditional_break_or_continue(_bn_then_block)
+                    if _bn_then_cb_result is not None:
+                        _bn_then_stmts = _bn_then_cb_result
+                    else:
+                        _bn_then_stmts = self._generate_block_statements(_bn_then_block)
                     if _bn_then_block not in self.generated_blocks:
                         self.generated_blocks.add(_bn_then_block)
                 else:
@@ -5725,7 +5905,16 @@ class RegionASTGenerator:
                 elif _bn_else_role in (BlockRole.CONTINUE, BlockRole.PURE_CONTINUE):
                     _bn_else_stmts = [{'type': 'Continue'}]
                 elif _bn_else_block not in self.generated_blocks:
-                    _bn_else_stmts = self._generate_block_statements(_bn_else_block)
+                    _bn_else_last = _bn_else_block.get_last_instruction()
+                    _bn_else_cb_result = None
+                    if (_bn_else_last is not None
+                        and _bn_else_last.opname in FORWARD_CONDITIONAL_JUMP_OPS | BACKWARD_CONDITIONAL_JUMP_OPS
+                        and self._current_loop is not None):
+                        _bn_else_cb_result = self._try_generate_conditional_break_or_continue(_bn_else_block)
+                    if _bn_else_cb_result is not None:
+                        _bn_else_stmts = _bn_else_cb_result
+                    else:
+                        _bn_else_stmts = self._generate_block_statements(_bn_else_block)
                     if not _bn_else_stmts:
                         _bn_else_stmts = [{'type': 'Break'}]
                     if _bn_else_block not in self.generated_blocks:
