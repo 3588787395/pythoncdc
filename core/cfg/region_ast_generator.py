@@ -115,6 +115,7 @@ class RegionASTGenerator:
         self._try_depth: int = 0
         self._post_break_blocks: List[BasicBlock] = []
         self._with_cleanup_generated_blocks: Set[BasicBlock] = set()
+        self._skipped_outer_try: Optional[TryExceptRegion] = None
         self.detector = get_opcode_detector()
 
     def block_role(self, block: 'BasicBlock') -> 'BlockRole':
@@ -1817,158 +1818,170 @@ class RegionASTGenerator:
             _eps_instrs: List[Instruction] = []
             _eps_unpack_info = None
             _cond_was_generated = cond_block in self.generated_blocks
+            _cond_is_ancestor_header = False
+            _parent = region.parent
+            while _parent is not None:
+                if isinstance(_parent, LoopRegion) and hasattr(_parent, 'header_block') and _parent.header_block == cond_block:
+                    _cond_is_ancestor_header = True
+                    break
+                _parent = getattr(_parent, 'parent', None)
 
-            for _instr in cond_block.instructions:
-                if _instr.opname in ('RESUME', 'NOP', 'CACHE'):
-                    continue
+            if not _cond_is_ancestor_header:
+                for _instr in cond_block.instructions:
+                    if _instr.opname in ('RESUME', 'NOP', 'CACHE'):
+                        continue
 
-                if _instr.opname == 'PUSH_NULL':
-                    _eps_instrs.append(_instr)
-                    continue
+                    if _instr.opname == 'PUSH_NULL':
+                        _eps_instrs.append(_instr)
+                        continue
 
-                if _instr.opname == 'POP_TOP':
-                    if _eps_instrs:
-                        _call_instrs = [i for i in _eps_instrs
-                                       if i.opname not in ('POP_TOP', 'LOAD_CONST')
-                                       or (i.opname == 'LOAD_CONST' and i.argval is not None)]
-                        _has_call = any(i.opname in ('CALL', 'CALL_FUNCTION', 'CALL_METHOD',
-                                                    'CALL_FUNCTION_KW', 'CALL_FUNCTION_EX')
-                                       for i in _call_instrs)
-                        if _has_call:
-                            _stmt = self._build_statement(_call_instrs)
+                    if _instr.opname == 'POP_TOP':
+                        if _eps_instrs:
+                            _call_instrs = [i for i in _eps_instrs
+                                           if i.opname not in ('POP_TOP', 'LOAD_CONST')
+                                           or (i.opname == 'LOAD_CONST' and i.argval is not None)]
+                            _has_call = any(i.opname in ('CALL', 'CALL_FUNCTION', 'CALL_METHOD',
+                                                        'CALL_FUNCTION_KW', 'CALL_FUNCTION_EX')
+                                           for i in _call_instrs)
+                            if _has_call:
+                                _stmt = self._build_statement(_call_instrs)
+                                if _stmt:
+                                    pre_stmts.append(_stmt)
+                                _eps_instrs = []
+                                continue
+                            _eps_instrs.append(_instr)
+                            _stmt = self._build_statement(_eps_instrs)
                             if _stmt:
                                 pre_stmts.append(_stmt)
                             _eps_instrs = []
+                        continue
+                    if _instr.opname in FORWARD_JUMP_OPS or _instr.opname in BACKWARD_JUMP_OPS:
+                        break
+                    if _instr.opname in ('JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'):
+                        break
+                    if _instr.opname in ('POP_EXCEPT', 'PUSH_EXC_INFO', 'RERAISE',
+                                        'WITH_EXCEPT_START', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH'):
+                        continue
+                    if _instr.opname == 'RAISE_VARARGS':
+                        if _instr.arg == 0:
+                            _pre_stmts.append({'type': 'Raise', 'exc': None})
+                        else:
+                            _exc_instrs = [i for i in _stmt_instrs if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                            _exc_expr = self.expr_reconstructor.reconstruct(_exc_instrs) if _exc_instrs else None
+                            if _exc_expr is None and _exc_instrs:
+                                _exc_expr = self._build_statement(_exc_instrs)
+                                if _exc_expr and _exc_expr.get('type') == 'Expr':
+                                    _exc_expr = _exc_expr.get('value')
+                            _pre_stmts.append({'type': 'Raise', 'exc': _exc_expr})
+                        _stmt_instrs = []
+                        break
+                    if _instr.opname == 'RETURN_CONST':
+                        _pre_stmts.append({'type': 'Return', 'value': {'type': 'Constant', 'value': _instr.argval}})
+                        _stmt_instrs = []
+                        break
+                    if _instr.opname == 'RETURN_VALUE':
+                        _value_instrs = [i for i in _stmt_instrs if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                        _value = self.expr_reconstructor.reconstruct(_value_instrs) if _value_instrs else None
+                        _pre_stmts.append({'type': 'Return', 'value': _value if _value else {'type': 'Constant', 'value': None}})
+                        _stmt_instrs = []
+                        break
+                    if _instr.opname == 'UNPACK_SEQUENCE':
+                        _val_instrs = [i for i in _eps_instrs if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                        _val = self.expr_reconstructor.reconstruct(_val_instrs) if _val_instrs else None
+                        _eps_unpack_info = {'value': _val, 'targets': [], 'count': _instr.arg}
+                        _eps_instrs = []
+                        continue
+                    if _instr.opname == 'UNPACK_EX':
+                        _val_instrs = [i for i in _eps_instrs if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                        _val = self.expr_reconstructor.reconstruct(_val_instrs) if _val_instrs else None
+                        _arg = _instr.argval
+                        _before = _arg & 0xFF
+                        _after = (_arg >> 8) & 0xFF
+                        _eps_unpack_info = {'value': _val, 'targets': [], 'count': _before + 1 + _after, 'is_starred': True, 'starred_idx': _before}
+                        _eps_instrs = []
+                        continue
+                    if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                        if skip_store_targets and _instr.argval in skip_store_targets:
+                            _eps_instrs = []
+                            continue
+                        _has_prev_copy = len(_eps_instrs) >= 1 and _eps_instrs[-1].opname == 'COPY' and _eps_instrs[-1].arg == 1
+                        if _has_prev_copy:
+                            _eps_instrs.append(_instr)
+                            prev_was_copy = True
+                            continue
+                        if _eps_unpack_info is not None:
+                            _is_starred = _eps_unpack_info.get('is_starred', False)
+                            _starred_idx = _eps_unpack_info.get('starred_idx', -1)
+                            _current_target_idx = len(_eps_unpack_info['targets'])
+                            if _is_starred and _current_target_idx == _starred_idx:
+                                _eps_unpack_info['targets'].append({
+                                    'type': 'Starred',
+                                    'value': {'type': 'Name', 'id': _instr.argval if _instr.argval else f'var_{_instr.arg}', 'ctx': 'Store'},
+                                })
+                            else:
+                                _eps_unpack_info['targets'].append({
+                                    'type': 'Name',
+                                    'id': _instr.argval if _instr.argval else f'var_{_instr.arg}',
+                                    'ctx': 'Store',
+                                })
+                            if len(_eps_unpack_info['targets']) == _eps_unpack_info['count']:
+                                _target = {
+                                    'type': 'Tuple',
+                                    'elts': _eps_unpack_info['targets'],
+                                    'ctx': 'Store',
+                                }
+                                if _eps_unpack_info['value']:
+                                    pre_stmts.append({'type': 'Assign', 'targets': [_target], 'value': _eps_unpack_info['value']})
+                                _eps_unpack_info = None
+                            _eps_instrs = []
                             continue
                         _eps_instrs.append(_instr)
-                        _stmt = self._build_statement(_eps_instrs)
+                        _stmt = self._build_store_statement(_eps_instrs, block=cond_block)
                         if _stmt:
+                            _dec_block = _stmt.pop('_decorator_block', None)
+                            if _dec_block is not None:
+                                _dec_name = None
+                                _dec_list = _stmt.get('decorator_list', [])
+                                for _d in _dec_list:
+                                    if isinstance(_d, dict):
+                                        _f = _d.get('func', _d) if _d.get('type') == 'Call' else _d
+                                        if isinstance(_f, dict) and _f.get('type') == 'Name':
+                                            _dec_name = _f.get('id')
+                                            break
+                                if _dec_name:
+                                    for _i in range(len(pre_stmts) - 1, -1, -1):
+                                        _s = pre_stmts[_i]
+                                        if (isinstance(_s, dict) and _s.get('type') == 'Expr' and
+                                            isinstance(_s.get('value'), dict) and
+                                            _s.get('value', {}).get('type') == 'Name' and
+                                            _s.get('value', {}).get('id') == _dec_name):
+                                            pre_stmts.pop(_i)
+                                            break
                             pre_stmts.append(_stmt)
                         _eps_instrs = []
-                    continue
-                if _instr.opname in FORWARD_JUMP_OPS or _instr.opname in BACKWARD_JUMP_OPS:
-                    break
-                if _instr.opname in ('JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'):
-                    break
-                if _instr.opname in ('POP_EXCEPT', 'PUSH_EXC_INFO', 'RERAISE',
-                                    'WITH_EXCEPT_START', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH'):
-                    continue
-                if _instr.opname == 'RAISE_VARARGS':
-                    if _instr.arg == 0:
-                        _pre_stmts.append({'type': 'Raise', 'exc': None})
-                    else:
-                        _exc_instrs = [i for i in _stmt_instrs if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                        _exc_expr = self.expr_reconstructor.reconstruct(_exc_instrs) if _exc_instrs else None
-                        if _exc_expr is None and _exc_instrs:
-                            _exc_expr = self._build_statement(_exc_instrs)
-                            if _exc_expr and _exc_expr.get('type') == 'Expr':
-                                _exc_expr = _exc_expr.get('value')
-                        _pre_stmts.append({'type': 'Raise', 'exc': _exc_expr})
-                    _stmt_instrs = []
-                    break
-                if _instr.opname == 'RETURN_CONST':
-                    _pre_stmts.append({'type': 'Return', 'value': {'type': 'Constant', 'value': _instr.argval}})
-                    _stmt_instrs = []
-                    break
-                if _instr.opname == 'RETURN_VALUE':
-                    _value_instrs = [i for i in _stmt_instrs if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                    _value = self.expr_reconstructor.reconstruct(_value_instrs) if _value_instrs else None
-                    _pre_stmts.append({'type': 'Return', 'value': _value if _value else {'type': 'Constant', 'value': None}})
-                    _stmt_instrs = []
-                    break
-                if _instr.opname == 'UNPACK_SEQUENCE':
-                    _val_instrs = [i for i in _eps_instrs if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                    _val = self.expr_reconstructor.reconstruct(_val_instrs) if _val_instrs else None
-                    _eps_unpack_info = {'value': _val, 'targets': [], 'count': _instr.arg}
-                    _eps_instrs = []
-                    continue
-                if _instr.opname == 'UNPACK_EX':
-                    _val_instrs = [i for i in _eps_instrs if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                    _val = self.expr_reconstructor.reconstruct(_val_instrs) if _val_instrs else None
-                    _arg = _instr.argval
-                    _before = _arg & 0xFF
-                    _after = (_arg >> 8) & 0xFF
-                    _eps_unpack_info = {'value': _val, 'targets': [], 'count': _before + 1 + _after, 'is_starred': True, 'starred_idx': _before}
-                    _eps_instrs = []
-                    continue
-                if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
-                    if skip_store_targets and _instr.argval in skip_store_targets:
-                        _eps_instrs = []
                         continue
-                    _has_prev_copy = len(_eps_instrs) >= 1 and _eps_instrs[-1].opname == 'COPY' and _eps_instrs[-1].arg == 1
-                    if _has_prev_copy:
+
+                    if _instr.opname in ('DELETE_SUBSCR', 'DELETE_ATTR'):
                         _eps_instrs.append(_instr)
-                        prev_was_copy = True
-                        continue
-                    if _eps_unpack_info is not None:
-                        _is_starred = _eps_unpack_info.get('is_starred', False)
-                        _starred_idx = _eps_unpack_info.get('starred_idx', -1)
-                        _current_target_idx = len(_eps_unpack_info['targets'])
-                        if _is_starred and _current_target_idx == _starred_idx:
-                            _eps_unpack_info['targets'].append({
-                                'type': 'Starred',
-                                'value': {'type': 'Name', 'id': _instr.argval if _instr.argval else f'var_{_instr.arg}', 'ctx': 'Store'},
-                            })
-                        else:
-                            _eps_unpack_info['targets'].append({
-                                'type': 'Name',
-                                'id': _instr.argval if _instr.argval else f'var_{_instr.arg}',
-                                'ctx': 'Store',
-                            })
-                        if len(_eps_unpack_info['targets']) == _eps_unpack_info['count']:
-                            _target = {
-                                'type': 'Tuple',
-                                'elts': _eps_unpack_info['targets'],
-                                'ctx': 'Store',
-                            }
-                            if _eps_unpack_info['value']:
-                                pre_stmts.append({'type': 'Assign', 'targets': [_target], 'value': _eps_unpack_info['value']})
-                            _eps_unpack_info = None
+
+                        _stmt_nodes = self._process_instruction(_instr, cond_block, _eps_instrs)
+                        if _stmt_nodes:
+                            pre_stmts.extend(_stmt_nodes)
+
                         _eps_instrs = []
                         continue
-                    _eps_instrs.append(_instr)
-                    _stmt = self._build_store_statement(_eps_instrs, block=cond_block)
-                    if _stmt:
-                        _dec_block = _stmt.pop('_decorator_block', None)
-                        if _dec_block is not None:
-                            _dec_name = None
-                            _dec_list = _stmt.get('decorator_list', [])
-                            for _d in _dec_list:
-                                if isinstance(_d, dict):
-                                    _f = _d.get('func', _d) if _d.get('type') == 'Call' else _d
-                                    if isinstance(_f, dict) and _f.get('type') == 'Name':
-                                        _dec_name = _f.get('id')
-                                        break
-                            if _dec_name:
-                                for _i in range(len(pre_stmts) - 1, -1, -1):
-                                    _s = pre_stmts[_i]
-                                    if (isinstance(_s, dict) and _s.get('type') == 'Expr' and
-                                        isinstance(_s.get('value'), dict) and
-                                        _s.get('value', {}).get('type') == 'Name' and
-                                        _s.get('value', {}).get('id') == _dec_name):
-                                        pre_stmts.pop(_i)
-                                        break
-                        pre_stmts.append(_stmt)
-                    _eps_instrs = []
-                    continue
 
-                if _instr.opname in ('DELETE_SUBSCR', 'DELETE_ATTR'):
                     _eps_instrs.append(_instr)
 
-                    _stmt_nodes = self._process_instruction(_instr, cond_block, _eps_instrs)
-                    if _stmt_nodes:
-                        pre_stmts.extend(_stmt_nodes)
+            if _cond_is_ancestor_header:
+                self.generated_blocks.add(cond_block)
+                self.generated_offsets.add(cond_block.start_offset)
+            else:
+                if _cond_was_generated and not pre_stmts:
+                    pre_stmts = []
 
-                    _eps_instrs = []
-                    continue
-
-                _eps_instrs.append(_instr)
-
-            if _cond_was_generated and not pre_stmts:
-                pre_stmts = []
-
-            self.generated_blocks.add(cond_block)
-            self.generated_offsets.add(cond_block.start_offset)
+                self.generated_blocks.add(cond_block)
+                self.generated_offsets.add(cond_block.start_offset)
         elif is_degenerate_while:
             init_stmts: List[Dict[str, Any]] = []
             cond_instr_idx = None
@@ -2182,7 +2195,20 @@ class RegionASTGenerator:
                                  and isinstance(s.get('body'), list)
                                  and any(b.get('type') == 'Break' for b in s.get('body', [])))]
 
-        else_stmts = self._if_generate_branch_stmts(region.else_blocks) if region.else_blocks else []
+        _filtered_else_blocks = list(region.else_blocks) if region.else_blocks else []
+        if _filtered_else_blocks and region.parent is not None and isinstance(region.parent, LoopRegion):
+            _parent_loop = region.parent
+            _exclude_blocks = set()
+            if _parent_loop.back_edge_block is not None:
+                _exclude_blocks.add(_parent_loop.back_edge_block)
+            if _parent_loop.condition_block is not None:
+                _exclude_blocks.add(_parent_loop.condition_block)
+            if _parent_loop.header_block is not None:
+                _exclude_blocks.add(_parent_loop.header_block)
+            if _exclude_blocks:
+                _filtered_else_blocks = [b for b in _filtered_else_blocks if b not in _exclude_blocks]
+
+        else_stmts = self._if_generate_branch_stmts(_filtered_else_blocks) if _filtered_else_blocks else []
 
         if else_stmts and getattr(region, 'has_trailing_return_none', False):
             _non_trivial = [s for s in else_stmts if not self._is_trailing_return_none_statement(s)]
@@ -2649,6 +2675,45 @@ class RegionASTGenerator:
                 if _is_for_iter_setup:
                     self.generated_blocks.add(header)
                     self.generated_offsets.add(header.start_offset)
+                    return
+                _child_while_cond = None
+                for _cr in self.region_analyzer.regions:
+                    if (isinstance(_cr, LoopRegion) and _cr.region_type == RegionType.WHILE_LOOP
+                        and hasattr(_cr, 'condition_block') and _cr.condition_block == header
+                        and _cr != region):
+                        _child_while_cond = _cr
+                        break
+                if _child_while_cond is not None:
+                    _self_loop_stmts = self._loop_extract_self_loop_stmts(header)
+                    while _self_loop_stmts and isinstance(_self_loop_stmts[-1], dict):
+                        _last = _self_loop_stmts[-1]
+                        if _last.get('type') == 'If' and any(
+                            b.get('type') in ('Continue', 'Break')
+                            for b in _last.get('body', [])
+                        ):
+                            _self_loop_stmts.pop()
+                        else:
+                            break
+                    _child_while_ast = self._generate_loop(_child_while_cond)
+                    if _child_while_ast:
+                        if isinstance(_child_while_ast, list):
+                            _self_loop_stmts.extend(_child_while_ast)
+                        else:
+                            _self_loop_stmts.append(_child_while_ast)
+                    body_stmts.extend(_self_loop_stmts)
+                    self.generated_blocks.add(header)
+                    self.generated_offsets.add(header.start_offset)
+                    if _child_while_cond.else_blocks:
+                        _parent_keys = set()
+                        if region.back_edge_block is not None:
+                            _parent_keys.add(region.back_edge_block)
+                        if region.condition_block is not None:
+                            _parent_keys.add(region.condition_block)
+                        if region.header_block is not None:
+                            _parent_keys.add(region.header_block)
+                        for _eb in _child_while_cond.else_blocks:
+                            if _eb in _parent_keys and _eb in self.generated_blocks:
+                                self.generated_blocks.discard(_eb)
                     return
                 _self_loop_stmts = self._loop_extract_self_loop_stmts(header)
                 body_stmts.extend(_self_loop_stmts)
@@ -5061,6 +5126,16 @@ class RegionASTGenerator:
         for block in sorted(blocks, key=lambda b: b.start_offset):
             if block in self.generated_blocks:
                 continue
+            if any(i.opname == 'PUSH_EXC_INFO' for i in block.instructions):
+                _is_handler_entry = False
+                for _r in self.region_analyzer.regions:
+                    if isinstance(_r, TryExceptRegion) and block in _r.handler_entry_blocks:
+                        _is_handler_entry = True
+                        break
+                if _is_handler_entry:
+                    self.generated_blocks.add(block)
+                    self.generated_offsets.add(block.start_offset)
+                    continue
             _has_gyfi = any(i.opname == 'GET_YIELD_FROM_ITER' for i in block.instructions)
             if _has_gyfi:
                 _block_region = self.region_analyzer.get_region_for_block(block)
@@ -5893,6 +5968,7 @@ class RegionASTGenerator:
                     _bn_then_stmts = []
                 _bn_else_role = self.region_analyzer.get_block_role(_bn_else_block)
                 _bn_else_is_break = (_bn_else_block == break_succ[0])
+                _bn_else_meaningful_skipped = False
                 if _bn_else_is_break:
                     _bn_else_stmts = [{'type': 'Break'}]
                     if _bn_else_block not in self.generated_blocks:
@@ -5903,7 +5979,18 @@ class RegionASTGenerator:
                     if _bn_else_block not in self.generated_blocks:
                         self.generated_blocks.add(_bn_else_block)
                 elif _bn_else_role in (BlockRole.CONTINUE, BlockRole.PURE_CONTINUE):
-                    _bn_else_stmts = [{'type': 'Continue'}]
+                    _bn_else_meaningful = [i for i in _bn_else_block.instructions
+                                           if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP')
+                                           and i.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+                                                                'JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                                           and i.opname not in ('POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_FORWARD_IF_FALSE',
+                                                                'POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE')
+                                           and i.opname not in ('JUMP_IF_TRUE_OR_POP', 'JUMP_IF_FALSE_OR_POP')]
+                    if _bn_else_meaningful:
+                        _bn_else_stmts = []
+                        _bn_else_meaningful_skipped = True
+                    else:
+                        _bn_else_stmts = [{'type': 'Continue'}]
                 elif _bn_else_block not in self.generated_blocks:
                     _bn_else_last = _bn_else_block.get_last_instruction()
                     _bn_else_cb_result = None
@@ -5927,7 +6014,8 @@ class RegionASTGenerator:
                 if break_succ[0] not in self.generated_blocks:
                     self.generated_blocks.add(break_succ[0])
                 if normal_succ[0] not in self.generated_blocks:
-                    self.generated_blocks.add(normal_succ[0])
+                    if not (_bn_else_meaningful_skipped and normal_succ[0] == _bn_else_block):
+                        self.generated_blocks.add(normal_succ[0])
                 result = _bn_pre_stmts + [_if_stmt] if _bn_pre_stmts else [_if_stmt]
                 return result
         elif break_succ and continue_succ:
@@ -6198,7 +6286,17 @@ class RegionASTGenerator:
                 pred_in_try = any(p in set(region.try_blocks) and p != block for p in block.predecessors)
                 _last_op = block.get_last_instruction()
                 is_terminal = _last_op is not None and _last_op.opname in ('RETURN_VALUE', 'RETURN_CONST')
-                if not has_exc_instr and (succs_outside or is_terminal) and pred_in_try:
+                _is_simple_nontrivial_return = False
+                if is_terminal:
+                    _m_instrs = [i for i in block.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                    if (len(_m_instrs) == 2 and
+                        _m_instrs[0].opname == 'LOAD_CONST' and _m_instrs[0].argval is not None and
+                        _m_instrs[1].opname in ('RETURN_VALUE', 'RETURN_CONST')):
+                        _is_simple_nontrivial_return = True
+                    elif (len(_m_instrs) == 1 and
+                          _m_instrs[0].opname == 'RETURN_CONST' and _m_instrs[0].argval is not None):
+                        _is_simple_nontrivial_return = True
+                if not has_exc_instr and (succs_outside or is_terminal) and pred_in_try and not _is_simple_nontrivial_return:
                     self.generated_blocks.add(block)
                     continue
 
@@ -6338,6 +6436,14 @@ class RegionASTGenerator:
                     stmts = self._generate_block_statements(block)
                     body_stmts.extend(stmts)
                     continue
+                if (isinstance(nested_region, TryExceptRegion) and
+                    isinstance(region, TryExceptRegion) and
+                    nested_region.try_offset_end > region.try_offset_end and
+                    nested_region.try_offset_start <= region.try_offset_start):
+                    stmts = self._generate_block_statements(block)
+                    body_stmts.extend(stmts)
+                    self.generated_blocks.add(block)
+                    continue
                 nested_id = id(nested_region)
                 if nested_id in self._generated_regions or nested_id in self._generating_regions:
                     if block in region.try_blocks:
@@ -6374,6 +6480,13 @@ class RegionASTGenerator:
 
         for ntr in nested_try_regions:
             if id(ntr) not in self._generated_regions and id(ntr) not in self._generating_regions:
+                if ntr.try_offset_end > region.try_offset_end and ntr.try_offset_start <= region.try_offset_start:
+                    self._skipped_outer_try = ntr
+                    for heb in ntr.handler_entry_blocks:
+                        self.generated_blocks.add(heb)
+                    for cb in ntr.cleanup_blocks:
+                        self.generated_blocks.add(cb)
+                    continue
                 for b in ntr.blocks:
                     self.generated_blocks.discard(b)
                 nested_ast = self._generate_try(ntr)
@@ -6806,10 +6919,18 @@ class RegionASTGenerator:
             _handler_entry_blocks = set(region.handler_entry_blocks)
             _pre_consumed_handler_entries = _handler_entry_blocks & self.generated_blocks
             self.generated_blocks.update(_handler_entry_blocks)
+            _handler_body_blocks = set()
+            for _, _, hbs in region.except_handlers:
+                for hb in hbs:
+                    if hb not in _handler_entry_blocks:
+                        _handler_body_blocks.add(hb)
+            _pre_consumed_handler_bodies = _handler_body_blocks & self.generated_blocks
+            self.generated_blocks.update(_handler_body_blocks)
 
             body_stmts = self._generate_try_body(region)
 
             self.generated_blocks -= (_handler_entry_blocks - _pre_consumed_handler_entries)
+            self.generated_blocks -= (_handler_body_blocks - _pre_consumed_handler_bodies)
 
             handlers = []
             _enumerated_handlers = list(enumerate(region.except_handlers))
@@ -6873,14 +6994,12 @@ class RegionASTGenerator:
                                 if has_push_exc:
                                     _outer_handler_entries.append(target_block)
             if _outer_handler_entries and handlers:
-                # 将内层try body + handlers 包装成嵌套的 Try AST
                 _inner_try = {
                     'type': 'Try',
                     'body': body_stmts if body_stmts else [{'type': 'Pass'}],
                     'handlers': handlers,
                 }
                 body_stmts = [_inner_try]
-                # 生成外层 handlers
                 handlers = []
                 for _outer_block in sorted(_outer_handler_entries, key=lambda b: b.start_offset):
                     if _outer_block in self.generated_blocks:
@@ -6903,6 +7022,10 @@ class RegionASTGenerator:
                         'body': _outer_body if _outer_body else [{'type': 'Pass'}]
                     }
                     handlers.append(_outer_handler)
+
+            _skipped_outer = self._skipped_outer_try
+            self._skipped_outer_try = None
+            _outer_finally = None
 
             orelse_stmts = None
             if region.else_blocks and region.has_else:
@@ -6928,8 +7051,66 @@ class RegionASTGenerator:
                         orelse_stmts.extend(ebs)
                     self.generated_blocks.add(eb)
 
+            if _skipped_outer is not None and _skipped_outer is not region:
+                _inner_try = {
+                    'type': 'Try',
+                    'body': body_stmts if body_stmts else [{'type': 'Pass'}],
+                    'handlers': handlers,
+                }
+                if orelse_stmts:
+                    _inner_try['orelse'] = orelse_stmts
+                    orelse_stmts = None
+                _outer_body_stmts = [_inner_try]
+                for ob in sorted(_skipped_outer.try_blocks, key=lambda b: b.start_offset):
+                    if ob in self.generated_blocks:
+                        continue
+                    obs = self._generate_block_statements(ob)
+                    if obs:
+                        _outer_body_stmts.extend(obs)
+                    self.generated_blocks.add(ob)
+                _outer_handlers = []
+                for oi, (oet, oen, ohbs) in enumerate(_skipped_outer.except_handlers):
+                    ohe = _skipped_outer.handler_entry_blocks[oi] if oi < len(_skipped_outer.handler_entry_blocks) else None
+                    if ohe is None and ohbs:
+                        ohe = ohbs[0]
+                    if ohe is None:
+                        continue
+                    oh_body = self._generate_handler_body_statements(ohe)
+                    self.generated_blocks.add(ohe)
+                    for ohb in ohbs:
+                        if ohb in self.generated_blocks or ohb is ohe:
+                            continue
+                        ohbs_stmts = self._generate_handler_body_statements(ohb)
+                        if ohbs_stmts:
+                            oh_body.extend(ohbs_stmts)
+                        self.generated_blocks.add(ohb)
+                    oh_node = {'type': 'ExceptHandler', 'body': oh_body if oh_body else [{'type': 'Pass'}]}
+                    if oen:
+                        oh_node['name'] = oen
+                    if oet:
+                        oh_node['exc_type'] = {'type': 'Name', 'id': str(oet), 'ctx': 'Load'} if isinstance(oet, str) else oet
+                    _outer_handlers.append(oh_node)
+                if _skipped_outer.has_finally and _skipped_outer.finally_blocks:
+                    _outer_finally = []
+                    for fb in _skipped_outer.finally_blocks:
+                        if fb in self.generated_blocks:
+                            continue
+                        fbs = self._generate_handler_body_statements(fb)
+                        if fbs:
+                            _outer_finally.extend(fbs)
+                        self.generated_blocks.add(fb)
+                else:
+                    _outer_finally = None
+                for cb in _skipped_outer.cleanup_blocks:
+                    if cb not in self.generated_blocks:
+                        self.generated_blocks.add(cb)
+                body_stmts = _outer_body_stmts
+                handlers = _outer_handlers
+
             finalbody_stmts = None
-            if region.finally_blocks and region.has_finally:
+            if _outer_finally:
+                finalbody_stmts = _outer_finally
+            elif region.finally_blocks and region.has_finally:
                 finalbody_stmts = []
                 _generated_finally_offsets = set()
                 for fb in region.finally_blocks:

@@ -207,6 +207,45 @@
 - [ ] Task 23.7: 全量测试 + 字节码等价性验证
 - [ ] Task 23.8: 更新最终数据表
 
+## Phase 47: 区域化增量修复（基线156f→138f）
+
+### 基线状态
+- basic: 0f/122p (100%) ✅
+- if_region: 6f/302p (98.1%) — if43×3, if72×3 基线失败
+- for_loop: 3f/188p (98.4%) — fl46, for16, for20
+- while_loop: 11f/96p (89.7%)
+- try_except: 21f/198p (90.4%)
+- with_region: 9f/182p (95.3%)
+- match_region: 4f/176p (97.8%)
+- boolop: 9f/123p (93.2%)
+- ternary: 8f/81p (91.0%)
+- nested: 82f/187p (69.5%)
+- **总计: 156f/1655p (91.4%)**
+
+### 已完成任务
+- [x] Task 47.1: while_loop修复 (11f→5f) — while15+wl32+wl07+else过滤
+- [x] Task 47.2: try_except te13/te33修复 (21f→19f) — _is_simple_nontrivial_return
+- [x] Task 47.3: boolop bo50修复 (9f→8f) — REGION_TYPE改为TERNARY
+- [x] Task 47.4: nested改善 (82f→76f) — while/if修复的级联效果
+
+### 当前状态 (138f)
+- basic: **0f** ✅ (100%)
+- if_region: 6f (基线失败)
+- for_loop: 3f
+- while_loop: **5f** ↓6f
+- try_except: **19f** ↓2f
+- with_region: 9f
+- match_region: 4f
+- boolop: **8f** ↓1f
+- ternary: 8f
+- nested: **76f** ↓6f
+
+### 待完成任务
+- [ ] Task 47.5: for_loop 3f修复
+- [ ] Task 47.6: try_except 19f深度修复
+- [ ] Task 47.7: nested 76f优化
+- [ ] Task 47.8: 全量回归验证与文档更新
+
 ---
 
 ## 🚀 Phase 24: 架构级突破 - ✅ 已完成（2026-05-12）
