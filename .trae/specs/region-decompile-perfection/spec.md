@@ -176,21 +176,57 @@
 - **WHEN** `if a and b:` 模式的字节码与 `return a and b` 几乎相同时
 - **THEN** 基于上下文正确识别为IfRegion而非BoolOpRegion
 
+### Requirement: Phase 48 区域归约算法全区域完善
+系统 SHALL 基于 "No More Gotos" 论文的区域归约算法，对每一区域执行以下完整循环：
+1. **分析区域模式** — 将每个区域的失败测试按字节码模式分类，识别根因
+2. **规划反编译逻辑** — 基于区域归约理论，为每种失败模式设计修复方案
+3. **写入识别方法注释** — 将反编译逻辑以结构化注释写入对应的识别方法和生成方法
+4. **执行测试验证** — 运行区域测试，验证成功率和字节码一致性
+5. **修正反编译逻辑** — 根据错误修正反编译逻辑，重新写入注释
+6. **完善代码** — 完成相应代码修改
+7. **持续迭代** — 直到100%成功率和字节码完全匹配
+
+核心设计原则：
+- **区域化分析**：基于编译器理论中的区域分析算法，将CFG分解为层次化的区域
+- **单向数据流**：分析结果从底层向上层传递，不回溯修正
+- **一次正确**：每个结构在识别阶段就正确分类，不需要后处理修正
+- **算法驱动**：用算法替代模式匹配，用数学性质替代启发式规则
+
+#### Scenario: BoolOp短路路径重复生成修复
+- **WHEN** BoolOpRegion嵌套在WithRegion/TryExceptRegion中时
+- **THEN** BoolOpRegion的blocks不被父区域重复生成（P0修复：_generate_boolop标记generated_blocks + _generate_with识别BoolOpRegion子区域）
+
+#### Scenario: With区域BoolOp/Ternary子区域处理
+- **WHEN** WithRegion包含BoolOpRegion或TernaryRegion子区域时
+- **THEN** _generate_with正确识别并委托生成，不将子区域blocks作为简单语句重复生成
+
+#### Scenario: 嵌套While-While-Break正确归约
+- **WHEN** 内层while break的跳转目标与外层while条件重合时
+- **THEN** break正确归约到内层循环，不与外层循环条件混淆
+
+#### Scenario: Try-Except中continue/break正确分类
+- **WHEN** try-except块位于循环内部且包含continue/break时
+- **THEN** continue/break的角色基于跳转目标正确分类，不因异常处理边界而误判
+
+#### Scenario: 所有区域100%成功率
+- **WHEN** 运行全部10个区域的测试套件时
+- **THEN** 所有测试通过，反编译后重新编译的字节码与原始字节码完全匹配
+
 ## 完整演进表
 
-| 区域 | Phase0 | Phase17 | Phase25 | Phase33 | Phase41 | Phase44 | **Phase45** | 目标 |
-|------|--------|---------|---------|---------|---------|---------|-------------|------|
-| Basic | - | - | - | - | 7f | 7f | **7f (94.3%)** | 0f |
-| For | 62f | 19f | 14f | 12f | 7f | 6f | **7f (96.4%)** | 0f |
-| While | 66f | 50f | 34f | 8f | 10f | 10f | **12f (88.0%)** | 0f |
-| Try | 54f | 35f | 35f | 23f | 21f | 21f | **21f (90.4%)** | 0f |
-| With | 37f | 9f | 9f | 9f | 9f | 9f | **9f (95.3%)** | 0f |
-| Match | 74f | 51f | 47f | 20f | 4f | 4f | **4f (97.8%)** | 0f |
-| If | 90f | 48f | 51f | 34f | 50f | 44f | **9f (97.1%)** | 0f |
-| BoolOp | 12f | 64f | 6f | 9f | 9f | 9f | **9f (93.2%)** | 0f |
-| Ternary | 32f | 19f | 13f | 13f | 8f | 8f | **8f (91.0%)** | 0f |
-| Nested | - | - | - | - | 87f | 81f | **81f (69.4%)** | 0f |
-| **总计** | **~427f** | **306f** | **~225f** | **~129f** | **212f** | **199f** | **167f (90.8%)** | **0f** |
+| 区域 | Phase0 | Phase17 | Phase25 | Phase33 | Phase41 | Phase44 | Phase45 | **Phase48基线** | 目标 |
+|------|--------|---------|---------|---------|---------|---------|---------|-----------------|------|
+| Basic | - | - | - | - | 7f | 7f | 7f | **0f (100%)** | 0f ✅ |
+| If | 90f | 48f | 51f | 34f | 50f | 44f | 9f | **6f (98.0%)** | 0f |
+| For | 62f | 19f | 14f | 12f | 7f | 6f | 7f | **3f (98.4%)** | 0f |
+| While | 66f | 50f | 34f | 8f | 10f | 10f | 12f | **5f (95.3%)** | 0f |
+| Try | 54f | 35f | 35f | 23f | 21f | 21f | 21f | **11f (95.0%)** | 0f |
+| With | 37f | 9f | 9f | 9f | 9f | 9f | 9f | **9f (95.3%)** | 0f |
+| Match | 74f | 51f | 47f | 20f | 4f | 4f | 4f | **4f (97.8%)** | 0f |
+| BoolOp | 12f | 64f | 6f | 9f | 9f | 9f | 9f | **8f (93.9%)** | 0f |
+| Ternary | 32f | 19f | 13f | 13f | 8f | 8f | 8f | **8f (91.0%)** | 0f |
+| Nested | - | - | - | - | 87f | 81f | 81f | **73f (73.1%)** | 0f |
+| **总计** | **~427f** | **306f** | **~225f** | **~129f** | **212f** | **199f** | **167f** | **127f (93.0%)** | **0f** |
 
 ### 历史里程碑
 
@@ -205,5 +241,56 @@ Phase 34:   240f (87.4%)     ← 新基线(含nested区域), 算法驱动归约
 Phase 41:   212f (88.2%)     ← Return→Break值保持修复, for_loop 96.3%
 Phase 44:   199f (88.9%)     ← 循环条件分支修复, for_loop 96.9%
 Phase 45:   167f (90.8%)     ← BoolOp-If冲突消解! if_region 97.1%! 净-33f!
+Phase 47:   127f (93.0%)     ← while_loop修复+BoolOp-If消解, basic 100%!
                          目标: 0f (100%)
 ```
+
+### Phase 48 失败模式分类（127f详细分析）
+
+#### P0: Nested区域 (73f, 57.5%的失败)
+- **BoolOp/Ternary重复生成** (~12f): with_boolop(3), try_boolop(3), try_ternary(3), with_ternary(3) — P0修复目标
+- **循环嵌套break/continue误分类** (~15f): n11, n13, n18, n23, while_boolop, while_if, while_match, while_ternary
+- **Match嵌套body丢失** (~15f): match_if(3), match_match(3), match_boolop(3), match_ternary(3), match_while(3)
+- **if-elif-in-while结构错误** (~6f): n29(3), n17(2), n01(3=if43)
+- **深层嵌套归约不完整** (~9f): n35(3), n14(2), n15(2), n09(1), n07(1), n10(2)
+
+#### P1: Try区域 (11f)
+- **for-try-continue中continue→break误判** (~3f): te047, te083, te050
+- **嵌套try-except handler排序** (~3f): te104, try15, try20
+- **try-finally finally块重复/丢失** (~3f): te080, te081, te100
+- **复杂try模式** (~2f): try11(32vs42), try16(语法错误)
+
+#### P1: With区域 (9f)
+- **with+boolop/ternary重复生成** (~3f): w035, w043, w30 — P0修复目标
+- **with+try嵌套** (~3f): w058, w079, w080
+- **with+循环嵌套** (~3f): w099, w100, w102
+
+#### P2: BoolOp区域 (8f)
+- **混合and/or链segment构建** (~3f): bo24 or-and-or (16vs14)
+- **BoolOp-If冲突(反向)** (~3f): bo31 and-in-if (未找到BOOL_OP)
+- **ListComp中BoolOp** (~1f): bo42
+- **复杂not-and-or** (~1f): bo43 (19vs11)
+
+#### P2: Ternary区域 (8f)
+- **ternary在if/while/for/try/lambda中** (~5f): ternary11-13, ternary15, ternary17
+- **嵌套code object参数不匹配** (~2f): te04×2
+- **复杂实用模式** (~1f): ternary20
+
+#### P2: While区域 (5f)
+- **while False/while True识别** (~2f): while06, wl05
+- **while-return/raise** (~2f): while13, while14
+- **复杂状态机** (~1f): while20
+
+#### P2: If区域 (6f)
+- **if-in-while指令数不匹配** (~3f): if43 (22vs24)
+- **ternary-in-if赋值丢失** (~3f): if72 (14vs9)
+
+#### P3: For区域 (3f)
+- **for-return直接** (~1f): fl46forreturn_n
+- **for-if嵌套** (~1f): for16
+- **复杂body** (~1f): for20
+
+#### P3: Match区域 (4f)
+- **guard boolop** (~1f): m106
+- **match-in-func-return** (~1f): m107
+- **复杂pattern** (~2f): m075, m083

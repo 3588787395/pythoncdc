@@ -816,3 +816,91 @@
 - [x] if65ifboolopcompare×3 全部通过 ✅
 - [x] if_region 38f→9f(-29f!!) ✅
 - [x] 零回归 ✅
+
+---
+
+## Phase 48: 区域归约算法全区域完善验证清单（进行中）
+
+### Task 48.0: P0 BoolOp短路路径重复生成修复
+- [x] 48.0.1: _generate_boolop中标记generated_blocks（L9996-10002，已应用）
+- [ ] 48.0.2: _generate_with中添加BoolOpRegion/TernaryRegion到isinstance检查（L7868）
+- [ ] 48.0.3: 验证P0修复效果：nested with_boolop + try_boolop + with_ternary + try_ternary
+- [ ] 48.0.4: 全量10区域回归测试确认零回归
+- [ ] 48.0.5: 将反编译逻辑写入_generate_boolop和_generate_with注释
+
+### Task 48.1: Nested区域BoolOp/Ternary子区域重复生成修复
+- [ ] 48.1.1: nested_with_boolop(34vs44)根因分析
+- [ ] 48.1.2: nested_with_ternary(32vs37)根因分析
+- [ ] 48.1.3: nested_try_boolop(17vs27)根因分析
+- [ ] 48.1.4: nested_try_ternary(15vs22)根因分析
+- [ ] 48.1.5: _generate_try中添加BoolOpRegion/TernaryRegion子区域处理
+- [ ] 48.1.6: 将反编译逻辑写入_generate_try注释
+- [ ] 48.1.7: nested验证 + 全量回归
+
+### Task 48.2: Nested区域循环嵌套break/continue修复
+- [ ] 48.2.1: n23 while-in-while-break(28vs41)根因分析
+- [ ] 48.2.2: n11 while-if-while-break(37vs20)根因分析
+- [ ] 48.2.3: n18 with-for-if-break(44vs49)根因分析
+- [ ] 48.2.4: n13 try-for-if-break(29vs34)根因分析
+- [ ] 48.2.5: nested_while_boolop(13vs19)根因分析
+- [ ] 48.2.6: nested_while_if/while_match/while_ternary根因分析
+- [ ] 48.2.7: 循环嵌套break/continue归约修复实施
+- [ ] 48.2.8: 将反编译逻辑写入_try_generate_conditional_break_or_continue注释
+- [ ] 48.2.9: nested验证 + 全量回归
+
+### Task 48.3: Nested区域Match嵌套body丢失修复
+- [ ] 48.3.1: nested_match_if(12vs5)根因分析
+- [ ] 48.3.2: nested_match_match(14vs5)根因分析
+- [ ] 48.3.3: nested_match_boolop(11vs7)根因分析
+- [ ] 48.3.4: nested_match_ternary(9vs5)根因分析
+- [ ] 48.3.5: nested_match_while(13vs15)根因分析
+- [ ] 48.3.6: Match嵌套body归约修复实施
+- [ ] 48.3.7: 将反编译逻辑写入_generate_match注释
+- [ ] 48.3.8: nested验证 + 全量回归
+
+### Task 48.4: Try区域修复
+- [ ] 48.4.1: te047/te083 for-try-continue continue→break误判根因
+- [ ] 48.4.2: te080/te081/te100 try-finally finally块重复/丢失根因
+- [ ] 48.4.3: try11/try16 复杂try模式根因
+- [ ] 48.4.4: try-except continue/break分类修复实施
+- [ ] 48.4.5: 将反编译逻辑写入_generate_try注释
+- [ ] 48.4.6: try验证 + 全量回归
+
+### Task 48.5: With区域修复
+- [ ] 48.5.1: w035/w043/w30 with+boolop/ternary重复生成根因
+- [ ] 48.5.2: w058/w079/w080 with+try嵌套根因
+- [ ] 48.5.3: w099/w100/w102 with+循环嵌套根因
+- [ ] 48.5.4: with区域子区域处理修复实施
+- [ ] 48.5.5: 将反编译逻辑写入_generate_with注释
+- [ ] 48.5.6: with验证 + 全量回归
+
+### Task 48.6: BoolOp/Ternary/While/If/For边际修复
+- [ ] 48.6.1: BoolOp bo24 or-and-or segment构建修复
+- [ ] 48.6.2: BoolOp bo31 and-in-if冲突修复
+- [ ] 48.6.3: Ternary在if/while/for/try/lambda中修复
+- [ ] 48.6.4: While while06/wl05识别修复
+- [ ] 48.6.5: While while13/while14 return/raise修复
+- [ ] 48.6.6: If if43 if-in-while修复
+- [ ] 48.6.7: If if72 ternary-in-if修复
+- [ ] 48.6.8: For fl46/for16/for20修复
+- [ ] 48.6.9: 将反编译逻辑写入各识别/生成方法注释
+- [ ] 48.6.10: 各区域验证 + 全量回归
+
+### Task 48.7: 全量回归验证与文档更新
+- [ ] 48.7.1: 全量10区域回归测试
+- [ ] 48.7.2: 字节码等价性验证
+- [ ] 48.7.3: tasks.md/checklist.md/spec.md更新
+- [ ] 48.7.4: 反编译逻辑注释完整性验证
+
+### Phase 48 基线确认
+- [x] 48-BL1: basic **0f/122p (100%)** ✅ 完美!
+- [x] 48-BL2: if_region **6f/302p (98.0%)**
+- [x] 48-BL3: for_loop **3f/188p (98.4%)**
+- [x] 48-BL4: while_loop **5f/102p (95.3%)**
+- [x] 48-BL5: try_except **11f/208p (95.0%)**
+- [x] 48-BL6: with_region **9f/182p (95.3%)**
+- [x] 48-BL7: match_region **4f/176p (97.8%)**
+- [x] 48-BL8: boolop **8f/124p (93.9%)**
+- [x] 48-BL9: ternary **8f/81p (91.0%)**
+- [x] 48-BL10: nested **73f/198p (73.1%)**
+- [x] 48-BL11: **总计 127f/1683p (93.0%)**
