@@ -8976,8 +8976,10 @@ class RegionAnalyzer:
                     _lre.add(_e)
                     _lrbs.append((_r.blocks, _e))
         if _lre:
-            then_blocks = [b for b in then_blocks if b in _lre or not any(b in _lb and b != _le for _lb, _le in _lrbs)]
-            else_blocks = [b for b in else_blocks if b in _lre or not any(b in _lb and b != _le for _lb, _le in _lrbs)]
+            _if_in_loop = any(block in _lb for _lb, _le in _lrbs)
+            if not _if_in_loop:
+                then_blocks = [b for b in then_blocks if b in _lre or not any(b in _lb and b != _le for _lb, _le in _lrbs)]
+                else_blocks = [b for b in else_blocks if b in _lre or not any(b in _lb and b != _le for _lb, _le in _lrbs)]
         region_type = RegionType.IF_THEN_ELSE if else_blocks else RegionType.IF_THEN
         all_blocks = all_condition_blocks | set(then_blocks) | set(else_blocks)
         region = IfRegion(
@@ -10478,6 +10480,7 @@ class RegionAnalyzer:
         current = start_block
         visited = set()
         BOOLOP_CHAIN_JUMPS = FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS
+        first_jump_type = None
         while current and current.start_offset not in visited:
             visited.add(current.start_offset)
             last = current.get_last_instruction()
@@ -10489,6 +10492,16 @@ class RegionAnalyzer:
                     break
             if last.opname in NONE_CHECK_OPS:
                 break
+            cur_jump_type = 'forward' if last.opname in FORWARD_CONDITIONAL_JUMP_OPS else 'short_circuit'
+            if first_jump_type is None:
+                first_jump_type = cur_jump_type
+            elif first_jump_type != cur_jump_type:
+                first_last = chain[0][0].get_last_instruction()
+                cur_last = last
+                first_jt_offset = first_last.argval if first_last else None
+                cur_jt_offset = cur_last.argval if cur_last else None
+                if first_jt_offset is not None and cur_jt_offset is not None and first_jt_offset > cur_jt_offset:
+                    break
             op_type = 'and' if 'FALSE' in last.opname else 'or'
             chain.append((current, op_type))
             succs = list(current.conditional_successors)

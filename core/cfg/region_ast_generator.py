@@ -362,23 +362,26 @@ class RegionASTGenerator:
                         _match_ast = self._generate_match(_wildcard_match)
                         if _match_ast:
                             ast_nodes.append(_match_ast)
-                    _pre_stmts: List[Dict[str, Any]] = []
-                    _stmt_instrs: List[Instruction] = []
+                        self.generated_blocks.add(entry_block)
+                        entry_ast = []
+                    else:
+                        _pre_stmts: List[Dict[str, Any]] = []
+                        _stmt_instrs: List[Instruction] = []
 
-                    for _instr in entry_block.instructions:
-                        if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL'):
-                            continue
-                        if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                        for _instr in entry_block.instructions:
+                            if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL'):
+                                continue
+                            if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                                _stmt_instrs.append(_instr)
+                                _stmt = self._build_store_statement(_stmt_instrs, block=entry_block)
+                                if _stmt:
+                                    _pre_stmts.append(_stmt)
+                                _stmt_instrs = []
+                                continue
                             _stmt_instrs.append(_instr)
-                            _stmt = self._build_store_statement(_stmt_instrs, block=entry_block)
-                            if _stmt:
-                                _pre_stmts.append(_stmt)
-                            _stmt_instrs = []
-                            continue
-                        _stmt_instrs.append(_instr)
 
-                    self.generated_blocks.add(entry_block)
-                    entry_ast = _pre_stmts
+                        self.generated_blocks.add(entry_block)
+                        entry_ast = _pre_stmts
                 else:
                     _wildcard_match = self._detect_undetected_wildcard_match(entry_block)
                     if _wildcard_match:
@@ -2054,6 +2057,10 @@ class RegionASTGenerator:
             if region.header_block:
                 loop_blocks.add(region.header_block)
             for r in region.iter_descendants((BoolOpRegion,)):
+                if r.prefix_block != cond_block:
+                    first_chain_block = r.op_chain[0][0] if r.op_chain else None
+                    if first_chain_block != cond_block:
+                        continue
                 for chain_block, _ in r.op_chain:
                     if chain_block in loop_blocks:
                         boolop_for_while = r
@@ -2624,6 +2631,33 @@ class RegionASTGenerator:
                     self._generated_regions.add(ar_id)
                 self.generated_blocks.add(block)
                 return
+        _header_expr_region = None
+        for _child in (region.children or []):
+            if isinstance(_child, (TernaryRegion, BoolOpRegion)) and _child.entry == block:
+                _header_expr_region = _child
+                break
+        if _header_expr_region is None:
+            for _r in self.region_analyzer.regions:
+                if isinstance(_r, (TernaryRegion, BoolOpRegion)) and _r.entry == block and _r is not region:
+                    _header_expr_region = _r
+                    break
+        if _header_expr_region is not None:
+            _expr_region_id = id(_header_expr_region)
+            if _expr_region_id not in self._generated_regions and _expr_region_id not in self._generating_regions:
+                if isinstance(_header_expr_region, TernaryRegion):
+                    _expr_ast = self._generate_ternary(_header_expr_region)
+                else:
+                    _expr_ast = self._generate_boolop(_header_expr_region)
+                if _expr_ast:
+                    if isinstance(_expr_ast, list):
+                        body_stmts.extend(_expr_ast)
+                    else:
+                        body_stmts.append(_expr_ast)
+                for b in _header_expr_region.blocks:
+                    self.generated_blocks.add(b)
+                self._generated_regions.add(_expr_region_id)
+            self.generated_blocks.add(block)
+            return
         header = region.header_block
         _header_with_region = None
         for _r in region.iter_descendants((WithRegion,)):
@@ -4746,7 +4780,31 @@ class RegionASTGenerator:
 
     def _if_generate_then_branch(self, region: IfRegion) -> List[Dict[str, Any]]:
         """生成 then 分支的语句列表"""
+        _expr_child_stmts = []
+        for child in (region.children or []):
+            if not isinstance(child, (BoolOpRegion, TernaryRegion)):
+                continue
+            if not hasattr(child, 'entry') or child.entry is None:
+                continue
+            if child.entry in self.generated_blocks:
+                continue
+            child_id = id(child)
+            if child_id not in self._generated_regions and child_id not in self._generating_regions:
+                if isinstance(child, BoolOpRegion):
+                    child_ast = self._generate_boolop(child)
+                else:
+                    child_ast = self._generate_ternary(child)
+                if child_ast:
+                    if isinstance(child_ast, list):
+                        _expr_child_stmts.extend(child_ast)
+                    else:
+                        _expr_child_stmts.append(child_ast)
+                for b in child.blocks:
+                    self.generated_blocks.add(b)
+                self._generated_regions.add(child_id)
         then_stmts = self._process_if_blocks(region.then_blocks, region, branch='then')
+        if _expr_child_stmts:
+            then_stmts = _expr_child_stmts + then_stmts
         elif_cond_set = set()
         elif_body_block_set = set()
         if hasattr(region, 'elif_conditions') and region.elif_conditions:
@@ -6326,6 +6384,19 @@ class RegionASTGenerator:
                 if isinstance(nr, (LoopRegion, IfRegion, WithRegion, MatchRegion, BoolOpRegion, TernaryRegion, AssertRegion)):
                     for b in nr.blocks:
                         self.generated_blocks.discard(b)
+                    if isinstance(nr, TernaryRegion) and not getattr(nr, 'value_target', None) and not nr.merge_block:
+                        for _b in nr.blocks:
+                            for _s in _b.successors:
+                                if _s not in nr.blocks and _s in region.try_blocks:
+                                    for _i in _s.instructions:
+                                        if _i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                                            nr.value_target = _i.argval
+                                            nr.merge_block = _s
+                                            break
+                                    if getattr(nr, 'value_target', None):
+                                        break
+                            if getattr(nr, 'value_target', None):
+                                break
                     nested_ast = self._generate_region(nr)
                     if nested_ast:
                         if isinstance(nested_ast, list):
@@ -6682,7 +6753,7 @@ class RegionASTGenerator:
                             if not getattr(child, 'value_target', None) and not child.merge_block:
                                 for _b in child.blocks:
                                     for _s in _b.successors:
-                                        if _s not in child.blocks and _s in region.with_blocks:
+                                        if _s not in child.blocks and _s in region.try_blocks:
                                             for _i in _s.instructions:
                                                 if _i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
                                                     child.value_target = _i.argval
@@ -7905,6 +7976,19 @@ class RegionASTGenerator:
                         skip_targets = set()
                         if region.target and isinstance(nested_region, (LoopRegion, TernaryRegion, BoolOpRegion)):
                             skip_targets.add(region.target)
+                        if isinstance(nested_region, TernaryRegion) and not getattr(nested_region, 'value_target', None) and not nested_region.merge_block:
+                            for _b in nested_region.blocks:
+                                for _s in _b.successors:
+                                    if _s not in nested_region.blocks and _s in region.with_blocks:
+                                        for _i in _s.instructions:
+                                            if _i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                                                nested_region.value_target = _i.argval
+                                                nested_region.merge_block = _s
+                                                break
+                                        if getattr(nested_region, 'value_target', None):
+                                            break
+                                if getattr(nested_region, 'value_target', None):
+                                    break
                         generated = self._generate_region(nested_region, skip_store_targets=skip_targets)
                         if generated:
                             if isinstance(generated, list):
@@ -9007,7 +9091,7 @@ class RegionASTGenerator:
                         orig_block = body[0]
                         nested_found = False
                         for candidate_region in self.region_analyzer.regions:
-                            if candidate_region is region or not isinstance(candidate_region, (IfRegion, LoopRegion, TryExceptRegion, WithRegion, MatchRegion)):
+                            if candidate_region is region or not isinstance(candidate_region, (IfRegion, LoopRegion, TryExceptRegion, WithRegion, MatchRegion, BoolOpRegion, TernaryRegion)):
                                 continue
                             cand_entry = getattr(candidate_region, 'entry', None)
                             cand_cond = getattr(candidate_region, 'condition_block', None)
@@ -9023,11 +9107,62 @@ class RegionASTGenerator:
                                 relevant_ref = candidate_region
                             if relevant_ref:
                                 try:
-                                    self.generated_blocks.add(orig_block)
+                                    _orig_entry = getattr(relevant_ref, 'entry', None)
+                                    _orig_cond = getattr(relevant_ref, 'condition_block', None)
+                                    _orig_header = getattr(relevant_ref, 'header_block', None)
+                                    _virtual_entry = None
+                                    _virtual_cond = None
+                                    _orig_try_blocks = None
+                                    _needs_virtual = False
+                                    if isinstance(relevant_ref, (BoolOpRegion, TernaryRegion)) and _orig_entry is orig_block and body_start < len(orig_block.instructions):
+                                        from .basic_block import BasicBlock as _BB
+                                        _virtual_entry = _BB(orig_block.instructions[body_start].offset)
+                                        for instr in orig_block.instructions[body_start:]:
+                                            _virtual_entry.add_instruction(instr)
+                                        relevant_ref.entry = _virtual_entry
+                                        _needs_virtual = True
+                                    if isinstance(relevant_ref, (LoopRegion, IfRegion, TryExceptRegion)) and body_start < len(orig_block.instructions):
+                                        from .basic_block import BasicBlock as _BB
+                                        if _orig_cond is orig_block:
+                                            _virtual_cond = _BB(orig_block.instructions[body_start].offset)
+                                            for instr in orig_block.instructions[body_start:]:
+                                                _virtual_cond.add_instruction(instr)
+                                            relevant_ref.condition_block = _virtual_cond
+                                            _needs_virtual = True
+                                        if _orig_entry is orig_block and _virtual_entry is None:
+                                            _virtual_entry = _BB(orig_block.instructions[body_start].offset)
+                                            for instr in orig_block.instructions[body_start:]:
+                                                _virtual_entry.add_instruction(instr)
+                                            relevant_ref.entry = _virtual_entry
+                                            _needs_virtual = True
+                                        if isinstance(relevant_ref, TryExceptRegion) and hasattr(relevant_ref, 'try_blocks') and orig_block in relevant_ref.try_blocks:
+                                            _orig_try_blocks = list(relevant_ref.try_blocks)
+                                            if body_start >= len(orig_block.instructions):
+                                                relevant_ref.try_blocks = [b for b in relevant_ref.try_blocks if b is not orig_block]
+                                            else:
+                                                _vb = _BB(orig_block.instructions[body_start].offset)
+                                                for instr in orig_block.instructions[body_start:]:
+                                                    _vb.add_instruction(instr)
+                                                relevant_ref.try_blocks = [_vb if b is orig_block else b for b in relevant_ref.try_blocks]
+                                            _needs_virtual = True
+                                    if isinstance(relevant_ref, TryExceptRegion):
+                                        self.generated_blocks.add(orig_block)
                                     if isinstance(relevant_ref, MatchRegion):
                                         nested_gen = self._generate_match(relevant_ref)
+                                    elif isinstance(relevant_ref, BoolOpRegion):
+                                        nested_gen = self._generate_boolop(relevant_ref)
+                                    elif isinstance(relevant_ref, TernaryRegion):
+                                        nested_gen = self._generate_ternary(relevant_ref)
                                     else:
                                         nested_gen = self._generate_region(relevant_ref)
+                                    if _needs_virtual:
+                                        if _virtual_entry is not None:
+                                            relevant_ref.entry = _orig_entry
+                                        if _virtual_cond is not None:
+                                            relevant_ref.condition_block = _orig_cond
+                                        if _orig_try_blocks is not None:
+                                            relevant_ref.try_blocks = _orig_try_blocks
+                                    self.generated_blocks.add(orig_block)
                                     if nested_gen:
                                         if isinstance(nested_gen, list):
                                             body_stmts.extend(nested_gen)
