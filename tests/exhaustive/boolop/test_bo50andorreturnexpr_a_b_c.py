@@ -8,7 +8,7 @@ class TestBO50AndOrReturnExpr(ExhaustiveTestCase):
     SOURCE_CODE = """def f(a, b, c):
     return a if a > 0 else (b if b > 0 else c)
 """
-    REGION_TYPE = "BOOL_OP"
+    REGION_TYPE = "TERNARY"
 
     def test_decompile(self):
         self.verify_decompilation()

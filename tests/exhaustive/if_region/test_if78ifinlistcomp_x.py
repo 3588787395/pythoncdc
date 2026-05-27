@@ -6,7 +6,7 @@ from tests.exhaustive.base import ExhaustiveTestCase
 
 class TestIF78Ifinlistcomp_x(ExhaustiveTestCase):
     SOURCE_CODE = """r = [i for i in range(10) if x > i]"""
-    REGION_TYPE = "IF_REGION"
+    REGION_TYPE = "BASIC"
 
     def test_decompile(self):
         self.verify_decompilation()
