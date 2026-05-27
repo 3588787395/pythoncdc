@@ -4005,6 +4005,13 @@ class RegionAnalyzer:
                             before_with_offset = next((i.offset for i in block.instructions if i.opname in ('BEFORE_WITH', 'BEFORE_ASYNC_WITH')), None)
                             if before_with_offset is not None and not (try_start_for_blocks <= before_with_offset < try_end_for_blocks):
                                 continue
+                        if block.start_offset < try_start_for_blocks:
+                            has_outer_branch = any(
+                                succ.start_offset >= try_end_for_blocks and succ != handler_entry_block
+                                for succ in block.successors
+                            )
+                            if has_outer_branch:
+                                continue
                         pre_handler_blocks.append(block)
                     if pre_handler_blocks:
                         for phb in pre_handler_blocks:
@@ -4394,6 +4401,17 @@ class RegionAnalyzer:
             key = (entry['handler_start'], entry['handler_type'])
             if key in merged:
                 existing = merged[key]
+                if entry['try_start'] >= existing['handler_start']:
+                    handler_block = self.cfg.get_block_by_offset(existing['handler_start'])
+                    if handler_block:
+                        handler_already_in_range = any(
+                            existing['try_start'] <= instr.offset < existing['try_end']
+                            for instr in handler_block.instructions
+                        )
+                        if not handler_already_in_range:
+                            continue
+                    else:
+                        continue
                 existing['try_start'] = min(existing['try_start'], entry['try_start'])
                 existing['try_end'] = max(existing['try_end'], entry['try_end'])
                 existing['depth'] = min(existing['depth'], entry['depth'])
@@ -4595,7 +4613,10 @@ class RegionAnalyzer:
             has_push_exc_self = any(i.opname == 'PUSH_EXC_INFO' for i in cleanup_block.instructions)
             has_check_self = any(i.opname == 'CHECK_EXC_MATCH' for i in cleanup_block.instructions)
             has_check_eg_self = any(i.opname == 'CHECK_EG_MATCH' for i in cleanup_block.instructions)
+            has_reraise_self = any(i.opname == 'RERAISE' for i in cleanup_block.instructions)
             if has_push_exc_self and (has_check_self or has_check_eg_self):
+                return cleanup_offset
+            if has_push_exc_self and not has_check_self and not has_check_eg_self and not has_reraise_self:
                 return cleanup_offset
 
             visited = {cleanup_offset}
@@ -8728,7 +8749,7 @@ class RegionAnalyzer:
                         if any(s in lr.blocks or s == lr.header_block or s == lr.entry for lr in loop_regions for s in cond_succs_check):
                             is_loop_backedge_target = any(
                                 any(su.start_offset >= lr.header_block.start_offset for su in block.successors)
-                                and any(i.opname.startswith('JUMP_BACKWARD') for i in block.instructions)
+                                and any(i.opname.startswith('JUMP_BACKWARD') or i.opname in BACKWARD_CONDITIONAL_JUMP_OPS for i in block.instructions)
                                 for lr in loop_regions
                             )
                             if is_loop_backedge_target:
@@ -9009,6 +9030,8 @@ class RegionAnalyzer:
                 elif isinstance(existing, (TryExceptRegion, WithRegion)):
                     pass
                 elif isinstance(existing, BoolOpRegion):
+                    pass
+                elif isinstance(existing, LoopRegion):
                     pass
                 else:
                     return None

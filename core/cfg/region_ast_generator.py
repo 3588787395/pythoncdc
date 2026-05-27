@@ -2495,7 +2495,34 @@ class RegionASTGenerator:
             #     _dbg.stderr.write(f'[FIX-DEBUG] Block {block.start_offset}: meaningful={len(_meaningful_instrs)}, total={len(block.instructions)}\n')
             
             if _meaningful_instrs:
-                # 有意义语句，当作普通LOOP_BODY处理，添加到body_blocks_no_header
+                _child_if = None
+                for _child in (region.children or []):
+                    if isinstance(_child, IfRegion) and _child.condition_block == block:
+                        _child_if = _child
+                        break
+                if _child_if is not None:
+                    _if_has_exit = False
+                    for _b in _child_if.get_content_blocks():
+                        for _s in _b.successors:
+                            _s_role = self.region_analyzer.get_block_role(_s)
+                            if _s_role in (BlockRole.BREAK, BlockRole.PURE_BREAK, BlockRole.RETURN, BlockRole.RETURN_NONE):
+                                _if_has_exit = True
+                                break
+                        if _if_has_exit:
+                            break
+                    if not _if_has_exit:
+                        _if_id = id(_child_if)
+                        if _if_id not in self._generated_regions and _if_id not in self._generating_regions:
+                            _if_ast = self._generate_region(_child_if)
+                            if _if_ast:
+                                if isinstance(_if_ast, list):
+                                    body_stmts.extend(_if_ast)
+                                else:
+                                    body_stmts.append(_if_ast)
+                            for _b in _child_if.blocks:
+                                self.generated_blocks.add(_b)
+                            self._generated_regions.add(_if_id)
+                            return True
                 body_blocks_no_header.append(block)
                 return True
             
@@ -5518,8 +5545,15 @@ class RegionASTGenerator:
         fall_through = None
         for s in block.successors:
             if s != jump_target:
+                if any(i.opname in ('PUSH_EXC_INFO', 'WITH_EXCEPT_START') for i in s.instructions):
+                    continue
                 fall_through = s
                 break
+        if fall_through is None:
+            for s in block.successors:
+                if s != jump_target:
+                    fall_through = s
+                    break
         exit_succ = None
         continue_succ = None
         if jump_target and jump_target not in loop_body_set:
@@ -5684,8 +5718,15 @@ class RegionASTGenerator:
         fall_through = None
         for s in block.successors:
             if s != jump_target:
+                if any(i.opname in ('PUSH_EXC_INFO', 'WITH_EXCEPT_START') for i in s.instructions):
+                    continue
                 fall_through = s
                 break
+        if fall_through is None:
+            for s in block.successors:
+                if s != jump_target:
+                    fall_through = s
+                    break
         if jump_target is None and fall_through is None:
             return None
 
