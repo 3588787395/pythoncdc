@@ -4379,6 +4379,8 @@ class RegionAnalyzer:
                             has_check = any(i.opname in ('CHECK_EXC_MATCH', 'CHECK_EG_MATCH') for i in actual_handler_block.instructions)
                             if not (has_push_exc or has_check):
                                 continue
+                        if entry_start < actual_handler_start:
+                            continue
                 else:
                     if handler_type != 'finally':
                         continue
@@ -5318,14 +5320,92 @@ class RegionAnalyzer:
                     return succ
         return None
 
+    def _collect_async_with_send_blocks(self, entry_block, existing_blocks):
+        send_blocks = set()
+        visited = set()
+        worklist = list(existing_blocks)
+        while worklist:
+            b = worklist.pop(0)
+            if b in visited:
+                continue
+            visited.add(b)
+            for succ in b.successors:
+                if succ in visited or succ in existing_blocks:
+                    continue
+                if any(i.opname in ('SEND', 'YIELD_VALUE', 'GET_AWAITABLE', 'JUMP_BACKWARD_NO_INTERRUPT') for i in succ.instructions):
+                    send_blocks.add(succ)
+                    worklist.append(succ)
+        return send_blocks
+
+    def _find_async_with_store_offset(self, block):
+        visited = set()
+        worklist = [block]
+        while worklist:
+            b = worklist.pop(0)
+            if b in visited:
+                continue
+            visited.add(b)
+            for instr in b.instructions:
+                if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                    return instr.offset
+            for succ in b.successors:
+                if succ not in visited:
+                    if any(i.opname in ('SEND', 'YIELD_VALUE', 'GET_AWAITABLE', 'JUMP_BACKWARD_NO_INTERRUPT') for i in succ.instructions):
+                        worklist.append(succ)
+                    elif any(i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF') for i in succ.instructions):
+                        worklist.append(succ)
+        return None
+
+    def _filter_async_with_pseudo_loops(self, loop_regions, with_regions):
+        async_with_regions = [wr for wr in with_regions if wr.is_async]
+        if not async_with_regions:
+            return loop_regions
+        async_with_block_sets = []
+        for wr in async_with_regions:
+            async_with_block_sets.append(frozenset(wr.blocks))
+        filtered = []
+        for lr in loop_regions:
+            is_pseudo = False
+            for aw_blocks in async_with_block_sets:
+                if lr.blocks <= aw_blocks:
+                    has_only_async_ops = True
+                    for b in lr.blocks:
+                        for instr in b.instructions:
+                            if instr.opname in ('SEND', 'YIELD_VALUE', 'RESUME', 'JUMP_BACKWARD_NO_INTERRUPT',
+                                                'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_FORWARD_IF_FALSE',
+                                                'RERAISE', 'COPY', 'POP_EXCEPT', 'POP_TOP',
+                                                'NOP', 'CACHE', 'LOAD_CONST', 'PUSH_EXC_INFO',
+                                                'WITH_EXCEPT_START', 'GET_AWAITABLE'):
+                                continue
+                            if instr.opname in NOISE_OPS:
+                                continue
+                            has_only_async_ops = False
+                            break
+                        if not has_only_async_ops:
+                            break
+                    if has_only_async_ops:
+                        is_pseudo = True
+                        break
+            if not is_pseudo:
+                filtered.append(lr)
+            else:
+                for b in lr.blocks:
+                    if b in self.block_to_region and self.block_to_region[b] is lr:
+                        del self.block_to_region[b]
+                if lr in self.regions:
+                    self.regions.remove(lr)
+        return filtered
+
     def _find_with_exc_entry(self, block):
         search_offset = block.start_offset
         found_bw = False
         bw_offset = None
+        is_async = False
         for instr in block.instructions:
             if instr.opname in ('BEFORE_WITH', 'BEFORE_ASYNC_WITH'):
                 found_bw = True
                 bw_offset = instr.offset
+                is_async = instr.opname == 'BEFORE_ASYNC_WITH'
             elif found_bw and instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
                 search_offset = instr.offset
                 break
@@ -5333,13 +5413,18 @@ class RegionAnalyzer:
                 search_offset = instr.offset
                 break
         if found_bw and search_offset == block.start_offset and bw_offset is not None:
-            closest_succ = None
-            for succ in block.successors:
-                if succ.start_offset > bw_offset:
-                    if closest_succ is None or succ.start_offset < closest_succ.start_offset:
-                        closest_succ = succ
-            if closest_succ is not None:
-                search_offset = closest_succ.start_offset
+            if is_async:
+                store_offset = self._find_async_with_store_offset(block)
+                if store_offset is not None:
+                    search_offset = store_offset
+            if search_offset == block.start_offset:
+                closest_succ = None
+                for succ in block.successors:
+                    if succ.start_offset > bw_offset:
+                        if closest_succ is None or succ.start_offset < closest_succ.start_offset:
+                            closest_succ = succ
+                if closest_succ is not None:
+                    search_offset = closest_succ.start_offset
         best_entry = None
         best_depth = -1
         for entry in self.cfg.exception_table:
@@ -5451,6 +5536,7 @@ class RegionAnalyzer:
         found_bw = False
         store_instr = None
         bw_offset = None
+        is_async = False
         for instr in with_block.instructions:
             if found_bw and instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
                 store_instr = instr
@@ -5461,7 +5547,14 @@ class RegionAnalyzer:
             if instr.opname in ('BEFORE_WITH', 'BEFORE_ASYNC_WITH'):
                 found_bw = True
                 bw_offset = instr.offset
+                is_async = instr.opname == 'BEFORE_ASYNC_WITH'
         if store_instr is None and found_bw and bw_offset is not None:
+            if is_async:
+                async_store_offset = self._find_async_with_store_offset(with_block)
+                if async_store_offset is not None:
+                    for b in sorted(self.cfg.blocks.values(), key=lambda b: b.start_offset):
+                        if any(i.offset == async_store_offset for i in b.instructions):
+                            return b
             for succ in with_block.successors:
                 if succ.start_offset > bw_offset:
                     first_instr = succ.instructions[0] if succ.instructions else None
@@ -5619,6 +5712,11 @@ class RegionAnalyzer:
             body_offset_start=body_start, body_offset_end=body_end,
         )
         region.is_async = bool(has_async)
+        if region.is_async:
+            async_send_blocks = self._collect_async_with_send_blocks(block, all_blocks)
+            if async_send_blocks:
+                all_blocks.update(async_send_blocks)
+                region.blocks = all_blocks
         self._extract_with_items(with_entry_blocks, region)
         self.regions.append(region)
         for b in all_blocks:
@@ -6067,6 +6165,19 @@ class RegionAnalyzer:
                 next_instr = instructions[bw_pos + 1]
                 if next_instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
                     target = next_instr.argval
+            if target is None and instructions[bw_pos].opname == 'BEFORE_ASYNC_WITH':
+                for entry_block in entry_blocks:
+                    async_store_offset = self._find_async_with_store_offset(entry_block)
+                    if async_store_offset is not None:
+                        for b in self.cfg.blocks.values():
+                            for i in b.instructions:
+                                if i.offset == async_store_offset and i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                                    target = i.argval
+                                    break
+                            if target is not None:
+                                break
+                    if target is not None:
+                        break
             
             items.append((ctx_expr, target))
         

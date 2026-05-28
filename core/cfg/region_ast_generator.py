@@ -5221,6 +5221,10 @@ class RegionASTGenerator:
                     self.generated_blocks.add(block)
                     self.generated_offsets.add(block.start_offset)
                     continue
+            if any(i.opname in ('BEFORE_WITH', 'BEFORE_ASYNC_WITH') for i in block.instructions):
+                self.generated_blocks.add(block)
+                self.generated_offsets.add(block.start_offset)
+                continue
             _has_gyfi = any(i.opname == 'GET_YIELD_FROM_ITER' for i in block.instructions)
             if _has_gyfi:
                 _block_region = self.region_analyzer.get_region_for_block(block)
@@ -5269,6 +5273,11 @@ class RegionASTGenerator:
                 self.generated_offsets.add(block.start_offset)
                 continue
             if role in (BlockRole.CONTINUE, BlockRole.PURE_CONTINUE):
+                if self._current_loop and self.region_analyzer._is_with_exit_leading_to_continue(block, self._current_loop):
+                    stmts.append({'type': 'Continue'})
+                    self.generated_blocks.add(block)
+                    self.generated_offsets.add(block.start_offset)
+                    continue
                 _meaningful_instrs = [
                     i for i in block.instructions
                     if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP')
@@ -7365,6 +7374,49 @@ class RegionASTGenerator:
                                                            'DELETE_FAST', 'DELETE_NAME',
                                                            'DELETE_DEREF', 'DELETE_GLOBAL',
                                                            'SWAP', 'POP_TOP', 'COPY'))
+                if not has_return_after:
+                    for _succ in block.successors:
+                        if any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in _succ.instructions):
+                            _succ_return_idx = None
+                            for _si, _si_instr in enumerate(_succ.instructions):
+                                if _si_instr.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                                    _succ_return_idx = _si
+                                    break
+                            if _succ_return_idx is not None and _succ_return_idx > 0:
+                                _value_instrs = []
+                                for _si_instr in _succ.instructions[:_succ_return_idx]:
+                                    if _si_instr.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
+                                                                'POP_TOP', 'PRECALL', 'CALL',
+                                                                'LOAD_GLOBAL', 'LOAD_CONST'):
+                                        if _si_instr.opname == 'LOAD_CONST' and _si_instr.argval is None:
+                                            continue
+                                        _value_instrs.append(_si_instr)
+                                    elif _si_instr.opname == 'LOAD_CONST' and _si_instr.argval is not None:
+                                        _value_instrs.append(_si_instr)
+                                    elif _si_instr.opname == 'LOAD_FAST':
+                                        _value_instrs.append(_si_instr)
+                                    elif _si_instr.opname == 'LOAD_GLOBAL' and _si_instr.argval is not None:
+                                        _value_instrs.append(_si_instr)
+                            else:
+                                _value_instrs = []
+                            if _succ.instructions[_succ_return_idx].opname == 'RETURN_CONST':
+                                _ret_val = _succ.instructions[_succ_return_idx].argval
+                                if _ret_val is not None:
+                                    stmts.append({'type': 'Return', 'value': {'type': 'Constant', 'value': _ret_val}})
+                                else:
+                                    stmts.append({'type': 'Return', 'value': None})
+                            elif _value_instrs:
+                                expr = self.expr_reconstructor.reconstruct(_value_instrs)
+                                if expr:
+                                    stmts.append({'type': 'Return', 'value': expr})
+                                else:
+                                    stmts.append({'type': 'Return', 'value': None})
+                            else:
+                                stmts.append({'type': 'Return', 'value': None})
+                            self.generated_blocks.add(_succ)
+                            skip_initial_pop = True
+                            has_return_after = True
+                            break
                 if has_return_after:
                     skip_initial_pop = True
                     continue
@@ -7424,6 +7476,28 @@ class RegionASTGenerator:
                 continue
 
             if instr.opname == 'COPY' and instr.arg == 1:
+                stmt_instrs.append(instr)
+                continue
+
+            if instr.opname == 'SWAP' and instr.arg == 2:
+                _swap_succ_has_pop_except_return = False
+                for _ss in block.successors:
+                    if any(i.opname == 'POP_EXCEPT' for i in _ss.instructions):
+                        if any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in _ss.instructions):
+                            _swap_succ_has_pop_except_return = True
+                            break
+                if _swap_succ_has_pop_except_return:
+                    value_instrs_no_swap = [i for i in stmt_instrs if i.opname != 'SWAP']
+                    expr = self.expr_reconstructor.reconstruct(value_instrs_no_swap) if value_instrs_no_swap else None
+                    if expr:
+                        stmts.append({'type': 'Return', 'value': expr})
+                    else:
+                        stmts.append({'type': 'Return', 'value': None})
+                    stmt_instrs = []
+                    for _ss in block.successors:
+                        if any(i.opname == 'POP_EXCEPT' for i in _ss.instructions):
+                            self.generated_blocks.add(_ss)
+                    continue
                 stmt_instrs.append(instr)
                 continue
 
@@ -7674,6 +7748,36 @@ class RegionASTGenerator:
 
     def _mark_with_cleanup_generated(self, block):
         self._with_cleanup_generated_blocks.add(block)
+
+    def _is_async_with_send_block(self, block):
+        if any(i.opname in ('SEND', 'YIELD_VALUE', 'JUMP_BACKWARD_NO_INTERRUPT') for i in block.instructions):
+            has_send = any(i.opname == 'SEND' for i in block.instructions)
+            has_yield = any(i.opname == 'YIELD_VALUE' for i in block.instructions)
+            has_jump_back = any(i.opname == 'JUMP_BACKWARD_NO_INTERRUPT' for i in block.instructions)
+            if (has_send and has_yield) or (has_yield and has_jump_back):
+                return True
+        if any(i.opname == 'GET_AWAITABLE' for i in block.instructions):
+            for succ in block.successors:
+                if any(s_i.opname in ('SEND', 'YIELD_VALUE') for s_i in succ.instructions):
+                    return True
+        return False
+
+    def _is_async_pseudo_loop(self, loop_region):
+        has_send_or_yield = False
+        for b in loop_region.blocks:
+            for instr in b.instructions:
+                if instr.opname in ('SEND', 'YIELD_VALUE'):
+                    has_send_or_yield = True
+                    break
+            if has_send_or_yield:
+                break
+        if not has_send_or_yield:
+            return False
+        for r in self.region_analyzer.regions:
+            if isinstance(r, WithRegion) and r.is_async:
+                if loop_region.blocks <= r.blocks:
+                    return True
+        return False
 
     def _extract_return_from_exit_block(self, block):
         value_instrs = []
@@ -7985,6 +8089,9 @@ class RegionASTGenerator:
                 if self.region_analyzer.get_block_role(block) == BlockRole.WITH_EXIT_CLEANUP:
                     self.generated_blocks.add(block)
                     continue
+                if region.is_async and self._is_async_with_send_block(block):
+                    self.generated_blocks.add(block)
+                    continue
                 # 跳过属于外层循环的回边块（with-in-for情况）
                 # 这些JUMP_BACKWARD块是外层for/while循环的一部分，不是with body的内容
                 if self.region_analyzer.get_block_role(block) == BlockRole.LOOP_BACK_EDGE:
@@ -8047,11 +8154,15 @@ class RegionASTGenerator:
                     elif block in nested_region.blocks:
                         if id(nested_region) not in self._generated_regions:
                             if isinstance(nested_region, LoopRegion):
-                                pre_instrs = self.region_analyzer.identify_block_prefix_instructions(block)
-                                if pre_instrs:
-                                    pre_stmts = self._build_statements_from_instructions(pre_instrs, block)
-                                    if pre_stmts:
-                                        body_stmts.extend(pre_stmts)
+                                for_iter_setup = nested_region.metadata.get('for_iter_setup') if nested_region.metadata else None
+                                if for_iter_setup and block == for_iter_setup:
+                                    pass
+                                else:
+                                    pre_instrs = self.region_analyzer.identify_block_prefix_instructions(block)
+                                    if pre_instrs:
+                                        pre_stmts = self._build_statements_from_instructions(pre_instrs, block)
+                                        if pre_stmts:
+                                            body_stmts.extend(pre_stmts)
                             skip_targets = set()
                             if region.target and isinstance(nested_region, LoopRegion):
                                 skip_targets.add(region.target)
