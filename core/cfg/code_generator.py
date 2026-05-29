@@ -2940,11 +2940,90 @@ class CodeGenerator:
             elif node_type == 'Slice':
                 return self._generate_slice_from_dict(node)
             elif node_type == 'JoinedStr':
-                # [P2-2026] 处理字典格式的JoinedStr（f-string）
                 return self._generate_joined_str_from_dict(node)
             elif node_type == 'FormattedValue':
-                # [P2-2026] 处理字典格式的FormattedValue
                 return self._generate_formatted_value_from_dict(node)
+            elif node_type == 'BinOp':
+                left = node.get('left', {})
+                right = node.get('right', {})
+                op = node.get('op', '+')
+                op_str = str(op)
+                current_prec = self._precedence.get(op_str, 11)
+                left_code = self._generate_expression(left, current_prec)
+                right_code = self._generate_expression(right, current_prec + 1)
+                result_str = f'{left_code} {op_str} {right_code}'
+                if parent_precedence <= current_prec:
+                    return result_str
+                return f'({result_str})'
+            elif node_type == 'IfExp':
+                test = node.get('test', {})
+                body = node.get('body', {})
+                orelse = node.get('orelse', {})
+                test_code = self._generate_expression(test, 0)
+                body_code = self._generate_expression(body, self._precedence['if'] + 1)
+                orelse_code = self._generate_expression(orelse, self._precedence['if'])
+                result_str = f'{body_code} if {test_code} else {orelse_code}'
+                if parent_precedence <= self._precedence['if']:
+                    return result_str
+                return f'({result_str})'
+            elif node_type == 'BoolOp':
+                op = node.get('op', 'and')
+                values = node.get('values', [])
+                op_str = str(op)
+                val_codes = [self._generate_expression(v, 0) for v in values]
+                result_str = f' {op_str} '.join(val_codes)
+                if parent_precedence > 0:
+                    return result_str
+                return result_str
+            elif node_type == 'UnaryOp':
+                op = node.get('op', 'not')
+                operand = node.get('operand', {})
+                if str(op) == 'not':
+                    operand_code = self._generate_expression(operand, self._precedence['not'])
+                    if isinstance(operand, dict) and operand.get('type') in ('BoolOp', 'IfExp'):
+                        result_str = f'not ({operand_code})'
+                    else:
+                        result_str = f'not {operand_code}'
+                else:
+                    operand_code = self._generate_expression(operand, self._precedence.get(str(op), 13))
+                    result_str = f'{op}{operand_code}'
+                if parent_precedence > 0 and parent_precedence <= self._precedence.get(str(op), 5):
+                    return result_str
+                return result_str
+            elif node_type == 'Compare':
+                left = node.get('left', {})
+                ops = node.get('ops', [])
+                comparators = node.get('comparators', [])
+                right = node.get('right')
+                if not comparators and right is not None:
+                    comparators = [right]
+                    ops = [op.get('op', '==') if isinstance(op, dict) and op.get('type') == 'CompareOp' else op for op in ops]
+                left_code = self._generate_expression(left, self._precedence.get('==', 6))
+                if isinstance(left, dict) and left.get('type') == 'IfExp':
+                    left_code = f'({left_code})'
+                parts = [left_code]
+                op_map = {
+                    'Eq': '==', 'NotEq': '!=', 'Lt': '<', 'LtE': '<=',
+                    'Gt': '>', 'GtE': '>=', 'Is': 'is', 'IsNot': 'is not',
+                    'In': 'in', 'NotIn': 'not in',
+                    '==': '==', '!=': '!=', '<': '<', '<=': '<=',
+                    '>': '>', '>=': '>=', 'is': 'is', 'is not': 'is not',
+                    'in': 'in', 'not in': 'not in',
+                }
+                for o, c in zip(ops, comparators):
+                    if isinstance(o, dict):
+                        op_type = o.get('type', '')
+                        if o.get('type') == 'CompareOp':
+                            op_type = o.get('op', '==')
+                    else:
+                        op_type = str(o)
+                    op_str = op_map.get(op_type, op_type.lower() if isinstance(op_type, str) else str(o))
+                    c_code = self._generate_expression(c, self._precedence.get('==', 6))
+                    parts.append(f'{op_str} {c_code}')
+                result_str = ' '.join(parts)
+                if parent_precedence > 0 and parent_precedence <= self._precedence.get('<', 6):
+                    return result_str
+                return result_str
             else:
                 # [修复-L13/L17/L18] 基础表达式类型必须正确处理
                 # Constant和Name是最常用的，必须直接处理避免泄露
