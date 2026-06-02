@@ -2071,6 +2071,22 @@ class RegionASTGenerator:
                         break
 
         if boolop_for_while:
+            _skip_boolop = False
+            if len(boolop_for_while.op_chain) >= 2:
+                for chain_block, _ in boolop_for_while.op_chain:
+                    if chain_block == cond_block:
+                        continue
+                    for _sr in self.regions:
+                        if isinstance(_sr, LoopRegion) and _sr is not region:
+                            if chain_block is _sr.condition_block:
+                                _skip_boolop = True
+                                break
+                    if _skip_boolop:
+                        break
+            if _skip_boolop:
+                boolop_for_while = None
+
+        if boolop_for_while:
             boolop_expr = self._build_boolop_expression(boolop_for_while)
             if boolop_expr:
                 condition = boolop_expr
@@ -2629,7 +2645,7 @@ class RegionASTGenerator:
             # 根因：region_analyzer在确定block_role时，将跳出循环的退出块统一标记为BREAK
             #       但没有区分"break退出"和"return退出"
             # 修复：检查块的实际指令，如果包含return操作码，则不当作break处理
-            if any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in block.instructions):
+            if any(i.opname in ('RETURN_VALUE', 'RETURN_CONST', 'RAISE_VARARGS') for i in block.instructions):
                 body_blocks_no_header.append(block)
                 return True
             return False
@@ -3228,7 +3244,21 @@ class RegionASTGenerator:
                                             break
                                         if _ri.opname not in ('NOP', 'CACHE', 'POP_TOP'):
                                             break
-                            if _is_early_return:
+                            _is_early_raise_ft = False
+                            if _ft_last_i and _ft_last_i.opname == 'RAISE_VARARGS':
+                                _is_early_raise_ft = True
+                            if _is_early_raise_ft:
+                                _raise_stmts_ft = self._generate_block_statements(_fall_through_block)
+                                if _fall_through_block not in self.generated_blocks:
+                                    self.generated_blocks.add(_fall_through_block)
+                                self.generated_offsets.add(_fall_through_block.start_offset)
+                                _self_loop_stmts.append({
+                                    'type': 'If',
+                                    'test': _cb_cond,
+                                    'body': _raise_stmts_ft if _raise_stmts_ft else [{'type': 'Raise', 'exc': None}],
+                                    'orelse': [],
+                                })
+                            elif _is_early_return:
                                 _ret_ast = self._generate_return_ast(_fall_through_block)
                                 _then_ret = [_ret_ast] if _ret_ast else [{'type': 'Return', 'value': {'type': 'Constant', 'value': None}}]
                                 if _fall_through_block not in self.generated_blocks:
@@ -3287,7 +3317,21 @@ class RegionASTGenerator:
                                             break
                                         if _ri2.opname not in ('NOP', 'CACHE', 'POP_TOP'):
                                             break
-                            if _is_early_ret:
+                            _is_early_raise = False
+                            if _ft_last_i2 and _ft_last_i2.opname == 'RAISE_VARARGS':
+                                _is_early_raise = True
+                            if _is_early_raise:
+                                _raise_stmts = self._generate_block_statements(_fall_through_block)
+                                if _fall_through_block not in self.generated_blocks:
+                                    self.generated_blocks.add(_fall_through_block)
+                                self.generated_offsets.add(_fall_through_block.start_offset)
+                                _self_loop_stmts.append({
+                                    'type': 'If',
+                                    'test': _cb_cond,
+                                    'body': _raise_stmts if _raise_stmts else [{'type': 'Raise', 'exc': None}],
+                                    'orelse': [],
+                                })
+                            elif _is_early_ret:
                                 _ret_ast2 = self._generate_return_ast(_fall_through_block)
                                 _then_ret2 = [_ret_ast2] if _ret_ast2 else [{'type': 'Return', 'value': {'type': 'Constant', 'value': None}}]
                                 if _fall_through_block not in self.generated_blocks:
@@ -4829,6 +4873,32 @@ class RegionASTGenerator:
                 for b in child.blocks:
                     self.generated_blocks.add(b)
                 self._generated_regions.add(child_id)
+        if not _expr_child_stmts:
+            then_entry_offsets = {b.start_offset for b in region.then_blocks} if region.then_blocks else set()
+            then_block_set = set(region.then_blocks) if region.then_blocks else set()
+            for r in self.regions:
+                if not isinstance(r, (BoolOpRegion, TernaryRegion)):
+                    continue
+                if r.entry is None or r.entry in self.generated_blocks:
+                    continue
+                r_id = id(r)
+                if r_id in self._generated_regions or r_id in self._generating_regions:
+                    continue
+                if r.entry.start_offset not in then_entry_offsets:
+                    if not any(b in then_block_set for b in r.blocks):
+                        continue
+                if isinstance(r, BoolOpRegion):
+                    child_ast = self._generate_boolop(r)
+                else:
+                    child_ast = self._generate_ternary(r)
+                if child_ast:
+                    if isinstance(child_ast, list):
+                        _expr_child_stmts.extend(child_ast)
+                    else:
+                        _expr_child_stmts.append(child_ast)
+                for b in r.blocks:
+                    self.generated_blocks.add(b)
+                self._generated_regions.add(r_id)
         then_stmts = self._process_if_blocks(region.then_blocks, region, branch='then')
         if _expr_child_stmts:
             then_stmts = _expr_child_stmts + then_stmts
@@ -5130,6 +5200,16 @@ class RegionASTGenerator:
                 self.generated_blocks.add(elif_cond)
         then_stmts = self._if_generate_then_branch(region)
         else_stmts = self._if_generate_else_branch(region)
+        if (not else_stmts and then_stmts
+            and len(then_stmts) == 1
+            and isinstance(then_stmts[0], dict)
+            and then_stmts[0].get('type') == 'If'
+            and not then_stmts[0].get('orelse')):
+            inner_cond = then_stmts[0].get('test')
+            inner_body = then_stmts[0].get('body', [])
+            if inner_cond:
+                condition = {'type': 'BoolOp', 'op': 'and', 'values': [condition, inner_cond]}
+                then_stmts = inner_body
         result = {'type': 'If', 'test': condition, 'body': then_stmts, 'orelse': else_stmts if else_stmts else None}
         self._generating_regions.discard(region_id)
         self._generated_regions.add(region_id)
@@ -7427,6 +7507,32 @@ class RegionASTGenerator:
                 stmt_instrs.append(instr)
                 continue
 
+            if instr.opname == 'SWAP':
+                instr_idx = block.instructions.index(instr)
+                remaining_after_swap = block.instructions[instr_idx + 1:]
+                remaining_nospace = [i for i in remaining_after_swap
+                                     if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                _is_except_return_swap = False
+                if (remaining_nospace and
+                        remaining_nospace[0].opname == 'POP_EXCEPT' and
+                        len(remaining_nospace) >= 2 and
+                        remaining_nospace[1].opname in ('RETURN_VALUE', 'RETURN_CONST')):
+                    _is_except_return_swap = True
+                if not _is_except_return_swap and not remaining_nospace:
+                    for succ in block.successors:
+                        succ_instrs = [i for i in succ.instructions
+                                       if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                        if (succ_instrs and
+                                succ_instrs[0].opname == 'POP_EXCEPT' and
+                                len(succ_instrs) >= 2 and
+                                succ_instrs[1].opname in ('RETURN_VALUE', 'RETURN_CONST')):
+                            _is_except_return_swap = True
+                            break
+                if _is_except_return_swap:
+                    continue
+                stmt_instrs.append(instr)
+                continue
+
             if instr.opname in ('RETURN_VALUE', 'RETURN_CONST'):
                 if self._loop_depth > 0:
                     is_only_load_none = (len(stmt_instrs) == 1 and
@@ -7624,9 +7730,35 @@ class RegionASTGenerator:
             stmt_instrs.append(instr)
 
         if stmt_instrs:
-            stmt = self._build_statement(stmt_instrs)
-            if stmt:
-                stmts.append(stmt)
+            _succ_is_except_return = False
+            for succ in block.successors:
+                succ_instrs = [i for i in succ.instructions
+                               if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                if (succ_instrs and
+                        succ_instrs[0].opname == 'POP_EXCEPT' and
+                        len(succ_instrs) >= 2 and
+                        succ_instrs[1].opname in ('RETURN_VALUE', 'RETURN_CONST')):
+                    _succ_is_except_return = True
+                    break
+            if _succ_is_except_return and self._try_depth > 0:
+                expr = self.expr_reconstructor.reconstruct(stmt_instrs)
+                if expr and not (expr.get('type') == 'Constant' and expr.get('value') is None):
+                    stmts.append({'type': 'Return', 'value': expr})
+                else:
+                    stmts.append({'type': 'Return', 'value': None})
+                for succ in block.successors:
+                    succ_instrs = [i for i in succ.instructions
+                                   if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                    if (succ_instrs and
+                            succ_instrs[0].opname == 'POP_EXCEPT' and
+                            len(succ_instrs) >= 2 and
+                            succ_instrs[1].opname in ('RETURN_VALUE', 'RETURN_CONST')):
+                        self.generated_blocks.add(succ)
+                        break
+            else:
+                stmt = self._build_statement(stmt_instrs)
+                if stmt:
+                    stmts.append(stmt)
 
         return stmts
 
@@ -8046,12 +8178,6 @@ class RegionASTGenerator:
                         continue
                     elif block in nested_region.blocks:
                         if id(nested_region) not in self._generated_regions:
-                            if isinstance(nested_region, LoopRegion):
-                                pre_instrs = self.region_analyzer.identify_block_prefix_instructions(block)
-                                if pre_instrs:
-                                    pre_stmts = self._build_statements_from_instructions(pre_instrs, block)
-                                    if pre_stmts:
-                                        body_stmts.extend(pre_stmts)
                             skip_targets = set()
                             if region.target and isinstance(nested_region, LoopRegion):
                                 skip_targets.add(region.target)
@@ -8516,6 +8642,16 @@ class RegionASTGenerator:
                     item = {
                         'context_expr': context_expr,
                     }
+                    if not target and context_instrs:
+                        _last_offset = context_instrs[-1].offset
+                        for _r in self.regions:
+                            if isinstance(_r, WithRegion) and _r is not region:
+                                for _ci, _ct in getattr(_r, 'items', []):
+                                    if _ci and _ci[-1].offset == _last_offset and _ct:
+                                        target = _ct
+                                        break
+                            if target:
+                                break
                     if target:
                         item['optional_vars'] = {'type': 'Name', 'id': target, 'ctx': 'Store'}
                     items.append(item)

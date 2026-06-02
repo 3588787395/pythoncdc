@@ -10635,6 +10635,12 @@ class RegionAnalyzer:
         first_block, _ = chain[0]
         first_instr = first_block.get_last_instruction()
         if first_instr and first_instr.argval is not None:
+            if len(chain) >= 2:
+                second_block, _ = chain[1]
+                second_instr = second_block.get_last_instruction()
+                if second_instr and second_instr.argval is not None:
+                    if first_instr.argval > second_instr.argval:
+                        return True
             first_ft = next((s for s in first_block.conditional_successors
                              if s.start_offset != first_instr.argval), None)
             if first_ft and len(first_ft.instructions) <= 3:
