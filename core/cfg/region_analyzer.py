@@ -9474,6 +9474,20 @@ class RegionAnalyzer:
             return None, None, None
 
         def _detect_ternary_pattern(block):
+            """检测三元表达式模式
+
+            判定规则：
+            1. 基本条件：两个分支都必须是单表达式块
+            2. 额外检查：如果值块包含函数调用（CALL指令）且返回值未被使用（CALL后跟POP_TOP）
+               则不应该被认为是Ternary，而应识别为IfRegion
+
+            这解决了简单if-else语句被误判为三元表达式的问题：
+                if x > 0:
+                    print('positive')   # CALL + POP_TOP
+                else:
+                    print('non-positive')  # CALL + POP_TOP
+            这种print()语句是语句而非表达式，不应该被识别为Ternary。
+            """
             if not _can_be_ternary_header(block):
                 return None
             last_instr = block.get_last_instruction()
@@ -9486,6 +9500,23 @@ class RegionAnalyzer:
                 return None
 
             chain_blocks = _build_ternary_condition_chain(block, true_block, false_block)
+
+            # 辅助函数：检查块是否包含CALL指令且返回值被POP_TOP丢弃
+            # 这是语句（如print()）而非表达式的典型特征
+            def _is_call_without_value_used(blk):
+                """检查块是否包含CALL指令且返回值被POP_TOP丢弃"""
+                effective = [i for i in blk.instructions if i.opname not in NOISE_OPS]
+                # 移除末尾跳转
+                while effective and effective[-1].opname in (
+                    'JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'):
+                    effective = effective[:-1]
+                # 检查是否有CALL指令后跟POP_TOP的模式
+                for i, instr in enumerate(effective):
+                    if instr.opname.startswith('CALL') and i + 1 < len(effective):
+                        next_instr = effective[i + 1]
+                        if next_instr.opname == 'POP_TOP':
+                            return True
+                return False
 
             if len(chain_blocks) > 1:
                 last_chain = chain_blocks[-1]
@@ -9504,6 +9535,11 @@ class RegionAnalyzer:
                     return None
                 if not (self._is_single_expression_block(true_block) and
                         self._is_single_expression_block(false_block)):
+                    return None
+
+                # 修复：检查值块是否包含CALL指令但返回值未被使用
+                # 如果是，则这是语句（如print()）而非表达式，不应识别为Ternary
+                if _is_call_without_value_used(true_block) or _is_call_without_value_used(false_block):
                     return None
                 true_discards = any(i.opname == 'POP_TOP' for i in true_block.instructions
                                    if i.opname not in NOISE_OPS)
