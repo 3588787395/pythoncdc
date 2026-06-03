@@ -10682,6 +10682,22 @@ class RegionAnalyzer:
             visited.add(current.start_offset)
             last = current.get_last_instruction()
             if not last or last.opname not in SHORT_CIRCUIT_JUMP_OPS:
+                # 扩展链检测：当已存在short-circuit链时，也接受FORWARD_CONDITIONAL_JUMP_OPS块
+                if chain and last and last.opname in FORWARD_CONDITIONAL_JUMP_OPS:
+                    op_type = 'and' if 'FALSE' in last.opname else 'or'
+                    chain.append((current, op_type))
+                    succs = list(current.conditional_successors)
+                    if len(succs) != 2:
+                        break
+                    ft_succ = next((s for s in succs if s.start_offset != last.argval), None)
+                    if ft_succ is None:
+                        break
+                    if ft_succ in self.block_to_region:
+                        _ft_reg = self.block_to_region.get(ft_succ)
+                        if isinstance(_ft_reg, BoolOpRegion):
+                            break
+                    current = ft_succ
+                    continue
                 if chain and last and last.opname not in ('RETURN_VALUE', 'RETURN_CONST',
                                                            'RAISE_VARARGS', 'RERAISE'):
                     pure_instrs = [i for i in current.instructions

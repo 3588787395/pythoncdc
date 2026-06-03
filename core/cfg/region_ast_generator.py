@@ -1754,6 +1754,12 @@ class RegionASTGenerator:
                     _filtered_else_blocks = [b for b in _filtered_else_blocks if b not in _exclude_blocks]
             else_stmts = self._if_generate_branch_stmts(_filtered_else_blocks) if _filtered_else_blocks else []
 
+        # 过滤for循环else子句中多余的return None（隐式函数返回，非for-else语义）
+        if else_stmts:
+            _non_trivial = [s for s in else_stmts if not self._is_trailing_return_none_statement(s)]
+            if not _non_trivial:
+                else_stmts = []
+
         result = {
             'type': 'AsyncFor' if region.is_async else 'For',
             'target': target,
@@ -5684,7 +5690,21 @@ class RegionASTGenerator:
         if expr is None:
             self.generated_blocks.add(block)
             return pre_stmts if pre_stmts else None
-        is_if_false = 'IF_FALSE' in last_instr.opname
+        # 处理NONE_CHECK_OPS
+        if last_instr.opname in NONE_CHECK_OPS:
+            _is_not_none_jump = 'NOT_NONE' in last_instr.opname
+            if _is_not_none_jump:
+                expr = {'type': 'Compare', 'left': expr,
+                       'ops': [{'type': 'Is'}],
+                       'comparators': [{'type': 'Constant', 'value': None}]}
+            else:
+                expr = {'type': 'Compare', 'left': expr,
+                       'ops': [{'type': 'IsNot'}],
+                       'comparators': [{'type': 'Constant', 'value': None}]}
+        if last_instr.opname in NONE_CHECK_OPS:
+            is_if_false = True
+        else:
+            is_if_false = 'IF_FALSE' in last_instr.opname
         if exit_succ == jump_target:
             cond_expr = _negate_expr(expr) if is_if_false else expr
         else:
@@ -5980,7 +6000,20 @@ class RegionASTGenerator:
                 if expr is None:
                     self.generated_blocks.add(block)
                     return pre_stmts if pre_stmts else None
+                # 处理NONE_CHECK_OPS：重建 is None / is not None 比较表达式
+                if last_instr.opname in NONE_CHECK_OPS:
+                    _is_not_none_jump = 'NOT_NONE' in last_instr.opname
+                    if _is_not_none_jump:
+                        expr = {'type': 'Compare', 'left': expr,
+                               'ops': [{'type': 'Is'}],
+                               'comparators': [{'type': 'Constant', 'value': None}]}
+                    else:
+                        expr = {'type': 'Compare', 'left': expr,
+                               'ops': [{'type': 'IsNot'}],
+                               'comparators': [{'type': 'Constant', 'value': None}]}
                 is_if_false = 'IF_FALSE' in last_instr.opname
+                if last_instr.opname in NONE_CHECK_OPS:
+                    is_if_false = True  # NONE_CHECK_OPS跳转条件与if条件相反
                 cond_expr = expr
                 # Phase 45: IF_TRUE/IF_FALSE四组合then/else映射（字节码等价）
                 # 核心原则: then=条件True路径, else=条件False路径, 条件不取反
@@ -6060,6 +6093,17 @@ class RegionASTGenerator:
                 if expr is None:
                     self.generated_blocks.add(block)
                     return pre_stmts if pre_stmts else None
+                # 处理NONE_CHECK_OPS
+                if last_instr.opname in NONE_CHECK_OPS:
+                    _is_not_none_jump = 'NOT_NONE' in last_instr.opname
+                    if _is_not_none_jump:
+                        expr = {'type': 'Compare', 'left': expr,
+                               'ops': [{'type': 'Is'}],
+                               'comparators': [{'type': 'Constant', 'value': None}]}
+                    else:
+                        expr = {'type': 'Compare', 'left': expr,
+                               'ops': [{'type': 'IsNot'}],
+                               'comparators': [{'type': 'Constant', 'value': None}]}
                 cond_expr = expr
                 if_stmt = {'type': 'If', 'test': cond_expr, 'body': []}
                 self.generated_blocks.add(block)
@@ -6101,7 +6145,20 @@ class RegionASTGenerator:
                 target_succ = break_succ
                 body_type = 'Break'
             else:
+                # 处理NONE_CHECK_OPS
+                if last_instr.opname in NONE_CHECK_OPS:
+                    _is_not_none_jump = 'NOT_NONE' in last_instr.opname
+                    if _is_not_none_jump:
+                        _bn_expr = {'type': 'Compare', 'left': _bn_expr,
+                                   'ops': [{'type': 'Is'}],
+                                   'comparators': [{'type': 'Constant', 'value': None}]}
+                    else:
+                        _bn_expr = {'type': 'Compare', 'left': _bn_expr,
+                                   'ops': [{'type': 'IsNot'}],
+                                   'comparators': [{'type': 'Constant', 'value': None}]}
                 _bn_is_if_false = 'IF_FALSE' in last_instr.opname
+                if last_instr.opname in NONE_CHECK_OPS:
+                    _bn_is_if_false = True
                 _bn_norm_is_jump = normal_succ[1]
                 # Phase 45: 四组合then/else映射（与continue+normal分支一致）
                 # then=条件True路径, else=条件False路径, 条件不取反
@@ -10087,9 +10144,13 @@ class RegionASTGenerator:
         if not op_chain:
             return None
         STRIP_JUMP_OPS = SHORT_CIRCUIT_JUMP_OPS | FORWARD_CONDITIONAL_JUMP_OPS
-        segments = []
-        current_op = None
-        current_values = []
+        # 使用or_groups算法处理混合and/or优先级
+        # 核心原理：Python中and绑定比or更紧
+        # 当op从'and'变为'or'时，当前值是'and'段的最后一个值（外层or的短路跳转）
+        # 当op从'or'变为'and'时，当前值开始一个新的'and'子组
+        or_groups = []
+        current_group_op = None
+        current_group_values = []
         for chain_block, chain_op in op_chain:
             instrs = [i for i in chain_block.instructions
                      if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
@@ -10109,22 +10170,29 @@ class RegionASTGenerator:
             sub_expr = self.expr_reconstructor.reconstruct(pure_instrs)
             if sub_expr is None:
                 continue
-            if current_op is None:
-                current_op = chain_op
-                current_values = [sub_expr]
-            elif chain_op == current_op:
-                current_values.append(sub_expr)
+            if current_group_op is None:
+                current_group_op = chain_op
+                current_group_values = [sub_expr]
+            elif chain_op == current_group_op:
+                current_group_values.append(sub_expr)
+            elif current_group_op == 'and' and chain_op == 'or':
+                # and→or：当前值是and段最后一个值，关闭and组
+                current_group_values.append(sub_expr)
+                or_groups.append((current_group_op, current_group_values))
+                current_group_op = None
+                current_group_values = []
             else:
-                if current_values:
-                    segments.append((current_op, current_values))
-                current_op = chain_op
-                current_values = [sub_expr]
-        if current_values:
-            segments.append((current_op, current_values))
+                # or→and：and绑定更紧，开始新and子组
+                if current_group_values:
+                    or_groups.append((current_group_op, current_group_values))
+                current_group_op = chain_op
+                current_group_values = [sub_expr]
+        # 处理ft_block（fall-through块）
         chain_blocks = set(b for b, _ in op_chain)
-        if segments and len(op_chain) >= 1:
+        if len(op_chain) >= 1:
             last_chain_block = op_chain[-1][0]
             last_instr = last_chain_block.get_last_instruction()
+            last_chain_op = op_chain[-1][1]
             if last_instr and last_instr.opname in STRIP_JUMP_OPS:
                 ft_succs = sorted(last_chain_block.conditional_successors, key=lambda s: s.start_offset)
                 ft_block = next((s for s in ft_succs
@@ -10143,9 +10211,17 @@ class RegionASTGenerator:
                     if clean_ft:
                         ft_expr = self.expr_reconstructor.reconstruct(clean_ft)
                         if ft_expr:
-                            last_op, last_vals = segments[-1]
-                            last_vals.append(ft_expr)
-                            segments[-1] = (last_op, last_vals)
+                            if last_chain_op == 'or' and current_group_op == 'and':
+                                or_groups.append((current_group_op, current_group_values))
+                                or_groups.append(('or', [ft_expr]))
+                                current_group_values = []
+                            elif current_group_op is None:
+                                or_groups.append((last_chain_op, [ft_expr]))
+                            else:
+                                current_group_values.append(ft_expr)
+        if current_group_values:
+            or_groups.append((current_group_op, current_group_values))
+        segments = or_groups
         if not segments:
             return None
         if len(segments) == 1 and len(segments[0][1]) == 1 and len(op_chain) == 1:
@@ -10186,16 +10262,20 @@ class RegionASTGenerator:
             else:
                 result = {'type': 'BoolOp', 'op': op, 'values': values}
         else:
-            result = None
-            for op, values in reversed(segments):
-                if len(values) == 1:
-                    node = values[0]
+            # 多段：外层操作符始终是'or'（因为and绑定更紧，被归入and子组）
+            or_values = []
+            for seg_op, seg_values in segments:
+                if seg_op == 'or':
+                    or_values.extend(seg_values)
                 else:
-                    node = {'type': 'BoolOp', 'op': op, 'values': values}
-                if result is None:
-                    result = node
-                else:
-                    result = {'type': 'BoolOp', 'op': op, 'values': [node, result]}
+                    if len(seg_values) == 1:
+                        or_values.append(seg_values[0])
+                    else:
+                        or_values.append({'type': 'BoolOp', 'op': 'and', 'values': seg_values})
+            if len(or_values) == 1:
+                result = or_values[0]
+            else:
+                result = {'type': 'BoolOp', 'op': 'or', 'values': or_values}
         _has_unary_not = False
         if region.merge_block:
             _merge_instrs = [i for i in region.merge_block.instructions
