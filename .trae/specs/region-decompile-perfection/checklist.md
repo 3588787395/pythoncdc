@@ -907,41 +907,44 @@
 
 ---
 
-## Phase 49: 冲刺100%成功率验证清单（进行中）
+## Phase 50: 冲刺100%成功率验证清单（进行中）
 
-### Task 49.0: 基线确认与错误分类
-- [x] 49.0.1: 全量测试基线确认 → **39f/1859p/1898t (97.9%)** (commit d928883)
-- [x] 49.0.2: 39个失败测试错误分类完成
+### Task 50.0: 基线确认与错误分类
+- [x] 50.0.1: 全量测试基线确认 → **36f/1862p/1898t (98.1%)** ✅
+- [x] 50.0.2: 36个失败测试错误分类完成 ✅
 
-### Task 49.1: while_loop 3f修复
-- [ ] 49.1.1: while06_false — `while False: x=1` CPython优化为NOP，需合成While节点
-- [ ] 49.1.2: while13_while_return — 多余return None过滤
-- [ ] 49.1.3: wl05whiletrue — `while True: break` CPython优化，需合成While节点
-- [ ] 49.1.4: while_loop验证 + 全量回归
+### Task 50.1: while_loop 3f修复
+- [ ] 50.1.1: while13_while_return — has_trailing_return_none过滤修复
+- [ ] 50.1.2: while06_false — CPython优化While合成
+- [ ] 50.1.3: wl05whiletrue — CPython优化While合成
+- [ ] 50.1.4: while_loop验证 + 全量回归
 
-### Task 49.2: for_loop 4f修复
-- [ ] 49.2.1: fl46forreturn_n — SWAP+POP_TOP+RETURN_VALUE模式
-- [ ] 49.2.2: fl51forbreaknestedif_n/x — for+break+嵌套if
-- [ ] 49.2.3: for16_for_if — ternary vs if-else选择
-- [ ] 49.2.4: for_loop验证 + 全量回归
+### Task 50.2: for_loop 4f修复
+- [ ] 50.2.1: fl46forreturn_n — SWAP+POP_TOP+RETURN_VALUE
+- [ ] 50.2.2: fl51forbreaknestedif_n/x — for+break+嵌套if
+- [ ] 50.2.3: for16_for_if — ternary vs if-else
+- [ ] 50.2.4: for_loop验证 + 全量回归
 
-### Task 49.3: try_except 6f修复
-- [ ] 49.3.1: te080/te081/te100/te104/try16/try20逐个修复
-- [ ] 49.3.2: try_except验证 + 全量回归
+### Task 50.3: try_except 6f修复
+- [ ] 50.3.1: te080/te081/te100 — try-finally finally块
+- [ ] 50.3.2: te104 — 嵌套try handler排序
+- [ ] 50.3.3: try16/try20 — 复杂try模式
+- [ ] 50.3.4: try_except验证 + 全量回归
 
-### Task 49.4: with_region 2f修复
-- [ ] 49.4.1: w058 — async with
-- [ ] 49.4.2: w30withcustomctx — 自定义上下文管理器
-- [ ] 49.4.3: with_region验证 + 全量回归
+### Task 50.4: with_region 2f修复
+- [ ] 50.4.1: w058 — async with
+- [ ] 50.4.2: w30withcustomctx — 自定义上下文管理器
+- [ ] 50.4.3: with_region验证 + 全量回归
 
-### Task 49.5: match/boolop/ternary/nested边际修复 (24f)
-- [ ] 49.5.1: match m054/m061/m069/m075/m083/m106/m107
-- [ ] 49.5.2: boolop bo42/bo43
-- [ ] 49.5.3: ternary te04/ternary11/12/13/17/20
-- [ ] 49.5.4: nested n09/n10/n11/n13/n15
-- [ ] 49.5.5: 各区域验证 + 全量回归
+### Task 50.5: match/boolop/ternary/nested边际修复 (15f)
+- [ ] 50.5.1: match m075/m083/m106/m107
+- [ ] 50.5.2: boolop bo42/bo43
+- [ ] 50.5.3: ternary te04/ternary11/12/13/17/20
+- [ ] 50.5.4: nested n09/n10/n11/n13/n15
+- [ ] 50.5.5: 各区域验证 + 全量回归
 
-### Task 49.6: 全量回归验证与文档更新
-- [ ] 49.6.1: 全量10区域回归测试
-- [ ] 49.6.2: 字节码等价性验证
-- [ ] 49.6.3: tasks.md/checklist.md/spec.md更新
+### Task 50.6: 全量回归验证与文档更新
+- [ ] 50.6.1: 全量10区域回归测试
+- [ ] 50.6.2: 字节码等价性验证
+- [ ] 50.6.3: tasks.md/checklist.md/spec.md更新
+- [ ] 50.6.4: 反编译逻辑注释完整性验证

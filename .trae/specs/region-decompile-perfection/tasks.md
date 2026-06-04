@@ -1729,37 +1729,77 @@ Phase 41:   212f (88.2%)  ← Return→Break值保持修复 (-5f!) 🎉
   - [x] 49.0.1: 全量测试基线确认 → 39f/1859p/1898t (97.9%)
   - [x] 49.0.2: 39个失败测试错误分类完成
 
-- [ ] **Task 49.1: while_loop 3f修复**
-  - [ ] 49.1.1: while06_false — CPython优化为NOP，需合成While节点
-  - [ ] 49.1.2: while13_while_return — 多余return None，需过滤
-  - [ ] 49.1.3: wl05whiletrue — CPython优化，需合成While节点
-  - [ ] 49.1.4: while_loop验证 + 全量回归
+- [x] **Task 49.5a: match+try嵌套修复 (m054/m061/m069)** → match 7f→4f, 总计 39f→36f
+  - [x] 49.5a.1: _generate_try_body中block归属子region判断修复
+  - [x] 49.5a.2: _generate_match中TryExceptRegion try_blocks检测
+  - [x] 49.5a.3: 全量回归验证零回归
 
-- [ ] **Task 49.2: for_loop 4f修复**
-  - [ ] 49.2.1: fl46forreturn_n — SWAP+POP_TOP+RETURN_VALUE模式
-  - [ ] 49.2.2: fl51forbreaknestedif_n/x — for+break+嵌套if
-  - [ ] 49.2.3: for16_for_if — ternary vs if-else选择
-  - [ ] 49.2.4: for_loop验证 + 全量回归
+---
 
-- [ ] **Task 49.3: try_except 6f修复**
-  - [ ] 49.3.1: te080/te081/te100/te104/try16/try20逐个修复
-  - [ ] 49.3.2: try_except验证 + 全量回归
+# Phase 50: 冲刺100%成功率 — 剩余36f (2026-06-04)
 
-- [ ] **Task 49.4: with_region 2f修复**
-  - [ ] 49.4.1: w058 — async with
-  - [ ] 49.4.2: w30withcustomctx — 自定义上下文管理器
-  - [ ] 49.4.3: with_region验证 + 全量回归
+> **目标**: 基于 "No More Gotos" 论文的区域归约算法，修复剩余36个失败测试，达到100%成功率和字节码完全匹配
 
-- [ ] **Task 49.5: match/boolop/ternary/nested边际修复 (24f)**
-  - [ ] 49.5.1: match m054/m061/m069/m075/m083/m106/m107
-  - [ ] 49.5.2: boolop bo42/bo43
-  - [ ] 49.5.3: ternary te04/ternary11/12/13/17/20
-  - [ ] 49.5.4: nested n09/n10/n11/n13/n15
-  - [ ] 49.5.5: 各区域验证 + 全量回归
+## Phase 50 基线（2026-06-04 实测）
 
-- [ ] **Task 49.6: 全量回归验证与文档更新**
-  - [ ] 49.6.1: 全量10区域回归测试
-  - [ ] 49.6.2: 字节码等价性验证
-  - [ ] 49.6.3: tasks.md/checklist.md/spec.md更新
-  - [ ] 48.7.3: tasks.md/checklist.md/spec.md更新
-  - [ ] 48.7.4: 反编译逻辑注释完整性验证
+| 区域 | 失败 | 通过 | 总计 | 通过率 | 优先级 |
+|------|------|------|------|--------|--------|
+| basic | 0 | 122 | 122 | **100%** | ✅ |
+| if_region | 0 | 311 | 311 | **100%** | ✅ |
+| while_loop | 3 | 117 | 120 | 97.5% | P1 |
+| for_loop | 4 | 189 | 193 | 97.9% | P1 |
+| try_except | 6 | 224 | 230 | 97.4% | P1 |
+| with_region | 2 | 189 | 191 | 99.0% | P2 |
+| match_region | 4 | 194 | 198 | 98.0% | P2 |
+| boolop | 2 | 130 | 132 | 98.5% | P2 |
+| ternary | 7 | 109 | 116 | 94.0% | P1 |
+| nested | 8 | 277 | 285 | 97.2% | P2 |
+| **总计** | **36** | **1862** | **1898** | **98.1%** | |
+
+## Phase 50 任务清单
+
+- [x] **Task 50.0: 基线确认与错误分类** → 36f/1862p/1898t (98.1%) ✅
+
+- [ ] **Task 50.1: while_loop 3f修复**
+  - [ ] 50.1.1: while13_while_return — has_trailing_return_none过滤过于激进，需保留显式return None
+  - [ ] 50.1.2: while06_false — CPython优化`while False: pass`为NOP，需在模块级优化路径合成While节点
+  - [ ] 50.1.3: wl05whiletrue — CPython优化`while True: break`为NOP，需合成While节点
+  - [ ] 50.1.4: while_loop验证 + 全量回归
+
+- [ ] **Task 50.2: for_loop 4f修复**
+  - [ ] 50.2.1: fl46forreturn_n — SWAP+POP_TOP+RETURN_VALUE模式
+  - [ ] 50.2.2: fl51forbreaknestedif_n/x — for+break+嵌套if
+  - [ ] 50.2.3: for16_for_if — ternary vs if-else选择
+  - [ ] 50.2.4: for_loop验证 + 全量回归
+
+- [ ] **Task 50.3: try_except 6f修复**
+  - [ ] 50.3.1: te080/te081/te100 — try-finally finally块重复/丢失
+  - [ ] 50.3.2: te104 — 嵌套try-except handler排序
+  - [ ] 50.3.3: try16/try20 — 复杂try模式
+  - [ ] 50.3.4: try_except验证 + 全量回归
+
+- [ ] **Task 50.4: with_region 2f修复**
+  - [ ] 50.4.1: w058 — async with
+  - [ ] 50.4.2: w30withcustomctx — 自定义上下文管理器
+  - [ ] 50.4.3: with_region验证 + 全量回归
+
+- [ ] **Task 50.5: match/boolop/ternary/nested边际修复 (15f)**
+  - [ ] 50.5.1: match m075/m083/m106/m107
+  - [ ] 50.5.2: boolop bo42/bo43
+  - [ ] 50.5.3: ternary te04/ternary11/12/13/17/20
+  - [ ] 50.5.4: nested n09/n10/n11/n13/n15
+  - [ ] 50.5.5: 各区域验证 + 全量回归
+
+- [ ] **Task 50.6: 全量回归验证与文档更新**
+  - [ ] 50.6.1: 全量10区域回归测试
+  - [ ] 50.6.2: 字节码等价性验证
+  - [ ] 50.6.3: tasks.md/checklist.md/spec.md更新
+  - [ ] 50.6.4: 反编译逻辑注释完整性验证
+
+# Task Dependencies
+
+```
+- Phase 1-49 已完成
+- **Phase 50 (当前) 无依赖 - 立即开始**
+- Phase 50内: Task 50.0已完成，50.1-50.5可并行，50.6依赖全部
+```
