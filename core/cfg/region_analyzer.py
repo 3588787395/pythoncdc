@@ -3887,11 +3887,25 @@ class RegionAnalyzer:
                         if not has_bare_except_entry:
                             inner_handler_indices.add(i)
                             continue
+            # 深度比较标记inner handler：
+            # - 非PUSH_EXC_INFO开头的handler（cleanup块）：总是进行深度比较
+            # - PUSH_EXC_INFO开头的handler（真正except handler）：
+            #   仅当内层try_start < 外层handler_start时标记为inner
+            #   （即内层try在外层try body中，由_generate_try_body处理）
+            #   当内层try_start >= 外层handler_start时，不标记为inner
+            #   （即内层try在外层except handler body中，由handler body生成代码处理）
             for j, other in enumerate(handler_infos):
                 if i == j:
                     continue
                 if other.get('depth', 0) < info.get('depth', 0):
                     if info['try_start'] >= other['handler_start']:
+                        # 对于真正的except handler（PUSH_EXC_INFO开头），
+                        # 只有当内层try在外层try body中时才标记为inner
+                        # 当内层try在外层except handler body中时，不标记为inner
+                        if first_instr.opname in ('PUSH_EXC_INFO', 'WITH_EXCEPT_START'):
+                            # 真正的except handler嵌套在另一个handler体内
+                            # 不标记为inner，由AST生成器处理嵌套关系
+                            continue
                         inner_handler_indices.add(i)
                         break
 
@@ -4230,7 +4244,47 @@ class RegionAnalyzer:
                                          finally_blocks, handler_info, finally_copy_blocks, else_blocks,
                                          cleanup_blocks)
 
-        return self.regions[initial_region_count:]
+        # 设置嵌套TryExceptRegion的parent关系
+        # 需要确定哪个region是外层（parent），哪个是内层（child）
+        new_regions = self.regions[initial_region_count:]
+        for i, region_a in enumerate(new_regions):
+            if not isinstance(region_a, TryExceptRegion):
+                continue
+            if region_a.parent is not None:
+                continue
+            for region_b in new_regions:
+                if region_b is region_a:
+                    continue
+                if not isinstance(region_b, TryExceptRegion):
+                    continue
+
+                # 情况1: region_a的entry在region_b的handler body块中
+                # → region_a嵌套在region_b的except handler体内，region_b是parent
+                for _, _, handler_blocks in region_b.except_handlers:
+                    if region_a.entry in handler_blocks:
+                        region_a.parent = region_b
+                        break
+                if region_a.parent is not None:
+                    break
+
+                # 情况2: region_a的try范围完全在region_b的try范围内
+                # 且region_a的范围更小 → region_a是内层，region_b是parent
+                if (region_a.try_offset_start >= region_b.try_offset_start and
+                    region_a.try_offset_end <= region_b.try_offset_end and
+                    (region_a.try_offset_end - region_a.try_offset_start) <
+                    (region_b.try_offset_end - region_b.try_offset_start)):
+                    # 确认region_a不是region_b的parent（避免循环）
+                    # region_b的handler entry不在region_a的try范围内
+                    b_handler_in_a = False
+                    for heb in region_b.handler_entry_blocks:
+                        if region_a.try_offset_start <= heb.start_offset < region_a.try_offset_end:
+                            b_handler_in_a = True
+                            break
+                    if not b_handler_in_a:
+                        region_a.parent = region_b
+                        break
+
+        return new_regions
 
     def _parse_exception_table(self) -> List[Dict[str, Any]]:
         """
@@ -4366,6 +4420,18 @@ class RegionAnalyzer:
             )
             if is_cleanup_only:
                 if actual_handler_start != entry_target:
+                    # 检查actual_handler_start是否是另一个异常表条目的直接target
+                    # 如果是，说明该handler是另一个try块的真正handler，
+                    # 当前cleanup条目只是该handler作用域内的异常传播，应过滤掉
+                    is_other_handler_target = False
+                    for other_entry in entries:
+                        if other_entry is entry:
+                            continue
+                        if other_entry.get('target', 0) == actual_handler_start:
+                            is_other_handler_target = True
+                            break
+                    if is_other_handler_target:
+                        continue
                     if handler_type == 'finally':
                         actual_handler_block = self.cfg.get_block_by_offset(actual_handler_start)
                         if actual_handler_block and actual_handler_block.instructions:

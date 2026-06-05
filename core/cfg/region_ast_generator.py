@@ -1232,7 +1232,9 @@ class RegionASTGenerator:
 
         if isinstance(region, TryExceptRegion):
             all_generated = all(b in self.generated_blocks for b in region.try_blocks)
-            if all_generated:
+            if all_generated and region.try_blocks:
+                # 只有当try_blocks非空时才跳过
+                # 如果try_blocks为空但region有嵌套的子TryExceptRegion，仍需生成
                 for block in region.blocks:
                     self.generated_blocks.add(block)
                 return None
@@ -6563,7 +6565,10 @@ class RegionASTGenerator:
                         nested_try_regions.append(r)
 
         for ntr in sorted(nested_try_regions, key=lambda r: r.try_offset_start):
-            if ntr.entry.start_offset < region.try_offset_start:
+            # [nested修复] 当嵌套TryExceptRegion的entry在outer的try_offset_start之前或相同时，
+            # 需要先生成嵌套的TryExceptRegion。使用<=而非<是因为当两个try块的
+            # try_offset_start相同时（如try-in-try模式），内层try也需要在此生成。
+            if ntr.entry.start_offset <= region.try_offset_start:
                 if id(ntr) not in self._generated_regions and id(ntr) not in self._generating_regions:
                     self.generated_blocks.discard(ntr.entry)
                     for b in ntr.try_blocks:
@@ -6800,6 +6805,14 @@ class RegionASTGenerator:
                     stmts = self._generate_block_statements(block)
                     body_stmts.extend(stmts)
                     continue
+                # 跳过嵌套在handler body中的TryExceptRegion（由handler body生成代码处理）
+                if isinstance(nested_region, TryExceptRegion) and isinstance(region, TryExceptRegion):
+                    _hbb_check = set()
+                    for _, _, hbs in region.except_handlers:
+                        _hbb_check.update(hbs)
+                    if nested_region.entry in _hbb_check:
+                        self.generated_blocks.add(block)
+                        continue
                 if (isinstance(nested_region, TryExceptRegion) and
                     isinstance(region, TryExceptRegion) and
                     nested_region.try_offset_end > region.try_offset_end and
@@ -6843,6 +6856,12 @@ class RegionASTGenerator:
                 self.generated_blocks.add(block)
 
         for ntr in nested_try_regions:
+            # 跳过嵌套在handler body中的region（由handler body生成代码处理）
+            _hbb = set()
+            for _, _, hbs in region.except_handlers:
+                _hbb.update(hbs)
+            if ntr.entry in _hbb:
+                continue
             if id(ntr) not in self._generated_regions and id(ntr) not in self._generating_regions:
                 if ntr.try_offset_end > region.try_offset_end and ntr.try_offset_start <= region.try_offset_start:
                     self._skipped_outer_try = ntr
@@ -7340,10 +7359,53 @@ class RegionASTGenerator:
                     continue
                 handler_body = self._generate_handler_body_statements(handler_entry)
                 self.generated_blocks.add(handler_entry)
+
+                # 检测handler body中是否存在嵌套的TryExceptRegion
+                # 当内层try-except嵌套在except handler体内时，需要递归生成
+                _nested_in_handler = []
+                for nr in self.region_analyzer.regions:
+                    if not isinstance(nr, TryExceptRegion) or nr is region:
+                        continue
+                    if id(nr) in self._generated_regions or id(nr) in self._generating_regions:
+                        continue
+                    # 内层region的parent是当前region，且内层entry在handler body块中
+                    if nr.parent is region:
+                        _nested_in_handler.append(nr)
+                    # 或者内层region的try_offset_start在当前handler范围内
+                    elif (nr.try_offset_start >= handler_entry.start_offset and
+                          nr.try_offset_start < region.try_offset_end and
+                          nr.try_offset_end > handler_entry.start_offset):
+                        # 确认内层handler也在当前handler范围内
+                        for nheb in nr.handler_entry_blocks:
+                            if nheb.start_offset >= handler_entry.start_offset:
+                                _nested_in_handler.append(nr)
+                                break
+
                 for hb in handler_blocks:
                     if hb in self.generated_blocks:
                         continue
                     if hb is handler_entry:
+                        continue
+                    # 检查此块是否是嵌套TryExceptRegion的入口
+                    _is_nested_entry = False
+                    for nr in sorted(_nested_in_handler, key=lambda r: r.try_offset_start):
+                        if nr.entry == hb or hb in nr.try_blocks:
+                            _nested_ast = self._generate_try(nr)
+                            if _nested_ast:
+                                handler_body.append(_nested_ast)
+                            for b in nr.blocks:
+                                self.generated_blocks.add(b)
+                            _is_nested_entry = True
+                            break
+                    if _is_nested_entry:
+                        continue
+                    # 检查此块是否属于某个嵌套TryExceptRegion
+                    _in_nested = False
+                    for nr in _nested_in_handler:
+                        if hb in nr.blocks:
+                            _in_nested = True
+                            break
+                    if _in_nested:
                         continue
                     hbs = self._generate_handler_body_statements(hb)
                     if hbs:
