@@ -242,7 +242,70 @@ Phase 41:   212f (88.2%)     ← Return→Break值保持修复, for_loop 96.3%
 Phase 44:   199f (88.9%)     ← 循环条件分支修复, for_loop 96.9%
 Phase 45:   167f (90.8%)     ← BoolOp-If冲突消解! if_region 97.1%! 净-33f!
 Phase 47:   127f (93.0%)     ← while_loop修复+BoolOp-If消解, basic 100%!
+Phase 49:   39f (97.9%)      ← match+try修复前基线
+Phase 50:   36f (98.1%)      ← match+try嵌套修复(m054/m061/m069), match 7f→4f
                          目标: 0f (100%)
+```
+
+### Phase 50 当前基线（2026-06-04 实测）
+
+| 区域 | 失败 | 通过 | 总计 | 通过率 | 优先级 |
+|------|------|------|------|--------|--------|
+| basic | 0 | 122 | 122 | **100%** | ✅ |
+| if_region | 0 | 311 | 311 | **100%** | ✅ |
+| while_loop | 3 | 117 | 120 | 97.5% | P1 |
+| for_loop | 4 | 189 | 193 | 97.9% | P1 |
+| try_except | 6 | 224 | 230 | 97.4% | P1 |
+| with_region | 2 | 189 | 191 | 99.0% | P2 |
+| match_region | 4 | 194 | 198 | 98.0% | P2 |
+| boolop | 2 | 130 | 132 | 98.5% | P2 |
+| ternary | 7 | 109 | 116 | 94.0% | P1 |
+| nested | 8 | 277 | 285 | 97.2% | P2 |
+| **总计** | **36** | **1862** | **1898** | **98.1%** | |
+
+### Phase 50 剩余36个失败测试详细列表
+
+#### while_loop (3f)
+- while06_false — `while False: x=1` CPython优化为NOP，需合成While节点
+- while13_while_return — while else中return None被has_trailing_return_none过滤
+- wl05whiletrue — `while True: break` CPython优化为NOP，需合成While节点
+
+#### for_loop (4f)
+- fl46forreturn_n — SWAP+POP_TOP+RETURN_VALUE处理错误
+- fl51forbreaknestedif_n/x — for+break+嵌套if
+- for16_for_if — ternary vs if-else选择错误
+
+#### try_except (6f)
+- te080, te081, te100 — try-finally finally块重复/丢失
+- te104 — 嵌套try-except handler排序
+- try16_multi_nested — 复杂try嵌套
+- try20_complex_pattern — 复杂try模式
+
+#### with_region (2f)
+- w058 — async with
+- w30withcustomctx — 自定义上下文管理器
+
+#### match_region (4f)
+- m075, m083 — 指令数不匹配
+- m106 — guard boolop
+- m107 — match in func return
+
+#### boolop (2f)
+- bo42 — BoolOp in listcomp
+- bo43 — complex not-and-or
+
+#### ternary (7f)
+- te04_a/n — ternary func param
+- ternary11_in_if, ternary12_in_while, ternary13_in_for_iter — ternary在控制结构中
+- ternary17_in_lambda — ternary在lambda中
+- ternary20_complex_practical — 复杂实用模式
+
+#### nested (8f)
+- n09 — while+try+except
+- n10_a/b — for+if+for+break
+- n11_a/b — while+if+while+break
+- n13_a/n — try+for+if+break
+- n15 — while+if+try+except
 ```
 
 ### Phase 48 失败模式分类（127f详细分析）

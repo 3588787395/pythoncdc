@@ -622,13 +622,27 @@ class RegionASTGenerator:
                         _all_instrs = []
                         for b in self.cfg.blocks.values():
                             _all_instrs.extend(b.instructions)
-                        _meaningful = [i for i in _all_instrs if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'RETURN_VALUE', 'RETURN_CONST')]
-                        if not _meaningful or len(_meaningful) <= 2:
+                        _meaningful = [i for i in _all_instrs if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'RETURN_VALUE', 'RETURN_CONST', 'LOAD_CONST', 'POP_TOP')]
+                        # [区域归约算法 - 模块级优化路径]
+                        # CPython编译器优化规则：
+                        #   - while False: body → 整个循环被优化为 LOAD_CONST None; RETURN_VALUE
+                        #   - while True: break → 整个循环被优化为 LOAD_CONST True; LOAD_CONST None; RETURN_VALUE
+                        #   - if False: body → 整个if被优化为 LOAD_CONST None; RETURN_VALUE
+                        #   - if True: pass → 整个if被优化为 LOAD_CONST True; LOAD_CONST None; RETURN_VALUE
+                        #
+                        # 关键发现：if和while的优化后字节码完全相同，无法从字节码区分。
+                        # 因此采用以下策略：
+                        #   1. 仅当_meaningful为空时才触发合成路径
+                        #   2. 默认合成为If（比While更常见）
+                        #   3. WHILE_LOOP测试通过REGION_TYPE_ALTERNATIVES接受ast.If
+                        if not _meaningful:
                             _cond_val = _consts[0]
                             if _cond_val is True and len(_consts) == 2 and _consts[1] is None:
-                                ast_nodes = [{'type': 'If', 'test': {'type': 'Constant', 'value': True}, 'body': [{'type': 'Pass'}], 'orelse': None}]
+                                ast_nodes = [{'type': 'If', 'test': {'type': 'Constant', 'value': True}, 'body': [{'type': 'Pass'}], 'orelse': []}]
+                            elif _cond_val is False:
+                                ast_nodes = [{'type': 'If', 'test': {'type': 'Constant', 'value': False}, 'body': [{'type': 'Pass'}], 'orelse': []}]
                             else:
-                                ast_nodes = [{'type': 'If', 'test': {'type': 'Constant', 'value': _cond_val}, 'body': [{'type': 'Pass'}], 'orelse': None}]
+                                ast_nodes = [{'type': 'If', 'test': {'type': 'Constant', 'value': _cond_val}, 'body': [{'type': 'Pass'}], 'orelse': []}]
             
             code_obj = getattr(self.cfg, 'code', None)
             scope_decls = self.region_analyzer.global_declarations
@@ -732,10 +746,28 @@ class RegionASTGenerator:
 
         filtered_body = body
         if filtered_body and isinstance(filtered_body, list):
-            has_explicit_return = any(
-                isinstance(s, dict) and s.get('type') == 'Return' and not self._is_trailing_return_none_statement(s)
-                for s in filtered_body
-            )
+            # [修复] 递归检查函数体中是否有显式return（非return None），
+            # 包括控制结构（While/For/If/Try/With）内部的return。
+            # 这确保while循环内有return时，循环后的return None不被错误过滤。
+            def _has_explicit_return_recursive(stmts):
+                for s in (stmts if isinstance(stmts, list) else [stmts]):
+                    if not isinstance(s, dict):
+                        continue
+                    if s.get('type') == 'Return' and not self._is_trailing_return_none_statement(s):
+                        return True
+                    # 递归检查控制结构内部
+                    for key in ('body', 'orelse', 'handlers', 'finalbody'):
+                        inner = s.get(key)
+                        if inner:
+                            if _has_explicit_return_recursive(inner):
+                                return True
+                    # 检查Try的每个handler
+                    for handler in (s.get('handlers') or []):
+                        if isinstance(handler, dict) and handler.get('body'):
+                            if _has_explicit_return_recursive(handler['body']):
+                                return True
+                return False
+            has_explicit_return = _has_explicit_return_recursive(filtered_body)
             if not has_explicit_return:
                 if filtered_body and self._is_trailing_return_none_statement(filtered_body[-1]):
                     filtered_body = filtered_body[:-1]
@@ -1203,7 +1235,9 @@ class RegionASTGenerator:
 
         if isinstance(region, TryExceptRegion):
             all_generated = all(b in self.generated_blocks for b in region.try_blocks)
-            if all_generated:
+            if all_generated and region.try_blocks:
+                # 只有当try_blocks非空时才跳过
+                # 如果try_blocks为空但region有嵌套的子TryExceptRegion，仍需生成
                 for block in region.blocks:
                     self.generated_blocks.add(block)
                 return None
@@ -1754,6 +1788,12 @@ class RegionASTGenerator:
                     _filtered_else_blocks = [b for b in _filtered_else_blocks if b not in _exclude_blocks]
             else_stmts = self._if_generate_branch_stmts(_filtered_else_blocks) if _filtered_else_blocks else []
 
+        # 过滤for循环else子句中多余的return None（隐式函数返回，非for-else语义）
+        if else_stmts:
+            _non_trivial = [s for s in else_stmts if not self._is_trailing_return_none_statement(s)]
+            if not _non_trivial:
+                else_stmts = []
+
         result = {
             'type': 'AsyncFor' if region.is_async else 'For',
             'target': target,
@@ -2071,6 +2111,22 @@ class RegionASTGenerator:
                         break
 
         if boolop_for_while:
+            _skip_boolop = False
+            if len(boolop_for_while.op_chain) >= 2:
+                for chain_block, _ in boolop_for_while.op_chain:
+                    if chain_block == cond_block:
+                        continue
+                    for _sr in self.regions:
+                        if isinstance(_sr, LoopRegion) and _sr is not region:
+                            if chain_block is _sr.condition_block:
+                                _skip_boolop = True
+                                break
+                    if _skip_boolop:
+                        break
+            if _skip_boolop:
+                boolop_for_while = None
+
+        if boolop_for_while:
             boolop_expr = self._build_boolop_expression(boolop_for_while)
             if boolop_expr:
                 condition = boolop_expr
@@ -2220,7 +2276,38 @@ class RegionASTGenerator:
         if else_stmts and getattr(region, 'has_trailing_return_none', False):
             _non_trivial = [s for s in else_stmts if not self._is_trailing_return_none_statement(s)]
             if not _non_trivial:
-                else_stmts = []
+                # [修复] 判断while else中的return None是显式还是隐式：
+                # - 显式：while else块是函数中唯一的return None出口（如while13）
+                # - 隐式：存在其他独立的return None块（如wl23，编译器添加的隐式return）
+                # 检测方法：统计CFG中不在while循环blocks内的return None块数量
+                _loop_block_set = set(region.blocks)
+                if region.header_block:
+                    _loop_block_set.add(region.header_block)
+                _other_return_none_blocks = 0
+                for _b in self.cfg.blocks.values():
+                    if _b in _loop_block_set:
+                        continue
+                    if _b in (region.else_blocks or []):
+                        continue
+                    if not _b.successors:  # 出口块
+                        _b_instrs = _b.instructions
+                        if (len(_b_instrs) >= 2 and
+                            _b_instrs[-1].opname == 'RETURN_VALUE' and
+                            _b_instrs[-2].opname == 'LOAD_CONST' and
+                            _b_instrs[-2].argval is None):
+                            _other_return_none_blocks += 1
+                if _other_return_none_blocks == 0:
+                    # 没有其他return None块 → return None是显式的，保留
+                    _trailing_return_none_stmts = list(else_stmts)
+                    else_stmts = []
+                else:
+                    # 有其他return None块 → return None是隐式的，过滤掉
+                    _trailing_return_none_stmts = None
+                    else_stmts = []
+            else:
+                _trailing_return_none_stmts = None
+        else:
+            _trailing_return_none_stmts = None
 
         _cond_offset = cond_block.start_offset if cond_block else (region.entry.start_offset if region.entry else 0)
         _preceding_if_cond = None
@@ -2284,6 +2371,16 @@ class RegionASTGenerator:
 
         if else_stmts:
             result['orelse'] = else_stmts
+
+        # [修复] 将被过滤的return None语句追加到while循环后（而非放入orelse）
+        if _trailing_return_none_stmts:
+            if pre_stmts:
+                output = list(pre_stmts)
+                output.append(result)
+                output.extend(_trailing_return_none_stmts)
+                return output
+            else:
+                return [result] + _trailing_return_none_stmts
 
         if pre_stmts:
             output = list(pre_stmts)
@@ -2629,7 +2726,7 @@ class RegionASTGenerator:
             # 根因：region_analyzer在确定block_role时，将跳出循环的退出块统一标记为BREAK
             #       但没有区分"break退出"和"return退出"
             # 修复：检查块的实际指令，如果包含return操作码，则不当作break处理
-            if any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in block.instructions):
+            if any(i.opname in ('RETURN_VALUE', 'RETURN_CONST', 'RAISE_VARARGS') for i in block.instructions):
                 body_blocks_no_header.append(block)
                 return True
             return False
@@ -3228,7 +3325,21 @@ class RegionASTGenerator:
                                             break
                                         if _ri.opname not in ('NOP', 'CACHE', 'POP_TOP'):
                                             break
-                            if _is_early_return:
+                            _is_early_raise_ft = False
+                            if _ft_last_i and _ft_last_i.opname == 'RAISE_VARARGS':
+                                _is_early_raise_ft = True
+                            if _is_early_raise_ft:
+                                _raise_stmts_ft = self._generate_block_statements(_fall_through_block)
+                                if _fall_through_block not in self.generated_blocks:
+                                    self.generated_blocks.add(_fall_through_block)
+                                self.generated_offsets.add(_fall_through_block.start_offset)
+                                _self_loop_stmts.append({
+                                    'type': 'If',
+                                    'test': _cb_cond,
+                                    'body': _raise_stmts_ft if _raise_stmts_ft else [{'type': 'Raise', 'exc': None}],
+                                    'orelse': [],
+                                })
+                            elif _is_early_return:
                                 _ret_ast = self._generate_return_ast(_fall_through_block)
                                 _then_ret = [_ret_ast] if _ret_ast else [{'type': 'Return', 'value': {'type': 'Constant', 'value': None}}]
                                 if _fall_through_block not in self.generated_blocks:
@@ -3287,7 +3398,21 @@ class RegionASTGenerator:
                                             break
                                         if _ri2.opname not in ('NOP', 'CACHE', 'POP_TOP'):
                                             break
-                            if _is_early_ret:
+                            _is_early_raise = False
+                            if _ft_last_i2 and _ft_last_i2.opname == 'RAISE_VARARGS':
+                                _is_early_raise = True
+                            if _is_early_raise:
+                                _raise_stmts = self._generate_block_statements(_fall_through_block)
+                                if _fall_through_block not in self.generated_blocks:
+                                    self.generated_blocks.add(_fall_through_block)
+                                self.generated_offsets.add(_fall_through_block.start_offset)
+                                _self_loop_stmts.append({
+                                    'type': 'If',
+                                    'test': _cb_cond,
+                                    'body': _raise_stmts if _raise_stmts else [{'type': 'Raise', 'exc': None}],
+                                    'orelse': [],
+                                })
+                            elif _is_early_ret:
                                 _ret_ast2 = self._generate_return_ast(_fall_through_block)
                                 _then_ret2 = [_ret_ast2] if _ret_ast2 else [{'type': 'Return', 'value': {'type': 'Constant', 'value': None}}]
                                 if _fall_through_block not in self.generated_blocks:
@@ -3941,7 +4066,11 @@ class RegionASTGenerator:
         _nbe_cond_start_idx = None
         _has_store = any(i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF') for i in block.instructions)
         _has_call = any(i.opname in ('CALL', 'PRECALL', 'LOAD_METHOD') for i in block.instructions)
-        _needs_extended_trace = _has_store and _has_call
+        # [区域归约算法 - 条件块起始索引检测]
+        # 当条件块包含CALL指令时（如len(data) > 0中的len(data)），
+        # CALL指令是条件表达式的一部分，不是前置语句。
+        # 修复n09：放宽条件为仅检查_has_call
+        _needs_extended_trace = _has_call
         for _nbci in range(len(block.instructions) - 2, -1, -1):
             _nbc_instr = block.instructions[_nbci]
             if _nbc_instr.opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP'):
@@ -4829,6 +4958,32 @@ class RegionASTGenerator:
                 for b in child.blocks:
                     self.generated_blocks.add(b)
                 self._generated_regions.add(child_id)
+        if not _expr_child_stmts:
+            then_entry_offsets = {b.start_offset for b in region.then_blocks} if region.then_blocks else set()
+            then_block_set = set(region.then_blocks) if region.then_blocks else set()
+            for r in self.regions:
+                if not isinstance(r, (BoolOpRegion, TernaryRegion)):
+                    continue
+                if r.entry is None or r.entry in self.generated_blocks:
+                    continue
+                r_id = id(r)
+                if r_id in self._generated_regions or r_id in self._generating_regions:
+                    continue
+                if r.entry.start_offset not in then_entry_offsets:
+                    if not any(b in then_block_set for b in r.blocks):
+                        continue
+                if isinstance(r, BoolOpRegion):
+                    child_ast = self._generate_boolop(r)
+                else:
+                    child_ast = self._generate_ternary(r)
+                if child_ast:
+                    if isinstance(child_ast, list):
+                        _expr_child_stmts.extend(child_ast)
+                    else:
+                        _expr_child_stmts.append(child_ast)
+                for b in r.blocks:
+                    self.generated_blocks.add(b)
+                self._generated_regions.add(r_id)
         then_stmts = self._process_if_blocks(region.then_blocks, region, branch='then')
         if _expr_child_stmts:
             then_stmts = _expr_child_stmts + then_stmts
@@ -5130,6 +5285,16 @@ class RegionASTGenerator:
                 self.generated_blocks.add(elif_cond)
         then_stmts = self._if_generate_then_branch(region)
         else_stmts = self._if_generate_else_branch(region)
+        if (not else_stmts and then_stmts
+            and len(then_stmts) == 1
+            and isinstance(then_stmts[0], dict)
+            and then_stmts[0].get('type') == 'If'
+            and not then_stmts[0].get('orelse')):
+            inner_cond = then_stmts[0].get('test')
+            inner_body = then_stmts[0].get('body', [])
+            if inner_cond:
+                condition = {'type': 'BoolOp', 'op': 'and', 'values': [condition, inner_cond]}
+                then_stmts = inner_body
         result = {'type': 'If', 'test': condition, 'body': then_stmts, 'orelse': else_stmts if else_stmts else None}
         self._generating_regions.discard(region_id)
         self._generated_regions.add(region_id)
@@ -5604,7 +5769,21 @@ class RegionASTGenerator:
         if expr is None:
             self.generated_blocks.add(block)
             return pre_stmts if pre_stmts else None
-        is_if_false = 'IF_FALSE' in last_instr.opname
+        # 处理NONE_CHECK_OPS
+        if last_instr.opname in NONE_CHECK_OPS:
+            _is_not_none_jump = 'NOT_NONE' in last_instr.opname
+            if _is_not_none_jump:
+                expr = {'type': 'Compare', 'left': expr,
+                       'ops': [{'type': 'Is'}],
+                       'comparators': [{'type': 'Constant', 'value': None}]}
+            else:
+                expr = {'type': 'Compare', 'left': expr,
+                       'ops': [{'type': 'IsNot'}],
+                       'comparators': [{'type': 'Constant', 'value': None}]}
+        if last_instr.opname in NONE_CHECK_OPS:
+            is_if_false = True
+        else:
+            is_if_false = 'IF_FALSE' in last_instr.opname
         if exit_succ == jump_target:
             cond_expr = _negate_expr(expr) if is_if_false else expr
         else:
@@ -5900,7 +6079,20 @@ class RegionASTGenerator:
                 if expr is None:
                     self.generated_blocks.add(block)
                     return pre_stmts if pre_stmts else None
+                # 处理NONE_CHECK_OPS：重建 is None / is not None 比较表达式
+                if last_instr.opname in NONE_CHECK_OPS:
+                    _is_not_none_jump = 'NOT_NONE' in last_instr.opname
+                    if _is_not_none_jump:
+                        expr = {'type': 'Compare', 'left': expr,
+                               'ops': [{'type': 'Is'}],
+                               'comparators': [{'type': 'Constant', 'value': None}]}
+                    else:
+                        expr = {'type': 'Compare', 'left': expr,
+                               'ops': [{'type': 'IsNot'}],
+                               'comparators': [{'type': 'Constant', 'value': None}]}
                 is_if_false = 'IF_FALSE' in last_instr.opname
+                if last_instr.opname in NONE_CHECK_OPS:
+                    is_if_false = True  # NONE_CHECK_OPS跳转条件与if条件相反
                 cond_expr = expr
                 # Phase 45: IF_TRUE/IF_FALSE四组合then/else映射（字节码等价）
                 # 核心原则: then=条件True路径, else=条件False路径, 条件不取反
@@ -5980,8 +6172,26 @@ class RegionASTGenerator:
                 if expr is None:
                     self.generated_blocks.add(block)
                     return pre_stmts if pre_stmts else None
+                # 处理NONE_CHECK_OPS
+                if last_instr.opname in NONE_CHECK_OPS:
+                    _is_not_none_jump = 'NOT_NONE' in last_instr.opname
+                    if _is_not_none_jump:
+                        expr = {'type': 'Compare', 'left': expr,
+                               'ops': [{'type': 'Is'}],
+                               'comparators': [{'type': 'Constant', 'value': None}]}
+                    else:
+                        expr = {'type': 'Compare', 'left': expr,
+                               'ops': [{'type': 'IsNot'}],
+                               'comparators': [{'type': 'Constant', 'value': None}]}
                 cond_expr = expr
-                if_stmt = {'type': 'If', 'test': cond_expr, 'body': []}
+                # Determine correct condition for continue+normal pattern
+                _is_if_false = 'IF_FALSE' in last_instr.opname
+                _continue_is_jump = continue_succ[1]
+                if _continue_is_jump:
+                    cond_expr = _negate_expr(expr) if _is_if_false else expr
+                else:
+                    cond_expr = expr if _is_if_false else _negate_expr(expr)
+                if_stmt = {'type': 'If', 'test': cond_expr, 'body': [{'type': 'Continue'}]}
                 self.generated_blocks.add(block)
                 self.generated_offsets.add(block.start_offset)
                 result = pre_stmts + [if_stmt] if pre_stmts else [if_stmt]
@@ -6021,7 +6231,20 @@ class RegionASTGenerator:
                 target_succ = break_succ
                 body_type = 'Break'
             else:
+                # 处理NONE_CHECK_OPS
+                if last_instr.opname in NONE_CHECK_OPS:
+                    _is_not_none_jump = 'NOT_NONE' in last_instr.opname
+                    if _is_not_none_jump:
+                        _bn_expr = {'type': 'Compare', 'left': _bn_expr,
+                                   'ops': [{'type': 'Is'}],
+                                   'comparators': [{'type': 'Constant', 'value': None}]}
+                    else:
+                        _bn_expr = {'type': 'Compare', 'left': _bn_expr,
+                                   'ops': [{'type': 'IsNot'}],
+                                   'comparators': [{'type': 'Constant', 'value': None}]}
                 _bn_is_if_false = 'IF_FALSE' in last_instr.opname
+                if last_instr.opname in NONE_CHECK_OPS:
+                    _bn_is_if_false = True
                 _bn_norm_is_jump = normal_succ[1]
                 # Phase 45: 四组合then/else映射（与continue+normal分支一致）
                 # then=条件True路径, else=条件False路径, 条件不取反
@@ -6140,6 +6363,26 @@ class RegionASTGenerator:
                 stmt = self._build_store_statement(cond_instrs + [instr], block=block)
                 if stmt:
                     pre_stmts.append(stmt)
+                cond_instrs = []
+                continue
+            if instr.opname == 'STORE_SUBSCR' and cond_instrs:
+                subscr_stmt = self._build_subscript_assign(cond_instrs + [instr])
+                if subscr_stmt:
+                    pre_stmts.append(subscr_stmt)
+                else:
+                    stmt = self._build_statement(cond_instrs + [instr])
+                    if stmt:
+                        pre_stmts.append(stmt)
+                cond_instrs = []
+                continue
+            if instr.opname == 'STORE_ATTR' and cond_instrs:
+                attr_stmt = self._build_attr_assign(cond_instrs + [instr])
+                if attr_stmt:
+                    pre_stmts.append(attr_stmt)
+                else:
+                    stmt = self._build_statement(cond_instrs + [instr])
+                    if stmt:
+                        pre_stmts.append(stmt)
                 cond_instrs = []
                 continue
             if instr.opname == 'POP_TOP' and cond_instrs:
@@ -6329,7 +6572,10 @@ class RegionASTGenerator:
                         nested_try_regions.append(r)
 
         for ntr in sorted(nested_try_regions, key=lambda r: r.try_offset_start):
-            if ntr.entry.start_offset < region.try_offset_start:
+            # [nested修复] 当嵌套TryExceptRegion的entry在outer的try_offset_start之前或相同时，
+            # 需要先生成嵌套的TryExceptRegion。使用<=而非<是因为当两个try块的
+            # try_offset_start相同时（如try-in-try模式），内层try也需要在此生成。
+            if ntr.entry.start_offset <= region.try_offset_start:
                 if id(ntr) not in self._generated_regions and id(ntr) not in self._generating_regions:
                     self.generated_blocks.discard(ntr.entry)
                     for b in ntr.try_blocks:
@@ -6530,12 +6776,30 @@ class RegionASTGenerator:
 
             nested_region = self.region_analyzer.get_entry_region_for_block(block)
             if not nested_region or nested_region is region:
+                # [修复] 当block是当前region的entry时，检查block是否属于某个子region。
+                # 如果属于子region（block在子region的blocks中且子region的entry也在当前region中），
+                # 应让子region生成（不阻止回退搜索）。
+                # 如果只属于父级region（如MatchRegion），则阻止回退搜索。
+                # 这修复了match+try嵌套时try body内容丢失的问题。
+                _block_is_region_entry = (nested_region is region and block is region.entry)
+                _block_belongs_to_child_region = False
+                if _block_is_region_entry:
+                    for r in self.region_analyzer.regions:
+                        if r is region:
+                            continue
+                        if isinstance(r, (IfRegion, LoopRegion, TryExceptRegion, WithRegion, MatchRegion, BoolOpRegion, TernaryRegion, AssertRegion)):
+                            if block in r.blocks and r.entry in region.blocks:
+                                _block_belongs_to_child_region = True
+                                break
                 block_region = self.region_analyzer.get_region_for_block(block)
                 if block_region and block_region is not region and isinstance(block_region, (IfRegion, LoopRegion, TryExceptRegion, WithRegion, MatchRegion, BoolOpRegion, TernaryRegion, AssertRegion)):
-                    nested_region = block_region
+                    if _block_is_region_entry and not _block_belongs_to_child_region:
+                        nested_region = None
+                    else:
+                        nested_region = block_region
                 elif nested_region is region:
                     nested_region = None
-                if nested_region is None:
+                if nested_region is None and not (_block_is_region_entry and not _block_belongs_to_child_region):
                     for r in self.region_analyzer.regions:
                         if r is region:
                             continue
@@ -6548,6 +6812,14 @@ class RegionASTGenerator:
                     stmts = self._generate_block_statements(block)
                     body_stmts.extend(stmts)
                     continue
+                # 跳过嵌套在handler body中的TryExceptRegion（由handler body生成代码处理）
+                if isinstance(nested_region, TryExceptRegion) and isinstance(region, TryExceptRegion):
+                    _hbb_check = set()
+                    for _, _, hbs in region.except_handlers:
+                        _hbb_check.update(hbs)
+                    if nested_region.entry in _hbb_check:
+                        self.generated_blocks.add(block)
+                        continue
                 if (isinstance(nested_region, TryExceptRegion) and
                     isinstance(region, TryExceptRegion) and
                     nested_region.try_offset_end > region.try_offset_end and
@@ -6591,6 +6863,20 @@ class RegionASTGenerator:
                 self.generated_blocks.add(block)
 
         for ntr in nested_try_regions:
+            # 跳过嵌套在handler body中的region（由handler body生成代码处理）
+            _hbb = set()
+            for _, _, hbs in region.except_handlers:
+                _hbb.update(hbs)
+            if ntr.entry in _hbb:
+                continue
+            # 跳过entry在finally_blocks中的region（由finally body生成代码处理）
+            # 以及entry不在try_blocks中的region（正常路径副本，应跳过）
+            _try_block_set = set(region.try_blocks)
+            _finally_block_set = set(region.finally_blocks) if region.finally_blocks else set()
+            if ntr.entry in _finally_block_set:
+                continue
+            if region.has_finally and ntr.entry not in _try_block_set:
+                continue
             if id(ntr) not in self._generated_regions and id(ntr) not in self._generating_regions:
                 if ntr.try_offset_end > region.try_offset_end and ntr.try_offset_start <= region.try_offset_start:
                     self._skipped_outer_try = ntr
@@ -7088,10 +7374,53 @@ class RegionASTGenerator:
                     continue
                 handler_body = self._generate_handler_body_statements(handler_entry)
                 self.generated_blocks.add(handler_entry)
+
+                # 检测handler body中是否存在嵌套的TryExceptRegion
+                # 当内层try-except嵌套在except handler体内时，需要递归生成
+                _nested_in_handler = []
+                for nr in self.region_analyzer.regions:
+                    if not isinstance(nr, TryExceptRegion) or nr is region:
+                        continue
+                    if id(nr) in self._generated_regions or id(nr) in self._generating_regions:
+                        continue
+                    # 内层region的parent是当前region，且内层entry在handler body块中
+                    if nr.parent is region:
+                        _nested_in_handler.append(nr)
+                    # 或者内层region的try_offset_start在当前handler范围内
+                    elif (nr.try_offset_start >= handler_entry.start_offset and
+                          nr.try_offset_start < region.try_offset_end and
+                          nr.try_offset_end > handler_entry.start_offset):
+                        # 确认内层handler也在当前handler范围内
+                        for nheb in nr.handler_entry_blocks:
+                            if nheb.start_offset >= handler_entry.start_offset:
+                                _nested_in_handler.append(nr)
+                                break
+
                 for hb in handler_blocks:
                     if hb in self.generated_blocks:
                         continue
                     if hb is handler_entry:
+                        continue
+                    # 检查此块是否是嵌套TryExceptRegion的入口
+                    _is_nested_entry = False
+                    for nr in sorted(_nested_in_handler, key=lambda r: r.try_offset_start):
+                        if nr.entry == hb or hb in nr.try_blocks:
+                            _nested_ast = self._generate_try(nr)
+                            if _nested_ast:
+                                handler_body.append(_nested_ast)
+                            for b in nr.blocks:
+                                self.generated_blocks.add(b)
+                            _is_nested_entry = True
+                            break
+                    if _is_nested_entry:
+                        continue
+                    # 检查此块是否属于某个嵌套TryExceptRegion
+                    _in_nested = False
+                    for nr in _nested_in_handler:
+                        if hb in nr.blocks:
+                            _in_nested = True
+                            break
+                    if _in_nested:
                         continue
                     hbs = self._generate_handler_body_statements(hb)
                     if hbs:
@@ -7109,6 +7438,7 @@ class RegionASTGenerator:
             # 说明存在外层except handler被遗漏。此时需要将当前handlers（内层）包装成嵌套Try AST，
             # 并用外层handler作为当前Try AST的handlers。
             # 关键条件：target_block不在当前region.blocks中（区分try_try与try/except/finally）
+            # 额外条件：target_block不属于子region（如finally块内部的try-except）
             _existing_handler_offsets = set()
             for heb in region.handler_entry_blocks:
                 _existing_handler_offsets.add(heb.start_offset)
@@ -7123,6 +7453,11 @@ class RegionASTGenerator:
                             if (target_block and
                                 target_block not in self.generated_blocks and
                                 target_block not in _region_block_set):
+                                # 检查 target_block 是否属于子region
+                                # 如果是，说明这是子region的handler，不应作为外层handler
+                                child_region = self.region_analyzer.get_region_for_block(target_block)
+                                if child_region is not None and child_region is not region:
+                                    continue
                                 has_push_exc = any(
                                     i.opname == 'PUSH_EXC_INFO'
                                     for i in target_block.instructions
@@ -7249,6 +7584,24 @@ class RegionASTGenerator:
             elif region.finally_blocks and region.has_finally:
                 finalbody_stmts = []
                 _generated_finally_offsets = set()
+                # 检查是否有嵌套的TryExceptRegion在finally_blocks中
+                _nested_in_finally = []
+                for nr in self.region_analyzer.regions:
+                    if not isinstance(nr, TryExceptRegion) or nr is region:
+                        continue
+                    if id(nr) in self._generated_regions or id(nr) in self._generating_regions:
+                        continue
+                    if nr.parent is region and nr.entry in set(region.finally_blocks):
+                        _nested_in_finally.append(nr)
+                # 先生成嵌套的TryExceptRegion
+                for nr in sorted(_nested_in_finally, key=lambda r: r.entry.start_offset):
+                    for b in nr.blocks:
+                        self.generated_blocks.discard(b)
+                    nested_ast = self._generate_try(nr)
+                    if nested_ast:
+                        finalbody_stmts.append(nested_ast)
+                    for b in nr.blocks:
+                        self.generated_blocks.add(b)
                 for fb in region.finally_blocks:
                     if fb in self.generated_blocks:
                         continue
@@ -7424,6 +7777,32 @@ class RegionASTGenerator:
                 continue
 
             if instr.opname == 'COPY' and instr.arg == 1:
+                stmt_instrs.append(instr)
+                continue
+
+            if instr.opname == 'SWAP':
+                instr_idx = block.instructions.index(instr)
+                remaining_after_swap = block.instructions[instr_idx + 1:]
+                remaining_nospace = [i for i in remaining_after_swap
+                                     if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                _is_except_return_swap = False
+                if (remaining_nospace and
+                        remaining_nospace[0].opname == 'POP_EXCEPT' and
+                        len(remaining_nospace) >= 2 and
+                        remaining_nospace[1].opname in ('RETURN_VALUE', 'RETURN_CONST')):
+                    _is_except_return_swap = True
+                if not _is_except_return_swap and not remaining_nospace:
+                    for succ in block.successors:
+                        succ_instrs = [i for i in succ.instructions
+                                       if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                        if (succ_instrs and
+                                succ_instrs[0].opname == 'POP_EXCEPT' and
+                                len(succ_instrs) >= 2 and
+                                succ_instrs[1].opname in ('RETURN_VALUE', 'RETURN_CONST')):
+                            _is_except_return_swap = True
+                            break
+                if _is_except_return_swap:
+                    continue
                 stmt_instrs.append(instr)
                 continue
 
@@ -7624,9 +8003,35 @@ class RegionASTGenerator:
             stmt_instrs.append(instr)
 
         if stmt_instrs:
-            stmt = self._build_statement(stmt_instrs)
-            if stmt:
-                stmts.append(stmt)
+            _succ_is_except_return = False
+            for succ in block.successors:
+                succ_instrs = [i for i in succ.instructions
+                               if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                if (succ_instrs and
+                        succ_instrs[0].opname == 'POP_EXCEPT' and
+                        len(succ_instrs) >= 2 and
+                        succ_instrs[1].opname in ('RETURN_VALUE', 'RETURN_CONST')):
+                    _succ_is_except_return = True
+                    break
+            if _succ_is_except_return and self._try_depth > 0:
+                expr = self.expr_reconstructor.reconstruct(stmt_instrs)
+                if expr and not (expr.get('type') == 'Constant' and expr.get('value') is None):
+                    stmts.append({'type': 'Return', 'value': expr})
+                else:
+                    stmts.append({'type': 'Return', 'value': None})
+                for succ in block.successors:
+                    succ_instrs = [i for i in succ.instructions
+                                   if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                    if (succ_instrs and
+                            succ_instrs[0].opname == 'POP_EXCEPT' and
+                            len(succ_instrs) >= 2 and
+                            succ_instrs[1].opname in ('RETURN_VALUE', 'RETURN_CONST')):
+                        self.generated_blocks.add(succ)
+                        break
+            else:
+                stmt = self._build_statement(stmt_instrs)
+                if stmt:
+                    stmts.append(stmt)
 
         return stmts
 
@@ -7674,6 +8079,87 @@ class RegionASTGenerator:
 
     def _mark_with_cleanup_generated(self, block):
         self._with_cleanup_generated_blocks.add(block)
+
+    def _generate_class_body_from_code(self, code_obj):
+        """从code object生成类定义的body语句列表。"""
+        try:
+            from core.cfg.cfg_builder import CFGBuilder
+            from core.cfg.region_analyzer import RegionAnalyzer
+            _cfg_builder = CFGBuilder()
+            _cfg = _cfg_builder.build(code_obj)
+            _analyzer = RegionAnalyzer(_cfg)
+            _analyzer.analyze()
+            _generator = RegionASTGenerator(_cfg, _analyzer)
+            _result = _generator.generate()
+            if isinstance(_result, list):
+                return _result
+            elif isinstance(_result, dict):
+                return [_result]
+            return None
+        except Exception:
+            return None
+
+    def _filter_if_blocks_in_with(self, if_region, with_region):
+        """过滤IfRegion在WithRegion内的then/else_blocks中的with清理代码。
+        返回: (filtered_then, filtered_else, found_break, found_continue)
+        """
+        _filtered_then = []
+        _filtered_else = []
+        _found_break = False
+        _found_continue = False
+        _break_visited = set()
+        for tb in if_region.then_blocks:
+            _tb_role = self.region_analyzer.get_block_role(tb)
+            _is_wc = False
+            if _tb_role in (BlockRole.WITH_EXIT_CLEANUP, BlockRole.WITH_STACK_CLEANUP,
+                            BlockRole.WITH_HANDLER, BlockRole.LOOP_HEADER, BlockRole.LOOP_BACK_EDGE):
+                _is_wc = True
+            elif self.region_analyzer._is_with_exit_cleanup(tb):
+                _is_wc = True
+            elif _tb_role == BlockRole.CONTINUE:
+                _is_wc = True
+                _found_continue = True
+            elif _tb_role == BlockRole.PURE_BREAK:
+                if any(i.opname == 'RERAISE' for i in tb.instructions):
+                    _is_wc = True
+            elif _tb_role == BlockRole.LOOP_ELSE:
+                if any(i.opname == 'RETURN_VALUE' for i in tb.instructions):
+                    _is_wc = True
+            elif _tb_role == BlockRole.LOOP_BODY:
+                if any(i.opname in ('BEFORE_WITH', 'BEFORE_ASYNC_WITH') for i in tb.instructions):
+                    _is_wc = True
+                if any(i.opname == 'WITH_EXCEPT_START' for i in tb.instructions):
+                    _is_wc = True
+            if not _is_wc:
+                _filtered_then.append(tb)
+            else:
+                if not _found_break and not _found_continue and self._current_loop is not None:
+                    if self.region_analyzer._is_with_exit_leading_to_break(tb, self._current_loop, _break_visited):
+                        _found_break = True
+        for eb in if_region.else_blocks:
+            _eb_role = self.region_analyzer.get_block_role(eb)
+            _is_wc = False
+            if _eb_role in (BlockRole.WITH_EXIT_CLEANUP, BlockRole.WITH_STACK_CLEANUP,
+                            BlockRole.WITH_HANDLER, BlockRole.LOOP_HEADER, BlockRole.LOOP_BACK_EDGE):
+                _is_wc = True
+            elif self.region_analyzer._is_with_exit_cleanup(eb):
+                _is_wc = True
+            elif _eb_role == BlockRole.CONTINUE:
+                _is_wc = True
+            elif _eb_role == BlockRole.PURE_BREAK:
+                if any(i.opname == 'RERAISE' for i in eb.instructions):
+                    _is_wc = True
+            elif _eb_role == BlockRole.LOOP_ELSE:
+                if any(i.opname == 'RETURN_VALUE' for i in eb.instructions):
+                    _is_wc = True
+            elif _eb_role == BlockRole.LOOP_BODY:
+                if any(i.opname in ('BEFORE_WITH', 'BEFORE_ASYNC_WITH') for i in eb.instructions):
+                    _is_wc = True
+                if any(i.opname == 'WITH_EXCEPT_START' for i in eb.instructions):
+                    _is_wc = True
+            if not _is_wc:
+                _filtered_else.append(eb)
+        return _filtered_then, _filtered_else, _found_break, _found_continue
 
     def _extract_return_from_exit_block(self, block):
         value_instrs = []
@@ -8008,6 +8494,53 @@ class RegionASTGenerator:
                             break
                 if nested_region and nested_region != region and nested_region is not region.parent and isinstance(nested_region, (IfRegion, LoopRegion, TryExceptRegion, WithRegion, AssertRegion, BoolOpRegion, TernaryRegion)):
                     if nested_region.entry == block or (hasattr(nested_region, 'condition_block') and nested_region.condition_block == block):
+                        # [修复] TryExceptRegion在WithRegion内时，else_blocks可能包含with清理代码
+                        _try_else_fixup = None
+                        if isinstance(nested_region, TryExceptRegion) and nested_region.has_else and nested_region.else_blocks:
+                            _bad_else = []
+                            _good_else = []
+                            for eb in nested_region.else_blocks:
+                                _is_cleanup = False
+                                if body_end_offset > 0 and eb.start_offset >= body_end_offset:
+                                    _is_cleanup = True
+                                elif self.region_analyzer._is_with_exit_cleanup(eb):
+                                    _is_cleanup = True
+                                elif self.region_analyzer.get_block_role(eb) in (BlockRole.WITH_EXIT_CLEANUP, BlockRole.WITH_STACK_CLEANUP, BlockRole.WITH_HANDLER):
+                                    _is_cleanup = True
+                                elif nested_region.has_finally and nested_region.finally_blocks:
+                                    for fb in nested_region.finally_blocks:
+                                        _eb_r = [i for i in eb.instructions if i.opname not in ('RESUME','NOP','CACHE','PUSH_NULL','PUSH_EXC_INFO','POP_EXCEPT','POP_TOP','RERAISE','COPY','JUMP_FORWARD','JUMP_BACKWARD','JUMP_ABSOLUTE','JUMP_BACKWARD_NO_INTERRUPT')]
+                                        _fb_r = [i for i in fb.instructions if i.opname not in ('RESUME','NOP','CACHE','PUSH_NULL','PUSH_EXC_INFO','POP_EXCEPT','POP_TOP','RERAISE','COPY','JUMP_FORWARD','JUMP_BACKWARD','JUMP_ABSOLUTE','JUMP_BACKWARD_NO_INTERRUPT')]
+                                        if _eb_r and _fb_r and len(_eb_r) == len(_fb_r) and all(a.opname == b.opname for a, b in zip(_eb_r, _fb_r)):
+                                            _is_cleanup = True
+                                            break
+                                if _is_cleanup:
+                                    _bad_else.append(eb)
+                                else:
+                                    _good_else.append(eb)
+                            if _bad_else:
+                                _try_end = getattr(nested_region, 'try_offset_end', None)
+                                _handler_start = min((hb.start_offset for hb in nested_region.handler_entry_blocks), default=None) if nested_region.handler_entry_blocks else None
+                                _actual_else = []
+                                if _try_end is not None and _handler_start is not None:
+                                    for wb in region.with_blocks:
+                                        if wb in nested_region.blocks or wb in self.generated_blocks:
+                                            continue
+                                        if wb.start_offset >= _try_end and wb.start_offset < _handler_start:
+                                            _actual_else.append(wb)
+                                if _actual_else or not _good_else:
+                                    _try_else_fixup = (list(nested_region.else_blocks), nested_region.has_else)
+                                    nested_region.else_blocks = _actual_else if _actual_else else _good_else
+                                    if not nested_region.else_blocks:
+                                        nested_region.has_else = False
+                        # [修复] IfRegion在WithRegion内时，then/else_blocks可能包含with清理代码
+                        _if_blocks_fixup = None
+                        if isinstance(nested_region, IfRegion):
+                            _ft, _fe, _fb, _fc = self._filter_if_blocks_in_with(nested_region, region)
+                            if _ft != nested_region.then_blocks or _fe != nested_region.else_blocks:
+                                _if_blocks_fixup = (list(nested_region.then_blocks), list(nested_region.else_blocks), _fb, _fc)
+                                nested_region.then_blocks = _ft
+                                nested_region.else_blocks = _fe
                         if isinstance(nested_region, WithRegion) and nested_region.entry == block:
                             pre_instrs = self.region_analyzer.identify_block_prefix_instructions(block)
                             if pre_instrs:
@@ -8031,6 +8564,23 @@ class RegionASTGenerator:
                                 if getattr(nested_region, 'value_target', None):
                                     break
                         generated = self._generate_region(nested_region, skip_store_targets=skip_targets)
+                        # [修复] 恢复TryExceptRegion的else_blocks
+                        if _try_else_fixup is not None:
+                            nested_region.else_blocks, nested_region.has_else = _try_else_fixup
+                        # [修复] 恢复IfRegion的then/else_blocks并处理break/continue
+                        if _if_blocks_fixup is not None:
+                            _orig_then, _orig_else, _found_break, _found_continue = _if_blocks_fixup
+                            nested_region.then_blocks = _orig_then
+                            nested_region.else_blocks = _orig_else
+                            if isinstance(generated, dict) and generated.get('type') == 'If':
+                                if _found_break:
+                                    _then_body = generated.get('body', [])
+                                    if not _then_body or all(s.get('type') == 'Pass' for s in _then_body):
+                                        generated['body'] = [{'type': 'Break'}]
+                                if _found_continue:
+                                    _then_body = generated.get('body', [])
+                                    if not _then_body or all(s.get('type') == 'Pass' for s in _then_body):
+                                        generated['body'] = [{'type': 'Continue'}]
                         if generated:
                             if isinstance(generated, list):
                                 body_stmts.extend(generated)
@@ -8046,16 +8596,74 @@ class RegionASTGenerator:
                         continue
                     elif block in nested_region.blocks:
                         if id(nested_region) not in self._generated_regions:
-                            if isinstance(nested_region, LoopRegion):
-                                pre_instrs = self.region_analyzer.identify_block_prefix_instructions(block)
-                                if pre_instrs:
-                                    pre_stmts = self._build_statements_from_instructions(pre_instrs, block)
-                                    if pre_stmts:
-                                        body_stmts.extend(pre_stmts)
+                            # [修复] TryExceptRegion在WithRegion内时，else_blocks可能包含with清理代码
+                            _try_else_fixup2 = None
+                            if isinstance(nested_region, TryExceptRegion) and nested_region.has_else and nested_region.else_blocks:
+                                _bad_else2 = []
+                                _good_else2 = []
+                                for eb in nested_region.else_blocks:
+                                    _is_cleanup2 = False
+                                    if body_end_offset > 0 and eb.start_offset >= body_end_offset:
+                                        _is_cleanup2 = True
+                                    elif self.region_analyzer._is_with_exit_cleanup(eb):
+                                        _is_cleanup2 = True
+                                    elif self.region_analyzer.get_block_role(eb) in (BlockRole.WITH_EXIT_CLEANUP, BlockRole.WITH_STACK_CLEANUP, BlockRole.WITH_HANDLER):
+                                        _is_cleanup2 = True
+                                    elif nested_region.has_finally and nested_region.finally_blocks:
+                                        for fb in nested_region.finally_blocks:
+                                            _eb_r2 = [i for i in eb.instructions if i.opname not in ('RESUME','NOP','CACHE','PUSH_NULL','PUSH_EXC_INFO','POP_EXCEPT','POP_TOP','RERAISE','COPY','JUMP_FORWARD','JUMP_BACKWARD','JUMP_ABSOLUTE','JUMP_BACKWARD_NO_INTERRUPT')]
+                                            _fb_r2 = [i for i in fb.instructions if i.opname not in ('RESUME','NOP','CACHE','PUSH_NULL','PUSH_EXC_INFO','POP_EXCEPT','POP_TOP','RERAISE','COPY','JUMP_FORWARD','JUMP_BACKWARD','JUMP_ABSOLUTE','JUMP_BACKWARD_NO_INTERRUPT')]
+                                            if _eb_r2 and _fb_r2 and len(_eb_r2) == len(_fb_r2) and all(a.opname == b.opname for a, b in zip(_eb_r2, _fb_r2)):
+                                                _is_cleanup2 = True
+                                                break
+                                    if _is_cleanup2:
+                                        _bad_else2.append(eb)
+                                    else:
+                                        _good_else2.append(eb)
+                                if _bad_else2:
+                                    _try_end2 = getattr(nested_region, 'try_offset_end', None)
+                                    _handler_start2 = min((hb.start_offset for hb in nested_region.handler_entry_blocks), default=None) if nested_region.handler_entry_blocks else None
+                                    _actual_else2 = []
+                                    if _try_end2 is not None and _handler_start2 is not None:
+                                        for wb in region.with_blocks:
+                                            if wb in nested_region.blocks or wb in self.generated_blocks:
+                                                continue
+                                            if wb.start_offset >= _try_end2 and wb.start_offset < _handler_start2:
+                                                _actual_else2.append(wb)
+                                    if _actual_else2 or not _good_else2:
+                                        _try_else_fixup2 = (list(nested_region.else_blocks), nested_region.has_else)
+                                        nested_region.else_blocks = _actual_else2 if _actual_else2 else _good_else2
+                                        if not nested_region.else_blocks:
+                                            nested_region.has_else = False
+                            # [修复] IfRegion在WithRegion内时，then/else_blocks可能包含with清理代码
+                            _if_blocks_fixup2 = None
+                            if isinstance(nested_region, IfRegion):
+                                _ft2, _fe2, _fb2, _fc2 = self._filter_if_blocks_in_with(nested_region, region)
+                                if _ft2 != nested_region.then_blocks or _fe2 != nested_region.else_blocks:
+                                    _if_blocks_fixup2 = (list(nested_region.then_blocks), list(nested_region.else_blocks), _fb2, _fc2)
+                                    nested_region.then_blocks = _ft2
+                                    nested_region.else_blocks = _fe2
                             skip_targets = set()
                             if region.target and isinstance(nested_region, LoopRegion):
                                 skip_targets.add(region.target)
                             generated = self._generate_region(nested_region, skip_store_targets=skip_targets)
+                            # [修复] 恢复TryExceptRegion的else_blocks
+                            if _try_else_fixup2 is not None:
+                                nested_region.else_blocks, nested_region.has_else = _try_else_fixup2
+                            # [修复] 恢复IfRegion的then/else_blocks并处理break/continue
+                            if _if_blocks_fixup2 is not None:
+                                _orig_then2, _orig_else2, _found_break2, _found_continue2 = _if_blocks_fixup2
+                                nested_region.then_blocks = _orig_then2
+                                nested_region.else_blocks = _orig_else2
+                                if isinstance(generated, dict) and generated.get('type') == 'If':
+                                    if _found_break2:
+                                        _then_body2 = generated.get('body', [])
+                                        if not _then_body2 or all(s.get('type') == 'Pass' for s in _then_body2):
+                                            generated['body'] = [{'type': 'Break'}]
+                                    if _found_continue2:
+                                        _then_body2 = generated.get('body', [])
+                                        if not _then_body2 or all(s.get('type') == 'Pass' for s in _then_body2):
+                                            generated['body'] = [{'type': 'Continue'}]
                             if generated:
                                 if isinstance(generated, list):
                                     body_stmts.extend(generated)
@@ -8151,6 +8759,75 @@ class RegionASTGenerator:
 
                 body_stmts.extend(stmts)
                 self.generated_blocks.add(block)
+
+            # [修复] async with body内容提取
+            # async with的字节码中，body内容位于SEND/YIELD_VALUE循环的LOOP_ELSE块中
+            if region.is_async and not body_stmts:
+                _async_body_blocks = []
+                _region_block_ids = {id(b) for b in region.blocks}
+                _first_async_loop = True
+                # 按entry offset排序，确保先处理__aenter__循环（最小的offset）
+                _async_loops = sorted(
+                    [r for r in self.regions if isinstance(r, LoopRegion)],
+                    key=lambda r: r.entry.start_offset
+                )
+                for _r in _async_loops:
+                    if not isinstance(_r, LoopRegion):
+                        continue
+                    _has_send = any(i.opname == 'SEND' for i in _r.entry.instructions)
+                    _has_yield = any(i.opname == 'YIELD_VALUE' for i in _r.entry.instructions)
+                    if not (_has_send and _has_yield):
+                        continue
+                    _overlaps = _r.entry in region.blocks
+                    if not _overlaps:
+                        for b in _r.blocks:
+                            if id(b) in _region_block_ids:
+                                _overlaps = True
+                                break
+                    if _overlaps:
+                        if _first_async_loop:
+                            for b in _r.blocks:
+                                _b_role = self.region_analyzer.get_block_role(b)
+                                if _b_role == BlockRole.LOOP_ELSE and b not in self.generated_blocks:
+                                    _async_body_blocks.append(b)
+                            _first_async_loop = False
+                        # 标记非LOOP_ELSE块为已生成，LOOP_ELSE块稍后处理
+                        for b in _r.blocks:
+                            if b not in _async_body_blocks:
+                                self.generated_blocks.add(b)
+                        self._generated_regions.add(id(_r))
+                # [修复] async with的target检测
+                # BEFORE_ASYNC_WITH之后的STORE指令在LOOP_ELSE块中，不在入口块中
+                # 需要从第一个async loop的LOOP_ELSE块中提取target变量
+                _async_target = None
+                if region.target is None and _async_body_blocks:
+                    _first_loop_else = _async_body_blocks[0]
+                    for _instr in _first_loop_else.instructions:
+                        if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                            _async_target = _instr.argval
+                            break
+                    if _async_target:
+                        region.target = _async_target
+                        # 更新region.items中的optional_vars
+                        if region.items:
+                            _new_items = []
+                            for _ctx_instrs, _tgt in region.items:
+                                if _tgt is None:
+                                    _new_items.append((_ctx_instrs, _async_target))
+                                else:
+                                    _new_items.append((_ctx_instrs, _tgt))
+                            region.items = _new_items
+                for _abb in sorted(_async_body_blocks, key=lambda b: b.start_offset):
+                    if _abb in self.generated_blocks:
+                        continue
+                    _abb_stmts = self._generate_block_statements(_abb)
+                    if region.target and _abb_stmts:
+                        _abb_stmts = [s for s in _abb_stmts
+                                      if not (s.get('type') == 'Assign' and
+                                              s.get('target', {}).get('id') == region.target)]
+                    if _abb_stmts:
+                        body_stmts.extend(_abb_stmts)
+                    self.generated_blocks.add(_abb)
 
             for child in region.children:
                 if isinstance(child, (TryExceptRegion, IfRegion, LoopRegion, WithRegion)):
@@ -8488,6 +9165,7 @@ class RegionASTGenerator:
             for context_instrs, target in region.items:
                     if context_instrs:
                         import_instrs = []
+                        class_def_instrs = []
                         expr_instrs = []
                         i = 0
                         while i < len(context_instrs):
@@ -8501,6 +9179,41 @@ class RegionASTGenerator:
                             else:
                                 expr_instrs.extend(context_instrs[i:])
                                 break
+                        # [修复] 检测类定义模式并分离
+                        _has_code_const = any(i.opname == 'LOAD_CONST' and hasattr(i.argval, 'co_code') for i in expr_instrs)
+                        _has_make_function = any(i.opname == 'MAKE_FUNCTION' for i in expr_instrs)
+                        _has_load_build_class = any(i.opname == 'LOAD_BUILD_CLASS' for i in expr_instrs)
+                        if _has_code_const or _has_make_function or _has_load_build_class:
+                            _class_split_idx = None
+                            _last_call_idx = None
+                            for _ci_idx, _ci in enumerate(expr_instrs):
+                                if _ci.opname == 'CALL':
+                                    _last_call_idx = _ci_idx
+                                if _ci.opname == 'PUSH_NULL' and _ci_idx + 1 < len(expr_instrs):
+                                    if expr_instrs[_ci_idx + 1].opname in ('LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_FAST'):
+                                        _next_name = expr_instrs[_ci_idx + 1].argval
+                                        if _last_call_idx is not None:
+                                            for _prev_idx in range(_last_call_idx - 1, -1, -1):
+                                                _prev = expr_instrs[_prev_idx]
+                                                if _prev.opname == 'LOAD_CONST' and isinstance(_prev.argval, str):
+                                                    if _next_name == _prev.argval:
+                                                        _class_split_idx = _ci_idx
+                                                        break
+                                            if _class_split_idx is not None:
+                                                break
+                                if _ci.opname in ('LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_FAST') and _last_call_idx is not None and _ci_idx > _last_call_idx:
+                                    _next_name = _ci.argval
+                                    for _prev_idx in range(_last_call_idx - 1, -1, -1):
+                                        _prev = expr_instrs[_prev_idx]
+                                        if _prev.opname == 'LOAD_CONST' and isinstance(_prev.argval, str):
+                                            if _next_name == _prev.argval:
+                                                _class_split_idx = _ci_idx
+                                                break
+                                    if _class_split_idx is not None:
+                                        break
+                            if _class_split_idx is not None:
+                                class_def_instrs = expr_instrs[:_class_split_idx]
+                                expr_instrs = expr_instrs[_class_split_idx:]
                         for imp_instr in import_instrs:
                             if imp_instr.opname == 'IMPORT_NAME':
                                 import_stmt = {
@@ -8508,6 +9221,38 @@ class RegionASTGenerator:
                                     'names': [{'name': imp_instr.argval, 'asname': None}],
                                 }
                                 pre_stmts.append(import_stmt)
+                        # [修复] 从class_def_instrs生成类定义
+                        if class_def_instrs:
+                            _class_name = None
+                            _class_code_obj = None
+                            for _cdi in class_def_instrs:
+                                if _cdi.opname == 'LOAD_CONST' and isinstance(_cdi.argval, str):
+                                    _class_name = _cdi.argval
+                                elif _cdi.opname == 'LOAD_CONST' and hasattr(_cdi.argval, 'co_code'):
+                                    _class_code_obj = _cdi.argval
+                            if _class_name and _class_code_obj:
+                                _class_result = self._generate_class_body_from_code(_class_code_obj)
+                                # _class_result可能是ClassDef节点或语句列表
+                                _class_body = None
+                                if isinstance(_class_result, dict) and _class_result.get('type') == 'ClassDef':
+                                    _class_body = _class_result.get('body', [])
+                                elif isinstance(_class_result, list):
+                                    # 检查列表中是否有ClassDef节点
+                                    for _item in _class_result:
+                                        if isinstance(_item, dict) and _item.get('type') == 'ClassDef' and _item.get('name') == _class_name:
+                                            _class_body = _item.get('body', [])
+                                            break
+                                    if _class_body is None:
+                                        _class_body = _class_result
+                                class_def_ast = {
+                                    'type': 'ClassDef',
+                                    'name': _class_name,
+                                    'bases': [],
+                                    'keywords': [],
+                                    'body': _class_body if _class_body else [{'type': 'Pass'}],
+                                    'decorator_list': [],
+                                }
+                                pre_stmts.append(class_def_ast)
                         expr = self.expr_reconstructor.reconstruct(expr_instrs) if expr_instrs else None
                         context_expr = expr if expr else {'type': 'Call', 'func': {'type': 'Name', 'id': 'context'}, 'args': [], 'keywords': []}
                     else:
@@ -8516,6 +9261,16 @@ class RegionASTGenerator:
                     item = {
                         'context_expr': context_expr,
                     }
+                    if not target and context_instrs:
+                        _last_offset = context_instrs[-1].offset
+                        for _r in self.regions:
+                            if isinstance(_r, WithRegion) and _r is not region:
+                                for _ci, _ct in getattr(_r, 'items', []):
+                                    if _ci and _ci[-1].offset == _last_offset and _ct:
+                                        target = _ct
+                                        break
+                            if target:
+                                break
                     if target:
                         item['optional_vars'] = {'type': 'Name', 'id': target, 'ctx': 'Store'}
                     items.append(item)
@@ -9520,6 +10275,12 @@ class RegionASTGenerator:
                             self.generated_blocks.add(nested_region.header_block)
                         continue
                     elif block in nested_region.blocks:
+                        # [修复] 当block在TryExceptRegion的try_blocks中时，需要生成语句
+                        # 这处理了match case body中try-except的try body块丢失问题
+                        if (isinstance(nested_region, TryExceptRegion) and
+                            block in set(nested_region.try_blocks)):
+                            stmts = self._generate_block_statements(block)
+                            body_stmts.extend(stmts)
                         if block not in self.generated_blocks:
                             self.generated_blocks.add(block)
                         continue
@@ -9951,9 +10712,13 @@ class RegionASTGenerator:
         if not op_chain:
             return None
         STRIP_JUMP_OPS = SHORT_CIRCUIT_JUMP_OPS | FORWARD_CONDITIONAL_JUMP_OPS
-        segments = []
-        current_op = None
-        current_values = []
+        # 使用or_groups算法处理混合and/or优先级
+        # 核心原理：Python中and绑定比or更紧
+        # 当op从'and'变为'or'时，当前值是'and'段的最后一个值（外层or的短路跳转）
+        # 当op从'or'变为'and'时，当前值开始一个新的'and'子组
+        or_groups = []
+        current_group_op = None
+        current_group_values = []
         for chain_block, chain_op in op_chain:
             instrs = [i for i in chain_block.instructions
                      if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
@@ -9973,22 +10738,29 @@ class RegionASTGenerator:
             sub_expr = self.expr_reconstructor.reconstruct(pure_instrs)
             if sub_expr is None:
                 continue
-            if current_op is None:
-                current_op = chain_op
-                current_values = [sub_expr]
-            elif chain_op == current_op:
-                current_values.append(sub_expr)
+            if current_group_op is None:
+                current_group_op = chain_op
+                current_group_values = [sub_expr]
+            elif chain_op == current_group_op:
+                current_group_values.append(sub_expr)
+            elif current_group_op == 'and' and chain_op == 'or':
+                # and→or：当前值是and段最后一个值，关闭and组
+                current_group_values.append(sub_expr)
+                or_groups.append((current_group_op, current_group_values))
+                current_group_op = None
+                current_group_values = []
             else:
-                if current_values:
-                    segments.append((current_op, current_values))
-                current_op = chain_op
-                current_values = [sub_expr]
-        if current_values:
-            segments.append((current_op, current_values))
+                # or→and：and绑定更紧，开始新and子组
+                if current_group_values:
+                    or_groups.append((current_group_op, current_group_values))
+                current_group_op = chain_op
+                current_group_values = [sub_expr]
+        # 处理ft_block（fall-through块）
         chain_blocks = set(b for b, _ in op_chain)
-        if segments and len(op_chain) >= 1:
+        if len(op_chain) >= 1:
             last_chain_block = op_chain[-1][0]
             last_instr = last_chain_block.get_last_instruction()
+            last_chain_op = op_chain[-1][1]
             if last_instr and last_instr.opname in STRIP_JUMP_OPS:
                 ft_succs = sorted(last_chain_block.conditional_successors, key=lambda s: s.start_offset)
                 ft_block = next((s for s in ft_succs
@@ -10007,9 +10779,17 @@ class RegionASTGenerator:
                     if clean_ft:
                         ft_expr = self.expr_reconstructor.reconstruct(clean_ft)
                         if ft_expr:
-                            last_op, last_vals = segments[-1]
-                            last_vals.append(ft_expr)
-                            segments[-1] = (last_op, last_vals)
+                            if last_chain_op == 'or' and current_group_op == 'and':
+                                or_groups.append((current_group_op, current_group_values))
+                                or_groups.append(('or', [ft_expr]))
+                                current_group_values = []
+                            elif current_group_op is None:
+                                or_groups.append((last_chain_op, [ft_expr]))
+                            else:
+                                current_group_values.append(ft_expr)
+        if current_group_values:
+            or_groups.append((current_group_op, current_group_values))
+        segments = or_groups
         if not segments:
             return None
         if len(segments) == 1 and len(segments[0][1]) == 1 and len(op_chain) == 1:
@@ -10050,16 +10830,20 @@ class RegionASTGenerator:
             else:
                 result = {'type': 'BoolOp', 'op': op, 'values': values}
         else:
-            result = None
-            for op, values in reversed(segments):
-                if len(values) == 1:
-                    node = values[0]
+            # 多段：外层操作符始终是'or'（因为and绑定更紧，被归入and子组）
+            or_values = []
+            for seg_op, seg_values in segments:
+                if seg_op == 'or':
+                    or_values.extend(seg_values)
                 else:
-                    node = {'type': 'BoolOp', 'op': op, 'values': values}
-                if result is None:
-                    result = node
-                else:
-                    result = {'type': 'BoolOp', 'op': op, 'values': [node, result]}
+                    if len(seg_values) == 1:
+                        or_values.append(seg_values[0])
+                    else:
+                        or_values.append({'type': 'BoolOp', 'op': 'and', 'values': seg_values})
+            if len(or_values) == 1:
+                result = or_values[0]
+            else:
+                result = {'type': 'BoolOp', 'op': 'or', 'values': or_values}
         _has_unary_not = False
         if region.merge_block:
             _merge_instrs = [i for i in region.merge_block.instructions
@@ -11876,6 +12660,19 @@ class RegionASTGenerator:
                 continue
 
             if instr.opname == 'POP_TOP' and stmt_instrs:
+                # 当POP_TOP后面紧跟RETURN_VALUE/RETURN_CONST时，跳过POP_TOP处理
+                # CPython为for循环中的return n生成: LOAD_FAST n, SWAP, POP_TOP, RETURN_VALUE
+                # 其中POP_TOP弹出的是迭代器而非返回值，不应消费stmt_instrs中的表达式
+                _pt_instr_idx = block.instructions.index(instr)
+                _pt_remaining = block.instructions[_pt_instr_idx + 1:]
+                _pt_next_meaningful = None
+                for _pt_ri in _pt_remaining:
+                    if _pt_ri.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                        _pt_next_meaningful = _pt_ri
+                        break
+                if _pt_next_meaningful and _pt_next_meaningful.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                    continue
+
                 pop_expr = self.expr_reconstructor.reconstruct(stmt_instrs)
                 if pop_expr and pop_expr.get('type') not in ('Constant',):
                     stmts.append({'type': 'Expr', 'value': pop_expr})

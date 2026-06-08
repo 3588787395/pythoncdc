@@ -904,3 +904,99 @@
 - [x] 48-BL9: ternary **8f/81p (91.0%)**
 - [x] 48-BL10: nested **73f/198p (73.1%)**
 - [x] 48-BL11: **总计 127f/1683p (93.0%)**
+
+---
+
+## Phase 50: 冲刺100%成功率验证清单（进行中）
+
+### Task 50.0: 基线确认与错误分类
+- [x] 50.0.1: 全量测试基线确认 → **36f/1862p/1898t (98.1%)** ✅
+- [x] 50.0.2: 36个失败测试错误分类完成 ✅
+
+### Task 50.1: while_loop 3f修复
+- [ ] 50.1.1: while13_while_return — has_trailing_return_none过滤修复
+- [ ] 50.1.2: while06_false — CPython优化While合成
+- [ ] 50.1.3: wl05whiletrue — CPython优化While合成
+- [ ] 50.1.4: while_loop验证 + 全量回归
+
+### Task 50.2: for_loop 4f修复
+- [ ] 50.2.1: fl46forreturn_n — SWAP+POP_TOP+RETURN_VALUE
+- [ ] 50.2.2: fl51forbreaknestedif_n/x — for+break+嵌套if
+- [ ] 50.2.3: for16_for_if — ternary vs if-else
+- [ ] 50.2.4: for_loop验证 + 全量回归
+
+### Task 50.3: try_except 6f修复
+- [ ] 50.3.1: te080/te081/te100 — try-finally finally块
+- [ ] 50.3.2: te104 — 嵌套try handler排序
+- [ ] 50.3.3: try16/try20 — 复杂try模式
+- [ ] 50.3.4: try_except验证 + 全量回归
+
+### Task 50.4: with_region 2f修复
+- [ ] 50.4.1: w058 — async with
+- [ ] 50.4.2: w30withcustomctx — 自定义上下文管理器
+- [ ] 50.4.3: with_region验证 + 全量回归
+
+### Task 50.5: match/boolop/ternary/nested边际修复 (15f)
+- [ ] 50.5.1: match m075/m083/m106/m107
+- [ ] 50.5.2: boolop bo42/bo43
+- [ ] 50.5.3: ternary te04/ternary11/12/13/17/20
+- [ ] 50.5.4: nested n09/n10/n11/n13/n15
+- [ ] 50.5.5: 各区域验证 + 全量回归
+
+### Task 50.6: 全量回归验证与文档更新
+- [ ] 50.6.1: 全量10区域回归测试
+- [ ] 50.6.2: 字节码等价性验证
+- [ ] 50.6.3: tasks.md/checklist.md/spec.md更新
+
+---
+
+## 🔥 Phase 51: 区域归约算法驱动 — 冲刺100% 验证清单
+
+### Task 51.0: 基线确认与错误分类
+- [x] 51.0.1: 全量测试基线确认 → **29f/1869p/1898t (98.4%)** ✅
+- [x] 51.0.2: 29个失败测试错误分类完成 ✅
+
+### Task 51.1: P0 模块级While合成条件修正
+- [x] 51.1.1: 模块级优化路径改为If合成 ✅
+- [x] 51.1.2: 收紧_meaningful条件（仅当为空时触发）✅
+- [x] 51.1.3: 添加REGION_TYPE_ALTERNATIVES让WHILE_LOOP接受ast.If ✅
+- [x] 51.1.4: if_region 4f→0f ✅
+- [x] 51.1.5: ternary 10f→7f ✅
+- [x] 51.1.6: while_loop保持0f ✅
+
+### Task 51.1b: nested n09修复
+- [x] 51.1b.1: _needs_extended_trace = _has_call ✅
+- [x] 51.1b.2: nested 8f→7f ✅
+
+### Task 51.2: for_loop 4f修复
+- [ ] 51.2.1: fl46forreturn_n — SWAP+POP_TOP+RETURN_VALUE模式
+- [ ] 51.2.2: fl51forbreaknestedif_n/x — 嵌套if中break归属
+- [ ] 51.2.3: for16_for_if — ternary vs if-else选择
+- [ ] 51.2.4: for_loop验证 + 全量回归
+
+### Task 51.3: try_except 3f修复
+- [ ] 51.3.1: te088 — bare except+finally
+- [ ] 51.3.2: te104/try20 — 嵌套code object/条件取反
+- [ ] 51.3.3: try_except验证 + 全量回归
+
+### Task 51.4: with_region 2f修复
+- [ ] 51.4.1: w058 — async with
+- [ ] 51.4.2: w30withcustomctx — 自定义上下文管理器
+- [ ] 51.4.3: with_region验证 + 全量回归
+
+### Task 51.5: match/boolop/ternary/nested边际修复 (17f)
+- [ ] 51.5.1: match m075/m083/m106/m107
+- [ ] 51.5.2: boolop bo42/bo43
+- [ ] 51.5.3: ternary te04/ternary11/12/13/17/20
+- [ ] 51.5.4: nested n10/n11/n13/n15
+- [ ] 51.5.5: 各区域验证 + 全量回归
+
+### Task 51.6: 反编译逻辑注释完善
+- [ ] 51.6.1: 区域归约算法注释更新
+- [ ] 51.6.2: 新增修复的逻辑注释
+
+### Task 51.7: 全量回归验证与文档更新
+- [ ] 51.7.1: 全量10区域回归测试
+- [ ] 51.7.2: 字节码等价性验证
+- [ ] 51.7.3: tasks.md/checklist.md/spec.md更新
+- [ ] 50.6.4: 反编译逻辑注释完整性验证

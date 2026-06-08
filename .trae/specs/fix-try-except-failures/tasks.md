@@ -1,65 +1,29 @@
 # Tasks
 
-- [ ] Task 1: Fix te047/te083 — continue→break 误识别（fall_through 选择异常处理入口块）
-  - [ ] 1.1: 在 `_try_generate_conditional_break_or_continue` 中修改 fall_through 选择逻辑：当后继块包含 PUSH_EXC_INFO 或 WITH_EXCEPT_START 指令时，跳过该后继，选择另一个非 jump_target 的后继作为 fall_through
-  - [ ] 1.2: 如果所有非 jump_target 后继都是异常处理入口，则回退到原始逻辑（选择第一个非 jump_target 后继）
-  - [ ] 1.3: 验证 te047 和 te083 测试通过
-  - [ ] 1.4: 运行 try_except 回归测试，确认无回归
+- [x] Task 0: 回滚有回归的变更，恢复到基线 + te046 修复状态
+- [x] Task 1: Fix te080 — except handler 内嵌套 try-except
+- [x] Task 2: Fix te100 — 三层嵌套 try
+- [x] Task 3: Fix try16 — 多层嵌套 try
+- [x] Task 4: Fix te081 — try-finally 内嵌套 try-except
+- [ ] Task 5: Fix te104 — finally copy 块泄漏
+  - [ ] 5.1: 分析 te104 的 region 结构和 try_blocks 内容，确定 cleanup()+return 'val' 块为何在 try_blocks 中
+  - [ ] 5.2: 在 region_analyzer 中将 except handler 的 finally copy 块从 try_blocks 移到 handler_blocks，或在 region_ast_generator 的 _generate_try_body 中过滤这些块
+  - [ ] 5.3: 验证 te104 反编译输出为 `try: x=1 except ValueError: return 'val' finally: cleanup()`
+  - [ ] 5.4: 运行全量回归测试，确认总失败数不超过25f
 
-- [ ] Task 2: Fix te050 — 内层 try-except 在 for 循环中未识别
-  - [ ] 2.1: 分析 te050 的 region 结构和异常表，确定内层 try-except 未被识别的原因
-  - [ ] 2.2: 修改 `_find_actual_handler_start` 添加 bare except 检测（PUSH_EXC_INFO 无 CHECK_EXC_MATCH/CHECK_EG_MATCH 且无 RERAISE 时，返回 cleanup_offset）
-  - [ ] 2.3: 验证 te050 测试通过
-  - [ ] 2.4: 运行 try_except 回归测试，确认无回归
+- [ ] Task 6: Fix try20 — 复杂 try 模式
+  - [ ] 6.1: 分析 try20 的字节码和 CFG，确定 `if not result: continue` 为何被反编译为 `if result: pass else: errors.append(result)`
+  - [ ] 6.2: 修复 except handler 中 continue 语句的生成（TypeError handler 缺少 continue）
+  - [ ] 6.3: 修复条件反转问题（`if not result: continue` → `if result: pass else: ...`）
+  - [ ] 6.4: 验证 try20 反编译输出正确
+  - [ ] 6.5: 运行全量回归测试，确认总失败数不超过25f
 
-- [ ] Task 3: Fix te080/try16 — 嵌套 try-except 异常表解析
-  - [ ] 3.1: 在 `_parse_exception_table` 中添加向后搜索逻辑：当 except handler 的 `try_start >= handler_start` 时，向后搜索实际的 try body 起始位置
-  - [ ] 3.2: 在 `_find_actual_handler_start` 中添加候选者收集逻辑，选择最接近 try_start 的候选者（offset <= try_start 中最大的）
-  - [ ] 3.3: 在 `_parse_exception_table` 的合并逻辑中，修复 try_end 不超过 handler_start 的约束
-  - [ ] 3.4: 验证 te080 和 try16 测试通过
-  - [ ] 3.5: 运行 try_except 回归测试，确认无回归
-
-- [ ] Task 4: Fix te100 — 三层嵌套 try handler 顺序错误
-  - [ ] 4.1: 分析 te100 的异常表条目和 region 结构，确定 handler 顺序错误的原因
-  - [ ] 4.2: 修复异常表条目合并逻辑或 region 创建逻辑
-  - [ ] 4.3: 验证 te100 测试通过
-  - [ ] 4.4: 运行 try_except 回归测试，确认无回归
-
-- [ ] Task 5: Fix te104 — finally copy 块泄漏到 try body
-  - [ ] 5.1: 在 `_generate_try_body` 的 has_finally 过滤逻辑中，增加检查：如果 try_blocks 中的块的某个前驱在 except_handlers 的 blocks 中，则该块是 handler return 路径上的 finally copy 块，应从 try body 中过滤
-  - [ ] 5.2: 将被过滤的 finally copy 块中的 return 语句加入对应的 handler body
-  - [ ] 5.3: 验证 te104 测试通过
-  - [ ] 5.4: 运行 try_except 回归测试，确认无回归
-
-- [ ] Task 6: Fix try15 — except handler return 语句错误
-  - [ ] 6.1: 在 handler body 生成中，检测 `LOAD_X; SWAP; POP_EXCEPT; RETURN_VALUE` 模式并生成 `return expr`
-  - [ ] 6.2: 验证 try15 测试通过
-  - [ ] 6.3: 运行 try_except 回归测试，确认无回归
-
-- [ ] Task 7: Fix te081 — try-finally 内嵌套 try-except
-  - [ ] 7.1: 在 finalbody 生成中，检测 finally_blocks 中属于嵌套 TryExceptRegion 的块
-  - [ ] 7.2: 当检测到嵌套 TryExceptRegion 时，调用 `_generate_try` 生成嵌套 try-except 结构
-  - [ ] 7.3: 验证 te081 测试通过
-  - [ ] 7.4: 运行 try_except 回归测试，确认无回归
-
-- [ ] Task 8: Fix try20 — 复杂 try 模式
-  - [ ] 8.1: 分析 try20 的具体问题（条件反转、for-else 多余 return、continue 处理）
-  - [ ] 8.2: 修复 for-else 中 return None 过滤
-  - [ ] 8.3: 验证 try20 测试通过
-  - [ ] 8.4: 运行 try_except 回归测试，确认无回归
-
-- [ ] Task 9: 最终验证与清理
-  - [ ] 9.1: 运行完整 try_except 回归测试
-  - [ ] 9.2: 运行 basic + for_loop + while_loop + if_region 回归测试
-  - [ ] 9.3: 确认零回归（回归不超过5个）
+- [ ] Task 7: 最终验证
+  - [ ] 7.1: 运行完整 try_except 回归测试，确认 0f
+  - [ ] 7.2: 运行全量回归测试，确认总失败数不超过25f
+  - [ ] 7.3: 确认 try_except 失败数减少（从原始8f到0f）
 
 # Task Dependencies
-- Task 1 (te047/te083) 独立，优先级最高
-- Task 2 (te050) 可能依赖 Task 1 的 fall_through 修复
-- Task 3 (te080/try16) 独立但最复杂
-- Task 4 (te100) 可能依赖 Task 3 的异常表修复
 - Task 5 (te104) 独立
-- Task 6 (try15) 独立
-- Task 7 (te081) 可能依赖 Task 3 的嵌套 try 修复
-- Task 8 (try20) 可能依赖 Task 1 和 Task 6 的修复
-- Task 9 依赖所有其他任务完成
+- Task 6 (try20) 独立
+- Task 7 依赖 Task 5 和 Task 6 完成
