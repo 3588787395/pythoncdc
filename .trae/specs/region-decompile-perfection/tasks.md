@@ -1799,7 +1799,118 @@ Phase 41:   212f (88.2%)  ← Return→Break值保持修复 (-5f!) 🎉
 # Task Dependencies
 
 ```
-- Phase 1-49 已完成
-- **Phase 50 (当前) 无依赖 - 立即开始**
-- Phase 50内: Task 50.0已完成，50.1-50.5可并行，50.6依赖全部
+- Phase 1-50 已完成
+- **Phase 51 (当前) 无依赖 - 立即开始**
+- Phase 51内: Task 51.1已完成，51.2-51.5可并行，51.6-51.7依赖全部
 ```
+
+---
+
+# Phase 51: 区域归约算法驱动 — 冲刺100% (2026-06-05)
+
+> **目标**: 基于 "No More Gotos" 论文的区域归约算法，修复剩余失败测试，达到100%成功率和字节码完全匹配
+
+## Phase 51 基线（2026-06-05 实测）
+
+| 区域 | 失败 | 通过 | 总计 | 通过率 | 优先级 |
+|------|------|------|------|--------|--------|
+| basic | 0 | 122 | 122 | **100%** | ✅ |
+| if_region | 0 | 311 | 311 | **100%** | ✅ |
+| while_loop | 0 | 120 | 120 | **100%** | ✅ |
+| for_loop | 4 | 189 | 193 | 97.9% | P1 |
+| try_except | 3 | 227 | 230 | 98.7% | P1 |
+| with_region | 2 | 189 | 191 | 99.0% | P2 |
+| match_region | 4 | 194 | 198 | 98.0% | P2 |
+| boolop | 2 | 130 | 132 | 98.5% | P2 |
+| ternary | 7 | 109 | 116 | 94.0% | P1 |
+| nested | 7 | 278 | 285 | 97.5% | P2 |
+| **总计** | **29** | **1869** | **1898** | **98.4%** | |
+
+## Phase 51 已完成修复
+
+### Task 51.1: P0 模块级While合成条件修正 ✅
+- **修复1**: 模块级优化路径改为If合成（if False:pass和while False:pass字节码相同，默认If）
+- **修复2**: 收紧_meaningful条件（仅当为空时触发，修复tn24ternarybool回归）
+- **修复3**: 添加REGION_TYPE_ALTERNATIVES让WHILE_LOOP接受ast.If
+- **效果**: if_region 4f→0f, ternary 10f→7f, while_loop保持0f
+
+### Task 51.1b: nested n09修复 ✅
+- **修复**: `_needs_extended_trace = _has_call`（原为`_has_store and _has_call`）
+- **效果**: nested 8f→7f
+
+## Phase 51 当前失败测试列表 (29f)
+
+### for_loop (4f)
+- fl46forreturn_n — SWAP+POP_TOP+RETURN_VALUE模式
+- fl51forbreaknestedif_n — for+break+嵌套if
+- fl51forbreaknestedif_x — for+break+嵌套if
+- for16_for_if — ternary vs if-else选择
+
+### try_except (3f)
+- te088 — bare except+finally被错误反编译
+- te104 — 嵌套code object指令数不匹配
+- try20_complex_pattern — 条件取反+is None丢失
+
+### with_region (2f)
+- w058 — async with
+- w30withcustomctx — 自定义上下文管理器
+
+### match_region (4f)
+- m075 — match+boolop
+- m083 — match+多条件
+- m106matchguardboolop — guard boolop
+- m107matchinfuncreturn — match in func return
+
+### boolop (2f)
+- bo42boolopinlistcomp_items — 列表推导式中的布尔运算
+- bo43complexnotandor_a_b_c_d — 复杂not/and/or组合
+
+### ternary (7f)
+- te04ternaryfuncparam_a/n — 三元表达式作为函数参数
+- ternary11_in_if — if中的三元
+- ternary12_in_while — while中的三元
+- ternary13_in_for_iter — for迭代器中的三元
+- ternary17_in_lambda — lambda中的三元
+- ternary20_complex_practical — 复杂三元
+
+### nested (7f)
+- n10for_if_for_break_a_b/n_m — for+if+for+break
+- n11while_if_while_break_a_b/n_m — while+if+while+break
+- n13try_for_if_break_a_indexerror/n_valueerror — try+for+if+break
+- n15while_if_try_except_a_b_indexerror — while+if+try+except
+
+## Phase 51 任务清单
+
+- [x] **Task 51.0: 基线确认与错误分类** → 37f→29f ✅
+- [x] **Task 51.1: P0 模块级While合成条件修正** → if_region 4f→0f, ternary 10f→7f ✅
+- [ ] **Task 51.2: for_loop 4f修复**
+  - [ ] 51.2.1: fl46forreturn_n — SWAP+POP_TOP+RETURN_VALUE模式
+  - [ ] 51.2.2: fl51forbreaknestedif_n/x — 嵌套if中break归属
+  - [ ] 51.2.3: for16_for_if — ternary vs if-else选择
+  - [ ] 51.2.4: for_loop验证 + 全量回归
+
+- [ ] **Task 51.3: try_except 3f修复**
+  - [ ] 51.3.1: te088 — bare except+finally
+  - [ ] 51.3.2: te104/try20 — 嵌套code object/条件取反
+  - [ ] 51.3.3: try_except验证 + 全量回归
+
+- [ ] **Task 51.4: with_region 2f修复**
+  - [ ] 51.4.1: w058 — async with
+  - [ ] 51.4.2: w30withcustomctx — 自定义上下文管理器
+  - [ ] 51.4.3: with_region验证 + 全量回归
+
+- [ ] **Task 51.5: match/boolop/ternary/nested边际修复 (17f)**
+  - [ ] 51.5.1: match m075/m083/m106/m107
+  - [ ] 51.5.2: boolop bo42/bo43
+  - [ ] 51.5.3: ternary te04/ternary11/12/13/17/20
+  - [ ] 51.5.4: nested n10/n11/n13/n15
+  - [ ] 51.5.5: 各区域验证 + 全量回归
+
+- [ ] **Task 51.6: 反编译逻辑注释完善**
+  - [ ] 51.6.1: 区域归约算法注释更新
+  - [ ] 51.6.2: 新增修复的逻辑注释
+
+- [ ] **Task 51.7: 全量回归验证与文档更新**
+  - [ ] 51.7.1: 全量10区域回归测试
+  - [ ] 51.7.2: 字节码等价性验证
+  - [ ] 51.7.3: tasks.md/checklist.md/spec.md更新

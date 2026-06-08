@@ -3923,6 +3923,12 @@ class RegionAnalyzer:
                     if (other['try_start'] == info['try_start'] or
                         other['handler_start'] >= info['try_start'] and
                         other['handler_start'] < info['try_end']):
+                        # 额外检查：如果 except handler 的 try_start 与 finally handler 不同，
+                        # 且两者深度相同，则 except handler 可能是 finally 块内部的
+                        # 独立 try-except 结构，而非与 finally 配对的 except handler
+                        if (other['try_start'] != info['try_start'] and
+                            other.get('depth', 0) <= info.get('depth', 0)):
+                            continue
                         paired_except_indices.add(j)
 
         for i, handler_info in enumerate(handler_infos):
@@ -4500,8 +4506,13 @@ class RegionAnalyzer:
                             entry['try_start'] = raw_start
                             changed = True
                         if raw_end > entry['try_end'] and raw_end <= handler_start:
-                            entry['try_end'] = raw_end
-                            changed = True
+                            # 只有当 raw_entry 的起始偏移在当前 try 范围内时才扩展 try_end。
+                            # 如果 raw_start 在 try 范围之外（之后），说明这是一个独立的
+                            # try 结构（如 finally 块内部的 try-except），不应被包含在
+                            # 当前 try 范围内。
+                            if raw_start < entry['try_end']:
+                                entry['try_end'] = raw_end
+                                changed = True
 
         for entry in result:
             if entry['handler_type'] != 'finally':
@@ -4642,6 +4653,19 @@ class RegionAnalyzer:
             if instr.opname == 'WITH_EXCEPT_START':
                 return 'with'
             if instr.opname == 'RERAISE':
+                # PUSH_EXC_INFO + ... + POP_EXCEPT + RERAISE 在同一块中
+                # 说明异常已被处理（POP_EXCEPT），RERAISE 是重新抛出外层异常
+                # 这是 except handler（通常是 finally 上下文中的 bare except），
+                # 而非 finally handler（finally handler 中 POP_EXCEPT 在 RERAISE 之前不存在）
+                has_pop_except_before = False
+                for prev_instr in handler_block.instructions:
+                    if prev_instr is instr:
+                        break
+                    if prev_instr.opname == 'POP_EXCEPT':
+                        has_pop_except_before = True
+                        break
+                if has_pop_except_before:
+                    return 'except'
                 return 'finally'
             if instr.opname == 'CHECK_EXC_MATCH':
                 return 'except'
@@ -4661,9 +4685,14 @@ class RegionAnalyzer:
                 if any(i.opname == 'CHECK_EXC_MATCH' for i in current.instructions):
                     return 'except'
                 if any(i.opname == 'RERAISE' for i in current.instructions):
+                    # cleanup reraise 模式1: COPY + POP_EXCEPT + RERAISE
+                    # cleanup reraise 模式2: POP_EXCEPT + RERAISE（无PUSH_EXC_INFO）
+                    # 两种模式都表明这是 except handler 的清理块，而非 finally handler
                     is_cleanup_reraise = (
-                        any(i.opname == 'COPY' for i in current.instructions) and
-                        any(i.opname == 'POP_EXCEPT' for i in current.instructions)
+                        (any(i.opname == 'COPY' for i in current.instructions) and
+                         any(i.opname == 'POP_EXCEPT' for i in current.instructions)) or
+                        (any(i.opname == 'POP_EXCEPT' for i in current.instructions) and
+                         not any(i.opname == 'PUSH_EXC_INFO' for i in current.instructions))
                     )
                     if not is_cleanup_reraise:
                         return 'finally'
@@ -9652,6 +9681,11 @@ class RegionAnalyzer:
                             false_is_ternary = True
                 if not false_is_ternary:
                     return None
+
+            # 检查值块是否包含CALL+POP_TOP模式（函数返回值被丢弃）
+            # 这种情况是if-else语句（如 even.append(i)），不是三元表达式
+            if _is_call_without_value_used(true_block) or _is_call_without_value_used(false_block):
+                return None
 
             candidate_blocks = set(chain_blocks) | {block}
             skip_ternary = False

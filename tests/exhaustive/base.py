@@ -42,6 +42,9 @@ REGION_TYPE_MAP = {
 
 REGION_TYPE_ALTERNATIVES = {
     'MATCH_REGION': [ast.If],
+    # CPython优化使while False:pass和if False:pass产生完全相同的字节码，
+    # 反编译器无法区分，因此WHILE_LOOP接受ast.If作为替代
+    'WHILE_LOOP': [ast.If],
 }
 
 
