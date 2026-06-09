@@ -9503,8 +9503,36 @@ class RegionAnalyzer:
             succs = list(block.conditional_successors)
             if len(succs) != 2:
                 return False
-            return (self._is_single_expression_block(succs[0]) and
-                    self._is_single_expression_block(succs[1]))
+            s0_ok = self._is_single_expression_block(succs[0])
+            s1_ok = self._is_single_expression_block(succs[1])
+            if s0_ok and s1_ok:
+                return True
+            # Lambda ternary pattern: one successor is a single expression block,
+            # the other is just LOAD_CONST None (without RETURN_VALUE — the RETURN_VALUE
+            # is in the merge block, which is the lambda body return pattern).
+            # e.g., lambda x: (process(x) if valid(x) else None)
+            # False branch: LOAD_CONST None (1 instr, no RETURN_VALUE)
+            # True branch: LOAD_GLOBAL process, LOAD_FAST x, PRECALL, CALL, JUMP_FORWARD
+            # Merge block: RETURN_VALUE
+            # Be conservative: only accept LOAD_CONST None without RETURN_VALUE to avoid
+            # misidentifying if-return statements as ternary expressions.
+            if not s0_ok or not s1_ok:
+                for idx, (succ, other_ok) in enumerate([(succs[0], s1_ok), (succs[1], s0_ok)]):
+                    if not other_ok:
+                        continue
+                    fail_succ = succ
+                    fail_instrs = [i for i in fail_succ.instructions if i.opname not in NOISE_OPS]
+                    fail_non_jmp = [i for i in fail_instrs if not i.opname.startswith('JUMP_')]
+                    # Accept: single LOAD_CONST None (no RETURN_VALUE in this block)
+                    # This is the lambda pattern where RETURN_VALUE is in the merge block
+                    if (len(fail_non_jmp) == 1 and fail_non_jmp[0].opname == 'LOAD_CONST'
+                            and fail_non_jmp[0].argval is None):
+                        if idx == 0:
+                            s0_ok = True
+                        else:
+                            s1_ok = True
+                        break
+            return s0_ok and s1_ok
 
         def _build_ternary_condition_chain(start_block, initial_ft, initial_jt):
             chain = [start_block]

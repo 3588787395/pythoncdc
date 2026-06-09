@@ -715,8 +715,12 @@ class RegionASTGenerator:
                     nested_cfg = builder.build(code_obj)
                     nested_gen = RegionASTGenerator(nested_cfg, recursive=True, parent_code=self.cfg.code, top_level_code=self._top_level_code)
                     nested_ast = nested_gen.generate()
-                    if nested_ast and nested_ast.get('body'):
-                        body_stmts = nested_ast['body']
+                    if nested_ast:
+                        if nested_ast.get('type') == 'Lambda':
+                            # Lambda node: body is a single expression, not a list of statements
+                            body_stmts = [nested_ast['body']] if nested_ast.get('body') else [{'type': 'Pass'}]
+                        elif nested_ast.get('body'):
+                            body_stmts = nested_ast['body']
                 except Exception:
                     pass
 
@@ -795,6 +799,12 @@ class RegionASTGenerator:
                     s = filtered_body[0]
                     if isinstance(s, dict) and s.get('type') == 'Return':
                         body_expr = s.get('value')
+                    elif isinstance(s, dict) and s.get('type') in ('IfExp', 'Call', 'BinOp',
+                            'UnaryOp', 'Compare', 'BoolOp', 'Name', 'Constant',
+                            'Attribute', 'Subscript', 'Starred', 'List', 'Tuple',
+                            'Set', 'Dict', 'FormattedValue', 'JoinedStr'):
+                        # Expression types from TernaryRegion or other region-based generation
+                        body_expr = s
                     elif isinstance(s, dict) and s.get('type') == 'If':
                         # [DEPRECATED TERNARY PATH] Lambda body中的内联IfExp生成
                         # 这是历史遗留的多路径问题，理想情况下应该通过 _generate_ternary 处理
