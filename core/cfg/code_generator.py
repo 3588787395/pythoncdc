@@ -2945,6 +2945,40 @@ class CodeGenerator:
             elif node_type == 'FormattedValue':
                 # [P2-2026] 处理字典格式的FormattedValue
                 return self._generate_formatted_value_from_dict(node)
+            elif node_type == 'Compare':
+                left = node.get('left', {})
+                ops = node.get('ops', [])
+                comparators = node.get('comparators', [])
+                right = node.get('right')
+
+                if not comparators and right is not None:
+                    comparators = [right]
+
+                left_code = self._generate_expression(left, 0)
+                if isinstance(left, dict) and left.get('type') == 'IfExp':
+                    left_code = f'({left_code})'
+
+                op_map = {
+                    'Eq': '==', 'NotEq': '!=', 'Lt': '<', 'LtE': '<=',
+                    'Gt': '>', 'GtE': '>=', 'Is': 'is', 'IsNot': 'is not',
+                    'In': 'in', 'NotIn': 'not in'
+                }
+
+                parts = [left_code]
+                for op, comparator in zip(ops, comparators):
+                    if isinstance(op, dict):
+                        if op.get('type') in ('cmpop', 'CompareOp'):
+                            op_type = op.get('op', '==')
+                        else:
+                            op_type = op.get('type', '')
+                    else:
+                        op_type = str(op)
+
+                    op_str = op_map.get(op_type, op_type.lower() if isinstance(op_type, str) else str(op))
+                    comparator_code = self._generate_expression(comparator, 0)
+                    parts.append(f'{op_str} {comparator_code}')
+
+                return ' '.join(parts)
             else:
                 # [修复-L13/L17/L18] 基础表达式类型必须正确处理
                 # Constant和Name是最常用的，必须直接处理避免泄露
@@ -4517,6 +4551,12 @@ class CodeGenerator:
                 return f'iter({value_code})'
             else:
                 return f'iter({value})'
+        elif ann_type == 'JoinedStr':
+            # f-string: delegate to the dedicated handler
+            return self._generate_joined_str_from_dict(annotation)
+        elif ann_type == 'FormattedValue':
+            # f-string formatted value: delegate to the dedicated handler
+            return self._generate_formatted_value_from_dict(annotation)
         else:
             # 未知类型，尝试使用 _generate_expression（如果是ASTNode）
             if isinstance(annotation, ASTNode):

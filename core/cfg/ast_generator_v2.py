@@ -1238,44 +1238,45 @@ class ExpressionReconstructor:
         
         # [关键修复] Python 3.11+ FORMAT_VALUE 指令
         elif opname == 'FORMAT_VALUE':
+            flags = instr.arg if instr.arg is not None else 0
+
+            # [关键修复] 处理格式说明符（format spec）
+            # flags & 4 表示有格式说明符
+            # 栈顺序: TOS=format_spec, TOS1=value (format_spec在value之上)
+            # 所以必须先弹出format_spec，再弹出value
+            format_spec = None
+            if flags & 4 and self.stack:
+                format_spec_node = self.stack.pop()
+                if format_spec_node.get('type') == 'Constant':
+                    format_spec = format_spec_node.get('value')
+                elif isinstance(format_spec_node, dict):
+                    format_spec = format_spec_node
+
+            value = None
             if self.stack:
                 value = self.stack.pop()
-                flags = instr.arg if instr.arg is not None else 0
-                
-                # [关键修复] 处理格式标志，使用整数表示（与ASTFormattedValue一致）
-                # 0=无, 1=str, 2=repr, 3=ascii
-                conversion = 0
-                if flags & 1:  # FVC_STR
-                    conversion = 1
-                elif flags & 2:  # FVC_REPR
-                    conversion = 2
-                elif flags & 3:  # FVC_ASCII
-                    conversion = 3
-                
-                # [关键修复] 处理格式说明符（format spec）
-                # flags & 4 在Python 3.11+ 也表示有格式说明符
-                format_spec = None
-                if flags & 4 and self.stack:
-                    # 格式说明符在栈上
-                    format_spec_node = self.stack.pop()
-                    if format_spec_node.get('type') == 'Constant':
-                        format_spec = format_spec_node.get('value')
-                    elif isinstance(format_spec_node, dict):
-                        # [关键修复] 处理复杂的格式说明符（如函数调用）
-                        # 将表达式节点转换为字符串表示
-                        format_spec = format_spec_node
-                
-                formatted_value = {
-                    'type': 'FormattedValue',
-                    'value': value,
-                    'conversion': conversion,
-                    'format_spec': format_spec,
-                    'lineno': instr.starts_line
-                }
-                
-                # [关键修复] 只压入FormattedValue，不自动包装为JoinedStr
-                # BUILD_STRING指令会处理多个部分的组合
-                self.stack.append(formatted_value)
+
+            # [关键修复] 处理格式标志，使用整数表示（与ASTFormattedValue一致）
+            # 0=无, 1=str, 2=repr, 3=ascii
+            conversion = 0
+            if flags & 1:  # FVC_STR
+                conversion = 1
+            elif flags & 2:  # FVC_REPR
+                conversion = 2
+            elif flags & 3:  # FVC_ASCII
+                conversion = 3
+
+            formatted_value = {
+                'type': 'FormattedValue',
+                'value': value,
+                'conversion': conversion,
+                'format_spec': format_spec,
+                'lineno': instr.starts_line
+            }
+
+            # [关键修复] 只压入FormattedValue，不自动包装为JoinedStr
+            # BUILD_STRING指令会处理多个部分的组合
+            self.stack.append(formatted_value)
         
         # [关键修复] Python 3.11+ BUILD_STRING 指令
         elif opname == 'BUILD_STRING':

@@ -2685,14 +2685,45 @@ class RegionAnalyzer:
         if loop_type == RegionType.FOR_LOOP and for_iter_exit and for_iter_exit not in body_set:
             natural_exit = for_iter_exit
             break_targets = []
+            # Also check if any break jumps directly to for_iter_exit
+            break_to_iter_exit = False
+            # Collect blocks reachable from body via conditional jumps (break blocks)
+            # These blocks are not in body_set but are part of the loop's control flow
+            conditional_exit_blocks = set()
+            for block in body_set:
+                if block == header:
+                    continue
+                block_last = block.get_last_instruction()
+                if block_last and block_last.opname in CONDITIONAL_JUMP_OPS:
+                    for succ in block.successors:
+                        if succ not in body_set and succ != for_iter_exit:
+                            conditional_exit_blocks.add(succ)
             for block in body_set:
                 if block == header:
                     continue
                 for succ in block.successors:
-                    if succ not in body_set and succ != for_iter_exit and succ not in break_targets:
+                    if succ not in body_set and succ not in break_targets:
                         block_last = block.get_last_instruction()
                         if block_last and block_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+                            if succ == for_iter_exit:
+                                break_to_iter_exit = True
+                            else:
+                                break_targets.append(succ)
+            # Also check conditional exit blocks (break blocks reached via conditional jumps)
+            for ceb in conditional_exit_blocks:
+                for succ in ceb.successors:
+                    if succ == for_iter_exit:
+                        ceb_last = ceb.get_last_instruction()
+                        if ceb_last and ceb_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+                            break_to_iter_exit = True
+                    elif succ not in body_set and succ not in break_targets:
+                        ceb_last = ceb.get_last_instruction()
+                        if ceb_last and ceb_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
                             break_targets.append(succ)
+            # If a break jumps to for_iter_exit, there is no else clause
+            # because the else clause should only execute on normal (non-break) exit
+            if break_to_iter_exit:
+                return None, natural_exit
             if break_targets:
                 post_else = self.dom_analyzer.find_nearest_common_post_dominator(set(break_targets))
                 if post_else and post_else != for_iter_exit:
@@ -2742,6 +2773,48 @@ class RegionAnalyzer:
 
         if not loop_successors:
             return None, None
+
+        # For while loops, check if any break from the loop body (including conditional
+        # exit blocks) jumps to the same target as the condition exit. If so, there's
+        # no else clause because the else should only execute on normal (non-break) exit.
+        if loop_type == RegionType.WHILE_LOOP and condition_block and condition_block not in body_set:
+            cond_last = condition_block.get_last_instruction()
+            if cond_last and cond_last.opname in FORWARD_CONDITIONAL_JUMP_OPS and cond_last.argval is not None:
+                cond_exit = self.cfg.get_block_by_offset(cond_last.argval)
+                if cond_exit:
+                    # Check if any break block jumps to cond_exit
+                    break_to_cond_exit = False
+                    # Check direct successors of body blocks
+                    for block in body_set:
+                        if block == header:
+                            continue
+                        for succ in block.successors:
+                            if succ not in body_set:
+                                block_last = block.get_last_instruction()
+                                if block_last and block_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+                                    if succ == cond_exit:
+                                        break_to_cond_exit = True
+                                        break
+                                elif block_last and block_last.opname in CONDITIONAL_JUMP_OPS:
+                                    # Check the conditional exit block
+                                    for csucc in succ.successors:
+                                        if csucc == cond_exit:
+                                            succ_last = succ.get_last_instruction()
+                                            if succ_last and succ_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+                                                break_to_cond_exit = True
+                                                break
+                        if break_to_cond_exit:
+                            break
+                    # Also check header's successors (break from header condition)
+                    for succ in header.successors:
+                        if succ not in body_set and succ != header:
+                            succ_last = succ.get_last_instruction()
+                            if succ_last and succ_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+                                if succ.successors and any(s == cond_exit for s in succ.successors):
+                                    break_to_cond_exit = True
+                                    break
+                    if break_to_cond_exit:
+                        return None, cond_exit
 
         natural_exit = self.dom_analyzer.find_nearest_common_post_dominator(set(loop_successors))
         if not natural_exit or natural_exit in body_set:
@@ -8827,7 +8900,7 @@ class RegionAnalyzer:
                             if last_instr and last_instr.opname in FORWARD_CONDITIONAL_JUMP_OPS:
                                 has_body_stmt = any(
                                     i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
-                                                'STORE_DEREF', 'BINARY_OP', 'DELETE_')
+                                                'STORE_DEREF', 'DELETE_')
                                     for i in block.instructions
                                     if i.offset < last_instr.offset
                                 )
@@ -8976,6 +9049,34 @@ class RegionAnalyzer:
                 else_blocks = [b for b in else_blocks if b not in try_handler_blocks]
 
             all_condition_blocks = {condition_block} | chain_blocks
+
+            # Filter out condition_block from else_blocks to prevent circular references.
+            # This can happen when the else branch follows a back edge to the loop header
+            # (which is also the condition_block of the if statement).
+            if condition_block in else_blocks:
+                else_blocks = [b for b in else_blocks if b != condition_block]
+            # Also filter out then_blocks from else_blocks to prevent duplication
+            then_block_set = set(then_blocks)
+            if any(b in then_block_set for b in else_blocks):
+                else_blocks = [b for b in else_blocks if b not in then_block_set]
+
+            # When the then branch ends with a break/continue/return inside a loop,
+            # the else blocks are just the continuation of the loop body, not a true
+            # else clause. Clear them to avoid generating `else: ...; continue`.
+            if else_blocks and then_blocks and loop_regions:
+                _then_exits_loop = False
+                _last_then = then_blocks[-1]
+                _last_then_instr = _last_then.get_last_instruction()
+                if _last_then_instr and _last_then_instr.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+                    # Check if the then branch jumps outside the enclosing loop
+                    for lr in loop_regions:
+                        if block in lr.blocks:
+                            _jump_target = self.cfg.get_block_by_offset(_last_then_instr.argval) if _last_then_instr.argval is not None else None
+                            if _jump_target and _jump_target not in lr.blocks:
+                                _then_exits_loop = True
+                                break
+                if _then_exits_loop:
+                    else_blocks = []
 
             region = self._build_elif_region(block, then_blocks, else_blocks, merge, all_condition_blocks, condition_block)
             if region is None:
@@ -9503,6 +9604,29 @@ class RegionAnalyzer:
             succs = list(block.conditional_successors)
             if len(succs) != 2:
                 return False
+            # Reject if either successor is a return block (ends with RETURN_VALUE/RETURN_CONST
+            # and has no successors). This indicates an if-return pattern, not a ternary.
+            # In a true ternary expression, both branches converge to a merge block.
+            for succ in succs:
+                last = succ.get_last_instruction()
+                if last and last.opname in ('RETURN_VALUE', 'RETURN_CONST') and not succ.successors:
+                    return False
+            # Reject if both successors are conditional blocks whose successors
+            # converge to RETURN_VALUE blocks. This is an if/elif/else chain with
+            # return statements, not a nested ternary expression.
+            def _branch_is_return_ternary(blk):
+                """Check if a block is a conditional that leads to return statements."""
+                if len(blk.conditional_successors) != 2:
+                    return False
+                succs_inner = list(blk.conditional_successors)
+                merge = self.dom_analyzer.find_nearest_common_post_dominator(set(succs_inner)) if hasattr(self, 'dom_analyzer') else None
+                if merge:
+                    merge_last = merge.get_last_instruction()
+                    if merge_last and merge_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                        return True
+                return False
+            if _branch_is_return_ternary(succs[0]) and _branch_is_return_ternary(succs[1]):
+                return False
             s0_ok = self._is_single_expression_block(succs[0])
             s1_ok = self._is_single_expression_block(succs[1])
             if s0_ok and s1_ok:
@@ -9568,9 +9692,27 @@ class RegionAnalyzer:
                     if instr.opname == 'BUILD_MAP':
                         dict_key = RegionAnalyzer.extract_dict_key_from_block(cond_block)
                         return 'dict', None, dict_key
+                    if instr.opname == 'BUILD_STRING':
+                        # f-string context: ternary is inside an f-string expression
+                        # BUILD_STRING arg tells us the number of parts
+                        fstring_info = {'num_parts': instr.arg}
+                        return 'fstring', None, fstring_info
             if cond_block:
                 instrs = [i for i in cond_block.instructions
                          if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+                # Check if there's a CALL/PRECALL before the conditional jump.
+                # If so, the function call IS the condition expression (e.g., valid(x)
+                # in "process(x) if valid(x) else None"), and should NOT be detected
+                # as 'call' context. Only detect 'call' when the function call prefix
+                # is for the enclosing function (e.g., print in "print(x if cond else y)"),
+                # which means no CALL before the conditional jump.
+                has_call_before_jump = False
+                for i in instrs:
+                    if i.opname in ('CALL', 'PRECALL'):
+                        has_call_before_jump = True
+                        break
+                    if i.opname.startswith('POP_JUMP_'):
+                        break
                 push_null_idx = None
                 for idx, i in enumerate(instrs):
                     if i.opname == 'PUSH_NULL':
@@ -9580,19 +9722,29 @@ class RegionAnalyzer:
                     func_i = instrs[push_null_idx + 1]
                     if func_i.opname in ('LOAD_NAME', 'LOAD_GLOBAL',
                                          'LOAD_FAST', 'LOAD_DEREF'):
-                        return 'call', {
-                            'func': {'type': 'Name', 'id': func_i.argval, 'ctx': 'Load'},
-                        }, None
+                        if not has_call_before_jump:
+                            return 'call', {
+                                'func': {'type': 'Name', 'id': func_i.argval, 'ctx': 'Load'},
+                            }, None
                     elif func_i.opname == 'LOAD_ATTR':
                         obj_i = instrs[push_null_idx - 1] if push_null_idx > 0 else None
                         if obj_i and obj_i.opname.startswith('LOAD_'):
+                            if not has_call_before_jump:
+                                return 'call', {
+                                    'func': {
+                                        'type': 'Attribute',
+                                        'value': {'type': 'Name', 'id': obj_i.argval, 'ctx': 'Load'},
+                                        'attr': func_i.argval,
+                                        'ctx': 'Load',
+                                    },
+                                }, None
+                # Python 3.11+: LOAD_GLOBAL with NULL+ prefix (arg & 1 == 1)
+                # This replaces PUSH_NULL + LOAD_GLOBAL with a single instruction
+                if push_null_idx is None and not has_call_before_jump:
+                    for idx, i in enumerate(instrs):
+                        if i.opname == 'LOAD_GLOBAL' and (i.arg & 1) == 1:
                             return 'call', {
-                                'func': {
-                                    'type': 'Attribute',
-                                    'value': {'type': 'Name', 'id': obj_i.argval, 'ctx': 'Load'},
-                                    'attr': func_i.argval,
-                                    'ctx': 'Load',
-                                },
+                                'func': {'type': 'Name', 'id': i.argval, 'ctx': 'Load'},
                             }, None
             return None, None, None
 
@@ -9696,6 +9848,40 @@ class RegionAnalyzer:
                     if not (true_has_content and false_has_content):
                         return None
             elif not _is_ternary_block(block):
+                # Reject if the true branch is a return block (ends with RETURN_VALUE
+                # and has no successors). This indicates an if-return pattern, not ternary.
+                true_last = true_block.get_last_instruction()
+                if (true_last and true_last.opname in ('RETURN_VALUE', 'RETURN_CONST')
+                        and not true_block.successors):
+                    return None
+                # Reject if both true and false branches are TernaryRegions with
+                # merge_context='return'. This indicates an if/elif/else chain with
+                # return statements, not a nested ternary expression.
+                true_existing = self.block_to_region.get(true_block)
+                false_existing = self.block_to_region.get(false_block)
+                if (isinstance(true_existing, TernaryRegion) and
+                        isinstance(false_existing, TernaryRegion) and
+                        getattr(true_existing, 'merge_context', None) == 'return' and
+                        getattr(false_existing, 'merge_context', None) == 'return'):
+                    return None
+                # Also reject if both branches are conditional blocks whose
+                # successors converge to RETURN_VALUE blocks. This is an if/elif/else
+                # chain with return statements, not a nested ternary.
+                def _branch_is_return_ternary(blk):
+                    """Check if a block is a conditional that leads to return statements."""
+                    if len(blk.conditional_successors) != 2:
+                        return False
+                    # Check if the block's successors converge to a merge block with RETURN_VALUE
+                    succs = list(blk.conditional_successors)
+                    merge = self.dom_analyzer.find_nearest_common_post_dominator(set(succs)) if hasattr(self, 'dom_analyzer') else None
+                    if merge:
+                        merge_last = merge.get_last_instruction()
+                        if merge_last and merge_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                            return True
+                    return False
+                if (_branch_is_return_ternary(true_block) and
+                        _branch_is_return_ternary(false_block)):
+                    return None
                 false_is_ternary = False
                 false_existing = self.block_to_region.get(false_block)
                 if isinstance(false_existing, TernaryRegion):
@@ -10465,6 +10651,11 @@ class RegionAnalyzer:
             if not preds:
                 break
             pred = preds[0]
+            # If the predecessor is NOT in the loop's blocks, it's likely an
+            # if-statement that wraps the loop (e.g., if cond: while ...),
+            # not part of the loop's condition chain. Stop the chain.
+            if pred not in loop.blocks:
+                break
             visited.add(pred.start_offset)
             pred_last = pred.get_last_instruction()
             if not pred_last or pred_last.opname not in FORWARD_CONDITIONAL_JUMP_OPS:
@@ -10677,8 +10868,19 @@ class RegionAnalyzer:
                 existing_reg = self.block_to_region.get(current)
                 if isinstance(existing_reg, BoolOpRegion):
                     break
+            # Determine op_type for this block.
+            # For standard conditional jumps: IF_FALSE → 'and', IF_TRUE → 'or'
+            # For NONE_CHECK_OPS in conditional chains: always 'and' because
+            # they appear in patterns like `x is not None and y` (IF_NONE jumps
+            # to exit when x is None, short-circuiting the `and`) or
+            # `x is None and y` (IF_NOT_NONE jumps to exit when x is not None).
+            # NONE_CHECK_OPS in `or` chains use a different bytecode pattern
+            # (fall-through is a JUMP, not a conditional jump) and are handled
+            # by _detect_boolop_short_circuit_chain instead.
             if last.opname in NONE_CHECK_OPS:
-                break
+                op_type = 'and'
+            else:
+                op_type = 'and' if 'FALSE' in last.opname else 'or'
             cur_jump_type = 'forward' if last.opname in FORWARD_CONDITIONAL_JUMP_OPS else 'short_circuit'
             if first_jump_type is None:
                 first_jump_type = cur_jump_type
@@ -10689,7 +10891,6 @@ class RegionAnalyzer:
                 cur_jt_offset = cur_last.argval if cur_last else None
                 if first_jt_offset is not None and cur_jt_offset is not None and first_jt_offset > cur_jt_offset:
                     break
-            op_type = 'and' if 'FALSE' in last.opname else 'or'
             chain.append((current, op_type))
             succs = list(current.conditional_successors)
             if len(succs) != 2:
@@ -10698,6 +10899,16 @@ class RegionAnalyzer:
             if ft_succ is None:
                 break
             if ft_succ in self.block_to_region or ft_succ in claimed:
+                break
+            # Stop the chain if the fall-through successor is the condition_block
+            # or header_block of a LoopRegion. This prevents merging "if cond: while ..."
+            # patterns into a single boolop expression.
+            _ft_succ_is_loop_entry = False
+            for r in self.regions:
+                if isinstance(r, LoopRegion) and (r.condition_block == ft_succ or r.header_block == ft_succ):
+                    _ft_succ_is_loop_entry = True
+                    break
+            if _ft_succ_is_loop_entry:
                 break
             if len(chain) >= 2:
                 first_jump_target = self.cfg.get_block_by_offset(chain[0][0].get_last_instruction().argval)
@@ -11027,7 +11238,10 @@ class RegionAnalyzer:
                 child_p = region_priority.get(type(child).__name__, 0)
                 best_cand_p = max(region_priority.get(type(c).__name__, 1) for c in candidates)
                 if best_cand_p >= child_p:
-                    best_parent = max(candidates, key=lambda c: region_priority.get(type(c).__name__, 1))
+                    best_parent = max(candidates, key=lambda c: (
+                        region_priority.get(type(c).__name__, 1),
+                        -(ranges[id(c)][1] - ranges[id(c)][0])  # prefer smaller range (more specific parent)
+                    ))
                     if child is not best_parent and child not in best_parent.children:
                         entry_block = child.entry
                         if entry_block and self.block_to_region.get(entry_block) is child:
@@ -11048,9 +11262,13 @@ class RegionAnalyzer:
                                 loop_entry_in_if = (child.entry and child.entry in best_parent.blocks)
                                 loop_has_real_structure = (getattr(child, 'back_edge_blocks', None) or
                                                          getattr(child, 'header_block', None))
+                                # If the IfRegion's entry is NOT in the LoopRegion's blocks,
+                                # then the IfRegion genuinely contains the loop (e.g., if cond: for x in y: ...)
+                                # and should be the parent. Only skip if the IfRegion is inside the loop.
+                                if_entry_in_loop = best_parent.entry and best_parent.entry in set(child.blocks)
                                 if (parent_in_child or entry_in_body or
                                     (cond_is_loop_cond and loop_entry_in_if) or
-                                    (loop_entry_in_if and loop_has_real_structure)):
+                                    (loop_entry_in_if and loop_has_real_structure and if_entry_in_loop)):
                                     continue
                         best_parent.add_child(child)
 

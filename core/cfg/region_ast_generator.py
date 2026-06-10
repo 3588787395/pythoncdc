@@ -285,6 +285,22 @@ class RegionASTGenerator:
                     _import_pending_store = False
                     _unpack_targets: List[str] = []
 
+                    # [修复] 检查region.items中是否包含class定义模式
+                    # 如果包含，_generate_with会生成ClassDef，entry block处理不应重复生成
+                    _with_items_has_class_def = False
+                    if hasattr(_entry_region, 'items'):
+                        for _ctx_instrs, _tgt in _entry_region.items:
+                            if _ctx_instrs:
+                                for _ci in _ctx_instrs:
+                                    if _ci.opname == 'LOAD_CONST' and hasattr(_ci.argval, 'co_code'):
+                                        _with_items_has_class_def = True
+                                        break
+                                    if _ci.opname in ('LOAD_BUILD_CLASS', 'MAKE_FUNCTION'):
+                                        _with_items_has_class_def = True
+                                        break
+                            if _with_items_has_class_def:
+                                break
+
                     for _instr in entry_block.instructions:
                         if _instr.opname == 'BEFORE_WITH':
                             break
@@ -317,6 +333,12 @@ class RegionASTGenerator:
                                 _import_pending_store = False
                                 continue
                             if _stmt_instrs and any(i.opname == 'IMPORT_NAME' for i in _stmt_instrs):
+                                _stmt_instrs = []
+                                continue
+                            # [修复] 如果region.items包含class定义，且当前STORE指令
+                            # 伴随LOAD_BUILD_CLASS，说明这是class定义的存储，
+                            # _generate_with会处理，跳过不生成
+                            if _with_items_has_class_def and any(i.opname == 'LOAD_BUILD_CLASS' for i in _stmt_instrs):
                                 _stmt_instrs = []
                                 continue
                             if _unpack_targets is not None and any(i.opname == 'UNPACK_SEQUENCE' for i in _stmt_instrs):
@@ -453,7 +475,11 @@ class RegionASTGenerator:
                                 is_contained = True
                                 break
                         elif isinstance(other, TernaryRegion) and isinstance(r, (BoolOpRegion, IfRegion)):
-                            if r.entry and r.entry in other.blocks:
+                            # 当IfRegion的entry是TernaryRegion的merge_block且merge_context为compare/iter时，
+                            # IfRegion不应被标记为contained（三元表达式由IfRegion内联处理）
+                            if isinstance(r, IfRegion) and r.entry and r.entry == other.merge_block and getattr(other, 'merge_context', None) in ('compare', 'iter'):
+                                pass
+                            elif r.entry and r.entry in other.blocks:
                                 is_contained = True
                                 break
                         elif isinstance(other, IfRegion) and isinstance(r, LoopRegion):
@@ -1104,7 +1130,14 @@ class RegionASTGenerator:
                     else:
                         bases.append(arg)
 
-            decorator_list = self._extract_decorators(outer_call if outer_call else call_expr)
+            # [修复] __build_class__是CPython内部机制，不是装饰器
+            # 只有当outer_call存在且不是__build_class__调用时才提取装饰器
+            _should_extract_decorators = False
+            if outer_call is not None:
+                _outer_func = outer_call.get('func', {}) if isinstance(outer_call, dict) else {}
+                if not (_outer_func.get('type') == 'Name' and _outer_func.get('id') == '__build_class__'):
+                    _should_extract_decorators = True
+            decorator_list = self._extract_decorators(outer_call) if _should_extract_decorators else []
 
             if name is None:
                 name = 'UnknownClass'
@@ -1274,6 +1307,14 @@ class RegionASTGenerator:
                         should_skip = True
                         break
             if should_skip:
+                return None
+            # 当TernaryRegion的merge_context为'compare'或'iter'时，
+            # 跳过独立生成——三元表达式将由父IfRegion/LoopRegion内联处理
+            # 但当container_type='call'时，三元表达式是函数调用参数，
+            # 需要独立生成Call节点，不应跳过
+            _mc = getattr(region, 'merge_context', None)
+            _ct = getattr(region, 'container_type', None)
+            if _mc in ('compare', 'iter') and _ct != 'call':
                 return None
             return self._generate_ternary(region, skip_store_targets=skip_store_targets)
         elif region.region_type == RegionType.PASS:
@@ -1695,7 +1736,20 @@ class RegionASTGenerator:
 
         # Build iterator expression
         for_iter_setup = region.metadata.get('for_iter_setup')
-        if for_iter_setup and for_iter_setup in self.cfg.blocks.values():
+        # Phase 12修复: 优先检查TernaryRegion merge_context='iter' —
+        # 当for_iter_setup块被TernaryRegion"借用"时，从TernaryRegion获取迭代器表达式
+        iter_expr = None
+        for r in self.region_analyzer.regions:
+            if (isinstance(r, TernaryRegion) and
+                getattr(r, 'merge_context', None) == 'iter' and
+                r.merge_block and for_iter_setup and
+                r.merge_block.start_offset == for_iter_setup.start_offset):
+                iter_expr = self._build_ternary_inline_expr(r)
+                if iter_expr:
+                    for b in r.blocks:
+                        self.generated_blocks.add(b)
+                break
+        if iter_expr is None and for_iter_setup and for_iter_setup in self.cfg.blocks.values():
             instrs = [i for i in for_iter_setup.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
             _fis_pre_stmts, _fis_iter_instrs = self._loop_extract_for_iter_pre_stmts(instrs, for_iter_setup)
             if _fis_pre_stmts:
@@ -1707,41 +1761,10 @@ class RegionASTGenerator:
             # Unwrap Iter wrapper (GET_ITER) - for-loop iter field uses inner expression directly
             if isinstance(iter_expr, dict) and iter_expr.get('type') == 'Iter' and isinstance(iter_expr.get('value'), dict):
                 iter_expr = iter_expr['value']
-        else:
-            # Phase 12修复: 当for_iter_setup块被TernaryRegion"借用"时（merge_context=='iter'），
-            # 从TernaryRegion获取迭代器表达式
-            iter_expr = None
-            for r in self.region_analyzer.regions:
-                if (isinstance(r, TernaryRegion) and
-                    getattr(r, 'merge_context', None) == 'iter' and
-                    r.merge_block and
-                    r.merge_block.start_offset in [b.start_offset for b in region.blocks]):
-                    
-                    # 检查TernaryRegion是否已经被生成（在ast_nodes中）
-                    # 如果已生成，从现有结果中提取IfExp
-                    found_in_existing = False
-                    for node in ast_nodes:
-                        if (isinstance(node, dict) and node.get('type') == 'Expr' and
-                            isinstance(node.get('value'), dict) and
-                            node['value'].get('type') == 'IfExp'):
-                            iter_expr = node['value']
-                            found_in_existing = True
-                            # 从ast_nodes中移除，避免重复输出
-                            ast_nodes.remove(node)
-                            break
-                    
-                    if not found_in_existing:
-                        # TernaryRegion尚未生成，现在生成它
-                        ternary_stmts = self._generate_ternary(r)
-                        if ternary_stmts and len(ternary_stmts) > 0:
-                            stmt = ternary_stmts[0]
-                            if stmt.get('type') == 'Expr' and 'value' in stmt:
-                                iter_expr = stmt['value']
-                    break
-            
-            if iter_expr is None:
-                iter_val = region.metadata.get('for_iter_value')
-                iter_expr = {'type': 'Name', 'id': iter_val} if isinstance(iter_val, str) else (iter_val or {'type': 'Constant', 'value': None})
+        elif iter_expr is None:
+            # for_iter_setup不存在或不在cfg中 — 使用回退逻辑
+            iter_val = region.metadata.get('for_iter_value')
+            iter_expr = {'type': 'Name', 'id': iter_val} if isinstance(iter_val, str) else (iter_val or {'type': 'Constant', 'value': None})
 
         # Resolve target variable
         target_name = region.metadata.get('for_target', '_')
@@ -4407,6 +4430,29 @@ class RegionASTGenerator:
             return True
         if isinstance(block_region, IfRegion) and block in child_if_blocks:
             return True
+        # Handle IfRegion whose condition_block is this block and is a child of the current loop.
+        # This handles patterns like: for x in y: if cond: for z in w: ...
+        # where the inner for loop is nested inside the if block.
+        if entry_region and isinstance(entry_region, IfRegion) and entry_region.condition_block == block and block not in self.generated_blocks:
+            # Check that this IfRegion is a child (direct or descendant) of the current loop
+            _is_child_of_loop = False
+            for child in (region.children or []):
+                if child is entry_region:
+                    _is_child_of_loop = True
+                    break
+            if _is_child_of_loop:
+                if_id = id(entry_region)
+                if if_id not in self._generated_regions and if_id not in self._generating_regions:
+                    if_ast = self._generate_region(entry_region)
+                    if if_ast:
+                        if isinstance(if_ast, list):
+                            body_stmts.extend(if_ast)
+                        else:
+                            body_stmts.append(if_ast)
+                    for b in entry_region.blocks:
+                        self.generated_blocks.add(b)
+                    self._generated_regions.add(if_id)
+                return True
         if isinstance(block_region, AssertRegion) and block_region.entry == block:
             ar_id = id(block_region)
             if ar_id not in self._generated_regions and ar_id not in self._generating_regions:
@@ -5335,6 +5381,42 @@ class RegionASTGenerator:
                 for b in boolop_region_for_cond.blocks:
                     self.generated_blocks.add(b)
                 return boolop_expr
+        # TernaryRegion merge_context='compare' — 三元表达式作为if条件
+        _ternary_region_for_cond = None
+        for r in self.regions:
+            if isinstance(r, TernaryRegion) and getattr(r, 'merge_context', None) == 'compare' and r.merge_block is cond_block:
+                _ternary_region_for_cond = r
+                break
+        if _ternary_region_for_cond is not None:
+            _ternary_expr = self._build_ternary_inline_expr(_ternary_region_for_cond)
+            if _ternary_expr:
+                for b in _ternary_region_for_cond.blocks:
+                    self.generated_blocks.add(b)
+                # 将三元表达式作为COMPARE_OP的左操作数
+                # merge_block中的指令模式: [LOAD_* right_val, COMPARE_OP op, POP_JUMP_*]
+                # 三元表达式的值已在栈上作为左操作数
+                _cond_instrs = [i for i in cond_instrs if i.opname not in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL')]
+                _compare_idx = None
+                for idx, i in enumerate(_cond_instrs):
+                    if i.opname == 'COMPARE_OP':
+                        _compare_idx = idx
+                        break
+                if _compare_idx is not None:
+                    # COMPARE_OP之前的指令是右操作数
+                    _right_instrs = _cond_instrs[:_compare_idx]
+                    _right = self.expr_reconstructor.reconstruct(_right_instrs) if _right_instrs else None
+                    # 将argval(如'>')映射为CompareOp名称(如'Gt')
+                    _cmp_op_map = {'<': 'Lt', '<=': 'LtE', '==': 'Eq', '!=': 'NotEq',
+                                   '>': 'Gt', '>=': 'GtE', 'in': 'In', 'not in': 'NotIn',
+                                   'is': 'Is', 'is not': 'IsNot'}
+                    _cmp_argval = str(_cond_instrs[_compare_idx].argval)
+                    _op_name = _cmp_op_map.get(_cmp_argval, _cmp_argval)
+                    _ops = [{'type': 'cmpop', 'op': _op_name}]
+                    if _right:
+                        return {'type': 'Compare', 'left': _ternary_expr, 'ops': _ops, 'comparators': [_right]}
+                    else:
+                        return _ternary_expr
+                return _ternary_expr
         if region.chained_compare_blocks and region.chained_compare_ops:
             compare_expr = self._build_chained_compare_from_region_data(region)
             if compare_expr is not None:
@@ -5444,6 +5526,26 @@ class RegionASTGenerator:
                 self.generated_offsets.add(block.start_offset)
                 continue
             if role in (BlockRole.CONTINUE, BlockRole.PURE_CONTINUE):
+                # Check if this block is the entry of a child LoopRegion.
+                # If so, generate the child LoopRegion instead of treating it as a CONTINUE block.
+                # This handles patterns like: if cond: while ... (where the while loop entry
+                # might be marked as CONTINUE because it jumps to the outer loop's back edge).
+                _child_loop_entry = None
+                if region and hasattr(region, 'children'):
+                    for child in getattr(region, 'children', []):
+                        if isinstance(child, LoopRegion) and child.entry == block:
+                            _child_loop_entry = child
+                            break
+                if _child_loop_entry:
+                    nid = id(_child_loop_entry)
+                    if nid not in self._generated_regions and nid not in self._generating_regions:
+                        na = self._generate_region(_child_loop_entry)
+                        if na:
+                            (stmts.append if isinstance(na, dict) else stmts.extend)(na)
+                        for b in _child_loop_entry.blocks:
+                            self.generated_blocks.add(b)
+                        self._generated_regions.add(nid)
+                    continue
                 _meaningful_instrs = [
                     i for i in block.instructions
                     if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP')
@@ -6197,7 +6299,21 @@ class RegionASTGenerator:
                 # Determine correct condition for continue+normal pattern
                 _is_if_false = 'IF_FALSE' in last_instr.opname
                 _continue_is_jump = continue_succ[1]
-                if _continue_is_jump:
+                # Phase 51: when continue_succ is a back edge block with meaningful
+                # instructions, it's NOT a pure continue — don't invert the condition
+                _cont_is_meaningful_backedge = (
+                    continue_succ[0] == loop.back_edge_block and
+                    any(i.opname not in NOISE_OPS
+                        and i.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+                                             'JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                        and i.opname not in CONDITIONAL_JUMP_OPS
+                        and i.opname not in SHORT_CIRCUIT_JUMP_OPS
+                        for i in continue_succ[0].instructions)
+                )
+                if _cont_is_meaningful_backedge:
+                    # Don't invert: keep the original condition direction
+                    cond_expr = expr if _is_if_false else _negate_expr(expr)
+                elif _continue_is_jump:
                     cond_expr = _negate_expr(expr) if _is_if_false else expr
                 else:
                     cond_expr = expr if _is_if_false else _negate_expr(expr)
@@ -11173,6 +11289,53 @@ class RegionASTGenerator:
 
         return results if results is not None and len(results) > 0 else None
 
+    def _build_ternary_inline_expr(self, region: TernaryRegion) -> Optional[Dict]:
+        """构建TernaryRegion的IfExp AST节点（不包装为语句），用于内联到if条件或for迭代器中
+
+        归约算法：TernaryRegion → IfExp(expr)
+        当merge_context='compare'或'iter'时，三元表达式不作为独立语句生成，
+        而是内联到父IfRegion的条件或LoopRegion的迭代器中。
+        """
+        # 构建条件表达式
+        cond_expr = None
+        if hasattr(region, 'condition_chain_blocks') and region.condition_chain_blocks and len(region.condition_chain_blocks) > 1:
+            cond_expr = self._build_ternary_boolop_condition(region)
+        if cond_expr is None:
+            cond_block = region.condition_block
+            if cond_block:
+                cond_instrs = [i for i in cond_block.instructions
+                               if i.opname not in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL')
+                               and i.opname not in FORWARD_CONDITIONAL_JUMP_OPS
+                               and i.opname not in BACKWARD_CONDITIONAL_JUMP_OPS
+                               and i.opname not in SHORT_CIRCUIT_JUMP_OPS
+                               and i.opname not in ('JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE')]
+                if cond_instrs:
+                    cond_expr = self.expr_reconstructor.reconstruct(cond_instrs)
+
+        # 构建true值表达式
+        true_expr = None
+        if region.true_value_block:
+            true_instrs = [i for i in region.true_value_block.instructions
+                           if i.opname not in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL',
+                                               'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE',
+                                               'RETURN_VALUE', 'RETURN_CONST')]
+            if true_instrs:
+                true_expr = self.expr_reconstructor.reconstruct(true_instrs)
+
+        # 构建false值表达式
+        false_expr = None
+        if region.false_value_block:
+            false_instrs = [i for i in region.false_value_block.instructions
+                            if i.opname not in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL',
+                                                'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE',
+                                                'RETURN_VALUE', 'RETURN_CONST')]
+            if false_instrs:
+                false_expr = self.expr_reconstructor.reconstruct(false_instrs)
+
+        if cond_expr and true_expr:
+            return {'type': 'IfExp', 'test': cond_expr, 'body': true_expr, 'orelse': false_expr or {'type': 'Constant', 'value': None}}
+        return None
+
     def _build_ternary_boolop_condition(self, region: TernaryRegion) -> Optional[Dict]:
         """构建三元表达式中嵌套的BoolOp条件
 
@@ -11357,20 +11520,32 @@ class RegionASTGenerator:
                                if i.opname not in ('RESUME', 'NOP', 'CACHE')]
             last_cond_instr = cond_block.get_last_instruction()
 
+            # Only skip function call prefix when the ternary is inside a function call
+            # context (container_type == 'call'). In other contexts (e.g., lambda return,
+            # while condition), the condition block's function call IS the condition
+            # expression and should not be skipped.
             func_call_skip = 0
-            push_null_idx = None
-            for idx, i in enumerate(cond_instrs_raw):
-                if i.opname == 'PUSH_NULL':
-                    push_null_idx = idx
-                    break
-            if push_null_idx is not None and push_null_idx + 1 < len(cond_instrs_raw):
-                next_i = cond_instrs_raw[push_null_idx + 1]
-                if next_i.opname in ('LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_FAST', 'LOAD_DEREF', 'LOAD_ATTR'):
-                    func_call_skip = push_null_idx + 2
-                    if next_i.opname == 'LOAD_ATTR' and push_null_idx > 0:
-                        obj_i = cond_instrs_raw[push_null_idx - 1]
-                        if obj_i.opname.startswith('LOAD_'):
-                            func_call_skip = push_null_idx + 2
+            if region.container_type == 'call':
+                push_null_idx = None
+                for idx, i in enumerate(cond_instrs_raw):
+                    if i.opname == 'PUSH_NULL':
+                        push_null_idx = idx
+                        break
+                if push_null_idx is not None and push_null_idx + 1 < len(cond_instrs_raw):
+                    next_i = cond_instrs_raw[push_null_idx + 1]
+                    if next_i.opname in ('LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_FAST', 'LOAD_DEREF', 'LOAD_ATTR'):
+                        func_call_skip = push_null_idx + 2
+                        if next_i.opname == 'LOAD_ATTR' and push_null_idx > 0:
+                            obj_i = cond_instrs_raw[push_null_idx - 1]
+                            if obj_i.opname.startswith('LOAD_'):
+                                func_call_skip = push_null_idx + 2
+                # Python 3.11+: LOAD_GLOBAL with NULL+ prefix (arg & 1 == 1)
+                # This replaces PUSH_NULL + LOAD_GLOBAL with a single instruction
+                if func_call_skip == 0:
+                    for idx, i in enumerate(cond_instrs_raw):
+                        if i.opname == 'LOAD_GLOBAL' and (i.arg & 1) == 1:
+                            func_call_skip = idx + 1
+                            break
 
             cond_instrs = cond_instrs_raw[func_call_skip:]
             if skip_store_targets:
@@ -11432,7 +11607,85 @@ class RegionASTGenerator:
                            if not (s.get('type') == 'Assign' and
                                    s.get('targets', [{}])[0].get('id') in skip_store_targets)]
             merge_ctx = getattr(region, 'merge_context', None)  # Phase 12: 获取merge上下文
-            
+            container_type = region.container_type
+            func_call_info = region.func_call_info
+
+            # 函数调用上下文: 当ternary作为函数调用参数时，生成Call节点
+            # 此优先级高于merge_context，因为函数调用是更具体的上下文
+            if container_type == 'call' and func_call_info:
+                call_args = [ternary_expr]
+                subsequent_consumed_blocks = set()
+                current_merge = region.merge_block
+
+                # 收集后续ternary参数（同一函数调用的多个ternary参数）
+                while current_merge:
+                    next_ternary_region = self.region_analyzer.block_to_region.get(current_merge)
+                    if (isinstance(next_ternary_region, TernaryRegion)
+                            and next_ternary_region.condition_block == current_merge
+                            and next_ternary_region.entry != region.entry):
+                        # 构建后续ternary的值表达式
+                        next_true_expr = self._build_ternary_value_expr(next_ternary_region.true_value_block)
+                        next_false_expr = self._build_ternary_value_expr(next_ternary_region.false_value_block)
+
+                        # 重建后续ternary的条件表达式
+                        next_cond_instrs_raw = [i for i in current_merge.instructions
+                                                if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+                        next_last_cond = current_merge.get_last_instruction()
+                        next_filtered = []
+                        for i in next_cond_instrs_raw:
+                            if i == next_last_cond:
+                                if next_last_cond.opname in NONE_CHECK_OPS:
+                                    next_filtered.append(i)
+                                break
+                            next_filtered.append(i)
+                        next_cond_expr = self.expr_reconstructor.reconstruct(next_filtered)
+
+                        if next_cond_expr and next_true_expr and next_false_expr:
+                            call_args.append({
+                                'type': 'IfExp',
+                                'test': next_cond_expr,
+                                'body': next_true_expr,
+                                'orelse': next_false_expr,
+                            })
+
+                        subsequent_consumed_blocks.update(next_ternary_region.blocks)
+                        current_merge = next_ternary_region.merge_block
+                    else:
+                        break
+
+                # 生成Call节点
+                call_expr = {
+                    'type': 'Call',
+                    'func': func_call_info['func'],
+                    'args': func_call_info.get('args', []) + call_args,
+                    'keywords': [],
+                }
+
+                # 根据最终merge块决定输出格式
+                final_merge = current_merge
+                if final_merge:
+                    merge_non_noise = [i for i in final_merge.instructions
+                                      if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'PRECALL')]
+                    has_pop_top = any(i.opname == 'POP_TOP' for i in merge_non_noise)
+                    if has_pop_top:
+                        results.append({'type': 'Expr', 'value': call_expr})
+                    else:
+                        merge_last = final_merge.get_last_instruction()
+                        if merge_last and merge_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                            results.append({'type': 'Return', 'value': call_expr})
+                        else:
+                            results.append({'type': 'Expr', 'value': call_expr})
+                else:
+                    results.append({'type': 'Expr', 'value': call_expr})
+
+                # 标记后续ternary的块为已生成
+                for block in subsequent_consumed_blocks:
+                    self.generated_blocks.add(block)
+                for block in region.blocks:
+                    self.generated_blocks.add(block)
+
+                return results
+
             # Phase 12修复: 根据merge_context决定输出格式（保守策略）
             if merge_ctx == 'iter':
                 # for循环迭代器: 生成Expr(IfExp)，由for循环生成器使用
@@ -11484,8 +11737,132 @@ class RegionASTGenerator:
                         container_info = {'type': 'Tuple', 'elts': [ternary_expr], 'ctx': 'Load'}
                     elif container_type == 'set':
                         container_info = {'type': 'Set', 'elts': [ternary_expr], 'ctx': 'Load'}
+                    elif container_type == 'fstring':
+                        # f-string context: ternary is inside an f-string expression
+                        # Need to extract f-string prefix from condition block and build JoinedStr
+                        fstring_info = region.dict_key_info  # num_parts stored here
+                        num_parts = fstring_info.get('num_parts', 1) if fstring_info else 1
+
+                        # Extract f-string prefix instructions from condition block
+                        # These are the instructions before the ternary condition
+                        cond_instrs_raw = [i for i in cond_block.instructions
+                                           if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+
+                        # Find where the ternary condition starts by tracking stack depth
+                        # The f-string prefix pushes values that remain on the stack after
+                        # the ternary branches. The ternary condition starts when the
+                        # stack depth equals the number of prefix values.
+                        # For BUILD_STRING N with 1 FORMAT_VALUE in merge_block for the
+                        # ternary result, the prefix has N-1 parts on the stack.
+                        prefix_count = num_parts - 1  # ternary result is 1 part
+
+                        # Track stack depth to find the prefix boundary
+                        fstring_skip = 0
+                        stack_depth = 0
+                        for idx, instr in enumerate(cond_instrs_raw):
+                            if instr.opname == last_cond_instr.opname and instr.offset == last_cond_instr.offset:
+                                break
+                            # Calculate stack effect
+                            if instr.opname.startswith('LOAD_'):
+                                stack_depth += 1
+                            elif instr.opname == 'FORMAT_VALUE':
+                                pass  # pops 1, pushes 1: net 0
+                            elif instr.opname == 'BUILD_STRING':
+                                stack_depth -= instr.arg
+                                stack_depth += 1
+                            elif instr.opname.startswith('BINARY_'):
+                                stack_depth -= 1
+                            elif instr.opname.startswith('UNARY_'):
+                                pass  # pops 1, pushes 1: net 0
+                            elif instr.opname == 'CALL':
+                                stack_depth -= instr.arg + 1
+                                stack_depth += 1
+                            elif instr.opname == 'COMPARE_OP':
+                                stack_depth -= 1  # pops 2, pushes 1: net -1
+
+                            if stack_depth >= prefix_count and fstring_skip == 0:
+                                fstring_skip = idx + 1 if stack_depth == prefix_count else 0
+                                if fstring_skip > 0:
+                                    break
+
+                        # If we couldn't find the boundary, try a simpler heuristic:
+                        # look for the first LOAD that starts the comparison chain
+                        if fstring_skip == 0 and prefix_count > 0:
+                            # Find COMPARE_OP and work backwards
+                            compare_idx = None
+                            for idx, instr in enumerate(cond_instrs_raw):
+                                if instr.opname == 'COMPARE_OP':
+                                    compare_idx = idx
+                                    break
+                            if compare_idx is not None:
+                                # The comparison has 2 operands before COMPARE_OP
+                                # Find where the operands start
+                                operand_count = 0
+                                for idx in range(compare_idx - 1, -1, -1):
+                                    if cond_instrs_raw[idx].opname.startswith('LOAD_'):
+                                        operand_count += 1
+                                        if operand_count == 2:
+                                            fstring_skip = idx
+                                            break
+
+                        # Build f-string prefix parts from the prefix instructions
+                        prefix_values = []
+                        if fstring_skip > 0:
+                            prefix_instrs = cond_instrs_raw[:fstring_skip]
+                            # Reconstruct prefix values as JoinedStr components
+                            i = 0
+                            while i < len(prefix_instrs):
+                                instr = prefix_instrs[i]
+                                if instr.opname.startswith('LOAD_') and instr.opname not in ('LOAD_GLOBAL',):
+                                    # Check if next instruction is FORMAT_VALUE
+                                    if i + 1 < len(prefix_instrs) and prefix_instrs[i + 1].opname == 'FORMAT_VALUE':
+                                        prefix_values.append({
+                                            'type': 'FormattedValue',
+                                            'value': {'type': 'Name', 'id': instr.argval, 'ctx': 'Load'},
+                                            'conversion': -1,
+                                            'format_spec': None,
+                                        })
+                                        i += 2
+                                    else:
+                                        prefix_values.append({
+                                            'type': 'Name', 'id': instr.argval, 'ctx': 'Load',
+                                        })
+                                        i += 1
+                                elif instr.opname == 'LOAD_CONST' and isinstance(instr.argval, str):
+                                    prefix_values.append({
+                                        'type': 'Constant',
+                                        'value': instr.argval,
+                                    })
+                                    i += 1
+                                elif instr.opname == 'FORMAT_VALUE':
+                                    i += 1  # skip, handled with LOAD above
+                                else:
+                                    i += 1
+
+                        # Add the ternary expression as a FormattedValue
+                        prefix_values.append({
+                            'type': 'FormattedValue',
+                            'value': ternary_expr,
+                            'conversion': -1,
+                            'format_spec': None,
+                        })
+
+                        container_info = {
+                            'type': 'JoinedStr',
+                            'values': prefix_values,
+                        }
                 if container_info:
-                    results.append({'type': 'Expr', 'value': container_info})
+                    # Check if merge_block ends with RETURN_VALUE/RETURN_CONST
+                    # For f-strings, the merge_block typically has FORMAT_VALUE + BUILD_STRING + RETURN_VALUE
+                    is_return = False
+                    if container_type == 'fstring' and region.merge_block:
+                        merge_last = region.merge_block.get_last_instruction()
+                        if merge_last and merge_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                            is_return = True
+                    if is_return:
+                        results.append({'type': 'Return', 'value': container_info})
+                    else:
+                        results.append({'type': 'Expr', 'value': container_info})
                 else:
                     has_pop_top = any(
                         any(i.opname == 'POP_TOP' for i in b.instructions)
