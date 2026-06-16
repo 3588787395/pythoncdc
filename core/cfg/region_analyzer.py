@@ -7624,6 +7624,13 @@ class RegionAnalyzer:
                 other_ops = [i for i in meaningful if i.opname not in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF') and i.opname not in CONDITIONAL_JUMP_OPS]
                 if len(load_ops) == 1 and (not other_ops or all(o.opname in ('POP_TOP',) for o in other_ops)):
                     return False
+        # Ternary exclusion: if both conditional successors are single expression
+        # blocks, this is a ternary expression pattern, not a match case.
+        # True match/case blocks have at least one branch with multi-statement body.
+        succs = list(block.conditional_successors)
+        if len(succs) == 2:
+            if self._is_single_expression_block(succs[0]) and self._is_single_expression_block(succs[1]):
+                return False
         return True
 
     def _is_wildcard_match_block(self, block):
@@ -7681,6 +7688,15 @@ class RegionAnalyzer:
         has_loop_header = any(i.opname in loop_header_ops for i in rest[:3]) if len(rest) >= 3 else False
         if has_loop_header:
             return False
+        # Ternary exclusion: if predecessor is a conditional block and both
+        # its successors are single expression blocks, this is a ternary
+        # expression pattern, not a wildcard match case.
+        for pred in block.predecessors:
+            if pred.is_conditional:
+                pred_succs = list(pred.conditional_successors)
+                if len(pred_succs) == 2:
+                    if self._is_single_expression_block(pred_succs[0]) and self._is_single_expression_block(pred_succs[1]):
+                        return False
         return True
 
     def _is_none_match_block(self, block):
@@ -9607,10 +9623,20 @@ class RegionAnalyzer:
             # Reject if either successor is a return block (ends with RETURN_VALUE/RETURN_CONST
             # and has no successors). This indicates an if-return pattern, not a ternary.
             # In a true ternary expression, both branches converge to a merge block.
+            # EXCEPTION: Module-level ternary — both branches end with
+            #   <value_expr>, POP_TOP, LOAD_CONST None, RETURN_VALUE
+            # because module code always returns None. If both successors have
+            # POP_TOP before RETURN_VALUE, it's a module-level ternary.
+            _both_return_no_succ = True
+            _both_have_pop_top = True
             for succ in succs:
                 last = succ.get_last_instruction()
-                if last and last.opname in ('RETURN_VALUE', 'RETURN_CONST') and not succ.successors:
-                    return False
+                if not (last and last.opname in ('RETURN_VALUE', 'RETURN_CONST') and not succ.successors):
+                    _both_return_no_succ = False
+                if not any(i.opname == 'POP_TOP' for i in succ.instructions):
+                    _both_have_pop_top = False
+            if _both_return_no_succ and not _both_have_pop_top:
+                return False
             # Reject if both successors are conditional blocks whose successors
             # converge to RETURN_VALUE blocks. This is an if/elif/else chain with
             # return statements, not a nested ternary expression.
