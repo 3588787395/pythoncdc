@@ -1042,7 +1042,12 @@ class RegionAnalyzer:
             if header is None:
                 continue
 
-            _, continue_map = self._detect_break_continue(loop.body_blocks, header)
+            # 优先使用循环识别阶段保存的 continue_map（包含 try body 内的 continue 块），
+            # 否则重新计算
+            if hasattr(loop, 'continue_map') and loop.continue_map:
+                continue_map = loop.continue_map
+            else:
+                _, continue_map = self._detect_break_continue(loop.body_blocks, header)
             for block, role in continue_map.items():
                 if role == 'LOOP_BACK_EDGE':
                     self._assign_region_role(block.start_offset, BlockRole.LOOP_BACK_EDGE)
@@ -2199,6 +2204,7 @@ class RegionAnalyzer:
             region.init_blocks = []
             region.back_edge_blocks = {back_edge_block} if back_edge_block else set()
             region.break_blocks = sorted(verified_break_blocks, key=lambda b: b.start_offset)
+            region.continue_map = continue_map
             for _bb in verified_break_blocks:
                 self.block_roles[_bb.start_offset] = BlockRole.BREAK
             region.metadata.update({'for_iter_setup': for_iter_setup, 'for_iter_exit': for_iter_exit,
@@ -2865,6 +2871,7 @@ class RegionAnalyzer:
         - break_blocks集合用于AST生成时正确插入break语句
         """
         break_blocks_set = set()
+        continue_map = {}
         body_set = set(loop_body) if not isinstance(loop_body, set) else loop_body
 
         if natural_exit is not None:
@@ -2915,13 +2922,24 @@ class RegionAnalyzer:
                         else:
                             if is_back_edge_condition:
                                 continue
+                            # Fix: 如果后继块是跳回循环头部或循环条件的 JUMP_BACKWARD 块
+                            # （即 continue 语句），不应将其归类为 break 块。
+                            # 这种情况发生在 try body 内的 continue 块未被纳入
+                            # loop_body 但仍属于循环结构时。
+                            # while 循环中 continue 跳转到循环条件块（header 的前驱），
+                            # for 循环中 continue 跳转到 header 本身。
+                            _s_last = s.get_last_instruction()
+                            if _s_last and _s_last.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'):
+                                _s_target = self.cfg.get_block_by_offset(_s_last.argval) if _s_last.argval is not None else None
+                                if _s_target == header or _s_target in header.predecessors:
+                                    continue_map[s] = 'CONTINUE'
+                                    continue
                             break_blocks_set.add(s)
                 elif s == natural_exit and ne_is_terminator:
                     if last and last.opname in FORWARD_CONDITIONAL_JUMP_OPS:
                         if last.argval is not None and self.cfg.get_block_by_offset(last.argval) in body_set:
                             break_blocks_set.add(s)
 
-        continue_map = {}
         detector = get_opcode_detector()
         for block in loop_body:
             if block == header:
@@ -8836,7 +8854,36 @@ class RegionAnalyzer:
                         else:
                             continue
                 elif br_check is not None:
-                    continue
+                    # Fix: 允许 TryExceptRegion 的 try_blocks 中的块创建 IfRegion。
+                    # try body 内的 if 语句应正常识别为 IfRegion（嵌套在 try 内），
+                    # 但 handler/finally/cleanup 块中的条件不应创建 IfRegion，
+                    # 否则会导致错误的区域嵌套。
+                    # 额外限制：
+                    # 1. 如果该块同时是某个 LoopRegion 的条件块，
+                    #    则不允许创建 IfRegion，因为循环条件不是 if 语句。
+                    # 2. 如果该块在循环内且其条件后继包含 BREAK 块（if-break 模式），
+                    #    则不允许创建 IfRegion，因为 try 块内的 break 被编译为 return，
+                    #    创建 IfRegion 会导致 else 分支错误包含循环体继续的代码。
+                    if isinstance(br_check, TryExceptRegion) and block in br_check.try_blocks:
+                        _skip_if_region = False
+                        if any(lr.condition_block == block for lr in loop_regions):
+                            _skip_if_region = True  # 循环条件块不应创建 IfRegion
+                        if not _skip_if_region:
+                            # 检查 if-break 模式
+                            block_in_loop = any(block in lr.blocks for lr in loop_regions)
+                            if block_in_loop:
+                                cond_succs_ib = list(block.conditional_successors)
+                                if len(cond_succs_ib) == 2:
+                                    for _cs in cond_succs_ib:
+                                        _cs_role = self.block_roles.get(_cs.start_offset)
+                                        if _cs_role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
+                                            _skip_if_region = True  # if-break 模式，不创建 IfRegion
+                                            break
+                        if _skip_if_region:
+                            continue
+                        # 允许继续处理，创建嵌套在 try body 内的 IfRegion
+                    else:
+                        continue
                 cond_succs_check = list(block.conditional_successors)
                 if len(cond_succs_check) == 2:
                     block_in_loop = any(block in lr.blocks for lr in loop_regions)
@@ -8969,11 +9016,35 @@ class RegionAnalyzer:
                 continue
 
             merge = self._find_nearest_common_post_dominator(then_succ, else_succ)
-            then_blocks = self._collect_branch_blocks(then_succ, merge, {else_succ})
-            else_blocks = self._collect_branch_blocks(else_succ, merge, {then_succ})
+
+            # Fix: 当条件块在 TryExceptRegion 的 try_blocks 中时，
+            # 分支收集可能越过 try 体边界（通过 JUMP_FORWARD 到循环条件等），
+            # 需要计算 try 体边界块（try 体外的直接后继），作为 BFS 的额外停止点，
+            # 防止遍历越过 try 体后通过循环回边重新进入 try 体。
+            br_check_try = self.block_to_region.get(block)
+            try_boundary_stop = set()
+            if isinstance(br_check_try, TryExceptRegion) and block in br_check_try.try_blocks:
+                try_body_set = set(br_check_try.try_blocks) | set(br_check_try.else_blocks)
+                for tb in try_body_set:
+                    for succ in tb.successors:
+                        if succ not in try_body_set:
+                            try_boundary_stop.add(succ)
+
+            then_stop = {else_succ} | (try_boundary_stop - {then_succ})
+            else_stop = {then_succ} | (try_boundary_stop - {else_succ})
+            then_blocks = self._collect_branch_blocks(then_succ, merge, then_stop)
+            else_blocks = self._collect_branch_blocks(else_succ, merge, else_stop)
             if try_handler_blocks:
                 then_blocks = [b for b in then_blocks if b not in try_handler_blocks]
                 else_blocks = [b for b in else_blocks if b not in try_handler_blocks]
+
+            # 后过滤：确保没有 try 体外的块混入，但保留直接后继块（then_succ/else_succ）
+            # 因为它们是 if 条件的直接分支目标（如 break/continue 块），即使不在 try 体内
+            # 也应保留在 then/else 分支中。
+            if isinstance(br_check_try, TryExceptRegion) and block in br_check_try.try_blocks:
+                try_body_set = set(br_check_try.try_blocks) | set(br_check_try.else_blocks)
+                then_blocks = [b for b in then_blocks if b in try_body_set or b == then_succ]
+                else_blocks = [b for b in else_blocks if b in try_body_set or b == else_succ]
 
             all_condition_blocks = {condition_block} | chain_blocks
 
@@ -9068,7 +9139,20 @@ class RegionAnalyzer:
         """
         if else_blocks and all(self._is_trivial_block(b) for b in else_blocks):
             else_blocks = []
+        # Fix: 当 then 分支以 RAISE_VARARGS 结尾且 merge 为 None 时，
+        # else_blocks 中的块实际上是 if 语句之后的顺序代码，不是 else 分支。
+        # 例如: "if not valid(item): raise ValueError(...)" 后面的代码是顺序执行，
+        # 不属于 else 分支。此时应将 else_blocks 清空，生成 IF_THEN 而非 IF_THEN_ELSE。
+        # 注意: RETURN_VALUE/RETURN_CONST 不属于此情况，因为 return 后面的 else
+        # 是真正的 else 分支（如 if x: return 1 else: return 2）。
         if else_blocks and merge is None:
+            then_terminates_with_raise = False
+            if then_blocks:
+                last_then = then_blocks[-1].get_last_instruction()
+                if last_then and last_then.opname == 'RAISE_VARARGS':
+                    then_terminates_with_raise = True
+            if then_terminates_with_raise:
+                else_blocks = []
             then_block_set = set(then_blocks) if then_blocks else set()
             else_block_set = set(else_blocks)
             shared_or_reachable = False
@@ -9116,6 +9200,23 @@ class RegionAnalyzer:
             first_else = else_blocks_[0]
             if len(first_else.conditional_successors) != 2:
                 return None
+            # Fix: 如果潜在的 elif 条件块在条件跳转前包含 body 语句
+            # （如 STORE_FAST/BINARY_OP 等），则它不是纯 elif 条件块，
+            # 而是包含实际代码的块，不应被合并为 elif 链。
+            # 例如: try body 中 "result = transform(item); if result is None: continue"
+            # 的 block 同时包含赋值和条件跳转，不应被视为 elif。
+            _fe_last = first_else.get_last_instruction()
+            if _fe_last and _fe_last.opname in FORWARD_CONDITIONAL_JUMP_OPS:
+                _has_body_stmt = any(
+                    i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
+                                'STORE_DEREF', 'STORE_ATTR', 'STORE_SUBSCR',
+                                'BINARY_OP', 'DELETE_NAME', 'DELETE_FAST',
+                                'DELETE_GLOBAL', 'DELETE_ATTR', 'DELETE_SUBSCR')
+                    for i in first_else.instructions
+                    if i.offset < _fe_last.offset
+                )
+                if _has_body_stmt:
+                    return None
             if first_else in self.block_to_region:
                 existing = self.block_to_region[first_else]
                 if isinstance(existing, (IfRegion, TernaryRegion)):

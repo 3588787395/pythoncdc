@@ -284,12 +284,35 @@ class RegionASTGenerator:
                     _stmt_instrs: List[Instruction] = []
                     _import_pending_store = False
                     _unpack_targets: List[str] = []
+                    # [修复] 跳过类定义指令的跟踪变量
+                    # LOAD_BUILD_CLASS → MAKE_FUNCTION → CALL → STORE_NAME 序列
+                    # 由 _generate_with 的 class_def_instrs 统一处理，避免重复生成
+                    _skip_class_def = False
+                    _class_def_paren_depth = 0
 
                     for _instr in entry_block.instructions:
                         if _instr.opname == 'BEFORE_WITH':
                             break
                         if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
                             continue
+                        # [修复] 跳过类定义指令（LOAD_BUILD_CLASS → MAKE_FUNCTION → CALL → STORE_NAME）
+                        # 这些指令由 _generate_with 的 class_def_instrs 统一处理
+                        if _instr.opname == 'LOAD_BUILD_CLASS':
+                            _skip_class_def = True
+                            _class_def_paren_depth = 0
+                            continue
+                        if _skip_class_def:
+                            if _instr.opname in ('PRECALL', 'CALL'):
+                                _class_def_paren_depth += 1
+                            if _instr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL') and _class_def_paren_depth <= 1:
+                                _skip_class_def = False
+                                _class_def_paren_depth = 0
+                                continue
+                            if _instr.opname == 'BEFORE_WITH':
+                                _skip_class_def = False
+                                _class_def_paren_depth = 0
+                            else:
+                                continue
                         if _instr.opname == 'POP_TOP':
                             if _stmt_instrs:
                                 expr = self.expr_reconstructor.reconstruct(_stmt_instrs)
@@ -1095,6 +1118,8 @@ class RegionASTGenerator:
                         bases.append(arg)
 
             decorator_list = self._extract_decorators(outer_call if outer_call else call_expr)
+            # [修复] __build_class__ 是 CPython 内部操作码，不是源代码中的装饰器
+            decorator_list = [d for d in decorator_list if not (isinstance(d, dict) and d.get('type') == 'Name' and d.get('id') == '__build_class__')]
 
             if name is None:
                 name = 'UnknownClass'
@@ -5418,18 +5443,10 @@ class RegionASTGenerator:
                 continue
             role = self.region_analyzer.get_block_role(block)
             if role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
-                _block_has_return = any(
-                    i.opname in ('RETURN_VALUE', 'RETURN_CONST')
-                    for i in block.instructions
-                )
-                if _block_has_return:
-                    _ret_ast = self._generate_return_ast(block)
-                    if _ret_ast:
-                        stmts.append(_ret_ast)
-                    else:
-                        stmts.append({'type': 'Break'})
-                else:
-                    stmts.append({'type': 'Break'})
+                # Fix: 当 block 的 role 是 BREAK 时，始终生成 Break 语句。
+                # 在 try 块内，break 被编译为 LOAD_CONST(None); RETURN_VALUE，
+                # 但这仍然是 break 语句，不应生成 return。
+                stmts.append({'type': 'Break'})
                 self.generated_blocks.add(block)
                 self.generated_offsets.add(block.start_offset)
                 continue
