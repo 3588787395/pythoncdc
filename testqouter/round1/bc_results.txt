@@ -1,0 +1,73 @@
+Bytecode: MATCH=60, MISMATCH=64, ERROR=3, Total=127
+Bytecode match rate: 60/127 = 47%
+
+Mismatched (64):
+  test_b08_pass.py
+  test_c04_nested_if.py
+  test_e02_multi_except.py
+  test_e05_try_except_finally.py
+  test_e07_except_as.py
+  test_e09_nested_try.py
+  test_e12_try_with_if.py
+  test_l01_for_break.py
+  test_l02_for_continue.py
+  test_l04_while_break.py
+  test_l05_while_continue.py
+  test_l09_for_break_else.py
+  test_l10_while_break_else.py
+  test_l11_for_break_continue.py
+  test_l12_while_break_continue.py
+  test_l14_nested_while.py
+  test_l16_nested_for_continue.py
+  test_l18_while_with_for.py
+  test_n11_try_while_continue.py
+  test_n15_while_if_while_break.py
+  test_n16_for_if_try_except.py
+  test_n17_if_for_break.py
+  test_n18_if_while_break.py
+  test_r1_bool_and_assign.py
+  test_r1_bool_or_assign.py
+  test_r1_chained_compare.py
+  test_r1_except_as_var.py
+  test_r1_for_if_for_break.py
+  test_r1_for_if_try_except.py
+  test_r1_for_nested_try_break.py
+  test_r1_if_for_break.py
+  test_r1_if_try_except.py
+  test_r1_if_while_break.py
+  test_r1_multi_except_chain.py
+  test_r1_multi_with.py
+  test_r1_nested_try_except.py
+  test_r1_nested_while_if_break.py
+  test_r1_nested_with.py
+  test_r1_try_while_continue.py
+  test_r1_try_with.py
+  test_r1_while_and_condition.py
+  test_r1_while_break_continue.py
+  test_r1_while_break_else.py
+  test_r1_while_break_simple.py
+  test_r1_while_if_while_break.py
+  test_r1_while_nested_try_break.py
+  test_r1_while_try_except.py
+  test_r1_with_as.py
+  test_r1_with_no_as.py
+  test_r1_with_try.py
+  test_r2q_01_boolop_and_return.py
+  test_r2q_02_boolop_or_assign.py
+  test_r2q_04_ternary_in_dict.py
+  test_r2q_05_chained_compare_len.py
+  test_r2q_10_with_open_read.py
+  test_r2q_18_check_suffix.py
+  test_r2q_24_for_break_continue.py
+  test_r2q_25_full_check_stock.py
+  test_r2q_26_get_quote_pattern.py
+  test_r2q_30_if_none_then_elif.py
+  test_r2q_31_elif_in_except.py
+  test_r2q_33_try_except_nested.py
+  test_r2q_34_api_get_pattern.py
+  test_w04_nested_with.py
+
+Errors (3):
+  test_r2q_27_get_real_pattern.py: don't know how to disassemble NoneType objects
+  test_r2q_32_try_get_quote.py: SYNTAX - name capture 'quote' makes remaining patterns unreachable (<decomp>, line 8)
+  test_w06_try_with_with.py: SYNTAX - default 'except:' must be last (<decomp>, line 11)

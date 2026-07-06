@@ -1,0 +1,8 @@
+[
+  {
+    "source": "if flag == 'a':\n    value = None\nelse:\n    pass\n    pass\n    z = x + 1",
+    "decompiled": "match flag:\n    case 'a':\n        value = None\nz = x + 1\n",
+    "error": "Bytecode mismatch: Instruction count: 14 vs 12\nDecompiled:\nmatch flag:\n    case 'a':\n        value = None\nz = x + 1\n",
+    "category": "bytecode_mismatch"
+  }
+]

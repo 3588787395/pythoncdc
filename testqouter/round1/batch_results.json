@@ -1,0 +1,758 @@
+{
+  "summary": {
+    "total": 125,
+    "passed": 124,
+    "failed": 0
+  },
+  "results": [
+    {
+      "name": "test_b01_simple_assign",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_b02_aug_assign",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_b03_multi_assign",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_b04_tuple_unpack",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_b05_expr_stmt",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_b06_return",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_b07_return_none",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_b08_pass",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_c01_if_elif_else",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_c02_if_then",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_c03_if_else",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_c04_nested_if",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_e01_try_except",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_e02_multi_except",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_e03_try_else_finally",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_e04_try_finally",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_e05_try_except_finally",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_e06_full_combination",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_e07_except_as",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_e08_bare_except",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_e09_nested_try",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_e10_try_with_loop",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_e11_loop_with_try",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_e12_try_with_if",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_e13_if_with_try",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_l01_for_break",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_l02_for_continue",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_l03_for_else",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_l04_while_break",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_l05_while_continue",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_l06_for",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_l07_while",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_l08_while_else",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_l09_for_break_else",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_l10_while_break_else",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_l11_for_break_continue",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_l12_while_break_continue",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_l13_nested_for",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_l14_nested_while",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_l15_nested_for_break",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_l16_nested_for_continue",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_l17_for_with_while",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_l18_while_with_for",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_n10_try_for_break",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_n11_try_while_continue",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_n12_for_try_except",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_n13_while_try_except",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_n14_for_for_if_break",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_n15_while_if_while_break",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_n16_for_if_try_except",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_n17_if_for_break",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_n18_if_while_break",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r1_bool_and_assign",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r1_bool_or_assign",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r1_chained_compare",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r1_except_as_var",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r1_for_if_for_break",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r1_for_if_try_except",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r1_for_nested_try_break",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r1_for_try_except",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r1_if_for_break",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r1_if_not_condition",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r1_if_try_except",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r1_if_while_break",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r1_multi_except_chain",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r1_multi_with",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r1_nested_try_except",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r1_nested_while_if_break",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r1_nested_with",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r1_pass_only",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r1_return_none_implicit",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r1_ternary_assign",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r1_try_except_else_finally",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r1_try_except_finally",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r1_try_for_break",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r1_try_while_continue",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r1_try_with",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r1_while_and_condition",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r1_while_break_continue",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r1_while_break_else",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r1_while_break_simple",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r1_while_if_while_break",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r1_while_nested_try_break",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r1_while_try_except",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r1_with_as",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r1_with_no_as",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r1_with_try",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r2q_01_boolop_and_return",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r2q_02_boolop_or_assign",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r2q_03_ternary_in_return",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r2q_04_ternary_in_dict",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r2q_05_chained_compare_len",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r2q_06_chained_compare_num",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r2q_07_assert_with_msg",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r2q_08_assert_chain",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r2q_09_ternary_assign",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r2q_10_with_open_read",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r2q_11_const_key_map",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r2q_12_if_not_none",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r2q_13_chained_get",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r2q_14_pass_only",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r2q_15_explicit_return_none",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r2q_16_implicit_return_none",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r2q_17_for_if_append",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r2q_18_check_suffix",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r2q_19_mod_string_format",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r2q_20_list_comprehension",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r2q_21_if_elif_else_chain",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r2q_22_try_except_finally",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r2q_23_multi_except",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r2q_24_for_break_continue",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r2q_25_full_check_stock",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r2q_26_get_quote_pattern",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r2q_27_get_real_pattern",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r2q_28_date_convert_pattern",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r2q_29_lambda_datetime",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r2q_30_if_none_then_elif",
+      "status": "SYNTAX_ERROR",
+      "error": "wildcard makes remaining patterns unreachable (<test>, line 8)"
+    },
+    {
+      "name": "test_r2q_32_try_get_quote",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_r2q_33_try_except_nested",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_w01_with",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_w02_with_no_as",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_w03_multi_with",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_w04_nested_with",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_w05_with_with_try",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    },
+    {
+      "name": "test_w06_try_with_with",
+      "status": "PASS",
+      "jump_diffs": 0,
+      "true_diffs": 0
+    }
+  ]
+}

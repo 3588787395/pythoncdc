@@ -1,0 +1,278 @@
+[
+  {
+    "source": "try:\n    z = x + 1\n    print(y)\n    print(x)\nexcept RuntimeError as e:\n    y = 2\n    print(x)\nexcept ValueError as e:\n    print(y)\n    y = 2\n    value = None\nexcept RuntimeError:\n    print(y)\n    result = True\nelse:\n    count = 0\nfinally:\n    z = x + 1\n    print(y)",
+    "decompiled": "try:\n    z = x + 1\n    print(y)\n    print(x)\nexcept RuntimeError as e:\n    y = 2\n    print(x)\nexcept ValueError as e:\n    print(y)\n    y = 2\n    value = None\nexcept RuntimeError: result = True\nelse: count = 0\nfinally:\n    z = x + 1\n    print(y)\n",
+    "error": "Bytecode mismatch: Instruction count: 103 vs 97\nDecompiled:\ntry:\n    z = x + 1\n    print(y)\n    print(x)\nexcept RuntimeError as e:\n    y = 2\n    print(x)\nexcept ValueError as e:\n    print(y)\n    y = 2\n    value = None\nexcept RuntimeError: result = True\nelse: count = 0\nfinally:\n    z = x + 1\n    print(y)\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    pass\nexcept IndexError:\n    print(x)\nexcept OSError:\n    count = 0\nexcept OSError as e:\n    pass\n    z = x + 1\nelse:\n    count = 0\nfinally:\n    count = 0\n    y = 2",
+    "decompiled": "try:\n    count = 0\nfinally:\n    count = 0\n    y = 2\ntry:\n    pass\n",
+    "error": "SyntaxError in decompiled output: expected 'except' or 'finally' block (<decompiled>, line 7)\nOutput:\ntry:\n    count = 0\nfinally:\n    count = 0\n    y = 2\ntry:\n    pass\n",
+    "category": "syntax_error"
+  },
+  {
+    "source": "try:\n    w = 0\n    print(y)\n    z = x + 1\nexcept ValueError:\n    value = None\nexcept KeyError:\n    print(x)\n    print(y)\nexcept ValueError:\n    z = x + 1\n    result = True",
+    "decompiled": "try:\n    w = 0\n    print(y)\n    z = x + 1\nexcept ValueError: value = None\nexcept KeyError: print(y)\nexcept ValueError:\n    z = x + 1\n    result = True\n",
+    "error": "Bytecode mismatch: Instruction count: 58 vs 52\nDecompiled:\ntry:\n    w = 0\n    print(y)\n    z = x + 1\nexcept ValueError: value = None\nexcept KeyError: print(y)\nexcept ValueError:\n    z = x + 1\n    result = True\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    x = 1\n    value = None\n    print(y)\nexcept ValueError as e:\n    print(x)\n    x = 1\nexcept Exception:\n    value = None\nexcept IndexError as e:\n    w = 0\n    print(y)\n    print(y)\nfinally:\n    count = 0\n    print(x)\n    print(y)",
+    "decompiled": "try:\n    x = 1\n    value = None\n    print(y)\nexcept ValueError as e: x = 1\nexcept Exception: value = None\nexcept IndexError as e:\n    w = 0\n    print(y)\nfinally:\n    count = 0\n    print(y)\n",
+    "error": "Bytecode mismatch: Instruction count: 101 vs 77\nDecompiled:\ntry:\n    x = 1\n    value = None\n    print(y)\nexcept ValueError as e: x = 1\nexcept Exception: value = None\nexcept IndexError as e:\n    w = 0\n    print(y)\nfinally:\n    count = 0\n    print(y)\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    result = True\nexcept IndexError:\n    value = None\n    z = x + 1\n    result = True\nexcept IndexError:\n    print(y)\n    w = 0\nexcept OSError as e:\n    value = None\n    z = x + 1\nelse:\n    pass\n    x = 1",
+    "decompiled": "try:\n    result = True\nexcept IndexError:\n    value = None\n    z = x + 1\n    result = True\nexcept IndexError: w = 0\nexcept OSError as e:\n    value = None\n    z = x + 1\nelse: x = 1\n",
+    "error": "Bytecode mismatch: Instruction count: 59 vs 53\nDecompiled:\ntry:\n    result = True\nexcept IndexError:\n    value = None\n    z = x + 1\n    result = True\nexcept IndexError: w = 0\nexcept OSError as e:\n    value = None\n    z = x + 1\nelse: x = 1\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    pass\nexcept RuntimeError:\n    x = 1\n    z = x + 1\n    y = 2\nfinally:\n    print(x)\n    print(x)",
+    "decompiled": "try:\n    pass\nfinally: print(x)\n",
+    "error": "Bytecode mismatch: Instruction count: 49 vs 20\nDecompiled:\ntry:\n    pass\nfinally: print(x)\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    x = 1\n    pass\nexcept TypeError as e:\n    result = True\n    count = 0\nexcept ValueError as e:\n    print(y)\n    x = 1\nexcept KeyError as e:\n    print(y)\n    z = x + 1\nelse:\n    z = x + 1\n    count = 0\n    print(x)",
+    "decompiled": "try:\n    x = 1\nexcept TypeError as e:\n    result = True\n    count = 0\nexcept ValueError as e: x = 1\nexcept KeyError as e: z = x + 1\nelse:\n    z = x + 1\n    count = 0\n    print(x)\n",
+    "error": "Bytecode mismatch: Instruction count: 83 vs 71\nDecompiled:\ntry:\n    x = 1\nexcept TypeError as e:\n    result = True\n    count = 0\nexcept ValueError as e: x = 1\nexcept KeyError as e: z = x + 1\nelse:\n    z = x + 1\n    count = 0\n    print(x)\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    pass\n    pass\nexcept ValueError:\n    y = 2\n    print(y)\n    x = 1\nexcept ValueError as e:\n    count = 0\n    z = x + 1\nexcept IndexError:\n    print(x)\n    print(x)\nelse:\n    count = 0\n    pass",
+    "decompiled": "try:\n    pass\nexcept ValueError:\n    y = 2\n    print(y)\n    x = 1\nexcept ValueError as e:\n    count = 0\n    z = x + 1\nexcept IndexError: print(x)\nelse: count = 0\n",
+    "error": "Bytecode mismatch: Instruction count: 63 vs 57\nDecompiled:\ntry:\n    pass\nexcept ValueError:\n    y = 2\n    print(y)\n    x = 1\nexcept ValueError as e:\n    count = 0\n    z = x + 1\nexcept IndexError: print(x)\nelse: count = 0\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    y = 2\n    y = 2\nexcept ValueError as e:\n    print(x)\n    x = 1\nexcept KeyError as e:\n    z = x + 1\n    y = 2\nexcept Exception as e:\n    print(x)\n    print(x)",
+    "decompiled": "try:\n    y = 2\n    y = 2\nexcept ValueError as e: x = 1\nexcept KeyError as e:\n    z = x + 1\n    y = 2\nexcept Exception as e: print(x)\n",
+    "error": "Bytecode mismatch: Instruction count: 77 vs 65\nDecompiled:\ntry:\n    y = 2\n    y = 2\nexcept ValueError as e: x = 1\nexcept KeyError as e:\n    z = x + 1\n    y = 2\nexcept Exception as e: print(x)\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    print(y)\n    w = 0\nexcept TypeError:\n    x = 1\nexcept OSError as e:\n    print(y)\n    w = 0\nexcept RuntimeError as e:\n    w = 0\nelse:\n    pass\n    w = 0",
+    "decompiled": "try:\n    print(y)\n    w = 0\nexcept TypeError: x = 1\nexcept OSError as e: w = 0\nexcept RuntimeError as e: w = 0\nelse: w = 0\n",
+    "error": "Bytecode mismatch: Instruction count: 62 vs 56\nDecompiled:\ntry:\n    print(y)\n    w = 0\nexcept TypeError: x = 1\nexcept OSError as e: w = 0\nexcept RuntimeError as e: w = 0\nelse: w = 0\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    y = 2\n    pass\n    z = x + 1\nexcept IndexError as e:\n    y = 2\n    z = x + 1\n    y = 2\nexcept RuntimeError as e:\n    z = x + 1\n    print(x)\n    print(y)\nexcept TypeError:\n    print(y)\n    pass",
+    "decompiled": "try:\n    y = 2\n    z = x + 1\nexcept IndexError as e:\n    y = 2\n    z = x + 1\n    y = 2\nexcept RuntimeError as e:\n    z = x + 1\n    print(y)\nexcept TypeError: print(y)\n",
+    "error": "Bytecode mismatch: Instruction count: 76 vs 70\nDecompiled:\ntry:\n    y = 2\n    z = x + 1\nexcept IndexError as e:\n    y = 2\n    z = x + 1\n    y = 2\nexcept RuntimeError as e:\n    z = x + 1\n    print(y)\nexcept TypeError: print(y)\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    print(x)\n    count = 0\nexcept TypeError as e:\n    print(y)\n    count = 0\nexcept TypeError:\n    print(y)\nexcept KeyError:\n    y = 2\n    result = True",
+    "decompiled": "try:\n    print(x)\n    count = 0\nexcept TypeError as e: count = 0\nexcept TypeError: print(y)\nexcept KeyError:\n    y = 2\n    result = True\n",
+    "error": "Bytecode mismatch: Instruction count: 59 vs 53\nDecompiled:\ntry:\n    print(x)\n    count = 0\nexcept TypeError as e: count = 0\nexcept TypeError: print(y)\nexcept KeyError:\n    y = 2\n    result = True\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    w = 0\nexcept RuntimeError as e:\n    w = 0\n    print(x)\n    print(y)\nexcept KeyError as e:\n    z = x + 1\n    w = 0\n    count = 0\nelse:\n    print(y)\n    value = None\nfinally:\n    x = 1",
+    "decompiled": "try:\n    w = 0\nexcept RuntimeError as e:\n    w = 0\n    print(y)\nexcept KeyError as e:\n    z = x + 1\n    w = 0\n    count = 0\nelse:\n    print(y)\n    value = None\nfinally: x = 1\n",
+    "error": "Bytecode mismatch: Instruction count: 71 vs 65\nDecompiled:\ntry:\n    w = 0\nexcept RuntimeError as e:\n    w = 0\n    print(y)\nexcept KeyError as e:\n    z = x + 1\n    w = 0\n    count = 0\nelse:\n    print(y)\n    value = None\nfinally: x = 1\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    x = 1\nexcept KeyError:\n    w = 0\n    print(x)\n    print(y)",
+    "decompiled": "try:\n    x = 1\nexcept KeyError:\n    w = 0\n    print(y)\n",
+    "error": "Bytecode mismatch: Instruction count: 30 vs 24\nDecompiled:\ntry:\n    x = 1\nexcept KeyError:\n    w = 0\n    print(y)\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    print(y)\nexcept KeyError:\n    count = 0\n    pass\n    print(x)\nexcept KeyError:\n    print(x)\n    value = None\nexcept OSError:\n    value = None\nelse:\n    value = None\nfinally:\n    w = 0\n    result = True",
+    "decompiled": "try:\n    print(y)\nexcept KeyError:\n    count = 0\n    print(x)\nexcept KeyError: value = None\nexcept OSError: value = None\nelse: value = None\nfinally:\n    w = 0\n    result = True\n",
+    "error": "Bytecode mismatch: Instruction count: 59 vs 53\nDecompiled:\ntry:\n    print(y)\nexcept KeyError:\n    count = 0\n    print(x)\nexcept KeyError: value = None\nexcept OSError: value = None\nelse: value = None\nfinally:\n    w = 0\n    result = True\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    value = None\nexcept IndexError as e:\n    print(x)\n    w = 0\nexcept IndexError:\n    pass\n    z = x + 1\nexcept OSError:\n    count = 0\n    print(y)\nelse:\n    print(y)",
+    "decompiled": "try:\n    value = None\nexcept IndexError as e: w = 0\nexcept IndexError: z = x + 1\nexcept OSError:\n    count = 0\n    print(y)\nelse: print(y)\n",
+    "error": "Bytecode mismatch: Instruction count: 61 vs 55\nDecompiled:\ntry:\n    value = None\nexcept IndexError as e: w = 0\nexcept IndexError: z = x + 1\nexcept OSError:\n    count = 0\n    print(y)\nelse: print(y)\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    y = 2\nexcept ValueError:\n    z = x + 1\n    y = 2\n    result = True\nexcept ValueError:\n    y = 2\n    y = 2\n    x = 1\nfinally:\n    print(y)\n    x = 1\n    print(y)",
+    "decompiled": "try:\n    y = 2\nexcept ValueError:\n    z = x + 1\n    y = 2\n    result = True\nexcept ValueError:\n    y = 2\n    y = 2\n    x = 1\nfinally:\n    x = 1\n    print(y)\n",
+    "error": "Bytecode mismatch: Instruction count: 65 vs 53\nDecompiled:\ntry:\n    y = 2\nexcept ValueError:\n    z = x + 1\n    y = 2\n    result = True\nexcept ValueError:\n    y = 2\n    y = 2\n    x = 1\nfinally:\n    x = 1\n    print(y)\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    z = x + 1\n    z = x + 1\n    x = 1\nexcept KeyError as e:\n    print(y)\n    value = None\nelse:\n    count = 0\n    count = 0\n    value = None",
+    "decompiled": "try:\n    z = x + 1\n    z = x + 1\n    x = 1\nexcept KeyError as e: value = None\nelse:\n    count = 0\n    count = 0\n    value = None\n",
+    "error": "Bytecode mismatch: Instruction count: 45 vs 39\nDecompiled:\ntry:\n    z = x + 1\n    z = x + 1\n    x = 1\nexcept KeyError as e: value = None\nelse:\n    count = 0\n    count = 0\n    value = None\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    print(x)\n    print(y)\nexcept OSError as e:\n    pass\n    print(x)\n    print(y)\nfinally:\n    x = 1\n    result = True",
+    "decompiled": "try:\n    print(x)\n    print(y)\nexcept OSError as e: print(y)\nfinally:\n    x = 1\n    result = True\n",
+    "error": "Bytecode mismatch: Instruction count: 56 vs 50\nDecompiled:\ntry:\n    print(x)\n    print(y)\nexcept OSError as e: print(y)\nfinally:\n    x = 1\n    result = True\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    count = 0\nexcept RuntimeError:\n    pass\n    print(y)\n    y = 2\nexcept Exception:\n    w = 0\n    count = 0\nexcept TypeError:\n    count = 0\n    print(y)\nfinally:\n    y = 2\n    value = None",
+    "decompiled": "try:\n    count = 0\nexcept RuntimeError: y = 2\nexcept Exception:\n    w = 0\n    count = 0\nexcept TypeError:\n    count = 0\n    print(y)\nfinally:\n    y = 2\n    value = None\n",
+    "error": "Bytecode mismatch: Instruction count: 55 vs 49\nDecompiled:\ntry:\n    count = 0\nexcept RuntimeError: y = 2\nexcept Exception:\n    w = 0\n    count = 0\nexcept TypeError:\n    count = 0\n    print(y)\nfinally:\n    y = 2\n    value = None\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    print(y)\n    w = 0\n    value = None\nexcept ValueError:\n    pass\n    count = 0\n    result = True\nelse:\n    pass\n    z = x + 1\n    value = None\nfinally:\n    print(x)\n    print(y)",
+    "decompiled": "try:\n    print(y)\n    w = 0\n    value = None\nexcept ValueError:\n    count = 0\n    result = True\nelse:\n    z = x + 1\n    value = None\nfinally: print(y)\n",
+    "error": "Bytecode mismatch: Instruction count: 61 vs 49\nDecompiled:\ntry:\n    print(y)\n    w = 0\n    value = None\nexcept ValueError:\n    count = 0\n    result = True\nelse:\n    z = x + 1\n    value = None\nfinally: print(y)\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    z = x + 1\n    value = None\n    count = 0\nexcept RuntimeError as e:\n    print(x)\n    y = 2\nfinally:\n    result = True\n    pass",
+    "decompiled": "try:\n    z = x + 1\n    value = None\n    count = 0\nexcept RuntimeError as e: y = 2\nfinally: result = True\n",
+    "error": "Bytecode mismatch: Instruction count: 44 vs 38\nDecompiled:\ntry:\n    z = x + 1\n    value = None\n    count = 0\nexcept RuntimeError as e: y = 2\nfinally: result = True\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    count = 0\n    x = 1\n    pass\nexcept OSError as e:\n    w = 0\nexcept TypeError:\n    value = None\n    print(x)\n    value = None\nexcept IndexError as e:\n    print(y)\n    result = True\nelse:\n    w = 0\nfinally:\n    count = 0\n    w = 0\n    count = 0",
+    "decompiled": "try:\n    count = 0\n    x = 1\nexcept OSError as e: w = 0\nexcept TypeError:\n    value = None\n    print(x)\n    value = None\nexcept IndexError as e: result = True\nelse: w = 0\nfinally:\n    count = 0\n    w = 0\n    count = 0\n",
+    "error": "Bytecode mismatch: Instruction count: 77 vs 71\nDecompiled:\ntry:\n    count = 0\n    x = 1\nexcept OSError as e: w = 0\nexcept TypeError:\n    value = None\n    print(x)\n    value = None\nexcept IndexError as e: result = True\nelse: w = 0\nfinally:\n    count = 0\n    w = 0\n    count = 0\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    result = True\n    print(y)\nexcept RuntimeError:\n    result = True\n    print(y)\n    value = None\nexcept OSError:\n    print(x)\n    w = 0\nfinally:\n    x = 1",
+    "decompiled": "try:\n    result = True\n    print(y)\nexcept RuntimeError:\n    result = True\n    print(y)\n    value = None\nexcept OSError: w = 0\nfinally: x = 1\n",
+    "error": "Bytecode mismatch: Instruction count: 51 vs 45\nDecompiled:\ntry:\n    result = True\n    print(y)\nexcept RuntimeError:\n    result = True\n    print(y)\n    value = None\nexcept OSError: w = 0\nfinally: x = 1\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    pass\nexcept Exception as e:\n    print(x)\n    y = 2\nexcept IndexError as e:\n    result = True\n    w = 0\nexcept IndexError:\n    x = 1\n    count = 0\n    x = 1\nfinally:\n    print(x)\n    value = None\n    print(x)",
+    "decompiled": "try:\n    pass\nfinally:\n    value = None\n    print(x)\n",
+    "error": "Bytecode mismatch: Instruction count: 85 vs 24\nDecompiled:\ntry:\n    pass\nfinally:\n    value = None\n    print(x)\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    x = 1\nexcept Exception as e:\n    print(x)\n    print(y)\nexcept RuntimeError as e:\n    z = x + 1\nexcept KeyError:\n    print(x)\n    y = 2\n    z = x + 1\nfinally:\n    result = True\n    print(y)",
+    "decompiled": "try:\n    x = 1\nexcept Exception as e: print(y)\nexcept RuntimeError as e: z = x + 1\nexcept KeyError:\n    print(x)\n    y = 2\n    z = x + 1\nfinally:\n    result = True\n    print(y)\n",
+    "error": "Bytecode mismatch: Instruction count: 85 vs 79\nDecompiled:\ntry:\n    x = 1\nexcept Exception as e: print(y)\nexcept RuntimeError as e: z = x + 1\nexcept KeyError:\n    print(x)\n    y = 2\n    z = x + 1\nfinally:\n    result = True\n    print(y)\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    print(y)\n    result = True\n    result = True\nexcept OSError:\n    pass\nexcept TypeError as e:\n    y = 2\n    count = 0\nelse:\n    y = 2\n    value = None\nfinally:\n    print(x)\n    print(y)",
+    "decompiled": "try:\n    print(y)\n    result = True\n    result = True\nexcept OSError: pass\nexcept TypeError as e:\n    y = 2\n    count = 0\nelse:\n    y = 2\n    value = None\nfinally: print(y)\n",
+    "error": "Bytecode mismatch: Instruction count: 70 vs 58\nDecompiled:\ntry:\n    print(y)\n    result = True\n    result = True\nexcept OSError: pass\nexcept TypeError as e:\n    y = 2\n    count = 0\nelse:\n    y = 2\n    value = None\nfinally: print(y)\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    x = 1\n    w = 0\nexcept TypeError:\n    print(x)\n    y = 2\n    x = 1\nexcept IndexError as e:\n    print(x)\n    count = 0\nexcept IndexError:\n    x = 1\n    count = 0\n    w = 0\nelse:\n    print(x)\nfinally:\n    x = 1",
+    "decompiled": "try:\n    x = 1\n    w = 0\nexcept TypeError:\n    print(x)\n    y = 2\n    x = 1\nexcept IndexError as e: count = 0\nexcept IndexError:\n    x = 1\n    count = 0\n    w = 0\nelse: print(x)\nfinally: x = 1\n",
+    "error": "Bytecode mismatch: Instruction count: 70 vs 64\nDecompiled:\ntry:\n    x = 1\n    w = 0\nexcept TypeError:\n    print(x)\n    y = 2\n    x = 1\nexcept IndexError as e: count = 0\nexcept IndexError:\n    x = 1\n    count = 0\n    w = 0\nelse: print(x)\nfinally: x = 1\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    x = 1\n    w = 0\n    y = 2\nexcept IndexError:\n    print(y)\n    print(y)\nexcept KeyError as e:\n    result = True\n    z = x + 1",
+    "decompiled": "try:\n    x = 1\n    w = 0\n    y = 2\nexcept IndexError: print(y)\nexcept KeyError as e:\n    result = True\n    z = x + 1\n",
+    "error": "Bytecode mismatch: Instruction count: 51 vs 45\nDecompiled:\ntry:\n    x = 1\n    w = 0\n    y = 2\nexcept IndexError: print(y)\nexcept KeyError as e:\n    result = True\n    z = x + 1\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    result = True\nexcept OSError as e:\n    w = 0\nfinally:\n    print(y)\n    z = x + 1\n    print(x)",
+    "decompiled": "try:\n    result = True\nexcept OSError as e: w = 0\nfinally:\n    z = x + 1\n    print(x)\n",
+    "error": "Bytecode mismatch: Instruction count: 60 vs 48\nDecompiled:\ntry:\n    result = True\nexcept OSError as e: w = 0\nfinally:\n    z = x + 1\n    print(x)\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    result = True\nexcept RuntimeError as e:\n    print(x)\nexcept ValueError:\n    count = 0\n    print(y)\nexcept IndexError:\n    count = 0\n    print(y)\n    print(y)\nelse:\n    value = None\n    count = 0\n    y = 2\nfinally:\n    y = 2",
+    "decompiled": "try:\n    result = True\nexcept RuntimeError as e: print(x)\nexcept ValueError:\n    count = 0\n    print(y)\nexcept IndexError:\n    count = 0\n    print(y)\nelse:\n    value = None\n    count = 0\n    y = 2\nfinally: y = 2\n",
+    "error": "Bytecode mismatch: Instruction count: 72 vs 66\nDecompiled:\ntry:\n    result = True\nexcept RuntimeError as e: print(x)\nexcept ValueError:\n    count = 0\n    print(y)\nexcept IndexError:\n    count = 0\n    print(y)\nelse:\n    value = None\n    count = 0\n    y = 2\nfinally: y = 2\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    print(y)\n    print(x)\n    pass\nexcept KeyError:\n    print(x)\n    result = True\nelse:\n    y = 2\n    x = 1\n    y = 2\nfinally:\n    count = 0\n    print(x)",
+    "decompiled": "try:\n    print(y)\n    print(x)\nexcept KeyError: result = True\nelse:\n    y = 2\n    x = 1\n    y = 2\nfinally:\n    count = 0\n    print(x)\n",
+    "error": "Bytecode mismatch: Instruction count: 59 vs 53\nDecompiled:\ntry:\n    print(y)\n    print(x)\nexcept KeyError: result = True\nelse:\n    y = 2\n    x = 1\n    y = 2\nfinally:\n    count = 0\n    print(x)\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    w = 0\n    print(x)\nexcept ValueError:\n    pass\n    print(x)\n    print(x)\nfinally:\n    z = x + 1\n    value = None",
+    "decompiled": "try:\n    w = 0\n    print(x)\nexcept ValueError: print(x)\nfinally:\n    z = x + 1\n    value = None\n",
+    "error": "Bytecode mismatch: Instruction count: 49 vs 43\nDecompiled:\ntry:\n    w = 0\n    print(x)\nexcept ValueError: print(x)\nfinally:\n    z = x + 1\n    value = None\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    result = True\n    print(y)\n    z = x + 1\nexcept RuntimeError:\n    pass\n    print(x)\nexcept IndexError as e:\n    w = 0\n    result = True\n    print(y)\nexcept RuntimeError:\n    print(x)\n    z = x + 1\nelse:\n    w = 0\n    result = True",
+    "decompiled": "try:\n    result = True\n    print(y)\n    z = x + 1\nexcept RuntimeError: print(x)\nexcept IndexError as e:\n    w = 0\n    result = True\n    print(y)\nexcept RuntimeError: z = x + 1\nelse:\n    w = 0\n    result = True\n",
+    "error": "Bytecode mismatch: Instruction count: 75 vs 69\nDecompiled:\ntry:\n    result = True\n    print(y)\n    z = x + 1\nexcept RuntimeError: print(x)\nexcept IndexError as e:\n    w = 0\n    result = True\n    print(y)\nexcept RuntimeError: z = x + 1\nelse:\n    w = 0\n    result = True\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    value = None\n    y = 2\nexcept RuntimeError:\n    print(y)\n    print(x)\n    pass\nexcept RuntimeError as e:\n    value = None\n    value = None",
+    "decompiled": "try:\n    value = None\n    y = 2\nexcept RuntimeError: print(x)\nexcept RuntimeError as e:\n    value = None\n    value = None\n",
+    "error": "Bytecode mismatch: Instruction count: 47 vs 41\nDecompiled:\ntry:\n    value = None\n    y = 2\nexcept RuntimeError: print(x)\nexcept RuntimeError as e:\n    value = None\n    value = None\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    value = None\nexcept TypeError as e:\n    y = 2\n    value = None\nexcept IndexError:\n    print(y)\n    x = 1\nexcept TypeError:\n    print(y)\nfinally:\n    print(x)\n    print(x)\n    result = True",
+    "decompiled": "try:\n    value = None\nexcept TypeError as e:\n    y = 2\n    value = None\nexcept IndexError: x = 1\nexcept TypeError: print(y)\nfinally: result = True\n",
+    "error": "Bytecode mismatch: Instruction count: 80 vs 50\nDecompiled:\ntry:\n    value = None\nexcept TypeError as e:\n    y = 2\n    value = None\nexcept IndexError: x = 1\nexcept TypeError: print(y)\nfinally: result = True\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    print(y)\nexcept IndexError as e:\n    z = x + 1\n    pass\nexcept Exception as e:\n    print(x)\n    count = 0\nexcept KeyError as e:\n    y = 2",
+    "decompiled": "try:\n    print(y)\nexcept IndexError as e: z = x + 1\nexcept Exception as e: count = 0\nexcept KeyError as e: y = 2\n",
+    "error": "Bytecode mismatch: Instruction count: 67 vs 61\nDecompiled:\ntry:\n    print(y)\nexcept IndexError as e: z = x + 1\nexcept Exception as e: count = 0\nexcept KeyError as e: y = 2\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    x = 1\n    value = None\n    print(y)\nexcept RuntimeError:\n    print(x)\n    result = True\nexcept OSError as e:\n    w = 0\n    result = True\n    pass\nelse:\n    print(x)\n    w = 0\n    w = 0",
+    "decompiled": "try:\n    x = 1\n    value = None\n    print(y)\nexcept RuntimeError: result = True\nexcept OSError as e:\n    w = 0\n    result = True\nelse:\n    print(x)\n    w = 0\n    w = 0\n",
+    "error": "Bytecode mismatch: Instruction count: 59 vs 53\nDecompiled:\ntry:\n    x = 1\n    value = None\n    print(y)\nexcept RuntimeError: result = True\nexcept OSError as e:\n    w = 0\n    result = True\nelse:\n    print(x)\n    w = 0\n    w = 0\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    print(x)\n    y = 2\n    count = 0\nexcept IndexError:\n    print(x)\n    value = None\nexcept ValueError as e:\n    value = None\n    pass\nexcept RuntimeError as e:\n    print(y)\n    x = 1",
+    "decompiled": "try:\n    print(x)\n    y = 2\n    count = 0\nexcept IndexError: value = None\nexcept ValueError as e: value = None\nexcept RuntimeError as e: x = 1\n",
+    "error": "Bytecode mismatch: Instruction count: 68 vs 56\nDecompiled:\ntry:\n    print(x)\n    y = 2\n    count = 0\nexcept IndexError: value = None\nexcept ValueError as e: value = None\nexcept RuntimeError as e: x = 1\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    w = 0\nexcept ValueError as e:\n    result = True\n    x = 1\nexcept OSError:\n    y = 2\n    value = None\n    z = x + 1\nfinally:\n    print(x)\n    w = 0",
+    "decompiled": "try:\n    w = 0\nexcept ValueError as e:\n    result = True\n    x = 1\nexcept OSError:\n    y = 2\n    value = None\n    z = x + 1\nfinally: w = 0\n",
+    "error": "Bytecode mismatch: Instruction count: 58 vs 46\nDecompiled:\ntry:\n    w = 0\nexcept ValueError as e:\n    result = True\n    x = 1\nexcept OSError:\n    y = 2\n    value = None\n    z = x + 1\nfinally: w = 0\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    value = None\nexcept ValueError:\n    print(y)\n    w = 0\nexcept ValueError:\n    value = None\n    pass\nexcept RuntimeError:\n    z = x + 1\nelse:\n    z = x + 1\nfinally:\n    x = 1",
+    "decompiled": "try:\n    value = None\nexcept ValueError: w = 0\nexcept ValueError: value = None\nexcept RuntimeError: z = x + 1\nelse: z = x + 1\nfinally: x = 1\n",
+    "error": "Bytecode mismatch: Instruction count: 49 vs 43\nDecompiled:\ntry:\n    value = None\nexcept ValueError: w = 0\nexcept ValueError: value = None\nexcept RuntimeError: z = x + 1\nelse: z = x + 1\nfinally: x = 1\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    z = x + 1\nexcept ValueError as e:\n    result = True\n    print(y)\n    print(y)\nexcept KeyError:\n    count = 0\nexcept ValueError:\n    pass\n    count = 0\n    w = 0\nelse:\n    count = 0\n    y = 2\nfinally:\n    y = 2",
+    "decompiled": "try:\n    z = x + 1\nexcept ValueError as e:\n    result = True\n    print(y)\nexcept KeyError: count = 0\nexcept ValueError:\n    count = 0\n    w = 0\nelse:\n    count = 0\n    y = 2\nfinally: y = 2\n",
+    "error": "Bytecode mismatch: Instruction count: 64 vs 58\nDecompiled:\ntry:\n    z = x + 1\nexcept ValueError as e:\n    result = True\n    print(y)\nexcept KeyError: count = 0\nexcept ValueError:\n    count = 0\n    w = 0\nelse:\n    count = 0\n    y = 2\nfinally: y = 2\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    pass\nexcept TypeError as e:\n    w = 0\nfinally:\n    pass\n    pass\n    y = 2",
+    "decompiled": "try:\n    pass\nfinally: y = 2\n",
+    "error": "Bytecode mismatch: Instruction count: 30 vs 12\nDecompiled:\ntry:\n    pass\nfinally: y = 2\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    count = 0\n    w = 0\n    w = 0\nexcept OSError as e:\n    print(y)\n    result = True\nexcept TypeError as e:\n    y = 2\n    pass\nfinally:\n    z = x + 1\n    print(y)\n    count = 0",
+    "decompiled": "try:\n    count = 0\n    w = 0\n    w = 0\nexcept OSError as e: result = True\nexcept TypeError as e: y = 2\nfinally:\n    z = x + 1\n    print(y)\n    count = 0\n",
+    "error": "Bytecode mismatch: Instruction count: 75 vs 69\nDecompiled:\ntry:\n    count = 0\n    w = 0\n    w = 0\nexcept OSError as e: result = True\nexcept TypeError as e: y = 2\nfinally:\n    z = x + 1\n    print(y)\n    count = 0\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    z = x + 1\n    y = 2\nexcept TypeError as e:\n    y = 2\nexcept ValueError as e:\n    value = None\nexcept IndexError as e:\n    print(y)\n    w = 0\nfinally:\n    x = 1\n    y = 2\n    z = x + 1",
+    "decompiled": "try:\n    z = x + 1\n    y = 2\nexcept TypeError as e: y = 2\nexcept ValueError as e: value = None\nexcept IndexError as e: w = 0\nfinally:\n    x = 1\n    y = 2\n    z = x + 1\n",
+    "error": "Bytecode mismatch: Instruction count: 80 vs 74\nDecompiled:\ntry:\n    z = x + 1\n    y = 2\nexcept TypeError as e: y = 2\nexcept ValueError as e: value = None\nexcept IndexError as e: w = 0\nfinally:\n    x = 1\n    y = 2\n    z = x + 1\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "try:\n    z = x + 1\nexcept TypeError as e:\n    y = 2\nexcept ValueError as e:\n    print(y)\n    print(y)\n    w = 0\nexcept ValueError as e:\n    w = 0",
+    "decompiled": "try:\n    z = x + 1\nexcept TypeError as e: y = 2\nexcept ValueError as e: w = 0\nexcept ValueError as e: w = 0\n",
+    "error": "Bytecode mismatch: Instruction count: 69 vs 57\nDecompiled:\ntry:\n    z = x + 1\nexcept TypeError as e: y = 2\nexcept ValueError as e: w = 0\nexcept ValueError as e: w = 0\n",
+    "category": "bytecode_mismatch"
+  }
+]

@@ -1,0 +1,7 @@
+def test():
+    for i in range(5):
+        if i > 2:
+            break
+    else:
+        return 100
+    return i

@@ -1,0 +1,42 @@
+{
+  "if": {
+    "total": 12,
+    "c_class": 0,
+    "fixable": 12
+  },
+  "loop": {
+    "total": 3,
+    "c_class": 0,
+    "fixable": 3
+  },
+  "with": {
+    "total": 0,
+    "c_class": 0,
+    "fixable": 0
+  },
+  "tryexcept": {
+    "total": 2,
+    "c_class": 0,
+    "fixable": 2
+  },
+  "match": {
+    "total": 2,
+    "c_class": 0,
+    "fixable": 2
+  },
+  "assert": {
+    "total": 5,
+    "c_class": 0,
+    "fixable": 5
+  },
+  "boolop": {
+    "total": 4,
+    "c_class": 0,
+    "fixable": 4
+  },
+  "ternary": {
+    "total": 3,
+    "c_class": 0,
+    "fixable": 3
+  }
+}

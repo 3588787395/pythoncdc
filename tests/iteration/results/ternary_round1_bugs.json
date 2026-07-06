@@ -1,0 +1,8 @@
+[
+  {
+    "source": "if (1 if x else 0):\n    y = 1",
+    "decompiled": "if x:\n    y = 1\n",
+    "error": "Bytecode mismatch: Arg #2: None vs 1 (op=LOAD_CONST)\nDecompiled:\nif x:\n    y = 1\n",
+    "category": "bytecode_mismatch"
+  }
+]

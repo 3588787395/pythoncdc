@@ -1,0 +1,198 @@
+[
+  {
+    "name": "test_if_simple",
+    "pattern_type": "If-Elif-Else",
+    "source_code": "x = 5\nif x > 0:\n    result = 'positive'",
+    "expected_output": null,
+    "expected_ast": null,
+    "tags": [
+      "simple"
+    ],
+    "description": "简单 if 语句",
+    "created_at": "2026-03-12T23:11:19.021804",
+    "updated_at": "2026-03-12T23:11:19.021804"
+  },
+  {
+    "name": "test_if_else",
+    "pattern_type": "If-Elif-Else",
+    "source_code": "x = 5\nif x > 0:\n    result = 'positive'\nelse:\n    result = 'non-positive'",
+    "expected_output": null,
+    "expected_ast": null,
+    "tags": [
+      "simple"
+    ],
+    "description": "if-else 语句",
+    "created_at": "2026-03-12T23:11:19.021804",
+    "updated_at": "2026-03-12T23:11:19.021804"
+  },
+  {
+    "name": "test_try_except_simple",
+    "pattern_type": "Try-Except",
+    "source_code": "try:\n    result = 10 / 0\nexcept ZeroDivisionError:\n    result = 'error'",
+    "expected_output": null,
+    "expected_ast": null,
+    "tags": [
+      "simple"
+    ],
+    "description": "简单 try-except",
+    "created_at": "2026-03-12T23:11:19.021804",
+    "updated_at": "2026-03-12T23:11:19.021804"
+  },
+  {
+    "name": "test_try_except_in_for",
+    "pattern_type": "Try-Except",
+    "source_code": "result = 0\nfor i in range(1, 5):\n    try:\n        result += 10 // i\n    except:\n        pass",
+    "expected_output": null,
+    "expected_ast": null,
+    "tags": [
+      "complex",
+      "regression"
+    ],
+    "description": "for 循环内的 try-except（关键修复测试）",
+    "created_at": "2026-03-12T23:11:19.021804",
+    "updated_at": "2026-03-12T23:11:19.021804"
+  },
+  {
+    "name": "test_for_simple",
+    "pattern_type": "For-Loop",
+    "source_code": "result = 0\nfor i in range(5):\n    result += i",
+    "expected_output": null,
+    "expected_ast": null,
+    "tags": [
+      "simple"
+    ],
+    "description": "简单 for 循环",
+    "created_at": "2026-03-12T23:11:19.021804",
+    "updated_at": "2026-03-12T23:11:19.021804"
+  },
+  {
+    "name": "test_augassign_simple",
+    "pattern_type": "AugAssign",
+    "source_code": "x = 0\nx += 1",
+    "expected_output": null,
+    "expected_ast": null,
+    "tags": [
+      "simple"
+    ],
+    "description": "简单复合赋值",
+    "created_at": "2026-03-12T23:11:19.021804",
+    "updated_at": "2026-03-12T23:11:19.021804"
+  },
+  {
+    "name": "test_list_comprehension",
+    "pattern_type": "Comprehension",
+    "source_code": "squares = [x**2 for x in range(10)]",
+    "expected_output": null,
+    "expected_ast": null,
+    "tags": [
+      "simple"
+    ],
+    "description": "列表推导式",
+    "created_at": "2026-03-12T23:11:19.021804",
+    "updated_at": "2026-03-12T23:11:19.021804"
+  },
+  {
+    "name": "test_function_def",
+    "pattern_type": "FunctionDef",
+    "source_code": "def test():\n    return 42",
+    "expected_output": null,
+    "expected_ast": null,
+    "tags": [
+      "simple"
+    ],
+    "description": "简单函数定义",
+    "created_at": "2026-03-12T23:11:19.021804",
+    "updated_at": "2026-03-12T23:11:19.021804"
+  },
+  {
+    "name": "test_class_def",
+    "pattern_type": "ClassDef",
+    "source_code": "class MyClass:\n    pass",
+    "expected_output": null,
+    "expected_ast": null,
+    "tags": [
+      "simple"
+    ],
+    "description": "简单类定义",
+    "created_at": "2026-03-12T23:11:19.021804",
+    "updated_at": "2026-03-12T23:11:19.021804"
+  },
+  {
+    "name": "test_break_in_for",
+    "pattern_type": "BreakContinue",
+    "source_code": "for i in range(10):\n    if i == 5:\n        break",
+    "expected_output": null,
+    "expected_ast": null,
+    "tags": [
+      "simple"
+    ],
+    "description": "for 循环中的 break",
+    "created_at": "2026-03-12T23:11:19.021804",
+    "updated_at": "2026-03-12T23:11:19.021804"
+  },
+  {
+    "name": "test_return_value",
+    "pattern_type": "Return",
+    "source_code": "def test():\n    return 42",
+    "expected_output": null,
+    "expected_ast": null,
+    "tags": [
+      "simple"
+    ],
+    "description": "return 带值",
+    "created_at": "2026-03-12T23:11:19.021804",
+    "updated_at": "2026-03-12T23:11:19.021804"
+  },
+  {
+    "name": "test_lambda_simple",
+    "pattern_type": "Lambda",
+    "source_code": "f = lambda x: x + 1",
+    "expected_output": null,
+    "expected_ast": null,
+    "tags": [
+      "simple"
+    ],
+    "description": "简单 lambda",
+    "created_at": "2026-03-12T23:11:19.021804",
+    "updated_at": "2026-03-12T23:11:19.021804"
+  },
+  {
+    "name": "test_decorator",
+    "pattern_type": "Decorator",
+    "source_code": "def decorator(f):\n    return f\n\n@decorator\ndef func():\n    pass",
+    "expected_output": null,
+    "expected_ast": null,
+    "tags": [
+      "simple"
+    ],
+    "description": "装饰器",
+    "created_at": "2026-03-12T23:11:19.021804",
+    "updated_at": "2026-03-12T23:11:19.021804"
+  },
+  {
+    "name": "test_import",
+    "pattern_type": "Import",
+    "source_code": "import os",
+    "expected_output": null,
+    "expected_ast": null,
+    "tags": [
+      "simple"
+    ],
+    "description": "import 语句",
+    "created_at": "2026-03-12T23:11:19.021804",
+    "updated_at": "2026-03-12T23:11:19.021804"
+  },
+  {
+    "name": "test_global",
+    "pattern_type": "GlobalNonlocal",
+    "source_code": "x = 0\ndef func():\n    global x\n    x = 10",
+    "expected_output": null,
+    "expected_ast": null,
+    "tags": [
+      "simple"
+    ],
+    "description": "global 声明",
+    "created_at": "2026-03-12T23:11:19.021804",
+    "updated_at": "2026-03-12T23:11:19.021804"
+  }
+]

@@ -1,0 +1,176 @@
+name: CFG Quality Gate
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'core/cfg/**'
+      - 'tests/**'
+      - 'scripts/**'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'core/cfg/**'
+      - 'tests/**'
+      - 'scripts/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  patch-detection:
+    name: Patch Detection
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Cache pip dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest pytest-cov
+
+    - name: Run patch detection on region_analyzer.py
+      run: python core/cfg/patch_detector_enhanced.py --file core/cfg/region_analyzer.py --threshold 98
+
+    - name: Run patch detection on region_ast_generator.py
+      run: python core/cfg/patch_detector_enhanced.py --file core/cfg/region_ast_generator.py --threshold 98
+
+    - name: Verify patch scores
+      run: python scripts/verify_patch_scores.py --min-score 98
+
+    - name: Upload patch reports as artifacts
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: patch-detection-reports
+        path: |
+          core/cfg/report_region_analyzer.json
+          core/cfg/report_region_ast_generator.json
+        retention-days: 30
+
+  method-compliance-check:
+    name: Method Compliance Check
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Cache pip dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install ast-tools
+
+    - name: Check method compliance
+      run: python scripts/check_method_compliance.py --directory core/cfg/ --max-length 100 --max-complexity 10
+
+    - name: Verify compliance (zero violations)
+      run: python scripts/verify_compliance.py --allow-zero-violations
+
+    - name: Upload compliance report as artifact
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: compliance-report
+        path: compliance_report.json
+        retention-days: 30
+
+  full-test-suite:
+    name: Full Test Suite
+    runs-on: ubuntu-latest
+    needs: [patch-detection, method-compliance-check]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Cache pip dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest pytest-cov
+
+    - name: Run full test suite with coverage
+      run: pytest tests/ -v --tb=short --cov=core/cfg --cov-report=term-missing --cov-fail-under=90
+
+    - name: Upload coverage report as artifact
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: htmlcov/
+        retention-days: 30
+
+  functional-verification:
+    name: Functional Verification
+    runs-on: ubuntu-latest
+    needs: full-test-suite
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Cache pip dependencies
+      uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements*.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest
+
+    - name: Run functional verification tests
+      run: python tests/test_completeness_verification.py --min-pass-rate 98 --min-bytecode-similarity 95

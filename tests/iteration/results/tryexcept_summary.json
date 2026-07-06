@@ -1,0 +1,185 @@
+{
+  "region_type": "tryexcept",
+  "total_rounds": 20,
+  "total_bugs": 0,
+  "c_class_bugs": 0,
+  "round_summaries": [
+    {
+      "round": 1,
+      "complexity": "basic",
+      "bug_count": 0,
+      "c_class_count": 0,
+      "round_valid": false,
+      "total_patterns": 2513
+    },
+    {
+      "round": 2,
+      "complexity": "basic",
+      "bug_count": 0,
+      "c_class_count": 0,
+      "round_valid": false,
+      "total_patterns": 2497
+    },
+    {
+      "round": 3,
+      "complexity": "basic",
+      "bug_count": 0,
+      "c_class_count": 0,
+      "round_valid": false,
+      "total_patterns": 2539
+    },
+    {
+      "round": 4,
+      "complexity": "basic",
+      "bug_count": 0,
+      "c_class_count": 0,
+      "round_valid": false,
+      "total_patterns": 0,
+      "fast_tracked": true
+    },
+    {
+      "round": 5,
+      "complexity": "basic",
+      "bug_count": 0,
+      "c_class_count": 0,
+      "round_valid": false,
+      "total_patterns": 0,
+      "fast_tracked": true
+    },
+    {
+      "round": 6,
+      "complexity": "moderate",
+      "bug_count": 0,
+      "c_class_count": 0,
+      "round_valid": false,
+      "total_patterns": 0,
+      "fast_tracked": true
+    },
+    {
+      "round": 7,
+      "complexity": "moderate",
+      "bug_count": 0,
+      "c_class_count": 0,
+      "round_valid": false,
+      "total_patterns": 0,
+      "fast_tracked": true
+    },
+    {
+      "round": 8,
+      "complexity": "moderate",
+      "bug_count": 0,
+      "c_class_count": 0,
+      "round_valid": false,
+      "total_patterns": 0,
+      "fast_tracked": true
+    },
+    {
+      "round": 9,
+      "complexity": "moderate",
+      "bug_count": 0,
+      "c_class_count": 0,
+      "round_valid": false,
+      "total_patterns": 0,
+      "fast_tracked": true
+    },
+    {
+      "round": 10,
+      "complexity": "moderate",
+      "bug_count": 0,
+      "c_class_count": 0,
+      "round_valid": false,
+      "total_patterns": 0,
+      "fast_tracked": true
+    },
+    {
+      "round": 11,
+      "complexity": "advanced",
+      "bug_count": 0,
+      "c_class_count": 0,
+      "round_valid": false,
+      "total_patterns": 0,
+      "fast_tracked": true
+    },
+    {
+      "round": 12,
+      "complexity": "advanced",
+      "bug_count": 0,
+      "c_class_count": 0,
+      "round_valid": false,
+      "total_patterns": 0,
+      "fast_tracked": true
+    },
+    {
+      "round": 13,
+      "complexity": "advanced",
+      "bug_count": 0,
+      "c_class_count": 0,
+      "round_valid": false,
+      "total_patterns": 0,
+      "fast_tracked": true
+    },
+    {
+      "round": 14,
+      "complexity": "advanced",
+      "bug_count": 0,
+      "c_class_count": 0,
+      "round_valid": false,
+      "total_patterns": 0,
+      "fast_tracked": true
+    },
+    {
+      "round": 15,
+      "complexity": "advanced",
+      "bug_count": 0,
+      "c_class_count": 0,
+      "round_valid": false,
+      "total_patterns": 0,
+      "fast_tracked": true
+    },
+    {
+      "round": 16,
+      "complexity": "adversarial",
+      "bug_count": 0,
+      "c_class_count": 0,
+      "round_valid": false,
+      "total_patterns": 0,
+      "fast_tracked": true
+    },
+    {
+      "round": 17,
+      "complexity": "adversarial",
+      "bug_count": 0,
+      "c_class_count": 0,
+      "round_valid": false,
+      "total_patterns": 0,
+      "fast_tracked": true
+    },
+    {
+      "round": 18,
+      "complexity": "adversarial",
+      "bug_count": 0,
+      "c_class_count": 0,
+      "round_valid": false,
+      "total_patterns": 0,
+      "fast_tracked": true
+    },
+    {
+      "round": 19,
+      "complexity": "adversarial",
+      "bug_count": 0,
+      "c_class_count": 0,
+      "round_valid": false,
+      "total_patterns": 0,
+      "fast_tracked": true
+    },
+    {
+      "round": 20,
+      "complexity": "adversarial",
+      "bug_count": 0,
+      "c_class_count": 0,
+      "round_valid": false,
+      "total_patterns": 0,
+      "fast_tracked": true
+    }
+  ]
+}

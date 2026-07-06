@@ -1,0 +1,4549 @@
+{
+  "timestamp": "2026-05-04T19:13:02.482856",
+  "test_dir": "D:\\Desktop\\ptrade相关\\pythoncdc\\testqouter\\round1",
+  "summary": {
+    "total": 93,
+    "pass": 63,
+    "fail": 30,
+    "jump_diff_only": 0,
+    "semantic_equivalent": 30,
+    "compile_fail": 0,
+    "decompile_fail": 0,
+    "syntax_fail": 0
+  },
+  "details": {
+    "test_b01_simple_assign": {
+      "file": "test_b01_simple_assign.py",
+      "status": "PASS",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": true,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_b02_aug_assign": {
+      "file": "test_b02_aug_assign.py",
+      "status": "PASS",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": true,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_b03_multi_assign": {
+      "file": "test_b03_multi_assign.py",
+      "status": "PASS",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": true,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_b04_tuple_unpack": {
+      "file": "test_b04_tuple_unpack.py",
+      "status": "PASS",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": true,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_b05_expr_stmt": {
+      "file": "test_b05_expr_stmt.py",
+      "status": "PASS",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": true,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_b06_return": {
+      "file": "test_b06_return.py",
+      "status": "PASS",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": true,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_b07_return_none": {
+      "file": "test_b07_return_none.py",
+      "status": "SEMANTIC_OK_BYTECODE_DIFF",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FC1670F0, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FC1673F0, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_b08_pass": {
+      "file": "test_b08_pass.py",
+      "status": "SEMANTIC_OK_BYTECODE_DIFF",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FC166EB0, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FBA86430, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_c01_if_elif_else": {
+      "file": "test_c01_if_elif_else.py",
+      "status": "PASS",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": true,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_c02_if_then": {
+      "file": "test_c02_if_then.py",
+      "status": "PASS",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": true,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_c03_if_else": {
+      "file": "test_c03_if_else.py",
+      "status": "PASS",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": true,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_c04_nested_if": {
+      "file": "test_c04_nested_if.py",
+      "status": "SEMANTIC_OK_BYTECODE_DIFF",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FC336950, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FC3373D0, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_e01_try_except": {
+      "file": "test_e01_try_except.py",
+      "status": "SEMANTIC_OK_BYTECODE_DIFF",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FBB252F0, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FBB25890, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_e02_multi_except": {
+      "file": "test_e02_multi_except.py",
+      "status": "SEMANTIC_OK_BYTECODE_DIFF",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FBB31240, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FBB30E00, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_e03_try_else_finally": {
+      "file": "test_e03_try_else_finally.py",
+      "status": "PASS",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": true,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_e04_try_finally": {
+      "file": "test_e04_try_finally.py",
+      "status": "PASS",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": true,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_e05_try_except_finally": {
+      "file": "test_e05_try_except_finally.py",
+      "status": "FAIL",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FC219370, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FC1D0EA0, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": false,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": [
+            {
+              "type": "return_value_mismatch",
+              "func": "test",
+              "args": [],
+              "orig_return": "-2",
+              "decomp_return": "-1"
+            }
+          ]
+        }
+      }
+    },
+    "test_e06_full_combination": {
+      "file": "test_e06_full_combination.py",
+      "status": "PASS",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": true,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_e07_except_as": {
+      "file": "test_e07_except_as.py",
+      "status": "SEMANTIC_OK_BYTECODE_DIFF",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FC1D1140, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FC1D1A70, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_e08_bare_except": {
+      "file": "test_e08_bare_except.py",
+      "status": "SEMANTIC_OK_BYTECODE_DIFF",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FC2BF590, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FC2BE330, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_e09_nested_try": {
+      "file": "test_e09_nested_try.py",
+      "status": "SEMANTIC_OK_BYTECODE_DIFF",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FBB31350, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FBB50430, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_e10_try_with_loop": {
+      "file": "test_e10_try_with_loop.py",
+      "status": "FAIL",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FBB31460, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FBA864F0, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": false,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": [
+            {
+              "type": "return_value_mismatch",
+              "func": "test",
+              "args": [],
+              "orig_return": "3",
+              "decomp_return": "None"
+            }
+          ]
+        }
+      }
+    },
+    "test_e11_loop_with_try": {
+      "file": "test_e11_loop_with_try.py",
+      "status": "SEMANTIC_OK_BYTECODE_DIFF",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FC0DEE80, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FC1F44F0, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_e12_try_with_if": {
+      "file": "test_e12_try_with_if.py",
+      "status": "PASS",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": true,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_e13_if_with_try": {
+      "file": "test_e13_if_with_try.py",
+      "status": "FAIL",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FBB256B0, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FC2169A0, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": false,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": [
+            {
+              "type": "return_value_mismatch",
+              "func": "test",
+              "args": [],
+              "orig_return": "1",
+              "decomp_return": "0"
+            }
+          ]
+        }
+      }
+    },
+    "test_l01_for_break": {
+      "file": "test_l01_for_break.py",
+      "status": "FAIL",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FBB50130, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FBB31130, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": false,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": [
+            {
+              "type": "return_value_mismatch",
+              "func": "test",
+              "args": [],
+              "orig_return": "15",
+              "decomp_return": "None"
+            }
+          ]
+        }
+      }
+    },
+    "test_l02_for_continue": {
+      "file": "test_l02_for_continue.py",
+      "status": "SEMANTIC_OK_BYTECODE_DIFF",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FBB50730, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FC301430, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_l03_for_else": {
+      "file": "test_l03_for_else.py",
+      "status": "PASS",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": true,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_l04_while_break": {
+      "file": "test_l04_while_break.py",
+      "status": "PASS",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": true,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_l05_while_continue": {
+      "file": "test_l05_while_continue.py",
+      "status": "FAIL",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FBB50330, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FC0DF470, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": false,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": [
+            {
+              "type": "return_value_mismatch",
+              "func": "test",
+              "args": [],
+              "orig_return": "13",
+              "decomp_return": "21"
+            }
+          ]
+        }
+      }
+    },
+    "test_l06_for": {
+      "file": "test_l06_for.py",
+      "status": "SEMANTIC_OK_BYTECODE_DIFF",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FBB255C0, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FBB25110, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_l07_while": {
+      "file": "test_l07_while.py",
+      "status": "SEMANTIC_OK_BYTECODE_DIFF",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FC19E880, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FC19EF10, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_l08_while_else": {
+      "file": "test_l08_while_else.py",
+      "status": "PASS",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": true,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_l09_for_break_else": {
+      "file": "test_l09_for_break_else.py",
+      "status": "PASS",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": true,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_l10_while_break_else": {
+      "file": "test_l10_while_break_else.py",
+      "status": "FAIL",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FBB50030, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FBB50230, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": false,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": [
+            {
+              "type": "return_value_mismatch",
+              "func": "test",
+              "args": [],
+              "orig_return": "3",
+              "decomp_return": "None"
+            }
+          ]
+        }
+      }
+    },
+    "test_l11_for_break_continue": {
+      "file": "test_l11_for_break_continue.py",
+      "status": "FAIL",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FBB30BE0, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FC1B2890, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": false,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": [
+            {
+              "type": "return_value_mismatch",
+              "func": "test",
+              "args": [],
+              "orig_return": "25",
+              "decomp_return": "None"
+            }
+          ]
+        }
+      }
+    },
+    "test_l12_while_break_continue": {
+      "file": "test_l12_while_break_continue.py",
+      "status": "PASS",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": true,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_l13_nested_for": {
+      "file": "test_l13_nested_for.py",
+      "status": "FAIL",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FC1E9B30, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FC1E9470, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": false,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": [
+            {
+              "type": "return_value_mismatch",
+              "func": "test",
+              "args": [],
+              "orig_return": "18",
+              "decomp_return": "\"EXCEPTION:NameError:name 'j' is not defined\""
+            }
+          ]
+        }
+      }
+    },
+    "test_l14_nested_while": {
+      "file": "test_l14_nested_while.py",
+      "status": "FAIL",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FC1E9FB0, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FC1B29A0, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": false,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": [
+            {
+              "type": "return_value_mismatch",
+              "func": "test",
+              "args": [],
+              "orig_return": "9",
+              "decomp_return": "\"EXCEPTION:UnboundLocalError:cannot access local variable 'j' where it is not associated with a value\""
+            }
+          ]
+        }
+      }
+    },
+    "test_l15_nested_for_break": {
+      "file": "test_l15_nested_for_break.py",
+      "status": "FAIL",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FC1F5200, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FC1F5590, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": false,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": [
+            {
+              "type": "return_value_mismatch",
+              "func": "test",
+              "args": [],
+              "orig_return": "11",
+              "decomp_return": "\"EXCEPTION:NameError:name 'j' is not defined\""
+            }
+          ]
+        }
+      }
+    },
+    "test_l16_nested_for_continue": {
+      "file": "test_l16_nested_for_continue.py",
+      "status": "FAIL",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FC1F63D0, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FC1F57F0, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": false,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": [
+            {
+              "type": "return_value_mismatch",
+              "func": "test",
+              "args": [],
+              "orig_return": "24",
+              "decomp_return": "\"EXCEPTION:NameError:name 'j' is not defined\""
+            }
+          ]
+        }
+      }
+    },
+    "test_l17_for_with_while": {
+      "file": "test_l17_for_with_while.py",
+      "status": "FAIL",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FC1E9E90, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FC228870, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": false,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": [
+            {
+              "type": "return_value_mismatch",
+              "func": "test",
+              "args": [],
+              "orig_return": "3",
+              "decomp_return": "None"
+            }
+          ]
+        }
+      }
+    },
+    "test_l18_while_with_for": {
+      "file": "test_l18_while_with_for.py",
+      "status": "FAIL",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FC1E9D70, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FBB50830, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": false,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": [
+            {
+              "type": "return_value_mismatch",
+              "func": "test",
+              "args": [],
+              "orig_return": "3",
+              "decomp_return": "\"EXCEPTION:NameError:name 'i' is not defined\""
+            }
+          ]
+        }
+      }
+    },
+    "test_n10_try_for_break": {
+      "file": "test_n10_try_for_break.py",
+      "status": "FAIL",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FE908030, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FC2289F0, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": false,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": [
+            {
+              "type": "return_value_mismatch",
+              "func": "test",
+              "args": [],
+              "orig_return": "6",
+              "decomp_return": "None"
+            }
+          ]
+        }
+      }
+    },
+    "test_n11_try_while_continue": {
+      "file": "test_n11_try_while_continue.py",
+      "status": "FAIL",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FE908470, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FC1E8030, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": false,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": [
+            {
+              "type": "return_value_mismatch",
+              "func": "test",
+              "args": [],
+              "orig_return": "11",
+              "decomp_return": "0"
+            }
+          ]
+        }
+      }
+    },
+    "test_n12_for_try_except": {
+      "file": "test_n12_for_try_except.py",
+      "status": "SEMANTIC_OK_BYTECODE_DIFF",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FC1A4E90, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FC1A7110, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_n13_while_try_except": {
+      "file": "test_n13_while_try_except.py",
+      "status": "SEMANTIC_OK_BYTECODE_DIFF",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FC1A76D0, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FC1A7840, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_n14_for_for_if_break": {
+      "file": "test_n14_for_for_if_break.py",
+      "status": "FAIL",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FC1E96B0, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FC1F76D0, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": false,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": [
+            {
+              "type": "return_value_mismatch",
+              "func": "test",
+              "args": [],
+              "orig_return": "4",
+              "decomp_return": "\"EXCEPTION:NameError:name 'j' is not defined\""
+            }
+          ]
+        }
+      }
+    },
+    "test_n15_while_if_while_break": {
+      "file": "test_n15_while_if_while_break.py",
+      "status": "SEMANTIC_OK_BYTECODE_DIFF",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FC1F7A60, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FC1EA310, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_n16_for_if_try_except": {
+      "file": "test_n16_for_if_try_except.py",
+      "status": "FAIL",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FC2CA100, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FC10D6F0, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": false,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": [
+            {
+              "type": "return_value_mismatch",
+              "func": "test",
+              "args": [],
+              "orig_return": "[0, 10, 5]",
+              "decomp_return": "None"
+            }
+          ]
+        }
+      }
+    },
+    "test_n17_if_for_break": {
+      "file": "test_n17_if_for_break.py",
+      "status": "FAIL",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FE908360, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FE908580, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": false,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": [
+            {
+              "type": "return_value_mismatch",
+              "func": "test",
+              "args": [],
+              "orig_return": "6",
+              "decomp_return": "None"
+            }
+          ]
+        }
+      }
+    },
+    "test_n18_if_while_break": {
+      "file": "test_n18_if_while_break.py",
+      "status": "SEMANTIC_OK_BYTECODE_DIFF",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FC301130, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FC301730, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_r1_bool_and_assign": {
+      "file": "test_r1_bool_and_assign.py",
+      "status": "PASS",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": true,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_r1_bool_or_assign": {
+      "file": "test_r1_bool_or_assign.py",
+      "status": "PASS",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": true,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_r1_chained_compare": {
+      "file": "test_r1_chained_compare.py",
+      "status": "FAIL",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FC22F780, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FBA85FB0, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": false,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": [
+            {
+              "type": "return_value_mismatch",
+              "func": "test",
+              "args": [],
+              "orig_return": "True",
+              "decomp_return": "None"
+            }
+          ]
+        }
+      }
+    },
+    "test_r1_except_as_var": {
+      "file": "test_r1_except_as_var.py",
+      "status": "SEMANTIC_OK_BYTECODE_DIFF",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FC1D1FB0, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FC1D1D10, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_r1_for_if_for_break": {
+      "file": "test_r1_for_if_for_break.py",
+      "status": "FAIL",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FC1F5460, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FC173730, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": false,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": [
+            {
+              "type": "return_value_mismatch",
+              "func": "test",
+              "args": [],
+              "orig_return": "6",
+              "decomp_return": "\"EXCEPTION:NameError:name 'j' is not defined\""
+            }
+          ]
+        }
+      }
+    },
+    "test_r1_for_if_try_except": {
+      "file": "test_r1_for_if_try_except.py",
+      "status": "FAIL",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FC1F7210, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FC1F7B90, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": false,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": [
+            {
+              "type": "return_value_mismatch",
+              "func": "test",
+              "args": [],
+              "orig_return": "7",
+              "decomp_return": "10"
+            }
+          ]
+        }
+      }
+    },
+    "test_r1_for_nested_try_break": {
+      "file": "test_r1_for_nested_try_break.py",
+      "status": "FAIL",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FC288750, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FC288880, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": false,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": [
+            {
+              "type": "return_value_mismatch",
+              "func": "test",
+              "args": [],
+              "orig_return": "6",
+              "decomp_return": "None"
+            }
+          ]
+        }
+      }
+    },
+    "test_r1_for_try_except": {
+      "file": "test_r1_for_try_except.py",
+      "status": "SEMANTIC_OK_BYTECODE_DIFF",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FC1EA0D0, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FC1EA1F0, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_r1_if_for_break": {
+      "file": "test_r1_if_for_break.py",
+      "status": "FAIL",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FE908690, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FC1EA9D0, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": false,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": [
+            {
+              "type": "return_value_mismatch",
+              "func": "test",
+              "args": [],
+              "orig_return": "13",
+              "decomp_return": "None"
+            }
+          ]
+        }
+      }
+    },
+    "test_r1_if_not_condition": {
+      "file": "test_r1_if_not_condition.py",
+      "status": "PASS",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": true,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_r1_if_try_except": {
+      "file": "test_r1_if_try_except.py",
+      "status": "FAIL",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FBB50530, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FC358100, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": false,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": [
+            {
+              "type": "return_value_mismatch",
+              "func": "test",
+              "args": [],
+              "orig_return": "11",
+              "decomp_return": "10"
+            }
+          ]
+        }
+      }
+    },
+    "test_r1_if_while_break": {
+      "file": "test_r1_if_while_break.py",
+      "status": "SEMANTIC_OK_BYTECODE_DIFF",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FE908140, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FE9087A0, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_r1_multi_except_chain": {
+      "file": "test_r1_multi_except_chain.py",
+      "status": "SEMANTIC_OK_BYTECODE_DIFF",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FE908BE0, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FE908CF0, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_r1_multi_with": {
+      "file": "test_r1_multi_with.py",
+      "status": "PASS",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": true,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_r1_nested_try_except": {
+      "file": "test_r1_nested_try_except.py",
+      "status": "SEMANTIC_OK_BYTECODE_DIFF",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FE908E00, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FE908AD0, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_r1_nested_while_if_break": {
+      "file": "test_r1_nested_while_if_break.py",
+      "status": "SEMANTIC_OK_BYTECODE_DIFF",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FC1EA8B0, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FC1EAD30, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_r1_nested_with": {
+      "file": "test_r1_nested_with.py",
+      "status": "SEMANTIC_OK_BYTECODE_DIFF",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FC1A7560, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FC1A7B20, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_r1_pass_only": {
+      "file": "test_r1_pass_only.py",
+      "status": "PASS",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": true,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_r1_return_none_implicit": {
+      "file": "test_r1_return_none_implicit.py",
+      "status": "PASS",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": true,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_r1_ternary_assign": {
+      "file": "test_r1_ternary_assign.py",
+      "status": "PASS",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": true,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_r1_try_except_else_finally": {
+      "file": "test_r1_try_except_else_finally.py",
+      "status": "PASS",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": true,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_r1_try_except_finally": {
+      "file": "test_r1_try_except_finally.py",
+      "status": "PASS",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": true,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_r1_try_for_break": {
+      "file": "test_r1_try_for_break.py",
+      "status": "FAIL",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FC288AE0, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FC173870, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": false,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": [
+            {
+              "type": "return_value_mismatch",
+              "func": "test",
+              "args": [],
+              "orig_return": "6",
+              "decomp_return": "-1"
+            }
+          ]
+        }
+      }
+    },
+    "test_r1_try_while_continue": {
+      "file": "test_r1_try_while_continue.py",
+      "status": "FAIL",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FC2884F0, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FC1D17D0, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": false,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": [
+            {
+              "type": "return_value_mismatch",
+              "func": "test",
+              "args": [],
+              "orig_return": "3",
+              "decomp_return": "0"
+            }
+          ]
+        }
+      }
+    },
+    "test_r1_try_with": {
+      "file": "test_r1_try_with.py",
+      "status": "FAIL",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FC1D28E0, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FC301030, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": false,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": [
+            {
+              "type": "return_value_mismatch",
+              "func": "test",
+              "args": [],
+              "orig_return": "42",
+              "decomp_return": "\"EXCEPTION:UnboundLocalError:cannot access local variable 'result' where it is not associated with a value\""
+            }
+          ]
+        }
+      }
+    },
+    "test_r1_while_and_condition": {
+      "file": "test_r1_while_and_condition.py",
+      "status": "SEMANTIC_OK_BYTECODE_DIFF",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FC30D0D0, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FBB25200, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_r1_while_break_continue": {
+      "file": "test_r1_while_break_continue.py",
+      "status": "SEMANTIC_OK_BYTECODE_DIFF",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FC1EA430, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FC1E9230, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_r1_while_break_else": {
+      "file": "test_r1_while_break_else.py",
+      "status": "PASS",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": true,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_r1_while_break_simple": {
+      "file": "test_r1_while_break_simple.py",
+      "status": "PASS",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": true,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_r1_while_if_while_break": {
+      "file": "test_r1_while_if_while_break.py",
+      "status": "FAIL",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FC1EAC10, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FC229EF0, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": false,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": [
+            {
+              "type": "return_value_mismatch",
+              "func": "test",
+              "args": [],
+              "orig_return": "3",
+              "decomp_return": "None"
+            }
+          ]
+        }
+      }
+    },
+    "test_r1_while_nested_try_break": {
+      "file": "test_r1_while_nested_try_break.py",
+      "status": "PASS",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": true,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_r1_while_try_except": {
+      "file": "test_r1_while_try_except.py",
+      "status": "SEMANTIC_OK_BYTECODE_DIFF",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FE908250, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FE9089C0, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_r1_with_as": {
+      "file": "test_r1_with_as.py",
+      "status": "PASS",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": true,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_r1_with_no_as": {
+      "file": "test_r1_with_no_as.py",
+      "status": "PASS",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": true,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_r1_with_try": {
+      "file": "test_r1_with_try.py",
+      "status": "PASS",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": true,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_w01_with": {
+      "file": "test_w01_with.py",
+      "status": "SEMANTIC_OK_BYTECODE_DIFF",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FBE36C00, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FBE365A0, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_w02_with_no_as": {
+      "file": "test_w02_with_no_as.py",
+      "status": "SEMANTIC_OK_BYTECODE_DIFF",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FC07BA50, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FC26C030, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_w03_multi_with": {
+      "file": "test_w03_multi_with.py",
+      "status": "SEMANTIC_OK_BYTECODE_DIFF",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FBE2BD20, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FBE2E240, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_w04_nested_with": {
+      "file": "test_w04_nested_with.py",
+      "status": "FAIL",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FDC0E3E0, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FB8A37D0, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": false,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": [
+            {
+              "type": "return_value_mismatch",
+              "func": "test",
+              "args": [],
+              "orig_return": "'ab'",
+              "decomp_return": "\"EXCEPTION:NameError:name 'f2' is not defined\""
+            }
+          ]
+        }
+      }
+    },
+    "test_w05_with_with_try": {
+      "file": "test_w05_with_with_try.py",
+      "status": "SEMANTIC_OK_BYTECODE_DIFF",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FDC20E10, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FDC1F000, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": true,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": []
+        }
+      }
+    },
+    "test_w06_try_with_with": {
+      "file": "test_w06_try_with_with.py",
+      "status": "FAIL",
+      "steps": {
+        "decompile": "ok",
+        "syntax_check": "ok",
+        "bytecode_compare": {
+          "match": false,
+          "orig_count": 6,
+          "decomp_count": 6,
+          "jump_diffs": [],
+          "true_diffs": [
+            {
+              "index": 1,
+              "orig_op": "LOAD_CONST",
+              "decomp_op": "LOAD_CONST",
+              "orig_arg": "<code object test at 0x000002B0FBED0A80, file \"<original>\", line 1>",
+              "decomp_arg": "<code object test at 0x000002B0FC02F0A0, file \"<decompiled>\", line 1>"
+            }
+          ],
+          "orig_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ],
+          "decomp_ops": [
+            "RESUME",
+            "LOAD_CONST",
+            "MAKE_FUNCTION",
+            "STORE_NAME",
+            "LOAD_CONST",
+            "RETURN_VALUE"
+          ]
+        },
+        "semantic_test": {
+          "equivalent": false,
+          "orig_func_names": [
+            "test"
+          ],
+          "decomp_func_names": [
+            "test"
+          ],
+          "mismatches": [
+            {
+              "type": "return_value_mismatch",
+              "func": "test",
+              "args": [],
+              "orig_return": "'hello'",
+              "decomp_return": "''"
+            }
+          ]
+        }
+      }
+    }
+  }
+}

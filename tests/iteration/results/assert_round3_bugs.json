@@ -1,0 +1,56 @@
+[
+  {
+    "source": "assert x and y",
+    "decompiled": "assert x\n",
+    "error": "Bytecode mismatch: Instruction count: 7 vs 6\nDecompiled:\nassert x\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "assert 0 < x < 100",
+    "decompiled": "if 0 < x < 100:\n    raise AssertionError\n",
+    "error": "Bytecode mismatch: Instruction count: 13 vs 15\nDecompiled:\nif 0 < x < 100:\n    raise AssertionError\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "assert False",
+    "decompiled": "raise AssertionError\n",
+    "error": "Bytecode mismatch: Op #1: LOAD_ASSERTION_ERROR vs LOAD_NAME\nDecompiled:\nraise AssertionError\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "assert 0, 'invalid'",
+    "decompiled": "raise RuntimeError('invalid')\n",
+    "error": "Bytecode mismatch: Instruction count: 6 vs 7\nDecompiled:\nraise RuntimeError('invalid')\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "assert None, 'error'",
+    "decompiled": "raise RuntimeError('error')\n",
+    "error": "Bytecode mismatch: Instruction count: 6 vs 7\nDecompiled:\nraise RuntimeError('error')\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "assert None",
+    "decompiled": "raise AssertionError\n",
+    "error": "Bytecode mismatch: Op #1: LOAD_ASSERTION_ERROR vs LOAD_NAME\nDecompiled:\nraise AssertionError\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "assert 0, 'error'",
+    "decompiled": "raise RuntimeError('error')\n",
+    "error": "Bytecode mismatch: Instruction count: 6 vs 7\nDecompiled:\nraise RuntimeError('error')\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "assert 0, 'invalid'",
+    "decompiled": "raise RuntimeError('invalid')\n",
+    "error": "Bytecode mismatch: Instruction count: 6 vs 7\nDecompiled:\nraise RuntimeError('invalid')\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "assert None",
+    "decompiled": "raise AssertionError\n",
+    "error": "Bytecode mismatch: Op #1: LOAD_ASSERTION_ERROR vs LOAD_NAME\nDecompiled:\nraise AssertionError\n",
+    "category": "bytecode_mismatch"
+  }
+]

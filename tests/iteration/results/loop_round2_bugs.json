@@ -1,0 +1,8 @@
+[
+  {
+    "source": "while 3:\n    pass\n    w = 0\n    count = 0",
+    "decompiled": "while True:\n    count = 0\n",
+    "error": "Bytecode mismatch: Instruction count: 5 vs 3\nDecompiled:\nwhile True:\n    count = 0\n",
+    "category": "bytecode_mismatch"
+  }
+]

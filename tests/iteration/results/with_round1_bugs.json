@@ -1,0 +1,1184 @@
+[
+  {
+    "source": "with open('f') as f:\n    data = f.read()",
+    "decompiled": "with open('f') as f: data = f.read()\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 33 vs 31\nDecompiled:\nwith open('f') as f: data = f.read()\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with ctx:\n    pass",
+    "decompiled": "with ctx: pass\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 24 vs 22\nDecompiled:\nwith ctx: pass\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with open('a') as a, open('b') as b:\n    data = a.read() + b.read()",
+    "decompiled": "with open('a') as a, open('b') as b: data = a.read() + b.read()\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 61 vs 59\nDecompiled:\nwith open('a') as a, open('b') as b: data = a.read() + b.read()\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with open('a') as a:\n    with open('b') as b:\n        data = a.read() + b.read()",
+    "decompiled": "with open('a') as a, open('b') as b: data = a.read() + b.read()\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 61 vs 59\nDecompiled:\nwith open('a') as a, open('b') as b: data = a.read() + b.read()\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with open('f') as f:\n    try:\n        data = f.read()\n    except OSError:\n        data = ''",
+    "decompiled": "with open('f') as f:\n    try:\n        data = f.read()\n    except OSError: data = ''\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 44 vs 42\nDecompiled:\nwith open('f') as f:\n    try:\n        data = f.read()\n    except OSError: data = ''\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with open('f') as f:\n    for line in f:\n        print(line)",
+    "decompiled": "with open('f') as f:\n    for line in f:\n        print(line)\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 37 vs 35\nDecompiled:\nwith open('f') as f:\n    for line in f:\n        print(line)\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "if flag:\n    with open('f') as f:\n        data = f.read()",
+    "decompiled": "if flag:\n    with open('f') as f: data = f.read()\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 36 vs 32\nDecompiled:\nif flag:\n    with open('f') as f: data = f.read()\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as res, connection() as conn:\n    result = True\n    y = 2",
+    "decompiled": "with resource() as res, connection() as conn:\n    result = True\n    y = 2\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 53 vs 51\nDecompiled:\nwith resource() as res, connection() as conn:\n    result = True\n    y = 2\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with open() as fp:\n    result = True\n    print(x)",
+    "decompiled": "with open() as fp:\n    result = True\n    print(x)\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 35 vs 33\nDecompiled:\nwith open() as fp:\n    result = True\n    print(x)\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with ctx() as fh, lock() as fh:\n    x = 1",
+    "decompiled": "with ctx() as fh, lock() as fh: x = 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 51 vs 49\nDecompiled:\nwith ctx() as fh, lock() as fh: x = 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as f:\n    x = 1\n    value = None",
+    "decompiled": "with connection() as f:\n    x = 1\n    value = None\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 31 vs 29\nDecompiled:\nwith connection() as f:\n    x = 1\n    value = None\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with open() as res, ctx() as f:\n    result = True\n    z = x + 1",
+    "decompiled": "with open() as res, ctx() as f:\n    result = True\n    z = x + 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 55 vs 53\nDecompiled:\nwith open() as res, ctx() as f:\n    result = True\n    z = x + 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as fh:\n    print(x)",
+    "decompiled": "with resource() as fh: print(x)\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 33 vs 31\nDecompiled:\nwith resource() as fh: print(x)\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with open() as fh, connection() as f:\n    y = 2\n    w = 0\n    value = None",
+    "decompiled": "with open() as fh, connection() as f:\n    y = 2\n    w = 0\n    value = None\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 55 vs 53\nDecompiled:\nwith open() as fh, connection() as f:\n    y = 2\n    w = 0\n    value = None\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as fp, connection() as res:\n    result = True\n    w = 0",
+    "decompiled": "with resource() as fp, connection() as res:\n    result = True\n    w = 0\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 53 vs 51\nDecompiled:\nwith resource() as fp, connection() as res:\n    result = True\n    w = 0\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with lock() as res:\n    x = 1\n    print(x)",
+    "decompiled": "with lock() as res:\n    x = 1\n    print(x)\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 35 vs 33\nDecompiled:\nwith lock() as res:\n    x = 1\n    print(x)\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as f, open() as lk:\n    count = 0\n    print(x)\n    x = 1",
+    "decompiled": "with resource() as f, open() as lk:\n    count = 0\n    print(x)\n    x = 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 59 vs 57\nDecompiled:\nwith resource() as f, open() as lk:\n    count = 0\n    print(x)\n    x = 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as lk, ctx() as fp:\n    print(x)\n    pass\n    x = 1",
+    "decompiled": "with resource() as lk, ctx() as fp:\n    print(x)\n    x = 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 57 vs 55\nDecompiled:\nwith resource() as lk, ctx() as fp:\n    print(x)\n    x = 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with lock() as res, connection() as fp:\n    x = 1\n    print(y)",
+    "decompiled": "with lock() as res, connection() as fp:\n    x = 1\n    print(y)\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 57 vs 55\nDecompiled:\nwith lock() as res, connection() as fp:\n    x = 1\n    print(y)\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as fp:\n    print(y)\n    w = 0",
+    "decompiled": "with connection() as fp:\n    print(y)\n    w = 0\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 35 vs 33\nDecompiled:\nwith connection() as fp:\n    print(y)\n    w = 0\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with lock() as fp, connection() as f:\n    print(x)\n    result = True\n    print(x)",
+    "decompiled": "with lock() as fp, connection() as f:\n    print(x)\n    result = True\n    print(x)\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 63 vs 61\nDecompiled:\nwith lock() as fp, connection() as f:\n    print(x)\n    result = True\n    print(x)\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as lk:\n    y = 2\n    z = x + 1\n    x = 1",
+    "decompiled": "with resource() as lk:\n    y = 2\n    z = x + 1\n    x = 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 35 vs 33\nDecompiled:\nwith resource() as lk:\n    y = 2\n    z = x + 1\n    x = 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as res, connection() as fh:\n    pass\n    x = 1",
+    "decompiled": "with resource() as res, connection() as fh: x = 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 51 vs 49\nDecompiled:\nwith resource() as res, connection() as fh: x = 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as fp, lock() as fp:\n    result = True\n    z = x + 1\n    count = 0",
+    "decompiled": "with resource() as fp, lock() as fp:\n    result = True\n    z = x + 1\n    count = 0\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 57 vs 55\nDecompiled:\nwith resource() as fp, lock() as fp:\n    result = True\n    z = x + 1\n    count = 0\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as lk, ctx() as f:\n    value = None\n    pass\n    print(x)",
+    "decompiled": "with resource() as lk, ctx() as f:\n    value = None\n    print(x)\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 57 vs 55\nDecompiled:\nwith resource() as lk, ctx() as f:\n    value = None\n    print(x)\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as fp:\n    z = x + 1\n    y = 2",
+    "decompiled": "with connection() as fp:\n    z = x + 1\n    y = 2\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 33 vs 31\nDecompiled:\nwith connection() as fp:\n    z = x + 1\n    y = 2\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with ctx() as res, ctx() as conn:\n    print(y)\n    z = x + 1",
+    "decompiled": "with ctx() as res, ctx() as conn:\n    print(y)\n    z = x + 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 59 vs 57\nDecompiled:\nwith ctx() as res, ctx() as conn:\n    print(y)\n    z = x + 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as lk:\n    result = True\n    z = x + 1\n    print(y)",
+    "decompiled": "with resource() as lk:\n    result = True\n    z = x + 1\n    print(y)\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 39 vs 37\nDecompiled:\nwith resource() as lk:\n    result = True\n    z = x + 1\n    print(y)\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with lock() as f, ctx() as fh:\n    result = True",
+    "decompiled": "with lock() as f, ctx() as fh: result = True\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 51 vs 49\nDecompiled:\nwith lock() as f, ctx() as fh: result = True\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as conn, ctx() as f:\n    w = 0",
+    "decompiled": "with resource() as conn, ctx() as f: w = 0\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 51 vs 49\nDecompiled:\nwith resource() as conn, ctx() as f: w = 0\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with open() as fh, open() as res:\n    count = 0",
+    "decompiled": "with open() as fh, open() as res: count = 0\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 51 vs 49\nDecompiled:\nwith open() as fh, open() as res: count = 0\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with open() as lk:\n    print(y)\n    x = 1",
+    "decompiled": "with open() as lk:\n    print(y)\n    x = 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 35 vs 33\nDecompiled:\nwith open() as lk:\n    print(y)\n    x = 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with lock() as fp, resource() as lk:\n    result = True",
+    "decompiled": "with lock() as fp, resource() as lk: result = True\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 51 vs 49\nDecompiled:\nwith lock() as fp, resource() as lk: result = True\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with open() as fp, open() as f:\n    count = 0\n    x = 1\n    result = True",
+    "decompiled": "with open() as fp, open() as f:\n    count = 0\n    x = 1\n    result = True\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 55 vs 53\nDecompiled:\nwith open() as fp, open() as f:\n    count = 0\n    x = 1\n    result = True\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as fp:\n    result = True\n    result = True",
+    "decompiled": "with resource() as fp:\n    result = True\n    result = True\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 31 vs 29\nDecompiled:\nwith resource() as fp:\n    result = True\n    result = True\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as fp, open() as res:\n    print(y)",
+    "decompiled": "with connection() as fp, open() as res: print(y)\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 55 vs 53\nDecompiled:\nwith connection() as fp, open() as res: print(y)\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as fh, lock() as res:\n    count = 0\n    value = None",
+    "decompiled": "with resource() as fh, lock() as res:\n    count = 0\n    value = None\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 53 vs 51\nDecompiled:\nwith resource() as fh, lock() as res:\n    count = 0\n    value = None\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with ctx() as res:\n    value = None\n    x = 1\n    print(y)",
+    "decompiled": "with ctx() as res:\n    value = None\n    x = 1\n    print(y)\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 37 vs 35\nDecompiled:\nwith ctx() as res:\n    value = None\n    x = 1\n    print(y)\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as fh, lock() as conn:\n    result = True\n    w = 0\n    z = x + 1",
+    "decompiled": "with connection() as fh, lock() as conn:\n    result = True\n    w = 0\n    z = x + 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 57 vs 55\nDecompiled:\nwith connection() as fh, lock() as conn:\n    result = True\n    w = 0\n    z = x + 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as conn:\n    value = None",
+    "decompiled": "with resource() as conn: value = None\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 29 vs 27\nDecompiled:\nwith resource() as conn: value = None\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with ctx() as fh:\n    w = 0",
+    "decompiled": "with ctx() as fh: w = 0\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 29 vs 27\nDecompiled:\nwith ctx() as fh: w = 0\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with lock() as conn, open() as res:\n    pass\n    value = None\n    pass",
+    "decompiled": "with lock() as conn, open() as res: value = None\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 51 vs 49\nDecompiled:\nwith lock() as conn, open() as res: value = None\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as conn:\n    print(y)",
+    "decompiled": "with connection() as conn: print(y)\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 33 vs 31\nDecompiled:\nwith connection() as conn: print(y)\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as fh, resource() as fp:\n    y = 2\n    w = 0",
+    "decompiled": "with connection() as fh, resource() as fp:\n    y = 2\n    w = 0\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 53 vs 51\nDecompiled:\nwith connection() as fh, resource() as fp:\n    y = 2\n    w = 0\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with open() as fh:\n    print(y)\n    value = None\n    z = x + 1",
+    "decompiled": "with open() as fh:\n    print(y)\n    value = None\n    z = x + 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 39 vs 37\nDecompiled:\nwith open() as fh:\n    print(y)\n    value = None\n    z = x + 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with open() as lk:\n    x = 1",
+    "decompiled": "with open() as lk: x = 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 29 vs 27\nDecompiled:\nwith open() as lk: x = 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with ctx() as conn, lock() as lk:\n    w = 0",
+    "decompiled": "with ctx() as conn, lock() as lk: w = 0\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 51 vs 49\nDecompiled:\nwith ctx() as conn, lock() as lk: w = 0\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as lk:\n    print(x)\n    value = None",
+    "decompiled": "with resource() as lk:\n    print(x)\n    value = None\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 35 vs 33\nDecompiled:\nwith resource() as lk:\n    print(x)\n    value = None\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with open() as res:\n    z = x + 1\n    pass\n    x = 1",
+    "decompiled": "with open() as res:\n    z = x + 1\n    x = 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 33 vs 31\nDecompiled:\nwith open() as res:\n    z = x + 1\n    x = 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as res:\n    result = True",
+    "decompiled": "with resource() as res: result = True\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 29 vs 27\nDecompiled:\nwith resource() as res: result = True\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as fh, ctx() as conn:\n    result = True",
+    "decompiled": "with resource() as fh, ctx() as conn: result = True\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 51 vs 49\nDecompiled:\nwith resource() as fh, ctx() as conn: result = True\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as f, ctx() as res:\n    print(y)",
+    "decompiled": "with connection() as f, ctx() as res: print(y)\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 55 vs 53\nDecompiled:\nwith connection() as f, ctx() as res: print(y)\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as lk, ctx() as f:\n    pass\n    z = x + 1\n    z = x + 1",
+    "decompiled": "with resource() as lk, ctx() as f:\n    z = x + 1\n    z = x + 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 57 vs 55\nDecompiled:\nwith resource() as lk, ctx() as f:\n    z = x + 1\n    z = x + 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with lock() as fp:\n    w = 0\n    pass\n    z = x + 1",
+    "decompiled": "with lock() as fp:\n    w = 0\n    z = x + 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 33 vs 31\nDecompiled:\nwith lock() as fp:\n    w = 0\n    z = x + 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as lk:\n    w = 0",
+    "decompiled": "with connection() as lk: w = 0\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 29 vs 27\nDecompiled:\nwith connection() as lk: w = 0\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with open() as fh:\n    value = None\n    x = 1\n    value = None",
+    "decompiled": "with open() as fh:\n    value = None\n    x = 1\n    value = None\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 33 vs 31\nDecompiled:\nwith open() as fh:\n    value = None\n    x = 1\n    value = None\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as fp, open() as f:\n    result = True\n    result = True\n    print(x)",
+    "decompiled": "with resource() as fp, open() as f:\n    result = True\n    result = True\n    print(x)\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 59 vs 57\nDecompiled:\nwith resource() as fp, open() as f:\n    result = True\n    result = True\n    print(x)\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as lk, open() as fp:\n    value = None\n    w = 0\n    value = None",
+    "decompiled": "with connection() as lk, open() as fp:\n    value = None\n    w = 0\n    value = None\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 55 vs 53\nDecompiled:\nwith connection() as lk, open() as fp:\n    value = None\n    w = 0\n    value = None\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as fp, resource() as f:\n    pass",
+    "decompiled": "with resource() as fp, resource() as f: pass\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 49 vs 47\nDecompiled:\nwith resource() as fp, resource() as f: pass\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as f, ctx() as fp:\n    w = 0\n    print(y)",
+    "decompiled": "with resource() as f, ctx() as fp:\n    w = 0\n    print(y)\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 57 vs 55\nDecompiled:\nwith resource() as f, ctx() as fp:\n    w = 0\n    print(y)\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as f:\n    result = True\n    pass\n    y = 2",
+    "decompiled": "with connection() as f:\n    result = True\n    y = 2\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 31 vs 29\nDecompiled:\nwith connection() as f:\n    result = True\n    y = 2\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with open() as lk, connection() as conn:\n    y = 2\n    count = 0",
+    "decompiled": "with open() as lk, connection() as conn:\n    y = 2\n    count = 0\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 53 vs 51\nDecompiled:\nwith open() as lk, connection() as conn:\n    y = 2\n    count = 0\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as conn:\n    w = 0",
+    "decompiled": "with connection() as conn: w = 0\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 29 vs 27\nDecompiled:\nwith connection() as conn: w = 0\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with lock() as conn:\n    value = None",
+    "decompiled": "with lock() as conn: value = None\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 29 vs 27\nDecompiled:\nwith lock() as conn: value = None\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as lk:\n    result = True\n    pass\n    z = x + 1",
+    "decompiled": "with connection() as lk:\n    result = True\n    z = x + 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 33 vs 31\nDecompiled:\nwith connection() as lk:\n    result = True\n    z = x + 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as fp, open() as fp:\n    count = 0\n    y = 2\n    x = 1",
+    "decompiled": "with connection() as fp, open() as fp:\n    count = 0\n    y = 2\n    x = 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 55 vs 53\nDecompiled:\nwith connection() as fp, open() as fp:\n    count = 0\n    y = 2\n    x = 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as conn, ctx() as f:\n    result = True\n    print(y)\n    print(x)",
+    "decompiled": "with resource() as conn, ctx() as f:\n    result = True\n    print(y)\n    print(x)\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 63 vs 61\nDecompiled:\nwith resource() as conn, ctx() as f:\n    result = True\n    print(y)\n    print(x)\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as f:\n    x = 1\n    x = 1",
+    "decompiled": "with resource() as f:\n    x = 1\n    x = 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 31 vs 29\nDecompiled:\nwith resource() as f:\n    x = 1\n    x = 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as lk, open() as lk:\n    print(x)",
+    "decompiled": "with connection() as lk, open() as lk: print(x)\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 55 vs 53\nDecompiled:\nwith connection() as lk, open() as lk: print(x)\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as fh, connection() as res:\n    result = True\n    print(x)",
+    "decompiled": "with resource() as fh, connection() as res:\n    result = True\n    print(x)\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 57 vs 55\nDecompiled:\nwith resource() as fh, connection() as res:\n    result = True\n    print(x)\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with ctx() as fh:\n    value = None\n    w = 0",
+    "decompiled": "with ctx() as fh:\n    value = None\n    w = 0\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 31 vs 29\nDecompiled:\nwith ctx() as fh:\n    value = None\n    w = 0\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with open() as res, connection() as conn:\n    pass",
+    "decompiled": "with open() as res, connection() as conn: pass\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 49 vs 47\nDecompiled:\nwith open() as res, connection() as conn: pass\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as fp:\n    print(y)",
+    "decompiled": "with connection() as fp: print(y)\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 33 vs 31\nDecompiled:\nwith connection() as fp: print(y)\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with open() as fp, connection() as conn:\n    count = 0\n    pass",
+    "decompiled": "with open() as fp, connection() as conn: count = 0\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 51 vs 49\nDecompiled:\nwith open() as fp, connection() as conn: count = 0\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with lock() as res, ctx() as fp:\n    count = 0",
+    "decompiled": "with lock() as res, ctx() as fp: count = 0\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 51 vs 49\nDecompiled:\nwith lock() as res, ctx() as fp: count = 0\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with ctx() as lk:\n    y = 2",
+    "decompiled": "with ctx() as lk: y = 2\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 29 vs 27\nDecompiled:\nwith ctx() as lk: y = 2\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with ctx() as lk, lock() as fp:\n    result = True\n    print(y)\n    value = None",
+    "decompiled": "with ctx() as lk, lock() as fp:\n    result = True\n    print(y)\n    value = None\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 59 vs 57\nDecompiled:\nwith ctx() as lk, lock() as fp:\n    result = True\n    print(y)\n    value = None\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as fh:\n    result = True\n    print(y)\n    z = x + 1",
+    "decompiled": "with resource() as fh:\n    result = True\n    print(y)\n    z = x + 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 39 vs 37\nDecompiled:\nwith resource() as fh:\n    result = True\n    print(y)\n    z = x + 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with lock() as conn, ctx() as conn:\n    print(x)",
+    "decompiled": "with lock() as conn, ctx() as conn: print(x)\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 55 vs 53\nDecompiled:\nwith lock() as conn, ctx() as conn: print(x)\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as f, ctx() as fp:\n    value = None\n    y = 2\n    x = 1",
+    "decompiled": "with resource() as f, ctx() as fp:\n    value = None\n    y = 2\n    x = 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 55 vs 53\nDecompiled:\nwith resource() as f, ctx() as fp:\n    value = None\n    y = 2\n    x = 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with lock() as f:\n    z = x + 1",
+    "decompiled": "with lock() as f: z = x + 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 31 vs 29\nDecompiled:\nwith lock() as f: z = x + 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with ctx() as conn, open() as fp:\n    print(x)",
+    "decompiled": "with ctx() as conn, open() as fp: print(x)\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 55 vs 53\nDecompiled:\nwith ctx() as conn, open() as fp: print(x)\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with ctx() as fh:\n    value = None\n    result = True",
+    "decompiled": "with ctx() as fh:\n    value = None\n    result = True\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 31 vs 29\nDecompiled:\nwith ctx() as fh:\n    value = None\n    result = True\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with ctx() as res, lock() as fp:\n    pass\n    x = 1\n    z = x + 1",
+    "decompiled": "with ctx() as res, lock() as fp:\n    x = 1\n    z = x + 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 55 vs 53\nDecompiled:\nwith ctx() as res, lock() as fp:\n    x = 1\n    z = x + 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with lock() as f:\n    x = 1",
+    "decompiled": "with lock() as f: x = 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 29 vs 27\nDecompiled:\nwith lock() as f: x = 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as lk, ctx() as fh:\n    z = x + 1\n    result = True",
+    "decompiled": "with connection() as lk, ctx() as fh:\n    z = x + 1\n    result = True\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 55 vs 53\nDecompiled:\nwith connection() as lk, ctx() as fh:\n    z = x + 1\n    result = True\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with open() as fh:\n    x = 1\n    count = 0",
+    "decompiled": "with open() as fh:\n    x = 1\n    count = 0\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 31 vs 29\nDecompiled:\nwith open() as fh:\n    x = 1\n    count = 0\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as f:\n    w = 0\n    print(x)",
+    "decompiled": "with resource() as f:\n    w = 0\n    print(x)\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 35 vs 33\nDecompiled:\nwith resource() as f:\n    w = 0\n    print(x)\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with open() as res:\n    print(y)",
+    "decompiled": "with open() as res: print(y)\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 33 vs 31\nDecompiled:\nwith open() as res: print(y)\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as f, connection() as conn:\n    result = True\n    w = 0",
+    "decompiled": "with resource() as f, connection() as conn:\n    result = True\n    w = 0\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 53 vs 51\nDecompiled:\nwith resource() as f, connection() as conn:\n    result = True\n    w = 0\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with open() as res:\n    z = x + 1\n    print(y)\n    print(y)",
+    "decompiled": "with open() as res:\n    z = x + 1\n    print(y)\n    print(y)\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 43 vs 41\nDecompiled:\nwith open() as res:\n    z = x + 1\n    print(y)\n    print(y)\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as fp:\n    w = 0",
+    "decompiled": "with resource() as fp: w = 0\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 29 vs 27\nDecompiled:\nwith resource() as fp: w = 0\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as lk, resource() as lk:\n    count = 0",
+    "decompiled": "with connection() as lk, resource() as lk: count = 0\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 51 vs 49\nDecompiled:\nwith connection() as lk, resource() as lk: count = 0\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with open() as fh:\n    y = 2",
+    "decompiled": "with open() as fh: y = 2\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 29 vs 27\nDecompiled:\nwith open() as fh: y = 2\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with open() as fp:\n    w = 0\n    y = 2",
+    "decompiled": "with open() as fp:\n    w = 0\n    y = 2\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 31 vs 29\nDecompiled:\nwith open() as fp:\n    w = 0\n    y = 2\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as conn, ctx() as conn:\n    w = 0\n    value = None",
+    "decompiled": "with connection() as conn, ctx() as conn:\n    w = 0\n    value = None\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 53 vs 51\nDecompiled:\nwith connection() as conn, ctx() as conn:\n    w = 0\n    value = None\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as f:\n    y = 2",
+    "decompiled": "with connection() as f: y = 2\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 29 vs 27\nDecompiled:\nwith connection() as f: y = 2\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with ctx() as fh:\n    pass\n    pass",
+    "decompiled": "with ctx() as fh: pass\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 27 vs 25\nDecompiled:\nwith ctx() as fh: pass\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with ctx() as conn:\n    y = 2\n    x = 1\n    count = 0",
+    "decompiled": "with ctx() as conn:\n    y = 2\n    x = 1\n    count = 0\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 33 vs 31\nDecompiled:\nwith ctx() as conn:\n    y = 2\n    x = 1\n    count = 0\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as res:\n    result = True\n    x = 1\n    print(y)",
+    "decompiled": "with resource() as res:\n    result = True\n    x = 1\n    print(y)\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 37 vs 35\nDecompiled:\nwith resource() as res:\n    result = True\n    x = 1\n    print(y)\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as lk, open() as conn:\n    x = 1\n    result = True",
+    "decompiled": "with resource() as lk, open() as conn:\n    x = 1\n    result = True\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 53 vs 51\nDecompiled:\nwith resource() as lk, open() as conn:\n    x = 1\n    result = True\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as fh, ctx() as res:\n    count = 0\n    w = 0\n    pass",
+    "decompiled": "with connection() as fh, ctx() as res:\n    count = 0\n    w = 0\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 53 vs 51\nDecompiled:\nwith connection() as fh, ctx() as res:\n    count = 0\n    w = 0\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as f:\n    x = 1\n    pass\n    y = 2",
+    "decompiled": "with connection() as f:\n    x = 1\n    y = 2\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 31 vs 29\nDecompiled:\nwith connection() as f:\n    x = 1\n    y = 2\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with open() as fp, lock() as fp:\n    print(x)\n    pass\n    print(x)",
+    "decompiled": "with open() as fp, lock() as fp:\n    print(x)\n    print(x)\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 61 vs 59\nDecompiled:\nwith open() as fp, lock() as fp:\n    print(x)\n    print(x)\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as conn, open() as f:\n    print(y)\n    print(x)",
+    "decompiled": "with connection() as conn, open() as f:\n    print(y)\n    print(x)\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 61 vs 59\nDecompiled:\nwith connection() as conn, open() as f:\n    print(y)\n    print(x)\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with open() as res, lock() as fh:\n    w = 0\n    w = 0",
+    "decompiled": "with open() as res, lock() as fh:\n    w = 0\n    w = 0\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 53 vs 51\nDecompiled:\nwith open() as res, lock() as fh:\n    w = 0\n    w = 0\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with lock() as f, connection() as f:\n    y = 2\n    result = True\n    count = 0",
+    "decompiled": "with lock() as f, connection() as f:\n    y = 2\n    result = True\n    count = 0\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 55 vs 53\nDecompiled:\nwith lock() as f, connection() as f:\n    y = 2\n    result = True\n    count = 0\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with lock() as res:\n    x = 1\n    print(y)\n    pass",
+    "decompiled": "with lock() as res:\n    x = 1\n    print(y)\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 35 vs 33\nDecompiled:\nwith lock() as res:\n    x = 1\n    print(y)\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with ctx() as conn, connection() as fh:\n    y = 2\n    value = None",
+    "decompiled": "with ctx() as conn, connection() as fh:\n    y = 2\n    value = None\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 53 vs 51\nDecompiled:\nwith ctx() as conn, connection() as fh:\n    y = 2\n    value = None\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with lock() as conn, connection() as res:\n    value = None\n    pass\n    y = 2",
+    "decompiled": "with lock() as conn, connection() as res:\n    value = None\n    y = 2\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 53 vs 51\nDecompiled:\nwith lock() as conn, connection() as res:\n    value = None\n    y = 2\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as f:\n    pass\n    print(x)\n    count = 0",
+    "decompiled": "with connection() as f:\n    print(x)\n    count = 0\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 35 vs 33\nDecompiled:\nwith connection() as f:\n    print(x)\n    count = 0\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as conn, ctx() as res:\n    pass\n    y = 2",
+    "decompiled": "with resource() as conn, ctx() as res: y = 2\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 51 vs 49\nDecompiled:\nwith resource() as conn, ctx() as res: y = 2\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with ctx() as fh, ctx() as fp:\n    print(x)\n    x = 1",
+    "decompiled": "with ctx() as fh, ctx() as fp:\n    print(x)\n    x = 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 57 vs 55\nDecompiled:\nwith ctx() as fh, ctx() as fp:\n    print(x)\n    x = 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as lk, connection() as fh:\n    print(y)\n    print(y)",
+    "decompiled": "with connection() as lk, connection() as fh:\n    print(y)\n    print(y)\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 61 vs 59\nDecompiled:\nwith connection() as lk, connection() as fh:\n    print(y)\n    print(y)\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with open() as f:\n    count = 0\n    pass\n    value = None",
+    "decompiled": "with open() as f:\n    count = 0\n    value = None\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 31 vs 29\nDecompiled:\nwith open() as f:\n    count = 0\n    value = None\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as fp, ctx() as res:\n    pass\n    w = 0\n    result = True",
+    "decompiled": "with connection() as fp, ctx() as res:\n    w = 0\n    result = True\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 53 vs 51\nDecompiled:\nwith connection() as fp, ctx() as res:\n    w = 0\n    result = True\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with open() as f:\n    x = 1",
+    "decompiled": "with open() as f: x = 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 29 vs 27\nDecompiled:\nwith open() as f: x = 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as fh:\n    print(y)\n    print(y)",
+    "decompiled": "with connection() as fh:\n    print(y)\n    print(y)\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 39 vs 37\nDecompiled:\nwith connection() as fh:\n    print(y)\n    print(y)\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as res, lock() as conn:\n    print(y)\n    print(y)\n    y = 2",
+    "decompiled": "with resource() as res, lock() as conn:\n    print(y)\n    print(y)\n    y = 2\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 63 vs 61\nDecompiled:\nwith resource() as res, lock() as conn:\n    print(y)\n    print(y)\n    y = 2\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with lock() as f, connection() as lk:\n    z = x + 1",
+    "decompiled": "with lock() as f, connection() as lk: z = x + 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 53 vs 51\nDecompiled:\nwith lock() as f, connection() as lk: z = x + 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with ctx() as conn, connection() as f:\n    print(y)\n    result = True\n    z = x + 1",
+    "decompiled": "with ctx() as conn, connection() as f:\n    print(y)\n    result = True\n    z = x + 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 61 vs 59\nDecompiled:\nwith ctx() as conn, connection() as f:\n    print(y)\n    result = True\n    z = x + 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as fh, resource() as fh:\n    w = 0\n    w = 0",
+    "decompiled": "with resource() as fh, resource() as fh:\n    w = 0\n    w = 0\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 53 vs 51\nDecompiled:\nwith resource() as fh, resource() as fh:\n    w = 0\n    w = 0\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with ctx() as conn:\n    print(y)\n    z = x + 1\n    y = 2",
+    "decompiled": "with ctx() as conn:\n    print(y)\n    z = x + 1\n    y = 2\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 39 vs 37\nDecompiled:\nwith ctx() as conn:\n    print(y)\n    z = x + 1\n    y = 2\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with ctx() as res:\n    print(y)\n    z = x + 1",
+    "decompiled": "with ctx() as res:\n    print(y)\n    z = x + 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 37 vs 35\nDecompiled:\nwith ctx() as res:\n    print(y)\n    z = x + 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as fh:\n    x = 1\n    pass",
+    "decompiled": "with connection() as fh: x = 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 29 vs 27\nDecompiled:\nwith connection() as fh: x = 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as conn, open() as f:\n    x = 1\n    pass\n    z = x + 1",
+    "decompiled": "with resource() as conn, open() as f:\n    x = 1\n    z = x + 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 55 vs 53\nDecompiled:\nwith resource() as conn, open() as f:\n    x = 1\n    z = x + 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with ctx() as f, resource() as res:\n    print(y)\n    print(x)\n    value = None",
+    "decompiled": "with ctx() as f, resource() as res:\n    print(y)\n    print(x)\n    value = None\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 63 vs 61\nDecompiled:\nwith ctx() as f, resource() as res:\n    print(y)\n    print(x)\n    value = None\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with ctx() as res, ctx() as conn:\n    x = 1\n    y = 2",
+    "decompiled": "with ctx() as res, ctx() as conn:\n    x = 1\n    y = 2\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 53 vs 51\nDecompiled:\nwith ctx() as res, ctx() as conn:\n    x = 1\n    y = 2\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as res, ctx() as fp:\n    value = None",
+    "decompiled": "with connection() as res, ctx() as fp: value = None\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 51 vs 49\nDecompiled:\nwith connection() as res, ctx() as fp: value = None\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with open() as res:\n    print(y)\n    result = True\n    value = None",
+    "decompiled": "with open() as res:\n    print(y)\n    result = True\n    value = None\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 37 vs 35\nDecompiled:\nwith open() as res:\n    print(y)\n    result = True\n    value = None\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with lock() as res, connection() as fh:\n    value = None\n    z = x + 1\n    count = 0",
+    "decompiled": "with lock() as res, connection() as fh:\n    value = None\n    z = x + 1\n    count = 0\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 57 vs 55\nDecompiled:\nwith lock() as res, connection() as fh:\n    value = None\n    z = x + 1\n    count = 0\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with open() as f, resource() as conn:\n    count = 0",
+    "decompiled": "with open() as f, resource() as conn: count = 0\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 51 vs 49\nDecompiled:\nwith open() as f, resource() as conn: count = 0\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as fp:\n    w = 0\n    print(y)\n    pass",
+    "decompiled": "with resource() as fp:\n    w = 0\n    print(y)\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 35 vs 33\nDecompiled:\nwith resource() as fp:\n    w = 0\n    print(y)\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with lock() as conn:\n    value = None",
+    "decompiled": "with lock() as conn: value = None\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 29 vs 27\nDecompiled:\nwith lock() as conn: value = None\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as res, ctx() as fh:\n    z = x + 1\n    z = x + 1",
+    "decompiled": "with resource() as res, ctx() as fh:\n    z = x + 1\n    z = x + 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 57 vs 55\nDecompiled:\nwith resource() as res, ctx() as fh:\n    z = x + 1\n    z = x + 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as fp:\n    print(x)\n    result = True",
+    "decompiled": "with resource() as fp:\n    print(x)\n    result = True\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 35 vs 33\nDecompiled:\nwith resource() as fp:\n    print(x)\n    result = True\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as f, ctx() as lk:\n    result = True\n    print(y)\n    count = 0",
+    "decompiled": "with connection() as f, ctx() as lk:\n    result = True\n    print(y)\n    count = 0\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 59 vs 57\nDecompiled:\nwith connection() as f, ctx() as lk:\n    result = True\n    print(y)\n    count = 0\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with ctx() as fh, open() as lk:\n    result = True",
+    "decompiled": "with ctx() as fh, open() as lk: result = True\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 51 vs 49\nDecompiled:\nwith ctx() as fh, open() as lk: result = True\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as res, connection() as fh:\n    value = None\n    z = x + 1",
+    "decompiled": "with connection() as res, connection() as fh:\n    value = None\n    z = x + 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 55 vs 53\nDecompiled:\nwith connection() as res, connection() as fh:\n    value = None\n    z = x + 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with lock() as conn:\n    result = True\n    value = None\n    x = 1",
+    "decompiled": "with lock() as conn:\n    result = True\n    value = None\n    x = 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 33 vs 31\nDecompiled:\nwith lock() as conn:\n    result = True\n    value = None\n    x = 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with ctx() as res, ctx() as conn:\n    x = 1\n    pass",
+    "decompiled": "with ctx() as res, ctx() as conn: x = 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 51 vs 49\nDecompiled:\nwith ctx() as res, ctx() as conn: x = 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with open() as lk, open() as fp:\n    count = 0",
+    "decompiled": "with open() as lk, open() as fp: count = 0\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 51 vs 49\nDecompiled:\nwith open() as lk, open() as fp: count = 0\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with lock() as conn:\n    value = None\n    count = 0",
+    "decompiled": "with lock() as conn:\n    value = None\n    count = 0\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 31 vs 29\nDecompiled:\nwith lock() as conn:\n    value = None\n    count = 0\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as lk, open() as fh:\n    print(y)\n    print(x)\n    x = 1",
+    "decompiled": "with resource() as lk, open() as fh:\n    print(y)\n    print(x)\n    x = 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 63 vs 61\nDecompiled:\nwith resource() as lk, open() as fh:\n    print(y)\n    print(x)\n    x = 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with open() as conn:\n    z = x + 1\n    value = None\n    print(y)",
+    "decompiled": "with open() as conn:\n    z = x + 1\n    value = None\n    print(y)\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 39 vs 37\nDecompiled:\nwith open() as conn:\n    z = x + 1\n    value = None\n    print(y)\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as fp, lock() as f:\n    w = 0\n    result = True\n    y = 2",
+    "decompiled": "with connection() as fp, lock() as f:\n    w = 0\n    result = True\n    y = 2\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 55 vs 53\nDecompiled:\nwith connection() as fp, lock() as f:\n    w = 0\n    result = True\n    y = 2\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with ctx() as conn, resource() as f:\n    z = x + 1\n    result = True\n    value = None",
+    "decompiled": "with ctx() as conn, resource() as f:\n    z = x + 1\n    result = True\n    value = None\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 57 vs 55\nDecompiled:\nwith ctx() as conn, resource() as f:\n    z = x + 1\n    result = True\n    value = None\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as conn:\n    print(y)",
+    "decompiled": "with connection() as conn: print(y)\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 33 vs 31\nDecompiled:\nwith connection() as conn: print(y)\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with ctx() as lk, ctx() as fp:\n    x = 1\n    print(y)",
+    "decompiled": "with ctx() as lk, ctx() as fp:\n    x = 1\n    print(y)\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 57 vs 55\nDecompiled:\nwith ctx() as lk, ctx() as fp:\n    x = 1\n    print(y)\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with open() as conn:\n    y = 2\n    x = 1\n    value = None",
+    "decompiled": "with open() as conn:\n    y = 2\n    x = 1\n    value = None\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 33 vs 31\nDecompiled:\nwith open() as conn:\n    y = 2\n    x = 1\n    value = None\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with lock() as fh, open() as f:\n    print(y)\n    pass\n    y = 2",
+    "decompiled": "with lock() as fh, open() as f:\n    print(y)\n    y = 2\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 57 vs 55\nDecompiled:\nwith lock() as fh, open() as f:\n    print(y)\n    y = 2\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with open() as res:\n    result = True",
+    "decompiled": "with open() as res: result = True\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 29 vs 27\nDecompiled:\nwith open() as res: result = True\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as lk:\n    result = True\n    value = None\n    result = True",
+    "decompiled": "with connection() as lk:\n    result = True\n    value = None\n    result = True\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 33 vs 31\nDecompiled:\nwith connection() as lk:\n    result = True\n    value = None\n    result = True\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as conn:\n    x = 1\n    result = True\n    value = None",
+    "decompiled": "with connection() as conn:\n    x = 1\n    result = True\n    value = None\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 33 vs 31\nDecompiled:\nwith connection() as conn:\n    x = 1\n    result = True\n    value = None\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with ctx() as lk, resource() as conn:\n    result = True",
+    "decompiled": "with ctx() as lk, resource() as conn: result = True\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 51 vs 49\nDecompiled:\nwith ctx() as lk, resource() as conn: result = True\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as f, lock() as conn:\n    count = 0\n    value = None",
+    "decompiled": "with resource() as f, lock() as conn:\n    count = 0\n    value = None\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 53 vs 51\nDecompiled:\nwith resource() as f, lock() as conn:\n    count = 0\n    value = None\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as lk:\n    pass\n    count = 0",
+    "decompiled": "with connection() as lk: count = 0\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 29 vs 27\nDecompiled:\nwith connection() as lk: count = 0\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with open() as conn:\n    w = 0\n    count = 0\n    value = None",
+    "decompiled": "with open() as conn:\n    w = 0\n    count = 0\n    value = None\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 33 vs 31\nDecompiled:\nwith open() as conn:\n    w = 0\n    count = 0\n    value = None\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with lock() as conn:\n    z = x + 1\n    pass",
+    "decompiled": "with lock() as conn: z = x + 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 31 vs 29\nDecompiled:\nwith lock() as conn: z = x + 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with open() as fp, ctx() as fh:\n    pass\n    value = None",
+    "decompiled": "with open() as fp, ctx() as fh: value = None\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 51 vs 49\nDecompiled:\nwith open() as fp, ctx() as fh: value = None\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as conn:\n    x = 1",
+    "decompiled": "with connection() as conn: x = 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 29 vs 27\nDecompiled:\nwith connection() as conn: x = 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with ctx() as lk:\n    print(y)\n    result = True",
+    "decompiled": "with ctx() as lk:\n    print(y)\n    result = True\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 35 vs 33\nDecompiled:\nwith ctx() as lk:\n    print(y)\n    result = True\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with open() as conn, connection() as res:\n    z = x + 1",
+    "decompiled": "with open() as conn, connection() as res: z = x + 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 53 vs 51\nDecompiled:\nwith open() as conn, connection() as res: z = x + 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with open() as lk:\n    z = x + 1",
+    "decompiled": "with open() as lk: z = x + 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 31 vs 29\nDecompiled:\nwith open() as lk: z = x + 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with ctx() as res:\n    value = None\n    y = 2\n    print(y)",
+    "decompiled": "with ctx() as res:\n    value = None\n    y = 2\n    print(y)\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 37 vs 35\nDecompiled:\nwith ctx() as res:\n    value = None\n    y = 2\n    print(y)\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as f, connection() as lk:\n    print(x)\n    x = 1",
+    "decompiled": "with connection() as f, connection() as lk:\n    print(x)\n    x = 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 57 vs 55\nDecompiled:\nwith connection() as f, connection() as lk:\n    print(x)\n    x = 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as res, lock() as lk:\n    pass",
+    "decompiled": "with connection() as res, lock() as lk: pass\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 49 vs 47\nDecompiled:\nwith connection() as res, lock() as lk: pass\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with lock() as f, resource() as fp:\n    result = True",
+    "decompiled": "with lock() as f, resource() as fp: result = True\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 51 vs 49\nDecompiled:\nwith lock() as f, resource() as fp: result = True\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as fp:\n    print(y)",
+    "decompiled": "with connection() as fp: print(y)\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 33 vs 31\nDecompiled:\nwith connection() as fp: print(y)\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as lk:\n    count = 0\n    value = None\n    count = 0",
+    "decompiled": "with connection() as lk:\n    count = 0\n    value = None\n    count = 0\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 33 vs 31\nDecompiled:\nwith connection() as lk:\n    count = 0\n    value = None\n    count = 0\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as res, connection() as fh:\n    count = 0\n    result = True",
+    "decompiled": "with connection() as res, connection() as fh:\n    count = 0\n    result = True\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 53 vs 51\nDecompiled:\nwith connection() as res, connection() as fh:\n    count = 0\n    result = True\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with ctx() as conn, ctx() as lk:\n    pass\n    result = True\n    z = x + 1",
+    "decompiled": "with ctx() as conn, ctx() as lk:\n    result = True\n    z = x + 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 55 vs 53\nDecompiled:\nwith ctx() as conn, ctx() as lk:\n    result = True\n    z = x + 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with ctx() as res, ctx() as conn:\n    z = x + 1\n    result = True",
+    "decompiled": "with ctx() as res, ctx() as conn:\n    z = x + 1\n    result = True\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 55 vs 53\nDecompiled:\nwith ctx() as res, ctx() as conn:\n    z = x + 1\n    result = True\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as fh:\n    pass\n    value = None",
+    "decompiled": "with resource() as fh: value = None\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 29 vs 27\nDecompiled:\nwith resource() as fh: value = None\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as lk:\n    print(x)",
+    "decompiled": "with resource() as lk: print(x)\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 33 vs 31\nDecompiled:\nwith resource() as lk: print(x)\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with ctx() as lk, open() as conn:\n    x = 1\n    z = x + 1\n    w = 0",
+    "decompiled": "with ctx() as lk, open() as conn:\n    x = 1\n    z = x + 1\n    w = 0\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 57 vs 55\nDecompiled:\nwith ctx() as lk, open() as conn:\n    x = 1\n    z = x + 1\n    w = 0\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as fp:\n    pass",
+    "decompiled": "with connection() as fp: pass\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 27 vs 25\nDecompiled:\nwith connection() as fp: pass\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as res:\n    pass\n    pass",
+    "decompiled": "with connection() as res: pass\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 27 vs 25\nDecompiled:\nwith connection() as res: pass\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as f:\n    y = 2",
+    "decompiled": "with resource() as f: y = 2\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 29 vs 27\nDecompiled:\nwith resource() as f: y = 2\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with open() as f, connection() as res:\n    value = None\n    y = 2\n    w = 0",
+    "decompiled": "with open() as f, connection() as res:\n    value = None\n    y = 2\n    w = 0\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 55 vs 53\nDecompiled:\nwith open() as f, connection() as res:\n    value = None\n    y = 2\n    w = 0\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with lock() as fp, connection() as res:\n    print(y)\n    print(x)\n    pass",
+    "decompiled": "with lock() as fp, connection() as res:\n    print(y)\n    print(x)\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 61 vs 59\nDecompiled:\nwith lock() as fp, connection() as res:\n    print(y)\n    print(x)\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with lock() as lk:\n    y = 2\n    z = x + 1\n    x = 1",
+    "decompiled": "with lock() as lk:\n    y = 2\n    z = x + 1\n    x = 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 35 vs 33\nDecompiled:\nwith lock() as lk:\n    y = 2\n    z = x + 1\n    x = 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with ctx() as lk, resource() as lk:\n    w = 0\n    print(x)",
+    "decompiled": "with ctx() as lk, resource() as lk:\n    w = 0\n    print(x)\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 57 vs 55\nDecompiled:\nwith ctx() as lk, resource() as lk:\n    w = 0\n    print(x)\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with ctx() as lk, lock() as fh:\n    print(x)\n    x = 1",
+    "decompiled": "with ctx() as lk, lock() as fh:\n    print(x)\n    x = 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 57 vs 55\nDecompiled:\nwith ctx() as lk, lock() as fh:\n    print(x)\n    x = 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with ctx() as conn:\n    print(y)\n    result = True\n    pass",
+    "decompiled": "with ctx() as conn:\n    print(y)\n    result = True\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 35 vs 33\nDecompiled:\nwith ctx() as conn:\n    print(y)\n    result = True\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with ctx() as fh:\n    result = True",
+    "decompiled": "with ctx() as fh: result = True\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 29 vs 27\nDecompiled:\nwith ctx() as fh: result = True\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with ctx() as fp, resource() as f:\n    result = True",
+    "decompiled": "with ctx() as fp, resource() as f: result = True\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 51 vs 49\nDecompiled:\nwith ctx() as fp, resource() as f: result = True\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with open() as f, open() as conn:\n    result = True\n    y = 2",
+    "decompiled": "with open() as f, open() as conn:\n    result = True\n    y = 2\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 53 vs 51\nDecompiled:\nwith open() as f, open() as conn:\n    result = True\n    y = 2\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with open() as conn:\n    result = True\n    print(x)\n    pass",
+    "decompiled": "with open() as conn:\n    result = True\n    print(x)\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 35 vs 33\nDecompiled:\nwith open() as conn:\n    result = True\n    print(x)\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with ctx() as fp:\n    print(x)\n    w = 0\n    x = 1",
+    "decompiled": "with ctx() as fp:\n    print(x)\n    w = 0\n    x = 1\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 37 vs 35\nDecompiled:\nwith ctx() as fp:\n    print(x)\n    w = 0\n    x = 1\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with ctx() as f, open() as conn:\n    w = 0",
+    "decompiled": "with ctx() as f, open() as conn: w = 0\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 51 vs 49\nDecompiled:\nwith ctx() as f, open() as conn: w = 0\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with ctx() as conn, lock() as lk:\n    z = x + 1\n    y = 2",
+    "decompiled": "with ctx() as conn, lock() as lk:\n    z = x + 1\n    y = 2\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 55 vs 53\nDecompiled:\nwith ctx() as conn, lock() as lk:\n    z = x + 1\n    y = 2\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with open() as conn:\n    count = 0",
+    "decompiled": "with open() as conn: count = 0\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 29 vs 27\nDecompiled:\nwith open() as conn: count = 0\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with lock() as conn:\n    pass\n    w = 0\n    print(y)",
+    "decompiled": "with lock() as conn:\n    w = 0\n    print(y)\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 35 vs 33\nDecompiled:\nwith lock() as conn:\n    w = 0\n    print(y)\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with resource() as res, open() as lk:\n    y = 2",
+    "decompiled": "with resource() as res, open() as lk: y = 2\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 51 vs 49\nDecompiled:\nwith resource() as res, open() as lk: y = 2\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with connection() as fh, lock() as f:\n    w = 0\n    z = x + 1\n    value = None",
+    "decompiled": "with connection() as fh, lock() as f:\n    w = 0\n    z = x + 1\n    value = None\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 57 vs 55\nDecompiled:\nwith connection() as fh, lock() as f:\n    w = 0\n    z = x + 1\n    value = None\nNone\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "with lock() as lk:\n    pass\n    result = True\n    pass",
+    "decompiled": "with lock() as lk: result = True\nNone\n",
+    "error": "Bytecode mismatch: Instruction count: 29 vs 27\nDecompiled:\nwith lock() as lk: result = True\nNone\n",
+    "category": "bytecode_mismatch"
+  }
+]

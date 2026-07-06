@@ -1,0 +1,20 @@
+[
+  {
+    "source": "if (x and y) or z:\n    w = 1",
+    "decompiled": "if (y if x else z) and y or z:\n    w = 1\n",
+    "error": "Bytecode mismatch: Instruction count: 10 vs 12\nDecompiled:\nif (y if x else z) and y or z:\n    w = 1\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "if x and (y or z):\n    w = 1",
+    "decompiled": "if x and y or z:\n    w = 1\n",
+    "error": "Bytecode mismatch: Instruction count: 12 vs 10\nDecompiled:\nif x and y or z:\n    w = 1\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "if a and (b if c else d):\n    pass",
+    "decompiled": "if a and d:\n    pass\n",
+    "error": "Bytecode mismatch: Instruction count: 13 vs 9\nDecompiled:\nif a and d:\n    pass\n",
+    "category": "bytecode_mismatch"
+  }
+]

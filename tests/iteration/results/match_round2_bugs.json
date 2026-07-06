@@ -1,0 +1,62 @@
+[
+  {
+    "source": "match obj:\n    case int():\n        y = 'int'\n    case str():\n        y = 'str'\n    case _:\n        y = 'other'",
+    "decompiled": "match obj:\n    case int() as y:\n        pass\n    case str() as y:\n        pass\n    case _:\n        y = 'other'\n",
+    "error": "Bytecode mismatch: Instruction count: 30 vs 32\nDecompiled:\nmatch obj:\n    case int() as y:\n        pass\n    case str() as y:\n        pass\n    case _:\n        y = 'other'\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "match y:\n    case 1:\n        w = 0\n        w = 0\n        print(x)\n    case False:\n        value = None\n        print(y)\n        pass\n    case 1:\n        count = 0\n    case True:\n        z = x + 1\n    case False:\n        count = 0\n        pass\n        result = True",
+    "decompiled": "match y:\n    case 1 as count:\n        w = 0\n        w = 0\n        print(x)\n    case False as count:\n        value = None\n        print(y)\n    case 1 as count:\n        count = 0\n    case True as count:\n        z = x + 1\n    case False as count:\n        count = 0\n        result = True\n",
+    "error": "Bytecode mismatch: Instruction count: 60 vs 75\nDecompiled:\nmatch y:\n    case 1 as count:\n        w = 0\n        w = 0\n        print(x)\n    case False as count:\n        value = None\n        print(y)\n    case 1 as count:\n        count = 0\n    case True as count:\n        z = x + 1\n    case False as count:\n        count = 0\n        result = True\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "match c:\n    case 'a':\n        result = True\n        z = x + 1\n        count = 0\n    case 42:\n        print(y)\n        count = 0\n    case 1:\n        y = 2\n        pass\n        print(x)\n    case _:\n        print(y)",
+    "decompiled": "match c:\n    case 'a' as y:\n        result = True\n        z = x + 1\n        count = 0\n    case 42 as y:\n        print(y)\n        count = 0\n    case 1 as y:\n        y = 2\n        print(x)\n    case _:\n        print(y)\n",
+    "error": "Bytecode mismatch: Instruction count: 50 vs 59\nDecompiled:\nmatch c:\n    case 'a' as y:\n        result = True\n        z = x + 1\n        count = 0\n    case 42 as y:\n        print(y)\n        count = 0\n    case 1 as y:\n        y = 2\n        print(x)\n    case _:\n        print(y)\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "match m:\n    case 3:\n        pass\n    case _:\n        pass",
+    "decompiled": "if m == 3:\n    pass\npass\n",
+    "error": "Bytecode mismatch: Instruction count: 8 vs 6\nDecompiled:\nif m == 3:\n    pass\npass\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "match a:\n    case 0:\n        x = 1\n        pass\n        pass\n    case 2:\n        pass\n        result = True\n        x = 1\n    case 0:\n        y = 2\n    case 'a':\n        z = x + 1\n        print(x)\n        value = None\n    case _:\n        w = 0\n        pass",
+    "decompiled": "match a:\n    case 0 as x:\n        x = 1\n    case 2:\n        result = True\n        x = 1\n    case 0:\n        y = 2\n    case 'a':\n        z = x + 1\n        print(x)\n        value = None\n    case _:\n        w = 0\n",
+    "error": "Bytecode mismatch: Instruction count: 48 vs 51\nDecompiled:\nmatch a:\n    case 0 as x:\n        x = 1\n    case 2:\n        result = True\n        x = 1\n    case 0:\n        y = 2\n    case 'a':\n        z = x + 1\n        print(x)\n        value = None\n    case _:\n        w = 0\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "match w:\n    case False:\n        print(y)\n        value = None\n        count = 0\n    case 'b':\n        result = True\n        pass\n        w = 0\n    case None:\n        w = 0\n        pass\n        print(x)\n    case False:\n        z = x + 1\n        y = 2\n        print(y)\n    case 'b':\n        count = 0\n        y = 2",
+    "decompiled": "match w:\n    case False as result:\n        print(y)\n        value = None\n        count = 0\n    case 'b' as result:\n        result = True\n        w = 0\n    case None as w:\n        w = 0\n        print(x)\n    case False:\n        z = x + 1\n        y = 2\n        print(y)\n    case 'b':\n        count = 0\n        y = 2\n",
+    "error": "Bytecode mismatch: Instruction count: 69 vs 78\nDecompiled:\nmatch w:\n    case False as result:\n        print(y)\n        value = None\n        count = 0\n    case 'b' as result:\n        result = True\n        w = 0\n    case None as w:\n        w = 0\n        print(x)\n    case False:\n        z = x + 1\n        y = 2\n        print(y)\n    case 'b':\n        count = 0\n        y = 2\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "match b:\n    case 'b':\n        count = 0\n        w = 0\n    case 10:\n        value = None\n        w = 0\n        y = 2\n    case None:\n        pass\n        result = True\n    case 'b':\n        print(y)\n    case 'b':\n        value = None\n        count = 0",
+    "decompiled": "match b:\n    case 'b':\n        count = 0\n        w = 0\n    case 10:\n        value = None\n        w = 0\n        y = 2\n    case None:\n        result = True\n    case 'b':\n        print(y)\n    case 'b':\n        value = None\n        count = 0\n",
+    "error": "Bytecode mismatch: Arg #25: 76 vs 74 (op=POP_JUMP_FORWARD_IF_NOT_NONE)\nDecompiled:\nmatch b:\n    case 'b':\n        count = 0\n        w = 0\n    case 10:\n        value = None\n        w = 0\n        y = 2\n    case None:\n        result = True\n    case 'b':\n        print(y)\n    case 'b':\n        value = None\n        count = 0\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "match x:\n    case None:\n        result = True\n    case 0:\n        z = x + 1\n    case False:\n        count = 0\n    case False:\n        print(x)\n    case None:\n        pass\n        y = 2",
+    "decompiled": "match x:\n    case None:\n        result = True\n    case 0:\n        z = x + 1\n    case False:\n        count = 0\n    case False:\n        print(x)\n    case None:\n        y = 2\n",
+    "error": "Bytecode mismatch: Arg #39: 112 vs 110 (op=POP_JUMP_FORWARD_IF_NOT_NONE)\nDecompiled:\nmatch x:\n    case None:\n        result = True\n    case 0:\n        z = x + 1\n    case False:\n        count = 0\n    case False:\n        print(x)\n    case None:\n        y = 2\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "match flag:\n    case 'a':\n        result = True\n    case None:\n        w = 0\n        pass\n        y = 2\n    case None:\n        y = 2\n        y = 2\n    case 42:\n        y = 2\n        y = 2\n        print(x)\n    case False:\n        z = x + 1\n        z = x + 1\n        print(x)",
+    "decompiled": "match flag:\n    case 'a' as w:\n        result = True\n    case None as w:\n        w = 0\n        y = 2\n    case None:\n        y = 2\n        y = 2\n    case 42:\n        y = 2\n        y = 2\n        print(x)\n    case False:\n        z = x + 1\n        z = x + 1\n        print(x)\n",
+    "error": "Bytecode mismatch: Instruction count: 64 vs 70\nDecompiled:\nmatch flag:\n    case 'a' as w:\n        result = True\n    case None as w:\n        w = 0\n        y = 2\n    case None:\n        y = 2\n        y = 2\n    case 42:\n        y = 2\n        y = 2\n        print(x)\n    case False:\n        z = x + 1\n        z = x + 1\n        print(x)\n",
+    "category": "bytecode_mismatch"
+  },
+  {
+    "source": "match c:\n    case None:\n        value = None\n        pass\n        value = None\n    case 2:\n        count = 0\n        pass\n        count = 0\n    case 'b':\n        z = x + 1\n    case 1:\n        z = x + 1\n        print(x)\n        x = 1\n    case 1:\n        count = 0\n        z = x + 1",
+    "decompiled": "match c:\n    case None as value:\n        value = None\n        value = None\n    case 2 as count:\n        count = 0\n        count = 0\n    case 'b':\n        z = x + 1\n    case 1:\n        z = x + 1\n        print(x)\n        x = 1\n    case 1:\n        count = 0\n        z = x + 1\n",
+    "error": "Bytecode mismatch: Instruction count: 61 vs 67\nDecompiled:\nmatch c:\n    case None as value:\n        value = None\n        value = None\n    case 2 as count:\n        count = 0\n        count = 0\n    case 'b':\n        z = x + 1\n    case 1:\n        z = x + 1\n        print(x)\n        x = 1\n    case 1:\n        count = 0\n        z = x + 1\n",
+    "category": "bytecode_mismatch"
+  }
+]

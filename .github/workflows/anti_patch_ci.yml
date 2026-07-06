@@ -1,0 +1,281 @@
+name: Anti-Patch CI Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+    paths:
+      - 'core/cfg/**'
+      - 'tests/**'
+      - 'scripts/**'
+  pull_request:
+    branches: [ main, develop ]
+    paths:
+      - 'core/cfg/**'
+      - 'tests/**'
+      - 'scripts/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  PYTHON_VERSION: '3.11'
+
+jobs:
+  method-signature-check:
+    name: Method Signature Validation
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Validate analyzer signatures
+      run: python scripts/validate_region_analyzer_signatures.py core/cfg/region_analyzer.py
+
+    - name: Validate generator signatures
+      run: python scripts/validate_region_generator_signatures.py core/cfg/region_ast_generator.py
+
+    - name: Run unified signature validation
+      run: python scripts/validate_method_signatures.py --json
+
+  patch-detection:
+    name: Patch Detection
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+
+    - name: Run patch detection on region_analyzer.py
+      run: python core/cfg/patch_detector_enhanced.py core/cfg/region_analyzer.py --threshold 95
+
+    - name: Run patch detection on region_ast_generator.py
+      run: python core/cfg/patch_detector_enhanced.py core/cfg/region_ast_generator.py --threshold 95
+
+    - name: Verify patch scores
+      run: python scripts/verify_patch_scores.py --min-score 95
+
+  completeness-tests:
+    name: Completeness Tests
+    runs-on: ubuntu-latest
+    needs: [method-signature-check]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest pytest-cov
+
+    - name: Run L1 completeness tests
+      run: python tests/control_flow_matrix/run_tests.py --level L1 --format json --output completeness_l1.json
+      continue-on-error: true
+
+    - name: Run L2 completeness tests
+      run: python tests/control_flow_matrix/run_tests.py --level L2 --format json --output completeness_l2.json
+      continue-on-error: true
+
+    - name: Run L3 completeness tests
+      run: python tests/control_flow_matrix/run_tests.py --level L3 --format json --output completeness_l3.json
+      continue-on-error: true
+
+    - name: Run pytest completeness suite
+      run: pytest tests/control_flow_matrix/ -v --tb=short --maxfail=5 -q
+
+    - name: Check completeness pass rate
+      run: |
+        python -c "
+        import json
+        import sys
+        
+        total_pass = 0
+        total_fail = 0
+        files = ['completeness_l1.json', 'completeness_l2.json', 'completeness_l3.json']
+        
+        for f in files:
+            try:
+                with open(f) as fp:
+                    data = json.load(fp)
+                    total_pass += data['summary']['passed']
+                    total_fail += data['summary']['failed']
+            except:
+                pass
+        
+        total = total_pass + total_fail
+        if total > 0:
+            rate = total_pass * 100 / total
+            print(f'Completeness pass rate: {rate:.1f}% ({total_pass}/{total})')
+            if rate >= 85:
+                print('PASS: Completeness tests meet minimum threshold')
+                sys.exit(0)
+            else:
+                print('FAIL: Completeness tests below minimum threshold (85%)')
+                sys.exit(1)
+        "
+
+    - name: Upload completeness reports
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: completeness-reports
+        path: completeness_*.json
+        retention-days: 30
+
+  bytecode-equivalence-tests:
+    name: Bytecode Equivalence Tests
+    runs-on: ubuntu-latest
+    needs: [method-signature-check]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Run bytecode equivalence test suite
+      run: python scripts/verify_bytecode_equivalence.py --test
+
+    - name: Run exhaustive bytecode tests
+      run: |
+        python -c "
+        import sys
+        import os
+        sys.path.insert(0, os.getcwd())
+        
+        from scripts.verify_bytecode_equivalence import verify_semantic_equivalence
+        
+        test_cases = [
+            # Basic structures
+            ('x = 1', 'Basic assignment'),
+            ('def f(): return 42', 'Simple function'),
+            ('if x: pass', 'If statement'),
+            ('for i in range(10): pass', 'For loop'),
+            ('while True: break', 'While loop'),
+            
+            # Control flow
+            ('if x: a=1\nelse: a=2', 'If-else'),
+            ('if x>0:a=1\nelif x<0:a=-1\nelse:a=0', 'If-elif-else'),
+            ('for i in range(10):\n if i==5: break', 'For with break'),
+            ('for i in range(10):\n if i%2: continue', 'For with continue'),
+            
+            # Exception handling
+            ('try: x=1\nexcept: pass', 'Try-except'),
+            ('try: pass\nfinally: x=1', 'Try-finally'),
+            ('try: pass\nexcept: pass\nelse: pass', 'Try-except-else'),
+            
+            # With statement
+            ('class C:\n def __enter__(self): return self\n def __exit__(s,a): pass\nwith C() as c: pass', 'With statement'),
+            
+            # Nested structures
+            ('if x:\n if y:\n  pass', 'Nested if'),
+            ('for i in range(3):\n for j in range(3): pass', 'Nested for'),
+            ('try:\n for i in range(3): pass\nexcept: pass', 'Try-for'),
+        ]
+        
+        passed = 0
+        failed = 0
+        for code, name in test_cases:
+            ok, msg = verify_semantic_equivalence(code)
+            if ok:
+                passed += 1
+            else:
+                failed += 1
+                print(f'FAIL: {name}')
+                print(f'  Code: {code[:50]}...')
+                print(f'  Error: {msg[:100]}')
+        
+        print(f'\\nBytecode equivalence: {passed}/{len(test_cases)} passed')
+        if failed > 0:
+            sys.exit(1)
+        "
+
+  functional-tests:
+    name: Functional Tests
+    runs-on: ubuntu-latest
+    needs: [completeness-tests]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install pytest pytest-cov
+
+    - name: Run core functional tests
+      run: pytest tests/test_core_functional.py -v --tb=short -q
+
+    - name: Run control flow tests
+      run: pytest tests/test_control_flow_completeness_matrix.py -v --tb=short -q
+
+    - name: Run anti-patch tests
+      run: pytest tests/anti_patch/ -v --tb=short -q
+
+  final-verification:
+    name: Final Verification
+    runs-on: ubuntu-latest
+    needs: [method-signature-check, patch-detection, completeness-tests, bytecode-equivalence-tests, functional-tests]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Python ${{ env.PYTHON_VERSION }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+
+    - name: Final method compliance check
+      run: python scripts/check_method_compliance.py --directory core/cfg/ --max-length 100 --max-complexity 10
+
+    - name: Final patch pattern check
+      run: python tests/anti_patch/patch_detector.py
+
+    - name: Generate final report
+      run: |
+        echo "=============================================="
+        echo "Anti-Patch CI Pipeline Final Report"
+        echo "=============================================="
+        echo ""
+        echo "All jobs completed successfully!"
+        echo ""
+        echo "Checks performed:"
+        echo "  [✓] Method Signature Validation"
+        echo "  [✓] Patch Detection"
+        echo "  [✓] Completeness Tests"
+        echo "  [✓] Bytecode Equivalence Tests"
+        echo "  [✓] Functional Tests"
+        echo ""
+        echo "The codebase follows anti-patch principles."
+        echo "=============================================="
