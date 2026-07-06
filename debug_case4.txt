@@ -1,0 +1,76 @@
+﻿============================= test session starts =============================
+platform win32 -- Python 3.11.7, pytest-7.1.3, pluggy-1.6.0 -- D:\Python\python.exe
+cachedir: .pytest_cache
+hypothesis profile 'default' -> database=DirectoryBasedExampleDatabase('F:\\pythoncdc\\.hypothesis\\examples')
+rootdir: F:\pythoncdc, configfile: pytest.ini
+plugins: hypothesis-6.24.2
+collecting ... collected 1 item
+
+tests/exhaustive/match_region/test_m28matchnone_a.py::TestM28MatchNone_a::test_decompile FAILED [100%]
+
+================================== FAILURES ===================================
+______________________ TestM28MatchNone_a.test_decompile ______________________
+
+self = <test_m28matchnone_a.TestM28MatchNone_a testMethod=test_decompile>
+
+    def test_decompile(self):
+>       self.verify_decompilation()
+
+D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\match_region\test_m28matchnone_a.py:14: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <test_m28matchnone_a.TestM28MatchNone_a testMethod=test_decompile>
+
+    def verify_decompilation(self):
+        decompiled = self.decompile()
+        tree = self.verify_syntax(decompiled)
+        self.assertIsNotNone(tree, "AST解析失败")
+    
+        if self.REGION_TYPE:
+>           self.verify_region_type(self.REGION_TYPE)
+
+tests\exhaustive\base.py:111: 
+_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _
+
+self = <test_m28matchnone_a.TestM28MatchNone_a testMethod=test_decompile>
+expected_type = 'MATCH_REGION'
+
+    def verify_region_type(self, expected_type: str = None) -> bool:
+        if expected_type is None:
+            expected_type = self.REGION_TYPE
+    
+        if not expected_type:
+            self.fail("未指定 REGION_TYPE，无法验证区域类型")
+    
+        decompiled = self.decompile()
+        tree = self.verify_syntax(decompiled)
+    
+        expected_ast_types = REGION_TYPE_MAP.get(expected_type, [])
+        if not expected_ast_types:
+            return True
+    
+        found = False
+        for ast_type in expected_ast_types:
+            for node in ast.walk(tree):
+                if isinstance(node, ast_type):
+                    found = True
+                    break
+            if found:
+                break
+    
+        if not found:
+            expected_names = [t.__name__ for t in expected_ast_types]
+>           self.fail(
+                f"反编译结果中未找到预期的区域类型 {expected_type} "
+                f"(期望AST节点: {expected_names})\n"
+                f"反编译结果:\n{decompiled}"
+            )
+E           AssertionError: 反编译结果中未找到预期的区域类型 MATCH_REGION (期望AST节点: ['Match'])
+E           反编译结果:
+E           if a is None:
+E               pass
+
+tests\exhaustive\base.py:76: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/exhaustive/match_region/test_m28matchnone_a.py::TestM28MatchNone_a::test_decompile
+============================== 1 failed in 5.26s ==============================

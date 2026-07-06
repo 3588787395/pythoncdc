@@ -1,0 +1,102 @@
+﻿.............................................FFFFFF...FFF...FFF......... [ 23%]
+....................FF.F....FFFFFFFFFF..FF.F..FFFF....FFFFFFFF.......FFF [ 46%]
+..F.FF.FFF.........FFF.....................FFF...FFFFFF...FFFFFF.F.FFFF. [ 69%]
+.FF.FFFF.FFF.........FFFF...FFF......FFF...FFF...................FFFFFF. [ 92%]
+..FFF......FFFFFFFFFFFFFF                                                [100%]
+================================== FAILURES ===================================
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 19 vs 13
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 19 vs 13
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 19 vs 13
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 15 vs 13
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 15 vs 13
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 15 vs 13
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 16 vs 15
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 16 vs 15
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 16 vs 15
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 18 vs 14
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 18 vs 14
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 18 vs 14
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 27 vs 24
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 32 vs 29
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:98: AssertionError: 反编译过程出错: 'RegionASTGenerator' object has no attribute '_negate_condition'
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 17 vs 15
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 17 vs 13
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 18 vs 15
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 22 vs 17
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 24 vs 16
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 21 vs 15
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 21 vs 15
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 23 vs 17
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 28 vs 27
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 28 vs 27
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 37 vs 43
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 39 vs 45
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 21 vs 17
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\base.py:76: AssertionError: 反编译结果中未找到预期的区域类型 FOR_LOOP (期望AST节点: ['For'])
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 16 vs 15
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 20 vs 14
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 22 vs 14
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 17 vs 15
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 19 vs 17
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 21 vs 15
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 23 vs 15
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 18 vs 13
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 20 vs 13
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 16 vs 14
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 18 vs 16
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 23 vs 15
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 21 vs 15
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 18 vs 14
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 20 vs 14
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 17 vs 15
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 31 vs 21
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 14 vs 13
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:98: AssertionError: 反编译过程出错: 'RegionASTGenerator' object has no attribute '_negate_condition'
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 45 vs 38
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 11 vs 9
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 11 vs 9
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 11 vs 9
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 21 vs 9
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 21 vs 9
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 21 vs 9
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 19 vs 15
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 19 vs 15
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 19 vs 15
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 19 vs 17
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 19 vs 17
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 19 vs 17
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 34 vs 28
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 34 vs 28
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 34 vs 28
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 36 vs 42
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 36 vs 42
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 36 vs 42
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 22 vs 16
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 26 vs 32
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 9 vs 7
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\base.py:76: AssertionError: 反编译结果中未找到预期的区域类型 WHILE_LOOP (期望AST节点: ['While'])
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 17 vs 15
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 26 vs 22
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 24 vs 26
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令11操作码不匹配: LOAD_FAST vs LOAD_CONST
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 35 vs 33
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 33 vs 32
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 26 vs 25
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 50 vs 40
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 26 vs 19
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 47 vs 26
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 18 vs 24
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 18 vs 24
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 18 vs 24
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\base.py:76: AssertionError: 反编译结果中未找到预期的区域类型 WHILE_LOOP (期望AST节点: ['While'])
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 25 vs 39
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 25 vs 39
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 25 vs 39
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 21 vs 18
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 21 vs 18
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 21 vs 18
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 20 vs 18
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 20 vs 18
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 20 vs 18
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 23 vs 28
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 23 vs 28

@@ -1,0 +1,350 @@
+﻿......FFF.........FFF...FFF...FFF...FFF...FFFFFFFFF...FFF...FFF......... [ 23%]
+....................FFFFFF..FFFFFFFFFF.FFF.F..FFFFFFFFFFFFFFFF..FFFFFFFF [ 46%]
+..F.FFFFFF......FFFFFFFFF......FFF...FFFFFFFFF...FFFFFF...FFFFFF..FF.FFF [ 69%]
+..FFFFFFFFFF.........FFFF...FFF...FFFFFF...FFF...................FFFFFFF [ 92%]
+FFFFF......FFFFFFFFFFFFFF                                                [100%]
+================================== FAILURES ===================================
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 16 vs 13
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 16 vs 13
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 16 vs 13
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 14 vs 12
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 14 vs 12
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 14 vs 12
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 13 vs 11
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 13 vs 11
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 13 vs 11
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 15 vs 13
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 15 vs 13
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 15 vs 13
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 18 vs 13
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 18 vs 13
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 18 vs 13
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 8 vs 6
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 8 vs 6
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 8 vs 6
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 19 vs 13
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 19 vs 13
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 19 vs 13
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 15 vs 13
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 15 vs 13
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 15 vs 13
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 16 vs 12
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 16 vs 12
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 16 vs 12
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 18 vs 14
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 18 vs 14
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 18 vs 14
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 27 vs 24
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 32 vs 26
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 18 vs 15
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 22 vs 19
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 24 vs 15
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 24 vs 15
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 17 vs 15
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 17 vs 13
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 18 vs 15
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 22 vs 17
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 24 vs 16
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 21 vs 15
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 21 vs 13
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 23 vs 15
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 28 vs 21
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 28 vs 21
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令13操作码不匹配: RETURN_VALUE vs STORE_NAME
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:109: AssertionError: 反编译结果语法错误:
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:109: AssertionError: 反编译结果语法错误:
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 21 vs 17
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\base.py:76: AssertionError: 反编译结果中未找到预期的区域类型 FOR_LOOP (期望AST节点: ['For'])
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 16 vs 12
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 20 vs 14
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 22 vs 14
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令10操作码不匹配: PUSH_EXC_INFO vs LOAD_CONST
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令12操作码不匹配: PUSH_EXC_INFO vs LOAD_CONST
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 20 vs 15
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 22 vs 17
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 17 vs 15
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 19 vs 17
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 21 vs 15
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 23 vs 15
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 18 vs 13
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 20 vs 13
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 16 vs 14
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 18 vs 16
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 21 vs 19
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 21 vs 19
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 24 vs 22
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 22 vs 13
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 18 vs 15
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 23 vs 15
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 21 vs 15
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 18 vs 11
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 20 vs 14
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 17 vs 15
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 31 vs 21
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令10操作码不匹配: PUSH_EXC_INFO vs PUSH_NULL
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 14 vs 10
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 20 vs 11
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 45 vs 33
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 14 vs 11
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 14 vs 11
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 14 vs 11
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 11 vs 9
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 11 vs 9
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 11 vs 9
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 16 vs 11
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 16 vs 11
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 16 vs 11
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 15 vs 13
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 15 vs 13
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 15 vs 13
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 16 vs 14
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 16 vs 14
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 16 vs 14
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 15 vs 13
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 15 vs 13
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 15 vs 13
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 21 vs 9
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 21 vs 9
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 21 vs 9
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 19 vs 17
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 19 vs 17
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 19 vs 17
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 19 vs 17
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 19 vs 17
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 19 vs 17
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\base.py:76: AssertionError: 反编译结果中未找到预期的区域类型 WHILE_LOOP (期望AST节点: ['While'])
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\base.py:76: AssertionError: 反编译结果中未找到预期的区域类型 WHILE_LOOP (期望AST节点: ['While'])
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\base.py:76: AssertionError: 反编译结果中未找到预期的区域类型 WHILE_LOOP (期望AST节点: ['While'])
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\base.py:76: AssertionError: 反编译结果中未找到预期的区域类型 WHILE_LOOP (期望AST节点: ['While'])
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\base.py:76: AssertionError: 反编译结果中未找到预期的区域类型 WHILE_LOOP (期望AST节点: ['While'])
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\base.py:76: AssertionError: 反编译结果中未找到预期的区域类型 WHILE_LOOP (期望AST节点: ['While'])
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 16 vs 15
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 26 vs 10
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\base.py:76: AssertionError: 反编译结果中未找到预期的区域类型 WHILE_LOOP (期望AST节点: ['While'])
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 17 vs 15
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\base.py:76: AssertionError: 反编译结果中未找到预期的区域类型 WHILE_LOOP (期望AST节点: ['While'])
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 24 vs 26
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 33 vs 27
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\base.py:76: AssertionError: 反编译结果中未找到预期的区域类型 WHILE_LOOP (期望AST节点: ['While'])
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\base.py:76: AssertionError: 反编译结果中未找到预期的区域类型 WHILE_LOOP (期望AST节点: ['While'])
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 33 vs 25
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 26 vs 23
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令7操作码不匹配: PUSH_EXC_INFO vs PUSH_NULL
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:109: AssertionError: 反编译结果语法错误:
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 26 vs 13
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 47 vs 16
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 18 vs 8
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 18 vs 8
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 18 vs 8
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\base.py:76: AssertionError: 反编译结果中未找到预期的区域类型 WHILE_LOOP (期望AST节点: ['While'])
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 25 vs 28
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 25 vs 28
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 25 vs 28
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\base.py:76: AssertionError: 反编译结果中未找到预期的区域类型 WHILE_LOOP (期望AST节点: ['While'])
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\base.py:76: AssertionError: 反编译结果中未找到预期的区域类型 WHILE_LOOP (期望AST节点: ['While'])
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\base.py:76: AssertionError: 反编译结果中未找到预期的区域类型 WHILE_LOOP (期望AST节点: ['While'])
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 21 vs 17
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 21 vs 17
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 21 vs 17
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\base.py:76: AssertionError: 反编译结果中未找到预期的区域类型 WHILE_LOOP (期望AST节点: ['While'])
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\base.py:76: AssertionError: 反编译结果中未找到预期的区域类型 WHILE_LOOP (期望AST节点: ['While'])
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\base.py:76: AssertionError: 反编译结果中未找到预期的区域类型 WHILE_LOOP (期望AST节点: ['While'])
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 23 vs 15
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 23 vs 15
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 23 vs 15
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 22 vs 14
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 22 vs 14
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 22 vs 14
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令8操作码不匹配: PUSH_EXC_INFO vs LOAD_CONST
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令8操作码不匹配: PUSH_EXC_INFO vs LOAD_CONST
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令8操作码不匹配: PUSH_EXC_INFO vs LOAD_CONST
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\base.py:76: AssertionError: 反编译结果中未找到预期的区域类型 WHILE_LOOP (期望AST节点: ['While'])
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\base.py:76: AssertionError: 反编译结果中未找到预期的区域类型 WHILE_LOOP (期望AST节点: ['While'])
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\base.py:76: AssertionError: 反编译结果中未找到预期的区域类型 WHILE_LOOP (期望AST节点: ['While'])
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 17 vs 15
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 17 vs 15
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 15 vs 13
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 15 vs 13
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 21 vs 19
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 21 vs 19
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 23 vs 21
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 23 vs 21
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 31 vs 27
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 37 vs 31
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\base.py:76: AssertionError: 反编译结果中未找到预期的区域类型 WHILE_LOOP (期望AST节点: ['While'])
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 24 vs 15
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 27 vs 14
+F:\pythoncdc\tests\exhaustive\for_loop\..\..\..\tests\exhaustive\..\..\tests\control_flow_matrix\base.py:179: AssertionError: 指令数不匹配: 27 vs 14
+=========================== short test summary info ===========================
+FAILED tests/exhaustive/for_loop/test_fl03forbreak_a.py::TestFL03ForBreak_a::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl03forbreak_n.py::TestFL03ForBreak_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl03forbreak_x.py::TestFL03ForBreak_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl07forenumerate_a_b.py::TestFL07ForEnumerate_a_b::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl07forenumerate_n_m.py::TestFL07ForEnumerate_n_m::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl07forenumerate_x_y.py::TestFL07ForEnumerate_x_y::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl09fordict_a_b.py::TestFL09ForDict_a_b::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl09fordict_n_m.py::TestFL09ForDict_n_m::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl09fordict_x_y.py::TestFL09ForDict_x_y::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl11forzip_a_b.py::TestFL11ForZip_a_b::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl11forzip_n_m.py::TestFL11ForZip_n_m::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl11forzip_x_y.py::TestFL11ForZip_x_y::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl13forbreakelse_a.py::TestFL13ForBreakElse_a::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl13forbreakelse_n.py::TestFL13ForBreakElse_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl13forbreakelse_x.py::TestFL13ForBreakElse_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl15fortupleunpack_a_b.py::TestFL15ForTupleUnpack_a_b::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl15fortupleunpack_n_m.py::TestFL15ForTupleUnpack_n_m::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl15fortupleunpack_x_y.py::TestFL15ForTupleUnpack_x_y::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl16forbreakcontinue_a.py::TestFL16ForBreakContinue_a::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl16forbreakcontinue_n.py::TestFL16ForBreakContinue_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl16forbreakcontinue_x.py::TestFL16ForBreakContinue_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl17fornestedif_a_b.py::TestFL17ForNestedIf_a_b::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl17fornestedif_n_m.py::TestFL17ForNestedIf_n_m::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl17fornestedif_x_y.py::TestFL17ForNestedIf_x_y::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl19forreturn_a.py::TestFL19ForReturn_a::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl19forreturn_n.py::TestFL19ForReturn_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl19forreturn_x.py::TestFL19ForReturn_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl21formultistmt_a.py::TestFL21ForMultiStmt_a::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl21formultistmt_n.py::TestFL21ForMultiStmt_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl21formultistmt_x.py::TestFL21ForMultiStmt_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl33forbreakintry_n.py::TestFL33ForBreakInTry_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl33forbreakintry_x.py::TestFL33ForBreakInTry_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl34forbreakinifelse_n.py::TestFL34ForBreakInIfElse_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl34forbreakinifelse_x.py::TestFL34ForBreakInIfElse_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl35formultibreak_n.py::TestFL35ForMultiBreak_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl35formultibreak_x.py::TestFL35ForMultiBreak_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl37forcontinueinifelse_n.py::TestFL37ForContinueInIfElse_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl37forcontinueinifelse_x.py::TestFL37ForContinueInIfElse_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl38formulticontinue_n.py::TestFL38ForMultiContinue_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl38formulticontinue_x.py::TestFL38ForMultiContinue_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl39forbreakcont1_n.py::TestFL39ForBreakCont1_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl39forbreakcont1_x.py::TestFL39ForBreakCont1_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl40forbreakcontelse_n.py::TestFL40ForBreakContElse_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl40forbreakcontelse_x.py::TestFL40ForBreakContElse_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl41forinwhile_n.py::TestFL41ForInWhile_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl41forinwhile_x.py::TestFL41ForInWhile_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl42forintry_x.py::TestFL42ForInTry_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl43forinwith_n.py::TestFL43ForInWith_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl43forinwith_x.py::TestFL43ForInWith_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl44forinif_x.py::TestFL44ForInIf_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl46forreturn_n.py::TestFL46ForReturn_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl46forreturn_x.py::TestFL46ForReturn_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl47forassignonly_n.py::TestFL47ForAssignOnly_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl47forassignonly_x.py::TestFL47ForAssignOnly_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl48fortrysimple_n.py::TestFL48ForTrySimple_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl48fortrysimple_x.py::TestFL48ForTrySimple_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl49forelsebreakassign_n.py::TestFL49ForElseBreakAssign_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl49forelsebreakassign_x.py::TestFL49ForElseBreakAssign_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl50fornestedelse_n.py::TestFL50ForNestedElse_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl50fornestedelse_x.py::TestFL50ForNestedElse_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl51forbreaknestedif_n.py::TestFL51ForBreakNestedIf_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl51forbreaknestedif_x.py::TestFL51ForBreakNestedIf_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl52forcontinuenestedif_n.py::TestFL52ForContinueNestedIf_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl52forcontinuenestedif_x.py::TestFL52ForContinueNestedIf_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl53foraugassign_n.py::TestFL53ForAugAssign_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl53foraugassign_x.py::TestFL53ForAugAssign_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_for03_enumerate.py::TestFor03Enumerate::test_decompile
+FAILED tests/exhaustive/for_loop/test_for04_dict_items.py::TestFor04DictItems::test_decompile
+FAILED tests/exhaustive/for_loop/test_for05_zip.py::TestFor05Zip::test_decompile
+FAILED tests/exhaustive/for_loop/test_for06_for_else.py::TestFor06ForElse::test_decompile
+FAILED tests/exhaustive/for_loop/test_for07_break.py::TestFor07Break::test_decompile
+FAILED tests/exhaustive/for_loop/test_for08_continue.py::TestFor08Continue::test_decompile
+FAILED tests/exhaustive/for_loop/test_for09_break_continue.py::TestFor09BreakContinue::test_decompile
+FAILED tests/exhaustive/for_loop/test_for10_search_pattern.py::TestFor10SearchPattern::test_decompile
+FAILED tests/exhaustive/for_loop/test_for13_multi_stmt.py::TestFor13MultiStmt::test_decompile
+FAILED tests/exhaustive/for_loop/test_for15_nested_comprehension.py::TestFor15NestedComprehension::test_decompile
+FAILED tests/exhaustive/for_loop/test_for16_for_if.py::TestFor16ForIf::test_decompile
+FAILED tests/exhaustive/for_loop/test_for17_for_try.py::TestFor17ForTry::test_decompile
+FAILED tests/exhaustive/for_loop/test_for18_for_return.py::TestFor18ForReturn::test_decompile
+FAILED tests/exhaustive/for_loop/test_for19_for_raise.py::TestFor19ForRaise::test_decompile
+FAILED tests/exhaustive/for_loop/test_for20_complex_body.py::TestFor20ComplexBody::test_decompile
+FAILED tests/exhaustive/for_loop/test_l03forbreak_a.py::TestL03ForBreak_a::test_decompile
+FAILED tests/exhaustive/for_loop/test_l03forbreak_n.py::TestL03ForBreak_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_l03forbreak_x.py::TestL03ForBreak_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_l04forcontinue_a.py::TestL04ForContinue_a::test_decompile
+FAILED tests/exhaustive/for_loop/test_l04forcontinue_n.py::TestL04ForContinue_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_l04forcontinue_x.py::TestL04ForContinue_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_l05forelse_break_a.py::TestL05ForElseBreak_a::test_decompile
+FAILED tests/exhaustive/for_loop/test_l05forelse_break_n.py::TestL05ForElseBreak_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_l05forelse_break_x.py::TestL05ForElseBreak_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_l08fordict_a.py::TestL08ForDict_a::test_decompile
+FAILED tests/exhaustive/for_loop/test_l08fordict_n.py::TestL08ForDict_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_l08fordict_x.py::TestL08ForDict_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_l10forzip_a.py::TestL10ForZip_a::test_decompile
+FAILED tests/exhaustive/for_loop/test_l10forzip_n.py::TestL10ForZip_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_l10forzip_x.py::TestL10ForZip_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_l11forenumerate_a.py::TestL11ForEnumerate_a::test_decompile
+FAILED tests/exhaustive/for_loop/test_l11forenumerate_n.py::TestL11ForEnumerate_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_l11forenumerate_x.py::TestL11ForEnumerate_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_l12forcomprehensionbody_a.py::TestL12ForComprehensionBody_a::test_decompile
+FAILED tests/exhaustive/for_loop/test_l12forcomprehensionbody_n.py::TestL12ForComprehensionBody_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_l12forcomprehensionbody_x.py::TestL12ForComprehensionBody_x::test_decompile
+FAILED tests/exhaustive/while_loop/test_l13simplewhile_a.py::TestL13SimpleWhile_a::test_decompile
+FAILED tests/exhaustive/while_loop/test_l13simplewhile_n.py::TestL13SimpleWhile_n::test_decompile
+FAILED tests/exhaustive/while_loop/test_l13simplewhile_x.py::TestL13SimpleWhile_x::test_decompile
+FAILED tests/exhaustive/while_loop/test_l14whileelse_a.py::TestL14WhileElse_a::test_decompile
+FAILED tests/exhaustive/while_loop/test_l14whileelse_n.py::TestL14WhileElse_n::test_decompile
+FAILED tests/exhaustive/while_loop/test_l14whileelse_x.py::TestL14WhileElse_x::test_decompile
+FAILED tests/exhaustive/while_loop/test_l16whilebreak_a.py::TestL16WhileBreak_a::test_decompile
+FAILED tests/exhaustive/while_loop/test_l16whilebreak_n.py::TestL16WhileBreak_n::test_decompile
+FAILED tests/exhaustive/while_loop/test_l16whilebreak_x.py::TestL16WhileBreak_x::test_decompile
+FAILED tests/exhaustive/while_loop/test_l17whilecontinue_a.py::TestL17WhileContinue_a::test_decompile
+FAILED tests/exhaustive/while_loop/test_l17whilecontinue_n.py::TestL17WhileContinue_n::test_decompile
+FAILED tests/exhaustive/while_loop/test_l17whilecontinue_x.py::TestL17WhileContinue_x::test_decompile
+FAILED tests/exhaustive/while_loop/test_while03_break.py::TestWhile03Break::test_decompile
+FAILED tests/exhaustive/while_loop/test_while04_continue.py::TestWhile04Continue::test_decompile
+FAILED tests/exhaustive/while_loop/test_while06_false.py::TestWhile06False::test_decompile
+FAILED tests/exhaustive/while_loop/test_while07_single_iter.py::TestWhile07SingleIter::test_decompile
+FAILED tests/exhaustive/while_loop/test_while08_complex_cond.py::TestWhile08ComplexCond::test_decompile
+FAILED tests/exhaustive/while_loop/test_while11_while_if.py::TestWhile11WhileIf::test_decompile
+FAILED tests/exhaustive/while_loop/test_while12_while_try.py::TestWhile12WhileTry::test_decompile
+FAILED tests/exhaustive/while_loop/test_while13_while_return.py::TestWhile13WhileReturn::test_decompile
+FAILED tests/exhaustive/while_loop/test_while14_while_raise.py::TestWhile14WhileRaise::test_decompile
+FAILED tests/exhaustive/while_loop/test_while15_nested_while.py::TestWhile15NestedWhile::test_decompile
+FAILED tests/exhaustive/while_loop/test_while16_for_in_while.py::TestWhile16ForInWhile::test_decompile
+FAILED tests/exhaustive/while_loop/test_while17_try_in_while.py::TestWhile17TryInWhile::test_decompile
+FAILED tests/exhaustive/while_loop/test_while18_with_in_while.py::TestWhile18WithInWhile::test_decompile
+FAILED tests/exhaustive/while_loop/test_while19_break_continue_combo.py::TestWhile19BreakContinueCombo::test_decompile
+FAILED tests/exhaustive/while_loop/test_while20_complex_state_machine.py::TestWhile20ComplexStateMachine::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl04whilecontinue_a.py::TestWL04WhileContinue_a::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl04whilecontinue_n.py::TestWL04WhileContinue_n::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl04whilecontinue_x.py::TestWL04WhileContinue_x::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl05whiletrue.py::TestWL05WhileTrue::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl07nestedwhile_a_b.py::TestWL07NestedWhile_a_b::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl07nestedwhile_n_m.py::TestWL07NestedWhile_n_m::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl07nestedwhile_x_y.py::TestWL07NestedWhile_x_y::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl09whileand_a_b.py::TestWL09WhileAnd_a_b::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl09whileand_n_m.py::TestWL09WhileAnd_n_m::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl09whileand_x_y.py::TestWL09WhileAnd_x_y::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl10whileor_a_b.py::TestWL10WhileOr_a_b::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl10whileor_n_m.py::TestWL10WhileOr_n_m::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl10whileor_x_y.py::TestWL10WhileOr_x_y::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl12whilebreakelse_a.py::TestWL12WhileBreakElse_a::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl12whilebreakelse_n.py::TestWL12WhileBreakElse_n::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl12whilebreakelse_x.py::TestWL12WhileBreakElse_x::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl20whilebreakcontinue_a.py::TestWL20WhileBreakContinue_a::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl20whilebreakcontinue_n.py::TestWL20WhileBreakContinue_n::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl20whilebreakcontinue_x.py::TestWL20WhileBreakContinue_x::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl21whilenestedif_a_b.py::TestWL21WhileNestedIf_a_b::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl21whilenestedif_n_m.py::TestWL21WhileNestedIf_n_m::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl21whilenestedif_x_y.py::TestWL21WhileNestedIf_x_y::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl22whiletry_a_indexerror.py::TestWL22WhileTry_a_IndexError::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl22whiletry_n_stopiteration.py::TestWL22WhileTry_n_StopIteration::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl22whiletry_x_valueerror.py::TestWL22WhileTry_x_ValueError::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl23whilereturn_a.py::TestWL23WhileReturn_a::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl23whilereturn_n.py::TestWL23WhileReturn_n::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl23whilereturn_x.py::TestWL23WhileReturn_x::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl26whileelseassign_n.py::TestWL26WhileElseAssign_n::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl26whileelseassign_x.py::TestWL26WhileElseAssign_x::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl27whileelsereturn_n.py::TestWL27WhileElseReturn_n::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl27whileelsereturn_x.py::TestWL27WhileElseReturn_x::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl28whileelseprint_n.py::TestWL28WhileElsePrint_n::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl28whileelseprint_x.py::TestWL28WhileElsePrint_x::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl29whileelsemulti_n.py::TestWL29WhileElseMulti_n::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl29whileelsemulti_x.py::TestWL29WhileElseMulti_x::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl30whilebreakintry_n.py::TestWL30WhileBreakInTry_n::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl30whilebreakintry_x.py::TestWL30WhileBreakInTry_x::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl31whilebreakinifelse_n.py::TestWL31WhileBreakInIfElse_n::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl31whilebreakinifelse_x.py::TestWL31WhileBreakInIfElse_x::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl32whilemultibreak_n.py::TestWL32WhileMultiBreak_n::test_decompile
+FAILED tests/exhaustive/while_loop/test_wl32whilemultibreak_x.py::TestWL32WhileMultiBreak_x::test_decompile
+171 failed, 142 passed in 8.12s

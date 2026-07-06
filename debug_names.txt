@@ -1,0 +1,82 @@
+﻿.............................................FFFFFF...FFF...FFF......... [ 23%]
+....................FF.F....FFFFFFFFFF..FF.F..FFFF....FFFFFFFF.......FFF [ 46%]
+..F.FF.FFF.........FFF.....................FFF...FFFFFF...FFFFFF.F.FFFF. [ 69%]
+.FF.FFFF.FFF.........FFFF...FFF......FFF...FFF...................FFFFFF. [ 92%]
+..FFF......FFFFFFFFFFFFFF                                                [100%]
+============================== warnings summary ===============================
+tests/exhaustive/while_loop/test_while18_with_in_while.py::TestWhile18WithInWhile::test_decompile
+  <decompiled>:5: SyntaxWarning: 'NoneType' object is not callable; perhaps you missed a comma?
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED tests/exhaustive/for_loop/test_fl16forbreakcontinue_a.py::TestFL16ForBreakContinue_a::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl16forbreakcontinue_n.py::TestFL16ForBreakContinue_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl16forbreakcontinue_x.py::TestFL16ForBreakContinue_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl17fornestedif_a_b.py::TestFL17ForNestedIf_a_b::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl17fornestedif_n_m.py::TestFL17ForNestedIf_n_m::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl17fornestedif_x_y.py::TestFL17ForNestedIf_x_y::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl19forreturn_a.py::TestFL19ForReturn_a::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl19forreturn_n.py::TestFL19ForReturn_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl19forreturn_x.py::TestFL19ForReturn_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl21formultistmt_a.py::TestFL21ForMultiStmt_a::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl21formultistmt_n.py::TestFL21ForMultiStmt_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl21formultistmt_x.py::TestFL21ForMultiStmt_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl33forbreakintry_n.py::TestFL33ForBreakInTry_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl33forbreakintry_x.py::TestFL33ForBreakInTry_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl34forbreakinifelse_x.py::TestFL34ForBreakInIfElse_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl37forcontinueinifelse_n.py::TestFL37ForContinueInIfElse_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl37forcontinueinifelse_x.py::TestFL37ForContinueInIfElse_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl38formulticontinue_n.py::TestFL38ForMultiContinue_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl38formulticontinue_x.py::TestFL38ForMultiContinue_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl39forbreakcont1_n.py::TestFL39ForBreakCont1_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl39forbreakcont1_x.py::TestFL39ForBreakCont1_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl40forbreakcontelse_n.py::TestFL40ForBreakContElse_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl40forbreakcontelse_x.py::TestFL40ForBreakContElse_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl41forinwhile_n.py::TestFL41ForInWhile_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl41forinwhile_x.py::TestFL41ForInWhile_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl43forinwith_n.py::TestFL43ForInWith_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl43forinwith_x.py::TestFL43ForInWith_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl44forinif_x.py::TestFL44ForInIf_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl46forreturn_n.py::TestFL46ForReturn_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl46forreturn_x.py::TestFL46ForReturn_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl47forassignonly_n.py::TestFL47ForAssignOnly_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl47forassignonly_x.py::TestFL47ForAssignOnly_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl50fornestedelse_n.py::TestFL50ForNestedElse_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl50fornestedelse_x.py::TestFL50ForNestedElse_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl51forbreaknestedif_n.py::TestFL51ForBreakNestedIf_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl51forbreaknestedif_x.py::TestFL51ForBreakNestedIf_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl52forcontinuenestedif_n.py::TestFL52ForContinueNestedIf_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl52forcontinuenestedif_x.py::TestFL52ForContinueNestedIf_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl53foraugassign_n.py::TestFL53ForAugAssign_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_fl53foraugassign_x.py::TestFL53ForAugAssign_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_for08_continue.py::TestFor08Continue::test_decompile
+FAILED tests/exhaustive/for_loop/test_for09_break_continue.py::TestFor09BreakContinue::test_decompile
+FAILED tests/exhaustive/for_loop/test_for10_search_pattern.py::TestFor10SearchPattern::test_decompile
+FAILED tests/exhaustive/for_loop/test_for13_multi_stmt.py::TestFor13MultiStmt::test_decompile
+FAILED tests/exhaustive/for_loop/test_for15_nested_comprehension.py::TestFor15NestedComprehension::test_decompile
+FAILED tests/exhaustive/for_loop/test_for16_for_if.py::TestFor16ForIf::test_decompile
+FAILED tests/exhaustive/for_loop/test_for18_for_return.py::TestFor18ForReturn::test_decompile
+FAILED tests/exhaustive/for_loop/test_for19_for_raise.py::TestFor19ForRaise::test_decompile
+FAILED tests/exhaustive/for_loop/test_for20_complex_body.py::TestFor20ComplexBody::test_decompile
+FAILED tests/exhaustive/for_loop/test_l04forcontinue_a.py::TestL04ForContinue_a::test_decompile
+FAILED tests/exhaustive/for_loop/test_l04forcontinue_n.py::TestL04ForContinue_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_l04forcontinue_x.py::TestL04ForContinue_x::test_decompile
+FAILED tests/exhaustive/for_loop/test_l12forcomprehensionbody_a.py::TestL12ForComprehensionBody_a::test_decompile
+FAILED tests/exhaustive/for_loop/test_l12forcomprehensionbody_n.py::TestL12ForComprehensionBody_n::test_decompile
+FAILED tests/exhaustive/for_loop/test_l12forcomprehensionbody_x.py::TestL12ForComprehensionBody_x::test_decompile
+FAILED tests/exhaustive/while_loop/test_l13simplewhile_a.py::TestL13SimpleWhile_a::test_decompile
+FAILED tests/exhaustive/while_loop/test_l13simplewhile_n.py::TestL13SimpleWhile_n::test_decompile
+FAILED tests/exhaustive/while_loop/test_l13simplewhile_x.py::TestL13SimpleWhile_x::test_decompile
+FAILED tests/exhaustive/while_loop/test_l14whileelse_a.py::TestL14WhileElse_a::test_decompile
+FAILED tests/exhaustive/while_loop/test_l14whileelse_n.py::TestL14WhileElse_n::test_decompile
+FAILED tests/exhaustive/while_loop/test_l14whileelse_x.py::TestL14WhileElse_x::test_decompile
+FAILED tests/exhaustive/while_loop/test_l16whilebreak_a.py::TestL16WhileBreak_a::test_decompile
+FAILED tests/exhaustive/while_loop/test_l16whilebreak_n.py::TestL16WhileBreak_n::test_decompile
+FAILED tests/exhaustive/while_loop/test_l16whilebreak_x.py::TestL16WhileBreak_x::test_decompile
+FAILED tests/exhaustive/while_loop/test_l17whilecontinue_a.py::TestL17WhileContinue_a::test_decompile
+FAILED tests/exhaustive/while_loop/test_l17whilecontinue_n.py::TestL17WhileContinue_n::test_decompile
+FAILED tests/exhaustive/while_loop/test_l17whilecontinue_x.py::TestL17WhileContinue_x::test_decompile
+FAILED tests/exhaustive/while_loop/test_while02_while_else.py::TestWhile02WhileElse::test_decompile
+FAILED tests/exhaustive/while_loop/test_while04_continue.py::TestWhile04Continue::test_decompile
+FAILED tests/exhaustive/while_loop/test_while05_while_true.py::TestWhile05WhileTrue::test_decompile
+FAILED tests/exhaustive/

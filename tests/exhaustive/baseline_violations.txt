@@ -1,0 +1,47 @@
+# Behavior Violation Baseline Report
+Date: 2026-05-02
+
+## P3 - Bypass _generate_region Direct Calls (Target: 0)
+3868: nested_match_stmt = self._generate_match(nested_match_region) (in _generate_match)
+
+## P4 - Cross-Responsibility Access (Target: 0)
+2544: effective = self.region_analyzer.effective_instructions.get(block.start_offset) (in _if_generate_branch_stmts)
+2864: effective = self.region_analyzer.effective_instructions.get(block.start_offset) (in _if_generate_branch_stmts)
+3404: for r in self.region_analyzer.regions: (in _try_generate_body)
+4489: effective = self.region_analyzer.effective_instructions.get(block.start_offset) (in _generate_block_statements)
+4594: effective = self.region_analyzer.effective_instructions.get(block.start_offset) (in _generate_block_statements)
+5556: for block in self.cfg.blocks.values(): (in _detect_global_declarations)
+
+## P1 - block_to_region Scattered Writes (Target: centralized in analyze())
+447: self.block_to_region[block] = region (in analyze)
+980: self.block_to_region[block] = region (in _identify_loop_regions)
+1049: self.block_to_region[block] = new_region (in _identify_loop_regions)
+1063: self.block_to_region[block] = region (in _identify_loop_regions)
+1065: self.block_to_region[region.condition_block] = region (in _identify_loop_regions)
+1120: self.block_to_region[b] = opt_region (in _identify_loop_regions)
+2095: self.block_to_region[block] = region (in _create_try_except_region)
+2101: self.block_to_region[block] = region (in _create_try_except_region)
+2104: self.block_to_region[block] = region (in _create_try_except_region)
+2108: self.block_to_region[_fc_block] = region (in _create_try_except_region)
+2110: self.block_to_region[block] = region (in _create_try_except_region)
+2655: self.block_to_region[wb] = region (in _identify_with_regions)
+2657: self.block_to_region[b] = region (in _identify_with_regions)
+2659: self.block_to_region[b] = region (in _identify_with_regions)
+2944: self.block_to_region[b] = region (in _identify_match_regions)
+3202: self.block_to_region[block] = region (in _identify_assert_regions)
+3204: self.block_to_region[message_block] = region (in _identify_assert_regions)
+3299: self.block_to_region[b] = if_region (in _identify_conditional_regions)
+3458: self.block_to_region[b] = region (in _identify_boolop_regions)
+3549: self.block_to_region[b] = boolop_region (in _identify_boolop_regions)
+3558: self.block_to_region[boolop_region.merge_block] = boolop_region (in _identify_boolop_regions)
+4299: self.block_to_region[block] = region (in _identify_sequence_regions)
+
+## P1 - region.blocks Post-Creation Modification (Target: 0)
+(none found)
+
+## Summary
+P3 violations: 1
+P4 violations: 6
+P1 block_to_region: 22 in 9 methods
+P1 region.blocks: 0
+Total: 29

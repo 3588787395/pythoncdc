@@ -1,0 +1,124 @@
+================================================================================
+Python 反编译器穷举测试报告
+================================================================================
+
+测试时间: 2026-05-02 10:41:21
+执行时长: 18.03 秒
+
+--------------------------------------------------------------------------------
+总体统计
+--------------------------------------------------------------------------------
+总测试数: 218
+通过:     190 (87.2%)
+失败:     28
+跳过:     0
+
+--------------------------------------------------------------------------------
+各区域类型统计
+--------------------------------------------------------------------------------
+
+  basic:
+    总数:   104
+    通过:   85 (81.7%)
+    失败:   19
+    跳过:   0
+    失败的测试:
+      - test_b16returnnone.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\basic\test
+      - test_b19delete_a.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\basic\test
+      - test_b19delete_n.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\basic\test
+      - test_b19delete_x.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\basic\test
+      - test_b21nonlocal_a.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\basic\test
+      - test_b21nonlocal_n.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\basic\test
+      - test_b21nonlocal_x.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\basic\test
+      - test_b23yieldfrom_a.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\basic\test
+      - test_b23yieldfrom_n.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\basic\test
+      - test_b23yieldfrom_x.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\basic\test
+
+  if_region:
+    总数:   114
+    通过:   105 (92.1%)
+    失败:   9
+    跳过:   0
+    失败的测试:
+      - test_if07ifreturn_a.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\if_region\
+      - test_if07ifreturn_n.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\if_region\
+      - test_if07ifreturn_x.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\if_region\
+      - test_if09ifcontinue_a.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\if_region\
+      - test_if09ifcontinue_n.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\if_region\
+      - test_if09ifcontinue_x.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\if_region\
+      - test_if26ifnone_a.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\if_region\
+      - test_if26ifnone_n.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\if_region\
+      - test_if26ifnone_x.py: Traceback (most recent call last):
+  File "D:\Desktop\ptrade相关\pythoncdc\tests\exhaustive\if_region\
+
+  while_loop:
+    总数:   0
+    通过:   0 (0.0%)
+    失败:   0
+    跳过:   0
+
+  for_loop:
+    总数:   0
+    通过:   0 (0.0%)
+    失败:   0
+    跳过:   0
+
+  try_except:
+    总数:   0
+    通过:   0 (0.0%)
+    失败:   0
+    跳过:   0
+
+  with_region:
+    总数:   0
+    通过:   0 (0.0%)
+    失败:   0
+    跳过:   0
+
+  match_region:
+    总数:   0
+    通过:   0 (0.0%)
+    失败:   0
+    跳过:   0
+
+  boolop:
+    总数:   0
+    通过:   0 (0.0%)
+    失败:   0
+    跳过:   0
+
+  ternary:
+    总数:   0
+    通过:   0 (0.0%)
+    失败:   0
+    跳过:   0
+
+  nested:
+    总数:   0
+    通过:   0 (0.0%)
+    失败:   0
+    跳过:   0
+
+--------------------------------------------------------------------------------
+
+总体通过率: 87.16%
+评估: ★★★★☆ 良好 (>=85%)
+================================================================================
