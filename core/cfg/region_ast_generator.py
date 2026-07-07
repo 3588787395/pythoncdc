@@ -11915,15 +11915,23 @@ class RegionASTGenerator:
             if isinstance(r, IfRegion) and hasattr(r, 'elif_conditions') and r.elif_conditions:
                 if jt_block in r.elif_conditions or ft_block in r.elif_conditions:
                     return None
+        chain_blocks = set(b for b, _ in region.op_chain)
+        if ft_block in chain_blocks or jt_block in chain_blocks:
+            return None
         if region.merge_block and jt_block in region.blocks and ft_block in region.blocks:
             pass
         else:
             return None
-        if len(list(jt_block.successors)) != 1 or len(list(ft_block.successors)) != 1:
-            jt_succs = list(jt_block.successors)
-            ft_succs = list(ft_block.successors)
-            if not (len(jt_succs) >= 1 and len(ft_succs) >= 1):
-                return None
+        jt_succs = list(jt_block.successors)
+        ft_succs = list(ft_block.successors)
+        if not jt_succs or not ft_succs:
+            return None
+        jt_merge = jt_succs[0] if len(jt_succs) >= 1 else None
+        ft_merge = ft_succs[0] if len(ft_succs) >= 1 else None
+        if jt_merge != ft_merge:
+            return None
+        if region.merge_block and jt_merge != region.merge_block and ft_merge != region.merge_block:
+            pass
         cond_instrs = [i for i in chain_block.instructions
                        if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL') and i != last_instr]
         if not cond_instrs:

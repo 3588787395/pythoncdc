@@ -519,22 +519,27 @@ class RegionAnalyzer:
             ternary_regions=ternary_regions
         )
 
-        _while_boolop_blocks = set()
+        _while_boolop_data = []
         for _wbr in boolop_regions:
             if getattr(_wbr, 'is_condition_context', False):
                 _wlr = _wbr.parent if hasattr(_wbr, 'parent') and isinstance(_wbr.parent, LoopRegion) else None
                 if _wlr and _wlr.condition_block is not None:
-                    _while_boolop_blocks.update(_wbr.blocks)
-                    _while_boolop_blocks.update(_wlr.blocks)
-        if _while_boolop_blocks:
+                    _boolop_chain_blocks = set(b for b, _ in _wbr.op_chain)
+                    _while_boolop_data.append((_wbr, _wlr, _boolop_chain_blocks))
+        if _while_boolop_data:
             _to_remove_cond = []
             for _ci, _cr in enumerate(conditional_regions):
                 if not isinstance(_cr, IfRegion):
                     continue
-                _cr_cond = getattr(_cr, 'condition_block', None)
-                if _cr_cond is None or _cr_cond not in _while_boolop_blocks:
-                    continue
-                if any(b in _while_boolop_blocks for b in _cr.blocks):
+                _should_remove = False
+                for _wbr, _wlr, _boolop_chain_blocks in _while_boolop_data:
+                    _cr_cond = getattr(_cr, 'condition_block', None)
+                    if _cr_cond is None or _cr_cond != _wlr.condition_block:
+                        continue
+                    if _cr.entry == _wbr.entry or _cr.entry == _wlr.condition_block:
+                        _should_remove = True
+                        break
+                if _should_remove:
                     _to_remove_cond.append(_ci)
             for _ci in sorted(_to_remove_cond, reverse=True):
                 _removed = conditional_regions.pop(_ci)
@@ -587,92 +592,34 @@ class RegionAnalyzer:
                 for ec in cr.elif_conditions:
                     elif_condition_blocks.add(ec)
         removed_ternary = [tr for tr in ternary_regions
-                          if (tr.false_value_block and tr.false_value_block in elif_condition_blocks)
-                          or any(b in elif_condition_blocks for b in tr.blocks)]
+                          if tr.entry and tr.entry in elif_condition_blocks]
         ternary_regions = [tr for tr in ternary_regions
-                          if not ((tr.false_value_block and tr.false_value_block in elif_condition_blocks)
-                          or any(b in elif_condition_blocks for b in tr.blocks))]
-        removed_boolop = [br for br in boolop_regions
-                          if any(b in elif_condition_blocks for b, _ in br.op_chain)
-                          and br.entry not in elif_condition_blocks]
-        boolop_regions = [br for br in boolop_regions
-                          if not (any(b in elif_condition_blocks for b, _ in br.op_chain)
-                          and br.entry not in elif_condition_blocks)]
+                          if not (tr.entry and tr.entry in elif_condition_blocks)]
+        for br in boolop_regions:
+            if br.entry and br.entry in elif_condition_blocks:
+                br.is_condition_context = True
+                if hasattr(br, 'parent') and br.parent is None:
+                    for cr in conditional_regions:
+                        if isinstance(cr, IfRegion) and br.entry in cr.elif_conditions:
+                            br.parent = cr
+                            if br not in cr.children:
+                                cr.add_child(br)
+                            break
         for tr in removed_ternary:
             if tr in self.regions:
                 self.regions.remove(tr)
             for b in tr.blocks:
                 if b in self.block_to_region and self.block_to_region[b] is tr:
                     del self.block_to_region[b]
-        boolop_to_reattach = {}
-        for br in removed_boolop:
-            boolop_to_reattach[id(br)] = br
-            if br in self.regions:
-                self.regions.remove(br)
-            for b in br.blocks:
-                if b in self.block_to_region and self.block_to_region[b] is br:
-                    del self.block_to_region[b]
 
-        if removed_ternary or removed_boolop:
+        if removed_ternary:
             removed_entries = set()
             for tr in removed_ternary:
                 if tr.entry:
                     removed_entries.add(tr.entry)
-            for br in removed_boolop:
-                if br.entry:
-                    removed_entries.add(br.entry)
             conditional_regions = [cr for cr in conditional_regions
                                    if not (isinstance(cr, IfRegion) and cr.entry in removed_entries
                                            and any(b in elif_condition_blocks for b in cr.blocks))]
-            orphaned_blocks = set()
-            for tr in removed_ternary:
-                orphaned_blocks.update(tr.blocks)
-            for br in removed_boolop:
-                orphaned_blocks.update(br.blocks)
-            for b in list(orphaned_blocks):
-                if b in self.block_to_region:
-                    orphaned_blocks.discard(b)
-            orphaned_entry_blocks = sorted(
-                [b for b in orphaned_blocks
-                 if len(list(b.conditional_successors)) == 2
-                 and b.get_last_instruction()
-                 and b.get_last_instruction().opname not in ('FOR_ITER',)
-                 and b.get_last_instruction().opname in FORWARD_CONDITIONAL_JUMP_OPS],
-                key=lambda b: b.start_offset
-            )
-            for ob in orphaned_entry_blocks:
-                if ob in self.block_to_region:
-                    continue
-                ob_last = ob.get_last_instruction()
-                if ob_last is None:
-                    continue
-                ob_succs = list(ob.conditional_successors)
-                if len(ob_succs) != 2:
-                    continue
-                then_succ, else_succ = sorted(ob_succs, key=lambda s: s.start_offset)
-                ob_merge = self._find_nearest_common_post_dominator(then_succ, else_succ)
-                ob_then_stop = {else_succ}
-                ob_else_stop = {then_succ}
-                ob_then = self._collect_branch_blocks(then_succ, ob_merge, ob_then_stop)
-                ob_else = self._collect_branch_blocks(else_succ, ob_merge, ob_else_stop)
-                ob_all_cond = {ob}
-                ob_region = self._build_elif_region(ob, ob_then, ob_else, ob_merge, ob_all_cond, ob)
-                if ob_region is None:
-                    ob_region = self._build_basic_if_region(ob, ob_then, ob_else, ob_merge, ob_all_cond, ob)
-                if ob_region is not None:
-                    for _bid, br in boolop_to_reattach.items():
-                        if br.entry == ob:
-                            ob_region.add_child(br)
-                            br.parent = ob_region
-                            self.regions.append(br)
-                            for b in br.blocks:
-                                self.block_to_region[b] = br
-                            boolop_regions.append(br)
-                            break
-                    conditional_regions.append(ob_region)
-                    self.regions.append(ob_region)
-                    for b in ob_region.blocks:
-                        self.block_to_region[b] = ob_region
 
         # Phase 11修复: 移除与Ternary重叠的IfRegion和BoolOpRegion
         #
@@ -11420,13 +11367,6 @@ class RegionAnalyzer:
                 if first_jt_offset is not None and cur_jt_offset is not None and first_jt_offset > cur_jt_offset:
                     break
             op_type = 'and' if 'FALSE' in last.opname else 'or'
-            if len(chain) >= 1 and chain[0][1] != op_type:
-                first_op = chain[0][1]
-                if first_op == 'or' and op_type == 'and':
-                    first_jt_block = self.cfg.get_block_by_offset(chain[0][0].get_last_instruction().argval)
-                    cur_jt_block = self.cfg.get_block_by_offset(last.argval)
-                    if first_jt_block and cur_jt_block and first_jt_block != cur_jt_block:
-                        op_type = first_op
             chain.append((current, op_type))
             succs = list(current.conditional_successors)
             if len(succs) != 2:
@@ -11555,14 +11495,6 @@ class RegionAnalyzer:
             if not last or last.opname not in SHORT_CIRCUIT_JUMP_OPS:
                 if chain and last and last.opname in FORWARD_CONDITIONAL_JUMP_OPS:
                     op_type = 'and' if 'FALSE' in last.opname else 'or'
-                    if len(chain) >= 1 and chain[0][1] != op_type:
-                        first_op = chain[0][1]
-                        if first_op == 'or' and op_type == 'and':
-                            if len(chain) >= 1:
-                                first_jt_block = self.cfg.get_block_by_offset(chain[0][0].get_last_instruction().argval)
-                                cur_jt_block = self.cfg.get_block_by_offset(last.argval)
-                                if first_jt_block and cur_jt_block and first_jt_block != cur_jt_block:
-                                    op_type = first_op
                     chain.append((current, op_type))
                     succs = list(current.conditional_successors)
                     if len(succs) != 2:
