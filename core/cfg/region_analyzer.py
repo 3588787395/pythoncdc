@@ -8504,7 +8504,9 @@ class RegionAnalyzer:
                     _cond_terminator = _cond_instrs[-1] if _cond_instrs else None
                     _cond_is_pure_compare = _cond_terminator and _cond_terminator.opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP')
                     if not _cond_is_pure_compare and not _has_store_before_cond:
-                        return True
+                        _jt_exits_loop = _jump_target and _jump_target not in block_region.blocks
+                        if _jt_exits_loop:
+                            return True
                     if _cond_is_pure_compare:
                         if (_ft_last and _ft_last.opname in BACKWARD_CONDITIONAL_JUMP_OPS
                             and _jt_role in (BlockRole.BREAK, BlockRole.PURE_BREAK)):
@@ -9125,6 +9127,21 @@ class RegionAnalyzer:
                             _loop_back_edge_blocks.add(lb)
                 _else_before_filter = list(else_blocks)
                 else_blocks = [b for b in else_blocks if (b in loop_body_set or self._block_exits_loop(b, block_region)) and b not in _loop_back_edge_blocks and b != block]
+                _then_back_edge_blocks = set()
+                for _tbe in _loop_back_edge_blocks:
+                    _tbe_meaningful = [i for i in _tbe.instructions
+                                       if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP')
+                                       and i.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+                                                           'JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                                       and i.opname not in ('POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_FORWARD_IF_FALSE',
+                                                           'POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE')
+                                       and i.opname not in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF',
+                                                           'LOAD_CONST', 'LOAD_ATTR', 'LOAD_METHOD')
+                                       and i.opname not in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP')
+                                       and i.opname not in ('RETURN_VALUE', 'RETURN_CONST')]
+                    if not _tbe_meaningful:
+                        _then_back_edge_blocks.add(_tbe)
+                then_blocks = [b for b in then_blocks if b not in _then_back_edge_blocks and b != block]
 
             all_condition_blocks = {condition_block} | chain_blocks
 
@@ -9223,10 +9240,22 @@ class RegionAnalyzer:
                     return True
             return False
 
-        if else_blocks and all(self._is_trivial_block(b) or _is_loop_continue_block(b) for b in else_blocks):
-            non_continue_else = [b for b in else_blocks if not _is_loop_continue_block(b)]
-            if not non_continue_else or all(self._is_trivial_block(b) for b in non_continue_else):
-                if not any(_is_loop_continue_block(b) for b in else_blocks):
+        def _is_loop_break_block(b):
+            last = b.get_last_instruction()
+            if last and last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE') and last.argval is not None:
+                target = self.cfg.get_block_by_offset(last.argval)
+                br = self.block_to_region.get(b)
+                if isinstance(br, LoopRegion) and target not in br.blocks:
+                    return True
+            if last and last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                return True
+            return False
+
+        if else_blocks and all(self._is_trivial_block(b) or _is_loop_continue_block(b) or _is_loop_break_block(b) for b in else_blocks):
+            non_continue_break_else = [b for b in else_blocks if not _is_loop_continue_block(b) and not _is_loop_break_block(b)]
+            non_break_else = [b for b in else_blocks if not _is_loop_break_block(b)]
+            if not non_continue_break_else or all(self._is_trivial_block(b) for b in non_continue_break_else):
+                if not any(_is_loop_continue_block(b) for b in non_break_else) and not any(_is_loop_break_block(b) for b in else_blocks):
                     else_blocks = []
         if else_blocks:
             then_terminates_with_raise = False
