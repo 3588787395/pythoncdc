@@ -2961,7 +2961,8 @@ class RegionAnalyzer:
             if not _break_targets:
                 if natural_exit and else_blocks:
                     _filtered = [b for b in else_blocks
-                                 if not self._is_except_handler_block(b)]
+                                 if not self._is_early_return_block(b)
+                                 and not self._is_except_handler_block(b)]
                     if _filtered:
                         else_blocks = _filtered
                     else:
@@ -2983,8 +2984,9 @@ class RegionAnalyzer:
                             if b_target in _break_targets:
                                 _break_trampoline_blocks.add(b)
                 else_blocks = [b for b in else_blocks
-                               if b in _cond_exit_set
-                               or (not self._is_early_return_block(b)
+                               if (b in _cond_exit_set and not self._is_early_return_block(b))
+                               or (b not in _cond_exit_set
+                                   and not self._is_early_return_block(b)
                                    and not self._is_except_handler_block(b)
                                    and b not in _break_trampoline_blocks)]
             else:
@@ -2994,21 +2996,6 @@ class RegionAnalyzer:
         return result, natural_exit
 
     def _is_early_return_block(self, block: BasicBlock) -> bool:
-        """Check if a block represents an early return from within a loop body.
-        
-        Bytecode pattern:
-        - Block contains RETURN_VALUE or RETURN_CONST with a non-None value
-        - Such blocks are targets of conditional jumps from within the loop body
-        - They represent 'if cond: return value' patterns, NOT else clauses
-        
-        Root cause (Phase 33 fix):
-        - _find_loop_else collected these blocks as else_blocks because they are
-          successors of body blocks outside the body set
-        - But semantically they are early exits via return, not normal loop exit paths
-        - Including them in else_blocks causes 'return' to become 'break + else: return'
-        
-        Returns True if block is an early return block (should be excluded from else).
-        """
         if not block or not block.instructions:
             return False
         last_instr = block.get_last_instruction()
@@ -3017,6 +3004,8 @@ class RegionAnalyzer:
         if last_instr.opname == 'RETURN_CONST' and last_instr.argval is not None:
             return True
         if last_instr.opname == 'RETURN_VALUE':
+            if self._check_block_has_trailing_return_none(block):
+                return False
             has_store = any(i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
                           for i in block.instructions)
             if has_store:
@@ -3294,9 +3283,19 @@ class RegionAnalyzer:
             if while_true_predecessor is not None:
                 body.add(while_true_predecessor)
 
+            _header_last = header.get_last_instruction()
+            _header_backward_cond_fallthrough = None
+            if _header_last and _header_last.opname in BACKWARD_CONDITIONAL_JUMP_OPS and _header_last.argval is not None:
+                _header_jump_target = self.cfg.get_block_by_offset(_header_last.argval)
+                for _hs in header.successors:
+                    if _hs != _header_jump_target:
+                        _header_backward_cond_fallthrough = _hs
+                        break
             _fwd_queue = []
             for _s in header.successors:
                 if _s not in body:
+                    if _s == _header_backward_cond_fallthrough:
+                        continue
                     if self.dom_analyzer.is_dominator(header, _s):
                         _fwd_queue.append(_s)
             _fwd_visited = set(body)
@@ -3642,6 +3641,8 @@ class RegionAnalyzer:
         return False
 
     def _block_exits_loop(self, block, loop_region):
+        if hasattr(loop_region, 'else_blocks') and block in loop_region.else_blocks:
+            return False
         last = block.get_last_instruction()
         if last and last.opname in ('RETURN_VALUE', 'RETURN_CONST', 'RAISE_VARARGS', 'RERAISE'):
             return True
@@ -8447,6 +8448,8 @@ class RegionAnalyzer:
             if block == block_region.condition_block:
                 return True
             if block == block_region.header_block:
+                if last_instr and last_instr.opname in BACKWARD_CONDITIONAL_JUMP_OPS:
+                    return True
                 if block_region.condition_block is None:
                     cond_succs = list(block.conditional_successors)
                     if len(cond_succs) == 2:
@@ -8473,18 +8476,52 @@ class RegionAnalyzer:
                                     'STORE_DEREF', 'STORE_ATTR', 'STORE_SUBSCR')
                         for i in _cond_instrs
                     )
+                    _jump_target = self.cfg.get_block_by_offset(last_instr.argval) if last_instr.argval is not None else None
+                    _ft_succ = next((s for s in cond_succs if s != _jump_target), None)
+                    _jt_role = self.block_roles.get(_jump_target.start_offset) if _jump_target else None
+                    _ft_last = _ft_succ.get_last_instruction() if _ft_succ else None
                     if _has_store_before_cond:
-                        _jump_target = self.cfg.get_block_by_offset(last_instr.argval) if last_instr.argval is not None else None
-                        _ft_succ = next((s for s in cond_succs if s != _jump_target), None)
                         _jump_exits_loop = _jump_target and _jump_target not in block_region.blocks
                         _ft_in_loop = _ft_succ and _ft_succ in block_region.blocks
                         if _jump_exits_loop or not _ft_in_loop:
+                            return True
+                        _ft_role = self.block_roles.get(_ft_succ.start_offset) if _ft_succ else None
+                        if _ft_role in (BlockRole.BREAK, BlockRole.PURE_BREAK, BlockRole.RETURN, BlockRole.RETURN_NONE):
+                            return True
+                        if _ft_role in (BlockRole.CONTINUE, BlockRole.PURE_CONTINUE):
+                            return True
+                        if _ft_succ:
+                            _ft_last_i = _ft_succ.get_last_instruction()
+                            if _ft_last_i and _ft_last_i.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'):
+                                _ft_jump_target = self.cfg.get_block_by_offset(_ft_last_i.argval) if _ft_last_i.argval is not None else None
+                                if _ft_jump_target and (_ft_jump_target == block_region.condition_block or _ft_jump_target == block_region.header_block):
+                                    return True
+                        if _ft_role == BlockRole.LOOP_BACK_EDGE and _jt_role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
+                            return True
+                        if (_ft_last and _ft_last.opname in BACKWARD_CONDITIONAL_JUMP_OPS
+                            and _jt_role in (BlockRole.BREAK, BlockRole.PURE_BREAK)):
                             return True
                     _cond_terminator = _cond_instrs[-1] if _cond_instrs else None
                     _cond_is_pure_compare = _cond_terminator and _cond_terminator.opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP')
                     if not _cond_is_pure_compare and not _has_store_before_cond:
                         return True
+                    if _cond_is_pure_compare:
+                        if (_ft_last and _ft_last.opname in BACKWARD_CONDITIONAL_JUMP_OPS
+                            and _jt_role in (BlockRole.BREAK, BlockRole.PURE_BREAK)):
+                            return True
+                        if _jt_role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
+                            return True
                 return False
+        elif block_region is None:
+            for _lr in loop_regions:
+                if block == _lr.header_block and _lr.condition_block is not None:
+                    _cond_succs = list(block.conditional_successors)
+                    if len(_cond_succs) == 2 and last_instr and last_instr.opname in FORWARD_CONDITIONAL_JUMP_OPS:
+                        _jump_target = self.cfg.get_block_by_offset(last_instr.argval) if last_instr.argval is not None else None
+                        _jt_role = self.block_roles.get(_jump_target.start_offset) if _jump_target else None
+                        if _jt_role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
+                            return True
+                    break
         elif block_region is not None:
             if isinstance(block_region, TryExceptRegion) and block in block_region.try_blocks:
                 if any(lr.condition_block == block for lr in loop_regions):
@@ -9088,10 +9125,6 @@ class RegionAnalyzer:
                             _loop_back_edge_blocks.add(lb)
                 _else_before_filter = list(else_blocks)
                 else_blocks = [b for b in else_blocks if (b in loop_body_set or self._block_exits_loop(b, block_region)) and b not in _loop_back_edge_blocks and b != block]
-                if not else_blocks and _else_before_filter:
-                    _back_edge_else = [b for b in _else_before_filter if b in _loop_back_edge_blocks and b != block]
-                    if _back_edge_else:
-                        else_blocks = _back_edge_else
 
             all_condition_blocks = {condition_block} | chain_blocks
 
