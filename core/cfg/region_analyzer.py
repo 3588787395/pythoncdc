@@ -4470,6 +4470,8 @@ class RegionAnalyzer:
                 for _, _, handler_blocks in region_b.except_handlers:
                     if region_a.entry in handler_blocks:
                         region_a.enclosing_try = region_b
+                        if not (getattr(region_b, 'has_finally', False) and not region_b.except_handlers and region_a.except_handlers):
+                            region_b.add_child(region_a)
                         break
                 if getattr(region_a, 'enclosing_try', None) is not None:
                     break
@@ -4485,6 +4487,8 @@ class RegionAnalyzer:
                             break
                     if not b_handler_in_a:
                         region_a.enclosing_try = region_b
+                        if not (getattr(region_b, 'has_finally', False) and not region_b.except_handlers and region_a.except_handlers):
+                            region_b.add_child(region_a)
                         break
 
         for region_a in new_regions:
