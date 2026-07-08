@@ -6591,6 +6591,10 @@ class RegionAnalyzer:
         if copy_idx + 1 < len(instrs) and instrs[copy_idx + 1].opname == 'PUSH_EXC_INFO':
             return False
 
+        # COPY 后面紧跟 STORE_FAST/STORE_NAME 是 walrus 运算符 (:=) 模式，不是 match subject
+        if copy_idx + 1 < len(instrs) and instrs[copy_idx + 1].opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL'):
+            return False
+
         # COPY 之后必须紧跟比较操作或 None 检查
         # 模式1: COPY + LOAD_CONST + COMPARE_OP/IS_OP + ... + 条件跳转
         # 模式2: COPY + POP_JUMP_IF_NOT_NONE（case None 模式）
@@ -8264,6 +8268,12 @@ class RegionAnalyzer:
             if has_copy and (instr.opname == 'LOAD_CONST' and
                 idx + 1 < len(meaningful) and meaningful[idx + 1].opname in ('COMPARE_OP', 'IS_OP') and
                 idx + 2 < len(meaningful) and meaningful[idx + 2].opname in CONDITIONAL_JUMP_OPS):
+                copy_indices = [j for j in range(idx) if meaningful[j].opname == 'COPY']
+                has_store_between = any(
+                    meaningful[k].opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
+                    for ci in copy_indices for k in range(ci + 1, idx))
+                if has_store_between:
+                    continue
                 if meaningful[idx + 1].opname == 'IS_OP':
                     return True
                 if meaningful[idx + 1].opname == 'COMPARE_OP' and meaningful[idx + 1].argval in ('==', '!='):
