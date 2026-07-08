@@ -9881,9 +9881,11 @@ class RegionAnalyzer:
             if isinstance(existing, (AssertRegion, MatchRegion)):
                 return False
             if isinstance(existing, LoopRegion):
-                if block == existing.header_block or block == existing.condition_block:
+                if block == existing.condition_block:
                     return False
                 if block == existing.back_edge_block:
+                    return False
+                if block == existing.header_block and existing.condition_block is None:
                     return False
                 if block not in existing.blocks:
                     return False
