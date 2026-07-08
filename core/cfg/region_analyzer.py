@@ -11117,6 +11117,16 @@ class RegionAnalyzer:
                                      pred_jump_target != loop.condition_block)
                     if cond_in_loop and else_outside:
                         if pred_ft == cond_block or pred_ft == loop.header_block:
+                            _pred_cond_instrs = [(i.opname, i.argval) for i in pred.instructions
+                                                 if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')
+                                                 and i.opname not in FORWARD_CONDITIONAL_JUMP_OPS
+                                                 and i.opname not in SHORT_CIRCUIT_JUMP_OPS]
+                            _cond_instrs = [(i.opname, i.argval) for i in cond_block.instructions
+                                            if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')
+                                            and i.opname not in FORWARD_CONDITIONAL_JUMP_OPS
+                                            and i.opname not in SHORT_CIRCUIT_JUMP_OPS]
+                            if _pred_cond_instrs == _cond_instrs:
+                                break
                             _cl2 = cond_block.get_last_instruction()
                             _cjt2 = self.cfg.get_block_by_offset(_cl2.argval) if _cl2 and _cl2.argval is not None else None
                             if _cjt2 and pred_jump_target != _cjt2:
