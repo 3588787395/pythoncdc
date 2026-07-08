@@ -5939,36 +5939,56 @@ class RegionAnalyzer:
 
     def _collect_normal_exit_cleanup(self, with_body, cleanup, cleanup_visited,
                                     entry_blocks, body_end):
-        body_set = set(with_body) | set(entry_blocks)
-        for body_block in sorted(with_body, key=lambda b: b.start_offset):
-            for succ in body_block.successors:
-                if succ in body_set or succ in cleanup_visited:
-                    continue
-                if any(i.opname in ('PUSH_EXC_INFO', 'WITH_EXCEPT_START') for i in succ.instructions):
-                    continue
-                stack = [succ]
-                visited = set()
-                while stack:
-                    cur = stack.pop()
-                    if cur in visited or cur in body_set or cur in cleanup_visited:
+        body_offsets = {b.start_offset for b in with_body}
+        body_offsets.update(b.start_offset for b in entry_blocks)
+        for block in sorted(self.cfg.blocks.values(), key=lambda b: b.start_offset):
+            if block in cleanup_visited:
+                continue
+            if block.start_offset in body_offsets:
+                continue
+            if block.start_offset < body_end:
+                continue
+            if any(i.opname in ('BEFORE_WITH', 'BEFORE_ASYNC_WITH') for i in block.instructions):
+                break
+            if any(i.opname == 'WITH_EXCEPT_START' for i in block.instructions):
+                continue
+            in_range = any(
+                body_end <= instr.offset < block.start_offset + 1000
+                for instr in block.instructions
+            )
+            if not in_range:
+                continue
+            has_user_code = any(
+                instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+                                 'BINARY_OP', 'UNARY_OP', 'COMPARE_OP', 'IS_OP', 'CONTAINS_OP',
+                                 'BUILD_TUPLE', 'BUILD_LIST', 'BUILD_MAP', 'BUILD_SET',
+                                 'IMPORT_NAME', 'IMPORT_FROM', 'LOAD_BUILD_CLASS',
+                                 'GET_ITER', 'GET_AITER', 'FOR_ITER', 'YIELD_VALUE',
+                                 'CALL', 'PRECALL', 'CALL_FUNCTION', 'CALL_METHOD')
+                for instr in block.instructions
+                if instr.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP',
+                                        'LOAD_CONST', 'RETURN_VALUE', 'RETURN_CONST',
+                                        'JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                                        'POP_EXCEPT', 'COPY', 'RERAISE', 'SWAP')
+            )
+            if has_user_code:
+                continue
+            last = block.get_last_instruction()
+            if last and last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                meaningful = [i for i in block.instructions
+                              if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP',
+                                                  'JUMP_FORWARD', 'JUMP_ABSOLUTE', 'POP_EXCEPT',
+                                                  'COPY', 'RERAISE', 'SWAP')]
+                if len(meaningful) >= 2:
+                    prev = meaningful[-2]
+                    if prev.opname in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF',
+                                       'LOAD_ATTR', 'BINARY_SUBSCR', 'BINARY_OP', 'CALL',
+                                       'PRECALL', 'CALL_FUNCTION', 'CALL_METHOD',
+                                       'COMPARE_OP', 'IS_OP', 'CONTAINS_OP',
+                                       'BUILD_TUPLE', 'BUILD_LIST', 'BUILD_MAP', 'BUILD_SET'):
                         continue
-                    visited.add(cur)
-                    if self._has_with_exit_call(cur):
-                        cleanup.append(cur)
-                        cleanup_visited.add(cur)
-                        last = cur.get_last_instruction()
-                        if last and last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
-                            pass
-                        for cs in cur.successors:
-                            if cs not in visited and cs not in body_set:
-                                if cs not in cleanup_visited:
-                                    stack.append(cs)
-                    elif self._is_with_exit_cleanup(cur):
-                        cleanup.append(cur)
-                        cleanup_visited.add(cur)
-                        for cs in cur.successors:
-                            if cs not in visited and cs not in body_set:
-                                stack.append(cs)
+            cleanup.append(block)
+            cleanup_visited.add(block)
 
     def _scan_before_with_instructions(self):
         before_with_blocks = []
