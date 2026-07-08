@@ -11866,6 +11866,10 @@ class RegionAnalyzer:
                                 if (parent_in_child or entry_in_body or
                                     (cond_is_loop_cond and not loop_entry_in_if_branch)):
                                     continue
+                        if isinstance(child, TryExceptRegion) and isinstance(best_parent, IfRegion):
+                            if child.blocks and best_parent.blocks:
+                                if set(best_parent.blocks) <= set(child.blocks):
+                                    continue
                         best_parent.add_child(child)
 
         boolop_regions = [r for r in regions if isinstance(r, __import__('core.cfg.region_analyzer', fromlist=['BoolOpRegion']).BoolOpRegion)]
