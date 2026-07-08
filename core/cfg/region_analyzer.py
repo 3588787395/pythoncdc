@@ -2856,23 +2856,7 @@ class RegionAnalyzer:
                     return None, natural_exit
             else:
                 if for_iter_exit and for_iter_exit not in body_set:
-                    _post_loop = []
-                    _visited = set()
-                    _stack = [for_iter_exit]
-                    while _stack:
-                        _cur = _stack.pop()
-                        if _cur in _visited or _cur in body_set:
-                            continue
-                        _visited.add(_cur)
-                        _post_loop.append(_cur)
-                        for _s in _cur.successors:
-                            if _s not in _visited and _s not in body_set:
-                                _stack.append(_s)
-                    _post_loop = sorted([b for b in _post_loop
-                                         if not self._is_except_handler_block(b)],
-                                        key=lambda b: b.start_offset)
-                    if _post_loop:
-                        return _post_loop, natural_exit
+                    return [for_iter_exit], natural_exit
                 return None, natural_exit
 
         loop_successors = [s for s in header.successors if s not in body_set and s != header]
@@ -7497,11 +7481,13 @@ class RegionAnalyzer:
         if not has_compare and not has_none_check:
             return False
         if has_compare and not has_none_check:
+            has_copy_instr = any(i.opname == 'COPY' for i in meaningful)
             for i in meaningful:
                 if i.opname == 'COMPARE_OP':
                     cmp_op = i.argval
                     if isinstance(cmp_op, str) and cmp_op not in ('==',):
-                        return False
+                        if not has_copy_instr:
+                            return False
             load_const_vals = [i.argval for i in meaningful if i.opname == 'LOAD_CONST']
             if any(v is None or v is True or v is False for v in load_const_vals):
                 return False
