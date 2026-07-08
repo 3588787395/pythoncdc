@@ -11172,6 +11172,8 @@ class RegionAnalyzer:
                                             and i.opname not in SHORT_CIRCUIT_JUMP_OPS]
                             if _pred_cond_instrs == _cond_instrs:
                                 break
+                            if loop.back_edge_block == loop.header_block:
+                                break
                             _cl2 = cond_block.get_last_instruction()
                             _cjt2 = self.cfg.get_block_by_offset(_cl2.argval) if _cl2 and _cl2.argval is not None else None
                             if _cjt2 and pred_jump_target != _cjt2:
