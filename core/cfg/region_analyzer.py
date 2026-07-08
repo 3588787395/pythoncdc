@@ -9030,8 +9030,13 @@ class RegionAnalyzer:
             condition_block = block
             chain_blocks = set()
             if isinstance(block_region, BoolOpRegion) and block_region.entry == block:
+                if not getattr(block_region, 'is_condition_context', True) and getattr(block_region, 'value_target', None):
+                    continue
                 condition_block = block_region.op_chain[-1][0]
                 chain_blocks = set(b for b, _ in block_region.op_chain)
+            elif boolop_region and boolop_region.entry == block:
+                if not getattr(boolop_region, 'is_condition_context', True) and getattr(boolop_region, 'value_target', None):
+                    continue
 
             cond_succs = list(condition_block.conditional_successors)
             if len(cond_succs) != 2:
