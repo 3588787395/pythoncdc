@@ -467,6 +467,7 @@ class RegionAnalyzer:
         # - 循环有回边需要特殊处理（次高优先级）
         # - 其他结构依赖前两者的结果
         try_regions = self._identify_try_except_regions()
+        try_regions = self._merge_split_try_except_finally_regions(try_regions)
         loop_regions = self._identify_loop_regions()
         with_regions = self._identify_with_regions()
         match_regions = self._identify_match_regions()
@@ -4518,6 +4519,36 @@ class RegionAnalyzer:
                 region_a.blocks = [b for b in region_a.blocks if b not in shared_else]
 
         return new_regions
+
+    def _merge_split_try_except_finally_regions(self, try_regions: list) -> list:
+        _inner_to_outer = {}
+        for r in try_regions:
+            if isinstance(r, TryExceptRegion) and r.enclosing_try is not None:
+                _inner_to_outer[id(r)] = r.enclosing_try
+        if not _inner_to_outer:
+            return try_regions
+        _to_remove = set()
+        for inner_id, outer in _inner_to_outer.items():
+            inner = next((r for r in try_regions if id(r) == inner_id), None)
+            if inner is None:
+                continue
+            if not isinstance(inner, TryExceptRegion) or not isinstance(outer, TryExceptRegion):
+                continue
+            inner_has_handler = bool(inner.handler_entry_blocks)
+            outer_has_finally = outer.has_finally and bool(outer.finally_blocks)
+            if inner_has_handler and outer_has_finally and not outer.handler_entry_blocks:
+                outer.handler_entry_blocks = inner.handler_entry_blocks
+                outer.handler_regions = getattr(inner, 'handler_regions', [])
+                outer.except_handlers = getattr(inner, 'except_handlers', [])
+                outer.has_else = inner.has_else
+                outer.else_blocks = inner.else_blocks
+                outer.blocks = outer.blocks | inner.blocks
+                if inner.entry.start_offset < outer.entry.start_offset:
+                    outer.entry = inner.entry
+                _to_remove.add(inner_id)
+        if _to_remove:
+            try_regions = [r for r in try_regions if id(r) not in _to_remove]
+        return try_regions
 
     def _parse_exception_table(self) -> List[Dict[str, Any]]:
         """
