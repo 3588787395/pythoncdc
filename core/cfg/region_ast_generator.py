@@ -1777,15 +1777,36 @@ class RegionASTGenerator:
                                 _i += 1
                         continue
                     self.generated_blocks.add(block)
+            _post_yf_stmts = []
+            if region.else_blocks:
+                for _eb in region.else_blocks:
+                    _eb_role = self.region_analyzer.get_block_role(_eb)
+                    if _eb_role in (BlockRole.LOOP_BACK_EDGE, BlockRole.LOOP_HEADER):
+                        continue
+                    _eb_has_yf_setup = any(i.opname == 'GET_YIELD_FROM_ITER' for i in _eb.instructions)
+                    if _eb_has_yf_setup:
+                        continue
+                    _eb_stmts = self._generate_block_statements(_eb)
+                    if _eb_stmts:
+                        _post_yf_stmts.extend(_eb_stmts)
             for block in region.blocks:
                 self.generated_blocks.add(block)
+                self.generated_offsets.add(block.start_offset)
             if _yf_expr:
                 _result = {'type': 'Expr', 'value': {'type': 'YieldFrom', 'value': _yf_expr}}
                 if _extra_stmts:
+                    if _post_yf_stmts:
+                        return _extra_stmts + [_result] + _post_yf_stmts
                     return _extra_stmts + [_result]
+                if _post_yf_stmts:
+                    return [_result] + _post_yf_stmts
                 return _result
             if _extra_stmts:
+                if _post_yf_stmts:
+                    return _extra_stmts + _post_yf_stmts
                 return _extra_stmts
+            if _post_yf_stmts:
+                return _post_yf_stmts
             return {'type': 'Pass'}
 
         self._loop_depth += 1
