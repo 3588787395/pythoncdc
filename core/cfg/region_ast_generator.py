@@ -4203,6 +4203,35 @@ class RegionASTGenerator:
             return True
         return False
 
+    def _is_with_exit_back_edge(self, block: BasicBlock) -> bool:
+        if not self._current_loop:
+            return False
+        last = block.get_last_instruction()
+        if not last or last.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'):
+            return False
+        if last.argval is None:
+            return False
+        target = self.cfg.get_block_by_offset(last.argval)
+        if target != self._current_loop.header_block:
+            return False
+        _block_region = self.region_analyzer.get_region_for_block(block)
+        if not isinstance(_block_region, WithRegion):
+            return False
+        _non_jump = [i for i in block.instructions
+                     if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP')
+                     and i.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+                                         'JUMP_FORWARD', 'JUMP_ABSOLUTE')]
+        if not _non_jump:
+            return True
+        _all_cleanup = all(
+            i.opname in ('LOAD_CONST', 'PRECALL', 'CALL', 'LOAD_FAST', 'LOAD_NAME',
+                         'LOAD_GLOBAL', 'LOAD_ATTR', 'LOAD_METHOD', 'PUSH_NULL')
+            for i in _non_jump
+        )
+        _has_call = any(i.opname == 'CALL' for i in _non_jump)
+        _has_none = any(i.opname == 'LOAD_CONST' and i.argval is None for i in _non_jump)
+        return _all_cleanup and _has_call and _has_none
+
     def _loop_handle_no_exit_successors(self, block: BasicBlock, _break_cause: Instruction,
                                         _jump_block, _fall_through,
                                         _hdr_stmts: List[Dict[str, Any]]) -> None:
@@ -6486,6 +6515,11 @@ class RegionASTGenerator:
                         continue
             effective = self.region_analyzer.effective_instructions.get(block.start_offset)
             if role == BlockRole.LOOP_BACK_EDGE and effective is not None:
+                if self._current_loop and self._is_with_exit_back_edge(block):
+                    stmts.append({'type': 'Continue'})
+                    self.generated_blocks.add(block)
+                    self.generated_offsets.add(block.start_offset)
+                    continue
                 if effective:
                     stmts.extend(self._build_effective_stmts(block, effective))
                 else:
@@ -9259,6 +9293,13 @@ class RegionASTGenerator:
             if _tb_role in (BlockRole.WITH_EXIT_CLEANUP, BlockRole.WITH_STACK_CLEANUP,
                             BlockRole.WITH_HANDLER, BlockRole.LOOP_HEADER, BlockRole.LOOP_BACK_EDGE):
                 _is_wc = True
+                if _tb_role == BlockRole.LOOP_BACK_EDGE and self._current_loop is not None:
+                    _tb_last = tb.get_last_instruction()
+                    if _tb_last and _tb_last.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT') and _tb_last.argval is not None:
+                        _tb_target = self.cfg.get_block_by_offset(_tb_last.argval)
+                        if _tb_target == self._current_loop.header_block:
+                            if self.region_analyzer._is_with_exit_cleanup(tb):
+                                _found_continue = True
             elif self.region_analyzer._is_with_exit_cleanup(tb):
                 _is_wc = True
             elif _tb_role == BlockRole.CONTINUE:
@@ -9287,6 +9328,13 @@ class RegionASTGenerator:
             if _eb_role in (BlockRole.WITH_EXIT_CLEANUP, BlockRole.WITH_STACK_CLEANUP,
                             BlockRole.WITH_HANDLER, BlockRole.LOOP_HEADER, BlockRole.LOOP_BACK_EDGE):
                 _is_wc = True
+                if _eb_role == BlockRole.LOOP_BACK_EDGE and self._current_loop is not None:
+                    _eb_last = eb.get_last_instruction()
+                    if _eb_last and _eb_last.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT') and _eb_last.argval is not None:
+                        _eb_target = self.cfg.get_block_by_offset(_eb_last.argval)
+                        if _eb_target == self._current_loop.header_block:
+                            if self.region_analyzer._is_with_exit_cleanup(eb):
+                                _found_continue = True
             elif self.region_analyzer._is_with_exit_cleanup(eb):
                 _is_wc = True
             elif _eb_role == BlockRole.CONTINUE:

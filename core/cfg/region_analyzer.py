@@ -3423,7 +3423,7 @@ class RegionAnalyzer:
         WITH_EXIT_INDICATOR_OPS = {
             'LOAD_CONST', 'PRECALL', 'CALL', 'CALL_FUNCTION', 'CALL_METHOD',
             'RETURN_VALUE', 'RETURN_CONST', 'POP_EXCEPT',
-            'JUMP_FORWARD', 'JUMP_ABSOLUTE',
+            'JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
         }
         none_count = 0
         has_call = False
