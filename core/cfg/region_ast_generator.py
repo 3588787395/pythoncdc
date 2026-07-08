@@ -1391,6 +1391,13 @@ class RegionASTGenerator:
                 return None
 
         if isinstance(region, LoopRegion):
+            if isinstance(region.parent, WithRegion) and region.entry and all(i.opname in ('SEND', 'YIELD_VALUE', 'RESUME', 'JUMP_BACKWARD_NO_INTERRUPT', 'NOP') for i in region.entry.instructions):
+                for block in region.blocks:
+                    _role = self.region_analyzer.get_block_role(block)
+                    if _role != BlockRole.LOOP_ELSE:
+                        self.generated_blocks.add(block)
+                self._generated_regions.add(id(region))
+                return None
             return self._generate_loop(region, skip_store_targets=skip_store_targets)
         elif isinstance(region, IfRegion):
             return self._generate_if(region)
@@ -9637,11 +9644,17 @@ class RegionASTGenerator:
                         break
                 if _block_in_descendant and _block_in_descendant.entry != block and (not hasattr(_block_in_descendant, 'condition_block') or _block_in_descendant.condition_block != block) and (not hasattr(_block_in_descendant, 'header_block') or _block_in_descendant.header_block != block):
                     if id(_block_in_descendant) in self._generated_regions:
-                        self.generated_blocks.add(block)
-                        continue
+                        if isinstance(_block_in_descendant, LoopRegion) and isinstance(region, WithRegion) and region.is_async and _block_in_descendant.entry and all(i.opname in ('SEND', 'YIELD_VALUE', 'RESUME', 'JUMP_BACKWARD_NO_INTERRUPT', 'NOP') for i in _block_in_descendant.entry.instructions) and self.region_analyzer.get_block_role(block) == BlockRole.LOOP_ELSE:
+                            pass
+                        else:
+                            self.generated_blocks.add(block)
+                            continue
                     if isinstance(_block_in_descendant, LoopRegion):
-                        self.generated_blocks.add(block)
-                        continue
+                        if isinstance(region, WithRegion) and region.is_async and _block_in_descendant.entry and all(i.opname in ('SEND', 'YIELD_VALUE', 'RESUME', 'JUMP_BACKWARD_NO_INTERRUPT', 'NOP') for i in _block_in_descendant.entry.instructions) and self.region_analyzer.get_block_role(block) == BlockRole.LOOP_ELSE:
+                            pass
+                        else:
+                            self.generated_blocks.add(block)
+                            continue
 
                 nested_region = self.region_analyzer.get_entry_region_for_block(block)
                 if not nested_region:
@@ -9652,6 +9665,8 @@ class RegionASTGenerator:
                             nested_region = _r
                             break
                 if nested_region and nested_region != region and nested_region is not region.parent and isinstance(nested_region, (IfRegion, LoopRegion, TryExceptRegion, WithRegion, AssertRegion, BoolOpRegion, TernaryRegion)):
+                    if isinstance(nested_region, LoopRegion) and isinstance(region, WithRegion) and region.is_async and nested_region.entry and all(i.opname in ('SEND', 'YIELD_VALUE', 'RESUME', 'JUMP_BACKWARD_NO_INTERRUPT', 'NOP') for i in nested_region.entry.instructions):
+                        continue
                     _direct_child = nested_region
                     while _direct_child.parent is not None and _direct_child.parent is not region and _direct_child.parent is not region.parent:
                         _direct_child = _direct_child.parent
@@ -9980,10 +9995,13 @@ class RegionASTGenerator:
                 _async_target = None
                 if region.target is None and _async_body_blocks:
                     _first_loop_else = _async_body_blocks[0]
+                    _first_real_instr = None
                     for _instr in _first_loop_else.instructions:
-                        if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
-                            _async_target = _instr.argval
+                        if _instr.opname not in ('RESUME', 'NOP', 'CACHE'):
+                            _first_real_instr = _instr
                             break
+                    if _first_real_instr and _first_real_instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                        _async_target = _first_real_instr.argval
                     if _async_target:
                         region.target = _async_target
                         # 更新region.items中的optional_vars
@@ -10206,8 +10224,11 @@ class RegionASTGenerator:
                                 body_stmts.extend(generated)
                             else:
                                 body_stmts.append(generated)
-                        for b in child.blocks:
-                            self.generated_blocks.add(b)
+                        if isinstance(child, LoopRegion) and isinstance(child.parent, WithRegion) and child.entry and all(i.opname in ('SEND', 'YIELD_VALUE', 'RESUME', 'JUMP_BACKWARD_NO_INTERRUPT', 'NOP') for i in child.entry.instructions):
+                            pass
+                        else:
+                            for b in child.blocks:
+                                self.generated_blocks.add(b)
                 # 反编译逻辑：处理with语句体中的TernaryRegion/BoolOpRegion子区域
                 # 根因：这些表达式级区域可以嵌入任何语句级区域（if/with/try/match）体内
                 # 归约顺序：内层（ternary/boolop）先识别、外层（with）后处理

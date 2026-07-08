@@ -3275,33 +3275,38 @@ class RegionAnalyzer:
                     if _hs != _header_jump_target:
                         _header_backward_cond_fallthrough = _hs
                         break
+            _is_async_send_loop = all(
+                i.opname in ('SEND', 'YIELD_VALUE', 'RESUME', 'JUMP_BACKWARD_NO_INTERRUPT', 'NOP')
+                for i in header.instructions
+            )
             _fwd_queue = []
-            for _s in header.successors:
-                if _s not in body:
-                    if _s == _header_backward_cond_fallthrough:
+            if not _is_async_send_loop:
+                for _s in header.successors:
+                    if _s not in body:
+                        if _s == _header_backward_cond_fallthrough:
+                            continue
+                        if self.dom_analyzer.is_dominator(header, _s):
+                            _fwd_queue.append(_s)
+                _fwd_visited = set(body)
+                while _fwd_queue:
+                    _fwd_block = _fwd_queue.pop(0)
+                    if _fwd_block in _fwd_visited:
                         continue
-                    if self.dom_analyzer.is_dominator(header, _s):
-                        _fwd_queue.append(_s)
-            _fwd_visited = set(body)
-            while _fwd_queue:
-                _fwd_block = _fwd_queue.pop(0)
-                if _fwd_block in _fwd_visited:
-                    continue
-                _fwd_visited.add(_fwd_block)
-                body.add(_fwd_block)
-                _fwd_last = _fwd_block.get_last_instruction()
-                _is_break_exit = False
-                if _fwd_last and _fwd_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
-                    _fwd_target = self.cfg.get_block_by_offset(_fwd_last.argval) if _fwd_last.argval is not None else None
-                    if _fwd_target and _fwd_target not in body and _fwd_target != header:
-                        _is_break_exit = True
-                if _is_break_exit:
-                    continue
-                for _fs in _fwd_block.successors:
-                    if _fs in body or _fs == header or _fs in _fwd_visited:
+                    _fwd_visited.add(_fwd_block)
+                    body.add(_fwd_block)
+                    _fwd_last = _fwd_block.get_last_instruction()
+                    _is_break_exit = False
+                    if _fwd_last and _fwd_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+                        _fwd_target = self.cfg.get_block_by_offset(_fwd_last.argval) if _fwd_last.argval is not None else None
+                        if _fwd_target and _fwd_target not in body and _fwd_target != header:
+                            _is_break_exit = True
+                    if _is_break_exit:
                         continue
-                    if self.dom_analyzer.is_dominator(header, _fs):
-                        _fwd_queue.append(_fs)
+                    for _fs in _fwd_block.successors:
+                        if _fs in body or _fs == header or _fs in _fwd_visited:
+                            continue
+                        if self.dom_analyzer.is_dominator(header, _fs):
+                            _fwd_queue.append(_fs)
 
         return body
 
@@ -5682,10 +5687,13 @@ class RegionAnalyzer:
         search_offset = block.start_offset
         found_bw = False
         bw_offset = None
+        is_async = False
         for instr in block.instructions:
             if instr.opname in ('BEFORE_WITH', 'BEFORE_ASYNC_WITH'):
                 found_bw = True
                 bw_offset = instr.offset
+                if instr.opname == 'BEFORE_ASYNC_WITH':
+                    is_async = True
             elif found_bw and instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
                 search_offset = instr.offset
                 break
@@ -5700,6 +5708,19 @@ class RegionAnalyzer:
                         closest_succ = succ
             if closest_succ is not None:
                 search_offset = closest_succ.start_offset
+                if is_async:
+                    _cur = closest_succ
+                    _visited = set()
+                    while _cur is not None and _cur not in _visited:
+                        _visited.add(_cur)
+                        if any(i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF', 'POP_TOP') for i in _cur.instructions):
+                            search_offset = _cur.start_offset
+                            break
+                        _succs = [s for s in _cur.successors if s != _cur]
+                        if len(_succs) == 1:
+                            _cur = _succs[0]
+                        else:
+                            break
         best_entry = None
         best_depth = -1
         for entry in self.cfg.exception_table:
@@ -5772,7 +5793,17 @@ class RegionAnalyzer:
                 if e_target == exc_target or e_start < exc_target:
                     max_end = max(max_end, e_end)
         if exc_target > max_end:
-            max_end = exc_target
+            _has_async_exit_protocol = False
+            for block in sorted(self.cfg.blocks.values(), key=lambda b: b.start_offset):
+                if block.start_offset < initial_end:
+                    continue
+                if block.start_offset >= exc_target:
+                    break
+                if any(i.opname in ('GET_AWAITABLE', 'SEND') for i in block.instructions):
+                    _has_async_exit_protocol = True
+                    break
+            if not _has_async_exit_protocol:
+                max_end = exc_target
         for block in sorted(self.cfg.blocks.values(), key=lambda b: b.start_offset):
             if block.start_offset < initial_end:
                 continue
@@ -5962,6 +5993,20 @@ class RegionAnalyzer:
         last_with = with_entry_blocks[-1]
         after_bw_block = self._find_after_with_store_block(last_with, with_entry_blocks)
         if after_bw_block and after_bw_block not in with_entry_blocks:
+            if has_async and after_bw_block not in {b for blk in with_entry_blocks for b in blk.successors}:
+                _cur = None
+                for succ in block.successors:
+                    if succ.start_offset > block.instructions[-1].offset:
+                        _cur = succ
+                        break
+                while _cur is not None and _cur != after_bw_block:
+                    if _cur not in with_entry_blocks:
+                        with_entry_blocks.append(_cur)
+                    _succs = [s for s in _cur.successors if s != _cur]
+                    if len(_succs) == 1:
+                        _cur = _succs[0]
+                    else:
+                        break
             with_entry_blocks.append(after_bw_block)
         body_start, body_end = self._get_with_body_range(last_with)
         with_body = self._collect_with_body_blocks(last_with, body_start, body_end)
