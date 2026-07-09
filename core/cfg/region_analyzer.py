@@ -11425,9 +11425,7 @@ class RegionAnalyzer:
         return None
 
 
-    def _create_boolop_region_from_chain(self, chain: List[Tuple[BasicBlock, str]], claimed: Set[BasicBlock]) -> Optional[BoolOpRegion]:
-        start_block = chain[0][0]
-        chain_blocks = set(b for b, _ in chain)
+    def _boolop_resolve_merge(self, chain: List[Tuple[BasicBlock, str]]) -> Optional[BasicBlock]:
         last_block, _ = chain[-1]
         last_instr = last_block.get_last_instruction()
         merge = None
@@ -11444,9 +11442,14 @@ class RegionAnalyzer:
                         if sc_target.start_offset > merge.start_offset or sc_target != merge:
                             merge = sc_target
                     break
-        is_condition_context = (last_instr is not None and last_instr.opname in FORWARD_CONDITIONAL_JUMP_OPS)
-        if is_condition_context and len(chain) >= 2:
-            first_instr = chain[0][0].get_last_instruction()
+        return merge
+
+    def _boolop_check_condition_context(self, chain: List[Tuple[BasicBlock, str]],
+                                         merge: Optional[BasicBlock]) -> bool:
+        last_block, _ = chain[-1]
+        last_instr = last_block.get_last_instruction()
+        is_condition = (last_instr is not None and last_instr.opname in FORWARD_CONDITIONAL_JUMP_OPS)
+        if is_condition and len(chain) >= 2:
             first_sc_target = None
             for chain_block, _ in chain:
                 cl = chain_block.get_last_instruction()
@@ -11458,33 +11461,43 @@ class RegionAnalyzer:
                 if last_target is not None and first_sc_target != last_target and merge is not None:
                     merge_has_store = any(
                         i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
-                        for i in merge.instructions
-                    )
+                        for i in merge.instructions)
                     if merge_has_store:
-                        is_condition_context = False
+                        is_condition = False
+        return is_condition
+
+    def _boolop_expand_non_condition_blocks(self, chain: List[Tuple[BasicBlock, str]],
+                                             chain_blocks: Set[BasicBlock],
+                                             merge: Optional[BasicBlock]) -> None:
+        for chain_block, _ in chain:
+            last = chain_block.get_last_instruction()
+            if last and last.opname in SHORT_CIRCUIT_JUMP_OPS:
+                ft_succ = next((s for s in sorted(chain_block.conditional_successors,
+                                   key=lambda s: s.start_offset)
+                                if s.start_offset != last.argval), None)
+                if ft_succ and ft_succ not in chain_blocks:
+                    chain_blocks.add(ft_succ)
+            if last and last.opname in FORWARD_CONDITIONAL_JUMP_OPS and chain and chain_block != chain[0][0]:
+                cond_succs = list(chain_block.conditional_successors)
+                if len(cond_succs) == 2:
+                    jt_succ = next((s for s in cond_succs if s.start_offset == last.argval), None)
+                    ft_succ = next((s for s in cond_succs if s.start_offset != last.argval), None)
+                    if jt_succ and ft_succ:
+                        both_reach = (merge is not None and
+                            any(s == merge or merge in list(s.successors) for s in [ft_succ]) and
+                            any(s == merge or merge in list(s.successors) for s in [jt_succ]))
+                        if both_reach:
+                            for succ in cond_succs:
+                                if succ not in chain_blocks and succ != merge:
+                                    chain_blocks.add(succ)
+
+    def _create_boolop_region_from_chain(self, chain: List[Tuple[BasicBlock, str]], claimed: Set[BasicBlock]) -> Optional[BoolOpRegion]:
+        start_block = chain[0][0]
+        chain_blocks = set(b for b, _ in chain)
+        merge = self._boolop_resolve_merge(chain)
+        is_condition_context = self._boolop_check_condition_context(chain, merge)
         if not is_condition_context:
-            for chain_block, _ in chain:
-                last = chain_block.get_last_instruction()
-                if last and last.opname in SHORT_CIRCUIT_JUMP_OPS:
-                    ft_succ = next((s for s in sorted(chain_block.conditional_successors, key=lambda s: s.start_offset)
-                                    if s.start_offset != last.argval), None)
-                    if ft_succ and ft_succ not in chain_blocks:
-                        chain_blocks.add(ft_succ)
-                if last and last.opname in FORWARD_CONDITIONAL_JUMP_OPS and chain and chain_block != chain[0][0]:
-                    cond_succs = list(chain_block.conditional_successors)
-                    if len(cond_succs) == 2:
-                        jt_succ = next((s for s in cond_succs if s.start_offset == last.argval), None)
-                        ft_succ = next((s for s in cond_succs if s.start_offset != last.argval), None)
-                        if jt_succ and ft_succ:
-                            both_reach_merge = (
-                                merge is not None and
-                                any(s == merge or merge in list(s.successors) for s in [ft_succ]) and
-                                any(s == merge or merge in list(s.successors) for s in [jt_succ])
-                            )
-                            if both_reach_merge:
-                                for succ in cond_succs:
-                                    if succ not in chain_blocks and succ != merge:
-                                        chain_blocks.add(succ)
+            self._boolop_expand_non_condition_blocks(chain, chain_blocks, merge)
         region_blocks = chain_blocks | ({merge} if merge else set())
         value_target = None
         if merge:
