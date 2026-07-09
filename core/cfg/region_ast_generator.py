@@ -5982,8 +5982,13 @@ class RegionASTGenerator:
                 if r.entry is None:
                     continue
                 if parent_region.then_blocks and r.entry in set(parent_region.then_blocks):
-                    if not self._is_chained_compare_cleanup_else(r):
-                        return r
+                    if self._is_chained_compare_cleanup_else(r):
+                        continue
+                    if parent_region.else_blocks:
+                        _shared_else = set(r.else_blocks) & set(parent_region.else_blocks)
+                        if _shared_else:
+                            return r
+                    continue
             return None
         if _has_or_ext:
             _or_elif_ir = None
@@ -6390,8 +6395,22 @@ class RegionASTGenerator:
                     child_region_blocks.update(child.blocks)
                     if child.entry:
                         child_entries.add(child.entry)
+        _block_set = set(blocks)
+        _nested_if_skip = set()
+        for b in _block_set:
+            _nr = self.region_analyzer.get_region_for_block(b)
+            if isinstance(_nr, IfRegion) and _nr is not region and _nr.entry is not None:
+                if _nr.entry in _block_set and b != _nr.entry:
+                    _has_cc = getattr(_nr, 'chained_compare_blocks', None) is not None
+                    _has_elif = getattr(_nr, 'elif_conditions', None) is not None
+                    if not _has_cc and not _has_elif:
+                        _nested_if_skip.add(b)
         for block in sorted(blocks, key=lambda b: b.start_offset):
             if block in self.generated_blocks:
+                continue
+            if block in _nested_if_skip:
+                self.generated_blocks.add(block)
+                self.generated_offsets.add(block.start_offset)
                 continue
             if any(i.opname == 'PUSH_EXC_INFO' for i in block.instructions):
                 _is_handler_entry = False
