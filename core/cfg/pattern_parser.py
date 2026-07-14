@@ -214,9 +214,18 @@ class PatternParser:
                         _cond_jump_target < jump_target_offset and
                         _cond_jump_target > current.start_offset
                     )
-                    if not has_body_op and not has_backward_jump and not _jumps_within_body:
-                        is_pattern_block = True
-                        is_guard_like = True
+                    # 区域归约算法：guard块可能包含函数调用（如 len(x) > 0）
+                    # 区分guard块与body块的关键：guard块的条件跳转目标指向下一个case
+                    # （>= case的跳转目标），而body内的if语句跳转目标在body内（< case的跳转目标）
+                    _jumps_to_next_case = (
+                        _cond_jump_target is not None and
+                        jump_target_offset is not None and
+                        _cond_jump_target >= jump_target_offset
+                    )
+                    if not has_backward_jump and not _jumps_within_body:
+                        if not has_body_op or _jumps_to_next_case:
+                            is_pattern_block = True
+                            is_guard_like = True
 
             if not is_pattern_block:
                 meaningful = [i for i in current.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
@@ -679,7 +688,17 @@ class PatternParser:
                                     if i.opname in self.LOAD_VAR_OPS and i.argval == store_target]
                 has_copy_after_load = any(i.opname == 'COPY' for i in pre_compare_instrs[pre_compare_instrs.index(post_store_loads[0]):]) if post_store_loads else False
                 if post_store_loads and not has_copy_after_load:
-                    is_literal_match = False
+                    store_instr = store_before_compare[-1]
+                    is_for_iter_store = False
+                    for pred in case_block.predecessors:
+                        if any(i.opname == 'FOR_ITER' for i in pred.instructions):
+                            pred_last = pred.get_last_instruction()
+                            if pred_last and pred_last.opname == 'FOR_ITER':
+                                if store_instr.opname in ('STORE_NAME', 'STORE_FAST'):
+                                    is_for_iter_store = True
+                                    break
+                    if not is_for_iter_store:
+                        is_literal_match = False
 
         if is_literal_match:
             result = self._extract_or_or_literal_pattern(instrs)
@@ -760,7 +779,13 @@ class PatternParser:
                 has_compare = any(r.opname in ('COMPARE_OP', 'IS_OP') for r in remaining)
                 has_copy_between = any(r.opname == 'COPY' for r in remaining[:next((j for j, r in enumerate(remaining) if r.opname in ('COMPARE_OP', 'IS_OP')), len(remaining))])
                 if has_guard_load and has_compare and not has_copy_between:
-                    return store_target
+                    is_for_iter_store = False
+                    for pred in case_block.predecessors:
+                        if any(pi.opname == 'FOR_ITER' for pi in pred.instructions):
+                            is_for_iter_store = True
+                            break
+                    if not is_for_iter_store:
+                        return store_target
 
         # 策略1：在case_block内查找
         filtered = [i for i in case_block.instructions
@@ -1008,14 +1033,26 @@ class PatternParser:
             if instr.opname == 'POP_TOP':
                 if in_unpack_context and unpack_stack:
                     slot = unpack_stack.pop()
-                    slot_actions.setdefault(slot, {'type': 'wildcard'})
+                    # 反编译逻辑：placeholder slot(-1)是非pattern栈项（如subject副本、
+                    # matched value等）的清理POP_TOP，不是通配符(_)，应跳过
+                    if slot != -1:
+                        slot_actions.setdefault(slot, {'type': 'wildcard'})
                 continue
             if instr.opname == 'SWAP':
-                if in_unpack_context and len(unpack_stack) >= 2:
+                if in_unpack_context:
                     n = instr.argval if instr.argval else 2
+                    # 反编译逻辑：SWAP n 交换 TOS 与 TOS-(n-1)。unpack_stack 只跟踪
+                    # pattern槽位，但实际栈上还有其他项（subject副本、matched value等）。
+                    # 当 n > len(unpack_stack) 时，需在栈底扩展 placeholder(-1) 表示
+                    # 非pattern栈项，然后执行交换。这样后续 POP_TOP/STORE 能正确映射
+                    # 到对应槽位。例如 [first, *rest] 的 UNPACK_EX 1 后栈为 [first, rest]，
+                    # SWAP 4 会引入2个 placeholder，经多轮 SWAP 后 POP_TOP 清理 placeholder，
+                    # STORE 正确绑定到 first(slot 0) 和 rest(slot 1)。
+                    while len(unpack_stack) < n:
+                        unpack_stack.insert(0, -1)
                     if n == 2:
                         unpack_stack[-1], unpack_stack[-2] = unpack_stack[-2], unpack_stack[-1]
-                    elif n > 2 and len(unpack_stack) >= n:
+                    elif n > 2:
                         unpack_stack[-1], unpack_stack[-n] = unpack_stack[-n], unpack_stack[-1]
                 continue
             if instr.opname == 'GET_LEN':
@@ -1047,7 +1084,10 @@ class PatternParser:
                 var_name = instr.argval if instr.argval else f'var_{instr.arg}'
                 if in_unpack_context and unpack_stack:
                     slot = unpack_stack.pop()
-                    slot_actions.setdefault(slot, {'type': 'capture', 'name': var_name})
+                    # 反编译逻辑：placeholder slot(-1)是非pattern栈项的STORE，
+                    # 不应记录为capture也不应设为as_name，直接跳过
+                    if slot != -1:
+                        slot_actions.setdefault(slot, {'type': 'capture', 'name': var_name})
                 else:
                     as_name = var_name
             elif instr.opname == 'LOAD_CONST' and idx + 1 < len(filtered) and filtered[idx + 1].opname == 'COMPARE_OP':
@@ -1055,10 +1095,13 @@ class PatternParser:
                 if has_unpack:
                     if in_unpack_context and unpack_stack:
                         slot = unpack_stack.pop()
-                        slot_actions.setdefault(slot, {'type': 'literal', 'value': literal_val})
+                        if slot != -1:
+                            slot_actions.setdefault(slot, {'type': 'literal', 'value': literal_val})
             elif instr.opname in ('MATCH_SEQUENCE', 'MATCH_CLASS'):
                 if in_unpack_context and unpack_stack:
                     slot = unpack_stack.pop()
+                    if slot == -1:
+                        continue
                     nested_instrs = filtered[idx:]
                     if instr.opname == 'MATCH_SEQUENCE':
                         nested_pattern = self._extract_sequence_pattern(nested_instrs)

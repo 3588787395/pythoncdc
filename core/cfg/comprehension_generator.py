@@ -327,7 +327,15 @@ class ComprehensionGenerator:
         # 检测三元模式：条件跳转的目标在LIST_APPEND之前
         ternary_info = self._detect_comp_ternary(all_instrs, store_idx, append_idx)
         if ternary_info is not None:
-            elt_expr = ternary_info
+            if append_op == 'MAP_ADD':
+                # Dict comprehension with ternary: ternary is the value, need to extract key
+                key_expr = self._extract_dict_comp_key_before_ternary(all_instrs, store_idx, append_idx)
+                if key_expr is not None:
+                    elt_expr = (key_expr, ternary_info)
+                else:
+                    elt_expr = ternary_info
+            else:
+                elt_expr = ternary_info
             ifs = []
         else:
             ifs, elt_start_idx = self._extract_comp_ifs(all_instrs, store_idx, append_idx)
@@ -547,7 +555,65 @@ class ComprehensionGenerator:
                         ifs.append(cond_expr)
             elt_start_idx = current_start
 
+        # Multiple if conditions in comprehension are connected by 'and' (short-circuit).
+        # In Python bytecode, `if a and b` and `if a if b` produce identical bytecode,
+        # so we combine multiple conditions into a single BoolOp to match the more common
+        # source form and produce correct BoolOp AST nodes.
+        if len(ifs) > 1:
+            ifs = [{'type': 'BoolOp', 'op': 'and', 'values': ifs}]
+
         return ifs, elt_start_idx
+
+    def _extract_dict_comp_key_before_ternary(self, all_instrs: List[Instruction],
+                                               store_idx: int,
+                                               append_idx: int) -> Optional[Dict[str, Any]]:
+        """Extract the dict key when a ternary is the dict value in a dict comprehension.
+
+        When a dict comprehension has a ternary value (e.g., {k: v if v else 'N/A' for ...}),
+        the key is pushed on the stack before the ternary condition. This method finds
+        the key by using stack-effect-based backwards scanning from the conditional jump.
+        """
+        import dis
+        from .region_analyzer import CONDITIONAL_JUMP_OPS
+
+        # Find the conditional jump between store_idx+1 and append_idx
+        cond_jump_idx = None
+        for idx in range(store_idx + 1, append_idx):
+            instr = all_instrs[idx]
+            if instr.opname in CONDITIONAL_JUMP_OPS:
+                cond_jump_idx = idx
+                break
+        if cond_jump_idx is None:
+            return None
+
+        # Use stack-effect-based backwards scan to find where the condition starts
+        needed = 1  # Need 1 stack element for the condition (the jump pops 1)
+        cond_start_idx = None
+        for idx in range(cond_jump_idx - 1, store_idx, -1):
+            instr = all_instrs[idx]
+            try:
+                effect = dis.stack_effect(instr.opcode, instr.arg)
+            except Exception:
+                effect = 0
+            needed -= effect
+            if needed <= 0:
+                cond_start_idx = idx
+                break
+        if cond_start_idx is None:
+            cond_start_idx = cond_jump_idx
+
+        # Key instructions are from store_idx+1 to cond_start_idx (exclusive)
+        # Skip STORE instructions
+        key_instrs = []
+        for idx in range(store_idx + 1, cond_start_idx):
+            instr = all_instrs[idx]
+            if instr.opname not in ('STORE_FAST', 'STORE_NAME', 'STORE_DEREF', 'STORE_GLOBAL'):
+                key_instrs.append(instr)
+
+        if not key_instrs:
+            return None
+
+        return self.expr_reconstructor.reconstruct(key_instrs)
 
     def _detect_comp_ternary(self, all_instrs: List[Instruction],
                              store_idx: int,

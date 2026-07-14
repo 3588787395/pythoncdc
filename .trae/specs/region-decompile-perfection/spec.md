@@ -1,359 +1,169 @@
-# 区域模式反编译逻辑完善规范
+# 区域反编译逻辑完善与字节码一致性 Spec
 
 ## Why
-当前反编译器经过21个Phase的系统性优化，整体通过率从67.6%提升至~81-83%。但最新实测发现存在**显著回归**（从~257f增至~340f，整体降至~76.2%），主要原因是BoolOp区域灾难性回退(+41f)、While循环大幅回退(+14f)和Assert区域大幅回退(+11f)。需要先诊断并修复这些回归问题，然后继续深度优化直到100%成功率和字节码完全匹配。
+
+当前区域归约反编译器存在两层测试基线：
+
+1. **测试矩阵**（`run_test_matrix.py` 覆盖 L1/L2/L3/P1 共 1870 个用例）：**5 失败**
+   （99.7% 通过率），分别为 L1 类别 1 个、L2 类别 3 个、P1 类别 1 个。
+2. **match_region 独立测试集**（`tests/exhaustive/match_region/`，~200 个用例，**未纳入**
+   `run_test_matrix.py`）：**44 失败**，覆盖 m013/m026-029/m036/m038-043/m047-048/
+   m05matchmapping×3/m06matchguard×3/m080/m083/m084/m093/m094/m096/m098/m100/m101/m104/
+   m106matchguardboolop/m107matchinfuncreturn/m13matchclassargs×3/m15matchmappingkey×3/
+   m16matchguardcomplex×3/m30matchclassmultiattr×3。
+
+**合计 49 失败**，距离用户要求的 **100% 成功率与字节码完全匹配** 仍有差距。
+
+各识别方法（`_identify_*_regions`）的反编译逻辑注释不统一、不完整，部分逻辑停留在
+「模式匹配 + 后处理补丁」层面，违反区域归约算法的核心原则（自底向上归约、每块唯一归属、
+嵌套即抽象节点、父引用子入口）。
+
+需要系统性地：
+1. 为每一种区域类型的识别方法补充**算法级**的反编译逻辑注释（统一模板）。
+2. **将 match_region 纳入测试矩阵**（修复 `run_test_matrix.py` 的 LEVEL_CATEGORIES），
+   量化每一区域的失败率。
+3. 根据**字节码不一致**的具体错误，修正识别逻辑（不是后处理补丁），重新写入注释。
+4. 迭代到 100% 成功率 + 字节码完全匹配。
 
 ## What Changes
-- **Phase 22（回归修复）**: 诊断并修复3个P0级回归区域（BoolOp/While/Assert）和2个P1级回退区域（Try/For）
-- **Phase 23（深度优化）**: 在回归修复基础上，针对"差N条指令"模式、UNARY_NOT丢失、Ternary边界、If死代码恢复等进行定向优化
-- **Phase 24（架构突破）**: 动态优先级引擎、控制流跟踪、Match独立管道等架构级重构
-- 为 `RegionAnalyzer` 和 `RegionASTGenerator` 中持续发现的问题添加修复代码
-- 为每个修复添加对应的反编译逻辑注释
-- 迭代测试-修正循环，直到所有区域测试100%通过且字节码完全匹配
+
+- **统一识别方法注释模板**：所有 `_identify_*_regions` 方法采用统一结构
+  （算法描述 / 字节码模式 / 边界条件 / 归约语义 / AST 映射 / 已知失败模式）。
+- **统一生成方法注释模板**：所有 `_generate_*` 方法在 `region_ast_generator.py`
+  中明确「区域→AST 节点」的一一映射规则。
+- **修复 73 个失败用例**：按区域类型分批修复，每批修复后回归测试，避免引入回归。
+- **建立字节码一致性验证闭环**：每次逻辑修改后必须运行 `tests/exhaustive/run_test_matrix.py`
+  + 失败用例的字节码 diff，确保**字节码完全匹配**而非「语义等价」。
+- **消除跨区域启发式规则**：识别阶段出现的「跨区域特例判断」「后处理 patch」一律
+  回归到区域归约算法本身修正（参考 `analyze()` 方法已确立的 4 条核心原则）。
+- **强化归约顺序**：自底向上识别 → 嵌套区域作为父区域的抽象入口节点 →
+  父区域 `then/else/body` 列表只引用子区域入口块（不是子区域所有块）。
+
+**BREAKING**: 无（不改变对外 API，仅完善识别逻辑与注释）。
 
 ## Impact
-- Affected specs: 所有9种区域类型的识别与生成逻辑
-- Affected code:
-  - `core/cfg/region_analyzer.py` - BoolOp/While/Assert识别方法 + 辅助方法
-  - `core/cfg/region_ast_generator.py` - BoolOp/While/Assert生成方法 + generate()入口
-  - 测试文件: `tests/exhaustive/` 下9个区域子目录 + `basic/` (assert测试)
+
+- **Affected specs**: 无（首份 spec）。
+- **Affected code**:
+  - `core/cfg/region_analyzer.py` — 10 个 `_identify_*_regions` 方法 + `analyze()` 编排
+  - `core/cfg/region_ast_generator.py` — 18 个 `_generate_*` 方法
+  - `core/cfg/dominator_analyzer.py` — 回边检测、支配树（被大量补丁覆盖，需澄清边界）
+  - `core/cfg/structured_analyzer.py` — 旧补丁式分析器（参考对比，不修改）
+  - `tests/exhaustive/` — 现有测试矩阵（运行验证，不修改测试）
+  - `tests/nook/` — 真实代码模式测试（运行验证）
+- **Affected regions (10 类)**:
+  1. `WHILE_LOOP` / `FOR_LOOP` — `_identify_loop_regions` / `_generate_loop`
+  2. `IF` / `IF_THEN_ELSE` / `IF_ELIF_CHAIN` — `_identify_conditional_regions` / `_generate_if`
+  3. `TRY_EXCEPT` / `TRY_FINALLY` — `_identify_try_except_regions` / `_generate_try`
+  4. `WITH` — `_identify_with_regions` / `_generate_with`
+  5. `MATCH` — `_identify_match_regions` / `_generate_match`
+  6. `ASSERT` — `_identify_assert_regions` / `_generate_assert`
+  7. `BOOL_OP` — `_identify_boolop_regions` / `_generate_boolop`
+  8. `TERNARY` — `_identify_ternary_regions` / `_generate_ternary`
+  9. `CHAINED_COMPARE` — `_identify_chained_compare_regions`（无独立 generate，复用 If）
+  10. `SEQUENCE` — `_identify_sequence_regions` / `_generate_basic_region`
 
 ## ADDED Requirements
 
-### Requirement: 回归修复（Phase 22 P0）
-系统 SHALL 修复以下区域的测试回归，恢复至Phase 21报告的水平：
-- **BoolOp区域**: 从76f修复至≤60f（≥65%通过率），恢复Phase 18b的35f(73.5%)水平
-- **While循环**: 从45f修复至≤35f（≥70%通过率），恢复Phase 18b的31f(74.2%)水平
-- **Assert区域**: 从16f修复至≤6f（≥75%通过率），恢复Phase 18a的5f(80.8%)水平
+### Requirement: 统一识别方法注释模板
 
-#### Scenario: BoolOp回归修复
-- **WHEN** 运行BoolOp区域132个测试用例时
-- **THEN** 失败数≤60（≥95%的原通过测试恢复）
+每一个 `_identify_<type>_regions` 方法的 docstring **SHALL** 包含以下 6 个固定小节，
+顺序与命名严格统一：
 
-### Requirement: 回归修复（Phase 22 P1）
-系统 SHALL 修复Try-except和For循环的轻微回退：
-- **Try-except**: 从44f修复至≤38f（≥83%）
-- **For循环**: 从11f修复至≤9f（≥94%）
+1. **【区域类型】** — 区域名称（中英对照）+ RegionType 枚举值
+2. **1. 算法描述（基于"No More Gotos"论文）** — 归约阶段（Phase N）、识别策略、归约过程（Step 1..N）
+3. **2. 字节码模式（CPython 编译器行为）** — 模式 A/B/C... 含源码示例 + 字节码结构 + 特征指令
+4. **3. 边界条件（数学性质）** — 基于支配树/回边的性质、边界确定规则、嵌套处理规则
+5. **4. 归约语义（与父区域的契约）** — 入口块定义、父区域引用规则、子区域块不出现在父区域展开中
+6. **5. AST 映射** — 对应的 `_generate_<type>` 方法名 + AST 节点类型 + 关键字段映射
+7. **6. 已知失败模式** — 当前测试矩阵中失败的用例编号 + 失败原因（字节码 diff 摘要）+ 修复状态
 
-### Requirement: 深度优化目标（Phase 23）
-在回归修复完成后，系统 SHALL 通过以下优化将整体通过率提升至85-88%：
-- While"差N条指令"统一修复（预期-15f）
-- UNARY_NOT丢失修复（预期-6f）
-- Ternary边界精炼（预期-5f）
-- If死代码恢复尝试（预期-8f）
-- Match is None降级增强（预期-5f）
-- For/With/Assert边缘清理（预期-5f）
+#### Scenario: 注释模板合规
+- **WHEN** 检查任意 `_identify_*_regions` 方法的 docstring
+- **THEN** 必须包含上述 6 个小节标题，且每节有实质内容（非空、非 TODO）
 
-### Requirement: 架构突破目标（Phase 24）
-系统 SHALL 通过架构级重构达到90%+：
-- BoolOp动态优先级引擎（预期-25f）
-- While控制流统一跟踪（预期-15f）
-- Match Pattern独立管道v2（预期-15f）
+#### Scenario: 失败模式可追溯
+- **WHEN** 某区域类型在测试矩阵中有失败用例
+- **THEN** 该区域的「6. 已知失败模式」小节**SHALL**列出每个失败用例的文件名、字节码差异摘要、修复状态
+
+### Requirement: 统一生成方法注释模板
+
+每一个 `_generate_<type>` 方法的 docstring **SHALL** 包含以下 4 个固定小节：
+
+1. **输入契约** — 接收的 Region 子类、关键字段（entry/blocks/children）
+2. **AST 映射规则** — 输出的 AST 节点类型 + 字段对应关系（一一映射表）
+3. **子区域处理** — 如何递归调用子区域的 `_generate_region`、如何处理嵌套
+4. **字节码一致性约束** — 生成的 AST 重编译后**必须**与原始字节码一致（列出关键约束）
+
+#### Scenario: 生成方法注释合规
+- **WHEN** 检查任意 `_generate_*` 方法的 docstring
+- **THEN** 必须包含上述 4 个小节标题
+
+### Requirement: 字节码完全一致性验证
+
+每一次反编译逻辑修改后，**SHALL**运行以下验证并记录结果：
+
+1. `python tests/exhaustive/run_test_matrix.py` （L1/L2/L3/P1 全量）
+2. 失败用例的 `dis.get_instructions()` 字节码 diff（原始 vs 重编译）
+3. 通过率必须达到 **100%**，且字节码 diff 为空
+
+#### Scenario: 修改后回归测试
+- **WHEN** 修改任意 `_identify_*` 或 `_generate_*` 方法
+- **THEN** **MUST**运行全量测试矩阵并报告通过率
+- **AND** 若通过率下降，**MUST**回滚或修正至不下降
+
+#### Scenario: 字节码 diff 为空
+- **WHEN** 对任一失败用例执行 `_compare_code_objects(original, recompiled)`
+- **THEN** 返回值**MUST**为 `None`（无差异）
+
+### Requirement: 区域归约算法符合度验证
+
+所有识别方法**SHALL**遵守以下 4 条核心原则（已在 `analyze()` 注释中确立）：
+
+1. **自底向上归约**：从最内层区域向最外层识别（归约顺序），不回溯修正
+2. **每块唯一归属**：任一基本块在任何层级只属于一个区域
+3. **嵌套即抽象节点**：嵌套区域在其父区域中表示为单个抽象节点
+4. **入口引用语义**：归约后父区域的 then/else/body 列表引用**子区域入口块**，
+   而非子区域的所有块
+
+#### Scenario: 无跨区域启发式规则
+- **WHEN** 审查识别方法代码
+- **THEN** **MUST NOT**出现以下反模式：
+  - 跨区域特例判断（如「如果是 try 内的 if 则...」）
+  - 后处理补丁（如「识别完后修正 then/else 列表」）
+  - 启发式优先级覆盖（如「match 优先于 if，除非...」）
+  - 破坏嵌套天然支持的扁平化逻辑
 
 ## MODIFIED Requirements
 
-### Requirement: 区域归约算法一致性（持续有效）
-所有新增修复 SHALL 严格遵循区域归约算法：
-1. Phase 1（低层）：TRY > LOOP > WITH/MATCH/ASSERT，按优先级识别
-2. Phase 2（高层）：CHAIN_CMP > BOOLOP > TERNARY > CONDITIONAL
-3. Phase 3（底层）：SEQUENCE覆盖未归约块
-4. 区域不重叠原则：每个基本块只属于一个区域
-5. 自底向上归约：内层先识别，外层后识别
+### Requirement: analyze() 编排方法
 
-### Requirement: 反编译逻辑注释规范（持续有效）
-每个新增修复的代码 SHALL 包含结构化注释：
-1. 根因分析 - 为什么会出现这个bug
-2. 字节码模式 - 触发bug的字节码特征
-3. 修复策略 - 如何修复及为什么这样修复
-4. 归约符合度 - 修复如何符合区域归约理论
-5. 影响范围 - 哪些测试受影响
+`RegionAnalyzer.analyze()` 方法**SHALL**维持当前「固定优先级三阶段流水线」
+（TRY > LOOP > WITH/MATCH/ASSERT > CHAINED_COMPARE > BOOLOP > TERNARY > IF > SEQUENCE），
+但在 docstring 中**必须**明确：
+
+1. 该流水线是论文 4.1 迭代归约循环的工程近似
+2. 等价性条件：满足 4 条核心原则时与真·迭代归约等价
+3. 任何识别方法都不得以跨层/跨区域的特例判断破坏这些原则
+4. 如遇特例，**MUST**回归到区域归约本身修正（而非添加补丁）
+
+#### Scenario: 编排方法注释完整
+- **WHEN** 检查 `analyze()` 方法 docstring
+- **THEN** 必须包含「核心原则」「各区域类型反编译逻辑对照表」「当前实现说明」三段
 
 ## REMOVED Requirements
-（无移除需求）
 
----
+### Requirement: 后处理补丁机制
 
-## 当前实测基线（Phase 35 Start, 2026-05-16）
+**Reason**: 违反区域归约算法的「一次正确」原则，导致逻辑分散、难以维护、
+字节码不一致。
+**Migration**: 所有后处理补丁（如 `structured_analyzer.py` 中的 patch_detector
+调用、`ast_generator_v2.py` 中的二次修正）**MUST**迁移到识别阶段的算法修正。
+本 spec 不删除旧代码（保留作为参考对比），但**禁止**在新的识别逻辑中引用。
 
-| 区域 | 失败 | 通过 | 总计 | 通过率 | 优先级 |
-|------|------|------|------|--------|--------|
-| basic | 20 | 73 | 96 | **76.0%** | P2 |
-| if_region | 15 | 290 | 311 | **95.2%** | P2 ✅ |
-| while_loop | 6 | 103 | 120 | **85.8%** | P2 ✅ |
-| for_loop | 12 | 180 | 193 | **93.8%** | P2 |
-| try_except | 21 | 202 | 230 | **90.6%** | P1 |
-| with_region | 9 | 182 | 191 | **95.3%** | P3 ✅ |
-| match_region | 3 | 176 | 198 | **98.3%** | P3 ✅ 🎉 |
-| boolop | 9 | 123 | 132 | **93.2%** | P2 |
-| ternary | 8 | 81 | 116 | **69.8%** | P1 |
-| nested | **89** | 176 | 285 | **62.5%** | **P0** 🔥🔥🔥 |
-| **总计** | **192** | **1536** | **1832** | **88.9%** | |
+### Requirement: 启发式优先级覆盖
 
-### Phase 34→35 关键改善
-- match_region: 19f→3f (-16f!) 🏆🏆🏆 (pattern_parser改进+REGION_TYPE_ALTERNATIVES)
-- if_region: 27f→15f (-12f!) 🏆🏆 (IF_ELIF_CHAIN修复+common_blocks+elif链检测)
-- while_loop: 10f→6f (-4f) 🏆 (BoolOp循环体后处理+条件链防护)
-- nested: 93f→89f (-4f) (else块过滤+层次修复)
-- for_loop: 12f恢复 (LOOP_BACK_EDGE→Continue误生成已修复)
-
-## ADDED Requirements (Phase 34+)
-
-### Requirement: 算法驱动的区域归约（Phase 34 核心原则）
-系统 SHALL 基于 "No More Gotos" (Launez et al., 2013) 论文的结构化算法核心思想，结合 Python 字节码特性，实现算法驱动的区域归约：
-
-1. **回边检测**：基于支配树的标准回边检测算法（DominatorAnalyzer），替代启发式回边判断
-2. **区域分类**：将CFG节点集合分类为有限种区域类型（Block/If/IfElse/IfElseIf/Switch/While/DoWhile/For/NaturalLoop/TryExcept/With/Match/Sequence）
-3. **归约**：将识别出的区域归约为单个节点，迭代直到整个CFG归约为一个节点
-4. **AST映射**：每个区域类型对应唯一的AST节点类型，映射关系确定不变
-
-#### Scenario: 回边检测正确性
-- **WHEN** DominatorAnalyzer计算支配树后
-- **THEN** 所有回边（back edge）通过 "边 N→D 其中 D 支配 N" 的数学性质检测，无需启发式规则
-
-#### Scenario: 区域归约完整性
-- **WHEN** 对CFG执行区域归约算法
-- **THEN** 迭代归约后整个CFG归约为单个节点，无遗漏块
-
-### Requirement: 单向数据流与一次正确（Phase 34 设计约束）
-系统 SHALL 遵循以下设计约束：
-
-1. **单向数据流**：分析结果从底层向上层传递，不回溯修正。一旦区域被识别和归约，其分类不再改变
-2. **一次正确**：每个结构在识别阶段就正确分类，不需要后处理修正。消除所有 `_fix_*`、`_patch_*`、`_adjust_*` 类方法
-3. **算法驱动**：用算法替代模式匹配，用数学性质替代启发式规则。每个识别决策都有明确的算法依据
-
-#### Scenario: 无回溯修正
-- **WHEN** 区域识别阶段完成
-- **THEN** 不存在任何后处理修正步骤改变已识别区域的类型或边界
-
-### Requirement: Nested区域突破（Phase 34 P0）
-系统 SHALL 将nested区域通过率从62.5%提升至≥80%：
-- 根因：嵌套区域间的层次关系识别不正确，导致内层区域被外层错误吞噬
-- 方案：基于支配树的区域层次化归约，确保内层区域先识别、先归约
-
-#### Scenario: Nested区域改善
-- **WHEN** 运行nested区域285个测试用例时
-- **THEN** 失败数≤57（≥80%通过率）
-
-### Requirement: If/Try/Ternary/Match区域攻坚（Phase 34 P1）
-系统 SHALL 将以下区域通过率提升至≥95%：
-- **If条件**：从89.1%提升至≥95%（34f→≤16f）
-- **Try-except**：从90.0%提升至≥95%（23f→≤12f）
-- **Ternary**：从88.8%提升至≥95%（13f→≤6f）
-- **Match区域**：从89.9%提升至≥95%（20f→≤10f）
-
-### Requirement: 反编译逻辑注释完善（Phase 34 持续）
-每个区域识别和生成方法 SHALL 包含完整的反编译逻辑注释：
-1. **算法描述** - 该方法使用的区域归约算法步骤
-2. **字节码模式** - 触发该区域类型的字节码特征（基于CPython编译器行为）
-3. **边界条件** - 区域边界的确定规则（基于支配树/回边等数学性质）
-4. **归约符合度** - 该方法如何符合 "No More Gotos" 论文的区域归约理论
-5. **AST映射规则** - 该区域类型到AST节点类型的确定映射关系
-
-### Requirement: 100%成功率和字节码完全匹配（最终目标）
-系统 SHALL 通过迭代测试-修正循环，最终达到：
-- 所有区域测试100%通过
-- 反编译后重新编译的字节码与原始字节码完全匹配
-
-### Requirement: Phase 45 区域归约算法驱动完善
-系统 SHALL 基于 "No More Gotos" 论文的区域归约算法，对每一区域执行以下步骤：
-1. **分析区域失败模式** — 将每个区域的失败测试按错误类型分类
-2. **规划反编译逻辑** — 基于区域归约理论，为每种失败模式设计修复方案
-3. **写入识别方法注释** — 将反编译逻辑以结构化注释写入对应的识别方法
-4. **执行测试验证** — 运行区域测试，验证成功率和字节码一致性
-5. **修正反编译逻辑** — 根据错误修正反编译逻辑，重新写入注释
-6. **完善代码** — 完成相应代码修改
-7. **持续迭代** — 直到100%成功率和字节码完全匹配
-
-#### Scenario: if60ifelsebreak回归修复
-- **WHEN** 循环内if-else含break时
-- **THEN** 反编译生成的指令数与原始字节码匹配（18→15修复为15）
-
-#### Scenario: if61ifelsecontinue COMPARE_OP正确
-- **WHEN** 循环内if-else含continue时
-- **THEN** COMPARE_OP操作符与原始字节码一致（`>`不被错误取反为`<=`）
-
-#### Scenario: BoolOp-If冲突消解
-- **WHEN** `if a and b:` 模式的字节码与 `return a and b` 几乎相同时
-- **THEN** 基于上下文正确识别为IfRegion而非BoolOpRegion
-
-### Requirement: Phase 48 区域归约算法全区域完善
-系统 SHALL 基于 "No More Gotos" 论文的区域归约算法，对每一区域执行以下完整循环：
-1. **分析区域模式** — 将每个区域的失败测试按字节码模式分类，识别根因
-2. **规划反编译逻辑** — 基于区域归约理论，为每种失败模式设计修复方案
-3. **写入识别方法注释** — 将反编译逻辑以结构化注释写入对应的识别方法和生成方法
-4. **执行测试验证** — 运行区域测试，验证成功率和字节码一致性
-5. **修正反编译逻辑** — 根据错误修正反编译逻辑，重新写入注释
-6. **完善代码** — 完成相应代码修改
-7. **持续迭代** — 直到100%成功率和字节码完全匹配
-
-核心设计原则：
-- **区域化分析**：基于编译器理论中的区域分析算法，将CFG分解为层次化的区域
-- **单向数据流**：分析结果从底层向上层传递，不回溯修正
-- **一次正确**：每个结构在识别阶段就正确分类，不需要后处理修正
-- **算法驱动**：用算法替代模式匹配，用数学性质替代启发式规则
-
-#### Scenario: BoolOp短路路径重复生成修复
-- **WHEN** BoolOpRegion嵌套在WithRegion/TryExceptRegion中时
-- **THEN** BoolOpRegion的blocks不被父区域重复生成（P0修复：_generate_boolop标记generated_blocks + _generate_with识别BoolOpRegion子区域）
-
-#### Scenario: With区域BoolOp/Ternary子区域处理
-- **WHEN** WithRegion包含BoolOpRegion或TernaryRegion子区域时
-- **THEN** _generate_with正确识别并委托生成，不将子区域blocks作为简单语句重复生成
-
-#### Scenario: 嵌套While-While-Break正确归约
-- **WHEN** 内层while break的跳转目标与外层while条件重合时
-- **THEN** break正确归约到内层循环，不与外层循环条件混淆
-
-#### Scenario: Try-Except中continue/break正确分类
-- **WHEN** try-except块位于循环内部且包含continue/break时
-- **THEN** continue/break的角色基于跳转目标正确分类，不因异常处理边界而误判
-
-#### Scenario: 所有区域100%成功率
-- **WHEN** 运行全部10个区域的测试套件时
-- **THEN** 所有测试通过，反编译后重新编译的字节码与原始字节码完全匹配
-
-## 完整演进表
-
-| 区域 | Phase0 | Phase17 | Phase25 | Phase33 | Phase41 | Phase44 | Phase45 | **Phase48基线** | 目标 |
-|------|--------|---------|---------|---------|---------|---------|---------|-----------------|------|
-| Basic | - | - | - | - | 7f | 7f | 7f | **0f (100%)** | 0f ✅ |
-| If | 90f | 48f | 51f | 34f | 50f | 44f | 9f | **6f (98.0%)** | 0f |
-| For | 62f | 19f | 14f | 12f | 7f | 6f | 7f | **3f (98.4%)** | 0f |
-| While | 66f | 50f | 34f | 8f | 10f | 10f | 12f | **5f (95.3%)** | 0f |
-| Try | 54f | 35f | 35f | 23f | 21f | 21f | 21f | **11f (95.0%)** | 0f |
-| With | 37f | 9f | 9f | 9f | 9f | 9f | 9f | **9f (95.3%)** | 0f |
-| Match | 74f | 51f | 47f | 20f | 4f | 4f | 4f | **4f (97.8%)** | 0f |
-| BoolOp | 12f | 64f | 6f | 9f | 9f | 9f | 9f | **8f (93.9%)** | 0f |
-| Ternary | 32f | 19f | 13f | 13f | 8f | 8f | 8f | **8f (91.0%)** | 0f |
-| Nested | - | - | - | - | 87f | 81f | 81f | **73f (73.1%)** | 0f |
-| **总计** | **~427f** | **306f** | **~225f** | **~129f** | **212f** | **199f** | **167f** | **127f (93.0%)** | **0f** |
-
-### 历史里程碑
-
-```
-Phase 0:    ~427f (~67.6%)   ← 原始基线
-Phase 17:   306f (78.9%)     ← 架构重构与收敛
-Phase 25:   ~225f (86.8%)    ← BoolOp突破95.5%
-Phase 30:   ~182f (89.1%)    ← While突破80.8%
-Phase 32:   ~153f (91.7%)    ← If突破87.5%! 净-28f!
-Phase 33:   ~129f (~90.3%)   ← While突破92.7%! 净-24f!
-Phase 34:   240f (87.4%)     ← 新基线(含nested区域), 算法驱动归约
-Phase 41:   212f (88.2%)     ← Return→Break值保持修复, for_loop 96.3%
-Phase 44:   199f (88.9%)     ← 循环条件分支修复, for_loop 96.9%
-Phase 45:   167f (90.8%)     ← BoolOp-If冲突消解! if_region 97.1%! 净-33f!
-Phase 47:   127f (93.0%)     ← while_loop修复+BoolOp-If消解, basic 100%!
-Phase 49:   39f (97.9%)      ← match+try修复前基线
-Phase 50:   36f (98.1%)      ← match+try嵌套修复(m054/m061/m069), match 7f→4f
-                         目标: 0f (100%)
-```
-
-### Phase 50 当前基线（2026-06-04 实测）
-
-| 区域 | 失败 | 通过 | 总计 | 通过率 | 优先级 |
-|------|------|------|------|--------|--------|
-| basic | 0 | 122 | 122 | **100%** | ✅ |
-| if_region | 0 | 311 | 311 | **100%** | ✅ |
-| while_loop | 3 | 117 | 120 | 97.5% | P1 |
-| for_loop | 4 | 189 | 193 | 97.9% | P1 |
-| try_except | 6 | 224 | 230 | 97.4% | P1 |
-| with_region | 2 | 189 | 191 | 99.0% | P2 |
-| match_region | 4 | 194 | 198 | 98.0% | P2 |
-| boolop | 2 | 130 | 132 | 98.5% | P2 |
-| ternary | 7 | 109 | 116 | 94.0% | P1 |
-| nested | 8 | 277 | 285 | 97.2% | P2 |
-| **总计** | **36** | **1862** | **1898** | **98.1%** | |
-
-### Phase 50 剩余36个失败测试详细列表
-
-#### while_loop (3f)
-- while06_false — `while False: x=1` CPython优化为NOP，需合成While节点
-- while13_while_return — while else中return None被has_trailing_return_none过滤
-- wl05whiletrue — `while True: break` CPython优化为NOP，需合成While节点
-
-#### for_loop (4f)
-- fl46forreturn_n — SWAP+POP_TOP+RETURN_VALUE处理错误
-- fl51forbreaknestedif_n/x — for+break+嵌套if
-- for16_for_if — ternary vs if-else选择错误
-
-#### try_except (6f)
-- te080, te081, te100 — try-finally finally块重复/丢失
-- te104 — 嵌套try-except handler排序
-- try16_multi_nested — 复杂try嵌套
-- try20_complex_pattern — 复杂try模式
-
-#### with_region (2f)
-- w058 — async with
-- w30withcustomctx — 自定义上下文管理器
-
-#### match_region (4f)
-- m075, m083 — 指令数不匹配
-- m106 — guard boolop
-- m107 — match in func return
-
-#### boolop (2f)
-- bo42 — BoolOp in listcomp
-- bo43 — complex not-and-or
-
-#### ternary (7f)
-- te04_a/n — ternary func param
-- ternary11_in_if, ternary12_in_while, ternary13_in_for_iter — ternary在控制结构中
-- ternary17_in_lambda — ternary在lambda中
-- ternary20_complex_practical — 复杂实用模式
-
-#### nested (8f)
-- n09 — while+try+except
-- n10_a/b — for+if+for+break
-- n11_a/b — while+if+while+break
-- n13_a/n — try+for+if+break
-- n15 — while+if+try+except
-```
-
-### Phase 48 失败模式分类（127f详细分析）
-
-#### P0: Nested区域 (73f, 57.5%的失败)
-- **BoolOp/Ternary重复生成** (~12f): with_boolop(3), try_boolop(3), try_ternary(3), with_ternary(3) — P0修复目标
-- **循环嵌套break/continue误分类** (~15f): n11, n13, n18, n23, while_boolop, while_if, while_match, while_ternary
-- **Match嵌套body丢失** (~15f): match_if(3), match_match(3), match_boolop(3), match_ternary(3), match_while(3)
-- **if-elif-in-while结构错误** (~6f): n29(3), n17(2), n01(3=if43)
-- **深层嵌套归约不完整** (~9f): n35(3), n14(2), n15(2), n09(1), n07(1), n10(2)
-
-#### P1: Try区域 (11f)
-- **for-try-continue中continue→break误判** (~3f): te047, te083, te050
-- **嵌套try-except handler排序** (~3f): te104, try15, try20
-- **try-finally finally块重复/丢失** (~3f): te080, te081, te100
-- **复杂try模式** (~2f): try11(32vs42), try16(语法错误)
-
-#### P1: With区域 (9f)
-- **with+boolop/ternary重复生成** (~3f): w035, w043, w30 — P0修复目标
-- **with+try嵌套** (~3f): w058, w079, w080
-- **with+循环嵌套** (~3f): w099, w100, w102
-
-#### P2: BoolOp区域 (8f)
-- **混合and/or链segment构建** (~3f): bo24 or-and-or (16vs14)
-- **BoolOp-If冲突(反向)** (~3f): bo31 and-in-if (未找到BOOL_OP)
-- **ListComp中BoolOp** (~1f): bo42
-- **复杂not-and-or** (~1f): bo43 (19vs11)
-
-#### P2: Ternary区域 (8f)
-- **ternary在if/while/for/try/lambda中** (~5f): ternary11-13, ternary15, ternary17
-- **嵌套code object参数不匹配** (~2f): te04×2
-- **复杂实用模式** (~1f): ternary20
-
-#### P2: While区域 (5f)
-- **while False/while True识别** (~2f): while06, wl05
-- **while-return/raise** (~2f): while13, while14
-- **复杂状态机** (~1f): while20
-
-#### P2: If区域 (6f)
-- **if-in-while指令数不匹配** (~3f): if43 (22vs24)
-- **ternary-in-if赋值丢失** (~3f): if72 (14vs9)
-
-#### P3: For区域 (3f)
-- **for-return直接** (~1f): fl46forreturn_n
-- **for-if嵌套** (~1f): for16
-- **复杂body** (~1f): for20
-
-#### P3: Match区域 (4f)
-- **guard boolop** (~1f): m106
-- **match-in-func-return** (~1f): m107
-- **复杂pattern** (~2f): m075, m083
+**Reason**: 「match 优先于 if，除非...」「try 优先于 loop，除非...」等启发式规则
+破坏了算法对嵌套的天然支持，导致边界用例失败。
+**Migration**: 优先级**MUST**由归约顺序（自底向上）+ 块的归属关系（每块唯一归属）
+天然决定，而非显式的优先级覆盖。

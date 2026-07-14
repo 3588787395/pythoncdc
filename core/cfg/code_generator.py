@@ -1067,6 +1067,8 @@ class CodeGenerator:
         # 生成普通if语句
         # [关键修复] 使用最低优先级(0)来避免if条件添加最外层括号
         test_code = self._generate_expression(node.test, 0)
+        if isinstance(node.test, ASTIfExp):
+            test_code = f'({test_code})'
         self._write_line(f'if {test_code}:')
         
         # [关键修复] 增加if深度计数
@@ -1584,6 +1586,9 @@ class CodeGenerator:
         # [关键修复] 使用0作为parent_precedence，避免条件被添加括号
         # 例如: while temp > 0: 而不是 while (temp > 0):
         test_code = self._generate_expression(node.get('test') if isinstance(node, dict) else node.test, 0)
+        test_obj = node.get('test') if isinstance(node, dict) else node.test
+        if isinstance(test_obj, ASTIfExp):
+            test_code = f'({test_code})'
         self._write_line(f'while {test_code}:')
 
         # 生成循环体
@@ -2906,6 +2911,22 @@ class CodeGenerator:
             elif node_type == 'FormattedValue':
                 # [P2-2026] 处理字典格式的FormattedValue
                 return self._generate_formatted_value_from_dict(node)
+            elif node_type == 'BinOp':
+                # [T1修复] dict-based BinOp 需要正确的优先级和括号处理
+                # 原先通过 _generate_annotation_from_dict 回退，不处理括号
+                return self._generate_binop_from_dict(node, parent_precedence)
+            elif node_type == 'IfExp':
+                # [T1修复] dict-based IfExp 需要正确的优先级和括号处理
+                return self._generate_ifexp_from_dict(node, parent_precedence)
+            elif node_type == 'BoolOp':
+                # [T4/B2修复] dict-based BoolOp 需要正确的优先级和括号处理
+                return self._generate_boolop_from_dict(node, parent_precedence)
+            elif node_type == 'UnaryOp':
+                # [B2修复] dict-based UnaryOp (not) 需要正确的优先级和括号处理
+                return self._generate_unaryop_from_dict(node, parent_precedence)
+            elif node_type == 'Compare':
+                # [T1修复] dict-based Compare 需要正确的优先级和括号处理
+                return self._generate_compare_from_dict(node, parent_precedence)
             else:
                 # [修复-L13/L17/L18] 基础表达式类型必须正确处理
                 # Constant和Name是最常用的，必须直接处理避免泄露
@@ -3323,7 +3344,9 @@ class CodeGenerator:
             if isinstance(expr, ASTBinary):
                 child_op = expr.op if isinstance(expr.op, str) else op_map.get(expr.op, '+')
                 return self._precedence.get(child_op, 11)
-            return self._precedence['atom']  # 非二元操作表达式使用原子优先级
+            if isinstance(expr, ASTIfExp):
+                return self._precedence['if']
+            return self._precedence['atom']
         
         left_precedence = get_expr_precedence(node.left)
         right_precedence = get_expr_precedence(node.right)
@@ -3724,6 +3747,8 @@ class CodeGenerator:
         if format_spec is not None:
             if isinstance(format_spec, dict) and format_spec.get('type') == 'JoinedStr':
                 result += ':' + self._generate_joined_str_from_dict(format_spec)
+            elif isinstance(format_spec, dict) and format_spec.get('type') == 'Constant' and isinstance(format_spec.get('value'), str):
+                result += ':' + format_spec['value']
             elif isinstance(format_spec, dict):
                 result += ':' + self._generate_expression(format_spec, 100)
             else:
@@ -3785,13 +3810,13 @@ class CodeGenerator:
             if isinstance(node._format_spec, ASTJoinedStr):
                 format_spec = ':' + self._generate_joined_str(node._format_spec)
             elif isinstance(node._format_spec, dict):
-                # [关键修复] 处理字典类型的格式说明符（如函数调用）
-                # 使用表达式生成器将字典转换为代码字符串
-                # 创建一个临时的ASTConstant节点来包装字典表达式
-                from ..ast_nodes import ASTConstant
-                temp_node = ASTConstant(value=node._format_spec)
-                format_spec_code = self._generate_expression(temp_node, 0)
-                format_spec = ':' + format_spec_code
+                if node._format_spec.get('type') == 'Constant' and isinstance(node._format_spec.get('value'), str):
+                    format_spec = ':' + node._format_spec['value']
+                else:
+                    from ..ast_nodes import ASTConstant
+                    temp_node = ASTConstant(value=node._format_spec)
+                    format_spec_code = self._generate_expression(temp_node, 0)
+                    format_spec = ':' + format_spec_code
             else:
                 format_spec = ':' + str(node._format_spec)
         
@@ -4141,7 +4166,188 @@ class CodeGenerator:
             body_code = f'({body_code})'
         
         return f'{body_code} if {test_code} else {orelse_code}'
-    
+
+    def _get_dict_expr_precedence(self, node: dict) -> int:
+        """获取 dict-based 表达式节点的优先级"""
+        if not isinstance(node, dict):
+            return self._precedence['atom']
+        node_type = node.get('type', '')
+        if node_type == 'BinOp':
+            op = node.get('op', '+')
+            if isinstance(op, str):
+                return self._precedence.get(op, 11)
+            return self._precedence.get(str(op), 11)
+        if node_type == 'IfExp':
+            return self._precedence['if']
+        if node_type == 'BoolOp':
+            op = node.get('op', 'or')
+            if isinstance(op, dict):
+                op = op.get('op', 'or')
+            if str(op).lower() == 'and':
+                return self._precedence['and']
+            return self._precedence['or']
+        if node_type == 'UnaryOp':
+            return self._precedence['not']
+        if node_type == 'Compare':
+            return self._precedence['==']
+        if node_type in ('Constant', 'Name', 'Attribute', 'Tuple', 'List', 'Dict', 'Set',
+                         'JoinedStr', 'FormattedValue', 'ListComp', 'SetComp', 'DictComp',
+                         'GeneratorExp', 'GenExpr', 'Lambda', 'Subscript', 'Call'):
+            return self._precedence['atom']
+        return self._precedence['atom']
+
+    def _generate_binop_from_dict(self, node: dict, parent_precedence: int = 0) -> str:
+        """[T1修复] 生成 dict-based BinOp 表达式，正确处理优先级和括号"""
+        left = node.get('left', {})
+        right = node.get('right', {})
+        op = node.get('op', '+')
+        if isinstance(op, dict):
+            op = op.get('op', '+')
+        op_str = str(op) if not isinstance(op, str) else op
+
+        current_precedence = self._precedence.get(op_str, 11)
+        left_prec = self._get_dict_expr_precedence(left)
+        right_prec = self._get_dict_expr_precedence(right)
+
+        # 左子表达式：优先级低于当前时加括号
+        if left_prec < current_precedence:
+            left_code = self._generate_expression(left, current_precedence)
+        else:
+            left_code = self._generate_expression(left, 0)
+
+        # 右子表达式：优先级低于当前时加括号
+        if right_prec < current_precedence:
+            right_code = self._generate_expression(right, current_precedence)
+        elif right_prec == current_precedence and op_str in ('-', '/', '//', '%'):
+            right_code = self._generate_expression(right, current_precedence + 1)
+        else:
+            right_code = self._generate_expression(right, 0)
+
+        result = f'{left_code} {op_str} {right_code}'
+        if parent_precedence > 0 and current_precedence < parent_precedence:
+            return f'({result})'
+        return result
+
+    def _generate_ifexp_from_dict(self, node: dict, parent_precedence: int = 0) -> str:
+        """[T1修复] 生成 dict-based IfExp 表达式，正确处理优先级和括号"""
+        test = node.get('test', {})
+        body = node.get('body', {})
+        orelse = node.get('orelse', {})
+
+        body_code = self._generate_expression(body, self._precedence['if'])
+        test_code = self._generate_expression(test, 0)
+        orelse_code = self._generate_expression(orelse, self._precedence['if'])
+
+        # 如果body是条件表达式，需要括号（右结合性）
+        if isinstance(body, dict) and body.get('type') == 'IfExp':
+            body_code = f'({body_code})'
+
+        result = f'{body_code} if {test_code} else {orelse_code}'
+        current_precedence = self._precedence['if']
+        if parent_precedence > 0 and current_precedence < parent_precedence:
+            return f'({result})'
+        return result
+
+    def _generate_boolop_from_dict(self, node: dict, parent_precedence: int = 0) -> str:
+        """[T4/B2修复] 生成 dict-based BoolOp 表达式，正确处理优先级和括号"""
+        op = node.get('op', 'or')
+        if isinstance(op, dict):
+            op = op.get('op', 'or')
+        op_str = str(op).lower() if not isinstance(op, str) else op.lower()
+        if op_str == 'and':
+            current_precedence = self._precedence['and']
+        else:
+            current_precedence = self._precedence['or']
+            op_str = 'or'
+
+        values = node.get('values', [])
+        value_codes = []
+        for v in values:
+            v_prec = self._get_dict_expr_precedence(v)
+            # BoolOp 子表达式如果优先级更低，需要括号
+            if v_prec < current_precedence:
+                vc = self._generate_expression(v, current_precedence)
+            else:
+                vc = self._generate_expression(v, 0)
+            value_codes.append(vc)
+
+        result = f' {op_str} '.join(value_codes)
+        if parent_precedence > 0 and current_precedence < parent_precedence:
+            return f'({result})'
+        return result
+
+    def _generate_unaryop_from_dict(self, node: dict, parent_precedence: int = 0) -> str:
+        """[B2修复] 生成 dict-based UnaryOp (not) 表达式，正确处理优先级和括号"""
+        op = node.get('op', 'Not')
+        if isinstance(op, dict):
+            op = op.get('op', 'Not')
+        op_map = {
+            'Not': 'not ', 'UAdd': '+', 'USub': '-', 'Invert': '~',
+            '-': '-', '+': '+', '~': '~', 'not ': 'not ',
+        }
+        op_str = op_map.get(op, 'not ')
+        operand = node.get('operand', {})
+        operand_prec = self._get_dict_expr_precedence(operand)
+        current_precedence = self._precedence['not']
+
+        if operand_prec < current_precedence:
+            operand_code = self._generate_expression(operand, current_precedence)
+        else:
+            operand_code = self._generate_expression(operand, 0)
+
+        result = f'{op_str}{operand_code}'
+        if parent_precedence > 0 and current_precedence < parent_precedence:
+            return f'({result})'
+        return result
+
+    def _generate_compare_from_dict(self, node: dict, parent_precedence: int = 0) -> str:
+        """[T1修复] 生成 dict-based Compare 表达式，正确处理优先级和括号
+
+        区域归约算法：Compare 节点由 PatternParser 产出，可能使用两种格式：
+        - 标准格式：{left, ops: [...], comparators: [...]}（多比较数链式比较）
+        - 单比较数格式：{left, ops: [...], right: <expr>}（单一比较）
+        本方法统一处理两种格式，确保嵌套在 BoolOp 内的 Compare 也能正确生成。
+        """
+        left = node.get('left', {})
+        ops = node.get('ops', [])
+        comparators = node.get('comparators', [])
+
+        # 区域归约算法：当 comparators 为空但 right 存在时，将 right 包装为单元素列表。
+        # 这处理 PatternParser 产出的单比较数格式 Compare（常见于 match guard 的 BoolOp 嵌套）。
+        if not comparators and 'right' in node:
+            comparators = [node.get('right')]
+
+        op_map = {
+            'Eq': '==', 'NotEq': '!=', 'Lt': '<', 'LtE': '<=',
+            'Gt': '>', 'GtE': '>=', 'Is': 'is', 'IsNot': 'is not',
+            'In': 'in', 'NotIn': 'not in',
+            '<': '<', '<=': '<=', '==': '==', '!=': '!=', '>': '>', '>=': '>=',
+            'in': 'in', 'not in': 'not in', 'is': 'is', 'is not': 'is not'
+        }
+
+        left_code = self._generate_expression(left, self._precedence['=='])
+        parts = [left_code]
+        for op, comparator in zip(ops, comparators):
+            # 区域归约算法：处理 dict-form ops 的三种格式：
+            # 1. {"type": "Is"} — type 即操作符
+            # 2. {"type": "CompareOp", "op": ">"} — op 字段是实际操作符
+            # 3. 纯字符串如 "Is" 或 ">"
+            if isinstance(op, dict):
+                op_key = op.get('type', str(op))
+                if op_key == 'CompareOp' and 'op' in op:
+                    op_key = op.get('op')
+            else:
+                op_key = op
+            op_str = op_map.get(op_key, str(op_key))
+            comparator_code = self._generate_expression(comparator, 0)
+            parts.append(f'{op_str} {comparator_code}')
+
+        result = ' '.join(parts)
+        current_precedence = self._precedence['==']
+        if parent_precedence > 0 and current_precedence < parent_precedence:
+            return f'({result})'
+        return result
+
     def _generate_awaitable(self, node: ASTAwaitable) -> str:
         """[异步] 生成 await 表达式"""
         # [关键修复] 使用较低的优先级，确保 await 表达式不会添加多余的括号

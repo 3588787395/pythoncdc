@@ -1,0 +1,132 @@
+{
+  "timestamp": "2026-04-21T23:24:49.065943",
+  "total_lines": 72870,
+  "total_patch_markers": 8954,
+  "total_anti_patterns": 289,
+  "score": 0,
+  "files": {
+    "__init__.py": {
+      "lines": 207,
+      "patch_markers": 0,
+      "anti_patterns": {},
+      "method_count": 2,
+      "avg_method_length": 21.5
+    },
+    "ast_converter.py": {
+      "lines": 1753,
+      "patch_markers": 155,
+      "anti_patterns": {},
+      "method_count": 85,
+      "avg_method_length": 19.1
+    },
+    "ast_generator_v2 copy.py": {
+      "lines": 12703,
+      "patch_markers": 1677,
+      "anti_patterns": {
+        "条件合并后处理": 4,
+        "从块直接生成结构（应从区域生成）": 20,
+        "NOP AST生成": 36,
+        "版本化方法（v2/v3表示迭代补丁）": 5,
+        "调试print语句": 139
+      },
+      "method_count": 84,
+      "avg_method_length": 150.0
+    },
+    "ast_generator_v2.py": {
+      "lines": 25659,
+      "patch_markers": 3692,
+      "anti_patterns": {
+        "后处理修复方法": 9,
+        "条件合并后处理": 4,
+        "从块直接生成结构（应从区域生成）": 31,
+        "NOP AST生成": 9,
+        "版本化方法（v2/v3表示迭代补丁）": 5
+      },
+      "method_count": 120,
+      "avg_method_length": 212.7
+    },
+    "basic_block.py": {
+      "lines": 376,
+      "patch_markers": 0,
+      "anti_patterns": {},
+      "method_count": 33,
+      "avg_method_length": 9.8
+    },
+    "cfg_builder.py": {
+      "lines": 409,
+      "patch_markers": 0,
+      "anti_patterns": {},
+      "method_count": 28,
+      "avg_method_length": 13.1
+    },
+    "cfg_optimizer.py": {
+      "lines": 317,
+      "patch_markers": 0,
+      "anti_patterns": {},
+      "method_count": 20,
+      "avg_method_length": 13.9
+    },
+    "cfg_visualizer.py": {
+      "lines": 409,
+      "patch_markers": 1,
+      "anti_patterns": {},
+      "method_count": 12,
+      "avg_method_length": 31.7
+    },
+    "code_generator.py": {
+      "lines": 3526,
+      "patch_markers": 442,
+      "anti_patterns": {
+        "调试print语句": 4
+      },
+      "method_count": 102,
+      "avg_method_length": 33.1
+    },
+    "dominator_analyzer.py": {
+      "lines": 557,
+      "patch_markers": 1,
+      "anti_patterns": {},
+      "method_count": 33,
+      "avg_method_length": 15.1
+    },
+    "exception_handler.py": {
+      "lines": 1539,
+      "patch_markers": 235,
+      "anti_patterns": {
+        "调试print语句": 3
+      },
+      "method_count": 15,
+      "avg_method_length": 99.8
+    },
+    "region_analyzer.py": {
+      "lines": 4502,
+      "patch_markers": 41,
+      "anti_patterns": {
+        "调试print语句": 6
+      },
+      "method_count": 161,
+      "avg_method_length": 26.6
+    },
+    "region_ast_generator.py": {
+      "lines": 4814,
+      "patch_markers": 18,
+      "anti_patterns": {
+        "从块直接生成结构（应从区域生成）": 2
+      },
+      "method_count": 159,
+      "avg_method_length": 29.0
+    },
+    "structured_analyzer.py": {
+      "lines": 16099,
+      "patch_markers": 2692,
+      "anti_patterns": {
+        "后处理修复方法": 3,
+        "条件合并后处理": 3,
+        "NOP识别后处理": 3,
+        "版本化方法（v2/v3表示迭代补丁）": 3
+      },
+      "method_count": 114,
+      "avg_method_length": 139.8
+    }
+  }
+}

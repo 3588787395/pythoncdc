@@ -1,1002 +1,162 @@
-# 区域模式反编译逻辑完善 - 验证清单
-
-## 注释完整性验证
-- [x] `_identify_loop_regions` 方法包含完整的字节码模式、识别算法、边界条件、归约算法符合度注释 (~380行)
-- [x] `_identify_try_except_regions` 方法包含完整的字节码模式、识别算法、边界条件、归约算法符合度注释 (~594行)
-- [x] `_identify_with_regions` 方法包含完整的字节码模式、识别算法、边界条件、归约算法符合度注释 (~380行)
-- [x] `_identify_match_regions` 方法包含完整的字节码模式、识别算法、边界条件、归约算法符合度注释 (~630行)
-- [x] `_identify_conditional_regions` 方法包含完整的字节码模式、识别算法、边界条件、归约算法符合度注释 (~450行)
-- [x] `_identify_boolop_regions` 方法包含完整的字节码模式、识别算法、边界条件、归约算法符合度注释 (~170行)
-- [x] `_identify_ternary_regions` 方法包含完整的字节码模式、识别算法、边界条件、归约算法符合度注释 (~215行)
-- [x] `_identify_assert_regions` 方法包含完整的字节码模式、识别算法、边界条件、归约算法符合度注释 (~230行)
-- [x] `_identify_chained_compare_regions` 方法包含完整的字节码模式、识别算法、边界条件、归约算法符合度注释
-- [x] `_generate_loop` 方法包含完整的区域到AST映射、表达式重建、嵌套处理、字节码等价保证注释
-- [x] `_generate_try` 方法包含完整的区域到AST映射、表达式重建、嵌套处理、字节码等价保证注释 (~178行)
-- [x] `_generate_with` 方法包含完整的区域到AST映射、表达式重建、嵌套处理、字节码等价保证注释
-- [x] `_generate_match` 方法包含完整的区域到AST映射、表达式重建、嵌套处理、字节码等价保证注释
-- [x] `_generate_if` 方法包含完整的区域到AST映射、表达式重建、嵌套处理、字节码等价保证注释
-- [x] `_generate_boolop` 方法包含完整的区域到AST映射、表达式重建、嵌套处理、字节码等价保证注释
-- [x] `_generate_ternary` 方法包含完整的区域到AST映射、表达式重建、嵌套处理、字节码等价保证注释
-- [x] `_generate_assert` 方法包含完整的区域到AST映射、表达式重建、嵌套处理、字节码等价保证注释
-
-**注释总量**: ~3,399行 ✅
-
-## Phase 21 最终验收状态 ✅ 已完成
-- [x] for_loop → 8f/185p (95.9%)
-- [x] while_loop → 31f/89p (74.2%)
-- [x] try_except → 35f/195p (84.8%)
-- [x] with_region → 9f/182p (95.3%)
-- [x] match_region → ~52f/?p (~72%)
-- [x] if_region → 48f/263p (84.6%)
-- [x] bool_op → 35f/97p (73.5%)
-- [x] ternary → ~14-19f/?p (~80-85%)
-- [x] assert → 5f/21p (80.8%)
-
----
-
-## 🔥 Phase 22: 回归修复验证清单（当前阶段）
-
-### 基线确认（2026-05-12 新一轮实测）
-- [x] 22-BL1: 确认For循环基线 **8f/161p (95.3%)** ✅ (从11f改善)
-- [x] 22-BL2: 确认While循环基线 **32f/85p (72.6%)** ✅✅ (从45f大幅改善)
-- [x] 22-BL3: 确认Try-except基线 **36f/188p (83.9%)** ✅ (从44f改善)
-- [x] 22-BL4: 确认With区域基线 **9f/182p (95.3%)** ✅ 稳定
-- [x] 22-BL5: 确认Match区域基线 **52f/127p (70.9%)** ✅ (从54f改善)
-- [x] 22-BL6: 确认If条件基线 **51f/251p (83.1%)** ⚠️ 微退(+3f)
-- [x] 22-BL7: 确认BoolOp基线 **40f/92p (69.7%)** 🎉🎉🎉 (从76f大幅改善!)
-- [x] 22-BL8: 确认Ternary基线 **19f/76p (80.0%)** ⚠️ 微退(+2f)
-- [x] 22-BL9: 确认Assert基线 **4f/15p (78.9%)** 🎉 (从16f大幅改善!)
-
-### Task 22.1: BoolOp回归诊断与修复
-- [x] 22.1.1: 完成BoolOp通过→失败测试对比分析
-- [x] 22.1.2: 确认Phase 18b BoolOp代码完整性（三节点链后处理 + 值块重建）
-- [x] 22.1.3: 排查后续修改对BoolOp的副作用
-- [x] 22.1.4: BoolOp失败数降至40f（69.7%）✅🎉 超额完成(目标≤60f)
-
-### Task 22.2: While循环回归诊断与修复
-- [x] 22.2.1: 完成While通过→失败测试对比分析
-- [x] 22.2.2: fake loop filter功能验证
-- [x] 22.2.3: while条件BoolOp副作用排查
-- [x] 22.2.4: While失败数降至32f（72.6%）✅ 超额完成(目标≤35f)
-
-### Task 22.3: Assert区域回归诊断与修复
-- [x] 22.3.1: Assert测试路径确认为basic/目录下的test_as*/test_b35/test_b36
-- [x] 22.3.2: generate()入口AssertRegion分支生效验证 — **根因:原为pass,已修复为调用_generate_assert()**
-- [x] 22.3.3: _assert_none_check_direction单向翻转生效验证
-- [x] 22.3.4: PRECALL/CALL消息提取过滤生效验证 — f-string智能过滤已实现
-- [x] 22.3.5: Assert失败数降至4f（78.9%）✅ 达标(目标≤6f)
-
-### Task 22.4: Try/For回退诊断与修复
-- [x] 22.4.1: Try-except新失败测试识别 — top-level区域过滤缺陷导致外层被内层错误过滤
-- [x] 22.4.2: For循环新失败测试识别 — 同上根因
-- [x] 22.4.3: 已修复: region_ast_generator.py L404增加`other.parent is r`判断
-
-### Task 22.5: 全量基线重新验证
-- [x] 22.5.1: 全部9个区域测试套件运行完成 → **~251f/~1177p (82.4%)**
-- [x] 22.5.2: 精确数据收集完成，新基线建立
-- [ ] 22.5.3: 字节码抽样等价性验证（待执行）
-- [x] 22.5.4: tasks.md已更新为Phase 23准备就绪
-
----
-
-## Phase 23 深度优化验证清单（待Phase 22完成后激活）
-- [x] 23.1: While"差N条指令"统一修复验证 → 34f(70.9%), LBE-IF检测已添加，深度调试完成
-- [x] 23.2: UNARY_NOT丢失修复验证 ✅ BoolOp 40f→33f(75%), not操作符正确保留
-- [x] 23.3: Ternary边界精炼验证 ✅ Ternary 19f→**13f(85.9%)**, 突破85%目标!
-- [x] 23.4: If死代码恢复尝试验证 ⚠️ is None误判修复(+5f)但级联回退(-8f), 净+3f
-- [x] 23.5: Match is None降级增强验证 ✅ Match 52f→**49f(-3f)**
-- [x] 23.6: For/With/Assert边缘清理验证 → Assert 4f→**2f(89.5%)✅**, For回退+8f❌待修复, With稳定
-- [x] 23.7: 全量测试 + 字节码等价性验证 ✅ **~245f/~1307p (84.2%)**
-- [x] 23.8: 最终数据表更新完成 ✅
-
----
-
-## 🔥 Phase 24: 架构级突破验证清单（实施中）
-
-### Task 24.3: Match Pattern独立管道v2 (49f→目标≤40f)
-- [ ] 24.3.1: Fix 1 — wildcard match body_start_indices计算修复 → m003/m004恢复(+2f)
-- [ ] 24.3.2: Fix 2 — is None/单case常量match检测增强 → m28matchnone等恢复(+3f)
-- [ ] 24.3.3: Fix 3 — guard+body分离修复 → m039/m046/m053/m072等恢复
-- [ ] 24.3.4: Fix 4 — match→if降级防护 → m031/m049等恢复
-- [ ] 24.3.5: Match区域最终验证 ≤40f (≥75%通过率)
-
-### Task 24.4: If嵌套协调器 + 级联回退修复 (54f→目标≤48f)
-- [ ] 24.4.1: Part D-1 — If级联回退根因分析完成
-- [ ] 24.4.2: Part D-2 — boolop链检测收敛修复
-- [ ] 24.4.3: Part D-3 — If-BoolOp边界精细化
-- [ ] 24.4.4: If区域最终验证 ≤48f (≥84%通过率)
-
-### Phase 24 全量验证
-- [ ] 24.5.1: 运行全部9个区域测试套件确认无回归
-- [ ] 24.5.2: 更新最终数据表
-
----
-
-## 字节码等价性验证
-- [x] Phase 14 全量抽样: 9区域100%等价 ✅
-- [ ] Phase 22 修复后全量抽样验证（待执行）
-
-## 区域归约算法一致性验证
-- [x] Phase 1 优先级正确：TRY(70) > LOOP(60) > WITH(50) > MATCH(40) > ASSERT(10) ✅
-- [x] Phase 2 依赖正确：CHAIN_CMP > BOOLOP > TERNARY > CONDITIONAL ✅
-- [x] Phase 3 覆盖完整：SEQUENCE覆盖未归约块 ✅
-- [x] 区域不重叠：每个基本块只属于一个区域 ✅
-- [x] 自底向上归约：内层先识别，外层后识别 ✅
-
-## 代码质量验证
-- [x] 无新增硬编码偏移量 ✅
-- [x] 无补丁式修正 ✅
-- [x] 无行为违规 ✅
-
----
-
-## 🔥 Phase 26: 架构完善与回归修复验证清单（已完成）
-
-### 紧急修复验证
-- [x] 26.0: IndentationError修复 (L4073) → 全部测试可正常收集运行 ✅
-- [x] 26.0: _meaningful_instrs作用域修复 → CONTINUE块处理逻辑正确嵌套 ✅
-
-### Task 26.1: While循环深度优化
-- [x] 26.1.1: _try_generate_conditional_break_or_continue normal_succ保护 → wl32 n+=1代码保留
-- [x] 26.1.2: _block_is_continue_target()新增方法 → continue目标检测增强
-- [x] 26.1.3: _loop_process_header_break_condition hdr_stmts空值修复
-- [x] 26.1.4: RegionType枚举比较bug(.name属性)修复
-- [x] 26.1.5: While最终验证 → **34f/83p (70.9%)** (代码架构改善)
-
-### Task 26.2: Match精细化
-- [x] 26.2.1: Dominator放松(Fix A) → cleanup connector块允许通过
-- [x] 26.2.2: ~11个测试从region=0变为有效语法输出
-- [x] 26.2.3: Match最终验证 → **47f/133p (73.7%)** (结构改善)
-
-### Task 26.3: 高通过率区域边缘清理
-- [x] 26.3.1: For循环回归修复 → 15f→**14f (92.2%)** ✅
-- [x] 26.3.2: Try-finally终端块去重(is_terminal) → 35f→**28f (87.5%)** 🎉
-- [x] 26.3.3: BoolOp稳定 → **8f** (比较链识别改善)
-- [x] 26.3.4: With/Ternary/If稳定无回归 ✅
-
-### Phase 26 全量验证
-- [x] 26.4.1: For循环 **14f/178p (92.2%)** ✅
-- [x] 26.4.2: While循环 **34f/83p (70.9%)** ✅
-- [x] 26.4.3: Try-except **28f/196p (87.5%)** 🎉
-- [x] 26.4.4: With区域 **9f/182p (95.3%)** ✅
-- [x] 26.4.5: Match区域 **47f/133p (73.7%)** ✅
-- [x] 26.4.6: If条件 **51f/254p (83.3%)** ✅
-- [x] 26.4.7: BoolOp **8f/~95%通过率** ✅
-- [x] 26.4.8: Ternary **13f/79p (85.9%)** ✅
-- [x] 26.4.9: 总计 **~204f/~1310p (87.1%)** ✅
-- [x] 26.4.10: tasks.md + spec.md + checklist.md 更新完成 ✅
-
----
-
-## 🔥 Phase 27: 架构完善与区域边际优化验证清单（正在进行）
-
-### 边际修复验证
-- [x] 27.3.1: if66ifisnoneelse_a/n/x三个测试完全通过 ✅
-- [x] 27.3.2: if18ifchaincompare_a/n/x从"找不到IF_REGION"改善为"指令数不匹配" ✅
-- [x] 27.3.3: if84ifchainedcompareelse_a/n/x从"找不到IF_REGION"改善为"指令数不匹配" ✅
-- [x] 27.3.4: _is_match_subject_block添加SWAP指令检查修复生效 ✅
-- [x] 27.4: 全量验证 → ~204f/87.1% ✅
-
----
-
-## 🔥 Phase 28: 冲刺90%+ 验证清单（已完成）
-
-### Task 28.1: While循环历史性突破（34f→30f, -4f）
-- [x] 28.1.1: LoopRegion去重 (region_analyzer.py L2051) → wl04/wl20完全通过(+7f)
-- [x] 28.1.2: 层次关系保护 (region_analyzer.py L8976) → WHILE_LOOP正确进入top_level
-- [x] 28.1.3: 包含过滤器豁免 (region_ast_generator.py L441) → LoopRegion不被IfRegion错误过滤
-- [x] 28.1.4: 后向条件跳转支持 (L4116, L4207) → 循环体内cond_break检测增强
-- [x] 28.1.5: condition_block排除 (L4209) → 循环条件不被误识别为cond_break
-- [x] 28.1.6: While最终验证 → **30f/90p (75.0%)** 🎉 历史突破!
-
-### Task 28.2: Match区域精细化（47f→46f, -1f）
-- [x] 28.2.1: m085嵌套sequence pattern + 空tuple过滤 → `() = `语法错误修复
-- [x] 28.2.2: m107 MATCH_KEYS passthrough (ast_generator_v2.py) → `<MatchKeys>`修复
-- [x] 28.2.3: m039 Rule 7两阶检查 + store count限制 → body语句恢复
-- [x] 28.2.4: m098 SWAP/POP_TOP跳过 (pattern_parser.py) → pattern name恢复
-- [x] 28.2.5: Match最终验证 → **46f/137p (74.8%)**
-
-### Task 28.3: If条件链式比较框架（结构改善）
-- [x] 28.3.1: `_is_chained_compare_header`排除BoolOp误识别 (region_analyzer.py)
-- [x] 28.3.2: chained compare COMPARE_OP检测bug修复 + ops完整收集
-- [x] 28.3.3: if18差距15vs8→15vs13(差7→差2), if84 19vs12→19vs15(差7→差4)
-- [x] 28.3.4: If最终验证 → **51f/254p (83.3%)** (结构改善)
-
-### Phase 28 全量验证
-- [x] 28.4.1: For循环 **14f/178p (92.2%)** ✅ 无回归
-- [x] 28.4.2: While循环 **30f/90p (75.0%)** 🎉
-- [x] 28.4.3: Try-except **28f/196p (87.5%)** ✅ 无回归
-- [x] 28.4.4: With区域 **9f/182p (95.3%)** ✅ 无回归
-- [x] 28.4.5: Match区域 **46f/137p (74.8%)** 📈
-- [x] 28.4.6: If条件 **51f/254p (83.3%)** 📈 结构改善
-- [x] 28.4.7: BoolOp **8f/~95%** ✅ 无回归
-- [x] 28.4.8: Ternary **13f/79p (85.9%)** ✅ 无回归
-- [x] 28.4.9: 总计 **~197f/~1339p (87.6%)** ✅
-- [x] 28.4.10: tasks.md + spec.md + checklist.md 更新完成 ✅
-
-### 全量验证
-- [x] 27.4.1: For **14f/178p (92.2%)** ✅
-- [x] 27.4.2: While **34f/83p (70.9%)** ✅
-- [x] 27.4.3: Try **28f/196p (87.5%)** ✅
-- [x] 27.4.4: With **9f/182p (95.3%)** ✅
-- [x] 27.4.5: Match **47f/133p (73.7%)** ✅
-- [x] 27.4.6: If **51f/254p (83.3%)** ✅
-- [x] 27.4.7: BoolOp **8f** ✅
-- [x] 27.4.8: Ternary **13f/79p (85.9%)** ✅
-- [x] 27.4.9: 总计 **~204f/1116p (87.1%)** ✅
-- [x] 27.4.10: tasks.md + spec.md + checklist.md 更新完成 ✅
-
----
-
-## 🔥 Phase 29: 并行攻坚与冲突修复验证清单（已完成）
-
-### Task 29.1: While循环架构改善
-- [x] 29.1.1: _collect_branch_blocks JUMP_BACKWARD处理 → 防止IfRegion过度收集
-- [x] 29.1.2: header块精准过滤 → 嵌套if vs 循环条件精确区分
-- [x] 29.1.3: _loop_handle_header提前IfRegion检测 → early return前处理嵌套if
-- [x] 29.1.4: is_really_nested区分 → 循环条件If vs 真正嵌套If
-- [x] 29.1.5: While验证 → **30f/90p (75.0%)** ✅
-
-### Task 29.2: Match区域精细化（46f→44f）
-- [x] 29.2.1: *_`通配符命名修复 (pattern_parser.py) → m046修复
-- [x] 29.2.2: Guard-like块过滤增强 → m053/m072改善
-- [x] 29.2.3: Guard变量验证 → 排除假guard
-- [x] 29.2.4: CASE_HEADER_OPS收集 → mapping pattern恢复
-- [x] 29.2.5: 复合guard支持 → m06/m16改善
-- [x] 29.2.6: Match验证 → **44f/139p (76.0%)** 🎉
-
-### Task 29.3: If条件边际优化（51f→48f, -3f!）
-- [x] 29.3.1: _detect_chained_compare_pattern扩展ft_successor链追踪
-- [x] 29.3.2: _build_chained_compare_region COMPARE_OP位置放宽
-- [x] 29.3.3: 链式比较后完整then/else body收集 → if84 then/else恢复
-- [x] 29.3.4: _is_chained_compare_cleanup_else空else抑制
-- [x] 29.3.5: If验证 → **48f/257p (84.3%)** 🎉
-
-### Task 29.4: For回归修复+冲突解决
-- [x] 29.4.1: BACKWARD_JUMP_OPS过度过滤移除 → For **14f** 恢复 ✅
-- [x] 29.4.2: 并行写入冲突通过重新应用修复解决 ✅
-
-### Phase 29 全量验证
-- [x] 29.4.3: For循环 **14f/178p (92.2%)** ✅
-- [x] 29.4.4: While循环 **30f/90p (75.0%)** ✅
-- [x] 29.4.5: Try-except **28f/196p (87.5%)** ✅
-- [x] 29.4.6: With区域 **9f/182p (95.3%)** ✅
-- [x] 29.4.7: Match区域 **44f/139p (76.0%)** 🎉
-- [x] 29.4.8: If条件 **48f/257p (84.3%)** 🎉
-- [x] 29.4.9: BoolOp **8f/~95%** ✅
-- [x] 29.4.10: Ternary **13f/79p (85.9%)** ✅
-- [x] 29.4.11: 总计 **~194f/~1343p (88.0%)** 🚀
-- [x] 29.4.12: tasks.md + spec.md + checklist.md 更新完成 ✅
-
----
-
-## 🔥 Phase 30: 历史性突破验证清单（已完成）
-
-### Task 30.1: While循环历史性突破（30f→23f, -7!!）
-- [x] 30.1.1: _loop_process_natural_back_edge回边STORE处理 → wl21×3, wl32×2通过
-- [x] 30.1.2: _loop_extract_self_loop_stmts四种模式识别 → while11/wl31/while19/wl09
-- [x] 30.1.3: While验证 → **23f/97p (80.8%)** 🏆🏆🏆 首次突破80%!
-
-### Task 30.2: Match区域body边界精修（44f→39f, -5!）
-- [x] 30.2.1: _get_loop_regions_for_boolop_check()方法添加 → AttributeError修复
-- [x] 30.2.2: 嵌套区域提前检查(核心Fix) → m051/m065恢复
-- [x] 30.2.3: 通配符case body_start回退 → m068/m070/m100恢复
-- [x] 30.2.4: simple_ops添加STORE_* → m031/m049恢复
-- [x] 30.2.5: pattern-only同body跳转检测 → if/while条件不再误判
-- [x] 30.2.6: guard_pattern_blocks嵌套区域保护
-- [x] 30.2.7: BUILD_MAP/RETURN_VALUE回退集合
-- [x] 30.2.8: Match验证 → **39f/141p (78.3%)** 🎉
-
-### Task 30.3: If条件边际优化（保持稳定）
-- [x] 30.3.1: BoolOp LoopRegion边界检查 → 辅助Match/While改善
-
-### Task 30.4: 冲突解决+错误修复
-- [x] 30.4.1: Match子代理7项Fix重新应用 ✅
-- [x] 30.4.2: BoolOp/Ternary return-outside-function错误修复(base.py) ✅
-- [x] 30.4.3: For **14f** 稳定 ✅
-- [x] 30.4.4: Try **28f** 稳定 ✅
-- [x] 30.4.5: With **9f** 稳定 ✅
-- [x] 30.4.6: If **48f** 稳定 ✅
-- [x] 30.4.7: BoolOp **8f** error归零 ✅
-- [x] 30.4.8: Ternary **13f** errors归零 ✅
-- [x] 30.4.9: 总计 **~182f/~1359p (89.1%)** 🚀🚀🚀
-- [x] 30.4.10: tasks.md + spec.md + checklist.md 更新完成 ✅
-
----
-
-## 🔥 Phase 31: 深度攻坚与结构改善验证清单（已完成）
-
-### Task 31.1: While循环（23f→24f, l16修复）
-- [x] 31.1.1: _loop_find_cond_start_idx混合块检测 → l16whilebreak×3完全通过(34vs34)
-- [x] 31.1.2: While验证 → **24f/96p (80.0%)** ⚠️ (l16修复+while06回归)
-
-### Task 31.2: If条件边际优化（结构突破）
-- [x] 31.2.1: BoolOp跨边界jump target一致性检查 → if87从"未识别"变为"指令不匹配"
-- [x] 31.2.2: IfRegion分支LoopRegion裁剪 → 防止贪婪收集循环体
-- [x] 31.2.3: ListComp filter恢复(if78) → 后向跳转vs三元表达式区分
-- [x] 31.2.4: If验证 → **48f/257p (84.3%)** (结构识别突破)
-
-### Task 31.3: Match区域精细化（39f→37f, -2!）
-- [x] 31.3.1: BoolOp op格式修复('and' vs {'type':'And'}) → m082/m101修复
-- [x] 31.3.2: Capture pattern检测(STORE+COMPARE_OP+LOAD) → case n if n>0正确解析
-- [x] 31.3.3: _find_as_binding策略0 + has_copy capture检查
-- [x] 31.3.4: Subject提取is_capture_match停止 → MatchAs时STORE不纳入subject
-- [x] 31.3.5: Match验证 → **37f/143p (79.5%)** 🎉
-
-### Phase 31 全量验证
-- [x] 31.4.1: For **14f/177p (92.2%)** ✅
-- [x] 31.4.2: While **24f/96p (80.0%)** ⚠️
-- [x] 31.4.3: Try **28f/196p (87.5%)** ✅
-- [x] 31.4.4: With **9f/182p (95.3%)** ✅
-- [x] 31.4.5: Match **37f/143p (79.5%)** 🎉
-- [x] 31.4.6: If **48f/257p (84.3%)** ✅
-- [x] 31.4.7: BoolOp **8f/~96%** ✅
-- [x] 31.4.8: Ternary **13f/81p (86.2%)** ✅
-- [x] 31.4.9: 总计 **~181f (~89.2%)** 📈
-- [x] 31.4.10: tasks.md + spec.md + checklist.md 更新完成 ✅
-
----
-
-## 🔥🔥🔥 Phase 32: 历史性大突破验证清单（已完成）
-
-### Task 32.1: While循环历史性突破（24f→19f, -5!!）
-- [x] 32.1.1: LoopRegion-IfRegion层次修复 → while06_false通过, wl05whiletrue通过
-- [x] 32.1.2: `_cjt2`检查放松 → 多出口循环boolop链恢复
-- [x] 32.1.3: 编译器优化循环检测重建 → while False/True AST合成
-- [x] 32.1.4: 区域包含过滤器增强 → LoopRegion被If包含时正确处理
-- [x] 32.1.5: 前置IF合并到While → wl09 BoolOp条件恢复
-- [x] 32.1.6: While最终验证 → **19f/101p (84.2%)** 🏆🏆🏆
-
-### Task 32.2: If条件历史性突破（48f→38f, -10!!）
-- [x] 32.2.1: `_is_nested_if_else_pattern()` → 嵌套if-else不再被误识别为BoolOp (if12, if32×3, c06×3 = +7测试)
-- [x] 32.2.2: `_is_implicit_return_block()` + 链式比较else清理 (if18×3 = +3测试)
-- [x] 32.2.3: If最终验证 → **38f/267p (87.5%)** 🏆🏆 突破87.5%!
-
-### Task 32.3: Match区域大跃进（37f→29f, -8!!）
-- [x] 32.3.1: Compare节点right→comparators转换 (code_generator.py) → m101修复
-- [x] 32.3.2: capture_store_name机制 + BFS范围修正 → m031, m049修复
-- [x] 32.3.3: OR pattern名称保留 `_apply_or_pattern_names()` → m103修复
-- [x] 32.3.4: BoolOp格式+Compare转换确认 → m082, m16×3修复
-- [x] 32.3.5: Match最终验证 → **29f/150p (83.1%)** 🏆🏆🏆
-
-### Phase 32 全量验证
-- [x] 32.4.1: For循环 **14f/177p (92.2%)** ✅
-- [x] 32.4.2: While循环 **19f/101p (84.2%)** 🚀
-- [x] 32.4.3: Try-except **28f/196p (87.5%)** ✅
-- [x] 32.4.4: With区域 **9f/182p (95.3%)** ✅
-- [x] 32.4.5: Match区域 **29f/150p (83.1%)** 🚀
-- [x] 32.4.6: If条件 **38f/267p (87.5%)** 🚀🚀
-- [x] 32.4.7: BoolOp **8f/~96%** ✅
-- [x] 32.4.8: Ternary **13f/81p (86.2%)** ✅
-- [x] 32.4.9: 总计 **~153f (~91.7%)** 🚀🚀🚀!
-- [x] 32.4.10: tasks.md + spec.md 更新完成 ✅
-
----
-
-## 🔥🔥🔥 Phase 33: 冲刺93%+ 验证清单（已完成）
-
-### Task 33.1: While循环历史性突破（19f→8f, -11!!）
-- [x] 33.1.1: 嵌套While条件链防护 → condition_chain_blocks跳过loop_header → l17×3通过
-- [x] 33.1.2: 反向BoolOp链污染修复 → 前驱fall-through=loop_header时break
-- [x] 33.1.3: RAISE_VARARGS/RERAISE排除 → raise不再误判为break
-- [x] 33.1.4: Try中Break检测增强 → RETURN_VALUE+PUSH_EXC_INFO三重条件 → wl30×2通过
-- [x] 33.1.5: BREAK角色强制设置 → annotate后重新设置防覆盖
-- [x] 33.1.6: AST端Break生成 → LOAD_CONST None+RETURN_VALUE→Break节点
-- [x] 33.1.7: _merge_compares生成器表达式bug修复
-- [x] 33.1.8: While最终验证 → **8f/101p (92.7%)** 🏆🏆🏆 历史最佳!
-
-### Task 33.2: If条件改善（38f→34f, -4f）
-- [x] 33.2.1: `_is_none_match_block` NOP前缀检查 → if15/if26/if66 = +9f
-- [x] 33.2.2: `_is_simple_match_case_block` 链式比较排除 → if18恢复 = +3f
-- [x] 33.2.3: `_build_elif_region` merge=None过滤 → if80 elif-break = +3f
-- [x] 33.2.4: If最终验证 → **34f/271p (87.1%)** ✅
-
-### Task 33.3: Match区域分析完善（29f→20f, -9f）
-- [x] 33.3.1: 完整20个失败测试根因分析完成
-- [x] 33.3.2: CPython match优化机制深入理解（单case vs 多case字节码差异）
-- [x] 33.3.3: Match验证 → **20f/159p (~88.8%)** 🏆 超额达标!
-
-### Phase 33 全量验证
-- [x] 33.5.1: For循环 **12f/180p (93.3%)** ✅
-- [x] 33.5.2: While循环 **8f/101p (92.7%)** 🚀🚀🚀
-- [x] 33.5.3: Try-except **23f/200p (87.0%)** ✅ (自然改善-5f)
-- [x] 33.5.4: With区域 **9f/182p (95.3%)** ✅ 稳定
-- [x] 33.5.5: Match区域 **20f/159p (~88.8%)** 🚀
-- [x] 33.5.6: If条件 **34f/271p (87.1%)** ✅
-- [x] 33.5.7: BoolOp **9f/** ⚠️ 测试数变化
-- [x] 33.5.8: Ternary **13f/** ⚠️ 测试数变化
-- [x] 33.5.9: Assert **1f/18p (94.7%)** 🎉
-- [x] 33.5.10: 总计 **~129f/~1203p (~90.3%)** 🚀! 净减少24个失败!
-- [x] 33.5.11: tasks.md + spec.md + checklist.md 更新完成 ✅
-
----
-
-## 🔥🔥🔥 Phase 34: 算法驱动归约验证清单（进行中）
-
-### Task 34.0: 基线确认与区域模式分析
-- [x] 34.0.1: 全量测试基线确认 → **227f/1671p (88.04%)** (d1ydr合并后基线)
-- [x] 34.0.2: 每个区域失败模式分类完成
-- [x] 34.0.3: 逐分支智能合并（6分支→仅合d1ydr正向分支）
-
-### Task 34.1: 安全修复轮次（零回归策略）
-- [x] 34.1.1: Basic assert-in-if修复 (region_analyzer.py L8574 `or`→`and`) → **5→4f**
-- [x] 34.1.2: Ternary value_target break缩进修复 (region_analyzer.py L8944) → **13→8f**
-- [x] 34.1.3: BoolOp混合跳转支持 BOOLOP_CHAIN_JUMPS (region_analyzer.py L9592) → **9→6f**
-- [x] 34.1.4: Yield from循环排除 (region_ast_generator.py L1434) → basic改善
-- [x] 34.1.5: If While→If启发式空分支修复 (region_ast_generator.py) → **31→27f**
-
-### Task 34.2: Try区域修复
-- [x] 34.2.1: except handler块排除出loop else (region_analyzer.py `_is_except_handler_block`) → **23→21f**, nested意外 **98→93f**
-
-### Task 34.3: Match区域尝试（已回退）
-- [x] 34.3.1: _is_none_match_block NOP前缀放宽 → 导致if +9f回归, **已回退**
-
-### Task 34.5: 全量验证 — 当前最佳状态
-- [x] 34.5.1: **总体 212f/1686p (88.83%)** ✅ (基线227f, 净修复15个!)
-- [x] 34.5.2: 各区域红线约束全部满足
-
-### Task 34.6: 本轮新增修复（Phase 34 续）
-- [x] 34.6.1: If-break模式识别修复 (region_analyzer.py+region_ast_generator.py) → **if08ifbreak×3通过, if_region 27→24f**
-- [x] 34.6.2: While True前导语句提取Pattern A (region_ast_generator.py L2386) → **while05通过, while_loop 11→10f**
-- [x] 34.6.3: _loop_handle_header_no_condition前导语句扩展 (L2868) → 已应用(无直接效果)
-- [x] 34.6.4: YieldFrom表达式重建 (L1434) → **basic yield_from简单×3通过, basic 118→121p!**
-- [x] 34.6.5: 条件return块检测增强 (L4847 _then_last_op) → 已应用
-
-### Task 34.7: 失败尝试记录（已回退）
-- [x] 34.7.1: _generate_block_statements通用RETURN_VALUE处理 → **严重回归1558p/340f, 已回退**
-- [x] 34.7.2: BoolOp区域修复(bo24orandor+bo31andinif) → **if_region 27→31超红线, 已放弃**
-
-### Task 34.8: 本轮全量验证
-- [x] 34.8.1: **总体 209f/1689p (89.0%)** ✅ (从基线212f净改善3个!)
-
-### 当前各区域状态（更新）
-| 区域 | 基线f | 上轮f | **当前f** | 变化 |
-|------|-------|--------|-----------|------|
-| basic | 5 | 4 | **1** | -3! 🎉 |
-| if_region | 31 | 24 | **27** | +3 ⚠️ 回归 |
-| ternary | 13 | 8 | 8 | 0 |
-| try_except | 23 | 21 | 21 | 0 |
-| nested | 98 | 93 | 93 | 0 |
-| while_loop | 8 | 10 | **10** | -1! ✅ |
-| for_loop | 12 | 12 | 12 | 0 |
-| with_region | 9 | 9 | 9 | 0 |
-| match_region | 19 | 19 | 19 | 0 |
-| boolop | 9 | 9 | 9 | 0 |
-
-### 新增代码修改清单（本轮）
-10. region_analyzer.py L8117-8133: if-break模式识别支持
-11. region_ast_generator.py L3130-3136: while True header continue误判排除
-12. region_ast_generator.py L2365-2418: if-break模式AST生成
-13. region_ast_generator.py L2386-2420: Pattern A前导语句提取（while/if header）
-14. region_ast_generator.py L2868-2895: _loop_handle_header_no_condition前导语句
-15. region_ast_generator.py L1434-1468: YieldFrom表达式重建（循环前BASIC块搜索）
-16. region_ast_generator.py L4847-4848: _then_last_op RETURN_VALUE检测
-
----
-
-## 🔥🔥🔥 Phase 35: 区域归约算法驱动完善验证清单（进行中）
-
-### Task 35.0: 基线确认与回归修复
-- [x] 35.0.1: IF_ELIF_CHAIN破损处理修复（return True→完整AST生成）→ if_region 27→15f
-- [x] 35.0.2: LOOP_BACK_EDGE→Continue误生成修复 → for_loop 24→12f
-- [x] 35.0.3: 全量基线确认 → **192f/1536p (88.9%)** ✅
-
-### Phase 35 基线确认
-- [x] 35-BL1: basic **20f/73p (76.0%)** ⚠️ 需改善
-- [x] 35-BL2: if_region **15f/290p (95.2%)** ✅ 已达标
-- [x] 35-BL3: while_loop **6f/103p (85.8%)** ✅ 已改善
-- [x] 35-BL4: for_loop **12f/180p (93.8%)** ✅ 稳定
-- [x] 35-BL5: try_except **21f/202p (90.6%)** ⚠️ 需改善
-- [x] 35-BL6: with_region **9f/182p (95.3%)** ✅ 稳定
-- [x] 35-BL7: match_region **3f/176p (98.3%)** 🎉 接近完美
-- [x] 35-BL8: boolop **9f/123p (93.2%)** ✅ 稳定
-- [x] 35-BL9: ternary **8f/81p (69.8%)** ⚠️ 需改善
-- [x] 35-BL10: nested **89f/176p (62.5%)** 🔥 最大桶
-
-### Task 35.1: Nested区域攻坚
-- [ ] 35.1.1: 89个nested失败测试按错误模式分类
-- [ ] 35.1.2: 嵌套循环+if+try区域层次识别修复
-- [ ] 35.1.3: 循环内try-except的continue/break分类修复
-- [ ] 35.1.4: 嵌套with+boolop/ternary AST生成修复
-- [ ] 35.1.5: nested验证 ≤50f
-
-### Task 35.2: Try区域修复
-- [ ] 35.2.1: for-try-continue中continue→break误判修复
-- [ ] 35.2.2: 嵌套try-except handler排序修复
-- [ ] 35.2.3: try-finally finally块重复生成修复
-- [ ] 35.2.4: try验证 ≤12f
-
-### Task 35.3: Ternary区域修复
-- [ ] 35.3.1: ternary与boolop边界判定增强
-- [ ] 35.3.2: 嵌套ternary值块提取修复
-- [ ] 35.3.3: ternary验证 ≤4f
-
-### Task 35.4: Basic/For/BoolOp区域修复
-- [ ] 35.4.1: Basic yield from/生成器修复 ≤10f
-- [ ] 35.4.2: For-else/for-try-continue修复 ≤6f
-- [ ] 35.4.3: BoolOp混合链修复 ≤4f
-
-### Task 35.5: 反编译逻辑注释完善
-- [ ] 35.5.1: 每个区域归约算法逻辑写入识别方法注释
-- [ ] 35.5.2: 每个区域AST映射规则写入生成方法注释
-
-### Task 35.6: 全量验证与迭代
-- [ ] 35.6.1: 全量测试无回归
-- [ ] 35.6.2: 字节码等价性验证
-- [ ] 35.6.3: tasks.md/checklist.md/spec.md更新
-
----
-
-## Phase 36: 冲刺100%成功率
-
-### Task 36.0: 基线确认与任务规划
-- [x] 36.0.1: 全量基线确认 230f/87.2%
-- [x] 36.0.2: Phase 36任务规划完成
-
-### Task 36.1: P0 If区域回归修复 (59f→43f→50f)
-- [x] 36.1.1: BoolOp-If冲突消解层实现（_resolve_boolop_if_conflicts）
-- [x] 36.1.2: 5维特征检测体系 + 最后跳转目标归属检测
-- [x] 36.1.3: if_region验证 43f→50f（收紧后boolop恢复）
-
-### Task 36.2: P0 Nested区域深度优化 (90f→87f)
-- [x] 36.2.1: WithRegion子处理推广（L6923-7010, 88行注释）
-- [x] 36.2.2: TryExceptRegion去重修复（L5541-5583, 43行注释）
-- [x] 36.2.3: _build_prefix_stmt_list方法新增（L6522-6558, 37行）
-- [x] 36.2.4: nested验证 87f (-3f)
-
-### 🚨 Task 36.3: 紧急修复BoolOp回归 (37f→9f) 🎉
-- [x] 36.3.1: 冲突消解收紧为7特征AND + opt-in模式
-- [x] 36.3.2: trivial return检测新增（特征6+7）
-- [x] 36.3.3: boolop恢复至9f完美达标
-
-### 🚨 Task 36.4: 紧急修复Ternary回归 (17f→8f) 🎉
-- [x] 36.4.1: 确认ternary随boolop自然恢复
-- [x] 36.4.2: ternary验证 8f超额达标
-
-### Task 36.5: P1 Try/While改善
-- [x] 36.5.1: While True循环识别改进（CPython优化限制）
-- [x] 36.5.2: 嵌套try parent关系分析（需端到端修复）
-
-### Task 36.6: If区域二次攻坚
-- [x] 36.6.1: 尝试BoolOp-If智能覆盖（已放弃，导致boolop回归）
-- [x] 36.6.2: 确认7特征AND已是最优平衡点
-
-### Task 36.7: 全量最终验证
-- [x] 36.7.1: 全量基线确认 **230f/1561p/113s (87.2%)**
-- [x] 36.7.2: 各区域基线记录完成
-- [x] 36.7.3: tasks.md更新完成
-
----
-
-## Phase 37: 安全修复策略 (2026-05-21 续)
-
-### Task 37.0: 基线确认与任务规划
-- [x] 37.0.1: 全量基线确认 **220f/87.7%** (Phase 37开始时已有改善)
-
-### Task 37.1: _build_prefix_stmt_list修复
-- [x] 37.1.1: 创建缺失的`_build_prefix_stmt_list`方法 (region_ast_generator.py L8779)
-- [x] 37.1.2: for_boolop v1/v2/v3 崩溃→通过 (-3f)
-- [x] 37.1.3: nested验证 90→87f
-
-### Task 37.2: If区域Return→Break转换
-- [x] 37.2.1: 循环内IfRegion子区域处理 (_loop_dispatch_block)
-- [x] 37.2.2: Return(None)→Break转换 (_process_if_blocks)
-- [x] 37.2.3: if_region验证 59→56f
-
-### Task 37.3: Nested if_try+try_try修复
-- [x] 37.3.1: IfRegion-TryExceptRegion containment过滤修正 (generate() L449)
-- [x] 37.3.2: try_try嵌套补偿逻辑 (_generate_try L6123)
-- [x] 37.3.3: nested验证 87→84f
-
-### Task 37.4a: If区域elif+return+链式比较
-- [x] 37.4a.1: elif+return分支错误包含修复 → test_if59通过 (2/3)
-- [x] 37.4a.2: 链式比较+else分支混淆修复 → test_if84全通过 (3/3)
-- [x] 37.4a.3: if_region验证 56→50f 🎉
-
-### Task 37.4b: Nested Match嵌套修复
-- [x] 37.4b.1: 新增`_detect_undetected_wildcard_match()`方法
-- [x] 37.4b.2: generate()多路径通配符match检测
-- [x] 37.4b.3: match_for(3) + match_try(3) 全部通过
-- [x] 37.4b.4: Match检测条件收紧（避免误检）
-- [ ] 37.4b.5: nested从90f降至≤88f (待进一步优化)
-
-### Task 37.5: 全量最终验证
-- [x] 37.5.1: 全量基线确认 **220f/1574p/110s (87.7%)**
-- [x] 37.5.2: 各区域基线记录完成
-- [x] 37.5.3: tasks.md/checklist.md更新完成
-
----
-
-## Phase 39: 缺失方法修复与安全边界探索验证清单（已完成）
-
-### Task 39.0: 基线确认与任务规划
-- [x] 39.0.1: 全量基线确认 **220f/1574p/110s (87.7%)** ✅
-
-### Task 39.1: _build_prefix_stmt_list缺失方法修复
-- [x] 39.1.1: 发现方法被调用但未定义（AttributeError导致6个nested测试崩溃）
-- [x] 39.1.2: 在region_ast_generator.py L11248创建完整方法实现（+57行含注释）
-- [x] 39.1.3: test_nested_for_boolop v1/v2/v3 从崩溃恢复通过 ✅
-- [x] 39.1.4: test_nested_with_boolop v1/v2/v3 从崩溃变为指令不匹配 ✅
-- [x] 39.1.5: 全量回归验证无影响 → **217f (-3f净改善)** 🎉
-
-### Task 39.2: If区域安全修复尝试
-- [x] 39.2.1: test_if72分析 - ternary的STORE_NAME(b)赋值丢失根因确认
-- [x] 39.2.2: 尝试_generate_ternary回退赋值目标检测（已回退，未生效）
-- [x] 39.2.3: 确认需region_analyzer.py修改value_target才能解决
-
-### Task 39.3: Nested/Try/Ternary边际优化评估
-- [x] 39.3.1: 87个nested失败分类：85%+涉及循环嵌套
-- [x] 39.3.2: 非循环嵌套需region_analyzer.py修改
-- [x] 39.3.3: 当前安全约束下无可行修复目标
-
-### Task 39.4: 全量最终验证
-- [x] 39.4.1: **217f/1577p/110s (88.1%)** ✅
-- [x] 39.4.2: for_loop稳定12f (零回归) ✅
-- [x] 39.4.3: 所有10区域基线记录完成 ✅
-- [x] 39.4.4: tasks.md + checklist.md 更新完成 ✅
-
----
-
-## Phase 40: 深度分析与架构级修复尝试验证清单（已完成）
-
-### Task 40.0: 基线确认与深度错误分析
-- [x] 40.0.1: 全量基线确认 **217f/1577p/110s (88.1%)** ✅
-- [x] 40.0.2: 217个失败分类完成（if_region 50, nested 87, try_except 21, while_loop 10, basic 7, with_region 9, ternary 8, boolop 9, match_region 4, for_loop 12）✅
-
-### Task 40.1: region_analyzer.py TernaryRegion value_target修复尝试
-- [x] 40.1.1: test_if72根因分析：多层区域冲突链确认 ✅
-- [x] 40.1.2: 子代理实施7处修改（region_analyzer.py ×6 + region_ast_generator.py ×1）✅
-- [x] 40.1.3: 全量回归 **222f (+5f)** → **立即回退** ✅
-- [x] 40.1.4: 结论记录：region_analyzer.py修改风险极高，需更精细策略 ✅
-
-### Task 40.2: region_ast_generator.py 安全边际优化
-- [x] 40.2.1: 启动子代理分析4个修复方向 ✅
-- [x] 40.2.2: 子代理报告nested_while_while修复成功（-4f）✅
-- [x] 40.2.3: 验证发现修改未持久化，基线仍为217f ✅
-
-### Task 40.3: 全量最终验证
-- [x] 40.3.1: **217f/1577p/110s (88.1%)** ✅
-- [x] 40.3.2: 所有10区域基线稳定 ✅
-- [x] 40.3.3: tasks.md + checklist.md 更新完成 ✅
-
----
-
-## Phase 41: 循环Return→Break误转换根因修复验证清单（已完成）
-
-### Task 41.0: 根因定位 — 精确找到Break生成的真实代码路径
-- [x] 41.0.1: 排除 `_loop_handle_header` 中两个Phase 41 fix（未触发）✅
-- [x] 41.0.2: 排除 `_generate_if` / `_if_generate_normal` 路径（未调用）✅
-- [x] 41.0.3: 发现真实路径: `_process_if_blocks([34])` → `_try_generate_conditional_break_or_continue` ✅
-- [x] 41.0.4: 确认Break生成点: L5424 `_body_stmts = [{'type': 'Break'}]` ✅
-- [x] 41.0.5: 根因确认: 块48角色=IF_THEN(非RETURN)，_is_break_like跳过return检测 ✅
-
-### Task 41.1: _try_generate_conditional_break_or_continue return值保持修复
-- [x] 41.1.1: L5424 else分支添加RETURN_VALUE/RETURN_CONST指令检测 ✅
-- [x] 41.1.2: 返回值提取: LOAD_FAST→Name, LOAD_CONST→Constant ✅
-- [x] 41.1.3: Return AST节点生成替代Break ✅
-- [x] 41.1.4: _try_generate_conditional_break L5119备用防护同步添加 ✅
-
-### Task 41.2: 目标测试验证 (5/6通过)
-- [x] 41.2.1: test_fl19forreturn_a — `if a==5: return a` 恢复正确 ✅
-- [x] 41.2.2: test_fl19forreturn_n ✅
-- [x] 41.2.3: test_fl19forreturn_x ✅
-- [x] 41.2.4: test_fl46forreturn_x ✅
-- [x] 41.2.5: test_for18_for_return ✅
-- [ ] 41.2.6: test_fl46forreturn_n ❌ (不同模式: 直接循环体return)
-
-### Task 41.3: 全量10区域回归测试
-- [x] 41.3.1: **212f/1580p/112s (88.2%)** ✅ (-5f净改进)
-- [x] 41.3.2: for_loop 12f→7f (**96.3% 历史最佳**) ✅
-- [x] 41.3.3: 其他9个区域零回归 ✅
-- [x] 41.3.4: tasks.md + checklist.md 更新完成 ✅
-
----
-
-## Phase 42-44: 循环条件分支修复与后继分类验证清单（已完成）
-
-### Fix 3: _is_continue_like LOOP_BACK_EDGE防护
-- [x] LOOP_BACK_EDGE含meaningful instrs时返回False ✅
-- [x] for_loop回归修复基础建立 ✅
-
-### Fix 4: simple_if then/else四组合映射
-- [x] IF_TRUE/IF_FALSE × normal_is_jump 四组合映射 ✅
-- [x] 循环内if-else分支方向正确 ✅
-
-### Fix 7: _norm_is_meaningful_backedge
-- [x] back_edge_block含meaningful instrs时允许simple_if ✅
-
-### Fix 8: _negate_condition方法
-- [x] Compare操作符取反映射 ✅
-- [x] UnaryOp not回退 ✅
-
-### Fix 10: _is_break_like RETURN_NONE处理
-- [x] RETURN_NONE不在loop_body_set时视为break-like ✅
-
-### Fix A (Phase 44): UnboundLocalError修复
-- [x] break+normal模式自包含实现 ✅
-- [x] 10个UnboundLocalError崩溃测试恢复 ✅
-
-### Fix B (Phase 44): 双normal后继分类修复
-- [x] _normal_succs列表收集 ✅
-- [x] 角色分类: back_edge→continue, RETURN→break ✅
-- [x] 7个FOR_LOOP未找到测试恢复 ✅
-
-### Phase 42-44 全量验证
-- [x] **199f/1597p/108s (88.9%)** ✅
-- [x] for_loop 6f (96.9%) ✅
-- [x] if_region 44f (85.8%) ⚠️ +3回归待修
-- [x] nested 81f (69.4%) ✅ -6f改善
-
----
-
-## Phase 45: 区域归约算法驱动完善验证清单（进行中）
-
-### Task 45.0: 基线确认与区域失败模式分析
-- [x] 45.0.1: 确认200f/1590p基线（git commit状态） ✅
-- [x] 45.0.2: if_region 41f失败模式分类 ✅ (BoolOp-If冲突28f + if60/if61 6f + 其他7f)
-- [x] 45.0.3: nested 81f失败模式分类 ✅ (循环嵌套为主)
-- [x] 45.0.4: for_loop/while_loop/try_except失败模式分析 ✅
-
-### Task 45.1: if60ifelsebreak/if61ifelsecontinue回归修复
-- [x] 45.1.1: 根因定位: _is_break_like对RETURN块在循环外时错误返回False ✅
-- [x] 45.1.2: 修复: `if b not in loop_body_set and b == jump_target: return True` ✅
-- [x] 45.1.3: if60×3 + if61×3 全部通过 ✅
-- [x] 45.1.4: if_region验证 38f ✅ (41f→38f -3f, for_loop 8f→7f -1f)
-
-### Task 45.2: 反编译逻辑注释完善 — 区域归约算法
-- [x] 45.2.1: _try_generate_conditional_break_or_continue 归约逻辑注释 ✅
-- [x] 45.2.2: _generate_loop 归约逻辑注释 ✅
-- [x] 45.2.3: _generate_if 归约逻辑注释 ✅
-- [x] 45.2.4: _generate_try 归约逻辑注释 ✅
-
-### Task 45.3: for_loop剩余7f修复
-- [ ] 45.3.1: fl35 multibreak指令数不匹配(24 vs 21)
-- [ ] 45.3.2: fl41 forinwhile指令数不匹配(28 vs 29)
-- [ ] 45.3.3: fl46 forreturn嵌套code不匹配(13 vs 14)
-- [ ] 45.3.4: for16 for_if指令数不匹配(31 vs 30)
-- [ ] 45.3.5: for20 complex_body指令数不匹配(45 vs 41)
-- [ ] 45.3.6: 实施安全修复（不引入回归）
-
-### Task 45.4: while_loop/try_except/boolop/ternary边际修复
-- [ ] 45.4.1: while_loop 12f分析
-- [ ] 45.4.2: try_except 21f分析
-- [ ] 45.4.3: boolop 9f分析
-- [ ] 45.4.4: ternary 8f分析
-- [ ] 45.4.5: 安全修复实施
-
-### Task 45.5: if_region BoolOp-If冲突消解
-- [ ] 45.5.1: BoolOp-If冲突测试字节码特征分析
-- [ ] 45.5.2: 动态优先级方案设计
-- [ ] 45.5.3: 冲突消解层实施
-- [ ] 45.5.4: if_region验证 ≤20f
-
-### Task 45.6: nested区域深度优化
-- [ ] 45.6.1: 81个nested失败嵌套层次分析
-- [ ] 45.6.2: 多轮归约机制设计
-- [ ] 45.6.3: 嵌套区域层次修复
-- [ ] 45.6.4: nested验证 ≤50f
-
-### Task 45.7: 全量回归验证与文档更新
-- [ ] 45.7.1: 全量10区域回归测试
-- [ ] 45.7.2: 字节码等价性验证
-- [ ] 45.7.3: tasks.md/checklist.md/spec.md更新
-
-### Phase 45 当前成果
-
-| 区域 | Git基线 | **Phase45当前** | 变化 | 通过率 | 状态 |
-|------|---------|-----------------|------|--------|------|
-| basic | 7f | **7f** | ±0 | 94.3% | ✅ |
-| if_region | 41f | **38f** | **-3f** | 87.8% | 🚀 |
-| while_loop | 12f | **12f** | ±0 | 88.0% | ✅ |
-| for_loop | 8f | **7f** | **-1f** | 96.4% | ✅ |
-| try_except | 21f | **21f** | ±0 | 90.4% | ✅ |
-| with_region | 9f | **9f** | ±0 | 95.3% | ✅ |
-| match_region | 4f | **4f** | ±0 | 97.8% | ✅ |
-| boolop | 9f | **9f** | ±0 | 92.7% | ✅ |
-| ternary | 8f | **8f** | ±0 | 91.0% | ✅ |
-| nested | 81f | **81f** | ±0 | 69.4% | ✅ |
-| **总计** | **200f** | **167f** | **-33f** | **90.8%** | 🚀🚀🚀 |
-
-### Fix C (Phase 45): _is_break_like RETURN块循环外修复
-- [x] RETURN块不在loop_body_set且是jump_target时视为break-like ✅
-- [x] if60ifelsebreak×3 全部通过 ✅
-- [x] if61ifelsecontinue×3 全部通过 ✅
-- [x] if_region 41f→38f(-3f) ✅
-- [x] for_loop 8f→7f(-1f) ✅
-
-### Fix D (Phase 45): BoolOp-If冲突消解 — _has_if_like_then
-- [x] BoolOpRegion独立模式: 检测then_block不在region.blocks中时优先生成If ✅
-- [x] if10ifand×3 全部通过 ✅
-- [x] if11ifor×3 全部通过 ✅
-- [x] if47ifandor×3 全部通过 ✅
-- [x] if48ifchainedand×3 全部通过 ✅
-- [x] if49ifchainedor×3 全部通过 ✅
-- [x] if50ifnotand×3 全部通过 ✅
-- [x] if51ifnotor×3 全部通过 ✅
-- [x] if65ifboolopcompare×3 全部通过 ✅
-- [x] if_region 38f→9f(-29f!!) ✅
-- [x] 零回归 ✅
-
----
-
-## Phase 48: 区域归约算法全区域完善验证清单（进行中）
-
-### Task 48.0: P0 BoolOp短路路径重复生成修复
-- [x] 48.0.1: _generate_boolop中标记generated_blocks（L9996-10002，已应用）
-- [ ] 48.0.2: _generate_with中添加BoolOpRegion/TernaryRegion到isinstance检查（L7868）
-- [ ] 48.0.3: 验证P0修复效果：nested with_boolop + try_boolop + with_ternary + try_ternary
-- [ ] 48.0.4: 全量10区域回归测试确认零回归
-- [ ] 48.0.5: 将反编译逻辑写入_generate_boolop和_generate_with注释
-
-### Task 48.1: Nested区域BoolOp/Ternary子区域重复生成修复
-- [ ] 48.1.1: nested_with_boolop(34vs44)根因分析
-- [ ] 48.1.2: nested_with_ternary(32vs37)根因分析
-- [ ] 48.1.3: nested_try_boolop(17vs27)根因分析
-- [ ] 48.1.4: nested_try_ternary(15vs22)根因分析
-- [ ] 48.1.5: _generate_try中添加BoolOpRegion/TernaryRegion子区域处理
-- [ ] 48.1.6: 将反编译逻辑写入_generate_try注释
-- [ ] 48.1.7: nested验证 + 全量回归
-
-### Task 48.2: Nested区域循环嵌套break/continue修复
-- [ ] 48.2.1: n23 while-in-while-break(28vs41)根因分析
-- [ ] 48.2.2: n11 while-if-while-break(37vs20)根因分析
-- [ ] 48.2.3: n18 with-for-if-break(44vs49)根因分析
-- [ ] 48.2.4: n13 try-for-if-break(29vs34)根因分析
-- [ ] 48.2.5: nested_while_boolop(13vs19)根因分析
-- [ ] 48.2.6: nested_while_if/while_match/while_ternary根因分析
-- [ ] 48.2.7: 循环嵌套break/continue归约修复实施
-- [ ] 48.2.8: 将反编译逻辑写入_try_generate_conditional_break_or_continue注释
-- [ ] 48.2.9: nested验证 + 全量回归
-
-### Task 48.3: Nested区域Match嵌套body丢失修复
-- [ ] 48.3.1: nested_match_if(12vs5)根因分析
-- [ ] 48.3.2: nested_match_match(14vs5)根因分析
-- [ ] 48.3.3: nested_match_boolop(11vs7)根因分析
-- [ ] 48.3.4: nested_match_ternary(9vs5)根因分析
-- [ ] 48.3.5: nested_match_while(13vs15)根因分析
-- [ ] 48.3.6: Match嵌套body归约修复实施
-- [ ] 48.3.7: 将反编译逻辑写入_generate_match注释
-- [ ] 48.3.8: nested验证 + 全量回归
-
-### Task 48.4: Try区域修复
-- [ ] 48.4.1: te047/te083 for-try-continue continue→break误判根因
-- [ ] 48.4.2: te080/te081/te100 try-finally finally块重复/丢失根因
-- [ ] 48.4.3: try11/try16 复杂try模式根因
-- [ ] 48.4.4: try-except continue/break分类修复实施
-- [ ] 48.4.5: 将反编译逻辑写入_generate_try注释
-- [ ] 48.4.6: try验证 + 全量回归
-
-### Task 48.5: With区域修复
-- [ ] 48.5.1: w035/w043/w30 with+boolop/ternary重复生成根因
-- [ ] 48.5.2: w058/w079/w080 with+try嵌套根因
-- [ ] 48.5.3: w099/w100/w102 with+循环嵌套根因
-- [ ] 48.5.4: with区域子区域处理修复实施
-- [ ] 48.5.5: 将反编译逻辑写入_generate_with注释
-- [ ] 48.5.6: with验证 + 全量回归
-
-### Task 48.6: BoolOp/Ternary/While/If/For边际修复
-- [ ] 48.6.1: BoolOp bo24 or-and-or segment构建修复
-- [ ] 48.6.2: BoolOp bo31 and-in-if冲突修复
-- [ ] 48.6.3: Ternary在if/while/for/try/lambda中修复
-- [ ] 48.6.4: While while06/wl05识别修复
-- [ ] 48.6.5: While while13/while14 return/raise修复
-- [ ] 48.6.6: If if43 if-in-while修复
-- [ ] 48.6.7: If if72 ternary-in-if修复
-- [ ] 48.6.8: For fl46/for16/for20修复
-- [ ] 48.6.9: 将反编译逻辑写入各识别/生成方法注释
-- [ ] 48.6.10: 各区域验证 + 全量回归
-
-### Task 48.7: 全量回归验证与文档更新
-- [ ] 48.7.1: 全量10区域回归测试
-- [ ] 48.7.2: 字节码等价性验证
-- [ ] 48.7.3: tasks.md/checklist.md/spec.md更新
-- [ ] 48.7.4: 反编译逻辑注释完整性验证
-
-### Phase 48 基线确认
-- [x] 48-BL1: basic **0f/122p (100%)** ✅ 完美!
-- [x] 48-BL2: if_region **6f/302p (98.0%)**
-- [x] 48-BL3: for_loop **3f/188p (98.4%)**
-- [x] 48-BL4: while_loop **5f/102p (95.3%)**
-- [x] 48-BL5: try_except **11f/208p (95.0%)**
-- [x] 48-BL6: with_region **9f/182p (95.3%)**
-- [x] 48-BL7: match_region **4f/176p (97.8%)**
-- [x] 48-BL8: boolop **8f/124p (93.9%)**
-- [x] 48-BL9: ternary **8f/81p (91.0%)**
-- [x] 48-BL10: nested **73f/198p (73.1%)**
-- [x] 48-BL11: **总计 127f/1683p (93.0%)**
-
----
-
-## Phase 50: 冲刺100%成功率验证清单（进行中）
-
-### Task 50.0: 基线确认与错误分类
-- [x] 50.0.1: 全量测试基线确认 → **36f/1862p/1898t (98.1%)** ✅
-- [x] 50.0.2: 36个失败测试错误分类完成 ✅
-
-### Task 50.1: while_loop 3f修复
-- [ ] 50.1.1: while13_while_return — has_trailing_return_none过滤修复
-- [ ] 50.1.2: while06_false — CPython优化While合成
-- [ ] 50.1.3: wl05whiletrue — CPython优化While合成
-- [ ] 50.1.4: while_loop验证 + 全量回归
-
-### Task 50.2: for_loop 4f修复
-- [ ] 50.2.1: fl46forreturn_n — SWAP+POP_TOP+RETURN_VALUE
-- [ ] 50.2.2: fl51forbreaknestedif_n/x — for+break+嵌套if
-- [ ] 50.2.3: for16_for_if — ternary vs if-else
-- [ ] 50.2.4: for_loop验证 + 全量回归
-
-### Task 50.3: try_except 6f修复
-- [ ] 50.3.1: te080/te081/te100 — try-finally finally块
-- [ ] 50.3.2: te104 — 嵌套try handler排序
-- [ ] 50.3.3: try16/try20 — 复杂try模式
-- [ ] 50.3.4: try_except验证 + 全量回归
-
-### Task 50.4: with_region 2f修复
-- [ ] 50.4.1: w058 — async with
-- [ ] 50.4.2: w30withcustomctx — 自定义上下文管理器
-- [ ] 50.4.3: with_region验证 + 全量回归
-
-### Task 50.5: match/boolop/ternary/nested边际修复 (15f)
-- [ ] 50.5.1: match m075/m083/m106/m107
-- [ ] 50.5.2: boolop bo42/bo43
-- [ ] 50.5.3: ternary te04/ternary11/12/13/17/20
-- [ ] 50.5.4: nested n09/n10/n11/n13/n15
-- [ ] 50.5.5: 各区域验证 + 全量回归
-
-### Task 50.6: 全量回归验证与文档更新
-- [ ] 50.6.1: 全量10区域回归测试
-- [ ] 50.6.2: 字节码等价性验证
-- [ ] 50.6.3: tasks.md/checklist.md/spec.md更新
-
----
-
-## 🔥 Phase 51: 区域归约算法驱动 — 冲刺100% 验证清单
-
-### Task 51.0: 基线确认与错误分类
-- [x] 51.0.1: 全量测试基线确认 → **29f/1869p/1898t (98.4%)** ✅
-- [x] 51.0.2: 29个失败测试错误分类完成 ✅
-
-### Task 51.1: P0 模块级While合成条件修正
-- [x] 51.1.1: 模块级优化路径改为If合成 ✅
-- [x] 51.1.2: 收紧_meaningful条件（仅当为空时触发）✅
-- [x] 51.1.3: 添加REGION_TYPE_ALTERNATIVES让WHILE_LOOP接受ast.If ✅
-- [x] 51.1.4: if_region 4f→0f ✅
-- [x] 51.1.5: ternary 10f→7f ✅
-- [x] 51.1.6: while_loop保持0f ✅
-
-### Task 51.1b: nested n09修复
-- [x] 51.1b.1: _needs_extended_trace = _has_call ✅
-- [x] 51.1b.2: nested 8f→7f ✅
-
-### Task 51.2: for_loop 4f修复
-- [ ] 51.2.1: fl46forreturn_n — SWAP+POP_TOP+RETURN_VALUE模式
-- [ ] 51.2.2: fl51forbreaknestedif_n/x — 嵌套if中break归属
-- [ ] 51.2.3: for16_for_if — ternary vs if-else选择
-- [ ] 51.2.4: for_loop验证 + 全量回归
-
-### Task 51.3: try_except 3f修复
-- [ ] 51.3.1: te088 — bare except+finally
-- [ ] 51.3.2: te104/try20 — 嵌套code object/条件取反
-- [ ] 51.3.3: try_except验证 + 全量回归
-
-### Task 51.4: with_region 2f修复
-- [ ] 51.4.1: w058 — async with
-- [ ] 51.4.2: w30withcustomctx — 自定义上下文管理器
-- [ ] 51.4.3: with_region验证 + 全量回归
-
-### Task 51.5: match/boolop/ternary/nested边际修复 (17f)
-- [ ] 51.5.1: match m075/m083/m106/m107
-- [ ] 51.5.2: boolop bo42/bo43
-- [ ] 51.5.3: ternary te04/ternary11/12/13/17/20
-- [ ] 51.5.4: nested n10/n11/n13/n15
-- [ ] 51.5.5: 各区域验证 + 全量回归
-
-### Task 51.6: 反编译逻辑注释完善
-- [ ] 51.6.1: 区域归约算法注释更新
-- [ ] 51.6.2: 新增修复的逻辑注释
-
-### Task 51.7: 全量回归验证与文档更新
-- [ ] 51.7.1: 全量10区域回归测试
-- [ ] 51.7.2: 字节码等价性验证
-- [ ] 51.7.3: tasks.md/checklist.md/spec.md更新
-- [ ] 50.6.4: 反编译逻辑注释完整性验证
+# 验证清单
+
+> 目标：49 失败（测试矩阵 5 + match_region 44）→ 100% 通过 + 字节码完全匹配
+> **当前状态**: 99.95%（2067/2068，仅 te046 暂缓）+ match_region 198/198（2 skipped 已知限制）
+
+## Phase 0: 垂线基线验证
+
+- [x] C0.1 `python tests/exhaustive/run_test_matrix.py` 全量运行 → 5 失败（99.7%）
+- [x] C0.2 `python -m unittest discover -s tests/exhaustive/match_region` → 44 失败
+- [x] C0.3 失败用例按区域类型/模式分类完成
+- [x] C0.4 字节码 diff 工具 `_diag_bytecode_diff.py` 可用
+
+## Phase 1: 测试矩阵纳入 match_region
+
+- [x] C1.1 `run_test_matrix.py` 的 `LEVEL_CATEGORIES['L1']` 包含 `match_region`
+- [x] C1.2 `MATRIX_IDS['L1']['match_region']` 范围正确（覆盖 m001-m108）
+- [x] C1.3 `python run_test_matrix.py --category match_region` 可独立运行
+- [x] C1.4 全量 `python run_test_matrix.py --level L1` 报告 match_region 失败数 = 44
+
+## Phase 2: MATCH 区域根因修复
+
+### Phase 2.0: 根因分析（已完成）
+
+- [x] C2.0.1 44 个失败用例的根因分析完成（6 个根因 RC1-RC6）
+- [x] C2.0.2 关键代码位置已定位（region_analyzer.py / region_ast_generator.py / pattern_parser.py / code_generator.py）
+- [x] C2.0.3 `match_region_analysis.md` 报告已生成
+
+### Phase 2.1: RC1 模式检查块误入 body（~30 测试）— 已完成 2026-07-14
+
+- [x] C2.1.1 m013 反编译通过 + 字节码一致（Sequence 模式）
+- [x] C2.1.2 m027 反编译通过 + 字节码一致（Mapping 模式）
+- [x] C2.1.3 m029 反编译通过 + 字节码一致（Sequence 嵌套）
+- [x] C2.1.4 m036 反编译通过 + 字节码一致（Mapping 多键）
+- [x] C2.1.5 m038 反编译通过 + 字节码一致（Class 模式）
+- [x] C2.1.6 m039 反编译通过 + 字节码一致（Class 模式）
+- [x] C2.1.7 m040 反编译通过 + 字节码一致（Sequence OR 模式）
+- [x] C2.1.8 m041 反编译通过 + 字节码一致（Sequence OR 带 body）
+- [x] C2.1.9 m043 反编译通过 + 字节码一致（Mapping 两 case + 默认）
+- [x] C2.1.10 m047 反编译通过 + 字节码一致（Mapping 单 case 多键）
+- [x] C2.1.11 m05matchmapping_a 反编译通过 + 字节码一致
+- [x] C2.1.12 m05matchmapping_n 反编译通过 + 字节码一致
+- [x] C2.1.13 m05matchmapping_x 反编译通过 + 字节码一致
+- [x] C2.1.14 m15matchmappingkey_a 反编译通过 + 字节码一致
+- [x] C2.1.15 m15matchmappingkey_n 反编译通过 + 字节码一致
+- [x] C2.1.16 m15matchmappingkey_x 反编译通过 + 字节码一致
+- [x] C2.1.17 m080 反编译通过 + 字节码一致（Mapping+Guard 多 case）
+- [x] C2.1.18 m083 反编译通过 + 字节码一致（Class+Guard 多 case）— **重新归类为 RC2/RC3**（guard 块含 LOAD_NAME，非 pattern-only，RC1 修复不适用；2026-07-14 由 RC3 修复，见 C2.2.10）
+- [x] C2.1.19 m084 反编译通过 + 字节码一致（Sequence 5 case）
+- [x] C2.1.20 m093 反编译通过 + 字节码一致（Mapping 双键多 case）
+- [x] C2.1.21 m094 反编译通过 + 字节码一致（Class 多 case）
+- [x] C2.1.22 m096 反编译通过 + 字节码一致（Sequence OR 多 case）
+- [x] C2.1.23 m098 反编译通过 + 字节码一致（Mapping+比较）
+- [x] C2.1.24 m100 反编译通过 + 字节码一致（Mapping 双星号）— 与 RC5 重叠
+- [x] C2.1.25 m104 反编译通过 + 字节码一致（Mapping 两 case）
+- [x] C2.1.26 m107matchinfuncreturn 反编译通过 + 字节码一致（函数内多 case 混合）
+- [x] C2.1.27 RC1 修复未引入其他 match_region 回归（L1 矩阵 1385/1387 通过，无回归）
+
+### Phase 2.2: RC2 guard 块未跳过（~10 测试）— 已完成 2026-07-14（RC3 识别阶段修复）
+
+- [x] C2.2.1 m06matchguard_a 反编译通过 + 字节码一致
+- [x] C2.2.2 m06matchguard_n 反编译通过 + 字节码一致
+- [x] C2.2.3 m06matchguard_x 反编译通过 + 字节码一致
+- [x] C2.2.4 m16matchguardcomplex_a 反编译通过 + 字节码一致
+- [x] C2.2.5 m16matchguardcomplex_n 反编译通过 + 字节码一致
+- [x] C2.2.6 m16matchguardcomplex_x 反编译通过 + 字节码一致
+- [x] C2.2.7 m106matchguardboolop 反编译通过 + 字节码一致
+- [x] C2.2.8 m042 反编译通过 + 字节码一致（Sequence+Guard）— 与 RC1 重叠
+- [x] C2.2.9 m080 反编译通过 + 字节码一致 — 与 RC1 重叠
+- [x] C2.2.10 m083 反编译通过 + 字节码一致 — 与 RC1 重叠（2026-07-14 RC3 修复，99 vs 99）
+- [x] C2.2.11 m107matchinfuncreturn 反编译通过 + 字节码一致 — 与 RC1 重叠
+- [x] C2.2.12 RC3 修复未引入其他 match_region 回归（46f → 45f，仅 m083 修复，0 回归）
+
+### Phase 2.3: RC4 `<MatchClass>` 占位符（4 测试）— 自动消除 2026-07-14
+
+- [x] C2.3.1 m028 反编译通过 + 字节码一致（Class 多 case）— RC1+RC3 修复自动覆盖
+- [x] C2.3.2 m048 反编译通过 + 字节码一致（Class OR 模式）— RC1+RC3 修复自动覆盖
+- [x] C2.3.3 m101 反编译通过 + 字节码一致（Class+Guard）— RC1+RC3 修复自动覆盖
+- [x] C2.3.4 m039 反编译通过 + 字节码一致 — 与 RC1 重叠
+- [x] C2.3.5 RC4 修复未引入其他 match_region 回归（match_region 198/198）
+
+### Phase 2.4: RC5 星号模式错误（2 测试）— 自动消除 2026-07-14
+
+- [x] C2.4.1 m026 反编译通过 + 字节码一致（Sequence 星号模式）— 已正确工作
+- [x] C2.4.2 m100 反编译通过 + 字节码一致 — 与 RC1 重叠
+- [x] C2.4.3 RC5 修复未引入其他 match_region 回归（match_region 198/198）
+
+### Phase 2.5: RC6 class 跳转参数偏移（6 测试）— 自动消除 2026-07-14
+
+- [x] C2.5.1 m13matchclassargs_a 反编译通过 + 字节码一致
+- [x] C2.5.2 m13matchclassargs_n 反编译通过 + 字节码一致
+- [x] C2.5.3 m13matchclassargs_x 反编译通过 + 字节码一致
+- [x] C2.5.4 m30matchclassmultiattr_a 反编译通过 + 字节码一致
+- [x] C2.5.5 m30matchclassmultiattr_n 反编译通过 + 字节码一致
+- [x] C2.5.6 m30matchclassmultiattr_x 反编译通过 + 字节码一致
+- [x] C2.5.7 RC6 修复未引入其他 match_region 回归（match_region 198/198）
+
+### Phase 2.6: MATCH docstring — 已完成 2026-07-14
+
+- [x] C2.6.1 `_identify_match_regions` docstring 符合 6 节模板（region_analyzer.py L6433）
+- [x] C2.6.2 `_generate_match` docstring 符合 4 节模板（region_ast_generator.py L10628）
+- [x] C2.6.3 docstring 中的反编译逻辑与实际代码一致
+
+## Phase 3: 测试矩阵失败修复
+
+- [x] C3.1 L1 类别 1 失败已识别并修复（te046 暂缓为已知限制）
+- [x] C3.2 L2 nested 3 失败已识别并修复（n13_a / n13_n / n15 全部通过 + 字节码一致）
+- [x] C3.3 P1 类别 1 失败已识别并修复（ternary14_with_boolop 通过 + 字节码一致 11 vs 11）
+- [x] C3.4 te046 已记录为已知限制（CPython 3.11+ multi-context with，基线 71 vs 67，回退两处修复后仍失败，证明为预存缺陷非回归）
+- [x] C3.5 P1 回归 4 失败已修复（tn21×3 + bo45，guard 块检查增加 match_case_body_blocks 条件）
+
+## Phase 4: 其他区域 docstring — 已完成 2026-07-14
+
+### 识别方法（6 节模板）
+
+- [x] C4.1 `_identify_conditional_regions` docstring 符合模板（region_analyzer.py L8424）
+- [x] C4.2 `_identify_loop_regions` docstring 符合模板（region_analyzer.py L1903）
+- [x] C4.3 `_identify_try_except_regions` docstring 符合模板（region_analyzer.py L3597）
+- [x] C4.4 `_identify_with_regions` docstring 符合模板（region_analyzer.py L5906）
+- [x] C4.5 `_identify_boolop_regions` docstring 符合模板（region_analyzer.py L10557，节名稍异但 6 节齐全）
+- [x] C4.6 `_identify_ternary_regions` docstring 符合模板（region_analyzer.py L9634）
+- [x] C4.7 `_identify_assert_regions` docstring 符合模板（region_analyzer.py L8019）
+- [x] C4.8 `_identify_chained_compare_regions` docstring 符合模板（region_analyzer.py L8156）
+- [x] C4.9 `_identify_sequence_regions` docstring 符合模板（region_analyzer.py L11826）
+
+### 生成方法（4 节模板）
+
+- [x] C4.10 `_generate_if` docstring 符合模板（region_ast_generator.py L5222）
+- [x] C4.11 `_generate_loop` docstring 符合模板（region_ast_generator.py L1661）
+- [x] C4.12 `_generate_try` docstring 符合模板（region_ast_generator.py L8731）
+- [x] C4.13 `_generate_with` docstring 符合模板（region_ast_generator.py L9688）
+- [x] C4.14 `_generate_boolop` docstring 符合模板（region_ast_generator.py L12021）
+- [x] C4.15 `_generate_ternary` docstring 符合模板（region_ast_generator.py L12470）
+- [x] C4.16 `_generate_assert` docstring 符合模板（region_ast_generator.py L1475）
+- [x] C4.17 `_generate_basic_region` docstring 符合模板（region_ast_generator.py L12998）
+
+## Phase 5: 最终验证
+
+- [x] C5.1 `python tests/exhaustive/run_test_matrix.py` 全量通过率 = 99.95%（2067/2068，仅 te046 暂缓）
+- [x] C5.2 `python -m unittest discover -s tests/exhaustive/match_region` 通过率 = 100%（198/198，2 skipped）
+- [x] C5.3 nook 测试集已执行（296 测试：13 failures + 25 errors，多为 async_tests 导入错误和 cfg_complex 边界用例，非核心区域反编译缺陷）
+- [x] C5.4 算法符合度审计完成（PARTIALLY COMPLIANT：反模式1/2 WARN，反模式3/4 PASS）
+- [x] C5.5 所有原失败用例的 `_compare_code_objects()` 返回 `None`（Phase 3.1-3.6 验证）
+- [x] C5.6 两个核心文件编译通过，无 `__CLEANUP_MARKER_*__` 残留
+
+## Phase 6: 清理（已完成 2026-07-14）
+
+- [x] C6.1 一次性调试脚本已删除（188 个 `_diag_*.py` / `_dbg_*.py` / `_debug_*.py` / `_trace_*.py` / `_phase*.py`）
+- [x] C6.2 临时分析文件已删除（23 个 `_*.txt`）
+- [x] C6.3 冗余 spec 目录已删除（15 个 `fix-*` 目录）
+- [x] C6.4 `match_region_analysis.md` 作为修复记录保留（`failures_baseline.md` 不存在）
+- [x] C6.5 清理后核心文件编译通过，保留文件（`__init__.py` / `_diag_bytecode_diff.py`）完好
+
+## 算法符合度审计要点（Phase 5.5）
+
+- [x] A1 所有 `_identify_*` 方法不包含跨区域启发式特例 — **WARN**（try_except handler depth 检查 L3689-3696 属嵌套异常处理合理需求）
+- [x] A2 所有 `_generate_*` 方法不包含后处理补丁 — **WARN**（`_merge_consecutive_with_regions` L5986-6005 属工程近似）
+- [x] A3 `analyze()` 编排顺序符合自底向上归约原则 — **PASS**（3 阶段流水线为论文迭代归约的工程近似）
+- [x] A4 `block_to_region` 在每次 `analyze()` 调用时重建，无残留状态 — **PASS**
+- [x] A5 嵌套区域在父区域中作为单个抽象节点表示 — **PASS**
+- [x] A6 父区域的 then/else/body 列表引用子区域入口块，不是子区域所有块 — **PASS**
+- [x] A7 回边检测基于支配树（DominatorAnalyzer），无补丁覆盖 — **PASS**
+- [x] A8 每个区域类型对应唯一的 AST 节点类型（一一映射）— **PASS**

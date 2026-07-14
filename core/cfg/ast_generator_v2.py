@@ -1238,12 +1238,21 @@ class ExpressionReconstructor:
         
         # [关键修复] Python 3.11+ FORMAT_VALUE 指令
         elif opname == 'FORMAT_VALUE':
+            flags = instr.arg if instr.arg is not None else 0
+
+            # 栈顺序：[..., value, format_spec]（如果flags & 4）
+            # 必须先弹出 format_spec，再弹出 value
+            format_spec = None
+            if flags & 4 and len(self.stack) >= 2:
+                format_spec_node = self.stack.pop()
+                if format_spec_node.get('type') == 'Constant':
+                    format_spec = format_spec_node
+                elif isinstance(format_spec_node, dict):
+                    format_spec = format_spec_node
+
             if self.stack:
                 value = self.stack.pop()
-                flags = instr.arg if instr.arg is not None else 0
-                
-                # [关键修复] 处理格式标志，使用整数表示（与ASTFormattedValue一致）
-                # 0=无, 1=str, 2=repr, 3=ascii
+
                 conversion = 0
                 if flags & 1:  # FVC_STR
                     conversion = 1
@@ -1251,20 +1260,7 @@ class ExpressionReconstructor:
                     conversion = 2
                 elif flags & 3:  # FVC_ASCII
                     conversion = 3
-                
-                # [关键修复] 处理格式说明符（format spec）
-                # flags & 4 在Python 3.11+ 也表示有格式说明符
-                format_spec = None
-                if flags & 4 and self.stack:
-                    # 格式说明符在栈上
-                    format_spec_node = self.stack.pop()
-                    if format_spec_node.get('type') == 'Constant':
-                        format_spec = format_spec_node.get('value')
-                    elif isinstance(format_spec_node, dict):
-                        # [关键修复] 处理复杂的格式说明符（如函数调用）
-                        # 将表达式节点转换为字符串表示
-                        format_spec = format_spec_node
-                
+
                 formatted_value = {
                     'type': 'FormattedValue',
                     'value': value,
@@ -1272,9 +1268,7 @@ class ExpressionReconstructor:
                     'format_spec': format_spec,
                     'lineno': instr.starts_line
                 }
-                
-                # [关键修复] 只压入FormattedValue，不自动包装为JoinedStr
-                # BUILD_STRING指令会处理多个部分的组合
+
                 self.stack.append(formatted_value)
         
         # [关键修复] Python 3.11+ BUILD_STRING 指令
@@ -25985,3 +25979,18 @@ class ASTGeneratorV2:
             25: '^=',
         }
         return op_map.get(arg, '+')
+
+
+def generate_ast_v2(cfg: ControlFlowGraph, recursive: bool = True) -> Dict[str, Any]:
+    """
+    从CFG生成AST字典（V2版本）
+
+    Args:
+        cfg: 控制流图
+        recursive: 是否递归反编译嵌套函数
+
+    Returns:
+        AST字典，根节点类型为'Module'
+    """
+    generator = ASTGeneratorV2(cfg, recursive=recursive)
+    return generator.generate()

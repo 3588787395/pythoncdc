@@ -62,7 +62,7 @@ class TestMatrixRunner:
     EXHAUSTIVE_DIR = Path(__file__).parent
 
     LEVEL_CATEGORIES = {
-        'L1': ['basic', 'if_region', 'for_loop', 'while_loop', 'try_except', 'with_region', 'L1_basic'],
+        'L1': ['basic', 'if_region', 'for_loop', 'while_loop', 'try_except', 'with_region', 'match_region', 'L1_basic'],
         'L2': ['nested', 'L2_two_level_nested'],
         'L3': ['triple_nested', 'l3_three_level_nested', 'L3_deep_nested'],
         'P1': ['boolop', 'ternary', 'P1_expressions']
@@ -81,6 +81,7 @@ class TestMatrixRunner:
             'while_loop': list(range(1, 19)),
             'try_except': list(range(1, 14)),  # E01-E13
             'with_region': list(range(1, 7)),  # W01-W06
+            'match_region': list(range(1, 109)),  # M001-M108（含 _a/_n/_x 变体）
             'L1_basic': list(range(1, 53))
         },
         'L2': {
@@ -223,6 +224,19 @@ class TestMatrixRunner:
                 matrix_id = "BO03"
             elif 'bo04andor' in filename or 'bo24orandor' in filename:
                 matrix_id = "BO04"
+
+        elif category == 'match_region':
+            # match_region 文件命名不规则：test_m001.py / test_m05matchmapping_a.py
+            # 提取 m 后的数字作为 matrix_id（仅用于文档/统计，不影响测试运行）
+            if filename.startswith('test_m'):
+                digits = ''
+                for ch in filename[len('test_m'):]:
+                    if ch.isdigit():
+                        digits += ch
+                    else:
+                        break
+                if digits:
+                    matrix_id = f"M{int(digits):03d}"
 
         return level, matrix_id
 
@@ -474,7 +488,7 @@ class TestMatrixRunner:
                 level = self.CATEGORY_LEVEL_MAP.get(category, '??')
                 print(f"  [{level}] {category:20s}: {stats.total:4d} 测试 | "
                       f"{stats.passed:4d} 通过 ({cat_pass_rate:5.1f}%) | "
-                      f"{stats.failed:2d} 失败 | {stats.duration:6.2f}s")
+                      f"{stats.failed:2d} 失败 | {stats.total_duration:6.2f}s")
 
         print(f"\n{'=' * 80}")
         print("🎯 覆盖率评估:")
