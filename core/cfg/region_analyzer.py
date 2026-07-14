@@ -3401,8 +3401,8 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                                         current_loop: Optional['LoopRegion'] = None,
                                         visited: Optional[Set[BasicBlock]] = None,
                                         depth: int = 0) -> bool:
-        if depth > 3:
-            return False
+        # 无限嵌套支持：递归终止由 visited 集合（循环检测）+ CFG 有限性保证，
+        # 不使用硬编码深度上限。depth 参数仅用于 depth==0 的遍历范围控制。
         if visited is None:
             visited = set()
         if block in visited:
@@ -3451,8 +3451,8 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                                            current_loop: Optional['LoopRegion'] = None,
                                            visited: Optional[Set[BasicBlock]] = None,
                                            depth: int = 0) -> bool:
-        if depth > 3:
-            return False
+        # 无限嵌套支持：递归终止由 visited 集合（循环检测）+ CFG 有限性保证，
+        # 不使用硬编码深度上限。depth 参数仅用于 depth==0 的遍历范围控制。
         if visited is None:
             visited = set()
         if block in visited:
@@ -3624,7 +3624,7 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
         3. 边界条件（数学性质）
            - try 范围由异常表 [start, end) 唯一确定
            - handler 类型由入口首指令决定
-           - 嵌套关系由异常表 depth 字段刻画
+           - 嵌套关系由 (try_start, try_end) 区间包含关系刻画（结构包含判定，非 depth 数值比较）
            - 每个基本块经 block_to_region 唯一归属一个 TryExceptRegion
 
         4. 归约语义（与父区域的契约）
@@ -3679,8 +3679,10 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                         if not has_bare_except_entry:
                             inner_handler_indices.add(i)
                             continue
-            # 深度比较标记inner handler：
-            # - 非PUSH_EXC_INFO开头的handler（cleanup块）：总是进行深度比较
+            # 结构包含判定标记inner handler：
+            # - other 的 try 范围严格包含 info 的 try 范围（other 为外层，info 为内层）
+            #   等价于原 depth 比较：other.depth < info.depth 表示 other 更浅（外层）
+            # - 非PUSH_EXC_INFO开头的handler（cleanup块）：总是进行结构包含判定
             # - PUSH_EXC_INFO开头的handler（真正except handler）：
             #   仅当内层try_start < 外层handler_start时标记为inner
             #   （即内层try在外层try body中，由_generate_try_body处理）
@@ -3689,7 +3691,9 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
             for j, other in enumerate(handler_infos):
                 if i == j:
                     continue
-                if other.get('depth', 0) < info.get('depth', 0):
+                if (other['try_start'] <= info['try_start'] and
+                    info['try_end'] <= other['try_end'] and
+                    not (other['try_start'] == info['try_start'] and other['try_end'] == info['try_end'])):
                     if info['try_start'] >= other['handler_start']:
                         # 对于真正的except handler（PUSH_EXC_INFO开头），
                         # 只有当内层try在外层try body中时才标记为inner
@@ -3719,7 +3723,8 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                         # 且两者深度相同，则 except handler 可能是 finally 块内部的
                         # 独立 try-except 结构，而非与 finally 配对的 except handler
                         if other['try_start'] != info['try_start']:
-                            if other.get('depth', 0) != info.get('depth', 0):
+                            if ((other['try_start'] < info['try_start'] and info['try_end'] <= other['try_end']) or
+                                (info['try_start'] < other['try_start'] and other['try_end'] <= info['try_end'])):
                                 continue
                         paired_except_indices.add(j)
 
@@ -3731,7 +3736,6 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
             try_start = handler_info['try_start']
             try_end = handler_info['try_end']
             handler_start_offset = handler_info['handler_start']
-            current_depth = handler_info.get('depth', 0)
 
             handler_entry_block = self.cfg.get_block_by_offset(handler_start_offset)
             if handler_entry_block is None:
@@ -3761,8 +3765,9 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
             for other_info in handler_infos:
                 if other_info is handler_info:
                     continue
-                other_depth = other_info.get('depth', 0)
-                if other_depth >= current_depth:
+                # 结构包含判定：other 不严格包含 current（同层或更深）时排除其 handler 偏移
+                if not (other_info['try_start'] < handler_info['try_start'] and
+                        handler_info['try_end'] <= other_info['try_end']):
                     for key in ('handler_start', 'finally_handler_start'):
                         offset = other_info.get(key)
                         if offset:
@@ -5917,7 +5922,7 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
              Step 1: 扫描所有 BEFORE_WITH/BEFORE_ASYNC_WITH 指令定位 with 入口块。
              Step 2: 基于异常表 [start, end) 确定 body 偏移范围。
              Step 3: 收集 body 块、cleanup 块、exception 块，构建 WithRegion。
-             Step 4: _merge_consecutive_with_regions 合并连续 with（with A: ... with B: ...）。
+             Step 4: 识别阶段即合并连续 with（with A: ... with B: ...），由 _should_merge_with_regions 判定。
 
         2. 字节码模式（CPython 编译器行为）
            模式 A: 基本 with
@@ -5952,14 +5957,27 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
         6. 已知失败模式
            - 当前测试矩阵通过率: 100%（with_region 191/191），无已知失败模式
         """
+        # 识别阶段即合并连续 WithRegion（区域归约算法：一次正确，无后处理补丁）
+        # 合并条件由 _should_merge_with_regions 判定：相邻 entry + 同一异常表 depth
         regions = []
         before_with_blocks, depth_map = self._scan_before_with_instructions()
         for block, has_async, depth in before_with_blocks:
             region = self._build_single_with_region(block, has_async, depth, depth_map)
             if region:
-                regions.append(region)
-        merged_regions = self._merge_consecutive_with_regions(regions)
-        return merged_regions
+                if regions and self._should_merge_with_regions(regions[-1], region):
+                    prev = regions[-1]
+                    prev.blocks.update(region.blocks)
+                    prev.with_blocks.extend(region.with_blocks)
+                    prev.exception_blocks.extend(region.exception_blocks)
+                    prev.cleanup_blocks.extend(region.cleanup_blocks)
+                    prev.items.extend(region.items)
+                    prev.body_offset_end = region.body_offset_end
+                    for blk in region.blocks:
+                        if blk not in self.block_to_region:
+                            self.block_to_region[blk] = prev
+                else:
+                    regions.append(region)
+        return regions
 
     def _should_merge_with_regions(self, region1: WithRegion, region2: WithRegion) -> bool:
         if not isinstance(region1, WithRegion) or not isinstance(region2, WithRegion):
@@ -5982,32 +6000,6 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
         if entry1_depth != entry2_depth:
             return False
         return True
-
-    def _merge_consecutive_with_regions(self, regions: List[Region]) -> List[Region]:
-        if len(regions) <= 1:
-            return regions
-        merged = []
-        i = 0
-        while i < len(regions):
-            current = regions[i]
-            if i + 1 < len(regions):
-                next_region = regions[i + 1]
-                if self._should_merge_with_regions(current, next_region):
-                    current.blocks.update(next_region.blocks)
-                    current.with_blocks.extend(next_region.with_blocks)
-                    current.exception_blocks.extend(next_region.exception_blocks)
-                    current.cleanup_blocks.extend(next_region.cleanup_blocks)
-                    current.items.extend(next_region.items)
-                    current.body_offset_end = next_region.body_offset_end
-                    for block in next_region.blocks:
-                        if block not in self.block_to_region:
-                            self.block_to_region[block] = current
-                    i += 2
-                    merged.append(current)
-                    continue
-            merged.append(current)
-            i += 1
-        return merged
 
     def _has_intermediate_body_path(self, current, succ):
         for other_succ in current.successors:
