@@ -12244,28 +12244,36 @@ RegionType 枚举值: RegionType.ASSERT
             return False
         return True
 
-    def _is_equivalent_exit_block(self, block_a: BasicBlock, block_b: BasicBlock, depth: int = 0) -> bool:
+    def _is_equivalent_exit_block(self, block_a: BasicBlock, block_b: BasicBlock,
+                                   depth: int = 0,
+                                   visited: Optional[Set[Tuple[int, int]]] = None) -> bool:
+        # 无限嵌套支持：递归终止由 visited 集合（循环检测）+ CFG 有限性保证，
+        # 不使用硬编码深度上限。
         if block_a is block_b:
             return True
-        if depth > 5:
-            return False
+        if visited is None:
+            visited = set()
+        pair = (id(block_a), id(block_b))
+        if pair in visited:
+            return False  # 循环检测：已访问过的块对
+        visited.add(pair)
         a_is_only_jumps = self._is_only_jumps(block_a)
         b_is_only_jumps = self._is_only_jumps(block_b)
         if a_is_only_jumps and b_is_only_jumps:
             a_succs = list(block_a.successors)
             b_succs = list(block_b.successors)
             if len(a_succs) == 1 and len(b_succs) == 1:
-                return self._is_equivalent_exit_block(a_succs[0], b_succs[0], depth + 1)
+                return self._is_equivalent_exit_block(a_succs[0], b_succs[0], depth + 1, visited)
             return False
         if a_is_only_jumps and not b_is_only_jumps:
             a_succs = list(block_a.successors)
             if len(a_succs) == 1:
-                return self._is_equivalent_exit_block(a_succs[0], block_b, depth + 1)
+                return self._is_equivalent_exit_block(a_succs[0], block_b, depth + 1, visited)
             return False
         if b_is_only_jumps and not a_is_only_jumps:
             b_succs = list(block_b.successors)
             if len(b_succs) == 1:
-                return self._is_equivalent_exit_block(block_a, b_succs[0], depth + 1)
+                return self._is_equivalent_exit_block(block_a, b_succs[0], depth + 1, visited)
             return False
         if self._is_trivial_return_block(block_a) and self._is_trivial_return_block(block_b):
             return True
