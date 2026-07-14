@@ -226,6 +226,38 @@ class Region:
                 yield child
             yield from child.iter_descendants(region_types)
 
+    def annotate_structural_roles(self, analyzer) -> None:
+        """多态分发：标注区域结构化角色。子类按需覆写。"""
+        return None
+
+    def annotate_cond_recheck(self, analyzer) -> None:
+        """多态分发：循环条件复查 / 链式比较操作数计算。子类按需覆写。"""
+        return None
+
+    def get_score_merge_block(self) -> Optional['BasicBlock']:
+        """多态分发：评分时获取merge_block。仅BoolOp/If/Ternary覆写。"""
+        return None
+
+    def precompute_analysis(self, analyzer) -> None:
+        """多态分发：预计算区域分析数据。子类按需覆写。"""
+        return None
+
+    def is_block_entry(self, block) -> bool:
+        """多态分发：判断block是否为区域的入口/条件/header块。子类按需覆写。"""
+        return False
+
+    def contains_block(self, block) -> bool:
+        """多态分发：判断block是否属于区域的关键块（try_blocks/entry等）。子类按需覆写。"""
+        return False
+
+    def is_block_in_body(self, block) -> bool:
+        """多态分发：判断block是否在区域体内（用于if检测）。子类按需覆写。"""
+        return False
+
+    def else_block_conflict(self, block) -> bool:
+        """多态分发：判断block是否与区域的else放置冲突（True=冲突需return None）。子类按需覆写。"""
+        return True
+
 @dataclass
 class IfRegion(Region):
     condition_block: Optional[BasicBlock] = None
@@ -255,6 +287,25 @@ class IfRegion(Region):
             content.update(self.elif_final_else)
         return content
 
+    def annotate_structural_roles(self, analyzer) -> None:
+        analyzer._annotate_if_structural_roles(self)
+
+    def annotate_cond_recheck(self, analyzer) -> None:
+        if self.chained_compare_blocks:
+            analyzer.compute_chained_compare_operands(self)
+
+    def get_score_merge_block(self) -> Optional['BasicBlock']:
+        return self.merge_block
+
+    def precompute_analysis(self, analyzer) -> None:
+        analyzer._precompute_chained_compare_analysis(self)
+
+    def is_block_entry(self, block) -> bool:
+        return self.condition_block == block or self.entry == block
+
+    def else_block_conflict(self, block) -> bool:
+        return False
+
 @dataclass(eq=False)
 class LoopRegion(Region):
     header_block: Optional[BasicBlock] = None
@@ -283,6 +334,43 @@ class LoopRegion(Region):
         content.update(self.init_blocks)
         return content
 
+    def annotate_structural_roles(self, analyzer) -> None:
+        analyzer._annotate_loop_structural_roles(self)
+
+    def annotate_cond_recheck(self, analyzer) -> None:
+        for block in self.condition_recheck_blocks:
+            analyzer._assign_region_role(block.start_offset,
+                                          BlockRole.LOOP_CONDITION_RECHECK)
+
+    def precompute_analysis(self, analyzer) -> None:
+        analyzer._precompute_loop_analysis_data(self)
+
+    def is_block_entry(self, block) -> bool:
+        return (self.header_block == block or
+                self.entry == block or
+                self.condition_block == block)
+
+    def is_block_in_body(self, block) -> bool:
+        if block == self.header_block:
+            return False
+        if block == self.condition_block:
+            return False
+        if block in getattr(self, 'condition_chain_blocks', []):
+            return False
+        if block == self.back_edge_block:
+            return False
+        if block in getattr(self, 'back_edge_blocks', set()):
+            return False
+        last = block.get_last_instruction()
+        if last and last.opname in FORWARD_CONDITIONAL_JUMP_OPS:
+            return False
+        return True
+
+    def else_block_conflict(self, block) -> bool:
+        return (block == self.condition_block or
+                block == self.header_block or
+                block == self.entry)
+
 @dataclass
 class TryExceptRegion(Region):
     try_blocks: List[BasicBlock] = field(default_factory=list)
@@ -309,6 +397,21 @@ class TryExceptRegion(Region):
             content.update(self.finally_blocks)
         return content
 
+    def annotate_structural_roles(self, analyzer) -> None:
+        analyzer._annotate_try_except_structural_roles(self)
+
+    def precompute_analysis(self, analyzer) -> None:
+        analyzer._enhance_finally_copy_annotation(self)
+
+    def is_block_entry(self, block) -> bool:
+        return self.entry == block
+
+    def contains_block(self, block) -> bool:
+        return block in self.try_blocks
+
+    def else_block_conflict(self, block) -> bool:
+        return False
+
 @dataclass
 class WithRegion(Region):
     with_blocks: List[BasicBlock] = field(default_factory=list)
@@ -323,6 +426,18 @@ class WithRegion(Region):
 
     def get_content_blocks(self) -> Set[BasicBlock]:
         return set(self.with_blocks)
+
+    def is_block_entry(self, block) -> bool:
+        return self.entry == block
+
+    def contains_block(self, block) -> bool:
+        return True
+
+    def is_block_in_body(self, block) -> bool:
+        return True
+
+    def else_block_conflict(self, block) -> bool:
+        return False
 
 @dataclass
 class MatchRegion(Region):
@@ -343,10 +458,19 @@ class MatchRegion(Region):
             content.update(body_list)
         return content
 
+    def is_block_entry(self, block) -> bool:
+        return self.entry == block
+
+    def is_block_in_body(self, block) -> bool:
+        return block != self.subject_block
+
 @dataclass
 class AssertRegion(Region):
     condition_block: Optional[BasicBlock] = None
     message_block: Optional[BasicBlock] = None
+
+    def is_block_entry(self, block) -> bool:
+        return self.condition_block == block
 
 @dataclass
 class BoolOpRegion(Region):
@@ -358,6 +482,18 @@ class BoolOpRegion(Region):
     body_block: Optional[BasicBlock] = None
     condition_expr: Optional[Dict[str, Any]] = None
     condition_block: Optional[BasicBlock] = None
+
+    def get_score_merge_block(self) -> Optional['BasicBlock']:
+        return self.merge_block
+
+    def is_block_entry(self, block) -> bool:
+        return self.entry == block
+
+    def contains_block(self, block) -> bool:
+        return block == self.entry
+
+    def else_block_conflict(self, block) -> bool:
+        return False
 
 @dataclass
 class TernaryRegion(Region):
@@ -371,6 +507,15 @@ class TernaryRegion(Region):
     container_type: Optional[str] = None
     func_call_info: Optional[Dict[str, Any]] = None
     dict_key_info: Optional[Dict[str, Any]] = None
+
+    def get_score_merge_block(self) -> Optional['BasicBlock']:
+        return self.merge_block
+
+    def is_block_entry(self, block) -> bool:
+        return self.entry == block
+
+    def else_block_conflict(self, block) -> bool:
+        return False
 
 class RegionAnalyzer:
     """
@@ -405,6 +550,12 @@ class RegionAnalyzer:
         self._block_metadata: Dict[int, Dict[str, Any]] = {}
         self._current_loop_blocks: Set[BasicBlock] = set()
         self._current_boolop_regions: List[Region] = []
+
+    def _filter_regions(self, regions: List['Region'], region_class) -> List['Region']:
+        """按精确类型过滤区域列表（使用 type() 而非 isinstance 以避免子类匹配）。"""
+        if isinstance(region_class, tuple):
+            return [r for r in regions if type(r) in region_class]
+        return [r for r in regions if type(r) is region_class]
 
     def _stack_effect(self, instr) -> tuple:
         """计算单条指令的栈效应（push_count, pop_count）。
@@ -1121,7 +1272,7 @@ class RegionAnalyzer:
         for block in self.cfg.blocks.values():
             self.block_roles[block.start_offset] = BlockRole.NORMAL
 
-        loop_regions = [r for r in all_regions if isinstance(r, LoopRegion)]
+        loop_regions = self._filter_regions(all_regions, LoopRegion)
 
         for loop in loop_regions:
             header = loop.header_block
@@ -1154,12 +1305,7 @@ class RegionAnalyzer:
                     self.block_roles[loop.back_edge_block.start_offset] = BlockRole.CONTINUE
 
         for region in all_regions:
-            if isinstance(region, LoopRegion):
-                self._annotate_loop_structural_roles(region)
-            elif isinstance(region, IfRegion):
-                self._annotate_if_structural_roles(region)
-            elif isinstance(region, TryExceptRegion):
-                self._annotate_try_except_structural_roles(region)
+            region.annotate_structural_roles(self)
 
         for block in self.cfg.blocks.values():
             offset = block.start_offset
@@ -1373,12 +1519,7 @@ class RegionAnalyzer:
                             self.block_to_region[block] = region
 
         for region in all_regions:
-            if isinstance(region, LoopRegion):
-                for block in region.condition_recheck_blocks:
-                    self._assign_region_role(block.start_offset,
-                                           BlockRole.LOOP_CONDITION_RECHECK)
-            elif isinstance(region, IfRegion) and region.chained_compare_blocks:
-                self.compute_chained_compare_operands(region)
+            region.annotate_cond_recheck(self)
 
     def _annotate_loop_structural_roles(self, loop: LoopRegion) -> None:
         """基于LoopRegion边界标注循环结构化角色"""
@@ -1543,13 +1684,7 @@ class RegionAnalyzer:
 
     def _score_merge_semantics(self, block: BasicBlock, region: 'Region') -> float:
         rt = region.region_type
-        merge = None
-        if isinstance(region, BoolOpRegion):
-            merge = region.merge_block
-        elif isinstance(region, IfRegion):
-            merge = region.merge_block
-        elif isinstance(region, TernaryRegion):
-            merge = getattr(region, 'merge_block', None)
+        merge = region.get_score_merge_block()
         if not merge:
             return 50.0
         has_store = any(i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
@@ -1615,13 +1750,7 @@ class RegionAnalyzer:
 
     def _score_expression_context(self, block: BasicBlock, region: 'Region') -> float:
         rt = region.region_type
-        merge = None
-        if isinstance(region, BoolOpRegion):
-            merge = region.merge_block
-        elif isinstance(region, IfRegion):
-            merge = region.merge_block
-        elif isinstance(region, TernaryRegion):
-            merge = getattr(region, 'merge_block', None)
+        merge = region.get_score_merge_block()
         if not merge:
             return 50.0
         non_noise = [i for i in merge.instructions if i.opname not in NOISE_OPS]
@@ -1687,7 +1816,7 @@ class RegionAnalyzer:
             return 25.0
         boolop_competitor = None
         for r in self.regions:
-            if r is not region and isinstance(r, __import__('core.cfg.region_analyzer', fromlist=['BoolOpRegion']).BoolOpRegion) and r.entry == region.entry:
+            if r is not region and isinstance(r, BoolOpRegion) and r.entry == region.entry:
                 boolop_competitor = r
                 break
         if boolop_competitor:
@@ -2303,7 +2432,7 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                         break
                 region.condition_chain_blocks = chain
 
-        loop_regions = [r for r in regions if isinstance(r, LoopRegion)]
+        loop_regions = self._filter_regions(regions, LoopRegion)
         if len(loop_regions) >= 2:
             removal_set = set()
             for i, lr_a in enumerate(loop_regions):
@@ -2355,7 +2484,7 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
         2. 假循环的back_edge_block (POP_JUMP_BACKWARD_IF_*块) → 应标记为LOOP_BODY或LOOP_BACK_EDGE
         3. 假循环的body_blocks中被错误标记为CONTINUE → 应标记为LOOP_BODY（如果有意义语句）
         """
-        loop_regions = [r for r in regions if isinstance(r, LoopRegion)]
+        loop_regions = self._filter_regions(regions, LoopRegion)
         
         for region in loop_regions:
             if id(region) not in fake_loop_ids:
@@ -2480,7 +2609,7 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
             需要被过滤的假循环region ID集合
         """
         fake_loop_region_ids = set()
-        loop_regions = [r for r in regions if isinstance(r, LoopRegion)]
+        loop_regions = self._filter_regions(regions, LoopRegion)
         
         for inner in loop_regions:
             if id(inner) in fake_loop_region_ids:
@@ -4219,7 +4348,7 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
             if exclude_from_try:
                 try_blocks = [b for b in try_blocks if b not in exclude_from_try]
 
-            existing_entry_regions = [r for r in self.regions if isinstance(r, TryExceptRegion) and r.entry == entry_block]
+            existing_entry_regions = [r for r in self.regions if type(r) is TryExceptRegion and r.entry == entry_block]
             if existing_entry_regions:
                 for existing in existing_entry_regions:
                     if (existing.try_offset_start >= try_start and
@@ -8373,7 +8502,9 @@ RegionType 枚举值: RegionType.ASSERT
                             return True
                     break
         elif block_region is not None:
-            if isinstance(block_region, TryExceptRegion) and block in block_region.try_blocks:
+            if not block_region.contains_block(block):
+                return True
+            if type(block_region) is TryExceptRegion:
                 if any(lr.condition_block == block for lr in loop_regions):
                     return True
                 block_in_loop = any(block in lr.blocks for lr in loop_regions)
@@ -8384,12 +8515,6 @@ RegionType 枚举值: RegionType.ASSERT
                             _cs_role = self.block_roles.get(_cs.start_offset)
                             if _cs_role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
                                 return True
-            elif isinstance(block_region, BoolOpRegion) and block_region.entry == block:
-                pass
-            elif isinstance(block_region, WithRegion):
-                pass  # Allow if identification inside with body
-            else:
-                return True
         cond_succs_check = list(block.conditional_successors)
         if len(cond_succs_check) == 2:
             block_in_loop = any(block in lr.blocks for lr in loop_regions)
@@ -9266,18 +9391,9 @@ RegionType 枚举值: RegionType.ASSERT
                     return None
             if first_else in self.block_to_region:
                 existing = self.block_to_region[first_else]
-                if isinstance(existing, (IfRegion, TernaryRegion)):
+                if existing.region_type == RegionType.BASIC:
                     pass
-                elif existing.region_type == RegionType.BASIC:
-                    pass
-                elif isinstance(existing, (TryExceptRegion, WithRegion)):
-                    pass
-                elif isinstance(existing, BoolOpRegion):
-                    pass
-                elif isinstance(existing, LoopRegion):
-                    if first_else == existing.condition_block or first_else == existing.header_block or first_else == existing.entry:
-                        return None
-                else:
+                elif existing.else_block_conflict(first_else):
                     return None
             else:
                 # block_to_region可能因BoolOpRegion删除而缺失映射，
@@ -10503,28 +10619,7 @@ RegionType 枚举值: RegionType.ASSERT
         if block not in self.block_to_region:
             return False
         region = self.block_to_region[block]
-        if isinstance(region, LoopRegion):
-            if block == region.header_block:
-                return False
-            if block == region.condition_block:
-                return False
-            if block in getattr(region, 'condition_chain_blocks', []):
-                return False
-            if block == region.back_edge_block:
-                return False
-            if block in getattr(region, 'back_edge_blocks', set()):
-                return False
-            last = block.get_last_instruction()
-            if last and last.opname in FORWARD_CONDITIONAL_JUMP_OPS:
-                return False
-            return True
-        if isinstance(region, WithRegion):
-            return True
-        if isinstance(region, MatchRegion):
-            if block == region.subject_block:
-                return False
-            return True
-        return False
+        return region.is_block_in_body(block)
 
     def _identify_boolop_regions(self, existing_regions: List[Region]) -> List[Region]:
         """
@@ -11973,9 +12068,9 @@ RegionType 枚举值: RegionType.ASSERT
                         candidates.append(candidate)
 
             if len(candidates) > 1 and child.entry:
-                _if_candidates = [c for c in candidates if isinstance(c, IfRegion)]
+                _if_candidates = self._filter_regions(candidates, IfRegion)
                 if _if_candidates:
-                    _non_if_candidates = [c for c in candidates if not isinstance(c, IfRegion)]
+                    _non_if_candidates = [c for c in candidates if type(c) is not IfRegion]
                     _to_remove = set()
                     for _if_cand in _if_candidates:
                         _if_branch_entries = set(_if_cand.then_blocks or []) | set(_if_cand.else_blocks or [])
@@ -12004,14 +12099,14 @@ RegionType 枚举值: RegionType.ASSERT
                     _entry_owner = self.block_to_region.get(child.entry) if child.entry else None
                     _entry_owner_is_candidate = _entry_owner is not None and _entry_owner in candidates and isinstance(_entry_owner, LoopRegion) and _entry_owner is not child
                     if _entry_owner_is_candidate and not isinstance(child, LoopRegion):
-                        _loop_cands_eo = [c for c in candidates if isinstance(c, LoopRegion) and c is not child]
+                        _loop_cands_eo = [c for c in candidates if type(c) is LoopRegion and c is not child]
                         if len(_loop_cands_eo) >= 2:
                             _most_nested_loop = max(_loop_cands_eo, key=lambda c: -(ranges[id(c)][1] - ranges[id(c)][0]))
                             if _most_nested_loop is not _entry_owner:
                                 _entry_owner = _most_nested_loop
                         best_parent = _entry_owner
                     else:
-                        _loop_candidates = [c for c in candidates if isinstance(c, LoopRegion)]
+                        _loop_candidates = self._filter_regions(candidates, LoopRegion)
                         _use_nested_tiebreaker = isinstance(child, LoopRegion) and len(_loop_candidates) >= 2
                         _use_if_tiebreaker = isinstance(child, TryExceptRegion) and any(isinstance(c, IfRegion) for c in candidates)
                         if _use_nested_tiebreaker:
@@ -12020,14 +12115,14 @@ RegionType 枚举值: RegionType.ASSERT
                                 -(ranges[id(c)][1] - ranges[id(c)][0])
                             ))
                         elif _use_if_tiebreaker:
-                            _if_candidates = [c for c in candidates if isinstance(c, IfRegion)]
+                            _if_candidates = self._filter_regions(candidates, IfRegion)
                             best_parent = max(_if_candidates, key=lambda c: (
                                 region_priority.get(type(c).__name__, 1),
                                 -(ranges[id(c)][1] - ranges[id(c)][0])
                             ))
                         else:
-                            _loop_cands = [c for c in candidates if isinstance(c, LoopRegion)]
-                            _container_cands = [c for c in candidates if isinstance(c, (TryExceptRegion, WithRegion))]
+                            _loop_cands = self._filter_regions(candidates, LoopRegion)
+                            _container_cands = self._filter_regions(candidates, (TryExceptRegion, WithRegion))
                             if len(_loop_cands) >= 2:
                                 best_parent = max(_loop_cands, key=lambda c: (
                                     region_priority.get(type(c).__name__, 1),
@@ -12082,8 +12177,8 @@ RegionType 枚举值: RegionType.ASSERT
                                     continue
                         best_parent.add_child(child)
 
-        boolop_regions = [r for r in regions if isinstance(r, __import__('core.cfg.region_analyzer', fromlist=['BoolOpRegion']).BoolOpRegion)]
-        if_regions = [r for r in regions if isinstance(r, __import__('core.cfg.region_analyzer', fromlist=['IfRegion']).IfRegion)]
+        boolop_regions = self._filter_regions(regions, BoolOpRegion)
+        if_regions = self._filter_regions(regions, IfRegion)
         for br in boolop_regions:
             if br.parent is not None:
                 continue
@@ -12201,22 +12296,9 @@ RegionType 枚举值: RegionType.ASSERT
     def get_entry_region_for_block(self, block: BasicBlock) -> Optional[Region]:
         _matching = []
         for region in self.regions:
-            if isinstance(region, TryExceptRegion) and region.entry == block:
-                _matching.append(region)
-            if isinstance(region, WithRegion) and region.entry == block:
-                _matching.append(region)
-            if isinstance(region, LoopRegion):
-                if region.header_block == block or region.entry == block or region.condition_block == block:
-                    _matching.append(region)
-            if isinstance(region, IfRegion) and (region.condition_block == block or region.entry == block):
-                _matching.append(region)
-            if isinstance(region, AssertRegion) and region.condition_block == block:
-                return region
-            if isinstance(region, MatchRegion) and region.entry == block:
-                _matching.append(region)
-            if isinstance(region, BoolOpRegion) and region.entry == block:
-                _matching.append(region)
-            if isinstance(region, TernaryRegion) and region.entry == block:
+            if region.is_block_entry(block):
+                if type(region) is AssertRegion:
+                    return region
                 _matching.append(region)
         if not _matching:
             return None
@@ -12296,12 +12378,7 @@ RegionType 枚举值: RegionType.ASSERT
         4. finally copy块的增强标注
         """
         for region in all_regions:
-            if isinstance(region, LoopRegion):
-                self._precompute_loop_analysis_data(region)
-            elif isinstance(region, IfRegion):
-                self._precompute_chained_compare_analysis(region)
-            elif isinstance(region, TryExceptRegion):
-                self._enhance_finally_copy_annotation(region)
+            region.precompute_analysis(self)
 
         self._precompute_break_jump_classification(all_regions)
 
