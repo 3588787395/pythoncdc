@@ -4,11 +4,11 @@
 > 消除 2 个 WARN、移除硬编码嵌套上限、减少 isinstance 分支至 < 20，
 > 使程序完全符合区域归约算法并支持无限嵌套。
 >
-> **当前状态（2026-07-14 Phase 3+4+5+6 完成后）**:
-> - 测试矩阵：2067/2068（99.95%，仅 te046 暂缓）
+> **当前状态（2026-07-14 Phase 3+4+5+6 完成后，Phase 6 迭代 Task 2.5 完成后）**:
+> - 测试矩阵：2068/2068（100.0%，te046 已通过）
 > - match_region：198/198（2 skipped）
 > - 算法符合度：FULLY COMPLIANT（WARN-1 已消除：3 处 depth 比较改为结构包含判定；WARN-2 已消除：with 合并前移至识别阶段）
-> - isinstance.*Region 出现次数：116（Phase 6 部分完成：Priority 1+2 已完成，Priority 3 已回滚；目标 < 20 未达成）
+> - isinstance.*Region 出现次数：77（Phase 6 迭代 Task 2.5：29 处 FILTER 模式已替换为 `_filter_regions` 调用，从 106 降至 77；目标 < 20 未达成，剩余为 SEMANTIC/DISPATCH/DEFENSIVE）
 > - 硬编码嵌套上限：已全部移除（`depth > 3` 已从两方法移除，递归终止由 visited 集合保证）
 > - Git：9eb2650 为基线，Phase 3+4+5+6 改动待提交（按指令不提交）
 
@@ -114,6 +114,28 @@
 - [x] Task 6.4: 验证 isinstance 数量下降与基线保持
   - [x] 重新统计 `isinstance.*Region` 出现次数：116（从 151 降至此，未达 < 20 目标）
   - [x] 全量 `run_test_matrix.py` 确认 ≥ 2067/2068（2067/2068，99.95%）
+  - [x] `python -c "import core.cfg.region_analyzer"` 编译通过
+  - [ ] 提交本阶段改动（未提交，按指令不提交 git）
+
+## Phase 6 迭代: FILTER 模式批量替换 — Task 2.5 已完成 2026-07-14
+
+> **当前状态**: isinstance.*Region 计数 77（从 106 降至此，减少 29 处）。
+> Task 2.3（前一批次）将 119 降至 106；Task 2.5（本批次）将 106 降至 77。
+> 所有 29 处 FILTER 模式替换为 `self._filter_regions(list, RegionType)` 调用，分 8 批验证。
+> 未使用 `type() is` 形式（避免 Priority 3 的 267 回归）。测试矩阵提升至 100%（2068/2068，te046 已通过）。
+> 剩余 77 处为 SEMANTIC/DISPATCH/DEFENSIVE 模式，目标 < 20 未达成。
+
+- [x] Task 2.5.1: 重新审计 `isinstance\([^)]+Region` 模式并分类
+  - [x] 75 处严格模式匹配 + 2 处方法调用形式（`isinstance(self.block_to_region.get(...), X)`）= 77 总计
+  - [x] 分类为 FILTER（可替换）/ SEMANTIC（语义必需）/ DISPATCH（分派链）/ DEFENSIVE（类型守卫）
+- [x] Task 2.5.2: 批量替换 FILTER 模式（8 批，每批 5-8 处，逐批验证）
+  - [x] Batch 1-3: 替换 IfRegion/LoopRegion/TryExceptRegion 过滤循环
+  - [x] Batch 4-6: 替换 TernaryRegion/BoolOpRegion/MatchRegion 过滤循环
+  - [x] Batch 7-8: 替换嵌套过滤与 dict-items 过滤（含 L9207 边界用例）
+  - [x] 每批后运行 `python -c "import core.cfg.region_analyzer"` + `python tests/exhaustive/run_test_matrix.py`
+- [x] Task 2.5.3: 最终验证
+  - [x] `isinstance.*Region` 计数：77（从 106 降至此，减少 29 处）
+  - [x] `run_test_matrix.py` 全量：2068/2068（100.0%，te046 已通过）
   - [x] `python -c "import core.cfg.region_analyzer"` 编译通过
   - [ ] 提交本阶段改动（未提交，按指令不提交 git）
 

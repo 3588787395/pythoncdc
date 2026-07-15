@@ -1,7 +1,7 @@
 # 验证清单
 
 > 目标：保持 99.95% 基线 + 消除 2 WARN + 移除嵌套上限 + isinstance < 20 → FULLY COMPLIANT
-> **当前状态**: Phase 1-5 已完成，Phase 6 部分完成（isinstance 116，目标 < 20 未达成），Phase 7 待执行
+> **当前状态**: Phase 1-5 已完成，Phase 6 部分完成（isinstance 77，目标 < 20 未达成；Task 2.5 迭代已替换 29 处 FILTER），Phase 7 待执行
 
 ## Phase 1: 基线固化 — 已完成 2026-07-14
 
@@ -48,17 +48,19 @@
 
 ## Phase 6: 减少 isinstance 分支 — 部分完成 2026-07-14
 
-> **当前状态**: isinstance.*Region 计数 116（从 151 降至此）。
+> **当前状态**: isinstance.*Region 计数 77（从 151 → 116 → 106 → 77）。
 > Priority 1 + Priority 2 已完成并验证；Priority 3 已回滚。
-> 目标 < 20 未达成，但 99.95% 基线已保持。
+> Phase 6 迭代 Task 2.5：29 处 FILTER 模式已替换为 `_filter_regions` 调用（从 106 降至 77）。
+> 目标 < 20 未达成，但 100% 基线已达到（te046 已通过）。
 
-- [x] C6.1 `process_regions` 及其他方法中的过滤列表推导已替换为 `_filter_regions` 调用（14 处）
+- [x] C6.1 `process_regions` 及其他方法中的过滤列表推导已替换为 `_filter_regions` 调用（14 处 + 迭代 Task 2.5 追加 29 处 = 43 处）
 - [x] C6.2 5 处分派链已替换为多态方法调用（`is_block_entry` / `contains_block` / `is_block_in_body` / `else_block_conflict` / `precompute_analysis`）
 - [x] C6.3 高频分派类型（LoopRegion/IfRegion/TryExceptRegion/WithRegion/BoolOpRegion/MatchRegion/AssertRegion/TernaryRegion）已多态化（8 个子类覆写 4 个多态方法）
-- [ ] C6.4 `isinstance.*Region` 在 region_analyzer.py 出现次数 < 20（当前 116，未达标）
-- [x] C6.5 全量 `run_test_matrix.py` ≥ 2067/2068（2067/2068，99.95%）
+- [ ] C6.4 `isinstance.*Region` 在 region_analyzer.py 出现次数 < 20（当前 77，未达标；剩余为 SEMANTIC/DISPATCH/DEFENSIVE 模式）
+- [x] C6.5 全量 `run_test_matrix.py` ≥ 2067/2068（2068/2068，100.0%，te046 已通过）
 - [x] C6.6 `python -c "import core.cfg.region_analyzer"` 编译通过
 - [x] C6.7 Priority 3 批量替换导致 267 回归后已全部回滚，测试恢复 2067/2068
+- [x] C6.8 迭代 Task 2.5：29 处 FILTER 模式替换为 `_filter_regions` 调用，每批 5-8 处逐批验证，无回归
 
 ## Phase 7: 算法符合度最终验证 — 已完成 2026-07-14
 
@@ -68,11 +70,11 @@
 - [x] C7.4 反模式4（破坏嵌套的扁平化）：PASS（无硬编码深度上限）
 - [x] C7.5 整体算法符合度：FULLY COMPLIANT
 - [x] C7.6 嵌套 with+break/continue 反编译正确（L2 nested 285/285 + L3 triple_nested 120/120 通过，无深度上限）
-- [x] C7.7 嵌套 try/except 反编译正确（L1 try_except 229/230 仅 te046 暂缓 + L2/L3 嵌套全通过）
+- [x] C7.7 嵌套 try/except 反编译正确（L1 try_except 230/230 te046 已通过 + L2/L3 嵌套全通过）
 - [x] C7.8 `grep "depth > [0-9]" core/cfg/region_analyzer.py` 无结果（0 处）
-- [x] C7.9 `run_test_matrix.py` 全量通过率 ≥ 99.95%（2067/2068）
+- [x] C7.9 `run_test_matrix.py` 全量通过率 = 100%（2068/2068，te046 已通过）
 - [x] C7.10 `match_region` 独立测试 198/198（2 skipped）
-- [ ] C7.11 `isinstance.*Region` 计数 < 20（当前 119，未达标；Priority 3 批量替换导致 267 回归已回滚）
+- [ ] C7.11 `isinstance.*Region` 计数 < 20（当前 77，未达标；Task 2.5 迭代已替换 29 处 FILTER，剩余为 SEMANTIC/DISPATCH/DEFENSIVE）
 - [x] C7.12 最终改动已 `git commit` 并 `git push`
 
 ## 算法符合度审计要点（Phase 7 复核）
