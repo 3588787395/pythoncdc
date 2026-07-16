@@ -629,13 +629,21 @@ class ExpressionReconstructor:
                 # 弹出列表对象
                 list_obj = self.stack.pop()
                 # 创建一个新的列表，包含扩展后的元素
-                elts = list_obj.get('elts', [])
-                if extend_values.get('type') == 'Tuple' or extend_values.get('type') == 'Constant':
+                elts = list_obj.get('elts', []) if isinstance(list_obj, dict) else []
+                if isinstance(extend_values, dict) and (extend_values.get('type') == 'Tuple' or extend_values.get('type') == 'Constant'):
                     # 如果是元组或常量，提取其元素
                     extend_elts = extend_values.get('elts', [])
                     if not extend_elts and isinstance(extend_values.get('value'), (tuple, list)):
                         extend_elts = [{'type': 'Constant', 'value': v} for v in extend_values.get('value')]
                     elts = elts + extend_elts
+                elif isinstance(extend_values, dict) and extend_values.get('type') == 'List':
+                    # [聚类7 修复] 列表扩展列表：合并元素
+                    elts = elts + extend_values.get('elts', [])
+                elif isinstance(extend_values, dict) and extend_values.get('type') in ('Name', 'Attribute', 'Call', 'Subscript'):
+                    # [聚类7 修复] *args 模式：LIST_EXTEND 用一个变量扩展列表，
+                    # 例如 f(a, *d) 的字节码 BUILD_LIST 1 / LOAD_NAME d / LIST_EXTEND 1
+                    # 生成 Starred 节点以保留 *d 语义
+                    elts = elts + [{'type': 'Starred', 'value': extend_values, 'ctx': 'Load', 'lineno': instr.starts_line}]
                 self.stack.append({
                     'type': 'List',
                     'elts': elts,
@@ -659,6 +667,23 @@ class ExpressionReconstructor:
                     'lineno': instr.starts_line
                 }
                 self.stack.append(merged)
+
+        # [聚类7 修复] LIST_TO_TUPLE - Python 3.11+ 的列表转元组指令
+        # 用于 CALL_FUNCTION_EX 的位置参数构建：BUILD_LIST + LIST_EXTEND + LIST_TO_TUPLE
+        # 生成 *args 的位置参数元组。若不处理，args_obj 会停留在 List 类型，
+        # CALL_FUNCTION_EX 的 Tuple 分支无法匹配，导致位置参数全部丢失。
+        elif opname == 'LIST_TO_TUPLE':
+            if self.stack:
+                list_obj = self.stack.pop()
+                if isinstance(list_obj, dict) and list_obj.get('type') == 'List':
+                    self.stack.append({
+                        'type': 'Tuple',
+                        'elts': list_obj.get('elts', []),
+                        'ctx': 'Load',
+                        'lineno': instr.starts_line
+                    })
+                else:
+                    self.stack.append(list_obj)
 
         # 返回语句
         elif opname in ('RETURN_VALUE', 'RETURN_CONST'):
@@ -1077,16 +1102,20 @@ class ExpressionReconstructor:
                     # [关键修复] 处理args和kwargs
                     args = []
                     kwargs = []
-                    
-                    # 处理args_obj - 可能是Tuple、Name或其他类型
+
+                    # 处理args_obj - 可能是Tuple、List、Name或其他类型
                     if args_obj:
                         if args_obj.get('type') == 'Tuple':
                             # 如果是元组，展开其元素作为位置参数
-                            args = args_obj.get('elts', [])
+                            # [聚类7 修复] 元素可能包含 Starred（来自 LIST_EXTEND 的 *d）
+                            args = list(args_obj.get('elts', []))
+                        elif args_obj.get('type') == 'List':
+                            # [聚类7 修复] LIST_TO_TUPLE 未处理的回退路径
+                            args = list(args_obj.get('elts', []))
                         elif args_obj.get('type') in ('Name', 'Constant'):
                             # 如果是变量名（如*args），保留为星号参数
                             args = [{'type': 'Starred', 'value': args_obj}]
-                    
+
                     # 处理kwargs_dict - 可能是Dict、DictMerge或其他类型
                     if kwargs_dict:
                         if kwargs_dict.get('type') == 'Dict':
@@ -1106,16 +1135,27 @@ class ExpressionReconstructor:
                                             'arg': key.get('value') if key.get('type') == 'Constant' else key,
                                             'value': values[i]
                                         })
-                        
+
                         # 检查是否是DictMerge对象（DICT_MERGE指令的结果）
                         if kwargs_dict.get('type') == 'DictMerge':
-                            # DictMerge包含dict1和dict2
-                            # dict1是BUILD_MAP 0的结果（空字典）
-                            # dict2是kwargs变量
+                            # [聚类7 修复] DictMerge 包含 dict1 (BUILD_MAP 的显式关键字参数,
+                            # 如 b=c) 和 dict2 (**kwargs 变量)。两者都必须保留：
+                            # 显式参数转为 keyword 节点，dict2 转为 KeywordStarred。
+                            dict1 = kwargs_dict.get('dict1')
+                            if isinstance(dict1, dict) and dict1.get('type') == 'Dict':
+                                d1_keys = dict1.get('keys', [])
+                                d1_values = dict1.get('values', [])
+                                for i, key in enumerate(d1_keys):
+                                    if i < len(d1_values):
+                                        kwargs.append({
+                                            'type': 'keyword',
+                                            'arg': key.get('value') if key.get('type') == 'Constant' else key,
+                                            'value': d1_values[i]
+                                        })
                             dict2 = kwargs_dict.get('dict2')
                             if dict2 and dict2.get('type') == 'Name':
-                                # 这是**kwargs模式
-                                kwargs = [{'type': 'KeywordStarred', 'value': dict2}]
+                                # **kwargs 模式
+                                kwargs.append({'type': 'KeywordStarred', 'value': dict2})
                         elif kwargs_dict.get('type') == 'Name':
                             # 如果是变量名，表示**kwargs
                             kwargs = [{'type': 'KeywordStarred', 'value': kwargs_dict}]

@@ -2867,30 +2867,50 @@ class CodeGenerator:
                         func_code = '(lambda *args, **kwargs: False)'
                 else:
                     func_code = self._generate_expression(func, self._precedence['call']) if func else ''
-                
+                    # [聚类3 修复] Lambda as Call func needs parentheses because
+                    # lambda has lower precedence than call; without parens
+                    # `(lambda x: x + 1)(5)` renders as `lambda x: x + 1(5)`.
+                    if isinstance(func, dict) and func.get('type') == 'Lambda':
+                        if not (func_code.startswith('(') and func_code.endswith(')')):
+                            func_code = f'({func_code})'
+
                 args = node.get('args', [])
-                keywords = node.get('keywords', [])
-                
+                # [聚类7 修复] Call 节点字段兼容：ExpressionReconstructor 构建的 Call 节点
+                # 使用 'kwargs' 字段存放关键字参数，而其他路径（如 _build_call_from_dict）
+                # 使用标准 AST 风格的 'keywords' 字段。两者都读取以保证 keyword 不丢失。
+                keywords = node.get('keywords', []) or node.get('kwargs', [])
+
                 if (len(args) == 1 and not keywords and
                     isinstance(args[0], dict) and args[0].get('type') in ('GeneratorExp', 'GenExpr')):
                     gen_code = self._generate_gen_expr_from_dict(args[0])
                     if gen_code.startswith('(') and gen_code.endswith(')'):
                         gen_code = gen_code[1:-1]
                     return f'{func_code}({gen_code})'
-                
+
                 args_codes = [self._generate_expression(arg, 0) for arg in args]
                 kw_codes = []
                 for kw in keywords:
                     if isinstance(kw, dict):
+                        # [聚类7 修复] KeywordStarred (**kwargs) 渲染为 **<value>
+                        if kw.get('type') == 'KeywordStarred':
+                            kw_value = kw.get('value')
+                            if kw_value is not None:
+                                kw_codes.append(f'**{self._generate_expression(kw_value, 0)}')
+                            continue
                         arg_name = kw.get('arg', '')
                         kw_value = kw.get('value')
                         if arg_name and kw_value is not None:
                             kw_codes.append(f'{arg_name}={self._generate_expression(kw_value, 0)}')
-                
+
                 all_args = args_codes + kw_codes
                 return f'{func_code}({", ".join(all_args)})'
             elif node_type == 'Lambda':
                 return self._generate_lambda_from_dict(node)
+            elif node_type == 'Starred':
+                # [聚类7 修复] *args 渲染：Call 的位置参数中的 Starred 节点
+                value = node.get('value', {})
+                value_code = self._generate_expression(value, 0) if value else ''
+                return f'*{value_code}'
             elif node_type == 'Subscript':
                 value = node.get('value', {})
                 slice_node = node.get('slice', {})
@@ -2927,6 +2947,13 @@ class CodeGenerator:
             elif node_type == 'Compare':
                 # [T1修复] dict-based Compare 需要正确的优先级和括号处理
                 return self._generate_compare_from_dict(node, parent_precedence)
+            elif node_type == 'Await':
+                # [Round 1 Cluster 2] await 表达式 dict 处理
+                value = node.get('value')
+                if value is not None:
+                    value_code = self._generate_expression(value, self._precedence.get('await', 0))
+                    return f'await {value_code}'
+                return 'await <value>'
             else:
                 # [修复-L13/L17/L18] 基础表达式类型必须正确处理
                 # Constant和Name是最常用的，必须直接处理避免泄露
@@ -4164,7 +4191,12 @@ class CodeGenerator:
         # 如果body是条件表达式，添加括号
         if body_is_ifexp:
             body_code = f'({body_code})'
-        
+
+        # [Cluster 6] 如果test是条件表达式，需要括号消除歧义
+        test_is_ifexp = isinstance(node.test, ASTIfExp) if hasattr(node, 'test') else False
+        if test_is_ifexp:
+            test_code = f'({test_code})'
+
         return f'{body_code} if {test_code} else {orelse_code}'
 
     def _get_dict_expr_precedence(self, node: dict) -> int:
@@ -4241,6 +4273,11 @@ class CodeGenerator:
         # 如果body是条件表达式，需要括号（右结合性）
         if isinstance(body, dict) and body.get('type') == 'IfExp':
             body_code = f'({body_code})'
+
+        # [Cluster 6] 如果test是条件表达式，需要括号消除歧义
+        # (e.g. `a if (b if c else d) else e` 而非 `a if b if c else d else e`)
+        if isinstance(test, dict) and test.get('type') == 'IfExp':
+            test_code = f'({test_code})'
 
         result = f'{body_code} if {test_code} else {orelse_code}'
         current_precedence = self._precedence['if']

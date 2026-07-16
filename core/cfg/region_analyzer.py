@@ -2480,6 +2480,17 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
             if is_fake_loop:
                 continue
 
+            # [聚类2 修复] 抑制 await 轮询自循环的 LoopRegion 创建。
+            # CPython 为 `await <expr>` 生成的轮询自循环字节码为：
+            #   GET_AWAITABLE + LOAD_CONST None + SEND + YIELD_VALUE +
+            #   RESUME + JUMP_BACKWARD_NO_INTERRUPT
+            # 这是 await 的实现细节，绝不应被物化为 `while True: pass`。
+            # 其前驱（含 GET_AWAITABLE）属于 await 表达式，应归入外围
+            # if/return 的条件求值链。区域归约算法原则"嵌套即抽象节点"
+            # 不适用于此——这是同一线性表达式的内联轮询，非嵌套结构。
+            if self._is_await_polling_loop(header, body):
+                continue
+
             is_subset_of_existing = False
             for existing_body in processed_bodies:
                 if body < existing_body:
@@ -3789,6 +3800,132 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
             return False
 
         return True
+
+    def _is_await_polling_loop(self, header: BasicBlock, body: Set[BasicBlock]) -> bool:
+        """检测当前循环是否为 `await <expr>` 的轮询自循环。
+
+        CPython 为 `await <expr>` 生成的字节码模式：
+            pred : ... <expr> ... ; GET_AWAITABLE ; LOAD_CONST None
+            hdr  : SEND   <exit_offset>
+                   YIELD_VALUE
+                   RESUME <3>
+                   JUMP_BACKWARD_NO_INTERRUPT <hdr_offset>   (回边自循环)
+            exit : POP_JUMP_*_IF_*  (条件跳转，继续 await 值消费)
+
+        判定要点（同时满足）：
+          1. header 不含 FOR_ITER / GET_ANEXT / GET_AITER（非 for / async-for）
+          2. body 内存在 SEND + YIELD_VALUE + JUMP_BACKWARD_NO_INTERRUPT 三联
+          3. 前驱链中含有 GET_AWAITABLE（即确为 await 而非 yield from）
+          4. 前驱不含 GET_YIELD_FROM_ITER（排除 yield from）
+
+        这种循环是 await 的实现细节，不应被物化为 `while True: pass`。
+        """
+        # 条件 1: header 不是 for/async-for 循环头
+        header_has_iter = any(
+            i.opname in ('FOR_ITER', 'GET_ANEXT', 'GET_AITER')
+            for i in header.instructions
+        )
+        if header_has_iter:
+            return False
+
+        # 条件 2: body 内含 SEND + YIELD_VALUE + JUMP_BACKWARD_NO_INTERRUPT 三联
+        has_send = has_yield = has_jbni = False
+        for block in body:
+            for instr in block.instructions:
+                if instr.opname == 'SEND':
+                    has_send = True
+                elif instr.opname == 'YIELD_VALUE':
+                    has_yield = True
+                elif instr.opname == 'JUMP_BACKWARD_NO_INTERRUPT':
+                    has_jbni = True
+            if has_send and has_yield and has_jbni:
+                break
+        if not (has_send and has_yield and has_jbni):
+            return False
+
+        # 条件 3 + 4: 前驱链中含 GET_AWAITABLE 且不含 GET_YIELD_FROM_ITER
+        # 前驱链 = header 直接前驱 + body 块前驱（覆盖 await 嵌套于其他块的情况）
+        pred_blocks = set()
+        for block in [header] + list(body):
+            for p in block.predecessors:
+                if p is not header and p not in body:
+                    pred_blocks.add(p)
+        has_awaitable = False
+        has_yield_from_iter = False
+        for p in pred_blocks:
+            for instr in p.instructions:
+                if instr.opname == 'GET_AWAITABLE':
+                    has_awaitable = True
+                elif instr.opname == 'GET_YIELD_FROM_ITER':
+                    has_yield_from_iter = True
+        # 若前驱链无 GET_AWAITABLE，检查 body 自身（await 可能与条件求值在同块）
+        if not has_awaitable:
+            for block in body:
+                for instr in block.instructions:
+                    if instr.opname == 'GET_AWAITABLE':
+                        has_awaitable = True
+                        break
+                if has_awaitable:
+                    break
+        if not has_awaitable:
+            return False
+        if has_yield_from_iter:
+            return False
+        return True
+
+    def _collect_await_predecessor_chain(self, condition_block: BasicBlock) -> List[BasicBlock]:
+        """从 condition_block 反向追踪 await 前驱链。
+
+        await 在 if 条件中的典型字节码布局：
+            setup_block : ... <expr> ... ; GET_AWAITABLE ; LOAD_CONST None
+            poll_block  : SEND <exit> ; YIELD_VALUE ; RESUME ;
+                          JUMP_BACKWARD_NO_INTERRUPT <poll_block>  (自循环)
+            cond_block  : POP_JUMP_FORWARD_IF_FALSE <else>          (condition_block)
+
+        本方法从 condition_block 出发，沿前驱链反向查找：
+          - poll_block：含 SEND + YIELD_VALUE + JUMP_BACKWARD_NO_INTERRUPT 的自循环块
+          - setup_block：含 GET_AWAITABLE 的前驱块（await 表达式主体所在）
+
+        返回 [setup_block, poll_block]（若均找到），否则返回空列表。
+        仅返回确属 await 模式的块，避免误伤普通条件链。
+        """
+        result: List[BasicBlock] = []
+        # 步骤 1: 找 poll_block（condition_block 的前驱中含 await 轮询三联的块）
+        poll_block = None
+        for pred in condition_block.predecessors:
+            has_send = has_yield = has_jbni = False
+            for instr in pred.instructions:
+                if instr.opname == 'SEND':
+                    has_send = True
+                elif instr.opname == 'YIELD_VALUE':
+                    has_yield = True
+                elif instr.opname == 'JUMP_BACKWARD_NO_INTERRUPT':
+                    has_jbni = True
+            if has_send and has_yield and has_jbni:
+                poll_block = pred
+                break
+        if poll_block is None:
+            return []
+        result.append(poll_block)
+
+        # 步骤 2: 找 setup_block（poll_block 的前驱中含 GET_AWAITABLE 的块）
+        # 排除 poll_block 自身（自循环前驱）
+        setup_block = None
+        for pred in poll_block.predecessors:
+            if pred is poll_block:
+                continue
+            if any(instr.opname == 'GET_AWAITABLE' for instr in pred.instructions):
+                setup_block = pred
+                break
+        if setup_block is None:
+            return []
+        result.append(setup_block)
+
+        # 步骤 3: 排除 GET_YIELD_FROM_ITER（yield from 而非 await）
+        for instr in setup_block.instructions:
+            if instr.opname == 'GET_YIELD_FROM_ITER':
+                return []
+        return result
 
     def _has_body_code_before_before_with(self, block: BasicBlock) -> bool:
         store_idx = None
@@ -8915,6 +9052,15 @@ RegionType 枚举值: RegionType.ASSERT
                 continue
             if last_instr.opname == 'FOR_ITER':
                 continue
+            # [聚类2 修复] 跳过 await 轮询自循环块（SEND 是其条件分支指令）。
+            # CPython 的 await 字节码中，SEND 有两个后继：自循环（继续轮询）
+            # 和退出（awaitable 完成）。这让 block.conditional_successors == 2，
+            # 被误识别为 IfRegion。但这是 await 的实现细节，不应成为独立 if。
+            # 判定：块含 SEND + YIELD_VALUE + JUMP_BACKWARD_NO_INTERRUPT 三联。
+            if any(i.opname == 'SEND' for i in block.instructions) and \
+               any(i.opname == 'YIELD_VALUE' for i in block.instructions) and \
+               any(i.opname == 'JUMP_BACKWARD_NO_INTERRUPT' for i in block.instructions):
+                continue
             block_region = self.block_to_region.get(block)
             if block in with_handler_blocks:
                 continue
@@ -9035,8 +9181,35 @@ RegionType 枚举值: RegionType.ASSERT
                             break
                     if _is_ternary_value_block:
                         continue
-                condition_block = block_region.op_chain[-1][0]
-                chain_blocks = set(b for b, _ in block_region.op_chain)
+                # [Cluster 4] Chained-compare phantom BoolOpRegion guard.
+                # The chained compare's short-circuit jumps
+                # (POP_JUMP_IF_FALSE per middle segment, POP_JUMP_IF_TRUE
+                # on the last segment for `not <chain>`) are misread by the
+                # BoolOp detector as a BoolOpRegion whose blocks are exactly
+                # {entry} ∪ chained_compare_blocks of a chained-compare
+                # IfRegion created in Phase 2a. If we let this phantom
+                # override condition_block with op_chain[-1] (the last chain
+                # block), _detect_chained_compare_pattern(condition_block)
+                # below returns None (the last chain block has no
+                # COPY+COMPARE_OP pair), so the IfRegion loses its
+                # chained_compare_blocks/ops and the AST generator falls
+                # back to the broken BoolOp path. Per unique-block-
+                # ownership the chained compare (Phase 2a, more reduced)
+                # owns these blocks; skip the BoolOp condition_block
+                # override and let the chained-compare detection below
+                # handle it (condition_block stays as `block`).
+                _cc_phantom = False
+                if getattr(block_region, 'op_chain', None):
+                    _bor_blocks = set(b for b, _ in block_region.op_chain)
+                    for _r in self.regions:
+                        if (isinstance(_r, IfRegion)
+                                and getattr(_r, 'chained_compare_blocks', None)
+                                and _bor_blocks <= set(_r.blocks)):
+                            _cc_phantom = True
+                            break
+                if not _cc_phantom:
+                    condition_block = block_region.op_chain[-1][0]
+                    chain_blocks = set(b for b, _ in block_region.op_chain)
             elif boolop_region and boolop_region.entry == block:
                 if not getattr(boolop_region, 'is_condition_context', True) and getattr(boolop_region, 'value_target', None):
                     continue
@@ -9222,6 +9395,18 @@ RegionType 枚举值: RegionType.ASSERT
                 then_blocks = [b for b in then_blocks if b not in _conditional_back_edge_blocks and (b not in _then_back_edge_blocks or b == then_succ) and b != block]
 
             all_condition_blocks = {condition_block} | chain_blocks
+
+            # [聚类2 修复] 检测 await 前驱链：当 condition_block 的前驱链包含
+            # await 轮询自循环（SEND+YIELD_VALUE+JUMP_BACKWARD_NO_INTERRUPT）和
+            # await 设置块（GET_AWAITABLE）时，将这些块纳入 IfRegion 的
+            # all_condition_blocks，使它们归 IfRegion 所有（每块唯一归属），
+            # 不再作为独立 BASIC 区域被 _generate_block_statements 处理。
+            # 这符合区域归约算法原则：await 表达式是 if 条件求值的内联部分，
+            # 其求值块应归入条件区域而非独立语句。
+            _await_pred_blocks = self._collect_await_predecessor_chain(condition_block)
+            if _await_pred_blocks:
+                all_condition_blocks.update(_await_pred_blocks)
+                chain_blocks.update(_await_pred_blocks)
 
             region = self._build_elif_region(block, then_blocks, else_blocks, merge, all_condition_blocks, condition_block)
             if region is None:
@@ -11804,7 +11989,20 @@ RegionType 枚举值: RegionType.ASSERT
                 cur_jump_target = self.cfg.get_block_by_offset(last.argval)
                 prev_op = chain[-2][1]
                 if op_type == prev_op and first_jump_target and cur_jump_target and first_jump_target != cur_jump_target:
-                    if not (op_type == 'or' and 'TRUE' in chain[0][0].get_last_instruction().opname and 'FALSE' in last.opname):
+                    # [Cluster 5] not(or) pattern: a pure 'or' chain where
+                    # EVERY segment's short-circuit jump is IF_TRUE (each true
+                    # operand exits to its own skip-body block). This is the
+                    # compiler's lowering of `not (X or Y ...)` — the UNARY_NOT
+                    # is optimized away by inverting jump direction. The
+                    # distinct TRUE targets are equivalent trivial exits, so
+                    # the chain must be preserved for bottom-up reduction into
+                    # a single BoolOp(or) that the AST generator wraps in
+                    # `not (...)` (preserving original COMPARE_OP operators).
+                    _normal_or = (op_type == 'or' and 'TRUE' in chain[0][0].get_last_instruction().opname and 'FALSE' in last.opname)
+                    _not_or_chain = (op_type == 'or' and all(
+                        (cb.get_last_instruction() is not None and 'TRUE' in cb.get_last_instruction().opname)
+                        for cb, _ in chain))
+                    if not _normal_or and not _not_or_chain:
                         chain.pop()
                         break
             current = ft_succ
