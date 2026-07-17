@@ -4719,8 +4719,11 @@ class CodeGenerator:
         elif ann_type == 'NamedExpr':
             target = annotation.get('target', {})
             value = annotation.get('value', {})
-            target_code = self._generate_annotation_from_dict(target) if target else '_'
-            value_code = self._generate_annotation_from_dict(value) if value else 'None'
+            # [聚类4 修复] value 可能是任意表达式（如 Await、Call、Subscript 等），
+            # 必须用 _generate_expression 处理，否则 Await 等类型会落入 fallback
+            # 导致 dict 被直接 str() 输出。
+            target_code = self._generate_expression(target, 0) if target else '_'
+            value_code = self._generate_expression(value, 0) if value else 'None'
             return f'({target_code} := {value_code})'
         elif ann_type == 'Iter':
             # [N14修复] 处理迭代器表达式（如 iter(row)）

@@ -866,8 +866,32 @@ class RegionAnalyzer:
         """
         op = instr.opname
         arg = instr.arg
-        if op.startswith('LOAD_') or op == 'COPY':
+        # [聚类1 修复] COPY 必须先于 LOAD_* 判定（COPY 不以 LOAD_ 开头，
+        # 但显式列出以保持可读性）。COPY n 净压 1（复制栈上已有元素）。
+        if op == 'COPY':
             return 1, 0
+        # [聚类1 修复] LOAD_ATTR 消费栈顶对象，压入属性值（净效应 0）。
+        # Python 3.11: LOAD_ATTR arg 仅为 co_names 索引，LSB 无方法标志含义；
+        # 方法调用使用独立的 LOAD_METHOD 操作码（压入 NULL+bound method，弹 1）。
+        # Python 3.12+ 的 LOAD_ATTR 才用 arg&1 区分方法形式，但当前测试环境
+        # 为 3.11，故统一按属性访问处理（LOAD_METHOD 分支处理方法形式）。
+        if op == 'LOAD_ATTR':
+            return 1, 1
+        if op == 'LOAD_METHOD':
+            return 2, 1
+        if op.startswith('LOAD_'):
+            return 1, 0
+        # [聚类1 修复] BINARY_SUBSCR 弹 2（value + slice），压 1（subscript）
+        if op == 'BINARY_SUBSCR':
+            return 1, 2
+        # [聚类1 修复] NONE_CHECK_OPS 与条件跳转弹 1（被测试的值）
+        if op in NONE_CHECK_OPS:
+            return 0, 1
+        if op in (FORWARD_CONDITIONAL_JUMP_OPS | BACKWARD_CONDITIONAL_JUMP_OPS):
+            # IF_NONE / IF_NOT_NONE 已在上面处理；IF_FALSE / IF_TRUE 弹 1
+            if 'IF_NONE' in op or 'IF_NOT_NONE' in op:
+                return 0, 1
+            return 0, 1
         if op in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP'):
             return 1, 2
         if op == 'BINARY_OP':
@@ -878,12 +902,18 @@ class RegionAnalyzer:
             return 1, 1 if (arg or 0) < 2 else 2
         if op == 'BUILD_STRING':
             return 1, arg or 0
+        # [聚类1 修复] BUILD_MAP 弹 2*argc（key-value 对），压 1（dict）
+        if op == 'BUILD_MAP':
+            return 1, 2 * (arg or 0)
         if op.startswith('BUILD_'):
             return 1, arg or 0
         if op in ('PRECALL', 'POP_TOP'):
             return 0, 0
         if op == 'CALL':
             return 1, (arg or 0) + 1
+        # [聚类1 修复] SWAP 净效应为 0（交换栈顶两元素）
+        if op == 'SWAP':
+            return 0, 0
         if op == 'STORE_FAST' or op == 'STORE_NAME' or op == 'STORE_GLOBAL' or op == 'STORE_DEREF':
             return 0, 1
         # 默认：假设无栈效应（保守估计）
@@ -7697,6 +7727,15 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
         has_swap = any(instr.opname == 'SWAP' for instr in meaningful)
         if has_swap:
             return False
+        # [聚类4 修复] COPY 后紧跟 STORE_* 是 walrus 运算符 (:=) 模式，不是 match case。
+        # 例如 ``if (n := await g()) > 0:`` 的条件块：
+        #   COPY + STORE_FAST(n) + LOAD_CONST(0) + COMPARE_OP(>) + POP_JUMP_IF_FALSE
+        # 此模式与 _is_match_subject_block 的 walrus 排除（行 6844-6846）一致。
+        for idx in range(len(meaningful) - 1):
+            if (meaningful[idx].opname == 'COPY' and
+                meaningful[idx + 1].opname in ('STORE_FAST', 'STORE_NAME',
+                                               'STORE_GLOBAL', 'STORE_DEREF')):
+                return False
         # 如果以 LOAD_CONST 开头且无 COPY 和 subject-load，是链式比较chain block（如 a < b < c 的第二比较）
         first_meaningful = meaningful[0]
         if first_meaningful.opname == 'LOAD_CONST':
@@ -10817,8 +10856,24 @@ RegionType 枚举值: RegionType.ASSERT
                                     break
                                 if not _has_cond_after_cmp:
                                     compare_uses_ternary = False
-                            elif _net_stack != 1:
-                                # net_stack>=2: COMPARE_OP不消费ternary结果，跳过
+                            elif _net_stack == 1:
+                                # ternary 是单比较的左操作数（右操作数在 merge_block 加载）
+                                pass
+                            elif _net_stack == 2:
+                                # [聚类1 修复] net_stack==2 + COPY(arg>=2) 表示链式比较
+                                # setup（COPY 复制操作数供后续比较段使用），ternary 仍是
+                                # 链式比较的左操作数。例：(ternary) < 0 < 10 的字节码为
+                                # LOAD_CONST 0, SWAP, COPY 2, COMPARE_OP, ...
+                                _has_chain_copy = any(
+                                    _i.opname == 'COPY' and _i.arg is not None and _i.arg >= 2
+                                    for _i in merge_block.instructions[:cmp_idx]
+                                    if _i.opname not in NOISE_OPS
+                                )
+                                if not _has_chain_copy:
+                                    compare_uses_ternary = False
+                                # else: 链式比较，允许 net_stack==2
+                            else:
+                                # net_stack>=3 或 <0: COMPARE_OP不消费ternary结果，跳过
                                 compare_uses_ternary = False
                         if not compare_uses_ternary:
                             # COMPARE_OP不消费ternary结果，跳过设置merge_context='compare'
@@ -10836,7 +10891,55 @@ RegionType 枚举值: RegionType.ASSERT
                             merge_context = 'compare'
                             value_target = '__compare_target__'
                             break
-                    
+
+                    # [聚类1 修复] NONE_CHECK_OPS: ternary（或其包裹表达式）
+                    # 作 is None / is not None 测试。字节码布局：
+                    #   [wrapping_ops...], POP_JUMP_*_IF_NONE/NOT_NONE
+                    # NONE_CHECK_OP 弹 1（被测试的值），ternary 结果（或其包裹后
+                    # 的值）在栈顶。无显式 COMPARE_OP。
+                    elif instr.opname in NONE_CHECK_OPS:
+                        true_non_noise = [i for i in true_block.instructions
+                                         if i.opname not in NOISE_OPS]
+                        false_non_noise = [i for i in false_block.instructions
+                                          if i.opname not in NOISE_OPS]
+                        true_has_pop = any(i.opname == 'POP_TOP' for i in true_non_noise)
+                        false_has_pop = any(i.opname == 'POP_TOP' for i in false_non_noise)
+                        if not (true_has_pop or false_has_pop):
+                            merge_context = 'compare'
+                            value_target = '__compare_target__'
+                            break
+
+                    # [聚类1 修复] CONTAINS_OP: ternary（或其包裹）作 in / not in 测试
+                    # 字节码布局：<container_load>, CONTAINS_OP, POP_JUMP_IF_FALSE
+                    # CONTAINS_OP 弹 2（left + right），压 1（比较结果）。
+                    elif instr.opname == 'CONTAINS_OP':
+                        true_non_noise = [i for i in true_block.instructions
+                                         if i.opname not in NOISE_OPS]
+                        false_non_noise = [i for i in false_block.instructions
+                                          if i.opname not in NOISE_OPS]
+                        true_has_pop = any(i.opname == 'POP_TOP' for i in true_non_noise)
+                        false_has_pop = any(i.opname == 'POP_TOP' for i in false_non_noise)
+                        if not (true_has_pop or false_has_pop):
+                            merge_context = 'compare'
+                            value_target = '__compare_target__'
+                            break
+
+                    # [聚类1 修复] BUILD_MAP: ternary 作 dict 字面量的 key
+                    # 字节码布局：<value_loads>, BUILD_MAP, POP_JUMP_IF_FALSE
+                    # BUILD_MAP 弹 2*argc（key-value 对），压 1（dict）。
+                    # dict 作真值测试（无 COMPARE_OP）。
+                    elif instr.opname == 'BUILD_MAP':
+                        true_non_noise = [i for i in true_block.instructions
+                                         if i.opname not in NOISE_OPS]
+                        false_non_noise = [i for i in false_block.instructions
+                                          if i.opname not in NOISE_OPS]
+                        true_has_pop = any(i.opname == 'POP_TOP' for i in true_non_noise)
+                        false_has_pop = any(i.opname == 'POP_TOP' for i in false_non_noise)
+                        if not (true_has_pop or false_has_pop):
+                            merge_context = 'compare'
+                            value_target = '__compare_target__'
+                            break
+
                     # 场景3: RETURN_VALUE在嵌套code object中（test_17 lambda）
                     # 仅当这是唯一的非噪音指令时（纯return expr模式）
                     elif instr.opname in ('RETURN_VALUE', 'RETURN_CONST'):

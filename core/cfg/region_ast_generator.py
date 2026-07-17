@@ -5566,6 +5566,91 @@ AST 映射规则:
                 break
         if copy_idx is None:
             return None  # not a walrus chained compare
+        walrus_name = instrs[store_idx].argval
+
+        # [聚类2 修复] 检测 STORE 之后是否存在 wrapping 指令（如 BINARY_SUBSCR）。
+        # 若存在，说明 walrus 值被外层表达式包裹（如 ``d[(n := f())]``），
+        # walrus 值只是 middle 操作数的子表达式，完整的 middle 需通过前向栈模拟重建：
+        # trapped 容器（如 ``d``）与 walrus 值共同入栈后，由 post-STORE 的 wrapping
+        # 指令组装为 Subscript/Attribute/Call 等。
+        _POST_WRAP_OPS = {'BINARY_SUBSCR', 'LOAD_ATTR', 'CALL', 'BUILD_MAP',
+                          'CONTAINS_OP', 'IS_OP'}
+        _POST_WRAP_TERMINATORS = {
+            'SWAP', 'COPY', 'COMPARE_OP', 'POP_TOP',
+            'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_FALSE',
+            'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_TRUE',
+            'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE',
+            'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+        }
+        post_wrap_instrs: List = []
+        for instr in instrs[store_idx + 1:]:
+            op = instr.opname
+            if op in _POST_WRAP_TERMINATORS:
+                break
+            if op in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                continue
+            post_wrap_instrs.append(instr)
+        has_post_wrap = any(i.opname in _POST_WRAP_OPS for i in post_wrap_instrs)
+
+        # 构建 chained_compare 尾部（右操作数列表）的公共逻辑
+        _skip_ops = ({'COMPARE_OP', 'SWAP', 'COPY', 'POP_TOP',
+                      'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_FALSE',
+                      'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_TRUE',
+                      'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE', 'PRECALL'})
+
+        if has_post_wrap:
+            # 前向栈模拟：处理 COPY 之前的指令构造 [left, trapped..., walrus_value]，
+            # 把 walrus_value 包裹为 NamedExpr，再处理 post_wrap_instrs 把
+            # trapped 与 NamedExpr 组装为完整 middle（如 Subscript(d, NamedExpr(n, f())))。
+            stack: List = []
+            for instr in instrs[:copy_idx]:
+                if instr.opname in ('COPY', 'STORE_FAST', 'STORE_NAME',
+                                    'STORE_GLOBAL', 'STORE_DEREF'):
+                    continue
+                self._sim_wrapping_instr(instr, stack)
+            if not stack:
+                return None
+            walrus_value = stack.pop()
+            middle_ast = {
+                'type': 'NamedExpr',
+                'target': {'type': 'Name', 'id': walrus_name,
+                           'ctx': 'Store', 'lineno': None},
+                'value': walrus_value,
+                'lineno': None,
+            }
+            stack.append(middle_ast)
+            for instr in post_wrap_instrs:
+                self._sim_wrapping_instr(instr, stack)
+            if len(stack) < 2:
+                return None
+            middle_complete = stack.pop()
+            left_ast = stack.pop()
+            if stack:
+                # 栈上仍有未消费操作数，模式未识别
+                return None
+            comparators = [middle_complete]
+            for cb in region.chained_compare_blocks:
+                cb_instrs = [i for i in cb.instructions
+                             if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')
+                             and i.opname not in _skip_ops]
+                if not cb_instrs:
+                    continue
+                if len(cb_instrs) == 1 and cb_instrs[0].opname.startswith('LOAD_'):
+                    comparators.append(self.expr_reconstructor._load_instr_to_ast(cb_instrs[0]))
+                else:
+                    r = self.expr_reconstructor.reconstruct(cb_instrs)
+                    if r is not None:
+                        comparators.append(r)
+            if len(comparators) != len(ops):
+                return None
+            return {
+                'type': 'Compare',
+                'left': left_ast,
+                'ops': list(ops),
+                'comparators': comparators,
+            }
+
+        # 原始路径：STORE 之后无 wrapping，middle 即 walrus_value 本身。
         # Reverse stack-track from just before COPY to find the middle-operand
         # start. Before COPY the stack depth is 2 ([left, middle]). Undo each
         # instruction's stack effect; when depth reaches 1, that instruction
@@ -5592,7 +5677,6 @@ AST 映射规则:
         middle_value_ast = self.expr_reconstructor.reconstruct(middle_value_instrs)
         if left_ast is None or middle_value_ast is None:
             return None
-        walrus_name = instrs[store_idx].argval
         middle_ast = {
             'type': 'NamedExpr',
             'target': {'type': 'Name', 'id': walrus_name, 'ctx': 'Store', 'lineno': None},
@@ -5602,10 +5686,6 @@ AST 映射规则:
         # Remaining comparators come from chained_compare_blocks: each block
         # contains one operand (LOAD or call) + COMPARE_OP + jump.
         comparators = [middle_ast]
-        _skip_ops = ({'COMPARE_OP', 'SWAP', 'COPY', 'POP_TOP', 'POP_JUMP_FORWARD_IF_FALSE',
-                      'POP_JUMP_BACKWARD_IF_FALSE', 'POP_JUMP_FORWARD_IF_TRUE',
-                      'POP_JUMP_BACKWARD_IF_TRUE', 'JUMP_FORWARD', 'JUMP_BACKWARD',
-                      'JUMP_ABSOLUTE', 'PRECALL'})
         for cb in region.chained_compare_blocks:
             cb_instrs = [i for i in cb.instructions
                         if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')
@@ -6785,9 +6865,77 @@ AST 映射规则:
         # （await 结果已在栈顶，rhs 在其下入栈，故 rhs 在 COMPARE_OP 之前）
         cond_effective = [i for i in cond_block.instructions
                           if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP')]
+        # [聚类4 修复] 检测 walrus 模式：cond_block 开头是 COPY(1) + STORE_*。
+        # 例如 ``if (n := await g()) > 0:`` 的 cond_block:
+        #   COPY 1, STORE_FAST n, LOAD_CONST 0, COMPARE_OP >, POP_JUMP_IF_FALSE
+        # 此时 await_expr 应被包装为 NamedExpr(target=Name(n, Store), value=await_expr)，
+        # 并跳过 COPY/STORE 后再收集 rhs_instrs。
+        walrus_target = None
+        walrus_skip = 0
+        if (len(cond_effective) >= 2 and
+                cond_effective[0].opname == 'COPY' and cond_effective[0].argval == 1
+                and cond_effective[1].opname in ('STORE_FAST', 'STORE_NAME',
+                                                  'STORE_GLOBAL', 'STORE_DEREF')):
+            walrus_target = cond_effective[1].argval
+            walrus_skip = 2
+            await_expr = {
+                'type': 'NamedExpr',
+                'target': {'type': 'Name', 'id': walrus_target,
+                           'ctx': 'Store', 'lineno': None},
+                'value': await_expr,
+                'lineno': None,
+            }
+
+        # [聚类4 修复] 检测链式比较（await 在中段，如 ``0 < await g() < 10``）。
+        # cond_block 含 SWAP + COPY + 多个 COMPARE_OP（链式比较开销），
+        # 且 region.chained_compare_ops 长度 >= 2。此时 await_expr 是 middle operand，
+        # left 来自 setup_block 中 GET_AWAITABLE 之前的指令（前向栈模拟后栈底），
+        # 后续 comparators 来自 chained_compare_blocks。
+        chained_ops_await = getattr(region, 'chained_compare_ops', None) or []
+        if (len(chained_ops_await) >= 2 and
+                any(i.opname == 'SWAP' for i in cond_effective) and
+                any(i.opname == 'COPY' for i in cond_effective) and
+                walrus_target is None):
+            sim_stack: List = []
+            for instr in inner_instrs:
+                self._sim_wrapping_instr(instr, sim_stack)
+            if len(sim_stack) < 2:
+                return None
+            await_inner = sim_stack.pop()
+            if len(sim_stack) != 1:
+                return None
+            left_ast = sim_stack.pop()
+            await_in_chain = {'type': 'Await', 'value': await_inner}
+            _skip_ops_await = ({'COMPARE_OP', 'SWAP', 'COPY', 'POP_TOP',
+                                'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_FALSE',
+                                'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_TRUE',
+                                'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE', 'PRECALL'})
+            comparators = [await_in_chain]
+            for cb in region.chained_compare_blocks:
+                cb_instrs = [i for i in cb.instructions
+                             if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')
+                             and i.opname not in _skip_ops_await]
+                if not cb_instrs:
+                    continue
+                if len(cb_instrs) == 1 and cb_instrs[0].opname.startswith('LOAD_'):
+                    comparators.append(self.expr_reconstructor._load_instr_to_ast(cb_instrs[0]))
+                else:
+                    r = self.expr_reconstructor.reconstruct(cb_instrs)
+                    if r is not None:
+                        comparators.append(r)
+            if len(comparators) != len(chained_ops_await):
+                return None
+            self.generated_blocks.add(cond_block)
+            return {
+                'type': 'Compare',
+                'left': left_ast,
+                'ops': list(chained_ops_await),
+                'comparators': comparators,
+            }
+
         compare_op_instr = None
         rhs_instrs = []
-        for instr in cond_effective:
+        for instr in cond_effective[walrus_skip:]:
             if instr.opname == 'COMPARE_OP':
                 compare_op_instr = instr
                 break
@@ -6924,6 +7072,277 @@ AST 映射规则:
                 break
         return instrs[:test_start]
 
+    def _extract_pre_ternary_instrs(self, ternary_region: 'TernaryRegion') -> List:
+        """[聚类1 修复] 提取 ternary test 之前的被困指令。
+
+        ternary_region.condition_block（test 入口块）中，test 表达式之前的
+        指令是被"困"的前导操作数（如 ``d[ternary]`` 中的容器 ``d``，
+        ``f(ternary)`` 中的 callable ``f``）。本方法通过栈效应追踪定位
+        test 起点，返回其前的所有指令。
+
+        与 ``_extract_trapped_lhs_from_ternary`` 的区别：本方法不要求
+        cond_block 末尾是条件跳转，适用于 ternary 被外层表达式包裹
+        （``merge_context='compare'`` 且外层为 BINARY_SUBSCR/CALL 等）的场景。
+        """
+        cb = getattr(ternary_region, 'condition_block', None)
+        if cb is None:
+            return []
+        instrs = [i for i in cb.instructions
+                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+        if not instrs:
+            return []
+        import dis as _dis
+        # 跳过末尾的条件跳转（test 跳转，POP_JUMP_IF_FALSE 等），
+        # 从倒数第二条开始追踪 test 表达式的生产者。
+        start_idx = len(instrs) - 1
+        if instrs[start_idx].opname in (FORWARD_CONDITIONAL_JUMP_OPS
+                                        | BACKWARD_CONDITIONAL_JUMP_OPS
+                                        | SHORT_CIRCUIT_JUMP_OPS):
+            start_idx -= 1
+        if start_idx < 0:
+            return []
+        depth = 1
+        test_start = start_idx + 1
+        for idx in range(start_idx, -1, -1):
+            instr = instrs[idx]
+            try:
+                effect = _dis.stack_effect(instr.opcode, instr.arg)
+            except Exception:
+                effect = 0
+            depth -= effect
+            if depth <= 0:
+                test_start = idx
+                break
+        return instrs[:test_start]
+
+    def _build_simple_load(self, instr) -> Dict[str, Any]:
+        """[聚类1 修复] 构建 LOAD 指令的表达式 dict。"""
+        op = instr.opname
+        if op == 'LOAD_CONST':
+            return {'type': 'Constant', 'value': instr.argval}
+        if op in ('LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_FAST', 'LOAD_DEREF',
+                  'LOAD_CLOSURE', 'LOAD_CLASSDEREF'):
+            return {'type': 'Name', 'id': instr.argval, 'ctx': 'Load'}
+        # fallback：当作 Name
+        return {'type': 'Name', 'id': str(instr.argval), 'ctx': 'Load'}
+
+    def _sim_wrapping_instr(self, instr, stack: List) -> None:
+        """[聚类1 修复] 栈模拟单条 wrapping 指令，更新栈。"""
+        op = instr.opname
+        if op in NOISE_OPS:
+            return
+        if op.startswith('LOAD_') and op != 'LOAD_ATTR' and op != 'LOAD_METHOD':
+            stack.append(self._build_simple_load(instr))
+            return
+        if op == 'LOAD_ATTR':
+            if stack:
+                obj = stack.pop()
+                stack.append({
+                    'type': 'Attribute',
+                    'value': obj,
+                    'attr': instr.argval,
+                    'ctx': 'Load',
+                })
+            return
+        if op == 'BINARY_SUBSCR':
+            if len(stack) >= 2:
+                subscript = stack.pop()
+                container = stack.pop()
+                stack.append({
+                    'type': 'Subscript',
+                    'value': container,
+                    'slice': subscript,
+                    'ctx': 'Load',
+                })
+            return
+        if op == 'PRECALL':
+            return
+        if op == 'CALL':
+            n = instr.arg or 0
+            if len(stack) >= n + 1:
+                args = [stack.pop() for _ in range(n)]
+                args.reverse()
+                callable_ = stack.pop()
+                stack.append({
+                    'type': 'Call',
+                    'func': callable_,
+                    'args': args,
+                    'keywords': [],
+                })
+            return
+        if op == 'BUILD_MAP':
+            n = instr.arg or 0
+            if len(stack) >= 2 * n:
+                keys = []
+                values = []
+                for _ in range(n):
+                    v = stack.pop()
+                    k = stack.pop()
+                    keys.insert(0, k)
+                    values.insert(0, v)
+                stack.append({
+                    'type': 'Dict',
+                    'keys': keys,
+                    'values': values,
+                })
+            return
+        if op == 'CONTAINS_OP':
+            if len(stack) >= 2:
+                right = stack.pop()
+                left = stack.pop()
+                op_str = 'not in' if instr.arg else 'in'
+                stack.append({
+                    'type': 'Compare',
+                    'left': left,
+                    'ops': [op_str],
+                    'comparators': [right],
+                })
+            return
+        if op == 'IS_OP':
+            if len(stack) >= 2:
+                right = stack.pop()
+                left = stack.pop()
+                op_str = 'is not' if instr.arg else 'is'
+                stack.append({
+                    'type': 'Compare',
+                    'left': left,
+                    'ops': [op_str],
+                    'comparators': [right],
+                })
+            return
+        if op == 'COMPARE_OP':
+            if len(stack) >= 2:
+                right = stack.pop()
+                left = stack.pop()
+                op_str = instr.argval
+                if not isinstance(op_str, str) or op_str not in _NEGATE_CMP_MAP:
+                    import dis as _dis
+                    if 0 <= (instr.arg or 0) < len(_dis.cmp_op):
+                        op_str = _dis.cmp_op[instr.arg]
+                stack.append({
+                    'type': 'Compare',
+                    'left': left,
+                    'ops': [op_str],
+                    'comparators': [right],
+                })
+            return
+        if op == 'BINARY_OP':
+            if len(stack) >= 2:
+                right = stack.pop()
+                left = stack.pop()
+                stack.append({
+                    'type': 'BinOp',
+                    'left': left,
+                    'op': instr.argval,
+                    'right': right,
+                })
+            return
+        if op.startswith('UNARY_'):
+            if stack:
+                operand = stack.pop()
+                uop = op[len('UNARY_'):].lower()
+                stack.append({
+                    'type': 'UnaryOp',
+                    'op': uop,
+                    'operand': operand,
+                })
+            return
+        if op == 'SWAP':
+            n = instr.arg or 2
+            if n == 2 and len(stack) >= 2:
+                stack[-1], stack[-2] = stack[-2], stack[-1]
+            return
+        if op == 'COPY':
+            n = instr.arg or 1
+            if 1 <= n <= len(stack):
+                stack.append(stack[-n])
+            return
+        if op == 'POP_TOP':
+            if stack:
+                stack.pop()
+            return
+        # 其他指令（如 STORE_*）忽略
+
+    def _build_ternary_wrapped_expr(self, ternary_expr: Dict[str, Any],
+                                     cond_block: 'BasicBlock',
+                                     ternary_region: 'TernaryRegion',
+                                     region: 'IfRegion') -> Optional[Dict[str, Any]]:
+        """[聚类1 修复] 三元被外层表达式包裹时，构建完整条件表达式。
+
+        适用场景（``merge_context='compare'``）：
+          - ``d[a if c else b] > 0``   → ``Subscript(d, ternary)`` 作为 Compare 左操作数
+          - ``(a if c else b).x > 0``  → ``Attribute(ternary, x)`` 作为 Compare 左操作数
+          - ``f(a if c else b) > 0``   → ``Call(f, [ternary])`` 作为 Compare 左操作数
+          - ``(a if c else b) is None`` → ``Compare(ternary, [is], [None])``
+          - ``(a if c else b) in lst``  → ``Compare(ternary, [in], [lst])``
+          - ``{(a if c else b): 1}``    → ``Dict([ternary], [1])`` 真值测试
+
+        实现：栈模拟。``ternary_expr`` 作为初始栈顶（ternary 已生产一个值），
+        按 cond_block 指令顺序处理 wrapping 指令。若 wrapping 指令需要前驱
+        操作数（如 BINARY_SUBSCR 需要 container），从 ternary_region.
+        condition_block 的 test 之前提取被困指令。
+
+        返回完整条件表达式 dict，或 None（cond_block 不含 wrapping 指令，
+        应走原始三元 Compare 构建路径）。
+        """
+        cond_instrs = [i for i in cond_block.instructions if i.opname not in NOISE_OPS]
+
+        _WRAPPING_OPS = {'LOAD_ATTR', 'BINARY_SUBSCR', 'PRECALL', 'CALL',
+                         'BUILD_MAP', 'CONTAINS_OP', 'IS_OP'}
+        _has_wrapping = any(i.opname in _WRAPPING_OPS for i in cond_instrs)
+        _has_none_check = any(i.opname in NONE_CHECK_OPS for i in cond_instrs)
+        if not (_has_wrapping or _has_none_check):
+            return None
+
+        # 提取 ternary test 之前的被困指令（如 container d, callable f）
+        trapped_instrs = self._extract_pre_ternary_instrs(ternary_region)
+
+        # 栈模拟
+        stack: List = []
+
+        # 阶段 1: 处理 trapped 指令（在 ternary 之前，如 container d, callable f）
+        for instr in trapped_instrs:
+            self._sim_wrapping_instr(instr, stack)
+
+        # 阶段 2: 压入 ternary_expr（ternary 已生产一个值）
+        stack.append(ternary_expr)
+
+        # 阶段 3: 处理 cond_block 中的指令
+        then_offsets = ({b.start_offset for b in region.then_blocks}
+                        if getattr(region, 'then_blocks', None) else set())
+
+        for instr in cond_instrs:
+            op = instr.opname
+            # NONE_CHECK_OPS（POP_JUMP_IF_NONE/NOT_NONE）：终结，构建 is/is not
+            if op in NONE_CHECK_OPS:
+                if stack:
+                    value = stack.pop()
+                    jump_target = instr.argval
+                    jumps_to_then = ((jump_target in then_offsets)
+                                     if jump_target is not None else False)
+                    # IF_NOT_NONE: 跳=值不是None; IF_NONE: 跳=值是None
+                    # 条件 = 走 then 的条件
+                    if 'NOT_NONE' in op:
+                        op_str = 'is not' if jumps_to_then else 'is'
+                    else:
+                        op_str = 'is' if jumps_to_then else 'is not'
+                    return {
+                        'type': 'Compare',
+                        'left': value,
+                        'ops': [op_str],
+                        'comparators': [{'type': 'Constant', 'value': None}],
+                    }
+                return None
+            # 非 NONE_CHECK 的条件跳转：终结，返回栈顶
+            if op in FORWARD_CONDITIONAL_JUMP_OPS or op in BACKWARD_CONDITIONAL_JUMP_OPS:
+                if stack:
+                    return stack[-1]
+                return None
+            # 其他指令：栈模拟
+            self._sim_wrapping_instr(instr, stack)
+
+        return stack[-1] if stack else None
+
     def _if_extract_condition_from_instructions(self, region: IfRegion, cond_block: 'BasicBlock', cond_instrs: List) -> Dict[str, Any]:
         # [Round 2 修复] 当 cond_block 属于某个多操作数 BoolOpRegion 时
         # （如 `if x or await g():` 中 await 的 truthy 测试块），条件应
@@ -6974,6 +7393,13 @@ AST 映射规则:
             if ternary_expr:
                 for b in ternary_for_cond.blocks:
                     self.generated_blocks.add(b)
+                # [聚类1 修复] 三元被外层表达式包裹时（d[ternary], (ternary).x,
+                # f(ternary), {ternary: v}, ternary is None, ternary in lst），
+                # 用栈模拟构建完整条件表达式。否则走原始三元 Compare 构建路径。
+                _wrapped = self._build_ternary_wrapped_expr(
+                    ternary_expr, cond_block, ternary_for_cond, region)
+                if _wrapped is not None:
+                    return _wrapped
                 # [聚类5 修复] 统一构建含三元的比较表达式，覆盖三种位置：
                 #   (a) 三元在左 : `(a if c else b) > 0`
                 #       cond_block 含 <rhs_loads>, COMPARE_OP, [jump]
