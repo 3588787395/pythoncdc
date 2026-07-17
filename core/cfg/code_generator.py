@@ -4376,7 +4376,14 @@ class CodeGenerator:
             else:
                 op_key = op
             op_str = op_map.get(op_key, str(op_key))
-            comparator_code = self._generate_expression(comparator, 0)
+            # [聚类5 修复] 比较数按比较优先级生成：低优先级操作数（如 IfExp/BoolOp）
+            # 需加括号，否则 `0 < (a if c else b)` 会渲染为 `0 < a if c else b`
+            # 并被 Python 解析为 `(0 < a) if c else b`（比较比条件表达式更紧绑定）。
+            c_prec = self._get_dict_expr_precedence(comparator)
+            if c_prec < self._precedence['==']:
+                comparator_code = self._generate_expression(comparator, self._precedence['=='])
+            else:
+                comparator_code = self._generate_expression(comparator, 0)
             parts.append(f'{op_str} {comparator_code}')
 
         result = ' '.join(parts)

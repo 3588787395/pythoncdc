@@ -3927,6 +3927,49 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                 return []
         return result
 
+    def _skip_await_poll_to_cond_block(self, setup_block: BasicBlock) -> Optional[BasicBlock]:
+        """[Round 2 修复] 正向跳过 await 轮询链，返回 truthy 测试 cond_block。
+
+        与 ``_collect_await_predecessor_chain``（反向：从 cond_block 找前驱）
+        互补，本方法正向遍历：从 setup_block（含 GET_AWAITABLE）出发，经
+        poll_block（SEND+YIELD_VALUE+JUMP_BACKWARD_NO_INTERRUPT 自循环）找到
+        其非自循环后继 cond_block（POP_JUMP_FORWARD_IF_TRUE/FALSE）。
+
+        用于 BoolOp 链检测中 ``x or await g()`` 模式：第一个操作数 ``x``
+        所在块以 POP_JUMP_IF_TRUE 结尾，fallthrough 后继是 await setup_block
+        （非条件跳转），链检测在此中断。本方法跳过 setup+poll，让链检测
+        继续到 await 结果的 truthy 测试块，识别为第二个操作数。
+
+        返回 cond_block，或 None（非 await 模式 / 结构不完整）。
+        """
+        # setup_block 必须含 GET_AWAITABLE（且不含 GET_YIELD_FROM_ITER）
+        has_awaitable = any(i.opname == 'GET_AWAITABLE' for i in setup_block.instructions)
+        if not has_awaitable:
+            return None
+        for instr in setup_block.instructions:
+            if instr.opname == 'GET_YIELD_FROM_ITER':
+                return None
+        # setup_block 的后继是 poll_block（含 SEND+YIELD+JUMP_BACKWARD_NO_INTERRUPT）
+        poll_succs = list(setup_block.successors)
+        if not poll_succs:
+            return None
+        poll_block = None
+        for succ in poll_succs:
+            _has_send = any(i.opname == 'SEND' for i in succ.instructions)
+            _has_yield = any(i.opname == 'YIELD_VALUE' for i in succ.instructions)
+            _has_jbni = any(i.opname == 'JUMP_BACKWARD_NO_INTERRUPT' for i in succ.instructions)
+            if _has_send and _has_yield and _has_jbni:
+                poll_block = succ
+                break
+        if poll_block is None:
+            return None
+        # poll_block 的非自循环后继是 cond_block
+        for succ in poll_block.successors:
+            if succ is poll_block:
+                continue
+            return succ
+        return None
+
     def _has_body_code_before_before_with(self, block: BasicBlock) -> bool:
         store_idx = None
         bw_idx = None
@@ -10221,6 +10264,64 @@ RegionType 枚举值: RegionType.ASSERT
         def _is_boolop_ternary_candidate(boolop_region):
             BOOLOP_JUMP_OPS = SHORT_CIRCUIT_JUMP_OPS | FORWARD_CONDITIONAL_JUMP_OPS
 
+            def _is_not_ternary_boolop_pattern():
+                """[聚类6] 检测 BoolOpRegion 是否实际是 not (ternary) 模式。
+
+                not (a if c else b) 编译为：
+                - cond_block: LOAD c, POP_JUMP_IF_FALSE → false_value
+                - true_value: LOAD a, POP_JUMP_IF_TRUE → else_exit
+                - false_value: LOAD b, POP_JUMP_IF_TRUE → else_exit (同一)
+
+                BoolOpRegion 误识别为 op_chain=[(cond, 'and'), (true_value, 'or')]
+                因为 cond 用 IF_FALSE (and 短路)，true_value 用 IF_TRUE (or 短路)。
+                两个 value 的 IF_TRUE target 是同一 else_exit (return body)。
+                """
+                if len(boolop_region.op_chain) != 2:
+                    return False
+                cond_block_bo, _ = boolop_region.op_chain[0]
+                tv_block_bo, _ = boolop_region.op_chain[1]
+                cond_last_bo = cond_block_bo.get_last_instruction()
+                tv_last_bo = tv_block_bo.get_last_instruction()
+                if not cond_last_bo or not tv_last_bo:
+                    return False
+                # cond 用 IF_FALSE/IF_NONE (and 短路)
+                if 'FALSE' not in cond_last_bo.opname and 'IF_NONE' not in cond_last_bo.opname:
+                    return False
+                # true_value 用 IF_TRUE/IF_NOT_NONE (or 短路)
+                if 'TRUE' not in tv_last_bo.opname and 'IF_NOT_NONE' not in tv_last_bo.opname:
+                    return False
+                if cond_last_bo.argval is None or tv_last_bo.argval is None:
+                    return False
+                # cond 的 IF_FALSE target 是 false_value block (另一个 value)
+                fv_block_bo = self.cfg.get_block_by_offset(cond_last_bo.argval)
+                if fv_block_bo is None or fv_block_bo is tv_block_bo:
+                    return False
+                # false_value 也以 IF_TRUE/IF_NOT_NONE 结尾
+                fv_last_bo = fv_block_bo.get_last_instruction()
+                if not fv_last_bo:
+                    return False
+                if 'TRUE' not in fv_last_bo.opname and 'IF_NOT_NONE' not in fv_last_bo.opname:
+                    return False
+                if fv_last_bo.argval is None:
+                    return False
+                # 两个 value 的 IF_TRUE target 是 else-exit。
+                # not(ternary) 模式下，两个 value (a/b) 的 IF_TRUE target 可能是
+                # 不同的 exit 块（CPython 为每条值路径生成独立的 return/exit 块），
+                # 但内容等价（如 LOAD_CONST None; RETURN_VALUE）。需检查内容等价，
+                # 而非要求同一块。
+                fv_exit_bo = self.cfg.get_block_by_offset(fv_last_bo.argval)
+                tv_exit_bo = self.cfg.get_block_by_offset(tv_last_bo.argval)
+                if fv_exit_bo is None or tv_exit_bo is None:
+                    return False
+                if fv_exit_bo is tv_exit_bo:
+                    return True
+                # 内容等价：非噪音指令序列（opname, argval）完全一致
+                fv_eff = [(i.opname, i.argval) for i in fv_exit_bo.instructions
+                          if i.opname not in NOISE_OPS]
+                tv_eff = [(i.opname, i.argval) for i in tv_exit_bo.instructions
+                          if i.opname not in NOISE_OPS]
+                return fv_eff == tv_eff
+
             if len(boolop_region.op_chain) >= 2:
                 first_jt_offset = None
                 for chain_block, _ in boolop_region.op_chain:
@@ -10256,6 +10357,11 @@ RegionType 枚举值: RegionType.ASSERT
                     if len(jt_non_noise) == 0:
                         continue
                     if not self._is_single_expression_block(jt_block):
+                        # [聚类6] not (ternary) 模式：value block 的 IF_TRUE 跳到
+                        # else-exit (return body)，而不是 merge。else-exit 是 return
+                        # body 不是单表达式，但这是有效的 not(ternary) 模式。
+                        if _is_not_ternary_boolop_pattern():
+                            continue
                         return False
                     return True
             return True
@@ -10691,7 +10797,28 @@ RegionType 枚举值: RegionType.ASSERT
                                     continue
                                 _push, _pop = self._stack_effect(_instr)
                                 _net_stack += _push - _pop
-                            if _net_stack != 1:
+                            # [聚类5 修复] net_stack==1: ternary 是比较的左操作数
+                            # (右操作数在 merge_block 中加载，已覆盖)。
+                            # net_stack==0: ternary 是比较的右操作数 —— 左操作数在
+                            # ternary 进入块之前加载（被"困"在 ternary entry 中），
+                            # merge_block 中 COMPARE_OP 之前无压栈。COMPARE_OP 仍消费
+                            # ternary 结果（栈顶）+ 预加载左操作数。需确认 COMPARE_OP
+                            # 紧随条件跳转（if/while 条件上下文），以区别于 ternary 结果
+                            # 保留作其他用途（如 print 参数，net_stack>=2）的场景。
+                            if _net_stack == 0:
+                                _has_cond_after_cmp = False
+                                for _ni in merge_block.instructions[cmp_idx + 1:]:
+                                    if _ni.opname in NOISE_OPS:
+                                        continue
+                                    if _ni.opname in (FORWARD_CONDITIONAL_JUMP_OPS
+                                                      | BACKWARD_CONDITIONAL_JUMP_OPS
+                                                      | SHORT_CIRCUIT_JUMP_OPS):
+                                        _has_cond_after_cmp = True
+                                    break
+                                if not _has_cond_after_cmp:
+                                    compare_uses_ternary = False
+                            elif _net_stack != 1:
+                                # net_stack>=2: COMPARE_OP不消费ternary结果，跳过
                                 compare_uses_ternary = False
                         if not compare_uses_ternary:
                             # COMPARE_OP不消费ternary结果，跳过设置merge_context='compare'
@@ -11896,7 +12023,56 @@ RegionType 枚举值: RegionType.ASSERT
                                 if succ not in chain_blocks and succ != merge:
                                     chain_blocks.add(succ)
 
+    def _fix_none_check_op_types(self, chain: List[Tuple[BasicBlock, str]]) -> List[Tuple[BasicBlock, str]]:
+        """Fix op_type classification for NONE_CHECK_OPS based on jump direction.
+
+        NONE_CHECK_OPS (IF_NONE/IF_NOT_NONE) are ambiguous: the opname alone
+        cannot determine whether the jump represents OR-success (jump to then
+        body) or AND-failure (jump to merge/else). The op_type classification
+        at line ~11964 uses substring matching ('_IF_NONE' → 'and') which is
+        incorrect for IF_NOT_NONE in AND chains and IF_NONE in OR chains.
+
+        This method post-processes the chain by determining the "then body"
+        (the fall-through successor of the last chain block — reached when the
+        overall condition is true) and reclassifies each NONE_CHECK_OP block:
+        - jump target == then body → 'or' (jump to then on success)
+        - jump target != then body → 'and' (jump to merge/else on failure)
+        """
+        if not chain or len(chain) < 2:
+            return chain
+        has_none_check = False
+        for block, _ in chain:
+            ci = block.get_last_instruction()
+            if ci and ci.opname in NONE_CHECK_OPS:
+                has_none_check = True
+                break
+        if not has_none_check:
+            return chain
+        last_block = chain[-1][0]
+        last_ci = last_block.get_last_instruction()
+        if not last_ci or last_ci.argval is None:
+            return chain
+        last_succs = list(last_block.conditional_successors)
+        if len(last_succs) != 2:
+            return chain
+        then_body = next((s for s in last_succs if s.start_offset != last_ci.argval), None)
+        if then_body is None:
+            return chain
+        fixed_chain = []
+        for block, op_type in chain:
+            ci = block.get_last_instruction()
+            if ci and ci.opname in NONE_CHECK_OPS and ci.argval is not None:
+                jt = self.cfg.get_block_by_offset(ci.argval)
+                if jt is not None:
+                    if jt == then_body:
+                        op_type = 'or'
+                    else:
+                        op_type = 'and'
+            fixed_chain.append((block, op_type))
+        return fixed_chain
+
     def _create_boolop_region_from_chain(self, chain: List[Tuple[BasicBlock, str]], claimed: Set[BasicBlock]) -> Optional[BoolOpRegion]:
+        chain = self._fix_none_check_op_types(chain)
         start_block = chain[0][0]
         chain_blocks = set(b for b, _ in chain)
         merge = self._boolop_resolve_merge(chain)
@@ -11914,6 +12090,31 @@ RegionType 枚举值: RegionType.ASSERT
         if is_condition_context and merge:
             region_blocks = chain_blocks
             value_target = None
+        # [Round 2 修复] await 轮询链作为 BoolOp 操作数：
+        # 当 `if await g() or x:` / `if x or await g():` 这样的 BoolOp 条件
+        # 中某个操作数是 `await <expr>` 时，CPython 把 await 求值展开为
+        # setup_block (LOAD/CALL/GET_AWAITABLE/LOAD_CONST None) +
+        # poll_block (SEND/YIELD_VALUE/RESUME/JUMP_BACKWARD_NO_INTERRUPT 自循环)
+        # + cond_block (POP_JUMP_FORWARD_IF_TRUE/FALSE truthy 测试)。
+        # cond_block 已在 op_chain 中，但 setup_block/poll_block 不在，会被
+        # _generate_block_statements 当作独立 `await g()` 语句输出，破坏
+        # BoolOp 表达式。这里把 await 前驱链纳入 BoolOpRegion.blocks，遵循
+        # 「每块唯一归属」——它们语义上属于 BoolOp 的操作数求值。
+        for _cb, _ in chain:
+            _await_chain = self._collect_await_predecessor_chain(_cb)
+            if not _await_chain:
+                continue
+            for _ab in _await_chain:  # [poll_block, setup_block]
+                if _ab is None or _ab in region_blocks:
+                    continue
+                # 不抢占已被其他区域（Loop/Try/With/Match/Ternary）占用的块
+                _existing = self.block_to_region.get(_ab)
+                if _existing is not None and _existing is not region:
+                    # LoopRegion 的 condition_block 允许共享，但 await 链通常
+                    # 不在循环条件里；保守起见跳过已归属的块
+                    if not isinstance(_existing, (LoopRegion,)):
+                        continue
+                region_blocks.add(_ab)
         region = BoolOpRegion(
             region_type=RegionType.BOOL_OP,
             entry=start_block,
@@ -12005,7 +12206,16 @@ RegionType 枚举值: RegionType.ASSERT
                     if not _normal_or and not _not_or_chain:
                         chain.pop()
                         break
-            current = ft_succ
+            # [Round 2 修复] await 作为后续操作数：`x or await g()` 中第一个
+            # 操作数 x 的 fallthrough 后继是 await setup_block（含 GET_AWAITABLE，
+            # 末尾 LOAD_CONST None 非条件跳转），链检测会在此中断。跳过
+            # setup+poll 轮询链，定位到 await 结果的 truthy 测试 cond_block，
+            # 作为下一个操作数块继续链检测。
+            _await_cond = self._skip_await_poll_to_cond_block(ft_succ)
+            if _await_cond is not None:
+                current = _await_cond
+            else:
+                current = ft_succ
         if len(chain) < 2:
             return None
         first_last = chain[0][0].get_last_instruction()

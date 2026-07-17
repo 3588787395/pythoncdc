@@ -149,10 +149,15 @@ class ExpressionReconstructor:
                             'lineno': instr.starts_line
                         }
                     
-                    # [关键修复] 将 NamedExpr 压入栈
-                    # 对于嵌套海象运算符，NamedExpr 的 value 字段已经包含了表达式
-                    # 所以只需要压入 NamedExpr，不需要额外压入原始值
-                    self.stack.append(named_expr)  # NamedExpr
+                    # [聚类1 修复] NamedExpr 应替换栈顶原值而非追加。
+                    # COPY 复制了栈顶值，STORE 弹出副本并赋值；栈上保留的原始值
+                    # 应被 NamedExpr 替换（walrus 求值 = 赋值 + 返回值）。
+                    # 追加会导致 BINARY_SUBSCR 等双操作数指令拿到错误操作数
+                    # （如 d[(n:=f())] 中容器 d 被额外的 f() 顶替）。
+                    if self.stack:
+                        self.stack[-1] = named_expr
+                    else:
+                        self.stack.append(named_expr)
                     self.last_instr_was_copy = False
                 else:
                     if isinstance(value, dict) and value.get('type') == 'AugAssign':
