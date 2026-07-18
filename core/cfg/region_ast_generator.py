@@ -1265,8 +1265,21 @@ class RegionASTGenerator:
 
     def _build_effective_stmts(self, block: BasicBlock, effective: List[Instruction]) -> List[Dict[str, Any]]:
         stmts, expr_instrs, seen_for = [], [], set()
+        # [R11-batch3 err 9-12] Skip for-target instructions (STORE_ATTR/STORE_SUBSCR + their
+        # preceding LOADs, UNPACK_*, etc.) in the fall_through block. Name-based skip
+        # (`for_target_names`) only covers STORE_NAME/FAST/GLOBAL/DEREF; complex targets
+        # (Attribute, Subscript, starred, nested Tuple) need offset-based skip.
+        _ft_consumed = (self._current_loop.metadata.get('for_target_consumed_offsets')
+                        if self._current_loop is not None
+                        and self._current_loop.metadata.get('for_iter_fall_through') is block
+                        else None)
         for instr in effective:
             if instr.opname in ('RESUME', 'NOP', 'CACHE'):
+                continue
+            if _ft_consumed is not None and instr.offset in _ft_consumed:
+                # This instruction was absorbed into the for-target; skip it. Flush any
+                # pending expr_instrs that were actually part of the target prefix too.
+                expr_instrs = []
                 continue
             for_targets = self._current_loop.metadata.get('for_target_names', set()) if self._current_loop else set()
             # for-target store（FOR_ITER落到的块中的STORE_*）属于循环机制指令，应跳过；
@@ -2405,78 +2418,116 @@ AST 映射规则:
                     continue
                 _searched.add(search_block)
                 _is_ft_block = (search_block == _ft_block)
-                found_unpack = False
-                unpack_count = 0
-                unpack_targets = []
-                # [Round9-02] 嵌套 UNPACK_SEQUENCE 栈式管理：支持
-                # `for (a, b), (c, d) in pairs` 这种多层 tuple target。
-                # 字节码：UNPACK_SEQUENCE 2 (outer) → UNPACK_SEQUENCE 2 (inner)
-                # → STORE a, STORE b → UNPACK_SEQUENCE 2 (inner) → STORE c, STORE d
-                # 每帧 {targets, count}，每完成一帧作为父帧的一个 Tuple 元素。
-                _nested_unpack_stack = []
-                _nested_completed_top = None  # 顶层完成帧的 Tuple 节点
+                # [R11-batch3 err 9-12] Generalized for-target builder.
+                # Supports: simple Name (STORE_NAME/FAST/...), Attribute (LOAD obj; STORE_ATTR),
+                # Subscript (LOAD obj, LOAD key; STORE_SUBSCR), nested Tuple (UNPACK_SEQUENCE),
+                # and starred Tuple (UNPACK_EX). All forms compose inside nested UNPACK_SEQUENCE.
+                # `_load_stack` accumulates LOAD_* expressions since the last consumer; STORE_ATTR
+                # pops 1 (obj), STORE_SUBSCR pops 2 (key, obj). `_unpack_stack` frames carry
+                # {targets, count, starred_idx}; starred_idx >= 0 marks the Starred slot for UNPACK_EX.
+                # `_consumed_offsets` records every instruction offset absorbed into the target so
+                # the body generator can skip them (STORE_ATTR/STORE_SUBSCR + their preceding LOADs
+                # are not covered by the name-based `for_target_names` skip).
+                _load_stack = []
+                _unpack_stack = []
+                _completed_top = None
+                _consumed_offsets = set()
+                _has_unpack = False
                 for i in search_block.instructions:
-                    if i.opname in ('FOR_ITER', 'GET_ANEXT'):
+                    if i.opname in ('FOR_ITER', 'GET_ANEXT', 'GET_ITER'):
+                        continue
+                    if i.opname in ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG', 'PUSH_NULL'):
+                        continue
+                    # Accumulate expression-producing loads for later STORE_ATTR/STORE_SUBSCR.
+                    if i.opname in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF'):
+                        _load_stack.append({'type': 'Name', 'id': str(i.argval), 'ctx': 'Load'})
+                        _consumed_offsets.add(i.offset)
+                        continue
+                    if i.opname == 'LOAD_CONST':
+                        _load_stack.append({'type': 'Constant', 'value': i.argval, 'ctx': 'Load'})
+                        _consumed_offsets.add(i.offset)
                         continue
                     if i.opname == 'UNPACK_SEQUENCE' and hasattr(i, 'arg'):
-                        found_unpack = True
-                        _nested_unpack_stack.append({'targets': [], 'count': i.arg})
+                        _has_unpack = True
+                        _unpack_stack.append({'targets': [], 'count': i.arg, 'starred_idx': -1})
+                        _consumed_offsets.add(i.offset)
                         continue
-                    if i.opname == 'UNPACK_EX' and hasattr(i, 'argval'):
-                        # star unpack: before, after = argval & 0xFF, (argval >> 8) & 0xFF
-                        # 不展开嵌套，简单按顺序收集 (before STORE + 1 star + after STORE)。
-                        found_unpack = True
-                        _ua_before = i.argval & 0xFF
-                        _ua_after = (i.argval >> 8) & 0xFF
-                        _ua_elts = []
-                        _ua_seen = 0
-                        _ua_star_seen = False
+                    if i.opname == 'UNPACK_EX':
+                        _has_unpack = True
+                        _arg = i.argval if (i.argval is not None and hasattr(i, 'argval')) else (i.arg or 0)
+                        _ua_before = _arg & 0xFF
+                        _ua_after = (_arg >> 8) & 0xFF
+                        _unpack_stack.append({
+                            'targets': [],
+                            'count': _ua_before + 1 + _ua_after,
+                            'starred_idx': _ua_before,
+                        })
+                        _consumed_offsets.add(i.offset)
                         continue
-                    if found_unpack and i.opname.startswith('STORE_') and hasattr(i, 'argval'):
-                        if _nested_unpack_stack:
-                            _top = _nested_unpack_stack[-1]
-                            _top['targets'].append({
-                                'type': 'Name',
-                                'id': str(i.argval),
-                                'ctx': 'Store',
-                            })
-                            # 嵌套归约：每完成一帧，作为父帧的一个 Tuple 目标；
-                            # 父帧若也随之完成则继续归约，直到顶层帧完成。
-                            while (_nested_unpack_stack
-                                   and len(_nested_unpack_stack[-1]['targets']) == _nested_unpack_stack[-1]['count']):
-                                _completed = _nested_unpack_stack.pop()
-                                _completed_tgt = {
-                                    'type': 'Tuple',
-                                    'elts': _completed['targets'],
-                                    'ctx': 'Store',
-                                }
-                                if not _nested_unpack_stack:
-                                    _nested_completed_top = _completed_tgt
-                                    break
-                                else:
-                                    _nested_unpack_stack[-1]['targets'].append(_completed_tgt)
-                            if _nested_completed_top is not None:
-                                break
+                    if not i.opname.startswith('STORE_'):
+                        # Other ops (POP_TOP, JUMP_*, etc.) — flush load stack to avoid
+                        # misattribution; they are not part of the target pattern.
+                        _load_stack = []
+                        continue
+                    # Build target node for this STORE_*.
+                    if i.opname == 'STORE_ATTR':
+                        _obj = _load_stack.pop() if _load_stack else None
+                        if _obj is None:
+                            _tgt = {'type': 'Name', 'id': str(i.argval) if i.argval is not None else '_', 'ctx': 'Store'}
                         else:
-                            unpack_targets.append({'type': 'Name', 'id': str(i.argval), 'ctx': 'Store'})
-                            if len(unpack_targets) == unpack_count:
+                            _tgt = {'type': 'Attribute', 'value': _obj, 'attr': str(i.argval), 'ctx': 'Store'}
+                    elif i.opname == 'STORE_SUBSCR':
+                        _key = _load_stack.pop() if _load_stack else None
+                        _obj = _load_stack.pop() if _load_stack else None
+                        if _obj is None or _key is None:
+                            _tgt = {'type': 'Name', 'id': '_', 'ctx': 'Store'}
+                        else:
+                            _tgt = {'type': 'Subscript', 'value': _obj, 'slice': _key, 'ctx': 'Store'}
+                    else:
+                        # STORE_NAME / STORE_FAST / STORE_GLOBAL / STORE_DEREF
+                        _tgt = {'type': 'Name', 'id': str(i.argval) if i.argval is not None else f'var_{i.arg}', 'ctx': 'Store'}
+                    _consumed_offsets.add(i.offset)
+                    if _unpack_stack:
+                        _top = _unpack_stack[-1]
+                        _idx = len(_top['targets'])
+                        if _top['starred_idx'] >= 0 and _idx == _top['starred_idx']:
+                            _tgt = {'type': 'Starred', 'value': _tgt}
+                        _top['targets'].append(_tgt)
+                        # Reduce completed frames bottom-up.
+                        while _unpack_stack and len(_unpack_stack[-1]['targets']) == _unpack_stack[-1]['count']:
+                            _completed = _unpack_stack.pop()
+                            _completed_tgt = {'type': 'Tuple', 'elts': _completed['targets'], 'ctx': 'Store'}
+                            if not _unpack_stack:
+                                _completed_top = _completed_tgt
                                 break
-                    elif not found_unpack and i.opname.startswith('STORE_') and hasattr(i, 'argval'):
-                        target_name = str(i.argval)
-                        target = {'type': 'Name', 'id': target_name, 'ctx': 'Store'}
+                            _parent = _unpack_stack[-1]
+                            _pidx = len(_parent['targets'])
+                            if _parent['starred_idx'] >= 0 and _pidx == _parent['starred_idx']:
+                                _completed_tgt = {'type': 'Starred', 'value': _completed_tgt}
+                            _parent['targets'].append(_completed_tgt)
+                        if _completed_top is not None:
+                            break
+                    else:
+                        target = _tgt
+                        target_name = '<target>'
                         break
-                if _nested_completed_top is not None:
-                    target = _nested_completed_top
-                    # target_name 仅作占位（避免再次进入搜索）。
+                if _completed_top is not None:
+                    target = _completed_top
                     target_name = '<tuple>'
+                    # Record consumed offsets so the body generator can skip target instrs.
+                    if _is_ft_block and _consumed_offsets:
+                        region.metadata['for_target_consumed_offsets'] = _consumed_offsets
                     break
-                if found_unpack and unpack_targets:
-                    target = {'type': 'Tuple', 'elts': unpack_targets, 'ctx': 'Store'}
-                    target_name = ','.join(t.get('id', '') for t in unpack_targets)
-                    break
-                if _is_ft_block and target_name:
+                if _has_unpack and _load_stack:
+                    # Unreduced loads without a closing STORE — ignore; not a target pattern.
+                    pass
+                if _is_ft_block and target_name and target_name != '_':
+                    if _consumed_offsets:
+                        region.metadata['for_target_consumed_offsets'] = _consumed_offsets
                     break
                 if target_name != '_':
+                    if _consumed_offsets:
+                        region.metadata['for_target_consumed_offsets'] = _consumed_offsets
                     break
 
         for_target_name = target.get('id') if target else None
@@ -5296,6 +5347,7 @@ AST 映射规则:
                 return
             if _be_meaningful:
                 _be_ft_names = region.metadata.get('for_target_names', set())
+                _be_ft_consumed = region.metadata.get('for_target_consumed_offsets')
                 _be_filtered = []
                 _be_seen_targets = set()
                 for _bei in _be_meaningful:
@@ -5305,6 +5357,8 @@ AST 映射规则:
                         else:
                             _be_filtered.append(_bei)
                             continue
+                    if _be_ft_consumed and _bei.offset in _be_ft_consumed:
+                        continue
                     _be_filtered.append(_bei)
                 _be_stmts = self._generate_stmts_from_instrs(_be_filtered, block)
                 _be_effective = self.region_analyzer.effective_instructions.get(block.start_offset)
@@ -5334,6 +5388,7 @@ AST 映射规则:
                                   and i.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')]
                 if _be_meaningful:
                     _be_ft_names2 = region.metadata.get('for_target_names', set())
+                    _be_ft_consumed2 = region.metadata.get('for_target_consumed_offsets')
                     _be_filtered2 = []
                     _be_seen2 = set()
                     for _bei2 in _be_meaningful:
@@ -5343,6 +5398,8 @@ AST 映射规则:
                             else:
                                 _be_filtered2.append(_bei2)
                                 continue
+                        if _be_ft_consumed2 and _bei2.offset in _be_ft_consumed2:
+                            continue
                         _be_filtered2.append(_bei2)
                     _be_stmts2 = self._generate_stmts_from_instrs(_be_filtered2, block)
                     _be_effective2 = self.region_analyzer.effective_instructions.get(block.start_offset)
