@@ -799,6 +799,8 @@ class RegionASTGenerator:
     def _build_function_def(self, func_name: str = None, body: List[Dict[str, Any]] = None,
                              func_obj: Dict[str, Any] = None, decorator: Any = None) -> Dict[str, Any]:
         is_async = False
+        # [R11-batch1] 初始化在 func_obj 分支内赋值的注解变量，避免 else 路径下未定义
+        _returns_annotation = None
 
         if func_obj is not None:
             code_obj = func_obj.get('code')
@@ -881,6 +883,15 @@ class RegionASTGenerator:
                             kw_defaults_list.append(None)
                     if any(d is not None for d in kw_defaults_list):
                         args['kw_defaults'] = kw_defaults_list
+
+            # [R11-batch1 err 4] 处理返回类型注解 (MAKE_FUNCTION flag 4)
+            # 字节码模式: cond_block 预加载 LOAD_CONST 'return'，三元求值后
+            # BUILD_TUPLE 2 组成 ('return', value) 元组传给 MAKE_FUNCTION 4。
+            # func_obj['annotations'] 是 {name: expr} 字典，提取 'return' 作 returns。
+            if isinstance(func_obj, dict) and 'annotations' in func_obj:
+                _annotations = func_obj.get('annotations')
+                if isinstance(_annotations, dict):
+                    _returns_annotation = _annotations.get('return')
 
             body_stmts = [{'type': 'Pass'}]
             if self.recursive:
@@ -1014,7 +1025,7 @@ class RegionASTGenerator:
             'args': args,
             'body': filtered_body,
             'decorator_list': [],
-            'returns': None,
+            'returns': _returns_annotation,
         }
 
         if decorator:
@@ -1026,6 +1037,10 @@ class RegionASTGenerator:
                     result['decorator_list'] = decorator_list
             elif isinstance(decorator, str):
                 result['decorator_list'] = [{'type': 'Name', 'id': decorator}]
+            elif isinstance(decorator, dict):
+                # [R11-batch1 err 1/2] 任意表达式（如 IfExp）作装饰器：
+                # @(dec1 if c2 else dec2) 或 @dec(a if c2 else b) 的整体 Call
+                result['decorator_list'] = [decorator]
 
         if func_obj is not None:
             try:
@@ -15404,16 +15419,80 @@ AST 映射规则:
                         # [T2修复] 检测MAKE_FUNCTION模式: ternary作为函数默认参数值
                         # 字节码模式: BUILD_TUPLE n, LOAD_CONST <code>, MAKE_FUNCTION 1, STORE_NAME fn
                         # 需要生成FunctionDef而不是Assign
+                        # [R11-batch1] 扩展支持 MAKE_FUNCTION 的全部 flags:
+                        #   flag 1 (defaults)        : ternary 作位置参数默认值
+                        #   flag 2 (kw_defaults)     : ternary 作 kw-only 默认值 (BUILD_CONST_KEY_MAP)
+                        #   flag 4 (annotations)     : ternary 作返回类型注解 (BUILD_TUPLE + 'return' preload)
+                        #   flag 0 + CALL after      : ternary 作装饰器 (PRECALL/CALL 应用装饰器)
+                        #   flag 0 + CALL before+after: ternary 作装饰器参数 (dec(ternary) → 装饰器)
                         _has_make_function = any(i.opname == 'MAKE_FUNCTION' for i in before_store)
                         if _has_make_function:
                             _code_obj = None
-                            for _bi in before_store:
-                                if _bi.opname == 'LOAD_CONST' and hasattr(_bi.argval, 'co_code'):
+                            _mf_idx = None
+                            _mf_flags = 0
+                            for _bi_idx, _bi in enumerate(before_store):
+                                if _bi.opname == 'MAKE_FUNCTION':
+                                    _mf_idx = _bi_idx
+                                    _mf_flags = _bi.arg or 0
+                                if _bi.opname == 'LOAD_CONST' and hasattr(_bi.argval, 'co_code') and _code_obj is None:
                                     _code_obj = _bi.argval
-                                    break
-                            if _code_obj is not None:
+                            if _code_obj is not None and _mf_idx is not None:
+                                _func_obj = {'code': _code_obj}
+                                _decorator = None
+                                if _mf_flags & 2:
+                                    # kw_defaults: 提取 LOAD_CONST (tuple) + BUILD_CONST_KEY_MAP
+                                    _kw_names = None
+                                    for _j in range(_mf_idx - 1, -1, -1):
+                                        if before_store[_j].opname == 'BUILD_CONST_KEY_MAP':
+                                            for _k in range(_j - 1, -1, -1):
+                                                if (before_store[_k].opname == 'LOAD_CONST'
+                                                        and isinstance(before_store[_k].argval, tuple)):
+                                                    _kw_names = before_store[_k].argval
+                                                    break
+                                            break
+                                    if _kw_names:
+                                        _keys = [{'type': 'Constant', 'value': n} for n in _kw_names]
+                                        _values = [ternary_expr for _ in _kw_names]
+                                        _func_obj['kw_defaults'] = {
+                                            'type': 'Dict',
+                                            'keys': _keys,
+                                            'values': _values,
+                                        }
+                                elif _mf_flags & 4:
+                                    # annotations: 从 cond_block preload 提取注解键名
+                                    _ann_key = 'return'
+                                    if preload_exprs:
+                                        for _pe in preload_exprs:
+                                            if (isinstance(_pe, dict)
+                                                    and _pe.get('type') == 'Constant'
+                                                    and isinstance(_pe.get('value'), str)):
+                                                _ann_key = _pe['value']
+                                                break
+                                    _func_obj['annotations'] = {_ann_key: ternary_expr}
+                                elif _mf_flags & 1:
+                                    _func_obj['defaults'] = [ternary_expr]
+                                else:
+                                    # flag 0: 检测装饰器应用模式
+                                    _has_call_after = any(_bi.opname == 'CALL'
+                                                         for _bi in before_store[_mf_idx + 1:])
+                                    _has_call_before = any(_bi.opname == 'CALL'
+                                                          for _bi in before_store[:_mf_idx])
+                                    if _has_call_after:
+                                        if _has_call_before and preload_exprs:
+                                            # ternary_decorator_arg: ternary 是 dec() 的参数，
+                                            # preload 中的 dec 是装饰器函数，CALL before 求出 dec(ternary)。
+                                            _func_expr = preload_exprs[0]
+                                            _decorator = {
+                                                'type': 'Call',
+                                                'func': _func_expr,
+                                                'args': [ternary_expr],
+                                                'keywords': [],
+                                            }
+                                        else:
+                                            # ternary_decorator: ternary 本身就是装饰器
+                                            _decorator = ternary_expr
                                 _func_def = self._build_function_def(
-                                    func_obj={'code': _code_obj, 'defaults': [ternary_expr]})
+                                    func_obj=_func_obj, decorator=_decorator)
                                 # [R10-batch1 err 8] When the function is a Lambda
                                 # (co_name == '<lambda>'), _build_function_def returns
                                 # a Lambda expression dict (not a FunctionDef). A bare
