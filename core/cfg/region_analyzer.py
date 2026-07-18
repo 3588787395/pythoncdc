@@ -7727,6 +7727,15 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                         else:
                             if gc != current:
                                 guard_jump_target = gj.argval
+                                # [R16 模式 B 修复] guard 块（含 LOAD_VAR + 条件跳转）
+                                # 排除出 body：guard 块的字节码（如 LOAD_NAME z /
+                                # POP_JUMP_IF_FALSE）已由 parse_case_guard 提取为
+                                # case 守卫条件，不应再作为 body 内容重复生成。
+                                # 将 guard 块加入 pattern_check_blocks，使其：
+                                # 1. 被 _mr_resolve_pattern_check_chain 跳过（找到真正 body）
+                                # 2. 加入 stop_set（从 body_set 中排除）
+                                # 3. 纳入 all_blocks（属于 match 区域）
+                                pattern_check_blocks.add(gc)
                             break
                     elif is_pattern_only:
                         for s in gc.successors:
@@ -8642,6 +8651,20 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
             return True
         trivial_ops = frozenset(('POP_TOP', 'LOAD_CONST', 'RETURN_VALUE', 'RETURN_CONST',
                                   'JUMP_FORWARD', 'JUMP_ABSOLUTE', 'NOP', 'RESUME', 'CACHE'))
+        # 区域归约算法：[R16 模式 A 修复] 显式 case _: body 识别
+        # CPython 为显式 case body 添加 NOP 前缀作为标记（即使 body 为 pass）。
+        # 对于 COPY-based 模式匹配（or-pattern, class pattern），显式 case _: pass
+        # 的 body 会跳转到带 NOP 前缀的 after-match continuation 块。若 body 中
+        # 包含此块，说明是显式 case _: body，不应视为隐式 default。
+        # 对于简单 match（无 COPY），NOP 前缀块已被 _mr_collect_simple_body_blocks
+        # 跳过（仅含 NOP 的块被合并到后继），因此此处不影响简单 match 的隐式
+        # default 识别（简单 match 有无 case _ 字节码过滤后等价）。
+        for block in body_blocks:
+            for instr in block.instructions:
+                if instr.opname == 'NOP':
+                    return False
+                elif instr.opname not in NOISE_OPS:
+                    break
         for block in body_blocks:
             meaningful = [i for i in block.instructions if i.opname not in trivial_ops]
             if meaningful:
