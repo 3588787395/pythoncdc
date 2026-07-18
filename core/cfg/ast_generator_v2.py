@@ -46,7 +46,78 @@ class ExpressionReconstructor:
         self.last_instr_was_copy = False
         self.copy_depth = 0
         self._jump_since_last_compare = False
-    
+
+    def _flatten_dict_merge_to_kwargs(self, node):
+        """[Round8-04] 递归展开（嵌套）DictMerge 节点为 keyword 列表。
+
+        用于 CALL_FUNCTION_EX 的 kwargs 重建：``f(**a, **b, k=v)`` 字节码
+        会产生嵌套 DictMerge(DictMerge(Dict({k:v}), Name(a)), Name(b))。
+        展开规则：
+          - DictMerge: 递归展开 dict1，再追加 dict2 为 KeywordStarred
+          - Dict: 显式关键字参数，转为 keyword 节点
+          - Name/Call/Attribute/Subscript/Starred: 单个 ``**expr`` 项
+        """
+        result = []
+        if not isinstance(node, dict):
+            return result
+        ntype = node.get('type')
+        if ntype == 'DictMerge':
+            d1 = node.get('dict1')
+            if d1 is not None:
+                result.extend(self._flatten_dict_merge_to_kwargs(d1))
+            d2 = node.get('dict2')
+            if d2 is not None:
+                result.append({'type': 'KeywordStarred', 'value': d2})
+        elif ntype == 'Dict':
+            keys = node.get('keys', [])
+            values = node.get('values', [])
+            for i, key in enumerate(keys):
+                if i < len(values):
+                    result.append({
+                        'type': 'keyword',
+                        'arg': key.get('value') if isinstance(key, dict) and key.get('type') == 'Constant' else key,
+                        'value': values[i]
+                    })
+        elif ntype in ('Name', 'Call', 'Attribute', 'Subscript', 'Starred'):
+            result.append({'type': 'KeywordStarred', 'value': node})
+        return result
+
+    def _flatten_dict_merge_to_dict_items(self, node):
+        """[Round8-05] 递归展开（嵌套）DictMerge 节点为 dict 字面量的
+        (keys, values) 列表，用于 DICT_UPDATE 合并源是 DictMerge 的罕见场景。
+
+        ``**expr`` 项以 Starred(value=expr) 作 key、None 作 value 表示
+        （与 CPython AST 中 dict 内 ``**expr`` 的表示一致）。
+        """
+        keys = []
+        values = []
+        if not isinstance(node, dict):
+            return keys, values
+        ntype = node.get('type')
+        if ntype == 'DictMerge':
+            sub_keys, sub_values = self._flatten_dict_merge_to_dict_items(node.get('dict1'))
+            keys.extend(sub_keys)
+            values.extend(sub_values)
+            d2 = node.get('dict2')
+            if d2 is not None:
+                keys.append({
+                    'type': 'Starred',
+                    'value': d2,
+                    'ctx': 'Load',
+                })
+                values.append(None)
+        elif ntype == 'Dict':
+            keys.extend(node.get('keys', []))
+            values.extend(node.get('values', []))
+        elif ntype in ('Name', 'Call', 'Attribute', 'Subscript', 'Starred'):
+            keys.append({
+                'type': 'Starred',
+                'value': node,
+                'ctx': 'Load',
+            })
+            values.append(None)
+        return keys, values
+
     def reconstruct(self, instructions: List[Instruction], initial_stack: Optional[List[Dict[str, Any]]] = None) -> Optional[Dict[str, Any]]:
         """
         从指令序列重建表达式
@@ -734,6 +805,62 @@ class ExpressionReconstructor:
                 }
                 self.stack.append(merged)
 
+        # [Round8-04/05] DICT_UPDATE - Python 3.11+ 字典字面量中的 **expr 合并指令
+        # 用于 ``{**a, **b, "k": v}`` 等字典字面量：BUILD_MAP 0; LOAD a; DICT_UPDATE 1;
+        # LOAD b; DICT_UPDATE 1; LOAD 'k'; LOAD v; BUILD_MAP 1; DICT_UPDATE 1; STORE r
+        # 与 DICT_MERGE（用于 CALL_FUNCTION_EX 的 **kwargs）不同，DICT_UPDATE 用于字面量。
+        # 语义：弹出栈顶 dict2，合并到栈下方 dict1 中。若 dict2 是字面量 Dict，展开其项；
+        # 若 dict2 是其他表达式（Name/Call/Subscript 等），则作为 ``**expr`` 项加入。
+        elif opname == 'DICT_UPDATE':
+            count = instr.arg if instr.arg is not None else 1
+            # DICT_UPDATE i 弹出 i 个源 dict，依次合并到下方目标 dict
+            sources = []
+            for _ in range(count):
+                if self.stack:
+                    sources.insert(0, self.stack.pop())
+            if not self.stack:
+                # 没有目标 dict，无法合并
+                for s in sources:
+                    self.stack.append(s)
+            else:
+                target = self.stack.pop()
+                # 若 target 不是 Dict，包成空 Dict 以便统一处理
+                if not (isinstance(target, dict) and target.get('type') == 'Dict'):
+                    target = {
+                        'type': 'Dict',
+                        'keys': [],
+                        'values': [],
+                        'lineno': instr.starts_line,
+                    }
+                keys = list(target.get('keys', []))
+                values = list(target.get('values', []))
+                for src in sources:
+                    if isinstance(src, dict) and src.get('type') == 'Dict':
+                        # 字面量 Dict：展开其项到 target
+                        keys.extend(src.get('keys', []))
+                        values.extend(src.get('values', []))
+                    elif isinstance(src, dict) and src.get('type') == 'DictMerge':
+                        # 嵌套 DictMerge（罕见）：递归展开
+                        sub_keys, sub_values = self._flatten_dict_merge_to_dict_items(src)
+                        keys.extend(sub_keys)
+                        values.extend(sub_values)
+                    else:
+                        # **expr 项：以 Starred(value=expr) 作 key，None 作 value
+                        # （与 CPython AST 中 dict 内 **expr 的表示一致）
+                        keys.append({
+                            'type': 'Starred',
+                            'value': src,
+                            'ctx': 'Load',
+                            'lineno': instr.starts_line,
+                        })
+                        values.append(None)
+                self.stack.append({
+                    'type': 'Dict',
+                    'keys': keys,
+                    'values': values,
+                    'lineno': instr.starts_line,
+                })
+
         # [聚类7 修复] LIST_TO_TUPLE - Python 3.11+ 的列表转元组指令
         # 用于 CALL_FUNCTION_EX 的位置参数构建：BUILD_LIST + LIST_EXTEND + LIST_TO_TUPLE
         # 生成 *args 的位置参数元组。若不处理，args_obj 会停留在 List 类型，
@@ -1210,7 +1337,7 @@ class ExpressionReconstructor:
                             # 如果是变量名（如*args），保留为星号参数
                             args = [{'type': 'Starred', 'value': args_obj}]
 
-                    # 处理kwargs_dict - 可能是Dict、DictMerge或其他类型
+                    # 处理kwargs_dict - 可能是Dict、DictMerge（含嵌套）或其他类型
                     if kwargs_dict:
                         if kwargs_dict.get('type') == 'Dict':
                             # 如果是字典，检查是否为空（BUILD_MAP 0的结果）
@@ -1231,28 +1358,18 @@ class ExpressionReconstructor:
                                         })
 
                         # 检查是否是DictMerge对象（DICT_MERGE指令的结果）
+                        # [Round8-04] DictMerge 可能嵌套（多次 **dict 合并），
+                        # 例如 f(**a, **b) 字节码为 BUILD_MAP 0; LOAD a; DICT_MERGE 1;
+                        # LOAD b; DICT_MERGE 1; CALL_FUNCTION_EX 1，外层 DictMerge 的
+                        # dict1 本身也是 DictMerge。需递归展开为多个 KeywordStarred。
                         if kwargs_dict.get('type') == 'DictMerge':
-                            # [聚类7 修复] DictMerge 包含 dict1 (BUILD_MAP 的显式关键字参数,
-                            # 如 b=c) 和 dict2 (**kwargs 变量)。两者都必须保留：
-                            # 显式参数转为 keyword 节点，dict2 转为 KeywordStarred。
-                            dict1 = kwargs_dict.get('dict1')
-                            if isinstance(dict1, dict) and dict1.get('type') == 'Dict':
-                                d1_keys = dict1.get('keys', [])
-                                d1_values = dict1.get('values', [])
-                                for i, key in enumerate(d1_keys):
-                                    if i < len(d1_values):
-                                        kwargs.append({
-                                            'type': 'keyword',
-                                            'arg': key.get('value') if key.get('type') == 'Constant' else key,
-                                            'value': d1_values[i]
-                                        })
-                            dict2 = kwargs_dict.get('dict2')
-                            if dict2 and dict2.get('type') == 'Name':
-                                # **kwargs 模式
-                                kwargs.append({'type': 'KeywordStarred', 'value': dict2})
+                            kwargs.extend(self._flatten_dict_merge_to_kwargs(kwargs_dict))
                         elif kwargs_dict.get('type') == 'Name':
                             # 如果是变量名，表示**kwargs
                             kwargs = [{'type': 'KeywordStarred', 'value': kwargs_dict}]
+                        elif kwargs_dict.get('type') in ('Call', 'Attribute', 'Subscript', 'Starred'):
+                            # **expr 其中 expr 是复杂表达式
+                            kwargs.append({'type': 'KeywordStarred', 'value': kwargs_dict})
                     
                     self.stack.append({
                         'type': 'Call',

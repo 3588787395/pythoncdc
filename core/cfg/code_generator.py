@@ -3054,6 +3054,13 @@ class CodeGenerator:
                     values = node.get('values', [])
                     pairs = []
                     for k, v in zip(keys, values):
+                        # [Round8-05] dict 字面量中的 **expr 项：CPython AST 用
+                        # Starred(value=expr) 作 key、None 作 value 表示。
+                        # 渲染为 ``**expr``（无 key: value 对）。
+                        if (isinstance(k, dict) and k.get('type') == 'Starred'
+                                and v is None):
+                            pairs.append(f'**{self._generate_expression(k.get("value"), 0)}')
+                            continue
                         k_code = self._generate_expression(k, 0)
                         v_code = self._generate_expression(v, 0)
                         pairs.append(f'{k_code}: {v_code}')
