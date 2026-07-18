@@ -21,7 +21,8 @@
 - [x] Task 1.3: IF round_03 — commit 17ccc7e (已 push)
 - [x] Task 1.4: IF round_04 — commit a3e4d41 (15/15 修复完成, 已 push)
 - [x] Task 1.5: IF round_05 — commit fb8d930 (11/11 修复完成, 已 push)
-- [ ] Task 1.6 ~ 1.20
+- [x] Task 1.6: IF round_06 — commit b340f2a (14/14 修复完成, 已 push)
+- [ ] Task 1.7 ~ 1.20
 
 ## Phase 2: LOOP 区域（20 轮）
 - [ ] Task 2.1 ~ 2.20

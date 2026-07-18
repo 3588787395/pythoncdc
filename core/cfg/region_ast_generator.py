@@ -1797,6 +1797,16 @@ AST 映射规则:
         if not ops or len(ops) < 2:
             return None
 
+        # [Round7-04] literal-middle chained compare: when cond_block contains
+        # BUILD_LIST/BUILD_TUPLE/BUILD_SET, the single-instruction operand
+        # extraction below treats each LOAD element as a separate operand,
+        # collapsing `[a, b]` to `a`. Reconstruct the middle as a List/Tuple/
+        # Set AST node by reverse stack-tracking from the BUILD_* instruction.
+        _literal_compare = self._try_build_literal_middle_from_blocks(
+            cond_block, list(chain_blocks), list(ops))
+        if _literal_compare is not None:
+            return _literal_compare
+
         left_instr = None
         comparator_instrs = []
         for block_idx, block in enumerate(all_blocks):
@@ -5872,6 +5882,15 @@ AST 映射规则:
         _walrus_compare = self._try_build_walrus_chained_compare(region)
         if _walrus_compare is not None:
             return _walrus_compare
+        # [Round7-04] literal-middle chained compare: when cond_block contains
+        # BUILD_LIST/BUILD_TUPLE/BUILD_SET, the single-instruction operand
+        # extraction in compute_chained_compare_operands treats each LOAD
+        # element as a separate operand (since BUILD_* is not a LOAD_),
+        # collapsing `[a, b]` to `a`. Reconstruct the middle as a List/Tuple/
+        # Set AST node by reverse stack-tracking from the BUILD_* instruction.
+        _literal_compare = self._try_build_literal_middle_chained_compare(region)
+        if _literal_compare is not None:
+            return _literal_compare
         if not region.chained_left_instr:
             return None
         left_ast = self.expr_reconstructor._load_instr_to_ast(region.chained_left_instr)
@@ -6044,6 +6063,115 @@ AST 映射规则:
             cb_instrs = [i for i in cb.instructions
                         if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')
                         and i.opname not in _skip_ops]
+            if not cb_instrs:
+                continue
+            if len(cb_instrs) == 1 and cb_instrs[0].opname.startswith('LOAD_'):
+                comparators.append(self.expr_reconstructor._load_instr_to_ast(cb_instrs[0]))
+            else:
+                r = self.expr_reconstructor.reconstruct(cb_instrs)
+                if r is not None:
+                    comparators.append(r)
+        if len(comparators) != len(ops):
+            return None
+        return {
+            'type': 'Compare',
+            'left': left_ast,
+            'ops': list(ops),
+            'comparators': comparators,
+        }
+
+    def _try_build_literal_middle_chained_compare(self, region: IfRegion) -> Optional[Dict[str, Any]]:
+        """[Round7-04] IfRegion condition-path wrapper for
+        ``_try_build_literal_middle_from_blocks``.
+        """
+        return self._try_build_literal_middle_from_blocks(
+            region.condition_block,
+            list(region.chained_compare_blocks),
+            list(region.chained_compare_ops),
+        )
+
+    def _try_build_literal_middle_from_blocks(self, cond_block, chain_blocks, ops):
+        """[Round7-04] Rebuild a chained comparison whose middle operand is a
+        literal construction (BUILD_LIST/BUILD_TUPLE/BUILD_SET), e.g.
+        ``x in [a, b] in cc``.
+
+        ``compute_chained_compare_operands`` / ``_build_assert_chained_compare``
+        only collect ``LOAD_*`` instructions as operands; ``BUILD_*`` (and the
+        literal's element LOADs that precede it) are not recognized as a single
+        operand, so the middle list/tuple/set collapses to its first element.
+        Reverse stack-track from the ``BUILD_*`` to find the middle operand span,
+        then reconstruct it as a List/Tuple/Set AST node. Remaining comparators
+        come from ``chain_blocks``.
+
+        Takes explicit block args so both AssertRegion (via
+        ``_build_assert_chained_compare``) and IfRegion (via
+        ``_try_build_literal_middle_chained_compare``) can use it.
+        """
+        import dis as _dis
+        if cond_block is None:
+            return None
+        if not ops or len(ops) < 2:
+            return None
+        instrs = [i for i in cond_block.instructions
+                  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+        if not instrs:
+            return None
+        # Detect BUILD_LIST/BUILD_TUPLE/BUILD_SET in cond_block
+        build_idx = None
+        for idx, instr in enumerate(instrs):
+            if instr.opname in ('BUILD_LIST', 'BUILD_TUPLE', 'BUILD_SET'):
+                build_idx = idx
+                break
+        if build_idx is None:
+            return None  # not a literal-middle chained compare
+        # Skip walrus (handled by _try_build_walrus_chained_compare for IfRegion)
+        for idx in range(len(instrs) - 1):
+            if (instrs[idx].opname == 'COPY' and instrs[idx].argval == 1
+                    and instrs[idx + 1].opname in ('STORE_FAST', 'STORE_NAME',
+                                                   'STORE_GLOBAL', 'STORE_DEREF')):
+                return None  # walrus case, not our concern
+
+        # Reverse stack-track from just before BUILD to find middle operand start.
+        # Before BUILD, stack is [left, ...elements]; we want to find where "left"
+        # was pushed (depth drops to 1 walking backwards). The instruction at
+        # that index is the FIRST instruction of the middle operand.
+        build_arg = instrs[build_idx].argval
+        if not isinstance(build_arg, int):
+            return None
+        depth_before_build = 1 + build_arg  # left + N elements
+        depth = depth_before_build
+        middle_start = 0  # default: no left, middle starts at index 0
+        for idx in range(build_idx - 1, -1, -1):
+            instr = instrs[idx]
+            try:
+                effect = _dis.stack_effect(instr.opcode, instr.arg)
+            except Exception:
+                effect = 0
+            depth -= effect
+            if depth <= 1:
+                middle_start = idx
+                break
+
+        left_instrs = instrs[:middle_start]
+        middle_instrs = instrs[middle_start:build_idx + 1]  # include BUILD_*
+        if not middle_instrs or not left_instrs:
+            return None
+
+        left_ast = self.expr_reconstructor.reconstruct(left_instrs)
+        middle_ast = self.expr_reconstructor.reconstruct(middle_instrs)
+        if left_ast is None or middle_ast is None:
+            return None
+
+        # Remaining comparators come from chain_blocks
+        _skip_ops = ({'COMPARE_OP', 'SWAP', 'COPY', 'POP_TOP',
+                      'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_FALSE',
+                      'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_TRUE',
+                      'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE', 'PRECALL'})
+        comparators = [middle_ast]
+        for cb in chain_blocks:
+            cb_instrs = [i for i in cb.instructions
+                         if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')
+                         and i.opname not in _skip_ops]
             if not cb_instrs:
                 continue
             if len(cb_instrs) == 1 and cb_instrs[0].opname.startswith('LOAD_'):
