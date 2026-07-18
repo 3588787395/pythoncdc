@@ -1543,7 +1543,7 @@ class CodeGenerator:
     def _generate_for_target(self, target) -> str:
         """
         [关键修复] 生成for循环目标变量代码
-        
+
         对于for循环目标，不应该添加括号：
         - 单变量: for i in data: （不是 for (i) in (data):）
         - 元组解包: for a, b in data: （不是 for (a, b) in (data):）
@@ -1556,7 +1556,16 @@ class CodeGenerator:
         elif isinstance(target, ASTTuple):
             if not target.elts:
                 return '()'
-            elts_code = [self._generate_for_target(elt) for elt in target.elts]
+            # [Round9-02] 嵌套 Tuple 元素需加括号以保留嵌套语义：
+            # `for (a, b), (c, d) in x` 中，外层 Tuple 的两个 Tuple 元素必须
+            # 各自加括号，否则渲染为 `a, b, c, d`（扁平 4 元组）。
+            elts_code = []
+            for elt in target.elts:
+                elt_code = self._generate_for_target(elt)
+                if isinstance(elt, ASTTuple):
+                    elts_code.append(f'({elt_code})')
+                else:
+                    elts_code.append(elt_code)
             return ', '.join(elts_code)
         else:
             return self._generate_expression(target, 0)
@@ -1565,16 +1574,25 @@ class CodeGenerator:
         """[N14修复] 为字典格式AST生成for循环目标（无括号）"""
         if not target:
             return '_'
-        
+
         node_type = target.get('type')
-        
+
         if node_type == 'Name':
             return target.get('id', '_')
         elif node_type == 'Tuple':
             elts = target.get('elts', [])
             if not elts:
                 return '()'
-            elts_code = [self._generate_for_target_from_dict(elt) for elt in elts]
+            # [Round9-02] 嵌套 Tuple 元素需加括号以保留嵌套语义：
+            # `for (a, b), (c, d) in x` 中，外层 Tuple 的两个 Tuple 元素必须
+            # 各自加括号，否则渲染为 `a, b, c, d`（扁平 4 元组）。
+            elts_code = []
+            for elt in elts:
+                elt_code = self._generate_for_target_from_dict(elt)
+                if isinstance(elt, dict) and elt.get('type') == 'Tuple':
+                    elts_code.append(f'({elt_code})')
+                else:
+                    elts_code.append(elt_code)
             return ', '.join(elts_code)
         elif node_type in ('List', 'Starred'):
             inner = self._generate_for_target_from_dict(target.get('value', target.get('values', {})))

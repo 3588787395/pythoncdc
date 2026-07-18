@@ -2265,21 +2265,68 @@ AST 映射规则:
                 found_unpack = False
                 unpack_count = 0
                 unpack_targets = []
+                # [Round9-02] 嵌套 UNPACK_SEQUENCE 栈式管理：支持
+                # `for (a, b), (c, d) in pairs` 这种多层 tuple target。
+                # 字节码：UNPACK_SEQUENCE 2 (outer) → UNPACK_SEQUENCE 2 (inner)
+                # → STORE a, STORE b → UNPACK_SEQUENCE 2 (inner) → STORE c, STORE d
+                # 每帧 {targets, count}，每完成一帧作为父帧的一个 Tuple 元素。
+                _nested_unpack_stack = []
+                _nested_completed_top = None  # 顶层完成帧的 Tuple 节点
                 for i in search_block.instructions:
                     if i.opname in ('FOR_ITER', 'GET_ANEXT'):
                         continue
                     if i.opname == 'UNPACK_SEQUENCE' and hasattr(i, 'arg'):
                         found_unpack = True
-                        unpack_count = i.arg
+                        _nested_unpack_stack.append({'targets': [], 'count': i.arg})
+                        continue
+                    if i.opname == 'UNPACK_EX' and hasattr(i, 'argval'):
+                        # star unpack: before, after = argval & 0xFF, (argval >> 8) & 0xFF
+                        # 不展开嵌套，简单按顺序收集 (before STORE + 1 star + after STORE)。
+                        found_unpack = True
+                        _ua_before = i.argval & 0xFF
+                        _ua_after = (i.argval >> 8) & 0xFF
+                        _ua_elts = []
+                        _ua_seen = 0
+                        _ua_star_seen = False
                         continue
                     if found_unpack and i.opname.startswith('STORE_') and hasattr(i, 'argval'):
-                        unpack_targets.append({'type': 'Name', 'id': str(i.argval), 'ctx': 'Store'})
-                        if len(unpack_targets) == unpack_count:
-                            break
+                        if _nested_unpack_stack:
+                            _top = _nested_unpack_stack[-1]
+                            _top['targets'].append({
+                                'type': 'Name',
+                                'id': str(i.argval),
+                                'ctx': 'Store',
+                            })
+                            # 嵌套归约：每完成一帧，作为父帧的一个 Tuple 目标；
+                            # 父帧若也随之完成则继续归约，直到顶层帧完成。
+                            while (_nested_unpack_stack
+                                   and len(_nested_unpack_stack[-1]['targets']) == _nested_unpack_stack[-1]['count']):
+                                _completed = _nested_unpack_stack.pop()
+                                _completed_tgt = {
+                                    'type': 'Tuple',
+                                    'elts': _completed['targets'],
+                                    'ctx': 'Store',
+                                }
+                                if not _nested_unpack_stack:
+                                    _nested_completed_top = _completed_tgt
+                                    break
+                                else:
+                                    _nested_unpack_stack[-1]['targets'].append(_completed_tgt)
+                            if _nested_completed_top is not None:
+                                break
+                        else:
+                            unpack_targets.append({'type': 'Name', 'id': str(i.argval), 'ctx': 'Store'})
+                            if len(unpack_targets) == unpack_count:
+                                break
                     elif not found_unpack and i.opname.startswith('STORE_') and hasattr(i, 'argval'):
                         target_name = str(i.argval)
                         target = {'type': 'Name', 'id': target_name, 'ctx': 'Store'}
                         break
+                if _nested_completed_top is not None:
+                    target = _nested_completed_top
+                    # target_name 仅作占位（避免再次进入搜索）。
+                    target_name = '<tuple>'
+                    break
                 if found_unpack and unpack_targets:
                     target = {'type': 'Tuple', 'elts': unpack_targets, 'ctx': 'Store'}
                     target_name = ','.join(t.get('id', '') for t in unpack_targets)
@@ -18059,6 +18106,40 @@ AST 映射规则:
 
         if delete_op == 'DELETE_ATTR':
             attr_name = delete_instr.argval if delete_instr.argval else ''
+
+            # [Round9-01] 之前 filter 只保留 LOAD_* 指令，丢失 BINARY_SUBSCR，
+            # 导致 `del a[b].c` 退化为 `del b.c`（栈上 a[b] 的 a 和 b 被当作
+            # attr chain 的两段）。改用 expr_reconstructor 处理所有前导指令
+            # （含 BINARY_SUBSCR / LOAD_ATTR / CALL 等），栈顶即为待删属性的
+            # 对象，再包裹 Attribute(value=stack[-1], attr=attr_name, ctx=Del)。
+            pre_delete_instrs = [i for i in stmt_instrs[:-1]
+                                 if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+            if not pre_delete_instrs:
+                return None
+
+            # 检测是否含「复杂对象构造」指令（BINARY_SUBSCR / LOAD_ATTR 等），
+            # 若仅有 LOAD_* 则走旧路径（保持 R6/R8 已修多层 attr chain 行为）。
+            _has_complex_build = any(
+                i.opname in ('BINARY_SUBSCR', 'LOAD_ATTR', 'CALL', 'BINARY_OP',
+                             'CONTAINS_OP', 'IS_OP', 'COMPARE_OP')
+                for i in pre_delete_instrs
+            )
+
+            if _has_complex_build:
+                self.expr_reconstructor.reset()
+                for _instr in pre_delete_instrs:
+                    self.expr_reconstructor._process_instruction(_instr)
+                _del_stack = [s for s in self.expr_reconstructor.stack
+                              if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+                if _del_stack:
+                    target_expr = {
+                        'type': 'Attribute',
+                        'value': _del_stack[-1],
+                        'attr': attr_name,
+                        'ctx': 'Del',
+                    }
+                    return [{'type': 'Delete', 'targets': [target_expr]}]
+                # 回退到旧路径
 
             load_instrs = [i for i in stmt_instrs[:-1]
                           if i.opname in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL',
