@@ -8417,13 +8417,25 @@ AST 映射规则:
         # 收集终结块中从开头到 STORE_*（不含）的所有指令（含 BUILD_*/BINARY_SUBSCR/CALL
         # 等终结指令），再追加 STORE_* 以触发 Assign 节点生成。
         # 遇到 RETURN/POP_TOP/JUMP 等语句终结指令则放弃（不应在 STORE 前出现）。
+        # [Round7-10] walrus+assign 模式：r = (n := await g()) 字节码为
+        # COPY 1, STORE_FAST n, STORE_FAST r, LOAD_FAST r, RETURN_VALUE
+        # COPY+STORE_n 是 walrus（NamedExpr），后接 STORE_r 是常规赋值目标。
+        # 此时 COPY+STORE_n 应作为 term_pre_instrs 的一部分（构成 walrus 子表达式），
+        # 第二个 STORE_r 才是 assign target。
         store_instr = None
         term_pre_instrs: List[Any] = []
         _stmt_terminators = ('LOAD_CONST', 'RETURN_VALUE', 'RETURN_CONST',
                              'POP_TOP', 'JUMP_FORWARD', 'JUMP_BACKWARD',
                              'JUMP_ABSOLUTE', 'RERAISE')
+        _prev_was_copy_1 = False
         for i in terminator_block.instructions:
             if i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                # walrus 模式：前一条是 COPY 1，本条 STORE 是 walrus 目标，
+                # 不是 assign 目标——继续收集直到找到非 walrus 的 STORE。
+                if _prev_was_copy_1:
+                    term_pre_instrs.append(i)
+                    _prev_was_copy_1 = False
+                    continue
                 store_instr = i
                 break
             if i.opname in _stmt_terminators:
@@ -8432,16 +8444,25 @@ AST 映射规则:
                 # 已在 chain_blocks 的前序块中。此处 LOAD_CONST 出现意味着语句结束。
                 break
             term_pre_instrs.append(i)
+            _prev_was_copy_1 = (i.opname == 'COPY' and i.argval == 1)
         if store_instr is None:
             return False
         # [R6 守卫] 终结块在 STORE 之前必须含「消费者」指令（BUILD_*/BINARY_SUBSCR/CALL），
         # 即 await 结果被外层表达式包裹（list/dict/tuple/subscr/call-arg 元素）。
         # 若 term_pre_instrs 为空（如 ``r = await g()`` 简单赋值、``async with x as y``
         # 的 __aenter__ await），应让 _has_awaitable / async-with 路径处理，避免误吞。
+        # [Round7-10] COPY+STORE walrus 模式也允许通过：COPY 1 + STORE walrus_target
+        # 视为「消费者」（因为 walrus 把 await 结果包裹为 NamedExpr）。
         _CONSUMER_OPS = ('BUILD_LIST', 'BUILD_MAP', 'BUILD_TUPLE', 'BUILD_SET',
                          'BINARY_SUBSCR', 'CALL', 'CALL_FUNCTION', 'CALL_METHOD',
                          'BUILD_CONST_KEY_MAP')
-        if not any(i.opname in _CONSUMER_OPS for i in term_pre_instrs):
+        _has_consumer = any(i.opname in _CONSUMER_OPS for i in term_pre_instrs)
+        _has_walrus_chain = (len(term_pre_instrs) >= 2
+                            and term_pre_instrs[-2].opname == 'COPY'
+                            and term_pre_instrs[-2].argval == 1
+                            and term_pre_instrs[-1].opname in ('STORE_FAST', 'STORE_NAME',
+                                                                'STORE_GLOBAL', 'STORE_DEREF'))
+        if not _has_consumer and not _has_walrus_chain:
             return False
 
         # 汇总指令：所有 setup/send_loop 块的完整指令 + 终结块中直到 STORE（不含）+ STORE
