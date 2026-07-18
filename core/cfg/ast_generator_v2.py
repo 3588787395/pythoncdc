@@ -805,7 +805,15 @@ class ExpressionReconstructor:
                     'value': value,
                     'lineno': instr.starts_line
                 })
-        
+
+        # [Round7-11] Python 3.11+ GET_YIELD_FROM_ITER - yield from 指令
+        # GET_YIELD_FROM_ITER 将栈顶的可迭代对象转换为迭代器，用于 yield from 语句。
+        # 在 _process_instruction 序列中，标记栈顶为 yield-from iter，
+        # 供后续 YIELD_VALUE 处理器识别并构造 YieldFrom 节点（而非 Yield）。
+        elif opname == 'GET_YIELD_FROM_ITER':
+            if self.stack and isinstance(self.stack[-1], dict):
+                self.stack[-1]['is_yield_from_iter'] = True
+
         elif opname == 'SEND':
             # SEND 指令用于向生成器发送值，在异步函数中用于 await
             # 通常跟在 GET_AWAITABLE 之后，格式是：GET_AWAITABLE + LOAD_CONST None + SEND
@@ -832,6 +840,26 @@ class ExpressionReconstructor:
                 value = self.stack.pop()
                 if isinstance(value, dict) and value.get('type') == 'Await':
                     self.stack.append(value)
+                # [Round7-11] yield-from 模式：序列为
+                # LOAD_xxx(iter) + GET_YIELD_FROM_ITER + LOAD_CONST None + SEND +
+                # YIELD_VALUE + RESUME + JUMP_BACKWARD_NO_INTERRUPT
+                # SEND 在没有 Await 时会压回 send_value (None)，所以此时栈顶是 None，
+                # 下一项是被 GET_YIELD_FROM_ITER 标记的可迭代对象。
+                # 应弹出 None 和 iter，压入 YieldFrom(iter) 节点。
+                elif (isinstance(value, dict) and value.get('type') == 'Constant' and value.get('value') is None
+                      and len(self.stack) >= 1
+                      and isinstance(self.stack[-1], dict)
+                      and self.stack[-1].get('is_yield_from_iter') is True):
+                    iter_obj = self.stack.pop()
+                    # 清除标记，避免污染后续重建
+                    if 'is_yield_from_iter' in iter_obj:
+                        del iter_obj['is_yield_from_iter']
+                    yield_from_node = {
+                        'type': 'YieldFrom',
+                        'value': iter_obj,
+                        'lineno': instr.starts_line
+                    }
+                    self.stack.append(yield_from_node)
                 else:
                     yield_node = {
                         'type': 'Yield',

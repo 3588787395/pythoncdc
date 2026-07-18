@@ -8340,13 +8340,13 @@ AST 映射规则:
         return {'type': 'BoolOp', 'op': outer_op, 'values': nested_values}
 
     def _try_generate_await_list_assign(self, block, stmts: List[Dict[str, Any]]) -> bool:
-        """[Round5-10 + R6-err8~11] 跨块 await 表达式赋值模式识别。
+        """[Round5-10 + R6-err8~11 + R7-11] 跨块 await/yield-from 表达式赋值模式识别。
 
         识别字节码模式：
-            setup_block (含 GET_AWAITABLE, 末尾 LOAD_CONST None)
+            setup_block (含 GET_AWAITABLE/GET_YIELD_FROM_ITER, 末尾 LOAD_CONST None)
             → SEND/YIELD 自循环块
             → (可选) 更多 setup_block + SEND/YIELD 自循环块对
-            → terminator_block (无 GET_AWAITABLE，含 STORE_* 赋值目标)
+            → terminator_block (无 GET_AWAITABLE/GET_YIELD_FROM_ITER，含 STORE_* 赋值目标)
 
         终结块支持的字节码形态（区域归约：父引用子入口，整条链为单一表达式）：
             - BUILD_LIST  (R5-10): ``r = [await g(), await h()]``
@@ -8354,16 +8354,27 @@ AST 映射规则:
             - BUILD_TUPLE (R6-10): ``r = (await g(), await h())``
             - BINARY_SUBSCR (R6-11): ``r = d[await g()]``
             - CALL + STORE_* (R6-08): ``r = h(await g(), x)``（外层 CALL 在 await 完成后）
+            - COPY+STORE walrus + STORE (R7-10): ``r = (n := await g())``
+            - GET_YIELD_FROM_ITER (R7-11): ``r = g((yield from h()))`` 跨块 yield-from 表达式
 
-        每块单独重建会把每个 await 退化为独立 Expr 语句、终结指令时栈空。
+        每块单独重建会把每个 await/yield-from 退化为独立 Expr 语句、终结指令时栈空。
         本方法将整条链作为单一表达式重建，产出一条 Assign 语句。
 
         Returns:
             True 若模式命中并已向 stmts 追加一条 Assign；否则 False。
         """
-        # 入口块必须含 GET_AWAITABLE（await setup 起点）
-        if not any(i.opname == 'GET_AWAITABLE' for i in block.instructions):
+        # 入口块必须含 GET_AWAITABLE (await setup) 或 GET_YIELD_FROM_ITER (yield-from setup)
+        _setup_op = None
+        for i in block.instructions:
+            if i.opname == 'GET_AWAITABLE':
+                _setup_op = 'GET_AWAITABLE'
+                break
+            if i.opname == 'GET_YIELD_FROM_ITER':
+                _setup_op = 'GET_YIELD_FROM_ITER'
+                break
+        if _setup_op is None:
             return False
+        _setup_ops = ('GET_AWAITABLE', 'GET_YIELD_FROM_ITER')
 
         chain_blocks: List[Any] = [block]
         current = block
@@ -8399,9 +8410,9 @@ AST 映射规则:
             if ft_block is None:
                 return False
             # 判定 fall-through 块性质：
-            # - 含 GET_AWAITABLE → 另一个 await setup，继续链
+            # - 含 GET_AWAITABLE/GET_YIELD_FROM_ITER → 另一个 setup，继续链
             # - 否则 → 终结块（BUILD_*/BINARY_SUBSCR/CALL + STORE_*）
-            if any(i.opname == 'GET_AWAITABLE' for i in ft_block.instructions):
+            if any(i.opname in _setup_ops for i in ft_block.instructions):
                 chain_blocks.append(ft_block)
                 current = ft_block
                 continue

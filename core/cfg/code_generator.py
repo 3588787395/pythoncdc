@@ -2915,6 +2915,11 @@ class CodeGenerator:
                     return f'{func_code}({gen_code})'
 
                 args_codes = [self._generate_expression(arg, 0) for arg in args]
+                # [Round7-11] Yield/YieldFrom 作为 Call 参数必须加括号，
+                # 否则 `g(yield from h())` 是语法错误，正确形式是 `g((yield from h()))`。
+                for i, arg in enumerate(args):
+                    if isinstance(arg, dict) and arg.get('type') in ('Yield', 'YieldFrom'):
+                        args_codes[i] = f'({args_codes[i]})'
                 kw_codes = []
                 for kw in keywords:
                     if isinstance(kw, dict):
