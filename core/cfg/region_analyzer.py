@@ -10388,6 +10388,23 @@ RegionType 枚举值: RegionType.ASSERT
             if not last or last.opname not in (
                 FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS):
                 return False
+            # [Round4-04] 值上下文链式比较 IfRegion.entry（如 `z = 0 < a < 10`
+            # 的 condition_block，末尾是 JUMP_IF_FALSE_OR_POP）不应被 TernaryRegion
+            # 抢占。依「每块唯一归属」原则，块已属 chained_compare IfRegion
+            # （region_type=IF 且 chained_compare_ops 非空）时跳过 ternary 识别。
+            # 直接遍历 self.regions 查找（不依赖 block_to_region，因 IF_THEN 父
+            # 优先级更高，block_to_region[block] 可能指向父 IfRegion 而非嵌套的
+            # chained_compare IfRegion）。
+            if last.opname in SHORT_CIRCUIT_JUMP_OPS:
+                for _r in self.regions:
+                    if (isinstance(_r, IfRegion)
+                            and _r.region_type == RegionType.IF
+                            and _r.entry is block):
+                        _cc_ops = getattr(_r, 'chained_compare_ops', None)
+                        _cc_blocks = getattr(_r, 'chained_compare_blocks', None)
+                        if (_cc_ops and len(_cc_ops) >= 2 and _cc_blocks):
+                            return False
+                        break
             if block not in self.block_to_region:
                 for succ in block.conditional_successors:
                     succ_region = self.block_to_region.get(succ)
@@ -11639,6 +11656,21 @@ RegionType 枚举值: RegionType.ASSERT
         for region in self._filter_regions(existing_regions, AssertRegion):
             if region.entry:
                 assert_region_entries.add(region.entry)
+        # [Round4-04] 值上下文链式比较 IfRegion（如 `z = 0 < a < 10`）的 entry
+        # 末尾是 JUMP_IF_FALSE_OR_POP（值上下文短路跳转，留值在栈上），会被
+        # _identify_boolop_regions 误识别为 BoolOp 链起点。但语义上是链式比较
+        # 作赋值右值，应归 IfRegion 处理（_generate_value_context_chain_compare_assign）。
+        # 依「每块唯一归属」原则，跳过这些 entry 防止 BoolOp 抢占。
+        value_chain_cmp_if_entries = set()
+        for region in self._filter_regions(existing_regions, IfRegion):
+            if (getattr(region, 'chained_compare_ops', None)
+                    and len(region.chained_compare_ops) >= 2
+                    and getattr(region, 'chained_compare_blocks', None)):
+                cond_block = region.condition_block
+                if cond_block is not None:
+                    _last = cond_block.get_last_instruction()
+                    if _last is not None and _last.opname in SHORT_CIRCUIT_JUMP_OPS:
+                        value_chain_cmp_if_entries.add(region.entry)
         blocks_in_order = self.cfg.get_blocks_in_order()
         for block in blocks_in_order:
             # 区域归约算法 [每块唯一归属]：含 MATCH_* 指令的块是 MatchRegion
@@ -11651,6 +11683,9 @@ RegionType 枚举值: RegionType.ASSERT
                 continue
             # [Round4-12] AssertRegion.entry 不应被识别为 BoolOp 链起点
             if block in assert_region_entries:
+                continue
+            # [Round4-04] 值上下文链式比较 IfRegion.entry 不应被识别为 BoolOp 链起点
+            if block in value_chain_cmp_if_entries:
                 continue
             # 区域归约算法 [每块唯一归属]：guard 块（case X if cond:）的条件
             # 跳转目标指向下一个 case_block。这些块含 COMPARE_OP +
