@@ -16507,20 +16507,26 @@ AST 映射规则:
                     stmt_instrs = []
                     continue
 
-            # [Round5-06] AnnAssign 检测：`x: int = 1` 字节码模式
-            # value_instrs; STORE_NAME x; LOAD <ann>; LOAD __annotations__; LOAD_CONST 'x'; STORE_SUBSCR
-            # 在 STORE_NAME 处前向探测后续 4 条指令，匹配则合成 AnnAssign。
+            # [Round5-06 / Round8-01] AnnAssign 检测：`x: <ann> = <value>` 字节码模式
+            # value_instrs; STORE_NAME x; <ann_expr_instrs>; LOAD_NAME __annotations__;
+            # LOAD_CONST 'x'; STORE_SUBSCR
+            # 在 STORE_NAME 处前向扫描，找到 LOAD_NAME __annotations__ + LOAD_CONST 'x'
+            # (匹配 store 名) + STORE_SUBSCR 的位置；中间的指令为注解表达式，
+            # 可为单条 LOAD_NAME（简单 `x: int`）或多条（复杂 `x: List[Dict[str, int]]`）。
             if (instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
                     and stmt_instrs):
                 _ann_idx = block.instructions.index(instr)
                 _ann_remaining = block.instructions[_ann_idx + 1:]
-                if (len(_ann_remaining) >= 4
-                        and _ann_remaining[0].opname in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF')
-                        and _ann_remaining[1].opname == 'LOAD_NAME'
-                        and _ann_remaining[1].argval == '__annotations__'
-                        and _ann_remaining[2].opname == 'LOAD_CONST'
-                        and _ann_remaining[2].argval == instr.argval
-                        and _ann_remaining[3].opname == 'STORE_SUBSCR'):
+                _ann_match_scan = None  # (ann_end_idx, store_subscr_offset)
+                for _scan_i in range(len(_ann_remaining) - 2):
+                    if (_ann_remaining[_scan_i].opname == 'LOAD_NAME'
+                            and _ann_remaining[_scan_i].argval == '__annotations__'
+                            and _ann_remaining[_scan_i + 1].opname == 'LOAD_CONST'
+                            and _ann_remaining[_scan_i + 1].argval == instr.argval
+                            and _ann_remaining[_scan_i + 2].opname == 'STORE_SUBSCR'):
+                        _ann_match_scan = _scan_i
+                        break
+                if _ann_match_scan is not None:
                     _ann_value = self.expr_reconstructor.reconstruct(stmt_instrs) if stmt_instrs else None
                     _ann_target = {
                         'type': 'Name',
@@ -16528,11 +16534,19 @@ AST 映射规则:
                         'ctx': 'Store',
                         'lineno': instr.starts_line,
                     }
-                    _ann_annotation = {
-                        'type': 'Name',
-                        'id': _ann_remaining[0].argval,
-                        'ctx': 'Load',
-                    }
+                    _ann_annotation_instrs = _ann_remaining[:_ann_match_scan]
+                    _ann_annotation = None
+                    if _ann_annotation_instrs:
+                        _ann_annotation = self.expr_reconstructor.reconstruct(_ann_annotation_instrs)
+                    # 兼容旧逻辑：单条 LOAD_NAME 时显式构造 Name 节点（保证与既有输出一致）
+                    if _ann_annotation is None and len(_ann_annotation_instrs) == 1:
+                        _l0 = _ann_annotation_instrs[0]
+                        if _l0.opname in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF'):
+                            _ann_annotation = {
+                                'type': 'Name',
+                                'id': _l0.argval,
+                                'ctx': 'Load',
+                            }
                     stmts.append({
                         'type': 'AnnAssign',
                         'target': _ann_target,
@@ -16540,9 +16554,51 @@ AST 映射规则:
                         'value': _ann_value,
                     })
                     stmt_instrs = []
-                    # 跳过后续 4 条指令（LOAD ann, LOAD __annotations__, LOAD_CONST name, STORE_SUBSCR）
-                    skip_offsets.update(_ann_remaining[i].offset for i in range(4))
+                    # 跳过整个 ann_expr + LOAD __annotations__ + LOAD_CONST name + STORE_SUBSCR
+                    skip_offsets.update(_ann_remaining[i].offset for i in range(_ann_match_scan + 3))
                     continue
+
+            # [Round8-02] AnnAssign (无值) 检测：`x: <ann>` 字节码模式
+            # <ann_expr_instrs>; LOAD_NAME __annotations__; LOAD_CONST <name>; STORE_SUBSCR
+            # 无 STORE_NAME；注解表达式在前，紧跟 __annotations__ / 名字常量 / STORE_SUBSCR。
+            # 区域归约：单一 AnnAssign 节点，不产生独立 Assign(__annotations__[name], ann)，
+            # 否则会丢失 CPython 在模块/函数首条注解前自动插入的 SETUP_ANNOTATIONS。
+            if instr.opname == 'STORE_SUBSCR' and len(stmt_instrs) >= 3:
+                _nv_idx = len(stmt_instrs) - 2
+                _nv_ann_tail_lo = stmt_instrs[_nv_idx]
+                _nv_ann_tail_lc = stmt_instrs[_nv_idx + 1]
+                if (_nv_ann_tail_lo.opname == 'LOAD_NAME'
+                        and _nv_ann_tail_lo.argval == '__annotations__'
+                        and _nv_ann_tail_lc.opname == 'LOAD_CONST'
+                        and isinstance(_nv_ann_tail_lc.argval, str)
+                        and _nv_ann_tail_lc.argval.isidentifier()):
+                    _nv_name = _nv_ann_tail_lc.argval
+                    _nv_ann_instrs = stmt_instrs[:_nv_idx]
+                    _nv_ann = None
+                    if _nv_ann_instrs:
+                        _nv_ann = self.expr_reconstructor.reconstruct(_nv_ann_instrs)
+                    if _nv_ann is None and len(_nv_ann_instrs) == 1:
+                        _l0 = _nv_ann_instrs[0]
+                        if _l0.opname in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF'):
+                            _nv_ann = {
+                                'type': 'Name',
+                                'id': _l0.argval,
+                                'ctx': 'Load',
+                            }
+                    if _nv_ann is not None:
+                        stmts.append({
+                            'type': 'AnnAssign',
+                            'target': {
+                                'type': 'Name',
+                                'id': _nv_name,
+                                'ctx': 'Store',
+                                'lineno': instr.starts_line,
+                            },
+                            'annotation': _nv_ann,
+                            'value': None,
+                        })
+                        stmt_instrs = []
+                        continue
 
             if instr.opname == 'STORE_SUBSCR' and stmt_instrs:
                 subscr_stmt = self._build_subscript_assign(stmt_instrs + [instr])
