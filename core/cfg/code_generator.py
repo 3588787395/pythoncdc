@@ -3818,12 +3818,18 @@ class CodeGenerator:
         else:
             expr_code = self._generate_expression(value, 100)
 
-        if conversion == -1 and (not format_spec or format_spec is None):
+        # [Round6-12/13/14] FORMAT_VALUE flags 的低 2 位编码 conversion：
+        # 0=无 / 1=!s / 2=!r / 3=!a。这 4 个值产生不同的 FORMAT_VALUE 字节码，
+        # 因此 !s 必须显式输出（不能像旧实现那样用 chr(conversion) 拼接，
+        # 也不能省略 !s —— !s (flag=1) 与无转换 (flag=0) 字节码不同）。
+        # -1 表示字典未设置 conversion 字段，按无转换处理。
+        conv_map = {1: '!s', 2: '!r', 3: '!a'}
+        conv_marker = conv_map.get(conversion, '') if conversion != -1 else ''
+
+        if not conv_marker and (not format_spec or format_spec is None):
             return f'{{{expr_code}}}'
-        
-        result = f'{{{expr_code}'
-        if conversion != -1:
-            result += chr(conversion)
+
+        result = f'{{{expr_code}{conv_marker}'
         if format_spec is not None:
             if isinstance(format_spec, dict) and format_spec.get('type') == 'JoinedStr':
                 # [Round5-07] 格式说明符上下文不包 f'...'，仅输出内部片段
@@ -3910,10 +3916,11 @@ class CodeGenerator:
         
         # 处理转换（!r, !s, !a）
         # [关键修复] conversion是整数：0=无, 1=str(!s), 2=repr(!r), 3=ascii(!a)
-        # [关键修复] 当conversion为1（str）时，不需要添加!s，因为f-string默认就是str()
+        # [Round6-12/13/14] !s (flag=1) 与无转换 (flag=0) 产生不同的 FORMAT_VALUE
+        # 字节码，必须显式输出 !s 以保证字节码等价（旧实现把 1 映射为 '' 是错的）。
         conversion = ''
         if hasattr(node, '_conversion') and node._conversion:
-            conversion_map = {1: '', 2: '!r', 3: '!a'}  # 1=str是默认值，不需要显式指定
+            conversion_map = {1: '!s', 2: '!r', 3: '!a'}
             conversion = conversion_map.get(node._conversion, '')
         
         # 处理格式规范

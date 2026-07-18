@@ -1345,13 +1345,10 @@ class ExpressionReconstructor:
             if self.stack:
                 value = self.stack.pop()
 
-                conversion = 0
-                if flags & 1:  # FVC_STR
-                    conversion = 1
-                elif flags & 2:  # FVC_REPR
-                    conversion = 2
-                elif flags & 3:  # FVC_ASCII
-                    conversion = 3
+                # [Round6-12/13/14] FORMAT_VALUE flags: bit0-1 = conversion
+                # (0=none, 1=str, 2=repr, 3=ascii), bit2 = has format_spec.
+                # 旧 elif 链对 !a (flags=3) 错误返回 1（3&1=1 先命中）。
+                conversion = flags & 3
 
                 formatted_value = {
                     'type': 'FormattedValue',
@@ -24002,16 +23999,11 @@ class ASTGeneratorV2:
                 if stack:
                     # 弹出值
                     value = stack.pop()
-                    
-                    # [关键修复] 使用整数表示conversion（与ASTFormattedValue一致）
-                    # 0=无, 1=str, 2=repr, 3=ascii
-                    conversion = 0
-                    if flags & 1:  # FVC_STR
-                        conversion = 1
-                    elif flags & 2:  # FVC_REPR
-                        conversion = 2
-                    elif flags & 3:  # FVC_ASCII
-                        conversion = 3
+
+                    # [Round6-12/13/14] FORMAT_VALUE flags: bit0-1 = conversion
+                    # (0=none, 1=str, 2=repr, 3=ascii), bit2 = has format_spec.
+                    # 旧 elif 链对 !a (flags=3) 错误返回 1（3&1=1 先命中）。
+                    conversion = flags & 3
                     
                     formatted_value = {
                         'type': 'FormattedValue',

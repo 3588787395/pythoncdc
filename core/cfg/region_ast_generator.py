@@ -14577,13 +14577,12 @@ AST 映射规则:
                             if _stack:
                                 _val = _stack.pop()
                                 flags = pi.arg if pi.arg is not None else 0
-                                conversion = 0
-                                if flags & 1:
-                                    conversion = 1
-                                elif flags & 2:
-                                    conversion = 2
-                                elif flags & 3:
-                                    conversion = 3
+                                # [Round6-12/13/14] FORMAT_VALUE flags: bit0-1 = conversion
+                                # (0=none, 1=str, 2=repr, 3=ascii), bit2 = has format_spec.
+                                # 旧 elif 链 `if flags & 1: 1 elif flags & 2: 2 elif flags & 3: 3`
+                                # 对 !a (flags=3) 错误返回 1（3&1=1 先命中）。flags&3 是 2-bit
+                                # 数值，应直接掩码取值，不能用 elif 链。
+                                conversion = flags & 3
                                 format_spec = None
                                 if flags & 4 and _stack:
                                     _fs = _stack.pop()
@@ -14703,13 +14702,9 @@ AST 映射规则:
                                     if _preload_stack:
                                         _val = _preload_stack.pop()
                                         flags = pi.arg if pi.arg is not None else 0
-                                        conversion = 0
-                                        if flags & 1:
-                                            conversion = 1
-                                        elif flags & 2:
-                                            conversion = 2
-                                        elif flags & 3:
-                                            conversion = 3
+                                        # [Round6-12/13/14] conversion = flags & 3
+                                        # （2-bit 数值，非 bit-flag；旧 elif 链对 !a 误判为 1）
+                                        conversion = flags & 3
                                         format_spec = None
                                         if flags & 4 and _preload_stack:
                                             _fs = _preload_stack.pop()
