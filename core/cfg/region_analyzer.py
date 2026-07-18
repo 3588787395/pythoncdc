@@ -9580,10 +9580,15 @@ RegionType 枚举值: RegionType.ASSERT
             else_stop = {then_succ} | (boundary_stop - {else_succ})
             then_blocks = self._collect_branch_blocks(then_succ, merge, then_stop)
             else_blocks = self._collect_branch_blocks(else_succ, merge, else_stop)
-            if try_handler_blocks:
+            # 区域归约算法：try/with handler 块过滤
+            # 仅当 if 条件块本身不在 handler 块集合中时才过滤 then/else 中的 handler 块。
+            # 当 if 位于 except/finally handler 内部时（条件块也在 handler 集合中），
+            # then/else 块合法地属于该 handler，不应被过滤——否则 if 体会变空，
+            # 导致 `except: if c: raise` 中的 raise 被移出 if 体。
+            if try_handler_blocks and block not in try_handler_blocks:
                 then_blocks = [b for b in then_blocks if b not in try_handler_blocks]
                 else_blocks = [b for b in else_blocks if b not in try_handler_blocks]
-            if with_handler_blocks:
+            if with_handler_blocks and block not in with_handler_blocks:
                 then_blocks = [b for b in then_blocks if b not in with_handler_blocks]
                 else_blocks = [b for b in else_blocks if b not in with_handler_blocks]
 
