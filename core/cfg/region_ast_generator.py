@@ -8212,16 +8212,22 @@ AST 映射规则:
         return {'type': 'BoolOp', 'op': outer_op, 'values': nested_values}
 
     def _try_generate_await_list_assign(self, block, stmts: List[Dict[str, Any]]) -> bool:
-        """[Round5-10] 跨块 await 列表元素赋值模式识别。
+        """[Round5-10 + R6-err8~11] 跨块 await 表达式赋值模式识别。
 
         识别字节码模式：
             setup_block (含 GET_AWAITABLE, 末尾 LOAD_CONST None)
             → SEND/YIELD 自循环块
             → (可选) 更多 setup_block + SEND/YIELD 自循环块对
-            → BUILD_LIST 块 (含 STORE_FAST/STORE_NAME/...)
+            → terminator_block (无 GET_AWAITABLE，含 STORE_* 赋值目标)
 
-        例：``r = [await g(), await h()]`` 编译后会展开为 5 个基本块，
-        每块单独重建会把每个 await 退化为独立 Expr 语句、BUILD_LIST 时栈空。
+        终结块支持的字节码形态（区域归约：父引用子入口，整条链为单一表达式）：
+            - BUILD_LIST  (R5-10): ``r = [await g(), await h()]``
+            - BUILD_MAP   (R6-09): ``r = {k: await g(), m: await h()}``
+            - BUILD_TUPLE (R6-10): ``r = (await g(), await h())``
+            - BINARY_SUBSCR (R6-11): ``r = d[await g()]``
+            - CALL + STORE_* (R6-08): ``r = h(await g(), x)``（外层 CALL 在 await 完成后）
+
+        每块单独重建会把每个 await 退化为独立 Expr 语句、终结指令时栈空。
         本方法将整条链作为单一表达式重建，产出一条 Assign 语句。
 
         Returns:
@@ -8233,7 +8239,7 @@ AST 映射规则:
 
         chain_blocks: List[Any] = [block]
         current = block
-        build_list_block = None
+        terminator_block = None
         # 沿 SEND 的 fall-through 目标向前收集 (setup, send_loop) 对
         while True:
             # setup 块必须以 LOAD_CONST None 结尾（await 的初始 send 值）
@@ -8264,49 +8270,57 @@ AST 映射规则:
             ft_block = self.cfg.get_block_by_offset(send_instr.argval)
             if ft_block is None:
                 return False
-            # 判定 fall-through 块性质：BUILD_LIST 终结 / 另一个 await setup 继续 / 其他放弃
-            first_real = None
-            for i in ft_block.instructions:
-                if i.opname not in ('RESUME', 'NOP', 'CACHE'):
-                    first_real = i
-                    break
-            if first_real is not None and first_real.opname == 'BUILD_LIST':
-                build_list_block = ft_block
-                chain_blocks.append(ft_block)
-                break
+            # 判定 fall-through 块性质：
+            # - 含 GET_AWAITABLE → 另一个 await setup，继续链
+            # - 否则 → 终结块（BUILD_*/BINARY_SUBSCR/CALL + STORE_*）
             if any(i.opname == 'GET_AWAITABLE' for i in ft_block.instructions):
                 chain_blocks.append(ft_block)
                 current = ft_block
                 continue
+            # 终结块：必须后续能找到 STORE_* 赋值目标（在终结指令之后）
+            terminator_block = ft_block
+            chain_blocks.append(ft_block)
+            break
+
+        if terminator_block is None:
             return False
 
-        if build_list_block is None:
-            return False
-
-        # 在 BUILD_LIST 块中找到 BUILD_LIST 之后的 STORE_* 指令
+        # 在终结块中找到 STORE_* 赋值目标。
+        # 收集终结块中从开头到 STORE_*（不含）的所有指令（含 BUILD_*/BINARY_SUBSCR/CALL
+        # 等终结指令），再追加 STORE_* 以触发 Assign 节点生成。
+        # 遇到 RETURN/POP_TOP/JUMP 等语句终结指令则放弃（不应在 STORE 前出现）。
         store_instr = None
-        seen_build = False
-        for i in build_list_block.instructions:
-            if not seen_build:
-                if i.opname == 'BUILD_LIST':
-                    seen_build = True
-                continue
+        term_pre_instrs: List[Any] = []
+        _stmt_terminators = ('LOAD_CONST', 'RETURN_VALUE', 'RETURN_CONST',
+                             'POP_TOP', 'JUMP_FORWARD', 'JUMP_BACKWARD',
+                             'JUMP_ABSOLUTE', 'RERAISE')
+        for i in terminator_block.instructions:
             if i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
                 store_instr = i
                 break
-            if i.opname in ('LOAD_CONST', 'RETURN_VALUE', 'RETURN_CONST', 'POP_TOP'):
+            if i.opname in _stmt_terminators:
+                # 注意：LOAD_CONST None 可能作为 SEND 的初始值出现在终结块前部，
+                # 但本循环只在 terminator_block 内扫描，setup 块的 LOAD_CONST None
+                # 已在 chain_blocks 的前序块中。此处 LOAD_CONST 出现意味着语句结束。
                 break
+            term_pre_instrs.append(i)
         if store_instr is None:
             return False
+        # [R6 守卫] 终结块在 STORE 之前必须含「消费者」指令（BUILD_*/BINARY_SUBSCR/CALL），
+        # 即 await 结果被外层表达式包裹（list/dict/tuple/subscr/call-arg 元素）。
+        # 若 term_pre_instrs 为空（如 ``r = await g()`` 简单赋值、``async with x as y``
+        # 的 __aenter__ await），应让 _has_awaitable / async-with 路径处理，避免误吞。
+        _CONSUMER_OPS = ('BUILD_LIST', 'BUILD_MAP', 'BUILD_TUPLE', 'BUILD_SET',
+                         'BINARY_SUBSCR', 'CALL', 'CALL_FUNCTION', 'CALL_METHOD',
+                         'BUILD_CONST_KEY_MAP')
+        if not any(i.opname in _CONSUMER_OPS for i in term_pre_instrs):
+            return False
 
-        # 汇总指令：所有 setup/send_loop 块的完整指令 + BUILD_LIST 块中直到 BUILD_LIST（含）
+        # 汇总指令：所有 setup/send_loop 块的完整指令 + 终结块中直到 STORE（不含）+ STORE
         all_instrs: List[Any] = []
         for cb in chain_blocks:
-            if cb is build_list_block:
-                for i in cb.instructions:
-                    all_instrs.append(i)
-                    if i.opname == 'BUILD_LIST':
-                        break
+            if cb is terminator_block:
+                all_instrs.extend(term_pre_instrs)
             else:
                 all_instrs.extend(cb.instructions)
         # 追加 STORE_* 以触发 Assign 节点生成
