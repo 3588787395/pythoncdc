@@ -17901,6 +17901,14 @@ AST 映射规则:
                     if _ua_expr:
                         _unpack_result = [_ua_expr]
             else:
+                # [R11-err4/5] 多目标解包预检: a, b = c = d, e 或 a, b = e, f = g, h
+                # 字节码模式: <value>; COPY 1; UNPACK_SEQUENCE N; STORE...; [COPY 1; STORE | UNPACK_SEQUENCE N; STORE...]...
+                # 区域归约算法: 检测 COPY 1 紧跟 UNPACK_SEQUENCE（区别于 walrus 的 COPY 1 + STORE + UNPACK），
+                # 收集所有目标（Tuple 解包目标 + Name 简单目标），发射单个 Assign(targets=[t1, t2, ...], value=RHS)。
+                # 通用化: 支持 2+ 目标、混合 unpack/name、任意嵌套深度（无硬编码上限）。
+                _mt_result = self._build_multi_target_unpack(block)
+                if _mt_result is not None:
+                    _unpack_result = _mt_result
                 _ua_stmts: List[Dict[str, Any]] = []
                 _ua_stmt_instrs: List[Instruction] = []
                 # 嵌套 UNPACK_SEQUENCE 用栈式管理：每帧 {value, targets, count}。
@@ -18033,7 +18041,9 @@ AST 映射规则:
                     _ua_stmt = self._build_subscript_assign(_ua_stmt_instrs) or self._build_attr_assign(_ua_stmt_instrs) or self._build_statement(_ua_stmt_instrs)
                     if _ua_stmt:
                         _ua_stmts.append(_ua_stmt)
-                _unpack_result = _ua_stmts if _ua_stmts else None
+                # [R11-err4/5] 若多目标预检已设置 _unpack_result，不覆盖
+                if _unpack_result is None:
+                    _unpack_result = _ua_stmts if _ua_stmts else None
         if _unpack_result is not None:
             stmts.extend(_unpack_result)
             self.generated_blocks.add(block)
@@ -19575,6 +19585,81 @@ AST 映射规则:
             'type': 'Expr',
             'value': expr,
         }
+
+    def _build_multi_target_unpack(self, block: BasicBlock) -> Optional[List[Dict[str, Any]]]:
+        """[R11-err4/5] 多目标解包重建: a, b = c = d, e 或 a, b = e, f = g, h。
+
+        字节码模式（CPython 3.11+）::
+            <value_instrs>          # RHS 表达式（如 LOAD d; LOAD e; BUILD_TUPLE 2）
+            COPY 1                  # 为首个目标复制值（最后一个目标无 COPY，消费原值）
+            UNPACK_SEQUENCE N       # 首个目标是元组解包
+            STORE ...               # N 个 STORE
+            [COPY 1; STORE | UNPACK_SEQUENCE N; STORE ...]...  # 后续目标
+            <终止指令>
+
+        区域归约算法: 检测 ``COPY 1`` 紧跟 ``UNPACK_SEQUENCE`` 作为多目标标志（区别于
+        walrus 的 ``COPY 1; STORE; UNPACK_SEQUENCE``）。收集所有目标，发射单个
+        ``Assign(targets=[t1, t2, ...], value=RHS)``。通用化支持 2+ 目标、
+        混合 unpack/name 目标、任意目标数（无硬编码上限）。
+        """
+        _mt_all = [i for i in block.instructions
+                   if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+        if not _mt_all:
+            return None
+        # 查找 COPY 1 紧跟 UNPACK_SEQUENCE 的位置（多目标解包标志）
+        _mt_copy_idx = None
+        for _mt_i, _mt_instr in enumerate(_mt_all):
+            if _mt_instr.opname == 'COPY' and _mt_instr.arg == 1:
+                if _mt_i + 1 < len(_mt_all) and _mt_all[_mt_i + 1].opname == 'UNPACK_SEQUENCE':
+                    _mt_copy_idx = _mt_i
+                    break
+        if _mt_copy_idx is None:
+            return None
+        _mt_value_instrs = _mt_all[:_mt_copy_idx]
+        _mt_value_expr = self.expr_reconstructor.reconstruct(_mt_value_instrs) if _mt_value_instrs else None
+        if _mt_value_expr is None:
+            return None
+        _mt_store_ops = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
+        _mt_targets: List[Dict[str, Any]] = []
+        _mt_idx = _mt_copy_idx
+        while _mt_idx < len(_mt_all):
+            _mt_instr = _mt_all[_mt_idx]
+            if _mt_instr.opname == 'COPY' and _mt_instr.arg == 1:
+                _mt_idx += 1
+                continue
+            if _mt_instr.opname == 'UNPACK_SEQUENCE':
+                _mt_count = _mt_instr.arg
+                _mt_idx += 1
+                _mt_elts = []
+                for _ in range(_mt_count):
+                    if _mt_idx < len(_mt_all) and _mt_all[_mt_idx].opname in _mt_store_ops:
+                        _mt_elts.append({
+                            'type': 'Name',
+                            'id': _mt_all[_mt_idx].argval if _mt_all[_mt_idx].argval else f'var_{_mt_all[_mt_idx].arg}',
+                            'ctx': 'Store',
+                        })
+                        _mt_idx += 1
+                    else:
+                        break
+                if len(_mt_elts) == _mt_count:
+                    _mt_targets.append({'type': 'Tuple', 'elts': _mt_elts, 'ctx': 'Store'})
+                else:
+                    break
+            elif _mt_instr.opname in _mt_store_ops:
+                _mt_targets.append({
+                    'type': 'Name',
+                    'id': _mt_instr.argval if _mt_instr.argval else f'var_{_mt_instr.arg}',
+                    'ctx': 'Store',
+                })
+                _mt_idx += 1
+            else:
+                break
+        if len(_mt_targets) < 2:
+            return None
+        # [R11-err4/5] 标记 is_chain_assign=True 以触发链式赋值渲染
+        # （CodeGenerator 用 ' = ' 连接多目标，而非 ', ' 元组解包风格）。
+        return [{'type': 'Assign', 'targets': _mt_targets, 'value': _mt_value_expr,
+                 'is_chain_assign': True}]
 
     def _build_store_statement(self, instrs: List[Instruction],
                                 block: Optional[BasicBlock] = None) -> Optional[Dict[str, Any]]:
