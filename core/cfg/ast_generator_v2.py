@@ -719,6 +719,49 @@ class ExpressionReconstructor:
                 'ctx': 'Load',
                 'lineno': instr.starts_line
             })
+
+        # [R11-err7] SET_UPDATE - Python 3.11+ 集合扩展指令
+        # 用于 `{*a, *b}` 等含 starred 元素的集合字面量：
+        #   BUILD_SET 0; LOAD a; SET_UPDATE 1; LOAD b; SET_UPDATE 1
+        # 栈状态: [set, iterable] -> [updated_set]
+        # 区域归约算法: SET_UPDATE 把可迭代对象的元素加入集合；
+        #   - Tuple/List: 展开其 elts 加入 Set.elts（字面量元素）
+        #   - 其他（Name/Call/...）: 归约为 Starred 节点追加到 Set.elts
+        #     （对应源码 `*<iterable>`），避免元素丢失退化为空集。
+        elif opname == 'SET_UPDATE':
+            if len(self.stack) >= 2:
+                iterable = self.stack.pop()
+                set_obj = self.stack.pop()
+                if isinstance(set_obj, dict) and set_obj.get('type') == 'Set':
+                    elts = list(set_obj.get('elts', []))
+                    if isinstance(iterable, dict) and iterable.get('type') in ('Tuple', 'List'):
+                        elts.extend(iterable.get('elts', []))
+                    elif isinstance(iterable, dict) and iterable.get('type') == 'Constant':
+                        const_val = iterable.get('value')
+                        if isinstance(const_val, frozenset):
+                            for item in const_val:
+                                elts.append({
+                                    'type': 'Constant',
+                                    'value': item,
+                                    'lineno': instr.starts_line,
+                                })
+                    else:
+                        elts.append({
+                            'type': 'Starred',
+                            'value': iterable,
+                            'ctx': 'Load',
+                            'lineno': instr.starts_line,
+                        })
+                    set_obj['elts'] = elts
+                    self.stack.append(set_obj)
+                else:
+                    self.stack.append({
+                        'type': 'BinOp',
+                        'op': '|',
+                        'left': set_obj,
+                        'right': iterable,
+                        'lineno': instr.starts_line,
+                    })
         
         # [关键修复] BUILD_CONST_KEY_MAP - Python 3.11+ 的常量键字典构建指令
         elif opname == 'BUILD_CONST_KEY_MAP':
@@ -24210,6 +24253,19 @@ class ASTGeneratorV2:
                                         'lineno': instr.starts_line
                                     })
                                 set_obj['elts'] = elts
+                        elif iterable and iterable.get('type') not in ('Tuple', 'List', 'Constant'):
+                            # [R11-err7] 通配可迭代对象作为 Starred 元素加入集合
+                            # 字节码 `{*a, *b}`: BUILD_SET 0; LOAD a; SET_UPDATE; LOAD b; SET_UPDATE
+                            # 每个 SET_UPDATE 的 iterable 是非字面量（Name/Call/...），
+                            # 对应源码 `*<iterable>`。归约为 Starred 节点追加到 Set.elts。
+                            elts = set_obj.get('elts', [])
+                            elts.append({
+                                'type': 'Starred',
+                                'value': iterable,
+                                'ctx': 'Load',
+                                'lineno': instr.starts_line
+                            })
+                            set_obj['elts'] = elts
                         # 将更新后的集合压回栈
                         stack.append(set_obj)
                     else:
