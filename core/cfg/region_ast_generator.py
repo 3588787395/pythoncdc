@@ -3232,6 +3232,22 @@ AST 映射规则:
         if block == natural_back_edge and block != header:
             if self._loop_process_natural_back_edge(block, back_edge_stmts, back_edge_source_blocks):
                 return True
+        # [Round5-09] async for/with 的 SEND/YIELD 挂起协议子循环：
+        # CPython 把 `async for` 的 GET_ANEXT+SEND+YIELD_VALUE+RESUME+
+        # JUMP_BACKWARD_NO_INTERRUPT 实现为一个独立的 LoopRegion 子区域。
+        # 该子区域不是用户写的循环，而是 await 挂起协议，不能生成源码语句。
+        # 检测条件：block 是某个子 LoopRegion 的 entry，且 entry 仅由
+        # SEND/YIELD_VALUE/RESUME/JUMP_BACKWARD_NO_INTERRUPT/NOP 组成。
+        for _child in (region.children or []):
+            if isinstance(_child, LoopRegion) and _child.entry is block and _child.entry is not None:
+                if all(i.opname in ('SEND', 'YIELD_VALUE', 'RESUME',
+                                    'JUMP_BACKWARD_NO_INTERRUPT', 'NOP', 'CACHE')
+                       for i in _child.entry.instructions):
+                    for _b in _child.blocks:
+                        self.generated_blocks.add(_b)
+                    self._generated_regions.add(id(_child))
+                    return True
+                break
         block_role = self.region_analyzer.get_block_role(block)
         if block_role in (BlockRole.CONTINUE, BlockRole.PURE_CONTINUE):
             # 修复: 检查被标记为CONTINUE的块是否真的只包含跳转指令
@@ -8077,6 +8093,129 @@ AST 映射规则:
             return nested_values[0]
         return {'type': 'BoolOp', 'op': outer_op, 'values': nested_values}
 
+    def _try_generate_await_list_assign(self, block, stmts: List[Dict[str, Any]]) -> bool:
+        """[Round5-10] 跨块 await 列表元素赋值模式识别。
+
+        识别字节码模式：
+            setup_block (含 GET_AWAITABLE, 末尾 LOAD_CONST None)
+            → SEND/YIELD 自循环块
+            → (可选) 更多 setup_block + SEND/YIELD 自循环块对
+            → BUILD_LIST 块 (含 STORE_FAST/STORE_NAME/...)
+
+        例：``r = [await g(), await h()]`` 编译后会展开为 5 个基本块，
+        每块单独重建会把每个 await 退化为独立 Expr 语句、BUILD_LIST 时栈空。
+        本方法将整条链作为单一表达式重建，产出一条 Assign 语句。
+
+        Returns:
+            True 若模式命中并已向 stmts 追加一条 Assign；否则 False。
+        """
+        # 入口块必须含 GET_AWAITABLE（await setup 起点）
+        if not any(i.opname == 'GET_AWAITABLE' for i in block.instructions):
+            return False
+
+        chain_blocks: List[Any] = [block]
+        current = block
+        build_list_block = None
+        # 沿 SEND 的 fall-through 目标向前收集 (setup, send_loop) 对
+        while True:
+            # setup 块必须以 LOAD_CONST None 结尾（await 的初始 send 值）
+            last = current.instructions[-1] if current.instructions else None
+            if not last or last.opname != 'LOAD_CONST' or last.argval is not None:
+                return False
+            # 找到 SEND/YIELD 自循环块：后继中指令集合仅含挂起协议指令
+            send_loop = None
+            for succ in current.successors:
+                if succ is current:
+                    continue
+                if all(i.opname in ('SEND', 'YIELD_VALUE', 'RESUME',
+                                    'JUMP_BACKWARD_NO_INTERRUPT', 'NOP', 'CACHE')
+                       for i in succ.instructions):
+                    send_loop = succ
+                    break
+            if send_loop is None:
+                return False
+            chain_blocks.append(send_loop)
+            # 通过 SEND 指令的 argval 确定 fall-through 目标
+            send_instr = None
+            for i in send_loop.instructions:
+                if i.opname == 'SEND':
+                    send_instr = i
+                    break
+            if send_instr is None or send_instr.argval is None:
+                return False
+            ft_block = self.cfg.get_block_by_offset(send_instr.argval)
+            if ft_block is None:
+                return False
+            # 判定 fall-through 块性质：BUILD_LIST 终结 / 另一个 await setup 继续 / 其他放弃
+            first_real = None
+            for i in ft_block.instructions:
+                if i.opname not in ('RESUME', 'NOP', 'CACHE'):
+                    first_real = i
+                    break
+            if first_real is not None and first_real.opname == 'BUILD_LIST':
+                build_list_block = ft_block
+                chain_blocks.append(ft_block)
+                break
+            if any(i.opname == 'GET_AWAITABLE' for i in ft_block.instructions):
+                chain_blocks.append(ft_block)
+                current = ft_block
+                continue
+            return False
+
+        if build_list_block is None:
+            return False
+
+        # 在 BUILD_LIST 块中找到 BUILD_LIST 之后的 STORE_* 指令
+        store_instr = None
+        seen_build = False
+        for i in build_list_block.instructions:
+            if not seen_build:
+                if i.opname == 'BUILD_LIST':
+                    seen_build = True
+                continue
+            if i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                store_instr = i
+                break
+            if i.opname in ('LOAD_CONST', 'RETURN_VALUE', 'RETURN_CONST', 'POP_TOP'):
+                break
+        if store_instr is None:
+            return False
+
+        # 汇总指令：所有 setup/send_loop 块的完整指令 + BUILD_LIST 块中直到 BUILD_LIST（含）
+        all_instrs: List[Any] = []
+        for cb in chain_blocks:
+            if cb is build_list_block:
+                for i in cb.instructions:
+                    all_instrs.append(i)
+                    if i.opname == 'BUILD_LIST':
+                        break
+            else:
+                all_instrs.extend(cb.instructions)
+        # 追加 STORE_* 以触发 Assign 节点生成
+        all_instrs.append(store_instr)
+
+        value_ast = self.expr_reconstructor.reconstruct(all_instrs)
+        if value_ast is None:
+            return False
+        if isinstance(value_ast, dict) and value_ast.get('type') == 'Assign':
+            stmts.append(value_ast)
+        else:
+            stmts.append({
+                'type': 'Assign',
+                'targets': [{
+                    'type': 'Name',
+                    'id': store_instr.argval,
+                    'ctx': 'Store',
+                    'lineno': store_instr.starts_line,
+                }],
+                'value': value_ast,
+                'lineno': store_instr.starts_line,
+            })
+        for cb in chain_blocks:
+            self.generated_blocks.add(cb)
+            self.generated_offsets.add(cb.start_offset)
+        return True
+
     def _process_if_blocks(self, blocks, region: IfRegion, branch: str = 'then') -> List[Dict[str, Any]]:
         """处理 if/else 分支的块列表"""
         stmts: List[Dict[str, Any]] = []
@@ -8110,6 +8249,9 @@ AST 映射规则:
             if block in _nested_if_skip:
                 self.generated_blocks.add(block)
                 self.generated_offsets.add(block.start_offset)
+                continue
+            # [Round5-10] 跨块 await 列表元素赋值：r = [await g(), await h()]
+            if self._try_generate_await_list_assign(block, stmts):
                 continue
             if block in child_expr_regions:
                 child = child_expr_regions[block]
@@ -10999,6 +11141,41 @@ AST 映射规则:
                 return _child_regions_cache
 
             body_stmts = []
+            # [Round5-08] async with 的 `as x` 绑定检测：early pass
+            # 字节码模式：BEFORE_ASYNC_WITH → GET_AWAITABLE → SEND/YIELD 循环
+            # → STORE_FAST x（as 绑定）→ body。
+            # SEND/YIELD 循环有时未被识别为 LoopRegion（无对应 LoopRegion 对象），
+            # 因此 region_analyzer 阶段无法填充 region.target。这里在主循环处理
+            # with_blocks 之前做一次 early detection：扫描 with_blocks[0]（SEND
+            # 跳出后的目标块）的首条 STORE_* 指令，作为 `as x` 绑定变量。
+            # 必须在主循环之前执行，否则主循环会把 STORE_FAST x 当作普通赋值
+            # 语句处理，导致 body_stmts 非空，使后续的 fallback 检测被
+            # `if region.is_async and not body_stmts` 闸门拦截。
+            if region.is_async and region.target is None:
+                _wb_blocks_early = sorted(
+                    (b for b in getattr(region, 'with_blocks', []) or []),
+                    key=lambda b: b.start_offset,
+                )
+                _async_target_early = None
+                for _wb in _wb_blocks_early:
+                    _wb_first = None
+                    for _instr in _wb.instructions:
+                        if _instr.opname not in ('RESUME', 'NOP', 'CACHE'):
+                            _wb_first = _instr
+                            break
+                    if _wb_first and _wb_first.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                        _async_target_early = _wb_first.argval
+                        break
+                if _async_target_early:
+                    region.target = _async_target_early
+                    if region.items:
+                        _new_items = []
+                        for _ctx_instrs, _tgt in region.items:
+                            if _tgt is None:
+                                _new_items.append((_ctx_instrs, _async_target_early))
+                            else:
+                                _new_items.append((_ctx_instrs, _tgt))
+                        region.items = _new_items
             for block in region.with_blocks:
                 if block in self.generated_blocks:
                     continue

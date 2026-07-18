@@ -3094,7 +3094,47 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                         for_iter_setup = header
                     return RegionType.FOR_LOOP, for_iter_setup, for_iter_exit, for_iter_fall_through, False, False
                 elif detector.is_get_anext(instr):
-                    return RegionType.FOR_LOOP, None, None, None, False, False
+                    # [Round5-09] async for：GET_ANEXT 在 header，GET_AITER 在前驱块。
+                    # FOR_ITER 的等价物跨两块：GET_ANEXT (header) + SEND (后继块)。
+                    # 与 sync FOR_ITER 分支保持对称：检测含 GET_AITER 的前驱作为
+                    # for_iter_setup，从 SEND 的 argval 提取 fall_through（循环体入口），
+                    # 从后继链中的 END_ASYNC_FOR 提取 exit（迭代耗尽出口）。
+                    for_iter_setup = None
+                    for pred in sorted(header.predecessors, key=lambda p: p.start_offset):
+                        if pred == header:
+                            continue
+                        if any(detector.is_iterator_setup_opcode(i) for i in pred.instructions):
+                            for_iter_setup = pred
+                            break
+                    header_has_get_aier = any(detector.is_iterator_setup_opcode(i) for i in header.instructions)
+                    if for_iter_setup is None and header_has_get_aier:
+                        for_iter_setup = header
+                    for_iter_fall_through = None
+                    for_iter_exit = None
+                    _visited = {header}
+                    _queue = list(header.successors)
+                    while _queue:
+                        _succ = _queue.pop(0)
+                        if _succ in _visited:
+                            continue
+                        _visited.add(_succ)
+                        _has_send = False
+                        for si in _succ.instructions:
+                            if si.opname == 'SEND' and si.argval is not None:
+                                _has_send = True
+                                _ft = self.cfg.get_block_by_offset(si.argval)
+                                if _ft and for_iter_fall_through is None:
+                                    for_iter_fall_through = _ft
+                                break
+                        if any(i.opname == 'END_ASYNC_FOR' for i in _succ.instructions):
+                            for_iter_exit = _succ
+                        # Only descend through the SEND/YIELD sub-loop (async for
+                        # 挂起协议块)；避免误把循环体或外层块纳入搜索。
+                        if _has_send or any(i.opname == 'END_ASYNC_FOR' for i in _succ.instructions):
+                            for _ss in _succ.successors:
+                                if _ss not in _visited:
+                                    _queue.append(_ss)
+                    return RegionType.FOR_LOOP, for_iter_setup, for_iter_exit, for_iter_fall_through, False, False
 
         is_yield_from = False
         if body is not None:
