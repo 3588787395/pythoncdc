@@ -2965,6 +2965,8 @@ class CodeGenerator:
                         return 'True' if value else 'False'
                     elif value is None:
                         return 'None'
+                    elif value is Ellipsis:
+                        return '...'
                     elif isinstance(value, frozenset):
                         return repr(set(value))
                     else:
@@ -3178,9 +3180,11 @@ class CodeGenerator:
     def _generate_constant(self, node: ASTConstant) -> str:
         """生成常量表达式"""
         value = node.value
-        
+
         if value is None:
             return 'None'
+        elif value is Ellipsis:
+            return '...'
         elif isinstance(value, bool):
             return 'True' if value else 'False'
         elif isinstance(value, (int, float)):
@@ -3956,47 +3960,28 @@ class CodeGenerator:
         """生成lambda表达式代码"""
         args = lambda_dict.get('args', {})
         body = lambda_dict.get('body', {})
-        
-        # 生成参数
-        args_code = []
-        if args:
-            # Handle different argument types
-            if isinstance(args, dict):
-                # Could have 'posonlyargs', 'args', 'vararg', 'kwonlyargs', 'kwarg', 'defaults'
-                pos_args = args.get('args', [])
-                for arg in pos_args:
-                    if isinstance(arg, dict):
-                        args_code.append(arg.get('arg', 'x'))
-                    else:
-                        args_code.append(str(arg))
-                # Handle vararg (*args)
-                vararg = args.get('vararg')
-                if vararg:
-                    if isinstance(vararg, dict):
-                        args_code.append(f"*{vararg.get('arg', 'args')}")
-                    else:
-                        args_code.append(f"*{vararg}")
-                # Handle kwarg (**kwargs)
-                kwarg = args.get('kwarg')
-                if kwarg:
-                    if isinstance(kwarg, dict):
-                        args_code.append(f"**{kwarg.get('arg', 'kwargs')}")
-                    else:
-                        args_code.append(f"**{kwarg}")
-            elif isinstance(args, list):
+
+        # 生成参数（复用 _generate_arguments_dict 以正确处理默认值/vararg/kwarg）
+        if isinstance(args, dict) and args:
+            args_code = self._generate_arguments_dict(args)
+        else:
+            args_code = ''
+            if isinstance(args, list):
+                parts = []
                 for arg in args:
                     if isinstance(arg, dict):
-                        args_code.append(arg.get('arg', 'x'))
+                        parts.append(arg.get('arg', 'x'))
                     else:
-                        args_code.append(str(arg))
-        
+                        parts.append(str(arg))
+                args_code = ', '.join(parts)
+
         # Generate body
         if isinstance(body, dict):
             body_code = self._generate_expression(body, 0)
         else:
             body_code = str(body)
-        
-        return f"lambda {', '.join(args_code)}: {body_code}"
+
+        return f"lambda {args_code}: {body_code}"
     
     def _generate_set_comp_from_dict(self, comp_dict: Dict[str, Any]) -> str:
         """[关键修复] 从字典生成集合推导式代码"""
@@ -4363,6 +4348,10 @@ class CodeGenerator:
         }
 
         left_code = self._generate_expression(left, self._precedence['=='])
+        # [Round4-10] 嵌套 Compare 必须加括号：`a == b == c == d` 会被 Python
+        # 解析为单一链式比较；要表达 `(a == b) == (c == d)` 必须给内层 Compare 加括号。
+        if isinstance(left, dict) and left.get('type') == 'Compare':
+            left_code = f'({left_code})'
         parts = [left_code]
         for op, comparator in zip(ops, comparators):
             # 区域归约算法：处理 dict-form ops 的三种格式：
@@ -4384,6 +4373,9 @@ class CodeGenerator:
                 comparator_code = self._generate_expression(comparator, self._precedence['=='])
             else:
                 comparator_code = self._generate_expression(comparator, 0)
+            # [Round4-10] comparator 为嵌套 Compare 时同样必须加括号
+            if isinstance(comparator, dict) and comparator.get('type') == 'Compare':
+                comparator_code = f'({comparator_code})'
             parts.append(f'{op_str} {comparator_code}')
 
         result = ' '.join(parts)

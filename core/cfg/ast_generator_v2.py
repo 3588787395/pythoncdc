@@ -32,7 +32,12 @@ class ExpressionReconstructor:
         self.copy_depth = 0  # [海象运算符] COPY 指令的深度参数
         self.cfg = cfg  # [关键修复] 保存CFG引用，用于检查函数标志
         self.verbose = verbose  # 接受verbose参数（用于兼容性，但不使用）
-    
+        # [Round4-10] 跟踪自上次 COMPARE_OP 后是否执行过条件跳转。
+        # 真正的链式比较 (a<b<c) 在两次 COMPARE_OP 之间必有条件跳转
+        # (JUMP_IF_FALSE_OR_POP / POP_JUMP_*_IF_FALSE 等)；而括号比较
+        # (a==b)==(c==d) 三个 COMPARE_OP 顺序堆叠无跳转，不应合并。
+        self._jump_since_last_compare = False
+
     def reset(self):
         """重置状态"""
         self.stack = []
@@ -40,6 +45,7 @@ class ExpressionReconstructor:
         self.temp_counter = 0
         self.last_instr_was_copy = False
         self.copy_depth = 0
+        self._jump_since_last_compare = False
     
     def reconstruct(self, instructions: List[Instruction], initial_stack: Optional[List[Dict[str, Any]]] = None) -> Optional[Dict[str, Any]]:
         """
@@ -72,7 +78,14 @@ class ExpressionReconstructor:
     def _process_instruction(self, instr: Instruction) -> None:
         """处理单条指令"""
         opname = instr.opname
-        
+
+        # [Round4-10] 检测条件跳转指令。真正的链式比较在两次 COMPARE_OP 之间
+        # 必有条件跳转（用于短路求值）；括号比较 (a==b)==(c==d) 没有跳转。
+        # 标记后供 COMPARE_OP 处理器判断是否允许合并 Compare 节点。
+        if (opname in ('JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP')
+                or opname.startswith('POP_JUMP_')):
+            self._jump_since_last_compare = True
+
         # [海象运算符] COPY 指令 - 复制栈顶值，用于 := 运算符
         # 必须在重置标志之前处理
         if opname == 'COPY':
@@ -326,6 +339,20 @@ class ExpressionReconstructor:
             if len(self.stack) >= 2:
                 slice_val = self.stack.pop()
                 value = self.stack.pop()
+                # [Round4-09] 多维切片 a[..., 0]：Python 编译器把 (Ellipsis, 0)
+                # 常量折叠为单个 LOAD_CONST tuple。还原为 Tuple AST 节点。
+                if (isinstance(slice_val, dict) and slice_val.get('type') == 'Constant'
+                        and isinstance(slice_val.get('value'), tuple)):
+                    elts = [
+                        {'type': 'Constant', 'value': v}
+                        for v in slice_val['value']
+                    ]
+                    slice_val = {
+                        'type': 'Tuple',
+                        'elts': elts,
+                        'ctx': 'Load',
+                        'lineno': instr.starts_line
+                    }
                 self.stack.append({
                     'type': 'Subscript',
                     'value': value,
@@ -428,9 +455,13 @@ class ExpressionReconstructor:
                 left = self.stack.pop()
                 op = self._get_compare_op(instr.argval)
 
-                # [关键修复] 检测链式比较模式
-                # 如果 left 是一个 Compare 节点，则合并为链式比较
-                if left.get('type') == 'Compare':
+                # [Round4-10] 防御括号比较 false-positive：
+                # 真正的链式比较 (a<b<c) 在两次 COMPARE_OP 之间必有条件跳转
+                # (JUMP_IF_FALSE_OR_POP / POP_JUMP_*_IF_FALSE 等) 做短路求值；
+                # 而括号比较 (a==b)==(c==d) 三个 COMPARE_OP 顺序堆叠无跳转。
+                # 仅在 _jump_since_last_compare 为 True 时才合并 Compare 节点。
+                if (left.get('type') == 'Compare'
+                        and self._jump_since_last_compare):
                     # 链式比较：将当前比较添加到前一个比较中
                     # 前一个比较的最后一个比较器作为当前比较的左操作数
                     left['comparators'].append(right)
@@ -445,8 +476,8 @@ class ExpressionReconstructor:
                         'lineno': instr.starts_line
                     }
                     self.stack.append(compare_node)
-            else:
-                pass
+            # 重置标志：每次 COMPARE_OP 后需重新等待条件跳转才允许下次合并
+            self._jump_since_last_compare = False
 
         # [关键修复] CONTAINS_OP 指令 - Python 3.11+ 的成员运算符 (in/not in)
         elif opname == 'CONTAINS_OP':
@@ -649,6 +680,22 @@ class ExpressionReconstructor:
                     # 例如 f(a, *d) 的字节码 BUILD_LIST 1 / LOAD_NAME d / LIST_EXTEND 1
                     # 生成 Starred 节点以保留 *d 语义
                     elts = elts + [{'type': 'Starred', 'value': extend_values, 'ctx': 'Load', 'lineno': instr.starts_line}]
+                self.stack.append({
+                    'type': 'List',
+                    'elts': elts,
+                    'ctx': 'Load',
+                    'lineno': instr.starts_line
+                })
+
+        # [Round4-11] LIST_APPEND - 列表字面量中追加元素（如 [a, *b, c] 的 c）
+        # 字节码模式: BUILD_LIST n / LIST_EXTEND m / LOAD c / LIST_APPEND 1
+        # LIST_APPEND 弹出栈顶值，追加到栈上下方的列表对象，不弹出列表
+        elif opname == 'LIST_APPEND':
+            if len(self.stack) >= 2:
+                value = self.stack.pop()
+                list_obj = self.stack.pop()
+                elts = list_obj.get('elts', []) if isinstance(list_obj, dict) else []
+                elts = elts + [value]
                 self.stack.append({
                     'type': 'List',
                     'elts': elts,
@@ -6349,6 +6396,19 @@ class ASTGeneratorV2:
                 if len(stack) >= 2:
                     slice_val = stack.pop()
                     value = stack.pop()
+                    # [Round4-09] 多维切片 a[..., 0]：常量折叠的 tuple 还原为 Tuple AST
+                    if (isinstance(slice_val, dict) and slice_val.get('type') == 'Constant'
+                            and isinstance(slice_val.get('value'), tuple)):
+                        elts = [
+                            {'type': 'Constant', 'value': v}
+                            for v in slice_val['value']
+                        ]
+                        slice_val = {
+                            'type': 'Tuple',
+                            'elts': elts,
+                            'ctx': 'Load',
+                            'lineno': instr.starts_line
+                        }
                     stack.append({
                         'type': 'Subscript',
                         'value': value,
@@ -23077,6 +23137,19 @@ class ASTGeneratorV2:
                 if len(stack) >= 2:
                     slice_val = stack.pop()
                     value = stack.pop()
+                    # [Round4-09] 多维切片 a[..., 0]：常量折叠的 tuple 还原为 Tuple AST
+                    if (isinstance(slice_val, dict) and slice_val.get('type') == 'Constant'
+                            and isinstance(slice_val.get('value'), tuple)):
+                        elts = [
+                            {'type': 'Constant', 'value': v}
+                            for v in slice_val['value']
+                        ]
+                        slice_val = {
+                            'type': 'Tuple',
+                            'elts': elts,
+                            'ctx': 'Load',
+                            'lineno': instr.starts_line
+                        }
                     stack.append({
                         'type': 'Subscript',
                         'value': value,
@@ -23805,10 +23878,10 @@ class ASTGeneratorV2:
                     iterable = stack.pop()
                     # 弹出列表对象
                     list_obj = stack.pop()
-                    
+
                     # 获取列表当前元素
                     list_elts = list_obj.get('elts', []) if list_obj.get('type') == 'List' else []
-                    
+
                     # 处理可迭代对象
                     if iterable.get('type') == 'Constant' and isinstance(iterable.get('value'), tuple):
                         # 常量元组，展开为元素
@@ -23820,8 +23893,22 @@ class ASTGeneratorV2:
                     else:
                         # 其他类型，直接添加
                         list_elts.append(iterable)
-                    
+
                     # 创建新的列表对象
+                    stack.append({
+                        'type': 'List',
+                        'elts': list_elts,
+                        'ctx': 'Load',
+                        'lineno': instr.starts_line
+                    })
+
+            # [Round4-11] LIST_APPEND - 列表字面量追加元素（[a, *b, c] 的 c）
+            elif opname == 'LIST_APPEND':
+                if len(stack) >= 2:
+                    value = stack.pop()
+                    list_obj = stack.pop()
+                    list_elts = list_obj.get('elts', []) if isinstance(list_obj, dict) else []
+                    list_elts = list_elts + [value]
                     stack.append({
                         'type': 'List',
                         'elts': list_elts,

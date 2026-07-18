@@ -7148,6 +7148,20 @@ AST 映射规则:
             if len(stack) >= 2:
                 subscript = stack.pop()
                 container = stack.pop()
+                # [Round4-09] 处理多维切片 a[..., 0]：Python 编译器把 (Ellipsis, 0)
+                # 常量折叠为单个 LOAD_CONST tuple。这里把 tuple-typed Constant 还原
+                # 为 Tuple AST 节点（切片上下文），以便渲染为 a[..., 0] 而非 a[(Ellipsis, 0)]
+                if (isinstance(subscript, dict) and subscript.get('type') == 'Constant'
+                        and isinstance(subscript.get('value'), tuple)):
+                    elts = [
+                        {'type': 'Constant', 'value': v}
+                        for v in subscript['value']
+                    ]
+                    subscript = {
+                        'type': 'Tuple',
+                        'elts': elts,
+                        'ctx': 'Load',
+                    }
                 stack.append({
                     'type': 'Subscript',
                     'value': container,
@@ -14902,58 +14916,189 @@ AST 映射规则:
                 if _first_store_idx >= 1:
                     _prev_idx = _first_store_idx - 1
                     if _chain_instrs[_prev_idx].opname == 'COPY' and _chain_instrs[_prev_idx].arg == COPY_STACK_TOP:
-                        _value_start_idx = _prev_idx - 1
-                        if _value_start_idx >= 0:
-                            _value_instr = _chain_instrs[_value_start_idx]
-                            if _value_instr.opname in ('LOAD_CONST', 'LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL'):
-                                _targets = []
-                                _valid_chain = True
-                                for _si, _store_idx in enumerate(_store_indices):
-                                    if _si > 0:
-                                        _expected_copy_idx = _store_idx - 1
-                                        if (_expected_copy_idx < 0 or
-                                            _chain_instrs[_expected_copy_idx].opname != 'COPY' or
-                                            _chain_instrs[_expected_copy_idx].arg != 1):
-                                            if _si != len(_store_indices) - 1:
-                                                _valid_chain = False
-                                                break
-                                    _store_instr = _chain_instrs[_store_idx]
-                                    _targets.append({
-                                        'type': 'Name',
-                                        'id': _store_instr.argval,
-                                        'ctx': 'Store',
-                                        'lineno': _store_instr.starts_line
-                                    })
-                                if _valid_chain and len(_targets) >= 2:
-                                    _value_expr = self.expr_reconstructor.reconstruct([_value_instr])
-                                    if _value_expr is not None:
-                                        _chain_stmts = [{
-                                            'type': 'Assign',
-                                            'targets': _targets,
-                                            'value': _value_expr,
-                                            'is_chain_assign': True,
-                                            'lineno': _value_instr.starts_line
-                                        }]
-                                        _last_store_idx = _store_indices[-1]
-                                        _remaining_instrs = _chain_instrs[_last_store_idx + 1:]
-                                        if _remaining_instrs:
-                                            _has_return = any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in _remaining_instrs)
-                                            if _has_return:
-                                                _rv_instrs = []
-                                                for _instr in _remaining_instrs:
-                                                    if _instr.opname in ('RETURN_VALUE', 'RETURN_CONST'):
-                                                        break
-                                                    if _instr.opname not in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL',
-                                                                        'COPY', 'SWAP', 'POP_EXCEPT', 'PUSH_EXC_INFO'):
-                                                        _rv_instrs.append(_instr)
-                                                _return_value = self.expr_reconstructor.reconstruct(_rv_instrs) if _rv_instrs else None
-                                                _chain_stmts.append({
-                                                    'type': 'Return',
-                                                    'value': _return_value if _return_value else {'type': 'Constant', 'value': None}
-                                                })
-                                        _chain_result = _chain_stmts
+                        # Value is the instruction slice [0, _prev_idx) ending right
+                        # before the COPY 1 that duplicates the value for the first
+                        # target. Allow multi-instruction values (e.g. d[k], f()).
+                        # Guard: value slice must form a single expression — no
+                        # statement-ending ops (STORE/POP_TOP/RETURN/etc.) inside.
+                        _value_instrs = _chain_instrs[:_prev_idx]
+                        _value_terminal_ops = (
+                            'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+                            'STORE_SUBSCR', 'STORE_ATTR',
+                            'POP_TOP', 'RETURN_VALUE', 'RETURN_CONST',
+                            'RAISE_VARARGS', 'IMPORT_NAME',
+                        )
+                        _value_ok = bool(_value_instrs) and not any(
+                            i.opname in _value_terminal_ops for i in _value_instrs
+                        )
+                        # Fast-path: keep the original single-LOAD acceptance.
+                        if (_value_ok and len(_value_instrs) == 1
+                                and _value_instrs[0].opname in (
+                                    'LOAD_CONST', 'LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL')):
+                            _value_ok = True
+                        if _value_ok:
+                            _targets = []
+                            _valid_chain = True
+                            for _si, _store_idx in enumerate(_store_indices):
+                                if _si > 0:
+                                    _expected_copy_idx = _store_idx - 1
+                                    _prev_store_idx = _store_indices[_si - 1]
+                                    _gap = _chain_instrs[_prev_store_idx + 1:_store_idx]
+                                    if _si != len(_store_indices) - 1:
+                                        # 中间目标：前一条必须是 COPY 1（为下一目标复制值）。
+                                        if (not _gap
+                                                or _gap[0].opname != 'COPY'
+                                                or _gap[0].arg != 1
+                                                or len(_gap) != 1):
+                                            _valid_chain = False
+                                            break
+                                    else:
+                                        # 末目标：与前一 STORE 相邻（栈上剩余值直接消费，
+                                        # 不应再有 BINARY_OP / 其他指令穿插，否则不是
+                                        # 多目标链——例如 walrus+AugAssign 会被误判）。
+                                        if len(_gap) != 0:
+                                            _valid_chain = False
+                                            break
+                                _store_instr = _chain_instrs[_store_idx]
+                                _targets.append({
+                                    'type': 'Name',
+                                    'id': _store_instr.argval,
+                                    'ctx': 'Store',
+                                    'lineno': _store_instr.starts_line
+                                })
+                            if _valid_chain and len(_targets) >= 2:
+                                _value_expr = self.expr_reconstructor.reconstruct(_value_instrs)
+                                if _value_expr is not None:
+                                    _chain_stmts = [{
+                                        'type': 'Assign',
+                                        'targets': _targets,
+                                        'value': _value_expr,
+                                        'is_chain_assign': True,
+                                        'lineno': _value_instrs[0].starts_line
+                                    }]
+                                    _last_store_idx = _store_indices[-1]
+                                    _remaining_instrs = _chain_instrs[_last_store_idx + 1:]
+                                    if _remaining_instrs:
+                                        _has_return = any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in _remaining_instrs)
+                                        if _has_return:
+                                            _rv_instrs = []
+                                            for _instr in _remaining_instrs:
+                                                if _instr.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                                                    break
+                                                if _instr.opname not in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL',
+                                                                    'COPY', 'SWAP', 'POP_EXCEPT', 'PUSH_EXC_INFO'):
+                                                    _rv_instrs.append(_instr)
+                                            _return_value = self.expr_reconstructor.reconstruct(_rv_instrs) if _rv_instrs else None
+                                            _chain_stmts.append({
+                                                'type': 'Return',
+                                                'value': _return_value if _return_value else {'type': 'Constant', 'value': None}
+                                            })
+                                    _chain_result = _chain_stmts
         if _chain_result is not None:
             stmts.extend(_chain_result)
+            self.generated_blocks.add(block)
+            return stmts
+
+        # 元组解包（非字面量右值）检测：LOAD v1, ..., LOAD vN, SWAP N, STORE t1, ..., STORE tN
+        # 例: a, b = c, d  ->  LOAD c, LOAD d, SWAP 2, STORE a, STORE b
+        # 注意：仅当 SWAP 后紧跟 N 个 STORE 时才识别，避免误吞普通 SWAP。
+        _swap_unpack_result = None
+        if len(_chain_instrs) >= 3:
+            _swap_idx = None
+            _swap_n = 0
+            for _ci, _instr in enumerate(_chain_instrs):
+                if _instr.opname == 'SWAP' and _instr.arg and _instr.arg >= 2:
+                    _swap_idx = _ci
+                    _swap_n = _instr.arg
+                    break
+            if _swap_idx is not None and _swap_idx >= 1:
+                _after_swap = _chain_instrs[_swap_idx + 1:]
+                if len(_after_swap) >= _swap_n:
+                    _swap_stores = []
+                    _swap_valid = True
+                    for _si in range(_swap_n):
+                        _s_instr = _after_swap[_si]
+                        if _s_instr.opname not in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                            _swap_valid = False
+                            break
+                        _swap_stores.append(_s_instr)
+                    # After the N stores, the next instr (if any) must NOT be another
+                    # STORE_* (otherwise this is a different pattern, e.g. multi-target
+                    # chain that happens to start with SWAP).
+                    if _swap_valid and _swap_n >= 2:
+                        _after_stores_idx = _swap_n
+                        if _after_stores_idx < len(_after_swap):
+                            _next_after = _after_swap[_after_stores_idx]
+                            if _next_after.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                                _swap_valid = False
+                        if _swap_valid:
+                            _value_pre_instrs = _chain_instrs[:_swap_idx]
+                            # Guard: value slice must form a single tuple-expression
+                            # (no statement-ending ops inside).
+                            _swap_terminal_ops = (
+                                'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+                                'STORE_SUBSCR', 'STORE_ATTR',
+                                'POP_TOP', 'RETURN_VALUE', 'RETURN_CONST',
+                                'RAISE_VARARGS', 'IMPORT_NAME',
+                            )
+                            if (_value_pre_instrs
+                                    and not any(i.opname in _swap_terminal_ops for i in _value_pre_instrs)):
+                                self.expr_reconstructor.reset()
+                                for _vin in _value_pre_instrs:
+                                    self.expr_reconstructor._process_instruction(_vin)
+                                _swap_stack = [s for s in self.expr_reconstructor.stack
+                                               if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+                                if len(_swap_stack) >= _swap_n:
+                                    # 栈上 N 个值，按加载顺序对应 N 个目标（源顺序）。
+                                    # stack[-N] = 第一个值（对应第一个目标），stack[-1] = 最后一个值。
+                                    _tuple_elts = []
+                                    for _si in range(_swap_n):
+                                        _val = _swap_stack[-_swap_n + _si]
+                                        _tgt_instr = _swap_stores[_si]
+                                        _tuple_elts.append({
+                                            'type': 'Name',
+                                            'id': _tgt_instr.argval if _tgt_instr.argval else f'var_{_tgt_instr.arg}',
+                                            'ctx': 'Store',
+                                            'lineno': _tgt_instr.starts_line,
+                                        })
+                                    _rhs_elts = [_swap_stack[-_swap_n + _si] for _si in range(_swap_n)]
+                                    _tuple_target = {
+                                        'type': 'Tuple',
+                                        'elts': _tuple_elts,
+                                        'ctx': 'Store',
+                                    }
+                                    _rhs_expr = {
+                                        'type': 'Tuple',
+                                        'elts': _rhs_elts,
+                                        'ctx': 'Load',
+                                    } if len(_rhs_elts) != 1 else _rhs_elts[0]
+                                    _swap_unpack_stmts = [{
+                                        'type': 'Assign',
+                                        'targets': [_tuple_target],
+                                        'value': _rhs_expr,
+                                        'lineno': _swap_stores[0].starts_line,
+                                    }]
+                                    # 处理 SWAP+STORE 之后的剩余指令（如 RETURN_VALUE）
+                                    _last_swap_store_idx = _swap_idx + 1 + _swap_n  # in _chain_instrs
+                                    _swap_remaining = _chain_instrs[_last_swap_store_idx:]
+                                    if _swap_remaining:
+                                        _has_return = any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in _swap_remaining)
+                                        if _has_return:
+                                            _rv_instrs = []
+                                            for _instr in _swap_remaining:
+                                                if _instr.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                                                    break
+                                                if _instr.opname not in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL',
+                                                                    'COPY', 'SWAP', 'POP_EXCEPT', 'PUSH_EXC_INFO'):
+                                                    _rv_instrs.append(_instr)
+                                            _return_value = self.expr_reconstructor.reconstruct(_rv_instrs) if _rv_instrs else None
+                                            _swap_unpack_stmts.append({
+                                                'type': 'Return',
+                                                'value': _return_value if _return_value else {'type': 'Constant', 'value': None}
+                                            })
+                                    _swap_unpack_result = _swap_unpack_stmts
+        if _swap_unpack_result is not None:
+            stmts.extend(_swap_unpack_result)
             self.generated_blocks.add(block)
             return stmts
 
@@ -15071,7 +15216,9 @@ AST 映射规则:
             else:
                 _ua_stmts: List[Dict[str, Any]] = []
                 _ua_stmt_instrs: List[Instruction] = []
-                _ua_unpack_info = None
+                # 嵌套 UNPACK_SEQUENCE 用栈式管理：每帧 {value, targets, count}。
+                # 顶层帧的 value 是字面量元组；嵌套帧的 value 为 None（隐式来自父帧解包）。
+                _ua_unpack_stack: List[Dict[str, Any]] = []
                 _ua_pending_import = None
                 for _instr in block.instructions:
                     if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
@@ -15095,25 +15242,37 @@ AST 映射规则:
                     if _instr.opname == 'UNPACK_SEQUENCE':
                         _ua_vi = [i for i in _ua_stmt_instrs if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
                         _ua_val = self.expr_reconstructor.reconstruct(_ua_vi) if _ua_vi else None
-                        _ua_unpack_info = {'value': _ua_val, 'targets': [], 'count': _instr.arg}
+                        _ua_unpack_stack.append({'value': _ua_val, 'targets': [], 'count': _instr.arg})
                         _ua_stmt_instrs = []
                         continue
                     if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
-                        if _ua_unpack_info is not None:
-                            _ua_unpack_info['targets'].append({
+                        if _ua_unpack_stack:
+                            _top = _ua_unpack_stack[-1]
+                            _top['targets'].append({
                                 'type': 'Name',
                                 'id': _instr.argval if _instr.argval else f'var_{_instr.arg}',
                                 'ctx': 'Store',
                             })
-                            if len(_ua_unpack_info['targets']) == _ua_unpack_info['count']:
-                                _ua_tgt = {
+                            # 嵌套归约：每完成一帧，作为父帧的一个 Tuple 目标；
+                            # 父帧若也随之完成则继续归约，直到顶层帧完成时发射 Assign。
+                            while (_ua_unpack_stack
+                                   and len(_ua_unpack_stack[-1]['targets']) == _ua_unpack_stack[-1]['count']):
+                                _completed = _ua_unpack_stack.pop()
+                                _completed_tgt = {
                                     'type': 'Tuple',
-                                    'elts': _ua_unpack_info['targets'],
+                                    'elts': _completed['targets'],
                                     'ctx': 'Store',
                                 }
-                                if _ua_unpack_info['value']:
-                                    _ua_stmts.append({'type': 'Assign', 'targets': [_ua_tgt], 'value': _ua_unpack_info['value']})
-                                _ua_unpack_info = None
+                                if not _ua_unpack_stack:
+                                    if _completed['value'] is not None:
+                                        _ua_stmts.append({
+                                            'type': 'Assign',
+                                            'targets': [_completed_tgt],
+                                            'value': _completed['value'],
+                                        })
+                                    break
+                                else:
+                                    _ua_unpack_stack[-1]['targets'].append(_completed_tgt)
                             _ua_stmt_instrs = []
                             continue
                         _ua_stmt_instrs.append(_instr)
@@ -15202,7 +15361,25 @@ AST 映射规则:
                 _aw_expr = self.expr_reconstructor.reconstruct(_aw_stmt_instrs)
                 if _aw_expr:
                     if _aw_expr.get('type') == 'Await':
-                        _aw_stmts.append({'type': 'Expr', 'value': _aw_expr})
+                        # [Round4-14] await 作赋值右值时，字节码布局为：
+                        #   await_setup block (含 GET_AWAITABLE)
+                        #   → wait_loop block (SEND/YIELD_VALUE/RESUME/JUMP_BACKWARD_NO_INTERRUPT)
+                        #   → fall_through block (STORE_FAST x)
+                        # 若 fall_through 是单个 STORE_*，生成 Assign(target=x, value=Await(...))
+                        # 而非 Expr(Await(...))，并标记 fall_through 块已生成避免重复处理。
+                        _aw_target = self._find_await_store_target(block)
+                        if _aw_target is not None:
+                            _aw_stmts.append({
+                                'type': 'Assign',
+                                'targets': [{
+                                    'type': 'Name',
+                                    'id': _aw_target,
+                                    'ctx': 'Store',
+                                }],
+                                'value': _aw_expr,
+                            })
+                        else:
+                            _aw_stmts.append({'type': 'Expr', 'value': _aw_expr})
                     else:
                         _aw_stmt = self._build_statement(_aw_stmt_instrs)
                         if _aw_stmt:
@@ -15519,13 +15696,23 @@ AST 映射规则:
                 if has_copy:
                     remaining = block.instructions[block.instructions.index(instr)+1:]
                     next_store_idx = None
+                    _next_meaningful_after_store = None
                     for ri_idx, ri in enumerate(remaining):
                         if ri.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
                             continue
+                        _next_meaningful_after_store = ri
                         if ri.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
                             next_store_idx = ri_idx
                             break
                         break
+                    # AugAssign + walrus 模式：LOAD T, ..., COPY 1, STORE W, BINARY_OP, STORE T
+                    # 此时 COPY 1 + STORE W 是 walrus 的一部分，不应作为独立赋值处理。
+                    # 让 STORE W 进入 stmt_instrs，等待 BINARY_OP + STORE T 完成 AugAssign 归约。
+                    if (next_store_idx is None
+                            and _next_meaningful_after_store is not None
+                            and _next_meaningful_after_store.opname == 'BINARY_OP'):
+                        stmt_instrs.append(instr)
+                        continue
                     if next_store_idx is not None:
                         chained_targets = [{
                             'type': 'Name',
@@ -15878,6 +16065,47 @@ AST 映射规则:
         self.generated_blocks.add(block)
         return stmts
 
+    def _find_await_store_target(self, block: 'BasicBlock') -> Optional[str]:
+        """[Round4-14] 查找 await 表达式后的赋值目标。
+
+        字节码布局：
+          await_setup block (含 GET_AWAITABLE) - 当前 block 参数
+          → wait_loop block (SEND/YIELD_VALUE/RESUME/JUMP_BACKWARD_NO_INTERRUPT)
+          → fall_through block (STORE_FAST x)
+
+        返回 STORE_* 的目标名，或 None（无赋值，await 作为独立 Expr）。
+        若 fall_through 是单个 STORE_* 块，标记其已生成避免后续重复处理。
+        """
+        # 找到 wait_loop 块（含 SEND/YIELD_VALUE），它是 await setup 的直接后继
+        wait_loop = None
+        for succ in block.successors:
+            if any(i.opname == 'SEND' for i in succ.instructions):
+                wait_loop = succ
+                break
+        if wait_loop is None:
+            return None
+        # 找到 wait_loop 的 fall-through 块（非自环）
+        for succ in wait_loop.successors:
+            if succ is wait_loop:
+                continue
+            # 检查 fall-through 块是否仅含单个 STORE_* 指令（+ noise）
+            store_instrs = [
+                i for i in succ.instructions
+                if i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
+            ]
+            # 仅当 fall-through 块的核心指令是单个 STORE_* 时，才认为是 await 赋值目标
+            non_noise = [
+                i for i in succ.instructions
+                if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP')
+            ]
+            if store_instrs and len(non_noise) == 1 and non_noise[0] is store_instrs[0]:
+                store_i = store_instrs[0]
+                target = store_i.argval if store_i.argval else f'var_{store_i.arg}'
+                # 标记该块已生成，避免后续作为独立赋值语句重复处理
+                self.generated_blocks.add(succ)
+                return target
+        return None
+
     def _process_instruction(self, instr, block, stmt_instrs=None):
         opname = instr.opname
 
@@ -16002,6 +16230,31 @@ AST 映射规则:
                 return [{'type': 'Delete', 'targets': [target_expr]}]
 
         elif delete_op == 'DELETE_SUBSCR':
+            # Use the expression reconstructor's stack to build the full target,
+            # supporting multi-level subscripts like del a[b][c].
+            # Bytecode for del a[b][c]: LOAD a, LOAD b, BINARY_SUBSCR, LOAD c, DELETE_SUBSCR
+            # Stack before DELETE_SUBSCR: [a[b], c] -> target = a[b][c].
+            pre_delete_instrs = [i for i in stmt_instrs[:-1]
+                                 if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+            if not pre_delete_instrs:
+                return None
+            self.expr_reconstructor.reset()
+            for _instr in pre_delete_instrs:
+                self.expr_reconstructor._process_instruction(_instr)
+            _del_stack = [s for s in self.expr_reconstructor.stack
+                          if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+            if len(_del_stack) >= 2:
+                _del_key = _del_stack[-1]
+                _del_obj = _del_stack[-2]
+                target_expr = {
+                    'type': 'Subscript',
+                    'value': _del_obj,
+                    'slice': _del_key,
+                    'ctx': 'Del',
+                }
+                return [{'type': 'Delete', 'targets': [target_expr]}]
+
+            # Fallback: legacy single-level handling.
             load_instrs = [i for i in stmt_instrs[:-1]
                           if i.opname in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL',
                                           'LOAD_ATTR', 'LOAD_DEREF', 'LOAD_CONST')]
@@ -16250,9 +16503,23 @@ AST 映射规则:
 
         store_instr = None
         value_instrs = []
+        # [Round4-05] walrus+AugAssign 修复：保留中间 STORE_* 到 value_instrs，
+        # 仅最后一个 STORE 作为 store_instr。否则 walrus 的 COPY 1 + STORE_NAME n
+        # 相邻序列被切断，expr_reconstructor 无法识别 walrus 模式（NamedExpr），
+        # 导致 `y += (n := f())` 退化为 `n = f()`。
+        # 注意：多目标链（COPY+多 STORE 相邻）与元组解包（SWAP+多 STORE 相邻）
+        # 由上游 _generate_block_statements 的专用检测路径优先处理并提前 return，
+        # 不会走到这里，因此保留中间 STORE 不会破坏已修的 03/01/02。
+        _store_ops = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
+        store_count = sum(1 for i in instrs if i.opname in _store_ops)
+        seen_stores = 0
         for instr in instrs:
-            if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
-                store_instr = instr
+            if instr.opname in _store_ops:
+                seen_stores += 1
+                if seen_stores == store_count:
+                    store_instr = instr
+                else:
+                    value_instrs.append(instr)
             else:
                 value_instrs.append(instr)
 
@@ -16449,69 +16716,103 @@ AST 映射规则:
                 op_symbol = op_map.get(aug_op.opname, None)
 
             if op_symbol and op_symbol.endswith('='):
-                pre_aug_instrs = obj_instrs[:aug_op_idx]
-                value_instrs_for_recon = []
-                found_binary_op = False
-                for idx in range(len(pre_aug_instrs) - 1, -1, -1):
-                    if pre_aug_instrs[idx].opname in ('BINARY_OP', 'BINARY_MULTIPLY',
-                                                        'BINARY_ADD', 'BINARY_SUBTRACT',
-                                                        'BINARY_TRUE_DIVIDE'):
-                        value_instrs_for_recon = pre_aug_instrs[idx+1:]
-                        found_binary_op = True
+                # AugAssign on subscript target.
+                # CPython pattern (Python 3.11+):
+                #   [container_setup, key_setup] -> stack: [container, key]
+                #   COPY 2, COPY 2, BINARY_SUBSCR -> stack: [container, key, container[key]]
+                #   [value_load]                  -> stack: [container, key, target, value]
+                #   BINARY_OP (+=)                -> stack: [container, key, target op value]
+                #   SWAP*, STORE_SUBSCR           -> container[key] = target op value
+                # The target is container[key], built from instructions before the
+                # COPY-2 duplication pattern (which preserves container/key for STORE_SUBSCR).
+
+                # Find the first COPY (arg>=2) in obj_instrs before aug_op_idx:
+                # this marks the start of the target-duplication pattern.
+                copy_pattern_start = None
+                for idx in range(aug_op_idx):
+                    if (obj_instrs[idx].opname == 'COPY'
+                            and obj_instrs[idx].arg is not None
+                            and obj_instrs[idx].arg >= 2):
+                        copy_pattern_start = idx
                         break
-                    elif pre_aug_instrs[idx].opname in ('LOAD_CONST', 'LOAD_FAST',
-                                                          'LOAD_NAME', 'LOAD_GLOBAL',
-                                                          'LOAD_DEREF'):
-                        continue
+
+                target = None
+                if copy_pattern_start is not None and copy_pattern_start > 0:
+                    pre_copy_instrs = obj_instrs[:copy_pattern_start]
+                    self.expr_reconstructor.reset()
+                    for _instr in pre_copy_instrs:
+                        if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                            continue
+                        self.expr_reconstructor._process_instruction(_instr)
+                    _aug_stack = [s for s in self.expr_reconstructor.stack
+                                  if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+                    if len(_aug_stack) >= 2:
+                        _aug_key = _aug_stack[-1]
+                        _aug_obj = _aug_stack[-2]
+                        target = {
+                            'type': 'Subscript',
+                            'value': _aug_obj,
+                            'slice': _aug_key,
+                            'ctx': 'Store',
+                        }
+
+                if target is None:
+                    # Fallback: single-level subscript using first BINARY_SUBSCR.
+                    obj_expr = None
+                    key_expr = None
+                    binary_subscr_idx = -1
+                    for idx, instr in enumerate(obj_instrs):
+                        if instr.opname == 'BINARY_SUBSCR':
+                            binary_subscr_idx = idx
+                            break
+                    if binary_subscr_idx > 0:
+                        load_instrs = []
+                        for idx in range(binary_subscr_idx):
+                            if obj_instrs[idx].opname in ('LOAD_FAST', 'LOAD_NAME',
+                                                          'LOAD_GLOBAL', 'LOAD_DEREF',
+                                                          'LOAD_CONST'):
+                                load_instrs.append((idx, obj_instrs[idx]))
+                        if len(load_instrs) >= 2:
+                            obj_expr = self.expr_reconstructor.reconstruct([load_instrs[0][1]])
+                            key_expr = self.expr_reconstructor.reconstruct([load_instrs[1][1]])
+                    if obj_expr is None:
+                        obj_expr = {'type': 'Name', 'id': '_'}
+                    if key_expr is None:
+                        key_expr = {'type': 'Constant', 'value': 0}
+                    target = {
+                        'type': 'Subscript',
+                        'value': obj_expr,
+                        'slice': key_expr,
+                        'ctx': 'Store',
+                    }
+
+                # Value: the LOAD instruction(s) immediately before BINARY_OP
+                # (after the COPY/BINARY_SUBSCR target-duplication pattern).
+                value_instrs_for_recon = []
+                for idx in range(aug_op_idx - 1, -1, -1):
+                    if obj_instrs[idx].opname in ('LOAD_CONST', 'LOAD_FAST',
+                                                   'LOAD_NAME', 'LOAD_GLOBAL',
+                                                   'LOAD_DEREF'):
+                        value_instrs_for_recon.insert(0, obj_instrs[idx])
                     else:
                         break
-                if not found_binary_op or not value_instrs_for_recon:
-                    value_instrs_for_recon = []
-                    copy_count = 0
-                    for instr in reversed(obj_instrs[:aug_op_idx]):
-                        if instr.opname == 'COPY':
-                            copy_count += 1
-                            if copy_count >= 2:
-                                break
-                        elif instr.opname not in ('COPY', 'SWAP'):
-                            value_instrs_for_recon.insert(0, instr)
-
+                if not value_instrs_for_recon:
+                    # Fallback: legacy extraction (handles older patterns).
+                    for idx in range(len(obj_instrs[:aug_op_idx]) - 1, -1, -1):
+                        if obj_instrs[idx].opname in ('BINARY_OP', 'BINARY_MULTIPLY',
+                                                       'BINARY_ADD', 'BINARY_SUBTRACT',
+                                                       'BINARY_TRUE_DIVIDE'):
+                            value_instrs_for_recon = obj_instrs[idx + 1:aug_op_idx]
+                            break
+                        elif obj_instrs[idx].opname in ('LOAD_CONST', 'LOAD_FAST',
+                                                         'LOAD_NAME', 'LOAD_GLOBAL',
+                                                         'LOAD_DEREF'):
+                            continue
+                        else:
+                            break
                 value_expr = self.expr_reconstructor.reconstruct(value_instrs_for_recon) if value_instrs_for_recon else None
                 if value_expr is None:
                     value_expr = {'type': 'Constant', 'value': 0}
-
-                target_instrs = []
-                obj_expr = None
-                key_expr = None
-                binary_subscr_idx = -1
-                for idx, instr in enumerate(obj_instrs):
-                    if instr.opname == 'BINARY_SUBSCR':
-                        binary_subscr_idx = idx
-                        break
-
-                if binary_subscr_idx > 0:
-                    load_instrs = []
-                    for idx in range(binary_subscr_idx):
-                        if obj_instrs[idx].opname in ('LOAD_FAST', 'LOAD_NAME',
-                                                      'LOAD_GLOBAL', 'LOAD_DEREF',
-                                                      'LOAD_CONST'):
-                            load_instrs.append((idx, obj_instrs[idx]))
-
-                    if len(load_instrs) >= 2:
-                        obj_expr = self.expr_reconstructor.reconstruct([load_instrs[0][1]])
-                        key_expr = self.expr_reconstructor.reconstruct([load_instrs[1][1]])
-
-                if obj_expr is None:
-                    obj_expr = {'type': 'Name', 'id': '_'}
-                if key_expr is None:
-                    key_expr = {'type': 'Constant', 'value': 0}
-
-                target = {
-                    'type': 'Subscript',
-                    'value': obj_expr,
-                    'slice': key_expr,
-                    'ctx': 'Store',
-                }
 
                 op_simple = op_symbol.replace('=', '')
                 return {
@@ -16521,6 +16822,34 @@ AST 映射规则:
                     'value': value_expr,
                 }
 
+        # Regular subscript assign: obj_instrs builds stack [value, container, key]
+        # (value pushed first as TOS2, container as TOS1, key as TOS).
+        # Use the reconstructor's stack to split correctly, supporting multi-level
+        # subscript containers like d[a][b][c].
+        self.expr_reconstructor.reset()
+        for _instr in obj_instrs:
+            if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                continue
+            self.expr_reconstructor._process_instruction(_instr)
+        _reg_stack = [s for s in self.expr_reconstructor.stack
+                      if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+        if len(_reg_stack) >= 3:
+            key_expr = _reg_stack[-1]
+            obj_expr = _reg_stack[-2]
+            value_expr = _reg_stack[-3]
+            target = {
+                'type': 'Subscript',
+                'value': obj_expr,
+                'slice': key_expr,
+                'ctx': 'Store',
+            }
+            return {
+                'type': 'Assign',
+                'targets': [target],
+                'value': value_expr,
+            }
+
+        # Fallback: legacy single-instruction split for simple cases.
         key_expr = self.expr_reconstructor.reconstruct(obj_instrs[-1:])
         if key_expr is None:
             key_expr = {'type': 'Constant', 'value': None}
