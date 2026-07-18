@@ -928,7 +928,6 @@ class RegionASTGenerator:
                         # [DEPRECATED TERNARY PATH] Lambda body中的内联IfExp生成
                         # 这是历史遗留的多路径问题，理想情况下应该通过 _generate_ternary 处理
                         # 保留此代码以维持向后兼容性，未来应迁移到统一的TernaryRegion生成流程
-                        # TODO: 考虑将Lambda中的三元表达式识别为TernaryRegion并委托给_generate_ternary
                         if_body = s.get('body', [])
                         else_body = s.get('orelse', [])
                         if len(if_body) == 1 and isinstance(if_body[0], dict) and if_body[0].get('type') == 'Return':
@@ -950,6 +949,14 @@ class RegionASTGenerator:
                                 }
             if body_expr is None:
                 body_expr = {'type': 'Constant', 'value': None}
+            # [Round5-02] 嵌套 lambda：lambda 体内返回另一个 lambda 时，
+            # 递归生成产生 FunctionObject（如 `lambda x: (lambda y: x+y)` 的
+            # 外层 lambda body 是内层 lambda 的 FunctionObject）。CodeGenerator
+            # 会将其渲染为占位符 `lambda *args, **kwargs: None`，丢失闭包信息。
+            # 这里复用 _convert_lambda_function_objects 把 FunctionObject 转为
+            # 真正的 Lambda dict（递归反编译内层 code object）。
+            if isinstance(body_expr, dict) and body_expr.get('type') == 'FunctionObject':
+                body_expr = self._convert_lambda_function_objects(body_expr)
             return {
                 'type': 'Lambda',
                 'args': args,
@@ -11378,6 +11385,36 @@ AST 映射规则:
                     if _async_target:
                         region.target = _async_target
                         # 更新region.items中的optional_vars
+                        if region.items:
+                            _new_items = []
+                            for _ctx_instrs, _tgt in region.items:
+                                if _tgt is None:
+                                    _new_items.append((_ctx_instrs, _async_target))
+                                else:
+                                    _new_items.append((_ctx_instrs, _tgt))
+                            region.items = _new_items
+                # [Round5-08] 当 SEND/YIELD 循环未被识别为 LoopRegion 时，
+                # _async_body_blocks 为空，上面的 target 检测不会触发。此时回退
+                # 到 region.with_blocks[0]（async with 的 body 入口块，即 SEND
+                # 跳出后的目标块）查找首条 STORE_* 指令作为 `as x` 绑定变量。
+                # 字节码模式：BEFORE_ASYNC_WITH → GET_AWAITABLE → SEND/YIELD 循环
+                # → STORE_FAST x（as 绑定）→ body。
+                if region.target is None and region.is_async:
+                    _wb_blocks = sorted(
+                        (b for b in getattr(region, 'with_blocks', []) or []),
+                        key=lambda b: b.start_offset,
+                    )
+                    for _wb in _wb_blocks:
+                        _wb_first = None
+                        for _instr in _wb.instructions:
+                            if _instr.opname not in ('RESUME', 'NOP', 'CACHE'):
+                                _wb_first = _instr
+                                break
+                        if _wb_first and _wb_first.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                            _async_target = _wb_first.argval
+                            break
+                    if _async_target:
+                        region.target = _async_target
                         if region.items:
                             _new_items = []
                             for _ctx_instrs, _tgt in region.items:

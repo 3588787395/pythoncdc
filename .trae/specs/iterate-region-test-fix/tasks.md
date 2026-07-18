@@ -16,10 +16,10 @@
 - [x] Task 0.3: 确认起点基线 @ afe8240（if_region 1 failed / 376 passed, control_flow_matrix 4 failed / 323 passed）
 
 ## Phase 1: IF 区域（20 轮）
-- [x] Task 1.1: IF round_01 — 本地 commit 2d0e64b（未 push）
-- [x] Task 1.2: IF round_02 — 本地 commit d84c6ae（未 push）
-- [x] Task 1.3: IF round_03 — 本地 commit 17ccc7e（未 push，遗留 test_adv03_nested_ternary_chain 失败）
-- [ ] Task 1.4: IF round_04 — 重做（R4-6 之前因环境重置丢失）
+- [x] Task 1.1: IF round_01 — commit 2d0e64b
+- [x] Task 1.2: IF round_02 — commit d84c6ae
+- [x] Task 1.3: IF round_03 — commit 17ccc7e (已 push)
+- [x] Task 1.4: IF round_04 — commit a3e4d41 (15/15 修复完成, 已 push)
 - [ ] Task 1.5 ~ 1.20
 
 ## Phase 2: LOOP 区域（20 轮）
