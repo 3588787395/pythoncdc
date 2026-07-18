@@ -1651,6 +1651,29 @@ AST 映射规则:
                 if message is not None:
                     result['msg'] = message
                 return result
+        # [R10 err 1] assert 条件为 BoolOp（`assert a > 0 and b > 0, "msg"`）时，
+        # condition_block 仅含 BoolOp 首段（a > 0），后续段在 boolop_chain_blocks。
+        # 这里手工重建 BoolOp(And/Or, [Compare, ...])，避免主路径只取首段
+        # Compare 作为 test，并避免后续 chain 块被独立识别为第二条 AssertRegion。
+        if getattr(region, 'boolop_chain_blocks', None) \
+                and getattr(region, 'boolop_chain_ops', None):
+            boolop_cond = self._build_assert_boolop_condition(
+                cond_block,
+                list(region.boolop_chain_blocks),
+                list(region.boolop_chain_ops),
+            )
+            if boolop_cond is not None:
+                boolop_cond = self._fix_assert_none_check_direction(boolop_cond)
+                for block in region.blocks:
+                    self.generated_blocks.add(block)
+                result = {
+                    'type': 'Assert',
+                    'test': boolop_cond,
+                }
+                message = self._build_assert_message(region)
+                if message is not None:
+                    result['msg'] = message
+                return result
         cond_instrs = []
         prev_was_copy = False
         for instr in cond_block.instructions:
@@ -1884,6 +1907,111 @@ AST 映射规则:
             'ops': list(ops),
             'comparators': comparators,
         }
+
+    def _build_assert_boolop_condition(self, cond_block, chain_blocks, chain_ops):
+        """[R10 err 1] 重建 assert BoolOp 条件 AST。
+
+        输入契约:
+          - cond_block: AssertRegion.condition_block（BoolOp 首段，含 a > 0）
+          - chain_blocks: AssertRegion.boolop_chain_blocks（后续段，如 b > 0）
+          - chain_ops: AssertRegion.boolop_chain_ops（每段对应的操作符 'and'/'or'）
+
+        实现要点:
+          - 与 BoolOpRegion._build_boolop_expression 的 or_groups 算法一致：
+            首段（cond_block）操作符取 chain_ops[0]，后续段按各自 op 分组。
+          - 每段从对应块抽取非跳转/非噪声指令，交由 expr_reconstructor 重建
+            子表达式（通常是 Compare，如 a > 0）。
+          - 跳转方向修正：assert 上下文中 POP_JUMP_IF_NOT_NONE/IF_NONE 的方向
+            与 if 相反，由 _fix_assert_none_check_direction 在外层统一处理；
+            本方法只重建原始 BoolOp 结构。
+
+        返回: BoolOp dict 或 None（操作数重建失败时）。
+        """
+        if not chain_blocks or not chain_ops:
+            return None
+        # 构建 (block, op) 链：首段 op = chain_ops[0]，后续段 op = chain_ops[i]
+        # （与 BoolOpRegion.op_chain 语义一致）
+        all_blocks = [cond_block] + list(chain_blocks)
+        all_ops = [chain_ops[0]] + list(chain_ops)
+        STRIP_JUMP_OPS = SHORT_CIRCUIT_JUMP_OPS | FORWARD_CONDITIONAL_JUMP_OPS
+        # or_groups 算法：连续相同 op 合并为一个 segment，
+        # and→or 转换时把当前 and group 作为 or 的左操作数。
+        or_groups = []
+        current_group_op = None
+        current_group_values = []
+        for block, op in zip(all_blocks, all_ops):
+            if block is None:
+                continue
+            instrs = [i for i in block.instructions
+                     if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+            last_instr = block.get_last_instruction()
+            if last_instr and last_instr.opname in STRIP_JUMP_OPS:
+                pure_instrs = [i for i in instrs if i != last_instr]
+            else:
+                clean_instrs = []
+                for i in instrs:
+                    if i.opname in ('POP_TOP', 'RETURN_VALUE', 'RETURN_CONST',
+                                   'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'):
+                        break
+                    clean_instrs.append(i)
+                pure_instrs = clean_instrs if clean_instrs else list(instrs[:1]) if instrs else []
+            if not pure_instrs:
+                continue
+            sub_expr = self.expr_reconstructor.reconstruct(pure_instrs)
+            if sub_expr is None:
+                continue
+            # None 检查方向修正（assert 上下文）：和 BoolOpRegion 一致，
+            # 把 NONE_CHECK 转换为 Compare，方向按 op 修正，
+            # 外层 _fix_assert_none_check_direction 会再次处理（递归进入 values）。
+            if last_instr and last_instr.opname in NONE_CHECK_OPS:
+                _is_not_none_op = 'NOT_NONE' in last_instr.opname
+                if op == 'and':
+                    _cmp_op = 'IsNot' if not _is_not_none_op else 'Is'
+                else:
+                    _cmp_op = 'IsNot' if _is_not_none_op else 'Is'
+                sub_expr = {
+                    'type': 'Compare',
+                    'left': sub_expr,
+                    'ops': [{'type': _cmp_op}],
+                    'comparators': [{'type': 'Constant', 'value': None}]
+                }
+            if current_group_op is None:
+                current_group_op = op
+                current_group_values = [sub_expr]
+            elif op == current_group_op:
+                current_group_values.append(sub_expr)
+            elif current_group_op == 'and' and op == 'or':
+                current_group_values.append(sub_expr)
+                or_groups.append((current_group_op, current_group_values))
+                current_group_op = None
+                current_group_values = []
+            else:
+                if current_group_values:
+                    or_groups.append((current_group_op, current_group_values))
+                current_group_op = op
+                current_group_values = [sub_expr]
+        if current_group_values:
+            or_groups.append((current_group_op, current_group_values))
+        # 构建最终 AST：单 segment → BoolOp(op, values)；多 segment → 嵌套 BoolOp(or)
+        if not or_groups:
+            return None
+        if len(or_groups) == 1:
+            gop, gvals = or_groups[0]
+            if len(gvals) == 1:
+                return gvals[0]
+            return {'type': 'BoolOp', 'op': gop, 'values': gvals}
+        # 多 segment：从右向左嵌套（or 外层，and 内层）
+        result = None
+        for gop, gvals in reversed(or_groups):
+            if len(gvals) == 1:
+                gnode = gvals[0]
+            else:
+                gnode = {'type': 'BoolOp', 'op': gop, 'values': gvals}
+            if result is None:
+                result = gnode
+            else:
+                result = {'type': 'BoolOp', 'op': 'or', 'values': [gnode, result]}
+        return result
 
     def _build_assert_message(self, region: AssertRegion) -> Optional[Dict[str, Any]]:
         """[Round4-12] 抽取 AssertRegion.message_block 重建逻辑。
@@ -17169,6 +17297,31 @@ AST 映射规则:
                         _ua_stmt_instrs = []
                         continue
                     if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                        # [R10 err 12] walrus in tuple-unpack rhs:
+                        # `a, b = (d := f())` -> ..., COPY 1, STORE d, UNPACK_SEQUENCE 2, STORE a, STORE b
+                        # The COPY+STORE d is the walrus (NamedExpr), and the walrus value
+                        # (still on stack after COPY) is what gets unpacked. Detect this
+                        # pattern BEFORE flushing STORE d as a separate statement; defer
+                        # to the UNPACK_SEQUENCE handler so it can reconstruct the walrus
+                        # NamedExpr as the unpack value. Without this, COPY 1 ends up as a
+                        # dangling tail of value_instrs in _build_store_statement and gets
+                        # dropped, collapsing `a, b = (d := f())` to `d = f()`.
+                        if (not _ua_unpack_stack
+                                and any(i.opname == 'COPY' and i.arg == 1 for i in _ua_stmt_instrs)):
+                            _next_idx = block.instructions.index(_instr) + 1
+                            _next_meaningful_after_store = None
+                            for _ni in range(_next_idx, len(block.instructions)):
+                                _ni_instr = block.instructions[_ni]
+                                if _ni_instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                                    continue
+                                _next_meaningful_after_store = _ni_instr
+                                break
+                            if (_next_meaningful_after_store is not None
+                                    and _next_meaningful_after_store.opname == 'UNPACK_SEQUENCE'):
+                                # Keep STORE in _ua_stmt_instrs so the UNPACK_SEQUENCE
+                                # handler can reconstruct the walrus NamedExpr as value.
+                                _ua_stmt_instrs.append(_instr)
+                                continue
                         if _ua_unpack_stack:
                             _top = _ua_unpack_stack[-1]
                             _top['targets'].append({
@@ -17785,6 +17938,57 @@ AST 映射规则:
                             stmt_instrs = []
                             skip_offsets.add(_next_meaningful_after_store.offset)
                             continue
+                    # [R10-batch2 err 12] walrus in tuple-unpack rhs:
+                    # `a, b = (d := f())` -> ..., COPY 1, STORE d, UNPACK_SEQUENCE 2, STORE a, STORE b
+                    # The COPY+STORE d is the walrus (NamedExpr), and UNPACK_SEQUENCE
+                    # + subsequent STOREs are the tuple-unpack targets. The walrus
+                    # value (still on stack after COPY) is what gets unpacked. Per
+                    # region reduction: COPY+STORE+UNPACK_SEQUENCE+STOREs form a
+                    # single Assign node (parent) referencing the walrus expression.
+                    # NOTE: blocks containing UNPACK_SEQUENCE are routed to the
+                    # _has_unpack branch above (see line ~17105), so this handler
+                    # only fires for walrus+UNPACK spanning multiple blocks.
+                    if (next_store_idx is None
+                            and _next_meaningful_after_store is not None
+                            and _next_meaningful_after_store.opname == 'UNPACK_SEQUENCE'):
+                        _unpack_count = _next_meaningful_after_store.arg or 0
+                        _unpack_targets = []
+                        _tail_instrs = [_next_meaningful_after_store]
+                        for ri in remaining:
+                            if ri is _next_meaningful_after_store:
+                                continue
+                            if ri.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                                continue
+                            if ri.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                                _unpack_targets.append({
+                                    'type': 'Name',
+                                    'id': ri.argval if ri.argval else f'var_{ri.arg}',
+                                    'ctx': 'Store',
+                                })
+                                _tail_instrs.append(ri)
+                                if len(_unpack_targets) == _unpack_count:
+                                    break
+                            else:
+                                break
+                        if len(_unpack_targets) == _unpack_count:
+                            # Reconstruct the value portion (everything before
+                            # UNPACK_SEQUENCE) as the walrus NamedExpr.
+                            _val_instrs = [i for i in (stmt_instrs + [instr])
+                                           if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                            _walrus_val = self.expr_reconstructor.reconstruct(_val_instrs)
+                            if _walrus_val is not None:
+                                _target = {'type': 'Tuple',
+                                           'elts': _unpack_targets,
+                                           'ctx': 'Store'}
+                                stmts.append({
+                                    'type': 'Assign',
+                                    'targets': [_target],
+                                    'value': _walrus_val,
+                                })
+                                stmt_instrs = []
+                                for ri in _tail_instrs:
+                                    skip_offsets.add(ri.offset)
+                                continue
                     # [Round7-01/02/03 / Round8-06/08/13] walrus 嵌入更大表达式：
                     # - 字面量元素：{(n := f()): v} / {k: (n := f())} / {(n := f()), m} / [(n := f()), m]
                     #   ..., COPY 1, STORE n, [LOAD v / LOAD m ...], BUILD_MAP/SET/LIST, STORE r

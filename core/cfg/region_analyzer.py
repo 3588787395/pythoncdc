@@ -745,6 +745,14 @@ class AssertRegion(Region):
     # region.blocks，避免被父 IfRegion 重复生成。
     chained_compare_blocks: List[BasicBlock] = field(default_factory=list)
     chained_compare_ops: List[str] = field(default_factory=list)
+    # [R10 err 1] assert 条件为 BoolOp（`assert a > 0 and b > 0, "msg"`）时，
+    # condition_block 仅为 BoolOp 首段（a > 0）；后续段（b > 0）通过
+    # boolop_chain_blocks / boolop_chain_ops 持有，由 _generate_assert
+    # 重建为 BoolOp(And/Or, [...]) 节点。每块唯一归属：所有 chain 块
+    # 纳入 region.blocks，避免被父 IfRegion 重复生成或被独立识别为
+    # 第二条 AssertRegion（导致一条 assert 被错误拆为多条）。
+    boolop_chain_blocks: List[BasicBlock] = field(default_factory=list)
+    boolop_chain_ops: List[str] = field(default_factory=list)
 
     def is_block_entry(self, block) -> bool:
         return self.condition_block == block
@@ -8810,14 +8818,31 @@ RegionType 枚举值: RegionType.ASSERT
                 chained_compare_blocks = list(cc_info.get('extra_chain_blocks', []))
                 chained_compare_ops = list(cc_info.get('compare_ops', []))
 
+            # [R10 err 1] 检测 condition_block 是否是 BoolOp 条件首段
+            # （`assert a > 0 and b > 0, "msg"`）。首段以 POP_JUMP_IF_FALSE 跳到
+            # message_block（"and" 失败快跳），其 fall-through 后继为下一段条件块；
+            # 末段以 POP_JUMP_IF_TRUE 跳过 message_block（"and" 成功快跳）。
+            # 与链式比较不同：链式比较用 COPY+COMPARE_OP 单块多 op，BoolOp 用
+            # 多块各含一个 COMPARE_OP，块间用 POP_JUMP_IF_FALSE/TRUE 串联。
+            boolop_chain_blocks: List[BasicBlock] = []
+            boolop_chain_ops: List[str] = []
+            if message_block is not None:
+                bc_info = self._detect_assert_boolop_chain(block, message_block)
+                if bc_info:
+                    boolop_chain_blocks = list(bc_info.get('chain_blocks', []))
+                    boolop_chain_ops = list(bc_info.get('chain_ops', []))
+
             region = AssertRegion(
                 region_type=RegionType.ASSERT,
                 entry=block,
-                blocks={block} | ({message_block} if message_block else set()) | set(chained_compare_blocks),
+                blocks=({block} | ({message_block} if message_block else set())
+                        | set(chained_compare_blocks) | set(boolop_chain_blocks)),
                 condition_block=block,
                 message_block=message_block,
                 chained_compare_blocks=chained_compare_blocks,
                 chained_compare_ops=chained_compare_ops,
+                boolop_chain_blocks=boolop_chain_blocks,
+                boolop_chain_ops=boolop_chain_ops,
             )
             regions.append(region)
             self.regions.append(region)
@@ -8834,8 +8859,101 @@ RegionType 枚举值: RegionType.ASSERT
             for cb in chained_compare_blocks:
                 if cb not in self.block_to_region:
                     self.block_to_region[cb] = region
+            # [R10 err 1] BoolOp chain 块登记归属，避免被独立识别为第二条
+            # AssertRegion（导致一条 assert 被错误拆为多条）
+            for cb in boolop_chain_blocks:
+                if cb not in self.block_to_region:
+                    self.block_to_region[cb] = region
 
         return regions
+
+    def _detect_assert_boolop_chain(self, condition_block: BasicBlock,
+                                    message_block: BasicBlock) -> Optional[Dict]:
+        """[R10 err 1] 检测 assert 条件为 BoolOp 的多段条件链。
+
+        输入: condition_block（首段，已被识别为 AssertRegion.condition_block），
+              message_block（含 LOAD_ASSERTION_ERROR 的失败块）。
+        返回: {'chain_blocks': [...], 'chain_ops': [...]} 或 None。
+
+        字节码模式（"and" 短路）：
+          block_1: a > 0, POP_JUMP_FORWARD_IF_FALSE → message_block
+          block_2: b > 0, POP_JUMP_FORWARD_IF_TRUE → end (skip), fall-through → message_block
+        字节码模式（"or" 短路）：
+          block_1: a > 0, POP_JUMP_FORWARD_IF_TRUE → end (skip), fall-through → block_2
+          block_2: b > 0, POP_JUMP_FORWARD_IF_TRUE → end (skip), fall-through → message_block
+
+        两种模式都满足：从 condition_block 起沿 fall-through（非 jump-target 后继）
+        能到达一个条件块，该条件块的 fall-through 链最终到达 message_block；
+        且条件块的另一后继不是 message_block（是 end/skip 块）。
+
+        操作符判定：chain 块末尾跳转为 IF_FALSE/IF_NONE → 'and'，IF_TRUE/IF_NOT_NONE → 'or'。
+        首段 condition_block 的 op 用于第一段（与 BoolOpRegion op_chain 语义一致）。
+        """
+        if message_block is None:
+            return None
+        # 首段 op 由 condition_block 的跳转方向决定（与 BoolOpRegion 一致）：
+        # IF_FALSE/IF_NONE → 'and'（失败快跳），IF_TRUE/IF_NOT_NONE → 'or'（成功快跳）。
+        # 注意：BoolOp 末段在 "and" 时用 IF_TRUE（成功快跳）、在 "or" 时也用 IF_TRUE，
+        # 故末段跳转方向不能用于判定 op；必须用首段。
+        cond_last = condition_block.get_last_instruction()
+        if not cond_last or cond_last.opname not in FORWARD_CONDITIONAL_JUMP_OPS:
+            return None
+        first_op = 'and'
+        if 'TRUE' in cond_last.opname or 'NOT_NONE' in cond_last.opname:
+            first_op = 'or'
+        chain_blocks: List[BasicBlock] = []
+        chain_ops: List[str] = []
+        visited = {condition_block, message_block}
+        current = condition_block
+        while True:
+            last = current.get_last_instruction()
+            if not last or last.opname not in FORWARD_CONDITIONAL_JUMP_OPS:
+                break
+            # 找出 fall-through 后继（非 jump-target）
+            jump_target_offset = last.argval
+            ft_candidates = [s for s in current.conditional_successors
+                             if s.start_offset != jump_target_offset and s not in visited]
+            if len(ft_candidates) != 1:
+                break
+            next_block = ft_candidates[0]
+            # next_block 必须是条件块（末尾为 FORWARD_CONDITIONAL_JUMP_OPS）
+            next_last = next_block.get_last_instruction()
+            if not next_last or next_last.opname not in FORWARD_CONDITIONAL_JUMP_OPS:
+                break
+            if len(next_block.conditional_successors) != 2:
+                break
+            # next_block 必须能到达 message_block：
+            # (a) message_block 是 next_block 的直接条件后继（常见情况，
+            #     如 `a>0 and b>0` 的末段 fall-through → message_block），或
+            # (b) next_block 的某个条件后继经 fall-through 链到达 message_block
+            #     （链式比较中段经 POP_TOP 中转块到 message_block）。
+            # 不能用 _reach_assertion_error_block：它要求块本身只有 ≤1 个
+            # 条件后继，而 BoolOp 末段有 2 个条件后继（message_block + end）。
+            reaches_msg = (message_block in next_block.conditional_successors
+                           or any(self._reaches_block_via_fallthrough(s, message_block)
+                                  for s in next_block.conditional_successors))
+            if not reaches_msg:
+                break
+            # 所有 chain 块的 op 与首段一致（纯 and/or 链）。
+            # 混合 and/or（如 `a and b or c`）需按各自跳转方向判定，
+            # 但 assert 中混合 boolop 罕见，先按首段 op 处理。
+            chain_blocks.append(next_block)
+            chain_ops.append(first_op)
+            visited.add(next_block)
+            # 若 next_block 的 fall-through 直接指向 message_block，链终止
+            next_jump_target_offset = next_last.argval
+            next_ft = [s for s in next_block.conditional_successors
+                       if s.start_offset != next_jump_target_offset]
+            if any(s is message_block for s in next_ft):
+                break
+            current = next_block
+        if not chain_blocks:
+            return None
+        return {
+            'chain_blocks': chain_blocks,
+            'chain_ops': chain_ops,
+            'first_op': first_op,
+        }
 
     def _reach_assertion_error_block(self, block: BasicBlock) -> bool:
         """[Round4-12] 从 block 起沿单后继 fall-through 链查找 LOAD_ASSERTION_ERROR。
@@ -8859,6 +8977,34 @@ RegionType 枚举值: RegionType.ASSERT
             for instr in cur.instructions:
                 if instr.opname == 'LOAD_ASSERTION_ERROR':
                     return True
+            if len(cur.conditional_successors) > 1:
+                return False
+            last = cur.get_last_instruction()
+            if last and last.opname in ('RAISE_VARARGS', 'RETURN_VALUE',
+                                        'RETURN_CONST', 'RERAISE'):
+                return False
+            succs = list(cur.successors)
+            if len(succs) != 1:
+                return False
+            cur = succs[0]
+            depth += 1
+        return False
+
+    def _reaches_block_via_fallthrough(self, block: BasicBlock,
+                                       target: BasicBlock) -> bool:
+        """[R10 err 1] 从 block 起沿单后继 fall-through 链查找 target 块。
+
+        用于 BoolOp assert chain 检测：判断 next_block 的某个条件后继
+        是否能经单后继 fall-through 链到达 message_block（如链式比较中段
+        经 POP_TOP 中转块到 message_block 的场景）。
+        """
+        seen: Set[BasicBlock] = set()
+        cur: Optional[BasicBlock] = block
+        depth = 0
+        while cur is not None and cur not in seen and depth < 8:
+            seen.add(cur)
+            if cur is target:
+                return True
             if len(cur.conditional_successors) > 1:
                 return False
             last = cur.get_last_instruction()
