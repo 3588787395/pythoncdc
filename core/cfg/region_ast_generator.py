@@ -1760,7 +1760,9 @@ AST 映射规则:
             load_instrs = []
             last_store_idx = -1
             for idx, instr in enumerate(block.instructions):
-                if instr.opname in NOISE_OPS | {'POP_TOP', 'COPY', 'SWAP', 'COMPARE_OP'}:
+                # [Round6-01/02] 跳过 IS_OP/CONTAINS_OP（链式 is/in 比较的运算指令）
+                if instr.opname in NOISE_OPS | {'POP_TOP', 'COPY', 'SWAP',
+                                                'COMPARE_OP', 'IS_OP', 'CONTAINS_OP'}:
                     continue
                 if instr.opname in (CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS |
                                     {'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'}):
@@ -1776,7 +1778,8 @@ AST 映射规则:
                 for idx, instr in enumerate(block.instructions):
                     if idx <= last_store_idx:
                         continue
-                    if instr.opname in NOISE_OPS | {'POP_TOP', 'COPY', 'SWAP', 'COMPARE_OP'}:
+                    if instr.opname in NOISE_OPS | {'POP_TOP', 'COPY', 'SWAP',
+                                                    'COMPARE_OP', 'IS_OP', 'CONTAINS_OP'}:
                         continue
                     if instr.opname in (CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS |
                                         {'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'}):
@@ -2034,7 +2037,33 @@ AST 映射规则:
                 self.generated_blocks.add(block)
                 self.generated_offsets.add(block.start_offset)
             if _yf_expr:
-                _result = {'type': 'Expr', 'value': {'type': 'YieldFrom', 'value': _yf_expr}}
+                # [Round6-07] yield from 作赋值右值：`x = yield from g()`
+                # 字节码在 yield-from 循环退出块（region.blocks 内）含
+                # STORE_* 指令作为赋值目标。检测 STORE_* 并生成
+                # Assign(targets=[store], value=YieldFrom)；否则保持
+                # Expr(YieldFrom)（独立语句，返回值被 POP_TOP 丢弃）。
+                _yf_store_target = None
+                _yf_store_ops = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
+                for _blk in region.blocks:
+                    for _instr in _blk.instructions:
+                        if _instr.opname in _yf_store_ops:
+                            _yf_store_target = _instr
+                            break
+                    if _yf_store_target:
+                        break
+                if _yf_store_target is not None:
+                    _tgt_name = _yf_store_target.argval if _yf_store_target.argval else f'var_{_yf_store_target.arg}'
+                    _result = {
+                        'type': 'Assign',
+                        'targets': [{
+                            'type': 'Name',
+                            'id': _tgt_name,
+                            'ctx': 'Store',
+                        }],
+                        'value': {'type': 'YieldFrom', 'value': _yf_expr},
+                    }
+                else:
+                    _result = {'type': 'Expr', 'value': {'type': 'YieldFrom', 'value': _yf_expr}}
                 if _extra_stmts:
                     if _post_yf_stmts:
                         return _extra_stmts + [_result] + _post_yf_stmts
@@ -6209,6 +6238,48 @@ AST 映射规则:
         _expr_child_stmts = []
         then_entry_offsets = {b.start_offset for b in region.then_blocks} if region.then_blocks else set()
         then_block_set = set(region.then_blocks) if region.then_blocks else set()
+        # [Round6-01] IS_OP/CONTAINS_OP 链式比较作赋值右值：
+        # 区域分析器对 IS_OP/CONTAINS_OP 链式比较只创建 IF_THEN_ELSE
+        # （chained_compare_ops≥2），不像 COMPARE_OP 那样额外创建中间
+        # IF 包装区域作为外层 IfRegion 的 child。因此内层 IF_THEN_ELSE
+        # 是 top-level region（parent=None），不会被外层 IfRegion 的
+        # children 遍历命中。这里主动扫描 self.regions，对 entry 落在
+        # then_blocks 内的链式比较 IfRegion 调用
+        # _generate_value_context_chain_compare_assign 生成 Assign AST，
+        # 并提前标记 blocks / merge_block / 子区域为已生成，避免后续
+        # BoolOp/Ternary 扫描与 _process_if_blocks 重复处理。
+        _chain_cmp_assign_stmts: List[Dict[str, Any]] = []
+        for _r in self.regions:
+            if not isinstance(_r, IfRegion):
+                continue
+            if _r is region:
+                continue
+            if not getattr(_r, 'chained_compare_ops', None) or len(_r.chained_compare_ops) < 2:
+                continue
+            if _r.entry is None or _r.entry.start_offset not in then_entry_offsets:
+                continue
+            if _r.entry in self.generated_blocks:
+                continue
+            _r_id = id(_r)
+            if _r_id in self._generated_regions or _r_id in self._generating_regions:
+                continue
+            _vc_assign = self._generate_value_context_chain_compare_assign(_r)
+            if _vc_assign is not None:
+                _chain_cmp_assign_stmts.append(_vc_assign)
+                self._generated_regions.add(_r_id)
+                # 标记内层 IfRegion 的子区域（BoolOp/Ternary）为已生成
+                for _child in (_r.children or []):
+                    _child_id = id(_child)
+                    self._generated_regions.add(_child_id)
+                    for _b in _child.blocks:
+                        self.generated_blocks.add(_b)
+                        self.generated_offsets.add(_b.start_offset)
+                # merge_block 不在 region.blocks 内（仅作 STORE_* 读取），
+                # 单独标记避免 _process_if_blocks 把它当作独立语句处理
+                _r_merge = getattr(_r, 'merge_block', None)
+                if _r_merge is not None and _r_merge not in self.generated_blocks:
+                    self.generated_blocks.add(_r_merge)
+                    self.generated_offsets.add(_r_merge.start_offset)
         for child in (region.children or []):
             if not isinstance(child, (BoolOpRegion, TernaryRegion)):
                 continue
@@ -6305,6 +6376,8 @@ AST 映射规则:
                     self.generated_blocks.add(b)
                 self._generated_regions.add(r_id)
         then_stmts = self._process_if_blocks(region.then_blocks, region, branch='then')
+        if _chain_cmp_assign_stmts:
+            then_stmts = _chain_cmp_assign_stmts + then_stmts
         if _expr_child_stmts:
             then_stmts = _expr_child_stmts + then_stmts
         elif_cond_set = set()
@@ -13910,6 +13983,13 @@ AST 映射规则:
         entry_existing = self.region_analyzer.get_entry_region_for_block(block)
         if isinstance(existing, TernaryRegion) and existing.entry == block:
             return self._build_nested_ternary_expr(existing)
+        # [Round6-03] 嵌套三元作赋值右值：外层 TernaryRegion 的
+        # true/false_value_block 可能是内层 TernaryRegion 的 entry。
+        # block_to_region 字典只保留一个映射（通常是外层 IfRegion），
+        # 故 existing 不是 TernaryRegion。改用 get_entry_region_for_block
+        # 遍历 self.regions 找 entry==block 的 TernaryRegion。
+        if isinstance(entry_existing, TernaryRegion) and entry_existing.entry == block and entry_existing is not existing:
+            return self._build_nested_ternary_expr(entry_existing)
         if isinstance(entry_existing, BoolOpRegion) and entry_existing.entry == block:
             return self._build_boolop_expression(entry_existing, skip_elif_blocks=True)
         if isinstance(existing, BoolOpRegion) and existing.entry == block:

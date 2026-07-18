@@ -2293,7 +2293,9 @@ class RegionAnalyzer:
             load_instrs = []
             last_store_idx = -1
             for idx, instr in enumerate(block.instructions):
-                if instr.opname in NOISE_OPS | {'POP_TOP', 'COPY', 'SWAP', 'COMPARE_OP'}:
+                # [Round6-01/02] 跳过 IS_OP/CONTAINS_OP（链式 is/in 比较的运算指令）
+                if instr.opname in NOISE_OPS | {'POP_TOP', 'COPY', 'SWAP',
+                                                'COMPARE_OP', 'IS_OP', 'CONTAINS_OP'}:
                     continue
                 if instr.opname in (CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS |
                                     {'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'}):
@@ -2311,7 +2313,8 @@ class RegionAnalyzer:
                 for idx, instr in enumerate(block.instructions):
                     if idx <= last_store_idx:
                         continue
-                    if instr.opname in NOISE_OPS | {'POP_TOP', 'COPY', 'SWAP', 'COMPARE_OP'}:
+                    if instr.opname in NOISE_OPS | {'POP_TOP', 'COPY', 'SWAP',
+                                                    'COMPARE_OP', 'IS_OP', 'CONTAINS_OP'}:
                         continue
                     if instr.opname in (CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS |
                                         {'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'}):
@@ -10298,15 +10301,22 @@ RegionType 枚举值: RegionType.ASSERT
             return False
         instrs = block.instructions
         for i in range(len(instrs) - 1):
-            if instrs[i].opname == 'COPY' and instrs[i].arg == 2 and instrs[i + 1].opname == 'COMPARE_OP':
+            # [Round6-01/02] 链式 is/in 也走 COPY + IS_OP/CONTAINS_OP 模式
+            if (instrs[i].opname == 'COPY' and instrs[i].arg == 2 and
+                instrs[i + 1].opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP')):
                 return True
         return False
 
     def _detect_chained_compare_pattern(self, condition_block: BasicBlock) -> Optional[Dict]:
-        """检测链式比较模式（COPY+COMPARE_OP指令对）
+        """检测链式比较模式（COPY+COMPARE_OP/IS_OP/CONTAINS_OP指令对）
 
         扩展检测：从单block扫描改为追踪ft_successor链中的额外COMPARE_OP块。
         使用min(succs)取then分支（fallthrough）而非else分支。
+
+        [Round6-01/02] 扩展支持 IS_OP（is/is not）与 CONTAINS_OP（in/not in）
+        链式比较。CPython 把 `a is b is c` 编译为 `IS_OP ×2`（而非 COMPARE_OP），
+        `a in b in c` 编译为 `CONTAINS_OP ×2`。旧实现仅匹配 COMPARE_OP，对
+        IS_OP/CONTAINS_OP 链式比较不识别，导致 if body 整条赋值坍塌为 pass。
 
         Returns:
             Dict with 'compare_ops' and 'extra_chain_blocks' keys or None
@@ -10318,9 +10328,9 @@ RegionType 枚举值: RegionType.ASSERT
         pair_count = 0
         for i in range(len(instrs) - 1):
             if (instrs[i].opname == 'COPY' and instrs[i].arg == 2 and
-                instrs[i + 1].opname == 'COMPARE_OP'):
+                instrs[i + 1].opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP')):
                 pair_count += 1
-                compare_ops.append(instrs[i + 1].argval)
+                compare_ops.append(self._chain_compare_op_str(instrs[i + 1]))
         extra_chain_blocks = []
         current_ft = condition_block
         visited = {condition_block}
@@ -10331,7 +10341,8 @@ RegionType 枚举值: RegionType.ASSERT
             ft_candidate = min(succs, key=lambda s: s.start_offset)
             if ft_candidate in visited:
                 break
-            if not any(i.opname == 'COMPARE_OP' for i in ft_candidate.instructions):
+            if not any(i.opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP')
+                       for i in ft_candidate.instructions):
                 break
             has_back_edge = any(s.start_offset <= ft_candidate.start_offset for s in ft_candidate.successors)
             if has_back_edge:
@@ -10339,11 +10350,27 @@ RegionType 枚举值: RegionType.ASSERT
             extra_chain_blocks.append(ft_candidate)
             visited.add(ft_candidate)
             for i in ft_candidate.instructions:
-                if i.opname == 'COMPARE_OP':
-                    compare_ops.append(i.argval)
+                if i.opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP'):
+                    compare_ops.append(self._chain_compare_op_str(i))
             current_ft = ft_candidate
         if pair_count >= 1 and extra_chain_blocks:
             return {'compare_ops': compare_ops, 'extra_chain_blocks': extra_chain_blocks}
+        return None
+
+    @staticmethod
+    def _chain_compare_op_str(instr) -> Optional[str]:
+        """[Round6-01/02] 把链式比较指令映射为 AST op 字符串。
+
+        COMPARE_OP 的 argval 已是字符串（'<' / '==' / '>=' 等）；
+        IS_OP arg=0 → 'is'，arg=1 → 'is not'；
+        CONTAINS_OP arg=0 → 'in'，arg=1 → 'not in'。
+        """
+        if instr.opname == 'COMPARE_OP':
+            return instr.argval
+        if instr.opname == 'IS_OP':
+            return 'is not' if instr.arg else 'is'
+        if instr.opname == 'CONTAINS_OP':
+            return 'not in' if instr.arg else 'in'
         return None
 
     def _identify_ternary_regions(self, loop_regions: List[Region],

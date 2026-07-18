@@ -3003,6 +3003,13 @@ class CodeGenerator:
                     value_code = self._generate_expression(value, 0)
                     return f'yield {value_code}'
                 return 'yield'
+            elif node_type == 'YieldFrom':
+                # [Round6-07] yield from 表达式 dict 处理（`x = yield from g()` 作赋值右值）
+                value = node.get('value')
+                if value is not None:
+                    value_code = self._generate_expression(value, 0)
+                    return f'yield from {value_code}'
+                return 'yield from'
             else:
                 # [修复-L13/L17/L18] 基础表达式类型必须正确处理
                 # Constant和Name是最常用的，必须直接处理避免泄露
