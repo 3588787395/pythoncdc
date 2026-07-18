@@ -15088,6 +15088,20 @@ AST 映射规则:
                         self.generated_blocks.add(block)
                     return results
 
+            # [R11-batch2 err 5-8] Ternary as if-condition sub-expression.
+            # 当 ternary 的 merge_block 以 POP_JUMP_IF_FALSE 结尾（在消费指令之后），
+            # 表示 ternary 被消费后作为 if 条件测试。模式:
+            #   walrus: if (n := ternary): pass  -> COPY, STORE_NAME n, POP_JUMP_IF_FALSE
+            #   subscr: if x[ternary]: pass      -> BINARY_SUBSCR, POP_JUMP_IF_FALSE
+            #   call:   if f(ternary): pass      -> PRECALL, CALL, POP_JUMP_IF_FALSE
+            # 生成 If 节点，test 为消费表达式（NamedExpr/Subscript/Call）。
+            _if_cond_node = self._try_build_ternary_as_if_cond(region, ternary_expr)
+            if _if_cond_node is not None:
+                results.append(_if_cond_node)
+                for block in region.blocks:
+                    self.generated_blocks.add(block)
+                return results
+
             # Phase 12修复: 根据merge_context决定输出格式（保守策略）
             if merge_ctx == 'iter':
                 # for循环迭代器: 生成Expr(IfExp)，由for循环生成器使用
@@ -15717,6 +15731,139 @@ AST 映射规则:
             return results
 
         return None
+
+    def _try_build_ternary_as_if_cond(self, region: TernaryRegion,
+                                       ternary_expr: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """[R11-batch2 err 5-8] Ternary as if-condition sub-expression.
+
+        当 ternary 的 merge_block 以 POP_JUMP_IF_FALSE 结尾（在消费指令之后），
+        表示 ternary 被消费后作为 if 条件测试。生成 If 节点。
+
+        支持的消费模式:
+          - walrus: COPY + STORE_NAME n + POP_JUMP_IF_FALSE
+                    → if (n := ternary): pass  (test = NamedExpr)
+          - subscr: BINARY_SUBSCR + POP_JUMP_IF_FALSE
+                    → if x[ternary]: pass      (test = Subscript, x 来自 cond preload)
+          - call:   PRECALL + CALL + POP_JUMP_IF_FALSE
+                    → if f(ternary): pass      (test = Call, f 来自 func_call_info 或 cond preload)
+
+        Returns:
+            If 节点 dict，或不匹配时返回 None。
+        """
+        if region.merge_block is None:
+            return None
+        merge_instrs = [i for i in region.merge_block.instructions
+                        if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+        if not merge_instrs:
+            return None
+
+        # 找到 merge_block 中最后一个 POP_JUMP_IF_FALSE（if 条件测试）
+        pop_jump_idx = None
+        for _i in range(len(merge_instrs) - 1, -1, -1):
+            _instr = merge_instrs[_i]
+            if (_instr.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                    and 'IF_FALSE' in _instr.opname):
+                pop_jump_idx = _i
+                break
+        if pop_jump_idx is None:
+            return None
+
+        # 消费指令 = POP_JUMP_IF_FALSE 之前的指令
+        consuming = merge_instrs[:pop_jump_idx]
+        # 必须有消费指令，否则是裸三元作 if 条件（由 while_cond 路径处理）
+        if not consuming:
+            return None
+
+        test_expr = None
+
+        # 模式 1: walrus (COPY + STORE_NAME)
+        _has_copy = any(i.opname == 'COPY' for i in consuming)
+        _store_instr = None
+        for i in consuming:
+            if i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                _store_instr = i
+                break
+        if _has_copy and _store_instr is not None:
+            test_expr = {
+                'type': 'NamedExpr',
+                'target': {'type': 'Name', 'id': _store_instr.argval, 'ctx': 'Store'},
+                'value': ternary_expr,
+            }
+
+        # 模式 2: subscr (BINARY_SUBSCR)
+        elif any(i.opname == 'BINARY_SUBSCR' for i in consuming):
+            _preload = self._compute_ternary_cond_preload_exprs(region)
+            if _preload:
+                test_expr = {
+                    'type': 'Subscript',
+                    'value': _preload[0],
+                    'slice': ternary_expr,
+                    'ctx': 'Load',
+                }
+
+        # 模式 3: call (PRECALL + CALL)
+        elif any(i.opname == 'CALL' for i in consuming):
+            _func_expr = None
+            if region.func_call_info:
+                _func_expr = region.func_call_info.get('func')
+            if _func_expr is None:
+                _preload = self._compute_ternary_cond_preload_exprs(region)
+                if _preload:
+                    _func_expr = _preload[0]
+            if _func_expr is not None:
+                test_expr = {
+                    'type': 'Call',
+                    'func': _func_expr,
+                    'args': [ternary_expr],
+                    'keywords': [],
+                }
+
+        if test_expr is None:
+            return None
+
+        # 从 merge_block 的后继块提取 if-body 和 orelse
+        _pop_jump_instr = merge_instrs[pop_jump_idx]
+        if _pop_jump_instr.argval is None:
+            return None
+        _if_body_block = None
+        _orelse_block = None
+        for _succ in region.merge_block.successors:
+            if _succ.start_offset == _pop_jump_instr.argval:
+                _orelse_block = _succ
+            else:
+                _if_body_block = _succ
+        if _if_body_block is None:
+            return None
+
+        # 处理 if-body 和 orelse
+        self.generated_blocks.add(_if_body_block)
+        _body_stmts = self._process_if_blocks([_if_body_block], region, branch='then')
+        _orelse_stmts: List[Dict[str, Any]] = []
+        if _orelse_block is not None:
+            self.generated_blocks.add(_orelse_block)
+            _orelse_stmts = self._process_if_blocks([_orelse_block], region, branch='else')
+
+        # 剥离隐式 return None
+        def _strip_impl_ret_none(stmts):
+            if not stmts:
+                return stmts
+            _out = list(stmts)
+            while _out and isinstance(_out[-1], dict) and _out[-1].get('type') == 'Return':
+                _rv = _out[-1].get('value')
+                if _rv and _rv.get('type') == 'Constant' and _rv.get('value') is None:
+                    _out = _out[:-1]
+                else:
+                    break
+            return _out
+        _body_stmts = _strip_impl_ret_none(_body_stmts)
+        _orelse_stmts = _strip_impl_ret_none(_orelse_stmts)
+
+        return {
+            'type': 'If',
+            'test': test_expr,
+            'body': _body_stmts if _body_stmts else [{'type': 'Pass'}],
+            'orelse': _orelse_stmts if _orelse_stmts else None,
+        }
 
     def _compute_ternary_cond_preload_exprs(self, region: TernaryRegion) -> List[Dict[str, Any]]:
         """[R10-batch1] Compute the preload expressions sitting on the
