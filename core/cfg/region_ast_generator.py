@@ -14184,6 +14184,99 @@ AST 映射规则:
             result = {'type': 'UnaryOp', 'op': 'not', 'operand': result}
         return result
 
+    def _build_boolop_augassign_target(self, region: 'BoolOpRegion') -> Optional[Dict[str, Any]]:
+        """[R11-err4/5/6] 从首 chain_block 前缀指令重建 AugAssign 的属性/下标 target。
+
+        字节码模式（attr target）:
+            LOAD_NAME x, COPY 1, LOAD_ATTR y, LOAD_NAME a, JUMP_IF_FALSE_OR_POP, ...
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  <- augassign target load prefix
+                                              后续 LOAD_NAME a 是首个 boolop 操作数
+        字节码模式（subscr target）:
+            <obj>, <key>, COPY 2, COPY 2, BINARY_SUBSCR, <operand>, JUMP_IF_FALSE_OR_POP, ...
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  <- augassign target load prefix
+
+        对 Name 目标直接返回 None（由调用方走默认路径）。
+        """
+        kind = getattr(region, 'augassign_target_kind', None)
+        if kind not in ('attr', 'subscr'):
+            return None
+        if not region.op_chain:
+            return None
+        first_chain_block = region.op_chain[0][0]
+        instrs = [i for i in first_chain_block.instructions
+                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+        # 去掉末尾的跳转指令
+        last_instr = first_chain_block.get_last_instruction()
+        if last_instr and last_instr.opname in SHORT_CIRCUIT_JUMP_OPS:
+            instrs = [i for i in instrs if i != last_instr]
+
+        if kind == 'attr':
+            # 找 LOAD_ATTR（augassign target 的属性读取）
+            load_attr_idx = None
+            for i, ins in enumerate(instrs):
+                if ins.opname == 'LOAD_ATTR':
+                    load_attr_idx = i
+            if load_attr_idx is None or load_attr_idx < 1:
+                return None
+            attr_name = instrs[load_attr_idx].argval
+            # obj 指令 = LOAD_ATTR 之前的非 COPY 指令（COPY 是为了 STORE_ATTR 保留 obj）
+            obj_instrs = []
+            for ins in instrs[:load_attr_idx]:
+                if ins.opname == 'COPY':
+                    continue
+                obj_instrs.append(ins)
+            if not obj_instrs:
+                return None
+            obj_expr = self.expr_reconstructor.reconstruct(obj_instrs)
+            if obj_expr is None:
+                # 回退：单条 LOAD_NAME → Name
+                _last_load = None
+                for ins in reversed(obj_instrs):
+                    if ins.opname in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF'):
+                        _last_load = ins
+                        break
+                if _last_load is None:
+                    return None
+                obj_expr = {'type': 'Name', 'id': _last_load.argval, 'ctx': 'Load'}
+            return {
+                'type': 'Attribute',
+                'value': obj_expr,
+                'attr': attr_name,
+                'ctx': 'Store',
+            }
+        if kind == 'subscr':
+            # 找 BINARY_SUBSCR（augassign target 的下标读取）
+            binary_subscr_idx = None
+            for i, ins in enumerate(instrs):
+                if ins.opname == 'BINARY_SUBSCR':
+                    binary_subscr_idx = i
+            if binary_subscr_idx is None or binary_subscr_idx < 1:
+                return None
+            # target 前缀: instrs[:binary_subscr_idx]
+            # 但 COPY 2 + COPY 2 是 augassign 保留 obj/key 的指令，需排除
+            target_prefix = []
+            for ins in instrs[:binary_subscr_idx]:
+                if ins.opname == 'COPY' and ins.arg is not None and ins.arg >= 2:
+                    continue
+                target_prefix.append(ins)
+            # 用 expr_reconstructor 重建栈，TOS=key, TOS1=obj
+            self.expr_reconstructor.reset()
+            for _ins in target_prefix:
+                self.expr_reconstructor._process_instruction(_ins)
+            _stack = [s for s in self.expr_reconstructor.stack
+                      if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+            if len(_stack) < 2:
+                return None
+            key_expr = _stack[-1]
+            obj_expr = _stack[-2]
+            return {
+                'type': 'Subscript',
+                'value': obj_expr,
+                'slice': key_expr,
+                'ctx': 'Store',
+            }
+        return None
+
     def _generate_boolop(self, region: BoolOpRegion, skip_store_targets: Set[str] = None) -> Optional[List[Dict[str, Any]]]:
         """生成 BoolOpRegion 的 AST 节点列表
 
@@ -14334,17 +14427,23 @@ AST 映射规则:
                 self.generated_blocks.add(block)
             if region.merge_block:
                 self.generated_blocks.add(region.merge_block)
-            if region.value_target:
+            if region.value_target or (getattr(region, 'is_augassign', False)
+                                       and getattr(region, 'augassign_target_kind', None) in ('attr', 'subscr')):
                 # [R10 err 3] AugAssign with BoolOp rhs (`x += a and b`):
                 # merge_block has BINARY_OP (in-place, arg>=13) before STORE.
                 # Emit AugAssign AST; boolop_expr already excludes the leading
                 # LOAD of value_target (it's the augassign target load, not a
                 # BoolOp operand). The code generator will re-emit LOAD(target)
                 # + BINARY_OP(in-place) + STORE(target) from AugAssign AST.
+                # [R11-err4/5/6] 扩展属性/下标目标: 用 _build_boolop_augassign_target
+                # 从首 chain_block 的前缀指令重建 Attribute/Subscript target。
                 if getattr(region, 'is_augassign', False) and getattr(region, 'augassign_op', None):
+                    _aug_target = self._build_boolop_augassign_target(region)
+                    if _aug_target is None:
+                        _aug_target = {'type': 'Name', 'id': region.value_target, 'ctx': 'Store'}
                     results.append({
                         'type': 'AugAssign',
-                        'target': {'type': 'Name', 'id': region.value_target, 'ctx': 'Store'},
+                        'target': _aug_target,
                         'op': region.augassign_op,
                         'value': boolop_expr,
                     })
@@ -14358,8 +14457,10 @@ AST 映射规则:
                     _merge_instrs = [i for i in region.merge_block.instructions
                                     if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
                     _after_store = False
+                    _store_ops_set = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+                                      'STORE_ATTR', 'STORE_SUBSCR')
                     for i in _merge_instrs:
-                        if i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                        if i.opname in _store_ops_set:
                             _after_store = True
                             continue
                         if _after_store and i.opname not in ('JUMP_FORWARD', 'JUMP_BACKWARD',
@@ -15487,6 +15588,56 @@ AST 映射规则:
                     initial_stack = list(preload_exprs) + [ternary_expr]
                     if store_idx is not None and (store_idx > 0 or preload_exprs):
                         before_store = merge_all[:store_idx]
+                        # [R11-err8] ternary as class base: `class C(A if c2 else B): ...`
+                        # 字节码模式: cond preload 含 LOAD_BUILD_CLASS + LOAD_CONST <code>
+                        # + MAKE_FUNCTION + LOAD_CONST 'C'; merge 含 PRECALL + CALL +
+                        # STORE_NAME C。ternary 是 __build_class__ 的第三个参数（基类）。
+                        # 需要直接生成 ClassDef 而非 Assign，否则 CodeObject 不会被
+                        # _build_class_def 识别为类体函数（它只认 FunctionObject）。
+                        _has_load_build_class_in_preload = False
+                        _has_make_function_in_preload = False
+                        _class_code_obj = None
+                        if cond_block is not None:
+                            _cb_instrs = [i for i in cond_block.instructions
+                                          if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+                            for _ci in _cb_instrs:
+                                if _ci.opname == 'LOAD_BUILD_CLASS':
+                                    _has_load_build_class_in_preload = True
+                                elif _ci.opname == 'MAKE_FUNCTION':
+                                    _has_make_function_in_preload = True
+                                elif (_ci.opname == 'LOAD_CONST'
+                                      and hasattr(_ci.argval, 'co_code')
+                                      and _class_code_obj is None):
+                                    _class_code_obj = _ci.argval
+                                if _ci.opname in ('POP_JUMP_FORWARD_IF_FALSE',
+                                                  'POP_JUMP_BACKWARD_IF_FALSE',
+                                                  'POP_JUMP_IF_FALSE'):
+                                    break
+                        _has_call_in_merge = any(i.opname == 'CALL' for i in before_store)
+                        if (_has_load_build_class_in_preload
+                                and _has_make_function_in_preload
+                                and _has_call_in_merge
+                                and _class_code_obj is not None):
+                            # 构造 __build_class__(FunctionObject, 'Name', ternary)
+                            # Call 节点，让 _build_class_def 提取类体、类名与基类。
+                            _build_call = {
+                                'type': 'Call',
+                                'func': {'type': 'Name', 'id': '__build_class__', 'ctx': 'Load'},
+                                'args': [
+                                    {'type': 'FunctionObject', 'code': _class_code_obj},
+                                    {'type': 'Constant', 'value': region.value_target},
+                                    ternary_expr,
+                                ],
+                                'keywords': [],
+                                'is_class_def': True,
+                            }
+                            _class_def = self._build_class_def(
+                                call_expr=_build_call, name=region.value_target)
+                            if _class_def is not None:
+                                results.append(_class_def)
+                                for block in region.blocks:
+                                    self.generated_blocks.add(block)
+                                return results
                         # [T2修复] 检测MAKE_FUNCTION模式: ternary作为函数默认参数值
                         # 字节码模式: BUILD_TUPLE n, LOAD_CONST <code>, MAKE_FUNCTION 1, STORE_NAME fn
                         # 需要生成FunctionDef而不是Assign
@@ -16158,6 +16309,48 @@ AST 映射规则:
         last_instr = merge_instrs[-1]
         before_store = merge_instrs[:-1]
 
+        # [R11-err6] Pattern C: ternary as augassign rhs.
+        # 当 ternary 是 augassign 的右值（而非普通 Assign 的右值），merge_block
+        # 末尾的 STORE_SUBSCR/STORE_ATTR 之前会有 BINARY_OP(arg>=13) + SWAP*
+        # 序列。此时 cond_block 前缀含 target 复制模板（subscr: COPY 2, COPY 2,
+        # BINARY_SUBSCR; attr: COPY 1, LOAD_ATTR），用于在 in-place BINARY_OP
+        # 替换栈顶后仍保留 obj[/key] 给 STORE_* 写回。如果不识别此模式，会
+        # 误走 Pattern B 把 ternary 当成下标 key，输出 `x[0][ternary] = 0`。
+        #   subscr: x[k] += ternary  -> cond pre: LOAD x, LOAD k, COPY 2, COPY 2, BINARY_SUBSCR;
+        #                               merge: BINARY_OP(>=13), SWAP 3, SWAP 2, STORE_SUBSCR
+        #   attr:   x.a += ternary   -> cond pre: LOAD x, COPY 1, LOAD_ATTR a;
+        #                               merge: BINARY_OP(>=13), SWAP 2, STORE_ATTR
+        if last_instr.opname in ('STORE_SUBSCR', 'STORE_ATTR') and before_store:
+            _BINARY_OP_AUG_MAP = {13: '+=', 14: '&=', 15: '//=', 16: '<<=',
+                                  17: '@=', 18: '*=', 19: '%=', 20: '|=',
+                                  21: '**=', 22: '>>=', 23: '-=', 24: '/=',
+                                  25: '^='}
+            _aug_op_idx = None
+            _aug_op_symbol = None
+            for _bi, _binstr in enumerate(before_store):
+                if (_binstr.opname == 'BINARY_OP'
+                        and _binstr.arg in _BINARY_OP_AUG_MAP):
+                    _aug_op_idx = _bi
+                    _aug_op_symbol = _BINARY_OP_AUG_MAP[_binstr.arg]
+                    break
+            if _aug_op_idx is not None:
+                # BINARY_OP 后必须全是 SWAP（重新排列栈以匹配 STORE_* 需求）
+                _after_op = before_store[_aug_op_idx + 1:]
+                _all_swaps = bool(_after_op) and all(
+                    _i.opname == 'SWAP' for _i in _after_op)
+                if _all_swaps:
+                    if last_instr.opname == 'STORE_SUBSCR':
+                        _aug_target = self._build_ternary_augassign_subscr_target(region)
+                    else:
+                        _aug_target = self._build_ternary_augassign_attr_target(region)
+                    if _aug_target is not None:
+                        return {
+                            'type': 'AugAssign',
+                            'target': _aug_target,
+                            'op': _aug_op_symbol[:-1],
+                            'value': ternary_expr,
+                        }
+
         # --- STORE_SUBSCR: stack [value, obj, key] ---
         if last_instr.opname == 'STORE_SUBSCR':
             # Pattern A: ternary is value; merge contains obj+key loads after
@@ -16280,6 +16473,133 @@ AST 映射规则:
                     }
 
         return None
+
+    def _build_ternary_augassign_subscr_target(self, region: TernaryRegion):
+        """[R11-err6] 为 augassign + ternary rhs 构造 Subscript target。
+
+        字节码模式（cond_block 前缀，位于 ternary 条件之前）：
+            LOAD obj; LOAD key; COPY 2; COPY 2; BINARY_SUBSCR
+        COPY 2/COPY 2 复制 obj 与 key 各一份留在栈上，BINARY_SUBSCR 求出
+        ``obj[key]`` 作为 in-place BINARY_OP 的左操作数。前置的 LOAD obj/
+        LOAD key 同时被 STORE_SUBSCR 复用为写入目标。
+        """
+        cond_block = region.condition_block
+        if cond_block is None:
+            return None
+        cond_instrs = [i for i in cond_block.instructions
+                       if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+        pj_idx = None
+        for _i in range(len(cond_instrs) - 1, -1, -1):
+            if cond_instrs[_i].opname in (
+                    'POP_JUMP_FORWARD_IF_FALSE',
+                    'POP_JUMP_BACKWARD_IF_FALSE',
+                    'POP_JUMP_IF_FALSE'):
+                pj_idx = _i
+                break
+        if pj_idx is None:
+            return None
+        # 在 ternary 条件之前找 BINARY_SUBSCR（augassign target 取值）
+        _bs_idx = None
+        for _i in range(pj_idx - 1, -1, -1):
+            if cond_instrs[_i].opname == 'BINARY_SUBSCR':
+                _bs_idx = _i
+                break
+            if cond_instrs[_i].opname in (
+                    'POP_JUMP_FORWARD_IF_FALSE',
+                    'POP_JUMP_BACKWARD_IF_FALSE',
+                    'POP_JUMP_IF_FALSE'):
+                break
+        if _bs_idx is None or _bs_idx < 2:
+            return None
+        # 紧邻 BINARY_SUBSCR 之前必须是 COPY 2, COPY 2
+        if (cond_instrs[_bs_idx - 1].opname != 'COPY'
+                or cond_instrs[_bs_idx - 1].arg != 2):
+            return None
+        if (cond_instrs[_bs_idx - 2].opname != 'COPY'
+                or cond_instrs[_bs_idx - 2].arg != 2):
+            return None
+        pre_copy_instrs = cond_instrs[:_bs_idx - 2]
+        if not pre_copy_instrs:
+            return None
+        self.expr_reconstructor.reset()
+        for _instr in pre_copy_instrs:
+            if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                continue
+            self.expr_reconstructor._process_instruction(_instr)
+        _stack = [s for s in self.expr_reconstructor.stack
+                  if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+        if len(_stack) < 2:
+            return None
+        return {
+            'type': 'Subscript',
+            'value': _stack[-2],
+            'slice': _stack[-1],
+            'ctx': 'Store',
+        }
+
+    def _build_ternary_augassign_attr_target(self, region: TernaryRegion):
+        """[R11-err6] 为 augassign + ternary rhs 构造 Attribute target。
+
+        字节码模式（cond_block 前缀，位于 ternary 条件之前）：
+            LOAD obj; COPY 1; LOAD_ATTR attr
+        COPY 1 复制 obj 留在栈上，LOAD_ATTR 取出 ``obj.attr`` 作为 in-place
+        BINARY_OP 的左操作数。STORE_ATTR 复用前置的 obj 副本与 attr 名写入。
+        """
+        cond_block = region.condition_block
+        if cond_block is None:
+            return None
+        cond_instrs = [i for i in cond_block.instructions
+                       if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+        pj_idx = None
+        for _i in range(len(cond_instrs) - 1, -1, -1):
+            if cond_instrs[_i].opname in (
+                    'POP_JUMP_FORWARD_IF_FALSE',
+                    'POP_JUMP_BACKWARD_IF_FALSE',
+                    'POP_JUMP_IF_FALSE'):
+                pj_idx = _i
+                break
+        if pj_idx is None:
+            return None
+        # 在 ternary 条件之前找 LOAD_ATTR（augassign target 取值）
+        _la_idx = None
+        for _i in range(pj_idx - 1, -1, -1):
+            if cond_instrs[_i].opname == 'LOAD_ATTR':
+                _la_idx = _i
+                break
+            if cond_instrs[_i].opname in (
+                    'POP_JUMP_FORWARD_IF_FALSE',
+                    'POP_JUMP_BACKWARD_IF_FALSE',
+                    'POP_JUMP_IF_FALSE'):
+                break
+        if _la_idx is None or _la_idx < 1:
+            return None
+        attr_name = cond_instrs[_la_idx].argval
+        # 紧邻 LOAD_ATTR 之前应该是 COPY 1（保留 obj 副本给 STORE_ATTR）
+        # 但即便没有 COPY 1（如某些 CPython 版本），也允许 fallback：只要
+        # LOAD_ATTR 之前还有指令用于重建 obj。
+        pre_attr_instrs = cond_instrs[:_la_idx]
+        if not pre_attr_instrs:
+            return None
+        # 过滤掉 COPY 1（栈复制指令，不属于 obj 表达式）
+        _filtered = [_i for _i in pre_attr_instrs
+                     if not (_i.opname == 'COPY' and _i.arg == 1)]
+        if not _filtered:
+            return None
+        self.expr_reconstructor.reset()
+        for _instr in _filtered:
+            if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                continue
+            self.expr_reconstructor._process_instruction(_instr)
+        _stack = [s for s in self.expr_reconstructor.stack
+                  if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+        if not _stack:
+            return None
+        return {
+            'type': 'Attribute',
+            'value': _stack[-1],
+            'attr': str(attr_name) if attr_name is not None else '_',
+            'ctx': 'Store',
+        }
 
     def _try_build_ternary_chained_container(self, region: TernaryRegion,
                                                ternary_expr: Dict[str, Any]) -> Optional[Dict[str, Any]]:
@@ -18065,6 +18385,18 @@ AST 映射规则:
                 continue
 
             if instr.opname == 'STORE_ATTR' and stmt_instrs:
+                # [R11-err1] AnnAssign with attribute target: `x.y: int = 1`
+                # 字节码: <value>; LOAD_NAME x; STORE_ATTR y; <ann_expr>; POP_TOP
+                # CPython 不为属性/下标目标写 __annotations__，仅以 POP_TOP 丢弃注解。
+                # 区域归约：单一 AnnAssign 节点，<ann_expr> + POP_TOP 与 STORE_ATTR
+                # 共同构成一条注解赋值，避免拆成 Assign + 孤立 Expr。
+                _ann_attr_stmt, _ann_attr_skip = self._try_build_ann_assign_complex_target(
+                    stmt_instrs + [instr], block, 'STORE_ATTR')
+                if _ann_attr_stmt:
+                    stmts.append(_ann_attr_stmt)
+                    stmt_instrs = []
+                    skip_offsets.update(_ann_attr_skip)
+                    continue
                 attr_stmt = self._build_attr_assign(stmt_instrs + [instr])
                 if attr_stmt:
                     stmts.append(attr_stmt)
@@ -18165,6 +18497,16 @@ AST 映射规则:
                         continue
 
             if instr.opname == 'STORE_SUBSCR' and stmt_instrs:
+                # [R11-err2] AnnAssign with subscript target: `x[0]: int = 1`
+                # 字节码: <value>; LOAD_NAME x; LOAD_CONST 0; STORE_SUBSCR; <ann_expr>; POP_TOP
+                # 与 err1 同理：CPython 不为属性/下标目标写 __annotations__。
+                _ann_subscr_stmt, _ann_subscr_skip = self._try_build_ann_assign_complex_target(
+                    stmt_instrs + [instr], block, 'STORE_SUBSCR')
+                if _ann_subscr_stmt:
+                    stmts.append(_ann_subscr_stmt)
+                    stmt_instrs = []
+                    skip_offsets.update(_ann_subscr_skip)
+                    continue
                 subscr_stmt = self._build_subscript_assign(stmt_instrs + [instr])
                 if subscr_stmt:
                     stmts.append(subscr_stmt)
@@ -19625,6 +19967,125 @@ AST 映射规则:
             'targets': [target],
             'value': value_expr,
         }
+
+    def _is_type_like_expr(self, expr) -> bool:
+        """判断表达式是否"看起来像类型注解"。
+        AnnAssign 的 annotation 必须是合法类型表达式，禁止 Call/BoolOp/BinOp 等
+        有副作用或非类型语义的表达式。允许 Name/Attribute/Subscript/Tuple/Constant
+        及其嵌套组合（如 List[int], Tuple[str, int], typing.Optional[str]）。
+        """
+        if not isinstance(expr, dict):
+            return False
+        t = expr.get('type')
+        if t in ('Name', 'Attribute', 'Constant'):
+            return True
+        if t == 'Subscript':
+            # value 是容器类型（如 List），slice 是参数类型
+            return self._is_type_like_expr(expr.get('value')) and self._is_type_like_slice(expr.get('slice'))
+        if t == 'Tuple':
+            return all(self._is_type_like_expr(e) for e in expr.get('elts', []))
+        return False
+
+    def _is_type_like_slice(self, expr) -> bool:
+        """Subscript 的 slice 部分允许单类型、Tuple of 类型、Name/Constant。"""
+        if not isinstance(expr, dict):
+            return False
+        t = expr.get('type')
+        if t == 'Tuple':
+            return all(self._is_type_like_expr(e) for e in expr.get('elts', []))
+        return self._is_type_like_expr(expr)
+
+    def _try_build_ann_assign_complex_target(
+        self, instrs: List[Instruction], block: BasicBlock, store_op: str
+    ) -> tuple:
+        """[R11-err1/err2] 检测 AnnAssign 复杂 target（属性 / 下标）。
+
+        字节码模式:
+            <value>; <target_setup>; STORE_ATTR/STORE_SUBSCR; <ann_expr>; POP_TOP
+        CPython 对 Name 目标写 __annotations__[name] = ann，但对属性/下标目标
+        只评估注解表达式然后 POP_TOP 丢弃。因此重建时必须把 <ann_expr> + POP_TOP
+        归并为 AnnAssign 节点的 annotation 字段，否则会丢失 SETUP_ANNOTATIONS
+        并把注解拆成孤立 Expr 语句。
+
+        Returns:
+            (stmt_dict_or_None, skip_offsets_set)
+        """
+        store_idx = -1
+        for i, ins in enumerate(instrs):
+            if ins.opname == store_op:
+                store_idx = i
+                break
+        if store_idx < 0:
+            return None, set()
+        store_instr = instrs[store_idx]
+
+        block_instrs = block.instructions
+        try:
+            store_block_idx = block_instrs.index(store_instr)
+        except ValueError:
+            return None, set()
+
+        # 向后扫描直到 POP_TOP，收集注解表达式指令
+        ann_expr_instrs = []
+        pop_top_idx = None
+        stmt_boundary_ops = {
+            'STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF',
+            'STORE_ATTR', 'STORE_SUBSCR', 'RETURN_VALUE', 'RETURN_CONST',
+            'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE',
+            'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_FORWARD_IF_TRUE',
+            'POP_JUMP_BACKWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_TRUE',
+            'POP_JUMP_IF_TRUE', 'POP_JUMP_IF_FALSE',
+            'SETUP_ANNOTATIONS', 'IMPORT_NAME', 'IMPORT_FROM', 'IMPORT_STAR',
+        }
+        for j in range(store_block_idx + 1, len(block_instrs)):
+            bi = block_instrs[j]
+            if bi.opname == 'POP_TOP':
+                pop_top_idx = j
+                break
+            if bi.opname in stmt_boundary_ops:
+                break
+            # 跳过对齐/无操作指令但不计入注解
+            if bi.opname in ('NOP', 'CACHE', 'RESUME'):
+                continue
+            ann_expr_instrs.append(bi)
+
+        if pop_top_idx is None or not ann_expr_instrs:
+            return None, set()
+
+        # 重建注解表达式
+        ann_expr = self.expr_reconstructor.reconstruct(ann_expr_instrs)
+        if ann_expr is None and len(ann_expr_instrs) == 1:
+            l0 = ann_expr_instrs[0]
+            if l0.opname in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF'):
+                ann_expr = {'type': 'Name', 'id': l0.argval, 'ctx': 'Load'}
+        if ann_expr is None:
+            return None, set()
+
+        # 校验是类型表达式（避免把 Expr(print(...)) 误判为注解）
+        if not self._is_type_like_expr(ann_expr):
+            return None, set()
+
+        # 用既有逻辑构造 target + value
+        if store_op == 'STORE_ATTR':
+            base_stmt = self._build_attr_assign(instrs)
+        else:
+            base_stmt = self._build_subscript_assign(instrs)
+        if base_stmt is None or base_stmt.get('type') != 'Assign':
+            return None, set()
+
+        target = base_stmt['targets'][0]
+        value = base_stmt.get('value')
+
+        skip = set()
+        for k in range(store_block_idx + 1, pop_top_idx + 1):
+            skip.add(block_instrs[k].offset)
+
+        return {
+            'type': 'AnnAssign',
+            'target': target,
+            'annotation': ann_expr,
+            'value': value,
+        }, skip
 
     def _build_attr_assign(self, instrs: List[Instruction]) -> Optional[Dict[str, Any]]:
         store_attr = None

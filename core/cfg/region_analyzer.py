@@ -776,8 +776,13 @@ class BoolOpRegion(Region):
     # value_target is the augassign target (e.g. 'x'), but the leading
     # LOAD of value_target in the first chain block is the augassign
     # target load (not a BoolOp operand) and must be stripped.
+    # [R11-err4/5/6] 扩展支持属性/下标目标 (`x.y += a and b`, `x[0] += ...`):
+    # augassign_target_kind 区分 'name' / 'attr' / 'subscr'，对 attr/subscr
+    # 需在 _generate_boolop 中重建 Attribute/Subscript target 而非 Name。
     is_augassign: bool = False
     augassign_op: Optional[str] = None  # '+', '-', '*', etc. (without '=')
+    augassign_target_kind: Optional[str] = None  # 'name' | 'attr' | 'subscr'
+    augassign_target_attr: Optional[str] = None  # 属性名（仅 'attr' 时有效）
 
     def get_score_merge_block(self) -> Optional['BasicBlock']:
         return self.merge_block
@@ -12743,8 +12748,13 @@ RegionType 枚举值: RegionType.ASSERT
         # in the first chain block is the augassign target load, not a BoolOp
         # operand. Record is_augassign + augassign_op so _generate_boolop can
         # emit AugAssign(target=x, op=+, value=BoolOp(a, b)).
+        # [R11-err4/5/6] 扩展支持属性/下标目标: `x.y += a and b` / `x[0] += a and b`
+        # merge_block 模式: [SWAP,] STORE_ATTR/STORE_SUBSCR (Name 目标是 STORE_FAST/
+        # STORE_NAME/...)。属性/下标目标的 BINARY_OP 前面有 SWAP，而 Name 目标没有。
         is_augassign = False
         augassign_op = None
+        augassign_target_kind = None  # 'name' | 'attr' | 'subscr'
+        augassign_target_attr = None
         if merge:
             _merge_instrs = [i for i in merge.instructions
                              if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
@@ -12754,10 +12764,28 @@ RegionType 枚举值: RegionType.ASSERT
                                     'STORE_GLOBAL', 'STORE_DEREF'):
                     _store_idx = _i
                     value_target = instr.argval if instr.argval else f'var_{instr.arg}'
+                    augassign_target_kind = 'name'
+                    break
+                if instr.opname == 'STORE_ATTR':
+                    _store_idx = _i
+                    augassign_target_kind = 'attr'
+                    augassign_target_attr = instr.argval if instr.argval else f'attr_{instr.arg}'
+                    break
+                if instr.opname == 'STORE_SUBSCR':
+                    _store_idx = _i
+                    augassign_target_kind = 'subscr'
                     break
             if _store_idx is not None and _store_idx >= 1:
-                _prev = _merge_instrs[_store_idx - 1]
-                if _prev.opname == 'BINARY_OP' and isinstance(_prev.arg, int) and _prev.arg >= 13:
+                # 寻找 BINARY_OP(arg>=13)，跳过 SWAP（属性/下标目标前会有 SWAP）
+                _binop_idx = None
+                for _bi in range(_store_idx - 1, -1, -1):
+                    if _merge_instrs[_bi].opname == 'BINARY_OP' and isinstance(_merge_instrs[_bi].arg, int) and _merge_instrs[_bi].arg >= 13:
+                        _binop_idx = _bi
+                        break
+                    if _merge_instrs[_bi].opname not in ('SWAP', 'NOP', 'CACHE'):
+                        break
+                if _binop_idx is not None:
+                    _prev = _merge_instrs[_binop_idx]
                     _aug_map = {13: '+', 14: '&', 15: '//', 16: '<<', 17: '@',
                                 18: '*', 19: '%', 20: '|', 21: '**', 22: '>>',
                                 23: '-', 24: '/', 25: '^'}
@@ -12770,6 +12798,8 @@ RegionType 枚举值: RegionType.ASSERT
             value_target = None
             is_augassign = False
             augassign_op = None
+            augassign_target_kind = None
+            augassign_target_attr = None
         # [Round 2 修复] await 轮询链作为 BoolOp 操作数：
         # 当 `if await g() or x:` / `if x or await g():` 这样的 BoolOp 条件
         # 中某个操作数是 `await <expr>` 时，CPython 把 await 求值展开为
@@ -12805,6 +12835,8 @@ RegionType 枚举值: RegionType.ASSERT
             condition_block=None,
             is_augassign=is_augassign,
             augassign_op=augassign_op,
+            augassign_target_kind=augassign_target_kind,
+            augassign_target_attr=augassign_target_attr,
         )
         region.is_condition_context = is_condition_context
         self.regions.append(region)

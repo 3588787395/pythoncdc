@@ -76,6 +76,38 @@ class ComprehensionGenerator:
         if not comp_indices:
             return None
 
+        # [R11-err3] async comprehension 的 await 模板 (GET_AWAITABLE + SEND +
+        # YIELD_VALUE + RESUME + JUMP_BACKWARD_NO_INTERRUPT + STORE_*) 跨多个
+        # 基本块。先把后续 fallthrough 块的指令合并进来，并把它们标记为已生成，
+        # 避免被外层 _generate_block_statements 当作独立语句重复处理。
+        _has_async_comp = False
+        for _ci, _cc in comp_indices:
+            for _idx in range(_ci + 1, len(instrs)):
+                if instrs[_idx].opname == 'GET_AITER':
+                    _has_async_comp = True
+                    break
+        _extra_async_blocks = []
+        if _has_async_comp and region_ast_gen is not None:
+            _cur = block
+            _seen = {block.start_offset}
+            # 最多延伸 4 个 fallthrough 块（足够覆盖 SEND/YIELD/RESUME/JUMP_BACK
+            # + STORE_* + trailing return）
+            for _ in range(4):
+                _succs = [s for s in _cur.successors
+                          if s.start_offset not in _seen
+                          and s.start_offset > _cur.start_offset]
+                if len(_succs) != 1:
+                    break
+                _nb = _succs[0]
+                _seen.add(_nb.start_offset)
+                _extra_async_blocks.append(_nb)
+                _cur = _nb
+        if _extra_async_blocks:
+            for _eb in _extra_async_blocks:
+                for _i in _eb.instructions:
+                    if _i.opname not in SKIP_OPS:
+                        instrs.append(_i)
+
         all_stmts = []
         prev_end = 0
 
@@ -85,10 +117,16 @@ class ComprehensionGenerator:
                 pre_stmts = self._generate_pre_comp_stmts(pre_comp_instrs, instrs, prev_end, region_ast_gen=region_ast_gen)
                 all_stmts.extend(pre_stmts)
 
+            # [R11-err3] async comprehension 外层使用 GET_AITER 而非 GET_ITER。
+            # 字节码: MAKE_FUNCTION, LOAD_* iter, GET_AITER, PRECALL, CALL,
+            # GET_AWAITABLE, LOAD_CONST None, SEND, YIELD_VALUE, RESUME,
+            # JUMP_BACKWARD_NO_INTERRUPT, STORE_* result
             get_iter_idx = None
+            _async_iter = False
             for idx in range(comp_idx + 1, len(instrs)):
-                if instrs[idx].opname == 'GET_ITER':
+                if instrs[idx].opname in ('GET_ITER', 'GET_AITER'):
                     get_iter_idx = idx
+                    _async_iter = (instrs[idx].opname == 'GET_AITER')
                     break
 
             if get_iter_idx is None:
@@ -109,6 +147,30 @@ class ComprehensionGenerator:
                     gen_call_end = idx + 1
                     if instrs[idx].opname == 'CALL':
                         break
+
+            # [R11-err3] async comprehension 在 CALL 后有一段 await 循环
+            # (GET_AWAITABLE + LOAD_CONST None + SEND + YIELD_VALUE + RESUME +
+            # JUMP_BACKWARD_NO_INTERRUPT)。这段是 CPython 自动生成的 await
+            # 模板，重建时归约到 await 表达式语句的语义内（listcomp 已含 is_async），
+            # 不产生独立语句，但要跳过这些指令避免误归约。
+            if _async_iter:
+                _async_end = gen_call_end
+                _send_idx = None
+                for idx in range(gen_call_end, min(gen_call_end + 8, len(instrs))):
+                    if instrs[idx].opname == 'SEND':
+                        _send_idx = idx
+                        break
+                if _send_idx is not None:
+                    # SEND 后是 YIELD_VALUE, RESUME, JUMP_BACKWARD_NO_INTERRUPT
+                    for idx in range(_send_idx + 1, min(_send_idx + 5, len(instrs))):
+                        if instrs[idx].opname == 'JUMP_BACKWARD_NO_INTERRUPT':
+                            _async_end = idx + 1
+                            break
+                        if instrs[idx].opname in ('STORE_FAST', 'STORE_NAME',
+                                                   'STORE_GLOBAL', 'STORE_DEREF'):
+                            _async_end = idx
+                            break
+                    gen_call_end = _async_end
 
             wrapper_call = None
             wrapper_end = gen_call_end
@@ -202,6 +264,13 @@ class ComprehensionGenerator:
         if remaining_instrs:
             remaining_stmts = self._generate_remaining_stmts(remaining_instrs)
             all_stmts.extend(remaining_stmts)
+
+        # [R11-err3] async comprehension 跨块的 fallthrough 已被合并处理，
+        # 标记延伸块为已生成，避免外层 _generate_block_statements 重复处理。
+        if _extra_async_blocks and region_ast_gen is not None:
+            for _eb in _extra_async_blocks:
+                region_ast_gen.generated_blocks.add(_eb)
+                region_ast_gen.generated_offsets.add(_eb.start_offset)
 
         return all_stmts if all_stmts else None
 
@@ -372,7 +441,9 @@ class ComprehensionGenerator:
 
         is_async = 0
         for instr in all_instrs:
-            if instr.opname == 'GET_AITER':
+            # [R11-err3] async comprehension 内层用 GET_ANEXT 而非 FOR_ITER，
+            # 外层用 GET_AITER 而非 GET_ITER。任一出现即标记 is_async=1。
+            if instr.opname in ('GET_AITER', 'GET_ANEXT', 'END_ASYNC_FOR'):
                 is_async = 1
                 break
 
@@ -413,7 +484,8 @@ class ComprehensionGenerator:
 
         is_async = 0
         for instr in all_instrs:
-            if instr.opname == 'GET_AITER':
+            # [R11-err3] 同单 for 路径，检测 async 标记。
+            if instr.opname in ('GET_AITER', 'GET_ANEXT', 'END_ASYNC_FOR'):
                 is_async = 1
                 break
 
