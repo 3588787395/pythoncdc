@@ -16220,21 +16220,33 @@ AST 映射规则:
             return None
 
         # 消费指令 = POP_JUMP_IF_FALSE 之前的指令
+        # [R12-batch0 退化修复] 必须是"紧贴"模式：consuming 的最后一条
+        # 指令就是消费指令本身（CALL/BINARY_SUBSCR/STORE_*）。如果最后还有
+        # 其他指令（如 COMPARE_OP / BINARY_OP / IS_OP / CONTAINS_OP），
+        # 说明真正的 if 测试是更复杂的表达式（如 Compare(Call(...), Gt, 0)），
+        # 而非消费表达式本身。此时不应在此匹配，交给正常的 if 条件重建路径
+        # （它会通过 expr_reconstructor 重建完整 Compare 表达式）。
+        # 否则会丢掉外层比较，导致 `if f(a if c else b) > 0:` 被错误反编译为
+        # `if f(a if c else b):`，且 if-body 提取错位。
         consuming = merge_instrs[:pop_jump_idx]
         # 必须有消费指令，否则是裸三元作 if 条件（由 while_cond 路径处理）
         if not consuming:
             return None
+        _last_consume = consuming[-1]
 
         test_expr = None
 
         # 模式 1: walrus (COPY + STORE_NAME)
+        # consuming 必须以 STORE_* 结尾
         _has_copy = any(i.opname == 'COPY' for i in consuming)
         _store_instr = None
         for i in consuming:
             if i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
                 _store_instr = i
                 break
-        if _has_copy and _store_instr is not None:
+        if (_has_copy and _store_instr is not None
+                and _last_consume.opname in ('STORE_FAST', 'STORE_NAME',
+                                              'STORE_GLOBAL', 'STORE_DEREF')):
             test_expr = {
                 'type': 'NamedExpr',
                 'target': {'type': 'Name', 'id': _store_instr.argval, 'ctx': 'Store'},
@@ -16242,7 +16254,8 @@ AST 映射规则:
             }
 
         # 模式 2: subscr (BINARY_SUBSCR)
-        elif any(i.opname == 'BINARY_SUBSCR' for i in consuming):
+        # consuming 必须以 BINARY_SUBSCR 结尾
+        elif _last_consume.opname == 'BINARY_SUBSCR':
             _preload = self._compute_ternary_cond_preload_exprs(region)
             if _preload:
                 test_expr = {
@@ -16253,7 +16266,8 @@ AST 映射规则:
                 }
 
         # 模式 3: call (PRECALL + CALL)
-        elif any(i.opname == 'CALL' for i in consuming):
+        # consuming 必须以 CALL 结尾（PRECALL 可选前置）
+        elif _last_consume.opname == 'CALL':
             _func_expr = None
             if region.func_call_info:
                 _func_expr = region.func_call_info.get('func')
