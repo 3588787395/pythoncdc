@@ -771,6 +771,13 @@ class BoolOpRegion(Region):
     body_block: Optional[BasicBlock] = None
     condition_expr: Optional[Dict[str, Any]] = None
     condition_block: Optional[BasicBlock] = None
+    # [R10 err 3] AugAssign with BoolOp rhs (`x += a and b`):
+    # merge_block contains BINARY_OP (in-place, arg>=13) before STORE.
+    # value_target is the augassign target (e.g. 'x'), but the leading
+    # LOAD of value_target in the first chain block is the augassign
+    # target load (not a BoolOp operand) and must be stripped.
+    is_augassign: bool = False
+    augassign_op: Optional[str] = None  # '+', '-', '*', etc. (without '=')
 
     def get_score_merge_block(self) -> Optional['BasicBlock']:
         return self.merge_block
@@ -12731,15 +12738,38 @@ RegionType 枚举值: RegionType.ASSERT
             self._boolop_expand_non_condition_blocks(chain, chain_blocks, merge)
         region_blocks = chain_blocks | ({merge} if merge else set())
         value_target = None
+        # [R10 err 3] AugAssign detection: merge_block has BINARY_OP (in-place,
+        # arg>=13) before STORE → `x += a and b`. The leading LOAD of value_target
+        # in the first chain block is the augassign target load, not a BoolOp
+        # operand. Record is_augassign + augassign_op so _generate_boolop can
+        # emit AugAssign(target=x, op=+, value=BoolOp(a, b)).
+        is_augassign = False
+        augassign_op = None
         if merge:
-            for instr in merge.instructions:
+            _merge_instrs = [i for i in merge.instructions
+                             if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+            _store_idx = None
+            for _i, instr in enumerate(_merge_instrs):
                 if instr.opname in ('STORE_FAST', 'STORE_NAME',
                                     'STORE_GLOBAL', 'STORE_DEREF'):
+                    _store_idx = _i
                     value_target = instr.argval if instr.argval else f'var_{instr.arg}'
                     break
+            if _store_idx is not None and _store_idx >= 1:
+                _prev = _merge_instrs[_store_idx - 1]
+                if _prev.opname == 'BINARY_OP' and isinstance(_prev.arg, int) and _prev.arg >= 13:
+                    _aug_map = {13: '+', 14: '&', 15: '//', 16: '<<', 17: '@',
+                                18: '*', 19: '%', 20: '|', 21: '**', 22: '>>',
+                                23: '-', 24: '/', 25: '^'}
+                    _op_sym = _aug_map.get(_prev.arg)
+                    if _op_sym is not None:
+                        is_augassign = True
+                        augassign_op = _op_sym
         if is_condition_context and merge:
             region_blocks = chain_blocks
             value_target = None
+            is_augassign = False
+            augassign_op = None
         # [Round 2 修复] await 轮询链作为 BoolOp 操作数：
         # 当 `if await g() or x:` / `if x or await g():` 这样的 BoolOp 条件
         # 中某个操作数是 `await <expr>` 时，CPython 把 await 求值展开为
@@ -12773,6 +12803,8 @@ RegionType 枚举值: RegionType.ASSERT
             merge_block=merge,
             value_target=value_target,
             condition_block=None,
+            is_augassign=is_augassign,
+            augassign_op=augassign_op,
         )
         region.is_condition_context = is_condition_context
         self.regions.append(region)

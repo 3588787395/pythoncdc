@@ -14263,11 +14263,25 @@ AST 映射规则:
             if region.merge_block:
                 self.generated_blocks.add(region.merge_block)
             if region.value_target:
-                results.append({
-                    'type': 'Assign',
-                    'targets': [{'type': 'Name', 'id': region.value_target, 'ctx': 'Store'}],
-                    'value': boolop_expr,
-                })
+                # [R10 err 3] AugAssign with BoolOp rhs (`x += a and b`):
+                # merge_block has BINARY_OP (in-place, arg>=13) before STORE.
+                # Emit AugAssign AST; boolop_expr already excludes the leading
+                # LOAD of value_target (it's the augassign target load, not a
+                # BoolOp operand). The code generator will re-emit LOAD(target)
+                # + BINARY_OP(in-place) + STORE(target) from AugAssign AST.
+                if getattr(region, 'is_augassign', False) and getattr(region, 'augassign_op', None):
+                    results.append({
+                        'type': 'AugAssign',
+                        'target': {'type': 'Name', 'id': region.value_target, 'ctx': 'Store'},
+                        'op': region.augassign_op,
+                        'value': boolop_expr,
+                    })
+                else:
+                    results.append({
+                        'type': 'Assign',
+                        'targets': [{'type': 'Name', 'id': region.value_target, 'ctx': 'Store'}],
+                        'value': boolop_expr,
+                    })
                 if region.merge_block:
                     _merge_instrs = [i for i in region.merge_block.instructions
                                     if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
@@ -14280,7 +14294,14 @@ AST 映射规则:
                                                               'JUMP_ABSOLUTE', 'JUMP_BACKWARD_NO_INTERRUPT'):
                             _stmts = self._generate_block_statements(region.merge_block)
                             for s in _stmts:
-                                if s.get('type') != 'Assign' or s.get('targets', [{}])[0].get('id') != region.value_target:
+                                # Skip the Assign/AugAssign that re-targets value_target
+                                # (already emitted above) — keep everything else.
+                                _s_target_id = None
+                                if s.get('type') == 'Assign' and s.get('targets'):
+                                    _s_target_id = s['targets'][0].get('id') if s['targets'] else None
+                                elif s.get('type') == 'AugAssign' and s.get('target'):
+                                    _s_target_id = s['target'].get('id')
+                                if _s_target_id != region.value_target:
                                     results.append(s)
                             break
             else:
