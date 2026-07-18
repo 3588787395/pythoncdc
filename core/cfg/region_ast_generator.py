@@ -8333,6 +8333,39 @@ AST 映射规则:
                     'right': right,
                 })
             return
+        if op == 'FORMAT_VALUE':
+            # [R13-batch1] f-string 单片段包裹三元（如 `f"{a if c else b}" == "x"`）
+            # 字节码：三元 merge 后 FORMAT_VALUE 0 把结果转为 FormattedValue。
+            # 不在此处理则会跳过 FORMAT_VALUE，三元直接与右操作数比较。
+            # flags 低 2 位 = conversion（0=none, 1=str, 2=repr, 3=ascii），
+            # bit 2 = has format_spec（栈顶是 format_spec）。
+            flags = instr.arg if instr.arg is not None else 0
+            format_spec = None
+            if flags & 4 and len(stack) >= 2:
+                _spec_node = stack.pop()
+                if isinstance(_spec_node, dict):
+                    _s_t = _spec_node.get('type')
+                    if _s_t == 'JoinedStr':
+                        format_spec = _spec_node
+                    elif (_s_t == 'Constant'
+                            and isinstance(_spec_node.get('value'), str)):
+                        format_spec = _spec_node
+                    else:
+                        format_spec = {
+                            'type': 'JoinedStr',
+                            'values': [_spec_node],
+                        }
+                else:
+                    format_spec = _spec_node
+            if stack:
+                value = stack.pop()
+                stack.append({
+                    'type': 'FormattedValue',
+                    'value': value,
+                    'conversion': flags & 3,
+                    'format_spec': format_spec,
+                })
+            return
         if op.startswith('UNARY_'):
             # [R12-batch1] 映射到 ast UnaryOp 期望的操作名：
             #   UNARY_NEGATIVE→USub, UNARY_NOT→Not, UNARY_POSITIVE→UAdd,
@@ -8452,7 +8485,12 @@ AST 映射规则:
 
         _WRAPPING_OPS = {'LOAD_ATTR', 'BINARY_SUBSCR', 'PRECALL', 'CALL',
                          'CALL_FUNCTION_EX', 'DICT_MERGE',
-                         'BUILD_MAP', 'CONTAINS_OP', 'IS_OP'}
+                         'BUILD_MAP', 'CONTAINS_OP', 'IS_OP',
+                         # [R13-batch1] 三元 merge_block 后的 FORMAT_VALUE（f-string
+                         # 单片段包裹三元）与 BINARY_OP（三元作二元运算左操作数）也
+                         # 是 wrapping，否则三元 merge 后的 FORMAT_VALUE / BINARY_OP
+                         # 被丢弃，输出退化为 ternary 直接与右操作数比较。
+                         'FORMAT_VALUE', 'BINARY_OP'}
         _has_wrapping = any(i.opname in _WRAPPING_OPS for i in cond_instrs)
         _has_none_check = any(i.opname in NONE_CHECK_OPS for i in cond_instrs)
         if not (_has_wrapping or _has_none_check):
@@ -15568,11 +15606,70 @@ AST 映射规则:
         #    built by chaining simple ternary expressions from each parent
         #    ternary's cond/tvb/fvb (the fused condition tests).
         _nested_cond_expr = None
+        # [R13-batch2] _nested_true_expr / _nested_false_expr 用于"内层三元作
+        # 外层 orelse"形式（`a if b else (c if d else e)`）。此时 cond/true 来
+        # 自外层三元，false 来自内层三元（由 innermost 自身的 cond/true/false 构成）。
+        # 现有 chain 逻辑（_nested_cond_expr）仅覆盖"内层三元作外层 cond"形式
+        # （`(a if (b if c else d) else e)`），后者将整条 chain 折叠为单一 cond。
+        _nested_true_expr = None
+        _nested_false_expr = None
         for _r in self.regions:
             if isinstance(_r, TernaryRegion) and _r is not region:
                 if _r.true_value_block is region.entry or _r.false_value_block is region.entry:
                     if getattr(region, 'merge_context', None) != 'while_cond':
                         return None
+                    # [R13-batch2] 检测"内层三元作外层 orelse"形式：
+                    # `a if b else (c if d else e)` 中外层 _r.false_value_block
+                    # 是内层 entry（region.entry），且 _r.true_value_block 的
+                    # truthy 测试跳向 if-else 出口（而非 region.false_value_block）。
+                    # 对照 R12 case `(a if (b if c else d) else e)`：外层
+                    # _r.true_value_block 是内层三元的 true 值，其 truthy 测试跳向
+                    # region.false_value_block（外层 false 值）。
+                    if _r.false_value_block is region.entry:
+                        _otb_last = (_r.true_value_block.get_last_instruction()
+                                     if _r.true_value_block is not None else None)
+                        _is_inner_in_orelse = False
+                        if (_otb_last is not None
+                                and _otb_last.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                                and _otb_last.argval is not None
+                                and region.false_value_block is not None):
+                            _otb_target = self.cfg.get_block_by_offset(_otb_last.argval)
+                            if _otb_target is not region.false_value_block:
+                                _is_inner_in_orelse = True
+                        if _is_inner_in_orelse:
+                            # 内层三元 = IfExp(test=region.cond, body=region.true,
+                            #                  orelse=region.false)
+                            _ic = [i for i in region.condition_block.instructions
+                                   if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                            _icl = region.condition_block.get_last_instruction()
+                            if _icl and _icl.opname in (FORWARD_CONDITIONAL_JUMP_OPS
+                                                        | BACKWARD_CONDITIONAL_JUMP_OPS
+                                                        | SHORT_CIRCUIT_JUMP_OPS):
+                                _ic = [i for i in _ic if i != _icl]
+                            _ice = self.expr_reconstructor.reconstruct(_ic) if _ic else None
+                            _ite = self._build_simple_ternary_value(region.true_value_block)
+                            _ife = self._build_simple_ternary_value(region.false_value_block)
+                            # 外层三元 = IfExp(test=_r.cond, body=_r.true, orelse=内层)
+                            _occ = [i for i in _r.condition_block.instructions
+                                    if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                            _occl = _r.condition_block.get_last_instruction()
+                            if _occl and _occl.opname in (FORWARD_CONDITIONAL_JUMP_OPS
+                                                          | BACKWARD_CONDITIONAL_JUMP_OPS
+                                                          | SHORT_CIRCUIT_JUMP_OPS):
+                                _occ = [i for i in _occ if i != _occl]
+                            _oce = self.expr_reconstructor.reconstruct(_occ) if _occ else None
+                            _ote = self._build_simple_ternary_value(_r.true_value_block)
+                            if _ice and _ite and _ife and _oce and _ote:
+                                _inner_ternary = {
+                                    'type': 'IfExp',
+                                    'test': _ice,
+                                    'body': _ite,
+                                    'orelse': _ife,
+                                }
+                                _nested_cond_expr = _oce
+                                _nested_true_expr = _ote
+                                _nested_false_expr = _inner_ternary
+                            break
                     # This is the innermost while_cond ternary. Build the
                     # condition chain from parent ternaries' cond/tvb/fvb.
                     _visited = {id(region)}
@@ -15620,8 +15717,17 @@ AST 映射规则:
                             _nested_cond_expr = _part
                     break
 
+        # [R13-batch2] 初始化 true_expr/false_expr，允许 _nested_* 分支预设值。
+        true_expr = None
+        false_expr = None
         if _nested_cond_expr is not None:
             cond_expr = _nested_cond_expr
+            # [R13-batch2] "内层三元作外层 orelse"形式：true/false 已由外层/内层
+            # 三元预构建，跳过下方基于 innermost.true/false_block 的重建。
+            if _nested_true_expr is not None:
+                true_expr = _nested_true_expr
+            if _nested_false_expr is not None:
+                false_expr = _nested_false_expr
         elif region.condition_chain_blocks and len(region.condition_chain_blocks) > 1:
             cond_expr = self._build_ternary_boolop_condition(region)
         else:
@@ -15701,9 +15807,12 @@ AST 映射规则:
                 filtered_cond.append(instr)
 
             cond_expr = self.expr_reconstructor.reconstruct(filtered_cond)
-        
-        true_expr = self._build_ternary_value_expr(true_block)
-        false_expr = self._build_ternary_value_expr(false_block)
+
+        # [R13-batch2] 仅当 _nested_* 未预构建时，从 innermost true/false block 重建。
+        if true_expr is None:
+            true_expr = self._build_ternary_value_expr(true_block)
+        if false_expr is None:
+            false_expr = self._build_ternary_value_expr(false_block)
 
         if cond_expr and true_expr and false_expr:
             ternary_expr = {
@@ -15751,6 +15860,16 @@ AST 映射规则:
                 results.append(_if_cond_node)
                 for block in region.blocks:
                     self.generated_blocks.add(block)
+                return results
+
+            # [R13-batch2 Error 11] 嵌套三元（orelse 形式）作 if 条件。
+            # 模式: `if a if b else (c if d else e): pass`
+            # 外层三元无 merge_block，内层三元（while_cond）拥有 if-body。
+            # 必须在外层三元退化为 Expr 之前检测此模式并生成 If 节点。
+            _nested_if_node = self._try_build_nested_ternary_as_if_cond(
+                region, ternary_expr)
+            if _nested_if_node is not None:
+                results.append(_nested_if_node)
                 return results
 
             # Phase 12修复: 根据merge_context决定输出格式（保守策略）
@@ -16576,6 +16695,157 @@ AST 映射规则:
         return {
             'type': 'If',
             'test': test_expr,
+            'body': _body_stmts if _body_stmts else [{'type': 'Pass'}],
+            'orelse': _orelse_stmts if _orelse_stmts else None,
+        }
+
+    def _try_build_nested_ternary_as_if_cond(self, region: TernaryRegion,
+                                              ternary_expr: Dict[str, Any]
+                                              ) -> Optional[Dict[str, Any]]:
+        """[R13-batch2 Error 11] Nested ternary as if condition (orelse form).
+
+        Detects the pattern where the current (outer) ternary is used as an
+        ``if`` condition, but the if-body is owned by a nested inner ternary
+        with ``merge_context='while_cond'``. Source pattern:
+            ``if a if b else (c if d else e): pass``
+        Python parses this as ``if (a if b else (c if d else e)): pass``.
+
+        结构特征:
+          - 外层三元 (region): cond=b, true=a, false=内层三元 entry
+            merge_context=None, merge_block=None
+          - 内层三元 (_inner): cond=d, true=c, false=e
+            merge_context='while_cond', merge_block=if-body
+
+        编译器将每个值块的真值测试融合进值块本身（POP_JUMP_IF_FALSE →
+        orelse 出口；JUMP_FORWARD/fallthrough → if-body）。外层三元没有
+        merge_block，所以现有 while_cond 路径（依赖 region.merge_block）
+        无法触发。外层三元会被退化为 Expr(ternary_expr)。
+
+        本方法检测此模式，构建 If 节点：
+          - test = ternary_expr（已正确构建，含嵌套结构）
+          - body = 处理 _inner.merge_block（if-body）
+          - orelse = 处理所有值块的 POP_JUMP_IF_FALSE 目标（orelse 出口）
+
+        Returns:
+            If 节点 dict，或不匹配时返回 None。
+        """
+        # 仅当外层三元无 merge_context 且无 merge_block 时考虑此模式
+        if getattr(region, 'merge_context', None) is not None:
+            return None
+        if region.merge_block is not None:
+            return None
+
+        # 查找内层三元：entry 是外层 true/false_value_block，且
+        # merge_context='while_cond'，且有 merge_block
+        _inner = None
+        _inner_is_outer_true = False
+        for _r in self.regions:
+            if (isinstance(_r, TernaryRegion) and _r is not region
+                    and getattr(_r, 'merge_context', None) == 'while_cond'
+                    and _r.merge_block is not None):
+                if _r.entry is region.true_value_block:
+                    _inner = _r
+                    _inner_is_outer_true = True
+                    break
+                if _r.entry is region.false_value_block:
+                    _inner = _r
+                    _inner_is_outer_true = False
+                    break
+        if _inner is None:
+            return None
+
+        # 若有外层 LoopRegion 包裹，这是 while 条件，不是 if 条件，交给
+        # while_cond 路径处理
+        for _r in self.regions:
+            if isinstance(_r, LoopRegion):
+                if any(b in _r.blocks for b in region.blocks):
+                    return None
+
+        # 收集所有"叶子"值块（实际值块，不是内层三元 entry）
+        _value_blocks = []
+        if _inner_is_outer_true:
+            # 外层 true_value_block 是内层 entry（跳过），false 是叶子
+            if region.false_value_block is not None:
+                _value_blocks.append(region.false_value_block)
+        else:
+            # 外层 false_value_block 是内层 entry（跳过），true 是叶子
+            if region.true_value_block is not None:
+                _value_blocks.append(region.true_value_block)
+        if _inner.true_value_block is not None:
+            _value_blocks.append(_inner.true_value_block)
+        if _inner.false_value_block is not None:
+            _value_blocks.append(_inner.false_value_block)
+
+        # if-body = 内层三元的 merge_block
+        _if_body_block = _inner.merge_block
+
+        # orelse 出口 = 各值块的 POP_JUMP_IF_FALSE 目标
+        _if_orelse_blocks = []
+        _not_inverted = False
+        _vb_if_true_count = 0
+        _vb_jump_count = 0
+        for _vb in _value_blocks:
+            # 值块可能含多条指令，找第一条条件跳变（真值测试）
+            _vb_cond = None
+            for _instr in _vb.instructions:
+                if (_instr.argval is not None
+                        and _instr.opname in FORWARD_CONDITIONAL_JUMP_OPS):
+                    _vb_cond = _instr
+                    break
+            if _vb_cond is None:
+                continue
+            _vb_jump_count += 1
+            if ('IF_TRUE' in _vb_cond.opname
+                    or 'IF_NOT_NONE' in _vb_cond.opname):
+                _vb_if_true_count += 1
+            _exit_blk = self.cfg.get_block_by_offset(_vb_cond.argval)
+            if (_exit_blk and _exit_blk is not _if_body_block
+                    and _exit_blk not in _if_orelse_blocks):
+                _if_orelse_blocks.append(_exit_blk)
+        # 所有值块都以 IF_TRUE 跳转 → `not (ternary)` 反转
+        if _vb_jump_count > 0 and _vb_if_true_count == _vb_jump_count:
+            _not_inverted = True
+
+        # 处理 if-body
+        _body_stmts: List[Dict[str, Any]] = []
+        if _if_body_block is not None:
+            self.generated_blocks.add(_if_body_block)
+            _body_stmts = self._process_if_blocks(
+                [_if_body_block], region, branch='then')
+
+        # 处理 orelse 出口块
+        _orelse_stmts: List[Dict[str, Any]] = []
+        for _b in _if_orelse_blocks:
+            self.generated_blocks.add(_b)
+        if _if_orelse_blocks:
+            _orelse_stmts = self._process_if_blocks(
+                _if_orelse_blocks, region, branch='else')
+
+        # 剥离隐式 return None
+        def _strip_impl_ret_none(stmts):
+            if not stmts:
+                return stmts
+            _out = list(stmts)
+            while _out and isinstance(_out[-1], dict) and _out[-1].get('type') == 'Return':
+                _rv = _out[-1].get('value')
+                if _rv and _rv.get('type') == 'Constant' and _rv.get('value') is None:
+                    _out = _out[:-1]
+                else:
+                    break
+            return _out
+        _body_stmts = _strip_impl_ret_none(_body_stmts)
+        _orelse_stmts = _strip_impl_ret_none(_orelse_stmts)
+
+        # 标记所有相关块为已生成（外层 + 内层）
+        for _b in region.blocks:
+            self.generated_blocks.add(_b)
+        for _b in _inner.blocks:
+            self.generated_blocks.add(_b)
+
+        _test_expr = _negate_expr(ternary_expr) if _not_inverted else ternary_expr
+        return {
+            'type': 'If',
+            'test': _test_expr,
             'body': _body_stmts if _body_stmts else [{'type': 'Pass'}],
             'orelse': _orelse_stmts if _orelse_stmts else None,
         }

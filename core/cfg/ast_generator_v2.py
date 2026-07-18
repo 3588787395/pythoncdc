@@ -2059,28 +2059,71 @@ class ExpressionReconstructor:
                 'lineno': instr.starts_line
             }
     
-    def _parse_comprehension_from_code(self, code: types.CodeType, 
+    def _parse_comprehension_from_code(self, code: types.CodeType,
                                         comp_type: str,
                                         iter_node: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """[N14/N15修复] 从推导式code object创建推导式AST
-        
+
         对于生成器表达式 `x == target for x in row`：
         - code: <genexpr>的code object
         - comp_type: 'GeneratorExp'
         - iter_node: Iter(Name(row))
-        
+
         返回: GeneratorExp(elt=Compare(...), generators=[comprehension(target=Name(row), ...)])
+
+        [R13-batch3] 委托 ComprehensionGenerator.parse_comprehension_inner 进行完整
+        重建（含 filter / key-value / 三元元素），避免 ifs 硬编码为 [] 导致
+        listcomp/setcomp 的 if 过滤条件、dictcomp 的 key/value、listcomp 的三元
+        元素在 if 条件上下文中丢失。仅当 ComprehensionGenerator 失败时回退到
+        原始的简化逻辑。
+
+        注意：parse_comprehension_inner 内部会调用 reconstruct，后者会 reset
+        栈状态。我们必须保存/恢复栈，否则外层 CALL 链（如 any(genexp) 中的
+        any）会丢失，导致 GeneratorExp 的 elt 被误用作外层 Call 的 func。
         """
+        try:
+            from .comprehension_generator import ComprehensionGenerator
+            comp_gen = ComprehensionGenerator(self)
+
+            # 解开 Iter 包装：parse_comprehension_inner 期望 iter_expr 直接是
+            # 迭代对象表达式（如 Call(range, [10])），而非 Iter(Call(...))。
+            if (isinstance(iter_node, dict)
+                    and iter_node.get('type') == 'Iter'
+                    and 'value' in iter_node):
+                iter_expr = iter_node.get('value')
+            else:
+                iter_expr = iter_node
+
+            if iter_expr is None:
+                iter_expr = {'type': 'Name', 'id': '.0', 'ctx': 'Load'}
+
+            # 保存栈状态：parse_comprehension_inner -> reconstruct -> reset
+            # 会清空栈。需要恢复以保留外层调用链（如 any(...) 中的 any）。
+            _saved_stack = self.stack
+            _saved_temp = self.temp_vars
+            _saved_jump_flag = self._jump_since_last_compare
+            try:
+                comp_ast = comp_gen.parse_comprehension_inner(code, iter_expr)
+            finally:
+                self.stack = _saved_stack
+                self.temp_vars = _saved_temp
+                self._jump_since_last_compare = _saved_jump_flag
+            if comp_ast is not None:
+                return comp_ast
+            # 否则回退到下方简化逻辑
+        except Exception as e:
+            print(f'[N14] Warning: parse_comprehension_inner failed, fallback: {e}')
+
         try:
             # 使用dis模块分析推导式的字节码
             import dis
-            
+
             # 获取推导式code的指令
             instrs = list(dis.get_instructions(code))
-            
+
             if not instrs:
                 return None
-            
+
             # 查找FOR_ITER指令来确定迭代变量
             target_name = None
             for i, instr in enumerate(instrs):
@@ -2092,10 +2135,10 @@ class ExpressionReconstructor:
                             target_name = instrs[j].argval
                             break
                     break
-            
+
             if not target_name:
                 target_name = '<target>'
-            
+
             # 创建推导式AST节点
             result = {
                 'type': comp_type,
@@ -2107,9 +2150,9 @@ class ExpressionReconstructor:
                     'is_async': 0
                 }]
             }
-            
+
             return result
-            
+
         except Exception as e:
             print(f'[N14] Warning: Failed to parse comprehension: {e}')
             return None

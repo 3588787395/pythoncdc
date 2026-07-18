@@ -925,6 +925,13 @@ class ComprehensionGenerator:
         for idx in range(store_idx + 1, append_idx):
             instr = all_instrs[idx]
             if instr.opname in CONDITIONAL_JUMP_OPS:
+                # [R13-batch3] BACKWARD 条件跳转是过滤器模式（跳回 FOR_ITER
+                # 循环开始以跳过当前元素），不是三元模式。三元模式使用 FORWARD
+                # 跳转跳到 false 值（在 true 值之后、LIST_APPEND 之前）。
+                # 与 _extract_comp_ifs 的 'BACKWARD' not in instr.opname 检查
+                # 保持一致，避免过滤器被误识别为三元导致 ifs 丢失。
+                if 'BACKWARD' in instr.opname:
+                    return None
                 # 检查跳转目标是否在LIST_APPEND之前（三元模式）
                 if hasattr(instr, 'argval') and instr.argval is not None:
                     if instr.argval < append_offset:
