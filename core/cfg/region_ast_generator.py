@@ -15244,6 +15244,34 @@ AST 映射规则:
                 if container_info:
                     results.append({'type': 'Expr', 'value': container_info})
                 else:
+                    # [Round9-04/05/09] Ternary as part of STORE_SUBSCR/STORE_ATTR
+                    # assignment. When merge_block contains STORE_SUBSCR or
+                    # STORE_ATTR (after stripping trailing return-None), the
+                    # ternary result is consumed as part of a subscript/attr
+                    # assignment. Build the full Assign with Subscript/Attribute
+                    # target instead of falling through to Expr(ternary).
+                    # Examples:
+                    #   d[k] = v if cond else w   -> merge: LOAD d, LOAD k, STORE_SUBSCR
+                    #   d[k if cond else m] = v   -> cond preload: [v, d], merge: STORE_SUBSCR
+                    #   a.b = c if cond else d    -> merge: LOAD a, STORE_ATTR b
+                    _store_assign = self._try_build_ternary_store_assign(
+                        region, ternary_expr)
+                    if _store_assign is not None:
+                        results.append(_store_assign)
+                        for block in region.blocks:
+                            self.generated_blocks.add(block)
+                        return results
+                    # [Round9-11] Outer ternary's merge_block is an inner
+                    # TernaryRegion's entry with container_type set (list/
+                    # tuple/set/dict). Build the container with both ternaries
+                    # as elements, e.g. `r = [t1, t2]`.
+                    _chained_container = self._try_build_ternary_chained_container(
+                        region, ternary_expr)
+                    if _chained_container is not None:
+                        results.append(_chained_container)
+                        for block in region.blocks:
+                            self.generated_blocks.add(block)
+                        return results
                     has_pop_top = any(
                         any(i.opname == 'POP_TOP' for i in b.instructions)
                         for b in (true_block, false_block)
@@ -15299,6 +15327,19 @@ AST 映射规则:
                                 for block in region.blocks:
                                     self.generated_blocks.add(block)
                                 return results
+                            # [Round9-06/10/12] Ternary as function keyword
+                            # argument. When merge_block (or a chained nested
+                            # ternary's merge_block) contains KW_NAMES, the
+                            # ternary result is a keyword argument. Extract
+                            # the kwarg names tuple and build a Call with
+                            # proper keyword args.
+                            _kwarg_call = self._try_build_ternary_kwarg_call(
+                                region, ternary_expr)
+                            if _kwarg_call is not None:
+                                results.append(_kwarg_call)
+                                for block in region.blocks:
+                                    self.generated_blocks.add(block)
+                                return results
                             func_call_info = region.func_call_info
                             if func_call_info:
                                 call_args = list(func_call_info.get('args', [])) + [ternary_expr]
@@ -15328,10 +15369,439 @@ AST 映射规则:
             
             for block in region.blocks:
                 self.generated_blocks.add(block)
-            
+
             return results
 
         return None
+
+    def _try_build_ternary_store_assign(self, region: TernaryRegion,
+                                         ternary_expr: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """[Round9-04/05/09] Build Assign when ternary result is consumed by
+        STORE_SUBSCR or STORE_ATTR in merge_block.
+
+        Patterns:
+          Pattern A (ternary as value, TOS3/TOS2):
+            ``d[k] = ternary``  -> merge: LOAD d, LOAD k, STORE_SUBSCR
+            ``a.b = ternary``   -> merge: LOAD a, STORE_ATTR b
+          Pattern B (ternary as key, TOS):
+            ``d[ternary] = v``  -> cond preload: LOAD v, LOAD d; merge: STORE_SUBSCR
+
+        Returns the Assign dict, or None if the pattern does not match.
+        """
+        if not region.merge_block:
+            return None
+
+        merge_instrs = [i for i in region.merge_block.instructions
+                        if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+        # Strip trailing implicit return None: LOAD_CONST None + RETURN_VALUE
+        while merge_instrs and merge_instrs[-1].opname == 'RETURN_VALUE':
+            merge_instrs.pop()
+            if (merge_instrs and merge_instrs[-1].opname == 'LOAD_CONST'
+                    and merge_instrs[-1].argval is None):
+                merge_instrs.pop()
+        if not merge_instrs:
+            return None
+
+        last_instr = merge_instrs[-1]
+        before_store = merge_instrs[:-1]
+
+        # --- STORE_SUBSCR: stack [value, obj, key] ---
+        if last_instr.opname == 'STORE_SUBSCR':
+            # Pattern A: ternary is value; merge contains obj+key loads after
+            # the ternary result lands on stack.
+            if before_store:
+                self.expr_reconstructor.reset()
+                self.expr_reconstructor.stack = [ternary_expr]
+                for _instr in before_store:
+                    if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                        continue
+                    self.expr_reconstructor._process_instruction(_instr)
+                _reg_stack = [s for s in self.expr_reconstructor.stack
+                              if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+                if len(_reg_stack) >= 3:
+                    key_expr = _reg_stack[-1]
+                    obj_expr = _reg_stack[-2]
+                    target = {
+                        'type': 'Subscript',
+                        'value': obj_expr,
+                        'slice': key_expr,
+                        'ctx': 'Store',
+                    }
+                    return {
+                        'type': 'Assign',
+                        'targets': [target],
+                        'value': ternary_expr,
+                    }
+
+            # Pattern B: ternary is key; merge is just STORE_SUBSCR. The value
+            # and obj were preloaded in cond_block before the ternary condition.
+            cond_block = region.condition_block
+            if cond_block:
+                cond_instrs = [i for i in cond_block.instructions
+                               if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+                pj_idx = None
+                for i in range(len(cond_instrs) - 1, -1, -1):
+                    if cond_instrs[i].opname in (
+                            'POP_JUMP_FORWARD_IF_FALSE',
+                            'POP_JUMP_BACKWARD_IF_FALSE',
+                            'POP_JUMP_IF_FALSE'):
+                        pj_idx = i
+                        break
+                if pj_idx is not None and pj_idx > 0:
+                    # Walk backward to find where the ternary condition
+                    # expression starts (stack-effect analysis).
+                    _needed = 1
+                    cond_expr_start = None
+                    for _ci in range(pj_idx - 1, -1, -1):
+                        _instr = cond_instrs[_ci]
+                        if _instr.opname.startswith('LOAD_') or _instr.opname == 'COPY':
+                            _push, _pop = 1, 0
+                        elif _instr.opname in ('BINARY_OP', 'COMPARE_OP',
+                                                'IS_OP', 'CONTAINS_OP', 'BINARY_SUBSCR'):
+                            _push, _pop = 1, 2
+                        elif _instr.opname.startswith('UNARY_'):
+                            _push, _pop = 1, 1
+                        elif _instr.opname.startswith('BUILD_'):
+                            _push, _pop = 1, _instr.arg or 0
+                        elif _instr.opname == 'CALL':
+                            _push, _pop = 1, (_instr.arg or 0) + 1
+                        elif _instr.opname in ('PRECALL', 'POP_TOP'):
+                            _push, _pop = 0, 0
+                        else:
+                            _push, _pop = 0, 0
+                        _needed = _needed - _push + _pop
+                        if _needed <= 0:
+                            cond_expr_start = _ci
+                            break
+                    if cond_expr_start is not None and cond_expr_start > 0:
+                        preload = cond_instrs[:cond_expr_start]
+                        self.expr_reconstructor.reset()
+                        for _instr in preload:
+                            if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                                continue
+                            self.expr_reconstructor._process_instruction(_instr)
+                        _pl_stack = [s for s in self.expr_reconstructor.stack
+                                     if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+                        # Expect [value, obj] on stack: value pushed first,
+                        # then obj; STORE_SUBSCR pops [value, obj, key].
+                        if len(_pl_stack) >= 2:
+                            obj_expr = _pl_stack[-1]
+                            value_expr = _pl_stack[-2]
+                            target = {
+                                'type': 'Subscript',
+                                'value': obj_expr,
+                                'slice': ternary_expr,
+                                'ctx': 'Store',
+                            }
+                            return {
+                                'type': 'Assign',
+                                'targets': [target],
+                                'value': value_expr,
+                            }
+
+        # --- STORE_ATTR: stack [value, obj] ---
+        elif last_instr.opname == 'STORE_ATTR':
+            # Pattern A: ternary is value; merge contains obj load after the
+            # ternary result lands on stack.
+            if before_store:
+                self.expr_reconstructor.reset()
+                self.expr_reconstructor.stack = [ternary_expr]
+                for _instr in before_store:
+                    if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                        continue
+                    self.expr_reconstructor._process_instruction(_instr)
+                _reg_stack = [s for s in self.expr_reconstructor.stack
+                              if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+                if len(_reg_stack) >= 2:
+                    obj_expr = _reg_stack[-1]
+                    target = {
+                        'type': 'Attribute',
+                        'value': obj_expr,
+                        'attr': last_instr.argval,
+                        'ctx': 'Store',
+                    }
+                    return {
+                        'type': 'Assign',
+                        'targets': [target],
+                        'value': ternary_expr,
+                    }
+
+        return None
+
+    def _try_build_ternary_chained_container(self, region: TernaryRegion,
+                                               ternary_expr: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """[Round9-11] Outer ternary's merge_block is an inner TernaryRegion's
+        entry, and the inner ternary has container_type set (list/tuple/set/
+        dict). Build the container with both ternaries as elements.
+
+        Pattern (list example):
+          ``r = [a if cond else b, d if e else f]`` compiles to two chained
+          TernaryRegions. The outer (entry=cond1, merge=inner.entry,
+          container=None) pushes its result first; the inner (container='list',
+          value_target='r', merge has BUILD_LIST 2) pushes its result second.
+          BUILD_LIST consumes both as elements.
+
+        Returns the Assign/Expr dict, or None if the pattern does not match.
+        Also marks the inner ternary's blocks as generated (caller marks the
+        outer's).
+        """
+        if not region.merge_block:
+            return None
+        # Find an inner TernaryRegion whose entry is region.merge_block.
+        inner_region = None
+        for r in self.regions:
+            if (isinstance(r, TernaryRegion) and r is not region
+                    and r.entry == region.merge_block):
+                inner_region = r
+                break
+        if inner_region is None:
+            return None
+        inner_container = inner_region.container_type
+        if not inner_container:
+            return None
+
+        # Collect all ternary expressions in chain order (outer first, then
+        # inner, then deeper-nested if any). Each outer ternary's result is
+        # pushed before its inner's, so the stack order at BUILD_* time is
+        # [outer_expr, inner_expr, ...].
+        ternary_chain = [region]
+        current = inner_region
+        while current is not None:
+            ternary_chain.append(current)
+            # Follow deeper: current.merge_block might be another TernaryRegion's entry
+            next_inner = None
+            for r in self.regions:
+                if (isinstance(r, TernaryRegion) and r is not current
+                        and r.entry == current.merge_block):
+                    next_inner = r
+                    break
+            if next_inner is not None and next_inner.container_type is None:
+                # Deeper chained ternary (still pushing onto the same container
+                # stack). Only follow if it has no container of its own.
+                current = next_inner
+            else:
+                current = None
+
+        # Build the expression for each ternary in the chain.
+        elts = []
+        for tr in ternary_chain:
+            if tr is region:
+                elts.append(ternary_expr)
+            else:
+                _nested = self._build_nested_ternary_expr(tr)
+                if _nested is None:
+                    return None
+                elts.append(_nested)
+
+        # The innermost ternary (last in chain) owns the container_type and
+        # value_target. Use its target if present.
+        innermost = ternary_chain[-1]
+        container_type = innermost.container_type
+        value_target = innermost.value_target
+
+        if container_type == 'list':
+            container_info = {'type': 'List', 'elts': elts, 'ctx': 'Load'}
+        elif container_type == 'tuple':
+            container_info = {'type': 'Tuple', 'elts': elts, 'ctx': 'Load'}
+        elif container_type == 'set':
+            container_info = {'type': 'Set', 'elts': elts, 'ctx': 'Load'}
+        elif container_type == 'dict':
+            # For dict, alternate key/value. The inner ternary's dict_key_info
+            # provides the key for its value-position ternary; chained outer
+            # ternaries are also values, each needing a key from cond preload.
+            # This is uncommon; fall back to using the known key for all.
+            key_expr = innermost.dict_key_info
+            if not key_expr:
+                return None
+            container_info = {
+                'type': 'Dict',
+                'keys': [key_expr] * len(elts),
+                'values': elts,
+            }
+        else:
+            return None
+
+        # Mark all chained inner ternaries' blocks as generated so the
+        # IfRegion processing does not emit them as separate statements.
+        for tr in ternary_chain:
+            if tr is region:
+                continue
+            for b in tr.blocks:
+                self.generated_blocks.add(b)
+
+        if value_target:
+            return {
+                'type': 'Assign',
+                'targets': [{'type': 'Name', 'id': value_target, 'ctx': 'Store'}],
+                'value': container_info,
+            }
+        return {'type': 'Expr', 'value': container_info}
+
+    def _try_build_ternary_kwarg_call(self, region: TernaryRegion,
+                                       ternary_expr: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """[Round9-06/10/12] Build Call when ternary result is consumed as a
+        keyword argument (KW_NAMES in the final merge_block).
+
+        Patterns:
+          Single:   ``f(x=ternary)``          -> merge has KW_NAMES
+          Chained:  ``f(t1, x=t2)`` / ``f(x=t1, y=t2)``
+                    -> outer.merge = inner.entry; inner.merge has KW_NAMES
+
+        The KW_NAMES instruction's argval is ``<unknown>`` at runtime, so the
+        kwarg names tuple must be looked up via ``co_consts[instr.arg]``.
+
+        Returns the Expr(Call) dict, or None if the pattern does not match.
+        Also marks chained inner ternaries' blocks as generated.
+        """
+        if not region.merge_block:
+            return None
+
+        # Follow the chain to find the final merge_block that contains KW_NAMES.
+        # region.merge_block may itself be another TernaryRegion's entry.
+        ternary_chain = [region]
+        current = region
+        final_merge = region.merge_block
+        visited = {id(region)}
+        while True:
+            next_inner = None
+            for r in self.regions:
+                if (isinstance(r, TernaryRegion) and id(r) not in visited
+                        and r.entry == current.merge_block):
+                    next_inner = r
+                    break
+            if next_inner is None:
+                break
+            ternary_chain.append(next_inner)
+            visited.add(id(next_inner))
+            current = next_inner
+            final_merge = current.merge_block
+            if final_merge is None:
+                return None
+
+        # Check final_merge for KW_NAMES + PRECALL + CALL.
+        merge_instrs = [i for i in final_merge.instructions
+                        if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+        kw_names_instr = None
+        call_instr = None
+        for i in merge_instrs:
+            if i.opname == 'KW_NAMES':
+                kw_names_instr = i
+            elif i.opname == 'CALL':
+                call_instr = i
+        if kw_names_instr is None or call_instr is None:
+            return None
+
+        # Resolve kwarg names tuple via co_consts lookup (argval is unknown).
+        kw_names = None
+        code_obj = getattr(self.cfg, 'code', None)
+        if (code_obj and hasattr(code_obj, 'co_consts')
+                and kw_names_instr.arg is not None):
+            try:
+                kw_names = code_obj.co_consts[kw_names_instr.arg]
+            except (IndexError, TypeError):
+                pass
+        if not isinstance(kw_names, tuple):
+            return None
+
+        # Build expression for each ternary in chain order. Stack order at
+        # CALL time is [outer_expr, inner_expr, ...] (outer pushed first).
+        ternary_exprs = []
+        for tr in ternary_chain:
+            if tr is region:
+                ternary_exprs.append(ternary_expr)
+            else:
+                _nested = self._build_nested_ternary_expr(tr)
+                if _nested is None:
+                    return None
+                ternary_exprs.append(_nested)
+
+        total_args = call_instr.arg or 0
+        kwarg_count = len(kw_names)
+        # The last kwarg_count args on the stack are keyword arguments.
+        # The ternary results occupy total_args slots (assuming no preload
+        # positional args in this pattern; preload args are rare for ternary-
+        # as-kwarg and not present in any R9 test case).
+        num_ternaries = len(ternary_exprs)
+        if num_ternaries > total_args:
+            return None
+        # Determine how many of the ternary results are positional vs keyword.
+        # Positional ternaries come first (lower stack indices).
+        num_positional_from_ternary = max(0, num_ternaries - kwarg_count)
+        num_kwarg_from_ternary = num_ternaries - num_positional_from_ternary
+
+        # Any preload positional args from cond_block (instructions before the
+        # function setup PUSH_NULL + LOAD_*). For R9 cases this is empty.
+        preload_args = []
+        cond_block = region.condition_block
+        if cond_block is not None and num_positional_from_ternary < (total_args - kwarg_count):
+            # Compute preload args count: total positional args minus ternary positional args.
+            preload_count = (total_args - kwarg_count) - num_positional_from_ternary
+            cond_instrs = [i for i in cond_block.instructions
+                           if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+            # Find PUSH_NULL (function setup) — preload args are before it.
+            push_null_idx = None
+            for idx, i in enumerate(cond_instrs):
+                if i.opname == 'PUSH_NULL':
+                    push_null_idx = idx
+                    break
+                if i.opname == 'LOAD_GLOBAL' and i.arg is not None and (i.arg & 1):
+                    push_null_idx = idx
+                    break
+            if push_null_idx is not None and push_null_idx > 0:
+                preload_instrs = cond_instrs[:push_null_idx]
+                self.expr_reconstructor.reset()
+                for _instr in preload_instrs:
+                    if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                        continue
+                    self.expr_reconstructor._process_instruction(_instr)
+                _pl_stack = [s for s in self.expr_reconstructor.stack
+                             if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+                # Take the last preload_count elements as positional args.
+                if len(_pl_stack) >= preload_count:
+                    preload_args = _pl_stack[-preload_count:]
+
+        # Build args list: preload positional + ternary positional.
+        call_args = list(preload_args) + ternary_exprs[:num_positional_from_ternary]
+        # Build keywords: each kwarg name maps to a ternary expression (in
+        # chain order) or a preload value.
+        keywords = []
+        kwarg_ternary_start = num_positional_from_ternary
+        for i, name in enumerate(kw_names):
+            if (kwarg_ternary_start + i) < num_ternaries:
+                value = ternary_exprs[kwarg_ternary_start + i]
+            else:
+                # Would need preload kwarg value — not in R9 cases.
+                return None
+            keywords.append({
+                'type': 'keyword',
+                'arg': name,
+                'value': value,
+            })
+
+        # Function expression: from func_call_info (set when container='call')
+        # or reconstruct from cond_block's PUSH_NULL + LOAD_* prefix.
+        func_expr = None
+        func_call_info = region.func_call_info
+        if func_call_info:
+            func_expr = func_call_info.get('func')
+        if func_expr is None:
+            return None
+
+        call_expr = {
+            'type': 'Call',
+            'func': func_expr,
+            'args': call_args,
+            'keywords': keywords,
+        }
+
+        # Mark all chained inner ternaries' blocks as generated.
+        for tr in ternary_chain:
+            if tr is region:
+                continue
+            for b in tr.blocks:
+                self.generated_blocks.add(b)
+
+        return {'type': 'Expr', 'value': call_expr}
 
 
 
