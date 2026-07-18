@@ -28,7 +28,8 @@
 - [x] Task 1.11: IF round_11 — commit 28b6aba (27/28 修复完成 + 1 跳过 bytes_in_cond, 已 push; if_region 647 passed / 3 failed / 4 skipped)
   - **退化警告**：batch 2 (5d823e0) 引入 2 个退化（test_adv03_ternary_call_arg, test_adv03_ternary_in_subscr），R12 优先修复
 - [x] Task 1.12: IF round_12 — commit 10dd437 (15/15 修复完成 + 退化修复 batch 0, 已 push; if_region 664 passed / 1 legacy failed / 4 skipped)
-- [ ] Task 1.13 ~ 1.20
+- [x] Task 1.13: IF round_13 — commit be09ab2 (8/11 修复完成 + 3 cat4 已知限制, 已 push; if_region 676 passed / 4 failed / 4 skipped)
+- [ ] Task 1.14 ~ 1.20
 
 ## Phase 2: LOOP 区域（20 轮）
 - [ ] Task 2.1 ~ 2.20

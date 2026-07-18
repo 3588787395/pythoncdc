@@ -11258,6 +11258,56 @@ RegionType 枚举值: RegionType.ASSERT
                         continue
                     if instr.opname in ('STORE_FAST', 'STORE_NAME',
                                         'STORE_GLOBAL', 'STORE_DEREF'):
+                        # [R14 类别 C] walrus + 三元 + 后续操作模式检测：
+                        # 字节码布局 `COPY 1, STORE_*, <wrapping_ops>..., <cond_jump>`
+                        # 表示 walrus 副本绑定名称后，原始三元结果仍在栈上继续参与
+                        # LOAD_ATTR/BINARY_SUBSCR/LOAD_METHOD/BINARY_OP 等运算。
+                        # 若误设 merge_context='store'，walrus 会被提取为独立赋值
+                        # `x = (ternary)`，丢弃后续 wrapping 与整个 if 结构。
+                        # 此处显式检测：若 COPY 1 紧邻 STORE_* 之前，且 STORE_* 之后
+                        # 有 wrapping 指令 + 条件跳转，则设 merge_context='compare'，
+                        # 交由 _build_ternary_wrapped_expr 走栈模拟重建完整表达式。
+                        _mb_non_noise = [i for i in merge_block.instructions
+                                         if i.opname not in NOISE_OPS]
+                        try:
+                            _store_idx = _mb_non_noise.index(instr)
+                        except ValueError:
+                            _store_idx = -1
+                        _is_walrus_wrapping = False
+                        if _store_idx > 0:
+                            _prev = _mb_non_noise[_store_idx - 1]
+                            if (_prev.opname == 'COPY'
+                                    and _prev.arg is not None
+                                    and _prev.arg == 1):
+                                _post_store = _mb_non_noise[_store_idx + 1:]
+                                _WALRUS_WRAP_OPS = {
+                                    'LOAD_ATTR', 'LOAD_METHOD', 'BINARY_SUBSCR',
+                                    'PRECALL', 'CALL', 'BINARY_OP',
+                                    'BUILD_SLICE', 'BUILD_TUPLE', 'BUILD_LIST',
+                                    'BUILD_SET', 'BUILD_MAP', 'CONTAINS_OP',
+                                    'IS_OP', 'FORMAT_VALUE',
+                                }
+                                _has_wrap_after = any(
+                                    i.opname in _WALRUS_WRAP_OPS for i in _post_store)
+                                _has_cond_jump = any(
+                                    i.opname in (FORWARD_CONDITIONAL_JUMP_OPS
+                                                 | BACKWARD_CONDITIONAL_JUMP_OPS)
+                                    for i in _post_store)
+                                if _has_wrap_after and _has_cond_jump:
+                                    _is_walrus_wrapping = True
+                        if _is_walrus_wrapping:
+                            true_non_noise = [i for i in true_block.instructions
+                                             if i.opname not in NOISE_OPS]
+                            false_non_noise = [i for i in false_block.instructions
+                                              if i.opname not in NOISE_OPS]
+                            true_has_pop = any(i.opname == 'POP_TOP' for i in true_non_noise)
+                            false_has_pop = any(i.opname == 'POP_TOP' for i in false_non_noise)
+                            if not (true_has_pop or false_has_pop):
+                                merge_context = 'compare'
+                                value_target = '__compare_target__'
+                                break
+                        # 默认：独立 walrus 赋值（如 `if (x := ternary): pass`
+                        # 或 `x = (ternary)`）
                         value_target = instr.argval if instr.argval else f'var_{instr.arg}'
                         merge_context = 'store'
                         break
@@ -11425,6 +11475,59 @@ RegionType 枚举值: RegionType.ASSERT
                             merge_context = 'compare'
                             value_target = '__compare_target__'
                             break
+
+                    # [R14 类别 B] BUILD_TUPLE/BUILD_LIST/BUILD_SET：
+                    # 三元作容器字面量元素时，BUILD_* 消费三元结果与其他元素，
+                    # 产出的容器作 if 条件真值测试。
+                    # 必须检查 merge_block 末尾含条件跳转（if/while 条件上下文），
+                    # 以区别于 BUILD_* 用于赋值/默认值/注解等场景
+                    # （如 `x = [ternary, y]`、`lambda x=ternary: ...`、
+                    # `def f() -> ternary: ...`）。否则会误设 merge_context='compare'，
+                    # 把赋值/默认值场景的三元错认为 if 条件，导致退化。
+                    elif instr.opname in ('BUILD_TUPLE', 'BUILD_LIST', 'BUILD_SET'):
+                        _mb_has_cond_jump = any(
+                            _i.opname in (FORWARD_CONDITIONAL_JUMP_OPS
+                                          | BACKWARD_CONDITIONAL_JUMP_OPS)
+                            for _i in merge_block.instructions
+                            if _i.opname not in NOISE_OPS
+                        )
+                        if _mb_has_cond_jump:
+                            true_non_noise = [i for i in true_block.instructions
+                                             if i.opname not in NOISE_OPS]
+                            false_non_noise = [i for i in false_block.instructions
+                                              if i.opname not in NOISE_OPS]
+                            true_has_pop = any(i.opname == 'POP_TOP' for i in true_non_noise)
+                            false_has_pop = any(i.opname == 'POP_TOP' for i in false_non_noise)
+                            if not (true_has_pop or false_has_pop):
+                                merge_context = 'compare'
+                                value_target = '__compare_target__'
+                                break
+
+                    # [R14 类别 D] BUILD_SLICE: 三元作切片的 base 或 step。
+                    # 字节码布局：[<trapped_loads>], <ternary merge>, BUILD_SLICE,
+                    # BINARY_SUBSCR, [wrapping...], <cond_jump>
+                    # BUILD_SLICE 消费三元结果（作 base 或 step），产出切片对象，
+                    # 由 BINARY_SUBSCR 应用到容器上。COMPARE_OP 分支对此失效：
+                    # 三元结果被 BUILD_SLICE 消费而非 COMPARE_OP，net_stack 计算
+                    # 出负值，导致 compare_uses_ternary=False，merge_context 不被设置。
+                    elif instr.opname == 'BUILD_SLICE':
+                        _mb_has_cond_jump = any(
+                            _i.opname in (FORWARD_CONDITIONAL_JUMP_OPS
+                                          | BACKWARD_CONDITIONAL_JUMP_OPS)
+                            for _i in merge_block.instructions
+                            if _i.opname not in NOISE_OPS
+                        )
+                        if _mb_has_cond_jump:
+                            true_non_noise = [i for i in true_block.instructions
+                                             if i.opname not in NOISE_OPS]
+                            false_non_noise = [i for i in false_block.instructions
+                                              if i.opname not in NOISE_OPS]
+                            true_has_pop = any(i.opname == 'POP_TOP' for i in true_non_noise)
+                            false_has_pop = any(i.opname == 'POP_TOP' for i in false_non_noise)
+                            if not (true_has_pop or false_has_pop):
+                                merge_context = 'compare'
+                                value_target = '__compare_target__'
+                                break
 
                     # 场景3: RETURN_VALUE在嵌套code object中（test_17 lambda）
                     # 仅当这是唯一的非噪音指令时（纯return expr模式）

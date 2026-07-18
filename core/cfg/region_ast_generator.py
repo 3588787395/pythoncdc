@@ -8333,6 +8333,52 @@ AST 映射规则:
                     'right': right,
                 })
             return
+        if op == 'BUILD_SLICE':
+            # [R14 类别 D] BUILD_SLICE 构造切片对象：
+            #   argc=2: 弹 start, stop；压 Slice(start, stop, None)
+            #   argc=3: 弹 start, stop, step；压 Slice(start, stop, step)
+            # 三元作切片的 base 或 step 时，BUILD_SLICE 必须被识别为 wrapping，
+            # 否则三元 merge 后的切片构造被跳过，输出退化为 `0[5] > 0`。
+            argc = instr.arg if instr.arg is not None else 2
+            if argc == 3 and len(stack) >= 3:
+                step = stack.pop()
+                stop = stack.pop()
+                start = stack.pop()
+                stack.append({
+                    'type': 'Slice',
+                    'lower': start,
+                    'upper': stop,
+                    'step': step,
+                })
+            elif argc == 2 and len(stack) >= 2:
+                stop = stack.pop()
+                start = stack.pop()
+                stack.append({
+                    'type': 'Slice',
+                    'lower': start,
+                    'upper': stop,
+                    'step': None,
+                })
+            return
+        if op in ('BUILD_TUPLE', 'BUILD_LIST', 'BUILD_SET'):
+            # [R14 类别 B] 容器字面量构造：弹 n 个元素，压 Tuple/List/Set。
+            # 三元作容器字面量元素时，BUILD_TUPLE/LIST/SET 必须被识别为
+            # wrapping，否则三元 merge 结果被单独提取为顶层表达式，丢失其他
+            # 元素与整个 if 结构（如 `if (a if c else b, d): pass` 退化为
+            # `(a if c else b,)`）。
+            n = instr.arg or 0
+            if len(stack) >= n:
+                elts = [stack.pop() for _ in range(n)]
+                elts.reverse()
+                _node_type = {'BUILD_TUPLE': 'Tuple',
+                              'BUILD_LIST': 'List',
+                              'BUILD_SET': 'Set'}[op]
+                stack.append({
+                    'type': _node_type,
+                    'elts': elts,
+                    'ctx': 'Load',
+                })
+            return
         if op == 'FORMAT_VALUE':
             # [R13-batch1] f-string 单片段包裹三元（如 `f"{a if c else b}" == "x"`）
             # 字节码：三元 merge 后 FORMAT_VALUE 0 把结果转为 FormattedValue。
@@ -8393,12 +8439,41 @@ AST 映射规则:
             n = instr.arg or 1
             if 1 <= n <= len(stack):
                 stack.append(stack[-n])
+                # [R14 类别 C] COPY 1 + STORE_* 是 walrus (NamedExpr) 模式
+                # 的前半。COPY 1 复制栈顶（三元结果），紧接的 STORE_* 消费副本
+                # 并绑定名称。原始三元结果仍在栈上，后续 wrapping 指令
+                # （LOAD_ATTR/BINARY_SUBSCR 等）继续消费它。重建时需把原始
+                # 替换为 NamedExpr(target, original)，以表达 walrus 副作用。
+                # 仅 COPY 1 标记（链式比较 COPY arg>=2 不受影响）。
+                if n == 1 and state is not None:
+                    state['pending_walrus_copy'] = True
+            return
+        if op in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+            # [R14 类别 C] walrus 模式：COPY 1 + STORE_*。
+            # COPY 在栈顶留了副本，STORE_* 消费副本并绑定名称。
+            # 原始值仍留在栈上，需替换为 NamedExpr 以表达 walrus 副作用：
+            # `(x := expr)` 的值等于 `expr`，但产生 `x = expr` 的副作用。
+            # 否则 `if (x := a if c else b).field > 0:` 的 walrus 会被提取为
+            # 独立赋值 `x = (a if c else b)`，丢弃后续 LOAD_ATTR/COMPARE_OP。
+            if state is not None and state.pop('pending_walrus_copy', False):
+                if len(stack) >= 2:
+                    stack.pop()  # 弹出 COPY 推入的副本
+                    original = stack.pop()  # 弹出原始三元结果
+                    stack.append({
+                        'type': 'NamedExpr',
+                        'target': {'type': 'Name', 'id': instr.argval,
+                                   'ctx': 'Store'},
+                        'value': original,
+                    })
+                    return
+            # 非 walrus：常规 STORE 弹出一个值（赋值副作用）
+            if stack:
+                stack.pop()
             return
         if op == 'POP_TOP':
             if stack:
                 stack.pop()
             return
-        # 其他指令（如 STORE_*）忽略
 
     @staticmethod
     def _binary_op_arg_to_str(arg: Any) -> str:
@@ -8490,7 +8565,18 @@ AST 映射规则:
                          # 单片段包裹三元）与 BINARY_OP（三元作二元运算左操作数）也
                          # 是 wrapping，否则三元 merge 后的 FORMAT_VALUE / BINARY_OP
                          # 被丢弃，输出退化为 ternary 直接与右操作数比较。
-                         'FORMAT_VALUE', 'BINARY_OP'}
+                         'FORMAT_VALUE', 'BINARY_OP',
+                         # [R14 类别 B/D] 三元作容器字面量元素（BUILD_TUPLE/LIST/SET）
+                         # 或切片操作数（BUILD_SLICE）时，BUILD_* 必须被识别为
+                         # wrapping，否则三元 merge 结果被单独提取为顶层表达式，
+                         # 丢失其他元素/切片结构与整个 if 上下文。
+                         'BUILD_TUPLE', 'BUILD_LIST', 'BUILD_SET', 'BUILD_SLICE',
+                         # [R14 类别 C] walrus COPY + STORE_* 模式：COPY 留副本、
+                         # STORE_* 绑定名称，原始三元结果仍在栈上继续参与后续
+                         # wrapping 运算。STORE_* 进入此集合仅为触发 _has_wrapping
+                         # 检测，实际 NamedExpr 重建在 _sim_wrapping_instr 中完成。
+                         'COPY', 'STORE_FAST', 'STORE_NAME',
+                         'STORE_GLOBAL', 'STORE_DEREF'}
         _has_wrapping = any(i.opname in _WRAPPING_OPS for i in cond_instrs)
         _has_none_check = any(i.opname in NONE_CHECK_OPS for i in cond_instrs)
         if not (_has_wrapping or _has_none_check):
