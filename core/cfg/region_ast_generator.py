@@ -829,13 +829,58 @@ class RegionASTGenerator:
                         else:
                             defaults_list = [pos_defaults_from_obj]
                     elif isinstance(pos_defaults_from_obj, dict) and pos_defaults_from_obj.get('type') == 'Tuple':
-                        defaults_list = pos_defaults_from_obj.get('elsts', [])
+                        # [R6-err5] 修复拼写错误：'elsts' -> 'elts'，外部变量默认值 (LOAD_NAME+BUILD_TUPLE)
+                        # 之前 typo 导致 lambda x=a, y=b 的 defaults_list 为空，丢失 BUILD_TUPLE
+                        defaults_list = pos_defaults_from_obj.get('elts', [])
+                    elif isinstance(pos_defaults_from_obj, dict) and pos_defaults_from_obj.get('type') == 'List':
+                        defaults_list = pos_defaults_from_obj.get('elts', [])
                     elif isinstance(pos_defaults_from_obj, list):
                         defaults_list = pos_defaults_from_obj
                     elif isinstance(pos_defaults_from_obj, tuple):
                         defaults_list = [{'type': 'Constant', 'value': v} for v in pos_defaults_from_obj]
                     if defaults_list:
                         args['defaults'] = defaults_list
+
+            # [R6-err6] 处理 kw-only 默认值 (BUILD_CONST_KEY_MAP 路径)
+            # lambda x, *, y=10 字节码为 LOAD_CONST 10 + LOAD_CONST ('y',) + BUILD_CONST_KEY_MAP
+            # FunctionObject.kw_defaults 是 Dict 节点 {'type':'Dict','keys':[Constant('y')],'values':[Constant(10)]}
+            # 需要转换为 args['kw_defaults'] 列表，与 kwonlyargs 位置对应（无默认值的位置为 None）
+            if isinstance(func_obj, dict) and 'kw_defaults' in func_obj:
+                kw_defaults_from_obj = func_obj.get('kw_defaults')
+                if kw_defaults_from_obj:
+                    kw_defaults_map = {}
+                    if isinstance(kw_defaults_from_obj, dict) and kw_defaults_from_obj.get('type') == 'Dict':
+                        kw_keys = kw_defaults_from_obj.get('keys', []) or []
+                        kw_values = kw_defaults_from_obj.get('values', []) or []
+                        for i, key_node in enumerate(kw_keys):
+                            key_name = None
+                            if isinstance(key_node, dict):
+                                if key_node.get('type') == 'Constant':
+                                    key_name = key_node.get('value')
+                                elif key_node.get('type') == 'str':
+                                    key_name = key_node.get('value')
+                            else:
+                                key_name = key_node
+                            if key_name is not None and i < len(kw_values):
+                                kw_defaults_map[key_name] = kw_values[i]
+                    elif isinstance(kw_defaults_from_obj, dict):
+                        # 普通字典 {name: value_dict}
+                        for k, v in kw_defaults_from_obj.items():
+                            if isinstance(v, dict):
+                                kw_defaults_map[k] = v
+                            else:
+                                kw_defaults_map[k] = {'type': 'Constant', 'value': v}
+                    # 按 kwonlyargs 顺序生成 kw_defaults 列表（无默认值的位置为 None）
+                    kwonly_args_list = args.get('kwonlyargs', []) or []
+                    kw_defaults_list = []
+                    for arg_node in kwonly_args_list:
+                        arg_name = arg_node.get('arg') if isinstance(arg_node, dict) else arg_node
+                        if arg_name in kw_defaults_map:
+                            kw_defaults_list.append(kw_defaults_map[arg_name])
+                        else:
+                            kw_defaults_list.append(None)
+                    if any(d is not None for d in kw_defaults_list):
+                        args['kw_defaults'] = kw_defaults_list
 
             body_stmts = [{'type': 'Pass'}]
             if self.recursive:
