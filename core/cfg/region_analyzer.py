@@ -738,6 +738,13 @@ class MatchRegion(Region):
 class AssertRegion(Region):
     condition_block: Optional[BasicBlock] = None
     message_block: Optional[BasicBlock] = None
+    # [Round4-12] assert 条件为链式比较（如 `assert 0 < a < 10`）时，
+    # condition_block 仅为链式比较的起始块；后续 COMPARE_OP 块通过
+    # chained_compare_blocks / chained_compare_ops 持有，由 _generate_assert
+    # 重建为多 op 的 Compare 节点。遵循"每块唯一归属"：这些块同时纳入
+    # region.blocks，避免被父 IfRegion 重复生成。
+    chained_compare_blocks: List[BasicBlock] = field(default_factory=list)
+    chained_compare_ops: List[str] = field(default_factory=list)
 
     def is_block_entry(self, block) -> bool:
         return self.condition_block == block
@@ -8681,16 +8688,28 @@ RegionType 枚举值: RegionType.ASSERT
         """
         regions = []
         for block in self.cfg.get_blocks_in_order():
+            # [Round4-12] 跳过已被本识别器前序迭代识别为 AssertRegion 的块
+            # （entry / chained_compare_block / message_block）——链式比较
+            # assert (`assert 0 < a < 10`) 的中段 COMPARE_OP 块也以条件跳转
+            # 结尾且后继链含 LOAD_ASSERTION_ERROR，会被误识别为独立 AssertRegion
+            # （违反「每块唯一归属」）。父 IfRegion/LoopRegion 持有的块仍允许
+            # 嵌套识别（嵌套即抽象节点）。
+            _existing_region = self.block_to_region.get(block)
+            if isinstance(_existing_region, AssertRegion):
+                continue
             last = block.get_last_instruction()
             if last is None or last.opname not in FORWARD_JUMP_OPS:
                 continue
             if len(block.conditional_successors) != 2:
                 continue
+            # [Round4-12] assert 失败块可能不在直接后继中：链式比较 assert
+            # (`assert 0 < a < 10`) 的第一段 COMPARE_OP 块的两个后继为
+            # 「继续链」与「跳到 POP_TOP 中转块」；后者经单后继 fall-through
+            # 才到达 LOAD_ASSERTION_ERROR 块。直接后继只看一层会漏识别。
             is_assert = any(
-                instr.opname == 'LOAD_ASSERTION_ERROR'
+                self._reach_assertion_error_block(succ)
                 for succ in block.conditional_successors
                 if succ != block
-                for instr in succ.instructions
             )
             if not is_assert:
                 continue
@@ -8699,16 +8718,31 @@ RegionType 枚举值: RegionType.ASSERT
             for succ in sorted(block.successors, key=lambda s: s.start_offset):
                 if succ == block:
                     continue
-                if any(instr.opname == 'RAISE_VARARGS' for instr in succ.instructions):
-                    message_block = succ
+                # 同上：沿 fall-through 链查找含 RAISE_VARARGS 的块
+                mb = self._reach_raise_varargs_block(succ)
+                if mb is not None:
+                    message_block = mb
                     break
+
+            # [Round4-12] 检测 condition_block 是否是链式比较 header
+            # （COPY(arg=2)+COMPARE_OP 对 + 后续 fall-through COMPARE_OP 块）。
+            # 若是，将所有 chain 块纳入 AssertRegion.blocks（每块唯一归属），
+            # 并记录 chained_compare_ops 供 _generate_assert 重建链式 Compare。
+            chained_compare_blocks: List[BasicBlock] = []
+            chained_compare_ops: List[str] = []
+            cc_info = self._detect_chained_compare_pattern(block)
+            if cc_info and len(cc_info.get('compare_ops', [])) >= 2:
+                chained_compare_blocks = list(cc_info.get('extra_chain_blocks', []))
+                chained_compare_ops = list(cc_info.get('compare_ops', []))
 
             region = AssertRegion(
                 region_type=RegionType.ASSERT,
                 entry=block,
-                blocks={block} | ({message_block} if message_block else set()),
+                blocks={block} | ({message_block} if message_block else set()) | set(chained_compare_blocks),
                 condition_block=block,
                 message_block=message_block,
+                chained_compare_blocks=chained_compare_blocks,
+                chained_compare_ops=chained_compare_ops,
             )
             regions.append(region)
             self.regions.append(region)
@@ -8721,8 +8755,72 @@ RegionType 枚举值: RegionType.ASSERT
                     region.parent = existing
             if message_block and message_block not in self.block_to_region:
                 self.block_to_region[message_block] = region
+            # 链式比较 chain 块同样登记归属，避免被父 IfRegion 重复生成
+            for cb in chained_compare_blocks:
+                if cb not in self.block_to_region:
+                    self.block_to_region[cb] = region
 
         return regions
+
+    def _reach_assertion_error_block(self, block: BasicBlock) -> bool:
+        """[Round4-12] 从 block 起沿单后继 fall-through 链查找 LOAD_ASSERTION_ERROR。
+
+        用于 assert 检测：当 assert 条件为链式比较时，第一段 COMPARE_OP 块的
+        「失败」后继常是一个仅含 POP_TOP 的中转块，需继续 fall-through 才能到
+        达真正含 LOAD_ASSERTION_ERROR 的 message 块。
+
+        终止条件：
+          - 当前块含 LOAD_ASSERTION_ERROR → True
+          - 当前块有 ≥2 个 conditional_successors（出现分支，停止追踪）
+          - 当前块以 RAISE_VARARGS / RETURN / RERAISE 终结（无 fall-through）
+          - 后继数量 ≠ 1（无法继续 fall-through）
+          - 已访问过（防环）
+        """
+        seen: Set[BasicBlock] = set()
+        cur: Optional[BasicBlock] = block
+        depth = 0
+        while cur is not None and cur not in seen and depth < 8:
+            seen.add(cur)
+            for instr in cur.instructions:
+                if instr.opname == 'LOAD_ASSERTION_ERROR':
+                    return True
+            if len(cur.conditional_successors) > 1:
+                return False
+            last = cur.get_last_instruction()
+            if last and last.opname in ('RAISE_VARARGS', 'RETURN_VALUE',
+                                        'RETURN_CONST', 'RERAISE'):
+                return False
+            succs = list(cur.successors)
+            if len(succs) != 1:
+                return False
+            cur = succs[0]
+            depth += 1
+        return False
+
+    def _reach_raise_varargs_block(self, block: BasicBlock) -> Optional[BasicBlock]:
+        """[Round4-12] 从 block 起沿单后继 fall-through 链查找含 RAISE_VARARGS 的块。
+
+        返回该块（assert message 块），或 None。用于在链式比较 assert 中定位
+        实际的 LOAD_ASSERTION_ERROR + RAISE_VARARGS 块（可能隔一个 POP_TOP 中转块）。
+        """
+        seen: Set[BasicBlock] = set()
+        cur: Optional[BasicBlock] = block
+        depth = 0
+        while cur is not None and cur not in seen and depth < 8:
+            seen.add(cur)
+            if any(instr.opname == 'RAISE_VARARGS' for instr in cur.instructions):
+                return cur
+            if len(cur.conditional_successors) > 1:
+                return None
+            last = cur.get_last_instruction()
+            if last and last.opname in ('RETURN_VALUE', 'RETURN_CONST', 'RERAISE'):
+                return None
+            succs = list(cur.successors)
+            if len(succs) != 1:
+                return None
+            cur = succs[0]
+            depth += 1
+        return None
 
     def _identify_chained_compare_regions(self, loop_regions: List[Region],
                                            try_regions: List[Region],
@@ -11533,6 +11631,14 @@ RegionType 枚举值: RegionType.ASSERT
             match_case_body_blocks.update(region.blocks)
             for cb in region.case_blocks:
                 match_case_entry_offsets.add(cb.start_offset)
+        # [Round4-12] AssertRegion 是叶节点区域，其 entry（含链式比较 COPY+
+        # COMPARE_OP 模式）不应被 BoolOpRegion 抢占。否则链式比较 assert
+        # 的短路跳转（POP_JUMP_IF_FALSE / POP_JUMP_IF_TRUE）会被误识别为
+        # BoolOp 链，造成块归属冲突（违反「每块唯一归属」）。
+        assert_region_entries = set()
+        for region in self._filter_regions(existing_regions, AssertRegion):
+            if region.entry:
+                assert_region_entries.add(region.entry)
         blocks_in_order = self.cfg.get_blocks_in_order()
         for block in blocks_in_order:
             # 区域归约算法 [每块唯一归属]：含 MATCH_* 指令的块是 MatchRegion
@@ -11542,6 +11648,9 @@ RegionType 枚举值: RegionType.ASSERT
             if any(i.opname in ('MATCH_CLASS', 'MATCH_SEQUENCE', 'MATCH_MAPPING',
                                  'MATCH_KEYS', 'MATCH_MAPPING_KEYS')
                    for i in block.instructions):
+                continue
+            # [Round4-12] AssertRegion.entry 不应被识别为 BoolOp 链起点
+            if block in assert_region_entries:
                 continue
             # 区域归约算法 [每块唯一归属]：guard 块（case X if cond:）的条件
             # 跳转目标指向下一个 case_block。这些块含 COMPARE_OP +

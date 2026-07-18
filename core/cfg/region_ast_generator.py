@@ -1566,6 +1566,31 @@ AST 映射规则:
         cond_block = region.condition_block
         if cond_block is None:
             return {'type': 'Pass'}
+        # [Round4-12] assert 条件为链式比较（`assert 0 < a < 10`）时，
+        # condition_block 仅含链式比较的第一段（COPY+COMPARE_OP），后续段
+        # 在 chained_compare_blocks 中。这里手工重建链式 Compare，避免
+        # expr_reconstructor 把单段 COMPARE_OP 误建为嵌套 Compare
+        # （(0 < a) < 10 而非 0 < a < 10）。
+        if getattr(region, 'chained_compare_ops', None) and len(region.chained_compare_ops) >= 2 \
+                and getattr(region, 'chained_compare_blocks', None):
+            chained_cond = self._build_assert_chained_compare(
+                cond_block,
+                list(region.chained_compare_blocks),
+                list(region.chained_compare_ops),
+            )
+            if chained_cond is not None:
+                chained_cond = self._fix_assert_none_check_direction(chained_cond)
+                for block in region.blocks:
+                    self.generated_blocks.add(block)
+                result = {
+                    'type': 'Assert',
+                    'test': chained_cond,
+                }
+                # message_block 重建（与下方主路径一致）
+                message = self._build_assert_message(region)
+                if message is not None:
+                    result['msg'] = message
+                return result
         cond_instrs = []
         prev_was_copy = False
         for instr in cond_block.instructions:
@@ -1692,6 +1717,152 @@ AST 映射规则:
                     fixed['values'] = fixed_values
                     return fixed
         return expr
+
+    def _build_assert_chained_compare(self, cond_block, chain_blocks, ops):
+        """[Round4-12] 重建 assert 链式比较条件 AST。
+
+        输入契约:
+          - cond_block: AssertRegion.condition_block（链式比较首段，含 COPY+COMPARE_OP）
+          - chain_blocks: AssertRegion.chained_compare_blocks（后续段，每段一个 COMPARE_OP）
+          - ops: AssertRegion.chained_compare_ops（比较运算符列表，如 ['<', '<']）
+
+        实现要点:
+          - AssertRegion 没有 chained_left_instr / chained_comparator_instrs 字段
+            （这些字段是 IfRegion 专属，由 compute_chained_compare_operands 计算），
+            因此在 AssertRegion 上下文内联遍历块链，复用 IfRegion 的过滤策略。
+          - 走 [cond_block] + chain_blocks 顺序，每块抽取 LOAD_* 指令作为操作数候选：
+              首块（block_idx == 0）取 [left, comparator0]；后续块取最后一条 LOAD
+              （排除 LOAD_CONST None）作为下一 comparator。
+          - 跳过噪声/跳转/COPY/SWAP/COMPARE_OP/POP_TOP/STORE_* 指令。
+          - 用 expr_reconstructor._load_instr_to_ast 将 LOAD 指令转为 AST 节点。
+          - 构建 {'type': 'Compare', 'left': ..., 'ops': [...], 'comparators': [...]} 节点。
+
+        返回: Compare dict 或 None（操作数提取失败时）。
+        """
+        all_blocks = [cond_block] + list(chain_blocks)
+        if not all_blocks or cond_block is None:
+            return None
+        if not ops or len(ops) < 2:
+            return None
+
+        left_instr = None
+        comparator_instrs = []
+        for block_idx, block in enumerate(all_blocks):
+            if block is None:
+                continue
+            load_instrs = []
+            last_store_idx = -1
+            for idx, instr in enumerate(block.instructions):
+                if instr.opname in NOISE_OPS | {'POP_TOP', 'COPY', 'SWAP', 'COMPARE_OP'}:
+                    continue
+                if instr.opname in (CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS |
+                                    {'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'}):
+                    continue
+                if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                    last_store_idx = idx
+                    continue
+                if instr.opname.startswith('LOAD_'):
+                    load_instrs.append(instr)
+
+            if block_idx == 0 and last_store_idx >= 0:
+                filtered_loads = []
+                for idx, instr in enumerate(block.instructions):
+                    if idx <= last_store_idx:
+                        continue
+                    if instr.opname in NOISE_OPS | {'POP_TOP', 'COPY', 'SWAP', 'COMPARE_OP'}:
+                        continue
+                    if instr.opname in (CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS |
+                                        {'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'}):
+                        continue
+                    if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                        continue
+                    if instr.opname.startswith('LOAD_'):
+                        filtered_loads.append(instr)
+                load_instrs = filtered_loads
+
+            if left_instr is None:
+                if len(load_instrs) >= 2:
+                    left_instr = load_instrs[0]
+                    comparator_instrs.append(load_instrs[1])
+                elif len(load_instrs) == 1:
+                    left_instr = load_instrs[0]
+            else:
+                filtered = [li for li in load_instrs
+                            if not (li.opname == 'LOAD_CONST' and li.argval is None)]
+                if filtered:
+                    comparator_instrs.append(filtered[-1])
+
+        # 链式比较 `a < b < c` 的 AST 形态：left=a, ops=[<, <], comparators=[b, c]
+        # 即 comparators 长度等于 ops 长度（与 IfRegion _build_chained_compare_from_region_data 一致）。
+        if left_instr is None or len(comparator_instrs) < len(ops):
+            return None
+        left_ast = self.expr_reconstructor._load_instr_to_ast(left_instr)
+        comparators = [self.expr_reconstructor._load_instr_to_ast(ci)
+                       for ci in comparator_instrs[:len(ops)]]
+        if not comparators:
+            return None
+        return {
+            'type': 'Compare',
+            'left': left_ast,
+            'ops': list(ops),
+            'comparators': comparators,
+        }
+
+    def _build_assert_message(self, region: AssertRegion) -> Optional[Dict[str, Any]]:
+        """[Round4-12] 抽取 AssertRegion.message_block 重建逻辑。
+
+        输入契约:
+          - region: AssertRegion（已识别含/不含 message_block）
+
+        实现要点:
+          - 与 _generate_assert 主路径中 message 重建逻辑等价（line 1624-1658）。
+          - 抽出为方法以便链式比较分支复用，避免逻辑重复。
+          - 过滤规则:
+              base_skip = {RAISE_VARARGS, POP_EXCEPT, RERAISE, LOAD_ASSERTION_ERROR,
+                           RESUME, NOP, CACHE, PUSH_NULL, COPY, SWAP}
+              存在 BUILD_STRING（f-string 情况）→ 从后向前定位 RAISE_VARARGS 边界，
+                  过滤该边界及之后的 PRECALL/CALL。
+              否则 → 一律跳过 PRECALL/CALL。
+          - 剩余指令交由 expr_reconstructor.reconstruct 重建。
+
+        返回: 消息 AST 节点或 None（无 message_block 或重建失败时）。
+        """
+        if not region.message_block:
+            return None
+        msg_instrs = []
+        instrs = region.message_block.instructions
+        has_build_string = any(i.opname == 'BUILD_STRING' for i in instrs)
+        base_skip = {'RAISE_VARARGS', 'POP_EXCEPT', 'RERAISE',
+                     'LOAD_ASSERTION_ERROR', 'RESUME', 'NOP', 'CACHE',
+                     'PUSH_NULL', 'COPY', 'SWAP'}
+        if has_build_string:
+            raise_call_start = len(instrs)
+            found_raise = False
+            for idx in range(len(instrs) - 1, -1, -1):
+                op = instrs[idx].opname
+                if op == 'RAISE_VARARGS':
+                    raise_call_start = idx
+                    found_raise = True
+                elif found_raise and op in ('CALL', 'PRECALL', 'PUSH_NULL',
+                                            'COPY', 'SWAP', 'NOP', 'CACHE',
+                                            'RESUME'):
+                    raise_call_start = idx
+                elif found_raise:
+                    break
+            for i, instr in enumerate(instrs):
+                if instr.opname in base_skip:
+                    continue
+                if i >= raise_call_start and instr.opname in ('PRECALL', 'CALL'):
+                    continue
+                msg_instrs.append(instr)
+        else:
+            for instr in instrs:
+                if instr.opname in base_skip or instr.opname in ('PRECALL', 'CALL'):
+                    continue
+                msg_instrs.append(instr)
+        if msg_instrs:
+            return self.expr_reconstructor.reconstruct(msg_instrs)
+        return None
 
     def _generate_loop(self, region: LoopRegion,
                         exclude_blocks: Set[BasicBlock] = None,
@@ -5290,6 +5461,14 @@ AST 映射规则:
         """
         if region.region_type.name == 'IF_ELIF_CHAIN':
             return self._if_generate_full_elif_chain(region)
+        # [Round4-04] 链式比较作赋值右值（`z = 0 < a < 10`）模式：
+        # condition_block 末尾是 JUMP_IF_FALSE_OR_POP/JUMP_IF_TRUE_OR_POP（值上下文
+        # 短路跳转，非控制流），merge_block 含 STORE_*。此时不能生成 If 语句，
+        # 而应生成 Assign(targets=[store], value=chained Compare)。
+        # 字节码模式详见 _generate_value_context_chain_compare_assign。
+        _vc_assign = self._generate_value_context_chain_compare_assign(region)
+        if _vc_assign is not None:
+            return _vc_assign
         if region.entry and region.entry in self.generated_blocks:
             boolop_child = None
             if region.children:
@@ -5308,6 +5487,84 @@ AST 映射规则:
                 if region.entry in r.elif_conditions:
                     return []
         return self._if_generate_normal(region)
+
+    def _generate_value_context_chain_compare_assign(self, region: IfRegion) -> Optional[Dict[str, Any]]:
+        """[Round4-04] 链式比较作赋值右值的 AST 生成。
+
+        字节码模式（`z = 0 < a < 10`）:
+            header(cond_block):
+                LOAD left; LOAD cmp1; SWAP; COPY(2); COMPARE_OP op1;
+                JUMP_IF_FALSE_OR_POP → cleanup   # 值上下文短路跳转
+            chain_block:
+                LOAD cmp2; COMPARE_OP op2; JUMP_FORWARD → merge
+            cleanup:
+                SWAP; POP_TOP; fallthrough → merge
+            merge:
+                STORE_NAME target; LOAD_CONST None; RETURN_VALUE  # 隐式返回
+
+        与控制流链式比较（`if 0 < a < 10:` / `assert 0 < a < 10`）的关键差异：
+            控制流版本 header 末尾是 POP_JUMP_FORWARD_IF_FALSE（消耗栈顶）；
+            值上下文版本 header 末尾是 JUMP_IF_FALSE_OR_POP（保留/弹出栈顶），
+            且 merge_block 含 STORE_*。
+
+        识别条件:
+          1. region.chained_compare_ops 长度 ≥ 2（链式比较模式）
+          2. region.condition_block 末尾指令 ∈ SHORT_CIRCUIT_JUMP_OPS（值上下文）
+          3. region.merge_block 含 STORE_* 指令（赋值目标）
+
+        生成 AST:
+            {'type': 'Assign',
+             'targets': [{'type': 'Name', 'id': <store_target>, 'ctx': 'Store'}],
+             'value': {'type': 'Compare', 'left': ..., 'ops': [...], 'comparators': [...]}}
+
+        块归属: 标记 region.blocks 为 generated，避免父 IfRegion 重复处理。
+        """
+        if not getattr(region, 'chained_compare_ops', None) or len(region.chained_compare_ops) < 2:
+            return None
+        if not getattr(region, 'chained_compare_blocks', None):
+            return None
+        cond_block = region.condition_block
+        if cond_block is None:
+            return None
+        last = cond_block.get_last_instruction()
+        if not last or last.opname not in SHORT_CIRCUIT_JUMP_OPS:
+            return None
+        merge_block = getattr(region, 'merge_block', None)
+        if merge_block is None:
+            return None
+        # 在 merge_block 中查找 STORE_* 指令作为赋值目标
+        store_ops = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
+        store_instr = None
+        for instr in merge_block.instructions:
+            if instr.opname in store_ops:
+                store_instr = instr
+                break
+        if store_instr is None:
+            return None
+        target_name = store_instr.argval if store_instr.argval else f'var_{store_instr.arg}'
+        # 用与 AssertRegion _build_assert_chained_compare 相同的算法重建链式 Compare
+        chained_cond = self._build_assert_chained_compare(
+            cond_block,
+            list(region.chained_compare_blocks),
+            list(region.chained_compare_ops),
+        )
+        if chained_cond is None:
+            return None
+        # 标记所有 region.blocks 为已生成，避免父 IfRegion 重复处理。
+        # 注意：merge_block 中的 LOAD_CONST None + RETURN_VALUE（隐式返回）由
+        # 模块级包装负责剥离，本方法只生成 Assign 节点。
+        for block in region.blocks:
+            self.generated_blocks.add(block)
+            self.generated_offsets.add(block.start_offset)
+        return {
+            'type': 'Assign',
+            'targets': [{
+                'type': 'Name',
+                'id': target_name,
+                'ctx': 'Store',
+            }],
+            'value': chained_cond,
+        }
 
     def _if_generate_full_elif_chain(self, region: IfRegion) -> Dict[str, Any]:
         """

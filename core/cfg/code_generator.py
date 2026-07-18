@@ -2954,6 +2954,17 @@ class CodeGenerator:
                     value_code = self._generate_expression(value, self._precedence.get('await', 0))
                     return f'await {value_code}'
                 return 'await <value>'
+            elif node_type == 'Yield':
+                # [Round4-15] yield 表达式 dict 处理（如 `x = yield g()` 中作赋值右值）
+                # _generate_dict_node 的 Yield 分支仅处理语句级 Expr(Yield)；
+                # 表达式上下文（Assign.value / 函数参数等）的 Yield dict 必须在此渲染为
+                # `yield <value>`，否则会落入 _generate_annotation_from_dict 把 AST
+                # dict 直接 str() 输出（造成内部结构泄露）。
+                value = node.get('value')
+                if value is not None:
+                    value_code = self._generate_expression(value, 0)
+                    return f'yield {value_code}'
+                return 'yield'
             else:
                 # [修复-L13/L17/L18] 基础表达式类型必须正确处理
                 # Constant和Name是最常用的，必须直接处理避免泄露
