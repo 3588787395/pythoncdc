@@ -12547,7 +12547,12 @@ AST 映射规则:
                             if target:
                                 break
                     if target:
-                        item['optional_vars'] = {'type': 'Name', 'id': target, 'ctx': 'Store'}
+                        if isinstance(target, dict):
+                            # 多目标 as 绑定，如 with ctx as (a, b):
+                            # target 已是 AST 字典（{'type': 'Tuple', 'elts': [...]}）
+                            item['optional_vars'] = target
+                        else:
+                            item['optional_vars'] = {'type': 'Name', 'id': target, 'ctx': 'Store'}
                     items.append(item)
 
             with_ast = {

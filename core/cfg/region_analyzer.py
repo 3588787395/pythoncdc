@@ -6783,11 +6783,14 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
         - `with open('f') as fa:` → LOAD_NAME('open') LOAD_CONST('f') CALL BEFORE_WITH STORE_FAST('fa')
         - `with ctx:` → LOAD_NAME('ctx') BEFORE_WITH POP_TOP
         - `with A as a, B as b:` → ...BEFORE_WITH STORE_FAST('a') ...BEFORE_WITH STORE_FAST('b')
+        - `with ctx as (a, b):` → ...BEFORE_WITH UNPACK_SEQUENCE 2 STORE_NAME('a') STORE_NAME('b')
 
         关键约束：
         - 上下文表达式指令仅包含LOAD/CALL/PUSH_NULL等值产生指令
         - NOISE_OPS（RESUME/NOP/CACHE）被跳过
         - 目标变量为None时表示无as子句
+        - 多目标 as 绑定（with ctx as (a, b)）的 target 以 AST 字典形式
+          （{'type': 'Tuple', 'elts': [...]}）表示，单目标为字符串名
         """
         import dis
         items = []
@@ -6831,17 +6834,40 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                     ctx_expr.append(instr)
                 i += 1
             
-            # 查找目标变量（在 AFTER_WITH 之后的 STORE）
+            # 查找目标变量（在 BEFORE_WITH 之后的 STORE 或 UNPACK_SEQUENCE）
             target = None
             if bw_pos + 1 < len(instructions):
                 next_instr = instructions[bw_pos + 1]
-                if next_instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                if next_instr.opname == 'UNPACK_SEQUENCE':
+                    # with ctx as (a, b): 模式 - 多目标 as 绑定
+                    # 字节码模式: BEFORE_WITH, UNPACK_SEQUENCE N, STORE_* x N
+                    unpack_count = next_instr.argval if isinstance(next_instr.argval, int) else next_instr.arg
+                    if not isinstance(unpack_count, int):
+                        unpack_count = 2
+                    names = []
+                    j = bw_pos + 2
+                    for _ in range(unpack_count):
+                        if j < len(instructions) and instructions[j].opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                            names.append(instructions[j].argval)
+                            j += 1
+                        else:
+                            break
+                    if names and len(names) == unpack_count:
+                        target = {
+                            'type': 'Tuple',
+                            'elts': [{'type': 'Name', 'id': n, 'ctx': 'Store'} for n in names],
+                            'ctx': 'Store',
+                        }
+                elif next_instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
                     target = next_instr.argval
-            
+
             items.append((ctx_expr, target))
-        
+
         region.items = items
-        region.target = region.items[0][1] if region.items and region.items[0][1] else None
+        # region.target 仅保留单目标字符串名，多目标 Tuple 字典不写入
+        # （region.target 在多处按字符串使用，Tuple 信息只通过 items 传递）
+        _first_target = region.items[0][1] if region.items and region.items[0][1] else None
+        region.target = _first_target if isinstance(_first_target, str) else None
 
     def _is_match_subject_block(self, block: 'BasicBlock') -> bool:
         """检测块是否是 match 语句的 subject 块（字面量模式）
