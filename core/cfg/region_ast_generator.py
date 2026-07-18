@@ -18362,6 +18362,20 @@ AST 映射规则:
         if expr is None:
             return None
 
+        # [Round9-14] Inline lambda call as statement: `(lambda x: x)(5)`
+        # is reconstructed as Call(func=FunctionObject, ...). CodeGenerator
+        # renders FunctionObject as the placeholder `lambda *args, **kwargs:
+        # None`, losing the real signature and body. Convert any
+        # FunctionObject whose code is a `<lambda>` into a proper Lambda
+        # dict (recursively decompiling the lambda's code object) so the
+        # inline call renders with the real lambda.
+        # _convert_lambda_function_objects only converts <lambda> code
+        # objects, so regular FunctionObjects (e.g. `deco(func)` decorator
+        # pattern, `f = lambda: 0` expression statement) are preserved and
+        # the existing FunctionObject / decorator detection still fires.
+        if isinstance(expr, dict):
+            expr = self._convert_lambda_function_objects(expr)
+
         if expr.get('type') == 'FunctionObject':
             return self._build_function_def(func_obj=expr)
 
@@ -18463,6 +18477,19 @@ AST 映射规则:
 
         if value is None:
             return None
+
+        # [Round9-14] Inline lambda call: `(lambda x, y: x+y)(x=1, y=2)` is
+        # reconstructed as Call(func=FunctionObject, ...). CodeGenerator
+        # renders FunctionObject as the placeholder `lambda *args, **kwargs:
+        # None`, losing the real signature and body. Convert any
+        # FunctionObject whose code is a `<lambda>` into a proper Lambda
+        # dict (recursively decompiling the lambda's code object) so the
+        # inline call renders with the real lambda.
+        # _convert_lambda_function_objects only converts <lambda> code
+        # objects, so regular FunctionObjects (e.g. `r = deco(func)`) are
+        # preserved and the existing decorator detection still fires.
+        if isinstance(value, dict):
+            value = self._convert_lambda_function_objects(value)
 
         if value.get('type') == 'FunctionObject':
             func_def = self._build_function_def(func_obj=value)
