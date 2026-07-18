@@ -1082,11 +1082,19 @@ class RegionASTGenerator:
             inner_func = func.get('func', {})
             inner_args = func.get('args', [])
             if inner_func.get('type') in ('Name', 'Attribute'):
+                # [Round9-16] Preserve keyword arguments from the inner Call
+                # (e.g. `@decorator(arg=1)`). ExpressionReconstructor stores
+                # kwargs under 'kwargs'; standard AST uses 'keywords'. Copy
+                # both fields so the CodeGenerator picks them up regardless
+                # of which key it reads.
+                inner_kwargs = func.get('keywords', []) or func.get('kwargs', [])
                 decorator_with_args = {
                     'type': 'Call',
                     'func': inner_func,
                     'args': inner_args,
                 }
+                if inner_kwargs:
+                    decorator_with_args['keywords'] = inner_kwargs
                 if args:
                     first_arg = args[0]
                     if first_arg.get('type') == 'FunctionObject':
