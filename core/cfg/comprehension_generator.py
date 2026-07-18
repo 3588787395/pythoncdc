@@ -518,22 +518,24 @@ class ComprehensionGenerator:
         if not instrs_to_split:
             return None, None
 
-        # [Round5-04] 探测 walrus 副作用块（COPY 1 + STORE_*）—— 不剥离，
-        # 仅记录 walrus 变量名，供 value_expr 包裹 NamedExpr。保留 COPY 在
-        # filtered_instrs 中（栈深度净影响 0），过滤掉 walrus 的 STORE_*。
-        _walrus_var = None
+        # [Round10-05] 识别 walrus 副作用块（COPY 1 + STORE_*）。
+        # walrus 的 STORE_* 必须保留，让 expr_reconstructor 把 COPY+STORE
+        # 序列识别为 NamedExpr（无论 walrus 落在 key 还是 value 位置）。
+        # 仅过滤非 walrus 的 STORE_*（如 UNPACK_SEQUENCE 的多目标 store、
+        # 迭代变量 store），它们不属于 key/value 表达式。
+        _walrus_store_indices = set()
         for _i in range(len(instrs_to_split) - 1):
             _cur = instrs_to_split[_i]
             _nxt = instrs_to_split[_i + 1]
             if (_cur.opname == 'COPY' and _cur.arg == 1
                     and _nxt.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_DEREF', 'STORE_GLOBAL')
                     and _nxt.argval != '.0'):
-                _walrus_var = _nxt.argval
-                break
+                _walrus_store_indices.add(_i + 1)
 
         filtered_instrs = [
-            instr for instr in instrs_to_split
-            if instr.opname not in ('STORE_FAST', 'STORE_NAME', 'STORE_DEREF', 'STORE_GLOBAL')
+            instr for idx, instr in enumerate(instrs_to_split)
+            if not (instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_DEREF', 'STORE_GLOBAL')
+                    and idx not in _walrus_store_indices)
         ]
 
         if not filtered_instrs:
@@ -557,17 +559,10 @@ class ComprehensionGenerator:
         key_expr = self.expr_reconstructor.reconstruct(key_instrs) if key_instrs else None
         value_expr = self.expr_reconstructor.reconstruct(value_instrs) if value_instrs else None
 
-        # [Round5-04] walrus 包裹：dictcomp value 位置的 (v := expr) → NamedExpr
-        if _walrus_var is not None and value_expr is not None:
-            value_expr = {
-                'type': 'NamedExpr',
-                'target': {
-                    'type': 'Name',
-                    'id': _walrus_var,
-                    'ctx': 'Store',
-                },
-                'value': value_expr,
-            }
+        # [Round10-05] walrus 的 COPY+STORE 已由 expr_reconstructor 识别为
+        # NamedExpr（reconstruct 中 COPY 1 + STORE_* 会生成 NamedExpr 节点），
+        # 无需根据 _walrus_var 手动包裹 value_expr。这样 key 位置和 value 位置
+        # 的 walrus 都能被正确归约到对应的表达式上。
 
         return key_expr, value_expr
 
@@ -636,6 +631,12 @@ class ComprehensionGenerator:
             return -(instr.arg) + 1
         elif instr.opname == 'FORMAT_VALUE':
             return 0
+        elif instr.opname == 'COPY':
+            # [Round10-05] COPY 总是向栈压入一个已有元素的副本，栈深度 +1。
+            # 用于 walrus (x := expr) 的 COPY 1 + STORE_x 模式：COPY 压栈、
+            # STORE 弹栈，净效果为 0，但中间状态需正确跟踪以便定位 key/value
+            # 边界（边界应落在 STORE 之后，使 walrus 整体归属 key 或 value）。
+            return 1
         elif instr.opname.startswith('POP_') or instr.opname == 'POP_TOP':
             return -1
         elif instr.opname.startswith('STORE_'):

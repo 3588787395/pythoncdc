@@ -1496,9 +1496,29 @@ class ExpressionReconstructor:
             format_spec = None
             if flags & 4 and len(self.stack) >= 2:
                 format_spec_node = self.stack.pop()
-                if format_spec_node.get('type') == 'Constant':
-                    format_spec = format_spec_node
-                elif isinstance(format_spec_node, dict):
+                if isinstance(format_spec_node, dict):
+                    fs_type = format_spec_node.get('type')
+                    if fs_type == 'JoinedStr':
+                        # 来自 BUILD_STRING 的多片段 format_spec（如
+                        # f"{x:{width}.2f}"），已是 JoinedStr，直接使用。
+                        format_spec = format_spec_node
+                    elif fs_type == 'Constant' and isinstance(format_spec_node.get('value'), str):
+                        # 字面量 format_spec（如 f"{x:.2f}"），保持 Constant。
+                        format_spec = format_spec_node
+                    else:
+                        # [Round10-06] 纯表达式 format_spec（如 f"{y:{width}}"）。
+                        # 内层 FORMAT_VALUE 0 把表达式转为 FormattedValue 压栈，
+                        # 外层 FORMAT_VALUE 4 弹出它作为 format_spec。Python AST
+                        # 中 format_spec 始终是 JoinedStr，需包裹为
+                        # JoinedStr([FormattedValue])。否则 code_generator 会把
+                        # FormattedValue 渲染为嵌套 f-string f'{width}'，多出
+                        # LOAD_CONST/BUILD_STRING 指令，字节码不等价。
+                        format_spec = {
+                            'type': 'JoinedStr',
+                            'values': [format_spec_node],
+                            'lineno': instr.starts_line
+                        }
+                else:
                     format_spec = format_spec_node
 
             if self.stack:
