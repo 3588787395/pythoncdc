@@ -15127,6 +15127,18 @@ AST 映射规则:
                 if region.merge_block:
                     merge_all = [i for i in region.merge_block.instructions
                                 if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                    # [R10-batch1 err 4] For await (ternary), merge_block only
+                    # holds GET_AWAITABLE + LOAD_CONST None; the SEND/YIELD_VALUE/
+                    # RESUME/JUMP_BACKWARD_NO_INTERRUPT polling loop and the
+                    # STORE_FAST block live in region.merge_extra_blocks. Splice
+                    # them in so the store_idx scan finds STORE_FAST and
+                    # before_store contains the full await protocol for the
+                    # expr_reconstructor to fold into an Await expression.
+                    if region.merge_extra_blocks:
+                        for _eb in region.merge_extra_blocks:
+                            merge_all.extend(
+                                i for i in _eb.instructions
+                                if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'))
                     store_idx = None
                     for _si, _sinstr in enumerate(merge_all):
                         if _sinstr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
@@ -15253,13 +15265,39 @@ AST 映射规则:
                             if _code_obj is not None:
                                 _func_def = self._build_function_def(
                                     func_obj={'code': _code_obj, 'defaults': [ternary_expr]})
-                                _func_def['name'] = region.value_target
-                                results.append(_func_def)
+                                # [R10-batch1 err 8] When the function is a Lambda
+                                # (co_name == '<lambda>'), _build_function_def returns
+                                # a Lambda expression dict (not a FunctionDef). A bare
+                                # Lambda is an expression, not a statement, so it must
+                                # be wrapped in an Assign to preserve the `f = lambda...`
+                                # assignment. For real FunctionDef, set the name as before.
+                                if _func_def.get('type') == 'Lambda':
+                                    results.append({
+                                        'type': 'Assign',
+                                        'targets': [{'type': 'Name', 'id': region.value_target, 'ctx': 'Store'}],
+                                        'value': _func_def,
+                                    })
+                                else:
+                                    _func_def['name'] = region.value_target
+                                    results.append(_func_def)
                                 for block in region.blocks:
                                     self.generated_blocks.add(block)
                                 return results
+                        # [R10-batch1] Expand consumer-instruction detection to include
+                        # patterns where the ternary result is consumed by an outer
+                        # expression wrapper (await / f-string / method-call / yield-from):
+                        #   err 4:  x = await (ternary)    -> before_store: GET_AWAITABLE, LOAD_CONST None, SEND, YIELD_VALUE, RESUME, JUMP_BACKWARD_NO_INTERRUPT
+                        #   err 7:  x = f"{ternary}"      -> before_store: FORMAT_VALUE
+                        #   err 11: x = (ternary).method()-> before_store: LOAD_METHOD, PRECALL, CALL
+                        # The expr_reconstructor already maps these opcodes to
+                        # Await / FormattedValue / Call(Attribute(...)) AST nodes when
+                        # given initial_stack=[ternary_expr]; we only need to let the
+                        # reconstruct call fire for them.
                         has_ops = any(i.opname.startswith('BINARY_') or i.opname.startswith('UNARY_')
                                      or i.opname == 'COMPARE_OP' or i.opname.startswith('BUILD_')
+                                     or i.opname in ('GET_AWAITABLE', 'GET_YIELD_FROM_ITER',
+                                                    'YIELD_VALUE', 'FORMAT_VALUE',
+                                                    'LOAD_METHOD', 'LOAD_ATTR')
                                      for i in before_store)
                         if has_ops or preload_exprs:
                             full_expr = self.expr_reconstructor.reconstruct(before_store, initial_stack=initial_stack)
@@ -15304,6 +15342,24 @@ AST 映射规则:
                 if container_info:
                     results.append({'type': 'Expr', 'value': container_info})
                 else:
+                    # [R10-batch1] Ternary as outer statement argument
+                    # (assert / raise / raise-from / yield / yield-from) — no
+                    # value_target, no container. The merge_block hosts the
+                    # consumer instruction (RAISE_VARARGS / YIELD_VALUE / etc).
+                    # Detect those consumers first, before falling through to
+                    # STORE_SUBSCR / STORE_ATTR / Expr(ternary) handlers.
+                    #   err 2:  assert (ternary)
+                    #   err 9:  raise E from (ternary)
+                    #   err 10: raise (ternary)
+                    #   err 13: yield (ternary)
+                    #   err 14: yield from (ternary)
+                    _consumer_stmt = self._build_ternary_no_target_consumer_stmt(
+                        region, ternary_expr)
+                    if _consumer_stmt is not None:
+                        results.append(_consumer_stmt)
+                        for block in region.blocks:
+                            self.generated_blocks.add(block)
+                        return results
                     # [Round9-04/05/09] Ternary as part of STORE_SUBSCR/STORE_ATTR
                     # assignment. When merge_block contains STORE_SUBSCR or
                     # STORE_ATTR (after stripping trailing return-None), the
@@ -15431,6 +15487,211 @@ AST 映射规则:
                 self.generated_blocks.add(block)
 
             return results
+
+        return None
+
+    def _compute_ternary_cond_preload_exprs(self, region: TernaryRegion) -> List[Dict[str, Any]]:
+        """[R10-batch1] Compute the preload expressions sitting on the
+        TernaryRegion's cond_block stack *below* the ternary condition.
+
+        These are values loaded before the ternary condition test and left
+        on the stack to be consumed by the merge_block (e.g. the exception
+        in ``raise E from (a if cond else b)`` where ``E`` is a plain NAME
+        loaded before the ternary condition).
+
+        Returns a list of expression dicts (stack-bottom order). Returns an
+        empty list when the cond_block has no preload prefix or when the
+        prefix contains STORE instructions (those are pre-statements, not
+        on-stack preloads).
+        """
+        cond_block = region.condition_block
+        if cond_block is None:
+            return []
+        cond_instrs = [i for i in cond_block.instructions
+                       if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+        cond_last = cond_block.get_last_instruction()
+        # Walk backwards from the conditional jump, tracking the required
+        # stack depth, to find where the condition expression itself begins.
+        cond_val_start = None
+        _needed = 1
+        for _ci_idx in range(len(cond_instrs) - 1, -1, -1):
+            _ci = cond_instrs[_ci_idx]
+            if _ci is cond_last:
+                continue
+            if _ci.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                cond_val_start = _ci_idx + 1
+                break
+            _push = 0
+            _pop = 0
+            if _ci.opname.startswith('LOAD_') or _ci.opname == 'COPY':
+                _push = 1
+            elif _ci.opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP'):
+                _push = 1
+                _pop = 2
+            elif _ci.opname == 'BINARY_OP':
+                _push = 1
+                _pop = 2
+            elif _ci.opname.startswith('UNARY_'):
+                _push = 1
+                _pop = 1
+            elif _ci.opname == 'FORMAT_VALUE':
+                _push = 1
+                _pop = 1 if (_ci.arg or 0) < 2 else 2
+            elif _ci.opname == 'BUILD_STRING':
+                _push = 1
+                _pop = _ci.arg or 0
+            elif _ci.opname.startswith('BUILD_'):
+                _push = 1
+                _pop = _ci.arg or 0
+            elif _ci.opname in ('PRECALL', 'POP_TOP'):
+                _push = 0
+                _pop = 0
+            elif _ci.opname == 'CALL':
+                _push = 1
+                _pop = (_ci.arg or 0) + 1
+            _needed = _needed - _push + _pop
+            if _needed <= 0:
+                cond_val_start = _ci_idx
+                break
+        if cond_val_start is None or cond_val_start == 0:
+            return []
+        # If there is a STORE in the prefix, it's a pre-statement, not a
+        # preload: skip (those are handled by the caller as pre_stmts).
+        for _k in range(0, cond_val_start):
+            if cond_instrs[_k].opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                return []
+        _preload_instrs = cond_instrs[:cond_val_start]
+        # Detect compound expressions (calls, container builds) that the
+        # simple per-instruction loop below can't handle (it only knows
+        # LOAD_ / COPY). For those, defer to the full reconstruct pipeline
+        # so e.g. `E()` (LOAD E + PRECALL + CALL) rebuilds as a Call node
+        # rather than a bare Name. [R10-batch1 err 9 regression fix]
+        _has_compound = any(
+            pi.opname in ('PRECALL', 'CALL', 'BUILD_TUPLE', 'BUILD_LIST',
+                          'BUILD_MAP', 'BUILD_SET', 'BUILD_CONST_KEY_MAP')
+            for pi in _preload_instrs)
+        if _has_compound:
+            _pe = self.expr_reconstructor.reconstruct(_preload_instrs)
+            if _pe:
+                return [_pe]
+            return []
+        _preload_stack: List[Dict[str, Any]] = []
+        for pi in _preload_instrs:
+            if pi.opname.startswith('LOAD_'):
+                _pe = self.expr_reconstructor.reconstruct([pi])
+                if _pe:
+                    _preload_stack.append(_pe)
+            elif pi.opname == 'COPY' and pi.arg == 1 and _preload_stack:
+                _preload_stack.append(_preload_stack[-1])
+        return _preload_stack
+
+    def _build_ternary_no_target_consumer_stmt(self, region: TernaryRegion,
+                                                ternary_expr: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """[R10-batch1] Build a statement where the ternary result is consumed
+        by an outer statement keyword (assert / raise / yield / yield-from)
+        rather than being stored or used as a plain expression.
+
+        Per the region-reduction principle "parent references child entry":
+        the TernaryRegion's merge_block hosts the consumer instruction that
+        belongs to the outer statement. This helper detects those consumers
+        and wraps the ternary expression accordingly.
+
+        Patterns handled:
+          err 2:  ``assert (ternary)``           -> merge: LOAD_ASSERTION_ERROR, RAISE_VARARGS 1
+                                                    (optionally + msg via CALL)
+          err 9:  ``raise E from (ternary)``     -> merge: RAISE_VARARGS 2; exc=E in cond preload
+          err 10: ``raise (ternary)``            -> merge: RAISE_VARARGS 1 (ternary is the exc)
+          err 13: ``yield (ternary)``            -> merge: YIELD_VALUE (no GET_YIELD_FROM_ITER)
+          err 14: ``yield from (ternary)``       -> merge: GET_YIELD_FROM_ITER, LOAD_CONST None,
+                                                    YIELD_VALUE, RESUME, JUMP_BACKWARD_NO_INTERRUPT,
+                                                    POP_TOP
+
+        Returns the statement dict, or None if no consumer pattern matched.
+        """
+        if region.merge_block is None:
+            return None
+
+        merge_instrs = [i for i in region.merge_block.instructions
+                        if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+        # [R10-batch1 err 14] For yield-from (ternary), merge_block only holds
+        # GET_YIELD_FROM_ITER + LOAD_CONST None; the SEND/YIELD_VALUE/RESUME/
+        # JUMP_BACKWARD_NO_INTERRUPT polling loop and the POP_TOP block live in
+        # region.merge_extra_blocks. Splice them in so the reconstruct call can
+        # fold the full yield-from protocol into a YieldFrom expression.
+        if region.merge_extra_blocks:
+            for _eb in region.merge_extra_blocks:
+                merge_instrs.extend(
+                    i for i in _eb.instructions
+                    if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'))
+        # Strip trailing implicit return None: LOAD_CONST None + RETURN_VALUE
+        # (may appear once or twice for if-body / function-exit paths)
+        while merge_instrs and merge_instrs[-1].opname in ('RETURN_VALUE', 'RETURN_CONST'):
+            merge_instrs.pop()
+            if (merge_instrs and merge_instrs[-1].opname == 'LOAD_CONST'
+                    and merge_instrs[-1].argval is None):
+                merge_instrs.pop()
+        if not merge_instrs:
+            return None
+
+        # Locate a RAISE_VARARGS (if any) and check for assert error load.
+        raise_instr = None
+        has_assert_err = False
+        for i in merge_instrs:
+            if i.opname == 'RAISE_VARARGS':
+                if raise_instr is None:
+                    raise_instr = i
+            elif i.opname == 'LOAD_ASSERTION_ERROR':
+                has_assert_err = True
+
+        # Pattern 1: assert (ternary) — LOAD_ASSERTION_ERROR + RAISE_VARARGS
+        if has_assert_err and raise_instr is not None:
+            # The ternary is the assertion test; RAISE_VARARGS only fires when
+            # the test is false (handled by the value blocks' POP_JUMP_IF_TRUE
+            # exits). Optionally the merge_block contains a CALL producing the
+            # assert msg (LOAD_ASSERTION_ERROR, <msg>, PRECALL, CALL, RAISE_VARARGS).
+            msg_expr = None
+            lae_idx = None
+            for idx, i in enumerate(merge_instrs):
+                if i.opname == 'LOAD_ASSERTION_ERROR':
+                    lae_idx = idx
+                    break
+            if lae_idx is not None and lae_idx + 1 < len(merge_instrs):
+                msg_candidate = merge_instrs[lae_idx + 1]
+                # Simple constant msg: LOAD_CONST <msg>
+                if msg_candidate.opname == 'LOAD_CONST':
+                    msg_expr = {'type': 'Constant', 'value': msg_candidate.argval}
+            return {'type': 'Assert', 'test': ternary_expr, 'msg': msg_expr}
+
+        # Pattern 2 & 3: raise (ternary) / raise E from (ternary)
+        if raise_instr is not None:
+            if raise_instr.arg == 1:
+                # raise (ternary) — ternary result IS the exception
+                return {'type': 'Raise', 'exc': ternary_expr, 'cause': None}
+            if raise_instr.arg == 2:
+                # raise <exc> from (ternary) — exc loaded before the ternary
+                # condition (preload on cond_block stack). Reconstruct the
+                # RAISE_VARARGS with [exc, ternary] as initial stack so the
+                # exc/cause pair is built correctly.
+                preload = self._compute_ternary_cond_preload_exprs(region)
+                if preload:
+                    initial_stack = list(preload) + [ternary_expr]
+                    full_expr = self.expr_reconstructor.reconstruct(
+                        merge_instrs, initial_stack=initial_stack)
+                    if full_expr and full_expr.get('type') == 'Raise':
+                        return full_expr
+                return None
+
+        # Pattern 4 & 5: yield (ternary) / yield from (ternary)
+        has_yield = any(i.opname == 'YIELD_VALUE' for i in merge_instrs)
+        if has_yield:
+            # expr_reconstructor maps:
+            #   GET_YIELD_FROM_ITER + LOAD_CONST None + YIELD_VALUE -> YieldFrom
+            #   YIELD_VALUE alone -> Yield
+            # given initial_stack=[ternary_expr].
+            full_expr = self.expr_reconstructor.reconstruct(
+                merge_instrs, initial_stack=[ternary_expr])
+            if full_expr:
+                return {'type': 'Expr', 'value': full_expr}
 
         return None
 

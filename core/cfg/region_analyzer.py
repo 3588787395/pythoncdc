@@ -811,6 +811,12 @@ class TernaryRegion(Region):
     container_type: Optional[str] = None
     func_call_info: Optional[Dict[str, Any]] = None
     dict_key_info: Optional[Dict[str, Any]] = None
+    # [R10-batch1 err 4] For await (ternary): merge_block ends with
+    # GET_AWAITABLE + LOAD_CONST None (await setup); the polling loop
+    # (SEND/YIELD_VALUE/RESUME/JUMP_BACKWARD_NO_INTERRUPT) and the
+    # STORE_FAST block live in successor blocks. These are merged here
+    # so the generator can reconstruct the full Await expression.
+    merge_extra_blocks: List[BasicBlock] = field(default_factory=list)
 
     def get_score_merge_block(self) -> Optional['BasicBlock']:
         return self.merge_block
@@ -11022,8 +11028,72 @@ RegionType 枚举值: RegionType.ASSERT
                                 _tft_last.argval is not None):
                             merge_block = self.cfg.get_block_by_offset(_tft_last.argval)
 
+            # [R10-batch1 err 2] assert (ternary) pattern fallback.
+            # When both branches end with POP_JUMP_FORWARD_IF_TRUE (assert's
+            # truthy-check-then-skip-raise pattern), there's no common post-
+            # dominator: the truthy path exits via RETURN_VALUE while the
+            # falsy path falls through to the assert's raise block. The raise
+            # block IS the ternary's consumer (merge_block) per "parent
+            # references child entry" — it hosts LOAD_ASSERTION_ERROR +
+            # RAISE_VARARGS that consumes the ternary result.
+            # Follow each branch's fallthrough successor (skipping pure
+            # JUMP_FORWARD connector blocks) to a common consumer block.
+            if merge_block is None:
+                def _follow_pure_jumps(blk):
+                    seen = set()
+                    while blk is not None and id(blk) not in seen:
+                        seen.add(id(blk))
+                        eff = [i for i in blk.instructions
+                               if i.opname not in NOISE_OPS]
+                        if (len(eff) == 1 and eff[0].opname in (
+                                'JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                                'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                                and isinstance(eff[0].argval, int)):
+                            nb = self.cfg.get_block_by_offset(eff[0].argval)
+                            if nb is not None:
+                                blk = nb
+                                continue
+                        break
+                    return blk
+
+                def _fallthrough_succ(blk, last_i):
+                    if blk is None or last_i is None or last_i.argval is None:
+                        return None
+                    succs = list(blk.conditional_successors)
+                    if len(succs) != 2:
+                        return None
+                    return next((s for s in succs
+                                 if s.start_offset != last_i.argval), None)
+
+                _t_last_i = true_block.get_last_instruction()
+                _f_last_i = false_block.get_last_instruction()
+                _TRUTHY_CHECK_OPS = ('POP_JUMP_FORWARD_IF_TRUE',
+                                     'POP_JUMP_IF_TRUE',
+                                     'POP_JUMP_BACKWARD_IF_TRUE')
+                if (_t_last_i and _f_last_i
+                        and _t_last_i.opname in _TRUTHY_CHECK_OPS
+                        and _f_last_i.opname in _TRUTHY_CHECK_OPS):
+                    _t_ft = _follow_pure_jumps(
+                        _fallthrough_succ(true_block, _t_last_i))
+                    _f_ft = _follow_pure_jumps(
+                        _fallthrough_succ(false_block, _f_last_i))
+                    if (_t_ft is not None and _t_ft is _f_ft):
+                        _eff = [i for i in _t_ft.instructions
+                                if i.opname not in NOISE_OPS]
+                        if (any(i.opname == 'LOAD_ASSERTION_ERROR' for i in _eff)
+                                and any(i.opname == 'RAISE_VARARGS' for i in _eff)):
+                            merge_block = _t_ft
+
             value_target = None
             merge_context = None  # 新增: 记录merge块的上下文类型
+            # [R10-batch1 err 4/14] Cross-block consumer instruction blocks.
+            # For `x = await (ternary)` / `yield from (ternary)`, the
+            # merge_block only has GET_AWAITABLE/GET_YIELD_FROM_ITER + LOAD_CONST
+            # None; the SEND/YIELD_VALUE/RESUME/JUMP_BACKWARD_NO_INTERRUPT
+            # polling loop and the STORE_FAST/POP_TOP block live in successor
+            # blocks. Stash them here so the generator can reconstruct the
+            # full Await/YieldFrom expression.
+            _consumer_extra_blocks: List[BasicBlock] = []
             if merge_block:
                 for instr in merge_block.instructions:
                     if instr.opname in NOISE_OPS:
@@ -11188,6 +11258,55 @@ RegionType 枚举值: RegionType.ASSERT
                         value_target = '__fstring_target__'
                         break
 
+                    # [R10-batch1 err 4/14] await (ternary) / yield-from (ternary).
+                    # merge_block starts with GET_AWAITABLE / GET_YIELD_FROM_ITER +
+                    # LOAD_CONST None (the await/yield-from setup). The polling
+                    # loop (SEND/YIELD_VALUE/RESUME/JUMP_BACKWARD_NO_INTERRUPT)
+                    # and the consumer block (STORE_FAST for await, POP_TOP for
+                    # yield-from) live in successor blocks. Find them, set
+                    # value_target from the store block (await only), and stash
+                    # the extra blocks so the generator can reconstruct the full
+                    # Await / YieldFrom expression.
+                    elif instr.opname in ('GET_AWAITABLE', 'GET_YIELD_FROM_ITER'):
+                        _is_await = (instr.opname == 'GET_AWAITABLE')
+                        _poll_blk = None
+                        _consume_blk = None
+                        _vt = None
+                        for _succ in merge_block.successors:
+                            if _succ is merge_block:
+                                continue
+                            if any(i.opname == 'SEND' for i in _succ.instructions):
+                                _poll_blk = _succ
+                                _send_i = next((i for i in _succ.instructions
+                                                if i.opname == 'SEND'), None)
+                                if (_send_i is not None
+                                        and isinstance(_send_i.argval, int)):
+                                    _sb = self.cfg.get_block_by_offset(_send_i.argval)
+                                    if _sb is not None:
+                                        if _is_await and any(
+                                                i.opname in ('STORE_FAST', 'STORE_NAME',
+                                                            'STORE_GLOBAL', 'STORE_DEREF')
+                                                for i in _sb.instructions):
+                                            _consume_blk = _sb
+                                            for _si in _sb.instructions:
+                                                if _si.opname in ('STORE_FAST', 'STORE_NAME',
+                                                                'STORE_GLOBAL', 'STORE_DEREF'):
+                                                    _vt = _si.argval if _si.argval else f'var_{_si.arg}'
+                                                    break
+                                        elif (not _is_await
+                                                and any(i.opname == 'POP_TOP' for i in _sb.instructions)):
+                                            _consume_blk = _sb
+                                break
+                        if _poll_blk is not None and _consume_blk is not None:
+                            if _is_await and _vt is not None:
+                                merge_context = 'await'
+                                value_target = _vt
+                            else:
+                                merge_context = 'yieldfrom'
+                                value_target = None
+                            _consumer_extra_blocks = [_poll_blk, _consume_blk]
+                        break
+
             # When the JUMP_FORWARD pattern was detected (ternary in
             # while-loop condition), set merge_context if no other context
             # was identified. The ternary result is consumed by the while
@@ -11255,6 +11374,14 @@ RegionType 枚举值: RegionType.ASSERT
             for nested in nested_boolop_regions:
                 all_blocks.update(nested.blocks)
 
+            # [R10-batch1 err 4/14] For await (ternary) / yield-from (ternary),
+            # the polling loop and consumer (STORE_FAST/POP_TOP) blocks are
+            # not reachable from merge_block via the standard value-block
+            # successor walk — claim them here so they don't leak as separate
+            # statements (or as a spurious LoopRegion for yield-from).
+            if _consumer_extra_blocks:
+                all_blocks.update(_consumer_extra_blocks)
+
             container_type, func_call_info, dict_key_info = _detect_ternary_context(block, merge_block)
             return {
                 'block': block,
@@ -11269,6 +11396,9 @@ RegionType 枚举值: RegionType.ASSERT
                 'container_type': container_type,
                 'func_call_info': func_call_info,
                 'dict_key_info': dict_key_info,
+                # [R10-batch1 err 4/14] Cross-block consumer instruction blocks
+                # for await / yield-from (ternary).
+                'merge_extra_blocks': _consumer_extra_blocks,
             }
 
         def _create_ternary_region_from_pattern(pattern):
@@ -11287,6 +11417,7 @@ RegionType 枚举值: RegionType.ASSERT
                 container_type=pattern['container_type'],
                 func_call_info=pattern['func_call_info'],
                 dict_key_info=pattern['dict_key_info'],
+                merge_extra_blocks=pattern.get('merge_extra_blocks') or [],
             )
 
             for nested in pattern['nested_ternary_regions']:
@@ -11329,6 +11460,18 @@ RegionType 枚举值: RegionType.ASSERT
                             # 从LoopRegion的blocks集合中移除
                             if merge_blk in r.blocks:
                                 r.blocks.remove(merge_blk)
+                # [R10-batch1 err 14] yield-from (ternary): the SEND polling
+                # loop is a CPython lowering artifact (the await/yield-from
+                # protocol), not a real Python loop. A spurious LoopRegion may
+                # have been created on it in Phase 1. Drop that LoopRegion so
+                # the ternary owns the polling blocks per "each block has a
+                # unique owner".
+                elif (isinstance(r, LoopRegion)
+                        and pattern.get('merge_context') == 'yieldfrom'
+                        and pattern.get('merge_extra_blocks')):
+                    _extra = pattern['merge_extra_blocks']
+                    if any(b in r.blocks for b in _extra):
+                        to_remove.append(r)
             
             for r in to_remove:
                 self.regions.remove(r)
