@@ -266,6 +266,8 @@ class CodeGenerator:
             self._generate_aug_assign_dict(node)
         elif node_type == 'Assign':
             self._generate_assign_dict(node)
+        elif node_type == 'AnnAssign':
+            self._generate_ann_assign_dict(node)
         elif node_type == 'AugAssign':
             self._generate_aug_assign_dict(node)
         elif node_type == 'Expr':
@@ -357,7 +359,18 @@ class CodeGenerator:
         elif node_type in ('Import', 'ImportFrom'):
             # 处理Import语句
             names = node.get('names', [])
-            names_str = ', '.join(n if isinstance(n, str) else n.get('name', str(n)) for n in names)
+            _name_parts = []
+            for n in names:
+                if isinstance(n, str):
+                    _name_parts.append(n)
+                else:
+                    _n_name = n.get('name', str(n))
+                    _n_asname = n.get('asname')
+                    if _n_asname:
+                        _name_parts.append(f'{_n_name} as {_n_asname}')
+                    else:
+                        _name_parts.append(_n_name)
+            names_str = ', '.join(_name_parts)
             if node_type == 'ImportFrom':
                 module = node.get('module', '')
                 level = node.get('level', 0)
@@ -945,6 +958,20 @@ class CodeGenerator:
         op_symbol = op_map.get(op, f'{op}=')
 
         self._write_line(f'{target_code} {op_symbol} {value_code}')
+
+    def _generate_ann_assign_dict(self, node: Dict[str, Any]) -> None:
+        """生成字典格式的AnnAssign节点（如 x: int = 1）"""
+        target = node.get('target', {})
+        annotation = node.get('annotation', {})
+        value = node.get('value')
+
+        target_code = self._generate_expression(target)
+        annotation_code = self._generate_expression(annotation) if isinstance(annotation, dict) else str(annotation)
+        if value is not None:
+            value_code = self._generate_expression(value) if isinstance(value, dict) else str(value)
+            self._write_line(f'{target_code}: {annotation_code} = {value_code}')
+        else:
+            self._write_line(f'{target_code}: {annotation_code}')
 
     def _generate_for_dict(self, node: Dict[str, Any], async_prefix: str = '') -> None:
         target = node.get('target', {})

@@ -15835,6 +15835,9 @@ AST 映射规则:
             if instr.opname in self.SKIP_OPS:
                 continue
 
+            if instr.offset in skip_offsets:
+                continue
+
             if _import_skip:
                 if instr.opname in ('IMPORT_FROM', 'POP_TOP'):
                     continue
@@ -15926,6 +15929,43 @@ AST 映射规则:
                 if attr_stmt:
                     stmts.append(attr_stmt)
                     stmt_instrs = []
+                    continue
+
+            # [Round5-06] AnnAssign 检测：`x: int = 1` 字节码模式
+            # value_instrs; STORE_NAME x; LOAD <ann>; LOAD __annotations__; LOAD_CONST 'x'; STORE_SUBSCR
+            # 在 STORE_NAME 处前向探测后续 4 条指令，匹配则合成 AnnAssign。
+            if (instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
+                    and stmt_instrs):
+                _ann_idx = block.instructions.index(instr)
+                _ann_remaining = block.instructions[_ann_idx + 1:]
+                if (len(_ann_remaining) >= 4
+                        and _ann_remaining[0].opname in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF')
+                        and _ann_remaining[1].opname == 'LOAD_NAME'
+                        and _ann_remaining[1].argval == '__annotations__'
+                        and _ann_remaining[2].opname == 'LOAD_CONST'
+                        and _ann_remaining[2].argval == instr.argval
+                        and _ann_remaining[3].opname == 'STORE_SUBSCR'):
+                    _ann_value = self.expr_reconstructor.reconstruct(stmt_instrs) if stmt_instrs else None
+                    _ann_target = {
+                        'type': 'Name',
+                        'id': instr.argval,
+                        'ctx': 'Store',
+                        'lineno': instr.starts_line,
+                    }
+                    _ann_annotation = {
+                        'type': 'Name',
+                        'id': _ann_remaining[0].argval,
+                        'ctx': 'Load',
+                    }
+                    stmts.append({
+                        'type': 'AnnAssign',
+                        'target': _ann_target,
+                        'annotation': _ann_annotation,
+                        'value': _ann_value,
+                    })
+                    stmt_instrs = []
+                    # 跳过后续 4 条指令（LOAD ann, LOAD __annotations__, LOAD_CONST name, STORE_SUBSCR）
+                    skip_offsets.update(_ann_remaining[i].offset for i in range(4))
                     continue
 
             if instr.opname == 'STORE_SUBSCR' and stmt_instrs:
@@ -17238,24 +17278,34 @@ AST 映射规则:
                     # 如果 target_expr 为 None 或不是 Attribute 类型，尝试使用更多上下文指令
                     if target_expr is None or target_expr.get('type') != 'Attribute':
                         # 手动构建 Attribute 表达式
-                        # 从 COPY 之前提取对象名（如 self）
-                        obj_name = None
-                        for i, instr in enumerate(obj_instrs):
-                            if instr.opname == 'COPY':
-                                # COPY 之前的指令应该是对象加载
-                                break
-                            if instr.opname in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL'):
-                                obj_name = instr.argval
-                        
-                        if obj_name:
-                            target = {
-                                'type': 'Attribute',
-                                'value': {'type': 'Name', 'id': obj_name, 'ctx': 'Load'},
-                                'attr': store_attr.argval,
-                                'ctx': 'Store',
-                            }
-                        else:
-                            return None
+                        # [Round5-11] 多层属性链 AugAssign（`a.b.c += 1`）：COPY 之前可能
+                        # 包含多个 LOAD_ATTR（如 LOAD_NAME a + LOAD_ATTR b = a.b）。
+                        # 需要用 COPY 之前的所有指令重建 obj 表达式，而不是仅取单个 obj_name。
+                        before_copy_instrs = obj_instrs[:last_copy_idx]
+                        # 过滤掉 RESUME/NOP/CACHE/PUSH_NULL
+                        _bc_filtered = [i for i in before_copy_instrs
+                                        if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                        obj_expr = None
+                        if _bc_filtered:
+                            obj_expr = self.expr_reconstructor.reconstruct(_bc_filtered)
+                        if obj_expr is None:
+                            # 回退到单 obj_name 提取
+                            obj_name = None
+                            for i, instr in enumerate(obj_instrs):
+                                if instr.opname == 'COPY':
+                                    break
+                                if instr.opname in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL'):
+                                    obj_name = instr.argval
+                            if obj_name:
+                                obj_expr = {'type': 'Name', 'id': obj_name, 'ctx': 'Load'}
+                            else:
+                                return None
+                        target = {
+                            'type': 'Attribute',
+                            'value': obj_expr,
+                            'attr': store_attr.argval,
+                            'ctx': 'Store',
+                        }
                     elif target_expr.get('type') == 'Attribute':
                         target = {
                             'type': 'Attribute',
