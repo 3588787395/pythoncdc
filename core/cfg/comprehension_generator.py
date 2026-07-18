@@ -336,12 +336,22 @@ class ComprehensionGenerator:
         ternary_info = self._detect_comp_ternary(all_instrs, store_idx, append_idx)
         if ternary_info is not None:
             if append_op == 'MAP_ADD':
-                # Dict comprehension with ternary: ternary is the value, need to extract key
-                key_expr = self._extract_dict_comp_key_before_ternary(all_instrs, store_idx, append_idx)
-                if key_expr is not None:
-                    elt_expr = (key_expr, ternary_info)
+                # [Round7-08] Dict comprehension with ternary: ternary can be either key
+                # or value. Distinguish by checking if there are meaningful instructions
+                # between the ternary merge point and MAP_ADD:
+                # - If yes → ternary is the KEY, those trailing instructions are the value
+                # - If no  → ternary is the VALUE, key (if any) was pushed before the cond
+                value_expr = self._extract_dict_comp_value_after_ternary(
+                    all_instrs, store_idx, append_idx)
+                if value_expr is not None:
+                    elt_expr = (ternary_info, value_expr)
                 else:
-                    elt_expr = ternary_info
+                    key_expr = self._extract_dict_comp_key_before_ternary(
+                        all_instrs, store_idx, append_idx)
+                    if key_expr is not None:
+                        elt_expr = (key_expr, ternary_info)
+                    else:
+                        elt_expr = ternary_info
             else:
                 elt_expr = ternary_info
             ifs = []
@@ -466,11 +476,18 @@ class ComprehensionGenerator:
         ternary_info = self._detect_comp_ternary(all_instrs, innermost_store_idx, append_idx)
         if ternary_info is not None:
             if append_op == 'MAP_ADD':
-                key_expr = self._extract_dict_comp_key_before_ternary(all_instrs, innermost_store_idx, append_idx)
-                if key_expr is not None:
-                    elt_expr = (key_expr, ternary_info)
+                # [Round7-08] Ternary could be key or value - see parse_comprehension_inner.
+                value_expr = self._extract_dict_comp_value_after_ternary(
+                    all_instrs, innermost_store_idx, append_idx)
+                if value_expr is not None:
+                    elt_expr = (ternary_info, value_expr)
                 else:
-                    elt_expr = ternary_info
+                    key_expr = self._extract_dict_comp_key_before_ternary(
+                        all_instrs, innermost_store_idx, append_idx)
+                    if key_expr is not None:
+                        elt_expr = (key_expr, ternary_info)
+                    else:
+                        elt_expr = ternary_info
             else:
                 elt_expr = ternary_info
         else:
@@ -765,6 +782,60 @@ class ComprehensionGenerator:
 
         return self.expr_reconstructor.reconstruct(key_instrs)
 
+    def _extract_dict_comp_value_after_ternary(self, all_instrs: List[Instruction],
+                                                store_idx: int,
+                                                append_idx: int) -> Optional[Dict[str, Any]]:
+        """[Round7-08] Extract the dict value when a ternary is the dict KEY.
+
+        When a dict comprehension has a ternary key (e.g., `{(k if cond else m): v for ...}`),
+        after the ternary's JUMP_FORWARD merge point, the value expression is pushed onto
+        the stack before MAP_ADD consumes both. This method locates that merge point and
+        reconstructs the value expression from the instructions between it and MAP_ADD.
+
+        Returns None when there are no meaningful instructions between the merge point
+        and MAP_ADD (i.e., the ternary is the value, not the key).
+        """
+        # Find the conditional jump between store_idx+1 and append_idx
+        cond_jump_idx = None
+        for idx in range(store_idx + 1, append_idx):
+            instr = all_instrs[idx]
+            if instr.opname in CONDITIONAL_JUMP_OPS:
+                cond_jump_idx = idx
+                break
+        if cond_jump_idx is None:
+            return None
+
+        false_target_offset = all_instrs[cond_jump_idx].argval
+
+        # Find JUMP_FORWARD within the true branch (between cond_jump and false_target)
+        merge_offset = None
+        for idx in range(cond_jump_idx + 1, append_idx):
+            instr = all_instrs[idx]
+            if instr.offset >= false_target_offset:
+                break
+            if instr.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD'):
+                if hasattr(instr, 'argval') and instr.argval is not None:
+                    merge_offset = instr.argval
+                break
+        if merge_offset is None:
+            return None
+
+        # Collect meaningful instructions between merge_offset and append_idx
+        value_instrs = []
+        for idx in range(cond_jump_idx + 1, append_idx):
+            instr = all_instrs[idx]
+            if instr.offset < merge_offset:
+                continue
+            if instr.offset >= all_instrs[append_idx].offset:
+                break
+            if instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                continue
+            value_instrs.append(instr)
+        if not value_instrs:
+            return None
+
+        return self.expr_reconstructor.reconstruct(value_instrs)
+
     def _detect_comp_ternary(self, all_instrs: List[Instruction],
                              store_idx: int,
                              append_idx: int) -> Optional[Dict[str, Any]]:
@@ -803,6 +874,10 @@ class ComprehensionGenerator:
         true_start = cond_jump_idx + 1
         false_start = None
         true_end = None
+        # [Round7-08] 记录 JUMP_FORWARD 的目标偏移量（merge point），
+        # false 值区域只到 merge point 之前，merge point 之后是后续表达式（如
+        # dict comprehension 的 value，紧跟在三元 key 之后压栈）。
+        merge_offset = None
 
         # 在true值区域中查找JUMP_FORWARD（跳转到merge/LIST_APPEND）
         for idx in range(true_start, append_idx):
@@ -816,6 +891,9 @@ class ComprehensionGenerator:
                 true_end = idx
                 # false值从JUMP的目标偏移量开始
                 false_start = idx + 1
+                # 记录 merge point（JUMP 的目标偏移量）
+                if hasattr(instr, 'argval') and instr.argval is not None:
+                    merge_offset = instr.argval
                 break
 
         if false_start is None:
@@ -828,7 +906,18 @@ class ComprehensionGenerator:
             true_instrs = all_instrs[true_start:false_start]
 
         # false值指令：从false_start到append_idx
-        false_instrs = all_instrs[false_start:append_idx]
+        # [Round7-08] 若有 merge_offset，false 值区域只到 merge_offset 之前。
+        # merge_offset 之后是指令属于后续表达式（如 dict comp 的 value），
+        # 不应作为 false 分支的一部分。
+        if merge_offset is not None:
+            false_end = false_start
+            for idx in range(false_start, append_idx):
+                if all_instrs[idx].offset >= merge_offset:
+                    break
+                false_end = idx + 1
+            false_instrs = all_instrs[false_start:false_end]
+        else:
+            false_instrs = all_instrs[false_start:append_idx]
 
         # 重建条件表达式
         cond_expr = self.expr_reconstructor.reconstruct(cond_instrs)
