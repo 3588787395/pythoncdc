@@ -16361,6 +16361,24 @@ AST 映射规则:
                             and _next_meaningful_after_store.opname == 'BINARY_OP'):
                         stmt_instrs.append(instr)
                         continue
+                    # [R6-err4] walrus 表达式语句模式：(n := f()) 字节码为
+                    # PUSH_NULL, LOAD f, PRECALL, CALL, COPY 1, STORE_NAME n, POP_TOP
+                    # COPY 1 + STORE 是 walrus (NamedExpr)，后续 POP_TOP 丢弃返回值。
+                    # 重建为 Expr(NamedExpr(n, Call(f)))，而非 Assign(n, Call(f))。
+                    # 区域归约：COPY+STORE 是单一 walrus 表达式的归约节点，POP_TOP
+                    # 是表达式语句的终结指令，三者共同构成一个 Expr 语句的完整归约。
+                    if (next_store_idx is None
+                            and _next_meaningful_after_store is not None
+                            and _next_meaningful_after_store.opname == 'POP_TOP'):
+                        _walrus_instrs = stmt_instrs + [instr]
+                        _walrus_expr = self.expr_reconstructor.reconstruct(_walrus_instrs)
+                        if (_walrus_expr is not None
+                                and isinstance(_walrus_expr, dict)
+                                and _walrus_expr.get('type') == 'NamedExpr'):
+                            stmts.append({'type': 'Expr', 'value': _walrus_expr})
+                            stmt_instrs = []
+                            skip_offsets.add(_next_meaningful_after_store.offset)
+                            continue
                     if next_store_idx is not None:
                         chained_targets = [{
                             'type': 'Name',
