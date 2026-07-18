@@ -1677,35 +1677,39 @@ AST 映射规则:
         if region.message_block:
             msg_instrs = []
             instrs = region.message_block.instructions
-            has_build_string = any(i.opname == 'BUILD_STRING' for i in instrs)
+            # [Round8-12] walrus 在 assert 消息：(n := f()) 字节码为
+            # PUSH_NULL, LOAD f, PRECALL, CALL, COPY 1, STORE n, ..., PRECALL, CALL, RAISE_VARARGS 1
+            # 消息求值段含 PRECALL/CALL（f() 调用）和 COPY+STORE（walrus 副作用），
+            # 必须保留这些指令才能让 expr_reconstructor 识别 walrus 与调用。
+            # 旧逻辑：非 BUILD_STRING 时一律跳过所有 PRECALL/CALL，并把 COPY 列入
+            # base_skip —— 这会让 `assert x, f()` 退化为 `assert x, f`，让 walrus
+            # 退化为占位 dict。新逻辑：统一用反向扫描定位 RAISE_VARARGS 边界
+            # （build_string 路径已有此逻辑），仅跳过边界及之后的 PRECALL/CALL
+            # （LOAD_ASSERTION_ERROR + CALL 的抛错基础设施），保留消息体内的
+            # PRECALL/CALL/COPY/STORE。COPY 从 base_skip 移除，使 walrus 的
+            # COPY+STORE 模式可被识别；SWAP 仍保留跳过（消息中暂未需要）。
             base_skip = {'RAISE_VARARGS', 'POP_EXCEPT', 'RERAISE',
                         'LOAD_ASSERTION_ERROR', 'RESUME', 'NOP', 'CACHE',
-                        'PUSH_NULL', 'COPY', 'SWAP'}
-            if has_build_string:
-                raise_call_start = len(instrs)
-                found_raise = False
-                for idx in range(len(instrs) - 1, -1, -1):
-                    op = instrs[idx].opname
-                    if op == 'RAISE_VARARGS':
-                        raise_call_start = idx
-                        found_raise = True
-                    elif found_raise and op in ('CALL', 'PRECALL', 'PUSH_NULL',
-                                                'COPY', 'SWAP', 'NOP', 'CACHE',
-                                                'RESUME'):
-                        raise_call_start = idx
-                    elif found_raise:
-                        break
-                for i, instr in enumerate(instrs):
-                    if instr.opname in base_skip:
-                        continue
-                    if i >= raise_call_start and instr.opname in ('PRECALL', 'CALL'):
-                        continue
-                    msg_instrs.append(instr)
-            else:
-                for instr in instrs:
-                    if instr.opname in base_skip or instr.opname in ('PRECALL', 'CALL'):
-                        continue
-                    msg_instrs.append(instr)
+                        'PUSH_NULL', 'SWAP'}
+            raise_call_start = len(instrs)
+            found_raise = False
+            for idx in range(len(instrs) - 1, -1, -1):
+                op = instrs[idx].opname
+                if op == 'RAISE_VARARGS':
+                    raise_call_start = idx
+                    found_raise = True
+                elif found_raise and op in ('CALL', 'PRECALL', 'PUSH_NULL',
+                                            'COPY', 'SWAP', 'NOP', 'CACHE',
+                                            'RESUME'):
+                    raise_call_start = idx
+                elif found_raise:
+                    break
+            for i, instr in enumerate(instrs):
+                if instr.opname in base_skip:
+                    continue
+                if i >= raise_call_start and instr.opname in ('PRECALL', 'CALL'):
+                    continue
+                msg_instrs.append(instr)
             if msg_instrs:
                 message = self.expr_reconstructor.reconstruct(msg_instrs)
         for block in region.blocks:
@@ -15950,6 +15954,132 @@ AST 映射规则:
                                     _chain_result = _chain_stmts
         if _chain_result is not None:
             stmts.extend(_chain_result)
+            self.generated_blocks.add(block)
+            return stmts
+
+        # [Round8-07] 多目标链含下标/属性目标：a = b[k] = c.d = e
+        # 字节码模式：LOAD val, COPY 1, STORE_NAME t1, COPY 1, [LOAD obj, (LOAD key)?, STORE_SUBSCR|STORE_ATTR], ...
+        # 每个非首目标前有 COPY 1（为该目标复制值），后跟目标的 obj/key LOADs + STORE。
+        # 纯 STORE_NAME 链（a = b = c = d）由上方 _chain_result 路径处理；
+        # 本路径仅处理含 STORE_SUBSCR/STORE_ATTR 的混合链。
+        # 区域归约：单一 Assign(targets=[Name, Subscript, Attribute], value=val) 节点，
+        # 不拆为多条独立赋值（否则 COPY 1 会被误读为常量 1 / None，目标值错位）。
+        _mixed_chain_result = None
+        if len(_chain_instrs) > MIN_INSTRS_FOR_CHAIN_ASSIGN_PATTERN:
+            _mixed_store_indices = []
+            for _ci, _instr in enumerate(_chain_instrs):
+                if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+                                     'STORE_SUBSCR', 'STORE_ATTR'):
+                    _mixed_store_indices.append((_ci, _instr.opname))
+            _has_complex_m = any(_op in ('STORE_SUBSCR', 'STORE_ATTR') for _, _op in _mixed_store_indices)
+            if _has_complex_m and len(_mixed_store_indices) >= 2:
+                _first_store_idx_m, _first_op_m = _mixed_store_indices[0]
+                # 首目标前必须是 COPY 1（值复制边界）。要求首目标是简单 STORE_NAME
+                # （CPython 对 a = b[k] = c.d = e 的 codegen：首目标用 STORE_NAME + 紧邻 COPY 1）
+                _value_instrs_m = None
+                if (_first_op_m in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
+                        and _first_store_idx_m >= 1
+                        and _chain_instrs[_first_store_idx_m - 1].opname == 'COPY'
+                        and _chain_instrs[_first_store_idx_m - 1].arg == COPY_STACK_TOP):
+                    _value_instrs_m = _chain_instrs[:_first_store_idx_m - 1]
+                if _value_instrs_m:
+                    _value_terminal_ops_m = (
+                        'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+                        'STORE_SUBSCR', 'STORE_ATTR',
+                        'POP_TOP', 'RETURN_VALUE', 'RETURN_CONST',
+                        'RAISE_VARARGS', 'IMPORT_NAME',
+                    )
+                    _value_clean_m = not any(i.opname in _value_terminal_ops_m for i in _value_instrs_m)
+                    if _value_clean_m:
+                        _targets_m = []
+                        _valid_m = True
+                        _last_si_m = len(_mixed_store_indices) - 1
+                        for _si, (_store_idx_m, _store_op_m) in enumerate(_mixed_store_indices):
+                            if _si == 0:
+                                # 首目标 obj/key 在 COPY 1 与 STORE 之间（简单目标为空）
+                                _obj_key_m = _chain_instrs[_first_store_idx_m:_store_idx_m]
+                            else:
+                                _prev_store_idx_m = _mixed_store_indices[_si - 1][0]
+                                _gap_m = _chain_instrs[_prev_store_idx_m + 1:_store_idx_m]
+                                if _si != _last_si_m:
+                                    # 中间目标：间隙必须以 COPY 1 开头（为该目标复制值）
+                                    if not _gap_m or _gap_m[0].opname != 'COPY' or _gap_m[0].arg != 1:
+                                        _valid_m = False
+                                        break
+                                    _obj_key_m = _gap_m[1:]
+                                else:
+                                    # 末目标：栈上剩余值直接消费，无 COPY 1。
+                                    # 间隙仅含 obj/key LOADs（与纯 STORE_NAME 链末目标 gap=[] 同语义）。
+                                    _obj_key_m = _gap_m
+                            _store_instr_m = _chain_instrs[_store_idx_m]
+                            if _store_op_m in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                                if _obj_key_m:
+                                    _valid_m = False
+                                    break
+                                _targets_m.append({
+                                    'type': 'Name',
+                                    'id': _store_instr_m.argval,
+                                    'ctx': 'Store',
+                                    'lineno': _store_instr_m.starts_line,
+                                })
+                            elif _store_op_m == 'STORE_ATTR':
+                                if (len(_obj_key_m) != 1
+                                        or not _obj_key_m[0].opname.startswith('LOAD_')):
+                                    _valid_m = False
+                                    break
+                                _obj_ast_m = self.expr_reconstructor._load_instr_to_ast(_obj_key_m[0])
+                                _targets_m.append({
+                                    'type': 'Attribute',
+                                    'value': _obj_ast_m,
+                                    'attr': _store_instr_m.argval,
+                                    'ctx': 'Store',
+                                    'lineno': _store_instr_m.starts_line,
+                                })
+                            elif _store_op_m == 'STORE_SUBSCR':
+                                if (len(_obj_key_m) != 2
+                                        or not _obj_key_m[0].opname.startswith('LOAD_')
+                                        or not _obj_key_m[1].opname.startswith('LOAD_')):
+                                    _valid_m = False
+                                    break
+                                _obj_ast_m = self.expr_reconstructor._load_instr_to_ast(_obj_key_m[0])
+                                _key_ast_m = self.expr_reconstructor._load_instr_to_ast(_obj_key_m[1])
+                                _targets_m.append({
+                                    'type': 'Subscript',
+                                    'value': _obj_ast_m,
+                                    'slice': _key_ast_m,
+                                    'ctx': 'Store',
+                                    'lineno': _store_instr_m.starts_line,
+                                })
+                        if _valid_m and len(_targets_m) >= 2:
+                            _value_expr_m = self.expr_reconstructor.reconstruct(_value_instrs_m)
+                            if _value_expr_m is not None:
+                                _mixed_chain_stmts = [{
+                                    'type': 'Assign',
+                                    'targets': _targets_m,
+                                    'value': _value_expr_m,
+                                    'is_chain_assign': True,
+                                    'lineno': _value_instrs_m[0].starts_line,
+                                }]
+                                _last_store_idx_m = _mixed_store_indices[-1][0]
+                                _remaining_m = _chain_instrs[_last_store_idx_m + 1:]
+                                if _remaining_m:
+                                    _has_return_m = any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in _remaining_m)
+                                    if _has_return_m:
+                                        _rv_instrs_m = []
+                                        for _instr in _remaining_m:
+                                            if _instr.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                                                break
+                                            if _instr.opname not in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL',
+                                                                'COPY', 'SWAP', 'POP_EXCEPT', 'PUSH_EXC_INFO'):
+                                                _rv_instrs_m.append(_instr)
+                                        _return_value_m = self.expr_reconstructor.reconstruct(_rv_instrs_m) if _rv_instrs_m else None
+                                        _mixed_chain_stmts.append({
+                                            'type': 'Return',
+                                            'value': _return_value_m if _return_value_m else {'type': 'Constant', 'value': None}
+                                        })
+                                _mixed_chain_result = _mixed_chain_stmts
+        if _mixed_chain_result is not None:
+            stmts.extend(_mixed_chain_result)
             self.generated_blocks.add(block)
             return stmts
 
