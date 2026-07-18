@@ -16204,17 +16204,34 @@ AST 映射规则:
                 continue
 
             if _import_skip:
-                if instr.opname in ('IMPORT_FROM', 'POP_TOP'):
+                if instr.opname in ('IMPORT_FROM', 'POP_TOP', 'IMPORT_STAR'):
                     continue
                 if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
                     stmt_instrs = []
                     _import_skip = False
+                    continue
+                # [Round7-05] from m import * 路径: IMPORT_NAME 后跟 LOAD_CONST ('*',) + IMPORT_STAR
+                if instr.opname == 'LOAD_CONST' and isinstance(instr.argval, tuple):
                     continue
                 _import_skip = False
 
             if instr.opname == 'IMPORT_NAME':
                 module_name = instr.argval if instr.argval else ''
                 instr_idx = block.instructions.index(instr)
+                # [Round7-05] 检测 from m import *: IMPORT_NAME m + LOAD_CONST ('*',) + IMPORT_STAR
+                _has_import_star = False
+                for _i in range(instr_idx + 1, min(instr_idx + 4, len(block.instructions))):
+                    if block.instructions[_i].opname == 'IMPORT_STAR':
+                        _has_import_star = True
+                        break
+                    if block.instructions[_i].opname not in ('LOAD_CONST', 'PUSH_NULL'):
+                        break
+                if _has_import_star:
+                    stmts.append({'type': 'ImportFrom', 'module': module_name,
+                                  'names': [{'name': '*', 'asname': None}]})
+                    stmt_instrs = []
+                    _import_skip = True
+                    continue
                 has_import_from = False
                 _scan_start = instr_idx + 1
                 _max_lookahead = 3
@@ -16393,6 +16410,62 @@ AST 映射规则:
                             stmt_instrs = []
                             skip_offsets.add(_next_meaningful_after_store.offset)
                             continue
+                    # [Round7-01/02/03] walrus 作 dict/set/list 字面量元素：
+                    # {(n := f()): v} / {k: (n := f())} / {(n := f()), m} / [(n := f()), m]
+                    # 字节码: ..., COPY 1, STORE_NAME n, [LOAD_NAME v / LOAD_NAME m ...],
+                    # BUILD_MAP/BUILD_SET/BUILD_LIST, STORE_NAME r
+                    # walrus 的 COPY+STORE 应被 BUILD_MAP/BUILD_SET/BUILD_LIST 整合，
+                    # 整条链作为单一 Assign 归约，不能把 walrus 提为独立赋值（否则字面量
+                    # 退化为空 {} / 单元素）。
+                    _LITERAL_BUILD_OPS = ('BUILD_MAP', 'BUILD_SET', 'BUILD_LIST',
+                                          'BUILD_TUPLE', 'BUILD_CONST_KEY_MAP')
+                    if (next_store_idx is None
+                            and _next_meaningful_after_store is not None
+                            and (_next_meaningful_after_store.opname in _LITERAL_BUILD_OPS
+                                 or _next_meaningful_after_store.opname in (
+                                     'LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF',
+                                     'LOAD_CONST', 'LOAD_ATTR'))):
+                        _lit_skip_ops = ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')
+                        _lit_consume_ops = ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL',
+                                            'LOAD_DEREF', 'LOAD_CONST', 'LOAD_ATTR',
+                                            'BUILD_MAP', 'BUILD_SET', 'BUILD_LIST',
+                                            'BUILD_TUPLE', 'BUILD_CONST_KEY_MAP',
+                                            'PRECALL', 'CALL', 'COPY', 'FORMAT_VALUE')
+                        _final_store = None
+                        _has_literal_build = False
+                        _lit_consumed_offsets = set()
+                        for ri in remaining:
+                            if ri.opname in _lit_skip_ops:
+                                continue
+                            if ri.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                                _final_store = ri
+                                break
+                            if ri.opname in _lit_consume_ops:
+                                if ri.opname in _LITERAL_BUILD_OPS:
+                                    _has_literal_build = True
+                                _lit_consumed_offsets.add(ri.offset)
+                                continue
+                            break
+                        # 必须找到终结 STORE 且中间有 BUILD_MAP/BUILD_SET/BUILD_LIST 字面量构造
+                        if (_final_store is not None and _has_literal_build):
+                            # 保留原相对顺序：从 remaining 按顺序追加至 _final_store（含）
+                            _ordered_tail = []
+                            for ri in remaining:
+                                if ri.opname in _lit_skip_ops:
+                                    continue
+                                _ordered_tail.append(ri)
+                                if ri is _final_store:
+                                    break
+                            _all_instrs = stmt_instrs + [instr] + _ordered_tail
+                            _lit_stmt = self._build_store_statement(_all_instrs, block=block)
+                            if (_lit_stmt is not None
+                                    and isinstance(_lit_stmt, dict)
+                                    and _lit_stmt.get('type') == 'Assign'):
+                                stmts.append(_lit_stmt)
+                                stmt_instrs = []
+                                for ri in _ordered_tail:
+                                    skip_offsets.add(ri.offset)
+                                continue
                     if next_store_idx is not None:
                         chained_targets = [{
                             'type': 'Name',

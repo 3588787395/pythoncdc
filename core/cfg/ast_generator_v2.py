@@ -634,6 +634,20 @@ class ExpressionReconstructor:
                 'values': values,
                 'lineno': instr.starts_line
             })
+
+        # [Round7-03] 构建集合
+        elif opname == 'BUILD_SET':
+            count = instr.arg if instr.arg is not None else 0
+            elts = []
+            for _ in range(count):
+                if self.stack:
+                    elts.insert(0, self.stack.pop())
+            self.stack.append({
+                'type': 'Set',
+                'elts': elts,
+                'ctx': 'Load',
+                'lineno': instr.starts_line
+            })
         
         # [关键修复] BUILD_CONST_KEY_MAP - Python 3.11+ 的常量键字典构建指令
         elif opname == 'BUILD_CONST_KEY_MAP':
