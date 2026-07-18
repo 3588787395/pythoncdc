@@ -18095,16 +18095,34 @@ AST 映射规则:
                         'ctx': 'Store',
                     }
 
-                # Value: the LOAD instruction(s) immediately before BINARY_OP
-                # (after the COPY/BINARY_SUBSCR target-duplication pattern).
+                # Value: instructions between the target BINARY_SUBSCR (the one
+                # right after the COPY-2 duplication pattern) and the BINARY_OP.
+                # This handles complex rhs like function calls
+                # (PUSH_NULL + LOAD + PRECALL + CALL) and subscripts
+                # (LOAD + LOAD + BINARY_SUBSCR), as well as simple LOAD_* rhs.
+                # [Round8-09] 旧逻辑只反向收集 LOAD_*，遇到 CALL/PRECALL 即中断，
+                # 导致 `a[b] += f(c, d)` 的方法调用右值退化为常量 0。
                 value_instrs_for_recon = []
-                for idx in range(aug_op_idx - 1, -1, -1):
-                    if obj_instrs[idx].opname in ('LOAD_CONST', 'LOAD_FAST',
-                                                   'LOAD_NAME', 'LOAD_GLOBAL',
-                                                   'LOAD_DEREF'):
-                        value_instrs_for_recon.insert(0, obj_instrs[idx])
-                    else:
-                        break
+                if copy_pattern_start is not None:
+                    # 目标 BINARY_SUBSCR = COPY 2, COPY 2 之后的第一个 BINARY_SUBSCR
+                    # （内层目标计算，如 a[b][c] += 1 中的 a[b][c]）。
+                    _target_bs_idx = None
+                    for _bs_idx in range(copy_pattern_start + 1, aug_op_idx):
+                        if obj_instrs[_bs_idx].opname == 'BINARY_SUBSCR':
+                            _target_bs_idx = _bs_idx
+                            break
+                    if _target_bs_idx is not None:
+                        value_instrs_for_recon = obj_instrs[_target_bs_idx + 1:aug_op_idx]
+                if not value_instrs_for_recon:
+                    # Fallback primary: LOAD_* immediately before BINARY_OP
+                    # (handles simple rhs like `a[b] += 1`).
+                    for idx in range(aug_op_idx - 1, -1, -1):
+                        if obj_instrs[idx].opname in ('LOAD_CONST', 'LOAD_FAST',
+                                                       'LOAD_NAME', 'LOAD_GLOBAL',
+                                                       'LOAD_DEREF'):
+                            value_instrs_for_recon.insert(0, obj_instrs[idx])
+                        else:
+                            break
                 if not value_instrs_for_recon:
                     # Fallback: legacy extraction (handles older patterns).
                     for idx in range(len(obj_instrs[:aug_op_idx]) - 1, -1, -1):
