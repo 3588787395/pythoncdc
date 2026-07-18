@@ -6227,10 +6227,27 @@ AST 映射规则:
         if not _expr_child_stmts:
             then_entry_offsets = {b.start_offset for b in region.then_blocks} if region.then_blocks else set()
             then_block_set = set(region.then_blocks) if region.then_blocks else set()
+            # [Round5-05] 5 段及以上链式比较作赋值右值：内部 IfRegion
+            # （chained_compare_ops≥2）的 chained_compare_blocks 与一个
+            # BoolOpRegion 重叠（区域识别器同时为同一段字节码创建两个 region）。
+            # 若外层 IfRegion 在内层 IfRegion 之前生成 then 分支，会把 BoolOpRegion
+            # 当作普通子表达式生成 phantom Expr。这里预先收集所有 chain-compare
+            # IfRegion 的 chained_compare_blocks 入口 offset，跳过入口命中这些块
+            # 的 BoolOpRegion/TernaryRegion（其归属是 chain-compare IfRegion）。
+            _chain_cmp_block_offsets: set = set()
+            for _r in self.regions:
+                if isinstance(_r, IfRegion) and getattr(_r, 'chained_compare_ops', None) \
+                        and len(_r.chained_compare_ops) >= 2:
+                    for _cb in (getattr(_r, 'chained_compare_blocks', None) or []):
+                        if _cb is not None and hasattr(_cb, 'start_offset'):
+                            _chain_cmp_block_offsets.add(_cb.start_offset)
             for r in self.regions:
                 if not isinstance(r, (BoolOpRegion, TernaryRegion)):
                     continue
                 if r.entry is None or r.entry in self.generated_blocks:
+                    continue
+                # [Round5-05] 跳过属于 chain-compare IfRegion 的 BoolOp/Ternary
+                if r.entry.start_offset in _chain_cmp_block_offsets:
                     continue
                 r_id = id(r)
                 if r_id in self._generated_regions or r_id in self._generating_regions:

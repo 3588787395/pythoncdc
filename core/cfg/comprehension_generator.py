@@ -308,6 +308,14 @@ class ComprehensionGenerator:
             all_instrs.extend(b.instructions)
         all_instrs.sort(key=lambda i: i.offset)
 
+        # [Round5-03] 多 for 子句检测：统计 FOR_ITER 数量。
+        # 多 for 子句（如 `{x+y for x in a for y in b}`）字节码含多个 FOR_ITER，
+        # 每个 FOR_ITER 后接 STORE_* target，最后一个 FOR_ITER 的 body 含 element + APPEND。
+        # 单 for 路径保留原逻辑；多 for 走新路径分别提取每个 generator。
+        for_iter_indices = [i for i, instr in enumerate(all_instrs) if instr.opname == 'FOR_ITER']
+        if len(for_iter_indices) > 1:
+            return self._parse_multi_for_comprehension(code_obj, all_instrs, iter_expr, for_iter_indices)
+
         target_name = self._find_comp_target_names(all_instrs, first_only=True)
         if target_name is None:
             return None
@@ -368,6 +376,123 @@ class ComprehensionGenerator:
 
         return self._build_comp_result(code_obj, elt_expr, generators)
 
+    def _parse_multi_for_comprehension(self, code_obj, all_instrs, iter_expr, for_iter_indices):
+        """[Round5-03] 多 for 子句推导式重建。
+
+        字节码结构（以 `{x+y for x in a for y in b}` 为例）:
+            BUILD_SET 0
+            LOAD_FAST .0           <- 外部传入的迭代器（对应第一个 for 的 iter）
+            FOR_ITER (outer)       <- for_iter_indices[0]
+            STORE_FAST x           <- 第一个 for 的 target
+            LOAD_GLOBAL b
+            GET_ITER
+            FOR_ITER (inner)       <- for_iter_indices[1]
+            STORE_FAST y           <- 第二个 for 的 target
+            <element>
+            SET_ADD
+            JUMP_BACKWARD to inner FOR_ITER
+            JUMP_BACKWARD to outer FOR_ITER
+
+        生成多个 generator，按外→内顺序。第一个 generator 的 iter 是 iter_expr
+        （外部传入），后续 generator 的 iter 由 LOAD_* + GET_ITER 重建。
+        元素表达式从最内层 FOR_ITER 的 STORE_* 之后、APPEND 之前提取。
+        """
+        append_op, append_idx = self._find_comp_append_op(all_instrs)
+        if append_op is None:
+            return None
+
+        is_async = 0
+        for instr in all_instrs:
+            if instr.opname == 'GET_AITER':
+                is_async = 1
+                break
+
+        generators = []
+        for gen_idx, fi_idx in enumerate(for_iter_indices):
+            # target = STORE_* right after FOR_ITER
+            if fi_idx + 1 >= len(all_instrs):
+                return None
+            store_instr = all_instrs[fi_idx + 1]
+            if store_instr.opname not in ('STORE_FAST', 'STORE_NAME', 'STORE_DEREF', 'STORE_GLOBAL'):
+                return None
+            target = {
+                'type': 'Name',
+                'id': store_instr.argval,
+                'ctx': 'Store',
+            }
+
+            if gen_idx == 0:
+                # 第一个 for 的 iter 来自外部传入
+                gen_iter_expr = iter_expr
+            else:
+                # 后续 for 的 iter 来自前一个 STORE_* 之后、本 FOR_ITER 之前的 LOAD_* + GET_ITER
+                # 定位本 FOR_ITER 之前的 GET_ITER
+                get_iter_idx = None
+                for j in range(fi_idx - 1, -1, -1):
+                    if all_instrs[j].opname == 'GET_ITER':
+                        get_iter_idx = j
+                        break
+                    if all_instrs[j].opname in ('STORE_FAST', 'STORE_NAME', 'STORE_DEREF', 'STORE_GLOBAL'):
+                        break
+                if get_iter_idx is None:
+                    return None
+                # iter 表达式指令范围：从上一个 STORE_* 之后到 GET_ITER 之前
+                start_idx = 0
+                for j in range(get_iter_idx - 1, -1, -1):
+                    if all_instrs[j].opname in ('STORE_FAST', 'STORE_NAME', 'STORE_DEREF', 'STORE_GLOBAL'):
+                        start_idx = j + 1
+                        break
+                iter_instrs = [i for i in all_instrs[start_idx:get_iter_idx]
+                               if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                gen_iter_expr = self.expr_reconstructor.reconstruct(iter_instrs) if iter_instrs else None
+                if gen_iter_expr is None:
+                    gen_iter_expr = {'type': 'Name', 'id': '<iterator>'}
+
+            generators.append({
+                'type': 'comprehension',
+                'target': target,
+                'iter': gen_iter_expr,
+                'ifs': [],
+                'is_async': is_async,
+            })
+
+        # 最内层 FOR_ITER 的 STORE_* 索引（用于元素提取）
+        innermost_fi_idx = for_iter_indices[-1]
+        innermost_store_idx = innermost_fi_idx + 1
+        # 元素提取：从 innermost_store_idx + 1 到 append_idx
+        elt_start_idx = innermost_store_idx + 1
+
+        # 检测三元 / ifs（在最内层 for body 内）
+        ternary_info = self._detect_comp_ternary(all_instrs, innermost_store_idx, append_idx)
+        if ternary_info is not None:
+            if append_op == 'MAP_ADD':
+                key_expr = self._extract_dict_comp_key_before_ternary(all_instrs, innermost_store_idx, append_idx)
+                if key_expr is not None:
+                    elt_expr = (key_expr, ternary_info)
+                else:
+                    elt_expr = ternary_info
+            else:
+                elt_expr = ternary_info
+        else:
+            ifs, elt_start_idx = self._extract_comp_ifs(all_instrs, innermost_store_idx, append_idx)
+            if append_op == 'MAP_ADD':
+                key_expr, value_expr = self._split_dict_comp_kv(all_instrs, elt_start_idx, append_idx)
+                if key_expr is None:
+                    key_expr = {'type': 'Name', 'id': all_instrs[innermost_store_idx].argval, 'ctx': 'Load'}
+                if value_expr is None:
+                    value_expr = {'type': 'Constant', 'value': None}
+                elt_expr = (key_expr, value_expr)
+            else:
+                elt_instrs = all_instrs[elt_start_idx:append_idx]
+                elt_expr = self.expr_reconstructor.reconstruct(elt_instrs)
+                if elt_expr is None:
+                    elt_expr = {'type': 'Name', 'id': all_instrs[innermost_store_idx].argval, 'ctx': 'Load'}
+            # 把 ifs 挂到最内层 generator
+            if ifs:
+                generators[-1]['ifs'] = ifs
+
+        return self._build_comp_result(code_obj, elt_expr, generators)
+
     def _split_dict_comp_kv(self, all_instrs: List[Instruction], start_idx: int, end_idx: int) -> Tuple[Optional[Dict], Optional[Dict]]:
         if start_idx >= end_idx:
             return None, None
@@ -375,6 +500,19 @@ class ComprehensionGenerator:
         instrs_to_split = all_instrs[start_idx:end_idx]
         if not instrs_to_split:
             return None, None
+
+        # [Round5-04] 探测 walrus 副作用块（COPY 1 + STORE_*）—— 不剥离，
+        # 仅记录 walrus 变量名，供 value_expr 包裹 NamedExpr。保留 COPY 在
+        # filtered_instrs 中（栈深度净影响 0），过滤掉 walrus 的 STORE_*。
+        _walrus_var = None
+        for _i in range(len(instrs_to_split) - 1):
+            _cur = instrs_to_split[_i]
+            _nxt = instrs_to_split[_i + 1]
+            if (_cur.opname == 'COPY' and _cur.arg == 1
+                    and _nxt.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_DEREF', 'STORE_GLOBAL')
+                    and _nxt.argval != '.0'):
+                _walrus_var = _nxt.argval
+                break
 
         filtered_instrs = [
             instr for instr in instrs_to_split
@@ -401,6 +539,18 @@ class ComprehensionGenerator:
 
         key_expr = self.expr_reconstructor.reconstruct(key_instrs) if key_instrs else None
         value_expr = self.expr_reconstructor.reconstruct(value_instrs) if value_instrs else None
+
+        # [Round5-04] walrus 包裹：dictcomp value 位置的 (v := expr) → NamedExpr
+        if _walrus_var is not None and value_expr is not None:
+            value_expr = {
+                'type': 'NamedExpr',
+                'target': {
+                    'type': 'Name',
+                    'id': _walrus_var,
+                    'ctx': 'Store',
+                },
+                'value': value_expr,
+            }
 
         return key_expr, value_expr
 

@@ -2957,7 +2957,18 @@ class CodeGenerator:
                 return self._generate_joined_str_from_dict(node)
             elif node_type == 'FormattedValue':
                 # [P2-2026] 处理字典格式的FormattedValue
-                return self._generate_formatted_value_from_dict(node)
+                # [Round5-07] 当 FormattedValue 作为顶层表达式出现时（如
+                # `s = f'{x:{width}.2f}'` 整个右值仅一个 FormattedValue 节点），
+                # reconstruct 不会用 BUILD_STRING 包装它（BUILD_STRING 仅在多个
+                # f-string 片段拼接时出现）。若直接返回 `{x:...}` 会被解析为
+                # dict 字面量。这里返回完整的 `f'{...}'` 字符串。
+                # _generate_joined_str_from_dict 调用本方法时不走本分支（它通过
+                # node_type 分发前的 if 链已处理 JoinedStr），因此不会双重包装。
+                _fv_inner = self._generate_formatted_value_from_dict(node)
+                if "'" in _fv_inner and '"' not in _fv_inner:
+                    return f'f"{_fv_inner}"'
+                else:
+                    return f"f'{_fv_inner}'"
             elif node_type == 'BinOp':
                 # [T1修复] dict-based BinOp 需要正确的优先级和括号处理
                 # 原先通过 _generate_annotation_from_dict 回退，不处理括号
@@ -3815,7 +3826,11 @@ class CodeGenerator:
             result += chr(conversion)
         if format_spec is not None:
             if isinstance(format_spec, dict) and format_spec.get('type') == 'JoinedStr':
-                result += ':' + self._generate_joined_str_from_dict(format_spec)
+                # [Round5-07] 格式说明符上下文不包 f'...'，仅输出内部片段
+                # （如 `{width}.2f` 而非 `f'{width}.2f'`），否则 Python 重编时
+                # 会把 `f'` 与 `'` 当作字面常量并入 BUILD_STRING，导致多出
+                # 两条 LOAD_CONST，字节码不等价。
+                result += ':' + self._generate_format_spec_inner_from_dict(format_spec)
             elif isinstance(format_spec, dict) and format_spec.get('type') == 'Constant' and isinstance(format_spec.get('value'), str):
                 result += ':' + format_spec['value']
             elif isinstance(format_spec, dict):
@@ -3825,6 +3840,34 @@ class CodeGenerator:
         result += '}'
 
         return result
+
+    def _generate_format_spec_inner_from_dict(self, node: Dict[str, Any]) -> str:
+        """[Round5-07] 生成格式说明符内部内容（不包 f'...'）。
+
+        与 _generate_joined_str_from_dict 的区别：本方法仅拼接 JoinedStr.values
+        各片段的源码（字符串常量直出、FormattedValue 输出 `{expr[:conv][:spec]}`），
+        不添加外层 `f'...'` 引号。这是 f-string 格式说明符上下文所要求的：
+        `f'{x:{width}.2f}'` 中 `{width}.2f` 是格式说明符，本身就是类 f-string
+        上下文（{} 内可嵌套替换），但不需要外层引号。
+        """
+        values = node.get('values', [])
+        parts = []
+        for value in values:
+            if isinstance(value, str):
+                escaped = value.replace("'", "\\'").replace('\n', '\\n').replace('\r', '\\r')
+                parts.append(escaped)
+            elif isinstance(value, dict):
+                value_type = value.get('type')
+                if value_type == 'Constant' and isinstance(value.get('value'), str):
+                    escaped = value['value'].replace("'", "\\'").replace('\n', '\\n').replace('\r', '\\r')
+                    parts.append(escaped)
+                elif value_type == 'FormattedValue':
+                    parts.append(self._generate_formatted_value_from_dict(value))
+                else:
+                    parts.append(self._generate_expression(value, 0))
+            else:
+                parts.append(self._generate_expression(value, 0))
+        return ''.join(parts)
 
     def _generate_joined_str(self, node: ASTJoinedStr) -> str:
         """生成f-string表达式"""
