@@ -11269,7 +11269,36 @@ RegionType 枚举值: RegionType.ASSERT
                         merge_context = 'iter'
                         value_target = '__iter_target__'
                         break
-                    
+
+                    # [R12-batch1] 场景1.5: LOAD_ATTR / LOAD_METHOD 作为首条
+                    # 非噪音指令 —— ternary 被属性/方法访问包裹
+                    # （`(ternary).x`、`(ternary).m()`），包裹后的值再用于
+                    # if/while 条件。COMPARE_OP 分支对此失效：LOAD_METHOD 压入
+                    # NULL+method（净 +1），而 _stack_effect 对 CALL 保守地按
+                    # argc+1 弹栈（未扣除 LOAD_METHOD 多压的 NULL），导致
+                    # _net_stack==2 被误判为「无 COPY 的链式比较」。
+                    # 此处显式识别包裹模式：只要 merge_block 末尾含条件跳转
+                    # （if/while 条件上下文），就设 merge_context='compare'，
+                    # 由 _build_ternary_wrapped_expr 走栈模拟重建完整条件。
+                    elif instr.opname in ('LOAD_ATTR', 'LOAD_METHOD'):
+                        _mb_has_cond_jump = any(
+                            _i.opname in (FORWARD_CONDITIONAL_JUMP_OPS
+                                          | BACKWARD_CONDITIONAL_JUMP_OPS)
+                            for _i in merge_block.instructions
+                            if _i.opname not in NOISE_OPS
+                        )
+                        if _mb_has_cond_jump:
+                            true_non_noise = [i for i in true_block.instructions
+                                             if i.opname not in NOISE_OPS]
+                            false_non_noise = [i for i in false_block.instructions
+                                              if i.opname not in NOISE_OPS]
+                            true_has_pop = any(i.opname == 'POP_TOP' for i in true_non_noise)
+                            false_has_pop = any(i.opname == 'POP_TOP' for i in false_non_noise)
+                            if not (true_has_pop or false_has_pop):
+                                merge_context = 'compare'
+                                value_target = '__compare_target__'
+                                break
+
                     # 场景2: COMPARE_OP - ternary用于if/while条件（test_11, 12）
                     # 仅当true/false块都是纯表达式且无POP_TOP时才启用
                     elif instr.opname == 'COMPARE_OP':

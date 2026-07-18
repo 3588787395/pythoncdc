@@ -130,12 +130,25 @@ class CFGBuilder:
         self.instructions = []
         try:
             for instr in dis.get_instructions(self.code_obj):
+                # [R12-batch1] KW_NAMES 的 arg 是 co_consts 索引，dis 不会自动
+                # 解析 argval（返回 <unknown>）。这里手动解析为关键字参数名元组，
+                # 使所有下游消费者（栈模拟、ast_generator_v2 等）都能直接使用 argval。
+                # 否则 `f(x=ternary) > 0` 等场景的关键字参数会被错误地当作位置参数。
+                _argval = instr.argval
+                if (instr.opname == 'KW_NAMES' and instr.arg is not None
+                        and not isinstance(_argval, tuple)):
+                    try:
+                        _resolved = self.code_obj.co_consts[instr.arg]
+                        if isinstance(_resolved, tuple):
+                            _argval = _resolved
+                    except (IndexError, TypeError):
+                        pass
                 instruction = Instruction(
                     offset=instr.offset,
                     opcode=instr.opcode,
                     opname=instr.opname,
                     arg=instr.arg,
-                    argval=instr.argval,
+                    argval=_argval,
                     starts_line=instr.starts_line,
                     is_jump_target=instr.is_jump_target,
                 )

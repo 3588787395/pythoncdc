@@ -8096,15 +8096,25 @@ AST 映射规则:
         # fallback：当作 Name
         return {'type': 'Name', 'id': str(instr.argval), 'ctx': 'Load'}
 
-    def _sim_wrapping_instr(self, instr, stack: List) -> None:
-        """[聚类1 修复] 栈模拟单条 wrapping 指令，更新栈。"""
+    def _sim_wrapping_instr(self, instr, stack: List,
+                            state: Optional[Dict[str, Any]] = None) -> None:
+        """[聚类1 修复] 栈模拟单条 wrapping 指令，更新栈。
+
+        ``state`` 是可选的可变字典，用于跨指令跟踪 ``KW_NAMES``（关键字参数名）。
+        当提供时，``KW_NAMES`` 会记录 ``state['kw_names']``，``CALL`` 会消费它
+        以拆分位置参数与关键字参数；调用方可在调用前初始化为 ``{}``。
+        """
         op = instr.opname
         if op in NOISE_OPS:
             return
         if op.startswith('LOAD_') and op != 'LOAD_ATTR' and op != 'LOAD_METHOD':
             stack.append(self._build_simple_load(instr))
             return
-        if op == 'LOAD_ATTR':
+        if op == 'LOAD_ATTR' or op == 'LOAD_METHOD':
+            # [R12-batch1] LOAD_METHOD 与 LOAD_ATTR 在栈效应上一致
+            # （弹出 receiver，压入属性/方法引用），统一重建为 Attribute。
+            # 否则 `(ternary).m() > 0` 的 LOAD_METHOD 被忽略，CALL 错误地
+            # 把 ternary 当 callable，整个 if 条件丢失。
             if stack:
                 obj = stack.pop()
                 stack.append({
@@ -8141,17 +8151,117 @@ AST 映射规则:
             return
         if op == 'PRECALL':
             return
+        if op == 'KW_NAMES':
+            # [R12-batch1] Python 3.11+ 关键字参数名指令：设置下一次 CALL 的
+            # 关键字参数名元组。栈上不压入值，仅记录在 state 中供 CALL 拆分。
+            if state is not None:
+                state['kw_names'] = instr.argval
+            return
         if op == 'CALL':
             n = instr.arg or 0
             if len(stack) >= n + 1:
                 args = [stack.pop() for _ in range(n)]
                 args.reverse()
                 callable_ = stack.pop()
+                # [R12-batch1] 拆分关键字参数：KW_NAMES 提供关键字名（按栈顺序，
+                # 即最后一个关键字值在前）。CALL 的 n 是位置+关键字参数总数。
+                keywords = []
+                if state is not None and state.get('kw_names'):
+                    _kw_names = state['kw_names']
+                    if isinstance(_kw_names, tuple) and len(_kw_names) <= len(args):
+                        _kw_vals = args[len(args) - len(_kw_names):]
+                        args = args[:len(args) - len(_kw_names)]
+                        for _kn, _kv in zip(_kw_names, _kw_vals):
+                            keywords.append({
+                                'type': 'keyword',
+                                'arg': _kn,
+                                'value': _kv,
+                            })
+                        state['kw_names'] = None
                 stack.append({
                     'type': 'Call',
                     'func': callable_,
                     'args': args,
-                    'keywords': [],
+                    'keywords': keywords,
+                })
+            return
+        if op == 'CALL_FUNCTION_EX':
+            # [R12-batch1] CALL_FUNCTION_EX 用于 *args / **kw 调用：
+            #   m(*args)  -> LOAD args; CALL_FUNCTION_EX 0
+            #   m(**kw)   -> BUILD_MAP 0; LOAD kw; DICT_MERGE 1; CALL_FUNCTION_EX 1
+            # arg bit 0 (1) = 栈顶有 kwargs dict；args tuple 总在栈上。
+            # 栈布局（自顶向下）：[kwargs_dict?, args_tuple, callable]
+            # 否则 `m(*args)` 的 CALL_FUNCTION_EX 被忽略，仅留 args 在栈，
+            # 整个 ternary 被属性/方法包裹的条件丢失。
+            flags = instr.arg or 0
+            has_kwargs = bool(flags & 0x01)
+            kwargs_node = None
+            if has_kwargs and stack:
+                kwargs_node = stack.pop()
+            args_tuple = stack.pop() if stack else None
+            callable_ = stack.pop() if stack else None
+            args = []
+            if args_tuple is not None and isinstance(args_tuple, dict):
+                _t = args_tuple.get('type')
+                if _t == 'Tuple':
+                    args = list(args_tuple.get('elts', []))
+                elif (_t == 'Constant'
+                        and isinstance(args_tuple.get('value'), tuple)
+                        and len(args_tuple['value']) == 0):
+                    # 空元组 ()（**kw 调用的占位）：无位置参数
+                    args = []
+                elif _t == 'List':
+                    args = list(args_tuple.get('elts', []))
+                else:
+                    # 单个 Name/Call 等：包装为 *expr
+                    args = [{'type': 'Starred', 'value': args_tuple,
+                             'ctx': 'Load'}]
+            keywords = []
+            if kwargs_node is not None and isinstance(kwargs_node, dict):
+                _kt = kwargs_node.get('type')
+                if _kt == 'DictMerge':
+                    # 多个 **dict 合并：递归展开为多个 KeywordStarred
+                    keywords.extend(self._flatten_dict_merge_to_keywords(kwargs_node))
+                elif _kt == 'Dict':
+                    # 字面量 dict：展开键值对为 keyword
+                    _keys = kwargs_node.get('keys', [])
+                    _vals = kwargs_node.get('values', [])
+                    for _k, _v in zip(_keys, _vals):
+                        if _k is None:
+                            keywords.append({'type': 'KeywordStarred',
+                                             'value': _v})
+                        else:
+                            keywords.append({
+                                'type': 'keyword',
+                                'arg': (_k.get('value') if isinstance(_k, dict)
+                                        and _k.get('type') == 'Constant'
+                                        else _k),
+                                'value': _v,
+                            })
+                else:
+                    # Name / Call / Attribute 等：**expr
+                    keywords.append({'type': 'KeywordStarred',
+                                     'value': kwargs_node})
+            stack.append({
+                'type': 'Call',
+                'func': callable_,
+                'args': args,
+                'keywords': keywords,
+            })
+            return
+        if op == 'DICT_MERGE':
+            # [R12-batch1] DICT_MERGE 用于 **kw 调用：栈顶是源 dict（如 kw），
+            # 下方是 BUILD_MAP 0 创建的空 dict（占位符）。合并为目标 + 源。
+            # 保留为 DictMerge 节点，供 CALL_FUNCTION_EX 递归展开为
+            # KeywordStarred（与 ast_generator_v2 保持一致）。
+            # 否则 `m(**kw)` 的 kw 被当作普通值，CALL_FUNCTION_EX 重建失败。
+            if len(stack) >= 2:
+                src = stack.pop()
+                target = stack.pop()
+                stack.append({
+                    'type': 'DictMerge',
+                    'dict1': target,
+                    'dict2': src,
                 })
             return
         if op == 'BUILD_MAP':
@@ -8211,23 +8321,33 @@ AST 映射规则:
                 })
             return
         if op == 'BINARY_OP':
+            # [R12-batch1] dis 返回 BINARY_OP.argval 为整数 arg（如 0=NB_ADD），
+            # 不是操作符字符串。映射到 ast BinOp 期望的字符串操作符。
             if len(stack) >= 2:
                 right = stack.pop()
                 left = stack.pop()
                 stack.append({
                     'type': 'BinOp',
                     'left': left,
-                    'op': instr.argval,
+                    'op': self._binary_op_arg_to_str(instr.arg),
                     'right': right,
                 })
             return
         if op.startswith('UNARY_'):
+            # [R12-batch1] 映射到 ast UnaryOp 期望的操作名：
+            #   UNARY_NEGATIVE→USub, UNARY_NOT→Not, UNARY_POSITIVE→UAdd,
+            #   UNARY_INVERT→Invert
+            _UNARY_AST_OP = {
+                'UNARY_NEGATIVE': 'USub',
+                'UNARY_NOT': 'Not',
+                'UNARY_POSITIVE': 'UAdd',
+                'UNARY_INVERT': 'Invert',
+            }
             if stack:
                 operand = stack.pop()
-                uop = op[len('UNARY_'):].lower()
                 stack.append({
                     'type': 'UnaryOp',
-                    'op': uop,
+                    'op': _UNARY_AST_OP.get(op, 'Not'),
                     'operand': operand,
                 })
             return
@@ -8246,6 +8366,65 @@ AST 映射规则:
                 stack.pop()
             return
         # 其他指令（如 STORE_*）忽略
+
+    @staticmethod
+    def _binary_op_arg_to_str(arg: Any) -> str:
+        """[R12-batch1] 将 BINARY_OP 的整数 arg 映射为操作符字符串。
+
+        CPython 3.11+ ``dis.get_instructions`` 返回的 BINARY_OP ``argval`` 是
+        整数 arg（如 0 表示 NB_ADD），而非操作符字符串。CodeGenerator 期望
+        BinOp 节点的 ``op`` 字段是字符串（如 ``'+'``）。
+        """
+        _BINARY_OP_MAP = {
+            0: '+',   1: '&',   2: '//',  3: '<<',  4: '@',   5: '*',
+            6: '%',   7: '|',   8: '**',  9: '>>',  10: '-',  11: '/',  12: '^',
+        }
+        if isinstance(arg, int):
+            return _BINARY_OP_MAP.get(arg, '+')
+        if isinstance(arg, str):
+            # 已是字符串（可能是 '+' 等），原样返回
+            return arg
+        return '+'
+
+    def _flatten_dict_merge_to_keywords(self, node):
+        """[R12-batch1] 递归展开（嵌套）DictMerge 节点为 keyword 列表。
+
+        用于 CALL_FUNCTION_EX 的 kwargs 重建：``f(**a, **b, k=v)`` 字节码
+        会产生嵌套 DictMerge(DictMerge(Dict({k:v}), Name(a)), Name(b))。
+        展开规则（与 ast_generator_v2._flatten_dict_merge_to_kwargs 一致）：
+          - DictMerge: 递归展开 dict1，再追加 dict2 为 KeywordStarred
+          - Dict: 显式关键字参数，转为 keyword 节点
+          - Name/Call/Attribute/Subscript/Starred: 单个 ``**expr`` 项
+        """
+        result = []
+        if not isinstance(node, dict):
+            return result
+        ntype = node.get('type')
+        if ntype == 'DictMerge':
+            d1 = node.get('dict1')
+            if d1 is not None:
+                result.extend(self._flatten_dict_merge_to_keywords(d1))
+            d2 = node.get('dict2')
+            if d2 is not None:
+                result.append({'type': 'KeywordStarred', 'value': d2})
+        elif ntype == 'Dict':
+            keys = node.get('keys', [])
+            values = node.get('values', [])
+            for i, key in enumerate(keys):
+                if i < len(values):
+                    if key is None:
+                        result.append({'type': 'KeywordStarred',
+                                       'value': values[i]})
+                    else:
+                        result.append({
+                            'type': 'keyword',
+                            'arg': (key.get('value') if isinstance(key, dict)
+                                    and key.get('type') == 'Constant' else key),
+                            'value': values[i],
+                        })
+        elif ntype in ('Name', 'Call', 'Attribute', 'Subscript', 'Starred'):
+            result.append({'type': 'KeywordStarred', 'value': node})
+        return result
 
     def _build_ternary_wrapped_expr(self, ternary_expr: Dict[str, Any],
                                      cond_block: 'BasicBlock',
@@ -8272,6 +8451,7 @@ AST 映射规则:
         cond_instrs = [i for i in cond_block.instructions if i.opname not in NOISE_OPS]
 
         _WRAPPING_OPS = {'LOAD_ATTR', 'BINARY_SUBSCR', 'PRECALL', 'CALL',
+                         'CALL_FUNCTION_EX', 'DICT_MERGE',
                          'BUILD_MAP', 'CONTAINS_OP', 'IS_OP'}
         _has_wrapping = any(i.opname in _WRAPPING_OPS for i in cond_instrs)
         _has_none_check = any(i.opname in NONE_CHECK_OPS for i in cond_instrs)
@@ -8283,10 +8463,14 @@ AST 映射规则:
 
         # 栈模拟
         stack: List = []
+        # [R12-batch1] state 字典跟踪 KW_NAMES（关键字参数名），供 CALL 拆分
+        # 位置参数与关键字参数。否则 `f(x=ternary) > 0` 的 KW_NAMES 被忽略，
+        # 关键字参数被错误地当作位置参数，导致 KW_NAMES 指令在重编字节码中丢失。
+        sim_state: Dict[str, Any] = {}
 
         # 阶段 1: 处理 trapped 指令（在 ternary 之前，如 container d, callable f）
         for instr in trapped_instrs:
-            self._sim_wrapping_instr(instr, stack)
+            self._sim_wrapping_instr(instr, stack, sim_state)
 
         # 阶段 2: 压入 ternary_expr（ternary 已生产一个值）
         stack.append(ternary_expr)
@@ -8294,6 +8478,13 @@ AST 映射规则:
         # 阶段 3: 处理 cond_block 中的指令
         then_offsets = ({b.start_offset for b in region.then_blocks}
                         if getattr(region, 'then_blocks', None) else set())
+
+        # [R12-batch1] 链式比较支持：当 IfRegion 含 chained_compare_blocks
+        # （如 `0 < (ternary).x < 10`），不在首个条件跳转处返回，而是
+        # 收集各段 Compare，最后合并为单个链式 Compare。否则第二段
+        # （`< 10`）丢失，输出退化为 `0 < (ternary).x`。
+        _chained_blocks = list(getattr(region, 'chained_compare_blocks', None) or [])
+        _chained_compares: List[Dict[str, Any]] = []
 
         for instr in cond_instrs:
             op = instr.opname
@@ -8319,11 +8510,53 @@ AST 映射规则:
                 return None
             # 非 NONE_CHECK 的条件跳转：终结，返回栈顶
             if op in FORWARD_CONDITIONAL_JUMP_OPS or op in BACKWARD_CONDITIONAL_JUMP_OPS:
+                if _chained_blocks:
+                    # 链式比较中间跳转：弹出比较结果，继续处理后续段
+                    if stack and isinstance(stack[-1], dict) and stack[-1].get('type') == 'Compare':
+                        _chained_compares.append(stack.pop())
+                    break
                 if stack:
                     return stack[-1]
                 return None
             # 其他指令：栈模拟
-            self._sim_wrapping_instr(instr, stack)
+            self._sim_wrapping_instr(instr, stack, sim_state)
+
+        # [R12-batch1] 处理 chained_compare_blocks：继续栈模拟，收集各段 Compare
+        if _chained_blocks and _chained_compares:
+            for _cb in _chained_blocks:
+                _cb_instrs = [i for i in _cb.instructions
+                              if i.opname not in NOISE_OPS]
+                for _instr in _cb_instrs:
+                    _op = _instr.opname
+                    if _op in (FORWARD_CONDITIONAL_JUMP_OPS
+                               | BACKWARD_CONDITIONAL_JUMP_OPS
+                               | NONE_CHECK_OPS):
+                        if stack and isinstance(stack[-1], dict) and stack[-1].get('type') == 'Compare':
+                            _chained_compares.append(stack.pop())
+                        break
+                    self._sim_wrapping_instr(_instr, stack, sim_state)
+            # 合并各段 Compare 为单个链式 Compare
+            if len(_chained_compares) >= 2:
+                _first = _chained_compares[0]
+                _merged_ops = [_first.get('ops', ['<'])[0] if _first.get('ops') else '<']
+                _merged_comparators = [_first.get('comparators', [None])[0]
+                                       if _first.get('comparators') else None]
+                for _c in _chained_compares[1:]:
+                    _c_ops = _c.get('ops', [])
+                    _c_comps = _c.get('comparators', [])
+                    if _c_ops:
+                        _merged_ops.append(_c_ops[0])
+                    if _c_comps:
+                        _merged_comparators.append(_c_comps[0])
+                return {
+                    'type': 'Compare',
+                    'left': _first.get('left'),
+                    'ops': _merged_ops,
+                    'comparators': _merged_comparators,
+                }
+            if _chained_compares:
+                return _chained_compares[0]
+            return stack[-1] if stack else None
 
         return stack[-1] if stack else None
 
@@ -8354,10 +8587,27 @@ AST 映射规则:
                 return _await_cond
         # Check if condition block is the merge of a TernaryRegion with compare context
         ternary_for_cond = None
-        for _r in self.region_analyzer.regions:
-            if isinstance(_r, TernaryRegion) and _r.merge_block is cond_block:
-                ternary_for_cond = _r
-                break
+        # [R12-batch1] 嵌套三元共享同一 merge_block 时（如
+        # `(a if c else (b if d else e)).x > 0`），内层和外层 TernaryRegion
+        # 都以 cond_block 为 merge_block。需选最外层（其 entry 不是任何
+        # 其他候选三元的 true/false 值块），否则内层三元被选中后 nesting
+        # guard 返回 None，整个条件表达式丢失为 `if 0:`。
+        _ternary_candidates = [_r for _r in self.region_analyzer.regions
+                               if isinstance(_r, TernaryRegion)
+                               and _r.merge_block is cond_block]
+        if _ternary_candidates:
+            _inner_value_block_ids = set()
+            for _r in _ternary_candidates:
+                if _r.true_value_block is not None:
+                    _inner_value_block_ids.add(id(_r.true_value_block))
+                if _r.false_value_block is not None:
+                    _inner_value_block_ids.add(id(_r.false_value_block))
+            for _r in _ternary_candidates:
+                if id(_r.entry) not in _inner_value_block_ids:
+                    ternary_for_cond = _r
+                    break
+            if ternary_for_cond is None:
+                ternary_for_cond = _ternary_candidates[0]
         if isinstance(ternary_for_cond, TernaryRegion) and getattr(ternary_for_cond, 'merge_context', None) == 'compare':
             ternary_result = self._generate_ternary(ternary_for_cond)
             ternary_expr = None
