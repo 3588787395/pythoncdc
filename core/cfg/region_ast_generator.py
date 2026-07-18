@@ -4254,8 +4254,26 @@ AST 映射规则:
                         _last_store_idx = _sli
                     break
             if _walrus_store_idx >= 0:
+                # [R11-err8] walrus (COPY 1 + STORE_*) 是回边条件重检的一部分，
+                # 不应作为 body 语句输出。需要用栈模拟找到 walrus 值计算的起点，
+                # 把 _body_end_idx 设到该起点之前（与 BACKWARD 分支一致）。
+                # 否则 LOAD/CALL/COPY/STORE 序列会被 _build_store_statement 重建为
+                # 独立的 `x = f()` 赋值，导致 while (x := f()) and g(): 的循环体
+                # 多出冗余的 x = f() 语句。
                 _cond_break_start_idx = _walrus_store_idx + 1
-                _body_end_idx = _walrus_store_idx
+                stack_depth = 0
+                for _sli in range(len(hdr.instructions) - 1, -1, -1):
+                    _sl_instr = hdr.instructions[_sli]
+                    try:
+                        effect = _dis.stack_effect(_sl_instr.opcode, _sl_instr.arg)
+                    except Exception:
+                        effect = 0
+                    stack_depth -= effect
+                    if stack_depth <= 0:
+                        _body_end_idx = _sli - 1
+                        break
+                if _body_end_idx is None:
+                    _body_end_idx = _walrus_store_idx - 1
             elif _last_store_idx >= 0:
                 _body_end_idx = _last_store_idx
                 _cond_break_start_idx = _last_store_idx + 1
@@ -13884,6 +13902,208 @@ AST 映射规则:
             return None
         return {'type': 'IfExp', 'test': cond_expr, 'body': true_expr, 'orelse': false_expr}
 
+    def _detect_boolop_grouping(self, region: 'BoolOpRegion', op_chain: List[Tuple['BasicBlock', str]]) -> tuple:
+        """[R11-err2] 检测 BoolOp 链中是否存在显式分组（括号化的 and/or 组合）。
+
+        算法角色：分组结构检测器（Grouping Structure Detector）
+        输入：BoolOpRegion.op_chain
+        输出：(has_grouping, outer_op, classifications)
+
+        【判定原理】
+        平坦的 `a or b and c or d`（= `a or (b and c) or d`）中，每个链块的
+        短路跳转目标都指向链外（body/else/merge）。
+        而括号化的 `(a or b) and (c or d)` 中，block@0 (or) 的 IF_TRUE 跳转
+        目标是 block@10（另一个链块）——因为 `(a or b)` 是自包含子组，a 为真
+        时跳到下一组 `(c or d)` 继续求值，而非直接跳到 body。
+
+        因此「跳转目标 ∈ 链块集合」是内层操作符的可靠信号：
+        - 'or' 块 IF_TRUE → 链块：内层 'or'（括号化的 or 子组）
+        - 'and' 块 IF_FALSE → 链块：内层 'and'（括号化的 and 子组）
+
+        【外层操作符推导】
+        - 存在内层 'or' 且无内层 'and' → 外层是 'and'（and/or 互斥）
+        - 存在内层 'and' 且无内层 'or' → 外层是 'or'
+        - 两者皆无 → 平坦结构，回退 or_groups 算法
+        - 两者皆有 → 混合嵌套分组（罕见），回退 or_groups 算法避免误判
+
+        【分类规则】
+        - 内层块（跳转目标 ∈ 链块）→ 'INNER'
+        - 外层块（跳转目标 ∉ 链块）→ 与外层操作符同型 → 'OUTER'；异型 → 'INNER'
+          （异型说明该块是「最后一个内层子组」的起始，其跳转目标因是末组而指向 body/else）
+        - 末尾块 → 'LAST'（最终真值测试，无连接操作符）
+        """
+        if len(op_chain) < 2:
+            return False, None, []
+        chain_block_offsets = {b.start_offset for b, _ in op_chain}
+        has_internal_or = False
+        has_internal_and = False
+        raw_signals = []  # 'INNER' / None（待定）
+        for i, (chain_block, _chain_op) in enumerate(op_chain):
+            if i == len(op_chain) - 1:
+                break
+            last_instr = chain_block.get_last_instruction()
+            if (last_instr is None or last_instr.argval is None
+                    or last_instr.opname not in (SHORT_CIRCUIT_JUMP_OPS
+                                                  | FORWARD_CONDITIONAL_JUMP_OPS
+                                                  | BACKWARD_CONDITIONAL_JUMP_OPS)):
+                raw_signals.append(None)
+                continue
+            target_is_chain_block = last_instr.argval in chain_block_offsets
+            if target_is_chain_block:
+                raw_signals.append('INNER')
+                if _chain_op == 'or':
+                    has_internal_or = True
+                else:
+                    has_internal_and = True
+            else:
+                raw_signals.append(None)
+        if has_internal_or and not has_internal_and:
+            outer_op = 'and'
+        elif has_internal_and and not has_internal_or:
+            outer_op = 'or'
+        else:
+            return False, None, []
+        classifications = []
+        for i, (_chain_block, chain_op) in enumerate(op_chain):
+            if i == len(op_chain) - 1:
+                classifications.append('LAST')
+                continue
+            sig = raw_signals[i]
+            if sig == 'INNER':
+                classifications.append('INNER')
+            else:
+                classifications.append('OUTER' if chain_op == outer_op else 'INNER')
+        return True, outer_op, classifications
+
+    def _build_grouped_boolop_expression(self, region: 'BoolOpRegion', op_chain: List[Tuple['BasicBlock', str]],
+                                         outer_op: str, classifications: list) -> Optional[Dict[str, Any]]:
+        """[R11-err2] 重建带显式分组的 BoolOp 表达式，保留括号结构。
+
+        算法角色：分组表达式重建器（Grouped Expression Reconstructor）
+        输入：op_chain + 外层操作符 + 每块分类（INNER/OUTER/LAST）
+        输出：保留嵌套结构的 BoolOp AST
+
+        【算法步骤】
+        1. 遍历 op_chain，对每个链块重建子表达式（同 _build_boolop_expression）
+        2. 按分类分组：
+           - INNER：当前操作数加入内层组，连接操作符即内层组操作符
+           - OUTER：当前操作数是内层组最后一个，结束内层组（>1值则嵌套 BoolOp），
+             作为外层操作数；下一操作数开始新的内层组
+           - LAST：末尾块的最终真值测试，操作数加入当前内层组后结束
+        3. 外层操作数列表 → BoolOp(outer_op, [外层操作数...])
+
+        【示例】
+        (a or b) and (c or d):
+          分类 [INNER, OUTER, INNER, LAST], outer='and'
+          → and[ or[a,b], or[c,d] ]
+        a or (b and c) or d:
+          分类 [OUTER, INNER, OUTER, LAST], outer='or'
+          → or[ a, and[b,c], d ]
+        """
+        STRIP_JUMP_OPS = SHORT_CIRCUIT_JUMP_OPS | FORWARD_CONDITIONAL_JUMP_OPS
+        TRANSFORM_OPS = frozenset({'UNARY_NOT', 'UNARY_NEGATIVE', 'UNARY_POSITIVE', 'UNARY_INVERT'})
+
+        outer_values: List[Dict[str, Any]] = []
+        current_inner_op: Optional[str] = None
+        current_inner_values: List[Dict[str, Any]] = []
+
+        def _end_inner_group():
+            nonlocal current_inner_op, current_inner_values
+            if not current_inner_values:
+                current_inner_op = None
+                return
+            if current_inner_op is None or len(current_inner_values) == 1:
+                outer_values.append(current_inner_values[0])
+            else:
+                outer_values.append({'type': 'BoolOp', 'op': current_inner_op,
+                                     'values': list(current_inner_values)})
+            current_inner_op = None
+            current_inner_values = []
+
+        for i, (chain_block, chain_op) in enumerate(op_chain):
+            nested_ternary = self._try_build_nested_ternary_in_boolop(chain_block, region)
+            instrs = [inst for inst in chain_block.instructions
+                      if inst.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+            last_instr = chain_block.get_last_instruction()
+            if last_instr and last_instr.opname in STRIP_JUMP_OPS:
+                pure_instrs = [inst for inst in instrs if inst != last_instr]
+            else:
+                clean_instrs = []
+                for inst in instrs:
+                    if inst.opname in ('POP_TOP', 'RETURN_VALUE', 'RETURN_CONST',
+                                       'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'):
+                        break
+                    clean_instrs.append(inst)
+                pure_instrs = clean_instrs if clean_instrs else (list(instrs[:1]) if instrs else [])
+            is_transforming_only = (pure_instrs and nested_ternary is None and
+                                    all(inst.opname in TRANSFORM_OPS for inst in pure_instrs))
+            if is_transforming_only:
+                if current_inner_values:
+                    if len(current_inner_values) == 1:
+                        group_result = current_inner_values[0]
+                    else:
+                        group_result = {'type': 'BoolOp', 'op': current_inner_op,
+                                         'values': list(current_inner_values)}
+                    for inst in pure_instrs:
+                        if inst.opname == 'UNARY_NOT':
+                            group_result = {'type': 'UnaryOp', 'op': 'not', 'operand': group_result}
+                        elif inst.opname == 'UNARY_NEGATIVE':
+                            group_result = {'type': 'UnaryOp', 'op': 'USub', 'operand': group_result}
+                        elif inst.opname == 'UNARY_POSITIVE':
+                            group_result = {'type': 'UnaryOp', 'op': 'UAdd', 'operand': group_result}
+                        elif inst.opname == 'UNARY_INVERT':
+                            group_result = {'type': 'UnaryOp', 'op': 'Invert', 'operand': group_result}
+                    current_inner_op = chain_op
+                    current_inner_values = [group_result]
+                continue
+            if nested_ternary is not None:
+                sub_expr = nested_ternary
+            elif not pure_instrs:
+                sub_expr = self._try_build_await_boolop_operand(chain_block)
+            else:
+                sub_expr = self.expr_reconstructor.reconstruct(pure_instrs)
+                if sub_expr is None:
+                    sub_expr = self._try_build_await_boolop_operand(chain_block)
+            if sub_expr is not None and last_instr and last_instr.opname in NONE_CHECK_OPS:
+                _is_not_none_op = 'NOT_NONE' in last_instr.opname
+                if chain_op == 'and':
+                    _cmp_op = 'IsNot' if not _is_not_none_op else 'Is'
+                else:
+                    _cmp_op = 'IsNot' if _is_not_none_op else 'Is'
+                sub_expr = {
+                    'type': 'Compare',
+                    'left': sub_expr,
+                    'ops': [{'type': _cmp_op}],
+                    'comparators': [{'type': 'Constant', 'value': None}]
+                }
+            if sub_expr is None:
+                continue
+            current_inner_values.append(sub_expr)
+            cls = classifications[i] if i < len(classifications) else 'LAST'
+            if cls == 'LAST':
+                _end_inner_group()
+            elif cls == 'INNER':
+                current_inner_op = chain_op
+            else:  # OUTER
+                _end_inner_group()
+        if current_inner_values:
+            _end_inner_group()
+        if not outer_values:
+            return None
+        if len(outer_values) == 1:
+            result: Optional[Dict[str, Any]] = outer_values[0]
+        else:
+            result = {'type': 'BoolOp', 'op': outer_op, 'values': outer_values}
+        _has_unary_not = False
+        if region.merge_block:
+            _merge_instrs = [inst for inst in region.merge_block.instructions
+                             if inst.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+            if any(inst.opname == 'UNARY_NOT' for inst in _merge_instrs):
+                _has_unary_not = True
+        if _has_unary_not and result:
+            result = {'type': 'UnaryOp', 'op': 'not', 'operand': result}
+        return result
+
     def _build_boolop_expression(self, region: 'BoolOpRegion', skip_elif_blocks: bool = True) -> Optional[Dict[str, Any]]:
         """从BoolOpRegion的op_chain重建布尔表达式AST
 
@@ -13932,6 +14152,17 @@ AST 映射规则:
         if not op_chain:
             return None
         STRIP_JUMP_OPS = SHORT_CIRCUIT_JUMP_OPS | FORWARD_CONDITIONAL_JUMP_OPS
+        # [R11-err2] 显式分组（括号化的 and/or 组合）检测：
+        # 当链块的短路跳转目标指向另一个链块时，表明存在自包含子组
+        # （如 (a or b) and (c or d) 中 block@0 or 的 IF_TRUE→block@10）。
+        # 此时 or_groups 平坦化算法会丢失括号，需改用基于跳转目标的分组重建。
+        _has_grouping, _group_outer_op, _group_classifications = self._detect_boolop_grouping(region, op_chain)
+        if _has_grouping:
+            _grouped_result = self._build_grouped_boolop_expression(
+                region, op_chain, _group_outer_op, _group_classifications)
+            if _grouped_result is not None:
+                return _grouped_result
+            # 分组重建失败时回退到 or_groups 算法
         # 使用or_groups算法处理混合and/or优先级
         # 核心原理：Python中and绑定比or更紧
         # 当op从'and'变为'or'时，当前值是'and'段的最后一个值（外层or的短路跳转）
