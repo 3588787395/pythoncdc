@@ -16098,89 +16098,137 @@ AST 映射规则:
             if _swap_idx is not None and _swap_idx >= 1:
                 _after_swap = _chain_instrs[_swap_idx + 1:]
                 if len(_after_swap) >= _swap_n:
-                    _swap_stores = []
-                    _swap_valid = True
-                    for _si in range(_swap_n):
-                        _s_instr = _after_swap[_si]
-                        if _s_instr.opname not in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
-                            _swap_valid = False
+                    # 统一解析 N 个 store 序列，支持 name/attr/subscr 三种目标。
+                    # 字节码布局: SWAP N, [LOAD obj]? [LOAD key]? STORE_*, ... (共 N 个 store)
+                    # 每个目标: name=STORE_*; attr=LOAD obj, STORE_ATTR; subscr=LOAD obj, LOAD key, STORE_SUBSCR
+                    _parsed_targets = []
+                    _parsed_valid = True
+                    _consume_idx = 0
+                    _all_simple_names = True
+                    for _ti in range(_swap_n):
+                        _pre_instrs = []
+                        _store_instr = None
+                        while _consume_idx < len(_after_swap):
+                            _instr = _after_swap[_consume_idx]
+                            if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+                                                 'STORE_ATTR', 'STORE_SUBSCR'):
+                                _store_instr = _instr
+                                break
+                            _pre_instrs.append(_instr)
+                            _consume_idx += 1
+                        if _store_instr is None:
+                            _parsed_valid = False
                             break
-                        _swap_stores.append(_s_instr)
-                    # After the N stores, the next instr (if any) must NOT be another
-                    # STORE_* (otherwise this is a different pattern, e.g. multi-target
-                    # chain that happens to start with SWAP).
-                    if _swap_valid and _swap_n >= 2:
-                        _after_stores_idx = _swap_n
-                        if _after_stores_idx < len(_after_swap):
-                            _next_after = _after_swap[_after_stores_idx]
+                        if _store_instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                            # name 目标: 不允许前导 LOAD（否则是其他模式）
+                            if _pre_instrs:
+                                _parsed_valid = False
+                                break
+                            _parsed_targets.append({
+                                'type': 'Name',
+                                'id': _store_instr.argval if _store_instr.argval else f'var_{_store_instr.arg}',
+                                'ctx': 'Store',
+                                'lineno': _store_instr.starts_line,
+                            })
+                        elif _store_instr.opname == 'STORE_ATTR':
+                            _all_simple_names = False
+                            if not _pre_instrs:
+                                _parsed_valid = False
+                                break
+                            _obj_expr = self.expr_reconstructor.reconstruct(_pre_instrs)
+                            if _obj_expr is None:
+                                _parsed_valid = False
+                                break
+                            _parsed_targets.append({
+                                'type': 'Attribute',
+                                'value': _obj_expr,
+                                'attr': _store_instr.argval,
+                                'ctx': 'Store',
+                                'lineno': _store_instr.starts_line,
+                            })
+                        elif _store_instr.opname == 'STORE_SUBSCR':
+                            _all_simple_names = False
+                            if not _pre_instrs:
+                                _parsed_valid = False
+                                break
+                            self.expr_reconstructor.reset()
+                            for _pin in _pre_instrs:
+                                self.expr_reconstructor._process_instruction(_pin)
+                            _sub_stack = [s for s in self.expr_reconstructor.stack
+                                          if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+                            if len(_sub_stack) < 2:
+                                _parsed_valid = False
+                                break
+                            _parsed_targets.append({
+                                'type': 'Subscript',
+                                'value': _sub_stack[-2],
+                                'slice': _sub_stack[-1],
+                                'ctx': 'Store',
+                                'lineno': _store_instr.starts_line,
+                            })
+                        _consume_idx += 1  # 消费 store 指令
+                    # 纯名字路径守卫: N 个 store 之后下一条不能仍是 STORE_*（避免误吞多目标链）
+                    if _parsed_valid and _all_simple_names and _swap_n >= 2:
+                        if _consume_idx < len(_after_swap):
+                            _next_after = _after_swap[_consume_idx]
                             if _next_after.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
-                                _swap_valid = False
-                        if _swap_valid:
-                            _value_pre_instrs = _chain_instrs[:_swap_idx]
-                            # Guard: value slice must form a single tuple-expression
-                            # (no statement-ending ops inside).
-                            _swap_terminal_ops = (
-                                'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
-                                'STORE_SUBSCR', 'STORE_ATTR',
-                                'POP_TOP', 'RETURN_VALUE', 'RETURN_CONST',
-                                'RAISE_VARARGS', 'IMPORT_NAME',
-                            )
-                            if (_value_pre_instrs
-                                    and not any(i.opname in _swap_terminal_ops for i in _value_pre_instrs)):
-                                self.expr_reconstructor.reset()
-                                for _vin in _value_pre_instrs:
-                                    self.expr_reconstructor._process_instruction(_vin)
-                                _swap_stack = [s for s in self.expr_reconstructor.stack
-                                               if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
-                                if len(_swap_stack) >= _swap_n:
-                                    # 栈上 N 个值，按加载顺序对应 N 个目标（源顺序）。
-                                    # stack[-N] = 第一个值（对应第一个目标），stack[-1] = 最后一个值。
-                                    _tuple_elts = []
-                                    for _si in range(_swap_n):
-                                        _val = _swap_stack[-_swap_n + _si]
-                                        _tgt_instr = _swap_stores[_si]
-                                        _tuple_elts.append({
-                                            'type': 'Name',
-                                            'id': _tgt_instr.argval if _tgt_instr.argval else f'var_{_tgt_instr.arg}',
-                                            'ctx': 'Store',
-                                            'lineno': _tgt_instr.starts_line,
+                                _parsed_valid = False
+                    if _parsed_valid and _swap_n >= 2:
+                        _value_pre_instrs = _chain_instrs[:_swap_idx]
+                        # Guard: value slice must form a single tuple-expression
+                        # (no statement-ending ops inside).
+                        _swap_terminal_ops = (
+                            'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+                            'STORE_SUBSCR', 'STORE_ATTR',
+                            'POP_TOP', 'RETURN_VALUE', 'RETURN_CONST',
+                            'RAISE_VARARGS', 'IMPORT_NAME',
+                        )
+                        if (_value_pre_instrs
+                                and not any(i.opname in _swap_terminal_ops for i in _value_pre_instrs)):
+                            self.expr_reconstructor.reset()
+                            for _vin in _value_pre_instrs:
+                                self.expr_reconstructor._process_instruction(_vin)
+                            _swap_stack = [s for s in self.expr_reconstructor.stack
+                                           if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+                            if len(_swap_stack) >= _swap_n:
+                                # 栈上 N 个值，按加载顺序对应 N 个目标（源顺序）。
+                                # stack[-N] = 第一个值（对应第一个目标），stack[-1] = 最后一个值。
+                                _tuple_target = {
+                                    'type': 'Tuple',
+                                    'elts': _parsed_targets,
+                                    'ctx': 'Store',
+                                }
+                                _rhs_elts = [_swap_stack[-_swap_n + _si] for _si in range(_swap_n)]
+                                _rhs_expr = {
+                                    'type': 'Tuple',
+                                    'elts': _rhs_elts,
+                                    'ctx': 'Load',
+                                } if len(_rhs_elts) != 1 else _rhs_elts[0]
+                                _swap_unpack_stmts = [{
+                                    'type': 'Assign',
+                                    'targets': [_tuple_target],
+                                    'value': _rhs_expr,
+                                    'lineno': _parsed_targets[0].get('lineno'),
+                                }]
+                                # 处理 SWAP+STORE 之后的剩余指令（如 RETURN_VALUE）
+                                _last_swap_store_idx = _swap_idx + 1 + _consume_idx  # in _chain_instrs
+                                _swap_remaining = _chain_instrs[_last_swap_store_idx:]
+                                if _swap_remaining:
+                                    _has_return = any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in _swap_remaining)
+                                    if _has_return:
+                                        _rv_instrs = []
+                                        for _instr in _swap_remaining:
+                                            if _instr.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                                                break
+                                            if _instr.opname not in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL',
+                                                                'COPY', 'SWAP', 'POP_EXCEPT', 'PUSH_EXC_INFO'):
+                                                _rv_instrs.append(_instr)
+                                        _return_value = self.expr_reconstructor.reconstruct(_rv_instrs) if _rv_instrs else None
+                                        _swap_unpack_stmts.append({
+                                            'type': 'Return',
+                                            'value': _return_value if _return_value else {'type': 'Constant', 'value': None}
                                         })
-                                    _rhs_elts = [_swap_stack[-_swap_n + _si] for _si in range(_swap_n)]
-                                    _tuple_target = {
-                                        'type': 'Tuple',
-                                        'elts': _tuple_elts,
-                                        'ctx': 'Store',
-                                    }
-                                    _rhs_expr = {
-                                        'type': 'Tuple',
-                                        'elts': _rhs_elts,
-                                        'ctx': 'Load',
-                                    } if len(_rhs_elts) != 1 else _rhs_elts[0]
-                                    _swap_unpack_stmts = [{
-                                        'type': 'Assign',
-                                        'targets': [_tuple_target],
-                                        'value': _rhs_expr,
-                                        'lineno': _swap_stores[0].starts_line,
-                                    }]
-                                    # 处理 SWAP+STORE 之后的剩余指令（如 RETURN_VALUE）
-                                    _last_swap_store_idx = _swap_idx + 1 + _swap_n  # in _chain_instrs
-                                    _swap_remaining = _chain_instrs[_last_swap_store_idx:]
-                                    if _swap_remaining:
-                                        _has_return = any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in _swap_remaining)
-                                        if _has_return:
-                                            _rv_instrs = []
-                                            for _instr in _swap_remaining:
-                                                if _instr.opname in ('RETURN_VALUE', 'RETURN_CONST'):
-                                                    break
-                                                if _instr.opname not in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL',
-                                                                    'COPY', 'SWAP', 'POP_EXCEPT', 'PUSH_EXC_INFO'):
-                                                    _rv_instrs.append(_instr)
-                                            _return_value = self.expr_reconstructor.reconstruct(_rv_instrs) if _rv_instrs else None
-                                            _swap_unpack_stmts.append({
-                                                'type': 'Return',
-                                                'value': _return_value if _return_value else {'type': 'Constant', 'value': None}
-                                            })
-                                    _swap_unpack_result = _swap_unpack_stmts
+                                _swap_unpack_result = _swap_unpack_stmts
         if _swap_unpack_result is not None:
             stmts.extend(_swap_unpack_result)
             self.generated_blocks.add(block)
