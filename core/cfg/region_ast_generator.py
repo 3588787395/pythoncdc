@@ -17487,11 +17487,13 @@ AST 映射规则:
                     # 整合指令：消费栈顶 walrus 值，组装到更大表达式中（非字面量构造）。
                     # FORMAT_VALUE = f-string 格式化；MAKE_FUNCTION = lambda 默认参数；
                     # BINARY_SUBSCR = 下标访问；BINARY_OP = 二元运算；COMPARE_OP = 比较；
-                    # LOAD_ATTR/CALL = 方法链；BUILD_STRING = f-string 拼接。
+                    # LOAD_ATTR = 属性访问（如 (x := f()).attr）；BUILD_STRING = f-string 拼接。
+                    # [Round9-08] 新增 LOAD_ATTR：walrus 后跟 LOAD_ATTR + STORE 作为单一
+                    # Assign 归约（`r = (x := f()).attr`），而非把 walrus 提为独立赋值。
                     _WALRUS_INTEGRATING_OPS = ('FORMAT_VALUE', 'MAKE_FUNCTION',
                                                'BINARY_SUBSCR', 'BINARY_OP',
                                                'COMPARE_OP', 'BUILD_STRING',
-                                               'CONTAINS_OP', 'IS_OP')
+                                               'CONTAINS_OP', 'IS_OP', 'LOAD_ATTR')
                     if (next_store_idx is None
                             and _next_meaningful_after_store is not None
                             and (_next_meaningful_after_store.opname in _LITERAL_BUILD_OPS
@@ -17540,9 +17542,15 @@ AST 映射规则:
                                     break
                             _all_instrs = stmt_instrs + [instr] + _ordered_tail
                             _lit_stmt = self._build_store_statement(_all_instrs, block=block)
+                            # [Round9-13] walrus 整合后可能产出 Assign / FunctionDef /
+                            # AsyncFunctionDef / ClassDef（如 `def f(x=(n := 1))` 整合
+                            # BUILD_TUPLE+MAKE_FUNCTION 后是 FunctionDef 而非 Assign）。
+                            # 之前仅接受 Assign，导致 walrus 默认值被回退为独立赋值 + 无默认 def。
                             if (_lit_stmt is not None
                                     and isinstance(_lit_stmt, dict)
-                                    and _lit_stmt.get('type') == 'Assign'):
+                                    and _lit_stmt.get('type') in (
+                                        'Assign', 'FunctionDef',
+                                        'AsyncFunctionDef', 'ClassDef')):
                                 stmts.append(_lit_stmt)
                                 stmt_instrs = []
                                 for ri in _ordered_tail:

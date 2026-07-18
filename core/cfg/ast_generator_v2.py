@@ -2037,29 +2037,75 @@ class ExpressionReconstructor:
     
     def _extract_comp_elt(self, instrs) -> Dict[str, Any]:
         """[N14/N15修复v3] 从推导式指令中提取元素表达式
-        
-        改进版：元素表达式位于FOR_ITER/STORE_FAST之后、YIELD_VALUE之前
+
+        改进版：元素表达式位于FOR_ITER/STORE_FAST之后、YIELD_VALUE/LIST_APPEND/
+        SET_ADD/MAP_ADD 之前。
+
+        [Round9-15] 重写：之前没有 YIELD_VALUE 时（listcomp/setcomp/dictcomp）
+        回退到 _build_expr_from_instrs 全指令前缀，元素位置定位错误，且无法识别
+        walrus（COPY 1 + STORE_*）模式，导致 `[(y := x) for x in a]` 元素退化为
+        Constant(True)。新逻辑：定位 STORE_FAST（循环 target）与首个 append op
+        （LIST_APPEND/SET_ADD/MAP_ADD/YIELD_VALUE），提取二者之间的指令，交给
+        expr_reconstructor.reconstruct 重建（reconstruct 已正确处理 walrus）。
         """
         if not instrs:
             return {'type': 'Constant', 'value': True}
-        
+
+        _APPEND_OPS = ('LIST_APPEND', 'SET_ADD', 'MAP_ADD', 'YIELD_VALUE')
+
+        # 找到首个 STORE_FAST/STORE_DEREF（FOR_ITER 之后的循环 target）
+        target_idx = None
+        for i, instr in enumerate(instrs):
+            if instr.opname in ('STORE_FAST', 'STORE_DEREF', 'STORE_NAME',
+                                'STORE_GLOBAL') and getattr(instr, 'argval', None) != '.0':
+                target_idx = i
+                break
+
+        # 找到 target 之后的首个 append/yield 指令
+        append_idx = None
+        if target_idx is not None:
+            for i in range(target_idx + 1, len(instrs)):
+                if instrs[i].opname in _APPEND_OPS:
+                    append_idx = i
+                    break
+
+        if target_idx is not None and append_idx is not None:
+            elt_instrs = [i for i in instrs[target_idx + 1:append_idx]
+                          if i.opname not in ('RESUME', 'CACHE', 'NOP')]
+            if elt_instrs:
+                # 用 ExpressionReconstructor 重建（已支持 walrus / subscr / call 等）
+                try:
+                    saved_stack = self.stack
+                    saved_temp = self.temp_vars
+                    self.stack = []
+                    self.temp_vars = {}
+                    elt_expr = self.reconstruct(elt_instrs)
+                    self.stack = saved_stack
+                    self.temp_vars = saved_temp
+                    if elt_expr is not None:
+                        return elt_expr
+                except Exception:
+                    self.stack = saved_stack
+                    self.temp_vars = saved_temp
+                # 回退到旧逻辑（仅当 reconstruct 失败时）
+
         # [N14修复v5] 查找YIELD_VALUE的位置（元素表达式的结束点）
         yield_idx = None
         for i, instr in enumerate(instrs):
             if instr.opname == 'YIELD_VALUE':
                 yield_idx = i
                 break
-        
+
         if yield_idx is None:
             # 没有YIELD_VALUE，使用RETURN_VALUE之前
             for i in range(len(instrs)-1, -1, -1):
                 if instrs[i].opname not in ('RETURN_VALUE', 'RESUME', 'CACHE', 'NOP'):
                     return self._build_expr_from_instrs(instrs[:i+1])
             return {'type': 'Constant', 'value': True}
-        
+
         # 元素表达式在YIELD_VALUE之前的指令中
         elt_instrs = instrs[:yield_idx]
-        
+
         # 移除前导的控制流指令（RESUME, FOR_ITER, STORE_FAST等）
         meaningful_instrs = []
         started = False
@@ -2068,14 +2114,14 @@ class ExpressionReconstructor:
                 if instr.opname in ('STORE_FAST', 'STORE_DEREF'):
                     started = True
                     continue  # 跳过STORE_*
-                elif instr.opname not in ('RESUME', 'CACHE', 'NOP', 'COPY_FREE_VARS', 
+                elif instr.opname not in ('RESUME', 'CACHE', 'NOP', 'COPY_FREE_VARS',
                                           'RETURN_GENERATOR', 'POP_TOP',
                                           'FOR_ITER'):  # FOR_ITER不应该出现在这里
                     started = True
-            
+
             if started and instr.opname not in ('RESUME', 'CACHE', 'NOP'):
                 meaningful_instrs.append(instr)
-        
+
         return self._build_expr_from_instrs(meaningful_instrs)
     
     def _build_expr_from_instrs(self, instrs: List) -> Dict[str, Any]:
