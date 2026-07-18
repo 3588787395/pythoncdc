@@ -10706,6 +10706,22 @@ RegionType 枚举值: RegionType.ASSERT
                 if false_block == _lr.condition_block or false_block == _lr.header_block:
                     return None
 
+            # [Round7-06] MatchRegion 优先级高于 TernaryRegion：当 if 体（true_block）
+            # 或 else 路径（false_block）落入已识别 MatchRegion 的 blocks（subject_block /
+            # case_blocks / case_body）时，这是「if 体含 match 语句」的结构，不是三元表达式。
+            # 若允许 TernaryRegion 创建，下游 filter（line 1113
+            # `_region_overlaps_with_ternary`）会把 MatchRegion 从 match_regions 列表移除，
+            # 导致 _identify_conditional_regions 看不到 MatchRegion，进而在 MatchRegion 的
+            # case_blocks 上错误创建 IfRegion，把 `case 1 | 2:` 误转为 `if (x==1): ...
+            # elif 2: ...`。依「每块唯一归属」原则：match 的 case 块归属 MatchRegion，
+            # 不应被 TernaryRegion 抢占。
+            for _mr in (match_regions or []):
+                _mr_blocks = getattr(_mr, 'blocks', None)
+                if not _mr_blocks:
+                    continue
+                if true_block in _mr_blocks or false_block in _mr_blocks:
+                    return None
+
             # [Issue 1 fix] 三元表达式的值分支是"在栈顶留下一个值"的单表达式
             # （后续由 STORE_*/RETURN_VALUE/BUILD_STRING 等消费）。
             # 如果值分支块本身以 RETURN_VALUE/RETURN_CONST 结尾且不含 POP_TOP，

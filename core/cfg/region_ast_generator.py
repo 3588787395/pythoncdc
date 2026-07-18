@@ -14963,6 +14963,40 @@ AST 映射规则:
                         if is_return:
                             results.append({'type': 'Return', 'value': ternary_expr})
                         else:
+                            # [Round7-07] raise from ternary cause:
+                            # `raise E() from (a if cond else b)` 编译为
+                            #   cond_block: PUSH_NULL+LOAD E+PRECALL+CALL (构造 E())
+                            #             + LOAD cond + POP_JUMP_IF_FALSE (三元条件)
+                            #   true_block: LOAD a; JUMP_FORWARD → merge
+                            #   false_block: LOAD b
+                            #   merge_block: RAISE_VARARGS 2 (raise exc from cause)
+                            # TernaryRegion 误把 E() 当 func_call_info、三元当其参数，
+                            # 生成 `E(a if cond else b)`。正确语义：E() 是异常、
+                            # 三元是 cause。检测 merge_block 末尾 RAISE_VARARGS，
+                            # 用 func_call_info 重建 exc=E()，三元作 cause，
+                            # 生成 Raise(exc=E(), cause=ternary_expr)。
+                            _merge_last_i = (region.merge_block.get_last_instruction()
+                                             if region.merge_block else None)
+                            if (_merge_last_i is not None
+                                    and _merge_last_i.opname == 'RAISE_VARARGS'
+                                    and region.func_call_info):
+                                _fc = region.func_call_info
+                                _exc_expr = {
+                                    'type': 'Call',
+                                    'func': _fc['func'],
+                                    'args': list(_fc.get('args', [])),
+                                    'keywords': [],
+                                }
+                                _cause_expr = (ternary_expr
+                                               if _merge_last_i.arg == 2 else None)
+                                results.append({
+                                    'type': 'Raise',
+                                    'exc': _exc_expr,
+                                    'cause': _cause_expr,
+                                })
+                                for block in region.blocks:
+                                    self.generated_blocks.add(block)
+                                return results
                             func_call_info = region.func_call_info
                             if func_call_info:
                                 call_args = list(func_call_info.get('args', [])) + [ternary_expr]
