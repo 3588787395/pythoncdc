@@ -5891,6 +5891,16 @@ AST 映射规则:
         _literal_compare = self._try_build_literal_middle_chained_compare(region)
         if _literal_compare is not None:
             return _literal_compare
+        # [Round8-03] method-call chained compare: when cond_block / chain_blocks
+        # contain LOAD_METHOD + PRECALL + CALL sequences, the single-instruction
+        # operand extraction collapses each method-call operand to a
+        # ``<LOAD_METHOD>`` placeholder via ``_load_instr_to_ast``. Reconstruct
+        # each operand span (left / middle1 / middle2..) via expr_reconstructor
+        # by splitting the cond_block at the SWAP+COPY+COMPARE_OP boundary and
+        # each chain_block at its COMPARE_OP boundary.
+        _method_compare = self._try_build_method_call_chained_compare(region)
+        if _method_compare is not None:
+            return _method_compare
         if not region.chained_left_instr:
             return None
         left_ast = self.expr_reconstructor._load_instr_to_ast(region.chained_left_instr)
@@ -6089,6 +6099,134 @@ AST 映射规则:
             list(region.chained_compare_blocks),
             list(region.chained_compare_ops),
         )
+
+    def _try_build_method_call_chained_compare(self, region: IfRegion) -> Optional[Dict[str, Any]]:
+        """[Round8-03] Rebuild a chained comparison whose operands contain
+        method calls (LOAD_METHOD + PRECALL + CALL), e.g.
+        ``a.f() < b.g() < c.h()``.
+
+        ``compute_chained_compare_operands`` only collects single LOAD_*
+        instrs as operands; method-call sequences collapse to
+        ``<LOAD_METHOD>`` placeholders via ``_load_instr_to_ast``. Forward-
+        simulate the cond_block stack to split operands at the
+        SWAP+COPY+COMPARE_OP boundary (left = below, middle1 = top), then
+        reconstruct each chain_block's middle (everything before its
+        COMPARE_OP) via expr_reconstructor.
+        """
+        import dis as _dis
+        cond_block = region.condition_block
+        if cond_block is None:
+            return None
+        ops = region.chained_compare_ops
+        if len(ops) < 2:
+            return None
+        all_scan_blocks = [cond_block] + list(region.chained_compare_blocks)
+        # 仅当任一 block 含 LOAD_METHOD 时触发（避免误抢普通链式比较）
+        has_method_call = False
+        for blk in all_scan_blocks:
+            if blk is None:
+                continue
+            for instr in blk.instructions:
+                if instr.opname == 'LOAD_METHOD':
+                    has_method_call = True
+                    break
+            if has_method_call:
+                break
+        if not has_method_call:
+            return None
+
+        cond_instrs = [i for i in cond_block.instructions
+                       if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+        if not cond_instrs:
+            return None
+        # walrus 由 _try_build_walrus_chained_compare 处理
+        for idx in range(len(cond_instrs) - 1):
+            if (cond_instrs[idx].opname == 'COPY' and cond_instrs[idx].argval == 1
+                    and cond_instrs[idx + 1].opname in ('STORE_FAST', 'STORE_NAME',
+                                                        'STORE_GLOBAL', 'STORE_DEREF')):
+                return None
+        # literal-middle 由 _try_build_literal_middle_chained_compare 处理
+        for instr in cond_instrs:
+            if instr.opname in ('BUILD_LIST', 'BUILD_TUPLE', 'BUILD_SET'):
+                return None
+
+        # 在 cond_block 中定位首个 SWAP（链式比较的特征指令）与首个 COMPARE_OP
+        swap_idx = None
+        compare_idx = None
+        for idx, instr in enumerate(cond_instrs):
+            if instr.opname == 'SWAP' and swap_idx is None:
+                swap_idx = idx
+            if instr.opname == 'COMPARE_OP' and compare_idx is None:
+                compare_idx = idx
+                break
+        if compare_idx is None:
+            return None
+
+        if swap_idx is not None:
+            # SWAP 之前栈为 [left, middle1]（深度 2）。逆向栈模拟找到 left 入栈位置。
+            depth = 2
+            left_start = 0
+            for idx in range(swap_idx - 1, -1, -1):
+                instr = cond_instrs[idx]
+                try:
+                    effect = _dis.stack_effect(instr.opcode, instr.arg)
+                except Exception:
+                    effect = 0
+                depth -= effect
+                if depth <= 1:
+                    left_start = idx
+                    break
+            left_instrs = cond_instrs[:left_start]
+            middle1_instrs = cond_instrs[left_start:swap_idx]
+        else:
+            # 无 SWAP：可能是普通比较被误识别为链式。用 COMPARE_OP 反向找 left 起点。
+            depth = 2
+            left_start = 0
+            for idx in range(compare_idx - 1, -1, -1):
+                instr = cond_instrs[idx]
+                try:
+                    effect = _dis.stack_effect(instr.opcode, instr.arg)
+                except Exception:
+                    effect = 0
+                depth -= effect
+                if depth <= 1:
+                    left_start = idx
+                    break
+            left_instrs = cond_instrs[:left_start]
+            middle1_instrs = cond_instrs[left_start:compare_idx]
+
+        if not left_instrs or not middle1_instrs:
+            return None
+        left_ast = self.expr_reconstructor.reconstruct(left_instrs)
+        middle1_ast = self.expr_reconstructor.reconstruct(middle1_instrs)
+        if left_ast is None or middle1_ast is None:
+            return None
+
+        # 各 chain_block 取 COMPARE_OP 之前的所有指令作为 middle2..N
+        _skip_ops = ({'COMPARE_OP', 'SWAP', 'COPY', 'POP_TOP',
+                      'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_FALSE',
+                      'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_TRUE',
+                      'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'})
+        comparators = [middle1_ast]
+        for cb in region.chained_compare_blocks:
+            if cb is None:
+                continue
+            cb_instrs = [i for i in cb.instructions
+                         if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')
+                         and i.opname not in _skip_ops]
+            if not cb_instrs:
+                continue
+            r = self.expr_reconstructor.reconstruct(cb_instrs)
+            if r is not None:
+                comparators.append(r)
+        if len(comparators) != len(ops):
+            return None
+        return {
+            'type': 'Compare',
+            'left': left_ast,
+            'ops': list(ops),
+            'comparators': comparators,
+        }
 
     def _try_build_literal_middle_from_blocks(self, cond_block, chain_blocks, ops):
         """[Round7-04] Rebuild a chained comparison whose middle operand is a
