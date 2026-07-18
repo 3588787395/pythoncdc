@@ -16816,18 +16816,30 @@ AST 映射规则:
                             stmt_instrs = []
                             skip_offsets.add(_next_meaningful_after_store.offset)
                             continue
-                    # [Round7-01/02/03] walrus 作 dict/set/list 字面量元素：
-                    # {(n := f()): v} / {k: (n := f())} / {(n := f()), m} / [(n := f()), m]
-                    # 字节码: ..., COPY 1, STORE_NAME n, [LOAD_NAME v / LOAD_NAME m ...],
-                    # BUILD_MAP/BUILD_SET/BUILD_LIST, STORE_NAME r
-                    # walrus 的 COPY+STORE 应被 BUILD_MAP/BUILD_SET/BUILD_LIST 整合，
-                    # 整条链作为单一 Assign 归约，不能把 walrus 提为独立赋值（否则字面量
-                    # 退化为空 {} / 单元素）。
+                    # [Round7-01/02/03 / Round8-06/08/13] walrus 嵌入更大表达式：
+                    # - 字面量元素：{(n := f()): v} / {k: (n := f())} / {(n := f()), m} / [(n := f()), m]
+                    #   ..., COPY 1, STORE n, [LOAD v / LOAD m ...], BUILD_MAP/SET/LIST, STORE r
+                    # - [Round8-13] f-string：s = f"{(n := x)}" → LOAD x, COPY 1, STORE n, FORMAT_VALUE, STORE s
+                    # - [Round8-06] lambda 默认参数：f = lambda x=(n := 1): x
+                    #   → LOAD_CONST 1, COPY 1, STORE n, BUILD_TUPLE 1, LOAD_CONST <code>, MAKE_FUNCTION, STORE f
+                    # - [Round8-08] 嵌套下标：r = d[a[(n := f())]]
+                    #   → LOAD d, LOAD a, ..., CALL, COPY 1, STORE n, BINARY_SUBSCR, BINARY_SUBSCR, STORE r
+                    # walrus 的 COPY+STORE 应被后续表达式整合指令消费，整条链作为单一 Assign 归约，
+                    # 不能把 walrus 提为独立赋值（否则字面量/调用/f-string/下标 退化为空 / 缺省值）。
                     _LITERAL_BUILD_OPS = ('BUILD_MAP', 'BUILD_SET', 'BUILD_LIST',
                                           'BUILD_TUPLE', 'BUILD_CONST_KEY_MAP')
+                    # 整合指令：消费栈顶 walrus 值，组装到更大表达式中（非字面量构造）。
+                    # FORMAT_VALUE = f-string 格式化；MAKE_FUNCTION = lambda 默认参数；
+                    # BINARY_SUBSCR = 下标访问；BINARY_OP = 二元运算；COMPARE_OP = 比较；
+                    # LOAD_ATTR/CALL = 方法链；BUILD_STRING = f-string 拼接。
+                    _WALRUS_INTEGRATING_OPS = ('FORMAT_VALUE', 'MAKE_FUNCTION',
+                                               'BINARY_SUBSCR', 'BINARY_OP',
+                                               'COMPARE_OP', 'BUILD_STRING',
+                                               'CONTAINS_OP', 'IS_OP')
                     if (next_store_idx is None
                             and _next_meaningful_after_store is not None
                             and (_next_meaningful_after_store.opname in _LITERAL_BUILD_OPS
+                                 or _next_meaningful_after_store.opname in _WALRUS_INTEGRATING_OPS
                                  or _next_meaningful_after_store.opname in (
                                      'LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF',
                                      'LOAD_CONST', 'LOAD_ATTR'))):
@@ -16836,9 +16848,13 @@ AST 映射规则:
                                             'LOAD_DEREF', 'LOAD_CONST', 'LOAD_ATTR',
                                             'BUILD_MAP', 'BUILD_SET', 'BUILD_LIST',
                                             'BUILD_TUPLE', 'BUILD_CONST_KEY_MAP',
-                                            'PRECALL', 'CALL', 'COPY', 'FORMAT_VALUE')
+                                            'PRECALL', 'CALL', 'COPY', 'FORMAT_VALUE',
+                                            'MAKE_FUNCTION', 'BINARY_SUBSCR', 'BINARY_OP',
+                                            'COMPARE_OP', 'BUILD_STRING',
+                                            'CONTAINS_OP', 'IS_OP', 'LOAD_METHOD')
                         _final_store = None
                         _has_literal_build = False
+                        _has_integrating_op = False
                         _lit_consumed_offsets = set()
                         for ri in remaining:
                             if ri.opname in _lit_skip_ops:
@@ -16849,11 +16865,15 @@ AST 映射规则:
                             if ri.opname in _lit_consume_ops:
                                 if ri.opname in _LITERAL_BUILD_OPS:
                                     _has_literal_build = True
+                                if ri.opname in _WALRUS_INTEGRATING_OPS:
+                                    _has_integrating_op = True
                                 _lit_consumed_offsets.add(ri.offset)
                                 continue
                             break
-                        # 必须找到终结 STORE 且中间有 BUILD_MAP/BUILD_SET/BUILD_LIST 字面量构造
-                        if (_final_store is not None and _has_literal_build):
+                        # 必须找到终结 STORE，且中间有字面量构造或 walrus 整合指令
+                        # （否则可能是 chained store `a = b = c`，由专门路径处理）
+                        if (_final_store is not None
+                                and (_has_literal_build or _has_integrating_op)):
                             # 保留原相对顺序：从 remaining 按顺序追加至 _final_store（含）
                             _ordered_tail = []
                             for ri in remaining:

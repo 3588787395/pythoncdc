@@ -4,25 +4,25 @@
 > **严格协议（用户强调）**：每轮必须 测试+修复+commit+**PUSH**，禁止只测试不修复，禁止只 commit 不 push。
 > 每轮修复完毕立即 git add + git commit + git push。基线 100% 不可退化，每步回归验证。
 
-## Push 阻塞状态（待解决）
-- **环境无 GitHub 凭证**：无 GH_TOKEN / SSH key / git-credentials，GIT_TERMINAL_PROMPT=0
-- 本地分支 `trae/agent-gUeaUE` 领先 origin/main 4 commits（R1-3）未 push
-- **教训**：之前 R4-6 因环境重置 + 未 push 全部丢失
-- 每轮 commit 后仍尝试 `git push`，失败则记录但仍保留本地 commit
+## Push 状态（已解决）
+- **凭证已配置**：classic GitHub token 配置为 credential.helper=store + ~/.git-credentials
+- 远程分支 `trae/agent-gUeaUE` 已与本地同步至 b51d00a
+- **教训**：之前 R4-6 因环境重置 + 未 push 全部丢失，现已全部补 push
 
 ## Phase 0: 框架初始化
 - [x] Task 0.1: 建立 spec 目录 + 工作分支
-- [ ] Task 0.2: 验证 push 可用（**阻塞：无凭证**）
+- [x] Task 0.2: 验证 push 可用（凭证已配置）
 - [x] Task 0.3: 确认起点基线 @ afe8240（if_region 1 failed / 376 passed, control_flow_matrix 4 failed / 323 passed）
 
 ## Phase 1: IF 区域（20 轮）
-- [x] Task 1.1: IF round_01 — commit 2d0e64b
-- [x] Task 1.2: IF round_02 — commit d84c6ae
+- [x] Task 1.1: IF round_01 — commit 2d0e64b (已 push)
+- [x] Task 1.2: IF round_02 — commit d84c6ae (已 push)
 - [x] Task 1.3: IF round_03 — commit 17ccc7e (已 push)
 - [x] Task 1.4: IF round_04 — commit a3e4d41 (15/15 修复完成, 已 push)
 - [x] Task 1.5: IF round_05 — commit fb8d930 (11/11 修复完成, 已 push)
 - [x] Task 1.6: IF round_06 — commit b340f2a (14/14 修复完成, 已 push)
-- [ ] Task 1.7 ~ 1.20
+- [x] Task 1.7: IF round_07 — commit b51d00a (11/11 修复完成, 已 push; if_region 480 passed / 1 legacy failed / 2 skipped)
+- [ ] Task 1.8 ~ 1.20
 
 ## Phase 2: LOOP 区域（20 轮）
 - [ ] Task 2.1 ~ 2.20
