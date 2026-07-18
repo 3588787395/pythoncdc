@@ -16572,6 +16572,24 @@ AST 映射规则:
                             stmt_instrs = []
                             skip_offsets.add(_next_meaningful_after_store.offset)
                             continue
+                    # [Round7-09] walrus 作 return 值：lambda x: (n := x+1) 字节码为
+                    # LOAD_FAST x, LOAD_CONST 1, BINARY_OP +, COPY 1, STORE_FAST n, RETURN_VALUE
+                    # COPY 1 + STORE 是 walrus (NamedExpr)，原值留栈供 RETURN_VALUE 返回。
+                    # 重建为 Return(NamedExpr(n, BinOp(x+1)))，而非 Assign(n, x+1) + Return(None)。
+                    # 区域归约：COPY+STORE 是单一 walrus 表达式的归约节点，RETURN_VALUE 消费
+                    # 栈顶（即 walrus 表达式值），二者共同构成一个 Return 语句的完整归约。
+                    if (next_store_idx is None
+                            and _next_meaningful_after_store is not None
+                            and _next_meaningful_after_store.opname in ('RETURN_VALUE', 'RETURN_CONST')):
+                        _walrus_instrs = stmt_instrs + [instr]
+                        _walrus_expr = self.expr_reconstructor.reconstruct(_walrus_instrs)
+                        if (_walrus_expr is not None
+                                and isinstance(_walrus_expr, dict)
+                                and _walrus_expr.get('type') == 'NamedExpr'):
+                            stmts.append({'type': 'Return', 'value': _walrus_expr})
+                            stmt_instrs = []
+                            skip_offsets.add(_next_meaningful_after_store.offset)
+                            continue
                     # [Round7-01/02/03] walrus 作 dict/set/list 字面量元素：
                     # {(n := f()): v} / {k: (n := f())} / {(n := f()), m} / [(n := f()), m]
                     # 字节码: ..., COPY 1, STORE_NAME n, [LOAD_NAME v / LOAD_NAME m ...],
