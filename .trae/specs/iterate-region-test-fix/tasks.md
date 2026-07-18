@@ -22,7 +22,9 @@
 - [x] Task 1.5: IF round_05 — commit fb8d930 (11/11 修复完成, 已 push)
 - [x] Task 1.6: IF round_06 — commit b340f2a (14/14 修复完成, 已 push)
 - [x] Task 1.7: IF round_07 — commit b51d00a (11/11 修复完成, 已 push; if_region 480 passed / 1 legacy failed / 2 skipped)
-- [ ] Task 1.8 ~ 1.20
+- [x] Task 1.8: IF round_08 — commit bfa1850 (13/13 修复完成, 已 push; if_region 513 passed / 1 legacy failed / 2 skipped)
+- [x] Task 1.9: IF round_09 — commit b186a33 (16/16 修复完成, 已 push; if_region 564 passed / 1 legacy failed / 2 skipped)
+- [ ] Task 1.10 ~ 1.20
 
 ## Phase 2: LOOP 区域（20 轮）
 - [ ] Task 2.1 ~ 2.20
