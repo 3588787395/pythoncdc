@@ -6905,6 +6905,33 @@ AST 映射规则:
                     self._generated_regions.add(loop_nid)
                 continue
             child_id = id(child)
+            # [R15 Mode A] Skip ternary with merge_context='iter' consumed
+            # by a LoopRegion (for-iter). The LoopRegion generator calls
+            # _generate_ternary itself. Without this guard the ternary is
+            # emitted BOTH as standalone Expr AND as for-iterable.
+            if (isinstance(child, TernaryRegion)
+                    and getattr(child, 'merge_context', None) == 'iter'
+                    and child.merge_block is not None):
+                _consumed_by_loop = False
+                for _lr in self.regions:
+                    if not isinstance(_lr, LoopRegion):
+                        continue
+                    if child.merge_block in _lr.blocks:
+                        _consumed_by_loop = True
+                        break
+                    if _lr.header_block is child.merge_block:
+                        _consumed_by_loop = True
+                        break
+                    _fis = _lr.metadata.get('for_iter_setup')
+                    if (_fis is not None
+                            and child.merge_block.start_offset == _fis.start_offset):
+                        _consumed_by_loop = True
+                        break
+                if _consumed_by_loop:
+                    for b in child.blocks:
+                        self.generated_blocks.add(b)
+                    self._generated_regions.add(child_id)
+                    continue
             if child_id not in self._generated_regions and child_id not in self._generating_regions:
                 if isinstance(child, BoolOpRegion):
                     child_ast = self._generate_boolop(child)
@@ -6963,6 +6990,31 @@ AST 映射规则:
                             self.generated_blocks.add(b)
                         self._generated_regions.add(loop_nid)
                     continue
+                # [R15 Mode A] Skip ternary with merge_context='iter' consumed
+                # by a LoopRegion (for-iter).
+                if (isinstance(r, TernaryRegion)
+                        and getattr(r, 'merge_context', None) == 'iter'
+                        and r.merge_block is not None):
+                    _consumed_by_loop = False
+                    for _lr in self.regions:
+                        if not isinstance(_lr, LoopRegion):
+                            continue
+                        if r.merge_block in _lr.blocks:
+                            _consumed_by_loop = True
+                            break
+                        if _lr.header_block is r.merge_block:
+                            _consumed_by_loop = True
+                            break
+                        _fis = _lr.metadata.get('for_iter_setup')
+                        if (_fis is not None
+                                and r.merge_block.start_offset == _fis.start_offset):
+                            _consumed_by_loop = True
+                            break
+                    if _consumed_by_loop:
+                        for b in r.blocks:
+                            self.generated_blocks.add(b)
+                        self._generated_regions.add(r_id)
+                        continue
                 if isinstance(r, BoolOpRegion):
                     child_ast = self._generate_boolop(r)
                 else:
@@ -9349,6 +9401,35 @@ AST 映射规则:
             if block in child_expr_regions:
                 child = child_expr_regions[block]
                 child_id = id(child)
+                # [R15 Mode A] Skip ternary with merge_context='iter' that is
+                # consumed by a LoopRegion (for-iter). The LoopRegion generator
+                # calls _generate_ternary itself to extract the iterable
+                # expression. Without this guard, the ternary is emitted BOTH
+                # as a standalone Expr (here) AND as the for-iterable (in
+                # LoopRegion generation), causing duplicate evaluation.
+                if (isinstance(child, TernaryRegion)
+                        and getattr(child, 'merge_context', None) == 'iter'
+                        and child.merge_block is not None):
+                    _consumed_by_loop = False
+                    for _lr in self.regions:
+                        if not isinstance(_lr, LoopRegion):
+                            continue
+                        if child.merge_block in _lr.blocks:
+                            _consumed_by_loop = True
+                            break
+                        if _lr.header_block is child.merge_block:
+                            _consumed_by_loop = True
+                            break
+                        _fis = _lr.metadata.get('for_iter_setup')
+                        if (_fis is not None
+                                and child.merge_block.start_offset == _fis.start_offset):
+                            _consumed_by_loop = True
+                            break
+                    if _consumed_by_loop:
+                        for b in child.blocks:
+                            self.generated_blocks.add(b)
+                        self._generated_regions.add(child_id)
+                        continue
                 if child_id not in self._generated_regions and child_id not in self._generating_regions:
                     if isinstance(child, BoolOpRegion):
                         child_ast = self._generate_boolop(child)
@@ -9665,6 +9746,34 @@ AST 映射规则:
                             self._generated_regions.add(loop_nid)
                         continue
                     child_id = id(nested)
+                    # [R15 Mode A] Skip ternary with merge_context='iter'
+                    # consumed by a LoopRegion (for-iter). The LoopRegion
+                    # generator calls _generate_ternary itself to extract
+                    # the iterable. Without this guard the ternary is
+                    # emitted BOTH as standalone Expr AND as for-iterable.
+                    if (isinstance(nested, TernaryRegion)
+                            and getattr(nested, 'merge_context', None) == 'iter'
+                            and nested.merge_block is not None):
+                        _consumed_by_loop = False
+                        for _lr in self.regions:
+                            if not isinstance(_lr, LoopRegion):
+                                continue
+                            if nested.merge_block in _lr.blocks:
+                                _consumed_by_loop = True
+                                break
+                            if _lr.header_block is nested.merge_block:
+                                _consumed_by_loop = True
+                                break
+                            _fis = _lr.metadata.get('for_iter_setup')
+                            if (_fis is not None
+                                    and nested.merge_block.start_offset == _fis.start_offset):
+                                _consumed_by_loop = True
+                                break
+                        if _consumed_by_loop:
+                            for b in nested.blocks:
+                                self.generated_blocks.add(b)
+                            self._generated_regions.add(child_id)
+                            continue
                     if child_id not in self._generated_regions and child_id not in self._generating_regions:
                         if isinstance(nested, TernaryRegion):
                             child_ast = self._generate_ternary(nested)
@@ -16451,28 +16560,165 @@ AST 映射规则:
                             full_expr = self.expr_reconstructor.reconstruct(before_store, initial_stack=initial_stack)
                             if full_expr:
                                 ternary_expr = full_expr
+                # [R15 Mode A] Walrus + wrapping in body context detection.
+                # Pattern: COPY 1 + STORE_* (walrus) + [wrapping ops] + STORE_* (outer)
+                # Example: `x = (y := a if p else b) + 1`
+                # 字节码: COPY 1, STORE_NAME y, LOAD_CONST 1, BINARY_OP +, STORE_NAME x, ...
+                # walrus 的 STORE_* 是第一个 STORE_*（被误设为 value_target），
+                # 但真正的赋值目标是外层 STORE_*（x）。需重建完整值表达式
+                # BinOp(NamedExpr(y, ternary), Add, 1) 并赋给 x。
+                # 否则会输出 `y = (ternary); x = 1`（丢失 walrus 与 +1 的关联）。
+                _walrus_outer_assign = None
+                _walrus_outer_store_idx = None
+                if (store_idx is not None and store_idx > 0
+                        and merge_all[store_idx - 1].opname == 'COPY'
+                        and merge_all[store_idx - 1].arg == 1):
+                    _after_walrus = merge_all[store_idx + 1:]
+                    _outer_idx_local = None
+                    for _ai, _ainstr in enumerate(_after_walrus):
+                        if _ainstr.opname in ('STORE_FAST', 'STORE_NAME',
+                                              'STORE_GLOBAL', 'STORE_DEREF'):
+                            _outer_idx_local = _ai
+                            break
+                    if _outer_idx_local is not None:
+                        _between = _after_walrus[:_outer_idx_local]
+                        _WALRUS_BODY_WRAP_OPS = {
+                            'LOAD_ATTR', 'LOAD_METHOD', 'BINARY_SUBSCR',
+                            'PRECALL', 'CALL', 'CALL_FUNCTION_EX',
+                            'BINARY_OP', 'BUILD_SLICE', 'BUILD_TUPLE',
+                            'BUILD_LIST', 'BUILD_SET', 'BUILD_MAP',
+                            'CONTAINS_OP', 'IS_OP', 'FORMAT_VALUE',
+                            'COMPARE_OP',
+                        }
+                        _has_wrap_between = any(
+                            i.opname in _WALRUS_BODY_WRAP_OPS for i in _between)
+                        if _has_wrap_between:
+                            _recon_instrs = merge_all[:store_idx + 1 + _outer_idx_local]
+                            _full_walrus_expr = self.expr_reconstructor.reconstruct(
+                                _recon_instrs, initial_stack=initial_stack)
+                            if _full_walrus_expr:
+                                _outer_target_name = _after_walrus[_outer_idx_local].argval
+                                _walrus_outer_assign = {
+                                    'type': 'Assign',
+                                    'targets': [{'type': 'Name', 'id': _outer_target_name, 'ctx': 'Store'}],
+                                    'value': _full_walrus_expr,
+                                }
+                                _walrus_outer_store_idx = store_idx + 1 + _outer_idx_local
+                if _walrus_outer_assign is not None:
+                    results.append(_walrus_outer_assign)
+                    # 处理外层 STORE_* 之后的后续语句（与下方相同逻辑）
+                    if region.merge_block and _walrus_outer_store_idx is not None:
+                        _post_outer = merge_all[_walrus_outer_store_idx + 1:]
+                        _post_non_noise = [i for i in _post_outer
+                                           if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                        _is_trivial_ret_post = False
+                        if len(_post_non_noise) <= 2:
+                            _no_pop_post = [i for i in _post_non_noise
+                                            if i.opname != 'POP_TOP']
+                            if (len(_no_pop_post) == 2
+                                    and _no_pop_post[0].opname == 'LOAD_CONST'
+                                    and _no_pop_post[0].argval is None
+                                    and _no_pop_post[1].opname in ('RETURN_VALUE', 'RETURN_CONST')):
+                                _is_trivial_ret_post = True
+                            elif (len(_no_pop_post) == 1
+                                    and _no_pop_post[0].opname == 'RETURN_CONST'
+                                    and _no_pop_post[0].argval is None):
+                                _is_trivial_ret_post = True
+                        if not _is_trivial_ret_post and _post_non_noise:
+                            _extra_post = self._build_statements_from_instructions(
+                                list(_post_non_noise))
+                            while _extra_post and isinstance(_extra_post[-1], dict):
+                                _last_post = _extra_post[-1]
+                                if _last_post.get('type') == 'Return':
+                                    _rv_post = _last_post.get('value')
+                                    if _rv_post and isinstance(_rv_post, dict) \
+                                            and _rv_post.get('type') == 'Constant' \
+                                            and _rv_post.get('value') is None:
+                                        _extra_post = _extra_post[:-1]
+                                        continue
+                                break
+                            results.extend(_extra_post)
+                    for block in region.blocks:
+                        self.generated_blocks.add(block)
+                    return results
                 results.append({
                     'type': 'Assign',
                     'targets': [{'type': 'Name', 'id': region.value_target, 'ctx': 'Store'}],
                     'value': ternary_expr,
                 })
                 if region.merge_block:
-                    merge_instrs = [i for i in region.merge_block.instructions
-                                    if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL')]
-                    return_value = None
-                    for instr in merge_instrs:
-                        if instr.opname == 'LOAD_FAST':
-                            return_value = {'type': 'Name', 'id': instr.argval, 'ctx': 'Load'}
-                        elif instr.opname == 'LOAD_NAME':
-                            return_value = {'type': 'Name', 'id': instr.argval, 'ctx': 'Load'}
-                        elif instr.opname == 'LOAD_GLOBAL':
-                            return_value = {'type': 'Name', 'id': instr.argval, 'ctx': 'Load'}
-                        elif instr.opname == 'LOAD_CONST':
-                            return_value = {'type': 'Constant', 'value': instr.argval}
-                        elif instr.opname == 'RETURN_VALUE' and return_value is not None:
-                            results.append({'type': 'Return', 'value': return_value})
-                        elif instr.opname == 'RETURN_CONST':
-                            results.append({'type': 'Return', 'value': {'type': 'Constant', 'value': instr.argval}})
+                    # [R15 Mode A] 处理 merge_block 中 STORE_* 之后的后续语句。
+                    # 当 if 体内三元赋值后还有其他语句（如 `b = a if x else 2; c = b + 1`），
+                    # merge_block 包含 STORE_NAME b + LOAD_NAME b + LOAD_CONST 1 +
+                    # BINARY_OP + + STORE_NAME c + LOAD_CONST None + RETURN_VALUE。
+                    # 旧逻辑过滤掉所有 STORE_* 并只识别 LOAD_*+RETURN_VALUE 模式，
+                    # 导致 `c = b + 1` 语句丢失。新逻辑使用 _build_statements_from_instructions
+                    # 正确重建 STORE_* 之后的语句，同时保留原 Return 处理（用于 lambda 等）。
+                    merge_all = [i for i in region.merge_block.instructions
+                                 if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                    # 找到第一个 STORE_* 的位置（ternary 的 value_target 消费点）
+                    _first_store_idx = None
+                    for _si, _sinstr in enumerate(merge_all):
+                        if _sinstr.opname in ('STORE_FAST', 'STORE_NAME',
+                                              'STORE_GLOBAL', 'STORE_DEREF'):
+                            _first_store_idx = _si
+                            break
+                    if _first_store_idx is not None:
+                        _remaining = merge_all[_first_store_idx + 1:]
+                        # 检测后续是否仅有 trailing implicit return None 模式
+                        _non_noise_remaining = [i for i in _remaining
+                                                if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                        _is_trivial_ret = False
+                        if len(_non_noise_remaining) <= 2:
+                            _no_pop = [i for i in _non_noise_remaining
+                                       if i.opname != 'POP_TOP']
+                            if (len(_no_pop) == 2
+                                    and _no_pop[0].opname == 'LOAD_CONST'
+                                    and _no_pop[0].argval is None
+                                    and _no_pop[1].opname in ('RETURN_VALUE', 'RETURN_CONST')):
+                                _is_trivial_ret = True
+                            elif (len(_no_pop) == 1
+                                    and _no_pop[0].opname == 'RETURN_CONST'
+                                    and _no_pop[0].argval is None):
+                                _is_trivial_ret = True
+                        if _is_trivial_ret:
+                            # 仅 trailing implicit return None —— 不发射任何语句
+                            # （由外层 function/module 自动补齐 LOAD_CONST None + RETURN_VALUE）
+                            pass
+                        elif _non_noise_remaining:
+                            # 有实际后续语句 —— 使用 _build_statements_from_instructions 重建
+                            _extra_stmts = self._build_statements_from_instructions(
+                                list(_non_noise_remaining))
+                            # 剥离尾部隐式 return None（由外层补齐）
+                            while _extra_stmts and isinstance(_extra_stmts[-1], dict):
+                                _last = _extra_stmts[-1]
+                                if _last.get('type') == 'Return':
+                                    _rv = _last.get('value')
+                                    if _rv and isinstance(_rv, dict) \
+                                            and _rv.get('type') == 'Constant' \
+                                            and _rv.get('value') is None:
+                                        _extra_stmts = _extra_stmts[:-1]
+                                        continue
+                                break
+                            results.extend(_extra_stmts)
+                        else:
+                            # 无后续指令 —— 走旧逻辑的 Return 处理路径（lambda 等）
+                            merge_instrs = [i for i in region.merge_block.instructions
+                                            if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL')]
+                            return_value = None
+                            for instr in merge_instrs:
+                                if instr.opname == 'LOAD_FAST':
+                                    return_value = {'type': 'Name', 'id': instr.argval, 'ctx': 'Load'}
+                                elif instr.opname == 'LOAD_NAME':
+                                    return_value = {'type': 'Name', 'id': instr.argval, 'ctx': 'Load'}
+                                elif instr.opname == 'LOAD_GLOBAL':
+                                    return_value = {'type': 'Name', 'id': instr.argval, 'ctx': 'Load'}
+                                elif instr.opname == 'LOAD_CONST':
+                                    return_value = {'type': 'Constant', 'value': instr.argval}
+                                elif instr.opname == 'RETURN_VALUE' and return_value is not None:
+                                    results.append({'type': 'Return', 'value': return_value})
+                                elif instr.opname == 'RETURN_CONST':
+                                    results.append({'type': 'Return', 'value': {'type': 'Constant', 'value': instr.argval}})
             else:
                 container_type = region.container_type
                 container_info = None
@@ -16606,7 +16852,24 @@ AST 映射规则:
                                 return results
                             func_call_info = region.func_call_info
                             if func_call_info:
-                                call_args = list(func_call_info.get('args', [])) + [ternary_expr]
+                                # [R15 Mode A] Detect CALL_FUNCTION_EX in merge_block
+                                # (`f(*(a if x else b))` pattern). The ternary result
+                                # is the *args iterable, not a positional arg.
+                                # Wrap in Starred so the CodeGenerator emits
+                                # CALL_FUNCTION_EX with *args semantics.
+                                _is_star_call = False
+                                if region.merge_block:
+                                    _is_star_call = any(
+                                        i.opname == 'CALL_FUNCTION_EX'
+                                        for i in region.merge_block.instructions
+                                        if i.opname not in NOISE_OPS)
+                                if _is_star_call:
+                                    _ternary_arg = {'type': 'Starred',
+                                                     'value': ternary_expr,
+                                                     'ctx': 'Load'}
+                                else:
+                                    _ternary_arg = ternary_expr
+                                call_args = list(func_call_info.get('args', [])) + [_ternary_arg]
                                 # [T1修复] 当merge_block是另一个TernaryRegion的entry时，
                                 # 该嵌套ternary也是同一函数调用的参数（如print(t1, t2)），
                                 # 需要吸收嵌套ternary作为额外参数，并标记其块为已生成。

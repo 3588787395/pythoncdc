@@ -11285,7 +11285,7 @@ RegionType 枚举值: RegionType.ASSERT
                                     'PRECALL', 'CALL', 'BINARY_OP',
                                     'BUILD_SLICE', 'BUILD_TUPLE', 'BUILD_LIST',
                                     'BUILD_SET', 'BUILD_MAP', 'CONTAINS_OP',
-                                    'IS_OP', 'FORMAT_VALUE',
+                                    'IS_OP', 'FORMAT_VALUE', 'COMPARE_OP',
                                 }
                                 _has_wrap_after = any(
                                     i.opname in _WALRUS_WRAP_OPS for i in _post_store)
@@ -11464,17 +11464,29 @@ RegionType 枚举值: RegionType.ASSERT
                     # 字节码布局：<value_loads>, BUILD_MAP, POP_JUMP_IF_FALSE
                     # BUILD_MAP 弹 2*argc（key-value 对），压 1（dict）。
                     # dict 作真值测试（无 COMPARE_OP）。
+                    # [R15 Mode A] 必须检查 merge_block 末尾含条件跳转
+                    # （if/while 条件上下文），以区别于 BUILD_MAP 用于赋值场景
+                    # （如 `d = {'k': a if x else b}` —— dict 被赋值而非真值测试）。
+                    # 否则会误设 merge_context='compare'，把 if body 内的字典赋值
+                    # 错认为 if 条件，导致 BUILD_MAP / STORE_NAME d 丢失。
                     elif instr.opname == 'BUILD_MAP':
-                        true_non_noise = [i for i in true_block.instructions
-                                         if i.opname not in NOISE_OPS]
-                        false_non_noise = [i for i in false_block.instructions
-                                          if i.opname not in NOISE_OPS]
-                        true_has_pop = any(i.opname == 'POP_TOP' for i in true_non_noise)
-                        false_has_pop = any(i.opname == 'POP_TOP' for i in false_non_noise)
-                        if not (true_has_pop or false_has_pop):
-                            merge_context = 'compare'
-                            value_target = '__compare_target__'
-                            break
+                        _mb_has_cond_jump = any(
+                            _i.opname in (FORWARD_CONDITIONAL_JUMP_OPS
+                                          | BACKWARD_CONDITIONAL_JUMP_OPS)
+                            for _i in merge_block.instructions
+                            if _i.opname not in NOISE_OPS
+                        )
+                        if _mb_has_cond_jump:
+                            true_non_noise = [i for i in true_block.instructions
+                                             if i.opname not in NOISE_OPS]
+                            false_non_noise = [i for i in false_block.instructions
+                                              if i.opname not in NOISE_OPS]
+                            true_has_pop = any(i.opname == 'POP_TOP' for i in true_non_noise)
+                            false_has_pop = any(i.opname == 'POP_TOP' for i in false_non_noise)
+                            if not (true_has_pop or false_has_pop):
+                                merge_context = 'compare'
+                                value_target = '__compare_target__'
+                                break
 
                     # [R14 类别 B] BUILD_TUPLE/BUILD_LIST/BUILD_SET：
                     # 三元作容器字面量元素时，BUILD_* 消费三元结果与其他元素，
