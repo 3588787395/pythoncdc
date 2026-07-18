@@ -1093,6 +1093,18 @@ class RegionASTGenerator:
                     return [func] + inner_decs if inner_decs else []
             return []
 
+        # [R11-err1/3] 任意表达式（Lambda / FunctionObject / Subscript / ...）作为装饰器：
+        # @(lambda f: ...) def g(): ... 字节码为 LOAD_CONST <lambda>; MAKE_FUNCTION;
+        # LOAD_CONST <g>; MAKE_FUNCTION; PRECALL 0; CALL 0 → Call(func=Lambda, args=[FO(g)])。
+        # 区域归约算法：当 func 不是 Call（非链式装饰器）且首个参数是被装饰的 FunctionObject 时，
+        # 整个 func 即为装饰器表达式。与 Name/Attribute 装饰器同构。
+        if func.get('type') != 'Call':
+            if args:
+                first_arg = args[0]
+                if first_arg.get('type') == 'FunctionObject':
+                    return [func]
+            return []
+
         elif func.get('type') == 'Call':
             inner_func = func.get('func', {})
             inner_args = func.get('args', [])
@@ -18295,6 +18307,20 @@ AST 映射规则:
 
             if instr.opname == 'IMPORT_NAME':
                 module_name = instr.argval if instr.argval else ''
+                # [R11-err6] 相对导入: `from . import a` 中 IMPORT_NAME argval 为空字符串，
+                # level 信息保存在前面栈帧的 LOAD_CONST (整数) 中（紧跟其后是 fromlist 元组）。
+                # 区域归约算法：向前在 stmt_instrs 中查找 level，构造 module_path = '.' * level + name。
+                _import_level = 0
+                for _lc in reversed(stmt_instrs):
+                    if _lc.opname == 'LOAD_CONST' and isinstance(_lc.argval, int) and not isinstance(_lc.argval, bool):
+                        _import_level = _lc.argval
+                        break
+                    if _lc.opname == 'LOAD_CONST' and isinstance(_lc.argval, tuple):
+                        # fromlist 元组，跳过继续找 level
+                        continue
+                    break
+                if _import_level > 0:
+                    module_name = ('.' * _import_level) + module_name
                 instr_idx = block.instructions.index(instr)
                 # [Round7-05] 检测 from m import *: IMPORT_NAME m + LOAD_CONST ('*',) + IMPORT_STAR
                 _has_import_star = False

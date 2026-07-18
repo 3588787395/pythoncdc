@@ -1141,6 +1141,22 @@ class ExpressionReconstructor:
                                 'kwargs': kwargs,
                                 'lineno': instr.starts_line
                             })
+                        elif self.stack and self.stack[-1].get('type') == 'FunctionObject':
+                            # [R11-err1/3] lambda 装饰器: @lambda f: ... def g(): ...
+                            # 字节码: LOAD_CONST <lambda code>; MAKE_FUNCTION;
+                            #         LOAD_CONST <g code>; MAKE_FUNCTION; PRECALL 0; CALL 0
+                            # 区域归约算法: 当 argc==0 且栈顶两个均为 FunctionObject 时，
+                            # 下方的 FunctionObject（lambda）是装饰器，弹出的 func 是被装饰函数。
+                            # 通用化：与 Name 装饰器同构，统一构造 Call(func=decorator, args=[func])。
+                            decorator_obj = self.stack.pop()
+                            self.stack.append({
+                                'type': 'Call',
+                                'func': decorator_obj,
+                                'args': [func],
+                                'kwargs': kwargs,
+                                'lineno': instr.starts_line,
+                                'is_decorator': True
+                            })
                         else:
                             self.stack.append({
                                 'type': 'Call',
