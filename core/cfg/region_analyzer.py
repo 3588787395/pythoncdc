@@ -9730,11 +9730,24 @@ RegionType 枚举值: RegionType.ASSERT
                 # creating IF_THEN instead of IF_ELIF_CHAIN. This prevents
                 # two independent if-break patterns from being merged into
                 # an if/elif chain.
+                # [R17 fix] When the non-BREAK successor is itself a conditional block
+                # (potential elif condition: 2 conditional successors + forward
+                # conditional jump), do NOT set merge=else_succ. Setting merge=else_succ
+                # would empty else_blocks (entry==merge) and prevent elif chain
+                # detection. Keeping merge=None allows _build_elif_region to detect
+                # the elif chain (e.g., `if x: break / elif y: continue / else: return`).
                 if merge is None:
                     _then_br_role = self.get_block_role(then_succ)
                     _else_br_role = self.get_block_role(else_succ)
                     if _then_br_role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
-                        merge = else_succ
+                        _else_last = else_succ.get_last_instruction()
+                        _else_is_elif_cond = (
+                            len(else_succ.conditional_successors) == 2
+                            and _else_last is not None
+                            and _else_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)
+                        )
+                        if not _else_is_elif_cond:
+                            merge = else_succ
                     elif _else_br_role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
                         # Only set merge=then_succ if then_succ is a simple fall-through
                         # block with no meaningful code. If then_succ has actual statements
@@ -9849,7 +9862,7 @@ RegionType 枚举值: RegionType.ASSERT
                 all_condition_blocks.update(_await_pred_blocks)
                 chain_blocks.update(_await_pred_blocks)
 
-            region = self._build_elif_region(block, then_blocks, else_blocks, merge, all_condition_blocks, condition_block)
+            region = self._build_elif_region(block, then_blocks, else_blocks, merge, all_condition_blocks, condition_block, boundary_stop=boundary_stop)
             if region is None:
                 region = self._build_basic_if_region(block, then_blocks, else_blocks, merge,
                                                       all_condition_blocks, condition_block,
@@ -10092,7 +10105,20 @@ RegionType 枚举值: RegionType.ASSERT
             region.mark_trailing_return_none()
         return region
 
-    def _build_elif_region(self, block, then_blocks, else_blocks, merge, all_condition_blocks, condition_block=None):
+    def _build_elif_region(self, block, then_blocks, else_blocks, merge, all_condition_blocks, condition_block=None, boundary_stop=None):
+        # [R17 fix] When collecting inner elif branch blocks inside a loop, the loop's
+        # boundary_stop (which includes break/return exit blocks and the loop header)
+        # prevents collecting terminal blocks that are part of the elif chain (e.g.,
+        # the `else: return i` body). Remove terminal blocks from boundary_stop for
+        # the inner collection, since terminal blocks don't lead anywhere (collecting
+        # them doesn't cause BFS to re-enter the loop). Keep the loop header in the
+        # stop set to prevent following back-edges.
+        _inner_boundary_stop = set(boundary_stop) if boundary_stop else set()
+        if _inner_boundary_stop:
+            _terminal_offsets = {b for b in _inner_boundary_stop
+                                 if b.get_last_instruction()
+                                 and b.get_last_instruction().opname in ('RETURN_VALUE', 'RETURN_CONST', 'RAISE_VARARGS', 'RERAISE')}
+            _inner_boundary_stop = _inner_boundary_stop - _terminal_offsets
         def _check_elif_chain(header_, else_blocks_, merge_):
             if not else_blocks_:
                 return None
@@ -10338,8 +10364,8 @@ RegionType 枚举值: RegionType.ASSERT
                         pass
                     else:
                         inner_merge = _candidate_merge
-            inner_then_blocks = self._collect_branch_blocks(inner_then_succ, inner_merge, {inner_else_succ})
-            inner_else_blocks = self._collect_branch_blocks(inner_else_succ, inner_merge, {inner_then_succ})
+            inner_then_blocks = self._collect_branch_blocks(inner_then_succ, inner_merge, {inner_else_succ} | _inner_boundary_stop)
+            inner_else_blocks = self._collect_branch_blocks(inner_else_succ, inner_merge, {inner_then_succ} | _inner_boundary_stop)
             if inner_else_blocks and all(self._is_trivial_block(b) for b in inner_else_blocks):
                 inner_else_blocks = []
             inner_region_type = RegionType.IF_THEN_ELSE if inner_else_blocks else RegionType.IF_THEN
@@ -10375,6 +10401,7 @@ RegionType 枚举值: RegionType.ASSERT
                             final_else = [else_succ]
 
             result = {'conditions': conditions, 'bodies': bodies, 'final_else': final_else}
+
             if inline_boolop_chain:
                 result['inline_boolop_chains'] = {id(first_else): inline_boolop_chain}
                 if deeper_elif and deeper_elif.get('inline_boolop_chains'):

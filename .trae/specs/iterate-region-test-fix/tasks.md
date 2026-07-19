@@ -31,7 +31,8 @@
 - [x] Task 1.13: IF round_13 — commit be09ab2 (8/11 修复完成 + 3 cat4 已知限制, 已 push; if_region 676 passed / 4 failed / 4 skipped)
 - [x] Task 1.14: IF round_14 — commit d651de7 (9/11 修复完成 + 2 catA 已知限制, 已 push; if_region 689 passed / 6 failed / 4 skipped)
 - [x] Task 1.15: IF round_15 — commit 8d6e3ba (7/15 修复完成 + 8 已知限制, 已 push; if_region 696 passed / 12 failed / 6 skipped)
-- [ ] Task 1.16 ~ 1.20
+- [x] Task 1.16: IF round_16 — commit b63b4f8 (9/11 修复完成 + 2 已知限制, 已 push; if_region 709 passed / 13 failed / 7 skipped; match_region 无退化)
+- [ ] Task 1.17 ~ 1.20
 
 ## Phase 2: LOOP 区域（20 轮）
 - [ ] Task 2.1 ~ 2.20
