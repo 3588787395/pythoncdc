@@ -16808,7 +16808,12 @@ AST 映射规则:
                                                     # 容器展开模式，需触发 full_expr 重建。
                                                     'LIST_EXTEND', 'DICT_UPDATE',
                                                     'SET_UPDATE', 'LIST_APPEND',
-                                                    'MAP_ADD')
+                                                    'MAP_ADD',
+                                                    # [R2 Bug is_none/contains 修复]
+                                                    # IS_OP / CONTAINS_OP 消费 ternary 结果
+                                                    # 生成 Compare 表达式，需触发 full_expr 重建
+                                                    # （如 `x = (ternary) is None` / `x = (ternary) in coll`）。
+                                                    'IS_OP', 'CONTAINS_OP')
                                      for i in before_store)
                         if has_ops or preload_exprs:
                             full_expr = self.expr_reconstructor.reconstruct(before_store, initial_stack=initial_stack)
@@ -16895,6 +16900,71 @@ AST 映射规则:
                     for block in region.blocks:
                         self.generated_blocks.add(block)
                     return results
+                # [R2 Bug multi_target/unpacking 修复] 检测多目标赋值与解包赋值模式。
+                # 多目标: `x = y = ternary` -> merge: COPY 1, STORE_x, STORE_y, ...
+                #   COPY 1 复制 ternary 结果，多个 STORE_* 依次绑定到不同目标。
+                # 解包: `a, b = ternary` -> merge: UNPACK_SEQUENCE N, STORE_a, STORE_b, ...
+                #   UNPACK_SEQUENCE N 解包 ternary 结果（tuple/iterable），N 个 STORE_* 绑定。
+                # 依「每块唯一归属」：COPY/UNPACK_SEQUENCE + 多 STORE 同属 ternary 父赋值，
+                # 不应拆分为独立语句。依「父引用子入口」：父 Assign 通过 merge_block
+                # 的 COPY/UNPACK_SEQUENCE + 多 STORE 引用 ternary 子节点。
+                if (store_idx is not None and store_idx > 0
+                        and region.merge_block is not None):
+                    _prev_instr = merge_all[store_idx - 1]
+                    # 收集 store_idx 之后的所有 STORE_*（多目标）
+                    _stores_after = []
+                    for _sa_i in range(store_idx, len(merge_all)):
+                        _sa_instr = merge_all[_sa_i]
+                        if _sa_instr.opname in ('STORE_FAST', 'STORE_NAME',
+                                                'STORE_GLOBAL', 'STORE_DEREF'):
+                            _stores_after.append(_sa_instr)
+                        elif _sa_instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
+                                                  'POP_TOP'):
+                            continue
+                        else:
+                            break
+                    # 模式 1: COPY 1 + 多 STORE_*（多目标赋值）
+                    # CodeGenerator 对 is_chain_assign=True 用 ` = ` 连接 targets，
+                    # 生成 `x = y = (ternary)`；否则用 `, ` 连接，错误生成 `x, y = (ternary)`。
+                    if (_prev_instr.opname == 'COPY'
+                            and _prev_instr.arg == 1
+                            and len(_stores_after) >= 2):
+                        _mt_targets = [
+                            {'type': 'Name', 'id': _s.argval if _s.argval else f'var_{_s.arg}',
+                             'ctx': 'Store'}
+                            for _s in _stores_after
+                        ]
+                        results.append({
+                            'type': 'Assign',
+                            'targets': _mt_targets,
+                            'value': ternary_expr,
+                            'is_chain_assign': True,
+                        })
+                        for block in region.blocks:
+                            self.generated_blocks.add(block)
+                        return results
+                    # 模式 2: UNPACK_SEQUENCE N + N 个 STORE_*（解包赋值）
+                    if (_prev_instr.opname == 'UNPACK_SEQUENCE'
+                            and _prev_instr.arg is not None
+                            and _prev_instr.arg >= 1
+                            and len(_stores_after) == _prev_instr.arg):
+                        _up_targets = [
+                            {'type': 'Name', 'id': _s.argval if _s.argval else f'var_{_s.arg}',
+                             'ctx': 'Store'}
+                            for _s in _stores_after
+                        ]
+                        results.append({
+                            'type': 'Assign',
+                            'targets': [{
+                                'type': 'Tuple',
+                                'elts': _up_targets,
+                                'ctx': 'Store',
+                            }],
+                            'value': ternary_expr,
+                        })
+                        for block in region.blocks:
+                            self.generated_blocks.add(block)
+                        return results
                 results.append({
                     'type': 'Assign',
                     'targets': [{'type': 'Name', 'id': region.value_target, 'ctx': 'Store'}],
@@ -17123,7 +17193,20 @@ AST 映射规则:
                                                      'ctx': 'Load'}
                                 else:
                                     _ternary_arg = ternary_expr
-                                call_args = list(func_call_info.get('args', [])) + [_ternary_arg]
+                                # [R2 Bug multi_arg 修复] 计算 cond_block 的 preload 表达式。
+                                # preload[0] 是函数本身（已在 func_call_info['func'] 中），
+                                # preload[1:] 是在 ternary 条件之前预加载的函数参数。
+                                # 例: `print(prefix, a if cond else b)` ->
+                                #   cond_block: PUSH_NULL, LOAD_NAME print, LOAD_NAME prefix, LOAD_NAME cond, ...
+                                #   preload = [Name(print), Name(prefix)]
+                                #   call_args 应为 [Name(prefix), ternary] 而非 [ternary]。
+                                # 依「父引用子入口」：父 Call 通过 cond_block preload 引用 ternary 子节点。
+                                _multi_preload = self._compute_ternary_cond_preload_exprs(region)
+                                _preloaded_args = []
+                                if len(_multi_preload) > 1:
+                                    _preloaded_args = list(_multi_preload[1:])
+                                call_args = (list(func_call_info.get('args', []))
+                                             + _preloaded_args + [_ternary_arg])
                                 # [T1修复] 当merge_block是另一个TernaryRegion的entry时，
                                 # 该嵌套ternary也是同一函数调用的参数（如print(t1, t2)），
                                 # 需要吸收嵌套ternary作为额外参数，并标记其块为已生成。
@@ -17144,6 +17227,13 @@ AST 映射规则:
                                     'args': call_args,
                                     'keywords': [],
                                 }
+                                # [R2 Bug lambda_call 修复] func_call_info['func'] 可能是
+                                # FunctionObject（如 `(lambda x: x*2)(ternary)` 的 lambda）。
+                                # CodeGenerator 会将 FunctionObject 渲染为占位符
+                                # `lambda *args, **kwargs: None`，丢失真实 body。调用
+                                # _convert_lambda_function_objects 递归将其转为 Lambda dict。
+                                # 依「嵌套即抽象节点」：lambda 是父 Call 的 func 子节点。
+                                call_expr = self._convert_lambda_function_objects(call_expr)
                                 results.append({'type': 'Expr', 'value': call_expr})
                             else:
                                 results.append({'type': 'Expr', 'value': ternary_expr})
@@ -17628,6 +17718,23 @@ AST 映射规则:
         # Pattern 2 & 3: raise (ternary) / raise E from (ternary)
         if raise_instr is not None:
             if raise_instr.arg == 1:
+                # [R2 Bug raise 修复] 检测 merge_block 在 RAISE_VARARGS 之前是否有
+                # PRECALL + CALL。若有，ternary body 是 callable（如异常类），
+                # CALL 调用它产生异常实例，RAISE_VARARGS 抛出该实例。
+                # 例: `raise (Exc1 if cond else Exc2)()`
+                #   merge: PRECALL 0, CALL 0, RAISE_VARARGS 1
+                #   ternary (Exc1/Exc2) 是 callable，CALL 0 调用它。
+                # 用 expr_reconstructor 重建: initial_stack=[ternary_expr]，
+                #   PRECALL no-op, CALL 0 -> Call(func=ternary, args=[]),
+                #   RAISE_VARARGS 1 -> Raise(exc=Call(...))。
+                # 依「父引用子入口」：父 Raise 通过 merge_block 的 CALL 引用 ternary 子节点。
+                _has_call_before_raise = any(
+                    i.opname in ('PRECALL', 'CALL') for i in merge_instrs)
+                if _has_call_before_raise:
+                    _full_raise = self.expr_reconstructor.reconstruct(
+                        merge_instrs, initial_stack=[ternary_expr])
+                    if _full_raise and _full_raise.get('type') == 'Raise':
+                        return _full_raise
                 # raise (ternary) — ternary result IS the exception
                 return {'type': 'Raise', 'exc': ternary_expr, 'cause': None}
             if raise_instr.arg == 2:

@@ -11002,6 +11002,23 @@ RegionType 枚举值: RegionType.ASSERT
                                     'ctx': 'Load',
                                 },
                             }, None
+                    # [R2 Bug lambda_call 修复] 检测 lambda 调用模式:
+                    # (lambda x: ...)(ternary) 字节码模式:
+                    #   PUSH_NULL, LOAD_CONST <code>, MAKE_FUNCTION, [args], PRECALL, CALL
+                    # func_i 是 LOAD_CONST <code>，下一条是 MAKE_FUNCTION。
+                    # 用 FunctionObject 包装 code object 作为 func，由 AST 生成器的
+                    # _build_function_def 转换为 Lambda 表达式。
+                    # 依「嵌套即抽象节点」：lambda 是父 Call 的子节点（func）。
+                    elif (func_i.opname == 'LOAD_CONST'
+                            and push_null_idx + 2 < len(instrs)
+                            and instrs[push_null_idx + 2].opname == 'MAKE_FUNCTION'
+                            and hasattr(func_i.argval, 'co_code')):
+                        return 'call', {
+                            'func': {
+                                'type': 'FunctionObject',
+                                'code': func_i.argval,
+                            },
+                        }, None
                 else:
                     # [R4 Bug 8 修复] 检测 LOAD_METHOD 模式: obj.method(args)
                     # 字节码模式: LOAD_NAME obj, [LOAD_ATTR ...], LOAD_METHOD method,
@@ -11710,7 +11727,63 @@ RegionType 枚举值: RegionType.ASSERT
                     # [聚类1 修复] CONTAINS_OP: ternary（或其包裹）作 in / not in 测试
                     # 字节码布局：<container_load>, CONTAINS_OP, POP_JUMP_IF_FALSE
                     # CONTAINS_OP 弹 2（left + right），压 1（比较结果）。
+                    # [R2 Bug is_none/contains 修复] 仿 [R4 Bug 7 修复]：若 CONTAINS_OP
+                    # 后跟 STORE_*，说明 in/not in 结果被赋值（如 `x = (ternary) in coll`），
+                    # 而非用作 if/while 条件测试。此时不应设 merge_context='compare'，
+                    # 让流程继续扫描 merge_block 找到 STORE_* 并设为 value_target，
+                    # 由 AST 生成器的 value_target 路径重建完整 Compare 表达式。
                     elif instr.opname == 'CONTAINS_OP':
+                        _ct_idx = None
+                        for _ii, _instr in enumerate(merge_block.instructions):
+                            if _instr is instr:
+                                _ct_idx = _ii
+                                break
+                        _has_store_after_ct = False
+                        if _ct_idx is not None:
+                            _has_store_after_ct = any(
+                                _ni.opname in ('STORE_FAST', 'STORE_NAME',
+                                               'STORE_GLOBAL', 'STORE_DEREF')
+                                for _ni in merge_block.instructions[_ct_idx + 1:]
+                                if _ni.opname not in NOISE_OPS
+                            )
+                        if _has_store_after_ct:
+                            # CONTAINS_OP 结果被赋值，跳过 compare 上下文
+                            continue
+                        true_non_noise = [i for i in true_block.instructions
+                                         if i.opname not in NOISE_OPS]
+                        false_non_noise = [i for i in false_block.instructions
+                                          if i.opname not in NOISE_OPS]
+                        true_has_pop = any(i.opname == 'POP_TOP' for i in true_non_noise)
+                        false_has_pop = any(i.opname == 'POP_TOP' for i in false_non_noise)
+                        if not (true_has_pop or false_has_pop):
+                            merge_context = 'compare'
+                            value_target = '__compare_target__'
+                            break
+
+                    # [R2 Bug is_none 修复] IS_OP: ternary 作 is / is not 比较的左操作数
+                    # 字节码布局：<right_load>, IS_OP, STORE_*   （赋值场景）
+                    # 或 <right_load>, IS_OP, POP_JUMP_IF_*     （条件测试场景）
+                    # IS_OP 弹 2（left + right），压 1（比较结果）。
+                    # 若 IS_OP 后跟 STORE_*，跳过 compare 上下文，让扫描落入 STORE_* →
+                    # merge_context='store'，由 AST 生成器重建 `x = (ternary) is None`。
+                    elif instr.opname == 'IS_OP':
+                        _is_idx = None
+                        for _ii, _instr in enumerate(merge_block.instructions):
+                            if _instr is instr:
+                                _is_idx = _ii
+                                break
+                        _has_store_after_is = False
+                        if _is_idx is not None:
+                            _has_store_after_is = any(
+                                _ni.opname in ('STORE_FAST', 'STORE_NAME',
+                                               'STORE_GLOBAL', 'STORE_DEREF')
+                                for _ni in merge_block.instructions[_is_idx + 1:]
+                                if _ni.opname not in NOISE_OPS
+                            )
+                        if _has_store_after_is:
+                            # IS_OP 结果被赋值，跳过 compare 上下文
+                            continue
+                        # 条件测试场景：IS_OP 后跟条件跳转（如 `if (ternary) is None:`）
                         true_non_noise = [i for i in true_block.instructions
                                          if i.opname not in NOISE_OPS]
                         false_non_noise = [i for i in false_block.instructions
