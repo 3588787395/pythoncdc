@@ -30,6 +30,7 @@ from .dominator_analyzer import (
 
 from .pattern_parser import PatternParser
 from .opcode_feature_detector import get_opcode_detector
+from .peephole_patterns import PeepholePatternLibrary
 
 FORWARD_CONDITIONAL_JUMP_OPS = frozenset({
     'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_FORWARD_IF_TRUE',
@@ -884,6 +885,8 @@ class RegionAnalyzer:
         self._block_metadata: Dict[int, Dict[str, Any]] = {}
         self._current_loop_blocks: Set[BasicBlock] = set()
         self._current_boolop_regions: List[Region] = []
+        self.peephole_library = PeepholePatternLibrary()
+        self._peephole_matches: List[Dict[str, Any]] = []
 
     def _filter_regions(self, regions: List['Region'], region_class) -> List['Region']:
         """按精确类型过滤区域列表（使用 type() 而非 isinstance 以避免子类匹配）。"""
@@ -1101,6 +1104,24 @@ class RegionAnalyzer:
         with_regions = self._identify_with_regions()
         match_regions = self._identify_match_regions()
         assert_regions = self._identify_assert_regions()
+
+        # [Phase 2.5.1-2.5.2] CPython peephole 优化模式库预处理
+        # 扫描所有 P1 模式（模块级三元表达式语句 → 双 RETURN_VALUE），
+        # 释放被 MatchRegion 误识别的值块（match_regions 守卫会拒绝三元识别）。
+        # 此预处理在所有 Phase 1 区域识别完成后、Phase 2 高层识别前执行，
+        # 确保三元识别阶段能看到正确的 match_regions 集合。
+        self._peephole_matches = self.peephole_library.match_peephole_pattern(
+            list(self.cfg.blocks.values()), self.cfg
+        )
+        if self._peephole_matches:
+            _p1_value_blocks: Set[BasicBlock] = set()
+            for _match in self._peephole_matches:
+                _p1_value_blocks.update(_match.get('value_blocks_to_release', []))
+            if _p1_value_blocks:
+                match_regions = [
+                    _mr for _mr in match_regions
+                    if not (_mr.blocks & _p1_value_blocks)
+                ]
 
         # Phase 2: 高层区域识别(接收Phase 1结果)
         chained_compare_regions = self._identify_chained_compare_regions(
