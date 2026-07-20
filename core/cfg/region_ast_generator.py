@@ -16091,7 +16091,16 @@ AST 映射规则:
                 _has_enclosing_loop = False
                 for _r in self.regions:
                     if isinstance(_r, LoopRegion):
+                        # [Scenario B] while 条件位三元：三元 blocks 物理上
+                        # 在循环之前（编译器将条件检查放在循环体之前），
+                        # 因此 blocks-containment 检查会漏判。关键特征是
+                        # 三元的 merge_block IS 循环的 header_block —— 这才
+                        # 是 while_cond 的真正判别条件。
                         if any(b in _r.blocks for b in region.blocks):
+                            _has_enclosing_loop = True
+                            break
+                        if (region.merge_block is not None
+                                and _r.header_block is region.merge_block):
                             _has_enclosing_loop = True
                             break
                 if not _has_enclosing_loop:
@@ -16921,6 +16930,13 @@ AST 映射规则:
         """
         if region.merge_block is None:
             return None
+        # [Scenario B] 如果 merge_block 同时是某个 LoopRegion 的 header_block，
+        # 则其指令是循环回边重检查（CPython 3.11 在 back-edge 复制 while 条件），
+        # 不是三元值的消费指令。此时 while_cond 路径会处理，本路径不应匹配。
+        for _r in self.regions:
+            if (isinstance(_r, LoopRegion)
+                    and _r.header_block is region.merge_block):
+                return None
         merge_instrs = [i for i in region.merge_block.instructions
                         if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
         if not merge_instrs:
