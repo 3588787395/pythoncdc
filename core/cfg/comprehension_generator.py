@@ -423,7 +423,10 @@ class ComprehensionGenerator:
                         elt_expr = ternary_info
             else:
                 elt_expr = ternary_info
-            ifs = []
+            # [R6-10/12/13 fix] ternary + filter 共存时也提取 filter。
+            # _extract_comp_ifs 看到 FORWARD ternary 跳转会 break（不 return），
+            # 已收集的 BACKWARD filter segments 会被处理为 ifs。
+            ifs, _ = self._extract_comp_ifs(all_instrs, store_idx, append_idx)
         else:
             ifs, elt_start_idx = self._extract_comp_ifs(all_instrs, store_idx, append_idx)
             if append_op == 'MAP_ADD':
@@ -562,6 +565,11 @@ class ComprehensionGenerator:
                         elt_expr = ternary_info
             else:
                 elt_expr = ternary_info
+            # [R6-10/12/13 fix] ternary + filter 共存时也提取 filter，
+            # 挂到最内层 generator。
+            ifs, _ = self._extract_comp_ifs(all_instrs, innermost_store_idx, append_idx)
+            if ifs:
+                generators[-1]['ifs'] = ifs
         else:
             ifs, elt_start_idx = self._extract_comp_ifs(all_instrs, innermost_store_idx, append_idx)
             if append_op == 'MAP_ADD':
@@ -777,10 +785,13 @@ class ComprehensionGenerator:
                 # 三元条件不应被提取为过滤条件，而应作为元素表达式的一部分
                 if hasattr(instr, 'argval') and instr.argval is not None:
                     if instr.argval < append_offset and 'BACKWARD' not in instr.opname:
-                        # 跳转目标在LIST_APPEND之前 → 三元模式，不提取为过滤条件
-                        # 重置elt_start_idx以包含条件指令
-                        elt_start_idx = store_idx + 1
-                        return ifs, elt_start_idx
+                        # [R6-10/12/13 fix] FORWARD ternary cond 跳转 — break
+                        # 出循环让已收集的 filter segments 被处理，而非 return
+                        # 丢弃 filters。elt_start_idx 保持为 current_start
+                        # （最后一个 filter 之后，ternary cond 之前），由
+                        # parse_comprehension_inner 决定是否使用 ternary_info
+                        # 作为 elt（若使用则 elt_start_idx 不被使用）。
+                        break
                 segments.append((current_start, idx, instr))
                 current_start = idx + 1
 
@@ -917,21 +928,29 @@ class ComprehensionGenerator:
         三元模式特征：条件跳转的目标在LIST_APPEND之前（跳转到false值），
         而不是跳过整个元素表达式（过滤器模式）。
         字节码模式：condition → POP_JUMP_IF_FALSE false_value → true_value → JUMP_FORWARD merge → false_value → LIST_APPEND
+
+        [R6-10/12/13 fix] 支持 ternary + filter 共存：BACKWARD filter 跳转
+        （跳回 FOR_ITER）会被跳过，继续寻找 FORWARD ternary cond 跳转。
+        cond_instrs 从最后一个 filter 跳转之后开始，避免包含 filter 指令。
         """
         append_offset = all_instrs[append_idx].offset if append_idx < len(all_instrs) else float('inf')
 
         # 查找STORE和LIST_APPEND之间的条件跳转
         cond_jump_idx = None
+        # [R6-10/12/13 fix] 记录最后一个 BACKWARD filter 跳转的索引，
+        # cond_instrs 从此之后开始（跳过 filter 条件指令）。
+        last_filter_end = store_idx
         for idx in range(store_idx + 1, append_idx):
             instr = all_instrs[idx]
             if instr.opname in CONDITIONAL_JUMP_OPS:
                 # [R13-batch3] BACKWARD 条件跳转是过滤器模式（跳回 FOR_ITER
                 # 循环开始以跳过当前元素），不是三元模式。三元模式使用 FORWARD
                 # 跳转跳到 false 值（在 true 值之后、LIST_APPEND 之前）。
-                # 与 _extract_comp_ifs 的 'BACKWARD' not in instr.opname 检查
-                # 保持一致，避免过滤器被误识别为三元导致 ifs 丢失。
+                # [R6-10/12/13 fix] 跳过 BACKWARD filter 跳转继续寻找 FORWARD
+                # ternary cond 跳转，支持 ternary + filter 共存。
                 if 'BACKWARD' in instr.opname:
-                    return None
+                    last_filter_end = idx
+                    continue
                 # 检查跳转目标是否在LIST_APPEND之前（三元模式）
                 if hasattr(instr, 'argval') and instr.argval is not None:
                     if instr.argval < append_offset:
@@ -947,8 +966,9 @@ class ComprehensionGenerator:
         false_target_offset = cond_instr.argval
 
         # 分离条件指令、true值指令、false值指令
-        # 条件指令：从store_idx+1到cond_jump_idx（不含跳转指令本身）
-        cond_instrs = all_instrs[store_idx + 1:cond_jump_idx]
+        # [R6-10/12/13 fix] 条件指令从最后一个 filter 跳转之后开始，
+        # 避免把 filter 条件指令包含进 ternary cond 表达式。
+        cond_instrs = all_instrs[last_filter_end + 1:cond_jump_idx]
 
         # 找到true值和false值的指令范围
         true_start = cond_jump_idx + 1

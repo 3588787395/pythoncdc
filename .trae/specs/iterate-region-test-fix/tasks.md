@@ -46,7 +46,8 @@
 - [x] Task T1.3: Ternary round_03 — 5 R3 bug + 3 bonus + 2 回归守卫 (return_arith/raise/lambda_complex/return_two_ternary); 61 failed, 133 passed, 1 skipped (基线 58 failed)
 - [x] Task T1.4: Ternary round_04 — 9 R4 bug 修复 + 4 bonus (setattr/await/dict/del/format/fstring/set/except_handler/with_ctx_mgr); 59 failed, 158 passed, 1 skipped (基线 61 failed, 133 passed); 2 已知限制 (chained_compare_4way 部分修复 / while_cond 完全回滚，R5+ 处理); 跨区域 104 failed / 930 passed / 11 skipped (基线 107/927/11，改善 3 无退化); commit pending
 - [x] Task T1.5: Ternary round_05 — 7 R5 bug 修复 + 6 bonus (chained_compare+assign/double_star/subscript_slice/return await/class_body); 57 failed, 182 passed, 1 skipped (基线 69 failed, 170 passed); 3 已知限制 (while_cond 同 R4-10 根因，R6+ 处理); 跨区域 102 failed / 954 passed / 11 skipped (基线 104/930，改善 2 无退化); commit pending
-- [ ] Task T1.6 ~ T1.20
+- [x] Task T1.6: Ternary round_06 — 10 R6 bug 修复 + 2 bonus (multi_ternary_shared_exit/comprehension/while_body_leak/annotation/except_handler); 59 failed, 202 passed, 1 skipped (基线 70 failed, 191 passed); 3 已知限制 (while_cond_nested/complex + decorator_chain，R7+ 处理); 跨区域 103 failed / 975 passed / 11 skipped (基线 102/954，+1 failed net = 3 R6 known - 2 baseline bonus，+21 passed); commit pending
+- [ ] Task T1.7 ~ T1.20
 
 ## Phase 3-10: 其他 8 区域（各 20 轮）
 - [ ] Task 3.1 ~ 10.20
