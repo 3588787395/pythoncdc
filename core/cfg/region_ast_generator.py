@@ -14559,6 +14559,21 @@ AST 映射规则:
                     'ops': [{'type': _cmp_op}],
                     'comparators': [{'type': 'Constant', 'value': None}]
                 }
+            # [CPython peephole] Implicit `not` on a boolop operand
+            # (mirrors the handling in _build_boolop_expression):
+            # `not X` is lowered as `LOAD X; POP_JUMP_IF_TRUE` (AND
+            # chain) or `LOAD X; POP_JUMP_IF_FALSE` (OR chain, non-
+            # last block). The UNARY_NOT is optimized away into the
+            # jump direction. Wrap the operand in UnaryOp(not, ...)
+            # to restore the original semantics.
+            if (sub_expr is not None and last_instr and not is_transforming_only
+                    and last_instr.opname in STRIP_JUMP_OPS):
+                _jump_op = last_instr.opname
+                if chain_op == 'and' and 'TRUE' in _jump_op:
+                    sub_expr = {'type': 'UnaryOp', 'op': 'not', 'operand': sub_expr}
+                elif (chain_op == 'or' and 'FALSE' in _jump_op
+                      and i < len(op_chain) - 1):
+                    sub_expr = {'type': 'UnaryOp', 'op': 'not', 'operand': sub_expr}
             if sub_expr is None:
                 continue
             current_inner_values.append(sub_expr)
@@ -14569,6 +14584,43 @@ AST 映射规则:
                 current_inner_op = chain_op
             else:  # OUTER
                 _end_inner_group()
+        # [CPython peephole] Final outer operand in fall-through block:
+        # For `X or Y or Z` where Z is a non-boolop value (e.g., `None`,
+        # a constant, or a function call), the compiler emits the first
+        # two operands as JUMP_IF_TRUE_OR_POP blocks in op_chain, but Z
+        # lives in the fall-through block of the LAST chain block (no
+        # conditional jump). op_chain captures only the boolop-jump blocks,
+        # so Z would be lost without this step. This mirrors the
+        # fall-through handling in _build_boolop_expression (lines 14753+).
+        if op_chain:
+            last_chain_block, last_chain_op = op_chain[-1]
+            last_instr = last_chain_block.get_last_instruction()
+            chain_block_offsets = {b.start_offset for b, _ in op_chain}
+            if (last_instr and last_instr.opname in STRIP_JUMP_OPS
+                    and last_instr.argval is not None
+                    and last_chain_op == outer_op):
+                ft_succs = sorted(last_chain_block.conditional_successors,
+                                   key=lambda s: s.start_offset)
+                ft_block = next((s for s in ft_succs
+                                 if s.start_offset != last_instr.argval
+                                 and s.start_offset not in chain_block_offsets
+                                 and s != region.merge_block
+                                 and s in region.blocks
+                                 and not any(i.opname == 'GET_AWAITABLE'
+                                            for i in s.instructions)), None)
+                if ft_block is not None:
+                    ft_instrs = [inst for inst in ft_block.instructions
+                                 if inst.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                    clean_ft = []
+                    for inst in ft_instrs:
+                        if inst.opname in ('POP_TOP', 'RETURN_VALUE', 'RETURN_CONST',
+                                           'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'):
+                            break
+                        clean_ft.append(inst)
+                    if clean_ft:
+                        ft_expr = self.expr_reconstructor.reconstruct(clean_ft)
+                        if ft_expr is not None:
+                            outer_values.append(ft_expr)
         if current_inner_values:
             _end_inner_group()
         if not outer_values:
@@ -14731,6 +14783,32 @@ AST 映射规则:
                     'ops': [{'type': _cmp_op}],
                     'comparators': [{'type': 'Constant', 'value': None}]
                 }
+            # [CPython peephole] Implicit `not` on a boolop operand:
+            # When `not X` appears as a boolop operand, CPython 3.11
+            # optimizes away the UNARY_NOT by inverting the jump
+            # direction. For an AND chain, the normal short-circuit
+            # is IF_FALSE (exit when operand is false); if the jump
+            # is IF_TRUE, the operand is `not X` (AND short-circuits
+            # when `not X` is false, i.e., X is true — so IF_TRUE
+            # exits on X being true). For an OR chain, the normal
+            # short-circuit is IF_TRUE; if a NON-LAST block's jump
+            # is IF_FALSE, the operand is `not X` (OR short-circuits
+            # when `not X` is true, i.e., X is false — so IF_FALSE
+            # exits on X being false). The last block in an OR chain
+            # is the "value" block whose IF_FALSE is the loop-exit
+            # condition (not a negated operand), so it must be
+            # excluded. Wrap the operand in UnaryOp(not, ...) to
+            # restore the original semantics. This handles source
+            # patterns like `while not done and has_data():` where
+            # `not done` is lowered as `LOAD done; POP_JUMP_IF_TRUE`.
+            if (sub_expr is not None and last_instr and not is_transforming_only
+                    and last_instr.opname in STRIP_JUMP_OPS):
+                _jump_op = last_instr.opname
+                if chain_op == 'and' and 'TRUE' in _jump_op:
+                    sub_expr = {'type': 'UnaryOp', 'op': 'not', 'operand': sub_expr}
+                elif (chain_op == 'or' and 'FALSE' in _jump_op
+                      and chain_idx < len(op_chain) - 1):
+                    sub_expr = {'type': 'UnaryOp', 'op': 'not', 'operand': sub_expr}
             # Group transition for sub_expr
             if sub_expr is not None:
                 if current_group_op is None:

@@ -2655,6 +2655,59 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                 if header in condition_block.successors or any(pred in body for pred in condition_block.predecessors):
                     region_blocks.add(condition_block)
                     _cb = condition_block
+                    # [CPython peephole] Compound while condition like
+                    # `while not done and has_data():` is lowered as a chain
+                    # of FORWARD_CONDITIONAL_JUMP blocks. Each operand's
+                    # short-circuit target is a SEPARATE trivial exit block
+                    # (LOAD_CONST None; RETURN_VALUE) at module/function-tail
+                    # position. They are semantically equivalent — all do
+                    # "exit the loop". The backward walk must accept a
+                    # predecessor whose jump target is ANY equivalent exit
+                    # block, not just _cb/body/header. Without this, only
+                    # the last operand (e.g., `has_data()`) is captured as
+                    # condition_block, and earlier operands (e.g., `not done`)
+                    # leak out as spurious outer IfRegion.
+                    _cond_exit = None
+                    _cond_last = condition_block.get_last_instruction()
+                    if _cond_last and _cond_last.argval is not None:
+                        _cond_exit = self.cfg.get_block_by_offset(_cond_last.argval)
+                    # [Discriminator] A compound `and` while-condition (e.g.
+                    # `while not done and has_data():`) is re-evaluated at the
+                    # back edge. The back-edge recheck emits a FORWARD
+                    # conditional jump to a trivial exit block for each operand
+                    # that short-circuits (e.g. `LOAD done;
+                    # POP_JUMP_FORWARD_IF_TRUE @exit`). A loop with a SIMPLE
+                    # condition (e.g. `while a > 10:`) has only a BACKWARD
+                    # conditional jump to the header at the back edge — NO
+                    # forward jump to an exit. This distinguishes a true
+                    # condition-chain predecessor (part of the while condition)
+                    # from an outer construct's condition block (e.g. the `if`
+                    # in `if a > 0: while a > 10:`) whose exit block is also a
+                    # trivial return but is NOT a loop exit. Without this
+                    # discriminator, the backward walk would absorb the outer
+                    # `if`'s condition block into the LoopRegion, causing the
+                    # IfRegion to vanish.
+                    # Count the back-edge recheck's FORWARD-jump-to-exit blocks.
+                    # Each represents one operand of a compound `and` condition
+                    # that is re-evaluated at the back edge. This count limits
+                    # how many `and`-chain predecessors the backward walk may
+                    # absorb: an outer construct's condition block (e.g. `if c:`
+                    # wrapping `while (x := f()) and g():`) has an equivalent
+                    # trivial-return exit but NO corresponding back-edge recheck
+                    # block, so it would push the accepted count past this
+                    # limit and is correctly rejected.
+                    _back_edge_recheck_count = 0
+                    for _b in body:
+                        _b_last = _b.get_last_instruction()
+                        if (_b_last
+                                and _b_last.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                                and _b_last.argval is not None):
+                            _b_target = self.cfg.get_block_by_offset(_b_last.argval)
+                            if (_b_target is not None
+                                    and _b_target is not header
+                                    and self._is_trivial_return_block(_b_target)):
+                                _back_edge_recheck_count += 1
+                    _accepted_equivalent_count = 0
                     while _cb is not None:
                         _cb_preds = [p for p in _cb.predecessors
                                      if p not in body and p not in region_blocks
@@ -2665,18 +2718,32 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                             if p_last and p_last.opname in FORWARD_CONDITIONAL_JUMP_OPS:
                                 if p_last.argval is not None:
                                     p_target = self.cfg.get_block_by_offset(p_last.argval)
-                                    if p_target == _cb or p_target in body or p_target == header:
+                                    _is_equivalent_exit = (
+                                        _cond_exit is not None
+                                        and p_target is not None
+                                        and p_target != _cond_exit
+                                        and self._is_equivalent_exit_block(p_target, _cond_exit)
+                                        and _back_edge_recheck_count > 0
+                                        and _accepted_equivalent_count < _back_edge_recheck_count
+                                    )
+                                    if p_target == _cb or p_target in body or p_target == header or _is_equivalent_exit:
                                         _has_back_edge_to_p = any(
                                             be.get_last_instruction() is not None and
                                             be.get_last_instruction().opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT') and
                                             be.get_last_instruction().argval == p.start_offset
                                             for be in body
                                         )
+                                        # p is a valid condition-chain predecessor —
+                                        # always claim it for this LoopRegion so it
+                                        # does not leak out as a spurious outer
+                                        # IfRegion. Only continue the backward walk
+                                        # when p is not an inner-loop header (no
+                                        # back-edge to p from this loop's body).
+                                        region_blocks.add(p)
+                                        if _is_equivalent_exit:
+                                            _accepted_equivalent_count += 1
                                         if not _has_back_edge_to_p:
                                             _next_cb = p
-                                            break
-                                        region_blocks.add(p)
-                                        _next_cb = p
                                         break
                         _cb = _next_cb
             verified_break_blocks = set()
@@ -9283,6 +9350,30 @@ RegionType 枚举值: RegionType.ASSERT
                         _jt_exits_loop = _jump_target and _jump_target not in block_region.blocks
                         if _jt_exits_loop:
                             return True
+                        # [CPython peephole] Back-edge condition re-check
+                        # without a STORE: e.g., `while not done and
+                        # has_data():` where CPython 3.11 duplicates the
+                        # compound condition at the back edge. The
+                        # back-edge re-check is `LOAD done;
+                        # POP_JUMP_IF_TRUE` (no STORE before the
+                        # condition — just a condition re-evaluation).
+                        # The fallthrough leads to the LOOP_BACK_EDGE
+                        # block (or to a block whose last instr is a
+                        # BACKWARD_CONDITIONAL_JUMP) and the jump target
+                        # is a BREAK block (exits the loop when the
+                        # re-check fails). This is the same back-edge
+                        # recheck pattern as the with-STORE case above,
+                        # just without the loop increment. Without this
+                        # check, the header_block would be misidentified
+                        # as a standalone IfRegion, producing spurious
+                        # `if (not done): pass` in the loop body.
+                        if _ft_succ:
+                            _ft_role_nostore = self.block_roles.get(_ft_succ.start_offset)
+                            if _ft_role_nostore == BlockRole.LOOP_BACK_EDGE and _jt_role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
+                                return True
+                            if (_ft_last and _ft_last.opname in BACKWARD_CONDITIONAL_JUMP_OPS
+                                and _jt_role in (BlockRole.BREAK, BlockRole.PURE_BREAK)):
+                                return True
                     if _cond_is_pure_compare:
                         if (_ft_last and _ft_last.opname in BACKWARD_CONDITIONAL_JUMP_OPS
                             and _jt_role in (BlockRole.BREAK, BlockRole.PURE_BREAK)):
@@ -13132,7 +13223,73 @@ RegionType 枚举值: RegionType.ASSERT
                     _not_or_chain = (op_type == 'or' and all(
                         (cb.get_last_instruction() is not None and 'TRUE' in cb.get_last_instruction().opname)
                         for cb, _ in chain))
-                    if not _normal_or and not _not_or_chain:
+                    # [CPython peephole] `and`/`or` chain with multiple
+                    # operands: the compiler emits a SEPARATE trivial exit
+                    # block (LOAD_CONST None; RETURN_VALUE) for each operand's
+                    # short-circuit target. The targets are different offsets
+                    # but semantically equivalent — they all do "skip the body,
+                    # return None". Treat them as the same logical target so
+                    # the chain is preserved for bottom-up reduction into a
+                    # single BoolOp. This is the compiler's standard lowering
+                    # for `if (a and b and c): ...` at module/function-tail
+                    # position (each operand's false-exit gets its own block).
+                    _equivalent_exits = self._is_equivalent_exit_block(first_jump_target, cur_jump_target)
+                    # [CPython peephole] Scenario B ternary guard: when the
+                    # chain's fallthrough leads (via JUMP_FORWARD) to a loop
+                    # header, the first block is a ternary's condition (not a
+                    # boolop operand) and its jump target is the ternary's
+                    # false-value block. CPython merges the ternary's
+                    # true-value with the while-condition check, producing a
+                    # structure that looks like a boolop chain (both blocks
+                    # IF_FALSE to trivial exit blocks). Without this guard,
+                    # `_equivalent_exits` would preserve the chain and steal
+                    # blocks the TernaryRegion detector needs, causing
+                    # `while (x if c else None): pass` to decompile as a
+                    # nested if+while. The discriminator: walk the
+                    # fallthrough chain from the current block's fallthrough;
+                    # if a JUMP_FORWARD block appears whose target is a loop
+                    # header (has a back-edge predecessor), it's a Scenario B
+                    # ternary — break the chain so the TernaryRegion detector
+                    # can find the pattern.
+                    _is_scenario_b_ternary = False
+                    if _equivalent_exits:
+                        _ft_walk = ft_succ
+                        _walk_count = 0
+                        _visited_ft = set()
+                        while _ft_walk and _walk_count < 5 and _ft_walk.start_offset not in _visited_ft:
+                            _visited_ft.add(_ft_walk.start_offset)
+                            _ft_last_i = _ft_walk.get_last_instruction()
+                            if _ft_last_i and _ft_last_i.opname == 'JUMP_FORWARD' and _ft_last_i.argval is not None:
+                                _merge_block = self.cfg.get_block_by_offset(_ft_last_i.argval)
+                                if _merge_block is not None and _merge_block is not _ft_walk:
+                                    # Loop header = has a back-edge predecessor
+                                    # (a predecessor at a higher offset with
+                                    # JUMP_BACKWARD). This identifies the
+                                    # JUMP_FORWARD target as a loop header,
+                                    # meaning the current block is a ternary
+                                    # condition whose merge is the loop header.
+                                    for _mp in _merge_block.predecessors:
+                                        if _mp.start_offset > _merge_block.start_offset:
+                                            _mp_last = _mp.get_last_instruction()
+                                            if _mp_last and (_mp_last.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                                                              or _mp_last.opname in BACKWARD_CONDITIONAL_JUMP_OPS):
+                                                _is_scenario_b_ternary = True
+                                                break
+                                    if _is_scenario_b_ternary:
+                                        break
+                            # Move to fallthrough successor (not jump target)
+                            _ft_next = None
+                            if _ft_last_i and _ft_last_i.argval is not None:
+                                for s in _ft_walk.successors:
+                                    if s.start_offset != _ft_last_i.argval:
+                                        _ft_next = s
+                                        break
+                            else:
+                                if _ft_walk.successors:
+                                    _ft_next = next(iter(_ft_walk.successors))
+                            _ft_walk = _ft_next
+                            _walk_count += 1
+                    if not _normal_or and not _not_or_chain and (not _equivalent_exits or _is_scenario_b_ternary):
                         chain.pop()
                         break
             # [Round 2 修复] await 作为后续操作数：`x or await g()` 中第一个
@@ -13167,7 +13324,69 @@ RegionType 枚举值: RegionType.ASSERT
                 if last_last_instr and 'FALSE' in last_last_instr.opname:
                     last_jt_offset = last_last_instr.argval
                     if last_jt_offset != first_jt_offset:
-                        chain[-1] = (chain[-1][0], 'or')
+                        # [CPython peephole] Distinguish `X or Y or ... or Z`
+                        # (OR chain) from `not X and Y` (AND chain with `not`
+                        # on the first operand). Both produce the "first N-1
+                        # blocks IF_TRUE with same target + last block IF_FALSE
+                        # with different target" pattern, but the semantics
+                        # differ by where the IF_TRUE targets point:
+                        # - `X or Y`: each IF_TRUE targets the LOOP BODY
+                        #   (continue when X is true). The last block's
+                        #   IF_FALSE is the "value" block (exit when false).
+                        #   Reclassify last as 'or' to match the OR chain.
+                        # - `not X and Y`: each IF_TRUE targets an EXIT
+                        #   (exit when `not X` is false, i.e., X is true —
+                        #   this is an AND short-circuit on `not X`, not an
+                        #   OR short-circuit on X). The last block's IF_FALSE
+                        #   is the AND short-circuit on Y. Reclassify the
+                        #   first N-1 blocks as 'and' so the chain correctly
+                        #   reduces to BoolOp(And, [not X, Y]).
+                        # The discriminator is whether the first block's
+                        # IF_TRUE target is a trivial exit block (LOAD_CONST
+                        # None; RETURN_VALUE) or a loop body block. This
+                        # mirrors the bytecode difference between
+                        # `while X or Y:` (IF_TRUE → loop body) and
+                        # `while not X and Y:` (IF_TRUE → exit).
+                        first_jt_block = self.cfg.get_block_by_offset(first_jt_offset)
+                        if (first_jt_block is not None
+                                and self._is_trivial_block(first_jt_block)):
+                            # [Discriminator] `not X and Y` vs `X or Y`:
+                            # Both patterns have first N-1 blocks IF_TRUE
+                            # with the same target. The difference is WHERE
+                            # that target lies:
+                            # - `X or Y`: the IF_TRUE target IS the merge
+                            #   block (the last block's non-jump successor —
+                            #   the if/loop body where the condition is True).
+                            #   Even if the merge block is a trivial return
+                            #   (e.g. `if a or b: pass` — `pass` compiles to
+                            #   LOAD_CONST None; RETURN_VALUE), it's the BODY,
+                            #   not an exit.
+                            # - `not X and Y`: the IF_TRUE target is an EXIT
+                            #   block (NOT the merge block). The merge block
+                            #   is the last block's non-jump successor (the
+                            #   loop body).
+                            # Without this merge-block check, `if a or b:
+                            # pass` would be misidentified as `if (not a and
+                            # b): pass` because the if body (`pass`) is a
+                            # trivial return block.
+                            _last_chain_block = chain[-1][0]
+                            _last_chain_instr = _last_chain_block.get_last_instruction()
+                            _merge_block = None
+                            if _last_chain_instr and _last_chain_instr.argval is not None:
+                                for _s in _last_chain_block.conditional_successors:
+                                    if _s.start_offset != _last_chain_instr.argval:
+                                        _merge_block = _s
+                                        break
+                            if (_merge_block is not None
+                                    and first_jt_block is _merge_block):
+                                # IF_TRUE target is the merge block → `X or Y`
+                                chain[-1] = (chain[-1][0], 'or')
+                            else:
+                                # IF_TRUE target is an exit → `not X and Y`
+                                for i in range(len(chain) - 1):
+                                    chain[i] = (chain[i][0], 'and')
+                        else:
+                            chain[-1] = (chain[-1][0], 'or')
         all_same_target = True
         target_groups = {}
         for cb, cop in chain:
@@ -13177,7 +13396,13 @@ RegionType 枚举值: RegionType.ASSERT
                 break
             cjt = self.cfg.get_block_by_offset(cl.argval)
             if cjt != first_jt:
-                all_same_target = False
+                # [CPython peephole] Multiple operands in `and`/`or` chain
+                # produce distinct trivial exit blocks (LOAD_CONST None;
+                # RETURN_VALUE) at module/function-tail position. They are
+                # semantically equivalent — treat them as the same logical
+                # target so the chain is preserved.
+                if not self._is_equivalent_exit_block(first_jt, cjt):
+                    all_same_target = False
             target_groups.setdefault(id(cjt), set()).add(cop)
         if not all_same_target:
             has_operator_boundary = False
