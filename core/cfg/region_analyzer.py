@@ -10761,6 +10761,7 @@ RegionType 枚举值: RegionType.ASSERT
         归约算法 4 核心原则一致（自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 /
         父引用子入口）。
         """
+
         def _can_be_ternary_header(block):
             if len(block.conditional_successors) != 2:
                 return False
@@ -11094,6 +11095,7 @@ RegionType 枚举值: RegionType.ASSERT
                     print('non-positive')  # CALL + POP_TOP
             这种print()语句是语句而非表达式，不应该被识别为Ternary。
             """
+
             if not _can_be_ternary_header(block):
                 return None
             last_instr = block.get_last_instruction()
