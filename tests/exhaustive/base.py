@@ -40,6 +40,17 @@ REGION_TYPE_MAP = {
     'NESTED': [],
 }
 
+# 特殊节点匹配规则：当简单 isinstance 不足时使用。
+# 键 = REGION_TYPE，值 = 谓词函数 node -> bool。
+# 用于 BOOL_OP 接受 UnaryOp(Not) —— `not` 是 Python 布尔运算之一
+# (https://docs.python.org/3/library/stdtypes.html#boolean-operations)，
+# 但 AST 中以 UnaryOp(Not) 表示，而非 BoolOp(and/or)。
+REGION_TYPE_CUSTOM_MATCHERS = {
+    'BOOL_OP': lambda node: (
+        isinstance(node, ast.UnaryOp) and isinstance(node.op, ast.Not)
+    ),
+}
+
 REGION_TYPE_ALTERNATIVES = {
     'MATCH_REGION': [ast.If],
     # CPython优化使while False:pass和if False:pass产生完全相同的字节码，
@@ -87,6 +98,15 @@ class ExhaustiveTestCase(ControlFlowTestCase):
                         break
                 if found:
                     break
+
+        # 特殊谓词匹配（如 BOOL_OP 接受 UnaryOp(Not)）
+        if not found:
+            custom_matcher = REGION_TYPE_CUSTOM_MATCHERS.get(expected_type)
+            if custom_matcher is not None:
+                for node in ast.walk(tree):
+                    if custom_matcher(node):
+                        found = True
+                        break
 
         if not found:
             expected_names = [t.__name__ for t in expected_ast_types]
