@@ -7377,8 +7377,17 @@ AST 映射规则:
                     _elif_last = _last_chain_block.get_last_instruction()
                     _elif_negate = False
                     if _elif_last and _elif_last.argval is not None and _elif_last.opname in FORWARD_CONDITIONAL_JUMP_OPS:
-                        if 'TRUE' in _elif_last.opname or 'NONE' in _elif_last.opname:
-                            _elif_negate = True
+                        # 6. 已知失败模式: R19 Bug 10-12 - elif 条件为 BoolOp 含 `is not None`/`or`
+                        # 时, 简单 opname 检查 ('NONE' in opname) 会错误取反. 正确逻辑应基于跳转目标
+                        # 是否为 then body (参考 _extract_condition_for_elif_block).
+                        if _elif_last.opname in NONE_CHECK_OPS:
+                            _elif_if_true = False
+                        else:
+                            _elif_if_true = 'IF_TRUE' in _elif_last.opname
+                        _elif_then_offsets = set()
+                        if region.elif_bodies and len(region.elif_bodies) > 0:
+                            _elif_then_offsets = {b.start_offset for b in region.elif_bodies[0]}
+                        _elif_negate = (_elif_last.argval in _elif_then_offsets) != _elif_if_true
                     elif_condition = _negate_expr(_elif_boolop_expr) if _elif_negate else _elif_boolop_expr
                     for _b in elif_boolop.blocks:
                         self.generated_blocks.add(_b)
@@ -7501,8 +7510,16 @@ AST 映射规则:
                         _last_elif_last = _last_chain_block.get_last_instruction()
                         _last_elif_negate = False
                         if _last_elif_last and _last_elif_last.argval is not None and _last_elif_last.opname in FORWARD_CONDITIONAL_JUMP_OPS:
-                            if 'TRUE' in _last_elif_last.opname or 'NONE' in _last_elif_last.opname:
-                                _last_elif_negate = True
+                            # 6. 已知失败模式: R19 Bug 10-12 - 同上, 最后一个 elif 的 BoolOp 条件
+                            # 也需基于跳转目标判断是否取反.
+                            if _last_elif_last.opname in NONE_CHECK_OPS:
+                                _last_elif_if_true = False
+                            else:
+                                _last_elif_if_true = 'IF_TRUE' in _last_elif_last.opname
+                            _last_elif_then_offsets = set()
+                            if len(region.elif_bodies) > 1:
+                                _last_elif_then_offsets = {b.start_offset for b in region.elif_bodies[1]}
+                            _last_elif_negate = (_last_elif_last.argval in _last_elif_then_offsets) != _last_elif_if_true
                         _last_elif_condition = _negate_expr(_last_elif_boolop_expr) if _last_elif_negate else _last_elif_boolop_expr
                         for _b in _last_elif_boolop.blocks:
                             self.generated_blocks.add(_b)

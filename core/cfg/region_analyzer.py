@@ -10877,6 +10877,25 @@ RegionType 枚举值: RegionType.ASSERT
             succs = list(block.conditional_successors)
             if len(succs) != 2:
                 return False
+            # [R19 Bug 22-24 修复] ternary 的值块不能是嵌套 if-elif-else 的条件头。
+            # 判定: 若值块以条件跳转结尾（条件头），检查其 fallthrough 后继（非跳转
+            # 目标）。仅当 fallthrough 以 RETURN_VALUE/RETURN_CONST 结尾（即 if body
+            # 是 return 语句）时拒绝 — 这是 if-elif-else 条件头的特征。boolop 链中
+            # 的值块虽以条件跳转结尾（短路求值），但其 fallthrough 是下一个 boolop
+            # 检查（POP_JUMP_IF_*）或 JUMP_FORWARD 到 merge，均不以 RETURN 结尾，
+            # 不被拒绝。依「每块唯一归属」原则：if-elif-else 条件头归属 IfRegion。
+            for s in succs:
+                s_last = s.get_last_instruction()
+                if s_last and s_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS) and s_last.argval is not None:
+                    fallthrough = None
+                    for ss in s.conditional_successors:
+                        if ss.start_offset != s_last.argval:
+                            fallthrough = ss
+                            break
+                    if fallthrough is not None:
+                        ft_last = fallthrough.get_last_instruction()
+                        if ft_last and ft_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                            return False
             if not (self._is_single_expression_block(succs[0]) and
                     self._is_single_expression_block(succs[1])):
                 return False
@@ -11170,20 +11189,62 @@ RegionType 枚举值: RegionType.ASSERT
                     # TernaryRegion，导致 if-elif-else 结构退化为表达式语句，
                     # 甚至泄漏 AST dict 字面量（Bug 23）。
                     # 依「每块唯一归属」原则：ternary 的值块必须是表达式而非语句。
+                    # [R19 Bug 22-24 修复] 进一步: true_block 若是嵌套 if-elif-else 的
+                    # 条件头（以 POP_JUMP_IF_* 结尾且后继含 return 语句体），则不是
+                    # ternary 值块。嵌套 ternary 的条件头后继是纯表达式（无 return），
+                    # 不被拒绝。原 `_is_single_expression_block` 会剥离尾部条件跳转，
+                    # 使条件头误判为单表达式，导致外层 if-elif-else 整体退化为
+                    # TernaryRegion，9 个分支退化为 6 个裸 return。
                     true_existing = self.block_to_region.get(true_block)
                     if isinstance(true_existing, TernaryRegion):
                         false_is_ternary = True
                     elif self._is_single_expression_block(true_block):
-                        false_is_ternary = True
+                        _tb_last = true_block.get_last_instruction()
+                        _is_nested_if_header = False
+                        if _tb_last and _tb_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS):
+                            for ss in true_block.conditional_successors:
+                                ss_last = ss.get_last_instruction()
+                                if ss_last and ss_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                                    _is_nested_if_header = True
+                                    break
+                        false_is_ternary = not _is_nested_if_header
                     # else: true_block 是语句块（含 STORE_FAST 等），不构成 ternary
                 elif (len(false_block.conditional_successors) == 2 and
                       self._is_single_expression_block(true_block)):
-                    false_last = false_block.get_last_instruction()
-                    if false_last and false_last.opname in FORWARD_CONDITIONAL_JUMP_OPS:
-                        false_succs = list(false_block.conditional_successors)
-                        if all(self._is_single_expression_block(s) for s in false_succs):
-                            if all(not _block_ends_with_return(s) for s in false_succs):
-                                false_is_ternary = True
+                    # [R19 Bug 22-24 修复] 同上: true_block 若是嵌套 if-elif-else 的
+                    # 条件头（后继含 return），则不是 ternary 值块
+                    _tb_last = true_block.get_last_instruction()
+                    _true_is_nested_if_header = False
+                    if _tb_last and _tb_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS):
+                        for ss in true_block.conditional_successors:
+                            ss_last = ss.get_last_instruction()
+                            if ss_last and ss_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                                _true_is_nested_if_header = True
+                                break
+                    if _true_is_nested_if_header:
+                        false_is_ternary = False
+                    else:
+                        false_last = false_block.get_last_instruction()
+                        if false_last and false_last.opname in FORWARD_CONDITIONAL_JUMP_OPS:
+                            false_succs = list(false_block.conditional_successors)
+                            # [R19 Bug 22-24 修复] false_succs 若是嵌套 if-elif-else 的
+                            # 条件头（后继含 return），也不是 ternary 值块
+                            _any_succ_nested_if_header = False
+                            for s in false_succs:
+                                s_last = s.get_last_instruction()
+                                if s_last and s_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS):
+                                    for ss in s.conditional_successors:
+                                        ss_last = ss.get_last_instruction()
+                                        if ss_last and ss_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                                            _any_succ_nested_if_header = True
+                                            break
+                                if _any_succ_nested_if_header:
+                                    break
+                            if _any_succ_nested_if_header:
+                                false_is_ternary = False
+                            elif all(self._is_single_expression_block(s) for s in false_succs):
+                                if all(not _block_ends_with_return(s) for s in false_succs):
+                                    false_is_ternary = True
                 if not false_is_ternary and not has_jump_forward_skip:
                     return None
 
