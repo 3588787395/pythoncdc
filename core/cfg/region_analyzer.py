@@ -5672,20 +5672,44 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                                    and pred.instructions[_push_exc_idx + 1].opname == 'POP_TOP')
                 if _is_bare_except:
                     return 'except'
-                _pred_chain_has_return = any(
-                    i.opname in ('RETURN_VALUE', 'RETURN_CONST')
-                    for i in pred.instructions
-                )
-                if not _pred_chain_has_return:
-                    for succ in pred.successors:
-                        _pred_chain_has_return = any(
-                            i.opname in ('RETURN_VALUE', 'RETURN_CONST')
-                            for i in succ.instructions
-                        )
-                        if _pred_chain_has_return:
-                            break
-                if _pred_chain_has_return:
+                # 先检查 pred 自身是否含 RETURN（典型 finally 出口）
+                if any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in pred.instructions):
                     return 'finally'
+                # BFS walk successors 检查 RETURN 或非 cleanup RERAISE。
+                # finally body 含 ternary 时，pred (PUSH_EXC_INFO + cond + POP_JUMP) 的
+                # successors 是 ternary 的 true/false value 块，再走一层才到 merge 块
+                # （含 STORE + RERAISE，无 COPY+POP_EXCEPT），属非 cleanup RERAISE。
+                # 单层 walk 看不到 merge 块，需 BFS 才能识别 finally 异常路径。
+                # [R3-08/R4-05 守卫] 若任一 successor 含 CHECK_EXC_MATCH /
+                # CHECK_EG_MATCH，则是 except handler 的异常类型为 ternary 的情形
+                # （merge 块含 CHECK_EXC_MATCH + POP_TOP + POP_EXCEPT + RETURN），
+                # 不能误判为 finally。CHECK_EXC_MATCH 是 except 的强信号。
+                _visited_succ = {pred}
+                _worklist_succ = list(pred.successors)
+                while _worklist_succ:
+                    _cur_succ = _worklist_succ.pop()
+                    if _cur_succ in _visited_succ:
+                        continue
+                    _visited_succ.add(_cur_succ)
+                    if any(i.opname == 'PUSH_EXC_INFO' for i in _cur_succ.instructions):
+                        continue
+                    if any(i.opname in ('CHECK_EXC_MATCH', 'CHECK_EG_MATCH')
+                           for i in _cur_succ.instructions):
+                        return 'except'
+                    if any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in _cur_succ.instructions):
+                        return 'finally'
+                    if any(i.opname == 'RERAISE' for i in _cur_succ.instructions):
+                        _is_cleanup_reraise = (
+                            (any(i.opname == 'COPY' for i in _cur_succ.instructions) and
+                             any(i.opname == 'POP_EXCEPT' for i in _cur_succ.instructions)) or
+                            (any(i.opname == 'POP_EXCEPT' for i in _cur_succ.instructions) and
+                             not any(i.opname == 'PUSH_EXC_INFO' for i in _cur_succ.instructions))
+                        )
+                        if not _is_cleanup_reraise:
+                            return 'finally'
+                    for _succ_next in _cur_succ.successors:
+                        if _succ_next not in _visited_succ:
+                            _worklist_succ.append(_succ_next)
                 return 'except'
 
             has_copy_pop = any(i.opname == 'COPY' for i in pred.instructions) and any(i.opname == 'POP_EXCEPT' for i in pred.instructions)
@@ -11935,10 +11959,33 @@ RegionType 枚举值: RegionType.ASSERT
                                         elif (not _is_await
                                                 and any(i.opname == 'POP_TOP' for i in _sb.instructions)):
                                             _consume_blk = _sb
+                                        elif (not _is_await
+                                                and any(i.opname in ('STORE_FAST', 'STORE_NAME',
+                                                                     'STORE_GLOBAL', 'STORE_DEREF')
+                                                        for i in _sb.instructions)):
+                                            # [R7-06 fix] yield from (ternary) + 赋值:
+                                            # x = yield from (a if c else b) 的 SEND
+                                            # polling 之后是 STORE_FAST x 消费 yield from
+                                            # 的最终返回值。识别此模式，记录 value_target
+                                            # 供后续 Assign 重建。依「父引用子入口」：
+                                            # 父 Assign 通过 STORE_FAST x 引用 ternary 子节点
+                                            # （经 yield-from 协议）。
+                                            _consume_blk = _sb
+                                            for _si in _sb.instructions:
+                                                if _si.opname in ('STORE_FAST', 'STORE_NAME',
+                                                                'STORE_GLOBAL', 'STORE_DEREF'):
+                                                    _vt = _si.argval if _si.argval else f'var_{_si.arg}'
+                                                    break
                                 break
                         if _poll_blk is not None and _consume_blk is not None:
                             if _is_await and _vt is not None:
                                 merge_context = 'await'
+                                value_target = _vt
+                            elif (not _is_await) and _vt is not None:
+                                # [R7-06 fix] yield from (ternary) + 赋值:
+                                # value_target 是 STORE_FAST x 的目标 x。
+                                # Pattern 4/5 会构建 Assign([x], YieldFrom(ternary))。
+                                merge_context = 'yieldfrom'
                                 value_target = _vt
                             else:
                                 merge_context = 'yieldfrom'

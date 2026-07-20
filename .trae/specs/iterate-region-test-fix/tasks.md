@@ -47,7 +47,16 @@
 - [x] Task T1.4: Ternary round_04 — 9 R4 bug 修复 + 4 bonus (setattr/await/dict/del/format/fstring/set/except_handler/with_ctx_mgr); 59 failed, 158 passed, 1 skipped (基线 61 failed, 133 passed); 2 已知限制 (chained_compare_4way 部分修复 / while_cond 完全回滚，R5+ 处理); 跨区域 104 failed / 930 passed / 11 skipped (基线 107/927/11，改善 3 无退化); commit pending
 - [x] Task T1.5: Ternary round_05 — 7 R5 bug 修复 + 6 bonus (chained_compare+assign/double_star/subscript_slice/return await/class_body); 57 failed, 182 passed, 1 skipped (基线 69 failed, 170 passed); 3 已知限制 (while_cond 同 R4-10 根因，R6+ 处理); 跨区域 102 failed / 954 passed / 11 skipped (基线 104/930，改善 2 无退化); commit pending
 - [x] Task T1.6: Ternary round_06 — 10 R6 bug 修复 + 2 bonus (multi_ternary_shared_exit/comprehension/while_body_leak/annotation/except_handler); 59 failed, 202 passed, 1 skipped (基线 70 failed, 191 passed); 3 已知限制 (while_cond_nested/complex + decorator_chain，R7+ 处理); 跨区域 103 failed / 975 passed / 11 skipped (基线 102/954，+1 failed net = 3 R6 known - 2 baseline bonus，+21 passed); commit pending
-- [ ] Task T1.7 ~ T1.20
+- [x] Task T1.7: Ternary round_07 — 5 R7 bug 修复 + 1 回归修复 (R3-08/R4-05) + 6 已知限制 (R7-01/02/03/04/08/10); ternary 65 failed / 228 passed / 1 skipped (基线 70/223/1, -5 failed); 跨区域 109 failed / 1001 passed / 11 skipped (基线 103/975/11, +6 net = 11 新增 - 5 修复，无基线退化)
+  - [x] SubTask T1.7.0: 基线确认
+  - [x] SubTask T1.7.1 (P0): R7-05/07/11 finally 块 ternary 归约 — `_classify_handler_with_cleanup` BFS walk + CHECK_EXC_MATCH/CHECK_EG_MATCH 守卫 + generate() 全局预标记 + _generate_try_body try_blocks 预标记 + finally body TernaryRegion 识别
+  - [x] SubTask T1.7.3 (P2): R7-09 del subscript base obj (Pattern D2) + R7-06 yield from + 赋值
+  - [x] SubTask T1.7.4 (P3): R7-06 yield from + 赋值复合 — STORE_* 检测 + value_target 记录 + Pattern 4&5 Assign 包装
+  - [x] SubTask T1.7.5: 全量 ternary 回归 — 65 failed (基线 70, -5)
+  - [x] SubTask T1.7.6: 跨区域回归 — 109 failed / 1001 passed / 11 skipped (无基线退化)
+  - [x] SubTask T1.7.7: 写 fix_report.md
+  - [ ] 已知限制 (R8+ 处理): R7-01/08 assert message ternary, R7-02 async for body, R7-03 async with body, R7-04 del subscript chain, R7-10 async for-else
+- [ ] Task T1.8 ~ T1.20
 
 ## Phase 3-10: 其他 8 区域（各 20 轮）
 - [ ] Task 3.1 ~ 10.20

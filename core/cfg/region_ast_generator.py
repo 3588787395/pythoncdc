@@ -554,6 +554,43 @@ class RegionASTGenerator:
                 _refined.append(r)
             filtered = [r for r in _refined if not (isinstance(r, LoopRegion) and r.entry in _wrapped_loop_entries)]
 
+        # [R7-05/07/11 fix] 全局预标记 finally body 的 normal path 副本
+        # TernaryRegion 的 region ID（不预标记 blocks，避免破坏 nested try
+        # 检测）。CPython 3.11+ 把 finally body 复制两份：normal path
+        # （在 try_blocks 或 normal completion 路径，无 PUSH_EXC_INFO）+
+        # exception path（在 finally_blocks，含 PUSH_EXC_INFO + RERAISE）。
+        # 两个副本对应同一 ternary 表达式。normal path 副本不应作为顶级
+        # 区域独立输出，应由父 TryExceptRegion 的 finally body 遍历通过
+        # exception path 副本归约（生成一份 IfExp）。依「每块唯一归属」：
+        # normal path 副本的块归属到 finally body 的归约结果。判定条件：
+        # parent 是 TryExceptRegion + has_finally + entry 不在
+        # finally_blocks + 有 sibling 在 finally_blocks + 相同 block 数。
+        _r7_normal_path_copy_ids = set()
+        for _r7_r in self.regions:
+            if not isinstance(_r7_r, TernaryRegion):
+                continue
+            _r7_p = getattr(_r7_r, 'parent', None)
+            if not isinstance(_r7_p, TryExceptRegion):
+                continue
+            if not (getattr(_r7_p, 'has_finally', False) and _r7_p.finally_blocks):
+                continue
+            if _r7_r.entry is None:
+                continue
+            _r7_foff = {b.start_offset for b in _r7_p.finally_blocks}
+            if _r7_r.entry.start_offset in _r7_foff:
+                continue  # exception path 副本，不跳过
+            _r7_has_sib = False
+            for _r7_sib in (getattr(_r7_p, 'children', None) or []):
+                if (_r7_sib is _r7_r or not isinstance(_r7_sib, TernaryRegion)):
+                    continue
+                if (_r7_sib.entry is not None
+                        and _r7_sib.entry.start_offset in _r7_foff
+                        and len(_r7_sib.blocks) == len(_r7_r.blocks)):
+                    _r7_has_sib = True
+                    break
+            if _r7_has_sib:
+                _r7_normal_path_copy_ids.add(id(_r7_r))
+
         for r in self.regions:
             if isinstance(r, (TernaryRegion, MatchRegion)) and r.parent is not None:
                 if r not in filtered:
@@ -565,6 +602,10 @@ class RegionASTGenerator:
                             break
                         parent = getattr(parent, 'parent', None)
                     if not is_nested_in_tm_parent:
+                        # [R7-05/07/11 fix] 跳过 finally body 的 normal path
+                        # 副本 TernaryRegion（已在上方识别）。
+                        if id(r) in _r7_normal_path_copy_ids:
+                            continue
                         filtered.append(r)
         boolop_regions = [r for r in filtered if isinstance(r, BoolOpRegion)]
         other_regions = [r for r in filtered if not isinstance(r, BoolOpRegion)]
@@ -10951,6 +10992,51 @@ AST 映射规则:
                     for b in ntr.blocks:
                         self.generated_blocks.add(b)
 
+        # [R7-05/07/11 fix] 在 try_blocks 遍历之前，识别并标记 finally body
+        # 的 normal path 副本 ternary 的所有块为已生成。CPython 3.11+ 把
+        # finally body 复制两份：normal path（在 try_blocks 或 normal
+        # completion 路径，无 PUSH_EXC_INFO）+ exception path（在
+        # finally_blocks，含 PUSH_EXC_INFO + RERAISE）。normal path 副本
+        # 不应被 try_blocks 遍历消费（否则会在 try body 内重复生成 IfExp），
+        # 应由父 TryExceptRegion 的 finally body 遍历通过 exception path
+        # 副本归约。依「每块唯一归属」：normal path 副本的块归属到 finally
+        # body 的归约结果（通过 exception path 副本），不重复生成。
+        # 注意：normal path 副本的 parent 可能是当前 region（R7-05/11），
+        # 也可能是嵌套的子 TryExceptRegion（R7-07：外层 try_blocks 包含
+        # 内层 try-finally 的 normal path 副本 ternary 的块），因此需扫描
+        # 所有 region 而非仅当前 region 的 children。
+        _r7_pre_try_offsets = {b.start_offset for b in region.try_blocks}
+        for _r7_tr in self.region_analyzer.regions:
+            if not isinstance(_r7_tr, TernaryRegion):
+                continue
+            if id(_r7_tr) in self._generated_regions:
+                continue
+            if _r7_tr.entry is None:
+                continue
+            if _r7_tr.entry.start_offset not in _r7_pre_try_offsets:
+                continue  # normal path 副本 entry 必须在当前 try_blocks 内
+            _r7_tp = getattr(_r7_tr, 'parent', None)
+            if not isinstance(_r7_tp, TryExceptRegion):
+                continue
+            if not (getattr(_r7_tp, 'has_finally', False) and _r7_tp.finally_blocks):
+                continue
+            _r7_tp_foff = {b.start_offset for b in _r7_tp.finally_blocks}
+            if _r7_tr.entry.start_offset in _r7_tp_foff:
+                continue  # 是 exception path 副本，不跳过
+            _r7_tp_has_sib = False
+            for _r7_sib in (getattr(_r7_tp, 'children', None) or []):
+                if (_r7_sib is _r7_tr or not isinstance(_r7_sib, TernaryRegion)):
+                    continue
+                if (_r7_sib.entry is not None
+                        and _r7_sib.entry.start_offset in _r7_tp_foff
+                        and len(_r7_sib.blocks) == len(_r7_tr.blocks)):
+                    _r7_tp_has_sib = True
+                    break
+            if _r7_tp_has_sib:
+                self._generated_regions.add(id(_r7_tr))
+                for _r7_b in _r7_tr.blocks:
+                    self.generated_blocks.add(_r7_b)
+
         for block in sorted(region.try_blocks, key=lambda b: b.start_offset):
             if block in self.generated_blocks:
                 continue
@@ -11437,6 +11523,42 @@ AST 映射规则:
             for _r6_06_eh in region.except_handlers:
                 for _r6_06_b in (_r6_06_eh[2] if len(_r6_06_eh) >= 3 else ()):
                     _r6_06_handler_block_set.add(_r6_06_b)
+            # [R7-05/07/11 fix] 识别 finally body 的 normal path 副本 ternary。
+            # CPython 3.11+ 把 finally body 复制两份：normal path（在 try_blocks
+            # 或 normal completion 路径，无 PUSH_EXC_INFO）+ exception path
+            # （在 finally_blocks 含 PUSH_EXC_INFO + RERAISE）。两个副本对应
+            # 同一 ternary 表达式。normal path 副本不应被 try body 消费，应
+            # 由 finally body 遍历通过 exception path 副本归约（生成一份
+            # IfExp）。依「每块唯一归属」：normal path 副本的块归属到 finally
+            # body 的归约结果，不重复生成。判定条件：entry 不在 finally_blocks
+            # + 有 sibling 在 finally_blocks + 相同 block 数（结构相同 → 副本）。
+            # 注意：normal path 副本的 entry 可能在 try_blocks（R7-05/07）或
+            # 在 normal completion 路径（R7-11：try-except-finally 的 try body
+            # 后 JUMP_FORWARD 到 normal path ternary），故不能用 entry in
+            # try_blocks 作判定，必须用 entry not in finally_blocks。
+            _r7_normal_path_ternary_ids = set()
+            if region.has_finally and region.finally_blocks:
+                _r7_finally_offsets = {b.start_offset for b in region.finally_blocks}
+                _r7_finally_ternary_entry_offsets = set()
+                for child in region.children:
+                    if (isinstance(child, TernaryRegion)
+                            and child.entry is not None
+                            and child.entry.start_offset in _r7_finally_offsets):
+                        _r7_finally_ternary_entry_offsets.add(child.entry.start_offset)
+                if _r7_finally_ternary_entry_offsets:
+                    for child in region.children:
+                        if (isinstance(child, TernaryRegion)
+                                and child.entry is not None
+                                and child.entry.start_offset not in _r7_finally_offsets):
+                            # 检查是否有结构相同的 sibling 在 finally_blocks 内
+                            for _sib in region.children:
+                                if (_sib is child or not isinstance(_sib, TernaryRegion)):
+                                    continue
+                                if (_sib.entry is not None
+                                        and _sib.entry.start_offset in _r7_finally_offsets
+                                        and len(_sib.blocks) == len(child.blocks)):
+                                    _r7_normal_path_ternary_ids.add(id(child))
+                                    break
             for child in region.children:
                 if isinstance(child, RegionASTGenerator._EXPR_REGION_TYPES):
                     child_id = id(child)
@@ -11446,6 +11568,14 @@ AST 映射规则:
                         if (isinstance(region, TryExceptRegion)
                                 and child.entry is not None
                                 and child.entry in _r6_06_handler_block_set):
+                            continue
+                        # [R7-05/07/11 fix] 跳过 finally body 的 normal path
+                        # 副本 ternary — 由 finally body 遍历通过 exception
+                        # path 副本归约，避免重复生成 IfExp
+                        if child_id in _r7_normal_path_ternary_ids:
+                            self._generated_regions.add(child_id)
+                            for _b in child.blocks:
+                                self.generated_blocks.add(_b)
                             continue
                         if child.entry and child.entry in self.generated_blocks:
                             self._generated_regions.add(child_id)
@@ -12001,6 +12131,26 @@ AST 映射规则:
                         continue
                     if fb.start_offset in _generated_finally_offsets:
                         continue
+                    # [R7-05/07/11 fix] finally body 中的 ternary 应委托给
+                    # _generate_ternary 归约为 IfExp，而非被
+                    # _generate_handler_body_statements 误处理为 if-else + 泄漏
+                    # 表达式。依「嵌套即抽象节点」：嵌套 ternary 在父 Try.finalbody
+                    # 中作为单个抽象节点。仿 R6-06 handler body 修复（L11719-11737）。
+                    _fb_region = self.region_analyzer.get_entry_region_for_block(fb)
+                    if _fb_region and isinstance(_fb_region, (LoopRegion, IfRegion, WithRegion, TernaryRegion)):
+                        _nrid = id(_fb_region)
+                        if _nrid not in self._generated_regions and _nrid not in self._generating_regions and _fb_region is not region:
+                            _nr_ast = self._generate_region(_fb_region)
+                            if _nr_ast:
+                                if isinstance(_nr_ast, list):
+                                    finalbody_stmts.extend(_nr_ast)
+                                else:
+                                    finalbody_stmts.append(_nr_ast)
+                            for b in _fb_region.blocks:
+                                self.generated_blocks.add(b)
+                            self._generated_regions.add(_nrid)
+                            _generated_finally_offsets.add(fb.start_offset)
+                            continue
                     fbs = self._generate_handler_body_statements(fb)
                     if fbs:
                         finalbody_stmts.extend(fbs)
@@ -18326,6 +18476,21 @@ AST 映射规则:
             full_expr = self.expr_reconstructor.reconstruct(
                 merge_instrs, initial_stack=[ternary_expr])
             if full_expr:
+                # [R7-06 fix] yield from (ternary) + 赋值:
+                # `x = yield from (a if c else b)` 的 value_target 是 x，
+                # merge_context 是 'yieldfrom'。包裹为 Assign([x], YieldFrom(ternary))。
+                # 依「父引用子入口」：父 Assign 通过 STORE_FAST x 引用 ternary 子节点
+                # （经 yield-from 协议）。
+                _vt = getattr(region, 'value_target', None)
+                _mc = getattr(region, 'merge_context', None)
+                if (full_expr.get('type') == 'YieldFrom'
+                        and _mc == 'yieldfrom'
+                        and _vt and _vt != '__while_cond_target__'):
+                    return {
+                        'type': 'Assign',
+                        'targets': [{'type': 'Name', 'id': _vt, 'ctx': 'Store'}],
+                        'value': full_expr,
+                    }
                 return {'type': 'Expr', 'value': full_expr}
 
         # [R4-02 fix] Pattern 7: await (ternary) — 无 return/assign 包装。
@@ -18660,7 +18825,44 @@ AST 映射规则:
         # ternary result is the key (subscript index); obj is in cond preload.
         # 依「父引用子入口」：父 Delete 通过 cond_block 的 LOAD d 入口 +
         # merge_block 的 DELETE_SUBSCR 引用 ternary 子节点作为 subscript index。
+        #
+        # [R7-09 fix] Pattern D2: ternary as obj of del subscript.
+        # `del (ternary)[key]` -> merge: LOAD key, DELETE_SUBSCR
+        # ternary result is the obj (TOS1), key loaded in merge_block (TOS).
+        # before_store contains the key-loading instructions.
+        # 依「父引用子入口」：父 Delete 通过 merge_block 的 LOAD key + DELETE_SUBSCR
+        # 引用 ternary 子节点作为 subscript 的 base obj。
         elif last_instr.opname == 'DELETE_SUBSCR':
+            if before_store:
+                # Pattern D2: ternary is obj, key in merge_block.
+                # Reconstruct key from before_store with ternary on stack.
+                self.expr_reconstructor.reset()
+                self.expr_reconstructor.stack = [ternary_expr]
+                for _instr in before_store:
+                    if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                        continue
+                    self.expr_reconstructor._process_instruction(_instr)
+                _reg_stack = [s for s in self.expr_reconstructor.stack
+                              if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+                # DELETE_SUBSCR pops [obj, key]. ternary is obj (TOS1),
+                # key is TOS. After processing before_store with [ternary] as
+                # initial stack, stack should be [ternary, key].
+                if len(_reg_stack) >= 2:
+                    key_expr = _reg_stack[-1]
+                    obj_expr = _reg_stack[-2]
+                    if obj_expr is ternary_expr or (
+                            isinstance(obj_expr, dict)
+                            and obj_expr.get('type') == 'IfExp'):
+                        target = {
+                            'type': 'Subscript',
+                            'value': obj_expr,
+                            'slice': key_expr,
+                            'ctx': 'Del',
+                        }
+                        return {
+                            'type': 'Delete',
+                            'targets': [target],
+                        }
             cond_block = region.condition_block
             if cond_block:
                 cond_instrs = [i for i in cond_block.instructions

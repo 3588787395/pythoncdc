@@ -93,3 +93,50 @@
 - [ ] R3-08 Bug try_handler: ternary 作为 except handler 异常类型，与 except 子句 COMPARE_OP 冲突
 - [ ] R3-09 Bug while_cond: ternary 作为 while 条件，与 while 的 POP_JUMP_IF_FALSE 冲突
 - [ ] R3-10 Bug with_as: ternary 作为 with 上下文管理器，BEFORE_WITH + STORE_NAME 消费链
+
+## Ternary 区域 Round 07 验证
+
+### SubTask T1.7.0: 基线确认
+- [ ] 全量 ternary 回归基线 = 70 failed / 223 passed / 1 skipped
+- [ ] 跨区域回归基线 = 103 failed / 975 passed / 11 skipped
+
+### SubTask T1.7.1 (P0): R7-05/07/11 finally 块 ternary
+- [ ] R7-05 `try: pass\nfinally: y = a if c else b` 反编译为 ast.Try 含 finally + body 内 IfExp 赋值，字节码等价
+- [ ] R7-07 嵌套 try-finally + 内层 finally ternary + 外层 except E：内层 finally 正确归约，字节码等价
+- [ ] R7-11 try-except-finally + finally ternary：finally 块内 IfExp 赋值正确归约（不再退化为 if-else 泄漏），字节码等价
+- [ ] 修复依 4 原则：自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口
+- [ ] ternary 回归无退化（不新增 failed）
+- [ ] 跨区域回归无退化（不新增 failed）
+
+### SubTask T1.7.2 (P1): R7-02/03/10 async 控制流 ternary
+- [ ] R7-02 `async for x in ys: y = a if c else b` body 内 ternary 正确归约，字节码等价
+- [ ] R7-03 `async with ctx: y = a if c else b` body 内 ternary 正确归约，as_target 不误识别（无 `as y`），字节码等价
+- [ ] R7-10 `async for-else: y = a if c else b` else 块 ternary 正确归约，无幻影 while True: pass，字节码等价
+- [ ] 修复依 4 原则
+- [ ] ternary 回归无退化
+- [ ] 跨区域回归无退化
+
+### SubTask T1.7.3 (P2): R7-01/04/08/09 语句位置 ternary consumer
+- [ ] R7-01 `assert x, (a if c else b)` message 位置 ternary 正确归约为 ast.Assert(test=x, msg=IfExp)，字节码等价
+- [ ] R7-08 `assert x, f(a if c else b)` message 是 f(ternary) 调用，正确归约为 ast.Assert(test=x, msg=Call(f, [IfExp]))，字节码等价
+- [ ] R7-04 `del x[a if c else b][c if d else e]` 双 subscript ternary 正确归约为 ast.Delete(Subscript(Subscript(x, t1), t2))，字节码等价
+- [ ] R7-09 `del (a if c else b)[idx]` base 是 ternary，正确归约为 ast.Delete(Subscript(IfExp, idx))，字节码等价
+- [ ] 修复依 4 原则
+- [ ] ternary 回归无退化
+- [ ] 跨区域回归无退化
+
+### SubTask T1.7.4 (P3): R7-06 yield from + 赋值复合
+- [ ] R7-06 `def g(): x = yield from (a if c else b)` ternary merge 块作为 yield from iterable 正确归约，字节码等价
+- [ ] 修复依 4 原则
+- [ ] ternary 回归无退化
+- [ ] 跨区域回归无退化
+
+### SubTask T1.7.5-7: 最终验证
+- [ ] 全量 ternary 回归 = 70 - N failed（N = 修复成功的 bug 数），无新增退化
+- [ ] 跨区域回归 ≤ 103 failed / ≥ 975 passed / 11 skipped，无新增退化
+- [ ] 修复报告已写 — `rounds/ternary_region/round_07/fix_report.md`
+- [ ] 所有修复均通过 4 原则论证，无跨区域启发式特例 / 后处理补丁 / 启发式优先级覆盖 / 扁平化
+- [ ] 源代码无 debug 打印残留
+- [ ] 未修改任何测试文件
+- [ ] 未创建根级 debug 文件
+- [ ] 未 git commit
