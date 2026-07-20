@@ -5970,6 +5970,55 @@ AST 映射规则:
             list(region.chained_compare_blocks),
             list(region.chained_compare_ops),
         )
+        # [R5-01/02/03 fix] Fallback: when cond_block has no LOAD_* (operands
+        # came from previous blocks via stack — e.g. `r = 0 < (a if c else b) < 10`
+        # where Constant(0) and the ternary IfExp are pushed before cond_block),
+        # _build_assert_chained_compare returns None. Detect this case by
+        # checking if cond_block is a TernaryRegion's merge_block. If so,
+        # the chained compare's left is the ternary's preload (e.g. Constant(0)),
+        # and the first comparator is the ternary's IfExp. Remaining comparators
+        # come from chain_blocks' LOAD_* instructions.
+        # 依「父引用子入口」：父 Assign 通过 IfRegion.merge_block 的 STORE_*
+        # 引用 chained compare；chained compare 通过 IfRegion.condition_block
+        # （=TernaryRegion.merge_block）引用 ternary 子节点。
+        if chained_cond is None:
+            _ternary_owner = None
+            for _r in self.regions:
+                if (isinstance(_r, TernaryRegion)
+                        and getattr(_r, 'merge_block', None) is cond_block
+                        and _r is not region):
+                    _ternary_owner = _r
+                    break
+            if _ternary_owner is not None:
+                _ternary_expr = self._build_nested_ternary_expr(_ternary_owner)
+                if _ternary_expr is not None:
+                    _preload = self._compute_ternary_cond_preload_exprs(
+                        _ternary_owner)
+                    if _preload:
+                        _left = _preload[0]
+                        _comparators: List[Dict[str, Any]] = [_ternary_expr]
+                        for _cb in region.chained_compare_blocks:
+                            for _instr in _cb.instructions:
+                                if _instr.opname == 'LOAD_CONST':
+                                    _comparators.append({
+                                        'type': 'Constant',
+                                        'value': _instr.argval,
+                                    })
+                                elif _instr.opname in ('LOAD_NAME', 'LOAD_FAST',
+                                                       'LOAD_GLOBAL', 'LOAD_DEREF'):
+                                    _comparators.append({
+                                        'type': 'Name',
+                                        'id': _instr.argval,
+                                        'ctx': 'Load',
+                                    })
+                        if len(_comparators) >= len(region.chained_compare_ops):
+                            chained_cond = {
+                                'type': 'Compare',
+                                'left': _left,
+                                'ops': list(region.chained_compare_ops),
+                                'comparators': _comparators[
+                                    :len(region.chained_compare_ops)],
+                            }
         if chained_cond is None:
             return None
         # 标记所有 region.blocks 为已生成，避免父 IfRegion 重复处理。
@@ -17237,6 +17286,25 @@ AST 映射规则:
                         # 检测后续是否仅有 trailing implicit return None 模式
                         _non_noise_remaining = [i for i in _remaining
                                                 if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                        # [R5-08 fix] 当 merge_block 与下一个 TernaryRegion 共享
+                        # （即 merge_block 同时是另一个 TernaryRegion 的 entry_block，
+                        # 典型场景：class body 中连续多个 ternary 赋值
+                        # `x = a if c else b; y = m if c else n`，Python 字节码将
+                        # 第一个 ternary 的 STORE_x 与第二个 ternary 的 LOAD_c +
+                        # POP_JUMP_IF_FALSE 合并到同一基本块），STORE_* 之后的指令
+                        # 属于下一个 TernaryRegion 的条件设置，不应被本 TernaryRegion
+                        # 作为后续语句发射（否则会泄漏 `c` 表达式语句）。
+                        # 依「每块唯一归属」+「嵌套即抽象节点」：merge_block 在本
+                        # region 上下文中仅消费 STORE_* 部分，其余指令归下一个
+                        # TernaryRegion 的 entry/condition。
+                        _shared_with_next_ternary = False
+                        if _non_noise_remaining and region.merge_block is not None:
+                            for _r in self.regions:
+                                if (isinstance(_r, TernaryRegion)
+                                        and _r is not region
+                                        and _r.entry is region.merge_block):
+                                    _shared_with_next_ternary = True
+                                    break
                         _is_trivial_ret = False
                         if len(_non_noise_remaining) <= 2:
                             _no_pop = [i for i in _non_noise_remaining
@@ -17253,6 +17321,12 @@ AST 映射规则:
                         if _is_trivial_ret:
                             # 仅 trailing implicit return None —— 不发射任何语句
                             # （由外层 function/module 自动补齐 LOAD_CONST None + RETURN_VALUE）
+                            pass
+                        elif _shared_with_next_ternary:
+                            # [R5-08 fix] merge_block 是下一个 TernaryRegion 的
+                            # entry_block；STORE_* 之后的指令（LOAD cond +
+                            # POP_JUMP_IF_FALSE 等）属于下一个 ternary 的条件设置，
+                            # 不发射为独立语句。
                             pass
                         elif _non_noise_remaining:
                             # 有实际后续语句 —— 使用 _build_statements_from_instructions 重建
@@ -17426,12 +17500,46 @@ AST 映射规则:
                                 # is the *args iterable, not a positional arg.
                                 # Wrap in Starred so the CodeGenerator emits
                                 # CALL_FUNCTION_EX with *args semantics.
+                                #
+                                # [R5-14 fix] 扩展：检测 DICT_MERGE + CALL_FUNCTION_EX 1
+                                # （kwargs flag）模式（`f(**(ternary))` pattern）。ternary
+                                # 结果是 **kwargs dict，不是位置 *args。用 KeywordStarred
+                                # 包装，CodeGenerator 会输出 `f(**(ternary))`。
+                                # 依「父引用子入口」：父 Call 通过 cond_block 的 f 入口 +
+                                # merge_block 的 BUILD_MAP+DICT_MERGE+CALL_FUNCTION_EX 1
+                                # 引用 ternary 子节点。
                                 _is_star_call = False
+                                _is_double_star_kwargs = False
                                 if region.merge_block:
-                                    _is_star_call = any(
-                                        i.opname == 'CALL_FUNCTION_EX'
-                                        for i in region.merge_block.instructions
-                                        if i.opname not in NOISE_OPS)
+                                    _cf_eff = [i for i in region.merge_block.instructions
+                                               if i.opname not in NOISE_OPS]
+                                    for _cf_i in _cf_eff:
+                                        if _cf_i.opname == 'CALL_FUNCTION_EX':
+                                            _is_star_call = True
+                                            # CALL_FUNCTION_EX arg=1 (kwargs flag) +
+                                            # DICT_MERGE present -> **kwargs mode
+                                            if (_cf_i.arg == 1
+                                                    and any(x.opname == 'DICT_MERGE'
+                                                            for x in _cf_eff)):
+                                                _is_double_star_kwargs = True
+                                            break
+                                if _is_double_star_kwargs:
+                                    # `f(**(ternary))` — 重建 Call with empty args
+                                    # and a single KeywordStarred keyword.
+                                    call_expr = {
+                                        'type': 'Call',
+                                        'func': func_call_info['func'],
+                                        'args': [],
+                                        'keywords': [{
+                                            'type': 'KeywordStarred',
+                                            'value': ternary_expr,
+                                        }],
+                                    }
+                                    call_expr = self._convert_lambda_function_objects(call_expr)
+                                    results.append({'type': 'Expr', 'value': call_expr})
+                                    for block in region.blocks:
+                                        self.generated_blocks.add(block)
+                                    return results
                                 if _is_star_call:
                                     _ternary_arg = {'type': 'Starred',
                                                      'value': ternary_expr,
@@ -18081,7 +18189,43 @@ AST 映射规则:
         # 注意：剥离 implicit return None 后 merge_instrs 可能只剩 [GET_AWAITABLE]，
         # 因为 LOAD_CONST None 被误判为 implicit return None 剥离。这是安全的，
         # 因为 await 表达式的 LOAD_CONST None 是 SEND 的 send 值（非 return None）。
+        #
+        # [R5-22 fix] 扩展：return await (ternary)。当 GET_AWAITABLE 之后的
+        # SEND polling 循环的 fall-through 块（consume block）只含 RETURN_VALUE
+        # （无 POP_TOP、无 STORE_*），说明 await 结果被直接 return。
+        # 此时返回 Return(Await(IfExp))，并标记 polling + consume 块为 generated
+        # 防止它们泄漏为独立语句。
+        # 依「父引用子入口」：父 Return 通过 polling 循环 + RETURN_VALUE
+        # 引用 ternary 子节点（经 GET_AWAITABLE+SEND 协议）。
         if any(i.opname == 'GET_AWAITABLE' for i in merge_instrs):
+            if region.merge_block is not None:
+                _poll_blk = None
+                _consume_blk = None
+                for _succ in region.merge_block.successors:
+                    if _succ is region.merge_block:
+                        continue
+                    if any(i.opname == 'SEND' for i in _succ.instructions):
+                        _poll_blk = _succ
+                        _send_i = next((i for i in _succ.instructions
+                                        if i.opname == 'SEND'), None)
+                        if (_send_i is not None
+                                and isinstance(_send_i.argval, int)):
+                            _cb = self.cfg.get_block_by_offset(_send_i.argval)
+                            if _cb is not None:
+                                _cb_eff = [i for i in _cb.instructions
+                                           if i.opname not in (
+                                               'RESUME', 'NOP', 'CACHE',
+                                               'PUSH_NULL')]
+                                # consume 块仅含 RETURN_VALUE：await 结果被 return
+                                if (len(_cb_eff) == 1
+                                        and _cb_eff[0].opname == 'RETURN_VALUE'):
+                                    _consume_blk = _cb
+                        break
+                if _poll_blk is not None and _consume_blk is not None:
+                    self.generated_blocks.add(_poll_blk)
+                    self.generated_blocks.add(_consume_blk)
+                    return {'type': 'Return',
+                            'value': {'type': 'Await', 'value': ternary_expr}}
             return {'type': 'Expr',
                     'value': {'type': 'Await', 'value': ternary_expr}}
 
@@ -18129,6 +18273,41 @@ AST 映射规则:
                         merge_instrs, initial_stack=_init_stack)
                     if _wrapped:
                         return {'type': 'Return', 'value': _wrapped}
+
+        # [R5-15 fix] Pattern 8: ternary wrapped by subscript/slice/attr/binop
+        # in an Expr statement context (merge ends with POP_TOP after wrapping
+        # ops, after stripping implicit return None). When func_call_info is
+        # None (not a Call context — Call has its own handler later in the
+        # dispatch), use expr_reconstructor to rebuild the full wrapped
+        # expression from preload + ternary + merge_instrs (minus the trailing
+        # POP_TOP).
+        # 例: `x[1:(a if c else b)]` ->
+        #   cond preload: LOAD_NAME x, LOAD_CONST 1
+        #   merge (after stripping return None): BUILD_SLICE 2, BINARY_SUBSCR, POP_TOP
+        #   rebuild: Expr(Subscript(x, Slice(1, IfExp)))
+        # 依「父引用子入口」：父 Subscript 通过 cond_block preload (x, 1) +
+        # merge_block (BUILD_SLICE, BINARY_SUBSCR) 引用 ternary 子节点。
+        # 依「每块唯一归属」：merge_block 的 BUILD_SLICE+BINARY_SUBSCR+POP_TOP
+        # 归属 ternary 父表达式（Subscript），不与 ternary 子区域重叠。
+        if (merge_instrs
+                and merge_instrs[-1].opname == 'POP_TOP'
+                and not getattr(region, 'func_call_info', None)):
+            _WRAPPING_EXPR_OPS = {
+                'BUILD_SLICE', 'BINARY_SUBSCR', 'LOAD_ATTR',
+                'BINARY_OP', 'FORMAT_VALUE', 'IS_OP', 'CONTAINS_OP',
+                'COMPARE_OP', 'BUILD_TUPLE', 'BUILD_LIST', 'BUILD_SET',
+                'BUILD_MAP',
+            }
+            _before_pop = merge_instrs[:-1]
+            _has_wrapping = any(
+                i.opname in _WRAPPING_EXPR_OPS for i in _before_pop)
+            if _has_wrapping:
+                _preload = self._compute_ternary_cond_preload_exprs(region)
+                _init_stack = list(_preload) + [ternary_expr]
+                _wrapped = self.expr_reconstructor.reconstruct(
+                    _before_pop, initial_stack=_init_stack)
+                if _wrapped:
+                    return {'type': 'Expr', 'value': _wrapped}
 
         return None
 
