@@ -1548,6 +1548,33 @@ class RegionAnalyzer:
             if not effective:
                 return False
 
+        # [R1 Bug 1/2 修复] walrus (y := expr) 的 COPY+STORE 副作用剥离
+        # 字节码模式: <expr 求值>; COPY 1; STORE_*(y)
+        # COPY 1 复制栈顶值，STORE 消耗复制体给 walrus 目标 y，
+        # 原值留在栈上作为 ternary 值块的求值结果（流向 merge_block）。
+        # 整个 COPY+STORE 对是 walrus 子表达式的副作用，不破坏外层
+        # 单表达式性——块仍只产生一个表达式值（原 expr 求值结果）。
+        # 依「嵌套即抽象节点」：walrus 是值表达式内的子节点，
+        # 块整体归属 TernaryRegion（每块唯一归属）。
+        # 注意：walrus := 仅可目标 NAME，所以 STORE 必为 STORE_FAST/NAME/GLOBAL/DEREF。
+        _walrus_stripped = []
+        _idx = 0
+        while _idx < len(effective):
+            _instr = effective[_idx]
+            if (_instr.opname == 'COPY' and _instr.argval >= 1
+                    and _idx + 1 < len(effective)
+                    and effective[_idx + 1].opname in (
+                        'STORE_FAST', 'STORE_NAME',
+                        'STORE_GLOBAL', 'STORE_DEREF')):
+                # walrus 副作用对 (COPY + STORE)，跳过
+                _idx += 2
+                continue
+            _walrus_stripped.append(_instr)
+            _idx += 1
+        effective = _walrus_stripped
+        if not effective:
+            return False
+
         pop_idx = None
         for idx, instr in enumerate(effective):
             if instr.opname == 'POP_TOP':
@@ -10975,6 +11002,64 @@ RegionType 枚举值: RegionType.ASSERT
                                     'ctx': 'Load',
                                 },
                             }, None
+                else:
+                    # [R4 Bug 8 修复] 检测 LOAD_METHOD 模式: obj.method(args)
+                    # 字节码模式: LOAD_NAME obj, [LOAD_ATTR ...], LOAD_METHOD method,
+                    #            [args], PRECALL, CALL
+                    # 与 PUSH_NULL 模式不同，LOAD_METHOD 自带 self 绑定，无 PUSH_NULL。
+                    # 仅当 merge_block 含 PRECALL/CALL 时才识别为 call 上下文，
+                    # 避免误把其他场景的 LOAD_METHOD 当 call。
+                    _has_call_in_merge = merge_block is not None and any(
+                        i.opname in ('PRECALL', 'CALL') for i in merge_block.instructions
+                        if i.opname not in NOISE_OPS)
+                    if _has_call_in_merge and len(instrs) >= 2:
+                        _method_idx = None
+                        for _idx, _i in enumerate(instrs):
+                            if _i.opname == 'LOAD_METHOD':
+                                _method_idx = _idx
+                                break
+                            # 在到达三元条件测试前停止
+                            if _i.opname in FORWARD_CONDITIONAL_JUMP_OPS:
+                                break
+                        if _method_idx is not None and _method_idx > 0:
+                            _method_name = instrs[_method_idx].argval
+                            # 从 LOAD_METHOD 向前重建 obj 表达式:
+                            # 形如 LOAD_NAME a, [LOAD_ATTR b, LOAD_ATTR c, ...], LOAD_METHOD m
+                            # obj 表达式 = a.b.c
+                            _obj_chain = []
+                            _j = _method_idx - 1
+                            while _j >= 0:
+                                _ji = instrs[_j]
+                                if _ji.opname == 'LOAD_ATTR':
+                                    _obj_chain.insert(0, ('attr', _ji.argval))
+                                    _j -= 1
+                                    continue
+                                if _ji.opname in ('LOAD_NAME', 'LOAD_FAST',
+                                                  'LOAD_GLOBAL', 'LOAD_DEREF'):
+                                    _obj_chain.insert(0, ('base', _ji.argval))
+                                    _j -= 1
+                                    break
+                                # 其他指令（如 LOAD_CONST、CALL 等）停止
+                                break
+                            if _obj_chain and _obj_chain[0][0] == 'base':
+                                _obj_expr = {
+                                    'type': 'Name', 'id': _obj_chain[0][1], 'ctx': 'Load',
+                                }
+                                for _kind, _name in _obj_chain[1:]:
+                                    _obj_expr = {
+                                        'type': 'Attribute',
+                                        'value': _obj_expr,
+                                        'attr': _name,
+                                        'ctx': 'Load',
+                                    }
+                                return 'call', {
+                                    'func': {
+                                        'type': 'Attribute',
+                                        'value': _obj_expr,
+                                        'attr': _method_name,
+                                        'ctx': 'Load',
+                                    },
+                                }, None
             return None, None, None
 
         def _detect_ternary_pattern(block):
@@ -11559,7 +11644,19 @@ RegionType 枚举值: RegionType.ASSERT
                                     compare_uses_ternary = False
                             elif _net_stack == 1:
                                 # ternary 是单比较的左操作数（右操作数在 merge_block 加载）
-                                pass
+                                # [R4 Bug 7 修复] 但若 COMPARE_OP 之后有 STORE_*，
+                                # 说明比对结果被赋值（如 `x = (ternary) == b`），
+                                # 而非用作 if/while 条件测试。此时不应设 merge_context='compare'，
+                                # 让流程继续扫描 merge_block 找到 STORE_* 并设为 value_target，
+                                # 由 AST 生成器的 value_target 路径重建完整 Compare 表达式。
+                                _has_store_after_cmp = any(
+                                    _ni.opname in ('STORE_FAST', 'STORE_NAME',
+                                                   'STORE_GLOBAL', 'STORE_DEREF')
+                                    for _ni in merge_block.instructions[cmp_idx + 1:]
+                                    if _ni.opname not in NOISE_OPS
+                                )
+                                if _has_store_after_cmp:
+                                    compare_uses_ternary = False
                             elif _net_stack == 2:
                                 # [聚类1 修复] net_stack==2 + COPY(arg>=2) 表示链式比较
                                 # setup（COPY 复制操作数供后续比较段使用），ternary 仍是

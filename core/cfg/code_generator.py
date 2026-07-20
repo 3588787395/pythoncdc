@@ -2978,8 +2978,20 @@ class CodeGenerator:
                 return self._generate_lambda_from_dict(node)
             elif node_type == 'Starred':
                 # [聚类7 修复] *args 渲染：Call 的位置参数中的 Starred 节点
+                # [R4 Bug 9 修复] 当 Starred.value 是低优先级复合表达式
+                # （IfExp/BoolOp/NamedExpr/lambda/Yield 等）时必须加括号，
+                # 否则 `*(items if cond else [])` 会被渲染为
+                # `*items if cond else []` 导致语法错误（starred 与
+                # ternary 优先级冲突）。Call 位置参数上下文也要求 *expr
+                # 中 expr 是单 atom。
                 value = node.get('value', {})
                 value_code = self._generate_expression(value, 0) if value else ''
+                _v_type = value.get('type') if isinstance(value, dict) else None
+                if _v_type in ('IfExp', 'BoolOp', 'NamedExpr', 'Lambda',
+                               'Yield', 'YieldFrom', 'Await',
+                               'BinOp', 'UnaryOp', 'Compare',
+                               'Starred'):
+                    return f'*({value_code})'
                 return f'*{value_code}'
             elif node_type == 'Subscript':
                 value = node.get('value', {})

@@ -40,6 +40,10 @@
 ## Phase 2: LOOP 区域（20 轮）
 - [ ] Task 2.1 ~ 2.20
 
+## Phase 2.5: TERNARY 区域（20 轮）
+- [x] Task T1.1: Ternary round_01 — 5 bug 修复 (walrus/compare/method_call/starred); 55 failed, 77 passed, 1 skipped (基线 60 failed, 72 passed)
+- [ ] Task T1.2 ~ T1.20
+
 ## Phase 3-10: 其他 8 区域（各 20 轮）
 - [ ] Task 3.1 ~ 10.20
 

@@ -9609,6 +9609,34 @@ AST 映射规则:
                     self.generated_blocks.add(block)
                     self.generated_offsets.add(block.start_offset)
                     continue
+                # [R5 Bug 13 修复] back_edge_block 末尾是后向条件跳转
+                # (POP_JUMP_BACKWARD_IF_TRUE/FALSE) 时，effective 中的
+                # 指令是 while 循环的"条件 reload"——这是 LoopRegion
+                # 语义的一部分（条件已由 condition_block 重建），不应
+                # 作为独立表达式语句输出。否则 `while cond: x = ternary`
+                # 会被错译为 `while cond: x = ternary; cond`（多输出 cond）。
+                # 依「每块唯一归属」：back_edge_block 的条件 reload 归属
+                # LoopRegion，不归属外层表达式语句。
+                # 但若 back_edge_block 在条件 reload 之前还有有意义的语句
+                # (如 `i += 1; if i < 10: continue`)，需保留这些前置语句。
+                _be_last = block.get_last_instruction()
+                if _be_last and _be_last.opname in BACKWARD_CONDITIONAL_JUMP_OPS:
+                    _cond_start_idx = self._loop_find_cond_start_idx(block)
+                    if _cond_start_idx is None or _cond_start_idx <= 0:
+                        # 整块都是条件 reload，跳过
+                        self.generated_blocks.add(block)
+                        self.generated_offsets.add(block.start_offset)
+                        continue
+                    # 只输出条件 reload 之前的前置语句
+                    _pre_instrs = [i for i in block.instructions[:_cond_start_idx]
+                                   if i.opname not in NOISE_OPS]
+                    if _pre_instrs:
+                        _pre_stmts = self._loop_extract_pre_stmts_from_instrs(_pre_instrs, block)
+                        if _pre_stmts:
+                            stmts.extend(_pre_stmts)
+                    self.generated_blocks.add(block)
+                    self.generated_offsets.add(block.start_offset)
+                    continue
                 if effective:
                     stmts.extend(self._build_effective_stmts(block, effective))
                 else:
@@ -16585,6 +16613,17 @@ AST 映射规则:
                                         })
                                 elif pi.opname == 'COPY' and pi.arg == 1 and _preload_stack:
                                     _preload_stack.append(_preload_stack[-1])
+                                elif pi.opname in ('BUILD_LIST', 'BUILD_TUPLE',
+                                                   'BUILD_SET', 'BUILD_MAP',
+                                                   'BUILD_CONST_KEY_MAP'):
+                                    # [R4 Bug 9 修复] 处理容器字面量 preload:
+                                    # `x = [*(ternary)]` 的 cond_block 含 BUILD_LIST 0
+                                    # （外层空 list），随后 LIST_EXTEND 1 在 merge_block
+                                    # 用 ternary 扩展它。需把 List([]) 加入 preload_stack
+                                    # 以便后续 LIST_EXTEND 重建为 List([Starred(ternary)])。
+                                    _pe = self.expr_reconstructor.reconstruct([pi])
+                                    if _pe:
+                                        _preload_stack.append(_pe)
                             preload_exprs = _preload_stack
                     # [T1修复] 处理函数调用上下文: result = func(ternary_expr)
                     # 当条件块包含PUSH_NULL+LOAD func前缀且merge块有PRECALL/CALL时，
@@ -16763,7 +16802,13 @@ AST 映射规则:
                                      or i.opname == 'COMPARE_OP' or i.opname.startswith('BUILD_')
                                      or i.opname in ('GET_AWAITABLE', 'GET_YIELD_FROM_ITER',
                                                     'YIELD_VALUE', 'FORMAT_VALUE',
-                                                    'LOAD_METHOD', 'LOAD_ATTR')
+                                                    'LOAD_METHOD', 'LOAD_ATTR',
+                                                    # [R4 Bug 9 修复] *_EXTEND/*_UPDATE
+                                                    # 用于 [*(ternary)] / {**ternary} 等
+                                                    # 容器展开模式，需触发 full_expr 重建。
+                                                    'LIST_EXTEND', 'DICT_UPDATE',
+                                                    'SET_UPDATE', 'LIST_APPEND',
+                                                    'MAP_ADD')
                                      for i in before_store)
                         if has_ops or preload_exprs:
                             full_expr = self.expr_reconstructor.reconstruct(before_store, initial_stack=initial_stack)
