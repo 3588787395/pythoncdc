@@ -43,7 +43,9 @@
 ## Phase 2.5: TERNARY 区域（20 轮）
 - [x] Task T1.1: Ternary round_01 — 5 bug 修复 (walrus/compare/method_call/starred); 55 failed, 77 passed, 1 skipped (基线 60 failed, 72 passed)
 - [x] Task T1.2: Ternary round_02 — 7 bug 修复 (is_none/contains/multi_target/unpacking/raise/multi_arg/lambda_call); 58 failed, 116 passed, 1 skipped (基线 65 failed, 109 passed); 3 已知限制 (chained_compare/await/return_arith, R3 处理)
-- [ ] Task T1.3 ~ T1.20
+- [x] Task T1.3: Ternary round_03 — 5 R3 bug + 3 bonus + 2 回归守卫 (return_arith/raise/lambda_complex/return_two_ternary); 61 failed, 133 passed, 1 skipped (基线 58 failed)
+- [ ] Task T1.4 ~ T1.20Ternary round_03 — 5 R3 bug 修复 + 3 基线 bonus 修复 (return_arith_left/mul/call/return_tuple/raise_arg + R2 return_arith + R1 lambda_complex + R1 return_two_ternary); 61 failed, 133 passed, 1 skipped (基线 58 failed, 116 passed, 1 skipped); 6 已知限制 (chained_compare/await/try_handler/while_cond/with_as, R4+ 处理); 未 commit（按用户要求）
+- [ ] Task T1.4 ~ T1.20
 
 ## Phase 3-10: 其他 8 区域（各 20 轮）
 - [ ] Task 3.1 ~ 10.20

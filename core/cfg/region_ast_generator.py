@@ -17676,6 +17676,14 @@ AST 映射规则:
                 merge_instrs.extend(
                     i for i in _eb.instructions
                     if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'))
+        # [R3 fix] Record whether merge_block originally ended with
+        # RETURN_VALUE/RETURN_CONST (before stripping). Used by Pattern 6
+        # (return (ternary) wrapped) to distinguish `return (ternary) + 1`
+        # (merge ends with RETURN_VALUE, has BINARY_OP before) from a bare
+        # `Expr(ternary)` (no RETURN_VALUE in merge).
+        _ends_with_return = bool(merge_instrs) and merge_instrs[-1].opname in (
+            'RETURN_VALUE', 'RETURN_CONST')
+
         # Strip trailing implicit return None: LOAD_CONST None + RETURN_VALUE
         # (may appear once or twice for if-body / function-exit paths)
         while merge_instrs and merge_instrs[-1].opname in ('RETURN_VALUE', 'RETURN_CONST'):
@@ -17728,11 +17736,19 @@ AST 映射规则:
                 #   PRECALL no-op, CALL 0 -> Call(func=ternary, args=[]),
                 #   RAISE_VARARGS 1 -> Raise(exc=Call(...))。
                 # 依「父引用子入口」：父 Raise 通过 merge_block 的 CALL 引用 ternary 子节点。
+                #
+                # [R3 fix] 扩展: `raise E(a if cond else b)` — ternary 是 ARG，
+                # E 是 callable（在 cond_block preload 中）。需把 preload_exprs
+                # 加入 initial_stack，使 CALL 1 能正确重建 Call(E, [ternary])。
+                # 依「父引用子入口」：父 Raise 通过 cond_block 的 E 入口 + merge_block
+                # 的 CALL 引用 ternary 子节点。
                 _has_call_before_raise = any(
                     i.opname in ('PRECALL', 'CALL') for i in merge_instrs)
                 if _has_call_before_raise:
+                    _preload = self._compute_ternary_cond_preload_exprs(region)
+                    _init_stack = list(_preload) + [ternary_expr]
                     _full_raise = self.expr_reconstructor.reconstruct(
-                        merge_instrs, initial_stack=[ternary_expr])
+                        merge_instrs, initial_stack=_init_stack)
                     if _full_raise and _full_raise.get('type') == 'Raise':
                         return _full_raise
                 # raise (ternary) — ternary result IS the exception
@@ -17762,6 +17778,51 @@ AST 映射规则:
                 merge_instrs, initial_stack=[ternary_expr])
             if full_expr:
                 return {'type': 'Expr', 'value': full_expr}
+
+        # [R3 fix] Pattern 6: return (ternary) wrapped
+        # merge_block 原本以 RETURN_VALUE/RETURN_CONST 结尾，剥离 RETURN 后
+        # 仍有 wrapping 指令（BINARY_OP/CALL/BUILD_TUPLE/etc.）消费 ternary 结果。
+        # 用 expr_reconstructor 重建完整表达式，发射 Return(wrapped_expr)。
+        # 依「父引用子入口」：父 Return 通过 cond_block 的 preload 入口 +
+        # merge_block 的 wrapping 指令引用 ternary 子节点。
+        #
+        # 例:
+        #   return (a if cond else 0) + 1   -> merge: LOAD_CONST 1, BINARY_OP, RETURN_VALUE
+        #   return foo(a if cond else 0)    -> merge: PRECALL, CALL, RETURN_VALUE
+        #                                       cond preload: PUSH_NULL + LOAD foo
+        #   return (a if cond else b), (c if cond else d)
+        #                                    -> merge: BUILD_TUPLE 2, RETURN_VALUE
+        #                                       (第二个 ternary 作为嵌套区域已归约)
+        #
+        # [R3 regression guard] 当 merge_instrs 末尾是 POP_TOP 时，ternary 结果被
+        # 丢弃（顶层 Expr 语句，如 `func(ternary)`），不应触发 Return 模式。
+        # 否则会把 `func(ternary)` 误编译为 `return func(ternary)`。
+        #
+        # [R3 regression guard 2] 当 merge_instrs 含 STORE_* 指令时，merge_block
+        # 是赋值上下文（如 `x[0] += (ternary)` 的 BINARY_OP += + SWAP + STORE_SUBSCR），
+        # RETURN_VALUE 是 implicit return None（非显式 return）。此时不应触发 Return
+        # 模式，应让 _try_build_ternary_store_assign 处理。否则会把
+        # `x[0] += (ternary)` 误编译为 `return x`。
+        if _ends_with_return and merge_instrs and merge_instrs[-1].opname != 'POP_TOP':
+            _STORE_OPS = {'STORE_SUBSCR', 'STORE_ATTR', 'STORE_NAME',
+                          'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF',
+                          'STORE_DEREF'}
+            _has_store = any(i.opname in _STORE_OPS for i in merge_instrs)
+            if not _has_store:
+                _WRAPPING_RETURN_OPS = {
+                    'BINARY_OP', 'PRECALL', 'CALL', 'BUILD_TUPLE',
+                    'BUILD_LIST', 'BUILD_SET', 'BUILD_MAP', 'BUILD_CONST_KEY_MAP',
+                    'FORMAT_VALUE', 'IS_OP', 'CONTAINS_OP', 'COMPARE_OP',
+                    'BINARY_SUBSCR', 'LOAD_ATTR'}
+                _has_wrapping = any(
+                    i.opname in _WRAPPING_RETURN_OPS for i in merge_instrs)
+                if _has_wrapping:
+                    _preload = self._compute_ternary_cond_preload_exprs(region)
+                    _init_stack = list(_preload) + [ternary_expr]
+                    _wrapped = self.expr_reconstructor.reconstruct(
+                        merge_instrs, initial_stack=_init_stack)
+                    if _wrapped:
+                        return {'type': 'Return', 'value': _wrapped}
 
         return None
 
@@ -18195,6 +18256,26 @@ AST 映射规则:
                 'targets': [{'type': 'Name', 'id': value_target, 'ctx': 'Store'}],
                 'value': container_info,
             }
+        # [R3 fix] Pattern: return (ternary1, ternary2) — chained container
+        # 内层 ternary 的 merge_block 以 RETURN_VALUE 结尾（无 value_target），
+        # 说明父级是 Return 语句消费 container。依「父引用子入口」：父 Return
+        # 通过内层 ternary 的 merge_block 入口（BUILD_TUPLE + RETURN_VALUE）
+        # 引用整个 chained container 子节点。
+        # 例: `return (a if cond else b), (c if cond else d)`
+        #   -> 内层 merge: BUILD_TUPLE 2, RETURN_VALUE
+        _innermost_merge = innermost.merge_block
+        if _innermost_merge is not None:
+            _im_instrs = [i for i in _innermost_merge.instructions
+                          if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+            if _im_instrs and _im_instrs[-1].opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                # 排除 implicit return None（LOAD_CONST None + RETURN_VALUE）
+                _before_ret = [i for i in _im_instrs
+                               if i.opname not in ('RETURN_VALUE', 'RETURN_CONST')]
+                _has_load_none = (len(_before_ret) >= 1
+                                  and _before_ret[-1].opname == 'LOAD_CONST'
+                                  and _before_ret[-1].argval is None)
+                if _before_ret and not _has_load_none:
+                    return {'type': 'Return', 'value': container_info}
         return {'type': 'Expr', 'value': container_info}
 
     def _try_build_ternary_kwarg_call(self, region: TernaryRegion,

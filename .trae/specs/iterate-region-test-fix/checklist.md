@@ -65,4 +65,31 @@
 
 - [ ] R2-E Bug chained_compare: `0 < (ternary) < 10` — SWAP + COPY 2 + 双 COMPARE_OP + JUMP_IF_FALSE_OR_POP 序列，与 R1 Bug 5 同类
 - [ ] R2-F Bug await: 嵌套 async code object 内 GET_AWAITABLE + SEND 轮询循环，与 R1 Bug 10/13/15/16/17 同类
-- [ ] R2-F Bug return_arith: 嵌套 code object 内 `return (ternary) + 1`，BINARY_OP + RETURN_VALUE 不满足单指令块，与 R1 Bug 10/13 同类
+- [x] R2-F Bug return_arith: 嵌套 code object 内 `return (ternary) + 1`，BINARY_OP + RETURN_VALUE 不满足单指令块，与 R1 Bug 10/13 同类 — **R3 已修复**（Pattern 6）
+
+## Ternary 区域 Round 03 验证
+
+- [x] R3-04 Bug return_arith_left: `def f(): return 1 + (a if cond else 0)` — `region_ast_generator.py` `_build_ternary_no_target_consumer_stmt` 新增 Pattern 6（return wrapped），用 expr_reconstructor 重建 BINARY_OP + RETURN_VALUE 为 Return(BinOp(1, +, ternary))
+  - 验证：`tests/exhaustive/ternary/test_r3_ternary_return_arith_left.py` 通过
+- [x] R3-05 Bug return_arith_mul: `def f(): return (a if cond else 1) * 2` — 同 R3-04（Pattern 6 共用，BINARY_OP * 重建）
+  - 验证：`tests/exhaustive/ternary/test_r3_ternary_return_arith_mul.py` 通过
+- [x] R3-06 Bug return_call: `def f(): return foo(a if cond else 0)` — Pattern 6 用 `_compute_ternary_cond_preload_exprs` 提取 foo callable 加入 initial_stack，重建 Call(foo, [ternary]) + Return
+  - 验证：`tests/exhaustive/ternary/test_r3_ternary_return_call.py` 通过
+- [x] R3-07 Bug return_tuple: `def f(): return (a if cond else b), (c if cond else d)` — `_try_build_ternary_chained_container` 末尾新增 return 检测：innermost merge_block 以 RETURN_VALUE 结尾时返回 Return(Tuple) 而非 Expr(Tuple)
+  - 验证：`tests/exhaustive/ternary/test_r3_ternary_return_tuple.py` 通过
+- [x] R3-11 Bug raise_arg: `raise E(a if cond else b)` — `_build_ternary_no_target_consumer_stmt` raise 分支扩展：raise_instr.arg==1 且含 PRECALL/CALL 时，用 preload_exprs（含 E callable）重建 Call(E, [ternary])，包装为 Raise(exc=Call)
+  - 验证：`tests/exhaustive/ternary/test_r3_ternary_raise_arg.py` 通过
+- [x] 全量回归无退化 — Ternary 区域：58 failed → 55 failed（基线减 3 bonus）；新增 20 R3 测试后：61 failed, 133 passed, 1 skipped（无退化，POP_TOP + STORE_* 双守卫已修复两版退化）
+- [x] 跨区域回归无退化 — ternary + if_region：基线 106 failed / 904 passed / 11 skipped → 106 failed / 905 passed / 11 skipped（STORE_* 守卫修复 test_adv11_augassign_subscr_ternary.py 退化后恢复基线）
+- [x] 修复依归约算法 4 原则 — 所有 5 个 R3 修复 + 3 个 bonus 修复均通过「自底向上归约」「每块唯一归属」「嵌套即抽象节点」「父引用子入口」原则论证，无跨区域启发式特例、无后处理补丁、无扁平化
+- [x] 修复报告已写 — `rounds/ternary_region/round_03/fix_report.md`
+- [x] POP_TOP 回归保护 — Pattern 6 初版对 `func(ternary)` 顶层 Expr 语句误触发 Return 模式（退化 64 failed + 10 skipped），守卫 `merge_instrs[-1].opname != 'POP_TOP'` 修复后回归 61 failed + 1 skipped
+- [x] STORE_* 回归保护 — Pattern 6 对 `if c: x[0] += a if b else c` 误触发 Return 模式（跨区域退化 11→12 skipped，test_adv11_augassign_subscr_ternary.py 因 `return x` 模块顶层非法被 skip），守卫 `not any(i.opname in STORE_OPS for i in merge_instrs)` 修复后恢复 11 skipped，该测试变 PASSED
+
+## R3 已知限制（未修复 bug，R4+ 处理）
+
+- [ ] R3-01/02 Bug chained_compare: ternary 在 chained compare 左端/4-term，需 chained_compare IfRegion 边界调整
+- [ ] R3-03 Bug await_expr: `await (ternary)` 无 return，GET_AWAITABLE + SEND 循环消费 ternary
+- [ ] R3-08 Bug try_handler: ternary 作为 except handler 异常类型，与 except 子句 COMPARE_OP 冲突
+- [ ] R3-09 Bug while_cond: ternary 作为 while 条件，与 while 的 POP_JUMP_IF_FALSE 冲突
+- [ ] R3-10 Bug with_as: ternary 作为 with 上下文管理器，BEFORE_WITH + STORE_NAME 消费链
