@@ -284,6 +284,19 @@ class CodeGenerator:
                                     'AsyncWith'):
                         self._generate_dict_node(expr)
                         return
+                    # [R20-Bug7 修复] 过滤 with __exit__ 残留调用：dict 格式
+                    # Call(func=Constant(None), args=[Constant(None), Constant(None)])
+                    # 此模式来自 with 块 __exit__ 字节码泄漏，输出会变成
+                    # `None(None, None)` 垃圾代码，导致语法错误。
+                    if expr_type == 'Call':
+                        _func = expr.get('func', {})
+                        _args = expr.get('args', []) or expr.get('pparams', [])
+                        if (isinstance(_func, dict) and
+                            _func.get('type') == 'Constant' and
+                            _func.get('value') is None and
+                            all(isinstance(a, dict) and a.get('type') == 'Constant'
+                                and a.get('value') is None for a in _args)):
+                            return  # 跳过 __exit__ 残留调用
                 expr_code = self._generate_expression(expr)
                 self._write_line(expr_code)
         elif node_type == 'Pass':
@@ -2507,6 +2520,13 @@ class CodeGenerator:
                 inner_func = func.func
                 if isinstance(inner_func, ASTName) and inner_func.name == 'open':
                     return  # 跳过open()()(None, None)形式的调用
+            # [R20-Bug7 修复] 过滤 Call(func=Constant(None), args=[Constant(None), Constant(None)])
+            # 这是 with 语句 __exit__ 调用泄漏为独立 Expr 语句的形式，输出会变成
+            # `None(None, None)` 垃圾代码。检测模式：func 是 None 常量，args 全是 None 常量。
+            if isinstance(func, ASTConstant) and func.value is None:
+                pparams = getattr(node.value, 'pparams', []) or []
+                if all(isinstance(a, ASTConstant) and a.value is None for a in pparams):
+                    return  # 跳过 __exit__ 残留调用
 
         # [关键修复] 使用最低优先级(0)来避免表达式语句添加最外层括号
         expr_code = self._generate_expression(node.value, 0)
@@ -4740,9 +4760,17 @@ class CodeGenerator:
             # 处理关键字参数
             for kw in kwargs:
                 if isinstance(kw, dict):
+                    # [R20-Bug8 修复] KeywordStarred (**kwargs / **{...}) 渲染为 **<value>
+                    # 此前仅处理普通 keyword (arg=value)，对 KeywordStarred 类型直接套用
+                    # `arg=value` 模板，导致 `**{k: v+1}` 错译为 `=Dict[k, v + 1]` 垃圾。
+                    if kw.get('type') == 'KeywordStarred':
+                        kw_value = kw.get('value')
+                        if kw_value is not None:
+                            arg_codes.append(f'**{self._generate_expression(kw_value, 0)}')
+                        continue
                     kw_arg = kw.get('arg', '')
                     kw_value = kw.get('value', {})
-                    kw_value_code = self._generate_annotation_from_dict(kw_value)
+                    kw_value_code = self._generate_expression(kw_value, 0)
                     arg_codes.append(f'{kw_arg}={kw_value_code}')
             
             return f'{func_code}({", ".join(arg_codes)})'

@@ -35,7 +35,7 @@
 - [x] Task 1.17: IF round_17 — commit (R17 之前的 if_region 17 failed baseline)
 - [x] Task 1.18: IF round_18 — 5 bug 修复 (yield/yield_from/try-finally 部分/嵌套ternary 部分); 25 failed, 740 passed, 7 skipped (基线 27 failed, 738 passed)
 - [x] Task 1.19: IF round_19 — 6 bug 修复 (elif 语义反转 + 嵌套 if-elif-else 退化); 35 failed, 760 passed, 9 skipped (基线 37 failed, 758 passed)
-- [ ] Task 1.20
+- [x] Task 1.20: IF round_20 — 6 bug 修复 (CodeGenerator AST dict 泄漏 + WithRegion 跨域归并); 45 failed, 772 passed, 10 skipped (基线 35 failed, 760 passed) — IF 区域 20 轮完成
 
 ## Phase 2: LOOP 区域（20 轮）
 - [ ] Task 2.1 ~ 2.20

@@ -9835,7 +9835,18 @@ AST 映射规则:
                     na = self._generate_region(nested)
                     if na:
                         (stmts.append if isinstance(na, dict) else stmts.extend)(na)
+                    # [R20-Bug7 修复] 跳过属于父 IfRegion 的 elif_final_else / else_blocks
+                    # 的块。这些块属于外层 if-elif-else 的 else 分支，不应被子区域
+                    # （如 WithRegion）标记为 generated，否则 else 分支内容会被丢失。
+                    _parent_if_else_blocks = set()
+                    if isinstance(region, IfRegion):
+                        if getattr(region, 'elif_final_else', None):
+                            _parent_if_else_blocks.update(region.elif_final_else)
+                        if getattr(region, 'else_blocks', None):
+                            _parent_if_else_blocks.update(region.else_blocks)
                     for b in nested.blocks:
+                        if b in _parent_if_else_blocks:
+                            continue
                         self.generated_blocks.add(b)
                     if isinstance(nested, LoopRegion) and nested.metadata.get('is_yield_from_loop'):
                         if nested.header_block:
@@ -11736,6 +11747,71 @@ AST 映射规则:
                 self.generated_blocks.add(block)
             self._try_depth -= 1
 
+    def _find_return_through_cleanup_chain(self, start_block, max_depth=6):
+        """[R20-Bug7] Walk through cleanup-only successor blocks to find RETURN_VALUE.
+
+        When an except handler returns a value, the cleanup path may span
+        multiple basic blocks:
+          当前 block (CALL) → SWAP-only block
+                          → POP_EXCEPT + as-var-cleanup block
+                          → SWAP + with __exit__ call + POP_TOP + RETURN_VALUE block
+        此前 leftover-stmt_instrs 只检查直接后继，无法识别此模式，导致
+        return 值（如 str(e) Call）被识别为 Expr 语句而非 Return 语句。
+
+        Returns:
+            list[BasicBlock]: 从直接后继开始到含 RETURN_VALUE 的 block 的路径（不含 start_block）；
+            None: 未找到。
+        """
+        _cleanup_only_ops = {
+            'SWAP', 'POP_EXCEPT', 'LOAD_CONST', 'STORE_FAST', 'STORE_NAME',
+            'STORE_GLOBAL', 'STORE_DEREF', 'DELETE_FAST', 'DELETE_NAME',
+            'DELETE_GLOBAL', 'DELETE_DEREF', 'POP_TOP', 'COPY', 'PRECALL', 'CALL',
+            'PUSH_EXC_INFO', 'RERAISE', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH',
+            'WITH_EXCEPT_START', 'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE',
+            'JUMP_BACKWARD_NO_INTERRUPT',
+        }
+
+        def _is_cleanup_only_no_return(b):
+            instrs = [i for i in b.instructions
+                      if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+            if not instrs:
+                return False
+            if any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in instrs):
+                return False
+            return all(i.opname in _cleanup_only_ops for i in instrs)
+
+        def _is_cleanup_with_return(b):
+            instrs = [i for i in b.instructions
+                      if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+            if not instrs:
+                return False
+            has_return = any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in instrs)
+            if not has_return:
+                return False
+            for i in instrs:
+                if i.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                    continue
+                if i.opname not in _cleanup_only_ops:
+                    return False
+            return True
+
+        visited = {id(start_block)}
+        queue = [(succ, [succ]) for succ in start_block.successors]
+        while queue:
+            current, path = queue.pop(0)
+            if id(current) in visited:
+                continue
+            visited.add(id(current))
+            if len(path) > max_depth:
+                continue
+            if _is_cleanup_with_return(current):
+                return path
+            if _is_cleanup_only_no_return(current):
+                for succ in current.successors:
+                    if id(succ) not in visited:
+                        queue.append((succ, path + [succ]))
+        return None
+
     def _generate_handler_body_statements(self, block: BasicBlock) -> List[Dict[str, Any]]:
         handler_instrs = [i for i in block.instructions
                           if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
@@ -11760,7 +11836,25 @@ AST 映射规则:
         store_indices = [i for i, instr in enumerate(handler_instrs)
                         if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')]
         if len(store_indices) >= 2:
-            return self._generate_block_statements(block)
+            # [R20-Bug7 修复] 检测第二个 STORE_FAST 是否是 as-var 清理模式的一部分
+            # (LOAD_CONST None → STORE_FAST same_var → DELETE_FAST same_var)。
+            # 若是，说明这是 except handler 的 as-var 清理（不是用户代码），
+            # 不应触发 _generate_block_statements fallback，否则 return 值会被
+            # 当作 Expr 语句输出（丢失 return）。
+            _as_var_cleanup_indices = set()
+            for _si in store_indices[1:]:
+                if _si + 2 < len(handler_instrs):
+                    _prev = handler_instrs[_si - 1] if _si > 0 else None
+                    _store = handler_instrs[_si]
+                    _next = handler_instrs[_si + 1]
+                    if (_prev is not None and
+                        _prev.opname == 'LOAD_CONST' and _prev.argval is None and
+                        _store.argval == _next.argval and
+                        _next.opname in ('DELETE_FAST', 'DELETE_NAME', 'DELETE_GLOBAL', 'DELETE_DEREF')):
+                        _as_var_cleanup_indices.add(_si)
+            _user_store_indices = [i for i in store_indices if i not in _as_var_cleanup_indices]
+            if len(_user_store_indices) >= 2:
+                return self._generate_block_statements(block)
 
         stmts: List[Dict[str, Any]] = []
         stmt_instrs: List[Instruction] = []
@@ -11897,6 +11991,38 @@ AST 映射规则:
                         len(remaining_nospace) >= 2 and
                         remaining_nospace[1].opname in ('RETURN_VALUE', 'RETURN_CONST')):
                     _is_except_return_swap = True
+                # [R20-Bug7 修复] 扩展 SWAP-POP_EXCEPT-RETURN_VALUE 检测：
+                # 当 except handler 内含 return 且被 with 包裹时，SWAP 与
+                # RETURN_VALUE 之间会夹有 as-var 清理 (LOAD_CONST None/STORE/DELETE)
+                # 和 with __exit__ 清理 (LOAD_CONST None x3/PRECALL/CALL/POP_TOP)。
+                # 此前检测仅识别 SWAP→POP_EXCEPT→RETURN_VALUE 紧邻模式，导致 SWAP
+                # 被加入 stmt_instrs，return 值被当作 Expr 语句输出（丢失 return）。
+                if not _is_except_return_swap and remaining_nospace:
+                    _rn = remaining_nospace
+                    if _rn[0].opname == 'POP_EXCEPT':
+                        _cleanup_only = True
+                        _has_return = False
+                        for _ri in _rn[1:]:
+                            if _ri.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                                _has_return = True
+                                break
+                            if _ri.opname in ('LOAD_CONST', 'STORE_FAST', 'STORE_NAME',
+                                              'STORE_GLOBAL', 'STORE_DEREF',
+                                              'DELETE_FAST', 'DELETE_NAME', 'DELETE_GLOBAL',
+                                              'DELETE_DEREF', 'POP_TOP', 'SWAP', 'POP_EXCEPT',
+                                              'COPY', 'PRECALL', 'CALL', 'RERAISE'):
+                                continue
+                            _cleanup_only = False
+                            break
+                        if _has_return and _cleanup_only:
+                            _is_except_return_swap = True
+                            # 标记所有清理指令为跳过，使 RETURN_VALUE 处理时
+                            # stmt_instrs 仍保留 return 值（如 str(e) Call），
+                            # 从而正确生成 Return 语句而非 Expr 语句。
+                            for _ri in _rn:
+                                if _ri.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                                    break
+                                skip_offsets.add(_ri.offset)
                 if not _is_except_return_swap and not remaining_nospace:
                     for succ in block.successors:
                         succ_instrs = [i for i in succ.instructions
@@ -12116,6 +12242,7 @@ AST 映射规则:
 
         if stmt_instrs:
             _succ_is_except_return = False
+            _return_path = None
             for succ in block.successors:
                 succ_instrs = [i for i in succ.instructions
                                if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
@@ -12124,22 +12251,37 @@ AST 映射规则:
                         len(succ_instrs) >= 2 and
                         succ_instrs[1].opname in ('RETURN_VALUE', 'RETURN_CONST')):
                     _succ_is_except_return = True
+                    _return_path = [succ]
                     break
+            # [R20-Bug7 修复] 跨多 block cleanup 链路查找 RETURN_VALUE：
+            # 当 except handler 内 return 时，路径可能是
+            #   当前 block (CALL) → SWAP-only → POP_EXCEPT+as-var-cleanup
+            #   → SWAP+with __exit__ call+POP_TOP+RETURN_VALUE
+            # 此前只检查直接后继，导致 return 值被识别为 Expr 而非 Return。
+            if not _succ_is_except_return and self._try_depth > 0:
+                _chain = self._find_return_through_cleanup_chain(block)
+                if _chain:
+                    _succ_is_except_return = True
+                    _return_path = _chain
             if _succ_is_except_return and self._try_depth > 0:
                 expr = self.expr_reconstructor.reconstruct(stmt_instrs)
                 if expr and not (expr.get('type') == 'Constant' and expr.get('value') is None):
                     stmts.append({'type': 'Return', 'value': expr})
                 else:
                     stmts.append({'type': 'Return', 'value': None})
-                for succ in block.successors:
-                    succ_instrs = [i for i in succ.instructions
-                                   if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                    if (succ_instrs and
-                            succ_instrs[0].opname == 'POP_EXCEPT' and
-                            len(succ_instrs) >= 2 and
-                            succ_instrs[1].opname in ('RETURN_VALUE', 'RETURN_CONST')):
-                        self.generated_blocks.add(succ)
-                        break
+                if _return_path:
+                    for rb in _return_path:
+                        self.generated_blocks.add(rb)
+                else:
+                    for succ in block.successors:
+                        succ_instrs = [i for i in succ.instructions
+                                       if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                        if (succ_instrs and
+                                succ_instrs[0].opname == 'POP_EXCEPT' and
+                                len(succ_instrs) >= 2 and
+                                succ_instrs[1].opname in ('RETURN_VALUE', 'RETURN_CONST')):
+                            self.generated_blocks.add(succ)
+                            break
             else:
                 stmt = self._build_statement(stmt_instrs)
                 if stmt:
@@ -12339,6 +12481,39 @@ AST 映射规则:
                 with_cleanup_blocks.update(region.cleanup_blocks)
             if hasattr(region, 'exception_blocks'):
                 with_cleanup_blocks.update(region.exception_blocks)
+            # [R20-Bug7 修复] 排除属于嵌套 TryExceptRegion handler_entry_blocks 的块。
+            # 当 with body 内含 try-except 时，with 的 cleanup 路径会经异常传播链
+            # 流到 try 的 handler entry，但这些块不应被 with 当作 cleanup 标记为
+            # generated，否则内层 _generate_try 会因 handler_entry 已 consumed 而
+            # 产出空 handlers 列表，导致 try 块未关闭、语法错误。
+            _nested_try_handler_entries = set()
+            for _r in self.regions:
+                if isinstance(_r, TryExceptRegion) and _r is not region:
+                    if _r.parent is region or (hasattr(_r, 'blocks') and any(
+                        _b in region.blocks for _b in _r.blocks)):
+                        for _heb in _r.handler_entry_blocks:
+                            _nested_try_handler_entries.add(_heb)
+            with_cleanup_blocks -= _nested_try_handler_entries
+            # [R20-Bug7 修复] 排除祖先 IfRegion 的 elif_final_else / else_blocks 块。
+            # 当 with 嵌套在 if-elif-else 的 elif body 内时，区域分析器可能将
+            # 外层 if-elif-else 的 final else 块（如 `else: return 'none'`）
+            # 错误归入 with 的 cleanup_blocks（因为 cleanup 路径理论上可能跳到
+            # 该 merge 块）。但这违反「每块唯一归属」原则：final else 块属于
+            # 外层 IfRegion，不应被 with 标记为 generated，否则 _process_if_blocks
+            # 处理 elif_final_else 时会跳过该块，导致 else 分支内容丢失。
+            _ancestor_if_else_blocks = set()
+            for _r in self.regions:
+                if not isinstance(_r, IfRegion) or _r is region:
+                    continue
+                # 检测 WithRegion 是否嵌套在 IfRegion 内：WithRegion.entry 在 IfRegion.blocks 中
+                if region.entry is None or region.entry not in _r.blocks:
+                    continue
+                # 收集 IfRegion 的 elif_final_else 和 else_blocks
+                if getattr(_r, 'elif_final_else', None):
+                    _ancestor_if_else_blocks.update(_r.elif_final_else)
+                if getattr(_r, 'else_blocks', None):
+                    _ancestor_if_else_blocks.update(_r.else_blocks)
+            with_cleanup_blocks -= _ancestor_if_else_blocks
             for cb in with_cleanup_blocks:
                 self.generated_blocks.add(cb)
             body_end_offset = region.body_offset_end if region.body_offset_end is not None and region.body_offset_end > 0 else 0
@@ -13089,6 +13264,8 @@ AST 映射规则:
                 with_cleanup_blocks.update(region.cleanup_blocks)
             if hasattr(region, 'exception_blocks'):
                 with_cleanup_blocks.update(region.exception_blocks)
+            # [R20-Bug7 修复] 同样排除祖先 IfRegion 的 elif_final_else / else_blocks 块
+            with_cleanup_blocks -= _ancestor_if_else_blocks
             if body_end_offset > 0:
                 for blk in sorted(region.blocks, key=lambda b: b.start_offset):
                     if blk.start_offset < body_end_offset:
@@ -13096,6 +13273,8 @@ AST 映射规则:
                     if blk in region.with_blocks or blk == region.entry:
                         continue
                     if blk in self.generated_blocks:
+                        continue
+                    if blk in _ancestor_if_else_blocks:
                         continue
                     if blk in with_cleanup_blocks:
                         self.generated_blocks.add(blk)
@@ -13172,6 +13351,10 @@ AST 映射规则:
                         self.generated_blocks.add(blk)
 
             for block in region.blocks:
+                # [R20-Bug7 修复] 跳过祖先 IfRegion 的 elif_final_else / else_blocks 块。
+                # 这些块属于外层 if-elif-else 的 else 分支，不应被 with 标记为 generated。
+                if block in _ancestor_if_else_blocks:
+                    continue
                 self.generated_blocks.add(block)
 
             items = []
