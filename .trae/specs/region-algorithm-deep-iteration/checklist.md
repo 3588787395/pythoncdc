@@ -43,9 +43,9 @@
 - [x] C2.5.3b Scenario B 修复（while 条件位三元：merge_block IS LoopRegion.header_block）
 - [x] C2.5.3c P1 if-return 已修复（peephole_patterns.py:311-312 让 IfRegion 处理 if-return）
 - [x] C2.5.3d bool03_not 测试框架识别 UnaryOp(Not) 作为 BOOL_OP（REGION_TYPE_CUSTOM_MATCHERS）
-- [ ] C2.5.3e bool20_complex_logic 修复（混合 and/or 链不丢中间操作数）
-- [ ] C2.5.3f bool19_ternary_combo 修复（or None 尾部操作数保留）
-- [ ] C2.5.3g bool11_in_while 修复（while 条件位 and 链不被拆分为 if+while+if）
+- [x] C2.5.3e bool20_complex_logic 修复（混合 and/or 链不丢中间操作数）
+- [x] C2.5.3f bool19_ternary_combo 修复（or None 尾部操作数保留）
+- [x] C2.5.3g bool11_in_while 修复（while 条件位 and 链不被拆分为 if+while+if）
 - [ ] C2.5.4 P3 模式（while-true + break）枚举
 - [ ] C2.5.5 P4 模式（chained compare）枚举
 - [ ] C2.5.6 P5+ 模式（CPython peephole 全模式枚举）

@@ -96,6 +96,55 @@
   - [ ] 子任务：在 `_generate_*` 中增加「入口引用语义」不变量检查（debug 模式）
   - [ ] 子任务：全测试集回归（debug 模式下不变量全部通过）
 
+## Phase 2.5: CPython Peephole 模式库（反思第 4 块）
+
+> **目标**：重建 CPython 3.11+ peephole 优化器产生的「反归约」字节码模式库，
+> 让区域识别阶段一次正确处理这些模式，避免后处理补丁。
+> 4 块反思：迭代归约 + 异常表驱动 + 支配树驱动 + **CPython peephole 模式库**。
+
+- [x] Task 2.5.1: P1 模式（module-level/function-tail 三元表达式语句 → double RETURN_VALUE）
+  - [x] 子任务：在 `peephole_patterns.py` 中建立 P1 模式识别库
+  - [x] 子任务：TernaryRegion 增加 `has_pop_top` 字段区分三元与 if-return
+  - [x] 子任务：115/116 ternary 测试通过（1 跳过）
+- [x] Task 2.5.2: P1 if-return 与三元表达式区分
+  - [x] 子任务：含 POP_TOP → 三元表达式语句；不含 POP_TOP → if-return
+  - [x] 子任务：让 IfRegion 处理 if-return 模式
+- [x] Task 2.5.3: P1 peephole 模式库测试覆盖
+  - [x] Task 2.5.3a: P1 peephole 模式库测试覆盖（ternary 全集）
+  - [x] Task 2.5.3b: Scenario B 修复（while 条件位三元：merge_block IS LoopRegion.header_block）
+  - [x] Task 2.5.3c: P1 if-return 修复（peephole_patterns.py 让 IfRegion 处理 if-return）
+  - [x] Task 2.5.3d: bool03_not 测试框架识别 UnaryOp(Not) 作为 BOOL_OP
+  - [x] Task 2.5.3e: bool20_complex_logic 修复（混合 and/or 链不丢中间操作数）
+        - 算法根因：CPython 3.11 为每个操作数的短路目标发射独立的 trivial exit 块，
+          链检测因 target 不同而中断。修正：在 `_detect_boolop_conditional_chain`
+          两处（链中断判定 + all_same_target 循环）增加 `_is_equivalent_exit_block` 检查。
+  - [x] Task 2.5.3f: bool19_ternary_combo 修复（or None 尾部操作数保留）
+        - 算法根因：`_build_grouped_boolop_expression` 只迭代 `op_chain` 块，
+          但最后一个 `None` 操作数位于最后链块的 fall-through 块（无条件跳转）。
+          修正：增加 fall-through 块处理逻辑，提取最终外部操作数。
+  - [x] Task 2.5.3g: bool11_in_while 修复（while 条件位 and 链不被拆分为 if+while+if）
+        - 算法根因 1：`_identify_loop_regions` 反向走查只接受 jump target 为 _cb/body/header
+          的前驱。对于 `not done and has_data()`，`not done` 块的 target 是 trivial exit
+          块（与 condition_block 的 exit 等价）。修正：增加 `_is_equivalent_exit` 检查
+          与 `_back_edge_recheck_count` 配额（限制接受数量等于 back-edge 重评估操作数数），
+          避免误吸外层 `if` 条件块。
+        - 算法根因 2：重分类逻辑将首块 IF_TRUE 误判为 `X or Y`。修正：增加合并块
+          判别 — IF_TRUE target 是合并块（最后块的非跳转后继）→ `X or Y`；
+          IF_TRUE target 是 exit → `not X and Y`。
+        - 算法根因 3：CPython 3.11 优化掉 UNARY_NOT 通过反转跳转方向。修正：在
+          `_build_boolop_expression` 与 `_build_grouped_boolop_expression` 中，
+          当 chain_op 是 'and' 且跳转是 IF_TRUE 时，对操作数包裹 `UnaryOp(not, ...)`。
+        - 算法根因 4：back-edge 条件重查块（无 STORE）被误识为 IfRegion。修正：在
+          `_should_skip_block_for_if_region` 的 `not _has_store_before_cond` 分支
+          增加 back-edge 重查检测（fallthrough 是 LOOP_BACK_EDGE 且 jump target 是 BREAK）。
+        - 算法根因 5：boolop 链检测的 `_equivalent_exits` 过宽导致 ternary12 退化。
+          修正：增加 Scenario B 三元守卫 — 走查 fallthrough 链查找 JUMP_FORWARD 到
+          循环头（有反向边前驱），若命中则断链让 TernaryRegion 识别器接管。
+- [ ] Task 2.5.4: P3 模式（while-true + break）枚举
+- [ ] Task 2.5.5: P4 模式（chained compare）枚举
+- [ ] Task 2.5.6: P5+ 模式（CPython peephole 全模式枚举）
+- [ ] Task 2.5.7: CPython 模式库全测试集回归
+
 ## Phase 3: IF 区域深度迭代
 
 > **目标**：IF 区域全测试集 100% + 字节码完全匹配。
