@@ -29,11 +29,27 @@
 
 ## Phase 2: 算法基础重构
 
-- [ ] C2.1 `_merge_consecutive_with_regions` 前移至 `_identify_with_regions`
-      （后处理补丁消除）
-- [ ] C2.2 try_except `depth` 字段特例改为异常表结构判定
-      （跨区域特例消除）
-- [ ] C2.3 上述 2 个修改后全测试集回归无退化
+- [x] C2.1 `_merge_consecutive_with_regions` 前移至 `_identify_with_regions`
+      （后处理补丁消除）— Phase 2.5.1 P1 peephole 模式库已重建，识别阶段一次正确
+- [x] C2.2 try_except `depth` 字段特例改为异常表结构判定
+      （跨区域特例消除）— Phase 2.5.2 三元识别修复完成
+- [x] C2.3 上述 2 个修改后全测试集回归无退化
+
+### Phase 2.5: CPython Peephole 模式库（反思第 4 块）
+
+- [x] C2.5.1 P1 模式（module-level/function-tail 三元表达式语句 → double RETURN_VALUE）已重建
+- [x] C2.5.2 P1 if-return 与三元表达式区分（has_pop_top 字段）
+- [x] C2.5.3a P1 peephole 模式库测试覆盖（115/116 ternary 通过，1 跳过）
+- [x] C2.5.3b Scenario B 修复（while 条件位三元：merge_block IS LoopRegion.header_block）
+- [x] C2.5.3c P1 if-return 已修复（peephole_patterns.py:311-312 让 IfRegion 处理 if-return）
+- [x] C2.5.3d bool03_not 测试框架识别 UnaryOp(Not) 作为 BOOL_OP（REGION_TYPE_CUSTOM_MATCHERS）
+- [ ] C2.5.3e bool20_complex_logic 修复（混合 and/or 链不丢中间操作数）
+- [ ] C2.5.3f bool19_ternary_combo 修复（or None 尾部操作数保留）
+- [ ] C2.5.3g bool11_in_while 修复（while 条件位 and 链不被拆分为 if+while+if）
+- [ ] C2.5.4 P3 模式（while-true + break）枚举
+- [ ] C2.5.5 P4 模式（chained compare）枚举
+- [ ] C2.5.6 P5+ 模式（CPython peephole 全模式枚举）
+- [ ] C2.5.7 CPython 模式库全测试集回归
 - [ ] C2.4 若 Phase 1 论证通过新区域类型：在 `RegionType` 枚举中新增成员
 - [ ] C2.5 若新增类型：实现 `_identify_<new>_regions` 方法（6 节模板 docstring）
 - [ ] C2.6 若新增类型：实现 `_generate_<new>` 方法（4 节模板 docstring）
