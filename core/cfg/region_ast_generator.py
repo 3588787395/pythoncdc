@@ -9878,7 +9878,16 @@ AST 映射规则:
                      and not self.region_analyzer._is_with_exit_cleanup(s)
                      and not (_in_loop and self._is_loop_break_return(s)))
                     for s in block.successors):
-                    if self._try_depth <= 0:
+                    # [R18 Bug 1-3 修复] 当 Expr 的值是 Yield/YieldFrom 时，
+                    # 不得转换为 Return。`return yield X` 是 Python 无效语法，
+                    # 且 yield 语句永远不应作为返回值处理。生成器函数中 if body
+                    # 内的连续 yield 应保持为 Expr(Yield) 语句，fall-through 到
+                    # 后继块（含 RETURN_VALUE 的 merge block）。
+                    # 依「自底向上归约」原则：yield 是语句级语义，不被 return 吞并。
+                    _last_expr_val = bs[-1].get('value')
+                    _is_yield_expr = (isinstance(_last_expr_val, dict)
+                                      and _last_expr_val.get('type') in ('Yield', 'YieldFrom'))
+                    if self._try_depth <= 0 and not _is_yield_expr:
                         bs[-1] = {'type': 'Return', 'value': bs[-1]['value']}
                 stmts.extend(bs)
             self.generated_blocks.add(block)

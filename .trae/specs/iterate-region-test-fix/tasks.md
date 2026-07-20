@@ -32,7 +32,9 @@
 - [x] Task 1.14: IF round_14 — commit d651de7 (9/11 修复完成 + 2 catA 已知限制, 已 push; if_region 689 passed / 6 failed / 4 skipped)
 - [x] Task 1.15: IF round_15 — commit 8d6e3ba (7/15 修复完成 + 8 已知限制, 已 push; if_region 696 passed / 12 failed / 6 skipped)
 - [x] Task 1.16: IF round_16 — commit b63b4f8 (9/11 修复完成 + 2 已知限制, 已 push; if_region 709 passed / 13 failed / 7 skipped; match_region 无退化)
-- [ ] Task 1.17 ~ 1.20
+- [x] Task 1.17: IF round_17 — commit (R17 之前的 if_region 17 failed baseline)
+- [x] Task 1.18: IF round_18 — 5 bug 修复 (yield/yield_from/try-finally 部分/嵌套ternary 部分); 25 failed, 740 passed, 7 skipped (基线 27 failed, 738 passed)
+- [ ] Task 1.19 ~ 1.20
 
 ## Phase 2: LOOP 区域（20 轮）
 - [ ] Task 2.1 ~ 2.20

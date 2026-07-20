@@ -1565,6 +1565,15 @@ class RegionAnalyzer:
             'YIELD_VALUE',
             'IMPORT_NAME', 'IMPORT_FROM', 'IMPORT_STAR',
             'GLOBAL', 'NONLOCAL',
+            # [R18 Bug 2-3 修复] GET_YIELD_FROM_ITER 是 yield from 语句的迭代器
+            # 获取指令，总是后跟 SEND 循环。含此指令的块是 yield from 语句的
+            # setup 块（语句级语义），不是三元表达式的值块（表达式级语义）。
+            # 若不排除，if-elif-else 三分支都含 yield from 时，setup 块会被
+            # 误识别为 ternary 值块，导致整体退化为嵌套 ternary
+            # `None if ... else None if ... else None`，所有 yield from 逃逸
+            # 到函数顶层。依「每块唯一归属」原则：yield from setup 块归属
+            # LoopRegion（SEND 循环），不归属 TernaryRegion。
+            'GET_YIELD_FROM_ITER',
         })
 
         allowed_terminal_ops = frozenset({
@@ -4756,6 +4765,17 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                         if succ in self.block_to_region:
                             continue
                         _worklist_np.append(succ)
+                # [R18 Bug 25-27 修复] 计算 finally_blocks (异常路径) 的最大偏移。
+                # normal-path finally body 的块偏移应小于此最大偏移；超出此范围的
+                # 后继块是 try-finally 之后的代码（after-try code），不应被纳入
+                # TRY_FINALLY 区域。否则 try-finally 之后的 if-elif 链、return 等
+                # 代码会被错误归约为 TRY_FINALLY 的一部分，导致后续代码全部丢失。
+                # 依「每块唯一归属」原则：try-finally 之后的代码归属后续 IfRegion 等，
+                # 不归属 TRY_FINALLY。
+                # 例外：函数末尾的隐式 return None（LOAD_CONST None + RETURN_VALUE
+                # 或 RETURN_CONST None）需纳入 all_blocks（Pattern A fix 意图），
+                # 编译器会在编译 try-finally 语句时重新添加。
+                _finally_max_offset = max((fb.start_offset for fb in finally_blocks), default=0)
                 while _worklist_np:
                     _blk = _worklist_np.pop()
                     if _blk in _visited_np:
@@ -4791,6 +4811,27 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                             continue
                         if _succ in _visited_np:
                             continue
+                        # [R18 Bug 25-27 修复] 不跟随进入 try-finally 之后的代码。
+                        # 当后继块偏移大于 finally_blocks 的最大偏移时，该块是
+                        # after-try code（如 if-elif 链、return 语句等），不属于
+                        # finally body 的 normal path。例外：隐式 return None 块
+                        # 仍需纳入 all_blocks（编译器会重新添加）。
+                        if _succ.start_offset > _finally_max_offset:
+                            _succ_meaningful = [i for i in _succ.instructions
+                                                if i.opname not in (
+                                                        'RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                            _succ_is_implicit_return = False
+                            if len(_succ_meaningful) == 2:
+                                if (_succ_meaningful[0].opname == 'LOAD_CONST' and
+                                        _succ_meaningful[0].argval is None and
+                                        _succ_meaningful[1].opname == 'RETURN_VALUE'):
+                                    _succ_is_implicit_return = True
+                            elif len(_succ_meaningful) == 1:
+                                if (_succ_meaningful[0].opname == 'RETURN_CONST' and
+                                        _succ_meaningful[0].argval is None):
+                                    _succ_is_implicit_return = True
+                            if not _succ_is_implicit_return:
+                                continue
                         _worklist_np.append(_succ)
                 if _normal_path_blocks:
                     all_blocks |= _normal_path_blocks
@@ -11121,7 +11162,20 @@ RegionType 枚举值: RegionType.ASSERT
                                         has_jump_forward_skip = True
                 false_existing = self.block_to_region.get(false_block)
                 if isinstance(false_existing, TernaryRegion):
-                    false_is_ternary = True
+                    # [R18 Bug 22-24 修复] 当 false_block 是已存在的 TernaryRegion
+                    # （嵌套三元 `(x if c else (y if c2 else z))` 的 false 路径）时，
+                    # 仍需验证 true_block 是有效的三元值块（单表达式块或已存在的
+                    # TernaryRegion entry）。否则若 true_block 含 STORE_FAST 等副作用
+                    # 指令（如 if-elif-else 链中 if body），仍会被错误归约为
+                    # TernaryRegion，导致 if-elif-else 结构退化为表达式语句，
+                    # 甚至泄漏 AST dict 字面量（Bug 23）。
+                    # 依「每块唯一归属」原则：ternary 的值块必须是表达式而非语句。
+                    true_existing = self.block_to_region.get(true_block)
+                    if isinstance(true_existing, TernaryRegion):
+                        false_is_ternary = True
+                    elif self._is_single_expression_block(true_block):
+                        false_is_ternary = True
+                    # else: true_block 是语句块（含 STORE_FAST 等），不构成 ternary
                 elif (len(false_block.conditional_successors) == 2 and
                       self._is_single_expression_block(true_block)):
                     false_last = false_block.get_last_instruction()
