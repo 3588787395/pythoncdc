@@ -227,6 +227,32 @@ class PatternParser:
                             is_pattern_block = True
                             is_guard_like = True
 
+            # [R16 模式 B 修复] 识别简单变量 guard 块
+            # 例如 `case Point(x=1, y=2) if z:` 的 guard `if z` 字节码为
+            # LOAD_NAME z / POP_JUMP_FORWARD_IF_FALSE → after_match
+            # 此类块无 DEFINITIVE_PATTERN_OPS 也无 COMPARE_OP，需要专门识别。
+            # 关键判据：条件跳转目标 >= case 的跳转目标（指向下一个 case/after-match），
+            # 与 body 内 if 语句（跳转目标在 body 内）区分。
+            if not is_pattern_block:
+                meaningful = [i for i in current.instructions
+                              if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                if (len(meaningful) >= 2 and
+                        meaningful[0].opname in self.LOAD_VAR_OPS and
+                        meaningful[-1].opname in ('POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_IF_FALSE',
+                                                   'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_IF_TRUE')):
+                    middle = meaningful[1:-1]
+                    middle_ok = all(m.opname in ('POP_TOP',) for m in middle) or not middle
+                    if middle_ok:
+                        _simple_guard_jump_target = meaningful[-1].argval
+                        _simple_jumps_to_next_case = (
+                            _simple_guard_jump_target is not None and
+                            jump_target_offset is not None and
+                            _simple_guard_jump_target >= jump_target_offset
+                        )
+                        if _simple_jumps_to_next_case:
+                            is_pattern_block = True
+                            is_guard_like = True
+
             if not is_pattern_block:
                 meaningful = [i for i in current.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
                 has_return = any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in meaningful)
@@ -285,6 +311,21 @@ class PatternParser:
 
         if not all_instrs:
             return None
+
+        # [R16 模式 B/E 回归防护] 计算 case header 块（pattern_blocks[0]）的指令数。
+        # 如果 guard 指令位于 case header 块内（guard_start < first_block_instr_count），
+        # 说明 guard 与 case header 在同一基本块中（如 `case _ if x > 0` 的字节码：
+        # LOAD_NAME x / POP_TOP / LOAD_NAME x / LOAD_CONST 0 / COMPARE_OP > / POP_JUMP_IF_FALSE）。
+        # 此时不提取 guard，因为 body 收集以块为单位，无法从同一块中分离 guard 指令，
+        # 提取后会导致 guard 在 body 中重复生成。对于 guard 在独立块的 case（如
+        # `case Point(...) if z` 或 `case 1 if y > 0`），guard_start 在后续块中，
+        # 不受此限制。
+        first_block_instr_count = 0
+        if pattern_blocks:
+            first_block_instr_count = sum(
+                1 for i in pattern_blocks[0].instructions
+                if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')
+            )
 
         store_indices = []
         for i, instr in enumerate(all_instrs):
@@ -352,6 +393,10 @@ class PatternParser:
                             break
 
         if guard_start is not None and guard_end is not None:
+            # [R16 回归防护] guard 位于 case header 块内时不提取（避免与 body 重复）
+            if guard_start < first_block_instr_count:
+                return None
+
             guard_instrs = all_instrs[guard_start:guard_end + 1]
 
             first_jump_is_true = (
@@ -371,8 +416,11 @@ class PatternParser:
                     if has_match_class and all_instrs[i].opname in self.LOAD_VAR_OPS:
                         pattern_loaded_names.add(all_instrs[i].argval)
 
-                if left_name not in pattern_store_names and left_name not in pattern_loaded_names:
-                    return None
+                # [R16 模式 B/E 修复] 允许 guard 引用外部变量
+                # Python 语义允许 guard 引用任何作用域内的变量（如 `case 1 if y > 0`
+                # 中 y 是外部变量）。_collect_pattern_blocks 已通过跳转目标分析
+                # （_jumps_to_next_case）区分 guard 块与 body 内 if 语句，因此
+                # 此处无需再用 pattern_store_names 拒绝外部变量。
 
                 jump_target = all_instrs[guard_end].argval
                 comparisons = []
@@ -387,8 +435,6 @@ class PatternParser:
                     })
                 else:
                     right_name = guard_instrs[1].argval
-                    if right_name not in pattern_store_names:
-                        return None
                     comparisons.append({
                         'type': 'Compare',
                         'left': {'type': 'Name', 'id': left_name},
@@ -405,8 +451,6 @@ class PatternParser:
                         guard_instrs[pos + 1].opname == 'LOAD_CONST' and
                         guard_instrs[pos + 2].opname == 'COMPARE_OP'):
                         nxt_cmp_op = guard_instrs[pos + 2].argval
-                        if nxt_name not in pattern_store_names and nxt_name not in pattern_loaded_names:
-                            break
                         comparisons.append({
                             'type': 'Compare',
                             'left': {'type': 'Name', 'id': nxt_name},
@@ -458,13 +502,13 @@ class PatternParser:
                 if instr.opname in self.LOAD_VAR_OPS:
                     if (i + 1 < len(all_instrs) and
                         all_instrs[i + 1].opname in ('POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_IF_FALSE')):
+                        # [R16 回归防护] guard 位于 case header 块内时不提取
+                        if i < first_block_instr_count:
+                            break
+                        # [R16 模式 B 修复] 简单变量 guard（如 `if z`）允许外部变量
+                        # _collect_pattern_blocks 已通过跳转目标分析区分 guard 与 body if
                         var_name = instr.argval
-                        _psn = set()
-                        for j in range(i):
-                            if all_instrs[j].opname in self.STORE_OPS:
-                                _psn.add(all_instrs[j].argval)
-                        if var_name in _psn:
-                            return {'type': 'Name', 'id': var_name}
+                        return {'type': 'Name', 'id': var_name}
 
         if guard_start is None:
             for i in range(search_start, len(all_instrs)):
@@ -1256,6 +1300,81 @@ class PatternParser:
             result['as_name'] = as_name
         return result
 
+    def _count_class_pattern_instrs(self, instrs: List[Instruction]) -> int:
+        """
+        [R16 模式 D] 计算嵌套 class pattern 消耗的指令数
+
+        用于在 _extract_class_pattern 的属性循环中跳过内层 class pattern 的所有指令。
+        内层 class pattern 结构：
+            LOAD_NAME/LOAD_GLOBAL (类名)
+            LOAD_CONST (tuple, keyword keys)
+            MATCH_CLASS (pos_count)
+            COPY
+            POP_JUMP_FORWARD_IF_NONE
+            UNPACK_SEQUENCE (count)
+            (per attr: LOAD_CONST+COMPARE_OP+COND_JUMP 或 STORE_ 或 POP_TOP)
+
+        Args:
+            instrs: 从内层 class pattern 的 LOAD_NAME 开始的指令列表
+
+        Returns:
+            消耗的指令数
+        """
+        if not instrs:
+            return 0
+
+        # 找到 MATCH_CLASS
+        match_class_idx = None
+        for i, instr in enumerate(instrs):
+            if instr.opname == 'MATCH_CLASS':
+                match_class_idx = i
+                break
+            if i > 5:
+                break
+
+        if match_class_idx is None:
+            return 0
+
+        # 找到 UNPACK_SEQUENCE
+        unpack_idx = None
+        for i in range(match_class_idx + 1, len(instrs)):
+            if instrs[i].opname == 'UNPACK_SEQUENCE':
+                unpack_idx = i
+                break
+            if instrs[i].opname == 'MATCH_CLASS':
+                break
+
+        if unpack_idx is None:
+            # 无 UNPACK_SEQUENCE，可能是 0 参数的 class pattern
+            # 跳过到 POP_JUMP_IF_NONE 之后
+            j = match_class_idx + 1
+            while j < len(instrs):
+                if instrs[j].opname in ('POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_IF_NONE'):
+                    j += 1
+                    break
+                j += 1
+            return j
+
+        count = instrs[unpack_idx].argval if instrs[unpack_idx].argval is not None else 0
+        j = unpack_idx + 1
+        attr_idx = 0
+        while j < len(instrs) and attr_idx < count:
+            if instrs[j].opname == 'LOAD_CONST' and j + 1 < len(instrs) and instrs[j + 1].opname == 'COMPARE_OP':
+                j += 2
+                while j < len(instrs) and instrs[j].opname in self.COND_JUMP_OPS:
+                    j += 1
+                attr_idx += 1
+            elif instrs[j].opname in self.STORE_OPS:
+                j += 1
+                attr_idx += 1
+            elif instrs[j].opname == 'POP_TOP':
+                j += 1
+                attr_idx += 1
+            else:
+                j += 1
+
+        return j
+
     def _extract_class_pattern(self, instrs: List[Instruction]) -> Dict[str, Any]:
         """
         构建MatchClass AST
@@ -1277,7 +1396,11 @@ class PatternParser:
         as_name = None
         pos_count = 0
 
-        filtered = [i for i in instrs if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP')]
+        # [R16 模式 C 修复] 保留 POP_TOP 指令
+        # UNPACK_SEQUENCE 之后的 POP_TOP 对应通配符 _ 位置参数（如 `Point(_, _)`），
+        # 必须保留以便后续循环识别为 MatchAs 模式。此前过滤掉 POP_TOP 导致
+        # `Point(_, _)` 退化为 `Point()`，重编字节码缺失 UNPACK_SEQUENCE + POP_TOP。
+        filtered = [i for i in instrs if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
 
         match_class_idx = None
         for i, instr in enumerate(filtered):
@@ -1334,7 +1457,24 @@ class PatternParser:
                 j = unpack_idx + 1
                 while j < len(filtered) and attr_idx < count:
                     instr = filtered[j]
-                    if instr.opname == 'LOAD_CONST' and j + 1 < len(filtered) and filtered[j + 1].opname == 'COMPARE_OP':
+                    # [R16 模式 D 修复] 嵌套 class pattern（如 Outer(x=Inner(1))）
+                    # 字节码特征：LOAD_NAME/LOAD_GLOBAL + LOAD_CONST(tuple) + MATCH_CLASS
+                    # 递归提取内层 class pattern 作为当前属性的值
+                    if (instr.opname in ('LOAD_NAME', 'LOAD_GLOBAL') and
+                            j + 2 < len(filtered) and
+                            filtered[j + 1].opname == 'LOAD_CONST' and
+                            isinstance(filtered[j + 1].argval, tuple) and
+                            filtered[j + 2].opname == 'MATCH_CLASS'):
+                        nested_instrs = filtered[j:]
+                        nested_pattern = self._extract_class_pattern(nested_instrs)
+                        patterns.append(nested_pattern)
+                        # 跳过内层 class pattern 的所有指令
+                        # 内层结构：LOAD_NAME + LOAD_CONST + MATCH_CLASS + COPY + POP_JUMP_IF_NONE +
+                        #          UNPACK_SEQUENCE + (per attr: LOAD_CONST+COMPARE_OP+COND_JUMP 或 STORE_ 或 POP_TOP)
+                        consumed = self._count_class_pattern_instrs(nested_instrs)
+                        j += consumed
+                        attr_idx += 1
+                    elif instr.opname == 'LOAD_CONST' and j + 1 < len(filtered) and filtered[j + 1].opname == 'COMPARE_OP':
                         patterns.append({'type': 'MatchValue', 'value': {'type': 'Constant', 'value': instr.argval}})
                         j += 2
                         # 跳过条件跳转

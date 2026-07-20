@@ -76,6 +76,38 @@ class ComprehensionGenerator:
         if not comp_indices:
             return None
 
+        # [R11-err3] async comprehension 的 await 模板 (GET_AWAITABLE + SEND +
+        # YIELD_VALUE + RESUME + JUMP_BACKWARD_NO_INTERRUPT + STORE_*) 跨多个
+        # 基本块。先把后续 fallthrough 块的指令合并进来，并把它们标记为已生成，
+        # 避免被外层 _generate_block_statements 当作独立语句重复处理。
+        _has_async_comp = False
+        for _ci, _cc in comp_indices:
+            for _idx in range(_ci + 1, len(instrs)):
+                if instrs[_idx].opname == 'GET_AITER':
+                    _has_async_comp = True
+                    break
+        _extra_async_blocks = []
+        if _has_async_comp and region_ast_gen is not None:
+            _cur = block
+            _seen = {block.start_offset}
+            # 最多延伸 4 个 fallthrough 块（足够覆盖 SEND/YIELD/RESUME/JUMP_BACK
+            # + STORE_* + trailing return）
+            for _ in range(4):
+                _succs = [s for s in _cur.successors
+                          if s.start_offset not in _seen
+                          and s.start_offset > _cur.start_offset]
+                if len(_succs) != 1:
+                    break
+                _nb = _succs[0]
+                _seen.add(_nb.start_offset)
+                _extra_async_blocks.append(_nb)
+                _cur = _nb
+        if _extra_async_blocks:
+            for _eb in _extra_async_blocks:
+                for _i in _eb.instructions:
+                    if _i.opname not in SKIP_OPS:
+                        instrs.append(_i)
+
         all_stmts = []
         prev_end = 0
 
@@ -85,10 +117,16 @@ class ComprehensionGenerator:
                 pre_stmts = self._generate_pre_comp_stmts(pre_comp_instrs, instrs, prev_end, region_ast_gen=region_ast_gen)
                 all_stmts.extend(pre_stmts)
 
+            # [R11-err3] async comprehension 外层使用 GET_AITER 而非 GET_ITER。
+            # 字节码: MAKE_FUNCTION, LOAD_* iter, GET_AITER, PRECALL, CALL,
+            # GET_AWAITABLE, LOAD_CONST None, SEND, YIELD_VALUE, RESUME,
+            # JUMP_BACKWARD_NO_INTERRUPT, STORE_* result
             get_iter_idx = None
+            _async_iter = False
             for idx in range(comp_idx + 1, len(instrs)):
-                if instrs[idx].opname == 'GET_ITER':
+                if instrs[idx].opname in ('GET_ITER', 'GET_AITER'):
                     get_iter_idx = idx
+                    _async_iter = (instrs[idx].opname == 'GET_AITER')
                     break
 
             if get_iter_idx is None:
@@ -109,6 +147,30 @@ class ComprehensionGenerator:
                     gen_call_end = idx + 1
                     if instrs[idx].opname == 'CALL':
                         break
+
+            # [R11-err3] async comprehension 在 CALL 后有一段 await 循环
+            # (GET_AWAITABLE + LOAD_CONST None + SEND + YIELD_VALUE + RESUME +
+            # JUMP_BACKWARD_NO_INTERRUPT)。这段是 CPython 自动生成的 await
+            # 模板，重建时归约到 await 表达式语句的语义内（listcomp 已含 is_async），
+            # 不产生独立语句，但要跳过这些指令避免误归约。
+            if _async_iter:
+                _async_end = gen_call_end
+                _send_idx = None
+                for idx in range(gen_call_end, min(gen_call_end + 8, len(instrs))):
+                    if instrs[idx].opname == 'SEND':
+                        _send_idx = idx
+                        break
+                if _send_idx is not None:
+                    # SEND 后是 YIELD_VALUE, RESUME, JUMP_BACKWARD_NO_INTERRUPT
+                    for idx in range(_send_idx + 1, min(_send_idx + 5, len(instrs))):
+                        if instrs[idx].opname == 'JUMP_BACKWARD_NO_INTERRUPT':
+                            _async_end = idx + 1
+                            break
+                        if instrs[idx].opname in ('STORE_FAST', 'STORE_NAME',
+                                                   'STORE_GLOBAL', 'STORE_DEREF'):
+                            _async_end = idx
+                            break
+                    gen_call_end = _async_end
 
             wrapper_call = None
             wrapper_end = gen_call_end
@@ -202,6 +264,13 @@ class ComprehensionGenerator:
         if remaining_instrs:
             remaining_stmts = self._generate_remaining_stmts(remaining_instrs)
             all_stmts.extend(remaining_stmts)
+
+        # [R11-err3] async comprehension 跨块的 fallthrough 已被合并处理，
+        # 标记延伸块为已生成，避免外层 _generate_block_statements 重复处理。
+        if _extra_async_blocks and region_ast_gen is not None:
+            for _eb in _extra_async_blocks:
+                region_ast_gen.generated_blocks.add(_eb)
+                region_ast_gen.generated_offsets.add(_eb.start_offset)
 
         return all_stmts if all_stmts else None
 
@@ -308,6 +377,14 @@ class ComprehensionGenerator:
             all_instrs.extend(b.instructions)
         all_instrs.sort(key=lambda i: i.offset)
 
+        # [Round5-03] 多 for 子句检测：统计 FOR_ITER 数量。
+        # 多 for 子句（如 `{x+y for x in a for y in b}`）字节码含多个 FOR_ITER，
+        # 每个 FOR_ITER 后接 STORE_* target，最后一个 FOR_ITER 的 body 含 element + APPEND。
+        # 单 for 路径保留原逻辑；多 for 走新路径分别提取每个 generator。
+        for_iter_indices = [i for i, instr in enumerate(all_instrs) if instr.opname == 'FOR_ITER']
+        if len(for_iter_indices) > 1:
+            return self._parse_multi_for_comprehension(code_obj, all_instrs, iter_expr, for_iter_indices)
+
         target_name = self._find_comp_target_names(all_instrs, first_only=True)
         if target_name is None:
             return None
@@ -328,12 +405,22 @@ class ComprehensionGenerator:
         ternary_info = self._detect_comp_ternary(all_instrs, store_idx, append_idx)
         if ternary_info is not None:
             if append_op == 'MAP_ADD':
-                # Dict comprehension with ternary: ternary is the value, need to extract key
-                key_expr = self._extract_dict_comp_key_before_ternary(all_instrs, store_idx, append_idx)
-                if key_expr is not None:
-                    elt_expr = (key_expr, ternary_info)
+                # [Round7-08] Dict comprehension with ternary: ternary can be either key
+                # or value. Distinguish by checking if there are meaningful instructions
+                # between the ternary merge point and MAP_ADD:
+                # - If yes → ternary is the KEY, those trailing instructions are the value
+                # - If no  → ternary is the VALUE, key (if any) was pushed before the cond
+                value_expr = self._extract_dict_comp_value_after_ternary(
+                    all_instrs, store_idx, append_idx)
+                if value_expr is not None:
+                    elt_expr = (ternary_info, value_expr)
                 else:
-                    elt_expr = ternary_info
+                    key_expr = self._extract_dict_comp_key_before_ternary(
+                        all_instrs, store_idx, append_idx)
+                    if key_expr is not None:
+                        elt_expr = (key_expr, ternary_info)
+                    else:
+                        elt_expr = ternary_info
             else:
                 elt_expr = ternary_info
             ifs = []
@@ -354,7 +441,9 @@ class ComprehensionGenerator:
 
         is_async = 0
         for instr in all_instrs:
-            if instr.opname == 'GET_AITER':
+            # [R11-err3] async comprehension 内层用 GET_ANEXT 而非 FOR_ITER，
+            # 外层用 GET_AITER 而非 GET_ITER。任一出现即标记 is_async=1。
+            if instr.opname in ('GET_AITER', 'GET_ANEXT', 'END_ASYNC_FOR'):
                 is_async = 1
                 break
 
@@ -368,6 +457,131 @@ class ComprehensionGenerator:
 
         return self._build_comp_result(code_obj, elt_expr, generators)
 
+    def _parse_multi_for_comprehension(self, code_obj, all_instrs, iter_expr, for_iter_indices):
+        """[Round5-03] 多 for 子句推导式重建。
+
+        字节码结构（以 `{x+y for x in a for y in b}` 为例）:
+            BUILD_SET 0
+            LOAD_FAST .0           <- 外部传入的迭代器（对应第一个 for 的 iter）
+            FOR_ITER (outer)       <- for_iter_indices[0]
+            STORE_FAST x           <- 第一个 for 的 target
+            LOAD_GLOBAL b
+            GET_ITER
+            FOR_ITER (inner)       <- for_iter_indices[1]
+            STORE_FAST y           <- 第二个 for 的 target
+            <element>
+            SET_ADD
+            JUMP_BACKWARD to inner FOR_ITER
+            JUMP_BACKWARD to outer FOR_ITER
+
+        生成多个 generator，按外→内顺序。第一个 generator 的 iter 是 iter_expr
+        （外部传入），后续 generator 的 iter 由 LOAD_* + GET_ITER 重建。
+        元素表达式从最内层 FOR_ITER 的 STORE_* 之后、APPEND 之前提取。
+        """
+        append_op, append_idx = self._find_comp_append_op(all_instrs)
+        if append_op is None:
+            return None
+
+        is_async = 0
+        for instr in all_instrs:
+            # [R11-err3] 同单 for 路径，检测 async 标记。
+            if instr.opname in ('GET_AITER', 'GET_ANEXT', 'END_ASYNC_FOR'):
+                is_async = 1
+                break
+
+        generators = []
+        for gen_idx, fi_idx in enumerate(for_iter_indices):
+            # target = STORE_* right after FOR_ITER
+            if fi_idx + 1 >= len(all_instrs):
+                return None
+            store_instr = all_instrs[fi_idx + 1]
+            if store_instr.opname not in ('STORE_FAST', 'STORE_NAME', 'STORE_DEREF', 'STORE_GLOBAL'):
+                return None
+            target = {
+                'type': 'Name',
+                'id': store_instr.argval,
+                'ctx': 'Store',
+            }
+
+            if gen_idx == 0:
+                # 第一个 for 的 iter 来自外部传入
+                gen_iter_expr = iter_expr
+            else:
+                # 后续 for 的 iter 来自前一个 STORE_* 之后、本 FOR_ITER 之前的 LOAD_* + GET_ITER
+                # 定位本 FOR_ITER 之前的 GET_ITER
+                get_iter_idx = None
+                for j in range(fi_idx - 1, -1, -1):
+                    if all_instrs[j].opname == 'GET_ITER':
+                        get_iter_idx = j
+                        break
+                    if all_instrs[j].opname in ('STORE_FAST', 'STORE_NAME', 'STORE_DEREF', 'STORE_GLOBAL'):
+                        break
+                if get_iter_idx is None:
+                    return None
+                # iter 表达式指令范围：从上一个 STORE_* 之后到 GET_ITER 之前
+                start_idx = 0
+                for j in range(get_iter_idx - 1, -1, -1):
+                    if all_instrs[j].opname in ('STORE_FAST', 'STORE_NAME', 'STORE_DEREF', 'STORE_GLOBAL'):
+                        start_idx = j + 1
+                        break
+                iter_instrs = [i for i in all_instrs[start_idx:get_iter_idx]
+                               if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                gen_iter_expr = self.expr_reconstructor.reconstruct(iter_instrs) if iter_instrs else None
+                if gen_iter_expr is None:
+                    gen_iter_expr = {'type': 'Name', 'id': '<iterator>'}
+
+            generators.append({
+                'type': 'comprehension',
+                'target': target,
+                'iter': gen_iter_expr,
+                'ifs': [],
+                'is_async': is_async,
+            })
+
+        # 最内层 FOR_ITER 的 STORE_* 索引（用于元素提取）
+        innermost_fi_idx = for_iter_indices[-1]
+        innermost_store_idx = innermost_fi_idx + 1
+        # 元素提取：从 innermost_store_idx + 1 到 append_idx
+        elt_start_idx = innermost_store_idx + 1
+
+        # 检测三元 / ifs（在最内层 for body 内）
+        ternary_info = self._detect_comp_ternary(all_instrs, innermost_store_idx, append_idx)
+        if ternary_info is not None:
+            if append_op == 'MAP_ADD':
+                # [Round7-08] Ternary could be key or value - see parse_comprehension_inner.
+                value_expr = self._extract_dict_comp_value_after_ternary(
+                    all_instrs, innermost_store_idx, append_idx)
+                if value_expr is not None:
+                    elt_expr = (ternary_info, value_expr)
+                else:
+                    key_expr = self._extract_dict_comp_key_before_ternary(
+                        all_instrs, innermost_store_idx, append_idx)
+                    if key_expr is not None:
+                        elt_expr = (key_expr, ternary_info)
+                    else:
+                        elt_expr = ternary_info
+            else:
+                elt_expr = ternary_info
+        else:
+            ifs, elt_start_idx = self._extract_comp_ifs(all_instrs, innermost_store_idx, append_idx)
+            if append_op == 'MAP_ADD':
+                key_expr, value_expr = self._split_dict_comp_kv(all_instrs, elt_start_idx, append_idx)
+                if key_expr is None:
+                    key_expr = {'type': 'Name', 'id': all_instrs[innermost_store_idx].argval, 'ctx': 'Load'}
+                if value_expr is None:
+                    value_expr = {'type': 'Constant', 'value': None}
+                elt_expr = (key_expr, value_expr)
+            else:
+                elt_instrs = all_instrs[elt_start_idx:append_idx]
+                elt_expr = self.expr_reconstructor.reconstruct(elt_instrs)
+                if elt_expr is None:
+                    elt_expr = {'type': 'Name', 'id': all_instrs[innermost_store_idx].argval, 'ctx': 'Load'}
+            # 把 ifs 挂到最内层 generator
+            if ifs:
+                generators[-1]['ifs'] = ifs
+
+        return self._build_comp_result(code_obj, elt_expr, generators)
+
     def _split_dict_comp_kv(self, all_instrs: List[Instruction], start_idx: int, end_idx: int) -> Tuple[Optional[Dict], Optional[Dict]]:
         if start_idx >= end_idx:
             return None, None
@@ -376,9 +590,24 @@ class ComprehensionGenerator:
         if not instrs_to_split:
             return None, None
 
+        # [Round10-05] 识别 walrus 副作用块（COPY 1 + STORE_*）。
+        # walrus 的 STORE_* 必须保留，让 expr_reconstructor 把 COPY+STORE
+        # 序列识别为 NamedExpr（无论 walrus 落在 key 还是 value 位置）。
+        # 仅过滤非 walrus 的 STORE_*（如 UNPACK_SEQUENCE 的多目标 store、
+        # 迭代变量 store），它们不属于 key/value 表达式。
+        _walrus_store_indices = set()
+        for _i in range(len(instrs_to_split) - 1):
+            _cur = instrs_to_split[_i]
+            _nxt = instrs_to_split[_i + 1]
+            if (_cur.opname == 'COPY' and _cur.arg == 1
+                    and _nxt.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_DEREF', 'STORE_GLOBAL')
+                    and _nxt.argval != '.0'):
+                _walrus_store_indices.add(_i + 1)
+
         filtered_instrs = [
-            instr for instr in instrs_to_split
-            if instr.opname not in ('STORE_FAST', 'STORE_NAME', 'STORE_DEREF', 'STORE_GLOBAL')
+            instr for idx, instr in enumerate(instrs_to_split)
+            if not (instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_DEREF', 'STORE_GLOBAL')
+                    and idx not in _walrus_store_indices)
         ]
 
         if not filtered_instrs:
@@ -401,6 +630,11 @@ class ComprehensionGenerator:
 
         key_expr = self.expr_reconstructor.reconstruct(key_instrs) if key_instrs else None
         value_expr = self.expr_reconstructor.reconstruct(value_instrs) if value_instrs else None
+
+        # [Round10-05] walrus 的 COPY+STORE 已由 expr_reconstructor 识别为
+        # NamedExpr（reconstruct 中 COPY 1 + STORE_* 会生成 NamedExpr 节点），
+        # 无需根据 _walrus_var 手动包裹 value_expr。这样 key 位置和 value 位置
+        # 的 walrus 都能被正确归约到对应的表达式上。
 
         return key_expr, value_expr
 
@@ -469,6 +703,12 @@ class ComprehensionGenerator:
             return -(instr.arg) + 1
         elif instr.opname == 'FORMAT_VALUE':
             return 0
+        elif instr.opname == 'COPY':
+            # [Round10-05] COPY 总是向栈压入一个已有元素的副本，栈深度 +1。
+            # 用于 walrus (x := expr) 的 COPY 1 + STORE_x 模式：COPY 压栈、
+            # STORE 弹栈，净效果为 0，但中间状态需正确跟踪以便定位 key/value
+            # 边界（边界应落在 STORE 之后，使 walrus 整体归属 key 或 value）。
+            return 1
         elif instr.opname.startswith('POP_') or instr.opname == 'POP_TOP':
             return -1
         elif instr.opname.startswith('STORE_'):
@@ -615,6 +855,60 @@ class ComprehensionGenerator:
 
         return self.expr_reconstructor.reconstruct(key_instrs)
 
+    def _extract_dict_comp_value_after_ternary(self, all_instrs: List[Instruction],
+                                                store_idx: int,
+                                                append_idx: int) -> Optional[Dict[str, Any]]:
+        """[Round7-08] Extract the dict value when a ternary is the dict KEY.
+
+        When a dict comprehension has a ternary key (e.g., `{(k if cond else m): v for ...}`),
+        after the ternary's JUMP_FORWARD merge point, the value expression is pushed onto
+        the stack before MAP_ADD consumes both. This method locates that merge point and
+        reconstructs the value expression from the instructions between it and MAP_ADD.
+
+        Returns None when there are no meaningful instructions between the merge point
+        and MAP_ADD (i.e., the ternary is the value, not the key).
+        """
+        # Find the conditional jump between store_idx+1 and append_idx
+        cond_jump_idx = None
+        for idx in range(store_idx + 1, append_idx):
+            instr = all_instrs[idx]
+            if instr.opname in CONDITIONAL_JUMP_OPS:
+                cond_jump_idx = idx
+                break
+        if cond_jump_idx is None:
+            return None
+
+        false_target_offset = all_instrs[cond_jump_idx].argval
+
+        # Find JUMP_FORWARD within the true branch (between cond_jump and false_target)
+        merge_offset = None
+        for idx in range(cond_jump_idx + 1, append_idx):
+            instr = all_instrs[idx]
+            if instr.offset >= false_target_offset:
+                break
+            if instr.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD'):
+                if hasattr(instr, 'argval') and instr.argval is not None:
+                    merge_offset = instr.argval
+                break
+        if merge_offset is None:
+            return None
+
+        # Collect meaningful instructions between merge_offset and append_idx
+        value_instrs = []
+        for idx in range(cond_jump_idx + 1, append_idx):
+            instr = all_instrs[idx]
+            if instr.offset < merge_offset:
+                continue
+            if instr.offset >= all_instrs[append_idx].offset:
+                break
+            if instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                continue
+            value_instrs.append(instr)
+        if not value_instrs:
+            return None
+
+        return self.expr_reconstructor.reconstruct(value_instrs)
+
     def _detect_comp_ternary(self, all_instrs: List[Instruction],
                              store_idx: int,
                              append_idx: int) -> Optional[Dict[str, Any]]:
@@ -631,6 +925,13 @@ class ComprehensionGenerator:
         for idx in range(store_idx + 1, append_idx):
             instr = all_instrs[idx]
             if instr.opname in CONDITIONAL_JUMP_OPS:
+                # [R13-batch3] BACKWARD 条件跳转是过滤器模式（跳回 FOR_ITER
+                # 循环开始以跳过当前元素），不是三元模式。三元模式使用 FORWARD
+                # 跳转跳到 false 值（在 true 值之后、LIST_APPEND 之前）。
+                # 与 _extract_comp_ifs 的 'BACKWARD' not in instr.opname 检查
+                # 保持一致，避免过滤器被误识别为三元导致 ifs 丢失。
+                if 'BACKWARD' in instr.opname:
+                    return None
                 # 检查跳转目标是否在LIST_APPEND之前（三元模式）
                 if hasattr(instr, 'argval') and instr.argval is not None:
                     if instr.argval < append_offset:
@@ -653,6 +954,10 @@ class ComprehensionGenerator:
         true_start = cond_jump_idx + 1
         false_start = None
         true_end = None
+        # [Round7-08] 记录 JUMP_FORWARD 的目标偏移量（merge point），
+        # false 值区域只到 merge point 之前，merge point 之后是后续表达式（如
+        # dict comprehension 的 value，紧跟在三元 key 之后压栈）。
+        merge_offset = None
 
         # 在true值区域中查找JUMP_FORWARD（跳转到merge/LIST_APPEND）
         for idx in range(true_start, append_idx):
@@ -666,6 +971,9 @@ class ComprehensionGenerator:
                 true_end = idx
                 # false值从JUMP的目标偏移量开始
                 false_start = idx + 1
+                # 记录 merge point（JUMP 的目标偏移量）
+                if hasattr(instr, 'argval') and instr.argval is not None:
+                    merge_offset = instr.argval
                 break
 
         if false_start is None:
@@ -678,7 +986,18 @@ class ComprehensionGenerator:
             true_instrs = all_instrs[true_start:false_start]
 
         # false值指令：从false_start到append_idx
-        false_instrs = all_instrs[false_start:append_idx]
+        # [Round7-08] 若有 merge_offset，false 值区域只到 merge_offset 之前。
+        # merge_offset 之后是指令属于后续表达式（如 dict comp 的 value），
+        # 不应作为 false 分支的一部分。
+        if merge_offset is not None:
+            false_end = false_start
+            for idx in range(false_start, append_idx):
+                if all_instrs[idx].offset >= merge_offset:
+                    break
+                false_end = idx + 1
+            false_instrs = all_instrs[false_start:false_end]
+        else:
+            false_instrs = all_instrs[false_start:append_idx]
 
         # 重建条件表达式
         cond_expr = self.expr_reconstructor.reconstruct(cond_instrs)

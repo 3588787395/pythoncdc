@@ -266,6 +266,8 @@ class CodeGenerator:
             self._generate_aug_assign_dict(node)
         elif node_type == 'Assign':
             self._generate_assign_dict(node)
+        elif node_type == 'AnnAssign':
+            self._generate_ann_assign_dict(node)
         elif node_type == 'AugAssign':
             self._generate_aug_assign_dict(node)
         elif node_type == 'Expr':
@@ -357,7 +359,18 @@ class CodeGenerator:
         elif node_type in ('Import', 'ImportFrom'):
             # 处理Import语句
             names = node.get('names', [])
-            names_str = ', '.join(n if isinstance(n, str) else n.get('name', str(n)) for n in names)
+            _name_parts = []
+            for n in names:
+                if isinstance(n, str):
+                    _name_parts.append(n)
+                else:
+                    _n_name = n.get('name', str(n))
+                    _n_asname = n.get('asname')
+                    if _n_asname:
+                        _name_parts.append(f'{_n_name} as {_n_asname}')
+                    else:
+                        _name_parts.append(_n_name)
+            names_str = ', '.join(_name_parts)
             if node_type == 'ImportFrom':
                 module = node.get('module', '')
                 level = node.get('level', 0)
@@ -946,6 +959,20 @@ class CodeGenerator:
 
         self._write_line(f'{target_code} {op_symbol} {value_code}')
 
+    def _generate_ann_assign_dict(self, node: Dict[str, Any]) -> None:
+        """生成字典格式的AnnAssign节点（如 x: int = 1）"""
+        target = node.get('target', {})
+        annotation = node.get('annotation', {})
+        value = node.get('value')
+
+        target_code = self._generate_expression(target)
+        annotation_code = self._generate_expression(annotation) if isinstance(annotation, dict) else str(annotation)
+        if value is not None:
+            value_code = self._generate_expression(value) if isinstance(value, dict) else str(value)
+            self._write_line(f'{target_code}: {annotation_code} = {value_code}')
+        else:
+            self._write_line(f'{target_code}: {annotation_code}')
+
     def _generate_for_dict(self, node: Dict[str, Any], async_prefix: str = '') -> None:
         target = node.get('target', {})
         iter_expr = node.get('iter', {})
@@ -1516,7 +1543,7 @@ class CodeGenerator:
     def _generate_for_target(self, target) -> str:
         """
         [关键修复] 生成for循环目标变量代码
-        
+
         对于for循环目标，不应该添加括号：
         - 单变量: for i in data: （不是 for (i) in (data):）
         - 元组解包: for a, b in data: （不是 for (a, b) in (data):）
@@ -1529,7 +1556,16 @@ class CodeGenerator:
         elif isinstance(target, ASTTuple):
             if not target.elts:
                 return '()'
-            elts_code = [self._generate_for_target(elt) for elt in target.elts]
+            # [Round9-02] 嵌套 Tuple 元素需加括号以保留嵌套语义：
+            # `for (a, b), (c, d) in x` 中，外层 Tuple 的两个 Tuple 元素必须
+            # 各自加括号，否则渲染为 `a, b, c, d`（扁平 4 元组）。
+            elts_code = []
+            for elt in target.elts:
+                elt_code = self._generate_for_target(elt)
+                if isinstance(elt, ASTTuple):
+                    elts_code.append(f'({elt_code})')
+                else:
+                    elts_code.append(elt_code)
             return ', '.join(elts_code)
         else:
             return self._generate_expression(target, 0)
@@ -1538,16 +1574,25 @@ class CodeGenerator:
         """[N14修复] 为字典格式AST生成for循环目标（无括号）"""
         if not target:
             return '_'
-        
+
         node_type = target.get('type')
-        
+
         if node_type == 'Name':
             return target.get('id', '_')
         elif node_type == 'Tuple':
             elts = target.get('elts', [])
             if not elts:
                 return '()'
-            elts_code = [self._generate_for_target_from_dict(elt) for elt in elts]
+            # [Round9-02] 嵌套 Tuple 元素需加括号以保留嵌套语义：
+            # `for (a, b), (c, d) in x` 中，外层 Tuple 的两个 Tuple 元素必须
+            # 各自加括号，否则渲染为 `a, b, c, d`（扁平 4 元组）。
+            elts_code = []
+            for elt in elts:
+                elt_code = self._generate_for_target_from_dict(elt)
+                if isinstance(elt, dict) and elt.get('type') == 'Tuple':
+                    elts_code.append(f'({elt_code})')
+                else:
+                    elts_code.append(elt_code)
             return ', '.join(elts_code)
         elif node_type in ('List', 'Starred'):
             inner = self._generate_for_target_from_dict(target.get('value', target.get('values', {})))
@@ -2867,30 +2912,55 @@ class CodeGenerator:
                         func_code = '(lambda *args, **kwargs: False)'
                 else:
                     func_code = self._generate_expression(func, self._precedence['call']) if func else ''
-                
+                    # [聚类3 修复] Lambda as Call func needs parentheses because
+                    # lambda has lower precedence than call; without parens
+                    # `(lambda x: x + 1)(5)` renders as `lambda x: x + 1(5)`.
+                    if isinstance(func, dict) and func.get('type') == 'Lambda':
+                        if not (func_code.startswith('(') and func_code.endswith(')')):
+                            func_code = f'({func_code})'
+
                 args = node.get('args', [])
-                keywords = node.get('keywords', [])
-                
+                # [聚类7 修复] Call 节点字段兼容：ExpressionReconstructor 构建的 Call 节点
+                # 使用 'kwargs' 字段存放关键字参数，而其他路径（如 _build_call_from_dict）
+                # 使用标准 AST 风格的 'keywords' 字段。两者都读取以保证 keyword 不丢失。
+                keywords = node.get('keywords', []) or node.get('kwargs', [])
+
                 if (len(args) == 1 and not keywords and
                     isinstance(args[0], dict) and args[0].get('type') in ('GeneratorExp', 'GenExpr')):
                     gen_code = self._generate_gen_expr_from_dict(args[0])
                     if gen_code.startswith('(') and gen_code.endswith(')'):
                         gen_code = gen_code[1:-1]
                     return f'{func_code}({gen_code})'
-                
+
                 args_codes = [self._generate_expression(arg, 0) for arg in args]
+                # [Round7-11] Yield/YieldFrom 作为 Call 参数必须加括号，
+                # 否则 `g(yield from h())` 是语法错误，正确形式是 `g((yield from h()))`。
+                for i, arg in enumerate(args):
+                    if isinstance(arg, dict) and arg.get('type') in ('Yield', 'YieldFrom'):
+                        args_codes[i] = f'({args_codes[i]})'
                 kw_codes = []
                 for kw in keywords:
                     if isinstance(kw, dict):
+                        # [聚类7 修复] KeywordStarred (**kwargs) 渲染为 **<value>
+                        if kw.get('type') == 'KeywordStarred':
+                            kw_value = kw.get('value')
+                            if kw_value is not None:
+                                kw_codes.append(f'**{self._generate_expression(kw_value, 0)}')
+                            continue
                         arg_name = kw.get('arg', '')
                         kw_value = kw.get('value')
                         if arg_name and kw_value is not None:
                             kw_codes.append(f'{arg_name}={self._generate_expression(kw_value, 0)}')
-                
+
                 all_args = args_codes + kw_codes
                 return f'{func_code}({", ".join(all_args)})'
             elif node_type == 'Lambda':
                 return self._generate_lambda_from_dict(node)
+            elif node_type == 'Starred':
+                # [聚类7 修复] *args 渲染：Call 的位置参数中的 Starred 节点
+                value = node.get('value', {})
+                value_code = self._generate_expression(value, 0) if value else ''
+                return f'*{value_code}'
             elif node_type == 'Subscript':
                 value = node.get('value', {})
                 slice_node = node.get('slice', {})
@@ -2910,7 +2980,18 @@ class CodeGenerator:
                 return self._generate_joined_str_from_dict(node)
             elif node_type == 'FormattedValue':
                 # [P2-2026] 处理字典格式的FormattedValue
-                return self._generate_formatted_value_from_dict(node)
+                # [Round5-07] 当 FormattedValue 作为顶层表达式出现时（如
+                # `s = f'{x:{width}.2f}'` 整个右值仅一个 FormattedValue 节点），
+                # reconstruct 不会用 BUILD_STRING 包装它（BUILD_STRING 仅在多个
+                # f-string 片段拼接时出现）。若直接返回 `{x:...}` 会被解析为
+                # dict 字面量。这里返回完整的 `f'{...}'` 字符串。
+                # _generate_joined_str_from_dict 调用本方法时不走本分支（它通过
+                # node_type 分发前的 if 链已处理 JoinedStr），因此不会双重包装。
+                _fv_inner = self._generate_formatted_value_from_dict(node)
+                if "'" in _fv_inner and '"' not in _fv_inner:
+                    return f'f"{_fv_inner}"'
+                else:
+                    return f"f'{_fv_inner}'"
             elif node_type == 'BinOp':
                 # [T1修复] dict-based BinOp 需要正确的优先级和括号处理
                 # 原先通过 _generate_annotation_from_dict 回退，不处理括号
@@ -2927,6 +3008,31 @@ class CodeGenerator:
             elif node_type == 'Compare':
                 # [T1修复] dict-based Compare 需要正确的优先级和括号处理
                 return self._generate_compare_from_dict(node, parent_precedence)
+            elif node_type == 'Await':
+                # [Round 1 Cluster 2] await 表达式 dict 处理
+                value = node.get('value')
+                if value is not None:
+                    value_code = self._generate_expression(value, self._precedence.get('await', 0))
+                    return f'await {value_code}'
+                return 'await <value>'
+            elif node_type == 'Yield':
+                # [Round4-15] yield 表达式 dict 处理（如 `x = yield g()` 中作赋值右值）
+                # _generate_dict_node 的 Yield 分支仅处理语句级 Expr(Yield)；
+                # 表达式上下文（Assign.value / 函数参数等）的 Yield dict 必须在此渲染为
+                # `yield <value>`，否则会落入 _generate_annotation_from_dict 把 AST
+                # dict 直接 str() 输出（造成内部结构泄露）。
+                value = node.get('value')
+                if value is not None:
+                    value_code = self._generate_expression(value, 0)
+                    return f'yield {value_code}'
+                return 'yield'
+            elif node_type == 'YieldFrom':
+                # [Round6-07] yield from 表达式 dict 处理（`x = yield from g()` 作赋值右值）
+                value = node.get('value')
+                if value is not None:
+                    value_code = self._generate_expression(value, 0)
+                    return f'yield from {value_code}'
+                return 'yield from'
             else:
                 # [修复-L13/L17/L18] 基础表达式类型必须正确处理
                 # Constant和Name是最常用的，必须直接处理避免泄露
@@ -2938,6 +3044,8 @@ class CodeGenerator:
                         return 'True' if value else 'False'
                     elif value is None:
                         return 'None'
+                    elif value is Ellipsis:
+                        return '...'
                     elif isinstance(value, frozenset):
                         return repr(set(value))
                     else:
@@ -2964,6 +3072,13 @@ class CodeGenerator:
                     values = node.get('values', [])
                     pairs = []
                     for k, v in zip(keys, values):
+                        # [Round8-05] dict 字面量中的 **expr 项：CPython AST 用
+                        # Starred(value=expr) 作 key、None 作 value 表示。
+                        # 渲染为 ``**expr``（无 key: value 对）。
+                        if (isinstance(k, dict) and k.get('type') == 'Starred'
+                                and v is None):
+                            pairs.append(f'**{self._generate_expression(k.get("value"), 0)}')
+                            continue
                         k_code = self._generate_expression(k, 0)
                         v_code = self._generate_expression(v, 0)
                         pairs.append(f'{k_code}: {v_code}')
@@ -3151,9 +3266,11 @@ class CodeGenerator:
     def _generate_constant(self, node: ASTConstant) -> str:
         """生成常量表达式"""
         value = node.value
-        
+
         if value is None:
             return 'None'
+        elif value is Ellipsis:
+            return '...'
         elif isinstance(value, bool):
             return 'True' if value else 'False'
         elif isinstance(value, (int, float)):
@@ -3738,15 +3855,25 @@ class CodeGenerator:
         else:
             expr_code = self._generate_expression(value, 100)
 
-        if conversion == -1 and (not format_spec or format_spec is None):
+        # [Round6-12/13/14] FORMAT_VALUE flags 的低 2 位编码 conversion：
+        # 0=无 / 1=!s / 2=!r / 3=!a。这 4 个值产生不同的 FORMAT_VALUE 字节码，
+        # 因此 !s 必须显式输出（不能像旧实现那样用 chr(conversion) 拼接，
+        # 也不能省略 !s —— !s (flag=1) 与无转换 (flag=0) 字节码不同）。
+        # -1 表示字典未设置 conversion 字段，按无转换处理。
+        conv_map = {1: '!s', 2: '!r', 3: '!a'}
+        conv_marker = conv_map.get(conversion, '') if conversion != -1 else ''
+
+        if not conv_marker and (not format_spec or format_spec is None):
             return f'{{{expr_code}}}'
-        
-        result = f'{{{expr_code}'
-        if conversion != -1:
-            result += chr(conversion)
+
+        result = f'{{{expr_code}{conv_marker}'
         if format_spec is not None:
             if isinstance(format_spec, dict) and format_spec.get('type') == 'JoinedStr':
-                result += ':' + self._generate_joined_str_from_dict(format_spec)
+                # [Round5-07] 格式说明符上下文不包 f'...'，仅输出内部片段
+                # （如 `{width}.2f` 而非 `f'{width}.2f'`），否则 Python 重编时
+                # 会把 `f'` 与 `'` 当作字面常量并入 BUILD_STRING，导致多出
+                # 两条 LOAD_CONST，字节码不等价。
+                result += ':' + self._generate_format_spec_inner_from_dict(format_spec)
             elif isinstance(format_spec, dict) and format_spec.get('type') == 'Constant' and isinstance(format_spec.get('value'), str):
                 result += ':' + format_spec['value']
             elif isinstance(format_spec, dict):
@@ -3756,6 +3883,34 @@ class CodeGenerator:
         result += '}'
 
         return result
+
+    def _generate_format_spec_inner_from_dict(self, node: Dict[str, Any]) -> str:
+        """[Round5-07] 生成格式说明符内部内容（不包 f'...'）。
+
+        与 _generate_joined_str_from_dict 的区别：本方法仅拼接 JoinedStr.values
+        各片段的源码（字符串常量直出、FormattedValue 输出 `{expr[:conv][:spec]}`），
+        不添加外层 `f'...'` 引号。这是 f-string 格式说明符上下文所要求的：
+        `f'{x:{width}.2f}'` 中 `{width}.2f` 是格式说明符，本身就是类 f-string
+        上下文（{} 内可嵌套替换），但不需要外层引号。
+        """
+        values = node.get('values', [])
+        parts = []
+        for value in values:
+            if isinstance(value, str):
+                escaped = value.replace("'", "\\'").replace('\n', '\\n').replace('\r', '\\r')
+                parts.append(escaped)
+            elif isinstance(value, dict):
+                value_type = value.get('type')
+                if value_type == 'Constant' and isinstance(value.get('value'), str):
+                    escaped = value['value'].replace("'", "\\'").replace('\n', '\\n').replace('\r', '\\r')
+                    parts.append(escaped)
+                elif value_type == 'FormattedValue':
+                    parts.append(self._generate_formatted_value_from_dict(value))
+                else:
+                    parts.append(self._generate_expression(value, 0))
+            else:
+                parts.append(self._generate_expression(value, 0))
+        return ''.join(parts)
 
     def _generate_joined_str(self, node: ASTJoinedStr) -> str:
         """生成f-string表达式"""
@@ -3798,10 +3953,11 @@ class CodeGenerator:
         
         # 处理转换（!r, !s, !a）
         # [关键修复] conversion是整数：0=无, 1=str(!s), 2=repr(!r), 3=ascii(!a)
-        # [关键修复] 当conversion为1（str）时，不需要添加!s，因为f-string默认就是str()
+        # [Round6-12/13/14] !s (flag=1) 与无转换 (flag=0) 产生不同的 FORMAT_VALUE
+        # 字节码，必须显式输出 !s 以保证字节码等价（旧实现把 1 映射为 '' 是错的）。
         conversion = ''
         if hasattr(node, '_conversion') and node._conversion:
-            conversion_map = {1: '', 2: '!r', 3: '!a'}  # 1=str是默认值，不需要显式指定
+            conversion_map = {1: '!s', 2: '!r', 3: '!a'}
             conversion = conversion_map.get(node._conversion, '')
         
         # 处理格式规范
@@ -3929,47 +4085,28 @@ class CodeGenerator:
         """生成lambda表达式代码"""
         args = lambda_dict.get('args', {})
         body = lambda_dict.get('body', {})
-        
-        # 生成参数
-        args_code = []
-        if args:
-            # Handle different argument types
-            if isinstance(args, dict):
-                # Could have 'posonlyargs', 'args', 'vararg', 'kwonlyargs', 'kwarg', 'defaults'
-                pos_args = args.get('args', [])
-                for arg in pos_args:
-                    if isinstance(arg, dict):
-                        args_code.append(arg.get('arg', 'x'))
-                    else:
-                        args_code.append(str(arg))
-                # Handle vararg (*args)
-                vararg = args.get('vararg')
-                if vararg:
-                    if isinstance(vararg, dict):
-                        args_code.append(f"*{vararg.get('arg', 'args')}")
-                    else:
-                        args_code.append(f"*{vararg}")
-                # Handle kwarg (**kwargs)
-                kwarg = args.get('kwarg')
-                if kwarg:
-                    if isinstance(kwarg, dict):
-                        args_code.append(f"**{kwarg.get('arg', 'kwargs')}")
-                    else:
-                        args_code.append(f"**{kwarg}")
-            elif isinstance(args, list):
+
+        # 生成参数（复用 _generate_arguments_dict 以正确处理默认值/vararg/kwarg）
+        if isinstance(args, dict) and args:
+            args_code = self._generate_arguments_dict(args)
+        else:
+            args_code = ''
+            if isinstance(args, list):
+                parts = []
                 for arg in args:
                     if isinstance(arg, dict):
-                        args_code.append(arg.get('arg', 'x'))
+                        parts.append(arg.get('arg', 'x'))
                     else:
-                        args_code.append(str(arg))
-        
+                        parts.append(str(arg))
+                args_code = ', '.join(parts)
+
         # Generate body
         if isinstance(body, dict):
             body_code = self._generate_expression(body, 0)
         else:
             body_code = str(body)
-        
-        return f"lambda {', '.join(args_code)}: {body_code}"
+
+        return f"lambda {args_code}: {body_code}"
     
     def _generate_set_comp_from_dict(self, comp_dict: Dict[str, Any]) -> str:
         """[关键修复] 从字典生成集合推导式代码"""
@@ -4164,7 +4301,12 @@ class CodeGenerator:
         # 如果body是条件表达式，添加括号
         if body_is_ifexp:
             body_code = f'({body_code})'
-        
+
+        # [Cluster 6] 如果test是条件表达式，需要括号消除歧义
+        test_is_ifexp = isinstance(node.test, ASTIfExp) if hasattr(node, 'test') else False
+        if test_is_ifexp:
+            test_code = f'({test_code})'
+
         return f'{body_code} if {test_code} else {orelse_code}'
 
     def _get_dict_expr_precedence(self, node: dict) -> int:
@@ -4241,6 +4383,11 @@ class CodeGenerator:
         # 如果body是条件表达式，需要括号（右结合性）
         if isinstance(body, dict) and body.get('type') == 'IfExp':
             body_code = f'({body_code})'
+
+        # [Cluster 6] 如果test是条件表达式，需要括号消除歧义
+        # (e.g. `a if (b if c else d) else e` 而非 `a if b if c else d else e`)
+        if isinstance(test, dict) and test.get('type') == 'IfExp':
+            test_code = f'({test_code})'
 
         result = f'{body_code} if {test_code} else {orelse_code}'
         current_precedence = self._precedence['if']
@@ -4326,6 +4473,10 @@ class CodeGenerator:
         }
 
         left_code = self._generate_expression(left, self._precedence['=='])
+        # [Round4-10] 嵌套 Compare 必须加括号：`a == b == c == d` 会被 Python
+        # 解析为单一链式比较；要表达 `(a == b) == (c == d)` 必须给内层 Compare 加括号。
+        if isinstance(left, dict) and left.get('type') == 'Compare':
+            left_code = f'({left_code})'
         parts = [left_code]
         for op, comparator in zip(ops, comparators):
             # 区域归约算法：处理 dict-form ops 的三种格式：
@@ -4339,7 +4490,17 @@ class CodeGenerator:
             else:
                 op_key = op
             op_str = op_map.get(op_key, str(op_key))
-            comparator_code = self._generate_expression(comparator, 0)
+            # [聚类5 修复] 比较数按比较优先级生成：低优先级操作数（如 IfExp/BoolOp）
+            # 需加括号，否则 `0 < (a if c else b)` 会渲染为 `0 < a if c else b`
+            # 并被 Python 解析为 `(0 < a) if c else b`（比较比条件表达式更紧绑定）。
+            c_prec = self._get_dict_expr_precedence(comparator)
+            if c_prec < self._precedence['==']:
+                comparator_code = self._generate_expression(comparator, self._precedence['=='])
+            else:
+                comparator_code = self._generate_expression(comparator, 0)
+            # [Round4-10] comparator 为嵌套 Compare 时同样必须加括号
+            if isinstance(comparator, dict) and comparator.get('type') == 'Compare':
+                comparator_code = f'({comparator_code})'
             parts.append(f'{op_str} {comparator_code}')
 
         result = ' '.join(parts)
@@ -4675,8 +4836,11 @@ class CodeGenerator:
         elif ann_type == 'NamedExpr':
             target = annotation.get('target', {})
             value = annotation.get('value', {})
-            target_code = self._generate_annotation_from_dict(target) if target else '_'
-            value_code = self._generate_annotation_from_dict(value) if value else 'None'
+            # [聚类4 修复] value 可能是任意表达式（如 Await、Call、Subscript 等），
+            # 必须用 _generate_expression 处理，否则 Await 等类型会落入 fallback
+            # 导致 dict 被直接 str() 输出。
+            target_code = self._generate_expression(target, 0) if target else '_'
+            value_code = self._generate_expression(value, 0) if value else 'None'
             return f'({target_code} := {value_code})'
         elif ann_type == 'Iter':
             # [N14修复] 处理迭代器表达式（如 iter(row)）

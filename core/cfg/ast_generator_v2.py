@@ -32,7 +32,12 @@ class ExpressionReconstructor:
         self.copy_depth = 0  # [海象运算符] COPY 指令的深度参数
         self.cfg = cfg  # [关键修复] 保存CFG引用，用于检查函数标志
         self.verbose = verbose  # 接受verbose参数（用于兼容性，但不使用）
-    
+        # [Round4-10] 跟踪自上次 COMPARE_OP 后是否执行过条件跳转。
+        # 真正的链式比较 (a<b<c) 在两次 COMPARE_OP 之间必有条件跳转
+        # (JUMP_IF_FALSE_OR_POP / POP_JUMP_*_IF_FALSE 等)；而括号比较
+        # (a==b)==(c==d) 三个 COMPARE_OP 顺序堆叠无跳转，不应合并。
+        self._jump_since_last_compare = False
+
     def reset(self):
         """重置状态"""
         self.stack = []
@@ -40,7 +45,79 @@ class ExpressionReconstructor:
         self.temp_counter = 0
         self.last_instr_was_copy = False
         self.copy_depth = 0
-    
+        self._jump_since_last_compare = False
+
+    def _flatten_dict_merge_to_kwargs(self, node):
+        """[Round8-04] 递归展开（嵌套）DictMerge 节点为 keyword 列表。
+
+        用于 CALL_FUNCTION_EX 的 kwargs 重建：``f(**a, **b, k=v)`` 字节码
+        会产生嵌套 DictMerge(DictMerge(Dict({k:v}), Name(a)), Name(b))。
+        展开规则：
+          - DictMerge: 递归展开 dict1，再追加 dict2 为 KeywordStarred
+          - Dict: 显式关键字参数，转为 keyword 节点
+          - Name/Call/Attribute/Subscript/Starred: 单个 ``**expr`` 项
+        """
+        result = []
+        if not isinstance(node, dict):
+            return result
+        ntype = node.get('type')
+        if ntype == 'DictMerge':
+            d1 = node.get('dict1')
+            if d1 is not None:
+                result.extend(self._flatten_dict_merge_to_kwargs(d1))
+            d2 = node.get('dict2')
+            if d2 is not None:
+                result.append({'type': 'KeywordStarred', 'value': d2})
+        elif ntype == 'Dict':
+            keys = node.get('keys', [])
+            values = node.get('values', [])
+            for i, key in enumerate(keys):
+                if i < len(values):
+                    result.append({
+                        'type': 'keyword',
+                        'arg': key.get('value') if isinstance(key, dict) and key.get('type') == 'Constant' else key,
+                        'value': values[i]
+                    })
+        elif ntype in ('Name', 'Call', 'Attribute', 'Subscript', 'Starred'):
+            result.append({'type': 'KeywordStarred', 'value': node})
+        return result
+
+    def _flatten_dict_merge_to_dict_items(self, node):
+        """[Round8-05] 递归展开（嵌套）DictMerge 节点为 dict 字面量的
+        (keys, values) 列表，用于 DICT_UPDATE 合并源是 DictMerge 的罕见场景。
+
+        ``**expr`` 项以 Starred(value=expr) 作 key、None 作 value 表示
+        （与 CPython AST 中 dict 内 ``**expr`` 的表示一致）。
+        """
+        keys = []
+        values = []
+        if not isinstance(node, dict):
+            return keys, values
+        ntype = node.get('type')
+        if ntype == 'DictMerge':
+            sub_keys, sub_values = self._flatten_dict_merge_to_dict_items(node.get('dict1'))
+            keys.extend(sub_keys)
+            values.extend(sub_values)
+            d2 = node.get('dict2')
+            if d2 is not None:
+                keys.append({
+                    'type': 'Starred',
+                    'value': d2,
+                    'ctx': 'Load',
+                })
+                values.append(None)
+        elif ntype == 'Dict':
+            keys.extend(node.get('keys', []))
+            values.extend(node.get('values', []))
+        elif ntype in ('Name', 'Call', 'Attribute', 'Subscript', 'Starred'):
+            keys.append({
+                'type': 'Starred',
+                'value': node,
+                'ctx': 'Load',
+            })
+            values.append(None)
+        return keys, values
+
     def reconstruct(self, instructions: List[Instruction], initial_stack: Optional[List[Dict[str, Any]]] = None) -> Optional[Dict[str, Any]]:
         """
         从指令序列重建表达式
@@ -72,7 +149,14 @@ class ExpressionReconstructor:
     def _process_instruction(self, instr: Instruction) -> None:
         """处理单条指令"""
         opname = instr.opname
-        
+
+        # [Round4-10] 检测条件跳转指令。真正的链式比较在两次 COMPARE_OP 之间
+        # 必有条件跳转（用于短路求值）；括号比较 (a==b)==(c==d) 没有跳转。
+        # 标记后供 COMPARE_OP 处理器判断是否允许合并 Compare 节点。
+        if (opname in ('JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP')
+                or opname.startswith('POP_JUMP_')):
+            self._jump_since_last_compare = True
+
         # [海象运算符] COPY 指令 - 复制栈顶值，用于 := 运算符
         # 必须在重置标志之前处理
         if opname == 'COPY':
@@ -149,10 +233,15 @@ class ExpressionReconstructor:
                             'lineno': instr.starts_line
                         }
                     
-                    # [关键修复] 将 NamedExpr 压入栈
-                    # 对于嵌套海象运算符，NamedExpr 的 value 字段已经包含了表达式
-                    # 所以只需要压入 NamedExpr，不需要额外压入原始值
-                    self.stack.append(named_expr)  # NamedExpr
+                    # [聚类1 修复] NamedExpr 应替换栈顶原值而非追加。
+                    # COPY 复制了栈顶值，STORE 弹出副本并赋值；栈上保留的原始值
+                    # 应被 NamedExpr 替换（walrus 求值 = 赋值 + 返回值）。
+                    # 追加会导致 BINARY_SUBSCR 等双操作数指令拿到错误操作数
+                    # （如 d[(n:=f())] 中容器 d 被额外的 f() 顶替）。
+                    if self.stack:
+                        self.stack[-1] = named_expr
+                    else:
+                        self.stack.append(named_expr)
                     self.last_instr_was_copy = False
                 else:
                     if isinstance(value, dict) and value.get('type') == 'AugAssign':
@@ -321,6 +410,20 @@ class ExpressionReconstructor:
             if len(self.stack) >= 2:
                 slice_val = self.stack.pop()
                 value = self.stack.pop()
+                # [Round4-09] 多维切片 a[..., 0]：Python 编译器把 (Ellipsis, 0)
+                # 常量折叠为单个 LOAD_CONST tuple。还原为 Tuple AST 节点。
+                if (isinstance(slice_val, dict) and slice_val.get('type') == 'Constant'
+                        and isinstance(slice_val.get('value'), tuple)):
+                    elts = [
+                        {'type': 'Constant', 'value': v}
+                        for v in slice_val['value']
+                    ]
+                    slice_val = {
+                        'type': 'Tuple',
+                        'elts': elts,
+                        'ctx': 'Load',
+                        'lineno': instr.starts_line
+                    }
                 self.stack.append({
                     'type': 'Subscript',
                     'value': value,
@@ -423,9 +526,13 @@ class ExpressionReconstructor:
                 left = self.stack.pop()
                 op = self._get_compare_op(instr.argval)
 
-                # [关键修复] 检测链式比较模式
-                # 如果 left 是一个 Compare 节点，则合并为链式比较
-                if left.get('type') == 'Compare':
+                # [Round4-10] 防御括号比较 false-positive：
+                # 真正的链式比较 (a<b<c) 在两次 COMPARE_OP 之间必有条件跳转
+                # (JUMP_IF_FALSE_OR_POP / POP_JUMP_*_IF_FALSE 等) 做短路求值；
+                # 而括号比较 (a==b)==(c==d) 三个 COMPARE_OP 顺序堆叠无跳转。
+                # 仅在 _jump_since_last_compare 为 True 时才合并 Compare 节点。
+                if (left.get('type') == 'Compare'
+                        and self._jump_since_last_compare):
                     # 链式比较：将当前比较添加到前一个比较中
                     # 前一个比较的最后一个比较器作为当前比较的左操作数
                     left['comparators'].append(right)
@@ -440,8 +547,8 @@ class ExpressionReconstructor:
                         'lineno': instr.starts_line
                     }
                     self.stack.append(compare_node)
-            else:
-                pass
+            # 重置标志：每次 COMPARE_OP 后需重新等待条件跳转才允许下次合并
+            self._jump_since_last_compare = False
 
         # [关键修复] CONTAINS_OP 指令 - Python 3.11+ 的成员运算符 (in/not in)
         elif opname == 'CONTAINS_OP':
@@ -598,6 +705,63 @@ class ExpressionReconstructor:
                 'values': values,
                 'lineno': instr.starts_line
             })
+
+        # [Round7-03] 构建集合
+        elif opname == 'BUILD_SET':
+            count = instr.arg if instr.arg is not None else 0
+            elts = []
+            for _ in range(count):
+                if self.stack:
+                    elts.insert(0, self.stack.pop())
+            self.stack.append({
+                'type': 'Set',
+                'elts': elts,
+                'ctx': 'Load',
+                'lineno': instr.starts_line
+            })
+
+        # [R11-err7] SET_UPDATE - Python 3.11+ 集合扩展指令
+        # 用于 `{*a, *b}` 等含 starred 元素的集合字面量：
+        #   BUILD_SET 0; LOAD a; SET_UPDATE 1; LOAD b; SET_UPDATE 1
+        # 栈状态: [set, iterable] -> [updated_set]
+        # 区域归约算法: SET_UPDATE 把可迭代对象的元素加入集合；
+        #   - Tuple/List: 展开其 elts 加入 Set.elts（字面量元素）
+        #   - 其他（Name/Call/...）: 归约为 Starred 节点追加到 Set.elts
+        #     （对应源码 `*<iterable>`），避免元素丢失退化为空集。
+        elif opname == 'SET_UPDATE':
+            if len(self.stack) >= 2:
+                iterable = self.stack.pop()
+                set_obj = self.stack.pop()
+                if isinstance(set_obj, dict) and set_obj.get('type') == 'Set':
+                    elts = list(set_obj.get('elts', []))
+                    if isinstance(iterable, dict) and iterable.get('type') in ('Tuple', 'List'):
+                        elts.extend(iterable.get('elts', []))
+                    elif isinstance(iterable, dict) and iterable.get('type') == 'Constant':
+                        const_val = iterable.get('value')
+                        if isinstance(const_val, frozenset):
+                            for item in const_val:
+                                elts.append({
+                                    'type': 'Constant',
+                                    'value': item,
+                                    'lineno': instr.starts_line,
+                                })
+                    else:
+                        elts.append({
+                            'type': 'Starred',
+                            'value': iterable,
+                            'ctx': 'Load',
+                            'lineno': instr.starts_line,
+                        })
+                    set_obj['elts'] = elts
+                    self.stack.append(set_obj)
+                else:
+                    self.stack.append({
+                        'type': 'BinOp',
+                        'op': '|',
+                        'left': set_obj,
+                        'right': iterable,
+                        'lineno': instr.starts_line,
+                    })
         
         # [关键修复] BUILD_CONST_KEY_MAP - Python 3.11+ 的常量键字典构建指令
         elif opname == 'BUILD_CONST_KEY_MAP':
@@ -629,13 +793,37 @@ class ExpressionReconstructor:
                 # 弹出列表对象
                 list_obj = self.stack.pop()
                 # 创建一个新的列表，包含扩展后的元素
-                elts = list_obj.get('elts', [])
-                if extend_values.get('type') == 'Tuple' or extend_values.get('type') == 'Constant':
+                elts = list_obj.get('elts', []) if isinstance(list_obj, dict) else []
+                if isinstance(extend_values, dict) and (extend_values.get('type') == 'Tuple' or extend_values.get('type') == 'Constant'):
                     # 如果是元组或常量，提取其元素
                     extend_elts = extend_values.get('elts', [])
                     if not extend_elts and isinstance(extend_values.get('value'), (tuple, list)):
                         extend_elts = [{'type': 'Constant', 'value': v} for v in extend_values.get('value')]
                     elts = elts + extend_elts
+                elif isinstance(extend_values, dict) and extend_values.get('type') == 'List':
+                    # [聚类7 修复] 列表扩展列表：合并元素
+                    elts = elts + extend_values.get('elts', [])
+                elif isinstance(extend_values, dict) and extend_values.get('type') in ('Name', 'Attribute', 'Call', 'Subscript'):
+                    # [聚类7 修复] *args 模式：LIST_EXTEND 用一个变量扩展列表，
+                    # 例如 f(a, *d) 的字节码 BUILD_LIST 1 / LOAD_NAME d / LIST_EXTEND 1
+                    # 生成 Starred 节点以保留 *d 语义
+                    elts = elts + [{'type': 'Starred', 'value': extend_values, 'ctx': 'Load', 'lineno': instr.starts_line}]
+                self.stack.append({
+                    'type': 'List',
+                    'elts': elts,
+                    'ctx': 'Load',
+                    'lineno': instr.starts_line
+                })
+
+        # [Round4-11] LIST_APPEND - 列表字面量中追加元素（如 [a, *b, c] 的 c）
+        # 字节码模式: BUILD_LIST n / LIST_EXTEND m / LOAD c / LIST_APPEND 1
+        # LIST_APPEND 弹出栈顶值，追加到栈上下方的列表对象，不弹出列表
+        elif opname == 'LIST_APPEND':
+            if len(self.stack) >= 2:
+                value = self.stack.pop()
+                list_obj = self.stack.pop()
+                elts = list_obj.get('elts', []) if isinstance(list_obj, dict) else []
+                elts = elts + [value]
                 self.stack.append({
                     'type': 'List',
                     'elts': elts,
@@ -659,6 +847,79 @@ class ExpressionReconstructor:
                     'lineno': instr.starts_line
                 }
                 self.stack.append(merged)
+
+        # [Round8-04/05] DICT_UPDATE - Python 3.11+ 字典字面量中的 **expr 合并指令
+        # 用于 ``{**a, **b, "k": v}`` 等字典字面量：BUILD_MAP 0; LOAD a; DICT_UPDATE 1;
+        # LOAD b; DICT_UPDATE 1; LOAD 'k'; LOAD v; BUILD_MAP 1; DICT_UPDATE 1; STORE r
+        # 与 DICT_MERGE（用于 CALL_FUNCTION_EX 的 **kwargs）不同，DICT_UPDATE 用于字面量。
+        # 语义：弹出栈顶 dict2，合并到栈下方 dict1 中。若 dict2 是字面量 Dict，展开其项；
+        # 若 dict2 是其他表达式（Name/Call/Subscript 等），则作为 ``**expr`` 项加入。
+        elif opname == 'DICT_UPDATE':
+            count = instr.arg if instr.arg is not None else 1
+            # DICT_UPDATE i 弹出 i 个源 dict，依次合并到下方目标 dict
+            sources = []
+            for _ in range(count):
+                if self.stack:
+                    sources.insert(0, self.stack.pop())
+            if not self.stack:
+                # 没有目标 dict，无法合并
+                for s in sources:
+                    self.stack.append(s)
+            else:
+                target = self.stack.pop()
+                # 若 target 不是 Dict，包成空 Dict 以便统一处理
+                if not (isinstance(target, dict) and target.get('type') == 'Dict'):
+                    target = {
+                        'type': 'Dict',
+                        'keys': [],
+                        'values': [],
+                        'lineno': instr.starts_line,
+                    }
+                keys = list(target.get('keys', []))
+                values = list(target.get('values', []))
+                for src in sources:
+                    if isinstance(src, dict) and src.get('type') == 'Dict':
+                        # 字面量 Dict：展开其项到 target
+                        keys.extend(src.get('keys', []))
+                        values.extend(src.get('values', []))
+                    elif isinstance(src, dict) and src.get('type') == 'DictMerge':
+                        # 嵌套 DictMerge（罕见）：递归展开
+                        sub_keys, sub_values = self._flatten_dict_merge_to_dict_items(src)
+                        keys.extend(sub_keys)
+                        values.extend(sub_values)
+                    else:
+                        # **expr 项：以 Starred(value=expr) 作 key，None 作 value
+                        # （与 CPython AST 中 dict 内 **expr 的表示一致）
+                        keys.append({
+                            'type': 'Starred',
+                            'value': src,
+                            'ctx': 'Load',
+                            'lineno': instr.starts_line,
+                        })
+                        values.append(None)
+                self.stack.append({
+                    'type': 'Dict',
+                    'keys': keys,
+                    'values': values,
+                    'lineno': instr.starts_line,
+                })
+
+        # [聚类7 修复] LIST_TO_TUPLE - Python 3.11+ 的列表转元组指令
+        # 用于 CALL_FUNCTION_EX 的位置参数构建：BUILD_LIST + LIST_EXTEND + LIST_TO_TUPLE
+        # 生成 *args 的位置参数元组。若不处理，args_obj 会停留在 List 类型，
+        # CALL_FUNCTION_EX 的 Tuple 分支无法匹配，导致位置参数全部丢失。
+        elif opname == 'LIST_TO_TUPLE':
+            if self.stack:
+                list_obj = self.stack.pop()
+                if isinstance(list_obj, dict) and list_obj.get('type') == 'List':
+                    self.stack.append({
+                        'type': 'Tuple',
+                        'elts': list_obj.get('elts', []),
+                        'ctx': 'Load',
+                        'lineno': instr.starts_line
+                    })
+                else:
+                    self.stack.append(list_obj)
 
         # 返回语句
         elif opname in ('RETURN_VALUE', 'RETURN_CONST'):
@@ -714,7 +975,15 @@ class ExpressionReconstructor:
                     'value': value,
                     'lineno': instr.starts_line
                 })
-        
+
+        # [Round7-11] Python 3.11+ GET_YIELD_FROM_ITER - yield from 指令
+        # GET_YIELD_FROM_ITER 将栈顶的可迭代对象转换为迭代器，用于 yield from 语句。
+        # 在 _process_instruction 序列中，标记栈顶为 yield-from iter，
+        # 供后续 YIELD_VALUE 处理器识别并构造 YieldFrom 节点（而非 Yield）。
+        elif opname == 'GET_YIELD_FROM_ITER':
+            if self.stack and isinstance(self.stack[-1], dict):
+                self.stack[-1]['is_yield_from_iter'] = True
+
         elif opname == 'SEND':
             # SEND 指令用于向生成器发送值，在异步函数中用于 await
             # 通常跟在 GET_AWAITABLE 之后，格式是：GET_AWAITABLE + LOAD_CONST None + SEND
@@ -741,6 +1010,26 @@ class ExpressionReconstructor:
                 value = self.stack.pop()
                 if isinstance(value, dict) and value.get('type') == 'Await':
                     self.stack.append(value)
+                # [Round7-11] yield-from 模式：序列为
+                # LOAD_xxx(iter) + GET_YIELD_FROM_ITER + LOAD_CONST None + SEND +
+                # YIELD_VALUE + RESUME + JUMP_BACKWARD_NO_INTERRUPT
+                # SEND 在没有 Await 时会压回 send_value (None)，所以此时栈顶是 None，
+                # 下一项是被 GET_YIELD_FROM_ITER 标记的可迭代对象。
+                # 应弹出 None 和 iter，压入 YieldFrom(iter) 节点。
+                elif (isinstance(value, dict) and value.get('type') == 'Constant' and value.get('value') is None
+                      and len(self.stack) >= 1
+                      and isinstance(self.stack[-1], dict)
+                      and self.stack[-1].get('is_yield_from_iter') is True):
+                    iter_obj = self.stack.pop()
+                    # 清除标记，避免污染后续重建
+                    if 'is_yield_from_iter' in iter_obj:
+                        del iter_obj['is_yield_from_iter']
+                    yield_from_node = {
+                        'type': 'YieldFrom',
+                        'value': iter_obj,
+                        'lineno': instr.starts_line
+                    }
+                    self.stack.append(yield_from_node)
                 else:
                     yield_node = {
                         'type': 'Yield',
@@ -894,6 +1183,22 @@ class ExpressionReconstructor:
                                 'args': [func],
                                 'kwargs': kwargs,
                                 'lineno': instr.starts_line
+                            })
+                        elif self.stack and self.stack[-1].get('type') == 'FunctionObject':
+                            # [R11-err1/3] lambda 装饰器: @lambda f: ... def g(): ...
+                            # 字节码: LOAD_CONST <lambda code>; MAKE_FUNCTION;
+                            #         LOAD_CONST <g code>; MAKE_FUNCTION; PRECALL 0; CALL 0
+                            # 区域归约算法: 当 argc==0 且栈顶两个均为 FunctionObject 时，
+                            # 下方的 FunctionObject（lambda）是装饰器，弹出的 func 是被装饰函数。
+                            # 通用化：与 Name 装饰器同构，统一构造 Call(func=decorator, args=[func])。
+                            decorator_obj = self.stack.pop()
+                            self.stack.append({
+                                'type': 'Call',
+                                'func': decorator_obj,
+                                'args': [func],
+                                'kwargs': kwargs,
+                                'lineno': instr.starts_line,
+                                'is_decorator': True
                             })
                         else:
                             self.stack.append({
@@ -1077,17 +1382,21 @@ class ExpressionReconstructor:
                     # [关键修复] 处理args和kwargs
                     args = []
                     kwargs = []
-                    
-                    # 处理args_obj - 可能是Tuple、Name或其他类型
+
+                    # 处理args_obj - 可能是Tuple、List、Name或其他类型
                     if args_obj:
                         if args_obj.get('type') == 'Tuple':
                             # 如果是元组，展开其元素作为位置参数
-                            args = args_obj.get('elts', [])
+                            # [聚类7 修复] 元素可能包含 Starred（来自 LIST_EXTEND 的 *d）
+                            args = list(args_obj.get('elts', []))
+                        elif args_obj.get('type') == 'List':
+                            # [聚类7 修复] LIST_TO_TUPLE 未处理的回退路径
+                            args = list(args_obj.get('elts', []))
                         elif args_obj.get('type') in ('Name', 'Constant'):
                             # 如果是变量名（如*args），保留为星号参数
                             args = [{'type': 'Starred', 'value': args_obj}]
-                    
-                    # 处理kwargs_dict - 可能是Dict、DictMerge或其他类型
+
+                    # 处理kwargs_dict - 可能是Dict、DictMerge（含嵌套）或其他类型
                     if kwargs_dict:
                         if kwargs_dict.get('type') == 'Dict':
                             # 如果是字典，检查是否为空（BUILD_MAP 0的结果）
@@ -1106,19 +1415,20 @@ class ExpressionReconstructor:
                                             'arg': key.get('value') if key.get('type') == 'Constant' else key,
                                             'value': values[i]
                                         })
-                        
+
                         # 检查是否是DictMerge对象（DICT_MERGE指令的结果）
+                        # [Round8-04] DictMerge 可能嵌套（多次 **dict 合并），
+                        # 例如 f(**a, **b) 字节码为 BUILD_MAP 0; LOAD a; DICT_MERGE 1;
+                        # LOAD b; DICT_MERGE 1; CALL_FUNCTION_EX 1，外层 DictMerge 的
+                        # dict1 本身也是 DictMerge。需递归展开为多个 KeywordStarred。
                         if kwargs_dict.get('type') == 'DictMerge':
-                            # DictMerge包含dict1和dict2
-                            # dict1是BUILD_MAP 0的结果（空字典）
-                            # dict2是kwargs变量
-                            dict2 = kwargs_dict.get('dict2')
-                            if dict2 and dict2.get('type') == 'Name':
-                                # 这是**kwargs模式
-                                kwargs = [{'type': 'KeywordStarred', 'value': dict2}]
+                            kwargs.extend(self._flatten_dict_merge_to_kwargs(kwargs_dict))
                         elif kwargs_dict.get('type') == 'Name':
                             # 如果是变量名，表示**kwargs
                             kwargs = [{'type': 'KeywordStarred', 'value': kwargs_dict}]
+                        elif kwargs_dict.get('type') in ('Call', 'Attribute', 'Subscript', 'Starred'):
+                            # **expr 其中 expr 是复杂表达式
+                            kwargs.append({'type': 'KeywordStarred', 'value': kwargs_dict})
                     
                     self.stack.append({
                         'type': 'Call',
@@ -1245,21 +1555,38 @@ class ExpressionReconstructor:
             format_spec = None
             if flags & 4 and len(self.stack) >= 2:
                 format_spec_node = self.stack.pop()
-                if format_spec_node.get('type') == 'Constant':
-                    format_spec = format_spec_node
-                elif isinstance(format_spec_node, dict):
+                if isinstance(format_spec_node, dict):
+                    fs_type = format_spec_node.get('type')
+                    if fs_type == 'JoinedStr':
+                        # 来自 BUILD_STRING 的多片段 format_spec（如
+                        # f"{x:{width}.2f}"），已是 JoinedStr，直接使用。
+                        format_spec = format_spec_node
+                    elif fs_type == 'Constant' and isinstance(format_spec_node.get('value'), str):
+                        # 字面量 format_spec（如 f"{x:.2f}"），保持 Constant。
+                        format_spec = format_spec_node
+                    else:
+                        # [Round10-06] 纯表达式 format_spec（如 f"{y:{width}}"）。
+                        # 内层 FORMAT_VALUE 0 把表达式转为 FormattedValue 压栈，
+                        # 外层 FORMAT_VALUE 4 弹出它作为 format_spec。Python AST
+                        # 中 format_spec 始终是 JoinedStr，需包裹为
+                        # JoinedStr([FormattedValue])。否则 code_generator 会把
+                        # FormattedValue 渲染为嵌套 f-string f'{width}'，多出
+                        # LOAD_CONST/BUILD_STRING 指令，字节码不等价。
+                        format_spec = {
+                            'type': 'JoinedStr',
+                            'values': [format_spec_node],
+                            'lineno': instr.starts_line
+                        }
+                else:
                     format_spec = format_spec_node
 
             if self.stack:
                 value = self.stack.pop()
 
-                conversion = 0
-                if flags & 1:  # FVC_STR
-                    conversion = 1
-                elif flags & 2:  # FVC_REPR
-                    conversion = 2
-                elif flags & 3:  # FVC_ASCII
-                    conversion = 3
+                # [Round6-12/13/14] FORMAT_VALUE flags: bit0-1 = conversion
+                # (0=none, 1=str, 2=repr, 3=ascii), bit2 = has format_spec.
+                # 旧 elif 链对 !a (flags=3) 错误返回 1（3&1=1 先命中）。
+                conversion = flags & 3
 
                 formatted_value = {
                     'type': 'FormattedValue',
@@ -1732,28 +2059,71 @@ class ExpressionReconstructor:
                 'lineno': instr.starts_line
             }
     
-    def _parse_comprehension_from_code(self, code: types.CodeType, 
+    def _parse_comprehension_from_code(self, code: types.CodeType,
                                         comp_type: str,
                                         iter_node: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """[N14/N15修复] 从推导式code object创建推导式AST
-        
+
         对于生成器表达式 `x == target for x in row`：
         - code: <genexpr>的code object
         - comp_type: 'GeneratorExp'
         - iter_node: Iter(Name(row))
-        
+
         返回: GeneratorExp(elt=Compare(...), generators=[comprehension(target=Name(row), ...)])
+
+        [R13-batch3] 委托 ComprehensionGenerator.parse_comprehension_inner 进行完整
+        重建（含 filter / key-value / 三元元素），避免 ifs 硬编码为 [] 导致
+        listcomp/setcomp 的 if 过滤条件、dictcomp 的 key/value、listcomp 的三元
+        元素在 if 条件上下文中丢失。仅当 ComprehensionGenerator 失败时回退到
+        原始的简化逻辑。
+
+        注意：parse_comprehension_inner 内部会调用 reconstruct，后者会 reset
+        栈状态。我们必须保存/恢复栈，否则外层 CALL 链（如 any(genexp) 中的
+        any）会丢失，导致 GeneratorExp 的 elt 被误用作外层 Call 的 func。
         """
+        try:
+            from .comprehension_generator import ComprehensionGenerator
+            comp_gen = ComprehensionGenerator(self)
+
+            # 解开 Iter 包装：parse_comprehension_inner 期望 iter_expr 直接是
+            # 迭代对象表达式（如 Call(range, [10])），而非 Iter(Call(...))。
+            if (isinstance(iter_node, dict)
+                    and iter_node.get('type') == 'Iter'
+                    and 'value' in iter_node):
+                iter_expr = iter_node.get('value')
+            else:
+                iter_expr = iter_node
+
+            if iter_expr is None:
+                iter_expr = {'type': 'Name', 'id': '.0', 'ctx': 'Load'}
+
+            # 保存栈状态：parse_comprehension_inner -> reconstruct -> reset
+            # 会清空栈。需要恢复以保留外层调用链（如 any(...) 中的 any）。
+            _saved_stack = self.stack
+            _saved_temp = self.temp_vars
+            _saved_jump_flag = self._jump_since_last_compare
+            try:
+                comp_ast = comp_gen.parse_comprehension_inner(code, iter_expr)
+            finally:
+                self.stack = _saved_stack
+                self.temp_vars = _saved_temp
+                self._jump_since_last_compare = _saved_jump_flag
+            if comp_ast is not None:
+                return comp_ast
+            # 否则回退到下方简化逻辑
+        except Exception as e:
+            print(f'[N14] Warning: parse_comprehension_inner failed, fallback: {e}')
+
         try:
             # 使用dis模块分析推导式的字节码
             import dis
-            
+
             # 获取推导式code的指令
             instrs = list(dis.get_instructions(code))
-            
+
             if not instrs:
                 return None
-            
+
             # 查找FOR_ITER指令来确定迭代变量
             target_name = None
             for i, instr in enumerate(instrs):
@@ -1765,10 +2135,10 @@ class ExpressionReconstructor:
                             target_name = instrs[j].argval
                             break
                     break
-            
+
             if not target_name:
                 target_name = '<target>'
-            
+
             # 创建推导式AST节点
             result = {
                 'type': comp_type,
@@ -1780,38 +2150,84 @@ class ExpressionReconstructor:
                     'is_async': 0
                 }]
             }
-            
+
             return result
-            
+
         except Exception as e:
             print(f'[N14] Warning: Failed to parse comprehension: {e}')
             return None
     
     def _extract_comp_elt(self, instrs) -> Dict[str, Any]:
         """[N14/N15修复v3] 从推导式指令中提取元素表达式
-        
-        改进版：元素表达式位于FOR_ITER/STORE_FAST之后、YIELD_VALUE之前
+
+        改进版：元素表达式位于FOR_ITER/STORE_FAST之后、YIELD_VALUE/LIST_APPEND/
+        SET_ADD/MAP_ADD 之前。
+
+        [Round9-15] 重写：之前没有 YIELD_VALUE 时（listcomp/setcomp/dictcomp）
+        回退到 _build_expr_from_instrs 全指令前缀，元素位置定位错误，且无法识别
+        walrus（COPY 1 + STORE_*）模式，导致 `[(y := x) for x in a]` 元素退化为
+        Constant(True)。新逻辑：定位 STORE_FAST（循环 target）与首个 append op
+        （LIST_APPEND/SET_ADD/MAP_ADD/YIELD_VALUE），提取二者之间的指令，交给
+        expr_reconstructor.reconstruct 重建（reconstruct 已正确处理 walrus）。
         """
         if not instrs:
             return {'type': 'Constant', 'value': True}
-        
+
+        _APPEND_OPS = ('LIST_APPEND', 'SET_ADD', 'MAP_ADD', 'YIELD_VALUE')
+
+        # 找到首个 STORE_FAST/STORE_DEREF（FOR_ITER 之后的循环 target）
+        target_idx = None
+        for i, instr in enumerate(instrs):
+            if instr.opname in ('STORE_FAST', 'STORE_DEREF', 'STORE_NAME',
+                                'STORE_GLOBAL') and getattr(instr, 'argval', None) != '.0':
+                target_idx = i
+                break
+
+        # 找到 target 之后的首个 append/yield 指令
+        append_idx = None
+        if target_idx is not None:
+            for i in range(target_idx + 1, len(instrs)):
+                if instrs[i].opname in _APPEND_OPS:
+                    append_idx = i
+                    break
+
+        if target_idx is not None and append_idx is not None:
+            elt_instrs = [i for i in instrs[target_idx + 1:append_idx]
+                          if i.opname not in ('RESUME', 'CACHE', 'NOP')]
+            if elt_instrs:
+                # 用 ExpressionReconstructor 重建（已支持 walrus / subscr / call 等）
+                try:
+                    saved_stack = self.stack
+                    saved_temp = self.temp_vars
+                    self.stack = []
+                    self.temp_vars = {}
+                    elt_expr = self.reconstruct(elt_instrs)
+                    self.stack = saved_stack
+                    self.temp_vars = saved_temp
+                    if elt_expr is not None:
+                        return elt_expr
+                except Exception:
+                    self.stack = saved_stack
+                    self.temp_vars = saved_temp
+                # 回退到旧逻辑（仅当 reconstruct 失败时）
+
         # [N14修复v5] 查找YIELD_VALUE的位置（元素表达式的结束点）
         yield_idx = None
         for i, instr in enumerate(instrs):
             if instr.opname == 'YIELD_VALUE':
                 yield_idx = i
                 break
-        
+
         if yield_idx is None:
             # 没有YIELD_VALUE，使用RETURN_VALUE之前
             for i in range(len(instrs)-1, -1, -1):
                 if instrs[i].opname not in ('RETURN_VALUE', 'RESUME', 'CACHE', 'NOP'):
                     return self._build_expr_from_instrs(instrs[:i+1])
             return {'type': 'Constant', 'value': True}
-        
+
         # 元素表达式在YIELD_VALUE之前的指令中
         elt_instrs = instrs[:yield_idx]
-        
+
         # 移除前导的控制流指令（RESUME, FOR_ITER, STORE_FAST等）
         meaningful_instrs = []
         started = False
@@ -1820,14 +2236,14 @@ class ExpressionReconstructor:
                 if instr.opname in ('STORE_FAST', 'STORE_DEREF'):
                     started = True
                     continue  # 跳过STORE_*
-                elif instr.opname not in ('RESUME', 'CACHE', 'NOP', 'COPY_FREE_VARS', 
+                elif instr.opname not in ('RESUME', 'CACHE', 'NOP', 'COPY_FREE_VARS',
                                           'RETURN_GENERATOR', 'POP_TOP',
                                           'FOR_ITER'):  # FOR_ITER不应该出现在这里
                     started = True
-            
+
             if started and instr.opname not in ('RESUME', 'CACHE', 'NOP'):
                 meaningful_instrs.append(instr)
-        
+
         return self._build_expr_from_instrs(meaningful_instrs)
     
     def _build_expr_from_instrs(self, instrs: List) -> Dict[str, Any]:
@@ -6304,6 +6720,19 @@ class ASTGeneratorV2:
                 if len(stack) >= 2:
                     slice_val = stack.pop()
                     value = stack.pop()
+                    # [Round4-09] 多维切片 a[..., 0]：常量折叠的 tuple 还原为 Tuple AST
+                    if (isinstance(slice_val, dict) and slice_val.get('type') == 'Constant'
+                            and isinstance(slice_val.get('value'), tuple)):
+                        elts = [
+                            {'type': 'Constant', 'value': v}
+                            for v in slice_val['value']
+                        ]
+                        slice_val = {
+                            'type': 'Tuple',
+                            'elts': elts,
+                            'ctx': 'Load',
+                            'lineno': instr.starts_line
+                        }
                     stack.append({
                         'type': 'Subscript',
                         'value': value,
@@ -23032,6 +23461,19 @@ class ASTGeneratorV2:
                 if len(stack) >= 2:
                     slice_val = stack.pop()
                     value = stack.pop()
+                    # [Round4-09] 多维切片 a[..., 0]：常量折叠的 tuple 还原为 Tuple AST
+                    if (isinstance(slice_val, dict) and slice_val.get('type') == 'Constant'
+                            and isinstance(slice_val.get('value'), tuple)):
+                        elts = [
+                            {'type': 'Constant', 'value': v}
+                            for v in slice_val['value']
+                        ]
+                        slice_val = {
+                            'type': 'Tuple',
+                            'elts': elts,
+                            'ctx': 'Load',
+                            'lineno': instr.starts_line
+                        }
                     stack.append({
                         'type': 'Subscript',
                         'value': value,
@@ -23760,10 +24202,10 @@ class ASTGeneratorV2:
                     iterable = stack.pop()
                     # 弹出列表对象
                     list_obj = stack.pop()
-                    
+
                     # 获取列表当前元素
                     list_elts = list_obj.get('elts', []) if list_obj.get('type') == 'List' else []
-                    
+
                     # 处理可迭代对象
                     if iterable.get('type') == 'Constant' and isinstance(iterable.get('value'), tuple):
                         # 常量元组，展开为元素
@@ -23775,8 +24217,22 @@ class ASTGeneratorV2:
                     else:
                         # 其他类型，直接添加
                         list_elts.append(iterable)
-                    
+
                     # 创建新的列表对象
+                    stack.append({
+                        'type': 'List',
+                        'elts': list_elts,
+                        'ctx': 'Load',
+                        'lineno': instr.starts_line
+                    })
+
+            # [Round4-11] LIST_APPEND - 列表字面量追加元素（[a, *b, c] 的 c）
+            elif opname == 'LIST_APPEND':
+                if len(stack) >= 2:
+                    value = stack.pop()
+                    list_obj = stack.pop()
+                    list_elts = list_obj.get('elts', []) if isinstance(list_obj, dict) else []
+                    list_elts = list_elts + [value]
                     stack.append({
                         'type': 'List',
                         'elts': list_elts,
@@ -23840,6 +24296,19 @@ class ASTGeneratorV2:
                                         'lineno': instr.starts_line
                                     })
                                 set_obj['elts'] = elts
+                        elif iterable and iterable.get('type') not in ('Tuple', 'List', 'Constant'):
+                            # [R11-err7] 通配可迭代对象作为 Starred 元素加入集合
+                            # 字节码 `{*a, *b}`: BUILD_SET 0; LOAD a; SET_UPDATE; LOAD b; SET_UPDATE
+                            # 每个 SET_UPDATE 的 iterable 是非字面量（Name/Call/...），
+                            # 对应源码 `*<iterable>`。归约为 Starred 节点追加到 Set.elts。
+                            elts = set_obj.get('elts', [])
+                            elts.append({
+                                'type': 'Starred',
+                                'value': iterable,
+                                'ctx': 'Load',
+                                'lineno': instr.starts_line
+                            })
+                            set_obj['elts'] = elts
                         # 将更新后的集合压回栈
                         stack.append(set_obj)
                     else:
@@ -23870,16 +24339,11 @@ class ASTGeneratorV2:
                 if stack:
                     # 弹出值
                     value = stack.pop()
-                    
-                    # [关键修复] 使用整数表示conversion（与ASTFormattedValue一致）
-                    # 0=无, 1=str, 2=repr, 3=ascii
-                    conversion = 0
-                    if flags & 1:  # FVC_STR
-                        conversion = 1
-                    elif flags & 2:  # FVC_REPR
-                        conversion = 2
-                    elif flags & 3:  # FVC_ASCII
-                        conversion = 3
+
+                    # [Round6-12/13/14] FORMAT_VALUE flags: bit0-1 = conversion
+                    # (0=none, 1=str, 2=repr, 3=ascii), bit2 = has format_spec.
+                    # 旧 elif 链对 !a (flags=3) 错误返回 1（3&1=1 先命中）。
+                    conversion = flags & 3
                     
                     formatted_value = {
                         'type': 'FormattedValue',
