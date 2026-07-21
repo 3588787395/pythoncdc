@@ -112,7 +112,19 @@
   - [x] SubTask T1.15.6: 清理临时调试脚本（删除 _debug_r15_blocks.py + _debug_r15_explore.py）
   - [x] SubTask T1.15.7: 写 fix_report.md（含 11 bug 详细修复说明 + 算法 4 原则合规论证 + 全量回归结果 + 跨区域回归结果 + 已知限制记录）
   - [ ] 已知限制: any_genexp skipped（与 R5 ternary_in_genexp 同嵌套 code object 机制，非新 bug，R5 已知限制延续）
-- [ ] Task T1.16 ~ T1.20
+- [x] Task T1.16: Ternary round_16 — 修复 10 bug / 6 根因簇（Cluster A 3: LHS ternary assign/aug-assign / Cluster B 2: comprehension iter is ternary / Cluster C 2: chained_compare middle + walrus subscr / Cluster D 1: await+binop+return / Cluster E 1: yield+subscript / Cluster F 1: lambda multi-default order），0 新增已知限制，+4 bonus；ternary 93 failed / 439 passed / 9 skipped（基线 93/425/9，无退化 +14 passed）；跨区域 control_flow_matrix 3 failed / 324 passed / 11 skipped（无退化）；commit daff8d3 (已 push)
+  - [x] SubTask T1.16.0: 基线确认（ternary 93 failed / 425 passed / 9 skipped；跨区域 control_flow_matrix 3 failed / 324 passed / 11 skipped；R16 新测试 10 failed / 4 passed）
+  - [x] SubTask T1.16.1 (P0): Cluster A — ternary 作 LHS assign/aug-assign 目标侧 3 bug（R16-01 (a if c else b).attr = x / R16-02 (a if c else b).attr += 1 / R16-03 x[a if c else b] += 1） — Pattern A (STORE_ATTR) + Pattern C (AugAssign) 扩展识别 ternary 作 obj/idx
+  - [x] SubTask T1.16.2 (P0): Cluster B — comprehension iter 是 ternary 2 bug（R16-04 [v for v in (a if c else b)] / R16-05 {k: v for k, v in (a if c else b)}） — `extract_comp_iter_expr` 识别 ternary merge 块作 GET_ITER 源
+  - [x] SubTask T1.16.3 (P1): Cluster C — 父表达式栈顶消费链中段 ternary 2 bug（R16-06 a < (b if c else d) < e / R16-07 x[(n := a if c else b)]） — 新增 `_try_build_ternary_chained_compare_middle` + IfRegion skip for JUMP_IF_FALSE_OR_POP + walrus+BINARY_SUBSCR chain via expr_reconstructor
+  - [x] SubTask T1.16.4 (P1): Cluster D — await + binop + return 消费链丢失 1 bug（R16-08 async def f(): return await (a if c else b) + 1） — Pattern 7 await 路径扩展检测 wrapping ops + RETURN_VALUE，重建 Return(BinOp(Await(IfExp), op, right))
+  - [x] SubTask T1.16.5 (P1): Cluster E — yield + subscript 消费链丢失 1 bug（R16-09 def gen(): yield x[a if c else b]） — Pattern 4 yield 路径扩展 initial_stack=preload+[ternary] 使 BINARY_SUBSCR 能消费重建 Yield(Subscript(x, IfExp))
+  - [x] SubTask T1.16.6 (P2): Cluster F — lambda 多默认参数顺序打乱 1 bug（R16-10 f = lambda x=(a if c else b), y=2: x） — MAKE_FUNCTION defaults 路径扩展 BUILD_TUPLE N>1 识别，保留 default 顺序 [IfExp, Constant(2)]
+  - [x] SubTask T1.16.7: 全量 ternary 回归 93 failed / 439 passed / 9 skipped（基线 93/425/9，无退化 +14 passed）+ 跨区域 control_flow_matrix 回归 3 failed / 324 passed / 11 skipped（无退化）
+  - [x] SubTask T1.16.8: 算法合规性自检 — 归约顺序 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口；无跨区域特例 / 后处理补丁 / 启发式优先级覆盖 / 扁平化 / 硬编码深度上限
+  - [x] SubTask T1.16.9: 清理 3 个 _debug_*.py 调试脚本（_debug_await_yield / _debug_chained / _debug_comp）
+  - [x] SubTask T1.16.10: 写 fix_report.md（含 10 bug + 4 bonus 详细修复说明 + 算法 4 原则合规论证 + 全量回归结果 + 跨区域回归结果）
+- [ ] Task T1.17 ~ T1.20
 
 ## Phase 3-10: 其他 8 区域（各 20 轮）
 - [ ] Task 3.1 ~ 10.20
