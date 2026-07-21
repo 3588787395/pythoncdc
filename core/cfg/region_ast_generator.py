@@ -15911,6 +15911,71 @@ AST 映射规则:
             _cur_is_true = 'IF_TRUE' in _cur_last.opname or 'IF_NOT_NONE' in _cur_last.opname
             _cur_target = self.cfg.get_block_by_offset(_cur_last.argval)
 
+            # [P5 + Cluster 4 interaction] Nested ternary as boolop operand.
+            # When a ternary appears as a boolop operand (e.g.
+            # `X and (a if c else b)` or `X or (a if c else b)`), the
+            # ternary's cond block IS the continuation block. The chain
+            # must treat the entire nested ternary as a SINGLE operand
+            # and hop over its internal blocks (true/false/merge) to
+            # reach the next operand, NOT fall through to the cond
+            # block's direct successor (which is the nested ternary's
+            # true_value_block — incorrectly adding it as an extra
+            # operand). This follows "nesting means abstract node": the
+            # nested TernaryRegion is an atomic operand of the parent
+            # BoolOp.
+            _nested_t = None
+            for _r in self.regions:
+                if (isinstance(_r, TernaryRegion) and _r.entry is _cur
+                        and _r is not region
+                        and _r.merge_block is not None):
+                    _nested_t = _r
+                    break
+            if _nested_t is not None:
+                _operand = self._build_nested_ternary_expr(_nested_t)
+                if _operand is None:
+                    break
+                _operands.append(_operand)
+                _cont_blocks.append(_cur)
+                for _b in _nested_t.blocks:
+                    self.generated_blocks.add(_b)
+                # Collect exit blocks from nested ternary's value blocks
+                # (P5 pattern: each value block may have its own trivial
+                # exit, all semantically equivalent to the parent's exits).
+                _nt_true = _nested_t.true_value_block
+                _nt_false = _nested_t.false_value_block
+                for _vb in (_nt_true, _nt_false):
+                    if _vb is None:
+                        continue
+                    _vb_last = _vb.get_last_instruction()
+                    if (_vb_last and _vb_last.argval is not None
+                            and _vb_last.opname in FORWARD_CONDITIONAL_JUMP_OPS):
+                        _vb_target = self.cfg.get_block_by_offset(_vb_last.argval)
+                        if _boolop_op == 'and' and not ('IF_TRUE' in _vb_last.opname
+                                                         or 'IF_NOT_NONE' in _vb_last.opname):
+                            if _vb_target:
+                                _exit_blocks.add(_vb_target)
+                        elif _boolop_op == 'or' and ('IF_TRUE' in _vb_last.opname
+                                                      or 'IF_NOT_NONE' in _vb_last.opname):
+                            if _if_body_block is None:
+                                _if_body_block = _vb_target
+                # Hop to merge_block (if-body for last operand, or next
+                # continuation for non-last operand)
+                _cur = _nested_t.merge_block
+                continue
+
+            # [P5 + Cluster 4 interaction] Phantom BoolOpRegion detection.
+            # When the boolop chain detection creates a BoolOpRegion for
+            # the SAME chain that _try_build_ternary_boolop_and_if is
+            # building, the BoolOpRegion's entry IS a continuation block
+            # of this chain. _build_ternary_value_expr would recurse into
+            # _build_boolop_expression (producing a nested BoolOp of the
+            # remaining operands). Use _build_simple_ternary_value to
+            # extract just this block's value, keeping the operand flat.
+            _phantom_boolop = any(
+                isinstance(_r, BoolOpRegion) and _r.entry is _cur
+                for _r in self.regions
+            )
+
             if _boolop_op == 'and':
                 # and: continuation must use IF_FALSE → exit
                 if _cur_is_true:
@@ -15918,7 +15983,10 @@ AST 映射规则:
                 if _cur_target:
                     _exit_blocks.add(_cur_target)
                 _cont_blocks.append(_cur)
-                _operand = self._build_ternary_value_expr(_cur)
+                if _phantom_boolop:
+                    _operand = self._build_simple_ternary_value(_cur)
+                else:
+                    _operand = self._build_ternary_value_expr(_cur)
                 if _operand is None:
                     break
                 _operands.append(_operand)
