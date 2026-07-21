@@ -7402,6 +7402,44 @@ AST 映射规则:
                     elif_condition = {'type': 'BoolOp', 'op': _chain_op, 'values': _elif_parts}
                     for _cb in _chain_blocks[1:]:
                         self.generated_blocks.add(_cb)
+        # [Phase 3 adv15_ternary_elif_test] 三元作为 elif 条件：
+        # 当 elif_cond_block 是 TernaryRegion（merge_context='while_cond'）的 entry 时，
+        # 整个三元表达式就是 elif 条件。从 TernaryRegion 重建 IfExp AST。
+        # 此时三元的 true_value_block/false_value_block 各自带 POP_JUMP_IF_FALSE
+        # 跳到 falsy path（CPython 3.11+ 内联条件测试），不能简单从 elif_cond_block
+        # 的指令重建（那只会得到 `c`，丢失 `b if c else d` 的整体语义）。
+        if elif_condition is None:
+            for _tr in self.region_analyzer.regions:
+                if (isinstance(_tr, TernaryRegion)
+                        and _tr.entry is elif_cond_block
+                        and getattr(_tr, 'merge_context', None) == 'while_cond'):
+                    _te_result = self._generate_ternary(_tr)
+                    _te_expr = None
+                    if isinstance(_te_result, list):
+                        for _item in _te_result:
+                            if isinstance(_item, dict):
+                                if _item.get('type') == 'IfExp':
+                                    _te_expr = _item
+                                    break
+                                elif _item.get('type') == 'If':
+                                    # while_cond 三元生成完整 If 语句，
+                                    # 其 test 即 IfExp 表达式
+                                    _te_expr = _item.get('test')
+                                    break
+                                elif _item.get('type') == 'Expr':
+                                    _te_expr = _item.get('value')
+                    elif isinstance(_te_result, dict):
+                        if _te_result.get('type') == 'IfExp':
+                            _te_expr = _te_result
+                        elif _te_result.get('type') == 'If':
+                            _te_expr = _te_result.get('test')
+                        elif _te_result.get('type') == 'Expr':
+                            _te_expr = _te_result.get('value')
+                    if _te_expr is not None:
+                        elif_condition = _te_expr
+                        for _b in _tr.blocks:
+                            self.generated_blocks.add(_b)
+                    break
         if elif_condition is None and elif_cond_instrs:
             expr2 = self.expr_reconstructor.reconstruct(elif_cond_instrs)
             if expr2:
@@ -16229,11 +16267,18 @@ AST 映射规则:
         false_block = region.false_value_block
         pre_stmts = []
 
-        for r in self.regions:
-            if isinstance(r, IfRegion) and getattr(r, 'elif_conditions', None):
-                for ec in r.elif_conditions:
-                    if any(b.start_offset == ec.start_offset for b in region.blocks):
-                        return None
+        # [Phase 3 adv15_ternary_elif_test] 条件上下文三元（merge_context='while_cond'）
+        # 的 entry 必然与某个 IfRegion 的 elif_conditions 重叠——这正是"三元作为
+        # elif 条件"的合法形态。跳过此 guard，让 _if_generate_elif_chain 通过
+        # _generate_ternary 重建 IfExp 作为 elif 条件。
+        _is_conditional_context_ternary = (
+            getattr(region, 'merge_context', None) == 'while_cond')
+        if not _is_conditional_context_ternary:
+            for r in self.regions:
+                if isinstance(r, IfRegion) and getattr(r, 'elif_conditions', None):
+                    for ec in r.elif_conditions:
+                        if any(b.start_offset == ec.start_offset for b in region.blocks):
+                            return None
 
         # [Cluster 6] Nesting guard + nested condition building.
         # When the compiler fuses a nested ternary's condition test with the

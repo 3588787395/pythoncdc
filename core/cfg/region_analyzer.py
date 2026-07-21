@@ -1242,10 +1242,45 @@ class RegionAnalyzer:
             if cr.elif_conditions:
                 for ec in cr.elif_conditions:
                     elif_condition_blocks.add(ec)
+        # [Phase 3 adv15_ternary_elif_test] 区分两种 entry 落在
+        # elif_condition_blocks 中的三元：
+        #
+        # (A) 真正的"三元作为 elif 条件"——三元的结果被内联为条件
+        #     测试（CPython 3.11+ 优化）。此时 true_value_block 和
+        #     false_value_block 各自带 POP_JUMP_IF_FALSE/TRUE 跳到
+        #     "skip body" 块，且 true_value_block 末尾通过 JUMP_FORWARD
+        #     跳到 merge_block。`_detect_ternary_pattern` 将此模式识别
+        #     为 has_jump_forward_skip=True，并设置
+        #     merge_context='while_cond' / value_target='__while_cond_target__'。
+        #     此类三元必须保留——它就是 elif 条件本身。移除会使其
+        #     被错误地拆解为多层 elif 链：
+        #       `elif (b if c else d): pass` → `elif c: if b: pass / elif d: pass`
+        #     语义不等价。
+        #
+        # (B) if/elif/else 被误识别为三元（语句体而非表达式体）。
+        #     此类三元的 value_target 是真实变量名或 None，
+        #     merge_context 不是 'while_cond'。继续按原逻辑移除。
+        def _is_ternary_conditional_context(_tr):
+            return (_tr.merge_context == 'while_cond'
+                    or _tr.value_target == '__while_cond_target__')
         removed_ternary = [tr for tr in ternary_regions
-                          if tr.entry and tr.entry in elif_condition_blocks]
+                          if tr.entry and tr.entry in elif_condition_blocks
+                          and not _is_ternary_conditional_context(tr)]
         ternary_regions = [tr for tr in ternary_regions
-                          if not (tr.entry and tr.entry in elif_condition_blocks)]
+                          if not (tr.entry and tr.entry in elif_condition_blocks
+                                  and not _is_ternary_conditional_context(tr))]
+        # 条件上下文三元作为 elif 条件：与 IfRegion 建立父子关系，
+        # 类似 boolop 在 elif 条件上下文中的处理（line 1249+）。
+        for tr in ternary_regions:
+            if (tr.entry and tr.entry in elif_condition_blocks
+                    and _is_ternary_conditional_context(tr)):
+                if getattr(tr, 'parent', None) is None:
+                    for cr in self._filter_regions(conditional_regions, IfRegion):
+                        if tr.entry in cr.elif_conditions:
+                            tr.parent = cr
+                            if tr not in cr.children:
+                                cr.add_child(tr)
+                            break
         for br in boolop_regions:
             if br.entry and br.entry in elif_condition_blocks:
                 br.is_condition_context = True
@@ -10088,7 +10123,7 @@ RegionType 枚举值: RegionType.ASSERT
                 all_condition_blocks.update(_await_pred_blocks)
                 chain_blocks.update(_await_pred_blocks)
 
-            region = self._build_elif_region(block, then_blocks, else_blocks, merge, all_condition_blocks, condition_block, boundary_stop=boundary_stop)
+            region = self._build_elif_region(block, then_blocks, else_blocks, merge, all_condition_blocks, condition_block, boundary_stop=boundary_stop, ternary_regions=ternary_regions)
             if region is None:
                 region = self._build_basic_if_region(block, then_blocks, else_blocks, merge,
                                                       all_condition_blocks, condition_block,
@@ -10331,7 +10366,7 @@ RegionType 枚举值: RegionType.ASSERT
             region.mark_trailing_return_none()
         return region
 
-    def _build_elif_region(self, block, then_blocks, else_blocks, merge, all_condition_blocks, condition_block=None, boundary_stop=None):
+    def _build_elif_region(self, block, then_blocks, else_blocks, merge, all_condition_blocks, condition_block=None, boundary_stop=None, ternary_regions=None):
         # [R17 fix] When collecting inner elif branch blocks inside a loop, the loop's
         # boundary_stop (which includes break/return exit blocks and the loop header)
         # prevents collecting terminal blocks that are part of the elif chain (e.g.,
@@ -10493,6 +10528,48 @@ RegionType 枚举值: RegionType.ASSERT
                 for _r in self._filter_regions(self.regions, LoopRegion):
                     if first_else == _r.condition_block or first_else == _r.header_block or first_else == _r.entry:
                         return None
+
+            # [Phase 3 adv15_ternary_elif_test] 三元作为 elif 条件：
+            # 当 first_else 是 TernaryRegion（merge_context='while_cond'）的 entry 时，
+            # 整个三元就是 elif 条件本身。CPython 3.11+ 内联三元结果为条件测试，
+            # 使 true_value_block/false_value_block 各自带 POP_JUMP_IF_FALSE 跳到
+            # "skip body" 块。若不识别此模式，_check_elif_chain 会递归把 true_value
+            # 和 false_value 块拆成多个 elif 条件，破坏三元语义：
+            #   `elif (b if c else d): pass` → `elif c: pass / elif d: pass`（b 丢失）
+            #
+            # 区域归约：三元（Phase 1.5）先于 IfRegion（Phase 2）归约，
+            # 三元是更归约的形式。IfRegion 应把整个三元视为单个 elif 条件，
+            # body = 三元的 merge_block（truthy path 汇聚点），
+            # final_else = 三元值块的 POP_JUMP_IF_FALSE 目标（falsy path）。
+            if ternary_regions:
+                _te_ternary = None
+                for _tr in self._filter_regions(ternary_regions, TernaryRegion):
+                    if (_tr.entry is first_else
+                            and getattr(_tr, 'merge_context', None) == 'while_cond'
+                            and _tr.merge_block is not None
+                            and _tr.true_value_block is not None
+                            and _tr.false_value_block is not None):
+                        _te_ternary = _tr
+                        break
+                if _te_ternary is not None:
+                    _te_body = _te_ternary.merge_block
+                    _te_final_else = []
+                    _te_seen = {_te_body.start_offset}
+                    for _te_vb in (_te_ternary.true_value_block, _te_ternary.false_value_block):
+                        _te_vlast = _te_vb.get_last_instruction()
+                        if (_te_vlast is not None
+                                and _te_vlast.argval is not None
+                                and _te_vlast.opname in FORWARD_CONDITIONAL_JUMP_OPS):
+                            _te_skip = self.cfg.get_block_by_offset(_te_vlast.argval)
+                            if (_te_skip is not None
+                                    and _te_skip.start_offset not in _te_seen):
+                                _te_final_else.append(_te_skip)
+                                _te_seen.add(_te_skip.start_offset)
+                    return {
+                        'conditions': [first_else],
+                        'bodies': [[_te_body]],
+                        'final_else': _te_final_else,
+                    }
 
             conditions = [first_else]
             bodies = []
