@@ -1369,6 +1369,50 @@ class RegionASTGenerator:
 
         decorator_entries.reverse()
 
+        # [R10-Fix1] Post-process: merge LOAD_NAME/GLOBAL/DEREF + LOAD_ATTR chain
+        # into a single Attribute decorator node. The backwards scan treats each
+        # LOAD_ATTR as a separate entry, but for `@x.setter` the bytecode
+        # `LOAD_NAME x + LOAD_ATTR setter` is a single Attribute(Name('x'), 'setter')
+        # decorator (依「父引用子入口」: 父 FunctionDef 通过 LOAD_ATTR setter 引用
+        # LOAD_NAME x 子节点), not two independent Name decorators.
+        if len(decorator_entries) >= 2:
+            merged_entries = []
+            i = 0
+            while i < len(decorator_entries):
+                entry = decorator_entries[i]
+                instr = entry['instr']
+                if instr.opname in ('LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF'):
+                    # Look ahead for adjacent LOAD_ATTR chain (x.y.z)
+                    j = i + 1
+                    attr_chain = []
+                    while j < len(decorator_entries):
+                        next_entry = decorator_entries[j]
+                        next_instr = next_entry['instr']
+                        prev_idx = decorator_entries[j - 1]['idx']
+                        if (next_instr.opname == 'LOAD_ATTR'
+                                and next_entry['idx'] == prev_idx + 1):
+                            attr_chain.append(next_entry['name'])
+                            j += 1
+                            continue
+                        break
+                    if attr_chain:
+                        node = {'type': 'Name', 'id': entry['name'], 'ctx': 'Load'}
+                        for attr_name in attr_chain:
+                            node = {'type': 'Attribute', 'value': node, 'attr': attr_name, 'ctx': 'Load'}
+                        merged_entries.append({
+                            'idx': entry['idx'],
+                            'end_idx': decorator_entries[j - 1]['idx'],
+                            'node': node,
+                            'instr': instr,
+                        })
+                        i = j
+                        continue
+                entry['end_idx'] = entry['idx']
+                entry['node'] = {'type': 'Name', 'id': entry['name'], 'ctx': 'Load'}
+                merged_entries.append(entry)
+                i += 1
+            decorator_entries = merged_entries
+
         call_count_after_make = 0
         after_idx = make_func_idx + 1
         while after_idx < len(instructions):
@@ -1396,11 +1440,14 @@ class RegionASTGenerator:
         has_decorator_args = [False] * num_decorators
         arg_nodes_per_decorator = [[] for _ in range(num_decorators)]
 
-        arg_idx = decorator_entries[0]['idx'] + 1 if decorator_entries else make_func_idx
         for dec_i in range(num_decorators - 1):
-            peek_idx = decorator_entries[dec_i]['idx'] + 1
+            # [R10-Fix1] Use end_idx (last instruction of this decorator entry)
+            # instead of idx+1, so merged Attribute entries (x.setter) don't
+            # treat the LOAD_ATTR as an arg.
+            start_idx = decorator_entries[dec_i].get('end_idx', decorator_entries[dec_i]['idx']) + 1
             end_idx = decorator_entries[dec_i + 1]['idx'] if dec_i + 1 < len(decorator_entries) else make_func_idx
             args = []
+            peek_idx = start_idx
             while peek_idx < end_idx:
                 peek_op = instructions[peek_idx].opname
                 if peek_op in ('PRECALL', 'PUSH_NULL', 'CALL', 'CALL_FUNCTION',
@@ -1424,14 +1471,15 @@ class RegionASTGenerator:
 
         result = []
         for dec_i, entry in enumerate(decorator_entries[:num_decorators]):
+            node = entry.get('node', {'type': 'Name', 'id': entry['name'], 'ctx': 'Load'})
             if has_decorator_args[dec_i]:
                 result.append({
                     'type': 'Call',
-                    'func': {'type': 'Name', 'id': entry['name'], 'ctx': 'Load'},
+                    'func': node,
                     'args': arg_nodes_per_decorator[dec_i],
                 })
             else:
-                result.append({'type': 'Name', 'id': entry['name'], 'ctx': 'Load'})
+                result.append(node)
 
         return result if result else None
 
@@ -17345,55 +17393,154 @@ AST 映射规则:
                             cond_val_start = _ci_idx
                             break
                     if cond_val_start is not None and cond_val_start > 0:
-                        _store_before_cond = False
+                        # [R10-Fix2] Forward-track stack depth to filter out
+                        # LOAD instructions consumed by a subsequent STORE
+                        # before cond_val_start. This handles class body setup
+                        # (LOAD_NAME __name__ + STORE_NAME __module__ +
+                        # LOAD_CONST C + STORE_NAME __qualname__) which has
+                        # zero net stack effect, leaving only the decorator
+                        # LOAD (e.g. LOAD_NAME abstractmethod) as the actual
+                        # preload expression. Previously, any STORE before
+                        # cond_val_start caused preload to be skipped entirely,
+                        # breaking decorator detection for @abstractmethod /
+                        # @classmethod / @staticmethod / @overload inside class
+                        # bodies. (依「父引用子入口」: 父 FunctionDef 通过
+                        # MAKE_FUNCTION 之后的 CALL 引用 FunctionObject 子节点;
+                        # preload_exprs[0] 提供装饰器名)
+                        _preload_instrs = []
                         for _k in range(0, cond_val_start):
-                            if cond_block_instrs[_k].opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
-                                _store_before_cond = True
-                                break
-                        if not _store_before_cond:
-                            _preload_instrs = cond_block_instrs[:cond_val_start]
-                            _preload_stack = []
-                            for pi in _preload_instrs:
-                                if pi.opname.startswith('LOAD_'):
-                                    _pe = self.expr_reconstructor.reconstruct([pi])
-                                    if _pe:
-                                        _preload_stack.append(_pe)
-                                elif pi.opname == 'FORMAT_VALUE':
-                                    # [T1修复] 处理f-string中的FORMAT_VALUE指令
-                                    # 将前一个表达式包装为FormattedValue
-                                    if _preload_stack:
-                                        _val = _preload_stack.pop()
-                                        flags = pi.arg if pi.arg is not None else 0
-                                        # [Round6-12/13/14] conversion = flags & 3
-                                        # （2-bit 数值，非 bit-flag；旧 elif 链对 !a 误判为 1）
-                                        conversion = flags & 3
-                                        format_spec = None
-                                        if flags & 4 and _preload_stack:
-                                            _fs = _preload_stack.pop()
-                                            if isinstance(_fs, dict) and _fs.get('type') == 'Constant':
-                                                format_spec = _fs.get('value')
-                                            else:
-                                                format_spec = _fs
-                                        _preload_stack.append({
-                                            'type': 'FormattedValue',
-                                            'value': _val,
-                                            'conversion': conversion,
-                                            'format_spec': format_spec,
-                                        })
-                                elif pi.opname == 'COPY' and pi.arg == 1 and _preload_stack:
-                                    _preload_stack.append(_preload_stack[-1])
-                                elif pi.opname in ('BUILD_LIST', 'BUILD_TUPLE',
-                                                   'BUILD_SET', 'BUILD_MAP',
-                                                   'BUILD_CONST_KEY_MAP'):
-                                    # [R4 Bug 9 修复] 处理容器字面量 preload:
-                                    # `x = [*(ternary)]` 的 cond_block 含 BUILD_LIST 0
-                                    # （外层空 list），随后 LIST_EXTEND 1 在 merge_block
-                                    # 用 ternary 扩展它。需把 List([]) 加入 preload_stack
-                                    # 以便后续 LIST_EXTEND 重建为 List([Starred(ternary)])。
-                                    _pe = self.expr_reconstructor.reconstruct([pi])
-                                    if _pe:
-                                        _preload_stack.append(_pe)
-                            preload_exprs = _preload_stack
+                            _ki = cond_block_instrs[_k]
+                            # [R10-Fix3] LOAD_ATTR / LOAD_METHOD consume the
+                            # top of the stack (previous LOAD_*) to form an
+                            # Attribute. They MUST be grouped with the previous
+                            # LOAD_* so reconstruct can build the Attribute
+                            # node. Otherwise reconstruct([LOAD_METHOD]) alone
+                            # finds an empty stack and the method/attr name is
+                            # silently dropped — this was the exitstack
+                            # regression root cause:
+                            #   stack.enter_context((a if c else b))
+                            # degraded to  stack((a if c else b))  because
+                            # enter_context was lost. (依「父引用子入口」:
+                            # 父 Assign 通过 STORE_NAME x 引用 Call 节点;
+                            # preload_exprs[0] 提供 stack.enter_context Attribute)
+                            if _ki.opname in ('LOAD_METHOD', 'LOAD_ATTR'):
+                                if _preload_instrs:
+                                    _last = _preload_instrs[-1]
+                                    if isinstance(_last, list):
+                                        _last.append(_ki)
+                                    elif (_last.opname.startswith('LOAD_')
+                                          or _last.opname == 'COPY'):
+                                        _preload_instrs[-1] = [_last, _ki]
+                                    # else: previous is BUILD_*/FORMAT_VALUE;
+                                    # LOAD_ATTR/LOAD_METHOD consumes something
+                                    # not in preload; skip.
+                            elif _ki.opname.startswith('LOAD_') or _ki.opname == 'COPY':
+                                _preload_instrs.append(_ki)
+                            elif _ki.opname in ('STORE_FAST', 'STORE_NAME',
+                                                'STORE_GLOBAL', 'STORE_DEREF'):
+                                # [R10-Fix2] Distinguish walrus COPY 1 + STORE_*
+                                # (STORE saves a copy of the ternary result;
+                                # original stays on stack → pop only the COPY
+                                # from preload) vs. statement-boundary STORE_*
+                                # (STORE saves a value from a previous statement
+                                # like MAKE_FUNCTION result → clear preload
+                                # entirely, since everything before belongs to
+                                # the previous statement). This handles the
+                                # multi-decorated-function case where the
+                                # second ternary's cond_block contains the
+                                # first function's definition tail
+                                # (BUILD_TUPLE + MAKE_FUNCTION + STORE_NAME m1).
+                                # (依「每块唯一归属」: POST-STORE 部分属于下一条语句)
+                                _ki_idx = _k
+                                _is_walrus_store = False
+                                if _ki_idx > 0:
+                                    _prev_ki = cond_block_instrs[_ki_idx - 1]
+                                    if (_prev_ki.opname == 'COPY'
+                                            and _prev_ki.arg is not None
+                                            and _prev_ki.arg == 1):
+                                        _is_walrus_store = True
+                                if _is_walrus_store:
+                                    if _preload_instrs:
+                                        _preload_instrs.pop()
+                                else:
+                                    _preload_instrs = []
+                            elif _ki.opname in ('BUILD_LIST', 'BUILD_TUPLE',
+                                                'BUILD_SET', 'BUILD_MAP',
+                                                'BUILD_CONST_KEY_MAP'):
+                                # [R10-Fix2] BUILD_* consumes `arity` items
+                                # from the stack. If arity exceeds available
+                                # preload items, the BUILD is consuming the
+                                # ternary result (from true/false blocks) —
+                                # its output is ternary-derived, NOT a preload
+                                # item. Only keep BUILD result in preload when
+                                # all consumed items came from preload.
+                                _arity = _ki.arg or 0
+                                if _arity > 0 and len(_preload_instrs) >= _arity:
+                                    _preload_instrs = _preload_instrs[:-_arity]
+                                    _preload_instrs.append(_ki)
+                                elif _arity == 0:
+                                    _preload_instrs.append(_ki)
+                                # else: BUILD consumed the ternary result;
+                                # don't append (output is ternary-derived).
+                            elif _ki.opname == 'FORMAT_VALUE':
+                                _fv_pop = 1 if (_ki.arg or 0) < 2 else 2
+                                if len(_preload_instrs) >= _fv_pop:
+                                    for _ in range(_fv_pop):
+                                        _preload_instrs.pop()
+                                    _preload_instrs.append(_ki)
+                                # else: FORMAT_VALUE consumed the ternary
+                                # result; don't append.
+                            # Other ops (e.g. PRECALL/CALL for prior decorator
+                            # applications) are not preload-relevant; ignore.
+                        _preload_stack = []
+                        for pi in _preload_instrs:
+                            if isinstance(pi, list):
+                                # [R10-Fix3] Grouped LOAD_* + LOAD_ATTR/LOAD_METHOD
+                                # sequence — reconstruct together so the
+                                # Attribute node is built correctly.
+                                _pe = self.expr_reconstructor.reconstruct(pi)
+                                if _pe:
+                                    _preload_stack.append(_pe)
+                            elif pi.opname.startswith('LOAD_'):
+                                _pe = self.expr_reconstructor.reconstruct([pi])
+                                if _pe:
+                                    _preload_stack.append(_pe)
+                            elif pi.opname == 'FORMAT_VALUE':
+                                # [T1修复] 处理f-string中的FORMAT_VALUE指令
+                                # 将前一个表达式包装为FormattedValue
+                                if _preload_stack:
+                                    _val = _preload_stack.pop()
+                                    flags = pi.arg if pi.arg is not None else 0
+                                    # [Round6-12/13/14] conversion = flags & 3
+                                    # （2-bit 数值，非 bit-flag；旧 elif 链对 !a 误判为 1）
+                                    conversion = flags & 3
+                                    format_spec = None
+                                    if flags & 4 and _preload_stack:
+                                        _fs = _preload_stack.pop()
+                                        if isinstance(_fs, dict) and _fs.get('type') == 'Constant':
+                                            format_spec = _fs.get('value')
+                                        else:
+                                            format_spec = _fs
+                                    _preload_stack.append({
+                                        'type': 'FormattedValue',
+                                        'value': _val,
+                                        'conversion': conversion,
+                                        'format_spec': format_spec,
+                                    })
+                            elif pi.opname == 'COPY' and pi.arg == 1 and _preload_stack:
+                                _preload_stack.append(_preload_stack[-1])
+                            elif pi.opname in ('BUILD_LIST', 'BUILD_TUPLE',
+                                               'BUILD_SET', 'BUILD_MAP',
+                                               'BUILD_CONST_KEY_MAP'):
+                                # [R4 Bug 9 修复] 处理容器字面量 preload:
+                                # `x = [*(ternary)]` 的 cond_block 含 BUILD_LIST 0
+                                # （外层空 list），随后 LIST_EXTEND 1 在 merge_block
+                                # 用 ternary 扩展它。需把 List([]) 加入 preload_stack
+                                # 以便后续 LIST_EXTEND 重建为 List([Starred(ternary)])。
+                                _pe = self.expr_reconstructor.reconstruct([pi])
+                                if _pe:
+                                    _preload_stack.append(_pe)
+                        preload_exprs = _preload_stack
                     # [T1修复] 处理函数调用上下文: result = func(ternary_expr)
                     # 当条件块包含PUSH_NULL+LOAD func前缀且merge块有PRECALL/CALL时，
                     # 需要将ternary包装为Call表达式
@@ -17462,6 +17609,95 @@ AST 映射规则:
                                 for block in region.blocks:
                                     self.generated_blocks.add(block)
                                 return results
+                        # [R10-Fix5] Class decorator with ternary arg:
+                        #   @deco(a if c else b) class C: ...
+                        # Here LOAD_BUILD_CLASS lives in the MERGE block (not
+                        # cond_block), because the ternary is the decorator
+                        # arg, not the class base. merge_block sequence:
+                        #   PRECALL+CALL (deco(ternary)) + PUSH_NULL +
+                        #   LOAD_BUILD_CLASS + LOAD_CONST(code) +
+                        #   MAKE_FUNCTION 0 + LOAD_CONST('C') +
+                        #   PRECALL 2 + CALL 2 (__build_class__) +
+                        #   PRECALL 0 + CALL 0 (deco(ternary)(C))
+                        # Manually build the nested Call tree (do NOT use
+                        # expr_reconstructor on the full before_store — the
+                        # CALL 0 handler in ast_generator_v2.py inverts the
+                        # decorator/class order for argc==0 + Call-on-stack,
+                        # producing __build_class__(...)(deco(ternary)) instead
+                        # of deco(ternary)(__build_class__(...))). Instead:
+                        #   1. extract class code object from LOAD_CONST(code)
+                        #   2. build __build_class__(FO, 'C') Call
+                        #   3. build deco(ternary) Call from func_call_info +
+                        #      ternary_expr (or reuse already-wrapped Call)
+                        #   4. build outer Call: deco(ternary)(__build_class__)
+                        #   5. pass call_expr=__build_class__ Call +
+                        #      outer_call=outer Call to _build_class_def so
+                        #      _extract_decorators pulls deco(ternary) from
+                        #      outer_call and the class body/name from
+                        #      call_expr. (依「父引用子入口」: 父 ClassDef
+                        #      通过 merge_block 的 CALL 引用 __build_class__
+                        #      子节点; func_call_info 提供 deco)
+                        _has_load_build_class_in_merge = any(
+                            i.opname == 'LOAD_BUILD_CLASS' for i in before_store)
+                        if _has_load_build_class_in_merge:
+                            _r914_code_obj = None
+                            for _bi in before_store:
+                                if (_bi.opname == 'LOAD_CONST'
+                                        and hasattr(_bi.argval, 'co_code')
+                                        and _r914_code_obj is None):
+                                    _r914_code_obj = _bi.argval
+                                    break
+                            _r914_build_call = {
+                                'type': 'Call',
+                                'func': {'type': 'Name', 'id': '__build_class__',
+                                         'ctx': 'Load'},
+                                'args': [
+                                    {'type': 'FunctionObject', 'code': _r914_code_obj},
+                                    {'type': 'Constant', 'value': region.value_target},
+                                ],
+                                'keywords': [],
+                                'is_class_def': True,
+                            }
+                            # Build deco(ternary) Call. When preload_exprs is
+                            # non-empty, ternary_expr is the raw IfExp and the
+                            # decorator name comes from func_call_info or
+                            # preload_exprs[0]. When preload_exprs is empty,
+                            # ternary_expr was already wrapped as Call(deco,
+                            # [ternary]) at line 17548 — reuse it directly.
+                            if (isinstance(ternary_expr, dict)
+                                    and ternary_expr.get('type') == 'Call'):
+                                _r914_deco_call = ternary_expr
+                            else:
+                                _r914_deco_func = None
+                                if func_call_info:
+                                    _r914_deco_func = func_call_info.get('func')
+                                if _r914_deco_func is None and preload_exprs:
+                                    _r914_deco_func = preload_exprs[0]
+                                if _r914_deco_func is not None:
+                                    _r914_deco_call = {
+                                        'type': 'Call',
+                                        'func': _r914_deco_func,
+                                        'args': [ternary_expr],
+                                        'keywords': [],
+                                    }
+                                else:
+                                    _r914_deco_call = None
+                            if _r914_deco_call is not None:
+                                _r914_outer_call = {
+                                    'type': 'Call',
+                                    'func': _r914_deco_call,
+                                    'args': [_r914_build_call],
+                                    'keywords': [],
+                                }
+                                _class_def = self._build_class_def(
+                                    call_expr=_r914_build_call,
+                                    name=region.value_target,
+                                    outer_call=_r914_outer_call)
+                                if _class_def is not None:
+                                    results.append(_class_def)
+                                    for block in region.blocks:
+                                        self.generated_blocks.add(block)
+                                    return results
                         # [T2修复] 检测MAKE_FUNCTION模式: ternary作为函数默认参数值
                         # 字节码模式: BUILD_TUPLE n, LOAD_CONST <code>, MAKE_FUNCTION 1, STORE_NAME fn
                         # 需要生成FunctionDef而不是Assign
@@ -17485,6 +17721,7 @@ AST 映射规则:
                             if _code_obj is not None and _mf_idx is not None:
                                 _func_obj = {'code': _code_obj}
                                 _decorator = None
+                                _extra_decorators = []  # [R10-Fix4] decorator chain prefix
                                 if _mf_flags & 2:
                                     # kw_defaults: 提取 LOAD_CONST (tuple) + BUILD_CONST_KEY_MAP
                                     _kw_names = None
@@ -17525,20 +17762,79 @@ AST 映射规则:
                                                           for _bi in before_store[:_mf_idx])
                                     if _has_call_after:
                                         if _has_call_before and preload_exprs:
-                                            # ternary_decorator_arg: ternary 是 dec() 的参数，
-                                            # preload 中的 dec 是装饰器函数，CALL before 求出 dec(ternary)。
-                                            _func_expr = preload_exprs[0]
-                                            _decorator = {
-                                                'type': 'Call',
-                                                'func': _func_expr,
-                                                'args': [ternary_expr],
-                                                'keywords': [],
-                                            }
+                                            # [R10-Fix4] Reconstruct the decorator
+                                            # from the instructions before MAKE_FUNCTION
+                                            # (excluding LOAD_CONST code object). This
+                                            # handles both decorator chains and subscript
+                                            # args by letting expr_reprocessor compute
+                                            # the full decorator expression from the
+                                            # initial_stack:
+                                            # - R10-01: @deco1 @deco2(ternary)
+                                            #   preload=[deco1,deco2], before_mf=
+                                            #   [PRECALL 1, CALL 1] → stack=
+                                            #   [deco1, deco2(ternary)] → decorators=
+                                            #   [deco1, deco2(ternary)]
+                                            # - R10-02: @deco(a[ternary])
+                                            #   preload=[deco,a], before_mf=
+                                            #   [BINARY_SUBSCR, PRECALL 1, CALL 1] →
+                                            #   stack=[deco(a[ternary])] → decorators=
+                                            #   [deco(a[ternary])]
+                                            # (依「父引用子入口」: 父 FunctionDef 通过
+                                            # MAKE_FUNCTION 之后的 CALL 引用
+                                            # FunctionObject 子节点; preload_exprs
+                                            # 提供装饰器链前缀)
+                                            _before_mf = [_bi for _bi in before_store[:_mf_idx]
+                                                          if not (_bi.opname == 'LOAD_CONST'
+                                                                  and hasattr(_bi.argval, 'co_code'))]
+                                            self.expr_reconstructor.reconstruct(
+                                                _before_mf, initial_stack=list(initial_stack))
+                                            _full_stack = [item for item in self.expr_reconstructor.stack
+                                                           if not (isinstance(item, dict)
+                                                                   and item.get('type') == 'PUSH_NULL')]
+                                            if _full_stack:
+                                                _decorator = _full_stack[-1]
+                                                _extra_decorators = _full_stack[:-1]
+                                            else:
+                                                _func_expr = preload_exprs[-1]
+                                                _decorator = {
+                                                    'type': 'Call',
+                                                    'func': _func_expr,
+                                                    'args': [ternary_expr],
+                                                    'keywords': [],
+                                                }
                                         else:
                                             # ternary_decorator: ternary 本身就是装饰器
                                             _decorator = ternary_expr
+                                # [R10-Fix2] For flags 1/2/4 (defaults/kw_defaults/
+                                # annotations), detect decorator application via
+                                # PRECALL+CALL after MAKE_FUNCTION. Pattern:
+                                #   @abstractmethod/@classmethod/@staticmethod
+                                #   def m(self, x=(a if c else b)): pass
+                                # bytecode: LOAD_NAME <deco> + <ternary> + BUILD_TUPLE
+                                #   + LOAD_CONST code + MAKE_FUNCTION (1|2|4)
+                                #   + PRECALL + CALL + STORE_NAME
+                                # The decorator name is in preload_exprs[0]
+                                # (依「父引用子入口」: 父 FunctionDef 通过
+                                # MAKE_FUNCTION 之后的 CALL 引用 FunctionObject 子节点).
+                                if _mf_flags & (1 | 2 | 4) and _decorator is None:
+                                    _has_call_after_mf = any(
+                                        _bi.opname == 'CALL'
+                                        for _bi in before_store[_mf_idx + 1:])
+                                    if _has_call_after_mf and preload_exprs:
+                                        _dec_expr = preload_exprs[0]
+                                        if isinstance(_dec_expr, dict) and _dec_expr.get('type') in ('Name', 'Attribute'):
+                                            _decorator = _dec_expr
                                 _func_def = self._build_function_def(
                                     func_obj=_func_obj, decorator=_decorator)
+                                # [R10-Fix4] Prepend additional decorators from the
+                                # chain (e.g. @deco1 in `@deco1 @deco2(ternary)`).
+                                # Stack order is [outer_decos..., inner_deco_with_arg];
+                                # source order is outermost-first, matching stack order.
+                                if _extra_decorators and _func_def.get('type') != 'Lambda':
+                                    _func_def['decorator_list'] = (
+                                        list(_extra_decorators)
+                                        + _func_def.get('decorator_list', [])
+                                    )
                                 # [R10-batch1 err 8] When the function is a Lambda
                                 # (co_name == '<lambda>'), _build_function_def returns
                                 # a Lambda expression dict (not a FunctionDef). A bare
@@ -23521,40 +23817,102 @@ AST 映射规则:
                     func_def['name'] = target_name
                     return func_def
 
-            if func.get('type') == 'FunctionObject' and not args and block is not None:
-                _fpd_visited = set()
-                _fpd_stack = [block]
-                dec_result = None
-                while _fpd_stack:
-                    _fpd_blk = _fpd_stack.pop()
-                    _fpd_visited.add(_fpd_blk.id)
-                    for pred in _fpd_blk.predecessors:
-                        if pred.id in _fpd_visited:
-                            continue
-                        meaningful = [i for i in pred.instructions
-                                     if i.opname not in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL')]
-                        if meaningful:
-                            last = meaningful[-1]
-                            if last.opname in ('LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF'):
-                                dec_result = (last.argval, pred)
-                                break
-                        else:
-                            _fpd_stack.append(pred)
-                    if dec_result:
+            if func.get('type') == 'FunctionObject' and not args:
+                # [R10-Fix1] expr_reconstructor produced Call(func=FunctionObject,
+                # args=[]) for @x.setter pattern. The decorator expression
+                # (LOAD_NAME x + LOAD_ATTR setter) is in the instrs before
+                # MAKE_FUNCTION, in the SAME block (not a predecessor). Extract
+                # it directly via expr_reconstructor
+                # (依「父引用子入口」: 父 FunctionDef 通过 LOAD_ATTR setter
+                # 引用 LOAD_NAME x 子节点).
+                _mf_idx_in_instrs = None
+                for _ii, _i in enumerate(instrs):
+                    if _i.opname == 'MAKE_FUNCTION':
+                        _mf_idx_in_instrs = _ii
                         break
-                if dec_result:
-                    dec_name, dec_block = dec_result
-                    decorator_call = {
-                        'type': 'Call',
-                        'func': {'type': 'Name', 'id': dec_name, 'ctx': 'Load'},
-                        'args': [func],
-                        'kwargs': [],
-                    }
-                    func_def = self._build_function_def(func_obj=func, decorator=decorator_call)
-                    if func_def.get('type') in ('FunctionDef', 'AsyncFunctionDef'):
-                        func_def['name'] = target_name
-                        func_def['_decorator_block'] = dec_block
-                        return func_def
+                if _mf_idx_in_instrs is not None and _mf_idx_in_instrs > 0:
+                    _dec_pre = []
+                    for _i in instrs[:_mf_idx_in_instrs]:
+                        if _i.opname == 'LOAD_CONST' and hasattr(_i.argval, 'co_code'):
+                            continue
+                        if _i.opname in ('PRECALL', 'CALL', 'PUSH_NULL'):
+                            continue
+                        _dec_pre.append(_i)
+                    if _dec_pre:
+                        _dec_node = self.expr_reconstructor.reconstruct(_dec_pre)
+                        if _dec_node is not None and isinstance(_dec_node, dict):
+                            decorator_call = {
+                                'type': 'Call',
+                                'func': _dec_node,
+                                'args': [func],
+                                'kwargs': [],
+                            }
+                            func_def = self._build_function_def(
+                                func_obj=func, decorator=decorator_call)
+                            if func_def.get('type') in ('FunctionDef', 'AsyncFunctionDef'):
+                                func_def['name'] = target_name
+                                return func_def
+                if block is not None:
+                    _fpd_visited = set()
+                    _fpd_stack = [block]
+                    dec_result = None
+                    while _fpd_stack:
+                        _fpd_blk = _fpd_stack.pop()
+                        _fpd_visited.add(_fpd_blk.id)
+                        for pred in _fpd_blk.predecessors:
+                            if pred.id in _fpd_visited:
+                                continue
+                            meaningful = [i for i in pred.instructions
+                                         if i.opname not in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL')]
+                            if meaningful:
+                                last = meaningful[-1]
+                                if last.opname in ('LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF'):
+                                    dec_result = ({'type': 'Name', 'id': last.argval, 'ctx': 'Load'}, pred)
+                                    break
+                                elif last.opname == 'LOAD_ATTR':
+                                    # [R10-Fix1] Handle Attribute decorator like @x.setter:
+                                    # bytecode `LOAD_NAME x + LOAD_ATTR setter` produces
+                                    # Call(func=FunctionObject, args=[]) after reconstruct
+                                    # (FunctionObject mistaken as callable). Walk backwards
+                                    # through meaningful instrs to build Attribute chain
+                                    # (依「父引用子入口」: 父 FunctionDef 通过 LOAD_ATTR
+                                    # setter 引用 LOAD_NAME x 子节点).
+                                    attr_chain = [last.argval]
+                                    base_idx = len(meaningful) - 2
+                                    attr_node = None
+                                    while base_idx >= 0:
+                                        base_instr = meaningful[base_idx]
+                                        if base_instr.opname == 'LOAD_ATTR':
+                                            attr_chain.append(base_instr.argval)
+                                            base_idx -= 1
+                                        elif base_instr.opname in ('LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF'):
+                                            attr_node = {'type': 'Name', 'id': base_instr.argval, 'ctx': 'Load'}
+                                            for attr_name in reversed(attr_chain):
+                                                attr_node = {'type': 'Attribute', 'value': attr_node,
+                                                             'attr': attr_name, 'ctx': 'Load'}
+                                            break
+                                        else:
+                                            break
+                                    if attr_node is not None:
+                                        dec_result = (attr_node, pred)
+                                        break
+                            else:
+                                _fpd_stack.append(pred)
+                        if dec_result:
+                            break
+                    if dec_result:
+                        dec_node, dec_block = dec_result
+                        decorator_call = {
+                            'type': 'Call',
+                            'func': dec_node,
+                            'args': [func],
+                            'kwargs': [],
+                        }
+                        func_def = self._build_function_def(func_obj=func, decorator=decorator_call)
+                        if func_def.get('type') in ('FunctionDef', 'AsyncFunctionDef'):
+                            func_def['name'] = target_name
+                            func_def['_decorator_block'] = dec_block
+                            return func_def
 
         if value.get('type') == 'AugAssign':
             target = {

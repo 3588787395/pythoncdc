@@ -141,6 +141,62 @@
 - [ ] 未创建根级 debug 文件
 - [ ] 未 git commit
 
+## Ternary 区域 Round 10 验证
+
+### SubTask T1.10.0: 基线确认
+- [x] 全量 ternary 回归基线 = 66 failed / 277 passed / 5 skipped
+- [x] 跨区域回归基线 = 109 failed / 1052 passed / 14 skipped
+- [x] R10 新测试基线 = 15 failed / 13 passed
+
+### SubTask T1.10.1 (P0): R9-12 @x.setter Attribute 装饰器
+- [x] `@x.setter def x(self, v): ...` 反编译保留 `@x.setter`（Attribute(Name('x'), 'setter')），字节码等价
+- [x] 修复依 4 原则：父 FunctionDef 通过 LOAD_ATTR setter 引用 LOAD_NAME x 子节点
+- [x] ternary 回归无退化
+- [x] 跨区域回归无退化
+
+### SubTask T1.10.2 (P0): 无参装饰器 + ternary default（R9-13/R10-03/R10-04/R10-05/R10-11）
+- [x] `@abstractmethod def m(self, x=ternary): pass` 反编译保留 @abstractmethod + ternary default，字节码等价
+- [x] `@classmethod def m(cls, x=ternary): pass` 反编译保留 @classmethod，字节码等价
+- [x] `@staticmethod def m(x=ternary): pass` 反编译保留 @staticmethod，字节码等价
+- [x] 多个 `@abstractmethod` + ternary default 共存，反编译全部保留
+- [ ] `@overload def f(x: int) -> int: ...` 多次定义，反编译保留所有 @overload 装饰器 — **未修复**（R10-11 标记为已知限制，涉及三次函数定义 + annotations tuple，R10-Fix2 未覆盖多函数场景）
+- [x] 修复依 4 原则：父 FunctionDef 通过 MAKE_FUNCTION 之后的 CALL 引用 FunctionObject 子节点；ternary 通过 BUILD_TUPLE defaults 引用
+- [x] ternary 回归无退化
+- [x] 跨区域回归无退化
+
+### SubTask T1.10.3 (P0): R10-01 装饰器链 @deco1 @deco2(ternary)
+- [x] `@deco1 @deco2(a if c else b) def f(): pass` 反编译保留两层装饰器，字节码等价
+- [x] 修复依 4 原则：每段 CALL 通过 MAKE_FUNCTION 之后的 CALL 引用下层装饰器或 FunctionObject 子节点
+- [x] ternary 回归无退化
+- [x] 跨区域回归无退化
+
+### SubTask T1.10.4 (P0): R10-02 @deco(a[ternary]) 下标参数
+- [x] `@deco(a[b if c else d]) def f(): pass` 反编译保留 Subscript(a, ternary) 作装饰器参数，字节码等价
+- [x] 修复依 4 原则：装饰器 Call 通过 merge_block 的 CALL 引用 ternary 子节点作为 BINARY_SUBSCR 的下标
+- [x] ternary 回归无退化
+- [x] 跨区域回归无退化
+
+### SubTask T1.10.5 (P0): R9-14 @deco(ternary) class C 类装饰器
+- [x] `@deco(a if c else b) class C: pass` 反编译保留 Call(deco, [ternary]) 作类装饰器，字节码等价
+- [x] 修复依 4 原则：装饰器 Call 通过 cond_block 的 deco 入口 + merge_block 的 CALL 引用 ternary 子节点
+- [x] ternary 回归无退化
+- [x] 跨区域回归无退化
+
+### SubTask T1.10.6-8 (评估/标记): P1/P2/P3 聚类
+- [x] P1 聚类 G dataclass/类基础设施（R9-10/R10-06/R10-07/R10-08）评估并处理 — 评估后标记为已知限制（修复复杂度中-高，留待 R11+）
+- [x] P2 聚类 H/I/J consumer/functools/kwonly（R9-15/R9-16/R10-09/R10-10/R10-12/R10-13/R10-14/R10-15）评估并处理 — R9-16/R10-13 已修复（Fix 3 bonus），其余 6 个标记为已知限制
+- [x] P3 聚类 K/L except*/async with multi-as（R9-08/R7-03）标记为已知限制
+
+### SubTask T1.10.9-12: 最终验证
+- [x] 全量 ternary 回归：pre-R10 62 failed（≤66 ✓，改善 4）/ R10 新增 9 failed（已知限制）/ 总 71 failed / 300 passed / 5 skipped — 无基线退化
+- [x] 跨区域回归：pre-R10 105 failed（≤109 ✓，改善 4）/ IF 43 failed（无退化）/ 775 passed / 9 skipped — 无基线退化
+- [x] 修复报告已写 — `rounds/ternary_region/round_10/fix_report.md`
+- [x] 所有修复均通过 4 原则论证，无跨区域启发式特例 / 后处理补丁 / 启发式优先级覆盖 / 扁平化 / 硬编码深度上限
+- [x] 源代码无 debug 打印残留（grep print/pdb/breakpoint 仅匹配注释）
+- [x] 未修改任何测试文件（git status 显示仅新增 R10 测试文件，无现有测试修改）
+- [x] 未创建根级 debug 文件（`_debug_*.py` 已清理，`/tmp/dbg/` 为临时调试脚本）
+- [x] 未 git commit（由父代理决定提交时机）
+
 ## Ternary 区域 Round 08 验证
 
 ### SubTask T1.8.0: 基线确认

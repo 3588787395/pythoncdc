@@ -75,7 +75,21 @@
   - [x] SubTask T1.9.5: 全量 ternary 回归 66 failed / 277 passed / 5 skipped（≤67 目标 ✅，基线 78→66 -12）+ 跨区域 109 failed / 1052 passed / 14 skipped（if_region 43 failed 无退化 ✅）
   - [x] SubTask T1.9.6: 写 fix_report.md，清理 8 个 round_09/_debug_*.py 调试脚本
   - [ ] 已知限制 (R10+ 处理): R9-08 except* PEP 654, R9-10 frozen dataclass, R9-12 property setter, R9-13 abstractmethod, R9-14 class decorator arg, R9-15 assert+return consumer, R9-16 partial application, R7-03/R9-02/R9-25 重编译失败 skip
-- [ ] Task T1.10 ~ T1.20
+- [x] Task T1.10: Ternary round_10 — P0 装饰器链修复（聚类 F，目标 9+ bug），P1/P2 评估，P3 标记已知限制
+  - [x] SubTask T1.10.0: 基线确认（ternary 66 failed / 277 passed / 5 skipped；跨区域 109 failed / 1052 passed / 14 skipped；R10 新测试 15 failed / 13 passed）
+  - [x] SubTask T1.10.1 (P0): R9-12 `@x.setter` Attribute 装饰器 — `_reconstruct_decorator_chain` 识别 LOAD_NAME + LOAD_ATTR 序列作 Attribute 节点（非两个独立 Name）
+  - [x] SubTask T1.10.2 (P0): R9-13/R10-03/R10-04/R10-05/R10-11 无参装饰器 + ternary default（5 bug） — `_generate_ternary` MAKE_FUNCTION flag 1/2/4 路径检测 MAKE_FUNCTION 之后的 PRECALL+CALL 作装饰器应用，从 preload_exprs[0] 取装饰器名 — **R10-11 未修复**（已知限制，涉及三次函数定义 + annotations tuple）
+  - [x] SubTask T1.10.3 (P0): R10-01 装饰器链 `@deco1 @deco2(ternary)`（1 bug） — `_generate_ternary` flag 0 路径统计 MAKE_FUNCTION 之后 CALL 数，>1 时构建多元素 decorator_list
+  - [x] SubTask T1.10.4 (P0): R10-02 `@deco(a[ternary])` 下标参数（1 bug） — `_generate_ternary` flag 0 路径用 expr_reconstructor 重建 merge_block 中 BINARY_SUBSCR 等指令为完整 Subscript 表达式作装饰器参数
+  - [x] SubTask T1.10.5 (P0): R9-14 `@deco(ternary) class C` 类装饰器（1 bug） — `_build_class_def` 或 `_generate_ternary` 类路径识别 outer_call 是 `Call(Call(deco, [ternary]), [__build_class__ Call])`，保留 `Call(deco, [ternary])` 作装饰器
+  - [x] SubTask T1.10.6 (评估): P1 聚类 G dataclass/类基础设施（R9-10/R10-06/R10-07/R10-08） — 评估后标记为已知限制（复杂度中-高，留待 R11+）
+  - [x] SubTask T1.10.7 (评估): P2 聚类 H/I/J consumer/functools/kwonly（R9-15/R9-16/R10-09/R10-10/R10-12/R10-13/R10-14/R10-15） — R9-16/R10-13 已修复（Fix 3 bonus），其余 6 个标记为已知限制
+  - [x] SubTask T1.10.8 (标记): P3 聚类 K/L except*/async with multi-as（R9-08/R7-03） — 标记为已知限制，不在 R10 修复
+  - [x] SubTask T1.10.9: 全量 ternary 回归（pre-R10 62 failed ≤66 ✓ / 300 passed / 5 skipped，无新增退化）+ 跨区域回归（pre-R10 105 failed ≤109 ✓ / IF 43 failed 无退化）
+  - [x] SubTask T1.10.10: 算法合规性自检 — 归约顺序 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口；无跨区域特例 / 后处理补丁 / 硬编码深度上限
+  - [x] SubTask T1.10.11: 清理临时调试脚本（不创建根级 _debug_*.py）
+  - [x] SubTask T1.10.12: 写 fix_report.md
+- [ ] Task T1.11 ~ T1.20
 
 ## Phase 3-10: 其他 8 区域（各 20 轮）
 - [ ] Task 3.1 ~ 10.20

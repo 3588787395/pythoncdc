@@ -11662,6 +11662,31 @@ RegionType 枚举值: RegionType.ASSERT
             # full Await/YieldFrom expression.
             _consumer_extra_blocks: List[BasicBlock] = []
             if merge_block:
+                # [R10-Fix2] Compute "effective prefix" of merge_block:
+                # instructions before the first STORE_* that is NOT part
+                # of a walrus COPY 1 + STORE_* pattern. This prevents
+                # compare detection (in BUILD_TUPLE/LOAD_ATTR/BUILD_SLICE
+                # cases) from being triggered by conditional jumps that
+                # belong to the NEXT statement/region — e.g. when
+                # merge_block contains both this ternary's consumer
+                # (BUILD_TUPLE + MAKE_FUNCTION + STORE_NAME m1) AND the
+                # setup for a subsequent ternary (LOAD_NAME deco +
+                # LOAD_NAME cond + POP_JUMP_IF_FALSE). The walrus case
+                # (COPY 1 + STORE_* + wrapping + cond_jump) is handled
+                # separately at the STORE_* branch below, so excluding
+                # post-STORE instructions here is safe.
+                # (依「每块唯一归属」: merge_block 的 POST-STORE 部分
+                # 属于下一条语句, 不属于本 ternary 的消费者)
+                _mb_first_store_idx = None
+                for _ii, _mi in enumerate(merge_block.instructions):
+                    if _mi.opname in ('STORE_FAST', 'STORE_NAME',
+                                      'STORE_GLOBAL', 'STORE_DEREF'):
+                        _mb_first_store_idx = _ii
+                        break
+                if _mb_first_store_idx is not None:
+                    _mb_prefix = merge_block.instructions[:_mb_first_store_idx]
+                else:
+                    _mb_prefix = merge_block.instructions
                 for instr in merge_block.instructions:
                     if instr.opname in NOISE_OPS:
                         continue
@@ -11745,10 +11770,13 @@ RegionType 枚举值: RegionType.ASSERT
                     # （if/while 条件上下文），就设 merge_context='compare'，
                     # 由 _build_ternary_wrapped_expr 走栈模拟重建完整条件。
                     elif instr.opname in ('LOAD_ATTR', 'LOAD_METHOD'):
+                        # [R10-Fix2] Use _mb_prefix (instructions before
+                        # first STORE_*) to avoid false compare detection
+                        # from subsequent statement's cond_jump.
                         _mb_has_cond_jump = any(
                             _i.opname in (FORWARD_CONDITIONAL_JUMP_OPS
                                           | BACKWARD_CONDITIONAL_JUMP_OPS)
-                            for _i in merge_block.instructions
+                            for _i in _mb_prefix
                             if _i.opname not in NOISE_OPS
                         )
                         if _mb_has_cond_jump:
@@ -11979,10 +12007,15 @@ RegionType 枚举值: RegionType.ASSERT
                     # `def f() -> ternary: ...`）。否则会误设 merge_context='compare'，
                     # 把赋值/默认值场景的三元错认为 if 条件，导致退化。
                     elif instr.opname in ('BUILD_TUPLE', 'BUILD_LIST', 'BUILD_SET'):
+                        # [R10-Fix2] Use _mb_prefix (instructions before
+                        # first STORE_*) to avoid false compare detection
+                        # when merge_block contains a subsequent ternary's
+                        # condition (e.g. multi @abstractmethod + ternary
+                        # default in same class body).
                         _mb_has_cond_jump = any(
                             _i.opname in (FORWARD_CONDITIONAL_JUMP_OPS
                                           | BACKWARD_CONDITIONAL_JUMP_OPS)
-                            for _i in merge_block.instructions
+                            for _i in _mb_prefix
                             if _i.opname not in NOISE_OPS
                         )
                         if _mb_has_cond_jump:
@@ -12005,10 +12038,13 @@ RegionType 枚举值: RegionType.ASSERT
                     # 三元结果被 BUILD_SLICE 消费而非 COMPARE_OP，net_stack 计算
                     # 出负值，导致 compare_uses_ternary=False，merge_context 不被设置。
                     elif instr.opname == 'BUILD_SLICE':
+                        # [R10-Fix2] Use _mb_prefix (instructions before
+                        # first STORE_*) to avoid false compare detection
+                        # from subsequent statement's cond_jump.
                         _mb_has_cond_jump = any(
                             _i.opname in (FORWARD_CONDITIONAL_JUMP_OPS
                                           | BACKWARD_CONDITIONAL_JUMP_OPS)
-                            for _i in merge_block.instructions
+                            for _i in _mb_prefix
                             if _i.opname not in NOISE_OPS
                         )
                         if _mb_has_cond_jump:
