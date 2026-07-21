@@ -9836,21 +9836,38 @@ RegionType 枚举值: RegionType.ASSERT
                     continue
 
             if isinstance(block_region, BoolOpRegion) and block_region.entry != block:
-                if any(block in br.blocks and br.entry != block for br in self._filter_regions(boolop_regions or [], BoolOpRegion)):
+                # [Phase 3 adv14_boolop_result_compare] 双角色 merge_block
+                # 例外：值上下文 BoolOpRegion 的 merge_block 可能含
+                # COMPARE_OP + POP_JUMP_IF_FALSE（如 ``(a and b) == (c and d)``
+                # 中 Block 14 是 R2.merge_block 又是真正的 if 条件块）。此时
+                # 必须创建 IfRegion——merge_block 既是 BoolOp 值的归并点又是
+                # if 条件入口。这是「每块唯一归属」原则的明确例外，类似
+                # loop_condition_blocks 例外，遵循同样的归约层次化原则。
+                _is_merge_if_condition = (
+                    block_region.merge_block is block
+                    and not getattr(block_region, 'is_condition_context', True)
+                    and any(i.opname == 'COMPARE_OP' for i in block.instructions)
+                    and last_instr is not None
+                    and last_instr.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                )
+                if _is_merge_if_condition:
+                    pass  # 允许后续创建 IfRegion
+                elif any(block in br.blocks and br.entry != block for br in self._filter_regions(boolop_regions or [], BoolOpRegion)):
                     continue
-                cond_succs_for_check = list(block.conditional_successors)
-                if len(cond_succs_for_check) == 2:
-                    then_cand = sorted(cond_succs_for_check, key=lambda s: s.start_offset)[0]
-                    in_structural = any(
-                        then_cand in sr.blocks or then_cand == sr.entry
-                        for sr in (loop_regions or []) + (match_regions or [])
-                        + ([r for r in (try_regions or []) if hasattr(r, 'blocks')])
-                        + ([r for r in (with_regions or []) if hasattr(r, 'blocks')])
-                    )
-                    if not in_structural:
-                        continue
                 else:
-                    continue
+                    cond_succs_for_check = list(block.conditional_successors)
+                    if len(cond_succs_for_check) == 2:
+                        then_cand = sorted(cond_succs_for_check, key=lambda s: s.start_offset)[0]
+                        in_structural = any(
+                            then_cand in sr.blocks or then_cand == sr.entry
+                            for sr in (loop_regions or []) + (match_regions or [])
+                            + ([r for r in (try_regions or []) if hasattr(r, 'blocks')])
+                            + ([r for r in (with_regions or []) if hasattr(r, 'blocks')])
+                        )
+                        if not in_structural:
+                            continue
+                    else:
+                        continue
 
             boolop_region = self._resolve_boolop_condition_region(block)
 
@@ -13174,18 +13191,62 @@ RegionType 枚举值: RegionType.ASSERT
         # 边界条件：
         # - 仅当块包含短路跳转时才放宽claimed检查（避免误判）
         # - 如果块已被其他BoolOpRegion声明则仍跳过（避免重复）
+        # - [Phase 3 adv14_boolop_result_compare] 双角色块例外：
+        #   块可以同时是某 BoolOpRegion 的 merge_block 又是另一个
+        #   BoolOpRegion 链的起始块。如 ``(a and b) == (c and d)``：
+        #   Block 3 (LOAD c; JUMP_IF_FALSE_OR_POP → Block 5) 既是第一个
+        #   `and` (R1: chain=[(1,'and')], merge=3) 的 merge_block，又是
+        #   第二个 `and` (R2: chain=[(3,'and')], merge=5) 的起始块。当块
+        #   是已存在 BoolOpRegion 的 merge_block（不在其 op_chain 中）且
+        #   自身以 SHORT_CIRCUIT_JUMP_OPS 结尾、跳转目标与已存在
+        #   BoolOpRegion 的 merge 不相同时，允许其作为新链起始被检测。
+        #   这是「每块唯一归属」原则的明确例外——双角色块语义上同时属于
+        #   两个表达式级区域（前一个的归并点 + 后一个的入口），类似
+        #   loop_condition_blocks 例外，遵循同样的归约层次化原则。
+        _is_dual_role_block = False
         if block in claimed:
             existing = self.block_to_region.get(block)
             if isinstance(existing, BoolOpRegion):
-                return None
-            last_instr = block.get_last_instruction()
-            if not last_instr or last_instr.opname not in (SHORT_CIRCUIT_JUMP_OPS | FORWARD_CONDITIONAL_JUMP_OPS):
-                return None
+                # 双角色块检查：块是已存在 BoolOpRegion 的 merge_block
+                # 且不在其 op_chain 中、自身以 SHORT_CIRCUIT_JUMP_OPS 结尾。
+                _last_for_dual = block.get_last_instruction()
+                _is_dual_role = (
+                    _last_for_dual is not None
+                    and _last_for_dual.opname in SHORT_CIRCUIT_JUMP_OPS
+                    and existing.merge_block is block
+                    and block not in {b for b, _ in existing.op_chain}
+                )
+                if _is_dual_role:
+                    # 进一步验证：新链的跳转目标必须与已存在 BoolOpRegion
+                    # 的 op_chain 中块的跳转目标不同，确保是独立表达式。
+                    _new_jt = (self.cfg.get_block_by_offset(_last_for_dual.argval)
+                               if _last_for_dual.argval is not None else None)
+                    _existing_jts = set()
+                    for _cb, _ in existing.op_chain:
+                        _cb_last = _cb.get_last_instruction()
+                        if (_cb_last is not None
+                                and _cb_last.argval is not None
+                                and _cb_last.opname in SHORT_CIRCUIT_JUMP_OPS):
+                            _jt = self.cfg.get_block_by_offset(_cb_last.argval)
+                            if _jt is not None:
+                                _existing_jts.add(_jt.start_offset)
+                    if (_new_jt is not None
+                            and _new_jt.start_offset not in _existing_jts):
+                        _is_dual_role_block = True  # 允许作为新链起始被检测
+                    else:
+                        return None
+                else:
+                    return None
+            else:
+                last_instr = block.get_last_instruction()
+                if not last_instr or last_instr.opname not in (SHORT_CIRCUIT_JUMP_OPS | FORWARD_CONDITIONAL_JUMP_OPS):
+                    return None
         last_instr = block.get_last_instruction()
         if not last_instr:
             return None
         if last_instr.opname in SHORT_CIRCUIT_JUMP_OPS:
-            chain = self._detect_boolop_short_circuit_chain(block)
+            chain = self._detect_boolop_short_circuit_chain(
+                block, skip_first_claimed_check=_is_dual_role_block)
             if chain is None or len(chain) < 1:
                 return None
             return chain
@@ -14234,10 +14295,11 @@ RegionType 枚举值: RegionType.ASSERT
             result.extend(extended)
         return result
 
-    def _detect_boolop_short_circuit_chain(self, start_block: BasicBlock) -> Optional[List[Tuple[BasicBlock, str]]]:
+    def _detect_boolop_short_circuit_chain(self, start_block: BasicBlock, skip_first_claimed_check: bool = False) -> Optional[List[Tuple[BasicBlock, str]]]:
         chain: List[Tuple[BasicBlock, str]] = []
         current = start_block
         visited = set()
+        _is_first_iter = True
         while current and current.start_offset not in visited:
             visited.add(current.start_offset)
             last = current.get_last_instruction()
@@ -14256,6 +14318,7 @@ RegionType 枚举值: RegionType.ASSERT
                         if isinstance(_ft_reg, BoolOpRegion):
                             break
                     current = ft_succ
+                    _is_first_iter = False
                     continue
                 if chain and last and last.opname not in ('RETURN_VALUE', 'RETURN_CONST',
                                                            'RAISE_VARARGS', 'RERAISE'):
@@ -14272,6 +14335,7 @@ RegionType 枚举值: RegionType.ASSERT
                         next_last = succs[0].get_last_instruction()
                         if (next_last and next_last.opname in SHORT_CIRCUIT_JUMP_OPS):
                             current = succs[0]
+                            _is_first_iter = False
                             continue
                         next_pure = [i for i in succs[0].instructions
                                      if i.opname not in NOISE_OPS]
@@ -14279,13 +14343,41 @@ RegionType 枚举值: RegionType.ASSERT
                                 len(next_pure) >= 2 and
                                 next_last and next_last.opname in SHORT_CIRCUIT_JUMP_OPS):
                             current = succs[0]
+                            _is_first_iter = False
                             continue
                 break
+            # [Phase 3 adv14_boolop_result_compare] 双角色块：start_block
+            # 可能是已存在 BoolOpRegion 的 merge_block（如 ``(a and b) ==
+            # (c and d)`` 中 Block 3）。此时 _detect_boolop_chain_start 已
+            # 通过双角色检查放行，这里在首次迭代时跳过 claimed 检查，让
+            # start_block 进入链。后续迭代仍执行 claimed 检查防止跨区域
+            # 扩展。
             if current in self.block_to_region:
                 _cur_reg = self.block_to_region.get(current)
                 if isinstance(_cur_reg, BoolOpRegion):
-                    break
+                    if not (_is_first_iter and skip_first_claimed_check):
+                        break
             op_type = 'and' if 'FALSE' in last.opname else 'or'
+            # [Phase 3 adv14_boolop_result_compare] 值上下文短路链
+            # (JUMP_IF_FALSE_OR_POP / JUMP_IF_TRUE_OR_POP) 的所有链块
+            # 必须共享同一个 merge（跳转目标）。如 ``(a and b) == (c and d)``
+            # 中，Block 1 (a; JIF_OR_POP→3) 和 Block 3 (c; JIF_OR_POP→5)
+            # 跳转目标不同（3 vs 5），是两个独立的 and 表达式，由 == 分隔；
+            # 不能合并为 ``(a and b) and (c and d)``。检测：当前块的跳转
+            # 目标若与链中首块的跳转目标不同，则停止扩展——它们是不同的
+            # 值上下文 BoolOp 表达式。普通 ``a and b and c``（值上下文）
+            # 所有 JIF_OR_POP 共享同一 merge（STORE 块），不会被此守卫
+            # 中断；控制流 ``if a and b and c:`` 用 POP_JUMP_FORWARD_IF_FALSE
+            # 不走 SHORT_CIRCUIT_JUMP_OPS 路径，亦不受影响。
+            _cur_jt = self.cfg.get_block_by_offset(last.argval) if last.argval is not None else None
+            if (len(chain) >= 1 and last.opname in SHORT_CIRCUIT_JUMP_OPS
+                    and _cur_jt is not None):
+                _first_last = chain[0][0].get_last_instruction()
+                _first_jt = (self.cfg.get_block_by_offset(_first_last.argval)
+                             if _first_last and _first_last.argval is not None
+                             else None)
+                if _first_jt is not None and _cur_jt is not _first_jt:
+                    break
             chain.append((current, op_type))
             succs = list(current.conditional_successors)
             if len(succs) != 2:

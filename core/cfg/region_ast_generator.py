@@ -14590,6 +14590,100 @@ AST 映射规则:
             if i.opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP'):
                 cmp_instr = i
                 break
+        # [Phase 3 adv14_boolop_result_compare] 双 BoolOp 比较：当
+        # BoolOpRegion.merge_block 不含 COMPARE_OP 但本身是另一个
+        # BoolOpRegion 的 entry（双角色块）时，BoolOp 结果被第二个
+        # BoolOp 表达式消费，第二个 BoolOp 的 merge_block 含 COMPARE_OP。
+        # 如 ``(a and b) == (c and d)``：
+        #   R1 (a and b): entry=Block 0, merge=Block 8（无 COMPARE_OP）
+        #   R2 (c and d): entry=Block 8, merge=Block 14（有 COMPARE_OP ==）
+        # 此时 left=R1 的 boolop_expr，right=R2 的 boolop_expr，
+        # op=R2.merge_block 的 COMPARE_OP。
+        if cmp_instr is None:
+            _dual_role_r2 = None
+            for _r in self.region_analyzer.regions:
+                if (isinstance(_r, BoolOpRegion)
+                        and _r is not boolop_region
+                        and _r.entry is merge_block
+                        and _r.merge_block is not None
+                        and _r.merge_block is not merge_block):
+                    _r2_merge = _r.merge_block
+                    _r2_instrs = [i for i in _r2_merge.instructions
+                                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                    if any(i.opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP')
+                           for i in _r2_instrs):
+                        _dual_role_r2 = _r
+                        break
+            if _dual_role_r2 is not None:
+                _r2_merge = _dual_role_r2.merge_block
+                if _r2_merge in self.generated_blocks:
+                    return boolop_expr
+                _r2_instrs = [i for i in _r2_merge.instructions
+                              if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                _r2_cmp = None
+                for i in _r2_instrs:
+                    if i.opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP'):
+                        _r2_cmp = i
+                        break
+                # R2 的 merge_block 中 COMPARE_OP 之前的 LOAD 指令是右操作数
+                # （如 ``(c and d) == 5`` 中的 5）。若没有 LOAD，则右操作数
+                # 就是 R2 的 BoolOp 本身（如 ``(a and b) == (c and d)``）。
+                _r2_rhs_instrs = []
+                for i in _r2_instrs:
+                    if i is _r2_cmp:
+                        break
+                    if i.opname in _CMP_SKIP_OPS:
+                        continue
+                    _r2_rhs_instrs.append(i)
+                # 构建 R2 的 BoolOp 表达式
+                _r2_boolop_expr = None
+                if _dual_role_r2.condition_expr is not None:
+                    _r2_boolop_expr = _dual_role_r2.condition_expr
+                else:
+                    _r2_boolop_expr = self._build_boolop_expression(_dual_role_r2)
+                if _r2_boolop_expr is None:
+                    return boolop_expr
+                # 确定比较运算符
+                if _r2_cmp.opname == 'COMPARE_OP':
+                    _dual_cmp_op = _r2_cmp.argval
+                elif _r2_cmp.opname == 'IS_OP':
+                    _dual_cmp_op = 'IsNot' if _r2_cmp.argval else 'Is'
+                elif _r2_cmp.opname == 'CONTAINS_OP':
+                    _dual_cmp_op = 'NotIn' if _r2_cmp.argval else 'In'
+                else:
+                    return boolop_expr
+                # 标记 R1.merge_block（双角色块）和 R2.merge_block 为 generated
+                self.generated_blocks.add(merge_block)
+                self.generated_blocks.add(_r2_merge)
+                # 标记 R2 的所有块为 generated（防止 R2 作为独立语句输出）
+                for _b in _dual_role_r2.blocks:
+                    self.generated_blocks.add(_b)
+                _dual_role_r2.condition_expr = _r2_boolop_expr
+                # 若 R2.merge_block 有额外 LOAD（rhs），则右操作数是 LOAD 表达式，
+                # R2 的 BoolOp 是…不可能的（R2 已是右操作数）。实际上
+                # ``(a and b) == (c and d)`` 中 R2.merge_block 只含 COMPARE_OP，
+                # 不含额外 LOAD，_r2_rhs_instrs 为空。
+                if not _r2_rhs_instrs:
+                    # 右操作数就是 R2 的 BoolOp
+                    return {
+                        'type': 'Compare',
+                        'left': boolop_expr,
+                        'ops': [_dual_cmp_op],
+                        'comparators': [_r2_boolop_expr],
+                    }
+                else:
+                    # R2.merge_block 有额外 LOAD：如 ``(a and b) == (c and d) == 5``
+                    # （链式比较）。退化为左=R1 boolop，右=LOAD 表达式，
+                    # R2 boolop 被丢弃（不应该发生，保守处理）。
+                    _rhs_expr = self.expr_reconstructor.reconstruct(_r2_rhs_instrs)
+                    if _rhs_expr is None:
+                        return boolop_expr
+                    return {
+                        'type': 'Compare',
+                        'left': boolop_expr,
+                        'ops': [_dual_cmp_op],
+                        'comparators': [_rhs_expr],
+                    }
         if cmp_instr is None:
             return boolop_expr  # No comparison in merge_block
         # Skip if merge_block has SWAP/COPY (chained compare, not single compare)
