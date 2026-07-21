@@ -89,7 +89,20 @@
   - [x] SubTask T1.10.10: 算法合规性自检 — 归约顺序 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口；无跨区域特例 / 后处理补丁 / 硬编码深度上限
   - [x] SubTask T1.10.11: 清理临时调试脚本（不创建根级 _debug_*.py）
   - [x] SubTask T1.10.12: 写 fix_report.md
-- [ ] Task T1.11 ~ T1.20
+- [x] Task T1.14: Ternary round_14 — 修复 5 bug（R14-04 for iter list middle / R14-05 raise ternary type from / R14-07 return method chain / R14-10 slice assign both bounds Pattern F / R14-06 raise arg+cause Pattern G），6 已知限制留待 R15+（R14-01/02 while_cond 系列 / R14-03 elif cond / R14-08 multi-with second as / R14-09 yield from+method / R14-11 assert+boolop 两 ternary）
+  - [x] SubTask T1.14.0: 基线确认（ternary 99 failed / 379 passed / 8 skipped；R14 测试 11 failed / 14 passed）
+  - [x] SubTask T1.14.1 (P1): R14-04 for iter list middle — iter merge_ctx 调用 `_try_build_ternary_merge_consumer_expr` + Iter wrapper 解包 + `_loop_generate_for` 两处类型检查扩展
+  - [x] SubTask T1.14.2 (P1): R14-05 raise ternary type from — raise_instr.arg==2 else 分支，无 preload 时 `initial_stack=[ternary_expr]` 重建 Raise(exc=ternary, cause)
+  - [x] SubTask T1.14.3 (P1): R14-07 return method chain — `_is_return_consumer` 检测裸 RETURN_VALUE，包装 Return 而非 Expr
+  - [x] SubTask T1.14.4 (P1): R14-10 slice assign both bounds — 新增 Pattern F（BUILD_SLICE+STORE_SUBSCR 双 ternary，镜像 Pattern E）
+  - [x] SubTask T1.14.5 (P2): R14-06 raise arg and cause — 新增 Pattern G（RAISE_VARARGS 2 双 ternary，exc=Call(E,[t1])，cause=t2）
+  - [x] SubTask T1.14.6 (评估): R14-01/02/03/08/09/11 评估 — 均涉及复杂控制流交互（while 回边 / elif 链 / multi-with cleanup / yield from polling / boolop 短路），标记为已知限制 R15+
+  - [x] SubTask T1.14.7: 全量 ternary 回归 93 failed / 385 passed / 8 skipped（基线 99→93 -6）+ 跨区域 3 failed / 324 passed / 11 skipped（无退化）
+  - [x] SubTask T1.14.8: 算法合规性自检 — 归约顺序 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口；无跨区域特例 / 后处理补丁 / 硬编码深度上限
+  - [x] SubTask T1.14.9: 清理 round_06 下 7 个遗留 _debug_*.py 调试脚本
+  - [x] SubTask T1.14.10: 写 fix_report.md
+  - [ ] 已知限制 (R15+ 处理): R14-01/02 while_cond + COMPARE_OP / walrus 系列，R14-03 elif cond ternary，R14-08 multi-with second as，R14-09 yield from + method chain，R14-11 assert + boolop 两 ternary
+- [ ] Task T1.15 ~ T1.20
 
 ## Phase 3-10: 其他 8 区域（各 20 轮）
 - [ ] Task 3.1 ~ 10.20

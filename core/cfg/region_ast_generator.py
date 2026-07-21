@@ -2771,7 +2771,12 @@ AST 映射规则:
                             # 此时 iter_expr 应是整个 Call（含 ternary 作为参数），
                             # 而非裸 IfExp。依「父引用子入口」：父 AsyncFor
                             # 通过 merge_block 的 PRECALL+CALL 引用 ternary 子节点。
-                            if _vtype == 'IfExp' or _vtype == 'Call':
+                            # [R14-04 fix] 当 merge_block 含多元素容器
+                            # （`for x in [1, ternary, 2]: pass`），_generate_ternary
+                            # 输出 Expr(Tuple/List/etc 内含 IfExp 元素)。
+                            # iter_expr 应是整个容器。
+                            if _vtype in ('IfExp', 'Call', 'List', 'Tuple',
+                                          'Set', 'Dict'):
                                 iter_expr = _v
                                 break
                     if iter_expr:
@@ -2791,7 +2796,10 @@ AST 映射规则:
                             continue
                         # [R9-03 fix] 同步第一处逻辑：ternary 被 g() 包装时
                         # 输出 Expr(Call(g, [IfExp]))，iter_expr 取整个 Call。
-                        if _v.get('type') in ('IfExp', 'Call'):
+                        # [R14-04 fix] 同步第一处逻辑：ternary 在多元素容器内
+                        # （`for x in [1, ternary, 2]: pass`），iter_expr 取整个容器。
+                        if _v.get('type') in ('IfExp', 'Call', 'List', 'Tuple',
+                                              'Set', 'Dict'):
                             iter_expr = _v
                             break
                 if iter_expr:
@@ -17171,6 +17179,27 @@ AST 映射规则:
                 # 是 Call(g, [ternary_expr]) 而非裸 ternary_expr。
                 # 依「父引用子入口」：父 For/AsyncFor 通过 merge_block 的
                 # PRECALL+CALL 引用 ternary 子节点作为 Call 的参数。
+                # [R14-04 fix] 若 merge_block 含多元素容器（BUILD_TUPLE N>1
+                # 等，如 `for x in [1, ternary, 2]: pass`），iter 表达式应是
+                # 完整 List/Tuple 容器而非裸 ternary_expr。复用
+                # _try_build_ternary_merge_consumer_expr 重建完整容器表达式。
+                # 依「每块唯一归属」: 容器的所有 sibling 元素 + BUILD_* 归属
+                # TernaryRegion 父表达式，不拆分为独立语句.
+                _iter_expr = None
+                _iter_consumer = self._try_build_ternary_merge_consumer_expr(
+                    region, ternary_expr)
+                if _iter_consumer is not None:
+                    # [R14-04] 多元素容器:BUILD_TUPLE N>1 等 → Tuple/List/Set/Dict
+                    # 直接使用容器表达式。Iter 包装（expr_reconstructor 给
+                    # GET_ITER 加的 wrapper）需解包取内部容器表达式。
+                    if _iter_consumer.get('type') in (
+                            'List', 'Tuple', 'Set', 'Dict', 'Call'):
+                        _iter_expr = _iter_consumer
+                    elif (_iter_consumer.get('type') == 'Iter'
+                            and isinstance(_iter_consumer.get('value'), dict)
+                            and _iter_consumer['value'].get('type') in (
+                                'List', 'Tuple', 'Set', 'Dict', 'Call')):
+                        _iter_expr = _iter_consumer['value']
                 _fc_info_iter = getattr(region, 'func_call_info', None)
                 if _fc_info_iter:
                     _iter_call_args = (list(_fc_info_iter.get('args', []))
@@ -17183,9 +17212,11 @@ AST 映射规则:
                     }
                     _iter_call_expr = self._convert_lambda_function_objects(_iter_call_expr)
                     results.append({'type': 'Expr', 'value': _iter_call_expr})
+                elif _iter_expr is not None:
+                    results.append({'type': 'Expr', 'value': _iter_expr})
                 else:
                     results.append({'type': 'Expr', 'value': ternary_expr})
-                
+    
             elif merge_ctx == 'compare':
                 # if/while条件: 生成Expr(IfExp)，由条件语句生成器使用
                 results.append({'type': 'Expr', 'value': ternary_expr})
@@ -18485,7 +18516,26 @@ AST 映射规则:
                 _merge_consumer_expr = self._try_build_ternary_merge_consumer_expr(
                     region, ternary_expr)
                 if _merge_consumer_expr is not None:
-                    results.append({'type': 'Expr', 'value': _merge_consumer_expr})
+                    # [R14-07 fix] 当 merge_block 原始以 bare RETURN_VALUE 结尾
+                    # （非 LOAD_CONST None + RETURN_VALUE 隐式 None）时，ternary
+                    # 表达式是 return 语句的值，应包装为 Return 而非 Expr。
+                    # 依「父引用子入口」: 父 Return 通过 merge_block 的 RETURN_VALUE
+                    # 引用 ternary 子节点（在 value 槽位）。
+                    _is_return_consumer = False
+                    if region.merge_block is not None:
+                        _mi = [i for i in region.merge_block.instructions
+                               if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                        if _mi and _mi[-1].opname == 'RETURN_VALUE':
+                            # 检查 RETURN_VALUE 前是否是 LOAD_CONST None（隐式 None）
+                            if len(_mi) >= 2 and _mi[-2].opname == 'LOAD_CONST' \
+                                    and _mi[-2].argval is None:
+                                _is_return_consumer = False
+                            else:
+                                _is_return_consumer = True
+                    if _is_return_consumer:
+                        results.append({'type': 'Return', 'value': _merge_consumer_expr})
+                    else:
+                        results.append({'type': 'Expr', 'value': _merge_consumer_expr})
                     for block in region.blocks:
                         self.generated_blocks.add(block)
                     return results
@@ -19469,6 +19519,19 @@ AST 映射规则:
                 preload = self._compute_ternary_cond_preload_exprs(region)
                 if preload:
                     initial_stack = list(preload) + [ternary_expr]
+                    full_expr = self.expr_reconstructor.reconstruct(
+                        merge_instrs, initial_stack=initial_stack)
+                    if full_expr and full_expr.get('type') == 'Raise':
+                        return full_expr
+                else:
+                    # [R14-05 fix] raise (ternary) from <cause> — ternary
+                    # IS the exc, cause loaded in merge_block (after ternary
+                    # merge). initial_stack=[ternary_expr] (exc), then merge
+                    # LOAD <cause> + RAISE_VARARGS 2 reconstructs as
+                    # Raise(exc=ternary, cause=<cause>). 依「父引用子入口」:
+                    # 父 Raise 通过 merge_block 的 LOAD <cause> + RAISE_VARARGS 2
+                    # 引用 ternary 子节点（在 exc 槽位）。
+                    initial_stack = [ternary_expr]
                     full_expr = self.expr_reconstructor.reconstruct(
                         merge_instrs, initial_stack=initial_stack)
                     if full_expr and full_expr.get('type') == 'Raise':
@@ -21398,6 +21461,150 @@ AST 映射规则:
                     return {
                         'type': 'Delete',
                         'targets': [_target],
+                    }
+
+        # --- Pattern F: x[t1:t2] = value (R14-10) ---
+        # innermost_merge: BUILD_SLICE 2, STORE_SUBSCR (+ LOAD_CONST None +
+        # RETURN_VALUE). Two chained ternaries produce the slice's lower and
+        # upper bounds; BUILD_SLICE 2 wraps them as a Slice node;
+        # STORE_SUBSCR assigns obj[slice] = value.
+        # 依「父引用子入口」+「嵌套即抽象节点」+「自底向上归约」: 父 Assign
+        # 通过 outer.cond_block preload (value, obj) + innermost_merge 的
+        # BUILD_SLICE 2 + STORE_SUBSCR 引用 chained ternary 子节点列表作为
+        # Slice 的 lower/upper。
+        _has_store_subscr = any(_i.opname == 'STORE_SUBSCR' for _i in _im_eff)
+        if (_has_build_slice and _has_store_subscr and len(elts) == 2):
+            _outer_cond = region.condition_block
+            if _outer_cond is not None:
+                _oc_instrs = [i for i in _outer_cond.instructions
+                              if i.opname not in ('RESUME', 'NOP',
+                                                  'CACHE', 'PUSH_NULL')]
+                _oc_last = _outer_cond.get_last_instruction()
+                _oc_cond_start = len(_oc_instrs)
+                if _oc_last and _oc_last.opname in (
+                        FORWARD_CONDITIONAL_JUMP_OPS
+                        | SHORT_CIRCUIT_JUMP_OPS):
+                    _oc_pj_idx = None
+                    for _ci_idx in range(len(_oc_instrs) - 1, -1, -1):
+                        if _oc_instrs[_ci_idx] is _oc_last:
+                            _oc_pj_idx = _ci_idx
+                            break
+                    if _oc_pj_idx is not None and _oc_pj_idx > 0:
+                        import dis as _dis
+                        _needed = 1
+                        _cstart = None
+                        for _ci in range(_oc_pj_idx - 1, -1, -1):
+                            _instr = _oc_instrs[_ci]
+                            try:
+                                _eff = _dis.stack_effect(
+                                    _instr.opcode, _instr.arg)
+                            except Exception:
+                                _eff = 0
+                            _needed -= _eff
+                            if _needed <= 0:
+                                _cstart = _ci
+                                break
+                        if _cstart is not None:
+                            _oc_cond_start = _cstart
+                _oc_preload = _oc_instrs[:_oc_cond_start]
+                self.expr_reconstructor.reset()
+                for _instr in _oc_preload:
+                    if _instr.opname in ('RESUME', 'NOP', 'CACHE',
+                                         'PUSH_NULL'):
+                        continue
+                    self.expr_reconstructor._process_instruction(_instr)
+                _pl_stack = [s for s in self.expr_reconstructor.stack
+                             if not (isinstance(s, dict)
+                                     and s.get('type') == 'PUSH_NULL')]
+                # Expect [value, obj] on stack (e.g. [Constant(1), Name(x)]).
+                if len(_pl_stack) >= 2:
+                    _rhs_value = _pl_stack[-2]
+                    _obj_expr = _pl_stack[-1]
+                    _slice_expr = {
+                        'type': 'Slice',
+                        'lower': elts[0],
+                        'upper': elts[1],
+                        'step': None,
+                    }
+                    _target = {
+                        'type': 'Subscript',
+                        'value': _obj_expr,
+                        'slice': _slice_expr,
+                        'ctx': 'Store',
+                    }
+                    return {
+                        'type': 'Assign',
+                        'targets': [_target],
+                        'value': _rhs_value,
+                    }
+
+        # --- Pattern G: raise E(t1) from (t2) (R14-06) ---
+        # innermost_merge: RAISE_VARARGS 2 (+ LOAD_CONST None + RETURN_VALUE).
+        # Two chained ternaries: outer ternary's merge (= inner entry) holds
+        # PRECALL + CALL forming E(t1); inner ternary's merge holds
+        # RAISE_VARARGS 2 consuming [E(t1), t2]. E is in outer.cond_block
+        # preload (PUSH_NULL + LOAD E, filtered to [E]).
+        # 依「父引用子入口」+「嵌套即抽象节点」+「自底向上归约」: 父 Raise
+        # 通过 outer.cond_block preload (E) + innermost_merge 的 RAISE_VARARGS 2
+        # 引用 chained ternary 子节点列表：t1 作 E() 参数（exc 槽位），t2 作 cause。
+        _has_raise_2 = any(_i.opname == 'RAISE_VARARGS' and _i.arg == 2
+                          for _i in _im_eff)
+        if (_has_raise_2 and len(elts) == 2):
+            _outer_cond = region.condition_block
+            if _outer_cond is not None:
+                _oc_instrs = [i for i in _outer_cond.instructions
+                              if i.opname not in ('RESUME', 'NOP',
+                                                  'CACHE', 'PUSH_NULL')]
+                _oc_last = _outer_cond.get_last_instruction()
+                _oc_cond_start = len(_oc_instrs)
+                if _oc_last and _oc_last.opname in (
+                        FORWARD_CONDITIONAL_JUMP_OPS
+                        | SHORT_CIRCUIT_JUMP_OPS):
+                    _oc_pj_idx = None
+                    for _ci_idx in range(len(_oc_instrs) - 1, -1, -1):
+                        if _oc_instrs[_ci_idx] is _oc_last:
+                            _oc_pj_idx = _ci_idx
+                            break
+                    if _oc_pj_idx is not None and _oc_pj_idx > 0:
+                        import dis as _dis
+                        _needed = 1
+                        _cstart = None
+                        for _ci in range(_oc_pj_idx - 1, -1, -1):
+                            _instr = _oc_instrs[_ci]
+                            try:
+                                _eff = _dis.stack_effect(
+                                    _instr.opcode, _instr.arg)
+                            except Exception:
+                                _eff = 0
+                            _needed -= _eff
+                            if _needed <= 0:
+                                _cstart = _ci
+                                break
+                        if _cstart is not None:
+                            _oc_cond_start = _cstart
+                _oc_preload = _oc_instrs[:_oc_cond_start]
+                self.expr_reconstructor.reset()
+                for _instr in _oc_preload:
+                    if _instr.opname in ('RESUME', 'NOP', 'CACHE',
+                                         'PUSH_NULL'):
+                        continue
+                    self.expr_reconstructor._process_instruction(_instr)
+                _pl_stack = [s for s in self.expr_reconstructor.stack
+                             if not (isinstance(s, dict)
+                                     and s.get('type') == 'PUSH_NULL')]
+                # Expect [E] on stack (the callable wrapping t1).
+                if len(_pl_stack) >= 1:
+                    _exc_callable = _pl_stack[-1]
+                    _exc_expr = {
+                        'type': 'Call',
+                        'func': _exc_callable,
+                        'args': [elts[0]],
+                        'keywords': [],
+                    }
+                    return {
+                        'type': 'Raise',
+                        'exc': _exc_expr,
+                        'cause': elts[1],
                     }
 
         return None

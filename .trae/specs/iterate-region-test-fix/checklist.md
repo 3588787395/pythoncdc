@@ -252,3 +252,57 @@
 - [x] 未修改任何测试文件
 - [x] 未创建根级 debug 文件（6 个 _debug_*.py 已清理）
 - [x] 未 git commit（由父代理决定提交时机）
+
+## Ternary 区域 Round 14 验证
+
+### SubTask T1.14.0: 基线确认
+- [x] 全量 ternary 回归基线 = 99 failed / 379 passed / 8 skipped（R13 88 + R14 新增 11）
+- [x] 跨区域 control_flow_matrix 基线 = 3 failed / 324 passed / 11 skipped
+- [x] R14 新测试基线 = 11 failed / 14 passed
+
+### SubTask T1.14.1 (P1): R14-04 for iter list middle
+- [x] `for x in [1, (a if c else b), 2]: pass` 反编译保留 BUILD_TUPLE 3 + 全部 list 元素 + ternary IfExp，字节码等价
+- [x] 修复依 4 原则：父 for 通过 merge_block 的 BUILD_TUPLE 3 引用 ternary 子节点作 Tuple 中间元素
+- [x] ternary 回归无退化
+- [x] 跨区域回归无退化
+
+### SubTask T1.14.2 (P1): R14-05 raise ternary type from
+- [x] `raise (a if c else b) from E2` 反编译为 Raise(exc=IfExp, cause=E2)，字节码等价
+- [x] 修复依 4 原则：父 Raise 通过 merge_block 的 LOAD <cause> + RAISE_VARARGS 2 引用 ternary（exc 槽位）
+- [x] ternary 回归无退化
+- [x] 跨区域回归无退化
+
+### SubTask T1.14.3 (P1): R14-07 return method chain
+- [x] `def f(): return (a if c else b).method()` 反编译为 Return(Call(Attribute(IfExp, 'method')))，字节码等价
+- [x] 修复依 4 原则：父 Return 通过 merge_block 的 LOAD_METHOD + CALL + RETURN_VALUE 引用 ternary
+- [x] ternary 回归无退化
+- [x] 跨区域回归无退化
+
+### SubTask T1.14.4 (P1): R14-10 slice assign both bounds (Pattern F)
+- [x] `x[(a if c else b):(d if e else f)] = 1` 反编译为 Assign(targets=[Subscript(x, Slice(t1, t2), Store)], value=Constant(1))，字节码等价
+- [x] 修复依 4 原则：父 Assign 通过 outer.cond_block preload (value, obj) + innermost_merge 的 BUILD_SLICE 2 + STORE_SUBSCR 引用 chained ternary 作 Slice.lower/upper
+- [x] ternary 回归无退化（94→93 failed）
+- [x] 跨区域回归无退化
+
+### SubTask T1.14.5 (P2): R14-06 raise arg and cause (Pattern G)
+- [x] `raise E(a if c else b) from (d if e else f)` 反编译为 Raise(exc=Call(E, [t1]), cause=t2)，字节码等价
+- [x] 修复依 4 原则：父 Raise 通过 outer.cond_block preload (E) + innermost_merge 的 RAISE_VARARGS 2 引用 chained ternary：t1 作 E() 参数（exc），t2 作 cause
+- [x] ternary 回归无退化（94→93 failed）
+- [x] 跨区域回归无退化
+
+### SubTask T1.14.6 (评估): R14-01/02/03/08/09/11 评估
+- [x] R14-01/02 while_cond + COMPARE_OP / walrus 系列 — 评估后标记为已知限制（while 回边 + ternary + COMPARE_OP 三方冲突，与 R3-09/R4-10/R5-10/R6-13 同根因，R15+ 统一处理）
+- [x] R14-03 elif cond ternary — 评估后标记为已知限制（elif 链 + ternary false-branch 跳转目标归属冲突）
+- [x] R14-08 multi-with second as — 评估后标记为已知限制（multi-with cleanup 链 + BEFORE_WITH + WITH_EXCEPT_START 异常处理路径复杂）
+- [x] R14-09 yield from + method chain — 评估后标记为已知限制（RETURN_GENERATOR + yield from polling 循环 + method chain + ternary 四方归约）
+- [x] R14-11 assert + boolop 两 ternary — 评估后标记为已知限制（boolop 短路逻辑 + 两 ternary 交织 + assert 区域边界）
+
+### SubTask T1.14.7-10: 最终验证
+- [x] 全量 ternary 回归 93 failed / 385 passed / 8 skipped（基线 99→93 -6，无基线退化）
+- [x] 跨区域 control_flow_matrix 回归 3 failed / 324 passed / 11 skipped（无退化）
+- [x] 修复报告已写 — `rounds/ternary_region/round_14/fix_report.md`
+- [x] 所有修复均通过 4 原则论证，无跨区域启发式特例 / 后处理补丁 / 启发式优先级覆盖 / 扁平化 / 硬编码深度上限
+- [x] 源代码无 debug 打印残留
+- [x] 未修改任何 R13 passing 测试（仅新增 R14 测试）
+- [x] 未创建根级 debug 文件（已清理 round_06 下 7 个遗留 _debug_*.py）
+- [x] 未 git commit（由父代理决定提交时机）
