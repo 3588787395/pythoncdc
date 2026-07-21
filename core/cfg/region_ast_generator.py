@@ -146,6 +146,12 @@ class RegionASTGenerator:
         for _instr in block.instructions:
             if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL', 'LOAD_CONST'):
                 continue
+            # [R11-14/15/16/17 fix] SETUP_ANNOTATIONS 是 module 级
+            # `x: T = (a if c else b)` 的注解设置指令，需跳过以让 IMPORT_NAME
+            # 序列被提取。依「每块唯一归属」：SETUP_ANNOTATIONS 归注解父区域，
+            # IMPORT_NAME 归 ImportFrom；ternary condition preload 归 TernaryRegion。
+            if _instr.opname == 'SETUP_ANNOTATIONS':
+                continue
             if _instr.opname in FORWARD_JUMP_OPS or _instr.opname in BACKWARD_JUMP_OPS:
                 break
             if _instr.opname in ('JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'):
@@ -16996,6 +17002,23 @@ AST 映射规则:
                 if not _has_meaningful_after_call:
                     func_call_skip = 0
 
+                # [R11-10 fix] If PUSH_NULL appears AFTER a STORE_NAME (statement
+                # boundary), the instructions before PUSH_NULL are predecessor
+                # statements (e.g., `def _m: ... \n m = partialmethod(_m, ternary)`
+                # where cond_block contains _m's def before the partialmethod
+                # PUSH_NULL + LOAD_NAME prefix). Don't skip them — they need to
+                # be captured as pre_stmts by the loop below.
+                # 依「每块唯一归属」: predecessor statement instructions belong
+                # to their own AST nodes (FunctionDef/Assign), not the
+                # TernaryRegion's condition preload.
+                if func_call_skip > 0:
+                    _has_store_before_push_null = any(
+                        cond_instrs_raw[k].opname in (
+                            'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
+                        for k in range(0, push_null_idx))
+                    if _has_store_before_push_null:
+                        func_call_skip = 0
+
             cond_instrs = cond_instrs_raw[func_call_skip:]
             if skip_store_targets:
                 cond_instrs = [i for i in cond_instrs
@@ -17007,6 +17030,35 @@ AST 映射规则:
             while i < len(cond_instrs):
                 instr = cond_instrs[i]
                 if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                    # [R11-10 fix] Check if the predecessor range contains
+                    # MAKE_FUNCTION. If so, the predecessor is a function/
+                    # method def (LOAD_CONST <code> + MAKE_FUNCTION + STORE_NAME),
+                    # not a simple Assign. MAKE_FUNCTION breaks the LOAD_* chain
+                    # in the simple reconstruction path below, so the def would
+                    # be silently dropped. Use _build_statements_from_instructions
+                    # to build the complete FunctionDef pre-statement.
+                    # Example: class body with
+                    #   `def _m(self, x): return x
+                    #    m = partialmethod(_m, (a if c else b))`
+                    # The ternary's cond_block absorbs _m's def (LOAD_CONST code
+                    # + MAKE_FUNCTION + STORE_NAME _m) before the partialmethod
+                    # preload. Without this fix, _m's def is lost.
+                    # 依「每块唯一归属」: function def instructions belong to
+                    # the FunctionDef predecessor statement, not the
+                    # TernaryRegion. The ternary only owns the condition +
+                    # value + merge blocks.
+                    _has_mf_in_pred = any(
+                        cond_instrs[k].opname == 'MAKE_FUNCTION'
+                        for k in range(cond_start_idx, i))
+                    if _has_mf_in_pred:
+                        _pred_instrs = list(cond_instrs[cond_start_idx:i + 1])
+                        _pred_stmts = self._build_statements_from_instructions(
+                            _pred_instrs)
+                        pre_stmts.extend(_pred_stmts)
+                        cond_start_idx = i + 1
+                        i += 1
+                        continue
+
                     load_instrs = []
                     j = i - 1
                     while j >= cond_start_idx:
@@ -17320,7 +17372,16 @@ AST 映射规则:
                 else:
                     results.append({'type': 'Expr', 'value': joined_str})
                 
-            elif region.value_target and not str(region.value_target).startswith('__'):
+            elif region.value_target and str(region.value_target) not in (
+                    '__while_cond_target__', '__compare_target__',
+                    '__iter_target__', '__return_target__',
+                    '__fstring_target__'):
+                # [R11-19 fix] 旧版用 `not str(value_target).startswith('__')`
+                # 排除所有 dunder 名，但 pythoncdc 内部虚拟 target 只有 5 个
+                # （`__xxx_target__` 模式）。合法的 Python dunder 赋值如
+                # `__version__ = ('1.0' if cond else '0.9')`、`__all__ = [...]`
+                # 应正常进入 store-assignment 路径。依「每块唯一归属」:
+                # ternary merge 块归属 Assign(targets=[__version__], value=IfExp)。
                 if region.merge_block:
                     merge_all = [i for i in region.merge_block.instructions
                                 if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
@@ -17361,7 +17422,21 @@ AST 映射规则:
                         # 计算指令的栈效应（push_count, pop_count）
                         _push = 0
                         _pop = 0
-                        if _ci.opname.startswith('LOAD_') or _ci.opname == 'COPY':
+                        # [R11-20 fix] LOAD_ATTR/LOAD_METHOD 消费栈顶对象以形成
+                        # Attribute/方法描述符（net 0 或 +1），所以 _pop=1。
+                        # 旧版将 LOAD_ATTR 当作普通 LOAD_*（_push=1, _pop=0），
+                        # 导致 `sys.version_info` 中的 `sys` 被误识别为 preload
+                        # 而非条件表达式的一部分，破坏 ternary 作为 Call 参数时的
+                        # Call func 归属（如 `__import__('json' if cond else 'x')`
+                        # 的 cond_block 含 LOAD_NAME sys + LOAD_ATTR version_info，
+                        # sys 被误归入 preload，使 CALL 错误地用 sys 作 func）。
+                        # 依「每块唯一归属」: cond_block preload 仅含不属于条件
+                        # 表达式的栈前缀（如 PUSH_NULL+LOAD_NAME __import__）；
+                        # LOAD_ATTR 消费的对象属于条件表达式。
+                        if _ci.opname in ('LOAD_ATTR', 'LOAD_METHOD'):
+                            _push = 1
+                            _pop = 1
+                        elif _ci.opname.startswith('LOAD_') or _ci.opname == 'COPY':
                             _push = 1
                         elif _ci.opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP'):
                             _push = 1
@@ -18084,7 +18159,14 @@ AST 映射规则:
                 # SETUP_ANNOTATIONS 语义）。
                 if (store_idx is not None and region.merge_block is not None
                         and region.value_target
-                        and not str(region.value_target).startswith('__')):
+                        and str(region.value_target) not in (
+                            '__while_cond_target__', '__compare_target__',
+                            '__iter_target__', '__return_target__',
+                            '__fstring_target__')):
+                    # [R11-19 fix] 见上方 elif 分支的同名修复说明。
+                    # AnnAssign 检测也需放开 dunder 排除，使 `__version__: T = ternary`
+                    # 等场景能正确归约到 AnnAssign（虽然 __version__ 通常不带注解，
+                    # 但保持与 elif 分支一致的守卫逻辑）。
                     _ann_after_store = merge_all[store_idx + 1:]
                     # 过滤 trailing implicit return None
                     _ann_scan = list(_ann_after_store)
@@ -18129,6 +18211,29 @@ AST 映射规则:
                                 'annotation': _ann_annotation,
                                 'value': ternary_expr,
                             })
+                            # [R11-13/10 fix] merge_block 在 AnnAssign 之后可能还
+                            # 含有后续语句（如类体内 `x: T = ternary \n def __post_init__(self): ...`
+                            # 的方法定义 LOAD_CONST code + MAKE_FUNCTION + STORE_NAME m）。
+                            # 依「每块唯一归属」：AnnAssign 部分归 AnnAssign 节点，
+                            # STORE_SUBSCR 之后的指令归下一条语句（如 FunctionDef）。
+                            _post_ann = _ann_scan[_ann_match_idx + 3:]
+                            _post_ann_non_noise = [i for i in _post_ann
+                                                   if i.opname not in ('RESUME', 'NOP',
+                                                                       'CACHE', 'PUSH_NULL')]
+                            if _post_ann_non_noise:
+                                _extra_ann_stmts = self._build_statements_from_instructions(
+                                    list(_post_ann_non_noise))
+                                while _extra_ann_stmts and isinstance(_extra_ann_stmts[-1], dict):
+                                    _last_ann = _extra_ann_stmts[-1]
+                                    if _last_ann.get('type') == 'Return':
+                                        _rv_ann = _last_ann.get('value')
+                                        if _rv_ann and isinstance(_rv_ann, dict) \
+                                                and _rv_ann.get('type') == 'Constant' \
+                                                and _rv_ann.get('value') is None:
+                                            _extra_ann_stmts = _extra_ann_stmts[:-1]
+                                            continue
+                                    break
+                                results.extend(_extra_ann_stmts)
                             for block in region.blocks:
                                 self.generated_blocks.add(block)
                             return results
@@ -18930,7 +19035,12 @@ AST 映射规则:
                 break
             _push = 0
             _pop = 0
-            if _ci.opname.startswith('LOAD_') or _ci.opname == 'COPY':
+            # [R11-20 fix] LOAD_ATTR/LOAD_METHOD 消费栈顶对象（_pop=1）。
+            # 见 _generate_ternary 同名修复的注释。
+            if _ci.opname in ('LOAD_ATTR', 'LOAD_METHOD'):
+                _push = 1
+                _pop = 1
+            elif _ci.opname.startswith('LOAD_') or _ci.opname == 'COPY':
                 _push = 1
             elif _ci.opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP'):
                 _push = 1
@@ -20342,7 +20452,13 @@ AST 映射规则:
         else:
             return None
 
-        if value_target and not str(value_target).startswith('__'):
+        if value_target and str(value_target) not in (
+                '__while_cond_target__', '__compare_target__',
+                '__iter_target__', '__return_target__',
+                '__fstring_target__'):
+            # [R11-19 fix] 见 _generate_ternary 同名修复说明。
+            # 链式 container ternary（如 `__all__ = [t1, t2, t3]`）也应能
+            # 正确进入 Assign 路径。
             return {
                 'type': 'Assign',
                 'targets': [{'type': 'Name', 'id': value_target, 'ctx': 'Store'}],
