@@ -9652,21 +9652,35 @@ RegionType 枚举值: RegionType.ASSERT
             # the reduced form (bottom-up reduction), so per unique-block
             # ownership the IfRegion must yield.
             #
-            # IMPORTANT: This skip must ONLY fire when the BoolOpRegion owns
-            # ternary internal blocks (i.e., more blocks than just the
-            # op_chain entries). For a regular `if a or b: x = 1` or a mixed
-            # and/or chain like `if f() and g() > 0 or h() == 1:` — the
-            # BoolOpRegion owns ONLY the chain blocks (no ternary internal
-            # blocks), and the IfRegion MUST be created normally to own the
-            # if-body. Skipping here would lose the if-body and emit `pass`.
-            # The discriminator is: does the BoolOpRegion own any block that
-            # is NOT in its op_chain? (Edit C adds ternary internal blocks
-            # beyond the op_chain.)
+            # IMPORTANT: The discriminator must distinguish ternary internal
+            # blocks (which have conditional jumps to the merge) from regular
+            # boolop value/merge blocks:
+            # - adv13 ternary internal: true_value/false_value blocks have
+            #   conditional jumps (POP_JUMP_IF_TRUE/FALSE → merge) → SKIP ✓
+            # - adv14 `(a or b) == c`: block 6 (LOAD b) has NO jump, block 8
+            #   (compare) IS the merge → DON'T skip, IfRegion must be created ✓
+            # - adv09 `f() and g() > 0 or h() == 1`: all blocks are in
+            #   op_chain, no internal blocks → DON'T skip ✓
+            # So we exclude: (1) op_chain blocks, (2) the merge block, (3)
+            # blocks whose last instruction is NOT a conditional/short-circuit
+            # jump (e.g., plain LOAD value blocks like `LOAD b`).
             if isinstance(block_region, BoolOpRegion):
                 _ed_chain_blocks = set(b for b, _ in block_region.op_chain)
-                _ed_has_internal = any(
-                    b not in _ed_chain_blocks for b in block_region.blocks
-                )
+                _ed_merge = block_region.merge_block
+                _ed_has_internal = False
+                for _ed_b in block_region.blocks:
+                    if _ed_b in _ed_chain_blocks:
+                        continue
+                    if _ed_b is _ed_merge:
+                        continue
+                    _ed_b_last = _ed_b.get_last_instruction()
+                    if (_ed_b_last is not None
+                            and _ed_b_last.argval is not None
+                            and _ed_b_last.opname in (
+                                FORWARD_CONDITIONAL_JUMP_OPS
+                                | SHORT_CIRCUIT_JUMP_OPS)):
+                        _ed_has_internal = True
+                        break
                 if _ed_has_internal:
                     continue
                 # [P5 + Cluster 4 interaction] Also skip TERNARY VALUE BLOCKS
