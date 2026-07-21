@@ -10331,8 +10331,20 @@ RegionType 枚举值: RegionType.ASSERT
                 for _or2 in (boolop_regions or []) + (ternary_regions or []):
                     if _or2.entry:
                         _bt_entries.add(_or2.entry)
-                then_blocks = [b for b in then_blocks if b in _bt_entries or b not in _boolop_ternary_blocks]
-                else_blocks = [b for b in else_blocks if b in _bt_entries or b not in _boolop_ternary_blocks]
+                # [Phase 3 adv11_while_walrus_boolop] LoopRegion 入口（entry/
+                # condition_block/header_block）即使同时是 BoolOpRegion 的
+                # 链块（如 ``if c: while (x:=f()) and g():``，Block 3 既是
+                # LoopRegion 条件块又是 BoolOpRegion 链块），也必须保留在
+                # IfRegion 的 then_blocks 中——否则 LoopRegion 无法嵌套进
+                # IfRegion，反编译会输出 ``if c: pass`` + 顶层 ``while``。
+                then_blocks = [b for b in then_blocks
+                               if b in _bt_entries
+                               or b not in _boolop_ternary_blocks
+                               or b in _lre]
+                else_blocks = [b for b in else_blocks
+                               if b in _bt_entries
+                               or b not in _boolop_ternary_blocks
+                               or b in _lre]
             else:
                 _loop_region = None
                 for _r in self._filter_regions(list(self.block_to_region.values()), LoopRegion):
@@ -12953,6 +12965,20 @@ RegionType 枚举值: RegionType.ASSERT
             _pred_has_store = any(i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
                                    for i in pred.instructions
                                    if i.opname not in NOISE_OPS)
+            # [Phase 3 adv11_while_walrus_boolop] 海象运算符 (:=) 编译为
+            # ``COPY 1 + STORE_*``，是条件表达式 NamedExpr 的一部分（如
+            # ``while (x := f()) and g():``），不是循环体赋值语句。检测
+            # predecessor 中的 STORE 是否全部由海象模式构成；若是，则不
+            # 视为"循环体内赋值"，允许链向后扩展以识别复合条件。
+            _pred_non_walrus_store = False
+            _pred_instrs_no_noise = [i for i in pred.instructions
+                                     if i.opname not in NOISE_OPS]
+            for _pi, _i in enumerate(_pred_instrs_no_noise):
+                if _i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                    _prev = _pred_instrs_no_noise[_pi - 1] if _pi > 0 else None
+                    if not (_prev and _prev.opname == 'COPY' and _prev.arg == 1):
+                        _pred_non_walrus_store = True
+                        break
             if _pred_has_store:
                 # 修复：当 predecessor 位于循环外部（不在 loop.blocks 中）时，
                 # STORE_FAST 通常是循环前的初始化代码（如 `i = 0`），
@@ -12961,7 +12987,8 @@ RegionType 枚举值: RegionType.ASSERT
                 # 此时应当允许链扩展到该块，以正确识别复合条件。
                 # 只有当 predecessor 位于循环内部时，STORE_FAST 才可能
                 # 表示循环体中的赋值语句，此时应中断链。
-                if pred in loop.blocks:
+                # [Phase 3 adv11] 但海象 STORE 不算循环体赋值，仍允许扩展。
+                if pred in loop.blocks and _pred_non_walrus_store:
                     break
             pred_succs = list(pred.conditional_successors)
             if len(pred_succs) == 2:
