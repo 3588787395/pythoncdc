@@ -140,3 +140,59 @@
 - [ ] 未修改任何测试文件
 - [ ] 未创建根级 debug 文件
 - [ ] 未 git commit
+
+## Ternary 区域 Round 08 验证
+
+### SubTask T1.8.0: 基线确认
+- [x] 全量 ternary 回归基线 = 65 failed / 228 passed / 1 skipped
+- [x] 跨区域回归基线 = 109 failed / 1001 passed / 11 skipped
+- [x] R8 测试基线 = 8 failed / 19 passed / 2 skipped
+
+### SubTask T1.8.1 (P0): assert message ternary 系列
+- [x] R7-01 `assert x, (a if c else b)` 反编译为 ast.Assert(test=x, msg=IfExp)，字节码等价
+- [x] R7-01b `assert x, f(a if c else b)` 反编译为 ast.Assert(test=x, msg=Call(f, [IfExp]))，字节码等价
+- [x] R8-01 `assert x, (n := (a if c else b))` 反编译为 ast.Assert(test=x, msg=NamedExpr(n, IfExp))，字节码等价
+- [x] R8-02 `assert x, "msg: " + (a if c else b)` 反编译为 ast.Assert(test=x, msg=BinOp("msg: ", +, IfExp))，字节码等价
+- [x] R8-03 `assert x, {k: (a if c else b)}` 反编译为 ast.Assert(test=x, msg=Dict({k: IfExp}))，字节码等价
+- [x] 修复依 4 原则：自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口
+- [x] ternary 回归无退化（不新增 failed）
+- [x] 跨区域回归无退化（不新增 failed）
+
+### SubTask T1.8.2 (P0): R8-04 walrus 捕获 ternary
+- [x] `(n := (a if c else b))` 反编译为 Expr(NamedExpr(n, IfExp))，字节码含 COPY+STORE+POP_TOP，等价
+- [x] 修复依 4 原则
+- [x] ternary 回归无退化
+- [x] 跨区域回归无退化
+
+### SubTask T1.8.3 (P1): R7-04/R8-06 del subscript 双 ternary
+- [x] R7-04 `del obj[a if c else b][c if d else e]` 反编译为 Delete([Subscript(Subscript(obj, IfExp1, Del), IfExp2, Del)])，字节码等价
+- [x] R8-06 `del (a if c1 else b)[x if c2 else y]` 反编译为 Delete([Subscript(IfExp1, IfExp2, Del)])，字节码等价
+- [x] 修复依 4 原则
+- [x] ternary 回归无退化
+- [x] 跨区域回归无退化
+
+### SubTask T1.8.4 (P2): R8-05 unpacking assign ternary
+- [x] `*y, = (a if c else b)` 反编译为 Assign(targets=[Starred(y)], value=IfExp)，字节码含 UNPACK_EX，等价
+- [x] 修复依 4 原则
+- [x] ternary 回归无退化
+- [x] 跨区域回归无退化
+
+### SubTask T1.8.5 (P2): R8-07 import 边界 ternary
+- [x] `from x import y as z\nw = a if c else b` 反编译含 ImportFrom + Assign(w, IfExp)，import 不丢失，字节码等价
+- [x] 修复依 4 原则
+- [x] ternary 回归无退化
+- [x] 跨区域回归无退化
+
+### SubTask T1.8.6 (评估): async 控制流 ternary 系列
+- [x] R7-02/R7-03/R7-10/R8-08 评估本轮是否修复
+- [x] 若未修复则记录为 R9+ 已知限制（评估结论：多文件多修改点 + 4 种不同修复方向 + 退化风险高，留待 R9+）
+
+### SubTask T1.8.7-8: 最终验证
+- [x] 全量 ternary 回归 ≤ 65 failed / ≥ 228 passed / 1 skipped，无新增退化 — 实际 63 failed / 257 passed / 3 skipped
+- [x] 跨区域回归 ≤ 109 failed / ≥ 1001 passed / 11 skipped，无新增退化 — 实际 107 failed / 1030 passed / 13 skipped
+- [x] 修复报告已写 — `rounds/ternary_region/round_08/fix_report.md`
+- [x] 所有修复均通过 4 原则论证，无跨区域启发式特例 / 后处理补丁 / 启发式优先级覆盖 / 扁平化
+- [x] 源代码无 debug 打印残留
+- [x] 未修改任何测试文件
+- [x] 未创建根级 debug 文件（6 个 _debug_*.py 已清理）
+- [x] 未 git commit（由父代理决定提交时机）

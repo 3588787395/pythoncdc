@@ -56,7 +56,17 @@
   - [x] SubTask T1.7.6: 跨区域回归 — 109 failed / 1001 passed / 11 skipped (无基线退化)
   - [x] SubTask T1.7.7: 写 fix_report.md
   - [ ] 已知限制 (R8+ 处理): R7-01/08 assert message ternary, R7-02 async for body, R7-03 async with body, R7-04 del subscript chain, R7-10 async for-else
-- [ ] Task T1.8 ~ T1.20
+- [x] Task T1.8: Ternary round_08 — 修复 10 测试 / 5 类 bug（assert family 5 + del subscript 2 + R8-04 walrus + R8-05 unpack + R8-07 import），6 已知限制留待 R9+（async 4 + skip 2）
+  - [x] SubTask T1.8.0: 基线确认（ternary 65 failed / 228 passed / 1 skipped；跨区域 109 failed / 1001 passed / 11 skipped）
+  - [x] SubTask T1.8.1 (P0): R7-01/R7-01b/R8-01/R8-02/R8-03 assert message ternary 系列（5 测试） — `_build_ternary_no_target_consumer_stmt` 顶部 guard + `_build_assert_message_ternary_stmt` 方法 + Pattern 1 内部 guard 移除
+  - [x] SubTask T1.8.2 (P0): R8-04 walrus 捕获 ternary — `_generate_ternary` value_target 分支前 walrus 检测，输出 `Expr(NamedExpr(target, IfExp))`
+  - [x] SubTask T1.8.3 (P1): R7-04/R8-06 del subscript 双 ternary — `_try_build_ternary_chained_r6_pattern` Pattern D，输出 `Delete([Subscript(Subscript(obj, IfExp1, Del), IfExp2, Del)])`
+  - [x] SubTask T1.8.4 (P2): R8-05 unpacking 赋值 source 是 ternary — `_generate_ternary` value_target 分支 Mode 3 UNPACK_EX 检测，输出 `Assign(targets=[Starred(y)], value=IfExp)`
+  - [x] SubTask T1.8.5 (P2): R8-07 import from alias 后跟 ternary 赋值 — 新增 `_extract_imports_from_block_prefix` helper + `generate()` TernaryRegion 分支调用，import 不丢失
+  - [x] SubTask T1.8.6 (评估): R7-02/R7-03/R7-10/R8-08 async 控制流 ternary 系列（4 测试） — 评估结论：多文件多修改点 + 4 种不同修复方向 + 退化风险高，留待 R9+
+  - [x] SubTask T1.8.7: 全量 ternary 回归 63 failed / 257 passed / 3 skipped（≤65 目标 ✅）+ 跨区域 107 failed / 1030 passed / 13 skipped（≤109 目标 ✅，无基线退化）
+  - [x] SubTask T1.8.8: 写 fix_report.md，清理 6 个根级 _debug_*.py 调试脚本
+- [ ] Task T1.9 ~ T1.20
 
 ## Phase 3-10: 其他 8 区域（各 20 轮）
 - [ ] Task 3.1 ~ 10.20

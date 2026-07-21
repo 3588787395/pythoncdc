@@ -126,6 +126,116 @@ class RegionASTGenerator:
     def block_role(self, block: 'BasicBlock') -> 'BlockRole':
         return self.region_analyzer.get_block_role(block)
 
+    def _extract_imports_from_block_prefix(self, block: 'BasicBlock') -> List[Dict[str, Any]]:
+        """[R8-07 fix] Extract import statements from the prefix of a block.
+
+        Scans the block's instructions for IMPORT_NAME + IMPORT_FROM + STORE_*
+        sequences, stopping at the first jump instruction or non-import
+        instruction. Returns a list of ImportFrom/Import AST dicts.
+
+        Used by generate() to extract imports from entry_block when the entry
+        region is TernaryRegion — the ternary's condition preload scan doesn't
+        emit imports, so they'd be lost without this extraction.
+
+        依「每块唯一归属」+「父引用子入口」：import 指令归 generate()
+        预扫描，ternary condition preload 归 TernaryRegion。两者通过
+        指令序列前后划分归属，不重叠。
+        """
+        _pre_stmts: List[Dict[str, Any]] = []
+        _import_pending_store = False
+        for _instr in block.instructions:
+            if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL', 'LOAD_CONST'):
+                continue
+            if _instr.opname in FORWARD_JUMP_OPS or _instr.opname in BACKWARD_JUMP_OPS:
+                break
+            if _instr.opname in ('JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'):
+                break
+            if _instr.opname == 'IMPORT_NAME':
+                module_name = _instr.argval if _instr.argval else ''
+                _instr_idx = block.instructions.index(_instr)
+                _has_import_from = False
+                _scan_start = _instr_idx + 1
+                for _s in range(_scan_start, min(_scan_start + 3, len(block.instructions))):
+                    if block.instructions[_s].opname == 'IMPORT_FROM':
+                        _has_import_from = True
+                        break
+                    elif block.instructions[_s].opname not in ('LOAD_CONST', 'PUSH_NULL'):
+                        break
+                if _has_import_from:
+                    from_names = []
+                    _si = _instr_idx + 1
+                    while _si < len(block.instructions) - 1:
+                        _sc = block.instructions[_si]
+                        _sn = block.instructions[_si + 1]
+                        if _sc.opname == 'IMPORT_FROM':
+                            _imp_n = _sc.argval if _sc.argval else ''
+                            _sto_n = None
+                            if _sn.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                                _sto_n = _sn.argval
+                                _si += 2
+                            elif _sn.opname == 'IMPORT_FROM':
+                                _sto_n = _imp_n
+                                _si += 1
+                            else:
+                                _sto_n = _imp_n
+                                _si += 1
+                                continue
+                            if _imp_n:
+                                from_names.append((_imp_n, _sto_n))
+                            continue
+                        elif _sc.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                            _si += 1
+                            continue
+                        elif _sc.opname in ('LOAD_CONST', 'PUSH_NULL', 'POP_TOP'):
+                            _si += 1
+                            continue
+                        else:
+                            break
+                    if from_names:
+                        _nl = []
+                        for _ipd, _std in from_names:
+                            if _ipd != _std:
+                                _nl.append({'name': _ipd, 'asname': _std})
+                            else:
+                                _nl.append({'name': _ipd, 'asname': None})
+                        _pre_stmts.append({'type': 'ImportFrom', 'module': module_name, 'names': _nl})
+                else:
+                    _sn_list = []
+                    for _si2 in range(_instr_idx + 1, len(block.instructions)):
+                        _nxt = block.instructions[_si2]
+                        if _nxt.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                            _sn_list.append(_nxt.argval)
+                        elif _nxt.opname == 'POP_TOP':
+                            pass
+                        elif _nxt.opname in ('LOAD_CONST',) and not _sn_list:
+                            pass
+                        else:
+                            break
+                    if _sn_list:
+                        if len(_sn_list) == 1 and _sn_list[0] != module_name:
+                            _aliases = [{'name': module_name, 'asname': _sn_list[0]}]
+                        else:
+                            _aliases = [{'name': _n, 'asname': None} for _n in _sn_list]
+                        _pre_stmts.append({'type': 'Import', 'names': _aliases})
+                    else:
+                        _pre_stmts.append({'type': 'Import', 'names': [{'name': module_name, 'asname': None}]})
+                _import_pending_store = True
+                continue
+            if _instr.opname == 'IMPORT_FROM':
+                _import_pending_store = True
+                continue
+            if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                if _import_pending_store:
+                    _import_pending_store = False
+                    continue
+                # Non-import STORE: stop (let caller handle, e.g., ternary
+                # value_target or condition preload).
+                break
+            # Non-import, non-STORE instruction: stop (let caller handle,
+            # e.g., ternary condition preload like LOAD_NAME c).
+            break
+        return _pre_stmts
+
     def generate(self) -> Dict[str, Any]:
         from core.cfg.region_analyzer import LoopRegion
         func_name = self.cfg.name
@@ -163,7 +273,16 @@ class RegionASTGenerator:
             elif isinstance(entry_region, BoolOpRegion):
                 pass
             elif isinstance(entry_region, TernaryRegion):
-                pass
+                # [R8-07 fix] TernaryRegion entry may contain import statements
+                # before the ternary condition preload (e.g., `from x import y as z
+                # \n w = a if c else b`). Extract them so they're not lost — the
+                # ternary's condition preload scan doesn't emit imports.
+                # Don't mark entry_block as generated — the ternary will process
+                # it for condition preload.
+                if entry_block is not None:
+                    _t_import_pre = self._extract_imports_from_block_prefix(entry_block)
+                    if _t_import_pre:
+                        ast_nodes.extend(_t_import_pre)
             elif isinstance(entry_region, AssertRegion):
                 assert_id = id(entry_region)
                 if assert_id not in self._generated_regions and assert_id not in self._generating_regions:
@@ -1664,6 +1783,23 @@ class RegionASTGenerator:
                             self.generated_blocks.add(_b)
                         self._generated_regions.add(id(region))
                         break
+            # [R8 fix] 守卫：ternary 的 entry 是某个 AssertRegion 的
+            # message_block（且 != condition_block）时，ternary 是 assert 的
+            # message 表达式（如 `assert x, (a if c else b)`）。由
+            # _generate_assert 通过 _resolve_assert_message_ternary_expr
+            # 调用 _generate_ternary 归约 IfExp 作为 msg，不应被独立处理为语句。
+            # 依「父引用子入口」原则，父 AssertRegion 通过 message_block 引用
+            # 嵌套 TernaryRegion 的入口。
+            if not should_skip and region.entry is not None:
+                for r in self.regions:
+                    if (r is not region and isinstance(r, AssertRegion)
+                            and r.message_block is region.entry
+                            and r.message_block is not r.condition_block):
+                        should_skip = True
+                        for _b in region.blocks:
+                            self.generated_blocks.add(_b)
+                        self._generated_regions.add(id(region))
+                        break
             if should_skip:
                 return None
             return self._generate_ternary(region, skip_store_targets=skip_store_targets)
@@ -1813,43 +1949,52 @@ AST 映射规则:
                 condition = self._fix_assert_none_check_direction(expr)
         message = None
         if region.message_block:
-            msg_instrs = []
-            instrs = region.message_block.instructions
-            # [Round8-12] walrus 在 assert 消息：(n := f()) 字节码为
-            # PUSH_NULL, LOAD f, PRECALL, CALL, COPY 1, STORE n, ..., PRECALL, CALL, RAISE_VARARGS 1
-            # 消息求值段含 PRECALL/CALL（f() 调用）和 COPY+STORE（walrus 副作用），
-            # 必须保留这些指令才能让 expr_reconstructor 识别 walrus 与调用。
-            # 旧逻辑：非 BUILD_STRING 时一律跳过所有 PRECALL/CALL，并把 COPY 列入
-            # base_skip —— 这会让 `assert x, f()` 退化为 `assert x, f`，让 walrus
-            # 退化为占位 dict。新逻辑：统一用反向扫描定位 RAISE_VARARGS 边界
-            # （build_string 路径已有此逻辑），仅跳过边界及之后的 PRECALL/CALL
-            # （LOAD_ASSERTION_ERROR + CALL 的抛错基础设施），保留消息体内的
-            # PRECALL/CALL/COPY/STORE。COPY 从 base_skip 移除，使 walrus 的
-            # COPY+STORE 模式可被识别；SWAP 仍保留跳过（消息中暂未需要）。
-            base_skip = {'RAISE_VARARGS', 'POP_EXCEPT', 'RERAISE',
-                        'LOAD_ASSERTION_ERROR', 'RESUME', 'NOP', 'CACHE',
-                        'PUSH_NULL', 'SWAP'}
-            raise_call_start = len(instrs)
-            found_raise = False
-            for idx in range(len(instrs) - 1, -1, -1):
-                op = instrs[idx].opname
-                if op == 'RAISE_VARARGS':
-                    raise_call_start = idx
-                    found_raise = True
-                elif found_raise and op in ('CALL', 'PRECALL', 'PUSH_NULL',
-                                            'COPY', 'SWAP', 'NOP', 'CACHE',
-                                            'RESUME'):
-                    raise_call_start = idx
-                elif found_raise:
-                    break
-            for i, instr in enumerate(instrs):
-                if instr.opname in base_skip:
-                    continue
-                if i >= raise_call_start and instr.opname in ('PRECALL', 'CALL'):
-                    continue
-                msg_instrs.append(instr)
-            if msg_instrs:
-                message = self.expr_reconstructor.reconstruct(msg_instrs)
+            # [R8 fix] 若 message_block 同时是某嵌套 TernaryRegion 的 entry，
+            # 调用 _generate_ternary 归约 TernaryRegion 为表达式作为 msg。
+            # 依「嵌套即抽象节点」+「父引用子入口」：AssertRegion 通过
+            # message_block 引用嵌套 TernaryRegion 入口，TernaryRegion 在
+            # 父 AssertRegion 中作为单个抽象节点。
+            _nested_ternary_msg = self._resolve_assert_message_ternary_expr(region)
+            if _nested_ternary_msg is not None:
+                message = _nested_ternary_msg
+            else:
+                msg_instrs = []
+                instrs = region.message_block.instructions
+                # [Round8-12] walrus 在 assert 消息：(n := f()) 字节码为
+                # PUSH_NULL, LOAD f, PRECALL, CALL, COPY 1, STORE n, ..., PRECALL, CALL, RAISE_VARARGS 1
+                # 消息求值段含 PRECALL/CALL（f() 调用）和 COPY+STORE（walrus 副作用），
+                # 必须保留这些指令才能让 expr_reconstructor 识别 walrus 与调用。
+                # 旧逻辑：非 BUILD_STRING 时一律跳过所有 PRECALL/CALL，并把 COPY 列入
+                # base_skip —— 这会让 `assert x, f()` 退化为 `assert x, f`，让 walrus
+                # 退化为占位 dict。新逻辑：统一用反向扫描定位 RAISE_VARARGS 边界
+                # （build_string 路径已有此逻辑），仅跳过边界及之后的 PRECALL/CALL
+                # （LOAD_ASSERTION_ERROR + CALL 的抛错基础设施），保留消息体内的
+                # PRECALL/CALL/COPY/STORE。COPY 从 base_skip 移除，使 walrus 的
+                # COPY+STORE 模式可被识别；SWAP 仍保留跳过（消息中暂未需要）。
+                base_skip = {'RAISE_VARARGS', 'POP_EXCEPT', 'RERAISE',
+                            'LOAD_ASSERTION_ERROR', 'RESUME', 'NOP', 'CACHE',
+                            'PUSH_NULL', 'SWAP'}
+                raise_call_start = len(instrs)
+                found_raise = False
+                for idx in range(len(instrs) - 1, -1, -1):
+                    op = instrs[idx].opname
+                    if op == 'RAISE_VARARGS':
+                        raise_call_start = idx
+                        found_raise = True
+                    elif found_raise and op in ('CALL', 'PRECALL', 'PUSH_NULL',
+                                                'COPY', 'SWAP', 'NOP', 'CACHE',
+                                                'RESUME'):
+                        raise_call_start = idx
+                    elif found_raise:
+                        break
+                for i, instr in enumerate(instrs):
+                    if instr.opname in base_skip:
+                        continue
+                    if i >= raise_call_start and instr.opname in ('PRECALL', 'CALL'):
+                        continue
+                    msg_instrs.append(instr)
+                if msg_instrs:
+                    message = self.expr_reconstructor.reconstruct(msg_instrs)
         for block in region.blocks:
             self.generated_blocks.add(block)
         result = {
@@ -2120,6 +2265,101 @@ AST 映射规则:
                 result = {'type': 'BoolOp', 'op': 'or', 'values': [gnode, result]}
         return result
 
+    def _resolve_assert_message_ternary_expr(self, region: AssertRegion) -> Optional[Dict[str, Any]]:
+        """[R8 fix] 若 AssertRegion.message_block 同时是某嵌套 TernaryRegion
+        的 entry（condition_block），说明 message 是一个三元表达式
+        （如 `assert x, (a if c else b)` / `assert x, f(a if c else b)` 等）。
+
+        依「嵌套即抽象节点」（原则 3）+「父引用子入口」（原则 4）：
+        AssertRegion 通过 message_block 引用嵌套 TernaryRegion 的入口；
+        TernaryRegion 在父 AssertRegion 中作为单个抽象表达式节点（msg 槽位）。
+
+        调用 _generate_ternary 归约 TernaryRegion 为 IfExp 表达式（或
+        BinOp/Call/Dict 等包装表达式），提取其 value 作为 msg 返回。
+        同时标记 TernaryRegion 的所有块为 generated，避免独立输出造成双重。
+
+        Returns:
+            msg 表达式 AST 节点（IfExp / Call / BinOp / Dict / NamedExpr 等），
+            或 None（无嵌套 ternary / 生成失败 / 出现递归）。
+        """
+        if region.message_block is None:
+            return None
+        # message_block 必须与 condition_block 不同（否则是 `assert (ternary)`，
+        # ternary 作 test 而非 msg —— 走 Pattern 1 处理）。
+        if region.message_block is region.condition_block:
+            return None
+        _nested_ternary = None
+        for _r in self.regions:
+            if (isinstance(_r, TernaryRegion) and _r is not region
+                    and _r.entry is region.message_block):
+                _nested_ternary = _r
+                break
+        if _nested_ternary is None:
+            return None
+        # 防止递归：标记正在生成
+        if id(_nested_ternary) in self._generating_regions:
+            return None
+        self._generating_regions.add(id(_nested_ternary))
+        # [R8-01 fix] walrus assert message: `assert x, (n := (a if c else b))`
+        # 字节码：merge_block 含 COPY 1 + STORE_NAME n + PRECALL + CALL + RAISE_VARARGS。
+        # analyzer 把 STORE_NAME n 设为 value_target，使 _generate_ternary 走
+        # value_target 分支生成 Assign([n], IfExp) —— 这会丢失 walrus 语义
+        # （COPY+STORE 是 walrus 副作用而非独立赋值），且导致指令数不匹配
+        # （13 vs 11，丢失 COPY+STORE_NAME）。
+        # 依「嵌套即抽象节点」+「父引用子入口」：walrus 应作为 msg 表达式的
+        # NamedExpr 节点（`assert x, (n := (ternary))`），由 merge_block 的
+        # COPY+STORE 入口引用 ternary 子节点。
+        # 修复：临时清除 value_target，让 _generate_ternary 走 no-target consumer
+        # 路径，由 _build_ternary_no_target_consumer_stmt 顶部守卫识别 walrus
+        # 模式并生成 Expr(NamedExpr(...))。
+        _saved_vt = getattr(_nested_ternary, 'value_target', None)
+        _mb = _nested_ternary.merge_block
+        _clear_vt_for_walrus = False
+        if (_saved_vt and _mb
+                and not str(_saved_vt).startswith('__')
+                and _saved_vt not in (
+                    '__while_cond_target__', '__compare_target__',
+                    '__iter_target__', '__return_target__',
+                    '__fstring_target__')):
+            _mb_eff = [i for i in _mb.instructions
+                       if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+            for _i, _instr in enumerate(_mb_eff):
+                if (_instr.opname == 'COPY' and _instr.arg == 1
+                        and _i + 1 < len(_mb_eff)
+                        and _mb_eff[_i + 1].opname in (
+                            'STORE_FAST', 'STORE_NAME',
+                            'STORE_GLOBAL', 'STORE_DEREF')
+                        and _mb_eff[_i + 1].argval == _saved_vt):
+                    # 确认是 assert msg 上下文（merge_block 含 RAISE_VARARGS）
+                    if any(_x.opname == 'RAISE_VARARGS' for _x in _mb_eff):
+                        _clear_vt_for_walrus = True
+                    break
+        if _clear_vt_for_walrus:
+            _nested_ternary.value_target = None
+        try:
+            _t_stmts = self._generate_ternary(_nested_ternary)
+        finally:
+            if _clear_vt_for_walrus:
+                _nested_ternary.value_target = _saved_vt
+            self._generating_regions.discard(id(_nested_ternary))
+        if not _t_stmts or len(_t_stmts) != 1:
+            return None
+        _t_node = _t_stmts[0]
+        _t_expr = None
+        if _t_node.get('type') == 'Expr':
+            _t_expr = _t_node.get('value')
+        elif _t_node.get('type') == 'Assign':
+            _t_expr = _t_node.get('value')
+        elif _t_node.get('type') == 'Return':
+            _t_expr = _t_node.get('value')
+        if _t_expr is None:
+            return None
+        # 标记 ternary region 的所有块为 generated，避免独立处理造成双重输出
+        for _b in _nested_ternary.blocks:
+            self.generated_blocks.add(_b)
+        self._generated_regions.add(id(_nested_ternary))
+        return _t_expr
+
     def _build_assert_message(self, region: AssertRegion) -> Optional[Dict[str, Any]]:
         """[Round4-12] 抽取 AssertRegion.message_block 重建逻辑。
 
@@ -2141,6 +2381,14 @@ AST 映射规则:
         """
         if not region.message_block:
             return None
+        # [R8 fix] 若 message_block 同时是某嵌套 TernaryRegion 的 entry
+        # （condition_block），说明 message 是一个三元表达式
+        # （`assert x, (a if c else b)` 等）。依「嵌套即抽象节点」+
+        # 「父引用子入口」：调用 _generate_ternary 归约 TernaryRegion 为
+        # IfExp 表达式（或包装表达式），作为 AssertRegion 的 msg。
+        _nested_ternary_msg = self._resolve_assert_message_ternary_expr(region)
+        if _nested_ternary_msg is not None:
+            return _nested_ternary_msg
         msg_instrs = []
         instrs = region.message_block.instructions
         has_build_string = any(i.opname == 'BUILD_STRING' for i in instrs)
@@ -17442,6 +17690,49 @@ AST 映射规则:
                         for block in region.blocks:
                             self.generated_blocks.add(block)
                         return results
+                    # 模式 3: UNPACK_EX + (before + 1 + after) 个 STORE_*（starred 解包赋值）
+                    # `*y, = ternary`   -> merge: UNPACK_EX 0, STORE_y
+                    # `a, *b = ternary`  -> merge: UNPACK_EX 1, STORE_a, STORE_b (b starred)
+                    # `*a, b = ternary`  -> merge: UNPACK_EX 256, STORE_a (starred), STORE_b
+                    # UNPACK_EX arg encoding: before = arg & 0xFF, after = arg >> 8
+                    # 总 STORE_* 数 = before + 1 + after（+1 为 starred 目标）
+                    # starred 目标在 STORE_* 列表中的索引 = before（0-based）
+                    # 依「父引用子入口」：父 Assign(starred) 通过 merge_block 的
+                    # UNPACK_EX + 多 STORE 引用 ternary 子节点作为 unpack 源。
+                    if (_prev_instr.opname == 'UNPACK_EX'
+                            and _prev_instr.arg is not None):
+                        _ex_before = _prev_instr.arg & 0xFF
+                        _ex_after = _prev_instr.arg >> 8
+                        _expected_stores = _ex_before + 1 + _ex_after
+                        if len(_stores_after) == _expected_stores:
+                            _up_targets = []
+                            for _si, _s in enumerate(_stores_after):
+                                _name_id = (_s.argval if _s.argval
+                                            else f'var_{_s.arg}')
+                                if _si == _ex_before:
+                                    _up_targets.append({
+                                        'type': 'Starred',
+                                        'value': {'type': 'Name', 'id': _name_id,
+                                                  'ctx': 'Store'},
+                                        'ctx': 'Store',
+                                    })
+                                else:
+                                    _up_targets.append({
+                                        'type': 'Name', 'id': _name_id,
+                                        'ctx': 'Store',
+                                    })
+                            results.append({
+                                'type': 'Assign',
+                                'targets': [{
+                                    'type': 'Tuple',
+                                    'elts': _up_targets,
+                                    'ctx': 'Store',
+                                }],
+                                'value': ternary_expr,
+                            })
+                            for block in region.blocks:
+                                self.generated_blocks.add(block)
+                            return results
                 # [R6-17 fix] AnnAssign 检测：`x: T = a if c else b` 字节码模式
                 # merge_block: STORE_x + <ann_expr_instrs> + LOAD_NAME __annotations__
                 #              + LOAD_CONST 'x' + STORE_SUBSCR + [trailing return]
@@ -17501,6 +17792,57 @@ AST 映射规则:
                             for block in region.blocks:
                                 self.generated_blocks.add(block)
                             return results
+                # [R8-04 fix] Standalone walrus capture ternary: `(n := (ternary))`.
+                # Pattern: COPY 1 + STORE_* (walrus) + POP_TOP (discard preserved
+                # stack top) — no outer STORE_* after the walrus store (otherwise
+                # R15 Mode A 处理它). 字节码: COPY 1, STORE_NAME n, POP_TOP,
+                # [LOAD_CONST None, RETURN_VALUE]. walrus 的 COPY 1 复制 ternary
+                # 结果保留栈顶（供外层表达式使用），STORE n 绑定变量，POP_TOP 丢弃
+                # 保留的栈顶（外层是 Expr 语句，丢弃结果）。
+                # 依「嵌套即抽象节点」：walrus NamedExpr 作为单个抽象节点，
+                # 包含 ternary IfExp 作为 value。父 Expr 通过 merge_block 的
+                # COPY+STORE+POP_TOP 引用 ternary 子节点入口。
+                # 否则会输出 `n = (ternary)`（Assign），丢失 walrus 留栈语义
+                # （重编译字节码缺失 COPY+POP_TOP，从 9 条退化为 7 条）。
+                if (store_idx is not None and store_idx > 0
+                        and merge_all[store_idx - 1].opname == 'COPY'
+                        and merge_all[store_idx - 1].arg == 1
+                        and region.merge_block is not None):
+                    _walrus_after_store = merge_all[store_idx + 1:]
+                    # 过滤 trailing implicit return None
+                    _walrus_scan = list(_walrus_after_store)
+                    while _walrus_scan and _walrus_scan[-1].opname == 'RETURN_VALUE':
+                        _walrus_scan.pop()
+                        if (_walrus_scan and _walrus_scan[-1].opname == 'LOAD_CONST'
+                                and _walrus_scan[-1].argval is None):
+                            _walrus_scan.pop()
+                    _walrus_has_outer_store = any(
+                        i.opname in ('STORE_FAST', 'STORE_NAME',
+                                     'STORE_GLOBAL', 'STORE_DEREF')
+                        for i in _walrus_scan)
+                    _walrus_non_noise = [i for i in _walrus_scan
+                                         if i.opname not in ('RESUME', 'NOP',
+                                                             'CACHE', 'PUSH_NULL')]
+                    if (not _walrus_has_outer_store
+                            and _walrus_non_noise
+                            and all(i.opname == 'POP_TOP'
+                                    for i in _walrus_non_noise)):
+                        _walrus_target_name = merge_all[store_idx].argval
+                        results.append({
+                            'type': 'Expr',
+                            'value': {
+                                'type': 'NamedExpr',
+                                'target': {
+                                    'type': 'Name',
+                                    'id': _walrus_target_name,
+                                    'ctx': 'Store',
+                                },
+                                'value': ternary_expr,
+                            },
+                        })
+                        for block in region.blocks:
+                            self.generated_blocks.add(block)
+                        return results
                 results.append({
                     'type': 'Assign',
                     'targets': [{'type': 'Name', 'id': region.value_target, 'ctx': 'Store'}],
@@ -18363,6 +18705,30 @@ AST 映射规则:
         if region.merge_block is None:
             return None
 
+        # [R8 fix] assert message ternary 顶部守卫
+        # 若此 ternary 的 entry 是某 AssertRegion 的 message_block（且 != condition_block），
+        # 说明 ternary 是 assert 的 message 表达式（`assert x, (ternary)` /
+        # `assert x, f(ternary)` / `assert x, (n := ternary)` 等）。
+        # 依「父引用子入口」+「嵌套即抽象节点」：父 Assert 通过 message_block 入口
+        # 引用 ternary 子节点，ternary 在父 Assert 中作为单个抽象表达式节点（msg 槽位）。
+        # 调用 _build_assert_message_ternary_stmt 构造 Expr(msg_expr) 让
+        # _resolve_assert_message_ternary_expr 提取 msg_expr 作为 msg。
+        # 必须在所有 pattern 之前：因为 merge_block 中的 PRECALL+CALL+RAISE_VARARGS
+        # 是 assert 基础设施（不是 raise (ternary)），Pattern 2 会误匹配。
+        if region.entry is not None:
+            _parent_assert_region = None
+            for _r in self.regions:
+                if (isinstance(_r, AssertRegion) and _r is not region
+                        and _r.message_block is region.entry
+                        and _r.message_block is not _r.condition_block):
+                    _parent_assert_region = _r
+                    break
+            if _parent_assert_region is not None:
+                _msg_stmt = self._build_assert_message_ternary_stmt(
+                    region, ternary_expr)
+                if _msg_stmt is not None:
+                    return _msg_stmt
+
         merge_instrs = [i for i in region.merge_block.instructions
                         if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
         # [R10-batch1 err 14] For yield-from (ternary), merge_block only holds
@@ -18623,6 +18989,137 @@ AST 映射规则:
                     return {'type': 'Expr', 'value': _wrapped}
 
         return None
+
+    def _build_assert_message_ternary_stmt(self, region: TernaryRegion,
+                                            ternary_expr: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """[R8 fix] Build an Expr(msg) statement for assert message ternary.
+
+        When the ternary's entry is an AssertRegion's message_block (and !=
+        condition_block), the ternary is the assert's message expression.
+        The merge_block contains consumer instructions followed by assert
+        infrastructure (PRECALL 0 + CALL 0 + RAISE_VARARGS 1).
+
+        Patterns handled:
+          Simple:  ``assert x, (ternary)``           -> msg = ternary
+          Walrus:  ``assert x, (n := ternary)``      -> msg = NamedExpr(n, ternary)
+          Call:    ``assert x, f(ternary)``          -> msg = Call(f, [ternary])
+          BinOp:   ``assert x, "s" + ternary``       -> msg = BinOp("s", +, ternary)
+          Dict:    ``assert x, {k: ternary}``        -> msg = Dict([k], [ternary])
+
+        Per "parent references child entry" + "nesting means abstract node":
+        the parent AssertRegion references the nested TernaryRegion's entry
+        via message_block; the TernaryRegion is a single abstract expression
+        node (the msg slot) in the parent AssertRegion. The cond_block
+        preloads (callable / left operand / dict key) and merge_block
+        consumer instructions (BINARY_OP / BUILD_MAP / COPY+STORE / CALL)
+        belong to the parent assert msg expression, not the ternary itself.
+
+        Returns {'type': 'Expr', 'value': msg_expr} or None.
+        """
+        if region.merge_block is None or region.condition_block is None:
+            return None
+
+        # Extract preload from cond_block, skipping LOAD_ASSERTION_ERROR
+        # (which is assert infrastructure, not part of the msg expression).
+        cond_block = region.condition_block
+        cond_instrs = [i for i in cond_block.instructions
+                       if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
+                                           'LOAD_ASSERTION_ERROR')]
+        cond_last = cond_block.get_last_instruction()
+        # Walk backwards from the conditional jump to find where the
+        # ternary condition expression itself begins. Everything before
+        # that is the msg-expression preload (callable / left operand / key).
+        cond_val_start = 0
+        _needed = 1
+        for _ci_idx in range(len(cond_instrs) - 1, -1, -1):
+            _ci = cond_instrs[_ci_idx]
+            if _ci is cond_last:
+                continue
+            if _ci.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                cond_val_start = _ci_idx + 1
+                break
+            _push = 1 if (_ci.opname.startswith('LOAD_') or _ci.opname == 'COPY') else 0
+            _pop = 0
+            if _ci.opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP', 'BINARY_OP'):
+                _push = 1
+                _pop = 2
+            elif _ci.opname.startswith('UNARY_'):
+                _push = 1
+                _pop = 1
+            elif _ci.opname == 'CALL':
+                _push = 1
+                _pop = (_ci.arg or 0) + 1
+            elif _ci.opname.startswith('BUILD_'):
+                _push = 1
+                _pop = _ci.arg or 0
+            elif _ci.opname in ('PRECALL', 'POP_TOP'):
+                _push = 0
+                _pop = 0
+            _needed = _needed - _push + _pop
+            if _needed <= 0:
+                cond_val_start = _ci_idx
+                break
+
+        preload_exprs: List[Dict[str, Any]] = []
+        if cond_val_start > 0:
+            preload_instrs = cond_instrs[:cond_val_start]
+            # Detect compound preloads (calls / container builds) that the
+            # simple per-instruction loop below can't handle.
+            _has_compound = any(
+                pi.opname in ('PRECALL', 'CALL', 'BUILD_TUPLE', 'BUILD_LIST',
+                              'BUILD_MAP', 'BUILD_SET', 'BUILD_CONST_KEY_MAP')
+                for pi in preload_instrs)
+            if _has_compound:
+                _pe = self.expr_reconstructor.reconstruct(preload_instrs)
+                if _pe:
+                    preload_exprs = [_pe]
+            else:
+                for pi in preload_instrs:
+                    if pi.opname.startswith('LOAD_'):
+                        _pe = self.expr_reconstructor.reconstruct([pi])
+                        if _pe:
+                            preload_exprs.append(_pe)
+                    elif pi.opname == 'COPY' and pi.arg == 1 and preload_exprs:
+                        preload_exprs.append(preload_exprs[-1])
+
+        # Get merge_block instructions (excluding noise).
+        merge_instrs = [i for i in region.merge_block.instructions
+                        if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+
+        # Strip trailing assert infrastructure: PRECALL 0 + CALL 0 + RAISE_VARARGS 1.
+        # Only strip the RAISE_VARARGS and the immediately preceding PRECALL +
+        # CALL pair (the AssertionError() call). Earlier PRECALL + CALL pairs
+        # may be part of the msg expression (e.g. f(ternary) in
+        # `assert x, f(a if c else b)`) and must be preserved.
+        assert_infra_start = len(merge_instrs)
+        for idx in range(len(merge_instrs) - 1, -1, -1):
+            if merge_instrs[idx].opname == 'RAISE_VARARGS':
+                assert_infra_start = idx
+                break
+        # Strip the AssertionError() call: PRECALL + CALL just before RAISE_VARARGS.
+        if assert_infra_start >= 1 and merge_instrs[assert_infra_start - 1].opname == 'CALL':
+            assert_infra_start -= 1
+            if assert_infra_start >= 1 and merge_instrs[assert_infra_start - 1].opname == 'PRECALL':
+                assert_infra_start -= 1
+
+        msg_instrs = merge_instrs[:assert_infra_start]
+
+        # Build msg_expr using reconstruct with preload + ternary as initial_stack.
+        # - Simple (no msg_instrs): msg = ternary_expr
+        # - Walrus (COPY+STORE): reconstruct produces NamedExpr(target, ternary)
+        # - Call (PRECALL N + CALL N): reconstruct produces Call(callable, [ternary])
+        # - BinOp (BINARY_OP): reconstruct produces BinOp(left, op, ternary)
+        # - Dict (BUILD_MAP): reconstruct produces Dict([key], [ternary])
+        if not msg_instrs:
+            msg_expr = ternary_expr
+        else:
+            initial_stack = list(preload_exprs) + [ternary_expr]
+            msg_expr = self.expr_reconstructor.reconstruct(
+                msg_instrs, initial_stack=initial_stack)
+
+        if msg_expr is None:
+            return None
+        return {'type': 'Expr', 'value': msg_expr}
 
     def _try_build_ternary_store_assign(self, region: TernaryRegion,
                                          ternary_expr: Dict[str, Any]) -> Optional[Dict[str, Any]]:
@@ -19739,6 +20236,131 @@ AST 映射规则:
                                 'targets': [_target],
                                 'value': _rhs_value,
                             }
+
+        # --- Pattern D: del subscript with double ternary (R7-04/R8-06) ---
+        # innermost_merge: DELETE_SUBSCR (+ LOAD_CONST None + RETURN_VALUE)
+        # 依「父引用子入口」+「嵌套即抽象节点」：父 Delete 通过 innermost_merge
+        # 的 DELETE_SUBSCR 引用 chained ternary 子节点列表作为 subscript obj/key。
+        #
+        # Two sub-patterns based on inner.cond_block prefix (instructions before
+        # the inner ternary's condition expression):
+        #   R7-04: ``del x[t1][t2]`` -> inner.cond prefix has BINARY_SUBSCR
+        #          (consumes [x, t1] preloaded in outer.cond_block)
+        #          outer.cond_block preload: [obj=x]
+        #          -> Delete([Subscript(Subscript(x, t1, Del), t2, Del)])
+        #   R8-06: ``del (t1)[t2]`` -> inner.cond prefix is empty (t1 is the obj)
+        #          outer.cond_block preload: empty
+        #          -> Delete([Subscript(t1, t2, Del)])
+        _has_delete_subscr = any(_i.opname == 'DELETE_SUBSCR' for _i in _im_eff)
+        if _has_delete_subscr and len(elts) == 2:
+            _inner_cond = innermost.condition_block
+            if _inner_cond is not None:
+                _ic_instrs = [i for i in _inner_cond.instructions
+                              if i.opname not in ('RESUME', 'NOP', 'CACHE',
+                                                  'PUSH_NULL')]
+                _ic_last = _inner_cond.get_last_instruction()
+                _cond_start_idx = len(_ic_instrs)
+                if _ic_last and _ic_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS
+                                                    | SHORT_CIRCUIT_JUMP_OPS):
+                    _pj_idx = None
+                    for _ci_idx in range(len(_ic_instrs) - 1, -1, -1):
+                        if _ic_instrs[_ci_idx] is _ic_last:
+                            _pj_idx = _ci_idx
+                            break
+                    if _pj_idx is not None and _pj_idx > 0:
+                        import dis as _dis
+                        _needed = 1
+                        _cstart = None
+                        for _ci in range(_pj_idx - 1, -1, -1):
+                            _instr = _ic_instrs[_ci]
+                            try:
+                                _eff = _dis.stack_effect(_instr.opcode, _instr.arg)
+                            except Exception:
+                                _eff = 0
+                            _needed -= _eff
+                            if _needed <= 0:
+                                _cstart = _ci
+                                break
+                        if _cstart is not None:
+                            _cond_start_idx = _cstart
+                _inner_prefix = _ic_instrs[:_cond_start_idx]
+                # R7-04: inner.cond_block prefix ends with BINARY_SUBSCR
+                # (consumes outer ternary result + obj from outer.cond_block
+                # preload, producing obj[t1] as the new base for DELETE_SUBSCR).
+                if _inner_prefix and _inner_prefix[-1].opname == 'BINARY_SUBSCR':
+                    _outer_cond = region.condition_block
+                    if _outer_cond is not None:
+                        _oc_instrs = [i for i in _outer_cond.instructions
+                                      if i.opname not in ('RESUME', 'NOP',
+                                                          'CACHE', 'PUSH_NULL')]
+                        _oc_last = _outer_cond.get_last_instruction()
+                        _oc_cond_start = len(_oc_instrs)
+                        if _oc_last and _oc_last.opname in (
+                                FORWARD_CONDITIONAL_JUMP_OPS
+                                | SHORT_CIRCUIT_JUMP_OPS):
+                            _oc_pj_idx = None
+                            for _ci_idx in range(len(_oc_instrs) - 1, -1, -1):
+                                if _oc_instrs[_ci_idx] is _oc_last:
+                                    _oc_pj_idx = _ci_idx
+                                    break
+                            if _oc_pj_idx is not None and _oc_pj_idx > 0:
+                                import dis as _dis
+                                _needed = 1
+                                _cstart = None
+                                for _ci in range(_oc_pj_idx - 1, -1, -1):
+                                    _instr = _oc_instrs[_ci]
+                                    try:
+                                        _eff = _dis.stack_effect(
+                                            _instr.opcode, _instr.arg)
+                                    except Exception:
+                                        _eff = 0
+                                    _needed -= _eff
+                                    if _needed <= 0:
+                                        _cstart = _ci
+                                        break
+                                if _cstart is not None:
+                                    _oc_cond_start = _cstart
+                        _oc_preload = _oc_instrs[:_oc_cond_start]
+                        self.expr_reconstructor.reset()
+                        for _instr in _oc_preload:
+                            if _instr.opname in ('RESUME', 'NOP', 'CACHE',
+                                                 'PUSH_NULL'):
+                                continue
+                            self.expr_reconstructor._process_instruction(_instr)
+                        _pl_stack = [s for s in self.expr_reconstructor.stack
+                                     if not (isinstance(s, dict)
+                                             and s.get('type') == 'PUSH_NULL')]
+                        # Expect [obj] on stack (e.g. [Name(x)])
+                        if len(_pl_stack) >= 1:
+                            _obj_expr = _pl_stack[-1]
+                            _target = {
+                                'type': 'Subscript',
+                                'value': {
+                                    'type': 'Subscript',
+                                    'value': _obj_expr,
+                                    'slice': elts[0],
+                                    'ctx': 'Del',
+                                },
+                                'slice': elts[1],
+                                'ctx': 'Del',
+                            }
+                            return {
+                                'type': 'Delete',
+                                'targets': [_target],
+                            }
+                # R8-06: inner.cond_block prefix is empty (outer ternary result
+                # t1 is directly the obj of DELETE_SUBSCR, no BINARY_SUBSCR).
+                elif not _inner_prefix:
+                    _target = {
+                        'type': 'Subscript',
+                        'value': elts[0],
+                        'slice': elts[1],
+                        'ctx': 'Del',
+                    }
+                    return {
+                        'type': 'Delete',
+                        'targets': [_target],
+                    }
 
         return None
 

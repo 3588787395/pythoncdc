@@ -758,7 +758,19 @@ class AssertRegion(Region):
         return self.condition_block == block
 
     def can_be_ternary_header(self, block, analyzer) -> bool:
-        # assert区域占用ternary header块时禁止创建ternary
+        # [R8] assert 的 condition_block/entry 块禁止作为 ternary header
+        # （ternary 不能吞掉 assert 的测试表达式）。但 message_block 允许：
+        # 当 message_block 与 condition_block 不同且等于请求块时，说明
+        # message_block 同时是某嵌套 TernaryRegion 的入口（condition_block），
+        # 例如 `assert x, (a if c else b)` 的 message_block 含
+        # LOAD_ASSERTION_ERROR + ternary 条件跳转。遵循「嵌套即抽象节点」
+        # （原则 3）与「父引用子入口」（原则 4）：AssertRegion 通过
+        # message_block 引用嵌套 TernaryRegion 的入口，TernaryRegion 在
+        # 父 AssertRegion 中作为单个抽象节点。
+        if (block is self.message_block
+                and self.message_block is not None
+                and block is not self.condition_block):
+            return True
         return False
 
 @dataclass
@@ -1132,7 +1144,20 @@ class RegionAnalyzer:
                 for tb_set in _ternary_block_sets:
                     if region.entry and region.entry in tb_set:
                         return True
-                    if region.blocks & tb_set:
+                    overlap = region.blocks & tb_set
+                    if overlap:
+                        # [R8] AssertRegion 的 message_block 可能是某嵌套
+                        # TernaryRegion 的 entry（如 `assert x, (a if c else b)`，
+                        # AssertRegion.blocks={0,6}, TernaryRegion.blocks={6,12,16,18}，
+                        # 重叠={6}=message_block）。这种情况是「嵌套即抽象节点」
+                        # （原则 3）+「父引用子入口」（原则 4）的合法嵌套，
+                        # 不应过滤掉 AssertRegion。_generate_assert 通过
+                        # message_block 引用嵌套 TernaryRegion 入口。
+                        if (isinstance(region, AssertRegion)
+                                and region.message_block is not None
+                                and region.message_block is not region.condition_block
+                                and overlap == {region.message_block}):
+                            continue  # 合法嵌套：跳过此 tb_set
                         return True
                 return False
 
@@ -8928,7 +8953,24 @@ RegionType 枚举值: RegionType.ASSERT
             for succ in sorted(block.successors, key=lambda s: s.start_offset):
                 if succ == block:
                     continue
-                # 同上：沿 fall-through 链查找含 RAISE_VARARGS 的块
+                # [R8 fix] Find the LOAD_ASSERTION_ERROR block (start of
+                # failure path). For simple cases (`assert x, "msg"`) this
+                # block also contains RAISE_VARARGS, so it's the same block
+                # the legacy `_reach_raise_varargs_block` would return.
+                # For ternary/complex message cases (`assert x, (a if c else
+                # b)`), the LOAD_ASSERTION_ERROR block is the TernaryRegion
+                # entry; the legacy walk gives up because of the ternary's
+                # 2 conditional successors. Finding the LOAD_ASSERTION_ERROR
+                # block directly lets the parent AssertRegion reference the
+                # TernaryRegion entry via `message_block` (principle 4:
+                # parent references child entry).
+                mb = self._find_assertion_error_block(succ)
+                if mb is not None:
+                    message_block = mb
+                    break
+                # Fallback: walk fall-through chain for cases where
+                # LOAD_ASSERTION_ERROR is in a later block (legacy behavior
+                # preserved for any edge cases not covered by the new helper).
                 mb = self._reach_raise_varargs_block(succ)
                 if mb is not None:
                     message_block = mb
@@ -9116,6 +9158,50 @@ RegionType 枚举值: RegionType.ASSERT
             cur = succs[0]
             depth += 1
         return False
+
+    def _find_assertion_error_block(self, block: BasicBlock) -> Optional[BasicBlock]:
+        """[R8 fix] Find the LOAD_ASSERTION_ERROR block (start of failure path).
+
+        Walks fall-through chain from ``block``, returning the first block
+        containing ``LOAD_ASSERTION_ERROR``. Used to locate the assert
+        ``message_block`` when the message path contains branching (e.g.,
+        a ternary expression in the message — ``assert x, (a if c else b)``).
+        In that case ``_reach_raise_varargs_block`` gives up because the
+        LOAD_ASSERTION_ERROR block has 2 conditional successors (the ternary
+        branches), so we look for LOAD_ASSERTION_ERROR directly instead of
+        walking to RAISE_VARARGS.
+
+        For simple cases (``assert x, "msg"``) the LOAD_ASSERTION_ERROR block
+        also contains RAISE_VARARGS, so this returns the same block as
+        ``_reach_raise_varargs_block``. For chained-compare cases the
+        fall-through chain walks via the POP_TOP transit block to the
+        LOAD_ASSERTION_ERROR block.
+
+        Per "every block has unique ownership": the returned block may also
+        be the entry of a nested TernaryRegion; the parent AssertRegion
+        references it via ``message_block`` (principle 4: parent references
+        child entry) without claiming the child's other blocks.
+        """
+        seen: Set[BasicBlock] = set()
+        cur: Optional[BasicBlock] = block
+        depth = 0
+        while cur is not None and cur not in seen and depth < 8:
+            seen.add(cur)
+            if any(instr.opname == 'LOAD_ASSERTION_ERROR'
+                   for instr in cur.instructions):
+                return cur
+            if len(cur.conditional_successors) > 1:
+                return None
+            last = cur.get_last_instruction()
+            if last and last.opname in ('RETURN_VALUE', 'RETURN_CONST',
+                                        'RERAISE'):
+                return None
+            succs = list(cur.successors)
+            if len(succs) != 1:
+                return None
+            cur = succs[0]
+            depth += 1
+        return None
 
     def _reaches_block_via_fallthrough(self, block: BasicBlock,
                                        target: BasicBlock) -> bool:
@@ -12124,7 +12210,20 @@ RegionType 枚举值: RegionType.ASSERT
                     if r.entry == region.entry or (r.entry and r.entry in region.blocks):
                         to_remove.append(r)
                     elif region.entry and region.entry in r.blocks:
-                        to_remove.append(r)
+                        # [R8] 当 TernaryRegion.entry 是 AssertRegion.message_block
+                        # 时，TernaryRegion 是嵌套在 AssertRegion 中的 message
+                        # （如 `assert x, (a if c else b)`）。保留 AssertRegion，
+                        # 让 _generate_assert 通过 message_block 引用 TernaryRegion
+                        # 入口（原则 4：父引用子入口）。TernaryRegion 与
+                        # AssertRegion 在 block_to_region 中通过「后写覆盖」让
+                        # block 6 归属 TernaryRegion（最内层），AssertRegion 仍
+                        # 保留 condition_block 归属。
+                        if (isinstance(r, AssertRegion)
+                                and r.message_block is region.entry
+                                and r.message_block is not r.condition_block):
+                            pass  # 保留 AssertRegion，TernaryRegion 作为嵌套 message
+                        else:
+                            to_remove.append(r)
                 # Phase 12修复: 处理TernaryRegion与LoopRegion的merge_block冲突
                 # 当ternary的merge_block被LoopRegion占用时（如for循环的GET_ITER块），
                 # 如果merge_context表明这是特殊的非STORE场景，则允许"借用"
