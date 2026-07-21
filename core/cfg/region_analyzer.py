@@ -10541,16 +10541,30 @@ RegionType 枚举值: RegionType.ASSERT
             # 三元是更归约的形式。IfRegion 应把整个三元视为单个 elif 条件，
             # body = 三元的 merge_block（truthy path 汇聚点），
             # final_else = 三元值块的 POP_JUMP_IF_FALSE 目标（falsy path）。
+            #
+            # [Phase 3 adv15_ternary_each_branch] 非条件上下文三元
+            # （merge_context != 'while_cond'，如 'store'）作为 else 分支体的
+            # 内容，不是 elif 条件。例如：
+            #   `if a: ... elif b: ... else: x = 5 if r else 6`
+            # else 体以三元 condition_block（LOAD r, POP_JUMP_IF_FALSE → false_value）
+            # 开头，_check_elif_chain 会误把 r 当作另一个 elif 条件，把 5/6 当作
+            # body/final_else。返回 None 让调用方使用 inner_else_blocks 作为
+            # final_else，保留完整 else 体（含三元）。
             if ternary_regions:
                 _te_ternary = None
+                _te_non_conditional = None
                 for _tr in self._filter_regions(ternary_regions, TernaryRegion):
-                    if (_tr.entry is first_else
-                            and getattr(_tr, 'merge_context', None) == 'while_cond'
-                            and _tr.merge_block is not None
-                            and _tr.true_value_block is not None
-                            and _tr.false_value_block is not None):
-                        _te_ternary = _tr
-                        break
+                    if _tr.entry is first_else:
+                        _mc = getattr(_tr, 'merge_context', None)
+                        if (_mc == 'while_cond'
+                                and _tr.merge_block is not None
+                                and _tr.true_value_block is not None
+                                and _tr.false_value_block is not None):
+                            _te_ternary = _tr
+                            break
+                        else:
+                            _te_non_conditional = _tr
+                            break
                 if _te_ternary is not None:
                     _te_body = _te_ternary.merge_block
                     _te_final_else = []
@@ -10570,6 +10584,8 @@ RegionType 枚举值: RegionType.ASSERT
                         'bodies': [[_te_body]],
                         'final_else': _te_final_else,
                     }
+                if _te_non_conditional is not None:
+                    return None
 
             conditions = [first_else]
             bodies = []
@@ -11969,6 +11985,45 @@ RegionType 枚举值: RegionType.ASSERT
             if has_jump_forward_skip and merge_context is None:
                 merge_context = 'while_cond'
                 value_target = '__while_cond_target__'
+
+            # [Phase 3 adv15_ternary_each_branch] 拒绝"吞噬 if/elif/else"
+            # 的虚假外层三元。当外层"三元"的 true_value_block 或
+            # false_value_block 是某个嵌套 TernaryRegion（merge_context='store'
+            # 或 'return'）的 entry 时，该嵌套三元是语句体（赋值/返回），
+            # 而非值表达式——外层"三元"实际上是把 if/elif/else 结构误识别
+            # 为三元。例如：
+            #   `if a: x = 1 if p else 2 / elif b: x = 3 if q else 4 /
+            #    else: x = 5 if r else 6`
+            # 外层"三元" entry=0 的 true=6（第一个内层三元 entry，store），
+            # false=22（elif/else 续）。若不拒绝，会吞掉整个 if/elif/else
+            # 结构，阻止 IfRegion 创建。
+            #
+            # 注意1：合法的嵌套三元（如 `a if (b if c else d) else e`）的
+            # 内层三元 merge_context=None 或 'while_cond'（值表达式上下文），
+            # 不应拒绝——这是 adv01_nested_ternary_cond 等场景。
+            #
+            # 注意2：当嵌套三元的 merge_block 与外层三元的 merge_block 相同
+            # 时（如 `z = a if b else (cc if d else e)`，内外层三元共享
+            # STORE_NAME z 块），嵌套三元是值表达式（其结果由外层三元消费），
+            # 不应拒绝——这是 adv06_nested_ternary_body 等场景。
+            def _is_statement_ternary_entry(blk):
+                if blk is None:
+                    return False
+                _existing = self.block_to_region.get(blk)
+                if isinstance(_existing, TernaryRegion):
+                    _mc = getattr(_existing, 'merge_context', None)
+                    if _mc in ('store', 'return'):
+                        # 嵌套三元与外层三元共享 merge_block 时，嵌套三元
+                        # 是值表达式（结果由外层三元消费），不是语句体。
+                        if (merge_block is not None
+                                and _existing.merge_block is merge_block):
+                            return False
+                        return True
+                return False
+
+            if (_is_statement_ternary_entry(true_block)
+                    or _is_statement_ternary_entry(false_block)):
+                return None
 
             all_blocks = {block, true_block, false_block}
             # Phase 11: chain_blocks 现在可能是 [(block, op), ...] 格式
