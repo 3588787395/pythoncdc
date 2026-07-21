@@ -81,7 +81,12 @@
 - [ ] C3.4b 批次 2：nested ternary in cond 失败修复 + 字节码完全匹配
 - [ ] C3.4c 批次 3：await in cond 失败修复 + 字节码完全匹配
 - [ ] C3.4d 批次 4：lambda call in cond 失败修复 + 字节码完全匹配
-- [ ] C3.4e 批次 5：chained compare + boolop 混合 cond 失败修复 + 字节码完全匹配
+- [x] C3.4e 批次 5：chained compare + boolop 混合 cond 失败修复 + 字节码完全匹配
+      — region_analyzer.py `_detect_boolop_conditional_chain` 增加链式比较 IfRegion
+        hop 逻辑；region_ast_generator.py 新增 `_try_build_chained_compare_in_boolop`
+        在 BoolOp 表达式重建时把链式比较 IfRegion 作为原子操作数展开为完整 Compare。
+        4 个测试通过（adv02_chaincmp_and_chaincmp / adv02_isnone_or_chaincmp /
+        adv02_isnotnone_and_chaincmp / adv03_await_chaincmp），全测试集 93→89 失败，0 退化。
 - [ ] C3.4f 批次 6：assert 与 if 混淆失败修复 + 字节码完全匹配
 - [ ] C3.4g 批次 7：嵌套 code object 不匹配失败修复 + 字节码完全匹配
 - [ ] C3.4h 批次 8：其余个例失败修复 + 字节码完全匹配

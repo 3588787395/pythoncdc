@@ -14326,6 +14326,65 @@ AST 映射规则:
             for p in pattern.get('patterns', []):
                 self._collect_pattern_store_names(p, names)
 
+    def _try_build_chained_compare_in_boolop(self, chain_block, region):
+        """[CPython peephole P4 + P5 interaction] Reconstruct a chained
+        compare (e.g. ``a < b < c``) when its entry block appears as a
+        BoolOp operand.
+
+        算法角色：链式比较操作数重建器（Chained Compare Operand Reconstructor）
+        输入：chain_block (BoolOp op_chain 的一个块) + BoolOpRegion
+        输出：完整链式比较 AST（{'type': 'Compare', ...}）或 None
+
+        【背景】
+        当 ``if a < b < c and d < e < f:`` 被编译时，每个链式比较
+        (a<b<c, d<e<f) 由 ``_identify_chained_compare_regions`` 识别为一个
+        IfRegion（带 ``chained_compare_ops`` / ``chained_compare_blocks``）。
+        该识别在 BoolOp 识别之前发生（自底向上归约：链式比较是更小的归约单元）。
+        随后 BoolOp 链检测把每个链式比较的 entry 作为单个操作数加入 op_chain
+        （通过 hop 逻辑跳过链式比较内部块），因此 op_chain 中每个 chain_block
+        可能是某个链式比较 IfRegion 的 entry。
+
+        【问题】
+        若直接对 chain_block 调用 ``expr_reconstructor.reconstruct()``，只会
+        取到 entry 块内的第一个 COMPARE_OP（如 ``a < b``），丢失后续链节
+        （``< c``），导致 ``a < b < c`` 退化为 ``a < b``。
+
+        【修复】
+        遍历 ``self.regions`` 查找 entry == chain_block 且带 chained_compare_ops
+        (长度 ≥ 2) 的 IfRegion，调用 ``_build_chained_compare_from_region_data``
+        重建完整链式比较表达式。同时把链式比较的内部块标记为已生成，避免父
+        IfRegion 重复处理。
+
+        【4 原则合规】
+        - 自底向上归约：链式比较 IfRegion 先于 BoolOp 识别，本方法仅在表达式
+          重建阶段把已识别的子区域作为抽象节点展开为表达式，不改变归约顺序。
+        - 每块唯一归属：链式比较的内部块（chained_compare_blocks）属于链式比较
+          IfRegion，不属于 BoolOpRegion；本方法把这些块标记为 generated，
+          防止父 IfRegion 重复处理。
+        - 嵌套即抽象节点：链式比较 IfRegion 作为 BoolOp 的抽象操作数节点。
+        - 父引用子入口：BoolOp 的 op_chain 引用链式比较 IfRegion 的 entry。
+        """
+        for r in self.regions:
+            if (isinstance(r, IfRegion)
+                    and r.entry is chain_block
+                    and getattr(r, 'chained_compare_ops', None)
+                    and len(r.chained_compare_ops) >= 2
+                    and getattr(r, 'chained_compare_blocks', None)):
+                cc_expr = self._build_chained_compare_from_region_data(r)
+                if cc_expr is not None:
+                    # Mark chained compare internal blocks as generated so the
+                    # parent IfRegion does not re-process them. The entry
+                    # block itself is part of op_chain (BoolOp's own block),
+                    # so only the chained_compare_blocks (extra chain blocks)
+                    # and merge_block are marked here.
+                    for cb in r.chained_compare_blocks:
+                        self.generated_blocks.add(cb)
+                    if r.merge_block is not None:
+                        self.generated_blocks.add(r.merge_block)
+                    return cc_expr
+                return None
+        return None
+
     def _try_build_nested_ternary_in_boolop(self, chain_block, region):
         if not hasattr(chain_block, 'conditional_successors'):
             return None
@@ -14505,6 +14564,9 @@ AST 映射规则:
 
         for i, (chain_block, chain_op) in enumerate(op_chain):
             nested_ternary = self._try_build_nested_ternary_in_boolop(chain_block, region)
+            # [CPython peephole P4 + P5 interaction] Chained compare as BoolOp
+            # operand. See _try_build_chained_compare_in_boolop docstring.
+            chained_compare_expr = self._try_build_chained_compare_in_boolop(chain_block, region)
             instrs = [inst for inst in chain_block.instructions
                       if inst.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
             last_instr = chain_block.get_last_instruction()
@@ -14518,8 +14580,9 @@ AST 映射规则:
                         break
                     clean_instrs.append(inst)
                 pure_instrs = clean_instrs if clean_instrs else (list(instrs[:1]) if instrs else [])
-            is_transforming_only = (pure_instrs and nested_ternary is None and
-                                    all(inst.opname in TRANSFORM_OPS for inst in pure_instrs))
+            is_transforming_only = (pure_instrs and nested_ternary is None
+                                    and chained_compare_expr is None
+                                    and all(inst.opname in TRANSFORM_OPS for inst in pure_instrs))
             if is_transforming_only:
                 if current_inner_values:
                     if len(current_inner_values) == 1:
@@ -14541,6 +14604,8 @@ AST 映射规则:
                 continue
             if nested_ternary is not None:
                 sub_expr = nested_ternary
+            elif chained_compare_expr is not None:
+                sub_expr = chained_compare_expr
             elif not pure_instrs:
                 sub_expr = self._try_build_await_boolop_operand(chain_block)
             else:
@@ -14717,6 +14782,9 @@ AST 映射规则:
             if skip_elif_blocks and chain_block.start_offset in _elif_cond_offsets:
                 continue
             nested_ternary = self._try_build_nested_ternary_in_boolop(chain_block, region)
+            # [CPython peephole P4 + P5 interaction] Chained compare as BoolOp
+            # operand. See _try_build_chained_compare_in_boolop docstring.
+            chained_compare_expr = self._try_build_chained_compare_in_boolop(chain_block, region)
             instrs = [i for i in chain_block.instructions
                      if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
             last_instr = chain_block.get_last_instruction()
@@ -14731,8 +14799,9 @@ AST 映射规则:
                     clean_instrs.append(i)
                 pure_instrs = clean_instrs if clean_instrs else list(instrs[:1]) if instrs else []
             # Check if pure_instrs are transforming-only (e.g., UNARY_NOT on previous group result)
-            is_transforming_only = (pure_instrs and nested_ternary is None and
-                                    all(i.opname in TRANSFORM_OPS for i in pure_instrs))
+            is_transforming_only = (pure_instrs and nested_ternary is None
+                                    and chained_compare_expr is None
+                                    and all(i.opname in TRANSFORM_OPS for i in pure_instrs))
             if is_transforming_only:
                 # Previous group's result is being transformed (e.g., not (a and b))
                 if current_group_values:
@@ -14754,6 +14823,8 @@ AST 映射规则:
                 continue
             if nested_ternary is not None:
                 sub_expr = nested_ternary
+            elif chained_compare_expr is not None:
+                sub_expr = chained_compare_expr
             elif not pure_instrs:
                 # [Round 2 修复] await 作为 BoolOp 操作数：
                 # `if await g() or x:` 中 await g() 的 truthy 测试块

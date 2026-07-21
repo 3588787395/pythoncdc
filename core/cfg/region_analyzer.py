@@ -13184,6 +13184,74 @@ RegionType 枚举值: RegionType.ASSERT
                     break
             op_type = 'and' if ('FALSE' in last.opname or '_IF_NONE' in last.opname) else 'or'
             chain.append((current, op_type))
+            # [CPython peephole P4 + P5 interaction] Chained compare as
+            # BoolOp operand hop. When `if a < b < c and d < e < f:` is
+            # compiled, each chained compare (a<b<c, d<e<f) is identified
+            # as an IfRegion with chained_compare_ops by
+            # _identify_chained_compare_regions (which runs BEFORE boolop
+            # identification). The boolop chain detection must treat each
+            # chained compare region as a SINGLE operand and hop over its
+            # internal blocks (extra_chain_blocks + merge_block) to reach
+            # the next operand's start.
+            #
+            # Algorithm (bottom-up reduction): if current is the entry of
+            # a chained compare IfRegion, the region's merge_block is the
+            # "fall-through after the chained compare succeeds". If
+            # merge_block is a JUMP_FORWARD, hop to its target (the next
+            # operand); otherwise, hop to merge_block itself. This makes
+            # chained compare regions atomic operands of the higher-level
+            # BoolOp, preserving "each block unique ownership" — the
+            # chained compare region's internal blocks are NOT added to
+            # the BoolOpRegion; only the chained compare headers (entries)
+            # become op_chain operands.
+            #
+            # Note: self.block_to_region may not yet contain the chained
+            # compare region's blocks (chained compare identification only
+            # appends to self.regions, not self.block_to_region). So we
+            # look up the region from self.regions by entry block.
+            #
+            # Safety guard: before hopping, if chain has length >= 2,
+            # verify that current's short-circuit exit is equivalent to
+            # the first chain entry's exit. This prevents false chains
+            # when the hop target is in a different semantic context.
+            _cc_region = None
+            for _r in self.regions:
+                if (type(_r) is IfRegion
+                        and _r.entry is current
+                        and getattr(_r, 'chained_compare_ops', None)
+                        and len(_r.chained_compare_ops) >= 2
+                        and getattr(_r, 'chained_compare_blocks', None)
+                        and _r.merge_block is not None):
+                    _cc_region = _r
+                    break
+            if _cc_region is not None:
+                # Safety guard: verify exit equivalence for chains with
+                # length >= 2 (the first entry sets the reference exit).
+                if len(chain) >= 2:
+                    _first_jt = self.cfg.get_block_by_offset(
+                        chain[0][0].get_last_instruction().argval
+                    ) if chain[0][0].get_last_instruction() and chain[0][0].get_last_instruction().argval is not None else None
+                    _cur_jt = self.cfg.get_block_by_offset(last.argval) if last.argval is not None else None
+                    if (_first_jt is not None and _cur_jt is not None
+                            and _first_jt is not _cur_jt
+                            and not self._is_equivalent_exit_block(_first_jt, _cur_jt)):
+                        chain.pop()
+                        break
+                _cc_merge = _cc_region.merge_block
+                _cc_merge_last = _cc_merge.get_last_instruction() if _cc_merge else None
+                _hop_target = None
+                if (_cc_merge_last is not None
+                        and _cc_merge_last.opname == 'JUMP_FORWARD'
+                        and _cc_merge_last.argval is not None):
+                    _hop_target = self.cfg.get_block_by_offset(_cc_merge_last.argval)
+                elif _cc_merge is not None:
+                    _hop_target = _cc_merge
+                if (_hop_target is not None
+                        and _hop_target.start_offset not in visited):
+                    current = _hop_target
+                    continue
+                # Hop target is None or already visited — break
+                break
             succs = list(current.conditional_successors)
             if len(succs) != 2:
                 break

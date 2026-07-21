@@ -215,7 +215,24 @@
   - [ ] 子任务：批次 2 — nested ternary in cond 失败（如 `test_adv01_nested_ternary_cond.py`）
   - [ ] 子任务：批次 3 — await in cond 失败（如 `test_adv01_await_compare.py`）
   - [ ] 子任务：批次 4 — lambda call in cond 失败（如 `test_adv01_lambda_call_cond.py`）
-  - [ ] 子任务：批次 5 — chained compare + boolop 混合 cond 失败
+  - [x] 子任务：批次 5 — chained compare + boolop 混合 cond 失败
+        - 算法根因：当 `if a < b < c and d < e < f:` 被编译时，每个链式比较
+          (a<b<c, d<e<f) 由 `_identify_chained_compare_regions` 识别为带
+          `chained_compare_ops` 的 IfRegion（在 BoolOp 识别之前）。但 BoolOp
+          链检测未跳过链式比较内部块，仅捕获第一个链式比较作为操作数。
+        - 修正 1（识别阶段，region_analyzer.py `_detect_boolop_conditional_chain`）：
+          增加链式比较 IfRegion hop 逻辑——当 current 是某个链式比较 IfRegion
+          的 entry 时，跳到其 merge_block（或 merge_block 的 JUMP_FORWARD 目标）
+          作为下一个操作数起点，使每个链式比较成为 BoolOp 的原子操作数。
+        - 修正 2（生成阶段，region_ast_generator.py `_build_boolop_expression` /
+          `_build_grouped_boolop_expression`）：增加 `_try_build_chained_compare_in_boolop`
+          辅助方法，当 op_chain 中的 chain_block 是某个链式比较 IfRegion 的 entry
+          时，调用 `_build_chained_compare_from_region_data` 重建完整链式比较表达式
+          （如 `a < b < c`），避免仅取 entry 块内第一个 COMPARE_OP（退化为 `a < b`）。
+          同时把链式比较内部块标记为 generated，防止父 IfRegion 重复处理。
+        - 影响：adv02_chaincmp_and_chaincmp / adv02_isnone_or_chaincmp /
+          adv02_isnotnone_and_chaincmp / adv03_await_chaincmp 4 个测试通过；
+          全测试集 93→89 失败（4 个净修复，0 退化）。
   - [ ] 子任务：批次 6 — assert 与 if 混淆（LOAD_ASSERTION_ERROR vs LOAD_CONST）
   - [ ] 子任务：批次 7 — 嵌套 code object 不匹配（如 class_def_in_if）
   - [ ] 子任务：批次 8 — 其余个例
