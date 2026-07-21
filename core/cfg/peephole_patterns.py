@@ -10,10 +10,14 @@
 Phase 2.5.1: 基础设施 + P1 模式（双 RETURN_VALUE 三元）
 Phase 2.5.2: 实施 P1（修复 _block_is_return_body 误判 + _generate_ternary
              虚拟 merge 处理）
+Phase 2.5.4: P3 模式枚举（while-true + break：NOP 头 + JUMP_BACKWARD 回边）
+Phase 2.5.5: P4 模式枚举（chained compare：SWAP/COPY/COMPARE_OP 降级）
+Phase 2.5.6: P5+ 模式枚举（BoolOp 短路独立 exit / not X 跳转反转 /
+             while 条件 back-edge 重查 / 隐式 return None）
 """
 
 from dataclasses import dataclass, field
-from typing import List, Dict, Optional, Any
+from typing import List, Dict, Optional, Any, Set
 
 
 # 复用 region_analyzer 的常量定义（避免循环导入，本地副本）
@@ -27,6 +31,18 @@ FORWARD_CONDITIONAL_JUMP_OPS = frozenset({
     'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_FORWARD_IF_NOT_NONE',
     'POP_JUMP_IF_NONE', 'POP_JUMP_IF_NOT_NONE',
 })
+
+BACKWARD_CONDITIONAL_JUMP_OPS = frozenset({
+    'POP_JUMP_BACKWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_TRUE',
+    'POP_JUMP_BACKWARD_IF_NONE', 'POP_JUMP_BACKWARD_IF_NOT_NONE',
+})
+
+BACKWARD_JUMP_OPS = frozenset({
+    'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+}) | BACKWARD_CONDITIONAL_JUMP_OPS
+
+# 链式比较相关指令
+COMPARE_OPS = frozenset({'COMPARE_OP', 'IS_OP', 'CONTAINS_OP'})
 
 # 单 LOAD 值表达式允许的操作码
 LOAD_VALUE_OPS = frozenset({
@@ -138,6 +154,95 @@ class PeepholePatternLibrary:
           拒绝三元识别
     本模式库通过预处理解决该根因：
       - 释放被 MatchRegion 误识别的值块（解除 match_regions 守卫）
+
+    7. P3 模式：while-true + break（Phase 2.5.4 枚举）
+    --------------------------------------------------
+    用例: `while True: ... break`（无限循环 + break 退出）
+    字节码（CPython 3.11+ 实测）:
+        NOP                          ← 循环头占位（条件被优化掉）
+        >> <body>                    ← 循环体
+        <break_target>: LOAD_CONST None; RETURN_VALUE  ← break 编译为 RETURN_VALUE
+        <back_edge>: JUMP_BACKWARD → <body>  ← 回边是唯一的循环标记
+    特征：循环头是无条件的 NOP（无常量条件检查），循环仅由 JUMP_BACKWARD 回边
+    标识。break 被编译为 LOAD_CONST None + RETURN_VALUE（模块级）或 JUMP_FORWARD
+    （函数内跳到函数出口），与 return 语句字节码不可区分。
+    反归约难点：
+      (a) 循环头无条件分支——标准「循环头 = 被回边支配且有条件出口」启发式
+          不触发，需依靠回边唯一性识别 while-true
+      (b) break 与 return 字节码相同——需依靠支配关系区分（break 退出循环，
+          return 退出函数）
+    当前状态：LoopRegion.is_while_true=True 已正确识别（while_loop 测试 100%
+    通过）。P3 模式枚举用于文档化与查询 API。
+
+    8. P4 模式：chained compare（Phase 2.5.5 枚举）
+    -----------------------------------------------
+    用例: `a < b < c`（链式比较表达式）
+    字节码（CPython 3.11+ 实测，测试上下文）:
+        LOAD a; LOAD b; SWAP 2; COPY 2; COMPARE_OP <; POP_JUMP_IF_FALSE → cleanup;
+        LOAD c; COMPARE_OP <; POP_JUMP_IF_FALSE → exit;
+        JUMP_FORWARD → then;
+        cleanup: POP_TOP; LOAD_CONST None; RETURN_VALUE
+    字节码（值上下文，如 `z = a < b < c`）:
+        LOAD a; LOAD b; SWAP 2; COPY 2; COMPARE_OP <; JUMP_IF_FALSE_OR_POP → cleanup;
+        LOAD c; COMPARE_OP <; JUMP_FORWARD → merge;
+        cleanup: SWAP 2; POP_TOP;  ← 清理 COPY 保留的中间操作数
+        merge: STORE z
+    特征：一个源码表达式被降级为多个 COMPARE_OP + SWAP/COPY 栈操作 + 短路分支。
+    中间操作数 b 被 COPY(2) 复制供两个比较使用。短路 cleanup 块仅清理栈，无
+    AST 对应。
+    反归约难点：
+      (a) 一个表达式跨多个基本块——短路分支无 AST 对应
+      (b) SWAP/COPY 栈操作无 AST 对应——需通过忽略它们 + 从 LOAD_* 重建操作数
+      (c) 两种上下文（测试 vs 值）有不同短路指令（POP_JUMP_IF_FALSE vs
+          JUMP_IF_FALSE_OR_POP）与不同 cleanup（POP_TOP vs SWAP+POP_TOP）
+      (d) not 链式比较通过跳转反转实现（无 UNARY_NOT）
+      (e) 与 BoolOp 组合时（`a < b < c and d < e < f`）短路目标交错
+    当前状态：_identify_chained_compare_regions 已正确识别基本链式比较
+    （if18/adv01/adv05 测试通过）。与 BoolOp 组合的复合模式
+    （adv02_chaincmp_and_chaincmp）待 Phase 3 批次 5 修复。P4 模式枚举用于
+    文档化与查询 API（is_p4_chained_compare_header）。
+
+    9. P5 模式：BoolOp 短路独立 exit 块（Phase 2.5.6 枚举）
+    -------------------------------------------------------
+    用例: `if a and b or c: pass`（混合 and/or 链）
+    字节码特征：CPython 3.11 在模块级/函数尾部为每个操作数的短路目标发射
+    独立的 trivial exit 块（LOAD_CONST None; RETURN_VALUE），而非共享同一
+    merge 块。目标 offset 不同但语义等价。
+    反归约难点：链检测因 target 不同而中断，需 _is_equivalent_exit_block
+    识别语义等价的 exit 块。
+    当前状态：已在 _detect_boolop_conditional_chain 修复（bool20 测试通过）。
+
+    10. P6 模式：not X 跳转反转（Phase 2.5.6 枚举）
+    -----------------------------------------------
+    用例: `while not done and has_data(): pass`（not X 在 and 链中）
+    字节码特征：CPython 3.11 优化掉 UNARY_NOT，通过反转跳转方向实现 not 语义。
+    `not X` 在 and 链中：跳转是 IF_TRUE（X 为真时 not X 为假，短路退出）。
+    反归约难点：字节码无 UNARY_NOT 指令，需从跳转方向重建 not 语义。
+    当前状态：已在 _build_boolop_expression / _build_grouped_boolop_expression
+    修复（bool11 测试通过）。
+
+    11. P7 模式：while 条件 back-edge 重查（Phase 2.5.6 枚举）
+    ---------------------------------------------------------
+    用例: `while not done and has_data(): process()`（复合条件 while 循环）
+    字节码特征：CPython 3.11 在回边处复制整个 while 条件进行重查。重查块
+    含 FORWARD 条件跳转到 trivial exit（每个 and 操作数一个），与正向条件
+    结构相同但位于循环体末尾。
+    反归约难点：
+      (a) 重查块被误识为 IfRegion（需 _should_skip_block_for_if_region
+          的 back-edge 重查检测）
+      (b) 反向走查误吸外层 if 条件块（需 _back_edge_recheck_count 配额）
+    当前状态：已在 _identify_loop_regions + _should_skip_block_for_if_region
+    修复（bool11 测试通过）。
+
+    12. P8 模式：隐式 return None（Phase 2.5.6 枚举）
+    -----------------------------------------------
+    用例: 模块级/函数尾部的隐式 return None
+    字节码特征：LOAD_CONST None; RETURN_VALUE（CPython 3.11 在模块级为每个
+    退出路径添加隐式 return None）。RETURN_CONST（CPython 3.12+ 优化）。
+    反归约难点：隐式 return None 块与显式 return None / break 语句字节码
+    相同，需依靠控制流上下文区分。
+    当前状态：P1 模式依赖此特征（值块的 LOAD_CONST None + RETURN_VALUE 是
+    隐式 return None 栈填充）。_is_trivial_return_block 识别此模式。
     """
 
     def __init__(self):
@@ -164,10 +269,138 @@ class PeepholePatternLibrary:
                     'both value blocks contain POP_TOP (expression statement, not if-return)',
                 ],
             ),
+            PeepholePattern(
+                name='P3_WHILE_TRUE_BREAK',
+                bytecode_signature=(
+                    'header: NOP (condition elided by peephole); '
+                    'body: <loop_body>; '
+                    'break: LOAD_CONST None, RETURN_VALUE (module-level) or '
+                    'JUMP_FORWARD -> func_exit (function-level); '
+                    'back_edge: JUMP_BACKWARD -> header'
+                ),
+                source_ast_type='ast.While',
+                anti_reduction_strategy=(
+                    'Create LoopRegion with is_while_true=True, condition_block=None. '
+                    'break blocks identified via dominance (break exits loop, '
+                    'return exits function). AST: While(test=Constant(True), body=..., orelse=[]).'
+                ),
+                invariants=[
+                    'header is NOP (no conditional branch at loop entry)',
+                    'back_edge is JUMP_BACKWARD to header',
+                    'break compiled to LOAD_CONST None + RETURN_VALUE (module) or '
+                    'JUMP_FORWARD (function)',
+                    'break and return have identical bytecode — distinguished by dominance',
+                ],
+            ),
+            PeepholePattern(
+                name='P4_CHAINED_COMPARE',
+                bytecode_signature=(
+                    'test context: LOAD a, LOAD b, SWAP 2, COPY 2, COMPARE_OP, '
+                    'POP_JUMP_IF_FALSE -> cleanup; LOAD c, COMPARE_OP, '
+                    'POP_JUMP_IF_FALSE -> exit; JUMP_FORWARD -> then; '
+                    'cleanup: POP_TOP, LOAD_CONST None, RETURN_VALUE; '
+                    'value context: same but JUMP_IF_FALSE_OR_POP + SWAP 2, POP_TOP cleanup'
+                ),
+                source_ast_type='ast.Compare',
+                anti_reduction_strategy=(
+                    'Create IfRegion with chained_compare_blocks/chained_compare_ops. '
+                    'AST: Compare(left=a, ops=[Lt, Lt], comparators=[b, c]). '
+                    'SWAP/COPY/COMPARE_OP consumed implicitly by extracting LOAD_* operands.'
+                ),
+                invariants=[
+                    'header block contains COPY(arg=2) immediately followed by COMPARE_OP/IS_OP/CONTAINS_OP',
+                    'fall-through chain has >= 1 extra chain block (>= 2 ops total)',
+                    'test context: POP_JUMP_IF_FALSE short-circuit + POP_TOP cleanup',
+                    'value context: JUMP_IF_FALSE_OR_POP short-circuit + SWAP+POP_TOP cleanup',
+                    'not chain: final jump inverted (POP_JUMP_IF_TRUE instead of FALSE)',
+                ],
+            ),
+            PeepholePattern(
+                name='P5_BOOLOP_SEPARATE_EXIT',
+                bytecode_signature=(
+                    'Each operand in and/or chain has its own trivial exit block '
+                    '(LOAD_CONST None, RETURN_VALUE) at module/function-tail position. '
+                    'Targets differ but are semantically equivalent.'
+                ),
+                source_ast_type='ast.BoolOp',
+                anti_reduction_strategy=(
+                    'Use _is_equivalent_exit_block to treat separate trivial exit '
+                    'blocks as equivalent in _detect_boolop_conditional_chain. '
+                    'AST: BoolOp(op=And/Or, values=[...]).'
+                ),
+                invariants=[
+                    'each operand short-circuit target is a trivial return block',
+                    'targets have different offsets but same semantics',
+                    '_is_equivalent_exit_block returns True for any pair',
+                ],
+            ),
+            PeepholePattern(
+                name='P6_NOT_X_JUMP_INVERSION',
+                bytecode_signature=(
+                    'not X in boolop chain: no UNARY_NOT instruction. '
+                    'Jump direction inverted: not X in AND chain uses POP_JUMP_IF_TRUE '
+                    '(exit when X is true, i.e. not X is false).'
+                ),
+                source_ast_type='ast.UnaryOp(Not)',
+                anti_reduction_strategy=(
+                    'In _build_boolop_expression / _build_grouped_boolop_expression, '
+                    'when chain_op is "and" and jump is IF_TRUE, wrap operand in '
+                    'UnaryOp(Not, ...). AST: UnaryOp(op=Not, operand=X).'
+                ),
+                invariants=[
+                    'no UNARY_NOT instruction in bytecode',
+                    'not X in AND chain: POP_JUMP_IF_TRUE (inverted)',
+                    'not X in OR chain: POP_JUMP_IF_FALSE (inverted)',
+                ],
+            ),
+            PeepholePattern(
+                name='P7_WHILE_BACKEDGE_RECHECK',
+                bytecode_signature=(
+                    'While condition duplicated at back edge: back_edge block contains '
+                    'FORWARD conditional jumps to trivial exit blocks (one per AND operand), '
+                    'mirroring the forward condition structure.'
+                ),
+                source_ast_type='ast.While',
+                anti_reduction_strategy=(
+                    'Detect back-edge recheck in _should_skip_block_for_if_region '
+                    '(skip IfRegion creation for recheck blocks). '
+                    'Use _back_edge_recheck_count quota in backward walk to limit '
+                    'absorbed equivalent-exit predecessors. AST: While(test=..., body=...).'
+                ),
+                invariants=[
+                    'back-edge block has FORWARD conditional jumps to trivial exits',
+                    'recheck count = number of AND operands in while condition',
+                    'recheck blocks must be skipped by IfRegion identifier',
+                ],
+            ),
+            PeepholePattern(
+                name='P8_IMPLICIT_RETURN_NONE',
+                bytecode_signature=(
+                    'Module-level/function-tail: LOAD_CONST None, RETURN_VALUE '
+                    '(CPython 3.11) or RETURN_CONST (CPython 3.12+). '
+                    'Added to every exit path implicitly.'
+                ),
+                source_ast_type='ast.Constant(None) / implicit',
+                anti_reduction_strategy=(
+                    '_is_trivial_return_block identifies this pattern. '
+                    'P1 pattern depends on it (value block LOAD_CONST None + RETURN_VALUE '
+                    'is implicit return None stack fill). Distinguish from explicit '
+                    'return None and break via control-flow context.'
+                ),
+                invariants=[
+                    'block contains only LOAD_CONST None + RETURN_VALUE (or RETURN_CONST None)',
+                    'no other effective instructions',
+                    'semantically equivalent across different offsets',
+                ],
+            ),
         ]
         # P1 模式匹配的 cond_block 集合（由 match_peephole_pattern 填充）
         # 用于区域识别阶段查询某块是否为 P1 模式的条件块
         self._p1_cond_blocks: Dict[int, Dict[str, Any]] = {}
+        # P3 模式匹配的 while-true 循环头集合（由 match_peephole_pattern 填充）
+        self._p3_headers: Set[int] = set()
+        # P4 模式匹配的链式比较头集合（由 match_peephole_pattern 填充）
+        self._p4_headers: Set[int] = set()
 
     def match_peephole_pattern(self, blocks, cfg) -> List[Dict[str, Any]]:
         """在识别阶段预处理时扫描所有模式。
@@ -188,13 +421,30 @@ class PeepholePatternLibrary:
         """
         # 重置内部状态
         self._p1_cond_blocks = {}
+        self._p3_headers = set()
+        self._p4_headers = set()
         matches: List[Dict[str, Any]] = []
         for block in blocks:
+            # P1: 双 RETURN_VALUE 三元表达式语句
             match = self._match_p1_double_return_ternary(block, cfg)
             if match is not None:
                 matches.append(match)
                 # 索引：以 cond_block.start_offset 为键
                 self._p1_cond_blocks[block.start_offset] = match
+            # P3: while-true + break 循环头
+            if self._match_p3_while_true_header(block, cfg):
+                self._p3_headers.add(block.start_offset)
+                matches.append({
+                    'pattern_name': 'P3_WHILE_TRUE_BREAK',
+                    'header_block': block,
+                })
+            # P4: 链式比较头
+            if self._match_p4_chained_compare_header(block, cfg):
+                self._p4_headers.add(block.start_offset)
+                matches.append({
+                    'pattern_name': 'P4_CHAINED_COMPARE',
+                    'header_block': block,
+                })
         return matches
 
     def is_p1_cond_block(self, block) -> bool:
@@ -206,6 +456,23 @@ class PeepholePatternLibrary:
         if block is None:
             return None
         return self._p1_cond_blocks.get(block.start_offset)
+
+    def is_p3_while_true_header(self, block) -> bool:
+        """查询某块是否为已识别的 P3 模式 while-true 循环头。
+
+        P3 模式：while True: ... break
+        循环头是 NOP 占位（条件被 CPython peephole 优化掉），
+        循环仅由 JUMP_BACKWARD 回边标识。
+        """
+        return block is not None and block.start_offset in self._p3_headers
+
+    def is_p4_chained_compare_header(self, block) -> bool:
+        """查询某块是否为已识别的 P4 模式链式比较头。
+
+        P4 模式：a < b < c
+        头块含 COPY(arg=2) 紧跟 COMPARE_OP/IS_OP/CONTAINS_OP。
+        """
+        return block is not None and block.start_offset in self._p4_headers
 
     def _match_p1_double_return_ternary(self, cond_block, cfg) -> Optional[Dict[str, Any]]:
         """检测 P1 模式: 双 RETURN_VALUE 三元表达式语句。
@@ -319,6 +586,75 @@ class PeepholePatternLibrary:
             'has_pop_top': has_pop_top,
             'value_blocks_to_release': [true_block, false_block],
         }
+
+    def _match_p3_while_true_header(self, block, cfg) -> bool:
+        """检测 P3 模式: while-true + break 循环头。
+
+        CPython 3.11+ peephole 优化器将 `while True:` 的条件检查完全消除，
+        循环头变为 NOP 占位。循环仅由 JUMP_BACKWARD 回边标识。
+
+        检测步骤:
+          1. 块的全部有效指令仅为 NOP（或空块）
+          2. 块有至少一个后继是 JUMP_BACKWARD 回边目标（即存在回边指向此块）
+          3. 块不是函数入口（RESUME 块）
+
+        本匹配器仅用于标记 while-true 循环头供查询 API 使用。实际循环识别
+        由 _identify_loop_regions 通过回边分析完成，不依赖此标记。
+        """
+        # 步骤 3: 排除函数入口（RESUME 块）
+        first_instr = block.instructions[0] if block.instructions else None
+        if first_instr is not None and first_instr.opname == 'RESUME':
+            # RESUME 块可能同时是循环头（while True 在函数体首行），
+            # 检查是否有回边指向此块
+            pass  # 不排除，继续检查
+
+        # 步骤 1: 块的有效指令仅为 NOP（while-true 头是无条件占位）
+        effective = [i for i in block.instructions
+                     if i.opname not in NOISE_OPS]
+        if effective:
+            # while-true 头不应有有效指令（NOP 占位）
+            # 但如果块同时是循环体入口（while True: body_first_stmt），
+            # 则有效指令属于循环体，不是循环头
+            return False
+
+        # 步骤 2: 存在回边指向此块（JUMP_BACKWARD 的目标）
+        for pred in block.predecessors:
+            pred_last = pred.get_last_instruction()
+            if (pred_last is not None
+                    and pred_last.opname in BACKWARD_JUMP_OPS
+                    and pred_last.argval == block.start_offset):
+                return True
+
+        return False
+
+    def _match_p4_chained_compare_header(self, block, cfg) -> bool:
+        """检测 P4 模式: 链式比较头块。
+
+        CPython 3.11+ 将 `a < b < c` 降级为 SWAP/COPY/COMPARE_OP 序列。
+        头块含 COPY(arg=2) 紧跟 COMPARE_OP/IS_OP/CONTAINS_OP。
+
+        检测步骤:
+          1. 块含 COPY(arg=2) 指令
+          2. COPY 之后紧跟 COMPARE_OP/IS_OP/CONTAINS_OP
+          3. 块以条件跳转终结（POP_JUMP_IF_FALSE/JUMP_IF_FALSE_OR_POP）
+
+        本匹配器仅用于标记链式比较头供查询 API 使用。实际链式比较识别
+        由 _identify_chained_compare_regions 完成，不依赖此标记。
+        """
+        instrs = block.instructions
+        for idx, instr in enumerate(instrs):
+            if instr.opname == 'COPY' and instr.arg == 2:
+                # 步骤 2: COPY 之后紧跟 COMPARE_OP/IS_OP/CONTAINS_OP
+                if idx + 1 < len(instrs):
+                    next_instr = instrs[idx + 1]
+                    if next_instr.opname in COMPARE_OPS:
+                        # 步骤 3: 块以条件跳转终结
+                        last = block.get_last_instruction()
+                        if (last is not None
+                                and (last.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                                     or last.opname.startswith('JUMP_IF_'))):
+                            return True
+        return False
 
 
 def _ends_with_return(block) -> bool:

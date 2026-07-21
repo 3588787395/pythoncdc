@@ -140,10 +140,27 @@
         - 算法根因 5：boolop 链检测的 `_equivalent_exits` 过宽导致 ternary12 退化。
           修正：增加 Scenario B 三元守卫 — 走查 fallthrough 链查找 JUMP_FORWARD 到
           循环头（有反向边前驱），若命中则断链让 TernaryRegion 识别器接管。
-- [ ] Task 2.5.4: P3 模式（while-true + break）枚举
-- [ ] Task 2.5.5: P4 模式（chained compare）枚举
-- [ ] Task 2.5.6: P5+ 模式（CPython peephole 全模式枚举）
-- [ ] Task 2.5.7: CPython 模式库全测试集回归
+- [x] Task 2.5.4: P3 模式（while-true + break）枚举
+      - 新增 P3_WHILE_TRUE_BREAK PeepholePattern 条目
+      - 新增 _match_p3_while_true_header 匹配器（查询 API）
+      - 新增 is_p3_while_true_header 查询接口
+      - 文档化 NOP 头 + JUMP_BACKWARD 回边 + break→RETURN_VALUE 模式
+- [x] Task 2.5.5: P4 模式（chained compare）枚举
+      - 新增 P4_CHAINED_COMPARE PeepholePattern 条目
+      - 新增 _match_p4_chained_compare_header 匹配器（查询 API）
+      - 新增 is_p4_chained_compare_header 查询接口
+      - 文档化 SWAP/COPY/COMPARE_OP 降级 + 两种上下文（测试 vs 值）模式
+- [x] Task 2.5.6: P5+ 模式（CPython peephole 全模式枚举）
+      - 新增 P5_BOOLOP_SEPARATE_EXIT（BoolOp 短路独立 exit 块）
+      - 新增 P6_NOT_X_JUMP_INVERSION（not X 跳转反转）
+      - 新增 P7_WHILE_BACKEDGE_RECHECK（while 条件 back-edge 重查）
+      - 新增 P8_IMPLICIT_RETURN_NONE（隐式 return None）
+      - 全部含 PeepholePattern 条目 + bytecode_signature + invariants + anti_reduction_strategy
+- [x] Task 2.5.7: CPython 模式库全测试集回归
+      - 84 baseline 失败（与模式库枚举前一致，无回归）
+      - 2587 通过 / 20 跳过
+      - bool_op 20/20、ternary 135/135 通过
+      - P3/P4/P5+ 模式枚举不影响识别管线（查询 API + 文档化）
 
 ## Phase 3: IF 区域深度迭代
 

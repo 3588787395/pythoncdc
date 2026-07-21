@@ -46,10 +46,10 @@
 - [x] C2.5.3e bool20_complex_logic 修复（混合 and/or 链不丢中间操作数）
 - [x] C2.5.3f bool19_ternary_combo 修复（or None 尾部操作数保留）
 - [x] C2.5.3g bool11_in_while 修复（while 条件位 and 链不被拆分为 if+while+if）
-- [ ] C2.5.4 P3 模式（while-true + break）枚举
-- [ ] C2.5.5 P4 模式（chained compare）枚举
-- [ ] C2.5.6 P5+ 模式（CPython peephole 全模式枚举）
-- [ ] C2.5.7 CPython 模式库全测试集回归
+- [x] C2.5.4 P3 模式（while-true + break）枚举
+- [x] C2.5.5 P4 模式（chained compare）枚举
+- [x] C2.5.6 P5+ 模式（CPython peephole 全模式枚举）
+- [x] C2.5.7 CPython 模式库全测试集回归
 - [ ] C2.4 若 Phase 1 论证通过新区域类型：在 `RegionType` 枚举中新增成员
 - [ ] C2.5 若新增类型：实现 `_identify_<new>_regions` 方法（6 节模板 docstring）
 - [ ] C2.6 若新增类型：实现 `_generate_<new>` 方法（4 节模板 docstring）
