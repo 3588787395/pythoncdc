@@ -461,11 +461,18 @@ class CodeGenerator:
         
         try:
             if body:
-                for body_node in body:
-                    if isinstance(body_node, dict):
-                        self._generate_dict_node(body_node)
-                    else:
-                        self._generate_node(body_node)
+                # [Phase 3 adv17_for_if_elif_else_flow] 过滤末尾 return None
+                # 字典路径此前未过滤，导致 for 循环 break 的 peephole 优化
+                # 被显式 return None 阻止，重编字节码不一致。
+                filtered_body = self._filter_trailing_return_none(body)
+                if filtered_body:
+                    for body_node in filtered_body:
+                        if isinstance(body_node, dict):
+                            self._generate_dict_node(body_node)
+                        else:
+                            self._generate_node(body_node)
+                else:
+                    self._write_line('pass')
             else:
                 self._write_line('pass')
         finally:
@@ -1888,32 +1895,54 @@ class CodeGenerator:
             if isinstance(node, ASTReturn):
                 return_idx = i
                 break
+            elif isinstance(node, dict) and node.get('type') == 'Return':
+                # [Phase 3 adv17_for_if_elif_else_flow] 字典格式 Return
+                return_idx = i
+                break
             elif isinstance(node, ASTBlock):
                 # 递归检查ASTBlock内部
                 filtered = self._filter_trailing_return_none(node.nodes)
                 # 如果内部有return，截断到此位置
                 if len(filtered) < len(node.nodes):
                     return nodes[:i] + [ASTBlock(filtered)]
-        
+
         # 如果找到了return，只保留到return为止的代码
         if return_idx >= 0:
             nodes = nodes[:return_idx + 1]
-        
+
         # [关键修复] 过滤掉函数末尾的return None
         # 对于生成器函数，显式return会改变字节码，必须过滤
         # 对于普通函数，return None是隐式的，过滤后字节码不变
         # [关键修复-2026-while-exit] 但对于包含while循环的函数，不过滤
-        if nodes and isinstance(nodes[-1], ASTReturn):
-            last_return = nodes[-1]
-            if last_return.value is None or (isinstance(last_return.value, ASTConstant) and last_return.value.value is None):
+        # [Phase 3 adv17_for_if_elif_else_flow] 同时处理字典格式 Return，
+        # 字典路径 _generate_function_def_dict 此前未过滤末尾 return None，
+        # 导致 for 循环 break 的 peephole 优化（break → return None 内联）
+        # 被显式 return None 阻止，重编字节码与原始不一致。
+        if nodes:
+            last = nodes[-1]
+            _is_return_none = False
+            if isinstance(last, ASTReturn):
+                if last.value is None or (isinstance(last.value, ASTConstant) and last.value.value is None):
+                    _is_return_none = True
+            elif isinstance(last, dict) and last.get('type') == 'Return':
+                _val = last.get('value')
+                if _val is None:
+                    _is_return_none = True
+                elif isinstance(_val, dict) and _val.get('type') == 'Constant' and _val.get('value') is None:
+                    _is_return_none = True
+            if _is_return_none:
                 if not has_while_loop:
                     if len(nodes) == 1:
                         pass
-                    elif len(nodes) >= 2 and isinstance(nodes[-2], ASTPass):
-                        pass
-                    else:
-                        nodes = nodes[:-1]
-        
+                    elif len(nodes) >= 2:
+                        _second_last = nodes[-2]
+                        _is_pass = (isinstance(_second_last, ASTPass)
+                                    or (isinstance(_second_last, dict) and _second_last.get('type') == 'Pass'))
+                        if _is_pass:
+                            pass
+                        else:
+                            nodes = nodes[:-1]
+
         return nodes
     
     def _generate_lambda_expr(self, node: ASTFunctionDef) -> None:

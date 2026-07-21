@@ -3798,7 +3798,31 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                                                     'JUMP_FORWARD', 'JUMP_ABSOLUTE')
                                and i.opname not in CONDITIONAL_JUMP_OPS]
             if block == natural_back_edge:
-                continue_map[block] = 'LOOP_BACK_EDGE'
+                # [Phase 3 adv17_for_if_elif_else_flow] 当 natural_back_edge
+                # 实际是显式 continue（条件分支 true body / fall-through）时，
+                # 标记为 CONTINUE 而非 LOOP_BACK_EDGE。判据：块只有一个前驱
+                # （在循环体内），前驱末指令是 FORWARD 条件跳转，且本块是
+                # fall-through（true body，非 jump target）。当循环所有路径
+                # 都显式 break/continue/return 时，唯一回边可能是 elif body
+                # 的 continue，把它当 LOOP_BACK_EDGE 会让 elif body 变 pass
+                # 而非 continue。fall-through（true body）始终是显式分支
+                # （必须走"if true"路径才能到达），不会是自然回边；jump
+                # target（false body）可能是自然路径（如 while 循环末尾），
+                # 故仅检测 fall-through 情形。
+                _nb_preds = [p for p in block.predecessors if p in body_set]
+                _is_explicit_cont = False
+                if len(_nb_preds) == 1:
+                    _np = _nb_preds[0]
+                    _npl = _np.get_last_instruction()
+                    if (_npl and _npl.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                            and _npl.argval is not None):
+                        _jt = self.cfg.get_block_by_offset(_npl.argval)
+                        if _jt is not block:
+                            _is_explicit_cont = True
+                if _is_explicit_cont:
+                    continue_map[block] = 'CONTINUE'
+                else:
+                    continue_map[block] = 'LOOP_BACK_EDGE'
                 continue
             if _blk_meaningful:
                 continue_map[block] = 'CONTINUE'
