@@ -45,9 +45,17 @@ class MatrixTestBase(ControlFlowTestCase):
     """
 
     @classmethod
-    def setup_class(cls):
-        """初始化验证器"""
+    def setUpClass(cls):
+        """初始化验证器（覆盖父类 SOURCE_CODE 强制要求）
+
+        MatrixTestBase 通过 ``verify_matrix_decompilation(source, ...)`` 把源码作为
+        参数传入，每个测试方法都有自己的源码，因此不需要类级 ``SOURCE_CODE``
+        属性。这里覆盖 ``ControlFlowTestCase.setUpClass``，避免触发其
+        ``NotImplementedError("子类必须定义SOURCE_CODE")`` 检查。
+        """
         cls.verifier = create_test_verifier()
+
+    setup_class = setUpClass  # pytest nose-style 兼容别名
 
     def verify_matrix_decompilation(
         self,

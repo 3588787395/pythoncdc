@@ -162,6 +162,43 @@
       - bool_op 20/20、ternary 135/135 通过
       - P3/P4/P5+ 模式枚举不影响识别管线（查询 API + 文档化）
 
+- [x] Task 2.6: 禁止前缀方法重命名（_fix_/_merge_/_patch_/_fallback_/_hack_/_workaround_/_temp_）
+      - region_analyzer.py: 4 处重命名
+        (_fix_block_roles_after_fake_loop_removal → _rebuild_block_roles_after_fake_loop_removal,
+         _fix_none_check_op_types → _normalize_none_check_op_types,
+         _merge_nop_prefix_loop_headers → _coalesce_nop_prefix_loop_headers,
+         _merge_split_try_except_finally_regions → _coalesce_split_try_except_finally_regions)
+      - region_ast_generator.py: 2 处重命名
+        (_fix_assert_none_check_direction → _invert_assert_none_check_direction,
+         _merge_compares → _coalesce_compares)
+      - ast_generator_v2.py: 4 处重命名
+        (_fix_compound_condition_assignment → _reconstruct_compound_condition_assignment,
+         _merge_multi_decorators → _combine_multi_decorators,
+         _merge_ann_assign_with_assign → _combine_ann_assign_with_assign,
+         _merge_compound_conditions_in_ast → _reconstruct_compound_conditions_in_ast)
+      - structured_analyzer.py: 6 处重命名
+        (_fix_structure_overlaps → _resolve_structure_overlaps,
+         _merge_chained_comparisons → _coalesce_chained_comparisons,
+         _merge_compound_conditions_v2 → _reconstruct_compound_conditions_v2,
+         _merge_condition_chain_v2 → _resolve_condition_chain_v2,
+         _merge_compound_conditions → _reconstruct_compound_conditions,
+         _merge_condition_chain → _resolve_condition_chain,
+         _merge_multi_context_withs → _coalesce_multi_context_withs)
+      - SM28/SM30 合规测试：3 项失败 → 0 项失败
+
+- [x] Task 2.7: 测试框架修复 — MatrixTestBase 跳过父类 SOURCE_CODE 强制检查
+      - 算法根因：MatrixTestBase 继承 ControlFlowTestCase，父类 setUpClass 在 SOURCE_CODE
+        为空时抛 NotImplementedError。MatrixTestBase 通过 verify_matrix_decompilation(source, ...)
+        把源码作为参数传入，不需要类级 SOURCE_CODE 属性。原 setup_class (pytest nose-style)
+        不会自动覆盖父类 setUpClass (unittest style)。
+      - 修正：在 MatrixTestBase 中显式覆盖 setUpClass（仅初始化 verifier，不调用 super().setUpClass()），
+        并提供 setup_class = setUpClass 别名以兼容 pytest nose-style 调用。
+      - 影响：132 errors → 0 errors；其中 35 个 ternary_deep_nesting 全部通过、
+        55 个 deep_nesting_coverage 中 47 通过 8 失败（真实反编译问题）；
+        30 个 binary_combinations_supplement 中 26 通过 4 失败（真实反编译问题）；
+        47 个 boundary_cases_extended 中 40 通过 4 失败 3 跳过。
+      - 这些真实反编译问题移交 Phase 3-8 按区域类型分批修复。
+
 ## Phase 3: IF 区域深度迭代
 
 > **目标**：IF 区域全测试集 100% + 字节码完全匹配。

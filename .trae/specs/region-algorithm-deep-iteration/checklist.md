@@ -50,11 +50,18 @@
 - [x] C2.5.5 P4 模式（chained compare）枚举
 - [x] C2.5.6 P5+ 模式（CPython peephole 全模式枚举）
 - [x] C2.5.7 CPython 模式库全测试集回归
+- [x] C2.6 禁止前缀方法重命名（_fix_/_merge_/_patch_/_fallback_/_hack_/_workaround_/_temp_）
+      — region_analyzer.py / region_ast_generator.py / ast_generator_v2.py / structured_analyzer.py
+      共 16 处重命名，SM28/SM30 合规测试 3 项失败 → 0 项失败
+- [x] C2.7 测试框架修复 — MatrixTestBase 跳过父类 SOURCE_CODE 强制检查
+      — 132 errors → 0 errors（test_ternary_deep_nesting 35/35 通过、
+        test_deep_nesting_coverage 47/55 通过、test_binary_combinations_supplement 26/30 通过、
+        test_boundary_cases_extended 40/47 通过；真实反编译失败移交 Phase 3-8）
 - [ ] C2.4 若 Phase 1 论证通过新区域类型：在 `RegionType` 枚举中新增成员
-- [ ] C2.5 若新增类型：实现 `_identify_<new>_regions` 方法（6 节模板 docstring）
-- [ ] C2.6 若新增类型：实现 `_generate_<new>` 方法（4 节模板 docstring）
-- [ ] C2.7 若新增类型：在 `analyze()` 中编排新类型的归约顺序
-- [ ] C2.8 若新增类型：全测试集回归无退化
+- [ ] C2.4a 若新增类型：实现 `_identify_<new>_regions` 方法（6 节模板 docstring）
+- [ ] C2.4b 若新增类型：实现 `_generate_<new>` 方法（4 节模板 docstring）
+- [ ] C2.4c 若新增类型：在 `analyze()` 中编排新类型的归约顺序
+- [ ] C2.4d 若新增类型：全测试集回归无退化
 - [ ] C2.9 若 Phase 1 论证通过新方法：实施迭代归约 / 异常表驱动 / 支配树驱动
 - [ ] C2.10 若实施新方法：全测试集回归无退化
 - [ ] C2.11 `analyze()` 末尾增加「每块唯一归属」不变量检查（debug 模式）
