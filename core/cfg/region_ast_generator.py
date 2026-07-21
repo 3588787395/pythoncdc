@@ -7007,6 +7007,28 @@ AST 映射规则:
                         self.generated_blocks.add(b)
                     self._generated_regions.add(loop_nid)
                 continue
+            # [Phase 3 adv15_ternary_in_tuple_unpack] 跳过元组解包链的前驱三元：
+            # 前驱三元（无 value_target，其 merge_block 是后继三元的 entry）由
+            # 链尾三元的 _generate_ternary 路径统一收集并重建为
+            # Assign(targets=[Tuple], value=Tuple)，此处独立生成会重复出栈且
+            # 误标记共享块（前驱 merge == 后继 entry）导致链尾三元被跳过。
+            if (isinstance(child, TernaryRegion)
+                    and not getattr(child, 'value_target', None)
+                    and child.merge_block is not None):
+                _is_unpack_pred = False
+                for _r in self.regions:
+                    if (isinstance(_r, TernaryRegion) and _r is not child
+                            and _r.entry is child.merge_block
+                            and getattr(_r, 'value_target', None)
+                            and _r.merge_block is not None):
+                        _pred_mb_eff = [i for i in _r.merge_block.instructions
+                                        if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                        if (_pred_mb_eff and _pred_mb_eff[0].opname == 'SWAP'
+                                and _pred_mb_eff[0].arg and _pred_mb_eff[0].arg >= 2):
+                            _is_unpack_pred = True
+                            break
+                if _is_unpack_pred:
+                    continue
             child_id = id(child)
             # [R15 Mode A] Skip ternary with merge_context='iter' consumed
             # by a LoopRegion (for-iter). The LoopRegion generator calls
@@ -17099,6 +17121,114 @@ AST 映射规则:
                     results.append({'type': 'Expr', 'value': joined_str})
                 
             elif region.value_target and not str(region.value_target).startswith('__'):
+                # [Phase 3 adv15_ternary_in_tuple_unpack] 元组解包赋值，右值为
+                # 多个三元组成的元组：`a, b = (1 if x else 2), (3 if y else 4)`。
+                # 字节码模式：N 个三元顺序压栈（前一个三元的 merge_block 是后一个
+                # 三元的 condition_block/entry），末尾跟 SWAP N + N 个 name STORE。
+                # 区域分析器把首个 STORE_* 误当作链尾三元的 value_target，导致
+                # 前驱三元丢失、赋值目标残缺。此处识别 SWAP N (N>=2) 模式，收集
+                # 三元链与 N 个 STORE 目标，重建为 Assign(targets=[Tuple], value=Tuple)。
+                # 栈语义：压栈顺序 [pred_val, ..., this_val]（this 在栈顶），SWAP N
+                # 反转为 [this_val, ..., pred_val]（pred 在栈顶），STORE 顺序依次
+                # 弹出，故 store_names[i] ↔ rhs_elts[i]（源加载顺序）。
+                _tuple_unpack_assign = None
+                if region.merge_block and ternary_expr is not None:
+                    _mb_eff = [i for i in region.merge_block.instructions
+                               if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                    if _mb_eff and _mb_eff[0].opname == 'SWAP' and _mb_eff[0].arg and _mb_eff[0].arg >= 2:
+                        _unpack_n = _mb_eff[0].arg
+                        _after_swap = _mb_eff[1:]
+                        _store_names = []
+                        _consume = 0
+                        _all_name_stores = True
+                        for _ti in range(_unpack_n):
+                            if _consume >= len(_after_swap):
+                                _all_name_stores = False
+                                break
+                            _sinstr = _after_swap[_consume]
+                            if _sinstr.opname not in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                                _all_name_stores = False
+                                break
+                            _store_names.append(_sinstr.argval if _sinstr.argval else f'var_{_sinstr.arg}')
+                            _consume += 1
+                        if (_all_name_stores and len(_store_names) == _unpack_n
+                                and _store_names[0] == region.value_target):
+                            # 收集三元链：前驱三元的 merge_block == 当前三元的 entry
+                            _chain_regions = [region]
+                            _cur = region
+                            _chain_safety = 0
+                            while _chain_safety < 20:
+                                _chain_safety += 1
+                                _pred = None
+                                for _r in self.regions:
+                                    if (isinstance(_r, TernaryRegion) and _r is not _cur
+                                            and _r.merge_block is _cur.entry
+                                            and not getattr(_r, 'value_target', None)):
+                                        _pred = _r
+                                        break
+                                if _pred is None:
+                                    break
+                                _chain_regions.insert(0, _pred)
+                                _cur = _pred
+                            if len(_chain_regions) == _unpack_n:
+                                _rhs_elts = []
+                                _chain_valid = True
+                                for _cr in _chain_regions:
+                                    if _cr is region:
+                                        _rhs_elts.append(ternary_expr)
+                                        continue
+                                    _cc = _cr.condition_block
+                                    _ctb = _cr.true_value_block
+                                    _cfb = _cr.false_value_block
+                                    if _cc is None or _ctb is None or _cfb is None:
+                                        _chain_valid = False
+                                        break
+                                    _cc_instrs = [i for i in _cc.instructions
+                                                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                                    _cc_last = _cc.get_last_instruction()
+                                    if _cc_last and _cc_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | BACKWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS):
+                                        _cc_instrs = [i for i in _cc_instrs if i is not _cc_last]
+                                    _cc_expr = self.expr_reconstructor.reconstruct(_cc_instrs) if _cc_instrs else None
+                                    _ctb_expr = self._build_simple_ternary_value(_ctb)
+                                    _cfb_expr = self._build_simple_ternary_value(_cfb)
+                                    if _cc_expr is None or _ctb_expr is None or _cfb_expr is None:
+                                        _chain_valid = False
+                                        break
+                                    _rhs_elts.append({
+                                        'type': 'IfExp',
+                                        'test': _cc_expr,
+                                        'body': _ctb_expr,
+                                        'orelse': _cfb_expr,
+                                    })
+                                if _chain_valid and len(_rhs_elts) == _unpack_n:
+                                    _target_elts = [{
+                                        'type': 'Name',
+                                        'id': _sn,
+                                        'ctx': 'Store',
+                                    } for _sn in _store_names]
+                                    _tuple_unpack_assign = {
+                                        'type': 'Assign',
+                                        'targets': [{
+                                            'type': 'Tuple',
+                                            'elts': _target_elts,
+                                            'ctx': 'Store',
+                                        }],
+                                        'value': {
+                                            'type': 'Tuple',
+                                            'elts': _rhs_elts,
+                                            'ctx': 'Load',
+                                        },
+                                    }
+                                    for _cr in _chain_regions:
+                                        for _b in _cr.blocks:
+                                            self.generated_blocks.add(_b)
+                                            self.generated_offsets.add(_b.start_offset)
+                                        self._generated_regions.add(id(_cr))
+                if _tuple_unpack_assign is not None:
+                    results.append(_tuple_unpack_assign)
+                    for block in region.blocks:
+                        self.generated_blocks.add(block)
+                    return results
                 if region.merge_block:
                     merge_all = [i for i in region.merge_block.instructions
                                 if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
