@@ -5938,12 +5938,34 @@ AST 映射规则:
         if store_instr is None:
             return None
         target_name = store_instr.argval if store_instr.argval else f'var_{store_instr.arg}'
-        # 用与 AssertRegion _build_assert_chained_compare 相同的算法重建链式 Compare
-        chained_cond = self._build_assert_chained_compare(
-            cond_block,
-            list(region.chained_compare_blocks),
-            list(region.chained_compare_ops),
-        )
+        # [Phase 3 adv15_ternary_in_chain_compare_body] 当 cond_block 是某
+        # TernaryRegion 的 merge_block 且 merge_context='compare' 时，链式比较
+        # 的中段操作数是三元 IfExp（如 ``z = 0 < (a if p else b) < 10``）。
+        # _build_assert_chained_compare 不识别三元，会用错误的 LOAD_* 指令构建
+        # Compare。改用与 _if_extract_condition_from_instructions 相同的算法：
+        # 提取被困左操作数（三元 condition_block 入口 test 之前的指令） +
+        # 三元 IfExp + 后续段操作数。
+        _ternary_for_cc = None
+        for _r in self.region_analyzer.regions:
+            if (isinstance(_r, TernaryRegion)
+                    and _r.merge_block is cond_block
+                    and getattr(_r, 'merge_context', None) == 'compare'):
+                _ternary_for_cc = _r
+                break
+        if _ternary_for_cc is not None:
+            chained_cond = self._build_chained_compare_with_ternary_middle(
+                cond_block,
+                list(region.chained_compare_blocks),
+                list(region.chained_compare_ops),
+                _ternary_for_cc,
+            )
+        else:
+            # 用与 AssertRegion _build_assert_chained_compare 相同的算法重建链式 Compare
+            chained_cond = self._build_assert_chained_compare(
+                cond_block,
+                list(region.chained_compare_blocks),
+                list(region.chained_compare_ops),
+            )
         if chained_cond is None:
             return None
         # 标记所有 region.blocks 为已生成，避免父 IfRegion 重复处理。
@@ -5960,6 +5982,87 @@ AST 映射规则:
                 'ctx': 'Store',
             }],
             'value': chained_cond,
+        }
+
+    def _build_chained_compare_with_ternary_middle(self, cond_block, chain_blocks, ops, ternary_region):
+        """[Phase 3 adv15_ternary_in_chain_compare_body] 构建含三元中段的链式比较 Compare。
+
+        用于 ``0 < (a if p else b) < 10`` 形态：cond_block 是三元的 merge_block，
+        三元 IfExp 作为链式比较的中段操作数，左操作数被困在三元的 condition_block
+        入口（test 之前）。
+
+        算法与 _if_extract_condition_from_instructions 的 compare 上下文路径一致：
+          - 生成三元 IfExp 表达式
+          - 按 [cond_block] + chain_blocks 分段提取 LOAD_* 指令
+          - 首段有 LOAD_* → 三元在左：left=ternary, comparators=各段操作数
+          - 首段无 LOAD_* → 三元在右/中段：left=被困左操作数, comparators=[ternary, ...]
+        """
+        _ternary_result = self._generate_ternary(ternary_region)
+        _ternary_expr = None
+        if _ternary_result:
+            for _item in (_ternary_result if isinstance(_ternary_result, list) else [_ternary_result]):
+                if isinstance(_item, dict):
+                    if _item.get('type') == 'Expr':
+                        _ternary_expr = _item.get('value')
+                    elif _item.get('type') == 'IfExp':
+                        _ternary_expr = _item
+        if _ternary_expr is None:
+            return None
+        for _b in ternary_region.blocks:
+            self.generated_blocks.add(_b)
+        _CMP_SKIP_OPS = frozenset({
+            'COMPARE_OP', 'SWAP', 'COPY', 'POP_TOP',
+            'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_FALSE',
+            'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_TRUE',
+            'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_BACKWARD_IF_NONE',
+            'POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_BACKWARD_IF_NOT_NONE',
+            'POP_JUMP_IF_FALSE', 'POP_JUMP_IF_TRUE',
+            'POP_JUMP_IF_NONE', 'POP_JUMP_IF_NOT_NONE',
+            'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE',
+            'JUMP_IF_TRUE_OR_POP', 'JUMP_IF_FALSE_OR_POP',
+            'CACHE', 'NOP', 'RESUME',
+        })
+        _segments = [cond_block] + list(chain_blocks)
+        _seg_load_instrs = []
+        for _seg in _segments:
+            _loads_i = []
+            for _instr in _seg.instructions:
+                if _instr.opname in NOISE_OPS:
+                    continue
+                if _instr.opname == 'COMPARE_OP':
+                    continue
+                elif _instr.opname in _CMP_SKIP_OPS:
+                    continue
+                else:
+                    _loads_i.append(_instr)
+            _seg_load_instrs.append(_loads_i)
+        _first_loads = _seg_load_instrs[0] if _seg_load_instrs else []
+        _ternary_is_left = len(_first_loads) > 0
+        if _ternary_is_left:
+            _left_expr = _ternary_expr
+            _comparators = []
+            for _loads in _seg_load_instrs:
+                if _loads:
+                    _r = self.expr_reconstructor.reconstruct(_loads)
+                    if _r:
+                        _comparators.append(_r)
+        else:
+            _lhs_instrs = self._extract_trapped_lhs_from_ternary(ternary_region)
+            _left_expr = self.expr_reconstructor.reconstruct(_lhs_instrs) if _lhs_instrs else None
+            _comparators = [_ternary_expr]
+            for _seg_idx in range(1, len(_seg_load_instrs)):
+                _loads = _seg_load_instrs[_seg_idx]
+                if _loads:
+                    _r = self.expr_reconstructor.reconstruct(_loads)
+                    if _r:
+                        _comparators.append(_r)
+        if _left_expr is None or len(_comparators) != len(ops):
+            return None
+        return {
+            'type': 'Compare',
+            'left': _left_expr,
+            'ops': list(ops),
+            'comparators': _comparators,
         }
 
     def _if_generate_full_elif_chain(self, region: IfRegion) -> Dict[str, Any]:
@@ -9482,6 +9585,50 @@ AST 映射规则:
                     if _consumed_by_loop:
                         for b in child.blocks:
                             self.generated_blocks.add(b)
+                        self._generated_regions.add(child_id)
+                        continue
+                # [Phase 3 adv15_ternary_in_chain_compare_body] Skip ternary
+                # with merge_context='compare' that is consumed by a sibling
+                # IfRegion with chained_compare_blocks (e.g.
+                # ``z = 0 < (a if p else b) < 10`` inside ``if c:``).
+                # The ternary's merge_block is the entry/condition_block of the
+                # consuming IfRegion. The IfRegion generator
+                # (_generate_value_context_chain_compare_assign, which calls
+                # _build_chained_compare_with_ternary_middle) will invoke
+                # _generate_ternary itself to extract the IfExp. Without this
+                # guard, the ternary is emitted as a standalone Expr (here),
+                # AND the merge_block is marked as generated, causing the
+                # consuming IfRegion to be skipped entirely (chain structure
+                # lost, z assignment missing).
+                if (isinstance(child, TernaryRegion)
+                        and getattr(child, 'merge_context', None) == 'compare'
+                        and child.merge_block is not None):
+                    _consuming_if = None
+                    for _ir in self.regions:
+                        if (isinstance(_ir, IfRegion) and _ir is not region
+                                and _ir.entry is child.merge_block
+                                and getattr(_ir, 'chained_compare_blocks', None)):
+                            _consuming_if = _ir
+                            break
+                    if _consuming_if is not None:
+                        _if_id = id(_consuming_if)
+                        if _if_id not in self._generated_regions and _if_id not in self._generating_regions:
+                            self._generating_regions.add(_if_id)
+                            try:
+                                _if_ast = self._generate_region(_consuming_if)
+                            finally:
+                                self._generating_regions.discard(_if_id)
+                            if _if_ast:
+                                if isinstance(_if_ast, list):
+                                    stmts.extend(_if_ast)
+                                else:
+                                    stmts.append(_if_ast)
+                        # Mark only the ternary's non-merge blocks as
+                        # generated. The merge_block is owned by the
+                        # consuming IfRegion (already marked above).
+                        for b in child.blocks:
+                            if b is not child.merge_block:
+                                self.generated_blocks.add(b)
                         self._generated_regions.add(child_id)
                         continue
                 if child_id not in self._generated_regions and child_id not in self._generating_regions:

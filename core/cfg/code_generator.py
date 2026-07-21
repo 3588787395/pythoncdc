@@ -3507,9 +3507,53 @@ class CodeGenerator:
 
         return f'{op_str}{operand_code}'
     
+    def _get_ast_expr_precedence(self, node) -> int:
+        """[Phase 3 adv15] 获取 ASTNode 表达式节点的优先级。
+
+        镜像 dict-based 路径的 ``_get_dict_expr_precedence``，供 AST-based
+        代码生成路径（如 ``_generate_compare``）使用，以决定是否为低优先级
+        子表达式（IfExp / BoolOp / Lambda / 嵌套 Compare）添加括号。
+
+        - IfExp          -> ``self._precedence['if']``   (2)
+        - BoolOp(and)    -> ``self._precedence['and']``  (4)
+        - BoolOp(or)     -> ``self._precedence['or']``   (3)
+        - UnaryOp(not)   -> ``self._precedence['not']``  (5)
+        - Compare        -> ``self._precedence['==']``   (6)
+        - Lambda         -> ``self._precedence['lambda']`` (1)
+        - 其他原子/容器  -> ``self._precedence['atom']`` (17)
+        """
+        if node is None:
+            return self._precedence['atom']
+        if isinstance(node, ASTIfExp):
+            return self._precedence['if']
+        if isinstance(node, ASTLambda):
+            return self._precedence['lambda']
+        if isinstance(node, ASTCompare):
+            return self._precedence['==']
+        if isinstance(node, ASTUnary):
+            return self._precedence['not']
+        if isinstance(node, ASTBinary):
+            # ASTBinary 同时承担算术与布尔运算；按 op 字符串查表
+            if isinstance(node.op, str):
+                op_str = node.op
+            else:
+                _op_map = {
+                    13: 'and', 14: 'or',
+                }
+                op_str = _op_map.get(node.op, '+')
+            return self._precedence.get(op_str, 11)
+        return self._precedence['atom']
+
     def _generate_compare(self, node: ASTCompare) -> str:
         """生成比较表达式"""
+        # [Phase 3 adv15] 左操作数按比较优先级生成：低优先级操作数
+        # （IfExp / BoolOp / Lambda / 嵌套 Compare）需加括号，否则
+        # ``(a if c else b) < 0`` 会被解析为 ``a if c else (b < 0)``。
         left_code = self._generate_expression(node.left, self._precedence['=='])
+        # [Round4-10] 嵌套 Compare 必须加括号：``a == b == c == d`` 是单一
+        # 链式比较；要表达 ``(a == b) == (c == d)`` 必须给内层 Compare 加括号。
+        if isinstance(node.left, ASTCompare):
+            left_code = f'({left_code})'
 
         # 操作符映射（支持整数和字符串）
         op_map = {
@@ -3521,8 +3565,18 @@ class CodeGenerator:
 
         parts = [left_code]
         for op, comparator in zip(node.ops, node.comparators):
-            # [关键修复] 使用0作为parent_precedence，确保比较操作的操作数不会添加括号
-            comparator_code = self._generate_expression(comparator, 0)
+            # [Phase 3 adv15] 比较数按比较优先级生成：低优先级操作数
+            # （如 IfExp / BoolOp）需加括号，否则 ``0 < (a if c else b)``
+            # 会渲染为 ``0 < a if c else b`` 并被 Python 解析为
+            # ``(0 < a) if c else b``（比较比条件表达式更紧绑定）。
+            c_prec = self._get_ast_expr_precedence(comparator)
+            if c_prec < self._precedence['==']:
+                comparator_code = self._generate_expression(comparator, self._precedence['=='])
+            else:
+                comparator_code = self._generate_expression(comparator, 0)
+            # [Round4-10] comparator 为嵌套 Compare 时同样必须加括号
+            if isinstance(comparator, ASTCompare):
+                comparator_code = f'({comparator_code})'
             op_str = op_map.get(op, str(op))
             parts.append(f'{op_str} {comparator_code}')
 
