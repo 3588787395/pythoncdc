@@ -14501,6 +14501,16 @@ AST 映射规则:
                         self.generated_blocks.add(cb)
                     if r.merge_block is not None:
                         self.generated_blocks.add(r.merge_block)
+                    # [bool17 fix] Mark ALL blocks of the absorbed chained
+                    # compare IfRegion as generated. The IfRegion may own
+                    # else_blocks (false-exit return-None sinks) that are
+                    # not in chained_compare_blocks or merge_block. Without
+                    # this, the generation loop's "all blocks generated"
+                    # check fails and the IfRegion is duplicated, producing
+                    # `if 0 < x < 10 and y != 0:\n    pass\nif 0 < x < 10
+                    # and y != 0:\n    pass`.
+                    for b in r.blocks:
+                        self.generated_blocks.add(b)
                     return cc_expr
                 return None
         return None
@@ -14535,8 +14545,39 @@ AST 映射规则:
         ft_succs = list(ft_block.successors)
         if not jt_succs or not ft_succs:
             return None
-        jt_merge = jt_succs[0] if len(jt_succs) >= 1 else None
-        ft_merge = ft_succs[0] if len(ft_succs) >= 1 else None
+        # [P5 + Cluster 4 interaction] For ternary value blocks, the
+        # successor might be a JUMP_FORWARD intermediate block. Follow
+        # JUMP_FORWARD to find the real merge, so both value blocks
+        # correctly resolve to the same merge point.
+        def _fallthrough_merge(blk):
+            blk_last = blk.get_last_instruction()
+            blk_jt_offset = blk_last.argval if (blk_last and blk_last.argval is not None) else None
+            ss = list(blk.successors)
+            if not ss:
+                return None
+            # Prefer the fall-through successor (NOT the jump target of
+            # the value block's last conditional jump). The jump target
+            # of a value block (IF_TRUE/IF_FALSE) is the BoolOp short-circuit
+            # exit (e.g., the if-body for `or`), NOT the ternary merge.
+            # The fall-through leads (possibly via JUMP_FORWARD) to the
+            # real ternary merge.
+            ft_succs = [s for s in ss if s.start_offset != blk_jt_offset]
+            candidates = ft_succs if ft_succs else ss
+            for succ in candidates:
+                eff = [i for i in succ.instructions
+                       if i.opname not in ('NOP', 'CACHE')]
+                if (len(eff) == 1 and eff[0].opname == 'JUMP_FORWARD'
+                        and eff[0].argval is not None):
+                    real = self.cfg.get_block_by_offset(eff[0].argval)
+                    if real is not None:
+                        return real
+            # No JUMP_FORWARD intermediate — return the first fall-through
+            # successor (or the first successor if no fall-through).
+            return candidates[0] if candidates else None
+        jt_merge = _fallthrough_merge(jt_block)
+        ft_merge = _fallthrough_merge(ft_block)
+        if jt_merge is None or ft_merge is None:
+            return None
         if jt_merge != ft_merge:
             return None
         if region.merge_block and jt_merge != region.merge_block and ft_merge != region.merge_block:
@@ -14992,7 +15033,11 @@ AST 映射规则:
             # restore the original semantics. This handles source
             # patterns like `while not done and has_data():` where
             # `not done` is lowered as `LOAD done; POP_JUMP_IF_TRUE`.
+            # [P5 + Cluster 4] Skip implicit `not` when the chain block
+            # is a ternary cond block — the ternary's cond jump direction
+            # is determined by the ternary's semantics, not by `not` inversion.
             if (sub_expr is not None and last_instr and not is_transforming_only
+                    and nested_ternary is None
                     and last_instr.opname in STRIP_JUMP_OPS):
                 _jump_op = last_instr.opname
                 if chain_op == 'and' and 'TRUE' in _jump_op:
@@ -15020,8 +15065,14 @@ AST 映射规则:
                     current_group_op = chain_op
                     current_group_values = [sub_expr]
             # Check for fall-through block with additional operands (for ALL chain blocks, not just last)
+            # [P5 + Cluster 4] Skip fall-through processing when the chain
+            # block is a ternary cond block — the ternary's value blocks are
+            # handled by _try_build_nested_ternary_in_boolop, not as
+            # fall-through operands.
             next_chain_block = op_chain[chain_idx + 1][0] if chain_idx + 1 < len(op_chain) else None
-            if last_instr and last_instr.opname in STRIP_JUMP_OPS and last_instr.argval is not None:
+            if (nested_ternary is None
+                    and last_instr and last_instr.opname in STRIP_JUMP_OPS
+                    and last_instr.argval is not None):
                 ft_succs = sorted(chain_block.conditional_successors, key=lambda s: s.start_offset)
                 ft_block = next((s for s in ft_succs
                                  if s.start_offset != last_instr.argval
@@ -15369,6 +15420,67 @@ AST 映射规则:
                     boolop_expr = _negate_expr(boolop_expr)
                 region.condition_expr = boolop_expr
             return None
+
+        # [P5 + Cluster 4 interaction] Standalone If condition — when
+        # BoolOpRegion.is_condition_context is True but there is no
+        # enclosing IfRegion (because the chain blocks are ternary cond
+        # blocks, and Edit D in _identify_conditional_regions skipped
+        # creating the IfRegion to avoid corrupting the ternary's internal
+        # structure), generate the If statement directly using merge_block
+        # as the if-body. This is the case for
+        # `if (a if c else b) or (d if e else f) or (g if h else i): pass`.
+        # Without this branch, the boolop falls through to the "Return"
+        # path (merge_block is `LOAD_CONST None + RETURN_VALUE` for `pass`)
+        # and produces `return (boolop_expr)` — wrong.
+        if (not _is_outer_condition
+                and getattr(region, 'is_condition_context', False)
+                and region.merge_block is not None
+                and _enclosing is None):
+            boolop_expr = self._build_boolop_expression(region)
+            if boolop_expr:
+                # Determine if the boolop should be negated based on the
+                # last chain block's jump direction. For `or` chains ending
+                # in IF_FALSE → if-body, no negation. For IF_TRUE → if-body,
+                # negate (because IF_TRUE means "jump to if-body when truthy",
+                # so the boolop's truthy path goes to if-body, no negation;
+                # but the existing _is_outer_condition path negates when
+                # IF_TRUE because the IfRegion's else_blocks is the jump
+                # target). Since here the merge IS the if-body, semantics:
+                # - IF_FALSE → merge (if-body): condition truthy → fall
+                #   through to if-body → NO negation
+                # - IF_TRUE → merge (if-body): condition truthy → jump to
+                #   if-body → NO negation (truthy = if-body in both cases)
+                # But IF_TRUE here means the chain's last op is 'or' (jump
+                # when truthy to short-circuit), and merge is the
+                # short-circuit target = if-body, so no negation needed.
+                # Actually the existing _is_outer_condition path negates
+                # IF_TRUE because there the IfRegion's else_blocks IS the
+                # short-circuit target. Here we control merge = if-body,
+                # so NO negation regardless of jump direction.
+                for block in region.blocks:
+                    self.generated_blocks.add(block)
+                self.generated_blocks.add(region.merge_block)
+                # Generate the if-body from merge_block statements.
+                # Skip trailing RETURN_VALUE/RETURN_CONST (the implicit
+                # module-level return None) since the If statement doesn't
+                # need it.
+                _body_stmts = self._generate_block_statements(region.merge_block)
+                _filtered_body = []
+                for s in _body_stmts:
+                    if s.get('type') == 'Return' and (s.get('value') is None
+                                                       or (isinstance(s.get('value'), dict)
+                                                           and s['value'].get('type') == 'Constant'
+                                                           and s['value'].get('value') is None)):
+                        continue
+                    _filtered_body.append(s)
+                if not _filtered_body:
+                    _filtered_body = [{'type': 'Pass'}]
+                return [{
+                    'type': 'If',
+                    'test': boolop_expr,
+                    'body': _filtered_body,
+                    'orelse': [],
+                }]
 
         pre_stmts = []
         if region.prefix_block:
