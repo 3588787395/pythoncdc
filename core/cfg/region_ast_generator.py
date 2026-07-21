@@ -15780,8 +15780,16 @@ AST 映射规则:
                     current_group_op = chain_op
                     current_group_values = [sub_expr]
             # Check for fall-through block with additional operands (for ALL chain blocks, not just last)
+            # [R12-01 fix] 当 chain_block 自身是嵌套 ternary 的 cond_block 时
+            # （nested_ternary is not None），其 true/false 分支已纳入 IfExp，
+            # 不应再作为「fall-through 块附加操作数」重复求值。否则
+            # `x or (a if c else b)` 会误把 ternary 的 true_block (LOAD_NAME a)
+            # 当作 `and a` 的额外操作数，输出 `x or ((a if c else b) and a)`。
+            # 依「每块唯一归属」：ternary 的 true/false 块归属 TernaryRegion
+            # （此处由 nested_ternary 表达），不归属 BoolOpRegion 的操作数链。
             next_chain_block = op_chain[chain_idx + 1][0] if chain_idx + 1 < len(op_chain) else None
-            if last_instr and last_instr.opname in STRIP_JUMP_OPS and last_instr.argval is not None:
+            if (nested_ternary is None
+                    and last_instr and last_instr.opname in STRIP_JUMP_OPS and last_instr.argval is not None):
                 ft_succs = sorted(chain_block.conditional_successors, key=lambda s: s.start_offset)
                 ft_block = next((s for s in ft_succs
                                  if s.start_offset != last_instr.argval
@@ -17565,6 +17573,37 @@ AST 映射规则:
                                     _preload_instrs.append(_ki)
                                 # else: FORMAT_VALUE consumed the ternary
                                 # result; don't append.
+                            elif _ki.opname == 'BUILD_SLICE':
+                                # [R12-03 fix] BUILD_SLICE N consumes N items
+                                # (start, stop[, step]) from the stack and
+                                # pushes a Slice object. Pattern: `r = x[a:b,
+                                # c if d else e]` compiles to cond preload
+                                # LOAD_NAME x, LOAD_NAME a, LOAD_NAME b,
+                                # BUILD_SLICE 2, then ternary condition/body,
+                                # then merge BUILD_TUPLE 2 + BINARY_SUBSCR +
+                                # STORE_NAME r. Without this branch BUILD_SLICE
+                                # was silently dropped (matched no case), so
+                                # the slice bounds (a, b) stayed on the stack
+                                # as separate items, producing wrong output
+                                # `r = a[b, c if d else e]` instead of
+                                # `r = x[a:b, c if d else e]`.
+                                # 依「父引用子入口」: 父 Subscript 通过
+                                # cond preload (x, Slice(a, b)) + merge
+                                # (BUILD_TUPLE, BINARY_SUBSCR) 引用 ternary
+                                # 子节点。依「每块唯一归属」: cond_block 的
+                                # BUILD_SLICE preload 归属 TernaryRegion 父
+                                # 表达式（Subscript）。
+                                _slice_arity = _ki.arg or 2
+                                if len(_preload_instrs) >= _slice_arity:
+                                    _bounds = _preload_instrs[-_slice_arity:]
+                                    _preload_instrs = _preload_instrs[:-_slice_arity]
+                                    # Group bounds + BUILD_SLICE as a list so
+                                    # reconstruct can pop them in order and
+                                    # emit a Slice AST node (mirrors the
+                                    # LOAD_ATTR+LOAD_* grouping at L17509).
+                                    _preload_instrs.append(_bounds + [_ki])
+                                # else: BUILD_SLICE consumed the ternary result;
+                                # don't append (output is ternary-derived).
                             # Other ops (e.g. PRECALL/CALL for prior decorator
                             # applications) are not preload-relevant; ignore.
                         _preload_stack = []
@@ -18442,6 +18481,33 @@ AST 映射规则:
                         container_info = {'type': 'Tuple', 'elts': [ternary_expr], 'ctx': 'Load'}
                     elif container_type == 'set':
                         container_info = {'type': 'Set', 'elts': [ternary_expr], 'ctx': 'Load'}
+                    # [R12-02/04/06 fix] Container literal *-unpack: ternary
+                    # result is wrapped in Starred and unpacked into the
+                    # container. 依「嵌套即抽象节点」：Starred 是 ternary 的
+                    # 父节点包装，container 是 Starred 的父节点。
+                    # 代码库约定（见 ast_generator_v2.py L89-91）：dict 的
+                    # **expr 项以 Starred(value=expr) 作 key、None 作 value
+                    # 表示。list/set 的 *expr 项以 Starred(value=expr) 作 elt。
+                    elif container_type == 'dict_unpack':
+                        # {**(ternary)} -> Dict(keys=[Starred(ternary)], values=[None])
+                        container_info = {
+                            'type': 'Dict',
+                            'keys': [{'type': 'Starred', 'value': ternary_expr, 'ctx': 'Load'}],
+                            'values': [None],
+                        }
+                    elif container_type == 'list_unpack':
+                        # [*(ternary)] -> List(elts=[Starred(IfExp)])
+                        container_info = {
+                            'type': 'List',
+                            'elts': [{'type': 'Starred', 'value': ternary_expr, 'ctx': 'Load'}],
+                            'ctx': 'Load',
+                        }
+                    elif container_type == 'set_unpack':
+                        # {*(ternary)} -> Set(elts=[Starred(IfExp)])
+                        container_info = {
+                            'type': 'Set',
+                            'elts': [{'type': 'Starred', 'value': ternary_expr, 'ctx': 'Load'}],
+                        }
                 if container_info:
                     results.append({'type': 'Expr', 'value': container_info})
                 else:
@@ -20973,36 +21039,32 @@ AST 映射规则:
         num_positional_from_ternary = max(0, num_ternaries - kwarg_count)
         num_kwarg_from_ternary = num_ternaries - num_positional_from_ternary
 
-        # Any preload positional args from cond_block (instructions before the
-        # function setup PUSH_NULL + LOAD_*). For R9 cases this is empty.
+        # Any preload positional args from cond_block. Two layouts:
+        # (1) [PUSH_NULL, LOAD_* func, <preload args>, <ternary cond>, POP_JUMP_*]
+        #     — Python 3.11+ LOAD_GLOBAL with arg & 1 == 1 implicitly pushes NULL,
+        #       so the func setup is at idx 0 and preload args come AFTER it.
+        # (2) [<preload args>, PUSH_NULL, LOAD_* func, <ternary cond>, POP_JUMP_*]
+        #     — Pre-Python 3.11 explicit PUSH_NULL after preload args.
+        # _compute_ternary_cond_preload_exprs returns ALL preloads on the
+        # stack below the ternary condition (including the function). Skip
+        # the function (first element) to get the actual preload positional args.
         preload_args = []
         cond_block = region.condition_block
         if cond_block is not None and num_positional_from_ternary < (total_args - kwarg_count):
             # Compute preload args count: total positional args minus ternary positional args.
             preload_count = (total_args - kwarg_count) - num_positional_from_ternary
-            cond_instrs = [i for i in cond_block.instructions
-                           if i.opname not in ('RESUME', 'NOP', 'CACHE')]
-            # Find PUSH_NULL (function setup) — preload args are before it.
-            push_null_idx = None
-            for idx, i in enumerate(cond_instrs):
-                if i.opname == 'PUSH_NULL':
-                    push_null_idx = idx
-                    break
-                if i.opname == 'LOAD_GLOBAL' and i.arg is not None and (i.arg & 1):
-                    push_null_idx = idx
-                    break
-            if push_null_idx is not None and push_null_idx > 0:
-                preload_instrs = cond_instrs[:push_null_idx]
-                self.expr_reconstructor.reset()
-                for _instr in preload_instrs:
-                    if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
-                        continue
-                    self.expr_reconstructor._process_instruction(_instr)
-                _pl_stack = [s for s in self.expr_reconstructor.stack
-                             if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
-                # Take the last preload_count elements as positional args.
-                if len(_pl_stack) >= preload_count:
-                    preload_args = _pl_stack[-preload_count:]
+            # [R12-05 fix] Use _compute_ternary_cond_preload_exprs which
+            # correctly identifies preload expressions between the function
+            # setup and the ternary condition. The function itself (e.g. max)
+            # is the first element, so skip it.
+            all_preloads = self._compute_ternary_cond_preload_exprs(region)
+            if len(all_preloads) > 1:
+                # Skip the function (first element) and take the next
+                # preload_count elements as positional args.
+                preload_args = all_preloads[1:1 + preload_count]
+            elif len(all_preloads) == 1 and num_positional_from_ternary == 0:
+                # Edge case: function is the only preload, no actual preload args
+                preload_args = []
 
         # Build args list: preload positional + ternary positional.
         call_args = list(preload_args) + ternary_exprs[:num_positional_from_ternary]

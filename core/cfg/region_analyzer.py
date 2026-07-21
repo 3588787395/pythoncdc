@@ -11113,6 +11113,19 @@ RegionType 枚举值: RegionType.ASSERT
                         # Dict comprehension: ternary is the dict value, key is on stack before condition
                         dict_key = RegionAnalyzer.extract_dict_key_from_block(cond_block)
                         return 'dict', None, dict_key
+                    # [R12-02/04/06 fix] Container literal *-unpack consumes
+                    # ternary: BUILD_<container> 0 (in cond_block preload) +
+                    # <ternary> + {DICT_UPDATE|LIST_EXTEND|SET_UPDATE} 1 (in
+                    # merge_block). The ternary result is unpacked into the
+                    # container via Starred. 依「每块唯一归属」：merge_block 的
+                    # *_UPDATE/_EXTEND 消费指令归属 TernaryRegion，cond_block
+                    # 的 BUILD_<container> 0 preload 也归属 TernaryRegion。
+                    if instr.opname == 'DICT_UPDATE':
+                        return 'dict_unpack', None, None
+                    if instr.opname == 'LIST_EXTEND':
+                        return 'list_unpack', None, None
+                    if instr.opname == 'SET_UPDATE':
+                        return 'set_unpack', None, None
             if cond_block:
                 instrs = [i for i in cond_block.instructions
                          if i.opname not in ('RESUME', 'NOP', 'CACHE')]

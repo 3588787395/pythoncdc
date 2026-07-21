@@ -3099,6 +3099,14 @@ class CodeGenerator:
                     elts = node.get('elts', [])
                     elt_codes = [self._generate_expression(e, 0) for e in elts]
                     return f'[{", ".join(elt_codes)}]'
+                elif node_type == 'Set':
+                    # [R12-06 fix] dict-based Set rendering (mirrors List with
+                    # `{...}` braces). Falls back to annotation path otherwise.
+                    elts = node.get('elts', [])
+                    if elts:
+                        elt_codes = [self._generate_expression(e, 0) for e in elts]
+                        return f'{{{", ".join(elt_codes)}}}'
+                    return 'set()'
                 elif node_type == 'Dict':
                     keys = node.get('keys', [])
                     values = node.get('values', [])
@@ -3109,7 +3117,21 @@ class CodeGenerator:
                         # 渲染为 ``**expr``（无 key: value 对）。
                         if (isinstance(k, dict) and k.get('type') == 'Starred'
                                 and v is None):
-                            pairs.append(f'**{self._generate_expression(k.get("value"), 0)}')
+                            # [R12-02 fix] 当 Starred.value 是低优先级复合表达式
+                            # （IfExp/BoolOp/NamedExpr/lambda/Yield 等）时必须加
+                            # 括号，否则 `{**(a if c else b)}` 会被渲染为
+                            # `{**a if c else b}` 导致语法错误。同 Call 位置参数的
+                            # Starred 渲染逻辑（见 L2979-2995）。
+                            _inner = k.get('value', {})
+                            _inner_code = self._generate_expression(_inner, 0) if _inner else ''
+                            _inner_type = _inner.get('type') if isinstance(_inner, dict) else None
+                            if _inner_type in ('IfExp', 'BoolOp', 'NamedExpr',
+                                               'Lambda', 'Yield', 'YieldFrom',
+                                               'Await', 'BinOp', 'UnaryOp',
+                                               'Compare', 'Starred'):
+                                pairs.append(f'**({_inner_code})')
+                            else:
+                                pairs.append(f'**{_inner_code}')
                             continue
                         k_code = self._generate_expression(k, 0)
                         v_code = self._generate_expression(v, 0)
