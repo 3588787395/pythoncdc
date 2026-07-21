@@ -66,7 +66,16 @@
   - [x] SubTask T1.8.6 (评估): R7-02/R7-03/R7-10/R8-08 async 控制流 ternary 系列（4 测试） — 评估结论：多文件多修改点 + 4 种不同修复方向 + 退化风险高，留待 R9+
   - [x] SubTask T1.8.7: 全量 ternary 回归 63 failed / 257 passed / 3 skipped（≤65 目标 ✅）+ 跨区域 107 failed / 1030 passed / 13 skipped（≤109 目标 ✅，无基线退化）
   - [x] SubTask T1.8.8: 写 fix_report.md，清理 6 个根级 _debug_*.py 调试脚本
-- [ ] Task T1.9 ~ T1.20
+- [x] Task T1.9: Ternary round_09 — 修复 11 bug（聚类 A 6 fix + 1 skip：R7-02/R7-10/R8-08/R9-01/R9-03/R9-04 + R7-03 skip；聚类 B 4 fix：R9-05/R9-17/R9-18/R9-19；R9-09 metaclass class body），7 已知限制留待 R10+（聚类 C 4：R9-10/R9-12/R9-13/R9-14；聚类 D 2：R9-15/R9-16；聚类 E 1：R9-08 except*）；ternary 66 failed / 277 passed / 5 skipped（基线 78/258/3，-12 failed +19 passed）；跨区域 109 failed / 1052 passed / 14 skipped（if_region 43 failed 无退化）；commit pending
+  - [x] SubTask T1.9.0: 基线确认（ternary 78 failed / 258 passed / 3 skipped；跨区域 121 failed）
+  - [x] SubTask T1.9.1 (P0): 聚类 A async 协议 polling 块归属冲突（7 bug） — dominator_analyzer Option C 精细化（自循环块包含异常后继）+ region_analyzer _is_await_polling_loop GET_ANEXT 检测 + LoopRegion.can_be_ternary_header 嵌套 ternary 守卫 + GET_AITER/ASYNC_GEN_WRAP merge_context + cfg_builder RETURN_GENERATOR fall-through + region_ast_generator R9-03 func_call_info 包装 + R9-04 merge_block 截断
+  - [x] SubTask T1.9.2 (P1): 聚类 B comprehension 桥接指令吞并（4 bug） — comprehension_generator Pattern B 检测（三元作 if-filter）+ walrus(ternary) 检测 + code_generator IfExp 括号
+  - [x] SubTask T1.9.3 (P2): R9-09 metaclass class body — _build_class_def 从 call_expr 提取 keywords 保留 metaclass 关键字参数
+  - [x] SubTask T1.9.4 (评估): 聚类 C/D/E 评估 — 聚类 C 4 bug（类定义基础设施：装饰器 CALL/KW_NAMES/LOAD_BUILD_CLASS 重建）+ 聚类 D 2 bug（consumer 模式：_is_ternary_block 约束/func_call_info false_value 吞并）+ 聚类 E 1 bug（except* PEP 654 未实现）均标记为已知限制，避免过度工程化
+  - [x] SubTask T1.9.5: 全量 ternary 回归 66 failed / 277 passed / 5 skipped（≤67 目标 ✅，基线 78→66 -12）+ 跨区域 109 failed / 1052 passed / 14 skipped（if_region 43 failed 无退化 ✅）
+  - [x] SubTask T1.9.6: 写 fix_report.md，清理 8 个 round_09/_debug_*.py 调试脚本
+  - [ ] 已知限制 (R10+ 处理): R9-08 except* PEP 654, R9-10 frozen dataclass, R9-12 property setter, R9-13 abstractmethod, R9-14 class decorator arg, R9-15 assert+return consumer, R9-16 partial application, R7-03/R9-02/R9-25 重编译失败 skip
+- [ ] Task T1.10 ~ T1.20
 
 ## Phase 3-10: 其他 8 区域（各 20 轮）
 - [ ] Task 3.1 ~ 10.20

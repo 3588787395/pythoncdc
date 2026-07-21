@@ -561,6 +561,14 @@ class LoopRegion(Region):
             if _cs in self.blocks and _cs != self.back_edge_block:
                 _cs_inner_last = _cs.get_last_instruction()
                 if _cs_inner_last and _cs_inner_last.opname in FORWARD_CONDITIONAL_JUMP_OPS:
+                    # [R9 聚类A] 嵌套 ternary：若 _cs 已是某 TernaryRegion 的 entry
+                    # （如 `a if c1 else (b if c2 else d)` 中外层 false_block 是
+                    # 内层 ternary 的 condition_block），_cs 作为内层 ternary 的抽象
+                    # 节点引用，是合法的 false_value/true_value。依「嵌套即抽象节点」
+                    # 原则：内层 ternary 在外层 ternary 中是单表达式值节点，不应拒绝。
+                    _cs_existing = analyzer.block_to_region.get(_cs)
+                    if isinstance(_cs_existing, TernaryRegion) and _cs_existing.entry is _cs:
+                        continue
                     return False
         return True
 
@@ -3969,7 +3977,7 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
         return True
 
     def _is_await_polling_loop(self, header: BasicBlock, body: Set[BasicBlock]) -> bool:
-        """检测当前循环是否为 `await <expr>` 的轮询自循环。
+        """检测当前循环是否为 `await <expr>` 或 `async for` 的轮询自循环。
 
         CPython 为 `await <expr>` 生成的字节码模式：
             pred : ... <expr> ... ; GET_AWAITABLE ; LOAD_CONST None
@@ -3979,13 +3987,26 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                    JUMP_BACKWARD_NO_INTERRUPT <hdr_offset>   (回边自循环)
             exit : POP_JUMP_*_IF_*  (条件跳转，继续 await 值消费)
 
+        CPython 为 `async for x in iter:` 生成的轮询子循环模式：
+            pred : GET_AITER ; GET_ANEXT ; LOAD_CONST None
+            hdr  : SEND   <body_offset>
+                   YIELD_VALUE
+                   RESUME <3>
+                   JUMP_BACKWARD_NO_INTERRUPT <hdr_offset>   (回边自循环)
+            body : STORE_FAST x ; ...循环体...
+        注意：async for 的轮询子循环 header 与外层 async for 的 GET_ANEXT header
+        是相邻块（或被 CFG 拆分为两个块：GET_ANEXT 块 + SEND 块）。轮询子循环是
+        async for 协议的实现细节，外层 LoopRegion（含 GET_ANEXT）已完整归属整个
+        async for 结构，轮询子循环不应被物化为独立 LoopRegion，否则会吞并 ternary
+        的 condition/merge 块（违反「每块唯一归属」原则）。
+
         判定要点（同时满足）：
-          1. header 不含 FOR_ITER / GET_ANEXT / GET_AITER（非 for / async-for）
+          1. header 不含 FOR_ITER / GET_ANEXT / GET_AITER（非 for / async-for header）
           2. body 内存在 SEND + YIELD_VALUE + JUMP_BACKWARD_NO_INTERRUPT 三联
-          3. 前驱链中含有 GET_AWAITABLE（即确为 await 而非 yield from）
+          3. 前驱链中含有 GET_AWAITABLE（await 模式）或 GET_ANEXT（async for 模式）
           4. 前驱不含 GET_YIELD_FROM_ITER（排除 yield from）
 
-        这种循环是 await 的实现细节，不应被物化为 `while True: pass`。
+        这种循环是 await / async for 的实现细节，不应被物化为 `while True: pass`。
         """
         # 条件 1: header 不是 for/async-for 循环头
         header_has_iter = any(
@@ -4010,31 +4031,40 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
         if not (has_send and has_yield and has_jbni):
             return False
 
-        # 条件 3 + 4: 前驱链中含 GET_AWAITABLE 且不含 GET_YIELD_FROM_ITER
-        # 前驱链 = header 直接前驱 + body 块前驱（覆盖 await 嵌套于其他块的情况）
+        # 条件 3 + 4: 前驱链中含 GET_AWAITABLE 或 GET_ANEXT，且不含 GET_YIELD_FROM_ITER
+        # 前驱链 = header 直接前驱 + body 块前驱（覆盖 await/async for 嵌套于其他块的情况）
+        # [R9 聚类A] 新增 GET_ANEXT 检测：async for 的轮询子循环前驱含 GET_ANEXT
+        # （async for 的 header），该子循环是 async for 协议实现细节，不应独立物化。
         pred_blocks = set()
         for block in [header] + list(body):
             for p in block.predecessors:
                 if p is not header and p not in body:
                     pred_blocks.add(p)
         has_awaitable = False
+        has_anext = False
         has_yield_from_iter = False
         for p in pred_blocks:
             for instr in p.instructions:
                 if instr.opname == 'GET_AWAITABLE':
                     has_awaitable = True
+                elif instr.opname == 'GET_ANEXT':
+                    has_anext = True
                 elif instr.opname == 'GET_YIELD_FROM_ITER':
                     has_yield_from_iter = True
-        # 若前驱链无 GET_AWAITABLE，检查 body 自身（await 可能与条件求值在同块）
-        if not has_awaitable:
+        # 若前驱链无 GET_AWAITABLE 且无 GET_ANEXT，检查 body 自身
+        # （await/async for 可能与条件求值在同块）
+        if not has_awaitable and not has_anext:
             for block in body:
                 for instr in block.instructions:
                     if instr.opname == 'GET_AWAITABLE':
                         has_awaitable = True
                         break
-                if has_awaitable:
+                    if instr.opname == 'GET_ANEXT':
+                        has_anext = True
+                        break
+                if has_awaitable or has_anext:
                     break
-        if not has_awaitable:
+        if not has_awaitable and not has_anext:
             return False
         if has_yield_from_iter:
             return False
@@ -11694,7 +11724,12 @@ RegionType 枚举值: RegionType.ASSERT
                     # Phase 12修复: 仅对特定场景扩展merge块支持
                     # 场景1: GET_ITER - ternary用于for循环迭代器（test_13）
                     # 这是安全的，因为GET_ITER明确表示迭代器表达式
-                    elif instr.opname == 'GET_ITER':
+                    # [R9 聚类A R8-08/R9-03] 扩展 GET_AITER (async for)：
+                    # `async for x in (ternary)` 的 merge 块含 GET_AITER，
+                    # 与 sync for 的 GET_ITER 同构。依「父引用子入口」原则：
+                    # 父 async-for LoopRegion 通过 for_iter_setup 引用 ternary
+                    # 子节点作为 iter 表达式。
+                    elif instr.opname in ('GET_ITER', 'GET_AITER'):
                         merge_context = 'iter'
                         value_target = '__iter_target__'
                         break
@@ -12077,6 +12112,45 @@ RegionType 枚举值: RegionType.ASSERT
                                 merge_context = 'yieldfrom'
                                 value_target = None
                             _consumer_extra_blocks = [_poll_blk, _consume_blk]
+                        break
+
+                    # [R9 聚类A R9-04] async generator yield (ternary).
+                    # `yield (a if c else b)` in an async generator compiles to:
+                    #   ASYNC_GEN_WRAP + YIELD_VALUE + RESUME + POP_TOP + ...
+                    # ASYNC_GEN_WRAP wraps the ternary value for async gen yield.
+                    # 依「父引用子入口」：父 Yield 通过 ASYNC_GEN_WRAP+YIELD_VALUE
+                    # 引用 ternary 子节点。
+                    # 注意：CPython 的 CFG 构建可能不把 YIELD_VALUE 拆为独立块
+                    # （无显式跳转目标），所以 ASYNC_GEN_WRAP 和 YIELD_VALUE 可能
+                    # 在同一 merge_block 中。此时直接设 merge_context='yield'，
+                    # 让 _build_ternary_no_target_consumer_stmt 的 Pattern 4/5 匹配。
+                    # 若 YIELD_VALUE 在后继块中（CFG 已拆分），也将后继块加入
+                    # merge_extra_blocks 以保证 Pattern 4/5 能看到 YIELD_VALUE。
+                    elif instr.opname == 'ASYNC_GEN_WRAP':
+                        _has_yield_in_merge = any(
+                            i.opname == 'YIELD_VALUE' for i in merge_block.instructions)
+                        if _has_yield_in_merge:
+                            merge_context = 'yield'
+                            value_target = None
+                        else:
+                            _yield_blk = None
+                            _resume_blk = None
+                            for _succ in merge_block.successors:
+                                if _succ is merge_block:
+                                    continue
+                                if any(i.opname == 'YIELD_VALUE' for i in _succ.instructions):
+                                    _yield_blk = _succ
+                                    for _succ2 in _yield_blk.successors:
+                                        if any(i.opname == 'RESUME' for i in _succ2.instructions):
+                                            _resume_blk = _succ2
+                                            break
+                                    break
+                            if _yield_blk is not None:
+                                merge_context = 'yield'
+                                value_target = None
+                                _consumer_extra_blocks = [_yield_blk]
+                                if _resume_blk is not None:
+                                    _consumer_extra_blocks.append(_resume_blk)
                         break
 
             # When the JUMP_FORWARD pattern was detected (ternary in

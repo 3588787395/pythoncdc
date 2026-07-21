@@ -1514,6 +1514,10 @@ class RegionASTGenerator:
                           outer_call: Optional[Dict[str, Any]] = None) -> Optional[Dict[str, Any]]:
         bases = []
         decorator_list = []
+        # [Round9-09] Preserve class keyword arguments (e.g. metaclass=M) from
+        # the __build_class__ Call node. Standard AST stores them under the
+        # 'keywords' key as {'type': 'keyword', 'arg': name, 'value': value}.
+        keywords = []
 
         if call_expr is not None:
             func = call_expr.get('func', {})
@@ -1556,6 +1560,12 @@ class RegionASTGenerator:
 
             decorator_list = self._extract_decorators(outer_call if outer_call else call_expr)
             decorator_list = [d for d in decorator_list if not (isinstance(d, dict) and d.get('type') == 'Name' and d.get('id') == '__build_class__')]
+
+            # [Round9-09] Extract keyword arguments (e.g. metaclass=M) from the
+            # __build_class__ Call node so they are preserved on the ClassDef.
+            _call_kw = call_expr.get('keywords', []) or call_expr.get('kwargs', [])
+            if isinstance(_call_kw, list):
+                keywords = [kw for kw in _call_kw if isinstance(kw, dict)]
 
             if not decorator_list:
                 for block in self.cfg.blocks.values():
@@ -1634,7 +1644,7 @@ class RegionASTGenerator:
             'type': 'ClassDef',
             'name': class_name,
             'bases': bases,
-            'keywords': [],
+            'keywords': keywords,
             'body': filtered_body,
             'decorator_list': decorator_list,
         }
@@ -2695,11 +2705,20 @@ AST 映射规则:
                     ternary_stmts = self._generate_ternary(r)
                     if ternary_stmts and len(ternary_stmts) > 0:
                         for stmt in ternary_stmts:
-                            if stmt.get('type') == 'Expr' and isinstance(stmt.get('value'), dict) and stmt['value'].get('type') == 'IfExp':
-                                iter_expr = stmt['value']
-                                break
-                            elif stmt.get('type') == 'Return' and isinstance(stmt.get('value'), dict) and stmt['value'].get('type') == 'IfExp':
-                                iter_expr = stmt['value']
+                            if stmt.get('type') not in ('Expr', 'Return'):
+                                continue
+                            _v = stmt.get('value')
+                            if not isinstance(_v, dict):
+                                continue
+                            _vtype = _v.get('type')
+                            # [R9-03 fix] 当 ternary 被函数调用包装（
+                            # `async for x in g(a if c else b): pass`），
+                            # _generate_ternary 输出 Expr(Call(g, [IfExp]))。
+                            # 此时 iter_expr 应是整个 Call（含 ternary 作为参数），
+                            # 而非裸 IfExp。依「父引用子入口」：父 AsyncFor
+                            # 通过 merge_block 的 PRECALL+CALL 引用 ternary 子节点。
+                            if _vtype == 'IfExp' or _vtype == 'Call':
+                                iter_expr = _v
                                 break
                     if iter_expr:
                         for b in r.blocks:
@@ -2711,8 +2730,15 @@ AST 映射规则:
                 ternary_stmts = self._generate_ternary(_fis_owner)
                 if ternary_stmts and len(ternary_stmts) > 0:
                     for stmt in ternary_stmts:
-                        if stmt.get('type') == 'Expr' and isinstance(stmt.get('value'), dict) and stmt['value'].get('type') == 'IfExp':
-                            iter_expr = stmt['value']
+                        if stmt.get('type') not in ('Expr', 'Return'):
+                            continue
+                        _v = stmt.get('value')
+                        if not isinstance(_v, dict):
+                            continue
+                        # [R9-03 fix] 同步第一处逻辑：ternary 被 g() 包装时
+                        # 输出 Expr(Call(g, [IfExp]))，iter_expr 取整个 Call。
+                        if _v.get('type') in ('IfExp', 'Call'):
+                            iter_expr = _v
                             break
                 if iter_expr:
                     for b in _fis_owner.blocks:
@@ -17032,7 +17058,25 @@ AST 映射规则:
             # Phase 12修复: 根据merge_context决定输出格式（保守策略）
             if merge_ctx == 'iter':
                 # for循环迭代器: 生成Expr(IfExp)，由for循环生成器使用
-                results.append({'type': 'Expr', 'value': ternary_expr})
+                # [R9-03 fix] 若 func_call_info 存在，说明 ternary 被 g() 调用
+                # 包装（`async for x in g(a if c else b): pass`），iter 表达式
+                # 是 Call(g, [ternary_expr]) 而非裸 ternary_expr。
+                # 依「父引用子入口」：父 For/AsyncFor 通过 merge_block 的
+                # PRECALL+CALL 引用 ternary 子节点作为 Call 的参数。
+                _fc_info_iter = getattr(region, 'func_call_info', None)
+                if _fc_info_iter:
+                    _iter_call_args = (list(_fc_info_iter.get('args', []))
+                                      + [ternary_expr])
+                    _iter_call_expr = {
+                        'type': 'Call',
+                        'func': _fc_info_iter['func'],
+                        'args': _iter_call_args,
+                        'keywords': [],
+                    }
+                    _iter_call_expr = self._convert_lambda_function_objects(_iter_call_expr)
+                    results.append({'type': 'Expr', 'value': _iter_call_expr})
+                else:
+                    results.append({'type': 'Expr', 'value': ternary_expr})
                 
             elif merge_ctx == 'compare':
                 # if/while条件: 生成Expr(IfExp)，由条件语句生成器使用
@@ -18015,6 +18059,14 @@ AST 映射规则:
                         region, ternary_expr)
                     if _consumer_stmt is not None:
                         results.append(_consumer_stmt)
+                        # [R9-04 fix] _build_ternary_no_target_consumer_stmt
+                        # 可能在 region.post_consumer_extra_stmts 上存放「yield
+                        # cleanup 之后的后续语句」（如 `x = 1`），属于父
+                        # FunctionDef body 的独立语句。追加到 results。
+                        _post_extra = getattr(
+                            region, 'post_consumer_extra_stmts', None)
+                        if _post_extra:
+                            results.extend(_post_extra)
                         for block in region.blocks:
                             self.generated_blocks.add(block)
                         return results
@@ -18835,6 +18887,53 @@ AST 映射规则:
         # Pattern 4 & 5: yield (ternary) / yield from (ternary)
         has_yield = any(i.opname == 'YIELD_VALUE' for i in merge_instrs)
         if has_yield:
+            # [R9-04 fix] async gen yield (ternary) + 后续语句:
+            # 当 async generator 函数体内 `yield (ternary)` 后跟普通赋值语句
+            # （如 `x = 1`）时，CPython 的 CFG 不在 YIELD_VALUE 处分块，
+            # merge_block 含完整序列：
+            #   ASYNC_GEN_WRAP + YIELD_VALUE + (RESUME) + POP_TOP (yield cleanup)
+            #   + LOAD_CONST 1 + STORE_FAST x (后续语句)
+            #   + LOAD_CONST None + RETURN_VALUE (implicit return)
+            # expr_reconstructor 处理完整 merge_instrs 时会把后续 LOAD_CONST+
+            # STORE_FAST 误判为外层 Assign 表达式，掩盖了 Yield 表达式
+            # （返回 Assign(x, 1) 而非 Expr(Yield(ternary))）。
+            #
+            # 修复策略（依「每块唯一归属」原则）：
+            # merge_block 的指令按语义划分为两部分：
+            #   1. yield 表达式部分：ASYNC_GEN_WRAP + YIELD_VALUE + (RESUME) + POP_TOP
+            #      —— 归属 TernaryRegion 子表达式（Yield(ternary)）
+            #   2. 后续语句部分：LOAD_CONST + STORE_FAST 等
+            #      —— 归属父 FunctionDef body（独立语句）
+            # 截断 merge_instrs 到 yield cleanup (POP_TOP after YIELD_VALUE)，
+            # 让 expr_reconstructor 正确重建 Yield 表达式；
+            # 同时收集后续语句作为独立 stmt 返回给 generate() 用于追加到 results。
+            # 不修改 cfg_builder（之前尝试 YIELD_VALUE 分块导致 18+ 回归）。
+            _mc = getattr(region, 'merge_context', None)
+            _post_yield_stmts: List[Dict[str, Any]] = []
+            if _mc == 'yield':
+                _yv_idx = next(
+                    (_i for _i, _instr in enumerate(merge_instrs)
+                     if _instr.opname == 'YIELD_VALUE'), None)
+                if _yv_idx is not None:
+                    # 默认截断到 YIELD_VALUE 之后；若 YIELD_VALUE 后跟
+                    # RESUME + POP_TOP（async gen 的 yield 清理），则截断到 POP_TOP
+                    _cleanup_end = _yv_idx + 1
+                    for _i in range(_yv_idx + 1, len(merge_instrs)):
+                        if merge_instrs[_i].opname == 'POP_TOP':
+                            _cleanup_end = _i + 1
+                            break
+                        # 允许 RESUME 出现在 YIELD_VALUE 与 POP_TOP 之间（async gen）
+                        if merge_instrs[_i].opname != 'RESUME':
+                            break
+                    # 提取 yield cleanup 之后的剩余指令（属于父 FunctionDef）
+                    _remaining_instrs = merge_instrs[_cleanup_end:]
+                    merge_instrs = merge_instrs[:_cleanup_end]
+                    # 用 expr_reconstructor 把剩余指令重建为独立语句
+                    if _remaining_instrs:
+                        _rem_expr = self.expr_reconstructor.reconstruct(
+                            _remaining_instrs, initial_stack=[])
+                        if _rem_expr:
+                            _post_yield_stmts.append(_rem_expr)
             # expr_reconstructor maps:
             #   GET_YIELD_FROM_ITER + LOAD_CONST None + YIELD_VALUE -> YieldFrom
             #   YIELD_VALUE alone -> Yield
@@ -18848,16 +18947,22 @@ AST 映射规则:
                 # 依「父引用子入口」：父 Assign 通过 STORE_FAST x 引用 ternary 子节点
                 # （经 yield-from 协议）。
                 _vt = getattr(region, 'value_target', None)
-                _mc = getattr(region, 'merge_context', None)
+                _mc2 = getattr(region, 'merge_context', None)
                 if (full_expr.get('type') == 'YieldFrom'
-                        and _mc == 'yieldfrom'
+                        and _mc2 == 'yieldfrom'
                         and _vt and _vt != '__while_cond_target__'):
-                    return {
+                    _stmt: Dict[str, Any] = {
                         'type': 'Assign',
                         'targets': [{'type': 'Name', 'id': _vt, 'ctx': 'Store'}],
                         'value': full_expr,
                     }
-                return {'type': 'Expr', 'value': full_expr}
+                else:
+                    _stmt = {'type': 'Expr', 'value': full_expr}
+                # [R9-04 fix] 若有后续语句（yield cleanup 之后的指令），
+                # 存到 region 供 generate() 追加到 results。
+                if _post_yield_stmts:
+                    region.post_consumer_extra_stmts = _post_yield_stmts
+                return _stmt
 
         # [R4-02 fix] Pattern 7: await (ternary) — 无 return/assign 包装。
         # merge_block 含 GET_AWAITABLE（消费 ternary 结果产生 awaitable），

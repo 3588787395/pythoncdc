@@ -401,6 +401,43 @@ class ComprehensionGenerator:
         if store_idx is None:
             return None
 
+        # [R9-17/18/05 fix] 优先尝试 Pattern B：三元作 if-filter。
+        # 模式: ``[elt for x in iter if (a if c else b)]``
+        # 区分依据: BOTH 真假分支以 BACKWARD 条件跳转（filter skip）结束。
+        # 依「父引用子入口」：父推导式通过 merge 块的 elt 指令引用三元
+        # 子节点作为 if-filter 条件，元素独立重建。
+        _ternary_filter_info = self._detect_comp_ternary_as_filter(
+            all_instrs, store_idx, append_idx)
+        if _ternary_filter_info is not None:
+            _tf_expr, _tf_elt_start = _ternary_filter_info
+            _tf_ifs = [_tf_expr]
+            if append_op == 'MAP_ADD':
+                _tf_key, _tf_val = self._split_dict_comp_kv(
+                    all_instrs, _tf_elt_start, append_idx)
+                if _tf_key is None:
+                    _tf_key = {'type': 'Name', 'id': target_name, 'ctx': 'Load'}
+                if _tf_val is None:
+                    _tf_val = {'type': 'Constant', 'value': None}
+                _tf_elt = (_tf_key, _tf_val)
+            else:
+                _tf_elt_instrs = all_instrs[_tf_elt_start:append_idx]
+                _tf_elt = self.expr_reconstructor.reconstruct(_tf_elt_instrs)
+                if _tf_elt is None:
+                    _tf_elt = {'type': 'Name', 'id': target_name, 'ctx': 'Load'}
+            _tf_is_async = 0
+            for _instr in all_instrs:
+                if _instr.opname in ('GET_AITER', 'GET_ANEXT', 'END_ASYNC_FOR'):
+                    _tf_is_async = 1
+                    break
+            _tf_generators = [{
+                'type': 'comprehension',
+                'target': target,
+                'iter': iter_expr,
+                'ifs': _tf_ifs,
+                'is_async': _tf_is_async,
+            }]
+            return self._build_comp_result(code_obj, _tf_elt, _tf_generators)
+
         # 检测三元模式：条件跳转的目标在LIST_APPEND之前
         ternary_info = self._detect_comp_ternary(all_instrs, store_idx, append_idx)
         if ternary_info is not None:
@@ -546,6 +583,29 @@ class ComprehensionGenerator:
         innermost_store_idx = innermost_fi_idx + 1
         # 元素提取：从 innermost_store_idx + 1 到 append_idx
         elt_start_idx = innermost_store_idx + 1
+
+        # [R9-17/18/05 fix] 优先尝试 Pattern B：三元作 if-filter。
+        # 同 _parse_comprehension_inner 中的 Pattern B 逻辑，但作用域是
+        # 最内层 for body。依「父引用子入口」原则同上。
+        _ternary_filter_info = self._detect_comp_ternary_as_filter(
+            all_instrs, innermost_store_idx, append_idx)
+        if _ternary_filter_info is not None:
+            _tf_expr, _tf_elt_start = _ternary_filter_info
+            generators[-1]['ifs'] = [_tf_expr]
+            if append_op == 'MAP_ADD':
+                _tf_key, _tf_val = self._split_dict_comp_kv(
+                    all_instrs, _tf_elt_start, append_idx)
+                if _tf_key is None:
+                    _tf_key = {'type': 'Name', 'id': all_instrs[innermost_store_idx].argval, 'ctx': 'Load'}
+                if _tf_val is None:
+                    _tf_val = {'type': 'Constant', 'value': None}
+                elt_expr = (_tf_key, _tf_val)
+            else:
+                _tf_elt_instrs = all_instrs[_tf_elt_start:append_idx]
+                elt_expr = self.expr_reconstructor.reconstruct(_tf_elt_instrs)
+                if elt_expr is None:
+                    elt_expr = {'type': 'Name', 'id': all_instrs[innermost_store_idx].argval, 'ctx': 'Load'}
+            return self._build_comp_result(code_obj, elt_expr, generators)
 
         # 检测三元 / ifs（在最内层 for body 内）
         ternary_info = self._detect_comp_ternary(all_instrs, innermost_store_idx, append_idx)
@@ -1009,10 +1069,14 @@ class ComprehensionGenerator:
         # [Round7-08] 若有 merge_offset，false 值区域只到 merge_offset 之前。
         # merge_offset 之后是指令属于后续表达式（如 dict comp 的 value），
         # 不应作为 false 分支的一部分。
+        # [R9-19 fix] _merge_block_idx 标记 merge_offset 处的指令索引，
+        # 用于检测 walrus(COPY 1 + STORE_*) 副作用模式。
+        _merge_block_idx = None
         if merge_offset is not None:
             false_end = false_start
             for idx in range(false_start, append_idx):
                 if all_instrs[idx].offset >= merge_offset:
+                    _merge_block_idx = idx
                     break
                 false_end = idx + 1
             false_instrs = all_instrs[false_start:false_end]
@@ -1038,6 +1102,37 @@ class ComprehensionGenerator:
         if false_expr is None:
             return None
 
+        # [R9-19 fix] walrus(ternary) 模式检测：ternary merge 块后跟
+        # COPY 1 + STORE_* 序列（walrus 副作用捕获），将 IfExp 包装为
+        # NamedExpr(target, IfExp)。
+        # 字节码: <ternary merge> → COPY 1 → STORE_* n → LIST_APPEND/SET_ADD/YIELD_VALUE
+        # 依「每块唯一归属」：COPY+STORE 块属于父推导式的 walrus 表达式，
+        # 通过 NamedExpr 包装让 walrus 副作用保留在元素表达式中，避免
+        # walrus 副作用指令被父推导式重复或丢失。
+        if _merge_block_idx is not None:
+            _post_merge = all_instrs[_merge_block_idx:append_idx]
+            if (len(_post_merge) >= 2
+                    and _post_merge[0].opname == 'COPY'
+                    and _post_merge[0].arg == 1
+                    and _post_merge[1].opname in (
+                        'STORE_FAST', 'STORE_NAME', 'STORE_DEREF', 'STORE_GLOBAL')
+                    and _post_merge[1].argval != '.0'):
+                _walrus_target_name = _post_merge[1].argval
+                return {
+                    'type': 'NamedExpr',
+                    'target': {
+                        'type': 'Name',
+                        'id': _walrus_target_name,
+                        'ctx': 'Store',
+                    },
+                    'value': {
+                        'type': 'IfExp',
+                        'test': cond_expr,
+                        'body': true_expr,
+                        'orelse': false_expr,
+                    },
+                }
+
         # 构建IfExp节点
         return {
             'type': 'IfExp',
@@ -1045,6 +1140,132 @@ class ComprehensionGenerator:
             'body': true_expr,
             'orelse': false_expr,
         }
+
+    def _detect_comp_ternary_as_filter(self, all_instrs: List[Instruction],
+                                        store_idx: int,
+                                        append_idx: int) -> Optional[Tuple[Dict[str, Any], int]]:
+        """[R9-17/18/05 fix] 检测推导式中「三元作 if-filter」模式。
+
+        模式: ``[elt for x in iter if (a if c else b)]``
+
+        字节码特征:
+            LOAD c
+            POP_JUMP_FORWARD_IF_FALSE false_branch   # FORWARD 三元 cond
+            LOAD a
+            POP_JUMP_BACKWARD_IF_FALSE FOR_ITER       # filter skip
+            JUMP_FORWARD merge
+            false_branch:
+            LOAD b
+            POP_JUMP_BACKWARD_IF_FALSE FOR_ITER       # filter skip
+            merge:
+            <elt 表达式指令>                          # 元素（不属于三元）
+            LIST_APPEND / YIELD_VALUE
+
+        区分依据: BOTH 真假分支均以 ``POP_JUMP_BACKWARD_IF_FALSE → FOR_ITER``
+        结束（filter skip 模式），且 merge 块与 LIST_APPEND 之间有元素指令。
+
+        返回 ``(ternary_expr, elt_start_idx)`` 或 None。
+        依「父引用子入口」：父推导式通过 merge 块的 elt 指令引用三元子节点
+        作为 if-filter 条件，元素独立重建。
+        """
+        append_offset = all_instrs[append_idx].offset if append_idx < len(all_instrs) else float('inf')
+        # [R9-05 fix] async comprehension 内层用 GET_ANEXT 而非 FOR_ITER，
+        # filter skip 跳回目标可能是 GET_ANEXT/SEND 块而非 FOR_ITER。
+        # 此处不再强制要求 FOR_ITER 存在（async comp 由调用方上下文保证
+        # 是推导式）。依「算法驱动」：守卫只看 BACKWARD 跳转特征，
+        # 不硬编码跳转目标类型。
+
+        # 查找 FORWARD 条件跳转（三元 cond）
+        cond_jump_idx = None
+        last_filter_end = store_idx
+        for idx in range(store_idx + 1, append_idx):
+            instr = all_instrs[idx]
+            if instr.opname in CONDITIONAL_JUMP_OPS:
+                if 'BACKWARD' in instr.opname:
+                    last_filter_end = idx
+                    continue
+                if hasattr(instr, 'argval') and instr.argval is not None:
+                    if instr.argval < append_offset:
+                        cond_jump_idx = idx
+                        break
+                    return None
+        if cond_jump_idx is None:
+            return None
+
+        cond_instr = all_instrs[cond_jump_idx]
+        false_target_offset = cond_instr.argval
+        cond_instrs = all_instrs[last_filter_end + 1:cond_jump_idx]
+
+        # 在真值区域中查找 JUMP_FORWARD（标记 true_end 与 merge_offset）
+        true_end = None
+        false_start = None
+        merge_offset = None
+        for idx in range(cond_jump_idx + 1, append_idx):
+            instr = all_instrs[idx]
+            if instr.offset >= false_target_offset:
+                if false_start is None:
+                    false_start = idx
+                break
+            if instr.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD'):
+                true_end = idx
+                false_start = idx + 1
+                if hasattr(instr, 'argval') and instr.argval is not None:
+                    merge_offset = instr.argval
+                break
+        if true_end is None or false_start is None or merge_offset is None:
+            return None
+
+        true_instrs = all_instrs[cond_jump_idx + 1:true_end]
+        false_end = false_start
+        for idx in range(false_start, append_idx):
+            if all_instrs[idx].offset >= merge_offset:
+                break
+            false_end = idx + 1
+        false_instrs = all_instrs[false_start:false_end]
+
+        # 关键守卫: BOTH 真假分支必须以 BACKWARD 条件跳转（filter skip）结束。
+        # 否则不是 Pattern B（可能是普通元素三元 Pattern A，如 R9-19 walrus）。
+        if not true_instrs or not false_instrs:
+            return None
+        true_last = true_instrs[-1]
+        false_last = false_instrs[-1]
+        if (true_last.opname not in CONDITIONAL_JUMP_OPS
+                or 'BACKWARD' not in true_last.opname):
+            return None
+        if (false_last.opname not in CONDITIONAL_JUMP_OPS
+                or 'BACKWARD' not in false_last.opname):
+            return None
+
+        # 重建三元表达式（剥掉末尾 BACKWARD 跳转）
+        cond_expr = self.expr_reconstructor.reconstruct(cond_instrs)
+        if cond_expr is None:
+            return None
+        if 'IF_TRUE' in cond_instr.opname:
+            cond_expr = {'type': 'UnaryOp', 'op': 'not', 'operand': cond_expr}
+        true_expr = self.expr_reconstructor.reconstruct(true_instrs[:-1])
+        if true_expr is None:
+            return None
+        false_expr = self.expr_reconstructor.reconstruct(false_instrs[:-1])
+        if false_expr is None:
+            return None
+
+        ternary_expr = {
+            'type': 'IfExp',
+            'test': cond_expr,
+            'body': true_expr,
+            'orelse': false_expr,
+        }
+
+        # elt_start_idx: merge_offset 之后的第一条指令（元素表达式起点）
+        elt_start_idx = None
+        for idx in range(false_end, append_idx):
+            if all_instrs[idx].offset >= merge_offset:
+                elt_start_idx = idx
+                break
+        if elt_start_idx is None:
+            return None
+
+        return (ternary_expr, elt_start_idx)
 
     def _build_comp_result(self, code_obj: Any, elt_expr: Dict, generators: List[Dict]) -> Optional[Dict]:
         func_name = code_obj.co_name

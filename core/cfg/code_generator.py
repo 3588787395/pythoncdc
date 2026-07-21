@@ -4294,6 +4294,11 @@ class CodeGenerator:
             for if_clause in ifs:
                 if isinstance(if_clause, dict):
                     if_code = self._generate_annotation_from_dict(if_clause)
+                    # [R9-17/18/05 fix] 推导式 if 条件是 IfExp 时必须加括号，
+                    # 否则 `[i for i in r if a if c else b]` 会被解析为
+                    # `[i for i in r if a] if c else b`（语法错误）。
+                    if if_clause.get('type') == 'IfExp':
+                        if_code = f'({if_code})'
                 else:
                     if_code = self._generate_expression(if_clause, 0)
                 part += f' if {if_code}'
@@ -4650,6 +4655,12 @@ class CodeGenerator:
                 for if_clause in gen._ifs:
                     # [关键修复] 使用0作为parent_precedence，避免条件被添加括号
                     if_code = self._generate_expression(if_clause, 0)
+                    # [R9-17/18/05 fix] 推导式 if 条件是 IfExp 时必须加括号
+                    # （见 _generate_comprehensions_from_dict 同名修复）。
+                    if hasattr(if_clause, '_node_type') and if_clause._node_type == 'IfExp':
+                        if_code = f'({if_code})'
+                    elif isinstance(if_clause, dict) and if_clause.get('type') == 'IfExp':
+                        if_code = f'({if_code})'
                     part += f' if {if_code}'
             
             parts.append(part)
