@@ -15860,6 +15860,13 @@ AST 映射规则:
         则剥离该指令。但如果连续两个POP_TOP，则只剥一个。
         这处理了 `func()` vs `x = func()` 的区别。
 
+        【纯JUMP_FORWARD连接块处理】
+        当嵌套三元被编译器展开为共享分支形态时
+        （如 ``a if (b if c else d) else e`` 展开为两个 ``a if X else e``
+        分支），某分支的 true_value_block 可能是纯 JUMP_FORWARD
+        连接块，指向实际值块。此时跟随跳转目标递归重建。
+        遵循"自底向上归约"：连接块归约为目标块的表达式。
+
         【返回None的情况】
         - block为None（理论上不应该发生）
         - 过滤后无指令
@@ -15882,6 +15889,17 @@ AST 映射规则:
             return self._build_boolop_expression(entry_existing, skip_elif_blocks=True)
         if isinstance(existing, BoolOpRegion) and existing.entry == block:
             return self._build_boolop_expression(existing, skip_elif_blocks=True)
+        # [Phase 3 adv03_nested_ternary_chain] 纯 JUMP_FORWARD 连接块：
+        # 嵌套三元展开后某分支值块可能仅含 JUMP_FORWARD 指向真实值块。
+        # 跟随跳转目标递归调用本方法，归约为目标块的表达式。
+        _pure_jump_instrs = [i for i in block.instructions
+                             if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+        if (len(_pure_jump_instrs) == 1
+                and _pure_jump_instrs[0].opname == 'JUMP_FORWARD'
+                and _pure_jump_instrs[0].argval is not None):
+            _target_block = self.cfg.get_block_by_offset(_pure_jump_instrs[0].argval)
+            if _target_block is not None and _target_block is not block:
+                return self._build_ternary_value_expr(_target_block)
         instrs = [i for i in block.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE')]
         last = block.get_last_instruction()
         if last and last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
@@ -16422,6 +16440,18 @@ AST 映射规则:
         else:
             cond_instrs_raw = [i for i in cond_block.instructions
                                if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+            # [Phase 3 adv03_nested_ternary_chain] compare 上下文下，三元
+            # condition_block 入口可能被外层链式比较的左操作数"困住"
+            # （如 ``0 < (a if c else b) < 10`` 中 ``LOAD_CONST 0`` 困在
+            # 三元 test 之前）。这些指令属于外层 Compare，不属于三元 test。
+            # 调用 _extract_trapped_lhs_from_ternary 定位 test 起点，剔除其
+            # 前的被困指令，避免 reconstruct 因双压栈失败返回 None。
+            if getattr(region, 'merge_context', None) == 'compare':
+                _trapped_lhs = self._extract_trapped_lhs_from_ternary(region)
+                if _trapped_lhs:
+                    _trapped_ids = {id(i) for i in _trapped_lhs}
+                    cond_instrs_raw = [i for i in cond_instrs_raw
+                                       if id(i) not in _trapped_ids]
             last_cond_instr = cond_block.get_last_instruction()
 
             func_call_skip = 0
@@ -16502,6 +16532,64 @@ AST 映射规则:
             true_expr = self._build_ternary_value_expr(true_block)
         if false_expr is None:
             false_expr = self._build_ternary_value_expr(false_block)
+
+        # [Phase 3 adv03_nested_ternary_chain] 编译器展开的嵌套三元折叠。
+        # 源码 ``V1 if (X if C1 else Y) else V2`` 被编译器展开为共享分支形态：
+        #   - 外层三元 T1: cond=C1, tvb=T2, fvb=T3, merge=M
+        #   - T2: cond=X, tvb=V1（可能经 JUMP_FORWARD 连接块）, fvb=V2, merge=M
+        #   - T3: cond=Y, tvb=V1, fvb=V2, merge=M
+        # T2 和 T3 共享相同的 tvb 和 fvb。展开形式语义等价但字节码不等价
+        # （V1/V2 各被加载两次而非共享）。遵循"自底向上归约"：识别此结构
+        # 模式，折叠回原始嵌套三元 IfExp(test=IfExp(C1, X, Y), body=V1, orelse=V2)。
+        # 仅折叠 ternary_expr 本身，后续输出逻辑（compare/while_cond/return 等）
+        # 由原有路径处理，确保所有 merge_context 行为一致。
+        #
+        # 【merge_context 限制】仅当 merge_context 为 'compare' 或 'return' 时
+        # 折叠。对于 merge_context=None 的 if 条件三元（如 adv01），外层三元
+        # 不应自行生成 If 节点——应由内层 while_cond 三元通过 chain-building
+        # 逻辑生成。此时返回 None，让内层三元接管。
+        _folded_inner_ternaries = False
+        if (cond_expr and true_expr and false_expr
+                and true_expr.get('type') == 'IfExp'
+                and false_expr.get('type') == 'IfExp'
+                and true_expr.get('body') == false_expr.get('body')
+                and true_expr.get('orelse') == false_expr.get('orelse')):
+            _fold_merge_ctx = getattr(region, 'merge_context', None)
+            if _fold_merge_ctx in ('compare', 'return'):
+                _shared_body = true_expr['body']
+                _shared_orelse = true_expr['orelse']
+                _folded_test = {
+                    'type': 'IfExp',
+                    'test': cond_expr,
+                    'body': true_expr['test'],
+                    'orelse': false_expr['test'],
+                }
+                cond_expr = _folded_test
+                true_expr = _shared_body
+                false_expr = _shared_orelse
+                _folded_inner_ternaries = True
+            elif _fold_merge_ctx is None:
+                # if 条件三元：外层不生成，由内层 while_cond 三元接管。
+                # 标记内层三元 blocks 已处理（避免 _try_build_ternary_boolop_and_if
+                # 误识别为 BoolOp 模式）。
+                for _r in self.regions:
+                    if (isinstance(_r, TernaryRegion) and _r is not region
+                            and _r.entry in (true_block, false_block)
+                            and getattr(_r, 'merge_context', None) == 'while_cond'):
+                        return None
+                # 无内层 while_cond 三元时，正常折叠
+                _shared_body = true_expr['body']
+                _shared_orelse = true_expr['orelse']
+                _folded_test = {
+                    'type': 'IfExp',
+                    'test': cond_expr,
+                    'body': true_expr['test'],
+                    'orelse': false_expr['test'],
+                }
+                cond_expr = _folded_test
+                true_expr = _shared_body
+                false_expr = _shared_orelse
+                _folded_inner_ternaries = True
 
         if cond_expr and true_expr and false_expr:
             ternary_expr = {
