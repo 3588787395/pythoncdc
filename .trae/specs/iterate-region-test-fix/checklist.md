@@ -306,3 +306,50 @@
 - [x] 未修改任何 R13 passing 测试（仅新增 R14 测试）
 - [x] 未创建根级 debug 文件（已清理 round_06 下 7 个遗留 _debug_*.py）
 - [x] 未 git commit（由父代理决定提交时机）
+
+## Ternary 区域 Round 15 验证
+
+### SubTask T1.15.0: 基线确认
+- [x] 全量 ternary 回归基线 = 93 failed / 385 passed / 8 skipped
+- [x] 跨区域 control_flow_matrix 基线 = 3 failed / 324 passed / 11 skipped
+- [x] R15 新测试基线 = 11 failed / 29 passed / 1 skipped
+
+### SubTask T1.15.1 (P1): Cluster A — Constant obj.method(ternary) 7 bug
+- [x] R15-01 `",".join((a if c else b))` 反编译保留 `Call(Constant(','), [IfExp])` 字节码等价
+- [x] R15-02 `b",".join((a if c else b))` 反编译保留 `Call(Constant(b','), [IfExp])` 字节码等价
+- [x] R15-03 `"{0.x}".format(a if c else b)` 反编译保留 `Call(Constant('{0.x}'), [IfExp])` 字节码等价
+- [x] R15-04 `"{} {}".format((a if c else b), x)` 反编译保留 `Call(Constant('{} {}'), [IfExp, Name('x')])` 字节码等价
+- [x] R15-08 `[].append((a if c else b))` 反编译保留 `Call(List([], Load), [IfExp])` 字节码等价
+- [x] R15-09 `{}.get((a if c else b))` 反编译保留 `Call(Dict([], []), [IfExp])` 字节码等价
+- [x] R15-10 `().count((a if c else b))` 反编译保留 `Call(Tuple([], Load), [IfExp])` 字节码等价
+- [x] 修复依 4 原则：父 Call 通过 cond_block preload (obj_literal + LOAD_METHOD) 引用 ternary 子节点作 call 参数
+- [x] ternary 回归无退化
+- [x] 跨区域回归无退化
+
+### SubTask T1.15.2 (P1): Cluster B — ternary as callable 2 bug
+- [x] R15-05 `(a if c else b)()` 反编译保留 `Call(IfExp(c, a, b), [])` 字节码等价
+- [x] R15-06 `(a if c else b)(x, y)` 反编译保留 `Call(IfExp(c, a, b), [Name('x'), Name('y')])` 字节码等价
+- [x] 修复依 4 原则：父 Call 通过 merge_block PRECALL+CALL 引用 ternary 子节点（在 func 槽位）
+- [x] ternary 回归无退化
+- [x] 跨区域回归无退化
+
+### SubTask T1.15.3 (P1): Cluster C — subscript on call result + ternary index 2 bug
+- [x] R15-07 `vars()[(a if c else b)]` 反编译保留 `Subscript(Call(vars, []), IfExp, Load)` 字节码等价
+- [x] R15-11 `dict()[(a if c else b)]` 反编译保留 `Subscript(Call(dict, []), IfExp, Load)` 字节码等价
+- [x] 修复依 4 原则：父 Subscript 通过 cond_block preload (PUSH_NULL + callable + PRECALL + CALL 0) + merge_block (BINARY_SUBSCR) 引用 ternary 子节点
+- [x] ternary 回归无退化
+- [x] 跨区域回归无退化
+
+### SubTask T1.15.4-7: 最终验证
+- [x] 全量 ternary 回归 93 failed / 425 passed / 9 skipped（基线 93/385/8，无退化 +40 passed）
+- [x] 跨区域 control_flow_matrix 回归 3 failed / 324 passed / 11 skipped（无退化）
+- [x] if_region 回归 43 failed / 775 passed / 9 skipped（无退化）
+- [x] 修复报告已写 — `rounds/ternary_region/round_15/fix_report.md`
+- [x] 所有修复均通过 4 原则论证，无跨区域启发式特例 / 后处理补丁 / 启发式优先级覆盖 / 扁平化 / 硬编码深度上限
+- [x] 源代码无 debug 打印残留（region_analyzer.py 仅 docstring 示例含 print，region_ast_generator.py 无 debug 打印）
+- [x] 未修改任何 R14 passing 测试（仅新增 R15 测试）
+- [x] 未创建根级 debug 文件（_debug_r15_blocks.py + _debug_r15_explore.py 已删除）
+- [x] 未 git commit（由父代理决定提交时机）
+
+## R15 已知限制（未修复 bug）
+- [ ] any_genexp skipped（与 R5 ternary_in_genexp 同嵌套 code object 机制，非新 bug，R5 已知限制延续）

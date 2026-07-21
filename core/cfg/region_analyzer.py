@@ -11138,6 +11138,28 @@ RegionType 枚举值: RegionType.ASSERT
                     if i.opname == 'LOAD_GLOBAL' and i.arg is not None and (i.arg & 1):
                         push_null_idx = idx
                         break
+                # [R15-05/06 fix] PUSH_NULL guard: 当 func_i 之后的下一条指令
+                # 是 POP_JUMP_IF_* 或 PRECALL 时，func_i 实际上不是函数:
+                #   - Pattern 2 (ternary as callable): `(a if c else b)()`
+                #     字节码: PUSH_NULL, LOAD_NAME(c), POP_JUMP_IF_FALSE, ...
+                #     func_i 是 LOAD_NAME(c) (ternary 条件)，next 是 POP_JUMP_IF
+                #   - Pattern 3 (subscript on call result): `vars()[(a if c else b)]`
+                #     字节码: PUSH_NULL, LOAD_NAME(vars), PRECALL, CALL,
+                #             LOAD_NAME(c), POP_JUMP_IF_FALSE, ...
+                #     func_i 是 LOAD_NAME(vars) (已被 CALL 0 调用的函数)，next 是 PRECALL
+                # 此时不应返回 call context (否则会把 c/vars 误识别为 func，把 ternary
+                # 当作其参数)。设 push_null_idx = None 以走 LOAD_METHOD 路径或返回 None,
+                # 让 _try_build_ternary_merge_consumer_expr 通过 expr_reconstructor
+                # 重建 Call(func=ternary, args=...) 或 Subscript(value=vars(), slice=ternary)。
+                if push_null_idx is not None:
+                    _func_i_idx = (push_null_idx + 1
+                                   if instrs[push_null_idx].opname == 'PUSH_NULL'
+                                   else push_null_idx)
+                    if _func_i_idx + 1 < len(instrs):
+                        _after_func_i = instrs[_func_i_idx + 1]
+                        if (_after_func_i.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                                or _after_func_i.opname == 'PRECALL'):
+                            push_null_idx = None
                 if push_null_idx is not None and push_null_idx + 1 < len(instrs):
                     func_i = instrs[push_null_idx + 1] if instrs[push_null_idx].opname == 'PUSH_NULL' else instrs[push_null_idx]
                     if func_i.opname in ('LOAD_NAME', 'LOAD_GLOBAL',
@@ -11197,7 +11219,19 @@ RegionType 枚举值: RegionType.ASSERT
                             # 从 LOAD_METHOD 向前重建 obj 表达式:
                             # 形如 LOAD_NAME a, [LOAD_ATTR b, LOAD_ATTR c, ...], LOAD_METHOD m
                             # obj 表达式 = a.b.c
+                            # [R15-01/02/03/04 fix] obj base 也支持:
+                            #   - LOAD_CONST (str/bytes 字面量): "<str>".method(ternary),
+                            #     b"<bytes>".method(ternary), "{0.x}".format(ternary) 等
+                            #   - BUILD_LIST 0 / BUILD_TUPLE 0 / BUILD_MAP 0 / BUILD_SET 0
+                            #     (空容器字面量): [].method(ternary), {}.method(ternary),
+                            #     ().method(ternary)
+                            # 依「父引用子入口」: 父 Call 通过 cond_block 的 LOAD_METHOD
+                            # obj chain 引用 ternary 子节点。原逻辑只识别 LOAD_NAME 等
+                            # Name base，遇到 LOAD_CONST/BUILD_<container> 0 即 break，
+                            # 导致 _obj_chain 为空、func_call_info 为 None，ternary 被识别
+                            # 为独立表达式语句，obj.method(ternary) 调用完全丢失。
                             _obj_chain = []
+                            _obj_base_expr = None
                             _j = _method_idx - 1
                             while _j >= 0:
                                 _ji = instrs[_j]
@@ -11207,16 +11241,46 @@ RegionType 枚举值: RegionType.ASSERT
                                     continue
                                 if _ji.opname in ('LOAD_NAME', 'LOAD_FAST',
                                                   'LOAD_GLOBAL', 'LOAD_DEREF'):
-                                    _obj_chain.insert(0, ('base', _ji.argval))
+                                    _obj_base_expr = {
+                                        'type': 'Name', 'id': _ji.argval, 'ctx': 'Load',
+                                    }
                                     _j -= 1
                                     break
-                                # 其他指令（如 LOAD_CONST、CALL 等）停止
+                                if _ji.opname == 'LOAD_CONST':
+                                    _obj_base_expr = {
+                                        'type': 'Constant', 'value': _ji.argval,
+                                    }
+                                    _j -= 1
+                                    break
+                                if _ji.opname == 'BUILD_LIST' and (_ji.arg or 0) == 0:
+                                    _obj_base_expr = {
+                                        'type': 'List', 'elts': [], 'ctx': 'Load',
+                                    }
+                                    _j -= 1
+                                    break
+                                if _ji.opname == 'BUILD_TUPLE' and (_ji.arg or 0) == 0:
+                                    _obj_base_expr = {
+                                        'type': 'Tuple', 'elts': [], 'ctx': 'Load',
+                                    }
+                                    _j -= 1
+                                    break
+                                if _ji.opname == 'BUILD_MAP' and (_ji.arg or 0) == 0:
+                                    _obj_base_expr = {
+                                        'type': 'Dict', 'keys': [], 'values': [],
+                                    }
+                                    _j -= 1
+                                    break
+                                if _ji.opname == 'BUILD_SET' and (_ji.arg or 0) == 0:
+                                    _obj_base_expr = {
+                                        'type': 'Set', 'elts': [],
+                                    }
+                                    _j -= 1
+                                    break
+                                # 其他指令（如 CALL 等）停止
                                 break
-                            if _obj_chain and _obj_chain[0][0] == 'base':
-                                _obj_expr = {
-                                    'type': 'Name', 'id': _obj_chain[0][1], 'ctx': 'Load',
-                                }
-                                for _kind, _name in _obj_chain[1:]:
+                            if _obj_base_expr is not None:
+                                _obj_expr = _obj_base_expr
+                                for _kind, _name in _obj_chain:
                                     _obj_expr = {
                                         'type': 'Attribute',
                                         'value': _obj_expr,

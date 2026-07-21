@@ -20546,12 +20546,37 @@ AST 映射规则:
         # pops ternary + siblings as default args tuple).
         _has_make_function = any(i.opname == 'MAKE_FUNCTION' for i in merge_all)
 
+        # [R15-05/06 fix] Ternary as callable: merge_block has exactly 1
+        # PRECALL+CALL pair (not >1, otherwise it's a call chain) with no
+        # LOAD_METHOD (not a receiver method), no MAKE_FUNCTION (not a
+        # lambda), no BUILD_* (not a container), and region.func_call_info
+        # is None (PUSH_NULL guard in _detect_ternary_context cleared it
+        # because the PUSH_NULL is followed by the ternary condition test,
+        # not by a real callable LOAD). The ternary itself is the callable;
+        # reconstruct with initial_stack=preload+[ternary_expr] so the CALL
+        # pops ternary as func and any merge_block args as call args.
+        # 例:
+        #   (a if c else b)()    -> merge: PRECALL 0, CALL 0, POP_TOP
+        #   (a if c else b)(x,y) -> merge: LOAD x, LOAD y, PRECALL 2, CALL 2, POP_TOP
+        # 依「父引用子入口」: 父 Call 通过 merge_block 的 PRECALL+CALL 引用
+        # ternary 子节点（在 func 槽位）。
+        # 依「每块唯一归属」: merge_block 的 PRECALL+CALL+POP_TOP 归属
+        # TernaryRegion 父表达式（Call），不与 ternary 子区域重叠。
+        _has_ternary_as_callable = (
+            not region.func_call_info
+            and _call_count == 1
+            and not _has_receiver_method
+            and not _has_make_function
+            and _build_instr is None
+        )
+
         # Decide whether to invoke full reconstruct.
         _should_reconstruct = (
             _has_multi_elem
             or _has_call_chain
             or _has_receiver_method
             or _has_make_function
+            or _has_ternary_as_callable
         )
         if not _should_reconstruct:
             return None

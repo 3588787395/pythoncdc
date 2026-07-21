@@ -102,7 +102,17 @@
   - [x] SubTask T1.14.9: 清理 round_06 下 7 个遗留 _debug_*.py 调试脚本
   - [x] SubTask T1.14.10: 写 fix_report.md
   - [ ] 已知限制 (R15+ 处理): R14-01/02 while_cond + COMPARE_OP / walrus 系列，R14-03 elif cond ternary，R14-08 multi-with second as，R14-09 yield from + method chain，R14-11 assert + boolop 两 ternary
-- [ ] Task T1.15 ~ T1.20
+- [x] Task T1.15: Ternary round_15 — 修复 11 bug / 3 根因簇（Cluster A 7: Constant obj.method(ternary) / Cluster B 2: ternary as callable / Cluster C 2: subscript on call result + ternary index），1 已知限制（any_genexp skipped，与 R5 ternary_in_genexp 同机制）；ternary 93 failed / 425 passed / 9 skipped（基线 93/385/8，无退化 +40 passed）；跨区域 control_flow_matrix 3 failed / 324 passed / 11 skipped（无退化）
+  - [x] SubTask T1.15.0: 基线确认（ternary 93 failed / 385 passed / 8 skipped；跨区域 control_flow_matrix 3 failed / 324 passed / 11 skipped；R15 新测试 11 failed / 29 passed / 1 skipped）
+  - [x] SubTask T1.15.1 (P1): Cluster A — Constant obj.method(ternary) 7 bug（R15-01 str.join / R15-02 bytes.join / R15-03 str.format field access / R15-04 str.format multi-field + sibling / R15-08 [].append / R15-09 {}.get / R15-10 ().count） — `core/cfg/region_analyzer.py` `_detect_ternary_context` 中 LOAD_METHOD obj chain 反向重建扩展：识别 `LOAD_CONST` base（str/bytes 字面量）+ `BUILD_LIST 0`/`BUILD_TUPLE 0`/`BUILD_MAP 0`/`BUILD_SET 0` literal base，使 cond_block preload (obj_literal + LOAD_METHOD) 正确归属父 Call 区域，ternary merge 块栈顶作为 call 参数
+  - [x] SubTask T1.15.2 (P1): Cluster B — ternary as callable 2 bug（R15-05 (ternary)() / R15-06 (ternary)(x,y)） — `core/cfg/region_analyzer.py` `_detect_ternary_context` PUSH_NULL guard（func_i 之后是 POP_JUMP_IF/PRECALL 时清除 push_null_idx）+ `core/cfg/region_ast_generator.py` `_try_build_ternary_merge_consumer_expr` 新增 `_has_ternary_as_callable` 模式（单 CALL + 无 LOAD_METHOD + 无 MAKE_FUNCTION + 无 BUILD_* + func_call_info=None），用 expr_reconstructor 重建 Call(func=ternary, args=[...])
+  - [x] SubTask T1.15.3 (P1): Cluster C — subscript on call result + ternary index 2 bug（R15-07 vars()[ternary] / R15-11 dict()[ternary]） — `core/cfg/region_analyzer.py` `_detect_ternary_context` PUSH_NULL guard（func_i 之后是 PRECALL 时清除 push_null_idx，避免 vars()/dict() 被误识别为 ternary consumer），merge_block 的 BINARY_SUBSCR+POP_TOP 由 Pattern 8 wrapping expr 正确重建为 Subscript(Call(vars,[]), IfExp, Load)
+  - [x] SubTask T1.15.4: 全量 ternary 回归 93 failed / 425 passed / 9 skipped（基线 93/385/8，无退化 +40 passed）+ 跨区域 control_flow_matrix 回归 3 failed / 324 passed / 11 skipped（无退化）+ if_region 43 failed / 775 passed / 9 skipped（无退化）
+  - [x] SubTask T1.15.5: 算法合规性自检 — 归约顺序 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口；无跨区域特例 / 后处理补丁 / 启发式优先级覆盖 / 扁平化 / 硬编码深度上限
+  - [x] SubTask T1.15.6: 清理临时调试脚本（删除 _debug_r15_blocks.py + _debug_r15_explore.py）
+  - [x] SubTask T1.15.7: 写 fix_report.md（含 11 bug 详细修复说明 + 算法 4 原则合规论证 + 全量回归结果 + 跨区域回归结果 + 已知限制记录）
+  - [ ] 已知限制: any_genexp skipped（与 R5 ternary_in_genexp 同嵌套 code object 机制，非新 bug，R5 已知限制延续）
+- [ ] Task T1.16 ~ T1.20
 
 ## Phase 3-10: 其他 8 区域（各 20 轮）
 - [ ] Task 3.1 ~ 10.20
