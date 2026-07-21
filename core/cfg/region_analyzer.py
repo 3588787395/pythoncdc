@@ -1089,7 +1089,7 @@ class RegionAnalyzer:
         self.dom_analyzer.analyze()
         self.loop_analyzer = LoopAnalyzer(self.cfg, self.dom_analyzer)
         self.loop_analyzer.analyze()
-        self._merge_nop_prefix_loop_headers()
+        self._coalesce_nop_prefix_loop_headers()
         self.dominance_frontiers = self.dom_analyzer.compute_all_dominance_frontiers()
 
         # Phase 1: 低层区域识别（按优先级排序）
@@ -1099,7 +1099,7 @@ class RegionAnalyzer:
         # - 循环有回边需要特殊处理（次高优先级）
         # - 其他结构依赖前两者的结果
         try_regions = self._identify_try_except_regions()
-        try_regions = self._merge_split_try_except_finally_regions(try_regions)
+        try_regions = self._coalesce_split_try_except_finally_regions(try_regions)
         loop_regions = self._identify_loop_regions()
         with_regions = self._identify_with_regions()
         match_regions = self._identify_match_regions()
@@ -1360,7 +1360,7 @@ class RegionAnalyzer:
 
         fake_loop_region_ids = self._detect_and_filter_conditional_recheck_fake_loops(loop_regions)
         if fake_loop_region_ids:
-            self._fix_block_roles_after_fake_loop_removal(loop_regions, fake_loop_region_ids)
+            self._rebuild_block_roles_after_fake_loop_removal(loop_regions, fake_loop_region_ids)
             loop_regions = [r for r in loop_regions if id(r) not in fake_loop_region_ids]
             all_regions = [r for r in all_regions if id(r) not in fake_loop_region_ids]
             for block, region in list(self.block_to_region.items()):
@@ -2957,7 +2957,7 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
 
         return regions
 
-    def _fix_block_roles_after_fake_loop_removal(self, regions: List[Region], fake_loop_ids: Set[int]) -> None:
+    def _rebuild_block_roles_after_fake_loop_removal(self, regions: List[Region], fake_loop_ids: Set[int]) -> None:
         """
         过滤条件重检假循环后，修复相关块的block_role
         
@@ -3911,7 +3911,7 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
 
         return body
 
-    def _merge_nop_prefix_loop_headers(self) -> None:
+    def _coalesce_nop_prefix_loop_headers(self) -> None:
         _nop_headers = []
         for h in list(self.loop_analyzer.loop_headers):
             if (len(h.instructions) == 1 and h.instructions[0].opname == 'NOP'
@@ -5154,7 +5154,7 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
 
         return new_regions
 
-    def _merge_split_try_except_finally_regions(self, try_regions: list) -> list:
+    def _coalesce_split_try_except_finally_regions(self, try_regions: list) -> list:
         _inner_to_outer = {}
         for r in self._filter_regions(try_regions, TryExceptRegion):
             if r.enclosing_try is not None:
@@ -12991,7 +12991,7 @@ RegionType 枚举值: RegionType.ASSERT
                                 if succ not in chain_blocks and succ != merge:
                                     chain_blocks.add(succ)
 
-    def _fix_none_check_op_types(self, chain: List[Tuple[BasicBlock, str]]) -> List[Tuple[BasicBlock, str]]:
+    def _normalize_none_check_op_types(self, chain: List[Tuple[BasicBlock, str]]) -> List[Tuple[BasicBlock, str]]:
         """Fix op_type classification for NONE_CHECK_OPS based on jump direction.
 
         NONE_CHECK_OPS (IF_NONE/IF_NOT_NONE) are ambiguous: the opname alone
@@ -13040,7 +13040,7 @@ RegionType 枚举值: RegionType.ASSERT
         return fixed_chain
 
     def _create_boolop_region_from_chain(self, chain: List[Tuple[BasicBlock, str]], claimed: Set[BasicBlock]) -> Optional[BoolOpRegion]:
-        chain = self._fix_none_check_op_types(chain)
+        chain = self._normalize_none_check_op_types(chain)
         start_block = chain[0][0]
         chain_blocks = set(b for b, _ in chain)
         merge = self._boolop_resolve_merge(chain)

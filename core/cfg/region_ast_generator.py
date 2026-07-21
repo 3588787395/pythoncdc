@@ -1643,7 +1643,7 @@ AST 映射规则:
       若存在 BUILD_STRING（f-string 情况），从后向前定位 RAISE_VARARGS 边界
       raise_call_start，过滤该边界及之后的 PRECALL/CALL；
       否则一律跳过 PRECALL/CALL。剩余指令交由 expr_reconstructor 重建。
-  - None 检查方向修正（_fix_assert_none_check_direction）:
+  - None 检查方向修正（_invert_assert_none_check_direction）:
       对 Compare(op='is'/'is not', x, None) 互换 op；递归处理 BoolOp 包裹的
       None 检查（如 `assert a and x is not None`）。原因: expr_reconstructor
       基于 if 语义解析 NONE_CHECK_OPS，而 assert 的跳转语义与 if 相反
@@ -1679,7 +1679,7 @@ AST 映射规则:
                 list(region.chained_compare_ops),
             )
             if chained_cond is not None:
-                chained_cond = self._fix_assert_none_check_direction(chained_cond)
+                chained_cond = self._invert_assert_none_check_direction(chained_cond)
                 for block in region.blocks:
                     self.generated_blocks.add(block)
                 result = {
@@ -1703,7 +1703,7 @@ AST 映射规则:
                 list(region.boolop_chain_ops),
             )
             if boolop_cond is not None:
-                boolop_cond = self._fix_assert_none_check_direction(boolop_cond)
+                boolop_cond = self._invert_assert_none_check_direction(boolop_cond)
                 for block in region.blocks:
                     self.generated_blocks.add(block)
                 result = {
@@ -1743,7 +1743,7 @@ AST 映射规则:
         if cond_instrs:
             expr = self.expr_reconstructor.reconstruct(cond_instrs)
             if expr:
-                condition = self._fix_assert_none_check_direction(expr)
+                condition = self._invert_assert_none_check_direction(expr)
         message = None
         if region.message_block:
             msg_instrs = []
@@ -1793,7 +1793,7 @@ AST 映射规则:
             result['msg'] = message
         return result
 
-    def _fix_assert_none_check_direction(self, expr: Dict[str, Any]) -> Dict[str, Any]:
+    def _invert_assert_none_check_direction(self, expr: Dict[str, Any]) -> Dict[str, Any]:
         """修复assert上下文中None检查操作码的方向性问题
 
         【问题根因】
@@ -1838,7 +1838,7 @@ AST 映射规则:
         if expr.get('type') == 'BoolOp':
             values = expr.get('values', [])
             if values:
-                fixed_values = [self._fix_assert_none_check_direction(v) for v in values]
+                fixed_values = [self._invert_assert_none_check_direction(v) for v in values]
                 if any(fv is not v for fv, v in zip(fixed_values, values)):
                     fixed = dict(expr)
                     fixed['values'] = fixed_values
@@ -1962,7 +1962,7 @@ AST 映射规则:
           - 每段从对应块抽取非跳转/非噪声指令，交由 expr_reconstructor 重建
             子表达式（通常是 Compare，如 a > 0）。
           - 跳转方向修正：assert 上下文中 POP_JUMP_IF_NOT_NONE/IF_NONE 的方向
-            与 if 相反，由 _fix_assert_none_check_direction 在外层统一处理；
+            与 if 相反，由 _invert_assert_none_check_direction 在外层统一处理；
             本方法只重建原始 BoolOp 结构。
 
         返回: BoolOp dict 或 None（操作数重建失败时）。
@@ -2002,7 +2002,7 @@ AST 映射规则:
                 continue
             # None 检查方向修正（assert 上下文）：和 BoolOpRegion 一致，
             # 把 NONE_CHECK 转换为 Compare，方向按 op 修正，
-            # 外层 _fix_assert_none_check_direction 会再次处理（递归进入 values）。
+            # 外层 _invert_assert_none_check_direction 会再次处理（递归进入 values）。
             if last_instr and last_instr.opname in NONE_CHECK_OPS:
                 _is_not_none_op = 'NOT_NONE' in last_instr.opname
                 if op == 'and':
@@ -10710,10 +10710,10 @@ AST 映射规则:
             return self._generate_if(region)
         if blocks is not None:
             stmts = self._process_if_blocks(blocks, region, branch='standalone')
-            return self._merge_compares(stmts)
+            return self._coalesce_compares(stmts)
         return []
 
-    def _merge_compares(self, stmts):
+    def _coalesce_compares(self, stmts):
         if not stmts or self.cfg.name == '<module>':
             return stmts
         result, i = [], 0
