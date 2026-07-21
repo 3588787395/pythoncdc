@@ -18468,6 +18468,27 @@ AST 映射规则:
                                 elif instr.opname == 'RETURN_CONST':
                                     results.append({'type': 'Return', 'value': {'type': 'Constant', 'value': instr.argval}})
             else:
+                # [R13-08/10/04/09/11/05 fix] Multi-element container literal,
+                # nested Call chain, receiver method call, or lambda with
+                # ternary default — merge_block hosts consumer ops (BUILD_* N
+                # with N>1, multiple PRECALL+CALL, LOAD_METHOD, MAKE_FUNCTION)
+                # that wrap the ternary result. Use expr_reconstructor on the
+                # merge_block instructions with initial_stack = preload_exprs
+                # + ternary_expr to rebuild the full expression.
+                # 依「自底向上归约」: ternary 是内层抽象节点，外层 BUILD_*/CALL/
+                # MAKE_FUNCTION 通过 reconstruct 归约为单一表达式节点.
+                # 依「父引用子入口」: 父容器/Call/Lambda 通过 merge_block 的
+                # BUILD_*/PRECALL+CALL/MAKE_FUNCTION 引用 ternary 子节点 + 兄弟
+                # 子节点 (preload_exprs 中的 sibling 元素).
+                # 依「每块唯一归属」: container 的所有 sibling 元素 + BUILD_*
+                # 归属 TernaryRegion 父表达式，不拆分为独立语句.
+                _merge_consumer_expr = self._try_build_ternary_merge_consumer_expr(
+                    region, ternary_expr)
+                if _merge_consumer_expr is not None:
+                    results.append({'type': 'Expr', 'value': _merge_consumer_expr})
+                    for block in region.blocks:
+                        self.generated_blocks.add(block)
+                    return results
                 container_type = region.container_type
                 container_info = None
                 if container_type:
@@ -19149,15 +19170,33 @@ AST 映射规则:
         # LOAD_ / COPY). For those, defer to the full reconstruct pipeline
         # so e.g. `E()` (LOAD E + PRECALL + CALL) rebuilds as a Call node
         # rather than a bare Name. [R10-batch1 err 9 regression fix]
+        #
+        # [R13-09 fix] When the compound prefix leaves MULTIPLE sibling
+        # expressions on the stack (e.g. preload=[f, g(0)] for
+        # `f(g(0), ternary, h(1))`), split the prefix into per-sibling
+        # sub-slices by simulating stack depth, then reconstruct each
+        # sub-slice independently. Without this split, the legacy fallback
+        # returns only the topmost expression (e.g. `g(0)`) and loses
+        # earlier siblings (e.g. `f`), corrupting the outer Call arg list.
         _has_compound = any(
             pi.opname in ('PRECALL', 'CALL', 'BUILD_TUPLE', 'BUILD_LIST',
                           'BUILD_MAP', 'BUILD_SET', 'BUILD_CONST_KEY_MAP')
             for pi in _preload_instrs)
         if _has_compound:
-            _pe = self.expr_reconstructor.reconstruct(_preload_instrs)
-            if _pe:
-                return [_pe]
-            return []
+            _sibling_slices = self._split_preload_into_siblings(_preload_instrs)
+            if len(_sibling_slices) <= 1:
+                # Legacy fallback: single compound expression (or un-splittable).
+                _pe = self.expr_reconstructor.reconstruct(_preload_instrs)
+                if _pe:
+                    return [_pe]
+                return []
+            # Multi-sibling case: reconstruct each sub-slice.
+            _multi: List[Dict[str, Any]] = []
+            for _sl in _sibling_slices:
+                _pe = self.expr_reconstructor.reconstruct(_sl)
+                if _pe:
+                    _multi.append(_pe)
+            return _multi
         _preload_stack: List[Dict[str, Any]] = []
         for pi in _preload_instrs:
             if pi.opname.startswith('LOAD_'):
@@ -19167,6 +19206,86 @@ AST 映射规则:
             elif pi.opname == 'COPY' and pi.arg == 1 and _preload_stack:
                 _preload_stack.append(_preload_stack[-1])
         return _preload_stack
+
+    def _split_preload_into_siblings(self, preload_instrs) -> List[List]:
+        """[R13-09 fix] Split a cond_block preload prefix into per-sibling
+        instruction sub-slices by simulating stack depth (backward walk).
+
+        Each "sibling" is a maximal instruction sub-slice that leaves exactly
+        ONE net item on the stack at the top level (i.e. an outermost
+        expression). For example, the preload for
+        ``f(g(0), (a if c else b), h(1))`` is::
+
+            LOAD_NAME f, LOAD_NAME g, LOAD_CONST 0, PRECALL 1, CALL 1
+
+        which leaves two siblings on the stack: ``f`` and ``g(0)``. This
+        returns ``[[LOAD_NAME f], [LOAD_NAME g, LOAD_CONST 0, PRECALL 1, CALL 1]]``.
+
+        Algorithm: walk backward from the end of the prefix, tracking the
+        required stack depth (``needed``). The slice's start is the position
+        where ``needed`` first drops to 0. Repeat on the remaining prefix
+        until exhausted.
+
+        Returns a list of sub-slices. Returns ``[preload_instrs]`` (single
+        slice = whole prefix) when the prefix cannot be split (single sibling
+        compound expression, or analysis inconclusive).
+
+        Per region-reduction principle "each block has unique ownership":
+        each sibling expression is owned by exactly one outer consumer slot,
+        and is reconstructed independently so the outer Call container can
+        place each at its correct argument position.
+        """
+        if not preload_instrs:
+            return []
+        _siblings: List[List] = []
+        _end = len(preload_instrs)
+        while _end > 0:
+            _needed = 1
+            _start = None
+            for _idx in range(_end - 1, -1, -1):
+                _push, _pop = self._stack_effect(preload_instrs[_idx])
+                _needed = _needed - _push + _pop
+                if _needed <= 0:
+                    _start = _idx
+                    break
+            if _start is None:
+                # Incomplete prefix — treat the remainder as one slice.
+                _siblings.insert(0, list(preload_instrs[:_end]))
+                break
+            _siblings.insert(0, list(preload_instrs[_start:_end]))
+            _end = _start
+        if not _siblings:
+            _siblings = [list(preload_instrs)]
+        return _siblings
+
+    @staticmethod
+    def _stack_effect(instr) -> tuple:
+        """[R13-09 fix] Compute (push, pop) stack effect for an instruction
+        in the cond_block preload prefix. Used by _split_preload_into_siblings.
+        """
+        op = instr.opname
+        if op in ('LOAD_ATTR', 'LOAD_METHOD'):
+            return 1, 1
+        if op.startswith('LOAD_') or op == 'COPY':
+            return 1, 0
+        if op in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP'):
+            return 1, 2
+        if op == 'BINARY_OP':
+            return 1, 2
+        if op.startswith('UNARY_'):
+            return 1, 1
+        if op == 'FORMAT_VALUE':
+            return 1, 1 if (instr.arg or 0) < 2 else 2
+        if op == 'BUILD_STRING':
+            return 1, instr.arg or 0
+        if op.startswith('BUILD_'):
+            return 1, instr.arg or 0
+        if op in ('PRECALL', 'POP_TOP'):
+            return 0, 0
+        if op == 'CALL':
+            return 1, (instr.arg or 0) + 1
+        # Unknown: assume pure no-op (e.g. NOP, CACHE) — conservative default.
+        return 0, 0
 
     def _collect_post_ternary_positional_args(self, merge_block) -> List[Dict[str, Any]]:
         """[R4-01] 收集 merge_block 中 ternary 之后、PRECALL/CALL 之前的位置参数。
@@ -19766,11 +19885,42 @@ AST 映射规则:
                     else:
                         _aug_target = self._build_ternary_augassign_attr_target(region)
                     if _aug_target is not None:
+                        # [R13-03 fix] If before_store contains PRECALL+CALL
+                        # before BINARY_OP, the value is the CALL result wrapping
+                        # the ternary (e.g. `f(ternary)` for `x[0] += f(ternary)`),
+                        # not just the raw ternary. Reconstruct the prefix using
+                        # ternary_expr as initial stack to recover the Call node.
+                        # 依「自底向上归约」: ternary 是内层节点，外层 CALL 通过
+                        # reconstruct 归约为父 Call 表达式节点.
+                        # 依「父引用子入口」: 父 Call 通过 func_call_info.func
+                        # 或 cond_block preload 中的最后一个 LOAD_* 引用 callable.
+                        _aug_value = ternary_expr
+                        _pre_op_clean = [i for i in before_store[:_aug_op_idx]
+                                         if i.opname not in ('RESUME', 'NOP',
+                                                              'CACHE', 'PUSH_NULL')]
+                        if any(i.opname == 'CALL' for i in _pre_op_clean):
+                            # Initial stack: [callable, ternary] — the callable
+                            # comes from func_call_info (set by region_analyzer)
+                            # or from the last LOAD_* in cond_block preload.
+                            _init_stack = [ternary_expr]
+                            if region.func_call_info:
+                                _fc_func = region.func_call_info.get('func')
+                                if _fc_func is not None:
+                                    _init_stack = [_fc_func, ternary_expr]
+                            self.expr_reconstructor.reset()
+                            self.expr_reconstructor.stack = list(_init_stack)
+                            for _instr in _pre_op_clean:
+                                self.expr_reconstructor._process_instruction(_instr)
+                            _reg_stack = [s for s in self.expr_reconstructor.stack
+                                          if not (isinstance(s, dict)
+                                                  and s.get('type') == 'PUSH_NULL')]
+                            if _reg_stack:
+                                _aug_value = _reg_stack[-1]
                         return {
                             'type': 'AugAssign',
                             'target': _aug_target,
                             'op': _aug_op_symbol[:-1],
-                            'value': ternary_expr,
+                            'value': _aug_value,
                         }
 
         # --- STORE_SUBSCR: stack [value, obj, key] ---
@@ -19976,6 +20126,28 @@ AST 映射规则:
                             break
                     if cond_expr_start is not None and cond_expr_start > 0:
                         preload = cond_instrs[:cond_expr_start]
+                        # [R13-07 fix] Multi-target del: when cond preload
+                        # contains DELETE_ATTR/DELETE_SUBSCR/DELETE_NAME (e.g.
+                        # `del obj.attr, lst[ternary]`), each DELETE_* in preload
+                        # is a sibling del target. Build a multi-target Delete
+                        # node collecting all targets + the current ternary's
+                        # subscript.
+                        # 依「每块唯一归属」+「父引用子入口」: 每个 DELETE_* in
+                        # preload 独占一个 target slot; 当前 ternary 的 DELETE_SUBSCR
+                        # in merge_block 独占最后一个 target slot。
+                        _has_del_in_preload = any(
+                            i.opname in ('DELETE_ATTR', 'DELETE_SUBSCR',
+                                         'DELETE_NAME', 'DELETE_GLOBAL',
+                                         'DELETE_FAST', 'DELETE_DEREF')
+                            for i in preload)
+                        if _has_del_in_preload:
+                            _mt_targets = self._build_multi_target_del_targets(
+                                preload, ternary_expr)
+                            if _mt_targets:
+                                return {
+                                    'type': 'Delete',
+                                    'targets': _mt_targets,
+                                }
                         self.expr_reconstructor.reset()
                         for _instr in preload:
                             if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
@@ -19999,6 +20171,95 @@ AST 映射规则:
                             }
 
         return None
+
+    def _build_multi_target_del_targets(self, preload_instrs,
+                                          ternary_expr) -> List[Dict[str, Any]]:
+        """[R13-07 fix] Build a list of Delete targets from a cond_block
+        preload prefix that contains DELETE_* instructions (multi-target del).
+
+        Example: ``del obj.attr, lst[a if c else b]`` compiles to::
+
+            LOAD obj, DELETE_ATTR attr, LOAD lst, <ternary>, DELETE_SUBSCR
+
+        The cond preload is ``[LOAD obj, DELETE_ATTR attr, LOAD lst]``.
+        Each DELETE_* in preload owns one sibling del target; the live
+        ternary's DELETE_SUBSCR (in merge_block) owns the final target slot.
+
+        Algorithm: walk forward through preload, tracking the
+        expr_reconstructor's stack. At each DELETE_ATTR / DELETE_SUBSCR /
+        DELETE_NAME, build a Delete target from the current stack state and
+        pop accordingly. After the last DELETE_*, the remaining stack top is
+        the obj for the current ternary's subscript (ternary is the key).
+
+        Returns a list of target dicts (including the current ternary's
+        subscript as the last target). Returns ``[]`` if the pattern doesn't
+        cleanly match (e.g. stack underflow at a DELETE_* instruction).
+
+        Per region-reduction principle "each block has unique ownership":
+        each DELETE_* in preload and the live ternary's DELETE_SUBSCR each
+        own exactly one target slot. The caller (Delete statement) references
+        all of them as ``targets=[...]``.
+        """
+        _targets: List[Dict[str, Any]] = []
+        self.expr_reconstructor.reset()
+        _DELETE_NAME_OPS = ('DELETE_NAME', 'DELETE_GLOBAL',
+                            'DELETE_FAST', 'DELETE_DEREF')
+        for _instr in preload_instrs:
+            if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                continue
+            if _instr.opname == 'DELETE_ATTR':
+                _pl_stack = [s for s in self.expr_reconstructor.stack
+                             if not (isinstance(s, dict)
+                                     and s.get('type') == 'PUSH_NULL')]
+                if not _pl_stack:
+                    return []
+                _obj = _pl_stack[-1]
+                self.expr_reconstructor.stack.pop()
+                _targets.append({
+                    'type': 'Attribute',
+                    'value': _obj,
+                    'attr': _instr.argval,
+                    'ctx': 'Del',
+                })
+            elif _instr.opname == 'DELETE_SUBSCR':
+                _pl_stack = [s for s in self.expr_reconstructor.stack
+                             if not (isinstance(s, dict)
+                                     and s.get('type') == 'PUSH_NULL')]
+                if len(_pl_stack) < 2:
+                    return []
+                _key = _pl_stack[-1]
+                _obj = _pl_stack[-2]
+                self.expr_reconstructor.stack.pop()
+                self.expr_reconstructor.stack.pop()
+                _targets.append({
+                    'type': 'Subscript',
+                    'value': _obj,
+                    'slice': _key,
+                    'ctx': 'Del',
+                })
+            elif _instr.opname in _DELETE_NAME_OPS:
+                _targets.append({
+                    'type': 'Name',
+                    'id': _instr.argval,
+                    'ctx': 'Del',
+                })
+            else:
+                self.expr_reconstructor._process_instruction(_instr)
+        # After all DELETE_*, the remaining stack top is the obj for the
+        # current ternary's subscript (ternary is the key).
+        _pl_stack = [s for s in self.expr_reconstructor.stack
+                    if not (isinstance(s, dict)
+                            and s.get('type') == 'PUSH_NULL')]
+        if not _pl_stack:
+            return []
+        _obj = _pl_stack[-1]
+        _targets.append({
+            'type': 'Subscript',
+            'value': _obj,
+            'slice': ternary_expr,
+            'ctx': 'Del',
+        })
+        return _targets
 
     def _build_ternary_augassign_subscr_target(self, region: TernaryRegion):
         """[R11-err6] 为 augassign + ternary rhs 构造 Subscript target。
@@ -20126,6 +20387,119 @@ AST 映射规则:
             'attr': str(attr_name) if attr_name is not None else '_',
             'ctx': 'Store',
         }
+
+    def _try_build_ternary_merge_consumer_expr(self, region: TernaryRegion,
+                                                 ternary_expr: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+        """[R13-08/10/04/09/11/05 fix] Reconstruct the full expression when
+        the ternary result is consumed by ``merge_block`` instructions
+        before the final POP_TOP/RETURN.
+
+        Handles patterns where the ``merge_block`` hosts consumer ops that
+        wrap the ternary together with sibling elements (loaded either in
+        ``cond_block`` preload or in ``merge_block`` itself):
+
+          R13-08: ``[1, (a if c else b), 2]``  -> BUILD_LIST 3 + preload=[1] + after=[2]
+          R13-10: ``{1: x, 2: (a if c else b), 3: y}``  -> BUILD_CONST_KEY_MAP 3
+                  + preload=[x] + after=[y] + LOAD_CONST keys tuple
+          R13-04: ``f(g(h(a if c else b)))``  -> 3x PRECALL+CALL chain (call chain)
+          R13-09: ``f(g(0), (a if c else b), h(1))``  -> 2x PRECALL+CALL chain
+                  (sibling args are Calls)
+          R13-11: ``(a if c else b).method()``  -> LOAD_METHOD+PRECALL+CALL
+                  (ternary is the method receiver)
+          R13-05: ``lambda x=(a if c else b): x``  -> BUILD_TUPLE 1 + LOAD_CONST code
+                  + MAKE_FUNCTION 1 (lambda with default)
+
+        依「自底向上归约」: ternary 是内层抽象节点，外层 BUILD_*/CALL/
+        MAKE_FUNCTION 通过 expr_reconstructor.reconstruct 归约为单一表达式节点.
+        依「父引用子入口」: 父容器/Call/Lambda 通过 merge_block 的 BUILD_*/
+        PRECALL+CALL/MAKE_FUNCTION 引用 ternary 子节点 + preload 中的兄弟子节点.
+        依「每块唯一归属」: container 的所有 sibling 元素 + BUILD_* 归属
+        TernaryRegion 父表达式，不拆分为独立语句.
+
+        Returns the reconstructed expression dict, or None when the pattern
+        does not match (caller falls through to single-element container /
+        existing func_call_info / no-target consumer handlers).
+        """
+        if region.merge_block is None:
+            return None
+
+        # Compute preload_exprs (sibling elements on cond_block stack below
+        # the ternary condition). _compute_ternary_cond_preload_exprs already
+        # handles compound preload (Call/Attribute chains) by deferring to
+        # expr_reconstructor on the full preload prefix.
+        preload_exprs = self._compute_ternary_cond_preload_exprs(region)
+
+        merge_all = [i for i in region.merge_block.instructions
+                     if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+
+        # Strip trailing implicit return None: LOAD_CONST None + RETURN_VALUE
+        # (may appear once or twice for if-body / function-exit paths).
+        while merge_all and merge_all[-1].opname in ('RETURN_VALUE', 'RETURN_CONST'):
+            merge_all.pop()
+            if (merge_all and merge_all[-1].opname == 'LOAD_CONST'
+                    and merge_all[-1].argval is None):
+                merge_all.pop()
+        # Strip trailing POP_TOP (expression statement).
+        if merge_all and merge_all[-1].opname == 'POP_TOP':
+            merge_all = merge_all[:-1]
+        if not merge_all:
+            return None
+
+        # [R13 regression guard] assert statement's failure path puts
+        # LOAD_ASSERTION_ERROR + RAISE_VARARGS in merge_block. The assert
+        # infrastructure has its own handler; reconstruct would treat the
+        # raise as part of the expression and break assert message tests
+        # (e.g. test_r7_ternary_in_assert_complex_msg, test_r8_ternary_in_assert_dict_msg).
+        if any(i.opname in ('LOAD_ASSERTION_ERROR', 'RAISE_VARARGS',
+                            'PREP_RERAISE_STAR', 'RERAISE')
+               for i in merge_all):
+            return None
+
+        # Detect the BUILD_* instruction (multi-element container case).
+        _build_instr = None
+        for _mi in merge_all:
+            if _mi.opname in ('BUILD_LIST', 'BUILD_TUPLE', 'BUILD_SET',
+                              'BUILD_MAP', 'BUILD_CONST_KEY_MAP'):
+                _build_instr = _mi
+                break
+        _build_arity = (_build_instr.arg if _build_instr is not None else 0) or 0
+        # Multi-element container: BUILD_* arity > 1 OR preload siblings present.
+        # For arity==1 with no preload, the single-element container handler
+        # below is sufficient.
+        _has_multi_elem = (_build_instr is not None
+                           and (_build_arity > 1 or bool(preload_exprs)))
+
+        # Call chain: multiple PRECALL+CALL pairs in merge_block (each pair
+        # wraps the inner result; ternary sits at the innermost position).
+        _call_count = sum(1 for i in merge_all if i.opname == 'CALL')
+        _has_call_chain = _call_count > 1
+
+        # Receiver method call: LOAD_METHOD in merge_block with no
+        # func_call_info set (ternary is the method receiver).
+        _has_receiver_method = (not region.func_call_info
+                                and any(i.opname == 'LOAD_METHOD' for i in merge_all))
+
+        # Lambda with ternary default: MAKE_FUNCTION in merge_block (BUILD_TUPLE
+        # pops ternary + siblings as default args tuple).
+        _has_make_function = any(i.opname == 'MAKE_FUNCTION' for i in merge_all)
+
+        # Decide whether to invoke full reconstruct.
+        _should_reconstruct = (
+            _has_multi_elem
+            or _has_call_chain
+            or _has_receiver_method
+            or _has_make_function
+        )
+        if not _should_reconstruct:
+            return None
+
+        # Use expr_reconstructor to rebuild the full expression.
+        # initial_stack = preload_exprs + [ternary_expr] — the stack state
+        # just before merge_block instructions start executing.
+        initial_stack = list(preload_exprs) + [ternary_expr]
+        full_expr = self.expr_reconstructor.reconstruct(
+            merge_all, initial_stack=initial_stack)
+        return full_expr
 
     def _try_build_ternary_chained_container(self, region: TernaryRegion,
                                                ternary_expr: Dict[str, Any]) -> Optional[Dict[str, Any]]:
@@ -20834,8 +21208,15 @@ AST 映射规则:
         #   R8-06: ``del (t1)[t2]`` -> inner.cond prefix is empty (t1 is the obj)
         #          outer.cond_block preload: empty
         #          -> Delete([Subscript(t1, t2, Del)])
+        #
+        # [R13-02 guard] Pattern D does NOT handle BUILD_SLICE-wrapped slices.
+        # When BUILD_SLICE 2 is in innermost_merge (e.g. ``del x[t1:t2]``),
+        # defer to Pattern E below so the two ternaries become slice bounds
+        # (not subscript obj/key).
         _has_delete_subscr = any(_i.opname == 'DELETE_SUBSCR' for _i in _im_eff)
-        if _has_delete_subscr and len(elts) == 2:
+        _has_build_slice_d = any(_i.opname == 'BUILD_SLICE' for _i in _im_eff)
+        if (_has_delete_subscr and len(elts) == 2
+                and not _has_build_slice_d):
             _inner_cond = innermost.condition_block
             if _inner_cond is not None:
                 _ic_instrs = [i for i in _inner_cond.instructions
@@ -20938,6 +21319,80 @@ AST 映射规则:
                         'type': 'Subscript',
                         'value': elts[0],
                         'slice': elts[1],
+                        'ctx': 'Del',
+                    }
+                    return {
+                        'type': 'Delete',
+                        'targets': [_target],
+                    }
+
+        # --- Pattern E: del x[t1:t2] (R13-02) ---
+        # innermost_merge: BUILD_SLICE 2, DELETE_SUBSCR (+ LOAD_CONST None +
+        # RETURN_VALUE). Two chained ternaries produce the slice's lower and
+        # upper bounds; BUILD_SLICE 2 wraps them as a Slice node;
+        # DELETE_SUBSCR deletes obj[slice].
+        # 依「父引用子入口」+「嵌套即抽象节点」+「自底向上归约」: 父 Delete
+        # 通过 outer.cond_block preload (LOAD obj) + innermost_merge 的
+        # BUILD_SLICE 2 + DELETE_SUBSCR 引用 chained ternary 子节点列表作为
+        # Slice 的 lower/upper。
+        _has_build_slice = any(_i.opname == 'BUILD_SLICE' for _i in _im_eff)
+        if (_has_build_slice and _has_delete_subscr and len(elts) == 2):
+            # Locate obj in outer.cond_block preload (e.g. LOAD_NAME x).
+            _outer_cond = region.condition_block
+            if _outer_cond is not None:
+                _oc_instrs = [i for i in _outer_cond.instructions
+                              if i.opname not in ('RESUME', 'NOP',
+                                                  'CACHE', 'PUSH_NULL')]
+                _oc_last = _outer_cond.get_last_instruction()
+                _oc_cond_start = len(_oc_instrs)
+                if _oc_last and _oc_last.opname in (
+                        FORWARD_CONDITIONAL_JUMP_OPS
+                        | SHORT_CIRCUIT_JUMP_OPS):
+                    _oc_pj_idx = None
+                    for _ci_idx in range(len(_oc_instrs) - 1, -1, -1):
+                        if _oc_instrs[_ci_idx] is _oc_last:
+                            _oc_pj_idx = _ci_idx
+                            break
+                    if _oc_pj_idx is not None and _oc_pj_idx > 0:
+                        import dis as _dis
+                        _needed = 1
+                        _cstart = None
+                        for _ci in range(_oc_pj_idx - 1, -1, -1):
+                            _instr = _oc_instrs[_ci]
+                            try:
+                                _eff = _dis.stack_effect(
+                                    _instr.opcode, _instr.arg)
+                            except Exception:
+                                _eff = 0
+                            _needed -= _eff
+                            if _needed <= 0:
+                                _cstart = _ci
+                                break
+                        if _cstart is not None:
+                            _oc_cond_start = _cstart
+                _oc_preload = _oc_instrs[:_oc_cond_start]
+                self.expr_reconstructor.reset()
+                for _instr in _oc_preload:
+                    if _instr.opname in ('RESUME', 'NOP', 'CACHE',
+                                         'PUSH_NULL'):
+                        continue
+                    self.expr_reconstructor._process_instruction(_instr)
+                _pl_stack = [s for s in self.expr_reconstructor.stack
+                             if not (isinstance(s, dict)
+                                     and s.get('type') == 'PUSH_NULL')]
+                # Expect [obj] on stack (e.g. [Name(x)]).
+                if len(_pl_stack) >= 1:
+                    _obj_expr = _pl_stack[-1]
+                    _slice_expr = {
+                        'type': 'Slice',
+                        'lower': elts[0],
+                        'upper': elts[1],
+                        'step': None,
+                    }
+                    _target = {
+                        'type': 'Subscript',
+                        'value': _obj_expr,
+                        'slice': _slice_expr,
                         'ctx': 'Del',
                     }
                     return {

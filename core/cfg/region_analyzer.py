@@ -11223,13 +11223,65 @@ RegionType 枚举值: RegionType.ASSERT
                                         'attr': _name,
                                         'ctx': 'Load',
                                     }
-                                return 'call', {
-                                    'func': {
+                                _cur_func_expr = {
+                                    'type': 'Attribute',
+                                    'value': _obj_expr,
+                                    'attr': _method_name,
+                                    'ctx': 'Load',
+                                }
+                                # [R13-01 fix] 处理 method chain: 第一个
+                                # LOAD_METHOD m1, PRECALL, CALL, LOAD_METHOD m2,
+                                # ... 第一个 LOAD_METHOD 是 receiver chain 的
+                                # 一部分，第二个 LOAD_METHOD 才是真正消费
+                                # ternary 的函数。
+                                # 例: s.upper().split((a if c else b))
+                                #   cond_block: LOAD_NAME s, LOAD_METHOD upper,
+                                #               PRECALL, CALL, LOAD_METHOD split,
+                                #               LOAD_NAME c, POP_JUMP_...
+                                #   把 s.upper() 包装成 Call 作为 receiver，
+                                #   split 作为 func.attr。
+                                # 仅处理 0-arg 中间方法调用（PRECALL 紧跟
+                                # LOAD_METHOD），保守不退化。带 args 的中间
+                                # 方法调用（如 s.method(x).split(ternary)）留
+                                # 待 R14+。依「父引用子入口」: 父 Call 通过
+                                # cond_block 的 method chain 引用 ternary 子节点。
+                                _chain_idx = _method_idx + 1
+                                while _chain_idx < len(instrs):
+                                    _ci = instrs[_chain_idx]
+                                    if _ci.opname in NOISE_OPS:
+                                        _chain_idx += 1
+                                        continue
+                                    if _ci.opname != 'PRECALL':
+                                        break
+                                    _call_idx = _chain_idx + 1
+                                    while (_call_idx < len(instrs)
+                                           and instrs[_call_idx].opname in NOISE_OPS):
+                                        _call_idx += 1
+                                    if (_call_idx >= len(instrs)
+                                            or instrs[_call_idx].opname != 'CALL'):
+                                        break
+                                    _next_idx = _call_idx + 1
+                                    while (_next_idx < len(instrs)
+                                           and instrs[_next_idx].opname in NOISE_OPS):
+                                        _next_idx += 1
+                                    if (_next_idx >= len(instrs)
+                                            or instrs[_next_idx].opname != 'LOAD_METHOD'):
+                                        break
+                                    _cur_func_expr = {
+                                        'type': 'Call',
+                                        'func': _cur_func_expr,
+                                        'args': [],
+                                        'keywords': [],
+                                    }
+                                    _cur_func_expr = {
                                         'type': 'Attribute',
-                                        'value': _obj_expr,
-                                        'attr': _method_name,
+                                        'value': _cur_func_expr,
+                                        'attr': instrs[_next_idx].argval,
                                         'ctx': 'Load',
-                                    },
+                                    }
+                                    _chain_idx = _next_idx + 1
+                                return 'call', {
+                                    'func': _cur_func_expr,
                                 }, None
             return None, None, None
 
