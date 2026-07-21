@@ -215,6 +215,11 @@
   - [ ] 子任务：批次 2 — nested ternary in cond 失败（如 `test_adv01_nested_ternary_cond.py`）
   - [ ] 子任务：批次 3 — await in cond 失败（如 `test_adv01_await_compare.py`）
   - [ ] 子任务：批次 4 — lambda call in cond 失败（如 `test_adv01_lambda_call_cond.py`）
+        - 部分修复：boolop 结果用于比较（`(a or b) == c`）已修复
+          （`_wrap_boolop_with_merge_compare` 在 BoolOpRegion.merge_block 含
+          COMPARE_OP/IS_OP/CONTAINS_OP 时包裹 Compare）。test_adv14_boolop_single_compare
+          通过。`(a and b) == (c and d)` 仍未修复（BoolOpRegion 过度链化两个独立
+          值上下文 boolop 表达式）。
   - [x] 子任务：批次 5 — chained compare + boolop 混合 cond 失败
         - 算法根因：当 `if a < b < c and d < e < f:` 被编译时，每个链式比较
           (a<b<c, d<e<f) 由 `_identify_chained_compare_regions` 识别为带

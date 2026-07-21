@@ -8961,6 +8961,22 @@ AST 映射规则:
                             _boolop_negate = True
                 if _boolop_negate:
                     boolop_expr = _negate_expr(boolop_expr)
+                # [CPython peephole] BoolOp result used in a comparison:
+                # `if (a or b) == c:` compiles to:
+                #   LOAD a; JUMP_IF_TRUE_OR_POP to merge
+                #   LOAD b
+                #   merge: LOAD c; COMPARE_OP ==; POP_JUMP_IF_FALSE
+                # The BoolOpRegion's merge_block contains the COMPARE_OP /
+                # IS_OP / CONTAINS_OP that compares the boolop result (left
+                # operand, on stack) with the right operand (loaded in merge).
+                # The boolop expression built above is only the LEFT operand;
+                # the comparison operator and right operand live in the
+                # merge_block and must be reconstructed to form the full
+                # condition `Compare(left=boolop, ops=[op], comparators=[rhs])`.
+                # Without this, `if (a or b) == c:` decompiles as `if a or b:`
+                # (losing the `== c` part).
+                boolop_expr = self._wrap_boolop_with_merge_compare(
+                    boolop_expr, boolop_region_for_cond, region)
                 boolop_region_for_cond.condition_expr = boolop_expr
                 for b in boolop_region_for_cond.blocks:
                     self.generated_blocks.add(b)
@@ -14325,6 +14341,110 @@ AST 映射规则:
         elif ptype == 'MatchOr':
             for p in pattern.get('patterns', []):
                 self._collect_pattern_store_names(p, names)
+
+    def _wrap_boolop_with_merge_compare(self, boolop_expr: Dict[str, Any],
+                                         boolop_region: 'BoolOpRegion',
+                                         if_region: IfRegion) -> Dict[str, Any]:
+        """[CPython peephole] Wrap a BoolOp expression in a Compare when the
+        BoolOpRegion's merge_block contains a comparison instruction.
+
+        算法角色：BoolOp 比较包裹器（BoolOp Compare Wrapper）
+        输入：boolop_expr (已构建的 BoolOp 表达式) + BoolOpRegion + IfRegion
+        输出：Compare 表达式（若 merge_block 含比较指令）或原 boolop_expr
+
+        【背景】
+        当 ``if (a or b) == c:`` 被编译时，CPython 先求值 ``a or b``（值上下文
+        短路，使用 JUMP_IF_TRUE_OR_POP/JUMP_IF_FALSE_OR_POP），结果留在栈上，
+        然后在 merge_block 中执行 ``LOAD c; COMPARE_OP ==; POP_JUMP_IF_FALSE``。
+        BoolOpRegion 正确识别了 ``a or b``，但其 merge_block 中的 COMPARE_OP
+        是对 boolop 结果的比较，不属于 boolop 本身。
+
+        【问题】
+        若不包裹 Compare，``if (a or b) == c:`` 反编译为 ``if a or b:`` —
+        丢失 ``== c`` 部分。
+
+        【修复】
+        检查 BoolOpRegion.merge_block 是否含 COMPARE_OP / IS_OP / CONTAINS_OP：
+        - 含 COMPARE_OP：boolop 是左操作数，merge 中的 LOAD 是右操作数
+          → Compare(left=boolop, ops=[cmp_op], comparators=[rhs])
+        - 含 IS_OP：类似，op 为 Is/IsNot
+        - 含 CONTAINS_OP：类似，op 为 In/NotIn
+        - 否则：返回原 boolop_expr（boolop 结果直接做真值测试）
+
+        【4 原则合规】
+        - 自底向上归约：BoolOp 先归约为抽象节点，Compare 引用其为操作数。
+        - 每块唯一归属：merge_block 属于 BoolOpRegion，标记为 generated。
+        - 嵌套即抽象节点：BoolOp 作为 Compare 的抽象操作数。
+        - 父引用子入口：IfRegion 通过 BoolOpRegion 引用 boolop 入口。
+        """
+        merge_block = getattr(boolop_region, 'merge_block', None)
+        if merge_block is None:
+            return boolop_expr
+        # Don't re-process if merge_block is the cond_block (decision is in cond_block itself)
+        cond_block = if_region.condition_block
+        if merge_block is cond_block:
+            return boolop_expr
+        # Check if merge_block is already marked as generated (avoid double-processing)
+        if merge_block in self.generated_blocks:
+            return boolop_expr
+        # Extract comparison-related instructions from merge_block
+        _CMP_SKIP_OPS = frozenset({
+            'POP_TOP', 'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_FALSE',
+            'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_TRUE',
+            'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_BACKWARD_IF_NONE',
+            'POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_BACKWARD_IF_NOT_NONE',
+            'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE',
+            'CACHE', 'NOP', 'RESUME', 'PUSH_NULL',
+            'SWAP', 'COPY',  # chained compare setup (not single compare)
+        })
+        merge_instrs = [i for i in merge_block.instructions
+                        if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+        # Find comparison instruction
+        cmp_instr = None
+        for i in merge_instrs:
+            if i.opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP'):
+                cmp_instr = i
+                break
+        if cmp_instr is None:
+            return boolop_expr  # No comparison in merge_block
+        # Skip if merge_block has SWAP/COPY (chained compare, not single compare)
+        # — chained compare is handled by the chained compare path
+        has_chained_setup = any(i.opname in ('SWAP', 'COPY') for i in merge_instrs)
+        if has_chained_setup and cmp_instr.opname == 'COMPARE_OP':
+            return boolop_expr
+        # Extract right operand (loads before the comparison instruction)
+        rhs_instrs = []
+        for i in merge_instrs:
+            if i is cmp_instr:
+                break
+            if i.opname in _CMP_SKIP_OPS:
+                continue
+            rhs_instrs.append(i)
+        if not rhs_instrs:
+            # No right operand in merge_block — the right operand might be
+            # trapped before the boolop (e.g., `if c == (a or b):`).
+            # This case is not handled here; return boolop as-is.
+            return boolop_expr
+        rhs_expr = self.expr_reconstructor.reconstruct(rhs_instrs)
+        if rhs_expr is None:
+            return boolop_expr
+        # Determine comparison operator
+        if cmp_instr.opname == 'COMPARE_OP':
+            cmp_op = cmp_instr.argval
+        elif cmp_instr.opname == 'IS_OP':
+            cmp_op = 'IsNot' if cmp_instr.argval else 'Is'
+        elif cmp_instr.opname == 'CONTAINS_OP':
+            cmp_op = 'NotIn' if cmp_instr.argval else 'In'
+        else:
+            return boolop_expr
+        # Mark merge_block as generated
+        self.generated_blocks.add(merge_block)
+        return {
+            'type': 'Compare',
+            'left': boolop_expr,
+            'ops': [cmp_op],
+            'comparators': [rhs_expr],
+        }
 
     def _try_build_chained_compare_in_boolop(self, chain_block, region):
         """[CPython peephole P4 + P5 interaction] Reconstruct a chained
