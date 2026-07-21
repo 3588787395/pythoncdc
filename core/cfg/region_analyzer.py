@@ -7835,6 +7835,21 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                         continue
                     visited_g.add(gc)
                     is_pattern_only = all(i.opname in PATTERN_ONLY_OPS for i in gc.instructions)
+                    # [Phase 3 adv16_match_class_nested_in_if] 嵌套类模式块（如
+                    # Outer(x=Inner(1)) 的 Inner 匹配块）含 MATCH_CLASS + LOAD_NAME
+                    # （加载内层类引用）。LOAD_NAME 不在 PATTERN_ONLY_OPS（guard 块
+                    # 也用 LOAD_NAME），但含 MATCH_CLASS/MATCH_SEQUENCE/MATCH_MAPPING
+                    # 的块一定是模式检查块，应继续沿后继收集（找下一个 pattern 检查块
+                    # 与真正 body），而非当作 guard 块 break 中断 worklist。否则后续
+                    # pattern 检查块（如 Inner(1) 的 UNPACK+COMPARE 块）与 next-case
+                    # 块会被误纳入 body，导致 _mr_bodies_are_equivalent 误判两 case
+                    # body 末块相同而合并为 MatchOr。
+                    _has_definitive_match_op = any(
+                        i.opname in ('MATCH_CLASS', 'MATCH_SEQUENCE', 'MATCH_MAPPING',
+                                     'MATCH_KEYS', 'MATCH_MAPPING_KEYS')
+                        for i in gc.instructions)
+                    if _has_definitive_match_op:
+                        is_pattern_only = True
                     gj = self._mr_find_case_jump_instruction(gc)
                     if gj:
                         target_block = self.cfg.get_block_by_offset(gj.argval)

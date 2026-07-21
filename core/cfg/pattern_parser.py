@@ -1424,11 +1424,23 @@ class PatternParser:
         if cls_name is None:
             return {'type': 'MatchAs'}
 
+        # [Phase 3 adv16_match_class_nested_in_if] 嵌套类模式（如
+        # Outer(x=Inner(1))）字节码含多个 MATCH_CLASS（外层 + 内层）。
+        # 外层类的 keyword_keys 是首个 MATCH_CLASS 前紧邻的
+        # LOAD_CONST(tuple)，pos_count 是首个 MATCH_CLASS.arg。此前循环
+        # 遍历所有指令并覆盖 keyword_keys/pos_count，导致内层类的 () 和 1
+        # 覆盖外层的 ('x',) 和 0，输出 Outer(Inner(1)) 而非
+        # Outer(x=Inner(1))。修正：遇到首个 MATCH_CLASS 即停止，仅用其前
+        # 紧邻的 LOAD_CONST(tuple) 作为外层 keyword_keys。内层类的信息由
+        # 递归调用 _extract_class_pattern(nested_instrs) 独立处理。
         for i, instr in enumerate(filtered):
-            if instr.opname == 'LOAD_CONST' and isinstance(instr.argval, tuple):
-                keyword_keys = list(instr.argval)
-            elif instr.opname == 'MATCH_CLASS':
+            if instr.opname == 'MATCH_CLASS':
                 pos_count = instr.argval if instr.argval is not None else 0
+                for k in range(i - 1, -1, -1):
+                    if filtered[k].opname == 'LOAD_CONST' and isinstance(filtered[k].argval, tuple):
+                        keyword_keys = list(filtered[k].argval)
+                        break
+                break
 
         if cls_name is None:
             return {'type': 'MatchAs'}
