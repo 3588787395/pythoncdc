@@ -78,7 +78,20 @@
        assert 混淆 / 嵌套 code object）
 - [ ] C3.4 IF 区域算法根因修正（按批次）
 - [ ] C3.4a 批次 1：walrus in cond 失败修复 + 字节码完全匹配
-- [ ] C3.4b 批次 2：nested ternary in cond 失败修复 + 字节码完全匹配
+- [x] C3.4b 批次 2：nested ternary in cond 失败修复 + 字节码完全匹配
+      — 修正 1（commit f3021e7，生成阶段）：`_try_build_ternary_boolop_and_if`
+        增加嵌套 TernaryRegion hop（hop 到 merge_block）与幻影 BoolOpRegion 检测
+        （用 `_build_simple_ternary_value` 避免递归）。修复 `and` 链中三元作为
+        操作数（adv02_ternary_three_and / adv13_ternary_and_ternary_boolop /
+        adv13_ternary_plain_ternary_and）。
+      — 修正 2（本提交，识别阶段）：`_detect_boolop_conditional_chain` 增加
+        三元作为 BoolOp `or` 操作数 hop。判别护栏 `op_type != chain[0][1]`
+        确保 `and` 链仍由现有 `_is_equivalent_exit_block` 检查处理（避免退化）。
+        修复 `or` 链中三元作为第二操作数（adv02_ternary_second_or）。
+      — 剩余未修复：adv13_ternary_three_or_cond
+        (`if (a if c else b) or (d if e else f) or (g if h else i):`) —
+        需要检测 true_value 块的 IF_TRUE → if-body 模式（`or` 短路到 body），
+        移交后续迭代。
 - [ ] C3.4c 批次 3：await in cond 失败修复 + 字节码完全匹配
 - [ ] C3.4d 批次 4：lambda call in cond 失败修复 + 字节码完全匹配
       — 部分修复：boolop 结果用于比较（`(a or b) == c`）已通过

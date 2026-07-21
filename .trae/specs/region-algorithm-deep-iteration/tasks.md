@@ -212,7 +212,51 @@
   - [ ] 子任务：识别共性问题（如 walrus in cond / nested ternary in cond / await in cond）
 - [ ] Task 3.2: IF 区域算法根因修正（按共性根因分批）
   - [ ] 子任务：批次 1 — walrus in cond 失败（如 `test_adv01_simple_walrus.py`）
-  - [ ] 子任务：批次 2 — nested ternary in cond 失败（如 `test_adv01_nested_ternary_cond.py`）
+  - [x] 子任务：批次 2 — nested ternary in cond 失败（如 `test_adv01_nested_ternary_cond.py`）
+        - 算法根因 1（`and` 重复操作数，commit f3021e7）：当 `if (a if c else d) and b and e:`
+          被编译时，三元 cond 块（LOAD c, IF_FALSE → false_value）的 IF_FALSE 与
+          `and` 短路方向相同，BoolOpRegion 把三元 cond 块作为 chain 起点正确。
+          但生成阶段 `_try_build_ternary_boolop_and_if` 在沿 continuation 链收集
+          操作数时遇到两类问题：
+          (a) 幻影 BoolOpRegion — boolop 链检测为同一条 chain 创建 BoolOpRegion，
+          其 entry 是 continuation 块。`_build_ternary_value_expr` 会递归进入
+          `_build_boolop_expression`，把剩余操作数变成嵌套 BoolOp。
+          (b) 嵌套三元内部块泄漏 — continuation 块是嵌套 TernaryRegion 的 entry 时，
+          chain 落入三元的 true_value_block，把它误当作额外操作数。
+        - 修正 1（生成阶段，region_ast_generator.py `_try_build_ternary_boolop_and_if`）：
+          在 continuation 链循环开头增加两个检测：
+          (a) 嵌套 TernaryRegion 检测 — 当 `_cur` 是某个 TernaryRegion 的 entry
+          且有 merge_block 时，调用 `_build_nested_ternary_expr` 重建 IfExp，
+          标记内部块为 generated，从 value block 收集 exit blocks，
+          hop 到 merge_block 作为下一个 `_cur`。
+          (b) 幻影 BoolOpRegion 检测 — 当 `_cur` 是某个 BoolOpRegion 的 entry 时，
+          用 `_build_simple_ternary_value` 替代 `_build_ternary_value_expr`，
+          避免递归进入 `_build_boolop_expression`。
+        - 影响：adv02_ternary_three_and / adv13_ternary_and_ternary_boolop /
+          adv13_ternary_plain_ternary_and 3 个测试通过；全测试集 88→85 失败（0 退化）。
+        - 算法根因 2（`or` 误吸三元，本提交）：当 `if a or (b if c else d):` 被编译时，
+          三元 cond 块（LOAD c, IF_FALSE → false_value）作为 `or` 链的第二个操作数
+          出现。链检测从 `a` 块（IF_TRUE → exit）开始，fall-through 进入三元 cond 块。
+          三元 cond 块的 IF_FALSE 派生 op_type='and'，与 chain[0][1]='or' 不同，
+          导致 line 13276 的 `op_type == prev_op` 检查不触发，链继续延伸到
+          true_value 块（LOAD b, IF_FALSE → exit），产生错误链
+          `[(a,'or'),(c,'and'),(b,'and')]`，BoolOpRegion 吞掉三元内部块，
+          TernaryRegion 识别器（在 boolop 之后运行）无法接管。
+        - 修正 2（识别阶段，region_analyzer.py `_detect_boolop_conditional_chain`）：
+          增加三元作为 BoolOp `or` 操作数 hop 逻辑。判别条件：当前块的短路目标
+          不是 exit 块（即不是 RETURN_VALUE/RETURN_CONST），而是值块（含自己的
+          条件跳转），且当前块的 true_value 块也含条件跳转并通过 JUMP_FORWARD
+          到达 merge。判别护栏：仅在 `op_type != chain[0][1]` 时触发 — 当
+          op_type 与 chain[0][1] 相同时（如 `and` 链中的三元 cond 块），
+          现有 `_is_equivalent_exit_block` 检查已经能正确断链（因为 false_value
+          块与 exit 不等价），让 TernaryRegion 识别器自然处理。
+          hop 行为：覆盖 `chain[-1]` 的 op_type 为 chain[0][1]（不 append 重复项），
+          hop current 到 `_merge`（false_value 的 fallthrough）。
+        - 影响：adv02_ternary_second_or 通过；全测试集 85→84 失败（0 退化）。
+          剩余未修复：adv13_ternary_three_or_cond
+          (`if (a if c else b) or (d if e else f) or (g if h else i):`) —
+          此场景需要检测 true_value 块的 IF_TRUE → if-body 模式（`or` 短路到 body），
+          当前 hop 仅依据 cond 块的 IF_FALSE 派生 op_type，无法区分。
   - [ ] 子任务：批次 3 — await in cond 失败（如 `test_adv01_await_compare.py`）
   - [ ] 子任务：批次 4 — lambda call in cond 失败（如 `test_adv01_lambda_call_cond.py`）
         - 部分修复：boolop 结果用于比较（`(a or b) == c`）已修复

@@ -13252,6 +13252,101 @@ RegionType 枚举值: RegionType.ASSERT
                     continue
                 # Hop target is None or already visited — break
                 break
+            # [P5 + Cluster 4 interaction] Ternary as BoolOp `or` operand hop.
+            # When `if a or (b if c else d): pass` is compiled, the ternary's
+            # cond block (LOAD c, POP_JUMP_IF_FALSE → false_value) appears in
+            # the boolop chain. The IF_FALSE → false_value looks like an 'and'
+            # short-circuit, but false_value is NOT an exit block — it's the
+            # ternary's false value block (which has its own
+            # POP_JUMP_IF_FALSE/TRUE → exit). Without this hop, the chain
+            # absorbs the ternary's cond + true_value as 'and' operands,
+            # preventing TernaryRegion identification (which runs AFTER
+            # boolop). The chain must treat the entire ternary as a SINGLE
+            # operand and hop over its internal blocks (cond → true_value →
+            # JUMP_FORWARD → merge, false_value → merge) to reach the next
+            # operand or the if-body.
+            #
+            # Detection: current's short-circuit target is NOT an exit block
+            # (doesn't end with RETURN_VALUE/RETURN_CONST) but has its own
+            # conditional jump to an exit (it's a value block). The ternary's
+            # merge is false_value's fallthrough, which true_value's
+            # fallthrough (via JUMP_FORWARD) also reaches.
+            #
+            # Discriminator: only fire when op_type differs from chain[0][1].
+            # When the chain's first op_type matches the current op_type
+            # (e.g. both 'and' — the ternary cond block's IF_FALSE derives
+            # 'and', and the chain is also an 'and' chain), the existing
+            # `_is_equivalent_exit_block` check at line 13276+ already breaks
+            # the chain correctly (because the false_value block is NOT
+            # equivalent to an exit block), letting TernaryRegion
+            # identification handle it. Firing the hop here would WRAP the
+            # ternaries into a BoolOpRegion, breaking the natural TernaryRegion
+            # identification for `(a if c else b) and (d if e else f):`.
+            # The hop is needed ONLY when the chain's op_type differs from
+            # the current op_type — i.e. the ternary cond block's IF_FALSE
+            # derives 'and', but the chain is an 'or' chain (e.g. `a or
+            # (b if c else d):`). In this case, the existing check at line
+            # 13276 doesn't fire (because op_type != prev_op), and the chain
+            # would wrongly absorb the ternary's true_value as another 'or'
+            # operand. The hop overrides the op_type to match chain[0][1]
+            # and hops to the ternary's merge.
+            if (last.argval is not None and chain
+                    and op_type != chain[0][1]):
+                _sc_target = self.cfg.get_block_by_offset(last.argval)
+                if _sc_target is not None:
+                    _sc_target_last = _sc_target.get_last_instruction()
+                    _target_is_exit = (_sc_target_last is None
+                                       or _sc_target_last.opname in ('RETURN_VALUE', 'RETURN_CONST'))
+                    if (not _target_is_exit and _sc_target_last
+                            and _sc_target_last.opname in BOOLOP_CHAIN_JUMPS
+                            and _sc_target_last.argval is not None):
+                        # short-circuit target is a value block (has its own
+                        # conditional jump). Find merge = false_value's
+                        # fallthrough.
+                        _fv_succs = list(_sc_target.conditional_successors)
+                        _merge = next((s for s in _fv_succs
+                                       if s.start_offset != _sc_target_last.argval), None)
+                        if _merge is not None:
+                            # Verify true_value (current's fallthrough) also
+                            # has a conditional jump to an exit (it's a value
+                            # block) and reaches merge via fallthrough chain.
+                            _tv_succs = list(current.conditional_successors)
+                            _tv = next((s for s in _tv_succs
+                                        if s.start_offset != last.argval), None)
+                            if _tv is not None:
+                                _tv_last = _tv.get_last_instruction()
+                                _tv_is_value = (_tv_last and _tv_last.opname in BOOLOP_CHAIN_JUMPS)
+                                if _tv_is_value:
+                                    _tv_ft = next((s for s in _tv.conditional_successors
+                                                   if s.start_offset != _tv_last.argval), None)
+                                    _tv_reaches_merge = False
+                                    if _tv_ft is _merge:
+                                        _tv_reaches_merge = True
+                                    elif _tv_ft is not None:
+                                        _tv_ft_eff = [i for i in _tv_ft.instructions
+                                                      if i.opname not in ('NOP', 'CACHE')]
+                                        if (len(_tv_ft_eff) == 1
+                                                and _tv_ft_eff[0].opname == 'JUMP_FORWARD'
+                                                and _tv_ft_eff[0].argval is not None):
+                                            _jft = self.cfg.get_block_by_offset(_tv_ft_eff[0].argval)
+                                            if _jft is _merge:
+                                                _tv_reaches_merge = True
+                                    if _tv_reaches_merge:
+                                        # Ternary detected. The append at
+                                        # line 13186 above used op_type
+                                        # derived from the ternary cond
+                                        # block's IF_FALSE → 'and', but the
+                                        # ternary is an operand of the
+                                        # current chain whose op is chain[0][1]
+                                        # (e.g. 'or'). Override the last
+                                        # chain entry's op_type in place —
+                                        # do NOT append a duplicate.
+                                        op_type = chain[0][1]
+                                        chain[-1] = (current, op_type)
+                                        if _merge.start_offset not in visited:
+                                            current = _merge
+                                            continue
+                                        break
             succs = list(current.conditional_successors)
             if len(succs) != 2:
                 break
