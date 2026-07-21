@@ -9720,6 +9720,27 @@ RegionType 枚举值: RegionType.ASSERT
 
             if any(tr.entry == block for tr in self._filter_regions(ternary_regions or [], TernaryRegion)):
                 continue
+            # [R16-06 fix] 跳过 TernaryRegion 的 merge_block 当
+            # merge_context='compare' 且 merge_block 以 JUMP_IF_FALSE_OR_POP
+            # (或 JUMP_IF_TRUE_OR_POP) 结尾 (chained compare middle ternary).
+            # 模式: `a < (ternary) < e` 中，ternary 的 merge_block 是
+            # `<SWAP, COPY, COMPARE_OP, JUMP_IF_FALSE_OR_POP>`，是链式比较的
+            # 第一段。若不跳过，IfRegion 会抢占此块作为 if 条件，破坏链式比较
+            # 重建。依「每块唯一归属」: merge_block 已归属 TernaryRegion 父
+            # 表达式（Expr(Compare)），IfRegion 不应重复抢占。
+            # 注意: 仅 JUMP_IF_*_OR_POP 是链式比较短路；普通 POP_JUMP_IF_FALSE
+            # 是 if 条件测试，不应跳过（如 `if (ternary) > x: pass`）。
+            for tr in self._filter_regions(ternary_regions or [], TernaryRegion):
+                if (getattr(tr, 'merge_block', None) is block
+                        and getattr(tr, 'merge_context', None) == 'compare'
+                        and block.get_last_instruction() is not None
+                        and block.get_last_instruction().opname in (
+                            'JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP')):
+                    break
+            else:
+                tr = None
+            if tr is not None:
+                continue
 
             if match_regions:
                 if isinstance(block_region, MatchRegion):

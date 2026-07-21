@@ -4303,6 +4303,12 @@ class CodeGenerator:
                         iter_code = self._generate_annotation_from_dict(value)
                     else:
                         iter_code = self._generate_expression(value, 0)
+                elif iter_type == 'IfExp':
+                    # [R16-04/05 fix] 推导式 iter 是 IfExp 时必须加括号，
+                    # 否则 `[v for v in a if c else b]` 会被解析为
+                    # `[v for v in a if c] else b`（语法错误）。
+                    iter_code = self._generate_expression(iter_obj, 0)
+                    iter_code = f'({iter_code})'
                 else:
                     iter_code = self._generate_expression(iter_obj, 0)
             else:
