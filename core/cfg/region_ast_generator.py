@@ -7007,11 +7007,12 @@ AST 映射规则:
                         self.generated_blocks.add(b)
                     self._generated_regions.add(loop_nid)
                 continue
-            # [Phase 3 adv15_ternary_in_tuple_unpack] 跳过元组解包链的前驱三元：
-            # 前驱三元（无 value_target，其 merge_block 是后继三元的 entry）由
-            # 链尾三元的 _generate_ternary 路径统一收集并重建为
-            # Assign(targets=[Tuple], value=Tuple)，此处独立生成会重复出栈且
-            # 误标记共享块（前驱 merge == 后继 entry）导致链尾三元被跳过。
+            # [Phase 3 adv15_ternary_in_tuple_unpack / adv15_ternary_slice_in_body]
+            # 跳过元组解包链 / 切片链的前驱三元：前驱三元（无 value_target，
+            # 其 merge_block 是后继三元的 entry）由链尾三元的 _generate_ternary
+            # 路径统一收集并重建为 Assign(targets=[Tuple]/[Name], value=Tuple/Subscript)，
+            # 此处独立生成会重复出栈且误标记共享块（前驱 merge == 后继 entry）
+            # 导致链尾三元被跳过。链尾 merge_block 首指令为 SWAP N 或 BUILD_SLICE N。
             if (isinstance(child, TernaryRegion)
                     and not getattr(child, 'value_target', None)
                     and child.merge_block is not None):
@@ -7023,7 +7024,7 @@ AST 映射规则:
                             and _r.merge_block is not None):
                         _pred_mb_eff = [i for i in _r.merge_block.instructions
                                         if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                        if (_pred_mb_eff and _pred_mb_eff[0].opname == 'SWAP'
+                        if (_pred_mb_eff and _pred_mb_eff[0].opname in ('SWAP', 'BUILD_SLICE')
                                 and _pred_mb_eff[0].arg and _pred_mb_eff[0].arg >= 2):
                             _is_unpack_pred = True
                             break
@@ -17226,6 +17227,111 @@ AST 映射规则:
                                         self._generated_regions.add(id(_cr))
                 if _tuple_unpack_assign is not None:
                     results.append(_tuple_unpack_assign)
+                    for block in region.blocks:
+                        self.generated_blocks.add(block)
+                    return results
+                # [Phase 3 adv15_ternary_slice_in_body] 切片下标为多三元：
+                # `x = lst[a if p else q:b if r else s]`。字节码 N 个三元顺序
+                # 压栈 + BUILD_SLICE N + BINARY_SUBSCR + STORE。容器 lst 被困在
+                # 链首三元 cond_block 的 test 之前。重建为
+                # Assign(targets=[Name], value=Subscript(value=container, slice=Slice))。
+                # 栈语义：压栈顺序 [container, lower, upper, (step)]，BUILD_SLICE N
+                # 消费 top-N 生成 slice(lower,upper,(step))，BINARY_SUBSCR 消费
+                # container+slice 生成 container[slice]。
+                _slice_subscr_assign = None
+                if region.merge_block and ternary_expr is not None:
+                    _mb_eff = [i for i in region.merge_block.instructions
+                               if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                    if _mb_eff and _mb_eff[0].opname == 'BUILD_SLICE' and _mb_eff[0].arg and _mb_eff[0].arg >= 2:
+                        _slice_n = _mb_eff[0].arg
+                        if (len(_mb_eff) >= 3 and _mb_eff[1].opname == 'BINARY_SUBSCR'
+                                and _mb_eff[2].opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
+                                and _mb_eff[2].argval == region.value_target):
+                            _chain_regions = [region]
+                            _cur = region
+                            _chain_safety = 0
+                            while _chain_safety < 20:
+                                _chain_safety += 1
+                                _pred = None
+                                for _r in self.regions:
+                                    if (isinstance(_r, TernaryRegion) and _r is not _cur
+                                            and _r.merge_block is _cur.entry
+                                            and not getattr(_r, 'value_target', None)):
+                                        _pred = _r
+                                        break
+                                if _pred is None:
+                                    break
+                                _chain_regions.insert(0, _pred)
+                                _cur = _pred
+                            if len(_chain_regions) == _slice_n:
+                                _slice_parts = []
+                                _chain_valid = True
+                                for _cr in _chain_regions:
+                                    if _cr is region:
+                                        _slice_parts.append(ternary_expr)
+                                        continue
+                                    _cc = _cr.condition_block
+                                    _ctb = _cr.true_value_block
+                                    _cfb = _cr.false_value_block
+                                    if _cc is None or _ctb is None or _cfb is None:
+                                        _chain_valid = False
+                                        break
+                                    _cc_instrs = [i for i in _cc.instructions
+                                                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                                    _cc_last = _cc.get_last_instruction()
+                                    if _cc_last and _cc_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | BACKWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS):
+                                        _cc_instrs = [i for i in _cc_instrs if i is not _cc_last]
+                                    _cc_expr = self.expr_reconstructor.reconstruct(_cc_instrs) if _cc_instrs else None
+                                    _ctb_expr = self._build_simple_ternary_value(_ctb)
+                                    _cfb_expr = self._build_simple_ternary_value(_cfb)
+                                    if _cc_expr is None or _ctb_expr is None or _cfb_expr is None:
+                                        _chain_valid = False
+                                        break
+                                    _slice_parts.append({
+                                        'type': 'IfExp',
+                                        'test': _cc_expr,
+                                        'body': _ctb_expr,
+                                        'orelse': _cfb_expr,
+                                    })
+                                if _chain_valid and len(_slice_parts) == _slice_n:
+                                    _container_instrs = self._extract_pre_ternary_instrs(_chain_regions[0])
+                                    _container_expr = self.expr_reconstructor.reconstruct(_container_instrs) if _container_instrs else None
+                                    if _container_expr is not None:
+                                        if _slice_n == 2:
+                                            _slice_expr = {
+                                                'type': 'Slice',
+                                                'lower': _slice_parts[0],
+                                                'upper': _slice_parts[1],
+                                                'step': None,
+                                            }
+                                        else:
+                                            _slice_expr = {
+                                                'type': 'Slice',
+                                                'lower': _slice_parts[0],
+                                                'upper': _slice_parts[1],
+                                                'step': _slice_parts[2],
+                                            }
+                                        _slice_subscr_assign = {
+                                            'type': 'Assign',
+                                            'targets': [{
+                                                'type': 'Name',
+                                                'id': region.value_target,
+                                                'ctx': 'Store',
+                                            }],
+                                            'value': {
+                                                'type': 'Subscript',
+                                                'value': _container_expr,
+                                                'slice': _slice_expr,
+                                                'ctx': 'Load',
+                                            },
+                                        }
+                                        for _cr in _chain_regions:
+                                            for _b in _cr.blocks:
+                                                self.generated_blocks.add(_b)
+                                                self.generated_offsets.add(_b.start_offset)
+                                            self._generated_regions.add(id(_cr))
+                if _slice_subscr_assign is not None:
+                    results.append(_slice_subscr_assign)
                     for block in region.blocks:
                         self.generated_blocks.add(block)
                     return results
