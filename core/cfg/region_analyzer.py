@@ -15349,7 +15349,17 @@ RegionType 枚举值: RegionType.ASSERT
                 _first_jt = (self.cfg.get_block_by_offset(_first_last.argval)
                              if _first_last and _first_last.argval is not None
                              else None)
-                if _first_jt is not None and _cur_jt is not _first_jt:
+                # [Phase 7 boolop 3+ operand fix] 表达式语句的 BoolOp
+                # (JUMP_IF_*_OR_POP) 每个 short-circuit 跳转目标是一个独立的
+                # trivial return 块（POP_TOP + LOAD_CONST None + RETURN_VALUE）。
+                # 如 `a or b and c` 中 block0 跳到 offset 18、block6 跳到
+                # offset 24 — 两个不同的 trivial return 块但语义等价。
+                # 原 `is not` 身份比较会在此中断链，导致 3+ 操作数丢失尾部。
+                # 修正：用 `_is_equivalent_exit_block` 替代身份比较 — 仅当
+                # 两个跳转目标语义不等价（如 `(a and b) == (c and d)` 中
+                # block0 跳到 LOAD c 块、block8 跳到 COMPARE_OP 块）才断链。
+                if (_first_jt is not None
+                        and not self._is_equivalent_exit_block(_cur_jt, _first_jt)):
                     break
             chain.append((current, op_type))
             succs = list(current.conditional_successors)

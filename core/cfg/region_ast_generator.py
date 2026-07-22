@@ -16208,7 +16208,7 @@ AST 映射规则:
                 current_inner_op = chain_op
             else:  # OUTER
                 _end_inner_group()
-        # [CPython peephole] Final outer operand in fall-through block:
+        # [CPython peephole] Final operand in fall-through block:
         # For `X or Y or Z` where Z is a non-boolop value (e.g., `None`,
         # a constant, or a function call), the compiler emits the first
         # two operands as JUMP_IF_TRUE_OR_POP blocks in op_chain, but Z
@@ -16216,13 +16216,19 @@ AST 映射规则:
         # conditional jump). op_chain captures only the boolop-jump blocks,
         # so Z would be lost without this step. This mirrors the
         # fall-through handling in _build_boolop_expression (lines 14753+).
+        #
+        # [Phase 7 fix] 当 last_chain_op != outer_op 时（混合 and/or 链的
+        # 末尾内层块），fall-through 包含内层子组的最后一个操作数。如
+        # `a and b or c and True` 中末尾 chain 块 op='and'，outer_op='or'，
+        # fall-through 块含 `True`（内层 and 子组 [c, True] 的末尾操作数）。
+        # 此时 outer_values 末尾已是内层子组（由 'LAST' 分类结束），
+        # 需将 fall-through 表达式追加到该子组。
         if op_chain:
             last_chain_block, last_chain_op = op_chain[-1]
             last_instr = last_chain_block.get_last_instruction()
             chain_block_offsets = {b.start_offset for b, _ in op_chain}
             if (last_instr and last_instr.opname in STRIP_JUMP_OPS
-                    and last_instr.argval is not None
-                    and last_chain_op == outer_op):
+                    and last_instr.argval is not None):
                 ft_succs = sorted(last_chain_block.conditional_successors,
                                    key=lambda s: s.start_offset)
                 ft_block = next((s for s in ft_succs
@@ -16244,7 +16250,28 @@ AST 映射规则:
                     if clean_ft:
                         ft_expr = self.expr_reconstructor.reconstruct(clean_ft)
                         if ft_expr is not None:
-                            outer_values.append(ft_expr)
+                            if last_chain_op == outer_op:
+                                # Fall-through 是外层操作符的最后一个操作数
+                                outer_values.append(ft_expr)
+                            elif current_inner_values:
+                                # 末尾块未结束内层组（非 'LAST' 分类），
+                                # 直接追加到当前内层组
+                                current_inner_values.append(ft_expr)
+                            elif (outer_values and isinstance(outer_values[-1], dict)
+                                    and outer_values[-1].get('type') == 'BoolOp'
+                                    and outer_values[-1].get('op') == last_chain_op):
+                                # [Phase 7 fix] 追加到已结束的内层子组
+                                outer_values[-1]['values'].append(ft_expr)
+                            elif outer_values:
+                                # 内层子组只有一个操作数（未形成 BoolOp），
+                                # 创建新的 BoolOp
+                                _last_val = outer_values.pop()
+                                outer_values.append({
+                                    'type': 'BoolOp', 'op': last_chain_op,
+                                    'values': [_last_val, ft_expr]
+                                })
+                            else:
+                                outer_values.append(ft_expr)
         if current_inner_values:
             _end_inner_group()
         if not outer_values:
