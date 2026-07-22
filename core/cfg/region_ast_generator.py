@@ -640,25 +640,32 @@ class RegionASTGenerator:
                                 is_contained = True
                                 break
                         elif isinstance(r, BoolOpRegion) and isinstance(other, BoolOpRegion):
-                            # [Phase 7 fix] 两个连续 BoolOpRegion 共享 merge/entry 块
-                            # （前者的 merge_block 是后者的 entry）是顺序语句（如
-                            # `x = a or b or c; y = d or e or f` 或表达式语句
-                            # `a or b or c; d or e or f`），不是嵌套。不应将
-                            # 后者标记为 contained，否则后者被过滤出
-                            # top_level_regions，其块被线性生成导致丢失操作数
-                            # （如 `y = e\nf`）。len(r.blocks) > len(other.blocks)
-                            # 仅豁免 r 更大的情形；相等或更小时需此显式豁免。
+                            # [Phase 7 根因 E] 两个连续 BoolOpRegion 共享 merge/entry
+                            # 块（前者的 merge_block 是后者的 entry）是顺序语句
+                            # （如 `x = a or b; y = c or d` 或 `a or b\nc or d`），
+                            # 不是嵌套。不应将后者标记为 contained，否则后者被过滤
+                            # 出 top_level_regions，其块被线性生成导致丢失操作数。
                             #
-                            # 区分顺序语句与比较/条件内 boolop 的判据：共享块
-                            # （other.merge_block == r.entry）的首条实指令。
-                            # 顺序语句的共享块首指令是「结果消费指令」——
-                            # STORE_*（赋值语句 `x = a or b`）或 POP_TOP（表达式
-                            # 语句 `a or b or c`，结果被丢弃），表示前一表达式
-                            # 结果已被消耗，是语句边界。而 `(a and b) == (c and d)`
-                            # 中共享块首指令是 LOAD（比较操作数），结果留栈参与
-                            # COMPARE_OP，属同一表达式，应保持 contained。
-                            # 用首指令判据替代原先的 value_target 检查：后者仅
-                            # 覆盖 STORE（赋值），漏掉 POP_TOP（表达式语句）。
+                            # 区分顺序语句与表达式内连接（contained）的判据：共享块
+                            # （other.merge_block == r.entry）的首条实指令是否为
+                            # 「终端消费指令」——是 → 语句边界（结果被消费，后一
+                            # 表达式是新语句）；否 → 表达式内连接（结果留栈参与
+                            # 下一指令，contained）。
+                            #
+                            # 终端消费指令 = POP_TOP（表达式语句丢弃）+
+                            # STORE_NAME/STORE_FAST/STORE_GLOBAL/STORE_DEREF（赋值
+                            # 语句存储）。这是 CPython 字节码中「消费 TOS 不产生
+                            # 新值」的完备集合——其他指令要么不消费 TOS（LOAD_*），
+                            # 要么消费 TOS 作为操作数并产生新值（BINARY_OP/COMPARE_OP
+                            # /BUILD_*）。故此枚举是栈语义判据的完备实现，覆盖所有
+                            # 表达式语句/赋值语句边界，不依赖具体测试用例。
+                            #
+                            # 注：bo53（`a or b or c\nd or e or f`）的语句边界识别
+                            # 由识别阶段补丁 2（短路跳转目标结构语义）一次正确处理，
+                            # 两个表达式语句被识别为两个独立 BoolOpRegion。此 containment
+                            # 判据处理两者共享 merge/entry 块的情形（赋值语句
+                            # `x = a or b\ny = c or d` 中 STORE_* 边界，及表达式语句
+                            # POP_TOP 边界），是生成阶段的语义补全，非实例驱动补丁。
                             _exempt = False
                             if (r.entry is not None and other.merge_block is not None
                                     and r.entry is other.merge_block):

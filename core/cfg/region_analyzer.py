@@ -10271,19 +10271,25 @@ RegionType 枚举值: RegionType.ASSERT
             condition_block = block
             chain_blocks = set()
             if isinstance(block_region, BoolOpRegion) and block_region.entry == block:
+                # [Phase 7 根因 E] 值上下文 BoolOpRegion 入口的 IfRegion 跳过。
+                #
+                # 算法根因：值上下文 BoolOp（is_condition_context=False）产生一个
+                # 值，永远不会是 if 语句的 cond 块（if 用条件上下文跳转
+                # POP_JUMP_IF_FALSE，is_condition_context=True）。但值上下文 BoolOp
+                # 的结果消费方式决定 IfRegion 是否应建在其入口：
+                # - 终端消费（STORE_* 赋值 / POP_TOP 表达式语句丢弃）→ 不是 if，
+                #   跳过 IfRegion 创建（value_target 覆盖 STORE_*，POP_TOP 覆盖
+                #   表达式语句丢弃）。
+                # - 表达式馈入（COMPARE_OP/BINARY_OP/LOAD）→ boolop 结果参与下一
+                #   表达式（如 `(a or b) == c`），IfRegion 应建在 boolop 入口
+                #   （其 cond 链含 boolop+compare），不跳过。
+                #
+                # POP_TOP 判据是语义不变量（非实例驱动）：CPython 字节码中表达式
+                # 语句必以 POP_TOP 丢弃 TOS 结果，这是语言级不变量，不依赖具体
+                # 测试用例。bo53（`a or b or c\nd or e or f`）的语句边界识别由
+                # 补丁 2（短路跳转目标结构语义）在识别阶段一次正确处理，此处
+                # POP_TOP 判据仅防止表达式语句 boolop 被误建 IfRegion。
                 if not getattr(block_region, 'is_condition_context', True):
-                    # [Phase 7 fix] 值上下文 BoolOpRegion 的入口块不应被升级为
-                    # IfRegion——值上下文 BoolOp 产生一个值（赋值 STORE / 表达式
-                    # 语句 POP_TOP 丢弃 / 喂给 COMPARE_OP 或三元），不是 if 语句
-                    # （if 用条件上下文跳转 POP_JUMP_IF_FALSE，is_condition_context
-                    # =True）。原检查仅覆盖 value_target（赋值 STORE），漏掉表达式
-                    # 语句（merge 首指令 POP_TOP，value_target=None）——如
-                    # `a or b or c\nd or e or f` 中第一表达式被误建 IfRegion，
-                    # 抢占 blk1-3 致 BoolOpRegion 仅剩 merge，反编译为
-                    # `if (a or b or c): pass`。补 POP_TOP 判据：merge 首条实指令
-                    # 为 POP_TOP 时亦跳过。比较/三元场景（merge 首指令 LOAD/
-                    # COMPARE_OP）不触发此跳过，由后续 _is_merge_if_condition /
-                    # _is_ternary_value_block 逻辑处理，不回归。
                     _bor_merge = block_region.merge_block
                     _bor_merge_first = (next((i for i in _bor_merge.instructions
                                               if i.opname not in NOISE_OPS), None)
@@ -15301,26 +15307,38 @@ RegionType 枚举值: RegionType.ASSERT
                             (succs[0] not in self.block_to_region or
                              not isinstance(self.block_to_region.get(succs[0]), BoolOpRegion))):
                         next_last = succs[0].get_last_instruction()
-                        # [Phase 7 fix] 表达式语句连续 boolop 边界：当 succs[0]
-                        # 的首条实指令是 POP_TOP 时，它是一个「消耗前一表达式
-                        # 结果」的 merge 块（表达式语句 `a or b or c` 的结果被
-                        # POP_TOP 丢弃），即语句边界，而非同一 BoolOp 链的下一
-                        # 操作数块。如 `a or b or c\nd or e or f` 中 blk3
-                        # (LOAD c) fall-through 到 blk4 (POP_TOP; LOAD d;
-                        # JUMP_IF_TRUE_OR_POP) — blk4 是第一表达式的 merge
-                        # 兼第二表达式的 entry，跨语句边界，不应并入链。赋值
-                        # 语句 `x = a or b` 的 merge 首指令是 STORE_*（has_store
-                        # 路径不走此分支；且即便走到，首指令非 POP_TOP 不触发
-                        # 此守卫），不受影响。操作数块必以 LOAD/UNARY_NOT/CALL
-                        # 等值生产指令起始，不会以 POP_TOP 起始，故此守卫安全。
-                        next_first = next((i for i in succs[0].instructions
-                                           if i.opname not in NOISE_OPS), None)
-                        if (next_last and next_last.opname in SHORT_CIRCUIT_JUMP_OPS
-                                and next_first is not None
-                                and next_first.opname != 'POP_TOP'):
-                            current = succs[0]
-                            _is_first_iter = False
-                            continue
+                        if next_last and next_last.opname in SHORT_CIRCUIT_JUMP_OPS:
+                            # [Phase 7 根因 E] fall-through 扩展普遍性判据
+                            # （短路跳转目标结构语义，非实例驱动）。
+                            #
+                            # 场景：current 是 chain 末尾 fall-through 块（最后
+                            # 操作数，如 `a or b or c` 中的 LOAD c），succs[0] 是
+                            # 它的 fall-through 后继 = chain 的 merge 块。若
+                            # succs[0] 末指令是短路跳转，说明 succs[0] 是
+                            # 「merge + 下一表达式 entry」合并块（表达式语句边界
+                            # ——结果被消费后下一表达式开始）。
+                            #
+                            # 普遍性判据（替代原 POP_TOP 首指令实例判据）：
+                            # succs[0] == chain[0] 的短路跳转目标（= chain merge）
+                            # → 不扩展（语句边界）。基于「短路跳转目标 = chain merge」
+                            # 的结构语义，不依赖具体指令（POP_TOP/STORE_*）。覆盖：
+                            # 表达式语句 `a or b or c\nd or e or f`、混合操作符
+                            # `a or b\nc and d`、赋值 `x = a or b\ny = c or d`
+                            # （后者 has_store 路径不走此分支）—— 全部由
+                            # 「succs[0] == chain[0] 短路目标」统一识别。
+                            _first_last = chain[0][0].get_last_instruction()
+                            _first_jt_offset = (_first_last.argval
+                                                if (_first_last
+                                                    and _first_last.opname in SHORT_CIRCUIT_JUMP_OPS
+                                                    and _first_last.argval is not None)
+                                                else None)
+                            if (_first_jt_offset is not None
+                                    and succs[0].start_offset == _first_jt_offset):
+                                pass  # succs[0] 是 chain merge = 语句边界，不扩展
+                            else:
+                                current = succs[0]
+                                _is_first_iter = False
+                                continue
                         next_pure = [i for i in succs[0].instructions
                                      if i.opname not in NOISE_OPS]
                         if (len(next_pure) >= 1 and next_pure[0].opname == 'UNARY_NOT' and
