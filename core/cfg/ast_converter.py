@@ -1687,8 +1687,16 @@ class CFGASTConverter:
             patterns = [self._convert_match_pattern(p) for p in pattern_dict.get('patterns', [])]
             # [修复-2026] 保留as_name绑定
             as_name = pattern_dict.get('as_name')
-            
+            # [Phase 3 adv16_match_class_nested_in_if] 保留 keyword_keys
+            # code_generator 依据 keyword_keys 区分位置参数与关键字参数
+            # （pos_count = len(patterns) - len(keyword_keys)）。此前丢失
+            # keyword_keys 导致所有 pattern 被当作位置参数，输出
+            # Outer(Inner(1)) 而非 Outer(x=Inner(1))。
+            keyword_keys = pattern_dict.get('keyword_keys', [])
+
             result = {'type': 'MatchClass', 'cls': cls, 'patterns': patterns}
+            if keyword_keys:
+                result['keyword_keys'] = keyword_keys
             if as_name:
                 result['as_name'] = as_name
             return result

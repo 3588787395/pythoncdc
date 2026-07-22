@@ -176,15 +176,15 @@ class StructuredAnalyzer:
         # [关键修复] 识别NOP序列（对应优化后的if True:语句）
         self._identify_nop_sequences()
         # [关键修复] 合并复合条件（如 if a and b:）
-        self._merge_compound_conditions()
+        self._reconstruct_compound_conditions()
         # [关键修复] 合并链式比较（如 0 < x < 100）
-        self._merge_chained_comparisons()
+        self._coalesce_chained_comparisons()
         # [关键修复] 修复结构之间的重叠
-        self._fix_structure_overlaps()
+        self._resolve_structure_overlaps()
         self._identify_with_structures()
         
         # [关键修复] 合并多上下文with（如：with ctx1() as a, ctx2() as b:）
-        self._merge_multi_context_withs()
+        self._coalesce_multi_context_withs()
         # [Python 3.10+] 识别match/case结构
         self._identify_match_structures()
         self._identify_sequences()
@@ -3685,7 +3685,7 @@ class StructuredAnalyzer:
                         self.block_to_structure[block] = if_struct
                         analyzed_blocks.add(block)
 
-    def _fix_structure_overlaps(self) -> None:
+    def _resolve_structure_overlaps(self) -> None:
         """
         [关键修复] 修复结构之间的重叠
         
@@ -4076,7 +4076,7 @@ class StructuredAnalyzer:
                     new_block_to_structure[block] = struct
         
         # [关键修复] 添加LoopStructure的映射
-        # 修复问题：_fix_structure_overlaps清除了LoopStructure的block_to_structure映射
+        # 修复问题：_resolve_structure_overlaps清除了LoopStructure的block_to_structure映射
         for struct in self.structures:
             if isinstance(struct, LoopStructure):
                 # entry_block必须映射到当前结构
@@ -4124,7 +4124,7 @@ class StructuredAnalyzer:
                 # 更新映射到合并后的结构
                 self.block_to_structure[block] = struct._merged_into
 
-    def _merge_chained_comparisons(self) -> None:
+    def _coalesce_chained_comparisons(self) -> None:
         """
         [关键修复] 合并链式比较（如 0 < x < 100）
         
@@ -9575,7 +9575,7 @@ class StructuredAnalyzer:
                 break
         return elif_chain
     
-    def _merge_compound_conditions_v2(self) -> None:
+    def _reconstruct_compound_conditions_v2(self) -> None:
         """
         检测并合并复合条件链（改进版）
         
@@ -9679,7 +9679,7 @@ class StructuredAnalyzer:
         
         # 合并每个复合条件链
         for chain in chains:
-            self._merge_condition_chain_v2(chain)
+            self._resolve_condition_chain_v2(chain)
 
     def _has_chain_compare_pattern(self, block: BasicBlock) -> bool:
         """
@@ -9906,7 +9906,7 @@ class StructuredAnalyzer:
                 return block_id
         return None
     
-    def _merge_condition_chain_v2(self, chain: List[BasicBlock]) -> None:
+    def _resolve_condition_chain_v2(self, chain: List[BasicBlock]) -> None:
         """合并复合条件链（改进版）"""
         if len(chain) < 2:
             return
@@ -9981,7 +9981,7 @@ class StructuredAnalyzer:
         for block in chain:
             self.block_to_structure[block] = if_struct
     
-    def _merge_compound_conditions(self) -> None:
+    def _reconstruct_compound_conditions(self) -> None:
         """
         检测并合并复合条件链
         
@@ -10126,9 +10126,9 @@ class StructuredAnalyzer:
         
         # 合并每个复合条件链
         for chain in chains:
-            self._merge_condition_chain(chain)
+            self._resolve_condition_chain(chain)
     
-    def _merge_condition_chain(self, chain: List[BasicBlock]) -> None:
+    def _resolve_condition_chain(self, chain: List[BasicBlock]) -> None:
         """
         合并复合条件链
         
@@ -14357,7 +14357,7 @@ class StructuredAnalyzer:
 
         return None
 
-    def _merge_multi_context_withs(self) -> None:
+    def _coalesce_multi_context_withs(self) -> None:
         """
         [关键修复] 合并多上下文with结构
 

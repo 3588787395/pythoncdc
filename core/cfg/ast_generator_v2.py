@@ -2656,10 +2656,10 @@ class ASTGeneratorV2:
         # 复合条件如 x > 0 and y > 0 会被识别为多个if结构
         # 这里将它们合并为一个复合条件表达式
         # 注意：当前禁用复合条件合并，因为它会破坏AST结构
-        # ast_nodes = self._merge_compound_conditions_in_ast(ast_nodes)
+        # ast_nodes = self._reconstruct_compound_conditions_in_ast(ast_nodes)
         
             # [关键修复] 后处理：合并多装饰器模式
-        ast_nodes = self._merge_multi_decorators(ast_nodes)
+        ast_nodes = self._combine_multi_decorators(ast_nodes)
         
         # [关键修复] 检测是否是函数反编译（通过检查CFG是否有code属性）
         code_obj = getattr(self.cfg, 'code', None)
@@ -2741,7 +2741,7 @@ class ASTGeneratorV2:
                 }
         
         # [关键修复] 修复复合条件赋值问题（如if True:嵌套）
-        ast_nodes = self._fix_compound_condition_assignment(ast_nodes)
+        ast_nodes = self._reconstruct_compound_condition_assignment(ast_nodes)
 
         # [关键修复] 获取原始常量池信息，用于保持字节码一致性
         code_obj = getattr(self.cfg, 'code', None)
@@ -2870,7 +2870,7 @@ class ASTGeneratorV2:
         
         return False
     
-    def _merge_multi_decorators(self, ast_nodes: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _combine_multi_decorators(self, ast_nodes: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """[关键修复] 合并多装饰器模式
         
         如果有一个Assign语句和一个后续的Expr语句，且Expr的value是Call（装饰器）
@@ -2884,7 +2884,7 @@ class ASTGeneratorV2:
             # [关键修复] 递归处理Sequence节点
             if node.get('type') == 'Sequence':
                 statements = node.get('statements', [])
-                node['statements'] = self._merge_multi_decorators(statements)
+                node['statements'] = self._combine_multi_decorators(statements)
                 result.append(node)
                 i += 1
                 continue
@@ -2898,7 +2898,7 @@ class ASTGeneratorV2:
                     # 这里我们需要从原始代码中获取类体
                     # 由于类体已经在其他地方处理，这里只是递归处理body
                     pass
-                node['body'] = self._merge_multi_decorators(body)
+                node['body'] = self._combine_multi_decorators(body)
                 result.append(node)
                 i += 1
                 continue
@@ -3090,7 +3090,7 @@ class ASTGeneratorV2:
                                     class_ast = class_generator.generate()
                                     if class_ast and class_ast.get('body'):
                                         class_body = class_ast['body']
-                                        class_body = self._merge_multi_decorators(class_body)
+                                        class_body = self._combine_multi_decorators(class_body)
                                 except Exception:
                                     pass
                         
@@ -3219,11 +3219,11 @@ class ASTGeneratorV2:
         
         # [关键修复] 合并连续的 Assign 和 AnnAssign
         # 例如：age = 0 和 age: int 合并为 age: int = 0
-        result = self._merge_ann_assign_with_assign(result)
+        result = self._combine_ann_assign_with_assign(result)
         
         return result
     
-    def _fix_compound_condition_assignment(self, ast_nodes: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _reconstruct_compound_condition_assignment(self, ast_nodes: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """[关键修复] 修复复合条件赋值问题
         
         复合条件赋值如 condition = x > 0 and y < 10 or z == 'test' and not flag
@@ -3238,7 +3238,7 @@ class ASTGeneratorV2:
         
         for node in ast_nodes:
             if isinstance(node, list):
-                result.extend(self._fix_compound_condition_assignment(node))
+                result.extend(self._reconstruct_compound_condition_assignment(node))
                 continue
             if not isinstance(node, dict):
                 result.append(node)
@@ -3248,15 +3248,15 @@ class ASTGeneratorV2:
                 if 'body' in node:
                     body = node['body']
                     if isinstance(body, list):
-                        node['body'] = self._fix_compound_condition_assignment(body)
+                        node['body'] = self._reconstruct_compound_condition_assignment(body)
                     elif isinstance(body, dict) and body.get('type') == 'Block':
                         if 'nodes' in body:
-                            body['nodes'] = self._fix_compound_condition_assignment(body['nodes'])
+                            body['nodes'] = self._reconstruct_compound_condition_assignment(body['nodes'])
                 # 处理orelse
                 if 'orelse' in node:
                     orelse = node['orelse']
                     if isinstance(orelse, list):
-                        node['orelse'] = self._fix_compound_condition_assignment(orelse)
+                        node['orelse'] = self._reconstruct_compound_condition_assignment(orelse)
                 result.append(node)
                 continue
             
@@ -3268,10 +3268,10 @@ class ASTGeneratorV2:
                 
                 # 首先递归处理body和orelse
                 if body:
-                    body = self._fix_compound_condition_assignment(body)
+                    body = self._reconstruct_compound_condition_assignment(body)
                     node['body'] = body
                 if orelse:
-                    orelse = self._fix_compound_condition_assignment(orelse)
+                    orelse = self._reconstruct_compound_condition_assignment(orelse)
                     node['orelse'] = orelse
                 
                 # 检查是否是if True:模式（可能是复合条件赋值的错误生成）
@@ -3323,7 +3323,7 @@ class ASTGeneratorV2:
                         else:
                             # 替换body为内层if的body（去除嵌套的if True:）
                             # 递归处理内层body
-                            inner_body = self._fix_compound_condition_assignment(inner_body)
+                            inner_body = self._reconstruct_compound_condition_assignment(inner_body)
                             node['body'] = inner_body
 
                 # [关键修复] 检查body中是否包含多层嵌套的if True:模式
@@ -3355,7 +3355,7 @@ class ASTGeneratorV2:
         
         return result
     
-    def _merge_ann_assign_with_assign(self, ast_nodes: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _combine_ann_assign_with_assign(self, ast_nodes: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """合并类型注解和赋值语句
         
         例如：
@@ -3416,7 +3416,7 @@ class ASTGeneratorV2:
                     return result
         return None
 
-    def _merge_compound_conditions_in_ast(self, ast_nodes: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _reconstruct_compound_conditions_in_ast(self, ast_nodes: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """
         后处理：合并AST中的复合条件
         
@@ -22500,7 +22500,7 @@ class ASTGeneratorV2:
                                         if class_ast and class_ast.get('body'):
                                             class_body = class_ast['body']
                                             # [关键修复] 对类体也应用装饰器合并
-                                            class_body = self._merge_multi_decorators(class_body)
+                                            class_body = self._combine_multi_decorators(class_body)
                                     except Exception as e:
                                         pass
 
@@ -22669,7 +22669,7 @@ class ASTGeneratorV2:
                                             class_ast = class_generator.generate()
                                             if class_ast and class_ast.get('body'):
                                                 class_body = class_ast['body']
-                                                class_body = self._merge_multi_decorators(class_body)
+                                                class_body = self._combine_multi_decorators(class_body)
                                         except Exception:
                                             pass
                                 

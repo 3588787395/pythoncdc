@@ -1910,7 +1910,7 @@ AST 映射规则:
       若存在 BUILD_STRING（f-string 情况），从后向前定位 RAISE_VARARGS 边界
       raise_call_start，过滤该边界及之后的 PRECALL/CALL；
       否则一律跳过 PRECALL/CALL。剩余指令交由 expr_reconstructor 重建。
-  - None 检查方向修正（_fix_assert_none_check_direction）:
+  - None 检查方向修正（_invert_assert_none_check_direction）:
       对 Compare(op='is'/'is not', x, None) 互换 op；递归处理 BoolOp 包裹的
       None 检查（如 `assert a and x is not None`）。原因: expr_reconstructor
       基于 if 语义解析 NONE_CHECK_OPS，而 assert 的跳转语义与 if 相反
@@ -1946,7 +1946,7 @@ AST 映射规则:
                 list(region.chained_compare_ops),
             )
             if chained_cond is not None:
-                chained_cond = self._fix_assert_none_check_direction(chained_cond)
+                chained_cond = self._invert_assert_none_check_direction(chained_cond)
                 for block in region.blocks:
                     self.generated_blocks.add(block)
                 result = {
@@ -1970,7 +1970,7 @@ AST 映射规则:
                 list(region.boolop_chain_ops),
             )
             if boolop_cond is not None:
-                boolop_cond = self._fix_assert_none_check_direction(boolop_cond)
+                boolop_cond = self._invert_assert_none_check_direction(boolop_cond)
                 for block in region.blocks:
                     self.generated_blocks.add(block)
                 result = {
@@ -2010,7 +2010,7 @@ AST 映射规则:
         if cond_instrs:
             expr = self.expr_reconstructor.reconstruct(cond_instrs)
             if expr:
-                condition = self._fix_assert_none_check_direction(expr)
+                condition = self._invert_assert_none_check_direction(expr)
         message = None
         if region.message_block:
             # [R8 fix] 若 message_block 同时是某嵌套 TernaryRegion 的 entry，
@@ -2069,7 +2069,7 @@ AST 映射规则:
             result['msg'] = message
         return result
 
-    def _fix_assert_none_check_direction(self, expr: Dict[str, Any]) -> Dict[str, Any]:
+    def _invert_assert_none_check_direction(self, expr: Dict[str, Any]) -> Dict[str, Any]:
         """修复assert上下文中None检查操作码的方向性问题
 
         【问题根因】
@@ -2114,7 +2114,7 @@ AST 映射规则:
         if expr.get('type') == 'BoolOp':
             values = expr.get('values', [])
             if values:
-                fixed_values = [self._fix_assert_none_check_direction(v) for v in values]
+                fixed_values = [self._invert_assert_none_check_direction(v) for v in values]
                 if any(fv is not v for fv, v in zip(fixed_values, values)):
                     fixed = dict(expr)
                     fixed['values'] = fixed_values
@@ -2238,7 +2238,7 @@ AST 映射规则:
           - 每段从对应块抽取非跳转/非噪声指令，交由 expr_reconstructor 重建
             子表达式（通常是 Compare，如 a > 0）。
           - 跳转方向修正：assert 上下文中 POP_JUMP_IF_NOT_NONE/IF_NONE 的方向
-            与 if 相反，由 _fix_assert_none_check_direction 在外层统一处理；
+            与 if 相反，由 _invert_assert_none_check_direction 在外层统一处理；
             本方法只重建原始 BoolOp 结构。
 
         返回: BoolOp dict 或 None（操作数重建失败时）。
@@ -2278,7 +2278,7 @@ AST 映射规则:
                 continue
             # None 检查方向修正（assert 上下文）：和 BoolOpRegion 一致，
             # 把 NONE_CHECK 转换为 Compare，方向按 op 修正，
-            # 外层 _fix_assert_none_check_direction 会再次处理（递归进入 values）。
+            # 外层 _invert_assert_none_check_direction 会再次处理（递归进入 values）。
             if last_instr and last_instr.opname in NONE_CHECK_OPS:
                 _is_not_none_op = 'NOT_NONE' in last_instr.opname
                 if op == 'and':
@@ -4734,7 +4734,19 @@ AST 映射规则:
                 for _succ_ft in hdr.successors:
                     if _succ_ft.start_offset != _cond_break_instr.argval:
                         _ft_role_tmp = self.region_analyzer.get_block_role(_succ_ft)
-                        if _ft_role_tmp == BlockRole.LOOP_BACK_EDGE:
+                        # [Phase 4 回归修复] back_edge_block 可能被标注为
+                        # LOOP_BACK_EDGE 或 CONTINUE/PURE_CONTINUE（取决于
+                        # _annotate_all_roles 的路径）。CPython 3.11 在
+                        # `while a and b:` 的 back-edge 处复制复合条件，
+                        # header 块含 POP_JUMP_FORWARD_IF_FALSE（跳向 BREAK）
+                        # + fallthrough 是 back-edge 块（含
+                        # POP_JUMP_BACKWARD_IF_TRUE 跳回 body）。这是复合
+                        # 循环条件的 back-edge 重检，不是 if-break。三种角色
+                        # 都要接受，否则 back-edge 块标为 CONTINUE 时会漏检，
+                        # 生成多余的 `if cond: pass else: break`。
+                        if _ft_role_tmp in (BlockRole.LOOP_BACK_EDGE,
+                                            BlockRole.CONTINUE,
+                                            BlockRole.PURE_CONTINUE):
                             _ft_last_i = _succ_ft.get_last_instruction()
                             if _ft_last_i and _ft_last_i.opname in BACKWARD_CONDITIONAL_JUMP_OPS:
                                 _is_compound_loop_cond = True
@@ -5021,78 +5033,100 @@ AST 映射规则:
                 if _r.entry == block or _r.condition_block == block:
                     nested_if = _r
                     break
-            if nested_if is not None:
-                cond_succs = list(block.conditional_successors)
-                if len(cond_succs) == 2:
-                    then_succ, _ = sorted(cond_succs, key=lambda s: s.start_offset)
-                    then_last = then_succ.get_last_instruction()
-                    if then_last and then_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
-                        cond_instrs = [i for i in block.instructions
-                                      if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                        jump_instr = None
-                        for i in cond_instrs:
-                            if i.opname in ('POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_FORWARD_IF_FALSE',
-                                           'POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE'):
-                                jump_instr = i
-                                break
-                        if jump_instr:
-                            pre_cond_instrs = [i for i in cond_instrs if i != jump_instr]
-                            if pre_cond_instrs:
-                                _stmt_end = len(pre_cond_instrs)
-                                for _si in range(len(pre_cond_instrs) - 1, -1, -1):
-                                    if pre_cond_instrs[_si].opname in ('POP_TOP', 'RETURN_VALUE', 'RETURN_CONST'):
-                                        _stmt_end = _si + 1
-                                        break
-                                    if pre_cond_instrs[_si].opname in ('COMPARE_OP', 'IS_OP', 'IS_NOT', 'CONTAINS_OP', 'NOT_OP', 'UNARY_NOT'):
-                                        _stmt_end = _si
-                                        break
-                                if _stmt_end > 0 and _stmt_end < len(pre_cond_instrs):
-                                    _leading = pre_cond_instrs[:_stmt_end]
-                                    _cond_instrs = pre_cond_instrs[_stmt_end:]
-                                    _acc = []
-                                    for _li in _leading:
-                                        _acc.append(_li)
-                                        if _li.opname in ('POP_TOP', 'STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF', 'RETURN_VALUE', 'RETURN_CONST'):
-                                            _ls = self._build_statement(_acc)
-                                            if _ls:
-                                                body_stmts.append(_ls)
-                                            _acc = []
-                                    test_expr = self.expr_reconstructor.reconstruct(_cond_instrs)
-                                else:
-                                    test_expr = self.expr_reconstructor.reconstruct(pre_cond_instrs)
-                                if test_expr is None:
-                                    test_expr = self._build_statement(pre_cond_instrs)
-                                    if test_expr and test_expr.get('type') == 'Expr':
-                                        test_expr = test_expr.get('value')
-                                if test_expr:
-                                    # Phase 41修复: 循环内if+return值保持为return（for循环路径）
-                                    _then_ret_val = None
-                                    _then_target_block = then_succ
-                                    if _then_target_block:
-                                        _ti = [i for i in _then_target_block.instructions
-                                              if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                                        if _ti and _ti[0].opname in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF'):
-                                            _then_ret_val = {'type': 'Name', 'id': _ti[0].argval, 'ctx': 'Load'}
-                                        elif _ti and _ti[0].opname == 'LOAD_CONST':
-                                            _then_ret_val = {'type': 'Constant', 'value': _ti[0].argval}
-                                    if _then_ret_val is not None:
-                                        body_stmts.append({
-                                            'type': 'If',
-                                            'test': test_expr,
-                                            'body': [{'type': 'Return', 'value': _then_ret_val}],
-                                            'orelse': None
-                                        })
-                                    else:
-                                        body_stmts.append({
-                                            'type': 'If',
-                                            'test': test_expr,
-                                            'body': [{'type': 'Break'}],
-                                            'orelse': None
-                                        })
+            # [Phase 3 adv17_while_multi_if_flow] 即使没有嵌套 IfRegion，
+            # 也检测 header 块的 if/break（或 if/return）模式。region
+            # analyzer 不为 loop header 创建 IfRegion（header 已属于
+            # LoopRegion），导致 while True 内首个 if x: break 丢失。
+            # 此前仅在 nested_if is not None 时检测，现改为始终检测。
+            cond_succs = list(block.conditional_successors)
+            if len(cond_succs) == 2:
+                then_succ, _ = sorted(cond_succs, key=lambda s: s.start_offset)
+                then_last = then_succ.get_last_instruction()
+                if then_last and then_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                    cond_instrs = [i for i in block.instructions
+                                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                    jump_instr = None
+                    for i in cond_instrs:
+                        if i.opname in ('POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_FORWARD_IF_FALSE',
+                                       'POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE'):
+                            jump_instr = i
+                            break
+                    if jump_instr:
+                        pre_cond_instrs = [i for i in cond_instrs if i != jump_instr]
+                        if pre_cond_instrs:
+                            _stmt_end = len(pre_cond_instrs)
+                            for _si in range(len(pre_cond_instrs) - 1, -1, -1):
+                                if pre_cond_instrs[_si].opname in ('POP_TOP', 'RETURN_VALUE', 'RETURN_CONST'):
+                                    _stmt_end = _si + 1
+                                    break
+                                if pre_cond_instrs[_si].opname in ('COMPARE_OP', 'IS_OP', 'IS_NOT', 'CONTAINS_OP', 'NOT_OP', 'UNARY_NOT'):
+                                    _stmt_end = _si
+                                    break
+                            if _stmt_end > 0 and _stmt_end < len(pre_cond_instrs):
+                                _leading = pre_cond_instrs[:_stmt_end]
+                                _cond_instrs = pre_cond_instrs[_stmt_end:]
+                                _acc = []
+                                for _li in _leading:
+                                    _acc.append(_li)
+                                    if _li.opname in ('POP_TOP', 'STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF', 'RETURN_VALUE', 'RETURN_CONST'):
+                                        _ls = self._build_statement(_acc)
+                                        if _ls:
+                                            body_stmts.append(_ls)
+                                        _acc = []
+                                test_expr = self.expr_reconstructor.reconstruct(_cond_instrs)
+                            else:
+                                test_expr = self.expr_reconstructor.reconstruct(pre_cond_instrs)
+                            if test_expr is None:
+                                test_expr = self._build_statement(pre_cond_instrs)
+                                if test_expr and test_expr.get('type') == 'Expr':
+                                    test_expr = test_expr.get('value')
+                            if test_expr:
+                                # [Phase 3 adv17_while_multi_if_flow]
+                                # 当 then 块是 break 块（在 region.break_blocks
+                                # 中）时，生成 Break 而非 Return。CPython 把
+                                # while True 末尾的 break 优化为
+                                # LOAD_CONST None + RETURN_VALUE（peephole），
+                                # 此前代码检测到 LOAD_CONST 就生成 Return(None)，
+                                # 但实际应为 Break。
+                                if then_succ in region.break_blocks:
+                                    body_stmts.append({
+                                        'type': 'If',
+                                        'test': test_expr,
+                                        'body': [{'type': 'Break'}],
+                                        'orelse': None
+                                    })
                                     self.generated_blocks.add(block)
                                     for b in then_succ.blocks if hasattr(then_succ, 'blocks') else [then_succ]:
                                         self.generated_blocks.add(b)
                                     return
+                                # Phase 41修复: 循环内if+return值保持为return（for循环路径）
+                                _then_ret_val = None
+                                _then_target_block = then_succ
+                                if _then_target_block:
+                                    _ti = [i for i in _then_target_block.instructions
+                                          if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                                    if _ti and _ti[0].opname in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF'):
+                                        _then_ret_val = {'type': 'Name', 'id': _ti[0].argval, 'ctx': 'Load'}
+                                    elif _ti and _ti[0].opname == 'LOAD_CONST':
+                                        _then_ret_val = {'type': 'Constant', 'value': _ti[0].argval}
+                                if _then_ret_val is not None:
+                                    body_stmts.append({
+                                        'type': 'If',
+                                        'test': test_expr,
+                                        'body': [{'type': 'Return', 'value': _then_ret_val}],
+                                        'orelse': None
+                                    })
+                                else:
+                                    body_stmts.append({
+                                        'type': 'If',
+                                        'test': test_expr,
+                                        'body': [{'type': 'Break'}],
+                                        'orelse': None
+                                    })
+                                self.generated_blocks.add(block)
+                                for b in then_succ.blocks if hasattr(then_succ, 'blocks') else [then_succ]:
+                                    self.generated_blocks.add(b)
+                                return
         _block_stmts = self._generate_block_statements(block)
         _filtered: List[Dict[str, Any]] = []
         _has_break = False
@@ -6414,6 +6448,87 @@ AST 映射规则:
             'value': chained_cond,
         }
 
+    def _build_chained_compare_with_ternary_middle(self, cond_block, chain_blocks, ops, ternary_region):
+        """[Phase 3 adv15_ternary_in_chain_compare_body] 构建含三元中段的链式比较 Compare。
+
+        用于 ``0 < (a if p else b) < 10`` 形态：cond_block 是三元的 merge_block，
+        三元 IfExp 作为链式比较的中段操作数，左操作数被困在三元的 condition_block
+        入口（test 之前）。
+
+        算法与 _if_extract_condition_from_instructions 的 compare 上下文路径一致：
+          - 生成三元 IfExp 表达式
+          - 按 [cond_block] + chain_blocks 分段提取 LOAD_* 指令
+          - 首段有 LOAD_* → 三元在左：left=ternary, comparators=各段操作数
+          - 首段无 LOAD_* → 三元在右/中段：left=被困左操作数, comparators=[ternary, ...]
+        """
+        _ternary_result = self._generate_ternary(ternary_region)
+        _ternary_expr = None
+        if _ternary_result:
+            for _item in (_ternary_result if isinstance(_ternary_result, list) else [_ternary_result]):
+                if isinstance(_item, dict):
+                    if _item.get('type') == 'Expr':
+                        _ternary_expr = _item.get('value')
+                    elif _item.get('type') == 'IfExp':
+                        _ternary_expr = _item
+        if _ternary_expr is None:
+            return None
+        for _b in ternary_region.blocks:
+            self.generated_blocks.add(_b)
+        _CMP_SKIP_OPS = frozenset({
+            'COMPARE_OP', 'SWAP', 'COPY', 'POP_TOP',
+            'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_FALSE',
+            'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_TRUE',
+            'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_BACKWARD_IF_NONE',
+            'POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_BACKWARD_IF_NOT_NONE',
+            'POP_JUMP_IF_FALSE', 'POP_JUMP_IF_TRUE',
+            'POP_JUMP_IF_NONE', 'POP_JUMP_IF_NOT_NONE',
+            'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE',
+            'JUMP_IF_TRUE_OR_POP', 'JUMP_IF_FALSE_OR_POP',
+            'CACHE', 'NOP', 'RESUME',
+        })
+        _segments = [cond_block] + list(chain_blocks)
+        _seg_load_instrs = []
+        for _seg in _segments:
+            _loads_i = []
+            for _instr in _seg.instructions:
+                if _instr.opname in NOISE_OPS:
+                    continue
+                if _instr.opname == 'COMPARE_OP':
+                    continue
+                elif _instr.opname in _CMP_SKIP_OPS:
+                    continue
+                else:
+                    _loads_i.append(_instr)
+            _seg_load_instrs.append(_loads_i)
+        _first_loads = _seg_load_instrs[0] if _seg_load_instrs else []
+        _ternary_is_left = len(_first_loads) > 0
+        if _ternary_is_left:
+            _left_expr = _ternary_expr
+            _comparators = []
+            for _loads in _seg_load_instrs:
+                if _loads:
+                    _r = self.expr_reconstructor.reconstruct(_loads)
+                    if _r:
+                        _comparators.append(_r)
+        else:
+            _lhs_instrs = self._extract_trapped_lhs_from_ternary(ternary_region)
+            _left_expr = self.expr_reconstructor.reconstruct(_lhs_instrs) if _lhs_instrs else None
+            _comparators = [_ternary_expr]
+            for _seg_idx in range(1, len(_seg_load_instrs)):
+                _loads = _seg_load_instrs[_seg_idx]
+                if _loads:
+                    _r = self.expr_reconstructor.reconstruct(_loads)
+                    if _r:
+                        _comparators.append(_r)
+        if _left_expr is None or len(_comparators) != len(ops):
+            return None
+        return {
+            'type': 'Compare',
+            'left': _left_expr,
+            'ops': list(ops),
+            'comparators': _comparators,
+        }
+
     def _if_generate_full_elif_chain(self, region: IfRegion) -> Dict[str, Any]:
         """
         生成完整的 if-elif[-else] 链结构
@@ -7356,6 +7471,29 @@ AST 映射规则:
                         self.generated_blocks.add(b)
                     self._generated_regions.add(loop_nid)
                 continue
+            # [Phase 3 adv15_ternary_in_tuple_unpack / adv15_ternary_slice_in_body]
+            # 跳过元组解包链 / 切片链的前驱三元：前驱三元（无 value_target，
+            # 其 merge_block 是后继三元的 entry）由链尾三元的 _generate_ternary
+            # 路径统一收集并重建为 Assign(targets=[Tuple]/[Name], value=Tuple/Subscript)，
+            # 此处独立生成会重复出栈且误标记共享块（前驱 merge == 后继 entry）
+            # 导致链尾三元被跳过。链尾 merge_block 首指令为 SWAP N 或 BUILD_SLICE N。
+            if (isinstance(child, TernaryRegion)
+                    and not getattr(child, 'value_target', None)
+                    and child.merge_block is not None):
+                _is_unpack_pred = False
+                for _r in self.regions:
+                    if (isinstance(_r, TernaryRegion) and _r is not child
+                            and _r.entry is child.merge_block
+                            and getattr(_r, 'value_target', None)
+                            and _r.merge_block is not None):
+                        _pred_mb_eff = [i for i in _r.merge_block.instructions
+                                        if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                        if (_pred_mb_eff and _pred_mb_eff[0].opname in ('SWAP', 'BUILD_SLICE')
+                                and _pred_mb_eff[0].arg and _pred_mb_eff[0].arg >= 2):
+                            _is_unpack_pred = True
+                            break
+                if _is_unpack_pred:
+                    continue
             child_id = id(child)
             # [R15 Mode A] Skip ternary with merge_context='iter' consumed
             # by a LoopRegion (for-iter). The LoopRegion generator calls
@@ -7863,6 +8001,44 @@ AST 映射规则:
                     elif_condition = {'type': 'BoolOp', 'op': _chain_op, 'values': _elif_parts}
                     for _cb in _chain_blocks[1:]:
                         self.generated_blocks.add(_cb)
+        # [Phase 3 adv15_ternary_elif_test] 三元作为 elif 条件：
+        # 当 elif_cond_block 是 TernaryRegion（merge_context='while_cond'）的 entry 时，
+        # 整个三元表达式就是 elif 条件。从 TernaryRegion 重建 IfExp AST。
+        # 此时三元的 true_value_block/false_value_block 各自带 POP_JUMP_IF_FALSE
+        # 跳到 falsy path（CPython 3.11+ 内联条件测试），不能简单从 elif_cond_block
+        # 的指令重建（那只会得到 `c`，丢失 `b if c else d` 的整体语义）。
+        if elif_condition is None:
+            for _tr in self.region_analyzer.regions:
+                if (isinstance(_tr, TernaryRegion)
+                        and _tr.entry is elif_cond_block
+                        and getattr(_tr, 'merge_context', None) == 'while_cond'):
+                    _te_result = self._generate_ternary(_tr)
+                    _te_expr = None
+                    if isinstance(_te_result, list):
+                        for _item in _te_result:
+                            if isinstance(_item, dict):
+                                if _item.get('type') == 'IfExp':
+                                    _te_expr = _item
+                                    break
+                                elif _item.get('type') == 'If':
+                                    # while_cond 三元生成完整 If 语句，
+                                    # 其 test 即 IfExp 表达式
+                                    _te_expr = _item.get('test')
+                                    break
+                                elif _item.get('type') == 'Expr':
+                                    _te_expr = _item.get('value')
+                    elif isinstance(_te_result, dict):
+                        if _te_result.get('type') == 'IfExp':
+                            _te_expr = _te_result
+                        elif _te_result.get('type') == 'If':
+                            _te_expr = _te_result.get('test')
+                        elif _te_result.get('type') == 'Expr':
+                            _te_expr = _te_result.get('value')
+                    if _te_expr is not None:
+                        elif_condition = _te_expr
+                        for _b in _tr.blocks:
+                            self.generated_blocks.add(_b)
+                    break
         if elif_condition is None and elif_cond_instrs:
             expr2 = self.expr_reconstructor.reconstruct(elif_cond_instrs)
             if expr2:
@@ -9442,6 +9618,22 @@ AST 映射规则:
                             _boolop_negate = True
                 if _boolop_negate:
                     boolop_expr = _negate_expr(boolop_expr)
+                # [CPython peephole] BoolOp result used in a comparison:
+                # `if (a or b) == c:` compiles to:
+                #   LOAD a; JUMP_IF_TRUE_OR_POP to merge
+                #   LOAD b
+                #   merge: LOAD c; COMPARE_OP ==; POP_JUMP_IF_FALSE
+                # The BoolOpRegion's merge_block contains the COMPARE_OP /
+                # IS_OP / CONTAINS_OP that compares the boolop result (left
+                # operand, on stack) with the right operand (loaded in merge).
+                # The boolop expression built above is only the LEFT operand;
+                # the comparison operator and right operand live in the
+                # merge_block and must be reconstructed to form the full
+                # condition `Compare(left=boolop, ops=[op], comparators=[rhs])`.
+                # Without this, `if (a or b) == c:` decompiles as `if a or b:`
+                # (losing the `== c` part).
+                boolop_expr = self._wrap_boolop_with_merge_compare(
+                    boolop_expr, boolop_region_for_cond, region)
                 boolop_region_for_cond.condition_expr = boolop_expr
                 for b in boolop_region_for_cond.blocks:
                     self.generated_blocks.add(b)
@@ -9909,6 +10101,50 @@ AST 映射规则:
                     if _consumed_by_loop:
                         for b in child.blocks:
                             self.generated_blocks.add(b)
+                        self._generated_regions.add(child_id)
+                        continue
+                # [Phase 3 adv15_ternary_in_chain_compare_body] Skip ternary
+                # with merge_context='compare' that is consumed by a sibling
+                # IfRegion with chained_compare_blocks (e.g.
+                # ``z = 0 < (a if p else b) < 10`` inside ``if c:``).
+                # The ternary's merge_block is the entry/condition_block of the
+                # consuming IfRegion. The IfRegion generator
+                # (_generate_value_context_chain_compare_assign, which calls
+                # _build_chained_compare_with_ternary_middle) will invoke
+                # _generate_ternary itself to extract the IfExp. Without this
+                # guard, the ternary is emitted as a standalone Expr (here),
+                # AND the merge_block is marked as generated, causing the
+                # consuming IfRegion to be skipped entirely (chain structure
+                # lost, z assignment missing).
+                if (isinstance(child, TernaryRegion)
+                        and getattr(child, 'merge_context', None) == 'compare'
+                        and child.merge_block is not None):
+                    _consuming_if = None
+                    for _ir in self.regions:
+                        if (isinstance(_ir, IfRegion) and _ir is not region
+                                and _ir.entry is child.merge_block
+                                and getattr(_ir, 'chained_compare_blocks', None)):
+                            _consuming_if = _ir
+                            break
+                    if _consuming_if is not None:
+                        _if_id = id(_consuming_if)
+                        if _if_id not in self._generated_regions and _if_id not in self._generating_regions:
+                            self._generating_regions.add(_if_id)
+                            try:
+                                _if_ast = self._generate_region(_consuming_if)
+                            finally:
+                                self._generating_regions.discard(_if_id)
+                            if _if_ast:
+                                if isinstance(_if_ast, list):
+                                    stmts.extend(_if_ast)
+                                else:
+                                    stmts.append(_if_ast)
+                        # Mark only the ternary's non-merge blocks as
+                        # generated. The merge_block is owned by the
+                        # consuming IfRegion (already marked above).
+                        for b in child.blocks:
+                            if b is not child.merge_block:
+                                self.generated_blocks.add(b)
                         self._generated_regions.add(child_id)
                         continue
                 if child_id not in self._generated_regions and child_id not in self._generating_regions:
@@ -11239,10 +11475,10 @@ AST 映射规则:
             return self._generate_if(region)
         if blocks is not None:
             stmts = self._process_if_blocks(blocks, region, branch='standalone')
-            return self._merge_compares(stmts)
+            return self._coalesce_compares(stmts)
         return []
 
-    def _merge_compares(self, stmts):
+    def _coalesce_compares(self, stmts):
         if not stmts or self.cfg.name == '<module>':
             return stmts
         result, i = [], 0
@@ -12258,6 +12494,11 @@ AST 映射规则:
                         handler_node['name'] = _exc_name_from_ternary
                 elif exc_type:
                     handler_node['exc_type'] = {'type': 'Name', 'id': str(exc_type), 'ctx': 'Load'} if isinstance(exc_type, str) else exc_type
+                # [Phase 3 adv17_try_except_star] 标记 except* handler。
+                # 当 handler_entry 含 CHECK_EG_MATCH 时，是 except* 异常组语法。
+                # code_generator 读取此标记输出 'except*' 而非 'except'。
+                if handler_entry and any(i.opname == 'CHECK_EG_MATCH' for i in handler_entry.instructions):
+                    handler_node['is_except_star'] = True
                 handlers.append(handler_node)
 
             # try_try嵌套补偿：region_analyzer可能遗漏外层except handler
@@ -12583,26 +12824,43 @@ AST 映射规则:
         return None
 
     def _generate_handler_body_statements(self, block: BasicBlock) -> List[Dict[str, Any]]:
+        # [Phase 3 adv17_try_except_star] 检测是否是 except* 框架块
+        _is_except_star_block = any(i.opname in ('CHECK_EG_MATCH', 'PREP_RERAISE_STAR') for i in block.instructions)
+        _EXC_STAR_FRAMEWORK_OPS = ()
+        if _is_except_star_block:
+            # except* 框架指令：BUILD_LIST, SWAP, LIST_APPEND, PREP_RERAISE_STAR,
+            # COPY（在 CHECK_EG_MATCH/PREP_RERAISE_STAR 上下文中）,
+            # POP_JUMP_FORWARD_IF_NONE/POP_JUMP_FORWARD_IF_NOT_NONE（分派跳转）
+            _EXC_STAR_FRAMEWORK_OPS = ('BUILD_LIST', 'LIST_APPEND', 'PREP_RERAISE_STAR', 'SWAP')
         handler_instrs = [i for i in block.instructions
                           if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
                                                'PUSH_EXC_INFO', 'POP_EXCEPT', 'POP_TOP',
                                                'CHECK_EXC_MATCH', 'CHECK_EG_MATCH',
-                                               'WITH_EXCEPT_START')]
+                                               'WITH_EXCEPT_START')
+                          and i.opname not in _EXC_STAR_FRAMEWORK_OPS]
         exc_dispatch_jump_offset = None
         for idx, instr in enumerate(block.instructions):
             if instr.opname in ('CHECK_EXC_MATCH', 'CHECK_EG_MATCH'):
                 for next_instr in block.instructions[idx + 1:]:
+                    # [Phase 3 adv17_try_except_star] 补全 except* 的分派跳转
+                    # POP_JUMP_FORWARD_IF_NONE / POP_JUMP_FORWARD_IF_NOT_NONE
                     if next_instr.opname in ('POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_FALSE',
                                              'JUMP_IF_FALSE', 'JUMP_IF_TRUE',
-                                             'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_TRUE'):
+                                             'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_TRUE',
+                                             'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_BACKWARD_IF_NONE',
+                                             'POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_BACKWARD_IF_NOT_NONE',
+                                             'POP_JUMP_IF_NONE', 'POP_JUMP_IF_NOT_NONE'):
                         exc_dispatch_jump_offset = next_instr.offset
                         break
                     elif next_instr.opname not in ('LOAD_GLOBAL', 'LOAD_NAME', 'LOAD_CONST',
-                                                   'LOAD_ATTR', 'LOAD_DEREF'):
+                                                   'LOAD_ATTR', 'LOAD_DEREF', 'COPY', 'BUILD_LIST', 'SWAP'):
                         break
                 break
         if exc_dispatch_jump_offset is not None:
             handler_instrs = [i for i in handler_instrs if i.offset > exc_dispatch_jump_offset]
+        # [Phase 3 adv17_try_except_star] except* 块中 COPY 是框架指令，过滤掉
+        if _is_except_star_block:
+            handler_instrs = [i for i in handler_instrs if i.opname != 'COPY']
         store_indices = [i for i, instr in enumerate(handler_instrs)
                         if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')]
         if len(store_indices) >= 2:
@@ -15363,6 +15621,273 @@ AST 映射规则:
             for p in pattern.get('patterns', []):
                 self._collect_pattern_store_names(p, names)
 
+    def _wrap_boolop_with_merge_compare(self, boolop_expr: Dict[str, Any],
+                                         boolop_region: 'BoolOpRegion',
+                                         if_region: IfRegion) -> Dict[str, Any]:
+        """[CPython peephole] Wrap a BoolOp expression in a Compare when the
+        BoolOpRegion's merge_block contains a comparison instruction.
+
+        算法角色：BoolOp 比较包裹器（BoolOp Compare Wrapper）
+        输入：boolop_expr (已构建的 BoolOp 表达式) + BoolOpRegion + IfRegion
+        输出：Compare 表达式（若 merge_block 含比较指令）或原 boolop_expr
+
+        【背景】
+        当 ``if (a or b) == c:`` 被编译时，CPython 先求值 ``a or b``（值上下文
+        短路，使用 JUMP_IF_TRUE_OR_POP/JUMP_IF_FALSE_OR_POP），结果留在栈上，
+        然后在 merge_block 中执行 ``LOAD c; COMPARE_OP ==; POP_JUMP_IF_FALSE``。
+        BoolOpRegion 正确识别了 ``a or b``，但其 merge_block 中的 COMPARE_OP
+        是对 boolop 结果的比较，不属于 boolop 本身。
+
+        【问题】
+        若不包裹 Compare，``if (a or b) == c:`` 反编译为 ``if a or b:`` —
+        丢失 ``== c`` 部分。
+
+        【修复】
+        检查 BoolOpRegion.merge_block 是否含 COMPARE_OP / IS_OP / CONTAINS_OP：
+        - 含 COMPARE_OP：boolop 是左操作数，merge 中的 LOAD 是右操作数
+          → Compare(left=boolop, ops=[cmp_op], comparators=[rhs])
+        - 含 IS_OP：类似，op 为 Is/IsNot
+        - 含 CONTAINS_OP：类似，op 为 In/NotIn
+        - 否则：返回原 boolop_expr（boolop 结果直接做真值测试）
+
+        【4 原则合规】
+        - 自底向上归约：BoolOp 先归约为抽象节点，Compare 引用其为操作数。
+        - 每块唯一归属：merge_block 属于 BoolOpRegion，标记为 generated。
+        - 嵌套即抽象节点：BoolOp 作为 Compare 的抽象操作数。
+        - 父引用子入口：IfRegion 通过 BoolOpRegion 引用 boolop 入口。
+        """
+        merge_block = getattr(boolop_region, 'merge_block', None)
+        if merge_block is None:
+            return boolop_expr
+        # Don't re-process if merge_block is the cond_block (decision is in cond_block itself)
+        cond_block = if_region.condition_block
+        if merge_block is cond_block:
+            return boolop_expr
+        # Check if merge_block is already marked as generated (avoid double-processing)
+        if merge_block in self.generated_blocks:
+            return boolop_expr
+        # Extract comparison-related instructions from merge_block
+        _CMP_SKIP_OPS = frozenset({
+            'POP_TOP', 'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_FALSE',
+            'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_TRUE',
+            'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_BACKWARD_IF_NONE',
+            'POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_BACKWARD_IF_NOT_NONE',
+            'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE',
+            'CACHE', 'NOP', 'RESUME', 'PUSH_NULL',
+            'SWAP', 'COPY',  # chained compare setup (not single compare)
+        })
+        merge_instrs = [i for i in merge_block.instructions
+                        if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+        # Find comparison instruction
+        cmp_instr = None
+        for i in merge_instrs:
+            if i.opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP'):
+                cmp_instr = i
+                break
+        # [Phase 3 adv14_boolop_result_compare] 双 BoolOp 比较：当
+        # BoolOpRegion.merge_block 不含 COMPARE_OP 但本身是另一个
+        # BoolOpRegion 的 entry（双角色块）时，BoolOp 结果被第二个
+        # BoolOp 表达式消费，第二个 BoolOp 的 merge_block 含 COMPARE_OP。
+        # 如 ``(a and b) == (c and d)``：
+        #   R1 (a and b): entry=Block 0, merge=Block 8（无 COMPARE_OP）
+        #   R2 (c and d): entry=Block 8, merge=Block 14（有 COMPARE_OP ==）
+        # 此时 left=R1 的 boolop_expr，right=R2 的 boolop_expr，
+        # op=R2.merge_block 的 COMPARE_OP。
+        if cmp_instr is None:
+            _dual_role_r2 = None
+            for _r in self.region_analyzer.regions:
+                if (isinstance(_r, BoolOpRegion)
+                        and _r is not boolop_region
+                        and _r.entry is merge_block
+                        and _r.merge_block is not None
+                        and _r.merge_block is not merge_block):
+                    _r2_merge = _r.merge_block
+                    _r2_instrs = [i for i in _r2_merge.instructions
+                                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                    if any(i.opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP')
+                           for i in _r2_instrs):
+                        _dual_role_r2 = _r
+                        break
+            if _dual_role_r2 is not None:
+                _r2_merge = _dual_role_r2.merge_block
+                if _r2_merge in self.generated_blocks:
+                    return boolop_expr
+                _r2_instrs = [i for i in _r2_merge.instructions
+                              if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                _r2_cmp = None
+                for i in _r2_instrs:
+                    if i.opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP'):
+                        _r2_cmp = i
+                        break
+                # R2 的 merge_block 中 COMPARE_OP 之前的 LOAD 指令是右操作数
+                # （如 ``(c and d) == 5`` 中的 5）。若没有 LOAD，则右操作数
+                # 就是 R2 的 BoolOp 本身（如 ``(a and b) == (c and d)``）。
+                _r2_rhs_instrs = []
+                for i in _r2_instrs:
+                    if i is _r2_cmp:
+                        break
+                    if i.opname in _CMP_SKIP_OPS:
+                        continue
+                    _r2_rhs_instrs.append(i)
+                # 构建 R2 的 BoolOp 表达式
+                _r2_boolop_expr = None
+                if _dual_role_r2.condition_expr is not None:
+                    _r2_boolop_expr = _dual_role_r2.condition_expr
+                else:
+                    _r2_boolop_expr = self._build_boolop_expression(_dual_role_r2)
+                if _r2_boolop_expr is None:
+                    return boolop_expr
+                # 确定比较运算符
+                if _r2_cmp.opname == 'COMPARE_OP':
+                    _dual_cmp_op = _r2_cmp.argval
+                elif _r2_cmp.opname == 'IS_OP':
+                    _dual_cmp_op = 'IsNot' if _r2_cmp.argval else 'Is'
+                elif _r2_cmp.opname == 'CONTAINS_OP':
+                    _dual_cmp_op = 'NotIn' if _r2_cmp.argval else 'In'
+                else:
+                    return boolop_expr
+                # 标记 R1.merge_block（双角色块）和 R2.merge_block 为 generated
+                self.generated_blocks.add(merge_block)
+                self.generated_blocks.add(_r2_merge)
+                # 标记 R2 的所有块为 generated（防止 R2 作为独立语句输出）
+                for _b in _dual_role_r2.blocks:
+                    self.generated_blocks.add(_b)
+                _dual_role_r2.condition_expr = _r2_boolop_expr
+                # 若 R2.merge_block 有额外 LOAD（rhs），则右操作数是 LOAD 表达式，
+                # R2 的 BoolOp 是…不可能的（R2 已是右操作数）。实际上
+                # ``(a and b) == (c and d)`` 中 R2.merge_block 只含 COMPARE_OP，
+                # 不含额外 LOAD，_r2_rhs_instrs 为空。
+                if not _r2_rhs_instrs:
+                    # 右操作数就是 R2 的 BoolOp
+                    return {
+                        'type': 'Compare',
+                        'left': boolop_expr,
+                        'ops': [_dual_cmp_op],
+                        'comparators': [_r2_boolop_expr],
+                    }
+                else:
+                    # R2.merge_block 有额外 LOAD：如 ``(a and b) == (c and d) == 5``
+                    # （链式比较）。退化为左=R1 boolop，右=LOAD 表达式，
+                    # R2 boolop 被丢弃（不应该发生，保守处理）。
+                    _rhs_expr = self.expr_reconstructor.reconstruct(_r2_rhs_instrs)
+                    if _rhs_expr is None:
+                        return boolop_expr
+                    return {
+                        'type': 'Compare',
+                        'left': boolop_expr,
+                        'ops': [_dual_cmp_op],
+                        'comparators': [_rhs_expr],
+                    }
+        if cmp_instr is None:
+            return boolop_expr  # No comparison in merge_block
+        # Skip if merge_block has SWAP/COPY (chained compare, not single compare)
+        # — chained compare is handled by the chained compare path
+        has_chained_setup = any(i.opname in ('SWAP', 'COPY') for i in merge_instrs)
+        if has_chained_setup and cmp_instr.opname == 'COMPARE_OP':
+            return boolop_expr
+        # Extract right operand (loads before the comparison instruction)
+        rhs_instrs = []
+        for i in merge_instrs:
+            if i is cmp_instr:
+                break
+            if i.opname in _CMP_SKIP_OPS:
+                continue
+            rhs_instrs.append(i)
+        if not rhs_instrs:
+            # No right operand in merge_block — the right operand might be
+            # trapped before the boolop (e.g., `if c == (a or b):`).
+            # This case is not handled here; return boolop as-is.
+            return boolop_expr
+        rhs_expr = self.expr_reconstructor.reconstruct(rhs_instrs)
+        if rhs_expr is None:
+            return boolop_expr
+        # Determine comparison operator
+        if cmp_instr.opname == 'COMPARE_OP':
+            cmp_op = cmp_instr.argval
+        elif cmp_instr.opname == 'IS_OP':
+            cmp_op = 'IsNot' if cmp_instr.argval else 'Is'
+        elif cmp_instr.opname == 'CONTAINS_OP':
+            cmp_op = 'NotIn' if cmp_instr.argval else 'In'
+        else:
+            return boolop_expr
+        # Mark merge_block as generated
+        self.generated_blocks.add(merge_block)
+        return {
+            'type': 'Compare',
+            'left': boolop_expr,
+            'ops': [cmp_op],
+            'comparators': [rhs_expr],
+        }
+
+    def _try_build_chained_compare_in_boolop(self, chain_block, region):
+        """[CPython peephole P4 + P5 interaction] Reconstruct a chained
+        compare (e.g. ``a < b < c``) when its entry block appears as a
+        BoolOp operand.
+
+        算法角色：链式比较操作数重建器（Chained Compare Operand Reconstructor）
+        输入：chain_block (BoolOp op_chain 的一个块) + BoolOpRegion
+        输出：完整链式比较 AST（{'type': 'Compare', ...}）或 None
+
+        【背景】
+        当 ``if a < b < c and d < e < f:`` 被编译时，每个链式比较
+        (a<b<c, d<e<f) 由 ``_identify_chained_compare_regions`` 识别为一个
+        IfRegion（带 ``chained_compare_ops`` / ``chained_compare_blocks``）。
+        该识别在 BoolOp 识别之前发生（自底向上归约：链式比较是更小的归约单元）。
+        随后 BoolOp 链检测把每个链式比较的 entry 作为单个操作数加入 op_chain
+        （通过 hop 逻辑跳过链式比较内部块），因此 op_chain 中每个 chain_block
+        可能是某个链式比较 IfRegion 的 entry。
+
+        【问题】
+        若直接对 chain_block 调用 ``expr_reconstructor.reconstruct()``，只会
+        取到 entry 块内的第一个 COMPARE_OP（如 ``a < b``），丢失后续链节
+        （``< c``），导致 ``a < b < c`` 退化为 ``a < b``。
+
+        【修复】
+        遍历 ``self.regions`` 查找 entry == chain_block 且带 chained_compare_ops
+        (长度 ≥ 2) 的 IfRegion，调用 ``_build_chained_compare_from_region_data``
+        重建完整链式比较表达式。同时把链式比较的内部块标记为已生成，避免父
+        IfRegion 重复处理。
+
+        【4 原则合规】
+        - 自底向上归约：链式比较 IfRegion 先于 BoolOp 识别，本方法仅在表达式
+          重建阶段把已识别的子区域作为抽象节点展开为表达式，不改变归约顺序。
+        - 每块唯一归属：链式比较的内部块（chained_compare_blocks）属于链式比较
+          IfRegion，不属于 BoolOpRegion；本方法把这些块标记为 generated，
+          防止父 IfRegion 重复处理。
+        - 嵌套即抽象节点：链式比较 IfRegion 作为 BoolOp 的抽象操作数节点。
+        - 父引用子入口：BoolOp 的 op_chain 引用链式比较 IfRegion 的 entry。
+        """
+        for r in self.regions:
+            if (isinstance(r, IfRegion)
+                    and r.entry is chain_block
+                    and getattr(r, 'chained_compare_ops', None)
+                    and len(r.chained_compare_ops) >= 2
+                    and getattr(r, 'chained_compare_blocks', None)):
+                cc_expr = self._build_chained_compare_from_region_data(r)
+                if cc_expr is not None:
+                    # Mark chained compare internal blocks as generated so the
+                    # parent IfRegion does not re-process them. The entry
+                    # block itself is part of op_chain (BoolOp's own block),
+                    # so only the chained_compare_blocks (extra chain blocks)
+                    # and merge_block are marked here.
+                    for cb in r.chained_compare_blocks:
+                        self.generated_blocks.add(cb)
+                    if r.merge_block is not None:
+                        self.generated_blocks.add(r.merge_block)
+                    # [bool17 fix] Mark ALL blocks of the absorbed chained
+                    # compare IfRegion as generated. The IfRegion may own
+                    # else_blocks (false-exit return-None sinks) that are
+                    # not in chained_compare_blocks or merge_block. Without
+                    # this, the generation loop's "all blocks generated"
+                    # check fails and the IfRegion is duplicated, producing
+                    # `if 0 < x < 10 and y != 0:\n    pass\nif 0 < x < 10
+                    # and y != 0:\n    pass`.
+                    for b in r.blocks:
+                        self.generated_blocks.add(b)
+                    return cc_expr
+                return None
+        return None
+
     def _try_build_nested_ternary_in_boolop(self, chain_block, region):
         if not hasattr(chain_block, 'conditional_successors'):
             return None
@@ -15393,8 +15918,39 @@ AST 映射规则:
         ft_succs = list(ft_block.successors)
         if not jt_succs or not ft_succs:
             return None
-        jt_merge = jt_succs[0] if len(jt_succs) >= 1 else None
-        ft_merge = ft_succs[0] if len(ft_succs) >= 1 else None
+        # [P5 + Cluster 4 interaction] For ternary value blocks, the
+        # successor might be a JUMP_FORWARD intermediate block. Follow
+        # JUMP_FORWARD to find the real merge, so both value blocks
+        # correctly resolve to the same merge point.
+        def _fallthrough_merge(blk):
+            blk_last = blk.get_last_instruction()
+            blk_jt_offset = blk_last.argval if (blk_last and blk_last.argval is not None) else None
+            ss = list(blk.successors)
+            if not ss:
+                return None
+            # Prefer the fall-through successor (NOT the jump target of
+            # the value block's last conditional jump). The jump target
+            # of a value block (IF_TRUE/IF_FALSE) is the BoolOp short-circuit
+            # exit (e.g., the if-body for `or`), NOT the ternary merge.
+            # The fall-through leads (possibly via JUMP_FORWARD) to the
+            # real ternary merge.
+            ft_succs = [s for s in ss if s.start_offset != blk_jt_offset]
+            candidates = ft_succs if ft_succs else ss
+            for succ in candidates:
+                eff = [i for i in succ.instructions
+                       if i.opname not in ('NOP', 'CACHE')]
+                if (len(eff) == 1 and eff[0].opname == 'JUMP_FORWARD'
+                        and eff[0].argval is not None):
+                    real = self.cfg.get_block_by_offset(eff[0].argval)
+                    if real is not None:
+                        return real
+            # No JUMP_FORWARD intermediate — return the first fall-through
+            # successor (or the first successor if no fall-through).
+            return candidates[0] if candidates else None
+        jt_merge = _fallthrough_merge(jt_block)
+        ft_merge = _fallthrough_merge(ft_block)
+        if jt_merge is None or ft_merge is None:
+            return None
         if jt_merge != ft_merge:
             return None
         if region.merge_block and jt_merge != region.merge_block and ft_merge != region.merge_block:
@@ -15542,6 +16098,9 @@ AST 映射规则:
 
         for i, (chain_block, chain_op) in enumerate(op_chain):
             nested_ternary = self._try_build_nested_ternary_in_boolop(chain_block, region)
+            # [CPython peephole P4 + P5 interaction] Chained compare as BoolOp
+            # operand. See _try_build_chained_compare_in_boolop docstring.
+            chained_compare_expr = self._try_build_chained_compare_in_boolop(chain_block, region)
             instrs = [inst for inst in chain_block.instructions
                       if inst.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
             last_instr = chain_block.get_last_instruction()
@@ -15555,8 +16114,9 @@ AST 映射规则:
                         break
                     clean_instrs.append(inst)
                 pure_instrs = clean_instrs if clean_instrs else (list(instrs[:1]) if instrs else [])
-            is_transforming_only = (pure_instrs and nested_ternary is None and
-                                    all(inst.opname in TRANSFORM_OPS for inst in pure_instrs))
+            is_transforming_only = (pure_instrs and nested_ternary is None
+                                    and chained_compare_expr is None
+                                    and all(inst.opname in TRANSFORM_OPS for inst in pure_instrs))
             if is_transforming_only:
                 if current_inner_values:
                     if len(current_inner_values) == 1:
@@ -15578,6 +16138,8 @@ AST 映射规则:
                 continue
             if nested_ternary is not None:
                 sub_expr = nested_ternary
+            elif chained_compare_expr is not None:
+                sub_expr = chained_compare_expr
             elif not pure_instrs:
                 sub_expr = self._try_build_await_boolop_operand(chain_block)
             else:
@@ -15596,6 +16158,21 @@ AST 映射规则:
                     'ops': [{'type': _cmp_op}],
                     'comparators': [{'type': 'Constant', 'value': None}]
                 }
+            # [CPython peephole] Implicit `not` on a boolop operand
+            # (mirrors the handling in _build_boolop_expression):
+            # `not X` is lowered as `LOAD X; POP_JUMP_IF_TRUE` (AND
+            # chain) or `LOAD X; POP_JUMP_IF_FALSE` (OR chain, non-
+            # last block). The UNARY_NOT is optimized away into the
+            # jump direction. Wrap the operand in UnaryOp(not, ...)
+            # to restore the original semantics.
+            if (sub_expr is not None and last_instr and not is_transforming_only
+                    and last_instr.opname in STRIP_JUMP_OPS):
+                _jump_op = last_instr.opname
+                if chain_op == 'and' and 'TRUE' in _jump_op:
+                    sub_expr = {'type': 'UnaryOp', 'op': 'not', 'operand': sub_expr}
+                elif (chain_op == 'or' and 'FALSE' in _jump_op
+                      and i < len(op_chain) - 1):
+                    sub_expr = {'type': 'UnaryOp', 'op': 'not', 'operand': sub_expr}
             if sub_expr is None:
                 continue
             current_inner_values.append(sub_expr)
@@ -15606,6 +16183,70 @@ AST 映射规则:
                 current_inner_op = chain_op
             else:  # OUTER
                 _end_inner_group()
+        # [CPython peephole] Final operand in fall-through block:
+        # For `X or Y or Z` where Z is a non-boolop value (e.g., `None`,
+        # a constant, or a function call), the compiler emits the first
+        # two operands as JUMP_IF_TRUE_OR_POP blocks in op_chain, but Z
+        # lives in the fall-through block of the LAST chain block (no
+        # conditional jump). op_chain captures only the boolop-jump blocks,
+        # so Z would be lost without this step. This mirrors the
+        # fall-through handling in _build_boolop_expression (lines 14753+).
+        #
+        # [Phase 7 fix] 当 last_chain_op != outer_op 时（混合 and/or 链的
+        # 末尾内层块），fall-through 包含内层子组的最后一个操作数。如
+        # `a and b or c and True` 中末尾 chain 块 op='and'，outer_op='or'，
+        # fall-through 块含 `True`（内层 and 子组 [c, True] 的末尾操作数）。
+        # 此时 outer_values 末尾已是内层子组（由 'LAST' 分类结束），
+        # 需将 fall-through 表达式追加到该子组。
+        if op_chain:
+            last_chain_block, last_chain_op = op_chain[-1]
+            last_instr = last_chain_block.get_last_instruction()
+            chain_block_offsets = {b.start_offset for b, _ in op_chain}
+            if (last_instr and last_instr.opname in STRIP_JUMP_OPS
+                    and last_instr.argval is not None):
+                ft_succs = sorted(last_chain_block.conditional_successors,
+                                   key=lambda s: s.start_offset)
+                ft_block = next((s for s in ft_succs
+                                 if s.start_offset != last_instr.argval
+                                 and s.start_offset not in chain_block_offsets
+                                 and s != region.merge_block
+                                 and s in region.blocks
+                                 and not any(i.opname == 'GET_AWAITABLE'
+                                            for i in s.instructions)), None)
+                if ft_block is not None:
+                    ft_instrs = [inst for inst in ft_block.instructions
+                                 if inst.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                    clean_ft = []
+                    for inst in ft_instrs:
+                        if inst.opname in ('POP_TOP', 'RETURN_VALUE', 'RETURN_CONST',
+                                           'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'):
+                            break
+                        clean_ft.append(inst)
+                    if clean_ft:
+                        ft_expr = self.expr_reconstructor.reconstruct(clean_ft)
+                        if ft_expr is not None:
+                            if last_chain_op == outer_op:
+                                # Fall-through 是外层操作符的最后一个操作数
+                                outer_values.append(ft_expr)
+                            elif current_inner_values:
+                                # 末尾块未结束内层组（非 'LAST' 分类），
+                                # 直接追加到当前内层组
+                                current_inner_values.append(ft_expr)
+                            elif (outer_values and isinstance(outer_values[-1], dict)
+                                    and outer_values[-1].get('type') == 'BoolOp'
+                                    and outer_values[-1].get('op') == last_chain_op):
+                                # [Phase 7 fix] 追加到已结束的内层子组
+                                outer_values[-1]['values'].append(ft_expr)
+                            elif outer_values:
+                                # 内层子组只有一个操作数（未形成 BoolOp），
+                                # 创建新的 BoolOp
+                                _last_val = outer_values.pop()
+                                outer_values.append({
+                                    'type': 'BoolOp', 'op': last_chain_op,
+                                    'values': [_last_val, ft_expr]
+                                })
+                            else:
+                                outer_values.append(ft_expr)
         if current_inner_values:
             _end_inner_group()
         if not outer_values:
@@ -15702,6 +16343,9 @@ AST 映射规则:
             if skip_elif_blocks and chain_block.start_offset in _elif_cond_offsets:
                 continue
             nested_ternary = self._try_build_nested_ternary_in_boolop(chain_block, region)
+            # [CPython peephole P4 + P5 interaction] Chained compare as BoolOp
+            # operand. See _try_build_chained_compare_in_boolop docstring.
+            chained_compare_expr = self._try_build_chained_compare_in_boolop(chain_block, region)
             instrs = [i for i in chain_block.instructions
                      if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
             last_instr = chain_block.get_last_instruction()
@@ -15716,8 +16360,9 @@ AST 映射规则:
                     clean_instrs.append(i)
                 pure_instrs = clean_instrs if clean_instrs else list(instrs[:1]) if instrs else []
             # Check if pure_instrs are transforming-only (e.g., UNARY_NOT on previous group result)
-            is_transforming_only = (pure_instrs and nested_ternary is None and
-                                    all(i.opname in TRANSFORM_OPS for i in pure_instrs))
+            is_transforming_only = (pure_instrs and nested_ternary is None
+                                    and chained_compare_expr is None
+                                    and all(i.opname in TRANSFORM_OPS for i in pure_instrs))
             if is_transforming_only:
                 # Previous group's result is being transformed (e.g., not (a and b))
                 if current_group_values:
@@ -15739,6 +16384,8 @@ AST 映射规则:
                 continue
             if nested_ternary is not None:
                 sub_expr = nested_ternary
+            elif chained_compare_expr is not None:
+                sub_expr = chained_compare_expr
             elif not pure_instrs:
                 # [Round 2 修复] await 作为 BoolOp 操作数：
                 # `if await g() or x:` 中 await g() 的 truthy 测试块
@@ -15768,6 +16415,36 @@ AST 映射规则:
                     'ops': [{'type': _cmp_op}],
                     'comparators': [{'type': 'Constant', 'value': None}]
                 }
+            # [CPython peephole] Implicit `not` on a boolop operand:
+            # When `not X` appears as a boolop operand, CPython 3.11
+            # optimizes away the UNARY_NOT by inverting the jump
+            # direction. For an AND chain, the normal short-circuit
+            # is IF_FALSE (exit when operand is false); if the jump
+            # is IF_TRUE, the operand is `not X` (AND short-circuits
+            # when `not X` is false, i.e., X is true — so IF_TRUE
+            # exits on X being true). For an OR chain, the normal
+            # short-circuit is IF_TRUE; if a NON-LAST block's jump
+            # is IF_FALSE, the operand is `not X` (OR short-circuits
+            # when `not X` is true, i.e., X is false — so IF_FALSE
+            # exits on X being false). The last block in an OR chain
+            # is the "value" block whose IF_FALSE is the loop-exit
+            # condition (not a negated operand), so it must be
+            # excluded. Wrap the operand in UnaryOp(not, ...) to
+            # restore the original semantics. This handles source
+            # patterns like `while not done and has_data():` where
+            # `not done` is lowered as `LOAD done; POP_JUMP_IF_TRUE`.
+            # [P5 + Cluster 4] Skip implicit `not` when the chain block
+            # is a ternary cond block — the ternary's cond jump direction
+            # is determined by the ternary's semantics, not by `not` inversion.
+            if (sub_expr is not None and last_instr and not is_transforming_only
+                    and nested_ternary is None
+                    and last_instr.opname in STRIP_JUMP_OPS):
+                _jump_op = last_instr.opname
+                if chain_op == 'and' and 'TRUE' in _jump_op:
+                    sub_expr = {'type': 'UnaryOp', 'op': 'not', 'operand': sub_expr}
+                elif (chain_op == 'or' and 'FALSE' in _jump_op
+                      and chain_idx < len(op_chain) - 1):
+                    sub_expr = {'type': 'UnaryOp', 'op': 'not', 'operand': sub_expr}
             # Group transition for sub_expr
             if sub_expr is not None:
                 if current_group_op is None:
@@ -16146,6 +16823,67 @@ AST 映射规则:
                 region.condition_expr = boolop_expr
             return None
 
+        # [P5 + Cluster 4 interaction] Standalone If condition — when
+        # BoolOpRegion.is_condition_context is True but there is no
+        # enclosing IfRegion (because the chain blocks are ternary cond
+        # blocks, and Edit D in _identify_conditional_regions skipped
+        # creating the IfRegion to avoid corrupting the ternary's internal
+        # structure), generate the If statement directly using merge_block
+        # as the if-body. This is the case for
+        # `if (a if c else b) or (d if e else f) or (g if h else i): pass`.
+        # Without this branch, the boolop falls through to the "Return"
+        # path (merge_block is `LOAD_CONST None + RETURN_VALUE` for `pass`)
+        # and produces `return (boolop_expr)` — wrong.
+        if (not _is_outer_condition
+                and getattr(region, 'is_condition_context', False)
+                and region.merge_block is not None
+                and _enclosing is None):
+            boolop_expr = self._build_boolop_expression(region)
+            if boolop_expr:
+                # Determine if the boolop should be negated based on the
+                # last chain block's jump direction. For `or` chains ending
+                # in IF_FALSE → if-body, no negation. For IF_TRUE → if-body,
+                # negate (because IF_TRUE means "jump to if-body when truthy",
+                # so the boolop's truthy path goes to if-body, no negation;
+                # but the existing _is_outer_condition path negates when
+                # IF_TRUE because the IfRegion's else_blocks is the jump
+                # target). Since here the merge IS the if-body, semantics:
+                # - IF_FALSE → merge (if-body): condition truthy → fall
+                #   through to if-body → NO negation
+                # - IF_TRUE → merge (if-body): condition truthy → jump to
+                #   if-body → NO negation (truthy = if-body in both cases)
+                # But IF_TRUE here means the chain's last op is 'or' (jump
+                # when truthy to short-circuit), and merge is the
+                # short-circuit target = if-body, so no negation needed.
+                # Actually the existing _is_outer_condition path negates
+                # IF_TRUE because there the IfRegion's else_blocks IS the
+                # short-circuit target. Here we control merge = if-body,
+                # so NO negation regardless of jump direction.
+                for block in region.blocks:
+                    self.generated_blocks.add(block)
+                self.generated_blocks.add(region.merge_block)
+                # Generate the if-body from merge_block statements.
+                # Skip trailing RETURN_VALUE/RETURN_CONST (the implicit
+                # module-level return None) since the If statement doesn't
+                # need it.
+                _body_stmts = self._generate_block_statements(region.merge_block)
+                _filtered_body = []
+                for s in _body_stmts:
+                    if s.get('type') == 'Return' and (s.get('value') is None
+                                                       or (isinstance(s.get('value'), dict)
+                                                           and s['value'].get('type') == 'Constant'
+                                                           and s['value'].get('value') is None)):
+                        continue
+                    _filtered_body.append(s)
+                if not _filtered_body:
+                    _filtered_body = [{'type': 'Pass'}]
+                return [{
+                    'type': 'If',
+                    'test': boolop_expr,
+                    'body': _filtered_body,
+                    'orelse': [],
+                }]
+
         pre_stmts = []
         if region.prefix_block:
             pre_instrs = self.region_analyzer.identify_block_prefix_instructions(region.prefix_block)
@@ -16486,6 +17224,13 @@ AST 映射规则:
         则剥离该指令。但如果连续两个POP_TOP，则只剥一个。
         这处理了 `func()` vs `x = func()` 的区别。
 
+        【纯JUMP_FORWARD连接块处理】
+        当嵌套三元被编译器展开为共享分支形态时
+        （如 ``a if (b if c else d) else e`` 展开为两个 ``a if X else e``
+        分支），某分支的 true_value_block 可能是纯 JUMP_FORWARD
+        连接块，指向实际值块。此时跟随跳转目标递归重建。
+        遵循"自底向上归约"：连接块归约为目标块的表达式。
+
         【返回None的情况】
         - block为None（理论上不应该发生）
         - 过滤后无指令
@@ -16508,6 +17253,17 @@ AST 映射规则:
             return self._build_boolop_expression(entry_existing, skip_elif_blocks=True)
         if isinstance(existing, BoolOpRegion) and existing.entry == block:
             return self._build_boolop_expression(existing, skip_elif_blocks=True)
+        # [Phase 3 adv03_nested_ternary_chain] 纯 JUMP_FORWARD 连接块：
+        # 嵌套三元展开后某分支值块可能仅含 JUMP_FORWARD 指向真实值块。
+        # 跟随跳转目标递归调用本方法，归约为目标块的表达式。
+        _pure_jump_instrs = [i for i in block.instructions
+                             if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+        if (len(_pure_jump_instrs) == 1
+                and _pure_jump_instrs[0].opname == 'JUMP_FORWARD'
+                and _pure_jump_instrs[0].argval is not None):
+            _target_block = self.cfg.get_block_by_offset(_pure_jump_instrs[0].argval)
+            if _target_block is not None and _target_block is not block:
+                return self._build_ternary_value_expr(_target_block)
         instrs = [i for i in block.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE')]
         last = block.get_last_instruction()
         if last and last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
@@ -16687,6 +17443,71 @@ AST 映射规则:
             _cur_is_true = 'IF_TRUE' in _cur_last.opname or 'IF_NOT_NONE' in _cur_last.opname
             _cur_target = self.cfg.get_block_by_offset(_cur_last.argval)
 
+            # [P5 + Cluster 4 interaction] Nested ternary as boolop operand.
+            # When a ternary appears as a boolop operand (e.g.
+            # `X and (a if c else b)` or `X or (a if c else b)`), the
+            # ternary's cond block IS the continuation block. The chain
+            # must treat the entire nested ternary as a SINGLE operand
+            # and hop over its internal blocks (true/false/merge) to
+            # reach the next operand, NOT fall through to the cond
+            # block's direct successor (which is the nested ternary's
+            # true_value_block — incorrectly adding it as an extra
+            # operand). This follows "nesting means abstract node": the
+            # nested TernaryRegion is an atomic operand of the parent
+            # BoolOp.
+            _nested_t = None
+            for _r in self.regions:
+                if (isinstance(_r, TernaryRegion) and _r.entry is _cur
+                        and _r is not region
+                        and _r.merge_block is not None):
+                    _nested_t = _r
+                    break
+            if _nested_t is not None:
+                _operand = self._build_nested_ternary_expr(_nested_t)
+                if _operand is None:
+                    break
+                _operands.append(_operand)
+                _cont_blocks.append(_cur)
+                for _b in _nested_t.blocks:
+                    self.generated_blocks.add(_b)
+                # Collect exit blocks from nested ternary's value blocks
+                # (P5 pattern: each value block may have its own trivial
+                # exit, all semantically equivalent to the parent's exits).
+                _nt_true = _nested_t.true_value_block
+                _nt_false = _nested_t.false_value_block
+                for _vb in (_nt_true, _nt_false):
+                    if _vb is None:
+                        continue
+                    _vb_last = _vb.get_last_instruction()
+                    if (_vb_last and _vb_last.argval is not None
+                            and _vb_last.opname in FORWARD_CONDITIONAL_JUMP_OPS):
+                        _vb_target = self.cfg.get_block_by_offset(_vb_last.argval)
+                        if _boolop_op == 'and' and not ('IF_TRUE' in _vb_last.opname
+                                                         or 'IF_NOT_NONE' in _vb_last.opname):
+                            if _vb_target:
+                                _exit_blocks.add(_vb_target)
+                        elif _boolop_op == 'or' and ('IF_TRUE' in _vb_last.opname
+                                                      or 'IF_NOT_NONE' in _vb_last.opname):
+                            if _if_body_block is None:
+                                _if_body_block = _vb_target
+                # Hop to merge_block (if-body for last operand, or next
+                # continuation for non-last operand)
+                _cur = _nested_t.merge_block
+                continue
+
+            # [P5 + Cluster 4 interaction] Phantom BoolOpRegion detection.
+            # When the boolop chain detection creates a BoolOpRegion for
+            # the SAME chain that _try_build_ternary_boolop_and_if is
+            # building, the BoolOpRegion's entry IS a continuation block
+            # of this chain. _build_ternary_value_expr would recurse into
+            # _build_boolop_expression (producing a nested BoolOp of the
+            # remaining operands). Use _build_simple_ternary_value to
+            # extract just this block's value, keeping the operand flat.
+            _phantom_boolop = any(
+                isinstance(_r, BoolOpRegion) and _r.entry is _cur
+                for _r in self.regions
+            )
+
             if _boolop_op == 'and':
                 # and: continuation must use IF_FALSE → exit
                 if _cur_is_true:
@@ -16694,7 +17515,10 @@ AST 映射规则:
                 if _cur_target:
                     _exit_blocks.add(_cur_target)
                 _cont_blocks.append(_cur)
-                _operand = self._build_ternary_value_expr(_cur)
+                if _phantom_boolop:
+                    _operand = self._build_simple_ternary_value(_cur)
+                else:
+                    _operand = self._build_ternary_value_expr(_cur)
                 if _operand is None:
                     break
                 _operands.append(_operand)
@@ -16838,11 +17662,18 @@ AST 映射规则:
         false_block = region.false_value_block
         pre_stmts = []
 
-        for r in self.regions:
-            if isinstance(r, IfRegion) and getattr(r, 'elif_conditions', None):
-                for ec in r.elif_conditions:
-                    if any(b.start_offset == ec.start_offset for b in region.blocks):
-                        return None
+        # [Phase 3 adv15_ternary_elif_test] 条件上下文三元（merge_context='while_cond'）
+        # 的 entry 必然与某个 IfRegion 的 elif_conditions 重叠——这正是"三元作为
+        # elif 条件"的合法形态。跳过此 guard，让 _if_generate_elif_chain 通过
+        # _generate_ternary 重建 IfExp 作为 elif 条件。
+        _is_conditional_context_ternary = (
+            getattr(region, 'merge_context', None) == 'while_cond')
+        if not _is_conditional_context_ternary:
+            for r in self.regions:
+                if isinstance(r, IfRegion) and getattr(r, 'elif_conditions', None):
+                    for ec in r.elif_conditions:
+                        if any(b.start_offset == ec.start_offset for b in region.blocks):
+                            return None
 
         # [Cluster 6] Nesting guard + nested condition building.
         # When the compiler fuses a nested ternary's condition test with the
@@ -16986,6 +17817,18 @@ AST 映射规则:
         else:
             cond_instrs_raw = [i for i in cond_block.instructions
                                if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+            # [Phase 3 adv03_nested_ternary_chain] compare 上下文下，三元
+            # condition_block 入口可能被外层链式比较的左操作数"困住"
+            # （如 ``0 < (a if c else b) < 10`` 中 ``LOAD_CONST 0`` 困在
+            # 三元 test 之前）。这些指令属于外层 Compare，不属于三元 test。
+            # 调用 _extract_trapped_lhs_from_ternary 定位 test 起点，剔除其
+            # 前的被困指令，避免 reconstruct 因双压栈失败返回 None。
+            if getattr(region, 'merge_context', None) == 'compare':
+                _trapped_lhs = self._extract_trapped_lhs_from_ternary(region)
+                if _trapped_lhs:
+                    _trapped_ids = {id(i) for i in _trapped_lhs}
+                    cond_instrs_raw = [i for i in cond_instrs_raw
+                                       if id(i) not in _trapped_ids]
             last_cond_instr = cond_block.get_last_instruction()
 
             func_call_skip = 0
@@ -17112,6 +17955,64 @@ AST 映射规则:
             true_expr = self._build_ternary_value_expr(true_block)
         if false_expr is None:
             false_expr = self._build_ternary_value_expr(false_block)
+
+        # [Phase 3 adv03_nested_ternary_chain] 编译器展开的嵌套三元折叠。
+        # 源码 ``V1 if (X if C1 else Y) else V2`` 被编译器展开为共享分支形态：
+        #   - 外层三元 T1: cond=C1, tvb=T2, fvb=T3, merge=M
+        #   - T2: cond=X, tvb=V1（可能经 JUMP_FORWARD 连接块）, fvb=V2, merge=M
+        #   - T3: cond=Y, tvb=V1, fvb=V2, merge=M
+        # T2 和 T3 共享相同的 tvb 和 fvb。展开形式语义等价但字节码不等价
+        # （V1/V2 各被加载两次而非共享）。遵循"自底向上归约"：识别此结构
+        # 模式，折叠回原始嵌套三元 IfExp(test=IfExp(C1, X, Y), body=V1, orelse=V2)。
+        # 仅折叠 ternary_expr 本身，后续输出逻辑（compare/while_cond/return 等）
+        # 由原有路径处理，确保所有 merge_context 行为一致。
+        #
+        # 【merge_context 限制】仅当 merge_context 为 'compare' 或 'return' 时
+        # 折叠。对于 merge_context=None 的 if 条件三元（如 adv01），外层三元
+        # 不应自行生成 If 节点——应由内层 while_cond 三元通过 chain-building
+        # 逻辑生成。此时返回 None，让内层三元接管。
+        _folded_inner_ternaries = False
+        if (cond_expr and true_expr and false_expr
+                and true_expr.get('type') == 'IfExp'
+                and false_expr.get('type') == 'IfExp'
+                and true_expr.get('body') == false_expr.get('body')
+                and true_expr.get('orelse') == false_expr.get('orelse')):
+            _fold_merge_ctx = getattr(region, 'merge_context', None)
+            if _fold_merge_ctx in ('compare', 'return'):
+                _shared_body = true_expr['body']
+                _shared_orelse = true_expr['orelse']
+                _folded_test = {
+                    'type': 'IfExp',
+                    'test': cond_expr,
+                    'body': true_expr['test'],
+                    'orelse': false_expr['test'],
+                }
+                cond_expr = _folded_test
+                true_expr = _shared_body
+                false_expr = _shared_orelse
+                _folded_inner_ternaries = True
+            elif _fold_merge_ctx is None:
+                # if 条件三元：外层不生成，由内层 while_cond 三元接管。
+                # 标记内层三元 blocks 已处理（避免 _try_build_ternary_boolop_and_if
+                # 误识别为 BoolOp 模式）。
+                for _r in self.regions:
+                    if (isinstance(_r, TernaryRegion) and _r is not region
+                            and _r.entry in (true_block, false_block)
+                            and getattr(_r, 'merge_context', None) == 'while_cond'):
+                        return None
+                # 无内层 while_cond 三元时，正常折叠
+                _shared_body = true_expr['body']
+                _shared_orelse = true_expr['orelse']
+                _folded_test = {
+                    'type': 'IfExp',
+                    'test': cond_expr,
+                    'body': true_expr['test'],
+                    'orelse': false_expr['test'],
+                }
+                cond_expr = _folded_test
+                true_expr = _shared_body
+                false_expr = _shared_orelse
+                _folded_inner_ternaries = True
 
         if cond_expr and true_expr and false_expr:
             ternary_expr = {
@@ -17296,7 +18197,16 @@ AST 映射规则:
                 _has_enclosing_loop = False
                 for _r in self.regions:
                     if isinstance(_r, LoopRegion):
+                        # [Scenario B] while 条件位三元：三元 blocks 物理上
+                        # 在循环之前（编译器将条件检查放在循环体之前），
+                        # 因此 blocks-containment 检查会漏判。关键特征是
+                        # 三元的 merge_block IS 循环的 header_block —— 这才
+                        # 是 while_cond 的真正判别条件。
                         if any(b in _r.blocks for b in region.blocks):
+                            _has_enclosing_loop = True
+                            break
+                        if (region.merge_block is not None
+                                and _r.header_block is region.merge_block):
                             _has_enclosing_loop = True
                             break
                 if not _has_enclosing_loop:
@@ -19000,6 +19910,13 @@ AST 映射规则:
         """
         if region.merge_block is None:
             return None
+        # [Scenario B] 如果 merge_block 同时是某个 LoopRegion 的 header_block，
+        # 则其指令是循环回边重检查（CPython 3.11 在 back-edge 复制 while 条件），
+        # 不是三元值的消费指令。此时 while_cond 路径会处理，本路径不应匹配。
+        for _r in self.regions:
+            if (isinstance(_r, LoopRegion)
+                    and _r.header_block is region.merge_block):
+                return None
         merge_instrs = [i for i in region.merge_block.instructions
                         if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
         if not merge_instrs:
@@ -22675,7 +23592,7 @@ AST 映射规则:
                     for _instr in effective:
                         if _instr.opname in ('RESUME', 'NOP', 'CACHE'):
                             continue
-                        if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF') and _instr.argval in (self._current_loop.metadata.get('for_target_names', set()) if self._current_loop else set()) and _instr.argval not in _seen_for_targets3:
+                        if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF') and _instr.argval in (self._current_loop.metadata.get('for_target_names', set()) if self._current_loop else set()) and _instr.argval not in _seen_for_targets3 and not _eff_expr_instrs:
                             _seen_for_targets3.add(_instr.argval)
                             if _eff_expr_instrs:
                                 _expr = self.expr_reconstructor.reconstruct(_eff_expr_instrs)

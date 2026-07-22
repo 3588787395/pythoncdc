@@ -30,6 +30,7 @@ from .dominator_analyzer import (
 
 from .pattern_parser import PatternParser
 from .opcode_feature_detector import get_opcode_detector
+from .peephole_patterns import PeepholePatternLibrary
 
 FORWARD_CONDITIONAL_JUMP_OPS = frozenset({
     'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_FORWARD_IF_TRUE',
@@ -533,6 +534,17 @@ class LoopRegion(Region):
         boundary.add(self.header_block)
         if self.condition_block:
             boundary.add(self.condition_block)
+        # [Phase 4 回归修复] back_edge_block 含条件回边跳转
+        # （POP_JUMP_BACKWARD_IF_TRUE/FALSE）时是循环的条件重检块，属于
+        # LoopRegion（每块唯一归属），不应被嵌套 IfRegion 的 else 分支吸收。
+        # 但若 back_edge_block 仅含无条件 JUMP_BACKWARD（for 循环的隐式
+        # continue），它可能同时是 if 分支的真实 body（如
+        # `for x in r: if c: x = x+1`），此时不应排除。用最后指令区分：
+        # 条件回边 → 排除；无条件回边 → 保留。
+        if self.back_edge_block is not None:
+            _be_last = self.back_edge_block.get_last_instruction()
+            if _be_last and _be_last.opname in BACKWARD_CONDITIONAL_JUMP_OPS:
+                boundary.add(self.back_edge_block)
         return boundary
 
     def interrupts_boolop_forward_chain(self, ft_succ) -> bool:
@@ -904,6 +916,8 @@ class RegionAnalyzer:
         self._block_metadata: Dict[int, Dict[str, Any]] = {}
         self._current_loop_blocks: Set[BasicBlock] = set()
         self._current_boolop_regions: List[Region] = []
+        self.peephole_library = PeepholePatternLibrary()
+        self._peephole_matches: List[Dict[str, Any]] = []
 
     def _filter_regions(self, regions: List['Region'], region_class) -> List['Region']:
         """按精确类型过滤区域列表（使用 type() 而非 isinstance 以避免子类匹配）。"""
@@ -1106,7 +1120,7 @@ class RegionAnalyzer:
         self.dom_analyzer.analyze()
         self.loop_analyzer = LoopAnalyzer(self.cfg, self.dom_analyzer)
         self.loop_analyzer.analyze()
-        self._merge_nop_prefix_loop_headers()
+        self._coalesce_nop_prefix_loop_headers()
         self.dominance_frontiers = self.dom_analyzer.compute_all_dominance_frontiers()
 
         # Phase 1: 低层区域识别（按优先级排序）
@@ -1116,11 +1130,29 @@ class RegionAnalyzer:
         # - 循环有回边需要特殊处理（次高优先级）
         # - 其他结构依赖前两者的结果
         try_regions = self._identify_try_except_regions()
-        try_regions = self._merge_split_try_except_finally_regions(try_regions)
+        try_regions = self._coalesce_split_try_except_finally_regions(try_regions)
         loop_regions = self._identify_loop_regions()
         with_regions = self._identify_with_regions()
         match_regions = self._identify_match_regions()
         assert_regions = self._identify_assert_regions()
+
+        # [Phase 2.5.1-2.5.2] CPython peephole 优化模式库预处理
+        # 扫描所有 P1 模式（模块级三元表达式语句 → 双 RETURN_VALUE），
+        # 释放被 MatchRegion 误识别的值块（match_regions 守卫会拒绝三元识别）。
+        # 此预处理在所有 Phase 1 区域识别完成后、Phase 2 高层识别前执行，
+        # 确保三元识别阶段能看到正确的 match_regions 集合。
+        self._peephole_matches = self.peephole_library.match_peephole_pattern(
+            list(self.cfg.blocks.values()), self.cfg
+        )
+        if self._peephole_matches:
+            _p1_value_blocks: Set[BasicBlock] = set()
+            for _match in self._peephole_matches:
+                _p1_value_blocks.update(_match.get('value_blocks_to_release', []))
+            if _p1_value_blocks:
+                match_regions = [
+                    _mr for _mr in match_regions
+                    if not (_mr.blocks & _p1_value_blocks)
+                ]
 
         # Phase 2: 高层区域识别(接收Phase 1结果)
         chained_compare_regions = self._identify_chained_compare_regions(
@@ -1254,10 +1286,45 @@ class RegionAnalyzer:
             if cr.elif_conditions:
                 for ec in cr.elif_conditions:
                     elif_condition_blocks.add(ec)
+        # [Phase 3 adv15_ternary_elif_test] 区分两种 entry 落在
+        # elif_condition_blocks 中的三元：
+        #
+        # (A) 真正的"三元作为 elif 条件"——三元的结果被内联为条件
+        #     测试（CPython 3.11+ 优化）。此时 true_value_block 和
+        #     false_value_block 各自带 POP_JUMP_IF_FALSE/TRUE 跳到
+        #     "skip body" 块，且 true_value_block 末尾通过 JUMP_FORWARD
+        #     跳到 merge_block。`_detect_ternary_pattern` 将此模式识别
+        #     为 has_jump_forward_skip=True，并设置
+        #     merge_context='while_cond' / value_target='__while_cond_target__'。
+        #     此类三元必须保留——它就是 elif 条件本身。移除会使其
+        #     被错误地拆解为多层 elif 链：
+        #       `elif (b if c else d): pass` → `elif c: if b: pass / elif d: pass`
+        #     语义不等价。
+        #
+        # (B) if/elif/else 被误识别为三元（语句体而非表达式体）。
+        #     此类三元的 value_target 是真实变量名或 None，
+        #     merge_context 不是 'while_cond'。继续按原逻辑移除。
+        def _is_ternary_conditional_context(_tr):
+            return (_tr.merge_context == 'while_cond'
+                    or _tr.value_target == '__while_cond_target__')
         removed_ternary = [tr for tr in ternary_regions
-                          if tr.entry and tr.entry in elif_condition_blocks]
+                          if tr.entry and tr.entry in elif_condition_blocks
+                          and not _is_ternary_conditional_context(tr)]
         ternary_regions = [tr for tr in ternary_regions
-                          if not (tr.entry and tr.entry in elif_condition_blocks)]
+                          if not (tr.entry and tr.entry in elif_condition_blocks
+                                  and not _is_ternary_conditional_context(tr))]
+        # 条件上下文三元作为 elif 条件：与 IfRegion 建立父子关系，
+        # 类似 boolop 在 elif 条件上下文中的处理（line 1249+）。
+        for tr in ternary_regions:
+            if (tr.entry and tr.entry in elif_condition_blocks
+                    and _is_ternary_conditional_context(tr)):
+                if getattr(tr, 'parent', None) is None:
+                    for cr in self._filter_regions(conditional_regions, IfRegion):
+                        if tr.entry in cr.elif_conditions:
+                            tr.parent = cr
+                            if tr not in cr.children:
+                                cr.add_child(tr)
+                            break
         for br in boolop_regions:
             if br.entry and br.entry in elif_condition_blocks:
                 br.is_condition_context = True
@@ -1372,7 +1439,7 @@ class RegionAnalyzer:
 
         fake_loop_region_ids = self._detect_and_filter_conditional_recheck_fake_loops(loop_regions)
         if fake_loop_region_ids:
-            self._fix_block_roles_after_fake_loop_removal(loop_regions, fake_loop_region_ids)
+            self._rebuild_block_roles_after_fake_loop_removal(loop_regions, fake_loop_region_ids)
             loop_regions = [r for r in loop_regions if id(r) not in fake_loop_region_ids]
             all_regions = [r for r in all_regions if id(r) not in fake_loop_region_ids]
             for block, region in list(self.block_to_region.items()):
@@ -2703,6 +2770,59 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                 if header in condition_block.successors or any(pred in body for pred in condition_block.predecessors):
                     region_blocks.add(condition_block)
                     _cb = condition_block
+                    # [CPython peephole] Compound while condition like
+                    # `while not done and has_data():` is lowered as a chain
+                    # of FORWARD_CONDITIONAL_JUMP blocks. Each operand's
+                    # short-circuit target is a SEPARATE trivial exit block
+                    # (LOAD_CONST None; RETURN_VALUE) at module/function-tail
+                    # position. They are semantically equivalent — all do
+                    # "exit the loop". The backward walk must accept a
+                    # predecessor whose jump target is ANY equivalent exit
+                    # block, not just _cb/body/header. Without this, only
+                    # the last operand (e.g., `has_data()`) is captured as
+                    # condition_block, and earlier operands (e.g., `not done`)
+                    # leak out as spurious outer IfRegion.
+                    _cond_exit = None
+                    _cond_last = condition_block.get_last_instruction()
+                    if _cond_last and _cond_last.argval is not None:
+                        _cond_exit = self.cfg.get_block_by_offset(_cond_last.argval)
+                    # [Discriminator] A compound `and` while-condition (e.g.
+                    # `while not done and has_data():`) is re-evaluated at the
+                    # back edge. The back-edge recheck emits a FORWARD
+                    # conditional jump to a trivial exit block for each operand
+                    # that short-circuits (e.g. `LOAD done;
+                    # POP_JUMP_FORWARD_IF_TRUE @exit`). A loop with a SIMPLE
+                    # condition (e.g. `while a > 10:`) has only a BACKWARD
+                    # conditional jump to the header at the back edge — NO
+                    # forward jump to an exit. This distinguishes a true
+                    # condition-chain predecessor (part of the while condition)
+                    # from an outer construct's condition block (e.g. the `if`
+                    # in `if a > 0: while a > 10:`) whose exit block is also a
+                    # trivial return but is NOT a loop exit. Without this
+                    # discriminator, the backward walk would absorb the outer
+                    # `if`'s condition block into the LoopRegion, causing the
+                    # IfRegion to vanish.
+                    # Count the back-edge recheck's FORWARD-jump-to-exit blocks.
+                    # Each represents one operand of a compound `and` condition
+                    # that is re-evaluated at the back edge. This count limits
+                    # how many `and`-chain predecessors the backward walk may
+                    # absorb: an outer construct's condition block (e.g. `if c:`
+                    # wrapping `while (x := f()) and g():`) has an equivalent
+                    # trivial-return exit but NO corresponding back-edge recheck
+                    # block, so it would push the accepted count past this
+                    # limit and is correctly rejected.
+                    _back_edge_recheck_count = 0
+                    for _b in body:
+                        _b_last = _b.get_last_instruction()
+                        if (_b_last
+                                and _b_last.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                                and _b_last.argval is not None):
+                            _b_target = self.cfg.get_block_by_offset(_b_last.argval)
+                            if (_b_target is not None
+                                    and _b_target is not header
+                                    and self._is_trivial_return_block(_b_target)):
+                                _back_edge_recheck_count += 1
+                    _accepted_equivalent_count = 0
                     while _cb is not None:
                         _cb_preds = [p for p in _cb.predecessors
                                      if p not in body and p not in region_blocks
@@ -2713,18 +2833,32 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                             if p_last and p_last.opname in FORWARD_CONDITIONAL_JUMP_OPS:
                                 if p_last.argval is not None:
                                     p_target = self.cfg.get_block_by_offset(p_last.argval)
-                                    if p_target == _cb or p_target in body or p_target == header:
+                                    _is_equivalent_exit = (
+                                        _cond_exit is not None
+                                        and p_target is not None
+                                        and p_target != _cond_exit
+                                        and self._is_equivalent_exit_block(p_target, _cond_exit)
+                                        and _back_edge_recheck_count > 0
+                                        and _accepted_equivalent_count < _back_edge_recheck_count
+                                    )
+                                    if p_target == _cb or p_target in body or p_target == header or _is_equivalent_exit:
                                         _has_back_edge_to_p = any(
                                             be.get_last_instruction() is not None and
                                             be.get_last_instruction().opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT') and
                                             be.get_last_instruction().argval == p.start_offset
                                             for be in body
                                         )
+                                        # p is a valid condition-chain predecessor —
+                                        # always claim it for this LoopRegion so it
+                                        # does not leak out as a spurious outer
+                                        # IfRegion. Only continue the backward walk
+                                        # when p is not an inner-loop header (no
+                                        # back-edge to p from this loop's body).
+                                        region_blocks.add(p)
+                                        if _is_equivalent_exit:
+                                            _accepted_equivalent_count += 1
                                         if not _has_back_edge_to_p:
                                             _next_cb = p
-                                            break
-                                        region_blocks.add(p)
-                                        _next_cb = p
                                         break
                         _cb = _next_cb
             verified_break_blocks = set()
@@ -2938,7 +3072,7 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
 
         return regions
 
-    def _fix_block_roles_after_fake_loop_removal(self, regions: List[Region], fake_loop_ids: Set[int]) -> None:
+    def _rebuild_block_roles_after_fake_loop_removal(self, regions: List[Region], fake_loop_ids: Set[int]) -> None:
         """
         过滤条件重检假循环后，修复相关块的block_role
         
@@ -3744,7 +3878,31 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                                                     'JUMP_FORWARD', 'JUMP_ABSOLUTE')
                                and i.opname not in CONDITIONAL_JUMP_OPS]
             if block == natural_back_edge:
-                continue_map[block] = 'LOOP_BACK_EDGE'
+                # [Phase 3 adv17_for_if_elif_else_flow] 当 natural_back_edge
+                # 实际是显式 continue（条件分支 true body / fall-through）时，
+                # 标记为 CONTINUE 而非 LOOP_BACK_EDGE。判据：块只有一个前驱
+                # （在循环体内），前驱末指令是 FORWARD 条件跳转，且本块是
+                # fall-through（true body，非 jump target）。当循环所有路径
+                # 都显式 break/continue/return 时，唯一回边可能是 elif body
+                # 的 continue，把它当 LOOP_BACK_EDGE 会让 elif body 变 pass
+                # 而非 continue。fall-through（true body）始终是显式分支
+                # （必须走"if true"路径才能到达），不会是自然回边；jump
+                # target（false body）可能是自然路径（如 while 循环末尾），
+                # 故仅检测 fall-through 情形。
+                _nb_preds = [p for p in block.predecessors if p in body_set]
+                _is_explicit_cont = False
+                if len(_nb_preds) == 1:
+                    _np = _nb_preds[0]
+                    _npl = _np.get_last_instruction()
+                    if (_npl and _npl.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                            and _npl.argval is not None):
+                        _jt = self.cfg.get_block_by_offset(_npl.argval)
+                        if _jt is not block:
+                            _is_explicit_cont = True
+                if _is_explicit_cont:
+                    continue_map[block] = 'CONTINUE'
+                else:
+                    continue_map[block] = 'LOOP_BACK_EDGE'
                 continue
             if _blk_meaningful:
                 continue_map[block] = 'CONTINUE'
@@ -3769,6 +3927,23 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                                  and i.opname not in PURE_JUMP_OPS
                                  and i.opname not in ('RETURN_VALUE', 'RETURN_CONST')]
                     if not meaningful:
+                        # [Phase 3 adv17_while_multi_if_flow] 仅当
+                        # LOAD_CONST 值为 None 时才可能是 break 的
+                        # peephole 优化（while True 末尾 break → return
+                        # None）。显式 return <非None常量>（如 return 1 →
+                        # LOAD_CONST 1 + RETURN_VALUE）不应被分类为 break。
+                        _is_break_peephole = False
+                        for i in block.instructions:
+                            if i.opname == 'LOAD_CONST':
+                                if i.argval is None:
+                                    _is_break_peephole = True
+                                break
+                            if i.opname == 'RETURN_CONST':
+                                if i.argval is None:
+                                    _is_break_peephole = True
+                                break
+                        if not _is_break_peephole:
+                            continue
                         for pred in block.predecessors:
                             if pred in body_set:
                                 pred_last = pred.get_last_instruction()
@@ -3863,12 +4038,42 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
             )
             _fwd_queue = []
             if not _is_async_send_loop:
-                for _s in header.successors:
-                    if _s not in body:
+                # [Phase 3 adv17_while_multi_if_flow] 此前仅从 header 的
+                # 后继开始前向遍历，遗漏了通过回边收集的 body 块的后继。
+                # 例如 while True 内多 if + return 1：Block 22（if y）由
+                # 回边后向遍历收集入 body，但其后继 Block 38（return 1）
+                # 未被前向遍历处理（因 _fwd_visited = set(body) 跳过已入
+                # body 的块）。当 while True 无自然出口时，所有路径以
+                # RETURN_VALUE 或 JUMP_BACKWARD 结束，return 块应属于循环
+                # 体。修正：从所有 body 块的后继开始前向遍历。
+                #
+                # 但需排除循环回测块的 fall-through（自然出口）。while cond
+                # 的循环回测块（POP_JUMP_BACKWARD_IF_TRUE/FALSE to header）
+                # 的 fall-through 是循环条件失败时的自然出口（return None），
+                # 不属于循环体。若不排除，会把自然出口误纳入 body，导致
+                # 生成多余的 break。
+                _loop_backtest_fallthroughs: Set[BasicBlock] = set()
+                for _b in body:
+                    _b_last = _b.get_last_instruction()
+                    if (_b_last and _b_last.opname in BACKWARD_CONDITIONAL_JUMP_OPS
+                            and _b_last.argval is not None):
+                        _b_target = self.cfg.get_block_by_offset(_b_last.argval)
+                        if _b_target == header:
+                            for _s in _b.successors:
+                                if _s != header:
+                                    _loop_backtest_fallthroughs.add(_s)
+                                    break
+                for _b in list(body):
+                    for _s in _b.successors:
+                        if _s in body or _s == header:
+                            continue
                         if _s == _header_backward_cond_fallthrough:
                             continue
+                        if _s in _loop_backtest_fallthroughs:
+                            continue
                         if self.dom_analyzer.is_dominator(header, _s):
-                            _fwd_queue.append(_s)
+                            if _s not in _fwd_queue:
+                                _fwd_queue.append(_s)
                 _fwd_visited = set(body)
                 while _fwd_queue:
                     _fwd_block = _fwd_queue.pop(0)
@@ -3887,12 +4092,14 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                     for _fs in _fwd_block.successors:
                         if _fs in body or _fs == header or _fs in _fwd_visited:
                             continue
+                        if _fs in _loop_backtest_fallthroughs:
+                            continue
                         if self.dom_analyzer.is_dominator(header, _fs):
                             _fwd_queue.append(_fs)
 
         return body
 
-    def _merge_nop_prefix_loop_headers(self) -> None:
+    def _coalesce_nop_prefix_loop_headers(self) -> None:
         _nop_headers = []
         for h in list(self.loop_analyzer.loop_headers):
             if (len(h.instructions) == 1 and h.instructions[0].opname == 'NOP'
@@ -5032,6 +5239,32 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                                             'PUSH_EXC_INFO', 'SWAP')
                            for instr in meaningful):
                         is_cleanup = True
+                # [Phase 3 adv17_try_except_star] except* 框架清理块检测。
+                # PREP_RERAISE_STAR 是 except* 共享清理块的标志；
+                # LIST_APPEND（非列表推导上下文）是 except* 不匹配清理路径的标志。
+                # 这些块含条件跳转（POP_JUMP_FORWARD_IF_NONE/NOT_NONE），
+                # 若不被纳入 cleanup_blocks，会被误识别为 IfRegion 或孤儿块，
+                # 生成多余的 `if True: pass`。
+                if not is_cleanup:
+                    has_prep_reraise_star = any(instr.opname == 'PREP_RERAISE_STAR' for instr in block.instructions)
+                    has_list_append = any(instr.opname == 'LIST_APPEND' for instr in block.instructions)
+                    if has_prep_reraise_star or has_list_append:
+                        meaningful = [instr for instr in block.instructions
+                                      if instr.opname not in NOISE_OPS]
+                        if all(instr.opname in ('PREP_RERAISE_STAR', 'LIST_APPEND',
+                                                'COPY', 'POP_EXCEPT', 'RERAISE', 'POP_TOP',
+                                                'LOAD_CONST', 'STORE_FAST', 'STORE_NAME',
+                                                'STORE_DEREF', 'STORE_GLOBAL',
+                                                'DELETE_FAST', 'DELETE_NAME',
+                                                'DELETE_DEREF', 'DELETE_GLOBAL',
+                                                'JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                                                'PUSH_EXC_INFO', 'SWAP',
+                                                'POP_JUMP_FORWARD_IF_NONE',
+                                                'POP_JUMP_FORWARD_IF_NOT_NONE',
+                                                'POP_JUMP_BACKWARD_IF_NONE',
+                                                'POP_JUMP_BACKWARD_IF_NOT_NONE')
+                               for instr in meaningful):
+                            is_cleanup = True
                 if is_cleanup:
                     cleanup_blocks.append(block)
                     for succ in block.successors:
@@ -5189,7 +5422,7 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
 
         return new_regions
 
-    def _merge_split_try_except_finally_regions(self, try_regions: list) -> list:
+    def _coalesce_split_try_except_finally_regions(self, try_regions: list) -> list:
         _inner_to_outer = {}
         for r in self._filter_regions(try_regions, TryExceptRegion):
             if r.enclosing_try is not None:
@@ -5826,6 +6059,16 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                 if _current in _visited:
                     continue
                 _visited.add(_current)
+                # [Phase 3 adv17_try_except_star] 边界检查：
+                # 遇到下一个 handler 的 CHECK_EG_MATCH / CHECK_EXC_MATCH
+                # 入口块或 except* 共享清理块（PREP_RERAISE_STAR）时停止，
+                # 不将其纳入当前 handler 的 body。此前 _collect_body 无条件
+                # 追踪所有后继，导致多 except* handler 的块互相重叠。
+                if _current is not entry:
+                    if any(i.opname in ('CHECK_EG_MATCH', 'CHECK_EXC_MATCH') for i in _current.instructions):
+                        continue
+                    if any(i.opname == 'PREP_RERAISE_STAR' for i in _current.instructions):
+                        continue
                 _blocks.append(_current)
                 _last = _current.get_last_instruction()
                 if _last and _last.opname in ('RETURN_VALUE', 'RETURN_CONST', 'RERAISE'):
@@ -5833,6 +6076,12 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                 if any(i.opname == 'POP_EXCEPT' for i in _current.instructions):
                     continue
                 for _succ in _current.successors:
+                    # [Phase 3 adv17_try_except_star] 不跟踪异常后继
+                    # （exception_successors）。except* handler body 的异常后继
+                    # 是 except* 不匹配清理块（框架指令），跟踪它会导致
+                    # 多余的 e = None 和块重叠。
+                    if _succ in _current.exception_successors:
+                        continue
                     if _succ not in _visited:
                         if _succ.start_offset in self._reraise_block_offsets:
                             continue
@@ -5859,11 +6108,15 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                 handler_body_blocks = _collect_body(handler_entry)
                 return exc_type, exc_name, handler_body_blocks
 
-        has_check_exc = any(i.opname == 'CHECK_EXC_MATCH' for i in handler_entry.instructions)
+        # [Phase 3 adv17_try_except_star] 同时支持 CHECK_EXC_MATCH（普通 except）
+        # 和 CHECK_EG_MATCH（except* 异常组）。两者之前的 LOAD_NAME/LOAD_GLOBAL
+        # 是异常类型，之后的 STORE_* 是 as 变量名。
+        _CHECK_OPS = ('CHECK_EXC_MATCH', 'CHECK_EG_MATCH')
+        has_check_exc = any(i.opname in _CHECK_OPS for i in handler_entry.instructions)
         if has_check_exc:
             pre_check_instrs = []
             for instr in handler_entry.instructions:
-                if instr.opname == 'CHECK_EXC_MATCH':
+                if instr.opname in _CHECK_OPS:
                     break
                 if instr.opname in ('LOAD_NAME', 'LOAD_GLOBAL'):
                     pre_check_instrs.append(instr.argval)
@@ -5873,7 +6126,7 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                 has_build_tuple = any(
                     i.opname == 'BUILD_TUPLE' and i.argval == len(pre_check_instrs)
                     for i in handler_entry.instructions
-                    if i.opname != 'CHECK_EXC_MATCH'
+                    if i.opname not in _CHECK_OPS
                 )
                 if has_build_tuple:
                     exc_type = '(' + ', '.join(pre_check_instrs) + ')'
@@ -5882,7 +6135,7 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
 
             seen_check = False
             for instr in handler_entry.instructions:
-                if instr.opname == 'CHECK_EXC_MATCH':
+                if instr.opname in _CHECK_OPS:
                     seen_check = True
                     continue
                 if seen_check and instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_DEREF', 'STORE_GLOBAL'):
@@ -5921,7 +6174,14 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
             if body_entry:
                 handler_body_blocks = _collect_body(body_entry)
         elif not has_check_exc:
-            handler_body_blocks = [handler_entry]
+            # [Phase 3 回归修复] bare except（无 CHECK_OP、无 PUSH_EXC_INFO、
+            # 无条件跳转）的入口块可能仅含 POP_TOP（弹出异常），真正的 body
+            # （POP_EXCEPT + LOAD_CONST + RETURN_VALUE 等）在后继块中。此前
+            # 直接 body = [handler_entry] 只收集入口块，丢失后继 body 块，
+            # 导致 _follow_except_chain 无法识别 bare except（body 不含
+            # POP_EXCEPT）。改用 _collect_body 完整收集，其边界检查会自动
+            # 在 RETURN_VALUE/RERAISE/CHECK_OP/PREP_RERAISE_STAR 处停止。
+            handler_body_blocks = _collect_body(handler_entry)
 
         if not handler_body_blocks:
             body_entry = None
@@ -5936,7 +6196,7 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
         if exc_type is None and handler_body_blocks:
             for hb in handler_body_blocks:
                 for instr in hb.instructions:
-                    if instr.opname == 'CHECK_EXC_MATCH':
+                    if instr.opname in _CHECK_OPS:
                         exc_type = instr.argval
                         break
                 if exc_type:
@@ -5945,7 +6205,7 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                     if succ == hb:
                         continue
                     for instr in succ.instructions:
-                        if instr.opname == 'CHECK_EXC_MATCH':
+                        if instr.opname in _CHECK_OPS:
                             exc_type = instr.argval
                             break
                     if exc_type:
@@ -5960,7 +6220,7 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                         continue
                     _rv.add(_cur)
                     for instr in _cur.instructions:
-                        if instr.opname == 'CHECK_EXC_MATCH':
+                        if instr.opname in _CHECK_OPS:
                             exc_type = instr.argval
                             break
                     if exc_type:
@@ -5979,6 +6239,9 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
         current = handler_entry
         visited = {handler_entry}
         CHAIN_LINK_JUMPS = CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS
+        # [Phase 3 adv17_try_except_star] 同时识别 CHECK_EXC_MATCH（普通 except）
+        # 和 CHECK_EG_MATCH（except* 异常组）作为链中 handler 的标志。
+        _CHAIN_CHECK_OPS = ('CHECK_EXC_MATCH', 'CHECK_EG_MATCH')
         while True:
             last = current.get_last_instruction()
             if last is None or last.opname not in CHAIN_LINK_JUMPS:
@@ -5988,6 +6251,10 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
             if next_block is None or next_block in visited:
                 break
             if any(i.opname == 'RERAISE' for i in next_block.instructions):
+                break
+            # [Phase 3 adv17_try_except_star] PREP_RERAISE_STAR 是 except* 共享
+            # 清理块的标志，不是 handler，链到此中断。
+            if any(i.opname == 'PREP_RERAISE_STAR' for i in next_block.instructions):
                 break
             is_back_edge = False
             for i in next_block.instructions:
@@ -6003,14 +6270,68 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
             if any(i.opname == 'PUSH_EXC_INFO' for i in next_block.instructions):
                 break
             visited.add(next_block)
-            has_check_exc = any(i.opname == 'CHECK_EXC_MATCH' for i in next_block.instructions)
+            has_check = any(i.opname in _CHAIN_CHECK_OPS for i in next_block.instructions)
             exc_type, exc_name, body = self._extract_except_handler(next_block)
-            if has_check_exc:
+            if has_check:
                 chain_handlers.append((exc_type, exc_name, body))
                 chain_entries.append(next_block)
                 current = next_block
             else:
-                if body:
+                # [Phase 3 adv17_try_except_star_multi] except* 多 handler
+                # 链中，POP_JUMP_FORWARD_IF_NONE 的跳转目标是「不匹配清理块」
+                # （仅含 POP_TOP），其后继才是下一个 except* handler 入口
+                # （含 CHECK_EG_MATCH）。此前直接 break 导致第二个 except*
+                # handler 丢失，其块被并入第一个 handler 的 body。
+                # 修正：若 next_block 是简单过渡块（仅含 POP_TOP / NOP /
+                # JUMP_FORWARD），沿其后继查找下一个含 CHECK_OP 的 handler。
+                _is_transition = all(
+                    i.opname in ('POP_TOP', 'NOP', 'CACHE', 'JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                    for i in next_block.instructions
+                )
+                if _is_transition:
+                    _probe = next_block
+                    _probe_visited = {next_block}
+                    _found_next_handler = False
+                    for _ in range(8):
+                        _probe_succs = [s for s in _probe.successors if s not in _probe_visited and s not in visited]
+                        if not _probe_succs:
+                            break
+                        _probe = _probe_succs[0]
+                        _probe_visited.add(_probe)
+                        if any(i.opname == 'PREP_RERAISE_STAR' for i in _probe.instructions):
+                            break
+                        if any(i.opname == 'RERAISE' for i in _probe.instructions):
+                            break
+                        if any(i.opname in _CHAIN_CHECK_OPS for i in _probe.instructions):
+                            visited.add(_probe)
+                            _et, _en, _body = self._extract_except_handler(_probe)
+                            chain_handlers.append((_et, _en, _body))
+                            chain_entries.append(_probe)
+                            current = _probe
+                            _found_next_handler = True
+                            break
+                    if _found_next_handler:
+                        continue
+                    # 过渡块未找到下一个 CHECK_OP handler。区分两种情况：
+                    # (a) except* 链末尾的清理过渡块（不是 handler，丢弃）：
+                    #     _collect_body 只返回过渡块自身（len == 1），因为
+                    #     后继全是 CHECK_OP/PREP_RERAISE_STAR/RERAISE 块被
+                    #     边界检查跳过。
+                    # (b) bare except 入口块（仅含 POP_TOP，真实 body 在后继
+                    #     块中）：_collect_body 返回入口 + 后继 body 块
+                    #     （len > 1），因为后继是 POP_EXCEPT/LOAD_CONST/
+                    #     STORE_NAME/RAISE_VARARGS 等真实指令块。
+                    # 用 len(body) > 1 区分：bare except 必有后继 body 块。
+                # [Phase 3 回归修复] bare except（无 CHECK_OP 但有真实 body）
+                # 是 except 链的终结 handler。恢复 e532253 之前的行为：将其
+                # 作为最后一个 handler 纳入链。此前 e532253 移除此分支导致
+                # te010/021/052/061/093 等 bare except 被丢弃。
+                # 判别护栏：
+                # - 非过渡块（入口含真实指令）：body 非空即纳入。
+                # - 过渡块（入口仅 POP_TOP/JUMP）：body 块数 > 1 才纳入
+                #   （except* 清理过渡块 body 仅 1 块，不纳入）。
+                _is_real_handler = body and (not _is_transition or len(body) > 1)
+                if _is_real_handler:
                     chain_handlers.append((exc_type, exc_name, body))
                     chain_entries.append(next_block)
                 break
@@ -7042,6 +7363,16 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
         _first_target = region.items[0][1] if region.items and region.items[0][1] else None
         region.target = _first_target if isinstance(_first_target, str) else None
 
+    def _is_except_star_framework_block(self, block: 'BasicBlock') -> bool:
+        """检测块是否是 except*（异常组）语法的框架块
+
+        except* 的框架指令包括 CHECK_EG_MATCH、PREP_RERAISE_STAR、LIST_APPEND
+        （在异常组上下文中）。这些块不应被识别为 MatchRegion 或其他区域。
+        """
+        if block is None:
+            return False
+        return any(i.opname in ('CHECK_EG_MATCH', 'PREP_RERAISE_STAR') for i in block.instructions)
+
     def _is_match_subject_block(self, block: 'BasicBlock') -> bool:
         """检测块是否是 match 语句的 subject 块（字面量模式）
 
@@ -7060,6 +7391,14 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
             return False
         # 已由 _has_match_op 处理的结构型模式，此处不重复
         if self._has_match_op(block):
+            return False
+
+        # [Phase 3 adv17_try_except_star] except* 框架块（含 CHECK_EG_MATCH
+        # 或 PREP_RERAISE_STAR）不是 match subject 块。except* 的清理块
+        # LIST_APPEND + PREP_RERAISE_STAR + COPY + POP_JUMP_IF_NOT_NONE
+        # 会被误识别为 match subject（模式2: COPY + POP_JUMP_IF_NOT_NONE），
+        # 但实际是 except* 的异常组清理逻辑。
+        if self._is_except_star_framework_block(block):
             return False
 
         instrs = [i for i in block.instructions if i.opname not in NOISE_OPS]
@@ -7859,6 +8198,21 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                         continue
                     visited_g.add(gc)
                     is_pattern_only = all(i.opname in PATTERN_ONLY_OPS for i in gc.instructions)
+                    # [Phase 3 adv16_match_class_nested_in_if] 嵌套类模式块（如
+                    # Outer(x=Inner(1)) 的 Inner 匹配块）含 MATCH_CLASS + LOAD_NAME
+                    # （加载内层类引用）。LOAD_NAME 不在 PATTERN_ONLY_OPS（guard 块
+                    # 也用 LOAD_NAME），但含 MATCH_CLASS/MATCH_SEQUENCE/MATCH_MAPPING
+                    # 的块一定是模式检查块，应继续沿后继收集（找下一个 pattern 检查块
+                    # 与真正 body），而非当作 guard 块 break 中断 worklist。否则后续
+                    # pattern 检查块（如 Inner(1) 的 UNPACK+COMPARE 块）与 next-case
+                    # 块会被误纳入 body，导致 _mr_bodies_are_equivalent 误判两 case
+                    # body 末块相同而合并为 MatchOr。
+                    _has_definitive_match_op = any(
+                        i.opname in ('MATCH_CLASS', 'MATCH_SEQUENCE', 'MATCH_MAPPING',
+                                     'MATCH_KEYS', 'MATCH_MAPPING_KEYS')
+                        for i in gc.instructions)
+                    if _has_definitive_match_op:
+                        is_pattern_only = True
                     gj = self._mr_find_case_jump_instruction(gc)
                     if gj:
                         target_block = self.cfg.get_block_by_offset(gj.argval)
@@ -8714,6 +9068,9 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
         return literal_regions
 
     def _is_case_pattern_block(self, block: 'BasicBlock') -> bool:
+        # [Phase 3 adv17_try_except_star] except* 框架块不是 case pattern 块
+        if self._is_except_star_framework_block(block):
+            return False
         if self._has_match_op(block):
             return True
         if any(i.opname in ('GET_LEN', 'UNPACK_SEQUENCE') for i in block.instructions):
@@ -9470,6 +9827,30 @@ RegionType 枚举值: RegionType.ASSERT
                         _jt_exits_loop = _jump_target and _jump_target not in block_region.blocks
                         if _jt_exits_loop:
                             return True
+                        # [CPython peephole] Back-edge condition re-check
+                        # without a STORE: e.g., `while not done and
+                        # has_data():` where CPython 3.11 duplicates the
+                        # compound condition at the back edge. The
+                        # back-edge re-check is `LOAD done;
+                        # POP_JUMP_IF_TRUE` (no STORE before the
+                        # condition — just a condition re-evaluation).
+                        # The fallthrough leads to the LOOP_BACK_EDGE
+                        # block (or to a block whose last instr is a
+                        # BACKWARD_CONDITIONAL_JUMP) and the jump target
+                        # is a BREAK block (exits the loop when the
+                        # re-check fails). This is the same back-edge
+                        # recheck pattern as the with-STORE case above,
+                        # just without the loop increment. Without this
+                        # check, the header_block would be misidentified
+                        # as a standalone IfRegion, producing spurious
+                        # `if (not done): pass` in the loop body.
+                        if _ft_succ:
+                            _ft_role_nostore = self.block_roles.get(_ft_succ.start_offset)
+                            if _ft_role_nostore == BlockRole.LOOP_BACK_EDGE and _jt_role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
+                                return True
+                            if (_ft_last and _ft_last.opname in BACKWARD_CONDITIONAL_JUMP_OPS
+                                and _jt_role in (BlockRole.BREAK, BlockRole.PURE_BREAK)):
+                                return True
                     if _cond_is_pure_compare:
                         if (_ft_last and _ft_last.opname in BACKWARD_CONDITIONAL_JUMP_OPS
                             and _jt_role in (BlockRole.BREAK, BlockRole.PURE_BREAK)):
@@ -9526,6 +9907,21 @@ RegionType 枚举值: RegionType.ASSERT
                         for _cs in cond_succs_ib:
                             _cs_role = self.block_roles.get(_cs.start_offset)
                             if _cs_role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
+                                return True
+            # [Phase 4 回归修复] BoolOpRegion 作为循环复合条件（如
+            # `while a > 0 and b > 0:`）时，CPython 3.11 在循环入口和
+            # back-edge 处复制复合条件。BoolOpRegion 的链块（每个含
+            # POP_JUMP_FORWARD_IF_FALSE 跳向循环出口）会被 IfRegion 创建
+            # 逻辑误识别为独立的 if-then，把整个循环体包进虚假的 if。
+            # 判别：块在 BoolOpRegion 中 + 块在循环内 + 块的条件跳转目标
+            # 在循环外（循环出口）。此 BoolOpRegion 是循环条件，不是
+            # if-then。与 TryExceptRegion 的处理对称。
+            elif type(block_region) is BoolOpRegion:
+                if last_instr and last_instr.argval is not None:
+                    _bor_jt = self.cfg.get_block_by_offset(last_instr.argval)
+                    if _bor_jt is not None:
+                        for _lr in loop_regions:
+                            if block in _lr.blocks and _bor_jt not in _lr.blocks:
                                 return True
         cond_succs_check = list(block.conditional_successors)
         if len(cond_succs_check) == 2:
@@ -9605,6 +10001,11 @@ RegionType 枚举值: RegionType.ASSERT
         """
         if_regions = []
         try_handler_blocks = set()
+        # [Phase 3 adv17_try_except_star] try_cleanup_blocks 仅含 except* 框架
+        # 清理块（PREP_RERAISE_STAR 等），在主循环中跳过 IfRegion 创建。
+        # 区别于 try_handler_blocks：handler body 块不应被跳过（允许嵌套 if），
+        # 只有 cleanup_blocks 才应被跳过。
+        try_cleanup_blocks = set()
         if try_regions:
             for tr in try_regions:
                 if hasattr(tr, 'handler_entry_blocks'):
@@ -9614,6 +10015,13 @@ RegionType 枚举值: RegionType.ASSERT
                 if hasattr(tr, 'except_handlers') and tr.except_handlers:
                     for _, _, hblocks in tr.except_handlers:
                         try_handler_blocks.update(hblocks)
+                # [Phase 3 adv17_try_except_star] cleanup_blocks 含
+                # except* 共享清理块（PREP_RERAISE_STAR），也必须排除，否则
+                # 该块的条件跳转（POP_JUMP_FORWARD_IF_NOT_NONE）会被误识别为
+                # IfRegion，生成多余的 `if True: pass`。
+                if hasattr(tr, 'cleanup_blocks') and tr.cleanup_blocks:
+                    try_handler_blocks.update(tr.cleanup_blocks)
+                    try_cleanup_blocks.update(tr.cleanup_blocks)
         with_handler_blocks = set()
         if with_regions:
             for wr in with_regions:
@@ -9656,6 +10064,20 @@ RegionType 枚举值: RegionType.ASSERT
                             break
                         if prev_last.opname != last_cb_last.opname:
                             break
+                        # [P5 + Cluster 4 interaction] Skip trimming when
+                        # prev_cb's jump target is a value block (has its own
+                        # conditional jump). This happens when ternaries are
+                        # BoolOp operands — each ternary's cond block has a
+                        # different jump target (its false_value), but the
+                        # chain correctly extends across ternary operands.
+                        # Trimming would incorrectly cut the chain.
+                        _prev_jt = self.cfg.get_block_by_offset(prev_last.argval)
+                        if _prev_jt is not None:
+                            _prev_jt_last = _prev_jt.get_last_instruction()
+                            if (_prev_jt_last is not None
+                                    and _prev_jt_last.opname in FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS
+                                    and _prev_jt_last.argval is not None):
+                                break
                         trimmed_chain = bor.op_chain[:i+1]
                         trimmed_blocks = set()
                         for cb, _ in trimmed_chain:
@@ -9708,6 +10130,13 @@ RegionType 枚举值: RegionType.ASSERT
             block_region = self.block_to_region.get(block)
             if block in with_handler_blocks:
                 continue
+            # [Phase 3 adv17_try_except_star] except* 框架清理块（PREP_RERAISE_STAR
+            # 等，含条件跳转 POP_JUMP_FORWARD_IF_NOT_NONE）不能被 IfRegion 抢占。
+            # 注意：只跳过 cleanup_blocks，不跳过 handler body 块——handler body
+            # 中的 if 语句应正常识别为嵌套 IfRegion。此前使用 try_handler_blocks
+            # 跳过所有块，导致 except handler 内的 if 语句丢失（adv09 回归）。
+            if block in try_cleanup_blocks:
+                continue
             if self._should_skip_block_for_if_region(block, block_region, loop_regions, last_instr):
                 continue
             # 跳过链式比较的额外链块：这些块是链式比较条件的一部分，
@@ -9715,7 +10144,7 @@ RegionType 枚举值: RegionType.ASSERT
             if block in chained_compare_extra_blocks:
                 continue
 
-            if any(instr.opname in ('PUSH_EXC_INFO', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH') for instr in block.instructions):
+            if any(instr.opname in ('PUSH_EXC_INFO', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH', 'PREP_RERAISE_STAR') for instr in block.instructions):
                 continue
 
             if any(tr.entry == block for tr in self._filter_regions(ternary_regions or [], TernaryRegion)):
@@ -9804,21 +10233,38 @@ RegionType 枚举值: RegionType.ASSERT
                     continue
 
             if isinstance(block_region, BoolOpRegion) and block_region.entry != block:
-                if any(block in br.blocks and br.entry != block for br in self._filter_regions(boolop_regions or [], BoolOpRegion)):
+                # [Phase 3 adv14_boolop_result_compare] 双角色 merge_block
+                # 例外：值上下文 BoolOpRegion 的 merge_block 可能含
+                # COMPARE_OP + POP_JUMP_IF_FALSE（如 ``(a and b) == (c and d)``
+                # 中 Block 14 是 R2.merge_block 又是真正的 if 条件块）。此时
+                # 必须创建 IfRegion——merge_block 既是 BoolOp 值的归并点又是
+                # if 条件入口。这是「每块唯一归属」原则的明确例外，类似
+                # loop_condition_blocks 例外，遵循同样的归约层次化原则。
+                _is_merge_if_condition = (
+                    block_region.merge_block is block
+                    and not getattr(block_region, 'is_condition_context', True)
+                    and any(i.opname == 'COMPARE_OP' for i in block.instructions)
+                    and last_instr is not None
+                    and last_instr.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                )
+                if _is_merge_if_condition:
+                    pass  # 允许后续创建 IfRegion
+                elif any(block in br.blocks and br.entry != block for br in self._filter_regions(boolop_regions or [], BoolOpRegion)):
                     continue
-                cond_succs_for_check = list(block.conditional_successors)
-                if len(cond_succs_for_check) == 2:
-                    then_cand = sorted(cond_succs_for_check, key=lambda s: s.start_offset)[0]
-                    in_structural = any(
-                        then_cand in sr.blocks or then_cand == sr.entry
-                        for sr in (loop_regions or []) + (match_regions or [])
-                        + ([r for r in (try_regions or []) if hasattr(r, 'blocks')])
-                        + ([r for r in (with_regions or []) if hasattr(r, 'blocks')])
-                    )
-                    if not in_structural:
-                        continue
                 else:
-                    continue
+                    cond_succs_for_check = list(block.conditional_successors)
+                    if len(cond_succs_for_check) == 2:
+                        then_cand = sorted(cond_succs_for_check, key=lambda s: s.start_offset)[0]
+                        in_structural = any(
+                            then_cand in sr.blocks or then_cand == sr.entry
+                            for sr in (loop_regions or []) + (match_regions or [])
+                            + ([r for r in (try_regions or []) if hasattr(r, 'blocks')])
+                            + ([r for r in (with_regions or []) if hasattr(r, 'blocks')])
+                        )
+                        if not in_structural:
+                            continue
+                    else:
+                        continue
 
             boolop_region = self._resolve_boolop_condition_region(block)
 
@@ -10091,7 +10537,7 @@ RegionType 枚举值: RegionType.ASSERT
                 all_condition_blocks.update(_await_pred_blocks)
                 chain_blocks.update(_await_pred_blocks)
 
-            region = self._build_elif_region(block, then_blocks, else_blocks, merge, all_condition_blocks, condition_block, boundary_stop=boundary_stop)
+            region = self._build_elif_region(block, then_blocks, else_blocks, merge, all_condition_blocks, condition_block, boundary_stop=boundary_stop, ternary_regions=ternary_regions)
             if region is None:
                 region = self._build_basic_if_region(block, then_blocks, else_blocks, merge,
                                                       all_condition_blocks, condition_block,
@@ -10299,8 +10745,20 @@ RegionType 枚举值: RegionType.ASSERT
                 for _or2 in (boolop_regions or []) + (ternary_regions or []):
                     if _or2.entry:
                         _bt_entries.add(_or2.entry)
-                then_blocks = [b for b in then_blocks if b in _bt_entries or b not in _boolop_ternary_blocks]
-                else_blocks = [b for b in else_blocks if b in _bt_entries or b not in _boolop_ternary_blocks]
+                # [Phase 3 adv11_while_walrus_boolop] LoopRegion 入口（entry/
+                # condition_block/header_block）即使同时是 BoolOpRegion 的
+                # 链块（如 ``if c: while (x:=f()) and g():``，Block 3 既是
+                # LoopRegion 条件块又是 BoolOpRegion 链块），也必须保留在
+                # IfRegion 的 then_blocks 中——否则 LoopRegion 无法嵌套进
+                # IfRegion，反编译会输出 ``if c: pass`` + 顶层 ``while``。
+                then_blocks = [b for b in then_blocks
+                               if b in _bt_entries
+                               or b not in _boolop_ternary_blocks
+                               or b in _lre]
+                else_blocks = [b for b in else_blocks
+                               if b in _bt_entries
+                               or b not in _boolop_ternary_blocks
+                               or b in _lre]
             else:
                 _loop_region = None
                 for _r in self._filter_regions(list(self.block_to_region.values()), LoopRegion):
@@ -10311,6 +10769,13 @@ RegionType 枚举值: RegionType.ASSERT
                     _loop_body_only = set(_loop_region.body_blocks)
                     if _loop_region.condition_block:
                         _loop_body_only.add(_loop_region.condition_block)
+                    # [Phase 4 回归修复] back_edge_block 是循环的回边重检块
+                    # （含 loop increment + 条件重检），不属于任何 IfRegion 的
+                    # else 分支。若不排除，`while: if: break if: break; n+=1`
+                    # 的 back_edge 块（n+=1 + n<100 重检）会被 elif 链的 else
+                    # 分支吸收，生成多余的 `if n<100: pass else: break`。
+                    if _loop_region.back_edge_block is not None:
+                        _loop_body_only.discard(_loop_region.back_edge_block)
                     _loop_all_blocks = set(_loop_region.blocks)
                     _break_target_blocks = set()
                     for _lb in _loop_region.blocks:
@@ -10334,7 +10799,7 @@ RegionType 枚举值: RegionType.ASSERT
             region.mark_trailing_return_none()
         return region
 
-    def _build_elif_region(self, block, then_blocks, else_blocks, merge, all_condition_blocks, condition_block=None, boundary_stop=None):
+    def _build_elif_region(self, block, then_blocks, else_blocks, merge, all_condition_blocks, condition_block=None, boundary_stop=None, ternary_regions=None):
         # [R17 fix] When collecting inner elif branch blocks inside a loop, the loop's
         # boundary_stop (which includes break/return exit blocks and the loop header)
         # prevents collecting terminal blocks that are part of the elif chain (e.g.,
@@ -10497,6 +10962,64 @@ RegionType 枚举值: RegionType.ASSERT
                     if first_else == _r.condition_block or first_else == _r.header_block or first_else == _r.entry:
                         return None
 
+            # [Phase 3 adv15_ternary_elif_test] 三元作为 elif 条件：
+            # 当 first_else 是 TernaryRegion（merge_context='while_cond'）的 entry 时，
+            # 整个三元就是 elif 条件本身。CPython 3.11+ 内联三元结果为条件测试，
+            # 使 true_value_block/false_value_block 各自带 POP_JUMP_IF_FALSE 跳到
+            # "skip body" 块。若不识别此模式，_check_elif_chain 会递归把 true_value
+            # 和 false_value 块拆成多个 elif 条件，破坏三元语义：
+            #   `elif (b if c else d): pass` → `elif c: pass / elif d: pass`（b 丢失）
+            #
+            # 区域归约：三元（Phase 1.5）先于 IfRegion（Phase 2）归约，
+            # 三元是更归约的形式。IfRegion 应把整个三元视为单个 elif 条件，
+            # body = 三元的 merge_block（truthy path 汇聚点），
+            # final_else = 三元值块的 POP_JUMP_IF_FALSE 目标（falsy path）。
+            #
+            # [Phase 3 adv15_ternary_each_branch] 非条件上下文三元
+            # （merge_context != 'while_cond'，如 'store'）作为 else 分支体的
+            # 内容，不是 elif 条件。例如：
+            #   `if a: ... elif b: ... else: x = 5 if r else 6`
+            # else 体以三元 condition_block（LOAD r, POP_JUMP_IF_FALSE → false_value）
+            # 开头，_check_elif_chain 会误把 r 当作另一个 elif 条件，把 5/6 当作
+            # body/final_else。返回 None 让调用方使用 inner_else_blocks 作为
+            # final_else，保留完整 else 体（含三元）。
+            if ternary_regions:
+                _te_ternary = None
+                _te_non_conditional = None
+                for _tr in self._filter_regions(ternary_regions, TernaryRegion):
+                    if _tr.entry is first_else:
+                        _mc = getattr(_tr, 'merge_context', None)
+                        if (_mc == 'while_cond'
+                                and _tr.merge_block is not None
+                                and _tr.true_value_block is not None
+                                and _tr.false_value_block is not None):
+                            _te_ternary = _tr
+                            break
+                        else:
+                            _te_non_conditional = _tr
+                            break
+                if _te_ternary is not None:
+                    _te_body = _te_ternary.merge_block
+                    _te_final_else = []
+                    _te_seen = {_te_body.start_offset}
+                    for _te_vb in (_te_ternary.true_value_block, _te_ternary.false_value_block):
+                        _te_vlast = _te_vb.get_last_instruction()
+                        if (_te_vlast is not None
+                                and _te_vlast.argval is not None
+                                and _te_vlast.opname in FORWARD_CONDITIONAL_JUMP_OPS):
+                            _te_skip = self.cfg.get_block_by_offset(_te_vlast.argval)
+                            if (_te_skip is not None
+                                    and _te_skip.start_offset not in _te_seen):
+                                _te_final_else.append(_te_skip)
+                                _te_seen.add(_te_skip.start_offset)
+                    return {
+                        'conditions': [first_else],
+                        'bodies': [[_te_body]],
+                        'final_else': _te_final_else,
+                    }
+                if _te_non_conditional is not None:
+                    return None
+
             conditions = [first_else]
             bodies = []
             final_else = []
@@ -10627,7 +11150,12 @@ RegionType 枚举值: RegionType.ASSERT
                                      if s.start_offset == last_instr.argval), None)
                     if else_succ and else_succ not in set(inner_then_blocks):
                         if merge_ is None or else_succ != merge_:
-                            final_else = [else_succ]
+                            # [Phase 4 回归修复] 不将 boundary_stop 中的块
+                            # （含循环 back_edge_block）作为 final_else。这些块
+                            # 属于 LoopRegion（每块唯一归属），不应被 IfRegion
+                            # 的 else 分支吸收。
+                            if else_succ not in _inner_boundary_stop:
+                                final_else = [else_succ]
 
             result = {'conditions': conditions, 'bodies': bodies, 'final_else': final_else}
 
@@ -12347,6 +12875,45 @@ RegionType 枚举值: RegionType.ASSERT
                 merge_context = 'while_cond'
                 value_target = '__while_cond_target__'
 
+            # [Phase 3 adv15_ternary_each_branch] 拒绝"吞噬 if/elif/else"
+            # 的虚假外层三元。当外层"三元"的 true_value_block 或
+            # false_value_block 是某个嵌套 TernaryRegion（merge_context='store'
+            # 或 'return'）的 entry 时，该嵌套三元是语句体（赋值/返回），
+            # 而非值表达式——外层"三元"实际上是把 if/elif/else 结构误识别
+            # 为三元。例如：
+            #   `if a: x = 1 if p else 2 / elif b: x = 3 if q else 4 /
+            #    else: x = 5 if r else 6`
+            # 外层"三元" entry=0 的 true=6（第一个内层三元 entry，store），
+            # false=22（elif/else 续）。若不拒绝，会吞掉整个 if/elif/else
+            # 结构，阻止 IfRegion 创建。
+            #
+            # 注意1：合法的嵌套三元（如 `a if (b if c else d) else e`）的
+            # 内层三元 merge_context=None 或 'while_cond'（值表达式上下文），
+            # 不应拒绝——这是 adv01_nested_ternary_cond 等场景。
+            #
+            # 注意2：当嵌套三元的 merge_block 与外层三元的 merge_block 相同
+            # 时（如 `z = a if b else (cc if d else e)`，内外层三元共享
+            # STORE_NAME z 块），嵌套三元是值表达式（其结果由外层三元消费），
+            # 不应拒绝——这是 adv06_nested_ternary_body 等场景。
+            def _is_statement_ternary_entry(blk):
+                if blk is None:
+                    return False
+                _existing = self.block_to_region.get(blk)
+                if isinstance(_existing, TernaryRegion):
+                    _mc = getattr(_existing, 'merge_context', None)
+                    if _mc in ('store', 'return'):
+                        # 嵌套三元与外层三元共享 merge_block 时，嵌套三元
+                        # 是值表达式（结果由外层三元消费），不是语句体。
+                        if (merge_block is not None
+                                and _existing.merge_block is merge_block):
+                            return False
+                        return True
+                return False
+
+            if (_is_statement_ternary_entry(true_block)
+                    or _is_statement_ternary_entry(false_block)):
+                return None
+
             all_blocks = {block, true_block, false_block}
             # Phase 11: chain_blocks 现在可能是 [(block, op), ...] 格式
             # 需要只提取 block 对象添加到 all_blocks
@@ -13288,6 +13855,20 @@ RegionType 枚举值: RegionType.ASSERT
             _pred_has_store = any(i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
                                    for i in pred.instructions
                                    if i.opname not in NOISE_OPS)
+            # [Phase 3 adv11_while_walrus_boolop] 海象运算符 (:=) 编译为
+            # ``COPY 1 + STORE_*``，是条件表达式 NamedExpr 的一部分（如
+            # ``while (x := f()) and g():``），不是循环体赋值语句。检测
+            # predecessor 中的 STORE 是否全部由海象模式构成；若是，则不
+            # 视为"循环体内赋值"，允许链向后扩展以识别复合条件。
+            _pred_non_walrus_store = False
+            _pred_instrs_no_noise = [i for i in pred.instructions
+                                     if i.opname not in NOISE_OPS]
+            for _pi, _i in enumerate(_pred_instrs_no_noise):
+                if _i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                    _prev = _pred_instrs_no_noise[_pi - 1] if _pi > 0 else None
+                    if not (_prev and _prev.opname == 'COPY' and _prev.arg == 1):
+                        _pred_non_walrus_store = True
+                        break
             if _pred_has_store:
                 # 修复：当 predecessor 位于循环外部（不在 loop.blocks 中）时，
                 # STORE_FAST 通常是循环前的初始化代码（如 `i = 0`），
@@ -13296,7 +13877,8 @@ RegionType 枚举值: RegionType.ASSERT
                 # 此时应当允许链扩展到该块，以正确识别复合条件。
                 # 只有当 predecessor 位于循环内部时，STORE_FAST 才可能
                 # 表示循环体中的赋值语句，此时应中断链。
-                if pred in loop.blocks:
+                # [Phase 3 adv11] 但海象 STORE 不算循环体赋值，仍允许扩展。
+                if pred in loop.blocks and _pred_non_walrus_store:
                     break
             pred_succs = list(pred.conditional_successors)
             if len(pred_succs) == 2:
@@ -13482,18 +14064,62 @@ RegionType 枚举值: RegionType.ASSERT
         # 边界条件：
         # - 仅当块包含短路跳转时才放宽claimed检查（避免误判）
         # - 如果块已被其他BoolOpRegion声明则仍跳过（避免重复）
+        # - [Phase 3 adv14_boolop_result_compare] 双角色块例外：
+        #   块可以同时是某 BoolOpRegion 的 merge_block 又是另一个
+        #   BoolOpRegion 链的起始块。如 ``(a and b) == (c and d)``：
+        #   Block 3 (LOAD c; JUMP_IF_FALSE_OR_POP → Block 5) 既是第一个
+        #   `and` (R1: chain=[(1,'and')], merge=3) 的 merge_block，又是
+        #   第二个 `and` (R2: chain=[(3,'and')], merge=5) 的起始块。当块
+        #   是已存在 BoolOpRegion 的 merge_block（不在其 op_chain 中）且
+        #   自身以 SHORT_CIRCUIT_JUMP_OPS 结尾、跳转目标与已存在
+        #   BoolOpRegion 的 merge 不相同时，允许其作为新链起始被检测。
+        #   这是「每块唯一归属」原则的明确例外——双角色块语义上同时属于
+        #   两个表达式级区域（前一个的归并点 + 后一个的入口），类似
+        #   loop_condition_blocks 例外，遵循同样的归约层次化原则。
+        _is_dual_role_block = False
         if block in claimed:
             existing = self.block_to_region.get(block)
             if isinstance(existing, BoolOpRegion):
-                return None
-            last_instr = block.get_last_instruction()
-            if not last_instr or last_instr.opname not in (SHORT_CIRCUIT_JUMP_OPS | FORWARD_CONDITIONAL_JUMP_OPS):
-                return None
+                # 双角色块检查：块是已存在 BoolOpRegion 的 merge_block
+                # 且不在其 op_chain 中、自身以 SHORT_CIRCUIT_JUMP_OPS 结尾。
+                _last_for_dual = block.get_last_instruction()
+                _is_dual_role = (
+                    _last_for_dual is not None
+                    and _last_for_dual.opname in SHORT_CIRCUIT_JUMP_OPS
+                    and existing.merge_block is block
+                    and block not in {b for b, _ in existing.op_chain}
+                )
+                if _is_dual_role:
+                    # 进一步验证：新链的跳转目标必须与已存在 BoolOpRegion
+                    # 的 op_chain 中块的跳转目标不同，确保是独立表达式。
+                    _new_jt = (self.cfg.get_block_by_offset(_last_for_dual.argval)
+                               if _last_for_dual.argval is not None else None)
+                    _existing_jts = set()
+                    for _cb, _ in existing.op_chain:
+                        _cb_last = _cb.get_last_instruction()
+                        if (_cb_last is not None
+                                and _cb_last.argval is not None
+                                and _cb_last.opname in SHORT_CIRCUIT_JUMP_OPS):
+                            _jt = self.cfg.get_block_by_offset(_cb_last.argval)
+                            if _jt is not None:
+                                _existing_jts.add(_jt.start_offset)
+                    if (_new_jt is not None
+                            and _new_jt.start_offset not in _existing_jts):
+                        _is_dual_role_block = True  # 允许作为新链起始被检测
+                    else:
+                        return None
+                else:
+                    return None
+            else:
+                last_instr = block.get_last_instruction()
+                if not last_instr or last_instr.opname not in (SHORT_CIRCUIT_JUMP_OPS | FORWARD_CONDITIONAL_JUMP_OPS):
+                    return None
         last_instr = block.get_last_instruction()
         if not last_instr:
             return None
         if last_instr.opname in SHORT_CIRCUIT_JUMP_OPS:
-            chain = self._detect_boolop_short_circuit_chain(block)
+            chain = self._detect_boolop_short_circuit_chain(
+                block, skip_first_claimed_check=_is_dual_role_block)
             if chain is None or len(chain) < 1:
                 return None
             return chain
@@ -13523,6 +14149,113 @@ RegionType 枚举值: RegionType.ASSERT
                         if sc_target.start_offset > merge.start_offset or sc_target != merge:
                             merge = sc_target
                     break
+        # [P5 + Cluster 4 interaction] Ternary as BoolOp operand — when the
+        # chain contains ternary cond blocks (each cond block's jump target
+        # is a ternary false_value, NOT the real merge), the merge computed
+        # above is actually a VALUE BLOCK. Follow the last chain block's
+        # value blocks' fallthrough (possibly via JUMP_FORWARD) to find the
+        # REAL merge (the if-body).
+        # This happens for `if (a if c else b) or (d if e else f) or ...:` —
+        # the last ternary's false_value's jump target IS the real if-body.
+        #
+        # IMPORTANT: Only fire when ALL chain blocks are ternary cond blocks
+        # (i.e., EVERY chain block's jump target is itself a value block
+        # whose last instruction is a conditional jump). For a mixed chain
+        # like `if a or (b if c else d):` — block 0 is a regular boolop
+        # chain block (its jump target is the if-body, NOT a value block),
+        # block 6 is a ternary cond block — the merge computed above (16,
+        # the false_value) is CORRECT and must NOT be replaced. Replacing
+        # it with the if-body (20) would cause the AST generator to
+        # mis-reconstruct the ternary's test as `a or c and b`.
+        if merge is not None:
+            _merge_last = merge.get_last_instruction()
+            if (_merge_last is not None
+                    and _merge_last.opname in BOOLOP_JUMP_OPS
+                    and _merge_last.argval is not None):
+                # Check if merge is a value block (i.e., it's the jump
+                # target of some chain block — that means it's the
+                # false_value of a ternary in the chain).
+                _is_value_block = False
+                for _cb, _ in chain:
+                    _cb_last = _cb.get_last_instruction()
+                    if (_cb_last is not None
+                            and _cb_last.argval is not None
+                            and _cb_last.opname in BOOLOP_JUMP_OPS):
+                        _cb_jt = self.cfg.get_block_by_offset(_cb_last.argval)
+                        if _cb_jt is merge:
+                            _is_value_block = True
+                            break
+                # Only fire Edit H when ALL chain blocks are ternary cond
+                # blocks (every chain block's jump target is a value block
+                # with its own conditional jump). If ANY chain block's jump
+                # target is a non-value-block (e.g., the if-body), the
+                # merge computed above is correct and must not be replaced.
+                #
+                # ALSO require each chain block's FALL-THROUGH to be a value
+                # block (conditional jump). This distinguishes ternary cond
+                # blocks (POP_JUMP_IF_FALSE → false_value, fall-through =
+                # true_value, BOTH value blocks) from value-level short-
+                # circuits (JUMP_IF_TRUE_OR_POP → merge, fall-through = next
+                # operand LOAD, NOT a value block). For `(a or b) == c:` —
+                # block 0's last is JUMP_IF_TRUE_OR_POP, its jump target is
+                # the comparison block (has POP_JUMP_IF_FALSE), but its
+                # fall-through is LOAD b (NOT a value block). Without this
+                # fall-through check, Edit H would wrongly replace the
+                # correct merge (comparison block) with the if-body.
+                _all_ternary_cond = True
+                for _cb, _ in chain:
+                    _cb_last = _cb.get_last_instruction()
+                    if (_cb_last is None
+                            or _cb_last.argval is None
+                            or _cb_last.opname not in BOOLOP_JUMP_OPS):
+                        _all_ternary_cond = False
+                        break
+                    _cb_jt = self.cfg.get_block_by_offset(_cb_last.argval)
+                    if _cb_jt is None:
+                        _all_ternary_cond = False
+                        break
+                    _cb_jt_last = _cb_jt.get_last_instruction()
+                    if (_cb_jt_last is None
+                            or _cb_jt_last.argval is None
+                            or _cb_jt_last.opname not in BOOLOP_JUMP_OPS):
+                        _all_ternary_cond = False
+                        break
+                    # Also check fall-through is a value block.
+                    _cb_ft = next((s for s in _cb.conditional_successors
+                                   if s.start_offset != _cb_last.argval), None)
+                    if _cb_ft is None:
+                        _all_ternary_cond = False
+                        break
+                    _cb_ft_last = _cb_ft.get_last_instruction()
+                    if (_cb_ft_last is None
+                            or _cb_ft_last.argval is None
+                            or _cb_ft_last.opname not in BOOLOP_JUMP_OPS):
+                        _all_ternary_cond = False
+                        break
+                if _is_value_block and _all_ternary_cond:
+                    # Follow value block's fallthrough to find real merge.
+                    # Value block's last instr is a conditional jump — the
+                    # fall-through successor is the "true branch" of the
+                    # value block (i.e., the "if value is truthy" target).
+                    # For a ternary's false_value, the fall-through usually
+                    # leads (via JUMP_FORWARD) to the real merge.
+                    _ft_succ = next((s for s in merge.conditional_successors
+                                     if s.start_offset != _merge_last.argval), None)
+                    _real_merge = None
+                    if _ft_succ is not None:
+                        _ft_eff = [i for i in _ft_succ.instructions
+                                   if i.opname not in ('NOP', 'CACHE')]
+                        if (len(_ft_eff) == 1
+                                and _ft_eff[0].opname == 'JUMP_FORWARD'
+                                and _ft_eff[0].argval is not None):
+                            _real_merge = self.cfg.get_block_by_offset(_ft_eff[0].argval)
+                        elif _ft_eff and _ft_eff[-1].opname == 'JUMP_FORWARD' \
+                                and _ft_eff[-1].argval is not None:
+                            _real_merge = self.cfg.get_block_by_offset(_ft_eff[-1].argval)
+                        else:
+                            _real_merge = _ft_succ
+                    if _real_merge is not None:
+                        merge = _real_merge
         return merge
 
     def _boolop_check_condition_context(self, chain: List[Tuple[BasicBlock, str]],
@@ -13572,7 +14305,7 @@ RegionType 枚举值: RegionType.ASSERT
                                 if succ not in chain_blocks and succ != merge:
                                     chain_blocks.add(succ)
 
-    def _fix_none_check_op_types(self, chain: List[Tuple[BasicBlock, str]]) -> List[Tuple[BasicBlock, str]]:
+    def _normalize_none_check_op_types(self, chain: List[Tuple[BasicBlock, str]]) -> List[Tuple[BasicBlock, str]]:
         """Fix op_type classification for NONE_CHECK_OPS based on jump direction.
 
         NONE_CHECK_OPS (IF_NONE/IF_NOT_NONE) are ambiguous: the opname alone
@@ -13621,7 +14354,7 @@ RegionType 枚举值: RegionType.ASSERT
         return fixed_chain
 
     def _create_boolop_region_from_chain(self, chain: List[Tuple[BasicBlock, str]], claimed: Set[BasicBlock]) -> Optional[BoolOpRegion]:
-        chain = self._fix_none_check_op_types(chain)
+        chain = self._normalize_none_check_op_types(chain)
         start_block = chain[0][0]
         chain_blocks = set(b for b, _ in chain)
         merge = self._boolop_resolve_merge(chain)
@@ -13712,6 +14445,102 @@ RegionType 枚举值: RegionType.ASSERT
                     if not isinstance(_existing, (LoopRegion,)):
                         continue
                 region_blocks.add(_ab)
+        # [P5 + Cluster 4 interaction] Ternary as BoolOp operand — add
+        # ternary internal blocks (true_value, false_value, JUMP_FORWARD
+        # intermediate) to BoolOpRegion.blocks so the AST generator can
+        # find them when reconstructing ternary expressions from chain
+        # blocks. Without this, the AST generator would not find the
+        # value blocks and fail to reconstruct the ternary.
+        #
+        # IMPORTANT: Only fire when ALL chain blocks are ternary cond blocks
+        # (i.e., EVERY chain block's jump target is itself a value block
+        # whose last instruction is a conditional jump). For a mixed chain
+        # like `if a or (b if c else d):` — block 0 is a regular boolop
+        # chain block (its jump target is the if-body, NOT a value block),
+        # block 6 is a ternary cond block — adding block 6's internal
+        # blocks (true_value=10, false_value=16) to the BoolOpRegion
+        # confuses the AST generator, which then includes true_value (b)
+        # in the ternary's test, producing `b if a or c and b else d`
+        # instead of `a or (b if c else d)`. For the mixed case, the
+        # AST generator finds the ternary internal blocks via block
+        # successors (as in the baseline), so Edit C is not needed.
+        _BOOLOP_CHAIN_JUMPS = FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS
+        _all_ternary_cond_c = True
+        for _cb, _ in chain:
+            _cb_last = _cb.get_last_instruction()
+            if (_cb_last is None
+                    or _cb_last.argval is None
+                    or _cb_last.opname not in _BOOLOP_CHAIN_JUMPS):
+                _all_ternary_cond_c = False
+                break
+            _cb_jt = self.cfg.get_block_by_offset(_cb_last.argval)
+            if _cb_jt is None:
+                _all_ternary_cond_c = False
+                break
+            _cb_jt_last = _cb_jt.get_last_instruction()
+            if (_cb_jt_last is None
+                    or _cb_jt_last.argval is None
+                    or _cb_jt_last.opname not in _BOOLOP_CHAIN_JUMPS):
+                _all_ternary_cond_c = False
+                break
+            # Also require fall-through to be a value block (conditional
+            # jump). This distinguishes ternary cond blocks from value-
+            # level short-circuits (JUMP_IF_TRUE_OR_POP). See Edit H.
+            _cb_ft = next((s for s in _cb.conditional_successors
+                           if s.start_offset != _cb_last.argval), None)
+            if _cb_ft is None:
+                _all_ternary_cond_c = False
+                break
+            _cb_ft_last = _cb_ft.get_last_instruction()
+            if (_cb_ft_last is None
+                    or _cb_ft_last.argval is None
+                    or _cb_ft_last.opname not in _BOOLOP_CHAIN_JUMPS):
+                _all_ternary_cond_c = False
+                break
+        if _all_ternary_cond_c:
+            for _cb, _ in chain:
+                _cb_last = _cb.get_last_instruction()
+                if (_cb_last is None
+                        or _cb_last.argval is None
+                        or _cb_last.opname not in _BOOLOP_CHAIN_JUMPS):
+                    continue
+                _fv = self.cfg.get_block_by_offset(_cb_last.argval)
+                if _fv is None:
+                    continue
+                _fv_last = _fv.get_last_instruction()
+                if (_fv_last is None
+                        or _fv_last.opname not in _BOOLOP_CHAIN_JUMPS
+                        or _fv_last.argval is None):
+                    continue
+                # _fv is a value block (ternary false_value). Find true_value
+                # = chain block's fallthrough.
+                _cb_succs = list(_cb.conditional_successors)
+                _tv = next((s for s in _cb_succs
+                            if s.start_offset != _cb_last.argval), None)
+                if _tv is None:
+                    continue
+                _tv_last = _tv.get_last_instruction()
+                if (_tv_last is None
+                        or _tv_last.opname not in _BOOLOP_CHAIN_JUMPS):
+                    continue
+                # Both _fv and _tv are value blocks — this is a ternary.
+                # Add them to region_blocks. Also add the JUMP_FORWARD
+                # intermediate block between true_value and merge (if any).
+                for _vb in (_fv, _tv):
+                    if _vb not in self.block_to_region:
+                        region_blocks.add(_vb)
+                # Find JUMP_FORWARD intermediate between true_value and merge.
+                _tv_ft = next((s for s in _tv.conditional_successors
+                               if s.start_offset != _tv_last.argval), None)
+                if _tv_ft is not None and _tv_ft not in region_blocks:
+                    _tv_ft_eff = [i for i in _tv_ft.instructions
+                                  if i.opname not in ('NOP', 'CACHE')]
+                    if (len(_tv_ft_eff) == 1
+                            and _tv_ft_eff[0].opname == 'JUMP_FORWARD'
+                            and _tv_ft_eff[0].argval is not None):
+                        # _tv_ft is a JUMP_FORWARD intermediate block.
+                        if _tv_ft not in self.block_to_region:
+                            region_blocks.add(_tv_ft)
         region = BoolOpRegion(
             region_type=RegionType.BOOL_OP,
             entry=start_block,
@@ -13765,6 +14594,232 @@ RegionType 枚举值: RegionType.ASSERT
                     break
             op_type = 'and' if ('FALSE' in last.opname or '_IF_NONE' in last.opname) else 'or'
             chain.append((current, op_type))
+            # [CPython peephole P4 + P5 interaction] Chained compare as
+            # BoolOp operand hop. When `if a < b < c and d < e < f:` is
+            # compiled, each chained compare (a<b<c, d<e<f) is identified
+            # as an IfRegion with chained_compare_ops by
+            # _identify_chained_compare_regions (which runs BEFORE boolop
+            # identification). The boolop chain detection must treat each
+            # chained compare region as a SINGLE operand and hop over its
+            # internal blocks (extra_chain_blocks + merge_block) to reach
+            # the next operand's start.
+            #
+            # Algorithm (bottom-up reduction): if current is the entry of
+            # a chained compare IfRegion, the region's merge_block is the
+            # "fall-through after the chained compare succeeds". If
+            # merge_block is a JUMP_FORWARD, hop to its target (the next
+            # operand); otherwise, hop to merge_block itself. This makes
+            # chained compare regions atomic operands of the higher-level
+            # BoolOp, preserving "each block unique ownership" — the
+            # chained compare region's internal blocks are NOT added to
+            # the BoolOpRegion; only the chained compare headers (entries)
+            # become op_chain operands.
+            #
+            # Note: self.block_to_region may not yet contain the chained
+            # compare region's blocks (chained compare identification only
+            # appends to self.regions, not self.block_to_region). So we
+            # look up the region from self.regions by entry block.
+            #
+            # Safety guard: before hopping, if chain has length >= 2,
+            # verify that current's short-circuit exit is equivalent to
+            # the first chain entry's exit. This prevents false chains
+            # when the hop target is in a different semantic context.
+            _cc_region = None
+            for _r in self.regions:
+                if (type(_r) is IfRegion
+                        and _r.entry is current
+                        and getattr(_r, 'chained_compare_ops', None)
+                        and len(_r.chained_compare_ops) >= 2
+                        and getattr(_r, 'chained_compare_blocks', None)
+                        and _r.merge_block is not None):
+                    _cc_region = _r
+                    break
+            if _cc_region is not None:
+                # Safety guard: verify exit equivalence for chains with
+                # length >= 2 (the first entry sets the reference exit).
+                if len(chain) >= 2:
+                    _first_jt = self.cfg.get_block_by_offset(
+                        chain[0][0].get_last_instruction().argval
+                    ) if chain[0][0].get_last_instruction() and chain[0][0].get_last_instruction().argval is not None else None
+                    _cur_jt = self.cfg.get_block_by_offset(last.argval) if last.argval is not None else None
+                    if (_first_jt is not None and _cur_jt is not None
+                            and _first_jt is not _cur_jt
+                            and not self._is_equivalent_exit_block(_first_jt, _cur_jt)):
+                        chain.pop()
+                        break
+                _cc_merge = _cc_region.merge_block
+                _cc_merge_last = _cc_merge.get_last_instruction() if _cc_merge else None
+                _hop_target = None
+                if (_cc_merge_last is not None
+                        and _cc_merge_last.opname == 'JUMP_FORWARD'
+                        and _cc_merge_last.argval is not None):
+                    _hop_target = self.cfg.get_block_by_offset(_cc_merge_last.argval)
+                elif _cc_merge is not None:
+                    _hop_target = _cc_merge
+                if (_hop_target is not None
+                        and _hop_target.start_offset not in visited):
+                    current = _hop_target
+                    continue
+                # Hop target is None or already visited — break
+                break
+            # [P5 + Cluster 4 interaction] Ternary as BoolOp `or` operand hop.
+            # When `if a or (b if c else d): pass` is compiled, the ternary's
+            # cond block (LOAD c, POP_JUMP_IF_FALSE → false_value) appears in
+            # the boolop chain. The IF_FALSE → false_value looks like an 'and'
+            # short-circuit, but false_value is NOT an exit block — it's the
+            # ternary's false value block (which has its own
+            # POP_JUMP_IF_FALSE/TRUE → exit). Without this hop, the chain
+            # absorbs the ternary's cond + true_value as 'and' operands,
+            # preventing TernaryRegion identification (which runs AFTER
+            # boolop). The chain must treat the entire ternary as a SINGLE
+            # operand and hop over its internal blocks (cond → true_value →
+            # JUMP_FORWARD → merge, false_value → merge) to reach the next
+            # operand or the if-body.
+            #
+            # Detection: current's short-circuit target is NOT an exit block
+            # (doesn't end with RETURN_VALUE/RETURN_CONST) but has its own
+            # conditional jump to an exit (it's a value block). The ternary's
+            # merge is false_value's fallthrough, which true_value's
+            # fallthrough (via JUMP_FORWARD) also reaches.
+            #
+            # Discriminator: only fire when op_type differs from chain[0][1].
+            # When the chain's first op_type matches the current op_type
+            # (e.g. both 'and' — the ternary cond block's IF_FALSE derives
+            # 'and', and the chain is also an 'and' chain), the existing
+            # `_is_equivalent_exit_block` check at line 13276+ already breaks
+            # the chain correctly (because the false_value block is NOT
+            # equivalent to an exit block), letting TernaryRegion
+            # identification handle it. Firing the hop here would WRAP the
+            # ternaries into a BoolOpRegion, breaking the natural TernaryRegion
+            # identification for `(a if c else b) and (d if e else f):`.
+            # The hop is needed ONLY when the chain's op_type differs from
+            # the current op_type — i.e. the ternary cond block's IF_FALSE
+            # derives 'and', but the chain is an 'or' chain (e.g. `a or
+            # (b if c else d):`). In this case, the existing check at line
+            # 13276 doesn't fire (because op_type != prev_op), and the chain
+            # would wrongly absorb the ternary's true_value as another 'or'
+            # operand. The hop overrides the op_type to match chain[0][1]
+            # and hops to the ternary's merge.
+            if last.argval is not None and chain:
+                _sc_target = self.cfg.get_block_by_offset(last.argval)
+                if _sc_target is not None:
+                    _sc_target_last = _sc_target.get_last_instruction()
+                    _target_is_exit = (_sc_target_last is None
+                                       or _sc_target_last.opname in ('RETURN_VALUE', 'RETURN_CONST'))
+                    if (not _target_is_exit and _sc_target_last
+                            and _sc_target_last.opname in BOOLOP_CHAIN_JUMPS
+                            and _sc_target_last.argval is not None):
+                        # _sc_target is a value block (ternary operand).
+                        # Determine the chain op_type:
+                        # - For the FIRST chain entry (len(chain) == 1):
+                        #   derive from value block's jump direction.
+                        #   Non-last `or` operand: IF_TRUE → if-body = 'or'.
+                        #   Non-last `and` operand: IF_FALSE → exit = 'and'.
+                        # - For NON-FIRST chain entries (len(chain) >= 2):
+                        #   INHERIT from chain[0][1]. The last operand of
+                        #   an `or`/`and` chain does a truthiness check
+                        #   (IF_FALSE → exit) instead of short-circuiting,
+                        #   so the value block's jump direction is
+                        #   unreliable — but the chain's op_type is
+                        #   already established by the first entry.
+                        # Discriminator for firing the hop:
+                        # - len(chain) >= 2: ALWAYS fire (inherit op_type).
+                        #   This handles the LAST ternary in an `or`/`and`
+                        #   chain, whose value blocks do truthiness checks
+                        #   (IF_FALSE → exit) — without this, the chain
+                        #   would break prematurely or absorb the ternary's
+                        #   internals as wrong-op operands.
+                        # - len(chain) == 1: fire only when `_actual_op !=
+                        #   op_type`. This preserves Case A
+                        #   (`(a if c else b) and (d if e else f):`), where
+                        #   the first ternary is a NON-LAST `and` operand
+                        #   and the existing `_is_equivalent_exit_block`
+                        #   check breaks the chain correctly (letting
+                        #   TernaryRegion identification handle it).
+                        _is_or_short_circuit = 'TRUE' in _sc_target_last.opname
+                        _actual_op = 'or' if _is_or_short_circuit else 'and'
+                        _is_non_first = len(chain) >= 2
+                        # Compute merge FIRST so we can check whether the hop
+                        # target is a "plain operand" block (its last instr is
+                        # a conditional jump to an exit). For
+                        # `(ternary) or plain:` — the ternary's merge IS the
+                        # plain operand. Firing Edit A here would create a
+                        # BoolOpRegion without the ternary's internal blocks
+                        # (Edit C doesn't fire for mixed chains), corrupting
+                        # the ternary. Instead, let the chain extend
+                        # naturally (block → value block → break) so
+                        # TernaryRegion identification can handle the ternary
+                        # (as in baseline).
+                        # Discriminator:
+                        # - merge's last is NOT a conditional jump → fire
+                        #   (e.g., merge is the if-body with RETURN_VALUE).
+                        # - merge's last IS a conditional jump:
+                        #   - jump target is an exit → DON'T fire (plain
+                        #     operand; let TernaryRegion handle the ternary).
+                        #   - jump target is a value block → fire (merge is
+                        #     another ternary cond, e.g. adv13's full chain).
+                        _fv_succs = list(_sc_target.conditional_successors)
+                        _merge = next((s for s in _fv_succs
+                                       if s.start_offset != _sc_target_last.argval), None)
+                        _is_plain_operand = False
+                        if _merge is not None:
+                            _merge_last_i = _merge.get_last_instruction()
+                            if (_merge_last_i is not None
+                                    and _merge_last_i.opname in BOOLOP_CHAIN_JUMPS
+                                    and _merge_last_i.argval is not None):
+                                _merge_jt = self.cfg.get_block_by_offset(_merge_last_i.argval)
+                                if _merge_jt is not None:
+                                    _merge_jt_last = _merge_jt.get_last_instruction()
+                                    if (_merge_jt_last is None
+                                            or _merge_jt_last.opname in ('RETURN_VALUE', 'RETURN_CONST')):
+                                        _is_plain_operand = True
+                        _should_fire = ((_is_non_first
+                                         or _actual_op != op_type)
+                                        and not _is_plain_operand)
+                        if _should_fire and _merge is not None:
+                            # Verify true_value (current's fallthrough)
+                            # also has a conditional jump to an exit
+                            # (it's a value block) and reaches merge
+                            # via fallthrough chain.
+                            _tv_succs = list(current.conditional_successors)
+                            _tv = next((s for s in _tv_succs
+                                        if s.start_offset != last.argval), None)
+                            if _tv is not None:
+                                _tv_last = _tv.get_last_instruction()
+                                _tv_is_value = (_tv_last and _tv_last.opname in BOOLOP_CHAIN_JUMPS)
+                                if _tv_is_value:
+                                    _tv_ft = next((s for s in _tv.conditional_successors
+                                                   if s.start_offset != _tv_last.argval), None)
+                                    _tv_reaches_merge = False
+                                    if _tv_ft is _merge:
+                                        _tv_reaches_merge = True
+                                    elif _tv_ft is not None:
+                                        _tv_ft_eff = [i for i in _tv_ft.instructions
+                                                      if i.opname not in ('NOP', 'CACHE')]
+                                        if (len(_tv_ft_eff) == 1
+                                                and _tv_ft_eff[0].opname == 'JUMP_FORWARD'
+                                                and _tv_ft_eff[0].argval is not None):
+                                            _jft = self.cfg.get_block_by_offset(_tv_ft_eff[0].argval)
+                                            if _jft is _merge:
+                                                _tv_reaches_merge = True
+                                    if _tv_reaches_merge:
+                                        # Ternary detected. Determine
+                                        # the chain op_type:
+                                        # - Non-first entry: inherit
+                                        #   from chain[0][1] (already
+                                        #   correctly established).
+                                        # - First entry: use the
+                                        #   actual op derived from the
+                                        #   value block's jump dir.
+                                        if _is_non_first:
+                                            op_type = chain[0][1]
+                                        else:
+                                            op_type = _actual_op
+                                        chain[-1] = (current, op_type)
+                                        if _merge.start_offset not in visited:
+                                            current = _merge
+                                            continue
+                                        break
             succs = list(current.conditional_successors)
             if len(succs) != 2:
                 break
@@ -13804,7 +14859,73 @@ RegionType 枚举值: RegionType.ASSERT
                     _not_or_chain = (op_type == 'or' and all(
                         (cb.get_last_instruction() is not None and 'TRUE' in cb.get_last_instruction().opname)
                         for cb, _ in chain))
-                    if not _normal_or and not _not_or_chain:
+                    # [CPython peephole] `and`/`or` chain with multiple
+                    # operands: the compiler emits a SEPARATE trivial exit
+                    # block (LOAD_CONST None; RETURN_VALUE) for each operand's
+                    # short-circuit target. The targets are different offsets
+                    # but semantically equivalent — they all do "skip the body,
+                    # return None". Treat them as the same logical target so
+                    # the chain is preserved for bottom-up reduction into a
+                    # single BoolOp. This is the compiler's standard lowering
+                    # for `if (a and b and c): ...` at module/function-tail
+                    # position (each operand's false-exit gets its own block).
+                    _equivalent_exits = self._is_equivalent_exit_block(first_jump_target, cur_jump_target)
+                    # [CPython peephole] Scenario B ternary guard: when the
+                    # chain's fallthrough leads (via JUMP_FORWARD) to a loop
+                    # header, the first block is a ternary's condition (not a
+                    # boolop operand) and its jump target is the ternary's
+                    # false-value block. CPython merges the ternary's
+                    # true-value with the while-condition check, producing a
+                    # structure that looks like a boolop chain (both blocks
+                    # IF_FALSE to trivial exit blocks). Without this guard,
+                    # `_equivalent_exits` would preserve the chain and steal
+                    # blocks the TernaryRegion detector needs, causing
+                    # `while (x if c else None): pass` to decompile as a
+                    # nested if+while. The discriminator: walk the
+                    # fallthrough chain from the current block's fallthrough;
+                    # if a JUMP_FORWARD block appears whose target is a loop
+                    # header (has a back-edge predecessor), it's a Scenario B
+                    # ternary — break the chain so the TernaryRegion detector
+                    # can find the pattern.
+                    _is_scenario_b_ternary = False
+                    if _equivalent_exits:
+                        _ft_walk = ft_succ
+                        _walk_count = 0
+                        _visited_ft = set()
+                        while _ft_walk and _walk_count < 5 and _ft_walk.start_offset not in _visited_ft:
+                            _visited_ft.add(_ft_walk.start_offset)
+                            _ft_last_i = _ft_walk.get_last_instruction()
+                            if _ft_last_i and _ft_last_i.opname == 'JUMP_FORWARD' and _ft_last_i.argval is not None:
+                                _merge_block = self.cfg.get_block_by_offset(_ft_last_i.argval)
+                                if _merge_block is not None and _merge_block is not _ft_walk:
+                                    # Loop header = has a back-edge predecessor
+                                    # (a predecessor at a higher offset with
+                                    # JUMP_BACKWARD). This identifies the
+                                    # JUMP_FORWARD target as a loop header,
+                                    # meaning the current block is a ternary
+                                    # condition whose merge is the loop header.
+                                    for _mp in _merge_block.predecessors:
+                                        if _mp.start_offset > _merge_block.start_offset:
+                                            _mp_last = _mp.get_last_instruction()
+                                            if _mp_last and (_mp_last.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                                                              or _mp_last.opname in BACKWARD_CONDITIONAL_JUMP_OPS):
+                                                _is_scenario_b_ternary = True
+                                                break
+                                    if _is_scenario_b_ternary:
+                                        break
+                            # Move to fallthrough successor (not jump target)
+                            _ft_next = None
+                            if _ft_last_i and _ft_last_i.argval is not None:
+                                for s in _ft_walk.successors:
+                                    if s.start_offset != _ft_last_i.argval:
+                                        _ft_next = s
+                                        break
+                            else:
+                                if _ft_walk.successors:
+                                    _ft_next = next(iter(_ft_walk.successors))
+                            _ft_walk = _ft_next
+                            _walk_count += 1
+                    if not _normal_or and not _not_or_chain and (not _equivalent_exits or _is_scenario_b_ternary):
                         chain.pop()
                         break
             # [Round 2 修复] await 作为后续操作数：`x or await g()` 中第一个
@@ -13839,7 +14960,112 @@ RegionType 枚举值: RegionType.ASSERT
                 if last_last_instr and 'FALSE' in last_last_instr.opname:
                     last_jt_offset = last_last_instr.argval
                     if last_jt_offset != first_jt_offset:
-                        chain[-1] = (chain[-1][0], 'or')
+                        # [CPython peephole] Distinguish `X or Y or ... or Z`
+                        # (OR chain) from `not X and Y` (AND chain with `not`
+                        # on the first operand). Both produce the "first N-1
+                        # blocks IF_TRUE with same target + last block IF_FALSE
+                        # with different target" pattern, but the semantics
+                        # differ by where the IF_TRUE targets point:
+                        # - `X or Y`: each IF_TRUE targets the LOOP BODY
+                        #   (continue when X is true). The last block's
+                        #   IF_FALSE is the "value" block (exit when false).
+                        #   Reclassify last as 'or' to match the OR chain.
+                        # - `not X and Y`: each IF_TRUE targets an EXIT
+                        #   (exit when `not X` is false, i.e., X is true —
+                        #   this is an AND short-circuit on `not X`, not an
+                        #   OR short-circuit on X). The last block's IF_FALSE
+                        #   is the AND short-circuit on Y. Reclassify the
+                        #   first N-1 blocks as 'and' so the chain correctly
+                        #   reduces to BoolOp(And, [not X, Y]).
+                        # The discriminator is whether the first block's
+                        # IF_TRUE target is a trivial exit block (LOAD_CONST
+                        # None; RETURN_VALUE) or a loop body block. This
+                        # mirrors the bytecode difference between
+                        # `while X or Y:` (IF_TRUE → loop body) and
+                        # `while not X and Y:` (IF_TRUE → exit).
+                        first_jt_block = self.cfg.get_block_by_offset(first_jt_offset)
+                        if (first_jt_block is not None
+                                and self._is_trivial_block(first_jt_block)):
+                            # [Discriminator] `not X and Y` vs `X or Y`:
+                            # Both patterns have first N-1 blocks IF_TRUE
+                            # with the same target. The difference is WHERE
+                            # that target lies:
+                            # - `X or Y`: the IF_TRUE target IS the merge
+                            #   block (the last block's non-jump successor —
+                            #   the if/loop body where the condition is True).
+                            #   Even if the merge block is a trivial return
+                            #   (e.g. `if a or b: pass` — `pass` compiles to
+                            #   LOAD_CONST None; RETURN_VALUE), it's the BODY,
+                            #   not an exit.
+                            # - `not X and Y`: the IF_TRUE target is an EXIT
+                            #   block (NOT the merge block). The merge block
+                            #   is the last block's non-jump successor (the
+                            #   loop body).
+                            # Without this merge-block check, `if a or b:
+                            # pass` would be misidentified as `if (not a and
+                            # b): pass` because the if body (`pass`) is a
+                            # trivial return block.
+                            _last_chain_block = chain[-1][0]
+                            _last_chain_instr = _last_chain_block.get_last_instruction()
+                            _merge_block = None
+                            if _last_chain_instr and _last_chain_instr.argval is not None:
+                                for _s in _last_chain_block.conditional_successors:
+                                    if _s.start_offset != _last_chain_instr.argval:
+                                        _merge_block = _s
+                                        break
+                            # [P5 + Cluster 4 interaction] Ternary as BoolOp
+                            # operand — when chain[-1] is a ternary cond block
+                            # (its non-jump successor is a VALUE BLOCK with its
+                            # own conditional jump, not the real merge), the
+                            # _merge_block computed above is the ternary's
+                            # true_value, NOT the BoolOp's merge. Edit A's hop
+                            # has already set the correct op_type for chain[-1]
+                            # (inherited from chain[0][1]). Skip this old
+                            # discriminator to avoid corrupting chain[0..N-2]'s
+                            # op_type. This happens for `if a or (b if c else
+                            # d): pass` where chain[-1] (block 6, ternary cond)
+                            # has its fall-through (block 10, true_value) being
+                            # a value block, not the merge (block 20, if-body).
+                            #
+                            # IMPORTANT: Require BOTH _merge_block (chain[-1]'s
+                            # fall-through) AND chain[-1]'s jump target to be
+                            # value blocks (conditional jumps). For
+                            # `while not X and Y:` — chain[-1]'s jump target
+                            # is an EXIT (the loop's "condition false" exit),
+                            # NOT a value block. So chain[-1] is NOT a ternary
+                            # cond block, and the old discriminator MUST run
+                            # (reclassifying the chain as `not X and Y`).
+                            _is_ternary_cond_tail = False
+                            if _merge_block is not None:
+                                _mb_last = _merge_block.get_last_instruction()
+                                if (_mb_last is not None
+                                        and _mb_last.opname in BOOLOP_CHAIN_JUMPS
+                                        and _mb_last.argval is not None):
+                                    # Also require chain[-1]'s jump target to
+                                    # be a value block (NOT an exit).
+                                    _tail_jt = self.cfg.get_block_by_offset(
+                                        _last_chain_instr.argval
+                                    )
+                                    if _tail_jt is not None:
+                                        _tail_jt_last = _tail_jt.get_last_instruction()
+                                        if (_tail_jt_last is not None
+                                                and _tail_jt_last.opname in BOOLOP_CHAIN_JUMPS
+                                                and _tail_jt_last.argval is not None):
+                                            _is_ternary_cond_tail = True
+                            if _is_ternary_cond_tail:
+                                # Edit A's hop already handled op_type — skip
+                                # the old discriminator.
+                                pass
+                            elif (_merge_block is not None
+                                    and first_jt_block is _merge_block):
+                                # IF_TRUE target is the merge block → `X or Y`
+                                chain[-1] = (chain[-1][0], 'or')
+                            else:
+                                # IF_TRUE target is an exit → `not X and Y`
+                                for i in range(len(chain) - 1):
+                                    chain[i] = (chain[i][0], 'and')
+                        else:
+                            chain[-1] = (chain[-1][0], 'or')
         all_same_target = True
         target_groups = {}
         for cb, cop in chain:
@@ -13849,7 +15075,13 @@ RegionType 枚举值: RegionType.ASSERT
                 break
             cjt = self.cfg.get_block_by_offset(cl.argval)
             if cjt != first_jt:
-                all_same_target = False
+                # [CPython peephole] Multiple operands in `and`/`or` chain
+                # produce distinct trivial exit blocks (LOAD_CONST None;
+                # RETURN_VALUE) at module/function-tail position. They are
+                # semantically equivalent — treat them as the same logical
+                # target so the chain is preserved.
+                if not self._is_equivalent_exit_block(first_jt, cjt):
+                    all_same_target = False
             target_groups.setdefault(id(cjt), set()).add(cop)
         if not all_same_target:
             has_operator_boundary = False
@@ -13936,10 +15168,11 @@ RegionType 枚举值: RegionType.ASSERT
             result.extend(extended)
         return result
 
-    def _detect_boolop_short_circuit_chain(self, start_block: BasicBlock) -> Optional[List[Tuple[BasicBlock, str]]]:
+    def _detect_boolop_short_circuit_chain(self, start_block: BasicBlock, skip_first_claimed_check: bool = False) -> Optional[List[Tuple[BasicBlock, str]]]:
         chain: List[Tuple[BasicBlock, str]] = []
         current = start_block
         visited = set()
+        _is_first_iter = True
         while current and current.start_offset not in visited:
             visited.add(current.start_offset)
             last = current.get_last_instruction()
@@ -13958,6 +15191,7 @@ RegionType 枚举值: RegionType.ASSERT
                         if isinstance(_ft_reg, BoolOpRegion):
                             break
                     current = ft_succ
+                    _is_first_iter = False
                     continue
                 if chain and last and last.opname not in ('RETURN_VALUE', 'RETURN_CONST',
                                                            'RAISE_VARARGS', 'RERAISE'):
@@ -13974,6 +15208,7 @@ RegionType 枚举值: RegionType.ASSERT
                         next_last = succs[0].get_last_instruction()
                         if (next_last and next_last.opname in SHORT_CIRCUIT_JUMP_OPS):
                             current = succs[0]
+                            _is_first_iter = False
                             continue
                         next_pure = [i for i in succs[0].instructions
                                      if i.opname not in NOISE_OPS]
@@ -13981,13 +15216,65 @@ RegionType 枚举值: RegionType.ASSERT
                                 len(next_pure) >= 2 and
                                 next_last and next_last.opname in SHORT_CIRCUIT_JUMP_OPS):
                             current = succs[0]
+                            _is_first_iter = False
                             continue
                 break
+            # [Phase 3 adv14_boolop_result_compare] 双角色块：start_block
+            # 可能是已存在 BoolOpRegion 的 merge_block（如 ``(a and b) ==
+            # (c and d)`` 中 Block 3）。此时 _detect_boolop_chain_start 已
+            # 通过双角色检查放行，这里在首次迭代时跳过 claimed 检查，让
+            # start_block 进入链。后续迭代仍执行 claimed 检查防止跨区域
+            # 扩展。
             if current in self.block_to_region:
                 _cur_reg = self.block_to_region.get(current)
                 if isinstance(_cur_reg, BoolOpRegion):
-                    break
+                    if not (_is_first_iter and skip_first_claimed_check):
+                        break
             op_type = 'and' if 'FALSE' in last.opname else 'or'
+            # [Phase 3 adv14_boolop_result_compare] 值上下文短路链
+            # (JUMP_IF_FALSE_OR_POP / JUMP_IF_TRUE_OR_POP) 的所有链块
+            # 必须共享同一个 merge（跳转目标）。如 ``(a and b) == (c and d)``
+            # 中，Block 1 (a; JIF_OR_POP→3) 和 Block 3 (c; JIF_OR_POP→5)
+            # 跳转目标不同（3 vs 5），是两个独立的 and 表达式，由 == 分隔；
+            # 不能合并为 ``(a and b) and (c and d)``。检测：当前块的跳转
+            # 目标若与链中首块的跳转目标不同，则停止扩展——它们是不同的
+            # 值上下文 BoolOp 表达式。普通 ``a and b and c``（值上下文）
+            # 所有 JIF_OR_POP 共享同一 merge（STORE 块），不会被此守卫
+            # 中断；控制流 ``if a and b and c:`` 用 POP_JUMP_FORWARD_IF_FALSE
+            # 不走 SHORT_CIRCUIT_JUMP_OPS 路径，亦不受影响。
+            _cur_jt = self.cfg.get_block_by_offset(last.argval) if last.argval is not None else None
+            if (len(chain) >= 1 and last.opname in SHORT_CIRCUIT_JUMP_OPS
+                    and _cur_jt is not None):
+                _first_last = chain[0][0].get_last_instruction()
+                _first_jt = (self.cfg.get_block_by_offset(_first_last.argval)
+                             if _first_last and _first_last.argval is not None
+                             else None)
+                # [Phase 7 boolop 3+ operand fix] 表达式语句的 BoolOp
+                # (JUMP_IF_*_OR_POP) 每个 short-circuit 跳转目标是一个独立的
+                # trivial return 块（POP_TOP + LOAD_CONST None + RETURN_VALUE）。
+                # 如 `a or b and c` 中 block0 跳到 offset 18、block6 跳到
+                # offset 24 — 两个不同的 trivial return 块但语义等价。
+                # 原 `is not` 身份比较会在此中断链，导致 3+ 操作数丢失尾部。
+                # 修正：用 `_is_equivalent_exit_block` 替代身份比较 — 仅当
+                # 两个跳转目标语义不等价（如 `(a and b) == (c and d)` 中
+                # block0 跳到 LOAD c 块、block8 跳到 COMPARE_OP 块）才断链。
+                if (_first_jt is not None
+                        and not self._is_equivalent_exit_block(_cur_jt, _first_jt)):
+                    # [Phase 7 fix] 混合操作符表达式语句（如 `a and b or c`、
+                    # `not (a and b) or (c and not d)`）：内层操作符的短路
+                    # 目标是外层操作符块（链继续块，非 exit），外层操作符的
+                    # 短路目标是 trivial return（exit）。此时 _cur_jt 是 exit
+                    # 而 _first_jt 不是（或反之），不应断链 — 它们是同一
+                    # 表达式语句的混合操作符链，短路目标发散源于操作符语义
+                    # 差异（and 短路 false 喂给外层 or、or 短路 true 直达
+                    # exit），而非两个独立表达式。
+                    # 对比 `(a and b) == (c and d)`：两个 and 的短路目标都
+                    # 是非 exit 中间块（LOAD c / COMPARE_OP），_cur_jt 与
+                    # _first_jt 均非 exit，不触发此豁免，仍由上面的
+                    # _is_equivalent_exit_block 正确断链。
+                    if not (self._is_exit_like_block(_cur_jt)
+                            or self._is_exit_like_block(_first_jt)):
+                        break
             chain.append((current, op_type))
             succs = list(current.conditional_successors)
             if len(succs) != 2:
@@ -14405,6 +15692,25 @@ RegionType 枚举值: RegionType.ASSERT
                 return True
         if self.block_roles.get(block.start_offset) == BlockRole.RETURN_NONE:
             return True
+        return False
+
+    def _is_exit_like_block(self, block: BasicBlock,
+                            visited: Optional[Set[int]] = None) -> bool:
+        # 判断单个块是否是「退出块」：trivial return，或 only-jumps 链
+        # 最终到达 trivial return。与 _is_equivalent_exit_block 的区别：
+        # 后者比较两个块是否语义等价（含 block_a is block_b 短路），
+        # 无法用于判定单个块是否为退出块。递归终止由 visited + CFG 有限性保证。
+        if visited is None:
+            visited = set()
+        if block.start_offset in visited:
+            return False
+        visited.add(block.start_offset)
+        if self._is_trivial_return_block(block):
+            return True
+        if self._is_only_jumps(block):
+            succs = list(block.successors)
+            if len(succs) == 1:
+                return self._is_exit_like_block(succs[0], visited)
         return False
 
     def get_region_for_block(self, block: BasicBlock) -> Optional[Region]:
