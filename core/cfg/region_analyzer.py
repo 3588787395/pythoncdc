@@ -9689,6 +9689,21 @@ RegionType 枚举值: RegionType.ASSERT
                             _cs_role = self.block_roles.get(_cs.start_offset)
                             if _cs_role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
                                 return True
+            # [Phase 4 回归修复] BoolOpRegion 作为循环复合条件（如
+            # `while a > 0 and b > 0:`）时，CPython 3.11 在循环入口和
+            # back-edge 处复制复合条件。BoolOpRegion 的链块（每个含
+            # POP_JUMP_FORWARD_IF_FALSE 跳向循环出口）会被 IfRegion 创建
+            # 逻辑误识别为独立的 if-then，把整个循环体包进虚假的 if。
+            # 判别：块在 BoolOpRegion 中 + 块在循环内 + 块的条件跳转目标
+            # 在循环外（循环出口）。此 BoolOpRegion 是循环条件，不是
+            # if-then。与 TryExceptRegion 的处理对称。
+            elif type(block_region) is BoolOpRegion:
+                if last_instr and last_instr.argval is not None:
+                    _bor_jt = self.cfg.get_block_by_offset(last_instr.argval)
+                    if _bor_jt is not None:
+                        for _lr in loop_regions:
+                            if block in _lr.blocks and _bor_jt not in _lr.blocks:
+                                return True
         cond_succs_check = list(block.conditional_successors)
         if len(cond_succs_check) == 2:
             block_in_loop = any(block in lr.blocks for lr in loop_regions)
@@ -10614,6 +10629,13 @@ RegionType 枚举值: RegionType.ASSERT
                     _loop_body_only = set(_loop_region.body_blocks)
                     if _loop_region.condition_block:
                         _loop_body_only.add(_loop_region.condition_block)
+                    # [Phase 4 回归修复] back_edge_block 是循环的回边重检块
+                    # （含 loop increment + 条件重检），不属于任何 IfRegion 的
+                    # else 分支。若不排除，`while: if: break if: break; n+=1`
+                    # 的 back_edge 块（n+=1 + n<100 重检）会被 elif 链的 else
+                    # 分支吸收，生成多余的 `if n<100: pass else: break`。
+                    if _loop_region.back_edge_block is not None:
+                        _loop_body_only.discard(_loop_region.back_edge_block)
                     _loop_all_blocks = set(_loop_region.blocks)
                     _break_target_blocks = set()
                     for _lb in _loop_region.blocks:

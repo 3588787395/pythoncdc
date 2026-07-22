@@ -4331,7 +4331,19 @@ AST 映射规则:
                 for _succ_ft in hdr.successors:
                     if _succ_ft.start_offset != _cond_break_instr.argval:
                         _ft_role_tmp = self.region_analyzer.get_block_role(_succ_ft)
-                        if _ft_role_tmp == BlockRole.LOOP_BACK_EDGE:
+                        # [Phase 4 回归修复] back_edge_block 可能被标注为
+                        # LOOP_BACK_EDGE 或 CONTINUE/PURE_CONTINUE（取决于
+                        # _annotate_all_roles 的路径）。CPython 3.11 在
+                        # `while a and b:` 的 back-edge 处复制复合条件，
+                        # header 块含 POP_JUMP_FORWARD_IF_FALSE（跳向 BREAK）
+                        # + fallthrough 是 back-edge 块（含
+                        # POP_JUMP_BACKWARD_IF_TRUE 跳回 body）。这是复合
+                        # 循环条件的 back-edge 重检，不是 if-break。三种角色
+                        # 都要接受，否则 back-edge 块标为 CONTINUE 时会漏检，
+                        # 生成多余的 `if cond: pass else: break`。
+                        if _ft_role_tmp in (BlockRole.LOOP_BACK_EDGE,
+                                            BlockRole.CONTINUE,
+                                            BlockRole.PURE_CONTINUE):
                             _ft_last_i = _succ_ft.get_last_instruction()
                             if _ft_last_i and _ft_last_i.opname in BACKWARD_CONDITIONAL_JUMP_OPS:
                                 _is_compound_loop_cond = True
