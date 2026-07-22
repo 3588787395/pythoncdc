@@ -1,0 +1,400 @@
+{
+  "total": {
+    "passed": 3515,
+    "failed": 116,
+    "skipped": 40,
+    "errors": 25
+  },
+  "by_dir": {
+    "tests/exhaustive/if_region": {
+      "category": "IF",
+      "status": "ok",
+      "passed": 787,
+      "failed": 31,
+      "skipped": 9,
+      "errors": 0,
+      "summary": "31 failed, 787 passed, 9 skipped, 1 warning in 7.31s",
+      "failures": [
+        "tests/exhaustive/if_region/test_adv13_ternary_three_or_cond.py::TestAdv13TernaryThreeOrCond::test_decompile - AssertionError: 指令数不匹配: 16 vs 10",
+        "tests/exhaustive/if_region/test_adv15_ternary_in_chain_compare_body.py::TestAdv15TernaryInChainCompareBody::test_decompile - AssertionError: 指令数不匹配: 19 vs 32",
+        "tests/exhaustive/if_region/test_adv15_ternary_in_tuple_unpack.py::TestAdv15TernaryInTupleUnpack::test_decompile - AssertionError: 指令数不匹配: 15 vs 19",
+        "tests/exhaustive/if_region/test_adv15_ternary_slice_in_body.py::TestAdv15TernarySliceInBody::test_decompile - AssertionError: 指令数不匹配: 16 vs 14",
+        "tests/exhaustive/if_region/test_adv18_assert_in_if_body.py::TestAdv18AssertInIfBody::test_decompile - AssertionError: 反编译结果中未找到预期的区域类型 IF_REGION (期望AST节点: ['If'])",
+        "tests/exhaustive/if_region/test_adv18_for_else_nested_in_if_body.py::TestAdv18ForElseNestedInIfBody::test_decompile - AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 18 vs 15",
+        "tests/exhaustive/if_region/test_adv18_if_with_chained_compare_cond.py::TestAdv18IfWithChainedCompareCond::test_decompile - AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 35 vs 28",
+        "tests/exhaustive/if_region/test_adv18_nested_ternary_in_elif_cond.py::TestAdv18NestedTernaryInElifCond::test_decompile - AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 19 vs 18",
+        "tests/exhaustive/if_region/test_adv18_raise_from_complex_in_if_body.py::TestAdv18RaiseFromComplexInIfBody::test_decompile - AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 34 vs 13",
+        "tests/exhaustive/if_region/test_adv18_try_finally_in_if_body.py::TestAdv18TryFinallyInIfBody::test_decompile - AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 34 vs 36",
+        "tests/exhaustive/if_region/test_adv19_assert_chained_cmp_in_if_body.py::TestAdv19AssertChainedCmpInIfBody::test_decompile - AssertionError: 反编译结果中未找到预期的区域类型 IF_REGION (期望AST节点: ['If'])",
+        "tests/exhaustive/if_region/test_adv19_async_with_async_for_in_if_body.py::TestAdv19AsyncWithAsyncForInIfBody::test_decompile - AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 84 vs 73",
+        "tests/exhaustive/if_region/test_adv19_await_in_if_cond.py::TestAdv19AwaitInIfCond::test_decompile - AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 49 vs 5",
+        "tests/exhaustive/if_region/test_adv19_chained_in_check_in_if_cond.py::TestAdv19ChainedInCheckInIfCond::test_decompile - AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 27 vs 31",
+        "tests/exhaustive/if_region/test_adv19_for_continue_in_each_branch.py::TestAdv19ForContinueInEachBranch::test_decompile - AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 44 vs 24",
+        "tests/exhaustive/if_region/test_adv19_lambda_iife_in_if_cond.py::TestAdv19LambdaIifeInIfCond::test_decompile - AssertionError: 嵌套code object不匹配 (指令1): 嵌套code object不匹配 (指令2): 指令数不匹配: 5 vs 3",
+        "tests/exhaustive/if_region/test_adv19_mixed_complex_branches.py::TestAdv19MixedComplexBranches::test_decompile - AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 79 vs 43",
+        "tests/exhaustive/if_region/test_adv19_multiline_return_in_if_body.py::TestAdv19MultilineReturnInIfBody::test_decompile - AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 33 vs 32",
+        "tests/exhaustive/if_region/test_adv19_try_except_else_in_if_body.py::TestAdv19TryExceptElseInIfBody::test_decompile - AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 38 vs 40",
+        "tests/exhaustive/if_region/test_adv19_tuple_unpack_in_if_body.py::TestAdv19TupleUnpackInIfBody::test_decompile - AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 42 vs 40",
+        "tests/exhaustive/if_region/test_adv19_while_else_break_in_elif_body.py::TestAdv19WhileElseBreakInElifBody::test_decompile - AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 40 vs 36",
+        "tests/exhaustive/if_region/test_adv19_with_multi_ctx_in_if_body.py::TestAdv19WithMultiCtxInIfBody::test_decompile - AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 97 vs 113",
+        "tests/exhaustive/if_region/test_adv20_assert_chained_cmp_in_branches.py::TestAdv20AssertChainedCmpInBranches::test_decompile - AssertionError: 反编译结果中未找到预期的区域类型 IF_REGION (期望AST节点: ['If'])",
+        "tests/exhaustive/if_region/test_adv20_class_with_slots_in_if_body.py::TestAdv20ClassWithSlotsInIfBody::test_decompile - AssertionError: 嵌套code object不匹配 (指令1): 嵌套code object不匹配 (指令4): 指令数不匹配: 24 vs 27",
+        "tests/exhaustive/if_region/test_adv20_dictcomp_complex_filter_in_branches.py::TestAdv20DictcompComplexFilterInBranches::test_decompile - AssertionError: 嵌套code object不匹配 (指令1): 嵌套code object不匹配 (指令4): 指令数不匹配: 20 vs 19",
+        "tests/exhaustive/if_region/test_adv20_for_else_break_in_each_branch.py::TestAdv20ForElseBreakInEachBranch::test_decompile - AssertionError: 嵌套code object不匹配 (指令1): 指令5操作码不匹配: GET_ITER vs LOAD_FAST",
+        "tests/exhaustive/if_region/test_adv20_nested_with_try_in_elif_body.py::TestAdv20NestedWithTryInElifBody::test_decompile - AssertionError: 嵌套code object不匹配 (指令1): 指令108参数不匹配: none vs None (op=LOAD_CONST)",
+        "tests/exhaustive/if_region/test_adv20_star_expr_in_call_in_if_body.py::TestAdv20StarExprInCallInIfBody::test_decompile - AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 42 vs 39",
+        "tests/exhaustive/if_region/test_adv20_tuple_return_in_branches.py::TestAdv20TupleReturnInBranches::test_decompile - AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 62 vs 53",
+        "tests/exhaustive/if_region/test_adv20_walrus_in_while_cond_nested_if.py::TestAdv20WalrusInWhileCondNestedIf::test_decompile - AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 53 vs 55",
+        "tests/exhaustive/if_region/test_adv20_yield_in_while_in_if_body.py::TestAdv20YieldInWhileInIfBody::test_decompile - AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 51 vs 53"
+      ]
+    },
+    "tests/exhaustive/while_loop": {
+      "category": "LOOP",
+      "status": "ok",
+      "passed": 120,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "summary": "120 passed in 1.03s",
+      "failures": []
+    },
+    "tests/exhaustive/for_loop": {
+      "category": "LOOP",
+      "status": "ok",
+      "passed": 192,
+      "failed": 0,
+      "skipped": 1,
+      "errors": 0,
+      "summary": "192 passed, 1 skipped in 1.51s",
+      "failures": []
+    },
+    "tests/exhaustive/with_region": {
+      "category": "WITH",
+      "status": "ok",
+      "passed": 191,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "summary": "191 passed in 1.90s",
+      "failures": []
+    },
+    "tests/exhaustive/try_except": {
+      "category": "TRY",
+      "status": "ok",
+      "passed": 228,
+      "failed": 0,
+      "skipped": 2,
+      "errors": 0,
+      "summary": "228 passed, 2 skipped in 2.20s",
+      "failures": []
+    },
+    "tests/exhaustive/match_region": {
+      "category": "MATCH",
+      "status": "ok",
+      "passed": 193,
+      "failed": 3,
+      "skipped": 2,
+      "errors": 0,
+      "summary": "3 failed, 193 passed, 2 skipped in 1.67s",
+      "failures": [
+        "tests/exhaustive/match_region/test_m031.py::TestM031::test_decompile - AssertionError: 指令数不匹配: 24 vs 19",
+        "tests/exhaustive/match_region/test_m049.py::TestM049::test_decompile - AssertionError: 指令数不匹配: 34 vs 26",
+        "tests/exhaustive/match_region/test_m106matchguardboolop.py::TestM106MatchGuardBoolOp::test_decompile - AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 24 vs 22"
+      ]
+    },
+    "tests/exhaustive/boolop": {
+      "category": "BOOLOP",
+      "status": "ok",
+      "passed": 132,
+      "failed": 0,
+      "skipped": 1,
+      "errors": 0,
+      "summary": "132 passed, 1 skipped in 0.80s",
+      "failures": []
+    },
+    "tests/exhaustive/bool_op": {
+      "category": "BOOLOP",
+      "status": "ok",
+      "passed": 19,
+      "failed": 1,
+      "skipped": 0,
+      "errors": 0,
+      "summary": "1 failed, 19 passed in 0.22s",
+      "failures": [
+        "tests/exhaustive/bool_op/test_bool19_ternary_combo.py::TestBool19TernaryCombo::test_decompile - AssertionError: 指令数不匹配: 11 vs 12"
+      ]
+    },
+    "tests/exhaustive/ternary": {
+      "category": "TERNARY",
+      "status": "ok",
+      "passed": 485,
+      "failed": 47,
+      "skipped": 9,
+      "errors": 0,
+      "summary": "47 failed, 485 passed, 9 skipped in 3.87s",
+      "failures": [
+        "tests/exhaustive/ternary/test_r10_ternary_abc_abstract_property.py::TestR10TernaryAbcAbstractProperty::test_decompile - AssertionError: 嵌套code object不匹配 (指令11): 指令数不匹配: 23 vs 25",
+        "tests/exhaustive/ternary/test_r10_ternary_async_aenter.py::TestR10TernaryAsyncAenter::test_decompile - AssertionError: 嵌套code object不匹配 (指令3): 嵌套code object不匹配 (指令5): 指令数不匹配: 10 vs 12",
+        "tests/exhaustive/ternary/test_r10_ternary_dataclass_default_factory.py::TestR10TernaryDataclassDefaultFactory::test_decompile - AssertionError: 反编译结果中未找到预期的区域类型 TERNARY (期望AST节点: ['IfExp'])",
+        "tests/exhaustive/ternary/test_r10_ternary_kwonly_default.py::TestR10TernaryKwonlyDefault::test_decompile - AssertionError: 反编译结果中未找到预期的区域类型 TERNARY (期望AST节点: ['IfExp'])",
+        "tests/exhaustive/ternary/test_r10_ternary_magic_methods.py::TestR10TernaryMagicMethods::test_decompile - AssertionError: 嵌套code object不匹配 (指令3): 嵌套code object不匹配 (指令5): 指令数不匹配: 9 vs 8",
+        "tests/exhaustive/ternary/test_r10_ternary_multi_abstractmethod.py::TestR10TernaryMultiAbstractmethod::test_decompile - AssertionError: 嵌套code object不匹配 (指令3): 指令数不匹配: 27 vs 33",
+        "tests/exhaustive/ternary/test_r10_ternary_overload.py::TestR10TernaryOverload::test_decompile - AssertionError: 指令数不匹配: 34 vs 24",
+        "tests/exhaustive/ternary/test_r10_ternary_typeddict_default.py::TestR10TernaryTypedDictDefault::test_decompile - AssertionError: 嵌套code object不匹配 (指令9): 指令数不匹配: 20 vs 16",
+        "tests/exhaustive/ternary/test_r10_ternary_wraps.py::TestR10TernaryFunctoolsWraps::test_decompile - AssertionError: 反编译结果中未找到预期的区域类型 TERNARY (期望AST节点: ['IfExp'])",
+        "tests/exhaustive/ternary/test_r11_ternary_abc_abstract_property_setter.py::TestR11TernaryAbcAbstractPropertySetter::test_decompile - AssertionError: 嵌套code object不匹配 (指令11): 指令数不匹配: 23 vs 25",
+        "tests/exhaustive/ternary/test_r11_ternary_async_aenter.py::TestR11TernaryAsyncAenter::test_decompile - AssertionError: 嵌套code object不匹配 (指令3): 嵌套code object不匹配 (指令5): 指令数不匹配: 10 vs 12",
+        "tests/exhaustive/ternary/test_r11_ternary_asynccontextmanager.py::TestR11TernaryAsyncContextManager::test_decompile - AssertionError: 嵌套code object不匹配 (指令8): 指令数不匹配: 14 vs 9",
+        "tests/exhaustive/ternary/test_r11_ternary_asyncio_gather.py::TestR11TernaryAsyncioGather::test_decompile - AssertionError: 反编译结果中未找到预期的区域类型 TERNARY (期望AST节点: ['IfExp'])",
+        "tests/exhaustive/ternary/test_r11_ternary_cached_property.py::TestR11TernaryCachedProperty::test_decompile - AssertionError: 嵌套code object不匹配 (指令9): 指令数不匹配: 16 vs 19",
+        "tests/exhaustive/ternary/test_r11_ternary_contextlib_suppress.py::TestR11TernaryContextlibSuppress::test_decompile - AssertionError: 反编译结果中未找到预期的区域类型 TERNARY (期望AST节点: ['IfExp'])",
+        "tests/exhaustive/ternary/test_r11_ternary_dataclass_default_factory.py::TestR11TernaryDataclassDefaultFactory::test_decompile - AssertionError: 反编译结果中未找到预期的区域类型 TERNARY (期望AST节点: ['IfExp'])",
+        "tests/exhaustive/ternary/test_r11_ternary_except_star.py::TestR11TernaryExceptStar::test_decompile - AssertionError: 指令数不匹配: 39 vs 42",
+        "tests/exhaustive/ternary/test_r11_ternary_frozen_dataclass_default.py::TestR11TernaryFrozenDataclassDefault::test_decompile - AssertionError: 指令数不匹配: 25 vs 17",
+        "tests/exhaustive/ternary/test_r11_ternary_kwonly_default.py::TestR11TernaryKwonlyDefault::test_decompile - AssertionError: 反编译结果中未找到预期的区域类型 TERNARY (期望AST节点: ['IfExp'])",
+        "tests/exhaustive/ternary/test_r11_ternary_magic_methods.py::TestR11TernaryMagicMethods::test_decompile - AssertionError: 嵌套code object不匹配 (指令3): 嵌套code object不匹配 (指令5): 指令数不匹配: 9 vs 8",
+        "tests/exhaustive/ternary/test_r11_ternary_overload.py::TestR11TernaryOverload::test_decompile - AssertionError: 指令数不匹配: 34 vs 24",
+        "tests/exhaustive/ternary/test_r11_ternary_typeddict_default.py::TestR11TernaryTypedDictDefault::test_decompile - AssertionError: 嵌套code object不匹配 (指令9): 指令数不匹配: 20 vs 16",
+        "tests/exhaustive/ternary/test_r11_ternary_wraps.py::TestR11TernaryFunctoolsWraps::test_decompile - AssertionError: 反编译结果中未找到预期的区域类型 TERNARY (期望AST节点: ['IfExp'])",
+        "tests/exhaustive/ternary/test_r13_ternary_lambda_default.py::TestR13TernaryLambdaDefault::test_decompile - AssertionError: 反编译结果中未找到预期的区域类型 TERNARY (期望AST节点: ['IfExp'])",
+        "tests/exhaustive/ternary/test_r13_ternary_nested_lambda.py::TestR13TernaryNestedLambda::test_decompile - AssertionError: 反编译结果中未找到预期的区域类型 TERNARY (期望AST节点: ['IfExp'])",
+        "tests/exhaustive/ternary/test_r14_ternary_assert_two_ternaries_boolop.py::TestR14TernaryAssertTwoTernariesBoolop::test_decompile - AssertionError: 指令数不匹配: 13 vs 17",
+        "tests/exhaustive/ternary/test_r14_ternary_walrus_in_while_cond.py::TestR14TernaryWalrusInWhileCond::test_decompile - AssertionError: 指令数不匹配: 19 vs 3",
+        "tests/exhaustive/ternary/test_r14_ternary_while_cond_compare.py::TestR14TernaryWhileCondCompare::test_decompile - AssertionError: 指令数不匹配: 15 vs 3",
+        "tests/exhaustive/ternary/test_r14_ternary_with_multiple_second_as.py::TestR14TernaryWithMultipleSecondAs::test_decompile - AssertionError: 反编译结果中未找到预期的区域类型 TERNARY (期望AST节点: ['IfExp'])",
+        "tests/exhaustive/ternary/test_r14_ternary_yield_from_with_method.py::TestR14TernaryYieldFromWithMethod::test_decompile - AssertionError: 反编译结果中未找到预期的区域类型 TERNARY (期望AST节点: ['IfExp'])",
+        "tests/exhaustive/ternary/test_r1_assert_simple.py::TestR1AssertSimple::test_decompile - AssertionError: 反编译结果中未找到预期的区域类型 TERNARY (期望AST节点: ['IfExp'])",
+        "tests/exhaustive/ternary/test_r1_assert_with_message.py::TestR1AssertWithMessage::test_decompile - AssertionError: 反编译结果中未找到预期的区域类型 TERNARY (期望AST节点: ['IfExp'])",
+        "tests/exhaustive/ternary/test_r1_chained_compare_in_cond.py::TestR1ChainedCompareInCond::test_decompile - AssertionError: 反编译结果中未找到预期的区域类型 TERNARY (期望AST节点: ['IfExp'])",
+        "tests/exhaustive/ternary/test_r1_ternary_in_dict_value.py::TestR1TernaryInDictValue::test_decompile - AssertionError: 指令数不匹配: 12 vs 13",
+        "tests/exhaustive/ternary/test_r1_ternary_in_slice.py::TestR1TernaryInSlice::test_decompile - AssertionError: 指令数不匹配: 13 vs 11",
+        "tests/exhaustive/ternary/test_r3_ternary_chained_compare_left.py::TestR3TernaryChainedCompareLeft::test_decompile - AssertionError: 指令数不匹配: 16 vs 17",
+        "tests/exhaustive/ternary/test_r3_ternary_while_cond.py::TestR3TernaryWhileCond::test_decompile - AssertionError: 反编译结果中未找到预期的区域类型 TERNARY (期望AST节点: ['IfExp'])",
+        "tests/exhaustive/ternary/test_r4_ternary_while_cond.py::TestR4TernaryWhileCond::test_decompile - AssertionError: 反编译结果中未找到预期的区域类型 TERNARY (期望AST节点: ['IfExp'])",
+        "tests/exhaustive/ternary/test_r5_ternary_while_cond_body.py::TestR5TernaryWhileCondBody::test_decompile - AssertionError: 反编译结果中未找到预期的区域类型 TERNARY (期望AST节点: ['IfExp'])",
+        "tests/exhaustive/ternary/test_r5_ternary_while_cond_break.py::TestR5TernaryWhileCondBreak::test_decompile - AssertionError: 反编译结果中未找到预期的区域类型 TERNARY (期望AST节点: ['IfExp'])",
+        "tests/exhaustive/ternary/test_r5_ternary_while_cond_simple.py::TestR5TernaryWhileCondSimple::test_decompile - AssertionError: 反编译结果中未找到预期的区域类型 TERNARY (期望AST节点: ['IfExp'])",
+        "tests/exhaustive/ternary/test_r6_ternary_decorator_chain.py::TestR6TernaryDecoratorChain::test_decompile - AssertionError: 指令数不匹配: 18 vs 30",
+        "tests/exhaustive/ternary/test_r6_ternary_while_cond_complex_body.py::TestR6TernaryWhileCondComplexBody::test_decompile - AssertionError: 反编译结果中未找到预期的区域类型 TERNARY (期望AST节点: ['IfExp'])",
+        "tests/exhaustive/ternary/test_r6_ternary_while_cond_nested.py::TestR6TernaryWhileCondNested::test_decompile - AssertionError: 反编译结果中未找到预期的区域类型 TERNARY (期望AST节点: ['IfExp'])",
+        "tests/exhaustive/ternary/test_r7_ternary_in_async_with.py::TestR7TernaryInAsyncWith::test_decompile - AssertionError: 嵌套code object不匹配 (指令1): 指令10操作码不匹配: POP_TOP vs STORE_FAST",
+        "tests/exhaustive/ternary/test_r9_ternary_exception_group.py::TestR9TernaryExceptionGroup::test_decompile - AssertionError: 指令数不匹配: 39 vs 42",
+        "tests/exhaustive/ternary/test_r9_ternary_frozen_dataclass_default.py::TestR9TernaryFrozenDataclassDefault::test_decompile - AssertionError: 指令数不匹配: 25 vs 17"
+      ]
+    },
+    "tests/exhaustive/nested": {
+      "category": "NESTED",
+      "status": "ok",
+      "passed": 277,
+      "failed": 3,
+      "skipped": 5,
+      "errors": 0,
+      "summary": "3 failed, 277 passed, 5 skipped in 2.79s",
+      "failures": [
+        "tests/exhaustive/nested/test_n15while_if_try_except_a_b_indexerror.py::TestN15While_If_Try_Except_a_b_IndexError::test_decompile - AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 54 vs 52",
+        "tests/exhaustive/nested/test_n16try_while_if_break_a_indexerror.py::TestN16Try_While_If_Break_a_IndexError::test_decompile - AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 47 vs 33",
+        "tests/exhaustive/nested/test_n16try_while_if_break_n_valueerror.py::TestN16Try_While_If_Break_n_ValueError::test_decompile - AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 47 vs 33"
+      ]
+    },
+    "tests/exhaustive/basic": {
+      "category": "BASIC",
+      "status": "ok",
+      "passed": 127,
+      "failed": 1,
+      "skipped": 0,
+      "errors": 0,
+      "summary": "1 failed, 127 passed in 0.66s",
+      "failures": [
+        "tests/exhaustive/basic/test_b23yieldfrom_complex.py::TestB23YieldFrom_InLoop::test_decompile - AssertionError: 嵌套code object不匹配 (指令1): 指令数不匹配: 18 vs 9"
+      ]
+    },
+    "tests/exhaustive/L1_basic": {
+      "category": "L1",
+      "status": "ok",
+      "passed": 81,
+      "failed": 17,
+      "skipped": 0,
+      "errors": 0,
+      "summary": "17 failed, 81 passed, 1 warning in 0.40s",
+      "failures": [
+        "tests/exhaustive/L1_basic/test_b05_expression_statement.py::test_b05_expression_statement - NameError: name 'func_call' is not defined",
+        "tests/exhaustive/L1_basic/test_c01_if_then.py::test_c01_if_then - NameError: name 'condition' is not defined",
+        "tests/exhaustive/L1_basic/test_c02_if_else.py::test_c02_if_else - NameError: name 'condition' is not defined",
+        "tests/exhaustive/L1_basic/test_c03_if_elif.py::test_c03_if_elif - NameError: name 'cond1' is not defined",
+        "tests/exhaustive/L1_basic/test_c04_if_elif_else.py::test_c04_if_elif_else - NameError: name 'cond1' is not defined",
+        "tests/exhaustive/L1_basic/test_c05_multiple_elif_chain.py::test_c05_multiple_elif_chain - NameError: name 'cond1' is not defined",
+        "tests/exhaustive/L1_basic/test_c06_nested_if.py::test_c06_nested_if - NameError: name 'outer' is not defined",
+        "tests/exhaustive/L1_basic/test_c07_nested_if_else.py::test_c07_nested_if_else - NameError: name 'outer' is not defined",
+        "tests/exhaustive/L1_basic/test_l01_simple_for.py::test_l01_simple_for - NameError: name 'process' is not defined",
+        "tests/exhaustive/L1_basic/test_l02_for_else.py::test_l02_for_else - NameError: name 'items' is not defined",
+        "tests/exhaustive/L1_basic/test_l03_for_break.py::test_l03_for_break - NameError: name 'stop_condition' is not defined",
+        "tests/exhaustive/L1_basic/test_l04_for_continue.py::test_l04_for_continue - NameError: name 'skip' is not defined",
+        "tests/exhaustive/L1_basic/test_l05_for_break_continue.py::test_l05_for_break_continue - NameError: name 'should_stop' is not defined",
+        "tests/exhaustive/L1_basic/test_l06_for_range.py::test_l06_for_range - NameError: name 'even_process' is not defined",
+        "tests/exhaustive/L1_basic/test_l07_simple_while.py::test_l07_simple_while - NameError: name 'condition' is not defined",
+        "tests/exhaustive/L1_basic/test_l08_while_else.py::test_l08_while_else - NameError: name 'search' is not defined",
+        "tests/exhaustive/L1_basic/test_l09_while_break.py::test_l09_while_break - NameError: name 'done' is not defined"
+      ]
+    },
+    "tests/exhaustive/L2_basic": {
+      "category": "L1",
+      "status": "missing",
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "failures": []
+    },
+    "tests/exhaustive/L2_two_level_nested": {
+      "category": "L2",
+      "status": "ok",
+      "passed": 43,
+      "failed": 3,
+      "skipped": 0,
+      "errors": 2,
+      "summary": "3 failed, 43 passed, 2 errors in 0.23s",
+      "failures": [
+        "tests/exhaustive/L2_two_level_nested/test_L2_complete.py::TestL2_005_IfContainsIf::test_structure_correct - AssertionError: 1 not greater than or equal to 2 : 应该有2个嵌套的if",
+        "tests/exhaustive/L2_two_level_nested/test_L2_complete.py::TestL2_047_TryFinallyForWithCleanup::test_structure_correct - AssertionError: 1 not greater than or equal to 2 : 应该有嵌套的try",
+        "tests/exhaustive/L2_two_level_nested/test_L2_complete.py::TestL2_048_ComplexTryLoopExceptionPattern::test_structure_correct - AssertionError: 1 not greater than or equal to 2 : 应该有嵌套的try结构",
+        "tests/exhaustive/L2_two_level_nested/test_L2_complete.py::TestL2_043_TryForWithBreak::test_structure_correct - ValueError: 测试源码语法错误: 'break' outside loop (<test>, line 8)",
+        "tests/exhaustive/L2_two_level_nested/test_L2_complete.py::TestL2_046_TryExceptForWithReraise::test_structure_correct - ValueError: 测试源码语法错误: 'break' outside loop (<test>, line 13)"
+      ]
+    },
+    "tests/exhaustive/L2_nested": {
+      "category": "L2",
+      "status": "ok",
+      "passed": 48,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "summary": "48 passed in 0.27s",
+      "failures": []
+    },
+    "tests/exhaustive/L3_deep_nested": {
+      "category": "L3",
+      "status": "ok",
+      "passed": 16,
+      "failed": 2,
+      "skipped": 0,
+      "errors": 0,
+      "summary": "2 failed, 16 passed in 0.21s",
+      "failures": [
+        "tests/exhaustive/L3_deep_nested/test_L3_complete.py::TestN12_ForTryExceptElse::test_structure_correct - AssertionError: 反编译结果语法错误:",
+        "tests/exhaustive/L3_deep_nested/test_L3_complete.py::TestN15_ForIfForBreak::test_structure_correct - AssertionError: unexpectedly None"
+      ]
+    },
+    "tests/exhaustive/L3_nested": {
+      "category": "L3",
+      "status": "missing",
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "failures": []
+    },
+    "tests/exhaustive/triple_nested": {
+      "category": "L3",
+      "status": "ok",
+      "passed": 120,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "summary": "120 passed in 1.49s",
+      "failures": []
+    },
+    "tests/exhaustive/P1_expressions": {
+      "category": "P1",
+      "status": "ok",
+      "passed": 14,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "summary": "14 passed in 0.09s",
+      "failures": []
+    },
+    "tests/exhaustive/structured": {
+      "category": "STRUCTURED",
+      "status": "ok",
+      "passed": 8,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "summary": "8 passed, 7 warnings in 0.02s",
+      "failures": []
+    },
+    "tests/exhaustive/control_flow_matrix": {
+      "category": "MATRIX",
+      "status": "missing",
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 0,
+      "failures": []
+    },
+    "tests/control_flow_matrix": {
+      "category": "MATRIX",
+      "status": "ok",
+      "passed": 324,
+      "failed": 3,
+      "skipped": 11,
+      "errors": 0,
+      "summary": "3 failed, 324 passed, 11 skipped in 1.88s",
+      "failures": [
+        "tests/control_flow_matrix/test_completeness_matrix.py::TestN11TryWhileContinue::test_structure_correct - AssertionError: unexpectedly None",
+        "tests/control_flow_matrix/test_l1_expression.py::TestXP04BoolOpInIf::test_structure_correct - AssertionError: unexpectedly None : 应该包含BoolOp节点",
+        "tests/control_flow_matrix/test_l3_deep.py::TestDEEP16ParallelTaskCoordinator::test_structure_correct - AssertionError: 反编译结果语法错误:"
+      ]
+    },
+    "tests/completeness": {
+      "category": "COMPLETENESS",
+      "status": "ok",
+      "passed": 110,
+      "failed": 5,
+      "skipped": 0,
+      "errors": 0,
+      "summary": "5 failed, 110 passed in 0.48s",
+      "failures": [
+        "tests/completeness/test_l1_basic_structures.py::TestL1BasicStructures::test_L1_43_except_break - AssertionError: 'break' not found in 'def f(x):\\n    return None\\nfor x in (1, -1):\\n    try:\\n        f(x)\\n    except: pass\\n'",
+        "tests/completeness/test_l2_nested.py::TestL224TryMatch::test_structure - AssertionError: unexpectedly None",
+        "tests/completeness/test_l3_deep_nested.py::TestL318MatchIfFor::test_structure - AssertionError: unexpectedly None",
+        "tests/completeness/test_l4_extreme_nested.py::TestL42ForIfWhileTry::test_structure - AssertionError: unexpectedly None",
+        "tests/completeness/test_l4_extreme_nested.py::L44TryForIfWhile::test_structure - AssertionError: unexpectedly None"
+      ]
+    },
+    "tests/nook": {
+      "category": "NOOK",
+      "status": "ok",
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0,
+      "errors": 23,
+      "summary": "23 errors in 0.65s",
+      "failures": [
+        "tests/nook/test_async_await.py",
+        "tests/nook/test_async_comprehension.py",
+        "tests/nook/test_async_context.py",
+        "tests/nook/test_async_exception.py",
+        "tests/nook/test_async_for.py",
+        "tests/nook/test_async_generator.py",
+        "tests/nook/test_async_with_2.py",
+        "tests/nook/test_chain_compare_basic.py",
+        "tests/nook/test_complex_expressions.py",
+        "tests/nook/test_complex_scenarios.py",
+        "tests/nook/test_elif_basic.py",
+        "tests/nook/test_elif_complex_conditions.py",
+        "tests/nook/test_elif_nested.py",
+        "tests/nook/test_elif_with_exceptions.py",
+        "tests/nook/test_elif_with_loops.py",
+        "tests/nook/test_integration_cfg.py",
+        "tests/nook/test_logic_final.py",
+        "tests/nook/test_mixed_async.py",
+        "tests/nook/test_nested_exceptions.py",
+        "tests/nook/test_simple_async.py",
+        "tests/nook/test_single_function.py",
+        "tests/nook/test_with_nested.py - FileNotFoundError: [Errno 2] No such file or directory: 'file3.txt'",
+        "tests/nook/test_with_variants.py"
+      ]
+    }
+  }
+}
