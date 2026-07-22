@@ -1402,8 +1402,13 @@ class ExpressionReconstructor:
                         elif args_obj.get('type') == 'List':
                             # [聚类7 修复] LIST_TO_TUPLE 未处理的回退路径
                             args = list(args_obj.get('elts', []))
-                        elif args_obj.get('type') in ('Name', 'Constant'):
-                            # 如果是变量名（如*args），保留为星号参数
+                        else:
+                            # [R17-04 fix] 任何其他表达式 (Name/Constant/IfExp/
+                            # Call/Attribute/Subscript/BinOp 等) 都是 *args 的
+                            # 可迭代对象，包装为 Starred。CALL_FUNCTION_EX 的 args
+                            # 槽位始终是单个可迭代对象，编译为 `f(*expr)`。
+                            # 依「父引用子入口」: 父 Call 通过 CALL_FUNCTION_EX 的
+                            # args 槽位引用 ternary 子节点 (经 Starred 包装)。
                             args = [{'type': 'Starred', 'value': args_obj}]
 
                     # 处理kwargs_dict - 可能是Dict、DictMerge（含嵌套）或其他类型

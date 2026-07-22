@@ -420,10 +420,21 @@ class ComprehensionGenerator:
                     _tf_val = {'type': 'Constant', 'value': None}
                 _tf_elt = (_tf_key, _tf_val)
             else:
-                _tf_elt_instrs = all_instrs[_tf_elt_start:append_idx]
-                _tf_elt = self.expr_reconstructor.reconstruct(_tf_elt_instrs)
-                if _tf_elt is None:
-                    _tf_elt = {'type': 'Name', 'id': target_name, 'ctx': 'Load'}
+                # [R17-07 fix] body+if 双 ternary: 元素本身也可能是 ternary
+                # （``[(a if c else b) for x in y if (d if e else f)]``）。
+                # 优先用 _detect_comp_ternary 检测元素中的 ternary，再回退到
+                # reconstruct。依「自底向上归约」: body ternary 归约为 IfExp
+                # 抽象节点作为推导式 elt，filter ternary 归约为 IfExp 作为
+                # generators[0].ifs[0]，两者互不干扰。
+                _tf_elt_ternary = self._detect_comp_ternary(
+                    all_instrs, _tf_elt_start - 1, append_idx)
+                if _tf_elt_ternary is not None:
+                    _tf_elt = _tf_elt_ternary
+                else:
+                    _tf_elt_instrs = all_instrs[_tf_elt_start:append_idx]
+                    _tf_elt = self.expr_reconstructor.reconstruct(_tf_elt_instrs)
+                    if _tf_elt is None:
+                        _tf_elt = {'type': 'Name', 'id': target_name, 'ctx': 'Load'}
             _tf_is_async = 0
             for _instr in all_instrs:
                 if _instr.opname in ('GET_AITER', 'GET_ANEXT', 'END_ASYNC_FOR'):
@@ -601,10 +612,16 @@ class ComprehensionGenerator:
                     _tf_val = {'type': 'Constant', 'value': None}
                 elt_expr = (_tf_key, _tf_val)
             else:
-                _tf_elt_instrs = all_instrs[_tf_elt_start:append_idx]
-                elt_expr = self.expr_reconstructor.reconstruct(_tf_elt_instrs)
-                if elt_expr is None:
-                    elt_expr = {'type': 'Name', 'id': all_instrs[innermost_store_idx].argval, 'ctx': 'Load'}
+                # [R17-07 fix] body+if 双 ternary: 元素本身也可能是 ternary
+                _tf_elt_ternary = self._detect_comp_ternary(
+                    all_instrs, _tf_elt_start - 1, append_idx)
+                if _tf_elt_ternary is not None:
+                    elt_expr = _tf_elt_ternary
+                else:
+                    _tf_elt_instrs = all_instrs[_tf_elt_start:append_idx]
+                    elt_expr = self.expr_reconstructor.reconstruct(_tf_elt_instrs)
+                    if elt_expr is None:
+                        elt_expr = {'type': 'Name', 'id': all_instrs[innermost_store_idx].argval, 'ctx': 'Load'}
             return self._build_comp_result(code_obj, elt_expr, generators)
 
         # 检测三元 / ifs（在最内层 for body 内）

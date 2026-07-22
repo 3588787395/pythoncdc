@@ -1175,13 +1175,48 @@ class RegionAnalyzer:
         )
 
         _ternary_block_sets = []
+        _ternary_regions_with_blocks = []
         for tr in ternary_regions:
             if tr.blocks:
                 _ternary_block_sets.append(tr.blocks)
+                _ternary_regions_with_blocks.append(tr)
 
         if _ternary_block_sets:
             def _region_overlaps_with_ternary(region):
-                for tb_set in _ternary_block_sets:
+                for _ti, tb_set in enumerate(_ternary_block_sets):
+                    _tr = _ternary_regions_with_blocks[_ti]
+                    # [R8 / R17-11] AssertRegion 可与嵌套 TernaryRegion 合法重叠：
+                    #  - message_block == 某 TernaryRegion.entry（`assert x, (ternary)`）
+                    #  - condition_block == 某 TernaryRegion.merge_block
+                    #    （`assert (ternary).method()`，merge_block 含消费指令 + assert
+                    #     测试跳转 POP_JUMP_IF_TRUE）。依「嵌套即抽象节点」+
+                    #    「父引用子入口」：AssertRegion 通过 condition_block /
+                    #    message_block 引用嵌套 TernaryRegion，属合法嵌套，不过滤。
+                    if isinstance(region, AssertRegion):
+                        _mb = region.message_block
+                        _cb = region.condition_block
+                        _legal_overlap = set()
+                        if (_mb is not None and _mb is not _cb
+                                and _mb in tb_set
+                                and _tr.entry is _mb):
+                            _legal_overlap.add(_mb)
+                        if (_cb is not None
+                                and _cb in tb_set
+                                and getattr(_tr, 'merge_block', None) is _cb):
+                            _legal_overlap.add(_cb)
+                        if _legal_overlap:
+                            overlap = region.blocks & tb_set
+                            if overlap <= _legal_overlap:
+                                continue  # 合法嵌套：跳过此 tb_set
+                            return True
+                        # AssertRegion 与此 ternary 无合法嵌套关系，但若仍有块
+                        # 重叠（entry 或其他），按常规处理。
+                        if region.entry and region.entry in tb_set:
+                            return True
+                        overlap = region.blocks & tb_set
+                        if overlap:
+                            return True
+                        continue
                     if region.entry and region.entry in tb_set:
                         return True
                     overlap = region.blocks & tb_set
@@ -11671,6 +11706,47 @@ RegionType 枚举值: RegionType.ASSERT
                 current_ft = ft_next_ft
             return chain
 
+        def _reconstruct_simple_chain_args(arg_instrs):
+            """[R17-01] Reconstruct simple call args (for middle method calls in
+            a method chain) from a flat instruction list. Each arg is rebuilt as
+            an expr dict. Handles LOAD_CONST / LOAD_NAME family / LOAD_ATTR /
+            LOAD_METHOD chains / BUILD_<list|tuple|set> literals. Returns the
+            list of arg expr dicts, or None when an unsupported instruction
+            (CALL, BINARY_OP, etc.) is encountered — caller then conservatively
+            falls back (no regression). 依「每块唯一归属」: 中间调用的 args 是
+            兄弟子节点，与 ternary 同属父 Call 区域，不拆分为独立语句。
+            """
+            _stack = []
+            for _ai in arg_instrs:
+                if _ai.opname == 'LOAD_CONST':
+                    _stack.append({'type': 'Constant', 'value': _ai.argval})
+                elif _ai.opname in ('LOAD_NAME', 'LOAD_FAST',
+                                    'LOAD_GLOBAL', 'LOAD_DEREF'):
+                    _stack.append({'type': 'Name', 'id': _ai.argval,
+                                   'ctx': 'Load'})
+                elif _ai.opname in ('LOAD_ATTR', 'LOAD_METHOD'):
+                    if not _stack:
+                        return None
+                    _base = _stack.pop()
+                    _stack.append({'type': 'Attribute', 'value': _base,
+                                   'attr': _ai.argval, 'ctx': 'Load'})
+                elif _ai.opname in ('BUILD_LIST', 'BUILD_TUPLE', 'BUILD_SET'):
+                    _n = _ai.arg or 0
+                    if len(_stack) < _n:
+                        return None
+                    _elts = [_stack.pop() for _ in range(_n)]
+                    _elts.reverse()
+                    _t = {'BUILD_LIST': 'List', 'BUILD_TUPLE': 'Tuple',
+                          'BUILD_SET': 'Set'}[_ai.opname]
+                    if _t == 'Set':
+                        _stack.append({'type': 'Set', 'elts': _elts})
+                    else:
+                        _stack.append({'type': _t, 'elts': _elts,
+                                       'ctx': 'Load'})
+                else:
+                    return None
+            return _stack
+
         def _detect_ternary_context(cond_block, merge_block):
             if merge_block:
                 for instr in merge_block.instructions:
@@ -11868,30 +11944,59 @@ RegionType 枚举值: RegionType.ASSERT
                                     'ctx': 'Load',
                                 }
                                 # [R13-01 fix] 处理 method chain: 第一个
-                                # LOAD_METHOD m1, PRECALL, CALL, LOAD_METHOD m2,
-                                # ... 第一个 LOAD_METHOD 是 receiver chain 的
-                                # 一部分，第二个 LOAD_METHOD 才是真正消费
-                                # ternary 的函数。
+                                # LOAD_METHOD m1, [args], PRECALL, CALL,
+                                # LOAD_METHOD m2, ... 第一个 LOAD_METHOD 是
+                                # receiver chain 的一部分，第二个 LOAD_METHOD 才
+                                # 是真正消费 ternary 的函数。
                                 # 例: s.upper().split((a if c else b))
                                 #   cond_block: LOAD_NAME s, LOAD_METHOD upper,
                                 #               PRECALL, CALL, LOAD_METHOD split,
                                 #               LOAD_NAME c, POP_JUMP_...
                                 #   把 s.upper() 包装成 Call 作为 receiver，
                                 #   split 作为 func.attr。
-                                # 仅处理 0-arg 中间方法调用（PRECALL 紧跟
-                                # LOAD_METHOD），保守不退化。带 args 的中间
-                                # 方法调用（如 s.method(x).split(ternary)）留
-                                # 待 R14+。依「父引用子入口」: 父 Call 通过
-                                # cond_block 的 method chain 引用 ternary 子节点。
+                                # [R17-01 fix] 扩展支持带 args 的中间方法调用:
+                                #   s.replace('a','b').split((a if c else b))
+                                #   cond_block: LOAD_NAME s, LOAD_METHOD replace,
+                                #               LOAD_CONST 'a', LOAD_CONST 'b',
+                                #               PRECALL, CALL, LOAD_METHOD split, ...
+                                #   中间 args 在 LOAD_METHOD 与 PRECALL 之间，
+                                #   重建为 Call.args，保守不退化（含不支持 arg
+                                #   指令时 break）。依「父引用子入口」: 父 Call
+                                #   通过 cond_block 的 method chain (含中间 args)
+                                #   引用 ternary 子节点；依「每块唯一归属」: 中间
+                                #   args 是兄弟子节点，与 ternary 同属父 Call 区域。
                                 _chain_idx = _method_idx + 1
                                 while _chain_idx < len(instrs):
                                     _ci = instrs[_chain_idx]
                                     if _ci.opname in NOISE_OPS:
                                         _chain_idx += 1
                                         continue
-                                    if _ci.opname != 'PRECALL':
+                                    # [R17-01] 找到 PRECALL，可能跨越中间 args
+                                    _precall_idx = None
+                                    _arg_start = _chain_idx
+                                    _scan = _chain_idx
+                                    while _scan < len(instrs):
+                                        _si = instrs[_scan]
+                                        if _si.opname in NOISE_OPS:
+                                            _scan += 1
+                                            continue
+                                        if _si.opname == 'PRECALL':
+                                            _precall_idx = _scan
+                                            break
+                                        if _si.opname in FORWARD_CONDITIONAL_JUMP_OPS:
+                                            break
+                                        _scan += 1
+                                    if _precall_idx is None:
                                         break
-                                    _call_idx = _chain_idx + 1
+                                    # [R17-01] 重建中间调用的 args
+                                    # (LOAD_METHOD 与 PRECALL 之间的指令)
+                                    _arg_instrs = [instrs[k]
+                                                   for k in range(_arg_start, _precall_idx)
+                                                   if instrs[k].opname not in NOISE_OPS]
+                                    _mid_args = _reconstruct_simple_chain_args(_arg_instrs)
+                                    if _mid_args is None:
+                                        break
+                                    _call_idx = _precall_idx + 1
                                     while (_call_idx < len(instrs)
                                            and instrs[_call_idx].opname in NOISE_OPS):
                                         _call_idx += 1
@@ -11908,7 +12013,7 @@ RegionType 枚举值: RegionType.ASSERT
                                     _cur_func_expr = {
                                         'type': 'Call',
                                         'func': _cur_func_expr,
-                                        'args': [],
+                                        'args': _mid_args,
                                         'keywords': [],
                                     }
                                     _cur_func_expr = {
@@ -12892,6 +12997,82 @@ RegionType 枚举值: RegionType.ASSERT
                                     _consumer_extra_blocks.append(_resume_blk)
                         break
 
+            # [R17-03 fix] ternary + await + binop + return/store:
+            # ``return (a if c else b) + await g()`` / ``x = (a if c else b) + await g()``
+            # 字节码布局:
+            #   merge_block: <ternary result on stack>; LOAD g; PRECALL; CALL;
+            #                GET_AWAITABLE; LOAD_CONST None
+            #   poll_block (successor): SEND; YIELD_VALUE; RESUME; JUMP_BACKWARD_NO_INTERRUPT
+            #   binop_block (successor of poll exit): BINARY_OP <op>; RETURN_VALUE / STORE_*
+            # ternary 结果是 BINARY_OP 的左操作数，await g() 是右操作数。
+            # merge_block 首条非噪音指令是 LOAD（await 内层表达式的函数），
+            # 不匹配现有任何 handler。此处检测 GET_AWAITABLE 在 merge_block 中
+            # （非首位）+ 后继链含 SEND 轮询 + BINARY_OP + RETURN/STORE 的模式。
+            # 依「自底向上归约」: ternary 归约为 IfExp，await 归约为 Await，
+            #   BinOp(left=IfExp, right=Await) 归约为父表达式，Return/Assign 归约为语句。
+            # 依「父引用子入口」: 父 Return/Assign 通过 BINARY_OP 引用 ternary 子节点
+            #   （左操作数）和 await 子节点（右操作数）。
+            # 依「每块唯一归属」: poll_block + binop_block 归属 TernaryRegion 父表达式，
+            #   不拆分为独立语句。
+            _binop_await_op = None
+            _binop_await_inner_instrs = None
+            _binop_await_extra_blocks = []
+            if (merge_context is None and merge_block is not None
+                    and any(i.opname == 'GET_AWAITABLE' for i in merge_block.instructions)
+                    and not any(i.opname == 'GET_YIELD_FROM_ITER'
+                                for i in merge_block.instructions)):
+                # 找 SEND 轮询后继
+                _ba_poll = None
+                for _succ in merge_block.successors:
+                    if _succ is merge_block:
+                        continue
+                    if (any(i.opname == 'SEND' for i in _succ.instructions)
+                            and any(i.opname == 'YIELD_VALUE' for i in _succ.instructions)
+                            and any(i.opname == 'JUMP_BACKWARD_NO_INTERRUPT'
+                                    for i in _succ.instructions)):
+                        _ba_poll = _succ
+                        break
+                if _ba_poll is not None:
+                    # SEND 的退出目标 = 轮询结束后的块
+                    _ba_send_i = next((i for i in _ba_poll.instructions
+                                       if i.opname == 'SEND'), None)
+                    _ba_binop_blk = None
+                    if _ba_send_i is not None and isinstance(_ba_send_i.argval, int):
+                        _ba_binop_blk = self.cfg.get_block_by_offset(_ba_send_i.argval)
+                    if _ba_binop_blk is not None:
+                        _ba_binop_i = next((i for i in _ba_binop_blk.instructions
+                                            if i.opname == 'BINARY_OP'), None)
+                        _ba_has_return = any(i.opname == 'RETURN_VALUE'
+                                             for i in _ba_binop_blk.instructions)
+                        _ba_store_i = next((i for i in _ba_binop_blk.instructions
+                                            if i.opname in ('STORE_FAST', 'STORE_NAME',
+                                                            'STORE_GLOBAL', 'STORE_DEREF')
+                                            ), None)
+                        if _ba_binop_i is not None and (_ba_has_return or _ba_store_i is not None):
+                            # 提取 await 内层表达式 (GET_AWAITABLE 之前的指令)
+                            _ba_mb_instrs = [i for i in merge_block.instructions
+                                             if i.opname not in ('RESUME', 'NOP', 'CACHE',
+                                                                 'PUSH_NULL', 'POP_TOP')]
+                            _ba_cutoff = None
+                            for _bi_idx, _bi_instr in enumerate(_ba_mb_instrs):
+                                if _bi_instr.opname == 'GET_AWAITABLE':
+                                    _ba_cutoff = _bi_idx
+                                    break
+                            if _ba_cutoff is not None and _ba_cutoff > 0:
+                                _binop_await_inner_instrs = _ba_mb_instrs[:_ba_cutoff]
+                                _binop_await_op = _ba_binop_i.arg
+                                _binop_await_extra_blocks = [_ba_poll, _ba_binop_blk]
+                                if _ba_has_return:
+                                    merge_context = 'return'
+                                    value_target = '__return_target__'
+                                else:
+                                    merge_context = 'store'
+                                    value_target = (_ba_store_i.argval
+                                                    if _ba_store_i and _ba_store_i.argval
+                                                    else f'var_{_ba_store_i.arg}'
+                                                    ) if _ba_store_i else None
+                                _consumer_extra_blocks.extend(_binop_await_extra_blocks)
+
             # When the JUMP_FORWARD pattern was detected (ternary in
             # while-loop condition), set merge_context if no other context
             # was identified. The ternary result is consumed by the while
@@ -13006,6 +13187,24 @@ RegionType 枚举值: RegionType.ASSERT
             if _consumer_extra_blocks:
                 all_blocks.update(_consumer_extra_blocks)
 
+            # [R17-10 fix] await in ternary condition: ``x = a if await g() else b``
+            # CPython 把 ``await g()`` 展开为 setup_block (GET_AWAITABLE 前的
+            # CALL 等) + poll_block (SEND 自循环) + cond_block (POP_JUMP_IF)。
+            # cond_block 是 ternary entry，但 setup_block/poll_block 是其前驱，
+            # 不在 ternary 钻石（true/false/merge）内。若不纳入 all_blocks，
+            # 它们会被识别为独立 Region 并生成 ``Expr(Await)`` 语句，与 ternary
+            # 重建的 ``Await`` 条件重复，导致字节码不匹配。
+            # 依「每块唯一归属」: setup_block/poll_block 归属 TernaryRegion 的
+            #   条件上下文（await 是 ternary test 的实现细节）。
+            # 依「父引用子入口」: ternary cond_block 通过前驱链引用 await 表达式。
+            _cond_await_extra_blocks = []
+            if hasattr(self, '_collect_await_predecessor_chain'):
+                _cond_await_chain = self._collect_await_predecessor_chain(block)
+                if _cond_await_chain:
+                    _cond_await_extra_blocks = [b for b in _cond_await_chain
+                                                if b is not None]
+                    all_blocks.update(_cond_await_extra_blocks)
+
             container_type, func_call_info, dict_key_info = _detect_ternary_context(block, merge_block)
             return {
                 'block': block,
@@ -13023,6 +13222,10 @@ RegionType 枚举值: RegionType.ASSERT
                 # [R10-batch1 err 4/14] Cross-block consumer instruction blocks
                 # for await / yield-from (ternary).
                 'merge_extra_blocks': _consumer_extra_blocks,
+                # [R17-03 fix] binop+await consumer metadata for
+                # ``return (ternary) + await g()`` / ``x = (ternary) + await g()``.
+                'binop_await_op': _binop_await_op,
+                'binop_await_inner_instrs': _binop_await_inner_instrs,
             }
 
         def _create_ternary_region_from_pattern(pattern):
@@ -13043,6 +13246,11 @@ RegionType 枚举值: RegionType.ASSERT
                 dict_key_info=pattern['dict_key_info'],
                 merge_extra_blocks=pattern.get('merge_extra_blocks') or [],
             )
+            # [R17-03 fix] Store binop+await consumer metadata for the AST
+            # generator to reconstruct ``BinOp(left=IfExp, right=Await)``.
+            if pattern.get('binop_await_op') is not None:
+                region.metadata['binop_await_op'] = pattern['binop_await_op']
+                region.metadata['binop_await_inner_instrs'] = pattern.get('binop_await_inner_instrs')
 
             for nested in pattern['nested_ternary_regions']:
                 if nested in self.regions:
