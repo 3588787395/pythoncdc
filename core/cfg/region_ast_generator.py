@@ -642,21 +642,34 @@ class RegionASTGenerator:
                         elif isinstance(r, BoolOpRegion) and isinstance(other, BoolOpRegion):
                             # [Phase 7 fix] 两个连续 BoolOpRegion 共享 merge/entry 块
                             # （前者的 merge_block 是后者的 entry）是顺序语句（如
-                            # `x = a or b or c; y = d or e or f`），不是嵌套。不应将
+                            # `x = a or b or c; y = d or e or f` 或表达式语句
+                            # `a or b or c; d or e or f`），不是嵌套。不应将
                             # 后者标记为 contained，否则后者被过滤出
                             # top_level_regions，其块被线性生成导致丢失操作数
                             # （如 `y = e\nf`）。len(r.blocks) > len(other.blocks)
                             # 仅豁免 r 更大的情形；相等或更小时需此显式豁免。
                             #
-                            # value_target 区分顺序语句与比较/条件内 boolop：
-                            # 顺序语句前者的 merge 块有 STORE 消耗结果
-                            # （value_target 非空，如 `x = a or b`）；而
-                            # `(a and b) == (c and d)` 中两个 and 的结果
-                            # 留栈参与 COMPARE_OP（value_target 为 None），
-                            # 属同一表达式，应保持 contained。
+                            # 区分顺序语句与比较/条件内 boolop 的判据：共享块
+                            # （other.merge_block == r.entry）的首条实指令。
+                            # 顺序语句的共享块首指令是「结果消费指令」——
+                            # STORE_*（赋值语句 `x = a or b`）或 POP_TOP（表达式
+                            # 语句 `a or b or c`，结果被丢弃），表示前一表达式
+                            # 结果已被消耗，是语句边界。而 `(a and b) == (c and d)`
+                            # 中共享块首指令是 LOAD（比较操作数），结果留栈参与
+                            # COMPARE_OP，属同一表达式，应保持 contained。
+                            # 用首指令判据替代原先的 value_target 检查：后者仅
+                            # 覆盖 STORE（赋值），漏掉 POP_TOP（表达式语句）。
+                            _exempt = False
                             if (r.entry is not None and other.merge_block is not None
-                                    and r.entry is other.merge_block
-                                    and getattr(other, 'value_target', None) is not None):
+                                    and r.entry is other.merge_block):
+                                _shared_first = next(
+                                    (i for i in other.merge_block.instructions
+                                     if i.opname not in NOISE_OPS), None)
+                                if (_shared_first is not None and _shared_first.opname in (
+                                        'POP_TOP', 'STORE_NAME', 'STORE_FAST',
+                                        'STORE_GLOBAL', 'STORE_DEREF')):
+                                    _exempt = True
+                            if _exempt:
                                 pass
                             else:
                                 is_contained = True

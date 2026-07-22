@@ -10271,8 +10271,27 @@ RegionType 枚举值: RegionType.ASSERT
             condition_block = block
             chain_blocks = set()
             if isinstance(block_region, BoolOpRegion) and block_region.entry == block:
-                if not getattr(block_region, 'is_condition_context', True) and getattr(block_region, 'value_target', None):
-                    continue
+                if not getattr(block_region, 'is_condition_context', True):
+                    # [Phase 7 fix] 值上下文 BoolOpRegion 的入口块不应被升级为
+                    # IfRegion——值上下文 BoolOp 产生一个值（赋值 STORE / 表达式
+                    # 语句 POP_TOP 丢弃 / 喂给 COMPARE_OP 或三元），不是 if 语句
+                    # （if 用条件上下文跳转 POP_JUMP_IF_FALSE，is_condition_context
+                    # =True）。原检查仅覆盖 value_target（赋值 STORE），漏掉表达式
+                    # 语句（merge 首指令 POP_TOP，value_target=None）——如
+                    # `a or b or c\nd or e or f` 中第一表达式被误建 IfRegion，
+                    # 抢占 blk1-3 致 BoolOpRegion 仅剩 merge，反编译为
+                    # `if (a or b or c): pass`。补 POP_TOP 判据：merge 首条实指令
+                    # 为 POP_TOP 时亦跳过。比较/三元场景（merge 首指令 LOAD/
+                    # COMPARE_OP）不触发此跳过，由后续 _is_merge_if_condition /
+                    # _is_ternary_value_block 逻辑处理，不回归。
+                    _bor_merge = block_region.merge_block
+                    _bor_merge_first = (next((i for i in _bor_merge.instructions
+                                              if i.opname not in NOISE_OPS), None)
+                                        if _bor_merge is not None else None)
+                    if (getattr(block_region, 'value_target', None)
+                            or (_bor_merge_first is not None
+                                and _bor_merge_first.opname == 'POP_TOP')):
+                        continue
                 # 区域归约算法：每块唯一归属 + 嵌套即抽象节点。
                 # 当 BoolOpRegion 处于值上下文(is_condition_context=False)且其入口是
                 # 某个 TernaryRegion 的 true_value_block/false_value_block 时，该
@@ -15206,7 +15225,23 @@ RegionType 枚举值: RegionType.ASSERT
                             (succs[0] not in self.block_to_region or
                              not isinstance(self.block_to_region.get(succs[0]), BoolOpRegion))):
                         next_last = succs[0].get_last_instruction()
-                        if (next_last and next_last.opname in SHORT_CIRCUIT_JUMP_OPS):
+                        # [Phase 7 fix] 表达式语句连续 boolop 边界：当 succs[0]
+                        # 的首条实指令是 POP_TOP 时，它是一个「消耗前一表达式
+                        # 结果」的 merge 块（表达式语句 `a or b or c` 的结果被
+                        # POP_TOP 丢弃），即语句边界，而非同一 BoolOp 链的下一
+                        # 操作数块。如 `a or b or c\nd or e or f` 中 blk3
+                        # (LOAD c) fall-through 到 blk4 (POP_TOP; LOAD d;
+                        # JUMP_IF_TRUE_OR_POP) — blk4 是第一表达式的 merge
+                        # 兼第二表达式的 entry，跨语句边界，不应并入链。赋值
+                        # 语句 `x = a or b` 的 merge 首指令是 STORE_*（has_store
+                        # 路径不走此分支；且即便走到，首指令非 POP_TOP 不触发
+                        # 此守卫），不受影响。操作数块必以 LOAD/UNARY_NOT/CALL
+                        # 等值生产指令起始，不会以 POP_TOP 起始，故此守卫安全。
+                        next_first = next((i for i in succs[0].instructions
+                                           if i.opname not in NOISE_OPS), None)
+                        if (next_last and next_last.opname in SHORT_CIRCUIT_JUMP_OPS
+                                and next_first is not None
+                                and next_first.opname != 'POP_TOP'):
                             current = succs[0]
                             _is_first_iter = False
                             continue
