@@ -639,6 +639,28 @@ class RegionASTGenerator:
                             else:
                                 is_contained = True
                                 break
+                        elif isinstance(r, BoolOpRegion) and isinstance(other, BoolOpRegion):
+                            # [Phase 7 fix] 两个连续 BoolOpRegion 共享 merge/entry 块
+                            # （前者的 merge_block 是后者的 entry）是顺序语句（如
+                            # `x = a or b or c; y = d or e or f`），不是嵌套。不应将
+                            # 后者标记为 contained，否则后者被过滤出
+                            # top_level_regions，其块被线性生成导致丢失操作数
+                            # （如 `y = e\nf`）。len(r.blocks) > len(other.blocks)
+                            # 仅豁免 r 更大的情形；相等或更小时需此显式豁免。
+                            #
+                            # value_target 区分顺序语句与比较/条件内 boolop：
+                            # 顺序语句前者的 merge 块有 STORE 消耗结果
+                            # （value_target 非空，如 `x = a or b`）；而
+                            # `(a and b) == (c and d)` 中两个 and 的结果
+                            # 留栈参与 COMPARE_OP（value_target 为 None），
+                            # 属同一表达式，应保持 contained。
+                            if (r.entry is not None and other.merge_block is not None
+                                    and r.entry is other.merge_block
+                                    and getattr(other, 'value_target', None) is not None):
+                                pass
+                            else:
+                                is_contained = True
+                                break
                         else:
                             is_contained = True
                             break
