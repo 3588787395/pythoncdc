@@ -4618,78 +4618,100 @@ AST 映射规则:
                 if _r.entry == block or _r.condition_block == block:
                     nested_if = _r
                     break
-            if nested_if is not None:
-                cond_succs = list(block.conditional_successors)
-                if len(cond_succs) == 2:
-                    then_succ, _ = sorted(cond_succs, key=lambda s: s.start_offset)
-                    then_last = then_succ.get_last_instruction()
-                    if then_last and then_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
-                        cond_instrs = [i for i in block.instructions
-                                      if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                        jump_instr = None
-                        for i in cond_instrs:
-                            if i.opname in ('POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_FORWARD_IF_FALSE',
-                                           'POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE'):
-                                jump_instr = i
-                                break
-                        if jump_instr:
-                            pre_cond_instrs = [i for i in cond_instrs if i != jump_instr]
-                            if pre_cond_instrs:
-                                _stmt_end = len(pre_cond_instrs)
-                                for _si in range(len(pre_cond_instrs) - 1, -1, -1):
-                                    if pre_cond_instrs[_si].opname in ('POP_TOP', 'RETURN_VALUE', 'RETURN_CONST'):
-                                        _stmt_end = _si + 1
-                                        break
-                                    if pre_cond_instrs[_si].opname in ('COMPARE_OP', 'IS_OP', 'IS_NOT', 'CONTAINS_OP', 'NOT_OP', 'UNARY_NOT'):
-                                        _stmt_end = _si
-                                        break
-                                if _stmt_end > 0 and _stmt_end < len(pre_cond_instrs):
-                                    _leading = pre_cond_instrs[:_stmt_end]
-                                    _cond_instrs = pre_cond_instrs[_stmt_end:]
-                                    _acc = []
-                                    for _li in _leading:
-                                        _acc.append(_li)
-                                        if _li.opname in ('POP_TOP', 'STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF', 'RETURN_VALUE', 'RETURN_CONST'):
-                                            _ls = self._build_statement(_acc)
-                                            if _ls:
-                                                body_stmts.append(_ls)
-                                            _acc = []
-                                    test_expr = self.expr_reconstructor.reconstruct(_cond_instrs)
-                                else:
-                                    test_expr = self.expr_reconstructor.reconstruct(pre_cond_instrs)
-                                if test_expr is None:
-                                    test_expr = self._build_statement(pre_cond_instrs)
-                                    if test_expr and test_expr.get('type') == 'Expr':
-                                        test_expr = test_expr.get('value')
-                                if test_expr:
-                                    # Phase 41修复: 循环内if+return值保持为return（for循环路径）
-                                    _then_ret_val = None
-                                    _then_target_block = then_succ
-                                    if _then_target_block:
-                                        _ti = [i for i in _then_target_block.instructions
-                                              if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                                        if _ti and _ti[0].opname in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF'):
-                                            _then_ret_val = {'type': 'Name', 'id': _ti[0].argval, 'ctx': 'Load'}
-                                        elif _ti and _ti[0].opname == 'LOAD_CONST':
-                                            _then_ret_val = {'type': 'Constant', 'value': _ti[0].argval}
-                                    if _then_ret_val is not None:
-                                        body_stmts.append({
-                                            'type': 'If',
-                                            'test': test_expr,
-                                            'body': [{'type': 'Return', 'value': _then_ret_val}],
-                                            'orelse': None
-                                        })
-                                    else:
-                                        body_stmts.append({
-                                            'type': 'If',
-                                            'test': test_expr,
-                                            'body': [{'type': 'Break'}],
-                                            'orelse': None
-                                        })
+            # [Phase 3 adv17_while_multi_if_flow] 即使没有嵌套 IfRegion，
+            # 也检测 header 块的 if/break（或 if/return）模式。region
+            # analyzer 不为 loop header 创建 IfRegion（header 已属于
+            # LoopRegion），导致 while True 内首个 if x: break 丢失。
+            # 此前仅在 nested_if is not None 时检测，现改为始终检测。
+            cond_succs = list(block.conditional_successors)
+            if len(cond_succs) == 2:
+                then_succ, _ = sorted(cond_succs, key=lambda s: s.start_offset)
+                then_last = then_succ.get_last_instruction()
+                if then_last and then_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                    cond_instrs = [i for i in block.instructions
+                                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                    jump_instr = None
+                    for i in cond_instrs:
+                        if i.opname in ('POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_FORWARD_IF_FALSE',
+                                       'POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE'):
+                            jump_instr = i
+                            break
+                    if jump_instr:
+                        pre_cond_instrs = [i for i in cond_instrs if i != jump_instr]
+                        if pre_cond_instrs:
+                            _stmt_end = len(pre_cond_instrs)
+                            for _si in range(len(pre_cond_instrs) - 1, -1, -1):
+                                if pre_cond_instrs[_si].opname in ('POP_TOP', 'RETURN_VALUE', 'RETURN_CONST'):
+                                    _stmt_end = _si + 1
+                                    break
+                                if pre_cond_instrs[_si].opname in ('COMPARE_OP', 'IS_OP', 'IS_NOT', 'CONTAINS_OP', 'NOT_OP', 'UNARY_NOT'):
+                                    _stmt_end = _si
+                                    break
+                            if _stmt_end > 0 and _stmt_end < len(pre_cond_instrs):
+                                _leading = pre_cond_instrs[:_stmt_end]
+                                _cond_instrs = pre_cond_instrs[_stmt_end:]
+                                _acc = []
+                                for _li in _leading:
+                                    _acc.append(_li)
+                                    if _li.opname in ('POP_TOP', 'STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF', 'RETURN_VALUE', 'RETURN_CONST'):
+                                        _ls = self._build_statement(_acc)
+                                        if _ls:
+                                            body_stmts.append(_ls)
+                                        _acc = []
+                                test_expr = self.expr_reconstructor.reconstruct(_cond_instrs)
+                            else:
+                                test_expr = self.expr_reconstructor.reconstruct(pre_cond_instrs)
+                            if test_expr is None:
+                                test_expr = self._build_statement(pre_cond_instrs)
+                                if test_expr and test_expr.get('type') == 'Expr':
+                                    test_expr = test_expr.get('value')
+                            if test_expr:
+                                # [Phase 3 adv17_while_multi_if_flow]
+                                # 当 then 块是 break 块（在 region.break_blocks
+                                # 中）时，生成 Break 而非 Return。CPython 把
+                                # while True 末尾的 break 优化为
+                                # LOAD_CONST None + RETURN_VALUE（peephole），
+                                # 此前代码检测到 LOAD_CONST 就生成 Return(None)，
+                                # 但实际应为 Break。
+                                if then_succ in region.break_blocks:
+                                    body_stmts.append({
+                                        'type': 'If',
+                                        'test': test_expr,
+                                        'body': [{'type': 'Break'}],
+                                        'orelse': None
+                                    })
                                     self.generated_blocks.add(block)
                                     for b in then_succ.blocks if hasattr(then_succ, 'blocks') else [then_succ]:
                                         self.generated_blocks.add(b)
                                     return
+                                # Phase 41修复: 循环内if+return值保持为return（for循环路径）
+                                _then_ret_val = None
+                                _then_target_block = then_succ
+                                if _then_target_block:
+                                    _ti = [i for i in _then_target_block.instructions
+                                          if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                                    if _ti and _ti[0].opname in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF'):
+                                        _then_ret_val = {'type': 'Name', 'id': _ti[0].argval, 'ctx': 'Load'}
+                                    elif _ti and _ti[0].opname == 'LOAD_CONST':
+                                        _then_ret_val = {'type': 'Constant', 'value': _ti[0].argval}
+                                if _then_ret_val is not None:
+                                    body_stmts.append({
+                                        'type': 'If',
+                                        'test': test_expr,
+                                        'body': [{'type': 'Return', 'value': _then_ret_val}],
+                                        'orelse': None
+                                    })
+                                else:
+                                    body_stmts.append({
+                                        'type': 'If',
+                                        'test': test_expr,
+                                        'body': [{'type': 'Break'}],
+                                        'orelse': None
+                                    })
+                                self.generated_blocks.add(block)
+                                for b in then_succ.blocks if hasattr(then_succ, 'blocks') else [then_succ]:
+                                    self.generated_blocks.add(b)
+                                return
         _block_stmts = self._generate_block_statements(block)
         _filtered: List[Dict[str, Any]] = []
         _has_break = False

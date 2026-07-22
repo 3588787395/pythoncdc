@@ -3847,6 +3847,23 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                                  and i.opname not in PURE_JUMP_OPS
                                  and i.opname not in ('RETURN_VALUE', 'RETURN_CONST')]
                     if not meaningful:
+                        # [Phase 3 adv17_while_multi_if_flow] 仅当
+                        # LOAD_CONST 值为 None 时才可能是 break 的
+                        # peephole 优化（while True 末尾 break → return
+                        # None）。显式 return <非None常量>（如 return 1 →
+                        # LOAD_CONST 1 + RETURN_VALUE）不应被分类为 break。
+                        _is_break_peephole = False
+                        for i in block.instructions:
+                            if i.opname == 'LOAD_CONST':
+                                if i.argval is None:
+                                    _is_break_peephole = True
+                                break
+                            if i.opname == 'RETURN_CONST':
+                                if i.argval is None:
+                                    _is_break_peephole = True
+                                break
+                        if not _is_break_peephole:
+                            continue
                         for pred in block.predecessors:
                             if pred in body_set:
                                 pred_last = pred.get_last_instruction()
@@ -3941,12 +3958,42 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
             )
             _fwd_queue = []
             if not _is_async_send_loop:
-                for _s in header.successors:
-                    if _s not in body:
+                # [Phase 3 adv17_while_multi_if_flow] 此前仅从 header 的
+                # 后继开始前向遍历，遗漏了通过回边收集的 body 块的后继。
+                # 例如 while True 内多 if + return 1：Block 22（if y）由
+                # 回边后向遍历收集入 body，但其后继 Block 38（return 1）
+                # 未被前向遍历处理（因 _fwd_visited = set(body) 跳过已入
+                # body 的块）。当 while True 无自然出口时，所有路径以
+                # RETURN_VALUE 或 JUMP_BACKWARD 结束，return 块应属于循环
+                # 体。修正：从所有 body 块的后继开始前向遍历。
+                #
+                # 但需排除循环回测块的 fall-through（自然出口）。while cond
+                # 的循环回测块（POP_JUMP_BACKWARD_IF_TRUE/FALSE to header）
+                # 的 fall-through 是循环条件失败时的自然出口（return None），
+                # 不属于循环体。若不排除，会把自然出口误纳入 body，导致
+                # 生成多余的 break。
+                _loop_backtest_fallthroughs: Set[BasicBlock] = set()
+                for _b in body:
+                    _b_last = _b.get_last_instruction()
+                    if (_b_last and _b_last.opname in BACKWARD_CONDITIONAL_JUMP_OPS
+                            and _b_last.argval is not None):
+                        _b_target = self.cfg.get_block_by_offset(_b_last.argval)
+                        if _b_target == header:
+                            for _s in _b.successors:
+                                if _s != header:
+                                    _loop_backtest_fallthroughs.add(_s)
+                                    break
+                for _b in list(body):
+                    for _s in _b.successors:
+                        if _s in body or _s == header:
+                            continue
                         if _s == _header_backward_cond_fallthrough:
                             continue
+                        if _s in _loop_backtest_fallthroughs:
+                            continue
                         if self.dom_analyzer.is_dominator(header, _s):
-                            _fwd_queue.append(_s)
+                            if _s not in _fwd_queue:
+                                _fwd_queue.append(_s)
                 _fwd_visited = set(body)
                 while _fwd_queue:
                     _fwd_block = _fwd_queue.pop(0)
@@ -3964,6 +4011,8 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                         continue
                     for _fs in _fwd_block.successors:
                         if _fs in body or _fs == header or _fs in _fwd_visited:
+                            continue
+                        if _fs in _loop_backtest_fallthroughs:
                             continue
                         if self.dom_analyzer.is_dominator(header, _fs):
                             _fwd_queue.append(_fs)
