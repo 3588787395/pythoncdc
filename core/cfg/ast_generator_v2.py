@@ -808,6 +808,16 @@ class ExpressionReconstructor:
                     # 例如 f(a, *d) 的字节码 BUILD_LIST 1 / LOAD_NAME d / LIST_EXTEND 1
                     # 生成 Starred 节点以保留 *d 语义
                     elts = elts + [{'type': 'Starred', 'value': extend_values, 'ctx': 'Load', 'lineno': instr.starts_line}]
+                elif isinstance(extend_values, dict) and extend_values.get('type') in (
+                        'IfExp', 'BoolOp', 'BinOp', 'UnaryOp', 'Compare',
+                        'Starred', 'NamedExpr', 'Await', 'Yield', 'YieldFrom',
+                        'JoinedStr', 'FormattedValue', 'Lambda', 'ListComp',
+                        'SetComp', 'DictComp', 'GeneratorExp'):
+                    # [R4 Bug 9 修复] LIST_EXTEND 用复合表达式扩展列表：
+                    # `[*(ternary)]` / `[*(a if c else b)]` 的字节码是
+                    # BUILD_LIST 0 + ternary 求值 + LIST_EXTEND 1。
+                    # 任意"非字面量"表达式都应包成 Starred 以保留 *expr 语义。
+                    elts = elts + [{'type': 'Starred', 'value': extend_values, 'ctx': 'Load', 'lineno': instr.starts_line}]
                 self.stack.append({
                     'type': 'List',
                     'elts': elts,

@@ -32,10 +32,99 @@
 - [x] Task 1.14: IF round_14 — commit d651de7 (9/11 修复完成 + 2 catA 已知限制, 已 push; if_region 689 passed / 6 failed / 4 skipped)
 - [x] Task 1.15: IF round_15 — commit 8d6e3ba (7/15 修复完成 + 8 已知限制, 已 push; if_region 696 passed / 12 failed / 6 skipped)
 - [x] Task 1.16: IF round_16 — commit b63b4f8 (9/11 修复完成 + 2 已知限制, 已 push; if_region 709 passed / 13 failed / 7 skipped; match_region 无退化)
-- [ ] Task 1.17 ~ 1.20
+- [x] Task 1.17: IF round_17 — commit (R17 之前的 if_region 17 failed baseline)
+- [x] Task 1.18: IF round_18 — 5 bug 修复 (yield/yield_from/try-finally 部分/嵌套ternary 部分); 25 failed, 740 passed, 7 skipped (基线 27 failed, 738 passed)
+- [x] Task 1.19: IF round_19 — 6 bug 修复 (elif 语义反转 + 嵌套 if-elif-else 退化); 35 failed, 760 passed, 9 skipped (基线 37 failed, 758 passed)
+- [x] Task 1.20: IF round_20 — 6 bug 修复 (CodeGenerator AST dict 泄漏 + WithRegion 跨域归并); 45 failed, 772 passed, 10 skipped (基线 35 failed, 760 passed) — IF 区域 20 轮完成
 
 ## Phase 2: LOOP 区域（20 轮）
 - [ ] Task 2.1 ~ 2.20
+
+## Phase 2.5: TERNARY 区域（20 轮）
+- [x] Task T1.1: Ternary round_01 — 5 bug 修复 (walrus/compare/method_call/starred); 55 failed, 77 passed, 1 skipped (基线 60 failed, 72 passed)
+- [x] Task T1.2: Ternary round_02 — 7 bug 修复 (is_none/contains/multi_target/unpacking/raise/multi_arg/lambda_call); 58 failed, 116 passed, 1 skipped (基线 65 failed, 109 passed); 3 已知限制 (chained_compare/await/return_arith, R3 处理)
+- [x] Task T1.3: Ternary round_03 — 5 R3 bug + 3 bonus + 2 回归守卫 (return_arith/raise/lambda_complex/return_two_ternary); 61 failed, 133 passed, 1 skipped (基线 58 failed)
+- [x] Task T1.4: Ternary round_04 — 9 R4 bug 修复 + 4 bonus (setattr/await/dict/del/format/fstring/set/except_handler/with_ctx_mgr); 59 failed, 158 passed, 1 skipped (基线 61 failed, 133 passed); 2 已知限制 (chained_compare_4way 部分修复 / while_cond 完全回滚，R5+ 处理); 跨区域 104 failed / 930 passed / 11 skipped (基线 107/927/11，改善 3 无退化); commit pending
+- [x] Task T1.5: Ternary round_05 — 7 R5 bug 修复 + 6 bonus (chained_compare+assign/double_star/subscript_slice/return await/class_body); 57 failed, 182 passed, 1 skipped (基线 69 failed, 170 passed); 3 已知限制 (while_cond 同 R4-10 根因，R6+ 处理); 跨区域 102 failed / 954 passed / 11 skipped (基线 104/930，改善 2 无退化); commit pending
+- [x] Task T1.6: Ternary round_06 — 10 R6 bug 修复 + 2 bonus (multi_ternary_shared_exit/comprehension/while_body_leak/annotation/except_handler); 59 failed, 202 passed, 1 skipped (基线 70 failed, 191 passed); 3 已知限制 (while_cond_nested/complex + decorator_chain，R7+ 处理); 跨区域 103 failed / 975 passed / 11 skipped (基线 102/954，+1 failed net = 3 R6 known - 2 baseline bonus，+21 passed); commit pending
+- [x] Task T1.7: Ternary round_07 — 5 R7 bug 修复 + 1 回归修复 (R3-08/R4-05) + 6 已知限制 (R7-01/02/03/04/08/10); ternary 65 failed / 228 passed / 1 skipped (基线 70/223/1, -5 failed); 跨区域 109 failed / 1001 passed / 11 skipped (基线 103/975/11, +6 net = 11 新增 - 5 修复，无基线退化)
+  - [x] SubTask T1.7.0: 基线确认
+  - [x] SubTask T1.7.1 (P0): R7-05/07/11 finally 块 ternary 归约 — `_classify_handler_with_cleanup` BFS walk + CHECK_EXC_MATCH/CHECK_EG_MATCH 守卫 + generate() 全局预标记 + _generate_try_body try_blocks 预标记 + finally body TernaryRegion 识别
+  - [x] SubTask T1.7.3 (P2): R7-09 del subscript base obj (Pattern D2) + R7-06 yield from + 赋值
+  - [x] SubTask T1.7.4 (P3): R7-06 yield from + 赋值复合 — STORE_* 检测 + value_target 记录 + Pattern 4&5 Assign 包装
+  - [x] SubTask T1.7.5: 全量 ternary 回归 — 65 failed (基线 70, -5)
+  - [x] SubTask T1.7.6: 跨区域回归 — 109 failed / 1001 passed / 11 skipped (无基线退化)
+  - [x] SubTask T1.7.7: 写 fix_report.md
+  - [ ] 已知限制 (R8+ 处理): R7-01/08 assert message ternary, R7-02 async for body, R7-03 async with body, R7-04 del subscript chain, R7-10 async for-else
+- [x] Task T1.8: Ternary round_08 — 修复 10 测试 / 5 类 bug（assert family 5 + del subscript 2 + R8-04 walrus + R8-05 unpack + R8-07 import），6 已知限制留待 R9+（async 4 + skip 2）
+  - [x] SubTask T1.8.0: 基线确认（ternary 65 failed / 228 passed / 1 skipped；跨区域 109 failed / 1001 passed / 11 skipped）
+  - [x] SubTask T1.8.1 (P0): R7-01/R7-01b/R8-01/R8-02/R8-03 assert message ternary 系列（5 测试） — `_build_ternary_no_target_consumer_stmt` 顶部 guard + `_build_assert_message_ternary_stmt` 方法 + Pattern 1 内部 guard 移除
+  - [x] SubTask T1.8.2 (P0): R8-04 walrus 捕获 ternary — `_generate_ternary` value_target 分支前 walrus 检测，输出 `Expr(NamedExpr(target, IfExp))`
+  - [x] SubTask T1.8.3 (P1): R7-04/R8-06 del subscript 双 ternary — `_try_build_ternary_chained_r6_pattern` Pattern D，输出 `Delete([Subscript(Subscript(obj, IfExp1, Del), IfExp2, Del)])`
+  - [x] SubTask T1.8.4 (P2): R8-05 unpacking 赋值 source 是 ternary — `_generate_ternary` value_target 分支 Mode 3 UNPACK_EX 检测，输出 `Assign(targets=[Starred(y)], value=IfExp)`
+  - [x] SubTask T1.8.5 (P2): R8-07 import from alias 后跟 ternary 赋值 — 新增 `_extract_imports_from_block_prefix` helper + `generate()` TernaryRegion 分支调用，import 不丢失
+  - [x] SubTask T1.8.6 (评估): R7-02/R7-03/R7-10/R8-08 async 控制流 ternary 系列（4 测试） — 评估结论：多文件多修改点 + 4 种不同修复方向 + 退化风险高，留待 R9+
+  - [x] SubTask T1.8.7: 全量 ternary 回归 63 failed / 257 passed / 3 skipped（≤65 目标 ✅）+ 跨区域 107 failed / 1030 passed / 13 skipped（≤109 目标 ✅，无基线退化）
+  - [x] SubTask T1.8.8: 写 fix_report.md，清理 6 个根级 _debug_*.py 调试脚本
+- [x] Task T1.9: Ternary round_09 — 修复 11 bug（聚类 A 6 fix + 1 skip：R7-02/R7-10/R8-08/R9-01/R9-03/R9-04 + R7-03 skip；聚类 B 4 fix：R9-05/R9-17/R9-18/R9-19；R9-09 metaclass class body），7 已知限制留待 R10+（聚类 C 4：R9-10/R9-12/R9-13/R9-14；聚类 D 2：R9-15/R9-16；聚类 E 1：R9-08 except*）；ternary 66 failed / 277 passed / 5 skipped（基线 78/258/3，-12 failed +19 passed）；跨区域 109 failed / 1052 passed / 14 skipped（if_region 43 failed 无退化）；commit pending
+  - [x] SubTask T1.9.0: 基线确认（ternary 78 failed / 258 passed / 3 skipped；跨区域 121 failed）
+  - [x] SubTask T1.9.1 (P0): 聚类 A async 协议 polling 块归属冲突（7 bug） — dominator_analyzer Option C 精细化（自循环块包含异常后继）+ region_analyzer _is_await_polling_loop GET_ANEXT 检测 + LoopRegion.can_be_ternary_header 嵌套 ternary 守卫 + GET_AITER/ASYNC_GEN_WRAP merge_context + cfg_builder RETURN_GENERATOR fall-through + region_ast_generator R9-03 func_call_info 包装 + R9-04 merge_block 截断
+  - [x] SubTask T1.9.2 (P1): 聚类 B comprehension 桥接指令吞并（4 bug） — comprehension_generator Pattern B 检测（三元作 if-filter）+ walrus(ternary) 检测 + code_generator IfExp 括号
+  - [x] SubTask T1.9.3 (P2): R9-09 metaclass class body — _build_class_def 从 call_expr 提取 keywords 保留 metaclass 关键字参数
+  - [x] SubTask T1.9.4 (评估): 聚类 C/D/E 评估 — 聚类 C 4 bug（类定义基础设施：装饰器 CALL/KW_NAMES/LOAD_BUILD_CLASS 重建）+ 聚类 D 2 bug（consumer 模式：_is_ternary_block 约束/func_call_info false_value 吞并）+ 聚类 E 1 bug（except* PEP 654 未实现）均标记为已知限制，避免过度工程化
+  - [x] SubTask T1.9.5: 全量 ternary 回归 66 failed / 277 passed / 5 skipped（≤67 目标 ✅，基线 78→66 -12）+ 跨区域 109 failed / 1052 passed / 14 skipped（if_region 43 failed 无退化 ✅）
+  - [x] SubTask T1.9.6: 写 fix_report.md，清理 8 个 round_09/_debug_*.py 调试脚本
+  - [ ] 已知限制 (R10+ 处理): R9-08 except* PEP 654, R9-10 frozen dataclass, R9-12 property setter, R9-13 abstractmethod, R9-14 class decorator arg, R9-15 assert+return consumer, R9-16 partial application, R7-03/R9-02/R9-25 重编译失败 skip
+- [x] Task T1.10: Ternary round_10 — P0 装饰器链修复（聚类 F，目标 9+ bug），P1/P2 评估，P3 标记已知限制
+  - [x] SubTask T1.10.0: 基线确认（ternary 66 failed / 277 passed / 5 skipped；跨区域 109 failed / 1052 passed / 14 skipped；R10 新测试 15 failed / 13 passed）
+  - [x] SubTask T1.10.1 (P0): R9-12 `@x.setter` Attribute 装饰器 — `_reconstruct_decorator_chain` 识别 LOAD_NAME + LOAD_ATTR 序列作 Attribute 节点（非两个独立 Name）
+  - [x] SubTask T1.10.2 (P0): R9-13/R10-03/R10-04/R10-05/R10-11 无参装饰器 + ternary default（5 bug） — `_generate_ternary` MAKE_FUNCTION flag 1/2/4 路径检测 MAKE_FUNCTION 之后的 PRECALL+CALL 作装饰器应用，从 preload_exprs[0] 取装饰器名 — **R10-11 未修复**（已知限制，涉及三次函数定义 + annotations tuple）
+  - [x] SubTask T1.10.3 (P0): R10-01 装饰器链 `@deco1 @deco2(ternary)`（1 bug） — `_generate_ternary` flag 0 路径统计 MAKE_FUNCTION 之后 CALL 数，>1 时构建多元素 decorator_list
+  - [x] SubTask T1.10.4 (P0): R10-02 `@deco(a[ternary])` 下标参数（1 bug） — `_generate_ternary` flag 0 路径用 expr_reconstructor 重建 merge_block 中 BINARY_SUBSCR 等指令为完整 Subscript 表达式作装饰器参数
+  - [x] SubTask T1.10.5 (P0): R9-14 `@deco(ternary) class C` 类装饰器（1 bug） — `_build_class_def` 或 `_generate_ternary` 类路径识别 outer_call 是 `Call(Call(deco, [ternary]), [__build_class__ Call])`，保留 `Call(deco, [ternary])` 作装饰器
+  - [x] SubTask T1.10.6 (评估): P1 聚类 G dataclass/类基础设施（R9-10/R10-06/R10-07/R10-08） — 评估后标记为已知限制（复杂度中-高，留待 R11+）
+  - [x] SubTask T1.10.7 (评估): P2 聚类 H/I/J consumer/functools/kwonly（R9-15/R9-16/R10-09/R10-10/R10-12/R10-13/R10-14/R10-15） — R9-16/R10-13 已修复（Fix 3 bonus），其余 6 个标记为已知限制
+  - [x] SubTask T1.10.8 (标记): P3 聚类 K/L except*/async with multi-as（R9-08/R7-03） — 标记为已知限制，不在 R10 修复
+  - [x] SubTask T1.10.9: 全量 ternary 回归（pre-R10 62 failed ≤66 ✓ / 300 passed / 5 skipped，无新增退化）+ 跨区域回归（pre-R10 105 failed ≤109 ✓ / IF 43 failed 无退化）
+  - [x] SubTask T1.10.10: 算法合规性自检 — 归约顺序 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口；无跨区域特例 / 后处理补丁 / 硬编码深度上限
+  - [x] SubTask T1.10.11: 清理临时调试脚本（不创建根级 _debug_*.py）
+  - [x] SubTask T1.10.12: 写 fix_report.md
+- [x] Task T1.14: Ternary round_14 — 修复 5 bug（R14-04 for iter list middle / R14-05 raise ternary type from / R14-07 return method chain / R14-10 slice assign both bounds Pattern F / R14-06 raise arg+cause Pattern G），6 已知限制留待 R15+（R14-01/02 while_cond 系列 / R14-03 elif cond / R14-08 multi-with second as / R14-09 yield from+method / R14-11 assert+boolop 两 ternary）
+  - [x] SubTask T1.14.0: 基线确认（ternary 99 failed / 379 passed / 8 skipped；R14 测试 11 failed / 14 passed）
+  - [x] SubTask T1.14.1 (P1): R14-04 for iter list middle — iter merge_ctx 调用 `_try_build_ternary_merge_consumer_expr` + Iter wrapper 解包 + `_loop_generate_for` 两处类型检查扩展
+  - [x] SubTask T1.14.2 (P1): R14-05 raise ternary type from — raise_instr.arg==2 else 分支，无 preload 时 `initial_stack=[ternary_expr]` 重建 Raise(exc=ternary, cause)
+  - [x] SubTask T1.14.3 (P1): R14-07 return method chain — `_is_return_consumer` 检测裸 RETURN_VALUE，包装 Return 而非 Expr
+  - [x] SubTask T1.14.4 (P1): R14-10 slice assign both bounds — 新增 Pattern F（BUILD_SLICE+STORE_SUBSCR 双 ternary，镜像 Pattern E）
+  - [x] SubTask T1.14.5 (P2): R14-06 raise arg and cause — 新增 Pattern G（RAISE_VARARGS 2 双 ternary，exc=Call(E,[t1])，cause=t2）
+  - [x] SubTask T1.14.6 (评估): R14-01/02/03/08/09/11 评估 — 均涉及复杂控制流交互（while 回边 / elif 链 / multi-with cleanup / yield from polling / boolop 短路），标记为已知限制 R15+
+  - [x] SubTask T1.14.7: 全量 ternary 回归 93 failed / 385 passed / 8 skipped（基线 99→93 -6）+ 跨区域 3 failed / 324 passed / 11 skipped（无退化）
+  - [x] SubTask T1.14.8: 算法合规性自检 — 归约顺序 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口；无跨区域特例 / 后处理补丁 / 硬编码深度上限
+  - [x] SubTask T1.14.9: 清理 round_06 下 7 个遗留 _debug_*.py 调试脚本
+  - [x] SubTask T1.14.10: 写 fix_report.md
+  - [ ] 已知限制 (R15+ 处理): R14-01/02 while_cond + COMPARE_OP / walrus 系列，R14-03 elif cond ternary，R14-08 multi-with second as，R14-09 yield from + method chain，R14-11 assert + boolop 两 ternary
+- [x] Task T1.15: Ternary round_15 — 修复 11 bug / 3 根因簇（Cluster A 7: Constant obj.method(ternary) / Cluster B 2: ternary as callable / Cluster C 2: subscript on call result + ternary index），1 已知限制（any_genexp skipped，与 R5 ternary_in_genexp 同机制）；ternary 93 failed / 425 passed / 9 skipped（基线 93/385/8，无退化 +40 passed）；跨区域 control_flow_matrix 3 failed / 324 passed / 11 skipped（无退化）
+  - [x] SubTask T1.15.0: 基线确认（ternary 93 failed / 385 passed / 8 skipped；跨区域 control_flow_matrix 3 failed / 324 passed / 11 skipped；R15 新测试 11 failed / 29 passed / 1 skipped）
+  - [x] SubTask T1.15.1 (P1): Cluster A — Constant obj.method(ternary) 7 bug（R15-01 str.join / R15-02 bytes.join / R15-03 str.format field access / R15-04 str.format multi-field + sibling / R15-08 [].append / R15-09 {}.get / R15-10 ().count） — `core/cfg/region_analyzer.py` `_detect_ternary_context` 中 LOAD_METHOD obj chain 反向重建扩展：识别 `LOAD_CONST` base（str/bytes 字面量）+ `BUILD_LIST 0`/`BUILD_TUPLE 0`/`BUILD_MAP 0`/`BUILD_SET 0` literal base，使 cond_block preload (obj_literal + LOAD_METHOD) 正确归属父 Call 区域，ternary merge 块栈顶作为 call 参数
+  - [x] SubTask T1.15.2 (P1): Cluster B — ternary as callable 2 bug（R15-05 (ternary)() / R15-06 (ternary)(x,y)） — `core/cfg/region_analyzer.py` `_detect_ternary_context` PUSH_NULL guard（func_i 之后是 POP_JUMP_IF/PRECALL 时清除 push_null_idx）+ `core/cfg/region_ast_generator.py` `_try_build_ternary_merge_consumer_expr` 新增 `_has_ternary_as_callable` 模式（单 CALL + 无 LOAD_METHOD + 无 MAKE_FUNCTION + 无 BUILD_* + func_call_info=None），用 expr_reconstructor 重建 Call(func=ternary, args=[...])
+  - [x] SubTask T1.15.3 (P1): Cluster C — subscript on call result + ternary index 2 bug（R15-07 vars()[ternary] / R15-11 dict()[ternary]） — `core/cfg/region_analyzer.py` `_detect_ternary_context` PUSH_NULL guard（func_i 之后是 PRECALL 时清除 push_null_idx，避免 vars()/dict() 被误识别为 ternary consumer），merge_block 的 BINARY_SUBSCR+POP_TOP 由 Pattern 8 wrapping expr 正确重建为 Subscript(Call(vars,[]), IfExp, Load)
+  - [x] SubTask T1.15.4: 全量 ternary 回归 93 failed / 425 passed / 9 skipped（基线 93/385/8，无退化 +40 passed）+ 跨区域 control_flow_matrix 回归 3 failed / 324 passed / 11 skipped（无退化）+ if_region 43 failed / 775 passed / 9 skipped（无退化）
+  - [x] SubTask T1.15.5: 算法合规性自检 — 归约顺序 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口；无跨区域特例 / 后处理补丁 / 启发式优先级覆盖 / 扁平化 / 硬编码深度上限
+  - [x] SubTask T1.15.6: 清理临时调试脚本（删除 _debug_r15_blocks.py + _debug_r15_explore.py）
+  - [x] SubTask T1.15.7: 写 fix_report.md（含 11 bug 详细修复说明 + 算法 4 原则合规论证 + 全量回归结果 + 跨区域回归结果 + 已知限制记录）
+  - [ ] 已知限制: any_genexp skipped（与 R5 ternary_in_genexp 同嵌套 code object 机制，非新 bug，R5 已知限制延续）
+- [x] Task T1.16: Ternary round_16 — 修复 10 bug / 6 根因簇（Cluster A 3: LHS ternary assign/aug-assign / Cluster B 2: comprehension iter is ternary / Cluster C 2: chained_compare middle + walrus subscr / Cluster D 1: await+binop+return / Cluster E 1: yield+subscript / Cluster F 1: lambda multi-default order），0 新增已知限制，+4 bonus；ternary 93 failed / 439 passed / 9 skipped（基线 93/425/9，无退化 +14 passed）；跨区域 control_flow_matrix 3 failed / 324 passed / 11 skipped（无退化）；commit daff8d3 (已 push)
+  - [x] SubTask T1.16.0: 基线确认（ternary 93 failed / 425 passed / 9 skipped；跨区域 control_flow_matrix 3 failed / 324 passed / 11 skipped；R16 新测试 10 failed / 4 passed）
+  - [x] SubTask T1.16.1 (P0): Cluster A — ternary 作 LHS assign/aug-assign 目标侧 3 bug（R16-01 (a if c else b).attr = x / R16-02 (a if c else b).attr += 1 / R16-03 x[a if c else b] += 1） — Pattern A (STORE_ATTR) + Pattern C (AugAssign) 扩展识别 ternary 作 obj/idx
+  - [x] SubTask T1.16.2 (P0): Cluster B — comprehension iter 是 ternary 2 bug（R16-04 [v for v in (a if c else b)] / R16-05 {k: v for k, v in (a if c else b)}） — `extract_comp_iter_expr` 识别 ternary merge 块作 GET_ITER 源
+  - [x] SubTask T1.16.3 (P1): Cluster C — 父表达式栈顶消费链中段 ternary 2 bug（R16-06 a < (b if c else d) < e / R16-07 x[(n := a if c else b)]） — 新增 `_try_build_ternary_chained_compare_middle` + IfRegion skip for JUMP_IF_FALSE_OR_POP + walrus+BINARY_SUBSCR chain via expr_reconstructor
+  - [x] SubTask T1.16.4 (P1): Cluster D — await + binop + return 消费链丢失 1 bug（R16-08 async def f(): return await (a if c else b) + 1） — Pattern 7 await 路径扩展检测 wrapping ops + RETURN_VALUE，重建 Return(BinOp(Await(IfExp), op, right))
+  - [x] SubTask T1.16.5 (P1): Cluster E — yield + subscript 消费链丢失 1 bug（R16-09 def gen(): yield x[a if c else b]） — Pattern 4 yield 路径扩展 initial_stack=preload+[ternary] 使 BINARY_SUBSCR 能消费重建 Yield(Subscript(x, IfExp))
+  - [x] SubTask T1.16.6 (P2): Cluster F — lambda 多默认参数顺序打乱 1 bug（R16-10 f = lambda x=(a if c else b), y=2: x） — MAKE_FUNCTION defaults 路径扩展 BUILD_TUPLE N>1 识别，保留 default 顺序 [IfExp, Constant(2)]
+  - [x] SubTask T1.16.7: 全量 ternary 回归 93 failed / 439 passed / 9 skipped（基线 93/425/9，无退化 +14 passed）+ 跨区域 control_flow_matrix 回归 3 failed / 324 passed / 11 skipped（无退化）
+  - [x] SubTask T1.16.8: 算法合规性自检 — 归约顺序 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口；无跨区域特例 / 后处理补丁 / 启发式优先级覆盖 / 扁平化 / 硬编码深度上限
+  - [x] SubTask T1.16.9: 清理 3 个 _debug_*.py 调试脚本（_debug_await_yield / _debug_chained / _debug_comp）
+  - [x] SubTask T1.16.10: 写 fix_report.md（含 10 bug + 4 bonus 详细修复说明 + 算法 4 原则合规论证 + 全量回归结果 + 跨区域回归结果）
+- [ ] Task T1.17 ~ T1.20
 
 ## Phase 3-10: 其他 8 区域（各 20 轮）
 - [ ] Task 3.1 ~ 10.20

@@ -228,6 +228,16 @@ class CFGBuilder:
                 if last_instr.opname not in {'JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD'}:
                     if i + 1 < len(blocks):
                         block.add_successor(blocks[i + 1])
+            elif last_instr.opname == 'RETURN_GENERATOR':
+                # [R9 聚类A] RETURN_GENERATOR 是生成器/异步函数的 setup 指令，
+                # 语义上 fall-through 到下一条指令（在后续 resume 时执行）。
+                # 若不连接后继，block 0 成为孤立块且被 _identify_exit_blocks
+                # 标记为 is_exit，破坏 post-dominator 分析（virtual_exit 误连），
+                # 导致嵌套 ternary 的 merge_block 无法被识别（merge=None）。
+                # 依「每块唯一归属」：RETURN_GENERATOR 块归属函数入口序言，
+                # 由 entry_block 引用下一条指令作为后继。
+                if i + 1 < len(blocks):
+                    block.add_successor(blocks[i + 1])
             elif last_instr.opname in self.RETURN_INSTRUCTIONS:
                 pass
             elif last_instr.opname in self.RAISE_INSTRUCTIONS:
@@ -267,7 +277,13 @@ class CFGBuilder:
             if not block.successors:
                 if block.instructions:
                     last_instr = block.get_last_instruction()
-                    if last_instr and last_instr.opname in self.RETURN_INSTRUCTIONS:
+                    # [R9 聚类A] RETURN_GENERATOR 不是真正的 return，是生成器
+                    # setup。在 _connect_blocks 中已 fall-through 到下一条指令，
+                    # 因此该块必然有后继，不会进入此分支。此处仅作为安全兜底：
+                    # 若某 RETURN_GENERATOR 块确实无后继（异常 CFG），不标记为
+                    # exit，避免破坏 post-dominator 分析。
+                    if (last_instr and last_instr.opname in self.RETURN_INSTRUCTIONS
+                            and last_instr.opname != 'RETURN_GENERATOR'):
                         self.cfg.add_exit_block(block)
 
     def _split_blocks_at_exception_boundaries(self) -> None:
