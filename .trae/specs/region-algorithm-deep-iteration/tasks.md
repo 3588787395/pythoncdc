@@ -284,7 +284,23 @@
           全测试集 93→89 失败（4 个净修复，0 退化）。
   - [ ] 子任务：批次 6 — assert 与 if 混淆（LOAD_ASSERTION_ERROR vs LOAD_CONST）
   - [ ] 子任务：批次 7 — 嵌套 code object 不匹配（如 class_def_in_if）
-  - [ ] 子任务：批次 8 — 其余个例
+  - [x] 子任务：批次 8 — except* 异常组语法（Python 3.11+ PEP 654）
+        - 测试用例：test_adv17_try_except_star_in_if / test_adv17_try_except_star_multi_in_if
+        - 算法根因：except* 使用 CHECK_EG_MATCH（而非 CHECK_EXC_MATCH）+ PREP_RERAISE_STAR +
+          LIST_APPEND + BUILD_LIST + SWAP + COPY 框架指令。此前反编译器不支持这些指令，
+          导致 except* 被误识别为普通 except / MatchRegion / IfRegion，生成多余代码。
+        - 修正（四件套贯彻）：
+          (1) 迭代归约 — _extract_except_handler 支持 CHECK_EG_MATCH；
+              _follow_except_chain 支持 except* 链 + PREP_RERAISE_STAR 中断 + 过渡块探测；
+              _collect_body 边界检查 + 排除异常后继
+          (2) 异常表驱动 — except* 框架清理块（PREP_RERAISE_STAR/LIST_APPEND）纳入 cleanup_blocks
+          (3) 支配树驱动 — _is_except_star_framework_block 排除 MatchRegion/IfRegion 误识别；
+              _identify_conditional_regions 主循环跳过 try_cleanup_blocks（仅 cleanup，非 handler body）
+          (4) code_generator — _generate_try_dict 读取 is_except_star 输出 'except*'；
+              _generate_assign_dict 使用 _except_as_vars 过滤 as 变量清理
+        - 影响：adv17_try_except_star_in_if / adv17_try_except_star_multi_in_if 通过；
+          if_region 全套 737 passed, 7 skipped, 0 failed（无回归）。
+  - [ ] 子任务：批次 9 — 其余个例
 - [ ] Task 3.3: IF 区域注释重写
   - [ ] 子任务：更新 `_identify_conditional_regions` docstring（6 节，含全部失败模式 + 算法根因）
   - [ ] 子任务：更新 `_generate_if` docstring（4 节，含子区域不变量）

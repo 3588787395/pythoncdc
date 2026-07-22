@@ -105,7 +105,19 @@
         adv02_isnotnone_and_chaincmp / adv03_await_chaincmp），全测试集 93→89 失败，0 退化。
 - [ ] C3.4f 批次 6：assert 与 if 混淆失败修复 + 字节码完全匹配
 - [ ] C3.4g 批次 7：嵌套 code object 不匹配失败修复 + 字节码完全匹配
-- [ ] C3.4h 批次 8：其余个例失败修复 + 字节码完全匹配
+- [x] C3.4h 批次 8：except* 异常组语法（PEP 654）失败修复 + 字节码完全匹配
+      — 四件套贯彻：_extract_except_handler 支持 CHECK_EG_MATCH；
+        _follow_except_chain 支持 except* 链 + PREP_RERAISE_STAR 中断 + 过渡块探测；
+        _collect_body 边界检查 + 排除异常后继；
+        except* 框架清理块纳入 cleanup_blocks；
+        _is_except_star_framework_block 排除 MatchRegion/IfRegion 误识别；
+        _identify_conditional_regions 主循环跳过 try_cleanup_blocks；
+        _generate_handler_body_statements 过滤 except* 框架指令；
+        _generate_try 标记 is_except_star；
+        code_generator _generate_try_dict 输出 'except*' + _generate_assign_dict 过滤 as 变量清理。
+        adv17_try_except_star_in_if / adv17_try_except_star_multi_in_if 通过；
+        if_region 全套 737 passed, 7 skipped, 0 failed（无回归）。
+- [ ] C3.4i 批次 9：其余个例失败修复 + 字节码完全匹配
 - [ ] C3.5 `_identify_conditional_regions` docstring 更新（6 节，含全部失败模式 + 算法根因）
 - [ ] C3.6 `_generate_if` docstring 更新（4 节，含子区域不变量）
 - [ ] C3.7 docstring 中明确「walrus/await/lambda in cond」的算法处理策略
