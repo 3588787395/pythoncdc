@@ -5105,6 +5105,32 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                                             'PUSH_EXC_INFO', 'SWAP')
                            for instr in meaningful):
                         is_cleanup = True
+                # [Phase 3 adv17_try_except_star] except* 框架清理块检测。
+                # PREP_RERAISE_STAR 是 except* 共享清理块的标志；
+                # LIST_APPEND（非列表推导上下文）是 except* 不匹配清理路径的标志。
+                # 这些块含条件跳转（POP_JUMP_FORWARD_IF_NONE/NOT_NONE），
+                # 若不被纳入 cleanup_blocks，会被误识别为 IfRegion 或孤儿块，
+                # 生成多余的 `if True: pass`。
+                if not is_cleanup:
+                    has_prep_reraise_star = any(instr.opname == 'PREP_RERAISE_STAR' for instr in block.instructions)
+                    has_list_append = any(instr.opname == 'LIST_APPEND' for instr in block.instructions)
+                    if has_prep_reraise_star or has_list_append:
+                        meaningful = [instr for instr in block.instructions
+                                      if instr.opname not in NOISE_OPS]
+                        if all(instr.opname in ('PREP_RERAISE_STAR', 'LIST_APPEND',
+                                                'COPY', 'POP_EXCEPT', 'RERAISE', 'POP_TOP',
+                                                'LOAD_CONST', 'STORE_FAST', 'STORE_NAME',
+                                                'STORE_DEREF', 'STORE_GLOBAL',
+                                                'DELETE_FAST', 'DELETE_NAME',
+                                                'DELETE_DEREF', 'DELETE_GLOBAL',
+                                                'JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                                                'PUSH_EXC_INFO', 'SWAP',
+                                                'POP_JUMP_FORWARD_IF_NONE',
+                                                'POP_JUMP_FORWARD_IF_NOT_NONE',
+                                                'POP_JUMP_BACKWARD_IF_NONE',
+                                                'POP_JUMP_BACKWARD_IF_NOT_NONE')
+                               for instr in meaningful):
+                            is_cleanup = True
                 if is_cleanup:
                     cleanup_blocks.append(block)
                     for succ in block.successors:
@@ -5875,6 +5901,16 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                 if _current in _visited:
                     continue
                 _visited.add(_current)
+                # [Phase 3 adv17_try_except_star] 边界检查：
+                # 遇到下一个 handler 的 CHECK_EG_MATCH / CHECK_EXC_MATCH
+                # 入口块或 except* 共享清理块（PREP_RERAISE_STAR）时停止，
+                # 不将其纳入当前 handler 的 body。此前 _collect_body 无条件
+                # 追踪所有后继，导致多 except* handler 的块互相重叠。
+                if _current is not entry:
+                    if any(i.opname in ('CHECK_EG_MATCH', 'CHECK_EXC_MATCH') for i in _current.instructions):
+                        continue
+                    if any(i.opname == 'PREP_RERAISE_STAR' for i in _current.instructions):
+                        continue
                 _blocks.append(_current)
                 _last = _current.get_last_instruction()
                 if _last and _last.opname in ('RETURN_VALUE', 'RETURN_CONST', 'RERAISE'):
@@ -5882,6 +5918,12 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                 if any(i.opname == 'POP_EXCEPT' for i in _current.instructions):
                     continue
                 for _succ in _current.successors:
+                    # [Phase 3 adv17_try_except_star] 不跟踪异常后继
+                    # （exception_successors）。except* handler body 的异常后继
+                    # 是 except* 不匹配清理块（框架指令），跟踪它会导致
+                    # 多余的 e = None 和块重叠。
+                    if _succ in _current.exception_successors:
+                        continue
                     if _succ not in _visited:
                         if _succ.start_offset in self._reraise_block_offsets:
                             continue
@@ -5908,11 +5950,15 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                 handler_body_blocks = _collect_body(handler_entry)
                 return exc_type, exc_name, handler_body_blocks
 
-        has_check_exc = any(i.opname == 'CHECK_EXC_MATCH' for i in handler_entry.instructions)
+        # [Phase 3 adv17_try_except_star] 同时支持 CHECK_EXC_MATCH（普通 except）
+        # 和 CHECK_EG_MATCH（except* 异常组）。两者之前的 LOAD_NAME/LOAD_GLOBAL
+        # 是异常类型，之后的 STORE_* 是 as 变量名。
+        _CHECK_OPS = ('CHECK_EXC_MATCH', 'CHECK_EG_MATCH')
+        has_check_exc = any(i.opname in _CHECK_OPS for i in handler_entry.instructions)
         if has_check_exc:
             pre_check_instrs = []
             for instr in handler_entry.instructions:
-                if instr.opname == 'CHECK_EXC_MATCH':
+                if instr.opname in _CHECK_OPS:
                     break
                 if instr.opname in ('LOAD_NAME', 'LOAD_GLOBAL'):
                     pre_check_instrs.append(instr.argval)
@@ -5922,7 +5968,7 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                 has_build_tuple = any(
                     i.opname == 'BUILD_TUPLE' and i.argval == len(pre_check_instrs)
                     for i in handler_entry.instructions
-                    if i.opname != 'CHECK_EXC_MATCH'
+                    if i.opname not in _CHECK_OPS
                 )
                 if has_build_tuple:
                     exc_type = '(' + ', '.join(pre_check_instrs) + ')'
@@ -5931,7 +5977,7 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
 
             seen_check = False
             for instr in handler_entry.instructions:
-                if instr.opname == 'CHECK_EXC_MATCH':
+                if instr.opname in _CHECK_OPS:
                     seen_check = True
                     continue
                 if seen_check and instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_DEREF', 'STORE_GLOBAL'):
@@ -5985,7 +6031,7 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
         if exc_type is None and handler_body_blocks:
             for hb in handler_body_blocks:
                 for instr in hb.instructions:
-                    if instr.opname == 'CHECK_EXC_MATCH':
+                    if instr.opname in _CHECK_OPS:
                         exc_type = instr.argval
                         break
                 if exc_type:
@@ -5994,7 +6040,7 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                     if succ == hb:
                         continue
                     for instr in succ.instructions:
-                        if instr.opname == 'CHECK_EXC_MATCH':
+                        if instr.opname in _CHECK_OPS:
                             exc_type = instr.argval
                             break
                     if exc_type:
@@ -6009,7 +6055,7 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                         continue
                     _rv.add(_cur)
                     for instr in _cur.instructions:
-                        if instr.opname == 'CHECK_EXC_MATCH':
+                        if instr.opname in _CHECK_OPS:
                             exc_type = instr.argval
                             break
                     if exc_type:
@@ -6028,6 +6074,9 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
         current = handler_entry
         visited = {handler_entry}
         CHAIN_LINK_JUMPS = CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS
+        # [Phase 3 adv17_try_except_star] 同时识别 CHECK_EXC_MATCH（普通 except）
+        # 和 CHECK_EG_MATCH（except* 异常组）作为链中 handler 的标志。
+        _CHAIN_CHECK_OPS = ('CHECK_EXC_MATCH', 'CHECK_EG_MATCH')
         while True:
             last = current.get_last_instruction()
             if last is None or last.opname not in CHAIN_LINK_JUMPS:
@@ -6037,6 +6086,10 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
             if next_block is None or next_block in visited:
                 break
             if any(i.opname == 'RERAISE' for i in next_block.instructions):
+                break
+            # [Phase 3 adv17_try_except_star] PREP_RERAISE_STAR 是 except* 共享
+            # 清理块的标志，不是 handler，链到此中断。
+            if any(i.opname == 'PREP_RERAISE_STAR' for i in next_block.instructions):
                 break
             is_back_edge = False
             for i in next_block.instructions:
@@ -6052,16 +6105,48 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
             if any(i.opname == 'PUSH_EXC_INFO' for i in next_block.instructions):
                 break
             visited.add(next_block)
-            has_check_exc = any(i.opname == 'CHECK_EXC_MATCH' for i in next_block.instructions)
+            has_check = any(i.opname in _CHAIN_CHECK_OPS for i in next_block.instructions)
             exc_type, exc_name, body = self._extract_except_handler(next_block)
-            if has_check_exc:
+            if has_check:
                 chain_handlers.append((exc_type, exc_name, body))
                 chain_entries.append(next_block)
                 current = next_block
             else:
-                if body:
-                    chain_handlers.append((exc_type, exc_name, body))
-                    chain_entries.append(next_block)
+                # [Phase 3 adv17_try_except_star_multi] except* 多 handler
+                # 链中，POP_JUMP_FORWARD_IF_NONE 的跳转目标是「不匹配清理块」
+                # （仅含 POP_TOP），其后继才是下一个 except* handler 入口
+                # （含 CHECK_EG_MATCH）。此前直接 break 导致第二个 except*
+                # handler 丢失，其块被并入第一个 handler 的 body。
+                # 修正：若 next_block 是简单过渡块（仅含 POP_TOP / NOP /
+                # JUMP_FORWARD），沿其后继查找下一个含 CHECK_OP 的 handler。
+                _is_transition = all(
+                    i.opname in ('POP_TOP', 'NOP', 'CACHE', 'JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                    for i in next_block.instructions
+                )
+                if _is_transition:
+                    _probe = next_block
+                    _probe_visited = {next_block}
+                    _found_next_handler = False
+                    for _ in range(8):
+                        _probe_succs = [s for s in _probe.successors if s not in _probe_visited and s not in visited]
+                        if not _probe_succs:
+                            break
+                        _probe = _probe_succs[0]
+                        _probe_visited.add(_probe)
+                        if any(i.opname == 'PREP_RERAISE_STAR' for i in _probe.instructions):
+                            break
+                        if any(i.opname == 'RERAISE' for i in _probe.instructions):
+                            break
+                        if any(i.opname in _CHAIN_CHECK_OPS for i in _probe.instructions):
+                            visited.add(_probe)
+                            _et, _en, _body = self._extract_except_handler(_probe)
+                            chain_handlers.append((_et, _en, _body))
+                            chain_entries.append(_probe)
+                            current = _probe
+                            _found_next_handler = True
+                            break
+                    if _found_next_handler:
+                        continue
                 break
         return chain_handlers, chain_entries
 
@@ -7091,6 +7176,16 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
         _first_target = region.items[0][1] if region.items and region.items[0][1] else None
         region.target = _first_target if isinstance(_first_target, str) else None
 
+    def _is_except_star_framework_block(self, block: 'BasicBlock') -> bool:
+        """检测块是否是 except*（异常组）语法的框架块
+
+        except* 的框架指令包括 CHECK_EG_MATCH、PREP_RERAISE_STAR、LIST_APPEND
+        （在异常组上下文中）。这些块不应被识别为 MatchRegion 或其他区域。
+        """
+        if block is None:
+            return False
+        return any(i.opname in ('CHECK_EG_MATCH', 'PREP_RERAISE_STAR') for i in block.instructions)
+
     def _is_match_subject_block(self, block: 'BasicBlock') -> bool:
         """检测块是否是 match 语句的 subject 块（字面量模式）
 
@@ -7109,6 +7204,14 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
             return False
         # 已由 _has_match_op 处理的结构型模式，此处不重复
         if self._has_match_op(block):
+            return False
+
+        # [Phase 3 adv17_try_except_star] except* 框架块（含 CHECK_EG_MATCH
+        # 或 PREP_RERAISE_STAR）不是 match subject 块。except* 的清理块
+        # LIST_APPEND + PREP_RERAISE_STAR + COPY + POP_JUMP_IF_NOT_NONE
+        # 会被误识别为 match subject（模式2: COPY + POP_JUMP_IF_NOT_NONE），
+        # 但实际是 except* 的异常组清理逻辑。
+        if self._is_except_star_framework_block(block):
             return False
 
         instrs = [i for i in block.instructions if i.opname not in NOISE_OPS]
@@ -8778,6 +8881,9 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
         return literal_regions
 
     def _is_case_pattern_block(self, block: 'BasicBlock') -> bool:
+        # [Phase 3 adv17_try_except_star] except* 框架块不是 case pattern 块
+        if self._is_except_star_framework_block(block):
+            return False
         if self._has_match_op(block):
             return True
         if any(i.opname in ('GET_LEN', 'UNPACK_SEQUENCE') for i in block.instructions):
@@ -9632,6 +9738,11 @@ RegionType 枚举值: RegionType.ASSERT
         """
         if_regions = []
         try_handler_blocks = set()
+        # [Phase 3 adv17_try_except_star] try_cleanup_blocks 仅含 except* 框架
+        # 清理块（PREP_RERAISE_STAR 等），在主循环中跳过 IfRegion 创建。
+        # 区别于 try_handler_blocks：handler body 块不应被跳过（允许嵌套 if），
+        # 只有 cleanup_blocks 才应被跳过。
+        try_cleanup_blocks = set()
         if try_regions:
             for tr in try_regions:
                 if hasattr(tr, 'handler_entry_blocks'):
@@ -9641,6 +9752,13 @@ RegionType 枚举值: RegionType.ASSERT
                 if hasattr(tr, 'except_handlers') and tr.except_handlers:
                     for _, _, hblocks in tr.except_handlers:
                         try_handler_blocks.update(hblocks)
+                # [Phase 3 adv17_try_except_star] cleanup_blocks 含
+                # except* 共享清理块（PREP_RERAISE_STAR），也必须排除，否则
+                # 该块的条件跳转（POP_JUMP_FORWARD_IF_NOT_NONE）会被误识别为
+                # IfRegion，生成多余的 `if True: pass`。
+                if hasattr(tr, 'cleanup_blocks') and tr.cleanup_blocks:
+                    try_handler_blocks.update(tr.cleanup_blocks)
+                    try_cleanup_blocks.update(tr.cleanup_blocks)
         with_handler_blocks = set()
         if with_regions:
             for wr in with_regions:
@@ -9749,6 +9867,13 @@ RegionType 枚举值: RegionType.ASSERT
             block_region = self.block_to_region.get(block)
             if block in with_handler_blocks:
                 continue
+            # [Phase 3 adv17_try_except_star] except* 框架清理块（PREP_RERAISE_STAR
+            # 等，含条件跳转 POP_JUMP_FORWARD_IF_NOT_NONE）不能被 IfRegion 抢占。
+            # 注意：只跳过 cleanup_blocks，不跳过 handler body 块——handler body
+            # 中的 if 语句应正常识别为嵌套 IfRegion。此前使用 try_handler_blocks
+            # 跳过所有块，导致 except handler 内的 if 语句丢失（adv09 回归）。
+            if block in try_cleanup_blocks:
+                continue
             if self._should_skip_block_for_if_region(block, block_region, loop_regions, last_instr):
                 continue
             # 跳过链式比较的额外链块：这些块是链式比较条件的一部分，
@@ -9756,7 +9881,7 @@ RegionType 枚举值: RegionType.ASSERT
             if block in chained_compare_extra_blocks:
                 continue
 
-            if any(instr.opname in ('PUSH_EXC_INFO', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH') for instr in block.instructions):
+            if any(instr.opname in ('PUSH_EXC_INFO', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH', 'PREP_RERAISE_STAR') for instr in block.instructions):
                 continue
 
             if any(tr.entry == block for tr in self._filter_regions(ternary_regions or [], TernaryRegion)):

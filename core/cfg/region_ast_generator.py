@@ -11717,6 +11717,11 @@ AST 映射规则:
                     handler_node['name'] = exc_name
                 if exc_type:
                     handler_node['exc_type'] = {'type': 'Name', 'id': str(exc_type), 'ctx': 'Load'} if isinstance(exc_type, str) else exc_type
+                # [Phase 3 adv17_try_except_star] 标记 except* handler。
+                # 当 handler_entry 含 CHECK_EG_MATCH 时，是 except* 异常组语法。
+                # code_generator 读取此标记输出 'except*' 而非 'except'。
+                if handler_entry and any(i.opname == 'CHECK_EG_MATCH' for i in handler_entry.instructions):
+                    handler_node['is_except_star'] = True
                 handlers.append(handler_node)
 
             # try_try嵌套补偿：region_analyzer可能遗漏外层except handler
@@ -11957,26 +11962,43 @@ AST 映射规则:
             self._try_depth -= 1
 
     def _generate_handler_body_statements(self, block: BasicBlock) -> List[Dict[str, Any]]:
+        # [Phase 3 adv17_try_except_star] 检测是否是 except* 框架块
+        _is_except_star_block = any(i.opname in ('CHECK_EG_MATCH', 'PREP_RERAISE_STAR') for i in block.instructions)
+        _EXC_STAR_FRAMEWORK_OPS = ()
+        if _is_except_star_block:
+            # except* 框架指令：BUILD_LIST, SWAP, LIST_APPEND, PREP_RERAISE_STAR,
+            # COPY（在 CHECK_EG_MATCH/PREP_RERAISE_STAR 上下文中）,
+            # POP_JUMP_FORWARD_IF_NONE/POP_JUMP_FORWARD_IF_NOT_NONE（分派跳转）
+            _EXC_STAR_FRAMEWORK_OPS = ('BUILD_LIST', 'LIST_APPEND', 'PREP_RERAISE_STAR', 'SWAP')
         handler_instrs = [i for i in block.instructions
                           if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
                                                'PUSH_EXC_INFO', 'POP_EXCEPT', 'POP_TOP',
                                                'CHECK_EXC_MATCH', 'CHECK_EG_MATCH',
-                                               'WITH_EXCEPT_START')]
+                                               'WITH_EXCEPT_START')
+                          and i.opname not in _EXC_STAR_FRAMEWORK_OPS]
         exc_dispatch_jump_offset = None
         for idx, instr in enumerate(block.instructions):
             if instr.opname in ('CHECK_EXC_MATCH', 'CHECK_EG_MATCH'):
                 for next_instr in block.instructions[idx + 1:]:
+                    # [Phase 3 adv17_try_except_star] 补全 except* 的分派跳转
+                    # POP_JUMP_FORWARD_IF_NONE / POP_JUMP_FORWARD_IF_NOT_NONE
                     if next_instr.opname in ('POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_FALSE',
                                              'JUMP_IF_FALSE', 'JUMP_IF_TRUE',
-                                             'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_TRUE'):
+                                             'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_TRUE',
+                                             'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_BACKWARD_IF_NONE',
+                                             'POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_BACKWARD_IF_NOT_NONE',
+                                             'POP_JUMP_IF_NONE', 'POP_JUMP_IF_NOT_NONE'):
                         exc_dispatch_jump_offset = next_instr.offset
                         break
                     elif next_instr.opname not in ('LOAD_GLOBAL', 'LOAD_NAME', 'LOAD_CONST',
-                                                   'LOAD_ATTR', 'LOAD_DEREF'):
+                                                   'LOAD_ATTR', 'LOAD_DEREF', 'COPY', 'BUILD_LIST', 'SWAP'):
                         break
                 break
         if exc_dispatch_jump_offset is not None:
             handler_instrs = [i for i in handler_instrs if i.offset > exc_dispatch_jump_offset]
+        # [Phase 3 adv17_try_except_star] except* 块中 COPY 是框架指令，过滤掉
+        if _is_except_star_block:
+            handler_instrs = [i for i in handler_instrs if i.opname != 'COPY']
         store_indices = [i for i, instr in enumerate(handler_instrs)
                         if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')]
         if len(store_indices) >= 2:

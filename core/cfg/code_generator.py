@@ -593,6 +593,13 @@ class CodeGenerator:
                 name = handler.get('name')
                 handler_body = handler.get('body', [])
 
+                # [Phase 3 adv17_try_except_star] 读取 except* 标记，
+                # 选择正确的关键字。dict 路径此前直接硬编码 'except'，
+                # 导致 region_ast_generator 设置的 is_except_star=True 被丢弃，
+                # 重编译后字节码退化为 CHECK_EXC_MATCH（而非 CHECK_EG_MATCH）。
+                is_except_star = handler.get('is_except_star', False)
+                except_keyword = 'except*' if is_except_star else 'except'
+
                 if name:
                     self._except_as_vars.add(name)
 
@@ -602,13 +609,13 @@ class CodeGenerator:
                     else:
                         exc_code = str(exc_type_node)
                     if name:
-                        header = f'except {exc_code} as {name}:'
+                        header = f'{except_keyword} {exc_code} as {name}:'
                     else:
-                        header = f'except {exc_code}:'
+                        header = f'{except_keyword} {exc_code}:'
                 elif name:
-                    header = f'except Exception as {name}:'
+                    header = f'{except_keyword} Exception as {name}:'
                 else:
-                    header = 'except:'
+                    header = f'{except_keyword}:'
 
                 if self._is_simple_single_statement(handler_body):
                     stmt_line = self._generate_single_stmt_line(handler_body[0])
@@ -940,9 +947,16 @@ class CodeGenerator:
             isinstance(value, dict) and value.get('type') == 'Constant' and
             value.get('value') is None):
             target_str = targets_code[0] if targets_code else ''
-            if target_str.isidentifier() and self._in_function_context() and not self._is_in_if_body():
-                if len(self._function_depth_stack) > 0:
+            if target_str.isidentifier():
+                # [Phase 3 adv17_try_except_star] 与 AST 路径（_generate_assign）
+                # 保持一致：只要 target 是 except 的 as 变量且值为 None，就跳过。
+                # 此前 dict 路径仅在函数上下文且不在 if body 中跳过，导致模块级
+                # if 内的 except/except* 的 as 变量清理（e = None）泄漏到输出。
+                if target_str in self._except_as_vars:
                     return
+                if self._in_function_context() and not self._is_in_if_body():
+                    if len(self._function_depth_stack) > 0:
+                        return
 
         self._write_line(f'{", ".join(targets_code)} = {value_code}')
 
