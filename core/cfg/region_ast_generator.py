@@ -16082,6 +16082,10 @@ AST 映射规则:
         outer_values: List[Dict[str, Any]] = []
         current_inner_op: Optional[str] = None
         current_inner_values: List[Dict[str, Any]] = []
+        # [Phase 7 fix] Per-chain-block fall-through tracking（避免与末尾
+        # fall-through 重复处理同一块）。chain_block_offsets 用于排除链块本身。
+        processed_ft_blocks: Set[int] = set()
+        chain_block_offsets = {b.start_offset for b, _ in op_chain}
 
         def _end_inner_group():
             nonlocal current_inner_op, current_inner_values
@@ -16133,8 +16137,25 @@ AST 映射规则:
                             group_result = {'type': 'UnaryOp', 'op': 'UAdd', 'operand': group_result}
                         elif inst.opname == 'UNARY_INVERT':
                             group_result = {'type': 'UnaryOp', 'op': 'Invert', 'operand': group_result}
-                    current_inner_op = chain_op
-                    current_inner_values = [group_result]
+                    # [Phase 7 fix] 变换块（如 UNARY_NOT）对前一个内层组的结果
+                    # 施加一元运算。变换后的结果去向由分类决定，而非一律续接
+                    # 内层组。如 `not (a and b) or (c and not d)` 中 block8
+                    # (UNARY_NOT, op='or', OUTER) 将内层 and 组 [a,b] 变为
+                    # `not (a and b)`，作为外层 or 的操作数（结束内层组），
+                    # 而非开启新的 or 内层组。
+                    _tf_cls = classifications[i] if i < len(classifications) else 'LAST'
+                    if _tf_cls == 'OUTER':
+                        # 变换结果是外层操作数：结束内层组，加入 outer_values
+                        outer_values.append(group_result)
+                        current_inner_op = None
+                        current_inner_values = []
+                    elif _tf_cls == 'LAST':
+                        # 变换结果是末尾操作数：追加到当前内层组后结束
+                        current_inner_values = [group_result]
+                        _end_inner_group()
+                    else:  # INNER
+                        current_inner_op = chain_op
+                        current_inner_values = [group_result]
                 continue
             if nested_ternary is not None:
                 sub_expr = nested_ternary
@@ -16176,6 +16197,42 @@ AST 映射规则:
             if sub_expr is None:
                 continue
             current_inner_values.append(sub_expr)
+            # [Phase 7 fix] Per-chain-block fall-through：收集 chain 块的
+            # fall-through 块中的额外操作数。如 `not (a and b) or (c and not d)`
+            # 中 block0 (and) 的 fall-through block6 含 `b`（LOAD b），它是
+            # 内层 and 组 [a, b] 的第二操作数。不带 UNARY_NOT 的平坦链
+            # （如 `a and b or c and True`）中 fall-through 块就是下一个链块，
+            # 已被 chain_block_offsets / next_chain_block 排除，不会误收。
+            # fall-through 操作数属于同一内层组，故在分类结束逻辑之前追加。
+            if (nested_ternary is None and last_instr
+                    and last_instr.opname in STRIP_JUMP_OPS
+                    and last_instr.argval is not None):
+                _next_cb = op_chain[i + 1][0] if i + 1 < len(op_chain) else None
+                _ft_succs = sorted(chain_block.conditional_successors,
+                                   key=lambda s: s.start_offset)
+                _ft_block = next((s for s in _ft_succs
+                                  if s.start_offset != last_instr.argval
+                                  and s is not _next_cb
+                                  and s.start_offset not in chain_block_offsets
+                                  and s is not region.merge_block
+                                  and s in region.blocks
+                                  and s.start_offset not in processed_ft_blocks
+                                  and not any(inst.opname == 'GET_AWAITABLE'
+                                               for inst in s.instructions)), None)
+                if _ft_block is not None:
+                    processed_ft_blocks.add(_ft_block.start_offset)
+                    _ft_instrs = [inst for inst in _ft_block.instructions
+                                  if inst.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                    _clean_ft = []
+                    for inst in _ft_instrs:
+                        if inst.opname in ('POP_TOP', 'RETURN_VALUE', 'RETURN_CONST',
+                                           'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'):
+                            break
+                        _clean_ft.append(inst)
+                    if _clean_ft:
+                        _ft_expr = self.expr_reconstructor.reconstruct(_clean_ft)
+                        if _ft_expr is not None:
+                            current_inner_values.append(_ft_expr)
             cls = classifications[i] if i < len(classifications) else 'LAST'
             if cls == 'LAST':
                 _end_inner_group()
