@@ -19369,7 +19369,7 @@ AST 映射规则:
                     for _instr in effective:
                         if _instr.opname in ('RESUME', 'NOP', 'CACHE'):
                             continue
-                        if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF') and _instr.argval in (self._current_loop.metadata.get('for_target_names', set()) if self._current_loop else set()) and _instr.argval not in _seen_for_targets3:
+                        if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF') and _instr.argval in (self._current_loop.metadata.get('for_target_names', set()) if self._current_loop else set()) and _instr.argval not in _seen_for_targets3 and not _eff_expr_instrs:
                             _seen_for_targets3.add(_instr.argval)
                             if _eff_expr_instrs:
                                 _expr = self.expr_reconstructor.reconstruct(_eff_expr_instrs)
