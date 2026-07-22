@@ -135,9 +135,36 @@ class DominatorAnalyzer:
                     dom.dominated_blocks.add(block)
 
     def _compute_post_dominators(self) -> None:
+        # [R9 聚类A] post-dominator 后继集选择策略（Option C 精细化）：
+        # 原实现排除 exception_successors，对 async for / await 场景产生致命
+        # 错误：async for 的轮询块唯一非循环出口是异常边（END_ASYNC_FOR），
+        # 排除异常边后 post-dominator 不收敛，导致 merge_block=None。
+        #
+        # 但「无差别包含异常后继」会破坏 try/finally/try/except 异常路径的
+        # ternary 识别：异常路径块（PUSH_EXC_INFO...RERAISE/COPY...RERAISE）
+        # 的正常后继指向后续块（非自循环），若包含异常边则 post-dominator
+        # 误指向异常清理块而非正常 merge 块，导致 ternary merge 误判。
+        #
+        # 策略（依「每块唯一归属」原则）：
+        # 仅当块的「正常后继为空」或「正常后继含自身（自循环）」时，才包含
+        # 异常后继：
+        #   * async for/await polling 块：含 JUMP_BACKWARD_NO_INTERRUPT 自循环，
+        #     异常后继是 END_ASYNC_FOR（真实出口）→ 包含 → 修复收敛
+        #   * try/finally/except 异常路径块：正常后继指向后续语句块，无自循环
+        #     → 排除 → 保护 ternary merge 识别
+        # 此条件是结构性（基于 CFG 拓扑），不依赖指令操作码特例，符合
+        # 算法 4 原则：无硬编码、无后处理补丁、无跨区域特例。
         normal_successors = {}
         for block in self.blocks:
-            normal_successors[block] = block.successors - getattr(block, 'exception_successors', set())
+            _succs = set(block.successors)
+            _exc_succs = getattr(block, 'exception_successors', set())
+            # 正常后继 = 所有后继 - 异常后继
+            _normal = _succs - _exc_succs
+            # Option C：仅当无正常后继或正常后继含自身（自循环）时包含异常后继
+            if not _normal or block in _normal:
+                for _exc in _exc_succs:
+                    _normal.add(_exc)
+            normal_successors[block] = _normal
 
         exit_blocks = [b for b in self.blocks if not normal_successors.get(b, set()) or b.is_exit]
         if not exit_blocks:

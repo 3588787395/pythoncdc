@@ -284,6 +284,19 @@ class CodeGenerator:
                                     'AsyncWith'):
                         self._generate_dict_node(expr)
                         return
+                    # [R20-Bug7 修复] 过滤 with __exit__ 残留调用：dict 格式
+                    # Call(func=Constant(None), args=[Constant(None), Constant(None)])
+                    # 此模式来自 with 块 __exit__ 字节码泄漏，输出会变成
+                    # `None(None, None)` 垃圾代码，导致语法错误。
+                    if expr_type == 'Call':
+                        _func = expr.get('func', {})
+                        _args = expr.get('args', []) or expr.get('pparams', [])
+                        if (isinstance(_func, dict) and
+                            _func.get('type') == 'Constant' and
+                            _func.get('value') is None and
+                            all(isinstance(a, dict) and a.get('type') == 'Constant'
+                                and a.get('value') is None for a in _args)):
+                            return  # 跳过 __exit__ 残留调用
                 expr_code = self._generate_expression(expr)
                 self._write_line(expr_code)
         elif node_type == 'Pass':
@@ -2550,6 +2563,13 @@ class CodeGenerator:
                 inner_func = func.func
                 if isinstance(inner_func, ASTName) and inner_func.name == 'open':
                     return  # 跳过open()()(None, None)形式的调用
+            # [R20-Bug7 修复] 过滤 Call(func=Constant(None), args=[Constant(None), Constant(None)])
+            # 这是 with 语句 __exit__ 调用泄漏为独立 Expr 语句的形式，输出会变成
+            # `None(None, None)` 垃圾代码。检测模式：func 是 None 常量，args 全是 None 常量。
+            if isinstance(func, ASTConstant) and func.value is None:
+                pparams = getattr(node.value, 'pparams', []) or []
+                if all(isinstance(a, ASTConstant) and a.value is None for a in pparams):
+                    return  # 跳过 __exit__ 残留调用
 
         # [关键修复] 使用最低优先级(0)来避免表达式语句添加最外层括号
         expr_code = self._generate_expression(node.value, 0)
@@ -3001,8 +3021,20 @@ class CodeGenerator:
                 return self._generate_lambda_from_dict(node)
             elif node_type == 'Starred':
                 # [聚类7 修复] *args 渲染：Call 的位置参数中的 Starred 节点
+                # [R4 Bug 9 修复] 当 Starred.value 是低优先级复合表达式
+                # （IfExp/BoolOp/NamedExpr/lambda/Yield 等）时必须加括号，
+                # 否则 `*(items if cond else [])` 会被渲染为
+                # `*items if cond else []` 导致语法错误（starred 与
+                # ternary 优先级冲突）。Call 位置参数上下文也要求 *expr
+                # 中 expr 是单 atom。
                 value = node.get('value', {})
                 value_code = self._generate_expression(value, 0) if value else ''
+                _v_type = value.get('type') if isinstance(value, dict) else None
+                if _v_type in ('IfExp', 'BoolOp', 'NamedExpr', 'Lambda',
+                               'Yield', 'YieldFrom', 'Await',
+                               'BinOp', 'UnaryOp', 'Compare',
+                               'Starred'):
+                    return f'*({value_code})'
                 return f'*{value_code}'
             elif node_type == 'Subscript':
                 value = node.get('value', {})
@@ -3110,6 +3142,14 @@ class CodeGenerator:
                     elts = node.get('elts', [])
                     elt_codes = [self._generate_expression(e, 0) for e in elts]
                     return f'[{", ".join(elt_codes)}]'
+                elif node_type == 'Set':
+                    # [R12-06 fix] dict-based Set rendering (mirrors List with
+                    # `{...}` braces). Falls back to annotation path otherwise.
+                    elts = node.get('elts', [])
+                    if elts:
+                        elt_codes = [self._generate_expression(e, 0) for e in elts]
+                        return f'{{{", ".join(elt_codes)}}}'
+                    return 'set()'
                 elif node_type == 'Dict':
                     keys = node.get('keys', [])
                     values = node.get('values', [])
@@ -3120,7 +3160,21 @@ class CodeGenerator:
                         # 渲染为 ``**expr``（无 key: value 对）。
                         if (isinstance(k, dict) and k.get('type') == 'Starred'
                                 and v is None):
-                            pairs.append(f'**{self._generate_expression(k.get("value"), 0)}')
+                            # [R12-02 fix] 当 Starred.value 是低优先级复合表达式
+                            # （IfExp/BoolOp/NamedExpr/lambda/Yield 等）时必须加
+                            # 括号，否则 `{**(a if c else b)}` 会被渲染为
+                            # `{**a if c else b}` 导致语法错误。同 Call 位置参数的
+                            # Starred 渲染逻辑（见 L2979-2995）。
+                            _inner = k.get('value', {})
+                            _inner_code = self._generate_expression(_inner, 0) if _inner else ''
+                            _inner_type = _inner.get('type') if isinstance(_inner, dict) else None
+                            if _inner_type in ('IfExp', 'BoolOp', 'NamedExpr',
+                                               'Lambda', 'Yield', 'YieldFrom',
+                                               'Await', 'BinOp', 'UnaryOp',
+                                               'Compare', 'Starred'):
+                                pairs.append(f'**({_inner_code})')
+                            else:
+                                pairs.append(f'**{_inner_code}')
                             continue
                         k_code = self._generate_expression(k, 0)
                         v_code = self._generate_expression(v, 0)
@@ -4346,6 +4400,12 @@ class CodeGenerator:
                         iter_code = self._generate_annotation_from_dict(value)
                     else:
                         iter_code = self._generate_expression(value, 0)
+                elif iter_type == 'IfExp':
+                    # [R16-04/05 fix] 推导式 iter 是 IfExp 时必须加括号，
+                    # 否则 `[v for v in a if c else b]` 会被解析为
+                    # `[v for v in a if c] else b`（语法错误）。
+                    iter_code = self._generate_expression(iter_obj, 0)
+                    iter_code = f'({iter_code})'
                 else:
                     iter_code = self._generate_expression(iter_obj, 0)
             else:
@@ -4359,6 +4419,11 @@ class CodeGenerator:
             for if_clause in ifs:
                 if isinstance(if_clause, dict):
                     if_code = self._generate_annotation_from_dict(if_clause)
+                    # [R9-17/18/05 fix] 推导式 if 条件是 IfExp 时必须加括号，
+                    # 否则 `[i for i in r if a if c else b]` 会被解析为
+                    # `[i for i in r if a] if c else b`（语法错误）。
+                    if if_clause.get('type') == 'IfExp':
+                        if_code = f'({if_code})'
                 else:
                     if_code = self._generate_expression(if_clause, 0)
                 part += f' if {if_code}'
@@ -4715,6 +4780,12 @@ class CodeGenerator:
                 for if_clause in gen._ifs:
                     # [关键修复] 使用0作为parent_precedence，避免条件被添加括号
                     if_code = self._generate_expression(if_clause, 0)
+                    # [R9-17/18/05 fix] 推导式 if 条件是 IfExp 时必须加括号
+                    # （见 _generate_comprehensions_from_dict 同名修复）。
+                    if hasattr(if_clause, '_node_type') and if_clause._node_type == 'IfExp':
+                        if_code = f'({if_code})'
+                    elif isinstance(if_clause, dict) and if_clause.get('type') == 'IfExp':
+                        if_code = f'({if_code})'
                     part += f' if {if_code}'
             
             parts.append(part)
@@ -4837,9 +4908,17 @@ class CodeGenerator:
             # 处理关键字参数
             for kw in kwargs:
                 if isinstance(kw, dict):
+                    # [R20-Bug8 修复] KeywordStarred (**kwargs / **{...}) 渲染为 **<value>
+                    # 此前仅处理普通 keyword (arg=value)，对 KeywordStarred 类型直接套用
+                    # `arg=value` 模板，导致 `**{k: v+1}` 错译为 `=Dict[k, v + 1]` 垃圾。
+                    if kw.get('type') == 'KeywordStarred':
+                        kw_value = kw.get('value')
+                        if kw_value is not None:
+                            arg_codes.append(f'**{self._generate_expression(kw_value, 0)}')
+                        continue
                     kw_arg = kw.get('arg', '')
                     kw_value = kw.get('value', {})
-                    kw_value_code = self._generate_annotation_from_dict(kw_value)
+                    kw_value_code = self._generate_expression(kw_value, 0)
                     arg_codes.append(f'{kw_arg}={kw_value_code}')
             
             return f'{func_code}({", ".join(arg_codes)})'
