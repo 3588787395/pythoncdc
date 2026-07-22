@@ -15360,7 +15360,21 @@ RegionType 枚举值: RegionType.ASSERT
                 # block0 跳到 LOAD c 块、block8 跳到 COMPARE_OP 块）才断链。
                 if (_first_jt is not None
                         and not self._is_equivalent_exit_block(_cur_jt, _first_jt)):
-                    break
+                    # [Phase 7 fix] 混合操作符表达式语句（如 `a and b or c`、
+                    # `not (a and b) or (c and not d)`）：内层操作符的短路
+                    # 目标是外层操作符块（链继续块，非 exit），外层操作符的
+                    # 短路目标是 trivial return（exit）。此时 _cur_jt 是 exit
+                    # 而 _first_jt 不是（或反之），不应断链 — 它们是同一
+                    # 表达式语句的混合操作符链，短路目标发散源于操作符语义
+                    # 差异（and 短路 false 喂给外层 or、or 短路 true 直达
+                    # exit），而非两个独立表达式。
+                    # 对比 `(a and b) == (c and d)`：两个 and 的短路目标都
+                    # 是非 exit 中间块（LOAD c / COMPARE_OP），_cur_jt 与
+                    # _first_jt 均非 exit，不触发此豁免，仍由上面的
+                    # _is_equivalent_exit_block 正确断链。
+                    if not (self._is_exit_like_block(_cur_jt)
+                            or self._is_exit_like_block(_first_jt)):
+                        break
             chain.append((current, op_type))
             succs = list(current.conditional_successors)
             if len(succs) != 2:
@@ -15778,6 +15792,25 @@ RegionType 枚举值: RegionType.ASSERT
                 return True
         if self.block_roles.get(block.start_offset) == BlockRole.RETURN_NONE:
             return True
+        return False
+
+    def _is_exit_like_block(self, block: BasicBlock,
+                            visited: Optional[Set[int]] = None) -> bool:
+        # 判断单个块是否是「退出块」：trivial return，或 only-jumps 链
+        # 最终到达 trivial return。与 _is_equivalent_exit_block 的区别：
+        # 后者比较两个块是否语义等价（含 block_a is block_b 短路），
+        # 无法用于判定单个块是否为退出块。递归终止由 visited + CFG 有限性保证。
+        if visited is None:
+            visited = set()
+        if block.start_offset in visited:
+            return False
+        visited.add(block.start_offset)
+        if self._is_trivial_return_block(block):
+            return True
+        if self._is_only_jumps(block):
+            succs = list(block.successors)
+            if len(succs) == 1:
+                return self._is_exit_like_block(succs[0], visited)
         return False
 
     def get_region_for_block(self, block: BasicBlock) -> Optional[Region]:
