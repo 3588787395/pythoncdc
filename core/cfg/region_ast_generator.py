@@ -83,6 +83,22 @@ from .comprehension_generator import ComprehensionGenerator
 from .opcode_feature_detector import get_opcode_detector
 
 
+class _IfRegionProxy:
+    """[Phase 7 根因 A] IfRegion-like 代理，供 while 条件路径复用 if 条件路径的
+    compare-ternary 构建逻辑（_build_ternary_wrapped_expr）。
+
+    while 条件位三元与 if 条件位三元语义同构：条件真→进入 body/then。本代理
+    提供 then_blocks（= loop body_blocks）和 chained_compare_blocks（= []），
+    使 _build_ternary_wrapped_expr 的 NONE_CHECK 取反判断和链式比较逻辑
+    在 while 上下文中正确工作。
+    """
+    __slots__ = ('then_blocks', 'chained_compare_blocks')
+
+    def __init__(self, then_blocks, chained_compare_blocks):
+        self.then_blocks = then_blocks
+        self.chained_compare_blocks = chained_compare_blocks or []
+
+
 class RegionASTGenerator:
     _ALL_REGION_TYPES = (IfRegion, LoopRegion, TryExceptRegion, WithRegion, MatchRegion, AssertRegion, BoolOpRegion, TernaryRegion)
     _STRUCTURAL_REGION_TYPES = (IfRegion, LoopRegion, TryExceptRegion, WithRegion, MatchRegion)
@@ -3058,12 +3074,22 @@ AST 映射规则:
         # This must happen before the while-true checks, because the loop may
         # be classified as is_while_true (with condition_block=None) when the
         # ternary spans the initial condition check and the back-edge recheck.
+        # [Phase 7 根因 A] while 条件位三元识别 — 基于「父引用子入口」结构判据。
+        # while 通过 condition_block / header_block 引用三元 merge 作为条件节点。
+        # 覆盖全部三元在 while 条件位置的情况：
+        #   - fused（CPython 融合三元与循环测试，merge==header，merge_context='while_cond'）
+        #   - non-fused compare（merge==condition_block，含 COMPARE_OP，merge_context='compare'）
+        #   - non-fused walrus（merge==condition_block，含 COPY+STORE，merge_context='store'）
+        #   - 链式比较 / 裸真值等任意位置
+        # 不依赖具体指令判据，是基于区域结构的普遍性判据。
         _ternary_for_while = None
         for _r in region.iter_descendants((TernaryRegion,)):
             if getattr(_r, 'merge_context', None) == 'while_cond':
                 _ternary_for_while = _r
                 break
-            if _r.merge_block and _r.merge_block is region.header_block:
+            if (_r.merge_block is not None
+                    and (_r.merge_block is region.header_block
+                         or (cond_block is not None and _r.merge_block is cond_block))):
                 _ternary_for_while = _r
                 break
         if _ternary_for_while is None:
@@ -3072,7 +3098,9 @@ AST 映射规则:
                     if getattr(_r, 'merge_context', None) == 'while_cond':
                         _ternary_for_while = _r
                         break
-                    if _r.merge_block and _r.merge_block is region.header_block:
+                    if (_r.merge_block is not None
+                            and (_r.merge_block is region.header_block
+                                 or (cond_block is not None and _r.merge_block is cond_block))):
                         _ternary_for_while = _r
                         break
         if _ternary_for_while:
@@ -3099,7 +3127,21 @@ AST 映射规则:
                     elif _ternary_result.get('type') == 'Assign':
                         _ternary_expr = _ternary_result.get('value')
             if _ternary_expr:
-                condition = _ternary_expr
+                # [Phase 7 根因 A] while 条件位三元生成。
+                # - fused（merge==header）：三元 IfExp 直接作为 while 条件（CPython
+                #   融合三元与循环测试，无外层包裹指令）。
+                # - non-fused（merge==cond_block）：cond_block 含消费指令（COMPARE_OP/
+                #   walrus COPY+STORE/subscript/call），需用 _build_compare_ternary_condition
+                #   包裹 IfExp 为 Compare/NamedExpr 等。复用 if 条件路径的通用方法，
+                #   基于「父引用子入口」结构判据（merge==cond_block），不依赖具体指令。
+                if (cond_block is not None
+                        and _ternary_for_while.merge_block is cond_block):
+                    _built = self._build_compare_ternary_condition(
+                        _ternary_expr, cond_block, _ternary_for_while,
+                        list(region.body_blocks) or [], [])
+                    condition = _built if _built is not None else _ternary_expr
+                else:
+                    condition = _ternary_expr
                 # Mark ternary blocks as generated so they don't appear as statements
                 for _b in _ternary_for_while.blocks:
                     self.generated_blocks.add(_b)
@@ -3154,6 +3196,22 @@ AST 映射规则:
                 # Clear pre_stmts extracted from the ternary's condition_block
                 if _ternary_for_while.condition_block is cond_block:
                     pre_stmts = []
+                # [Phase 7 根因 A] 标记回边重检三元为已生成。
+                # CPython 在回边处复制 while 条件求值。对 non-fused compare-ternary
+                # （merge==cond_block），回边重检三元是独立 TernaryRegion（entry==loop
+                # header），其块全在 body_blocks 中。若不标记，body 生成会把它作为
+                # 独立 Expr 语句泄入循环体。判据：三元 entry is region.header_block
+                # （「父引用子入口」——loop header 即回边重检三元的入口）。
+                for _r in self.regions:
+                    if (isinstance(_r, TernaryRegion)
+                            and _r is not _ternary_for_while
+                            and _r.entry is region.header_block):
+                        for _b in _r.blocks:
+                            self.generated_blocks.add(_b)
+                            self.generated_offsets.add(_b.start_offset)
+                        if _r.merge_block is not None:
+                            self.generated_blocks.add(_r.merge_block)
+                            self.generated_offsets.add(_r.merge_block.start_offset)
                 # Set cond_block to None to skip cond_block processing
                 cond_block = None
 
@@ -9435,6 +9493,139 @@ AST 映射规则:
 
         return stack[-1] if stack else None
 
+    def _build_compare_ternary_condition(self, ternary_expr: Dict[str, Any],
+                                          cond_block: 'BasicBlock',
+                                          ternary_region: 'TernaryRegion',
+                                          then_blocks: List['BasicBlock'],
+                                          chained_compare_blocks: List['BasicBlock']) -> Optional[Dict[str, Any]]:
+        """[Phase 7 根因 A] 构建 compare-ternary 条件表达式（普遍性）。
+
+        适用场景：三元 merge_block == 父区域 cond_block，cond_block 含消费指令
+        （COMPARE_OP / walrus COPY+STORE / subscript / call 等包裹三元结果）。
+        父区域通过 cond_block 引用三元 merge（「父引用子入口」原则）。
+
+        覆盖全部三元在条件位置的情况：
+          - 三元在左 : `(a if c else b) > 0` → Compare(IfExp, [>], [0])
+          - 三元在右 : `0 < (a if c else b)` → Compare(0, [<], [IfExp])
+          - walrus 包裹 : `(n := (a if c else b)) > 0` → Compare(NamedExpr, [>], [0])
+          - subscript/call 包裹 : `d[a if c else b] > 0` → Compare(Subscript, [>], [0])
+          - 链式比较 : `0 < (a if c else b) < 10` → Compare(0, [<], [IfExp, 10])
+          - is/in 测试 : `(a if c else b) is None` → Compare(IfExp, [is], [None])
+
+        被 if 条件路径（_if_extract_condition_from_instructions）和 while 条件路径
+        （_loop_generate_while）共同调用，消除重复，是基于区域结构的普遍性判据。
+
+        Args:
+            ternary_expr: 三元 IfExp 表达式 dict
+            cond_block: 父区域的条件块（= 三元 merge_block）
+            ternary_region: 三元区域
+            then_blocks: 父区域的 then/body 块（用于取反判断）
+            chained_compare_blocks: 链式比较后续段块
+
+        Returns:
+            完整条件表达式 dict，或 None（应退回裸三元真值测试）
+        """
+        # [聚类1 修复] 三元被外层表达式包裹时（d[ternary], (ternary).x,
+        # f(ternary), {ternary: v}, ternary is None, ternary in lst），
+        # 用栈模拟构建完整条件表达式。否则走原始三元 Compare 构建路径。
+        # 构造临时 IfRegion-like 代理以复用 _build_ternary_wrapped_expr。
+        _proxy = _IfRegionProxy(then_blocks, chained_compare_blocks)
+        _wrapped = self._build_ternary_wrapped_expr(
+            ternary_expr, cond_block, ternary_region, _proxy)
+        if _wrapped is not None:
+            return _wrapped
+        # [聚类5 修复] 统一构建含三元的比较表达式，覆盖三种位置：
+        #   (a) 三元在左 : `(a if c else b) > 0`
+        #       cond_block 含 <rhs_loads>, COMPARE_OP, [jump]
+        #   (b) 三元在右 : `0 < (a if c else b)`
+        #       cond_block 仅含 COMPARE_OP, [jump]；左操作数被"困"在
+        #       ternary 进入块（ternary test 之前）。
+        #   (c) 三元在链式比较中段 : `0 < (a if c else b) < 10`
+        #       cond_block 含 SWAP/COPY(链式setup), COMPARE_OP, [jump]；
+        #       chained_compare_blocks 持有后续段；左操作数仍困在 entry。
+        # 依区域归约：三元归约为抽象节点（IfExp），Compare 引用其为操作数。
+        _CMP_SKIP_OPS = frozenset({
+            'COMPARE_OP', 'SWAP', 'COPY', 'POP_TOP',
+            'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_FALSE',
+            'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_TRUE',
+            'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_BACKWARD_IF_NONE',
+            'POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_BACKWARD_IF_NOT_NONE',
+            'POP_JUMP_IF_FALSE', 'POP_JUMP_IF_TRUE',
+            'POP_JUMP_IF_NONE', 'POP_JUMP_IF_NOT_NONE',
+            'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE',
+            'CACHE', 'NOP', 'RESUME',
+        })
+        segments = [cond_block] + list(chained_compare_blocks or [])
+        seg_ops_instrs = []  # COMPARE_OP instrs per segment
+        seg_load_instrs = []  # operand-producing instrs per segment
+        for seg in segments:
+            ops_i = []
+            loads_i = []
+            for instr in seg.instructions:
+                if instr.opname in NOISE_OPS:
+                    continue
+                if instr.opname == 'COMPARE_OP':
+                    ops_i.append(instr)
+                elif instr.opname in _CMP_SKIP_OPS:
+                    continue
+                else:
+                    loads_i.append(instr)
+            seg_ops_instrs.append(ops_i)
+            seg_load_instrs.append(loads_i)
+        all_ops = [op.argval for seg in seg_ops_instrs for op in seg]
+        if not all_ops:
+            # 无 COMPARE_OP：三元作为裸真值条件
+            return ternary_expr
+        first_loads = seg_load_instrs[0] if seg_load_instrs else []
+        _ternary_is_left = len(first_loads) > 0
+        if _ternary_is_left:
+            # 三元在左：left=ternary，comparators=各段操作数
+            left_expr = ternary_expr
+            comparators = []
+            for loads in seg_load_instrs:
+                if loads:
+                    r = self.expr_reconstructor.reconstruct(loads)
+                    if r:
+                        comparators.append(r)
+        else:
+            # 三元在右/中段：left=困在 entry 的左操作数
+            lhs_instrs = self._extract_trapped_lhs_from_ternary(ternary_region)
+            left_expr = self.expr_reconstructor.reconstruct(lhs_instrs) if lhs_instrs else None
+            comparators = [ternary_expr]  # 三元是第一个 comparator
+            for seg_idx in range(1, len(seg_load_instrs)):
+                loads = seg_load_instrs[seg_idx]
+                if loads:
+                    r = self.expr_reconstructor.reconstruct(loads)
+                    if r:
+                        comparators.append(r)
+        # 标记链式比较块已生成
+        for cb in (chained_compare_blocks or []):
+            self.generated_blocks.add(cb)
+        if left_expr is None or len(comparators) != len(all_ops):
+            # 操作数不匹配，退回三元真值测试
+            return ternary_expr
+        compare_expr = {
+            'type': 'Compare',
+            'left': left_expr,
+            'ops': all_ops,
+            'comparators': comparators,
+        }
+        # 取反逻辑：以最后一段的条件跳转为准
+        negate = False
+        last_seg = segments[-1]
+        last = last_seg.get_last_instruction()
+        if last is not None and last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | BACKWARD_CONDITIONAL_JUMP_OPS):
+            if last.opname in NONE_CHECK_OPS:
+                if_true = False
+            else:
+                if_true = 'IF_TRUE' in last.opname
+            jump_target = last.argval
+            if jump_target is not None:
+                then_start_offsets = {b.start_offset for b in then_blocks}
+                jumps_to_then = jump_target in then_start_offsets
+                negate = jumps_to_then != if_true
+        return _negate_expr(compare_expr) if negate else compare_expr
+
     def _if_extract_condition_from_instructions(self, region: IfRegion, cond_block: 'BasicBlock', cond_instrs: List) -> Dict[str, Any]:
         # [Round 2 修复] 当 cond_block 属于某个多操作数 BoolOpRegion 时
         # （如 `if x or await g():` 中 await 的 truthy 测试块），条件应
@@ -9502,104 +9693,12 @@ AST 映射规则:
             if ternary_expr:
                 for b in ternary_for_cond.blocks:
                     self.generated_blocks.add(b)
-                # [聚类1 修复] 三元被外层表达式包裹时（d[ternary], (ternary).x,
-                # f(ternary), {ternary: v}, ternary is None, ternary in lst），
-                # 用栈模拟构建完整条件表达式。否则走原始三元 Compare 构建路径。
-                _wrapped = self._build_ternary_wrapped_expr(
-                    ternary_expr, cond_block, ternary_for_cond, region)
-                if _wrapped is not None:
-                    return _wrapped
-                # [聚类5 修复] 统一构建含三元的比较表达式，覆盖三种位置：
-                #   (a) 三元在左 : `(a if c else b) > 0`
-                #       cond_block 含 <rhs_loads>, COMPARE_OP, [jump]
-                #   (b) 三元在右 : `0 < (a if c else b)`
-                #       cond_block 仅含 COMPARE_OP, [jump]；左操作数被"困"在
-                #       ternary 进入块（ternary test 之前）。
-                #   (c) 三元在链式比较中段 : `0 < (a if c else b) < 10`
-                #       cond_block 含 SWAP/COPY(链式setup), COMPARE_OP, [jump]；
-                #       chained_compare_blocks 持有后续段；左操作数仍困在 entry。
-                # 依区域归约：三元归约为抽象节点（IfExp），Compare 引用其为操作数。
-                _CMP_SKIP_OPS = frozenset({
-                    'COMPARE_OP', 'SWAP', 'COPY', 'POP_TOP',
-                    'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_FALSE',
-                    'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_TRUE',
-                    'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_BACKWARD_IF_NONE',
-                    'POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_BACKWARD_IF_NOT_NONE',
-                    'POP_JUMP_IF_FALSE', 'POP_JUMP_IF_TRUE',
-                    'POP_JUMP_IF_NONE', 'POP_JUMP_IF_NOT_NONE',
-                    'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE',
-                    'CACHE', 'NOP', 'RESUME',
-                })
-                segments = [cond_block] + list(getattr(region, 'chained_compare_blocks', None) or [])
-                seg_ops_instrs = []  # COMPARE_OP instrs per segment
-                seg_load_instrs = []  # operand-producing instrs per segment
-                for seg in segments:
-                    ops_i = []
-                    loads_i = []
-                    for instr in seg.instructions:
-                        if instr.opname in NOISE_OPS:
-                            continue
-                        if instr.opname == 'COMPARE_OP':
-                            ops_i.append(instr)
-                        elif instr.opname in _CMP_SKIP_OPS:
-                            continue
-                        else:
-                            loads_i.append(instr)
-                    seg_ops_instrs.append(ops_i)
-                    seg_load_instrs.append(loads_i)
-                all_ops = [op.argval for seg in seg_ops_instrs for op in seg]
-                if not all_ops:
-                    # 无 COMPARE_OP：三元作为裸真值条件
-                    return ternary_expr
-                first_loads = seg_load_instrs[0] if seg_load_instrs else []
-                _ternary_is_left = len(first_loads) > 0
-                if _ternary_is_left:
-                    # 三元在左：left=ternary，comparators=各段操作数
-                    left_expr = ternary_expr
-                    comparators = []
-                    for loads in seg_load_instrs:
-                        if loads:
-                            r = self.expr_reconstructor.reconstruct(loads)
-                            if r:
-                                comparators.append(r)
-                else:
-                    # 三元在右/中段：left=困在 entry 的左操作数
-                    lhs_instrs = self._extract_trapped_lhs_from_ternary(ternary_for_cond)
-                    left_expr = self.expr_reconstructor.reconstruct(lhs_instrs) if lhs_instrs else None
-                    comparators = [ternary_expr]  # 三元是第一个 comparator
-                    for seg_idx in range(1, len(seg_load_instrs)):
-                        loads = seg_load_instrs[seg_idx]
-                        if loads:
-                            r = self.expr_reconstructor.reconstruct(loads)
-                            if r:
-                                comparators.append(r)
-                # 标记链式比较块已生成
-                for cb in (getattr(region, 'chained_compare_blocks', None) or []):
-                    self.generated_blocks.add(cb)
-                if left_expr is None or len(comparators) != len(all_ops):
-                    # 操作数不匹配，退回三元真值测试
-                    return ternary_expr
-                compare_expr = {
-                    'type': 'Compare',
-                    'left': left_expr,
-                    'ops': all_ops,
-                    'comparators': comparators,
-                }
-                # 取反逻辑：以最后一段的条件跳转为准
-                negate = False
-                last_seg = segments[-1]
-                last = last_seg.get_last_instruction()
-                if last is not None and last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | BACKWARD_CONDITIONAL_JUMP_OPS):
-                    if last.opname in NONE_CHECK_OPS:
-                        if_true = False
-                    else:
-                        if_true = 'IF_TRUE' in last.opname
-                    jump_target = last.argval
-                    if jump_target is not None:
-                        then_start_offsets = {b.start_offset for b in region.then_blocks}
-                        jumps_to_then = jump_target in then_start_offsets
-                        negate = jumps_to_then != if_true
-                return _negate_expr(compare_expr) if negate else compare_expr
+                # [Phase 7 根因 A] 复用通用 compare-ternary 构建方法（与 while 条件路径共享）。
+                _result = self._build_compare_ternary_condition(
+                    ternary_expr, cond_block, ternary_for_cond,
+                    getattr(region, 'then_blocks', None) or [],
+                    getattr(region, 'chained_compare_blocks', None) or [])
+                return _result if _result is not None else ternary_expr
         boolop_region_for_cond = self.region_analyzer.get_region_for_block(cond_block)
         if not isinstance(boolop_region_for_cond, BoolOpRegion):
             boolop_region_for_cond = region.find_descendant_region_for_block(cond_block, (BoolOpRegion,))
