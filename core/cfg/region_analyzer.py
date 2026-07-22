@@ -13993,85 +13993,9 @@ RegionType 枚举值: RegionType.ASSERT
             pred_op = 'and' if 'FALSE' in pred_last.opname else 'or'
             if pred_op != op_type:
                 break
-            # [Phase 7 根因 A] while 条件位三元 Scenario B 守卫。
-            # `while (a if cond else b):` 编译时，三元 cond 块（pred）的
-            # fallthrough 是 true_value 块，true_value 经 JUMP_FORWARD 跳到
-            # loop header（= 三元 merge）。当前方法从 false_value 块向后走
-            # predecessor，会把三元 cond 块误并入 boolop `and` 链（cond 和
-            # false_value 都 IF_FALSE 跳到 exit，形似 `and`）。
-            #
-            # 普遍性判据（与 _detect_boolop_short_circuit_chain 的 Scenario B
-            # 守卫同语义）：pred 的 fallthrough 链经 JUMP_FORWARD 到达 loop
-            # header，说明 pred 是三元 cond 块、loop header 是三元 merge。
-            # 此时断链，让 TernaryRegion 识别器接管。
-            # 覆盖：simple（`while (a if c else b)`）、compare（`while (a if c else b) > 0`）、
-            # walrus（`while (n := (a if c else b)) > 0`）、嵌套三元 ——
-            # 全部由「JUMP_FORWARD 到 loop header」结构模式统一识别，
-            # 不依赖具体指令判据。
-            if self._is_ternary_cond_reaching_loop_header(pred, loop):
-                break
             chain.insert(0, (pred, pred_op))
             current = pred
         return chain if len(chain) >= 1 else None
-
-    def _is_ternary_cond_reaching_loop_header(self, cond_block: BasicBlock, loop: LoopRegion) -> bool:
-        """检查 cond_block 是否是「while 条件位三元」的 cond 块。
-
-        普遍性判据：cond_block 的 fallthrough 链经 JUMP_FORWARD 到达
-        loop.header_block（= 三元 merge）。这是 CPython 编译
-        `while (X if cond else Y):` 的标准模式：
-          cond_block: LOAD cond; POP_JUMP_IF_FALSE → false_value
-          true_value: LOAD X; [POP_JUMP_IF_FALSE → exit]; JUMP_FORWARD → merge
-          merge = loop.header_block
-
-        返回 True 表示 cond_block 是三元 cond 块，不应并入 boolop 链。
-        """
-        header = loop.header_block
-        if header is None:
-            return False
-        last = cond_block.get_last_instruction()
-        if not last or last.argval is None:
-            return False
-        # cond_block 的 fallthrough（非跳转目标后继）
-        succs = list(cond_block.conditional_successors)
-        if len(succs) != 2:
-            return False
-        ft = next((s for s in succs if s.start_offset != last.argval), None)
-        if ft is None:
-            return False
-        # 沿 fallthrough 链走，最多 5 步，找 JUMP_FORWARD 到 loop header
-        visited = {cond_block.start_offset}
-        walk = ft
-        for _ in range(5):
-            if walk is None or walk.start_offset in visited:
-                break
-            visited.add(walk.start_offset)
-            walk_last = walk.get_last_instruction()
-            if walk_last is None:
-                break
-            # JUMP_FORWARD 到 loop header = 三元 merge
-            if (walk_last.opname == 'JUMP_FORWARD'
-                    and walk_last.argval is not None
-                    and walk_last.argval == header.start_offset):
-                return True
-            # 纯 JUMP_FORWARD 连接块：继续走 fallthrough
-            walk_eff = [i for i in walk.instructions if i.opname not in NOISE_OPS]
-            if (len(walk_eff) == 1 and walk_eff[0].opname == 'JUMP_FORWARD'
-                    and walk_eff[0].argval is not None):
-                nb = self.cfg.get_block_by_offset(walk_eff[0].argval)
-                if nb is not None:
-                    walk = nb
-                    continue
-            # 条件跳转块（true_value 含 POP_JUMP_IF_FALSE → exit）：走 fallthrough
-            if walk_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS):
-                wsuccs = list(walk.conditional_successors)
-                if len(wsuccs) == 2:
-                    wft = next((s for s in wsuccs if s.start_offset != walk_last.argval), None)
-                    if wft is not None:
-                        walk = wft
-                        continue
-            break
-        return False
 
     def _detect_while_boolop_forward_chain(self, cond_block: BasicBlock, loop: LoopRegion, BOOLOP_CHAIN_JUMPS) -> Optional[List[Tuple[BasicBlock, str]]]:
         chain: List[Tuple[BasicBlock, str]] = []
