@@ -2739,6 +2739,17 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                             if last_instr.argval is not None:
                                 target = self.cfg.get_block_by_offset(last_instr.argval)
                                 if target not in body and target != header:
+                                    # [Phase 7 方案 A] 跳过 fused ternary-loop 的
+                                    # false_value_block。CPython 将 `while (a if c else b):`
+                                    # 编译为融合结构，false_value 的 POP_JUMP_IF_FALSE 跳到
+                                    # exit 满足 "跳出 body/header" 判据，会被误设为
+                                    # condition_block。这导致 _detect_while_condition_
+                                    # boolop_chain 从 false_value 回溯识别为 boolop 链，
+                                    # 覆盖三元归属。跳过它让 condition_block 保持 None，
+                                    # 循环以 while_true 形式识别，由 _detect_ternary_pattern
+                                    # 正确识别三元（merge_context='while_cond'）。
+                                    if self._is_fused_ternary_false_value_block(pred, header):
+                                        continue
                                     condition_block = pred
                                     is_while_true = False
                                     break
@@ -12298,6 +12309,67 @@ RegionType 枚举值: RegionType.ASSERT
                                 _tft_last.argval is not None):
                             merge_block = self.cfg.get_block_by_offset(_tft_last.argval)
 
+            # [Phase 7 方案 A] fused ternary-loop merge_block fallback。
+            # 当 _is_ternary_block 返回 True（值块是单表达式块）但值块以
+            # FORWARD_CONDITIONAL_JUMP 结尾（fused 模式，非基本三元的 JUMP_FORWARD），
+            # has_jump_forward_skip 不会被设置（elif not _is_ternary_block 不进入）。
+            # 此时 find_nearest_common_post_dominator 返回 None（无公共后继支配者）。
+            # 检测 fused 模式：true_block 的 fallthrough 是纯 JUMP_FORWARD 块跳到 M，
+            # false_block 的 fallthrough 也是 M。设 merge_block=M, merge_context='while_cond'。
+            # 判据基于区域结构（与 _is_fused_ternary_false_value_block 一致），
+            # 非实例特征。
+            if merge_block is None:
+                _tli2 = true_block.get_last_instruction()
+                _fli2 = false_block.get_last_instruction()
+                if (_tli2 and _fli2
+                        and _tli2.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                        and _fli2.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                        and _tli2.argval is not None
+                        and _fli2.argval is not None):
+                    _tsuccs2 = list(true_block.conditional_successors)
+                    _fsuccs2 = list(false_block.conditional_successors)
+                    if len(_tsuccs2) == 2 and len(_fsuccs2) == 2:
+                        _tft2 = next((s for s in _tsuccs2
+                                      if s.start_offset != _tli2.argval), None)
+                        _fft2 = next((s for s in _fsuccs2
+                                      if s.start_offset != _fli2.argval), None)
+                        if _tft2 and _fft2 and _tft2 is not _fft2:
+                            # _tft2 应是纯 JUMP_FORWARD 块，跳到 _fft2
+                            _ft_eff = [i for i in _tft2.instructions
+                                       if i.opname not in NOISE_OPS]
+                            _ft_pure_jump = all(
+                                i.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                                             'JUMP_BACKWARD',
+                                             'JUMP_BACKWARD_NO_INTERRUPT')
+                                for i in _ft_eff
+                            )
+                            if _ft_pure_jump and _ft_eff:
+                                _ft_last2 = _ft_eff[-1]
+                                if _ft_last2.argval is not None:
+                                    _conn_target = self.cfg.get_block_by_offset(
+                                        _ft_last2.argval)
+                                    if _conn_target is _fft2:
+                                        # 排除 assert 模式：assert 三元的公共
+                                        # 消费块含 LOAD_ASSERTION_ERROR +
+                                        # RAISE_VARARGS，由独立的 assert pattern
+                                        # fallback 语义处理（merge_context=None，
+                                        # 不设 has_jump_forward_skip）。若此处
+                                        # 抢先设 has_jump_forward_skip=True，会
+                                        # 触发 merge_context='while_cond'，改变
+                                        # 生成路径，引入 assert 回归。判据基于
+                                        # 消费块指令特征（结构特征），非实例特征。
+                                        _fft_eff2 = [i for i in _fft2.instructions
+                                                     if i.opname not in NOISE_OPS]
+                                        _is_assert_consumer = (
+                                            any(i.opname == 'LOAD_ASSERTION_ERROR'
+                                                for i in _fft_eff2)
+                                            and any(i.opname == 'RAISE_VARARGS'
+                                                    for i in _fft_eff2)
+                                        )
+                                        merge_block = _fft2
+                                        if not _is_assert_consumer:
+                                            has_jump_forward_skip = True
+
             # [R10-batch1 err 2] assert (ternary) pattern fallback.
             # When both branches end with POP_JUMP_FORWARD_IF_TRUE (assert's
             # truthy-check-then-skip-raise pattern), there's no common post-
@@ -12896,7 +12968,12 @@ RegionType 枚举值: RegionType.ASSERT
             # while-loop condition), set merge_context if no other context
             # was identified. The ternary result is consumed by the while
             # loop's condition test at the merge_block (loop header).
-            if has_jump_forward_skip and merge_context is None:
+            # [Phase 7 方案 A] 对于 fused ternary-loop，merge_block 是 loop header，
+            # 可能同时含 body 赋值（STORE_*）和 while 条件测试（POP_JUMP_IF_*）。
+            # 此时 has_jump_forward_skip=True 表示三元与循环测试融合，
+            # merge_context 应优先设为 'while_cond'（三元消费者是 while 条件测试，
+            # 不是 body 赋值），覆盖 'store' 等其他上下文。
+            if has_jump_forward_skip:
                 merge_context = 'while_cond'
                 value_target = '__while_cond_target__'
 
@@ -12972,10 +13049,24 @@ RegionType 枚举值: RegionType.ASSERT
                 if not _is_critical_loop_blk:
                     all_blocks.add(merge_block)
 
+            # 收集 loop header/condition 块集合，用于排除（「每块唯一归属」）
+            _critical_loop_blocks = set()
+            for _lr in (loop_regions or []):
+                if _lr.header_block:
+                    _critical_loop_blocks.add(_lr.header_block)
+                if _lr.condition_block:
+                    _critical_loop_blocks.add(_lr.condition_block)
+
             for vb in (true_block, false_block):
                 vb_last = vb.get_last_instruction()
                 if vb_last and vb_last.opname in FORWARD_CONDITIONAL_JUMP_OPS:
                     for s in vb.conditional_successors:
+                        # [Phase 7 方案 A] fused ternary-loop 中，值块的
+                        # fallthrough 后继是 loop header（merge_block），不能
+                        # 纳入 TernaryRegion.blocks，否则违反「每块唯一归属」
+                        # （block 同时属 LoopRegion 和 TernaryRegion）。
+                        if s in _critical_loop_blocks:
+                            continue
                         all_blocks.add(s)
                 # [T4修复] 当值块以短路跳转（JUMP_IF_FALSE_OR_POP/JUMP_IF_TRUE_OR_POP）结尾时，
                 # 其fallthrough后继和跳转目标后继都是三元值表达式的一部分（boolop第二操作数等）。
@@ -13996,6 +14087,118 @@ RegionType 枚举值: RegionType.ASSERT
             chain.insert(0, (pred, pred_op))
             current = pred
         return chain if len(chain) >= 1 else None
+
+    def _is_fused_ternary_false_value_block(self, pred: BasicBlock, header: BasicBlock) -> bool:
+        """检测 pred 是否是 fused ternary-loop 的 false_value_block。
+
+        [Phase 7 方案 A] CPython 将 `while (a if c else b):` 编译为融合结构：
+        三元与循环测试融合，a/b 直接 POP_JUMP_IF_FALSE 跳到 exit，无三元钻石。
+        字节码布局：
+            cond_block: LOAD c; POP_JUMP_IF_FALSE -> false_value
+            true_value: LOAD a; POP_JUMP_IF_FALSE -> exit_a; (fallthrough) connector
+            connector:  JUMP_FORWARD -> merge (= loop header)
+            false_value: LOAD b; POP_JUMP_IF_FALSE -> exit_b; (fallthrough) merge
+            merge (header): <loop body / back-edge recheck>
+
+        在 _identify_loop_regions Step 7(d) 的 is_while_true 分支中，false_value
+        会被误识别为 condition_block（其末尾 FORWARD_CONDITIONAL_JUMP 跳到 exit，
+        满足 "跳出 body/header" 判据）。这导致：
+          1. LoopRegion.condition_block 被设为 false_value
+          2. _detect_while_condition_boolop_chain 从 false_value 回溯到 cond_block，
+             误识别为 boolop 链（c and b），覆盖三元归属
+          3. _detect_ternary_pattern 因 false_block == LoopRegion.condition_block
+             而拒绝 cond_block 作为三元
+
+        本函数基于 fused 三元的结构特征（has_jump_forward_skip 模式）检测 pred
+        是否是 false_value_block。若是，Step 7(d) 应跳过它，让 condition_block
+        保持 None，循环以 while_true 形式识别，由 _detect_ternary_pattern 正确
+        识别三元，生成器通过 TernaryRegion.merge_block == header 关联三元作为
+        条件表达式。
+
+        判据（基于区域结构，非实例特征）：
+        1. pred 末尾是 FORWARD_CONDITIONAL_JUMP_OPS
+        2. pred 有两个后继：exit（跳转目标）和 merge（fallthrough == header）
+        3. pred 的前驱 cond_block 有两个后继：true_value 和 pred
+        4. true_value 末尾是 FORWARD_CONDITIONAL_JUMP_OPS
+        5. true_value 的 fallthrough 后继是纯 JUMP_FORWARD 块（connector），
+           跳到 merge（== header）
+        """
+        # 判据 1: pred 末尾是 FORWARD_CONDITIONAL_JUMP_OPS
+        pred_last = pred.get_last_instruction()
+        if not pred_last or pred_last.opname not in FORWARD_CONDITIONAL_JUMP_OPS:
+            return False
+        if pred_last.argval is None:
+            return False
+
+        # 判据 2: pred 有两个后继，fallthrough == header
+        pred_succs = list(pred.conditional_successors)
+        if len(pred_succs) != 2:
+            return False
+        pred_jump_target = self.cfg.get_block_by_offset(pred_last.argval)
+        pred_fallthrough = next((s for s in pred_succs if s != pred_jump_target), None)
+        if pred_fallthrough is not header:
+            return False
+
+        # 判据 3: pred 的前驱 cond_block 有两个后继：true_value 和 pred
+        # cond_block 不在 body 中（fused 三元在循环外）
+        cond_candidates = [p for p in pred.predecessors if p not in header.predecessors or True]
+        # 排除 body 中的前驱（回边等）
+        # pred 的前驱中，找到有两个后继且其中一个后继是 pred 的块
+        cond_block = None
+        true_value = None
+        for p in pred.predecessors:
+            p_last = p.get_last_instruction()
+            if not p_last:
+                continue
+            if p_last.opname not in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS):
+                continue
+            p_succs = list(p.conditional_successors)
+            if len(p_succs) != 2:
+                continue
+            if pred in p_succs:
+                other = next((s for s in p_succs if s != pred), None)
+                if other is not None:
+                    cond_block = p
+                    true_value = other
+                    break
+        if cond_block is None or true_value is None:
+            return False
+
+        # 判据 4: true_value 末尾是 FORWARD_CONDITIONAL_JUMP_OPS
+        tv_last = true_value.get_last_instruction()
+        if not tv_last or tv_last.opname not in FORWARD_CONDITIONAL_JUMP_OPS:
+            return False
+        if tv_last.argval is None:
+            return False
+
+        # 判据 5: true_value 的 fallthrough 后继是纯 JUMP_FORWARD 块，
+        #         跳到 header（merge）
+        tv_succs = list(true_value.conditional_successors)
+        if len(tv_succs) != 2:
+            return False
+        tv_jump_target = self.cfg.get_block_by_offset(tv_last.argval)
+        tv_fallthrough = next((s for s in tv_succs if s != tv_jump_target), None)
+        if tv_fallthrough is None:
+            return False
+        # tv_fallthrough 应是纯 JUMP_FORWARD 块
+        ft_effective = [i for i in tv_fallthrough.instructions
+                        if i.opname not in NOISE_OPS]
+        if not ft_effective:
+            return False
+        ft_is_pure_jump = all(
+            i.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                         'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+            for i in ft_effective
+        )
+        if not ft_is_pure_jump:
+            return False
+        ft_last = ft_effective[-1]
+        if ft_last.argval is None:
+            return False
+        connector_target = self.cfg.get_block_by_offset(ft_last.argval)
+        if connector_target is not header:
+            return False
+        return True
 
     def _detect_while_boolop_forward_chain(self, cond_block: BasicBlock, loop: LoopRegion, BOOLOP_CHAIN_JUMPS) -> Optional[List[Tuple[BasicBlock, str]]]:
         chain: List[Tuple[BasicBlock, str]] = []

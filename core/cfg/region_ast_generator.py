@@ -3178,6 +3178,18 @@ AST 映射规则:
                         if not _b_last or _b_last.opname not in CONDITIONAL_JUMP_OPS:
                             continue
                         _b_non_jmp = [i for i in _b_instrs if i != _b_last]
+                        # [Phase 7 方案 A] 如果块含 STORE 指令（body 语句特征），
+                        # 说明该块同时含 body 赋值和三元回边重检，不能整体标记为
+                        # 已生成（否则 body 赋值会丢失）。判据基于「每块唯一归属」：
+                        # 纯回边重检块只含 LOAD + 条件跳转，不含 STORE 等副作用指令。
+                        _has_store = any(
+                            i.opname in ('STORE_FAST', 'STORE_NAME',
+                                         'STORE_GLOBAL', 'STORE_DEREF',
+                                         'STORE_ATTR', 'STORE_SUBSCR')
+                            for i in _b_non_jmp
+                        )
+                        if _has_store:
+                            continue
                         _b_load_names = set()
                         for _i in _b_non_jmp:
                             if _i.opname in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF'):
@@ -5443,6 +5455,32 @@ AST 映射规则:
             if _s != _jump_block:
                 _fall_through = _s
                 break
+        # [Phase 7 方案 A] fused ternary-loop 回边重检抑制。
+        # 当 loop 是 fused ternary-loop（is_while_true + 存在 merge==header 的
+        # TernaryRegion，merge_context='while_cond'），header 末尾的
+        # FORWARD_CONDITIONAL_JUMP 是三元条件的回边重检（CPython 在回边处复制
+        # while 条件求值），不是 body 的 break 条件。其两个后继都是回边重检块
+        # （在 body_blocks 内，无退出后继），此时应抑制 if 语句生成。
+        # 判据基于区域结构（「父引用子入口」——ternary merge==loop header）+
+        # 控制流结构（两后继均在 body 内、无退出后继），不依赖具体指令或实例。
+        if (block == region.header_block and region.is_while_true
+                and region.condition_block is None
+                and not _exit_succs and not _has_cond_chain
+                and _jump_block is not None and _fall_through is not None):
+            _is_fused_ternary_loop = False
+            for _r in self.regions:
+                if (isinstance(_r, TernaryRegion)
+                        and _r.merge_block is region.header_block
+                        and getattr(_r, 'merge_context', None) == 'while_cond'):
+                    _is_fused_ternary_loop = True
+                    break
+            if _is_fused_ternary_loop:
+                # 标记回边重检后继块为已生成（防止后续重复处理）
+                for _s in block.successors:
+                    if _s not in self.generated_blocks:
+                        self.generated_blocks.add(_s)
+                        self.generated_offsets.add(_s.start_offset)
+                return
         if (_block_succ_outside or _block_succ_break or _block_succ_return) and not _has_cond_chain:
             self._loop_handle_exit_successors(block, _break_cause, _jump_block, _fall_through,
                                               _exit_succs, _block_succ_break, _block_succ_return,
