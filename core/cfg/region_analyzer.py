@@ -534,6 +534,17 @@ class LoopRegion(Region):
         boundary.add(self.header_block)
         if self.condition_block:
             boundary.add(self.condition_block)
+        # [Phase 4 回归修复] back_edge_block 含条件回边跳转
+        # （POP_JUMP_BACKWARD_IF_TRUE/FALSE）时是循环的条件重检块，属于
+        # LoopRegion（每块唯一归属），不应被嵌套 IfRegion 的 else 分支吸收。
+        # 但若 back_edge_block 仅含无条件 JUMP_BACKWARD（for 循环的隐式
+        # continue），它可能同时是 if 分支的真实 body（如
+        # `for x in r: if c: x = x+1`），此时不应排除。用最后指令区分：
+        # 条件回边 → 排除；无条件回边 → 保留。
+        if self.back_edge_block is not None:
+            _be_last = self.back_edge_block.get_last_instruction()
+            if _be_last and _be_last.opname in BACKWARD_CONDITIONAL_JUMP_OPS:
+                boundary.add(self.back_edge_block)
         return boundary
 
     def interrupts_boolop_forward_chain(self, ft_succ) -> bool:
@@ -11010,7 +11021,12 @@ RegionType 枚举值: RegionType.ASSERT
                                      if s.start_offset == last_instr.argval), None)
                     if else_succ and else_succ not in set(inner_then_blocks):
                         if merge_ is None or else_succ != merge_:
-                            final_else = [else_succ]
+                            # [Phase 4 回归修复] 不将 boundary_stop 中的块
+                            # （含循环 back_edge_block）作为 final_else。这些块
+                            # 属于 LoopRegion（每块唯一归属），不应被 IfRegion
+                            # 的 else 分支吸收。
+                            if else_succ not in _inner_boundary_stop:
+                                final_else = [else_succ]
 
             result = {'conditions': conditions, 'bodies': bodies, 'final_else': final_else}
 
