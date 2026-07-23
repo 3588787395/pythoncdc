@@ -3142,8 +3142,25 @@ AST 映射规则:
                     condition = _built if _built is not None else _ternary_expr
                 else:
                     condition = _ternary_expr
-                # Mark ternary blocks as generated so they don't appear as statements
+                # Mark ternary blocks as generated so they don't appear as statements.
+                # [Phase 7 方案 A] 结构判据：当 merge_context='while_cond' 且
+                # merge_block 不是循环 header 时，merge_block 是循环体入口块
+                # （其内容属于循环体，如 `if x: break`），不属于三元表达式。
+                # 三元表达式仅由 condition_block + true/false_value_block 构成。
+                # 此时排除 merge_block，让循环体正常处理它。判据基于「每块唯一
+                # 归属」：merge_block 在非融合形态下归属循环体，不归属三元。
+                # 融合形态（merge==header）时 merge_block 含回边重检，仍需抑制。
+                _tw_merge_is_header = (
+                    _ternary_for_while.merge_block is region.header_block
+                )
+                _tw_exclude_merge = (
+                    getattr(_ternary_for_while, 'merge_context', None) == 'while_cond'
+                    and not _tw_merge_is_header
+                    and _ternary_for_while.merge_block is not None
+                )
                 for _b in _ternary_for_while.blocks:
+                    if _tw_exclude_merge and _b is _ternary_for_while.merge_block:
+                        continue
                     self.generated_blocks.add(_b)
                     self.generated_offsets.add(_b.start_offset)
                 # Mark back-edge recheck blocks that duplicate the ternary condition
@@ -10859,9 +10876,16 @@ AST 映射规则:
                     fall_through = s
                     break
         exit_succ = None
-        if jump_target and jump_target not in loop_body_set:
+        # [Phase 7 方案 A] 结构判据：BREAK/PURE_BREAK/RETURN/RETURN_NONE 角色
+        # 的块是循环退出目标，即使它们在 loop_body_set 中（region_analyzer
+        # 将退出块归入 body_blocks）。判据基于 block_role 语义，非实例特征。
+        _EXIT_ROLES = (BlockRole.BREAK, BlockRole.PURE_BREAK,
+                       BlockRole.RETURN, BlockRole.RETURN_NONE)
+        if jump_target and (jump_target not in loop_body_set
+                            or self.region_analyzer.get_block_role(jump_target) in _EXIT_ROLES):
             exit_succ = jump_target
-        elif fall_through and fall_through not in loop_body_set:
+        elif fall_through and (fall_through not in loop_body_set
+                               or self.region_analyzer.get_block_role(fall_through) in _EXIT_ROLES):
             exit_succ = fall_through
         if exit_succ is None:
             return None
@@ -10926,6 +10950,13 @@ AST 映射规则:
         if exit_role in (BlockRole.RETURN, BlockRole.RETURN_NONE) and exit_succ in loop_body_set:
             ret_stmts = self._generate_block_statements(exit_succ)
             body_stmts = ret_stmts if ret_stmts else [{'type': 'Return', 'value': {'type': 'Constant', 'value': None}}]
+            self.generated_blocks.add(exit_succ)
+        elif exit_role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
+            # [Phase 7 方案 A] BREAK 角色块是循环 break 退出目标（CPython
+            # 将 break 优化为跳到循环外块，该块常为 LOAD_CONST None + RETURN_VALUE
+            # 即模块隐式 return None）。block_role 语义已确定为 break 退出，
+            # 不因含 RETURN_VALUE 而误生成 return。判据基于 block_role 语义。
+            body_stmts = [{'type': 'Break'}]
             self.generated_blocks.add(exit_succ)
         else:
             _exit_has_return = any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in exit_succ.instructions)
@@ -11140,6 +11171,14 @@ AST 映射规则:
 
         target_succ = None
         body_type = None
+        # [Phase 7 方案 A] break+continue 模式标记：当 if 的一端是 break（退出
+        # 循环）、另一端是 continue（回边）时，continue 是 if 之后的独立顺序
+        # 语句（源码 `if x: break; continue`），不是 if 的 else 分支。由于
+        # break 退出循环，continue 是继续循环的唯一路径，必须显式输出。
+        # 判据基于控制流语义：break+continue = break 为 if 体 + continue 为
+        # 后续语句。continue 块由本归约处理（每块唯一归属），不留给 back_edge
+        # handler 静默消费。
+        _emit_continue_after_if = False
         if continue_succ and normal_succ:
             _norm = normal_succ[0]
             _is_simple_if = False
@@ -11511,6 +11550,7 @@ AST 映射规则:
         elif break_succ and continue_succ:
             target_succ = break_succ
             body_type = 'Break'
+            _emit_continue_after_if = True
         elif continue_succ:
             target_succ = continue_succ
             body_type = 'Continue'
@@ -11593,19 +11633,28 @@ AST 映射规则:
                 _body_stmts = [{'type': body_type}]
         else:
             if body_type == 'Break':
-                _blk_has_ret = any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in _target_blk.instructions)
-                _ret_val = None
-                if _blk_has_ret:
-                    _blk_meaningful = [i for i in _target_blk.instructions
-                                       if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                    if _blk_meaningful and _blk_meaningful[0].opname in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF'):
-                        _ret_val = {'type': 'Name', 'id': _blk_meaningful[0].argval, 'ctx': 'Load'}
-                    elif _blk_meaningful and _blk_meaningful[0].opname == 'LOAD_CONST':
-                        _ret_val = {'type': 'Constant', 'value': _blk_meaningful[0].argval}
-                if _ret_val is not None:
-                    _body_stmts = [{'type': 'Return', 'value': _ret_val}]
-                else:
+                # [Phase 7 方案 A] 结构判据：target_succ 的 block_role 已由
+                # _is_break_like 判定为 BREAK/PURE_BREAK。BREAK 角色块是循环
+                # break 退出目标（CPython 将 break 优化为跳到循环外块，该块常为
+                # LOAD_CONST None + RETURN_VALUE 即模块隐式 return None）。
+                # 不因含 RETURN_VALUE 而误生成 return，block_role 语义优先。
+                _target_blk_role = self.region_analyzer.get_block_role(_target_blk)
+                if _target_blk_role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
                     _body_stmts = [{'type': body_type}]
+                else:
+                    _blk_has_ret = any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in _target_blk.instructions)
+                    _ret_val = None
+                    if _blk_has_ret:
+                        _blk_meaningful = [i for i in _target_blk.instructions
+                                           if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                        if _blk_meaningful and _blk_meaningful[0].opname in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF'):
+                            _ret_val = {'type': 'Name', 'id': _blk_meaningful[0].argval, 'ctx': 'Load'}
+                        elif _blk_meaningful and _blk_meaningful[0].opname == 'LOAD_CONST':
+                            _ret_val = {'type': 'Constant', 'value': _blk_meaningful[0].argval}
+                    if _ret_val is not None:
+                        _body_stmts = [{'type': 'Return', 'value': _ret_val}]
+                    else:
+                        _body_stmts = [{'type': body_type}]
             else:
                 _body_stmts = [{'type': body_type}]
         if_stmt = {'type': 'If', 'test': cond_expr, 'body': _body_stmts}
@@ -11622,7 +11671,20 @@ AST 映射规则:
                 if _norm_blk not in self.generated_blocks:
                     self.generated_blocks.add(_norm_blk)
                     self.generated_offsets.add(_norm_blk.start_offset)
-        result = pre_stmts + [if_stmt] if pre_stmts else [if_stmt]
+        # [Phase 7 方案 A] break+continue 模式：continue 是 if 之后的独立顺序
+        # 语句。break 退出循环，continue 是继续循环的唯一路径，必须显式输出。
+        # continue 块由本归约处理（每块唯一归属），标记为 generated 防止
+        # back_edge handler 静默消费。continue_succ 经 _is_continue_like 判定
+        # 为 PURE_CONTINUE/LOOP_BACK_EDGE（无 meaningful 指令），直接输出 Continue。
+        if _emit_continue_after_if and continue_succ:
+            _cont_blk = continue_succ[0]
+            if _cont_blk not in self.generated_blocks:
+                self.generated_blocks.add(_cont_blk)
+                self.generated_offsets.add(_cont_blk.start_offset)
+            result = (pre_stmts + [if_stmt, {'type': 'Continue'}]
+                      if pre_stmts else [if_stmt, {'type': 'Continue'}])
+        else:
+            result = pre_stmts + [if_stmt] if pre_stmts else [if_stmt]
         return result
 
     def _is_child_reachable_from_blocks(self, child: Region, blocks: Set) -> bool:
@@ -20119,7 +20181,24 @@ AST 映射规则:
                             else:
                                 results.append({'type': 'Expr', 'value': ternary_expr})
             
+            # [Phase 7 方案 A] 结构判据：与 _loop_generate_while 中的标记一致。
+            # 当 merge_context='while_cond' 且 merge_block 不是任何 LoopRegion
+            # 的 header_block 时，merge_block 是循环体入口块（其内容属于循环体），
+            # 不归属三元表达式，排除它以免循环体丢失首块语句。判据基于「每块
+            # 唯一归属」：非融合 while_cond 的 merge 归属循环体。
+            _gt_merge = region.merge_block
+            _gt_exclude_merge = False
+            if (getattr(region, 'merge_context', None) == 'while_cond'
+                    and _gt_merge is not None):
+                _gt_merge_is_header = any(
+                    isinstance(_r, LoopRegion) and _r.header_block is _gt_merge
+                    for _r in self.regions
+                )
+                if not _gt_merge_is_header:
+                    _gt_exclude_merge = True
             for block in region.blocks:
+                if _gt_exclude_merge and block is _gt_merge:
+                    continue
                 self.generated_blocks.add(block)
 
             return results

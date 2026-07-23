@@ -558,6 +558,17 @@ class LoopRegion(Region):
         if block == self.back_edge_block:
             return False
         if block == self.header_block and self.condition_block is None:
+            # [Phase 7 方案 A] fused ternary-loop 例外。
+            # while (a if c else b): 中 CPython 将三元与循环测试融合，
+            # header_block 既是循环头又是三元 condition_block。检测 header 的
+            # 条件后继是否构成 fused ternary 结构（两值块都以
+            # FORWARD_CONDITIONAL_JUMP 结尾，true_value fall-through 是纯
+            # JUMP_FORWARD 跳到 false_value fall-through 即 merge）。判据基于
+            # 区域结构（与 _detect_ternary_pattern 的 fused merge_block fallback
+            # 一致），非实例特征。符合「每块唯一归属」：header 作为三元
+            # condition_block 归属 TernaryRegion，循环以 while_true 形态运行。
+            if self._is_fused_ternary_loop_header(block, analyzer):
+                return True
             return False
         if block not in self.blocks:
             return False
@@ -582,6 +593,75 @@ class LoopRegion(Region):
                     if isinstance(_cs_existing, TernaryRegion) and _cs_existing.entry is _cs:
                         continue
                     return False
+        return True
+
+    def _is_fused_ternary_loop_header(self, block, analyzer) -> bool:
+        """[Phase 7 方案 A] 检测 block（== header_block）是否是 fused
+        ternary-loop 的 condition_block。
+
+        fused ternary-loop `while (a if c else b):` 的 CPython 字节码：
+            cond_block(=header): LOAD c; POP_JUMP_IF_FALSE -> false_value
+            true_value:  LOAD a; POP_JUMP_IF_FALSE -> exit_a; (ft) connector
+            connector:   JUMP_FORWARD -> merge
+            false_value: LOAD b; POP_JUMP_IF_FALSE -> exit_b; (ft) merge
+            merge:       <loop body entry / back-edge recheck>
+
+        判据（基于区域结构，与 _detect_ternary_pattern 的 fused merge_block
+        fallback 一致）：
+        1. block 有两个条件后继（true_value, false_value）
+        2. 两值块都以 FORWARD_CONDITIONAL_JUMP_OPS 结尾（fused 模式特征）
+        3. true_value 的 fall-through 是纯 JUMP_FORWARD 块（connector），
+           跳到 false_value 的 fall-through（merge）
+        """
+        _cond_succs = list(block.conditional_successors)
+        if len(_cond_succs) != 2:
+            return False
+        last = block.get_last_instruction()
+        if not last or last.opname not in FORWARD_CONDITIONAL_JUMP_OPS:
+            return False
+        if last.argval is None:
+            return False
+        true_value = next((s for s in _cond_succs
+                           if s.start_offset != last.argval), None)
+        false_value = next((s for s in _cond_succs
+                            if s.start_offset == last.argval), None)
+        if not (true_value and false_value):
+            return False
+        tv_last = true_value.get_last_instruction()
+        fv_last = false_value.get_last_instruction()
+        if not (tv_last and fv_last):
+            return False
+        if tv_last.opname not in FORWARD_CONDITIONAL_JUMP_OPS:
+            return False
+        if fv_last.opname not in FORWARD_CONDITIONAL_JUMP_OPS:
+            return False
+        if tv_last.argval is None or fv_last.argval is None:
+            return False
+        tv_succs = list(true_value.conditional_successors)
+        fv_succs = list(false_value.conditional_successors)
+        if len(tv_succs) != 2 or len(fv_succs) != 2:
+            return False
+        tv_ft = next((s for s in tv_succs
+                      if s.start_offset != tv_last.argval), None)
+        fv_ft = next((s for s in fv_succs
+                      if s.start_offset != fv_last.argval), None)
+        if not (tv_ft and fv_ft):
+            return False
+        if tv_ft is fv_ft:
+            return False
+        tv_ft_eff = [i for i in tv_ft.instructions
+                     if i.opname not in NOISE_OPS]
+        if not tv_ft_eff:
+            return False
+        if not all(i.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                   for i in tv_ft_eff):
+            return False
+        tv_ft_last = tv_ft_eff[-1]
+        if tv_ft_last.argval is None:
+            return False
+        connector_target = analyzer.cfg.get_block_by_offset(tv_ft_last.argval)
+        if connector_target is not fv_ft:
+            return False
         return True
 
 @dataclass

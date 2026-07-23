@@ -793,16 +793,12 @@ class CodeGenerator:
         self._if_depth += 1
         
         if body:
-            # [修复-L05] 检查循环体最后一个语句是否是无意义的continue
-            # 如果循环体中有break，最后的continue是隐式fallthrough，可以省略
-            has_break = any(self._node_contains_break(child) for child in body)
-            for i, child in enumerate(body):
-                is_last = (i == len(body) - 1)
-                if is_last and has_break:
-                    if isinstance(child, dict) and child.get('type') == 'Continue':
-                        continue  # 跳过无意义的末尾continue
-                    elif hasattr(child, '__class__') and 'Continue' in type(child).__name__:
-                        continue
+            # [Phase 7 方案 A] 删除"修复-L05"后处理补丁（违反规范：禁止后处理
+            # 补丁）。原逻辑在有 break 时省略末尾 Continue，但 AST 中的 Continue
+            # 一定是显式的（隐式 continue 不生成 Continue 节点）。省略显式
+            # continue 会导致重编字节码不匹配（如 `while cond: if x: break;
+            # continue` 缺少 continue 后 CPython 重新生成条件重检代码）。
+            for child in body:
                 self._generate_node(child)
         else:
             self._write_line('pass')
@@ -1022,15 +1018,9 @@ class CodeGenerator:
         self._loop_depth += 1
         
         if body:
-            # [修复-L05] 检查循环体最后一个语句是否是无意义的continue
-            has_break = any(self._node_contains_break(child) for child in body)
-            for i, child in enumerate(body):
-                is_last = (i == len(body) - 1)
-                if is_last and has_break:
-                    if isinstance(child, dict) and child.get('type') == 'Continue':
-                        continue
-                    elif hasattr(child, '__class__') and 'Continue' in type(child).__name__:
-                        continue
+            # [Phase 7 方案 A] 删除"修复-L05"后处理补丁（违反规范）。
+            # AST 中的 Continue 一定是显式的，省略会导致字节码不匹配。
+            for child in body:
                 self._generate_node(child)
         else:
             self._write_line('pass')
@@ -1070,15 +1060,9 @@ class CodeGenerator:
         self._loop_depth += 1
         try:
             if body:
-                # [修复-L05] 同for循环，跳过无意义的末尾continue
-                has_break = any(self._node_contains_break(child) for child in body)
-                for i, child in enumerate(body):
-                    is_last = (i == len(body) - 1)
-                    if is_last and has_break:
-                        if isinstance(child, dict) and child.get('type') == 'Continue':
-                            continue
-                        elif hasattr(child, '__class__') and 'Continue' in type(child).__name__:
-                            continue
+                # [Phase 7 方案 A] 删除"修复-L05"后处理补丁（违反规范）。
+                # AST 中的 Continue 一定是显式的，省略会导致字节码不匹配。
+                for child in body:
                     self._generate_node(child)
             else:
                 self._write_line('pass')
