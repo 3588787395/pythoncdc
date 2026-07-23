@@ -124,7 +124,8 @@
   - [x] SubTask T1.16.8: 算法合规性自检 — 归约顺序 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口；无跨区域特例 / 后处理补丁 / 启发式优先级覆盖 / 扁平化 / 硬编码深度上限
   - [x] SubTask T1.16.9: 清理 3 个 _debug_*.py 调试脚本（_debug_await_yield / _debug_chained / _debug_comp）
   - [x] SubTask T1.16.10: 写 fix_report.md（含 10 bug + 4 bonus 详细修复说明 + 算法 4 原则合规论证 + 全量回归结果 + 跨区域回归结果）
-- [ ] Task T1.17 ~ T1.20
+- [x] Task T1.17: Ternary round_17 — 13 bug 修复（method chain 带 args/starred ternary 容器/await+binop+return/listcomp 双 ternary/await in cond/double ternary subscr assign/assert test ternary.method()/lambda body ternary 作 kwarg）；ternary 46 failed / 499 passed / 9 skipped（基线 47→46 -1）；if_region 31 failed / 787 passed（无退化）；boolop 131 passed / 1 skipped（无退化）；commit 0661a0d (已 push)
+- [ ] Task T1.18 ~ T1.20
 
 ## Phase 3-10: 其他 8 区域（各 20 轮）
 - [ ] Task 3.1 ~ 10.20
