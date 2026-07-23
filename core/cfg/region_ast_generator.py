@@ -13705,6 +13705,47 @@ AST 映射规则:
                     stmts.append(stmt)
                 stmt_instrs = []
                 continue
+            # [Phase 7 根因1 通用修复] RETURN_VALUE / RETURN_CONST 是语句边界，
+            # 之前累积的 stmt_instrs 是 return 的值表达式。旧版把 RETURN_VALUE
+            # 累积到 stmt_instrs，reconstruct 返回 stack 顶（值表达式）而非
+            # Return 节点，导致 `return self` 退化为裸 `self` 表达式语句。
+            # 普遍性修复：遇到 RETURN_VALUE/RETURN_CONST 时，先把累积的
+            # stmt_instrs 重建为值表达式，再包装为 Return 节点。
+            # 决定性对照：`self.x = ternary \n return self` 的 extra 重建中，
+            # STORE_ATTR x 之后是 LOAD_FAST self + RETURN_VALUE；旧版输出
+            # `self`（丢失 return），修复后输出 `return self`。
+            if instr.opname == 'RETURN_VALUE':
+                _rv_value = None
+                if stmt_instrs:
+                    _rv_value = self.expr_reconstructor.reconstruct(list(stmt_instrs))
+                # [closure 回归修复] reconstruct 对 MAKE_FUNCTION 返回
+                # FunctionObject，需递归转为 Lambda/FunctionDef dict（与
+                # _build_statement L26802 的 _convert_lambda_function_objects
+                # 一致），否则 `return lambda: x` 退化为
+                # `return (lambda *args, **kwargs: None)` 占位符。
+                if isinstance(_rv_value, dict):
+                    _rv_value = self._convert_lambda_function_objects(_rv_value)
+                if _rv_value is None and stmt_instrs:
+                    # fallback: 单个 LOAD_* 直接构建 Name
+                    _l0 = stmt_instrs[0]
+                    if _l0.opname in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF'):
+                        _rv_value = {'type': 'Name', 'id': _l0.argval, 'ctx': 'Load'}
+                if _rv_value is None:
+                    _rv_value = {'type': 'Constant', 'value': None}
+                # 若转换后是 FunctionDef/AsyncFunctionDef（语句形式，非表达式），
+                # 不能包装为 Return——作为独立语句追加（罕见，return 后跟 def）。
+                if isinstance(_rv_value, dict) and _rv_value.get('type') in ('FunctionDef', 'AsyncFunctionDef'):
+                    stmts.append(_rv_value)
+                else:
+                    stmts.append({'type': 'Return', 'value': _rv_value})
+                stmt_instrs = []
+                continue
+            if instr.opname == 'RETURN_CONST':
+                _rc_val = instr.argval
+                _rv_value = {'type': 'Constant', 'value': _rc_val}
+                stmts.append({'type': 'Return', 'value': _rv_value})
+                stmt_instrs = []
+                continue
             stmt_instrs.append(instr)
         if stmt_instrs:
             stmt = self._build_statement(stmt_instrs)
@@ -20113,6 +20154,14 @@ AST 映射规则:
                         region, ternary_expr)
                     if _store_assign is not None:
                         results.append(_store_assign)
+                        # [Phase 7 根因1 通用修复] _try_build_ternary_store_assign
+                        # 可能在 region.post_consumer_extra_stmts 上存放 STORE_* 之后的
+                        # 后续语句（如 `self.x = ternary \n return self` 的 return self），
+                        # 属于父 FunctionDef body 的独立语句。追加到 results。
+                        _post_extra = getattr(
+                            region, 'post_consumer_extra_stmts', None)
+                        if _post_extra:
+                            results.extend(_post_extra)
                         for block in region.blocks:
                             self.generated_blocks.add(block)
                         return results
@@ -21471,17 +21520,68 @@ AST 映射规则:
 
         merge_instrs = [i for i in region.merge_block.instructions
                         if i.opname not in ('RESUME', 'NOP', 'CACHE')]
-        # Strip trailing implicit return None: LOAD_CONST None + RETURN_VALUE
-        while merge_instrs and merge_instrs[-1].opname == 'RETURN_VALUE':
-            merge_instrs.pop()
-            if (merge_instrs and merge_instrs[-1].opname == 'LOAD_CONST'
-                    and merge_instrs[-1].argval is None):
+        # [Phase 7 根因1 通用修复] ternary region 的 merge_block 可能包含
+        # 后续语句的指令（如 `self.x = ternary \n return self` 中 STORE_ATTR x
+        # 之后的 LOAD_FAST self + RETURN_VALUE 属于下一个 return 语句）。旧版
+        # strip 仅识别 trailing implicit return None (LOAD_CONST None +
+        # RETURN_VALUE)，不识别显式 return / 后续赋值等，导致 merge_instrs[-1]
+        # 不是 STORE_ATTR/STORE_SUBSCR 而是 return 的 LOAD_*，Pattern A 误判
+        # 返回 None。
+        # 普遍性修复：扫描找到第一个 STORE_ATTR/STORE_SUBSCR/DELETE_SUBSCR 作为
+        # 消费点，store_idx 之后的指令重建为 extra statements（保存到
+        # region.post_consumer_extra_stmts 供调用方追加），last_instr/before_store
+        # 只覆盖消费点之前。依「每块唯一归属」：ternary region 仅拥有到 STORE_*
+        # 的部分，后续指令归下一条语句。
+        # 决定性对照：`self.x = (a if c else b)` (merge: LOAD_FAST self +
+        # STORE_ATTR x + LOAD_FAST self + RETURN_VALUE) 旧版返回 None → 输出
+        # `(a if c else b)` 丢失 `self.x =`；修复后正确输出
+        # `self.x = (a if c else b)` + `return self`。
+        _store_idx = None
+        for _si, _sinstr in enumerate(merge_instrs):
+            if _sinstr.opname in ('STORE_ATTR', 'STORE_SUBSCR', 'DELETE_SUBSCR'):
+                _store_idx = _si
+                break
+        if _store_idx is None:
+            # 没有 store 消费点 —— 剥掉 trailing implicit return None 后返回 None
+            while merge_instrs and merge_instrs[-1].opname == 'RETURN_VALUE':
                 merge_instrs.pop()
-        if not merge_instrs:
+                if (merge_instrs and merge_instrs[-1].opname == 'LOAD_CONST'
+                        and merge_instrs[-1].argval is None):
+                    merge_instrs.pop()
             return None
+        # store_idx 之后的指令属于下一个语句，重建为 extra statements
+        _after_store_instrs = merge_instrs[_store_idx + 1:]
+        if _after_store_instrs:
+            _after_clean = [i for i in _after_store_instrs
+                            if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+            # 只剥 implicit return None (LOAD_CONST None + RETURN_VALUE 对，
+            # 或 RETURN_CONST None)，保留显式 return (LOAD_* + RETURN_VALUE)
+            # 让 _build_statements_from_instructions 重建为 Return 节点。
+            while (len(_after_clean) >= 2
+                    and _after_clean[-1].opname == 'RETURN_VALUE'
+                    and _after_clean[-2].opname == 'LOAD_CONST'
+                    and _after_clean[-2].argval is None):
+                _after_clean = _after_clean[:-2]
+            while (_after_clean and _after_clean[-1].opname == 'RETURN_CONST'
+                    and _after_clean[-1].argval is None):
+                _after_clean = _after_clean[:-1]
+            if _after_clean:
+                _extra_stmts = self._build_statements_from_instructions(list(_after_clean))
+                while _extra_stmts and isinstance(_extra_stmts[-1], dict):
+                    _last = _extra_stmts[-1]
+                    if _last.get('type') == 'Return':
+                        _rv = _last.get('value')
+                        if _rv and isinstance(_rv, dict) \
+                                and _rv.get('type') == 'Constant' \
+                                and _rv.get('value') is None:
+                            _extra_stmts = _extra_stmts[:-1]
+                            continue
+                    break
+                if _extra_stmts:
+                    region.post_consumer_extra_stmts = _extra_stmts
 
-        last_instr = merge_instrs[-1]
-        before_store = merge_instrs[:-1]
+        last_instr = merge_instrs[_store_idx]
+        before_store = merge_instrs[:_store_idx]
 
         # [R11-err6] Pattern C: ternary as augassign rhs.
         # 当 ternary 是 augassign 的右值（而非普通 Assign 的右值），merge_block
