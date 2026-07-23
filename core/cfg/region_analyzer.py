@@ -958,6 +958,16 @@ class TernaryRegion(Region):
     # STORE_FAST block live in successor blocks. These are merged here
     # so the generator can reconstruct the full Await expression.
     merge_extra_blocks: List[BasicBlock] = field(default_factory=list)
+    # [Phase 7 方案 D] 当 ternary 条件本身是 chained compare
+    # （如 `x = a if 0 < a < 10 else 0`）时，condition_block 只是
+    # chained compare 的第一段，后续段在 chained_compare_blocks 中。
+    # 复用 IfRegion 的同名属性语义，供 region_ast_generator 调用
+    # _build_chained_compare_from_region_data 生成完整 Compare 节点。
+    # 依「父引用子入口」：TernaryRegion 拥有完整条件（含所有比较段）。
+    chained_compare_ops: List[str] = field(default_factory=list)
+    chained_compare_blocks: List[BasicBlock] = field(default_factory=list)
+    chained_left_instr: Optional[Instruction] = None
+    chained_comparator_instrs: List[Instruction] = field(default_factory=list)
 
     def get_score_merge_block(self) -> Optional['BasicBlock']:
         return self.merge_block
@@ -12082,6 +12092,59 @@ RegionType 枚举值: RegionType.ASSERT
             if not (true_block and false_block):
                 return None
 
+            # [Phase 7 方案 D] 当 ternary 条件本身是 chained compare 时
+            # （如 `x = a if 0 < a < 10 else 0`），header block 的直接
+            # fallthrough 是 chained compare 延续块（含 COMPARE_OP +
+            # POP_JUMP_IF_FALSE），直接 jump target 是 POP_TOP cleanup 块
+            # （弹掉栈上保留的左操作数后跳到 else）。这两者都不是 ternary 的
+            # 真正值块。依「自底向上归约」原则，沿 chained_compare_blocks
+            # 找到最后一个比较块，其 fallthrough（可能经 JUMP_FORWARD 连接块）
+            # 是 true 路径（body），其 jump target 是 false 路径（else）。
+            # 判据基于 chained compare IfRegion 的结构性属性
+            # （chained_compare_ops/Blocks），非实例特征。
+            _is_chained_compare_cond = False
+            _cc_if_region = None
+            for _r in self.regions:
+                if (isinstance(_r, IfRegion)
+                        and _r.region_type == RegionType.IF
+                        and _r.entry is block):
+                    _cc_ops = getattr(_r, 'chained_compare_ops', None)
+                    _cc_blocks = getattr(_r, 'chained_compare_blocks', None)
+                    if (_cc_ops and len(_cc_ops) >= 2 and _cc_blocks):
+                        _cc_if_region = _r
+                    break
+            if _cc_if_region is not None:
+                _all_cc_blocks = [block] + list(_cc_if_region.chained_compare_blocks)
+                _last_cc_block = _all_cc_blocks[-1]
+                _lc_last = _last_cc_block.get_last_instruction()
+                if _lc_last and _lc_last.opname in FORWARD_CONDITIONAL_JUMP_OPS:
+                    _lc_succs = sorted(
+                        _last_cc_block.conditional_successors,
+                        key=lambda s: s.start_offset)
+                    if len(_lc_succs) == 2:
+                        _cc_true = next((s for s in _lc_succs
+                                         if s.start_offset != _lc_last.argval), None)
+                        _cc_false = next((s for s in _lc_succs
+                                          if s.start_offset == _lc_last.argval), None)
+                        if _cc_true and _cc_false:
+                            # 最后比较块的 fallthrough 可能是纯 JUMP_FORWARD
+                            # 连接块（跳到 body），跟踪到真正的 body 值块。
+                            _cc_true_eff = [i for i in _cc_true.instructions
+                                            if i.opname not in NOISE_OPS]
+                            if (len(_cc_true_eff) == 1
+                                    and _cc_true_eff[0].opname == 'JUMP_FORWARD'
+                                    and _cc_true_eff[0].argval is not None):
+                                _body_block = self.cfg.get_block_by_offset(
+                                    _cc_true_eff[0].argval)
+                                if _body_block is not None:
+                                    _cc_true = _body_block
+                            # 验证新的 true/false 块是单表达式块（ternary 值块）
+                            if (self._is_single_expression_block(_cc_true)
+                                    and self._is_single_expression_block(_cc_false)):
+                                true_block = _cc_true
+                                false_block = _cc_false
+                                _is_chained_compare_cond = True
+
             # 区域归约算法：防止LoopRegion的condition_block/header_block被误识别为ternary值块
             # 当if-else的某个分支入口是while循环的条件块时，不应识别为三元表达式
             for _lr in (loop_regions or []):
@@ -12206,7 +12269,11 @@ RegionType 枚举值: RegionType.ASSERT
 
                     if not (true_has_content and false_has_content):
                         return None
-            elif not _is_ternary_block(block):
+            elif not _is_chained_compare_cond and not _is_ternary_block(block):
+                # [Phase 7 方案 D] 当 _is_chained_compare_cond=True 时，
+                # true_block/false_block 已更新为 chained compare 完成后的
+                # 真正值块（单表达式块），header block 的直接后继不是值块，
+                # 跳过 _is_ternary_block 检查（该检查基于 header 的直接后继）。
                 false_is_ternary = False
                 # Detect JUMP_FORWARD pattern: ternary in while-loop condition.
                 # When true_block ends with FORWARD_CONDITIONAL_JUMP (the while
@@ -13279,6 +13346,12 @@ RegionType 枚举值: RegionType.ASSERT
                 # [R10-batch1 err 4/14] Cross-block consumer instruction blocks
                 # for await / yield-from (ternary).
                 'merge_extra_blocks': _consumer_extra_blocks,
+                # [Phase 7 方案 D] ternary 条件本身是 chained compare 时，
+                # 传递 chained compare 属性供条件生成使用。
+                'chained_compare_ops': (list(_cc_if_region.chained_compare_ops)
+                                        if _is_chained_compare_cond and _cc_if_region else []),
+                'chained_compare_blocks': (list(_cc_if_region.chained_compare_blocks)
+                                           if _is_chained_compare_cond and _cc_if_region else []),
             }
 
         def _create_ternary_region_from_pattern(pattern):
@@ -13299,7 +13372,17 @@ RegionType 枚举值: RegionType.ASSERT
                 dict_key_info=pattern['dict_key_info'],
                 dict_const_keys=pattern.get('dict_const_keys'),
                 merge_extra_blocks=pattern.get('merge_extra_blocks') or [],
+                # [Phase 7 方案 D] ternary 条件是 chained compare 时，
+                # 传递 chained compare 属性供条件生成使用。
+                chained_compare_ops=pattern.get('chained_compare_ops') or [],
+                chained_compare_blocks=pattern.get('chained_compare_blocks') or [],
             )
+
+            # [Phase 7 方案 D] 当 ternary 条件是 chained compare 时，
+            # 计算 chained compare 操作数（left + comparators），
+            # 供 region_ast_generator 构建 Compare 节点。
+            if region.chained_compare_ops and len(region.chained_compare_ops) >= 2:
+                self.compute_chained_compare_operands(region)
 
             for nested in pattern['nested_ternary_regions']:
                 if nested in self.regions:

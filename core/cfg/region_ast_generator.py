@@ -18174,6 +18174,17 @@ AST 映射规则:
                 false_expr = _nested_false_expr
         elif region.condition_chain_blocks and len(region.condition_chain_blocks) > 1:
             cond_expr = self._build_ternary_boolop_condition(region)
+        elif (getattr(region, 'chained_compare_ops', None)
+                and len(region.chained_compare_ops) >= 2
+                and getattr(region, 'chained_compare_blocks', None)):
+            # [Phase 7 方案 D] ternary 条件本身是 chained compare
+            # （如 `x = a if 0 < a < 10 else 0`）。复用 IfRegion 的
+            # _build_chained_compare_from_region_data 构建 Compare 节点。
+            # 判据基于 chained_compare_ops/Blocks 结构性属性，非实例特征。
+            cond_expr = self._build_chained_compare_from_region_data(region)
+            if cond_expr is not None:
+                for _cb in region.chained_compare_blocks:
+                    self.generated_blocks.add(_cb)
         else:
             cond_instrs_raw = [i for i in cond_block.instructions
                                if i.opname not in ('RESUME', 'NOP', 'CACHE')]
