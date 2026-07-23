@@ -6572,17 +6572,21 @@ AST 映射规则:
             list(region.chained_compare_blocks),
             list(region.chained_compare_ops),
         )
-        # [R5-01/02/03 fix] Fallback: when cond_block has no LOAD_* (operands
-        # came from previous blocks via stack — e.g. `r = 0 < (a if c else b) < 10`
-        # where Constant(0) and the ternary IfExp are pushed before cond_block),
+        # [R5-01/02/03 fix + Phase 7 方案 D] Fallback: when cond_block has no
+        # LOAD_* left operand (operands came from previous blocks via stack),
         # _build_assert_chained_compare returns None. Detect this case by
-        # checking if cond_block is a TernaryRegion's merge_block. If so,
-        # the chained compare's left is the ternary's preload (e.g. Constant(0)),
-        # and the first comparator is the ternary's IfExp. Remaining comparators
-        # come from chain_blocks' LOAD_* instructions.
+        # checking if cond_block is a TernaryRegion's merge_block. The ternary
+        # fills one position of the chained compare; its position is determined
+        # by whether the ternary's cond_block preload is non-empty:
+        #   - preload non-empty → MIDDLE: ``L op1 (ternary) op2 R2``
+        #     left=preload[0], comparators=[ternary, R2_from_chain_blocks]
+        #   - preload empty → LEFT: ``(ternary) op1 R1 op2 R2``
+        #     left=ternary, comparators=[R1_from_cond_block, R2_from_chain_blocks]
         # 依「父引用子入口」：父 Assign 通过 IfRegion.merge_block 的 STORE_*
         # 引用 chained compare；chained compare 通过 IfRegion.condition_block
-        # （=TernaryRegion.merge_block）引用 ternary 子节点。
+        # （=TernaryRegion.merge_block）引用 ternary 子节点 + cond_block/chain
+        # _block 的 LOAD 操作数。位置判定基于操作码语义（preload 是否非空），
+        # 不依赖具体实例，覆盖 ternary 在 chained compare 任意非末尾位置。
         if chained_cond is None:
             _ternary_owner = None
             for _r in self.regions:
@@ -6596,31 +6600,53 @@ AST 映射规则:
                 if _ternary_expr is not None:
                     _preload = self._compute_ternary_cond_preload_exprs(
                         _ternary_owner)
+                    _comparators: List[Dict[str, Any]] = []
                     if _preload:
+                        # MIDDLE: L op1 (ternary) op2 R2
+                        # left=preload[0], comparators=[ternary, ...]
                         _left = _preload[0]
-                        _comparators: List[Dict[str, Any]] = [_ternary_expr]
-                        for _cb in region.chained_compare_blocks:
-                            for _instr in _cb.instructions:
-                                if _instr.opname == 'LOAD_CONST':
-                                    _comparators.append({
-                                        'type': 'Constant',
-                                        'value': _instr.argval,
-                                    })
-                                elif _instr.opname in ('LOAD_NAME', 'LOAD_FAST',
-                                                       'LOAD_GLOBAL', 'LOAD_DEREF'):
-                                    _comparators.append({
-                                        'type': 'Name',
-                                        'id': _instr.argval,
-                                        'ctx': 'Load',
-                                    })
-                        if len(_comparators) >= len(region.chained_compare_ops):
-                            chained_cond = {
-                                'type': 'Compare',
-                                'left': _left,
-                                'ops': list(region.chained_compare_ops),
-                                'comparators': _comparators[
-                                    :len(region.chained_compare_ops)],
-                            }
+                        _comparators.append(_ternary_expr)
+                    else:
+                        # LEFT: (ternary) op1 R1 op2 R2
+                        # left=ternary, R1 从 cond_block SWAP 之前的 LOAD 提取
+                        # （expr_reconstructor 处理复杂表达式，普遍性）
+                        _left = _ternary_expr
+                        _r1_instrs = []
+                        for _instr in cond_block.instructions:
+                            if _instr.opname in ('RESUME', 'NOP', 'CACHE',
+                                                  'PUSH_NULL'):
+                                continue
+                            if _instr.opname == 'SWAP':
+                                break
+                            _r1_instrs.append(_instr)
+                        if _r1_instrs:
+                            _r1 = self.expr_reconstructor.reconstruct(
+                                _r1_instrs)
+                            if _r1 is not None:
+                                _comparators.append(_r1)
+                    # 从 chain_blocks 提取剩余 comparators（与 MIDDLE 一致）
+                    for _cb in region.chained_compare_blocks:
+                        for _instr in _cb.instructions:
+                            if _instr.opname == 'LOAD_CONST':
+                                _comparators.append({
+                                    'type': 'Constant',
+                                    'value': _instr.argval,
+                                })
+                            elif _instr.opname in ('LOAD_NAME', 'LOAD_FAST',
+                                                   'LOAD_GLOBAL', 'LOAD_DEREF'):
+                                _comparators.append({
+                                    'type': 'Name',
+                                    'id': _instr.argval,
+                                    'ctx': 'Load',
+                                })
+                    if len(_comparators) >= len(region.chained_compare_ops):
+                        chained_cond = {
+                            'type': 'Compare',
+                            'left': _left,
+                            'ops': list(region.chained_compare_ops),
+                            'comparators': _comparators[
+                                :len(region.chained_compare_ops)],
+                        }
         if chained_cond is None:
             return None
         # 标记所有 region.blocks 为已生成，避免父 IfRegion 重复处理。
@@ -18481,26 +18507,30 @@ AST 映射规则:
     
             elif merge_ctx == 'compare':
                 # if/while条件: 生成Expr(IfExp)，由条件语句生成器使用
-                # [R16-06 fix] Chained compare middle ternary:
-                # `a < (b if c else d) < e` 字节码结构:
-                #   cond_block preload: LOAD a (left operand)
+                # [Phase 7 方案 D] Chained compare 中 ternary 处于任意非末尾位置:
+                #   LEFT:   `(ternary) op1 R1 op2 R2`
+                #   MIDDLE: `L op1 (ternary) op2 R2`
+                # 字节码结构 (SWAP 2 + COPY 2 + COMPARE_OP + JUMP_IF_FALSE_OR_POP
+                # 是 chained compare 操作码签名):
+                #   cond_block preload: [LOAD L]  (MIDDLE 非空; LEFT 为空)
                 #   ternary: produces ternary_result
-                #   merge_block: SWAP 2, COPY 2, COMPARE_OP op1,
+                #   merge_block: [LOAD R1], SWAP 2, COPY 2, COMPARE_OP op1,
                 #                JUMP_IF_FALSE_OR_POP to cleanup
-                #   fallthrough: LOAD right, COMPARE_OP op2,
+                #                (LEFT 时 merge 开头有 LOAD R1; MIDDLE 时无)
+                #   fallthrough: LOAD R2, COMPARE_OP op2,
                 #                [POP_TOP | STORE_* | RETURN_VALUE]
                 #   cleanup_block: SWAP 2, POP_TOP, POP_TOP, ...
                 # 依「自底向上归约」: ternary 是内层抽象节点（IfExp），外层
-                # Compare 是父节点，通过 cond preload + merge_block COMPARE_OP +
-                # fallthrough COMPARE_OP 引用 ternary 子节点作为中间操作数。
-                # 依「父引用子入口」: 父 Compare 通过 cond preload 的 left +
-                # merge_block 的 COMPARE_OP + fallthrough 的 COMPARE_OP 引用
+                # Compare 是父节点，通过 preload/merge LOAD + COMPARE_OP 链引用
                 # ternary 子节点。
-                # 依「每块唯一归属」: cond preload (left) + merge_block 的 SWAP/
-                # COPY/COMPARE_OP/JUMP_IF_FALSE_OR_POP + fallthrough 的 LOAD/
+                # 依「父引用子入口」: 父 Compare 通过 preload (MIDDLE left) /
+                # merge_block SWAP 前 LOAD (LEFT R1) + merge COMPARE_OP +
+                # fallthrough LOAD (R2) + COMPARE_OP 引用 ternary 子节点。
+                # 依「每块唯一归属」: preload + merge_block 的 SWAP/COPY/
+                # COMPARE_OP/JUMP_IF_FALSE_OR_POP + fallthrough 的 LOAD/
                 # COMPARE_OP/POP_TOP 全部归属 TernaryRegion 父表达式（Expr/
                 # Return/Assign），不拆分为独立语句。
-                _chained_cmp_stmt = self._try_build_ternary_chained_compare_middle(
+                _chained_cmp_stmt = self._try_build_ternary_chained_compare(
                     region, ternary_expr)
                 if _chained_cmp_stmt is not None:
                     results.append(_chained_cmp_stmt)
@@ -22215,33 +22245,46 @@ AST 映射规则:
         # Default: Expr (e.g. expression-statement genexpr or listcomp).
         return {'type': 'Expr', 'value': comp_ast}
 
-    def _try_build_ternary_chained_compare_middle(
+    def _try_build_ternary_chained_compare(
             self, region: TernaryRegion,
             ternary_expr: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """[R16-06 fix] Build full Expr/Return when ternary sits in the
-        middle of a chained comparison (``a < (ternary) < e``).
+        """[Phase 7 方案 D] Build full Expr/Return/Assign when ternary sits at
+        any non-last position of a 2-comparator chained comparison.
 
-        Bytecode structure:
-            cond_block preload: LOAD a  (left operand below ternary)
+        普遍性覆盖（依操作码语义，不依赖具体实例）:
+          - LEFT:    ``(ternary) op1 R1 op2 R2``
+          - MIDDLE:  ``L op1 (ternary) op2 R2``
+
+        Bytecode structure (SWAP 2 + COPY 2 + COMPARE_OP + JUMP_IF_FALSE_OR_POP
+        是 chained compare 的操作码签名; ternary 的位置由 SWAP 之前是否有
+        LOAD 产生的右操作数决定):
+            cond_block preload: [LOAD L]   (MIDDLE 时非空; LEFT 时为空)
             ternary condition: LOAD cond, POP_JUMP_IF_FALSE
             true/false: LOAD b / LOAD d
-            merge_block: SWAP 2, COPY 2, COMPARE_OP op1,
+            merge_block: [LOAD R1], SWAP 2, COPY 2, COMPARE_OP op1,
                          JUMP_IF_FALSE_OR_POP to cleanup_block
-            fallthrough: LOAD right, COMPARE_OP op2,
+                         (LEFT 时 merge_block 开头有 LOAD R1; MIDDLE 时无)
+            fallthrough: LOAD R2, COMPARE_OP op2,
                          [POP_TOP | STORE_* | RETURN_VALUE]
-            cleanup_block: SWAP 2, POP_TOP, POP_TOP, ...
+            cleanup_block: SWAP 2, POP_TOP, ...
+
+        位置判定:
+          - merge_block 中 SWAP 2 之前有 LOAD 产生操作数 → ternary 是 LEFT,
+            left=ternary, comparators=[R1_from_merge, R2_from_fallthrough]
+          - SWAP 2 之前无 LOAD → ternary 是 MIDDLE,
+            left=preload[-1], comparators=[ternary, R2_from_fallthrough]
 
         Returns an Expr/Return/Assign dict, or None when the pattern does
         not match.
 
         依「自底向上归约」: ternary 是内层抽象节点（IfExp），外层 Compare 是
-        父节点，通过 cond preload (left) + merge_block COMPARE_OP + fallthrough
-        COMPARE_OP 引用 ternary 子节点作为中间操作数。
-        依「父引用子入口」: 父 Compare 通过 cond preload (left) + merge_block
-        COMPARE_OP + fallthrough COMPARE_OP 引用 ternary 子节点。
-        依「每块唯一归属」: cond preload (left) + merge_block SWAP/COPY/
-        COMPARE_OP/JUMP_IF_FALSE_OR_POP + fallthrough LOAD/COMPARE_OP/POP_TOP
-        全部归属 TernaryRegion 父表达式（Expr/Return/Assign），不拆分。
+        父节点，通过 preload/merge LOAD + COMPARE_OP 链引用 ternary 子节点。
+        依「父引用子入口」: 父 Compare 通过 preload (MIDDLE left) /
+        merge_block SWAP 前 LOAD (LEFT R1) + merge COMPARE_OP + fallthrough
+        LOAD (R2) + COMPARE_OP 引用 ternary 子节点。
+        依「每块唯一归属」: preload + merge_block SWAP/COPY/COMPARE_OP/
+        JUMP_IF_FALSE_OR_POP + fallthrough LOAD/COMPARE_OP/POP_TOP 全部归属
+        TernaryRegion 父表达式（Expr/Return/Assign），不拆分。
         """
         if region.merge_block is None or region.condition_block is None:
             return None
@@ -22272,6 +22315,19 @@ AST 映射规则:
                 _cmp1_idx = _idx
                 break
         if _cmp1_idx is None:
+            return None
+
+        # Find the SWAP 2 immediately before COPY 2 + COMPARE_OP (chained
+        # compare signature). COPY 2 may sit between SWAP 2 and COMPARE_OP.
+        _swap_idx = None
+        for _idx in range(_cmp1_idx - 1, -1, -1):
+            if merge_instrs[_idx].opname == 'SWAP':
+                _swap_idx = _idx
+                break
+            if merge_instrs[_idx].opname != 'COPY':
+                # Not the chained-compare SWAP/COPY prefix.
+                break
+        if _swap_idx is None:
             return None
 
         # Get the fallthrough successor (continuation of the chained compare).
@@ -22310,25 +22366,39 @@ AST 映射规则:
         if _op1 is None or _op2 is None:
             return None
 
-        # Extract the left operand from cond_block preload (below ternary cond).
-        _preload_exprs = self._compute_ternary_cond_preload_exprs(region)
-        if not _preload_exprs:
-            return None
-        _left = _preload_exprs[-1]
+        # --- 位置判定: SWAP 2 之前是否有 LOAD 产生的操作数 ---
+        _pre_swap = merge_instrs[:_swap_idx]
+        _pre_swap_eff = [i for i in _pre_swap
+                         if i.opname not in ('NOP', 'CACHE', 'PUSH_NULL')]
 
-        # Extract the right operand from fallthrough instructions before
-        # the second COMPARE_OP (e.g. LOAD e).
-        _right_instrs = _ft_instrs[:_cmp2_idx]
-        _right = self.expr_reconstructor.reconstruct(_right_instrs)
-        if _right is None:
+        # Extract the right2 operand from fallthrough instructions before
+        # the second COMPARE_OP (e.g. LOAD R2). R2 在两种位置都需要。
+        _right2_instrs = _ft_instrs[:_cmp2_idx]
+        _right2 = self.expr_reconstructor.reconstruct(_right2_instrs)
+        if _right2 is None:
             return None
+
+        if _pre_swap_eff:
+            # LEFT: ternary 是左操作数; SWAP 前的 LOAD 产生 R1 (comparators[0]).
+            _right1 = self.expr_reconstructor.reconstruct(_pre_swap_eff)
+            if _right1 is None:
+                return None
+            _left = ternary_expr
+            _comparators = [_right1, _right2]
+        else:
+            # MIDDLE: preload 有左操作数; ternary 是 comparators[0].
+            _preload_exprs = self._compute_ternary_cond_preload_exprs(region)
+            if not _preload_exprs:
+                return None
+            _left = _preload_exprs[-1]
+            _comparators = [ternary_expr, _right2]
 
         # Build the chained Compare AST.
         _compare_expr = {
             'type': 'Compare',
             'left': _left,
             'ops': [_op1, _op2],
-            'comparators': [ternary_expr, _right],
+            'comparators': _comparators,
         }
 
         # Determine the wrapping statement by inspecting post-COMPARE_OP instrs.
