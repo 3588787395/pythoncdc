@@ -1274,9 +1274,20 @@ class RegionASTGenerator:
                         if instr.opname == 'MAKE_FUNCTION':
                             if i > 0:
                                 prev_instr = instructions[i - 1]
-                                if prev_instr.opname == 'LOAD_CONST' and prev_instr.argval is not func_obj:
-                                    if not hasattr(prev_instr.argval, 'co_code'):
-                                        continue
+                                # [Phase 7 通用修复] MAKE_FUNCTION 紧前的 LOAD_CONST
+                                # 是该函数的 code object。若该 code object ≠ func_obj，
+                                # 说明此 MAKE_FUNCTION 属于另一个函数，必须跳过——
+                                # 否则会把别的函数的装饰器链误赋给当前函数。
+                                # 旧逻辑条件反转：仅在 prev 是「非 code object 常量」
+                                # 时跳过，导致遍历到其他函数的 MAKE_FUNCTION 时
+                                # 仍调用 _reconstruct_decorator_chain，把 f 的装饰器
+                                # 链误赋给 deco1/deco2（test_r6_decorator_chain）。
+                                # 依「每块唯一归属」: 每个 MAKE_FUNCTION 唯一归属
+                                # 其 code object 对应的 FunctionDef。
+                                if (prev_instr.opname == 'LOAD_CONST'
+                                        and hasattr(prev_instr.argval, 'co_code')
+                                        and prev_instr.argval is not func_obj):
+                                    continue
                             bytecode_decorators = self._reconstruct_decorator_chain(instructions, i)
                             if bytecode_decorators:
                                 if not result.get('decorator_list') or len(bytecode_decorators) > len(result.get('decorator_list', [])):
@@ -1786,28 +1797,37 @@ class RegionASTGenerator:
         arg_count = getattr(code_obj, 'co_argcount', 0)
         varnames = list(getattr(code_obj, 'co_varnames', ()))
 
-        # 位置参数（前arg_count个）
+        # 位置参数（前arg_count个，含 posonly）
         pos_args = [{'type': 'arg', 'arg': name} for name in varnames[:arg_count]]
 
-        # 检查是否有*args（vararg）
+        # CPython 3.11+ co_varnames 顺序: positional, kwonly, *vararg, **kwarg, locals
+        # （而非 positional, *vararg, kwonly, **kwarg）。旧代码假设 *vararg 在 kwonly
+        # 之前，导致 `def f(*args, x=1)` 的 varnames=('x','args') 被误读为
+        # vararg='x'/kwonly=['args']。依「区域归约算法」: 函数签名重建必须严格
+        # 遵循 CPython code object 的 varnames 布局，否则 defaults/kw_defaults
+        # 与形参位置错配，破坏「父引用子入口」中父 FunctionDef 通过 MAKE_FUNCTION
+        # flags 引用 ternary 子节点作为默认值的语义。
         has_vararg = False
         vararg_name = None
 
-        # kwonly参数
+        # kwonly 参数紧跟 positional 之后
         kwonly_count = getattr(code_obj, 'co_kwonlyargcount', 0)
         kwonly_start = arg_count
-        if hasattr(code_obj, 'co_flags'):
-            flags = code_obj.co_flags
-            # CO_VARARGS = 0x04
-            if flags & 0x04:
-                vararg_name = varnames[arg_count] if arg_count < len(varnames) else None
-                kwonly_start = arg_count + 1
-                has_vararg = True
-
         kwonly_args = []
         for i in range(kwonly_start, kwonly_start + kwonly_count):
             if i < len(varnames):
                 kwonly_args.append({'type': 'arg', 'arg': varnames[i]})
+
+        # *vararg 在 kwonly 之后
+        _next_idx = kwonly_start + kwonly_count
+        if hasattr(code_obj, 'co_flags'):
+            flags = code_obj.co_flags
+            # CO_VARARGS = 0x04
+            if flags & 0x04:
+                if _next_idx < len(varnames):
+                    vararg_name = varnames[_next_idx]
+                _next_idx += 1
+                has_vararg = True
 
         # 检查是否有**kwargs（kwarg）
         kwarg_name = None
@@ -1815,13 +1835,8 @@ class RegionASTGenerator:
             flags = code_obj.co_flags
             # CO_VARKEYWORDS = 0x08
             if flags & 0x08:
-                kwargs_idx = kwonly_start + kwonly_count
-                if has_vararg:
-                    kwargs_idx = kwonly_start + kwonly_count
-                else:
-                    kwargs_idx = arg_count + kwonly_count
-                if kwargs_idx < len(varnames):
-                    kwarg_name = varnames[kwargs_idx]
+                if _next_idx < len(varnames):
+                    kwarg_name = varnames[_next_idx]
 
         return {
             'type': 'arguments',
