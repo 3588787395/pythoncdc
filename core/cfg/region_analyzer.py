@@ -12450,6 +12450,48 @@ RegionType 枚举值: RegionType.ASSERT
                                         if not _is_assert_consumer:
                                             has_jump_forward_skip = True
 
+            # [Phase 7 方案 A] 嵌套三元 while_cond fallback。
+            # 外层三元 `a if c else (inner)` 在 truthy-test 消费上下文中
+            # （如 while 条件），true_block 以 FORWARD_CONDITIONAL_JUMP 结尾
+            # （值是 truthy 测试），其 fallthrough (connector) 是纯
+            # JUMP_FORWARD 跳到 M。false_block 是已存在的 TernaryRegion
+            # entry（嵌套三元），且该嵌套三元的 merge_block 是 M。判据基于
+            # 区域结构：嵌套三元共享同一个 merge_block（循环头），非实例特征。
+            # 符合「每块唯一归属」：外层三元消费内层三元作为 false 值表达式，
+            # 两者共享 merge_block（循环头），循环以 while_true 形态运行。
+            # 识别按 block 逆序进行，内层三元先于外层创建，故此处能查到。
+            if merge_block is None:
+                _tli_nest = true_block.get_last_instruction()
+                if (_tli_nest
+                        and _tli_nest.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                        and _tli_nest.argval is not None):
+                    _tsuccs_nest = list(true_block.conditional_successors)
+                    if len(_tsuccs_nest) == 2:
+                        _tft_nest = next((s for s in _tsuccs_nest
+                                          if s.start_offset != _tli_nest.argval), None)
+                        if _tft_nest is not None:
+                            _ft_eff_nest = [i for i in _tft_nest.instructions
+                                            if i.opname not in NOISE_OPS]
+                            _ft_pure_jump_nest = all(
+                                i.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                                             'JUMP_BACKWARD',
+                                             'JUMP_BACKWARD_NO_INTERRUPT')
+                                for i in _ft_eff_nest
+                            )
+                            if _ft_pure_jump_nest and _ft_eff_nest:
+                                _ft_last_nest = _ft_eff_nest[-1]
+                                if (_ft_last_nest.argval is not None
+                                        and isinstance(_ft_last_nest.argval, int)):
+                                    _conn_target_nest = self.cfg.get_block_by_offset(
+                                        _ft_last_nest.argval)
+                                    if _conn_target_nest is not None:
+                                        _false_existing_nest = self.block_to_region.get(
+                                            false_block)
+                                        if (isinstance(_false_existing_nest, TernaryRegion)
+                                                and _false_existing_nest.merge_block is _conn_target_nest):
+                                            merge_block = _conn_target_nest
+                                            has_jump_forward_skip = True
+
             # [R10-batch1 err 2] assert (ternary) pattern fallback.
             # When both branches end with POP_JUMP_FORWARD_IF_TRUE (assert's
             # truthy-check-then-skip-raise pattern), there's no common post-

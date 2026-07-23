@@ -3083,26 +3083,45 @@ AST 映射规则:
         #   - 链式比较 / 裸真值等任意位置
         # 不依赖具体指令判据，是基于区域结构的普遍性判据。
         _ternary_for_while = None
+        # [Phase 7 方案 A] 嵌套三元 while_cond：选择最外层三元。
+        # 嵌套三元 `a if c else (b if d else e)` 在 while 条件中时，
+        # 外层和内层三元都有 merge_context='while_cond' 且 merge_block
+        # 都是循环头。iter_descendants 可能先返回内层，导致选错。最外层
+        # 三元生成完整嵌套 IfExp，内层只生成部分。判据：外层三元的
+        # condition_block 不在任何其他 while_cond 三元的 blocks 里。
+        # 基于「嵌套即抽象节点」：外层三元消费内层三元作为子节点。
+        _while_cond_candidates = []
         for _r in region.iter_descendants((TernaryRegion,)):
             if getattr(_r, 'merge_context', None) == 'while_cond':
-                _ternary_for_while = _r
-                break
-            if (_r.merge_block is not None
+                _while_cond_candidates.append(_r)
+            elif (_r.merge_block is not None
                     and (_r.merge_block is region.header_block
                          or (cond_block is not None and _r.merge_block is cond_block))):
-                _ternary_for_while = _r
-                break
-        if _ternary_for_while is None:
+                _while_cond_candidates.append(_r)
+        if not _while_cond_candidates:
             for _r in self.regions:
                 if isinstance(_r, TernaryRegion):
                     if getattr(_r, 'merge_context', None) == 'while_cond':
-                        _ternary_for_while = _r
-                        break
-                    if (_r.merge_block is not None
+                        _while_cond_candidates.append(_r)
+                    elif (_r.merge_block is not None
                             and (_r.merge_block is region.header_block
                                  or (cond_block is not None and _r.merge_block is cond_block))):
-                        _ternary_for_while = _r
+                        _while_cond_candidates.append(_r)
+        if _while_cond_candidates:
+            for _cand in _while_cond_candidates:
+                _is_inner = False
+                for _other in _while_cond_candidates:
+                    if _other is _cand:
+                        continue
+                    if (_cand.condition_block
+                            and _cand.condition_block in _other.blocks):
+                        _is_inner = True
                         break
+                if not _is_inner:
+                    _ternary_for_while = _cand
+                    break
+            if _ternary_for_while is None:
+                _ternary_for_while = _while_cond_candidates[0]
         if _ternary_for_while:
             _ternary_result = self._generate_ternary(_ternary_for_while)
             _ternary_expr = None
@@ -3165,14 +3184,31 @@ AST 映射规则:
                     self.generated_offsets.add(_b.start_offset)
                 # Mark back-edge recheck blocks that duplicate the ternary condition
                 # as generated to prevent them from being emitted as body statements
+                # [Phase 7 方案 A] 递归收集嵌套三元的所有 condition/value 块
+                # load names。嵌套三元 `a if c else (b if d else e)` 在 while
+                # 条件中时，回边重检块包含所有层级的值（c/a/d/b/e），仅收集
+                # 外层三元的 load names（c/a/d）会导致内层值块（b/e）的回边
+                # 重检块未被标记，泄入 body。判据基于「每块唯一归属」：回边
+                # 重检块是嵌套三元条件的复制，全归属三元（抑制为 generated）。
                 _ternary_cond_names = set()
-                for _cb in [_ternary_for_while.condition_block,
-                            _ternary_for_while.true_value_block,
-                            _ternary_for_while.false_value_block]:
-                    if _cb:
-                        for _i in _cb.instructions:
-                            if _i.opname in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF'):
-                                _ternary_cond_names.add(_i.argval)
+                _tcn_visited = set()
+                def _collect_ternary_load_names(_tr):
+                    if id(_tr) in _tcn_visited:
+                        return
+                    _tcn_visited.add(id(_tr))
+                    for _cb in [_tr.condition_block,
+                                _tr.true_value_block,
+                                _tr.false_value_block]:
+                        if _cb:
+                            for _i in _cb.instructions:
+                                if _i.opname in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF'):
+                                    _ternary_cond_names.add(_i.argval)
+                    for _vb in [_tr.true_value_block, _tr.false_value_block]:
+                        if _vb:
+                            _existing = self.region_analyzer.block_to_region.get(_vb)
+                            if isinstance(_existing, TernaryRegion):
+                                _collect_ternary_load_names(_existing)
+                _collect_ternary_load_names(_ternary_for_while)
                 if _ternary_cond_names:
                     # When the ternary's merge_block IS the loop header, the header
                     # contains the back-edge recheck of the ternary condition (Python
