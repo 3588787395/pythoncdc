@@ -943,6 +943,15 @@ class TernaryRegion(Region):
     container_type: Optional[str] = None
     func_call_info: Optional[Dict[str, Any]] = None
     dict_key_info: Optional[Dict[str, Any]] = None
+    # [Phase 7 方案 D] BUILD_CONST_KEY_MAP dict 构建模式：所有 key 作为
+    # 单个 LOAD_CONST tuple 压栈，再 BUILD_CONST_KEY_MAP N 消费 N 个 value。
+    # 与 BUILD_MAP 不同，key 不在各 ternary 的 cond_block preload 中，而是
+    # 统一打包在 merge_block 的 const tuple 里。存储 tuple（key 值列表）供
+    # chained container 构建器按链序分发到各 ternary。
+    # 依「每块唯一归属」+「父引用子入口」：merge_block 的 const-key tuple
+    # 归属内层（innermost）TernaryRegion，父 Dict 通过它引用所有 chained
+    # ternary 子节点作为 values。
+    dict_const_keys: Optional[tuple] = None
     # [R10-batch1 err 4] For await (ternary): merge_block ends with
     # GET_AWAITABLE + LOAD_CONST None (await setup); the polling loop
     # (SEND/YIELD_VALUE/RESUME/JUMP_BACKWARD_NO_INTERRUPT) and the
@@ -11763,21 +11772,53 @@ RegionType 枚举值: RegionType.ASSERT
             return chain
 
         def _detect_ternary_context(cond_block, merge_block):
+            # [Phase 7 方案 D] 返回 4-tuple：
+            #   (container_type, func_call_info, dict_key_info, dict_const_keys)
+            # dict_const_keys 仅对 BUILD_CONST_KEY_MAP 非空：存 const tuple 的
+            # 值列表，供 chained container 构建器分发到各 ternary。
             if merge_block:
                 for instr in merge_block.instructions:
                     if instr.opname == 'BUILD_LIST':
-                        return 'list', None, None
+                        return 'list', None, None, None
                     if instr.opname == 'BUILD_TUPLE':
-                        return 'tuple', None, None
+                        return 'tuple', None, None, None
                     if instr.opname == 'BUILD_SET':
-                        return 'set', None, None
+                        return 'set', None, None, None
                     if instr.opname == 'BUILD_MAP':
                         dict_key = RegionAnalyzer.extract_dict_key_from_block(cond_block)
-                        return 'dict', None, dict_key
+                        return 'dict', None, dict_key, None
+                    # [Phase 7 方案 D] BUILD_CONST_KEY_MAP N：语义等价于
+                    # BUILD_MAP N，但所有 key 作为单个 LOAD_CONST tuple 打包
+                    # 压栈（紧邻 BUILD_CONST_KEY_MAP 之前），N 个 value 在栈上。
+                    # 识别为 container_type='dict'，并捕获 const tuple 的值列表
+                    # 作为 dict_const_keys。chained container 构建器据此把 keys
+                    # 按链序分发到各 ternary（每个 ternary 一个 value）。
+                    # 依「自底向上归约」：innermost ternary 拥有 BUILD_CONST_KEY_MAP
+                    # 消费者，归约整个 chained ternary 链为单一 Dict 节点。
+                    # 判据基于操作码语义（dict 构建器），不依赖具体 key/value。
+                    if instr.opname == 'BUILD_CONST_KEY_MAP':
+                        _ck_instr = None
+                        _bm_instrs = [i for i in merge_block.instructions
+                                      if i.opname not in NOISE_OPS]
+                        _bck_idx = None
+                        for _ii, _mi in enumerate(_bm_instrs):
+                            if _mi.opname == 'BUILD_CONST_KEY_MAP':
+                                _bck_idx = _ii
+                                break
+                        if _bck_idx is not None and _bck_idx > 0:
+                            _prev = _bm_instrs[_bck_idx - 1]
+                            if (_prev.opname == 'LOAD_CONST'
+                                    and isinstance(_prev.argval, tuple)):
+                                _ck_instr = _prev
+                        if _ck_instr is not None:
+                            _const_keys = tuple(_ck_instr.argval)
+                        else:
+                            _const_keys = None
+                        return 'dict', None, None, _const_keys
                     if instr.opname == 'MAP_ADD':
                         # Dict comprehension: ternary is the dict value, key is on stack before condition
                         dict_key = RegionAnalyzer.extract_dict_key_from_block(cond_block)
-                        return 'dict', None, dict_key
+                        return 'dict', None, dict_key, None
                     # [R12-02/04/06 fix] Container literal *-unpack consumes
                     # ternary: BUILD_<container> 0 (in cond_block preload) +
                     # <ternary> + {DICT_UPDATE|LIST_EXTEND|SET_UPDATE} 1 (in
@@ -11786,11 +11827,11 @@ RegionType 枚举值: RegionType.ASSERT
                     # *_UPDATE/_EXTEND 消费指令归属 TernaryRegion，cond_block
                     # 的 BUILD_<container> 0 preload 也归属 TernaryRegion。
                     if instr.opname == 'DICT_UPDATE':
-                        return 'dict_unpack', None, None
+                        return 'dict_unpack', None, None, None
                     if instr.opname == 'LIST_EXTEND':
-                        return 'list_unpack', None, None
+                        return 'list_unpack', None, None, None
                     if instr.opname == 'SET_UPDATE':
-                        return 'set_unpack', None, None
+                        return 'set_unpack', None, None, None
             if cond_block:
                 instrs = [i for i in cond_block.instructions
                          if i.opname not in ('RESUME', 'NOP', 'CACHE')]
@@ -11831,7 +11872,7 @@ RegionType 枚举值: RegionType.ASSERT
                                          'LOAD_FAST', 'LOAD_DEREF'):
                         return 'call', {
                             'func': {'type': 'Name', 'id': func_i.argval, 'ctx': 'Load'},
-                        }, None
+                        }, None, None
                     elif func_i.opname == 'LOAD_ATTR':
                         obj_i = instrs[push_null_idx - 1] if push_null_idx > 0 else None
                         if obj_i and obj_i.opname.startswith('LOAD_'):
@@ -11842,7 +11883,7 @@ RegionType 枚举值: RegionType.ASSERT
                                     'attr': func_i.argval,
                                     'ctx': 'Load',
                                 },
-                            }, None
+                            }, None, None
                     # [R2 Bug lambda_call 修复] 检测 lambda 调用模式:
                     # (lambda x: ...)(ternary) 字节码模式:
                     #   PUSH_NULL, LOAD_CONST <code>, MAKE_FUNCTION, [args], PRECALL, CALL
@@ -11859,7 +11900,7 @@ RegionType 枚举值: RegionType.ASSERT
                                 'type': 'FunctionObject',
                                 'code': func_i.argval,
                             },
-                        }, None
+                        }, None, None
                 else:
                     # [R4 Bug 8 修复] 检测 LOAD_METHOD 模式: obj.method(args)
                     # 字节码模式: LOAD_NAME obj, [LOAD_ATTR ...], LOAD_METHOD method,
@@ -12011,8 +12052,8 @@ RegionType 枚举值: RegionType.ASSERT
                                     _chain_idx = _next_idx + 1
                                 return 'call', {
                                     'func': _cur_func_expr,
-                                }, None
-            return None, None, None
+                                }, None, None
+            return None, None, None, None
 
         def _detect_ternary_pattern(block):
             """检测三元表达式模式
@@ -13219,7 +13260,7 @@ RegionType 枚举值: RegionType.ASSERT
             if _consumer_extra_blocks:
                 all_blocks.update(_consumer_extra_blocks)
 
-            container_type, func_call_info, dict_key_info = _detect_ternary_context(block, merge_block)
+            container_type, func_call_info, dict_key_info, dict_const_keys = _detect_ternary_context(block, merge_block)
             return {
                 'block': block,
                 'true_block': true_block,
@@ -13233,6 +13274,8 @@ RegionType 枚举值: RegionType.ASSERT
                 'container_type': container_type,
                 'func_call_info': func_call_info,
                 'dict_key_info': dict_key_info,
+                # [Phase 7 方案 D] BUILD_CONST_KEY_MAP const-key tuple。
+                'dict_const_keys': dict_const_keys,
                 # [R10-batch1 err 4/14] Cross-block consumer instruction blocks
                 # for await / yield-from (ternary).
                 'merge_extra_blocks': _consumer_extra_blocks,
@@ -13254,6 +13297,7 @@ RegionType 枚举值: RegionType.ASSERT
                 container_type=pattern['container_type'],
                 func_call_info=pattern['func_call_info'],
                 dict_key_info=pattern['dict_key_info'],
+                dict_const_keys=pattern.get('dict_const_keys'),
                 merge_extra_blocks=pattern.get('merge_extra_blocks') or [],
             )
 
@@ -13392,7 +13436,7 @@ RegionType 枚举值: RegionType.ASSERT
                     for s in vb.conditional_successors:
                         all_blocks.add(s)
 
-            container_type, func_call_info, dict_key_info = _detect_ternary_context(header, merge)
+            container_type, func_call_info, dict_key_info, dict_const_keys = _detect_ternary_context(header, merge)
 
             region = TernaryRegion(
                 region_type=RegionType.TERNARY,
@@ -13407,6 +13451,7 @@ RegionType 枚举值: RegionType.ASSERT
                 container_type=container_type,
                 func_call_info=func_call_info,
                 dict_key_info=dict_key_info,
+                dict_const_keys=dict_const_keys,
             )
 
             return region

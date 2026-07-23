@@ -22874,15 +22874,32 @@ AST 映射规则:
             # first key to be replaced by the second key.
             # 依「每块唯一归属」：每个 ternary 的 cond_block 只归属该 ternary，
             # 其中的 LOAD_* key preload 也只属于该 ternary。
+            # [Phase 7 方案 D] BUILD_CONST_KEY_MAP 模式：所有 key 作为单个
+            # LOAD_CONST tuple 打包在 innermost merge_block 中，不在各 ternary
+            # 的 cond_block preload 里。此时 innermost.dict_const_keys 存有
+            # const tuple 的值列表，按链序分发到各 ternary（chain[0]→key[0]，
+            # 与 value 压栈顺序一致）。判据基于操作码语义（const-key dict 构建器），
+            # 不依赖具体 key/value，覆盖任意 key 数。
+            # 依「自底向上归约」：innermost ternary 拥有 BUILD_CONST_KEY_MAP
+            # 消费者 + const-key tuple，归约整个链为单一 Dict 节点。
+            _const_keys = getattr(innermost, 'dict_const_keys', None)
             keys = []
-            for tr in ternary_chain:
-                _k = RegionAnalyzer.extract_dict_key_from_block(tr.condition_block)
-                if _k is None:
-                    # Fallback to innermost's key (R3 behavior).
-                    _k = innermost.dict_key_info
+            if _const_keys is not None:
+                if len(_const_keys) != len(ternary_chain):
+                    return None
+                for _ck in _const_keys:
+                    if isinstance(_ck, tuple):
+                        _ck = list(_ck)
+                    keys.append({'type': 'Constant', 'value': _ck})
+            else:
+                for tr in ternary_chain:
+                    _k = RegionAnalyzer.extract_dict_key_from_block(tr.condition_block)
                     if _k is None:
-                        return None
-                keys.append(_k)
+                        # Fallback to innermost's key (R3 behavior).
+                        _k = innermost.dict_key_info
+                        if _k is None:
+                            return None
+                    keys.append(_k)
             container_info = {
                 'type': 'Dict',
                 'keys': keys,
