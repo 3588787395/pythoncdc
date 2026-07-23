@@ -503,25 +503,47 @@ class CodeGenerator:
         defaults = args.get('defaults', [])
         
         parts = []
-        
+
+        def _arg_with_annotation(arg):
+            """[Phase 7 根因2 通用修复] 发射形参注解 `name: annotation`。
+            region_ast_generator._build_function_def 已从 MAKE_FUNCTION flag 4
+            的注解元组 (name, type) 对解析并写入 arg['annotation']，但旧
+            _generate_arguments_dict 仅发射 `name`/`name=default`，丢弃注解，
+            导致 `def f(x: int)` 重编为 `def f(x)`，BUILD_TUPLE 元素数不匹配
+            （test_r11_ternary_overload 34 vs 30）。依「父引用子入口」: 父
+            FunctionDef 通过 BUILD_TUPLE 引用形参 annotation 子节点。"""
+            if isinstance(arg, dict):
+                arg_name = arg.get('arg', '')
+                ann = arg.get('annotation')
+                if ann is not None:
+                    ann_code = (self._generate_expression(ann)
+                                if isinstance(ann, dict) else str(ann))
+                    return f'{arg_name}: {ann_code}'
+                return arg_name
+            return str(arg)
+
         # 仅位置参数（Python 3.8+）
         for arg in posonlyargs:
-            arg_name = arg.get('arg', '') if isinstance(arg, dict) else str(arg)
-            parts.append(arg_name)
-        
+            parts.append(_arg_with_annotation(arg))
+
         # 普通位置参数
         for i, arg in enumerate(args_list):
             arg_name = arg.get('arg', '') if isinstance(arg, dict) else str(arg)
-            
+
             # 检查是否有默认值
             default_idx = i - (len(args_list) - len(defaults))
             if 0 <= default_idx < len(defaults):
                 default = defaults[default_idx]
                 default_code = self._generate_expression(default) if isinstance(default, dict) else repr(default)
-                parts.append(f'{arg_name}={default_code}')
+                ann = arg.get('annotation') if isinstance(arg, dict) else None
+                if ann is not None:
+                    ann_code = self._generate_expression(ann) if isinstance(ann, dict) else str(ann)
+                    parts.append(f'{arg_name}: {ann_code}={default_code}')
+                else:
+                    parts.append(f'{arg_name}={default_code}')
             else:
-                parts.append(arg_name)
-        
+                parts.append(_arg_with_annotation(arg))
+
         # *args
         if vararg:
             vararg_name = vararg.get('arg', '') if isinstance(vararg, dict) else str(vararg)
@@ -529,18 +551,23 @@ class CodeGenerator:
         elif kwonlyargs:
             # 如果没有*args但有仅关键字参数，需要添加*
             parts.append('*')
-        
+
         # 仅关键字参数
         for i, arg in enumerate(kwonlyargs):
             arg_name = arg.get('arg', '') if isinstance(arg, dict) else str(arg)
-            
+
             # 检查是否有默认值
             if i < len(kw_defaults) and kw_defaults[i] is not None:
                 default = kw_defaults[i]
                 default_code = self._generate_expression(default) if isinstance(default, dict) else repr(default)
-                parts.append(f'{arg_name}={default_code}')
+                ann = arg.get('annotation') if isinstance(arg, dict) else None
+                if ann is not None:
+                    ann_code = self._generate_expression(ann) if isinstance(ann, dict) else str(ann)
+                    parts.append(f'{arg_name}: {ann_code}={default_code}')
+                else:
+                    parts.append(f'{arg_name}={default_code}')
             else:
-                parts.append(arg_name)
+                parts.append(_arg_with_annotation(arg))
         
         # **kwargs
         if kwarg:

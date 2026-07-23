@@ -1111,10 +1111,45 @@ class RegionASTGenerator:
             # [R11-batch1 err 4] 处理返回类型注解 (MAKE_FUNCTION flag 4)
             # 字节码模式: cond_block 预加载 LOAD_CONST 'return'，三元求值后
             # BUILD_TUPLE 2 组成 ('return', value) 元组传给 MAKE_FUNCTION 4。
-            # func_obj['annotations'] 是 {name: expr} 字典，提取 'return' 作 returns。
+            # [Phase 7 根因2 通用修复] func_obj['annotations'] 是 expr_reconstructor
+            # 的 MAKE_FUNCTION handler (ast_generator_v2.py L1685-1688) 从栈弹出
+            # 的注解元组，重建为 AST Tuple 节点 {'type':'Tuple','elts':[name1,type1,
+            # name2,type2,...]}（按 CPython co_varnames + 'return' 顺序的 (name,type)
+            # 对）。旧代码假设它是 {name: expr} 字典，用 _annotations.get('return')
+            # 取值——Tuple 节点没有 'return' 键，恒返回 None，导致 `def f(x: int) -> int`
+            # 的参数注解与返回注解全部丢失（test_r11_ternary_overload 指令数 34 vs 24）。
+            # 依「父引用子入口」: 父 FunctionDef 通过 MAKE_FUNCTION flag 4 引用
+            # BUILD_TUPLE 子节点（注解元组）作 annotations；注解元组的 (name,type) 对
+            # 唯一归属对应形参的 annotation 槽位或 returns 槽位。
             if isinstance(func_obj, dict) and 'annotations' in func_obj:
                 _annotations = func_obj.get('annotations')
-                if isinstance(_annotations, dict):
+                if isinstance(_annotations, dict) and _annotations.get('type') == 'Tuple':
+                    # AST Tuple 节点: elts 是 [name, type, name, type, ...] 交替序列
+                    _ann_elts = _annotations.get('elts', []) or []
+                    _all_args = ((args.get('posonlyargs', []) or [])
+                                 + (args.get('args', []) or [])
+                                 + (args.get('kwonlyargs', []) or []))
+                    _vi = 0
+                    while _vi + 1 < len(_ann_elts):
+                        _name_node = _ann_elts[_vi]
+                        _type_node = _ann_elts[_vi + 1]
+                        _ann_name = None
+                        if isinstance(_name_node, dict):
+                            if _name_node.get('type') == 'Constant':
+                                _ann_name = _name_node.get('value')
+                            elif _name_node.get('type') in ('Name', 'str'):
+                                _ann_name = _name_node.get('id') or _name_node.get('value')
+                        elif isinstance(_name_node, str):
+                            _ann_name = _name_node
+                        if _ann_name == 'return':
+                            _returns_annotation = _type_node
+                        elif _ann_name is not None:
+                            for _arg_node in _all_args:
+                                if isinstance(_arg_node, dict) and _arg_node.get('arg') == _ann_name:
+                                    _arg_node['annotation'] = _type_node
+                                    break
+                        _vi += 2
+                elif isinstance(_annotations, dict):
                     _returns_annotation = _annotations.get('return')
 
             body_stmts = [{'type': 'Pass'}]
@@ -19955,6 +19990,23 @@ AST 映射规则:
                 _merge_consumer_expr = self._try_build_ternary_merge_consumer_expr(
                     region, ternary_expr)
                 if _merge_consumer_expr is not None:
+                    # [Phase 7 根因1 通用修复] 当 sink 非 STORE_*（POP_TOP/
+                    # RETURN_VALUE）时，ternary 走此 else 分支。其中
+                    # MAKE_FUNCTION 场景（lambda x=(a if c else b): x 的默认值
+                    # ternary，sink=POP_TOP）下，expr_reconstructor 产出
+                    # FunctionObject（co_name='<lambda>'，defaults=Tuple([IfExp])），
+                    # CodeGenerator 会将其渲染为占位符 `lambda *args, **kwargs: None`。
+                    # 决定性对照：`def f(x=(a if c else b))` (STORE sink, 走 T2 路径
+                    # 直接 _build_function_def) ✓；`lambda x=(a if c else b)` (POP_TOP
+                    # sink, 走此分支) ✗ —— 同一 ternary-as-default 模式仅因 sink
+                    # 操作码不同而结果相反。
+                    # 依「每块唯一归属」: ternary 作为 lambda 默认值归属 Lambda 父节点；
+                    # 依「父引用子入口」: 父 Lambda 通过 MAKE_FUNCTION flags=1 引用
+                    # ternary 子节点作 defaults。_convert_lambda_function_objects 把
+                    # FunctionObject 递归转为 Lambda dict（_build_function_def 在
+                    # L1057 已支持 Tuple 形式 defaults → elts 列表）。
+                    _merge_consumer_expr = self._convert_lambda_function_objects(
+                        _merge_consumer_expr)
                     # [R14-07 fix] 当 merge_block 原始以 bare RETURN_VALUE 结尾
                     # （非 LOAD_CONST None + RETURN_VALUE 隐式 None）时，ternary
                     # 表达式是 return 语句的值，应包装为 Return 而非 Expr。
