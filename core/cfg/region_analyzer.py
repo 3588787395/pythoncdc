@@ -13254,6 +13254,37 @@ RegionType 枚举值: RegionType.ASSERT
             else:
                 all_blocks.update(chain_blocks)
 
+            # [Phase 7 方案 D] 当 ternary 条件是 chained compare 时，
+            # 把 chained compare 的延续块、cleanup 块（POP_TOP + JUMP）和
+            # JUMP_FORWARD 连接块纳入 all_blocks，防止它们泄漏为独立语句。
+            # 依「每块唯一归属」：这些块归属 TernaryRegion（条件的一部分）。
+            if _is_chained_compare_cond and _cc_if_region is not None:
+                all_blocks.update(_cc_if_region.chained_compare_blocks)
+                # cleanup 块（POP_TOP + JUMP_FORWARD 到 false 路径）：
+                # header block 的 jump target 后继（非 fallthrough）。
+                _hdr_last = block.get_last_instruction()
+                if _hdr_last and _hdr_last.argval is not None:
+                    _cleanup_blk = self.cfg.get_block_by_offset(_hdr_last.argval)
+                    if _cleanup_blk is not None:
+                        all_blocks.add(_cleanup_blk)
+                # 最后比较块的 fallthrough 后继若是纯 JUMP_FORWARD 连接块，
+                # 也纳入 all_blocks（已在前面更新 true_block 时跟踪）。
+                _last_cc = _cc_if_region.chained_compare_blocks[-1] \
+                    if _cc_if_region.chained_compare_blocks else None
+                if _last_cc is not None:
+                    _lc_last = _last_cc.get_last_instruction()
+                    if _lc_last and _lc_last.opname in FORWARD_CONDITIONAL_JUMP_OPS \
+                            and _lc_last.argval is not None:
+                        _lc_succs = sorted(
+                            _last_cc.conditional_successors,
+                            key=lambda s: s.start_offset)
+                        for _s in _lc_succs:
+                            _s_eff = [i for i in _s.instructions
+                                      if i.opname not in NOISE_OPS]
+                            if (len(_s_eff) == 1
+                                    and _s_eff[0].opname == 'JUMP_FORWARD'):
+                                all_blocks.add(_s)
+
             # Include the JUMP_FORWARD block (the block between the
             # then-value and the merge) in the ternary's blocks.
             if has_jump_forward_skip:
