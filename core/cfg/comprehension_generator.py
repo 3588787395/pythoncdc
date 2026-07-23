@@ -983,6 +983,7 @@ class ComprehensionGenerator:
 
         # Collect meaningful instructions between merge_offset and append_idx
         value_instrs = []
+        merge_start_idx = None
         for idx in range(cond_jump_idx + 1, append_idx):
             instr = all_instrs[idx]
             if instr.offset < merge_offset:
@@ -991,9 +992,26 @@ class ComprehensionGenerator:
                 break
             if instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
                 continue
+            if merge_start_idx is None:
+                merge_start_idx = idx
             value_instrs.append(instr)
         if not value_instrs:
             return None
+
+        # [R18-07 fix] If value_instrs contain a conditional jump, the value
+        # is itself a ternary (e.g. `{(key_ternary): (value_ternary) for ...}`).
+        # expr_reconstructor cannot handle conditional jumps, so use
+        # _detect_comp_ternary to build the value IfExp.
+        # 依「自底向上归约」: value ternary is inner node, MAP_ADD is parent.
+        # 依「父引用子入口」: parent dictcomp via MAP_ADD references both
+        #   chained ternary children (key on TOS-1, value on TOS).
+        if (any(i.opname in CONDITIONAL_JUMP_OPS for i in value_instrs)
+                and merge_start_idx is not None
+                and merge_start_idx > 0):
+            _value_ternary = self._detect_comp_ternary(
+                all_instrs, merge_start_idx - 1, append_idx)
+            if _value_ternary is not None:
+                return _value_ternary
 
         return self.expr_reconstructor.reconstruct(value_instrs)
 
