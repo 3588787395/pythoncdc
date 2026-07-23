@@ -5,18 +5,21 @@ from tests.exhaustive.base import ExhaustiveTestCase
 
 
 class TestR1AssertSimple(ExhaustiveTestCase):
-    """Bug 3: assert(ternary) — 三元条件被折叠为 BoolOp，丢失 IfExp。
+    """Bug 3: assert(ternary) — assert 中三元表达式反编译验证。
 
-    原始: assert (a if a > 0 else 0)
-    错误反编译:
-        assert (a > 0 and a)
-    缺陷: assert 的参数是一个 IfExp 表达式，反编译器误把
-         ternary 折叠成 `a > 0 and a` 的 BoolOp（短路语义），
-         实际上当 a <= 0 时原表达式应抛 AssertionError，
-         而折叠后 a <= 0 时 assert 不抛错（因 a 已被求值），
-         行为发生实质改变。IfExp AST 节点缺失。
+    原始: assert (a if a > 0 else b)
+    说明: assert 的参数是 IfExp 表达式。当 else 分支为变量时，
+         CPython 编译器保留完整的 ternary 字节码结构
+         (cond_block + body + else_block + assert check)，
+         反编译器应正确恢复 IfExp AST 节点。
+
+    注: 当 else 为 falsy 常量（如 0/None/False）时，CPython 编译器
+         会优化掉 else 分支，使 `assert (a if cond else 0)` 与
+         `assert (cond and a)` 产生完全相同的字节码，二者语义等价、
+         字节码层面不可区分。此时反编译为 BoolOp 是正确的（语义等价）。
+         本用例使用 else=变量 b 以测试可区分场景下的 IfExp 恢复。
     """
-    SOURCE_CODE = """assert (a if a > 0 else 0)"""
+    SOURCE_CODE = """assert (a if a > 0 else b)"""
     REGION_TYPE = "TERNARY"
 
     def test_decompile(self):

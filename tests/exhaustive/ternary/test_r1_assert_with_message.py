@@ -5,16 +5,17 @@ from tests.exhaustive.base import ExhaustiveTestCase
 
 
 class TestR1AssertWithMessage(ExhaustiveTestCase):
-    """Bug 4: assert(ternary, msg) — 带消息的 assert 中三元被折叠为 BoolOp。
+    """Bug 4: assert(ternary, msg) — 带消息的 assert 中三元反编译验证。
 
-    原始: assert (a if a > 0 else 0), "error"
-    错误反编译:
-        assert (a > 0 and a), 'error'
-    缺陷: assert 语句的第一个参数是 IfExp，反编译器误折叠为 BoolOp。
-         与 Bug 3 同源，但此用例增加了 message 参数，验证折叠
-         错误在带消息场景仍存在。IfExp AST 节点缺失。
+    原始: assert (a if cond else b), "error"
+    说明: assert 语句的第一个参数是 IfExp，第二个参数是 message。
+         当 else 分支为变量时，字节码保留完整 ternary 结构，
+         反编译器应正确恢复 IfExp 并保留 message 参数。
+
+    注: 与 Bug 3 同源。当 else 为 falsy 常量时字节码不可区分
+         （CPython 优化），本用例使用 else=变量 b 以测试可区分场景。
     """
-    SOURCE_CODE = '''assert (a if a > 0 else 0), "error"'''
+    SOURCE_CODE = '''assert (a if cond else b), "error"'''
     REGION_TYPE = "TERNARY"
 
     def test_decompile(self):
