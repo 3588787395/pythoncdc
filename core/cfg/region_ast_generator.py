@@ -23560,6 +23560,141 @@ AST 映射规则:
                         'cause': elts[1],
                     }
 
+        # --- Pattern H: load-side slice subscript (Phase 7 方案 D) ---
+        # innermost_merge: BUILD_SLICE N, BINARY_SUBSCR, (STORE_* | POP_TOP |
+        # RETURN_VALUE). N chained ternaries produce the slice bounds (lower,
+        # upper[, step]); BUILD_SLICE N wraps them as a Slice node;
+        # BINARY_SUBSCR consumes (obj, slice) producing obj[slice]; the suffix
+        # stores/discards/returns the result.
+        # 例: x = lst[a if c else 0 : b if c2 else -1]
+        #     r = base[t1:t2:t3]  (3 元 chained ternary 作 step)
+        # 依「父引用子入口」+「嵌套即抽象节点」+「自底向上归约」: 父
+        # Assign/Expr/Return 通过 outer.cond_block preload (obj) +
+        # innermost_merge 的 BUILD_SLICE N + BINARY_SUBSCR 引用 chained
+        # ternary 子节点列表作为 Slice 的 lower/upper[/step]。
+        # 判据基于操作码语义（slice 构建 + subscript 读取），覆盖 N=2/3 任意
+        # bound 全为 ternary 的形态，不依赖具体 obj/bound。
+        if _has_build_slice:
+            _bs_instr = None
+            for _i in _im_eff:
+                if _i.opname == 'BUILD_SLICE':
+                    _bs_instr = _i
+                    break
+            _bs_n = (_bs_instr.arg if _bs_instr is not None else 2) or 2
+            _has_binary_subscr = any(
+                _i.opname == 'BINARY_SUBSCR' for _i in _im_eff)
+            # 仅当 chain 长度 == BUILD_SLICE N（所有 bound 均为 ternary）时
+            # 匹配。mixed（部分 bound 为 const preload）留待单 ternary 路径。
+            if (_bs_instr is not None and _has_binary_subscr
+                    and len(elts) == _bs_n):
+                _outer_cond = region.condition_block
+                if _outer_cond is not None:
+                    _oc_instrs = [i for i in _outer_cond.instructions
+                                  if i.opname not in ('RESUME', 'NOP',
+                                                      'CACHE', 'PUSH_NULL')]
+                    _oc_last = _outer_cond.get_last_instruction()
+                    _oc_cond_start = len(_oc_instrs)
+                    if _oc_last and _oc_last.opname in (
+                            FORWARD_CONDITIONAL_JUMP_OPS
+                            | SHORT_CIRCUIT_JUMP_OPS):
+                        _oc_pj_idx = None
+                        for _ci_idx in range(len(_oc_instrs) - 1, -1, -1):
+                            if _oc_instrs[_ci_idx] is _oc_last:
+                                _oc_pj_idx = _ci_idx
+                                break
+                        if _oc_pj_idx is not None and _oc_pj_idx > 0:
+                            import dis as _dis
+                            _needed = 1
+                            _cstart = None
+                            for _ci in range(_oc_pj_idx - 1, -1, -1):
+                                _instr = _oc_instrs[_ci]
+                                try:
+                                    _eff = _dis.stack_effect(
+                                        _instr.opcode, _instr.arg)
+                                except Exception:
+                                    _eff = 0
+                                _needed -= _eff
+                                if _needed <= 0:
+                                    _cstart = _ci
+                                    break
+                            if _cstart is not None:
+                                _oc_cond_start = _cstart
+                    _oc_preload = _oc_instrs[:_oc_cond_start]
+                    self.expr_reconstructor.reset()
+                    for _instr in _oc_preload:
+                        if _instr.opname in ('RESUME', 'NOP', 'CACHE',
+                                             'PUSH_NULL'):
+                            continue
+                        self.expr_reconstructor._process_instruction(_instr)
+                    _pl_stack = [s for s in self.expr_reconstructor.stack
+                                 if not (isinstance(s, dict)
+                                         and s.get('type') == 'PUSH_NULL')]
+                    # 期望栈: [obj]（subscript 的 base）。BUILD_SLICE N 的 N 个
+                    # bound 全部来自 chained ternary（已在 elts 中），无需 preload。
+                    if len(_pl_stack) >= 1:
+                        _obj_expr = _pl_stack[-1]
+                        _slice_expr = {
+                            'type': 'Slice',
+                            'lower': elts[0],
+                            'upper': elts[1],
+                            'step': elts[2] if _bs_n == 3 else None,
+                        }
+                        _subscr_expr = {
+                            'type': 'Subscript',
+                            'value': _obj_expr,
+                            'slice': _slice_expr,
+                            'ctx': 'Load',
+                        }
+                        # 依据 innermost_merge 的 BINARY_SUBSCR 之后的终结
+                        # 指令决定 wrapping：STORE_* → Assign，POP_TOP → Expr，
+                        # RETURN_VALUE（非 implicit None return）→ Return。
+                        # 模块级隐式返回 LOAD_CONST None + RETURN_VALUE 不是真实
+                        # Return，须排除（否则 Assign 被误判为 Return）。
+                        _bs_idx_in_eff = _im_eff.index(_bs_instr)
+                        _suffix = _im_eff[_bs_idx_in_eff + 1:]
+                        _store_target = None
+                        _is_return = False
+                        _ok_suffix = True
+                        _prev_load_none = False
+                        for _si in _suffix:
+                            if _si.opname == 'BINARY_SUBSCR':
+                                _prev_load_none = False
+                                continue
+                            if _si.opname == 'LOAD_CONST' and _si.argval is None:
+                                _prev_load_none = True
+                                continue
+                            if _si.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                                # implicit module return None: LOAD_CONST None +
+                                # RETURN_VALUE —— 不是真实 Return，忽略。
+                                if not _prev_load_none:
+                                    _is_return = True
+                                _prev_load_none = False
+                                continue
+                            if _si.opname in ('STORE_FAST', 'STORE_NAME',
+                                              'STORE_GLOBAL', 'STORE_DEREF'):
+                                if _store_target is None:
+                                    _store_target = _si.argval
+                                _prev_load_none = False
+                                continue
+                            if _si.opname == 'POP_TOP':
+                                _prev_load_none = False
+                                continue
+                            _ok_suffix = False
+                            break
+                        if _ok_suffix:
+                            if _store_target is not None:
+                                return {
+                                    'type': 'Assign',
+                                    'targets': [{'type': 'Name',
+                                                 'id': _store_target,
+                                                 'ctx': 'Store'}],
+                                    'value': _subscr_expr,
+                                }
+                            if _is_return:
+                                return {'type': 'Return',
+                                        'value': _subscr_expr}
+                            return {'type': 'Expr', 'value': _subscr_expr}
+
         return None
 
     def _try_build_ternary_kwarg_call(self, region: TernaryRegion,
