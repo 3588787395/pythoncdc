@@ -22581,6 +22581,89 @@ AST 映射规则:
             merge_all, initial_stack=initial_stack)
         return full_expr
 
+    def _try_build_chained_ternary_make_function(
+            self, region: TernaryRegion, ternary_expr: Dict[str, Any],
+            ternary_chain: List[TernaryRegion], innermost: TernaryRegion,
+            innermost_merge) -> Optional[Dict[str, Any]]:
+        """[Phase 7 方案 D] chained ternary + MAKE_FUNCTION 构建 FunctionDef/Lambda。
+
+        处理多个 ternary 作为函数默认参数的场景：
+            def f(x=(a if c else b), y=(d if e else g)): ...
+        字节码：chained ternary (merge 链) + BUILD_TUPLE N +
+               LOAD_CONST <code> + MAKE_FUNCTION flag + STORE_NAME
+
+        把 chained ternary 作为 defaults 列表，调用 _build_function_def
+        构建 FunctionDef。判据基于操作码语义，非实例特征。
+        """
+        _im_eff = [i for i in innermost_merge.instructions
+                   if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+        # 提取 MAKE_FUNCTION flags 和 code object
+        _mf_flags = 0
+        _code_obj = None
+        _mf_idx = None
+        for _i_idx, _i in enumerate(_im_eff):
+            if _i.opname == 'MAKE_FUNCTION':
+                _mf_idx = _i_idx
+                _mf_flags = _i.arg or 0
+            if (_i.opname == 'LOAD_CONST'
+                    and hasattr(_i.argval, 'co_code')
+                    and _code_obj is None):
+                _code_obj = _i.argval
+        if _code_obj is None or _mf_idx is None:
+            return None
+        # 仅处理 defaults (flag & 1)。kw_defaults (flag & 2) / annotations (flag & 4)
+        # 的 chained ternary 场景较罕见，暂不处理（返回 None 让默认路径处理）。
+        if not (_mf_flags & 1):
+            return None
+        # 构建 chained ternary 表达式列表（作为 defaults）
+        _defaults_exprs = []
+        for tr in ternary_chain:
+            if tr is region:
+                _defaults_exprs.append(ternary_expr)
+            else:
+                _nested = self._build_nested_ternary_expr(tr)
+                if _nested is None:
+                    return None
+                _defaults_exprs.append(_nested)
+        # 检查 BUILD_TUPLE 是否还有非 ternary 的 sibling defaults
+        # （如 `def f(x=(a if c else b), y=2): ...` 中 y=2 是常量 default）
+        _bt_idx = None
+        for _j in range(_mf_idx - 1, -1, -1):
+            if _im_eff[_j].opname == 'BUILD_TUPLE':
+                _bt_idx = _j
+                break
+        if _bt_idx is not None:
+            _bt_arg = _im_eff[_bt_idx].arg or 0
+            # BUILD_TUPLE N 的 N 应该 >= len(ternary_chain)
+            # 如果 N > len(ternary_chain)，说明有非 ternary 的 sibling defaults
+            # 在 BUILD_TUPLE 之前（常量 defaults）。这些在 cond_block preload 或
+            # BUILD_TUPLE 之前的指令中。为简单起见，仅处理 N == len(ternary_chain)
+            # 的情况（所有 defaults 都是 ternary）。
+            if _bt_arg != len(ternary_chain):
+                return None
+        _func_obj = {'code': _code_obj, 'defaults': _defaults_exprs}
+        _func_def = self._build_function_def(func_obj=_func_obj, decorator=None)
+        # 检测装饰器（MAKE_FUNCTION 后的 PRECALL+CALL）
+        _has_call_after = any(_i.opname == 'CALL'
+                              for _i in _im_eff[_mf_idx + 1:])
+        if _has_call_after:
+            # 装饰器在 outermost cond_block 的 preload 中
+            _preload = self._compute_ternary_cond_preload_exprs(region)
+            if _preload:
+                _dec_expr = _preload[0]
+                if isinstance(_dec_expr, dict) and _dec_expr.get('type') in ('Name', 'Attribute'):
+                    _func_def['decorator_list'] = [_dec_expr] + _func_def.get('decorator_list', [])
+        # Lambda vs FunctionDef
+        if _func_def.get('type') == 'Lambda':
+            return {
+                'type': 'Assign',
+                'targets': [{'type': 'Name', 'id': innermost.value_target, 'ctx': 'Store'}],
+                'value': _func_def,
+            }
+        else:
+            _func_def['name'] = innermost.value_target
+            return _func_def
+
     def _try_build_ternary_chained_container(self, region: TernaryRegion,
                                                ternary_expr: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """[Round9-11 / R4-P1] Outer ternary's merge_block is an inner
@@ -22645,6 +22728,30 @@ AST 映射规则:
         merge_ctx = getattr(innermost, 'merge_context', None)
         value_target = innermost.value_target
         innermost_merge = innermost.merge_block
+
+        # [Phase 7 方案 D] chained ternary + MAKE_FUNCTION：多个 ternary 作为
+        # 函数默认参数（如 `def f(x=(a if c else b), y=(d if e else g)): ...`）。
+        # innermost merge_block 含 BUILD_TUPLE N + LOAD_CONST <code> +
+        # MAKE_FUNCTION flag。此时不应构建 Tuple 字面量，而应把 chained
+        # ternary 作为函数 defaults/kw_defaults，构建 FunctionDef/Lambda。
+        # 判据基于操作码语义（MAKE_FUNCTION 消费 BUILD_TUPLE 作为 defaults），
+        # 不依赖具体参数。依「父引用子入口」：父 FunctionDef 通过
+        # MAKE_FUNCTION 引用 chained ternary 子节点列表作为 defaults。
+        if (container_type == 'tuple' and innermost_merge is not None
+                and len(ternary_chain) >= 2):
+            _im_eff_mf = [i for i in innermost_merge.instructions
+                          if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+            _has_mf = any(i.opname == 'MAKE_FUNCTION' for i in _im_eff_mf)
+            if _has_mf:
+                _mf_stmt = self._try_build_chained_ternary_make_function(
+                    region, ternary_expr, ternary_chain, innermost, innermost_merge)
+                if _mf_stmt is not None:
+                    for tr in ternary_chain:
+                        if tr is region:
+                            continue
+                        for b in tr.blocks:
+                            self.generated_blocks.add(b)
+                    return _mf_stmt
 
         # [R6-09/18/20 fix] 多 ternary 同上下文共享出口 — 3 个新模式：
         # 依「每块唯一归属」+「父引用子入口」+「嵌套即抽象节点」+「自底向上归约」：
