@@ -353,3 +353,65 @@
 
 ## R15 已知限制（未修复 bug）
 - [ ] any_genexp skipped（与 R5 ternary_in_genexp 同嵌套 code object 机制，非新 bug，R5 已知限制延续）
+
+## Ternary 区域 Round 20 验证（TERNARY 最后一轮）
+
+### SubTask T1.20.0: 基线确认
+- [x] 全量 ternary 回归基线（R19 commit 1d3bce5，无 R20 测试）= 43 failed / 529 passed / 9 skipped
+- [x] 新增 16 个 R20 测试后基线 = 59 failed / 529 passed / 9 skipped
+- [x] 跨区域回归基线 = 35 failed / 1418 passed / 13 skipped
+
+### SubTask T1.20.1 (Cat 1): container literal starred 展开 6 bug
+- [x] R20-01 `x = [*[a if c else b]]` 反编译保留 `Starred(List([IfExp]))`，BUILD_LIST+LIST_EXTEND 指令对保留，字节码等价
+- [x] R20-02 `x = (*[a if c else b],)` 反编译保留 `Starred(List([IfExp]))`，字节码等价
+- [x] R20-03 `x = {**{a if c else b: 1}}` 反编译保留 `Starred(Dict([IfExp],[1]))`，BUILD_MAP+DICT_UPDATE 指令对保留，字节码等价
+- [x] R20-04 `f(*[a if c else b])` 反编译保留 `Call(f, [], [Starred(List([IfExp]))])`，CALL_FUNCTION_EX 保留，字节码等价
+- [x] R20-05 `f(1, *[a if c else b], 2)` 反编译保留前置/后置位置参数 + Starred，字节码等价
+- [x] R20-06 `f(x=1, *[a if c else b])` 反编译保留 kwarg + Starred，字节码等价
+- [x] 修复依 4 原则：父 Starred 通过 LIST_EXTEND/DICT_UPDATE/CALL_FUNCTION_EX 栈效应引用 List/Dict 子节点，ternary 作 List.elts/Dict.keys 单抽象节点
+- [x] ternary 回归无退化
+- [x] 跨区域回归无退化
+
+### SubTask T1.20.2 (Cat 2): walrus store 上下文 2 bug
+- [x] R20-08 `x[(n := a if c else b)] = y` 反编译保留 `Assign([Subscript(x, NamedExpr(n, IfExp))], y)`，STORE_SUBSCR 消费链保留，字节码等价
+- [x] R20-09 `obj.attr = (n := a if c else b)` 反编译保留 `Assign([Attribute(obj, 'attr')], NamedExpr(n, IfExp))`，STORE_ATTR 消费链保留，字节码等价
+- [x] 修复依 4 原则：父 Assign 通过 STORE_SUBSCR/STORE_ATTR 栈效应引用 NamedExpr 子节点，ternary 作 NamedExpr.value 单抽象节点
+- [x] ternary 回归无退化
+- [x] 跨区域回归无退化
+
+### SubTask T1.20.3 (Cat 3): 双 ternary boolop+binop 组合 4 bug
+- [x] R20-10 `x = (a if c else b) and (d if e else f)` 反编译保留 `Assign([x], BoolOp(And, [IfExp1, IfExp2]))`，JUMP_IF_FALSE_OR_POP 消费链保留，字节码等价
+- [x] R20-11 `x = (a if c else b) or (d if e else f)` 反编译保留 `Assign([x], BoolOp(Or, [IfExp1, IfExp2]))`，JUMP_IF_TRUE_OR_POP 消费链保留，字节码等价
+- [x] R20-12 `assert x, (a if c else b) + (d if e else f)` 反编译保留 `Assert(x, BinOp(IfExp1, Add, IfExp2))`，BINARY_OP+RAISE_VARARGS 消费链保留，字节码等价
+- [x] R20-13 `def f(): yield from (a if c else b) + (d if e else f)` 反编译保留 `Expr(YieldFrom(BinOp(IfExp1, Add, IfExp2)))`，BINARY_OP+GET_YIELD_FROM_ITER+SEND 循环保留，字节码等价
+- [x] 修复依 4 原则：两个 ternary 各自独立归约为内层抽象节点，父表达式（BoolOp/BinOp/YieldFrom）通过消费指令栈效应（弹出 2 操作数）引用两个 ternary 子入口
+- [x] ternary 回归无退化
+- [x] 跨区域回归无退化
+
+### SubTask T1.20.4: 回归守卫加固（关键质量保障）
+- [x] 编辑 D 初版守卫过宽引入 20 个 r1-r19 回归（return/del/slice/dict/set/format/fstring/call/lambda/unpack 等场景）
+- [x] 根因定位：守卫 `merge_block is not None` 在非 yield-from 双 ternary 场景误触发，输出 Expr 而非 Return/Assign
+- [x] 修复：入口守卫新增 `and _second_tr.merge_extra_blocks`，精确限定为 yield-from（SEND 循环）场景
+- [x] 修复后 20 个回归全部恢复，r1-r19 基线 43 failed 保持不变（经 git stash 对比验证 IDENTICAL）
+
+### SubTask T1.20.5-8: 最终验证
+- [x] 全量 ternary 回归 = 47 failed / 541 passed / 9 skipped（基线 r1-r19 43 failed 保持，+4 R20 已知限制，+12 R20 修复，0 真实回归 ✓）
+- [x] 跨区域回归 = 35 failed / 1418 passed / 13 skipped（与基线 IDENTICAL，无退化 ✓）
+- [x] R20 新测试 = 12 passed / 4 failed（4 已知限制）
+- [x] 修复报告已写 — `rounds/ternary_region/round_20/fix_report.md`
+- [x] 所有修复均通过 4 原则论证，无跨区域启发式特例 / 后处理补丁 / 启发式优先级覆盖 / 扁平化 / 硬编码深度上限
+- [x] 源代码无 `_fix_*`/`_patch_*`/`_hack_*`/`_workaround_*`/`_temp_*` 前缀方法名
+- [x] 未修改任何测试文件（git status 显示仅新增 R20 测试文件）
+- [x] 未创建根级 debug 文件（`_dbg_regions.py` 在 round_20 目录内，已删除）
+- [x] 所有命令 `timeout 280` 包裹
+
+## R20 已知限制（未修复 bug）
+- [ ] R20-07 walrus_in_cond: `x = (n := a) if (m := b if c else d) else e` — walrus + 嵌套 ternary + 外层 ternary 条件三层嵌套，cond_block walrus 副作用剥离与内层 ternary 归约交互复杂
+- [ ] R20-14 async_with_item: `async with (a if c else b) as x: pass` — BEFORE_ASYNC_WITH + GET_AWAITABLE 消费链 + async with 清理协议渲染复杂
+- [ ] R20-15 yield_from_method_on: `def f(): yield from (a if c else b).m()` — 与 R14-09 同类，单 ternary + LOAD_METHOD + CALL 消费，非双 ternary 共享块
+- [ ] R20-16 except_handler_func_body: `def f(): try: x = 1 except (A if c else B) as e: pass` — ternary 已识别为 IfExp，但 except handler STORE_FAST e + DELETE_FAST e 清理序列渲染导致字节码不匹配（25 vs 24）
+
+## TERNARY 区域 20 轮迭代完成
+- R20 修复 12/16 bug（超过最低要求 10/16），4 个已知限制
+- 最终 ternary 全量 = 47 failed / 541 passed / 9 skipped
+- 进入下一区域（LOOP / Phase 2）

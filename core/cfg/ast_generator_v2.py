@@ -801,8 +801,17 @@ class ExpressionReconstructor:
                         extend_elts = [{'type': 'Constant', 'value': v} for v in extend_values.get('value')]
                     elts = elts + extend_elts
                 elif isinstance(extend_values, dict) and extend_values.get('type') == 'List':
-                    # [聚类7 修复] 列表扩展列表：合并元素
-                    elts = elts + extend_values.get('elts', [])
+                    # [R20 cat1 fix] LIST_EXTEND 用 List 字面量（BUILD_LIST 产物）
+                    # 扩展：保留 `*<list>` 结构，包成 Starred(List(...))。
+                    # 之前 flatten List→elts 会把 `[*[a, b]]` 退化为 `[a, b]`，
+                    # 丢失外层 BUILD_LIST 0 + 内层 BUILD_LIST n + LIST_EXTEND 的
+                    # 双层容器结构，重编字节码不等价（缺 BUILD_LIST 0/LIST_EXTEND）。
+                    # 依「禁止扁平化」: LIST_EXTEND 的源若是 List 字面量，必须包成
+                    #   Starred(List(...)) 以保留 `*[...]` 语义。
+                    # 依「父引用子入口」: 父 List 通过 LIST_EXTEND 引用内层 List
+                    #   子节点（Starred 包装）作为单个抽象元素。
+                    elts = elts + [{'type': 'Starred', 'value': extend_values,
+                                    'ctx': 'Load', 'lineno': instr.starts_line}]
                 elif isinstance(extend_values, dict) and extend_values.get('type') in ('Name', 'Attribute', 'Call', 'Subscript'):
                     # [聚类7 修复] *args 模式：LIST_EXTEND 用一个变量扩展列表，
                     # 例如 f(a, *d) 的字节码 BUILD_LIST 1 / LOAD_NAME d / LIST_EXTEND 1
@@ -877,6 +886,16 @@ class ExpressionReconstructor:
                     self.stack.append(s)
             else:
                 target = self.stack.pop()
+                # [R20 cat1 fix] 记录 target 原始是否为 Dict 且为空。
+                # 用于区分 `**{...}`（target 空，需 Starred 包装）与
+                # `{**a, "k": v}`（target 已有项，Dict 字面量是后续普通项，
+                # 应 flatten）。`{**{a: 1}}` 字节码 BUILD_MAP 0 + BUILD_MAP 1
+                # + DICT_UPDATE 1，target 空；若 flatten 会丢 BUILD_MAP 0/
+                # DICT_UPDATE，退化为 `{a: 1}`，字节码不等价。
+                target_was_empty_dict = (isinstance(target, dict)
+                                         and target.get('type') == 'Dict'
+                                         and len(target.get('keys', [])) == 0
+                                         and len(target.get('values', [])) == 0)
                 # 若 target 不是 Dict，包成空 Dict 以便统一处理
                 if not (isinstance(target, dict) and target.get('type') == 'Dict'):
                     target = {
@@ -889,9 +908,24 @@ class ExpressionReconstructor:
                 values = list(target.get('values', []))
                 for src in sources:
                     if isinstance(src, dict) and src.get('type') == 'Dict':
-                        # 字面量 Dict：展开其项到 target
-                        keys.extend(src.get('keys', []))
-                        values.extend(src.get('values', []))
+                        # [R20 cat1 fix] target 原本为空 Dict 且 source 是非空
+                        # Dict 字面量时，对应源 `**{...}` 双星号解包：保留 Starred
+                        # 包装以重建 `**{...}` 语法，避免 flatten 丢失外层
+                        # BUILD_MAP 0 + DICT_UPDATE 结构。target 非空（已有
+                        # `**expr` 或普通项）时仍 flatten，对应 `{**a, "k": v}`。
+                        src_keys = src.get('keys', [])
+                        if target_was_empty_dict and len(src_keys) > 0:
+                            keys.append({
+                                'type': 'Starred',
+                                'value': src,
+                                'ctx': 'Load',
+                                'lineno': instr.starts_line,
+                            })
+                            values.append(None)
+                        else:
+                            # 字面量 Dict：展开其项到 target
+                            keys.extend(src.get('keys', []))
+                            values.extend(src.get('values', []))
                     elif isinstance(src, dict) and src.get('type') == 'DictMerge':
                         # 嵌套 DictMerge（罕见）：递归展开
                         sub_keys, sub_values = self._flatten_dict_merge_to_dict_items(src)
@@ -1400,8 +1434,16 @@ class ExpressionReconstructor:
                             # [聚类7 修复] 元素可能包含 Starred（来自 LIST_EXTEND 的 *d）
                             args = list(args_obj.get('elts', []))
                         elif args_obj.get('type') == 'List':
-                            # [聚类7 修复] LIST_TO_TUPLE 未处理的回退路径
-                            args = list(args_obj.get('elts', []))
+                            # [R20 cat1 fix] CALL_FUNCTION_EX 的 args 槽位是
+                            # 单个 List 字面量（无 BUILD_LIST 0 + LIST_EXTEND +
+                            # LIST_TO_TUPLE 包装）时，对应源 `f(*[...])`：直接
+                            # 用 List 作 *args 可迭代对象。包成 Starred(List(...))
+                            # 以保留 `*[...]` 语义，避免 flatten 退化为 `f(...)` 走
+                            # PRECALL+CALL（字节码不等价：缺 BUILD_LIST/CALL_FUNCTION_EX）。
+                            # 依「父引用子入口」: 父 Call 通过 CALL_FUNCTION_EX 的
+                            # args 槽位引用 List 子节点（Starred 包装）。
+                            args = [{'type': 'Starred', 'value': args_obj,
+                                     'ctx': 'Load', 'lineno': instr.starts_line}]
                         else:
                             # [R17-04 fix] 任何其他表达式 (Name/Constant/IfExp/
                             # Call/Attribute/Subscript/BinOp 等) 都是 *args 的

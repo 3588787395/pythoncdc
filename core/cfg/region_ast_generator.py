@@ -16882,6 +16882,28 @@ AST 映射规则:
             if skip_elif_blocks and chain_block.start_offset in _elif_cond_offsets:
                 continue
             nested_ternary = self._try_build_nested_ternary_in_boolop(chain_block, region)
+            # [R20 cat3 fix] Chain block IS a TernaryRegion's merge_block:
+            # `(a if c else b) and (d if e else f)` — 第一个操作数的 ternary
+            # merge 即 boolop 的首个 chain block。chain block 本身只含短路跳转
+            # （JUMP_IF_FALSE_OR_POP/JUMP_IF_TRUE_OR_POP），值由 ternary 产生并
+            # 留栈。需识别该 ternary 子区域并构建 IfExp 作为操作数。
+            # 依「自底向上归约」: ternary 是内层抽象节点（IfExp），boolop 是父节点。
+            # 依「父引用子入口」: 父 BoolOp 通过 chain block 的短路跳转引用 ternary
+            #   子节点的 merge 入口（ternary 结果留栈供短路测试）。
+            # 依「每块唯一归属」: ternary 的 blocks 归 BoolOp 父表达式，不拆分为
+            #   独立 Expr 语句。
+            if nested_ternary is None:
+                for _tr in self.regions:
+                    if (isinstance(_tr, TernaryRegion)
+                            and _tr is not region
+                            and _tr.merge_block is chain_block):
+                        _t_ifexp = self._build_nested_ternary_expr(_tr)
+                        if _t_ifexp is not None:
+                            nested_ternary = _t_ifexp
+                            for _b in _tr.blocks:
+                                self.generated_blocks.add(_b)
+                            self._generated_regions.add(id(_tr))
+                        break
             # [CPython peephole P4 + P5 interaction] Chained compare as BoolOp
             # operand. See _try_build_chained_compare_in_boolop docstring.
             chained_compare_expr = self._try_build_chained_compare_in_boolop(chain_block, region)
@@ -20116,6 +20138,131 @@ AST 映射规则:
                             for block in region.blocks:
                                 self.generated_blocks.add(block)
                             return results
+                # [R20 cat2 fix] Walrus(ternary) consumed by STORE_SUBSCR /
+                # STORE_ATTR: `obj.attr = (n := ternary)` /
+                # `x[(n := ternary)] = y` / `d[k] = (n := ternary)`.
+                # Pattern: COPY 1 + STORE_* (walrus) + [LOAD obj/key]? +
+                # STORE_SUBSCR|STORE_ATTR. walrus 的 COPY 1 复制 ternary 结果
+                # 留栈（供 STORE_* 消费），STORE n 绑定 walrus 变量，随后
+                # STORE_SUBSCR/STORE_ATTR 消费 walrus(ternary) 作为赋值目标侧
+                # （key/obj）或右值（value）。
+                # 依「嵌套即抽象节点」: walrus NamedExpr(n, IfExp) 作为单个抽象
+                # 节点，包含 ternary IfExp 作 value。父 Assign 通过 merge_block
+                # 的 COPY+STORE+STORE_* 引用 walrus(ternary) 子节点。
+                # 依「父引用子入口」: 父 Assign 通过 cond_block preload (value/
+                # obj) + merge_block 的 STORE_* 引用 walrus(ternary) 入口。
+                # 依「每块唯一归属」: walrus 的 COPY+STORE 与外层 STORE_* 全部
+                # 归属 TernaryRegion 父 Assign，不拆分为独立语句。
+                # 否则 R8-04 walrus 分支会输出 `n = (ternary)`（丢失 STORE_*
+                # 消费），重编字节码缺失 STORE_SUBSCR/STORE_ATTR。
+                if (store_idx is not None and store_idx > 0
+                        and merge_all[store_idx - 1].opname == 'COPY'
+                        and merge_all[store_idx - 1].arg == 1
+                        and region.merge_block is not None):
+                    _wc_after = merge_all[store_idx + 1:]
+                    _wc_scan = list(_wc_after)
+                    while _wc_scan and _wc_scan[-1].opname == 'RETURN_VALUE':
+                        _wc_scan.pop()
+                        if (_wc_scan and _wc_scan[-1].opname == 'LOAD_CONST'
+                                and _wc_scan[-1].argval is None):
+                            _wc_scan.pop()
+                    _wc_has_store_consumer = any(
+                        i.opname in ('STORE_SUBSCR', 'STORE_ATTR')
+                        for i in _wc_scan)
+                    if _wc_has_store_consumer:
+                        _wc_target_name = merge_all[store_idx].argval
+                        _wc_walrus_value = {
+                            'type': 'NamedExpr',
+                            'target': {
+                                'type': 'Name',
+                                'id': _wc_target_name,
+                                'ctx': 'Store',
+                            },
+                            'value': ternary_expr,
+                        }
+                        # 找最后一个 STORE_SUBSCR/STORE_ATTR 消费点
+                        _wc_consumer_idx = None
+                        for _wci in range(len(_wc_scan) - 1, -1, -1):
+                            if _wc_scan[_wci].opname in (
+                                    'STORE_SUBSCR', 'STORE_ATTR'):
+                                _wc_consumer_idx = _wci
+                                break
+                        _wc_consumer = _wc_scan[_wc_consumer_idx]
+                        _wc_before = [i for i in _wc_scan[:_wc_consumer_idx]
+                                      if i.opname not in (
+                                          'RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                        _wc_built = None
+                        if _wc_consumer.opname == 'STORE_ATTR':
+                            # Pattern A: walrus(ternary) 是 value；
+                            # _wc_before 含 obj load。
+                            # 栈: [walrus_value] + _wc_before → [..., obj]
+                            # STORE_ATTR 消费 [value, obj] → obj.attr = value
+                            self.expr_reconstructor.reset()
+                            self.expr_reconstructor.stack = [_wc_walrus_value]
+                            for _winst in _wc_before:
+                                self.expr_reconstructor._process_instruction(_winst)
+                            _wc_rs = [s for s in self.expr_reconstructor.stack
+                                      if not (isinstance(s, dict)
+                                              and s.get('type') == 'PUSH_NULL')]
+                            if len(_wc_rs) >= 2:
+                                _wc_built = {
+                                    'type': 'Assign',
+                                    'targets': [{
+                                        'type': 'Attribute',
+                                        'value': _wc_rs[-1],
+                                        'attr': _wc_consumer.argval,
+                                        'ctx': 'Store',
+                                    }],
+                                    'value': _wc_walrus_value,
+                                }
+                        elif _wc_consumer.opname == 'STORE_SUBSCR':
+                            if _wc_before:
+                                # Pattern A: walrus(ternary) 是 value；
+                                # _wc_before 含 obj+key loads。
+                                # 栈: [walrus_value] + _wc_before →
+                                #     [..., obj, key]
+                                # STORE_SUBSCR 消费 [value, obj, key] →
+                                #     obj[key] = value
+                                self.expr_reconstructor.reset()
+                                self.expr_reconstructor.stack = [
+                                    _wc_walrus_value]
+                                for _winst in _wc_before:
+                                    self.expr_reconstructor._process_instruction(_winst)
+                                _wc_rs = [s for s in self.expr_reconstructor.stack
+                                          if not (isinstance(s, dict)
+                                                  and s.get('type') == 'PUSH_NULL')]
+                                if len(_wc_rs) >= 3:
+                                    _wc_built = {
+                                        'type': 'Assign',
+                                        'targets': [{
+                                            'type': 'Subscript',
+                                            'value': _wc_rs[-2],
+                                            'slice': _wc_rs[-1],
+                                            'ctx': 'Store',
+                                        }],
+                                        'value': _wc_walrus_value,
+                                    }
+                            else:
+                                # Pattern B: walrus(ternary) 是 key；
+                                # value+obj 在 cond_block preload。
+                                # 栈 at STORE_SUBSCR: [value, obj, key=walrus]
+                                # preload_exprs 末两项: [value, obj] (obj=TOS)
+                                if len(preload_exprs) >= 2:
+                                    _wc_built = {
+                                        'type': 'Assign',
+                                        'targets': [{
+                                            'type': 'Subscript',
+                                            'value': preload_exprs[-1],
+                                            'slice': _wc_walrus_value,
+                                            'ctx': 'Store',
+                                        }],
+                                        'value': preload_exprs[-2],
+                                    }
+                        if _wc_built is not None:
+                            results.append(_wc_built)
+                            for block in region.blocks:
+                                self.generated_blocks.add(block)
+                            return results
                 # [R8-04 fix] Standalone walrus capture ternary: `(n := (ternary))`.
                 # Pattern: COPY 1 + STORE_* (walrus) + POP_TOP (discard preserved
                 # stack top) — no outer STORE_* after the walrus store (otherwise
@@ -21871,6 +22018,76 @@ AST 映射规则:
                 if _wrapped:
                     return {'type': 'Expr', 'value': _wrapped}
 
+        # [R20 cat3 fix] Two-ternary shared-block pattern: first ternary's
+        # merge_block is the second ternary's cond_block. Consumer (BINARY_OP +
+        # yield-from / return / expr) is in the second ternary's merge_block.
+        # ``yield from (a if c else b) + (d if e else f)`` etc.
+        # 依「自底向上归约」: 两个 ternary 均为内层抽象节点（IfExp），BINARY_OP
+        #   是父消费指令。
+        # 依「父引用子入口」: 第一个 ternary 的 merge（值留栈）即第二个 ternary
+        #   的 cond 入口；BINARY_OP 在第二个 ternary 的 merge 中消费两 ternary 值。
+        # 依「每块唯一归属」: 第二个 ternary 的 blocks 归父表达式，不拆分为独立语句。
+        if region.merge_block is not None:
+            _second_tr = None
+            for _r in self.regions:
+                if (isinstance(_r, TernaryRegion) and _r is not region
+                        and _r.condition_block is region.merge_block):
+                    _second_tr = _r
+                    break
+            if (_second_tr is not None
+                    and _second_tr.merge_block is not None
+                    and _second_tr.merge_extra_blocks):
+                _second_ifexp = self._build_nested_ternary_expr(_second_tr)
+                if _second_ifexp is not None:
+                    _sm = [i for i in _second_tr.merge_block.instructions
+                           if i.opname not in ('RESUME', 'NOP', 'CACHE',
+                                               'PUSH_NULL')]
+                    if _second_tr.merge_extra_blocks:
+                        for _eb in _second_tr.merge_extra_blocks:
+                            _sm.extend(
+                                i for i in _eb.instructions
+                                if i.opname not in ('RESUME', 'NOP', 'CACHE',
+                                                    'PUSH_NULL'))
+                    while _sm and _sm[-1].opname in (
+                            'RETURN_VALUE', 'RETURN_CONST'):
+                        _sm.pop()
+                        if (_sm and _sm[-1].opname == 'LOAD_CONST'
+                                and _sm[-1].argval is None):
+                            _sm.pop()
+                    if _sm:
+                        _preload = self._compute_ternary_cond_preload_exprs(
+                            region)
+                        _init_stack = list(_preload) + [
+                            ternary_expr, _second_ifexp]
+                        _combined = self.expr_reconstructor.reconstruct(
+                            _sm, initial_stack=_init_stack)
+                        if _combined is not None:
+                            for _b in _second_tr.blocks:
+                                self.generated_blocks.add(_b)
+                            self._generated_regions.add(id(_second_tr))
+                            for _r2 in self.regions:
+                                if (type(_r2).__name__ == 'LoopRegion'
+                                        and getattr(_r2, 'entry', None)
+                                        and any(i.opname == 'SEND'
+                                                for i in _r2.entry.instructions)):
+                                    for _b in _r2.blocks:
+                                        self.generated_blocks.add(_b)
+                                    self._generated_regions.add(id(_r2))
+                                    break
+                            _vt = getattr(region, 'value_target', None)
+                            _mc = getattr(region, 'merge_context', None)
+                            if (_combined.get('type') == 'YieldFrom'
+                                    and _mc == 'yieldfrom'
+                                    and _vt
+                                    and _vt != '__while_cond_target__'):
+                                return {
+                                    'type': 'Assign',
+                                    'targets': [{'type': 'Name', 'id': _vt,
+                                                 'ctx': 'Store'}],
+                                    'value': _combined,
+                                }
+                            return {'type': 'Expr', 'value': _combined}
+
         return None
 
     def _build_assert_message_ternary_stmt(self, region: TernaryRegion,
@@ -21964,6 +22181,58 @@ AST 映射规则:
                             preload_exprs.append(_pe)
                     elif pi.opname == 'COPY' and pi.arg == 1 and preload_exprs:
                         preload_exprs.append(preload_exprs[-1])
+
+        # [R20 cat3 fix] Two-ternary binop in assert message:
+        # ``assert x, (t1 if c1 else t2) + (t3 if c2 else t4)`` — first ternary's
+        # merge_block is the second ternary's cond_block (shared block). The
+        # BINARY_OP + assert infrastructure lives in the second ternary's
+        # merge_block. Build both IfExp expressions and combine via BINARY_OP.
+        # 依「自底向上归约」: 两个 ternary 均为内层抽象节点（IfExp），BINARY_OP
+        #   是父消费指令。
+        # 依「父引用子入口」: AssertRegion 通过 message_block 引用第一个 ternary
+        #   入口；第一个 ternary 的 merge（值留栈）即第二个 ternary 的 cond 入口；
+        #   BINARY_OP 在第二个 ternary 的 merge 中消费两 ternary 值。
+        # 依「每块唯一归属」: 第二个 ternary 的 blocks 归 AssertRegion 父表达式，
+        #   不拆分为独立语句。
+        if region.merge_block is not None:
+            _second_ternary = None
+            for _r in self.regions:
+                if (isinstance(_r, TernaryRegion) and _r is not region
+                        and _r.condition_block is region.merge_block):
+                    _second_ternary = _r
+                    break
+            if (_second_ternary is not None
+                    and _second_ternary.merge_block is not None
+                    and any(i.opname == 'RAISE_VARARGS'
+                            for i in _second_ternary.merge_block.instructions)):
+                _second_ifexp = self._build_nested_ternary_expr(_second_ternary)
+                if _second_ifexp is not None:
+                    _second_merge = [
+                        i for i in _second_ternary.merge_block.instructions
+                        if i.opname not in ('RESUME', 'NOP', 'CACHE',
+                                            'PUSH_NULL')]
+                    _assert_start = len(_second_merge)
+                    for _idx in range(len(_second_merge) - 1, -1, -1):
+                        if _second_merge[_idx].opname == 'RAISE_VARARGS':
+                            _assert_start = _idx
+                            break
+                    if (_assert_start >= 1
+                            and _second_merge[_assert_start - 1].opname == 'CALL'):
+                        _assert_start -= 1
+                        if (_assert_start >= 1
+                                and _second_merge[_assert_start - 1].opname
+                                == 'PRECALL'):
+                            _assert_start -= 1
+                    _real_msg_instrs = _second_merge[:_assert_start]
+                    _init_stack = list(preload_exprs) + [
+                        ternary_expr, _second_ifexp]
+                    _msg = self.expr_reconstructor.reconstruct(
+                        _real_msg_instrs, initial_stack=_init_stack)
+                    if _msg is not None:
+                        for _b in _second_ternary.blocks:
+                            self.generated_blocks.add(_b)
+                        self._generated_regions.add(id(_second_ternary))
+                        return {'type': 'Expr', 'value': _msg}
 
         # Get merge_block instructions (excluding noise).
         merge_instrs = [i for i in region.merge_block.instructions
