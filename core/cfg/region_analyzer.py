@@ -5884,7 +5884,7 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
             if _is_bare_except:
                 return 'except'
             _any_return_in_chain = any(
-                i.opname in ('RETURN_VALUE', 'RETURN_CONST')
+                i.opname in ('RETURN_VALUE', 'RETURN_CONST', 'RAISE_VARARGS')
                 for b in _all_visited
                 for i in b.instructions
             )

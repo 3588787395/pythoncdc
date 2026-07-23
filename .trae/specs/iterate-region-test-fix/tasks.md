@@ -124,7 +124,9 @@
   - [x] SubTask T1.16.8: 算法合规性自检 — 归约顺序 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口；无跨区域特例 / 后处理补丁 / 启发式优先级覆盖 / 扁平化 / 硬编码深度上限
   - [x] SubTask T1.16.9: 清理 3 个 _debug_*.py 调试脚本（_debug_await_yield / _debug_chained / _debug_comp）
   - [x] SubTask T1.16.10: 写 fix_report.md（含 10 bug + 4 bonus 详细修复说明 + 算法 4 原则合规论证 + 全量回归结果 + 跨区域回归结果）
-- [ ] Task T1.17 ~ T1.20
+- [x] Task T1.18: Ternary round_18 — 13 bug 修复（await 调用链/slice 三段 ternary/dictcomp 双 ternary/chained subscr assign/del attr/starred call+pos arg/callable kwargs/match wildcard guard）；ternary 45 failed / 513 passed / 9 skipped（基线 46→45 -1）；if_region 31 failed / 787 passed（无退化）；boolop 132 passed / 1 skipped（无退化）；match_region 3 failed / 193 passed（无退化）；commit 92e561a (已 push)
+- [x] Task T1.19: Ternary round_19 — 14 bug 修复（双 ternary 共享单消费指令 5: raise from/链式 compare/in/dict literal/eq; tuple unpack 混合元素 2; with 槽位 3: as-target subscr/multi-with 双 cm/body 方法链; annotation 注解 2: ann assign/func arg; try-finally raise 1; dict literal 方法+参数 dict 1）；ternary 43 failed / 529 passed / 9 skipped（基线 45→43 -2）；跨区域 if_region 31 failed / with_region 191 passed / boolop+try_except 360 passed / match_region 3 failed 均无退化；commit pending
+- [ ] Task T1.20: Ternary round_20（TERNARY 最后一轮）
 
 ## Phase 3-10: 其他 8 区域（各 20 轮）
 - [ ] Task 3.1 ~ 10.20

@@ -507,21 +507,31 @@ class CodeGenerator:
         # 仅位置参数（Python 3.8+）
         for arg in posonlyargs:
             arg_name = arg.get('arg', '') if isinstance(arg, dict) else str(arg)
+            # [R19-09 fix] 渲染参数注解（dict 路径此前丢弃 annotation 字段）
+            annotation = arg.get('annotation') if isinstance(arg, dict) else None
+            if annotation:
+                ann_code = self._generate_annotation_from_dict(annotation) if isinstance(annotation, dict) else str(annotation)
+                arg_name = f'{arg_name}: {ann_code}'
             parts.append(arg_name)
-        
+
         # 普通位置参数
         for i, arg in enumerate(args_list):
             arg_name = arg.get('arg', '') if isinstance(arg, dict) else str(arg)
-            
+            annotation = arg.get('annotation') if isinstance(arg, dict) else None
+            ann_prefix = ''
+            if annotation:
+                ann_code = self._generate_annotation_from_dict(annotation) if isinstance(annotation, dict) else str(annotation)
+                ann_prefix = f': {ann_code}'
+
             # 检查是否有默认值
             default_idx = i - (len(args_list) - len(defaults))
             if 0 <= default_idx < len(defaults):
                 default = defaults[default_idx]
                 default_code = self._generate_expression(default) if isinstance(default, dict) else repr(default)
-                parts.append(f'{arg_name}={default_code}')
+                parts.append(f'{arg_name}{ann_prefix}={default_code}')
             else:
-                parts.append(arg_name)
-        
+                parts.append(f'{arg_name}{ann_prefix}')
+
         # *args
         if vararg:
             vararg_name = vararg.get('arg', '') if isinstance(vararg, dict) else str(vararg)
@@ -529,18 +539,23 @@ class CodeGenerator:
         elif kwonlyargs:
             # 如果没有*args但有仅关键字参数，需要添加*
             parts.append('*')
-        
+
         # 仅关键字参数
         for i, arg in enumerate(kwonlyargs):
             arg_name = arg.get('arg', '') if isinstance(arg, dict) else str(arg)
-            
+            annotation = arg.get('annotation') if isinstance(arg, dict) else None
+            ann_prefix = ''
+            if annotation:
+                ann_code = self._generate_annotation_from_dict(annotation) if isinstance(annotation, dict) else str(annotation)
+                ann_prefix = f': {ann_code}'
+
             # 检查是否有默认值
             if i < len(kw_defaults) and kw_defaults[i] is not None:
                 default = kw_defaults[i]
                 default_code = self._generate_expression(default) if isinstance(default, dict) else repr(default)
-                parts.append(f'{arg_name}={default_code}')
+                parts.append(f'{arg_name}{ann_prefix}={default_code}')
             else:
-                parts.append(arg_name)
+                parts.append(f'{arg_name}{ann_prefix}')
         
         # **kwargs
         if kwarg:
