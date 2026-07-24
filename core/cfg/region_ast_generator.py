@@ -1002,7 +1002,17 @@ class RegionASTGenerator:
                 last = ast_nodes[-1]
                 if isinstance(last, dict) and last.get('type') == 'Return' and self._is_trailing_return_none_statement(last):
                     ast_nodes = ast_nodes[:-1]
-            
+
+            # [R13 nested_lambda fix] Convert any remaining FunctionObjects
+            # (from MAKE_FUNCTION + POP_TOP expression statements) to proper
+            # Lambda dicts by recursively decompiling their code objects.
+            # Without this, module-level `lambda: lambda: (a if c else b)`
+            # renders as the placeholder `lambda *args, **kwargs: None`.
+            # 依「自底向上归约」: FunctionObject is an abstract node for a
+            # code object; _convert_lambda_function_objects reduces it to a
+            # concrete Lambda/FunctionDef AST node.
+            ast_nodes = [self._convert_lambda_function_objects(s) if isinstance(s, dict) else s
+                         for s in ast_nodes]
             return {
                 'type': 'Module',
                 'body': ast_nodes,
@@ -1014,6 +1024,10 @@ class RegionASTGenerator:
                          not (code_obj.co_flags & 0x0001) and
                          func_name != '<module>')
 
+        # [R13 nested_lambda fix] Same conversion for class body / function body:
+        # expression-level lambdas in function/class bodies also need conversion.
+        ast_nodes = [self._convert_lambda_function_objects(s) if isinstance(s, dict) else s
+                     for s in ast_nodes]
         if is_class_body:
             return self._build_class_def(func_name, ast_nodes)
         else:
@@ -10124,7 +10138,7 @@ AST 映射规则:
             child = expr.get(key)
             if isinstance(child, dict):
                 expr[key] = self._convert_lambda_function_objects(child)
-        for key in ('args', 'keywords', 'comparators', 'values', 'elts',
+        for key in ('args', 'keywords', 'kwargs', 'comparators', 'values', 'elts',
                     'keys', 'handlers', 'decorator_list', 'targets'):
             children = expr.get(key)
             if isinstance(children, list):
