@@ -20851,9 +20851,17 @@ AST 映射规则:
         # sub-slice independently. Without this split, the legacy fallback
         # returns only the topmost expression (e.g. `g(0)`) and loses
         # earlier siblings (e.g. `f`), corrupting the outer Call arg list.
+        # [R10 magic_methods fix] LOAD_ATTR/LOAD_METHOD 消费栈顶对象并推送属
+        # 性值，属「复合」操作（与 PRECALL/CALL/BUILD_* 同类）。旧实现仅将
+        # PRECALL/CALL/BUILD_* 视为复合，LOAD_ATTR 走简单逐条 reconstruct 路
+        # 径——但 [LOAD_ATTR x] 单独 reconstruct 时栈为空，无法消费 self，导致
+        # `self.x` 丢失为裸 `self`。依「自底向上归约」: LOAD_ATTR 是属性访问
+        # 表达式的归约入口，必须与前驱 LOAD_* 一起 reconstruct 才能得到完整
+        # Attribute 节点。加入复合判据，走完整 reconstruct 管线。
         _has_compound = any(
             pi.opname in ('PRECALL', 'CALL', 'BUILD_TUPLE', 'BUILD_LIST',
-                          'BUILD_MAP', 'BUILD_SET', 'BUILD_CONST_KEY_MAP')
+                          'BUILD_MAP', 'BUILD_SET', 'BUILD_CONST_KEY_MAP',
+                          'LOAD_ATTR', 'LOAD_METHOD')
             for pi in _preload_instrs)
         if _has_compound:
             _sibling_slices = self._split_preload_into_siblings(_preload_instrs)
@@ -22788,6 +22796,65 @@ AST 映射规则:
             and _build_instr is None
         )
 
+        # [R10 magic_methods fix] Binary/unary/comparison/format consumer ops
+        # in merge_block that wrap the ternary together with preload siblings.
+        # 例:
+        #   self.x == (other.x if c else 0)
+        #     -> cond preload: [self.x], merge: COMPARE_OP ==
+        #   (a if c else b) + x
+        #     -> merge: LOAD_NAME x, BINARY_OP +
+        #   not (a if c else b)
+        #     -> merge: UNARY_NOT
+        # 依「自底向上归约」: ternary 是内层抽象节点，外层 COMPARE_OP/BINARY_OP/
+        # UNARY_*/FORMAT_VALUE/BUILD_STRING/BUILD_SLICE 通过 reconstruct 归约为
+        # 单一表达式节点 (Compare/BinOp/UnaryOp/JoinedStr/Str/Slice).
+        # 依「父引用子入口」: 父 Compare/BinOp/UnaryOp 通过 merge_block 的消费
+        # 操作码引用 ternary 子节点 + preload 中的兄弟子节点.
+        # 依「每块唯一归属」: merge_block 的消费操作码归属 TernaryRegion 父表达式，
+        # 不拆分为独立语句.
+        #
+        # [regression guard] 仅当 merge_block 不含控制流跳转/赋值/删除/交换
+        # 指令时才触发。否则 merge_block 与下一个 TernaryRegion 的 entry
+        # 共享（chained ternary 条件 COMPARE_OP），或属 STORE_ATTR/STORE_SUBSCR
+        # 赋值消费链（aug-assign），各有专门处理器，不应走 reconstruct 路径。
+        _binop_consumer_ops = (
+            'COMPARE_OP', 'CONTAINS_OP', 'IS_OP',
+            'BINARY_OP', 'BINARY_SUBSCR',
+        )
+        _unary_consumer_ops = (
+            'UNARY_NOT', 'UNARY_NEGATIVE', 'UNARY_INVERT',
+            'UNARY_POSITIVE',
+        )
+        _format_consumer_ops = (
+            'FORMAT_VALUE', 'BUILD_STRING', 'BUILD_SLICE',
+        )
+        _has_control_flow_or_store = any(
+            i.opname.startswith('POP_JUMP_')
+            or i.opname.startswith('JUMP_')
+            or i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
+                            'STORE_DEREF', 'STORE_SUBSCR', 'STORE_ATTR',
+                            'DELETE_SUBSCR', 'DELETE_ATTR', 'DELETE_NAME',
+                            'DELETE_GLOBAL', 'DELETE_FAST', 'DELETE_DEREF',
+                            'SWAP', 'FOR_ITER', 'SEND',
+                            'SETUP_ANNOTATIONS', 'SETUP_FINALLY')
+            or i.opname.startswith('INPLACE_')
+            for i in merge_all
+        )
+        _has_binop_consumer = (
+            not _has_control_flow_or_store
+            and not _has_make_function
+            and not _has_receiver_method
+            and not _has_call_chain
+            and _build_instr is None
+            and any(
+                i.opname in _binop_consumer_ops
+                or i.opname.startswith('BINARY_')
+                or i.opname in _unary_consumer_ops
+                or i.opname in _format_consumer_ops
+                for i in merge_all
+            )
+        )
+
         # Decide whether to invoke full reconstruct.
         _should_reconstruct = (
             _has_multi_elem
@@ -22795,6 +22862,7 @@ AST 映射规则:
             or _has_receiver_method
             or _has_make_function
             or _has_ternary_as_callable
+            or _has_binop_consumer
         )
         if not _should_reconstruct:
             return None

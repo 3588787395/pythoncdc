@@ -1278,6 +1278,41 @@ class RegionAnalyzer:
             if tr.blocks:
                 _ternary_block_sets.append(tr.blocks)
 
+        # [R14 根因修复] yield-from/await ternary 吞并 SEND/YIELD 轮询循环
+        # LoopRegion。
+        # 字节码模式: `yield from (ternary).items()` / `await (ternary)` 的
+        # SEND/YIELD_VALUE/RESUME/JUMP_BACKWARD_NO_INTERRUPT 轮询循环被
+        # _identify_loop_regions 识别为 is_yield_from_loop LoopRegion，
+        # 同时被 _identify_ternary_regions 吸收为 merge_extra_blocks。
+        # 两者 blocks 重叠（轮询循环块 + POP_TOP 消费块），违反「每块唯一归属」。
+        # 依「自底向上归约」+「每块唯一归属」: 轮询循环是 ternary 的
+        # yield-from/await 协议的一部分（merge_extra_blocks），归属 TernaryRegion，
+        # 不归属独立 LoopRegion。_generate_ternary 的 Pattern 4/5/7 会完整重建
+        # YieldFrom/Await 表达式；若 LoopRegion 留存，会先标记轮询块为已生成，
+        # 导致 TernaryRegion 无法重建，整个表达式退化为 `None`。
+        # 移除 blocks 完全包含于 merge_context in ('yieldfrom','await') 的
+        # TernaryRegion.blocks 的 is_yield_from_loop LoopRegion。
+        _loop_to_remove = []
+        for _lr in loop_regions:
+            if not getattr(_lr, 'metadata', {}).get('is_yield_from_loop', False):
+                continue
+            for _tr in ternary_regions:
+                _mc = getattr(_tr, 'merge_context', None)
+                if _mc not in ('yieldfrom', 'await'):
+                    continue
+                _tr_blocks = _tr.blocks or set()
+                if _tr_blocks and all(b in _tr_blocks for b in _lr.blocks):
+                    _loop_to_remove.append(_lr)
+                    break
+        if _loop_to_remove:
+            for _lr in _loop_to_remove:
+                loop_regions.remove(_lr)
+                if _lr in self.regions:
+                    self.regions.remove(_lr)
+                for _rb in _lr.blocks:
+                    if _rb in self.block_to_region and self.block_to_region[_rb] is _lr:
+                        del self.block_to_region[_rb]
+
         if _ternary_block_sets:
             def _region_overlaps_with_ternary(region):
                 for tb_set in _ternary_block_sets:
