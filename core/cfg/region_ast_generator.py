@@ -18409,6 +18409,55 @@ AST 映射规则:
             i = 0
             while i < len(cond_instrs):
                 instr = cond_instrs[i]
+                # [R10 TypedDict fix] Handle class body annotation pattern in
+                # condition_block: `<ann_expr> + LOAD_NAME __annotations__ +
+                # LOAD_CONST <name> + STORE_SUBSCR`. This is `name: ann_expr`
+                # (AnnAssign without value) emitted by CPython for class body
+                # annotations (e.g. `title: str` in a TypedDict).
+                # 依「每块唯一归属」: annotation instructions belong to the
+                # AnnAssign predecessor statement, not the TernaryRegion's
+                # condition preload. Extract as pre-statement AnnAssign.
+                # Also skip SETUP_ANNOTATIONS (implicit class body init emitted
+                # once when annotations present; compiler regenerates it from
+                # AnnAssign nodes, so it must not leak into cond reconstruction).
+                if instr.opname == 'SETUP_ANNOTATIONS':
+                    cond_start_idx = i + 1
+                    i += 1
+                    continue
+                if (instr.opname == 'STORE_SUBSCR' and i >= 2
+                        and cond_instrs[i - 2].opname == 'LOAD_NAME'
+                        and cond_instrs[i - 2].argval == '__annotations__'
+                        and cond_instrs[i - 1].opname == 'LOAD_CONST'
+                        and isinstance(cond_instrs[i - 1].argval, str)):
+                    _ann_name = cond_instrs[i - 1].argval
+                    _ann_expr_instrs = list(cond_instrs[cond_start_idx:i - 2])
+                    _ann_annotation = None
+                    if _ann_expr_instrs:
+                        _ann_annotation = self.expr_reconstructor.reconstruct(
+                            _ann_expr_instrs)
+                    if _ann_annotation is None and len(_ann_expr_instrs) == 1:
+                        _l0 = _ann_expr_instrs[0]
+                        if _l0.opname in ('LOAD_NAME', 'LOAD_FAST',
+                                          'LOAD_GLOBAL', 'LOAD_DEREF'):
+                            _ann_annotation = {
+                                'type': 'Name',
+                                'id': _l0.argval,
+                                'ctx': 'Load',
+                            }
+                    if _ann_annotation is not None:
+                        pre_stmts.append({
+                            'type': 'AnnAssign',
+                            'target': {
+                                'type': 'Name',
+                                'id': _ann_name,
+                                'ctx': 'Store',
+                            },
+                            'annotation': _ann_annotation,
+                            'value': None,
+                        })
+                        cond_start_idx = i + 1
+                        i += 1
+                        continue
                 if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
                     # [R11-10 fix] Check if the predecessor range contains
                     # MAKE_FUNCTION. If so, the predecessor is a function/
