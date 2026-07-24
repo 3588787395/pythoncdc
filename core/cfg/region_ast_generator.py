@@ -1353,6 +1353,54 @@ class RegionASTGenerator:
         func = call_node.get('func', {})
         args = call_node.get('args', [])
 
+        # [通用修复 类装饰器] CPython 3.11+ 类装饰器字节码模式：
+        #   @deco(args) class C: ...
+        # 字节码: PUSH_NULL + LOAD deco + <deco args> + PRECALL + CALL (构造 deco)
+        #         + PUSH_NULL + LOAD_BUILD_CLASS + LOAD_CONST <C code> + MAKE_FUNCTION
+        #         + LOAD_CONST 'C' + PRECALL 2 + CALL 2 (__build_class__)
+        #         + PRECALL 0 + CALL 0 (deco(classdef)) + STORE_NAME C
+        # reconstruct 产出: Call(func=__build_class__Call(is_class_def=True),
+        #                       args=[deco_Call])
+        # 结构判据（基于操作码语义，非实例特征）:
+        #   - func 是 Call 且 is_class_def=True (或 func.func.id == '__build_class__')
+        #   - args[0] 是装饰器 Call (deco(args))
+        # 与函数装饰器（func 是装饰器, args[0] 是 FunctionObject）相反：
+        #   类装饰器中 func 是被装饰的类定义, args[0] 是装饰器。
+        # 依「父引用子入口」: 父 ClassDef 通过 CALL 0 引用 __build_class__ 子节点
+        # (func 槽位) + 装饰器子节点 (args[0] 槽位)。
+        # 旧版仅处理函数装饰器（args[0] 是 FunctionObject），对类装饰器
+        # (args[0] 是 deco_Call) 走 elif func.type == 'Call' 分支，误把
+        # __build_class__ Call 当装饰器、deco_Call 当被装饰对象，递归方向反转，
+        # 返回空 decorator_list，丢失 @dataclass(frozen=True) 等类装饰器。
+        if (func.get('type') == 'Call'
+                and (func.get('is_class_def')
+                     or (func.get('func', {}).get('type') == 'Name'
+                         and func.get('func', {}).get('id') == '__build_class__'))):
+            if args and isinstance(args[0], dict) and args[0].get('type') == 'Call':
+                _deco_call = args[0]
+                # 装饰器本身可能是 Name (无参 @dec) 或 Call (带参 @dec(args))
+                _deco_func = _deco_call.get('func', {})
+                _deco_args = _deco_call.get('args', [])
+                _deco_kwargs = _deco_call.get('keywords', []) or _deco_call.get('kwargs', [])
+                if _deco_func.get('type') in ('Name', 'Attribute'):
+                    if _deco_args or _deco_kwargs:
+                        _dec_node = {
+                            'type': 'Call',
+                            'func': _deco_func,
+                            'args': _deco_args,
+                        }
+                        if _deco_kwargs:
+                            _dec_node['keywords'] = _deco_kwargs
+                        return [_dec_node]
+                    else:
+                        # 无参装饰器 @dec (CALL 0 但无 args/kwargs)
+                        return [_deco_func]
+                # 多层类装饰器: 递归处理 args[0] 是链式装饰器 Call 的情况
+                elif _deco_func.get('type') == 'Call':
+                    _inner_decs = self._extract_decorators(_deco_call)
+                    return _inner_decs if _inner_decs else []
+            return []
+
         if func.get('type') in ('Name', 'Attribute'):
             if args:
                 first_arg = args[0]

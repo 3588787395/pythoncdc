@@ -1394,6 +1394,8 @@ class ExpressionReconstructor:
                     kwargs = []
 
                     # 处理args_obj - 可能是Tuple、List、Name或其他类型
+                    # 依「父引用子入口」: 父 Call 通过 CALL_FUNCTION_EX 引用
+                    # args_obj 子节点作 *args。判据基于操作码语义，非实例特征。
                     if args_obj:
                         if args_obj.get('type') == 'Tuple':
                             # 如果是元组，展开其元素作为位置参数
@@ -1402,9 +1404,25 @@ class ExpressionReconstructor:
                         elif args_obj.get('type') == 'List':
                             # [聚类7 修复] LIST_TO_TUPLE 未处理的回退路径
                             args = list(args_obj.get('elts', []))
-                        elif args_obj.get('type') in ('Name', 'Constant'):
-                            # 如果是变量名（如*args），保留为星号参数
-                            args = [{'type': 'Starred', 'value': args_obj}]
+                        elif (args_obj.get('type') == 'Constant'
+                                and isinstance(args_obj.get('value'), tuple)
+                                and len(args_obj['value']) == 0):
+                            # [通用修复] 空元组 () 占位（`f(**kw)` 调用无位置参数，
+                            # CPython 用 LOAD_CONST () 作 *args 占位）：无位置参数。
+                            # 旧版将 Constant 一律包装为 Starred，导致 `f(**kw)`
+                            # 退化为 `f(*(), **kw)`，字节码不一致。
+                            args = []
+                        else:
+                            # [通用修复] 任意单个可迭代表达式（Name/Call/IfExp/
+                            # Attribute/Subscript/Starred/...）: 包装为 *expr。
+                            # 旧版仅处理 Name/Constant，对 IfExp(args if c else
+                            # b)、Call(gen())、Attribute(obj.iter) 等表达式类型
+                            # 全部落入默认 args=[]，丢失 *args 实参，导致
+                            # `f(*(args if c else ()), **kwargs)` 退化为
+                            # `f(**kwargs)`。依「嵌套即抽象节点」: 任意表达式
+                            # 节点均可作 *args 的可迭代对象。
+                            args = [{'type': 'Starred', 'value': args_obj,
+                                     'ctx': 'Load'}]
 
                     # 处理kwargs_dict - 可能是Dict、DictMerge（含嵌套）或其他类型
                     if kwargs_dict:

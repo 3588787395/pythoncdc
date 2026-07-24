@@ -11795,6 +11795,29 @@ RegionType 枚举值: RegionType.ASSERT
                     if instr.opname == 'BUILD_SET':
                         return 'set', None, None, None
                     if instr.opname == 'BUILD_MAP':
+                        # [R10/R11 wraps 通用修复] BUILD_MAP 0 + DICT_MERGE +
+                        # CALL_FUNCTION_EX 是 `f(*ternary, **kwargs)` 的 **kwargs
+                        # 构造，不是 dict 字面量容器。BUILD_MAP 0 创建空 dict，
+                        # DICT_MERGE 合并 kwargs，CALL_FUNCTION_EX 1 以 ternary 为
+                        # *args、合并 dict 为 **kwargs 调用。
+                        # 旧版见 BUILD_MAP 即返回 container_type='dict'，
+                        # func_call_info=None，导致 _generate_ternary 跳过
+                        # CALL_FUNCTION_EX 的 *args 重建，ternary 丢失，输出
+                        # `f(**kwargs)`。
+                        # 依「父引用子入口」: 父 Call 通过 cond_block 的 f 入口 +
+                        # merge_block 的 BUILD_MAP+DICT_MERGE+CALL_FUNCTION_EX 引用
+                        # ternary 子节点作 *args。判据: BUILD_MAP 0 后续含 DICT_MERGE
+                        # + CALL_FUNCTION_EX → 跳过 dict 容器，fallthrough 到
+                        # cond_block 的 func_call_info 检测。
+                        if instr.arg == 0:
+                            _merge_eff = [i for i in merge_block.instructions
+                                          if i.opname not in NOISE_OPS]
+                            _has_dict_merge = any(
+                                i.opname == 'DICT_MERGE' for i in _merge_eff)
+                            _has_call_fn_ex = any(
+                                i.opname == 'CALL_FUNCTION_EX' for i in _merge_eff)
+                            if _has_dict_merge and _has_call_fn_ex:
+                                break  # fallthrough to cond_block func_call_info
                         dict_key = RegionAnalyzer.extract_dict_key_from_block(cond_block)
                         return 'dict', None, dict_key, None
                     # [Phase 7 方案 D] BUILD_CONST_KEY_MAP N：语义等价于
