@@ -1219,17 +1219,51 @@ class ExpressionReconstructor:
                                 'lineno': instr.starts_line
                             })
                     elif func.get('type') == 'Call':
-                        # [关键修复] 多装饰器调用：func是装饰器对象，args是空列表
-                        # 需要从栈中再弹出一个参数（FunctionObject或内层装饰器的Call节点）
-                        if self.stack:
-                            inner_obj = self.stack.pop()
-                            # 创建新的Call节点，将装饰器应用于内层对象
+                        # [关键修复] 多装饰器调用链 + 普通链式调用区分。
+                        #
+                        # 装饰器链 @deco1 @deco2 def f() 字节码:
+                        #   LOAD deco1; LOAD deco2; MAKE_FUNCTION f; CALL 0; CALL 0
+                        # 第一次 CALL 0: func=FunctionObject(f), stack[-1]=Name(deco2)
+                        #   → Call(func=deco2, args=[f])  (deco2(f))
+                        # 第二次 CALL 0: func=Call(deco2,[f]), stack[-1]=Name(deco1)
+                        #   → Call(func=deco1, args=[Call(deco2,[f])])  (deco1(deco2(f)))
+                        #
+                        # 旧版 bug: func 与 inner_obj 角色反转，产出
+                        #   Call(func=Call(deco2,[f]), args=[deco1]) = deco2(f)(deco1)
+                        # 导致 @deco2(...)(deco1) 而非 @deco1 @deco2。
+                        #
+                        # 普通链式调用 f()() 字节码:
+                        #   PUSH_NULL; LOAD f; CALL 0; CALL 0
+                        # 第二次 CALL 0: func=Call(f,[]), stack[-1]=PUSH_NULL
+                        #   → 消费 PUSH_NULL, Call(func=Call(f,[]), args=[])  (f()())
+                        #
+                        # 判据（基于操作码语义）:
+                        #   - stack[-1] 是 PUSH_NULL → 普通链式调用
+                        #   - stack[-1] 是 Name/Attribute/Call → 装饰器链
+                        # 依「父引用子入口」: 父装饰器 (deco1) 通过 CALL 0 引用
+                        # 子 Call 节点 (deco2(f)) 作 args[0]。
+                        if self.stack and self.stack[-1].get('type') == 'PUSH_NULL':
+                            # 普通链式调用: 消费 PUSH_NULL, 调用结果无参数
+                            self.stack.pop()
                             self.stack.append({
                                 'type': 'Call',
                                 'func': func,
-                                'args': [inner_obj],
+                                'args': args,
                                 'kwargs': kwargs,
                                 'lineno': instr.starts_line
+                            })
+                        elif self.stack:
+                            # 装饰器链: func 是内层装饰结果 (deco2(f)),
+                            # stack[-1] 是外层装饰器 (deco1)。
+                            # 正确: deco1(deco2(f)) = Call(func=deco1, args=[deco2(f)])
+                            inner_obj = self.stack.pop()
+                            self.stack.append({
+                                'type': 'Call',
+                                'func': inner_obj,
+                                'args': [func],
+                                'kwargs': kwargs,
+                                'lineno': instr.starts_line,
+                                'is_decorator': True
                             })
                         else:
                             # 栈为空，创建普通Call
