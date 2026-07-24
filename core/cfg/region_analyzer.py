@@ -13272,6 +13272,36 @@ RegionType 枚举值: RegionType.ASSERT
                                     _consumer_extra_blocks.append(_resume_blk)
                         break
 
+                    # [R14-yield fix] 普通生成器 yield (ternary) — 无 ASYNC_GEN_WRAP。
+                    # 字节码模式（merge_block 内）:
+                    #   `yield (ternary)`        -> YIELD_VALUE + RESUME + POP_TOP +
+                    #                               LOAD_CONST None + RETURN_VALUE
+                    #   `yield (ternary) + 1`    -> LOAD_CONST 1 + BINARY_OP + +
+                    #                               YIELD_VALUE + RESUME + POP_TOP +
+                    #                               LOAD_CONST None + RETURN_VALUE
+                    #   `yield (ternary) * 2 + 1`-> <wrapping_ops> + YIELD_VALUE + ...
+                    # 旧实现只识别 ASYNC_GEN_WRAP（async gen），普通生成器的 YIELD_VALUE
+                    # 不被任何分支匹配，merge_context 保持 None。随后 dispatch
+                    # （merge_ctx=None & value_target=None & merge_block 非 None）
+                    # 把 merge_block 末尾的 RETURN_VALUE（生成器隐式 return None）
+                    # 当作 return sink，将整段（含 YIELD_VALUE）重建为
+                    # Return(Yield(...))，产生非法语法 `return yield (ternary) + 1`。
+                    # 依「每块唯一归属」: merge_block 的 YIELD_VALUE（+ 前驱 wrapping
+                    # ops）归属 TernaryRegion 父表达式（Yield(ternary)），末尾的
+                    # LOAD_CONST None + RETURN_VALUE 是生成器隐式返回，归属父
+                    # FunctionDef body（独立语句），不应并入 yield 表达式。
+                    # 依「父引用子入口」: 父 Expr(Yield) 通过 YIELD_VALUE 引用 ternary
+                    # 子节点（前驱 wrapping ops + ternary 归约为 yield 的 value）。
+                    # 普遍性: 覆盖 `yield ternary` / `yield ternary + binop` /
+                    #   `yield ternary * binop + binop` 等所有 yield 表达式形态。
+                    # 注意: GET_YIELD_FROM_ITER（yield-from）已由前序分支处理并 break，
+                    # 不会到达此处；此处仅处理纯 YIELD_VALUE（普通/async gen 已由
+                    # ASYNC_GEN_WRAP 分支处理，此处兜底无 ASYNC_GEN_WRAP 的场景）。
+                    elif instr.opname == 'YIELD_VALUE':
+                        merge_context = 'yield'
+                        value_target = None
+                        break
+
             # When the JUMP_FORWARD pattern was detected (ternary in
             # while-loop condition), set merge_context if no other context
             # was identified. The ternary result is consumed by the while

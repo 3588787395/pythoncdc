@@ -138,6 +138,12 @@ class RegionASTGenerator:
         self._or_else_block: Optional['BasicBlock'] = None
         self._or_rhs_block: Optional['BasicBlock'] = None
         self.detector = get_opcode_detector()
+        # [R11-version fix] 记录已被 generate() 预扫描提取 import 前缀的
+        # entry_block。防止 _generate_ternary 的 cond_block pre-statement
+        # 提取重复抽取同一 import 序列（导致 `import sys` 重复）。
+        # 依「每块唯一归属」: import 指令归属 generate() 预扫描（父模块体），
+        # ternary cond_block 仅拥有 condition preload 指令。
+        self._entry_import_extracted_blocks: Set[BasicBlock] = set()
 
     def block_role(self, block: 'BasicBlock') -> 'BlockRole':
         return self.region_analyzer.get_block_role(block)
@@ -305,6 +311,10 @@ class RegionASTGenerator:
                     _t_import_pre = self._extract_imports_from_block_prefix(entry_block)
                     if _t_import_pre:
                         ast_nodes.extend(_t_import_pre)
+                        # [R11-version fix] 标记 entry_block 的 import 前缀已被
+                        # generate() 预扫描提取，防止 _generate_ternary 的
+                        # cond_block pre-statement 提取重复抽取。
+                        self._entry_import_extracted_blocks.add(entry_block)
             elif isinstance(entry_region, AssertRegion):
                 assert_id = id(entry_region)
                 if assert_id not in self._generated_regions and assert_id not in self._generating_regions:
@@ -1995,12 +2005,23 @@ class RegionASTGenerator:
             # 时，ternary 作为 with 上下文管理器表达式，由 _generate_with 通过
             # _resolve_nested_ternary_context_expr 引用，不应被独立处理为语句。
             # 依「父引用子入口」原则，父 WithRegion 引用 ternary 的归约结果。
+            # [R14-multi-with fix] merge_block 本身是 WithRegion.entry 时，归
+            # 属该 WithRegion（父引用子入口），不应标记为 generated——否则
+            # _generate_with 的子区域处理检测到 child.entry in generated_blocks
+            # 会跳过整个 WithRegion，导致 `with a as x, (b if c else d) as y: pass`
+            # 的第二项 `(b if c else d) as y` 整体丢失。
+            # 依「每块唯一归属」: merge_block 归属 WithRegion（作为其 entry），
+            # 其余 ternary 块（cond/true/false）归属 TernaryRegion。
+            # 普遍性: 覆盖 `with a as x, f(ternary) as y` / `with a, ternary:`
+            # 等所有 ternary merge_block 作为嵌套 WithRegion entry 的形态。
             if not should_skip and region.merge_block is not None:
                 for r in self.regions:
                     if (r is not region and isinstance(r, WithRegion)
                             and r.entry is region.merge_block):
                         should_skip = True
                         for _b in region.blocks:
+                            if _b is region.merge_block:
+                                continue
                             self.generated_blocks.add(_b)
                         self._generated_regions.add(id(region))
                         break
@@ -13752,6 +13773,31 @@ AST 映射规则:
         # 被 POP_TOP 丢弃后丢失。修复后 YIELD_VALUE 作为边界，前驱重建为
         # Yield 的 value，后续 RESUME+POP_TOP 作为 yield cleanup 跳过。
         _yield_cleanup_pending = False
+        # [R11-imports fix] IMPORT_NAME / IMPORT_FROM 状态机。
+        # 字节码模式:
+        #   `import sys`            -> LOAD_CONST level + LOAD_CONST None +
+        #                              IMPORT_NAME sys + STORE_NAME sys
+        #   `import sys as s`       -> ... + IMPORT_NAME sys + STORE_NAME s
+        #   `from m import a`       -> LOAD_CONST level + LOAD_CONST (a,) +
+        #                              IMPORT_NAME m + IMPORT_FROM a + STORE_NAME a
+        #   `from m import a, b`    -> ... + IMPORT_NAME m + IMPORT_FROM a +
+        #                              STORE_NAME a + IMPORT_FROM b + STORE_NAME b
+        #   `from m import a as x`  -> ... + IMPORT_NAME m + IMPORT_FROM a +
+        #                              STORE_NAME x
+        # 旧版 _build_statements_from_instructions 不识别 IMPORT_NAME，将整个
+        # 序列累积到 stmt_instrs 后由 _build_store_statement 处理，但
+        # expr_reconstructor 不识别 IMPORT_NAME/IMPORT_FROM，导致 `import sys`
+        # 退化为 `sys = None`（LOAD_CONST None 被 STORE_NAME 绑定）。
+        # 依「每块唯一归属」: IMPORT_NAME + IMPORT_FROM + STORE_* 序列归属单一
+        # Import/ImportFrom 语句节点，不拆分为 Assign。
+        # 依「自底向上归约」: IMPORT_NAME 是归约入口（消费 level+fromlist，
+        # 产生 module），IMPORT_FROM 消费 module 产生子模块，STORE_* 绑定名字。
+        # 普遍性: 覆盖 import / import-as / from-import / from-import-as /
+        #   from-import-multi 等所有 import 形式，以及在 ternary cond_block
+        #   前序、函数体、类体等任意上下文中出现的 import 前驱语句。
+        _imp_name_instr = None
+        _imp_from_pending = None
+        _imp_pairs = []
         for instr in instrs:
             if instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
                 continue
@@ -13771,7 +13817,67 @@ AST 映射规则:
             if instr.opname in ('POP_EXCEPT', 'PUSH_EXC_INFO', 'RERAISE',
                                 'WITH_EXCEPT_START', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH'):
                 continue
+            # [R11-imports fix] IMPORT_NAME 启动 import 序列。先 flush 已累积的
+            # stmt_instrs（前一条语句），再进入 import 状态机。
+            if instr.opname == 'IMPORT_NAME':
+                if _imp_name_instr is not None:
+                    # 前一个 import 序列未正常终结（无 STORE_*），先 flush。
+                    _module = _imp_name_instr.argval or ''
+                    if _imp_pairs:
+                        _names = [{'name': _n, 'asname': _a}
+                                  for _n, _a in _imp_pairs]
+                        stmts.append({'type': 'ImportFrom',
+                                      'module': _module, 'names': _names})
+                    else:
+                        stmts.append({'type': 'Import',
+                                      'names': [{'name': _module, 'asname': None}]})
+                if stmt_instrs:
+                    _prev_stmt = self._build_statement(list(stmt_instrs))
+                    if _prev_stmt:
+                        stmts.append(_prev_stmt)
+                    stmt_instrs = []
+                _imp_name_instr = instr
+                _imp_from_pending = None
+                _imp_pairs = []
+                continue
+            if instr.opname == 'IMPORT_FROM':
+                if _imp_name_instr is not None:
+                    # 前一个 IMPORT_FROM 未跟 STORE_* → 名字不变 (from m import a, b
+                    # 中 a 后面紧跟 IMPORT_FROM b 而非 STORE_NAME b 的情况不存在；
+                    # 但 `from m import *` 的 IMPORT_FROM '*' 后跟 STORE_NAME '*' 仍
+                    # 走 STORE_* 路径。此处保留 pending 以便 STORE_* 绑定 alias)。
+                    if _imp_from_pending is not None:
+                        _imp_pairs.append((_imp_from_pending.argval or '', None))
+                    _imp_from_pending = instr
+                continue
             if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                if _imp_name_instr is not None:
+                    if _imp_from_pending is not None:
+                        # from module import name [as alias]
+                        _imp_n = _imp_from_pending.argval or ''
+                        _sto_n = instr.argval
+                        if _imp_n != _sto_n:
+                            _imp_pairs.append((_imp_n, _sto_n))
+                        else:
+                            _imp_pairs.append((_imp_n, None))
+                        _imp_from_pending = None
+                    else:
+                        # import module [as alias] — 终结 import 序列
+                        _module = _imp_name_instr.argval or ''
+                        _sto_n = instr.argval
+                        if _module != _sto_n:
+                            stmts.append({'type': 'Import',
+                                          'names': [{'name': _module, 'asname': _sto_n}]})
+                        else:
+                            stmts.append({'type': 'Import',
+                                          'names': [{'name': _module, 'asname': None}]})
+                        _imp_name_instr = None
+                        _imp_pairs = []
+                    # 对于 from-import，等下一个 IMPORT_FROM 或非 import 指令时
+                    # 再 flush（可能有多个 name）。此处不 flush。
+                    # 但若已无 pending 且 pairs 非空，且下一条不是 IMPORT_FROM，
+                    # 则需在下次循环由非 import 指令触发 flush。
+                    continue
                 stmt = self._build_store_statement(stmt_instrs + [instr], block=block)
                 if stmt:
                     stmts.append(stmt)
@@ -14020,13 +14126,33 @@ AST 映射规则:
             return _fallback
         _t_node = _t_stmts[0]
         _t_expr = None
-        if (_t_node.get('type') == 'Expr'
-                and _t_node.get('value', {}).get('type') == 'IfExp'):
-            _t_expr = _t_node['value']
-        elif (_t_node.get('type') == 'Assign'
-                and _t_node.get('value', {}).get('type') == 'IfExp'):
+        # [R11-contextlib fix] 父 WithRegion 通过 entry block 反向引用嵌套
+        # TernaryRegion 的归约出口。merge_block 重建出的表达式即为 context_expr。
+        # merge_block 的指令决定重建形态:
+        #   - 仅 POP_TOP/STORE 终结: ternary 本身是 context_expr → Expr(IfExp)
+        #     (如 `with (a if c else b): pass`)
+        #   - PRECALL+CALL 终结: ternary 是某 Call 的参数 → Expr(Call(...IfExp...))
+        #     (如 `with suppress((E1 if c else E2)): pass`)
+        #   - GET_AWAITABLE+... 终结: ternary 是 await 参数 → Expr(Await(IfExp))
+        #     (如 `async with await (a if c else b): pass`)
+        # 旧实现仅接受 Expr(IfExp)/Assign(IfExp)，导致 Call/Await 包裹的 ternary
+        # 退化为 fallback `context()`，丢失 suppress 名字与三元表达式。
+        # 依「父引用子入口」: 父引用子的 merge_block 出口，出口重建为何表达式，
+        # context_expr 即为何——_generate_ternary 是归约出口的权威重建者。
+        # 依「每块唯一归属」: merge_block 的指令（PRECALL+CALL+BEFORE_WITH 中
+        # PRECALL+CALL）归属 context_expr 表达式，BEFORE_WITH 是 with 语句边界。
+        # 普遍性: 覆盖 `with f(ternary):` / `with obj.m(ternary):` /
+        #   `async with await ternary:` / `with (ternary):` 等所有 ternary
+        #   作为 with 上下文管理器表达式子节点的形态。
+        if _t_node.get('type') == 'Expr':
+            _t_value = _t_node.get('value')
+            if isinstance(_t_value, dict) and _t_value.get('type'):
+                _t_expr = _t_value
+        elif _t_node.get('type') == 'Assign':
             # with (a if c else b) as x 不应走 Assign，但保守处理
-            _t_expr = _t_node['value']
+            _t_value = _t_node.get('value')
+            if isinstance(_t_value, dict) and _t_value.get('type'):
+                _t_expr = _t_value
         if _t_expr is None:
             return _fallback
         # 标记 ternary region 的所有块为 generated，避免独立处理造成双重输出
@@ -14338,7 +14464,23 @@ AST 映射规则:
                                 body_stmts.extend(generated)
                             else:
                                 body_stmts.append(generated)
+                        # [R14-multi-with fix] 当 nested_region 是 TernaryRegion
+                        # 且其 merge_block 是某 WithRegion 的 entry 时，merge_block
+                        # 归属该 WithRegion（父引用子入口），不标记为 generated——
+                        # 否则 WithRegion 子区域处理检测到 child.entry in
+                        # generated_blocks 会跳过整个 WithRegion，导致 multi-with
+                        # 第二项整体丢失。依「每块唯一归属」: merge_block 归属
+                        # WithRegion，其余 ternary 块归属 TernaryRegion。
+                        _ternary_merge_is_with_entry = False
+                        if isinstance(nested_region, TernaryRegion) and nested_region.merge_block is not None:
+                            for _wr in self.regions:
+                                if (_wr is not nested_region and isinstance(_wr, WithRegion)
+                                        and _wr.entry is nested_region.merge_block):
+                                    _ternary_merge_is_with_entry = True
+                                    break
                         for b in nested_region.blocks:
+                            if _ternary_merge_is_with_entry and b is nested_region.merge_block:
+                                continue
                             self.generated_blocks.add(b)
                         if hasattr(nested_region, 'condition_block') and nested_region.condition_block:
                             self.generated_blocks.add(nested_region.condition_block)
@@ -18438,6 +18580,41 @@ AST 映射规则:
                         if obj_i.opname.startswith('LOAD_'):
                             func_call_skip = push_null_idx + 2
 
+            # [R11-asyncio fix] CPython 3.11+ LOAD_GLOBAL with arg & 1 == 1
+            # pushes an implicit NULL before the value (function call
+            # convention). This is equivalent to PUSH_NULL + LOAD_GLOBAL.
+            # When no explicit PUSH_NULL was found, check for LOAD_GLOBAL
+            # with odd arg as the implicit NULL-push prefix.
+            # 字节码模式: LOAD_GLOBAL <func> (arg&1==1) [LOAD_ATTR <method>]
+            #            <cond_expr> POP_JUMP_IF_*
+            # func 是被调用的函数（如 asyncio.gather），cond_expr 是三元条件。
+            # 依「每块唯一归属」: func 前缀属于父 Call 的 preload，不属于三元条件。
+            if push_null_idx is None:
+                for idx, i in enumerate(cond_instrs_raw):
+                    if i is last_cond_instr:
+                        break
+                    if (i.opname == 'LOAD_GLOBAL' and i.arg is not None
+                            and i.arg & 1 == 1):
+                        # LOAD_GLOBAL with implicit NULL push — check if
+                        # followed by LOAD_ATTR (method/attribute access)
+                        _skip_to = idx + 1
+                        if (idx + 1 < len(cond_instrs_raw)
+                                and cond_instrs_raw[idx + 1].opname == 'LOAD_ATTR'):
+                            _skip_to = idx + 2
+                        # Verify there are meaningful instructions after the
+                        # skip (the actual condition expression)
+                        _has_meaningful_after = False
+                        for _fi in range(_skip_to, len(cond_instrs_raw)):
+                            _fi_instr = cond_instrs_raw[_fi]
+                            if _fi_instr is last_cond_instr:
+                                break
+                            if _fi_instr.opname not in ('PRECALL', 'CALL', 'NOP', 'CACHE'):
+                                _has_meaningful_after = True
+                                break
+                        if _has_meaningful_after:
+                            func_call_skip = _skip_to
+                        break
+
             # If after the skip, the only remaining instructions are PRECALL/CALL
             # (plus the final jump), then the function call IS the condition —
             # don't skip the PUSH_NULL + LOAD_* prefix.
@@ -18453,6 +18630,35 @@ AST 映射规则:
                 if not _has_meaningful_after_call:
                     func_call_skip = 0
 
+                # [R11-lambda fix] 当 LOAD_GLOBAL (隐式 NULL) 被 cond_block 内的
+                # PRECALL+CALL 直接消费时，该 LOAD_GLOBAL 是条件表达式自身的
+                # Call 函数（如 `valid(x) if valid(x) else None` 的 cond 是
+                # `valid(x)`），而非外层 Call 的前缀（如 `asyncio.gather(...)`
+                # 中 gather 是外层 Call，cond 是独立三元条件）。
+                # 区分判据（结构性，非实例特征）:
+                #   - 外层 Call 前缀: cond_block 内无 CALL 消费 LOAD_GLOBAL，
+                #     CALL 在 merge_block（如 `return await asyncio.gather(...)`)
+                #   - 条件自身 Call: cond_block 内有 PRECALL+CALL 消费 LOAD_GLOBAL
+                #     及其参数（如 `valid(x)` -> LOAD_GLOBAL valid + LOAD_FAST x
+                #     + PRECALL 1 + CALL 1）
+                # 旧逻辑仅检查"_skip 后是否全为 PRECALL/CALL"，但 `valid(x)` 的
+                # LOAD_FAST x 是"有意义的"非 PRECALL/CALL 指令，导致 _has_meaningful
+                # _after_call=True，func_call_skip 未重置，LOAD_GLOBAL valid 被错误
+                # 跳过，cond 退化为 LOAD_FAST x + PRECALL + CALL（无函数），
+                # reconstruct 返回 None，_generate_ternary 整体返回 None，
+                # lambda body 退化为 Constant(None)。
+                # 依「每块唯一归属」: cond_block 内的 LOAD_GLOBAL + 参数 + CALL
+                # 归属三元条件表达式（Call），不归属外层表达式前缀。
+                # 普遍性: 覆盖 `f(x) if cond else y` / `obj.m(x) if cond else y`
+                # 等所有条件本身是 Call 的三元形态。
+                if func_call_skip > 0:
+                    _has_call_in_cond = any(
+                        cond_instrs_raw[_fi].opname == 'CALL'
+                        for _fi in range(func_call_skip, len(cond_instrs_raw))
+                        if cond_instrs_raw[_fi] is not last_cond_instr)
+                    if _has_call_in_cond:
+                        func_call_skip = 0
+
                 # [R11-10 fix] If PUSH_NULL appears AFTER a STORE_NAME (statement
                 # boundary), the instructions before PUSH_NULL are predecessor
                 # statements (e.g., `def _m: ... \n m = partialmethod(_m, ternary)`
@@ -18463,10 +18669,11 @@ AST 映射规则:
                 # to their own AST nodes (FunctionDef/Assign), not the
                 # TernaryRegion's condition preload.
                 if func_call_skip > 0:
+                    _check_end = push_null_idx if push_null_idx is not None else func_call_skip
                     _has_store_before_push_null = any(
                         cond_instrs_raw[k].opname in (
                             'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
-                        for k in range(0, push_null_idx))
+                        for k in range(0, _check_end))
                     if _has_store_before_push_null:
                         func_call_skip = 0
 
@@ -18551,6 +18758,78 @@ AST 映射规则:
                         cond_instrs[k].opname == 'MAKE_FUNCTION'
                         for k in range(cond_start_idx, i))
                     if _has_mf_in_pred:
+                        # [R10-multi fix] 共享 block 的 ternary 归属判定。
+                        # 字节码模式: class body 中连续两个 ternary-default 函数
+                        #   @abstractmethod
+                        #   def m1(self, x=(a if c else b)): pass
+                        #   @abstractmethod
+                        #   def m2(self, y=(d if e else f)): pass
+                        # 编译器将 m1 的 merge consumer (BUILD_TUPLE + MAKE_FUNCTION
+                        # + PRECALL + CALL + STORE_NAME m1) 与 m2 的 cond prefix
+                        # (LOAD_NAME abstractmethod + LOAD_NAME e + POP_JUMP) 合并
+                        # 到同一基本块 (block 22)。两个 TernaryRegion 都将该块
+                        # 纳入 blocks 集合：ternary1 作 merge_block，ternary2 作
+                        # cond_block。
+                        # 旧逻辑: ternary2 的 pre_stmts 扫描遇到 STORE_NAME m1，
+                        # 检测到前序含 MAKE_FUNCTION，调用 _build_statements_from_instructions
+                        # 重建前序为独立语句。但前序在 ternary2 的栈视角下是空栈
+                        # (BUILD_TUPLE 1 无栈输入 → Tuple([]))，MAKE_FUNCTION 1
+                        # 消费 Tuple([]) 作 defaults (空) → 无默认值，CALL 0 调用
+                        # Tuple([]) 作装饰器 → 生成幽灵 `@() def m1(self, x)`。
+                        # 依「每块唯一归属」: 前序 BUILD_TUPLE + MAKE_FUNCTION +
+                        # CALL + STORE 属于 ternary1 的 merge consumer，由 ternary1
+                        # 的 dispatch 生成 FunctionDef m1 (带正确 default + decorator)。
+                        # ternary2 不应重复生成。判定: cond_block 是否为另一个
+                        # TernaryRegion 的 merge_block。若是，则前序归属该 ternary，
+                        # 跳过 (不生成 phantom)，仅推进 cond_start_idx 到 STORE 之后，
+                        # 让后续 preload/cond 扫描从 ternary2 自身拥有的指令开始。
+                        # 普遍性: 覆盖任意数量的连续 ternary-default 函数 (m1/m2/m3...)
+                        # 共享 merge→cond 边界块的场景。对照 R11-partialmethod case
+                        # (`def _m: ...; m = partialmethod(_m, ternary)`): 该场景下
+                        # _m 的 def 在独立块，cond_block 不是另一 ternary 的 merge_block，
+                        # 走原有 _build_statements_from_instructions 路径生成 FunctionDef _m。
+                        _cond_block_is_other_ternary_merge = False
+                        for _other_r in self.regions:
+                            if (_other_r is not region
+                                    and isinstance(_other_r, TernaryRegion)
+                                    and getattr(_other_r, 'merge_block', None) is cond_block):
+                                _cond_block_is_other_ternary_merge = True
+                                break
+                        if _cond_block_is_other_ternary_merge:
+                            cond_start_idx = i + 1
+                            i += 1
+                            continue
+                        _pred_instrs = list(cond_instrs[cond_start_idx:i + 1])
+                        _pred_stmts = self._build_statements_from_instructions(
+                            _pred_instrs)
+                        pre_stmts.extend(_pred_stmts)
+                        cond_start_idx = i + 1
+                        i += 1
+                        continue
+
+                    # [R11-contextlib fix] Handle import statements in
+                    # condition_block: `from contextlib import suppress`
+                    # emits LOAD_CONST + IMPORT_NAME + IMPORT_FROM + STORE_NAME.
+                    # The simple LOAD_* backward scan below can't reconstruct
+                    # imports. Use _build_statements_from_instructions for the
+                    # full predecessor range when IMPORT_NAME is present.
+                    # 依「每块唯一归属」: import instructions belong to the
+                    # Import predecessor statement, not the TernaryRegion.
+                    # [R11-version fix] 若 cond_block 的 import 前缀已被
+                    # generate() 预扫描提取（entry_block 是 TernaryRegion entry
+                    # 时），此处仅推进 cond_start_idx 跳过 import 指令，不重复
+                    # 抽取（否则 `import sys` 出现两次）。依「每块唯一归属」:
+                    # import 指令归属 generate() 预扫描，ternary 仅拥有 cond
+                    # preload。
+                    _has_import_in_pred = any(
+                        cond_instrs[k].opname in ('IMPORT_NAME', 'IMPORT_FROM')
+                        for k in range(cond_start_idx, i))
+                    if _has_import_in_pred:
+                        if cond_block in self._entry_import_extracted_blocks:
+                            # import 已由 generate() 提取，仅推进游标跳过。
+                            cond_start_idx = i + 1
+                            i += 1
+                            continue
                         _pred_instrs = list(cond_instrs[cond_start_idx:i + 1])
                         _pred_stmts = self._build_statements_from_instructions(
                             _pred_instrs)
@@ -18712,6 +18991,93 @@ AST 映射规则:
             if _nested_if_node is not None:
                 results.append(_nested_if_node)
                 return results
+
+            # [R11-asyncio/with fix] merge_ctx=None, value_target=None,
+            # merge_block present: ternary result is consumed by merge_block
+            # consumer ops (CALL / GET_AWAITABLE / BEFORE_WITH / BUILD_* etc.)
+            # without a STORE_* sink. The ternary is an inner sub-expression of
+            # a larger expression (Call arg, await operand, with context, etc.).
+            # 字节码模式: <cond_block preload> + <ternary branches> + <merge_block
+            #            consumer ops (CALL/GET_AWAITABLE/BEFORE_WITH/...)>
+            # 依「自底向上归约」: ternary 是内层抽象节点，外层 CALL/AWAIT/WITH
+            # 通过 merge_block 的消费指令引用 ternary 子节点。
+            # 依「父引用子入口」: 父表达式通过 merge_block 的消费指令入口
+            # 引用 ternary 子节点。
+            # 依「每块唯一归属」: merge_block 的消费指令归属 TernaryRegion 父表达式。
+            # 普遍性: 覆盖 ternary 作为 Call 参数 / await 操作数 / with 上下文 /
+            #   raise 参数 / yield 值等所有无 STORE sink 的场景。
+            #   - return await asyncio.gather((f() if c else g()), h())
+            #   - with suppress((E1 if c else E2)): pass
+            #   - with a as x, (b if c else d) as y: pass
+            # 先尝试 _try_build_ternary_merge_consumer_expr（处理 CALL/BUILD_*
+            # 等复合消费指令），再尝试 _build_ternary_no_target_consumer_stmt
+            # （处理 assert/raise/yield/await 等语句级消费）。
+            if (merge_ctx is None and not region.value_target
+                    and region.merge_block is not None):
+                _merge_consumer_expr = self._try_build_ternary_merge_consumer_expr(
+                    region, ternary_expr)
+                if _merge_consumer_expr is not None:
+                    _merge_last = None
+                    if region.merge_block:
+                        _merge_last = region.merge_block.get_last_instruction()
+                    _extra_blocks = getattr(region, 'merge_extra_blocks', None) or []
+                    _has_return_sink = False
+                    if _merge_last and _merge_last.opname in (
+                            'RETURN_VALUE', 'RETURN_CONST'):
+                        _has_return_sink = True
+                    for _eb in _extra_blocks:
+                        _eb_last = _eb.get_last_instruction()
+                        if _eb_last and _eb_last.opname in (
+                                'RETURN_VALUE', 'RETURN_CONST'):
+                            _has_return_sink = True
+                            break
+                    # [R11-asyncio fix] For await pattern (GET_AWAITABLE in
+                    # merge_block), check successor blocks for the polling
+                    # loop (SEND/YIELD_VALUE) and consume block (RETURN_VALUE).
+                    # The consume block determines if the result is returned.
+                    if not _has_return_sink and region.merge_block:
+                        _mb_instrs = [i.opname for i in region.merge_block.instructions]
+                        if 'GET_AWAITABLE' in _mb_instrs:
+                            for _succ in region.merge_block.successors:
+                                _succ_instrs = [i.opname for i in _succ.instructions]
+                                if 'SEND' in _succ_instrs:
+                                    # Polling loop block — check its SEND target
+                                    for _si in _succ.instructions:
+                                        if _si.opname == 'SEND':
+                                            _cb = self.cfg.get_block_by_offset(_si.argval)
+                                            if _cb:
+                                                _cb_last = _cb.get_last_instruction()
+                                                if _cb_last and _cb_last.opname in (
+                                                        'RETURN_VALUE', 'RETURN_CONST'):
+                                                    _has_return_sink = True
+                                                    # Mark polling loop + consume
+                                                    # block as generated to prevent
+                                                    # duplicate statement gen.
+                                                    self.generated_blocks.add(_succ)
+                                                    self.generated_blocks.add(_cb)
+                                                    for _succ2 in _cb.successors:
+                                                        self.generated_blocks.add(_succ2)
+                                                    break
+                                    if _has_return_sink:
+                                        break
+                    if _has_return_sink:
+                        results.append({'type': 'Return', 'value': _merge_consumer_expr})
+                    else:
+                        results.append({'type': 'Expr', 'value': _merge_consumer_expr})
+                    for block in region.blocks:
+                        self.generated_blocks.add(block)
+                    return results
+                _consumer_stmt = self._build_ternary_no_target_consumer_stmt(
+                    region, ternary_expr)
+                if _consumer_stmt is not None:
+                    results.append(_consumer_stmt)
+                    _post_extra = getattr(
+                        region, 'post_consumer_extra_stmts', None)
+                    if _post_extra:
+                        results.extend(_post_extra)
+                    for block in region.blocks:
+                        self.generated_blocks.add(block)
+                    return results
 
             # Phase 12修复: 根据merge_context决定输出格式（保守策略）
             if merge_ctx == 'iter':
@@ -22865,6 +23231,26 @@ AST 映射规则:
             if (merge_all and merge_all[-1].opname == 'LOAD_CONST'
                     and merge_all[-1].argval is None):
                 merge_all.pop()
+        # [R11-asyncio fix] Strip trailing GET_AWAITABLE + LOAD_CONST None
+        # (await protocol). GET_AWAITABLE wraps the preceding expression in an
+        # awaitable; LOAD_CONST None is the initial send-value for the await
+        # polling loop (SEND/YIELD_VALUE in successor blocks, not in
+        # merge_block). Strip both and wrap the reconstructed expression in
+        # Await. The SEND/YIELD_VALUE/RESUME/JUMP_BACKWARD polling loop and
+        # the RETURN_VALUE consume block are in successor blocks (not in
+        # merge_block.instructions).
+        # 字节码模式: <consumer ops (CALL/BUILD_*/...)> + GET_AWAITABLE 0
+        #            + LOAD_CONST None
+        # 依「自底向上归约」: GET_AWAITABLE 之前的指令归约为 await 的 value
+        # 表达式，GET_AWAITABLE + LOAD_CONST None + SEND/YIELD_VALUE 是 await
+        # 协议的一部分，不归约为独立表达式。
+        _await_wrap = False
+        if (len(merge_all) >= 2
+                and merge_all[-1].opname == 'LOAD_CONST'
+                and merge_all[-1].argval is None
+                and merge_all[-2].opname == 'GET_AWAITABLE'):
+            merge_all = merge_all[:-2]
+            _await_wrap = True
         # Strip trailing POP_TOP (expression statement).
         if merge_all and merge_all[-1].opname == 'POP_TOP':
             merge_all = merge_all[:-1]
@@ -23010,6 +23396,9 @@ AST 映射规则:
         initial_stack = list(preload_exprs) + [ternary_expr]
         full_expr = self.expr_reconstructor.reconstruct(
             merge_all, initial_stack=initial_stack)
+        # [R11-asyncio fix] Wrap in Await if GET_AWAITABLE was stripped.
+        if full_expr is not None and _await_wrap:
+            full_expr = {'type': 'Await', 'value': full_expr}
         return full_expr
 
     def _try_build_chained_ternary_make_function(
