@@ -4946,7 +4946,7 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
             # try-body entry — NOT the first, which may include enclosing-loop setup blocks.
             pre_handler_entry_candidate = None
 
-            if handler_type == 'except' and handler_entry_block is not None:
+            if handler_type in ('except', 'except_star') and handler_entry_block is not None:
                 handler_in_try_range = any(
                     try_start_for_blocks <= instr.offset < try_end_for_blocks
                     for instr in handler_entry_block.instructions
@@ -5382,6 +5382,26 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                             search_blocks.append(succ)
             if cleanup_blocks:
                 all_blocks |= set(cleanup_blocks)
+
+            # [Phase 3 adv17_try_except_star] except* 框架清理块从 try_blocks
+            # 移至 cleanup_blocks。
+            # CPython 3.11+ except* (PEP 654) 字节码布局：try body 总在 handler
+            # entry 之前；handler entry 之后的块（在 try 范围内、非 handler body）
+            # 均为 except* 框架清理代码（LIST_APPEND + PREP_RERAISE_STAR 路径、
+            # as e 绑定的隐式 e=None/del e 清理、POP_TOP 合并块等）。
+            # 若留在 try_blocks 中，会被误生成为 try body 代码（如
+            # `e = None; del e` 和 `if True: pass`），导致指令数不匹配。
+            # 依「每块唯一归属」: except* 框架清理块归属 cleanup_blocks，
+            # 不归属 try_blocks。
+            if handler_type == 'except_star' and handler_entry_block is not None:
+                _star_framework = [
+                    blk for blk in try_blocks
+                    if blk not in all_handler_blocks_set
+                    and blk.start_offset >= handler_entry_block.start_offset
+                ]
+                if _star_framework:
+                    cleanup_blocks.extend(_star_framework)
+                    all_blocks |= set(_star_framework)
 
             preceding_blocks = []
             for block in self.cfg.blocks.values():
