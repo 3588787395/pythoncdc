@@ -22775,6 +22775,23 @@ AST 映射规则:
         if region.merge_block is None:
             return None
 
+        # [R14 yield_from_method fix] For yieldfrom/await merge_context, the
+        # merge_block's consumer ops (LOAD_METHOD/PRECALL/CALL for .items(),
+        # or direct GET_AWAITABLE) are followed by SEND/YIELD_VALUE polling
+        # that lives in merge_extra_blocks (not merge_block.instructions).
+        # This function only inspects merge_block.instructions, so it would
+        # reconstruct on a truncated instruction stream — the polling loop
+        # that builds the YieldFrom/Await node is missing, and reconstruct
+        # returns the dangling LOAD_CONST None (SEND's send-value) as a
+        # Constant(None) dict, which passes the `is not None` guard and
+        # short-circuits the correct handler _build_ternary_no_target_consumer_stmt
+        # (which properly splices merge_extra_blocks). Early-return None to
+        # let that handler run.
+        # 依「每块唯一归属」: merge_extra_blocks (polling loop + consume block)
+        # belong to the TernaryRegion and must be included in reconstruction.
+        if getattr(region, 'merge_context', None) in ('yieldfrom', 'await'):
+            return None
+
         # Compute preload_exprs (sibling elements on cond_block stack below
         # the ternary condition). _compute_ternary_cond_preload_exprs already
         # handles compound preload (Call/Attribute chains) by deferring to
