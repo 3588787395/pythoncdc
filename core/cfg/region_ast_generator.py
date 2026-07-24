@@ -14067,11 +14067,18 @@ AST 映射规则:
             body_stmts = []
             # [Round5-08] async with 的 `as x` 绑定检测：early pass
             # 字节码模式：BEFORE_ASYNC_WITH → GET_AWAITABLE → SEND/YIELD 循环
-            # → STORE_FAST x（as 绑定）→ body。
-            # SEND/YIELD 循环有时未被识别为 LoopRegion（无对应 LoopRegion 对象），
-            # 因此 region_analyzer 阶段无法填充 region.target。这里在主循环处理
-            # with_blocks 之前做一次 early detection：扫描 with_blocks[0]（SEND
-            # 跳出后的目标块）的首条 STORE_* 指令，作为 `as x` 绑定变量。
+            # → SEND 跳出目标块 → [STORE_FAST x（as 绑定）| POP_TOP（无 as）] → body。
+            #
+            # 依「每块唯一归属」+ SEND 语义: `as x` 绑定的 STORE_* 是 SEND 跳出
+            # 目标块的【首条】指令（若无 as 则为 POP_TOP）。该目标块是 async with
+            # body 的入口，即在 with_blocks 中 start_offset 最小的块。
+            #
+            # [Round5-08 根因修复] 旧实现遍历【所有】with_blocks 取首条 STORE_*，
+            # 会误将 body 内的赋值语句（如 ternary merge 块的 STORE_FAST y）
+            # 当作 `as x` 绑定，产生 `async with ctx: y = ...` →
+            # `async with ctx as y: ...` 的误判。
+            # 修正: 仅检查 with_blocks 中 start_offset 最小的块（SEND 跳出目标块），
+            # 其首条非噪声指令为 STORE_* → `as x`；为 POP_TOP 或其他 → 无 `as`。
             # 必须在主循环之前执行，否则主循环会把 STORE_FAST x 当作普通赋值
             # 语句处理，导致 body_stmts 非空，使后续的 fallback 检测被
             # `if region.is_async and not body_stmts` 闸门拦截。
@@ -14081,15 +14088,15 @@ AST 映射规则:
                     key=lambda b: b.start_offset,
                 )
                 _async_target_early = None
-                for _wb in _wb_blocks_early:
+                if _wb_blocks_early:
+                    _wb_first_block = _wb_blocks_early[0]
                     _wb_first = None
-                    for _instr in _wb.instructions:
+                    for _instr in _wb_first_block.instructions:
                         if _instr.opname not in ('RESUME', 'NOP', 'CACHE'):
                             _wb_first = _instr
                             break
                     if _wb_first and _wb_first.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
                         _async_target_early = _wb_first.argval
-                        break
                 if _async_target_early:
                     region.target = _async_target_early
                     if region.items:
@@ -14499,21 +14506,25 @@ AST 映射规则:
                 # 到 region.with_blocks[0]（async with 的 body 入口块，即 SEND
                 # 跳出后的目标块）查找首条 STORE_* 指令作为 `as x` 绑定变量。
                 # 字节码模式：BEFORE_ASYNC_WITH → GET_AWAITABLE → SEND/YIELD 循环
-                # → STORE_FAST x（as 绑定）→ body。
+                # → SEND 跳出目标块 → [STORE_FAST x（as 绑定）| POP_TOP（无 as）] → body。
+                #
+                # [Round5-08 根因修复] 与 early pass 同理: 仅检查 with_blocks 中
+                # start_offset 最小的块（SEND 跳出目标块），不遍历所有 with_blocks，
+                # 避免误将 body 内赋值（如 ternary merge 的 STORE_FAST y）当作 `as x`。
                 if region.target is None and region.is_async:
                     _wb_blocks = sorted(
                         (b for b in getattr(region, 'with_blocks', []) or []),
                         key=lambda b: b.start_offset,
                     )
-                    for _wb in _wb_blocks:
+                    if _wb_blocks:
+                        _wb_first_block = _wb_blocks[0]
                         _wb_first = None
-                        for _instr in _wb.instructions:
+                        for _instr in _wb_first_block.instructions:
                             if _instr.opname not in ('RESUME', 'NOP', 'CACHE'):
                                 _wb_first = _instr
                                 break
                         if _wb_first and _wb_first.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
                             _async_target = _wb_first.argval
-                            break
                     if _async_target:
                         region.target = _async_target
                         if region.items:
