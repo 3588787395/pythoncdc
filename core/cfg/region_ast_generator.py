@@ -13738,9 +13738,31 @@ AST 映射规则:
             return []
         stmts = []
         stmt_instrs = []
+        # [R11 asyncctx fix] YIELD_VALUE 是语句边界（yield 表达式语句）。
+        # 字节码模式: <value_instrs> + ASYNC_GEN_WRAP? + YIELD_VALUE +
+        #             RESUME? + POP_TOP (yield cleanup, 丢弃 send 值)
+        # 依「每块唯一归属」: yield 表达式指令（LOAD + ASYNC_GEN_WRAP +
+        # YIELD_VALUE + RESUME + POP_TOP）归属单一 Expr(Yield(...)) 语句节点，
+        # 不与后续语句（如 implicit return None）混合重建。
+        # 依「自底向上归约」: 累积的前驱指令（stmt_instrs）归约为 yield 的
+        # value 表达式，YIELD_VALUE 是归约入口（消费 value，产生 Yield 节点）。
+        # 旧实现未把 YIELD_VALUE 视为语句边界，导致 `yield x` 的指令与后续
+        # `LOAD_CONST None + RETURN_VALUE` 混合重建，reconstruct 返回最终栈顶
+        # Constant(None)（来自 RETURN_VALUE 前的 LOAD_CONST None），Yield 节点
+        # 被 POP_TOP 丢弃后丢失。修复后 YIELD_VALUE 作为边界，前驱重建为
+        # Yield 的 value，后续 RESUME+POP_TOP 作为 yield cleanup 跳过。
+        _yield_cleanup_pending = False
         for instr in instrs:
             if instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
                 continue
+            # [R11 asyncctx fix] YIELD_VALUE 之后的 RESUME + POP_TOP 是
+            # yield cleanup（丢弃 send 值）。POP_TOP 在此处不是表达式语句
+            # 终结符，而是 yield 协议的一部分。跳过它避免污染后续语句重建。
+            if _yield_cleanup_pending:
+                if instr.opname == 'POP_TOP':
+                    _yield_cleanup_pending = False
+                    continue
+                _yield_cleanup_pending = False
             if instr.opname in ('JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE',
                                 'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_FORWARD_IF_TRUE',
                                 'POP_JUMP_BACKWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_TRUE',
@@ -13807,6 +13829,41 @@ AST 映射规则:
                 _rv_value = {'type': 'Constant', 'value': _rc_val}
                 stmts.append({'type': 'Return', 'value': _rv_value})
                 stmt_instrs = []
+                continue
+            # [R11 asyncctx fix] YIELD_VALUE 是 yield 表达式语句的边界。
+            # 累积的 stmt_instrs（前驱指令，可能含 ASYNC_GEN_WRAP）是 yield
+            # 的 value 表达式。reconstruct 把它们归约为值，YIELD_VALUE 消费
+            # 值产生 Yield 节点。包装为 Expr(Yield(...)) 语句。
+            # 依「父引用子入口」: 父 Expr 通过 YIELD_VALUE 引用 yield value
+            # 子节点（前驱指令归约结果）。
+            # 普遍性: 覆盖所有 yield 表达式语句形态——
+            #   `yield x`        -> LOAD_FAST x + YIELD_VALUE + POP_TOP
+            #   `yield`          -> YIELD_VALUE + POP_TOP
+            #   `yield (expr)`   -> <expr_instrs> + YIELD_VALUE + POP_TOP
+            #   async gen `yield x` -> LOAD_FAST x + ASYNC_GEN_WRAP + YIELD_VALUE
+            #                          + RESUME + POP_TOP
+            # ASYNC_GEN_WRAP 是 async gen 协议的包装指令（reconstruct 中为
+            # no-op），属于 yield 表达式内部，不破坏归约。
+            if instr.opname == 'YIELD_VALUE':
+                _yield_value = None
+                if stmt_instrs:
+                    _yield_value = self.expr_reconstructor.reconstruct(list(stmt_instrs))
+                if _yield_value is None and stmt_instrs:
+                    # fallback: 单个 LOAD_* 直接构建 Name
+                    _l0 = stmt_instrs[0]
+                    if _l0.opname in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF'):
+                        _yield_value = {'type': 'Name', 'id': _l0.argval, 'ctx': 'Load'}
+                if _yield_value is None:
+                    _yield_value = {'type': 'Constant', 'value': None}
+                stmts.append({
+                    'type': 'Expr',
+                    'value': {
+                        'type': 'Yield',
+                        'value': _yield_value,
+                    },
+                })
+                stmt_instrs = []
+                _yield_cleanup_pending = True
                 continue
             stmt_instrs.append(instr)
         if stmt_instrs:
