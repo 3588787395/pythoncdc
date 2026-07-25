@@ -10159,6 +10159,11 @@ RegionType 枚举值: RegionType.ASSERT
         # 由于块按反向偏移顺序处理，Block B 会在 Block A 之前被处理，
         # 导致 Block B 被误识别为独立的 elif 条件块。
         # 解决方案：预扫描所有块，找出链式比较的 extra_chain_blocks 并加入 claimed 集合。
+        # TODO[pass2-CC]: 此处 CC extra_blocks 预扫描为 Phase 2a 漏识别的后处理
+        # 补丁。Pass 2 应放宽 Phase 2a CC 识别触发条件（去掉「恰 2 个
+        # conditional_successors 且未被占用」的过严约束），让所有 CC 头块在
+        # Phase 2a 一次识别完毕，届时删除本预扫描及 10429-10455 重检测、
+        # 10634-10636 字段回填。
         chained_compare_extra_blocks = set()
         for _blk in self.cfg.get_blocks_in_order():
             if len(_blk.conditional_successors) != 2:

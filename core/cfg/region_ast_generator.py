@@ -91,6 +91,23 @@ ASYNC_WITH_SEND_LOOP_OPS = frozenset({
     'JUMP_BACKWARD_NO_INTERRUPT', 'NOP',
 })
 
+# CC 段有效指令过滤的统一噪声 op 集合（消除 4 处 _skip_ops + 3 处 _CMP_SKIP_OPS
+# 的重复定义）。内容为原 4 处 _skip_ops（7186/7413/7511/8927）与 3 处
+# _CMP_SKIP_OPS（6828/9798/16322）的并集，确保不丢失任何当前已处理的 opname。
+# 依「每块唯一归属」：CC 段指令归属 Compare 节点，噪声/跳转/比较控制 op 不计入。
+CC_NOISE_OPS = frozenset({
+    'COMPARE_OP', 'SWAP', 'COPY', 'POP_TOP',
+    'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_FALSE',
+    'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_TRUE',
+    'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_BACKWARD_IF_NONE',
+    'POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_BACKWARD_IF_NOT_NONE',
+    'POP_JUMP_IF_FALSE', 'POP_JUMP_IF_TRUE',
+    'POP_JUMP_IF_NONE', 'POP_JUMP_IF_NOT_NONE',
+    'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE',
+    'JUMP_IF_TRUE_OR_POP', 'JUMP_IF_FALSE_OR_POP',
+    'CACHE', 'NOP', 'RESUME', 'PUSH_NULL', 'PRECALL',
+})
+
 
 class _IfRegionProxy:
     """[Phase 7 根因 A] IfRegion-like 代理，供 while 条件路径复用 if 条件路径的
@@ -6825,18 +6842,7 @@ AST 映射规则:
             return None
         for _b in ternary_region.blocks:
             self.generated_blocks.add(_b)
-        _CMP_SKIP_OPS = frozenset({
-            'COMPARE_OP', 'SWAP', 'COPY', 'POP_TOP',
-            'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_FALSE',
-            'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_TRUE',
-            'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_BACKWARD_IF_NONE',
-            'POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_BACKWARD_IF_NOT_NONE',
-            'POP_JUMP_IF_FALSE', 'POP_JUMP_IF_TRUE',
-            'POP_JUMP_IF_NONE', 'POP_JUMP_IF_NOT_NONE',
-            'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE',
-            'JUMP_IF_TRUE_OR_POP', 'JUMP_IF_FALSE_OR_POP',
-            'CACHE', 'NOP', 'RESUME',
-        })
+        _CMP_SKIP_OPS = CC_NOISE_OPS
         _segments = [cond_block] + list(chain_blocks)
         _seg_load_instrs = []
         for _seg in _segments:
@@ -7010,6 +7016,10 @@ AST 映射规则:
         if hasattr(region, 'chained_compare_blocks') and region.chained_compare_blocks:
             for cc_block in region.chained_compare_blocks:
                 self.generated_blocks.add(cc_block)
+        # TODO[pass2-CC]: 此处后处理补丁违反「识别阶段一次正确」原则，生成阶段不应
+        # 篡改 region.then_blocks。Pass 2 应将「CC + and/or 短路块」识别阶段统一
+        # 为 BoolOpRegion（CC IfRegion 作为 op_chain 元素，通过 entry 引用），
+        # 届时删除本调用块与 _detect_boolop_after_chained_compare 实现。
         # [关键修复] 处理链式比较 + and/or 组合模式
         # 当条件是 "chained_compare and simple_compare" 或 "chained_compare or simple_compare" 时，
         # 区域分析器可能将简单比较块放入 then_blocks，导致生成嵌套 if 而非组合条件。
@@ -7183,10 +7193,7 @@ AST 映射规则:
         has_post_wrap = any(i.opname in _POST_WRAP_OPS for i in post_wrap_instrs)
 
         # 构建 chained_compare 尾部（右操作数列表）的公共逻辑
-        _skip_ops = ({'COMPARE_OP', 'SWAP', 'COPY', 'POP_TOP',
-                      'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_FALSE',
-                      'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_TRUE',
-                      'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE', 'PRECALL'})
+        _skip_ops = CC_NOISE_OPS
 
         if has_post_wrap:
             # 前向栈模拟：处理 COPY 之前的指令构造 [left, trapped..., walrus_value]，
@@ -7410,10 +7417,7 @@ AST 映射规则:
             return None
 
         # 各 chain_block 取 COMPARE_OP 之前的所有指令作为 middle2..N
-        _skip_ops = ({'COMPARE_OP', 'SWAP', 'COPY', 'POP_TOP',
-                      'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_FALSE',
-                      'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_TRUE',
-                      'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'})
+        _skip_ops = CC_NOISE_OPS
         comparators = [middle1_ast]
         for cb in region.chained_compare_blocks:
             if cb is None:
@@ -7508,10 +7512,7 @@ AST 映射规则:
             return None
 
         # Remaining comparators come from chain_blocks
-        _skip_ops = ({'COMPARE_OP', 'SWAP', 'COPY', 'POP_TOP',
-                      'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_FALSE',
-                      'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_TRUE',
-                      'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE', 'PRECALL'})
+        _skip_ops = CC_NOISE_OPS
         comparators = [middle_ast]
         for cb in chain_blocks:
             cb_instrs = [i for i in cb.instructions
@@ -8924,10 +8925,7 @@ AST 映射规则:
                 return None
             left_ast = sim_stack.pop()
             await_in_chain = {'type': 'Await', 'value': await_inner}
-            _skip_ops_await = ({'COMPARE_OP', 'SWAP', 'COPY', 'POP_TOP',
-                                'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_FALSE',
-                                'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_TRUE',
-                                'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE', 'PRECALL'})
+            _skip_ops_await = CC_NOISE_OPS
             comparators = [await_in_chain]
             for cb in region.chained_compare_blocks:
                 cb_instrs = [i for i in cb.instructions
@@ -9795,17 +9793,7 @@ AST 映射规则:
         #       cond_block 含 SWAP/COPY(链式setup), COMPARE_OP, [jump]；
         #       chained_compare_blocks 持有后续段；左操作数仍困在 entry。
         # 依区域归约：三元归约为抽象节点（IfExp），Compare 引用其为操作数。
-        _CMP_SKIP_OPS = frozenset({
-            'COMPARE_OP', 'SWAP', 'COPY', 'POP_TOP',
-            'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_FALSE',
-            'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_TRUE',
-            'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_BACKWARD_IF_NONE',
-            'POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_BACKWARD_IF_NOT_NONE',
-            'POP_JUMP_IF_FALSE', 'POP_JUMP_IF_TRUE',
-            'POP_JUMP_IF_NONE', 'POP_JUMP_IF_NOT_NONE',
-            'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE',
-            'CACHE', 'NOP', 'RESUME',
-        })
+        _CMP_SKIP_OPS = CC_NOISE_OPS
         segments = [cond_block] + list(chained_compare_blocks or [])
         seg_ops_instrs = []  # COMPARE_OP instrs per segment
         seg_load_instrs = []  # operand-producing instrs per segment
@@ -16319,15 +16307,7 @@ AST 映射规则:
         if merge_block in self.generated_blocks:
             return boolop_expr
         # Extract comparison-related instructions from merge_block
-        _CMP_SKIP_OPS = frozenset({
-            'POP_TOP', 'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_FALSE',
-            'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_TRUE',
-            'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_BACKWARD_IF_NONE',
-            'POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_BACKWARD_IF_NOT_NONE',
-            'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE',
-            'CACHE', 'NOP', 'RESUME', 'PUSH_NULL',
-            'SWAP', 'COPY',  # chained compare setup (not single compare)
-        })
+        _CMP_SKIP_OPS = CC_NOISE_OPS
         merge_instrs = [i for i in merge_block.instructions
                         if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
         # Find comparison instruction
