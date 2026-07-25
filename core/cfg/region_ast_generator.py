@@ -26103,6 +26103,9 @@ AST 映射规则:
             self.generated_blocks.add(block)
             return stmts
 
+        # TODO[pass2-SEQ]: 此处在 BASIC 生成器内手工重建 IfRegion 违反「嵌套即抽象节点」
+        # 原则。Pass 2 应在 _identify_conditional_regions 末尾扫描「未被认领的条件跳转块」，
+        # 强制提升为 IfRegion，届时删除本 _cond_jump_bs 分支。
         _cond_jump_bs = None
         for _cjb_i in block.instructions:
             if _cjb_i.opname in CONDITIONAL_JUMP_OPS or _cjb_i.opname in FORWARD_CONDITIONAL_JUMP_OPS or _cjb_i.opname in BACKWARD_CONDITIONAL_JUMP_OPS:

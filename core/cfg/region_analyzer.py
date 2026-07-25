@@ -137,7 +137,7 @@ class BlockRole(Enum):
 
 class RegionType(Enum):
     BASIC = auto()
-    SEQUENCE = auto()
+    SEQUENCE = auto()  # TODO[pass2-SEQ]: dead code, 从不实例化；Pass 2 评估删除或实现
     IF = auto()
     IF_THEN = auto()
     IF_THEN_ELSE = auto()
@@ -2368,7 +2368,7 @@ class RegionAnalyzer:
         RegionType.BOOL_OP: 20,
         RegionType.TERNARY: 15,
         RegionType.ASSERT: 10,
-        RegionType.SEQUENCE: 5,
+        RegionType.SEQUENCE: 5,  # TODO[pass2-SEQ]: dead branch, SEQUENCE 从不实例化；Pass 2 评估删除
         RegionType.BASIC: 0,
     }
 
@@ -4659,15 +4659,11 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
         return {'type': 'Return', 'value': {'type': 'Constant', 'value': None}}
 
     def _is_return_none_block(self, block: BasicBlock) -> bool:
-        instrs = [i for i in block.instructions
-                  if i.opname not in NOISE_OPS]
-        if len(instrs) == 2:
-            if instrs[0].opname == 'LOAD_CONST' and instrs[0].argval is None and instrs[1].opname == 'RETURN_VALUE':
-                return True
-        if len(instrs) == 1:
-            if instrs[0].opname == 'RETURN_CONST' and instrs[0].argval is None:
-                return True
-        return False
+        """判断块是否为 return None 模式（含 POP_TOP 前缀变体）。
+
+        委托给 _is_trivial_return_block 以统一 4 种模式识别。
+        """
+        return self._is_trivial_return_block(block)
 
     def _is_trivial_block(self, block: BasicBlock) -> bool:
         if self._is_return_none_block(block):
@@ -15923,9 +15919,14 @@ RegionType 枚举值: RegionType.ASSERT
         return collected
 
     def _identify_sequence_regions(self, existing_regions: List[Region]) -> List[Region]:
-        """识别顺序区域 / 基础区域（Sequence / Basic Region）
+        """识别基础顺序区域（BASIC）。
 
-        【区域类型】 SEQUENCE — 顺序区域（Sequence Region）
+        NOTE: RegionType.SEQUENCE 当前为 dead code（定义于 RegionType 枚举但从不实例化）。
+        本方法实际仅创建 RegionType.BASIC 区域（每块独立成区）。
+        TODO[pass2-SEQ]: Pass 2 评估是否真正实现 SEQUENCE 区域（合并连续 BASIC 块为多块 SEQ），
+        或彻底删除 RegionType.SEQUENCE 枚举与 REGION_TYPE_PRIORITY 中的 SEQUENCE:5 条目。
+
+        【区域类型】 SEQUENCE — 顺序区域（Sequence Region）— 当前为 dead code，从不实例化
                     BASIC  — 基础区域（Basic Region，单块顺序区域）
         RegionType 枚举值: RegionType.BASIC（每个未被抢占的块独立成区）
 
