@@ -15625,6 +15625,17 @@ AST 映射规则:
                                 # except + log 属控制流变更（影响 nested_found 兜底语义），
                                 # 本轮保守不动——仅添加内联标记，待后续 Pass 把 save-mutate-
                                 # restore 逻辑统一到识别期后一并消除。
+                                # [Pass6-MATCH] 同步：Pass 5 写入后经 Pass6-IF / Pass6-LOOP
+                                # 上游修改使行号再次下移——`except Exception: pass` 现实际
+                                # 位置见紧邻的 `except Exception:` 行（原 Pass 5 引用 L15596
+                                # 为 Pass 5 写入时的快照，已过时）。行号漂移源于
+                                # region_ast_generator.py 顶部 Pass6-IF 添加 [Pass6-IF] 注释段
+                                # （约 12 行）+ Pass6-LOOP 重构 docstring（约 5 行）。本轮
+                                # 仅同步注释行号引用，未触碰可执行代码，控制流不变。验证方法：
+                                # grep `except Exception:` 在 _generate_match 内可重新定位
+                                # （紧邻本注释段下方的 `except Exception:` 即为该反模式位置）。
+                                # 后续 Pass 若实施「save-mutate-restore 统一到识别期」可一并
+                                # 消除此反模式与行号引用漂移源。
                                 except Exception:
                                     pass
                         if not nested_found:
