@@ -174,6 +174,14 @@ class RegionASTGenerator:
         # 依「每块唯一归属」: import 指令归属 generate() 预扫描（父模块体），
         # ternary cond_block 仅拥有 condition preload 指令。
         self._entry_import_extracted_blocks: Set[BasicBlock] = set()
+        # [R3-P2 fix] 记录 for_iter_setup 块的前置赋值语句已由
+        # _build_effective_stmts / _generate_block_statements 发射的块集合。
+        # _loop_generate_for 通过此集合判断是否重复发射 pre_stmts，避免
+        # 误用 generated_blocks（WithRegion 会批量加入其全部 blocks，包括
+        # 未发射 pre_stmts 的 for_iter_setup，导致 test_w099 `x = 0` 丢失）。
+        # 依「每块唯一归属」+「入口引用语义」: pre_stmts 发射权归首次处理
+        # 该块的语句生成器，_loop_generate_for 仅作 fallback。
+        self._fis_pre_stmts_emitted: Set[BasicBlock] = set()
 
     def block_role(self, block: 'BasicBlock') -> 'BlockRole':
         return self.region_analyzer.get_block_role(block)
@@ -1754,6 +1762,30 @@ class RegionASTGenerator:
             expr_instrs.append(instr)
         if expr_instrs:
             last = block.get_last_instruction()
+            # [R3-P2 repro_03_if_elif_bare_name / repro_03_loop_bare_name_and_dup]
+            # 依「每块唯一归属」+「入口引用语义」：当尾部 expr_instrs 以
+            # GET_ITER/GET_AITER 结束（for-iterable 设置序列），且当前块是某个
+            # LoopRegion 的 for_iter_setup 时，该尾部序列是 for 循环的迭代器
+            # 表达式，将由 _loop_generate_for 通过 _loop_extract_for_iter_pre_stmts
+            # 提取为 iter_expr（父 For 引用子 setup 入口），不应在此发射为裸
+            # Expr（repro_03 中 `for s in l:` 的 `l` 被泄漏为孤立 Expr 的根因）。
+            # 此时块内前置赋值语句（如 `l = l.replace(...)`）已通过 STORE_* 处理
+            # 发射为 stmts，标记 _fis_pre_stmts_emitted 以告知 _loop_generate_for
+            # 不要重复发射 pre_stmts（依「每块唯一归属」: pre_stmts 归首次处理者）。
+            _trailing_is_for_iter = any(i.opname in ('GET_ITER', 'GET_AITER') for i in expr_instrs)
+            if _trailing_is_for_iter:
+                _fis_block = block
+                for _lr in self.regions:
+                    if isinstance(_lr, LoopRegion):
+                        _fis = _lr.metadata.get('for_iter_setup')
+                        if _fis is not None and _fis is _fis_block:
+                            _trailing_is_for_iter = True
+                            break
+                else:
+                    _trailing_is_for_iter = False
+            if _trailing_is_for_iter:
+                self._fis_pre_stmts_emitted.add(block)
+                return stmts
             is_recheck = (self._current_loop is not None and last is not None
                           and last.opname in CONDITIONAL_JUMP_OPS and last.argval is not None)
             if is_recheck:
@@ -2994,6 +3026,36 @@ AST 映射规则:
 
 
     def _loop_generate_for(self, region: LoopRegion) -> Dict[str, Any]:
+        """生成 For 循环 AST 节点（含 for_iter_setup 前置赋值发射）。
+
+        算法依据（区域归约 4 原则）：
+          - 自底向上归约：for_iter_setup（含 GET_ITER 的 setup 块）作为
+            LoopRegion 的子节点，在本方法（LoopRegion 生成阶段）统一处理。
+          - 每块唯一归属：for_iter_setup 内的前置赋值（如 `even = []` /
+            `l = l.replace(...)` / `exrights_data = get_exrights_data(...)`）
+            发射权归首次处理该块的语句生成器。本方法通过 `_fis_pre_stmts_emitted`
+            集合判断是否已发射，仅作 fallback。
+          - 入口引用语义：父 For 通过 `_loop_extract_for_iter_pre_stmts`
+            提取 iter_expr（for-iterable 表达式），引用 for_iter_setup 入口。
+
+        R3-P2 修复（repro_03_if_elif_bare_name / repro_03_loop_bare_name_and_dup）：
+          当 for_iter_setup 被父区域（IfRegion elif/else body）的
+          `_build_effective_stmts` 处理时，尾部 GET_ITER 序列被重建为裸 Expr
+          泄漏（`l` / `panel.items`）。修复：在 `_build_effective_stmts` 中
+          检测 for_iter_setup 尾部 GET_ITER 时不发射裸 Expr，标记
+          `_fis_pre_stmts_emitted`；本方法据此跳过 pre_stmts 重复发射。
+
+        R3-P2 LOOP 回归修复（test_for16_for_if）：
+          原先用 `generated_blocks` 守卫判断 pre_stmts 是否已发射，但
+          `generated_blocks` 会被 `_generate_region` 批量填充
+          （for_iter_setup ∈ region.blocks），导致本方法误判 "已发射" 而跳过
+          pre_stmts，使 for_iter_setup 内的模块级赋值（`even = []` / `odd = []`）
+          丢失。修复：改用 `_fis_pre_stmts_emitted` 精确守卫。
+
+        已知限制：for_iter_setup 同时被父区域与本方法处理时，依赖
+          `_fis_pre_stmts_emitted` 避免重复发射；该集合由
+          `_build_effective_stmts` / `_generate_block_statements` 标记。
+        """
         pre_stmts = []
 
         for_iter_setup = region.metadata.get('for_iter_setup')
@@ -3084,7 +3146,21 @@ AST 映射规则:
             else:
                 instrs = [i for i in for_iter_setup.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
                 _fis_pre_stmts, _fis_iter_instrs = self._loop_extract_for_iter_pre_stmts(instrs, for_iter_setup)
-                if _fis_pre_stmts:
+                # [R3-P2 repro_03_if_elif_bare_name / repro_03_loop_bare_name_and_dup]
+                # [R3-P2 LOOP regression fix / test_for16_for_if / test_while15/16]
+                # 依「每块唯一归属」+「入口引用语义」：仅当 for_iter_setup 的前置
+                # 赋值语句尚未被任何语句生成器发射时（_fis_pre_stmts_emitted 为空），
+                # 才在此发射 pre_stmts。原先用 generated_blocks 守卫，但
+                # generated_blocks 会被 LoopRegion._generate_region 批量填充
+                # （for_iter_setup ∈ region.blocks），导致 _loop_generate_for 误判
+                # "已发射"而跳过 pre_stmts，使 for_iter_setup 内的模块级赋值
+                # （如 `even = []` / `odd = []`）丢失（test_for16_for_if 退化根因）。
+                # _fis_pre_stmts_emitted 仅由真正发射了 pre_stmts 的
+                # _build_effective_stmts / _generate_block_statements 标记，语义精确。
+                # 仍需从 _fis_iter_instrs 重建 iter_expr（for-iterable），因为
+                # 父区域处理时 LOAD_* + GET_ITER 尾部序列被重建为裸 Expr，
+                # 父区域未提取 iter_expr。
+                if _fis_pre_stmts and for_iter_setup not in self._fis_pre_stmts_emitted:
                     pre_stmts.extend(_fis_pre_stmts)
                 iter_expr = self.expr_reconstructor.reconstruct(_fis_iter_instrs) if _fis_iter_instrs else None
                 if iter_expr is None and instrs:
@@ -8381,7 +8457,16 @@ AST 映射规则:
                 return None
         if region.else_blocks:
             else_stmts = []
-            # 先生成子区域（LoopRegion/TryExceptRegion/WithRegion），避免_process_if_blocks消耗子区域入口块
+            # [R3-P0-2 fix] 按偏移顺序交错发射子区域与顺序块，避免 try 前的
+            # 顺序赋值（如 `file = '...' % finance_mic`）被发射到 try/except
+            # 之后。原逻辑先生成全部子区域（Try/With/Loop）再处理剩余块，
+            # 导致偏移更小的顺序赋值排到子区域 AST 之后（repro_03_repro04_
+            # file_assignment_lost 根因：@212 file 赋值排在 @224 TryRegion
+            # 之后，with open(file,...) 引用悬空）。依「自底向上归约」+
+            # 「每块唯一归属」：try 入口前的顺序赋值是 else 分支的兄弟节点
+            # （顺序语句），应按偏移顺序保留在 try 之前。子区域非入口块由
+            # _process_if_blocks 经 child_region_blocks 跳过，不重复发射。
+            _child_by_entry = {}
             for child in (region.children or []):
                 if not isinstance(child, (TryExceptRegion, WithRegion, LoopRegion)):
                     continue
@@ -8389,8 +8474,17 @@ AST 映射规则:
                     continue
                 if child.entry in self.generated_blocks:
                     continue
-                child_reachable_from_else = self._is_child_reachable_from_blocks(child, region.else_blocks)
-                if child_reachable_from_else:
+                if self._is_child_reachable_from_blocks(child, region.else_blocks):
+                    _child_by_entry[child.entry] = child
+            _sorted_else = sorted(region.else_blocks, key=lambda b: b.start_offset)
+            _seg_blocks = []
+            for block in _sorted_else:
+                if block in _child_by_entry:
+                    # 先冲刷当前顺序块段，再发射子区域 AST
+                    if _seg_blocks:
+                        else_stmts.extend(self._process_if_blocks(_seg_blocks, region, branch='else'))
+                        _seg_blocks = []
+                    child = _child_by_entry[block]
                     child_id = id(child)
                     if child_id not in self._generated_regions and child_id not in self._generating_regions:
                         child_ast = self._generate_region(child)
@@ -8402,9 +8496,10 @@ AST 映射规则:
                         for b in child.blocks:
                             self.generated_blocks.add(b)
                         self._generated_regions.add(child_id)
-            # 再处理剩余未生成的else块
-            remaining_else_stmts = self._process_if_blocks(region.else_blocks, region, branch='else')
-            else_stmts.extend(remaining_else_stmts)
+                else:
+                    _seg_blocks.append(block)
+            if _seg_blocks:
+                else_stmts.extend(self._process_if_blocks(_seg_blocks, region, branch='else'))
             return else_stmts if else_stmts else None
         if region.elif_final_else:
             else_stmts = self._process_if_blocks(region.elif_final_else, region, branch='else')
@@ -14692,13 +14787,35 @@ AST 映射规则:
                         if isinstance(_block_in_descendant, LoopRegion) and self._is_async_with_send_loop(_block_in_descendant, region) and self.region_analyzer.get_block_role(block) == BlockRole.LOOP_ELSE:
                             pass
                         else:
-                            self.generated_blocks.add(block)
+                            # [R3-P2 repro_03_loop_bare_name_and_dup / test_w099]
+                            # 依「每块唯一归属」+「入口引用语义」：若 block 是
+                            # descendant LoopRegion 的 for_iter_setup（包含前置赋值
+                            # 如 `x = 0` / `l = l.replace(...)` + GET_ITER 序列），
+                            # 不在此标记为 generated —— 否则后续 `_loop_generate_for`
+                            # 检测到 for_iter_setup in generated_blocks 会跳过 pre_stmts
+                            # 发射，导致 with body 首条赋值语句丢失（test_w099
+                            # 80→71 退化根因）。pre_stmts 发射权归 `_loop_generate_for`
+                            # （通过 _loop_extract_for_iter_pre_stmts 提取），iter_expr
+                            # 重建也归该处。仍 continue 避免双重处理。
+                            _is_fis_of_desc_loop = (
+                                isinstance(_block_in_descendant, LoopRegion)
+                                and _block_in_descendant.metadata.get('for_iter_setup') is block
+                            )
+                            if not _is_fis_of_desc_loop:
+                                self.generated_blocks.add(block)
                             continue
                     if isinstance(_block_in_descendant, LoopRegion):
                         if self._is_async_with_send_loop(_block_in_descendant, region) and self.region_analyzer.get_block_role(block) == BlockRole.LOOP_ELSE:
                             pass
                         else:
-                            self.generated_blocks.add(block)
+                            # [R3-P2 repro_03_loop_bare_name_and_dup / test_w099]
+                            # 同上：for_iter_setup 不标记 generated，留给
+                            # `_loop_generate_for` 发射 pre_stmts。
+                            _is_fis_of_desc_loop_2 = (
+                                _block_in_descendant.metadata.get('for_iter_setup') is block
+                            )
+                            if not _is_fis_of_desc_loop_2:
+                                self.generated_blocks.add(block)
                             continue
 
                 nested_region = self.region_analyzer.get_entry_region_for_block(block)
@@ -15507,6 +15624,58 @@ AST 映射规则:
 
             items = []
             pre_stmts = []
+            # [R3-P0-2 fix] 入口块在 BEFORE_WITH 之前的顺序赋值语句（如
+            # `file = '...' % finance_mic`）不应被 WithRegion 吞并。
+            # _extract_with_items 已把这些指令从 context_expr 中剔除，
+            # 但它们仍留在 region.entry 块内（WithRegion 拥有 entry 块）。
+            # 此处提取 entry 块内、BEFORE_WITH 之前、以 STORE_* 结尾的指令段，
+            # 作为 with 语句之前的顺序语句发射。依「自底向上归约」+
+            # 「每块唯一归属」: 这些指令是 else 分支的兄弟语句，不属于
+            # with items/body；entry 块归 WithRegion，但其前置语句仍需发射。
+            # repro_03_repro04_file_assignment_lost 根因：@234-242 的
+            # `file = '...' % finance_mic` 被吞并，with open(file,...) 引用悬空。
+            if region.entry is not None:
+                _bw_idx_in_entry = None
+                for _i, _instr in enumerate(region.entry.instructions):
+                    if _instr.opname in ('BEFORE_WITH', 'BEFORE_ASYNC_WITH'):
+                        _bw_idx_in_entry = _i
+                        break
+                if _bw_idx_in_entry is not None and _bw_idx_in_entry > 0:
+                    _pre_bw_instrs = []
+                    _has_store_boundary = False
+                    for _instr in region.entry.instructions[:_bw_idx_in_entry]:
+                        if _instr.opname in NOISE_OPS:
+                            continue
+                        if _instr.opname in ('BEFORE_WITH', 'BEFORE_ASYNC_WITH'):
+                            break
+                        _pre_bw_instrs.append(_instr)
+                        if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                            _has_store_boundary = True
+                    # [R3-P2 WITH 退化修复 / test_w007/008/030/031]
+                    # 依「每块唯一归属」+「入口引用语义」: 仅当 _pre_bw_instrs
+                    # 的首条非噪声指令【不是】STORE_* 时才发射前置赋值语句。
+                    # 首条为 STORE_* 表示该段是 for-iter pattern（STORE_NAME i 的
+                    # RHS = FOR_ITER 推入的值，位于前一区块 LoopRegion.entry），
+                    # 此 STORE_* 不构成完整语句、属 LoopRegion 语义；应留给
+                    # `_extract_with_items` 处理 LOAD_NAME ctx + BEFORE_WITH 作
+                    # context_expr，禁止作为裸 Expr 前置发射。
+                    # 否则（首条为 LOAD/CALL 等值产生指令），裁剪到最后一个 STORE_*
+                    # 结尾 —— 之后的指令属 with context_expr（如 repro_03_repro04
+                    # 中 `file = ...` 之后的 `PUSH_NULL + LOAD_NAME open + ... + CALL`）。
+                    if _pre_bw_instrs and _pre_bw_instrs[0].opname not in (
+                            'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                        if _has_store_boundary:
+                            _last_store_idx = -1
+                            for _i, _instr in enumerate(_pre_bw_instrs):
+                                if _instr.opname in ('STORE_FAST', 'STORE_NAME',
+                                                     'STORE_GLOBAL', 'STORE_DEREF'):
+                                    _last_store_idx = _i
+                            if _last_store_idx >= 0:
+                                _pre_bw_instrs = _pre_bw_instrs[:_last_store_idx + 1]
+                                _entry_pre_stmts = self._build_statements_from_instructions(
+                                    _pre_bw_instrs, region.entry)
+                                if _entry_pre_stmts:
+                                    pre_stmts.extend(_entry_pre_stmts)
             for context_instrs, target in region.items:
                     if context_instrs:
                         import_instrs = []
@@ -27400,6 +27569,44 @@ AST 映射规则:
         # 处理剩余的多语句情况
         # 当一个块包含多条独立语句时（如 while 循环体），需要正确分割
         if stmt_instrs:
+            # [R3-P2 repro_03_if_elif_bare_name / repro_03_loop_bare_name_and_dup]
+            # 依「每块唯一归属」+「入口引用语义」：当尾部 stmt_instrs 仅含
+            # for-iterable 设置序列（GET_ITER/GET_AITER 结尾、且无 STORE_* 等
+            # 完整语句边界）且当前块是某个 LoopRegion 的 for_iter_setup 时，
+            # 该尾部序列是 for 循环的迭代器表达式，将由 _loop_generate_for
+            # 通过 _loop_extract_for_iter_pre_stmts 提取为 iter_expr（父 For
+            # 引用子 setup 入口），不应在此发射为裸 Expr（repro_03 中
+            # `for s in l:` 的 `l` / `for stock in panel.items:` 的 `panel.items`
+            # 被泄漏为孤立 Expr 的根因）。
+            # 守卫：仅当 stmt_instrs 不含 STORE_*（即纯粹的 for-iterable 表达式
+            # 序列，无前置完整赋值语句）时才抑制。若 stmt_instrs 含 STORE_*，
+            # 说明块内还有未发射的赋值语句（如 with body 首条 `x = 0`），
+            # 抑制会丢失这些语句（test_w099 / test_w19withbreak 退化根因）。
+            # 此时交由后续 return/Expr 处理逻辑统一发射，_loop_generate_for
+            # 通过 for_iter_setup not in generated_blocks 守卫避免重复发射 pre_stmts。
+            _gs_has_store = any(
+                i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
+                             'STORE_DEREF', 'STORE_SUBSCR', 'STORE_ATTR')
+                for i in stmt_instrs)
+            _gs_trailing_for_iter = (not _gs_has_store and any(
+                i.opname in ('GET_ITER', 'GET_AITER') for i in stmt_instrs))
+            if _gs_trailing_for_iter:
+                for _lr in self.regions:
+                    if isinstance(_lr, LoopRegion):
+                        _fis = _lr.metadata.get('for_iter_setup')
+                        if _fis is not None and _fis is block:
+                            _gs_trailing_for_iter = True
+                            break
+                else:
+                    _gs_trailing_for_iter = False
+            if _gs_trailing_for_iter:
+                self.generated_blocks.add(block)
+                # [R3-P2 LOOP regression fix] 同步标记 _fis_pre_stmts_emitted，
+                # 告知 _loop_generate_for 本方法已发射 for_iter_setup 内的 STORE_*
+                # 前置赋值（在 stmts 中），避免 _loop_generate_for 重复发射。
+                # 依「每块唯一归属」: pre_stmts 发射权归首次处理该块的语句生成器。
+                self._fis_pre_stmts_emitted.add(block)
+                return stmts
             if (len(stmt_instrs) == 1 and
                 stmt_instrs[0].opname == 'LOAD_CONST' and stmt_instrs[0].argval is None):
                 has_yield_from_before = any(

@@ -185,7 +185,126 @@
 
 ## 轮 3 (Round 3)
 
-- [ ] R3-T1 ~ R3-T8
+> **状态**：测试工程师阶段已完成（10 个 repro_03_*.py 全部 DEFECT-REPRO）；修复工程师阶段执行中——P0×2 + P1×3 已完成并验证，P2 修复与最终验证/报告撰写待执行。
+> **R3 基线**：反编译产物 COMPILE_OK（2547 行），81 个函数字节码不一致、41 个签名不匹配、4 个缺失 code objects、18 个截断函数。
+> **R3 缺陷分布**：10 类（5 项 R2 残留演化 + 5 项 R3 新增/重点验证），P0=2、P1=3、P2=5。
+> **R3 重大发现**：R2 声称已修复的 repro_14（elif 链后函数体截断）在 quotation.pyc 实际路径仍复现（9 个财务函数 469→64）；repro_15 BoolOp 在 quotation.pyc::check_frequency 仍翻转为 `and`。
+
+### 阶段一：测试工程师（已完成）
+
+- [x] R3-T1: 反编译 + 字节码 diff → `decompile_report.md`
+  - 反编译命令 `python pycdc.py /workspace/quotation.pyc`（产物 `/tmp/r3_decompiled.py`，2547 行）
+  - 字节码 diff 工具 `/tmp/r3_diff.py`（输出 `/tmp/r3_diff_detail.txt` + `/tmp/r3_summary.txt`）
+  - 不一致清单：10 类缺陷 + 18 个截断函数 + 4 个缺失 code objects + R2 声称修复点逐项复测
+  - 关键结论：R2 完全修复 5 项（repro_13/15 minimal/02/16 + 孤儿 try）；R2 声称修复但 R3 实测仍复现 1 项（repro_14 quotation.pyc 路径）；R2 残留 8 项（repro_01/04/04b/06/07/08/09/11/12）
+- [x] R3-T2: ≥10 最小复现实例 → `minimal_repros/`
+  - 10 个 repro 全部通过 `py_compile` 独立编译
+  - 10/10 DEFECT-REPRO 验证通过
+  - 归档至 `rounds/round_03/test_engineer/minimal_repros/repro_03_*.py`
+
+### 阶段二：修复工程师（执行中 — P0×2 + P1×3 已验证，P2 修复与最终验证/报告待执行）
+
+- [x] R3-T3: 根因分析 + 定位（依赖 R3-T1/T2）
+  - 对 10 个 repro 逐项定位到 `_identify_*_regions` 或 `_generate_*` 方法
+  - 输出根因分析：区域类型 + 算法偏离点 + 4 原则违反项
+  - 涉及文件：`core/cfg/region_analyzer.py`、`core/cfg/region_ast_generator.py`、`core/cfg/pattern_parser.py`、`core/cfg/ast_converter.py`
+
+- [x] R3-T4: P0 修复实施（含 docstring 同步）
+  - [x] R3-T4a: 修复 repro_03_elif_chain_func_body_truncation（P0-1，elif 链后函数体截断，9 个财务函数 469→64）— **已验证**
+    - 定位：`region_analyzer.py::_identify_conditional_regions` / `_find_structural_merge_from_chain_end`
+    - 根因：复杂 CFG（含嵌套 for/try/return）中 ipdom 链遍历未正确识别 merge 点；原 sink 判定逻辑把 ipdom=None 等同于 sink，导致 merge=None，elif 链后 fall-through 块被误判为不可达子区域，函数体整段被吸收
+    - 修复方向：(1) sink 判定逻辑改为仅当块含 RETURN/RAISE/RERAISE 或无正常后继时才视为 sink；(2) 新增 `_find_structural_merge_from_chain_end` 从 ipdom 链终止块的后继中查找结构区域入口作为 merge 点；(3) ipdom 链遍历增加普通合并点（非结构区域入口但有 >1 个非回边前驱）检测，提前停止遍历
+    - 算法依据：自底向上归约 + 每块唯一归属
+    - 验证结果：`get_balance_statement` 函数体从 13 行恢复至 69 行，9 个财务函数均不再截断 ✓
+  - [x] R3-T4b: 修复 repro_03_repro04_file_assignment_lost（P0-2，try 块前 file 赋值丢失）— **已验证**
+    - 定位：`region_ast_generator.py::_generate_with` / `region_analyzer.py::_extract_with_items`
+    - 根因：`get_market_detail` 函数中 try 块前的 `file = '...' % finance_mic` 赋值语句被误识别为 TryExcept/WithRegion 的 setup 块而吞并，导致 `with open(file, 'rb')` 中 file 引用悬空
+    - 修复方向：(1) `_extract_with_items` 提取上下文表达式时遇到 STORE_* 指令清空已收集的 ctx_expr，仅保留 STORE_* 之后至 BEFORE_WITH 之间的指令作为真正的 context_expr；(2) `_generate_with` 提取 entry 块内 BEFORE_WITH 之前、以 STORE_* 结尾的指令段，作为 with 语句之前的顺序语句发射；(3) `_if_generate_else_branch` 按偏移顺序交错处理子区域（Try/With/Loop）和顺序块
+    - 算法依据：自底向上归约 + 每块唯一归属
+    - 验证结果：`repro_03_repro04_file_assignment_lost.pyc` 中 `file = ...` 正确出现在 `try:` 之前；quotation.pyc 中 `get_market_detail` 函数的 file 赋值已恢复 ✓
+
+- [x] R3-T5: P1 修复实施（已完成 3 项：repro_03_match_case_none_to_wildcard / repro_03_if_nested_inner_lost / repro_03_if_ifexp_arg_to_and_docstring）
+  - [x] R3-T5a: 修复 repro_03_match_case_none_to_wildcard（P1-1，case None 被转换为 case _）— **已验证**
+    - 定位：`pattern_parser.py::_extract_case_pattern` / `ast_converter.py::_convert_match_pattern`
+    - 根因：PatternParser 已能识别 `case None` 为 `MatchSingleton(None)`（POP_JUMP_FORWARD_IF_NOT_NONE / POP_JUMP_IF_NOT_NONE），但 ast_converter.py 在转换时未处理 `MatchSingleton` 类型，默认返回 `ASTName('_')`，导致渲染为 `case _`
+    - 修复方向：(1) `pattern_parser.py::_extract_case_pattern` 识别 `POP_JUMP_FORWARD_IF_NOT_NONE` / `POP_JUMP_IF_NOT_NONE` 为 `MatchSingleton(None)`；(2) `ast_converter.py::_convert_match_pattern` 添加 `MatchSingleton` 类型处理，直接返回其字典结构
+    - 算法依据：嵌套即抽象节点
+    - 验证结果：repro_03_match_case_none_to_wildcard.pyc 中 `case None` 正确输出；quotation.pyc 中检测到 19 处 `case None` ✓
+  - [x] R3-T5b: 修复 repro_03_if_nested_inner_lost（P1-2，嵌套 if 内层丢失）— **已验证**
+    - 定位：`region_analyzer.py::_detect_boolop_conditional_chain`
+    - 根因：BoolOpRegion 错误地将含 STORE_* 指令的 body 块识别为 `and` 操作数，导致外层 if 与内层 if 合并为 `if A and B:`，并将 body 语句提升出 if 块
+    - 修复方向：`_detect_boolop_conditional_chain` 中添加 STORE_* 检测，当非首块含 STORE_* 指令时中断链，避免 body 块被误纳为 BoolOp 操作数
+    - 算法依据：自底向上归约 + 嵌套即抽象节点
+    - 验证结果：repro_03_if_nested_inner_lost.pyc 中嵌套 if 结构正确保留，语句未被提升 ✓
+    - 已知限制：walrus `(x := foo()) and bar` 的条件块也含 STORE_FAST，此处会误中断链（罕见模式，留待后续）
+  - [x] R3-T5c: 修复 repro_03_if_ifexp_arg_to_and_docstring（P1-3，IfExp 实参→and + docstring 体）— **已验证**
+    - 定位：`region_analyzer.py::_detect_boolop_conditional_chain`
+    - 根因：`_detect_boolop_conditional_chain` 错误地将 IfExp 的条件块（含 `POP_JUMP_IF_FALSE`）识别为 `and` 操作数，导致 IfExp 实参被转换为 `if A and B:` 条件，且字符串常量被误发射为 docstring
+    - 修复方向：`_detect_boolop_conditional_chain` 中新增 IfExp 检测，当非首块的 fall-through 后继以 `JUMP_FORWARD` 终结时中断链，避免 IfExp 条件块被误纳为 BoolOp 操作数（JUMP_FORWARD 是 IfExp true-value 跳过 false-value 的特征）
+    - 算法依据：自底向上归约 + 嵌套即抽象节点
+    - 验证结果：repro_03_if_ifexp_arg_to_and_docstring.pyc 中 IfExp 正确保留为 Call 实参，docstring 错误消失 ✓
+    - 已知限制：嵌套 if 的 then-body 末尾若有 JUMP_FORWARD 由 P1-2 的 STORE_* 检测覆盖
+
+- [ ] R3-T6: P2 修复实施（按时间预算择优，至少 2 项 — 待执行）
+  - [ ] R3-T6a: 修复 repro_03_try_except_handler_if_cond_lost（P2-1，except handler 内 `if e2.code == 401:` 条件丢失→裸 `if HTTPError:`）— **待执行**
+    - 定位：`region_ast_generator.py::_generate_try`
+    - 根因初判：`_generate_try` 在 except handler 内重建 `if e.code == N:` 时，把 `LOAD_FAST e + LOAD_ATTR code + LOAD_CONST N + COMPARE_OP` 的 Compare 节点丢弃，改为引用 except 子句的 `LOAD_GLOBAL ExceptionClass`（HTTPError/BaseException），退化为裸 `if HTTPError:`（恒真）
+    - 修复方向：把 except handler 内 `LOAD_FAST e + LOAD_ATTR code + LOAD_CONST N + COMPARE_OP` 完整 Compare 节点保留作 If 条件，禁止只保留 `LOAD_GLOBAL cls`
+    - 算法依据：嵌套即抽象节点 + 入口引用语义
+    - 验证目标：repro_03_try_except_handler_if_cond_lost.pyc 中 `if e2.code == 401:` 条件恢复；quotation.pyc::api_get_financial line 141-150 条件恢复
+  - [ ] R3-T6b: 修复 repro_03_loop_store_subscr_to_annotation（P2-2，STORE_SUBSCR 被错误转换为变量注解 + spurious break）— **待执行**
+    - 定位：`region_ast_generator.py::_build_effective_stmts` / `_generate_loop`
+    - 根因初判：`_build_effective_stmts` 在处理 `STORE_SUBSCR` 时未能正确重建 `Subscript` 目标，导致赋值语句被错误解析为 `STORE_ANNOTATION`（PEP 526 变量注解），发射 `d[k]: d = call(...)`；循环体中出现多余 `break`
+    - 修复方向：`_build_effective_stmts` 中区分 `STORE_SUBSCR`（d[k]=call）与 `STORE_ANNOTATION`（PEP 526），正确重建 `Subscript` 目标为 `d[k] = v`；去除 spurious break
+    - 算法依据：每块唯一归属
+    - 验证目标：repro_03_loop_store_subscr_to_annotation.pyc 中 `returninfo[item] = ...` 正确输出；quotation.pyc::get_fundflow_day line 2179-2182 恢复
+  - [ ] R3-T6c: 修复 repro_03_loop_bare_name_and_dup（P2-3，循环体赋值目标丢失→裸 Name + 重复）— **可选**
+    - 定位：`region_ast_generator.py::_generate_if` / `_generate_loop` / `_build_effective_stmts`
+    - 修复方向：保留 `STORE_FAST var` 赋值目标；`_build_effective_stmts` 去重前驱语句
+  - [ ] R3-T6d: 修复 repro_03_loop_spurious_for_else_double（P2-4，双层 spurious for-else）— **可选**
+    - 定位：`region_analyzer.py::_identify_loop_regions`
+    - 修复方向：else 归属须判定 fall-through 块是否仅含循环出口 + 后续顺序语句，覆盖嵌套 for 与 match case 内 for
+  - [ ] R3-T6e: 修复 repro_03_if_elif_bare_name（P2-5，elif 分支首条赋值 RHS 丢失→裸 Name）— **可选**
+    - 定位：`region_ast_generator.py::_generate_if`
+    - 修复方向：保留 `LOAD_FAST l + LOAD_ATTR replace + CALL_METHOD` 的 Call 节点，禁止只保留 receiver `LOAD_FAST l` 作孤立 Expr
+
+- [ ] R3-T7: 回归测试（≤280s）— **待执行**
+  - [ ] R3-T7a: 10 个 R3 repro 反编译验证（核心缺陷消除）
+  - [ ] R3-T7b: 既有测试矩阵无退化（IF/LOOP/TRY/WITH/MATCH/BOOLOP/TERNARY/CC/SEQ/ASSERT 子集）
+  - [ ] R3-T7c: quotation.pyc 反编译 stderr 维持 0
+  - [ ] R3-T7d: quotation.pyc 反编译产物 `compile()` 通过（COMPILE_OK）
+  - [ ] R3-T7e: quotation.pyc 中 `get_balance_statement` 函数体不再截断（orig=469 → new ≥ 400）
+  - [ ] R3-T7f: quotation.pyc 中 `get_market_detail` 的 `file = ...` 赋值恢复
+  - [ ] R3-T7g: 残留不一致数 ≤ R3 基线（81 个函数不一致，目标 ≤ 50；截断函数 18 → ≤ 5）
+
+- [ ] R3-T8: `fix_report.md` 生成（rounds/round_03/repair_engineer/fix_report.md）— **待执行**
+  - 修复点列表（按 repro 编号 + 涉及方法 + 算法依据 + 4 原则对应条款）
+  - docstring 更新清单（方法名 + 6 项模板覆盖确认）
+  - 回归结果（10 repro 通过状态 + 既有矩阵退化检查）
+  - 残留不一致数（与 R3 基线 81 个函数不一致对比，应下降；推荐目标 ≤ 50）
+  - 算法 4 原则合规性自检
+  - 已知限制（walrus + IfExp JUMP_FORWARD 等）
+
+- [ ] R3-T9: 反模式自检 — **待执行**
+  - 无 `_fix_/_merge_/_patch_/_fallback_/_hack_/_workaround_/_temp_` 前缀 0 新增（grep 验证）
+  - `_merge_block_is_loop_back_edge` 仍未重命名（pre-existing，按 spec 留待后续轮次）
+
+- [ ] R3-T10: 涉及的 `_identify_*_regions` 方法 docstring 已按 6 项统一模板更新 — **待执行**
+  - 6 项：算法依据 / 归约顺序 / 唯一归属判定 / 嵌套处理 / 入口引用语义 / 反编译流程
+  - 待更新方法：`_identify_conditional_regions`（P0-1 修改）/ `_extract_with_items` + `_generate_with`（P0-2 修改）/ `_detect_boolop_conditional_chain`（P1-2/P1-3 修改）/ `_extract_case_pattern`（P1-1 修改）
+
+- [ ] R3-T11: commit + push `qpyc-r03:`（≤300s，待用户授权）
+
+## R3 验证补充检查点（待执行）
+
+- [ ] R3-V1: `python -c "import core.cfg.region_analyzer; import core.cfg.region_ast_generator; import core.cfg.cfg_builder; import core.cfg.ast_converter; import core.cfg.pattern_parser"` 编译通过
+- [ ] R3-V2: 反模式 grep 验证 0 新增（`_fix_/_merge_/_patch_/_fallback_/_hack_/_workaround_/_temp_` 前缀）
+- [ ] R3-V3: quotation.pyc 反编译 stderr 维持 0
+- [ ] R3-V4: quotation.pyc 反编译产物 `compile()` 通过（COMPILE_OK）
+- [ ] R3-V5: quotation.pyc 中 `get_balance_statement` 函数体不再截断（orig=469 → new ≥ 400）
+- [ ] R3-V6: quotation.pyc 中 `get_market_detail` 的 `file = ...` 赋值恢复
+- [ ] R3-V7: quotation.pyc 中 `check_frequency` 6 路 BoolOp 在 quotation.pyc 路径恢复为 `or`（不仅 minimal repro）— 待评估是否本轮覆盖
+- [ ] R3-V8: 10 个 R3 repro 全部反编译产物核心缺陷消除
 
 ## 轮 4 (Round 4)
 

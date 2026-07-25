@@ -1758,6 +1758,53 @@ class RegionAnalyzer:
     def _find_nearest_common_post_dominator(self, block_a: BasicBlock, block_b: BasicBlock) -> Optional[BasicBlock]:
         return self.dom_analyzer.find_nearest_common_post_dominator_two(block_a, block_b)
 
+    def _find_structural_merge_from_chain_end(self, chain_end, structural_region_entries, structural_region_co_blocks):
+        """[R3-P0-1] 从 ipdom 链终止块的后继中查找结构区域入口作为 merge 点。
+
+        当 ipdom 链因函数含多个 return 路径而中断（chain_end.immediate_post_dominator
+        为 None）但 chain_end 非真 sink（有正常后继）时，分支可能已 fall-through 到
+        后续结构化代码。依「自底向上归约」+「每块唯一归属」：结构区域（loop/match/
+        try/with）的入口块已归属该结构区域，不属于当前 IfRegion 的分支。当某后继是
+        结构区域入口且存在来自区域外部的非回边前驱时，该后继即为分支退出到后续结构化
+        代码的 merge 点。
+
+        算法依据：
+        - 自底向上归约：结构区域（Phase 2a）先于 IfRegion（Phase 2）识别，入口块
+          已归约，IfRegion 不应重复吸收。
+        - 每块唯一归属：结构区域入口块的唯一归属是结构区域，IfRegion 分支应在
+          merge 点停止收集。
+
+        Args:
+            chain_end: ipdom 链终止块（immediate_post_dominator 为 None 但有正常后继）
+            structural_region_entries: 所有结构区域的块集合
+            structural_region_co_blocks: 块到所属结构区域块集合的映射
+
+        Returns:
+            结构区域入口块作为 merge 点，或 None（未找到）
+        """
+        if chain_end is None:
+            return None
+        _normal_succs = [s for s in chain_end.successors
+                         if s not in getattr(chain_end, 'exception_successors', set())]
+        for _succ in _normal_succs:
+            if _succ in structural_region_entries:
+                _non_backedge_preds = sum(
+                    1 for p in _succ.predecessors
+                    if not any(i.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                               for i in p.instructions)
+                )
+                if _non_backedge_preds > 1:
+                    _succ_co_blocks = structural_region_co_blocks.get(_succ, set())
+                    _has_external = any(
+                        p not in _succ_co_blocks
+                        and not any(i.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                                    for i in p.instructions)
+                        for p in _succ.predecessors
+                    )
+                    if _has_external:
+                        return _succ
+        return None
+
 
     def _collect_blocks_on_path(self, entry: BasicBlock, exit_block: BasicBlock, stop_set: Optional[Set[BasicBlock]] = None) -> Set[BasicBlock]:
         result: Set[BasicBlock] = set()
@@ -7458,12 +7505,31 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
             start_search = prev_bw_pos + 1
             
             # 从 start_search 到 bw_pos 之间提取上下文表达式
+            # [R3-P0-2 fix] 当入口块在 BEFORE_WITH 之前还含有 STORE_* 指令时，
+            # 该 STORE_* 是上一条顺序赋值语句的目标（如 `file = '...' % x`），
+            # 其前置 LOAD/CALL/BINARY_OP 指令属于该赋值 RHS，不应并入 with 的
+            # context_expr。repro_03_repro04_file_assignment_lost 根因：entry@234
+            # 同时含 `file = '...' % finance_mic`（@234-242）与 `open(file, 'rb')`
+            # （@244-264），原逻辑把 @234-238 的 LOAD_CONST/LOAD_FAST/BINARY_OP
+            # 误并入 with items，导致 `file = ...` 赋值整段被 WithRegion 吞并，
+            # with open(file, ...) 引用悬空。依「自底向上归约」+「每块唯一归属」：
+            # 遇 STORE_* 时清空已收集的 ctx_expr，仅保留 STORE_* 之后至
+            # BEFORE_WITH 之间的指令作为真正的 context_expr；前置指令由
+            # _process_if_blocks 等顺序发射路径处理（WithRegion.entry 仍为
+            # 含 BEFORE_WITH 的块，但 items 不再吞并前驱赋值）。
             ctx_expr = []
             i = start_search
             while i < bw_pos:
                 instr = instructions[i]
                 # 跳过噪声指令
                 if instr.opname in NOISE_OPS:
+                    i += 1
+                    continue
+                # STORE_* 是语句边界：之前收集的指令属于上一条赋值语句 RHS，
+                # 不是 with 的 context_expr。清空已收集列表，使后续指令成为
+                # 真正的 context_expr 起点。
+                if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                    ctx_expr = []
                     i += 1
                     continue
                 # 收集所有看起来是加载/调用的指令
@@ -10805,10 +10871,36 @@ RegionType 枚举值: RegionType.ASSERT
                             )
                             if _has_external_non_backedge_pred:
                                 break
+                        elif _non_backedge_preds > 1:
+                            # [R3-P0-1 fix] Plain merge point（非结构区域入口）且
+                            # 有 >1 个非回边前驱：分支的多条路径在此汇合。这是
+                            # if/elif 构造的边界——其后继块是顺序函数体，不属于
+                            # 当前分支。停止遍历，避免 _collect_branch_blocks 越过
+                            # merge 点吸收整个函数体（repro_03_elif_chain_func_body_
+                            # truncation 根因：elif 链的 then/else 在 @160 汇合，
+                            # 原逻辑越过 @160 追到 @246 RETURN，误判 else 分支为
+                            # sink → merge=None → 函数体被吸收为不可达子区域）。
+                            # 依「自底向上归约」+「每块唯一归属」：merge 点后的块
+                            # 归属顺序函数体，不归属 IfRegion 分支。当 then 分支
+                            # sink 时，merge 点后的代码仅经 else 可达，作为顺序体
+                            # 发射语义等价。结构区域入口的内部汇合（无外部前驱）
+                            # 仍由上方 if 分支处理（不在此 break）。
+                            break
                         _visited.add(_next)
                         _then_chain_end = _next
-                    if any(i.opname in ('RAISE_VARARGS', 'RETURN_VALUE') for i in _then_chain_end.instructions) or _then_chain_end.immediate_post_dominator is None:
+                    # [R3-P0-1 fix] sink 判定：仅当块真正终止控制流（RETURN/RAISE/RERAISE
+                    # 或无正常后继）时才视为 sink。ipdom=None 不等价于 sink——当函数含
+                    # 多个 return 路径时，post-dominator 树仅以 virtual_exit 为公共后
+                    # 支配，virtual_exit 被丢弃后多数块的 ipdom 为 None，但它们并非 sink。
+                    # 依「自底向上归约」+「每块唯一归属」：误判 sink 会导致 merge=None，
+                    # 进而 _collect_branch_blocks 无边界地吸收整个函数体（repro_03_elif_
+                    # chain_func_body_truncation 根因）。
+                    if any(i.opname in ('RAISE_VARARGS', 'RETURN_VALUE', 'RERAISE') for i in _then_chain_end.instructions):
                         _then_sink = True
+                    elif _then_chain_end.immediate_post_dominator is None:
+                        _then_normal_succs = [s for s in _then_chain_end.successors
+                                              if s not in getattr(_then_chain_end, 'exception_successors', set())]
+                        _then_sink = not _then_normal_succs
                 if not _else_sink:
                     _else_chain_end = else_succ
                     _visited = {else_succ}
@@ -10853,14 +10945,40 @@ RegionType 枚举值: RegionType.ASSERT
                             )
                             if _has_external_non_backedge_pred:
                                 break
+                        elif _non_backedge_preds > 1:
+                            # [R3-P0-1 fix] 同 then 分支：Plain merge point（非结构
+                            # 区域入口）且有 >1 个非回边前驱——分支路径在此汇合，
+                            # 是 if/elif 构造的边界。停止遍历，避免越过 merge 点
+                            # 吸收函数体（repro_03_elif_chain_func_body_truncation）。
+                            # 详见 then 分支同名注释的算法依据。
+                            break
                         _visited.add(_next)
                         _else_chain_end = _next
-                    if any(i.opname in ('RAISE_VARARGS', 'RETURN_VALUE') for i in _else_chain_end.instructions) or _else_chain_end.immediate_post_dominator is None:
+                    # [R3-P0-1 fix] 同 then 分支：仅当块真正终止控制流时才视为 sink。
+                    # ipdom=None 因多 return 路径而非真 sink 时，误判会导致 merge=None，
+                    # _collect_branch_blocks 无边界吸收整个函数体（repro_03 根因）。
+                    if any(i.opname in ('RAISE_VARARGS', 'RETURN_VALUE', 'RERAISE') for i in _else_chain_end.instructions):
                         _else_sink = True
+                    elif _else_chain_end.immediate_post_dominator is None:
+                        _else_normal_succs = [s for s in _else_chain_end.successors
+                                              if s not in getattr(_else_chain_end, 'exception_successors', set())]
+                        _else_sink = not _else_normal_succs
                 if _then_sink and not _else_sink:
                     merge = else_succ.immediate_post_dominator
+                    # [R3-P0-1 fix] 当 else 分支 ipdom=None（多 return 路径）时，
+                    # 从 _else_chain_end 的后继中查找结构区域入口作为 merge 点。
+                    # 依「自底向上归约」+「每块唯一归属」：分支已 fall-through 到
+                    # 后续结构化代码（loop/match/try/with），结构区域入口块已归属
+                    # 该结构区域，不应被 IfRegion else 分支吸收。
+                    if merge is None and _else_chain_end is not None:
+                        merge = self._find_structural_merge_from_chain_end(
+                            _else_chain_end, _structural_region_entries, _structural_region_co_blocks)
                 elif _else_sink and not _then_sink:
                     merge = then_succ.immediate_post_dominator
+                    # [R3-P0-1 fix] 同上：then 分支 ipdom=None 时查找结构区域入口
+                    if merge is None and _then_chain_end is not None:
+                        merge = self._find_structural_merge_from_chain_end(
+                            _then_chain_end, _structural_region_entries, _structural_region_co_blocks)
                 # [wl32 fix] When both branches sink but one is a BREAK/PURE_BREAK
                 # block, the code after the if is sequential (not an else-branch).
                 # Set merge to the non-BREAK successor so the BREAK branch is
@@ -15650,6 +15768,62 @@ RegionType 枚举值: RegionType.ASSERT
                 if first_jt_offset is not None and cur_jt_offset is not None and first_jt_offset > cur_jt_offset:
                     break
             op_type = 'and' if ('FALSE' in last.opname or '_IF_NONE' in last.opname) else 'or'
+            # [R3-P1-2 fix] 依「自底向上归约」+「嵌套即抽象节点」:
+            # 当 current 块（非首块）在最终条件跳转之前含有 STORE_* 指令时，
+            # 它不是 BoolOp 的操作数，而是外层 if then-body 中嵌套的内层 if
+            # 条件块。例如 `if A: x=...; check(...); if B: ...` 编译为
+            #   block@A: cond_A; POP_JUMP_IF_FALSE → merge
+            #   block@body: x=...(STORE_FAST); check(...); cond_B; POP_JUMP_IF_FALSE → merge
+            # 两块都跳向 merge，但 block@body 含 STORE_FAST（语句），是
+            # then-body 而非 and 第二操作数。旧逻辑把含 STORE_* 的 body
+            # 块当作 and 操作数，合并为 `if A and B:`，并把 x=.../check(...)
+            # 提升出 if 块（repro_03_if_nested_inner_lost 根因）。
+            # 修复：非首块且含 STORE_* 时中断链，让 IfRegion 识别把
+            # block@body 作为 then_blocks 收集，内层 if 作为嵌套 IfRegion
+            # 子节点。首块是 start_block（入口条件块），不检查。
+            # 已知限制：walrus `(x := foo()) and bar` 的条件块也含 STORE_FAST，
+            # 此处会误中断链。该模式极罕见且当前测试矩阵无覆盖，留待后续。
+            if chain:
+                _cur_has_store = any(
+                    i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
+                    for i in current.instructions
+                )
+                if _cur_has_store:
+                    break
+            # [R3-P1-3 fix] 依「自底向上归约」+「嵌套即抽象节点」:
+            # 当 current 块（非首块）的 fall-through 后继（非跳转目标的
+            # 条件后继）以 JUMP_FORWARD 终结时，current 不是 BoolOp 的
+            # 操作数，而是 IfExp（三元表达式）的条件块。例如
+            #   Quote(log, 'trade' if is_trade else 'backtest')
+            # 编译为
+            #   block@call_setup: LOAD_GLOBAL Quote; LOAD_FAST log;
+            #                     LOAD_FAST is_trade; POP_JUMP_IF_FALSE → false_val
+            #   block@true_val:  LOAD_CONST 'trade'; JUMP_FORWARD → merge
+            #   block@false_val: LOAD_CONST 'backtest'  (fall-through → merge)
+            #   block@merge:     PRECALL; CALL; STORE result
+            # 旧逻辑把 block@call_setup 当作 and 第二操作数，合并为
+            # `if quote is None and is_trade:`，把 'trade'/'backtest' 误发射
+            # 为 docstring（repro_03_if_ifexp_arg_to_and_docstring 根因）。
+            # 修复：非首块且 fall-through 后继以 JUMP_FORWARD 终结时中断链，
+            # 让 TernaryRegion 识别把 IfExp 作为值表达式归约。BoolOp 操作数
+            # 的 fall-through 自然落入下一操作数，不会以 JUMP_FORWARD 终结
+            # （JUMP_FORWARD 是 IfExp true-value 跳过 false-value 的特征）。
+            # 已知限制：嵌套 if 的 then-body 末尾若有 JUMP_FORWARD（如
+            # `if A: if B: ... else: ...`），此处的 fall-through 检测不触发
+            # （因为嵌套 if 的 cond 块的 fall-through 是 then-body，不是
+            # JUMP_FORWARD）。该模式由 P1-2 的 STORE_* 检测覆盖。
+            if chain and last.argval is not None:
+                _ft_succ = None
+                for _s in current.conditional_successors:
+                    if _s.start_offset != last.argval:
+                        _ft_succ = _s
+                        break
+                if _ft_succ is not None:
+                    _ft_last = _ft_succ.get_last_instruction()
+                    if (_ft_last is not None
+                            and _ft_last.opname == 'JUMP_FORWARD'
+                            and _ft_last.argval is not None):
+                        break
             chain.append((current, op_type))
             # [CPython peephole P4 + P5 interaction] Chained compare as
             # BoolOp operand hop. When `if a < b < c and d < e < f:` is

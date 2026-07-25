@@ -1760,7 +1760,18 @@ class CFGASTConverter:
         
         elif pattern_type == 'MatchKeys':
             return ASTName('_')
-        
+
+        elif pattern_type == 'MatchSingleton':
+            # [R3-P1-1 fix] 保留 MatchSingleton 字典结构，由 code_generator
+            # ._generate_match_pattern 渲染为 'None'/'True'/'False'。
+            # 旧逻辑落入默认分支 _convert_expression，而 _convert_expression
+            # 对 MatchSingleton 返回 None（见上方 Match 类型守卫），导致
+            # case None: 被渲染为 case _（repro_03_match_case_none_to_
+            # wildcard 根因）。
+            # 依「嵌套即抽象节点」：case pattern 应作为独立抽象节点保留
+            # 语义，禁止塌缩为通配符。
+            return pattern_dict
+
         # 默认处理：作为表达式转换
         return self._convert_expression(pattern_dict)
 

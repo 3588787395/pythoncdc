@@ -143,7 +143,87 @@
 
 ## 轮 3 (Round 3)
 
-- [ ] R3-1 ~ R3-9
+> **R3 基线**：反编译产物 COMPILE_OK（2547 行），81 个函数字节码不一致、41 个签名不匹配、4 个缺失 code objects、18 个截断函数。
+> **R3 缺陷分布**：10 类（5 项 R2 残留演化 + 5 项 R3 新增/重点验证），P0=2、P1=3、P2=5。
+
+### 阶段一：测试工程师（已完成）
+
+- [x] R3-1 反编译 + 字节码 diff（`decompile_report.md`，10 类缺陷，81 个函数不一致，COMPILE_OK）
+- [x] R3-2 ≥10 最小复现实例（`minimal_repros/`，10 个 repro 全部 py_compile + DEFECT-REPRO 验证通过）
+
+### 阶段二：修复工程师（执行中 — P0+3 项 P1 已验证通过，P2 修复与最终验证/报告待执行）
+
+#### P0 修复（必须完成）
+
+- [x] R3-3 根因分析完成（10 个 repro 全部定位到 `_identify_*_regions` 或 `_generate_*` 方法，输出根因 + 4 原则违反项）
+- [x] R3-4a P0 repro_03_elif_chain_func_body_truncation 修复完成 — **已验证**
+  - `region_analyzer.py::_identify_conditional_regions` sink 判定逻辑改为仅当块含 RETURN/RAISE/RERAISE 或无正常后继时才视为 sink
+  - 新增 `_find_structural_merge_from_chain_end` 从 ipdom 链终止块的后继中查找结构区域入口作为 merge 点
+  - ipdom 链遍历增加普通合并点（非结构区域入口但有 >1 个非回边前驱）检测，提前停止遍历
+  - 9 个财务函数（`get_balance_statement` 等）函数体不再截断（13 行 → 69 行）✓
+  - `_identify_conditional_regions` docstring 已存在 6 节结构覆盖 6 项模板要求
+  - 验证：repro_03_elif_chain_func_body_truncation.pyc 反编译产物 `get_balance_statement` 函数体不再截断 ✓
+- [x] R3-4b P0 repro_03_repro04_file_assignment_lost 修复完成 — **已验证**
+  - `region_analyzer.py::_extract_with_items` 提取上下文表达式时遇到 STORE_* 清空已收集的 ctx_expr
+  - `region_ast_generator.py::_generate_with` 提取 entry 块内 BEFORE_WITH 之前、以 STORE_* 结尾的指令段，作为 with 语句之前的顺序语句发射
+  - `region_ast_generator.py::_if_generate_else_branch` 按偏移顺序交错处理子区域（Try/With/Loop）和顺序块
+  - quotation.pyc::get_market_detail 的 `file = '...' % finance_mic` 赋值在 try 之前恢复 ✓
+  - 验证：repro_03_repro04_file_assignment_lost.pyc 反编译产物 `file = ...` 正确出现在 `try:` 之前 ✓
+
+#### P1 修复（必须完成至少 3 项 — 已完成 3 项：repro_03_match_case_none_to_wildcard / repro_03_if_nested_inner_lost / repro_03_if_ifexp_arg_to_and_docstring）
+
+- [x] R3-5a P1 repro_03_match_case_none_to_wildcard 修复完成 — **已验证**
+  - `pattern_parser.py::_extract_case_pattern` 识别 `POP_JUMP_FORWARD_IF_NOT_NONE` / `POP_JUMP_IF_NOT_NONE` 为 `MatchSingleton(None)`
+  - `ast_converter.py::_convert_match_pattern` 添加 `MatchSingleton` 类型处理，直接返回其字典结构
+  - quotation.pyc 中检测到 19 处 `case None` ✓
+  - 验证：repro_03_match_case_none_to_wildcard.pyc 反编译产物 `case None` 正确输出 ✓
+- [x] R3-5b P1 repro_03_if_nested_inner_lost 修复完成 — **已验证**
+  - `region_analyzer.py::_detect_boolop_conditional_chain` 添加 STORE_* 检测，非首块含 STORE_* 时中断链
+  - 嵌套 if 结构正确保留，语句未被提升 ✓
+  - 已知限制：walrus `(x := foo()) and bar` 会误中断链（罕见，留待后续）
+  - 验证：repro_03_if_nested_inner_lost.pyc 反编译产物嵌套 if 正确保留 ✓
+- [x] R3-5c P1 repro_03_if_ifexp_arg_to_and_docstring 修复完成 — **已验证**
+  - `region_analyzer.py::_detect_boolop_conditional_chain` 新增 IfExp 检测，非首块 fall-through 后继以 JUMP_FORWARD 终结时中断链
+  - IfExp 正确保留为 Call 实参，docstring 错误消失 ✓
+  - 已知限制：嵌套 if then-body 末尾 JUMP_FORWARD 由 P1-2 的 STORE_* 检测覆盖
+  - 验证：repro_03_if_ifexp_arg_to_and_docstring.pyc 反编译产物 IfExp 正确保留 ✓
+
+#### P2 修复（按时间预算择优，至少 2 项 — 待执行）
+
+- [ ] R3-6a P2 repro_03_try_except_handler_if_cond_lost 修复（except handler 内 `if e2.code == 401:` 条件恢复，禁止退化为裸 `if HTTPError:`）
+- [ ] R3-6b P2 repro_03_loop_store_subscr_to_annotation 修复（`STORE_SUBSCR` 与 `STORE_ANNOTATION` 区分，去除 spurious break）
+- [ ] R3-6c P2 repro_03_loop_bare_name_and_dup 修复（循环体 `STORE_FAST var` 赋值目标保留，去重前驱语句）— 可选
+- [ ] R3-6d P2 repro_03_loop_spurious_for_else_double 修复（双层 for + match case 内 for 不再生成 spurious for-else）— 可选
+- [ ] R3-6e P2 repro_03_if_elif_bare_name 修复（elif 分支 `l = l.replace(...)` 的 Call 节点保留）— 可选
+
+#### 回归测试与验证（待执行）
+
+- [ ] R3-7a 10 个 R3 repro 反编译验证通过（核心缺陷已消除）
+- [ ] R3-7b 既有测试矩阵无退化（IF/LOOP/TRY/WITH/MATCH/BOOLOP/TERNARY/CC/SEQ/ASSERT 子集 0 退化）
+- [ ] R3-7c quotation.pyc 反编译 stderr 警告数维持 0
+- [ ] R3-7d quotation.pyc 反编译产物 `compile()` 通过（COMPILE_OK）
+- [ ] R3-7e quotation.pyc 中 `get_balance_statement` 函数体不再截断（orig=469 → new ≥ 400）
+- [ ] R3-7f quotation.pyc 中 `get_market_detail` 的 `file = ...` 赋值恢复
+- [ ] R3-7g quotation.pyc 中 `check_frequency` 6 路 BoolOp 在 quotation.pyc 路径恢复为 `or`（待评估是否本轮覆盖）
+- [ ] R3-7h 残留不一致数 ≤ R3 基线（81 个函数不一致，目标 ≤ 50；截断函数 18 → ≤ 5）
+
+#### 交付物与合规性（待执行）
+
+- [ ] R3-8 `fix_report.md` 生成（rounds/round_03/repair_engineer/fix_report.md）
+  - 修复点列表（按 repro 编号 + 涉及方法 + 算法依据 + 4 原则对应条款）
+  - docstring 更新清单（方法名 + 6 项模板覆盖确认）
+  - 回归结果（10 repro 通过状态 + 既有矩阵退化检查）
+  - 残留不一致数（与 R3 基线 81 个函数不一致对比，应下降）
+  - 算法 4 原则合规性自检
+  - 已知限制（walrus + IfExp JUMP_FORWARD 等）
+- [ ] R3-9 反模式自检通过（G3：0 新增 `_fix_/_merge_/_patch_/_fallback_/_hack_/_workaround_/_temp_` 前缀方法）
+  - `_merge_block_is_loop_back_edge`（region_ast_generator.py）为 pre-existing，按 spec 留待后续轮次重命名
+- [ ] R3-10 涉及的 `_identify_*_regions` 方法 docstring 已按 6 项统一模板更新
+  - 6 项：算法依据 / 归约顺序 / 唯一归属判定 / 嵌套处理 / 入口引用语义 / 反编译流程
+  - 待更新方法：`_identify_conditional_regions`（P0-1 修改）/ `_extract_with_items` + `_generate_with`（P0-2 修改）/ `_detect_boolop_conditional_chain`（P1-2/P1-3 修改）/ `_extract_case_pattern`（P1-1 修改）
+- [ ] R3-11 算法 4 原则 FULLY COMPLIANT（自底向上归约 / 每块唯一归属 / 嵌套抽象节点 / 入口引用语义）
+- [ ] R3-12 `python -c "import core.cfg.region_analyzer; import core.cfg.region_ast_generator; import core.cfg.cfg_builder; import core.cfg.ast_converter; import core.cfg.pattern_parser"` 编译通过
+- [ ] R3-13 commit + push `qpyc-r03:`（待用户授权执行）
 
 ## 轮 4 (Round 4)
 
