@@ -11980,6 +11980,11 @@ AST 映射规则:
         # 4. 控制流不变：region 在原函数中恒为 None，所有分支行为与原版完全一致
         # 验证：grep `_if_generate_branch_stmts\(` 全仓仅 3 处调用点 + 本定义处，
         # 3 处调用点均仅传入 blocks 位置参数。
+        # [Pass7-IF] 同步：Pass6-IF 注释中的第三个调用点行号 6607 经多轮上游修改
+        # 已下移至 6627（首两处 3211/3949 仍准确）。为避免递归漂移，本轮起改用
+        # grep 验证方式描述：grep `_if_generate_branch_stmts\(` 在本文件共 4 处命中
+        # （3 处调用点 + 1 处定义）。原 Pass5/Pass6-IF 引用 6607 为写入时快照，
+        # 已过时。控制流不变，仅注释文本同步。
         if blocks is not None:
             stmts = self._process_if_blocks(blocks, None, branch='standalone')
             return self._coalesce_compares(stmts)
