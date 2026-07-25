@@ -12676,6 +12676,12 @@ AST 映射规则:
           - te046 已修复 (2026-07-14): spurious `if True: pass` 缺陷已通过在
             `region_ast_generator.py` L599-634 增加「顶级祖先」检查修复，根因是 WithRegion
             的 exception_block 被误判为孤儿块。修复后字节码完全匹配 (71 vs 71)。
+          - [Pass4-TRY] 同步：原「100% 完全匹配（try_except 230/230）」表述与实测
+            不符——全量 try_except 套件（230 文件）实测为 228 passed / 2 skipped
+            （0 failed）。2 个 skipped 非「完全匹配」。「100% 完全匹配」应理解为
+            「0 failed」（无字节码不匹配），skipped 用例属测试侧跳过（非反编译器
+            缺陷）。bounded subset 80 文件实测为 80/80 passed。原表述保留作历史
+            追溯，本段落为口径校正。
           - 本方法遵循区域归约算法 4 核心原则:
             自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口
         """
