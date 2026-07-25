@@ -10116,6 +10116,20 @@ RegionType 枚举值: RegionType.ASSERT
                      下一 case_block 时，跳过 IfRegion 创建（guard 块归 MatchRegion）。
              Step 4: 收集 then_blocks/else_blocks，构建 IfRegion 并注册 block_to_region。
              Step 5: elif 链识别——else 块以条件跳转结尾时递归构建 IF_ELIF_CHAIN。
+           - [Pass9-IF] docstring 同步：上述「识别策略 / Step 1」表述仅描述理想化
+             语义，与实际控制流存在两处口径差异（不改控制流，仅补记）：
+             (a) 主扫描循环实际以**结构属性** `len(block.conditional_successors) == 2`
+                 为入口过滤（紧随 `for block in blocks_in_reverse:` 后），而非按
+                 opname ∈ FORWARD_CONDITIONAL_JUMP_OPS 过滤；opname 判据仅在
+                 BoolOp 双角色 merge_block 例外（`_is_merge_if_condition`，引用
+                 FORWARD_CONDITIONAL_JUMP_OPS）等下游细分分支中使用。
+             (b) Step 3 guard 检查实际使用 `CONDITIONAL_JUMP_OPS`
+                 （FORWARD_CONDITIONAL_JUMP_OPS ∪ BACKWARD_CONDITIONAL_JUMP_OPS，
+                 共 12 个 opname，含 POP_JUMP_BACKWARD_IF_FALSE/TRUE/NONE/NOT_NONE），
+                 而非「识别策略」字面所述 FORWARD_CONDITIONAL_JUMP_OPS（仅 8 个）。
+                 原表述未提及 BACKWARD 变体，可能误导读者认为 guard 检查仅覆盖
+                 前向跳转。本轮仅补记差异，不重写「识别策略 / Step 1-5」列表
+                 （与 Pass8-IF 改用 grep 验证方式描述同型保守思路一致）。
 
         2. 字节码模式（CPython 编译器行为）
            模式 A: if-then
