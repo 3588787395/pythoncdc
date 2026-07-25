@@ -11717,6 +11717,14 @@ RegionType 枚举值: RegionType.ASSERT
                         if ss.start_offset != s_last.argval:
                             fallthrough = ss
                             break
+                    # [Pass4-TERNARY] 已知反模式标记：下方 L11722 与 L11730 两处
+                    # `('RETURN_VALUE', 'RETURN_CONST')` 字面量为实例驱动判据（DRY
+                    # 违背），应替换为模块级常量 RETURN_TERMINATOR_OPS（L54 定义，
+                    # frozenset({'RETURN_VALUE', 'RETURN_CONST'})）。Pass 1
+                    # test_findings 已识别，Pass 2/3 因"字面量→常量替换属纯重构、
+                    # 不在删除死代码/同步 docstring/标记反模式三类仅做清单内" deferred。
+                    # 本轮仅添加注释标记，不改变控制流；待后续 Pass 以"重复代码消除"
+                    # 名义统一替换（需同步评估 frozenset 与 tuple 的 `in` 语义等价性）。
                     if fallthrough is not None:
                         ft_last = fallthrough.get_last_instruction()
                         if ft_last and ft_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
