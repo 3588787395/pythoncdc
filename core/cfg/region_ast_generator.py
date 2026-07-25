@@ -2647,8 +2647,15 @@ AST 映射规则:
           - region: AssertRegion（已识别含/不含 message_block）
 
         实现要点:
-          - 与 _generate_assert 主路径中 message 重建逻辑等价（line 1624-1658）。
-          - 抽出为方法以便链式比较分支复用，避免逻辑重复。
+          - 仅供 _generate_assert 的链式比较分支（chained_compare / boolop）
+            复用；_generate_assert 默认主路径未调用本方法，而是内联一份
+            独立的消息重建逻辑（含 [Round8-12] walrus 反向 RAISE_VARARGS 扫描）。
+          - 已知差异（保守修复，待后续轮次统一）：主路径在 [Round8-12] 为
+            walrus 消息引入反向 RAISE_VARARGS 扫描，本方法仅 has_build_string
+            分支同步了该扫描，非 build_string 分支仍为旧逻辑（一律跳过
+            PRECALL/CALL），未同步 walrus 处理。
+          - 旧 docstring 中「line 1624-1658」引用已失效（该行段实为
+            decorator 处理代码，与 assert message 无关），已清除。
           - 过滤规则:
               base_skip = {RAISE_VARARGS, POP_EXCEPT, RERAISE, LOAD_ASSERTION_ERROR,
                            RESUME, NOP, CACHE, PUSH_NULL, COPY, SWAP}
@@ -2696,6 +2703,10 @@ AST 映射规则:
                     continue
                 msg_instrs.append(instr)
         else:
+            # [Pass 2] 已知差异：未同步主路径 [Round8-12] 的 walrus 反向
+            # RAISE_VARARGS 扫描（chain 分支暂不进入 walrus 消息场景）。
+            # 保守修复：仅标记，不改控制流；若后续 chain + walrus 用例
+            # 出现，需统一两路逻辑。
             for instr in instrs:
                 if instr.opname in base_skip or instr.opname in ('PRECALL', 'CALL'):
                     continue

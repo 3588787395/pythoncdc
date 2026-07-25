@@ -9381,7 +9381,12 @@ RegionType 枚举值: RegionType.ASSERT
    - 特殊处理: None 检查方向修正（_invert_assert_none_check_direction 互换 is/is not）。
 
 6. 已知失败模式
-   - ASSERT bounded subset: 22/27 passed，已知失败模式：assert-in-if-body / ternary-in-assert-test
+   - ASSERT bounded subset: 21/27 passed（Pass 1 实测基线；原分析报告
+     声称 22/27 偏高 1 例，已校正）。已知 6 例失败（Pass 1 §7.3 实测）：
+     - 3 例 ternary-in-assert-test（assert 条件本身为三元表达式，需建立
+       condition_block = ternary.merge_block 父子引用，本识别器未处理）；
+     - 3 例 assert-in-if-body（链式比较变体：assert 嵌入 if body，涉及
+       ASSERT 与 BOOLOP/CC/TERNARY 识别顺序的高风险调整，未处理）。
         """
         regions = []
         for block in self.cfg.get_blocks_in_order():
