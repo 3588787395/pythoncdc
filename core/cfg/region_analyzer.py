@@ -10233,6 +10233,13 @@ RegionType 枚举值: RegionType.ASSERT
 
         6. 已知失败模式
            - Pass 1 后 IF 区域识别稳定，bounded subset 仍有 1 处预存失败（见 baseline_failures.txt），非本次引入。
+           - [Pass10-IF] docstring 同步：上述「见 baseline_failures.txt」中的文件名
+             为历史遗留引用，仓库中实际基线文件为
+             `.trae/specs/analysis-fix-iteration/baseline.txt`（IF 行：
+             `IF 79 1 80 8.1`，即 79 passed / 1 failed / 80 total）。
+             `baseline_failures.txt` 文件并不存在（Pass8-IF 报告「未完成项」已记录
+             此 1 处预存失败未处理，但未修正文件名引用）。本轮仅补记正确文件名，
+             不重写「已知失败模式」原表述（与 Pass8/Pass9-IF 同型保守思路一致）。
            - 本方法遵循区域归约算法 4 核心原则:
              自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口
         """
