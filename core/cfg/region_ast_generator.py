@@ -18544,11 +18544,12 @@ AST 映射规则:
             if push_null_idx is not None and push_null_idx + 1 < len(cond_instrs_raw):
                 next_i = cond_instrs_raw[push_null_idx + 1]
                 if next_i.opname in ('LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_FAST', 'LOAD_DEREF', 'LOAD_ATTR'):
+                    # [Pass3-TERNARY] 移除原 LOAD_ATTR 内层重赋值死代码块：
+                    # 内层 `if obj_i.opname.startswith('LOAD_'): func_call_skip =
+                    # push_null_idx + 2` 与外层上一行已设置的值完全相同，无副作用。
+                    # `obj_i` 局部变量仅在该死块内引用（grep 确认无其他使用点），
+                    # 一并删除。属纯死代码删除，控制流与 func_call_skip 取值不变。
                     func_call_skip = push_null_idx + 2
-                    if next_i.opname == 'LOAD_ATTR' and push_null_idx > 0:
-                        obj_i = cond_instrs_raw[push_null_idx - 1]
-                        if obj_i.opname.startswith('LOAD_'):
-                            func_call_skip = push_null_idx + 2
 
             # [R11-asyncio fix] CPython 3.11+ LOAD_GLOBAL with arg & 1 == 1
             # pushes an implicit NULL before the value (function call
