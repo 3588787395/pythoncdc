@@ -11776,6 +11776,21 @@ RegionType 枚举值: RegionType.ASSERT
                     # 但 2 元素差异可忽略）。本函数外 L12204/L12216/L12259 等已使用
                     # RETURN_TERMINATOR_OPS，本替换使 _is_ternary_block 与之一致。
                     # 控制流不变——`in` 判据的 True/False 结果在替换前后完全一致。
+                    # [Pass6-TERNARY] 同步上方 Pass4-TERNARY 标记中过时的
+                    # 「下方 L11722 与 L11730 两处」行号引用：经 Pass5 替换 + 追加
+                    # [Pass5-TERNARY] 段落后，原两处字面量（现 RETURN_TERMINATOR_OPS
+                    # 用法）已下移。与 Pass6-BOOLOP/MATCH/ASSERT 同型思路——不再
+                    # 引用具体行号，改用 grep 验证 + 相对位置描述，从根因上消除行号
+                    # 递归漂移源：
+                    #   - 首处：本函数 `_is_ternary_block` 内 `if fallthrough is
+                    #     not None:` 之后 `ft_last.opname in RETURN_TERMINATOR_OPS`
+                    #     （grep `ft_last and ft_last.opname in RETURN_TERMINATOR_OPS`
+                    #     在本文件仅 1 处命中）
+                    #   - 次处：本函数内 `all(... for cs in s.conditional_successors)`
+                    #     中 `cs.get_last_instruction().opname in RETURN_TERMINATOR_OPS`
+                    #     （grep 该串在本文件仅 1 处命中）
+                    # 原 Pass 4 引用 L11722/L11730 与 Pass5 fix_report 描述
+                    # L11744/L11752（原）/L11752/L11760（现）均有偏差，本轮不再追究。
                     if fallthrough is not None:
                         ft_last = fallthrough.get_last_instruction()
                         if ft_last and ft_last.opname in RETURN_TERMINATOR_OPS:
