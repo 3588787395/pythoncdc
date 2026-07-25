@@ -16406,6 +16406,23 @@ RegionType 枚举值: RegionType.ASSERT
         # L12204/L12216/L12259 等已使用 RETURN_TERMINATOR_OPS，本替换使
         # _is_trivial_return_block 与之一致。控制流不变——`in` 判据的 True/False
         # 结果在替换前后完全一致。
+        # [Pass6-SEQ] 同步上方 Pass5-SEQ 标记中过时的「L12204/L12216/L12259 等已使用
+        # RETURN_TERMINATOR_OPS」行号引用：经 Pass6 上游修改（TERNARY L11779 +
+        # CC L9842 等段落追加）后，原三处引用已下移至 L12265/L12277/L12320（grep
+        # 验证）。与 Pass6-TERNARY/BOOLOP/MATCH/ASSERT 同型思路——不再引用具体行号，
+        # 改用 grep 验证 + 相对位置描述，从根因上消除行号递归漂移源：
+        #   - 首处：`_identify_ternary_regions` 内嵌套函数 `_block_is_return_body`
+        #     中 `if last.opname not in RETURN_TERMINATOR_OPS:`
+        #     （grep `last.opname not in RETURN_TERMINATOR_OPS` 在本文件仅 1 处命中）
+        #   - 次处：内嵌函数 `_block_ends_with_return` 中
+        #     `return last is not None and last.opname in RETURN_TERMINATOR_OPS`
+        #     （grep 该串在本文件仅 1 处命中）
+        #   - 三处：内嵌函数 `_is_value_block_nested_if_header` 中
+        #     `if _succ_last and _succ_last.opname in RETURN_TERMINATOR_OPS:`
+        #     （grep `_succ_last and _succ_last.opname in RETURN_TERMINATOR_OPS`
+        #     在本文件仅 1 处命中）
+        # 原 Pass 5 引用 L12204/L12216/L12259 与当前 L12265/L12277/L12320 偏差 +61，
+        # 本轮不再追究。
         if len(meaningful) == 1 and meaningful[0].opname in RETURN_TERMINATOR_OPS:
             return True
         if len(meaningful) == 2:
