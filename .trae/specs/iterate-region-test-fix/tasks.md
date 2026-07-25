@@ -40,6 +40,15 @@
 - [x] Task 1.22: IF round_22 — 6 bug 修复 (C2 walrus+ternary IfRegion 被丢弃 5 + C3 AssertRegion 抢占 if 头 1/3); 28 failed, 789 passed, 10 skipped (基线 34 failed, 783 passed); ternary 0 回归; C3 残留 2 + C4/C7/C1/C5/C6/C8/C9/C10 待 R23+
 - [x] Task 1.23: IF round_23 — 15 测试修复 (C7 簇 7 主测试 + Bug 1/2/3 新增 3 + 回归 8: if59×3 + adv11×2 + if84×3); 21 failed, 796 passed, 10 skipped (基线 28/789/10, -7 failed); ternary 0 回归 (506/36/0); commit c678dde (已 push); C1/C4/C5/C6/C8/C9/C10 待 R24+
 - [x] Task 1.24: IF round_24 — 4 测试修复 (C8 assert_chained_cmp×2 + C10 raise_from×1 + C1 adv01×1); 17 failed, 800 passed, 10 skipped (基线 21/796/10, -4 failed); ternary 0 回归; commit pending; C1(5)/C4/C5/C6(3)/C8(2)/C9/C10(2)/其他(1) 待 R25+
+- [x] Task 1.25: IF round_25 — 6 测试修复 (R25-B 12/09/11 + R25-C 06/10 + R25-D 08); 24 failed (基线 30=17 旧+13 新, -6, ≤25 目标达成 ✅); ternary 0 回归; commit pending; 7 已知限制 (R25-01/02/03/04/05/07/13) 待 R26+
+  - [x] SubTask 1.25.0: 基线确认（if_region 17 failed / 800 passed / 10 skipped；ternary 0 failed / 506 passed / 36 skipped；R25 新测试 13 failed / 20 passed / 4 skipped）
+  - [x] SubTask 1.25.1 (P0): R25-B 簇 cleanup 归属错位（3 bug 修复） — R25-12 try-finally cleanup_blocks 互换 (`_check_elif_chain` try/with handler block 过滤) + R25-09 try-except-else-finally cleanup 丢失 (exception table chain 遍历 _chain_target_set + _chain_entry_ids 替换 _valid_handler_targets) + R25-11 global+del trailing return 优化
+  - [x] SubTask 1.25.2 (P0): R25-A 簇评估 — R25-01/03/04/13 全部标记为已知限制（在算法框架内未找到无退化修复方案）
+  - [x] SubTask 1.25.3 (P1): R25-C + R25-D 簇（3 bug 修复） — R25-06 multi-target ternary trailing return + R25-10 tuple return + comprehension (`comprehension_generator.py` pre_comp_instrs/post-wrapper 守卫返回 None) + R25-08 lambda IIFE (`_convert_lambda_function_objects` 列式子节点遍历扩展)
+  - [x] SubTask 1.25.4: 全量回归 — if_region 24 failed (基线 30, -6, ≤25 ✅) + ternary 0 failed (无退化 ✅)
+  - [x] SubTask 1.25.5: 算法合规性自检 — 归约顺序 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口；无跨区域特例 / 后处理补丁 / 硬编码深度上限
+  - [x] SubTask 1.25.6: 更新 checklist.md + 父级 tasks.md（fix_report.md 待 Spec Mode 退出后写）
+  - [ ] 已知限制 (R26+ 处理): R25-01 await call arg in elif, R25-02 for-else+continue, R25-03 f-string+ternary+walrus, R25-04 await in subscript, R25-05 for+continue+try, R25-07 nested with+multi context, R25-13 ternary+boolop in elif cond
 
 ## Phase 2: LOOP 区域（20 轮）
 - [ ] Task 2.1 ~ 2.20

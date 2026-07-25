@@ -5421,7 +5421,55 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                     if succ not in all_blocks:
                         search_blocks.append(succ)
             if self.cfg.exception_table:
+                # [R25-09/12 fix + regression fix] 区域归约算法原则 2（每块唯一
+                # 归属）：仅扫描属于当前 TryExceptRegion 的异常表条目。原实现
+                # 遍历全部异常表条目，导致并列的多个 try-finally（如 if-elif-else
+                # 三分支各自含 try-finally）互相吸收对方的 cleanup 块
+                # （PUSH_EXC_INFO + RERAISE 路径）。
+                #
+                # 初版守卫（要求 target 在 handler 块集合中）过于严格：对于
+                # `except (A, B) as e` 这类带清理链的 try-except，异常表含
+                # 嵌套条目——except handler body 的清理路径（range=[cleanup_start,
+                # cleanup_end), target=cleanup_handler）的 target 是 cleanup 块
+                # 本身，不在 handler_entry_blocks / finally_blocks 中。初版守卫
+                # 会过滤掉这些条目，导致 cleanup 块未被收集，被作为孤儿块
+                # 误生成为 `del e` 语句（test_adv11_try_except_tuple_as 回归）。
+                #
+                # 正确做法：沿异常表链做不动点遍历。一个条目属于当前 try 当且仅当：
+                #   (a) range 在 try body [try_start, try_end) 内，或
+                #   (b) range 起点在已知 target 集合中（handler entry / 前驱条目 target），或
+                #   (c) target 与链中已有条目的 target 共享（同 target 的并行清理路径）。
+                # 这保证了 try-except-as 的嵌套清理链被完整收集，同时排除并列
+                # try-finally 的无关条目（其 range 既不在 try body，target 也不在链中）。
+                _chain_target_set = set()
+                for _hb in (finally_blocks or []):
+                    _chain_target_set.add(_hb.start_offset)
+                for _heb in (all_handler_entry_blocks or []):
+                    _chain_target_set.add(_heb.start_offset)
+                for _ab in (all_handler_blocks_set or []):
+                    _chain_target_set.add(_ab.start_offset)
+                if handler_entry_block is not None:
+                    _chain_target_set.add(handler_entry_block.start_offset)
+                _chain_entry_ids = set()
+                _chain_changed = True
+                while _chain_changed:
+                    _chain_changed = False
+                    for _ee in self.cfg.exception_table:
+                        if id(_ee) in _chain_entry_ids:
+                            continue
+                        _ee_start = _ee.get('start', 0)
+                        _ee_end = _ee.get('end', 0)
+                        _ee_target = _ee.get('target', 0)
+                        _in_try_body = (_ee_start >= try_start and _ee_end <= try_end)
+                        _starts_at_known = (_ee_start in _chain_target_set)
+                        _shares_target = (_ee_target in _chain_target_set)
+                        if _in_try_body or _starts_at_known or _shares_target:
+                            _chain_entry_ids.add(id(_ee))
+                            _chain_target_set.add(_ee_target)
+                            _chain_changed = True
                 for exc_entry in self.cfg.exception_table:
+                    if id(exc_entry) not in _chain_entry_ids:
+                        continue
                     exc_start = exc_entry.get('start', 0)
                     exc_end = exc_entry.get('end', 0)
                     for blk in self.cfg.blocks.values():
@@ -11269,6 +11317,29 @@ RegionType 枚举值: RegionType.ASSERT
                         break
             _terminal_offsets = _terminal_offsets - _break_targets
             _inner_boundary_stop = _inner_boundary_stop - _terminal_offsets
+        # [R25-12 fix] 计算 try/with handler 块集合，供 _check_elif_chain 过滤
+        # elif body 中的 handler 块（finally_blocks / handler_entry_blocks /
+        # except_handlers body / cleanup_blocks）。镜像 _identify_conditional_regions
+        # 中 L10306-10334 的逻辑，从 self.regions 派生（_build_elif_region 是
+        # _identify_conditional_regions 的下游方法，无法直接访问其局部变量）。
+        _elif_try_handler_blocks = set()
+        _elif_with_handler_blocks = set()
+        for _r in self.regions:
+            if isinstance(_r, TryExceptRegion):
+                if getattr(_r, 'handler_entry_blocks', None):
+                    _elif_try_handler_blocks.update(_r.handler_entry_blocks)
+                if getattr(_r, 'finally_blocks', None):
+                    _elif_try_handler_blocks.update(_r.finally_blocks)
+                if getattr(_r, 'except_handlers', None):
+                    for _, _, _hblocks in _r.except_handlers:
+                        _elif_try_handler_blocks.update(_hblocks)
+                if getattr(_r, 'cleanup_blocks', None):
+                    _elif_try_handler_blocks.update(_r.cleanup_blocks)
+            elif isinstance(_r, WithRegion):
+                if getattr(_r, 'cleanup_blocks', None):
+                    _elif_with_handler_blocks.update(_r.cleanup_blocks)
+                if getattr(_r, 'exception_blocks', None):
+                    _elif_with_handler_blocks.update(_r.exception_blocks)
         def _check_elif_chain(header_, else_blocks_, merge_):
             if not else_blocks_:
                 return None
@@ -11614,6 +11685,26 @@ RegionType 枚举值: RegionType.ASSERT
                             inner_merge = inner_else_succ
             inner_then_blocks = self._collect_branch_blocks(inner_then_succ, inner_merge, {inner_else_succ} | _inner_boundary_stop)
             inner_else_blocks = self._collect_branch_blocks(inner_else_succ, inner_merge, {inner_then_succ} | _inner_boundary_stop)
+            # [R25-12 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3（嵌套即
+            # 抽象节点）：镜像外层 IfRegion 的 try/with handler 块过滤
+            # （_identify_conditional_regions L10903-10908）。
+            # _collect_branch_blocks 不按 block_to_region 排除，会把 elif body
+            # 内嵌套 TryExceptRegion 的 finally_blocks（PUSH_EXC_INFO 异常路径）
+            # 与 handler_entry_blocks 收集为独立 BASIC 块。这些块已归属
+            # TryExceptRegion，不应再出现在 elif body 中——否则 AST 生成时
+            # _process_if_blocks 会把 PUSH_EXC_INFO 块当作普通语句生成
+            # （spurious cleanup 调用），并抢占 finally_blocks 的块标记，
+            # 导致 _generate_try 的 finalbody 退化为 `finally: pass`。
+            # 守卫 `first_else not in _elif_try_handler_blocks`：当 elif 条件块
+            # 本身在 handler 内时（if-elif 嵌套于 except/finally），elif body
+            # 合法属于该 handler，不过滤（与外层 `block not in try_handler_blocks`
+            # 同构）。
+            if _elif_try_handler_blocks and first_else not in _elif_try_handler_blocks:
+                inner_then_blocks = [b for b in inner_then_blocks if b not in _elif_try_handler_blocks]
+                inner_else_blocks = [b for b in inner_else_blocks if b not in _elif_try_handler_blocks]
+            if _elif_with_handler_blocks and first_else not in _elif_with_handler_blocks:
+                inner_then_blocks = [b for b in inner_then_blocks if b not in _elif_with_handler_blocks]
+                inner_else_blocks = [b for b in inner_else_blocks if b not in _elif_with_handler_blocks]
             if inner_else_blocks and all(self._is_trivial_block(b) for b in inner_else_blocks):
                 inner_else_blocks = []
             inner_region_type = RegionType.IF_THEN_ELSE if inner_else_blocks else RegionType.IF_THEN

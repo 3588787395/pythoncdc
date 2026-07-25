@@ -7113,8 +7113,32 @@ AST 映射规则:
             if isinstance(last_elif, dict) and last_elif.get('type') == 'If':
                 orelse = last_elif.get('orelse', [])
                 if isinstance(orelse, list) and len(orelse) == 1 and isinstance(orelse[0], dict) and orelse[0].get('type') == 'Return':
-                    trailing_return = orelse[0]
-                    last_elif['orelse'] = []
+                    # [R25-11 fix] 区域归约算法原则 4（父引用子入口）+ 字节码等价：
+                    # 当 if/elif body 块以隐式 return None 结尾时（CPython 将
+                    # `else: return X` 编译为 if/elif body 终态 LOAD_CONST None +
+                    # RETURN_VALUE，else body 终态 return X），不能将 else 分支的
+                    # return 提升为函数末尾 return —— 否则 if/elif body 的隐式
+                    # return None 被剥离后，recompiled 字节码变为 if/elif body
+                    # fall-through + 函数末尾 return（指令数减少 4），与原始字节码
+                    # 不一致。仅当 if/elif body 块不以隐式 return None 结尾时（即
+                    # 原始结构就是 if-elif + 函数末尾 return，if/elif body 通过
+                    # JUMP_FORWARD fall-through）才应用此优化。
+                    _then_or_elif_has_implicit_return_none = False
+                    for _tb in (region.then_blocks or []):
+                        if self.region_analyzer._check_block_has_trailing_return_none(_tb):
+                            _then_or_elif_has_implicit_return_none = True
+                            break
+                    if not _then_or_elif_has_implicit_return_none:
+                        for _eb_list in (region.elif_bodies or []):
+                            for _eb in _eb_list:
+                                if self.region_analyzer._check_block_has_trailing_return_none(_eb):
+                                    _then_or_elif_has_implicit_return_none = True
+                                    break
+                            if _then_or_elif_has_implicit_return_none:
+                                break
+                    if not _then_or_elif_has_implicit_return_none:
+                        trailing_return = orelse[0]
+                        last_elif['orelse'] = []
                 elif isinstance(orelse, list) and len(orelse) >= 1:
                     if _is_implicit_return_none(orelse[-1]):
                         trailing_return = orelse[-1]
@@ -10544,13 +10568,24 @@ AST 映射规则:
                 except Exception:
                     pass
                 return expr
-        for key in ('func', 'value', 'left', 'right', 'test', 'body', 'orelse',
+        # [R25-08 fix] 区域归约算法原则 1（自底向上归约）：FunctionObject 是
+        # code object 的抽象节点，_convert_lambda_function_objects 将其归约
+        # 为具体 Lambda AST。原实现把 'body'/'orelse' 放在 dict-children
+        # 循环中（期望单 dict），但 ast.If/For/While/Try 的 body/orelse 是
+        # list，导致 isinstance(child, dict) 为 False，递归不进入——嵌套在
+        # elif 条件 / if body / else body 中的 FunctionObject 不会被转换，
+        # CodeGenerator 渲染为占位符 `lambda *args, **kwargs: None`
+        # （test_r25_lambda_iife_in_elif_cond / test_adv19_lambda_iife_in_if_cond）。
+        # 修复：把 body/orelse/cases/items/finalbody 移到 list-children 循环。
+        for key in ('func', 'value', 'left', 'right', 'test',
                     'operand', 'target', 'iter', 'subject', 'slice'):
             child = expr.get(key)
             if isinstance(child, dict):
                 expr[key] = self._convert_lambda_function_objects(child)
         for key in ('args', 'keywords', 'kwargs', 'comparators', 'values', 'elts',
-                    'keys', 'handlers', 'decorator_list', 'targets'):
+                    'keys', 'handlers', 'decorator_list', 'targets',
+                    'body', 'orelse', 'cases', 'items', 'finalbody',
+                    'defaults', 'kw_defaults'):
             children = expr.get(key)
             if isinstance(children, list):
                 expr[key] = [self._convert_lambda_function_objects(c) if isinstance(c, dict) else c
@@ -20591,6 +20626,52 @@ AST 映射规则:
                             'value': ternary_expr,
                             'is_chain_assign': True,
                         })
+                        # [R25-06 fix] 区域归约算法原则 2（每块唯一归属）+
+                        # 原则 4（父引用子入口）：merge_block 在 multi-target assign
+                        # 之后可能还含有后续语句（典型场景：elif body 内
+                        # `a = b = (ternary); return a + b`，CPython 因 offset 54
+                        # 非跳转目标而不切块，将 COPY+STORE_a+STORE_b 与
+                        # LOAD_a+LOAD_b+BINARY_OP+RETURN_VALUE 合并到同一基本块）。
+                        # 旧逻辑只生成 multi-target Assign 并返回，trailing return/expr
+                        # 语句被丢失（重编字节码少 4 条 LOAD/BINARY_OP/RETURN）。
+                        # 修复：merge_block 已归属 TernaryRegion（每块唯一归属），
+                        # 由 TernaryRegion 一并生成 trailing 语句；父 IfRegion 通过
+                        # entry 引用 TernaryRegion（父引用子入口），不重复生成。
+                        # 镜像 R15 Mode A（单目标 value_target 的 trailing 处理）。
+                        if region.merge_block:
+                            _mt_trailing = merge_all[store_idx + len(_stores_after):]
+                            _mt_trailing_non_noise = [i for i in _mt_trailing
+                                                      if i.opname not in ('RESUME', 'NOP',
+                                                                          'CACHE', 'PUSH_NULL')]
+                            _mt_is_trivial_ret = False
+                            if len(_mt_trailing_non_noise) <= 2:
+                                _mt_no_pop = [i for i in _mt_trailing_non_noise
+                                              if i.opname != 'POP_TOP']
+                                if (len(_mt_no_pop) == 2
+                                        and _mt_no_pop[0].opname == 'LOAD_CONST'
+                                        and _mt_no_pop[0].argval is None
+                                        and _mt_no_pop[1].opname in ('RETURN_VALUE', 'RETURN_CONST')):
+                                    _mt_is_trivial_ret = True
+                                elif (len(_mt_no_pop) == 1
+                                        and _mt_no_pop[0].opname == 'RETURN_CONST'
+                                        and _mt_no_pop[0].argval is None):
+                                    _mt_is_trivial_ret = True
+                            if _mt_is_trivial_ret:
+                                pass  # trailing implicit return None —— 不发射
+                            elif _mt_trailing_non_noise:
+                                _mt_extra_stmts = self._build_statements_from_instructions(
+                                    list(_mt_trailing_non_noise))
+                                while _mt_extra_stmts and isinstance(_mt_extra_stmts[-1], dict):
+                                    _last_mt = _mt_extra_stmts[-1]
+                                    if _last_mt.get('type') == 'Return':
+                                        _rv_mt = _last_mt.get('value')
+                                        if _rv_mt and isinstance(_rv_mt, dict) \
+                                                and _rv_mt.get('type') == 'Constant' \
+                                                and _rv_mt.get('value') is None:
+                                            _mt_extra_stmts = _mt_extra_stmts[:-1]
+                                            continue
+                                    break
+                                results.extend(_mt_extra_stmts)
                         for block in region.blocks:
                             self.generated_blocks.add(block)
                         return results
