@@ -1,0 +1,13 @@
+=== quotation.pyc decompile baseline ===
+decompiled lines: 2593
+stderr warnings (MatchSingleton): 19
+syntax_err: line=2579 expected default value expression
+
+=== antipattern prefix count (workspace-wide, core/cfg only) ===
+  _fix_: 0
+  _merge_: 1
+  _patch_: 0
+  _fallback_: 0
+  _hack_: 0
+  _workaround_: 0
+  _temp_: 0
