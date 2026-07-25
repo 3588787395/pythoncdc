@@ -5046,7 +5046,27 @@ class CodeGenerator:
                 return str(annotation.get('id', annotation.get('value', f'<{ann_type}>')))
     
     def _generate_arguments(self, args: Any) -> str:
-        """生成函数参数代码（支持类型注解）"""
+        """生成函数参数代码（支持类型注解）
+
+        [P2-2026 反编译流程]
+        1. 字节码 → AST 映射: MAKE_FUNCTION flags=1/2 弹出 BUILD_TUPLE/
+           BUILD_CONST_KEY_MAP 子节点作为 defaults/kw_defaults，由
+           ``_build_function_def`` 写入 args['defaults'] 列表。
+        2. 默认值渲染: 每个默认值节点（Constant/List/Tuple/Set/Dict/Name/
+           Call/IfExp 等）作为单个表达式子节点整体渲染，委托
+           ``_generate_expression``。不可拆解后只取 'value' 字段——List/
+           Tuple/Call 等复合节点无 'value' 键，旧逻辑会发射 `name=` 空默认值。
+        3. 位置对齐: defaults 对应最后 ``len(defaults)`` 个位置参数；
+           kw_defaults 与 kwonlyargs 按位置对应（无默认值的位置为 None）。
+
+        [算法依据]
+        - 「嵌套即抽象节点」: 默认值表达式（如 ``BUILD_LIST 0 +
+          LIST_EXTEND 1`` 构造的 ``['ST','HALT',...]``）应作为单个 List
+          子节点参与 defaults 重建，不可拆分后丢弃 LIST_EXTEND 的元素。
+        - 「父引用子入口」: 父 FunctionDef 通过 MAKE_FUNCTION flags=1
+          引用 BUILD_TUPLE defaults 子节点的 elts 列表，每个 elt 唯一
+          归属一个形参槽位。
+        """
         if isinstance(args, dict):
             args_list = []
             
@@ -5116,22 +5136,24 @@ class CodeGenerator:
                     arg_name = f'{arg_name}: {annotation_code}'
                 
                 # [关键修复] 如果有默认值，添加默认值
+                # 依「嵌套即抽象节点」: 默认值若是 BUILD_LIST+LIST_EXTEND /
+                # BUILD_TUPLE / Call / Name 等复合表达式节点，应作为单个
+                # 表达式子节点整体渲染，不可拆解后只取 'value' 字段（List/
+                # Tuple/Call 等无 'value' 键，旧逻辑会发射 `name=` 空默认值，
+                # 触发 SYNTAX_ERR expected default value expression）。
                 if i >= default_start_idx and defaults:
                     default_idx = i - default_start_idx
                     if default_idx < len(defaults):
                         default_val = defaults[default_idx]
-                        # 生成默认值代码
+                        # 生成默认值代码：dict 节点统一委托 _generate_expression
+                        # （覆盖 Constant/List/Tuple/Set/Dict/Name/Call/IfExp 等
+                        # 所有表达式类型），与 _generate_arguments_dict 对齐。
                         if isinstance(default_val, dict):
-                            if default_val.get('type') == 'Constant':
-                                val = default_val.get('value')
-                                if isinstance(val, str):
-                                    default_code = f"'{val}'"
-                                else:
-                                    default_code = str(val)
-                            else:
-                                default_code = str(default_val.get('value', ''))
+                            default_code = self._generate_expression(default_val, 0)
+                        elif isinstance(default_val, ASTNode):
+                            default_code = self._generate_expression(default_val, 0)
                         else:
-                            default_code = str(default_val)
+                            default_code = repr(default_val)
                         args_list.append(f'{arg_name}={default_code}')
                     else:
                         args_list.append(arg_name)
@@ -5180,19 +5202,16 @@ class CodeGenerator:
                         kwarg_name = f'{kwarg_name}: {annotation_code}'
                     
                     # 处理关键字-only参数的默认值
+                    # 依「嵌套即抽象节点」: 与位置参数默认值一致，dict/ASTNode
+                    # 默认值统一委托 _generate_expression 渲染。
                     if i < len(kw_defaults) and kw_defaults[i]:
                         kw_default = kw_defaults[i]
                         if isinstance(kw_default, dict):
-                            if kw_default.get('type') == 'Constant':
-                                val = kw_default.get('value')
-                                if isinstance(val, str):
-                                    default_code = f"'{val}'"
-                                else:
-                                    default_code = str(val)
-                            else:
-                                default_code = str(kw_default.get('value', ''))
+                            default_code = self._generate_expression(kw_default, 0)
+                        elif isinstance(kw_default, ASTNode):
+                            default_code = self._generate_expression(kw_default, 0)
                         else:
-                            default_code = str(kw_default)
+                            default_code = repr(kw_default)
                         args_list.append(f'{kwarg_name}={default_code}')
                     else:
                         args_list.append(kwarg_name)

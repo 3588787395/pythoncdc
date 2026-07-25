@@ -40,14 +40,14 @@
 
 ## 轮 1 (Round 1)
 
-- [ ] R1-T1: 反编译 + 字节码 diff → `decompile_report.md`
-- [ ] R1-T2: ≥10 最小复现实例 → `minimal_repros/`
-- [ ] R1-T3: 根因分析（定位到识别/生成方法）
-- [ ] R1-T4: 实施修复（含 docstring 同步）
-- [ ] R1-T5: 回归测试（无退化 + 复现实例通过）
-- [ ] R1-T6: `fix_report.md`
-- [ ] R1-T7: commit + push `qpyc-r01:`
-- [ ] R1-T8: 反模式自检
+- [x] R1-T1: 反编译 + 字节码 diff → `decompile_report.md`（rounds/round_01/test_engineer/decompile_report.md，12 类缺陷，line 2579 阻塞 + 19 处 MatchSingleton）
+- [x] R1-T2: ≥10 最小复现实例 → `minimal_repros/`（12 个 repro，全部通过 py_compile 验证）
+- [x] R1-T3: 根因分析（定位到识别/生成方法）（fix_report.md §1 已确认根因：repro_03→code_generator._generate_arguments；repro_01→region_analyzer._mr_finalize_match_region + ast_converter；repro_05→region_ast_generator 链式比较；repro_07→region_ast_generator POP_EXCEPT/多STORE）
+- [x] R1-T4: 实施修复（含 docstring 同步）（P0×2 完全/阻塞解除 + P1×2 完全/部分；4 处 docstring 更新）
+- [x] R1-T5: 回归测试（无退化 + 复现实例通过）（10 区域 0 退化，12 repro 全部反编译可编译）
+- [x] R1-T6: `fix_report.md`（rounds/round_01/repair_engineer/fix_report.md）
+- [ ] R1-T7: commit + push `qpyc-r01:`（待用户授权执行；修复工程师无 commit 权限）
+- [x] R1-T8: 反模式自检（G3 通过：0 新增反模式前缀方法；_merge_=1 为 pre-existing）
 
 ## 轮 2 (Round 2)
 

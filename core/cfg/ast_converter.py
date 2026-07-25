@@ -1023,7 +1023,8 @@ class CFGASTConverter:
             return self._convert_augassign_full(expr_dict)
         
         # [Python 3.10+] 模式匹配类型 - 这些不是表达式，应该返回None
-        if expr_type in ('MatchValue', 'MatchSequence', 'MatchMapping', 'MatchClass', 'MatchAs', 'MatchOr', 'MatchStar', 'MatchStarred', 'MatchKeys'):
+        # MatchSingleton (case None/True/False) 也属于模式匹配类型，不应作为表达式节点
+        if expr_type in ('MatchValue', 'MatchSequence', 'MatchMapping', 'MatchClass', 'MatchAs', 'MatchOr', 'MatchStar', 'MatchStarred', 'MatchKeys', 'MatchSingleton'):
             return None
         
         # [关键修复] 处理PUSH_NULL - Python 3.11+的null值标记，用于函数调用

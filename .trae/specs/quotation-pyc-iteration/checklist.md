@@ -25,15 +25,15 @@
 
 ## 轮 1 (Round 1)
 
-- [ ] R1-1 反编译 + 字节码 diff（`decompile_report.md`）
-- [ ] R1-2 ≥10 最小复现实例（`minimal_repros/`）
-- [ ] R1-3 根因分析（定位到识别/生成方法）
-- [ ] R1-4 修复实施（含 docstring 同步）
-- [ ] R1-5 回归测试通过
-- [ ] R1-6 `fix_report.md` 生成
-- [ ] R1-7 commit + push `qpyc-r01:`
-- [ ] R1-8 反模式自检通过
-- [ ] R1-9 残留不一致数 ≤ 基线
+- [x] R1-1 反编译 + 字节码 diff（`decompile_report.md`，12 类缺陷，line 2579 + 19 处 MatchSingleton）
+- [x] R1-2 ≥10 最小复现实例（`minimal_repros/`，12 个 repro 全部 py_compile 通过）
+- [x] R1-3 根因分析（定位到识别/生成方法）（fix_report.md §1 已确认 4 项根因）
+- [x] R1-4 修复实施（含 docstring 同步）（P0×2 + P1×2；4 处 docstring 更新）
+- [x] R1-5 回归测试通过（10 区域 0 退化；12 repro 全部可编译）
+- [x] R1-6 `fix_report.md` 生成（rounds/round_01/repair_engineer/fix_report.md）
+- [ ] R1-7 commit + push `qpyc-r01:`（待用户授权执行）
+- [x] R1-8 反模式自检通过（G3：0 新增；F6：import OK）
+- [x] R1-9 残留不一致数 ≤ 基线（MatchSingleton 19→0；语法错误 1→0；残留缺陷类 12→8）
 
 ## 轮 2 (Round 2)
 

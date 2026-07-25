@@ -8166,6 +8166,20 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
         return result
 
     def _mr_finalize_match_region(self, case_blocks, case_patterns, case_bodies, all_blocks):
+        # [P0-2 修复] 依「每块唯一归属」: 计算 match 的 merge block（所有
+        # case 的公共后支配点 = match 后续语句入口），并从每个 case body
+        # 中移除。merge block 唯一归属父区域（match 之后的顺序语句），
+        # 不归属任何 case body。旧逻辑未移除 merge block，导致:
+        #   1) case str(): pass 与 case _: date=... 的 body 都含 merge block
+        #      （post-match `return date`），_mr_bodies_are_equivalent 误判
+        #      末块相同 → 合并为 MatchOr，case _ body 丢失；
+        #   2) MatchSingleton/MatchClass/MatchAs 字典被当作表达式节点传入
+        #      code_generator，触发 "Unknown expression type: MatchSingleton"
+        #      警告（quotation.pyc 19 处同根因）。
+        merge_block = self._mr_compute_case_merge(case_bodies)
+        if merge_block is not None:
+            case_bodies = [[b for b in body if b != merge_block]
+                           for body in case_bodies]
         merged_p, merged_b, i = [], [], 0
         while i < len(case_blocks):
             orps, body = [case_patterns[i]], set(case_bodies[i])
@@ -8185,7 +8199,7 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
             merged_p.append(or_pattern)
             merged_b.append(sorted(body, key=lambda b: b.start_offset))
             i = j
-        merge_block = self._mr_compute_case_merge(merged_b)
+        # merge_block 已在上方计算，直接复用（避免重复计算）
         return case_blocks, merged_p, merged_b, merge_block, all_blocks
 
     def _apply_or_capture_name(self, or_pattern: Dict[str, Any], body: Set[BasicBlock]):
@@ -8211,13 +8225,16 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                     self._set_or_pattern_names(item, name)
 
     def _mr_bodies_are_equivalent(self, body_i_set, body_j_set):
+        # [P0-2 修复] 依「每块唯一归属」: 合法 MatchOr（`case A | B: body`）
+        # 的两个 case 共享同一 body 块集合（CPython 编译时 body 只生成一份，
+        # 两个 case 的 success 分支都 fall-through 到同一 body 入口）。
+        # 因此要求 body 集合完全相同（set 相等）。旧逻辑的「末块相同即合并」
+        # 判定过松：当两个不同 case 的 body 都含 merge block（post-match
+        # 公共出口）时，末块相同会被误判为可合并，导致 case body 丢失、
+        # MatchSingleton/MatchClass 字典被当作表达式拼入源码。
+        # merge block 已在 _mr_finalize_match_region 入口移除，此处只需
+        # 严格集合相等判定即可正确识别合法 MatchOr。
         if body_i_set == body_j_set:
-            return True
-        if not body_i_set or not body_j_set:
-            return False
-        sorted_i = sorted(body_i_set, key=lambda b: b.start_offset)
-        sorted_j = sorted(body_j_set, key=lambda b: b.start_offset)
-        if sorted_i[-1] == sorted_j[-1]:
             return True
         return False
 

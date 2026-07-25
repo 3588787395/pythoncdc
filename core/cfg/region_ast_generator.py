@@ -2385,6 +2385,16 @@ AST 映射规则:
             cond_block, list(chain_blocks), list(ops))
         if _literal_compare is not None:
             return _literal_compare
+        # [Round1-repro_05] call-middle chained compare: when cond_block contains
+        # a function call (LOAD_GLOBAL + args + PRECALL + CALL) as the middle
+        # operand (e.g. `11 >= len(s) >= 9`), the single-instruction operand
+        # extraction collapses `len(s)` to bare `len`. Reconstruct the middle
+        # as a Call AST node via reverse stack-tracking from SWAP/COMPARE_OP.
+        # 依「嵌套即抽象节点」：len(s) 应作为 Call 子节点整体参与比较。
+        _call_compare = self._try_build_call_middle_from_blocks(
+            cond_block, list(chain_blocks), list(ops))
+        if _call_compare is not None:
+            return _call_compare
 
         left_instr = None
         comparator_instrs = []
@@ -7626,6 +7636,143 @@ AST 映射规则:
         _skip_ops = CC_NOISE_OPS
         comparators = [middle_ast]
         for cb in chain_blocks:
+            cb_instrs = [i for i in cb.instructions
+                         if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')
+                         and i.opname not in _skip_ops]
+            if not cb_instrs:
+                continue
+            if len(cb_instrs) == 1 and cb_instrs[0].opname.startswith('LOAD_'):
+                comparators.append(self.expr_reconstructor._load_instr_to_ast(cb_instrs[0]))
+            else:
+                r = self.expr_reconstructor.reconstruct(cb_instrs)
+                if r is not None:
+                    comparators.append(r)
+        if len(comparators) != len(ops):
+            return None
+        return {
+            'type': 'Compare',
+            'left': left_ast,
+            'ops': list(ops),
+            'comparators': comparators,
+        }
+
+    def _try_build_call_middle_from_blocks(self, cond_block, chain_blocks, ops):
+        """[Round1-repro_05] Rebuild a chained comparison whose middle operand
+        is a regular function call (LOAD_GLOBAL + args + PRECALL + CALL), e.g.
+        ``11 >= len(s) >= 9``.
+
+        算法依据:
+          - 区域归约 4 原则之「嵌套即抽象节点」：``len(s)`` 应作为一个 Call
+            子节点整体参与比较，不可拆解为 LOAD_GLOBAL + LOAD_FAST 后丢弃
+            LOAD_FAST + CALL。
+          - 「No More Gotos」§链式比较：通过 SWAP+COPY+COMPARE_OP 边界识别
+            链式比较的首段（left OP middle），剩余段在 chain_blocks。
+
+        输入契约:
+          - cond_block: 链式比较首段块（含 left + middle + COMPARE_OP）
+          - chain_blocks: 后续段块列表（每段一个 COMPARE_OP）
+          - ops: 比较运算符列表（如 ['>=', '>=']）
+
+        实现要点:
+          - ``_build_assert_chained_compare`` 仅收集 LOAD_* 指令作为操作数，
+            函数调用序列会退化为仅 LOAD_GLOBAL（丢失 CALL 参数）。
+          - 逆向栈模拟从 SWAP（或 COMPARE_OP）回溯，定位 left 入栈位置，
+            切分出 left_instrs 与 middle1_instrs。
+          - 用 expr_reconstructor.reconstruct 重建 left 与 middle1 为完整
+            AST 节点（含 Call）。
+          - 各 chain_block 取 COMPARE_OP 之前的指令作为 middle2..N。
+
+        返回: Compare dict 或 None（非 CALL-middle 模式或重建失败时）。
+        """
+        import dis as _dis
+        if cond_block is None:
+            return None
+        if not ops or len(ops) < 2:
+            return None
+        cond_instrs = [i for i in cond_block.instructions
+                       if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+        if not cond_instrs:
+            return None
+        # walrus 由 _try_build_walrus_chained_compare 处理
+        for idx in range(len(cond_instrs) - 1):
+            if (cond_instrs[idx].opname == 'COPY' and cond_instrs[idx].argval == 1
+                    and cond_instrs[idx + 1].opname in ('STORE_FAST', 'STORE_NAME',
+                                                       'STORE_GLOBAL', 'STORE_DEREF')):
+                return None
+        # literal-middle 由 _try_build_literal_middle_from_blocks 处理
+        for instr in cond_instrs:
+            if instr.opname in ('BUILD_LIST', 'BUILD_TUPLE', 'BUILD_SET'):
+                return None
+        # 仅当 cond_block 含 CALL（且不含 LOAD_METHOD，后者由
+        # _try_build_method_call_chained_compare 处理）时触发
+        has_call = False
+        has_method_call = False
+        for instr in cond_instrs:
+            if instr.opname == 'CALL':
+                has_call = True
+            if instr.opname == 'LOAD_METHOD':
+                has_method_call = True
+        if not has_call or has_method_call:
+            return None
+
+        # 在 cond_block 中定位首个 SWAP（链式比较的特征指令）与首个 COMPARE_OP
+        swap_idx = None
+        compare_idx = None
+        for idx, instr in enumerate(cond_instrs):
+            if instr.opname == 'SWAP' and swap_idx is None:
+                swap_idx = idx
+            if instr.opname == 'COMPARE_OP' and compare_idx is None:
+                compare_idx = idx
+                break
+        if compare_idx is None:
+            return None
+
+        if swap_idx is not None:
+            # SWAP 之前栈为 [left, middle1]（深度 2）。逆向栈模拟找到 left 入栈位置。
+            depth = 2
+            left_start = 0
+            for idx in range(swap_idx - 1, -1, -1):
+                instr = cond_instrs[idx]
+                try:
+                    effect = _dis.stack_effect(instr.opcode, instr.arg)
+                except Exception:
+                    effect = 0
+                depth -= effect
+                if depth <= 1:
+                    left_start = idx
+                    break
+            left_instrs = cond_instrs[:left_start]
+            middle1_instrs = cond_instrs[left_start:swap_idx]
+        else:
+            # 无 SWAP：用 COMPARE_OP 反向找 left 起点。
+            depth = 2
+            left_start = 0
+            for idx in range(compare_idx - 1, -1, -1):
+                instr = cond_instrs[idx]
+                try:
+                    effect = _dis.stack_effect(instr.opcode, instr.arg)
+                except Exception:
+                    effect = 0
+                depth -= effect
+                if depth <= 1:
+                    left_start = idx
+                    break
+            left_instrs = cond_instrs[:left_start]
+            middle1_instrs = cond_instrs[left_start:compare_idx]
+
+        if not left_instrs or not middle1_instrs:
+            return None
+        left_ast = self.expr_reconstructor.reconstruct(left_instrs)
+        middle1_ast = self.expr_reconstructor.reconstruct(middle1_instrs)
+        if left_ast is None or middle1_ast is None:
+            return None
+
+        # 各 chain_block 取 COMPARE_OP 之前的所有指令作为 middle2..N
+        _skip_ops = CC_NOISE_OPS
+        comparators = [middle1_ast]
+        for cb in chain_blocks:
+            if cb is None:
+                continue
             cb_instrs = [i for i in cb.instructions
                          if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')
                          and i.opname not in _skip_ops]
@@ -13460,6 +13607,7 @@ AST 映射规则:
             handler_instrs = [i for i in handler_instrs if i.opname != 'COPY']
         store_indices = [i for i, instr in enumerate(handler_instrs)
                         if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')]
+        _skip_multi_store_fallback = False
         if len(store_indices) >= 2:
             # [R20-Bug7 修复] 检测第二个 STORE_FAST 是否是 as-var 清理模式的一部分
             # (LOAD_CONST None → STORE_FAST same_var → DELETE_FAST same_var)。
@@ -13478,12 +13626,30 @@ AST 映射规则:
                         _next.opname in ('DELETE_FAST', 'DELETE_NAME', 'DELETE_GLOBAL', 'DELETE_DEREF')):
                         _as_var_cleanup_indices.add(_si)
             _user_store_indices = [i for i in store_indices if i not in _as_var_cleanup_indices]
-            if len(_user_store_indices) >= 2:
+            # [Round1-repro_07] except handler 内多 STORE 块若以 return 值表达式
+            # 结尾（通过 cleanup chain 到达 RETURN_VALUE），不应 fallback 到
+            # _generate_block_statements（该路径无 cleanup chain 检测，会把
+            # return 值作为裸 Expr 输出，最终生成 `<expr>` + `return None`）。
+            # 依「每块唯一归属」：return 值表达式归 Return 语句，as-var 清理
+            # 归 except 机制。
+            _skip_multi_store_fallback = False
+            if len(_user_store_indices) >= 2 and self._try_depth > 0:
+                if self._find_return_through_cleanup_chain(block) is not None:
+                    _skip_multi_store_fallback = True
+            if len(_user_store_indices) >= 2 and not _skip_multi_store_fallback:
                 return self._generate_block_statements(block)
 
         stmts: List[Dict[str, Any]] = []
         stmt_instrs: List[Instruction] = []
-        skip_initial_pop = True
+        # [Round1-repro_07] 若跳过了 multi-store fallback（block 含 return chain），
+        # 需根据 block 首指令判定 skip_initial_pop。原无条件 True 会误跳 block
+        # 中部的 POP_TOP（如 call 结果丢弃的 POP_TOP），导致 call 表达式被
+        # 误绑定为后续 Assign 的 value。依「每块唯一归属」：call 结果丢弃的
+        # POP_TOP 归 Expr 语句，不应跳过。
+        if _skip_multi_store_fallback:
+            skip_initial_pop = bool(handler_instrs) and handler_instrs[0].opname == 'POP_TOP'
+        else:
+            skip_initial_pop = True
         skip_offsets: Set[int] = set()
         if exc_dispatch_jump_offset is not None:
             for instr in block.instructions:
@@ -13517,10 +13683,28 @@ AST 映射规则:
                     if (r0.opname == 'LOAD_CONST' and r0.argval is None and
                         r1.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF') and
                         r2.opname in ('DELETE_FAST', 'DELETE_NAME', 'DELETE_GLOBAL', 'DELETE_DEREF')):
+                        # [Round1-repro_07] 检测 as-var 清理后是否紧跟 RETURN_VALUE。
+                        # 若是，说明 stmt_instrs 是 return 的值表达式（如 BUILD_TUPLE
+                        # 构造的返回元组），应构建 Return 语句，而非裸 Expr 语句。
+                        # 否则 BUILD_TUPLE 等返回值构造会被误发射为独立 Expr，
+                        # RETURN_VALUE 被跳过，最终输出 `return None`。
+                        # 依「每块唯一归属」：as-var 清理指令归 except 机制，
+                        # RETURN_VALUE 的值表达式归 Return 语句。
+                        _has_return_after_cleanup = (
+                            len(remaining) >= 4 and
+                            remaining[3].opname in ('RETURN_VALUE', 'RETURN_CONST')
+                        )
                         if stmt_instrs:
-                            stmt = self._build_statement(stmt_instrs)
-                            if stmt:
-                                stmts.append(stmt)
+                            if _has_return_after_cleanup:
+                                expr = self.expr_reconstructor.reconstruct(stmt_instrs)
+                                if expr:
+                                    stmts.append({'type': 'Return', 'value': expr})
+                                else:
+                                    stmts.append({'type': 'Return', 'value': None})
+                            else:
+                                stmt = self._build_statement(stmt_instrs)
+                                if stmt:
+                                    stmts.append(stmt)
                         stmt_instrs = []
                         skip_initial_pop = True
                         for ri in remaining_after:
