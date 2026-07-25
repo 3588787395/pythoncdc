@@ -2621,7 +2621,13 @@ class RegionAnalyzer:
         if len(ops) < 2:
             return
         all_blocks = [region.condition_block] + list(region.chained_compare_blocks)
-        if not all_blocks or region.condition_block is None:
+        # [Pass4-CC] 简化死判据：原 `if not all_blocks or region.condition_block is None:`
+        # 中 `not all_blocks` 永假——all_blocks = [region.condition_block] +
+        # list(region.chained_compare_blocks) 至少含 region.condition_block 一个元素
+        # （即便 region.condition_block 为 None，[None] + list(...) 仍是非空列表）。
+        # 真正起作用的是 `region.condition_block is None` 守卫，简化为单一判据。
+        # 与 ASSERT Pass 3 `_build_assert_chained_compare` 同型死判据修复一致。控制流等价。
+        if region.condition_block is None:
             return
 
         left_expr = None
