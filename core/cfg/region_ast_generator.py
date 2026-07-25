@@ -4224,6 +4224,15 @@ AST 映射规则:
             if block == child_info.get('iter_setup_block'):
                 self.generated_blocks.add(block)
                 continue
+            # [R4-P2-2 fix] 跳过子 LoopRegion 的 for_iter_setup 块。
+            # 算法依据（区域归约 4 原则 · 每块唯一归属）：子 LoopRegion 的
+            # for_iter_setup 块归属子 LoopRegion，由其 _loop_generate_for 通过
+            # _loop_extract_for_iter_pre_stmts 统一提取 pre_stmts（如 `i = 0`）
+            # + iter_expr（如 `item`）。父循环体跳过该块（标记 generated_blocks），
+            # 避免重复发射 pre_stmts（如 `i = 0` 出现两次）。
+            if block in child_info.get('child_for_iter_setups', ()):
+                self.generated_blocks.add(block)
+                continue
             handled = self._loop_dispatch_block(
                 block, region, child_info, boolop_for_while,
                 body_stmts, body_blocks_no_header, back_edge_stmts, natural_back_edge,
@@ -4280,11 +4289,32 @@ AST 映射规则:
         child_try_regions: List[TryExceptRegion] = []
         child_with_regions: List[WithRegion] = []
         child_if_blocks: Set[BasicBlock] = set()
+        child_for_iter_setups: Set[BasicBlock] = set()
         for child in (region.children or []):
             if isinstance(child, TryExceptRegion):
                 child_try_regions.append(child)
             if isinstance(child, WithRegion):
                 child_with_regions.append(child)
+            # [R4-P2-2 fix] 收集子 LoopRegion 的 for_iter_setup 块。
+            # 算法依据（区域归约 4 原则）：
+            # - 每块唯一归属：子 LoopRegion 的 for_iter_setup 块（含 `i = 0`
+            #   等前置赋值 + GET_ITER 迭代器设置）归属子 LoopRegion，由子
+            #   LoopRegion 的 _loop_generate_for 通过 _loop_extract_for_iter_pre_stmts
+            #   统一处理（提取 pre_stmts + iter_expr）。父循环体不应重复处理
+            #   该块，否则 pre_stmts（如 `i = 0`）会被重复发射。
+            # - 自底向上归约：子 LoopRegion 的 for_iter_setup 先于父循环体
+            #   归约，父循环体跳过该块（标记 generated_blocks），由子
+            #   LoopRegion 处理时统一发射 pre_stmts + For 节点。
+            # 问题根因（repro_04_loop_spurious_for_else_double::one_prod_to_dataframe）：
+            #   @330 是 LoopRegion@328 的 body 入口（STORE_FAST item 为 for
+            #   target）+ LoopRegion@340 的 for_iter_setup（LOAD_CONST 0;
+            #   STORE_FAST i; LOAD_FAST item; GET_ITER）。父循环体处理 @330
+            #   时发射 `i = 0`，子 LoopRegion@340 的 _loop_generate_for 再
+            #   次提取 `i = 0` 作 pre_stmts，导致 `i = 0` 重复。
+            if isinstance(child, LoopRegion):
+                _cfis = child.metadata.get('for_iter_setup')
+                if _cfis is not None and _cfis in region.body_blocks:
+                    child_for_iter_setups.add(_cfis)
             # [Pass3-LOOP] 移除原 `if isinstance(child, LoopRegion):` 死代码块：
             # 内层仅 `if pred in region.body_blocks: pass` + `break`，无任何状态
             # 修改。属无副作用死代码删除。
@@ -4299,6 +4329,7 @@ AST 映射规则:
                         child_if_blocks.add(b)
         return {
             'iter_setup_block': iter_setup_block,
+            'child_for_iter_setups': child_for_iter_setups,
             'natural_back_edge': natural_back_edge,
             'child_try_regions': child_try_regions,
             'child_with_regions': child_with_regions,
@@ -4356,6 +4387,15 @@ AST 映射规则:
                                     if _pre_stmts:
                                         body_stmts.extend(_pre_stmts)
                                     self.generated_blocks.add(pred)
+                                    # [R4-P2-2 fix] 标记 _fis_pre_stmts_emitted，
+                                    # 防止子 LoopRegion 的 _loop_generate_for 重复
+                                    # 提取并发射 pre_stmts（如 `i = 0` 出现两次）。
+                                    # 算法依据（区域归约 4 原则 · 每块唯一归属）：
+                                    # pre_stmts 发射权归首次处理该块的语句生成器
+                                    # （此处为父循环的 _loop_generate_pre_stmts），
+                                    # 子 LoopRegion 的 _loop_generate_for 据此跳过
+                                    # pre_stmts 重复发射，仅提取 iter_expr。
+                                    self._fis_pre_stmts_emitted.add(pred)
                                 break
 
     def _loop_extract_for_iter_pre_stmts(self, instrs: List[Instruction], block: BasicBlock) -> Tuple[List[Dict[str,Any]], List[Instruction]]:
@@ -8536,6 +8576,98 @@ AST 映射规则:
                 return True
         return False
 
+    def _process_elif_final_else_with_children(self, region: IfRegion) -> Optional[List[Dict[str, Any]]]:
+        """处理 elif 链的 final else 分支，交错发射顺序块与子区域。
+
+        算法依据（区域归约 4 原则）：
+        - 自底向上归约：elif 链归约后，else 分支中的子区域（Loop/Try/With/If）
+          作为抽象节点保留，应按偏移顺序与顺序块交错发射。
+        - 每块唯一归属：子区域入口块已归属该子区域，不应被 _process_if_blocks
+          作为顺序块处理。
+        - 嵌套即抽象节点：子区域作为 else 分支的单个抽象节点发射。
+
+        问题根因（repro_04_func_body_truncated_after_else）：
+        elif_final_else 仅包含 else 分支中的顺序块（如 `preindex = None` 赋值），
+        不包含子区域入口块（如 for 循环的 FOR_ITER 块、嵌套 if 的条件块）。
+        _process_if_blocks 仅处理传入的块列表，不会发射不在列表中的子区域。
+        导致 else 分支后的 for 循环 + 嵌套 if + return 整段丢失
+        （change_his_to_forward orig=597 → new=181）。
+
+        修复：遍历 else_blocks 中所有块，通过 block_to_region 找到归属的子区域
+        （排除 elif 链自身的条件/体块和 final_else 顺序块），与 elif_final_else
+        块按偏移顺序交错发射。使用 block_to_region 而非 region.children，因为
+        elif 链归约时 region.children 可能不包含 else 分支中的深层子区域（如
+        IfRegion@528 的 children 仅含 IfRegion@562，但 else 分支中的
+        LoopRegion@1266 是 IfRegion@562 的子区域，不是 528 的直接子区域）。
+        """
+        if not region.elif_final_else:
+            return None
+        # 收集已归约为 elif 链条件/体的块（不应作为 else body 子区域发射）
+        _processed = set()
+        if region.elif_conditions:
+            _processed.update(region.elif_conditions)
+        if region.elif_bodies:
+            for _body in region.elif_bodies:
+                _processed.update(_body)
+        _final_else_set = set(region.elif_final_else)
+        _else_block_set = set(region.else_blocks) if region.else_blocks else set()
+        # 遍历 else_blocks，通过 block_to_region 找到子区域入口
+        _child_by_entry = {}
+        for _block in _else_block_set:
+            if _block in _processed:
+                continue
+            if _block in _final_else_set:
+                continue
+            if _block in self.generated_blocks:
+                continue
+            _owner = self.region_analyzer.block_to_region.get(_block)
+            if _owner is None or _owner is region:
+                continue
+            # 只发射结构化子区域（Loop/Try/With/If/Match），不发射 BASIC 块
+            if not isinstance(_owner, (LoopRegion, TryExceptRegion, WithRegion,
+                                       IfRegion, MatchRegion)):
+                continue
+            # 子区域 entry 必须是该块本身（避免把子区域的非入口块当作入口）
+            if getattr(_owner, 'entry', None) is not _block:
+                continue
+            # 排除 region 自身的 elif 条件块归属的 IfRegion（如 IfRegion@562 的
+            # entry @562 是 IfRegion@528 的第一个 elif 条件，不应作为 else body
+            # 子区域发射）
+            if _owner.entry in _processed:
+                continue
+            _child_by_entry[_block] = _owner
+        # 合并 elif_final_else 块与子区域入口，按偏移排序
+        _combined = list(region.elif_final_else)
+        for _entry in _child_by_entry:
+            if _entry not in _combined:
+                _combined.append(_entry)
+        _combined.sort(key=lambda b: b.start_offset)
+        # 交错发射顺序块段与子区域 AST
+        _else_stmts: List[Dict[str, Any]] = []
+        _seg_blocks: List = []
+        for _block in _combined:
+            if _block in _child_by_entry:
+                if _seg_blocks:
+                    _else_stmts.extend(self._process_if_blocks(_seg_blocks, region, branch='else'))
+                    _seg_blocks = []
+                _child = _child_by_entry[_block]
+                _child_id = id(_child)
+                if _child_id not in self._generated_regions and _child_id not in self._generating_regions:
+                    _child_ast = self._generate_region(_child)
+                    if _child_ast:
+                        if isinstance(_child_ast, list):
+                            _else_stmts.extend(_child_ast)
+                        else:
+                            _else_stmts.append(_child_ast)
+                    for _b in _child.blocks:
+                        self.generated_blocks.add(_b)
+                    self._generated_regions.add(_child_id)
+            else:
+                _seg_blocks.append(_block)
+        if _seg_blocks:
+            _else_stmts.extend(self._process_if_blocks(_seg_blocks, region, branch='else'))
+        return _else_stmts if _else_stmts else None
+
     def _if_generate_elif_chain(self, region: IfRegion) -> List[Dict[str, Any]]:
         if not getattr(region, 'elif_conditions', None):
             return [self._if_generate_normal(region)]
@@ -8887,7 +9019,7 @@ AST 映射规则:
                         for b in region.elif_final_else
                     )
                     if not _efe_is_continue_only:
-                        final_else_stmts = self._process_if_blocks(region.elif_final_else, region, branch='else')
+                        final_else_stmts = self._process_elif_final_else_with_children(region)
                         while (final_else_stmts and
                                isinstance(final_else_stmts[-1], dict) and
                                final_else_stmts[-1].get('type') == 'Return' and
@@ -8905,7 +9037,7 @@ AST 映射规则:
                 for b in region.elif_final_else
             )
             if not _efe_is_continue_only_2:
-                final_else_stmts = self._process_if_blocks(region.elif_final_else, region, branch='else')
+                final_else_stmts = self._process_elif_final_else_with_children(region)
             while (final_else_stmts and
                    isinstance(final_else_stmts[-1], dict) and
                    final_else_stmts[-1].get('type') == 'Return' and
@@ -18496,7 +18628,23 @@ AST 映射规则:
             return None
         values = []
         op_type = None
-        for cb, cop in chain:
+        # [R4-P0-2 fix] condition_chain_blocks 有两种来源格式：
+        #   (1) _build_ternary_condition_chain (region_analyzer L12778) 返回 [block, ...]
+        #       纯块列表，操作符需从每块末尾跳转指令推导。
+        #   (2) BoolOp→Ternary 升级 (region_analyzer L13057) 设置为
+        #       [(block, op), ...] 元组列表，操作符显式携带。
+        # 此前 for cb, cop in chain 仅处理格式 (2)，遇到格式 (1) 时抛
+        # ValueError: too many values to unpack，被 _build_function_def
+        # 的 try/except 吞掉，导致整个函数体退化为 pass（如
+        # repro_04_func_body_to_pass::fill_minute_or_day_blank）。
+        # 修复：统一两种格式，对纯块根据末尾 POP_JUMP_IF_* / JUMP_IF_*_OR_POP
+        # 推导操作符（IF_FALSE→and, IF_TRUE→or），与 BoolOp 重建规则一致。
+        for item in chain:
+            if isinstance(item, tuple) and len(item) == 2:
+                cb, cop = item
+            else:
+                cb = item
+                cop = None
             instrs = [i for i in cb.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
             last = cb.get_last_instruction()
             if last and last.opname in ('POP_JUMP_IF_FALSE', 'POP_JUMP_IF_TRUE', 'JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP'):
@@ -18506,6 +18654,11 @@ AST 映射规则:
                 if sub:
                     values.append(sub)
                     if op_type is None:
+                        if cop is None and last is not None:
+                            if last.opname in ('POP_JUMP_IF_FALSE', 'JUMP_IF_FALSE_OR_POP'):
+                                cop = 'and'
+                            elif last.opname in ('POP_JUMP_IF_TRUE', 'JUMP_IF_TRUE_OR_POP'):
+                                cop = 'or'
                         op_type = cop
         if len(values) < 2 or op_type is None:
             return None

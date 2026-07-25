@@ -227,7 +227,110 @@
 
 ## 轮 4 (Round 4)
 
-- [ ] R4-1 ~ R4-9
+> **R4 基线**：反编译产物 COMPILE_OK（3035 行），80 个函数字节码不一致、37 个签名不匹配、4 个缺失 code objects、11 个截断函数。
+> **R4 缺陷分布**：12 类（3 项 R3 残留 P2 复测 + 8 项 R4 新增 + 1 项 R3 修复在 quotation.pyc 退化），P0=2、P1=4、P2=5。
+
+### 阶段一：测试工程师（已完成）
+
+- [x] R4-1 反编译 + 字节码 diff（`decompile_report.md`，12 类缺陷，80 个函数不一致，COMPILE_OK）
+- [x] R4-2 ≥10 最小复现实例（`minimal_repros/`，12 个 repro 全部 py_compile + DEFECT-REPRO 验证通过）
+
+### 阶段二：修复工程师（待执行 — 目标：P0×2 + P1≥3 + P2≥2）
+
+#### P0 修复（必须完成 2 项）
+
+- [ ] R4-3 根因分析完成（12 个 repro 全部定位到 `_identify_*_regions` 或 `_generate_*` 方法，输出根因 + 4 原则违反项）
+- [ ] R4-4a P0 repro_04_func_body_truncated_after_else 修复完成（change_his_to_forward/backward else 后函数体截断退化）
+  - `region_analyzer.py::_identify_conditional_regions` / `_build_elif_region` / `_find_structural_merge_from_chain_end` 在 else 分支后跟 for 循环 + 多层 if 时正确识别 merge 点
+  - 扩展 `_structural_region_entries` 含 else body 的 for 循环 header/setup 块
+  - `_identify_conditional_regions` docstring 已按 6 项模板更新
+  - 验证：repro_04_func_body_truncated_after_else.pyc 中 else 后 for 循环 + tmpdata 赋值 + return 保留 ✓
+  - 验证：quotation.pyc::change_his_to_forward 函数体 orig=597 → new ≥ 400
+- [ ] R4-4b P0 repro_04_func_body_to_pass 修复完成（fill_minute_or_day_blank 函数体→pass）
+  - `region_ast_generator.py::_generate_region` / `_generate_block_statements` 在 for + if/elif/else + STORE_SUBSCR + continue 嵌套时按自底向上归约顺序处理子区域
+  - `_identify_loop_regions` 在含 continue 的 for 循环后跟 if/elif/else 时归约边界正确
+  - `_generate_region` docstring 已按 6 项模板更新
+  - 验证：repro_04_func_body_to_pass.pyc 中 for + if/elif/else + STORE_SUBSCR + continue 全部保留 ✓
+  - 验证：quotation.pyc::fill_minute_or_day_blank 函数体 orig=244 → new ≥ 150
+
+#### P1 修复（必须完成至少 3 项 — 目标 4 项）
+
+- [ ] R4-5a P1 repro_04_boolop_or_chain_to_and 修复完成（check_frequency or→and 语义反转）
+  - `region_analyzer.py::_detect_boolop_conditional_chain` 区分 assert 语句与 if 语句的 jump 方向
+  - POP_JUMP_IF_TRUE 短路正确识别为 or 链（非 and 链）
+  - assert 语句整体保留为 `assert not (or-chain), msg`，不拆分为 if + assert
+  - `_detect_boolop_conditional_chain` docstring 已按 6 项模板更新
+  - 验证：repro_04_boolop_or_chain_to_and.pyc 中 6 路 or 正确保留 ✓
+  - 验证：quotation.pyc::check_frequency 函数体 orig=96 → new ≤ 100
+- [ ] R4-5b P1 repro_04_try_except_handler_if_cond_lost 修复完成（except handler 内 `if e2.code == 401:` 条件丢失，R3 残留 P2 升级 P1）
+  - `region_ast_generator.py::_generate_try` 把 except handler 内 `LOAD_FAST e + LOAD_ATTR attr + LOAD_CONST N + COMPARE_OP` 完整 Compare 节点保留作 If 条件
+  - 禁止只保留 `LOAD_GLOBAL cls`（HTTPError/BaseException）
+  - 消除 spurious `if BaseException: pass` 嵌套
+  - `_generate_try` docstring 已按 6 项模板更新
+  - 验证：repro_04_try_except_handler_if_cond_lost.pyc 中 `if e2.code == 401:` 条件恢复 ✓
+  - 验证：quotation.pyc::api_get_financial line 161-172 条件恢复
+- [ ] R4-5c P1 repro_04_func_body_to_single_expr 修复完成（date_convert 函数体→单 Expr）
+  - `region_analyzer.py::_identify_conditional_regions` 在 if/elif/else 链 + IfExp 嵌套时按自底向上归约顺序处理
+  - 禁止把整个条件块压缩为单 IfExp；IfExp 仅在 Call 实参位置保留
+  - `_identify_conditional_regions` docstring 已按 6 项模板更新（与 R4-4a 共享）
+  - 验证：repro_04_func_body_to_single_expr.pyc 中 if/elif/else + return 完整保留 ✓
+  - 验证：quotation.pyc::date_convert 函数体 orig=87 → new ≥ 60
+- [ ] R4-5d P1 repro_04_if_branch_both_return_same 修复完成（_is_same_type_date 两分支均 return True）
+  - `region_ast_generator.py::_generate_if` / `_generate_compare` 保留嵌套 if 内层 Compare 节点
+  - 禁止把内层 Compare 折叠为外层 if 的常量分支
+  - 验证：repro_04_if_branch_both_return_same.pyc 中 `if typet == 7: ... else: if len(day1) == 8: return True` 内层 Compare 保留 ✓
+  - 验证：quotation.pyc::_is_same_type_date 函数体 orig=99 → new ≥ 60
+
+#### P2 修复（按时间预算择优，至少 2 项 — 目标 3 项）
+
+- [ ] R4-6a P2 repro_04_loop_store_subscr_to_bare_name 修复（load_get_price STORE_SUBSCR 丢失 + 裸 stock Expr，R3 退化）
+  - 扩展 `_fis_pre_stmts_emitted` 覆盖 STORE_SUBSCR 序列
+  - `_loop_generate_for` pre_stmts 发射守卫区分 minimal repro 与实际 CFG
+  - `_build_effective_stmts` 正确重建 `STORE_SUBSCR` 的 `Subscript` 目标为 `panel[stock] = data`
+  - `_loop_generate_for` + `_build_effective_stmts` docstring 已按 6 项模板更新
+  - 验证：repro_04_loop_store_subscr_to_bare_name.pyc 中 `panel[stock] = data` 保留，无裸 `stock` Expr ✓
+- [ ] R4-6b P2 repro_04_loop_spurious_for_else_double 修复（双层 spurious for-else + i=0 重复，R3 残留 P2）
+  - `_loop_generate_for` for 后顺序语句作为函数体顺序子节点保留，不应作为 else 子句
+  - 抑制 spurious `else: continue` / `else: return`
+  - `_identify_loop_regions` else 归属须判定 fall-through 块是否仅含循环出口 + 后续顺序语句
+  - 验证：repro_04_loop_spurious_for_else_double.pyc 中无 spurious for-else，无重复 `i = 0` ✓
+- [ ] R4-6c P2 repro_04_loop_dup_pre_assignment + repro_04_ifexp_as_bare_expr 修复（load_bars_from_hundsun 重复赋值 + 裸 IfExp）
+  - for_iter_setup pre_stmts 在 IfRegion 交叉时的发射权管理
+  - IfExpr 作为顺序语句时抑制裸 Expr 发射
+  - 验证：repro_04_loop_dup_pre_assignment.pyc 中无重复 `source_end = end[8:] or '1530'` ✓
+  - 验证：repro_04_ifexp_as_bare_expr.pyc 中无裸 IfExpr ✓
+- [ ] R4-6d P2 repro_04_ternary_in_call_arg_malformed 修复（get_history Call 实参 IfExp 畸形）— 可选
+- [ ] R4-6e P2 repro_04_loop_nested_if_spurious_pass 修复（顺序 if→elif + spurious pass）— 可选
+
+#### 回归测试与验证（待执行）
+
+- [ ] R4-7a 12 个 R4 repro 反编译验证通过（核心缺陷已消除）
+- [ ] R4-7b 既有测试矩阵无退化（IF/LOOP/TRY/WITH/MATCH/BOOLOP/TERNARY/CC/SEQ/ASSERT 子集 0 退化）
+- [ ] R4-7c quotation.pyc 反编译 stderr 警告数维持 0
+- [ ] R4-7d quotation.pyc 反编译产物 `compile()` 通过（COMPILE_OK）
+- [ ] R4-7e quotation.pyc 中 change_his_to_forward 函数体不再截断（orig=597 → new ≥ 400）
+- [ ] R4-7f quotation.pyc 中 fill_minute_or_day_blank 函数体不再→pass（orig=244 → new ≥ 150）
+- [ ] R4-7g quotation.pyc 中 check_frequency 6 路 BoolOp 在 quotation.pyc 路径恢复为 `or`（不仅 minimal repro）
+- [ ] R4-7h R3 已修 7 项不退化（特别是 repro_03_loop_bare_name_and_dup 在 quotation.pyc 实际产物复测，裸 `stock` Expr 消除）
+- [ ] R4-7i 残留不一致数 ≤ R4 基线（80 个函数不一致，目标 ≤ 60；截断函数 11 → ≤ 5；签名不匹配 37 → ≤ 25）
+
+#### 交付物与合规性（待执行）
+
+- [ ] R4-8 `fix_report.md` 生成（rounds/round_04/repair_engineer/fix_report.md）
+  - 修复点列表（按 repro 编号 + 涉及方法 + 算法依据 + 4 原则对应条款）
+  - docstring 更新清单（方法名 + 6 项模板覆盖确认）
+  - 回归结果（12 repro 通过状态 + 既有矩阵退化检查）
+  - 残留不一致数（与 R4 基线 80 个函数不一致对比，应下降）
+  - 算法 4 原则合规性自检
+  - 已知限制（assert not (or-chain) + 嵌套 IfExp + R3 退化点等）
+- [ ] R4-9 反模式自检通过（G3：0 新增 `_fix_/_merge_/_patch_/_fallback_/_hack_/_workaround_/_temp_` 前缀方法）
+  - `_merge_block_is_loop_back_edge`（region_ast_generator.py）为 pre-existing，按 spec 留待后续轮次重命名
+- [ ] R4-10 涉及的 `_identify_*_regions` / `_generate_*` 方法 docstring 已按 6 项统一模板更新
+  - 6 项：算法依据 / 归约顺序 / 唯一归属判定 / 嵌套处理 / 入口引用语义 / 反编译流程
+  - 待更新方法：`_identify_conditional_regions`（P0-1/P1-3 修改）/ `_generate_region`（P0-2 修改）/ `_detect_boolop_conditional_chain`（P1-1 修改）/ `_generate_try`（P1-2 修改）/ `_loop_generate_for` + `_build_effective_stmts`（P2-1/P2-2/P2-3 修改）
+- [ ] R4-11 算法 4 原则 FULLY COMPLIANT（自底向上归约 / 每块唯一归属 / 嵌套抽象节点 / 入口引用语义）
+- [ ] R4-12 `python -c "import core.cfg.region_analyzer; import core.cfg.region_ast_generator; import core.cfg.cfg_builder; import core.cfg.ast_converter; import core.cfg.pattern_parser"` 编译通过
+- [ ] R4-13 commit + push `qpyc-r04:`（待用户授权执行）
 
 ## 轮 5 (Round 5)
 

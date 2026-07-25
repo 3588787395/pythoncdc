@@ -3645,8 +3645,30 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                 else:
                     return None, natural_exit
             else:
-                if for_iter_exit and for_iter_exit not in body_set:
-                    return [for_iter_exit], natural_exit
+                # [R4-P2-2 fix] FOR 循环无 break 时，for_iter_exit 是循环后的
+                # 顺序语句/父循环回边/下一循环 for_iter_setup，不是 else 子句。
+                #
+                # 算法依据（区域归约 4 原则）：
+                # - 自底向上归约：for_iter_exit 不归属 LoopRegion.else_blocks，
+                #   留给父区域作为顺序语句处理（或归属下一循环的 for_iter_setup）。
+                # - 每块唯一归属：for_iter_exit 仅归属一个区域——若它是下一循环的
+                #   for_iter_setup 则归属该 LoopRegion；否则作为顺序块归属父区域。
+                #   原先把它强制收入本 LoopRegion.else_blocks 违反唯一归属（与下一
+                #   循环的 for_iter_setup 争夺所有权）。
+                # - 入口引用语义：for-else 仅在有 break 时才有语义（else 在循环
+                #   正常退出时执行，被 break 跳过）。无 break 时 else: 与循环后
+                #   顺序语句字节码完全等价，应按更简形式（无 else）发射。
+                #
+                # 问题根因（repro_04_loop_spurious_for_else_double::one_prod_to_dataframe）：
+                #   3 层 for 均无 break，但每层 else_blocks=[for_iter_exit]，
+                #   导致 `else: prod = data.get(...)` / `else: continue` /
+                #   `else: return df` 三处 spurious for-else。for_iter_exit 实为
+                #   顺序语句（prod = ...）、父循环回边（JUMP_BACKWARD）、函数返回
+                #   （return df），均非 else 语义。
+                # 安全性：与既有 `_break_hits_for_iter_exit → None` 和
+                #   `post_else == for_iter_exit → None` 分支一致——无语义 else 时
+                #   统一返回 None。for_iter_exit 不在本 LoopRegion.region_blocks
+                #   中，由父区域或下一循环的 for_iter_setup 机制正确处理。
                 return None, natural_exit
 
         loop_successors = [s for s in header.successors if s not in body_set and s != header]
@@ -9628,53 +9650,69 @@ RegionType 枚举值: RegionType.ASSERT
                 for succ in block.conditional_successors
                 if succ != block
             )
+            # [R4-P1-1 fix] `assert (or-chain), msg`（无 not）模式：
+            # 首操作数 POP_JUMP_IF_TRUE → end（成功快跳），fall-through 是下一
+            # 操作数块（含 2 个条件后继），_reach_assertion_error_block 在此处
+            # 停止。需沿 or-chain fall-through 链追踪到 message_block。
+            # 依「自底向上归约」+「每块唯一归属」：assert 识别器先于
+            # BoolOpRegion/IfRegion 运行，此处一次性识别整体，避免 or-chain
+            # 被抢占为 if not (and-chain): assert last_cond（repro_04_boolop_
+            # or_chain_to_and 根因：check_frequency orig=96 → new=101）。
+            _or_chain_msg_block: Optional[BasicBlock] = None
+            if not is_assert:
+                _or_chain_msg_block = self._detect_assert_or_chain_message_block(block)
+                if _or_chain_msg_block is not None:
+                    is_assert = True
             if not is_assert:
                 continue
 
             message_block = None
-            for succ in sorted(block.successors, key=lambda s: s.start_offset):
-                if succ == block:
-                    continue
-                # [R8 fix] Find the LOAD_ASSERTION_ERROR block (start of
-                # failure path). For simple cases (`assert x, "msg"`) this
-                # block also contains RAISE_VARARGS, so it's the same block
-                # the legacy `_reach_raise_varargs_block` would return.
-                # For ternary/complex message cases (`assert x, (a if c else
-                # b)`), the LOAD_ASSERTION_ERROR block is the TernaryRegion
-                # entry; the legacy walk gives up because of the ternary's
-                # 2 conditional successors. Finding the LOAD_ASSERTION_ERROR
-                # block directly lets the parent AssertRegion reference the
-                # TernaryRegion entry via `message_block` (principle 4:
-                # parent references child entry).
-                mb = self._find_assertion_error_block(succ)
-                if mb is not None:
-                    message_block = mb
-                    break
-                # Fallback: walk fall-through chain for cases where
-                # LOAD_ASSERTION_ERROR is in a later block (legacy behavior
-                # preserved for any edge cases not covered by the new helper).
-                # [Pass5-ASSERT] 已知反模式（Pass 1 已登记、Pass 4 fix_report
-                # §未完成项 4 引用 L9436 已过时——现实际位于 L9442-L9448）：
-                # 本 Fallback 块为「Fallback 补丁」反模式——上方
-                # `_find_assertion_error_block` 主路径 + 本 `_reach_raise_varargs_block`
-                # 兜底路径形成「主路径 + 兜底补丁」二段式结构，违反「识别阶段一次正确」
-                # 原则。改写需统一 `_find_assertion_error_block` / `_reach_raise_varargs_block`
-                # 为单一查询路径（识别期消除兜底），属控制流变更，超出保守范围。本轮保守
-                # 仅添加内联标记，待后续 Pass 统一两查询路径后一并删除本 Fallback 块。
-                # [Pass6-ASSERT] 同步：Pass 5 写入后经 Pass6-TRY 上游修改（在
-                # _identify_try_except_regions docstring L4770-L4781 追加 [Pass5-TRY]/
-                # [Pass6-TRY] 段落约 13 行）使行号再次下移——`_reach_raise_varargs_block(succ)`
-                # 调用现实际位置见紧邻本注释段下方的 `mb = self._reach_raise_varargs_block(succ)`
-                # 行（原 Pass 5 引用 L9442-L9448 / L9453 为 Pass 5 写入时的快照，已过时；
-                # 其中 L9442-L9448 范围本身亦与 Pass 5 fix_report 描述不完全一致，存疑）。
-                # 本轮改用相对位置描述避免递归漂移。验证方法：grep
-                # `_reach_raise_varargs_block(succ)` 在 _identify_assert_regions 内
-                # 可重新定位（紧邻本注释段下方）。后续 Pass 若实施「主路径 + 兜底
-                # 统一为单一查询路径」可一并消除此反模式与行号引用漂移源。
-                mb = self._reach_raise_varargs_block(succ)
-                if mb is not None:
-                    message_block = mb
-                    break
+            if _or_chain_msg_block is not None:
+                message_block = _or_chain_msg_block
+            else:
+                for succ in sorted(block.successors, key=lambda s: s.start_offset):
+                    if succ == block:
+                        continue
+                    # [R8 fix] Find the LOAD_ASSERTION_ERROR block (start of
+                    # failure path). For simple cases (`assert x, "msg"`) this
+                    # block also contains RAISE_VARARGS, so it's the same block
+                    # the legacy `_reach_raise_varargs_block` would return.
+                    # For ternary/complex message cases (`assert x, (a if c else
+                    # b)`), the LOAD_ASSERTION_ERROR block is the TernaryRegion
+                    # entry; the legacy walk gives up because of the ternary's
+                    # 2 conditional successors. Finding the LOAD_ASSERTION_ERROR
+                    # block directly lets the parent AssertRegion reference the
+                    # TernaryRegion entry via `message_block` (principle 4:
+                    # parent references child entry).
+                    mb = self._find_assertion_error_block(succ)
+                    if mb is not None:
+                        message_block = mb
+                        break
+                    # Fallback: walk fall-through chain for cases where
+                    # LOAD_ASSERTION_ERROR is in a later block (legacy behavior
+                    # preserved for any edge cases not covered by the new helper).
+                    # [Pass5-ASSERT] 已知反模式（Pass 1 已登记、Pass 4 fix_report
+                    # §未完成项 4 引用 L9436 已过时——现实际位于 L9442-L9448）：
+                    # 本 Fallback 块为「Fallback 补丁」反模式——上方
+                    # `_find_assertion_error_block` 主路径 + 本 `_reach_raise_varargs_block`
+                    # 兜底路径形成「主路径 + 兜底补丁」二段式结构，违反「识别阶段一次正确」
+                    # 原则。改写需统一 `_find_assertion_error_block` / `_reach_raise_varargs_block`
+                    # 为单一查询路径（识别期消除兜底），属控制流变更，超出保守范围。本轮保守
+                    # 仅添加内联标记，待后续 Pass 统一两查询路径后一并删除本 Fallback 块。
+                    # [Pass6-ASSERT] 同步：Pass 5 写入后经 Pass6-TRY 上游修改（在
+                    # _identify_try_except_regions docstring L4770-L4781 追加 [Pass5-TRY]/
+                    # [Pass6-TRY] 段落约 13 行）使行号再次下移——`_reach_raise_varargs_block(succ)`
+                    # 调用现实际位置见紧邻本注释段下方的 `mb = self._reach_raise_varargs_block(succ)`
+                    # 行（原 Pass 5 引用 L9442-L9448 / L9453 为 Pass 5 写入时的快照，已过时；
+                    # 其中 L9442-L9448 范围本身亦与 Pass 5 fix_report 描述不完全一致，存疑）。
+                    # 本轮改用相对位置描述避免递归漂移。验证方法：grep
+                    # `_reach_raise_varargs_block(succ)` 在 _identify_assert_regions 内
+                    # 可重新定位（紧邻本注释段下方）。后续 Pass 若实施「主路径 + 兜底
+                    # 统一为单一查询路径」可一并消除此反模式与行号引用漂移源。
+                    mb = self._reach_raise_varargs_block(succ)
+                    if mb is not None:
+                        message_block = mb
+                        break
 
             # [Round4-12] 检测 condition_block 是否是链式比较 header
             # （COPY(arg=2)+COMPARE_OP 对 + 后续 fall-through COMPARE_OP 块）。
@@ -9802,12 +9840,20 @@ RegionType 枚举值: RegionType.ASSERT
             # (a) message_block 是 next_block 的直接条件后继（常见情况，
             #     如 `a>0 and b>0` 的末段 fall-through → message_block），或
             # (b) next_block 的某个条件后继经 fall-through 链到达 message_block
-            #     （链式比较中段经 POP_TOP 中转块到 message_block）。
+            #     （链式比较中段经 POP_TOP 中转块到 message_block），或
+            # (c) [R4-P1-1 fix] next_block 是 `assert (or-chain), msg` 中间操作数，
+            #     其 fall-through 后继也是同跳转目标的 or-chain 操作数，需沿
+            #     or-chain 追踪才能到达 message_block（`_reaches_block_via_fallthrough`
+            #     在 >1 条件后继处停止，无法穿透 or-chain）。
             # 不能用 _reach_assertion_error_block：它要求块本身只有 ≤1 个
             # 条件后继，而 BoolOp 末段有 2 个条件后继（message_block + end）。
             reaches_msg = (message_block in next_block.conditional_successors
                            or any(self._reaches_block_via_fallthrough(s, message_block)
-                                  for s in next_block.conditional_successors))
+                                  for s in next_block.conditional_successors)
+                           or (first_op == 'or'
+                               and self._or_chain_reaches_message_block(
+                                   next_block, message_block,
+                                   jump_target_offset, visited)))
             if not reaches_msg:
                 break
             # 所有 chain 块的 op 与首段一致（纯 and/or 链）。
@@ -9932,6 +9978,49 @@ RegionType 枚举值: RegionType.ASSERT
             cur = succs[0]
         return False
 
+    def _or_chain_reaches_message_block(self, start_block: BasicBlock,
+                                         message_block: BasicBlock,
+                                         jump_target_offset: int,
+                                         visited: Set[BasicBlock]) -> bool:
+        """[R4-P1-1 fix] 沿 or-chain fall-through 链检查是否能到达 message_block。
+
+        用于 `assert (or-chain), msg` 模式：每个操作数块 POP_JUMP_IF_TRUE → end
+        （同一 jump_target_offset），fall-through 是下一操作数块。需穿透整条
+        or-chain 才能到达末操作数的 fall-through → message_block。
+
+        算法依据（区域归约 4 原则）：
+        - 自底向上归约：assert 识别器在 BoolOpRegion 之前运行，需一次性识别
+          整条 or-chain，避免被 BoolOpRegion 抢占。
+        - 每块唯一归属：识别后所有 or-chain 操作数块归属 AssertRegion。
+
+        检测策略：从 start_block 沿 fall-through（非 jump-target 后继）追踪，
+        要求每个中间块跳转目标与 jump_target_offset 一致。链终止于
+        message_block（含 LOAD_ASSERTION_ERROR）或非条件块。
+        """
+        cur = start_block
+        # 注意：visited 含 message_block（来自 _detect_assert_boolop_chain 的
+        # visited = {condition_block, message_block}），但此处需追踪到
+        # message_block，故从 seen 中移除 message_block 避免被过滤。
+        seen: Set[BasicBlock] = set(visited) - {message_block}
+        for _ in range(64):
+            if cur is message_block:
+                return True
+            if any(instr.opname == 'LOAD_ASSERTION_ERROR'
+                   for instr in cur.instructions):
+                return cur is message_block
+            last = cur.get_last_instruction()
+            if not last or last.opname not in FORWARD_CONDITIONAL_JUMP_OPS:
+                return False
+            if last.argval != jump_target_offset:
+                return False
+            ft = [s for s in cur.conditional_successors
+                  if s.start_offset != jump_target_offset and s not in seen]
+            if len(ft) != 1:
+                return False
+            seen.add(cur)
+            cur = ft[0]
+        return False
+
     def _reach_raise_varargs_block(self, block: BasicBlock) -> Optional[BasicBlock]:
         """[Round4-12] 从 block 起沿单后继 fall-through 链查找含 RAISE_VARARGS 的块。
 
@@ -9953,6 +10042,80 @@ RegionType 枚举值: RegionType.ASSERT
             if len(succs) != 1:
                 return None
             cur = succs[0]
+        return None
+
+    def _detect_assert_or_chain_message_block(self, start_block: BasicBlock) -> Optional[BasicBlock]:
+        """[R4-P1-1 fix] 检测 `assert (or-chain), msg` 模式并返回 message_block。
+
+        算法依据（区域归约 4 原则）：
+        - 自底向上归约：assert 识别器先于 IfRegion/BoolOpRegion 运行，需在
+          识别阶段一次性正确识别 assert (or-chain) 整体，避免 or-chain 被
+          BoolOpRegion/IfRegion 抢占（导致 if not (and-chain): assert last_cond）。
+        - 每块唯一归属：识别后所有 or-chain 操作数块归属 AssertRegion，不被
+          BoolOpRegion 重复识别。
+        - 入口引用语义：AssertRegion.entry = 首操作数块，message_block =
+          末操作数 fall-through 到达的 LOAD_ASSERTION_ERROR 块。
+
+        字节码模式 `assert (a or b or c), msg`（无 not）：
+          block_1 (a): ...; POP_JUMP_IF_TRUE → end (成功快跳); fall-through → block_2
+          block_2 (b): ...; POP_JUMP_IF_TRUE → end; fall-through → block_3
+          block_3 (c): ...; POP_JUMP_IF_TRUE → end; fall-through → message_block
+          message_block: LOAD_ASSERTION_ERROR; LOAD_CONST msg; CALL; RAISE_VARARGS
+          end: continue (assert 通过)
+
+        与 `assert not (or-chain), msg` 的区别：
+          - `not (or-chain)`: 首块 POP_JUMP_IF_TRUE → message_block（失败快跳），
+            现有 _reach_assertion_error_block 直接命中。
+          - `(or-chain)`（无 not）: 首块 POP_JUMP_IF_TRUE → end（成功快跳），
+            fall-through 是下一操作数块（含 2 个条件后继），
+            _reach_assertion_error_block 在此处停止（>1 条件后继），导致漏识别。
+
+        检测策略：从 start_block 沿 fall-through 链追踪，要求每个中间块：
+          (1) 末尾为 FORWARD_CONDITIONAL_JUMP_OPS；
+          (2) 跳转目标与 start_block 一致（同一 end 块）；
+          (3) 跳转方向为 IF_TRUE/IF_NOT_NONE（'or' 成功快跳）。
+        链终止于：含 LOAD_ASSERTION_ERROR 的块（message_block）或非条件块。
+
+        返回：message_block（含 LOAD_ASSERTION_ERROR），或 None。
+        """
+        last = start_block.get_last_instruction()
+        if not last or last.opname not in FORWARD_CONDITIONAL_JUMP_OPS:
+            return None
+        # 仅 'or' 成功快跳（IF_TRUE/IF_NOT_NONE）适用此模式；
+        # 'and' 失败快跳（IF_FALSE/IF_NONE）跳转目标即 message_block，由现有逻辑处理
+        if 'TRUE' not in last.opname and 'NOT_NONE' not in last.opname:
+            return None
+        jump_target_offset = last.argval
+        if jump_target_offset is None:
+            return None
+        visited = {start_block}
+        current = start_block
+        # 限制链长度防止异常 CFG 死循环（非硬编码深度，仅防环兜底）
+        for _ in range(64):
+            ft_candidates = [s for s in current.conditional_successors
+                             if s.start_offset != jump_target_offset and s not in visited]
+            if len(ft_candidates) != 1:
+                return None
+            next_block = ft_candidates[0]
+            if next_block in visited:
+                return None
+            visited.add(next_block)
+            # next_block 是 message_block（含 LOAD_ASSERTION_ERROR）
+            if any(instr.opname == 'LOAD_ASSERTION_ERROR'
+                   for instr in next_block.instructions):
+                return next_block
+            # next_block 经单后继 fall-through 链到达 LOAD_ASSERTION_ERROR
+            # （如链式比较中段经 POP_TOP 中转块）
+            mb = self._find_assertion_error_block(next_block)
+            if mb is not None:
+                return mb
+            # next_block 必须是另一 or-chain 操作数（同一跳转目标）
+            next_last = next_block.get_last_instruction()
+            if (not next_last
+                    or next_last.opname not in FORWARD_CONDITIONAL_JUMP_OPS
+                    or next_last.argval != jump_target_offset):
+                return None
+            current = next_block
         return None
 
     def _identify_chained_compare_regions(self, loop_regions: List[Region],
@@ -11697,6 +11860,30 @@ RegionType 枚举值: RegionType.ASSERT
                         pass
                     else:
                         inner_merge = _candidate_merge
+                # [R4-P0-1 fix] 当一分支 sink（return/raise）而另一分支继续时，
+                # inner_merge 被设为非 sink 分支的 immediate_post_dominator。但若该
+                # ipdom 是结构区域入口（LoopRegion/MatchRegion/TryExceptRegion/
+                # WithRegion/IfRegion 的 entry，如 else 分支后跟 for 循环的 FOR_ITER
+                # 块或嵌套 if/elif 块），则它不是 if/elif 分支的 merge 点——非 sink
+                # 分支并未在此与其他分支汇合，而是进入了应属于 else body 的结构化
+                # 代码。若误用此块作 merge，_collect_branch_blocks 会在结构区域入口
+                # 处停止，把 else 分支截断为仅含入口前的块（如 `preindex = None`
+                # 赋值），丢失整个 for 循环 + 后续 if + return（repro_04_func_body_
+                # truncated_after_else 根因：change_his_to_forward orig=597 →
+                # new=181，else 分支的 for idx in series[...]: 循环 +
+                # `if tmpdata is not None:` + return 全部丢失）。
+                # 依「自底向上归约」+「每块唯一归属」+「嵌套即抽象节点」：结构区域
+                # 入口已归属该结构区域，是 else body 的子节点而非 merge 点。设
+                # inner_merge=None 让 _collect_branch_blocks 收集完整 else 分支
+                # （含结构区域入口），结构区域作为 else body 的嵌套子节点保留。
+                # R4 扩展：新增 IfRegion 覆盖 else 分支中嵌套 if/elif（非 sink 分支
+                # ipdom 为嵌套 IfRegion entry 时，该 IfRegion 属于 else body 子节点）。
+                if inner_merge is not None:
+                    _merge_owner = self.block_to_region.get(inner_merge)
+                    if isinstance(_merge_owner, (LoopRegion, MatchRegion,
+                                                 TryExceptRegion, WithRegion,
+                                                 IfRegion)):
+                        inner_merge = None
             inner_then_blocks = self._collect_branch_blocks(inner_then_succ, inner_merge, {inner_else_succ} | _inner_boundary_stop)
             inner_else_blocks = self._collect_branch_blocks(inner_else_succ, inner_merge, {inner_then_succ} | _inner_boundary_stop)
             if inner_else_blocks and all(self._is_trivial_block(b) for b in inner_else_blocks):
@@ -12644,6 +12831,63 @@ RegionType 枚举值: RegionType.ASSERT
 
             if not _can_be_ternary_header(block):
                 return None
+            # [R4-P1-2/P1-3 fix] 检测 condition_block 是否包含语句级指令。
+            # 算法依据（区域归约 4 原则）：
+            # - 入口引用语义：含完整语句（赋值/调用语句/删除/导入等）的块应作为顺序
+            #   语句保留在父区域中，不应被 TernaryRegion 吞并为条件表达式的一部分。
+            # - 自底向上归约：TernaryRegion 识别器应在纯条件块上运行，含完整语句
+            #   的块应留给 IfRegion/顺序块归约。
+            # 问题根因：
+            #   P1-2 (repro_04_try_except_handler_if_cond_lost::api_get_financial):
+            #     except HTTPError as e2: handler 内 system_log.error(get_traceback_message())
+            #     [CALL+POP_TOP] + if e2.code == 401: 共处一个基本块，_detect_ternary_context
+            #     误将 LOAD_GLOBAL system_log 识别为 call 容器 func，整块当 ternary 条件，
+            #     导致 system_log.error(...) + if e2.code == 401: 被压缩为 IfExp。
+            #   P1-3 (repro_04_func_body_to_single_expr::date_convert):
+            #     函数体 dict_temp=...; date_temp=...; year_temp=...; month_temp=...
+            #     [STORE_FAST x4] + if report_types is None: 共处入口基本块 @0，
+            #     _detect_ternary_context 误将 LOAD_GLOBAL int 识别为 call 容器 func，
+            #     整个函数体被压缩为 `int(... if report_types is None else ...)` 单 Expr。
+            # 修复：扫描有效指令（剥离末尾条件跳转 + walrus COPY+STORE 对），若发现
+            # 语句级指令（STORE_*/DELETE_*/IMPORT_*/RAISE_VARARGS/YIELD_VALUE）或
+            # CALL+POP_TOP（完整调用语句），则该块含完整语句，不是纯 ternary 条件，返回 None。
+            # 安全性：纯 ternary 条件块只含表达式求值指令（LOAD/CALL/BINARY_OP/COMPARE_OP
+            # 等），CALL 结果被 POP_JUMP_IF_FALSE 直接消费，不会出现 CALL+POP_TOP；
+            # walrus := 的 COPY+STORE 对被剥离后不影响检查；链式比较中的 POP_TOP 出现在
+            # COMPARE_OP 之后而非 CALL 之后，且不含 STORE_*，不受影响。
+            _eff_instrs = [i for i in block.instructions if i.opname not in NOISE_OPS]
+            # 剥离末尾条件跳转指令
+            if _eff_instrs and _eff_instrs[-1].opname in (
+                    FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS):
+                _eff_instrs = _eff_instrs[:-1]
+            # 剥离 walrus COPY+STORE 对（y := expr 的副作用，不破坏单表达式性）
+            _walrus_stripped = []
+            _ws_idx = 0
+            while _ws_idx < len(_eff_instrs):
+                _ws_instr = _eff_instrs[_ws_idx]
+                if (_ws_instr.opname == 'COPY' and _ws_instr.argval >= 1
+                        and _ws_idx + 1 < len(_eff_instrs)
+                        and _eff_instrs[_ws_idx + 1].opname in (
+                            'STORE_FAST', 'STORE_NAME',
+                            'STORE_GLOBAL', 'STORE_DEREF')):
+                    _ws_idx += 2
+                    continue
+                _walrus_stripped.append(_ws_instr)
+                _ws_idx += 1
+            _stmt_level_ops = frozenset({
+                'STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_ATTR', 'STORE_SUBSCR',
+                'DELETE_NAME', 'DELETE_FAST', 'DELETE_GLOBAL', 'DELETE_ATTR',
+                'IMPORT_NAME', 'IMPORT_FROM', 'IMPORT_STAR',
+                'RAISE_VARARGS', 'YIELD_VALUE',
+            })
+            for _si, _sinstr in enumerate(_walrus_stripped):
+                if _sinstr.opname in _stmt_level_ops:
+                    return None
+                if _sinstr.opname in ('CALL', 'CALL_FUNCTION', 'CALL_FUNCTION_KW',
+                                      'CALL_FUNCTION_EX', 'CALL_KW'):
+                    if _si + 1 < len(_walrus_stripped):
+                        if _walrus_stripped[_si + 1].opname == 'POP_TOP':
+                            return None
             last_instr = block.get_last_instruction()
             heads = sorted(block.conditional_successors, key=lambda s: s.start_offset)
             if len(heads) != 2:
@@ -12729,6 +12973,47 @@ RegionType 枚举值: RegionType.ASSERT
                     continue
                 if true_block in _mr_blocks or false_block in _mr_blocks:
                     return None
+
+            # [R4-P1-4 fix] 拒绝把 if/elif/else 链的 elif 条件块误识别为 ternary 值块。
+            # 算法依据（区域归约 4 原则）：
+            # - 每块唯一归属：if/elif/else 链的 elif 条件块归属 IfRegion（elif_conditions），
+            #   不应被 TernaryRegion 抢占。
+            # - 入口引用语义：elif 条件块以 POP_JUMP_IF_FALSE 跳到下一 elif/else，其
+            #   fall-through 是 elif body。若 elif body 内含嵌套 if + return，则条件块的
+            #   后继中存在以 RETURN_VALUE/RETURN_CONST 结尾的块——这是 if-elif-else 链的
+            #   结构特征，不是三元表达式的值块。
+            # 问题根因（repro_04_if_branch_both_return_same::_is_same_type_date）：
+            #   `if typet == 7: ... elif typet == 8: if day1.year == day2.year and ...:
+            #    return True else: return False ...`
+            #   外层 if 条件块 @0 (typet==7) 的 true_block=@14, false_block=@174。
+            #   false_block @174 是 `elif typet == 8:` 条件，以 POP_JUMP_IF_FALSE 跳到
+            #   @258 (下一 elif)，fall-through 到 @186 (内层 if 条件)。
+            #   _is_ternary_block(@174) 仅检查直接 fallthrough @186 是否以 RETURN 结尾
+            #   （否，@186 以 POP_JUMP_IF_FALSE 结尾），返回 True，跳过后续
+            #   _is_value_block_nested_if_header 检查。但 @186 的后继 @254 以
+            #   RETURN_VALUE 结尾——这是嵌套 if-elif-else 条件头，不是 ternary 值块。
+            #   TernaryRegion@174 吞并 elif 链所有块，导致 IfRegion@0 无法构建 elif 链，
+            #   两分支均退化为 return True。
+            # 修复：在 chain_blocks 分析之前，无条件检查 true_block/false_block 是否为
+            # 嵌套 if-elif-else 条件头（以条件跳转结尾 + 任一后继以 RETURN 结尾）。
+            # 安全性：真三元表达式的值块是单表达式（LOAD/CALL/BINARY_OP 等），不以
+            # 条件跳转结尾，不会被拒绝。仅 if-elif-else 条件头（含 return 语句体后继）
+            # 被拒绝。
+            def _is_nested_elif_header(blk):
+                if blk is None:
+                    return False
+                _blk_last = blk.get_last_instruction()
+                if not (_blk_last and _blk_last.opname in (
+                        FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)):
+                    return False
+                for _succ in blk.conditional_successors:
+                    _succ_last = _succ.get_last_instruction()
+                    if _succ_last and _succ_last.opname in RETURN_TERMINATOR_OPS:
+                        return True
+                return False
+
+            if _is_nested_elif_header(true_block) or _is_nested_elif_header(false_block):
+                return None
 
             # [Issue 1 fix] 三元表达式的值分支是"在栈顶留下一个值"的单表达式
             # （后续由 STORE_*/RETURN_VALUE/BUILD_STRING 等消费）。
@@ -16875,11 +17160,24 @@ RegionType 枚举值: RegionType.ASSERT
                     if child is not best_parent and child not in best_parent.children:
                         entry_block = child.entry
                         if entry_block and self.block_to_region.get(entry_block) is child:
+                            # [R4-P0-1 fix] 仅当 child 与 best_parent 共享同一 entry 块时
+                            # 才视为动态冲突并跳过父子关系建立。共享 entry 的典型场景：
+                            # BoolOpRegion 与 IfRegion 都以 if 头块为 entry（BoolOp 是 if
+                            # 条件的子表达式），二者是同一控制流构造的不同侧面，不应嵌套。
+                            # 不同 entry 的嵌套 IfRegion（如 if/elif/else 链 else 分支内的
+                            # 内层 if、for 循环后的 if）必须正常建立父子关系——否则嵌套
+                            # IfRegion 会沦为 parent=None 的顶层区域，在 AST 生成阶段被
+                            # 丢弃，导致函数体在 else 分支后的 for + 内层 if + return 整段
+                            # 截断（repro_04_func_body_truncated_after_else 根因：
+                            # change_his_to_forward orig=597 → new=181）。
+                            # 算法依据：每块唯一归属（child 拥有自身 entry）+ 嵌套即抽象
+                            # 节点（嵌套 IfRegion 作为外层 IfRegion else 分支的抽象节点）。
                             dynamic_conflict_types = (RegionType.BOOL_OP, RegionType.TERNARY,
                                                       RegionType.IF_THEN_ELSE, RegionType.IF_THEN,
                                                       RegionType.IF_ELIF_CHAIN)
                             if (child.region_type in dynamic_conflict_types and
-                                best_parent.region_type in dynamic_conflict_types):
+                                best_parent.region_type in dynamic_conflict_types and
+                                best_parent.entry is child.entry):
                                 continue
                         if isinstance(child, LoopRegion) and isinstance(best_parent, (IfRegion)):
                             if child.blocks and best_parent.blocks:
