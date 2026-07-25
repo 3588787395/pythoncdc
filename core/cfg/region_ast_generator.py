@@ -3428,13 +3428,6 @@ AST 映射规则:
                 output.append(result)
                 return output
 
-            if region.is_while_true and cond_block == region.header_block:
-                body_stmts = self._loop_generate_body(region)
-                result = {'type': 'While', 'test': {'type': 'Constant', 'value': True}, 'body': body_stmts if body_stmts else [{'type': 'Pass'}]}
-                output = list(pre_stmts)
-                output.append(result)
-                return output
-
         is_degenerate_while = region.metadata.get('is_degenerate_while', False)
         if not is_degenerate_while:
             is_degenerate_while = (cond_block == region.header_block and 

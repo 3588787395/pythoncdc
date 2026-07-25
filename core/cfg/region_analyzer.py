@@ -1596,8 +1596,6 @@ class RegionAnalyzer:
 
         self._build_region_hierarchy(regions=all_regions)
 
-        self._cleanup_try_else_in_loop_body(loop_regions, try_regions)
-
         self._annotate_all_roles(all_regions)
 
         for _lr in loop_regions:
@@ -1605,15 +1603,6 @@ class RegionAnalyzer:
                 for _bb in _lr.break_blocks:
                     if _bb in _lr.blocks:
                         self.block_roles[_bb.start_offset] = BlockRole.BREAK
-
-        fake_loop_region_ids = self._detect_and_filter_conditional_recheck_fake_loops(loop_regions)
-        if fake_loop_region_ids:
-            self._rebuild_block_roles_after_fake_loop_removal(loop_regions, fake_loop_region_ids)
-            loop_regions = [r for r in loop_regions if id(r) not in fake_loop_region_ids]
-            all_regions = [r for r in all_regions if id(r) not in fake_loop_region_ids]
-            for block, region in list(self.block_to_region.items()):
-                if id(region) in fake_loop_region_ids:
-                    del self.block_to_region[block]
 
         self._precompute_all_generator_data(all_regions)
 
@@ -3252,203 +3241,6 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
 
         return regions
 
-    def _rebuild_block_roles_after_fake_loop_removal(self, regions: List[Region], fake_loop_ids: Set[int]) -> None:
-        """
-        过滤条件重检假循环后，修复相关块的block_role
-        
-        假循环被过滤后，以下块的role需要修正：
-        1. 假循环的else_blocks (JUMP_BACKWARD块) → 应标记为CONTINUE/PURE_CONTINUE
-        2. 假循环的back_edge_block (POP_JUMP_BACKWARD_IF_*块) → 应标记为LOOP_BODY或LOOP_BACK_EDGE
-        3. 假循环的body_blocks中被错误标记为CONTINUE → 应标记为LOOP_BODY（如果有意义语句）
-        """
-        loop_regions = self._filter_regions(regions, LoopRegion)
-        
-        for region in loop_regions:
-            if id(region) not in fake_loop_ids:
-                continue
-            
-            # Fix 1: 修正else_blocks的角色
-            for else_block in (region.else_blocks or []):
-                last_instr = else_block.get_last_instruction()
-                if last_instr and last_instr.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'):
-                    current_role = self.block_roles.get(else_block.start_offset)
-                    if current_role in (BlockRole.LOOP_BACK_EDGE, BlockRole.LOOP_ELSE, BlockRole.NORMAL):
-                        meaningful = [i for i in else_block.instructions
-                                    if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP')
-                                    and i.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')]
-                        if not meaningful:
-                            self.block_roles[else_block.start_offset] = BlockRole.PURE_CONTINUE
-                        else:
-                            self.block_roles[else_block.start_offset] = BlockRole.CONTINUE
-            
-            # Fix 2: 修正back_edge_block的角色
-            if region.back_edge_block:
-                be = region.back_edge_block
-                last_instr = be.get_last_instruction()
-                if last_instr and last_instr.opname in ('POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE'):
-                    current_role = self.block_roles.get(be.start_offset)
-                    if current_role in (BlockRole.CONTINUE, BlockRole.PURE_CONTINUE):
-                        meaningful = [i for i in be.instructions
-                                    if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP')
-                                    and i.opname not in ('POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE')]
-                        if meaningful:
-                            self.block_roles[be.start_offset] = BlockRole.LOOP_BODY
-                        else:
-                            self.block_roles[be.start_offset] = BlockRole.LOOP_BACK_EDGE
-            
-            # Fix 3: 修正body_blocks(含header)中被错误标记为CONTINUE/NON-NORMAL的块
-            # 当假循环被过滤后，其header和body_blocks中的非continue块应该恢复为LOOP_BODY
-            for body_block in list(region.body_blocks or []) + ([region.header_block] if region.header_block else []):
-                if body_block in (region.else_blocks or []):
-                    continue
-                if body_block == region.back_edge_block:
-                    continue
-                
-                current_role = self.block_roles.get(body_block.start_offset)
-                if current_role in (BlockRole.LOOP_HEADER, BlockRole.CONTINUE, BlockRole.PURE_CONTINUE):
-                    meaningful_instrs = [
-                        i for i in body_block.instructions
-                        if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP')
-                        and i.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
-                                            'JUMP_FORWARD', 'JUMP_ABSOLUTE')
-                        and i.opname not in CONDITIONAL_JUMP_OPS
-                        and i.opname not in SHORT_CIRCUIT_JUMP_OPS
-                    ]
-                    if meaningful_instrs:
-                        self.block_roles[body_block.start_offset] = BlockRole.LOOP_BODY
-
-    def _cleanup_try_else_in_loop_body(self, loop_regions: List['LoopRegion'], try_regions: List['TryExceptRegion']):
-        for tr in try_regions:
-            if not tr.else_blocks or not tr.has_else:
-                continue
-            enclosing_loops = [lr for lr in loop_regions
-                               if any(b in lr.body_blocks for b in tr.try_blocks)]
-            if not enclosing_loops:
-                continue
-            loop_body_blocks = set()
-            for lr in enclosing_loops:
-                if hasattr(lr, 'body_blocks') and lr.body_blocks:
-                    loop_body_blocks.update(lr.body_blocks)
-            try_blocks_set = set(tr.try_blocks) if tr.try_blocks else set()
-            spurious = [eb for eb in tr.else_blocks
-                        if eb in loop_body_blocks
-                        and self.block_roles.get(eb.start_offset) not in (BlockRole.PURE_CONTINUE, BlockRole.CONTINUE)
-                        and not any(tb in try_blocks_set
-                                    and eb in tb.successors
-                                    and tb.get_last_instruction() is not None
-                                    and tb.get_last_instruction().opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT', 'JUMP_ABSOLUTE')
-                                    and tb.get_last_instruction().opname not in CONDITIONAL_JUMP_OPS
-                                    for tb in try_blocks_set)]
-            if not spurious:
-                continue
-            for eb in spurious:
-                tr.else_blocks.remove(eb)
-                if eb in tr.blocks:
-                    tr.blocks.remove(eb)
-            if not tr.else_blocks:
-                tr.has_else = False
-
-        for lr in loop_regions:
-            if not lr.else_blocks:
-                continue
-            parent_loops = [pl for pl in loop_regions
-                           if pl is not lr
-                           and hasattr(pl, 'body_blocks') and pl.body_blocks
-                           and any(b in pl.body_blocks for b in lr.body_blocks)]
-            if not parent_loops:
-                continue
-            parent_body = set()
-            for pl in parent_loops:
-                parent_body.update(pl.body_blocks)
-            spurious = [eb for eb in lr.else_blocks if eb in parent_body]
-            if not spurious:
-                continue
-            for eb in spurious:
-                lr.else_blocks.remove(eb)
-                if eb in lr.blocks:
-                    lr.blocks.remove(eb)
-
-    def _detect_and_filter_conditional_recheck_fake_loops(self, regions: List[Region]) -> Set[int]:
-        """
-        检测并过滤条件重检假循环（由continue语句导致的重叠LoopRegion）
-        
-        Python编译器为含continue的while循环生成特殊字节码模式：
-        - 外层循环：真正的while循环
-        - 内层"循环"：由条件重检(POP_JUMP_BACKWARD_IF_*) + continue形成的假循环
-        
-        假循环的特征：
-        1. 内层header在外层body_blocks中
-        2. 共享condition_block或内层condition_block==内层header
-        3. 内层else_blocks只包含纯JUMP_BACKWARD块（continue目标块）
-        4. 内层back_edge_block是POP_JUMP_BACKWARD_IF_*类型（条件重检特征）
-        
-        Returns:
-            需要被过滤的假循环region ID集合
-        """
-        fake_loop_region_ids = set()
-        loop_regions = self._filter_regions(regions, LoopRegion)
-        
-        for inner in loop_regions:
-            if id(inner) in fake_loop_region_ids:
-                continue
-            if not inner.header_block:
-                continue
-                
-            for outer in loop_regions:
-                if inner is outer:
-                    continue
-                if id(outer) in fake_loop_region_ids:
-                    continue
-                if not outer.body_blocks:
-                    continue
-                
-                if inner.header_block not in outer.body_blocks:
-                    continue
-                
-                shared_condition = (
-                    (inner.condition_block == outer.condition_block) or
-                    (inner.condition_block == inner.header_block)
-                )
-                if not shared_condition:
-                    continue
-                
-                inner_else_blocks = set(inner.else_blocks or [])
-                if not inner_else_blocks:
-                    continue
-                
-                is_pure_continue_else = True
-                for block in inner_else_blocks:
-                    last_instr = block.get_last_instruction()
-                    has_trailing_jump_to_outer = (
-                        last_instr is not None
-                        and last_instr.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
-                        and last_instr.argval is not None
-                        and outer.header_block is not None
-                        and self.cfg.get_block_by_offset(last_instr.argval) == outer.header_block
-                    )
-                    if has_trailing_jump_to_outer:
-                        continue
-                    meaningful_instrs = [
-                        i for i in block.instructions
-                        if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP')
-                        and i.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
-                    ]
-                    if meaningful_instrs:
-                        is_pure_continue_else = False
-                        break
-                
-                if not is_pure_continue_else:
-                    continue
-                
-                if inner.back_edge_block:
-                    back_edge_last = inner.back_edge_block.get_last_instruction()
-                    if back_edge_last and back_edge_last.opname in ('POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE'):
-                        fake_loop_region_ids.add(id(inner))
-                        break
-        
-        return fake_loop_region_ids
-
-
     def _classify_loop_type(self, header: BasicBlock, body: Set[BasicBlock] = None) -> Tuple[RegionType, Optional[BasicBlock], Optional[BasicBlock], Optional[BasicBlock], bool, bool]:
         """
         分类循环类型：FOR_LOOP vs WHILE_LOOP
@@ -3641,6 +3433,26 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
         return False
 
 
+    def _is_owned_by_other_region(self, block: BasicBlock, exclude_loop_header: Optional[BasicBlock]) -> bool:
+        """检测块是否已被非本 LOOP 的区域占用。
+
+        基于 block_to_region 区域类型判据：TryExceptRegion/WithRegion/MatchRegion/AssertRegion/嵌套 LoopRegion。
+        返回 True 表示该块不应纳入 LoopRegion.else_blocks。
+        exclude_loop_header 为当前 LoopRegion 的 header，用于排除自身。
+        """
+        if block is None:
+            return False
+        owner = self.block_to_region.get(block)
+        if owner is None:
+            return False
+        if isinstance(owner, LoopRegion):
+            if exclude_loop_header is not None and owner.header_block is exclude_loop_header:
+                return False
+            return True
+        if isinstance(owner, (TryExceptRegion, WithRegion, MatchRegion, AssertRegion)):
+            return True
+        return False
+
     def _find_loop_else(self, header: BasicBlock, loop_body: Set[BasicBlock], loop_type: RegionType,
                         for_iter_exit: Optional[BasicBlock] = None,
                         condition_block: Optional[BasicBlock] = None) -> Tuple[Optional[List[BasicBlock]], Optional[BasicBlock]]:
@@ -3727,7 +3539,7 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                         visited.add(cur)
                         if cur.start_offset < header.start_offset:
                             continue
-                        if cur not in body_set:
+                        if cur not in body_set and not self._is_owned_by_other_region(cur, header):
                             else_blocks.append(cur)
                         for succ in cur.successors:
                             if succ not in visited and succ != post_else:
@@ -3806,7 +3618,8 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
             else:
                 path_blocks = self._collect_blocks_on_path(natural_exit, succ)
                 else_blocks.extend(path_blocks)
-        else_blocks = list(set(else_blocks) - body_set)
+        else_blocks = [b for b in (set(else_blocks) - body_set)
+                       if not self._is_owned_by_other_region(b, header)]
 
         if loop_type == RegionType.WHILE_LOOP:
             _cond_exit_set = set(cond_exit_targets) if cond_exit_targets else set()
@@ -3841,7 +3654,8 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                 if natural_exit and else_blocks:
                     _filtered = [b for b in else_blocks
                                  if not self._is_early_return_block(b)
-                                 and not self._is_except_handler_block(b)]
+                                 and not self._is_except_handler_block(b)
+                                 and not self._is_owned_by_other_region(b, header)]
                     if _filtered:
                         else_blocks = _filtered
                     else:
@@ -4305,8 +4119,69 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
         'RETURN_VALUE', 'RETURN_CONST',
     })
 
+    def _is_continue_recheck_fake_loop(self, header: BasicBlock, body: Set[BasicBlock],
+                                        back_edge_sources: List[BasicBlock]) -> bool:
+        """检测 continue 形成的条件重检假循环。
+
+        判据（全部满足）:
+        - header 末指令为 POP_JUMP_BACKWARD_IF_TRUE/FALSE，目标为 header 自身（条件回边自循环）
+        - header 被某外层 LoopRegion/自然循环包含（block_to_region 已注册或 LoopAnalyzer.all_loops 命中）
+        - body 中至少一个非 header 块的末指令为 JUMP_BACKWARD/JUMP_BACKWARD_NO_INTERRUPT，
+          且跳转目标是外层 LOOP 的 header（continue 目标）
+
+        返回 True 表示这是 continue 假循环，应跳过 LoopRegion 创建。
+        """
+        if header is None:
+            return False
+        header_last = header.get_last_instruction()
+        if header_last is None:
+            return False
+        if header_last.opname not in ('POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE'):
+            return False
+        if header_last.argval is None:
+            return False
+        self_target = self.cfg.get_block_by_offset(header_last.argval) if header_last.argval is not None else None
+        if self_target is not header:
+            return False
+        # 查找包含 header 的外层循环 header（block_to_region 已注册时优先使用，否则回退 LoopAnalyzer.all_loops）
+        outer_header = None
+        outer_body = None
+        owner = self.block_to_region.get(header)
+        if isinstance(owner, LoopRegion) and owner.header_block is not header:
+            if hasattr(owner, 'body_blocks') and owner.body_blocks and header in owner.body_blocks:
+                outer_header = owner.header_block
+                outer_body = owner.body_blocks
+        if outer_header is None:
+            all_loops = self.loop_analyzer.get_all_loops()
+            for outer_h, ob in all_loops.items():
+                if outer_h is header:
+                    continue
+                if header in ob:
+                    if outer_header is None or len(ob) < len(outer_body):
+                        outer_header = outer_h
+                        outer_body = ob
+        if outer_header is None:
+            return False
+        # body 中至少一个非 header 块的末指令为 JUMP_BACKWARD/JUMP_BACKWARD_NO_INTERRUPT，跳转目标是 outer_header
+        for blk in body:
+            if blk is header:
+                continue
+            blk_last = blk.get_last_instruction()
+            if blk_last is None:
+                continue
+            if blk_last.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'):
+                continue
+            if blk_last.argval is None:
+                continue
+            jump_target = self.cfg.get_block_by_offset(blk_last.argval) if blk_last.argval is not None else None
+            if jump_target is outer_header:
+                return True
+        return False
+
     def _is_fake_loop(self, header: BasicBlock, body: Set[BasicBlock],
                        back_edge_sources: List[BasicBlock]) -> bool:
+        if self._is_continue_recheck_fake_loop(header, body, back_edge_sources):
+            return True
         if len(body) == 1 and header in body:
             return False
 
