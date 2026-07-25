@@ -4685,7 +4685,7 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
         RegionType 枚举值: RegionType.TRY_EXCEPT
 
         1. 算法描述（基于"No More Gotos"论文）
-           - 归约阶段: Phase 1（最先识别，优先级最高；TRY > WITH > LOOP > IF > ASSERT）
+           - 归约阶段: Phase 1（最先识别，优先级最高；TRY > LOOP > WITH > MATCH > ASSERT）
            - 识别策略: 基于 CPython 3.11+ 异常表（exception table）的
              (start, end, target, depth) 条目定位 try 范围与 handler 入口。
              通过 handler 入口首指令（PUSH_EXC_INFO / WITH_EXCEPT_START）分类 handler 类型。
@@ -4890,6 +4890,7 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
             # The LAST pre_handler_block (highest offset, closest to handler) is the actual
             # try-body entry — NOT the first, which may include enclosing-loop setup blocks.
             pre_handler_entry_candidate = None
+            pre_handler_blocks = []
 
             if handler_type in ('except', 'except_star') and handler_entry_block is not None:
                 handler_in_try_range = any(
@@ -4919,14 +4920,6 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                             if has_outer_branch:
                                 continue
                         pre_handler_blocks.append(block)
-                    if pre_handler_blocks:
-                        for phb in pre_handler_blocks:
-                            if phb not in try_blocks:
-                                try_blocks.insert(0, phb)
-                        try_start_for_blocks = min(try_start_for_blocks,
-                                                   min(b.start_offset for b in pre_handler_blocks))
-                        pre_handler_entry_candidate = max(pre_handler_blocks,
-                                                           key=lambda b: b.start_offset)
 
             if handler_type == 'finally' and handler_entry_block is not None:
                 _need_pre_expand = not try_blocks or try_start_for_blocks >= handler_entry_block.start_offset
@@ -4952,14 +4945,15 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                                 pre_handler_blocks.append(block)
                             continue
                         pre_handler_blocks.append(block)
-                    if pre_handler_blocks:
-                        for phb in pre_handler_blocks:
-                            if phb not in try_blocks:
-                                try_blocks.insert(0, phb)
-                        try_start_for_blocks = min(try_start_for_blocks,
-                                                   min(b.start_offset for b in pre_handler_blocks))
-                        pre_handler_entry_candidate = max(pre_handler_blocks,
-                                                           key=lambda b: b.start_offset)
+
+            if pre_handler_blocks:
+                for phb in pre_handler_blocks:
+                    if phb not in try_blocks:
+                        try_blocks.insert(0, phb)
+                try_start_for_blocks = min(try_start_for_blocks,
+                                           min(b.start_offset for b in pre_handler_blocks))
+                pre_handler_entry_candidate = max(pre_handler_blocks,
+                                                   key=lambda b: b.start_offset)
 
             # Update entry_block to the try-body entry when pre_handler_blocks expansion
             # found try-body blocks that precede the exception-table's try_start.

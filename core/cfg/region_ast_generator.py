@@ -13187,7 +13187,7 @@ AST 映射规则:
                 self.generated_blocks.add(block)
             self._try_depth -= 1
 
-    def _find_return_through_cleanup_chain(self, start_block, max_depth=6):
+    def _find_return_through_cleanup_chain(self, start_block):
         """[R20-Bug7] Walk through cleanup-only successor blocks to find RETURN_VALUE.
 
         When an except handler returns a value, the cleanup path may span
@@ -13242,8 +13242,6 @@ AST 映射规则:
             if id(current) in visited:
                 continue
             visited.add(id(current))
-            if len(path) > max_depth:
-                continue
             if _is_cleanup_with_return(current):
                 return path
             if _is_cleanup_only_no_return(current):
