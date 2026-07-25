@@ -11495,6 +11495,28 @@ RegionType 枚举值: RegionType.ASSERT
         instrs = block.instructions
         for i in range(len(instrs) - 1):
             # [Round6-01/02] 链式 is/in 也走 COPY + IS_OP/CONTAINS_OP 模式
+            # [Pass8-CC] 同型反模式标记：下方 `('COMPARE_OP', 'IS_OP', 'CONTAINS_OP')`
+            # 字面量元组与本文件多处及 region_ast_generator.py 多处重复定义，属
+            # 「字面量元组 DRY 违背」反模式——grep 验证：
+            #   - 本文件 (`region_analyzer.py`) 共 11 处命中
+            #     （含本处紧邻下方 1 处，及 `_detect_chained_compare_pattern`
+            #     内 3 处同型：grep `('COMPARE_OP', 'IS_OP', 'CONTAINS_OP')` 在
+            #     本文件 11 行命中）
+            #   - `region_ast_generator.py` 共 13 处命中
+            #   - 两文件合计 24 处
+            # 与 Pass5-TERNARY/SEQ 在 `_is_ternary_block` /
+            # `_is_trivial_return_block` 中已替换为模块级常量
+            # `RETURN_TERMINATOR_OPS` 的同型 DRY 违背一致——本组字面量可提取
+            # 为模块级常量 `COMPARE_FAMILY_OPS = frozenset({'COMPARE_OP',
+            # 'IS_OP', 'CONTAINS_OP'})`（与 NONE_CHECK_OPS /
+            # FORWARD_CONDITIONAL_JUMP_OPS / SHORT_CIRCUIT_JUMP_OPS /
+            # RETURN_TERMINATOR_OPS 同 frozenset 常量风格）。
+            # 全量替换属高风险重构——需逐处评估「字面量元组 `in` 与 frozenset
+            # `in` 语义等价性」（与 Pass5-TERNARY 在 `_is_ternary_block` 中
+            # 替换 RETURN_TERMINATOR_OPS 时已验证的等价性证明一致——
+            # `x in tuple` 与 `x in frozenset` 对 hashable 字符串完全等价）。
+            # 本轮仅添加内联标记，未触碰可执行代码，控制流不变。后续 Pass 实施
+            # 「字面量元组 → frozenset 常量统一替换」时需同步替换 24 处。
             if (instrs[i].opname == 'COPY' and instrs[i].arg == 2 and
                 instrs[i + 1].opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP')):
                 return True
