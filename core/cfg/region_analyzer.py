@@ -558,6 +558,17 @@ class LoopRegion(Region):
         if block == self.back_edge_block:
             return False
         if block == self.header_block and self.condition_block is None:
+            # [Phase 7 方案 A] fused ternary-loop 例外。
+            # while (a if c else b): 中 CPython 将三元与循环测试融合，
+            # header_block 既是循环头又是三元 condition_block。检测 header 的
+            # 条件后继是否构成 fused ternary 结构（两值块都以
+            # FORWARD_CONDITIONAL_JUMP 结尾，true_value fall-through 是纯
+            # JUMP_FORWARD 跳到 false_value fall-through 即 merge）。判据基于
+            # 区域结构（与 _detect_ternary_pattern 的 fused merge_block fallback
+            # 一致），非实例特征。符合「每块唯一归属」：header 作为三元
+            # condition_block 归属 TernaryRegion，循环以 while_true 形态运行。
+            if self._is_fused_ternary_loop_header(block, analyzer):
+                return True
             return False
         if block not in self.blocks:
             return False
@@ -582,6 +593,75 @@ class LoopRegion(Region):
                     if isinstance(_cs_existing, TernaryRegion) and _cs_existing.entry is _cs:
                         continue
                     return False
+        return True
+
+    def _is_fused_ternary_loop_header(self, block, analyzer) -> bool:
+        """[Phase 7 方案 A] 检测 block（== header_block）是否是 fused
+        ternary-loop 的 condition_block。
+
+        fused ternary-loop `while (a if c else b):` 的 CPython 字节码：
+            cond_block(=header): LOAD c; POP_JUMP_IF_FALSE -> false_value
+            true_value:  LOAD a; POP_JUMP_IF_FALSE -> exit_a; (ft) connector
+            connector:   JUMP_FORWARD -> merge
+            false_value: LOAD b; POP_JUMP_IF_FALSE -> exit_b; (ft) merge
+            merge:       <loop body entry / back-edge recheck>
+
+        判据（基于区域结构，与 _detect_ternary_pattern 的 fused merge_block
+        fallback 一致）：
+        1. block 有两个条件后继（true_value, false_value）
+        2. 两值块都以 FORWARD_CONDITIONAL_JUMP_OPS 结尾（fused 模式特征）
+        3. true_value 的 fall-through 是纯 JUMP_FORWARD 块（connector），
+           跳到 false_value 的 fall-through（merge）
+        """
+        _cond_succs = list(block.conditional_successors)
+        if len(_cond_succs) != 2:
+            return False
+        last = block.get_last_instruction()
+        if not last or last.opname not in FORWARD_CONDITIONAL_JUMP_OPS:
+            return False
+        if last.argval is None:
+            return False
+        true_value = next((s for s in _cond_succs
+                           if s.start_offset != last.argval), None)
+        false_value = next((s for s in _cond_succs
+                            if s.start_offset == last.argval), None)
+        if not (true_value and false_value):
+            return False
+        tv_last = true_value.get_last_instruction()
+        fv_last = false_value.get_last_instruction()
+        if not (tv_last and fv_last):
+            return False
+        if tv_last.opname not in FORWARD_CONDITIONAL_JUMP_OPS:
+            return False
+        if fv_last.opname not in FORWARD_CONDITIONAL_JUMP_OPS:
+            return False
+        if tv_last.argval is None or fv_last.argval is None:
+            return False
+        tv_succs = list(true_value.conditional_successors)
+        fv_succs = list(false_value.conditional_successors)
+        if len(tv_succs) != 2 or len(fv_succs) != 2:
+            return False
+        tv_ft = next((s for s in tv_succs
+                      if s.start_offset != tv_last.argval), None)
+        fv_ft = next((s for s in fv_succs
+                      if s.start_offset != fv_last.argval), None)
+        if not (tv_ft and fv_ft):
+            return False
+        if tv_ft is fv_ft:
+            return False
+        tv_ft_eff = [i for i in tv_ft.instructions
+                     if i.opname not in NOISE_OPS]
+        if not tv_ft_eff:
+            return False
+        if not all(i.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                   for i in tv_ft_eff):
+            return False
+        tv_ft_last = tv_ft_eff[-1]
+        if tv_ft_last.argval is None:
+            return False
+        connector_target = analyzer.cfg.get_block_by_offset(tv_ft_last.argval)
+        if connector_target is not fv_ft:
+            return False
         return True
 
 @dataclass
@@ -863,12 +943,31 @@ class TernaryRegion(Region):
     container_type: Optional[str] = None
     func_call_info: Optional[Dict[str, Any]] = None
     dict_key_info: Optional[Dict[str, Any]] = None
+    # [Phase 7 方案 D] BUILD_CONST_KEY_MAP dict 构建模式：所有 key 作为
+    # 单个 LOAD_CONST tuple 压栈，再 BUILD_CONST_KEY_MAP N 消费 N 个 value。
+    # 与 BUILD_MAP 不同，key 不在各 ternary 的 cond_block preload 中，而是
+    # 统一打包在 merge_block 的 const tuple 里。存储 tuple（key 值列表）供
+    # chained container 构建器按链序分发到各 ternary。
+    # 依「每块唯一归属」+「父引用子入口」：merge_block 的 const-key tuple
+    # 归属内层（innermost）TernaryRegion，父 Dict 通过它引用所有 chained
+    # ternary 子节点作为 values。
+    dict_const_keys: Optional[tuple] = None
     # [R10-batch1 err 4] For await (ternary): merge_block ends with
     # GET_AWAITABLE + LOAD_CONST None (await setup); the polling loop
     # (SEND/YIELD_VALUE/RESUME/JUMP_BACKWARD_NO_INTERRUPT) and the
     # STORE_FAST block live in successor blocks. These are merged here
     # so the generator can reconstruct the full Await expression.
     merge_extra_blocks: List[BasicBlock] = field(default_factory=list)
+    # [Phase 7 方案 D] 当 ternary 条件本身是 chained compare
+    # （如 `x = a if 0 < a < 10 else 0`）时，condition_block 只是
+    # chained compare 的第一段，后续段在 chained_compare_blocks 中。
+    # 复用 IfRegion 的同名属性语义，供 region_ast_generator 调用
+    # _build_chained_compare_from_region_data 生成完整 Compare 节点。
+    # 依「父引用子入口」：TernaryRegion 拥有完整条件（含所有比较段）。
+    chained_compare_ops: List[str] = field(default_factory=list)
+    chained_compare_blocks: List[BasicBlock] = field(default_factory=list)
+    chained_left_instr: Optional[Instruction] = None
+    chained_comparator_instrs: List[Instruction] = field(default_factory=list)
 
     def get_score_merge_block(self) -> Optional['BasicBlock']:
         return self.merge_block
@@ -1175,48 +1274,48 @@ class RegionAnalyzer:
         )
 
         _ternary_block_sets = []
-        _ternary_regions_with_blocks = []
         for tr in ternary_regions:
             if tr.blocks:
                 _ternary_block_sets.append(tr.blocks)
-                _ternary_regions_with_blocks.append(tr)
+
+        # [R14 根因修复] yield-from/await ternary 吞并 SEND/YIELD 轮询循环
+        # LoopRegion。
+        # 字节码模式: `yield from (ternary).items()` / `await (ternary)` 的
+        # SEND/YIELD_VALUE/RESUME/JUMP_BACKWARD_NO_INTERRUPT 轮询循环被
+        # _identify_loop_regions 识别为 is_yield_from_loop LoopRegion，
+        # 同时被 _identify_ternary_regions 吸收为 merge_extra_blocks。
+        # 两者 blocks 重叠（轮询循环块 + POP_TOP 消费块），违反「每块唯一归属」。
+        # 依「自底向上归约」+「每块唯一归属」: 轮询循环是 ternary 的
+        # yield-from/await 协议的一部分（merge_extra_blocks），归属 TernaryRegion，
+        # 不归属独立 LoopRegion。_generate_ternary 的 Pattern 4/5/7 会完整重建
+        # YieldFrom/Await 表达式；若 LoopRegion 留存，会先标记轮询块为已生成，
+        # 导致 TernaryRegion 无法重建，整个表达式退化为 `None`。
+        # 移除 blocks 完全包含于 merge_context in ('yieldfrom','await') 的
+        # TernaryRegion.blocks 的 is_yield_from_loop LoopRegion。
+        _loop_to_remove = []
+        for _lr in loop_regions:
+            if not getattr(_lr, 'metadata', {}).get('is_yield_from_loop', False):
+                continue
+            for _tr in ternary_regions:
+                _mc = getattr(_tr, 'merge_context', None)
+                if _mc not in ('yieldfrom', 'await'):
+                    continue
+                _tr_blocks = _tr.blocks or set()
+                if _tr_blocks and all(b in _tr_blocks for b in _lr.blocks):
+                    _loop_to_remove.append(_lr)
+                    break
+        if _loop_to_remove:
+            for _lr in _loop_to_remove:
+                loop_regions.remove(_lr)
+                if _lr in self.regions:
+                    self.regions.remove(_lr)
+                for _rb in _lr.blocks:
+                    if _rb in self.block_to_region and self.block_to_region[_rb] is _lr:
+                        del self.block_to_region[_rb]
 
         if _ternary_block_sets:
             def _region_overlaps_with_ternary(region):
-                for _ti, tb_set in enumerate(_ternary_block_sets):
-                    _tr = _ternary_regions_with_blocks[_ti]
-                    # [R8 / R17-11] AssertRegion 可与嵌套 TernaryRegion 合法重叠：
-                    #  - message_block == 某 TernaryRegion.entry（`assert x, (ternary)`）
-                    #  - condition_block == 某 TernaryRegion.merge_block
-                    #    （`assert (ternary).method()`，merge_block 含消费指令 + assert
-                    #     测试跳转 POP_JUMP_IF_TRUE）。依「嵌套即抽象节点」+
-                    #    「父引用子入口」：AssertRegion 通过 condition_block /
-                    #    message_block 引用嵌套 TernaryRegion，属合法嵌套，不过滤。
-                    if isinstance(region, AssertRegion):
-                        _mb = region.message_block
-                        _cb = region.condition_block
-                        _legal_overlap = set()
-                        if (_mb is not None and _mb is not _cb
-                                and _mb in tb_set
-                                and _tr.entry is _mb):
-                            _legal_overlap.add(_mb)
-                        if (_cb is not None
-                                and _cb in tb_set
-                                and getattr(_tr, 'merge_block', None) is _cb):
-                            _legal_overlap.add(_cb)
-                        if _legal_overlap:
-                            overlap = region.blocks & tb_set
-                            if overlap <= _legal_overlap:
-                                continue  # 合法嵌套：跳过此 tb_set
-                            return True
-                        # AssertRegion 与此 ternary 无合法嵌套关系，但若仍有块
-                        # 重叠（entry 或其他），按常规处理。
-                        if region.entry and region.entry in tb_set:
-                            return True
-                        overlap = region.blocks & tb_set
-                        if overlap:
-                            return True
-                        continue
+                for tb_set in _ternary_block_sets:
                     if region.entry and region.entry in tb_set:
                         return True
                     overlap = region.blocks & tb_set
@@ -2774,6 +2873,17 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                             if last_instr.argval is not None:
                                 target = self.cfg.get_block_by_offset(last_instr.argval)
                                 if target not in body and target != header:
+                                    # [Phase 7 方案 A] 跳过 fused ternary-loop 的
+                                    # false_value_block。CPython 将 `while (a if c else b):`
+                                    # 编译为融合结构，false_value 的 POP_JUMP_IF_FALSE 跳到
+                                    # exit 满足 "跳出 body/header" 判据，会被误设为
+                                    # condition_block。这导致 _detect_while_condition_
+                                    # boolop_chain 从 false_value 回溯识别为 boolop 链，
+                                    # 覆盖三元归属。跳过它让 condition_block 保持 None，
+                                    # 循环以 while_true 形式识别，由 _detect_ternary_pattern
+                                    # 正确识别三元（merge_context='while_cond'）。
+                                    if self._is_fused_ternary_false_value_block(pred, header):
+                                        continue
                                     condition_block = pred
                                     is_while_true = False
                                     break
@@ -4871,7 +4981,7 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
             # try-body entry — NOT the first, which may include enclosing-loop setup blocks.
             pre_handler_entry_candidate = None
 
-            if handler_type == 'except' and handler_entry_block is not None:
+            if handler_type in ('except', 'except_star') and handler_entry_block is not None:
                 handler_in_try_range = any(
                     try_start_for_blocks <= instr.offset < try_end_for_blocks
                     for instr in handler_entry_block.instructions
@@ -5307,6 +5417,26 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                             search_blocks.append(succ)
             if cleanup_blocks:
                 all_blocks |= set(cleanup_blocks)
+
+            # [Phase 3 adv17_try_except_star] except* 框架清理块从 try_blocks
+            # 移至 cleanup_blocks。
+            # CPython 3.11+ except* (PEP 654) 字节码布局：try body 总在 handler
+            # entry 之前；handler entry 之后的块（在 try 范围内、非 handler body）
+            # 均为 except* 框架清理代码（LIST_APPEND + PREP_RERAISE_STAR 路径、
+            # as e 绑定的隐式 e=None/del e 清理、POP_TOP 合并块等）。
+            # 若留在 try_blocks 中，会被误生成为 try body 代码（如
+            # `e = None; del e` 和 `if True: pass`），导致指令数不匹配。
+            # 依「每块唯一归属」: except* 框架清理块归属 cleanup_blocks，
+            # 不归属 try_blocks。
+            if handler_type == 'except_star' and handler_entry_block is not None:
+                _star_framework = [
+                    blk for blk in try_blocks
+                    if blk not in all_handler_blocks_set
+                    and blk.start_offset >= handler_entry_block.start_offset
+                ]
+                if _star_framework:
+                    cleanup_blocks.extend(_star_framework)
+                    all_blocks |= set(_star_framework)
 
             preceding_blocks = []
             for block in self.cfg.blocks.values():
@@ -5884,7 +6014,7 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
             if _is_bare_except:
                 return 'except'
             _any_return_in_chain = any(
-                i.opname in ('RETURN_VALUE', 'RETURN_CONST', 'RAISE_VARARGS')
+                i.opname in ('RETURN_VALUE', 'RETURN_CONST')
                 for b in _all_visited
                 for i in b.instructions
             )
@@ -11706,63 +11836,77 @@ RegionType 枚举值: RegionType.ASSERT
                 current_ft = ft_next_ft
             return chain
 
-        def _reconstruct_simple_chain_args(arg_instrs):
-            """[R17-01] Reconstruct simple call args (for middle method calls in
-            a method chain) from a flat instruction list. Each arg is rebuilt as
-            an expr dict. Handles LOAD_CONST / LOAD_NAME family / LOAD_ATTR /
-            LOAD_METHOD chains / BUILD_<list|tuple|set> literals. Returns the
-            list of arg expr dicts, or None when an unsupported instruction
-            (CALL, BINARY_OP, etc.) is encountered — caller then conservatively
-            falls back (no regression). 依「每块唯一归属」: 中间调用的 args 是
-            兄弟子节点，与 ternary 同属父 Call 区域，不拆分为独立语句。
-            """
-            _stack = []
-            for _ai in arg_instrs:
-                if _ai.opname == 'LOAD_CONST':
-                    _stack.append({'type': 'Constant', 'value': _ai.argval})
-                elif _ai.opname in ('LOAD_NAME', 'LOAD_FAST',
-                                    'LOAD_GLOBAL', 'LOAD_DEREF'):
-                    _stack.append({'type': 'Name', 'id': _ai.argval,
-                                   'ctx': 'Load'})
-                elif _ai.opname in ('LOAD_ATTR', 'LOAD_METHOD'):
-                    if not _stack:
-                        return None
-                    _base = _stack.pop()
-                    _stack.append({'type': 'Attribute', 'value': _base,
-                                   'attr': _ai.argval, 'ctx': 'Load'})
-                elif _ai.opname in ('BUILD_LIST', 'BUILD_TUPLE', 'BUILD_SET'):
-                    _n = _ai.arg or 0
-                    if len(_stack) < _n:
-                        return None
-                    _elts = [_stack.pop() for _ in range(_n)]
-                    _elts.reverse()
-                    _t = {'BUILD_LIST': 'List', 'BUILD_TUPLE': 'Tuple',
-                          'BUILD_SET': 'Set'}[_ai.opname]
-                    if _t == 'Set':
-                        _stack.append({'type': 'Set', 'elts': _elts})
-                    else:
-                        _stack.append({'type': _t, 'elts': _elts,
-                                       'ctx': 'Load'})
-                else:
-                    return None
-            return _stack
-
         def _detect_ternary_context(cond_block, merge_block):
+            # [Phase 7 方案 D] 返回 4-tuple：
+            #   (container_type, func_call_info, dict_key_info, dict_const_keys)
+            # dict_const_keys 仅对 BUILD_CONST_KEY_MAP 非空：存 const tuple 的
+            # 值列表，供 chained container 构建器分发到各 ternary。
             if merge_block:
                 for instr in merge_block.instructions:
                     if instr.opname == 'BUILD_LIST':
-                        return 'list', None, None
+                        return 'list', None, None, None
                     if instr.opname == 'BUILD_TUPLE':
-                        return 'tuple', None, None
+                        return 'tuple', None, None, None
                     if instr.opname == 'BUILD_SET':
-                        return 'set', None, None
+                        return 'set', None, None, None
                     if instr.opname == 'BUILD_MAP':
+                        # [R10/R11 wraps 通用修复] BUILD_MAP 0 + DICT_MERGE +
+                        # CALL_FUNCTION_EX 是 `f(*ternary, **kwargs)` 的 **kwargs
+                        # 构造，不是 dict 字面量容器。BUILD_MAP 0 创建空 dict，
+                        # DICT_MERGE 合并 kwargs，CALL_FUNCTION_EX 1 以 ternary 为
+                        # *args、合并 dict 为 **kwargs 调用。
+                        # 旧版见 BUILD_MAP 即返回 container_type='dict'，
+                        # func_call_info=None，导致 _generate_ternary 跳过
+                        # CALL_FUNCTION_EX 的 *args 重建，ternary 丢失，输出
+                        # `f(**kwargs)`。
+                        # 依「父引用子入口」: 父 Call 通过 cond_block 的 f 入口 +
+                        # merge_block 的 BUILD_MAP+DICT_MERGE+CALL_FUNCTION_EX 引用
+                        # ternary 子节点作 *args。判据: BUILD_MAP 0 后续含 DICT_MERGE
+                        # + CALL_FUNCTION_EX → 跳过 dict 容器，fallthrough 到
+                        # cond_block 的 func_call_info 检测。
+                        if instr.arg == 0:
+                            _merge_eff = [i for i in merge_block.instructions
+                                          if i.opname not in NOISE_OPS]
+                            _has_dict_merge = any(
+                                i.opname == 'DICT_MERGE' for i in _merge_eff)
+                            _has_call_fn_ex = any(
+                                i.opname == 'CALL_FUNCTION_EX' for i in _merge_eff)
+                            if _has_dict_merge and _has_call_fn_ex:
+                                break  # fallthrough to cond_block func_call_info
                         dict_key = RegionAnalyzer.extract_dict_key_from_block(cond_block)
-                        return 'dict', None, dict_key
+                        return 'dict', None, dict_key, None
+                    # [Phase 7 方案 D] BUILD_CONST_KEY_MAP N：语义等价于
+                    # BUILD_MAP N，但所有 key 作为单个 LOAD_CONST tuple 打包
+                    # 压栈（紧邻 BUILD_CONST_KEY_MAP 之前），N 个 value 在栈上。
+                    # 识别为 container_type='dict'，并捕获 const tuple 的值列表
+                    # 作为 dict_const_keys。chained container 构建器据此把 keys
+                    # 按链序分发到各 ternary（每个 ternary 一个 value）。
+                    # 依「自底向上归约」：innermost ternary 拥有 BUILD_CONST_KEY_MAP
+                    # 消费者，归约整个 chained ternary 链为单一 Dict 节点。
+                    # 判据基于操作码语义（dict 构建器），不依赖具体 key/value。
+                    if instr.opname == 'BUILD_CONST_KEY_MAP':
+                        _ck_instr = None
+                        _bm_instrs = [i for i in merge_block.instructions
+                                      if i.opname not in NOISE_OPS]
+                        _bck_idx = None
+                        for _ii, _mi in enumerate(_bm_instrs):
+                            if _mi.opname == 'BUILD_CONST_KEY_MAP':
+                                _bck_idx = _ii
+                                break
+                        if _bck_idx is not None and _bck_idx > 0:
+                            _prev = _bm_instrs[_bck_idx - 1]
+                            if (_prev.opname == 'LOAD_CONST'
+                                    and isinstance(_prev.argval, tuple)):
+                                _ck_instr = _prev
+                        if _ck_instr is not None:
+                            _const_keys = tuple(_ck_instr.argval)
+                        else:
+                            _const_keys = None
+                        return 'dict', None, None, _const_keys
                     if instr.opname == 'MAP_ADD':
                         # Dict comprehension: ternary is the dict value, key is on stack before condition
                         dict_key = RegionAnalyzer.extract_dict_key_from_block(cond_block)
-                        return 'dict', None, dict_key
+                        return 'dict', None, dict_key, None
                     # [R12-02/04/06 fix] Container literal *-unpack consumes
                     # ternary: BUILD_<container> 0 (in cond_block preload) +
                     # <ternary> + {DICT_UPDATE|LIST_EXTEND|SET_UPDATE} 1 (in
@@ -11771,11 +11915,11 @@ RegionType 枚举值: RegionType.ASSERT
                     # *_UPDATE/_EXTEND 消费指令归属 TernaryRegion，cond_block
                     # 的 BUILD_<container> 0 preload 也归属 TernaryRegion。
                     if instr.opname == 'DICT_UPDATE':
-                        return 'dict_unpack', None, None
+                        return 'dict_unpack', None, None, None
                     if instr.opname == 'LIST_EXTEND':
-                        return 'list_unpack', None, None
+                        return 'list_unpack', None, None, None
                     if instr.opname == 'SET_UPDATE':
-                        return 'set_unpack', None, None
+                        return 'set_unpack', None, None, None
             if cond_block:
                 instrs = [i for i in cond_block.instructions
                          if i.opname not in ('RESUME', 'NOP', 'CACHE')]
@@ -11816,7 +11960,7 @@ RegionType 枚举值: RegionType.ASSERT
                                          'LOAD_FAST', 'LOAD_DEREF'):
                         return 'call', {
                             'func': {'type': 'Name', 'id': func_i.argval, 'ctx': 'Load'},
-                        }, None
+                        }, None, None
                     elif func_i.opname == 'LOAD_ATTR':
                         obj_i = instrs[push_null_idx - 1] if push_null_idx > 0 else None
                         if obj_i and obj_i.opname.startswith('LOAD_'):
@@ -11827,7 +11971,7 @@ RegionType 枚举值: RegionType.ASSERT
                                     'attr': func_i.argval,
                                     'ctx': 'Load',
                                 },
-                            }, None
+                            }, None, None
                     # [R2 Bug lambda_call 修复] 检测 lambda 调用模式:
                     # (lambda x: ...)(ternary) 字节码模式:
                     #   PUSH_NULL, LOAD_CONST <code>, MAKE_FUNCTION, [args], PRECALL, CALL
@@ -11844,7 +11988,7 @@ RegionType 枚举值: RegionType.ASSERT
                                 'type': 'FunctionObject',
                                 'code': func_i.argval,
                             },
-                        }, None
+                        }, None, None
                 else:
                     # [R4 Bug 8 修复] 检测 LOAD_METHOD 模式: obj.method(args)
                     # 字节码模式: LOAD_NAME obj, [LOAD_ATTR ...], LOAD_METHOD method,
@@ -11944,59 +12088,30 @@ RegionType 枚举值: RegionType.ASSERT
                                     'ctx': 'Load',
                                 }
                                 # [R13-01 fix] 处理 method chain: 第一个
-                                # LOAD_METHOD m1, [args], PRECALL, CALL,
-                                # LOAD_METHOD m2, ... 第一个 LOAD_METHOD 是
-                                # receiver chain 的一部分，第二个 LOAD_METHOD 才
-                                # 是真正消费 ternary 的函数。
+                                # LOAD_METHOD m1, PRECALL, CALL, LOAD_METHOD m2,
+                                # ... 第一个 LOAD_METHOD 是 receiver chain 的
+                                # 一部分，第二个 LOAD_METHOD 才是真正消费
+                                # ternary 的函数。
                                 # 例: s.upper().split((a if c else b))
                                 #   cond_block: LOAD_NAME s, LOAD_METHOD upper,
                                 #               PRECALL, CALL, LOAD_METHOD split,
                                 #               LOAD_NAME c, POP_JUMP_...
                                 #   把 s.upper() 包装成 Call 作为 receiver，
                                 #   split 作为 func.attr。
-                                # [R17-01 fix] 扩展支持带 args 的中间方法调用:
-                                #   s.replace('a','b').split((a if c else b))
-                                #   cond_block: LOAD_NAME s, LOAD_METHOD replace,
-                                #               LOAD_CONST 'a', LOAD_CONST 'b',
-                                #               PRECALL, CALL, LOAD_METHOD split, ...
-                                #   中间 args 在 LOAD_METHOD 与 PRECALL 之间，
-                                #   重建为 Call.args，保守不退化（含不支持 arg
-                                #   指令时 break）。依「父引用子入口」: 父 Call
-                                #   通过 cond_block 的 method chain (含中间 args)
-                                #   引用 ternary 子节点；依「每块唯一归属」: 中间
-                                #   args 是兄弟子节点，与 ternary 同属父 Call 区域。
+                                # 仅处理 0-arg 中间方法调用（PRECALL 紧跟
+                                # LOAD_METHOD），保守不退化。带 args 的中间
+                                # 方法调用（如 s.method(x).split(ternary)）留
+                                # 待 R14+。依「父引用子入口」: 父 Call 通过
+                                # cond_block 的 method chain 引用 ternary 子节点。
                                 _chain_idx = _method_idx + 1
                                 while _chain_idx < len(instrs):
                                     _ci = instrs[_chain_idx]
                                     if _ci.opname in NOISE_OPS:
                                         _chain_idx += 1
                                         continue
-                                    # [R17-01] 找到 PRECALL，可能跨越中间 args
-                                    _precall_idx = None
-                                    _arg_start = _chain_idx
-                                    _scan = _chain_idx
-                                    while _scan < len(instrs):
-                                        _si = instrs[_scan]
-                                        if _si.opname in NOISE_OPS:
-                                            _scan += 1
-                                            continue
-                                        if _si.opname == 'PRECALL':
-                                            _precall_idx = _scan
-                                            break
-                                        if _si.opname in FORWARD_CONDITIONAL_JUMP_OPS:
-                                            break
-                                        _scan += 1
-                                    if _precall_idx is None:
+                                    if _ci.opname != 'PRECALL':
                                         break
-                                    # [R17-01] 重建中间调用的 args
-                                    # (LOAD_METHOD 与 PRECALL 之间的指令)
-                                    _arg_instrs = [instrs[k]
-                                                   for k in range(_arg_start, _precall_idx)
-                                                   if instrs[k].opname not in NOISE_OPS]
-                                    _mid_args = _reconstruct_simple_chain_args(_arg_instrs)
-                                    if _mid_args is None:
-                                        break
-                                    _call_idx = _precall_idx + 1
+                                    _call_idx = _chain_idx + 1
                                     while (_call_idx < len(instrs)
                                            and instrs[_call_idx].opname in NOISE_OPS):
                                         _call_idx += 1
@@ -12013,7 +12128,7 @@ RegionType 枚举值: RegionType.ASSERT
                                     _cur_func_expr = {
                                         'type': 'Call',
                                         'func': _cur_func_expr,
-                                        'args': _mid_args,
+                                        'args': [],
                                         'keywords': [],
                                     }
                                     _cur_func_expr = {
@@ -12025,8 +12140,8 @@ RegionType 枚举值: RegionType.ASSERT
                                     _chain_idx = _next_idx + 1
                                 return 'call', {
                                     'func': _cur_func_expr,
-                                }, None
-            return None, None, None
+                                }, None, None
+            return None, None, None, None
 
         def _detect_ternary_pattern(block):
             """检测三元表达式模式
@@ -12054,6 +12169,59 @@ RegionType 枚举值: RegionType.ASSERT
             false_block = next((s for s in heads if s.start_offset == last_instr.argval), None)
             if not (true_block and false_block):
                 return None
+
+            # [Phase 7 方案 D] 当 ternary 条件本身是 chained compare 时
+            # （如 `x = a if 0 < a < 10 else 0`），header block 的直接
+            # fallthrough 是 chained compare 延续块（含 COMPARE_OP +
+            # POP_JUMP_IF_FALSE），直接 jump target 是 POP_TOP cleanup 块
+            # （弹掉栈上保留的左操作数后跳到 else）。这两者都不是 ternary 的
+            # 真正值块。依「自底向上归约」原则，沿 chained_compare_blocks
+            # 找到最后一个比较块，其 fallthrough（可能经 JUMP_FORWARD 连接块）
+            # 是 true 路径（body），其 jump target 是 false 路径（else）。
+            # 判据基于 chained compare IfRegion 的结构性属性
+            # （chained_compare_ops/Blocks），非实例特征。
+            _is_chained_compare_cond = False
+            _cc_if_region = None
+            for _r in self.regions:
+                if (isinstance(_r, IfRegion)
+                        and _r.region_type == RegionType.IF
+                        and _r.entry is block):
+                    _cc_ops = getattr(_r, 'chained_compare_ops', None)
+                    _cc_blocks = getattr(_r, 'chained_compare_blocks', None)
+                    if (_cc_ops and len(_cc_ops) >= 2 and _cc_blocks):
+                        _cc_if_region = _r
+                    break
+            if _cc_if_region is not None:
+                _all_cc_blocks = [block] + list(_cc_if_region.chained_compare_blocks)
+                _last_cc_block = _all_cc_blocks[-1]
+                _lc_last = _last_cc_block.get_last_instruction()
+                if _lc_last and _lc_last.opname in FORWARD_CONDITIONAL_JUMP_OPS:
+                    _lc_succs = sorted(
+                        _last_cc_block.conditional_successors,
+                        key=lambda s: s.start_offset)
+                    if len(_lc_succs) == 2:
+                        _cc_true = next((s for s in _lc_succs
+                                         if s.start_offset != _lc_last.argval), None)
+                        _cc_false = next((s for s in _lc_succs
+                                          if s.start_offset == _lc_last.argval), None)
+                        if _cc_true and _cc_false:
+                            # 最后比较块的 fallthrough 可能是纯 JUMP_FORWARD
+                            # 连接块（跳到 body），跟踪到真正的 body 值块。
+                            _cc_true_eff = [i for i in _cc_true.instructions
+                                            if i.opname not in NOISE_OPS]
+                            if (len(_cc_true_eff) == 1
+                                    and _cc_true_eff[0].opname == 'JUMP_FORWARD'
+                                    and _cc_true_eff[0].argval is not None):
+                                _body_block = self.cfg.get_block_by_offset(
+                                    _cc_true_eff[0].argval)
+                                if _body_block is not None:
+                                    _cc_true = _body_block
+                            # 验证新的 true/false 块是单表达式块（ternary 值块）
+                            if (self._is_single_expression_block(_cc_true)
+                                    and self._is_single_expression_block(_cc_false)):
+                                true_block = _cc_true
+                                false_block = _cc_false
+                                _is_chained_compare_cond = True
 
             # 区域归约算法：防止LoopRegion的condition_block/header_block被误识别为ternary值块
             # 当if-else的某个分支入口是while循环的条件块时，不应识别为三元表达式
@@ -12179,7 +12347,11 @@ RegionType 枚举值: RegionType.ASSERT
 
                     if not (true_has_content and false_has_content):
                         return None
-            elif not _is_ternary_block(block):
+            elif not _is_chained_compare_cond and not _is_ternary_block(block):
+                # [Phase 7 方案 D] 当 _is_chained_compare_cond=True 时，
+                # true_block/false_block 已更新为 chained compare 完成后的
+                # 真正值块（单表达式块），header block 的直接后继不是值块，
+                # 跳过 _is_ternary_block 检查（该检查基于 header 的直接后继）。
                 false_is_ternary = False
                 # Detect JUMP_FORWARD pattern: ternary in while-loop condition.
                 # When true_block ends with FORWARD_CONDITIONAL_JUMP (the while
@@ -12402,6 +12574,109 @@ RegionType 枚举值: RegionType.ASSERT
                         if (_tft_last and _tft_last.opname == 'JUMP_FORWARD' and
                                 _tft_last.argval is not None):
                             merge_block = self.cfg.get_block_by_offset(_tft_last.argval)
+
+            # [Phase 7 方案 A] fused ternary-loop merge_block fallback。
+            # 当 _is_ternary_block 返回 True（值块是单表达式块）但值块以
+            # FORWARD_CONDITIONAL_JUMP 结尾（fused 模式，非基本三元的 JUMP_FORWARD），
+            # has_jump_forward_skip 不会被设置（elif not _is_ternary_block 不进入）。
+            # 此时 find_nearest_common_post_dominator 返回 None（无公共后继支配者）。
+            # 检测 fused 模式：true_block 的 fallthrough 是纯 JUMP_FORWARD 块跳到 M，
+            # false_block 的 fallthrough 也是 M。设 merge_block=M, merge_context='while_cond'。
+            # 判据基于区域结构（与 _is_fused_ternary_false_value_block 一致），
+            # 非实例特征。
+            if merge_block is None:
+                _tli2 = true_block.get_last_instruction()
+                _fli2 = false_block.get_last_instruction()
+                if (_tli2 and _fli2
+                        and _tli2.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                        and _fli2.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                        and _tli2.argval is not None
+                        and _fli2.argval is not None):
+                    _tsuccs2 = list(true_block.conditional_successors)
+                    _fsuccs2 = list(false_block.conditional_successors)
+                    if len(_tsuccs2) == 2 and len(_fsuccs2) == 2:
+                        _tft2 = next((s for s in _tsuccs2
+                                      if s.start_offset != _tli2.argval), None)
+                        _fft2 = next((s for s in _fsuccs2
+                                      if s.start_offset != _fli2.argval), None)
+                        if _tft2 and _fft2 and _tft2 is not _fft2:
+                            # _tft2 应是纯 JUMP_FORWARD 块，跳到 _fft2
+                            _ft_eff = [i for i in _tft2.instructions
+                                       if i.opname not in NOISE_OPS]
+                            _ft_pure_jump = all(
+                                i.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                                             'JUMP_BACKWARD',
+                                             'JUMP_BACKWARD_NO_INTERRUPT')
+                                for i in _ft_eff
+                            )
+                            if _ft_pure_jump and _ft_eff:
+                                _ft_last2 = _ft_eff[-1]
+                                if _ft_last2.argval is not None:
+                                    _conn_target = self.cfg.get_block_by_offset(
+                                        _ft_last2.argval)
+                                    if _conn_target is _fft2:
+                                        # 排除 assert 模式：assert 三元的公共
+                                        # 消费块含 LOAD_ASSERTION_ERROR +
+                                        # RAISE_VARARGS，由独立的 assert pattern
+                                        # fallback 语义处理（merge_context=None，
+                                        # 不设 has_jump_forward_skip）。若此处
+                                        # 抢先设 has_jump_forward_skip=True，会
+                                        # 触发 merge_context='while_cond'，改变
+                                        # 生成路径，引入 assert 回归。判据基于
+                                        # 消费块指令特征（结构特征），非实例特征。
+                                        _fft_eff2 = [i for i in _fft2.instructions
+                                                     if i.opname not in NOISE_OPS]
+                                        _is_assert_consumer = (
+                                            any(i.opname == 'LOAD_ASSERTION_ERROR'
+                                                for i in _fft_eff2)
+                                            and any(i.opname == 'RAISE_VARARGS'
+                                                    for i in _fft_eff2)
+                                        )
+                                        merge_block = _fft2
+                                        if not _is_assert_consumer:
+                                            has_jump_forward_skip = True
+
+            # [Phase 7 方案 A] 嵌套三元 while_cond fallback。
+            # 外层三元 `a if c else (inner)` 在 truthy-test 消费上下文中
+            # （如 while 条件），true_block 以 FORWARD_CONDITIONAL_JUMP 结尾
+            # （值是 truthy 测试），其 fallthrough (connector) 是纯
+            # JUMP_FORWARD 跳到 M。false_block 是已存在的 TernaryRegion
+            # entry（嵌套三元），且该嵌套三元的 merge_block 是 M。判据基于
+            # 区域结构：嵌套三元共享同一个 merge_block（循环头），非实例特征。
+            # 符合「每块唯一归属」：外层三元消费内层三元作为 false 值表达式，
+            # 两者共享 merge_block（循环头），循环以 while_true 形态运行。
+            # 识别按 block 逆序进行，内层三元先于外层创建，故此处能查到。
+            if merge_block is None:
+                _tli_nest = true_block.get_last_instruction()
+                if (_tli_nest
+                        and _tli_nest.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                        and _tli_nest.argval is not None):
+                    _tsuccs_nest = list(true_block.conditional_successors)
+                    if len(_tsuccs_nest) == 2:
+                        _tft_nest = next((s for s in _tsuccs_nest
+                                          if s.start_offset != _tli_nest.argval), None)
+                        if _tft_nest is not None:
+                            _ft_eff_nest = [i for i in _tft_nest.instructions
+                                            if i.opname not in NOISE_OPS]
+                            _ft_pure_jump_nest = all(
+                                i.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                                             'JUMP_BACKWARD',
+                                             'JUMP_BACKWARD_NO_INTERRUPT')
+                                for i in _ft_eff_nest
+                            )
+                            if _ft_pure_jump_nest and _ft_eff_nest:
+                                _ft_last_nest = _ft_eff_nest[-1]
+                                if (_ft_last_nest.argval is not None
+                                        and isinstance(_ft_last_nest.argval, int)):
+                                    _conn_target_nest = self.cfg.get_block_by_offset(
+                                        _ft_last_nest.argval)
+                                    if _conn_target_nest is not None:
+                                        _false_existing_nest = self.block_to_region.get(
+                                            false_block)
+                                        if (isinstance(_false_existing_nest, TernaryRegion)
+                                                and _false_existing_nest.merge_block is _conn_target_nest):
+                                            merge_block = _conn_target_nest
+                                            has_jump_forward_skip = True
 
             # [R10-batch1 err 2] assert (ternary) pattern fallback.
             # When both branches end with POP_JUMP_FORWARD_IF_TRUE (assert's
@@ -12997,87 +13272,46 @@ RegionType 枚举值: RegionType.ASSERT
                                     _consumer_extra_blocks.append(_resume_blk)
                         break
 
-            # [R17-03 fix] ternary + await + binop + return/store:
-            # ``return (a if c else b) + await g()`` / ``x = (a if c else b) + await g()``
-            # 字节码布局:
-            #   merge_block: <ternary result on stack>; LOAD g; PRECALL; CALL;
-            #                GET_AWAITABLE; LOAD_CONST None
-            #   poll_block (successor): SEND; YIELD_VALUE; RESUME; JUMP_BACKWARD_NO_INTERRUPT
-            #   binop_block (successor of poll exit): BINARY_OP <op>; RETURN_VALUE / STORE_*
-            # ternary 结果是 BINARY_OP 的左操作数，await g() 是右操作数。
-            # merge_block 首条非噪音指令是 LOAD（await 内层表达式的函数），
-            # 不匹配现有任何 handler。此处检测 GET_AWAITABLE 在 merge_block 中
-            # （非首位）+ 后继链含 SEND 轮询 + BINARY_OP + RETURN/STORE 的模式。
-            # 依「自底向上归约」: ternary 归约为 IfExp，await 归约为 Await，
-            #   BinOp(left=IfExp, right=Await) 归约为父表达式，Return/Assign 归约为语句。
-            # 依「父引用子入口」: 父 Return/Assign 通过 BINARY_OP 引用 ternary 子节点
-            #   （左操作数）和 await 子节点（右操作数）。
-            # 依「每块唯一归属」: poll_block + binop_block 归属 TernaryRegion 父表达式，
-            #   不拆分为独立语句。
-            _binop_await_op = None
-            _binop_await_inner_instrs = None
-            _binop_await_extra_blocks = []
-            if (merge_context is None and merge_block is not None
-                    and any(i.opname == 'GET_AWAITABLE' for i in merge_block.instructions)
-                    and not any(i.opname == 'GET_YIELD_FROM_ITER'
-                                for i in merge_block.instructions)):
-                # 找 SEND 轮询后继
-                _ba_poll = None
-                for _succ in merge_block.successors:
-                    if _succ is merge_block:
-                        continue
-                    if (any(i.opname == 'SEND' for i in _succ.instructions)
-                            and any(i.opname == 'YIELD_VALUE' for i in _succ.instructions)
-                            and any(i.opname == 'JUMP_BACKWARD_NO_INTERRUPT'
-                                    for i in _succ.instructions)):
-                        _ba_poll = _succ
+                    # [R14-yield fix] 普通生成器 yield (ternary) — 无 ASYNC_GEN_WRAP。
+                    # 字节码模式（merge_block 内）:
+                    #   `yield (ternary)`        -> YIELD_VALUE + RESUME + POP_TOP +
+                    #                               LOAD_CONST None + RETURN_VALUE
+                    #   `yield (ternary) + 1`    -> LOAD_CONST 1 + BINARY_OP + +
+                    #                               YIELD_VALUE + RESUME + POP_TOP +
+                    #                               LOAD_CONST None + RETURN_VALUE
+                    #   `yield (ternary) * 2 + 1`-> <wrapping_ops> + YIELD_VALUE + ...
+                    # 旧实现只识别 ASYNC_GEN_WRAP（async gen），普通生成器的 YIELD_VALUE
+                    # 不被任何分支匹配，merge_context 保持 None。随后 dispatch
+                    # （merge_ctx=None & value_target=None & merge_block 非 None）
+                    # 把 merge_block 末尾的 RETURN_VALUE（生成器隐式 return None）
+                    # 当作 return sink，将整段（含 YIELD_VALUE）重建为
+                    # Return(Yield(...))，产生非法语法 `return yield (ternary) + 1`。
+                    # 依「每块唯一归属」: merge_block 的 YIELD_VALUE（+ 前驱 wrapping
+                    # ops）归属 TernaryRegion 父表达式（Yield(ternary)），末尾的
+                    # LOAD_CONST None + RETURN_VALUE 是生成器隐式返回，归属父
+                    # FunctionDef body（独立语句），不应并入 yield 表达式。
+                    # 依「父引用子入口」: 父 Expr(Yield) 通过 YIELD_VALUE 引用 ternary
+                    # 子节点（前驱 wrapping ops + ternary 归约为 yield 的 value）。
+                    # 普遍性: 覆盖 `yield ternary` / `yield ternary + binop` /
+                    #   `yield ternary * binop + binop` 等所有 yield 表达式形态。
+                    # 注意: GET_YIELD_FROM_ITER（yield-from）已由前序分支处理并 break，
+                    # 不会到达此处；此处仅处理纯 YIELD_VALUE（普通/async gen 已由
+                    # ASYNC_GEN_WRAP 分支处理，此处兜底无 ASYNC_GEN_WRAP 的场景）。
+                    elif instr.opname == 'YIELD_VALUE':
+                        merge_context = 'yield'
+                        value_target = None
                         break
-                if _ba_poll is not None:
-                    # SEND 的退出目标 = 轮询结束后的块
-                    _ba_send_i = next((i for i in _ba_poll.instructions
-                                       if i.opname == 'SEND'), None)
-                    _ba_binop_blk = None
-                    if _ba_send_i is not None and isinstance(_ba_send_i.argval, int):
-                        _ba_binop_blk = self.cfg.get_block_by_offset(_ba_send_i.argval)
-                    if _ba_binop_blk is not None:
-                        _ba_binop_i = next((i for i in _ba_binop_blk.instructions
-                                            if i.opname == 'BINARY_OP'), None)
-                        _ba_has_return = any(i.opname == 'RETURN_VALUE'
-                                             for i in _ba_binop_blk.instructions)
-                        _ba_store_i = next((i for i in _ba_binop_blk.instructions
-                                            if i.opname in ('STORE_FAST', 'STORE_NAME',
-                                                            'STORE_GLOBAL', 'STORE_DEREF')
-                                            ), None)
-                        if _ba_binop_i is not None and (_ba_has_return or _ba_store_i is not None):
-                            # 提取 await 内层表达式 (GET_AWAITABLE 之前的指令)
-                            _ba_mb_instrs = [i for i in merge_block.instructions
-                                             if i.opname not in ('RESUME', 'NOP', 'CACHE',
-                                                                 'PUSH_NULL', 'POP_TOP')]
-                            _ba_cutoff = None
-                            for _bi_idx, _bi_instr in enumerate(_ba_mb_instrs):
-                                if _bi_instr.opname == 'GET_AWAITABLE':
-                                    _ba_cutoff = _bi_idx
-                                    break
-                            if _ba_cutoff is not None and _ba_cutoff > 0:
-                                _binop_await_inner_instrs = _ba_mb_instrs[:_ba_cutoff]
-                                _binop_await_op = _ba_binop_i.arg
-                                _binop_await_extra_blocks = [_ba_poll, _ba_binop_blk]
-                                if _ba_has_return:
-                                    merge_context = 'return'
-                                    value_target = '__return_target__'
-                                else:
-                                    merge_context = 'store'
-                                    value_target = (_ba_store_i.argval
-                                                    if _ba_store_i and _ba_store_i.argval
-                                                    else f'var_{_ba_store_i.arg}'
-                                                    ) if _ba_store_i else None
-                                _consumer_extra_blocks.extend(_binop_await_extra_blocks)
 
             # When the JUMP_FORWARD pattern was detected (ternary in
             # while-loop condition), set merge_context if no other context
             # was identified. The ternary result is consumed by the while
             # loop's condition test at the merge_block (loop header).
-            if has_jump_forward_skip and merge_context is None:
+            # [Phase 7 方案 A] 对于 fused ternary-loop，merge_block 是 loop header，
+            # 可能同时含 body 赋值（STORE_*）和 while 条件测试（POP_JUMP_IF_*）。
+            # 此时 has_jump_forward_skip=True 表示三元与循环测试融合，
+            # merge_context 应优先设为 'while_cond'（三元消费者是 while 条件测试，
+            # 不是 body 赋值），覆盖 'store' 等其他上下文。
+            if has_jump_forward_skip:
                 merge_context = 'while_cond'
                 value_target = '__while_cond_target__'
 
@@ -13128,6 +13362,37 @@ RegionType 枚举值: RegionType.ASSERT
             else:
                 all_blocks.update(chain_blocks)
 
+            # [Phase 7 方案 D] 当 ternary 条件是 chained compare 时，
+            # 把 chained compare 的延续块、cleanup 块（POP_TOP + JUMP）和
+            # JUMP_FORWARD 连接块纳入 all_blocks，防止它们泄漏为独立语句。
+            # 依「每块唯一归属」：这些块归属 TernaryRegion（条件的一部分）。
+            if _is_chained_compare_cond and _cc_if_region is not None:
+                all_blocks.update(_cc_if_region.chained_compare_blocks)
+                # cleanup 块（POP_TOP + JUMP_FORWARD 到 false 路径）：
+                # header block 的 jump target 后继（非 fallthrough）。
+                _hdr_last = block.get_last_instruction()
+                if _hdr_last and _hdr_last.argval is not None:
+                    _cleanup_blk = self.cfg.get_block_by_offset(_hdr_last.argval)
+                    if _cleanup_blk is not None:
+                        all_blocks.add(_cleanup_blk)
+                # 最后比较块的 fallthrough 后继若是纯 JUMP_FORWARD 连接块，
+                # 也纳入 all_blocks（已在前面更新 true_block 时跟踪）。
+                _last_cc = _cc_if_region.chained_compare_blocks[-1] \
+                    if _cc_if_region.chained_compare_blocks else None
+                if _last_cc is not None:
+                    _lc_last = _last_cc.get_last_instruction()
+                    if _lc_last and _lc_last.opname in FORWARD_CONDITIONAL_JUMP_OPS \
+                            and _lc_last.argval is not None:
+                        _lc_succs = sorted(
+                            _last_cc.conditional_successors,
+                            key=lambda s: s.start_offset)
+                        for _s in _lc_succs:
+                            _s_eff = [i for i in _s.instructions
+                                      if i.opname not in NOISE_OPS]
+                            if (len(_s_eff) == 1
+                                    and _s_eff[0].opname == 'JUMP_FORWARD'):
+                                all_blocks.add(_s)
+
             # Include the JUMP_FORWARD block (the block between the
             # then-value and the merge) in the ternary's blocks.
             if has_jump_forward_skip:
@@ -13153,10 +13418,24 @@ RegionType 枚举值: RegionType.ASSERT
                 if not _is_critical_loop_blk:
                     all_blocks.add(merge_block)
 
+            # 收集 loop header/condition 块集合，用于排除（「每块唯一归属」）
+            _critical_loop_blocks = set()
+            for _lr in (loop_regions or []):
+                if _lr.header_block:
+                    _critical_loop_blocks.add(_lr.header_block)
+                if _lr.condition_block:
+                    _critical_loop_blocks.add(_lr.condition_block)
+
             for vb in (true_block, false_block):
                 vb_last = vb.get_last_instruction()
                 if vb_last and vb_last.opname in FORWARD_CONDITIONAL_JUMP_OPS:
                     for s in vb.conditional_successors:
+                        # [Phase 7 方案 A] fused ternary-loop 中，值块的
+                        # fallthrough 后继是 loop header（merge_block），不能
+                        # 纳入 TernaryRegion.blocks，否则违反「每块唯一归属」
+                        # （block 同时属 LoopRegion 和 TernaryRegion）。
+                        if s in _critical_loop_blocks:
+                            continue
                         all_blocks.add(s)
                 # [T4修复] 当值块以短路跳转（JUMP_IF_FALSE_OR_POP/JUMP_IF_TRUE_OR_POP）结尾时，
                 # 其fallthrough后继和跳转目标后继都是三元值表达式的一部分（boolop第二操作数等）。
@@ -13187,25 +13466,7 @@ RegionType 枚举值: RegionType.ASSERT
             if _consumer_extra_blocks:
                 all_blocks.update(_consumer_extra_blocks)
 
-            # [R17-10 fix] await in ternary condition: ``x = a if await g() else b``
-            # CPython 把 ``await g()`` 展开为 setup_block (GET_AWAITABLE 前的
-            # CALL 等) + poll_block (SEND 自循环) + cond_block (POP_JUMP_IF)。
-            # cond_block 是 ternary entry，但 setup_block/poll_block 是其前驱，
-            # 不在 ternary 钻石（true/false/merge）内。若不纳入 all_blocks，
-            # 它们会被识别为独立 Region 并生成 ``Expr(Await)`` 语句，与 ternary
-            # 重建的 ``Await`` 条件重复，导致字节码不匹配。
-            # 依「每块唯一归属」: setup_block/poll_block 归属 TernaryRegion 的
-            #   条件上下文（await 是 ternary test 的实现细节）。
-            # 依「父引用子入口」: ternary cond_block 通过前驱链引用 await 表达式。
-            _cond_await_extra_blocks = []
-            if hasattr(self, '_collect_await_predecessor_chain'):
-                _cond_await_chain = self._collect_await_predecessor_chain(block)
-                if _cond_await_chain:
-                    _cond_await_extra_blocks = [b for b in _cond_await_chain
-                                                if b is not None]
-                    all_blocks.update(_cond_await_extra_blocks)
-
-            container_type, func_call_info, dict_key_info = _detect_ternary_context(block, merge_block)
+            container_type, func_call_info, dict_key_info, dict_const_keys = _detect_ternary_context(block, merge_block)
             return {
                 'block': block,
                 'true_block': true_block,
@@ -13219,13 +13480,17 @@ RegionType 枚举值: RegionType.ASSERT
                 'container_type': container_type,
                 'func_call_info': func_call_info,
                 'dict_key_info': dict_key_info,
+                # [Phase 7 方案 D] BUILD_CONST_KEY_MAP const-key tuple。
+                'dict_const_keys': dict_const_keys,
                 # [R10-batch1 err 4/14] Cross-block consumer instruction blocks
                 # for await / yield-from (ternary).
                 'merge_extra_blocks': _consumer_extra_blocks,
-                # [R17-03 fix] binop+await consumer metadata for
-                # ``return (ternary) + await g()`` / ``x = (ternary) + await g()``.
-                'binop_await_op': _binop_await_op,
-                'binop_await_inner_instrs': _binop_await_inner_instrs,
+                # [Phase 7 方案 D] ternary 条件本身是 chained compare 时，
+                # 传递 chained compare 属性供条件生成使用。
+                'chained_compare_ops': (list(_cc_if_region.chained_compare_ops)
+                                        if _is_chained_compare_cond and _cc_if_region else []),
+                'chained_compare_blocks': (list(_cc_if_region.chained_compare_blocks)
+                                           if _is_chained_compare_cond and _cc_if_region else []),
             }
 
         def _create_ternary_region_from_pattern(pattern):
@@ -13244,13 +13509,19 @@ RegionType 枚举值: RegionType.ASSERT
                 container_type=pattern['container_type'],
                 func_call_info=pattern['func_call_info'],
                 dict_key_info=pattern['dict_key_info'],
+                dict_const_keys=pattern.get('dict_const_keys'),
                 merge_extra_blocks=pattern.get('merge_extra_blocks') or [],
+                # [Phase 7 方案 D] ternary 条件是 chained compare 时，
+                # 传递 chained compare 属性供条件生成使用。
+                chained_compare_ops=pattern.get('chained_compare_ops') or [],
+                chained_compare_blocks=pattern.get('chained_compare_blocks') or [],
             )
-            # [R17-03 fix] Store binop+await consumer metadata for the AST
-            # generator to reconstruct ``BinOp(left=IfExp, right=Await)``.
-            if pattern.get('binop_await_op') is not None:
-                region.metadata['binop_await_op'] = pattern['binop_await_op']
-                region.metadata['binop_await_inner_instrs'] = pattern.get('binop_await_inner_instrs')
+
+            # [Phase 7 方案 D] 当 ternary 条件是 chained compare 时，
+            # 计算 chained compare 操作数（left + comparators），
+            # 供 region_ast_generator 构建 Compare 节点。
+            if region.chained_compare_ops and len(region.chained_compare_ops) >= 2:
+                self.compute_chained_compare_operands(region)
 
             for nested in pattern['nested_ternary_regions']:
                 if nested in self.regions:
@@ -13387,7 +13658,7 @@ RegionType 枚举值: RegionType.ASSERT
                     for s in vb.conditional_successors:
                         all_blocks.add(s)
 
-            container_type, func_call_info, dict_key_info = _detect_ternary_context(header, merge)
+            container_type, func_call_info, dict_key_info, dict_const_keys = _detect_ternary_context(header, merge)
 
             region = TernaryRegion(
                 region_type=RegionType.TERNARY,
@@ -13402,6 +13673,7 @@ RegionType 枚举值: RegionType.ASSERT
                 container_type=container_type,
                 func_call_info=func_call_info,
                 dict_key_info=dict_key_info,
+                dict_const_keys=dict_const_keys,
             )
 
             return region
@@ -14201,85 +14473,121 @@ RegionType 枚举值: RegionType.ASSERT
             pred_op = 'and' if 'FALSE' in pred_last.opname else 'or'
             if pred_op != op_type:
                 break
-            # [Phase 7 根因 A] while 条件位三元 Scenario B 守卫。
-            # `while (a if cond else b):` 编译时，三元 cond 块（pred）的
-            # fallthrough 是 true_value 块，true_value 经 JUMP_FORWARD 跳到
-            # loop header（= 三元 merge）。当前方法从 false_value 块向后走
-            # predecessor，会把三元 cond 块误并入 boolop `and` 链（cond 和
-            # false_value 都 IF_FALSE 跳到 exit，形似 `and`）。
-            #
-            # 普遍性判据（与 _detect_boolop_short_circuit_chain 的 Scenario B
-            # 守卫同语义）：pred 的 fallthrough 链经 JUMP_FORWARD 到达 loop
-            # header，说明 pred 是三元 cond 块、loop header 是三元 merge。
-            # 此时断链，让 TernaryRegion 识别器接管。
-            # 覆盖：simple（`while (a if c else b)`）、compare（`while (a if c else b) > 0`）、
-            # walrus（`while (n := (a if c else b)) > 0`）、嵌套三元 ——
-            # 全部由「JUMP_FORWARD 到 loop header」结构模式统一识别，
-            # 不依赖具体指令判据。
-            if self._is_ternary_cond_reaching_loop_header(pred, loop):
-                break
             chain.insert(0, (pred, pred_op))
             current = pred
         return chain if len(chain) >= 1 else None
 
-    def _is_ternary_cond_reaching_loop_header(self, cond_block: BasicBlock, loop: LoopRegion) -> bool:
-        """检查 cond_block 是否是「while 条件位三元」的 cond 块。
+    def _is_fused_ternary_false_value_block(self, pred: BasicBlock, header: BasicBlock) -> bool:
+        """检测 pred 是否是 fused ternary-loop 的 false_value_block。
 
-        普遍性判据：cond_block 的 fallthrough 链经 JUMP_FORWARD 到达
-        loop.header_block（= 三元 merge）。这是 CPython 编译
-        `while (X if cond else Y):` 的标准模式：
-          cond_block: LOAD cond; POP_JUMP_IF_FALSE → false_value
-          true_value: LOAD X; [POP_JUMP_IF_FALSE → exit]; JUMP_FORWARD → merge
-          merge = loop.header_block
+        [Phase 7 方案 A] CPython 将 `while (a if c else b):` 编译为融合结构：
+        三元与循环测试融合，a/b 直接 POP_JUMP_IF_FALSE 跳到 exit，无三元钻石。
+        字节码布局：
+            cond_block: LOAD c; POP_JUMP_IF_FALSE -> false_value
+            true_value: LOAD a; POP_JUMP_IF_FALSE -> exit_a; (fallthrough) connector
+            connector:  JUMP_FORWARD -> merge (= loop header)
+            false_value: LOAD b; POP_JUMP_IF_FALSE -> exit_b; (fallthrough) merge
+            merge (header): <loop body / back-edge recheck>
 
-        返回 True 表示 cond_block 是三元 cond 块，不应并入 boolop 链。
+        在 _identify_loop_regions Step 7(d) 的 is_while_true 分支中，false_value
+        会被误识别为 condition_block（其末尾 FORWARD_CONDITIONAL_JUMP 跳到 exit，
+        满足 "跳出 body/header" 判据）。这导致：
+          1. LoopRegion.condition_block 被设为 false_value
+          2. _detect_while_condition_boolop_chain 从 false_value 回溯到 cond_block，
+             误识别为 boolop 链（c and b），覆盖三元归属
+          3. _detect_ternary_pattern 因 false_block == LoopRegion.condition_block
+             而拒绝 cond_block 作为三元
+
+        本函数基于 fused 三元的结构特征（has_jump_forward_skip 模式）检测 pred
+        是否是 false_value_block。若是，Step 7(d) 应跳过它，让 condition_block
+        保持 None，循环以 while_true 形式识别，由 _detect_ternary_pattern 正确
+        识别三元，生成器通过 TernaryRegion.merge_block == header 关联三元作为
+        条件表达式。
+
+        判据（基于区域结构，非实例特征）：
+        1. pred 末尾是 FORWARD_CONDITIONAL_JUMP_OPS
+        2. pred 有两个后继：exit（跳转目标）和 merge（fallthrough == header）
+        3. pred 的前驱 cond_block 有两个后继：true_value 和 pred
+        4. true_value 末尾是 FORWARD_CONDITIONAL_JUMP_OPS
+        5. true_value 的 fallthrough 后继是纯 JUMP_FORWARD 块（connector），
+           跳到 merge（== header）
         """
-        header = loop.header_block
-        if header is None:
+        # 判据 1: pred 末尾是 FORWARD_CONDITIONAL_JUMP_OPS
+        pred_last = pred.get_last_instruction()
+        if not pred_last or pred_last.opname not in FORWARD_CONDITIONAL_JUMP_OPS:
             return False
-        last = cond_block.get_last_instruction()
-        if not last or last.argval is None:
+        if pred_last.argval is None:
             return False
-        # cond_block 的 fallthrough（非跳转目标后继）
-        succs = list(cond_block.conditional_successors)
-        if len(succs) != 2:
+
+        # 判据 2: pred 有两个后继，fallthrough == header
+        pred_succs = list(pred.conditional_successors)
+        if len(pred_succs) != 2:
             return False
-        ft = next((s for s in succs if s.start_offset != last.argval), None)
-        if ft is None:
+        pred_jump_target = self.cfg.get_block_by_offset(pred_last.argval)
+        pred_fallthrough = next((s for s in pred_succs if s != pred_jump_target), None)
+        if pred_fallthrough is not header:
             return False
-        # 沿 fallthrough 链走，最多 5 步，找 JUMP_FORWARD 到 loop header
-        visited = {cond_block.start_offset}
-        walk = ft
-        for _ in range(5):
-            if walk is None or walk.start_offset in visited:
-                break
-            visited.add(walk.start_offset)
-            walk_last = walk.get_last_instruction()
-            if walk_last is None:
-                break
-            # JUMP_FORWARD 到 loop header = 三元 merge
-            if (walk_last.opname == 'JUMP_FORWARD'
-                    and walk_last.argval is not None
-                    and walk_last.argval == header.start_offset):
-                return True
-            # 纯 JUMP_FORWARD 连接块：继续走 fallthrough
-            walk_eff = [i for i in walk.instructions if i.opname not in NOISE_OPS]
-            if (len(walk_eff) == 1 and walk_eff[0].opname == 'JUMP_FORWARD'
-                    and walk_eff[0].argval is not None):
-                nb = self.cfg.get_block_by_offset(walk_eff[0].argval)
-                if nb is not None:
-                    walk = nb
-                    continue
-            # 条件跳转块（true_value 含 POP_JUMP_IF_FALSE → exit）：走 fallthrough
-            if walk_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS):
-                wsuccs = list(walk.conditional_successors)
-                if len(wsuccs) == 2:
-                    wft = next((s for s in wsuccs if s.start_offset != walk_last.argval), None)
-                    if wft is not None:
-                        walk = wft
-                        continue
-            break
-        return False
+
+        # 判据 3: pred 的前驱 cond_block 有两个后继：true_value 和 pred
+        # cond_block 不在 body 中（fused 三元在循环外）
+        cond_candidates = [p for p in pred.predecessors if p not in header.predecessors or True]
+        # 排除 body 中的前驱（回边等）
+        # pred 的前驱中，找到有两个后继且其中一个后继是 pred 的块
+        cond_block = None
+        true_value = None
+        for p in pred.predecessors:
+            p_last = p.get_last_instruction()
+            if not p_last:
+                continue
+            if p_last.opname not in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS):
+                continue
+            p_succs = list(p.conditional_successors)
+            if len(p_succs) != 2:
+                continue
+            if pred in p_succs:
+                other = next((s for s in p_succs if s != pred), None)
+                if other is not None:
+                    cond_block = p
+                    true_value = other
+                    break
+        if cond_block is None or true_value is None:
+            return False
+
+        # 判据 4: true_value 末尾是 FORWARD_CONDITIONAL_JUMP_OPS
+        tv_last = true_value.get_last_instruction()
+        if not tv_last or tv_last.opname not in FORWARD_CONDITIONAL_JUMP_OPS:
+            return False
+        if tv_last.argval is None:
+            return False
+
+        # 判据 5: true_value 的 fallthrough 后继是纯 JUMP_FORWARD 块，
+        #         跳到 header（merge）
+        tv_succs = list(true_value.conditional_successors)
+        if len(tv_succs) != 2:
+            return False
+        tv_jump_target = self.cfg.get_block_by_offset(tv_last.argval)
+        tv_fallthrough = next((s for s in tv_succs if s != tv_jump_target), None)
+        if tv_fallthrough is None:
+            return False
+        # tv_fallthrough 应是纯 JUMP_FORWARD 块
+        ft_effective = [i for i in tv_fallthrough.instructions
+                        if i.opname not in NOISE_OPS]
+        if not ft_effective:
+            return False
+        ft_is_pure_jump = all(
+            i.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                         'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+            for i in ft_effective
+        )
+        if not ft_is_pure_jump:
+            return False
+        ft_last = ft_effective[-1]
+        if ft_last.argval is None:
+            return False
+        connector_target = self.cfg.get_block_by_offset(ft_last.argval)
+        if connector_target is not header:
+            return False
+        return True
 
     def _detect_while_boolop_forward_chain(self, cond_block: BasicBlock, loop: LoopRegion, BOOLOP_CHAIN_JUMPS) -> Optional[List[Tuple[BasicBlock, str]]]:
         chain: List[Tuple[BasicBlock, str]] = []

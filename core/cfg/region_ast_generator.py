@@ -83,6 +83,22 @@ from .comprehension_generator import ComprehensionGenerator
 from .opcode_feature_detector import get_opcode_detector
 
 
+class _IfRegionProxy:
+    """[Phase 7 根因 A] IfRegion-like 代理，供 while 条件路径复用 if 条件路径的
+    compare-ternary 构建逻辑（_build_ternary_wrapped_expr）。
+
+    while 条件位三元与 if 条件位三元语义同构：条件真→进入 body/then。本代理
+    提供 then_blocks（= loop body_blocks）和 chained_compare_blocks（= []），
+    使 _build_ternary_wrapped_expr 的 NONE_CHECK 取反判断和链式比较逻辑
+    在 while 上下文中正确工作。
+    """
+    __slots__ = ('then_blocks', 'chained_compare_blocks')
+
+    def __init__(self, then_blocks, chained_compare_blocks):
+        self.then_blocks = then_blocks
+        self.chained_compare_blocks = chained_compare_blocks or []
+
+
 class RegionASTGenerator:
     _ALL_REGION_TYPES = (IfRegion, LoopRegion, TryExceptRegion, WithRegion, MatchRegion, AssertRegion, BoolOpRegion, TernaryRegion)
     _STRUCTURAL_REGION_TYPES = (IfRegion, LoopRegion, TryExceptRegion, WithRegion, MatchRegion)
@@ -122,6 +138,12 @@ class RegionASTGenerator:
         self._or_else_block: Optional['BasicBlock'] = None
         self._or_rhs_block: Optional['BasicBlock'] = None
         self.detector = get_opcode_detector()
+        # [R11-version fix] 记录已被 generate() 预扫描提取 import 前缀的
+        # entry_block。防止 _generate_ternary 的 cond_block pre-statement
+        # 提取重复抽取同一 import 序列（导致 `import sys` 重复）。
+        # 依「每块唯一归属」: import 指令归属 generate() 预扫描（父模块体），
+        # ternary cond_block 仅拥有 condition preload 指令。
+        self._entry_import_extracted_blocks: Set[BasicBlock] = set()
 
     def block_role(self, block: 'BasicBlock') -> 'BlockRole':
         return self.region_analyzer.get_block_role(block)
@@ -289,6 +311,10 @@ class RegionASTGenerator:
                     _t_import_pre = self._extract_imports_from_block_prefix(entry_block)
                     if _t_import_pre:
                         ast_nodes.extend(_t_import_pre)
+                        # [R11-version fix] 标记 entry_block 的 import 前缀已被
+                        # generate() 预扫描提取，防止 _generate_ternary 的
+                        # cond_block pre-statement 提取重复抽取。
+                        self._entry_import_extracted_blocks.add(entry_block)
             elif isinstance(entry_region, AssertRegion):
                 assert_id = id(entry_region)
                 if assert_id not in self._generated_regions and assert_id not in self._generating_regions:
@@ -622,24 +648,6 @@ class RegionASTGenerator:
                                 else:
                                     is_contained = True
                                     break
-                        elif isinstance(other, TernaryRegion) and isinstance(r, AssertRegion):
-                            # [R17-11 fix] AssertRegion.condition_block 是
-                            # TernaryRegion.merge_block 时（`assert (ternary).method()`），
-                            # 属合法嵌套：AssertRegion 通过 condition_block 引用嵌套
-                            # TernaryRegion。依「嵌套即抽象节点」+「父引用子入口」，
-                            # 不判为 contained。AssertRegion.message_block 是
-                            # TernaryRegion.entry 时（`assert x, (ternary)`）亦同。
-                            _legal = False
-                            if (r.condition_block is other.merge_block
-                                    and r.condition_block is not r.message_block):
-                                _legal = True
-                            if (r.message_block is not None
-                                    and r.message_block is other.entry
-                                    and r.message_block is not r.condition_block):
-                                _legal = True
-                            if not _legal:
-                                is_contained = True
-                                break
                         elif isinstance(other, IfRegion) and isinstance(r, LoopRegion):
                             if r.condition_block and (r.condition_block in other.blocks or r.condition_block == other.entry):
                                 pass
@@ -923,45 +931,6 @@ class RegionASTGenerator:
                             if not parent_owns:
                                 self.generated_blocks.add(b)
                         continue
-            # [R17-02 fix] 嵌套即抽象节点: 若此 TernaryRegion 的 merge_block
-            # 是另一个 TernaryRegion 的 entry (cond_block)，且消费 ternary 的
-            # merge_block 末尾为 STORE_SUBSCR/STORE_ATTR，则此 ternary 的结果
-            # 作为消费 ternary 的 preload 子表达式（如 ``x[a if c else b] =
-            # (d if e else f)`` 中 value ternary 的 merge = index ternary 的
-            # cond）。依归约算法原则3「嵌套即抽象节点」与原则4「父引用子入口」，
-            # 此 ternary 不应作为顶层语句独立发射，而由消费 ternary 通过
-            # _build_nested_ternary_expr 引用（Pattern B2/C4/C5）。
-            # 依原则2「每块唯一归属」: value ternary 的 blocks 归属父 Assign
-            #   语句，不拆分为独立 Expr 语句。
-            if isinstance(region, TernaryRegion) and region.merge_block is not None:
-                _consumed_by_sibling_ternary = False
-                for _tr in self.regions:
-                    if (isinstance(_tr, TernaryRegion)
-                            and _tr is not region
-                            and _tr.entry is region.merge_block
-                            and _tr.merge_block is not None):
-                        _sib_merge_instrs = list(_tr.merge_block.instructions)
-                        if _sib_merge_instrs and any(i.opname in ('STORE_SUBSCR', 'STORE_ATTR') for i in _sib_merge_instrs):
-                            _consumed_by_sibling_ternary = True
-                            break
-                if _consumed_by_sibling_ternary:
-                    # [R18-08 fix] Distinguish R17-02 (value ternary consumed
-                    # by sibling) from R18-08 (subscript index ternary consumed
-                    # by chained sibling). In R18-08, the sibling's cond_block
-                    # contains BINARY_SUBSCR (consuming the outer ternary as a
-                    # subscript index to produce x[t1]), which means the outer
-                    # is NOT a value ternary — it should be processed by the
-                    # chained Pattern C, not skipped.
-                    # 依「每块唯一归属」: outer ternary blocks belong to chained
-                    #   Assign, not to a sibling value-ternary skip.
-                    _is_chained_subscr_index = False
-                    if _tr.condition_block is not None:
-                        _sib_cond_eff = [i for i in _tr.condition_block.instructions
-                                         if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                        if any(i.opname == 'BINARY_SUBSCR' for i in _sib_cond_eff):
-                            _is_chained_subscr_index = True
-                    if not _is_chained_subscr_index:
-                        continue
             region_ast = self._generate_region(region)
             if region_ast:
                 if isinstance(region_ast, list):
@@ -1043,7 +1012,17 @@ class RegionASTGenerator:
                 last = ast_nodes[-1]
                 if isinstance(last, dict) and last.get('type') == 'Return' and self._is_trailing_return_none_statement(last):
                     ast_nodes = ast_nodes[:-1]
-            
+
+            # [R13 nested_lambda fix] Convert any remaining FunctionObjects
+            # (from MAKE_FUNCTION + POP_TOP expression statements) to proper
+            # Lambda dicts by recursively decompiling their code objects.
+            # Without this, module-level `lambda: lambda: (a if c else b)`
+            # renders as the placeholder `lambda *args, **kwargs: None`.
+            # 依「自底向上归约」: FunctionObject is an abstract node for a
+            # code object; _convert_lambda_function_objects reduces it to a
+            # concrete Lambda/FunctionDef AST node.
+            ast_nodes = [self._convert_lambda_function_objects(s) if isinstance(s, dict) else s
+                         for s in ast_nodes]
             return {
                 'type': 'Module',
                 'body': ast_nodes,
@@ -1055,6 +1034,10 @@ class RegionASTGenerator:
                          not (code_obj.co_flags & 0x0001) and
                          func_name != '<module>')
 
+        # [R13 nested_lambda fix] Same conversion for class body / function body:
+        # expression-level lambdas in function/class bodies also need conversion.
+        ast_nodes = [self._convert_lambda_function_objects(s) if isinstance(s, dict) else s
+                     for s in ast_nodes]
         if is_class_body:
             return self._build_class_def(func_name, ast_nodes)
         else:
@@ -1152,30 +1135,46 @@ class RegionASTGenerator:
             # [R11-batch1 err 4] 处理返回类型注解 (MAKE_FUNCTION flag 4)
             # 字节码模式: cond_block 预加载 LOAD_CONST 'return'，三元求值后
             # BUILD_TUPLE 2 组成 ('return', value) 元组传给 MAKE_FUNCTION 4。
-            # func_obj['annotations'] 是 {name: expr} 字典，提取 'return' 作 returns。
-            # [R19-09 fix] 参数注解: annotations 字典的 key 是参数名（如 'x'），
-            # value 是注解表达式（可能是 ternary IfExp）。需将注解应用到对应
-            # 参数节点的 annotation 字段。字节码模式: cond_block 预加载
-            # LOAD_CONST 'x'（参数名），三元求值后 BUILD_TUPLE 2 组成
-            # ('x', annotation) 传给 MAKE_FUNCTION 4。
-            # 依「父引用子入口」: 父 FunctionDef 通过 BUILD_TUPLE 的 'x' +
-            # ternary 引用 ternary 子节点（作参数 annotation）。
-            # 依「每块唯一归属」: BUILD_TUPLE + MAKE_FUNCTION + STORE_NAME 归
-            # FunctionDef 节点，不拆分为独立 Assign。
+            # [Phase 7 根因2 通用修复] func_obj['annotations'] 是 expr_reconstructor
+            # 的 MAKE_FUNCTION handler (ast_generator_v2.py L1685-1688) 从栈弹出
+            # 的注解元组，重建为 AST Tuple 节点 {'type':'Tuple','elts':[name1,type1,
+            # name2,type2,...]}（按 CPython co_varnames + 'return' 顺序的 (name,type)
+            # 对）。旧代码假设它是 {name: expr} 字典，用 _annotations.get('return')
+            # 取值——Tuple 节点没有 'return' 键，恒返回 None，导致 `def f(x: int) -> int`
+            # 的参数注解与返回注解全部丢失（test_r11_ternary_overload 指令数 34 vs 24）。
+            # 依「父引用子入口」: 父 FunctionDef 通过 MAKE_FUNCTION flag 4 引用
+            # BUILD_TUPLE 子节点（注解元组）作 annotations；注解元组的 (name,type) 对
+            # 唯一归属对应形参的 annotation 槽位或 returns 槽位。
             if isinstance(func_obj, dict) and 'annotations' in func_obj:
                 _annotations = func_obj.get('annotations')
-                if isinstance(_annotations, dict):
+                if isinstance(_annotations, dict) and _annotations.get('type') == 'Tuple':
+                    # AST Tuple 节点: elts 是 [name, type, name, type, ...] 交替序列
+                    _ann_elts = _annotations.get('elts', []) or []
+                    _all_args = ((args.get('posonlyargs', []) or [])
+                                 + (args.get('args', []) or [])
+                                 + (args.get('kwonlyargs', []) or []))
+                    _vi = 0
+                    while _vi + 1 < len(_ann_elts):
+                        _name_node = _ann_elts[_vi]
+                        _type_node = _ann_elts[_vi + 1]
+                        _ann_name = None
+                        if isinstance(_name_node, dict):
+                            if _name_node.get('type') == 'Constant':
+                                _ann_name = _name_node.get('value')
+                            elif _name_node.get('type') in ('Name', 'str'):
+                                _ann_name = _name_node.get('id') or _name_node.get('value')
+                        elif isinstance(_name_node, str):
+                            _ann_name = _name_node
+                        if _ann_name == 'return':
+                            _returns_annotation = _type_node
+                        elif _ann_name is not None:
+                            for _arg_node in _all_args:
+                                if isinstance(_arg_node, dict) and _arg_node.get('arg') == _ann_name:
+                                    _arg_node['annotation'] = _type_node
+                                    break
+                        _vi += 2
+                elif isinstance(_annotations, dict):
                     _returns_annotation = _annotations.get('return')
-                    # [R19-09 fix] 应用参数注解到 posonlyargs/args/kwonlyargs
-                    for _arg_list_key in ('posonlyargs', 'args', 'kwonlyargs'):
-                        _arg_list = args.get(_arg_list_key, []) or []
-                        for _arg_node in _arg_list:
-                            if isinstance(_arg_node, dict):
-                                _arg_name = _arg_node.get('arg')
-                                if (_arg_name is not None
-                                        and _arg_name in _annotations
-                                        and _arg_name != 'return'):
-                                    _arg_node['annotation'] = _annotations[_arg_name]
 
             body_stmts = [{'type': 'Pass'}]
             if self.recursive:
@@ -1334,9 +1333,20 @@ class RegionASTGenerator:
                         if instr.opname == 'MAKE_FUNCTION':
                             if i > 0:
                                 prev_instr = instructions[i - 1]
-                                if prev_instr.opname == 'LOAD_CONST' and prev_instr.argval is not func_obj:
-                                    if not hasattr(prev_instr.argval, 'co_code'):
-                                        continue
+                                # [Phase 7 通用修复] MAKE_FUNCTION 紧前的 LOAD_CONST
+                                # 是该函数的 code object。若该 code object ≠ func_obj，
+                                # 说明此 MAKE_FUNCTION 属于另一个函数，必须跳过——
+                                # 否则会把别的函数的装饰器链误赋给当前函数。
+                                # 旧逻辑条件反转：仅在 prev 是「非 code object 常量」
+                                # 时跳过，导致遍历到其他函数的 MAKE_FUNCTION 时
+                                # 仍调用 _reconstruct_decorator_chain，把 f 的装饰器
+                                # 链误赋给 deco1/deco2（test_r6_decorator_chain）。
+                                # 依「每块唯一归属」: 每个 MAKE_FUNCTION 唯一归属
+                                # 其 code object 对应的 FunctionDef。
+                                if (prev_instr.opname == 'LOAD_CONST'
+                                        and hasattr(prev_instr.argval, 'co_code')
+                                        and prev_instr.argval is not func_obj):
+                                    continue
                             bytecode_decorators = self._reconstruct_decorator_chain(instructions, i)
                             if bytecode_decorators:
                                 if not result.get('decorator_list') or len(bytecode_decorators) > len(result.get('decorator_list', [])):
@@ -1366,6 +1376,54 @@ class RegionASTGenerator:
 
         func = call_node.get('func', {})
         args = call_node.get('args', [])
+
+        # [通用修复 类装饰器] CPython 3.11+ 类装饰器字节码模式：
+        #   @deco(args) class C: ...
+        # 字节码: PUSH_NULL + LOAD deco + <deco args> + PRECALL + CALL (构造 deco)
+        #         + PUSH_NULL + LOAD_BUILD_CLASS + LOAD_CONST <C code> + MAKE_FUNCTION
+        #         + LOAD_CONST 'C' + PRECALL 2 + CALL 2 (__build_class__)
+        #         + PRECALL 0 + CALL 0 (deco(classdef)) + STORE_NAME C
+        # reconstruct 产出: Call(func=__build_class__Call(is_class_def=True),
+        #                       args=[deco_Call])
+        # 结构判据（基于操作码语义，非实例特征）:
+        #   - func 是 Call 且 is_class_def=True (或 func.func.id == '__build_class__')
+        #   - args[0] 是装饰器 Call (deco(args))
+        # 与函数装饰器（func 是装饰器, args[0] 是 FunctionObject）相反：
+        #   类装饰器中 func 是被装饰的类定义, args[0] 是装饰器。
+        # 依「父引用子入口」: 父 ClassDef 通过 CALL 0 引用 __build_class__ 子节点
+        # (func 槽位) + 装饰器子节点 (args[0] 槽位)。
+        # 旧版仅处理函数装饰器（args[0] 是 FunctionObject），对类装饰器
+        # (args[0] 是 deco_Call) 走 elif func.type == 'Call' 分支，误把
+        # __build_class__ Call 当装饰器、deco_Call 当被装饰对象，递归方向反转，
+        # 返回空 decorator_list，丢失 @dataclass(frozen=True) 等类装饰器。
+        if (func.get('type') == 'Call'
+                and (func.get('is_class_def')
+                     or (func.get('func', {}).get('type') == 'Name'
+                         and func.get('func', {}).get('id') == '__build_class__'))):
+            if args and isinstance(args[0], dict) and args[0].get('type') == 'Call':
+                _deco_call = args[0]
+                # 装饰器本身可能是 Name (无参 @dec) 或 Call (带参 @dec(args))
+                _deco_func = _deco_call.get('func', {})
+                _deco_args = _deco_call.get('args', [])
+                _deco_kwargs = _deco_call.get('keywords', []) or _deco_call.get('kwargs', [])
+                if _deco_func.get('type') in ('Name', 'Attribute'):
+                    if _deco_args or _deco_kwargs:
+                        _dec_node = {
+                            'type': 'Call',
+                            'func': _deco_func,
+                            'args': _deco_args,
+                        }
+                        if _deco_kwargs:
+                            _dec_node['keywords'] = _deco_kwargs
+                        return [_dec_node]
+                    else:
+                        # 无参装饰器 @dec (CALL 0 但无 args/kwargs)
+                        return [_deco_func]
+                # 多层类装饰器: 递归处理 args[0] 是链式装饰器 Call 的情况
+                elif _deco_func.get('type') == 'Call':
+                    _inner_decs = self._extract_decorators(_deco_call)
+                    return _inner_decs if _inner_decs else []
+            return []
 
         if func.get('type') in ('Name', 'Attribute'):
             if args:
@@ -1846,28 +1904,37 @@ class RegionASTGenerator:
         arg_count = getattr(code_obj, 'co_argcount', 0)
         varnames = list(getattr(code_obj, 'co_varnames', ()))
 
-        # 位置参数（前arg_count个）
+        # 位置参数（前arg_count个，含 posonly）
         pos_args = [{'type': 'arg', 'arg': name} for name in varnames[:arg_count]]
 
-        # 检查是否有*args（vararg）
+        # CPython 3.11+ co_varnames 顺序: positional, kwonly, *vararg, **kwarg, locals
+        # （而非 positional, *vararg, kwonly, **kwarg）。旧代码假设 *vararg 在 kwonly
+        # 之前，导致 `def f(*args, x=1)` 的 varnames=('x','args') 被误读为
+        # vararg='x'/kwonly=['args']。依「区域归约算法」: 函数签名重建必须严格
+        # 遵循 CPython code object 的 varnames 布局，否则 defaults/kw_defaults
+        # 与形参位置错配，破坏「父引用子入口」中父 FunctionDef 通过 MAKE_FUNCTION
+        # flags 引用 ternary 子节点作为默认值的语义。
         has_vararg = False
         vararg_name = None
 
-        # kwonly参数
+        # kwonly 参数紧跟 positional 之后
         kwonly_count = getattr(code_obj, 'co_kwonlyargcount', 0)
         kwonly_start = arg_count
-        if hasattr(code_obj, 'co_flags'):
-            flags = code_obj.co_flags
-            # CO_VARARGS = 0x04
-            if flags & 0x04:
-                vararg_name = varnames[arg_count] if arg_count < len(varnames) else None
-                kwonly_start = arg_count + 1
-                has_vararg = True
-
         kwonly_args = []
         for i in range(kwonly_start, kwonly_start + kwonly_count):
             if i < len(varnames):
                 kwonly_args.append({'type': 'arg', 'arg': varnames[i]})
+
+        # *vararg 在 kwonly 之后
+        _next_idx = kwonly_start + kwonly_count
+        if hasattr(code_obj, 'co_flags'):
+            flags = code_obj.co_flags
+            # CO_VARARGS = 0x04
+            if flags & 0x04:
+                if _next_idx < len(varnames):
+                    vararg_name = varnames[_next_idx]
+                _next_idx += 1
+                has_vararg = True
 
         # 检查是否有**kwargs（kwarg）
         kwarg_name = None
@@ -1875,13 +1942,8 @@ class RegionASTGenerator:
             flags = code_obj.co_flags
             # CO_VARKEYWORDS = 0x08
             if flags & 0x08:
-                kwargs_idx = kwonly_start + kwonly_count
-                if has_vararg:
-                    kwargs_idx = kwonly_start + kwonly_count
-                else:
-                    kwargs_idx = arg_count + kwonly_count
-                if kwargs_idx < len(varnames):
-                    kwarg_name = varnames[kwargs_idx]
+                if _next_idx < len(varnames):
+                    kwarg_name = varnames[_next_idx]
 
         return {
             'type': 'arguments',
@@ -1943,12 +2005,23 @@ class RegionASTGenerator:
             # 时，ternary 作为 with 上下文管理器表达式，由 _generate_with 通过
             # _resolve_nested_ternary_context_expr 引用，不应被独立处理为语句。
             # 依「父引用子入口」原则，父 WithRegion 引用 ternary 的归约结果。
+            # [R14-multi-with fix] merge_block 本身是 WithRegion.entry 时，归
+            # 属该 WithRegion（父引用子入口），不应标记为 generated——否则
+            # _generate_with 的子区域处理检测到 child.entry in generated_blocks
+            # 会跳过整个 WithRegion，导致 `with a as x, (b if c else d) as y: pass`
+            # 的第二项 `(b if c else d) as y` 整体丢失。
+            # 依「每块唯一归属」: merge_block 归属 WithRegion（作为其 entry），
+            # 其余 ternary 块（cond/true/false）归属 TernaryRegion。
+            # 普遍性: 覆盖 `with a as x, f(ternary) as y` / `with a, ternary:`
+            # 等所有 ternary merge_block 作为嵌套 WithRegion entry 的形态。
             if not should_skip and region.merge_block is not None:
                 for r in self.regions:
                     if (r is not region and isinstance(r, WithRegion)
                             and r.entry is region.merge_block):
                         should_skip = True
                         for _b in region.blocks:
+                            if _b is region.merge_block:
+                                continue
                             self.generated_blocks.add(_b)
                         self._generated_regions.add(id(region))
                         break
@@ -1977,23 +2050,6 @@ class RegionASTGenerator:
                     if (r is not region and isinstance(r, AssertRegion)
                             and r.message_block is region.entry
                             and r.message_block is not r.condition_block):
-                        should_skip = True
-                        for _b in region.blocks:
-                            self.generated_blocks.add(_b)
-                        self._generated_regions.add(id(region))
-                        break
-            # [R17-11 fix] 守卫：ternary 的 merge_block 是某个 AssertRegion 的
-            # condition_block（且 != message_block）时，ternary 是 assert 的 test
-            # 表达式（如 `assert (a if c else b).method()`）。由 _generate_assert
-            # 通过 _resolve_assert_condition_ternary_expr 调用 _generate_ternary
-            # 归约消费表达式（Call/Attribute 等包裹 IfExp）作为 test，不应被独立
-            # 处理为语句。依「父引用子入口」原则，父 AssertRegion 通过
-            # condition_block（=TernaryRegion.merge_block）引用嵌套 TernaryRegion。
-            if not should_skip and region.merge_block is not None:
-                for r in self.regions:
-                    if (r is not region and isinstance(r, AssertRegion)
-                            and r.condition_block is region.merge_block
-                            and r.condition_block is not r.message_block):
                         should_skip = True
                         for _b in region.blocks:
                             self.generated_blocks.add(_b)
@@ -2068,23 +2124,6 @@ AST 映射规则:
         cond_block = region.condition_block
         if cond_block is None:
             return {'type': 'Pass'}
-        # [R17-11 fix] assert 的 test 是三元表达式的消费表达式
-        # （如 `assert (a if c else b).method()`）。condition_block 同时是某
-        # 嵌套 TernaryRegion 的 merge_block，含消费指令（LOAD_METHOD/PRECALL/
-        # CALL）+ assert 测试跳转 POP_JUMP_IF_TRUE。依「嵌套即抽象节点」+
-        # 「父引用子入口」：AssertRegion 通过 condition_block（=TernaryRegion.
-        # merge_block）引用嵌套 TernaryRegion，TernaryRegion 在父 AssertRegion
-        # 中作为 test 槽位的抽象表达式节点。由 _resolve_assert_condition_ternary_expr
-        # 归约消费表达式（Call(Attribute(IfExp, 'method'), []) 等）作为 test。
-        _nested_cond_ternary = self._resolve_assert_condition_ternary_expr(region)
-        if _nested_cond_ternary is not None:
-            for block in region.blocks:
-                self.generated_blocks.add(block)
-            result = {'type': 'Assert', 'test': _nested_cond_ternary}
-            message = self._build_assert_message(region)
-            if message is not None:
-                result['msg'] = message
-            return result
         # [Round4-12] assert 条件为链式比较（`assert 0 < a < 10`）时，
         # condition_block 仅含链式比较的第一段（COPY+COMPARE_OP），后续段
         # 在 chained_compare_blocks 中。这里手工重建链式 Compare，避免
@@ -2480,75 +2519,6 @@ AST 映射规则:
             else:
                 result = {'type': 'BoolOp', 'op': 'or', 'values': [gnode, result]}
         return result
-
-    def _resolve_assert_condition_ternary_expr(self, region: AssertRegion) -> Optional[Dict[str, Any]]:
-        """[R17-11 fix] 若 AssertRegion.condition_block 同时是某嵌套 TernaryRegion
-        的 merge_block（且 condition_block != message_block），说明 assert 的
-        test 是一个三元表达式的消费表达式
-        （如 `assert (a if c else b).method()` / `assert f(a if c else b)` 等）。
-
-        依「嵌套即抽象节点」（原则 3）+「父引用子入口」（原则 4）：
-        AssertRegion 通过 condition_block（=TernaryRegion.merge_block）引用嵌套
-        TernaryRegion 的汇合块；TernaryRegion 在父 AssertRegion 中作为单个抽象
-        表达式节点（test 槽位）。
-
-        调用 _generate_ternary 归约 TernaryRegion 为 IfExp 表达式（merge_block
-        的消费指令由 _generate_ternary 在 merge_context='compare' 路径下不自动
-        包裹），再通过 _try_build_ternary_merge_consumer_expr 重建消费表达式
-        （如 Call(Attribute(IfExp, 'method'), [])）作为 test 返回。同时标记
-        TernaryRegion 的所有块为 generated，避免独立输出造成双重。
-
-        Returns:
-            test 表达式 AST 节点（Call / Attribute / IfExp 等），或 None
-            （无嵌套 ternary / 生成失败 / 出现递归）。
-        """
-        cond_block = region.condition_block
-        if cond_block is None:
-            return None
-        # condition_block 必须与 message_block 不同（否则 message ternary 走
-        # _resolve_assert_message_ternary_expr 处理）。
-        if region.message_block is cond_block:
-            return None
-        _nested_ternary = None
-        for _r in self.regions:
-            if (isinstance(_r, TernaryRegion) and _r is not region
-                    and getattr(_r, 'merge_block', None) is cond_block):
-                _nested_ternary = _r
-                break
-        if _nested_ternary is None:
-            return None
-        # 防止递归：标记正在生成
-        if id(_nested_ternary) in self._generating_regions:
-            return None
-        self._generating_regions.add(id(_nested_ternary))
-        try:
-            _t_stmts = self._generate_ternary(_nested_ternary)
-        finally:
-            self._generating_regions.discard(id(_nested_ternary))
-        if not _t_stmts or len(_t_stmts) != 1:
-            return None
-        _t_node = _t_stmts[0]
-        _t_expr = None
-        if _t_node.get('type') == 'Expr':
-            _t_expr = _t_node.get('value')
-        elif _t_node.get('type') == 'Assign':
-            _t_expr = _t_node.get('value')
-        elif _t_node.get('type') == 'Return':
-            _t_expr = _t_node.get('value')
-        if _t_expr is None:
-            return None
-        # 重建消费表达式（如 (ternary).method() 的 Call(Attribute(IfExp,
-        # 'method'), [])）。_try_build_ternary_merge_consumer_expr 处理
-        # LOAD_METHOD/PRECALL/CALL 等 merge_block 消费指令，将 ternary 作为
-        # initial_stack 上的接收者/参数。
-        _consumer = self._try_build_ternary_merge_consumer_expr(
-            _nested_ternary, _t_expr)
-        _test = _consumer if _consumer is not None else _t_expr
-        # 标记 ternary region 的所有块为 generated，避免独立处理造成双重输出
-        for _b in _nested_ternary.blocks:
-            self.generated_blocks.add(_b)
-        self._generated_regions.add(id(_nested_ternary))
-        return _test
 
     def _resolve_assert_message_ternary_expr(self, region: AssertRegion) -> Optional[Dict[str, Any]]:
         """[R8 fix] 若 AssertRegion.message_block 同时是某嵌套 TernaryRegion
@@ -2996,12 +2966,8 @@ AST 映射规则:
                             # （`for x in [1, ternary, 2]: pass`），_generate_ternary
                             # 输出 Expr(Tuple/List/etc 内含 IfExp 元素)。
                             # iter_expr 应是整个容器。
-                            # [R18-05/09 fix] 当 iter 是 subscript 含 ternary
-                            # （`for x in y[(ternary)]: pass`），_generate_ternary
-                            # 输出 Expr(Subscript(y, IfExp))。iter_expr 应是整个
-                            # Subscript。
                             if _vtype in ('IfExp', 'Call', 'List', 'Tuple',
-                                          'Set', 'Dict', 'Subscript'):
+                                          'Set', 'Dict'):
                                 iter_expr = _v
                                 break
                     if iter_expr:
@@ -3241,23 +3207,54 @@ AST 映射规则:
         # This must happen before the while-true checks, because the loop may
         # be classified as is_while_true (with condition_block=None) when the
         # ternary spans the initial condition check and the back-edge recheck.
+        # [Phase 7 根因 A] while 条件位三元识别 — 基于「父引用子入口」结构判据。
+        # while 通过 condition_block / header_block 引用三元 merge 作为条件节点。
+        # 覆盖全部三元在 while 条件位置的情况：
+        #   - fused（CPython 融合三元与循环测试，merge==header，merge_context='while_cond'）
+        #   - non-fused compare（merge==condition_block，含 COMPARE_OP，merge_context='compare'）
+        #   - non-fused walrus（merge==condition_block，含 COPY+STORE，merge_context='store'）
+        #   - 链式比较 / 裸真值等任意位置
+        # 不依赖具体指令判据，是基于区域结构的普遍性判据。
         _ternary_for_while = None
+        # [Phase 7 方案 A] 嵌套三元 while_cond：选择最外层三元。
+        # 嵌套三元 `a if c else (b if d else e)` 在 while 条件中时，
+        # 外层和内层三元都有 merge_context='while_cond' 且 merge_block
+        # 都是循环头。iter_descendants 可能先返回内层，导致选错。最外层
+        # 三元生成完整嵌套 IfExp，内层只生成部分。判据：外层三元的
+        # condition_block 不在任何其他 while_cond 三元的 blocks 里。
+        # 基于「嵌套即抽象节点」：外层三元消费内层三元作为子节点。
+        _while_cond_candidates = []
         for _r in region.iter_descendants((TernaryRegion,)):
             if getattr(_r, 'merge_context', None) == 'while_cond':
-                _ternary_for_while = _r
-                break
-            if _r.merge_block and _r.merge_block is region.header_block:
-                _ternary_for_while = _r
-                break
-        if _ternary_for_while is None:
+                _while_cond_candidates.append(_r)
+            elif (_r.merge_block is not None
+                    and (_r.merge_block is region.header_block
+                         or (cond_block is not None and _r.merge_block is cond_block))):
+                _while_cond_candidates.append(_r)
+        if not _while_cond_candidates:
             for _r in self.regions:
                 if isinstance(_r, TernaryRegion):
                     if getattr(_r, 'merge_context', None) == 'while_cond':
-                        _ternary_for_while = _r
+                        _while_cond_candidates.append(_r)
+                    elif (_r.merge_block is not None
+                            and (_r.merge_block is region.header_block
+                                 or (cond_block is not None and _r.merge_block is cond_block))):
+                        _while_cond_candidates.append(_r)
+        if _while_cond_candidates:
+            for _cand in _while_cond_candidates:
+                _is_inner = False
+                for _other in _while_cond_candidates:
+                    if _other is _cand:
+                        continue
+                    if (_cand.condition_block
+                            and _cand.condition_block in _other.blocks):
+                        _is_inner = True
                         break
-                    if _r.merge_block and _r.merge_block is region.header_block:
-                        _ternary_for_while = _r
-                        break
+                if not _is_inner:
+                    _ternary_for_while = _cand
+                    break
+            if _ternary_for_while is None:
+                _ternary_for_while = _while_cond_candidates[0]
         if _ternary_for_while:
             _ternary_result = self._generate_ternary(_ternary_for_while)
             _ternary_expr = None
@@ -3282,21 +3279,69 @@ AST 映射规则:
                     elif _ternary_result.get('type') == 'Assign':
                         _ternary_expr = _ternary_result.get('value')
             if _ternary_expr:
-                condition = _ternary_expr
-                # Mark ternary blocks as generated so they don't appear as statements
+                # [Phase 7 根因 A] while 条件位三元生成。
+                # - fused（merge==header）：三元 IfExp 直接作为 while 条件（CPython
+                #   融合三元与循环测试，无外层包裹指令）。
+                # - non-fused（merge==cond_block）：cond_block 含消费指令（COMPARE_OP/
+                #   walrus COPY+STORE/subscript/call），需用 _build_compare_ternary_condition
+                #   包裹 IfExp 为 Compare/NamedExpr 等。复用 if 条件路径的通用方法，
+                #   基于「父引用子入口」结构判据（merge==cond_block），不依赖具体指令。
+                if (cond_block is not None
+                        and _ternary_for_while.merge_block is cond_block):
+                    _built = self._build_compare_ternary_condition(
+                        _ternary_expr, cond_block, _ternary_for_while,
+                        list(region.body_blocks) or [], [])
+                    condition = _built if _built is not None else _ternary_expr
+                else:
+                    condition = _ternary_expr
+                # Mark ternary blocks as generated so they don't appear as statements.
+                # [Phase 7 方案 A] 结构判据：当 merge_context='while_cond' 且
+                # merge_block 不是循环 header 时，merge_block 是循环体入口块
+                # （其内容属于循环体，如 `if x: break`），不属于三元表达式。
+                # 三元表达式仅由 condition_block + true/false_value_block 构成。
+                # 此时排除 merge_block，让循环体正常处理它。判据基于「每块唯一
+                # 归属」：merge_block 在非融合形态下归属循环体，不归属三元。
+                # 融合形态（merge==header）时 merge_block 含回边重检，仍需抑制。
+                _tw_merge_is_header = (
+                    _ternary_for_while.merge_block is region.header_block
+                )
+                _tw_exclude_merge = (
+                    getattr(_ternary_for_while, 'merge_context', None) == 'while_cond'
+                    and not _tw_merge_is_header
+                    and _ternary_for_while.merge_block is not None
+                )
                 for _b in _ternary_for_while.blocks:
+                    if _tw_exclude_merge and _b is _ternary_for_while.merge_block:
+                        continue
                     self.generated_blocks.add(_b)
                     self.generated_offsets.add(_b.start_offset)
                 # Mark back-edge recheck blocks that duplicate the ternary condition
                 # as generated to prevent them from being emitted as body statements
+                # [Phase 7 方案 A] 递归收集嵌套三元的所有 condition/value 块
+                # load names。嵌套三元 `a if c else (b if d else e)` 在 while
+                # 条件中时，回边重检块包含所有层级的值（c/a/d/b/e），仅收集
+                # 外层三元的 load names（c/a/d）会导致内层值块（b/e）的回边
+                # 重检块未被标记，泄入 body。判据基于「每块唯一归属」：回边
+                # 重检块是嵌套三元条件的复制，全归属三元（抑制为 generated）。
                 _ternary_cond_names = set()
-                for _cb in [_ternary_for_while.condition_block,
-                            _ternary_for_while.true_value_block,
-                            _ternary_for_while.false_value_block]:
-                    if _cb:
-                        for _i in _cb.instructions:
-                            if _i.opname in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF'):
-                                _ternary_cond_names.add(_i.argval)
+                _tcn_visited = set()
+                def _collect_ternary_load_names(_tr):
+                    if id(_tr) in _tcn_visited:
+                        return
+                    _tcn_visited.add(id(_tr))
+                    for _cb in [_tr.condition_block,
+                                _tr.true_value_block,
+                                _tr.false_value_block]:
+                        if _cb:
+                            for _i in _cb.instructions:
+                                if _i.opname in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF'):
+                                    _ternary_cond_names.add(_i.argval)
+                    for _vb in [_tr.true_value_block, _tr.false_value_block]:
+                        if _vb:
+                            _existing = self.region_analyzer.block_to_region.get(_vb)
+                            if isinstance(_existing, TernaryRegion):
+                                _collect_ternary_load_names(_existing)
+                _collect_ternary_load_names(_ternary_for_while)
                 if _ternary_cond_names:
                     # When the ternary's merge_block IS the loop header, the header
                     # contains the back-edge recheck of the ternary condition (Python
@@ -3319,6 +3364,18 @@ AST 映射规则:
                         if not _b_last or _b_last.opname not in CONDITIONAL_JUMP_OPS:
                             continue
                         _b_non_jmp = [i for i in _b_instrs if i != _b_last]
+                        # [Phase 7 方案 A] 如果块含 STORE 指令（body 语句特征），
+                        # 说明该块同时含 body 赋值和三元回边重检，不能整体标记为
+                        # 已生成（否则 body 赋值会丢失）。判据基于「每块唯一归属」：
+                        # 纯回边重检块只含 LOAD + 条件跳转，不含 STORE 等副作用指令。
+                        _has_store = any(
+                            i.opname in ('STORE_FAST', 'STORE_NAME',
+                                         'STORE_GLOBAL', 'STORE_DEREF',
+                                         'STORE_ATTR', 'STORE_SUBSCR')
+                            for i in _b_non_jmp
+                        )
+                        if _has_store:
+                            continue
                         _b_load_names = set()
                         for _i in _b_non_jmp:
                             if _i.opname in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF'):
@@ -3337,6 +3394,22 @@ AST 映射规则:
                 # Clear pre_stmts extracted from the ternary's condition_block
                 if _ternary_for_while.condition_block is cond_block:
                     pre_stmts = []
+                # [Phase 7 根因 A] 标记回边重检三元为已生成。
+                # CPython 在回边处复制 while 条件求值。对 non-fused compare-ternary
+                # （merge==cond_block），回边重检三元是独立 TernaryRegion（entry==loop
+                # header），其块全在 body_blocks 中。若不标记，body 生成会把它作为
+                # 独立 Expr 语句泄入循环体。判据：三元 entry is region.header_block
+                # （「父引用子入口」——loop header 即回边重检三元的入口）。
+                for _r in self.regions:
+                    if (isinstance(_r, TernaryRegion)
+                            and _r is not _ternary_for_while
+                            and _r.entry is region.header_block):
+                        for _b in _r.blocks:
+                            self.generated_blocks.add(_b)
+                            self.generated_offsets.add(_b.start_offset)
+                        if _r.merge_block is not None:
+                            self.generated_blocks.add(_r.merge_block)
+                            self.generated_offsets.add(_r.merge_block.start_offset)
                 # Set cond_block to None to skip cond_block processing
                 cond_block = None
 
@@ -5568,6 +5641,32 @@ AST 映射规则:
             if _s != _jump_block:
                 _fall_through = _s
                 break
+        # [Phase 7 方案 A] fused ternary-loop 回边重检抑制。
+        # 当 loop 是 fused ternary-loop（is_while_true + 存在 merge==header 的
+        # TernaryRegion，merge_context='while_cond'），header 末尾的
+        # FORWARD_CONDITIONAL_JUMP 是三元条件的回边重检（CPython 在回边处复制
+        # while 条件求值），不是 body 的 break 条件。其两个后继都是回边重检块
+        # （在 body_blocks 内，无退出后继），此时应抑制 if 语句生成。
+        # 判据基于区域结构（「父引用子入口」——ternary merge==loop header）+
+        # 控制流结构（两后继均在 body 内、无退出后继），不依赖具体指令或实例。
+        if (block == region.header_block and region.is_while_true
+                and region.condition_block is None
+                and not _exit_succs and not _has_cond_chain
+                and _jump_block is not None and _fall_through is not None):
+            _is_fused_ternary_loop = False
+            for _r in self.regions:
+                if (isinstance(_r, TernaryRegion)
+                        and _r.merge_block is region.header_block
+                        and getattr(_r, 'merge_context', None) == 'while_cond'):
+                    _is_fused_ternary_loop = True
+                    break
+            if _is_fused_ternary_loop:
+                # 标记回边重检后继块为已生成（防止后续重复处理）
+                for _s in block.successors:
+                    if _s not in self.generated_blocks:
+                        self.generated_blocks.add(_s)
+                        self.generated_offsets.add(_s.start_offset)
+                return
         if (_block_succ_outside or _block_succ_break or _block_succ_return) and not _has_cond_chain:
             self._loop_handle_exit_successors(block, _break_cause, _jump_block, _fall_through,
                                               _exit_succs, _block_succ_break, _block_succ_return,
@@ -6606,17 +6705,21 @@ AST 映射规则:
             list(region.chained_compare_blocks),
             list(region.chained_compare_ops),
         )
-        # [R5-01/02/03 fix] Fallback: when cond_block has no LOAD_* (operands
-        # came from previous blocks via stack — e.g. `r = 0 < (a if c else b) < 10`
-        # where Constant(0) and the ternary IfExp are pushed before cond_block),
+        # [R5-01/02/03 fix + Phase 7 方案 D] Fallback: when cond_block has no
+        # LOAD_* left operand (operands came from previous blocks via stack),
         # _build_assert_chained_compare returns None. Detect this case by
-        # checking if cond_block is a TernaryRegion's merge_block. If so,
-        # the chained compare's left is the ternary's preload (e.g. Constant(0)),
-        # and the first comparator is the ternary's IfExp. Remaining comparators
-        # come from chain_blocks' LOAD_* instructions.
+        # checking if cond_block is a TernaryRegion's merge_block. The ternary
+        # fills one position of the chained compare; its position is determined
+        # by whether the ternary's cond_block preload is non-empty:
+        #   - preload non-empty → MIDDLE: ``L op1 (ternary) op2 R2``
+        #     left=preload[0], comparators=[ternary, R2_from_chain_blocks]
+        #   - preload empty → LEFT: ``(ternary) op1 R1 op2 R2``
+        #     left=ternary, comparators=[R1_from_cond_block, R2_from_chain_blocks]
         # 依「父引用子入口」：父 Assign 通过 IfRegion.merge_block 的 STORE_*
         # 引用 chained compare；chained compare 通过 IfRegion.condition_block
-        # （=TernaryRegion.merge_block）引用 ternary 子节点。
+        # （=TernaryRegion.merge_block）引用 ternary 子节点 + cond_block/chain
+        # _block 的 LOAD 操作数。位置判定基于操作码语义（preload 是否非空），
+        # 不依赖具体实例，覆盖 ternary 在 chained compare 任意非末尾位置。
         if chained_cond is None:
             _ternary_owner = None
             for _r in self.regions:
@@ -6630,31 +6733,53 @@ AST 映射规则:
                 if _ternary_expr is not None:
                     _preload = self._compute_ternary_cond_preload_exprs(
                         _ternary_owner)
+                    _comparators: List[Dict[str, Any]] = []
                     if _preload:
+                        # MIDDLE: L op1 (ternary) op2 R2
+                        # left=preload[0], comparators=[ternary, ...]
                         _left = _preload[0]
-                        _comparators: List[Dict[str, Any]] = [_ternary_expr]
-                        for _cb in region.chained_compare_blocks:
-                            for _instr in _cb.instructions:
-                                if _instr.opname == 'LOAD_CONST':
-                                    _comparators.append({
-                                        'type': 'Constant',
-                                        'value': _instr.argval,
-                                    })
-                                elif _instr.opname in ('LOAD_NAME', 'LOAD_FAST',
-                                                       'LOAD_GLOBAL', 'LOAD_DEREF'):
-                                    _comparators.append({
-                                        'type': 'Name',
-                                        'id': _instr.argval,
-                                        'ctx': 'Load',
-                                    })
-                        if len(_comparators) >= len(region.chained_compare_ops):
-                            chained_cond = {
-                                'type': 'Compare',
-                                'left': _left,
-                                'ops': list(region.chained_compare_ops),
-                                'comparators': _comparators[
-                                    :len(region.chained_compare_ops)],
-                            }
+                        _comparators.append(_ternary_expr)
+                    else:
+                        # LEFT: (ternary) op1 R1 op2 R2
+                        # left=ternary, R1 从 cond_block SWAP 之前的 LOAD 提取
+                        # （expr_reconstructor 处理复杂表达式，普遍性）
+                        _left = _ternary_expr
+                        _r1_instrs = []
+                        for _instr in cond_block.instructions:
+                            if _instr.opname in ('RESUME', 'NOP', 'CACHE',
+                                                  'PUSH_NULL'):
+                                continue
+                            if _instr.opname == 'SWAP':
+                                break
+                            _r1_instrs.append(_instr)
+                        if _r1_instrs:
+                            _r1 = self.expr_reconstructor.reconstruct(
+                                _r1_instrs)
+                            if _r1 is not None:
+                                _comparators.append(_r1)
+                    # 从 chain_blocks 提取剩余 comparators（与 MIDDLE 一致）
+                    for _cb in region.chained_compare_blocks:
+                        for _instr in _cb.instructions:
+                            if _instr.opname == 'LOAD_CONST':
+                                _comparators.append({
+                                    'type': 'Constant',
+                                    'value': _instr.argval,
+                                })
+                            elif _instr.opname in ('LOAD_NAME', 'LOAD_FAST',
+                                                   'LOAD_GLOBAL', 'LOAD_DEREF'):
+                                _comparators.append({
+                                    'type': 'Name',
+                                    'id': _instr.argval,
+                                    'ctx': 'Load',
+                                })
+                    if len(_comparators) >= len(region.chained_compare_ops):
+                        chained_cond = {
+                            'type': 'Compare',
+                            'left': _left,
+                            'ops': list(region.chained_compare_ops),
+                            'comparators': _comparators[
+                                :len(region.chained_compare_ops)],
+                        }
         if chained_cond is None:
             return None
         # 标记所有 region.blocks 为已生成，避免父 IfRegion 重复处理。
@@ -9618,6 +9743,139 @@ AST 映射规则:
 
         return stack[-1] if stack else None
 
+    def _build_compare_ternary_condition(self, ternary_expr: Dict[str, Any],
+                                          cond_block: 'BasicBlock',
+                                          ternary_region: 'TernaryRegion',
+                                          then_blocks: List['BasicBlock'],
+                                          chained_compare_blocks: List['BasicBlock']) -> Optional[Dict[str, Any]]:
+        """[Phase 7 根因 A] 构建 compare-ternary 条件表达式（普遍性）。
+
+        适用场景：三元 merge_block == 父区域 cond_block，cond_block 含消费指令
+        （COMPARE_OP / walrus COPY+STORE / subscript / call 等包裹三元结果）。
+        父区域通过 cond_block 引用三元 merge（「父引用子入口」原则）。
+
+        覆盖全部三元在条件位置的情况：
+          - 三元在左 : `(a if c else b) > 0` → Compare(IfExp, [>], [0])
+          - 三元在右 : `0 < (a if c else b)` → Compare(0, [<], [IfExp])
+          - walrus 包裹 : `(n := (a if c else b)) > 0` → Compare(NamedExpr, [>], [0])
+          - subscript/call 包裹 : `d[a if c else b] > 0` → Compare(Subscript, [>], [0])
+          - 链式比较 : `0 < (a if c else b) < 10` → Compare(0, [<], [IfExp, 10])
+          - is/in 测试 : `(a if c else b) is None` → Compare(IfExp, [is], [None])
+
+        被 if 条件路径（_if_extract_condition_from_instructions）和 while 条件路径
+        （_loop_generate_while）共同调用，消除重复，是基于区域结构的普遍性判据。
+
+        Args:
+            ternary_expr: 三元 IfExp 表达式 dict
+            cond_block: 父区域的条件块（= 三元 merge_block）
+            ternary_region: 三元区域
+            then_blocks: 父区域的 then/body 块（用于取反判断）
+            chained_compare_blocks: 链式比较后续段块
+
+        Returns:
+            完整条件表达式 dict，或 None（应退回裸三元真值测试）
+        """
+        # [聚类1 修复] 三元被外层表达式包裹时（d[ternary], (ternary).x,
+        # f(ternary), {ternary: v}, ternary is None, ternary in lst），
+        # 用栈模拟构建完整条件表达式。否则走原始三元 Compare 构建路径。
+        # 构造临时 IfRegion-like 代理以复用 _build_ternary_wrapped_expr。
+        _proxy = _IfRegionProxy(then_blocks, chained_compare_blocks)
+        _wrapped = self._build_ternary_wrapped_expr(
+            ternary_expr, cond_block, ternary_region, _proxy)
+        if _wrapped is not None:
+            return _wrapped
+        # [聚类5 修复] 统一构建含三元的比较表达式，覆盖三种位置：
+        #   (a) 三元在左 : `(a if c else b) > 0`
+        #       cond_block 含 <rhs_loads>, COMPARE_OP, [jump]
+        #   (b) 三元在右 : `0 < (a if c else b)`
+        #       cond_block 仅含 COMPARE_OP, [jump]；左操作数被"困"在
+        #       ternary 进入块（ternary test 之前）。
+        #   (c) 三元在链式比较中段 : `0 < (a if c else b) < 10`
+        #       cond_block 含 SWAP/COPY(链式setup), COMPARE_OP, [jump]；
+        #       chained_compare_blocks 持有后续段；左操作数仍困在 entry。
+        # 依区域归约：三元归约为抽象节点（IfExp），Compare 引用其为操作数。
+        _CMP_SKIP_OPS = frozenset({
+            'COMPARE_OP', 'SWAP', 'COPY', 'POP_TOP',
+            'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_FALSE',
+            'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_TRUE',
+            'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_BACKWARD_IF_NONE',
+            'POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_BACKWARD_IF_NOT_NONE',
+            'POP_JUMP_IF_FALSE', 'POP_JUMP_IF_TRUE',
+            'POP_JUMP_IF_NONE', 'POP_JUMP_IF_NOT_NONE',
+            'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE',
+            'CACHE', 'NOP', 'RESUME',
+        })
+        segments = [cond_block] + list(chained_compare_blocks or [])
+        seg_ops_instrs = []  # COMPARE_OP instrs per segment
+        seg_load_instrs = []  # operand-producing instrs per segment
+        for seg in segments:
+            ops_i = []
+            loads_i = []
+            for instr in seg.instructions:
+                if instr.opname in NOISE_OPS:
+                    continue
+                if instr.opname == 'COMPARE_OP':
+                    ops_i.append(instr)
+                elif instr.opname in _CMP_SKIP_OPS:
+                    continue
+                else:
+                    loads_i.append(instr)
+            seg_ops_instrs.append(ops_i)
+            seg_load_instrs.append(loads_i)
+        all_ops = [op.argval for seg in seg_ops_instrs for op in seg]
+        if not all_ops:
+            # 无 COMPARE_OP：三元作为裸真值条件
+            return ternary_expr
+        first_loads = seg_load_instrs[0] if seg_load_instrs else []
+        _ternary_is_left = len(first_loads) > 0
+        if _ternary_is_left:
+            # 三元在左：left=ternary，comparators=各段操作数
+            left_expr = ternary_expr
+            comparators = []
+            for loads in seg_load_instrs:
+                if loads:
+                    r = self.expr_reconstructor.reconstruct(loads)
+                    if r:
+                        comparators.append(r)
+        else:
+            # 三元在右/中段：left=困在 entry 的左操作数
+            lhs_instrs = self._extract_trapped_lhs_from_ternary(ternary_region)
+            left_expr = self.expr_reconstructor.reconstruct(lhs_instrs) if lhs_instrs else None
+            comparators = [ternary_expr]  # 三元是第一个 comparator
+            for seg_idx in range(1, len(seg_load_instrs)):
+                loads = seg_load_instrs[seg_idx]
+                if loads:
+                    r = self.expr_reconstructor.reconstruct(loads)
+                    if r:
+                        comparators.append(r)
+        # 标记链式比较块已生成
+        for cb in (chained_compare_blocks or []):
+            self.generated_blocks.add(cb)
+        if left_expr is None or len(comparators) != len(all_ops):
+            # 操作数不匹配，退回三元真值测试
+            return ternary_expr
+        compare_expr = {
+            'type': 'Compare',
+            'left': left_expr,
+            'ops': all_ops,
+            'comparators': comparators,
+        }
+        # 取反逻辑：以最后一段的条件跳转为准
+        negate = False
+        last_seg = segments[-1]
+        last = last_seg.get_last_instruction()
+        if last is not None and last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | BACKWARD_CONDITIONAL_JUMP_OPS):
+            if last.opname in NONE_CHECK_OPS:
+                if_true = False
+            else:
+                if_true = 'IF_TRUE' in last.opname
+            jump_target = last.argval
+            if jump_target is not None:
+                then_start_offsets = {b.start_offset for b in then_blocks}
+                jumps_to_then = jump_target in then_start_offsets
+                negate = jumps_to_then != if_true
+        return _negate_expr(compare_expr) if negate else compare_expr
+
     def _if_extract_condition_from_instructions(self, region: IfRegion, cond_block: 'BasicBlock', cond_instrs: List) -> Dict[str, Any]:
         # [Round 2 修复] 当 cond_block 属于某个多操作数 BoolOpRegion 时
         # （如 `if x or await g():` 中 await 的 truthy 测试块），条件应
@@ -9685,104 +9943,12 @@ AST 映射规则:
             if ternary_expr:
                 for b in ternary_for_cond.blocks:
                     self.generated_blocks.add(b)
-                # [聚类1 修复] 三元被外层表达式包裹时（d[ternary], (ternary).x,
-                # f(ternary), {ternary: v}, ternary is None, ternary in lst），
-                # 用栈模拟构建完整条件表达式。否则走原始三元 Compare 构建路径。
-                _wrapped = self._build_ternary_wrapped_expr(
-                    ternary_expr, cond_block, ternary_for_cond, region)
-                if _wrapped is not None:
-                    return _wrapped
-                # [聚类5 修复] 统一构建含三元的比较表达式，覆盖三种位置：
-                #   (a) 三元在左 : `(a if c else b) > 0`
-                #       cond_block 含 <rhs_loads>, COMPARE_OP, [jump]
-                #   (b) 三元在右 : `0 < (a if c else b)`
-                #       cond_block 仅含 COMPARE_OP, [jump]；左操作数被"困"在
-                #       ternary 进入块（ternary test 之前）。
-                #   (c) 三元在链式比较中段 : `0 < (a if c else b) < 10`
-                #       cond_block 含 SWAP/COPY(链式setup), COMPARE_OP, [jump]；
-                #       chained_compare_blocks 持有后续段；左操作数仍困在 entry。
-                # 依区域归约：三元归约为抽象节点（IfExp），Compare 引用其为操作数。
-                _CMP_SKIP_OPS = frozenset({
-                    'COMPARE_OP', 'SWAP', 'COPY', 'POP_TOP',
-                    'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_FALSE',
-                    'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_TRUE',
-                    'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_BACKWARD_IF_NONE',
-                    'POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_BACKWARD_IF_NOT_NONE',
-                    'POP_JUMP_IF_FALSE', 'POP_JUMP_IF_TRUE',
-                    'POP_JUMP_IF_NONE', 'POP_JUMP_IF_NOT_NONE',
-                    'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE',
-                    'CACHE', 'NOP', 'RESUME',
-                })
-                segments = [cond_block] + list(getattr(region, 'chained_compare_blocks', None) or [])
-                seg_ops_instrs = []  # COMPARE_OP instrs per segment
-                seg_load_instrs = []  # operand-producing instrs per segment
-                for seg in segments:
-                    ops_i = []
-                    loads_i = []
-                    for instr in seg.instructions:
-                        if instr.opname in NOISE_OPS:
-                            continue
-                        if instr.opname == 'COMPARE_OP':
-                            ops_i.append(instr)
-                        elif instr.opname in _CMP_SKIP_OPS:
-                            continue
-                        else:
-                            loads_i.append(instr)
-                    seg_ops_instrs.append(ops_i)
-                    seg_load_instrs.append(loads_i)
-                all_ops = [op.argval for seg in seg_ops_instrs for op in seg]
-                if not all_ops:
-                    # 无 COMPARE_OP：三元作为裸真值条件
-                    return ternary_expr
-                first_loads = seg_load_instrs[0] if seg_load_instrs else []
-                _ternary_is_left = len(first_loads) > 0
-                if _ternary_is_left:
-                    # 三元在左：left=ternary，comparators=各段操作数
-                    left_expr = ternary_expr
-                    comparators = []
-                    for loads in seg_load_instrs:
-                        if loads:
-                            r = self.expr_reconstructor.reconstruct(loads)
-                            if r:
-                                comparators.append(r)
-                else:
-                    # 三元在右/中段：left=困在 entry 的左操作数
-                    lhs_instrs = self._extract_trapped_lhs_from_ternary(ternary_for_cond)
-                    left_expr = self.expr_reconstructor.reconstruct(lhs_instrs) if lhs_instrs else None
-                    comparators = [ternary_expr]  # 三元是第一个 comparator
-                    for seg_idx in range(1, len(seg_load_instrs)):
-                        loads = seg_load_instrs[seg_idx]
-                        if loads:
-                            r = self.expr_reconstructor.reconstruct(loads)
-                            if r:
-                                comparators.append(r)
-                # 标记链式比较块已生成
-                for cb in (getattr(region, 'chained_compare_blocks', None) or []):
-                    self.generated_blocks.add(cb)
-                if left_expr is None or len(comparators) != len(all_ops):
-                    # 操作数不匹配，退回三元真值测试
-                    return ternary_expr
-                compare_expr = {
-                    'type': 'Compare',
-                    'left': left_expr,
-                    'ops': all_ops,
-                    'comparators': comparators,
-                }
-                # 取反逻辑：以最后一段的条件跳转为准
-                negate = False
-                last_seg = segments[-1]
-                last = last_seg.get_last_instruction()
-                if last is not None and last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | BACKWARD_CONDITIONAL_JUMP_OPS):
-                    if last.opname in NONE_CHECK_OPS:
-                        if_true = False
-                    else:
-                        if_true = 'IF_TRUE' in last.opname
-                    jump_target = last.argval
-                    if jump_target is not None:
-                        then_start_offsets = {b.start_offset for b in region.then_blocks}
-                        jumps_to_then = jump_target in then_start_offsets
-                        negate = jumps_to_then != if_true
-                return _negate_expr(compare_expr) if negate else compare_expr
+                # [Phase 7 根因 A] 复用通用 compare-ternary 构建方法（与 while 条件路径共享）。
+                _result = self._build_compare_ternary_condition(
+                    ternary_expr, cond_block, ternary_for_cond,
+                    getattr(region, 'then_blocks', None) or [],
+                    getattr(region, 'chained_compare_blocks', None) or [])
+                return _result if _result is not None else ternary_expr
         boolop_region_for_cond = self.region_analyzer.get_region_for_block(cond_block)
         if not isinstance(boolop_region_for_cond, BoolOpRegion):
             boolop_region_for_cond = region.find_descendant_region_for_block(cond_block, (BoolOpRegion,))
@@ -9993,11 +10159,6 @@ AST 映射规则:
             child = expr.get(key)
             if isinstance(child, dict):
                 expr[key] = self._convert_lambda_function_objects(child)
-        # [R17-13 fix] ExpressionReconstructor 构建的 Call 节点使用 'kwargs' 字段
-        # 存放关键字参数（CodeGenerator 同时读取 'keywords' 与 'kwargs'）。若仅遍历
-        # 'keywords'，作为 kwarg 传入的 lambda（如 `f(g=lambda: a if c else b)`）
-        # 的 FunctionObject 不会被转换为 Lambda dict，CodeGenerator 退化为
-        # `lambda *args, **kwargs: None` 占位符，丢失 lambda body。
         for key in ('args', 'keywords', 'kwargs', 'comparators', 'values', 'elts',
                     'keys', 'handlers', 'decorator_list', 'targets'):
             children = expr.get(key)
@@ -10910,9 +11071,16 @@ AST 映射规则:
                     fall_through = s
                     break
         exit_succ = None
-        if jump_target and jump_target not in loop_body_set:
+        # [Phase 7 方案 A] 结构判据：BREAK/PURE_BREAK/RETURN/RETURN_NONE 角色
+        # 的块是循环退出目标，即使它们在 loop_body_set 中（region_analyzer
+        # 将退出块归入 body_blocks）。判据基于 block_role 语义，非实例特征。
+        _EXIT_ROLES = (BlockRole.BREAK, BlockRole.PURE_BREAK,
+                       BlockRole.RETURN, BlockRole.RETURN_NONE)
+        if jump_target and (jump_target not in loop_body_set
+                            or self.region_analyzer.get_block_role(jump_target) in _EXIT_ROLES):
             exit_succ = jump_target
-        elif fall_through and fall_through not in loop_body_set:
+        elif fall_through and (fall_through not in loop_body_set
+                               or self.region_analyzer.get_block_role(fall_through) in _EXIT_ROLES):
             exit_succ = fall_through
         if exit_succ is None:
             return None
@@ -10977,6 +11145,13 @@ AST 映射规则:
         if exit_role in (BlockRole.RETURN, BlockRole.RETURN_NONE) and exit_succ in loop_body_set:
             ret_stmts = self._generate_block_statements(exit_succ)
             body_stmts = ret_stmts if ret_stmts else [{'type': 'Return', 'value': {'type': 'Constant', 'value': None}}]
+            self.generated_blocks.add(exit_succ)
+        elif exit_role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
+            # [Phase 7 方案 A] BREAK 角色块是循环 break 退出目标（CPython
+            # 将 break 优化为跳到循环外块，该块常为 LOAD_CONST None + RETURN_VALUE
+            # 即模块隐式 return None）。block_role 语义已确定为 break 退出，
+            # 不因含 RETURN_VALUE 而误生成 return。判据基于 block_role 语义。
+            body_stmts = [{'type': 'Break'}]
             self.generated_blocks.add(exit_succ)
         else:
             _exit_has_return = any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in exit_succ.instructions)
@@ -11191,6 +11366,14 @@ AST 映射规则:
 
         target_succ = None
         body_type = None
+        # [Phase 7 方案 A] break+continue 模式标记：当 if 的一端是 break（退出
+        # 循环）、另一端是 continue（回边）时，continue 是 if 之后的独立顺序
+        # 语句（源码 `if x: break; continue`），不是 if 的 else 分支。由于
+        # break 退出循环，continue 是继续循环的唯一路径，必须显式输出。
+        # 判据基于控制流语义：break+continue = break 为 if 体 + continue 为
+        # 后续语句。continue 块由本归约处理（每块唯一归属），不留给 back_edge
+        # handler 静默消费。
+        _emit_continue_after_if = False
         if continue_succ and normal_succ:
             _norm = normal_succ[0]
             _is_simple_if = False
@@ -11562,6 +11745,7 @@ AST 映射规则:
         elif break_succ and continue_succ:
             target_succ = break_succ
             body_type = 'Break'
+            _emit_continue_after_if = True
         elif continue_succ:
             target_succ = continue_succ
             body_type = 'Continue'
@@ -11644,19 +11828,28 @@ AST 映射规则:
                 _body_stmts = [{'type': body_type}]
         else:
             if body_type == 'Break':
-                _blk_has_ret = any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in _target_blk.instructions)
-                _ret_val = None
-                if _blk_has_ret:
-                    _blk_meaningful = [i for i in _target_blk.instructions
-                                       if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                    if _blk_meaningful and _blk_meaningful[0].opname in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF'):
-                        _ret_val = {'type': 'Name', 'id': _blk_meaningful[0].argval, 'ctx': 'Load'}
-                    elif _blk_meaningful and _blk_meaningful[0].opname == 'LOAD_CONST':
-                        _ret_val = {'type': 'Constant', 'value': _blk_meaningful[0].argval}
-                if _ret_val is not None:
-                    _body_stmts = [{'type': 'Return', 'value': _ret_val}]
-                else:
+                # [Phase 7 方案 A] 结构判据：target_succ 的 block_role 已由
+                # _is_break_like 判定为 BREAK/PURE_BREAK。BREAK 角色块是循环
+                # break 退出目标（CPython 将 break 优化为跳到循环外块，该块常为
+                # LOAD_CONST None + RETURN_VALUE 即模块隐式 return None）。
+                # 不因含 RETURN_VALUE 而误生成 return，block_role 语义优先。
+                _target_blk_role = self.region_analyzer.get_block_role(_target_blk)
+                if _target_blk_role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
                     _body_stmts = [{'type': body_type}]
+                else:
+                    _blk_has_ret = any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in _target_blk.instructions)
+                    _ret_val = None
+                    if _blk_has_ret:
+                        _blk_meaningful = [i for i in _target_blk.instructions
+                                           if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                        if _blk_meaningful and _blk_meaningful[0].opname in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF'):
+                            _ret_val = {'type': 'Name', 'id': _blk_meaningful[0].argval, 'ctx': 'Load'}
+                        elif _blk_meaningful and _blk_meaningful[0].opname == 'LOAD_CONST':
+                            _ret_val = {'type': 'Constant', 'value': _blk_meaningful[0].argval}
+                    if _ret_val is not None:
+                        _body_stmts = [{'type': 'Return', 'value': _ret_val}]
+                    else:
+                        _body_stmts = [{'type': body_type}]
             else:
                 _body_stmts = [{'type': body_type}]
         if_stmt = {'type': 'If', 'test': cond_expr, 'body': _body_stmts}
@@ -11673,7 +11866,20 @@ AST 映射规则:
                 if _norm_blk not in self.generated_blocks:
                     self.generated_blocks.add(_norm_blk)
                     self.generated_offsets.add(_norm_blk.start_offset)
-        result = pre_stmts + [if_stmt] if pre_stmts else [if_stmt]
+        # [Phase 7 方案 A] break+continue 模式：continue 是 if 之后的独立顺序
+        # 语句。break 退出循环，continue 是继续循环的唯一路径，必须显式输出。
+        # continue 块由本归约处理（每块唯一归属），标记为 generated 防止
+        # back_edge handler 静默消费。continue_succ 经 _is_continue_like 判定
+        # 为 PURE_CONTINUE/LOOP_BACK_EDGE（无 meaningful 指令），直接输出 Continue。
+        if _emit_continue_after_if and continue_succ:
+            _cont_blk = continue_succ[0]
+            if _cont_blk not in self.generated_blocks:
+                self.generated_blocks.add(_cont_blk)
+                self.generated_offsets.add(_cont_blk.start_offset)
+            result = (pre_stmts + [if_stmt, {'type': 'Continue'}]
+                      if pre_stmts else [if_stmt, {'type': 'Continue'}])
+        else:
+            result = pre_stmts + [if_stmt] if pre_stmts else [if_stmt]
         return result
 
     def _is_child_reachable_from_blocks(self, child: Region, blocks: Set) -> bool:
@@ -13553,9 +13759,56 @@ AST 映射规则:
             return []
         stmts = []
         stmt_instrs = []
+        # [R11 asyncctx fix] YIELD_VALUE 是语句边界（yield 表达式语句）。
+        # 字节码模式: <value_instrs> + ASYNC_GEN_WRAP? + YIELD_VALUE +
+        #             RESUME? + POP_TOP (yield cleanup, 丢弃 send 值)
+        # 依「每块唯一归属」: yield 表达式指令（LOAD + ASYNC_GEN_WRAP +
+        # YIELD_VALUE + RESUME + POP_TOP）归属单一 Expr(Yield(...)) 语句节点，
+        # 不与后续语句（如 implicit return None）混合重建。
+        # 依「自底向上归约」: 累积的前驱指令（stmt_instrs）归约为 yield 的
+        # value 表达式，YIELD_VALUE 是归约入口（消费 value，产生 Yield 节点）。
+        # 旧实现未把 YIELD_VALUE 视为语句边界，导致 `yield x` 的指令与后续
+        # `LOAD_CONST None + RETURN_VALUE` 混合重建，reconstruct 返回最终栈顶
+        # Constant(None)（来自 RETURN_VALUE 前的 LOAD_CONST None），Yield 节点
+        # 被 POP_TOP 丢弃后丢失。修复后 YIELD_VALUE 作为边界，前驱重建为
+        # Yield 的 value，后续 RESUME+POP_TOP 作为 yield cleanup 跳过。
+        _yield_cleanup_pending = False
+        # [R11-imports fix] IMPORT_NAME / IMPORT_FROM 状态机。
+        # 字节码模式:
+        #   `import sys`            -> LOAD_CONST level + LOAD_CONST None +
+        #                              IMPORT_NAME sys + STORE_NAME sys
+        #   `import sys as s`       -> ... + IMPORT_NAME sys + STORE_NAME s
+        #   `from m import a`       -> LOAD_CONST level + LOAD_CONST (a,) +
+        #                              IMPORT_NAME m + IMPORT_FROM a + STORE_NAME a
+        #   `from m import a, b`    -> ... + IMPORT_NAME m + IMPORT_FROM a +
+        #                              STORE_NAME a + IMPORT_FROM b + STORE_NAME b
+        #   `from m import a as x`  -> ... + IMPORT_NAME m + IMPORT_FROM a +
+        #                              STORE_NAME x
+        # 旧版 _build_statements_from_instructions 不识别 IMPORT_NAME，将整个
+        # 序列累积到 stmt_instrs 后由 _build_store_statement 处理，但
+        # expr_reconstructor 不识别 IMPORT_NAME/IMPORT_FROM，导致 `import sys`
+        # 退化为 `sys = None`（LOAD_CONST None 被 STORE_NAME 绑定）。
+        # 依「每块唯一归属」: IMPORT_NAME + IMPORT_FROM + STORE_* 序列归属单一
+        # Import/ImportFrom 语句节点，不拆分为 Assign。
+        # 依「自底向上归约」: IMPORT_NAME 是归约入口（消费 level+fromlist，
+        # 产生 module），IMPORT_FROM 消费 module 产生子模块，STORE_* 绑定名字。
+        # 普遍性: 覆盖 import / import-as / from-import / from-import-as /
+        #   from-import-multi 等所有 import 形式，以及在 ternary cond_block
+        #   前序、函数体、类体等任意上下文中出现的 import 前驱语句。
+        _imp_name_instr = None
+        _imp_from_pending = None
+        _imp_pairs = []
         for instr in instrs:
             if instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
                 continue
+            # [R11 asyncctx fix] YIELD_VALUE 之后的 RESUME + POP_TOP 是
+            # yield cleanup（丢弃 send 值）。POP_TOP 在此处不是表达式语句
+            # 终结符，而是 yield 协议的一部分。跳过它避免污染后续语句重建。
+            if _yield_cleanup_pending:
+                if instr.opname == 'POP_TOP':
+                    _yield_cleanup_pending = False
+                    continue
+                _yield_cleanup_pending = False
             if instr.opname in ('JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE',
                                 'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_FORWARD_IF_TRUE',
                                 'POP_JUMP_BACKWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_TRUE',
@@ -13564,7 +13817,67 @@ AST 映射规则:
             if instr.opname in ('POP_EXCEPT', 'PUSH_EXC_INFO', 'RERAISE',
                                 'WITH_EXCEPT_START', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH'):
                 continue
+            # [R11-imports fix] IMPORT_NAME 启动 import 序列。先 flush 已累积的
+            # stmt_instrs（前一条语句），再进入 import 状态机。
+            if instr.opname == 'IMPORT_NAME':
+                if _imp_name_instr is not None:
+                    # 前一个 import 序列未正常终结（无 STORE_*），先 flush。
+                    _module = _imp_name_instr.argval or ''
+                    if _imp_pairs:
+                        _names = [{'name': _n, 'asname': _a}
+                                  for _n, _a in _imp_pairs]
+                        stmts.append({'type': 'ImportFrom',
+                                      'module': _module, 'names': _names})
+                    else:
+                        stmts.append({'type': 'Import',
+                                      'names': [{'name': _module, 'asname': None}]})
+                if stmt_instrs:
+                    _prev_stmt = self._build_statement(list(stmt_instrs))
+                    if _prev_stmt:
+                        stmts.append(_prev_stmt)
+                    stmt_instrs = []
+                _imp_name_instr = instr
+                _imp_from_pending = None
+                _imp_pairs = []
+                continue
+            if instr.opname == 'IMPORT_FROM':
+                if _imp_name_instr is not None:
+                    # 前一个 IMPORT_FROM 未跟 STORE_* → 名字不变 (from m import a, b
+                    # 中 a 后面紧跟 IMPORT_FROM b 而非 STORE_NAME b 的情况不存在；
+                    # 但 `from m import *` 的 IMPORT_FROM '*' 后跟 STORE_NAME '*' 仍
+                    # 走 STORE_* 路径。此处保留 pending 以便 STORE_* 绑定 alias)。
+                    if _imp_from_pending is not None:
+                        _imp_pairs.append((_imp_from_pending.argval or '', None))
+                    _imp_from_pending = instr
+                continue
             if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                if _imp_name_instr is not None:
+                    if _imp_from_pending is not None:
+                        # from module import name [as alias]
+                        _imp_n = _imp_from_pending.argval or ''
+                        _sto_n = instr.argval
+                        if _imp_n != _sto_n:
+                            _imp_pairs.append((_imp_n, _sto_n))
+                        else:
+                            _imp_pairs.append((_imp_n, None))
+                        _imp_from_pending = None
+                    else:
+                        # import module [as alias] — 终结 import 序列
+                        _module = _imp_name_instr.argval or ''
+                        _sto_n = instr.argval
+                        if _module != _sto_n:
+                            stmts.append({'type': 'Import',
+                                          'names': [{'name': _module, 'asname': _sto_n}]})
+                        else:
+                            stmts.append({'type': 'Import',
+                                          'names': [{'name': _module, 'asname': None}]})
+                        _imp_name_instr = None
+                        _imp_pairs = []
+                    # 对于 from-import，等下一个 IMPORT_FROM 或非 import 指令时
+                    # 再 flush（可能有多个 name）。此处不 flush。
+                    # 但若已无 pending 且 pairs 非空，且下一条不是 IMPORT_FROM，
+                    # 则需在下次循环由非 import 指令触发 flush。
+                    continue
                 stmt = self._build_store_statement(stmt_instrs + [instr], block=block)
                 if stmt:
                     stmts.append(stmt)
@@ -13581,6 +13894,82 @@ AST 映射规则:
                 if stmt:
                     stmts.append(stmt)
                 stmt_instrs = []
+                continue
+            # [Phase 7 根因1 通用修复] RETURN_VALUE / RETURN_CONST 是语句边界，
+            # 之前累积的 stmt_instrs 是 return 的值表达式。旧版把 RETURN_VALUE
+            # 累积到 stmt_instrs，reconstruct 返回 stack 顶（值表达式）而非
+            # Return 节点，导致 `return self` 退化为裸 `self` 表达式语句。
+            # 普遍性修复：遇到 RETURN_VALUE/RETURN_CONST 时，先把累积的
+            # stmt_instrs 重建为值表达式，再包装为 Return 节点。
+            # 决定性对照：`self.x = ternary \n return self` 的 extra 重建中，
+            # STORE_ATTR x 之后是 LOAD_FAST self + RETURN_VALUE；旧版输出
+            # `self`（丢失 return），修复后输出 `return self`。
+            if instr.opname == 'RETURN_VALUE':
+                _rv_value = None
+                if stmt_instrs:
+                    _rv_value = self.expr_reconstructor.reconstruct(list(stmt_instrs))
+                # [closure 回归修复] reconstruct 对 MAKE_FUNCTION 返回
+                # FunctionObject，需递归转为 Lambda/FunctionDef dict（与
+                # _build_statement L26802 的 _convert_lambda_function_objects
+                # 一致），否则 `return lambda: x` 退化为
+                # `return (lambda *args, **kwargs: None)` 占位符。
+                if isinstance(_rv_value, dict):
+                    _rv_value = self._convert_lambda_function_objects(_rv_value)
+                if _rv_value is None and stmt_instrs:
+                    # fallback: 单个 LOAD_* 直接构建 Name
+                    _l0 = stmt_instrs[0]
+                    if _l0.opname in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF'):
+                        _rv_value = {'type': 'Name', 'id': _l0.argval, 'ctx': 'Load'}
+                if _rv_value is None:
+                    _rv_value = {'type': 'Constant', 'value': None}
+                # 若转换后是 FunctionDef/AsyncFunctionDef（语句形式，非表达式），
+                # 不能包装为 Return——作为独立语句追加（罕见，return 后跟 def）。
+                if isinstance(_rv_value, dict) and _rv_value.get('type') in ('FunctionDef', 'AsyncFunctionDef'):
+                    stmts.append(_rv_value)
+                else:
+                    stmts.append({'type': 'Return', 'value': _rv_value})
+                stmt_instrs = []
+                continue
+            if instr.opname == 'RETURN_CONST':
+                _rc_val = instr.argval
+                _rv_value = {'type': 'Constant', 'value': _rc_val}
+                stmts.append({'type': 'Return', 'value': _rv_value})
+                stmt_instrs = []
+                continue
+            # [R11 asyncctx fix] YIELD_VALUE 是 yield 表达式语句的边界。
+            # 累积的 stmt_instrs（前驱指令，可能含 ASYNC_GEN_WRAP）是 yield
+            # 的 value 表达式。reconstruct 把它们归约为值，YIELD_VALUE 消费
+            # 值产生 Yield 节点。包装为 Expr(Yield(...)) 语句。
+            # 依「父引用子入口」: 父 Expr 通过 YIELD_VALUE 引用 yield value
+            # 子节点（前驱指令归约结果）。
+            # 普遍性: 覆盖所有 yield 表达式语句形态——
+            #   `yield x`        -> LOAD_FAST x + YIELD_VALUE + POP_TOP
+            #   `yield`          -> YIELD_VALUE + POP_TOP
+            #   `yield (expr)`   -> <expr_instrs> + YIELD_VALUE + POP_TOP
+            #   async gen `yield x` -> LOAD_FAST x + ASYNC_GEN_WRAP + YIELD_VALUE
+            #                          + RESUME + POP_TOP
+            # ASYNC_GEN_WRAP 是 async gen 协议的包装指令（reconstruct 中为
+            # no-op），属于 yield 表达式内部，不破坏归约。
+            if instr.opname == 'YIELD_VALUE':
+                _yield_value = None
+                if stmt_instrs:
+                    _yield_value = self.expr_reconstructor.reconstruct(list(stmt_instrs))
+                if _yield_value is None and stmt_instrs:
+                    # fallback: 单个 LOAD_* 直接构建 Name
+                    _l0 = stmt_instrs[0]
+                    if _l0.opname in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF'):
+                        _yield_value = {'type': 'Name', 'id': _l0.argval, 'ctx': 'Load'}
+                if _yield_value is None:
+                    _yield_value = {'type': 'Constant', 'value': None}
+                stmts.append({
+                    'type': 'Expr',
+                    'value': {
+                        'type': 'Yield',
+                        'value': _yield_value,
+                    },
+                })
+                stmt_instrs = []
+                _yield_cleanup_pending = True
                 continue
             stmt_instrs.append(instr)
         if stmt_instrs:
@@ -13701,8 +14090,7 @@ AST 映射规则:
                 return expr
         return None
 
-    def _resolve_nested_ternary_context_expr(self, with_region: WithRegion,
-                                              entry_block=None) -> Dict[str, Any]:
+    def _resolve_nested_ternary_context_expr(self, with_region: WithRegion) -> Dict[str, Any]:
         """[R4-11] 当 with 的 context_expr 是嵌套 ternary 时，通过 entry block
         反向引用 TernaryRegion 的归约结果（IfExp 表达式）作为 context_expr。
 
@@ -13711,25 +14099,17 @@ AST 映射规则:
         依「每块唯一归属」原则：ternary region 的所有块（含 cond_block）都
         被标记为 generated，避免被独立处理为 Expr(IfExp) 语句造成双重输出。
 
-        [R19-03 fix] entry_block 参数支持 multi-with 被拆分为嵌套
-        WithRegion 的场景：父 WithRegion 吸收子 WithRegion 的 items 时，
-        通过 entry_block=child.entry 引用子 WithRegion 入口处的 TernaryRegion。
-        同时支持 ternary 作为 Call 参数（如 open(a if c else b)）的情况：
-        _generate_ternary 产出 Expr(Call(open, [IfExp]))，整个 Call 即
-        context_expr。
-
         Returns:
-            IfExp/Call 表达式 dict，或 fallback 到 ``context()`` 调用。
+            IfExp 表达式 dict，或 fallback 到 ``context()`` 调用。
         """
         _fallback = {'type': 'Call', 'func': {'type': 'Name', 'id': 'context'},
                      'args': [], 'keywords': []}
-        _entry = entry_block if entry_block is not None else with_region.entry
-        if _entry is None:
+        if with_region.entry is None:
             return _fallback
         _nested_ternary = None
         for _r in self.regions:
             if (isinstance(_r, TernaryRegion) and _r is not with_region
-                    and _r.merge_block is _entry):
+                    and _r.merge_block is with_region.entry):
                 _nested_ternary = _r
                 break
         if _nested_ternary is None:
@@ -13746,20 +14126,33 @@ AST 映射规则:
             return _fallback
         _t_node = _t_stmts[0]
         _t_expr = None
-        if (_t_node.get('type') == 'Expr'
-                and _t_node.get('value', {}).get('type') == 'IfExp'):
-            _t_expr = _t_node['value']
-        elif (_t_node.get('type') == 'Assign'
-                and _t_node.get('value', {}).get('type') == 'IfExp'):
+        # [R11-contextlib fix] 父 WithRegion 通过 entry block 反向引用嵌套
+        # TernaryRegion 的归约出口。merge_block 重建出的表达式即为 context_expr。
+        # merge_block 的指令决定重建形态:
+        #   - 仅 POP_TOP/STORE 终结: ternary 本身是 context_expr → Expr(IfExp)
+        #     (如 `with (a if c else b): pass`)
+        #   - PRECALL+CALL 终结: ternary 是某 Call 的参数 → Expr(Call(...IfExp...))
+        #     (如 `with suppress((E1 if c else E2)): pass`)
+        #   - GET_AWAITABLE+... 终结: ternary 是 await 参数 → Expr(Await(IfExp))
+        #     (如 `async with await (a if c else b): pass`)
+        # 旧实现仅接受 Expr(IfExp)/Assign(IfExp)，导致 Call/Await 包裹的 ternary
+        # 退化为 fallback `context()`，丢失 suppress 名字与三元表达式。
+        # 依「父引用子入口」: 父引用子的 merge_block 出口，出口重建为何表达式，
+        # context_expr 即为何——_generate_ternary 是归约出口的权威重建者。
+        # 依「每块唯一归属」: merge_block 的指令（PRECALL+CALL+BEFORE_WITH 中
+        # PRECALL+CALL）归属 context_expr 表达式，BEFORE_WITH 是 with 语句边界。
+        # 普遍性: 覆盖 `with f(ternary):` / `with obj.m(ternary):` /
+        #   `async with await ternary:` / `with (ternary):` 等所有 ternary
+        #   作为 with 上下文管理器表达式子节点的形态。
+        if _t_node.get('type') == 'Expr':
+            _t_value = _t_node.get('value')
+            if isinstance(_t_value, dict) and _t_value.get('type'):
+                _t_expr = _t_value
+        elif _t_node.get('type') == 'Assign':
             # with (a if c else b) as x 不应走 Assign，但保守处理
-            _t_expr = _t_node['value']
-        elif (_t_node.get('type') == 'Expr'
-                and _t_node.get('value', {}).get('type') == 'Call'):
-            # [R19-03 fix] ternary 作为 Call 参数（如 open(a if c else b)）—
-            # _generate_ternary 产出 Expr(Call(open, [IfExp]))，整个 Call
-            # 即 with 的 context_expr。依「父引用子入口」: 父 WithRegion
-            # 通过 entry block 引用 TernaryRegion 归约出口（Call 包裹 IfExp）。
-            _t_expr = _t_node['value']
+            _t_value = _t_node.get('value')
+            if isinstance(_t_value, dict) and _t_value.get('type'):
+                _t_expr = _t_value
         if _t_expr is None:
             return _fallback
         # 标记 ternary region 的所有块为 generated，避免独立处理造成双重输出
@@ -13871,11 +14264,18 @@ AST 映射规则:
             body_stmts = []
             # [Round5-08] async with 的 `as x` 绑定检测：early pass
             # 字节码模式：BEFORE_ASYNC_WITH → GET_AWAITABLE → SEND/YIELD 循环
-            # → STORE_FAST x（as 绑定）→ body。
-            # SEND/YIELD 循环有时未被识别为 LoopRegion（无对应 LoopRegion 对象），
-            # 因此 region_analyzer 阶段无法填充 region.target。这里在主循环处理
-            # with_blocks 之前做一次 early detection：扫描 with_blocks[0]（SEND
-            # 跳出后的目标块）的首条 STORE_* 指令，作为 `as x` 绑定变量。
+            # → SEND 跳出目标块 → [STORE_FAST x（as 绑定）| POP_TOP（无 as）] → body。
+            #
+            # 依「每块唯一归属」+ SEND 语义: `as x` 绑定的 STORE_* 是 SEND 跳出
+            # 目标块的【首条】指令（若无 as 则为 POP_TOP）。该目标块是 async with
+            # body 的入口，即在 with_blocks 中 start_offset 最小的块。
+            #
+            # [Round5-08 根因修复] 旧实现遍历【所有】with_blocks 取首条 STORE_*，
+            # 会误将 body 内的赋值语句（如 ternary merge 块的 STORE_FAST y）
+            # 当作 `as x` 绑定，产生 `async with ctx: y = ...` →
+            # `async with ctx as y: ...` 的误判。
+            # 修正: 仅检查 with_blocks 中 start_offset 最小的块（SEND 跳出目标块），
+            # 其首条非噪声指令为 STORE_* → `as x`；为 POP_TOP 或其他 → 无 `as`。
             # 必须在主循环之前执行，否则主循环会把 STORE_FAST x 当作普通赋值
             # 语句处理，导致 body_stmts 非空，使后续的 fallback 检测被
             # `if region.is_async and not body_stmts` 闸门拦截。
@@ -13885,15 +14285,15 @@ AST 映射规则:
                     key=lambda b: b.start_offset,
                 )
                 _async_target_early = None
-                for _wb in _wb_blocks_early:
+                if _wb_blocks_early:
+                    _wb_first_block = _wb_blocks_early[0]
                     _wb_first = None
-                    for _instr in _wb.instructions:
+                    for _instr in _wb_first_block.instructions:
                         if _instr.opname not in ('RESUME', 'NOP', 'CACHE'):
                             _wb_first = _instr
                             break
                     if _wb_first and _wb_first.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
                         _async_target_early = _wb_first.argval
-                        break
                 if _async_target_early:
                     region.target = _async_target_early
                     if region.items:
@@ -14064,7 +14464,23 @@ AST 映射规则:
                                 body_stmts.extend(generated)
                             else:
                                 body_stmts.append(generated)
+                        # [R14-multi-with fix] 当 nested_region 是 TernaryRegion
+                        # 且其 merge_block 是某 WithRegion 的 entry 时，merge_block
+                        # 归属该 WithRegion（父引用子入口），不标记为 generated——
+                        # 否则 WithRegion 子区域处理检测到 child.entry in
+                        # generated_blocks 会跳过整个 WithRegion，导致 multi-with
+                        # 第二项整体丢失。依「每块唯一归属」: merge_block 归属
+                        # WithRegion，其余 ternary 块归属 TernaryRegion。
+                        _ternary_merge_is_with_entry = False
+                        if isinstance(nested_region, TernaryRegion) and nested_region.merge_block is not None:
+                            for _wr in self.regions:
+                                if (_wr is not nested_region and isinstance(_wr, WithRegion)
+                                        and _wr.entry is nested_region.merge_block):
+                                    _ternary_merge_is_with_entry = True
+                                    break
                         for b in nested_region.blocks:
+                            if _ternary_merge_is_with_entry and b is nested_region.merge_block:
+                                continue
                             self.generated_blocks.add(b)
                         if hasattr(nested_region, 'condition_block') and nested_region.condition_block:
                             self.generated_blocks.add(nested_region.condition_block)
@@ -14303,21 +14719,25 @@ AST 映射规则:
                 # 到 region.with_blocks[0]（async with 的 body 入口块，即 SEND
                 # 跳出后的目标块）查找首条 STORE_* 指令作为 `as x` 绑定变量。
                 # 字节码模式：BEFORE_ASYNC_WITH → GET_AWAITABLE → SEND/YIELD 循环
-                # → STORE_FAST x（as 绑定）→ body。
+                # → SEND 跳出目标块 → [STORE_FAST x（as 绑定）| POP_TOP（无 as）] → body。
+                #
+                # [Round5-08 根因修复] 与 early pass 同理: 仅检查 with_blocks 中
+                # start_offset 最小的块（SEND 跳出目标块），不遍历所有 with_blocks，
+                # 避免误将 body 内赋值（如 ternary merge 的 STORE_FAST y）当作 `as x`。
                 if region.target is None and region.is_async:
                     _wb_blocks = sorted(
                         (b for b in getattr(region, 'with_blocks', []) or []),
                         key=lambda b: b.start_offset,
                     )
-                    for _wb in _wb_blocks:
+                    if _wb_blocks:
+                        _wb_first_block = _wb_blocks[0]
                         _wb_first = None
-                        for _instr in _wb.instructions:
+                        for _instr in _wb_first_block.instructions:
                             if _instr.opname not in ('RESUME', 'NOP', 'CACHE'):
                                 _wb_first = _instr
                                 break
                         if _wb_first and _wb_first.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
                             _async_target = _wb_first.argval
-                            break
                     if _async_target:
                         region.target = _async_target
                         if region.items:
@@ -14682,58 +15102,9 @@ AST 映射规则:
                     continue
                 self.generated_blocks.add(block)
 
-            # [R19-02 fix] Pick up with-as subscript target from child
-            # TernaryRegion (set by _generate_ternary when the ternary is
-            # the subscript index of the with-as-target, e.g.
-            # `with ctx() as cm[(a if c else b)]: pass`).
-            # 依「父引用子入口」: 父 With 通过子 TernaryRegion 的
-            # with_as_subscript_target 引用 ternary 子节点入口。
-            for _cr in self.regions:
-                if (isinstance(_cr, TernaryRegion)
-                        and getattr(_cr, 'parent', None) is region
-                        and hasattr(_cr, 'with_as_subscript_target')):
-                    _was_t = getattr(_cr, 'with_as_subscript_target')
-                    if _was_t and region.items:
-                        region.items = [
-                            (_ci, _was_t) for _ci, _ct in region.items]
-                    break
-
-            # [R19-03 fix] multi-with 双 ternary cm: `with open(t1) as f,
-            # open(t2) as h: pass` 被 region_analyzer 拆分为嵌套
-            # WithRegion（parent + child），各 1 item。吸收子 WithRegion
-            # 的 items 到父 items 列表，通过 child.entry 引用子
-            # TernaryRegion。依「父引用子入口」: 父 WithRegion 引用子
-            # WithRegion 入口（= TernaryRegion.merge_block）作为额外
-            # with-item 的 context_expr 来源。
-            _absorbed_with_items = []  # (context_instrs, target, entry_block)
-            for _child in (region.children or []):
-                if not isinstance(_child, WithRegion) or _child is region:
-                    continue
-                if _child.entry is None:
-                    continue
-                _is_ternary_split = any(
-                    isinstance(_r, TernaryRegion) and _r is not region
-                    and _r.merge_block is _child.entry
-                    for _r in self.regions
-                )
-                if not _is_ternary_split:
-                    continue
-                _parent_blk_set = set(region.with_blocks or [])
-                _child_blk_set = set(_child.with_blocks or [])
-                if _child_blk_set and not _child_blk_set.issubset(_parent_blk_set):
-                    continue
-                for _ci, _ct in (_child.items or []):
-                    _absorbed_with_items.append((_ci, _ct, _child.entry))
-                for _b in _child.blocks:
-                    self.generated_blocks.add(_b)
-                self._generated_regions.add(id(_child))
-
-            _combined_with_items = [(ci, t, None) for ci, t in region.items]
-            _combined_with_items.extend(_absorbed_with_items)
-
             items = []
             pre_stmts = []
-            for context_instrs, target, _item_entry_block in _combined_with_items:
+            for context_instrs, target in region.items:
                     if context_instrs:
                         import_instrs = []
                         class_def_instrs = []
@@ -14832,11 +15203,9 @@ AST 映射规则:
                             # 父 WithRegion 通过 entry block 反向引用嵌套
                             # TernaryRegion 的归约结果作为 context_expr。
                             # 依「父引用子入口」：WithRegion.entry == TernaryRegion.merge_block。
-                            # [R19-03 fix] _item_entry_block 非 None 时为吸收的
-                            # 子 WithRegion item，用 child.entry 定位 TernaryRegion。
-                            context_expr = self._resolve_nested_ternary_context_expr(region, entry_block=_item_entry_block)
+                            context_expr = self._resolve_nested_ternary_context_expr(region)
                     else:
-                        context_expr = self._resolve_nested_ternary_context_expr(region, entry_block=_item_entry_block)
+                        context_expr = self._resolve_nested_ternary_context_expr(region)
 
                     item = {
                         'context_expr': context_expr,
@@ -15049,33 +15418,6 @@ AST 映射规则:
             # - 归约符合度：内层先识别、外层后识别的自底向上归约保证无遗漏
             if is_wildcard_match and body and len(body) == 1 and body[0] == region.subject_block:
                 body_start = region.case_body_start_indices.get(body[0].start_offset, 0)
-                # [R18-04 fix] Detect ternary guard in wildcard case.
-                # `case _ if (a if c else b):` — wildcard + ternary guard.
-                # The ternary condition is in the subject block (after POP_TOP),
-                # and each branch has a truthiness test (POP_JUMP_IF_FALSE → guard_fail).
-                # Build the ternary as the case guard (IfExp) and skip nested IfRegion.
-                # 依归约算法原则2「每块唯一归属」: guard 块归属 guard 表达式，
-                # 不作为 body 重复生成。原则3「嵌套即抽象节点」: ternary 作为
-                # guard 子表达式，通过 match_case.guard 引用。
-                if guard is None and body_start > 0:
-                    _tg = self._try_build_wildcard_ternary_guard(
-                        region, body[0], body_start)
-                    if _tg is not None:
-                        guard = _tg['guard']
-                        for _gb in _tg['guard_blocks']:
-                            self.generated_blocks.add(_gb)
-                        _body_blk = _tg.get('body_block')
-                        if _body_blk is not None and _body_blk not in self.generated_blocks:
-                            _body_stmts = self._generate_block_statements(_body_blk)
-                            for _s in _body_stmts:
-                                if (_s.get('type') == 'Expr' and isinstance(_s.get('value'), dict)
-                                        and _s['value'].get('type') == 'Constant'
-                                        and _s['value'].get('value') is None):
-                                    continue
-                                body_stmts.append(_s)
-                            self.generated_blocks.add(_body_blk)
-                        self.generated_blocks.add(body[0])
-                        body_start = 0  # Prevent nested region search
                 if body_start > 0:
                     body_instrs = body[0].instructions[body_start:] if body_start < len(body[0].instructions) else []
                     _non_noise = [i for i in body_instrs if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
@@ -15864,164 +16206,6 @@ AST 映射规则:
                 else:
                     guard_pattern_blocks.add(block)
         return guard_pattern_blocks
-
-    def _try_build_wildcard_ternary_guard(self, region, subject_block, body_start):
-        """Build a ternary guard for wildcard ``case _ if (ternary):``.
-
-        For ``match x: case _ if (a if c else b): pass``, the wildcard
-        case produces no MATCH_VALUE — the subject is discarded
-        (LOAD + POP_TOP) and the ternary condition follows in the same
-        subject block (after body_start). Each ternary branch (body /
-        orelse) is followed by a truthiness test
-        (POP_JUMP_IF_FALSE → guard_fail exit) because the ternary
-        result is consumed as the guard condition.
-
-        Bytecode structure::
-
-            blk@0 (subject):
-                RESUME / LOAD_NAME x / POP_TOP      ← subject discard
-                <cond expr> / POP_JUMP_IF_FALSE → orelse_blk
-            blk@body (fall-through):
-                <body expr> / POP_JUMP_IF_FALSE → guard_fail_body
-            blk@jump_fwd:
-                JUMP_FORWARD → case_body
-            blk@orelse (jump target):
-                <orelse expr> / POP_JUMP_IF_FALSE → guard_fail_orelse
-            blk@case_body:
-                <case body instructions>
-            blk@guard_fail_body, blk@guard_fail_orelse:
-                LOAD_CONST None / RETURN_VALUE
-
-        依归约算法原则2「每块唯一归属」: ternary condition / body /
-        orelse 块及 guard fail 出口块均归属 guard 表达式，不作为 body
-        重复生成。原则3「嵌套即抽象节点」: ternary 作为 guard 子表达式，
-        通过 match_case.guard 引用。
-
-        Returns ``{'guard': IfExp_dict, 'guard_blocks': set_of_blocks,
-        'body_block': actual_case_body_block}`` or ``None`` if the
-        structure does not match the expected ternary guard pattern.
-        """
-        instrs = subject_block.instructions
-        if body_start >= len(instrs):
-            return None
-
-        NOISE = ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')
-        COND_JUMP_FALSE = ('POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_IF_FALSE')
-
-        # 1. Extract ternary condition from subject_block[body_start:].
-        cond_real = [i for i in instrs[body_start:] if i.opname not in NOISE]
-        if len(cond_real) < 2:
-            return None
-        cond_jump = cond_real[-1]
-        if cond_jump.opname not in COND_JUMP_FALSE:
-            return None
-        cond_expr_instrs = cond_real[:-1]
-        if not cond_expr_instrs:
-            return None
-        orelse_offset = cond_jump.argval
-
-        # 2. Find the body (fall-through) and orelse (jump-target)
-        #    successor blocks of the subject block.
-        body_blk = None
-        orelse_blk = None
-        for succ in subject_block.successors:
-            if succ.start_offset == orelse_offset:
-                orelse_blk = succ
-            else:
-                body_blk = succ
-        if body_blk is None or orelse_blk is None:
-            return None
-
-        # 3. Verify body block: <expr instrs> + POP_JUMP_IF_FALSE → fail.
-        body_real = [i for i in body_blk.instructions if i.opname not in NOISE]
-        if not body_real:
-            return None
-        body_jump = body_real[-1]
-        if body_jump.opname not in COND_JUMP_FALSE:
-            return None
-        body_expr_instrs = body_real[:-1]
-        if not body_expr_instrs:
-            return None
-        body_fail_offset = body_jump.argval
-
-        # 4. Verify orelse block: <expr instrs> + POP_JUMP_IF_FALSE → fail.
-        orelse_real = [i for i in orelse_blk.instructions if i.opname not in NOISE]
-        if not orelse_real:
-            return None
-        orelse_jump = orelse_real[-1]
-        if orelse_jump.opname not in COND_JUMP_FALSE:
-            return None
-        orelse_expr_instrs = orelse_real[:-1]
-        if not orelse_expr_instrs:
-            return None
-        orelse_fail_offset = orelse_jump.argval
-
-        # 5. Identify the actual case body block.
-        #    - orelse_blk falls through directly to case_body (its
-        #      non-jump-target successor).
-        #    - body_blk falls through to a JUMP_FORWARD intermediate
-        #      that targets case_body.
-        case_body_blk = None
-        orelse_fail_blk = None
-        for succ in orelse_blk.successors:
-            if succ.start_offset == orelse_fail_offset:
-                orelse_fail_blk = succ
-            elif case_body_blk is None:
-                case_body_blk = succ
-        if case_body_blk is None:
-            return None
-
-        body_fail_blk = None
-        jump_fwd_blk = None
-        for succ in body_blk.successors:
-            if succ.start_offset == body_fail_offset:
-                body_fail_blk = succ
-            elif jump_fwd_blk is None:
-                jump_fwd_blk = succ
-
-        # Verify the JUMP_FORWARD intermediate (if present) targets
-        # the same case_body block identified from the orelse branch.
-        if jump_fwd_blk is not None:
-            jf_real = [i for i in jump_fwd_blk.instructions if i.opname not in NOISE]
-            if jf_real and jf_real[0].opname == 'JUMP_FORWARD':
-                jf_target = self.cfg.get_block_by_offset(jf_real[0].argval)
-                if jf_target is not None and jf_target is not case_body_blk:
-                    return None
-            elif jf_real and jf_real[-1].opname == 'JUMP_FORWARD':
-                jf_target = self.cfg.get_block_by_offset(jf_real[-1].argval)
-                if jf_target is not None and jf_target is not case_body_blk:
-                    return None
-
-        # 6. Build the IfExp using expr_reconstructor.
-        cond_expr = self.expr_reconstructor.reconstruct(cond_expr_instrs)
-        body_expr = self.expr_reconstructor.reconstruct(body_expr_instrs)
-        orelse_expr = self.expr_reconstructor.reconstruct(orelse_expr_instrs)
-        if cond_expr is None or body_expr is None or orelse_expr is None:
-            return None
-
-        ifexp = {
-            'type': 'IfExp',
-            'test': cond_expr,
-            'body': body_expr,
-            'orelse': orelse_expr,
-        }
-
-        # 7. Collect guard blocks: subject_block, body_blk, orelse_blk,
-        #    JUMP_FORWARD intermediate, and both guard fail exits.
-        #    All ternary-related control-flow blocks must be marked as
-        #    generated so the orphaned IfRegions (which share these
-        #    blocks) are skipped during top-level region generation
-        #    (依「每块唯一归属」).
-        guard_blocks = {subject_block, body_blk, orelse_blk}
-        if jump_fwd_blk is not None:
-            guard_blocks.add(jump_fwd_blk)
-        if body_fail_blk is not None:
-            guard_blocks.add(body_fail_blk)
-        if orelse_fail_blk is not None:
-            guard_blocks.add(orelse_fail_blk)
-
-        return {'guard': ifexp, 'guard_blocks': guard_blocks,
-                'body_block': case_body_blk}
 
     def _compute_body_block_start(self, block, pattern_store_names):
         instrs = block.instructions
@@ -16882,28 +17066,6 @@ AST 映射规则:
             if skip_elif_blocks and chain_block.start_offset in _elif_cond_offsets:
                 continue
             nested_ternary = self._try_build_nested_ternary_in_boolop(chain_block, region)
-            # [R20 cat3 fix] Chain block IS a TernaryRegion's merge_block:
-            # `(a if c else b) and (d if e else f)` — 第一个操作数的 ternary
-            # merge 即 boolop 的首个 chain block。chain block 本身只含短路跳转
-            # （JUMP_IF_FALSE_OR_POP/JUMP_IF_TRUE_OR_POP），值由 ternary 产生并
-            # 留栈。需识别该 ternary 子区域并构建 IfExp 作为操作数。
-            # 依「自底向上归约」: ternary 是内层抽象节点（IfExp），boolop 是父节点。
-            # 依「父引用子入口」: 父 BoolOp 通过 chain block 的短路跳转引用 ternary
-            #   子节点的 merge 入口（ternary 结果留栈供短路测试）。
-            # 依「每块唯一归属」: ternary 的 blocks 归 BoolOp 父表达式，不拆分为
-            #   独立 Expr 语句。
-            if nested_ternary is None:
-                for _tr in self.regions:
-                    if (isinstance(_tr, TernaryRegion)
-                            and _tr is not region
-                            and _tr.merge_block is chain_block):
-                        _t_ifexp = self._build_nested_ternary_expr(_tr)
-                        if _t_ifexp is not None:
-                            nested_ternary = _t_ifexp
-                            for _b in _tr.blocks:
-                                self.generated_blocks.add(_b)
-                            self._generated_regions.add(id(_tr))
-                        break
             # [CPython peephole P4 + P5 interaction] Chained compare as BoolOp
             # operand. See _try_build_chained_compare_in_boolop docstring.
             chained_compare_expr = self._try_build_chained_compare_in_boolop(chain_block, region)
@@ -17839,36 +18001,6 @@ AST 映射规则:
             instrs = instrs[:-1]
         if not instrs:
             return None
-        # [R18-12/R18-06 fix] ternary true/false value 是 await 表达式。
-        # CPython 展开 ``await <inner>`` 为 setup 块 (LOAD/CALL/GET_AWAITABLE/
-        # LOAD_CONST None) + poll 块 (SEND/YIELD_VALUE/RESUME/
-        # JUMP_BACKWARD_NO_INTERRUPT 自循环)。当值块含 GET_AWAITABLE 时，
-        # 内层表达式位于 GET_AWAITABLE 之前的指令，整体包装为 Await。
-        # 依「自底向上归约」: await 归约为 Await 抽象节点，ternary 引用其
-        #   作 true/false value。
-        # 依「每块唯一归属」: 值块(setup)归属 TernaryRegion 值上下文；轮询
-        #   块(poll, setup 的后继)是 await 实现细节，标记为已生成避免重复处理。
-        _await_idx = None
-        for _ai, _instr in enumerate(instrs):
-            if _instr.opname == 'GET_AWAITABLE':
-                _await_idx = _ai
-                break
-        if _await_idx is not None and _await_idx > 0:
-            _inner_instrs = instrs[:_await_idx]
-            _inner_expr = self.expr_reconstructor.reconstruct(_inner_instrs)
-            if _inner_expr is not None:
-                # 标记轮询块(setup 的后继中含 SEND+YIELD+JUMP_BACKWARD_NO_INTERRUPT)
-                # 为已生成，避免 _generate_block_statements 重复处理为独立语句。
-                for _succ in getattr(block, 'successors', []):
-                    _s_instrs = _succ.instructions
-                    if (any(i.opname == 'SEND' for i in _s_instrs)
-                            and any(i.opname == 'YIELD_VALUE' for i in _s_instrs)
-                            and any(i.opname == 'JUMP_BACKWARD_NO_INTERRUPT'
-                                    for i in _s_instrs)):
-                        self.generated_blocks.add(_succ)
-                        self.generated_offsets.add(_succ.start_offset)
-                        break
-                return {'type': 'Await', 'value': _inner_expr}
         return self.expr_reconstructor.reconstruct(instrs)
 
     def _build_nested_ternary_expr(self, region: TernaryRegion) -> Optional[Dict]:
@@ -17896,33 +18028,7 @@ AST 映射规则:
         last_cond = cond_block.get_last_instruction()
         if last_cond and last_cond.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS):
             cond_instrs = [i for i in cond_instrs if i != last_cond]
-        # [R18-08 fix] When this ternary's cond_block is also the merge_block of
-        # an outer chained ternary, the cond_block may contain a prefix of
-        # consumer instructions (e.g. BINARY_SUBSCR consuming the outer
-        # ternary's result to produce x[t1]). These prefix instructions belong
-        # to the outer ternary's consumer chain, not this ternary's condition.
-        # Use stack-effect backward walk to find the cond expr start and skip
-        # the prefix.
-        # 依「每块唯一归属」: prefix belongs to outer ternary consumer chain.
-        cond_expr_start = 0
-        if cond_instrs:
-            import dis as _dis
-            _needed = 1
-            _cstart = None
-            for _ci in range(len(cond_instrs) - 1, -1, -1):
-                _instr = cond_instrs[_ci]
-                try:
-                    _eff = _dis.stack_effect(_instr.opcode, _instr.arg)
-                except Exception:
-                    _eff = 0
-                _needed -= _eff
-                if _needed <= 0:
-                    _cstart = _ci
-                    break
-            if _cstart is not None and _cstart > 0:
-                cond_expr_start = _cstart
-        cond_expr_instrs = cond_instrs[cond_expr_start:]
-        cond_expr = self.expr_reconstructor.reconstruct(cond_expr_instrs) if cond_expr_instrs else None
+        cond_expr = self.expr_reconstructor.reconstruct(cond_instrs) if cond_instrs else None
         true_expr = self._build_ternary_value_expr(region.true_value_block)
         false_expr = self._build_ternary_value_expr(region.false_value_block)
         if cond_expr and true_expr and false_expr:
@@ -18431,6 +18537,17 @@ AST 映射规则:
                 false_expr = _nested_false_expr
         elif region.condition_chain_blocks and len(region.condition_chain_blocks) > 1:
             cond_expr = self._build_ternary_boolop_condition(region)
+        elif (getattr(region, 'chained_compare_ops', None)
+                and len(region.chained_compare_ops) >= 2
+                and getattr(region, 'chained_compare_blocks', None)):
+            # [Phase 7 方案 D] ternary 条件本身是 chained compare
+            # （如 `x = a if 0 < a < 10 else 0`）。复用 IfRegion 的
+            # _build_chained_compare_from_region_data 构建 Compare 节点。
+            # 判据基于 chained_compare_ops/Blocks 结构性属性，非实例特征。
+            cond_expr = self._build_chained_compare_from_region_data(region)
+            if cond_expr is not None:
+                for _cb in region.chained_compare_blocks:
+                    self.generated_blocks.add(_cb)
         else:
             cond_instrs_raw = [i for i in cond_block.instructions
                                if i.opname not in ('RESUME', 'NOP', 'CACHE')]
@@ -18463,6 +18580,41 @@ AST 映射规则:
                         if obj_i.opname.startswith('LOAD_'):
                             func_call_skip = push_null_idx + 2
 
+            # [R11-asyncio fix] CPython 3.11+ LOAD_GLOBAL with arg & 1 == 1
+            # pushes an implicit NULL before the value (function call
+            # convention). This is equivalent to PUSH_NULL + LOAD_GLOBAL.
+            # When no explicit PUSH_NULL was found, check for LOAD_GLOBAL
+            # with odd arg as the implicit NULL-push prefix.
+            # 字节码模式: LOAD_GLOBAL <func> (arg&1==1) [LOAD_ATTR <method>]
+            #            <cond_expr> POP_JUMP_IF_*
+            # func 是被调用的函数（如 asyncio.gather），cond_expr 是三元条件。
+            # 依「每块唯一归属」: func 前缀属于父 Call 的 preload，不属于三元条件。
+            if push_null_idx is None:
+                for idx, i in enumerate(cond_instrs_raw):
+                    if i is last_cond_instr:
+                        break
+                    if (i.opname == 'LOAD_GLOBAL' and i.arg is not None
+                            and i.arg & 1 == 1):
+                        # LOAD_GLOBAL with implicit NULL push — check if
+                        # followed by LOAD_ATTR (method/attribute access)
+                        _skip_to = idx + 1
+                        if (idx + 1 < len(cond_instrs_raw)
+                                and cond_instrs_raw[idx + 1].opname == 'LOAD_ATTR'):
+                            _skip_to = idx + 2
+                        # Verify there are meaningful instructions after the
+                        # skip (the actual condition expression)
+                        _has_meaningful_after = False
+                        for _fi in range(_skip_to, len(cond_instrs_raw)):
+                            _fi_instr = cond_instrs_raw[_fi]
+                            if _fi_instr is last_cond_instr:
+                                break
+                            if _fi_instr.opname not in ('PRECALL', 'CALL', 'NOP', 'CACHE'):
+                                _has_meaningful_after = True
+                                break
+                        if _has_meaningful_after:
+                            func_call_skip = _skip_to
+                        break
+
             # If after the skip, the only remaining instructions are PRECALL/CALL
             # (plus the final jump), then the function call IS the condition —
             # don't skip the PUSH_NULL + LOAD_* prefix.
@@ -18478,6 +18630,35 @@ AST 映射规则:
                 if not _has_meaningful_after_call:
                     func_call_skip = 0
 
+                # [R11-lambda fix] 当 LOAD_GLOBAL (隐式 NULL) 被 cond_block 内的
+                # PRECALL+CALL 直接消费时，该 LOAD_GLOBAL 是条件表达式自身的
+                # Call 函数（如 `valid(x) if valid(x) else None` 的 cond 是
+                # `valid(x)`），而非外层 Call 的前缀（如 `asyncio.gather(...)`
+                # 中 gather 是外层 Call，cond 是独立三元条件）。
+                # 区分判据（结构性，非实例特征）:
+                #   - 外层 Call 前缀: cond_block 内无 CALL 消费 LOAD_GLOBAL，
+                #     CALL 在 merge_block（如 `return await asyncio.gather(...)`)
+                #   - 条件自身 Call: cond_block 内有 PRECALL+CALL 消费 LOAD_GLOBAL
+                #     及其参数（如 `valid(x)` -> LOAD_GLOBAL valid + LOAD_FAST x
+                #     + PRECALL 1 + CALL 1）
+                # 旧逻辑仅检查"_skip 后是否全为 PRECALL/CALL"，但 `valid(x)` 的
+                # LOAD_FAST x 是"有意义的"非 PRECALL/CALL 指令，导致 _has_meaningful
+                # _after_call=True，func_call_skip 未重置，LOAD_GLOBAL valid 被错误
+                # 跳过，cond 退化为 LOAD_FAST x + PRECALL + CALL（无函数），
+                # reconstruct 返回 None，_generate_ternary 整体返回 None，
+                # lambda body 退化为 Constant(None)。
+                # 依「每块唯一归属」: cond_block 内的 LOAD_GLOBAL + 参数 + CALL
+                # 归属三元条件表达式（Call），不归属外层表达式前缀。
+                # 普遍性: 覆盖 `f(x) if cond else y` / `obj.m(x) if cond else y`
+                # 等所有条件本身是 Call 的三元形态。
+                if func_call_skip > 0:
+                    _has_call_in_cond = any(
+                        cond_instrs_raw[_fi].opname == 'CALL'
+                        for _fi in range(func_call_skip, len(cond_instrs_raw))
+                        if cond_instrs_raw[_fi] is not last_cond_instr)
+                    if _has_call_in_cond:
+                        func_call_skip = 0
+
                 # [R11-10 fix] If PUSH_NULL appears AFTER a STORE_NAME (statement
                 # boundary), the instructions before PUSH_NULL are predecessor
                 # statements (e.g., `def _m: ... \n m = partialmethod(_m, ternary)`
@@ -18488,10 +18669,11 @@ AST 映射规则:
                 # to their own AST nodes (FunctionDef/Assign), not the
                 # TernaryRegion's condition preload.
                 if func_call_skip > 0:
+                    _check_end = push_null_idx if push_null_idx is not None else func_call_skip
                     _has_store_before_push_null = any(
                         cond_instrs_raw[k].opname in (
                             'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
-                        for k in range(0, push_null_idx))
+                        for k in range(0, _check_end))
                     if _has_store_before_push_null:
                         func_call_skip = 0
 
@@ -18505,6 +18687,55 @@ AST 映射规则:
             i = 0
             while i < len(cond_instrs):
                 instr = cond_instrs[i]
+                # [R10 TypedDict fix] Handle class body annotation pattern in
+                # condition_block: `<ann_expr> + LOAD_NAME __annotations__ +
+                # LOAD_CONST <name> + STORE_SUBSCR`. This is `name: ann_expr`
+                # (AnnAssign without value) emitted by CPython for class body
+                # annotations (e.g. `title: str` in a TypedDict).
+                # 依「每块唯一归属」: annotation instructions belong to the
+                # AnnAssign predecessor statement, not the TernaryRegion's
+                # condition preload. Extract as pre-statement AnnAssign.
+                # Also skip SETUP_ANNOTATIONS (implicit class body init emitted
+                # once when annotations present; compiler regenerates it from
+                # AnnAssign nodes, so it must not leak into cond reconstruction).
+                if instr.opname == 'SETUP_ANNOTATIONS':
+                    cond_start_idx = i + 1
+                    i += 1
+                    continue
+                if (instr.opname == 'STORE_SUBSCR' and i >= 2
+                        and cond_instrs[i - 2].opname == 'LOAD_NAME'
+                        and cond_instrs[i - 2].argval == '__annotations__'
+                        and cond_instrs[i - 1].opname == 'LOAD_CONST'
+                        and isinstance(cond_instrs[i - 1].argval, str)):
+                    _ann_name = cond_instrs[i - 1].argval
+                    _ann_expr_instrs = list(cond_instrs[cond_start_idx:i - 2])
+                    _ann_annotation = None
+                    if _ann_expr_instrs:
+                        _ann_annotation = self.expr_reconstructor.reconstruct(
+                            _ann_expr_instrs)
+                    if _ann_annotation is None and len(_ann_expr_instrs) == 1:
+                        _l0 = _ann_expr_instrs[0]
+                        if _l0.opname in ('LOAD_NAME', 'LOAD_FAST',
+                                          'LOAD_GLOBAL', 'LOAD_DEREF'):
+                            _ann_annotation = {
+                                'type': 'Name',
+                                'id': _l0.argval,
+                                'ctx': 'Load',
+                            }
+                    if _ann_annotation is not None:
+                        pre_stmts.append({
+                            'type': 'AnnAssign',
+                            'target': {
+                                'type': 'Name',
+                                'id': _ann_name,
+                                'ctx': 'Store',
+                            },
+                            'annotation': _ann_annotation,
+                            'value': None,
+                        })
+                        cond_start_idx = i + 1
+                        i += 1
+                        continue
                 if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
                     # [R11-10 fix] Check if the predecessor range contains
                     # MAKE_FUNCTION. If so, the predecessor is a function/
@@ -18527,6 +18758,78 @@ AST 映射规则:
                         cond_instrs[k].opname == 'MAKE_FUNCTION'
                         for k in range(cond_start_idx, i))
                     if _has_mf_in_pred:
+                        # [R10-multi fix] 共享 block 的 ternary 归属判定。
+                        # 字节码模式: class body 中连续两个 ternary-default 函数
+                        #   @abstractmethod
+                        #   def m1(self, x=(a if c else b)): pass
+                        #   @abstractmethod
+                        #   def m2(self, y=(d if e else f)): pass
+                        # 编译器将 m1 的 merge consumer (BUILD_TUPLE + MAKE_FUNCTION
+                        # + PRECALL + CALL + STORE_NAME m1) 与 m2 的 cond prefix
+                        # (LOAD_NAME abstractmethod + LOAD_NAME e + POP_JUMP) 合并
+                        # 到同一基本块 (block 22)。两个 TernaryRegion 都将该块
+                        # 纳入 blocks 集合：ternary1 作 merge_block，ternary2 作
+                        # cond_block。
+                        # 旧逻辑: ternary2 的 pre_stmts 扫描遇到 STORE_NAME m1，
+                        # 检测到前序含 MAKE_FUNCTION，调用 _build_statements_from_instructions
+                        # 重建前序为独立语句。但前序在 ternary2 的栈视角下是空栈
+                        # (BUILD_TUPLE 1 无栈输入 → Tuple([]))，MAKE_FUNCTION 1
+                        # 消费 Tuple([]) 作 defaults (空) → 无默认值，CALL 0 调用
+                        # Tuple([]) 作装饰器 → 生成幽灵 `@() def m1(self, x)`。
+                        # 依「每块唯一归属」: 前序 BUILD_TUPLE + MAKE_FUNCTION +
+                        # CALL + STORE 属于 ternary1 的 merge consumer，由 ternary1
+                        # 的 dispatch 生成 FunctionDef m1 (带正确 default + decorator)。
+                        # ternary2 不应重复生成。判定: cond_block 是否为另一个
+                        # TernaryRegion 的 merge_block。若是，则前序归属该 ternary，
+                        # 跳过 (不生成 phantom)，仅推进 cond_start_idx 到 STORE 之后，
+                        # 让后续 preload/cond 扫描从 ternary2 自身拥有的指令开始。
+                        # 普遍性: 覆盖任意数量的连续 ternary-default 函数 (m1/m2/m3...)
+                        # 共享 merge→cond 边界块的场景。对照 R11-partialmethod case
+                        # (`def _m: ...; m = partialmethod(_m, ternary)`): 该场景下
+                        # _m 的 def 在独立块，cond_block 不是另一 ternary 的 merge_block，
+                        # 走原有 _build_statements_from_instructions 路径生成 FunctionDef _m。
+                        _cond_block_is_other_ternary_merge = False
+                        for _other_r in self.regions:
+                            if (_other_r is not region
+                                    and isinstance(_other_r, TernaryRegion)
+                                    and getattr(_other_r, 'merge_block', None) is cond_block):
+                                _cond_block_is_other_ternary_merge = True
+                                break
+                        if _cond_block_is_other_ternary_merge:
+                            cond_start_idx = i + 1
+                            i += 1
+                            continue
+                        _pred_instrs = list(cond_instrs[cond_start_idx:i + 1])
+                        _pred_stmts = self._build_statements_from_instructions(
+                            _pred_instrs)
+                        pre_stmts.extend(_pred_stmts)
+                        cond_start_idx = i + 1
+                        i += 1
+                        continue
+
+                    # [R11-contextlib fix] Handle import statements in
+                    # condition_block: `from contextlib import suppress`
+                    # emits LOAD_CONST + IMPORT_NAME + IMPORT_FROM + STORE_NAME.
+                    # The simple LOAD_* backward scan below can't reconstruct
+                    # imports. Use _build_statements_from_instructions for the
+                    # full predecessor range when IMPORT_NAME is present.
+                    # 依「每块唯一归属」: import instructions belong to the
+                    # Import predecessor statement, not the TernaryRegion.
+                    # [R11-version fix] 若 cond_block 的 import 前缀已被
+                    # generate() 预扫描提取（entry_block 是 TernaryRegion entry
+                    # 时），此处仅推进 cond_start_idx 跳过 import 指令，不重复
+                    # 抽取（否则 `import sys` 出现两次）。依「每块唯一归属」:
+                    # import 指令归属 generate() 预扫描，ternary 仅拥有 cond
+                    # preload。
+                    _has_import_in_pred = any(
+                        cond_instrs[k].opname in ('IMPORT_NAME', 'IMPORT_FROM')
+                        for k in range(cond_start_idx, i))
+                    if _has_import_in_pred:
+                        if cond_block in self._entry_import_extracted_blocks:
+                            # import 已由 generate() 提取，仅推进游标跳过。
+                            cond_start_idx = i + 1
+                            i += 1
+                            continue
                         _pred_instrs = list(cond_instrs[cond_start_idx:i + 1])
                         _pred_stmts = self._build_statements_from_instructions(
                             _pred_instrs)
@@ -18566,46 +18869,6 @@ AST 映射规则:
                 filtered_cond.append(instr)
 
             cond_expr = self.expr_reconstructor.reconstruct(filtered_cond)
-
-            # [R17-10 fix] await in ternary condition: ``x = a if await g() else b``
-            # CPython 展开 await 为 setup_block (LOAD/CALL/GET_AWAITABLE/LOAD_CONST
-            # None) + poll_block (SEND/YIELD_VALUE/RESUME/JUMP_BACKWARD_NO_INTERRUPT
-            # 自循环) + cond_block (POP_JUMP_IF_FALSE truthy 测试)。cond_block
-            # 本身只有 POP_JUMP_IF_FALSE，await 内层表达式位于 setup_block 中
-            # GET_AWAITABLE 之前。当 cond_block 无有效指令（filtered_cond 为空
-            # 或 reconstruct 返回 None）时，沿前驱链检测 await 模式并重建
-            # ``Await(value=<inner_expr>)`` 作为 ternary test。
-            # 依「自底向上归约」: await 归约为 Await 抽象节点，ternary 引用其
-            #   作为 test。
-            # 依「父引用子入口」: ternary cond_block 的前驱 setup_block/poll_block
-            #   是 await 表达式的实现细节，归属 ternary 条件，不拆分为独立语句。
-            # 依「每块唯一归属」: setup_block/poll_block 归属 TernaryRegion 条件
-            #   上下文，标记为已生成避免重复处理。
-            if cond_expr is None and hasattr(self.region_analyzer, '_collect_await_predecessor_chain'):
-                _await_chain = self.region_analyzer._collect_await_predecessor_chain(cond_block)
-                if _await_chain:
-                    _poll_blk = _await_chain[0]
-                    _setup_blk = _await_chain[1] if len(_await_chain) > 1 else None
-                    if _setup_blk is not None:
-                        _setup_instrs = [i for i in _setup_blk.instructions
-                                         if i.opname not in ('RESUME', 'NOP', 'CACHE',
-                                                             'PUSH_NULL', 'POP_TOP')]
-                        _cutoff = None
-                        for _ai_idx, _ai_instr in enumerate(_setup_instrs):
-                            if _ai_instr.opname == 'GET_AWAITABLE':
-                                _cutoff = _ai_idx
-                                break
-                        if _cutoff is not None and _cutoff > 0:
-                            _inner_instrs = _setup_instrs[:_cutoff]
-                            _inner_expr = self.expr_reconstructor.reconstruct(_inner_instrs)
-                            if _inner_expr is not None:
-                                cond_expr = {'type': 'Await', 'value': _inner_expr}
-                                # 标记 await 块为已生成，避免 _generate_block_statements
-                                # 重复处理为独立 Expr(await ...) 语句
-                                self.generated_blocks.add(_setup_blk)
-                                self.generated_blocks.add(_poll_blk)
-                                self.generated_offsets.add(_setup_blk.start_offset)
-                                self.generated_offsets.add(_poll_blk.start_offset)
 
         # [R13-batch2] 仅当 _nested_* 未预构建时，从 innermost true/false block 重建。
         if true_expr is None:
@@ -18679,70 +18942,12 @@ AST 映射规则:
                 'orelse': false_expr,
             }
 
-            # [R19-02 fix] Ternary as with-as subscript target:
-            # `with ctx() as cm[(a if c else b)]: pass`
-            # The ternary's merge_block has STORE_SUBSCR (the with-as
-            # binding), and the ternary's parent is a WithRegion. The
-            # cond_block preload has the subscript base (LOAD_NAME cm).
-            # Build the as-target as Subscript(Name(base), IfExp, Store)
-            # and store it on the region for the with region to pick up.
-            # Return empty body stmts — the ternary is an abstract node
-            # nested inside the with-as-target, not a standalone statement.
-            # 依「嵌套即抽象节点」: ternary 是 with-as-target 的内层节点。
-            # 依「父引用子入口」: 父 With 通过 merge_block 的 STORE_SUBSCR
-            # 引用 ternary 子节点（作 subscript index）。
-            if (region.merge_block is not None
-                    and not region.value_target
-                    and isinstance(getattr(region, 'parent', None),
-                                   WithRegion)):
-                _was_eff = [i for i in region.merge_block.instructions
-                            if i.opname not in (
-                                'RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                while _was_eff and _was_eff[-1].opname == 'RETURN_VALUE':
-                    _was_eff.pop()
-                    if (_was_eff and _was_eff[-1].opname == 'LOAD_CONST'
-                            and _was_eff[-1].argval is None):
-                        _was_eff.pop()
-                if (len(_was_eff) == 1
-                        and _was_eff[0].opname == 'STORE_SUBSCR'):
-                    _was_preload = self._compute_ternary_cond_preload_exprs(
-                        region)
-                    if _was_preload and len(_was_preload) >= 1:
-                        _was_base = _was_preload[0]
-                        _was_target = {
-                            'type': 'Subscript',
-                            'value': _was_base,
-                            'slice': ternary_expr,
-                            'ctx': 'Store',
-                        }
-                        region.with_as_subscript_target = _was_target
-                        for block in region.blocks:
-                            self.generated_blocks.add(block)
-                        return list(pre_stmts)
-
             results = list(pre_stmts)
             if skip_store_targets:
                 results = [s for s in results
                            if not (s.get('type') == 'Assign' and
                                    s.get('targets', [{}])[0].get('id') in skip_store_targets)]
             merge_ctx = getattr(region, 'merge_context', None)  # Phase 12: 获取merge上下文
-
-            # [R19-06/07] Single ternary in tuple unpack with mixed constant
-            # elements: `x, y = c, (a if d else b)`. merge_block has SWAP N
-            # (N > 1) + N×STORE_* but only 1 ternary element. Check this
-            # BEFORE the value_target/preload reconstruction path overwrites
-            # ternary_expr with the preload constant.
-            # 依「父引用子入口」: 父 Assign(tuple-unpack) 通过 merge_block
-            # 的 SWAP N + N×STORE_* 引用 ternary 子节点 + 常量元素。
-            if (merge_ctx == 'store' and region.merge_block is not None
-                    and region.value_target is not None):
-                _tuple_unpack = self._try_build_ternary_tuple_unpack_mixed(
-                    region, ternary_expr)
-                if _tuple_unpack is not None:
-                    results.append(_tuple_unpack)
-                    for block in region.blocks:
-                        self.generated_blocks.add(block)
-                    return results
 
             # [Cluster 4] Ternary as first operand of BoolOp `and` condition.
             # When merge_ctx is None and merge_block is None, the ternary's
@@ -18786,6 +18991,93 @@ AST 映射规则:
             if _nested_if_node is not None:
                 results.append(_nested_if_node)
                 return results
+
+            # [R11-asyncio/with fix] merge_ctx=None, value_target=None,
+            # merge_block present: ternary result is consumed by merge_block
+            # consumer ops (CALL / GET_AWAITABLE / BEFORE_WITH / BUILD_* etc.)
+            # without a STORE_* sink. The ternary is an inner sub-expression of
+            # a larger expression (Call arg, await operand, with context, etc.).
+            # 字节码模式: <cond_block preload> + <ternary branches> + <merge_block
+            #            consumer ops (CALL/GET_AWAITABLE/BEFORE_WITH/...)>
+            # 依「自底向上归约」: ternary 是内层抽象节点，外层 CALL/AWAIT/WITH
+            # 通过 merge_block 的消费指令引用 ternary 子节点。
+            # 依「父引用子入口」: 父表达式通过 merge_block 的消费指令入口
+            # 引用 ternary 子节点。
+            # 依「每块唯一归属」: merge_block 的消费指令归属 TernaryRegion 父表达式。
+            # 普遍性: 覆盖 ternary 作为 Call 参数 / await 操作数 / with 上下文 /
+            #   raise 参数 / yield 值等所有无 STORE sink 的场景。
+            #   - return await asyncio.gather((f() if c else g()), h())
+            #   - with suppress((E1 if c else E2)): pass
+            #   - with a as x, (b if c else d) as y: pass
+            # 先尝试 _try_build_ternary_merge_consumer_expr（处理 CALL/BUILD_*
+            # 等复合消费指令），再尝试 _build_ternary_no_target_consumer_stmt
+            # （处理 assert/raise/yield/await 等语句级消费）。
+            if (merge_ctx is None and not region.value_target
+                    and region.merge_block is not None):
+                _merge_consumer_expr = self._try_build_ternary_merge_consumer_expr(
+                    region, ternary_expr)
+                if _merge_consumer_expr is not None:
+                    _merge_last = None
+                    if region.merge_block:
+                        _merge_last = region.merge_block.get_last_instruction()
+                    _extra_blocks = getattr(region, 'merge_extra_blocks', None) or []
+                    _has_return_sink = False
+                    if _merge_last and _merge_last.opname in (
+                            'RETURN_VALUE', 'RETURN_CONST'):
+                        _has_return_sink = True
+                    for _eb in _extra_blocks:
+                        _eb_last = _eb.get_last_instruction()
+                        if _eb_last and _eb_last.opname in (
+                                'RETURN_VALUE', 'RETURN_CONST'):
+                            _has_return_sink = True
+                            break
+                    # [R11-asyncio fix] For await pattern (GET_AWAITABLE in
+                    # merge_block), check successor blocks for the polling
+                    # loop (SEND/YIELD_VALUE) and consume block (RETURN_VALUE).
+                    # The consume block determines if the result is returned.
+                    if not _has_return_sink and region.merge_block:
+                        _mb_instrs = [i.opname for i in region.merge_block.instructions]
+                        if 'GET_AWAITABLE' in _mb_instrs:
+                            for _succ in region.merge_block.successors:
+                                _succ_instrs = [i.opname for i in _succ.instructions]
+                                if 'SEND' in _succ_instrs:
+                                    # Polling loop block — check its SEND target
+                                    for _si in _succ.instructions:
+                                        if _si.opname == 'SEND':
+                                            _cb = self.cfg.get_block_by_offset(_si.argval)
+                                            if _cb:
+                                                _cb_last = _cb.get_last_instruction()
+                                                if _cb_last and _cb_last.opname in (
+                                                        'RETURN_VALUE', 'RETURN_CONST'):
+                                                    _has_return_sink = True
+                                                    # Mark polling loop + consume
+                                                    # block as generated to prevent
+                                                    # duplicate statement gen.
+                                                    self.generated_blocks.add(_succ)
+                                                    self.generated_blocks.add(_cb)
+                                                    for _succ2 in _cb.successors:
+                                                        self.generated_blocks.add(_succ2)
+                                                    break
+                                    if _has_return_sink:
+                                        break
+                    if _has_return_sink:
+                        results.append({'type': 'Return', 'value': _merge_consumer_expr})
+                    else:
+                        results.append({'type': 'Expr', 'value': _merge_consumer_expr})
+                    for block in region.blocks:
+                        self.generated_blocks.add(block)
+                    return results
+                _consumer_stmt = self._build_ternary_no_target_consumer_stmt(
+                    region, ternary_expr)
+                if _consumer_stmt is not None:
+                    results.append(_consumer_stmt)
+                    _post_extra = getattr(
+                        region, 'post_consumer_extra_stmts', None)
+                    if _post_extra:
+                        results.extend(_post_extra)
+                    for block in region.blocks:
+                        self.generated_blocks.add(block)
+                    return results
 
             # Phase 12修复: 根据merge_context决定输出格式（保守策略）
             if merge_ctx == 'iter':
@@ -18843,34 +19135,6 @@ AST 映射规则:
                             and _iter_consumer['value'].get('type') in (
                                 'List', 'Tuple', 'Set', 'Dict', 'Call')):
                         _iter_expr = _iter_consumer['value']
-                # [R18-05/09 fix] For/async-for iter is subscript with ternary
-                # index: `for x in y[(a if c else b)]: pass` /
-                # `async for x in y[(a if c else b)]: pass`.
-                # 字节码: cond preload LOAD y; ternary; merge: BINARY_SUBSCR,
-                # GET_ITER (or GET_AITER). _try_build_ternary_merge_consumer_expr
-                # doesn't trigger on BINARY_SUBSCR alone. Reconstruct the
-                # Subscript(y, ternary) expression using preload + ternary as
-                # initial stack, processing only the BINARY_SUBSCR instruction.
-                # 依「父引用子入口」: 父 For/AsyncFor 通过 merge_block 的
-                # BINARY_SUBSCR+GET_ITER 引用 ternary 子节点作为 subscript index.
-                # 依「每块唯一归属」: BINARY_SUBSCR+GET_ITER 消费链归属 TernaryRegion
-                # 父表达式，不拆分为独立语句.
-                if _iter_expr is None and region.merge_block is not None:
-                    _mb_iter = [i for i in region.merge_block.instructions
-                                if i.opname not in ('RESUME', 'NOP', 'CACHE',
-                                                    'PUSH_NULL')]
-                    if any(i.opname == 'BINARY_SUBSCR' for i in _mb_iter):
-                        _iter_preload = self._compute_ternary_cond_preload_exprs(region)
-                        _iter_init = list(_iter_preload) + [ternary_expr]
-                        _iter_recon = self.expr_reconstructor.reconstruct(
-                            [i for i in _mb_iter
-                             if i.opname in ('BINARY_SUBSCR', 'LOAD_ATTR',
-                                             'LOAD_METHOD', 'PRECALL', 'CALL',
-                                             'BUILD_SLICE', 'BUILD_TUPLE',
-                                             'BUILD_LIST', 'BUILD_MAP')],
-                            initial_stack=_iter_init)
-                        if _iter_recon is not None:
-                            _iter_expr = _iter_recon
                 _fc_info_iter = getattr(region, 'func_call_info', None)
                 if _fc_info_iter:
                     _iter_call_args = (list(_fc_info_iter.get('args', []))
@@ -18890,26 +19154,30 @@ AST 映射规则:
     
             elif merge_ctx == 'compare':
                 # if/while条件: 生成Expr(IfExp)，由条件语句生成器使用
-                # [R16-06 fix] Chained compare middle ternary:
-                # `a < (b if c else d) < e` 字节码结构:
-                #   cond_block preload: LOAD a (left operand)
+                # [Phase 7 方案 D] Chained compare 中 ternary 处于任意非末尾位置:
+                #   LEFT:   `(ternary) op1 R1 op2 R2`
+                #   MIDDLE: `L op1 (ternary) op2 R2`
+                # 字节码结构 (SWAP 2 + COPY 2 + COMPARE_OP + JUMP_IF_FALSE_OR_POP
+                # 是 chained compare 操作码签名):
+                #   cond_block preload: [LOAD L]  (MIDDLE 非空; LEFT 为空)
                 #   ternary: produces ternary_result
-                #   merge_block: SWAP 2, COPY 2, COMPARE_OP op1,
+                #   merge_block: [LOAD R1], SWAP 2, COPY 2, COMPARE_OP op1,
                 #                JUMP_IF_FALSE_OR_POP to cleanup
-                #   fallthrough: LOAD right, COMPARE_OP op2,
+                #                (LEFT 时 merge 开头有 LOAD R1; MIDDLE 时无)
+                #   fallthrough: LOAD R2, COMPARE_OP op2,
                 #                [POP_TOP | STORE_* | RETURN_VALUE]
                 #   cleanup_block: SWAP 2, POP_TOP, POP_TOP, ...
                 # 依「自底向上归约」: ternary 是内层抽象节点（IfExp），外层
-                # Compare 是父节点，通过 cond preload + merge_block COMPARE_OP +
-                # fallthrough COMPARE_OP 引用 ternary 子节点作为中间操作数。
-                # 依「父引用子入口」: 父 Compare 通过 cond preload 的 left +
-                # merge_block 的 COMPARE_OP + fallthrough 的 COMPARE_OP 引用
+                # Compare 是父节点，通过 preload/merge LOAD + COMPARE_OP 链引用
                 # ternary 子节点。
-                # 依「每块唯一归属」: cond preload (left) + merge_block 的 SWAP/
-                # COPY/COMPARE_OP/JUMP_IF_FALSE_OR_POP + fallthrough 的 LOAD/
+                # 依「父引用子入口」: 父 Compare 通过 preload (MIDDLE left) /
+                # merge_block SWAP 前 LOAD (LEFT R1) + merge COMPARE_OP +
+                # fallthrough LOAD (R2) + COMPARE_OP 引用 ternary 子节点。
+                # 依「每块唯一归属」: preload + merge_block 的 SWAP/COPY/
+                # COMPARE_OP/JUMP_IF_FALSE_OR_POP + fallthrough 的 LOAD/
                 # COMPARE_OP/POP_TOP 全部归属 TernaryRegion 父表达式（Expr/
                 # Return/Assign），不拆分为独立语句。
-                _chained_cmp_stmt = self._try_build_ternary_chained_compare_middle(
+                _chained_cmp_stmt = self._try_build_ternary_chained_compare(
                     region, ternary_expr)
                 if _chained_cmp_stmt is not None:
                     results.append(_chained_cmp_stmt)
@@ -18927,29 +19195,7 @@ AST 映射规则:
                 
             elif merge_ctx == 'return':
                 # lambda/嵌套return: 直接返回Return(IfExp)
-                # [R17-03 fix] 若 metadata 含 binop_await_op，ternary 是
-                # BinOp 的左操作数，右操作数是 await <inner>。重建完整
-                # ``Return(BinOp(left=IfExp, op=<op>, right=Await(<inner>)))``。
-                _ba_op = region.metadata.get('binop_await_op') if region.metadata else None
-                if _ba_op is not None:
-                    _ba_inner_instrs = region.metadata.get('binop_await_inner_instrs')
-                    _ba_inner_expr = None
-                    if _ba_inner_instrs is not None:
-                        _ba_inner_expr = self.expr_reconstructor.reconstruct(
-                            list(_ba_inner_instrs))
-                    if _ba_inner_expr is not None:
-                        _ba_op_str = self._binary_op_arg_to_str(_ba_op)
-                        _ba_value = {
-                            'type': 'BinOp',
-                            'left': ternary_expr,
-                            'op': _ba_op_str,
-                            'right': {'type': 'Await', 'value': _ba_inner_expr},
-                        }
-                        results.append({'type': 'Return', 'value': _ba_value})
-                    else:
-                        results.append({'type': 'Return', 'value': ternary_expr})
-                else:
-                    results.append({'type': 'Return', 'value': ternary_expr})
+                results.append({'type': 'Return', 'value': ternary_expr})
 
             elif merge_ctx == 'while_cond':
                 # while条件中的ternary: 生成Expr(IfExp)，由while循环生成器提取使用。
@@ -19323,23 +19569,10 @@ AST 映射规则:
                                 # its output is ternary-derived, NOT a preload
                                 # item. Only keep BUILD result in preload when
                                 # all consumed items came from preload.
-                                # [R17-09 fix] Group consumed items + BUILD
-                                # as a list so reconstruct builds the container
-                                # WITH its elements (e.g. LOAD_CONST 1 +
-                                # BUILD_LIST 1 → List([1])), instead of
-                                # dropping them and producing an empty List.
-                                # 依「父引用子入口」: 父 Tuple 通过 cond
-                                # preload (List([1])) + merge (LIST_EXTEND +
-                                # LIST_APPEND + LIST_TO_TUPLE) 引用 ternary。
                                 _arity = _ki.arg or 0
-                                if _ki.opname == 'BUILD_MAP':
-                                    # BUILD_MAP n consumes 2*n stack items
-                                    # (n key-value pairs), not n.
-                                    _arity = _arity * 2
                                 if _arity > 0 and len(_preload_instrs) >= _arity:
-                                    _consumed = _preload_instrs[-_arity:]
                                     _preload_instrs = _preload_instrs[:-_arity]
-                                    _preload_instrs.append(_consumed + [_ki])
+                                    _preload_instrs.append(_ki)
                                 elif _arity == 0:
                                     _preload_instrs.append(_ki)
                                 # else: BUILD consumed the ternary result;
@@ -19383,35 +19616,6 @@ AST 映射规则:
                                     _preload_instrs.append(_bounds + [_ki])
                                 # else: BUILD_SLICE consumed the ternary result;
                                 # don't append (output is ternary-derived).
-                            elif _ki.opname in ('DICT_UPDATE', 'LIST_EXTEND',
-                                                'SET_UPDATE'):
-                                # [R17-05 fix] Container unpacking in preload:
-                                # BUILD_MAP 0 + LOAD_NAME d + DICT_UPDATE 1
-                                # folds **d into the Dict. Group the target
-                                # container + source(s) + update instruction
-                                # so reconstruct builds Dict/List/Set with
-                                # proper Starred entries. Without this, the
-                                # *_UPDATE is silently dropped and the source
-                                # (e.g. **d) is lost from the output.
-                                # 依「每块唯一归属」: cond_block 的
-                                # *_UPDATE 消费链 (target + source + update)
-                                # 整体归属 TernaryRegion 父表达式 (Dict)。
-                                _count = _ki.arg or 1
-                                _grouped = [_ki]
-                                for _ in range(_count):
-                                    if _preload_instrs:
-                                        _src = _preload_instrs.pop()
-                                        if isinstance(_src, list):
-                                            _grouped = _src + _grouped
-                                        else:
-                                            _grouped.insert(0, _src)
-                                if _preload_instrs:
-                                    _tgt = _preload_instrs.pop()
-                                    if isinstance(_tgt, list):
-                                        _grouped = _tgt + _grouped
-                                    else:
-                                        _grouped.insert(0, _tgt)
-                                _preload_instrs.append(_grouped)
                             # Other ops (e.g. PRECALL/CALL for prior decorator
                             # applications) are not preload-relevant; ignore.
                         _preload_stack = []
@@ -19839,23 +20043,6 @@ AST 映射规则:
                                                     # （如 `x = (ternary) is None` / `x = (ternary) in coll`）。
                                                     'IS_OP', 'CONTAINS_OP')
                                      for i in before_store)
-                        # [R18-13 fix] Ternary as callable with kwargs in store
-                        # context: `x = (a if c else b)(key=val)` compiles to
-                        # merge: LOAD val, KW_NAMES, PRECALL 1, CALL 1, STORE x.
-                        # func_call_info is None (ternary IS the callable, not an
-                        # arg), so the func_call_info path doesn't fire. has_ops
-                        # also misses KW_NAMES/PRECALL/CALL. Detect ternary-as-
-                        # callable explicitly: no func_call_info + CALL in
-                        # before_store + no LOAD_METHOD (receiver handled above).
-                        # 依「父引用子入口」: 父 Assign 通过 merge_block 的
-                        # KW_NAMES+PRECALL+CALL 引用 ternary 子节点（func 槽位）。
-                        # 依「每块唯一归属」: CALL 消费链归属 TernaryRegion 父表达式.
-                        if (not has_ops and not func_call_info
-                                and not preload_exprs
-                                and any(i.opname == 'CALL' for i in before_store)
-                                and not any(i.opname == 'LOAD_METHOD'
-                                            for i in before_store)):
-                            has_ops = True
                         if has_ops or preload_exprs:
                             full_expr = self.expr_reconstructor.reconstruct(before_store, initial_stack=initial_stack)
                             if full_expr:
@@ -20138,131 +20325,6 @@ AST 映射规则:
                             for block in region.blocks:
                                 self.generated_blocks.add(block)
                             return results
-                # [R20 cat2 fix] Walrus(ternary) consumed by STORE_SUBSCR /
-                # STORE_ATTR: `obj.attr = (n := ternary)` /
-                # `x[(n := ternary)] = y` / `d[k] = (n := ternary)`.
-                # Pattern: COPY 1 + STORE_* (walrus) + [LOAD obj/key]? +
-                # STORE_SUBSCR|STORE_ATTR. walrus 的 COPY 1 复制 ternary 结果
-                # 留栈（供 STORE_* 消费），STORE n 绑定 walrus 变量，随后
-                # STORE_SUBSCR/STORE_ATTR 消费 walrus(ternary) 作为赋值目标侧
-                # （key/obj）或右值（value）。
-                # 依「嵌套即抽象节点」: walrus NamedExpr(n, IfExp) 作为单个抽象
-                # 节点，包含 ternary IfExp 作 value。父 Assign 通过 merge_block
-                # 的 COPY+STORE+STORE_* 引用 walrus(ternary) 子节点。
-                # 依「父引用子入口」: 父 Assign 通过 cond_block preload (value/
-                # obj) + merge_block 的 STORE_* 引用 walrus(ternary) 入口。
-                # 依「每块唯一归属」: walrus 的 COPY+STORE 与外层 STORE_* 全部
-                # 归属 TernaryRegion 父 Assign，不拆分为独立语句。
-                # 否则 R8-04 walrus 分支会输出 `n = (ternary)`（丢失 STORE_*
-                # 消费），重编字节码缺失 STORE_SUBSCR/STORE_ATTR。
-                if (store_idx is not None and store_idx > 0
-                        and merge_all[store_idx - 1].opname == 'COPY'
-                        and merge_all[store_idx - 1].arg == 1
-                        and region.merge_block is not None):
-                    _wc_after = merge_all[store_idx + 1:]
-                    _wc_scan = list(_wc_after)
-                    while _wc_scan and _wc_scan[-1].opname == 'RETURN_VALUE':
-                        _wc_scan.pop()
-                        if (_wc_scan and _wc_scan[-1].opname == 'LOAD_CONST'
-                                and _wc_scan[-1].argval is None):
-                            _wc_scan.pop()
-                    _wc_has_store_consumer = any(
-                        i.opname in ('STORE_SUBSCR', 'STORE_ATTR')
-                        for i in _wc_scan)
-                    if _wc_has_store_consumer:
-                        _wc_target_name = merge_all[store_idx].argval
-                        _wc_walrus_value = {
-                            'type': 'NamedExpr',
-                            'target': {
-                                'type': 'Name',
-                                'id': _wc_target_name,
-                                'ctx': 'Store',
-                            },
-                            'value': ternary_expr,
-                        }
-                        # 找最后一个 STORE_SUBSCR/STORE_ATTR 消费点
-                        _wc_consumer_idx = None
-                        for _wci in range(len(_wc_scan) - 1, -1, -1):
-                            if _wc_scan[_wci].opname in (
-                                    'STORE_SUBSCR', 'STORE_ATTR'):
-                                _wc_consumer_idx = _wci
-                                break
-                        _wc_consumer = _wc_scan[_wc_consumer_idx]
-                        _wc_before = [i for i in _wc_scan[:_wc_consumer_idx]
-                                      if i.opname not in (
-                                          'RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                        _wc_built = None
-                        if _wc_consumer.opname == 'STORE_ATTR':
-                            # Pattern A: walrus(ternary) 是 value；
-                            # _wc_before 含 obj load。
-                            # 栈: [walrus_value] + _wc_before → [..., obj]
-                            # STORE_ATTR 消费 [value, obj] → obj.attr = value
-                            self.expr_reconstructor.reset()
-                            self.expr_reconstructor.stack = [_wc_walrus_value]
-                            for _winst in _wc_before:
-                                self.expr_reconstructor._process_instruction(_winst)
-                            _wc_rs = [s for s in self.expr_reconstructor.stack
-                                      if not (isinstance(s, dict)
-                                              and s.get('type') == 'PUSH_NULL')]
-                            if len(_wc_rs) >= 2:
-                                _wc_built = {
-                                    'type': 'Assign',
-                                    'targets': [{
-                                        'type': 'Attribute',
-                                        'value': _wc_rs[-1],
-                                        'attr': _wc_consumer.argval,
-                                        'ctx': 'Store',
-                                    }],
-                                    'value': _wc_walrus_value,
-                                }
-                        elif _wc_consumer.opname == 'STORE_SUBSCR':
-                            if _wc_before:
-                                # Pattern A: walrus(ternary) 是 value；
-                                # _wc_before 含 obj+key loads。
-                                # 栈: [walrus_value] + _wc_before →
-                                #     [..., obj, key]
-                                # STORE_SUBSCR 消费 [value, obj, key] →
-                                #     obj[key] = value
-                                self.expr_reconstructor.reset()
-                                self.expr_reconstructor.stack = [
-                                    _wc_walrus_value]
-                                for _winst in _wc_before:
-                                    self.expr_reconstructor._process_instruction(_winst)
-                                _wc_rs = [s for s in self.expr_reconstructor.stack
-                                          if not (isinstance(s, dict)
-                                                  and s.get('type') == 'PUSH_NULL')]
-                                if len(_wc_rs) >= 3:
-                                    _wc_built = {
-                                        'type': 'Assign',
-                                        'targets': [{
-                                            'type': 'Subscript',
-                                            'value': _wc_rs[-2],
-                                            'slice': _wc_rs[-1],
-                                            'ctx': 'Store',
-                                        }],
-                                        'value': _wc_walrus_value,
-                                    }
-                            else:
-                                # Pattern B: walrus(ternary) 是 key；
-                                # value+obj 在 cond_block preload。
-                                # 栈 at STORE_SUBSCR: [value, obj, key=walrus]
-                                # preload_exprs 末两项: [value, obj] (obj=TOS)
-                                if len(preload_exprs) >= 2:
-                                    _wc_built = {
-                                        'type': 'Assign',
-                                        'targets': [{
-                                            'type': 'Subscript',
-                                            'value': preload_exprs[-1],
-                                            'slice': _wc_walrus_value,
-                                            'ctx': 'Store',
-                                        }],
-                                        'value': preload_exprs[-2],
-                                    }
-                        if _wc_built is not None:
-                            results.append(_wc_built)
-                            for block in region.blocks:
-                                self.generated_blocks.add(block)
-                            return results
                 # [R8-04 fix] Standalone walrus capture ternary: `(n := (ternary))`.
                 # Pattern: COPY 1 + STORE_* (walrus) + POP_TOP (discard preserved
                 # stack top) — no outer STORE_* after the walrus store (otherwise
@@ -20497,91 +20559,6 @@ AST 映射规则:
                                 elif instr.opname == 'RETURN_CONST':
                                     results.append({'type': 'Return', 'value': {'type': 'Constant', 'value': instr.argval}})
             else:
-                # [R19-08 fix] AnnAssign with ternary annotation:
-                #   `x: (A if c else B) = None`
-                # 字节码模式:
-                #   cond_block: SETUP_ANNOTATIONS + <value_instrs> + STORE_NAME <name>
-                #               + <ternary condition>
-                #   merge_block: LOAD_NAME __annotations__ + LOAD_CONST <name>
-                #                + STORE_SUBSCR + [trailing return]
-                # ternary 结果是 annotation (被 STORE_SUBSCR 写入
-                # __annotations__[name])，value 在 ternary 之前加载并 STORE_NAME。
-                # R6-17 AnnAssign 检测（上方）处理 `x: T = (ternary)`（ternary 是
-                # value，有 STORE_x 在 merge_block）。本分支处理 ternary 是
-                # annotation（无 STORE_x 在 merge_block，STORE_SUBSCR 消费 ternary）。
-                # 依「父引用子入口」: 父 AnnAssign 通过 merge_block 的
-                # __annotations__ + name + STORE_SUBSCR 引用 ternary 子节点
-                # （annotation 槽位），通过 cond_block 的 <value> + STORE_NAME 引用
-                # value 子节点。
-                # 依「每块唯一归属」: 整个 AnnAssign (SETUP_ANNOTATIONS + value +
-                # STORE + ternary + __annotations__ + STORE_SUBSCR) 归约到单一节点，
-                # 避免拆分为 Assign(x, None) + __annotations__[x] = ternary
-                # （丢失 SETUP_ANNOTATIONS，字节码指令数不匹配）。
-                if (region.merge_block is not None and cond_block is not None):
-                    _r19_08_merge = [i for i in region.merge_block.instructions
-                                     if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                    while _r19_08_merge and _r19_08_merge[-1].opname in (
-                            'RETURN_VALUE', 'RETURN_CONST'):
-                        _r19_08_merge.pop()
-                        if (_r19_08_merge
-                                and _r19_08_merge[-1].opname == 'LOAD_CONST'
-                                and _r19_08_merge[-1].argval is None):
-                            _r19_08_merge.pop()
-                    if (len(_r19_08_merge) >= 3
-                            and _r19_08_merge[-3].opname == 'LOAD_NAME'
-                            and _r19_08_merge[-3].argval == '__annotations__'
-                            and _r19_08_merge[-2].opname == 'LOAD_CONST'
-                            and isinstance(_r19_08_merge[-2].argval, str)
-                            and _r19_08_merge[-2].argval.isidentifier()
-                            and _r19_08_merge[-1].opname == 'STORE_SUBSCR'):
-                        _r19_08_name = _r19_08_merge[-2].argval
-                        _r19_08_cb = [i for i in cond_block.instructions
-                                      if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                        _r19_08_has_setup = any(
-                            i.opname == 'SETUP_ANNOTATIONS' for i in _r19_08_cb)
-                        _r19_08_store_idx = None
-                        for _si, _sinstr in enumerate(_r19_08_cb):
-                            if (_sinstr.opname in ('STORE_NAME', 'STORE_FAST',
-                                                   'STORE_GLOBAL', 'STORE_DEREF')
-                                    and _sinstr.argval == _r19_08_name):
-                                _r19_08_store_idx = _si
-                                break
-                        if (_r19_08_has_setup and _r19_08_store_idx is not None):
-                            _r19_08_setup_idx = None
-                            for _si, _sinstr in enumerate(_r19_08_cb):
-                                if _sinstr.opname == 'SETUP_ANNOTATIONS':
-                                    _r19_08_setup_idx = _si
-                                    break
-                            _r19_08_val_instrs = (
-                                _r19_08_cb[_r19_08_setup_idx + 1:_r19_08_store_idx]
-                                if _r19_08_setup_idx is not None else [])
-                            _r19_08_value = None
-                            if _r19_08_val_instrs:
-                                _r19_08_value = self.expr_reconstructor.reconstruct(
-                                    _r19_08_val_instrs)
-                            # [R19-08 fix] 条件构建阶段（L18446-18463）已将
-                            # cond_block 的 <value> + STORE_NAME <name> 提取为
-                            # pre-statement Assign(x, value)。该 value store 是
-                            # AnnAssign 的一部分（非独立语句），须从 results 移除
-                            # 以避免重编译产生重复 LOAD_CONST + STORE_NAME。
-                            # 依「每块唯一归属」: value store 归 AnnAssign 节点。
-                            results = [s for s in results
-                                       if not (isinstance(s, dict)
-                                               and s.get('type') == 'Assign'
-                                               and s.get('targets', [{}])[0].get('id') == _r19_08_name)]
-                            results.append({
-                                'type': 'AnnAssign',
-                                'target': {
-                                    'type': 'Name',
-                                    'id': _r19_08_name,
-                                    'ctx': 'Store',
-                                },
-                                'annotation': ternary_expr,
-                                'value': _r19_08_value,
-                            })
-                            for block in region.blocks:
-                                self.generated_blocks.add(block)
-                            return results
                 # [R13-08/10/04/09/11/05 fix] Multi-element container literal,
                 # nested Call chain, receiver method call, or lambda with
                 # ternary default — merge_block hosts consumer ops (BUILD_* N
@@ -20599,6 +20576,23 @@ AST 映射规则:
                 _merge_consumer_expr = self._try_build_ternary_merge_consumer_expr(
                     region, ternary_expr)
                 if _merge_consumer_expr is not None:
+                    # [Phase 7 根因1 通用修复] 当 sink 非 STORE_*（POP_TOP/
+                    # RETURN_VALUE）时，ternary 走此 else 分支。其中
+                    # MAKE_FUNCTION 场景（lambda x=(a if c else b): x 的默认值
+                    # ternary，sink=POP_TOP）下，expr_reconstructor 产出
+                    # FunctionObject（co_name='<lambda>'，defaults=Tuple([IfExp])），
+                    # CodeGenerator 会将其渲染为占位符 `lambda *args, **kwargs: None`。
+                    # 决定性对照：`def f(x=(a if c else b))` (STORE sink, 走 T2 路径
+                    # 直接 _build_function_def) ✓；`lambda x=(a if c else b)` (POP_TOP
+                    # sink, 走此分支) ✗ —— 同一 ternary-as-default 模式仅因 sink
+                    # 操作码不同而结果相反。
+                    # 依「每块唯一归属」: ternary 作为 lambda 默认值归属 Lambda 父节点；
+                    # 依「父引用子入口」: 父 Lambda 通过 MAKE_FUNCTION flags=1 引用
+                    # ternary 子节点作 defaults。_convert_lambda_function_objects 把
+                    # FunctionObject 递归转为 Lambda dict（_build_function_def 在
+                    # L1057 已支持 Tuple 形式 defaults → elts 列表）。
+                    _merge_consumer_expr = self._convert_lambda_function_objects(
+                        _merge_consumer_expr)
                     # [R14-07 fix] 当 merge_block 原始以 bare RETURN_VALUE 结尾
                     # （非 LOAD_CONST None + RETURN_VALUE 隐式 None）时，ternary
                     # 表达式是 return 语句的值，应包装为 Return 而非 Expr。
@@ -20650,28 +20644,6 @@ AST 映射规则:
                             'values': [None],
                         }
                     elif container_type == 'list_unpack':
-                        # [R18-11 fix] Detect starred call pattern:
-                        # `f(*(ternary), other)` — merge_block has LIST_EXTEND
-                        # (starred ternary) + LIST_APPEND (positional args) +
-                        # LIST_TO_TUPLE + CALL_FUNCTION_EX. Build Call with
-                        # Starred(ternary) as first arg + positional args.
-                        # 依「父引用子入口」: parent Call through cond_block
-                        #   preload (func) + merge_block LIST_EXTEND+LIST_APPEND
-                        #   + CALL_FUNCTION_EX references ternary child.
-                        # 依「自底向上归约」: ternary is inner node, Call is parent.
-                        _is_starred_call = (
-                            region.merge_block is not None
-                            and any(i.opname == 'CALL_FUNCTION_EX'
-                                    for i in region.merge_block.instructions
-                                    if i.opname not in NOISE_OPS))
-                        if _is_starred_call:
-                            _call_expr = self._build_starred_call_with_pos_args(
-                                region, ternary_expr)
-                            if _call_expr is not None:
-                                results.append({'type': 'Expr', 'value': _call_expr})
-                                for block in region.blocks:
-                                    self.generated_blocks.add(block)
-                                return results
                         # [*(ternary)] -> List(elts=[Starred(IfExp)])
                         container_info = {
                             'type': 'List',
@@ -20727,6 +20699,14 @@ AST 映射规则:
                         region, ternary_expr)
                     if _store_assign is not None:
                         results.append(_store_assign)
+                        # [Phase 7 根因1 通用修复] _try_build_ternary_store_assign
+                        # 可能在 region.post_consumer_extra_stmts 上存放 STORE_* 之后的
+                        # 后续语句（如 `self.x = ternary \n return self` 的 return self），
+                        # 属于父 FunctionDef body 的独立语句。追加到 results。
+                        _post_extra = getattr(
+                            region, 'post_consumer_extra_stmts', None)
+                        if _post_extra:
+                            results.extend(_post_extra)
                         for block in region.blocks:
                             self.generated_blocks.add(block)
                         return results
@@ -20738,17 +20718,6 @@ AST 映射规则:
                         region, ternary_expr)
                     if _chained_container is not None:
                         results.append(_chained_container)
-                        for block in region.blocks:
-                            self.generated_blocks.add(block)
-                        return results
-                    # [R19-06/07] Single ternary in tuple unpack with mixed
-                    # constant elements: `x, y = c, (a if d else b)` or
-                    # `a, b, c = 1, (x if d else y), 2`. merge_block has
-                    # SWAP N (N > 1) + N×STORE_* but only 1 ternary element.
-                    _tuple_unpack = self._try_build_ternary_tuple_unpack_mixed(
-                        region, ternary_expr)
-                    if _tuple_unpack is not None:
-                        results.append(_tuple_unpack)
                         for block in region.blocks:
                             self.generated_blocks.add(block)
                         return results
@@ -20946,63 +20915,28 @@ AST 映射规则:
                                 # _convert_lambda_function_objects 递归将其转为 Lambda dict。
                                 # 依「嵌套即抽象节点」：lambda 是父 Call 的 func 子节点。
                                 call_expr = self._convert_lambda_function_objects(call_expr)
-                                # [R18-03 fix] await g(t1, t2) — chained ternary
-                                # args (func_call_info path) feed PRECALL+CALL,
-                                # then GET_AWAITABLE+SEND/YIELD_VALUE polling wraps
-                                # the call result in Await. 沿 merge→entry 链找到
-                                # innermost merge_block，若含 GET_AWAITABLE 则将
-                                # Call 包裹为 Await(Call(...))，并标记轮询/consume 块。
-                                # 依「自底向上归约」: chained ternary 是内层参数节点，
-                                #   Call 归约为 Call 节点，Await 再归约为外层节点。
-                                # 依「父引用子入口」: 父 Await 通过 innermost merge 的
-                                #   PRECALL+CALL+GET_AWAITABLE 引用 ternary 子节点。
-                                _innermost_await_blk = region.merge_block
-                                if region.merge_block:
-                                    _ac = region
-                                    _avis = {id(region)}
-                                    while True:
-                                        _anxt = None
-                                        for _r in self.regions:
-                                            if (isinstance(_r, TernaryRegion)
-                                                    and _r.entry == _ac.merge_block
-                                                    and _r is not _ac
-                                                    and id(_r) not in _avis):
-                                                _anxt = _r
-                                                break
-                                        if _anxt is None or _anxt.merge_block is None:
-                                            break
-                                        _avis.add(id(_anxt))
-                                        _ac = _anxt
-                                        _innermost_await_blk = _anxt.merge_block
-                                if _innermost_await_blk is not None:
-                                    _aw_eff = [i for i in _innermost_await_blk.instructions
-                                               if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                                    if any(i.opname == 'GET_AWAITABLE' for i in _aw_eff):
-                                        call_expr = {'type': 'Await', 'value': call_expr}
-                                        for _succ in _innermost_await_blk.successors:
-                                            if _succ is _innermost_await_blk:
-                                                continue
-                                            _s_instrs = _succ.instructions
-                                            if (any(i.opname == 'SEND' for i in _s_instrs)
-                                                    and any(i.opname == 'YIELD_VALUE' for i in _s_instrs)
-                                                    and any(i.opname == 'JUMP_BACKWARD_NO_INTERRUPT'
-                                                            for i in _s_instrs)):
-                                                self.generated_blocks.add(_succ)
-                                                self.generated_offsets.add(_succ.start_offset)
-                                                _send_i = next((i for i in _s_instrs
-                                                                if i.opname == 'SEND'), None)
-                                                if (_send_i is not None
-                                                        and isinstance(_send_i.argval, int)):
-                                                    _cb = self.cfg.get_block_by_offset(_send_i.argval)
-                                                    if _cb is not None:
-                                                        self.generated_blocks.add(_cb)
-                                                        self.generated_offsets.add(_cb.start_offset)
-                                                break
                                 results.append({'type': 'Expr', 'value': call_expr})
                             else:
                                 results.append({'type': 'Expr', 'value': ternary_expr})
             
+            # [Phase 7 方案 A] 结构判据：与 _loop_generate_while 中的标记一致。
+            # 当 merge_context='while_cond' 且 merge_block 不是任何 LoopRegion
+            # 的 header_block 时，merge_block 是循环体入口块（其内容属于循环体），
+            # 不归属三元表达式，排除它以免循环体丢失首块语句。判据基于「每块
+            # 唯一归属」：非融合 while_cond 的 merge 归属循环体。
+            _gt_merge = region.merge_block
+            _gt_exclude_merge = False
+            if (getattr(region, 'merge_context', None) == 'while_cond'
+                    and _gt_merge is not None):
+                _gt_merge_is_header = any(
+                    isinstance(_r, LoopRegion) and _r.header_block is _gt_merge
+                    for _r in self.regions
+                )
+                if not _gt_merge_is_header:
+                    _gt_exclude_merge = True
             for block in region.blocks:
+                if _gt_exclude_merge and block is _gt_merge:
+                    continue
                 self.generated_blocks.add(block)
 
             return results
@@ -21369,16 +21303,6 @@ AST 映射规则:
             elif _ci.opname == 'BUILD_STRING':
                 _push = 1
                 _pop = _ci.arg or 0
-            elif _ci.opname == 'BUILD_MAP':
-                # [R19-14 fix] BUILD_MAP n consumes 2*n stack items (n key-value
-                # pairs), not n. The generic BUILD_ branch below under-counts,
-                # causing _split_preload_into_siblings to mis-split the preload
-                # of `{1: 2}.update({(ternary): 3})` (outer dict {1:2} preload
-                # is split as [1] + [2, BUILD_MAP 1, LOAD_METHOD update],
-                # dropping the key 1 and producing an empty {}).
-                # 依「每块唯一归属」: BUILD_MAP 的 2*n 消费项整体归属父表达式.
-                _push = 1
-                _pop = (_ci.arg or 0) * 2
             elif _ci.opname.startswith('BUILD_'):
                 _push = 1
                 _pop = _ci.arg or 0
@@ -21413,9 +21337,17 @@ AST 映射规则:
         # sub-slice independently. Without this split, the legacy fallback
         # returns only the topmost expression (e.g. `g(0)`) and loses
         # earlier siblings (e.g. `f`), corrupting the outer Call arg list.
+        # [R10 magic_methods fix] LOAD_ATTR/LOAD_METHOD 消费栈顶对象并推送属
+        # 性值，属「复合」操作（与 PRECALL/CALL/BUILD_* 同类）。旧实现仅将
+        # PRECALL/CALL/BUILD_* 视为复合，LOAD_ATTR 走简单逐条 reconstruct 路
+        # 径——但 [LOAD_ATTR x] 单独 reconstruct 时栈为空，无法消费 self，导致
+        # `self.x` 丢失为裸 `self`。依「自底向上归约」: LOAD_ATTR 是属性访问
+        # 表达式的归约入口，必须与前驱 LOAD_* 一起 reconstruct 才能得到完整
+        # Attribute 节点。加入复合判据，走完整 reconstruct 管线。
         _has_compound = any(
             pi.opname in ('PRECALL', 'CALL', 'BUILD_TUPLE', 'BUILD_LIST',
-                          'BUILD_MAP', 'BUILD_SET', 'BUILD_CONST_KEY_MAP')
+                          'BUILD_MAP', 'BUILD_SET', 'BUILD_CONST_KEY_MAP',
+                          'LOAD_ATTR', 'LOAD_METHOD')
             for pi in _preload_instrs)
         if _has_compound:
             _sibling_slices = self._split_preload_into_siblings(_preload_instrs)
@@ -21513,10 +21445,6 @@ AST 映射规则:
             return 1, 1 if (instr.arg or 0) < 2 else 2
         if op == 'BUILD_STRING':
             return 1, instr.arg or 0
-        if op == 'BUILD_MAP':
-            # [R19-14 fix] BUILD_MAP n consumes 2*n stack items (n key-value
-            # pairs), not n. See _compute_ternary_cond_preload_exprs for details.
-            return 1, (instr.arg or 0) * 2
         if op.startswith('BUILD_'):
             return 1, instr.arg or 0
         if op in ('PRECALL', 'POP_TOP'):
@@ -21854,33 +21782,6 @@ AST 映射规则:
         # 依「每块唯一归属」：consume 块的 wrapping 指令归属 TernaryRegion
         # 父表达式（Return(BinOp(Await(ternary), ...))），不与 ternary 子区域重叠。
         if any(i.opname == 'GET_AWAITABLE' for i in merge_instrs):
-            # [R18-02/03 fix] await 包装一个消费 ternary 的 Call/BinOp：
-            # `await g(ternary)` -> merge: PRECALL, CALL, GET_AWAITABLE,
-            # LOAD_CONST None (send value)。GET_AWAITABLE 之前的指令包装
-            # ternary（Call/BinOp 等），应用 initial_stack=preload+[ternary]
-            # 重建为 await 内层表达式；若无包装（ternary 直接被 await），沿用
-            # ternary_expr。
-            # 依「自底向上归约」: ternary 是内层节点，Call + Await 逐层归约为
-            #   Await(Call(...)) 单一表达式节点。
-            # 依「父引用子入口」: 父 Await 通过 merge_block 的 PRECALL+CALL+
-            #   GET_AWAITABLE 引用 ternary 子节点（Call 在内层，Await 在外层）。
-            _await_inner_expr = ternary_expr
-            _aw_idx = next((i for i, v in enumerate(merge_instrs)
-                            if v.opname == 'GET_AWAITABLE'), None)
-            if _aw_idx is not None and _aw_idx > 0:
-                _WRAPPING_PRE_AWAIT = {
-                    'CALL', 'BINARY_OP', 'BINARY_SUBSCR', 'BUILD_TUPLE',
-                    'BUILD_LIST', 'BUILD_SET', 'BUILD_MAP', 'LOAD_ATTR',
-                    'FORMAT_VALUE', 'IS_OP', 'CONTAINS_OP', 'COMPARE_OP',
-                    'BUILD_SLICE'}
-                if any(i.opname in _WRAPPING_PRE_AWAIT
-                       for i in merge_instrs[:_aw_idx]):
-                    _aw_preload = self._compute_ternary_cond_preload_exprs(region)
-                    _aw_init_stack = list(_aw_preload) + [ternary_expr]
-                    _aw_inner = self.expr_reconstructor.reconstruct(
-                        merge_instrs[:_aw_idx], initial_stack=_aw_init_stack)
-                    if _aw_inner is not None:
-                        _await_inner_expr = _aw_inner
             if region.merge_block is not None:
                 _poll_blk = None
                 _consume_blk = None
@@ -21927,16 +21828,16 @@ AST 映射规则:
                     # 重建 BinOp(Await(ternary), op, right) 并包裹 Return。
                     if _consume_wrapping_instrs is not None:
                         _preload = self._compute_ternary_cond_preload_exprs(region)
-                        _await_expr = {'type': 'Await', 'value': _await_inner_expr}
+                        _await_expr = {'type': 'Await', 'value': ternary_expr}
                         _init_stack = list(_preload) + [_await_expr]
                         _wrapped = self.expr_reconstructor.reconstruct(
                             _consume_wrapping_instrs, initial_stack=_init_stack)
                         if _wrapped:
                             return {'type': 'Return', 'value': _wrapped}
                     return {'type': 'Return',
-                            'value': {'type': 'Await', 'value': _await_inner_expr}}
+                            'value': {'type': 'Await', 'value': ternary_expr}}
             return {'type': 'Expr',
-                    'value': {'type': 'Await', 'value': _await_inner_expr}}
+                    'value': {'type': 'Await', 'value': ternary_expr}}
 
         # [R3 fix] Pattern 6: return (ternary) wrapped
         # merge_block 原本以 RETURN_VALUE/RETURN_CONST 结尾，剥离 RETURN 后
@@ -22017,76 +21918,6 @@ AST 映射规则:
                     _before_pop, initial_stack=_init_stack)
                 if _wrapped:
                     return {'type': 'Expr', 'value': _wrapped}
-
-        # [R20 cat3 fix] Two-ternary shared-block pattern: first ternary's
-        # merge_block is the second ternary's cond_block. Consumer (BINARY_OP +
-        # yield-from / return / expr) is in the second ternary's merge_block.
-        # ``yield from (a if c else b) + (d if e else f)`` etc.
-        # 依「自底向上归约」: 两个 ternary 均为内层抽象节点（IfExp），BINARY_OP
-        #   是父消费指令。
-        # 依「父引用子入口」: 第一个 ternary 的 merge（值留栈）即第二个 ternary
-        #   的 cond 入口；BINARY_OP 在第二个 ternary 的 merge 中消费两 ternary 值。
-        # 依「每块唯一归属」: 第二个 ternary 的 blocks 归父表达式，不拆分为独立语句。
-        if region.merge_block is not None:
-            _second_tr = None
-            for _r in self.regions:
-                if (isinstance(_r, TernaryRegion) and _r is not region
-                        and _r.condition_block is region.merge_block):
-                    _second_tr = _r
-                    break
-            if (_second_tr is not None
-                    and _second_tr.merge_block is not None
-                    and _second_tr.merge_extra_blocks):
-                _second_ifexp = self._build_nested_ternary_expr(_second_tr)
-                if _second_ifexp is not None:
-                    _sm = [i for i in _second_tr.merge_block.instructions
-                           if i.opname not in ('RESUME', 'NOP', 'CACHE',
-                                               'PUSH_NULL')]
-                    if _second_tr.merge_extra_blocks:
-                        for _eb in _second_tr.merge_extra_blocks:
-                            _sm.extend(
-                                i for i in _eb.instructions
-                                if i.opname not in ('RESUME', 'NOP', 'CACHE',
-                                                    'PUSH_NULL'))
-                    while _sm and _sm[-1].opname in (
-                            'RETURN_VALUE', 'RETURN_CONST'):
-                        _sm.pop()
-                        if (_sm and _sm[-1].opname == 'LOAD_CONST'
-                                and _sm[-1].argval is None):
-                            _sm.pop()
-                    if _sm:
-                        _preload = self._compute_ternary_cond_preload_exprs(
-                            region)
-                        _init_stack = list(_preload) + [
-                            ternary_expr, _second_ifexp]
-                        _combined = self.expr_reconstructor.reconstruct(
-                            _sm, initial_stack=_init_stack)
-                        if _combined is not None:
-                            for _b in _second_tr.blocks:
-                                self.generated_blocks.add(_b)
-                            self._generated_regions.add(id(_second_tr))
-                            for _r2 in self.regions:
-                                if (type(_r2).__name__ == 'LoopRegion'
-                                        and getattr(_r2, 'entry', None)
-                                        and any(i.opname == 'SEND'
-                                                for i in _r2.entry.instructions)):
-                                    for _b in _r2.blocks:
-                                        self.generated_blocks.add(_b)
-                                    self._generated_regions.add(id(_r2))
-                                    break
-                            _vt = getattr(region, 'value_target', None)
-                            _mc = getattr(region, 'merge_context', None)
-                            if (_combined.get('type') == 'YieldFrom'
-                                    and _mc == 'yieldfrom'
-                                    and _vt
-                                    and _vt != '__while_cond_target__'):
-                                return {
-                                    'type': 'Assign',
-                                    'targets': [{'type': 'Name', 'id': _vt,
-                                                 'ctx': 'Store'}],
-                                    'value': _combined,
-                                }
-                            return {'type': 'Expr', 'value': _combined}
 
         return None
 
@@ -22182,58 +22013,6 @@ AST 映射规则:
                     elif pi.opname == 'COPY' and pi.arg == 1 and preload_exprs:
                         preload_exprs.append(preload_exprs[-1])
 
-        # [R20 cat3 fix] Two-ternary binop in assert message:
-        # ``assert x, (t1 if c1 else t2) + (t3 if c2 else t4)`` — first ternary's
-        # merge_block is the second ternary's cond_block (shared block). The
-        # BINARY_OP + assert infrastructure lives in the second ternary's
-        # merge_block. Build both IfExp expressions and combine via BINARY_OP.
-        # 依「自底向上归约」: 两个 ternary 均为内层抽象节点（IfExp），BINARY_OP
-        #   是父消费指令。
-        # 依「父引用子入口」: AssertRegion 通过 message_block 引用第一个 ternary
-        #   入口；第一个 ternary 的 merge（值留栈）即第二个 ternary 的 cond 入口；
-        #   BINARY_OP 在第二个 ternary 的 merge 中消费两 ternary 值。
-        # 依「每块唯一归属」: 第二个 ternary 的 blocks 归 AssertRegion 父表达式，
-        #   不拆分为独立语句。
-        if region.merge_block is not None:
-            _second_ternary = None
-            for _r in self.regions:
-                if (isinstance(_r, TernaryRegion) and _r is not region
-                        and _r.condition_block is region.merge_block):
-                    _second_ternary = _r
-                    break
-            if (_second_ternary is not None
-                    and _second_ternary.merge_block is not None
-                    and any(i.opname == 'RAISE_VARARGS'
-                            for i in _second_ternary.merge_block.instructions)):
-                _second_ifexp = self._build_nested_ternary_expr(_second_ternary)
-                if _second_ifexp is not None:
-                    _second_merge = [
-                        i for i in _second_ternary.merge_block.instructions
-                        if i.opname not in ('RESUME', 'NOP', 'CACHE',
-                                            'PUSH_NULL')]
-                    _assert_start = len(_second_merge)
-                    for _idx in range(len(_second_merge) - 1, -1, -1):
-                        if _second_merge[_idx].opname == 'RAISE_VARARGS':
-                            _assert_start = _idx
-                            break
-                    if (_assert_start >= 1
-                            and _second_merge[_assert_start - 1].opname == 'CALL'):
-                        _assert_start -= 1
-                        if (_assert_start >= 1
-                                and _second_merge[_assert_start - 1].opname
-                                == 'PRECALL'):
-                            _assert_start -= 1
-                    _real_msg_instrs = _second_merge[:_assert_start]
-                    _init_stack = list(preload_exprs) + [
-                        ternary_expr, _second_ifexp]
-                    _msg = self.expr_reconstructor.reconstruct(
-                        _real_msg_instrs, initial_stack=_init_stack)
-                    if _msg is not None:
-                        for _b in _second_ternary.blocks:
-                            self.generated_blocks.add(_b)
-                        self._generated_regions.add(id(_second_ternary))
-                        return {'type': 'Expr', 'value': _msg}
-
         # Get merge_block instructions (excluding noise).
         merge_instrs = [i for i in region.merge_block.instructions
                         if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
@@ -22294,17 +22073,68 @@ AST 映射规则:
 
         merge_instrs = [i for i in region.merge_block.instructions
                         if i.opname not in ('RESUME', 'NOP', 'CACHE')]
-        # Strip trailing implicit return None: LOAD_CONST None + RETURN_VALUE
-        while merge_instrs and merge_instrs[-1].opname == 'RETURN_VALUE':
-            merge_instrs.pop()
-            if (merge_instrs and merge_instrs[-1].opname == 'LOAD_CONST'
-                    and merge_instrs[-1].argval is None):
+        # [Phase 7 根因1 通用修复] ternary region 的 merge_block 可能包含
+        # 后续语句的指令（如 `self.x = ternary \n return self` 中 STORE_ATTR x
+        # 之后的 LOAD_FAST self + RETURN_VALUE 属于下一个 return 语句）。旧版
+        # strip 仅识别 trailing implicit return None (LOAD_CONST None +
+        # RETURN_VALUE)，不识别显式 return / 后续赋值等，导致 merge_instrs[-1]
+        # 不是 STORE_ATTR/STORE_SUBSCR 而是 return 的 LOAD_*，Pattern A 误判
+        # 返回 None。
+        # 普遍性修复：扫描找到第一个 STORE_ATTR/STORE_SUBSCR/DELETE_SUBSCR 作为
+        # 消费点，store_idx 之后的指令重建为 extra statements（保存到
+        # region.post_consumer_extra_stmts 供调用方追加），last_instr/before_store
+        # 只覆盖消费点之前。依「每块唯一归属」：ternary region 仅拥有到 STORE_*
+        # 的部分，后续指令归下一条语句。
+        # 决定性对照：`self.x = (a if c else b)` (merge: LOAD_FAST self +
+        # STORE_ATTR x + LOAD_FAST self + RETURN_VALUE) 旧版返回 None → 输出
+        # `(a if c else b)` 丢失 `self.x =`；修复后正确输出
+        # `self.x = (a if c else b)` + `return self`。
+        _store_idx = None
+        for _si, _sinstr in enumerate(merge_instrs):
+            if _sinstr.opname in ('STORE_ATTR', 'STORE_SUBSCR', 'DELETE_SUBSCR'):
+                _store_idx = _si
+                break
+        if _store_idx is None:
+            # 没有 store 消费点 —— 剥掉 trailing implicit return None 后返回 None
+            while merge_instrs and merge_instrs[-1].opname == 'RETURN_VALUE':
                 merge_instrs.pop()
-        if not merge_instrs:
+                if (merge_instrs and merge_instrs[-1].opname == 'LOAD_CONST'
+                        and merge_instrs[-1].argval is None):
+                    merge_instrs.pop()
             return None
+        # store_idx 之后的指令属于下一个语句，重建为 extra statements
+        _after_store_instrs = merge_instrs[_store_idx + 1:]
+        if _after_store_instrs:
+            _after_clean = [i for i in _after_store_instrs
+                            if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+            # 只剥 implicit return None (LOAD_CONST None + RETURN_VALUE 对，
+            # 或 RETURN_CONST None)，保留显式 return (LOAD_* + RETURN_VALUE)
+            # 让 _build_statements_from_instructions 重建为 Return 节点。
+            while (len(_after_clean) >= 2
+                    and _after_clean[-1].opname == 'RETURN_VALUE'
+                    and _after_clean[-2].opname == 'LOAD_CONST'
+                    and _after_clean[-2].argval is None):
+                _after_clean = _after_clean[:-2]
+            while (_after_clean and _after_clean[-1].opname == 'RETURN_CONST'
+                    and _after_clean[-1].argval is None):
+                _after_clean = _after_clean[:-1]
+            if _after_clean:
+                _extra_stmts = self._build_statements_from_instructions(list(_after_clean))
+                while _extra_stmts and isinstance(_extra_stmts[-1], dict):
+                    _last = _extra_stmts[-1]
+                    if _last.get('type') == 'Return':
+                        _rv = _last.get('value')
+                        if _rv and isinstance(_rv, dict) \
+                                and _rv.get('type') == 'Constant' \
+                                and _rv.get('value') is None:
+                            _extra_stmts = _extra_stmts[:-1]
+                            continue
+                    break
+                if _extra_stmts:
+                    region.post_consumer_extra_stmts = _extra_stmts
 
-        last_instr = merge_instrs[-1]
-        before_store = merge_instrs[:-1]
+        last_instr = merge_instrs[_store_idx]
+        before_store = merge_instrs[:_store_idx]
 
         # [R11-err6] Pattern C: ternary as augassign rhs.
         # 当 ternary 是 augassign 的右值（而非普通 Assign 的右值），merge_block
@@ -22476,108 +22306,6 @@ AST 映射规则:
                             'value': _aug_value_new,
                         }
 
-                    # [R17-08/12 fix] Pattern C4/C5: ternary is the receiver of
-                    # a method call, and the method result is the aug-assign
-                    # target obj (attr) or index (subscr).
-                    #   C4 (STORE_ATTR): `(ternary).method().attr += value`
-                    #     before_store: LOAD_METHOD m, PRECALL, CALL, COPY 1,
-                    #                   LOAD_ATTR attr, <value>, BINARY_OP, SWAP
-                    #   C5 (STORE_SUBSCR): `x[(ternary).method()] += value`
-                    #     before_store: LOAD_METHOD m, PRECALL, CALL, COPY 2,
-                    #                   COPY 2, BINARY_SUBSCR, <value>,
-                    #                   BINARY_OP, SWAP, SWAP
-                    # 依「自底向上归约」: ternary 是内层节点，外层 method call +
-                    #   aug-assign 归约为单一 AugAssign 节点。
-                    # 依「父引用子入口」: 父 AugAssign 通过 merge_block 的
-                    #   LOAD_METHOD+CALL+COPY+LOAD_ATTR/BINARY_SUBSCR+BINARY_OP+
-                    #   SWAP+STORE_* 引用 ternary 子节点作为 method receiver。
-                    _mc_target = None
-                    _mc_value = None
-                    if (not _aug_target_new
-                            and len(before_store) >= 5
-                            and before_store[0].opname == 'LOAD_METHOD'
-                            and before_store[1].opname == 'PRECALL'
-                            and before_store[2].opname == 'CALL'):
-                        _mc_method = before_store[0].argval
-                        _mc_call_expr = {
-                            'type': 'Call',
-                            'func': {
-                                'type': 'Attribute',
-                                'value': ternary_expr,
-                                'attr': (str(_mc_method)
-                                         if _mc_method is not None else '_'),
-                                'ctx': 'Load',
-                            },
-                            'args': [],
-                            'keywords': [],
-                        }
-                        if (last_instr.opname == 'STORE_ATTR'
-                                and _aug_op_idx >= 5
-                                and before_store[3].opname == 'COPY'
-                                and before_store[3].arg == 1
-                                and before_store[4].opname == 'LOAD_ATTR'
-                                and before_store[4].argval == last_instr.argval):
-                            _attr_name = before_store[4].argval
-                            _mc_target = {
-                                'type': 'Attribute',
-                                'value': _mc_call_expr,
-                                'attr': (str(_attr_name)
-                                         if _attr_name is not None else '_'),
-                                'ctx': 'Store',
-                            }
-                            _mc_val_instrs = before_store[5:_aug_op_idx]
-                            self.expr_reconstructor.reset()
-                            self.expr_reconstructor.stack = []
-                            for _vi in _mc_val_instrs:
-                                if _vi.opname in ('RESUME', 'NOP', 'CACHE',
-                                                  'PUSH_NULL'):
-                                    continue
-                                self.expr_reconstructor._process_instruction(_vi)
-                            _mc_vstack = [s for s in self.expr_reconstructor.stack
-                                          if not (isinstance(s, dict)
-                                                  and s.get('type') == 'PUSH_NULL')]
-                            if _mc_vstack:
-                                _mc_value = _mc_vstack[-1]
-                            else:
-                                _mc_target = None
-                        elif (last_instr.opname == 'STORE_SUBSCR'
-                                and _aug_op_idx >= 6
-                                and before_store[3].opname == 'COPY'
-                                and before_store[3].arg == 2
-                                and before_store[4].opname == 'COPY'
-                                and before_store[4].arg == 2
-                                and before_store[5].opname == 'BINARY_SUBSCR'):
-                            _cond_obj = self._extract_cond_preload_value_expr(region)
-                            if _cond_obj is not None:
-                                _mc_target = {
-                                    'type': 'Subscript',
-                                    'value': _cond_obj,
-                                    'slice': _mc_call_expr,
-                                    'ctx': 'Store',
-                                }
-                                _mc_val_instrs = before_store[6:_aug_op_idx]
-                                self.expr_reconstructor.reset()
-                                self.expr_reconstructor.stack = []
-                                for _vi in _mc_val_instrs:
-                                    if _vi.opname in ('RESUME', 'NOP', 'CACHE',
-                                                      'PUSH_NULL'):
-                                        continue
-                                    self.expr_reconstructor._process_instruction(_vi)
-                                _mc_vstack = [s for s in self.expr_reconstructor.stack
-                                              if not (isinstance(s, dict)
-                                                      and s.get('type') == 'PUSH_NULL')]
-                                if _mc_vstack:
-                                    _mc_value = _mc_vstack[-1]
-                                else:
-                                    _mc_target = None
-                    if _mc_target is not None and _mc_value is not None:
-                        return {
-                            'type': 'AugAssign',
-                            'target': _mc_target,
-                            'op': _aug_op_symbol[:-1],
-                            'value': _mc_value,
-                        }
-
         # --- STORE_SUBSCR: stack [value, obj, key] ---
         if last_instr.opname == 'STORE_SUBSCR':
             # Pattern A: ternary is value; merge contains obj+key loads after
@@ -22671,47 +22399,6 @@ AST 映射规则:
                                 'targets': [target],
                                 'value': value_expr,
                             }
-                        # [R17-02 fix] Pattern B2: only 1 preload item (obj),
-                        # but the value is the result of a PRECEDING ternary
-                        # whose merge_block IS this region's cond_block.
-                        # ``x[a if c else b] = (d if e else f)`` compiles to:
-                        #   value_ternary merge → LOAD_NAME x → index_ternary
-                        #   cond → ... → STORE_SUBSCR.
-                        # The value ternary's result sits on the stack below
-                        # the obj load. Build its IfExp and use as value.
-                        # 依「自底向上归约」: value ternary 是内层节点，index
-                        #   ternary 是兄弟节点，STORE_SUBSCR 是父 Assign 节点。
-                        # 依「父引用子入口」: 父 Assign 通过 cond preload (obj)
-                        #   + index ternary (key) + value ternary (value) 引用
-                        #   两个 ternary 子节点。
-                        # 依「每块唯一归属」: value ternary 的 blocks 归此 Assign
-                        #   语句（不拆分为独立 Expr 语句）。
-                        if len(_pl_stack) == 1:
-                            _prev_ternary = None
-                            for _r in self.regions:
-                                if (isinstance(_r, TernaryRegion)
-                                        and _r is not region
-                                        and _r.merge_block is cond_block):
-                                    _prev_ternary = _r
-                                    break
-                            if _prev_ternary is not None:
-                                _prev_ifexp = self._build_nested_ternary_expr(
-                                    _prev_ternary)
-                                if _prev_ifexp is not None:
-                                    obj_expr = _pl_stack[-1]
-                                    target = {
-                                        'type': 'Subscript',
-                                        'value': obj_expr,
-                                        'slice': ternary_expr,
-                                        'ctx': 'Store',
-                                    }
-                                    for _b in _prev_ternary.blocks:
-                                        self.generated_blocks.add(_b)
-                                    return {
-                                        'type': 'Assign',
-                                        'targets': [target],
-                                        'value': _prev_ifexp,
-                                    }
 
         # --- STORE_ATTR: stack [value, obj] ---
         elif last_instr.opname == 'STORE_ATTR':
@@ -22892,52 +22579,6 @@ AST 映射规则:
                                 'type': 'Delete',
                                 'targets': [target],
                             }
-
-        # [R18-10 fix] --- DELETE_ATTR: stack [obj] ---
-        # `del (ternary).x` -> merge: DELETE_ATTR x
-        # ternary result is the obj (TOS), DELETE_ATTR pops [obj] and deletes
-        # the attribute. before_store may contain LOAD_ATTR for chained del
-        # like `del (ternary).x.y` (LOAD_ATTR y, DELETE_ATTR x... wait, no;
-        # chained del compiles to multiple DELETE_ATTR). The simple case:
-        # merge_block = [DELETE_ATTR x, LOAD_CONST None, RETURN_VALUE].
-        # 依「父引用子入口」: 父 Delete 通过 merge_block 的 DELETE_ATTR 引用
-        # ternary 子节点作为 target obj.
-        # 依「每块唯一归属」: DELETE_ATTR 消费链归属 TernaryRegion 父 Delete 语句.
-        elif last_instr.opname == 'DELETE_ATTR':
-            if before_store:
-                # Chained attribute delete: `del (ternary).x.y`
-                # before_store: LOAD_ATTR y; ternary is obj, chain to attr
-                self.expr_reconstructor.reset()
-                self.expr_reconstructor.stack = [ternary_expr]
-                for _instr in before_store:
-                    if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
-                        continue
-                    self.expr_reconstructor._process_instruction(_instr)
-                _reg_stack = [s for s in self.expr_reconstructor.stack
-                              if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
-                if _reg_stack:
-                    _inner = _reg_stack[-1]
-                    target = {
-                        'type': 'Attribute',
-                        'value': _inner,
-                        'attr': str(last_instr.argval) if last_instr.argval is not None else '_',
-                        'ctx': 'Del',
-                    }
-                    return {
-                        'type': 'Delete',
-                        'targets': [target],
-                    }
-            # Simple: `del (ternary).x` -> merge: DELETE_ATTR x
-            target = {
-                'type': 'Attribute',
-                'value': ternary_expr,
-                'attr': str(last_instr.argval) if last_instr.argval is not None else '_',
-                'ctx': 'Del',
-            }
-            return {
-                'type': 'Delete',
-                'targets': [target],
-            }
 
         return None
 
@@ -23335,33 +22976,46 @@ AST 映射规则:
         # Default: Expr (e.g. expression-statement genexpr or listcomp).
         return {'type': 'Expr', 'value': comp_ast}
 
-    def _try_build_ternary_chained_compare_middle(
+    def _try_build_ternary_chained_compare(
             self, region: TernaryRegion,
             ternary_expr: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """[R16-06 fix] Build full Expr/Return when ternary sits in the
-        middle of a chained comparison (``a < (ternary) < e``).
+        """[Phase 7 方案 D] Build full Expr/Return/Assign when ternary sits at
+        any non-last position of a 2-comparator chained comparison.
 
-        Bytecode structure:
-            cond_block preload: LOAD a  (left operand below ternary)
+        普遍性覆盖（依操作码语义，不依赖具体实例）:
+          - LEFT:    ``(ternary) op1 R1 op2 R2``
+          - MIDDLE:  ``L op1 (ternary) op2 R2``
+
+        Bytecode structure (SWAP 2 + COPY 2 + COMPARE_OP + JUMP_IF_FALSE_OR_POP
+        是 chained compare 的操作码签名; ternary 的位置由 SWAP 之前是否有
+        LOAD 产生的右操作数决定):
+            cond_block preload: [LOAD L]   (MIDDLE 时非空; LEFT 时为空)
             ternary condition: LOAD cond, POP_JUMP_IF_FALSE
             true/false: LOAD b / LOAD d
-            merge_block: SWAP 2, COPY 2, COMPARE_OP op1,
+            merge_block: [LOAD R1], SWAP 2, COPY 2, COMPARE_OP op1,
                          JUMP_IF_FALSE_OR_POP to cleanup_block
-            fallthrough: LOAD right, COMPARE_OP op2,
+                         (LEFT 时 merge_block 开头有 LOAD R1; MIDDLE 时无)
+            fallthrough: LOAD R2, COMPARE_OP op2,
                          [POP_TOP | STORE_* | RETURN_VALUE]
-            cleanup_block: SWAP 2, POP_TOP, POP_TOP, ...
+            cleanup_block: SWAP 2, POP_TOP, ...
+
+        位置判定:
+          - merge_block 中 SWAP 2 之前有 LOAD 产生操作数 → ternary 是 LEFT,
+            left=ternary, comparators=[R1_from_merge, R2_from_fallthrough]
+          - SWAP 2 之前无 LOAD → ternary 是 MIDDLE,
+            left=preload[-1], comparators=[ternary, R2_from_fallthrough]
 
         Returns an Expr/Return/Assign dict, or None when the pattern does
         not match.
 
         依「自底向上归约」: ternary 是内层抽象节点（IfExp），外层 Compare 是
-        父节点，通过 cond preload (left) + merge_block COMPARE_OP + fallthrough
-        COMPARE_OP 引用 ternary 子节点作为中间操作数。
-        依「父引用子入口」: 父 Compare 通过 cond preload (left) + merge_block
-        COMPARE_OP + fallthrough COMPARE_OP 引用 ternary 子节点。
-        依「每块唯一归属」: cond preload (left) + merge_block SWAP/COPY/
-        COMPARE_OP/JUMP_IF_FALSE_OR_POP + fallthrough LOAD/COMPARE_OP/POP_TOP
-        全部归属 TernaryRegion 父表达式（Expr/Return/Assign），不拆分。
+        父节点，通过 preload/merge LOAD + COMPARE_OP 链引用 ternary 子节点。
+        依「父引用子入口」: 父 Compare 通过 preload (MIDDLE left) /
+        merge_block SWAP 前 LOAD (LEFT R1) + merge COMPARE_OP + fallthrough
+        LOAD (R2) + COMPARE_OP 引用 ternary 子节点。
+        依「每块唯一归属」: preload + merge_block SWAP/COPY/COMPARE_OP/
+        JUMP_IF_FALSE_OR_POP + fallthrough LOAD/COMPARE_OP/POP_TOP 全部归属
+        TernaryRegion 父表达式（Expr/Return/Assign），不拆分。
         """
         if region.merge_block is None or region.condition_block is None:
             return None
@@ -23392,6 +23046,19 @@ AST 映射规则:
                 _cmp1_idx = _idx
                 break
         if _cmp1_idx is None:
+            return None
+
+        # Find the SWAP 2 immediately before COPY 2 + COMPARE_OP (chained
+        # compare signature). COPY 2 may sit between SWAP 2 and COMPARE_OP.
+        _swap_idx = None
+        for _idx in range(_cmp1_idx - 1, -1, -1):
+            if merge_instrs[_idx].opname == 'SWAP':
+                _swap_idx = _idx
+                break
+            if merge_instrs[_idx].opname != 'COPY':
+                # Not the chained-compare SWAP/COPY prefix.
+                break
+        if _swap_idx is None:
             return None
 
         # Get the fallthrough successor (continuation of the chained compare).
@@ -23430,25 +23097,39 @@ AST 映射规则:
         if _op1 is None or _op2 is None:
             return None
 
-        # Extract the left operand from cond_block preload (below ternary cond).
-        _preload_exprs = self._compute_ternary_cond_preload_exprs(region)
-        if not _preload_exprs:
-            return None
-        _left = _preload_exprs[-1]
+        # --- 位置判定: SWAP 2 之前是否有 LOAD 产生的操作数 ---
+        _pre_swap = merge_instrs[:_swap_idx]
+        _pre_swap_eff = [i for i in _pre_swap
+                         if i.opname not in ('NOP', 'CACHE', 'PUSH_NULL')]
 
-        # Extract the right operand from fallthrough instructions before
-        # the second COMPARE_OP (e.g. LOAD e).
-        _right_instrs = _ft_instrs[:_cmp2_idx]
-        _right = self.expr_reconstructor.reconstruct(_right_instrs)
-        if _right is None:
+        # Extract the right2 operand from fallthrough instructions before
+        # the second COMPARE_OP (e.g. LOAD R2). R2 在两种位置都需要。
+        _right2_instrs = _ft_instrs[:_cmp2_idx]
+        _right2 = self.expr_reconstructor.reconstruct(_right2_instrs)
+        if _right2 is None:
             return None
+
+        if _pre_swap_eff:
+            # LEFT: ternary 是左操作数; SWAP 前的 LOAD 产生 R1 (comparators[0]).
+            _right1 = self.expr_reconstructor.reconstruct(_pre_swap_eff)
+            if _right1 is None:
+                return None
+            _left = ternary_expr
+            _comparators = [_right1, _right2]
+        else:
+            # MIDDLE: preload 有左操作数; ternary 是 comparators[0].
+            _preload_exprs = self._compute_ternary_cond_preload_exprs(region)
+            if not _preload_exprs:
+                return None
+            _left = _preload_exprs[-1]
+            _comparators = [ternary_expr, _right2]
 
         # Build the chained Compare AST.
         _compare_expr = {
             'type': 'Compare',
             'left': _left,
             'ops': [_op1, _op2],
-            'comparators': [ternary_expr, _right],
+            'comparators': _comparators,
         }
 
         # Determine the wrapping statement by inspecting post-COMPARE_OP instrs.
@@ -23517,6 +23198,23 @@ AST 映射规则:
         if region.merge_block is None:
             return None
 
+        # [R14 yield_from_method fix] For yieldfrom/await merge_context, the
+        # merge_block's consumer ops (LOAD_METHOD/PRECALL/CALL for .items(),
+        # or direct GET_AWAITABLE) are followed by SEND/YIELD_VALUE polling
+        # that lives in merge_extra_blocks (not merge_block.instructions).
+        # This function only inspects merge_block.instructions, so it would
+        # reconstruct on a truncated instruction stream — the polling loop
+        # that builds the YieldFrom/Await node is missing, and reconstruct
+        # returns the dangling LOAD_CONST None (SEND's send-value) as a
+        # Constant(None) dict, which passes the `is not None` guard and
+        # short-circuits the correct handler _build_ternary_no_target_consumer_stmt
+        # (which properly splices merge_extra_blocks). Early-return None to
+        # let that handler run.
+        # 依「每块唯一归属」: merge_extra_blocks (polling loop + consume block)
+        # belong to the TernaryRegion and must be included in reconstruction.
+        if getattr(region, 'merge_context', None) in ('yieldfrom', 'await'):
+            return None
+
         # Compute preload_exprs (sibling elements on cond_block stack below
         # the ternary condition). _compute_ternary_cond_preload_exprs already
         # handles compound preload (Call/Attribute chains) by deferring to
@@ -23533,6 +23231,26 @@ AST 映射规则:
             if (merge_all and merge_all[-1].opname == 'LOAD_CONST'
                     and merge_all[-1].argval is None):
                 merge_all.pop()
+        # [R11-asyncio fix] Strip trailing GET_AWAITABLE + LOAD_CONST None
+        # (await protocol). GET_AWAITABLE wraps the preceding expression in an
+        # awaitable; LOAD_CONST None is the initial send-value for the await
+        # polling loop (SEND/YIELD_VALUE in successor blocks, not in
+        # merge_block). Strip both and wrap the reconstructed expression in
+        # Await. The SEND/YIELD_VALUE/RESUME/JUMP_BACKWARD polling loop and
+        # the RETURN_VALUE consume block are in successor blocks (not in
+        # merge_block.instructions).
+        # 字节码模式: <consumer ops (CALL/BUILD_*/...)> + GET_AWAITABLE 0
+        #            + LOAD_CONST None
+        # 依「自底向上归约」: GET_AWAITABLE 之前的指令归约为 await 的 value
+        # 表达式，GET_AWAITABLE + LOAD_CONST None + SEND/YIELD_VALUE 是 await
+        # 协议的一部分，不归约为独立表达式。
+        _await_wrap = False
+        if (len(merge_all) >= 2
+                and merge_all[-1].opname == 'LOAD_CONST'
+                and merge_all[-1].argval is None
+                and merge_all[-2].opname == 'GET_AWAITABLE'):
+            merge_all = merge_all[:-2]
+            _await_wrap = True
         # Strip trailing POP_TOP (expression statement).
         if merge_all and merge_all[-1].opname == 'POP_TOP':
             merge_all = merge_all[:-1]
@@ -23547,18 +23265,6 @@ AST 映射规则:
         if any(i.opname in ('LOAD_ASSERTION_ERROR', 'RAISE_VARARGS',
                             'PREP_RERAISE_STAR', 'RERAISE')
                for i in merge_all):
-            return None
-
-        # [R17-08/12 guard] augmented-assign pattern: merge_block ends with
-        # STORE_ATTR/STORE_SUBSCR (preceded by BINARY_OP aug + SWAP*, possibly
-        # a COPY+LOAD_ATTR/BINARY_SUBSCR target-setup prefix). Reconstruct
-        # cannot represent AugAssign (it would build an Expr wrapping a Call
-        # and drop the STORE_*/BINARY_OP/SWAP instructions). Let control fall
-        # through to _try_build_ternary_store_assign Pattern C2/C3/C4/C5 which
-        # builds a proper AugAssign node.
-        # 依「每块唯一归属」: aug-assign 消费链 (BINARY_OP+SWAP+STORE_*) 整体
-        # 归属 _try_build_ternary_store_assign，不在此处拆分为 Expr。
-        if any(i.opname in ('STORE_ATTR', 'STORE_SUBSCR') for i in merge_all):
             return None
 
         # Detect the BUILD_* instruction (multi-element container case).
@@ -23613,28 +23319,64 @@ AST 映射规则:
             and _build_instr is None
         )
 
-        # [R17-06 fix] func_call_info set + post-CALL consumer ops wrapping
-        # the call result. 例:
-        #   obj.method(a if c else b).other
-        #   cond: LOAD_NAME obj, LOAD_METHOD method, LOAD_NAME c, POP_JUMP
-        #   merge: PRECALL, CALL, LOAD_ATTR other, POP_TOP
-        # _detect_ternary_context sets func_call_info=Attribute(Name(obj),method)
-        # (ternary is the arg), but the post-CALL LOAD_ATTR (wrapping the call
-        # result) is lost by the plain func_call_info path. Reconstruct with
-        # initial_stack=preload+[ternary] so PRECALL+CALL+LOAD_ATTR rebuilds
-        # Attribute(Call(func, [ternary]), other).
-        # 依「自底向上归约」: ternary 是内层节点，外层 Call+LOAD_ATTR 归约为
-        # 单一 Attribute(Call(...)) 表达式节点。
-        # 依「父引用子入口」: 父表达式通过 merge_block 的 PRECALL+CALL+
-        # LOAD_ATTR 引用 ternary 子节点。
-        _has_post_call_consumer = False
-        if region.func_call_info and _call_count >= 1 and not _has_multi_elem:
-            _last_call_idx = max(i for i, x in enumerate(merge_all)
-                                 if x.opname == 'CALL')
-            _after_call = merge_all[_last_call_idx + 1:]
-            if any(x.opname in ('LOAD_ATTR', 'BINARY_SUBSCR',
-                                'LOAD_METHOD') for x in _after_call):
-                _has_post_call_consumer = True
+        # [R10 magic_methods fix] Binary/unary/comparison/format consumer ops
+        # in merge_block that wrap the ternary together with preload siblings.
+        # 例:
+        #   self.x == (other.x if c else 0)
+        #     -> cond preload: [self.x], merge: COMPARE_OP ==
+        #   (a if c else b) + x
+        #     -> merge: LOAD_NAME x, BINARY_OP +
+        #   not (a if c else b)
+        #     -> merge: UNARY_NOT
+        # 依「自底向上归约」: ternary 是内层抽象节点，外层 COMPARE_OP/BINARY_OP/
+        # UNARY_*/FORMAT_VALUE/BUILD_STRING/BUILD_SLICE 通过 reconstruct 归约为
+        # 单一表达式节点 (Compare/BinOp/UnaryOp/JoinedStr/Str/Slice).
+        # 依「父引用子入口」: 父 Compare/BinOp/UnaryOp 通过 merge_block 的消费
+        # 操作码引用 ternary 子节点 + preload 中的兄弟子节点.
+        # 依「每块唯一归属」: merge_block 的消费操作码归属 TernaryRegion 父表达式，
+        # 不拆分为独立语句.
+        #
+        # [regression guard] 仅当 merge_block 不含控制流跳转/赋值/删除/交换
+        # 指令时才触发。否则 merge_block 与下一个 TernaryRegion 的 entry
+        # 共享（chained ternary 条件 COMPARE_OP），或属 STORE_ATTR/STORE_SUBSCR
+        # 赋值消费链（aug-assign），各有专门处理器，不应走 reconstruct 路径。
+        _binop_consumer_ops = (
+            'COMPARE_OP', 'CONTAINS_OP', 'IS_OP',
+            'BINARY_OP', 'BINARY_SUBSCR',
+        )
+        _unary_consumer_ops = (
+            'UNARY_NOT', 'UNARY_NEGATIVE', 'UNARY_INVERT',
+            'UNARY_POSITIVE',
+        )
+        _format_consumer_ops = (
+            'FORMAT_VALUE', 'BUILD_STRING', 'BUILD_SLICE',
+        )
+        _has_control_flow_or_store = any(
+            i.opname.startswith('POP_JUMP_')
+            or i.opname.startswith('JUMP_')
+            or i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
+                            'STORE_DEREF', 'STORE_SUBSCR', 'STORE_ATTR',
+                            'DELETE_SUBSCR', 'DELETE_ATTR', 'DELETE_NAME',
+                            'DELETE_GLOBAL', 'DELETE_FAST', 'DELETE_DEREF',
+                            'SWAP', 'FOR_ITER', 'SEND',
+                            'SETUP_ANNOTATIONS', 'SETUP_FINALLY')
+            or i.opname.startswith('INPLACE_')
+            for i in merge_all
+        )
+        _has_binop_consumer = (
+            not _has_control_flow_or_store
+            and not _has_make_function
+            and not _has_receiver_method
+            and not _has_call_chain
+            and _build_instr is None
+            and any(
+                i.opname in _binop_consumer_ops
+                or i.opname.startswith('BINARY_')
+                or i.opname in _unary_consumer_ops
+                or i.opname in _format_consumer_ops
+                for i in merge_all
+            )
+        )
 
         # Decide whether to invoke full reconstruct.
         _should_reconstruct = (
@@ -23643,7 +23385,7 @@ AST 映射规则:
             or _has_receiver_method
             or _has_make_function
             or _has_ternary_as_callable
-            or _has_post_call_consumer
+            or _has_binop_consumer
         )
         if not _should_reconstruct:
             return None
@@ -23651,38 +23393,96 @@ AST 映射规则:
         # Use expr_reconstructor to rebuild the full expression.
         # initial_stack = preload_exprs + [ternary_expr] — the stack state
         # just before merge_block instructions start executing.
-        if _has_post_call_consumer and region.func_call_info:
-            # [R17-06] func_call_info['func'] is the true callable (e.g.
-            # Attribute(Name(obj), method)); preload_exprs[0] is the receiver
-            # base already represented in func, preload_exprs[1:] are sibling
-            # args between the callable and the ternary. Use func as the
-            # initial stack[0] so CALL binds to the method (LOAD_METHOD style),
-            # not a free-function PUSH_NULL call.
-            _fc = region.func_call_info.get('func')
-            _mid = list(preload_exprs[1:]) if len(preload_exprs) > 1 else []
-            initial_stack = ([_fc] if _fc is not None else []) + _mid + [ternary_expr]
-        elif (region.func_call_info and not preload_exprs
-                and _has_call_chain):
-            # [R19-04 fix] Method chain with ternary arg in with body:
-            # `cm.process(a if c else b).finalize()`. func_call_info captures
-            # Attribute(cm, process) as the first call's func (loaded in
-            # cond_block via LOAD_NAME cm + LOAD_METHOD process). The merge_block
-            # has PRECALL+CALL (process) + LOAD_METHOD finalize + PRECALL+CALL
-            # (finalize) — a call chain wrapping the process call result.
-            # preload_exprs is empty because the func is in func_call_info.
-            # Put func on initial_stack[0] so the first CALL binds to the method,
-            # then LOAD_METHOD+CALL rebuilds the chained .finalize() call.
-            # 依「自底向上归约」: ternary 是内层参数节点，Call(process) 是中间
-            # 节点，Call(finalize) 是最外层父节点。
-            # 依「父引用子入口」: 父 Call 通过 merge_block 的 PRECALL+CALL+
-            # LOAD_METHOD+PRECALL+CALL 引用 ternary 子节点。
-            _fc = region.func_call_info.get('func')
-            initial_stack = ([_fc] if _fc is not None else []) + [ternary_expr]
-        else:
-            initial_stack = list(preload_exprs) + [ternary_expr]
+        initial_stack = list(preload_exprs) + [ternary_expr]
         full_expr = self.expr_reconstructor.reconstruct(
             merge_all, initial_stack=initial_stack)
+        # [R11-asyncio fix] Wrap in Await if GET_AWAITABLE was stripped.
+        if full_expr is not None and _await_wrap:
+            full_expr = {'type': 'Await', 'value': full_expr}
         return full_expr
+
+    def _try_build_chained_ternary_make_function(
+            self, region: TernaryRegion, ternary_expr: Dict[str, Any],
+            ternary_chain: List[TernaryRegion], innermost: TernaryRegion,
+            innermost_merge) -> Optional[Dict[str, Any]]:
+        """[Phase 7 方案 D] chained ternary + MAKE_FUNCTION 构建 FunctionDef/Lambda。
+
+        处理多个 ternary 作为函数默认参数的场景：
+            def f(x=(a if c else b), y=(d if e else g)): ...
+        字节码：chained ternary (merge 链) + BUILD_TUPLE N +
+               LOAD_CONST <code> + MAKE_FUNCTION flag + STORE_NAME
+
+        把 chained ternary 作为 defaults 列表，调用 _build_function_def
+        构建 FunctionDef。判据基于操作码语义，非实例特征。
+        """
+        _im_eff = [i for i in innermost_merge.instructions
+                   if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+        # 提取 MAKE_FUNCTION flags 和 code object
+        _mf_flags = 0
+        _code_obj = None
+        _mf_idx = None
+        for _i_idx, _i in enumerate(_im_eff):
+            if _i.opname == 'MAKE_FUNCTION':
+                _mf_idx = _i_idx
+                _mf_flags = _i.arg or 0
+            if (_i.opname == 'LOAD_CONST'
+                    and hasattr(_i.argval, 'co_code')
+                    and _code_obj is None):
+                _code_obj = _i.argval
+        if _code_obj is None or _mf_idx is None:
+            return None
+        # 仅处理 defaults (flag & 1)。kw_defaults (flag & 2) / annotations (flag & 4)
+        # 的 chained ternary 场景较罕见，暂不处理（返回 None 让默认路径处理）。
+        if not (_mf_flags & 1):
+            return None
+        # 构建 chained ternary 表达式列表（作为 defaults）
+        _defaults_exprs = []
+        for tr in ternary_chain:
+            if tr is region:
+                _defaults_exprs.append(ternary_expr)
+            else:
+                _nested = self._build_nested_ternary_expr(tr)
+                if _nested is None:
+                    return None
+                _defaults_exprs.append(_nested)
+        # 检查 BUILD_TUPLE 是否还有非 ternary 的 sibling defaults
+        # （如 `def f(x=(a if c else b), y=2): ...` 中 y=2 是常量 default）
+        _bt_idx = None
+        for _j in range(_mf_idx - 1, -1, -1):
+            if _im_eff[_j].opname == 'BUILD_TUPLE':
+                _bt_idx = _j
+                break
+        if _bt_idx is not None:
+            _bt_arg = _im_eff[_bt_idx].arg or 0
+            # BUILD_TUPLE N 的 N 应该 >= len(ternary_chain)
+            # 如果 N > len(ternary_chain)，说明有非 ternary 的 sibling defaults
+            # 在 BUILD_TUPLE 之前（常量 defaults）。这些在 cond_block preload 或
+            # BUILD_TUPLE 之前的指令中。为简单起见，仅处理 N == len(ternary_chain)
+            # 的情况（所有 defaults 都是 ternary）。
+            if _bt_arg != len(ternary_chain):
+                return None
+        _func_obj = {'code': _code_obj, 'defaults': _defaults_exprs}
+        _func_def = self._build_function_def(func_obj=_func_obj, decorator=None)
+        # 检测装饰器（MAKE_FUNCTION 后的 PRECALL+CALL）
+        _has_call_after = any(_i.opname == 'CALL'
+                              for _i in _im_eff[_mf_idx + 1:])
+        if _has_call_after:
+            # 装饰器在 outermost cond_block 的 preload 中
+            _preload = self._compute_ternary_cond_preload_exprs(region)
+            if _preload:
+                _dec_expr = _preload[0]
+                if isinstance(_dec_expr, dict) and _dec_expr.get('type') in ('Name', 'Attribute'):
+                    _func_def['decorator_list'] = [_dec_expr] + _func_def.get('decorator_list', [])
+        # Lambda vs FunctionDef
+        if _func_def.get('type') == 'Lambda':
+            return {
+                'type': 'Assign',
+                'targets': [{'type': 'Name', 'id': innermost.value_target, 'ctx': 'Store'}],
+                'value': _func_def,
+            }
+        else:
+            _func_def['name'] = innermost.value_target
+            return _func_def
 
     def _try_build_ternary_chained_container(self, region: TernaryRegion,
                                                ternary_expr: Dict[str, Any]) -> Optional[Dict[str, Any]]:
@@ -23748,6 +23548,30 @@ AST 映射规则:
         merge_ctx = getattr(innermost, 'merge_context', None)
         value_target = innermost.value_target
         innermost_merge = innermost.merge_block
+
+        # [Phase 7 方案 D] chained ternary + MAKE_FUNCTION：多个 ternary 作为
+        # 函数默认参数（如 `def f(x=(a if c else b), y=(d if e else g)): ...`）。
+        # innermost merge_block 含 BUILD_TUPLE N + LOAD_CONST <code> +
+        # MAKE_FUNCTION flag。此时不应构建 Tuple 字面量，而应把 chained
+        # ternary 作为函数 defaults/kw_defaults，构建 FunctionDef/Lambda。
+        # 判据基于操作码语义（MAKE_FUNCTION 消费 BUILD_TUPLE 作为 defaults），
+        # 不依赖具体参数。依「父引用子入口」：父 FunctionDef 通过
+        # MAKE_FUNCTION 引用 chained ternary 子节点列表作为 defaults。
+        if (container_type == 'tuple' and innermost_merge is not None
+                and len(ternary_chain) >= 2):
+            _im_eff_mf = [i for i in innermost_merge.instructions
+                          if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+            _has_mf = any(i.opname == 'MAKE_FUNCTION' for i in _im_eff_mf)
+            if _has_mf:
+                _mf_stmt = self._try_build_chained_ternary_make_function(
+                    region, ternary_expr, ternary_chain, innermost, innermost_merge)
+                if _mf_stmt is not None:
+                    for tr in ternary_chain:
+                        if tr is region:
+                            continue
+                        for b in tr.blocks:
+                            self.generated_blocks.add(b)
+                    return _mf_stmt
 
         # [R6-09/18/20 fix] 多 ternary 同上下文共享出口 — 3 个新模式：
         # 依「每块唯一归属」+「父引用子入口」+「嵌套即抽象节点」+「自底向上归约」：
@@ -23916,43 +23740,6 @@ AST 映射规则:
                 'args': elts,
                 'keywords': [],
             }
-            # [R18-03 fix] await g(t1, t2) — chained ternary args feed PRECALL+
-            # CALL, then GET_AWAITABLE+SEND/YIELD_VALUE polling wraps the call
-            # result in Await. innermost merge 在 CALL 之后含 GET_AWAITABLE 时，
-            # 将 Call 包裹为 Await(Call(...))，并标记轮询块为已生成避免泄漏。
-            # 依「自底向上归约」: chained ternary 是最内层参数节点，Call 归约
-            #   为 Call 节点，Await 再归约为 Await(Call) 外层节点。
-            # 依「父引用子入口」: 父 Await 通过 innermost merge 的 PRECALL+
-            #   CALL+GET_AWAITABLE 引用 chained ternary 子节点列表作 call args。
-            if innermost_merge is not None:
-                _im_eff_call = [i for i in innermost_merge.instructions
-                                if i.opname not in ('RESUME', 'NOP', 'CACHE',
-                                                    'PUSH_NULL')]
-                if any(i.opname == 'GET_AWAITABLE' for i in _im_eff_call):
-                    _call_expr = {'type': 'Await', 'value': _call_expr}
-                    # 标记轮询块（innermost_merge 后继中含 SEND+YIELD+
-                    # JUMP_BACKWARD_NO_INTERRUPT）为已生成。
-                    for _succ in innermost_merge.successors:
-                        if _succ is innermost_merge:
-                            continue
-                        _s_instrs = _succ.instructions
-                        if (any(i.opname == 'SEND' for i in _s_instrs)
-                                and any(i.opname == 'YIELD_VALUE' for i in _s_instrs)
-                                and any(i.opname == 'JUMP_BACKWARD_NO_INTERRUPT'
-                                        for i in _s_instrs)):
-                            self.generated_blocks.add(_succ)
-                            self.generated_offsets.add(_succ.start_offset)
-                            # SEND 完成跳转目标的 consume 块也标记（含 POP_TOP/
-                            # RETURN 的 await 结果清理）。
-                            _send_i = next((i for i in _s_instrs
-                                            if i.opname == 'SEND'), None)
-                            if (_send_i is not None
-                                    and isinstance(_send_i.argval, int)):
-                                _cb = self.cfg.get_block_by_offset(_send_i.argval)
-                                if _cb is not None:
-                                    self.generated_blocks.add(_cb)
-                                    self.generated_offsets.add(_cb.start_offset)
-                            break
             # Determine the wrapping statement from innermost merge_block.
             if innermost_merge is not None:
                 _im_eff = [i for i in innermost_merge.instructions
@@ -24095,46 +23882,37 @@ AST 映射规则:
             # first key to be replaced by the second key.
             # 依「每块唯一归属」：每个 ternary 的 cond_block 只归属该 ternary，
             # 其中的 LOAD_* key preload 也只属于该 ternary。
+            # [Phase 7 方案 D] BUILD_CONST_KEY_MAP 模式：所有 key 作为单个
+            # LOAD_CONST tuple 打包在 innermost merge_block 中，不在各 ternary
+            # 的 cond_block preload 里。此时 innermost.dict_const_keys 存有
+            # const tuple 的值列表，按链序分发到各 ternary（chain[0]→key[0]，
+            # 与 value 压栈顺序一致）。判据基于操作码语义（const-key dict 构建器），
+            # 不依赖具体 key/value，覆盖任意 key 数。
+            # 依「自底向上归约」：innermost ternary 拥有 BUILD_CONST_KEY_MAP
+            # 消费者 + const-key tuple，归约整个链为单一 Dict 节点。
+            _const_keys = getattr(innermost, 'dict_const_keys', None)
             keys = []
-            _all_keys_ok = True
-            for tr in ternary_chain:
-                _k = RegionAnalyzer.extract_dict_key_from_block(tr.condition_block)
-                if _k is None:
-                    # Fallback to innermost's key (R3 behavior).
-                    _k = innermost.dict_key_info
-                    if _k is None:
-                        _all_keys_ok = False
-                        break
-                keys.append(_k)
-            if not _all_keys_ok:
-                # [R19-12] `{(t1): (t2)}` — both ternaries ARE the key and
-                # value (no separate key preload). BUILD_MAP 1 with 2 chained
-                # ternaries: first ternary (elts[0]) is the key (pushed first,
-                # lower on stack), second ternary (elts[1]) is the value (TOS).
-                # 依「父引用子入口」: 父 Dict 通过 innermost_merge 的 BUILD_MAP 1
-                # 引用 chained ternary 子节点作为 key 与 value。
-                if (len(elts) == 2 and innermost_merge is not None):
-                    _im_dm = [i for i in innermost_merge.instructions
-                              if i.opname not in ('RESUME', 'NOP', 'CACHE',
-                                                  'PUSH_NULL')]
-                    _bm = next((i for i in _im_dm
-                                if i.opname == 'BUILD_MAP'), None)
-                    if _bm is not None and _bm.arg == 1:
-                        container_info = {
-                            'type': 'Dict',
-                            'keys': [elts[0]],
-                            'values': [elts[1]],
-                        }
-                    else:
-                        return None
-                else:
+            if _const_keys is not None:
+                if len(_const_keys) != len(ternary_chain):
                     return None
+                for _ck in _const_keys:
+                    if isinstance(_ck, tuple):
+                        _ck = list(_ck)
+                    keys.append({'type': 'Constant', 'value': _ck})
             else:
-                container_info = {
-                    'type': 'Dict',
-                    'keys': keys,
-                    'values': elts,
-                }
+                for tr in ternary_chain:
+                    _k = RegionAnalyzer.extract_dict_key_from_block(tr.condition_block)
+                    if _k is None:
+                        # Fallback to innermost's key (R3 behavior).
+                        _k = innermost.dict_key_info
+                        if _k is None:
+                            return None
+                    keys.append(_k)
+            container_info = {
+                'type': 'Dict',
+                'keys': keys,
+                'values': elts,
+            }
         else:
             return None
 
@@ -24171,138 +23949,6 @@ AST 映射规则:
                 if _before_ret and not _has_load_none:
                     return {'type': 'Return', 'value': container_info}
         return {'type': 'Expr', 'value': container_info}
-
-    def _try_build_ternary_tuple_unpack_mixed(
-            self, region: TernaryRegion,
-            ternary_expr: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """[R19-06/07] Single ternary in tuple unpack with mixed constant
-        elements.
-
-        ``x, y = c, (a if d else b)`` or ``a, b, c = 1, (x if d else y), 2``
-
-        The ternary's merge_block has ``SWAP N`` (N > 1) + ``N×STORE_*``.
-        Only 1 element is the ternary; the other N-1 are simple constants
-        loaded before/after the ternary.
-
-        依「父引用子入口」+「自底向上归约」: 父 Assign(tuple-unpack) 通过
-        merge_block 的 SWAP N + N×STORE_* 引用 ternary 子节点与常量元素
-        作为 Tuple value。常量元素在 condition_block 前缀（ternary 之前
-        push）和 merge_block SWAP 之前（ternary 之后 push）。
-
-        Tuple order: [before_consts..., ternary, after_consts...]
-        After SWAP N, first tuple element becomes TOS, so STORE order =
-        tuple order.
-        """
-        if not region.merge_block:
-            return None
-        _im_eff = [i for i in region.merge_block.instructions
-                   if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-        if not _im_eff:
-            return None
-        # Find SWAP N.
-        _swap_idx = None
-        _swap_n = None
-        for _si, _sinstr in enumerate(_im_eff):
-            if _sinstr.opname == 'SWAP':
-                _swap_idx = _si
-                _swap_n = _sinstr.arg
-                break
-        if _swap_idx is None or _swap_n is None or _swap_n < 2:
-            return None
-        # Collect STORE_* after SWAP.
-        _stores_after = []
-        _ok = True
-        for _ai in _im_eff[_swap_idx + 1:]:
-            if _ai.opname in ('STORE_FAST', 'STORE_NAME',
-                              'STORE_GLOBAL', 'STORE_DEREF'):
-                _stores_after.append(_ai)
-            elif _ai.opname in ('LOAD_CONST', 'RETURN_VALUE',
-                                'RETURN_CONST', 'POP_TOP'):
-                continue
-            else:
-                _ok = False
-                break
-        if not _ok or len(_stores_after) != _swap_n:
-            return None
-        # Constants after ternary: in merge_block before SWAP.
-        _after_instrs = _im_eff[:_swap_idx]
-        _n_after = len(_after_instrs)
-        _n_before = _swap_n - 1 - _n_after  # 1 ternary element
-        if _n_before < 0:
-            return None
-        # Constants before ternary: in condition_block prefix (before cond
-        # expr). Use stack-effect backward walk to find cond expr start.
-        _before_instrs = []
-        if _n_before > 0:
-            _cond_blk = region.condition_block
-            if _cond_blk is None:
-                return None
-            _cb_instrs = [i for i in _cond_blk.instructions
-                          if i.opname not in ('RESUME', 'NOP', 'CACHE',
-                                              'PUSH_NULL')]
-            _cb_last = _cond_blk.get_last_instruction()
-            _cond_start_idx = len(_cb_instrs)
-            if (_cb_last and _cb_last.opname in (
-                    FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)):
-                _pj_idx = None
-                for _ci_idx in range(len(_cb_instrs) - 1, -1, -1):
-                    if _cb_instrs[_ci_idx] is _cb_last:
-                        _pj_idx = _ci_idx
-                        break
-                if _pj_idx is not None and _pj_idx > 0:
-                    import dis as _dis_t
-                    _needed = 1
-                    _cstart = None
-                    for _ci in range(_pj_idx - 1, -1, -1):
-                        _instr = _cb_instrs[_ci]
-                        try:
-                            _eff = _dis_t.stack_effect(
-                                _instr.opcode, _instr.arg)
-                        except Exception:
-                            _eff = 0
-                        _needed -= _eff
-                        if _needed <= 0:
-                            _cstart = _ci
-                            break
-                    if _cstart is not None:
-                        _cond_start_idx = _cstart
-            _before_instrs = _cb_instrs[:_cond_start_idx]
-        if len(_before_instrs) != _n_before:
-            return None
-        # Reconstruct constant elements as AST nodes.
-        def _const_to_ast(_instr):
-            if _instr.opname == 'LOAD_NAME':
-                return {'type': 'Name', 'id': str(_instr.argval),
-                        'ctx': 'Load'}
-            if _instr.opname == 'LOAD_CONST':
-                return {'type': 'Constant', 'value': _instr.argval}
-            if _instr.opname == 'LOAD_FAST':
-                return {'type': 'Name', 'id': str(_instr.argval),
-                        'ctx': 'Load'}
-            _r = self.expr_reconstructor.reconstruct([_instr])
-            return _r
-        _before_consts = [_const_to_ast(i) for i in _before_instrs]
-        _after_consts = [_const_to_ast(i) for i in _after_instrs]
-        _all_elts = _before_consts + [ternary_expr] + _after_consts
-        _up_targets = [
-            {'type': 'Name',
-             'id': _s.argval if _s.argval else f'var_{_s.arg}',
-             'ctx': 'Store'}
-            for _s in _stores_after
-        ]
-        return {
-            'type': 'Assign',
-            'targets': [{
-                'type': 'Tuple',
-                'elts': _up_targets,
-                'ctx': 'Store',
-            }],
-            'value': {
-                'type': 'Tuple',
-                'elts': _all_elts,
-                'ctx': 'Load',
-            },
-        }
 
     def _try_build_ternary_chained_r6_pattern(
             self, region: TernaryRegion, ternary_expr: Dict[str, Any],
@@ -24421,7 +24067,7 @@ AST 映射规则:
                 _swap_idx = _si
                 _swap_n = _sinstr.arg
                 break
-        if _swap_idx is not None and _swap_n is not None and _swap_n >= len(elts):
+        if _swap_idx is not None and _swap_n is not None and _swap_n == len(elts):
             # 收集 SWAP 之后的 STORE_*（按出现顺序）
             _stores_after = []
             _ok_unpack = True
@@ -24442,107 +24088,20 @@ AST 映射规则:
                      'ctx': 'Store'}
                     for _s in _stores_after
                 ]
-                if _swap_n == len(elts):
-                    # All elements are ternary (R6-09 existing behavior).
-                    _value_tuple = {
+                _value_tuple = {
+                    'type': 'Tuple',
+                    'elts': elts,
+                    'ctx': 'Load',
+                }
+                return {
+                    'type': 'Assign',
+                    'targets': [{
                         'type': 'Tuple',
-                        'elts': elts,
-                        'ctx': 'Load',
-                    }
-                else:
-                    # [R19-06/07] Mixed: constants + ternary in tuple unpack.
-                    # `x, y = c, (a if d else b)` or
-                    # `a, b, c = 1, (x if d else y), 2`
-                    # SWAP N where N > len(elts): some tuple elements are
-                    # simple constants, not ternary.
-                    # Constants AFTER ternary: in innermost_merge before SWAP
-                    #   (pushed after ternary result, higher on stack).
-                    # Constants BEFORE ternary: in condition_block prefix
-                    #   (pushed before ternary, lower on stack).
-                    # Tuple order: [before_consts..., ternary..., after_consts...]
-                    # After SWAP N, first tuple element becomes TOS, so
-                    # STORE order = tuple order.
-                    _after_const_instrs = _im_eff[:_swap_idx]
-                    _n_after = len(_after_const_instrs)
-                    _n_before = _swap_n - len(elts) - _n_after
-                    _before_const_instrs = []
-                    if _n_before > 0:
-                        _cond_blk = innermost.condition_block
-                        if _cond_blk is not None:
-                            _cb_instrs = [
-                                i for i in _cond_blk.instructions
-                                if i.opname not in (
-                                    'RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                            _cb_last = _cond_blk.get_last_instruction()
-                            _cond_start_idx = len(_cb_instrs)
-                            if (_cb_last and _cb_last.opname in (
-                                    FORWARD_CONDITIONAL_JUMP_OPS
-                                    | SHORT_CIRCUIT_JUMP_OPS)):
-                                _pj_idx = None
-                                for _ci_idx in range(len(_cb_instrs) - 1,
-                                                     -1, -1):
-                                    if _cb_instrs[_ci_idx] is _cb_last:
-                                        _pj_idx = _ci_idx
-                                        break
-                                if _pj_idx is not None and _pj_idx > 0:
-                                    import dis as _dis_b
-                                    _needed = 1
-                                    _cstart = None
-                                    for _ci in range(_pj_idx - 1, -1, -1):
-                                        _instr = _cb_instrs[_ci]
-                                        try:
-                                            _eff = _dis_b.stack_effect(
-                                                _instr.opcode, _instr.arg)
-                                        except Exception:
-                                            _eff = 0
-                                        _needed -= _eff
-                                        if _needed <= 0:
-                                            _cstart = _ci
-                                            break
-                                    if _cstart is not None:
-                                        _cond_start_idx = _cstart
-                            _before_const_instrs = \
-                                _cb_instrs[:_cond_start_idx]
-                    # Reconstruct constant elements as AST nodes.
-                    def _const_to_ast(_instr):
-                        if _instr.opname == 'LOAD_NAME':
-                            return {'type': 'Name',
-                                    'id': str(_instr.argval),
-                                    'ctx': 'Load'}
-                        if _instr.opname == 'LOAD_CONST':
-                            return {'type': 'Constant',
-                                    'value': _instr.argval}
-                        if _instr.opname == 'LOAD_FAST':
-                            return {'type': 'Name',
-                                    'id': str(_instr.argval),
-                                    'ctx': 'Load'}
-                        _r = self.expr_reconstructor.reconstruct(
-                            [_instr])
-                        return _r
-                    if len(_before_const_instrs) != _n_before:
-                        _ok_unpack = False
-                    else:
-                        _before_consts = [_const_to_ast(i)
-                                          for i in _before_const_instrs]
-                        _after_consts = [_const_to_ast(i)
-                                         for i in _after_const_instrs]
-                        _all_elts = (_before_consts + elts
-                                     + _after_consts)
-                        _value_tuple = {
-                            'type': 'Tuple',
-                            'elts': _all_elts,
-                            'ctx': 'Load',
-                        }
-                if _ok_unpack:
-                    return {
-                        'type': 'Assign',
-                        'targets': [{
-                            'type': 'Tuple',
-                            'elts': _up_targets,
-                            'ctx': 'Store',
-                        }],
-                        'value': _value_tuple,
-                    }
+                        'elts': _up_targets,
+                        'ctx': 'Store',
+                    }],
+                    'value': _value_tuple,
+                }
 
         # --- Pattern C: nested subscript store (R6-20) ---
         # innermost_merge: STORE_SUBSCR (+ LOAD_CONST None + RETURN_VALUE)
@@ -24799,10 +24358,9 @@ AST 映射规则:
         # 依「父引用子入口」+「嵌套即抽象节点」+「自底向上归约」: 父 Delete
         # 通过 outer.cond_block preload (LOAD obj) + innermost_merge 的
         # BUILD_SLICE 2 + DELETE_SUBSCR 引用 chained ternary 子节点列表作为
-        # Slice 的 lower/upper/step (R13-02 双段 + R18-01 三段扩展).
-        # BUILD_SLICE 2 → del x[t1:t2]; BUILD_SLICE 3 → del x[t1:t2:t3].
+        # Slice 的 lower/upper。
         _has_build_slice = any(_i.opname == 'BUILD_SLICE' for _i in _im_eff)
-        if (_has_build_slice and _has_delete_subscr and len(elts) in (2, 3)):
+        if (_has_build_slice and _has_delete_subscr and len(elts) == 2):
             # Locate obj in outer.cond_block preload (e.g. LOAD_NAME x).
             _outer_cond = region.condition_block
             if _outer_cond is not None:
@@ -24853,7 +24411,7 @@ AST 映射规则:
                         'type': 'Slice',
                         'lower': elts[0],
                         'upper': elts[1],
-                        'step': elts[2] if len(elts) >= 3 else None,
+                        'step': None,
                     }
                     _target = {
                         'type': 'Subscript',
@@ -24866,17 +24424,17 @@ AST 映射规则:
                         'targets': [_target],
                     }
 
-        # --- Pattern F: x[t1:t2] = value (R14-10) / x[t1:t2:t3] = value (R18-01) ---
-        # innermost_merge: BUILD_SLICE N, STORE_SUBSCR (+ LOAD_CONST None +
-        # RETURN_VALUE). N chained ternaries (N=2 or 3) produce the slice's
-        # lower/upper (and step); BUILD_SLICE N wraps them as a Slice node;
+        # --- Pattern F: x[t1:t2] = value (R14-10) ---
+        # innermost_merge: BUILD_SLICE 2, STORE_SUBSCR (+ LOAD_CONST None +
+        # RETURN_VALUE). Two chained ternaries produce the slice's lower and
+        # upper bounds; BUILD_SLICE 2 wraps them as a Slice node;
         # STORE_SUBSCR assigns obj[slice] = value.
         # 依「父引用子入口」+「嵌套即抽象节点」+「自底向上归约」: 父 Assign
         # 通过 outer.cond_block preload (value, obj) + innermost_merge 的
-        # BUILD_SLICE N + STORE_SUBSCR 引用 chained ternary 子节点列表作为
-        # Slice 的 lower/upper/step。
+        # BUILD_SLICE 2 + STORE_SUBSCR 引用 chained ternary 子节点列表作为
+        # Slice 的 lower/upper。
         _has_store_subscr = any(_i.opname == 'STORE_SUBSCR' for _i in _im_eff)
-        if (_has_build_slice and _has_store_subscr and len(elts) in (2, 3)):
+        if (_has_build_slice and _has_store_subscr and len(elts) == 2):
             _outer_cond = region.condition_block
             if _outer_cond is not None:
                 _oc_instrs = [i for i in _outer_cond.instructions
@@ -24927,7 +24485,7 @@ AST 映射规则:
                         'type': 'Slice',
                         'lower': elts[0],
                         'upper': elts[1],
-                        'step': elts[2] if len(elts) >= 3 else None,
+                        'step': None,
                     }
                     _target = {
                         'type': 'Subscript',
@@ -24940,80 +24498,6 @@ AST 映射规则:
                         'targets': [_target],
                         'value': _rhs_value,
                     }
-
-        # --- Pattern H: x[t1:t2:t3] / x[t1:t2] as Expr (R18-01) ---
-        # innermost_merge: BUILD_SLICE N, BINARY_SUBSCR, POP_TOP (+ LOAD_CONST
-        # None + RETURN_VALUE). N chained ternaries (N=2 or 3) produce the
-        # slice's lower/upper (and step); BUILD_SLICE N wraps them as a Slice
-        # node; BINARY_SUBSCR loads obj[slice]; POP_TOP discards the result
-        # (Expr statement).
-        # 依「父引用子入口」+「嵌套即抽象节点」+「自底向上归约」: 父
-        # Expr(Subscript) 通过 outer.cond_block preload (obj) +
-        # innermost_merge 的 BUILD_SLICE N + BINARY_SUBSCR + POP_TOP 引用
-        # chained ternary 子节点列表作为 Slice 的 lower/upper/step。
-        _has_binary_subscr = any(_i.opname == 'BINARY_SUBSCR' for _i in _im_eff)
-        _has_pop_top = any(_i.opname == 'POP_TOP' for _i in _im_eff)
-        if (_has_build_slice and _has_binary_subscr and _has_pop_top
-                and not _has_store_subscr and not _has_delete_subscr
-                and len(elts) in (2, 3)):
-            _outer_cond = region.condition_block
-            if _outer_cond is not None:
-                _oc_instrs = [i for i in _outer_cond.instructions
-                              if i.opname not in ('RESUME', 'NOP',
-                                                  'CACHE', 'PUSH_NULL')]
-                _oc_last = _outer_cond.get_last_instruction()
-                _oc_cond_start = len(_oc_instrs)
-                if _oc_last and _oc_last.opname in (
-                        FORWARD_CONDITIONAL_JUMP_OPS
-                        | SHORT_CIRCUIT_JUMP_OPS):
-                    _oc_pj_idx = None
-                    for _ci_idx in range(len(_oc_instrs) - 1, -1, -1):
-                        if _oc_instrs[_ci_idx] is _oc_last:
-                            _oc_pj_idx = _ci_idx
-                            break
-                    if _oc_pj_idx is not None and _oc_pj_idx > 0:
-                        import dis as _dis
-                        _needed = 1
-                        _cstart = None
-                        for _ci in range(_oc_pj_idx - 1, -1, -1):
-                            _instr = _oc_instrs[_ci]
-                            try:
-                                _eff = _dis.stack_effect(
-                                    _instr.opcode, _instr.arg)
-                            except Exception:
-                                _eff = 0
-                            _needed -= _eff
-                            if _needed <= 0:
-                                _cstart = _ci
-                                break
-                        if _cstart is not None:
-                            _oc_cond_start = _cstart
-                _oc_preload = _oc_instrs[:_oc_cond_start]
-                self.expr_reconstructor.reset()
-                for _instr in _oc_preload:
-                    if _instr.opname in ('RESUME', 'NOP', 'CACHE',
-                                         'PUSH_NULL'):
-                        continue
-                    self.expr_reconstructor._process_instruction(_instr)
-                _pl_stack = [s for s in self.expr_reconstructor.stack
-                             if not (isinstance(s, dict)
-                                     and s.get('type') == 'PUSH_NULL')]
-                # Expect [obj] on stack (e.g. [Name(x)]).
-                if len(_pl_stack) >= 1:
-                    _obj_expr = _pl_stack[-1]
-                    _slice_expr = {
-                        'type': 'Slice',
-                        'lower': elts[0],
-                        'upper': elts[1],
-                        'step': elts[2] if len(elts) >= 3 else None,
-                    }
-                    _subscript = {
-                        'type': 'Subscript',
-                        'value': _obj_expr,
-                        'slice': _slice_expr,
-                        'ctx': 'Load',
-                    }
-                    return {'type': 'Expr', 'value': _subscript}
 
         # --- Pattern G: raise E(t1) from (t2) (R14-06) ---
         # innermost_merge: RAISE_VARARGS 2 (+ LOAD_CONST None + RETURN_VALUE).
@@ -25083,343 +24567,143 @@ AST 映射规则:
                         'exc': _exc_expr,
                         'cause': elts[1],
                     }
-            # [R19-05] raise (t1) from (t2) — naked ternaries, no E callable
-            # in outer.cond_block preload. Both ternaries are bare expressions
-            # consumed directly by RAISE_VARARGS 2 as (exc, cause).
-            # 依「父引用子入口」: 父 Raise 通过 innermost_merge 的 RAISE_VARARGS 2
-            # 直接引用 chained ternary 子节点作为 exc 与 cause。
-            return {
-                'type': 'Raise',
-                'exc': elts[0],
-                'cause': elts[1],
-            }
 
-        # --- Pattern I: two ternaries → chained compare (R19-10) ---
-        # `x = (t1) < (t2) < g` — two ternaries as left and middle operands
-        # of a chained comparison.
-        # innermost_merge: SWAP 2, COPY 2, COMPARE_OP op1,
-        #                   JUMP_IF_FALSE_OR_POP → cleanup
-        # fallthrough: LOAD right, COMPARE_OP op2, (STORE_* | POP_TOP | RETURN)
-        # 依「父引用子入口」+「自底向上归约」: 父 Compare 通过 innermost_merge
-        # 的 SWAP/COPY/COMPARE_OP/JUMP_IF_FALSE_OR_POP + fallthrough 的
-        # COMPARE_OP 引用两个 chained ternary 子节点作为 left 和 middle。
-        _jifop_instr = None
-        for _i in _im_eff:
-            if _i.opname in ('JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP'):
-                _jifop_instr = _i
-                break
-        if (_jifop_instr is not None and len(elts) == 2):
-            _CMP_OP_MAP_I = {0: '<', 1: '<=', 2: '==', 3: '!=', 4: '>', 5: '>='}
-            _cmp1_instr = None
-            _jifop_idx_i = _im_eff.index(_jifop_instr)
-            for _ci in range(_jifop_idx_i - 1, -1, -1):
-                if _im_eff[_ci].opname == 'COMPARE_OP':
-                    _cmp1_instr = _im_eff[_ci]
-                    break
-            if _cmp1_instr is not None:
-                _op1 = _CMP_OP_MAP_I.get(
-                    _cmp1_instr.arg & 0xFF if _cmp1_instr.arg is not None else -1)
-                # Find fallthrough successor (not the cleanup target).
-                _fallthrough = None
-                for _succ in innermost_merge.successors:
-                    if _succ.start_offset == _jifop_instr.argval:
-                        continue
-                    if _fallthrough is None or _succ.start_offset < _fallthrough.start_offset:
-                        _fallthrough = _succ
-                if _fallthrough is not None and _op1 is not None:
-                    _ft_eff = [i for i in _fallthrough.instructions
-                               if i.opname not in ('RESUME', 'NOP', 'CACHE',
-                                                   'PUSH_NULL')]
-                    _cmp2_instr = None
-                    _cmp2_idx = None
-                    for _fi, _fi_i in enumerate(_ft_eff):
-                        if _fi_i.opname == 'COMPARE_OP':
-                            _cmp2_instr = _fi_i
-                            _cmp2_idx = _fi
-                            break
-                    if _cmp2_instr is not None:
-                        _op2 = _CMP_OP_MAP_I.get(
-                            _cmp2_instr.arg & 0xFF
-                            if _cmp2_instr.arg is not None else -1)
-                        if _op2 is not None:
-                            _right_instrs = _ft_eff[:_cmp2_idx]
-                            _right = self.expr_reconstructor.reconstruct(
-                                _right_instrs)
-                            if _right is not None:
-                                _compare_expr = {
-                                    'type': 'Compare',
-                                    'left': elts[0],
-                                    'ops': [_op1, _op2],
-                                    'comparators': [elts[1], _right],
-                                }
-                                _after_cmp2 = _ft_eff[_cmp2_idx + 1:]
-                                _after_clean = list(_after_cmp2)
-                                while _after_clean and _after_clean[-1].opname in (
-                                        'RETURN_VALUE', 'RETURN_CONST'):
-                                    _after_clean.pop()
-                                    if (_after_clean
-                                            and _after_clean[-1].opname == 'LOAD_CONST'
-                                            and _after_clean[-1].argval is None):
-                                        _after_clean.pop()
-                                # Mark fallthrough + cleanup as generated.
-                                for _succ in innermost_merge.successors:
-                                    self.generated_blocks.add(_succ)
-                                    if hasattr(_succ, 'start_offset'):
-                                        self.generated_offsets.add(
-                                            _succ.start_offset)
-                                if not _after_clean:
-                                    return {'type': 'Return',
-                                            'value': _compare_expr}
-                                # Scan all post-COMPARE_OP instrs (including
-                                # SWAP/POP_TOP cleanup) for first STORE_*.
-                                _store_target = None
-                                for _instr in _after_clean:
-                                    if _instr.opname in (
-                                            'STORE_FAST', 'STORE_NAME',
-                                            'STORE_GLOBAL', 'STORE_DEREF'):
-                                        _store_target = str(_instr.argval)
-                                        break
-                                # [R19-10] If STORE_* not in fallthrough,
-                                # check the join block (common successor of
-                                # fallthrough and cleanup). The fallthrough
-                                # ends with JUMP_FORWARD → join, and cleanup
-                                # falls through to join. The STORE_* target
-                                # is in the join block.
-                                _join_block = None
-                                if _store_target is None:
-                                    _ft_succs = set(_fallthrough.successors)
-                                    for _succ in innermost_merge.successors:
-                                        if _succ is _fallthrough:
-                                            continue
-                                        _cl_succs = set(_succ.successors)
-                                        _common = _ft_succs & _cl_succs
-                                        if _common:
-                                            _join_block = next(iter(_common))
-                                            break
-                                if _join_block is not None:
-                                    _join_eff = [
-                                        i for i in _join_block.instructions
-                                        if i.opname not in (
-                                            'RESUME', 'NOP', 'CACHE',
-                                            'PUSH_NULL')]
-                                    for _instr in _join_eff:
-                                        if _instr.opname in (
-                                                'STORE_FAST', 'STORE_NAME',
-                                                'STORE_GLOBAL', 'STORE_DEREF'):
-                                            _store_target = str(
-                                                _instr.argval)
-                                            break
-                                if _store_target is not None:
-                                    # Mark join block as generated too (its
-                                    # STORE_* is consumed by this Assign; the
-                                    # implicit LOAD_CONST None + RETURN_VALUE
-                                    # is re-added by function body generator).
-                                    if _join_block is not None:
-                                        self.generated_blocks.add(_join_block)
-                                        if hasattr(_join_block,
-                                                   'start_offset'):
-                                            self.generated_offsets.add(
-                                                _join_block.start_offset)
-                                    return {
-                                        'type': 'Assign',
-                                        'targets': [{
-                                            'type': 'Name',
-                                            'id': _store_target,
-                                            'ctx': 'Store',
-                                        }],
-                                        'value': _compare_expr,
-                                    }
-                                return {'type': 'Expr',
-                                        'value': _compare_expr}
-
-        # --- Pattern J: two ternaries → COMPARE_OP / CONTAINS_OP (R19-11/13) ---
-        # innermost_merge: COMPARE_OP|CONTAINS_OP + (STORE_* | POP_TOP | RETURN)
-        # No JUMP_IF_FALSE_OR_POP (simple binary compare, not chained).
-        # 依「父引用子入口」: 父 Compare 通过 innermost_merge 的 COMPARE_OP/
-        # CONTAINS_OP 引用两个 chained ternary 子节点作为左右操作数。
-        _has_jifop = any(_i.opname in ('JUMP_IF_FALSE_OR_POP',
-                                       'JUMP_IF_TRUE_OR_POP') for _i in _im_eff)
-        _cmp_op_instr = None
-        for _i in _im_eff:
-            if _i.opname == 'COMPARE_OP':
-                _cmp_op_instr = _i
-                break
-        _contains_instr = None
-        if _cmp_op_instr is None:
+        # --- Pattern H: load-side slice subscript (Phase 7 方案 D) ---
+        # innermost_merge: BUILD_SLICE N, BINARY_SUBSCR, (STORE_* | POP_TOP |
+        # RETURN_VALUE). N chained ternaries produce the slice bounds (lower,
+        # upper[, step]); BUILD_SLICE N wraps them as a Slice node;
+        # BINARY_SUBSCR consumes (obj, slice) producing obj[slice]; the suffix
+        # stores/discards/returns the result.
+        # 例: x = lst[a if c else 0 : b if c2 else -1]
+        #     r = base[t1:t2:t3]  (3 元 chained ternary 作 step)
+        # 依「父引用子入口」+「嵌套即抽象节点」+「自底向上归约」: 父
+        # Assign/Expr/Return 通过 outer.cond_block preload (obj) +
+        # innermost_merge 的 BUILD_SLICE N + BINARY_SUBSCR 引用 chained
+        # ternary 子节点列表作为 Slice 的 lower/upper[/step]。
+        # 判据基于操作码语义（slice 构建 + subscript 读取），覆盖 N=2/3 任意
+        # bound 全为 ternary 的形态，不依赖具体 obj/bound。
+        if _has_build_slice:
+            _bs_instr = None
             for _i in _im_eff:
-                if _i.opname == 'CONTAINS_OP':
-                    _contains_instr = _i
+                if _i.opname == 'BUILD_SLICE':
+                    _bs_instr = _i
                     break
-        if (not _has_jifop
-                and (_cmp_op_instr is not None or _contains_instr is not None)
-                and len(elts) == 2):
-            _CMP_OP_MAP_J = {0: '<', 1: '<=', 2: '==', 3: '!=', 4: '>', 5: '>='}
-            if _cmp_op_instr is not None:
-                _op_str = _CMP_OP_MAP_J.get(
-                    _cmp_op_instr.arg & 0xFF
-                    if _cmp_op_instr.arg is not None else -1)
-            else:
-                _op_str = ('in' if _contains_instr.arg == 0 else 'not in')
-            if _op_str is not None:
-                _consumer = _cmp_op_instr or _contains_instr
-                _compare_expr = {
-                    'type': 'Compare',
-                    'left': elts[0],
-                    'ops': [_op_str],
-                    'comparators': [elts[1]],
-                }
-                _consumer_idx = _im_eff.index(_consumer)
-                _suffix = _im_eff[_consumer_idx + 1:]
-                _store_target = None
-                _is_return = False
-                _ok_suffix = True
-                for _si in _suffix:
-                    if _si.opname in ('RETURN_VALUE', 'RETURN_CONST'):
-                        _is_return = True
-                        continue
-                    if _si.opname == 'LOAD_CONST' and _si.argval is None:
-                        continue
-                    if _si.opname in ('STORE_FAST', 'STORE_NAME',
-                                      'STORE_GLOBAL', 'STORE_DEREF'):
-                        if _store_target is None:
-                            _store_target = _si.argval
-                        continue
-                    if _si.opname == 'POP_TOP':
-                        continue
-                    _ok_suffix = False
-                    break
-                if _ok_suffix:
-                    if _store_target is not None:
-                        return {
-                            'type': 'Assign',
-                            'targets': [{'type': 'Name', 'id': _store_target,
-                                         'ctx': 'Store'}],
-                            'value': _compare_expr,
+            _bs_n = (_bs_instr.arg if _bs_instr is not None else 2) or 2
+            _has_binary_subscr = any(
+                _i.opname == 'BINARY_SUBSCR' for _i in _im_eff)
+            # 仅当 chain 长度 == BUILD_SLICE N（所有 bound 均为 ternary）时
+            # 匹配。mixed（部分 bound 为 const preload）留待单 ternary 路径。
+            if (_bs_instr is not None and _has_binary_subscr
+                    and len(elts) == _bs_n):
+                _outer_cond = region.condition_block
+                if _outer_cond is not None:
+                    _oc_instrs = [i for i in _outer_cond.instructions
+                                  if i.opname not in ('RESUME', 'NOP',
+                                                      'CACHE', 'PUSH_NULL')]
+                    _oc_last = _outer_cond.get_last_instruction()
+                    _oc_cond_start = len(_oc_instrs)
+                    if _oc_last and _oc_last.opname in (
+                            FORWARD_CONDITIONAL_JUMP_OPS
+                            | SHORT_CIRCUIT_JUMP_OPS):
+                        _oc_pj_idx = None
+                        for _ci_idx in range(len(_oc_instrs) - 1, -1, -1):
+                            if _oc_instrs[_ci_idx] is _oc_last:
+                                _oc_pj_idx = _ci_idx
+                                break
+                        if _oc_pj_idx is not None and _oc_pj_idx > 0:
+                            import dis as _dis
+                            _needed = 1
+                            _cstart = None
+                            for _ci in range(_oc_pj_idx - 1, -1, -1):
+                                _instr = _oc_instrs[_ci]
+                                try:
+                                    _eff = _dis.stack_effect(
+                                        _instr.opcode, _instr.arg)
+                                except Exception:
+                                    _eff = 0
+                                _needed -= _eff
+                                if _needed <= 0:
+                                    _cstart = _ci
+                                    break
+                            if _cstart is not None:
+                                _oc_cond_start = _cstart
+                    _oc_preload = _oc_instrs[:_oc_cond_start]
+                    self.expr_reconstructor.reset()
+                    for _instr in _oc_preload:
+                        if _instr.opname in ('RESUME', 'NOP', 'CACHE',
+                                             'PUSH_NULL'):
+                            continue
+                        self.expr_reconstructor._process_instruction(_instr)
+                    _pl_stack = [s for s in self.expr_reconstructor.stack
+                                 if not (isinstance(s, dict)
+                                         and s.get('type') == 'PUSH_NULL')]
+                    # 期望栈: [obj]（subscript 的 base）。BUILD_SLICE N 的 N 个
+                    # bound 全部来自 chained ternary（已在 elts 中），无需 preload。
+                    if len(_pl_stack) >= 1:
+                        _obj_expr = _pl_stack[-1]
+                        _slice_expr = {
+                            'type': 'Slice',
+                            'lower': elts[0],
+                            'upper': elts[1],
+                            'step': elts[2] if _bs_n == 3 else None,
                         }
-                    if _is_return:
-                        return {'type': 'Return', 'value': _compare_expr}
-                    return {'type': 'Expr', 'value': _compare_expr}
-
-        # --- Pattern K: two ternaries → BUILD_MAP (R19-12) ---
-        # innermost_merge: BUILD_MAP 1 + (STORE_* | POP_TOP | RETURN)
-        # BUILD_MAP 1 pops key (below) and value (TOS) from stack.
-        # Stack order: [elts[0] (key, pushed first), elts[1] (value, TOS)]
-        # 依「父引用子入口」: 父 Dict 通过 innermost_merge 的 BUILD_MAP 1
-        # 引用两个 chained ternary 子节点作为 key 与 value。
-        _build_map_instr = None
-        for _i in _im_eff:
-            if _i.opname == 'BUILD_MAP':
-                _build_map_instr = _i
-                break
-        if (_build_map_instr is not None and _build_map_instr.arg == 1
-                and len(elts) == 2):
-            _dict_expr = {
-                'type': 'Dict',
-                'keys': [elts[0]],
-                'values': [elts[1]],
-            }
-            _consumer_idx = _im_eff.index(_build_map_instr)
-            _suffix = _im_eff[_consumer_idx + 1:]
-            _store_target = None
-            _is_return = False
-            _ok_suffix = True
-            for _si in _suffix:
-                if _si.opname in ('RETURN_VALUE', 'RETURN_CONST'):
-                    _is_return = True
-                    continue
-                if _si.opname == 'LOAD_CONST' and _si.argval is None:
-                    continue
-                if _si.opname in ('STORE_FAST', 'STORE_NAME',
-                                  'STORE_GLOBAL', 'STORE_DEREF'):
-                    if _store_target is None:
-                        _store_target = _si.argval
-                    continue
-                if _si.opname == 'POP_TOP':
-                    continue
-                _ok_suffix = False
-                break
-            if _ok_suffix:
-                if _store_target is not None:
-                    return {
-                        'type': 'Assign',
-                        'targets': [{'type': 'Name', 'id': _store_target,
-                                     'ctx': 'Store'}],
-                        'value': _dict_expr,
-                    }
-                if _is_return:
-                    return {'type': 'Return', 'value': _dict_expr}
-                return {'type': 'Expr', 'value': _dict_expr}
+                        _subscr_expr = {
+                            'type': 'Subscript',
+                            'value': _obj_expr,
+                            'slice': _slice_expr,
+                            'ctx': 'Load',
+                        }
+                        # 依据 innermost_merge 的 BINARY_SUBSCR 之后的终结
+                        # 指令决定 wrapping：STORE_* → Assign，POP_TOP → Expr，
+                        # RETURN_VALUE（非 implicit None return）→ Return。
+                        # 模块级隐式返回 LOAD_CONST None + RETURN_VALUE 不是真实
+                        # Return，须排除（否则 Assign 被误判为 Return）。
+                        _bs_idx_in_eff = _im_eff.index(_bs_instr)
+                        _suffix = _im_eff[_bs_idx_in_eff + 1:]
+                        _store_target = None
+                        _is_return = False
+                        _ok_suffix = True
+                        _prev_load_none = False
+                        for _si in _suffix:
+                            if _si.opname == 'BINARY_SUBSCR':
+                                _prev_load_none = False
+                                continue
+                            if _si.opname == 'LOAD_CONST' and _si.argval is None:
+                                _prev_load_none = True
+                                continue
+                            if _si.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                                # implicit module return None: LOAD_CONST None +
+                                # RETURN_VALUE —— 不是真实 Return，忽略。
+                                if not _prev_load_none:
+                                    _is_return = True
+                                _prev_load_none = False
+                                continue
+                            if _si.opname in ('STORE_FAST', 'STORE_NAME',
+                                              'STORE_GLOBAL', 'STORE_DEREF'):
+                                if _store_target is None:
+                                    _store_target = _si.argval
+                                _prev_load_none = False
+                                continue
+                            if _si.opname == 'POP_TOP':
+                                _prev_load_none = False
+                                continue
+                            _ok_suffix = False
+                            break
+                        if _ok_suffix:
+                            if _store_target is not None:
+                                return {
+                                    'type': 'Assign',
+                                    'targets': [{'type': 'Name',
+                                                 'id': _store_target,
+                                                 'ctx': 'Store'}],
+                                    'value': _subscr_expr,
+                                }
+                            if _is_return:
+                                return {'type': 'Return',
+                                        'value': _subscr_expr}
+                            return {'type': 'Expr', 'value': _subscr_expr}
 
         return None
-
-    def _build_starred_call_with_pos_args(self, region: TernaryRegion,
-                                          ternary_expr: Dict[str, Any]) -> Optional[Dict[str, Any]]:
-        """[R18-11] Build Call for ``f(*(ternary), other)`` pattern.
-
-        The ternary's merge_block has LIST_EXTEND (starred ternary) +
-        LIST_APPEND (positional args) + LIST_TO_TUPLE + CALL_FUNCTION_EX.
-        The func is preloaded in cond_block before BUILD_LIST 0.
-
-        Returns the Call dict, or None if the pattern does not match.
-        """
-        if not region.merge_block or not region.condition_block:
-            return None
-
-        merge_eff = [i for i in region.merge_block.instructions
-                     if i.opname not in NOISE_OPS]
-        while merge_eff and merge_eff[-1].opname == 'RETURN_VALUE':
-            merge_eff.pop()
-            if (merge_eff and merge_eff[-1].opname == 'LOAD_CONST'
-                    and merge_eff[-1].argval is None):
-                merge_eff.pop()
-        if not any(i.opname == 'CALL_FUNCTION_EX' for i in merge_eff):
-            return None
-
-        # Extract func from cond_block preload (the LOAD_* before BUILD_LIST 0).
-        preload_exprs = self._compute_ternary_cond_preload_exprs(region)
-        func_expr = None
-        for p in preload_exprs:
-            if isinstance(p, dict) and p.get('type') not in (
-                    'List', 'Tuple', 'Set', 'Dict'):
-                func_expr = p
-                break
-        if func_expr is None and preload_exprs:
-            func_expr = preload_exprs[0]
-        if func_expr is None:
-            return None
-
-        # Collect positional args: each group of instructions between
-        # LIST_EXTEND/LIST_APPEND and the next LIST_APPEND is one arg.
-        pos_args = []
-        _arg_instrs = []
-        _found_extend = False
-        for instr in merge_eff:
-            if instr.opname == 'LIST_EXTEND':
-                _found_extend = True
-                continue
-            if not _found_extend:
-                continue
-            if instr.opname == 'LIST_APPEND':
-                if _arg_instrs:
-                    self.expr_reconstructor.reset()
-                    _arg = self.expr_reconstructor.reconstruct(_arg_instrs)
-                    if _arg is not None:
-                        pos_args.append(_arg)
-                _arg_instrs = []
-                continue
-            if instr.opname in ('LIST_TO_TUPLE', 'CALL_FUNCTION_EX',
-                                'POP_TOP', 'LOAD_CONST'):
-                continue
-            _arg_instrs.append(instr)
-
-        _starred = {'type': 'Starred', 'value': ternary_expr, 'ctx': 'Load'}
-        call_expr = {
-            'type': 'Call',
-            'func': func_expr,
-            'args': [_starred] + pos_args,
-            'keywords': [],
-        }
-        return self._convert_lambda_function_objects(call_expr)
 
     def _try_build_ternary_kwarg_call(self, region: TernaryRegion,
                                        ternary_expr: Dict[str, Any]) -> Optional[Dict[str, Any]]:
@@ -27549,11 +26833,6 @@ AST 映射规则:
 
                 pop_expr = self.expr_reconstructor.reconstruct(stmt_instrs)
                 if pop_expr and pop_expr.get('type') not in ('Constant',):
-                    # [R17-13 fix] POP_TOP 路径直接包装 Expr，未经过 _build_statement，
-                    # 需在此显式转换 lambda FunctionObject 为 Lambda dict，否则
-                    # f(g=lambda: a if c else b) 的 lambda body 会退化为占位符。
-                    if isinstance(pop_expr, dict):
-                        pop_expr = self._convert_lambda_function_objects(pop_expr)
                     stmts.append({'type': 'Expr', 'value': pop_expr})
                     stmt_instrs = []
                     continue

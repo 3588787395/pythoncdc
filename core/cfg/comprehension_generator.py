@@ -420,21 +420,10 @@ class ComprehensionGenerator:
                     _tf_val = {'type': 'Constant', 'value': None}
                 _tf_elt = (_tf_key, _tf_val)
             else:
-                # [R17-07 fix] body+if 双 ternary: 元素本身也可能是 ternary
-                # （``[(a if c else b) for x in y if (d if e else f)]``）。
-                # 优先用 _detect_comp_ternary 检测元素中的 ternary，再回退到
-                # reconstruct。依「自底向上归约」: body ternary 归约为 IfExp
-                # 抽象节点作为推导式 elt，filter ternary 归约为 IfExp 作为
-                # generators[0].ifs[0]，两者互不干扰。
-                _tf_elt_ternary = self._detect_comp_ternary(
-                    all_instrs, _tf_elt_start - 1, append_idx)
-                if _tf_elt_ternary is not None:
-                    _tf_elt = _tf_elt_ternary
-                else:
-                    _tf_elt_instrs = all_instrs[_tf_elt_start:append_idx]
-                    _tf_elt = self.expr_reconstructor.reconstruct(_tf_elt_instrs)
-                    if _tf_elt is None:
-                        _tf_elt = {'type': 'Name', 'id': target_name, 'ctx': 'Load'}
+                _tf_elt_instrs = all_instrs[_tf_elt_start:append_idx]
+                _tf_elt = self.expr_reconstructor.reconstruct(_tf_elt_instrs)
+                if _tf_elt is None:
+                    _tf_elt = {'type': 'Name', 'id': target_name, 'ctx': 'Load'}
             _tf_is_async = 0
             for _instr in all_instrs:
                 if _instr.opname in ('GET_AITER', 'GET_ANEXT', 'END_ASYNC_FOR'):
@@ -612,16 +601,10 @@ class ComprehensionGenerator:
                     _tf_val = {'type': 'Constant', 'value': None}
                 elt_expr = (_tf_key, _tf_val)
             else:
-                # [R17-07 fix] body+if 双 ternary: 元素本身也可能是 ternary
-                _tf_elt_ternary = self._detect_comp_ternary(
-                    all_instrs, _tf_elt_start - 1, append_idx)
-                if _tf_elt_ternary is not None:
-                    elt_expr = _tf_elt_ternary
-                else:
-                    _tf_elt_instrs = all_instrs[_tf_elt_start:append_idx]
-                    elt_expr = self.expr_reconstructor.reconstruct(_tf_elt_instrs)
-                    if elt_expr is None:
-                        elt_expr = {'type': 'Name', 'id': all_instrs[innermost_store_idx].argval, 'ctx': 'Load'}
+                _tf_elt_instrs = all_instrs[_tf_elt_start:append_idx]
+                elt_expr = self.expr_reconstructor.reconstruct(_tf_elt_instrs)
+                if elt_expr is None:
+                    elt_expr = {'type': 'Name', 'id': all_instrs[innermost_store_idx].argval, 'ctx': 'Load'}
             return self._build_comp_result(code_obj, elt_expr, generators)
 
         # 检测三元 / ifs（在最内层 for body 内）
@@ -983,7 +966,6 @@ class ComprehensionGenerator:
 
         # Collect meaningful instructions between merge_offset and append_idx
         value_instrs = []
-        merge_start_idx = None
         for idx in range(cond_jump_idx + 1, append_idx):
             instr = all_instrs[idx]
             if instr.offset < merge_offset:
@@ -992,26 +974,9 @@ class ComprehensionGenerator:
                 break
             if instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
                 continue
-            if merge_start_idx is None:
-                merge_start_idx = idx
             value_instrs.append(instr)
         if not value_instrs:
             return None
-
-        # [R18-07 fix] If value_instrs contain a conditional jump, the value
-        # is itself a ternary (e.g. `{(key_ternary): (value_ternary) for ...}`).
-        # expr_reconstructor cannot handle conditional jumps, so use
-        # _detect_comp_ternary to build the value IfExp.
-        # 依「自底向上归约」: value ternary is inner node, MAP_ADD is parent.
-        # 依「父引用子入口」: parent dictcomp via MAP_ADD references both
-        #   chained ternary children (key on TOS-1, value on TOS).
-        if (any(i.opname in CONDITIONAL_JUMP_OPS for i in value_instrs)
-                and merge_start_idx is not None
-                and merge_start_idx > 0):
-            _value_ternary = self._detect_comp_ternary(
-                all_instrs, merge_start_idx - 1, append_idx)
-            if _value_ternary is not None:
-                return _value_ternary
 
         return self.expr_reconstructor.reconstruct(value_instrs)
 

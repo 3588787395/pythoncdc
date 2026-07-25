@@ -801,17 +801,8 @@ class ExpressionReconstructor:
                         extend_elts = [{'type': 'Constant', 'value': v} for v in extend_values.get('value')]
                     elts = elts + extend_elts
                 elif isinstance(extend_values, dict) and extend_values.get('type') == 'List':
-                    # [R20 cat1 fix] LIST_EXTEND 用 List 字面量（BUILD_LIST 产物）
-                    # 扩展：保留 `*<list>` 结构，包成 Starred(List(...))。
-                    # 之前 flatten List→elts 会把 `[*[a, b]]` 退化为 `[a, b]`，
-                    # 丢失外层 BUILD_LIST 0 + 内层 BUILD_LIST n + LIST_EXTEND 的
-                    # 双层容器结构，重编字节码不等价（缺 BUILD_LIST 0/LIST_EXTEND）。
-                    # 依「禁止扁平化」: LIST_EXTEND 的源若是 List 字面量，必须包成
-                    #   Starred(List(...)) 以保留 `*[...]` 语义。
-                    # 依「父引用子入口」: 父 List 通过 LIST_EXTEND 引用内层 List
-                    #   子节点（Starred 包装）作为单个抽象元素。
-                    elts = elts + [{'type': 'Starred', 'value': extend_values,
-                                    'ctx': 'Load', 'lineno': instr.starts_line}]
+                    # [聚类7 修复] 列表扩展列表：合并元素
+                    elts = elts + extend_values.get('elts', [])
                 elif isinstance(extend_values, dict) and extend_values.get('type') in ('Name', 'Attribute', 'Call', 'Subscript'):
                     # [聚类7 修复] *args 模式：LIST_EXTEND 用一个变量扩展列表，
                     # 例如 f(a, *d) 的字节码 BUILD_LIST 1 / LOAD_NAME d / LIST_EXTEND 1
@@ -886,16 +877,6 @@ class ExpressionReconstructor:
                     self.stack.append(s)
             else:
                 target = self.stack.pop()
-                # [R20 cat1 fix] 记录 target 原始是否为 Dict 且为空。
-                # 用于区分 `**{...}`（target 空，需 Starred 包装）与
-                # `{**a, "k": v}`（target 已有项，Dict 字面量是后续普通项，
-                # 应 flatten）。`{**{a: 1}}` 字节码 BUILD_MAP 0 + BUILD_MAP 1
-                # + DICT_UPDATE 1，target 空；若 flatten 会丢 BUILD_MAP 0/
-                # DICT_UPDATE，退化为 `{a: 1}`，字节码不等价。
-                target_was_empty_dict = (isinstance(target, dict)
-                                         and target.get('type') == 'Dict'
-                                         and len(target.get('keys', [])) == 0
-                                         and len(target.get('values', [])) == 0)
                 # 若 target 不是 Dict，包成空 Dict 以便统一处理
                 if not (isinstance(target, dict) and target.get('type') == 'Dict'):
                     target = {
@@ -908,24 +889,9 @@ class ExpressionReconstructor:
                 values = list(target.get('values', []))
                 for src in sources:
                     if isinstance(src, dict) and src.get('type') == 'Dict':
-                        # [R20 cat1 fix] target 原本为空 Dict 且 source 是非空
-                        # Dict 字面量时，对应源 `**{...}` 双星号解包：保留 Starred
-                        # 包装以重建 `**{...}` 语法，避免 flatten 丢失外层
-                        # BUILD_MAP 0 + DICT_UPDATE 结构。target 非空（已有
-                        # `**expr` 或普通项）时仍 flatten，对应 `{**a, "k": v}`。
-                        src_keys = src.get('keys', [])
-                        if target_was_empty_dict and len(src_keys) > 0:
-                            keys.append({
-                                'type': 'Starred',
-                                'value': src,
-                                'ctx': 'Load',
-                                'lineno': instr.starts_line,
-                            })
-                            values.append(None)
-                        else:
-                            # 字面量 Dict：展开其项到 target
-                            keys.extend(src.get('keys', []))
-                            values.extend(src.get('values', []))
+                        # 字面量 Dict：展开其项到 target
+                        keys.extend(src.get('keys', []))
+                        values.extend(src.get('values', []))
                     elif isinstance(src, dict) and src.get('type') == 'DictMerge':
                         # 嵌套 DictMerge（罕见）：递归展开
                         sub_keys, sub_values = self._flatten_dict_merge_to_dict_items(src)
@@ -1253,17 +1219,51 @@ class ExpressionReconstructor:
                                 'lineno': instr.starts_line
                             })
                     elif func.get('type') == 'Call':
-                        # [关键修复] 多装饰器调用：func是装饰器对象，args是空列表
-                        # 需要从栈中再弹出一个参数（FunctionObject或内层装饰器的Call节点）
-                        if self.stack:
-                            inner_obj = self.stack.pop()
-                            # 创建新的Call节点，将装饰器应用于内层对象
+                        # [关键修复] 多装饰器调用链 + 普通链式调用区分。
+                        #
+                        # 装饰器链 @deco1 @deco2 def f() 字节码:
+                        #   LOAD deco1; LOAD deco2; MAKE_FUNCTION f; CALL 0; CALL 0
+                        # 第一次 CALL 0: func=FunctionObject(f), stack[-1]=Name(deco2)
+                        #   → Call(func=deco2, args=[f])  (deco2(f))
+                        # 第二次 CALL 0: func=Call(deco2,[f]), stack[-1]=Name(deco1)
+                        #   → Call(func=deco1, args=[Call(deco2,[f])])  (deco1(deco2(f)))
+                        #
+                        # 旧版 bug: func 与 inner_obj 角色反转，产出
+                        #   Call(func=Call(deco2,[f]), args=[deco1]) = deco2(f)(deco1)
+                        # 导致 @deco2(...)(deco1) 而非 @deco1 @deco2。
+                        #
+                        # 普通链式调用 f()() 字节码:
+                        #   PUSH_NULL; LOAD f; CALL 0; CALL 0
+                        # 第二次 CALL 0: func=Call(f,[]), stack[-1]=PUSH_NULL
+                        #   → 消费 PUSH_NULL, Call(func=Call(f,[]), args=[])  (f()())
+                        #
+                        # 判据（基于操作码语义）:
+                        #   - stack[-1] 是 PUSH_NULL → 普通链式调用
+                        #   - stack[-1] 是 Name/Attribute/Call → 装饰器链
+                        # 依「父引用子入口」: 父装饰器 (deco1) 通过 CALL 0 引用
+                        # 子 Call 节点 (deco2(f)) 作 args[0]。
+                        if self.stack and self.stack[-1].get('type') == 'PUSH_NULL':
+                            # 普通链式调用: 消费 PUSH_NULL, 调用结果无参数
+                            self.stack.pop()
                             self.stack.append({
                                 'type': 'Call',
                                 'func': func,
-                                'args': [inner_obj],
+                                'args': args,
                                 'kwargs': kwargs,
                                 'lineno': instr.starts_line
+                            })
+                        elif self.stack:
+                            # 装饰器链: func 是内层装饰结果 (deco2(f)),
+                            # stack[-1] 是外层装饰器 (deco1)。
+                            # 正确: deco1(deco2(f)) = Call(func=deco1, args=[deco2(f)])
+                            inner_obj = self.stack.pop()
+                            self.stack.append({
+                                'type': 'Call',
+                                'func': inner_obj,
+                                'args': [func],
+                                'kwargs': kwargs,
+                                'lineno': instr.starts_line,
+                                'is_decorator': True
                             })
                         else:
                             # 栈为空，创建普通Call
@@ -1428,30 +1428,35 @@ class ExpressionReconstructor:
                     kwargs = []
 
                     # 处理args_obj - 可能是Tuple、List、Name或其他类型
+                    # 依「父引用子入口」: 父 Call 通过 CALL_FUNCTION_EX 引用
+                    # args_obj 子节点作 *args。判据基于操作码语义，非实例特征。
                     if args_obj:
                         if args_obj.get('type') == 'Tuple':
                             # 如果是元组，展开其元素作为位置参数
                             # [聚类7 修复] 元素可能包含 Starred（来自 LIST_EXTEND 的 *d）
                             args = list(args_obj.get('elts', []))
                         elif args_obj.get('type') == 'List':
-                            # [R20 cat1 fix] CALL_FUNCTION_EX 的 args 槽位是
-                            # 单个 List 字面量（无 BUILD_LIST 0 + LIST_EXTEND +
-                            # LIST_TO_TUPLE 包装）时，对应源 `f(*[...])`：直接
-                            # 用 List 作 *args 可迭代对象。包成 Starred(List(...))
-                            # 以保留 `*[...]` 语义，避免 flatten 退化为 `f(...)` 走
-                            # PRECALL+CALL（字节码不等价：缺 BUILD_LIST/CALL_FUNCTION_EX）。
-                            # 依「父引用子入口」: 父 Call 通过 CALL_FUNCTION_EX 的
-                            # args 槽位引用 List 子节点（Starred 包装）。
-                            args = [{'type': 'Starred', 'value': args_obj,
-                                     'ctx': 'Load', 'lineno': instr.starts_line}]
+                            # [聚类7 修复] LIST_TO_TUPLE 未处理的回退路径
+                            args = list(args_obj.get('elts', []))
+                        elif (args_obj.get('type') == 'Constant'
+                                and isinstance(args_obj.get('value'), tuple)
+                                and len(args_obj['value']) == 0):
+                            # [通用修复] 空元组 () 占位（`f(**kw)` 调用无位置参数，
+                            # CPython 用 LOAD_CONST () 作 *args 占位）：无位置参数。
+                            # 旧版将 Constant 一律包装为 Starred，导致 `f(**kw)`
+                            # 退化为 `f(*(), **kw)`，字节码不一致。
+                            args = []
                         else:
-                            # [R17-04 fix] 任何其他表达式 (Name/Constant/IfExp/
-                            # Call/Attribute/Subscript/BinOp 等) 都是 *args 的
-                            # 可迭代对象，包装为 Starred。CALL_FUNCTION_EX 的 args
-                            # 槽位始终是单个可迭代对象，编译为 `f(*expr)`。
-                            # 依「父引用子入口」: 父 Call 通过 CALL_FUNCTION_EX 的
-                            # args 槽位引用 ternary 子节点 (经 Starred 包装)。
-                            args = [{'type': 'Starred', 'value': args_obj}]
+                            # [通用修复] 任意单个可迭代表达式（Name/Call/IfExp/
+                            # Attribute/Subscript/Starred/...）: 包装为 *expr。
+                            # 旧版仅处理 Name/Constant，对 IfExp(args if c else
+                            # b)、Call(gen())、Attribute(obj.iter) 等表达式类型
+                            # 全部落入默认 args=[]，丢失 *args 实参，导致
+                            # `f(*(args if c else ()), **kwargs)` 退化为
+                            # `f(**kwargs)`。依「嵌套即抽象节点」: 任意表达式
+                            # 节点均可作 *args 的可迭代对象。
+                            args = [{'type': 'Starred', 'value': args_obj,
+                                     'ctx': 'Load'}]
 
                     # 处理kwargs_dict - 可能是Dict、DictMerge（含嵌套）或其他类型
                     if kwargs_dict:
