@@ -15306,6 +15306,13 @@ AST 映射规则:
           - 字节码匹配状态: 100% 完全匹配（match_region 198/198，2 skipped m085 已知限制）
           - 本方法遵循区域归约算法 4 核心原则:
             自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口
+          - [Pass4-MATCH] 同步：原「100% 完全匹配（match_region 198/198，2 skipped
+            m085 已知限制）」表述与实测不符——全量 match_region 套件（198 文件）
+            实测为 193 passed / 3 failed / 2 skipped。3 个 failed 用例（如
+            test_m106matchguardboolop：guard BoolOp 字节码指令数 24 vs 22，与
+            BoolOp/Compare 复合嵌套的指令顺序差异相关）属预存 baseline，非本轮引入。
+            「100% 完全匹配」表述不成立，原表述保留作历史追溯，本段落为口径校正。
+            bounded subset 80 文件实测见回归测试节。
         """
         subject = None
         if region.subject_block:
