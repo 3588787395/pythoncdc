@@ -50,6 +50,16 @@ SHORT_CIRCUIT_JUMP_OPS = frozenset({
     'JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP',
 })
 
+# 块末尾 return 终止指令（CPython 3.12+ 用 RETURN_CONST 替代 LOAD_CONST+RETURN_VALUE）
+RETURN_TERMINATOR_OPS = frozenset({'RETURN_VALUE', 'RETURN_CONST'})
+
+# 纯跳转指令集合（仅控制流转移，无栈效果）。与 PURE_JUMP_OPS（含 NOISE/POP_TOP/LOAD_CONST
+# 的"可忽略指令"集合）语义不同，此处仅用于判别块是否为纯跳转连接器。
+TERMINAL_JUMP_OPS = frozenset({
+    'JUMP_FORWARD', 'JUMP_ABSOLUTE',
+    'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+})
+
 NONE_CHECK_OPS = frozenset({
     'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_BACKWARD_IF_NONE',
     'POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_BACKWARD_IF_NOT_NONE',
@@ -12146,7 +12156,7 @@ RegionType 枚举值: RegionType.ASSERT
                 if not effective:
                     return False
                 last = effective[-1]
-                if last.opname not in ('RETURN_VALUE', 'RETURN_CONST'):
+                if last.opname not in RETURN_TERMINATOR_OPS:
                     return False
                 for i in effective[:-1]:
                     if i.opname == 'POP_TOP':
@@ -12158,7 +12168,7 @@ RegionType 枚举值: RegionType.ASSERT
             # 辅助函数：检查块是否以RETURN_VALUE/RETURN_CONST结尾
             def _block_ends_with_return(blk):
                 last = blk.get_last_instruction()
-                return last is not None and last.opname in ('RETURN_VALUE', 'RETURN_CONST')
+                return last is not None and last.opname in RETURN_TERMINATOR_OPS
 
             # 辅助函数：检查块是否包含CALL指令且返回值被POP_TOP丢弃
             # 这是语句（如print()）而非表达式的典型特征
@@ -12166,8 +12176,7 @@ RegionType 枚举值: RegionType.ASSERT
                 """检查块是否包含CALL指令且返回值被POP_TOP丢弃"""
                 effective = [i for i in blk.instructions if i.opname not in NOISE_OPS]
                 # 移除末尾跳转
-                while effective and effective[-1].opname in (
-                    'JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'):
+                while effective and effective[-1].opname in TERMINAL_JUMP_OPS:
                     effective = effective[:-1]
                 # 检查是否有CALL指令后跟POP_TOP的模式
                 for i, instr in enumerate(effective):
@@ -12175,6 +12184,35 @@ RegionType 枚举值: RegionType.ASSERT
                         next_instr = effective[i + 1]
                         if next_instr.opname == 'POP_TOP':
                             return True
+                return False
+
+            # 判别值块是否嵌套 if-elif-else 的条件头（R19 Bug 22-24 修复抽取）。
+            # 注：架构报告建议基于 IfRegion 归属（block_to_region[vb] is IfRegion），
+            # 但 IfRegion 在 Phase 2 的 _identify_conditional_regions 中创建，
+            # 晚于 _identify_ternary_regions（同 Phase 2 内 TERNARY→IF 顺序），
+            # 故 TERNARY Pass 调用时 block_to_region 中尚无 IfRegion。若改为
+            # IfRegion 归属判据将恒返回 False，使 R19 Bug 22-24 修复失效并引入
+            # 回归（9 分支退化为 6 裸 return）。此处保留原指令特征判据以维持
+            # 语义等价，仅消除 3 处重复实现。
+            def _is_value_block_nested_if_header(vb):
+                """判别值块是否嵌套 if-elif-else 的条件头。
+
+                若 vb 以条件跳转结尾（FORWARD_CONDITIONAL_JUMP_OPS |
+                SHORT_CIRCUIT_JUMP_OPS）且其条件后继中存在以 RETURN_VALUE/
+                RETURN_CONST 结尾的语句体，则 vb 是嵌套 if-elif-else 的条件头
+                而非 ternary 值块。嵌套 ternary 的条件头后继是纯表达式（无
+                return），不被判为 if-elif-else 条件头。
+                """
+                if vb is None:
+                    return False
+                _vb_last = vb.get_last_instruction()
+                if not (_vb_last and _vb_last.opname in (
+                        FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)):
+                    return False
+                for _succ in vb.conditional_successors:
+                    _succ_last = _succ.get_last_instruction()
+                    if _succ_last and _succ_last.opname in RETURN_TERMINATOR_OPS:
+                        return True
                 return False
 
             has_jump_forward_skip = False
@@ -12267,9 +12305,7 @@ RegionType 枚举值: RegionType.ASSERT
                                 _ft_effective = [i for i in _true_ft.instructions
                                                  if i.opname not in NOISE_OPS]
                                 _ft_is_pure_jump = all(
-                                    i.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE',
-                                                 'JUMP_BACKWARD',
-                                                 'JUMP_BACKWARD_NO_INTERRUPT')
+                                    i.opname in TERMINAL_JUMP_OPS
                                     for i in _ft_effective
                                 )
                                 if not _ft_is_pure_jump:
@@ -12308,29 +12344,13 @@ RegionType 枚举值: RegionType.ASSERT
                     if isinstance(true_existing, TernaryRegion):
                         false_is_ternary = True
                     elif self._is_single_expression_block(true_block):
-                        _tb_last = true_block.get_last_instruction()
-                        _is_nested_if_header = False
-                        if _tb_last and _tb_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS):
-                            for ss in true_block.conditional_successors:
-                                ss_last = ss.get_last_instruction()
-                                if ss_last and ss_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
-                                    _is_nested_if_header = True
-                                    break
-                        false_is_ternary = not _is_nested_if_header
+                        false_is_ternary = not _is_value_block_nested_if_header(true_block)
                     # else: true_block 是语句块（含 STORE_FAST 等），不构成 ternary
                 elif (len(false_block.conditional_successors) == 2 and
                       self._is_single_expression_block(true_block)):
                     # [R19 Bug 22-24 修复] 同上: true_block 若是嵌套 if-elif-else 的
                     # 条件头（后继含 return），则不是 ternary 值块
-                    _tb_last = true_block.get_last_instruction()
-                    _true_is_nested_if_header = False
-                    if _tb_last and _tb_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS):
-                        for ss in true_block.conditional_successors:
-                            ss_last = ss.get_last_instruction()
-                            if ss_last and ss_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
-                                _true_is_nested_if_header = True
-                                break
-                    if _true_is_nested_if_header:
+                    if _is_value_block_nested_if_header(true_block):
                         false_is_ternary = False
                     else:
                         false_last = false_block.get_last_instruction()
@@ -12338,18 +12358,7 @@ RegionType 枚举值: RegionType.ASSERT
                             false_succs = list(false_block.conditional_successors)
                             # [R19 Bug 22-24 修复] false_succs 若是嵌套 if-elif-else 的
                             # 条件头（后继含 return），也不是 ternary 值块
-                            _any_succ_nested_if_header = False
-                            for s in false_succs:
-                                s_last = s.get_last_instruction()
-                                if s_last and s_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS):
-                                    for ss in s.conditional_successors:
-                                        ss_last = ss.get_last_instruction()
-                                        if ss_last and ss_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
-                                            _any_succ_nested_if_header = True
-                                            break
-                                if _any_succ_nested_if_header:
-                                    break
-                            if _any_succ_nested_if_header:
+                            if any(_is_value_block_nested_if_header(s) for s in false_succs):
                                 false_is_ternary = False
                             elif all(self._is_single_expression_block(s) for s in false_succs):
                                 if all(not _block_ends_with_return(s) for s in false_succs):
@@ -12489,9 +12498,7 @@ RegionType 枚举值: RegionType.ASSERT
                             _ft_eff = [i for i in _tft2.instructions
                                        if i.opname not in NOISE_OPS]
                             _ft_pure_jump = all(
-                                i.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE',
-                                             'JUMP_BACKWARD',
-                                             'JUMP_BACKWARD_NO_INTERRUPT')
+                                i.opname in TERMINAL_JUMP_OPS
                                 for i in _ft_eff
                             )
                             if _ft_pure_jump and _ft_eff:
@@ -12581,9 +12588,7 @@ RegionType 枚举值: RegionType.ASSERT
                             _ft_eff_nest = [i for i in _tft_nest.instructions
                                             if i.opname not in NOISE_OPS]
                             _ft_pure_jump_nest = all(
-                                i.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE',
-                                             'JUMP_BACKWARD',
-                                             'JUMP_BACKWARD_NO_INTERRUPT')
+                                i.opname in TERMINAL_JUMP_OPS
                                 for i in _ft_eff_nest
                             )
                             if _ft_pure_jump_nest and _ft_eff_nest:
@@ -12617,9 +12622,7 @@ RegionType 枚举值: RegionType.ASSERT
                         seen.add(id(blk))
                         eff = [i for i in blk.instructions
                                if i.opname not in NOISE_OPS]
-                        if (len(eff) == 1 and eff[0].opname in (
-                                'JUMP_FORWARD', 'JUMP_ABSOLUTE',
-                                'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                        if (len(eff) == 1 and eff[0].opname in TERMINAL_JUMP_OPS
                                 and isinstance(eff[0].argval, int)):
                             nb = self.cfg.get_block_by_offset(eff[0].argval)
                             if nb is not None:
@@ -14393,8 +14396,7 @@ RegionType 枚举值: RegionType.ASSERT
         if not ft_effective:
             return False
         ft_is_pure_jump = all(
-            i.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE',
-                         'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+            i.opname in TERMINAL_JUMP_OPS
             for i in ft_effective
         )
         if not ft_is_pure_jump:
