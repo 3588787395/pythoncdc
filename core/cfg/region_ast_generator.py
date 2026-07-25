@@ -17475,12 +17475,15 @@ AST 映射规则:
         - 取反规则：若链末跳转为 IF_TRUE / NONE 类型，则表达式需取反
           （_negate_expr）后再写入 condition_expr。
         - value_target 的 STORE 指令在 merge_block 中必须恰好出现一次。
-        - 字节码一致性状态：100% 完全匹配（boolop 132/132）。历史遗留问题
-          （test_bool13 与 ternary 边界、test_bool19 复合嵌套、test_bool15 被
-          AssertRegion 抢占、循环条件 boolop 不被识别为子区域）已全部解决：
-          条件上下文模式由 _is_outer_condition 写入 condition_expr 消除歧义，
-          循环条件 boolop 由 _detect_while_condition_boolop_chain 显式挂载为
-          LoopRegion 子区域，assert 边界由 condition_block 共享协调。
+        - 字节码一致性状态：[Pass3-BOOLOP] 同步与实际测试状态一致——bool_op +
+          boolop 共 153 用例（151 passed / 1 failed / 1 skipped）。1 处预存失败
+          test_bool19_ternary_combo（baseline_failures.txt L41，指令数 11 vs 12，
+          非 BOOLOP 识别问题，与 ternary 复合嵌套的指令顺序差异相关）。历史遗留
+          问题（test_bool13 与 ternary 边界、test_bool15 被 AssertRegion 抢占、
+          循环条件 boolop 不被识别为子区域）已全部解决：条件上下文模式由
+          _is_outer_condition 写入 condition_expr 消除歧义，循环条件 boolop 由
+          _detect_while_condition_boolop_chain 显式挂载为 LoopRegion 子区域，
+          assert 边界由 condition_block 共享协调。
         """
         op_chain = region.op_chain
         if not op_chain and not region.prefix_block:
