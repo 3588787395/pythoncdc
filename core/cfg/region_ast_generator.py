@@ -2803,6 +2803,12 @@ AST 映射规则:
   - 字节码匹配状态: 100% 完全匹配（while_loop 120/120 + for_loop 193/193 = 313/313）
   - 已知反模式：跨区域反向抓 IfRegion（_preceding_if_cond）+ 跨 LoopRegion 去重
     + while/for-else 三联过滤，待 Pass 3 重构
+  - [Pass10-LOOP] docstring 同步：上述「待 Pass 3 重构」引用为历史遗留口径，
+    实际截至 Pass 9 仍未重构（Pass9-LOOP 报告「未完成项 1」明确记录此 3 处反模式
+    「仍挂账 Pass 3+」：_preceding_if_cond 跨区域反向抓 IfRegion / 跨 LoopRegion
+    去重后处理 / _is_except_handler_block 指令模式启发式）。本轮不重构（需识别
+    阶段统一改造），仅补记口径漂移，不重写原表述（与 Pass8/Pass9-LOOP 同型保守
+    思路一致）。文件计数 120 + 193 = 313 实测仍准确（ls 验证）。
   - 本方法遵循区域归约算法 4 核心原则:
     自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口
         """
