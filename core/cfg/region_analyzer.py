@@ -7745,6 +7745,22 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
              Step 3: _mr_collect_case_body 收集每个 case 的 body 块，排除 pattern_check_blocks。
              Step 4: _mr_resolve_pattern_check_chain 沿 fall-through 链跳过模式检查块，找到真正 body 入口。
              Step 5: 构建 MatchRegion，注册 block_to_region。
+           - [Pass9-MATCH] docstring 同步：上述「Step 4 / §3 pattern_check_blocks」
+             表述仅描述理想化语义，与实际控制流存在一处口径差异（不改控制流，
+             仅补记）：§3 边界条件中 pattern_check_blocks 描述为「含 MATCH_*
+             指令且以 POP_JUMP_IF_NONE/FALSE 结尾的块」，但实际传入
+             _mr_resolve_pattern_check_chain 的 pattern_check_blocks 集合还包含
+             **guard 块**——在 _mr_collect_case_body（grep `def _mr_collect_case_body`
+             在本文件仅 1 处命中，L8239）内，guard 块（含 LOAD_VAR + 条件跳转、
+             非当前 case_block）被显式加入 pattern_check_blocks（grep `将 guard 块加入
+             pattern_check_blocks` 在本文件仅 1 处命中，L8373，注释「[R16 模式 B 修复]」），
+             使其 (1) 被 _mr_resolve_pattern_check_chain 跳过以找到真正 body 入口，
+             (2) 加入 stop_set 从 body_set 中排除，(3) 纳入 all_blocks 属于 match 区域。
+             即 _mr_resolve_pattern_check_chain 实际跳过的是「模式检查块 ∪ guard 块」，
+             而非 §3 字面所述仅「含 MATCH_* 指令的模式检查块」。原表述未提及 guard
+             块的加入路径，可能误导读者认为该集合仅含 MATCH_* 块。本轮仅补记差异，
+             不重写「Step 4 / §3」列表（与 Pass8-IF / Pass8-MATCH 同型保守策略一致，
+             采用 grep 验证方式避免行号漂移）。控制流不变，仅 docstring 文本同步。
 
         2. 字节码模式（CPython 编译器行为）
            模式 A: 结构型模式 match
