@@ -2128,7 +2128,6 @@ AST 映射规则:
   - None 检查方向修正必须保证 `assert x is None` 与 `assert x is not None`
     反编译结果与源码语义一致。
   - 所有 region.blocks 必须被标记为 generated，避免父区域重复输出。
-  - 字节码一致性状态：100% 完全匹配（assert 随 basic 测试集通过），无遗留。
         """
         cond_block = region.condition_block
         if cond_block is None:

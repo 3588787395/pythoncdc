@@ -873,6 +873,16 @@ class AssertRegion(Region):
             return True
         return False
 
+    def contains_block(self, block) -> bool:
+        """AssertRegion 独占 message_block（含 RAISE_VARARGS），
+        不应被父 IfRegion 当作 then_blocks/else_blocks 重复生成。"""
+        return block in self.blocks
+
+    def else_block_conflict(self, block) -> bool:
+        """message_block 含 RAISE_VARARGS 永不 fall-through 到 if 的 else 分支，
+        不应参与 if 的 else 边界判定。"""
+        return block is self.message_block
+
 @dataclass
 class BoolOpRegion(Region):
     op_chain: List[Tuple[BasicBlock, str]] = field(default_factory=list)
@@ -9324,7 +9334,7 @@ RegionType 枚举值: RegionType.ASSERT
               CALL, RAISE_VARARGS
    模式 C: is None / is not None 断言
      - 使用 POP_JUMP_IF_NONE / POP_JUMP_IF_NOT_NONE（属 NONE_CHECK_OPS）；
-     - 在 _generate_assert 中由 _fix_assert_none_check_direction 修正方向。
+     - 在 _generate_assert 中由 _invert_assert_none_check_direction 修正方向。
 
 3. 边界条件（数学性质）
    - 单块识别: assert 区域由条件块（和可选消息块）两个块组成，
@@ -9353,10 +9363,10 @@ RegionType 枚举值: RegionType.ASSERT
    - 关键字段映射:
        AssertRegion.condition_block → AST.test（条件表达式，经指令过滤重建）
        AssertRegion.message_block   → AST.msg（错误消息表达式，可能为 None）
-   - 特殊处理: None 检查方向修正（_fix_assert_none_check_direction 互换 is/is not）。
+   - 特殊处理: None 检查方向修正（_invert_assert_none_check_direction 互换 is/is not）。
 
 6. 已知失败模式
-   - 当前测试矩阵通过率: 100%，无已知失败模式（assert 在 basic 测试集内通过）
+   - ASSERT bounded subset: 22/27 passed，已知失败模式：assert-in-if-body / ternary-in-assert-test
         """
         regions = []
         for block in self.cfg.get_blocks_in_order():
@@ -9577,8 +9587,7 @@ RegionType 枚举值: RegionType.ASSERT
         """
         seen: Set[BasicBlock] = set()
         cur: Optional[BasicBlock] = block
-        depth = 0
-        while cur is not None and cur not in seen and depth < 8:
+        while cur is not None and cur not in seen:
             seen.add(cur)
             for instr in cur.instructions:
                 if instr.opname == 'LOAD_ASSERTION_ERROR':
@@ -9593,7 +9602,6 @@ RegionType 枚举值: RegionType.ASSERT
             if len(succs) != 1:
                 return False
             cur = succs[0]
-            depth += 1
         return False
 
     def _find_assertion_error_block(self, block: BasicBlock) -> Optional[BasicBlock]:
@@ -9621,8 +9629,7 @@ RegionType 枚举值: RegionType.ASSERT
         """
         seen: Set[BasicBlock] = set()
         cur: Optional[BasicBlock] = block
-        depth = 0
-        while cur is not None and cur not in seen and depth < 8:
+        while cur is not None and cur not in seen:
             seen.add(cur)
             if any(instr.opname == 'LOAD_ASSERTION_ERROR'
                    for instr in cur.instructions):
@@ -9637,7 +9644,6 @@ RegionType 枚举值: RegionType.ASSERT
             if len(succs) != 1:
                 return None
             cur = succs[0]
-            depth += 1
         return None
 
     def _reaches_block_via_fallthrough(self, block: BasicBlock,
@@ -9650,8 +9656,7 @@ RegionType 枚举值: RegionType.ASSERT
         """
         seen: Set[BasicBlock] = set()
         cur: Optional[BasicBlock] = block
-        depth = 0
-        while cur is not None and cur not in seen and depth < 8:
+        while cur is not None and cur not in seen:
             seen.add(cur)
             if cur is target:
                 return True
@@ -9665,7 +9670,6 @@ RegionType 枚举值: RegionType.ASSERT
             if len(succs) != 1:
                 return False
             cur = succs[0]
-            depth += 1
         return False
 
     def _reach_raise_varargs_block(self, block: BasicBlock) -> Optional[BasicBlock]:
@@ -9676,8 +9680,7 @@ RegionType 枚举值: RegionType.ASSERT
         """
         seen: Set[BasicBlock] = set()
         cur: Optional[BasicBlock] = block
-        depth = 0
-        while cur is not None and cur not in seen and depth < 8:
+        while cur is not None and cur not in seen:
             seen.add(cur)
             if any(instr.opname == 'RAISE_VARARGS' for instr in cur.instructions):
                 return cur
@@ -9690,7 +9693,6 @@ RegionType 枚举值: RegionType.ASSERT
             if len(succs) != 1:
                 return None
             cur = succs[0]
-            depth += 1
         return None
 
     def _identify_chained_compare_regions(self, loop_regions: List[Region],
