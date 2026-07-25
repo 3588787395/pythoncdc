@@ -9778,6 +9778,17 @@ AST 映射规则:
                                      if jump_target is not None else False)
                     # IF_NOT_NONE: 跳=值不是None; IF_NONE: 跳=值是None
                     # 条件 = 走 then 的条件
+                    # [Pass10-TERNARY] 同型反模式标记：下方 `if 'NOT_NONE' in op:`
+                    # 子串匹配判据与 Pass8-ASSERT 在 `_build_assert_boolop_chain`
+                    # 内标记的 `_is_not_none_op = 'NOT_NONE' in last_instr.opname`
+                    # 子串匹配 DRY 违背同型（散布文件 17+ 处之一，Pass9-TERNARY
+                    # §未完成项 5 已登记但未标记）。本处为 ternary 栈模拟路径
+                    # （`_build_ternary_wrapped_expr` 内 NONE_CHECK_OPS 分支），
+                    # op 已先经 `op in NONE_CHECK_OPS` 集合判据筛选，此处子串
+                    # 匹配仅用于区分 IF_NOT_NONE / IF_NONE 方向。后续 Pass 实施
+                    # 「子串匹配 → frozenset 常量统一替换」时需同步替换此处及
+                    # 本文件 17+ 处同型（grep `'NOT_NONE' in ` 在本文件共 14 处
+                    # 命中）。本轮仅添加内联标记，未触碰可执行代码，控制流不变。
                     if 'NOT_NONE' in op:
                         op_str = 'is not' if jumps_to_then else 'is'
                     else:
