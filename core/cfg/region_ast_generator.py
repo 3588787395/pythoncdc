@@ -11954,6 +11954,8 @@ AST 映射规则:
     def _generate_try_body(self, region: TryExceptRegion) -> List[Dict[str, Any]]:
         body_stmts: List[Dict[str, Any]] = []
 
+        # [Pass 2 标记] 4 并列启发式（is_child / is_in_try_blocks / is_before_try_start /
+        # handler_in_range）待统一为区间包含判据，符合原则 3「嵌套即区间包含」。
         nested_try_regions = []
         for r in self.region_analyzer.regions:
             if isinstance(r, TryExceptRegion) and r is not region:
@@ -12121,8 +12123,6 @@ AST 映射规则:
                     continue
                 if id(nr) in self._generated_regions:
                     continue
-                else:
-                    pass
                 if isinstance(nr, (LoopRegion, IfRegion, WithRegion, MatchRegion, BoolOpRegion, TernaryRegion, AssertRegion)):
                     for b in nr.blocks:
                         self.generated_blocks.discard(b)
@@ -12149,8 +12149,6 @@ AST 映射规则:
                         self.generated_blocks.add(b)
                     is_nested_region_entry = True
                     break
-            if not is_nested_region_entry:
-                pass
             if is_nested_region_entry:
                 continue
 
@@ -12903,7 +12901,6 @@ AST 映射规则:
                         _nested_ternary_for_handler = _r
                         break
                 if _nested_ternary_for_handler is not None:
-                    self._generating_regions.discard(id(_nested_ternary_for_handler))
                     self._generating_regions.add(id(_nested_ternary_for_handler))
                     try:
                         _t_stmts = self._generate_ternary(_nested_ternary_for_handler)
