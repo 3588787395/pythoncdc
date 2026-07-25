@@ -16047,6 +16047,11 @@ AST 映射规则:
     def _detect_undetected_wildcard_match(self, entry_block):
         """检测未识别的通配符match语句（Phase 37.4修复 - 收紧版）
 
+        [Pass3-MATCH] 已知反模式：本方法在 region_ast_generator 阶段补建虚拟
+        MatchRegion，违反「区域识别归 region_analyzer、AST 生成归 ast_generator」
+        的职责分离（Pass 1 已标记，Pass 2 评估未加注释，本轮补加标记）。待 region_
+        analyzer 阶段统一识别通配符 match 后删除本方法及 3 处调用点（L322/L582/L608）。
+
         当match语句只有通配符case（case _:）且body包含控制流结构时，
         region_analyzer可能只识别了内层区域（LoopRegion/IfRegion等），
         而没有识别外层的MatchRegion。本方法检测这种情况并创建虚拟MatchRegion。
@@ -16062,7 +16067,9 @@ AST 映射规则:
         2. POP_TOP之后紧跟的内层区域是LoopRegion或TryExceptRegion
         3. 内层区域的entry_block == entry_block 或 entry_block的fallthrough后继
         4. 不存在已识别的MatchRegion覆盖此入口块
-        5. 入口块指令数 <= 5（避免在大块上误检）
+        5. 入口块指令数 >= 3 且 <= 10（避免在小块/大块上误检）：
+           - `< 3` 时 return None（至少需要 RESUME + LOAD_* + POP_TOP 三条指令）
+           - `> 10` 时 return None（大块 Likely 含真实控制流，非通配符 match 头）
         """
         if entry_block is None or len(entry_block.instructions) < 3:
             return None
