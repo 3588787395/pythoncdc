@@ -14772,6 +14772,11 @@ AST 映射规则:
                 # （with_blocks[0] 首条非噪声非 STORE_*），本块同检测必得同结果
                 # （target 仍为 None）。故本块无可观测副作用，属死代码删除。
                 # 待归约期统一 async-with target 检测后，early pass 亦可一并消除。
+                # [Pass4-WITH] 同步：经多轮 Pass 3 修改后，early pass 实际行号
+                # 已下移至 L14314-L14355（含注释段；`if region.is_async and
+                # region.target is None:` 起始于 L14331）。原 L14312-L14336
+                # 引用为 Pass 3 写入时的快照，本轮仅同步注释行号引用，未触碰
+                # 可执行代码，控制流不变。
                 for _abb in sorted(_async_body_blocks, key=lambda b: b.start_offset):
                     if _abb in self.generated_blocks:
                         continue
