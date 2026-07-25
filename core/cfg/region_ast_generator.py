@@ -7164,6 +7164,12 @@ AST 映射规则:
         # 探测+重建，绕过统一的 compute_chained_compare_operands 路径。统一
         # 操作数提取以删除该 chain 为高风险重构（需保证三特例的栈模拟语义被
         # 统一路径覆盖），留待 Pass 3+ 处理。本轮仅添加标记，不改控制流。
+        # [Pass7-CC] 进度同步：原「留待 Pass 3+ 处理」截至 Pass 7 仍未实施——
+        # Pass 3-6 均评估为高风险（删除 chain 会改变三特例栈模拟语义），保守
+        # 策略下保持现状（仅标记）。当前实际状态：CC 套件 37p/3f/40（3 个 failed
+        # 即 walrus / literal-middle / method-call 三特例，见 Pass6-CC §未完成项 1）。
+        # 该 patch chain 是 3 个 failed 用例的直接成因，需统一操作数提取路径方可消除，
+        # 非保守修复范围。控制流不变，仅注释文本同步。
         # [聚类1 修复] walrus in chained compare: when cond_block contains a
         # walrus COPY(1)+STORE pattern, the single-instruction operand
         # extraction in compute_chained_compare_operands fails (filters out
