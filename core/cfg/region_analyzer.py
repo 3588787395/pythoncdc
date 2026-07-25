@@ -3837,7 +3837,7 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                             if b_target in _break_targets:
                                 _break_trampoline_blocks.add(b)
                 else_blocks = [b for b in else_blocks
-                               if (b in _cond_exit_set and not self._is_early_return_block(b))
+                               if (b in _cond_exit_set)
                                or (b not in _cond_exit_set
                                    and not self._is_early_return_block(b)
                                    and not self._is_except_handler_block(b)
@@ -10428,7 +10428,23 @@ RegionType 枚举值: RegionType.ASSERT
                                             and _tr_other.entry is _tr_c1_merge):
                                         _merge_is_other_ternary_entry = True
                                         break
-                                if not _merge_is_other_ternary_entry:
+                                # [R23 Bug1 fix] 区域归约算法原则 2（每块唯一归属）
+                                # + 原则 3（嵌套即抽象节点）：当 ternary 的值通过
+                                # STORE 消费（merge_context == 'store'，如
+                                # `result = {..., 'k': ternary, ...}` 中 dict 字面量
+                                # 赋值），merge_block 末尾的 FORWARD_CONDITIONAL_JUMP
+                                # 属于 STORE 之后的下一条语句——嵌套 IfRegion 的条件，
+                                # 不是 ternary 所在 if 的条件。此时若 redirect，会把
+                                # ternary 的 entry 当作嵌套 IfRegion 的 entry，创建一
+                                # 个 wrapper IfRegion（entry=ternary.entry,
+                                # condition_block=ternary.merge_block），重叠 Ternary
+                                # Region 与嵌套 IfRegion，违反每块唯一归属。
+                                # 'while_cond'/'compare'/None 等上下文的消费者本身是
+                                # 条件跳转，redirect 合法（R21-C1）。
+                                _merge_is_stmt_consumer = getattr(
+                                    _tr_c1, 'merge_context', None) in ('store', 'return')
+                                if (not _merge_is_other_ternary_entry
+                                        and not _merge_is_stmt_consumer):
                                     _ternary_if_cond_redirect = _tr_c1_merge
                     break
             if _ternary_owner_for_skip is not None and _ternary_if_cond_redirect is None:
@@ -10662,6 +10678,10 @@ RegionType 枚举值: RegionType.ASSERT
             if len(cond_succs) != 2:
                 continue
             then_succ, else_succ = sorted(cond_succs, key=lambda s: s.start_offset)
+            # [R23 if84 fix] 保留 else_succ 原始引用（chained-compare 清理跳板
+            # 跳过前），供 _else_has_external_pred 排除集使用：清理跳板是当前 if
+            # 自己的 else 入口（POP_TOP+JUMP→else_body），非外层结构前驱。
+            _else_succ_original = else_succ
 
             chained_compare_info = self._detect_chained_compare_pattern(condition_block)
             if chained_compare_info:
@@ -10764,6 +10784,38 @@ RegionType 枚举值: RegionType.ASSERT
                                             and i.opname not in SHORT_CIRCUIT_JUMP_OPS]
                         if not _then_meaningful:
                             merge = then_succ
+                    # [R23 if59 regression fix] 区域归约算法原则 2（每块唯一归属）：
+                    # 当 then/else 都 sink 且 else_succ 是终态块（RETURN_VALUE/
+                    # RETURN_CONST/RAISE_VARARGS）时，若 else_succ 存在【不在
+                    # {条件块, then_succ, else_succ} 内】的前驱，则 else_succ 是
+                    # 外层结构（如 if-elif 链）的 post-if 合并点，被外层 if 的 then
+                    # 体 fall-through 共享，不属于当前 if 的 else 体。设 merge=
+                    # else_succ 使 else_blocks 为空（entry==merge），创建 IF_THEN
+                    # 而非 IF_THEN_ELSE，避免 else_succ 被当前 IfRegion 错占（导致
+                    # 外层 elif 链无法引用该块作为 merge，反编译丢失末尾 return /
+                    # 语句）。镜像 _check_elif_chain 的 _ie_has_external_pred 判据
+                    # （region_analyzer.py:11491-11527），保持两处一致。
+                    if merge is None:
+                        _else_last_instr = else_succ.get_last_instruction()
+                        _else_is_terminal = (_else_last_instr is not None
+                                             and _else_last_instr.opname in ('RETURN_VALUE', 'RETURN_CONST', 'RAISE_VARARGS'))
+                        if _else_is_terminal:
+                            # [R23 if84 regression fix] 区域归约算法原则 2（每块唯一
+                            # 归属）：排除集须含当前 if 自己的条件结构块——链式比较
+                            # 中间块（chain_blocks，如 `0 < a < 10` 的第二比较块）与
+                            # else 清理跳板（_else_succ_original，chained-compare 跳过
+                            # POP_TOP+JUMP 前的 else 入口）。这些块是终态 else_succ 的
+                            # 前驱，但属于当前 IfRegion 的 condition/branch，非外层 if
+                            # 的 then-body fall-through。镜像 _check_elif_chain 的
+                            # _ie_has_external_pred 排除集（含 inline_boolop_chain 块）。
+                            _if_struct_blocks = ({block, then_succ, else_succ,
+                                                 _else_succ_original} | chain_blocks)
+                            _else_has_external_pred = any(
+                                p not in _if_struct_blocks
+                                for p in else_succ.predecessors
+                            )
+                            if _else_has_external_pred:
+                                merge = else_succ
 
             # Fix: 当条件块在 TryExceptRegion 的 try_blocks 中时，
             # 分支收集可能越过 try 体边界（通过 JUMP_FORWARD 到循环条件等），
@@ -11456,6 +11508,46 @@ RegionType 枚举值: RegionType.ASSERT
                         pass
                     else:
                         inner_merge = _candidate_merge
+                # [R23-C7 fix] 镜像外层 IfRegion merge 检测的 both-sink-terminal
+                # 分支（区域归约算法原则 2：每块唯一归属）。当内层 elif 的 then 与
+                # else 都 sink 且 inner_else_succ 是终态块（单块 RETURN/RAISE）时，
+                # inner_else_succ 可能是 if-elif 结构之后的代码（post-if 点），应设为
+                # inner_merge，使 inner_else_blocks 为空（entry==merge）。否则
+                # inner_else_succ 会被当作 elif 的 final_else，把 post-if 的
+                # return/raise 拉进 if body。`elif c2: return B; else: return C` 与
+                # `elif c2: return B; return C` 字节码等价，不改变语义。
+                #
+                # [R23 regression fix] 严格判据：inner_else_succ 必须所有前驱都
+                # 不在 elif 链外（即所有前驱都是 elif 链内的 then/else succ）。
+                # 原 `_ie_has_external_pred = any(p is not inner_condition_block)`
+                # 太宽——if-elif-else 的 else 体合法地从所有 elif 条件块接收
+                # fall-through（多前驱），但前驱都是 elif 链内的块，非"外部"。
+                # 严格判据：inner_else_succ 的前驱中存在【不在 elif 链 conditions/bodies
+                # 集合内】的块，才是真正的 post-if 合并点。
+                elif _it_sink and _ie_sink:
+                    _ie_last_instr = inner_else_succ.get_last_instruction()
+                    _ie_is_terminal = (_ie_last_instr is not None
+                                       and _ie_last_instr.opname in ('RETURN_VALUE', 'RETURN_CONST', 'RAISE_VARARGS'))
+                    if _ie_is_terminal:
+                        # 收集 elif 链内所有块（conditions + bodies + inner_then/else succ）
+                        _elif_chain_blocks = {inner_condition_block, inner_then_succ, inner_else_succ}
+                        _elif_chain_blocks.update(_inner_boundary_stop or set())
+                        # [R23 Bug3 fix] 区域归约算法原则 2（每块唯一归属）：
+                        # 布尔运算链（a and b and c and d / not a or not b or
+                        # not c）的每个短路跳转都指向 inner_else_succ（elif 的
+                        # else 体）。这些条件块属于当前 elif 的 condition，不是
+                        # "外部"前驱。原判据仅排除 inner_condition_block（链尾
+                        # 块），导致链中其余块被误判为外部前驱，else 体被错误
+                        # 标记为 post-if 合并点，丢失 final_else。将 inline_
+                        # boolop_chain / BoolOpRegion 的所有链中块纳入排除范围。
+                        if inline_boolop_chain is not None:
+                            _elif_chain_blocks.update(inline_boolop_chain.get('blocks', []))
+                        elif isinstance(inner_br, BoolOpRegion) and inner_br.entry == first_else:
+                            _elif_chain_blocks.update(b for b, _op in inner_br.op_chain)
+                        _ie_has_external_pred = any(p not in _elif_chain_blocks
+                                                    for p in inner_else_succ.predecessors)
+                        if _ie_has_external_pred:
+                            inner_merge = inner_else_succ
             inner_then_blocks = self._collect_branch_blocks(inner_then_succ, inner_merge, {inner_else_succ} | _inner_boundary_stop)
             inner_else_blocks = self._collect_branch_blocks(inner_else_succ, inner_merge, {inner_then_succ} | _inner_boundary_stop)
             if inner_else_blocks and all(self._is_trivial_block(b) for b in inner_else_blocks):
@@ -11489,7 +11581,12 @@ RegionType 枚举值: RegionType.ASSERT
                     else_succ = next((s for s in sorted(first_else.successors, key=lambda s: s.start_offset)
                                      if s.start_offset == last_instr.argval), None)
                     if else_succ and else_succ not in set(inner_then_blocks):
-                        if merge_ is None or else_succ != merge_:
+                        # [R23-C7 fix] 区域归约算法原则 2（每块唯一归属）：
+                        # inner_merge 是当前 elif 节点的 post-if 点（如两分支都
+                        # sink 且 else_succ 终态时设为 else_succ）。当 else_succ
+                        # == inner_merge 时，else_succ 是 if-elif 结构之后的代码，
+                        # 不属于任何 elif 分支的 else 体，不应作为 final_else。
+                        if (merge_ is None or else_succ != merge_) and (inner_merge is None or else_succ != inner_merge):
                             # [Phase 4 回归修复] 不将 boundary_stop 中的块
                             # （含循环 back_edge_block）作为 final_else。这些块
                             # 属于 LoopRegion（每块唯一归属），不应被 IfRegion
@@ -11510,6 +11607,20 @@ RegionType 枚举值: RegionType.ASSERT
         elif_info = _check_elif_chain(block, else_blocks, merge)
         if elif_info is None:
             return None
+        # [R23-C7 fix] 区域归约算法原则 2（每块唯一归属）：当 merge=None 时，
+        # _collect_branch_blocks 会过度收集 else_blocks，把 if-elif 结构之后
+        # 的 post-if 块（如两分支都 sink 后的 `return X`）也纳入。这些块不
+        # 属于任何 elif 分支（不在 conditions / bodies / final_else 中），
+        # 应从 else_blocks 中过滤，防止 IfRegion 错占 post-if 块（导致父
+        # IfRegion.then_blocks BFS 把 post-if return 拉进 if body）。仅保留
+        # 真正属于 elif 链结构的块，AST 生成（_if_generate_full_elif_chain）
+        # 只读 elif_conditions / elif_bodies / elif_final_else，不读 else_blocks。
+        _elif_struct_blocks = set(elif_info.get("conditions", []))
+        for _body in elif_info.get("bodies", []):
+            _elif_struct_blocks.update(_body)
+        _elif_struct_blocks.update(elif_info.get("final_else", []))
+        if _elif_struct_blocks:
+            else_blocks = [b for b in else_blocks if b in _elif_struct_blocks]
         # 区域归约算法：merge=None时的共有块过滤
         # _check_elif_chain内部的_collect_branch_blocks没有传入loop boundary stop，
         # 可能过度收集，把then_blocks中的块也收入final_else。
@@ -13612,7 +13723,27 @@ RegionType 枚举值: RegionType.ASSERT
                         _is_critical_loop_blk = True
                         break
                 if not _is_critical_loop_blk:
-                    all_blocks.add(merge_block)
+                    # [R23 Bug1 fix] 区域归约算法原则 2（每块唯一归属）+
+                    # 原则 3（嵌套即抽象节点）：当 ternary 的 value 通过
+                    # STORE 消费（merge_context == 'store'），而 merge_block
+                    # 末尾是 FORWARD_CONDITIONAL_JUMP（2 个条件后继）时，该
+                    # 条件跳转属于 STORE 之后的下一条语句——嵌套 IfRegion 的
+                    # condition，不是 ternary 的消费者。若把 merge_block 纳入
+                    # ternary 的 all_blocks，嵌套 IfRegion 的 condition_block
+                    # 被 ternary 占据，嵌套 if 退化为裸表达式，return 体丢失。
+                    # merge_block 仍作为 ternary 的引用（AST 生成消费 STORE
+                    # 之前的指令），但归属嵌套 IfRegion（原则 4：父引用子入口）。
+                    # 'compare'/'while_cond' 等上下文的消费者本身是条件跳转，
+                    # 不在此列。
+                    _mb_is_nested_if_cond = False
+                    if merge_context == 'store':
+                        _mb_last = merge_block.get_last_instruction()
+                        if (_mb_last is not None
+                                and _mb_last.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                                and len(merge_block.conditional_successors) == 2):
+                            _mb_is_nested_if_cond = True
+                    if not _mb_is_nested_if_cond:
+                        all_blocks.add(merge_block)
 
             # 收集 loop header/condition 块集合，用于排除（「每块唯一归属」）
             _critical_loop_blocks = set()
@@ -16403,7 +16534,30 @@ RegionType 枚举值: RegionType.ASSERT
                                                       RegionType.IF_ELIF_CHAIN)
                             if (child.region_type in dynamic_conflict_types and
                                 best_parent.region_type in dynamic_conflict_types):
-                                continue
+                                # [R23 Bug1 fix] 区域归约算法原则 3（嵌套即抽象节点）
+                                # + 原则 4（父引用子入口）：dynamic_conflict_types
+                                # 判据原用于阻止同入口的重叠控制流区域（如 ternary 与
+                                # if 共享 entry）建立父子关系。但当 child.entry 落在
+                                # best_parent 的体块（then/else/elif body/loop body）
+                                # 内时，child 是 best_parent 体内的真正嵌套区域，不是
+                                # 同入口重叠。此时必须建立父子关系，否则 AST 生成时
+                                # child 不在 best_parent.children 中，其 entry 块会被
+                                # 当作裸语句重复发射（如 `if: ... if: ...` 中内层 if
+                                # 的条件块被发射为裸表达式）。
+                                _child_in_parent_body = False
+                                if isinstance(best_parent, IfRegion):
+                                    _bp_body = set()
+                                    _bp_body.update(best_parent.then_blocks or [])
+                                    _bp_body.update(best_parent.else_blocks or [])
+                                    for _eb in (best_parent.elif_bodies or []):
+                                        _bp_body.update(_eb)
+                                    if best_parent.elif_final_else:
+                                        _bp_body.update(best_parent.elif_final_else)
+                                    _child_in_parent_body = entry_block in _bp_body
+                                elif isinstance(best_parent, LoopRegion):
+                                    _child_in_parent_body = entry_block in (best_parent.body_blocks or [])
+                                if not _child_in_parent_body:
+                                    continue
                         if isinstance(child, LoopRegion) and isinstance(best_parent, (IfRegion)):
                             if child.blocks and best_parent.blocks:
                                 parent_in_child = set(best_parent.blocks) <= set(child.blocks)

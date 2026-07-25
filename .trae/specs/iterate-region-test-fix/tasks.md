@@ -38,6 +38,7 @@
 - [x] Task 1.20: IF round_20 — 6 bug 修复 (CodeGenerator AST dict 泄漏 + WithRegion 跨域归并); 45 failed, 772 passed, 10 skipped (基线 35 failed, 760 passed) — IF 区域 20 轮完成
 - [x] Task 1.21: IF round_21 — 1 bug 修复 (C5 async if multi-await chain + boolop ternary GET_AWAITABLE guard); 34 failed, 783 passed, 10 skipped (基线 35 failed, 782 passed); commit 56b283f (已 push); P0 C1/C4 待 R22 处理
 - [x] Task 1.22: IF round_22 — 6 bug 修复 (C2 walrus+ternary IfRegion 被丢弃 5 + C3 AssertRegion 抢占 if 头 1/3); 28 failed, 789 passed, 10 skipped (基线 34 failed, 783 passed); ternary 0 回归; C3 残留 2 + C4/C7/C1/C5/C6/C8/C9/C10 待 R23+
+- [x] Task 1.23: IF round_23 — 15 测试修复 (C7 簇 7 主测试 + Bug 1/2/3 新增 3 + 回归 8: if59×3 + adv11×2 + if84×3); 21 failed, 796 passed, 10 skipped (基线 28/789/10, -7 failed); ternary 0 回归 (506/36/0); commit pending; C1/C4/C5/C6/C8/C9/C10 待 R24+
 
 ## Phase 2: LOOP 区域（20 轮）
 - [ ] Task 2.1 ~ 2.20

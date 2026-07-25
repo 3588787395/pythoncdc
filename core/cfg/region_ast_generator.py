@@ -3907,7 +3907,11 @@ AST 映射规则:
 
         if else_stmts and getattr(region, 'has_trailing_return_none', False):
             _non_trivial = [s for s in else_stmts if not self._is_trailing_return_none_statement(s)]
-            if not _non_trivial:
+            # [R23 C7 修复] 遵循"父引用子入口"原则：函数级隐式 return None 仅存在于
+            # 顶层 LoopRegion（parent is None）。嵌套 LoopRegion 的 else_blocks 属于
+            # 父区域上下文（如外层 IfRegion 的 then 分支中的显式 return），不可跨区域
+            # 启发式过滤。仅顶层 LoopRegion 才进入隐式 return 判定。
+            if not _non_trivial and region.parent is None:
                 # [修复] 判断while else中的return None是显式还是隐式：
                 # - 显式：while else块是函数中唯一的return None出口（如while13）
                 # - 隐式：存在其他独立的return None块（如wl23，编译器添加的隐式return）
@@ -5970,7 +5974,15 @@ AST 映射规则:
         # CALL指令是条件表达式的一部分，不是前置语句。
         # 修复n09：放宽条件为仅检查_has_call
         _needs_extended_trace = _has_call
-        for _nbci in range(len(block.instructions) - 2, -1, -1):
+        # [R23 Bug2 fix] 区域归约算法原则 2（每块唯一归属）：
+        # 原扫描从 len-2 开始，跳过末尾指令。但 NONE_CHECK_OPS
+        # （POP_JUMP_*_IF_NONE / IF_NOT_NONE）本身就是条件跳转，必为块
+        # 末尾指令，永远不被检测，回退到第二个循环找 LOAD_FAST，把 walrus
+        # 表达式 `(x := next(it, None))` 的函数加载 LOAD_GLOBAL next 误判
+        # 为前置语句，发射裸 `next` 表达式。修复：扫描从 len-1 开始，并在
+        # 末尾指令是 NONE_CHECK_OPS 时回溯追踪条件值的生产指令（含 walrus
+        # 的 COPY/STORE_FAST/CALL/PRECALL）。
+        for _nbci in range(len(block.instructions) - 1, -1, -1):
             _nbc_instr = block.instructions[_nbci]
             if _nbc_instr.opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP'):
                 if _needs_extended_trace:
@@ -5991,7 +6003,26 @@ AST 映射规则:
                     _nbe_cond_start_idx = _nbci
                 return _nbe_cond_start_idx
             if _nbc_instr.opname in NONE_CHECK_OPS:
-                return _nbci
+                # [R23 Bug2 fix] 末尾 NONE_CHECK_OPS 的条件值可能由 walrus
+                # 表达式（CALL + COPY + STORE_FAST）生产。当块含 CALL 时，
+                # 回溯追踪含 walrus 的 STORE_FAST/COPY/CALL 等指令找到条件
+                # 起点；否则只追踪基本加载指令（避免误纳入普通赋值）。
+                if _needs_extended_trace:
+                    _none_check_extended_ops = ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF',
+                                                'LOAD_CONST', 'COPY', 'SWAP', 'TO_BOOL',
+                                                'CALL', 'PRECALL', 'LOAD_METHOD',
+                                                'BINARY_SUBSCR', 'GET_ITER', 'PUSH_NULL',
+                                                'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
+                else:
+                    _none_check_extended_ops = ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF',
+                                                'LOAD_CONST', 'COPY')
+                for _nbci2 in range(_nbci - 1, -1, -1):
+                    if block.instructions[_nbci2].opname not in _none_check_extended_ops:
+                        break
+                    _nbe_cond_start_idx = _nbci2
+                if _nbe_cond_start_idx is None:
+                    _nbe_cond_start_idx = _nbci
+                return _nbe_cond_start_idx
         for _nbci in range(len(block.instructions) - 2, -1, -1):
             _nbc_instr = block.instructions[_nbci]
             if _nbc_instr.opname in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF'):
@@ -7659,6 +7690,20 @@ AST 映射规则:
     def _if_extract_cond_instructions(self, cond_block: 'BasicBlock', region: IfRegion) -> Tuple[List[Dict], List]:
         """提取条件块的前置语句和条件指令"""
         pre_stmts, pre_instrs, pre_seen_store, pre_unpack_info, import_pending_store = [], [], False, None, False
+        # [R23 Bug1 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（父引用子入口）：
+        # 当 cond_block 同时是某个 TernaryRegion 的 merge_block（merge_context='store'）
+        # 时，cond_block 中 STORE_* 及其之前的指令已被 TernaryRegion 消费为赋值语句
+        # （如 `result = {..., 'k': ternary, ...}`）。本 IfRegion 仅引用 STORE_* 之后
+        # 的指令作为 if 条件。若把 STORE_* 之前的指令重建为 pre_stmt，会重复发射
+        # 赋值语句（且因 ternary 上下文丢失而退化为 `result = {'value': x * 2}` 等
+        # 部分 dict）。检测此场景后跳过 pre_stmt 提取，仅保留条件指令提取。
+        _cond_block_is_ternary_merge = False
+        for _r in self.regions:
+            if (isinstance(_r, TernaryRegion)
+                    and getattr(_r, 'merge_block', None) is cond_block
+                    and getattr(_r, 'merge_context', None) in ('store', 'return')):
+                _cond_block_is_ternary_merge = True
+                break
         for instr in cond_block.instructions:
             if instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
                 continue
@@ -7722,6 +7767,13 @@ AST 映射规则:
                 if import_pending_store:
                     pre_instrs = []
                     import_pending_store = False
+                    continue
+                # [R23 Bug1 fix] cond_block 是 TernaryRegion 的 merge_block：
+                # STORE_* 及其之前的指令已被 TernaryRegion 消费，跳过 pre_stmt
+                # 提取，仅保留条件指令提取（在循环外的 cond_instrs 收集中处理）。
+                if _cond_block_is_ternary_merge:
+                    pre_instrs = []
+                    pre_seen_store = True
                     continue
                 is_walrus = len(pre_instrs) >= 2 and pre_instrs[-1].opname == 'COPY' and pre_instrs[-1].arg == 1
                 if pre_unpack_info is not None:
@@ -20751,6 +20803,29 @@ AST 映射规则:
                                         and _r.entry is region.merge_block):
                                     _shared_with_next_ternary = True
                                     break
+                        # [R23 Bug1 fix] 区域归约算法原则 2（每块唯一归属）
+                        # + 原则 4（父引用子入口）：当 ternary 的 merge_block 同时
+                        # 是嵌套 IfRegion 的 entry/condition_block（典型场景：
+                        # `result = {..., 'k': ternary, ...}; if result['k'] > c: ...`
+                        # 中 dict 字面量赋值与嵌套 if 条件被合并到同一基本块），
+                        # STORE_* 之后的指令属于嵌套 IfRegion 的条件，不应被本
+                        # TernaryRegion 作为后续语句发射（否则会泄漏裸表达式
+                        # `(result['k'] > c)`）。merge_block 仍作为 ternary 的引用
+                        # （AST 生成消费 STORE_* 之前的指令），但 STORE_* 之后的
+                        # 指令归嵌套 IfRegion。
+                        _shared_with_nested_if_cond = False
+                        if _non_noise_remaining and region.merge_block is not None:
+                            _mb_last = region.merge_block.get_last_instruction()
+                            if (_mb_last is not None
+                                    and _mb_last.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                                    and len(region.merge_block.conditional_successors) == 2):
+                                for _r in self.regions:
+                                    if (isinstance(_r, IfRegion)
+                                            and _r is not region
+                                            and _r.entry is region.merge_block
+                                            and _r.condition_block is region.merge_block):
+                                        _shared_with_nested_if_cond = True
+                                        break
                         _is_trivial_ret = False
                         if len(_non_noise_remaining) <= 2:
                             _no_pop = [i for i in _non_noise_remaining
@@ -20773,6 +20848,11 @@ AST 映射规则:
                             # entry_block；STORE_* 之后的指令（LOAD cond +
                             # POP_JUMP_IF_FALSE 等）属于下一个 ternary 的条件设置，
                             # 不发射为独立语句。
+                            pass
+                        elif _shared_with_nested_if_cond:
+                            # [R23 Bug1 fix] merge_block 同时是嵌套 IfRegion 的
+                            # entry/condition_block；STORE_* 之后的指令属于嵌套
+                            # IfRegion 的条件，不发射为独立语句。
                             pass
                         elif _non_noise_remaining and self._merge_block_is_loop_back_edge(region):
                             # [R6-02 fix] merge_block 同时是 LoopRegion 的 back_edge_block
@@ -21376,6 +21456,22 @@ AST 映射规则:
             return _out
         _body_stmts = _strip_impl_ret_none(_body_stmts)
         _orelse_stmts = _strip_impl_ret_none(_orelse_stmts)
+
+        # [R23 adv11 regression fix] 区域归约算法原则 2（每块唯一归属）+
+        # 原则 4（父引用子入口）：本方法已消费 merge_block 的 walrus/subscr/call
+        # 指令作为 If 节点的 test，并处理了 if-body/orelse 块，生成完整 If 节点。
+        # merge_block 此时已被本 TernaryRegion 消费，对应的 IfRegion
+        # （entry == merge_block，由 _identify_if_regions 基于同一 POP_JUMP_IF_FALSE
+        # 创建）不应再独立生成 If 节点——否则因 walrus/subscr/call 指令已被消费，
+        # IfRegion 的条件重建退化为 Constant(True)，重复输出 `if True: pass`。
+        # 将 merge_block 加入 generated_blocks，使 IfRegion 在 top-level 循环中
+        # 被 `all(b in generated_blocks)` 守卫跳过（region_ast_generator.py:894-901）。
+        # 镜像同方法对 _if_body_block / _orelse_block 的标记，保持一致。
+        # adv19（multiline return in if body）不在此路径——其 merge_block 末尾
+        # 是 COMPARE_OP（非 STORE_*/BINARY_SUBSCR/CALL），_try_build_ternary_as_if_cond
+        # 返回 None，由嵌套 IfRegion 通过 _shared_with_nested_if_cond 路径生成 If。
+        if region.merge_block is not None:
+            self.generated_blocks.add(region.merge_block)
 
         return {
             'type': 'If',
@@ -26162,6 +26258,17 @@ AST 映射规则:
                             _ua_idx += 1
                     _ua_target = {'type': 'Tuple', 'elts': _ua_elts, 'ctx': 'Store'}
                     _unpack_result = [{'type': 'Assign', 'targets': [_ua_target], 'value': _ua_value_expr}]
+                    # [R23-C7 fix] 区域归约算法原则 2（每块唯一归属）：UNPACK_EX 赋值
+                    # 之后的剩余指令（如 `*a, b = items; return a, b` 中的
+                    # LOAD_FAST/BUILD_TUPLE/RETURN_VALUE）属于同一块内的后续语句，
+                    # 必须一并重建。原实现仅生成赋值即返回，导致 trailing 语句丢失
+                    # （指令数不匹配）。复用 _build_statements_from_instructions 按
+                    # 语句边界（STORE/POP_TOP/JUMP/RETURN）拆分剩余指令。
+                    _remaining_instrs = _ua_all_instrs[_ua_idx:]
+                    if _remaining_instrs:
+                        _trailing_stmts = self._build_statements_from_instructions(_remaining_instrs, block)
+                        if _trailing_stmts:
+                            _unpack_result.extend(_trailing_stmts)
                 else:
                     _ua_expr = self.expr_reconstructor.reconstruct(_ua_all_instrs)
                     if _ua_expr:
