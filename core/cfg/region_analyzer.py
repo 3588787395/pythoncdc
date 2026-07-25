@@ -11816,10 +11816,47 @@ RegionType 枚举值: RegionType.ASSERT
                             return False
                         break
             if block not in self.block_to_region:
+                # [R22-C3 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3（嵌套即抽象节点）：
+                # 当 if 头块的【恰好一个】直接后继是 AssertRegion.entry（assert 条件块，
+                # 如 `if x > 0: assert x < 100, msg` 中 if-then 是 `assert x < 100`
+                # 的条件块）时，if body 是 assert 语句（语句级语义），不应被
+                # TernaryRegion 抢占为 true_value 块（表达式级语义）。否则
+                # if-elif-else 头被 TernaryRegion 吞并，整 if 坍塌为链式三元
+                # `(x < 100 if x > 0 else x < 0)`，assert 消息、elif/else body 全失。
+                #
+                # [R22-C3 regression fix] 严格判据：必须【恰好一个】succ 是
+                # AssertRegion.entry。原 `isinstance(succ_region, AssertRegion)`
+                # 太宽——`assert (a if c else b), 'msg'` 中 ternary 的两个 value 块
+                # 各自含 POP_JUMP_IF_TRUE（assert 检查嵌入 value），二者均被识别为
+                # 独立 AssertRegion.entry。若任一 succ 是 AssertRegion.entry 即拒绝
+                # ternary，会破坏"assert 条件含三元"的合法识别。判据：仅当恰好一个
+                # succ 是 AssertRegion.entry（典型 if-then-assert：then 是 assert，
+                # else 是下一条语句），才拒绝 ternary；两个 succ 均是 AssertRegion.entry
+                # 时（ternary 两 value 均含 assert 检查），允许 ternary 识别。
+                _assert_entry_succ_count = 0
+                for _succ in block.conditional_successors:
+                    _succ_r = self.block_to_region.get(_succ)
+                    if (isinstance(_succ_r, AssertRegion)
+                            and _succ == _succ_r.entry):
+                        _assert_entry_succ_count += 1
+                if _assert_entry_succ_count == 1:
+                    return False
                 for succ in block.conditional_successors:
                     succ_region = self.block_to_region.get(succ)
                     if isinstance(succ_region, LoopRegion):
                         if succ == succ_region.condition_block or succ == succ_region.entry:
+                            return False
+                        # [R22-C4 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3（嵌套即抽象节点）：
+                        # 当 if 头块的直接后继落入某 LoopRegion.blocks（for/while 循环
+                        # 的 setup 块如 `LOAD iter; GET_ITER` 或循环体内任意块）时，
+                        # if body 是循环语句（语句级语义），不应被 TernaryRegion 抢占
+                        # 为 true_value 块（表达式级语义）。否则 if-elif-else 头被
+                        # TernaryRegion 吞并，整 if 坍塌为链式三元
+                        # `(items if mode=='a' else items if mode=='b' else items)`，
+                        # for 循环被提升为顶层语句，破坏嵌套层级。原检查仅覆盖
+                        # condition_block/entry，遗漏 for 循环的 GET_ITER setup 块
+                        # （在 blocks 中但不在 init_blocks/header_block/entry）。
+                        elif succ in succ_region.blocks:
                             return False
                 return True
             existing = self.block_to_region[block]

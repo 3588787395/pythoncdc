@@ -6638,7 +6638,29 @@ AST 映射规则:
                 if isinstance(br, BoolOpRegion) and br.entry == region.entry:
                     boolop_child = br
             if boolop_child is None:
-                return []
+                # [R22-C2 fix] 区域归约算法原则 4（父引用子入口）+ 原则 3（嵌套即抽象节点）：
+                # 当 IfRegion.condition_block 被 R21-C1 redirect 重定向到某
+                # TernaryRegion.merge_block，且 IfRegion.entry 与该 TernaryRegion.entry
+                # 共享（walrus+三元+wrapping 后 if 条件场景，如
+                # `if (x := a if c else b).field > 0: pass`），不应丢弃 IfRegion。
+                # TernaryRegion 先于 IfRegion 生成时已把 entry 标记为 generated，
+                # 但 IfRegion 通过 condition_block（= TernaryRegion.merge）引用 ternary
+                # 子节点 —— _if_extract_condition_from_instructions 会检测
+                # ternary_for_cond 并通过 _build_compare_ternary_condition 重建完整
+                # 条件表达式（NamedExpr(walrus, Compare(Call/Attr/Subscr/BinOp(IfExp),
+                # op, const))）。否则整个 IfRegion 被丢弃，输出坍塌为 `pass`。
+                _c2_cond_block = getattr(region, 'condition_block', None)
+                _c2_ternary_redirect = False
+                if _c2_cond_block is not None:
+                    for _c2_r in self.regions:
+                        if (isinstance(_c2_r, TernaryRegion)
+                                and getattr(_c2_r, 'merge_block', None) is _c2_cond_block
+                                and _c2_r.entry is region.entry
+                                and _c2_r is not region):
+                            _c2_ternary_redirect = True
+                            break
+                if not _c2_ternary_redirect:
+                    return []
         for r in self.regions:
             if r is not region and isinstance(r, IfRegion) and hasattr(r, 'elif_conditions') and r.elif_conditions:
                 if region.entry in r.elif_conditions:
