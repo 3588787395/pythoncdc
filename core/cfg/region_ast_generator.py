@@ -9019,14 +9019,25 @@ AST 映射规则:
         ``for block in region.blocks`` 统一处理，BoolOpRegion.blocks 已包含
         await 链块）。
 
-        返回 ``{'type': 'Await', 'value': inner_expr}``，或 None（非 await 模式）。
+        [R21-C5 AST fix] 区域归约算法原则 4（父引用子入口）+ 原则 3（嵌套即
+        抽象节点）：当 BoolOp 操作数是 ``await <expr> <op> <rhs>``（如
+        ``await a > 0``）时，chain_block 含 COMPARE_OP 指令（rhs 在
+        COMPARE_OP 之前压栈，await 结果已在栈顶）。原方法只返回
+        ``Await(<expr>)`` 丢失比较，导致 ``await a > 0 and await b < 100``
+        退化为 ``await a and await b`` 或仅 rhs 常量（``0 and 100``）。
+        修复：检测 chain_block 中的 COMPARE_OP，构建
+        ``Compare(left=await_expr, ops=[op], comparators=[rhs])``。
+
+        返回 ``{'type': 'Await', 'value': inner_expr}`` 或
+        ``{'type': 'Compare', ...}``，或 None（非 await 模式）。
         """
         if not hasattr(self.region_analyzer, '_collect_await_predecessor_chain'):
             return None
         _await_chain = self.region_analyzer._collect_await_predecessor_chain(chain_block)
         if not _await_chain:
             return None
-        # _await_chain = [poll_block, setup_block]
+        # 仅取第一组 [poll_block, setup_block]（多 await 链中后续组属于
+        # 其他 chain_block，由各自的 _try_build_await_boolop_operand 处理）
         setup_block = _await_chain[1] if len(_await_chain) > 1 else None
         if setup_block is None:
             return None
@@ -9043,7 +9054,41 @@ AST 映射规则:
         inner_expr = self.expr_reconstructor.reconstruct(inner_instrs)
         if inner_expr is None:
             return None
-        return {'type': 'Await', 'value': inner_expr}
+        await_expr = {'type': 'Await', 'value': inner_expr}
+
+        # [R21-C5 AST fix] 检测 chain_block 中的 COMPARE_OP（如
+        # ``await a > 0`` 中的 ``> 0``）。字节码布局：
+        #   chain_block: [rhs_instrs..., COMPARE_OP, POP_JUMP_IF_*]
+        # await 结果已在栈顶（poll_block 末尾 YIELD_VALUE 的产物），
+        # rhs 在 COMPARE_OP 之前压栈，故 await 是左操作数，rhs 是右操作数。
+        chain_instrs = [i for i in chain_block.instructions
+                        if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP')]
+        last_instr = chain_block.get_last_instruction()
+        _STRIP_JUMPS = (SHORT_CIRCUIT_JUMP_OPS | FORWARD_CONDITIONAL_JUMP_OPS
+                        | BACKWARD_CONDITIONAL_JUMP_OPS)
+        if last_instr is not None and last_instr.opname in _STRIP_JUMPS:
+            chain_pure = [i for i in chain_instrs if i is not last_instr]
+        else:
+            chain_pure = list(chain_instrs)
+        compare_op_instr = None
+        rhs_instrs: List = []
+        for instr in chain_pure:
+            if instr.opname == 'COMPARE_OP':
+                compare_op_instr = instr
+                break
+            rhs_instrs.append(instr)
+        if compare_op_instr is not None and rhs_instrs:
+            rhs_expr = self.expr_reconstructor.reconstruct(rhs_instrs)
+            if rhs_expr is not None:
+                op_name = compare_op_instr.argval
+                return {
+                    'type': 'Compare',
+                    'left': await_expr,
+                    'ops': [op_name],
+                    'comparators': [rhs_expr],
+                }
+        # 无 COMPARE_OP 或 rhs 重建失败：返回纯 await 表达式（truthy 测试）
+        return await_expr
 
     def _extract_trapped_lhs_from_ternary(self, ternary_region: 'TernaryRegion') -> List:
         """[聚类5 修复] 提取被"困"在三元条件块入口、位于三元 test 之前的
@@ -9949,6 +9994,193 @@ AST 映射规则:
                     getattr(region, 'then_blocks', None) or [],
                     getattr(region, 'chained_compare_blocks', None) or [])
                 return _result if _result is not None else ternary_expr
+        # [R21-C1 AST fix] 区域归约算法原则 4（父引用子入口）+ 原则 3（嵌套即抽象节点）：
+        # 当 TernaryRegion.merge_block 是 IfRegion.cond_block，且 ternary 的
+        # true_value_block / false_value_block 都以 FORWARD_CONDITIONAL_JUMP_OPS
+        # 结尾（POP_JUMP_IF_FALSE/TRUE 短路跳转），表明 ternary 是 BoolOp `and`/`or`
+        # 链的左操作数（短路测试），merge_block 含右操作数（如
+        # `if (a if c else d) and b: pass` 中的 `LOAD b; POP_JUMP_IF_FALSE`）。
+        # 此时条件表达式应重建为 `BoolOp(And/Or, [IfExp, <rhs>])`，否则会退化为
+        # `if <rhs>: pass` 丢失 ternary（违反父引用子入口：父 IfRegion 通过
+        # cond_block 引用 ternary merge，ternary 通过 IfExp 引用）。
+        # 判据：true/false 值块都以 FORWARD_CONDITIONAL_JUMP_OPS 结尾且 opname 相同
+        # （排除 NONE_CHECK_OPS，那是 `is None/is not None` 测试，非 BoolOp 短路；
+        # 掠除 chained compare middle，JUMP_IF_*_OR_POP 由 R16-06 下方处理）。
+        # op 判定：IF_TRUE → `or`（短路执行体），IF_FALSE → `and`（短路跳过体）。
+        if isinstance(ternary_for_cond, TernaryRegion):
+            _tvc = ternary_for_cond
+            _tvb = getattr(_tvc, 'true_value_block', None)
+            _fvb = getattr(_tvc, 'false_value_block', None)
+            _tv_last = _tvb.get_last_instruction() if _tvb is not None else None
+            _fv_last = _fvb.get_last_instruction() if _fvb is not None else None
+            if (_tv_last is not None and _fv_last is not None
+                    and _tv_last.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                    and _fv_last.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                    and _tv_last.opname == _fv_last.opname
+                    and _tv_last.opname not in NONE_CHECK_OPS):
+                # 检测到 BoolOp 短路模式（true/false 值块以同向条件跳转结尾）
+                _boolop_op = 'or' if 'IF_TRUE' in _tv_last.opname else 'and'
+                # [R21-C1 AST fix 续] 直接从 ternary 结构重建 IfExp，而非
+                # 调用 _generate_ternary。原因：ternary 值块以
+                # FORWARD_CONDITIONAL_JUMP_OPS 结尾时（BoolOp 短路模式），
+                # _generate_ternary 会把值块当作控制流 If 语句生成，并可能沿
+                # fall-through 吸收 merge_block 内容（如 `or` 短路时 false_value
+                # 块 fall-through 到 merge，导致 `b` 被并入 orelse，生成
+                # `(a if c else d or b)`）。直接重建避免此污染：test 从 entry，
+                # body 从 true_value_block，orelse 从 false_value_block，各取
+                # 指令（排除末尾跳转和 JUMP_FORWARD）用 expr_reconstructor 重建。
+                _c1_test_expr = None
+                _c1_body_expr = None
+                _c1_orelse_expr = None
+                # test: entry 块指令（排除末尾条件跳转）
+                if _tvc.entry is not None:
+                    _entry_instrs = [_i for _i in _tvc.entry.instructions
+                                     if _i.opname not in NOISE_OPS
+                                     and _i.opname not in FORWARD_CONDITIONAL_JUMP_OPS
+                                     and _i.opname not in BACKWARD_CONDITIONAL_JUMP_OPS
+                                     and _i.opname not in SHORT_CIRCUIT_JUMP_OPS
+                                     and _i.opname not in ('JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE')]
+                    if _entry_instrs:
+                        _c1_test_expr = self.expr_reconstructor.reconstruct(_entry_instrs)
+                # body: true_value_block 指令（排除末尾跳转）
+                if _tvc.true_value_block is not None:
+                    _tv_instrs = [_i for _i in _tvc.true_value_block.instructions
+                                   if _i.opname not in NOISE_OPS
+                                   and _i.opname not in FORWARD_CONDITIONAL_JUMP_OPS
+                                   and _i.opname not in BACKWARD_CONDITIONAL_JUMP_OPS
+                                   and _i.opname not in SHORT_CIRCUIT_JUMP_OPS
+                                   and _i.opname not in ('JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE')]
+                    if _tv_instrs:
+                        _c1_body_expr = self.expr_reconstructor.reconstruct(_tv_instrs)
+                # orelse: false_value_block 指令（排除末尾跳转）
+                if _tvc.false_value_block is not None:
+                    _fv_instrs = [_i for _i in _tvc.false_value_block.instructions
+                                   if _i.opname not in NOISE_OPS
+                                   and _i.opname not in FORWARD_CONDITIONAL_JUMP_OPS
+                                   and _i.opname not in BACKWARD_CONDITIONAL_JUMP_OPS
+                                   and _i.opname not in SHORT_CIRCUIT_JUMP_OPS
+                                   and _i.opname not in ('JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE')]
+                    if _fv_instrs:
+                        _c1_orelse_expr = self.expr_reconstructor.reconstruct(_fv_instrs)
+                _ternary_expr_c1 = None
+                if _c1_test_expr is not None and _c1_body_expr is not None and _c1_orelse_expr is not None:
+                    _ternary_expr_c1 = {
+                        'type': 'IfExp',
+                        'test': _c1_test_expr,
+                        'body': _c1_body_expr,
+                        'orelse': _c1_orelse_expr,
+                    }
+                else:
+                    # 回退：调用 _generate_ternary 并抽取 IfExp
+                    _ternary_result_c1 = self._generate_ternary(_tvc)
+                    if _ternary_result_c1:
+                        if isinstance(_ternary_result_c1, list):
+                            for _item_c1 in _ternary_result_c1:
+                                if isinstance(_item_c1, dict):
+                                    if _item_c1.get('type') == 'Expr':
+                                        _ternary_expr_c1 = _item_c1.get('value')
+                                    elif _item_c1.get('type') == 'IfExp':
+                                        _ternary_expr_c1 = _item_c1
+                                    elif _item_c1.get('type') == 'If':
+                                        _cand_test = _item_c1.get('test')
+                                        if isinstance(_cand_test, dict) and _cand_test.get('type') == 'IfExp':
+                                            _ternary_expr_c1 = _cand_test
+                                        elif (isinstance(_cand_test, dict)
+                                                and _cand_test.get('type') == 'UnaryOp'
+                                                and _cand_test.get('op') == 'not'
+                                                and isinstance(_cand_test.get('operand'), dict)
+                                                and _cand_test['operand'].get('type') == 'IfExp'):
+                                            _ternary_expr_c1 = _cand_test['operand']
+                        elif isinstance(_ternary_result_c1, dict):
+                            if _ternary_result_c1.get('type') == 'IfExp':
+                                _ternary_expr_c1 = _ternary_result_c1
+                            elif _ternary_result_c1.get('type') == 'Expr':
+                                _ternary_expr_c1 = _ternary_result_c1.get('value')
+                            elif _ternary_result_c1.get('type') == 'If':
+                                _cand_test = _ternary_result_c1.get('test')
+                                if isinstance(_cand_test, dict) and _cand_test.get('type') == 'IfExp':
+                                    _ternary_expr_c1 = _cand_test
+                                elif (isinstance(_cand_test, dict)
+                                        and _cand_test.get('type') == 'UnaryOp'
+                                        and _cand_test.get('op') == 'not'
+                                        and isinstance(_cand_test.get('operand'), dict)
+                                        and _cand_test['operand'].get('type') == 'IfExp'):
+                                    _ternary_expr_c1 = _cand_test['operand']
+                if _ternary_expr_c1 is not None:
+                    for _b_c1 in _tvc.blocks:
+                        self.generated_blocks.add(_b_c1)
+                    # [R21-C1 AST fix 续] 当存在 BoolOpRegion 以 ternary
+                    # merge_block 为 entry 时（如 `(a if c else d) and b and e`
+                    # 中 BoolOpRegion@16 op_chain=[(16,'and'),(20,'and')]），
+                    # BoolOpRegion 覆盖了 `b and e` 部分。依「嵌套即抽象节点」，
+                    # ternary IfExp 应作为 BoolOp 的第一个操作数（ternary merge
+                    # 的栈值），后续操作数由 BoolOpRegion 重建。直接重建会丢失
+                    # 后续操作数（仅生成 `BoolOp(And, [IfExp, b])`），导致 `e`
+                    # 丢失或 `b` 重复。修复：用 BoolOpRegion 重建完整链，把
+                    # IfExp 前插到 values 列表头部。
+                    _c1_boolop_region = None
+                    for _r_c1 in self.regions:
+                        if (isinstance(_r_c1, BoolOpRegion)
+                                and _r_c1.entry is cond_block
+                                and len(_r_c1.op_chain) >= 2):
+                            _c1_boolop_region = _r_c1
+                            break
+                    if _c1_boolop_region is not None:
+                        _c1_boolop_expr = self._build_boolop_expression(_c1_boolop_region)
+                        if (_c1_boolop_expr is not None
+                                and isinstance(_c1_boolop_expr, dict)
+                                and _c1_boolop_expr.get('type') == 'BoolOp'
+                                and _c1_boolop_expr.get('op') == _boolop_op):
+                            _c1_boolop_expr['values'] = [_ternary_expr_c1] + _c1_boolop_expr.get('values', [])
+                            for _b_c1 in _c1_boolop_region.blocks:
+                                self.generated_blocks.add(_b_c1)
+                            # 应用取反逻辑
+                            _merge_last_c1 = cond_block.get_last_instruction()
+                            _negate_c1 = False
+                            if (_merge_last_c1 is not None
+                                    and _merge_last_c1.opname in (FORWARD_CONDITIONAL_JUMP_OPS
+                                                                  | BACKWARD_CONDITIONAL_JUMP_OPS)):
+                                if _merge_last_c1.opname in NONE_CHECK_OPS:
+                                    _if_true_c1 = False
+                                else:
+                                    _if_true_c1 = 'IF_TRUE' in _merge_last_c1.opname
+                                _jump_target_c1 = _merge_last_c1.argval
+                                if _jump_target_c1 is not None:
+                                    _then_offsets_c1 = {b.start_offset for b in region.then_blocks}
+                                    _jumps_to_then_c1 = _jump_target_c1 in _then_offsets_c1
+                                    _negate_c1 = _jumps_to_then_c1 != _if_true_c1
+                            return _negate_expr(_c1_boolop_expr) if _negate_c1 else _c1_boolop_expr
+                    # 从 merge_block（cond_block）重建右操作数
+                    # （LOAD b / COMPARE_OP 等指令，排除末尾跳转）
+                    _merge_last_c1 = cond_block.get_last_instruction()
+                    _merge_pure_c1 = [_i_c1 for _i_c1 in cond_block.instructions
+                                      if _i_c1.opname not in NOISE_OPS
+                                      and _i_c1 is not _merge_last_c1]
+                    _rhs_expr_c1 = (self.expr_reconstructor.reconstruct(_merge_pure_c1)
+                                    if _merge_pure_c1 else None)
+                    if _rhs_expr_c1 is not None:
+                        # 应用取反逻辑（与下方 cond_instrs 路径一致）
+                        _negate_c1 = False
+                        if (_merge_last_c1 is not None
+                                and _merge_last_c1.opname in (FORWARD_CONDITIONAL_JUMP_OPS
+                                                              | BACKWARD_CONDITIONAL_JUMP_OPS)):
+                            if _merge_last_c1.opname in NONE_CHECK_OPS:
+                                _if_true_c1 = False
+                            else:
+                                _if_true_c1 = 'IF_TRUE' in _merge_last_c1.opname
+                            _jump_target_c1 = _merge_last_c1.argval
+                            if _jump_target_c1 is not None:
+                                _then_offsets_c1 = {b.start_offset for b in region.then_blocks}
+                                _jumps_to_then_c1 = _jump_target_c1 in _then_offsets_c1
+                                _negate_c1 = _jumps_to_then_c1 != _if_true_c1
+                        _boolop_expr_c1 = {
+                            'type': 'BoolOp',
+                            'op': _boolop_op,
+                            'values': [_ternary_expr_c1, _rhs_expr_c1],
+                        }
+                        return _negate_expr(_boolop_expr_c1) if _negate_c1 else _boolop_expr_c1
+                    # rhs 重建失败：退回三元真值测试
+                    return _ternary_expr_c1
         boolop_region_for_cond = self.region_analyzer.get_region_for_block(cond_block)
         if not isinstance(boolop_region_for_cond, BoolOpRegion):
             boolop_region_for_cond = region.find_descendant_region_for_block(cond_block, (BoolOpRegion,))
@@ -10448,8 +10680,12 @@ AST 映射规则:
             _nr = self.region_analyzer.get_region_for_block(b)
             if isinstance(_nr, IfRegion) and _nr is not region and _nr.entry is not None:
                 if _nr.entry in _block_set and b != _nr.entry:
-                    _has_cc = getattr(_nr, 'chained_compare_blocks', None) is not None
-                    _has_elif = getattr(_nr, 'elif_conditions', None) is not None
+                    # [R21-C5 fix] 使用真值检查而非 `is not None`：空列表 [] 也表示
+                    # 无 elif/chained_compare。原 `is not None` 把 [] 当作"有 elif"，
+                    # 导致嵌套 IfRegion（如 async if-elif-else 中的 elif 条件块）的非入口
+                    # 块（await setup/poll）未被跳过，被作为独立语句输出（spurious `await a`）。
+                    _has_cc = bool(getattr(_nr, 'chained_compare_blocks', None))
+                    _has_elif = bool(getattr(_nr, 'elif_conditions', None))
                     if not _has_cc and not _has_elif:
                         _nested_if_skip.add(b)
         for block in sorted(blocks, key=lambda b: b.start_offset):
@@ -16830,9 +17066,21 @@ AST 映射规则:
             elif not pure_instrs:
                 sub_expr = self._try_build_await_boolop_operand(chain_block)
             else:
-                sub_expr = self.expr_reconstructor.reconstruct(pure_instrs)
-                if sub_expr is None:
-                    sub_expr = self._try_build_await_boolop_operand(chain_block)
+                # [R21-C5 AST fix] 同 _build_boolop_expression：当 pure_instrs
+                # 含 COMPARE_OP 且 chain_block 是 await cond_block 时，优先用
+                # _try_build_await_boolop_operand 重建 `Compare(await, op, rhs)`，
+                # 避免 reconstruct 把 rhs 误判为完整表达式。
+                _has_compare_op = any(inst.opname == 'COMPARE_OP' for inst in pure_instrs)
+                if _has_compare_op:
+                    _await_operand = self._try_build_await_boolop_operand(chain_block)
+                    if _await_operand is not None:
+                        sub_expr = _await_operand
+                    else:
+                        sub_expr = self.expr_reconstructor.reconstruct(pure_instrs)
+                else:
+                    sub_expr = self.expr_reconstructor.reconstruct(pure_instrs)
+                    if sub_expr is None:
+                        sub_expr = self._try_build_await_boolop_operand(chain_block)
             if sub_expr is not None and last_instr and last_instr.opname in NONE_CHECK_OPS:
                 _is_not_none_op = 'NOT_NONE' in last_instr.opname
                 if chain_op == 'and':
@@ -17117,12 +17365,29 @@ AST 映射规则:
                 # 轮询链的 cond_block，若是则构建 Await 表达式。
                 sub_expr = self._try_build_await_boolop_operand(chain_block)
             else:
-                sub_expr = self.expr_reconstructor.reconstruct(pure_instrs)
-                # [Round 2 修复] fallback：pure_instrs 重建失败时（如 await
-                # 比较条件 `await g() > 0` 中 rhs 指令无法独立重建），尝试
-                # await 操作数识别。
-                if sub_expr is None:
-                    sub_expr = self._try_build_await_boolop_operand(chain_block)
+                # [R21-C5 AST fix] 区域归约算法原则 4（父引用子入口）：
+                # 当 chain_block 是 await 比较操作数的 cond_block（如
+                # `await a > 0` 中 `> 0` 测试块）时，pure_instrs 含
+                # COMPARE_OP 但缺少左操作数（await 结果在栈顶）。
+                # reconstruct 会把 rhs 误判为完整表达式（如返回 `Constant(0)`），
+                # 导致 `await a > 0 and await b < 100` 退化为 `0 and 100`。
+                # 修复：当 pure_instrs 含 COMPARE_OP 且 chain_block 是 await
+                # 轮询链的 cond_block 时，优先用 _try_build_await_boolop_operand
+                # 重建完整 `Compare(await, op, rhs)`。
+                _has_compare_op = any(i.opname == 'COMPARE_OP' for i in pure_instrs)
+                if _has_compare_op:
+                    _await_operand = self._try_build_await_boolop_operand(chain_block)
+                    if _await_operand is not None:
+                        sub_expr = _await_operand
+                    else:
+                        sub_expr = self.expr_reconstructor.reconstruct(pure_instrs)
+                else:
+                    sub_expr = self.expr_reconstructor.reconstruct(pure_instrs)
+                    # [Round 2 修复] fallback：pure_instrs 重建失败时（如 await
+                    # 比较条件 `await g() > 0` 中 rhs 指令无法独立重建），尝试
+                    # await 操作数识别。
+                    if sub_expr is None:
+                        sub_expr = self._try_build_await_boolop_operand(chain_block)
             # Wrap sub_expr in Compare if the stripped jump was a None-check
             if sub_expr is not None and last_instr and last_instr.opname in NONE_CHECK_OPS:
                 _is_not_none_op = 'NOT_NONE' in last_instr.opname

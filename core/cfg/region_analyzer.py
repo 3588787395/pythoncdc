@@ -523,11 +523,20 @@ class LoopRegion(Region):
         return orphan
 
     def get_if_branch_boundary_stop(self, block) -> set:
-        loop_body_set = set(self.body_blocks) | set(self.else_blocks)
-        if self.condition_block:
-            loop_body_set.add(self.condition_block)
+        # [R21-C4 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3（嵌套即抽象节点）：
+        # loop_body_set 必须覆盖 LoopRegion.blocks 中的所有块（含 setup 块、
+        # 嵌套 IfRegion.then_blocks 中的 break/continue 块等），而非仅 body_blocks
+        # + else_blocks。这样：
+        # 1. break/continue 块（位于嵌套 IfRegion.then_blocks 中，但在
+        #    LoopRegion.blocks 内）会被视为"在循环内"，其后继（break 目标，
+        #    如 for-else 之后的 `return x`）会被正确识别为"循环外"加入 boundary；
+        # 2. 否则 break 目标会被 _collect_branch_blocks 误吸收进 IfRegion.elif_bodies
+        #    / then_blocks，违反每块唯一归属（与 LoopRegion/外层 IfRegion 争抢）。
+        # 同时遍历范围从 body_blocks 改为 self.blocks，确保 break/continue 块的
+        # 后继被扫描到。
+        loop_body_set = set(self.blocks)
         boundary = set()
-        for lb in self.body_blocks:
+        for lb in self.blocks:
             for succ in lb.successors:
                 if succ not in loop_body_set:
                     boundary.add(succ)
@@ -4435,45 +4444,110 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
           - poll_block：含 SEND + YIELD_VALUE + JUMP_BACKWARD_NO_INTERRUPT 的自循环块
           - setup_block：含 GET_AWAITABLE 的前驱块（await 表达式主体所在）
 
-        返回 [setup_block, poll_block]（若均找到），否则返回空列表。
-        仅返回确属 await 模式的块，避免误伤普通条件链。
+        [R21-C5 fix] 区域归约算法原则 1（自底向上归约）+ 原则 4（父引用子入口）：
+        当 if 条件含多个 await（如 `await a > 0 and await b < 100`）时，
+        字节码布局为多组 setup+poll 对，中间由条件跳转块（and/or 短路）连接：
+            cond_block_N (POP_JUMP_IF_FALSE)  ← condition_block (final)
+              ← poll_N (SEND/YIELD/JBNI)
+                ← setup_N (GET_AWAITABLE)
+                  ← cond_block_(N-1) (POP_JUMP_IF_FALSE, and/or 短路)
+                    ← poll_(N-1) (SEND/YIELD/JBNI)
+                      ← setup_(N-1) (GET_AWAITABLE)
+        原方法只收集单组 [poll, setup]，导致第 2-N 个 await 的 setup+poll 块
+        未被纳入 IfRegion.all_condition_blocks，被作为独立 BASIC 区域处理，
+        最终 if 头块未识别，整个 if-elif-else 链丢失，函数体坍塌为 return None。
+        修复：沿前驱链反向迭代收集所有 setup+poll 对（含中间 and/or 短路条件块），
+        直到不再遇到 await 模式。当 setup 块的前驱是条件跳转块
+        （FORWARD_CONDITIONAL_JUMP_OPS / SHORT_CIRCUIT_JUMP_OPS）且该条件块的
+        前驱是 poll 块时，继续向上收集。
+
+        返回 [poll_1, setup_1, cond_2, poll_2, setup_2, ...]（按反向顺序），
+        若无 await 模式则返回空列表。仅返回确属 await 模式的块，避免误伤普通条件链。
         """
         result: List[BasicBlock] = []
-        # 步骤 1: 找 poll_block（condition_block 的前驱中含 await 轮询三联的块）
-        poll_block = None
-        for pred in condition_block.predecessors:
-            has_send = has_yield = has_jbni = False
-            for instr in pred.instructions:
-                if instr.opname == 'SEND':
-                    has_send = True
-                elif instr.opname == 'YIELD_VALUE':
-                    has_yield = True
-                elif instr.opname == 'JUMP_BACKWARD_NO_INTERRUPT':
-                    has_jbni = True
-            if has_send and has_yield and has_jbni:
-                poll_block = pred
+        visited = {condition_block}
+        current_cond: Optional[BasicBlock] = condition_block
+        while current_cond is not None:
+            # 步骤 1: 找 poll_block（current_cond 的前驱中含 await 轮询三联的块）
+            poll_block = None
+            for pred in current_cond.predecessors:
+                if pred in visited:
+                    continue
+                has_send = has_yield = has_jbni = False
+                for instr in pred.instructions:
+                    if instr.opname == 'SEND':
+                        has_send = True
+                    elif instr.opname == 'YIELD_VALUE':
+                        has_yield = True
+                    elif instr.opname == 'JUMP_BACKWARD_NO_INTERRUPT':
+                        has_jbni = True
+                if has_send and has_yield and has_jbni:
+                    poll_block = pred
+                    break
+            if poll_block is None:
                 break
-        if poll_block is None:
-            return []
-        result.append(poll_block)
 
-        # 步骤 2: 找 setup_block（poll_block 的前驱中含 GET_AWAITABLE 的块）
-        # 排除 poll_block 自身（自循环前驱）
-        setup_block = None
-        for pred in poll_block.predecessors:
-            if pred is poll_block:
-                continue
-            if any(instr.opname == 'GET_AWAITABLE' for instr in pred.instructions):
-                setup_block = pred
+            # 步骤 2: 找 setup_block（poll_block 的前驱中含 GET_AWAITABLE 的块）
+            # 排除 poll_block 自身（自循环前驱）
+            setup_block = None
+            for pred in poll_block.predecessors:
+                if pred is poll_block or pred in visited:
+                    continue
+                if any(instr.opname == 'GET_AWAITABLE' for instr in pred.instructions):
+                    setup_block = pred
+                    break
+            if setup_block is None:
                 break
-        if setup_block is None:
-            return []
-        result.append(setup_block)
 
-        # 步骤 3: 排除 GET_YIELD_FROM_ITER（yield from 而非 await）
-        for instr in setup_block.instructions:
-            if instr.opname == 'GET_YIELD_FROM_ITER':
-                return []
+            # 步骤 3: 排除 GET_YIELD_FROM_ITER（yield from 而非 await）
+            if any(instr.opname == 'GET_YIELD_FROM_ITER' for instr in setup_block.instructions):
+                # 若首组即遇 yield from（非 await），返回空列表；
+                # 若已收集若干组，保留已收集结果并停止
+                if not result:
+                    return []
+                break
+
+            # 收集当前 await 对
+            result.append(poll_block)
+            result.append(setup_block)
+            visited.add(poll_block)
+            visited.add(setup_block)
+
+            # 步骤 4: [R21-C5 fix] 检查 setup_block 的前驱是否为条件跳转块
+            # （and/or 短路），且该条件块的前驱为 poll_block（确认属 await 链）。
+            # 若是，把该条件块纳入结果并继续向上收集下一组 setup+poll 对。
+            next_cond = None
+            for pred in setup_block.predecessors:
+                if pred in visited:
+                    continue
+                last_instr = pred.get_last_instruction()
+                if (last_instr is not None
+                        and last_instr.opname in (FORWARD_CONDITIONAL_JUMP_OPS
+                                                  | SHORT_CIRCUIT_JUMP_OPS)):
+                    # [R21-C5 fix] 边界判据：setup_block 必须是 pred 的 fallthrough
+                    # 后继（同分支），而非跳转目标（不同分支）。若 pred 的跳转目标
+                    # 是 setup_block，说明 setup_block 是另一分支的入口（如
+                    # if-elif-else 中 elif 条件块 POP_JUMP_IF_FALSE → 下一 elif
+                    # 的 setup），pred 是上一分支的末尾条件，不应纳入当前 await 链。
+                    if (last_instr.argval is not None
+                            and last_instr.argval == setup_block.start_offset):
+                        continue
+                    # 验证该条件块的前驱是 poll_block（await 模式），
+                    # 避免误吸收非 await 的条件跳转块
+                    for pred_pred in pred.predecessors:
+                        if pred_pred is pred or pred_pred in visited:
+                            continue
+                        _pp_send = any(i.opname == 'SEND' for i in pred_pred.instructions)
+                        _pp_yield = any(i.opname == 'YIELD_VALUE' for i in pred_pred.instructions)
+                        if _pp_send and _pp_yield:
+                            next_cond = pred
+                            break
+                    if next_cond is not None:
+                        break
+            if next_cond is not None:
+                result.append(next_cond)
+                visited.add(next_cond)
+            current_cond = next_cond
         return result
 
     def _skip_await_poll_to_cond_block(self, setup_block: BasicBlock) -> Optional[BasicBlock]:
@@ -10312,7 +10386,53 @@ RegionType 枚举值: RegionType.ASSERT
             if any(instr.opname in ('PUSH_EXC_INFO', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH', 'PREP_RERAISE_STAR') for instr in block.instructions):
                 continue
 
-            if any(tr.entry == block for tr in self._filter_regions(ternary_regions or [], TernaryRegion)):
+            # [R21-C1 fix] 区域归约算法原则 4（父引用子入口）+ 原则 1（自底向上归约）+
+            # 原则 2（每块唯一归属）：
+            # 当 block 属于某 TernaryRegion.blocks 时，block 是三元结构的内部块
+            # （cond/true_value/false_value/merge 等）。IfRegion 不应抢占这些内部块
+            # ——否则会创建多个重叠 IfRegion（如 entry=6/12/16），违反每块唯一归属。
+            # 例外：当 block 是 TernaryRegion.entry 且 TernaryRegion 处于"if 条件上下文"
+            # 时（ternary 的 merge_block 以 FORWARD_CONDITIONAL_JUMP 结尾，表明
+            # ternary 值被作为 if 条件测试，如 `if (a if c else d) and b: pass`），
+            # 应让 IfRegion 优先创建（ternary 的 merge_block 作为 condition_block，
+            # TernaryRegion 作为 IfRegion 子节点），否则整个 if 体坍塌为表达式。
+            # 判据：ternary 的 merge_block 存在、≠ block、且以
+            # FORWARD_CONDITIONAL_JUMP_OPS 结尾（POP_JUMP_IF_FALSE/TRUE 等）。
+            # 排除 chained compare middle（JUMP_IF_*_OR_POP，由 R16-06 下方处理）。
+            _ternary_if_cond_redirect = None
+            _ternary_owner_for_skip = None
+            for _tr_c1 in self._filter_regions(ternary_regions or [], TernaryRegion):
+                if block in _tr_c1.blocks:
+                    _ternary_owner_for_skip = _tr_c1
+                    if _tr_c1.entry == block:
+                        _tr_c1_merge = getattr(_tr_c1, 'merge_block', None)
+                        if _tr_c1_merge is not None and _tr_c1_merge is not block:
+                            _tr_c1_merge_last = _tr_c1_merge.get_last_instruction()
+                            if (_tr_c1_merge_last is not None
+                                    and _tr_c1_merge_last.opname in FORWARD_CONDITIONAL_JUMP_OPS):
+                                # [R21-C3 fix] 区域归约算法原则 2（每块唯一归属）+
+                                # 原则 3（嵌套即抽象节点）：当 ternary 的 merge_block
+                                # 同时是另一个 TernaryRegion 的 entry 时（如
+                                # `a, b = (1 if x else 2), (3 if y else 4)` 中
+                                # 第一个三元 merge=16 是第二个三元 entry=16），
+                                # 这是链式三元（前一三元值留栈，后一三元在同 merge
+                                # 求值），非 if 条件上下文。merge_block 的条件跳转
+                                # 属于第二个三元（子节点），不应被 IfRegion 抢占。
+                                # 判据：存在 _tr_other != _tr_c1 且 _tr_other.entry
+                                # is _tr_c1_merge。此时跳过 redirect，让 block 按
+                                # TernaryRegion 内部块处理（_ternary_owner_for_skip
+                                # 非 None 且 redirect None → continue 跳过 IfRegion）。
+                                _merge_is_other_ternary_entry = False
+                                for _tr_other in self._filter_regions(ternary_regions or [], TernaryRegion):
+                                    if (_tr_other is not _tr_c1
+                                            and _tr_other.entry is _tr_c1_merge):
+                                        _merge_is_other_ternary_entry = True
+                                        break
+                                if not _merge_is_other_ternary_entry:
+                                    _ternary_if_cond_redirect = _tr_c1_merge
+                    break
+            if _ternary_owner_for_skip is not None and _ternary_if_cond_redirect is None:
+                # block 在 TernaryRegion.blocks 中但非（entry 处于 if 条件上下文）→ 跳过
                 continue
             # [R16-06 fix] 跳过 TernaryRegion 的 merge_block 当
             # merge_context='compare' 且 merge_block 以 JUMP_IF_FALSE_OR_POP
@@ -10435,6 +10555,20 @@ RegionType 枚举值: RegionType.ASSERT
 
             condition_block = block
             chain_blocks = set()
+            # [R21-C1 fix] 当 TernaryRegion 处于 if 条件上下文时，将 condition_block
+            # 重定向到 ternary 的 merge_block（实际 if 测试发生处，如
+            # `if (a if c else d) and b: pass` 中的 `LOAD b; POP_JUMP_IF_FALSE`）。
+            # 同时把 TernaryRegion.blocks 加入 chain_blocks（条件块集合），使它们
+            # 不被 _collect_branch_blocks 收入 then/else（每块唯一归属：ternary 块
+            # 归 TernaryRegion 子节点，IfRegion 通过 entry 引用 ternary 入口）。
+            # 注意：merge_block 本身也在 chain_blocks 中，确保 _collect_branch_blocks
+            # 不会沿 merge_block 的前驱回溯收集 ternary 内部块。
+            if _ternary_if_cond_redirect is not None:
+                condition_block = _ternary_if_cond_redirect
+                for _tr_c1b in self._filter_regions(ternary_regions or [], TernaryRegion):
+                    if _tr_c1b.entry == block:
+                        chain_blocks.update(_tr_c1b.blocks)
+                        break
             if isinstance(block_region, BoolOpRegion) and block_region.entry == block:
                 # [Phase 7 根因 E] 值上下文 BoolOpRegion 入口的 IfRegion 跳过。
                 #
@@ -10997,11 +11131,27 @@ RegionType 枚举值: RegionType.ASSERT
         # the inner collection, since terminal blocks don't lead anywhere (collecting
         # them doesn't cause BFS to re-enter the loop). Keep the loop header in the
         # stop set to prevent following back-edges.
+        # [R21-C4 fix] 区域归约算法原则 2（每块唯一归属）：break 目标块（如
+        # for-else 之后的 `return x`）是循环出口，不属于嵌套 IfRegion 的 elif
+        # body。break 目标的特征是：终态块（RETURN/RAISE）且有前驱以 JUMP_FORWARD
+        # 结尾（break 语句）。R17 的终态过滤会把这类块也从 boundary_stop 移除，
+        # 导致 break 目标被 _collect_branch_blocks 误吸收进 elif_bodies，与
+        # 外层 IfRegion.then_blocks 争抢（违反每块唯一归属）。
+        # 修复：从终态过滤集合中排除 break 目标（保留在 boundary_stop 中）。
         _inner_boundary_stop = set(boundary_stop) if boundary_stop else set()
         if _inner_boundary_stop:
             _terminal_offsets = {b for b in _inner_boundary_stop
                                  if b.get_last_instruction()
                                  and b.get_last_instruction().opname in ('RETURN_VALUE', 'RETURN_CONST', 'RAISE_VARARGS', 'RERAISE')}
+            # break 目标：终态块且有前驱以 JUMP_FORWARD 结尾（break 语句）
+            _break_targets = set()
+            for b in _terminal_offsets:
+                for pred in b.predecessors:
+                    _pred_last = pred.get_last_instruction()
+                    if _pred_last and _pred_last.opname == 'JUMP_FORWARD':
+                        _break_targets.add(b)
+                        break
+            _terminal_offsets = _terminal_offsets - _break_targets
             _inner_boundary_stop = _inner_boundary_stop - _terminal_offsets
         def _check_elif_chain(header_, else_blocks_, merge_):
             if not else_blocks_:
@@ -11764,6 +11914,15 @@ RegionType 枚举值: RegionType.ASSERT
                     jt_effective = [i for i in jt_block.instructions if i.opname not in NOISE_OPS]
                     has_unary_not = any(i.opname == 'UNARY_NOT' for i in jt_effective)
                     if has_unary_not:
+                        return False
+                    # [R21-C5 fix] 区域归约算法原则 4（父引用子入口）+ 原则 2（每块唯一归属）：
+                    # 当 BoolOp 的短路跳转目标是另一个 await 条件的 setup 块（含
+                    # GET_AWAITABLE，如 if-elif-else 中 elif 的 `await a == 0` setup），
+                    # 该块是 elif 条件链的子节点，而非 ternary 值块。将其误判为 ternary
+                    # 值会导致创建跨分支的 TernaryRegion（混合不同 if 分支的块），违反
+                    # 每块唯一归属，输出 `(None if 0 else None)`。ternary 的值块不会含
+                    # GET_AWAITABLE（await setup），此检查不影响合法 ternary。
+                    if any(i.opname == 'GET_AWAITABLE' for i in jt_effective):
                         return False
                     jt_non_noise = [i for i in jt_effective
                                     if i.opname not in ('JUMP_FORWARD', 'JUMP_BACKWARD',
@@ -15051,14 +15210,15 @@ RegionType 枚举值: RegionType.ASSERT
             _await_chain = self._collect_await_predecessor_chain(_cb)
             if not _await_chain:
                 continue
-            for _ab in _await_chain:  # [poll_block, setup_block]
+            for _ab in _await_chain:  # [poll_block, setup_block, ...]
                 if _ab is None or _ab in region_blocks:
                     continue
-                # 不抢占已被其他区域（Loop/Try/With/Match/Ternary）占用的块
+                # 不抢占已被其他区域（Loop/Try/With/Match/Ternary）占用的块。
+                # [R21-C5 fix] BoolOpRegion 在此处尚未创建（region 在下方才赋值），
+                # 任何已归属都意味着被其他区域占用；LoopRegion condition_block
+                # 允许共享（await 轮询自循环），其余跳过。
                 _existing = self.block_to_region.get(_ab)
-                if _existing is not None and _existing is not region:
-                    # LoopRegion 的 condition_block 允许共享，但 await 链通常
-                    # 不在循环条件里；保守起见跳过已归属的块
+                if _existing is not None:
                     if not isinstance(_existing, (LoopRegion,)):
                         continue
                 region_blocks.add(_ab)
@@ -15957,6 +16117,15 @@ RegionType 枚举值: RegionType.ASSERT
             return []
 
         stop = {merge, *(stop_set or ())} if merge else set(stop_set or ())
+        # [R21-C4 fix] 区域归约算法原则 4（父引用子入口）：entry 是当前分支的
+        # 子入口块，必须被收集到 collected 中（父 IfRegion 通过 entry 引用子节点）。
+        # 当外层 LoopRegion 的 get_if_branch_boundary_stop 把 break/continue 等
+        # loop-exit 块加入 boundary_stop 时，这些块恰好是嵌套 if-elif 的分支入口
+        # （如 `elif x < 0: break` 中的 break 块）。若 entry 在 stop 中，visited
+        # 初始化会把 entry 标记为已访问，导致 worklist pop 出 entry 后被跳过，
+        # collected 为空，AST 生成时分支体退化为 `pass`。stop_set 的语义是
+        # "BFS 不再沿后继深入"（边界），而非 "跳过入口块"；entry 始终应被收集。
+        stop.discard(entry)
         visited = stop | ({merge} if merge else set())
         collected = []
         worklist = [entry]
