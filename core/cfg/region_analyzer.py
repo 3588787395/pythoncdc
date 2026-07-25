@@ -137,7 +137,6 @@ class BlockRole(Enum):
 
 class RegionType(Enum):
     BASIC = auto()
-    SEQUENCE = auto()  # TODO[pass2-SEQ]: dead code, 从不实例化；Pass 2 评估删除或实现
     IF = auto()
     IF_THEN = auto()
     IF_THEN_ELSE = auto()
@@ -1172,7 +1171,7 @@ class RegionAnalyzer:
         TERNARY           _identify_ternary_regions POP_JUMP_IF_* 两路汇聚到同一 merge          IfExp(test, body, orelse)
         CHAINED_COMPARE    _identify_chained_        a<b<c：连续比较块，左值跨块复用            Compare(left, ops, comps)
                           _compare_regions
-        SEQUENCE          _identify_sequence_regions 剩余无结构的基本块按前驱→后继顺序拼接      stmt 序列
+        BASIC             _identify_sequence_regions 兜底归约：未被结构化抢占的块各自独立成区    Assign/Expr/Return/Pass
 
         归约语义（对每一区域通用）：
         - 区域入口块 = 该结构头（loop header / if condition / try protected-entry / …）。
@@ -1184,7 +1183,7 @@ class RegionAnalyzer:
         当前实现说明（与纯迭代归约的关系）
         ══════════════════════════════════════════════════════════════════════
         本方法当前采用「固定优先级三阶段流水线」(TRY>LOOP>WITH/MATCH/ASSERT>
-        CHAINED_COMPARE>BOOLOP>TERNARY>IF>SEQUENCE) 作为对论文 4.1 迭代归约循环
+        CHAINED_COMPARE>BOOLOP>TERNARY>IF>BASIC) 作为对论文 4.1 迭代归约循环
         的工程近似。该流水线在满足上述 4 条核心原则（每块唯一归属、嵌套即抽象节点、
         父引用子入口、回边吸收）时，与真·迭代归约等价。任何识别方法都不得以
         跨层/跨区域的特例判断破坏这些原则；如遇此类特例，应回归到区域归约本身修正。
@@ -2368,7 +2367,6 @@ class RegionAnalyzer:
         RegionType.BOOL_OP: 20,
         RegionType.TERNARY: 15,
         RegionType.ASSERT: 10,
-        RegionType.SEQUENCE: 5,  # TODO[pass2-SEQ]: dead branch, SEQUENCE 从不实例化；Pass 2 评估删除
         RegionType.BASIC: 0,
     }
 
@@ -15938,13 +15936,12 @@ RegionType 枚举值: RegionType.ASSERT
     def _identify_sequence_regions(self, existing_regions: List[Region]) -> List[Region]:
         """识别基础顺序区域（BASIC）。
 
-        NOTE: RegionType.SEQUENCE 当前为 dead code（定义于 RegionType 枚举但从不实例化）。
-        本方法实际仅创建 RegionType.BASIC 区域（每块独立成区）。
-        TODO[pass2-SEQ]: Pass 2 评估是否真正实现 SEQUENCE 区域（合并连续 BASIC 块为多块 SEQ），
-        或彻底删除 RegionType.SEQUENCE 枚举与 REGION_TYPE_PRIORITY 中的 SEQUENCE:5 条目。
+        NOTE: 原 RegionType.SEQUENCE 枚举（dead code，从不实例化）已于 Pass 2 删除。
+        本方法仅创建 RegionType.BASIC 区域（每块独立成区）。
+        若未来需合并连续 BASIC 块为多块顺序区域，应重新引入 SEQUENCE 枚举与
+        对应 _generate_sequence_region handler（当前 _generate_region 仅分派 BASIC）。
 
-        【区域类型】 SEQUENCE — 顺序区域（Sequence Region）— 当前为 dead code，从不实例化
-                    BASIC  — 基础区域（Basic Region，单块顺序区域）
+        【区域类型】 BASIC — 基础区域（Basic Region，单块顺序区域）
         RegionType 枚举值: RegionType.BASIC（每个未被抢占的块独立成区）
 
         1. 算法描述（基于"No More Gotos"论文）

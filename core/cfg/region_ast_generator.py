@@ -24924,8 +24924,6 @@ AST 映射规则:
                 self.generated_blocks.add(block)
                 continue
             block_stmts = self._generate_block_statements(block)
-            if block_stmts:
-                pass
             stmts.extend(block_stmts)
             self.generated_blocks.add(block)
         return stmts
@@ -24933,8 +24931,6 @@ AST 映射规则:
     def _generate_block_statements(self, block: BasicBlock, _cjb_parent: BasicBlock = None) -> List[Dict[str, Any]]:
         if block in self.generated_blocks or block.start_offset in self.generated_offsets:
             return []
-        if any(i.opname == 'BINARY_OP' for i in block.instructions):
-            pass
 
         # 区域归约算法：通用break检测
         # 在循环体内，POP_TOP(迭代器清理) + LOAD_CONST None + RETURN_VALUE = break
