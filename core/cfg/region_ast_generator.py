@@ -4219,6 +4219,20 @@ AST 映射规则:
           - 控制流不变：副作用（`body_stmts.extend(_pre_stmts)`）通过参数引用保留
           - 验证：grep `_loop_generate_pre_stmts\(` 全仓仅 1 处调用点（L4101，
             不使用返回值）+ 本定义处；无测试文件调用
+
+        [Pass7-LOOP] 同步 docstring 首行与函数体实际行为：
+          - 首行「从init_blocks和内层for循环的iter_setup提取前置语句」具误导性：
+            函数体仅处理 `region.region_type == FOR_LOOP` 时内层 for 循环的
+            iter_setup 前驱块（GET_ITER/GET_AITER），并未处理 `region.init_blocks`。
+          - `region.init_blocks` 的实际处理在 `_loop_generate_for`（grep
+            `if region.init_blocks:` 在 region_ast_generator.py 仅 2 处命中，
+            均位于 `_loop_generate_for` 内，L2977/L3238）。
+          - 首行「init_blocks」表述为历史遗留——可能源自早期 init_blocks 处理
+            内联于此的设计，后分离至 `_loop_generate_for`，但 docstring 未同步。
+          - 本轮仅追加说明段落，未修改首行（保留作历史追溯），未触碰可执行代码。
+          - 控制流不变，仅 docstring 文本同步。
+          - 验证：grep `_loop_generate_pre_stmts\(` 全仓仅 1 处调用点（L4101），
+            调用点不依赖 init_blocks 处理（init_blocks 已由 _loop_generate_for 处理）。
         """
         if region.region_type == RegionType.FOR_LOOP:
             for child in (region.children or []):
