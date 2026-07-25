@@ -11358,7 +11358,11 @@ RegionType 枚举值: RegionType.ASSERT
                                       ft_succ, short_circuit_succ, chained_compare_info):
         compare_ops = chained_compare_info["compare_ops"]
         real_then = None
-        real_else = None
+        # [Pass3-CC] 移除原 `real_else = None` 初始化：该初始值从未被读取——
+        # 下方 `real_else = short_circuit_succ` 无条件覆盖（两语句之间无任何
+        # `real_else` 引用，已 grep 验证）。`real_then = None` 初始化保留：当
+        # `all_compare_blocks` 为空时作为 fallback 被 `then_blocks = [real_then]
+        # if real_then else []` 读取。属纯死代码删除，控制流不变。
         all_compare_blocks = []
         current_ft = ft_succ
         for op_idx in range(len(compare_ops)):
