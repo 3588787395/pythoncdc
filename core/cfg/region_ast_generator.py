@@ -4194,7 +4194,7 @@ AST 映射规则:
             'child_if_blocks': child_if_blocks,
         }
 
-    def _loop_generate_pre_stmts(self, region: LoopRegion, body_stmts: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _loop_generate_pre_stmts(self, region: LoopRegion, body_stmts: List[Dict[str, Any]]) -> None:
         """从init_blocks和内层for循环的iter_setup提取前置语句
 
         [Pass5-LOOP] 同步 docstring 与实际行为（Pass4-LOOP 已在调用点删除死代码）：
@@ -4210,9 +4210,16 @@ AST 映射规则:
             （Pass4-LOOP 已删除调用点的 `if pre_stmts:` 死分支）。
         本轮仅同步 docstring，未重构函数（重构涉及调用方语义，超出保守范围）。
         后续 Pass 可把签名改为 `-> None` 并重命名以反映副作用语义。
-        """
-        pre_stmts: List[Dict[str, Any]] = []
 
+        [Pass6-LOOP] 完成 Pass5-LOOP deferred 的签名与死代码清理：
+          - 签名 `-> List[Dict[str, Any]]` 改为 `-> None`，与实际副作用语义一致
+          - 删除死局部变量 `pre_stmts: List[Dict[str, Any]] = []`（初始化后从未被
+            append/extend，仅在末尾 return，恒为 `[]`）
+          - 删除末尾 `return pre_stmts`（返回值唯一调用点 L4101 已不使用）
+          - 控制流不变：副作用（`body_stmts.extend(_pre_stmts)`）通过参数引用保留
+          - 验证：grep `_loop_generate_pre_stmts\(` 全仓仅 1 处调用点（L4101，
+            不使用返回值）+ 本定义处；无测试文件调用
+        """
         if region.region_type == RegionType.FOR_LOOP:
             for child in (region.children or []):
                 if isinstance(child, LoopRegion):
@@ -4225,8 +4232,6 @@ AST 映射规则:
                                         body_stmts.extend(_pre_stmts)
                                     self.generated_blocks.add(pred)
                                 break
-
-        return pre_stmts
 
     def _loop_extract_for_iter_pre_stmts(self, instrs: List[Instruction], block: BasicBlock) -> Tuple[List[Dict[str,Any]], List[Instruction]]:
         """从for_iter_setup指令序列中提取前置赋值语句，返回(前置语句列表, 剩余迭代器指令)
