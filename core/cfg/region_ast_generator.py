@@ -18350,11 +18350,13 @@ AST 映射规则:
         - merge_block 的 STORE / RETURN 终结指令必须与原始字节码一致。
         - BoolOp 条件链（condition_chain_blocks）必须按原始顺序重建，操作符
           (and/or) 与操作数顺序精确匹配，否则短路语义将被破坏。
-        - 字节码一致性状态：100% 完全匹配（ternary 116/116）。历史问题
-          test_tn20/tn21（`a if a and b else 0`）已解决：根因在
-          _identify_ternary_regions 的 BoolOpRegion 抢占 + skip_ternary=True
-          守卫，Phase 5 修复了 IfRegion 对简单三元的过度抢占，BoolOp 条件链
-          由 _build_ternary_boolop_condition 精确重建，短路语义完整保留。
+        - 字节码一致性状态：存在已知失败（截至 Pass 01: TERNARY 69p/7f/76）。
+          7 个失败用例为 ternary 值被外层表达式消费的模式，详见 TERNARY
+          Pass 01 报告。历史问题 test_tn20/tn21（`a if a and b else 0`）已
+          解决：根因在 _identify_ternary_regions 的 BoolOpRegion 抢占 +
+          skip_ternary=True 守卫，Phase 5 修复了 IfRegion 对简单三元的过度
+          抢占，BoolOp 条件链由 _build_ternary_boolop_condition 精确重建，
+          短路语义完整保留。
         """
         cond_block = region.condition_block
         true_block = region.true_value_block

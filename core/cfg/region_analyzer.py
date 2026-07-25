@@ -11543,7 +11543,10 @@ RegionType 枚举值: RegionType.ASSERT
 
         6. 已知失败模式
         ---------------
-        当前测试矩阵通过率: 100%（ternary 116/116），无已知失败模式。
+        当前测试矩阵通过率: TERNARY 套件存在已知失败（截至 Pass 01: 69p/7f/76）。
+        7 个失败用例均为 ternary 值被外层表达式消费的模式（assert method call /
+        listcomp body / await call arg / for-iter subscript / compare in both /
+        tuple-unpack / starred-list scalar），详见 TERNARY Pass 01 报告。
         历史问题 tn20/tn21 已在 Phase 3.6 修复：在 _detect_ternary_pattern
         中加入 `block in match_case_body_blocks` 守卫，避免误吞 Match case 体。
         设计权衡：BoolOp vs Ternary 优先级 —— 当候选块被 BoolOpRegion 占用时，
