@@ -10172,8 +10172,11 @@ RegionType 枚举值: RegionType.ASSERT
         # TODO[pass2-CC]: 此处 CC extra_blocks 预扫描为 Phase 2a 漏识别的后处理
         # 补丁。Pass 2 应放宽 Phase 2a CC 识别触发条件（去掉「恰 2 个
         # conditional_successors 且未被占用」的过严约束），让所有 CC 头块在
-        # Phase 2a 一次识别完毕，届时删除本预扫描及 10429-10455 重检测、
-        # 10634-10636 字段回填。
+        # Phase 2a 一次识别完毕，届时删除本预扫描、_identify_conditional_regions
+        # 中对 condition_block 的 _detect_chained_compare_pattern 重检测（紧随
+        # 其后的 then/else 调整块）、以及方法末尾对 region.chained_compare_blocks
+        # /chained_compare_ops 的字段回填。注：行号引用易随编辑漂移，故以方法名
+        # + 语义定位。
         chained_compare_extra_blocks = set()
         for _blk in self.cfg.get_blocks_in_order():
             if len(_blk.conditional_successors) != 2:

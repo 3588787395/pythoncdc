@@ -91,9 +91,13 @@ ASYNC_WITH_SEND_LOOP_OPS = frozenset({
     'JUMP_BACKWARD_NO_INTERRUPT', 'NOP',
 })
 
-# CC 段有效指令过滤的统一噪声 op 集合（消除 4 处 _skip_ops + 3 处 _CMP_SKIP_OPS
-# 的重复定义）。内容为原 4 处 _skip_ops（7186/7413/7511/8927）与 3 处
-# _CMP_SKIP_OPS（6828/9798/16322）的并集，确保不丢失任何当前已处理的 opname。
+# CC 段有效指令过滤的统一噪声 op 集合（消除 _skip_ops 与 _CMP_SKIP_OPS 的
+# 重复定义）。内容为原 4 处 _skip_ops（_try_build_walrus_chained_compare /
+# _try_build_method_call_chained_compare / _try_build_literal_middle_from_blocks
+# 及 _try_build_await_condition 段）与 3 处 _CMP_SKIP_OPS
+# （_build_chained_compare_with_ternary_middle / _build_compare_ternary_condition
+# / _wrap_boolop_with_merge_compare 段）的并集，确保不丢失任何当前已处理的 opname。
+# 注：原注释以行号定位各处定义，行号随编辑漂移已失准，改以函数名定位。
 # 依「每块唯一归属」：CC 段指令归属 Compare 节点，噪声/跳转/比较控制 op 不计入。
 CC_NOISE_OPS = frozenset({
     'COMPARE_OP', 'SWAP', 'COPY', 'POP_TOP',
@@ -7114,6 +7118,11 @@ AST 映射规则:
     def _build_chained_compare_from_region_data(self, region: IfRegion) -> Optional[Dict[str, Any]]:
         if not region.chained_compare_ops:
             return None
+        # TODO[pass2-CC]: 下方 _try_build_* 三连（walrus / literal-middle /
+        # method-call）为 CC 操作数提取的 patch chain 反模式——每个特例独立
+        # 探测+重建，绕过统一的 compute_chained_compare_operands 路径。统一
+        # 操作数提取以删除该 chain 为高风险重构（需保证三特例的栈模拟语义被
+        # 统一路径覆盖），留待 Pass 3+ 处理。本轮仅添加标记，不改控制流。
         # [聚类1 修复] walrus in chained compare: when cond_block contains a
         # walrus COPY(1)+STORE pattern, the single-instruction operand
         # extraction in compute_chained_compare_operands fails (filters out
