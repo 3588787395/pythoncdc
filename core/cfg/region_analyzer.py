@@ -13967,6 +13967,17 @@ RegionType 枚举值: RegionType.ASSERT
 
            当前测试矩阵通过率: 100%（boolop 132/132），无已知失败模式。
 
+           [Pass7-BOOLOP] 同步：原「100%（boolop 132/132），无已知失败模式」表述
+           与实测不符——与本 docstring 下方【已知限制】段中 [Pass4-BOOLOP] 已校正的
+           同型问题一致。全量 bool_op + boolop 套件共 153 用例实测为 151 passed /
+           1 failed / 1 skipped，1 处预存失败 test_bool19_ternary_combo
+           （baseline_failures.txt L41，指令数 11 vs 12，与 ternary 复合嵌套相关，
+           非 BOOLOP 识别问题）。bounded subset 80 文件实测为 79/80 passed
+           （见 Pass6-BOOLOP fix_report 回归记录 `79 0 0 79 1.6 BOOLOP files=80`）。
+           「100% 通过率」表述不成立，原表述保留作历史追溯，本段落为口径校正，
+           与本 docstring 下方【已知限制】段 [Pass4-BOOLOP] 段落口径一致。
+           控制流不变，仅 docstring 文本同步。
+
            归约算法 4 核心原则符合度（全已满足，故 0 失败）:
            (a) 自底向上归约 —— BoolOp 在 Phase 2 识别，先于 IfRegion；
            (b) 每块唯一归属 —— claimed 集合 + loop_condition_blocks 例外
