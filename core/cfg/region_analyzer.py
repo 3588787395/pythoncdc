@@ -9877,6 +9877,23 @@ RegionType 枚举值: RegionType.ASSERT
                      region.blocks，写入 chained_compare_blocks 与
                      chained_compare_ops；构造成功后登记到 self.regions
                      与 claimed，保证后续识别不会再分配这些块
+           - [Pass9-CC] docstring 同步：上述「§1 识别策略 / §2 字节码模式」
+             表述仅描述理想化语义，与实际控制流存在一处口径差异（不改控制流，
+             仅补记）：§1 识别策略表述为「COPY(arg=2) + COMPARE_OP 指令对」、
+             §2 字节码模式特征指令仅列「COPY(arg=2), COMPARE_OP」，但实际
+             `_is_chained_compare_header`（grep `def _is_chained_compare_header`
+             在本文件仅 1 处命中，L11546）与 `_detect_chained_compare_pattern`
+             内的判据是 `instrs[i+1].opname in ('COMPARE_OP', 'IS_OP',
+             'CONTAINS_OP')`（grep `instrs[i + 1].opname in ('COMPARE_OP',
+             'IS_OP', 'CONTAINS_OP')` 在本文件 2 处命中，L11587/L11612）——
+             即除 COMPARE_OP 外还接受 **IS_OP**（链式 `is`/`is not`）与
+             **CONTAINS_OP**（链式 `in`/`not in`），由 [Round6-01/02] 修复
+             （注释「链式 is/in 也走 COPY + IS_OP/CONTAINS_OP 模式」）。
+             §1/§2 仅提及 COMPARE_OP，未提及 IS_OP/CONTAINS_OP 的扩展，
+             可能误导读者认为本识别器仅处理 `<`/`>`/`==` 等比较运算符链。
+             本轮仅补记差异，不重写「§1 识别策略 / §2 字节码模式」列表
+             （与 Pass9-IF / Pass9-ASSERT / Pass9-BOOLOP 同型保守策略一致，
+             采用 grep 验证方式避免行号漂移）。控制流不变，仅 docstring 文本同步。
 
         2. 字节码模式（CPython 编译器行为）
            模式: 链式比较 a < b < c
