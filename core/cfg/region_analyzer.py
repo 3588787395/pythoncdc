@@ -16338,7 +16338,18 @@ RegionType 枚举值: RegionType.ASSERT
     def _is_trivial_return_block(self, block: BasicBlock) -> bool:
         meaningful = [i for i in block.instructions
                      if i.opname not in NOISE_OPS]
-        if len(meaningful) == 1 and meaningful[0].opname in ('RETURN_VALUE', 'RETURN_CONST'):
+        # [Pass5-SEQ] 重复代码消除：原 `meaningful[0].opname in ('RETURN_VALUE', 'RETURN_CONST')`
+        # 字面量替换为模块级常量 RETURN_TERMINATOR_OPS（L54 定义，
+        # frozenset({'RETURN_VALUE', 'RETURN_CONST'})）。与 Pass5-TERNARY
+        # `_is_ternary_block` 内同型 DRY 违背修复一致——本函数为 SEQ 区域
+        # （_generate_basic_region / _generate_block_statements）调用的通用工具，
+        # 通过 _is_exit_like_block / block_roles 等路径被 SEQ 生成逻辑使用。
+        # 语义等价性：`x in tuple` 与 `x in frozenset` 均为成员检测，对 hashable
+        # 字符串完全等价（frozenset 略快 O(1)，2 元素差异可忽略）。本文件
+        # L12204/L12216/L12259 等已使用 RETURN_TERMINATOR_OPS，本替换使
+        # _is_trivial_return_block 与之一致。控制流不变——`in` 判据的 True/False
+        # 结果在替换前后完全一致。
+        if len(meaningful) == 1 and meaningful[0].opname in RETURN_TERMINATOR_OPS:
             return True
         if len(meaningful) == 2:
             if meaningful[0].opname == 'LOAD_CONST' and meaningful[0].argval is None and meaningful[1].opname == 'RETURN_VALUE':
