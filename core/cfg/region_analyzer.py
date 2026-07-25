@@ -9912,6 +9912,18 @@ RegionType 枚举值: RegionType.ASSERT
              本轮仅补记差异，不重写「§1 识别策略 / §2 字节码模式」列表
              （与 Pass9-IF / Pass9-ASSERT / Pass9-BOOLOP 同型保守策略一致，
              采用 grep 验证方式避免行号漂移）。控制流不变，仅 docstring 文本同步。
+           - [Pass10-CC] 行号校正：上述 [Pass9-CC] 段落中 3 处行号引用自
+             Pass 9 写入后累计漂移 +42（Pass10-IF 在 `_identify_conditional_regions`
+             docstring 追加 [Pass10-IF] 段落、Pass10-MATCH / Pass10-ASSERT /
+             Pass10-BOOLOP 各自追加 [Pass10-*] 校正段落共同导致本函数上方行数
+             增加）。实际行号（grep 验证，截至本 Pass 10-CC 写入时）：
+             - `def _is_chained_compare_header` 在本文件 1 处命中 → 现位于 L11588
+               （[Pass9-CC] 原引 L11546，偏 +42）
+             - `instrs[i + 1].opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP')`
+               在本文件 2 处命中 → 现位于 L11629 / L11654（[Pass9-CC] 原引
+               L11587 / L11612，各偏 +42）
+             与 Pass10-MATCH / Pass10-ASSERT / Pass10-BOOLOP 同型行号校正
+             （逐 Pass 累计漂移），控制流不变，仅 docstring 文本同步。
 
         2. 字节码模式（CPython 编译器行为）
            模式: 链式比较 a < b < c
