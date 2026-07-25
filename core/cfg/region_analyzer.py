@@ -11812,6 +11812,24 @@ RegionType 枚举值: RegionType.ASSERT
                     # 但 2 元素差异可忽略）。本函数外 L12204/L12216/L12259 等已使用
                     # RETURN_TERMINATOR_OPS，本替换使 _is_ternary_block 与之一致。
                     # 控制流不变——`in` 判据的 True/False 结果在替换前后完全一致。
+                    # [Pass7-TERNARY] 同步：Pass5-TERNARY 引用「本函数外 L12204/L12216/
+                    # L12259 等已使用 RETURN_TERMINATOR_OPS」经多轮上游修改已下移至
+                    # L12292/L12304/L12347（与 Pass6-SEQ 已校正的 Pass5-SEQ marker 中
+                    # 同型行号引用一致漂移）。为避免递归漂移，本轮起改用 grep 验证 +
+                    # 相对位置描述（与 Pass6-SEQ/TERNARY/BOOLOP/MATCH/ASSERT 同型思路）：
+                    #   - 首处：`_identify_ternary_regions` 内嵌套函数
+                    #     `_block_is_return_body` 中 `if last.opname not in
+                    #     RETURN_TERMINATOR_OPS:`（grep `last.opname not in
+                    #     RETURN_TERMINATOR_OPS` 在本文件仅 1 处命中）
+                    #   - 次处：内嵌函数 `_block_ends_with_return` 中
+                    #     `return last is not None and last.opname in RETURN_TERMINATOR_OPS`
+                    #     （grep 该串在本文件仅 1 处命中）
+                    #   - 三处：内嵌函数 `_is_value_block_nested_if_header` 中
+                    #     `if _succ_last and _succ_last.opname in RETURN_TERMINATOR_OPS:`
+                    #     （grep `_succ_last and _succ_last.opname in RETURN_TERMINATOR_OPS`
+                    #     在本文件仅 1 处命中）
+                    # 原 Pass 5 引用 L12204/L12216/L12259 与当前 L12292/L12304/L12347
+                    # 偏差，本轮不再追究。控制流不变，仅注释文本同步。
                     # [Pass6-TERNARY] 同步上方 Pass4-TERNARY 标记中过时的
                     # 「下方 L11722 与 L11730 两处」行号引用：经 Pass5 替换 + 追加
                     # [Pass5-TERNARY] 段落后，原两处字面量（现 RETURN_TERMINATOR_OPS
