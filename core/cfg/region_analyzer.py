@@ -13960,7 +13960,11 @@ RegionType 枚举值: RegionType.ASSERT
         - 与 IfRegion 竞争：条件上下文中的boolop可能被if抢占
         - 子区域关系：循环条件中的boolop成为LoopRegion的子区域
 
-        【已知限制】（历史记录，当前 100% 通过已全部解决）
+        【已知限制】（历史记录；[Pass4-BOOLOP] 同步：原"当前 100% 通过已全部解决"
+         与实际测试状态不符——bool_op + boolop 共 153 用例，151 passed / 1 failed /
+         1 skipped，1 处预存失败 test_bool19_ternary_combo（baseline_failures.txt L41，
+         指令数 11 vs 12，与 ternary 复合嵌套相关，非 BOOLOP 识别问题）。
+         下方 4 项历史遗留问题确已解决，但不等于全量 100% 通过。）
         1. 复合表达式 `a and b or c` 与 ternary 边界 —— 已由 Ternary>BoolOp
            优先级 + skip_ternary 守卫解决（test_bool13 已通过）
         2. 循环/for 条件中的 boolop —— 已由 _detect_while_condition_boolop_chain
