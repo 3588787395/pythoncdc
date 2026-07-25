@@ -14020,6 +14020,17 @@ RegionType 枚举值: RegionType.ASSERT
              本轮仅补记差异，不重写「Step 1 / Step 3」列表（与 Pass9-IF / Pass9-ASSERT
              同型保守策略一致，采用 grep 验证方式避免行号漂移）。控制流不变，仅
              docstring 文本同步。
+           - [Pass10-BOOLOP] docstring 行号校正：上述 [Pass9-BOOLOP] 段落引用的
+             四处行号自写入时即偏差 +24（git show 1ffe140 验证：commit 1ffe140 时
+             `match_case_body_blocks = set()` 实际 L14252（非 L14228），
+             `assert_region_entries = set()` 实际 L14262（非 L14238），
+             `value_chain_cmp_if_entries = set()` 实际 L14271（非 L14247），
+             `chain = self._detect_boolop_chain_start(block, claimed)` 实际 L14331
+             （非 L14307））。经 Pass9-TERNARY/CC/SEQ + Pass10-IF/MATCH/ASSERT 等
+             上游修改（均位于本方法之前），现实际位置为 L14310 / L14320 / L14329 /
+             L14389（总偏差 +82 = 写入时 +24 + 后续上游 +58）。grep 验证方法不变：
+             四处引用在本文件均仅 1 处命中（可执行代码处）。本轮仅校正行号引用，
+             控制流不变。
 
         2. 字节码模式（CPython编译器行为）:
            ════════════════════════════════════════════════════════════════
