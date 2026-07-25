@@ -13938,6 +13938,30 @@ RegionType 枚举值: RegionType.ASSERT
                    - 创建的 boolop 区域作为 LoopRegion 的子区域
            Step 6: 后处理优化
                    - 尝试扩展 boolop 区域以包含值块（value block）
+           - [Pass9-BOOLOP] docstring 同步：上述「Step 1 / Step 3」表述仅描述
+             理想化语义，与实际控制流存在两处口径差异（不改控制流，仅补记）：
+             (a) Step 1 表述为「构建 claimed 集合 + 特殊排除循环条件块
+                 （loop_condition_blocks）」，但实际代码在主循环前构建 **5 个**
+                 排除/协调集合（grep `= set\(\)` 在本函数内命中：match_case_body_blocks
+                 L14228 / assert_region_entries L14238 / value_chain_cmp_if_entries
+                 L14247 等）：claimed + loop_condition_blocks（Step 1 已述）+
+                 match_case_body_blocks/match_case_entry_offsets（MatchRegion guard
+                 块排除）+ assert_region_entries（[Round4-12] AssertRegion.entry
+                 不被 BoolOp 抢占）+ value_chain_cmp_if_entries（[Round4-04] 值上下文
+                 链式比较 IfRegion.entry 不被 BoolOp 抢占）。Step 1 仅提及前 2 个，
+                 未提及后 3 个 [Round4-12] / [Round4-04] 新增排除集合。
+             (b) Step 3 表述为「模式A: _detect_boolop_short_circuit_chain() /
+                 模式B: _detect_boolop_conditional_chain()」，但实际代码主循环
+                 入口调用的是 **_detect_boolop_chain_start** 调度器（grep
+                 `chain = self._detect_boolop_chain_start(block, claimed)` 在本文件
+                 仅 1 处命中，L14307），由调度器内部按字节码模式分派到
+                 _detect_boolop_short_circuit_chain / _detect_boolop_conditional_chain。
+                 Step 3 直接列两个 _detect_*_chain 方法，未提及 _detect_boolop_chain_start
+                 调度器层（仅在下方「原有简要说明 / 调用链」段提及）。
+             原表述可能误导读者认为 Step 1 仅 2 个集合、Step 3 直接调用两个检测器。
+             本轮仅补记差异，不重写「Step 1 / Step 3」列表（与 Pass9-IF / Pass9-ASSERT
+             同型保守策略一致，采用 grep 验证方式避免行号漂移）。控制流不变，仅
+             docstring 文本同步。
 
         2. 字节码模式（CPython编译器行为）:
            ════════════════════════════════════════════════════════════════
