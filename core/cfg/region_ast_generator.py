@@ -2985,7 +2985,11 @@ AST 映射规则:
                     self.generated_offsets.add(ib.start_offset)
 
         # Build iterator expression
-        for_iter_setup = region.metadata.get('for_iter_setup')
+        # [Pass8-LOOP] 删除冗余重赋值：`for_iter_setup` 已在 L2975 由同一表达式
+        # `region.metadata.get('for_iter_setup')` 赋值。L2975-2987 之间仅访问
+        # region.init_blocks / self.generated_blocks / self.generated_offsets /
+        # pre_stmts，从未修改 region.metadata，故本行重赋值恒为 no-op。
+        # 删除后行为完全等价（保留作 Build iterator expression 段落起始锚点）。
         iter_expr = None
         _ternary_for_iter = False
         for r in self.region_analyzer.regions:
