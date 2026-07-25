@@ -4726,6 +4726,19 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
            - 识别策略: 基于 CPython 3.11+ 异常表（exception table）的
              (start, end, target, depth) 条目定位 try 范围与 handler 入口。
              通过 handler 入口首指令（PUSH_EXC_INFO / WITH_EXCEPT_START）分类 handler 类型。
+           - [Pass9-TRY] docstring 同步：上述「识别策略」表述仅描述主分类路径
+             （首指令 ∈ {PUSH_EXC_INFO, WITH_EXCEPT_START}），与实际控制流存在
+             一处口径差异（不改控制流，仅补记）：实际 inner_handler_indices 预扫描
+             循环中存在第三路 fallback 分支——当 handler 首指令**不**属于
+             {PUSH_EXC_INFO, WITH_EXCEPT_START} 时，检测 handler_block 是否含
+             COPY + POP_EXCEPT + RERAISE 三联（try-finally cleanup 块特征）；
+             若含且无 bare_except_entry（无 PUSH_EXC_INFO 内层 handler），则将该
+             handler 标记为 inner_handler_indices（由外层 try-finally 拥有，不独立
+             建 TryExceptRegion）。原表述未提及此 fallback 分支，可能误导读者认为
+             handler 分类仅基于首指令两 opname。本轮仅补记差异，不重写「识别策略」
+             行（避免递归漂移，与 Pass8-IF 改用 grep 验证方式描述同型保守思路一致）。
+             验证方法：grep `has_copy and has_pop_except and has_reraise` 在本文件
+             仅 1 处命中（紧邻本段落描述的 fallback 分支）。
            - 归约过程:
              Step 1: 解析异常表，将 target 偏移映射到 BasicBlock，分类 handler 类型。
              Step 2: 标记内层 handler 与配对关系（except-finally 配对）。
