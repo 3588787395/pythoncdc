@@ -15593,6 +15593,16 @@ AST 映射规则:
                                         if hasattr(relevant_ref, 'header_block') and relevant_ref.header_block:
                                             self.generated_blocks.add(relevant_ref.header_block)
                                     nested_found = True
+                                # [Pass5-MATCH] 已知反模式（Pass 2 已登记、Pass 4 fix_report
+                                # §未完成项 4 引用 L15531 已过时——经 Pass 4 修改行号已下移至
+                                # L15596）：`except Exception: pass` 静默吞异常，掩盖了
+                                # _generate_match / _generate_boolop / _generate_ternary /
+                                # _generate_region 在嵌套生成时可能抛出的真实错误（如
+                                # save-mutate-restore 路径中虚拟块替换 _virtual_entry /
+                                # _virtual_cond / _vb 引发的属性丢失）。改写为有针对性的
+                                # except + log 属控制流变更（影响 nested_found 兜底语义），
+                                # 本轮保守不动——仅添加内联标记，待后续 Pass 把 save-mutate-
+                                # restore 逻辑统一到识别期后一并消除。
                                 except Exception:
                                     pass
                         if not nested_found:
