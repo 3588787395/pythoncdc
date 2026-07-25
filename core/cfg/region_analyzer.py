@@ -9431,6 +9431,14 @@ RegionType 枚举值: RegionType.ASSERT
      查找。本轮仅补记差异，不重写「Step 4 / Step 5」列表（与 Pass9-IF / Pass9-MATCH
      同型保守策略一致，采用 grep 验证方式避免行号漂移）。控制流不变，仅 docstring
      文本同步。
+   - [Pass10-ASSERT] docstring 行号校正：上述 [Pass9-ASSERT] 段落引用的两处
+     行号自写入时即偏差 +23（git show 687cf0a 验证：commit 687cf0a 时
+     `_reach_assertion_error_block(succ)` 实际位于 L9512，非段落所述 L9489；
+     `mb = self._find_assertion_error_block(succ)` 实际位于 L9534，非 L9511）。
+     经 Pass10-MATCH（_identify_match_regions docstring 追加 [Pass10-MATCH]
+     段落 +10，位于本方法之前）上游修改，现实际位置为 L9522 / L9544（总偏差
+     +33 = 写入时 +23 + Pass10-MATCH +10）。grep 验证方法不变：两处引用在
+     本文件均仅 1 处命中（可执行代码处）。本轮仅校正行号引用，控制流不变。
 
 2. 字节码模式（CPython 编译器行为）
    模式 A: 基本断言
