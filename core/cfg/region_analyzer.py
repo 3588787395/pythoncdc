@@ -9260,6 +9260,20 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                  'LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF'} |
                 FORWARD_CONDITIONAL_JUMP_OPS)
             if all(i.opname in pattern_related for i in block.instructions):
+                # [R2-get_option_info] UNPACK_SEQUENCE 无 MATCH_SEQUENCE 前导时，
+                # 可能是 for-loop 元组解包（`for key, value in i.items():`）而非
+                # match case 模式。match 的 `case [a, b]:` 由 MATCH_SEQUENCE +
+                # UNPACK_SEQUENCE 组成（已在上方 _has_match_op 处理）；此处仅剩
+                # 无 MATCH_SEQUENCE 的 UNPACK_SEQUENCE，若其前驱块以 FOR_ITER
+                # 结尾则为循环体，依「每块唯一归属」归 LoopRegion 而非 MatchRegion，
+                # 禁止误判为 case pattern（否则 `if key == '...':` if/elif 链被
+                # 误识别为 match/case，产生重复 `case _` 致 SyntaxError）。
+                is_for_loop_body = any(
+                    any(i.opname in ('FOR_ITER', 'GET_ANEXT') for i in p.instructions)
+                    for p in block.predecessors
+                )
+                if is_for_loop_body:
+                    return False
                 return True
         meaningful = [i for i in block.instructions if i.opname not in NOISE_OPS]
         has_copy = any(i.opname == 'COPY' for i in meaningful)
@@ -10693,6 +10707,52 @@ RegionType 枚举值: RegionType.ASSERT
 
             merge = self._find_nearest_common_post_dominator(then_succ, else_succ)
 
+            # [R2-repro_14 fix] 结构区域入口集合：loop/match/try/with 区域的 entry。
+            # 用于在下方 sink 遍历中检测分支是否「退出到后续结构化代码」。
+            # 依「每块唯一归属」：结构区域（Phase 2a 先于 IfRegion 识别）的入口
+            # 块已归属该结构区域，不属于当前 IfRegion 的 then/else 分支。当某分支
+            # 的 ipdom 链到达一个结构区域入口时，说明该分支已 fall-through 到后续
+            # 结构化代码（如 `elif A and B: stmt` 之后的 for 循环），分支并未 sink。
+            # 此前遍历会沿 ipdom 链一路追到函数末尾 return，误判分支为 sink，导致
+            # merge=None 进而 _collect_branch_blocks 把后续 for/return 吸收进
+            # else_blocks，截断函数体（repro_14 根因）。
+            # [R2-repro_14 fix] 结构区域块集合：loop/match/try/with 区域的全部块。
+            # 用于在下方 sink 遍历中检测分支是否「退出到后续结构化代码」。
+            # 依「每块唯一归属」：结构区域（Phase 2a 先于 IfRegion 识别）的块
+            # 已归属该结构区域，不属于当前 IfRegion 的 then/else 分支。当某分支
+            # 的 ipdom 链到达一个结构区域块（且为多前驱 merge 点）时，说明该
+            # 分支已 fall-through 到后续结构化代码（如 `elif A and B: stmt` 之后
+            # 的 for 循环），分支并未 sink。
+            # 此前仅收集 entry 块不够：for 循环的 setup 块（LOAD_FAST iterable +
+            # GET_ITER，如 repro_14 的 Block@206）是 LoopRegion 的成员块但非 entry
+            # （entry 是 FOR_ITER 块@210），恰是 if/elif 的 merge 点。若不收集全部
+            # 块，ipdom 链到达 206 时不停止，继续追到函数末尾 return，误判分支为
+            # sink，导致 merge=None 进而 _collect_branch_blocks 把后续 for/return
+            # 吸收进 else_blocks，截断函数体（repro_14 根因）。
+            _structural_region_entries = set()
+            # [R2-orphan_try fix] 同区域兄弟块映射：block -> 包含该块的所有
+            # 结构区域的块集合的并集。用于在下方 sink 遍历中判定 _next 的前驱
+            # 是否「外部」于 _next 所属结构区域。依「每块唯一归属」+
+            # 「嵌套即抽象节点」：结构区域 body 块（如 try 体内的 with cleanup
+            # 汇聚点）若有多个前驱但全部来自同一结构区域内部，则该汇聚点是
+            # 区域内部控制流（如 try body 内 with __exit__ cleanup 与正常流程
+            # 汇合），不是分支「退出到后续结构化代码」的 merge 点。仅当前驱
+            # 存在来自区域外部的块时（如 if/elif 分支 fall-through 到 for 循环
+            # setup 块），才是真正的出口 merge 点（repro_14 场景）。
+            _structural_region_co_blocks: dict = {}
+            for _rlist in (loop_regions, match_regions, try_regions, with_regions):
+                for _r in (_rlist or []):
+                    _rblocks = set(getattr(_r, 'blocks', []) or [])
+                    if getattr(_r, 'entry', None) is not None:
+                        _rblocks.add(_r.entry)
+                    _structural_region_entries |= _rblocks
+                    for _b in _rblocks:
+                        _existing = _structural_region_co_blocks.get(_b)
+                        if _existing is None:
+                            _structural_region_co_blocks[_b] = set(_rblocks)
+                        else:
+                            _existing |= _rblocks
+
             if merge is None:
                 _then_sink = any(i.opname in ('RAISE_VARARGS', 'RETURN_VALUE') for i in then_succ.instructions) or then_succ.immediate_post_dominator is None
                 _else_sink = any(i.opname in ('RAISE_VARARGS', 'RETURN_VALUE') for i in else_succ.instructions) or else_succ.immediate_post_dominator is None
@@ -10703,6 +10763,48 @@ RegionType 枚举值: RegionType.ASSERT
                         _next = _then_chain_end.immediate_post_dominator
                         if _next in _visited:
                             break
+                        # [R2-repro_14] 到达结构区域入口 = 分支退出到后续结构化代码，
+                        # 不是 sink。停止遍历，保持 _then_sink=False，让下方把
+                        # merge 设为 then_succ.immediate_post_dominator（结构区域入口）。
+                        # 仅当该入口是 merge 点（多前驱）时才停止：单前驱的结构区域
+                        # 入口（如 if 体内嵌套的 try 入口）是分支内部结构，不是出口。
+                        # merge 点表明分支的多条路径在此汇合并退出到后续结构化代码。
+                        # [R2-regression] 排除循环回边（JUMP_BACKWARD[_NO_INTERRUPT]）：
+                        # if 体内嵌套的 for 循环入口（FOR_ITER）有 2 个前驱——分支
+                        # fall-through 与循环自身回边——但回边不是真正的 merge，是循环
+                        # 自身迭代。若不排除，会把 `if A: for x in y: ...` 的 for 循环
+                        # 误判为「分支退出到后续结构化代码」，导致 for 循环被提取到 if
+                        # 体外（test_if86ifnestedfor 退化）。真正的 merge 点（如
+                        # `elif A and B: stmt; for x in y: ...` 中 for 入口有 2+ 个
+                        # 非回边前驱：elif body fall-through + elif 条件 false 出口）
+                        # 仍被正确识别为出口。
+                        _non_backedge_preds = sum(
+                            1 for p in _next.predecessors
+                            if not any(i.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                                       for i in p.instructions)
+                        )
+                        if _next in _structural_region_entries and _non_backedge_preds > 1:
+                            # [R2-orphan_try fix] 仅当 _next 存在来自其所属结构区域
+                            # 「外部」的非回边前驱时，才判定为分支退出到后续结构化代码
+                            # 的 merge 点。若所有非回边前驱均位于 _next 所属结构区域
+                            # 内部（如 try body 内 with __exit__ cleanup 与正常流程的
+                            # 内部汇合点，前驱均在 TryExceptRegion 内），则是区域内部
+                            # 控制流，不是出口——若在此停止会使 ipdom 链提前终止，
+                            # 导致 _else_sink 误判为 False，进而 merge 被设为
+                            # else_succ.ipdom（try 入口），使 try 入口脱离 IfRegion 的
+                            # else 引用而被孤立成孤儿 `try:`（缺 except 块，触发
+                            # SyntaxError「expected 'except' or 'finally' block」）。
+                            # repro_14 场景：for 循环 setup 块的前驱来自 if/elif 分支
+                            # （区域外），是真正的出口 merge 点，仍正确识别。
+                            _next_co_blocks = _structural_region_co_blocks.get(_next, set())
+                            _has_external_non_backedge_pred = any(
+                                p not in _next_co_blocks
+                                and not any(i.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                                            for i in p.instructions)
+                                for p in _next.predecessors
+                            )
+                            if _has_external_non_backedge_pred:
+                                break
                         _visited.add(_next)
                         _then_chain_end = _next
                     if any(i.opname in ('RAISE_VARARGS', 'RETURN_VALUE') for i in _then_chain_end.instructions) or _then_chain_end.immediate_post_dominator is None:
@@ -10714,6 +10816,43 @@ RegionType 枚举值: RegionType.ASSERT
                         _next = _else_chain_end.immediate_post_dominator
                         if _next in _visited:
                             break
+                        # [R2-repro_14] 同上：到达结构区域入口 = else 分支退出到
+                        # 后续结构化代码（如 elif 之后的 for 循环），不是 sink。
+                        # [R2-get_market_detail] 与 then 分支保持一致：仅当该入口是
+                        # merge 点（多前驱）时才停止。单前驱的结构区域入口（如
+                        # `if not isinstance(...): return df` else 分支内的 try 入口）
+                        # 是分支内部结构，不是出口——若在此停止会使 try 入口脱离
+                        # IfRegion 的 else 引用而被孤立成孤儿 `try:`（缺 except 块，
+                        # 触发 SyntaxError「expected 'except' or 'finally' block」）。
+                        # 多前驱表明分支的多条路径在此汇合并退出到后续结构化代码。
+                        # [R2-regression] 同 then 分支：排除循环回边前驱，避免 if 体内
+                        # 嵌套的 for 循环被误判为分支出口（test_if86ifnestedfor 退化）。
+                        _non_backedge_preds = sum(
+                            1 for p in _next.predecessors
+                            if not any(i.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                                       for i in p.instructions)
+                        )
+                        if _next in _structural_region_entries and _non_backedge_preds > 1:
+                            # [R2-orphan_try fix] 同 then 分支：仅当 _next 存在来自其
+                            # 所属结构区域「外部」的非回边前驱时才判定为出口 merge 点。
+                            # 若所有非回边前驱均在 _next 所属结构区域内部（如 try body
+                            # 内 with cleanup 与正常流程的内部汇合），则是区域内部
+                            # 控制流——若在此停止会使 ipdom 链提前终止，_else_sink
+                            # 误判为 False，merge 被设为 else_succ.ipdom（try 入口），
+                            # 使 try 入口脱离 IfRegion else 引用而孤立成孤儿 `try:`
+                            # （get_market_detail 根因：354 的前驱 308/348 均在
+                            # TryExceptRegion 内，是 try body 内部 with cleanup 汇合，
+                            # 非出口）。repro_14 的 for setup 块前驱来自 if/elif 分支
+                            # （区域外），仍正确识别为出口。
+                            _next_co_blocks = _structural_region_co_blocks.get(_next, set())
+                            _has_external_non_backedge_pred = any(
+                                p not in _next_co_blocks
+                                and not any(i.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                                            for i in p.instructions)
+                                for p in _next.predecessors
+                            )
+                            if _has_external_non_backedge_pred:
+                                break
                         _visited.add(_next)
                         _else_chain_end = _next
                     if any(i.opname in ('RAISE_VARARGS', 'RETURN_VALUE') for i in _else_chain_end.instructions) or _else_chain_end.immediate_post_dominator is None:
@@ -16482,9 +16621,17 @@ RegionType 枚举值: RegionType.ASSERT
                             _ir_range = ranges[id(_if_cand)]
                             _ni_inside_ir = (_ir_range[0] <= _ni_range[0] and _ir_range[1] >= _ni_range[1] and
                                              (_ni_range[0] > _ir_range[0] or _ni_range[1] < _ir_range[1]))
+                            # 守卫：当非 If 候选与 child 共享同一 entry 块时（如
+                            # TryExceptRegion 与其内部的 WithRegion 都以 try 入口为
+                            # entry），非 If 候选是 child 的子区域/对等区域而非祖先，
+                            # 不应据此移除 IfRegion 候选（否则 TryExcept 无法挂到
+                            # IfRegion 分支下，导致 try/except 结构丢失 —
+                            # orphan_try 场景）。仅当非 If 候选 entry 不同于 child
+                            # entry 时才视为潜在祖先并移除 IfRegion。
+                            _ni_is_peer = _non_if_cand.entry is child.entry
                             if child.entry in _non_if_cand.blocks and (
                                 _non_if_cand.entry in _if_branch_entries or _ni_inside_ir
-                            ):
+                            ) and not _ni_is_peer:
                                 _to_remove.add(id(_if_cand))
                                 break
                     if _to_remove:

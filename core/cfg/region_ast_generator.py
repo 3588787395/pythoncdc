@@ -16746,6 +16746,19 @@ AST 映射规则:
         merge_block = getattr(boolop_region, 'merge_block', None)
         if merge_block is None:
             return boolop_expr
+        # [R2-repro_02 fix] 仅值上下文 BoolOp（is_condition_context=False）的
+        # 结果会被后续 COMPARE_OP/IS_OP/CONTAINS_OP 包裹（如 `if (a or b) == c:`
+        # 中 `a or b` 用 JUMP_IF_TRUE_OR_POP 求值，结果留栈供 == 比较）。
+        # 条件上下文 BoolOp（is_condition_context=True，如 `if A and B:`）的
+        # 结果直接驱动 POP_JUMP_IF_*，绝不会被比较运算符消费。其 merge_block
+        # 若含比较指令，那是下一条语句 / elif 条件的指令（merge_block 即 elif
+        # 条件块入口），不属于本 BoolOp 的包裹比较。此时包裹会把 elif 条件
+        # 误并到 if 条件（如 `if (quote is None and is_trade) not in ...`），
+        # 违反「每块唯一归属」：elif 条件块归属 elif IfRegion，不归属 if BoolOp。
+        # 依「入口引用语义」：条件上下文 BoolOp 的 merge_block 是后续结构的入口，
+        # 父 IfRegion 通过 elif_conditions 引用，而非通过 BoolOp 包裹比较引用。
+        if getattr(boolop_region, 'is_condition_context', True):
+            return boolop_expr
         # Don't re-process if merge_block is the cond_block (decision is in cond_block itself)
         cond_block = if_region.condition_block
         if merge_block is cond_block:

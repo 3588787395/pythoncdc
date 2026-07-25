@@ -1178,13 +1178,20 @@ class CFGASTConverter:
                 comparators = [right]
         
         ops = expr_dict.get('ops', ['=='])
-        
+
         # [修复-E3] 处理ops的两种格式:
         # 1. 字符串列表: ['==', '!=']
         # 2. 对象列表: [{'type': 'CompareOp', 'op': '=='}]
+        # [R2-repro_02 fix] 还需处理 BoolOp 重建产出的第三种格式:
+        # 3. {'type': 'Is'} / {'type': 'IsNot'} / {'type': 'NotIn'} / {'type': 'In'}
+        #    （type 字段直接是操作符，无 op 字段）。此前 op.get('op', '==')
+        #    对此类 dict 返回默认 '=='，导致 `is None` 被渲染为 `== None`、
+        #    `not in` 被渲染为 `in` 等。依「入口引用语义」：BoolOp 重建的
+        #    NONE_CHECK 包裹（_build_boolop_expression）使用 type 字段表达
+        #    比较运算符，转换器必须忠实读取 type 字段，不得回退默认值。
         if ops and isinstance(ops, list) and len(ops) > 0 and isinstance(ops[0], dict):
-            ops = [op.get('op', '==') if isinstance(op, dict) else op for op in ops]
-        
+            ops = [(op.get('op') or op.get('type', '==')) if isinstance(op, dict) else op for op in ops]
+
         # [关键修复] 将字符串操作符转换为整数
         op_map = {
             '<': 0,   # CMP_LESS
@@ -1197,6 +1204,10 @@ class CFGASTConverter:
             'not in': 7,  # CMP_NOT_IN
             'is': 8,  # CMP_IS
             'is not': 9,  # CMP_IS_NOT
+            # [R2-repro_02 fix] PascalCase 形式（BoolOp 重建 / dict-form ops）
+            'Lt': 0, 'LtE': 1, 'Eq': 2, 'NotEq': 3,
+            'Gt': 4, 'GtE': 5, 'In': 6, 'NotIn': 7,
+            'Is': 8, 'IsNot': 9,
         }
         int_ops = [op_map.get(op, 2) for op in ops]  # 默认使用 ==
 

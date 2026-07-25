@@ -159,6 +159,34 @@ class CFGBuilder:
             print(f"Warning: Error parsing instructions: {e}")
 
     def _identify_jump_targets(self) -> None:
+        """识别所有跳转目标偏移，作为基本块切分边界。
+
+        [R2-repro_13 反编译流程]
+        1. **算法依据**：自底向上归约 + 每块唯一归属。基本块切分必须严格
+           基于「跳转指令的目标」与「跳转指令的下一条」（No More Gotos §3.1），
+           不得引入额外的块边界。
+        2. **归约顺序**：CFG 构建阶段（最外层），其输出供后续 _identify_*_regions
+           自底向上归约。
+        3. **唯一归属判定**：每个指令仅属于一个基本块；块边界仅由 (a) 实际
+           跳转目标（instr.is_jump_target=True）与 (b) 跳转/返回/raise 指令的
+           下一条偏移确定。CPython 3.11+ 在 try/loop 结构起始处插入的 NOP
+           （非 is_jump_target，但标记结构边界）也需作为块边界，否则 try 区域
+           识别无法定位 try body 起始（test_te015/test_te033 退化根因）。
+        4. **嵌套处理**：不涉及（CFG 构建阶段无嵌套概念）。
+        5. **入口引用语义**：不涉及（CFG 构建阶段无父-子引用）。
+        6. **反编译流程**：遍历 dis 指令，收集 (a) is_jump_target=True 的偏移、
+           (b) JUMP_INSTRUCTIONS 的 argval 目标、(c) BRANCH_INSTRUCTIONS 之后
+           的 fall-through 偏移、(d) 非首条 NOP 的偏移（结构边界）。
+           **例外**：CPython 3.11+ 在装饰器与 MAKE_FUNCTION 之间插入的 NOP
+           （用于行号对齐/占位）并非结构边界，将其误判为块边界会切断
+           `LOAD_NAME decorator + LOAD_CONST defaults + MAKE_FUNCTION + CALL`
+           的原子序列，导致装饰器丢失、defaults 元组被误发射为 `@((...))`
+           （R2 repro_13 根因）。判定启发式：若 NOP 后续（跳过连续 NOP）首条
+           非_NOP 指令为 LOAD_CONST 且其后 5 条内出现 MAKE_FUNCTION，则该 NOP
+           属于 MAKE_FUNCTION 对齐填充，不作为块边界。try/loop 起始 NOP 后续
+           为实际语句（LOAD_FAST/LOAD_NAME/RETURN_VALUE 等），无 MAKE_FUNCTION，
+           故仍正确识别为结构边界。
+        """
         self.jump_targets = set()
         for i, instr in enumerate(self.instructions):
             if instr.is_jump_target:
@@ -169,8 +197,25 @@ class CFGBuilder:
                     if instr.opname in self.BRANCH_INSTRUCTIONS and i + 1 < len(self.instructions):
                         next_offset = self.instructions[i + 1].offset
                         self.jump_targets.add(next_offset)
+            # [R2-repro_13] CPython 3.11+ 在 try/loop 起始处插入 NOP 标记结构
+            # 边界（非 is_jump_target），需作为块边界供 try/loop 区域识别。
+            # 但装饰器与 MAKE_FUNCTION 之间的对齐 NOP 不是结构边界——将其切块
+            # 会切断 `LOAD_NAME decorator + LOAD_CONST defaults + MAKE_FUNCTION
+            # + CALL` 原子序列，导致 defaults 元组被误发射为 `@((...))`。
+            # 启发式：NOP 后续（跳过连续 NOP）首条非_NOP 为 LOAD_CONST 且 5 条
+            # 内有 MAKE_FUNCTION → 对齐填充，跳过。否则为结构边界。
             if instr.opname == 'NOP' and i > 0:
-                self.jump_targets.add(instr.offset)
+                _is_mkfunc_padding = False
+                _j = i + 1
+                while _j < len(self.instructions) and self.instructions[_j].opname == 'NOP':
+                    _j += 1
+                if _j < len(self.instructions) and self.instructions[_j].opname == 'LOAD_CONST':
+                    for _k in range(_j, min(len(self.instructions), _j + 5)):
+                        if self.instructions[_k].opname == 'MAKE_FUNCTION':
+                            _is_mkfunc_padding = True
+                            break
+                if not _is_mkfunc_padding:
+                    self.jump_targets.add(instr.offset)
 
     def _build_basic_blocks(self) -> None:
         if not self.instructions:

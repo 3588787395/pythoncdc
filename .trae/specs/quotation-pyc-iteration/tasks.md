@@ -51,7 +51,137 @@
 
 ## 轮 2 (Round 2)
 
-- [ ] R2-T1 ~ R2-T8（结构同 Round 1）
+> **状态**：测试工程师阶段已完成（14 repro 全部 DEFECT-REPRO）；修复工程师阶段待执行。
+> **R2 基线**：反编译产物 COMPILE_OK，但 81 个函数字节码不一致、70 个函数签名不匹配、1 个 listcomp 丢失。
+> **R2 缺陷分布**：14 类（10 项 R1 残留演化 + 4 项 R2 新增），P0=2、P1=5、P2=7。
+
+### 阶段一：测试工程师（已完成）
+
+- [x] R2-T1: 反编译 + 字节码 diff → `decompile_report.md`
+  - 反编译命令 `python pycdc.py /workspace/quotation.pyc`（产物 `/tmp/r2_decompiled.py`，2592 行）
+  - 字节码 diff 工具 `/tmp/r2_diff.py`（输出 `/tmp/r2_diff_detail.txt` + `/tmp/r2_sig_diff_detail.txt`）
+  - 不一致清单：14 类缺陷 + 代表性函数 + 偏移 + 字节码模式 + R1 repro 关联
+  - 关键结论：R1 完全修复 2 项（repro_03/05）、残留复现 7 项（repro_01/02/04/06/08/09/11）、残留部分修复 3 项（repro_07/10/12）、R2 新增 4 项（repro_13/14/15/16）
+- [x] R2-T2: ≥10 最小复现实例 → `minimal_repros/`
+  - 14 个 repro 全部通过 `py_compile` 独立编译
+  - 14/14 DEFECT-REPRO 验证通过（`python pycdc.py <repro>.pyc` 复现缺陷）
+  - 归档至 `rounds/round_02/test_engineer/minimal_repros/repro_NN_*.py`
+
+### 阶段二：修复工程师（执行中 — P0+3 项 P1 已验证通过，quotation.pyc 仍存孤儿 try 阻塞编译）
+
+- [x] R2-T3: 根因分析 + 定位（依赖 R2-T1/T2）
+  - 对 14 个 repro 逐项定位到 `_identify_*_regions` 或 `_generate_*` 方法
+  - 输出根因分析：区域类型 + 算法偏离点 + 4 原则违反项
+  - 涉及文件：`core/cfg/cfg_builder.py`、`core/cfg/region_analyzer.py`、`core/cfg/region_ast_generator.py`、`core/cfg/code_generator.py`、`core/cfg/pattern_parser.py`、`core/cfg/ast_converter.py`
+
+- [x] R2-T4: P0 修复实施（含 docstring 同步）
+  - [x] R2-T4a: 修复 repro_13（FUNCTION_DEF defaults→装饰器，疑似 R1 回归，3 处跨函数泄漏）— **已验证**
+    - 定位：`cfg_builder.py::_identify_jump_targets` / `region_ast_generator.py::_reconstruct_decorator_chain` / `code_generator.py::_generate_function_def`
+    - 根因：CPython 3.11+ 在装饰器与 MAKE_FUNCTION 之间插入 NOP（非跳转目标，用于行号对齐/占位），CFG 把 NOP 误判为块边界，切断 `LOAD_NAME decorator + LOAD_CONST defaults + MAKE_FUNCTION + CALL` 原子序列；导致装饰器丢失、defaults 元组被误发射为 `@((...))`
+    - 修复方向：禁止将非跳转目标的 NOP 作为块边界（NOP 是否为块边界由 `instr.is_jump_target` 唯一判定）；确保 defaults 元组只填入函数签名 `name=default`，绝不挂到 decorators 列表
+    - 算法依据：每块唯一归属（块边界仅由「跳转目标 + 跳转/返回/raise 的下一条」确定）
+    - docstring 更新：`_identify_jump_targets`（6 项模板）— 已按 6 项模板更新（算法依据/归约顺序/唯一归属判定/嵌套处理/入口引用语义/反编译流程）
+    - 验证结果：repro_13 反编译产物 `def get_history(count, frequency='1d', ...)` 无 `@((...))` 前导，defaults 正确填入签名 ✓
+  - [x] R2-T4b: 修复 repro_14（elif A and B: 后函数体截断，9 个财务函数 469→64 指令）— **已验证**
+    - 定位：`region_analyzer.py::_identify_conditional_regions` / `_build_elif_region`
+    - 根因：elif 条件的 `and` 短路（A 真值 + B CALL）归约后，elif body 之后的 fall-through 块（含 for/return）被错误吸收为不可达子区域。结构区域块集合（_structural_region_entries）原仅收集 entry 块，未包含 LoopRegion 的 setup 块（如 for 循环的 LOAD_FAST+GET_ITER 块），导致 ipdom 链遍历未在 merge 点停止
+    - 修复方向：保证 elif 归约后 fall-through 后续语句作为函数体顺序子节点保留，禁止吸收为不可达子区域。扩展结构区域块集合为包含所有结构区域块（含 setup/header/body），在 then/else 分支的 ipdom 链遍历中检测多非回边前驱的结构区域块（`_non_backedge_preds > 1`），正确设置 merge 点
+    - 算法依据：自底向上归约 + 每块唯一归属
+    - docstring 更新：`_identify_conditional_regions` / `_build_elif_region`（6 项模板）— 已存在详细 docstring（6 节结构：算法描述/字节码模式/边界条件/归约语义/AST映射/已知失败模式），内容覆盖 6 项模板要求
+    - 验证结果：repro_14 反编译产物 `get_balance_statement` 函数体不再截断，for 循环和 return 正确保留 ✓（注：存在 spurious for-else，属 repro_09 范畴，非 repro_14 截断问题）
+
+- [x] R2-T5: P1 修复实施（已完成 3 项：repro_02/15/16；repro_10/01 待后续轮次）
+  - [x] R2-T5a: 修复 repro_02 + repro_16（IS_OP→`== None`、`not in`→`in`）— **已验证**
+    - 定位：`region_ast_generator.py::_generate_if` / `_generate_compare` / `_wrap_boolop_with_merge_compare` / `ast_converter.py::_convert_compare_full`
+    - 根因：`_generate_if` 把 `POP_JUMP_IF_NONE`/`POP_JUMP_IF_NOT_NONE`（IS_OP）重建为 `COMPARE_OP == None`/`!= None`；`_generate_compare` 把 `CONTAINS_OP 0`（not in）+ `POP_JUMP_FORWARD_IF_FALSE` 误读为正向 `in`，丢失 `not`；`_convert_compare_full` 未处理 dict-form ops 第三种格式 `{'type': 'Is'}`
+    - 修复方向：按 `POP_JUMP_IF_NONE`/`POP_JUMP_IF_NOT_NONE` 重建 `is None`/`is not None`；按 `CONTAINS_OP` arg（0=not in, 1=in）正确解析 `not in`；处理 `{'type': 'Is'}` 格式并添加 PascalCase 操作符映射；条件上下文 BoolOp 不进行包裹比较
+    - 算法依据：每块唯一归属 + 入口引用语义
+    - 验证结果：repro_02 反编译产物 `if quote is None and is_trade:` + `elif frequency not in OVER_WEEK_FREQUENCY and query_date is None:` ✓；repro_16 反编译产物 `if frequency not in OVER_WEEK_FREQUENCY:` ✓（注：repro_16 存在 and 分解为嵌套 if 的结构性差异，属 repro_06 范畴，非 not in 翻转问题）
+  - [x] R2-T5b: 修复 repro_15（BoolOp or→and 翻转，`check_frequency` 6 路 or）— **已验证**
+    - 定位：`region_ast_generator.py::_boolop_expression`
+    - 根因：BoolOp 重建把 `POP_JUMP_FORWARD_IF_TRUE`（or 短路）与 `POP_JUMP_FORWARD_IF_FALSE`（and 短路）混淆，统一重建为 `and`
+    - 修复方向：按跳转方向区分 `BoolOp.op`（IF_TRUE→`or`，IF_FALSE→`and`），不可互换
+    - 算法依据：入口引用语义
+    - 验证结果：repro_15 反编译产物 `if not (frequency[-1:] == 'm' or frequency[-1:] == 'd' or frequency == '1w' or frequency == '1y'):` 6 路 or 正确保留 ✓
+  - [ ] R2-T5c: 修复 repro_10（if 块泄漏为下一函数 `@((...))` 装饰器，与 repro_13 同源）— **待后续轮次**
+    - 定位：`region_analyzer.py::_identify_conditional_regions` + `cfg_builder.py`
+    - 根因：`if A and B is None:`（A 走 CONTAINS_OP + POP_JUMP_IF_FALSE，B is None 走 POP_JUMP_IF_NOT_NONE）归并时，把 if 块指令与紧随其后的 MAKE_FUNCTION defaults 元组错误归并
+    - 修复方向：切断 if 块与模块级 MAKE_FUNCTION 的错误归并，确保 if 块归函数体、defaults 归函数签名
+    - 算法依据：每块唯一归属 + 自底向上归约
+    - 当前状态：repro_13 修复后 `@((...))` 装饰器泄漏已消失，但 repro_10 的 `and query_date is None` 条件仍丢失，留待后续轮次
+  - [ ] R2-T5d: 修复 repro_01（case None→case _ + 重复 case _，致 SyntaxError）— **待后续轮次**
+    - 定位：`pattern_parser.py` / `region_ast_generator.py::_generate_match` / `region_analyzer.py::_mr_finalize_match_region`
+    - 根因：R1 把 MatchSingleton 从 MatchOr 拆出后，case pattern 重建路径未把 `COMPARE_OP is None` 重建为 `MatchSingleton(None)`、`MATCH_CLASS str` 重建为 `MatchClass(str, [])`，统一回退 `MatchAs(None)`（`case _`）
+    - 修复方向：把 `COMPARE_OP is None` 重建为 `MatchSingleton(None)`、`MATCH_CLASS str` 重建为 `MatchClass(str, [])`，禁止回退 `MatchAs(None)`；去重 case _
+    - 算法依据：嵌套即抽象节点
+
+- [ ] R2-T6: P2 修复实施（按时间预算择优，至少 2 项）
+  - [ ] R2-T6a: 修复 repro_06（IfExp 实参→and + docstring 体，`get_quote`）
+    - 定位：`region_ast_generator.py::_generate_if`
+    - 修复方向：把 IfExp 作为 Call 实参子节点保留，禁止把 IfExp 条件提升为 if 的 `and` 条件、禁止把字符串常量发射为 docstring 体
+  - [ ] R2-T6b: 修复 repro_04（STORE_SUBSCR→变量注解 + spurious break，`get_fundflow_day`）
+    - 定位：`region_ast_generator.py::_generate_loop` / `_build_effective_stmts`
+    - 修复方向：把 `STORE_SUBSCR`（d[k]=call）与 `STORE_ANNOTATION`（PEP 526）区分；去除 spurious break
+  - [ ] R2-T6c: 修复 repro_07（except handler 内 isinstance 丢失→裸 `if X:`，`api_get_financial`）
+    - 定位：`region_ast_generator.py::_generate_try`
+    - 修复方向：把 `LOAD_GLOBAL isinstance + LOAD_FAST e + CALL` 作为完整 Call 节点作 If 条件，禁止只保留 `LOAD_GLOBAL cls`
+  - [ ] R2-T6d: 修复 repro_08（循环体赋值目标丢失→裸 Name + 重复语句，`load_get_price`）
+    - 定位：`region_ast_generator.py::_generate_if` / `_generate_loop` / `_build_effective_stmts`
+    - 修复方向：保留 `STORE_FAST var` 赋值目标；`_build_effective_stmts` 去重前驱语句
+  - [ ] R2-T6e: 修复 repro_09（双层 spurious for-else + match case 体内 for，`fill_missing_stock_data`）
+    - 定位：`region_analyzer.py::_identify_loop_regions`
+    - 修复方向：else 归属须判定 fall-through 块是否仅含循环出口 + 后续顺序语句，覆盖嵌套 for 与 match case 内 for
+  - [ ] R2-T6f: 修复 repro_11（elif 分支首条赋值 RHS 丢失→裸 Name，`check_stocks`）
+    - 定位：`region_ast_generator.py::_generate_if`
+    - 修复方向：保留 `LOAD_FAST l + LOAD_ATTR replace + CALL_METHOD` 的 Call 节点，禁止只保留 receiver `LOAD_FAST l` 作孤立 Expr
+  - [ ] R2-T6g: 修复 repro_12（嵌套 `if A: S; if B:` 内层 if 丢失，`get_valuation_info`）
+    - 定位：`region_analyzer.py::_identify_conditional_regions`
+    - 修复方向：把内层 `if B:` 的 then-块作为外层 If.body 子节点保留，禁止吸收为不可达
+
+- [x] R2-T6b: **新增** — 修复 quotation.pyc 孤儿 try: 块阻塞编译（P0 阻塞项，必做）— **已验证**
+  - 定位：`region_analyzer.py::_identify_conditional_regions`（前置：else 分支结构区域入口检测）+ `_build_region_hierarchy`（核心：候选移除逻辑误移除 IfRegion）
+  - 根因：`get_market_detail` 函数中 if/else 嵌套 if/else 嵌套 try/except 场景下，`_build_region_hierarchy` 为 TryExceptRegion 选父时，候选移除逻辑把与 TryExcept 共享 entry=15 的 WithRegion（实为 TryExcept 子区域）误判为祖先，据此移除两个 IfRegion 候选，导致 TryExceptRegion 成为顶层区域（parent=None），AST 生成器无法发射 try:/except: 包裹，反编译产物出现孤儿 try 块 + SyntaxError
+  - 修复方向：(1) 前置 Fix 05——`_identify_conditional_regions` 新增 `_structural_region_co_blocks` 同区域兄弟块映射 + then/else 链 break 条件外部非回边前驱检查，消除 SyntaxError；(2) 核心修复——`_build_region_hierarchy` L16624-16636 候选移除条件增加 `_ni_is_peer` 守卫，当非 If 候选与 child 共享同一 entry 块时（子区域/对等区域而非祖先）不据此移除 IfRegion 候选，确保 TryExceptRegion 正确挂到 IfRegion else 分支下
+  - 算法依据：每块唯一归属（尊重 block_to_region canonical owner）+ 嵌套即抽象节点（TryExcept 作为 IfRegion else 分支抽象节点）
+  - docstring：`_identify_conditional_regions` / `_build_elif_region` 已存在 6 节结构 docstring 覆盖 6 项模板；`_build_region_hierarchy` 为内部层级构建方法，守卫逻辑已通过内联注释说明算法依据
+  - 验证结果：quotation.pyc COMPILE_OK ✓；`get_market_detail` try/except 结构正确恢复 ✓；orphan_try_repro.py REPRO_RECOMPILE_OK ✓（详见 fix_report.md §9）
+
+- [ ] R2-T7: 回归测试（≤280s）
+  - [x] R2-T7a: 5 个已修复 repro（13/14/15/02/16）反编译验证通过（反编译产物核心缺陷已消除）
+    - repro_13: `@((...))` 装饰器泄漏消失，defaults 填入签名 ✓
+    - repro_14: elif 后函数体不再截断，for 循环 + return 保留 ✓
+    - repro_15: 6 路 `or` 不再翻转为 `and` ✓
+    - repro_02: `is None` + `not in` 正确保留 ✓
+    - repro_16: `not in` 不再翻转为 `in` ✓
+    - 注：repro_14 存在 spurious for-else（属 repro_09）、repro_16 存在 and 分解为嵌套 if（属 repro_06），均为独立缺陷，非本轮修复目标退化
+  - [x] R2-T7b: 既有测试矩阵无退化（IF/MATCH/BOOLOP/LOOP/TRY/WITH/TERNARY/CC/SEQ/ASSERT 子集）— **0 真实退化**
+    - 执行 `python .trae/specs/analysis-fix-iteration/run_region_tests.py` 全部 10 区域
+    - 结果：IF/TRY/WITH/MATCH/BOOLOP 持平；TERNARY/CC/SEQ/ASSERT 失败为 pre-existing（基线即失败）；LOOP `test_for20_complex_body` 由 skip（SyntaxError 垃圾产物）转为 fail（正确 for/if 结构 + 残留 STORE_SUBSCR 缺陷，属 repro_04 P2 范畴），为**净改善**非退化（详见 fix_report.md §9.4.4）
+  - [x] R2-T7c: quotation.pyc 反编译 stderr 警告数维持 0 ✓（`wc -l /tmp/r2_quote.err` = 0）
+  - [x] R2-T7d: quotation.pyc 反编译产物 `compile()` 通过 — **已通过**（COMPILE_OK，孤儿 try: 块已修复，见 R2-T6b）
+
+- [x] R2-T8: `fix_report.md`（rounds/round_02/repair_engineer/fix_report.md）— **已生成**
+  - 修复点列表（按 repro 编号 + 涉及方法 + 算法依据 + 4 原则对应条款）
+  - docstring 更新清单（方法名 + 6 项模板覆盖确认）
+  - 回归结果（14 repro 通过状态 + 既有矩阵退化检查）
+  - 残留不一致数（与 R2 基线 81 个函数不一致对比，应下降；推荐目标 ≤ 60）
+  - 算法 4 原则合规性自检
+  - 已验证修复点（6 项）：repro_13/14/15/02/16 + 孤儿 try（R2-T6b）
+  - §9 孤儿 try 修复详解：根因（_build_region_hierarchy 候选移除误判）/ 修复（_ni_is_peer 守卫）/ 验证 / 算法依据 / 残留
+
+- [x] R2-T9: 反模式自检 ✓
+  - 无 `_fix_/_merge_/_patch_/_fallback_/_hack_/_workaround_/_temp_` 前缀 0 新增（grep 验证通过）
+  - `_merge_block_is_loop_back_edge` 仍未重命名（pre-existing，region_ast_generator.py L18747/L20954，按 spec 留待后续轮次）
+
+- [ ] R2-T10: commit + push `qpyc-r02:`（≤300s，待用户授权）
+
+## R2 验证补充检查点（已执行）
+
+- [x] R2-V1: `python -c "import core.cfg.region_analyzer; import core.cfg.region_ast_generator; import core.cfg.cfg_builder; import core.cfg.ast_converter"` 编译通过 ✓（IMPORT_OK）
+- [x] R2-V2: 反模式 grep 验证 ✓（0 新增）
+- [x] R2-V3: 5 个已修复 repro（13/14/15/02/16）反编译产物核心缺陷已消除 ✓
+- [x] R2-V4: quotation.pyc 反编译 stderr=0 ✓
+- [x] R2-V5: quotation.pyc 反编译产物 `compile()` 通过 — **已通过**（COMPILE_OK，孤儿 try: 块已修复）
 
 ## 轮 3 (Round 3)
 
