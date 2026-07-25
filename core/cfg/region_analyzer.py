@@ -7761,6 +7761,17 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
            - 当前测试矩阵通过率: 100%（match_region 198/198，2 skipped）
            - m085 已知限制: 结构型 match + guard 模式下 pattern check chain 解析依赖
              CPython 字节码细节，标记为 skipped（非缺陷，与上游 CPython 行为一致）
+           - [Pass7-MATCH] 同步：原「100%（match_region 198/198，2 skipped）」表述
+             与实测不符——与 _generate_match docstring 中 [Pass4-MATCH] 已校正的
+             同型问题一致。全量 match_region 套件（198 文件）实测为 193 passed /
+             3 failed / 2 skipped（见 _generate_match docstring [Pass4-MATCH] 段落）。
+             3 个 failed 用例（如 test_m106matchguardboolop：guard BoolOp 字节码
+             指令数 24 vs 22，与 BoolOp/Compare 复合嵌套的指令顺序差异相关）属
+             预存 baseline，非本轮引入。bounded subset 80 文件实测为 79/80 passed
+             （见 Pass6-MATCH fix_report 回归记录 `79 0 0 79 2.1 MATCH files=80`）。
+             「100% 通过率」表述不成立，原表述保留作历史追溯，本段落为口径校正，
+             与 _generate_match docstring [Pass4-MATCH] 段落口径一致。控制流不变，
+             仅 docstring 文本同步。
            - 本方法遵循区域归约算法 4 核心原则:
              自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口
         """
