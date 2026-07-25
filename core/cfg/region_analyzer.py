@@ -9442,6 +9442,14 @@ RegionType 枚举值: RegionType.ASSERT
                 # Fallback: walk fall-through chain for cases where
                 # LOAD_ASSERTION_ERROR is in a later block (legacy behavior
                 # preserved for any edge cases not covered by the new helper).
+                # [Pass5-ASSERT] 已知反模式（Pass 1 已登记、Pass 4 fix_report
+                # §未完成项 4 引用 L9436 已过时——现实际位于 L9442-L9448）：
+                # 本 Fallback 块为「Fallback 补丁」反模式——上方
+                # `_find_assertion_error_block` 主路径 + 本 `_reach_raise_varargs_block`
+                # 兜底路径形成「主路径 + 兜底补丁」二段式结构，违反「识别阶段一次正确」
+                # 原则。改写需统一 `_find_assertion_error_block` / `_reach_raise_varargs_block`
+                # 为单一查询路径（识别期消除兜底），属控制流变更，超出保守范围。本轮保守
+                # 仅添加内联标记，待后续 Pass 统一两查询路径后一并删除本 Fallback 块。
                 mb = self._reach_raise_varargs_block(succ)
                 if mb is not None:
                     message_block = mb
