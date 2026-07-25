@@ -6987,6 +6987,13 @@ AST 映射规则:
         - _is_elif 标记：区分 elif 和普通嵌套 if（影响缩进和代码风格）
         - pre_stmts：条件表达式中的副作用语句（如函数调用的 POP_TOP）
         - generated_blocks 跟踪：防止重复生成 elif 条件块
+        - [Pass8-IF] docstring 同步：实际控制流在「处理流程 1」之前存在两个
+          早返回特例（未在原「处理流程」列表中体现，本轮仅补记，不改控制流）：
+          (a) cond_block 为 None → 直接返回 {'type': 'Pass'}（L7003-7004）；
+          (b) 单 elif + then/elif 均为单表达式块 + fallthrough 汇合 → 退化为
+              IfExp（三元）AST 节点（L7005-7063，调用 _if_extract_cond_instructions
+              / _if_extract_condition_from_instructions / expr_reconstructor）。
+          原「处理流程 1-4」仅描述主流程（L7064 起），未覆盖上述早返回。
 
         Args:
             region: IF_ELIF_CHAIN 类型的 IfRegion，包含:
