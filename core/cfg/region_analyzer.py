@@ -9469,6 +9469,16 @@ RegionType 枚举值: RegionType.ASSERT
                 # 原则。改写需统一 `_find_assertion_error_block` / `_reach_raise_varargs_block`
                 # 为单一查询路径（识别期消除兜底），属控制流变更，超出保守范围。本轮保守
                 # 仅添加内联标记，待后续 Pass 统一两查询路径后一并删除本 Fallback 块。
+                # [Pass6-ASSERT] 同步：Pass 5 写入后经 Pass6-TRY 上游修改（在
+                # _identify_try_except_regions docstring L4770-L4781 追加 [Pass5-TRY]/
+                # [Pass6-TRY] 段落约 13 行）使行号再次下移——`_reach_raise_varargs_block(succ)`
+                # 调用现实际位置见紧邻本注释段下方的 `mb = self._reach_raise_varargs_block(succ)`
+                # 行（原 Pass 5 引用 L9442-L9448 / L9453 为 Pass 5 写入时的快照，已过时；
+                # 其中 L9442-L9448 范围本身亦与 Pass 5 fix_report 描述不完全一致，存疑）。
+                # 本轮改用相对位置描述避免递归漂移。验证方法：grep
+                # `_reach_raise_varargs_block(succ)` 在 _identify_assert_regions 内
+                # 可重新定位（紧邻本注释段下方）。后续 Pass 若实施「主路径 + 兜底
+                # 统一为单一查询路径」可一并消除此反模式与行号引用漂移源。
                 mb = self._reach_raise_varargs_block(succ)
                 if mb is not None:
                     message_block = mb
