@@ -14895,6 +14895,15 @@ AST 映射规则:
                 # 验证方法不变：grep `if region.is_async and region.target is None:`
                 # 在本文件仅 1 处命中（可执行代码处，非本注释段）。本轮仅同步
                 # 注释行号引用，未触碰可执行代码，控制流不变。
+                # [Pass8-WITH] 同步：Pass 7 写入后经 Pass7-IF/LOOP/TRY 上游修改
+                # 使行号再次一致下移 +22——early pass 现实际位于 L14404-L14445
+                # （[Round5-08] 注释起始 L14404，`if region.is_async and
+                # region.target is None:` 起始 L14421，`_async_target_early = None`
+                # L14426，`region.target = _async_target_early` L14437，
+                # early pass 末行 `region.items = _new_items` L14445）。原 Pass 7
+                # 引用 L14382-L14435/L14399/L14404/L14415 为 Pass 7 写入时的快照。
+                # 验证方法不变：grep `if region.is_async and region.target is None:`
+                # 可重新定位。本轮仅同步注释行号引用，未触碰可执行代码，控制流不变。
                 for _abb in sorted(_async_body_blocks, key=lambda b: b.start_offset):
                     if _abb in self.generated_blocks:
                         continue
