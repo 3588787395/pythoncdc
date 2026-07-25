@@ -2648,8 +2648,15 @@ class RegionAnalyzer:
                     last_store_idx = idx
                     continue
                 if instr.opname.startswith('LOAD_'):
-                    if block_idx == 0 and last_store_idx >= 0:
-                        pass
+                    # [Pass5-CC] 删除原 `if block_idx == 0 and last_store_idx >= 0: pass`
+                    # 死代码块（与 Pass3-LOOP `_loop_collect_child_regions` 内
+                    # `if ... pass` 死代码同型）：内层仅 `pass` 无任何状态修改，
+                    # `load_instrs.append(instr)` 在外层 `if instr.opname.startswith('LOAD_')`
+                    # 内无条件执行。`block_idx == 0 and last_store_idx >= 0` 的实际过滤
+                    # 由下方紧随其后的 `if block_idx == 0 and last_store_idx >= 0:
+                    # filtered_loads = []` 块完成（基于 last_store_idx 截断）。本 if-pass
+                    # 块疑为重构遗留（早期版本可能在此处做内联过滤，后改为下方独立
+                    # 过滤块后未同步清理）。删除后控制流等价——`pass` 无副作用。
                     load_instrs.append(instr)
 
             if block_idx == 0 and last_store_idx >= 0:
