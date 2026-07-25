@@ -14248,6 +14248,17 @@ RegionType 枚举值: RegionType.ASSERT
         # 需先按 FALSE/TRUE/IF_NONE/IF_NOT_NONE/NONE 多类归类，再分别定义常量，
         # 涉及 17+ 处调用点，本轮保守不动。仅添加内联标记，待后续 Pass 统一常量库后
         # 一次性替换。
+        # [Pass6-BOOLOP] 同步：Pass 5 写入后经 Pass6-TRY 上游修改
+        # （_identify_try_except_regions docstring 追加段落约 13 行）+ Pass6-ASSERT
+        # 上游修改（_identify_assert_regions marker 追加段落约 10 行）使行号再次下移——
+        # 原 Pass 5 引用「同函数 L14340 pred_op 同型」中的 `pred_op` 行现实际位置见
+        # grep `pred_op = 'and' if 'FALSE' in pred_last.opname else 'or'`（在
+        # _detect_while_condition_boolop_chain 内，本文件仅 1 处命中）。
+        # 经 git show 7adf49b 验证，Pass 5 写入时该 `pred_op` 行位于 L14350，
+        # marker 文本中「L14340」与 Pass5-BOOLOP fix_report 描述「同函数 L14352」
+        # 均有偏差（存疑），本轮不再追究。本轮改用相对位置描述（grep 验证）
+        # 避免递归漂移。后续 Pass 若实施「子串匹配→frozenset 常量统一替换」可一并
+        # 消除 17+ 处 DRY 违背与行号引用漂移源。
         op_type = 'and' if 'FALSE' in last.opname else 'or'
         chain.append((cond_block, op_type))
         visited = {cond_block.start_offset}
