@@ -7761,6 +7761,16 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
              块的加入路径，可能误导读者认为该集合仅含 MATCH_* 块。本轮仅补记差异，
              不重写「Step 4 / §3」列表（与 Pass8-IF / Pass8-MATCH 同型保守策略一致，
              采用 grep 验证方式避免行号漂移）。控制流不变，仅 docstring 文本同步。
+           - [Pass10-MATCH] docstring 行号校正：上述 [Pass9-MATCH] 段落引用的
+             两处行号自写入时即偏差 -16（git show 4604907 验证：commit 4604907
+             时 `_mr_collect_case_body` 实际位于 L8255，非段落所述 L8239；
+             `将 guard 块加入 pattern_check_blocks` 实际位于 L8389，非 L8373）。
+             现实际位置仍为 L8255 / L8389（本文件 region_analyzer.py 在
+             [Pass9-MATCH] 之后、[Pass10-MATCH] 之前的上游修改均位于 L10236+
+             的 _identify_conditional_regions，未影响 L8255/L8389 之前行号）。
+             grep 验证方法不变：`def _mr_collect_case_body` / `将 guard 块加入
+             pattern_check_blocks` 在本文件均仅 1 处命中。本轮仅校正行号引用，
+             控制流不变。
 
         2. 字节码模式（CPython 编译器行为）
            模式 A: 结构型模式 match
