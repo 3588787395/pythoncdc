@@ -4195,7 +4195,22 @@ AST 映射规则:
         }
 
     def _loop_generate_pre_stmts(self, region: LoopRegion, body_stmts: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-        """从init_blocks和内层for循环的iter_setup提取前置语句"""
+        """从init_blocks和内层for循环的iter_setup提取前置语句
+
+        [Pass5-LOOP] 同步 docstring 与实际行为（Pass4-LOOP 已在调用点删除死代码）：
+        实际行为：
+          - 副作用：通过 `body_stmts.extend(_pre_stmts)` 修改入参 body_stmts
+            （注意 `_pre_stmts` 是局部变量，与函数末尾返回的 `pre_stmts` 是不同标识符）
+          - 返回值：函数末尾 `return pre_stmts` 中 `pre_stmts` 初始化为 `[]` 后从未
+            被 append/extend，故始终返回 `[]`。
+        签名/语义漂移：
+          - 形参 `-> List[Dict[str, Any]]` 暗示「生成并返回 pre_stmts 列表」，
+            实际返回值恒为 `[]`，真实数据通过副作用传递给 body_stmts。
+          - 唯一调用点 L4101（`_loop_generate_body` 内）已不使用返回值
+            （Pass4-LOOP 已删除调用点的 `if pre_stmts:` 死分支）。
+        本轮仅同步 docstring，未重构函数（重构涉及调用方语义，超出保守范围）。
+        后续 Pass 可把签名改为 `-> None` 并重命名以反映副作用语义。
+        """
         pre_stmts: List[Dict[str, Any]] = []
 
         if region.region_type == RegionType.FOR_LOOP:
