@@ -11940,6 +11940,16 @@ AST 映射规则:
         # [Pass4-IF] 同步：经多轮 Pass 3 修改后，3 处调用点行号已下移至
         # 3207/3945/6597（grep `_if_generate_branch_stmts\(` 可验证）。
         # 本轮仅同步注释行号引用，未触碰可执行代码，控制流不变。
+        # [Pass5-IF] 标记死形参与不可达分支（与 Pass3-IF 删除 _depth=0 同型）：
+        # 全仓 grep `_if_generate_branch_stmts\(` 仅 3 处调用点
+        # (line 3211/3949/6607) 与本定义处，3 处调用均仅传入 blocks（位置参数），
+        # 从不传 region= 关键字。故本函数内：
+        #   1. `region=None` 形参在调用点恒为 None（死形参）
+        #   2. `if region is not None: return self._generate_if(region)` 分支不可达
+        #   3. 末尾 `return []` 仅当 blocks/region 同时为 None 时可达，调用点亦不可达
+        # 本轮仅添加标记注释，不删除形参/不删除分支（删除形参需评估 _process_if_blocks
+        # 第二位置参数语义，超出保守范围）。后续 Pass 可在确认 _process_if_blocks
+        # 接受 region=None 后统一删除 region 形参与两个不可达分支。
         if region is not None:
             return self._generate_if(region)
         if blocks is not None:
