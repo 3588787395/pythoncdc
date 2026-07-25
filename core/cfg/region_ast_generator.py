@@ -78,6 +78,7 @@ from .region_analyzer import (
     FORWARD_CONDITIONAL_JUMP_OPS, BACKWARD_CONDITIONAL_JUMP_OPS,
     NOISE_OPS,
 )
+from .pattern_parser import collect_pattern_store_names
 from .ast_generator_v2 import ExpressionReconstructor
 from .comprehension_generator import ComprehensionGenerator
 from .opcode_feature_detector import get_opcode_detector
@@ -16269,37 +16270,9 @@ AST 映射规则:
         return idx
 
     def _collect_pattern_store_names(self, pattern, names):
-        if not pattern or not isinstance(pattern, dict):
-            return
-        ptype = pattern.get('type')
-        if ptype == 'MatchAs':
-            name = pattern.get('name')
-            if name:
-                names.add(name)
-            inner = pattern.get('pattern')
-            if inner:
-                self._collect_pattern_store_names(inner, names)
-        elif ptype == 'MatchStarred':
-            inner = pattern.get('pattern')
-            if inner:
-                self._collect_pattern_store_names(inner, names)
-        elif ptype == 'MatchSequence':
-            for p in pattern.get('patterns', []):
-                self._collect_pattern_store_names(p, names)
-        elif ptype == 'MatchMapping':
-            for p in pattern.get('patterns', []):
-                self._collect_pattern_store_names(p, names)
-            rest = pattern.get('rest')
-            if rest:
-                names.add(rest)
-        elif ptype == 'MatchClass':
-            for p in pattern.get('patterns', []):
-                self._collect_pattern_store_names(p, names)
-            for p in pattern.get('keyword_patterns', []):
-                self._collect_pattern_store_names(p, names)
-        elif ptype == 'MatchOr':
-            for p in pattern.get('patterns', []):
-                self._collect_pattern_store_names(p, names)
+        # 委托到 pattern_parser.collect_pattern_store_names（唯一权威实现）
+        # 保留实例方法签名以兼容现有调用点（self._collect_pattern_store_names）
+        collect_pattern_store_names(pattern, names)
 
     def _wrap_boolop_with_merge_compare(self, boolop_expr: Dict[str, Any],
                                          boolop_region: 'BoolOpRegion',

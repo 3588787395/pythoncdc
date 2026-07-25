@@ -28,7 +28,7 @@ from .dominator_analyzer import (
     FOR_ITER_OPS, BACKWARD_JUMP_OPS, FORWARD_JUMP_OPS, PLACEHOLDER_OPS,
 )
 
-from .pattern_parser import PatternParser
+from .pattern_parser import PatternParser, collect_pattern_store_names
 from .opcode_feature_detector import get_opcode_detector
 from .peephole_patterns import PeepholePatternLibrary
 
@@ -7501,8 +7501,9 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
         if copy_idx + 1 < len(instrs) and instrs[copy_idx + 1].opname == 'PUSH_EXC_INFO':
             return False
 
-        # COPY 后面紧跟 STORE_FAST/STORE_NAME 是 walrus 运算符 (:=) 模式，不是 match subject
-        if copy_idx + 1 < len(instrs) and instrs[copy_idx + 1].opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL'):
+        # COPY 后面紧跟 STORE_FAST/STORE_NAME/STORE_GLOBAL/STORE_DEREF 是 walrus 运算符 (:=) 模式，不是 match subject
+        # STORE_DEREF 覆盖闭包/嵌套函数内 walrus 场景，与代码库其余 40+ 处一致
+        if copy_idx + 1 < len(instrs) and instrs[copy_idx + 1].opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
             return False
 
         # COPY 之后必须紧跟比较操作或 None 检查
@@ -7640,7 +7641,12 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                             reload_count += 1
                             break
             # 如果所有后续case都重新加载了subject，更可能是if-elif
-            if reload_count == len(case_blocks) - 1 and len(case_blocks) > 2:
+            # （match 的 subject 在每个 case 不会重新 LOAD；if-elif 的每个分支会）
+            # 不再硬编码 case 数下限：2-case 场景下结构型 match 的 subject 块必然含 COPY，
+            # 此处由 _verify_literal_match_chain 上游 has_copy 判据已先行通过；
+            # 若进入此分支且 reload_count==1，说明 subject 无 COPY 且 case 重新加载，
+            # 真正的 if-elif 应被识别。
+            if reload_count == len(case_blocks) - 1:
                 return False
 
         return True
@@ -7747,37 +7753,9 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
         return match_regions
 
     def _mr_collect_pattern_store_names(self, pattern, names):
-        if not pattern or not isinstance(pattern, dict):
-            return
-        ptype = pattern.get('type')
-        if ptype == 'MatchAs':
-            name = pattern.get('name')
-            if name:
-                names.add(name)
-            inner = pattern.get('pattern')
-            if inner:
-                self._mr_collect_pattern_store_names(inner, names)
-        elif ptype == 'MatchStarred':
-            inner = pattern.get('pattern')
-            if inner:
-                self._mr_collect_pattern_store_names(inner, names)
-        elif ptype == 'MatchSequence':
-            for p in pattern.get('patterns', []):
-                self._mr_collect_pattern_store_names(p, names)
-        elif ptype == 'MatchMapping':
-            for p in pattern.get('patterns', []):
-                self._mr_collect_pattern_store_names(p, names)
-            rest = pattern.get('rest')
-            if rest:
-                names.add(rest)
-        elif ptype == 'MatchClass':
-            for p in pattern.get('patterns', []):
-                self._mr_collect_pattern_store_names(p, names)
-            for p in pattern.get('keyword_patterns', []):
-                self._mr_collect_pattern_store_names(p, names)
-        elif ptype == 'MatchOr':
-            for p in pattern.get('patterns', []):
-                self._mr_collect_pattern_store_names(p, names)
+        # 委托到 pattern_parser.collect_pattern_store_names（唯一权威实现）
+        # 保留实例方法签名以兼容现有调用点（self._mr_collect_pattern_store_names）
+        collect_pattern_store_names(pattern, names)
 
     def _mr_compute_case_body_start_indices(self, region):
         indices = {}
