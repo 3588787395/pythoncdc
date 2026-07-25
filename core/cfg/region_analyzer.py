@@ -11731,6 +11731,22 @@ RegionType 枚举值: RegionType.ASSERT
         （skip_ternary=True），优先保留 BoolOp。这是有意为之的保守策略，与
         归约算法 4 核心原则一致（自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 /
         父引用子入口）。
+
+        [Pass9-TERNARY] 同步：上述「截至 Pass 01: 69p/7f/76」表述仅引用 Pass 01
+        时点状态、未说明 Pass 2-8 期间无回归变化，可能误读为「Pass 01 后状态已变」。
+        与 Pass8-TERNARY 在 `_generate_ternary` docstring（region_ast_generator.py）
+        中对同型「截至 Pass 01」表述追加 [Pass8-TERNARY] 校正段落同型——对称缺失。
+        实际口径：TERNARY bounded subset 80 文件实测自 Pass 01 起持续为 69 passed /
+        7 failed / 0 errors / 76 总计（Pass8-TERNARY fix_report 回归记录
+        `69 7 0 76 5.6 TERNARY files=80`，与本 docstring 原「Pass 01: 69p/7f/76」
+        口径一致）。Pass 1-8 期间持续 69p/7f/76，无新增失败亦无失败消除。7 例预存
+        失败为 ternary 值被外层表达式消费的模式（assert method call / listcomp
+        body / await call arg / for-iter subscript / compare in both / tuple-unpack
+        / starred-list scalar），非保守修复范围（与 Pass8-TERNARY §未完成项 2 同源）。
+        与 Pass7-TRY 在 `_identify_try_except_regions` docstring 中追加 [Pass7-TRY]
+        段落校正同型「100% 通过率」表述（对称于 _generate_try [Pass4-TRY]）同型
+        保守策略。原表述保留作历史追溯，本段落为口径校正。控制流不变，仅 docstring
+        文本同步。
         """
 
         def _can_be_ternary_header(block):
