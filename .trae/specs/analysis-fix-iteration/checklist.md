@@ -17,7 +17,7 @@
 - [x] P1-IF 第 1 遍 IF 区域完成 (commit c5f18b8)（test_findings.md + fix_report.md 已生成；IF/BOOLOP/TERNARY 回归无退化；无反模式；commit+push 待用户指令）
 - [x] P1-LOOP 第 1 遍 LOOP 区域完成（test_findings.md + fix_report.md 已生成；编译通过；LOOP/TRY/IF 三区域回归无退化；3 个后处理补丁 + 死代码已消除；无禁止前缀新增、无硬编码深度上限；commit+push 待用户指令）
 - [ ] P1-TRY 第 1 遍 TRY 区域完成
-- [ ] P1-WITH 第 1 遍 WITH 区域完成
+- [x] P1-WITH 第 1 遍 WITH 区域完成（test_findings.md + fix_report.md 已生成；编译通过；WITH 80p/0f/80、LOOP 79p/0f/79、TRY 80p/0f/80 三区域回归无退化；3 项反模式消除：magic number +1000 → 空块跳过、5 处 inline 5-元组 → ASYNC_WITH_SEND_LOOP_OPS 常量 + _is_async_with_send_loop 谓词、docstring 归约顺序修正；无禁止前缀新增、无硬编码深度上限；commit+push 待用户指令）
 - [ ] P1-MATCH 第 1 遍 MATCH 区域完成
 - [ ] P1-ASSERT 第 1 遍 ASSERT 区域完成
 - [ ] P1-BOOLOP 第 1 遍 BOOLOP 区域完成

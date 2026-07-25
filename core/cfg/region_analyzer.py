@@ -7026,11 +7026,11 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                 break
             if any(i.opname == 'WITH_EXCEPT_START' for i in block.instructions):
                 continue
-            in_range = any(
-                body_end <= instr.offset < block.start_offset + 1000
-                for instr in block.instructions
-            )
-            if not in_range:
+            # 上界由上文 BEFORE_WITH break 与下方 has_user_code 过滤共同确定；
+            # 原硬编码常量上界（block.start_offset 加固定字节数）是恒为真的 no-op：
+            # block.start_offset >= body_end 已保证首指令 offset >= body_end，
+            # 且单基本块指令跨度远小于该固定字节数。此处仅保留空块跳过语义。
+            if not block.instructions:
                 continue
             has_user_code = any(
                 instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
@@ -7169,9 +7169,12 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
         RegionType 枚举值: RegionType.WITH
 
         1. 算法描述（基于"No More Gotos"论文）
-           - 归约阶段: Phase 1（在 TRY 之后，LOOP 之前）
+           - 归约阶段: Phase 1（在 TRY、LOOP 之后，MATCH/ASSERT 之前；优先级第三档）
            - 识别策略: 扫描 BEFORE_WITH / BEFORE_ASYNC_WITH 指令定位 with 入口，
              基于异常表确定 body 范围，WITH_EXCEPT_START 定位 handler。
+           - 注：async-with 的 SEND/YIELD 协程恢复循环因此会被 _identify_loop_regions
+             先识别为 LoopRegion，目前由 _generate_with 内的 ASYNC_WITH_SEND_LOOP_OPS
+             判据 patch 处理（待后续在归约期消除）
            - 归约过程:
              Step 1: 扫描所有 BEFORE_WITH/BEFORE_ASYNC_WITH 指令定位 with 入口块。
              Step 2: 基于异常表 [start, end) 确定 body 偏移范围。

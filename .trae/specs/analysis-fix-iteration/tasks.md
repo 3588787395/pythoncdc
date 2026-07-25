@@ -34,7 +34,7 @@
 - [x] Pass1-IF: 第 1 遍 IF 区域（轮 1）— T1/T2/T3 完成（test_findings.md + fix_report.md 已生成，IF/BOOLOP/TERNARY 三区域回归无退化）；T4 commit+push 待用户指令
 - [x] Pass1-LOOP: 第 1 遍 LOOP 区域（轮 2）— T1/T2/T3 完成（test_findings.md + fix_report.md 已生成；删除死代码 + 新增 `_is_owned_by_other_region`/`_is_continue_recheck_fake_loop` 守卫并消除 3 个后处理补丁；LOOP 79p/0f/79、TRY 80p/0f/80、IF 79p/1f/80 三区域回归无退化；反模式自检通过）；T4 commit+push 待用户指令
 - [ ] Pass1-TRY: 第 1 遍 TRY 区域（轮 3）
-- [ ] Pass1-WITH: 第 1 遍 WITH 区域（轮 4）
+- [x] Pass1-WITH: 第 1 遍 WITH 区域（轮 4）— T1/T2/T3 完成（test_findings.md + fix_report.md 已生成；3 项反模式消除完成；WITH 80p/0f/80、LOOP 79p/0f/79、TRY 80p/0f/80 三区域回归无退化；反模式自检通过）；T4 commit+push 待用户指令
 - [ ] Pass1-MATCH: 第 1 遍 MATCH 区域（轮 5）
 - [ ] Pass1-ASSERT: 第 1 遍 ASSERT 区域（轮 6）
 - [ ] Pass1-BOOLOP: 第 1 遍 BOOLOP 区域（轮 7）

@@ -82,6 +82,14 @@ from .ast_generator_v2 import ExpressionReconstructor
 from .comprehension_generator import ComprehensionGenerator
 from .opcode_feature_detector import get_opcode_detector
 
+# async-with 协程恢复循环的指令名集合（SEND/YIELD_VALUE/RESUME 恢复链 + 跳回 + NOP）。
+# 此循环应归 WithRegion 内部，不独立生成 ast.With body 之外的语句。
+# 集中定义为命名常量便于后续用入口引用语义替换（消除 DRY 违反）。
+ASYNC_WITH_SEND_LOOP_OPS = frozenset({
+    'SEND', 'YIELD_VALUE', 'RESUME',
+    'JUMP_BACKWARD_NO_INTERRUPT', 'NOP',
+})
+
 
 class _IfRegionProxy:
     """[Phase 7 根因 A] IfRegion-like 代理，供 while 条件路径复用 if 条件路径的
@@ -1974,7 +1982,7 @@ class RegionASTGenerator:
                 return None
 
         if isinstance(region, LoopRegion):
-            if isinstance(region.parent, WithRegion) and region.entry and all(i.opname in ('SEND', 'YIELD_VALUE', 'RESUME', 'JUMP_BACKWARD_NO_INTERRUPT', 'NOP') for i in region.entry.instructions):
+            if self._is_async_with_send_loop(region, region.parent):
                 for block in region.blocks:
                     _role = self.region_analyzer.get_block_role(block)
                     if _role != BlockRole.LOOP_ELSE:
@@ -14152,6 +14160,21 @@ AST 映射规则:
         self._generated_regions.add(id(_nested_ternary))
         return _t_expr
 
+    def _is_async_with_send_loop(self, loop_region, with_region) -> bool:
+        """判定 LoopRegion 是否为 async-with 的协程恢复循环（应归 WithRegion 内部，不独立生成）。
+
+        async-with 的协程恢复循环由 SEND/YIELD_VALUE/RESUME/JUMP_BACKWARD_NO_INTERRUPT
+        组成，识别期被 _identify_loop_regions 先识别为 LoopRegion。本谓词集中判定
+        此模式，便于后续在归约期归属该循环（消除生成期 patch）。
+        """
+        if not isinstance(with_region, WithRegion):
+            return False
+        if not getattr(with_region, 'is_async', False):
+            return False
+        if loop_region.entry is None:
+            return False
+        return all(i.opname in ASYNC_WITH_SEND_LOOP_OPS for i in loop_region.entry.instructions)
+
     def _generate_with(self, region: WithRegion) -> Dict[str, Any]:
         """_generate_with — WithRegion → ast.With 映射
 
@@ -14320,13 +14343,13 @@ AST 映射规则:
                         break
                 if _block_in_descendant and _block_in_descendant.entry != block and (not hasattr(_block_in_descendant, 'condition_block') or _block_in_descendant.condition_block != block) and (not hasattr(_block_in_descendant, 'header_block') or _block_in_descendant.header_block != block):
                     if id(_block_in_descendant) in self._generated_regions:
-                        if isinstance(_block_in_descendant, LoopRegion) and isinstance(region, WithRegion) and region.is_async and _block_in_descendant.entry and all(i.opname in ('SEND', 'YIELD_VALUE', 'RESUME', 'JUMP_BACKWARD_NO_INTERRUPT', 'NOP') for i in _block_in_descendant.entry.instructions) and self.region_analyzer.get_block_role(block) == BlockRole.LOOP_ELSE:
+                        if isinstance(_block_in_descendant, LoopRegion) and self._is_async_with_send_loop(_block_in_descendant, region) and self.region_analyzer.get_block_role(block) == BlockRole.LOOP_ELSE:
                             pass
                         else:
                             self.generated_blocks.add(block)
                             continue
                     if isinstance(_block_in_descendant, LoopRegion):
-                        if isinstance(region, WithRegion) and region.is_async and _block_in_descendant.entry and all(i.opname in ('SEND', 'YIELD_VALUE', 'RESUME', 'JUMP_BACKWARD_NO_INTERRUPT', 'NOP') for i in _block_in_descendant.entry.instructions) and self.region_analyzer.get_block_role(block) == BlockRole.LOOP_ELSE:
+                        if self._is_async_with_send_loop(_block_in_descendant, region) and self.region_analyzer.get_block_role(block) == BlockRole.LOOP_ELSE:
                             pass
                         else:
                             self.generated_blocks.add(block)
@@ -14341,7 +14364,7 @@ AST 映射规则:
                             nested_region = _r
                             break
                 if nested_region and nested_region != region and nested_region is not region.parent and isinstance(nested_region, (IfRegion, LoopRegion, TryExceptRegion, WithRegion, AssertRegion, BoolOpRegion, TernaryRegion)):
-                    if isinstance(nested_region, LoopRegion) and isinstance(region, WithRegion) and region.is_async and nested_region.entry and all(i.opname in ('SEND', 'YIELD_VALUE', 'RESUME', 'JUMP_BACKWARD_NO_INTERRUPT', 'NOP') for i in nested_region.entry.instructions):
+                    if isinstance(nested_region, LoopRegion) and self._is_async_with_send_loop(nested_region, region):
                         continue
                     _direct_child = nested_region
                     while _direct_child.parent is not None and _direct_child.parent is not region and _direct_child.parent is not region.parent:
@@ -14950,7 +14973,7 @@ AST 映射规则:
                                 body_stmts.extend(generated)
                             else:
                                 body_stmts.append(generated)
-                        if isinstance(child, LoopRegion) and isinstance(child.parent, WithRegion) and child.entry and all(i.opname in ('SEND', 'YIELD_VALUE', 'RESUME', 'JUMP_BACKWARD_NO_INTERRUPT', 'NOP') for i in child.entry.instructions):
+                        if isinstance(child, LoopRegion) and self._is_async_with_send_loop(child, child.parent):
                             pass
                         else:
                             for b in child.blocks:
