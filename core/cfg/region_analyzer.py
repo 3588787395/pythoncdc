@@ -1337,6 +1337,41 @@ class RegionAnalyzer:
 
             match_regions = [r for r in match_regions if not _region_overlaps_with_ternary(r)]
             assert_regions = [r for r in assert_regions if not _region_overlaps_with_ternary(r)]
+            # [Fix 7.3] 补全 ternary 重叠过滤对 boolop_regions 的应用。
+            # 区域归约算法「每块唯一归属」+「嵌套即抽象节点」+「父引用子入口」：
+            # 当 BoolOpRegion.blocks 包含某 TernaryRegion 的内部块
+            # （cond/true_value/false_value/merge）时，BoolOp 抢占了 ternary
+            # 的块，违反唯一归属。过滤掉此类 BoolOpRegion，让 TernaryRegion
+            # 独占其内部块；同时清理 block_to_region 与 self.regions，避免
+            # _identify_conditional_regions 仍看到已被移除的 BoolOp 占用。
+            # 保留合法父子嵌套：BoolOp.entry 恰为某 TernaryRegion.entry 且
+            # BoolOp.blocks 与 ternary 仅共享 entry（BoolOp 通过 entry 引用
+            # ternary 作为单操作数，不吞并内部块）——此情况不过滤。
+            def _boolop_overlaps_with_ternary(region):
+                for _tr in ternary_regions:
+                    if not isinstance(_tr, TernaryRegion) or not _tr.blocks:
+                        continue
+                    overlap = region.blocks & _tr.blocks
+                    if not overlap:
+                        continue
+                    # 合法父子嵌套：BoolOp 仅通过 entry 引用 ternary（单操作数）
+                    if (region.entry is not None
+                            and overlap == {region.entry}
+                            and _tr.entry is region.entry):
+                        continue  # 合法引用：跳过此 ternary
+                    return True
+                return False
+            _boolop_to_remove = [r for r in boolop_regions
+                                 if _boolop_overlaps_with_ternary(r)]
+            if _boolop_to_remove:
+                for _br in _boolop_to_remove:
+                    for _b in _br.blocks:
+                        if self.block_to_region.get(_b) is _br:
+                            del self.block_to_region[_b]
+                    if _br in self.regions:
+                        self.regions.remove(_br)
+                boolop_regions = [r for r in boolop_regions
+                                  if r not in _boolop_to_remove]
 
         conditional_regions = self._identify_conditional_regions(
             loop_regions=loop_regions,
@@ -12632,9 +12667,46 @@ RegionType 枚举值: RegionType.ASSERT
                                             and any(i.opname == 'RAISE_VARARGS'
                                                     for i in _fft_eff2)
                                         )
-                                        merge_block = _fft2
-                                        if not _is_assert_consumer:
-                                            has_jump_forward_skip = True
+                                        if _is_assert_consumer:
+                                            # assert 消费块：保留原行为（merge_block
+                                            # 设置，但不设 has_jump_forward_skip）
+                                            merge_block = _fft2
+                                        else:
+                                            # [Fix 7.4] 区域归约算法「每块唯一归属」
+                                            # +「嵌套即抽象节点」+「父引用子入口」：
+                                            # 此 fallback（Phase 7 方案 A）专为 fused
+                                            # ternary-loop 设计——ternary 值块以
+                                            # FORWARD_CONDITIONAL_JUMP 终结（truthy
+                                            # 测试），true/false 的 fallthrough 汇合于
+                                            # 循环头（merge_block）。当 _fft2 既非 assert
+                                            # 消费块也非循环头（LoopRegion 的
+                                            # entry/header_block/condition_block）时，
+                                            # _fft2 是 BoolOp 的兄弟操作数块（如
+                                            # `(a if c else d) or b` 中 `b` 的块），
+                                            # 不是 ternary 的 merge。此时 ternary 的值
+                                            # 被 BoolOp 短路求值直接消费（true/false 值块
+                                            # 跳至 BoolOp 真目标），无独立 merge_block。
+                                            # 若允许 TernaryRegion 创建，会吞并兄弟操作数
+                                            # 块与 BoolOp 真目标块，违反「每块唯一归属」
+                                            # （兄弟操作数同时归属 Ternary 与 BoolOp/If）
+                                            # 与「嵌套即抽象节点」（BoolOp 应通过 entry
+                                            # 引用 ternary，而非让 ternary 展开）。拒绝
+                                            # 创建 TernaryRegion，交由 BoolOpRegion/
+                                            # IfRegion 统一归约整个短路链。判据基于区域
+                                            # 结构属性（LoopRegion 归属），非指令名特例。
+                                            _fft2_is_loop_header = any(
+                                                _fft2 is _lr.entry
+                                                or _fft2 is _lr.header_block
+                                                or _fft2 is _lr.condition_block
+                                                for _lr in (loop_regions or [])
+                                            )
+                                            if _fft2_is_loop_header:
+                                                merge_block = _fft2
+                                                has_jump_forward_skip = True
+                                            else:
+                                                # BoolOp 兄弟操作数上下文：
+                                                # 非 fused ternary-loop，拒绝
+                                                return None
 
             # [Phase 7 方案 A] 嵌套三元 while_cond fallback。
             # 外层三元 `a if c else (inner)` 在 truthy-test 消费上下文中
@@ -12733,6 +12805,31 @@ RegionType 枚举值: RegionType.ASSERT
                         if (any(i.opname == 'LOAD_ASSERTION_ERROR' for i in _eff)
                                 and any(i.opname == 'RAISE_VARARGS' for i in _eff)):
                             merge_block = _t_ft
+
+            # [Fix 7.5] 区域归约算法「每块唯一归属」+「嵌套即抽象节点」：
+            # 当 true_block/false_block 以 SHORT_CIRCUIT_JUMP_OPS
+            # （JUMP_IF_TRUE_OR_POP / JUMP_IF_FALSE_OR_POP）终结，且其短路
+            # 跳转目标就是 merge_block 时，该"值块"实为 BoolOp 链操作数（如
+            # `a and b or c` 中 `b` 的块 `LOAD b; JUMP_IF_TRUE_OR_POP→merge`），
+            # 不是三元值块。三元值块以 JUMP_FORWARD（无条件跳 merge）终结；
+            # BoolOp 操作数以 SHORT_CIRCUIT_JUMP_OPS（条件短路跳 merge）终结
+            # ——短路跳转目标是 merge 意味着该块是 BoolOp 链尾操作数（truthy/
+            # falsy 时直接以本块值为结果跳到 merge 消费）。判据基于区域结构
+            # 属性（值块短路跳转目标 == merge_block），非指令名特例。
+            # 不影响合法嵌套：当值块本身是 BoolOp 表达式（如 `(a and b) if c
+            # else d` 的 true_block），其短路跳转目标是 BoolOp 内部块
+            # （and-false），非 merge，此判据不触发。has_jump_forward_skip
+            # （while 条件三元）值块以 FORWARD_CONDITIONAL_JUMP_OPS 终结，
+            # 不在 SHORT_CIRCUIT_JUMP_OPS 中，亦不受影响。
+            if merge_block is not None and not has_jump_forward_skip:
+                for _vb in (true_block, false_block):
+                    _vb_last = _vb.get_last_instruction()
+                    if (_vb_last is not None
+                            and _vb_last.opname in SHORT_CIRCUIT_JUMP_OPS
+                            and _vb_last.argval is not None):
+                        _vb_jt = self.cfg.get_block_by_offset(_vb_last.argval)
+                        if _vb_jt is merge_block:
+                            return None
 
             value_target = None
             merge_context = None  # 新增: 记录merge块的上下文类型
@@ -14728,6 +14825,15 @@ RegionType 枚举值: RegionType.ASSERT
                 else:
                     return None
             else:
+                # [Fix 7.1] 区域归约算法「每块唯一归属」+「嵌套即抽象节点」：
+                # 当块已被 TernaryRegion 占用时，BoolOp 不应抢占其内部块
+                # （cond/true_value/false_value/merge）。TernaryRegion 是叶子
+                # 值表达式区域，作为操作数时应由父区域通过 entry 引用，而非把
+                # ternary 内部块纳入 BoolOpRegion.blocks。即使块末尾是跳转指令
+                # （ternary 的 value 块常以 POP_JUMP_IF_TRUE/FALSE 终结），
+                # 这些跳转是 ternary 值上下文短路的一部分，不是 BoolOp 链节点。
+                if isinstance(existing, TernaryRegion):
+                    return None
                 last_instr = block.get_last_instruction()
                 if not last_instr or last_instr.opname not in (SHORT_CIRCUIT_JUMP_OPS | FORWARD_CONDITIONAL_JUMP_OPS):
                     return None
@@ -15279,6 +15385,41 @@ RegionType 枚举值: RegionType.ASSERT
                     continue
                 # Hop target is None or already visited — break
                 break
+            # [Fix 7.2] Ternary merge_block as BoolOp operand hop.
+            # 区域归约算法「每块唯一归属」+「嵌套即抽象节点」+「父引用子入口」：
+            # 当 `current` 已是某 TernaryRegion 的 merge_block 时（ternary 在
+            # 先前的归约或嵌套上下文中已被识别），ternary 已被归约为单值表达式。
+            # BoolOp 链应将其视为单操作数（op_chain 已包含 current 作为链块
+            # 引用），并 hop 到 current 的 fall-through 后继（下一操作数），
+            # 而非把 ternary 内部块（cond/true_value/false_value）纳入
+            # BoolOpRegion.blocks。ternary 内部块仍归属 TernaryRegion，
+            # BoolOpRegion 仅通过 merge_block 引用 ternary 的归约结果。
+            # 注意：此处不修改 op_chain 已追加的 (current, op_type)，仅决定
+            # 下一跳目标。基于区域类型/结构判据（TernaryRegion.merge_block），
+            # 非指令名特例。
+            if chain:
+                _ternary_for_hop = None
+                for _r in self.regions:
+                    if (isinstance(_r, TernaryRegion)
+                            and _r.merge_block is current
+                            and _r.entry is not None
+                            and _r.entry is not current):
+                        _ternary_for_hop = _r
+                        break
+                if _ternary_for_hop is not None:
+                    _cur_succs = list(current.conditional_successors)
+                    _ft_hop = None
+                    if len(_cur_succs) == 2 and last is not None and last.argval is not None:
+                        _ft_hop = next((s for s in _cur_succs
+                                        if s.start_offset != last.argval), None)
+                    elif len(_cur_succs) >= 1:
+                        _ft_hop = _cur_succs[0]
+                    if (_ft_hop is not None
+                            and _ft_hop.start_offset not in visited):
+                        current = _ft_hop
+                        continue
+                    # Fall-through unavailable or visited — break
+                    break
             # [P5 + Cluster 4 interaction] Ternary as BoolOp `or` operand hop.
             # When `if a or (b if c else d): pass` is compiled, the ternary's
             # cond block (LOAD c, POP_JUMP_IF_FALSE → false_value) appears in

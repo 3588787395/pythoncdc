@@ -14,7 +14,7 @@
 
 ## 遍 1 (Pass 1)
 
-- [ ] P1-IF 第 1 遍 IF 区域完成
+- [x] P1-IF 第 1 遍 IF 区域完成（test_findings.md + fix_report.md 已生成；IF/BOOLOP/TERNARY 回归无退化；无反模式；commit+push 待用户指令）
 - [ ] P1-LOOP 第 1 遍 LOOP 区域完成
 - [ ] P1-TRY 第 1 遍 TRY 区域完成
 - [ ] P1-WITH 第 1 遍 WITH 区域完成

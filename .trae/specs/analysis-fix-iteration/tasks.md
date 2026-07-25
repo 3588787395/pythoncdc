@@ -31,7 +31,7 @@
 
 ## 遍 1 (Pass 1)
 
-- [ ] Pass1-IF: 第 1 遍 IF 区域（轮 1）
+- [x] Pass1-IF: 第 1 遍 IF 区域（轮 1）— T1/T2/T3 完成（test_findings.md + fix_report.md 已生成，IF/BOOLOP/TERNARY 三区域回归无退化）；T4 commit+push 待用户指令
 - [ ] Pass1-LOOP: 第 1 遍 LOOP 区域（轮 2）
 - [ ] Pass1-TRY: 第 1 遍 TRY 区域（轮 3）
 - [ ] Pass1-WITH: 第 1 遍 WITH 区域（轮 4）
