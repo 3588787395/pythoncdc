@@ -4779,6 +4779,15 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
             同型引用（L4767-L4769）。本轮补齐 _identify_try_except_regions
             docstring 同步，与 _generate_try docstring 口径一致。两处均保留
             原 L599-634 引用作历史追溯，追加 [Pass5-TRY]/[Pass6-TRY] 段落校正。
+          - [Pass7-TRY] 同步：原「当前测试矩阵通过率: 100%（try_except 230/230）」
+            表述与实测不符——与 _generate_try docstring 中 [Pass4-TRY] 已校正的
+            同型问题一致。全量 try_except 套件（230 文件）实测为 228 passed /
+            2 skipped（0 failed），2 个 skipped 非「完全匹配」，属测试侧跳过
+            （非反编译器缺陷）。bounded subset 80 文件实测为 80/80 passed
+            （见 Pass6-TRY fix_report 回归记录 `80 0 0 80 2.6 TRY files=80`）。
+            「100% 通过率」应理解为「0 failed」（无字节码不匹配），原表述保留
+            作历史追溯，本段落为口径校正，与 _generate_try docstring [Pass4-TRY]
+            段落口径一致。控制流不变，仅 docstring 文本同步。
            - 本方法遵循区域归约算法 4 核心原则:
              自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口
         """
