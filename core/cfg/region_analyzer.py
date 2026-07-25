@@ -10053,7 +10053,7 @@ RegionType 枚举值: RegionType.ASSERT
              else_blocks → If.orelse
 
         6. 已知失败模式
-           - 当前测试矩阵通过率: 100%（if_region 311/311），无已知失败模式
+           - Pass 1 后 IF 区域识别稳定，bounded subset 仍有 1 处预存失败（见 baseline_failures.txt），非本次引入。
            - 本方法遵循区域归约算法 4 核心原则:
              自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口
         """

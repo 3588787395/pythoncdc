@@ -6630,7 +6630,7 @@ AST 映射规则:
           - JUMP_FORWARD 过滤: then 末尾的跳转到 else/end 不生成源码
           - elif 链结构: orelse 为 [If] 而非 [[If]]，与源码结构一致
           - chained_compare: a < b < c 重建为单个 Compare 而非嵌套 And+Compare
-          - 字节码匹配状态: 100% 完全匹配（if_region 311/311）
+          - 字节码匹配状态: Pass 1 后稳定（bounded subset 79/80，1 处预存失败见 baseline_failures.txt）
           - 本方法遵循区域归约算法 4 核心原则:
             自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口
         """
@@ -7020,37 +7020,44 @@ AST 映射规则:
         # 篡改 region.then_blocks。Pass 2 应将「CC + and/or 短路块」识别阶段统一
         # 为 BoolOpRegion（CC IfRegion 作为 op_chain 元素，通过 entry 引用），
         # 届时删除本调用块与 _detect_boolop_after_chained_compare 实现。
+        # [Pass2-11] 用 save/restore（try/finally）包裹对 region.then_blocks 的本地
+        # 修改与后续 _if_generate_then_branch / _if_generate_elif_chain 调用，确保
+        # 即便本 region 被多次生成也不会看到被改短的 then_blocks（消除生成阶段副作用）。
         # [关键修复] 处理链式比较 + and/or 组合模式
         # 当条件是 "chained_compare and simple_compare" 或 "chained_compare or simple_compare" 时，
         # 区域分析器可能将简单比较块放入 then_blocks，导致生成嵌套 if 而非组合条件。
         # 此修复检测 then_blocks 中的条件块，如果其 false/true target 匹配 elif 条件或 then body，
         # 则将其条件合并到外层条件中。
-        if region.chained_compare_blocks and region.then_blocks and condition:
-            _boolop_extra_cond = self._detect_boolop_after_chained_compare(region)
-            if _boolop_extra_cond is not None:
-                _extra_cond_expr, _extra_cond_block, _boolop_op = _boolop_extra_cond
-                if _boolop_op == 'and':
-                    condition = {
-                        'type': 'BoolOp', 'op': 'and',
-                        'values': [condition, _extra_cond_expr],
-                    }
-                else:  # 'or'
-                    condition = {
-                        'type': 'BoolOp', 'op': 'or',
-                        'values': [condition, _extra_cond_expr],
-                    }
-                self.generated_blocks.add(_extra_cond_block)
-                # 从 then_blocks 中移除该条件块和其清理块
-                _blocks_to_remove = {_extra_cond_block}
-                for b in region.then_blocks:
-                    if b is not _extra_cond_block and all(
-                        s in _blocks_to_remove or s is _extra_cond_block
-                        for s in b.successors
-                    ) and len(b.instructions) <= 2:
-                        _blocks_to_remove.add(b)
-                region.then_blocks = [b for b in region.then_blocks if b not in _blocks_to_remove]
-        then_stmts = self._if_generate_then_branch(region)
-        elif_part = self._if_generate_elif_chain(region)
+        _saved_then_blocks = region.then_blocks
+        try:
+            if region.chained_compare_blocks and region.then_blocks and condition:
+                _boolop_extra_cond = self._detect_boolop_after_chained_compare(region)
+                if _boolop_extra_cond is not None:
+                    _extra_cond_expr, _extra_cond_block, _boolop_op = _boolop_extra_cond
+                    if _boolop_op == 'and':
+                        condition = {
+                            'type': 'BoolOp', 'op': 'and',
+                            'values': [condition, _extra_cond_expr],
+                        }
+                    else:  # 'or'
+                        condition = {
+                            'type': 'BoolOp', 'op': 'or',
+                            'values': [condition, _extra_cond_expr],
+                        }
+                    self.generated_blocks.add(_extra_cond_block)
+                    # 从 then_blocks 中移除该条件块和其清理块
+                    _blocks_to_remove = {_extra_cond_block}
+                    for b in region.then_blocks:
+                        if b is not _extra_cond_block and all(
+                            s in _blocks_to_remove or s is _extra_cond_block
+                            for s in b.successors
+                        ) and len(b.instructions) <= 2:
+                            _blocks_to_remove.add(b)
+                    region.then_blocks = [b for b in region.then_blocks if b not in _blocks_to_remove]
+            then_stmts = self._if_generate_then_branch(region)
+            elif_part = self._if_generate_elif_chain(region)
+        finally:
+            region.then_blocks = _saved_then_blocks
         self._generating_regions.discard(region_id)
         self._generated_regions.add(region_id)
 
