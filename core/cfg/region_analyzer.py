@@ -9398,6 +9398,29 @@ RegionType 枚举值: RegionType.ASSERT
              - 条件块已归属（如位于 IfRegion/LoopRegion 内部）→ 作为该 region
                的 child 挂载并设置 region.parent，体现"嵌套即抽象节点"。
              - message_block 若未被映射则同样映射到本 region。
+   - [Pass9-ASSERT] docstring 同步：上述「Step 4 / Step 5」表述仅描述理想化
+     语义，与实际控制流存在两处口径差异（不改控制流，仅补记）：
+     (a) Step 4 表述为「检查任一非自身条件后继块是否包含 LOAD_ASSERTION_ERROR
+         指令」，但实际代码（grep `_reach_assertion_error_block(succ)` 在本文件
+         仅 1 处命中，L9489，[Round4-12] 修复）使用 `_reach_assertion_error_block`
+         做**可达性遍历**——链式比较 assert (`assert 0 < a < 10`) 的第一段
+         COMPARE_OP 块的两个后继为「继续链」与「跳到 POP_TOP 中转块」，后者经
+         单后继 fall-through 才到达 LOAD_ASSERTION_ERROR 块；直接后继只看一层
+         会漏识别。即 Step 4 实际判据是「后继可达 LOAD_ASSERTION_ERROR 块」
+         而非「后继本身含 LOAD_ASSERTION_ERROR 指令」。
+     (b) Step 5 表述为「查找包含 RAISE_VARARGS 的块作为 message_block」，但
+         实际代码（grep `mb = self._find_assertion_error_block(succ)` 在本文件
+         仅 1 处命中，L9511）主路径使用 `_find_assertion_error_block` 查找
+         **LOAD_ASSERTION_ERROR 块**（[R8 fix]，注释说明对 ternary/complex
+         message 场景 `assert x, (a if c else b)` LOAD_ASSERTION_ERROR 块是
+         TernaryRegion 入口），RAISE_VARARGS walk (`_reach_raise_varargs_block`)
+         仅作 [Pass5-ASSERT] 已标记的 Fallback 兜底路径。即 Step 5 实际主路径
+         查找的是 LOAD_ASSERTION_ERROR 块而非 RAISE_VARARGS 块，原表述未提及
+         主路径 / Fallback 二段式结构与 [R8 fix] / [Round4-12] 修复。
+     原表述可能误导读者认为 Step 4 是直接指令检查、Step 5 是直接 RAISE_VARARGS
+     查找。本轮仅补记差异，不重写「Step 4 / Step 5」列表（与 Pass9-IF / Pass9-MATCH
+     同型保守策略一致，采用 grep 验证方式避免行号漂移）。控制流不变，仅 docstring
+     文本同步。
 
 2. 字节码模式（CPython 编译器行为）
    模式 A: 基本断言
