@@ -11927,7 +11927,9 @@ AST 映射规则:
                     succ_frontier = next_frontier
         return False
 
-    def _if_generate_branch_stmts(self, blocks=None, _depth=0, region=None):
+    def _if_generate_branch_stmts(self, blocks=None, region=None):
+        # [Pass3-IF] 移除原 `_depth=0` 形参：函数体从未引用，3 处调用点
+        # (line 3203/3941/6600) 也均未传入。属无副作用死代码删除。
         if region is not None:
             return self._generate_if(region)
         if blocks is not None:
