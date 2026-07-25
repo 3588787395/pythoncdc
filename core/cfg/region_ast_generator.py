@@ -2998,6 +2998,13 @@ AST 映射规则:
         # region.init_blocks / self.generated_blocks / self.generated_offsets /
         # pre_stmts，从未修改 region.metadata，故本行重赋值恒为 no-op。
         # 删除后行为完全等价（保留作 Build iterator expression 段落起始锚点）。
+        # [Pass9-LOOP] 同步：Pass8-LOOP 写入后经 Pass8-ASSERT 在 L2507 处插入
+        # [Pass8-ASSERT] 标记段落（位于本函数 _loop_generate_for 之前），使本函数
+        # 整体一致下移 +8——`for_iter_setup` 首次赋值现实际位于 L2983（原 L2975），
+        # `if region.init_blocks:` 块现 L2985-L2993（原 L2977-L2987）。原 Pass8-LOOP
+        # 引用 L2975/L2987 为写入时快照，已过时。为避免递归漂移，本轮起改用 grep
+        # 验证方式描述：grep `for_iter_setup = region.metadata.get` 在本文件仅 1 处
+        # 命中（紧邻本注释段上方）。控制流不变，仅注释文本同步。
         iter_expr = None
         _ternary_for_iter = False
         for r in self.region_analyzer.regions:
