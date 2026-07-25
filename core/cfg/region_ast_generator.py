@@ -25132,6 +25132,19 @@ AST 映射规则:
             类失败（test 侧引用未定义名，属测试基础设施问题）；(b)
             basic/test_b23yieldfrom_complex 的嵌套 code object 指令数不匹配。
             原 docstring 声称「100% 完全匹配（basic 122/122），无遗留」与实测矛盾，已同步。
+          - [Pass8-SEQ] 同步：原「截至 Pass 03: 127p/10f/137」表述中的数字与
+            当前实测一致——SEQ bounded subset 80 文件实测自 Pass 03 起持续为
+            127 passed / 10 failed / 0 errors / 137 总计（Pass7-SEQ fix_report
+            回归记录 `127 10 0 137 1.7 SEQ files=80`，与本 docstring 原
+            「Pass 03: 127p/10f/137」口径一致）。原表述仅引用 Pass 03 时点状态、
+            未说明 Pass 4-7 期间无回归变化，可能误读为「Pass 03 后状态已变」。
+            本段落校正口径：Pass 3-7 期间持续 127p/10f/137，无新增失败亦无失败消除；
+            10 例预存失败分两类：(a) L1_basic 子目录 NameError 类（测试基础设施问题，
+            非反编译器问题）；(b) basic/test_b23yieldfrom_complex 嵌套 code object
+            指令数不匹配，非保守修复范围（与 Pass7-SEQ §未完成项 7 同源）。
+            与 Pass3-BOOLOP 在 `_generate_boolop` docstring / Pass8-TERNARY 在
+            `_generate_ternary` docstring 中追加同步测试状态段落同型。控制流不变，
+            仅 docstring 文本同步。
         """
         stmts = []
         for block in sorted(region.blocks, key=lambda b: b.start_offset):
