@@ -14744,45 +14744,15 @@ AST 映射规则:
                                 else:
                                     _new_items.append((_ctx_instrs, _tgt))
                             region.items = _new_items
-                # [Round5-08] 当 SEND/YIELD 循环未被识别为 LoopRegion 时，
-                # _async_body_blocks 为空，上面的 target 检测不会触发。此时回退
-                # 到 region.with_blocks[0]（async with 的 body 入口块，即 SEND
-                # 跳出后的目标块）查找首条 STORE_* 指令作为 `as x` 绑定变量。
-                # 字节码模式：BEFORE_ASYNC_WITH → GET_AWAITABLE → SEND/YIELD 循环
-                # → SEND 跳出目标块 → [STORE_FAST x（as 绑定）| POP_TOP（无 as）] → body。
-                #
-                # [Round5-08 根因修复] 与 early pass 同理: 仅检查 with_blocks 中
-                # start_offset 最小的块（SEND 跳出目标块），不遍历所有 with_blocks，
-                # 避免误将 body 内赋值（如 ternary merge 的 STORE_FAST y）当作 `as x`。
-                # [Pass 2 注] 本块与主循环前的 early pass（_generate_with 入口处）
-                # 逻辑等价：均取 with_blocks 中 start_offset 最小块、查首条非噪声
-                # 指令是否为 STORE_*。early pass 已无条件执行，故本块仅在 early pass
-                # 未设 target 时进入；执行相同检测必得相同结果——冗余兜底，已知
-                # 反模式，待归约期统一 async-with target 检测后消除。
-                if region.target is None and region.is_async:
-                    _wb_blocks = sorted(
-                        (b for b in getattr(region, 'with_blocks', []) or []),
-                        key=lambda b: b.start_offset,
-                    )
-                    if _wb_blocks:
-                        _wb_first_block = _wb_blocks[0]
-                        _wb_first = None
-                        for _instr in _wb_first_block.instructions:
-                            if _instr.opname not in ('RESUME', 'NOP', 'CACHE'):
-                                _wb_first = _instr
-                                break
-                        if _wb_first and _wb_first.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
-                            _async_target = _wb_first.argval
-                    if _async_target:
-                        region.target = _async_target
-                        if region.items:
-                            _new_items = []
-                            for _ctx_instrs, _tgt in region.items:
-                                if _tgt is None:
-                                    _new_items.append((_ctx_instrs, _async_target))
-                                else:
-                                    _new_items.append((_ctx_instrs, _tgt))
-                            region.items = _new_items
+                # [Pass3-WITH] 删除原 L14747-L14785 冗余兜底块（24 行 + 10 行注释）。
+                # 该块与主循环前的 early pass（L14312-L14336）逻辑等价：均取
+                # region.with_blocks 中 start_offset 最小块、查首条非噪声指令是否
+                # 为 STORE_*。region.with_blocks 在 _generate_with 内未被修改，
+                # early pass 已无条件执行——若 early pass 设了 target，本块条件
+                # `region.target is None` 为假不进入；若 early pass 未设 target
+                # （with_blocks[0] 首条非噪声非 STORE_*），本块同检测必得同结果
+                # （target 仍为 None）。故本块无可观测副作用，属死代码删除。
+                # 待归约期统一 async-with target 检测后，early pass 亦可一并消除。
                 for _abb in sorted(_async_body_blocks, key=lambda b: b.start_offset):
                     if _abb in self.generated_blocks:
                         continue
