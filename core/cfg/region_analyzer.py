@@ -11739,9 +11739,17 @@ RegionType 枚举值: RegionType.ASSERT
                     # 不在删除死代码/同步 docstring/标记反模式三类仅做清单内" deferred。
                     # 本轮仅添加注释标记，不改变控制流；待后续 Pass 以"重复代码消除"
                     # 名义统一替换（需同步评估 frozenset 与 tuple 的 `in` 语义等价性）。
+                    # [Pass5-TERNARY] 已完成 Pass 4 deferred 的「重复代码消除」替换：
+                    # 下方两处 `('RETURN_VALUE', 'RETURN_CONST')` 字面量已替换为
+                    # `RETURN_TERMINATOR_OPS` 模块级常量（L54 frozenset）。
+                    # 语义等价性验证：`x in tuple` 与 `x in frozenset` 均为成员检测，
+                    # 当 x 为 hashable 字符串时两者语义完全等价（frozenset 略快 O(1)，
+                    # 但 2 元素差异可忽略）。本函数外 L12204/L12216/L12259 等已使用
+                    # RETURN_TERMINATOR_OPS，本替换使 _is_ternary_block 与之一致。
+                    # 控制流不变——`in` 判据的 True/False 结果在替换前后完全一致。
                     if fallthrough is not None:
                         ft_last = fallthrough.get_last_instruction()
-                        if ft_last and ft_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                        if ft_last and ft_last.opname in RETURN_TERMINATOR_OPS:
                             return False
             if not (self._is_single_expression_block(succs[0]) and
                     self._is_single_expression_block(succs[1])):
@@ -11749,7 +11757,7 @@ RegionType 枚举值: RegionType.ASSERT
             for s in succs:
                 if len(s.conditional_successors) >= 2:
                     if all(cs.get_last_instruction() is not None and
-                           cs.get_last_instruction().opname in ('RETURN_VALUE', 'RETURN_CONST')
+                           cs.get_last_instruction().opname in RETURN_TERMINATOR_OPS
                            for cs in s.conditional_successors):
                         return False
             return True
