@@ -12083,6 +12083,11 @@ AST 映射规则:
 
         # [Pass 2 标记] 4 并列启发式（is_child / is_in_try_blocks / is_before_try_start /
         # handler_in_range）待统一为区间包含判据，符合原则 3「嵌套即区间包含」。
+        # [Pass10-TRY] 注释同步：上述「待统一」未指明时限，实际截至 Pass 9 仍未统一
+        # （Pass9-TRY 报告「未完成项 2」明确记录「_generate_try_body 4 并列启发式
+        # （is_child / is_in_try_blocks / is_before_try_start / handler_in_range）
+        # 仍挂账 Pass 3+，待统一为区间包含判据」）。本轮不重构（需统一区间判据后
+        # 改造），仅补记口径漂移，控制流不变。
         nested_try_regions = []
         for r in self.region_analyzer.regions:
             if isinstance(r, TryExceptRegion) and r is not region:
