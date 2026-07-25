@@ -2363,7 +2363,11 @@ AST 映射规则:
         返回: Compare dict 或 None（操作数提取失败时）。
         """
         all_blocks = [cond_block] + list(chain_blocks)
-        if not all_blocks or cond_block is None:
+        # [Pass3-ASSERT] 简化死判据：原 `if not all_blocks or cond_block is None:`
+        # 中 `not all_blocks` 永假——all_blocks = [cond_block] + list(chain_blocks)
+        # 至少含 cond_block 一个元素（即便 cond_block 为 None，列表仍非空）。
+        # 真正起作用的是 `cond_block is None` 守卫，简化为单一判据。控制流等价。
+        if cond_block is None:
             return None
         if not ops or len(ops) < 2:
             return None
