@@ -11949,7 +11949,7 @@ AST 映射规则:
                     succ_frontier = next_frontier
         return False
 
-    def _if_generate_branch_stmts(self, blocks=None, region=None):
+    def _if_generate_branch_stmts(self, blocks=None):
         # [Pass3-IF] 移除原 `_depth=0` 形参：函数体从未引用，3 处调用点
         # (line 3203/3941/6600) 也均未传入。属无副作用死代码删除。
         # [Pass4-IF] 同步：经多轮 Pass 3 修改后，3 处调用点行号已下移至
@@ -11965,10 +11965,18 @@ AST 映射规则:
         # 本轮仅添加标记注释，不删除形参/不删除分支（删除形参需评估 _process_if_blocks
         # 第二位置参数语义，超出保守范围）。后续 Pass 可在确认 _process_if_blocks
         # 接受 region=None 后统一删除 region 形参与两个不可达分支。
-        if region is not None:
-            return self._generate_if(region)
+        # [Pass6-IF] 完成 Pass5-IF deferred 的死形参与不可达分支删除：
+        # 1. 删除 `region=None` 形参（3 处调用点 line 3211/3949/6607 均不传 region=）
+        # 2. 删除 `if region is not None: return self._generate_if(region)` 不可达分支
+        # 3. `_process_if_blocks(blocks, None, branch='standalone')` 与原
+        #    `_process_if_blocks(blocks, region, branch='standalone')` 语义等价
+        #    （region 恒为 None，_process_if_blocks L10477 `if region and hasattr(...)`
+        #    短路为 False，行为一致）
+        # 4. 控制流不变：region 在原函数中恒为 None，所有分支行为与原版完全一致
+        # 验证：grep `_if_generate_branch_stmts\(` 全仓仅 3 处调用点 + 本定义处，
+        # 3 处调用点均仅传入 blocks 位置参数。
         if blocks is not None:
-            stmts = self._process_if_blocks(blocks, region, branch='standalone')
+            stmts = self._process_if_blocks(blocks, None, branch='standalone')
             return self._coalesce_compares(stmts)
         return []
 
