@@ -16334,6 +16334,25 @@ RegionType 枚举值: RegionType.ASSERT
              矛盾，已同步。baseline.txt 的「128 9 137」记录亦已过时。
            - 兜底归约确保任何未被结构化识别的块都能进入 AST，无遗漏
            - 与结构化区域无冲突（结构化区域已在 Phase 1/Phase 2 先识别并抢占块）
+
+           [Pass9-SEQ] 同步：上述「截至 Pass 03: 127p/10f/137」表述仅引用 Pass 03
+           时点状态、未说明 Pass 4-8 期间无回归变化，可能误读为「Pass 03 后状态
+           已变」。与 Pass8-SEQ 在 `_generate_basic_region` docstring
+           （region_ast_generator.py）中对同型「截至 Pass 03: 127p/10f/137」表述
+           追加 [Pass8-SEQ] 校正段落同型——对称缺失。实际口径：SEQ bounded subset
+           80 文件实测自 Pass 03 起持续为 127 passed / 10 failed / 0 errors / 137
+           总计（Pass8-SEQ fix_report 回归记录 `127 10 0 137 1.7 SEQ files=80`，
+           与本 docstring 原「Pass 03: 127p/10f/137」口径一致）。Pass 3-8 期间
+           持续 127p/10f/137，无新增失败亦无失败消除。10 例预存失败分两类：
+           (a) L1_basic 子目录 NameError 类（测试基础设施问题，非反编译器缺陷）；
+           (b) basic/test_b23yieldfrom_complex 嵌套 code object 指令数不匹配，
+           非保守修复范围（与 Pass8-SEQ §未完成项 7 同源）。与 Pass7-TRY 在
+           `_identify_try_except_regions` docstring 中追加 [Pass7-TRY] 段落校正
+           同型「100% 通过率」表述（对称于 _generate_try [Pass4-TRY]）/ Pass9-TERNARY
+           在 `_identify_ternary_regions` docstring 中追加 [Pass9-TERNARY] 段落
+           校正同型「截至 Pass 01」表述（对称于 _generate_ternary [Pass8-TERNARY]）
+           同型保守策略。原表述保留作历史追溯，本段落为口径校正。控制流不变，仅
+           docstring 文本同步。
         """
         regions = []
         for block in self.cfg.get_blocks_in_order():
