@@ -13275,9 +13275,13 @@ AST 映射规则:
         _is_except_star_block = any(i.opname in ('CHECK_EG_MATCH', 'PREP_RERAISE_STAR') for i in block.instructions)
         _EXC_STAR_FRAMEWORK_OPS = ()
         if _is_except_star_block:
-            # except* 框架指令：BUILD_LIST, SWAP, LIST_APPEND, PREP_RERAISE_STAR,
-            # COPY（在 CHECK_EG_MATCH/PREP_RERAISE_STAR 上下文中）,
-            # POP_JUMP_FORWARD_IF_NONE/POP_JUMP_FORWARD_IF_NOT_NONE（分派跳转）
+            # [Pass3-TRY] 同步注释与代码：下方元组仅含 4 个 op（BUILD_LIST /
+            # LIST_APPEND / PREP_RERAISE_STAR / SWAP）。COPY 与
+            # POP_JUMP_*_IF_NONE/IF_NOT_NONE 同属 except* 框架指令，但不在
+            # 本元组内——COPY 在下方 `_is_except_star_block` 分支单独过滤
+            # (handler_instrs = [i for i in handler_instrs if i.opname != 'COPY'])，
+            # POP_JUMP_*_IF_NONE/IF_NOT_NONE 由 exc_dispatch_jump_offset 路径
+            # （基于 offset 截断 handler_instrs）统一处理。
             _EXC_STAR_FRAMEWORK_OPS = ('BUILD_LIST', 'LIST_APPEND', 'PREP_RERAISE_STAR', 'SWAP')
         handler_instrs = [i for i in block.instructions
                           if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
