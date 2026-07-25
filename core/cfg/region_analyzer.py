@@ -7687,7 +7687,8 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
            - 归约阶段: Phase 1（在 TRY/WITH 之后，LOOP/IF 之前）
            - 识别策略: 双相位扫描。Phase 1 检测结构型模式（MATCH_* 操作码），
              Phase 2 通过 _scan_literal_match_subjects 检测字面量模式（COPY + COMPARE_OP/IS_OP）。
-             两种形态共用 _mr_collect_case_body 沿条件跳转链收集 case 块。
+             结构型形态通过 _mr_collect_case_body 沿条件跳转链收集 case 块；
+             字面量形态在 _scan_literal_match_subjects 内联收集 case 块（不调用 _mr_collect_case_body）。
            - 归约过程:
              Step 1: 扫描 MATCH_MAPPING/MATCH_KEYS/MATCH_CLASS/MATCH_SEQUENCE 指令定位结构型 match。
              Step 2: _scan_literal_match_subjects 检测字面量 match（COPY+COMPARE_OP 模式）。
@@ -9093,8 +9094,6 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                 case_bodies_l.append(sorted(body_set, key=lambda b: b.start_offset))
                 current = jt
             if not case_blocks_l:
-                continue
-            if len(case_blocks_l) < 1:
                 continue
             merge_block = self._mr_compute_case_merge(case_bodies_l)
             if merge_block is None and merge_candidates:
