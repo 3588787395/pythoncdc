@@ -4086,9 +4086,15 @@ AST 映射规则:
 
         child_info = self._loop_collect_child_regions(region)
 
-        pre_stmts = self._loop_generate_pre_stmts(region, body_stmts)
-        if pre_stmts:
-            body_stmts.extend(pre_stmts)
+        # [Pass4-LOOP] 移除原 `pre_stmts = self._loop_generate_pre_stmts(...)` 后
+        # 的 `if pre_stmts: body_stmts.extend(pre_stmts)` 死代码块：
+        # `_loop_generate_pre_stmts` 内部 `pre_stmts` 局部变量初始化为 `[]` 后
+        # 从未被 append/extend（实际副作用是 `body_stmts.extend(_pre_stmts)`，
+        # 注意 `_pre_stmts` 与 `pre_stmts` 是不同标识符），故函数始终返回 `[]`。
+        # 调用点的 `if pre_stmts:` 永假，`body_stmts.extend(pre_stmts)` 永不执行，
+        # 属无副作用死代码。函数调用的副作用（修改 body_stmts）保留不变。
+        # 同时移除已无引用的 `pre_stmts = ...` 赋值（grep 确认无其他引用）。
+        self._loop_generate_pre_stmts(region, body_stmts)
 
         body_blocks_no_header: List[BasicBlock] = []
         natural_back_edge = child_info['natural_back_edge']
