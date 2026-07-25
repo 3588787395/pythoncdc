@@ -16012,7 +16012,12 @@ RegionType 枚举值: RegionType.ASSERT
                trailing_return_none 标记 → 控制 Return None 是否省略
 
         6. 已知失败模式
-           - BASIC: 当前测试矩阵通过率 100%（basic 122/122）
+           - BASIC: SEQ 套件存在已知失败（截至 Pass 03: 127p/10f/137，有界子集
+             80 文件）。失败用例分两类：(a) L1_basic 子目录的 NameError 类失败
+             （test 侧引用未定义名，属测试基础设施问题，非反编译器缺陷）；
+             (b) basic/test_b23yieldfrom_complex 的嵌套 code object 指令数不匹配
+             （字节码重建差异）。原 docstring 声称「100%（basic 122/122）」与实测
+             矛盾，已同步。baseline.txt 的「128 9 137」记录亦已过时。
            - 兜底归约确保任何未被结构化识别的块都能进入 AST，无遗漏
            - 与结构化区域无冲突（结构化区域已在 Phase 1/Phase 2 先识别并抢占块）
         """

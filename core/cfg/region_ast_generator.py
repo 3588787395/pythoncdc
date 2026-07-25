@@ -24898,7 +24898,11 @@ AST 映射规则:
           - trailing_return_none 标记由识别阶段设置，本方法不直接消费，
             而是由下游 Pass/Return 处理逻辑决定是否省略（模块级别隐式
             return None 不应出现在最终 AST 中）。
-          - 字节码一致性状态：100% 完全匹配（basic 122/122），无遗留。
+          - 字节码一致性状态：SEQ 套件存在已知失败（截至 Pass 03: 127p/10f/137，
+            有界子集 80 文件）。失败用例分两类：(a) L1_basic 子目录的 NameError
+            类失败（test 侧引用未定义名，属测试基础设施问题）；(b)
+            basic/test_b23yieldfrom_complex 的嵌套 code object 指令数不匹配。
+            原 docstring 声称「100% 完全匹配（basic 122/122），无遗留」与实测矛盾，已同步。
         """
         stmts = []
         for block in sorted(region.blocks, key=lambda b: b.start_offset):
