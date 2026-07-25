@@ -7059,6 +7059,7 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
 
     def _extend_with_body_end(self, body_start, initial_end, exc_entry):
         exc_target = exc_entry.get('target', 0) if exc_entry else 0
+        exc_depth = exc_entry.get('depth', 0) if exc_entry else 0
         max_end = initial_end
         for entry in self.cfg.exception_table:
             e_start = entry.get('start', 0)
@@ -7079,15 +7080,38 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                     break
             if not _has_async_exit_protocol:
                 max_end = exc_target
+        # [R24-C6] 区域归约算法原则 3（嵌套即抽象节点）+ 原则 1（自底向上归约）：
+        # 当外层 with body 内含嵌套 with 时，嵌套 with 的 __exit__ 调用块
+        # （_is_with_exit_cleanup 检测）和 WITH_EXCEPT_START handler 块
+        # 位于外层 with body 范围内，但【不属于】外层 with 的清理路径。
+        # 若在此处收缩 max_end，会切断外层 with body（丢失嵌套 with 之后
+        # 的语句，如 `return data + fb.read()`），违反「嵌套即抽象节点」
+        # （嵌套 with 应作为单抽象节点留在父 body 中，父 body 应延伸至
+        # 父自身的 handler）。
+        # 结构性判据（非实例特征）：若 body_start 与当前块之间存在更深的
+        # 异常表条目（depth > exc_depth），说明当前块处于嵌套构造内
+        # （嵌套 with 的清理/handler），应跳过而非收缩。镜像 _find_next_with_block
+        # 中以 depth 区分多上下文与独立 with 的结构性判据。
         for block in self.cfg.get_blocks_in_order():
             if block.start_offset < initial_end:
                 continue
             if block.start_offset >= max_end:
                 break
-            if self._is_with_exit_cleanup(block):
-                max_end = min(max_end, block.start_offset)
-                break
-            if any(i.opname == 'WITH_EXCEPT_START' for i in block.instructions):
+            if self._is_with_exit_cleanup(block) or any(
+                i.opname == 'WITH_EXCEPT_START' for i in block.instructions
+            ):
+                has_nested = False
+                for entry in self.cfg.exception_table:
+                    e_start = entry.get('start', 0)
+                    e_end = entry.get('end', 0)
+                    e_depth = entry.get('depth', 0)
+                    if (e_start >= body_start
+                            and e_end <= block.start_offset
+                            and e_depth > exc_depth):
+                        has_nested = True
+                        break
+                if has_nested:
+                    continue
                 max_end = min(max_end, block.start_offset)
                 break
         return max_end
@@ -7504,10 +7528,17 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
         """从with入口块中提取上下文表达式和目标变量。
 
         反编译逻辑：
-        1. 指令收集：将所有入口块的指令按顺序拼接
-        2. 定位BEFORE_WITH：找到所有BEFORE_WITH/BEFORE_ASYNC_WITH指令位置
-        3. 提取上下文表达式：对每个BEFORE_WITH，从上一个BEFORE_WITH（或块起始）
-           到当前BEFORE_WITH之间的LOAD/CALL类指令构成上下文表达式
+        1. 指令收集：将所有入口块的指令按顺序拼接，同时记录每条指令所属块
+           是否为入口块（entry_blocks[0]）以及该块是否在 BEFORE_WITH 之前
+           含 body 代码（_has_body_code_before_before_with）。
+        2. 定位BEFORE_WITH：找到所有BEFORE_WITH/BEFORE_ASYNC_WITH指令位置。
+           [R24-C6] 跳过【非入口块】且含 body 代码的块中的 BEFORE_WITH —
+           该 BEFORE_WITH 属于嵌套 with，不是当前 with 的上下文。
+        3. 提取上下文表达式：对每个 BEFORE_WITH，从【上一条 STORE/POP_TOP】
+           （或上一条 BEFORE_WITH，取更后者）到当前 BEFORE_WITH 之间的
+           LOAD/CALL 类指令构成上下文表达式。[R24-C6] 以 STORE 为边界，
+           排除上下文之间的 body 代码（如 `data = fa.read()`），保留嵌套
+           with 入口块中最后一段上下文表达式。
         4. 提取目标变量：BEFORE_WITH之后紧跟的STORE_*指令的argval即为目标变量名
            （若无STORE则为POP_TOP，对应 `with ctx:` 无as子句的情况）
         5. 设置region.items和region.target
@@ -7524,6 +7555,18 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
         - 目标变量为None时表示无as子句
         - 多目标 as 绑定（with ctx as (a, b)）的 target 以 AST 字典形式
           （{'type': 'Tuple', 'elts': [...]}）表示，单目标为字符串名
+
+        [R24-C6 算法合规性] 区域归约算法原则 3（嵌套即抽象节点）+ 原则 2（每块唯一归属）：
+        当 with_entry_blocks 中的【非入口块】在 BEFORE_WITH 之前含 body 代码时
+        （_has_body_code_before_before_with 返回 True），该 BEFORE_WITH 属于
+        嵌套 with 而非当前 with 的上下文列表。结构性判据：
+          - 多上下文 with 的上下文表达式在字节码中连续，无 body 代码穿插
+          - 当 body 代码出现在两个 BEFORE_WITH 之间时，后者属于嵌套 with
+        镜像 _find_next_with_block 中已使用的 _has_body_code_before_before_with
+        结构性判据（防止嵌套 with 被误并为外层 with 的上下文）。入口块
+        （entry_blocks[0]）的 BEFORE_WITH 是当前 with 的【第一个】上下文，
+        即使含 body 代码（如 with body 内嵌套 with 的场景），也必须保留；
+        此时上下文表达式从最后一条 STORE 之后开始提取，排除 body 代码。
         """
         import dis
         items = []
@@ -7531,23 +7574,44 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
             region.items = items
             return
         instructions = []
-        for entry_block in entry_blocks:
+        # [R24-C6] 并行数组：每条指令所属块是否为入口块、该块是否含 body 代码
+        instr_is_from_entry = []
+        instr_blk_has_body_before_bw = []
+        for blk_idx, entry_block in enumerate(entry_blocks):
+            is_entry = (blk_idx == 0)
+            has_body_before_bw = self._has_body_code_before_before_with(entry_block)
             for instr in entry_block.instructions:
                 instructions.append(instr)
-        
-        # 收集所有 BEFORE_WITH 指令的位置
+                instr_is_from_entry.append(is_entry)
+                instr_blk_has_body_before_bw.append(has_body_before_bw)
+
+        # 收集所有 BEFORE_WITH 指令的位置，跳过属于嵌套 with 的 BEFORE_WITH
+        # [R24-C6] 非入口块 + 含 body 代码 → 该 BEFORE_WITH 属于嵌套 with，跳过
         bw_positions = []
         for i, instr in enumerate(instructions):
             if instr.opname in ('BEFORE_WITH', 'BEFORE_ASYNC_WITH'):
+                if (not instr_is_from_entry[i]) and instr_blk_has_body_before_bw[i]:
+                    continue
                 bw_positions.append(i)
-        
+
         # 对于每个 BEFORE_WITH，收集它之前的上下文表达式
         for idx, bw_pos in enumerate(bw_positions):
-            # 找到这个 BEFORE_WITH 之前的上下文表达式
-            # 查找上一个 BEFORE_WITH 的位置，或者 0
-            prev_bw_pos = bw_positions[idx - 1] if idx > 0 else -1
-            start_search = prev_bw_pos + 1
-            
+            # [R24-C6] 从【上一条 STORE/POP_TOP】之后开始搜索，排除上下文之间
+            # 的 body 代码（如 `data = fa.read()`）。对多上下文 with，上一条
+            # STORE 是上一条 BEFORE_WITH 的 target，效果等价于旧行为（从上一条
+            # BEFORE_WITH 之后开始）；对嵌套 with 入口块，上一条 STORE 是 body
+            # 代码的最后一条赋值，跳过 body 代码保留最后一段上下文表达式。
+            start_search = 0
+            for j in range(bw_pos - 1, -1, -1):
+                if instructions[j].opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF', 'POP_TOP'):
+                    start_search = j + 1
+                    break
+            # 同时考虑上一条 BEFORE_WITH 作为边界（取更后者）
+            if idx > 0:
+                prev_bw_pos = bw_positions[idx - 1]
+                if prev_bw_pos + 1 > start_search:
+                    start_search = prev_bw_pos + 1
+
             # 从 start_search 到 bw_pos 之间提取上下文表达式
             ctx_expr = []
             i = start_search
@@ -7566,7 +7630,7 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                                    'UNPACK_SEQUENCE', 'IS_OP', 'CONTAINS_OP'):
                     ctx_expr.append(instr)
                 i += 1
-            
+
             # 查找目标变量（在 BEFORE_WITH 之后的 STORE 或 UNPACK_SEQUENCE）
             target = None
             if bw_pos + 1 < len(instructions):
@@ -11944,14 +12008,39 @@ RegionType 枚举值: RegionType.ASSERT
                 # succ 是 AssertRegion.entry（典型 if-then-assert：then 是 assert，
                 # else 是下一条语句），才拒绝 ternary；两个 succ 均是 AssertRegion.entry
                 # 时（ternary 两 value 均含 assert 检查），允许 ternary 识别。
-                _assert_entry_succ_count = 0
+                #
+                # [R24-C8 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3（嵌套即抽象节点）：
+                # 当 if 头块的【两个】直接后继都是 AssertRegion.entry 时，需区分两种
+                # 结构性不同的模式：
+                #   (A) `assert (a if c else b), 'msg'` — 单条 assert，ternary 的两个
+                #       value 块各自含 POP_JUMP_IF_TRUE 检查，二者共享同一个
+                #       message_block（LOAD_ASSERTION_ERROR + msg + RAISE_VARARGS）。
+                #       此模式 MUST 允许 ternary 识别（ternary 是 assert 条件本身）。
+                #   (B) `if cond: assert A, msg_a / elif cond2: assert B, msg_b / else:
+                #       assert C, msg_c` — 多条独立 assert 语句分布在不同 if 分支，
+                #       每个 AssertRegion 有【不同的】message_block。此模式 MUST 拒绝
+                #       ternary（if-elif-else 是语句级语义，assert 是分支体）。
+                # 判据基于 message_block 的共享关系（结构性属性，非实例特征）：
+                # 两 AssertRegion 共享同一 message_block → 单 assert 含 ternary → 允许；
+                # 两 AssertRegion 拥有不同 message_block → 多 assert 分支 → 拒绝。
+                # 镜像 R22-C3 的 _else_has_external_pred 结构性判据。
+                _assert_entry_succs: List[AssertRegion] = []
                 for _succ in block.conditional_successors:
                     _succ_r = self.block_to_region.get(_succ)
                     if (isinstance(_succ_r, AssertRegion)
                             and _succ == _succ_r.entry):
-                        _assert_entry_succ_count += 1
+                        _assert_entry_succs.append(_succ_r)
+                _assert_entry_succ_count = len(_assert_entry_succs)
                 if _assert_entry_succ_count == 1:
                     return False
+                if _assert_entry_succ_count == 2:
+                    _ar_a, _ar_b = _assert_entry_succs[0], _assert_entry_succs[1]
+                    _mb_a = _ar_a.message_block
+                    _mb_b = _ar_b.message_block
+                    # 共享 message_block → 单 assert 含 ternary（模式 A）→ 允许
+                    # 不同 message_block → 多 assert 分支（模式 B）→ 拒绝
+                    if _mb_a is not None and _mb_b is not None and _mb_a is not _mb_b:
+                        return False
                 for succ in block.conditional_successors:
                     succ_region = self.block_to_region.get(succ)
                     if isinstance(succ_region, LoopRegion):

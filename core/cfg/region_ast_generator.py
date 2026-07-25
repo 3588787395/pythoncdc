@@ -10081,7 +10081,91 @@ AST 映射规则:
         # （排除 NONE_CHECK_OPS，那是 `is None/is not None` 测试，非 BoolOp 短路；
         # 掠除 chained compare middle，JUMP_IF_*_OR_POP 由 R16-06 下方处理）。
         # op 判定：IF_TRUE → `or`（短路执行体），IF_FALSE → `and`（短路跳过体）。
+        # [R24-C1 fix] 区域归约算法原则 3（嵌套即抽象节点）+ 原则 4（父引用子入口）：
+        # 在 BoolOp 短路判据之前，先检测「嵌套三元作 if 条件」模式（如
+        # `if (a if (b if c else d) else e): pass`）。编译器将内层三元 `b if c else d`
+        # 的真值测试与外层三元的值加载融合：内层三元的 tvb/fvb 末尾是 POP_JUMP_IF_FALSE
+        # → 外层 false 值块（LOAD e），与 BoolOp `and` 的「POP_JUMP_IF_FALSE → false 出口」
+        # 字节码模式相似，但语义完全不同。结构性判据（非实例特征）：
+        #   - 嵌套三元模式：cond_block（=ternary_for_cond.merge_block）同时是【另一个】
+        #     TernaryRegion 的 true_value_block 或 false_value_block（外层 true/false
+        #     值的加载块）。BoolOp `and` 模式中 cond_block 仅为 ternary 的 merge_block，
+        #     没有其他 ternary 以 cond_block 为 tvb/fvb。
+        # 误判为 BoolOp 会丢失外层三元的 orelse 值（生成 `(b if c else d) and a`
+        # 而非 `a if (b if c else d) else e`），违反「嵌套即抽象节点」。
+        # 修复：检测此模式时，构建完整嵌套三元 IfExp(test=内层三元, body=外层true值,
+        # orelse=外层false值) 作为 if 条件。
         if isinstance(ternary_for_cond, TernaryRegion):
+            _c1_inner_tr = None
+            _c1_inner_is_outer_true = False
+            for _c1_r in self.regions:
+                if (isinstance(_c1_r, TernaryRegion)
+                        and _c1_r is not ternary_for_cond
+                        and _c1_r.entry is not None):
+                    if _c1_r.true_value_block is cond_block:
+                        _c1_inner_tr = _c1_r
+                        _c1_inner_is_outer_true = True
+                        break
+                    if _c1_r.false_value_block is cond_block:
+                        _c1_inner_tr = _c1_r
+                        _c1_inner_is_outer_true = False
+                        break
+            if _c1_inner_tr is not None:
+                # test = 内层三元（从 ternary_for_cond 的 cond/tvb/fvb 重建）
+                _c1_occ = [i for i in ternary_for_cond.condition_block.instructions
+                           if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                _c1_occl = ternary_for_cond.condition_block.get_last_instruction()
+                if _c1_occl and _c1_occl.opname in (FORWARD_CONDITIONAL_JUMP_OPS
+                                                     | BACKWARD_CONDITIONAL_JUMP_OPS
+                                                     | SHORT_CIRCUIT_JUMP_OPS):
+                    _c1_occ = [i for i in _c1_occ if i != _c1_occl]
+                _c1_oce = self.expr_reconstructor.reconstruct(_c1_occ) if _c1_occ else None
+                _c1_ote = self._build_simple_ternary_value(ternary_for_cond.true_value_block)
+                _c1_ofe = self._build_simple_ternary_value(ternary_for_cond.false_value_block)
+                # body/orelse = 外层 true/false 值
+                if _c1_inner_is_outer_true:
+                    _c1_body_expr = self._build_simple_ternary_value(cond_block)
+                    _c1_orelse_expr = self._build_simple_ternary_value(_c1_inner_tr.false_value_block)
+                else:
+                    _c1_body_expr = self._build_simple_ternary_value(_c1_inner_tr.true_value_block)
+                    _c1_orelse_expr = self._build_simple_ternary_value(cond_block)
+                if (_c1_oce is not None and _c1_ote is not None
+                        and _c1_ofe is not None
+                        and _c1_body_expr is not None
+                        and _c1_orelse_expr is not None):
+                    _c1_nested_test = {
+                        'type': 'IfExp',
+                        'test': _c1_oce,
+                        'body': _c1_ote,
+                        'orelse': _c1_ofe,
+                    }
+                    _c1_nested_ternary = {
+                        'type': 'IfExp',
+                        'test': _c1_nested_test,
+                        'body': _c1_body_expr,
+                        'orelse': _c1_orelse_expr,
+                    }
+                    for _c1_b in ternary_for_cond.blocks:
+                        self.generated_blocks.add(_c1_b)
+                    for _c1_b in _c1_inner_tr.blocks:
+                        self.generated_blocks.add(_c1_b)
+                    # 取反逻辑（与 BoolOp 路径一致）
+                    _c1_merge_last = cond_block.get_last_instruction()
+                    _c1_negate = False
+                    if (_c1_merge_last is not None
+                            and _c1_merge_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS
+                                                           | BACKWARD_CONDITIONAL_JUMP_OPS)):
+                        if _c1_merge_last.opname in NONE_CHECK_OPS:
+                            _c1_if_true = False
+                        else:
+                            _c1_if_true = 'IF_TRUE' in _c1_merge_last.opname
+                        _c1_jt = _c1_merge_last.argval
+                        if _c1_jt is not None:
+                            _c1_then_offsets = {b.start_offset for b in region.then_blocks}
+                            _c1_jumps_to_then = _c1_jt in _c1_then_offsets
+                            _c1_negate = _c1_jumps_to_then != _c1_if_true
+                    return (_negate_expr(_c1_nested_ternary)
+                            if _c1_negate else _c1_nested_ternary)
             _tvc = ternary_for_cond
             _tvb = getattr(_tvc, 'true_value_block', None)
             _fvb = getattr(_tvc, 'false_value_block', None)
@@ -21808,6 +21892,53 @@ AST 映射规则:
             _siblings = [list(preload_instrs)]
         return _siblings
 
+    def _split_raise_from_stmts(self, stmt_instrs: List[Instruction]) -> tuple:
+        """[R24-C10] Split stmt_instrs for `raise X from Y` into (exc_instrs, cause_instrs).
+
+        Structural algorithm based on stack depth (区域归约算法 - 支配关系):
+        - Before cause evaluation: stack depth == 1 (exc on stack).
+        - During cause evaluation: depth >= 1 (cause is built on top of exc).
+        - After cause evaluation: depth == 2 (exc + cause on stack), then RAISE_VARARGS 2 pops both.
+
+        The split point is the LARGEST index k where depth[k] == 1 AND all
+        subsequent positions maintain depth >= 1. exc = stmt_instrs[:k+1],
+        cause = stmt_instrs[k+1:].
+
+        Self-consistency with 3.11 calling convention:
+        - PUSH_NULL is in SKIP_OPS (filtered from stmt_instrs).
+        - LOAD_GLOBAL's NULL flag (arg & 1) pushes an extra item (+1).
+        - CALL's NULL pop (arg + 2 items popped, not arg + 1) is an extra -1.
+        - These cancel: _stack_effect treats LOAD_GLOBAL as +1 (ignoring NULL flag)
+          and CALL as net -arg (not -arg-1). The model is self-consistent for the
+          common call patterns (LOAD_GLOBAL/PUSH_NULL + ... + CALL).
+
+        Fallback: if no valid split found, use original behavior (last instr as cause).
+        """
+        if not stmt_instrs:
+            return stmt_instrs, []
+        # Compute forward stack depth after each instruction using _stack_effect.
+        depths: List[int] = []
+        depth = 0
+        for instr in stmt_instrs:
+            push, pop = self._stack_effect(instr)
+            depth += (push - pop)
+            depths.append(depth)
+        # Final depth should be 2 (exc + cause on stack). If not, fall back.
+        if depth != 2:
+            return stmt_instrs[:-1], [stmt_instrs[-1]]
+        # Find largest k where depths[k] == 1 and all depths[k+1:] >= 1.
+        n = len(stmt_instrs)
+        split_idx = None
+        for k in range(n - 1, -1, -1):
+            if depths[k] == 1:
+                if all(depths[j] >= 1 for j in range(k + 1, n)):
+                    split_idx = k + 1
+                    break
+        if split_idx is None or split_idx == 0 or split_idx >= n:
+            # Fallback: original behavior (last instruction as cause)
+            return stmt_instrs[:-1], [stmt_instrs[-1]]
+        return stmt_instrs[:split_idx], stmt_instrs[split_idx:]
+
     @staticmethod
     def _stack_effect(instr) -> tuple:
         """[R13-09 fix] Compute (push, pop) stack effect for an instruction
@@ -27171,9 +27302,17 @@ AST 映射规则:
                 if instr.arg == 0:
                     stmts.append({'type': 'Raise', 'exc': None})
                 elif instr.arg == 2 and stmt_instrs:
-                    cause_instr = stmt_instrs[-1]
-                    exc_instrs = stmt_instrs[:-1]
-                    cause_expr = self.expr_reconstructor.reconstruct([cause_instr])
+                    # [R24-C10] raise X from Y: split stmt_instrs into (exc, cause)
+                    # by tracking forward stack depth. The split point is the largest
+                    # index k where depth == 1 (exc on stack) and all subsequent
+                    # positions maintain depth >= 1 (cause evaluates on top of exc).
+                    # Self-consistent with 3.11 calling convention: PUSH_NULL is
+                    # filtered (in SKIP_OPS), and LOAD_GLOBAL's NULL flag (+1) cancels
+                    # with CALL's NULL pop (-1) in the stack-effect model used by
+                    # _stack_effect. This is structural (depth-based), not instance-
+                    # specific — generalizes to any raise-from expression shape.
+                    exc_instrs, cause_instrs = self._split_raise_from_stmts(stmt_instrs)
+                    cause_expr = self.expr_reconstructor.reconstruct(cause_instrs) if cause_instrs else None
                     exc_expr = self.expr_reconstructor.reconstruct(exc_instrs) if exc_instrs else None
                     stmts.append({'type': 'Raise', 'exc': exc_expr, 'cause': cause_expr})
                 else:
