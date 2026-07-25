@@ -4774,6 +4774,11 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
             修改使 region_ast_generator.py 顶部插入若干行。本轮仅同步注释行号
             引用，未触碰可执行代码，控制流不变。验证方法：grep
             `修复 te046 spurious` 可重新定位。
+          - [Pass8-TRY] 同步：与 _generate_try docstring 同型——原 [Pass5-TRY]
+            段落中「已下移至 L886-L910」上界与同段「无顶级祖先释放分支 L909-L911」
+            下界不一致（差 1 行）。实际 te046 修复段跨 L886-L911。本轮仅校正
+            上界引用 L886-L910 → L886-L911，与同段 L909-L911 口径一致。控制流
+            不变，仅注释文本同步。
           - [Pass6-TRY] 同步：原 Pass5-TRY 仅同步 _generate_try docstring 中的
             L599-634 行号引用，未同步 _identify_try_except_regions docstring 中的
             同型引用（L4767-L4769）。本轮补齐 _identify_try_except_regions
