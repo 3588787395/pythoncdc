@@ -18565,6 +18565,19 @@ AST 映射规则:
           skip_ternary=True 守卫，Phase 5 修复了 IfRegion 对简单三元的过度
           抢占，BoolOp 条件链由 _build_ternary_boolop_condition 精确重建，
           短路语义完整保留。
+        - [Pass8-TERNARY] 同步：原「截至 Pass 01: TERNARY 69p/7f/76」表述中
+          的数字与当前实测一致——TERNARY bounded subset 80 文件实测自 Pass 01
+          起持续为 69 passed / 7 failed / 0 errors / 76 总计（Pass7-TERNARY
+          fix_report 回归记录 `69 7 0 76 5.4 TERNARY files=80`，与本 docstring
+          原「Pass 01: 69p/7f/76」口径一致）。原表述仅引用 Pass 01 时点状态、
+          未说明 Pass 2-7 期间无回归变化，可能误读为「Pass 01 后状态已变」。
+          本段落校正口径：Pass 1-7 期间持续 69p/7f/76，无新增失败亦无失败消除；
+          7 例预存失败为 ternary 值被外层表达式消费的模式（assert method call /
+          listcomp body / await call arg / for-iter subscript / compare in both /
+          tuple-unpack / starred-list scalar），非保守修复范围（与 Pass7-TERNARY
+          §未完成项 2 同源）。
+          与 Pass3-BOOLOP 在 `_generate_boolop` docstring 中追加 [Pass3-BOOLOP]
+          段落同步测试状态同型。控制流不变，仅 docstring 文本同步。
         """
         cond_block = region.condition_block
         true_block = region.true_value_block
