@@ -4160,20 +4160,13 @@ AST 映射规则:
                 child_try_regions.append(child)
             if isinstance(child, WithRegion):
                 child_with_regions.append(child)
-            if isinstance(child, LoopRegion):
-                if child.entry:
-                    for pred in child.header_block.predecessors:
-                        if any(instr.opname in ('GET_ITER', 'GET_AITER') for instr in pred.instructions):
-                            if pred in region.body_blocks:
-                                pass
-                            break
+            # [Pass3-LOOP] 移除原 `if isinstance(child, LoopRegion):` 死代码块：
+            # 内层仅 `if pred in region.body_blocks: pass` + `break`，无任何状态
+            # 修改。属无副作用死代码删除。
             if isinstance(child, IfRegion) and child.parent == region:
-                if (region.condition_block is not None and
-                    child.condition_block == region.condition_block and
-                    len(child.blocks) == 2 and
-                    region.condition_block in child.blocks and
-                    region.header_block in child.blocks):
-                    pass
+                # [Pass3-LOOP] 移除原 `if (region.condition_block is not None and
+                # child.condition_block == region.condition_block and ...): pass`
+                # 死代码块：内层仅 `pass`，无任何状态修改。
                 if child.condition_block != child.entry if hasattr(child, 'entry') else True:
                     for b in child.then_blocks:
                         child_if_blocks.add(b)
