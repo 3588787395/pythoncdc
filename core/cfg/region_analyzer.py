@@ -9592,6 +9592,13 @@ RegionType 枚举值: RegionType.ASSERT
         # IF_FALSE/IF_NONE → 'and'（失败快跳），IF_TRUE/IF_NOT_NONE → 'or'（成功快跳）。
         # 注意：BoolOp 末段在 "and" 时用 IF_TRUE（成功快跳）、在 "or" 时也用 IF_TRUE，
         # 故末段跳转方向不能用于判定 op；必须用首段。
+        # [Pass7-ASSERT] 同型反模式标记：下方 `if 'TRUE' in cond_last.opname or
+        # 'NOT_NONE' in cond_last.opname:` 子串匹配判据与 Pass5-BOOLOP / Pass6-BOOLOP
+        # 在 `_detect_while_condition_boolop_chain` 内标记的 `'FALSE' in last.opname` /
+        # `'TRUE' in last.opname` 子串匹配 DRY 违背同型（散布文件 17+ 处之一）。
+        # 后续 Pass 实施「子串匹配 → frozenset 常量统一替换」时需同步替换此处。
+        # 本轮仅添加内联标记，未触碰可执行代码，控制流不变。验证方法：grep
+        # `'TRUE' in cond_last.opname` 在本文件仅 1 处命中（紧邻本注释段下方）。
         cond_last = condition_block.get_last_instruction()
         if not cond_last or cond_last.opname not in FORWARD_CONDITIONAL_JUMP_OPS:
             return None
