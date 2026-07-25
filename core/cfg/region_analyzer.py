@@ -14201,6 +14201,16 @@ RegionType 枚举值: RegionType.ASSERT
         last = cond_block.get_last_instruction()
         if not last or last.opname not in FORWARD_CONDITIONAL_JUMP_OPS:
             return None
+        # [Pass5-BOOLOP] 已知反模式（Pass 1 test_findings §反模式检查已登记、Pass 2/3/4
+        # fix_report §未完成项 2 反复列出但未添加内联标记）：
+        # `'FALSE' in last.opname` / `'TRUE' in last.opname` 子串匹配判据散布 17+ 处
+        # （_identify_boolop_regions / _detect_boolop_* / _detect_while_condition_boolop_chain
+        # / _detect_boolop_short_circuit_chain 等），属「实例驱动判据 DRY 违背」反模式。
+        # 本处为本函数内首处使用（同函数 L14340 pred_op 同型）。统一替换为结构判据（如
+        # `last.opname in _FORWARD_FALSE_JUMP_OPS` frozenset 常量）属高风险重构——
+        # 需先按 FALSE/TRUE/IF_NONE/IF_NOT_NONE/NONE 多类归类，再分别定义常量，
+        # 涉及 17+ 处调用点，本轮保守不动。仅添加内联标记，待后续 Pass 统一常量库后
+        # 一次性替换。
         op_type = 'and' if 'FALSE' in last.opname else 'or'
         chain.append((cond_block, op_type))
         visited = {cond_block.start_offset}
