@@ -24956,6 +24956,12 @@ AST 映射规则:
         # 此模式出现在for循环的try块中的if-break结构中
         # 注意：必须有POP_TOP才触发（POP_TOP是for循环迭代器清理的标志），
         # 否则会误将普通的return None转为break
+        # [Pass4-SEQ] 已知反模式标记（对应 Pass 2 报告 TODO[pass3-SEQ]-F）：
+        # 下方 `if self._loop_depth > 0:` 为跨层启发式——使用生成阶段状态变量
+        # _loop_depth（"当前是否在循环体内"）做 break 模式判别，而 break 归属
+        # 理想上应在识别阶段通过 block_role / BlockRole.BREAK 统一判定。本启发式
+        # 作为 block_role 之外的后处理补丁存在，待识别阶段完善 break 块标记后
+        # 消除。本轮仅添加标记，不改变控制流。
         if self._loop_depth > 0:
             _meaningful_for_break = [i for i in block.instructions
                                       if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
