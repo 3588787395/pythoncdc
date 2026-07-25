@@ -14735,6 +14735,11 @@ AST 映射规则:
                 # [Round5-08 根因修复] 与 early pass 同理: 仅检查 with_blocks 中
                 # start_offset 最小的块（SEND 跳出目标块），不遍历所有 with_blocks，
                 # 避免误将 body 内赋值（如 ternary merge 的 STORE_FAST y）当作 `as x`。
+                # [Pass 2 注] 本块与主循环前的 early pass（_generate_with 入口处）
+                # 逻辑等价：均取 with_blocks 中 start_offset 最小块、查首条非噪声
+                # 指令是否为 STORE_*。early pass 已无条件执行，故本块仅在 early pass
+                # 未设 target 时进入；执行相同检测必得相同结果——冗余兜底，已知
+                # 反模式，待归约期统一 async-with target 检测后消除。
                 if region.target is None and region.is_async:
                     _wb_blocks = sorted(
                         (b for b in getattr(region, 'with_blocks', []) or []),
@@ -15014,7 +15019,7 @@ AST 映射规则:
                         self._generated_regions.add(child_id)
 
             post_with_stmts = []
-            body_end_offset = region.body_offset_end if region.body_offset_end is not None and region.body_offset_end > 0 else 0
+            # body_end_offset 沿用主循环前的赋值（region.body_offset_end 在本函数内未变）
             with_cleanup_blocks = set()
             if hasattr(region, 'cleanup_blocks'):
                 with_cleanup_blocks.update(region.cleanup_blocks)
