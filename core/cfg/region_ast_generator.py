@@ -25087,6 +25087,14 @@ AST 映射规则:
             _has_pop_top = any(i.opname == 'POP_TOP' for i in _meaningful_for_break)
             if _has_pop_top:
                 _no_pop = [i for i in _meaningful_for_break if i.opname != 'POP_TOP']
+                # [Pass7-SEQ] DRY 同型反模式标记（与 Pass5-TERNARY/SEQ 在
+                # `_is_trivial_return_block` / `_identify_ternary_regions` 中已替换为
+                # RETURN_TERMINATOR_OPS 模块级常量的 3 处同型）：下方
+                # `('RETURN_VALUE', 'RETURN_CONST')` 字面量应替换为 RETURN_TERMINATOR_OPS。
+                # 未替换原因（与 Pass6-SEQ §未完成项 1 同型）：本方法 _generate_block_statements
+                # 内尚有同模式 3 处命中（grep `_no_pop[1].opname in ('RETURN_VALUE', 'RETURN_CONST')`
+                # 在本文件命中 3 处：L25092 / L25128 / L20595），全量替换需逐处评估 break 模式
+                # 判别语义等价性，留待后续 Pass 统一处理。本轮仅添加标记，不改控制流。
                 if (len(_no_pop) == 2 and
                     _no_pop[0].opname == 'LOAD_CONST' and _no_pop[0].argval is None and
                     _no_pop[1].opname in ('RETURN_VALUE', 'RETURN_CONST')):
