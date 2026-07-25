@@ -20723,6 +20723,18 @@ AST 映射规则:
                         if len(_non_noise_remaining) <= 2:
                             _no_pop = [i for i in _non_noise_remaining
                                        if i.opname != 'POP_TOP']
+                            # [Pass10-SEQ] DRY 同型反模式标记：下方
+                            # `_no_pop[1].opname in ('RETURN_VALUE', 'RETURN_CONST')`
+                            # 与 Pass7-SEQ 在 `_generate_block_statements` 内标记的
+                            # 同型字面量元组 DRY 违背（Pass9-SEQ §未完成项 1 登记的
+                            # 「余 L20595 同型未标记」即本处，行号自 Pass 7 写入后
+                            # 漂移至当前位置；本处位于 `_generate_ternary` 内，非
+                            # `_generate_block_statements`——Pass7-SEQ 原文「本方法
+                            # _generate_block_statements 内尚有同模式 3 处命中」
+                            # 表述偏差，3 处中本处实为 `_generate_ternary` 内）。
+                            # 后续 Pass 实施「字面量元组 → RETURN_TERMINATOR_OPS
+                            # 模块级常量统一替换」时需同步替换此处。本轮仅添加
+                            # 内联标记，未触碰可执行代码，控制流不变。
                             if (len(_no_pop) == 2
                                     and _no_pop[0].opname == 'LOAD_CONST'
                                     and _no_pop[0].argval is None
@@ -25277,6 +25289,17 @@ AST 映射规则:
             # for循环中的break编译为 POP_TOP(弹出迭代器) + LOAD_CONST None + RETURN_VALUE
             # 需要过滤POP_TOP后检测 trivial return 模式
             _meaningful_no_pop = [i for i in _meaningful if i.opname != 'POP_TOP']
+            # [Pass10-SEQ] DRY 同型反模式标记：下方
+            # `_meaningful_no_pop[1].opname in ('RETURN_VALUE', 'RETURN_CONST')`
+            # 与 Pass7-SEQ 在本方法上方紧邻 [Pass7-SEQ] 标记的
+            # `_no_pop[1].opname in ('RETURN_VALUE', 'RETURN_CONST')` 同型——
+            # 均为 `('RETURN_VALUE', 'RETURN_CONST')` 字面量元组 DRY 违背
+            # （Pass9-SEQ §未完成项 1 登记的「余 L25128 同型未标记」即本处，
+            # 行号自 Pass 7 写入后漂移至当前位置）。后续 Pass 实施「字面量元组
+            # → RETURN_TERMINATOR_OPS 模块级常量统一替换」时需同步替换此处及
+            # 本文件 70+ 处同型（grep `('RETURN_VALUE', 'RETURN_CONST')` 在
+            # 本文件共 75 处命中）。本轮仅添加内联标记，未触碰可执行代码，
+            # 控制流不变。
             _is_trivial_ret = (len(_meaningful_no_pop) == 2
                                 and _meaningful_no_pop[0].opname == 'LOAD_CONST'
                                 and _meaningful_no_pop[0].argval is None
