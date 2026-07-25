@@ -11616,12 +11616,10 @@ RegionType 枚举值: RegionType.ASSERT
                     return False
                 if fv_exit_bo is tv_exit_bo:
                     return True
-                # 内容等价：非噪音指令序列（opname, argval）完全一致
-                fv_eff = [(i.opname, i.argval) for i in fv_exit_bo.instructions
-                          if i.opname not in NOISE_OPS]
-                tv_eff = [(i.opname, i.argval) for i in tv_exit_bo.instructions
-                          if i.opname not in NOISE_OPS]
-                return fv_eff == tv_eff
+                # 委托统一等价判别入口 _is_equivalent_exit_block（处理
+                # trivial-return 与 only-jumps 链等价）；该方法内部亦含
+                # block_a is block_b 短路，此处保留显式短路以减少递归开销。
+                return self._is_equivalent_exit_block(fv_exit_bo, tv_exit_bo)
 
             if len(boolop_region.op_chain) >= 2:
                 first_jt_offset = None
@@ -14050,84 +14048,6 @@ RegionType 枚举值: RegionType.ASSERT
             region = self._create_boolop_region_from_chain(chain, claimed)
             if region:
                 boolop_regions.append(region)
-        trimmed = []
-        for br in boolop_regions:
-            if len(br.op_chain) < 2:
-                trimmed.append(br)
-                continue
-            _loop_for_br = None
-            for _lr in self._filter_regions(existing_regions, LoopRegion):
-                if _lr.condition_block is not None:
-                    _cond_chain_offsets = set()
-                    _cq = [_lr.condition_block]
-                    _cvis = set()
-                    while _cq:
-                        _cc = _cq.pop(0)
-                        if _cc.start_offset in _cvis:
-                            continue
-                        _cvis.add(_cc.start_offset)
-                        _cond_chain_offsets.add(_cc.start_offset)
-                        for _cp in _cc.predecessors:
-                            if _cp not in _lr.blocks and _cp != _lr.header_block and _cp != _lr.back_edge_block:
-                                _cp_last = _cp.get_last_instruction()
-                                if _cp_last and _cp_last.opname in FORWARD_CONDITIONAL_JUMP_OPS:
-                                    _cq.append(_cp)
-                    _found = False
-                    for _cb, _ in br.op_chain[:-1]:
-                        if _cb.start_offset in _cond_chain_offsets and _cb not in _lr.blocks:
-                            _found = True
-                            break
-                    if _found:
-                        _loop_for_br = _lr
-                        break
-            if _loop_for_br is None:
-                trimmed.append(br)
-                continue
-            _rv = set()
-            _rq = [_loop_for_br.header_block]
-            _rvisited = set()
-            while _rq:
-                _rc = _rq.pop(0)
-                if _rc.start_offset in _rvisited:
-                    continue
-                _rvisited.add(_rc.start_offset)
-                for _ri in _rc.instructions:
-                    if _ri.opname in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF') and _ri.argval:
-                        _rv.add(_ri.argval)
-                if _rc != _loop_for_br.back_edge_block:
-                    for _rs in _rc.successors:
-                        if _rs in _loop_for_br.blocks and _rs.start_offset not in _rvisited:
-                            _rq.append(_rs)
-            _guard_idx = None
-            for _idx in range(len(br.op_chain) - 1):
-                _blk, _ = br.op_chain[_idx]
-                _bv = {_ri.argval for _ri in _blk.instructions
-                       if _ri.opname in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF') and _ri.argval}
-                if _bv and not _bv.intersection(_rv):
-                    _guard_idx = _idx
-                    break
-            if _guard_idx is not None:
-                _new_chain = br.op_chain[_guard_idx + 1:]
-                if len(_new_chain) < 2:
-                    for _b in br.blocks:
-                        if _b in self.block_to_region and self.block_to_region[_b] == br:
-                            del self.block_to_region[_b]
-                        claimed.discard(_b)
-                    if br in self.regions:
-                        self.regions.remove(br)
-                    continue
-                for _b in br.blocks:
-                    if _b in self.block_to_region and self.block_to_region[_b] == br:
-                        del self.block_to_region[_b]
-                    claimed.discard(_b)
-                if br in self.regions:
-                    self.regions.remove(br)
-                _new_region = self._create_boolop_region_from_chain(_new_chain, claimed)
-                if _new_region:
-                    trimmed.append(_new_region)
-            else:
-                trimmed.append(br)
-        boolop_regions[:] = trimmed
         for region in self._filter_regions(existing_regions, LoopRegion):
             if region.condition_block is None:
                 continue
@@ -14161,57 +14081,6 @@ RegionType 枚举值: RegionType.ASSERT
                     region.add_child(boolop_region)
                     boolop_regions.append(boolop_region)
                     region.is_while_true = False
-                    _rv2 = set()
-                    _rq2 = [region.header_block]
-                    _rvis2 = set()
-                    while _rq2:
-                        _rc2 = _rq2.pop(0)
-                        if _rc2.start_offset in _rvis2:
-                            continue
-                        _rvis2.add(_rc2.start_offset)
-                        for _ri2 in _rc2.instructions:
-                            if _ri2.opname in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF') and _ri2.argval:
-                                _rv2.add(_ri2.argval)
-                        if _rc2 != region.back_edge_block:
-                            for _rs2 in _rc2.successors:
-                                if _rs2 in region.blocks and _rs2.start_offset not in _rvis2:
-                                    _rq2.append(_rs2)
-                    _guard_idx2 = None
-                    for _idx2 in range(len(boolop_region.op_chain) - 1):
-                        _blk2, _ = boolop_region.op_chain[_idx2]
-                        _bv2 = {_ri2.argval for _ri2 in _blk2.instructions
-                                if _ri2.opname in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF') and _ri2.argval}
-                        if _bv2 and not _bv2.intersection(_rv2):
-                            _guard_idx2 = _idx2
-                            break
-                    if _guard_idx2 is not None:
-                        _new_chain2 = boolop_region.op_chain[_guard_idx2 + 1:]
-                        if len(_new_chain2) < 2:
-                            for _b2 in boolop_region.blocks:
-                                if _b2 in self.block_to_region and self.block_to_region[_b2] == boolop_region:
-                                    del self.block_to_region[_b2]
-                                claimed.discard(_b2)
-                            if boolop_region in self.regions:
-                                self.regions.remove(boolop_region)
-                            if boolop_region in boolop_regions:
-                                boolop_regions.remove(boolop_region)
-                            if boolop_region in region.children:
-                                region.children.remove(boolop_region)
-                            boolop_region.parent = None
-                        else:
-                            for _b2 in boolop_region.blocks:
-                                if _b2 in self.block_to_region and self.block_to_region[_b2] == boolop_region:
-                                    del self.block_to_region[_b2]
-                                claimed.discard(_b2)
-                            if boolop_region in self.regions:
-                                self.regions.remove(boolop_region)
-                            _new_region2 = self._create_boolop_region_from_chain(_new_chain2, claimed)
-                            if _new_region2:
-                                idx2 = boolop_regions.index(boolop_region) if boolop_region in boolop_regions else -1
-                                if idx2 >= 0:
-                                    boolop_regions[idx2] = _new_region2
-                                else:
-                                    boolop_regions.append(_new_region2)
         _for_body_enabled = True
         for region in self._filter_regions(existing_regions, LoopRegion):
             if not _for_body_enabled:
@@ -14928,8 +14797,81 @@ RegionType 枚举值: RegionType.ASSERT
             fixed_chain.append((block, op_type))
         return fixed_chain
 
+    def _trim_boolop_guard_prefix(self, op_chain: List[Tuple[BasicBlock, str]], loop_region) -> List[Tuple[BasicBlock, str]]:
+        """修剪 BoolOp op_chain 的 guard 前缀块（创建期一次性应用）。
+
+        当 op_chain 是某 LoopRegion 条件链且存在 guard 前缀块（其加载变量
+        与循环体加载变量无交集）时，返回修剪后的后缀 chain；否则原样返回。
+        纯函数，无副作用。统一了原主循环与 while 条件重识别后两处重复的
+        事后修剪逻辑。"""
+        if loop_region is None or len(op_chain) < 2:
+            return op_chain
+        # 收集循环体内加载的变量（从 header 出发 BFS，跳过 back_edge_block
+        # 以避免把循环出口变量计入）。
+        _rv = set()
+        _rq = [loop_region.header_block]
+        _rvisited = set()
+        while _rq:
+            _rc = _rq.pop(0)
+            if _rc.start_offset in _rvisited:
+                continue
+            _rvisited.add(_rc.start_offset)
+            for _ri in _rc.instructions:
+                if _ri.opname in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF') and _ri.argval:
+                    _rv.add(_ri.argval)
+            if _rc != loop_region.back_edge_block:
+                for _rs in _rc.successors:
+                    if _rs in loop_region.blocks and _rs.start_offset not in _rvisited:
+                        _rq.append(_rs)
+        # 找到首个前导块（不含末尾块）其加载变量与循环体变量无交集——
+        # 该块即 guard 前缀，返回其后的后缀 chain。
+        for _idx in range(len(op_chain) - 1):
+            _blk, _ = op_chain[_idx]
+            _bv = {_ri.argval for _ri in _blk.instructions
+                   if _ri.opname in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF') and _ri.argval}
+            if _bv and not _bv.intersection(_rv):
+                return op_chain[_idx + 1:]
+        return op_chain
+
     def _create_boolop_region_from_chain(self, chain: List[Tuple[BasicBlock, str]], claimed: Set[BasicBlock]) -> Optional[BoolOpRegion]:
         chain = self._normalize_none_check_op_types(chain)
+        # [反模式消除] guard-prefix 修剪移至创建期：原实现在主循环与 while
+        # 条件重识别后分别事后修剪（两处重复），现收敛到创建期一次性应用。
+        # 先定位 op_chain 隶属的 LoopRegion（条件链匹配），再调用统一修剪。
+        _loop_for_chain = None
+        for _lr in self._filter_regions(self.regions, LoopRegion):
+            if _lr.condition_block is None:
+                continue
+            _cond_chain_offsets = set()
+            _cq = [_lr.condition_block]
+            _cvis = set()
+            while _cq:
+                _cc = _cq.pop(0)
+                if _cc.start_offset in _cvis:
+                    continue
+                _cvis.add(_cc.start_offset)
+                _cond_chain_offsets.add(_cc.start_offset)
+                for _cp in _cc.predecessors:
+                    if _cp not in _lr.blocks and _cp != _lr.header_block and _cp != _lr.back_edge_block:
+                        _cp_last = _cp.get_last_instruction()
+                        if _cp_last and _cp_last.opname in FORWARD_CONDITIONAL_JUMP_OPS:
+                            _cq.append(_cp)
+            _found = False
+            for _cb, _ in chain[:-1]:
+                if _cb.start_offset in _cond_chain_offsets and _cb not in _lr.blocks:
+                    _found = True
+                    break
+            if _found:
+                _loop_for_chain = _lr
+                break
+        chain = self._trim_boolop_guard_prefix(chain, _loop_for_chain)
+        # 仅当修剪实际发生且修剪后 chain < 2 时拒绝（对应原事后修剪中
+        # _guard_idx is not None and len(_new_chain) < 2 的丢弃分支）。
+        # 未修剪的 1-元素短路链（JUMP_IF_FALSE_OR_POP）是合法的——第二
+        # 操作数位于 merge 块中；且匹配逻辑要求 chain[:-1] 非空才会设定
+        # _loop_for_chain，故 1-元素链的 _loop_for_chain 恒为 None。
+        if _loop_for_chain is not None and len(chain) < 2:
+            return None
         start_block = chain[0][0]
         chain_blocks = set(b for b, _ in chain)
         merge = self._boolop_resolve_merge(chain)
@@ -15500,9 +15442,8 @@ RegionType 枚举值: RegionType.ASSERT
                     _is_scenario_b_ternary = False
                     if _equivalent_exits:
                         _ft_walk = ft_succ
-                        _walk_count = 0
                         _visited_ft = set()
-                        while _ft_walk and _walk_count < 5 and _ft_walk.start_offset not in _visited_ft:
+                        while _ft_walk and _ft_walk.start_offset not in _visited_ft:
                             _visited_ft.add(_ft_walk.start_offset)
                             _ft_last_i = _ft_walk.get_last_instruction()
                             if _ft_last_i and _ft_last_i.opname == 'JUMP_FORWARD' and _ft_last_i.argval is not None:
@@ -15534,7 +15475,6 @@ RegionType 枚举值: RegionType.ASSERT
                                 if _ft_walk.successors:
                                     _ft_next = next(iter(_ft_walk.successors))
                             _ft_walk = _ft_next
-                            _walk_count += 1
                     if not _normal_or and not _not_or_chain and (not _equivalent_exits or _is_scenario_b_ternary):
                         chain.pop()
                         break
