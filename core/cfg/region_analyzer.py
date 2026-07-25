@@ -4767,6 +4767,18 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
            - te046 已修复 (2026-07-14): spurious `if True: pass` 缺陷已通过在
              `region_ast_generator.py` L599-634 增加「顶级祖先」检查修复，根因是 WithRegion
              的 exception_block 被误判为孤儿块。修复后字节码完全匹配 (71 vs 71)。
+          - [Pass5-TRY] 同步：原 te046 修复注释引用的行号 `L599-634` 已过时——
+            实际「顶级祖先」检查（orphan block 释放逻辑中的 te046 修复段）
+            已下移至 L886-L910（te046 注释起始 L886，沿 parent 链查找顶级祖先
+            L898-L905，无顶级祖先释放分支 L909-L911）。行号漂移源于多轮 Pass
+            修改使 region_ast_generator.py 顶部插入若干行。本轮仅同步注释行号
+            引用，未触碰可执行代码，控制流不变。验证方法：grep
+            `修复 te046 spurious` 可重新定位。
+          - [Pass6-TRY] 同步：原 Pass5-TRY 仅同步 _generate_try docstring 中的
+            L599-634 行号引用，未同步 _identify_try_except_regions docstring 中的
+            同型引用（L4767-L4769）。本轮补齐 _identify_try_except_regions
+            docstring 同步，与 _generate_try docstring 口径一致。两处均保留
+            原 L599-634 引用作历史追溯，追加 [Pass5-TRY]/[Pass6-TRY] 段落校正。
            - 本方法遵循区域归约算法 4 核心原则:
              自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口
         """
