@@ -14813,6 +14813,15 @@ AST 映射规则:
                 # region.target is None:` 起始于 L14331）。原 L14312-L14336
                 # 引用为 Pass 3 写入时的快照，本轮仅同步注释行号引用，未触碰
                 # 可执行代码，控制流不变。
+                # [Pass5-WITH] 同步：经 Pass 4 修改后行号再次漂移——early pass
+                # 现实际位于 L14350-L14391（[Round5-08] 注释起始 L14350，
+                # `if region.is_async and region.target is None:` 起始于 L14367，
+                # `_async_target_early = ...` STORE 提取 L14372-L14381，
+                # `region.target = _async_target_early` L14383）。原 Pass 4 引用
+                # L14314-L14355 / L14331 为 Pass 4 写入时的快照，本轮再次同步。
+                # 验证方法：grep `if region.is_async and region.target is None:`
+                # 可重新定位（全仓仅 1 处命中）。本轮仅同步注释行号引用，未触碰
+                # 可执行代码，控制流不变。
                 for _abb in sorted(_async_body_blocks, key=lambda b: b.start_offset):
                     if _abb in self.generated_blocks:
                         continue
