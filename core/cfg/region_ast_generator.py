@@ -2770,6 +2770,8 @@ AST 映射规则:
   - break_blocks 中的块必须生成 ast.Break，不得被忽略。
   - yield from 模式必须输出 ast.YieldFrom 表达式，而非 For/While 节点。
   - 字节码匹配状态: 100% 完全匹配（while_loop 120/120 + for_loop 193/193 = 313/313）
+  - 已知反模式：跨区域反向抓 IfRegion（_preceding_if_cond）+ 跨 LoopRegion 去重
+    + while/for-else 三联过滤，待 Pass 3 重构
   - 本方法遵循区域归约算法 4 核心原则:
     自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口
         """
@@ -3971,6 +3973,9 @@ AST 映射规则:
             _trailing_return_none_stmts = None
 
         _cond_offset = cond_block.start_offset if cond_block else (region.entry.start_offset if region.entry else 0)
+        # [已知反模式 / Pass 2 标记] 跨区域反向抓前驱 IfRegion 拼装 BoolOp，
+        # 违反原则 4（入口引用语义）。IfRegion 应作为独立节点引用，而非被
+        # while 条件吞并。待 Pass 3 重构为识别期 BoolOpRegion 归属。
         _preceding_if_cond = None
         if condition and _cond_offset > 0:
             for _tr in self.regions:

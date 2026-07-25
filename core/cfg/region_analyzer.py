@@ -2829,6 +2829,8 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
 
 6. 已知失败模式
    - 当前测试矩阵通过率: 100%（while_loop 120/120 + for_loop 193/193 = 313/313），无已知失败模式
+   - 已知反模式：跨区域反向抓 IfRegion（_preceding_if_cond）+ 跨 LoopRegion 去重
+     + while/for-else 三联过滤，待 Pass 3 重构
    - 本方法遵循区域归约算法 4 核心原则:
      自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口
         """
@@ -3219,6 +3221,9 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                 region.condition_chain_blocks = chain
 
         loop_regions = self._filter_regions(regions, LoopRegion)
+        # [已知反模式 / Pass 2 标记] 跨 LoopRegion 去重后处理，与 Pass 1 已删除的
+        # _detect_and_filter_conditional_recheck_fake_loops 同型。待 Pass 3 迁移
+        # 到识别期主循环判据。
         if len(loop_regions) >= 2:
             removal_set = set()
             for i, lr_a in enumerate(loop_regions):
@@ -3748,6 +3753,11 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
         - But semantically they are exception handlers, not normal loop exit paths
 
         Returns True if block is an except handler block (should be excluded from else).
+
+        [Pass 2 标记] 本方法基于指令模式（PUSH_EXC_INFO/CHECK_EXC_MATCH）判据，
+        与 Pass 1 fix_report 强调的「非 opname 计数启发式」原则相悖。待 Pass 3
+        调研 TryExceptRegion.handler_blocks 是否注册到 block_to_region，若是则
+        改为查 block_to_region 归属判据，统一由 _is_owned_by_other_region 守卫处理。
         """
         if not block or not block.instructions:
             return False
