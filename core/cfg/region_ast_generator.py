@@ -15424,6 +15424,17 @@ AST 映射规则:
           - guard 处理: case body 内的 guard 块（条件跳转）提取为 match_case.guard
           - 嵌套区域: case body 中的 IfRegion/LoopRegion 等递归调用 _generate_region
           - cleanup 块过滤: MATCH_* 相关的检查块不生成源码
+          - [Pass8-MATCH] docstring 同步：subject 提取（subject_block 指令遍历）
+            实际按 case_patterns[0] 类型分四路分支（未在原「子区域处理」列表中
+            体现，本轮仅补记，不改控制流）：
+            (a) 结构型 match（默认）：遇 MATCH_* 指令 break；
+            (b) is_literal_match（MatchValue/MatchOr/MatchSingleton，或
+                MatchAs(MatchSingleton)）：用 COPY+COMPARE_OP/IS_OP 而非 MATCH_*，
+                遇 LOAD_CONST+COMPARE_OP/IS_OP continue；
+            (c) is_wildcard_match（MatchAs name ∈ {None,'_'} 且无 pattern）：
+                遇 POP_TOP/RETURN_VALUE/RETURN_CONST break；
+            (d) is_capture_match（MatchAs name 非 None）：遇 STORE_* break。
+            原「子区域处理」仅描述通用 pattern 解析，未覆盖上述 subject 提取分路。
 
         字节码一致性约束:
           - MATCH_* 指令过滤: MATCH_MAPPING/MATCH_KEYS/MATCH_CLASS/MATCH_SEQUENCE 不生成源码
