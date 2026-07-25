@@ -9838,6 +9838,15 @@ RegionType 枚举值: RegionType.ASSERT
            - CHAINED_COMPARE: 当前测试矩阵通过率 100%
            - 与 Conditional 区域无冲突（在 Conditional 之前完成识别并标记 claimed）
            - 与 BoolOp 区域无冲突（先于 BoolOp 识别，避免被短路求值拆分）
+
+           [Pass6-CC] docstring 口径校正（与 Pass4-MATCH 同型「虚假 100% 通过率
+           声明」校正）：上方「当前测试矩阵通过率 100%」表述与实测矛盾——CC 套件
+           实测为 37 passed / 3 failed / 0 errors（40 文件，见 baseline.txt
+           `CC 37 3 40 3.6` 与 Pass5-CC fix_report 回归记录）。3 个 failed 用例
+           属预存 baseline（walrus / literal-middle / method-call 三特例的栈模拟
+           语义差异，见 Pass5-CC §未完成项 1 `_try_build_*` patch chain），非本轮
+           引入。「100% 通过率」表述不成立，原表述保留作历史追溯。控制流不变，
+           仅 docstring 文本同步。
         """
         claimed = set()
         for regions in [loop_regions, try_regions, with_regions, match_regions, assert_regions]:
