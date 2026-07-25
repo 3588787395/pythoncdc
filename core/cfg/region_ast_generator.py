@@ -11927,6 +11927,9 @@ AST 映射规则:
     def _if_generate_branch_stmts(self, blocks=None, region=None):
         # [Pass3-IF] 移除原 `_depth=0` 形参：函数体从未引用，3 处调用点
         # (line 3203/3941/6600) 也均未传入。属无副作用死代码删除。
+        # [Pass4-IF] 同步：经多轮 Pass 3 修改后，3 处调用点行号已下移至
+        # 3207/3945/6597（grep `_if_generate_branch_stmts\(` 可验证）。
+        # 本轮仅同步注释行号引用，未触碰可执行代码，控制流不变。
         if region is not None:
             return self._generate_if(region)
         if blocks is not None:
