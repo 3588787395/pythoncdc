@@ -2507,6 +2507,14 @@ AST 映射规则:
             # None 检查方向修正（assert 上下文）：和 BoolOpRegion 一致，
             # 把 NONE_CHECK 转换为 Compare，方向按 op 修正，
             # 外层 _invert_assert_none_check_direction 会再次处理（递归进入 values）。
+            # [Pass8-ASSERT] 同型反模式标记：下方 `_is_not_none_op = 'NOT_NONE' in
+            # last_instr.opname` 子串匹配判据与 Pass7-ASSERT 在
+            # `_detect_assert_boolop_chain` 内标记的 `'TRUE' in cond_last.opname` /
+            # `'NOT_NONE' in cond_last.opname` 子串匹配 DRY 违背同型（散布文件
+            # 17+ 处之一）。后续 Pass 实施「子串匹配 → frozenset 常量统一替换」
+            # 时需同步替换此处。本轮仅添加内联标记，未触碰可执行代码，控制流不变。
+            # 验证方法：grep `'NOT_NONE' in last_instr.opname` 在本文件仅 1 处命中
+            # （紧邻本注释段下方）。
             if last_instr and last_instr.opname in NONE_CHECK_OPS:
                 _is_not_none_op = 'NOT_NONE' in last_instr.opname
                 if op == 'and':
