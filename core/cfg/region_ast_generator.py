@@ -17554,25 +17554,10 @@ AST 映射规则:
                 and _enclosing is None):
             boolop_expr = self._build_boolop_expression(region)
             if boolop_expr:
-                # Determine if the boolop should be negated based on the
-                # last chain block's jump direction. For `or` chains ending
-                # in IF_FALSE → if-body, no negation. For IF_TRUE → if-body,
-                # negate (because IF_TRUE means "jump to if-body when truthy",
-                # so the boolop's truthy path goes to if-body, no negation;
-                # but the existing _is_outer_condition path negates when
-                # IF_TRUE because the IfRegion's else_blocks is the jump
-                # target). Since here the merge IS the if-body, semantics:
-                # - IF_FALSE → merge (if-body): condition truthy → fall
-                #   through to if-body → NO negation
-                # - IF_TRUE → merge (if-body): condition truthy → jump to
-                #   if-body → NO negation (truthy = if-body in both cases)
-                # But IF_TRUE here means the chain's last op is 'or' (jump
-                # when truthy to short-circuit), and merge is the
-                # short-circuit target = if-body, so no negation needed.
-                # Actually the existing _is_outer_condition path negates
-                # IF_TRUE because there the IfRegion's else_blocks IS the
-                # short-circuit target. Here we control merge = if-body,
-                # so NO negation regardless of jump direction.
+                # 与 _is_outer_condition 分支不同：此处 merge_block 本身就是
+                # if-body（无外层 IfRegion，_enclosing is None），短路跳转目标
+                # 即 if-body，故无论末尾跳转方向 (IF_FALSE / IF_TRUE) 均无需取反
+                # ——truthy 路径在两种情况下都落入 if-body。
                 for block in region.blocks:
                     self.generated_blocks.add(block)
                 self.generated_blocks.add(region.merge_block)

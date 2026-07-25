@@ -14099,10 +14099,7 @@ RegionType 枚举值: RegionType.ASSERT
                     region.add_child(boolop_region)
                     boolop_regions.append(boolop_region)
                     region.is_while_true = False
-        _for_body_enabled = True
         for region in self._filter_regions(existing_regions, LoopRegion):
-            if not _for_body_enabled:
-                break
             if region.condition_block is not None:
                 continue
             hdr_last = region.header_block.get_last_instruction()
