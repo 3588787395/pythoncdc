@@ -17716,6 +17716,28 @@ AST 映射规则:
                 if _last_cb:
                     _last_ci = _last_cb.get_last_instruction()
                     if _last_ci and _last_ci.argval is not None and _last_ci.opname in FORWARD_CONDITIONAL_JUMP_OPS:
+                        # [Pass8-BOOLOP] 同型反模式标记：下方
+                        # `if 'TRUE' in _last_ci.opname or 'NONE' in _last_ci.opname:`
+                        # 子串匹配判据与 Pass5-BOOLOP / Pass6-BOOLOP 在
+                        # `_detect_while_condition_boolop_chain` 内标记的
+                        # `'FALSE' in last.opname` / `'TRUE' in last.opname`
+                        # 子串匹配 DRY 违背同型（与 Pass7-ASSERT 在
+                        # `_detect_assert_boolop_chain` 内标记的
+                        # `'TRUE' in cond_last.opname` / `'NOT_NONE' in cond_last.opname`
+                        # 同型——跨文件 region_ast_generator.py 中本方法首处标记，
+                        # 散布 17+ 处之一）。本处为本文件 `_generate_boolop` 内
+                        # `_is_outer_condition` 分支末段取反判定：当链末跳转为
+                        # IF_TRUE / IF_NONE 类型时表达式需取反（语义：成功快跳的
+                        # 条件取反后即原条件）。
+                        # 后续 Pass 实施「子串匹配 → frozenset 常量统一替换」时
+                        # 需同步替换此处及本函数 if-like 复杂短路结构分支内两处
+                        # 同型子串匹配（grep 验证 `'TRUE' in _last.opname` /
+                        # `'FALSE' in _last.opname` 在 `_generate_boolop` 内共
+                        # 3 处命中，1 处为本行紧邻下方，2 处位于 if-like 复杂短路
+                        # 结构 then/else 取反分支内）。**不再引用具体行号**——
+                        # 每轮上游修改都会使行号继续漂移，与 Pass6-SEQ /
+                        # Pass7-TERNARY 同型思路一致。
+                        # 本轮仅添加内联标记，未触碰可执行代码，控制流不变。
                         if 'TRUE' in _last_ci.opname or 'NONE' in _last_ci.opname:
                             _boolop_negate = True
                 if _boolop_negate:
