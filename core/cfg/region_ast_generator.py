@@ -2127,10 +2127,14 @@ AST 映射规则:
       最终调用 expr_reconstructor.reconstruct(cond_instrs) 构建 AST。
   - 消息表达式重建（对 message_block.instructions 过滤）:
       base_skip = {RAISE_VARARGS, POP_EXCEPT, RERAISE, LOAD_ASSERTION_ERROR,
-                   RESUME, NOP, CACHE, PUSH_NULL, COPY, SWAP}；
-      若存在 BUILD_STRING（f-string 情况），从后向前定位 RAISE_VARARGS 边界
-      raise_call_start，过滤该边界及之后的 PRECALL/CALL；
-      否则一律跳过 PRECALL/CALL。剩余指令交由 expr_reconstructor 重建。
+                   RESUME, NOP, CACHE, PUSH_NULL, SWAP}；
+      [Pass4-ASSERT] docstring 同步：[Round8-12] 为支持 walrus 消息（(n := f())）
+      已将 COPY 从 base_skip 移除（保留 COPY+STORE 模式供 walrus 识别），
+      并把"非 BUILD_STRING 一律跳过 PRECALL/CALL"统一为反向 RAISE_VARARGS
+      扫描——无论是否含 BUILD_STRING，均从后向前定位 raise_call_start 边界，
+      仅过滤该边界及之后的 PRECALL/CALL（LOAD_ASSERTION_ERROR + CALL 抛错
+      基础设施），保留消息体内的 PRECALL/CALL/COPY/STORE。SWAP 仍跳过。
+      剩余指令交由 expr_reconstructor 重建。
   - None 检查方向修正（_invert_assert_none_check_direction）:
       对 Compare(op='is'/'is not', x, None) 互换 op；递归处理 BoolOp 包裹的
       None 检查（如 `assert a and x is not None`）。原因: expr_reconstructor
