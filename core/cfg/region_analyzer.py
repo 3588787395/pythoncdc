@@ -12391,6 +12391,30 @@ RegionType 枚举值: RegionType.ASSERT
                     return True
             return True
 
+        def _block_has_statement_instr(block):
+            """[R9-D7 fix] 检测块是否含语句级指令（STORE/DELETE/RAISE/IMPORT 等）。
+
+            区域归约算法原则 2（每块唯一归属）+ 原则 3（嵌套即抽象节点）：
+            ternary 的值块是表达式级语义（仅 LOAD/CALL/BINARY_OP 等），
+            不含语句级副作用指令。若块含 STORE_FAST 等，则该块是 if body
+            （语句级语义），归属 IfRegion，不归属 TernaryRegion。
+
+            对合法 ternary 安全：值块仅产生表达式值（LOAD/CALL/BINARY_OP），
+            不会含 STORE/DELETE/RAISE/IMPORT 等语句指令。
+            """
+            STATEMENT_OPS = frozenset({
+                'STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_ATTR',
+                'STORE_SUBSCR', 'STORE_DEREF',
+                'DELETE_NAME', 'DELETE_FAST', 'DELETE_GLOBAL', 'DELETE_ATTR',
+                'RAISE_VARARGS',
+                'YIELD_VALUE',
+                'IMPORT_NAME', 'IMPORT_FROM', 'IMPORT_STAR',
+            })
+            for instr in block.instructions:
+                if instr.opname not in NOISE_OPS and instr.opname in STATEMENT_OPS:
+                    return True
+            return False
+
         def _is_ternary_block(block):
             succs = list(block.conditional_successors)
             if len(succs) != 2:
@@ -12414,6 +12438,68 @@ RegionType 枚举值: RegionType.ASSERT
                         ft_last = fallthrough.get_last_instruction()
                         if ft_last and ft_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
                             return False
+                        # [R9-D7 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3（嵌套即抽象节点）：
+                        # 原检查仅覆盖嵌套 if-return（fallthrough 以 RETURN 结尾），遗漏
+                        # 嵌套 if-assign（fallthrough 含 STORE_FAST 等语句指令）。当外层
+                        # if/elif 的 then 块是内层 if 的条件头（以 POP_JUMP_IF_* 结尾），
+                        # 且内层 if 的 then/else body 含 STORE（赋值语句）时，该 then 块
+                        # 实质是嵌套 if 条件头，不是 ternary 值块。原检查不拒绝会导致
+                        # `if typet==2: if suffix=='X': y=a else: y=b elif typet==3: ...`
+                        # 被压缩为 `suffix=='X' if typet==2 else typet==3`（D7 缺陷）。
+                        # 判据（结构性，非实例特征）：fallthrough 含语句级指令 → 嵌套 if
+                        # body → 拒绝。对合法 ternary 安全：boolop 链值块的 fallthrough
+                        # 是 JUMP_FORWARD 到 merge 或下一 boolop 检查（均不含 STORE）；
+                        # 普通 ternary 值块的 fallthrough 是 LOAD value + JUMP_FORWARD
+                        # 到 merge（不含 STORE）。
+                        # [R9-D7 fix v2] ASSERT 回归修复：assert (a if c else b) 中
+                        # 值块的 fallthrough 是 assert error path（LOAD_ASSERTION_ERROR +
+                        # RAISE_VARARGS），含 RAISE_VARARGS（语句级指令）但无正常后继
+                        # （raise 块）。原判据误拒 → assert ternary 退化为 if 语句
+                        # （ASSERT 矩阵 20/6→18/8 回归）。收紧：fallthrough 无正常后继
+                        # （raise/exit 块）时不拒绝。对 D7 嵌套 if 安全：嵌套 if body
+                        # 必有正常后继（merge 或下一语句）。
+                        if (fallthrough.successors
+                                and _block_has_statement_instr(fallthrough)):
+                            return False
+                        # [R9-D3 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3（嵌套即抽象节点）：
+                        # elif 链被误识别为嵌套 ternary 时，「值块」实为 elif 条件头
+                        # （以 POP_JUMP_IF_* 结尾），其 fallthrough 是 elif body 或下一
+                        # elif 条件头。当 fallthrough 本身也是条件头（以 POP_JUMP_IF_*
+                        # 结尾）时，形成条件头链：cond1 → cond2 → cond3，这是 elif 链 /
+                        # chained-compare / boolop 短路链的结构特征，不是 ternary 值块。
+                        # 原判据（RETURN / STORE）无法覆盖「值块 = elif 条件头 +
+                        # fallthrough = 下一 elif 条件头」模式（如 quotation.pyc::
+                        # api_get_financial 的 `elif 400 <= e2.code <= 499:` 分支：
+                        # chained compare 跨两个 cond 块 298→324，均以 POP_JUMP_IF_*
+                        # 结尾，无 STORE/RETURN）。
+                        # 判据（结构性，非实例特征）：值块以条件跳转结尾，且其
+                        # fallthrough 也以条件跳转结尾 → 条件头链 → 拒绝。
+                        # 对合法 ternary 安全：ternary 值块是 LOAD value + JUMP_FORWARD
+                        # 到 merge（不以 POP_JUMP_IF_* 结尾）；嵌套 ternary 的内层 cond
+                        # 块的 fallthrough 是内层 true_value（LOAD value，不以
+                        # POP_JUMP_IF_* 结尾）。boolop 链由 BoolOpRegion 处理，不归
+                        # TernaryRegion。
+                        if (ft_last and ft_last.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                                and ft_last.argval is not None):
+                            return False
+                        # [R9-D3 fix 续] 同样检查 jump target：若值块的 jump target
+                        # 也是条件头（以 POP_JUMP_IF_* 结尾），则值块是 elif 条件头，
+                        # 其 else 分支是下一 elif 条件，不是 ternary 值。覆盖 3+ 分支
+                        # elif 链（if/elif/elif/else）：外层 if 的 false 值是第 1 个
+                        # elif 条件，其 jump target 是第 2 个 elif 条件（也是条件头）。
+                        # 对合法嵌套 ternary `a if c else (b if d else e)` 安全：c 的
+                        # false 分支是内层 cond d，d 的 jump target 是 e（简单值，非
+                        # 条件头）。对 boolop 安全：a 的 jump target 是 merge（非条件头）。
+                        _jt_block = None
+                        for _ss_cand in s.conditional_successors:
+                            if _ss_cand.start_offset == s_last.argval:
+                                _jt_block = _ss_cand
+                                break
+                        if _jt_block is not None:
+                            _jt_last = _jt_block.get_last_instruction()
+                            if (_jt_last and _jt_last.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                                    and _jt_last.argval is not None):
+                                return False
                     # [R4 Fix 3] nested if inner Compare lost: 上面的 fallthrough
                     # 检查只看【直接】fallthrough（一级深度），无法捕获嵌套 if-return
                     # 模式如 `if c1: if c2: if c3: return X; return Y`。这里 `s` 是
@@ -12431,9 +12517,30 @@ RegionType 枚举值: RegionType.ASSERT
                     # compare 值块的后继是 JUMP_FORWARD 或 false_block（LOAD 值，非
                     # return）；普通 ternary 值块以后继为 LOAD value + JUMP_FORWARD/
                     # fall-through 到 merge，非 return。
+                    # [R9-D7 fix] 扩展判据：若【任一】后继含语句级指令（STORE 等），
+                    # 同样视为嵌套 if 条件头。覆盖嵌套 if-assign 模式（D7）。
+                    # [R9-D7 fix v2] ASSERT 回归修复：assert (a if c else b) 中
+                    # 值块 a/b 的 POP_JUMP_IF_TRUE 跳转到 merge 块（next statement），
+                    # merge 块可能以 RETURN_VALUE 结尾（如 `return (x if c2 else y)`）。
+                    # 原判据误判为嵌套 if-return，拒绝合法 ternary → assert 退化为
+                    # if 语句（ASSERT 矩阵 20/6→18/8 回归）。判据收紧：若 `ss` 同时
+                    # 是【另一个值块】的后继，则 `ss` 是 merge 块（两值块汇聚点），
+                    # 不是嵌套 if body，不拒绝。对 D7 嵌套 if 安全：嵌套 if 的 then/else
+                    # body 是内层 if 独占的，不是另一值块的后继。
+                    _other_succs = succs[1] if s is succs[0] else succs[0]
+                    _other_succ_set = set(id(x) for x in _other_succs.successors)
                     for ss in s.conditional_successors:
+                        if id(ss) in _other_succ_set:
+                            continue
+                        # [R9-D7 fix v2] ASSERT 回归修复：assert error path
+                        # （LOAD_ASSERTION_ERROR + RAISE_VARARGS）无正常后继（raise
+                        # 块），不是嵌套 if body，不拒绝。
+                        if not ss.successors:
+                            continue
                         ss_last = ss.get_last_instruction()
                         if ss_last and ss_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                            return False
+                        if _block_has_statement_instr(ss):
                             return False
             if not (self._is_single_expression_block(succs[0]) and
                     self._is_single_expression_block(succs[1])):
@@ -13063,6 +13170,13 @@ RegionType 枚举值: RegionType.ASSERT
                                 if ss_last and ss_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
                                     _is_nested_if_header = True
                                     break
+                                # [R9-D7 fix] 区域归约算法原则 2 + 原则 3：
+                                # 后继含语句级指令（STORE 等）→ 嵌套 if body →
+                                # true_block 是嵌套 if 条件头，不是 ternary 值块。
+                                # 覆盖 D7 嵌套 if-assign 模式。
+                                if _block_has_statement_instr(ss):
+                                    _is_nested_if_header = True
+                                    break
                         false_is_ternary = not _is_nested_if_header
                     # else: true_block 是语句块（含 STORE_FAST 等），不构成 ternary
                 elif (len(false_block.conditional_successors) == 2 and
@@ -13075,6 +13189,10 @@ RegionType 枚举值: RegionType.ASSERT
                         for ss in true_block.conditional_successors:
                             ss_last = ss.get_last_instruction()
                             if ss_last and ss_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                                _true_is_nested_if_header = True
+                                break
+                            # [R9-D7 fix] 后继含语句级指令 → 嵌套 if 条件头
+                            if _block_has_statement_instr(ss):
                                 _true_is_nested_if_header = True
                                 break
                     if _true_is_nested_if_header:
@@ -13094,8 +13212,39 @@ RegionType 枚举值: RegionType.ASSERT
                                         if ss_last and ss_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
                                             _any_succ_nested_if_header = True
                                             break
+                                        # [R9-D7 fix] 后继含语句级指令 → 嵌套 if 条件头
+                                        if _block_has_statement_instr(ss):
+                                            _any_succ_nested_if_header = True
+                                            break
                                 if _any_succ_nested_if_header:
                                     break
+                            # [R9-D3 in-elif fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3（嵌套即抽象节点）：
+                            # false_block（elif 条件头）的 jump target 是下一 elif 条件头时，
+                            # 形成 elif 链 / chained-compare 链，不是嵌套 ternary 的 false 路径。
+                            # 判据（结构性，非实例特征）：false_block 的 jt 以 POP_JUMP_IF_*
+                            # 结尾 → 条件头链 → 拒绝。覆盖 quotation.pyc::api_get_financial
+                            # 的 `elif 400 <= e2.code <= 499:` 分支：@236（elif `==599` 条件头）
+                            # 的 jt 是 @298（chained compare 条件头），@298 也是条件头，构成
+                            # 条件头链，不是 ternary 值块。原判据（RETURN / STORE）无法覆盖
+                            # （@298 仅含 LOAD_CONST + COMPARE_OP + POP_JUMP_IF_FALSE，无
+                            # STORE/RETURN）；原 _is_ternary_block 的 D3 fix 续检查覆盖外层
+                            # ternary 值块，但本 elif 分支未应用，导致 false_block 被接受为
+                            # ternary false 路径，@298+@324 被压缩为 `if 499:`。
+                            # 对合法嵌套 ternary `a if c else (b if d else e)` 安全：c 的 false
+                            # 是内层 cond d，d 的 jt 是 e（简单值，非条件头）。
+                            # 对 boolop 安全：a 的 jt 是 merge（非条件头）。
+                            if not _any_succ_nested_if_header:
+                                _d3_jt_blk = None
+                                for _s_cand in false_succs:
+                                    if _s_cand.start_offset == false_last.argval:
+                                        _d3_jt_blk = _s_cand
+                                        break
+                                if _d3_jt_blk is not None:
+                                    _d3_jt_last_instr = _d3_jt_blk.get_last_instruction()
+                                    if (_d3_jt_last_instr and
+                                            _d3_jt_last_instr.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                                            and _d3_jt_last_instr.argval is not None):
+                                        _any_succ_nested_if_header = True
                             if _any_succ_nested_if_header:
                                 false_is_ternary = False
                             elif all(self._is_single_expression_block(s) for s in false_succs):

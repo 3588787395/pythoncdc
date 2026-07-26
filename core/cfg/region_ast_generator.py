@@ -9080,6 +9080,36 @@ AST 映射规则:
                             _last_elif_condition = {'type': 'BoolOp', 'op': _chain_op, 'values': _elif_parts}
                             for _cb in _chain_blocks:
                                 self.generated_blocks.add(_cb)
+                # [R9-D3 in-elif fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3（嵌套即抽象节点）：
+                # 最后一个 elif 条件本身是 chained compare（如 `elif 400 <= e2.code <= 499:`）
+                # 时，从对应的子 IfRegion（含 chained_compare_ops/chained_compare_blocks）
+                # 重建链式比较 Compare 节点。镜像 line 8796-8820 的首段 elif 处理逻辑。
+                # 原逻辑仅覆盖首段 elif（elif_conditions[0]）的 chained compare 检查，
+                # 漏掉末段 elif（elif_conditions[-1]），导致 `elif 400 <= e2.code <= 499:`
+                # 退化为 `elif 400 <= e2.code: if 499: pass`（chained compare 被拆分）。
+                # 依「每块唯一归属」: chained_compare_blocks 归属子 IfRegion，由子 IfRegion
+                # 重建为单个 Compare 节点；不归属外层 elif 的条件头。
+                if _last_elif_condition is None:
+                    for _r in self.regions:
+                        if (isinstance(_r, IfRegion)
+                                and _r.entry is _last_elif_cond_block
+                                and getattr(_r, 'chained_compare_ops', None)):
+                            _last_chained = self._build_chained_compare_from_region_data(_r)
+                            if _last_chained:
+                                _last_elif_condition = _last_chained
+                                self.generated_blocks.add(_last_elif_cond_block)
+                                for _ccb in (_r.chained_compare_blocks or []):
+                                    self.generated_blocks.add(_ccb)
+                                if hasattr(_r, 'merge_block') and _r.merge_block:
+                                    self.generated_blocks.add(_r.merge_block)
+                                for _eb in (_r.else_blocks or []):
+                                    _eb_meaningful = [i for i in _eb.instructions
+                                                      if i.opname not in ('RESUME', 'NOP', 'CACHE', 'POP_TOP',
+                                                                          'JUMP_FORWARD', 'JUMP_BACKWARD',
+                                                                          'RETURN_VALUE', 'RETURN_CONST')]
+                                    if not _eb_meaningful:
+                                        self.generated_blocks.add(_eb)
+                            break
                 if _last_elif_condition is None:
                     _last_elif_condition = self._extract_condition_for_elif_block(_last_elif_cond_block, region)
                 nested_elif_stmts = [{'type': 'If', '_is_elif': True, 'test': _last_elif_condition if _last_elif_condition else {'type': 'Constant', 'value': True}, 'body': last_elif_body_stmts if last_elif_body_stmts else [{'type': 'Pass'}], 'orelse': []}]
@@ -28429,6 +28459,18 @@ AST 映射规则:
                     val = last.get('value')
                     if isinstance(val, dict) and val.get('type') == 'Compare':
                         stmts[-1] = {'type': 'Return', 'value': val}
+                    # [R9-D6 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（入口引用语义）：
+                    # except handler 内 if/else 分支块含 return-through-cleanup 模式
+                    # （<return value> + SWAP + POP_EXCEPT + as-var cleanup + RETURN_VALUE）
+                    # 时，return 值表达式应归 Return 语句，as-var cleanup 归 except 机制。
+                    # 原转换逻辑仅处理 Expr(Compare)，遗漏 Expr(Tuple/Dict/Call) —— 即
+                    # D6 bare Expr 缺陷（return 关键字丢失，返回值作为裸 Expr 发射）。
+                    # 判据（结构性）：_find_return_through_cleanup_chain 检测同块内的
+                    # POP_EXCEPT + as-var cleanup + RETURN_VALUE 模式。对合法非 return
+                    # Expr 安全：该模式是 except handler 独有的 return 路径，普通块不含
+                    # POP_EXCEPT + as-var cleanup 序列。
+                    elif self._find_return_through_cleanup_chain(block):
+                        stmts[-1] = {'type': 'Return', 'value': val}
             else:
                 all_succs_are_return = False
                 cond_succs = getattr(block, 'conditional_successors', [])
@@ -28445,6 +28487,30 @@ AST 映射规则:
                             stmts[-1] = {'type': 'Return', 'value': val}
                             for succ in cond_succs:
                                 self.generated_blocks.add(succ)
+                # [R9-D6 fix v3] 区域归约算法原则 2（每块唯一归属）+ 原则 4（入口引用语义）：
+                # except handler 内 if/else 分支块的 return 值在当前块，但
+                # SWAP + POP_EXCEPT + as-var cleanup + RETURN_VALUE 跨多个后继块
+                # （CPython 3.11+ exception table 在 SWAP 边界拆分 basic block）。
+                # v2 禁用跨后继路径因 _find_return_chain_via_successors 过宽（接受任意
+                # cleanup-only+RETURN 块）导致 try body 误判（TRY 78/2→74/6 回归）。
+                # v3 收紧判据：用 _find_return_chain_via_successors 走 cleanup-only 后继链，
+                # 但最终含 RETURN_VALUE 的块 MUST 额外通过 _find_return_through_cleanup_chain
+                # 检查（含 POP_EXCEPT + as-var cleanup：LOAD_CONST None → STORE_FAST e →
+                # DELETE_FAST e，同名变量）。该 as-var cleanup 模式是 except handler 独有
+                # （`except E as e:` 的 e 清理），try body return 不含 as-var cleanup
+                # （无 as 变量），故对 try body 安全。
+                # 算法依据：原则 2（return 值块归 Return 语句，cleanup 块归 except 机制，
+                # 各唯一归属）；原则 4（return 值表达式引用入口语义）。
+                if not all_succs_are_return:
+                    last = stmts[-1] if stmts else None
+                    if (isinstance(last, dict) and last.get('type') == 'Expr'
+                            and isinstance(last.get('value'), dict)
+                            and last['value'].get('type') in ('Tuple', 'Dict', 'Call', 'Compare', 'List', 'Set', 'Name', 'Attribute', 'Subscript', 'BinOp', 'BoolOp', 'IfExp')):
+                        _ret_path = self._find_return_chain_via_successors(block)
+                        if _ret_path and self._find_return_through_cleanup_chain(_ret_path[-1]):
+                            stmts[-1] = {'type': 'Return', 'value': last['value']}
+                            for _rb in _ret_path:
+                                self.generated_blocks.add(_rb)
 
         self.generated_blocks.add(block)
         return stmts

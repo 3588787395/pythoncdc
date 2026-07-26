@@ -1,0 +1,32 @@
+"""Repro 09-13: D7 variant — 3 outer branches nested if/elif/else with assign.
+
+R9 repro_09_07 (4 outer branches) confirmed D7 fires with 4 nested
+branches. This repro tests the boundary with 3 outer branches to
+determine the minimum nesting depth that triggers D7.
+
+The quotation.pyc::build_future_fill_time has 4 outer branches
+(typet == 2/3/4/13). This 3-branch variant isolates whether the D7
+trigger threshold is at 3 or 4 branches.
+
+Expected defect: if D7 fires, a bare Expr of nested ternary of `==`.
+If NOT-REPRO, the threshold is 4 branches.
+"""
+
+
+def build_market(typet, suffix):
+    if typet == 2:
+        if suffix == 'T.CCFX':
+            market_time = {'open': '09:35'}
+        else:
+            market_time = {'open': '09:00'}
+    elif typet == 3:
+        if suffix == 'T.CCFX':
+            market_time = {'open': '09:30'}
+        else:
+            market_time = {'open': '09:00'}
+    elif typet == 4:
+        if suffix == 'T.CCFX':
+            market_time = {'open': '09:25'}
+        else:
+            market_time = {'open': '09:00'}
+    return market_time

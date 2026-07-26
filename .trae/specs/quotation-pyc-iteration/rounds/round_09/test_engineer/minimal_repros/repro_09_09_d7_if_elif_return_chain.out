@@ -1,0 +1,25 @@
+# Source Generated with Decompyle++ (Python version)
+# File: repro_09_09_d7_if_elif_return_chain.pyc (Python 3.11)
+
+__doc__ = """Repro 09-09: D7 variant — if/elif return chain.
+
+The D7 defect in quotation.pyc::build_future_fill_time collapses an
+if/elif assignment chain. A related form is an if/elif return chain:
+    if x == 1:
+        return 'a'
+    elif x == 2:
+        return 'b'
+    else:
+        return 'c'
+This repro tests whether the if/elif return chain is also compressed
+to a nested ternary (which would be a bare Expr, losing the returns).
+
+Expected defect: if compressed, the returns are lost and a bare Expr
+of nested ternary of `==` is emitted.
+"""
+def classify(x):
+    if x == 1:
+        return 'a'
+    elif x == 2:
+        return 'b'
+    return 'c'

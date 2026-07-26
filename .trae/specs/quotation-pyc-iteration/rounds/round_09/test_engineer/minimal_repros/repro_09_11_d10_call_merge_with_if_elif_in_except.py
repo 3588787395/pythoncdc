@@ -1,0 +1,38 @@
+"""Repro 09-11: D10 (P2) call merge with if/elif in except handler.
+
+The quotation.pyc::api_get_financial line 158 defect merges:
+    except HTTPError as e2:
+        system_log.error(get_traceback_message())
+        if e2.code == 401:
+            ...
+        elif e2.code == 599:
+            ...
+into a single call:
+    system_log(request_times <= 2 if e2.code == 401 else e2.code == 599)
+The `LOAD_ATTR error` accessor is dropped, the `get_traceback_message()`
+argument is dropped, and the if/elif conditions become IfExp arguments.
+
+This repro isolates the call-merge pattern: a `log.error(traceback())`
+call followed by an if/elif chain in the same except handler.
+
+Expected defect: `log(<IfExp of conditions>)` instead of preserving
+the `log.error(traceback())` call and the if/elif structure.
+"""
+
+
+def api_get_financial(url, request_times=0):
+    try:
+        response = do_request(url)
+        return_data = response.json()
+    except HTTPError as e2:
+        system_log.error(get_traceback_message())
+        if e2.code == 401:
+            if request_times <= 2:
+                time.sleep(10)
+                request_times += 1
+                return api_get_financial(url, request_times)
+        elif e2.code == 599:
+            return api_get_financial(url)
+        error_no = e2.code
+        return ({'error_no': error_no, 'error_info': ''}, {})
+    return ({'error_no': 0, 'error_info': ''}, return_data)

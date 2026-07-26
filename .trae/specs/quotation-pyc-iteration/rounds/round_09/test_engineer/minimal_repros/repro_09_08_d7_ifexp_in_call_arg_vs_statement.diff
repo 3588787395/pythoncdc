@@ -1,0 +1,3 @@
+classify offset=-1 type=length orig='orig=32' new='new=19'
+classify offset=42 type=opname orig='LOAD_GLOBAL NULL + log' new='LOAD_FAST y'
+classify offset=54 type=opname orig="LOAD_CONST 'result: %s'" new='RETURN_VALUE '

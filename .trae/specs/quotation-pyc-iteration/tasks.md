@@ -798,7 +798,138 @@
 
 ## 轮 9 (Round 9)
 
-- [ ] R9-T1 ~ R9-T8
+> **状态**：测试工程师阶段已完成（14 个 repro，9/14 DEFECT-REPRO 确认）；修复工程师阶段待执行 — 目标：D3 (P1) + D7 (P2) + P2≥2（D8/D10/D6-bare-Expr 择优）+ fix_report.md。
+> **R9 基线**：反编译产物 COMPILE_OK（2558 行，0 stderr，TRY 区域 78/2 持平 R8）。
+> **R9 残留缺陷**：5 类 — D3 (P1) chained compare in except / D7 (P2) malformed ternary chain / D8 (P2) lost date_convert body / D10 (P2) malformed call in except / D6-bare-Expr (P2) return lost as bare Expr（R9 新发现）。
+> **强制约束**：D3 修复必须使 quotation.pyc::api_get_financial line 159 `if 499:` 恢复为 `if 400 <= e2.code <= 499:`；D7 修复必须使 quotation.pyc::build_future_fill_time line 351 不再压缩为嵌套 ternary；必须保证 R7/R8 已修项不退化；区域归约算法 4 原则 FULLY COMPLIANT；禁止 `_fix_/_merge_/_patch_/_fallback_/_hack_/_workaround_/_temp_` 前缀方法新增。
+
+### 阶段一：测试工程师（已完成）
+
+- [x] R9-T1: 反编译 + 字节码 diff → `decompile_report.md`（rounds/round_09/test_engineer/decompile_report.md，5 类残留缺陷 + R9 新发现 N1-N7，COMPILE_OK 2558 行 0 stderr）
+  - 14 个 repro 全部通过 `py_compile` 独立编译
+  - 9/14 DEFECT-REPRO 确认（01/05/07/08/10/11/12/13/14）；5/14 NOT-REPRO 控制组（02/03/04/06/09）
+  - 关键诊断：D3 context-sensitive（隔离场景 NOT-REPRO，except handler + 前置 call 触发）；D7 触发条件 = 嵌套 if/elif（外层 ≥3 分支），纯非嵌套 4 分支不触发；D8 可独立复现
+- [x] R9-T2: ≥10 最小复现实例 → `minimal_repros/`（14 个 repro，归档至 `rounds/round_09/test_engineer/minimal_repros/repro_09_*.py`）
+
+### 阶段二：修复工程师（待执行 — D3 P1 + D7 P2 + P2≥2 + fix_report.md）
+
+- [ ] R9-T3: 根因分析 + 定位（依赖 R9-T1/T2）
+  - 对 5 类缺陷逐项定位到 `_identify_*_regions` 或 `_generate_*` 方法
+  - 输出根因分析：区域类型 + 算法偏离点 + 4 原则违反项
+  - 涉及文件：`core/cfg/region_analyzer.py`、`core/cfg/region_ast_generator.py`
+
+- [ ] R9-T4: D3 修复实施（P1 — 必须完成）
+  - [ ] R9-T4a: 定位 + 根因分析
+    - 定位：`region_analyzer.py::_identify_conditional_regions`（block@694 IfRegion 识别）+ `region_ast_generator.py::_try_build_attr_middle_chained_compare` / `_build_chained_compare_from_region_data`
+    - 根因：R6 已新增 `_try_build_attr_middle_chained_compare` 处理 `LOAD_FAST + LOAD_ATTR` 中间操作数（minimal repro 通过）；但 quotation.pyc::api_get_financial block@694（含 `SWAP + COPY + COMPARE_OP + POP_JUMP_FORWARD_IF_FALSE`）未被识别为 IfRegion（前置 `system_log.error(get_traceback_message())` call 干扰 IfRegion 识别）
+    - 算法依据：自底向上归约 + 每块唯一归属（call 块与 IfRegion 块分别归属）+ 入口引用语义
+  - [ ] R9-T4b: 实施修复（含 docstring 同步）
+    - `_identify_conditional_regions` 调整 IfRegion 识别条件，覆盖 except handler 内 SWAP+COPY+COMPARE_OP+POP_JUMP_FORWARD_IF_FALSE 模式（前置 call 不应干扰 IfRegion 识别）
+    - `_generate_condition_expr` 消费 chained compare 的两个 COMPARE_OP 操作数（跨 POP_JUMP_FORWARD_IF_FALSE 边界），不仅限于尾部
+    - 禁止引入反模式前缀方法
+    - 内联注释引用「自底向上归约」+「每块唯一归属」+「入口引用语义」原则
+  - [ ] R9-T4c: 验证
+    - repro_09_05_d3_chained_compare_in_elif_after_call.pyc 中 `elif 400 <= e2.code <= 499:` 条件恢复 ✓
+    - repro_09_12_d3_d10_compound_in_except.pyc 中 `400 <= e2.code <= 499` 完整保留 ✓
+    - quotation.pyc::api_get_financial line 159 `if 400 <= e2.code <= 499:` 条件恢复 ✓
+
+- [ ] R9-T5: D7 修复实施（P2 — 必须完成）
+  - [ ] R9-T5a: 定位 + 根因分析
+    - 定位：`region_analyzer.py::_is_ternary_block` / `_detect_ternary_pattern` / `region_ast_generator.py::_generate_if` / IfExp 重建
+    - 根因：嵌套 if/elif（外层 `typet == 2/3/4/13`，内层 `suffix == 'T.CCFX'`）被错误归约为嵌套 ternary of `==` 比较；内层 if 的条件被误归为外层 ternary 的 value 表达式；`=` 赋值被误发射为 `==` 比较
+    - 算法依据：自底向上归约 + 嵌套即抽象节点（嵌套 if/elif 归 IfRegion，不归 TernaryRegion）
+  - [ ] R9-T5b: 实施修复（含 docstring 同步）
+    - 已实施：`_block_has_statement_instr` 检测 STORE/DELETE/RAISE 等语句级指令；`_is_ternary_block` 检查 fallthrough 和后继是否含语句级指令；`_detect_ternary_pattern` 嵌套 if header 检测扩展
+    - 需验证：嵌套 if/elif（4 外层分支）不再压缩为嵌套 ternary；内层 if 条件保留为 IfRegion 子节点
+    - 禁止引入反模式前缀方法
+    - 内联注释引用「每块唯一归属」+「嵌套即抽象节点」原则
+  - [ ] R9-T5c: 验证
+    - repro_09_07_d7_nested_if_elif_else_with_assign.pyc 中嵌套 if/elif 结构保留 ✓
+    - repro_09_13_d7_nested_3_outer_branches.pyc 中前 2 分支不再压缩为 ternary ✓
+    - repro_09_08_d7_ifexp_in_call_arg_vs_statement.pyc 中 log(...) Call 语句保留 ✓
+    - repro_09_06_d7_if_elif_assign_chain.py（NOT-REPRO 控制组）不退化 ✓
+    - repro_09_09_d7_if_elif_return_chain.py（NOT-REPRO 控制组）不退化 ✓
+    - quotation.pyc::build_future_fill_time line 351 不再压缩为嵌套 ternary ✓
+
+- [ ] R9-T6: P2 修复实施（必须完成至少 2 项 — D8 / D10 / D6-bare-Expr 择优）
+  - [ ] R9-T6a: 修复 D8 — date_convert body collapse（P2）
+    - 定位：`region_analyzer.py::_identify_conditional_regions`（if/elif/else + IfExp 嵌套归约顺序）+ `region_ast_generator.py::_generate_block_statements`（dict_temp / year_temp / month_temp 赋值丢失）
+    - 根因：date_convert 函数体含 if/elif/else + IfExp 嵌套，被压缩为单 IfExp Expr（`int(IfExp)`）；中间赋值语句（dict_temp / year_temp / month_temp / quarter）全部丢失
+    - 修复方向：`_identify_conditional_regions` 在 if/elif/else + IfExp 嵌套时按自底向上归约顺序处理；IfExp 仅在 Call 实参位置保留；`_generate_block_statements` 识别局部赋值为独立语句
+    - 算法依据：自底向上归约 + 嵌套即抽象节点
+    - 验证目标：repro_09_10/14 中 if/elif/else + 局部赋值 + return 完整保留；quotation.pyc::date_convert 函数体 orig=87 → new ≥ 60
+  - [ ] R9-T6b: 修复 D10 — malformed call in except handler（P2）
+    - 定位：`region_ast_generator.py::_generate_handler_body_statements`（call 与 if/elif 合并）+ Call 重建
+    - 根因：except handler 内 `LOAD_GLOBAL system_log + LOAD_ATTR error + PRECALL + CALL get_traceback_message()` 调用与后续 `e2.code == 401 / e2.code == 599` if/elif 条件合并为单个 `system_log(IfExp)` 调用；`LOAD_ATTR error` accessor 丢失，`get_traceback_message()` 实参丢失
+    - 修复方向：`_generate_handler_body_statements` 把 `system_log.error(get_traceback_message())` 调用保留为独立 Expr，不与后续 if/elif 条件合并
+    - 算法依据：每块唯一归属（call 块与 IfRegion 块分别归属）+ 入口引用语义
+    - 验证目标：repro_09_11/12 中 `system_log.error(get_traceback_message())` 独立保留 + if/elif 结构保留；quotation.pyc::api_get_financial line 158 修复
+  - [ ] R9-T6c: 修复 D6-bare-Expr — return 丢失为裸 Expr（P2，R9 新发现 N1，可选）
+    - 定位：`region_ast_generator.py::_generate_handler_body_statements`（RETURN_VALUE 后接 RERAISE cleanup）
+    - 根因：`_generate_handler_body_statements` 在 except handler 内处理 RETURN_VALUE 时，将 `RETURN_VALUE <const/tuple>` 后接 `RERAISE+COPY+POP_EXCEPT` cleanup 序列整体当作 cleanup 抑制，导致 return 关键字丢失但返回值作为 Expr 保留
+    - 修复方向：精确区分真实 return 与 cleanup 抑制，return 关键字保留
+    - 算法依据：每块唯一归属 + 入口引用语义
+    - 验证目标：repro_09_01 中 `return ({...}, {})` 关键字恢复（不再为裸 Expr）
+
+- [ ] R9-T7: 回归测试（≤280s）
+  - [ ] R9-T7a: 9 个 DEFECT-REPRO repro（01/05/07/08/10/11/12/13/14）反编译验证通过（核心缺陷已消除）
+    - 注：5 个 NOT-REPRO 控制组（02/03/04/06/09）必须保持 NOT-REPRO 不退化
+  - [ ] R9-T7b: 既有测试矩阵无退化（IF/LOOP/TRY/WITH/MATCH/BOOLOP/TERNARY/CC/SEQ/ASSERT 子集 0 退化）
+    - 重点验证 TRY 区域维持 78/2（R8 改善后基线）
+  - [ ] R9-T7c: quotation.pyc 反编译 stderr 维持 0
+    - `timeout 60 python pycdc.py /workspace/quotation.pyc > /tmp/r9_fixed.py 2>/tmp/r9_fixed.err`
+    - EXIT=0，stderr 行数 = 0
+  - [ ] R9-T7d: quotation.pyc 反编译产物 `compile()` 通过（COMPILE_OK）
+    - `python -c "compile(open('/tmp/r9_fixed.py').read(),'r9','exec'); print('COMPILE_OK')"`
+  - [ ] R9-T7e: quotation.pyc::api_get_financial line 159 `if 400 <= e2.code <= 499:` 条件恢复（D3 修复）
+  - [ ] R9-T7f: quotation.pyc::build_future_fill_time line 351 不再压缩为嵌套 ternary（D7 修复）
+  - [ ] R9-T7g: quotation.pyc 中 D8/D10/D6-bare-Expr 修复点验证（如本轮覆盖）
+  - [ ] R9-T7h: R7 已修项不退化（D9 spurious return None / D5 orphan Expr / D4 del e2 在 quotation.pyc 实际产物复测）
+  - [ ] R9-T7i: R8 已修项不退化（D6 try body return / TRY 78/2 在 quotation.pyc 实际产物复测）
+  - [ ] R9-T7j: 残留不一致数 ≤ R9 基线（72 个函数不一致，目标 ≤ 60）
+
+- [ ] R9-T8: `fix_report.md` 生成（rounds/round_09/repair_engineer/fix_report.md）
+  - 修复点列表（按 repro 编号 + 涉及方法 + 算法依据 + 4 原则对应条款）
+  - docstring/内联注释更新清单（方法名 + 6 项模板覆盖确认 / 内联注释算法依据覆盖确认）
+  - 回归结果（9 DEFECT-REPRO 通过状态 + 5 NOT-REPRO 控制组不退化 + 既有矩阵退化检查）
+  - 残留不一致数（与 R9 基线 72 个函数不一致对比，应下降；推荐目标 ≤ 60）
+  - 算法 4 原则合规性自检
+  - 已知限制（未覆盖的 P2 项 + 后续轮次计划 R10）
+
+- [ ] R9-T9: 反模式自检
+  - 无 `_fix_/_merge_/_patch_/_fallback_/_hack_/_workaround_/_temp_` 前缀 0 新增（grep 验证）
+  - `_merge_block_is_loop_back_edge` 仍未重命名（pre-existing，按 spec 留待后续轮次）
+
+- [ ] R9-T10: 涉及的 `_identify_*_regions` / `_generate_*` 方法 docstring/内联注释已说明算法依据
+  - 6 项：算法依据 / 归约顺序 / 唯一归属判定 / 嵌套处理 / 入口引用语义 / 反编译流程
+  - 待更新方法：`_identify_conditional_regions`（D3/D7/D8 修改）/ `_is_ternary_block` + `_block_has_statement_instr` + `_detect_ternary_pattern`（D7 修改）/ `_generate_condition_expr`（D3 修改）/ `_generate_handler_body_statements`（D10/D6-bare-Expr 修改）/ `_generate_block_statements`（D8 修改）
+  - 注：spec.md G8 要求 `_identify_*_regions` 方法按 6 项统一模板更新 docstring；`_generate_*` 方法以「内联注释说明算法依据」替代，符合 spec "Add inline comments explaining the algorithm basis" 的要求
+
+- [ ] R9-T11: 算法 4 原则 FULLY COMPLIANT（自底向上归约 / 每块唯一归属 / 嵌套抽象节点 / 入口引用语义）
+  - 自底向上归约：D3/D7/D8 修复完善 IfRegion/TernaryRegion 识别条件，不改变归约顺序
+  - 每块唯一归属：call 块与 IfRegion 块分别归属（D3/D10）；ternary 值块与 if body 块分别归属（D7）；局部赋值块与 IfExp 块分别归属（D8）
+  - 嵌套即抽象节点：嵌套 if/elif 归 IfRegion，不归 TernaryRegion（D7）；except handler 作为 TryExcept 子区域抽象节点（D3/D10）
+  - 入口引用语义：handler body 语句序列只引用业务指令入口，不引用 cleanup 块入口（D6-bare-Expr）
+
+- [ ] R9-T12: `python -c "import core.cfg.region_analyzer; import core.cfg.region_ast_generator; import core.cfg.code_generator; print('IMPORT_OK')"` 编译通过
+
+- [ ] R9-T13: commit + push `qpyc-r09:`（≤300s，待用户授权执行）
+
+## R9 验证补充检查点
+
+- [ ] R9-V1: `python -c "import core.cfg.region_analyzer; import core.cfg.region_ast_generator; import core.cfg.code_generator; print('IMPORT_OK')"` 通过
+- [ ] R9-V2: `timeout 60 python pycdc.py /workspace/quotation.pyc > /tmp/r9_fixed.py 2>/tmp/r9_fixed.err` EXIT=0，stderr 行数 = 0
+- [ ] R9-V3: `python -c "compile(open('/tmp/r9_fixed.py').read(),'r9','exec'); print('COMPILE_OK')"` 通过
+- [ ] R9-V4: 9 个 DEFECT-REPRO repro（01/05/07/08/10/11/12/13/14）核心缺陷消除
+- [ ] R9-V5: 5 个 NOT-REPRO 控制组（02/03/04/06/09）保持 NOT-REPRO 不退化
+- [ ] R9-V6: `timeout 90 python .trae/specs/analysis-fix-iteration/run_region_tests.py TRY` 不劣化于 R8 的 78/2
+- [ ] R9-V7: quotation.pyc::api_get_financial line 159 `if 400 <= e2.code <= 499:` 条件恢复（D3）
+- [ ] R9-V8: quotation.pyc::build_future_fill_time line 351 不再压缩为嵌套 ternary（D7）
+- [ ] R9-V9: quotation.pyc line 181-183 虚假 return None 仍消除（R7 D9 修复不退化）
+- [ ] R9-V10: quotation.pyc line 174 `del e2` 仍消除（R7 D4 修复不退化）
+- [ ] R9-V11: quotation.pyc line 251 `prod` / line 504 `panel.items` 孤立 Expr 仍消除（R7 D5 修复不退化）
+- [ ] R9-V12: quotation.pyc::api_get_financial line 160-161 try body return 保留（R8 D6 修复不退化）
+- [ ] R9-V13: 反模式 grep 验证 0 新增（`_fix_/_merge_/_patch_/_fallback_/_hack_/_workaround_/_temp_` 前缀）
 
 ## 轮 10 (Round 10)
 
