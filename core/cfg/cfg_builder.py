@@ -159,6 +159,23 @@ class CFGBuilder:
             print(f"Warning: Error parsing instructions: {e}")
 
     def _identify_jump_targets(self) -> None:
+        """
+        识别跳转目标，确定基本块边界。
+
+        1. 算法依据：每块唯一归属 — 块边界仅由跳转目标 + 跳转/return/raise 之后
+           位置确定；NOP 不是块边界（CPython 3.11+ 在 decorator 与 MAKE_FUNCTION
+           之间插入 NOP 仅用于行对齐，非跳转目标）。
+        2. 归约顺序：CFG 构建阶段（最早期），在 _build_basic_blocks 之前完成。
+        3. 唯一归属判定：每个指令偏移只能属于一个基本块；块边界由
+           is_jump_target + JUMP 指令目标 + BRANCH 下一指令偏移共同确定。
+        4. 嵌套处理：N/A（CFG 层级，无嵌套结构）。
+        5. 入口引用语义：N/A（CFG 层级，无 region 引用）。
+        6. 反编译流程：枚举指令 → 收集跳转目标集合 → 后续 _build_basic_blocks
+           据此切分基本块；NOP 不作为块边界，避免将
+           `LOAD_NAME decorator + LOAD_CONST defaults + MAKE_FUNCTION + CALL`
+           原子序列在 NOP 处切断（导致 decorator 丢失 / defaults 元组作为
+           装饰器 `@((...))` 泄漏）。
+        """
         self.jump_targets = set()
         for i, instr in enumerate(self.instructions):
             if instr.is_jump_target:
@@ -169,8 +186,12 @@ class CFGBuilder:
                     if instr.opname in self.BRANCH_INSTRUCTIONS and i + 1 < len(self.instructions):
                         next_offset = self.instructions[i + 1].offset
                         self.jump_targets.add(next_offset)
-            if instr.opname == 'NOP' and i > 0:
-                self.jump_targets.add(instr.offset)
+            # NOP 块边界状态仅由 instr.is_jump_target 决定（见上方分支）。
+            # 不再无条件将 NOP 视为块边界：CPython 3.11+ 在 decorator 与
+            # MAKE_FUNCTION 之间插入 NOP 用于行对齐，并非跳转目标；若将其
+            # 视为块边界会切断 `LOAD_NAME decorator + LOAD_CONST defaults +
+            # MAKE_FUNCTION + CALL` 原子序列，导致 decorator 丢失 /
+            # defaults 元组被错误发射为 `@((...))` 装饰器（repro_13）。
 
     def _build_basic_blocks(self) -> None:
         if not self.instructions:

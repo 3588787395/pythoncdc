@@ -447,14 +447,37 @@ class CodeGenerator:
         self._write_line(f'{target_code} {op}= {value_code}')
 
     def _generate_function_def_dict(self, node: Dict[str, Any], async_prefix: str = '') -> None:
+        """
+        生成函数定义（字典路径）。
+
+        1. 算法依据：每块唯一归属 — defaults 元组应归函数签名 `name=default`，
+           不应归 decorators 列表；CPython 3.11+ 在 decorator 与 MAKE_FUNCTION
+           之间插入 NOP（行对齐），CFG 不应将 NOP 视为块边界切断
+           `LOAD_NAME decorator + LOAD_CONST defaults + MAKE_FUNCTION + CALL`
+           原子序列（repro_13: defaults 元组被误发射为 `@((...))` 装饰器）。
+        2. 归约顺序：AST → 源码生成阶段（最末期）。
+        3. 唯一归属判定：decorator_list 仅承载真装饰器节点；
+           defaults 由 args['defaults'] 渲染为 `name=default`。
+        4. 嵌套处理：N/A（叶子节点生成）。
+        5. 入口引用语义：N/A（叶子节点生成）。
+        6. 反编译流程：decorator_list → `@expr` 行；args.defaults →
+           `name=default` 形参；body → 缩进语句序列。
+        """
         func_name = node.get('name', 'function')
         args = node.get('args', {})
         body = node.get('body', [])
         decorator_list = node.get('decorator_list', [])
         returns = node.get('returns')
-        
+
         for decorator in decorator_list:
             if isinstance(decorator, dict):
+                # 防御：defaults 元组（Tuple 节点）绝不应作为装饰器发射。
+                # 依「每块唯一归属」: defaults 归函数签名，不归 decorators。
+                # 正常路径下 _reconstruct_decorator_chain 已不会收集 LOAD_CONST
+                # defaults 元组，此处仅作为兜底，防止 NOP 块边界误切等历史
+                # 路径再次将 defaults 泄漏到 decorator_list（repro_13）。
+                if decorator.get('type') == 'Tuple':
+                    continue
                 decorator_code = self._generate_expression(decorator)
             else:
                 decorator_code = str(decorator)

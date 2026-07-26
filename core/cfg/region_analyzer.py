@@ -16669,9 +16669,19 @@ RegionType 枚举值: RegionType.ASSERT
                             _ir_range = ranges[id(_if_cand)]
                             _ni_inside_ir = (_ir_range[0] <= _ni_range[0] and _ir_range[1] >= _ni_range[1] and
                                              (_ni_range[0] > _ir_range[0] or _ni_range[1] < _ir_range[1]))
+                            # Fix 06 / §9 守卫：当非 If 候选与 child 共享同一 entry 块时（如
+                            # TryExceptRegion 与其内部的 WithRegion 都以 try 入口为
+                            # entry），非 If 候选是 child 的子区域/对等区域而非祖先，
+                            # 不应据此移除 IfRegion 候选（否则 TryExcept 无法挂到
+                            # IfRegion 分支下，导致 try/except 结构丢失 —
+                            # orphan_try 场景）。仅当非 If 候选 entry 不同于 child
+                            # entry 时才视为潜在祖先并移除 IfRegion。
+                            # 算法依据：每块唯一归属（block_to_region canonical owner）
+                            # + 嵌套即抽象节点（TryExcept 作为 IfRegion else 分支抽象节点）
+                            _ni_is_peer = _non_if_cand.entry is child.entry
                             if child.entry in _non_if_cand.blocks and (
                                 _non_if_cand.entry in _if_branch_entries or _ni_inside_ir
-                            ):
+                            ) and not _ni_is_peer:
                                 _to_remove.add(id(_if_cand))
                                 break
                     if _to_remove:

@@ -1506,6 +1506,19 @@ class RegionASTGenerator:
         作为装饰器名称。然后检查MAKE_FUNCTION之后的CALL序列来确定
         哪些装饰器带有参数。
 
+        1. 算法依据：每块唯一归属 — defaults 元组（LOAD_CONST tuple）应归
+           函数签名 `name=default`，不归 decorators 列表；CPython 3.11+ 在
+           decorator 与 MAKE_FUNCTION 之间插入 NOP（行对齐，非跳转目标），
+           不应作为块边界切断原子序列。
+        2. 归约顺序：FunctionDef AST 构建阶段，向后扫描 MAKE_FUNCTION 之前的
+           装饰器 LOAD 指令序列。
+        3. 唯一归属判定：LOAD_CONST tuple（defaults 元组）遇到即停止扫描，
+           不作为装饰器收集；仅 LOAD_NAME/GLOBAL/DEREF/LOAD_ATTR 作装饰器。
+        4. 嵌套处理：嵌套装饰器链（@dec1 @dec2 def）按 CALL 序列展开为列表。
+        5. 入口引用语义：父 FunctionDef.decorator_list 引用各装饰器子节点。
+        6. 反编译流程：从 MAKE_FUNCTION 向前扫描 → 收集 LOAD_NAME 等装饰器
+           名 → 合并 LOAD_ATTR 链为 Attribute → 按 CALL 数确定参数化装饰器。
+
         Args:
             instructions: 基本块指令列表
             make_func_idx: MAKE_FUNCTION指令的索引
