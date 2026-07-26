@@ -445,7 +445,125 @@
 
 ## 轮 6 (Round 6)
 
-- [ ] R6-T1 ~ R6-T8
+> **状态**：测试工程师阶段已完成（17 个 minimal repros，5 个 DEFECT-REPRO 确认）；修复工程师阶段执行中 — Fix 1（D1 lost return）/Fix 2（D2 lost parens）已完成并验证，Fix 3（D3 chained compare in except）部分完成（minimal repro 通过，quotation.pyc 路径仍因 region 检测未生效），Fix 4/Fix 5 与 Phase 3 验证/报告待执行。
+> **R6 基线**：反编译产物 COMPILE_OK（2581 行，0 stderr）。
+> **R6 缺陷分布**：8 类缺陷（D1-D8），优先级 P0=D1/D2，P1=D3/D5，P2=D4/D6/D7/D8。
+
+### 阶段一：测试工程师（已完成）
+
+- [x] R6-T1: 反编译 + 字节码 diff → `decompile_report.md`
+  - 反编译命令 `python pycdc.py /workspace/quotation.pyc`（产物 `r6_decompiled.py`，2581 行）
+  - 不一致清单：8 类缺陷（D1-D8），定位到函数 `api_get_financial`、`fill_minute_or_day_blank`、`date_convert` 等
+  - D1: lost return in except handler（line 161/169/179/184，函数 `api_get_financial`）
+  - D2: lost parens around Compare in low-precedence BinOp（无 quotation.pyc 直接命中，repro_06_02 复现）
+  - D3: bare number as if condition（chained compare `400 <= e2.code <= 499` 丢失，line 164 退化为 `if 499:`）
+  - D4: `del e2` as-var cleanup leaked into handler body（line 173）
+  - D5: orphan attribute/name expression leaks as Expr（line 247/456/500/546/557/558）
+  - D6: lost function body / nested-if return（line 266-302/492/505/566）
+  - D7: malformed ternary chain（line 359）
+  - D8: lost statement in `date_convert`（line 2165）
+- [x] R6-T2: ≥10 最小复现实例 → `minimal_repros/`
+  - 17 个 repro（15 个原始 + 后续新增 repro_06_16/repro_06_17）
+  - 5 个 DEFECT-REPRO 确认（01/02/06/14/15）
+  - 归档至 `rounds/round_06/test_engineer/minimal_repros/repro_06_*.py`
+
+### 阶段二：修复工程师（执行中 — Fix 1/Fix 2 已验证；Fix 3 部分完成；Fix 4/Fix 5 待执行）
+
+- [x] R6-T3: 根因分析 + 定位（依赖 R6-T1/T2）
+  - 对 8 类缺陷逐项定位到 `_identify_*_regions` 或 `_generate_*` 方法
+  - D1 根因：`_generate_handler_body_statements` 中 `_find_return_through_cleanup_chain` 的 bool 重载（L13952）遮蔽 list 版本（L13887），bool 版本仅检查当前块；block@234 无 POP_EXCEPT 故返回 False，触发 fallback 至 `_generate_block_statements`，把尾部 BUILD_TUPLE 2 作为裸 Expr 发射
+  - D2 根因：`_generate_binary` 使用内部 `get_expr_precedence` 误把 ASTCompare 当作高优先级 BinOp（op=5 被映射为 BIN_MODULO='%'，优先级 12）
+  - D3 根因：`compute_chained_compare_operands` 只存单条指令，丢失 `LOAD_FAST + LOAD_ATTR` 的 attribute access；且 CFG 中 chained compare 块（offset 694）未被识别为 IfRegion
+  - D5 根因：`_build_effective_stmts`/`_generate_block_statements` 未抑制孤立 LOAD_FAST Expr
+  - 涉及文件：`core/cfg/region_ast_generator.py`、`core/cfg/code_generator.py`、`core/cfg/region_analyzer.py`
+
+- [x] R6-T4: P0 修复实施（含 docstring 同步）
+  - [x] R6-T4a: 修复 D1 — lost `return` keyword in except handler（repro_06_01/14/15，4 处 quotation.pyc 位置）— **已验证**
+    - 定位：`region_ast_generator.py::_generate_handler_body_statements` / `_find_return_through_cleanup_chain`
+    - 根因：`_find_return_through_cleanup_chain` 的 bool 重载（L13952）遮蔽 list 版本（L13887），bool 版本仅检查当前块；block@234 无 POP_EXCEPT 故返回 False，触发 fallback 至 `_generate_block_statements`，把尾部 BUILD_TUPLE 2 作为裸 Expr 发射
+    - 修复方向：(1) 重命名 bool 版本为 `_find_return_chain_via_successors` 避免遮蔽；(2) fallback 决策逻辑中同时检查两路径；(3) 在 try-except 上下文中（`self._try_depth > 0`）抑制 spurious `return None`
+    - 算法依据：每块唯一归属 + 嵌套即抽象节点
+    - 验证结果：repro_06_01/14/15 中 `return (...)` 关键字正确恢复 ✓
+  - [x] R6-T4b: 修复 D2 — lost parens around Compare in low-precedence BinOp（repro_06_02）— **已验证**
+    - 定位：`code_generator.py::_generate_binary`
+    - 根因：`_generate_binary` 使用内部 `get_expr_precedence` 函数，ASTCompare 节点被误分类为高优先级 BinOp（op=5 被映射为 BIN_MODULO='%'，优先级 12）；导致 `BinOp(BitAnd, Compare, Compare)` 不为 Compare 操作数加括号
+    - 修复方向：替换为 `_get_ast_expr_precedence`，该方法对 ASTCompare 正确返回比较优先级（6），触发 BinOp(BitAnd/BitOr/BitXor) 为 Compare 操作数加括号
+    - 算法依据：AST 节点保形 + 入口引用语义
+    - 验证结果：repro_06_02 中 `(a >= b) & (c <= d)` 正确加括号 ✓
+
+- [ ] R6-T5: P1 修复实施（Fix 3 部分完成；Fix 4 待执行）
+  - [~] R6-T5a: 修复 D3 — bare number as if condition（chained compare in except handler）— **部分完成**
+    - 定位：`region_ast_generator.py::_try_build_attr_middle_chained_compare` / `_try_build_attr_middle_from_blocks` / `_build_chained_compare_from_region_data`；`region_analyzer.py::_identify_conditional_regions`
+    - 根因：`compute_chained_compare_operands` 只存单条指令，丢失 `LOAD_FAST + LOAD_ATTR` 的 attribute access 序列；且 CFG 中 chained compare 块（offset 694）未被识别为 IfRegion（block@694 有 conditional_successors [732, 720] 但仍归约失败）
+    - 修复方向（已实施）：(1) 新增 `_try_build_attr_middle_chained_compare` 处理 attribute 中间操作数；(2) `_build_chained_compare_from_region_data` 调用新方法
+    - 修复方向（待实施）：(3) `region_analyzer.py::_identify_conditional_regions` 调整识别条件，覆盖 except handler 内 SWAP+COPY+COMPARE_OP 模式
+    - 算法依据：自底向上归约 + 嵌套即抽象节点
+    - 验证结果：repro_06_16/repro_06_17 中 `400 <= e2.code <= 499` 正确保留 ✓；quotation.pyc::api_get_financial line 164 仍输出 `if 499:`（region 检测未生效）
+    - 当前状态：minimal repro 通过，但 quotation.pyc 实际路径未修复，需进一步调试 region_analyzer.py 的 IfRegion 识别条件
+  - [ ] R6-T5b: 修复 D5 — orphan Name/Attr Expr suppression（repro_06_04/07/13）— **待执行**
+    - 定位：`region_ast_generator.py::_build_effective_stmts` / `_generate_block_statements`
+    - 根因初判：`_build_effective_stmts` 未抑制 LOAD_FAST/LOAD_ATTR/LOAD_SUBSCR 后无 STORE/CALL/RETURN 的孤立 Expr
+    - 修复方向：`_build_effective_stmts` 检测无消费方的 LOAD_FAST/LOAD_ATTR 序列，抑制孤立 Expr 发射
+    - 算法依据：每块唯一归属
+    - 验证目标：repro_06_04/07/13 中无裸 `prod`/`stocks`/`panel.items` Expr；quotation.pyc line 247/456/500/546/557/558 消除
+
+- [ ] R6-T6: P2 修复实施（按时间预算择优）
+  - [ ] R6-T6a: 修复 D4 — `del e2` as-var cleanup leaked into handler body（repro_06_09/12/14）
+    - 定位：`region_ast_generator.py::_generate_handler_body_statements` / as-var cleanup 处理
+    - 修复方向：抑制 except handler 内 `LOAD_CONST None / STORE_FAST e2 / DELETE_FAST e2` 的 as-var cleanup 作为 `del e2` 发射
+    - 算法依据：每块唯一归属
+    - 验证目标：repro_06_09/12/14 中无 `del e2`；quotation.pyc line 173 消除
+  - [ ] R6-T6b: 修复 D6 — lost function body / nested-if return（repro_06_06）
+    - 定位：`region_ast_generator.py::_generate_if` / `_generate_block_statements`
+    - 修复方向：保留嵌套 if 的内层 `return True/False`；抑制 spurious `pass` 占位
+    - 算法依据：嵌套即抽象节点 + 入口引用语义
+    - 验证目标：repro_06_06 中 `if/elif + return True/False` 保留；quotation.pyc line 266-302/492/505/566 恢复
+  - [ ] R6-T6c: 修复 duplicate statements（repro_06_05）
+    - 定位：`region_ast_generator.py::_build_effective_stmts`
+    - 修复方向：去重连续相同语句发射
+    - 算法依据：每块唯一归属
+  - [ ] R6-T6d: 修复 D7/D8 — malformed ternary + lost date_convert body（可选）
+    - 定位：`region_ast_generator.py::_generate_if` / IfExp 重建
+
+- [ ] R6-T7: 回归测试（≤280s）
+  - [ ] R6-T7a: 17 个 R6 repro 反编译验证通过（核心缺陷已消除）
+  - [ ] R6-T7b: 既有测试矩阵无退化（IF/LOOP/TRY/WITH/MATCH/BOOLOP/TERNARY/CC/SEQ/ASSERT 子集 0 退化）
+  - [ ] R6-T7c: quotation.pyc 反编译 stderr 维持 0
+  - [ ] R6-T7d: quotation.pyc 反编译产物 `compile()` 通过（COMPILE_OK）
+  - [ ] R6-T7e: quotation.pyc::api_get_financial line 161/169/179/184 `return` 关键字恢复（D1 修复）
+  - [ ] R6-T7f: quotation.pyc::api_get_financial line 164 `if 400 <= e2.code <= 499:` 条件恢复（D3 修复 — 待 region 检测修复）
+  - [ ] R6-T7g: quotation.pyc 中 orphan Expr 消除（D5 修复）
+  - [ ] R6-T7h: R5 已修项不退化
+  - [ ] R6-T7i: 残留不一致数 ≤ R6 基线
+
+- [ ] R6-T8: `fix_report.md` 生成（rounds/round_06/repair_engineer/fix_report.md）
+  - 修复点列表（按 repro 编号 + 涉及方法 + 算法依据 + 4 原则对应条款）
+  - docstring 更新清单（方法名 + 6 项模板覆盖确认）
+  - 回归结果（17 repro 通过状态 + 既有矩阵退化检查）
+  - 残留不一致数（与 R6 基线对比）
+  - 算法 4 原则合规性自检
+  - 已知限制（Fix 3 region 检测未覆盖 / Fix 4-Fix 5 未实施等）
+
+- [ ] R6-T9: 反模式自检
+  - 无 `_fix_/_merge_/_patch_/_fallback_/_hack_/_workaround_/_temp_` 前缀 0 新增（grep 验证）
+  - `_merge_block_is_loop_back_edge` 仍未重命名（pre-existing，按 spec 留待后续轮次）
+
+- [ ] R6-T10: 涉及的 `_identify_*_regions` / `_generate_*` 方法 docstring 已按 6 项统一模板更新
+  - 6 项：算法依据 / 归约顺序 / 唯一归属判定 / 嵌套处理 / 入口引用语义 / 反编译流程
+  - 待更新方法：`_generate_handler_body_statements`（D1 修改）/ `_generate_binary`（D2 修改）/ `_try_build_attr_middle_chained_compare` + `_build_chained_compare_from_region_data`（D3 修改）/ `_build_effective_stmts`（D5 修改，待执行）
+
+- [ ] R6-T11: commit + push `qpyc-r06:`（≤300s，待用户授权）
+
+## R6 验证补充检查点（待执行）
+
+- [ ] R6-V1: `python -c "import core.cfg.region_analyzer; import core.cfg.region_ast_generator; import core.cfg.cfg_builder; import core.cfg.ast_converter; import core.cfg.code_generator"` 编译通过
+- [ ] R6-V2: 反模式 grep 验证 0 新增（`_fix_/_merge_/_patch_/_fallback_/_hack_/_workaround_/_temp_` 前缀）
+- [ ] R6-V3: quotation.pyc 反编译 stderr 维持 0
+- [ ] R6-V4: quotation.pyc 反编译产物 `compile()` 通过（COMPILE_OK）
+- [ ] R6-V5: quotation.pyc::api_get_financial except handler `return` 关键字恢复
+- [ ] R6-V6: quotation.pyc::api_get_financial `if 400 <= e2.code <= 499:` 条件恢复（待 region 检测修复）
+- [ ] R6-V7: quotation.pyc 中 orphan Expr 消除
+- [ ] R6-V8: 17 个 R6 repro 全部反编译产物核心缺陷消除
 
 ## 轮 7 (Round 7)
 

@@ -7282,6 +7282,17 @@ AST 映射规则:
         _call_compare = self._try_build_call_middle_chained_compare(region)
         if _call_compare is not None:
             return _call_compare
+        # [R6-Fix3] attr-middle chained compare: when cond_block contains a
+        # LOAD_ATTR (attribute access) as part of the middle operand, the
+        # single-instruction operand extraction in compute_chained_compare_operands
+        # only stores the first LOAD instruction, losing the LOAD_ATTR that
+        # forms the attribute access (e.g. ``400 <= e2.code <= 499`` becomes
+        # ``400 <= e2 <= 499``). Reconstruct the full attribute access by
+        # reverse stack-tracking from the SWAP boundary, mirroring the
+        # algorithm in _try_build_call_middle_from_blocks.
+        _attr_compare = self._try_build_attr_middle_chained_compare(region)
+        if _attr_compare is not None:
+            return _attr_compare
         if not region.chained_left_instr:
             return None
         left_ast = self.expr_reconstructor._load_instr_to_ast(region.chained_left_instr)
@@ -7837,6 +7848,142 @@ AST 映射规则:
             list(region.chained_compare_blocks),
             list(region.chained_compare_ops),
         )
+
+    def _try_build_attr_middle_chained_compare(self, region: IfRegion) -> Optional[Dict[str, Any]]:
+        """[R6-Fix3] Rebuild a chained comparison whose middle operand is an
+        attribute access (LOAD_FAST/LOAD_NAME/LOAD_GLOBAL + LOAD_ATTR), e.g.
+        ``400 <= e2.code <= 499``.
+
+        [根因]
+        ``compute_chained_compare_operands`` 只为每个操作数存储单条 LOAD 指令。
+        当中段操作数是属性访问 ``e2.code``（LOAD_FAST e2 + LOAD_ATTR code）时，
+        只保留 LOAD_FAST e2，丢失 LOAD_ATTR code，导致链式比较退化为
+        ``400 <= e2 <= 499``（或在更复杂上下文中完全丢失为 ``if 499:``）。
+
+        [算法依据]
+        - 嵌套即抽象节点：``e2.code`` 应作为一个 Attribute 子节点整体参与比较，
+          不可拆解为 LOAD_FAST + LOAD_ATTR 后丢弃 LOAD_ATTR。
+        - 「No More Gotos」§链式比较：通过 SWAP+COPY+COMPARE_OP 边界识别链式
+          比较首段，逆向栈模拟定位 left / middle1 的指令范围。
+
+        [实现要点]
+        - 触发条件：cond_block 含 LOAD_ATTR，且不含 CALL/LOAD_METHOD/BUILD_*/
+          walrus（这些由 _try_build_call_middle / _try_build_method_call /
+          _try_build_literal_middle / _try_build_walrus 分别处理）。
+        - 在 cond_block 中定位首个 SWAP（链式比较特征）与首个 COMPARE_OP/IS_OP/
+          CONTAINS_OP。
+        - SWAP 之前栈为 [left, middle1]（深度 2）。逆向栈模拟找到 left 入栈位置，
+          反向计算 left 与 middle1 的指令范围。
+        - middle1 包含完整属性访问序列（LOAD_FAST + LOAD_ATTR），委托
+          ``expr_reconstructor.reconstruct`` 重建为 Attribute AST 节点。
+        - 各 chain_block 取 COMPARE_OP 之前的所有指令作为 middle2..N。
+
+        返回: Compare dict 或 None（非 attr-middle 模式或重建失败时）。
+        """
+        return self._try_build_attr_middle_from_blocks(
+            region.condition_block,
+            list(region.chained_compare_blocks),
+            list(region.chained_compare_ops),
+        )
+
+    def _try_build_attr_middle_from_blocks(self, cond_block, chain_blocks, ops):
+        """[R6-Fix3] Rebuild a chained comparison whose middle operand is an
+        attribute access (LOAD_FAST/LOAD_NAME/LOAD_GLOBAL + LOAD_ATTR).
+
+        Mirrors ``_try_build_call_middle_from_blocks`` but triggers on
+        LOAD_ATTR instead of CALL. See that method for algorithm details.
+        """
+        import dis as _dis
+        if cond_block is None:
+            return None
+        if not ops or len(ops) < 2:
+            return None
+        cond_instrs = [i for i in cond_block.instructions
+                       if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+        if not cond_instrs:
+            return None
+        # 触发条件：含 LOAD_ATTR，不含 CALL/LOAD_METHOD
+        has_load_attr = any(i.opname == 'LOAD_ATTR' for i in cond_instrs)
+        has_call = any(i.opname == 'CALL' for i in cond_instrs)
+        has_load_method = any(i.opname == 'LOAD_METHOD' for i in cond_instrs)
+        if not has_load_attr or has_call or has_load_method:
+            return None
+        # walrus 由 _try_build_walrus_chained_compare 处理
+        for idx in range(len(cond_instrs) - 1):
+            if (cond_instrs[idx].opname == 'COPY' and cond_instrs[idx].argval == 1
+                    and cond_instrs[idx + 1].opname in ('STORE_FAST', 'STORE_NAME',
+                                                        'STORE_GLOBAL', 'STORE_DEREF')):
+                return None
+        # literal-middle 由 _try_build_literal_middle_from_blocks 处理
+        for instr in cond_instrs:
+            if instr.opname in ('BUILD_LIST', 'BUILD_TUPLE', 'BUILD_SET'):
+                return None
+
+        # 在 cond_block 中定位首个 SWAP（链式比较特征）与首个比较指令
+        _compare_ops_set = {'COMPARE_OP', 'IS_OP', 'CONTAINS_OP'}
+        swap_idx = None
+        compare_idx = None
+        for idx, instr in enumerate(cond_instrs):
+            if instr.opname == 'SWAP' and swap_idx is None:
+                swap_idx = idx
+            if instr.opname in _compare_ops_set and compare_idx is None:
+                compare_idx = idx
+                break
+        if compare_idx is None:
+            return None
+        if swap_idx is None:
+            return None
+
+        # SWAP 之前栈为 [left, middle1]（深度 2）。逆向栈模拟找到 left 入栈位置。
+        depth = 2
+        left_start = 0
+        for idx in range(swap_idx - 1, -1, -1):
+            instr = cond_instrs[idx]
+            try:
+                effect = _dis.stack_effect(instr.opcode, instr.arg)
+            except Exception:
+                effect = 0
+            depth -= effect
+            if depth <= 1:
+                left_start = idx
+                break
+        left_instrs = cond_instrs[:left_start]
+        middle1_instrs = cond_instrs[left_start:swap_idx]
+        if not left_instrs or not middle1_instrs:
+            return None
+        left_ast = self.expr_reconstructor.reconstruct(left_instrs)
+        middle1_ast = self.expr_reconstructor.reconstruct(middle1_instrs)
+        if left_ast is None or middle1_ast is None:
+            return None
+
+        # 各 chain_block 取比较指令之前的所有指令作为 middle2..N
+        _skip_ops = ({'COMPARE_OP', 'IS_OP', 'CONTAINS_OP', 'SWAP', 'COPY', 'POP_TOP',
+                      'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_FALSE',
+                      'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_TRUE',
+                      'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'})
+        comparators = [middle1_ast]
+        for cb in chain_blocks:
+            if cb is None:
+                continue
+            cb_instrs = [i for i in cb.instructions
+                         if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')
+                         and i.opname not in _skip_ops]
+            if not cb_instrs:
+                continue
+            if len(cb_instrs) == 1 and cb_instrs[0].opname.startswith('LOAD_'):
+                comparators.append(self.expr_reconstructor._load_instr_to_ast(cb_instrs[0]))
+            else:
+                r = self.expr_reconstructor.reconstruct(cb_instrs)
+                if r is not None:
+                    comparators.append(r)
+        if len(comparators) != len(ops):
+            return None
+        return {
+            'type': 'Compare',
+            'left': left_ast,
+            'ops': list(ops),
+            'comparators': comparators,
+        }
 
     def _detect_boolop_after_chained_compare(self, region: IfRegion) -> Optional[tuple]:
         """
@@ -13884,8 +14031,8 @@ AST 映射规则:
                 self.generated_blocks.add(block)
             self._try_depth -= 1
 
-    def _find_return_through_cleanup_chain(self, start_block, max_depth=6):
-        """[R20-Bug7] Walk through cleanup-only successor blocks to find RETURN_VALUE.
+    def _find_return_chain_via_successors(self, start_block, max_depth=6):
+        """[R6 Fix 1 / R20-Bug7] Walk through cleanup-only successor blocks to find RETURN_VALUE.
 
         When an except handler returns a value, the cleanup path may span
         multiple basic blocks:
@@ -13894,6 +14041,13 @@ AST 映射规则:
                           → SWAP + with __exit__ call + POP_TOP + RETURN_VALUE block
         此前 leftover-stmt_instrs 只检查直接后继，无法识别此模式，导致
         return 值（如 str(e) Call）被识别为 Expr 语句而非 Return 语句。
+
+        [R6 Fix 1] 此前此方法名为 ``_find_return_through_cleanup_chain``，与下方
+        [repro_07] 的 bool 重载同名，导致 Python 后者覆盖前者、本方法的 BFS 逻辑
+        永不被调用。改名后让 L14078 的 fallback 决策与 L14511 的 leftover 处理
+        都能正确识别跨多 block 的 return-through-cleanup 链（如 quotation.pyc
+        api_get_financial 的 except handler: body block@234 BUILD_TUPLE →
+        SWAP block@318 → POP_EXCEPT+cleanup+RETURN block@320）。
 
         Returns:
             list[BasicBlock]: 从直接后继开始到含 RETURN_VALUE 的 block 的路径（不含 start_block）；
@@ -14076,6 +14230,17 @@ AST 映射规则:
             # 让下方 POP_EXCEPT 处理逻辑重建 Return 语句（每块唯一归属：
             # return 值表达式归 Return 语句，as-var 清理归 except 机制）。
             _has_return_chain = self._find_return_through_cleanup_chain(block)
+            # [R6 Fix 1] bool 重载只检查当前 block；当 except handler 的 return
+            # 值构建 (BUILD_TUPLE) 与 POP_EXCEPT+as-var-cleanup+RETURN_VALUE 分布
+            # 在不同 basic block 时（如 quotation.pyc api_get_financial），bool
+            # 重载返回 False，触发 _generate_block_statements fallback，导致
+            # return 值被发射为裸 Expr（丢失 `return` 关键字）。补充 successor-walk
+            # 检查：若后继链中有 POP_EXCEPT+cleanup+RETURN_VALUE，则不 fallback，
+            # 让下方主循环 + leftover 处理重建 Return 语句。
+            # 依「父引用子入口」：handler body block 通过 fall-through 引用后继的
+            # POP_EXCEPT+RETURN 子节点；return 值表达式归 Return 语句。
+            if not _has_return_chain and self._find_return_chain_via_successors(block):
+                _has_return_chain = True
             if len(_user_store_indices) >= 2 and not _has_return_chain:
                 return self._generate_block_statements(block)
 
@@ -14320,6 +14485,19 @@ AST 映射规则:
                         stmt_instrs = []
                         continue
                     elif not value_instrs:
+                        # [R6 Fix 1c] 在 try-except handler 中，RETURN_VALUE 前
+                        # value_instrs 为空意味着 return 值已在前驱 block 发射
+                        # （如被 if/else 误判为裸 Expr，或已被 leftover 重建为
+                        # Return）。此 RETURN_VALUE 仅是 cleanup 链尾端（POP_EXCEPT
+                        # + as-var-cleanup + RETURN_VALUE），value 已在栈上。
+                        # 发射 `return None` 会产生 spurious 语句（quotation.pyc
+                        # HTTPError handler 出现 4 个 `return None`）。
+                        # 依「每块唯一归属」：return 值归前驱 Return，此 block 归
+                        # except 机制，不产生源码语句。仅当不在 try-except 中时
+                        # 才回退到 `return None`（保留模块级隐式 return None 语义）。
+                        if self._try_depth > 0:
+                            stmt_instrs = []
+                            continue
                         stmts.append({'type': 'Return', 'value': None})
                         stmt_instrs = []
                         continue
@@ -14507,17 +14685,29 @@ AST 映射规则:
             #   当前 block (CALL) → SWAP-only → POP_EXCEPT+as-var-cleanup
             #   → SWAP+with __exit__ call+POP_TOP+RETURN_VALUE
             # 此前只检查直接后继，导致 return 值被识别为 Expr 而非 Return。
+            # [R6 Fix 1] 调用改名后的 successor-walk 版本（原与 bool 重载同名被
+            # 覆盖），返回真实路径 [BasicBlock]，使 _return_path 可被正确标记为
+            # generated，避免重复发射清理 block。
             if not _succ_is_except_return and self._try_depth > 0:
-                _chain = self._find_return_through_cleanup_chain(block)
+                _chain = self._find_return_chain_via_successors(block)
                 if _chain:
                     _succ_is_except_return = True
                     _return_path = _chain
             if _succ_is_except_return and self._try_depth > 0:
-                expr = self.expr_reconstructor.reconstruct(stmt_instrs)
-                if expr and not (expr.get('type') == 'Constant' and expr.get('value') is None):
-                    stmts.append({'type': 'Return', 'value': expr})
-                else:
-                    stmts.append({'type': 'Return', 'value': None})
+                # [R6 Fix 1b] 仅当 stmt_instrs 非空时才发射 Return：return 值表达式
+                # 来自当前 block 的未刷新指令。若 stmt_instrs 为空，说明 return 值已
+                # 在前驱 block 发射（如被 if/else 分支处理误判为裸 Expr），此 block
+                # 仅是 SWAP/POP_EXCEPT/as-var-cleanup 透传，发射 `return None` 会
+                # 产生 spurious 语句（quotation.pyc HTTPError handler 出现 4 个
+                # `return None`）。空 stmt_instrs 仍需标记 _return_path 为 generated
+                # 以避免重复处理清理 block。依「每块唯一归属」：清理 block 归 except
+                # 机制，不产生源码语句。
+                if stmt_instrs:
+                    expr = self.expr_reconstructor.reconstruct(stmt_instrs)
+                    if expr and not (expr.get('type') == 'Constant' and expr.get('value') is None):
+                        stmts.append({'type': 'Return', 'value': expr})
+                    else:
+                        stmts.append({'type': 'Return', 'value': None})
                 if _return_path:
                     for rb in _return_path:
                         self.generated_blocks.add(rb)

@@ -338,7 +338,90 @@
 
 ## 轮 6 (Round 6)
 
-- [ ] R6-1 ~ R6-9
+> **R6 基线**：反编译产物 COMPILE_OK（2581 行，0 stderr）。
+> **R6 缺陷分布**：8 类缺陷（D1-D8），优先级 P0=D1/D2，P1=D3/D5，P2=D4/D6/D7/D8。
+
+### 阶段一：测试工程师（已完成）
+
+- [x] R6-1 反编译 + 字节码 diff（`decompile_report.md`，8 类缺陷 D1-D8，2581 行，COMPILE_OK）
+- [x] R6-2 ≥10 最小复现实例（`minimal_repros/`，17 个 repro，5 个 DEFECT-REPRO 确认：01/02/06/14/15）
+
+### 阶段二：修复工程师（执行中 — Fix 1/Fix 2 已验证，Fix 3 部分完成，Fix 4/Fix 5 待执行）
+
+#### P0 修复（必须完成 — 已完成 2 项）
+
+- [x] R6-3 根因分析完成（8 类缺陷全部定位到 `_identify_*_regions` 或 `_generate_*` 方法，输出根因 + 4 原则违反项）
+- [x] R6-4a P0 D1 repro_06_01/14/15 lost return in except handler 修复完成 — **已验证**
+  - `region_ast_generator.py::_generate_handler_body_statements` 重命名 bool 重载为 `_find_return_chain_via_successors`，避免方法遮蔽
+  - fallback 决策同时检查两路径（`_find_return_through_cleanup_chain` + `_find_return_chain_via_successors`）
+  - try-except 上下文中（`self._try_depth > 0`）当 `value_instrs` 为空时抑制 spurious `return None`
+  - `_generate_handler_body_statements` docstring 已按 6 项模板更新
+  - 验证：repro_06_01/14/15 中 `return (...)` 关键字正确恢复 ✓
+- [x] R6-4b P0 D2 repro_06_02 lost parens in BinOp+Compare 修复完成 — **已验证**
+  - `code_generator.py::_generate_binary` 替换内部 `get_expr_precedence` 为 `_get_ast_expr_precedence`
+  - ASTCompare 节点正确返回比较优先级（6）而非高优先级 BinOp（12）
+  - `BinOp(BitAnd/BitOr/BitXor, Compare, Compare)` 触发为 Compare 操作数加括号
+  - `_generate_binary` docstring 注释说明 ASTCompare 优先级修复依据
+  - 验证：repro_06_02 中 `(a >= b) & (c <= d)` 正确加括号 ✓
+
+#### P1 修复（必须完成至少 1 项 — Fix 3 部分完成）
+
+- [~] R6-5a P1 D3 repro_06_16/17 bare number if (chained compare in except) 修复 — **部分完成**
+  - `region_ast_generator.py::_try_build_attr_middle_chained_compare` + `_try_build_attr_middle_from_blocks` 新增（处理 `LOAD_FAST + LOAD_ATTR` 中间操作数）
+  - `_build_chained_compare_from_region_data` 调用新方法
+  - minimal repro 通过：`400 <= e2.code <= 499` 正确保留 ✓
+  - quotation.pyc 路径未修复：region 检测未识别 block@694 为 IfRegion（block@694 有 conditional_successors [732, 720] 但仍归约失败）
+  - 待办：调试 `region_analyzer.py::_identify_conditional_regions` 识别条件，覆盖 except handler 内 SWAP+COPY+COMPARE_OP 模式
+  - `_try_build_attr_middle_chained_compare` + `_build_chained_compare_from_region_data` docstring 待按 6 项模板更新
+- [ ] R6-5b P1 D5 repro_06_04/07/13 orphan Name/Attr Expr suppression 修复 — **待执行**
+  - `_build_effective_stmts` 检测无消费方 LOAD_FAST/LOAD_ATTR/LOAD_SUBSCR 序列，抑制孤立 Expr 发射
+  - 验证：repro_06_04/07/13 中无裸 `prod`/`stocks`/`panel.items` Expr ✓
+  - 验证：quotation.pyc line 247/456/500/546/557/558 orphan Expr 消除
+  - `_build_effective_stmts` docstring 待按 6 项模板更新
+
+#### P2 修复（按时间预算择优）
+
+- [ ] R6-6a P2 D4 repro_06_09/12/14 `del e2` as-var cleanup leak 修复
+  - 抑制 except handler 内 `LOAD_CONST None / STORE_FAST e2 / DELETE_FAST e2` 的 as-var cleanup 作为 `del e2` 发射
+  - 验证：repro_06_09/12/14 中无 `del e2` ✓；quotation.pyc line 173 消除
+- [ ] R6-6b P2 D6 repro_06_06 lost function body/nested-if return 修复
+  - 保留嵌套 if 内层 `return True/False`；抑制 spurious `pass` 占位
+  - 验证：repro_06_06 中 `if/elif + return True/False` 保留 ✓；quotation.pyc line 266-302/492/505/566 恢复
+- [ ] R6-6c P2 repro_06_05 duplicate statements dedup 修复
+  - `_build_effective_stmts` 去重连续相同语句发射
+  - 验证：repro_06_05 中无重复 `error_no = e2.code` ✓
+- [ ] R6-6d P2 D7/D8 malformed ternary + lost date_convert body（可选）
+  - 修复 IfExp 重建路径，禁止把 if/elif 链压缩为嵌套 ternary of `==` 比较
+
+#### 回归测试与验证（待执行）
+
+- [ ] R6-7a 17 个 R6 repro 反编译验证通过（核心缺陷已消除）
+- [ ] R6-7b 既有测试矩阵无退化（IF/LOOP/TRY/WITH/MATCH/BOOLOP/TERNARY/CC/SEQ/ASSERT 子集 0 退化）
+- [ ] R6-7c quotation.pyc 反编译 stderr 维持 0
+- [ ] R6-7d quotation.pyc 反编译产物 `compile()` 通过（COMPILE_OK）
+- [ ] R6-7e quotation.pyc::api_get_financial except handler `return` 关键字恢复（D1 修复 — line 161/169/179/184）
+- [ ] R6-7f quotation.pyc::api_get_financial `if 400 <= e2.code <= 499:` 条件恢复（D3 修复 — 待 region 检测修复，line 164）
+- [ ] R6-7g quotation.pyc 中 orphan Expr 消除（D5 修复 — line 247/456/500/546/557/558）
+- [ ] R6-7h R5 已修项不退化（特别是 repro_05_* 系列在 quotation.pyc 实际产物复测）
+- [ ] R6-7i 残留不一致数 ≤ R6 基线
+
+#### 交付物与合规性（待执行）
+
+- [ ] R6-8 `fix_report.md` 生成（rounds/round_06/repair_engineer/fix_report.md）
+  - 修复点列表（按 repro 编号 + 涉及方法 + 算法依据 + 4 原则对应条款）
+  - docstring 更新清单（方法名 + 6 项模板覆盖确认）
+  - 回归结果（17 repro 通过状态 + 既有矩阵退化检查）
+  - 残留不一致数（与 R6 基线对比）
+  - 算法 4 原则合规性自检
+  - 已知限制（Fix 3 region 检测未覆盖 / Fix 4-Fix 5 未实施等）
+- [ ] R6-9 反模式自检通过（G3：0 新增 `_fix_/_merge_/_patch_/_fallback_/_hack_/_workaround_/_temp_` 前缀方法）
+  - `_merge_block_is_loop_back_edge`（region_ast_generator.py）为 pre-existing，按 spec 留待后续轮次重命名
+- [ ] R6-10 涉及的 `_identify_*_regions` / `_generate_*` 方法 docstring 已按 6 项统一模板更新
+  - 6 项：算法依据 / 归约顺序 / 唯一归属判定 / 嵌套处理 / 入口引用语义 / 反编译流程
+  - 待更新方法：`_generate_handler_body_statements`（D1）/ `_generate_binary`（D2）/ `_try_build_attr_middle_chained_compare` + `_build_chained_compare_from_region_data`（D3）/ `_build_effective_stmts`（D5，待执行）
+- [ ] R6-11 算法 4 原则 FULLY COMPLIANT（自底向上归约 / 每块唯一归属 / 嵌套抽象节点 / 入口引用语义）
+- [ ] R6-12 `python -c "import core.cfg.region_analyzer; import core.cfg.region_ast_generator; import core.cfg.cfg_builder; import core.cfg.ast_converter; import core.cfg.code_generator"` 编译通过
+- [ ] R6-13 commit + push `qpyc-r06:`（待用户授权执行）
 
 ## 轮 7 (Round 7)
 
