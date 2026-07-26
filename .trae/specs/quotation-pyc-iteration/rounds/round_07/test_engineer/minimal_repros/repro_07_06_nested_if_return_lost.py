@@ -1,0 +1,25 @@
+"""Repro 07-06: D6 (P2) nested-if return lost.
+
+A nested if/elif chain where each branch returns. The decompiler
+emits `pass` for the inner returns and only keeps the final
+fall-through, mirroring quotation.pyc lines 266-279 / 566.
+
+Expected defect:
+    if i == 0:
+        pass                # <- `return` body lost
+    elif i == 1:
+        pass                # <- `return` body lost
+    else:
+        return default
+"""
+
+
+def is_same_type(typet, suffix):
+    if typet == 1:
+        return True
+    elif typet == 2:
+        return False
+    elif typet == 3:
+        return True
+    else:
+        return suffix == 'XZCE'

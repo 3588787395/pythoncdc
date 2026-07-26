@@ -1,0 +1,29 @@
+"""Repro 07-03: D5 (P1) orphan Attr Expr leak.
+
+In `get_klines_data` the `elif fq == 'post':` branch contains a bare
+`panel.items` statement (quotation.pyc line 504) — a LOAD_ATTR with
+no following STORE/CALL/RETURN. The decompiler emits it as an orphan
+`Expr` instead of suppressing it. Mirrors the `stocks` leak on line
+456/460 as well.
+
+Expected defect:
+    elif fq == 'post':
+        exrights_data = get_exrights_data(stocks, start)
+        panel.items          # <- orphan Attr Expr leak
+"""
+
+
+def get_klines_data(panel, fq, stocks, start):
+    if len(panel.major_axis) != 0:
+        pass
+    if fq == 'pre':
+        exrights_data = get_exrights_data(stocks, start)
+        for stock in panel.items:
+            data = change_his_to_forward(stock, panel[stock], exrights_data, start, end, typet)
+            panel[stock] = data
+    elif fq == 'post':
+        exrights_data = get_exrights_data(stocks, start)
+        panel.items
+        for stock in panel.items:
+            panel[stock] = change_his_to_forward(stock, panel[stock], exrights_data, start, end, typet)
+    return panel

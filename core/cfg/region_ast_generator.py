@@ -1678,6 +1678,31 @@ class RegionASTGenerator:
 
         return result if result else None
 
+    def _is_orphan_load_expr(self, expr: Any) -> bool:
+        """[R7 Fix 2 / D5] 检测孤立 LOAD 表达式（无副作用的 Name/Attribute/Subscript/Iter）。
+
+        在 except handler 或循环 setup 块中，LOAD_FAST/LOAD_ATTR/LOAD_SUBSCR
+        + POP_TOP 序列是字节码生成器产生的无副作用表达式（如 `prod`、
+        `panel.items`、`re_data.columns`），不应作为独立 Expr 语句发射。
+        Iter 包裹的 Name/Attribute/Subscript 同理（如 GET_ITER 产物的
+        `Iter(Name('prod'))`）。
+        依「每块唯一归属」：这些 LOAD 序列归循环 setup 或 except 机制，
+        不作为用户语句；Call/BinOp/BoolOp/Compare/Yield 等可能有副作用，
+        不视为孤立 LOAD，保留发射。
+        """
+        if not isinstance(expr, dict):
+            return False
+        etype = expr.get('type')
+        if etype == 'Name':
+            return True
+        if etype == 'Attribute':
+            return self._is_orphan_load_expr(expr.get('value'))
+        if etype == 'Subscript':
+            return self._is_orphan_load_expr(expr.get('value'))
+        if etype == 'Iter':
+            return self._is_orphan_load_expr(expr.get('value'))
+        return False
+
     def _build_effective_stmts(self, block: BasicBlock, effective: List[Instruction]) -> List[Dict[str, Any]]:
         stmts, expr_instrs, seen_for = [], [], set()
         # [R11-batch3 err 9-12] Skip for-target instructions (STORE_ATTR/STORE_SUBSCR + their
@@ -1710,13 +1735,18 @@ class RegionASTGenerator:
                 seen_for.add(instr.argval)
                 if expr_instrs:
                     e = self.expr_reconstructor.reconstruct(expr_instrs)
-                    if e:
+                    # [R7 Fix 2 / D5] 抑制孤立 Name/Attr/Subscript Expr：
+                    # LOAD + POP_TOP 序列中重建出的纯 LOAD 表达式（如 `prod`）
+                    # 是字节码生成器产物的无副作用语句，依「每块唯一归属」
+                    # 归循环 setup / except 机制，不作为用户 Expr 发射。
+                    if e and not self._is_orphan_load_expr(e):
                         stmts.append({'type': 'Expr', 'value': e})
                     expr_instrs = []
                 continue
             if instr.opname == 'POP_TOP' and expr_instrs:
                 e = self.expr_reconstructor.reconstruct(expr_instrs)
-                if e:
+                # [R7 Fix 2 / D5] 抑制孤立 Name/Attr/Subscript Expr（同上）。
+                if e and not self._is_orphan_load_expr(e):
                     stmts.append({'type': 'Expr', 'value': e})
                 expr_instrs = []
                 continue
@@ -1748,7 +1778,8 @@ class RegionASTGenerator:
                                                   'RAISE_VARARGS', 'IMPORT_NAME') for i in expr_instrs):
                         return stmts
             e = self.expr_reconstructor.reconstruct(expr_instrs)
-            if e:
+            # [R7 Fix 2 / D5] 抑制孤立 Name/Attr/Subscript Expr（同上）。
+            if e and not self._is_orphan_load_expr(e):
                 stmts.append({'type': 'Expr', 'value': e})
         return stmts
 
@@ -2979,6 +3010,17 @@ AST 映射规则:
                     continue
                 if ib not in self.generated_blocks:
                     ib_stmts = self._generate_block_statements(ib)
+                    # [R7 Fix 2 / D5] 抑制 init_blocks 末尾的孤立 Name/Attr/Subscript Expr：
+                    # 当 init_block 末尾为 LOAD_FAST/LOAD_ATTR/LOAD_SUBSCR 序列且无 STORE/CALL
+                    # 消费时（如 `prod = data.get(prod_code)` 后跟 `LOAD_FAST prod` 喂给下一块的
+                    # GET_ITER），该末尾 LOAD 是 for 循环迭代器表达式的一部分，依「每块唯一归属」
+                    # 归属 for_iter_setup 机制代码，不作为用户 Expr 发射。
+                    # 算法依据：唯一块归属 + 入口引用语义
+                    if ib_stmts and isinstance(ib_stmts[-1], dict):
+                        _last = ib_stmts[-1]
+                        if (_last.get('type') == 'Expr'
+                                and self._is_orphan_load_expr(_last.get('value'))):
+                            ib_stmts = ib_stmts[:-1]
                     pre_stmts.extend(ib_stmts)
                     self.generated_blocks.add(ib)
                     self.generated_offsets.add(ib.start_offset)
@@ -14277,7 +14319,11 @@ AST 映射规则:
 
             if instr.opname == 'POP_TOP' and not skip_initial_pop and stmt_instrs:
                 expr = self.expr_reconstructor.reconstruct(stmt_instrs)
-                if expr:
+                # [R7 Fix 2 / D5] 抑制孤立 Name/Attr/Subscript Expr：
+                # except handler 内 LOAD_FAST as_var + POP_TOP 是异常变量
+                # 加载的无副作用序列，依「每块唯一归属」归 except 机制，不作为
+                # 用户 Expr 发射。
+                if expr and not self._is_orphan_load_expr(expr):
                     stmts.append({'type': 'Expr', 'value': expr})
                 stmt_instrs = []
                 continue
@@ -14447,6 +14493,41 @@ AST 映射规则:
                                 succ_instrs[1].opname in ('RETURN_VALUE', 'RETURN_CONST')):
                             _is_except_return_swap = True
                             break
+                        # [R7 Fix 1 / D9] 扩展 successor 检测：POP_EXCEPT +
+                        # as-var cleanup (LOAD_CONST None/STORE_FAST same_var/
+                        # DELETE_FAST same_var) + RETURN_VALUE 模式。此前仅
+                        # 识别 POP_EXCEPT→RETURN_VALUE 紧邻模式，导致 successor
+                        # 块中的 as-var cleanup + RETURN_VALUE 未被识别为 except
+                        # 机制代码，SWAP 被加入 stmt_instrs，触发后续 RETURN_VALUE
+                        # None 被错误发射为 spurious `return None`。
+                        # 依「每块唯一归属」：as-var cleanup 块归 except 机制，
+                        # 不作为独立 return 语句发射。
+                        if succ_instrs and succ_instrs[0].opname == 'POP_EXCEPT':
+                            _succ_cleanup_only = True
+                            _succ_has_return = False
+                            for _sri in succ_instrs[1:]:
+                                if _sri.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                                    _succ_has_return = True
+                                    break
+                                if _sri.opname in ('LOAD_CONST', 'STORE_FAST', 'STORE_NAME',
+                                                   'STORE_GLOBAL', 'STORE_DEREF',
+                                                   'DELETE_FAST', 'DELETE_NAME', 'DELETE_GLOBAL',
+                                                   'DELETE_DEREF', 'POP_TOP', 'SWAP', 'POP_EXCEPT',
+                                                   'COPY', 'PRECALL', 'CALL', 'RERAISE'):
+                                    continue
+                                _succ_cleanup_only = False
+                                break
+                            if _succ_has_return and _succ_cleanup_only:
+                                _is_except_return_swap = True
+                                # 标记 successor 块的清理指令为跳过，使主 RETURN_VALUE
+                                # 处理时 stmt_instrs 仍保留 return 值，从而正确生成
+                                # Return 语句而非 spurious return None。
+                                for _sri in succ_instrs:
+                                    if _sri.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                                        break
+                                    skip_offsets.add(_sri.offset)
+                                self.generated_blocks.add(succ)
+                                break
                 if _is_except_return_swap:
                     continue
                 stmt_instrs.append(instr)
@@ -14542,7 +14623,13 @@ AST 映射规则:
                         if target_block:
                             _then_succ = None
                             for succ in block.successors:
-                                if succ != target_block:
+                                # [R7 Fix 3 / D4] 跳过 exception_successors：except handler
+                                # 体内的 as-var 清理块 (LOAD_CONST None → STORE_FAST →
+                                # DELETE_FAST → RERAISE) 是 except 机制的清理块，被
+                                # CFG 作为 exception_successor 加入 successors。若被
+                                # 误选为 then-block，会泄漏 `del e2`。依「每块唯一归属」：
+                                # 清理块归 except 框架，不作为用户 if-body。
+                                if succ != target_block and succ not in block.exception_successors:
                                     _then_succ = succ
                                     then_stmts = self._generate_block_statements(succ)
                                     self.generated_blocks.add(succ)
@@ -26122,6 +26209,52 @@ AST 映射规则:
     def _generate_block_statements(self, block: BasicBlock, _cjb_parent: BasicBlock = None) -> List[Dict[str, Any]]:
         if block in self.generated_blocks or block.start_offset in self.generated_offsets:
             return []
+
+        # [R7 Fix 3 / D4] 检测 as-var 清理块并整体抑制：
+        # except handler 的 as-var 清理块（CPython 3.11+ 生成）形如
+        #   LOAD_CONST None → STORE_* as_var → DELETE_* as_var → RERAISE
+        # 或 POP_EXCEPT → LOAD_CONST None → STORE_* as_var → DELETE_* as_var
+        #   → [LOAD_CONST None → STORE_* as_var → DELETE_* as_var →] (RERAISE | RETURN_VALUE)
+        # 是 except 机制的清理代码，被 CFG 作为独立 basic block 处理。若被
+        # _generate_block_statements 处理，DELETE_FAST 会被发射为 `del as_var`
+        # （如 `del e2`、`del x`）。依「每块唯一归属」：清理块归 except 框架，
+        # 不作为用户语句发射；块内若含 RETURN_VALUE 也是清理路径的隐式 return，
+        # 真正的 return 值在 SWAP 前的块中。仅当块内全部指令都是清理指令
+        # 且至少含一组 as-var 清理序列时抑制。
+        _meaningful_d4 = [i for i in block.instructions
+                          if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+        _cleanup_ops_d4 = {'POP_EXCEPT', 'POP_TOP', 'STORE_FAST', 'STORE_NAME',
+                           'STORE_GLOBAL', 'STORE_DEREF', 'DELETE_FAST', 'DELETE_NAME',
+                           'DELETE_GLOBAL', 'DELETE_DEREF', 'RERAISE', 'RETURN_VALUE',
+                           'RETURN_CONST', 'SWAP', 'COPY', 'JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                           'EXTENDED_ARG'}
+        _all_cleanup_d4 = True
+        for _mi in _meaningful_d4:
+            if _mi.opname == 'LOAD_CONST':
+                if _mi.argval is not None:
+                    _all_cleanup_d4 = False
+                    break
+                continue
+            if _mi.opname not in _cleanup_ops_d4:
+                _all_cleanup_d4 = False
+                break
+        if _all_cleanup_d4 and len(_meaningful_d4) >= 3:
+            _has_asvar_cleanup_d4 = False
+            for _i in range(len(_meaningful_d4) - 2):
+                if (_meaningful_d4[_i].opname == 'LOAD_CONST'
+                        and _meaningful_d4[_i].argval is None
+                        and _meaningful_d4[_i + 1].opname in ('STORE_FAST', 'STORE_NAME',
+                                                               'STORE_GLOBAL', 'STORE_DEREF')
+                        and _meaningful_d4[_i + 2].opname in ('DELETE_FAST', 'DELETE_NAME',
+                                                               'DELETE_GLOBAL', 'DELETE_DEREF')
+                        and _meaningful_d4[_i + 1].argval == _meaningful_d4[_i + 2].argval):
+                    _has_asvar_cleanup_d4 = True
+                    break
+            if _has_asvar_cleanup_d4:
+                self.generated_blocks.add(block)
+                self.generated_offsets.add(block.start_offset)
+                return []
+
         if any(i.opname == 'BINARY_OP' for i in block.instructions):
             pass
 
@@ -26283,13 +26416,15 @@ AST 映射规则:
                             _seen_for_targets3.add(_instr.argval)
                             if _eff_expr_instrs:
                                 _expr = self.expr_reconstructor.reconstruct(_eff_expr_instrs)
-                                if _expr:
+                                # [R7 Fix 2 / D5] 抑制孤立 Name/Attr/Subscript Expr。
+                                if _expr and not self._is_orphan_load_expr(_expr):
                                     _eff_stmts.append({'type': 'Expr', 'value': _expr})
                             _eff_expr_instrs = []
                             continue
                         if _instr.opname == 'POP_TOP' and _eff_expr_instrs:
                             _expr = self.expr_reconstructor.reconstruct(_eff_expr_instrs)
-                            if _expr:
+                            # [R7 Fix 2 / D5] 抑制孤立 Name/Attr/Subscript Expr。
+                            if _expr and not self._is_orphan_load_expr(_expr):
                                 _eff_stmts.append({'type': 'Expr', 'value': _expr})
                             _eff_expr_instrs = []
                             continue
@@ -26334,7 +26469,9 @@ AST 映射规则:
                             if _eff_has_return_succ:
                                 _eff_stmts.append({'type': 'Return', 'value': _expr})
                             else:
-                                _eff_stmts.append({'type': 'Expr', 'value': _expr})
+                                # [R7 Fix 2 / D5] 抑制孤立 Name/Attr/Subscript Expr。
+                                if not self._is_orphan_load_expr(_expr):
+                                    _eff_stmts.append({'type': 'Expr', 'value': _expr})
                 stmts = _eff_stmts
                 if stmts:
                     self.generated_blocks.add(block)
@@ -28027,7 +28164,13 @@ AST 映射规则:
                     continue
 
                 pop_expr = self.expr_reconstructor.reconstruct(stmt_instrs)
-                if pop_expr and pop_expr.get('type') not in ('Constant',):
+                # [R7 Fix 2 / D5] 抑制孤立 Name/Attr/Subscript Expr：
+                # LOAD_FAST/LOAD_ATTR/LOAD_SUBSCR + POP_TOP 序列中重建出的
+                # 纯 LOAD 表达式（如 `prod`、`panel.items`、`re_data.columns`）
+                # 是字节码生成器产物的无副作用语句，依「每块唯一归属」归循环
+                # setup / except 机制，不作为用户 Expr 发射。Call/BinOp/BoolOp/
+                # Compare 等可能有副作用，不视为孤立 LOAD，保留发射。
+                if pop_expr and pop_expr.get('type') not in ('Constant',) and not self._is_orphan_load_expr(pop_expr):
                     stmts.append({'type': 'Expr', 'value': pop_expr})
                     stmt_instrs = []
                     continue
@@ -28243,7 +28386,7 @@ AST 映射规则:
                                 pass
                             else:
                                 _sp2_expr = self.expr_reconstructor.reconstruct(_sp2_remaining)
-                                if _sp2_expr:
+                                if _sp2_expr and not self._is_orphan_load_expr(_sp2_expr):
                                     _sp2_split.append({'type': 'Expr', 'value': _sp2_expr})
             split_stmts = _sp2_split
             if len(split_stmts) > 1:
@@ -28251,7 +28394,13 @@ AST 映射规则:
             else:
                 stmt = self._build_statement(stmt_instrs)
                 if stmt:
-                    stmts.append(stmt)
+                    # [R7 Fix 2 / D5] 抑制孤立 Name/Attr/Subscript Expr：
+                    # 块末剩余的纯 LOAD 指令（如 for 循环 setup 块的
+                    # LOAD_FAST prod）不应作为用户 Expr 发射。
+                    # 算法依据：唯一块归属 + 入口引用语义
+                    if not (isinstance(stmt, dict) and stmt.get('type') == 'Expr'
+                            and self._is_orphan_load_expr(stmt.get('value'))):
+                        stmts.append(stmt)
 
         if stmts and self.cfg.name != '<module>':
             has_return_value = any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in block.instructions)
@@ -28773,10 +28922,11 @@ AST 映射规则:
                 if isinstance(arg, dict) and arg.get('type') == 'FunctionObject':
                     return self._build_function_def(func_obj=arg, decorator=expr)
 
-        return {
+        _ret_expr_node = {
             'type': 'Expr',
             'value': expr,
         }
+        return _ret_expr_node
 
     def _build_multi_target_unpack(self, block: BasicBlock) -> Optional[List[Dict[str, Any]]]:
         """[R11-err4/5] 多目标解包重建: a, b = c = d, e 或 a, b = e, f = g, h。

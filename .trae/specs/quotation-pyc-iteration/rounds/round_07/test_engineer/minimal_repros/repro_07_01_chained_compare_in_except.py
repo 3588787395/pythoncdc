@@ -1,0 +1,25 @@
+"""Repro 07-01: D3 (P1) chained compare in except handler lost.
+
+In `api_get_financial` the HTTPError handler guards the 4xx branch with
+`if 400 <= e2.code <= 499:`. The decompiler drops the chained compare
+and emits `if 499:` (only the trailing LOAD_CONST survives).
+
+Expected defect:
+    if 499:
+        pass
+instead of:
+    if 400 <= e.code <= 499:
+        handle_4xx(e)
+"""
+
+
+def api_get_financial(url, request_times=0):
+    try:
+        response = do_request(url)
+        return_data = response.json()
+    except HTTPError as e2:
+        system_log.error(get_traceback_message())
+        if 400 <= e2.code <= 499:
+            error_no = e2.code
+            return ({'error_no': error_no, 'error_info': ''}, {})
+    return ({'error_no': 0, 'error_info': ''}, return_data)

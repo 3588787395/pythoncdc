@@ -567,7 +567,132 @@
 
 ## 轮 7 (Round 7)
 
-- [ ] R7-T1 ~ R7-T8
+> **状态**：测试工程师阶段已完成（10 个 repro，5 个 DEFECT-REPRO 确认：02/03/04/05/09）；修复工程师阶段待执行 — 拟交付 3 项修复（D9 P0 / D5 P1 / D4 P2）。
+> **R7 基线**：反编译产物 COMPILE_OK（2585 行，0 stderr），较 R6 +4 行（D4+D9 cleanup 残骸）。
+> **R7 缺陷分布**：8 类残留缺陷（D3-D10，源自 R6 残留），优先级 P0=D9、P1=D3/D5、P2=D4/D6/D7/D8/D10。
+> **R7 重大发现**：R6 D1 "lost return" 已修复后，原 cleanup 块的 `RETURN_VALUE None` 残骸浮现为新缺陷 D9（虚假 `return None`）；D5（孤立 Name/Attr Expr）在 R7 首次具备 minimal repro（02/03）；D4（`del e2` as-var 清理泄漏）持续存在。
+
+### 阶段一：测试工程师（已完成）
+
+- [x] R7-T1: 反编译 + 字节码 diff → `decompile_report.md`
+  - 反编译命令 `python pycdc.py /workspace/quotation.pyc`（产物 `/tmp/r7_decompiled.py`，2585 行，COMPILE_OK，0 stderr）
+  - 不一致清单：8 类残留缺陷（D3-D10）+ R6 已修 D1/D2 复测
+  - 关键结论：R6 D1 lost-return 已修复但衍生 D9 spurious `return None`；D5/D4/D6/D7/D8/D10 持续存在；R6 D2 已修复
+- [x] R7-T2: ≥10 最小复现实例 → `minimal_repros/`
+  - 10 个 repro 全部通过 `py_compile` 独立编译
+  - 5/10 DEFECT-REPRO 确认（02/03/04/05/09）；5/10 NOT-REPRO（01/06/07/08/10 — 上下文敏感，依赖 quotation.pyc 完整 CFG）
+  - 归档至 `rounds/round_07/test_engineer/minimal_repros/repro_07_*.py`
+
+### 阶段二：修复工程师（待执行 — Fix 1 D9 P0 / Fix 2 D5 P1 / Fix 3 D4 P2）
+
+- [ ] R7-T3: 根因分析 + 定位（依赖 R7-T1/T2）
+  - 对 D9/D5/D4 三类缺陷逐项定位到 `_generate_*` 方法
+  - 输出根因分析：区域类型 + 算法偏离点 + 4 原则违反项
+  - 涉及文件：`core/cfg/region_ast_generator.py`（D9/D4/D5 主战场）、`core/cfg/code_generator.py`（D5 表达式生成可能涉及）
+
+- [ ] R7-T4: Fix 1 — D9 spurious `return None` after restored return in except handler (P0) — **必须完成**
+  - [ ] R7-T4a: 定位 + 根因分析
+    - 定位：`region_ast_generator.py::_generate_handler_body_statements`（处理 except handler 体的指令序列，含 return 重建 + as-var cleanup 过滤）
+    - 根因：R6 D1 修复后，主 `return (...)` 值生成成功；但后续 as-var cleanup 块（`LOAD_CONST None → STORE_FAST same_var → DELETE_FAST same_var → RETURN_VALUE None`）未被识别为 except 机制代码，每个 cleanup 块的 `RETURN_VALUE None` 被错误发射为 `return None` 语句
+    - 算法依据：**唯一块归属** — as-var cleanup 块属于 except handler 机制代码，不应作为独立顺序语句归属到处理器体；**入口引用语义** — 父 handler 体仅引用真正业务指令的入口
+  - [ ] R7-T4b: 实施修复（含内联注释说明算法依据）
+    - 在 `_generate_handler_body_statements` 中：当已为当前处理器体生成 Return 语句后，标记 `handler_return_emitted = True`，后续识别为 as-var cleanup 链的 `RETURN_VALUE`/`RETURN_CONST None` 指令抑制生成 `return None`
+    - as-var cleanup 链识别模式：`LOAD_CONST None → STORE_FAST <asvar> → DELETE_FAST <asvar> → RETURN_VALUE`，其中 `<asvar>` 与 except 子句的 as-var 一致
+    - 内联注释必须引用「唯一块归属」+「入口引用语义」原则
+    - 禁止引入 `_fix_/_merge_/_patch_/_fallback_/_hack_/_workaround_/_temp_` 前缀方法
+  - [ ] R7-T4c: 验证
+    - repro_07_09 反编译产物中 `return ({...}, {})` 后无虚假 `return None` ✓
+    - quotation.pyc::api_get_financial line 181-183 三处 `return None` 消除 ✓
+    - 真实 `return (...)` line 180 保留 ✓
+
+- [ ] R7-T5: Fix 2 — D5 orphan Name/Attr Expr suppression (P1) — **必须完成**
+  - [ ] R7-T5a: 定位 + 根因分析
+    - 定位：`region_ast_generator.py::_build_effective_stmts`（从指令列表构建有效语句）/ `_generate_block_statements`（按块生成语句）
+    - 根因：未被 STORE/CALL/RETURN/POP_TOP 消费的 LOAD_FAST/LOAD_ATTR/LOAD_SUBSCR 序列被错误生成为裸 `Expr` 语句；repro_07_02/03 中观察到的「重复」是因为同一指令范围被多个处理路径（如块末尾 + 块间衔接）重复消费
+    - 算法依据：**唯一块归属** — 每条指令在任何层级仅属于一个语句/表达式节点；**入口引用语义** — 块的语句序列只引用该块入口可达的业务指令，不应越界引用后续块的指令或重复引用同一段指令
+  - [ ] R7-T5b: 实施修复（含内联注释说明算法依据）
+    - 在 `_build_effective_stmts`（或语句发射点）检测无消费方的 LOAD_FAST/LOAD_ATTR/LOAD_SUBSCR 序列：当 LOAD 序列后紧跟 POP_TOP 且该 POP_TOP 跨块（即 LOAD 与 POP_TOP 分属不同基本块，且 LOAD 所在块以 POP_TOP 的目标为后继），抑制该 LOAD 序列生成为 Expr
+    - 修复重复发射：确保每个指令范围（offset 区间）只被一个语句发射路径消费，跨块 LOAD+POP_TOP 序列归一个语句节点，避免块末尾发射 + 块间衔接发射两次
+    - 内联注释必须引用「唯一块归属」+「入口引用语义」原则
+    - 禁止引入反模式前缀方法
+  - [ ] R7-T5c: 验证
+    - repro_07_02 反编译产物中无裸 `prod` Expr（且不重复）✓
+    - repro_07_03 反编译产物中无裸 `panel.items` Expr（且不重复）✓
+    - quotation.pyc::get_kline line 251 `prod` 孤立 Expr 消除 ✓
+    - quotation.pyc::get_klines_data line 504 `panel.items` 孤立 Expr 消除 ✓
+    - quotation.pyc 其他 3 处孤立 Expr（line 460/771/783 `stocks`）消除 ✓
+
+- [ ] R7-T6: Fix 3 — D4 `del e2` as-var cleanup leak (P2) — **必须完成**
+  - [ ] R7-T6a: 定位 + 根因分析
+    - 定位：`region_ast_generator.py::_generate_handler_body_statements`（as-var cleanup 检测）/ `_build_effective_stmts`（DELETE_FAST 发射）
+    - 根因：现有 as-var cleanup 检测仅覆盖紧跟 RETURN_VALUE 的 `LOAD_CONST None → STORE_FAST same_var → DELETE_FAST same_var` 序列；当 cleanup 在 fall-through 块中（DELETE_FAST 后非 RETURN_VALUE，而是跳转到下一个 cleanup 或 handler 出口）时，DELETE_FAST 被错误生成为 `del e2` 语句
+    - 算法依据：**唯一块归属** — as-var cleanup 序列属于 except handler 机制代码，DELETE_FAST <asvar> 不应作为独立 `del` 语句归属到处理器体
+  - [ ] R7-T6b: 实施修复（含内联注释说明算法依据）
+    - 扩展 `_generate_handler_body_statements` 的 as-var cleanup 检测：识别 `LOAD_CONST None → STORE_FAST same_var → DELETE_FAST same_var` 三元组，**无论**后续是否紧跟 RETURN_VALUE，均将其过滤为 except 机制代码，不生成 `del` 语句
+    - same_var 判定：STORE_FAST 与 DELETE_FAST 的 argname 必须相同，且该 argname 与当前 except 子句的 as-var 一致
+    - 内联注释必须引用「唯一块归属」原则
+    - 禁止引入反模式前缀方法
+  - [ ] R7-T6c: 验证
+    - repro_07_04 反编译产物中 `if not e2.response:` 体内无 `del e2` ✓
+    - quotation.pyc::api_get_financial line 174 `del e2` 消除 ✓
+
+- [ ] R7-T7: 回归测试（≤280s）
+  - [ ] R7-T7a: 5 个 DEFECT-REPRO repro（02/03/04/05/09）反编译验证通过（核心缺陷已消除）
+    - 注：repro_07_05（D6 lost try-body return）不在本轮 3 项修复范围内，但需确认未退化
+  - [ ] R7-T7b: 既有 TRY 测试矩阵无退化
+    - 执行 `timeout 90 python .trae/specs/analysis-fix-iteration/run_region_tests.py TRY`
+    - 通过/失败数不应劣化于 R6 的 73/7
+  - [ ] R7-T7c: quotation.pyc 反编译 stderr 维持 0
+    - `timeout 60 python pycdc.py /workspace/quotation.pyc > /tmp/r7_fixed.py 2>/tmp/r7_fixed.err`
+    - EXIT=0，stderr 行数 = 0
+  - [ ] R7-T7d: quotation.pyc 反编译产物 `compile()` 通过（COMPILE_OK）
+    - `python -c "compile(open('/tmp/r7_fixed.py').read(),'r7','exec'); print('COMPILE_OK')"`
+  - [ ] R7-T7e: quotation.pyc line 174 `del e2` 消除（D4 修复）
+  - [ ] R7-T7f: quotation.pyc line 181-183 三处 `return None` 消除（D9 修复），line 180 真实 `return (...)` 保留
+  - [ ] R7-T7g: quotation.pyc line 251 `prod` 孤立 Expr 消除（D5 修复）
+  - [ ] R7-T7h: quotation.pyc line 504 `panel.items` 孤立 Expr 消除（D5 修复）
+  - [ ] R7-T7i: R6 已修项不退化（D1 lost return / D2 lost parens 在 quotation.pyc 实际产物复测）
+  - [ ] R7-T7j: 残留不一致数 ≤ R7 基线
+
+- [ ] R7-T8: `fix_report.md` 生成（rounds/round_07/repair_engineer/fix_report.md）
+  - 修复点列表（D9/D5/D4 + 涉及方法 + 算法依据 + 4 原则对应条款）
+  - docstring/内联注释更新清单（方法名 + 算法依据注释覆盖确认）
+  - 回归结果（5 DEFECT-REPRO 通过状态 + TRY 矩阵退化检查）
+  - 残留不一致数（与 R7 基线对比）
+  - 算法 4 原则合规性自检
+  - 已知限制（D3/D6/D7/D8/D10 未覆盖 + D5 重复发射根因是否完全消除）
+
+- [ ] R7-T9: 反模式自检
+  - 无 `_fix_/_merge_/_patch_/_fallback_/_hack_/_workaround_/_temp_` 前缀 0 新增（grep 验证）
+  - `_merge_block_is_loop_back_edge` 仍未重命名（pre-existing，按 spec 留待后续轮次）
+
+- [ ] R7-T10: 涉及的 `_generate_*` 方法内联注释已说明算法依据
+  - 算法依据：唯一块归属 / 入口引用语义 / 自底向上归约 / 嵌套即抽象节点（按修复点引用对应条款）
+  - 待注释方法：`_generate_handler_body_statements`（D9/D4 修改）/ `_build_effective_stmts`（D5 修改）/ `_generate_block_statements`（D5 修改，如涉及）
+  - 注：spec.md G8 要求 `_identify_*_regions` 方法按 6 项统一模板更新 docstring；本轮主要修改 `_generate_*` 方法，以「内联注释说明算法依据」替代，符合 spec "Add inline comments explaining the algorithm basis" 的要求
+
+- [ ] R7-T11: 算法 4 原则 FULLY COMPLIANT（自底向上归约 / 每块唯一归属 / 嵌套抽象节点 / 入口引用语义）
+  - 自底向上归约：D9/D4/D5 修复不改变归约顺序，仅在语句发射阶段过滤机制代码
+  - 每块唯一归属：as-var cleanup 块（D4/D9）归属 except handler 机制代码，不作为独立顺序语句；LOAD+POP_TOP 跨块序列（D5）归属单一语句节点
+  - 嵌套即抽象节点：except handler 作为 TryExcept 子区域抽象节点，cleanup 块为 handler 内部机制
+  - 入口引用语义：handler 体语句序列只引用业务指令入口，不引用 cleanup 块入口
+
+- [ ] R7-T12: `python -c "import core.cfg.region_analyzer; import core.cfg.region_ast_generator; import core.cfg.code_generator; print('IMPORT_OK')"` 编译通过
+
+- [ ] R7-T13: commit + push `qpyc-r07:`（≤300s，待用户授权执行）
+
+## R7 验证补充检查点
+
+- [ ] R7-V1: `python -c "import core.cfg.region_analyzer; import core.cfg.region_ast_generator; import core.cfg.code_generator; print('IMPORT_OK')"` 通过
+- [ ] R7-V2: `timeout 60 python pycdc.py /workspace/quotation.pyc > /tmp/r7_fixed.py 2>/tmp/r7_fixed.err` EXIT=0，stderr 行数 = 0
+- [ ] R7-V3: `python -c "compile(open('/tmp/r7_fixed.py').read(),'r7','exec'); print('COMPILE_OK')"` 通过
+- [ ] R7-V4: 5 个 DEFECT-REPRO repro（02/03/04/05/09）核心缺陷消除（05 仅不退化即可）
+- [ ] R7-V5: `timeout 90 python .trae/specs/analysis-fix-iteration/run_region_tests.py TRY` 不劣化于 R6 的 73/7
+- [ ] R7-V6: quotation.pyc line 174 `del e2` 消除（D4）
+- [ ] R7-V7: quotation.pyc line 181-183 三处 `return None` 消除（D9），line 180 真实 `return (...)` 保留
+- [ ] R7-V8: quotation.pyc line 251 `prod` 孤立 Expr 消除（D5）
+- [ ] R7-V9: quotation.pyc line 504 `panel.items` 孤立 Expr 消除（D5）
+- [ ] R7-V10: 反模式 grep 验证 0 新增（`_fix_/_merge_/_patch_/_fallback_/_hack_/_workaround_/_temp_` 前缀）
 
 ## 轮 8 (Round 8)
 

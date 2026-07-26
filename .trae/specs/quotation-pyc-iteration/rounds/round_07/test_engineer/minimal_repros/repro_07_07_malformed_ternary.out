@@ -1,0 +1,25 @@
+# Source Generated with Decompyle++ (Python version)
+# File: repro_07_07_malformed_ternary.pyc (Python 3.11)
+
+__doc__ = """Repro 07-07: D7 (P2) malformed ternary chain.
+
+In `get_trade_calendar` an if/elif chain of assignments
+(`suffix = 'T.CCFX' if typet == 2 elif typet == 3 elif typet == 4
+else 13`) is reduced by the decompiler to a nested ternary of `==`
+comparisons (quotation.pyc line 359/363). The `=` assignments become
+`==` comparisons and the whole expression becomes a bare Expr.
+
+Expected defect:
+    suffix == 'T.CCFX' if typet == 2 else suffix == 'T.CCFX' if typet == 3 else ...
+"""
+def pick_suffix(typet):
+    suffix = 'XZCE'
+    if typet == 2:
+        suffix = 'T.CCFX'
+    elif typet == 3:
+        suffix = 'T.CCFX'
+    elif typet == 4:
+        suffix = 'T.CCFX'
+    else:
+        suffix = 13
+    return suffix
