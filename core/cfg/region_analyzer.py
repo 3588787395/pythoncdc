@@ -9785,6 +9785,15 @@ RegionType 枚举值: RegionType.ASSERT
                 if bc_info:
                     boolop_chain_blocks = list(bc_info.get('chain_blocks', []))
                     boolop_chain_ops = list(bc_info.get('chain_ops', []))
+                    # [R4 Fix 1] Backward walk for `assert not (or-chain), msg`
+                    # may return new_condition_block — the FIRST or-chain block
+                    # (earlier in CFG order than `block`). The AssertRegion
+                    # entry/condition_block must be that first block per
+                    # "entry reference semantics"; `block` (the LAST or-chain
+                    # block) becomes the last entry of boolop_chain_blocks.
+                    new_cond = bc_info.get('new_condition_block')
+                    if new_cond is not None and new_cond is not block:
+                        block = new_cond
 
             region = AssertRegion(
                 region_type=RegionType.ASSERT,
@@ -9902,6 +9911,74 @@ RegionType 枚举值: RegionType.ASSERT
                 break
             current = next_block
         if not chain_blocks:
+            # [R4 Fix 1] Backward walk for `assert not (or-chain), msg`.
+            # CPython compiles `assert not (a or b or c), msg` so that each
+            # or-chain operand evaluates and POP_JUMP_IF_TRUE skips to the
+            # end (because operand-True ⇒ or-chain-True ⇒ not(or-chain)-False
+            # ⇒ don't raise). Only the LAST or-chain block's fall-through
+            # directly reaches message_block, so the forward walk above
+            # yields nothing. The assert entry is therefore detected at the
+            # LAST or-chain block (condition_block). Walk backward through
+            # predecessors that share the same IF_TRUE jump target to find
+            # the FIRST or-chain block; the AssertRegion entry must be that
+            # first block (per "entry reference semantics"), and the
+            # subsequent blocks — including the original condition_block —
+            # become boolop_chain_blocks. Without this, BoolOpRegion hijacks
+            # the first or-chain blocks and the assert degrades to
+            # `if not (and-chain): assert last_cond, msg` with op direction
+            # flipped during if-condition negation.
+            cond_last = condition_block.get_last_instruction()
+            if (cond_last is not None
+                    and cond_last.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                    and 'TRUE' in cond_last.opname
+                    and cond_last.argval is not None):
+                end_target = self.cfg.get_block_by_offset(cond_last.argval)
+                # condition_block's fall-through must be message_block
+                cond_ft = [s for s in condition_block.conditional_successors
+                           if s.start_offset != cond_last.argval]
+                if (end_target is not None
+                        and len(cond_ft) == 1
+                        and cond_ft[0] is message_block
+                        and end_target is not message_block):
+                    backward_blocks: List[BasicBlock] = []
+                    cur = condition_block
+                    bvisited = {condition_block, message_block}
+                    while True:
+                        or_pred = None
+                        for p in cur.predecessors:
+                            if p in bvisited:
+                                continue
+                            p_last = p.get_last_instruction()
+                            if (p_last is None
+                                    or p_last.opname not in FORWARD_CONDITIONAL_JUMP_OPS
+                                    or 'TRUE' not in p_last.opname
+                                    or p_last.argval is None):
+                                continue
+                            p_target = self.cfg.get_block_by_offset(p_last.argval)
+                            if p_target is not end_target:
+                                continue
+                            # p's fall-through must be cur (chain link)
+                            p_ft = [s for s in p.conditional_successors
+                                    if s.start_offset != p_last.argval]
+                            if len(p_ft) == 1 and p_ft[0] is cur:
+                                or_pred = p
+                                break
+                        if or_pred is None:
+                            break
+                        backward_blocks.append(or_pred)
+                        bvisited.add(or_pred)
+                        cur = or_pred
+                    if backward_blocks:
+                        backward_blocks.reverse()
+                        new_condition_block = backward_blocks[0]
+                        new_chain_blocks = backward_blocks[1:] + [condition_block]
+                        new_chain_ops = ['or'] * len(new_chain_blocks)
+                        return {
+                            'chain_blocks': new_chain_blocks,
+                            'chain_ops': new_chain_ops,
+                            'first_op': 'or',
+                            'new_condition_block': new_condition_block,
+                        }
             return None
         return {
             'chain_blocks': chain_blocks,
@@ -12336,6 +12413,27 @@ RegionType 枚举值: RegionType.ASSERT
                     if fallthrough is not None:
                         ft_last = fallthrough.get_last_instruction()
                         if ft_last and ft_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                            return False
+                    # [R4 Fix 3] nested if inner Compare lost: 上面的 fallthrough
+                    # 检查只看【直接】fallthrough（一级深度），无法捕获嵌套 if-return
+                    # 模式如 `if c1: if c2: if c3: return X; return Y`。这里 `s` 是
+                    # header 的 then（c2 块），其 fallthrough 是 c3 块（另一个条件，
+                    # 不是 return），但 `s` 的 jump target 是 return Y 块。`s` 实质是
+                    # 嵌套 if 的条件头，不是 ternary 值块。依「每块唯一归属」+「嵌套
+                    # 即抽象节点」: 嵌套 if 归属 IfRegion，不归属 TernaryRegion。没有
+                    # 此检查时，外层 if/elif 被折叠为 IfExp `... if c1 else c4`，内层
+                    # Compare 节点 + return 语句全部丢失（repro_04_if_branch_both_return
+                    # _same 与 quotation.pyc::_is_same_type_date 即此缺陷）。
+                    # 判据（结构性，非实例特征）: 若 `s` 以条件跳转结尾且【任一】后继
+                    # 是 return 块，`s` 是嵌套 if 条件头。镜像 line 13038-13045（elif
+                    # 分支内的嵌套 if 头检测）。对合法 ternary 安全: boolop 链值块的
+                    # 后继是 JUMP_FORWARD 或 fall-through 到 merge（非 return）；chained
+                    # compare 值块的后继是 JUMP_FORWARD 或 false_block（LOAD 值，非
+                    # return）；普通 ternary 值块以后继为 LOAD value + JUMP_FORWARD/
+                    # fall-through 到 merge，非 return。
+                    for ss in s.conditional_successors:
+                        ss_last = ss.get_last_instruction()
+                        if ss_last and ss_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
                             return False
             if not (self._is_single_expression_block(succs[0]) and
                     self._is_single_expression_block(succs[1])):
@@ -15751,6 +15849,21 @@ RegionType 枚举值: RegionType.ASSERT
             if current in self.block_to_region:
                 existing_reg = self.block_to_region.get(current)
                 if isinstance(existing_reg, BoolOpRegion):
+                    break
+                # [R4 Fix 1] assert not (or-chain) → and flip:
+                # _identify_assert_regions runs BEFORE _identify_boolop_regions
+                # and registers all AssertRegion blocks (entry,
+                # boolop_chain_blocks, chained_compare_blocks, message_block)
+                # in self.block_to_region. When the boolop chain detection
+                # walks into any AssertRegion-owned block (e.g. the non-entry
+                # boolop_chain_blocks of `assert not (a or b or c), msg`),
+                # it must stop — the AssertRegion owns those blocks per
+                # "each block unique ownership" and reconstructs the BoolOp
+                # itself via _generate_assert + boolop_chain_ops. Without
+                # this break, BoolOpRegion hijacks the assert's chain blocks
+                # and the assert is degraded to `if not (chain): assert
+                # last_cond, msg` with op direction possibly flipped.
+                if isinstance(existing_reg, AssertRegion):
                     break
             if last.opname in NONE_CHECK_OPS:
                 pass

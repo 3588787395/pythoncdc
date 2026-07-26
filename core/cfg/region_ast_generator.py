@@ -2175,6 +2175,33 @@ AST 映射规则:
             )
             if boolop_cond is not None:
                 boolop_cond = self._invert_assert_none_check_direction(boolop_cond)
+                # [R4 Fix 1] Detect `assert not (or-chain), msg` pattern.
+                # CPython compiles `assert not (a or b or c), msg` so that
+                # each or-chain operand's POP_JUMP_IF_TRUE jumps to
+                # message_block (raise) — operand-True ⇒ or-chain-True ⇒
+                # NOT(or-chain)-False ⇒ assert raises. The FIRST or-chain
+                # block (cond_block) thus ends with POP_JUMP_IF_TRUE →
+                # message_block. For `assert (or-chain), msg` (no `not`),
+                # cond_block's POP_JUMP_IF_TRUE → end (skip raise) because
+                # operand-True ⇒ or-chain-True ⇒ assert passes. Without
+                # this wrap, `assert not (a or b), msg` is emitted as
+                # `assert (a or b), msg` (semantically inverted). Per
+                # "AST 节点保形" + "入口引用语义": reconstruct the
+                # explicit UnaryNot. Known limitation: `assert not (and-
+                # chain), msg` (rare) is not handled here.
+                if region.message_block is not None:
+                    cond_last = cond_block.get_last_instruction()
+                    if (cond_last is not None
+                            and cond_last.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                            and 'TRUE' in cond_last.opname
+                            and cond_last.argval is not None):
+                        jump_target = self.cfg.get_block_by_offset(cond_last.argval)
+                        if jump_target is region.message_block:
+                            boolop_cond = {
+                                'type': 'UnaryOp',
+                                'op': 'not',
+                                'operand': boolop_cond,
+                            }
                 for block in region.blocks:
                     self.generated_blocks.add(block)
                 result = {
@@ -13946,7 +13973,7 @@ AST 映射规则:
                           if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
                                                'PUSH_EXC_INFO', 'POP_EXCEPT', 'POP_TOP',
                                                'CHECK_EXC_MATCH', 'CHECK_EG_MATCH',
-                                               'WITH_EXCEPT_START')
+                                               'WITH_EXCEPT_START', 'EXTENDED_ARG')
                           and i.opname not in _EXC_STAR_FRAMEWORK_OPS]
         exc_dispatch_jump_offset = None
         for idx, instr in enumerate(block.instructions):
@@ -13962,8 +13989,19 @@ AST 映射规则:
                                              'POP_JUMP_IF_NONE', 'POP_JUMP_IF_NOT_NONE'):
                         exc_dispatch_jump_offset = next_instr.offset
                         break
+                    # [R4 Fix 2] EXTENDED_ARG 是前缀指令（扩展下一条指令的
+                    # arg），CPython 3.11+ 在 POP_JUMP_FORWARD_IF_FALSE 跨
+                    # 256 边界时会插入 EXTENDED_ARG。原 elif 分支未包含
+                    # EXTENDED_ARG，导致循环提前 break，exc_dispatch_jump_offset
+                    # 保持 None，handler_instrs 未过滤 CHECK_EXC_MATCH 前的
+                    # LOAD_GLOBAL exc_type，最终被重建为 spurious `if <ExcType>:
+                    # pass`（如 quotation.pyc::api_get_financial 的 `if
+                    # HTTPError: pass`）。per "每块唯一归属"：LOAD_GLOBAL
+                    # exc_type + CHECK_EXC_MATCH + dispatch jump 是 except
+                    # 分派框架指令，归 ExceptHandler 头部，不应生成独立 If。
                     elif next_instr.opname not in ('LOAD_GLOBAL', 'LOAD_NAME', 'LOAD_CONST',
-                                                   'LOAD_ATTR', 'LOAD_DEREF', 'COPY', 'BUILD_LIST', 'SWAP'):
+                                                   'LOAD_ATTR', 'LOAD_DEREF', 'COPY', 'BUILD_LIST',
+                                                   'SWAP', 'EXTENDED_ARG'):
                         break
                 break
         if exc_dispatch_jump_offset is not None:
