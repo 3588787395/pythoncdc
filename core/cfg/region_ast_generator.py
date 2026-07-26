@@ -8378,7 +8378,17 @@ AST 映射规则:
                 return None
         if region.else_blocks:
             else_stmts = []
-            # 先生成子区域（LoopRegion/TryExceptRegion/WithRegion），避免_process_if_blocks消耗子区域入口块
+            # [R3 Fix C(3)] file assignment lost before try: interleave
+            # sub-regions (Try/With/Loop) and sequential blocks by offset
+            # order. Previously ALL sub-regions were emitted first, then ALL
+            # sequential blocks — causing an assignment before a try/with
+            # (e.g. `file = ...` before `try: with open(file):`) to be
+            # emitted AFTER the try, producing a dangling reference.
+            # Bottom-up reduction + unique block ownership: each block is
+            # emitted at its offset position; the assignment belongs to the
+            # function body sequence, not the try/with setup.
+            _reachable_children_c3 = []
+            _child_block_set_c3 = set()
             for child in (region.children or []):
                 if not isinstance(child, (TryExceptRegion, WithRegion, LoopRegion)):
                     continue
@@ -8386,22 +8396,45 @@ AST 映射规则:
                     continue
                 if child.entry in self.generated_blocks:
                     continue
-                child_reachable_from_else = self._is_child_reachable_from_blocks(child, region.else_blocks)
-                if child_reachable_from_else:
-                    child_id = id(child)
-                    if child_id not in self._generated_regions and child_id not in self._generating_regions:
-                        child_ast = self._generate_region(child)
-                        if child_ast:
-                            if isinstance(child_ast, list):
-                                else_stmts.extend(child_ast)
-                            else:
-                                else_stmts.append(child_ast)
-                        for b in child.blocks:
-                            self.generated_blocks.add(b)
-                        self._generated_regions.add(child_id)
-            # 再处理剩余未生成的else块
-            remaining_else_stmts = self._process_if_blocks(region.else_blocks, region, branch='else')
-            else_stmts.extend(remaining_else_stmts)
+                if self._is_child_reachable_from_blocks(child, region.else_blocks):
+                    _reachable_children_c3.append(child)
+                    for b in child.blocks:
+                        _child_block_set_c3.add(b)
+            _entry_to_child_c3 = {c.entry: c for c in _reachable_children_c3}
+            _sorted_else_c3 = sorted(region.else_blocks, key=lambda b: b.start_offset)
+            _seq_buffer_c3 = []
+            _emit_units_c3 = []
+            for _blk in _sorted_else_c3:
+                if _blk in _entry_to_child_c3:
+                    if _seq_buffer_c3:
+                        _emit_units_c3.append(('seq', list(_seq_buffer_c3)))
+                        _seq_buffer_c3 = []
+                    _emit_units_c3.append(('region', _entry_to_child_c3[_blk]))
+                elif _blk in _child_block_set_c3:
+                    continue
+                else:
+                    _seq_buffer_c3.append(_blk)
+            if _seq_buffer_c3:
+                _emit_units_c3.append(('seq', list(_seq_buffer_c3)))
+            for _unit in _emit_units_c3:
+                if _unit[0] == 'region':
+                    _child_c3 = _unit[1]
+                    _child_id_c3 = id(_child_c3)
+                    if _child_id_c3 in self._generated_regions or _child_id_c3 in self._generating_regions:
+                        continue
+                    _child_ast_c3 = self._generate_region(_child_c3)
+                    if _child_ast_c3:
+                        if isinstance(_child_ast_c3, list):
+                            else_stmts.extend(_child_ast_c3)
+                        else:
+                            else_stmts.append(_child_ast_c3)
+                    for b in _child_c3.blocks:
+                        self.generated_blocks.add(b)
+                    self._generated_regions.add(_child_id_c3)
+                else:
+                    _seq_stmts_c3 = self._process_if_blocks(_unit[1], region, branch='else')
+                    if _seq_stmts_c3:
+                        else_stmts.extend(_seq_stmts_c3)
             return else_stmts if else_stmts else None
         if region.elif_final_else:
             else_stmts = self._process_if_blocks(region.elif_final_else, region, branch='else')
@@ -15776,6 +15809,41 @@ AST 映射规则:
 
             items = []
             pre_stmts = []
+            # [R3 Fix C(2)] file assignment lost: extract the instruction
+            # segment in the WithRegion entry block before BEFORE_WITH that
+            # ends with STORE_* and emit it as sequential statements before
+            # the with statement. Bottom-up reduction + unique block
+            # ownership: the assignment statement (e.g.
+            # `file = '...' % finance_mic`) belongs to the function body
+            # sequence, not the with/try setup, so it must be emitted before
+            # the with. The context expression (LOAD/CALL up to BEFORE_WITH)
+            # is handled separately via region.items; only the pre-context
+            # assignment segment (ending with STORE_*) is emitted here.
+            _entry_block_c2 = getattr(region, 'entry', None)
+            if _entry_block_c2 is not None:
+                _entry_instrs_c2 = list(_entry_block_c2.instructions)
+                _bw_idx_c2 = None
+                for _ii, _instr in enumerate(_entry_instrs_c2):
+                    if _instr.opname in ('BEFORE_WITH', 'BEFORE_ASYNC_WITH'):
+                        _bw_idx_c2 = _ii
+                        break
+                if _bw_idx_c2 is not None:
+                    _last_store_idx_c2 = None
+                    for _ii in range(_bw_idx_c2 - 1, -1, -1):
+                        if _entry_instrs_c2[_ii].opname in (
+                                'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
+                                'STORE_DEREF', 'STORE_SUBSCR', 'STORE_ATTR'):
+                            _last_store_idx_c2 = _ii
+                            break
+                    if _last_store_idx_c2 is not None:
+                        _pre_bw_instrs_c2 = [
+                            _i for _i in _entry_instrs_c2[:_last_store_idx_c2 + 1]
+                            if _i.opname not in NOISE_OPS
+                        ]
+                        _pre_bw_stmts_c2 = self._build_statements_from_instructions(
+                            _pre_bw_instrs_c2, _entry_block_c2)
+                        if _pre_bw_stmts_c2:
+                            pre_stmts.extend(_pre_bw_stmts_c2)
             for context_instrs, target in region.items:
                     if context_instrs:
                         import_instrs = []

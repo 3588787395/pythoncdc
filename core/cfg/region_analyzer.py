@@ -7669,6 +7669,21 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                 if instr.opname in NOISE_OPS:
                     i += 1
                     continue
+                # [R3 Fix C(1)] file assignment lost: on encountering a
+                # STORE_* instruction, clear already-collected ctx_expr —
+                # the instructions before the STORE belong to an assignment
+                # statement (e.g. `file = '...' % finance_mic`), not the
+                # with context expression. Only keep instructions after the
+                # last STORE_* up to BEFORE_WITH as the real context_expr.
+                # Bottom-up reduction + unique block ownership: the
+                # assignment belongs to the function body sequence, not the
+                # with setup. This covers STORE_SUBSCR/STORE_ATTR that the
+                # start_search boundary (which only checks a subset) may miss.
+                if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
+                                    'STORE_DEREF', 'STORE_SUBSCR', 'STORE_ATTR'):
+                    ctx_expr = []
+                    i += 1
+                    continue
                 # 收集所有看起来是加载/调用的指令
                 if instr.opname in ('LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_ATTR', 'LOAD_FAST',
                                    'LOAD_CONST', 'LOAD_METHOD', 'CALL', 'PRECALL',
@@ -15749,6 +15764,39 @@ RegionType 枚举值: RegionType.ASSERT
                 cur_jt_offset = cur_last.argval if cur_last else None
                 if first_jt_offset is not None and cur_jt_offset is not None and first_jt_offset > cur_jt_offset:
                     break
+            # [R3 Fix A] nested if inner lost: when examining a NON-FIRST
+            # chain block, if it contains STORE_* instructions it is a body
+            # block (an assignment statement), not a BoolOp operand. Bottom-up
+            # reduction + nesting as abstract node: the body belongs to the
+            # if region, not the boolop region. Break the chain so the outer
+            # if and inner if are not merged into `if A and B:` with body
+            # statements lifted out.
+            if chain:
+                _has_store = any(
+                    i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
+                                 'STORE_DEREF', 'STORE_SUBSCR', 'STORE_ATTR')
+                    for i in current.instructions
+                )
+                if _has_store:
+                    break
+            # [R3 Fix B] IfExp arg → and + docstring: when examining a
+            # NON-FIRST chain block, if its fall-through successor ends with
+            # JUMP_FORWARD, the block is an IfExp condition block (the
+            # JUMP_FORWARD skips the false-value after the true-value), not a
+            # BoolOp operand. Bottom-up reduction + nesting as abstract node:
+            # the IfExp condition belongs to the IfExp, not the BoolOp. Break
+            # the chain so the IfExp is preserved as a Call arg instead of
+            # being folded into `if A and B:` with constants emitted as
+            # docstrings.
+            if chain:
+                _ft_succs_b = list(current.conditional_successors)
+                _ft_cand_b = next((s for s in _ft_succs_b
+                                   if s.start_offset != last.argval), None)
+                if _ft_cand_b is not None:
+                    _ft_last_b = _ft_cand_b.get_last_instruction()
+                    if (_ft_last_b is not None
+                            and _ft_last_b.opname == 'JUMP_FORWARD'):
+                        break
             op_type = 'and' if ('FALSE' in last.opname or '_IF_NONE' in last.opname) else 'or'
             chain.append((current, op_type))
             # [CPython peephole P4 + P5 interaction] Chained compare as
