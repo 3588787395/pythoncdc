@@ -1023,8 +1023,7 @@ class CFGASTConverter:
             return self._convert_augassign_full(expr_dict)
         
         # [Python 3.10+] 模式匹配类型 - 这些不是表达式，应该返回None
-        # MatchSingleton (case None/True/False) 也属于模式匹配类型，不应作为表达式节点
-        if expr_type in ('MatchValue', 'MatchSequence', 'MatchMapping', 'MatchClass', 'MatchAs', 'MatchOr', 'MatchStar', 'MatchStarred', 'MatchKeys', 'MatchSingleton'):
+        if expr_type in ('MatchValue', 'MatchSequence', 'MatchMapping', 'MatchClass', 'MatchAs', 'MatchOr', 'MatchStar', 'MatchStarred', 'MatchKeys'):
             return None
         
         # [关键修复] 处理PUSH_NULL - Python 3.11+的null值标记，用于函数调用
@@ -1178,20 +1177,13 @@ class CFGASTConverter:
                 comparators = [right]
         
         ops = expr_dict.get('ops', ['=='])
-
+        
         # [修复-E3] 处理ops的两种格式:
         # 1. 字符串列表: ['==', '!=']
         # 2. 对象列表: [{'type': 'CompareOp', 'op': '=='}]
-        # [R2-repro_02 fix] 还需处理 BoolOp 重建产出的第三种格式:
-        # 3. {'type': 'Is'} / {'type': 'IsNot'} / {'type': 'NotIn'} / {'type': 'In'}
-        #    （type 字段直接是操作符，无 op 字段）。此前 op.get('op', '==')
-        #    对此类 dict 返回默认 '=='，导致 `is None` 被渲染为 `== None`、
-        #    `not in` 被渲染为 `in` 等。依「入口引用语义」：BoolOp 重建的
-        #    NONE_CHECK 包裹（_build_boolop_expression）使用 type 字段表达
-        #    比较运算符，转换器必须忠实读取 type 字段，不得回退默认值。
         if ops and isinstance(ops, list) and len(ops) > 0 and isinstance(ops[0], dict):
-            ops = [(op.get('op') or op.get('type', '==')) if isinstance(op, dict) else op for op in ops]
-
+            ops = [op.get('op', '==') if isinstance(op, dict) else op for op in ops]
+        
         # [关键修复] 将字符串操作符转换为整数
         op_map = {
             '<': 0,   # CMP_LESS
@@ -1204,10 +1196,6 @@ class CFGASTConverter:
             'not in': 7,  # CMP_NOT_IN
             'is': 8,  # CMP_IS
             'is not': 9,  # CMP_IS_NOT
-            # [R2-repro_02 fix] PascalCase 形式（BoolOp 重建 / dict-form ops）
-            'Lt': 0, 'LtE': 1, 'Eq': 2, 'NotEq': 3,
-            'Gt': 4, 'GtE': 5, 'In': 6, 'NotIn': 7,
-            'Is': 8, 'IsNot': 9,
         }
         int_ops = [op_map.get(op, 2) for op in ops]  # 默认使用 ==
 
@@ -1760,18 +1748,7 @@ class CFGASTConverter:
         
         elif pattern_type == 'MatchKeys':
             return ASTName('_')
-
-        elif pattern_type == 'MatchSingleton':
-            # [R3-P1-1 fix] 保留 MatchSingleton 字典结构，由 code_generator
-            # ._generate_match_pattern 渲染为 'None'/'True'/'False'。
-            # 旧逻辑落入默认分支 _convert_expression，而 _convert_expression
-            # 对 MatchSingleton 返回 None（见上方 Match 类型守卫），导致
-            # case None: 被渲染为 case _（repro_03_match_case_none_to_
-            # wildcard 根因）。
-            # 依「嵌套即抽象节点」：case pattern 应作为独立抽象节点保留
-            # 语义，禁止塌缩为通配符。
-            return pattern_dict
-
+        
         # 默认处理：作为表达式转换
         return self._convert_expression(pattern_dict)
 

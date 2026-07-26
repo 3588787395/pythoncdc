@@ -113,6 +113,20 @@ class ComprehensionGenerator:
 
         for comp_idx, comp_code in comp_indices:
             pre_comp_instrs = instrs[prev_end:comp_idx - 1]
+            # [R25-10 fix] 区域归约算法原则 3（嵌套即抽象节点）：当 comprehension 是
+            # 更大表达式的子节点时（如 `return (sum(items), len(items), [listcomp])`），
+            # pre_comp_instrs 会包含未被 STORE/POP_TOP/IMPORT 消费的值生产指令
+            # （LOAD_GLOBAL/CALL/BUILD_* 等），这些值留在栈上与 comprehension 一起
+            # 被后续 BUILD_TUPLE 消费。此时不应将 comprehension 作为独立语句提取，
+            # 应返回 None 让标准 expr_reconstructor.reconstruct 路径处理整个块
+            # （正确重建 Return(Tuple([...]))）。判据：pre_comp_instrs 末尾指令不是
+            # 语句终止符（STORE/POP_TOP/IMPORT）时，说明栈上仍有未消费值。
+            if pre_comp_instrs:
+                _pre_last = pre_comp_instrs[-1]
+                if _pre_last.opname not in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
+                                             'STORE_DEREF', 'POP_TOP', 'IMPORT_NAME',
+                                             'IMPORT_FROM'):
+                    return None
             if pre_comp_instrs:
                 pre_stmts = self._generate_pre_comp_stmts(pre_comp_instrs, instrs, prev_end, region_ast_gen=region_ast_gen)
                 all_stmts.extend(pre_stmts)
@@ -237,6 +251,21 @@ class ComprehensionGenerator:
                                     break
 
             comp_value = wrapper_call if wrapper_call is not None else comp_ast
+
+            # [R25-10 fix] 区域归约算法原则 3（嵌套即抽象节点）：post-wrapper
+            # 指令含表达式构建指令（BUILD_TUPLE/BINARY_OP 等）时，comprehension
+            # 是更大表达式的子节点（如 `return ([listcomp], max(items))` 中
+            # listcomp 被后续 BUILD_TUPLE 2 消费）。返回 None 让标准
+            # expr_reconstructor.reconstruct 路径处理整个块。
+            if wrapper_end < len(instrs):
+                _post_wrapper = instrs[wrapper_end:]
+                _expr_building_ops = frozenset({
+                    'BUILD_TUPLE', 'BUILD_LIST', 'BUILD_SET', 'BUILD_MAP',
+                    'BUILD_CONST_KEY_MAP', 'BINARY_OP', 'BINARY_SUBSCR',
+                    'BUILD_SLICE', 'FORMAT_VALUE', 'BUILD_STRING',
+                })
+                if any(i.opname in _expr_building_ops for i in _post_wrapper):
+                    return None
 
             store_instr = None
             for instr in instrs[wrapper_end:]:
