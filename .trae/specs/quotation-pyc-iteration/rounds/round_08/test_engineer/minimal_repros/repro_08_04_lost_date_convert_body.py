@@ -1,0 +1,50 @@
+"""Repro 08-04: D8 (P2) lost date_convert body (if/elif/else + IfExp collapsed).
+
+In `date_convert` (quotation.pyc line 2145) the source is:
+    def date_convert(date, report_types):
+        dict_temp = {'03-31':..., '06-30':..., '09-30':..., '12-31':...}
+        date_temp = date.replace('-', '')
+        year_temp = int(date_temp[0:4])
+        month_temp = pandas.Period(date, 'Q-DEC').quarter
+        if report_types is not None:
+            if month_temp == 1:
+                month_temp = 4
+                year_temp -= 1
+            else:
+                month_temp -= 1
+        else:
+            if month_temp <= report_types:
+                month_temp = report_types
+                year_temp -= 1
+            else:
+                month_temp = report_types
+        data_return = str(year_temp) + '-' + dict_temp[month_temp]
+        return data_return
+The decompiler collapses this to:
+    def date_convert(date, report_types):
+        int(month_temp == 1 if report_types is None else month_temp <= report_types)
+
+Expected defect: only a single bare `int(...)` Expr remains; dict_temp, year_temp,
+month_temp, data_return assignments and the return statement are all lost.
+"""
+
+
+def date_convert(date, report_types):
+    dict_temp = {'03-31': 3, '06-30': 6, '09-30': 9, '12-31': 12}
+    date_temp = date.replace('-', '')
+    year_temp = int(date_temp[0:4])
+    month_temp = pandas.Period(date, 'Q-DEC').quarter
+    if report_types is not None:
+        if month_temp == 1:
+            month_temp = 4
+            year_temp -= 1
+        else:
+            month_temp -= 1
+    else:
+        if month_temp <= report_types:
+            month_temp = report_types
+            year_temp -= 1
+        else:
+            month_temp = report_types
+    data_return = str(year_temp) + '-' + dict_temp[month_temp]
+    return data_return

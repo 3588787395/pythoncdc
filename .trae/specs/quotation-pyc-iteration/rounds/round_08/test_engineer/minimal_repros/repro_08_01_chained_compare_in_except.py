@@ -1,0 +1,32 @@
+"""Repro 08-01: D3 (P1) chained compare in except handler lost.
+
+In `api_get_financial` (quotation.pyc line 159) the HTTPError handler
+guards the 4xx branch with `if 400 <= e2.code <= 499:`. CPython 3.11
+emits the chained compare as
+    LOAD_CONST 400 / LOAD_FAST e2 / LOAD_ATTR code / SWAP / COPY /
+    COMPARE_OP '<=' / POP_JUMP_FORWARD_IF_FALSE /
+    LOAD_CONST 499 / COMPARE_OP '<=' / POP_JUMP_FORWARD_IF_FALSE
+The decompiler consumes only the trailing COMPARE_OP operand and emits
+`if 499:` (chained compare lost).
+
+Expected defect:
+    except HTTPError as e2:
+        if 499:           # <- chained compare lost
+            pass
+instead of:
+    except HTTPError as e2:
+        if 400 <= e.code <= 499:
+            handle_4xx(e)
+"""
+
+
+def api_get_financial(url, request_times=0):
+    try:
+        response = do_request(url)
+        return_data = response.json()
+    except HTTPError as e2:
+        system_log.error(get_traceback_message())
+        if 400 <= e2.code <= 499:
+            error_no = e2.code
+            return ({'error_no': error_no, 'error_info': ''}, {})
+    return ({'error_no': 0, 'error_info': ''}, return_data)

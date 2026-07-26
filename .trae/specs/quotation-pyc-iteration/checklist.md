@@ -532,7 +532,92 @@
 
 ## 轮 8 (Round 8)
 
-- [ ] R8-1 ~ R8-9
+> **R8 基线**：反编译产物 COMPILE_OK（2558 行，0 stderr，TRY 区域 72/8 较 R6 73/7 退化 1）。
+> **R8 残留缺陷**：5 类 + 1 退化 — D3 chained compare in except / D6 try body return→pass / D7 malformed ternary chain / D8 lost date_convert body / D10 malformed call in except / TRY 区域 1 退化（R7 D9 副作用）。
+> **R8 修复目标**：P0×1（TRY 退化）+ P1×1（D3 chained compare quotation.pyc 实际路径）+ P2≥2（D6/D7/D8/D10 择优）。
+
+### 阶段一：测试工程师
+
+- [ ] R8-1 反编译 + 字节码 diff（`decompile_report.md`，5 类残留缺陷 D3/D6/D7/D8/D10 + TRY 退化点 + R7 已修项复测）
+- [ ] R8-2 ≥10 最小复现实例（`minimal_repros/`，10 个 repro 全部 py_compile + DEFECT-REPRO 验证通过）
+
+### 阶段二：修复工程师
+
+#### P0 修复（必须完成）
+
+- [ ] R8-3 根因分析完成（5 类缺陷 + TRY 退化全部定位到 `_identify_*_regions` 或 `_generate_*` 方法，输出根因 + 4 原则违反项）
+- [ ] R8-4 P0 TRY 区域 1 退化修复完成 — D9 RETURN_VALUE None 抑制守卫精细化
+  - 定位：`region_ast_generator.py::_generate_handler_body_statements`（D9 RETURN_VALUE None 抑制逻辑）
+  - 根因：R7 D9 抑制 except handler 内 `RETURN_VALUE None` 过于宽泛，可能误抑制了真实 `return None` 的简单 except return 场景
+  - 修复方向：仅当 return 值为 None **且** 紧跟 as-var cleanup 三元组时抑制；不影响真实 `return None` 业务语义
+  - 算法依据：每块唯一归属（as-var cleanup 块归 except 框架，真实 return None 块归用户 body）
+  - 内联注释引用「每块唯一归属」+「入口引用语义」原则 ✓
+  - 无反模式前缀方法新增 ✓
+  - 验证：TRY 测试矩阵恢复 73/7（不劣化于 R6 基线）；quotation.pyc D9 修复不退化（line 181-183 虚假 return None 仍消除）
+
+#### P1 修复（必须完成）
+
+- [ ] R8-5 P1 D3 chained compare in except handler（quotation.pyc 实际路径）修复完成
+  - 定位：`region_analyzer.py::_identify_conditional_regions`（block@694 IfRegion 识别）+ `region_ast_generator.py::_try_build_attr_middle_chained_compare`
+  - 根因：R6 已新增 `_try_build_attr_middle_chained_compare` 处理 `LOAD_FAST + LOAD_ATTR` 中间操作数，minimal repro 通过；但 quotation.pyc::api_get_financial block@694（含 SWAP+COPY+COMPARE_OP+POP_JUMP_FORWARD_IF_FALSE）未被识别为 IfRegion
+  - 修复方向：(1) `_identify_conditional_regions` 调整 IfRegion 识别条件，覆盖 except handler 内 SWAP+COPY+COMPARE_OP+POP_JUMP_FORWARD_IF_FALSE 模式；(2) 确保归约后 chained compare 作为 IfRegion 条件表达式保留
+  - 算法依据：自底向上归约 + 嵌套即抽象节点
+  - 内联注释引用「自底向上归约」+「嵌套即抽象节点」原则 ✓
+  - 无反模式前缀方法新增 ✓
+  - 验证：repro_08_*（quotation.pyc 路径复现）中 `if 400 <= e2.code <= 499:` 条件恢复 ✓；quotation.pyc::api_get_financial line 164 条件恢复 ✓
+
+#### P2 修复（按时间预算择优，至少 2 项）
+
+- [ ] R8-6a P2 D6 try body `return 1` → `pass` 修复
+  - 定位：`region_ast_generator.py::_generate_try_body` / `_generate_try`（try body 块遍历）
+  - 修复方向：调整 try_blocks 遍历条件，确保包含 return 的块作为 TryExcept.body 子节点保留
+  - 算法依据：嵌套即抽象节点（try body 作为 TryExcept 子节点）
+  - 验证：repro_08_*（try body return → pass）中 `try: return 1` 保留 ✓
+- [ ] R8-6b P2 D7 malformed ternary chain 修复
+  - 定位：`region_ast_generator.py::_generate_if` / IfExp 重建
+  - 修复方向：IfExp 重建禁止把 if/elif 链压缩为嵌套 ternary of `==` 比较；保留原始 if/elif 结构
+  - 算法依据：自底向上归约 + 嵌套即抽象节点
+  - 验证：repro_08_*（malformed ternary）中 if/elif 结构保留 ✓
+- [ ] R8-6c P2 D8 lost date_convert body 修复
+  - 定位：`region_analyzer.py::_identify_conditional_regions` / `region_ast_generator.py::_generate_if`
+  - 修复方向：_identify_conditional_regions 在 if/elif/else + IfExp 嵌套时按自底向上归约顺序处理；IfExp 仅在 Call 实参位置保留
+  - 算法依据：自底向上归约 + 嵌套即抽象节点
+  - 验证：repro_08_*（date_convert body lost）中 if/elif/else + return 完整保留 ✓
+- [ ] R8-6d P2 D10 malformed call in except 修复
+  - 定位：`region_ast_generator.py::_generate_handler_body_statements` / Call 重建
+  - 修复方向：except handler 内 Call 重建保留完整实参序列
+  - 算法依据：入口引用语义
+  - 验证：repro_08_*（malformed call in except）中 `system_log(request_times <= 2 if ...)` 完整保留 ✓
+
+#### 回归测试与验证
+
+- [ ] R8-7a 10 个 R8 repro 反编译验证通过（核心缺陷已消除）
+- [ ] R8-7b 既有测试矩阵无退化（IF/LOOP/TRY/WITH/MATCH/BOOLOP/TERNARY/CC/SEQ/ASSERT 子集 0 退化）
+  - 重点验证 TRY 区域恢复 73/7（R7 退化 1 已修复）
+- [ ] R8-7c quotation.pyc 反编译 stderr 维持 0
+- [ ] R8-7d quotation.pyc 反编译产物 `compile()` 通过（COMPILE_OK）
+- [ ] R8-7e quotation.pyc::api_get_financial line 164 `if 400 <= e2.code <= 499:` 条件恢复（D3 修复）
+- [ ] R8-7f quotation.pyc 中 D6/D7/D8/D10 修复点验证（如本轮覆盖）
+- [ ] R8-7g R7 已修项不退化（D9 虚假 return None / D5 orphan Expr / D4 del e2 在 quotation.pyc 实际产物复测）
+- [ ] R8-7h 残留不一致数 ≤ R7 基线
+
+#### 交付物与合规性
+
+- [ ] R8-8 `fix_report.md` 生成（rounds/round_08/repair_engineer/fix_report.md）
+  - 修复点列表（按 repro 编号 + 涉及方法 + 算法依据 + 4 原则对应条款）
+  - docstring/内联注释更新清单（方法名 + 算法依据注释覆盖确认）
+  - 回归结果（10 repro 通过状态 + 既有矩阵退化检查）
+  - 残留不一致数（与 R7 基线对比）
+  - 算法 4 原则合规性自检
+  - 已知限制（D6/D7/D8/D10 未覆盖项 + 后续轮次计划）
+- [ ] R8-9 反模式自检通过（G3：0 新增 `_fix_/_merge_/_patch_/_fallback_/_hack_/_workaround_/_temp_` 前缀方法）
+  - `_merge_block_is_loop_back_edge`（region_ast_generator.py）为 pre-existing，按 spec 留待后续轮次重命名
+- [ ] R8-10 涉及的 `_identify_*_regions` / `_generate_*` 方法 docstring/内联注释已说明算法依据
+  - 6 项：算法依据 / 归约顺序 / 唯一归属判定 / 嵌套处理 / 入口引用语义 / 反编译流程
+  - 待更新方法：`_generate_handler_body_statements`（P0 D9 守卫精细化）/ `_identify_conditional_regions`（P1 D3 quotation.pyc 路径）/ `_generate_try_body`（P2 D6）/ `_generate_if`（P2 D7/D8）
+- [ ] R8-11 算法 4 原则 FULLY COMPLIANT（自底向上归约 / 每块唯一归属 / 嵌套抽象节点 / 入口引用语义）
+- [ ] R8-12 `python -c "import core.cfg.region_analyzer; import core.cfg.region_ast_generator; import core.cfg.code_generator; print('IMPORT_OK')"` 编译通过
+- [ ] R8-13 commit + push `qpyc-r08:`（≤300s）
 
 ## 轮 9 (Round 9)
 

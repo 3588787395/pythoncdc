@@ -572,8 +572,18 @@ class RegionASTGenerator:
                                 continue
                             _stmt_instrs.append(_instr)
 
-                        self.generated_blocks.add(entry_block)
-                        entry_ast = _pre_stmts
+                        # [R8 Fix 1 / D6] 当 entry_block 是 TryExceptRegion entry 且
+                        # 含非 STORE 指令（try body，如 `return 1`）时，不可标记为
+                        # generated，否则 _generate_try_body 会跳过该块，try body 被
+                        # 丢弃为 `pass`（te12tryexceptreturn_valueerror 回归）。
+                        # 依「每块唯一归属」：entry_block 归 TryExceptRegion，由
+                        # _generate_try_body 处理。仅当无前导赋值（_pre_stmts 为空）
+                        # 且有剩余指令（try body）时跳过标记，避免与前导赋值场景冲突。
+                        if _stmt_instrs and not _pre_stmts:
+                            entry_ast = []
+                        else:
+                            self.generated_blocks.add(entry_block)
+                            entry_ast = _pre_stmts
                 else:
                     _wildcard_match = self._detect_undetected_wildcard_match(entry_block)
                     if _wildcard_match:
@@ -14292,9 +14302,18 @@ AST 映射规则:
         # 旧的无条件 True 会误跳 block 中部的 POP_TOP（如 call 结果丢弃的 POP_TOP），
         # 导致 call 表达式被误绑定为后续 Assign 的 value。仅当首条非噪声指令是 POP_TOP
         # 时才跳过（依「每块唯一归属」：call 结果丢弃的 POP_TOP 归 Expr 语句）。
+        # [R8 Fix 1 / D6 / te049] bare except: handler 的 PUSH_EXC_INFO + POP_TOP
+        # 序列中，PUSH_EXC_INFO 是 except 框架指令（与 CHECK_EXC_MATCH 等同列于
+        # 下方过滤集合），未纳入噪声列表会导致初始化循环停在 PUSH_EXC_INFO，
+        # skip_initial_pop 误判为 False，使得 POP_TOP（exc_info discard）被加入
+        # stmt_instrs，后续 RETURN_VALUE reconstruct 失败 fallback 至 `return None`
+        # 而非真实 `return <const>`。依「每块唯一归属」：PUSH_EXC_INFO 等 except
+        # 框架指令归 handler 头部，与 RESUME/NOP 等同视为噪声。
         skip_initial_pop = False
         for _instr in block.instructions:
-            if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+            if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
+                                 'PUSH_EXC_INFO', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH',
+                                 'WITH_EXCEPT_START'):
                 continue
             if exc_dispatch_jump_offset is not None and _instr.offset <= exc_dispatch_jump_offset:
                 continue
