@@ -5046,10 +5046,23 @@ class CodeGenerator:
                 return str(annotation.get('id', annotation.get('value', f'<{ann_type}>')))
     
     def _generate_arguments(self, args: Any) -> str:
-        """生成函数参数代码（支持类型注解）"""
+        """生成函数参数代码（支持类型注解）
+
+        [算法依据] 嵌套即抽象节点：默认值（含 BUILD_LIST + LIST_EXTEND 构造的
+        可变默认值 ['ST','HALT',...]）应作为单个 List/Call/IfExp 等表达式节点
+        整体参与 defaults 重建，不可拆解后只取字段。
+
+        [反编译流程]
+        1. MAKE_FUNCTION 字节码携带 defaults 元组（positional）与 kwdefaults dict；
+        2. region_ast_generator._build_function_def 从 BUILD_* 指令流重建为
+           List/Tuple/Set/Dict/Constant/Name/Call/IfExp 表达式 dict；
+        3. 本方法发射 `name=default` 时统一委托 _generate_expression(default_val, 0)
+           覆盖全部表达式类型，避免旧分支仅识别 Constant 导致 `name=` 空默认值；
+        4. 同步 _generate_arguments_dict 与 kw_defaults 分支保持一致。
+        """
         if isinstance(args, dict):
             args_list = []
-            
+
             # [关键修复] 处理仅限位置参数
             posonlyargs = args.get('posonlyargs', [])
             posonlyargcount = args.get('posonlyargcount', len(posonlyargs))
@@ -5116,22 +5129,19 @@ class CodeGenerator:
                     arg_name = f'{arg_name}: {annotation_code}'
                 
                 # [关键修复] 如果有默认值，添加默认值
+                # [repro_03 修复] 默认值渲染统一委托 _generate_expression，
+                # 覆盖 Constant/List/Tuple/Set/Dict/Name/Call/IfExp 等所有
+                # 表达式类型（嵌套即抽象节点），避免 BUILD_LIST+LIST_EXTEND
+                # 构造的列表默认值被发射为 `name=` 空默认值。
                 if i >= default_start_idx and defaults:
                     default_idx = i - default_start_idx
                     if default_idx < len(defaults):
                         default_val = defaults[default_idx]
                         # 生成默认值代码
                         if isinstance(default_val, dict):
-                            if default_val.get('type') == 'Constant':
-                                val = default_val.get('value')
-                                if isinstance(val, str):
-                                    default_code = f"'{val}'"
-                                else:
-                                    default_code = str(val)
-                            else:
-                                default_code = str(default_val.get('value', ''))
+                            default_code = self._generate_expression(default_val, 0)
                         else:
-                            default_code = str(default_val)
+                            default_code = repr(default_val)
                         args_list.append(f'{arg_name}={default_code}')
                     else:
                         args_list.append(arg_name)
@@ -5180,19 +5190,14 @@ class CodeGenerator:
                         kwarg_name = f'{kwarg_name}: {annotation_code}'
                     
                     # 处理关键字-only参数的默认值
+                    # [repro_03 同步] 同 positional defaults：委托 _generate_expression
+                    # 覆盖 List/Tuple/Set/Dict/Name/Call/IfExp 等复合默认值。
                     if i < len(kw_defaults) and kw_defaults[i]:
                         kw_default = kw_defaults[i]
                         if isinstance(kw_default, dict):
-                            if kw_default.get('type') == 'Constant':
-                                val = kw_default.get('value')
-                                if isinstance(val, str):
-                                    default_code = f"'{val}'"
-                                else:
-                                    default_code = str(val)
-                            else:
-                                default_code = str(kw_default.get('value', ''))
+                            default_code = self._generate_expression(kw_default, 0)
                         else:
-                            default_code = str(kw_default)
+                            default_code = repr(kw_default)
                         args_list.append(f'{kwarg_name}={default_code}')
                     else:
                         args_list.append(kwarg_name)

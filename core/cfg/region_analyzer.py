@@ -8353,13 +8353,30 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
         return result
 
     def _mr_finalize_match_region(self, case_blocks, case_patterns, case_bodies, all_blocks):
+        """Finalize match region: merge cases with equivalent bodies into MatchOr.
+
+        [每块唯一归属] merge_block（各 case 的共同后继出口）必须先计算并从每个
+        case body 中移除，再判断 body 等价。否则 merge_block 会被同时计入多个
+        case body，导致 `case None` 与 `case str()` 因「末块都是 merge_block」
+        被错误合并为 MatchOr（违反唯一归属）。等价判定改为严格集合相等。
+        """
+        # [repro_01 修复 (a)] 先计算 merge_block 并从各 case body 中移除，
+        # 确保每块唯一归属（merge_block 不属于任何 case body）。
+        merge_block = self._mr_compute_case_merge(case_bodies)
+        stripped_bodies = []
+        for body in case_bodies:
+            stripped = set(body)
+            if merge_block is not None:
+                stripped.discard(merge_block)
+            stripped_bodies.append(stripped)
+
         merged_p, merged_b, i = [], [], 0
         while i < len(case_blocks):
-            orps, body = [case_patterns[i]], set(case_bodies[i])
+            orps, body = [case_patterns[i]], set(stripped_bodies[i])
             j = i + 1
             while j < len(case_blocks):
-                body_i_set = set(case_bodies[i])
-                body_j_set = set(case_bodies[j])
+                body_i_set = set(stripped_bodies[i])
+                body_j_set = set(stripped_bodies[j])
                 should_merge = (body_i_set and body_j_set and self._mr_bodies_are_equivalent(body_i_set, body_j_set))
                 if should_merge:
                     orps.append(case_patterns[j])
@@ -8372,7 +8389,6 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
             merged_p.append(or_pattern)
             merged_b.append(sorted(body, key=lambda b: b.start_offset))
             i = j
-        merge_block = self._mr_compute_case_merge(merged_b)
         return case_blocks, merged_p, merged_b, merge_block, all_blocks
 
     def _apply_or_capture_name(self, or_pattern: Dict[str, Any], body: Set[BasicBlock]):
@@ -8398,15 +8414,17 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                     self._set_or_pattern_names(item, name)
 
     def _mr_bodies_are_equivalent(self, body_i_set, body_j_set):
-        if body_i_set == body_j_set:
-            return True
+        """Check whether two case bodies are equivalent (strict set equality).
+
+        [每块唯一归属] 等价判定必须为严格集合相等（`body_i_set == body_j_set`）。
+        旧的「末块相同即合并」宽松判定会错误合并 `case None` 与 `case str()`：
+        它们的 body 末块都是同一个 merge_block（共同后继出口），但前导 body
+        不同，应保留为独立 case。merge_block 应在调用前由 _mr_finalize_match_region
+        从各 body 中移除，本方法仅做严格相等判定。
+        """
         if not body_i_set or not body_j_set:
             return False
-        sorted_i = sorted(body_i_set, key=lambda b: b.start_offset)
-        sorted_j = sorted(body_j_set, key=lambda b: b.start_offset)
-        if sorted_i[-1] == sorted_j[-1]:
-            return True
-        return False
+        return body_i_set == body_j_set
 
     def _mr_compute_case_merge(self, case_bodies):
         all_bod = set()
@@ -9257,14 +9275,21 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
             return None
 
         # OR模式合并
+        # [repro_01 同步] 先剥离 merge_block 再判等价，确保每块唯一归属。
+        stripped_bodies_l = []
+        for body in case_bodies_l:
+            s = set(body)
+            if merge_block is not None:
+                s.discard(merge_block)
+            stripped_bodies_l.append(s)
         merged_p, merged_b, i = [], [], 0
         while i < len(case_blocks_l):
-            orps, body = [case_patterns_l[i]], set(case_bodies_l[i])
+            orps, body = [case_patterns_l[i]], set(stripped_bodies_l[i])
             j = i + 1
             while j < len(case_blocks_l):
-                body_i_set = set(case_bodies_l[i])
-                body_j_set = set(case_bodies_l[j])
-                if body_i_set == body_j_set:
+                body_i_set = set(stripped_bodies_l[i])
+                body_j_set = set(stripped_bodies_l[j])
+                if body_i_set and body_j_set and body_i_set == body_j_set:
                     orps.append(case_patterns_l[j])
                     body = body_i_set | body_j_set
                     j += 1
@@ -9381,13 +9406,20 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                 all_blocks_l.add(merge_block)
             if not self._verify_literal_match_chain(block, case_blocks_l):
                 continue
+            # [repro_01 同步] 先剥离 merge_block 再判等价，确保每块唯一归属。
+            stripped_bodies_l = []
+            for body in case_bodies_l:
+                s = set(body)
+                if merge_block is not None:
+                    s.discard(merge_block)
+                stripped_bodies_l.append(s)
             merged_p, merged_b, i = [], [], 0
             while i < len(case_blocks_l):
-                orps, body = [case_patterns_l[i]], set(case_bodies_l[i])
+                orps, body = [case_patterns_l[i]], set(stripped_bodies_l[i])
                 j = i + 1
                 while j < len(case_blocks_l):
-                    body_i_set = set(case_bodies_l[i])
-                    body_j_set = set(case_bodies_l[j])
+                    body_i_set = set(stripped_bodies_l[i])
+                    body_j_set = set(stripped_bodies_l[j])
                     if body_i_set and body_j_set and body_i_set == body_j_set:
                         orps.append(case_patterns_l[j])
                         body |= body_j_set

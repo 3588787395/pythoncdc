@@ -1120,12 +1120,10 @@ class ExpressionReconstructor:
                     if comp_ast:
                         # 将生成的GeneratorExp压回栈（作为外层调用的参数）
                         self.stack.append(comp_ast)
-                        print(f'[N14 v3] Created {comp_type}, pushed to stack')
                     else:
                         # 失败时恢复原状
                         self.stack.append(comp_obj)
                         self.stack.append(iter_node)
-                        print(f'[N14 v3] Failed, restored stack')
                 else:
                     self.stack.append(comp_obj)
                     self.stack.append(iter_node)

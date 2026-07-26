@@ -1023,7 +1023,11 @@ class CFGASTConverter:
             return self._convert_augassign_full(expr_dict)
         
         # [Python 3.10+] 模式匹配类型 - 这些不是表达式，应该返回None
-        if expr_type in ('MatchValue', 'MatchSequence', 'MatchMapping', 'MatchClass', 'MatchAs', 'MatchOr', 'MatchStar', 'MatchStarred', 'MatchKeys'):
+        # [repro_01 修复 (b)] 添加 MatchSingleton：否则 MatchSingleton dict 会被当作
+        # 表达式节点，触发 "Unknown expression type: MatchSingleton" 警告（19 处）。
+        # 依据「嵌套即抽象节点」：MatchSingleton 是模式匹配节点，不应作为表达式
+        # 节点传入 _generate_expression。
+        if expr_type in ('MatchValue', 'MatchSingleton', 'MatchSequence', 'MatchMapping', 'MatchClass', 'MatchAs', 'MatchOr', 'MatchStar', 'MatchStarred', 'MatchKeys'):
             return None
         
         # [关键修复] 处理PUSH_NULL - Python 3.11+的null值标记，用于函数调用
@@ -1708,6 +1712,14 @@ class CFGASTConverter:
                 value_pattern = self._convert_match_pattern(value)
                 return {'type': 'MatchAs', 'pattern': value_pattern, 'name': name}
             return ASTName(name)
+
+        elif pattern_type == 'MatchSingleton':
+            # [repro_01 修复] 保留 MatchSingleton dict 结构，由 code_generator
+            # _generate_match_pattern 渲染为 None/True/False。此前缺少此分支，
+            # MatchSingleton 落入默认 _convert_expression 返回 None（被表达式
+            # 白名单过滤），最终被渲染为 `case _`（wildcard）。
+            # 依据「嵌套即抽象节点」：MatchSingleton 是模式匹配节点。
+            return {'type': 'MatchSingleton', 'value': pattern_dict.get('value')}
         
         elif pattern_type == 'MatchOr':
             # [关键修复-2026] 支持多值OR模式 (case 0 | 1 | 2:)
