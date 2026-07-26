@@ -3048,7 +3048,10 @@ AST 映射规则:
             else:
                 instrs = [i for i in for_iter_setup.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
                 _fis_pre_stmts, _fis_iter_instrs = self._loop_extract_for_iter_pre_stmts(instrs, for_iter_setup)
-                if _fis_pre_stmts:
+                # [R5 Fix 1] 唯一块归属：若 for_iter_setup 已被其他区域（如前序
+                # 循环的 sequential_after_loop）标记为已生成，则其前缀语句已输出，
+                # 不再重复抽取 pre_stmts（仅抽取 iter_expr 供本 for 循环使用）。
+                if _fis_pre_stmts and for_iter_setup not in self.generated_blocks:
                     pre_stmts.extend(_fis_pre_stmts)
                 iter_expr = self.expr_reconstructor.reconstruct(_fis_iter_instrs) if _fis_iter_instrs else None
                 if iter_expr is None and instrs:
@@ -3193,8 +3196,17 @@ AST 映射规则:
 
         body_stmts = self._loop_generate_body(region)
 
+        # [R5 Fix 1] for-else 仅在循环显式含 break 时才发射 else 子句。
+        # 算法依据：唯一块归属 — 无 break 时，循环自然出口后的顺序语句
+        # 归属函数体（父区域顺序子节点），不归属循环 else。仅当存在 break
+        # 时，else_blocks 才是 "未 break 路径" 的归约结果。归约顺序：自底
+        # 向上先归约循环体，再判 break 决定 else 归属。无 break 时仍调用
+        # _if_generate_branch_stmts 标记 else_blocks 为已生成（避免父区域
+        # 重复输出），并把归约结果作为 for 之后的顺序语句返回。入口引用
+        # 语义：父区域通过 for 节点之后的顺序位置引用 else_blocks 归约。
         if not region.else_blocks:
             else_stmts = []
+            _filtered_else_blocks = []
         else:
             _filtered_else_blocks = list(region.else_blocks)
             if region.parent is not None and isinstance(region.parent, LoopRegion):
@@ -3215,6 +3227,14 @@ AST 映射规则:
             if not _non_trivial:
                 else_stmts = []
 
+        # [R5 Fix 1] 无 break 时 else_stmts 不作为 orelse, 而作为 for 之后的顺序语句
+        _has_break = getattr(region, 'has_break', False)
+        if _has_break:
+            _sequential_after_loop = []
+        else:
+            _sequential_after_loop = else_stmts
+            else_stmts = []
+
         result = {
             'type': 'AsyncFor' if region.is_async else 'For',
             'target': target,
@@ -3225,9 +3245,10 @@ AST 映射规则:
         if else_stmts:
             result['orelse'] = else_stmts
 
-        if pre_stmts:
+        if pre_stmts or _sequential_after_loop:
             output = list(pre_stmts)
             output.append(result)
+            output.extend(_sequential_after_loop)
             return output
         return result
 
@@ -3952,7 +3973,18 @@ AST 映射规则:
             if _exclude_blocks:
                 _filtered_else_blocks = [b for b in _filtered_else_blocks if b not in _exclude_blocks]
 
-        else_stmts = self._if_generate_branch_stmts(_filtered_else_blocks) if _filtered_else_blocks else []
+        # [R5 Fix 1] while-else 仅在循环显式含 break 时才发射 else 子句。
+        # 算法依据：唯一块归属 — 无 break 时，循环自然出口后的顺序语句
+        # 归属函数体（父区域顺序子节点），不归属循环 else。仅当存在 break
+        # 时，else_blocks 才是 "未 break 路径" 的归约结果。归约顺序：自底
+        # 向上先归约循环体，再判 break 决定 else 归属。无 break 时仍调用
+        # _if_generate_branch_stmts 标记 else_blocks 为已生成（避免父区域
+        # 重复输出），并把归约结果作为 while 之后的顺序语句返回。入口引用
+        # 语义：父区域通过 while 节点之后的顺序位置引用 else_blocks 归约。
+        if not _filtered_else_blocks:
+            else_stmts = []
+        else:
+            else_stmts = self._if_generate_branch_stmts(_filtered_else_blocks) if _filtered_else_blocks else []
 
         if else_stmts and getattr(region, 'has_trailing_return_none', False):
             _non_trivial = [s for s in else_stmts if not self._is_trailing_return_none_statement(s)]
@@ -4059,6 +4091,14 @@ AST 映射规则:
                 'values': [_preceding_if_cond, condition]
             }
 
+        # [R5 Fix 1] 无 break 时 else_stmts 不作为 orelse, 而作为 while 之后的顺序语句
+        _has_break = getattr(region, 'has_break', False)
+        if _has_break:
+            _sequential_after_loop = []
+        else:
+            _sequential_after_loop = else_stmts
+            else_stmts = []
+
         result = {
             'type': 'While',
             'test': condition if condition else {'type': 'Constant', 'value': True},
@@ -4070,17 +4110,19 @@ AST 映射规则:
 
         # [修复] 将被过滤的return None语句追加到while循环后（而非放入orelse）
         if _trailing_return_none_stmts:
-            if pre_stmts:
+            if pre_stmts or _sequential_after_loop:
                 output = list(pre_stmts)
                 output.append(result)
                 output.extend(_trailing_return_none_stmts)
+                output.extend(_sequential_after_loop)
                 return output
             else:
-                return [result] + _trailing_return_none_stmts
+                return [result] + _trailing_return_none_stmts + _sequential_after_loop
 
-        if pre_stmts:
+        if pre_stmts or _sequential_after_loop:
             output = list(pre_stmts)
             output.append(result)
+            output.extend(_sequential_after_loop)
             return output
         return result
 
@@ -28370,6 +28412,24 @@ AST 映射规则:
         _stmts: List[Dict[str, Any]] = []
         _buf: List[Instruction] = []
         for _instr in instrs:
+            # [R5 Fix 2] STORE_SUBSCR 重建为 Subscript 赋值 (container[index] = value)
+            # 而非裸 Name Expr。字节码模式：LOAD value, LOAD container, LOAD index, STORE_SUBSCR
+            # 栈顺序：TOS2=value, TOS1=container, TOS0=index → container[index] = value
+            # 算法依据：每块唯一归属 — STORE_SUBSCR 的 LOAD 前驱归属本赋值语句，
+            # 不应作为孤立 Expr 泄漏。与 _build_effective_stmts 中的 STORE_SUBSCR
+            # 处理保持一致（多语句回边块走本路径，单语句块走 _build_effective_stmts）。
+            if _instr.opname == 'STORE_SUBSCR' and len(_buf) >= MIN_INSTRS_FOR_SUBSCR_ASSIGN:
+                _v = self.expr_reconstructor.reconstruct(_buf[:-2])
+                _c = self.expr_reconstructor.reconstruct([_buf[-2]])
+                _idx = self.expr_reconstructor.reconstruct([_buf[-1]])
+                if _v and _c and _idx:
+                    _stmts.append({
+                        'type': 'Assign',
+                        'targets': [{'type': 'Subscript', 'value': _c, 'slice': _idx, 'ctx': 'Store'}],
+                        'value': _v,
+                    })
+                _buf = []
+                continue
             if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF') and _buf:
                 _stmt = self._build_store_statement(_buf + [_instr], block=block)
                 if _stmt:
