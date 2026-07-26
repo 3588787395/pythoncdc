@@ -3585,19 +3585,18 @@ class CodeGenerator:
         # [关键修复] 根据当前操作符的优先级决定子表达式的优先级
         # 这样可以正确添加括号，例如 (a + b) * c
         current_precedence = self._precedence.get(op_str, 11)
-        
-        # [关键修复] 获取子表达式的实际优先级
-        def get_expr_precedence(expr):
-            """获取表达式的优先级"""
-            if isinstance(expr, ASTBinary):
-                child_op = expr.op if isinstance(expr.op, str) else op_map.get(expr.op, '+')
-                return self._precedence.get(child_op, 11)
-            if isinstance(expr, ASTIfExp):
-                return self._precedence['if']
-            return self._precedence['atom']
-        
-        left_precedence = get_expr_precedence(node.left)
-        right_precedence = get_expr_precedence(node.right)
+
+        # [R6-Fix2] 获取子表达式的实际优先级。
+        # 必须在 ASTBinary 之前检查 ASTCompare / ASTSlice（它们继承自 ASTBinary），
+        # 否则 ASTCompare.op（CMP_*，0-11）会被 ASTBinary.BinOp 的 op_map 误解析
+        # （例如 CMP_GREATER_EQUAL=5 会被映射为 BIN_MODULO='%'），
+        # 导致 Compare 的优先级被错误地估计为高优先级（12）而非比较优先级（6），
+        # 进而 BinOp(BitAnd, Compare, Compare) 不为 Compare 操作数加括号，
+        # 产出 `a >= b & c <= d`（语义错误，应产出 `(a >= b) & (c <= d)`）。
+        # 复用已有的 _get_ast_expr_precedence，该函数对 ASTCompare / ASTSlice /
+        # ASTIfExp / ASTLambda / ASTUnary / ASTBinary 均有正确优先级映射。
+        left_precedence = self._get_ast_expr_precedence(node.left)
+        right_precedence = self._get_ast_expr_precedence(node.right)
         
         # 对于左子表达式：只有当子表达式优先级严格低于当前优先级时才加括号
         # 相同优先级不加括号（左结合）
