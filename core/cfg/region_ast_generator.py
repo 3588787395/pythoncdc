@@ -43,28 +43,18 @@ _NEGATE_CMP_MAP = {
 }
 
 def _negate_expr(expr: Dict[str, Any]) -> Dict[str, Any]:
+    # [R22-N5 fix] 区域归约算法「一次正确」原则：保留原始比较运算符，
+    # 用 not() 包裹而非反转运算符。
+    # 原始 pyc `x == y; POP_JUMP_IF_TRUE` 来自源码 `not (x == y)`，
+    # CPython 3.11+ 优化掉 UNARY_NOT，直接用 POP_JUMP_IF_TRUE。
+    # 旧逻辑反转运算符（== → !=）生成 `x != y`，编译为
+    # `!= + POP_JUMP_IF_FALSE`，字节码不一致。
+    # 修复后生成 `not (x == y)`，CPython 重新编译为
+    # `== + POP_JUMP_IF_TRUE`，与原始字节码一致。
+    # 普遍性: 覆盖 not (x == y) / not (x != y) / not (x < y) 等所有
+    # not-Compare 形式，以及 not (BoolOp) 等复合形式。
     if expr.get('type') == 'UnaryOp' and expr.get('op') == 'not':
         return expr.get('operand', expr)
-    if expr.get('type') == 'Compare':
-        ops = expr.get('ops')
-        op = expr.get('op')
-        if ops and isinstance(ops, list) and len(ops) == 1:
-            op_val = ops[0]
-            if isinstance(op_val, dict):
-                op_type = op_val.get('type', '')
-                negate_map = {
-                    'Eq': 'NotEq', 'NotEq': 'Eq',
-                    'Lt': 'GtE', 'GtE': 'Lt',
-                    'Gt': 'LtE', 'LtE': 'Gt',
-                    'In': 'NotIn', 'NotIn': 'In',
-                    'Is': 'IsNot', 'IsNot': 'Is',
-                }
-                if op_type in negate_map:
-                    r = dict(expr); r['ops'] = [{'type': negate_map[op_type]}]; return r
-            elif op_val in _NEGATE_CMP_MAP:
-                r = dict(expr); r['ops'] = [_NEGATE_CMP_MAP[op_val]]; return r
-        if op and isinstance(op, str) and op in _NEGATE_CMP_MAP:
-            r = dict(expr); r['op'] = _NEGATE_CMP_MAP[op]; return r
     return {'type': 'UnaryOp', 'op': 'not', 'operand': expr}
 
 from .basic_block import BasicBlock, Instruction
