@@ -14242,10 +14242,26 @@ AST 映射规则:
             # IfRegion 的 merge_block 处理逻辑生成，而非作为 post-try 代码生成。
             # 否则会导致 post-try 代码被放在 try-except 之内（嵌套在 IfRegion 的
             # then-branch 中），而非 try-except 之后。
+            # [R19-N2 fix] 收集所有 IfRegion 的 merge_block，用于排除不应作为
+            # post-try 代码生成的块。当 post-try 块同时是某个祖先 IfRegion 的
+            # merge_block 时（如 check_frequency 的 block 398），它应该由
+            # IfRegion 的 merge_block 处理逻辑生成，而非作为 post-try 代码生成。
+            # 否则会导致 post-try 代码被放在 try-except 之内（嵌套在 IfRegion 的
+            # then-branch 中），而非 try-except 之后。
+            #
+            # [R20-N2 fix] 仅排除「非子级」IfRegion 的 merge_block。
+            # 若 IfRegion 是 try-except 的子区域（entry 在 try-except 的 blocks 内），
+            # 其 merge_block 指向区域外部的 post-try 块（如 isVaildDate 的
+            # block 4 `return True`），必须作为 post-try 生成，否则会被丢失。
+            # 若 IfRegion 是 try-except 的祖先/兄弟（entry 不在 blocks 内），
+            # 其 merge_block 是 post-if 代码（如 check_frequency 的 block 18），
+            # 应由该 IfRegion 自身生成，不作为 post-try。
+            # 判定：IfRegion.entry 不在 _region_block_set_r19n2 中 → 非子级 → 排除。
             _all_if_merge_blocks_r19n2 = set()
             for _r in self.regions:
                 if isinstance(_r, IfRegion) and _r.merge_block is not None:
-                    _all_if_merge_blocks_r19n2.add(_r.merge_block)
+                    if _r.entry not in _region_block_set_r19n2:
+                        _all_if_merge_blocks_r19n2.add(_r.merge_block)
             # 从 else_blocks 的后继中查找 post-try 块
             if region.else_blocks:
                 for _eb in region.else_blocks:
