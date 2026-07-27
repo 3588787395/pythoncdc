@@ -4229,6 +4229,23 @@ AST 映射规则:
             if block == child_info.get('iter_setup_block'):
                 self.generated_blocks.add(block)
                 continue
+            # [R14-N9 fix] 区域归约算法原则 2（每块唯一归属）：
+            # 跳过子 LoopRegion 的 for_iter_setup 块——这些块由子循环的
+            # _generate_loop 处理（提取 pre_stmts + iter_expr）。若不跳过，
+            # 父循环会将其作为普通块处理（输出 BUILD_MAP+STORE_FAST 等为
+            # 独立语句），随后子循环又提取同样的 pre_stmts，导致重复输出
+            # （如 get_stock_info 中 `info_dict = {}` 出现两次，FOR_ITER
+            # 目标偏移 +4）。
+            _is_child_loop_fis = False
+            for _child in (region.children or []):
+                if isinstance(_child, LoopRegion):
+                    _cfis = _child.metadata.get('for_iter_setup')
+                    if _cfis is block:
+                        _is_child_loop_fis = True
+                        break
+            if _is_child_loop_fis:
+                self.generated_blocks.add(block)
+                continue
             handled = self._loop_dispatch_block(
                 block, region, child_info, boolop_for_while,
                 body_stmts, body_blocks_no_header, back_edge_stmts, natural_back_edge,
@@ -4328,9 +4345,15 @@ AST 映射规则:
                         for pred in child.header_block.predecessors:
                             if any(instr.opname in ('GET_ITER', 'GET_AITER') for instr in pred.instructions):
                                 if pred in region.body_blocks:
-                                    _pre_stmts = self._loop_extract_pre_stmts_from_block(pred)
-                                    if _pre_stmts:
-                                        body_stmts.extend(_pre_stmts)
+                                    # [R14-N9 fix] 区域归约算法原则 2（每块唯一归属）：
+                                    # 不在此处提取子循环 for_iter_setup 的前置语句——
+                                    # 子循环的 _generate_loop 会通过
+                                    # _loop_extract_for_iter_pre_stmts 提取 pre_stmts
+                                    # 并在 for 语句之前输出。若此处也提取并加入
+                                    # body_stmts，会导致重复输出（如 get_stock_info
+                                    # 中 `info_dict = {}` 出现两次，FOR_ITER 目标
+                                    # 偏移 +4）。仅标记为已生成，防止父循环体处理
+                                    # 重复输出。
                                     self.generated_blocks.add(pred)
                                 break
 
