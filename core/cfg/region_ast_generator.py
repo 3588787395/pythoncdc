@@ -19677,15 +19677,39 @@ AST 映射规则:
         - 假设所有操作符类型相同（纯and链或纯or链）
         - 不处理混合and/or（那种情况应该在识别阶段被拆分）
         """
+        # [R20-N1 fix] condition_chain_blocks 有两种存储格式：
+        #   - BoolOp→Ternary 升级路径: [(block, op), ...] 元组列表
+        #   - 直接 ternary 模式识别路径: [block, ...] 纯块列表
+        # 此前代码假定所有元素均为元组，导致直接识别路径下抛出
+        # `ValueError: too many values to unpack (expected 2)`，
+        # 使整个函数（如 fill_minute_or_day_blank）反编译失败退化为 `pass`。
+        # 修复：对每个元素先判定类型，纯块则从末尾条件跳转方向推导 op：
+        #   POP_JUMP_*_IF_FALSE → 'and'（短路于假）
+        #   POP_JUMP_*_IF_TRUE  → 'or'（短路于真）
+        _FALSE_JUMP_OPS_R20N1 = frozenset({
+            'POP_JUMP_IF_FALSE', 'POP_JUMP_FORWARD_IF_FALSE',
+            'POP_JUMP_BACKWARD_IF_FALSE', 'JUMP_IF_FALSE_OR_POP',
+        })
+        _TRUE_JUMP_OPS_R20N1 = frozenset({
+            'POP_JUMP_IF_TRUE', 'POP_JUMP_FORWARD_IF_TRUE',
+            'POP_JUMP_BACKWARD_IF_TRUE', 'JUMP_IF_TRUE_OR_POP',
+        })
         chain = getattr(region, 'condition_chain_blocks', None)
         if not chain or len(chain) <= 1:
             return None
         values = []
         op_type = None
-        for cb, cop in chain:
+        for item in chain:
+            if isinstance(item, tuple):
+                cb, cop = item[0], item[1]
+            else:
+                cb = item
+                cop = None
             instrs = [i for i in cb.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
             last = cb.get_last_instruction()
-            if last and last.opname in ('POP_JUMP_IF_FALSE', 'POP_JUMP_IF_TRUE', 'JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP'):
+            if last and last.opname in (_FALSE_JUMP_OPS_R20N1 | _TRUE_JUMP_OPS_R20N1):
+                if cop is None:
+                    cop = 'or' if last.opname in _TRUE_JUMP_OPS_R20N1 else 'and'
                 instrs = [i for i in instrs if i != last]
             if instrs:
                 sub = self.expr_reconstructor.reconstruct(instrs)
