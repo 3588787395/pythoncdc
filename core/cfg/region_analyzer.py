@@ -1424,6 +1424,39 @@ class RegionAnalyzer:
         ternary_regions = [tr for tr in ternary_regions
                           if not (tr.entry and tr.entry in elif_chain_entries)]
 
+        # [R15-N2 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3（嵌套即抽象节点）：
+        # 当 IF_ELIF_CHAIN 创建后，其 elif_conditions / elif_bodies / elif_final_else
+        # 中的块已被 IF_ELIF_CHAIN 占用。但 _identify_conditional_regions 按反向
+        # 偏移顺序处理块，elif 条件块（offset 较大）先于外层 if 条件块（offset 较小）
+        # 被处理，导致 elif 条件块被错误地创建为独立的 IF_THEN / IF_THEN_ELSE
+        # （如 get_valuation_info 中 block 52 被创建为 IF_THEN_ELSE，含 blocks
+        # [52, 94, 100, 104, 476]，其中 104 是 merge 点、476 属于 LoopRegion）。
+        # 这些内部 IfRegion 与 IF_ELIF_CHAIN 争抢块归属（block_to_region 优先级
+        # 相同 30，先到先得），导致 IF_ELIF_CHAIN 无法占有 elif 条件块，且内部
+        # IfRegion 错占 merge 点 104 阻止 IF_THEN(entry=104) 被生成（post-if
+        # 代码丢失）。修复：移除 entry 落在 IF_ELIF_CHAIN.elif_conditions 中的
+        # 内部 IfRegion（它们已被 IF_ELIF_CHAIN 归约，不再独立存在）。
+        _elif_chain_cond_blocks = set()
+        for _cr in self._filter_regions(conditional_regions, IfRegion):
+            if _cr.region_type == RegionType.IF_ELIF_CHAIN:
+                for _ec in (_cr.elif_conditions or []):
+                    _elif_chain_cond_blocks.add(_ec)
+        if _elif_chain_cond_blocks:
+            _subsumed_if_regions = []
+            for _cr in conditional_regions:
+                if (isinstance(_cr, IfRegion)
+                        and _cr.region_type != RegionType.IF_ELIF_CHAIN
+                        and _cr.entry in _elif_chain_cond_blocks):
+                    _subsumed_if_regions.append(_cr)
+            for _sr in _subsumed_if_regions:
+                if _sr in conditional_regions:
+                    conditional_regions.remove(_sr)
+                if _sr in self.regions:
+                    self.regions.remove(_sr)
+                for _b in _sr.blocks:
+                    if _b in self.block_to_region and self.block_to_region[_b] is _sr:
+                        del self.block_to_region[_b]
+
         elif_condition_blocks = set()
         for cr in self._filter_regions(conditional_regions, IfRegion):
             if cr.elif_conditions:
@@ -11939,6 +11972,53 @@ RegionType 枚举值: RegionType.ASSERT
                 # 同时从else_blocks和then_blocks中移除merge块
                 else_blocks = [b for b in else_blocks if b not in shared_blocks]
                 then_blocks = [b for b in then_blocks if b not in shared_blocks]
+        # [R15-N1 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3（嵌套即抽象节点）：
+        # 当 merge=None 且检测到 elif 链时，_collect_branch_blocks 会从 then_succ
+        # 出发 BFS，沿 JUMP_FORWARD 越过真正的 merge 点，把整个 post-if 代码段
+        # 误收入 then_blocks。典型场景（get_valuation_info 等 3 个函数）：
+        #   if isinstance(stocks, str):
+        #       stock_list = [stocks]      # then block 44, JUMP_FORWARD → 104
+        #   elif isinstance(stocks, Iterable):
+        #       stock_list = stocks         # elif body 94, JUMP_FORWARD → 104
+        #   else:
+        #       return {}                   # final_else 100, RETURN_VALUE (terminal)
+        #   check_stocks(stock_list)        # merge 104, post-if code
+        # post-dominator 分析因 else 终态（100 RETURN）找不到共同后向支配点，
+        # merge=None。BFS 从 44 出发：44→104→268→550→476→478，把整个函数剩余
+        # 部分都收入 then_blocks，导致 POP_JUMP_FORWARD_IF_FALSE 偏移 delta=-442。
+        # 修复：从 elif 链结构计算 merge 点（then_blocks[0] 与各 elif body 末块
+        # 的共同后继，排除 condition/final_else/then_blocks[0]/block 自身），
+        # 然后用正确的 merge 重新收集 then_blocks（BFS 在 merge 处终止）。
+        if merge is None and elif_info.get("bodies") and then_blocks:
+            _then_exit_succs = set(then_blocks[0].successors)
+            _all_branch_exits = [_then_exit_succs]
+            for _body in elif_info["bodies"]:
+                if _body:
+                    _all_branch_exits.append(set(_body[-1].successors))
+            if elif_info.get("final_else"):
+                _fe_blocks = elif_info["final_else"]
+                if _fe_blocks:
+                    _all_branch_exits.append(set(_fe_blocks[-1].successors))
+            _non_empty_exits = [s for s in _all_branch_exits if s]
+            _chain_merge_candidates = set()
+            if len(_non_empty_exits) >= 2:
+                _chain_merge_candidates = set.intersection(*_non_empty_exits)
+            elif len(_non_empty_exits) == 1:
+                _chain_merge_candidates = set(_non_empty_exits[0])
+            _chain_merge_candidates -= set(elif_info.get("conditions", []))
+            _chain_merge_candidates -= set(elif_info.get("final_else", []))
+            _chain_merge_candidates.discard(block)
+            _chain_merge_candidates.discard(then_blocks[0])
+            if _chain_merge_candidates:
+                _chain_merge = min(_chain_merge_candidates, key=lambda b: b.start_offset)
+                merge = _chain_merge
+                _then_stop = set()
+                if else_blocks:
+                    _then_stop.add(else_blocks[0])
+                if boundary_stop:
+                    _then_stop |= (set(boundary_stop) - {then_blocks[0]})
+                then_blocks = self._collect_branch_blocks(
+                    then_blocks[0], _chain_merge, stop_set=_then_stop)
         if merge is None and len(then_blocks) > 1:
             """
             === 反编译逻辑：merge=None时的then_blocks过滤 ===
