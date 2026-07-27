@@ -3267,6 +3267,27 @@ AST 映射规则:
             if _other_loop_fis:
                 _filtered_else_blocks = [b for b in _filtered_else_blocks
                                          if b not in _other_loop_fis]
+            # [R15-N5 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（父引用子入口）：
+            # 当前循环的 else_blocks（for_iter_exit）可能同时是祖先 IfRegion 的
+            # merge_block（如 get_valuation_info 中 `if filled: ... for stock in
+            # ...: ... return data_dict`，block 550 `return data_dict` 既是 for
+            # 循环的 FOR_ITER 目标，也是 `if filled` 的 POP_JUMP_FORWARD_IF_FALSE
+            # 目标）。若循环将此块作为 sequential_after_loop 输出，return 会被放
+            # 在 if body 内部（`if filled: ...; for ...: ...; return data_dict`），
+            # 而原始源码中 return 在 if 之后（`if filled: ...; for ...: ...` +
+            # `return data_dict`），导致 recompiled 字节码多出隐式 `return None`
+            # （delta=-4，3 个函数）。修复：排除属于祖先 IfRegion merge_block 的
+            # 块，交由祖先 IfRegion 作为 post-if 代码生成。
+            _ancestor_if_merge_blocks = set()
+            for _r in self.regions:
+                if (isinstance(_r, IfRegion) and _r is not region
+                        and id(_r) in self._generating_regions
+                        and getattr(_r, 'merge_block', None) is not None):
+                    if _r.merge_block in _filtered_else_blocks:
+                        _ancestor_if_merge_blocks.add(_r.merge_block)
+            if _ancestor_if_merge_blocks:
+                _filtered_else_blocks = [b for b in _filtered_else_blocks
+                                         if b not in _ancestor_if_merge_blocks]
             else_stmts = self._if_generate_branch_stmts(_filtered_else_blocks) if _filtered_else_blocks else []
 
         # 过滤for循环else子句中多余的return None（隐式函数返回，非for-else语义）
@@ -4361,7 +4382,7 @@ AST 映射规则:
 
     def _loop_extract_for_iter_pre_stmts(self, instrs: List[Instruction], block: BasicBlock) -> Tuple[List[Dict[str,Any]], List[Instruction]]:
         """从for_iter_setup指令序列中提取前置赋值语句，返回(前置语句列表, 剩余迭代器指令)
-        
+
         当for循环前有赋值语句时(如 result = [] / found = None)，CPython将这些语句
         和GET_ITER放在同一个基本块中。此方法将前置STORE语句提取出来作为pre_stmts，
         只保留迭代器相关指令(GET_ITER之前的LOAD等)用于表达式重建。
@@ -4380,7 +4401,38 @@ AST 映射规则:
         for _i, _instr in enumerate(instrs):
             if _instr.opname in ('GET_ITER', 'GET_AITER'):
                 _last_get_iter_idx = _i
+        _import_pending_store = False
         for _idx, _instr in enumerate(instrs):
+            # [R15-N4 fix] 区域归约算法原则 2（每块唯一归属）：
+            # for_iter_setup 块可能含 import 语句（如 get_valuation_info 中
+            # `if filled: from fly.common.tradingday_calendar import trading_days`）。
+            # IMPORT_NAME 前的 LOAD_CONST (level=0) + LOAD_CONST (fromlist) 是
+            # import 的参数，不是独立语句。IMPORT_NAME + IMPORT_FROM + STORE_* +
+            # POP_TOP 构成完整的 ImportFrom 语句。若不特殊处理，LOAD_CONST
+            # (fromlist) + STORE_FAST 会被 _build_store_statement 误识别为
+            # `trading_days = ('trading_days',)`，且 IMPORT_NAME/IMPORT_FROM 被
+            # 累积到 _buf 后推入 _remaining（迭代器指令），导致 import 语句丢失
+            # （delta=+4）。
+            if _instr.opname == 'IMPORT_NAME':
+                _buf = []
+                _import_result = self._process_instruction(_instr, block, [])
+                if _import_result:
+                    if isinstance(_import_result, list):
+                        _pre_stmts.extend(_import_result)
+                    else:
+                        _pre_stmts.append(_import_result)
+                _import_pending_store = True
+                continue
+            if _instr.opname == 'IMPORT_FROM':
+                _import_pending_store = True
+                continue
+            if _instr.opname in _store_ops and _import_pending_store:
+                _buf = []
+                _import_pending_store = False
+                continue
+            if _instr.opname == 'POP_TOP' and _import_pending_store:
+                _import_pending_store = False
+                continue
             if _instr.opname in _store_ops:
                 _buf.append(_instr)
                 _stmt = self._build_store_statement(_buf, block=block)
@@ -4437,6 +4489,7 @@ AST 映射规则:
         """从for循环的内层iter_setup前驱块提取前置语句"""
         _pre_stmts: List[Dict[str, Any]] = []
         _stmt_instrs: List[Instruction] = []
+        _import_pending_store = False
         for _instr in pred.instructions:
             if _instr.opname in ('GET_ITER', 'GET_AITER'):
                 break
@@ -4448,6 +4501,27 @@ AST 映射规则:
                 break
             if _instr.opname in ('POP_EXCEPT', 'PUSH_EXC_INFO', 'RERAISE',
                                 'WITH_EXCEPT_START', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH'):
+                continue
+            # [R15-N4 fix] 镜像 _loop_extract_for_iter_pre_stmts 的 IMPORT_NAME 处理。
+            if _instr.opname == 'IMPORT_NAME':
+                _stmt_instrs = []
+                _import_result = self._process_instruction(_instr, pred, [])
+                if _import_result:
+                    if isinstance(_import_result, list):
+                        _pre_stmts.extend(_import_result)
+                    else:
+                        _pre_stmts.append(_import_result)
+                _import_pending_store = True
+                continue
+            if _instr.opname == 'IMPORT_FROM':
+                _import_pending_store = True
+                continue
+            if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_DEREF') and _import_pending_store:
+                _stmt_instrs = []
+                _import_pending_store = False
+                continue
+            if _instr.opname == 'POP_TOP' and _import_pending_store:
+                _import_pending_store = False
                 continue
             if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_DEREF'):
                 _stmt_instrs.append(_instr)
@@ -7445,8 +7519,37 @@ AST 映射规则:
                             if _then_or_elif_has_implicit_return_none:
                                 break
                     if not _then_or_elif_has_implicit_return_none:
-                        trailing_return = orelse[0]
-                        last_elif['orelse'] = []
+                        # [R15-N3 fix] 区域归约算法原则 4（父引用子入口）+ 字节码等价：
+                        # 仅当 merge_block 是简单的隐式 return None 块（即 post-if
+                        # 无实际代码）时，才可将 else 分支的 return 提升为函数末尾
+                        # return。当 merge_block 含实际 post-if 代码（如
+                        # get_valuation_info 中 block 104 含 check_stocks(stock_list)
+                        # /date=str(date)/data_dict=... 等语句）时，提升会改变语义：
+                        # 原始结构 `if-elif-else: return {}; post-if code` 中 return
+                        # 仅在 else 分支执行，post-if 代码在 then/elif fall-through 后
+                        # 执行；提升后 `if-elif; return {}; post-if code` 中 return
+                        # 总是执行，post-if 代码被跳过（且不会出现在反编译输出中）。
+                        # 典型场景（get_valuation_info / get_valuation_new_info /
+                        # get_fundamentals_daily_info 等 3 个函数）：
+                        #   if isinstance(stocks, str):
+                        #       stock_list = [stocks]
+                        #   elif isinstance(stocks, Iterable):
+                        #       stock_list = stocks
+                        #   else:
+                        #       return {}
+                        #   check_stocks(stock_list)   # merge 104, post-if code
+                        #   ...
+                        # 修复：检测 merge_block 是否含实际语句；若是则不提升。
+                        _can_lift_else_return = True
+                        _merge_block = getattr(region, 'merge_block', None)
+                        if _merge_block is not None:
+                            _mb_meaningful = [i for i in _merge_block.instructions
+                                              if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+                            if not self._is_implicit_return_block(_mb_meaningful):
+                                _can_lift_else_return = False
+                        if _can_lift_else_return:
+                            trailing_return = orelse[0]
+                            last_elif['orelse'] = []
                 elif isinstance(orelse, list) and len(orelse) >= 1:
                     if _is_implicit_return_none(orelse[-1]):
                         trailing_return = orelse[-1]
