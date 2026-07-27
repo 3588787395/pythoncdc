@@ -4347,6 +4347,16 @@ AST 映射规则:
         _remaining: List[Instruction] = []
         _buf: List[Instruction] = []
         _store_ops = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
+        # [R14-N8 fix] 区域归约算法原则 2（每块唯一归属）：
+        # for_iter_setup 块可能含多个 GET_ITER（如 listcomp 的参数
+        # `trade_times = [x for x in trade_times]` 中 listcomp 的 GET_ITER
+        # 和 for 循环的 GET_ITER 在同一块）。只有最后一个 GET_ITER 是
+        # for 循环的迭代器设置，中间的 GET_ITER 属于表达式的一部分。
+        # 预计算最后一个 GET_ITER 的索引，只在该处分割 pre_stmts / iter_instrs。
+        _last_get_iter_idx = -1
+        for _i, _instr in enumerate(instrs):
+            if _instr.opname in ('GET_ITER', 'GET_AITER'):
+                _last_get_iter_idx = _i
         for _idx, _instr in enumerate(instrs):
             if _instr.opname in _store_ops:
                 _buf.append(_instr)
@@ -4387,7 +4397,9 @@ AST 映射规则:
                         _pre_stmts.append(_stmt)
                     _buf = []
                     continue
-            if _instr.opname in ('GET_ITER', 'GET_AITER'):
+            # [R14-N8 fix] 只在最后一个 GET_ITER 处分割——中间的 GET_ITER
+            # （如 listcomp 参数的 GET_ITER）属于表达式，留在 _buf 中。
+            if _instr.opname in ('GET_ITER', 'GET_AITER') and _idx == _last_get_iter_idx:
                 if _buf:
                     _remaining.extend(_buf)
                     _buf = []
@@ -11882,6 +11894,34 @@ AST 映射规则:
                     if bs:
                         stmts.extend(bs)
                 self.generated_blocks.add(block)
+                continue
+            # [R14-N7 fix] 区域归约算法原则 2（每块唯一归属）：
+            # for_iter_setup 块（含 LOAD_FAST iterable + GET_ITER）是
+            # LoopRegion 的一部分，由 LoopRegion 生成器处理（提取 iter_expr
+            # 及前置赋值语句 _loop_extract_for_iter_pre_stmts）。
+            # 但在 _process_if_blocks 中按 start_offset 排序处理时，
+            # for_iter_setup 块在 LoopRegion entry 之前被处理，此时
+            # LoopRegion 尚未生成，for_iter_setup 未被标记为已生成。
+            # 若不跳过，块内指令会被作为裸表达式/赋值语句输出（如
+            # `data_df.columns` → LOAD_FAST+LOAD_ATTR+POP_TOP 而非
+            # GET_ITER+FOR_ITER），导致 GET_ITER 丢失（10 个函数）或
+            # 迭代器变量被误输出为裸表达式（如 `l`，delta=-4）。
+            # [R14-N7c fix] 移除 R14-N7b 的指令类型过滤——该过滤排除了
+            # 含 LOAD_ATTR/LOAD_METHOD/CALL 等指令的块，但这些指令在
+            # iter 表达式（如 `for x in obj.attr:`）和前置赋值中普遍存在。
+            # _loop_extract_for_iter_pre_stmts 已能正确提取前置赋值语句
+            # （含 STORE_ATTR/STORE_SUBSCR/POP_TOP+CALL）和 iter 指令，
+            # 无需在 _process_if_blocks 中重复处理。
+            _block_is_for_iter_setup = False
+            for _lr in self.region_analyzer.regions:
+                if isinstance(_lr, LoopRegion):
+                    _fis = _lr.metadata.get('for_iter_setup')
+                    if _fis is block and _lr not in self._generated_regions:
+                        _block_is_for_iter_setup = True
+                        break
+            if _block_is_for_iter_setup:
+                self.generated_blocks.add(block)
+                self.generated_offsets.add(block.start_offset)
                 continue
             nested = self.region_analyzer.get_entry_region_for_block(block)
             if nested and isinstance(nested, (IfRegion, LoopRegion, TryExceptRegion, WithRegion, MatchRegion, AssertRegion, TernaryRegion, BoolOpRegion)):
@@ -29913,9 +29953,34 @@ AST 映射规则:
                         'value': value_expr,
                     }
 
-        obj_expr = self.expr_reconstructor.reconstruct(obj_instrs[-1:])
+        # [R14-N6 fix] 多层属性链赋值（如 `a.b.c = value`）：
+        # 字节码为 [LOAD_CONST value, LOAD_FAST a, LOAD_ATTR b, STORE_ATTR c]
+        # 栈顺序: [value, a.b]，STORE_ATTR 弹出 obj(a.b) 和 value，存到 a.b.c。
+        # 此前 obj_instrs[-1:] 仅取最后一条指令（LOAD_ATTR b），导致：
+        #   - obj 被重建为 Name('b') 而非 Attribute(a, 'b')
+        #   - value 被重建为 [LOAD_CONST value, LOAD_FAST a] → Name('a')
+        #   - 生成 `b.c = a` 而非 `a.b.c = value`
+        # 修复：从 store_idx 向前扫描，找到完整的对象链
+        #   [LOAD_FAST/LOAD_NAME/LOAD_GLOBAL] + [LOAD_ATTR]*
+        # 对象链之前的指令是 value。
+        _obj_chain_start = len(obj_instrs)  # index into obj_instrs
+        for j in range(len(obj_instrs) - 1, -1, -1):
+            _i = obj_instrs[j]
+            if _i.opname == 'LOAD_ATTR':
+                _obj_chain_start = j
+                continue
+            if _i.opname in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF'):
+                _obj_chain_start = j
+                break
+            # Any other instruction marks the boundary between value and object
+            break
+
+        _obj_chain_instrs = obj_instrs[_obj_chain_start:]
+        _value_instrs = obj_instrs[:_obj_chain_start]
+
+        obj_expr = self.expr_reconstructor.reconstruct(_obj_chain_instrs)
         if obj_expr is None:
-            obj_expr = {'type': 'Name', 'id': str(obj_instrs[-1].argval), 'ctx': 'Load'}
+            obj_expr = {'type': 'Name', 'id': str(_obj_chain_instrs[-1].argval), 'ctx': 'Load'}
 
         target = {
             'type': 'Attribute',
@@ -29924,7 +29989,7 @@ AST 映射规则:
             'ctx': 'Store',
         }
 
-        value_instrs = obj_instrs[:-1]
+        value_instrs = _value_instrs
         if value_instrs:
             value_expr = self.expr_reconstructor.reconstruct(value_instrs)
             if value_expr is None:
