@@ -3250,6 +3250,23 @@ AST 映射规则:
                     _exclude_blocks.add(_parent_loop.condition_block)
                 if _exclude_blocks:
                     _filtered_else_blocks = [b for b in _filtered_else_blocks if b not in _exclude_blocks]
+            # [R13-N2 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（父引用子入口）：
+            # 当前循环的 for_iter_exit（else_blocks 中的块）可能是另一个后续
+            # LoopRegion 的 for_iter_setup（如 `for x in a: ... for y in b: ...`
+            # 中第一个循环退出后的 `b + GET_ITER` 块）。原实现把该块当作
+            # sequential_after_loop 输出为独立 Expr（如 `data`），导致重复输出
+            # （for_iter_setup 的 LOAD 部分既作为 Expr 输出，又作为第二个循环的
+            # iter_expr）。修正：排除属于其他 LoopRegion for_iter_setup 的块，
+            # 交由该 LoopRegion 的 _loop_generate_for 完整处理。
+            _other_loop_fis = set()
+            for _r in self.regions:
+                if isinstance(_r, LoopRegion) and _r is not region:
+                    _fis = _r.metadata.get('for_iter_setup')
+                    if _fis is not None and _fis in _filtered_else_blocks:
+                        _other_loop_fis.add(_fis)
+            if _other_loop_fis:
+                _filtered_else_blocks = [b for b in _filtered_else_blocks
+                                         if b not in _other_loop_fis]
             else_stmts = self._if_generate_branch_stmts(_filtered_else_blocks) if _filtered_else_blocks else []
 
         # 过滤for循环else子句中多余的return None（隐式函数返回，非for-else语义）
