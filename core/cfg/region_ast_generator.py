@@ -12332,7 +12332,28 @@ AST 映射规则:
                                 bs.pop()
                                 if not bs or bs[-1].get('type') not in ('Break', 'Continue', 'Return', 'Raise'):
                                     bs.append({'type': 'Break'})
-                if bs and isinstance(bs[-1], dict) and bs[-1].get('type') == 'Expr' and any(
+                # [R17-N1 fix] 区域归约算法原则：每个字节码模式对应唯一的 AST 节点。
+                # Expr 语句（含 POP_TOP）的值已被丢弃，不应提升为 Return。
+                # 例如 `data.sort(...); return data` 的字节码为：
+                #   Block A: LOAD_FAST data + LOAD_METHOD sort + ... + CALL + POP_TOP
+                #   Block B (RETURN): LOAD_FAST data + RETURN_VALUE
+                # Block A 末尾的 POP_TOP 表示 `data.sort(...)` 是语句（值被丢弃），
+                # Block B 加载新值 `data` 返回。原逻辑仅检查后继块角色为 RETURN 就
+                # 将 Expr 提升为 Return，导致 `return data.sort(...)` 错误生成。
+                # 修正：检查块末尾（跳过 JUMP 指令）是否为 POP_TOP。若是，说明
+                # Expr 是语句，不应提升。
+                _block_ends_with_pop_top_r17 = False
+                _non_noise_r17 = [i for i in block.instructions
+                                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                if _non_noise_r17:
+                    _li_r17 = len(_non_noise_r17) - 1
+                    while _li_r17 >= 0 and _non_noise_r17[_li_r17].opname in (
+                        'JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD',
+                        'JUMP_BACKWARD_NO_INTERRUPT'):
+                        _li_r17 -= 1
+                    if _li_r17 >= 0 and _non_noise_r17[_li_r17].opname == 'POP_TOP':
+                        _block_ends_with_pop_top_r17 = True
+                if bs and isinstance(bs[-1], dict) and bs[-1].get('type') == 'Expr' and not _block_ends_with_pop_top_r17 and any(
                     (self.region_analyzer.get_block_role(s) in (BlockRole.RETURN, BlockRole.RETURN_NONE)
                      and not self.region_analyzer._is_with_exit_cleanup(s)
                      and not (_in_loop and self._is_loop_break_return(s)))
