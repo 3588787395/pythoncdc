@@ -27245,7 +27245,13 @@ AST 映射规则:
             return []
         if any(i.opname == 'BINARY_OP' for i in block.instructions):
             pass
-
+        import os as _os_dbg
+        if _os_dbg.environ.get('R23N6_DEBUG2'):
+            _has_bt2 = any(i.opname == 'BUILD_TUPLE' and i.arg == 2 for i in block.instructions)
+            if _has_bt2:
+                import sys as _sys_dbg
+                _last_op = [i.opname for i in block.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')][-3:]
+                print(f"[R23N6-DBG2] _generate_block_statements block@{block.start_offset} try_depth={self._try_depth} last3ops={_last_op} succs={[s.start_offset for s in block.successors]}", file=_sys_dbg.stderr)
         # 区域归约算法：通用break检测
         # 在循环体内，POP_TOP(迭代器清理) + LOAD_CONST None + RETURN_VALUE = break
         # 此模式出现在for循环的try块中的if-break结构中
@@ -27692,6 +27698,12 @@ AST 映射规则:
 
         # 收集所有特殊模式检测结果，而不是首次命中就返回
         # 这对于包含多种语句类型的大块（如模块级代码）至关重要
+        import os as _os_dbg_main
+        if _os_dbg_main.environ.get('R23N6_DEBUG5'):
+            _has_bt2_main = any(i.opname == 'BUILD_TUPLE' and i.arg == 2 for i in block.instructions)
+            if _has_bt2_main:
+                import sys as _sys_dbg_main
+                print(f"[R23N6-DBG5] block@{block.start_offset} reached main stmts processing (block_role={_block_role}, try_depth={self._try_depth})", file=_sys_dbg_main.stderr)
         
         _chain_instrs = [i for i in block.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
         _chain_result = None
@@ -28333,6 +28345,13 @@ AST 映射规则:
                     _unpack_result = _ua_stmts if _ua_stmts else None
         if _unpack_result is not None:
             stmts.extend(_unpack_result)
+            # [R23-N6 fix] UNPACK_SEQUENCE 块在 except handler 内时，末尾 Expr
+            # 可能是 return 值（SWAP+POP_EXCEPT+RETURN_VALUE 链路）。UNPACK_SEQUENCE
+            # 处理路径会提前 return，主语句处理路径的 R23-N6 修复无法触达。
+            # 此处调用通用 helper 确保 return 关键字不丢失（如 `return (a, b)`）。
+            # 依「每块唯一归属」: return 值表达式归 Return 语句，UNPACK_SEQUENCE
+            # 归 Assign 语句，两者共存于同一 block 时由本调用统一修正。
+            self._apply_r23n6_return_promotion(block, stmts, _block_role)
             self.generated_blocks.add(block)
             return stmts
 
@@ -29258,6 +29277,12 @@ AST 映射规则:
                 if has_yield_from_before:
                     stmt_instrs = []
         if stmt_instrs:
+            import os as _os_dbg_lf
+            if _os_dbg_lf.environ.get('R23N6_DEBUG4'):
+                _has_bt2_lf = any(i.opname == 'BUILD_TUPLE' and i.arg == 2 for i in block.instructions)
+                if _has_bt2_lf:
+                    import sys as _sys_dbg_lf
+                    print(f"[R23N6-DBG4] block@{block.start_offset} reached leftover stmt_instrs (count={len(stmt_instrs)}, last_op={stmt_instrs[-1].opname if stmt_instrs else None})", file=_sys_dbg_lf.stderr)
             return_succ = None
             for succ in block.conditional_successors:
                 if self.block_role(succ) in (BlockRole.RETURN, BlockRole.RETURN_NONE):
@@ -29411,6 +29436,15 @@ AST 映射规则:
                 if stmt:
                     stmts.append(stmt)
 
+        # [R23-N6 debug] 追踪 block@456 是否到达此处
+        import os as _os_dbg_r23n6_trace
+        if _os_dbg_r23n6_trace.environ.get('R23N6_TRACE'):
+            _has_bt2_trace = any(i.opname == 'BUILD_TUPLE' and i.arg == 2 for i in block.instructions)
+            if _has_bt2_trace:
+                import sys as _sys_dbg_trace
+                _stmt_types_trace = [s.get('type') if isinstance(s, dict) else type(s).__name__ for s in stmts]
+                print(f"[R23N6-TRACE] block@{block.start_offset} reached post-stmt_instrs stmts_count={len(stmts)} types={_stmt_types_trace} try_depth={self._try_depth}", file=_sys_dbg_trace.stderr)
+
         if stmts and self.cfg.name != '<module>':
             has_return_value = any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in block.instructions)
             if has_return_value:
@@ -29435,9 +29469,165 @@ AST 映射规则:
                             stmts[-1] = {'type': 'Return', 'value': val}
                             for succ in cond_succs:
                                 self.generated_blocks.add(succ)
+        # [R23-N6 fix] 区域归约算法原则 2（每块唯一归属）+
+        # 原则 4（父引用子入口）：
+        # 当当前 block 末尾以值构建指令（如 BUILD_TUPLE/BUILD_MAP/BUILD_CONST_KEY_MAP
+        # /LOAD_FAST/LOAD_CONST/CALL等）结束、且其后继链路为
+        #   succ1 (SWAP-only) → succ2 (POP_EXCEPT + as-var cleanup + RETURN_VALUE)
+        # 时（CPython 3.11+ 将 except handler 内的 `return <expr>` 编译为：
+        # 当前 block 构建 return 值 → SWAP 切换异常状态 → POP_EXCEPT 弹出
+        # 异常栈 → LOAD_CONST None/STORE_FAST e/DELETE_FAST e 清理 as 变量 →
+        # RETURN_VALUE），需将末尾 Expr 提升为 Return，否则会丢失 return 关键字
+        # （如 `return (re_error, re_data)` 被输出为裸 `(re_error, re_data)`）。
+        # 普遍性：覆盖 except handler 内任意 return（return tuple / return dict /
+        # return call / return name / return constant）且 SWAP 被切到独立块的形式。
+        # 关键判据：block 末尾（跳过 JUMP）必须是值构建指令（如 BUILD_TUPLE/CALL/
+        # LOAD_FAST 等），不能是 POP_TOP——POP_TOP 表示值被丢弃（语句），return
+        # 值是后续 LOAD_CONST None（隐式 return None），不应将前一个 Expr 提升
+        # 为 Return（否则会把 `print(...); return None` 错误提升为 `return print(...)`）。
+        import os as _os_dbg_pre
+        if _os_dbg_pre.environ.get('R23N6_DEBUG3'):
+            _has_bt2_pre = any(i.opname == 'BUILD_TUPLE' and i.arg == 2 for i in block.instructions)
+            if _has_bt2_pre:
+                import sys as _sys_dbg_pre
+                _stmt_types = [s.get('type') if isinstance(s, dict) else type(s).__name__ for s in stmts]
+                print(f"[R23N6-DBG3] pre-fix block@{block.start_offset} try_depth={self._try_depth} stmts_count={len(stmts)} stmt_types={_stmt_types}", file=_sys_dbg_pre.stderr)
+        # [R23-N6 fix] 区域归约算法原则 2（每块唯一归属）+
+        # 原则 4（父引用子入口）：
+        # 触发条件：block 处于 except handler 上下文中。判据二选一：
+        #   (a) self._try_depth > 0（进入 TryExceptRegion 时已递增）
+        #   (b) block_role == EXCEPT_STORE / EXCEPT_HANDLER（区域分析标注的
+        #       异常处理角色）—— 覆盖 try_depth 未正确传递的嵌套 IfRegion
+        #       场景：except handler 内嵌套 if/elif/else，IfRegion 作为子区域
+        #       被独立处理时，try_depth 可能未被传递，但 block_role 仍准确
+        #       反映 block 的异常处理语义归属。
+        _r23n6_in_except_context = (self._try_depth > 0
+                                    or _block_role in (BlockRole.EXCEPT_STORE,
+                                                       BlockRole.EXCEPT_HANDLER))
+        if stmts and _r23n6_in_except_context:
+            _last_stmt = stmts[-1]
+            if isinstance(_last_stmt, dict) and _last_stmt.get('type') == 'Expr':
+                # 检查 block 末尾（跳过 JUMP）是否为 POP_TOP（语句标志）
+                _block_ends_with_pop_top_r23n6 = False
+                _non_noise_r23n6 = [i for i in block.instructions
+                                    if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                if _non_noise_r23n6:
+                    _li_r23n6 = len(_non_noise_r23n6) - 1
+                    while _li_r23n6 >= 0 and _non_noise_r23n6[_li_r23n6].opname in (
+                        'JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD',
+                        'JUMP_BACKWARD_NO_INTERRUPT'):
+                        _li_r23n6 -= 1
+                    if _li_r23n6 >= 0 and _non_noise_r23n6[_li_r23n6].opname == 'POP_TOP':
+                        _block_ends_with_pop_top_r23n6 = True
+                if not _block_ends_with_pop_top_r23n6:
+                    _chain = self._find_return_chain_via_successors(block)
+                    if _chain:
+                        import os as _os_dbg
+                        if _os_dbg.environ.get('R23N6_DEBUG'):
+                            import sys as _sys_dbg
+                            print(f"[R23N6-DBG] block@{block.start_offset} try_depth={self._try_depth} chain={[b.start_offset for b in _chain]}", file=_sys_dbg.stderr)
+                        _expr_val = _last_stmt.get('value')
+                        # 跳过隐式 return None：若 Expr 值为 Constant None，
+                        # 不提升为 Return（避免 spurious `return None`）。
+                        if not (isinstance(_expr_val, dict)
+                                and _expr_val.get('type') == 'Constant'
+                                and _expr_val.get('value') is None):
+                            stmts[-1] = {'type': 'Return', 'value': _expr_val}
+                        else:
+                            stmts[-1] = {'type': 'Return', 'value': None}
+                        for _rb in _chain:
+                            self.generated_blocks.add(_rb)
+                            self.generated_offsets.add(_rb.start_offset)
+                    else:
+                        import os as _os_dbg
+                        if _os_dbg.environ.get('R23N6_DEBUG'):
+                            import sys as _sys_dbg
+                            print(f"[R23N6-DBG] block@{block.start_offset} try_depth={self._try_depth} NO chain (last instrs: {[i.opname for i in _non_noise_r23n6[-3:]]})", file=_sys_dbg.stderr)
+            else:
+                import os as _os_dbg
+                if _os_dbg.environ.get('R23N6_DEBUG'):
+                    import sys as _sys_dbg
+                    print(f"[R23N6-DBG] block@{block.start_offset} try_depth={self._try_depth} last_stmt is not Expr: {_last_stmt!r}", file=_sys_dbg.stderr)
+        elif stmts:
+            import os as _os_dbg
+            if _os_dbg.environ.get('R23N6_DEBUG'):
+                import sys as _sys_dbg
+                _last_stmt = stmts[-1]
+                _is_expr = isinstance(_last_stmt, dict) and _last_stmt.get('type') == 'Expr'
+                if _is_expr:
+                    print(f"[R23N6-DBG] block@{block.start_offset} try_depth={self._try_depth} SKIPPED (try_depth=0) but last is Expr", file=_sys_dbg.stderr)
+        else:
+            import os as _os_dbg
+            if _os_dbg.environ.get('R23N6_DEBUG'):
+                import sys as _sys_dbg
+                _has_bt2 = any(i.opname == 'BUILD_TUPLE' and i.arg == 2 for i in block.instructions)
+                if _has_bt2:
+                    print(f"[R23N6-DBG] block@{block.start_offset} try_depth={self._try_depth} EMPTY stmts (block has BUILD_TUPLE 2)", file=_sys_dbg.stderr)
 
         self.generated_blocks.add(block)
         return stmts
+
+    def _apply_r23n6_return_promotion(self, block: 'BasicBlock',
+                                      stmts: List[Dict[str, Any]],
+                                      block_role: 'BlockRole') -> None:
+        """[R23-N6 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（父引用子入口）。
+
+        当 block 处于 except handler 上下文、末尾以值构建指令结束、且后继链路为
+          succ1 (SWAP-only) → succ2 (POP_EXCEPT + as-var cleanup + RETURN_VALUE)
+        时（CPython 3.11+ 将 except handler 内的 ``return <expr>`` 编译为：
+        当前 block 构建 return 值 → SWAP 切换异常状态 → POP_EXCEPT 弹出异常栈 →
+        清理 as 变量 → RETURN_VALUE），需将末尾 Expr 提升为 Return，否则会丢失
+        return 关键字。
+
+        触发条件（判据二选一）：
+          (a) self._try_depth > 0（进入 TryExceptRegion 时已递增）
+          (b) block_role == EXCEPT_STORE / EXCEPT_HANDLER —— 覆盖 try_depth 未
+              正确传递的嵌套 IfRegion 场景。
+
+        关键判据：block 末尾（跳过 JUMP）必须是值构建指令，不能是 POP_TOP
+        （POP_TOP 表示值被丢弃的语句，return 值是后续 LOAD_CONST None）。
+
+        本方法直接修改 ``stmts`` 列表（将末尾 Expr 替换为 Return），并标记
+        return 链路中的清理块为已生成。调用者负责后续 ``return stmts``。
+        """
+        if not stmts:
+            return
+        _r23n6_in_except_context = (self._try_depth > 0
+                                    or block_role in (BlockRole.EXCEPT_STORE,
+                                                      BlockRole.EXCEPT_HANDLER))
+        if not _r23n6_in_except_context:
+            return
+        _last_stmt = stmts[-1]
+        if not (isinstance(_last_stmt, dict) and _last_stmt.get('type') == 'Expr'):
+            return
+        # 检查 block 末尾（跳过 JUMP）是否为 POP_TOP（语句标志）
+        _non_noise_r23n6 = [i for i in block.instructions
+                            if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+        _block_ends_with_pop_top_r23n6 = False
+        if _non_noise_r23n6:
+            _li_r23n6 = len(_non_noise_r23n6) - 1
+            while _li_r23n6 >= 0 and _non_noise_r23n6[_li_r23n6].opname in (
+                'JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD',
+                'JUMP_BACKWARD_NO_INTERRUPT'):
+                _li_r23n6 -= 1
+            if _li_r23n6 >= 0 and _non_noise_r23n6[_li_r23n6].opname == 'POP_TOP':
+                _block_ends_with_pop_top_r23n6 = True
+        if _block_ends_with_pop_top_r23n6:
+            return
+        _chain = self._find_return_chain_via_successors(block)
+        if not _chain:
+            return
+        _expr_val = _last_stmt.get('value')
+        # 跳过隐式 return None：若 Expr 值为 Constant None，不提升为 Return。
+        if not (isinstance(_expr_val, dict)
+                and _expr_val.get('type') == 'Constant'
+                and _expr_val.get('value') is None):
+            stmts[-1] = {'type': 'Return', 'value': _expr_val}
+        else:
+            stmts[-1] = {'type': 'Return', 'value': None}
+        for _rb in _chain:
+            self.generated_blocks.add(_rb)
+            self.generated_offsets.add(_rb.start_offset)
 
     def _find_await_store_target(self, block: 'BasicBlock') -> Optional[str]:
         """[Round4-14] 查找 await 表达式后的赋值目标。
