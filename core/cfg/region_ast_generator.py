@@ -22634,6 +22634,19 @@ AST 映射规则:
                                             and _r.condition_block is region.merge_block):
                                         _shared_with_nested_if_cond = True
                                         break
+                        # [R23-N5 fix] 检测 merge_block 是否同时是某 LoopRegion
+                        # 的 for_iter_setup 块。判据：存在 LoopRegion 其 metadata
+                        # 的 for_iter_setup 是本 region.merge_block。此时 STORE_* 之后
+                        # 的指令（LOAD ...; GET_ITER）归属 LoopRegion 的 iter setup，
+                        # 不应被 ternary 发射为独立 Expr 语句。
+                        _shared_with_loop_for_iter_setup = False
+                        if _non_noise_remaining and region.merge_block is not None:
+                            for _r in self.regions:
+                                if (isinstance(_r, LoopRegion)
+                                        and _r is not region
+                                        and _r.metadata.get('for_iter_setup') is region.merge_block):
+                                    _shared_with_loop_for_iter_setup = True
+                                    break
                         _is_trivial_ret = False
                         if len(_non_noise_remaining) <= 2:
                             _no_pop = [i for i in _non_noise_remaining
@@ -22661,6 +22674,23 @@ AST 映射规则:
                             # [R23 Bug1 fix] merge_block 同时是嵌套 IfRegion 的
                             # entry/condition_block；STORE_* 之后的指令属于嵌套
                             # IfRegion 的条件，不发射为独立语句。
+                            pass
+                        elif _shared_with_loop_for_iter_setup:
+                            # [R23-N5 fix] 区域归约算法原则 2（每块唯一归属）
+                            # + 原则 4（父引用子入口）：当 ternary 的 merge_block
+                            # 同时是嵌套 LoopRegion 的 for_iter_setup 块（典型场景：
+                            # `count = count if count else 0; for x in datass_list[-count:]: ...`
+                            # 中 ternary 的 STORE_count 与 for 循环的 iter setup
+                            # LOAD datass_list; ...; BINARY_SUBSCR; GET_ITER 被合并
+                            # 到同一基本块），STORE_* 之后的指令属于嵌套 LoopRegion
+                            # 的 for_iter_setup，由 LoopRegion 的 _loop_generate_for
+                            # 提取为 iter_expr，不应被本 TernaryRegion 作为独立
+                            # Expr(Iter(...)) 语句发射（否则会重复生成 iter 表达式，
+                            # 导致字节码不一致：datass_list[-count:] 出现两次）。
+                            # 普遍性: 覆盖 `x = a if c else b; for y in f(x): ...`
+                            # / `x = a if c else b; for y in obj[x:]: ...` 等所有
+                            # ternary 赋值 + 紧接 for 循环且 iter setup 与 STORE
+                            # 同块的形式。
                             pass
                         elif _non_noise_remaining and self._merge_block_is_loop_back_edge(region):
                             # [R6-02 fix] merge_block 同时是 LoopRegion 的 back_edge_block
