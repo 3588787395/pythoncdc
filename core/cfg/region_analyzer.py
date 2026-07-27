@@ -5382,6 +5382,86 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                 if _implicit_return_blocks:
                     all_blocks |= _implicit_return_blocks
 
+            # [R21-N1 fix] 显式 return 块归属 try_blocks。
+            #
+            # CPython 3.11+ 优化：不可抛出异常的指令（如 LOAD_CONST <非None>;
+            # RETURN_VALUE）会被移出异常表，以减少异常处理开销。这导致
+            # `try: ...; return True; except: ...` 中的 `return True` 块
+            # 不在异常表的 [try_start, try_end) 范围内，但语义上它仍是 try 体
+            # 的最后一条语句。
+            #
+            # 若不修复：该 return 块既不在 try_blocks 也不在 handler_blocks，
+            # 会被当作 post-try 代码生成在 except 之后。重编译时编译器会在
+            # try 体末尾插入 JUMP_FORWARD 跳过 except，导致字节码布局与原始
+            # pyc 不一致（多出一条 JUMP_FORWARD，且 return 偏移变化）。
+            #
+            # 修复策略：识别 try_blocks 的「normal 后继且位于 handler 之前」
+            # 且「以 RETURN_VALUE/RETURN_CONST 结尾」的块，将其加入 try_blocks
+            # 和 all_blocks。这样 AST 生成器会将其作为 try 体最后一条语句
+            # 生成，重编译后字节码与原始一致。
+            #
+            # 判定条件（全部满足）：
+            #   1. 块是某个 try_block 的 normal 后继（非 exception_successors）
+            #   2. 块的 start_offset < handler_entry_block.start_offset
+            #      （位于 handler 之前，确保是 try 体尾部的 return 而非
+            #       try-except 之后的代码）
+            #   3. 块以 RETURN_VALUE 或 RETURN_CONST 结尾（return 语句）
+            #   4. 块不在 try_blocks/handler_blocks/finally_blocks/all_blocks
+            #   5. 块不在 block_to_region（未被其他区域消费）
+            #   6. 块不在 excluded_offsets
+            #   7. 块不含异常处理指令（PUSH_EXC_INFO 等）
+            #
+            # 示例：isVaildDate 的 block 4（LOAD_CONST True; RETURN_VALUE）
+            # 原本不在 try_blocks=[10,2,3] 中，修复后 try_blocks=[10,2,3,4]，
+            # `return True` 正确生成在 try 体内部。
+            if handler_type == 'except' and handler_entry_block is not None:
+                _explicit_return_blocks_r21n1 = []
+                _try_block_set_r21n1 = set(try_blocks)
+                _handler_offset_r21n1 = handler_entry_block.start_offset
+                _seen_r21n1 = set()
+                for tb in try_blocks:
+                    for succ in tb.successors:
+                        if succ in tb.exception_successors:
+                            continue
+                        if succ in _seen_r21n1:
+                            continue
+                        _seen_r21n1.add(succ)
+                        if succ.start_offset >= _handler_offset_r21n1:
+                            continue
+                        if succ in _try_block_set_r21n1:
+                            continue
+                        if succ in all_handler_blocks_set:
+                            continue
+                        if succ in finally_blocks:
+                            continue
+                        if succ in all_blocks:
+                            continue
+                        if succ in self.block_to_region:
+                            continue
+                        if succ.start_offset in excluded_offsets:
+                            continue
+                        # 排除含异常处理指令的块
+                        if any(i.opname in ('PUSH_EXC_INFO', 'WITH_EXCEPT_START',
+                                             'CHECK_EXC_MATCH', 'CHECK_EG_MATCH',
+                                             'RERAISE', 'POP_EXCEPT')
+                               for i in succ.instructions):
+                            continue
+                        # 必须以 RETURN_VALUE 或 RETURN_CONST 结尾
+                        _last_i = succ.get_last_instruction()
+                        if _last_i is None or _last_i.opname not in (
+                                'RETURN_VALUE', 'RETURN_CONST'):
+                            continue
+                        _explicit_return_blocks_r21n1.append(succ)
+                if _explicit_return_blocks_r21n1:
+                    for _eb in _explicit_return_blocks_r21n1:
+                        if _eb not in try_blocks:
+                            try_blocks.append(_eb)
+                        all_blocks.add(_eb)
+                    # 更新 try_offset_end 以包含新增的块
+                    _new_max_end = max(b.end_offset for b in try_blocks)
+                    if _new_max_end > try_end_for_blocks:
+                        try_end_for_blocks = _new_max_end
+
             for existing_region in self._filter_regions(self.regions, TryExceptRegion):
                 for block in existing_region.blocks:
                     if any(try_start <= instr.offset < try_end for instr in block.instructions):

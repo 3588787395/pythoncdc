@@ -3765,9 +3765,25 @@ class CodeGenerator:
     
     def _generate_attribute(self, node: ASTAttribute) -> str:
         """生成属性访问表达式"""
-        # [关键修复] 使用0作为parent_precedence，确保不会添加括号
-        # 属性访问的value部分不需要括号，例如 self.children.append 而不是 (self.children).append
-        value_code = self._generate_expression(node.value, 0)
+        # [R21-N2 fix] 使用属性访问的优先级（16）作为 parent_precedence，
+        # 而非 0。这样低优先级的子表达式（如 BinOp，precedence=11）会自动
+        # 添加括号，例如 `(a + b).strftime(...)` 而非 `a + b.strftime(...)`。
+        #
+        # 为什么 0 是错的：
+        #   parent_precedence=0 时，_generate_expression 中的判定
+        #   `parent_precedence > 0 and current_precedence < parent_precedence`
+        #   永远为 False，导致任何子表达式都不会加括号。
+        #
+        # 为什么 16（attribute）是对的：
+        #   - Attribute value 是 Name/Constant（precedence=17，atom）：
+        #     17 < 16 为 False，不加括号 → `x.method`、`self.children.append` ✓
+        #   - Attribute value 是 Attribute（precedence=16）：
+        #     16 < 16 为 False，不加括号 → `a.b.c` ✓
+        #   - Attribute value 是 BinOp（precedence=11）：
+        #     11 < 16 为 True，加括号 → `(a + b).method` ✓
+        #   - Attribute value 是 Call（precedence=16）：
+        #     16 < 16 为 False，不加括号 → `f().method` ✓
+        value_code = self._generate_expression(node.value, self._precedence['attribute'])
         return f'{value_code}.{node.attr}'
     
     def _generate_subscript(self, node: ASTSubscript) -> str:
