@@ -8526,6 +8526,26 @@ AST 映射规则:
                 # [Round5-05] 跳过属于 chain-compare IfRegion 的 BoolOp/Ternary
                 if r.entry.start_offset in _chain_cmp_block_offsets:
                     continue
+                # [R12-N2 fix] 区域归约算法原则 3（嵌套即抽象节点）+ 原则 4（父引用子入口）：
+                # 当 BoolOpRegion 是某 IfRegion 的子节点且共享同一 entry 时，该
+                # BoolOpRegion 是 IfRegion 的条件表达式（如 `if a and b: body`），
+                # 不是独立表达式。若在此预扫描中处理 BoolOpRegion 并标记其块为已生成，
+                # 会导致后续子区域循环跳过父 IfRegion（entry 已生成），if/else 体丢失
+                # （如 _is_same_type_date 的 `typet == 7` 分支坍塌为 `pass`）。
+                # 修正：跳过此类 BoolOpRegion，交由子区域循环 _generate_region(if_parent)
+                # 完整处理（含条件重建 + then/else 体）。
+                if isinstance(r, BoolOpRegion):
+                    _has_if_parent_same_entry = False
+                    for _pr in self.regions:
+                        if (isinstance(_pr, IfRegion) and _pr is not region
+                                and _pr.entry is r.entry
+                                and r in (_pr.children or [])):
+                            # 确认父 IfRegion 也是当前 region 的子节点（属于 then 分支）
+                            if any(_pr is _c for _c in (region.children or [])):
+                                _has_if_parent_same_entry = True
+                                break
+                    if _has_if_parent_same_entry:
+                        continue
                 r_id = id(r)
                 if r_id in self._generated_regions or r_id in self._generating_regions:
                     continue
@@ -11467,6 +11487,15 @@ AST 映射规则:
                         child_expr_regions[child.entry] = child
         _block_set = set(blocks)
         _nested_if_skip = set()
+        # [R12-N1 fix] 区域归约算法原则 4：归约后父区域的 then/else 列表引用子区域
+        # 的入口，而不是子区域的所有块。但 _process_if_blocks 仍会扫描 then_blocks 中的
+        # 所有块。原实现仅跳过子 IfRegion 的非入口块（_nested_if_skip），入口块仍被
+        # 作为普通块处理并标记为已生成，导致后续子区域循环（L8598）检测到
+        # `child.entry in self.generated_blocks` 而跳过整个子 IfRegion，子区域体丢失
+        # （如 _is_same_type_date 的 `typet == 7` 分支显示 `pass`）。
+        # 修正：当子 IfRegion 的入口块同时是 BoolOpRegion 的入口时（复合条件模式），
+        # 跳过入口块（不标记已生成），交由子区域循环 _generate_region(child) 完整处理。
+        _nested_if_entry_skip = set()
         for b in _block_set:
             _nr = self.region_analyzer.get_region_for_block(b)
             if isinstance(_nr, IfRegion) and _nr is not region and _nr.entry is not None:
@@ -11479,12 +11508,27 @@ AST 映射规则:
                     _has_elif = bool(getattr(_nr, 'elif_conditions', None))
                     if not _has_cc and not _has_elif:
                         _nested_if_skip.add(b)
+                elif b == _nr.entry and _nr.entry in _block_set:
+                    # [R12-N1] 入口块同时是 BoolOpRegion 入口时跳过（复合条件模式）
+                    _has_cc = bool(getattr(_nr, 'chained_compare_blocks', None))
+                    _has_elif = bool(getattr(_nr, 'elif_conditions', None))
+                    if not _has_cc and not _has_elif:
+                        # 检查子 IfRegion 是否包含 BoolOpRegion（复合 and/or 条件）
+                        _has_boolop_child = any(
+                            isinstance(_c, BoolOpRegion) and _c.entry is _nr.entry
+                            for _c in getattr(_nr, 'children', [])
+                        )
+                        if _has_boolop_child:
+                            _nested_if_entry_skip.add(b)
         for block in sorted(blocks, key=lambda b: b.start_offset):
             if block in self.generated_blocks:
                 continue
             if block in _nested_if_skip:
                 self.generated_blocks.add(block)
                 self.generated_offsets.add(block.start_offset)
+                continue
+            if block in _nested_if_entry_skip:
+                # [R12-N1] 不标记为已生成，交由子区域循环 _generate_region(child) 处理
                 continue
             # [Round5-10] 跨块 await 列表元素赋值：r = [await g(), await h()]
             if self._try_generate_await_list_assign(block, stmts):
