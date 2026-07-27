@@ -8851,6 +8851,42 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
             pred_last = pred.get_last_instruction()
             if pred_last and pred_last.opname in SHORT_CIRCUIT_JUMP_OPS:
                 return False
+            # [R13-N3 fix] `and` 短路逻辑中的 `if x is None and y is None:` 使用
+            # 连续 POP_JUMP_FORWARD_IF_NOT_NONE 跳转。后续条件块（如 end_year）
+            # 的前驱是上一个条件块（如 start_year），其末尾是
+            # POP_JUMP_FORWARD_IF_NOT_NONE。真正的 match-case None 块的前驱
+            # 是 subject 加载块，不会是另一个 POP_JUMP_FORWARD_IF_NOT_NONE 块。
+            if pred_last and pred_last.opname in (
+                'POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_IF_NOT_NONE',
+                'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_IF_NONE',
+            ):
+                return False
+        # [R13-N3 fix] 区域归约算法原则 1（自底向上归约）：
+        # `if x is None and y is None:` 的 `and` 短路逻辑使用连续的
+        # POP_JUMP_FORWARD_IF_NOT_NONE 跳转。每个条件块的 fall-through
+        # 后继是下一个条件块（也以 POP_JUMP_FORWARD_IF_NOT_NONE 结尾）。
+        # 原实现只检查 jump target 的 NOP 前缀，把这种短路逻辑错误识别
+        # 为 `match x: case None:`（如 get_balance_statement 的
+        # `if date is None and start_year is None and end_year is None:`）。
+        # 修正：如果 block 的 fall-through 后继也以
+        # POP_JUMP_FORWARD_IF_NOT_NONE/POP_JUMP_IF_NOT_NONE 结尾（and 短路），
+        # 或以 POP_JUMP_FORWARD_IF_FALSE/POP_JUMP_IF_FALSE 结尾（if-elif 链），
+        # 则不是 match-case，而是复合条件的第一个条件块。
+        last_instr = block.get_last_instruction()
+        if last_instr and last_instr.argval is not None:
+            jt = self.cfg.get_block_by_offset(last_instr.argval)
+            if jt is not None:
+                ft_successors = [s for s in block.successors if s is not jt]
+                if ft_successors:
+                    ft = ft_successors[0]
+                    ft_last = ft.get_last_instruction()
+                    if ft_last and ft_last.opname in (
+                        'POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_IF_NOT_NONE',
+                        'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_IF_FALSE',
+                        'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_IF_TRUE',
+                        'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_IF_NONE',
+                    ):
+                        return False
         last_instr = block.get_last_instruction()
         if last_instr and last_instr.argval is not None:
             jt = self.cfg.get_block_by_offset(last_instr.argval)
