@@ -16097,11 +16097,34 @@ RegionType 枚举值: RegionType.ASSERT
         _sb_last = start_block.get_last_instruction()
         if (not _sb_in_match
                 and _sb_last and _sb_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)):
+            # [R23-N1 fix] 区域归约算法「每块唯一归属」原则：
+            # import 语句中的 STORE_* 指令不是 body 语句。`from X import Y`
+            # 编译为 IMPORT_NAME + IMPORT_FROM + STORE_FAST + POP_TOP，
+            # `import X` 编译为 IMPORT_NAME + STORE_FAST。这些 STORE_* 是
+            # import 语句的一部分，不是赋值或表达式语句。
+            # 若不排除，含 import 的块（如
+            #   from X import Y
+            #   if A or B: body
+            # ）会被 _sb_has_body 误判为有 body 语句，阻止 BoolOp 链检测，
+            # 导致 `or`/`and` 短路模式被错误识别为嵌套 if-else。
+            # 普遍性: 覆盖 `from X import Y` / `import X` / `import X as Y`
+            # 等所有 import 形式中的 STORE_* 指令。
+            _import_store_offsets = set()
+            _pre_instrs = [i for i in start_block.instructions
+                           if i.offset < _sb_last.offset]
+            for _idx, _i in enumerate(_pre_instrs):
+                if _i.opname in ('IMPORT_FROM', 'IMPORT_NAME'):
+                    if _idx + 1 < len(_pre_instrs):
+                        _nxt = _pre_instrs[_idx + 1]
+                        if _nxt.opname in ('STORE_FAST', 'STORE_NAME',
+                                           'STORE_GLOBAL', 'STORE_DEREF'):
+                            _import_store_offsets.add(_nxt.offset)
             _sb_has_body = any(
                 i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
                              'STORE_DEREF', 'STORE_ATTR', 'STORE_SUBSCR',
                              'BINARY_OP', 'DELETE_NAME', 'DELETE_FAST',
                              'DELETE_GLOBAL', 'DELETE_ATTR', 'DELETE_SUBSCR')
+                and i.offset not in _import_store_offsets
                 for i in start_block.instructions
                 if i.offset < _sb_last.offset
             )
