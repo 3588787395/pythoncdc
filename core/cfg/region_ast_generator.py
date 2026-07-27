@@ -9200,6 +9200,46 @@ AST 映射规则:
                                 if not _eb_meaningful:
                                     self.generated_blocks.add(_eb)
                             break
+        # [R23-N7 fix] 区域归约算法原则 4（父引用子入口）+
+        # 原则 2（每块唯一归属）：
+        # elif 条件本身是链式比较（如 `elif 400 <= e2.code <= 499:`）时，
+        # 若该 elif 条件块被外层 TryExceptRegion.blocks 集合 claim（因
+        # TryExceptRegion.blocks 是 try+handlers+else 的并集），
+        # _identify_chained_compare_regions 会跳过它，未创建独立的链式比较
+        # IfRegion 子区域。此处直接从 elif_cond_block 检测链式比较模式并
+        # 重建 Compare AST 节点，镜像 _build_chained_compare_from_region_data
+        # 的多策略重建流程（attr/call/literal/default）。
+        if elif_condition is None:
+            _r23n7_cc_info = self.region_analyzer._detect_chained_compare_pattern(
+                elif_cond_block)
+            if _r23n7_cc_info and len(_r23n7_cc_info.get('compare_ops', [])) >= 2:
+                _r23n7_chain_blocks = list(_r23n7_cc_info.get('extra_chain_blocks', []))
+                _r23n7_ops = list(_r23n7_cc_info.get('compare_ops', []))
+                _r23n7_chained = self._try_build_attr_middle_from_blocks(
+                    elif_cond_block, _r23n7_chain_blocks, _r23n7_ops)
+                if _r23n7_chained is None:
+                    _r23n7_chained = self._try_build_method_call_from_blocks(
+                        elif_cond_block, _r23n7_chain_blocks, _r23n7_ops) \
+                        if hasattr(self, '_try_build_method_call_from_blocks') else None
+                if _r23n7_chained is None:
+                    _r23n7_chained = self._try_build_call_middle_from_blocks(
+                        elif_cond_block, _r23n7_chain_blocks, _r23n7_ops)
+                if _r23n7_chained is None:
+                    _r23n7_chained = self._try_build_literal_middle_from_blocks(
+                        elif_cond_block, _r23n7_chain_blocks, _r23n7_ops)
+                if _r23n7_chained is None:
+                    _r23n7_chained = self._build_assert_chained_compare(
+                        elif_cond_block, _r23n7_chain_blocks, _r23n7_ops)
+                if _r23n7_chained is not None:
+                    elif_condition = _r23n7_chained
+                    # 用简单 namespace 模拟 IfRegion 供后续 or 模式检测使用
+                    class _R23N7_NS:
+                        pass
+                    _elif_cc_region = _R23N7_NS()
+                    _elif_cc_region.chained_compare_blocks = _r23n7_chain_blocks
+                    self.generated_blocks.add(elif_cond_block)
+                    for _r23n7_ccb in _r23n7_chain_blocks:
+                        self.generated_blocks.add(_r23n7_ccb)
         # [关键修复] 检测 elif 条件中链式比较后的 or 模式
         # 当 elif 条件是 "chained_compare or something" 时，需要检测 or 右操作数并合并
         if elif_condition is not None and _elif_cc_region is not None:
@@ -9421,6 +9461,40 @@ AST 映射规则:
                                 item['_is_elif'] = True
                     nested_elif_stmts = [nested_ast]
             else:
+                _last_elif_cond_block = region.elif_conditions[1]
+                # [R23-N7 fix] 区域归约算法原则 4（父引用子入口）+
+                # 原则 2（每块唯一归属）：
+                # 最后一个 elif 条件本身是链式比较（如
+                # `elif 400 <= e2.code <= 499:`）时，若该块被外层
+                # TryExceptRegion.blocks 集合 claim，未创建独立链式比较
+                # IfRegion 子区域，则直接从 _last_elif_cond_block 检测
+                # 链式比较模式并重建 Compare AST 节点。
+                # 关键：在 body 处理之前标记 chain blocks 为已生成，
+                # 避免 chain blocks（如 block@720 含 `LOAD_CONST 499 +
+                # COMPARE_OP <=`）被 _process_if_blocks 误处理为独立
+                # `if 499: pass` 语句。
+                _r23n7_last_elif_chained = None
+                _r23n7_cc_info3 = self.region_analyzer._detect_chained_compare_pattern(
+                    _last_elif_cond_block)
+                if _r23n7_cc_info3 and len(_r23n7_cc_info3.get('compare_ops', [])) >= 2:
+                    _r23n7_chain_blocks3 = list(_r23n7_cc_info3.get('extra_chain_blocks', []))
+                    _r23n7_ops3 = list(_r23n7_cc_info3.get('compare_ops', []))
+                    _r23n7_chained3 = self._try_build_attr_middle_from_blocks(
+                        _last_elif_cond_block, _r23n7_chain_blocks3, _r23n7_ops3)
+                    if _r23n7_chained3 is None:
+                        _r23n7_chained3 = self._try_build_call_middle_from_blocks(
+                            _last_elif_cond_block, _r23n7_chain_blocks3, _r23n7_ops3)
+                    if _r23n7_chained3 is None:
+                        _r23n7_chained3 = self._try_build_literal_middle_from_blocks(
+                            _last_elif_cond_block, _r23n7_chain_blocks3, _r23n7_ops3)
+                    if _r23n7_chained3 is None:
+                        _r23n7_chained3 = self._build_assert_chained_compare(
+                            _last_elif_cond_block, _r23n7_chain_blocks3, _r23n7_ops3)
+                    if _r23n7_chained3 is not None:
+                        _r23n7_last_elif_chained = _r23n7_chained3
+                        self.generated_blocks.add(_last_elif_cond_block)
+                        for _r23n7_ccb3 in _r23n7_chain_blocks3:
+                            self.generated_blocks.add(_r23n7_ccb3)
                 last_elif_body_stmts = []
                 if len(region.elif_bodies) > 1:
                     last_elif_body_stmts = self._process_if_blocks(region.elif_bodies[1], region, branch='elif')
@@ -9432,8 +9506,7 @@ AST 映射规则:
                            last_elif_body_stmts[-1]['value'].get('type') == 'Constant' and
                            last_elif_body_stmts[-1]['value'].get('value') is None):
                         last_elif_body_stmts.pop()
-                _last_elif_cond_block = region.elif_conditions[1]
-                _last_elif_condition = None
+                _last_elif_condition = _r23n7_last_elif_chained
                 _last_elif_boolop = self.region_analyzer.get_region_for_block(_last_elif_cond_block)
                 if not isinstance(_last_elif_boolop, BoolOpRegion):
                     _last_elif_boolop = region.find_descendant_region_for_block(_last_elif_cond_block, (BoolOpRegion,))
