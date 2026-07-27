@@ -15541,6 +15541,15 @@ AST 映射规则:
         _imp_name_instr = None
         _imp_from_pending = None
         _imp_pairs = []
+        # [R22-N4 fix] UNPACK_SEQUENCE / UNPACK_EX 状态机。
+        # 字节码模式: <value_expr> + UNPACK_SEQUENCE N + N×STORE_* →
+        #   (t1, t2, ..., tN) = value_expr
+        # 依「每块唯一归属」: UNPACK_SEQUENCE + N×STORE_* 序列归属单一
+        # Assign(Tuple(targets), value) 语句节点，不拆分为 N 个独立 Assign。
+        # 依「自底向上归约」: UNPACK_SEQUENCE 是归约入口（消费 iterable，
+        # 产生 N 个栈值），N×STORE_* 绑定名字。镜像 _if_extract_cond_instructions
+        # 的同名逻辑。
+        _bsi_unpack_info = None
         for instr in instrs:
             if instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
                 continue
@@ -15593,6 +15602,26 @@ AST 映射规则:
                         _imp_pairs.append((_imp_from_pending.argval or '', None))
                     _imp_from_pending = instr
                 continue
+            if instr.opname == 'UNPACK_SEQUENCE':
+                # [R22-N4 fix] UNPACK_SEQUENCE N: 消费栈顶 iterable，产生 N 个值。
+                # 前驱 stmt_instrs 是值表达式。设置 unpack_info，等待 N 个 STORE_*。
+                val_instrs = [i for i in stmt_instrs
+                              if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                val = self.expr_reconstructor.reconstruct(val_instrs) if val_instrs else None
+                _bsi_unpack_info = {'value': val, 'targets': [], 'count': instr.arg}
+                stmt_instrs = []
+                continue
+            if instr.opname == 'UNPACK_EX':
+                val_instrs = [i for i in stmt_instrs
+                              if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                val = self.expr_reconstructor.reconstruct(val_instrs) if val_instrs else None
+                arg = instr.argval
+                before, after = arg & 0xFF, (arg >> 8) & 0xFF
+                _bsi_unpack_info = {'value': val, 'targets': [],
+                                     'count': before + 1 + after,
+                                     'is_starred': True, 'starred_idx': before}
+                stmt_instrs = []
+                continue
             if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
                 if _imp_name_instr is not None:
                     if _imp_from_pending is not None:
@@ -15620,6 +15649,30 @@ AST 映射规则:
                     # 再 flush（可能有多个 name）。此处不 flush。
                     # 但若已无 pending 且 pairs 非空，且下一条不是 IMPORT_FROM，
                     # 则需在下次循环由非 import 指令触发 flush。
+                    continue
+                # [R22-N4 fix] UNPACK_SEQUENCE 状态机：收集 N 个 STORE_* 目标，
+                # 全部到齐后生成 Assign(Tuple(targets), value)。
+                if _bsi_unpack_info is not None:
+                    is_starred = _bsi_unpack_info.get('is_starred', False)
+                    starred_idx = _bsi_unpack_info.get('starred_idx', -1)
+                    current_target_idx = len(_bsi_unpack_info['targets'])
+                    if is_starred and current_target_idx == starred_idx:
+                        _bsi_unpack_info['targets'].append(
+                            {'type': 'Starred',
+                             'value': {'type': 'Name', 'id': instr.argval, 'ctx': 'Store'}})
+                    else:
+                        _bsi_unpack_info['targets'].append(
+                            {'type': 'Name', 'id': instr.argval, 'ctx': 'Store'})
+                    if len(_bsi_unpack_info['targets']) == _bsi_unpack_info['count']:
+                        target = {'type': 'Tuple',
+                                  'elts': _bsi_unpack_info['targets'],
+                                  'ctx': 'Store'}
+                        if _bsi_unpack_info['value']:
+                            stmts.append({'type': 'Assign',
+                                          'targets': [target],
+                                          'value': _bsi_unpack_info['value']})
+                        _bsi_unpack_info = None
+                    stmt_instrs = []
                     continue
                 stmt = self._build_store_statement(stmt_instrs + [instr], block=block)
                 if stmt:
@@ -20687,6 +20740,39 @@ AST 映射规则:
                                 'value': val_expr,
                             })
                         cond_start_idx = i + 1
+                    else:
+                        # [R22-N4 fix] 区域归约算法原则 2（每块唯一归属）：
+                        # 当 STORE_* 前驱含非 LOAD_ 指令（如 UNPACK_SEQUENCE、
+                        # BUILD_TUPLE、CALL 等）时，简单 backward LOAD_* 扫描失败。
+                        # 典型场景: `log, is_trade = getLogger()` 编译为
+                        #   LOAD_GLOBAL getLogger + PRECALL + CALL + UNPACK_SEQUENCE 2
+                        #   + STORE_FAST log + STORE_FAST is_trade
+                        # UNPACK_SEQUENCE 打断了 LOAD_ 链，load_instrs 为空，
+                        # cond_start_idx 不推进，STORE 指令污染 filtered_cond，
+                        # 导致三元条件重建失败，前驱语句丢失。
+                        # 依「每块唯一归属」: 解包赋值指令归属独立 Assign 语句节点，
+                        # 不归属 TernaryRegion 条件表达式。
+                        # 依「自底向上归约」: 前驱语句归约为独立 AST 节点，ternary
+                        # 仅拥有条件 + 值 + merge 块。
+                        # 普遍性: 覆盖 a, b = func() / a = b = expr / a, *b = iter
+                        # 等所有含非 LOAD_ 前驱的 STORE 模式。
+                        _store_end = i
+                        _k = i + 1
+                        while _k < len(cond_instrs):
+                            if cond_instrs[_k].opname in (
+                                    'STORE_FAST', 'STORE_NAME',
+                                    'STORE_GLOBAL', 'STORE_DEREF'):
+                                _store_end = _k
+                                _k += 1
+                            else:
+                                break
+                        _pred_instrs = list(cond_instrs[cond_start_idx:_store_end + 1])
+                        _pred_stmts = self._build_statements_from_instructions(
+                            _pred_instrs)
+                        if _pred_stmts:
+                            pre_stmts.extend(_pred_stmts)
+                        cond_start_idx = _store_end + 1
+                        i = _store_end
 
                 i += 1
 
