@@ -444,6 +444,27 @@ class RegionASTGenerator:
                                 _pre_stmts.append(_stmt)
                             _stmt_instrs = []
                             continue
+                        # [R10-N1 fix] 区域归约算法原则 2（每块唯一归属）：
+                        # 入口块中的 STORE_SUBSCR/STORE_ATTR 赋值（如
+                        # `return_data['data'] = []`、`obj.attr = value`）必须作为
+                        # 独立 pre_stmt 提取，否则会被累积到 _stmt_instrs 中，在
+                        # 遇到后续 STORE_FAST 时被 _build_store_statement 错误合并
+                        # 或在循环结束时丢失。balance_statement 等 9 个 financial
+                        # statement 函数的 `return_data['data'] = []` 因此丢失。
+                        if _instr.opname == 'STORE_SUBSCR':
+                            _stmt_instrs.append(_instr)
+                            _stmt = self._build_subscript_assign(_stmt_instrs)
+                            if _stmt:
+                                _pre_stmts.append(_stmt)
+                            _stmt_instrs = []
+                            continue
+                        if _instr.opname == 'STORE_ATTR':
+                            _stmt_instrs.append(_instr)
+                            _stmt = self._build_attr_assign(_stmt_instrs)
+                            if _stmt:
+                                _pre_stmts.append(_stmt)
+                            _stmt_instrs = []
+                            continue
                         _stmt_instrs.append(_instr)
 
                     self.generated_blocks.add(entry_block)
@@ -4282,6 +4303,38 @@ AST 映射规则:
                     _pre_stmts.append(_stmt)
                 _buf = []
                 continue
+            # [R10-N6 fix] 区域归约算法原则 2（每块唯一归属）：
+            # for 循环前驱块（含 GET_ITER）中的 STORE_SUBSCR/STORE_ATTR 赋值
+            # （如 `data_return.index = ...`、`dict[key] = ...`）必须作为独立
+            # pre_stmt 提取，否则会被累积到 _buf 中并在 GET_ITER 处理时被推入
+            # _remaining（迭代器指令）而丢失。9 个 get_xxx_statement 函数的
+            # `data_return.index = ...`（STORE_ATTR）因此丢失。
+            if _instr.opname == 'STORE_SUBSCR':
+                _buf.append(_instr)
+                _stmt = self._build_subscript_assign(_buf)
+                if _stmt:
+                    _pre_stmts.append(_stmt)
+                _buf = []
+                continue
+            if _instr.opname == 'STORE_ATTR':
+                _buf.append(_instr)
+                _stmt = self._build_attr_assign(_buf)
+                if _stmt:
+                    _pre_stmts.append(_stmt)
+                _buf = []
+                continue
+            # [R10-N6 fix] POP_TOP 作为 CALL 表达式语句的终结符
+            # （如 `DataFrame_temp.update(...)`）。当 _buf 中含 CALL 时，POP_TOP
+            # 标志一个独立表达式语句，必须构建为 Expr 语句，否则会被推入
+            # _remaining 而丢失。
+            if _instr.opname == 'POP_TOP':
+                if _buf and any(i.opname in ('CALL', 'CALL_FUNCTION', 'CALL_METHOD',
+                                              'CALL_FUNCTION_KW', 'CALL_FUNCTION_EX') for i in _buf):
+                    _stmt = self._build_statement(_buf)
+                    if _stmt:
+                        _pre_stmts.append(_stmt)
+                    _buf = []
+                    continue
             if _instr.opname in ('GET_ITER', 'GET_AITER'):
                 if _buf:
                     _remaining.extend(_buf)
@@ -4312,6 +4365,23 @@ AST 映射规则:
             if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_DEREF'):
                 _stmt_instrs.append(_instr)
                 _stmt = self._build_statement(list(_stmt_instrs))
+                if _stmt:
+                    _pre_stmts.append(_stmt)
+                _stmt_instrs = []
+                continue
+            # [R10-N6 fix] 区域归约算法原则 2（每块唯一归属）：
+            # for 循环内层 iter_setup 前驱块中的 STORE_SUBSCR/STORE_ATTR 赋值
+            # 必须作为独立 pre_stmt 提取。镜像 _loop_extract_for_iter_pre_stmts。
+            if _instr.opname == 'STORE_SUBSCR':
+                _stmt_instrs.append(_instr)
+                _stmt = self._build_subscript_assign(list(_stmt_instrs))
+                if _stmt:
+                    _pre_stmts.append(_stmt)
+                _stmt_instrs = []
+                continue
+            if _instr.opname == 'STORE_ATTR':
+                _stmt_instrs.append(_instr)
+                _stmt = self._build_attr_assign(list(_stmt_instrs))
                 if _stmt:
                     _pre_stmts.append(_stmt)
                 _stmt_instrs = []
@@ -5688,6 +5758,28 @@ AST 映射规则:
                 _hdr_instrs = []
                 _seen_store = True
                 continue
+            # [R10-N5 fix] 区域归约算法原则 2（每块唯一归属）：
+            # while 循环 header 块（同时含循环前置语句和 while 条件）中的
+            # STORE_SUBSCR/STORE_ATTR 赋值（如 `params['page_no'] = str(page_no)`、
+            # `obj.attr = value`）必须作为独立 pre_stmt 提取，否则会被累积到
+            # _hdr_instrs 中，在遇到后续 STORE_FAST 时被 _build_store_statement
+            # 错误合并或丢失。镜像入口块 R10-N1 修复 (L447-467)。
+            if _instr.opname == 'STORE_SUBSCR':
+                _hdr_instrs.append(_instr)
+                _stmt = self._build_subscript_assign(_hdr_instrs)
+                if _stmt:
+                    _hdr_stmts.append(_stmt)
+                _hdr_instrs = []
+                _seen_store = True
+                continue
+            if _instr.opname == 'STORE_ATTR':
+                _hdr_instrs.append(_instr)
+                _stmt = self._build_attr_assign(_hdr_instrs)
+                if _stmt:
+                    _hdr_stmts.append(_stmt)
+                _hdr_instrs = []
+                _seen_store = True
+                continue
             if _instr.opname == 'COMPARE_OP' and _seen_store:
                 _next_idx = _instr_idx + 1
                 _next_instr = block.instructions[_next_idx] if _next_idx < len(block.instructions) else None
@@ -6140,6 +6232,25 @@ AST 映射规则:
             if _nbi.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
                 _buf.append(_nbi)
                 _stmt = self._build_store_statement(_buf, block=block)
+                if _stmt:
+                    _pre_stmts.append(_stmt)
+                _buf = []
+                continue
+            # [R10-N7 fix] 区域归约算法原则 2（每块唯一归属）：
+            # 回边块（back_edge_block）中的 STORE_SUBSCR/STORE_ATTR 赋值（如
+            # `params['page_no'] = str(page_no)`、`obj.attr = value`）必须作为
+            # 独立 pre_stmt 提取，否则会被累积到 _buf 中，在遇到后续 POP_TOP
+            # 时被 _build_statement 错误合并或丢失。镜像入口块 R10-N1 修复。
+            if _nbi.opname == 'STORE_SUBSCR':
+                _buf.append(_nbi)
+                _stmt = self._build_subscript_assign(_buf)
+                if _stmt:
+                    _pre_stmts.append(_stmt)
+                _buf = []
+                continue
+            if _nbi.opname == 'STORE_ATTR':
+                _buf.append(_nbi)
+                _stmt = self._build_attr_assign(_buf)
                 if _stmt:
                     _pre_stmts.append(_stmt)
                 _buf = []
@@ -8202,6 +8313,28 @@ AST 映射规则:
                 pre_instrs = []
                 pre_seen_store = True
                 continue
+            # [R10-N2 fix] 区域归约算法原则 2（每块唯一归属）：
+            # IfRegion 条件块中的 STORE_SUBSCR/STORE_ATTR 赋值（如
+            # `params['page_no'] = str(page_no)`、`obj.attr = value`）必须作为
+            # 独立 pre_stmt 提取，否则会被累积到 pre_instrs 中，在遇到后续
+            # STORE_FAST 时被 _build_store_statement 错误合并或在条件指令收集
+            # 阶段丢失。镜像入口块 R10-N1 修复 (L447-467)。
+            if instr.opname == 'STORE_SUBSCR':
+                pre_instrs.append(instr)
+                stmt = self._build_subscript_assign(pre_instrs)
+                if stmt:
+                    pre_stmts.append(stmt)
+                pre_instrs = []
+                pre_seen_store = True
+                continue
+            if instr.opname == 'STORE_ATTR':
+                pre_instrs.append(instr)
+                stmt = self._build_attr_assign(pre_instrs)
+                if stmt:
+                    pre_stmts.append(stmt)
+                pre_instrs = []
+                pre_seen_store = True
+                continue
             if instr.opname == 'COMPARE_OP' and pre_seen_store:
                 pre_instrs = []
                 continue
@@ -8605,17 +8738,49 @@ AST 映射规则:
             # function body sequence, not the try/with setup.
             _reachable_children_c3 = []
             _child_block_set_c3 = set()
+            # [R10-N5 fix] 区域归约算法原则 2（每块唯一归属）：两阶段收集。
+            # 第一阶段收集复合子区域（TryExceptRegion/WithRegion/LoopRegion），
+            # 它们的 blocks 可能包含嵌套的 IfRegion.entry；第二阶段再收集
+            # IfRegion 子区域，跳过 entry 已被第一阶段占用的（嵌套 IfRegion
+            # 应交由外层复合区域的 _generate_region 递归处理）。
+            # 例如 TestDEEP12RecursivePatternWithExceptions 中外层 IfRegion 的
+            # else 分支同时含 TryExceptRegion 与 IfRegion，IfRegion 的 entry
+            # 在 TryExceptRegion.body_blocks 内，若平铺展开会与 TryExceptRegion
+            # 发生块所有权冲突，覆盖 TryExcept 的 AST。
+            # 镜像 then 分支 L8599 的 generated_blocks 检查（then 分支逐个即时
+            # 生成并标记，else 分支两阶段收集需显式追踪 _claimed_blocks_c3）。
+            _claimed_blocks_c3 = set()
+            def _try_collect_c3(child):
+                if not hasattr(child, 'entry') or child.entry is None:
+                    return False
+                if child.entry in self.generated_blocks:
+                    return False
+                if child.entry in _claimed_blocks_c3:
+                    return False
+                if not self._is_child_reachable_from_blocks(child, region.else_blocks):
+                    return False
+                _reachable_children_c3.append(child)
+                for b in child.blocks:
+                    _child_block_set_c3.add(b)
+                    _claimed_blocks_c3.add(b)
+                return True
+            # 第一阶段：复合子区域（Try/With/Loop）
             for child in (region.children or []):
                 if not isinstance(child, (TryExceptRegion, WithRegion, LoopRegion)):
                     continue
-                if not hasattr(child, 'entry') or child.entry is None:
+                _try_collect_c3(child)
+            # 第二阶段：IfRegion 子区域（含 R10-N4 修复，识别嵌套 if/elif）
+            for child in (region.children or []):
+                if not isinstance(child, IfRegion):
                     continue
-                if child.entry in self.generated_blocks:
-                    continue
-                if self._is_child_reachable_from_blocks(child, region.else_blocks):
-                    _reachable_children_c3.append(child)
+                # [R10-N4 fix] 跳过 is_empty_then_chained_compare 的子 IfRegion
+                # 这种子区域是链式比较模式的内部结构，不是真正的 if 语句
+                # （镜像 then 分支 L8462-8465）。
+                if getattr(child, 'is_empty_then_chained_compare', False):
                     for b in child.blocks:
-                        _child_block_set_c3.add(b)
+                        self.generated_blocks.add(b)
+                    continue
+                _try_collect_c3(child)
             _entry_to_child_c3 = {c.entry: c for c in _reachable_children_c3}
             _sorted_else_c3 = sorted(region.else_blocks, key=lambda b: b.start_offset)
             _seq_buffer_c3 = []
@@ -8710,6 +8875,15 @@ AST 映射规则:
                 region.elif_final_else = _expanded_final_else
         elif_cond_block = region.elif_conditions[0]
         self.generated_blocks.add(elif_cond_block)
+        # [R10-N3 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（父引用子入口）：
+        # elif 条件块中可能含前置赋值语句（如 `fields = re_fields` 在
+        # get_growth_ability / get_balance_statement 等 10 个 financial statement
+        # 函数中）。下面的手动指令循环只为提取条件指令 (elif_cond_instrs)，
+        # 遇到 STORE_FAST 时直接清空 elif_cond_instrs，导致前置赋值丢失。
+        # 调用 _if_extract_cond_instructions 复用 if 条件块的 pre_stmt 提取逻辑
+        # （含 R10-N2 的 STORE_SUBSCR/STORE_ATTR 处理），将 pre_stmts 前置到
+        # 返回结果中。
+        _elif_pre_stmts, _ = self._if_extract_cond_instructions(elif_cond_block, region)
         elif_cond_instrs = []
         prev_was_copy = False
         for instr in elif_cond_block.instructions:
@@ -9065,7 +9239,13 @@ AST 映射规则:
                    final_else_stmts[-1]['value'].get('value') is None):
                 final_else_stmts.pop()
         elif_orelse = nested_elif_stmts if nested_elif_stmts else (final_else_stmts if final_else_stmts else [])
-        return [{'type': 'If', '_is_elif': True, 'test': elif_condition if elif_condition else {'type': 'Constant', 'value': True}, 'body': elif_body_stmts if elif_body_stmts else [{'type': 'Pass'}], 'orelse': elif_orelse}]
+        _elif_if_stmt = {'type': 'If', '_is_elif': True, 'test': elif_condition if elif_condition else {'type': 'Constant', 'value': True}, 'body': elif_body_stmts if elif_body_stmts else [{'type': 'Pass'}], 'orelse': elif_orelse}
+        # [R10-N3 fix] 前置 elif 条件块中的赋值语句（如 `fields = re_fields`）。
+        # 这些语句在语义上属于 elif 之前的外层函数体序列，但物理上位于
+        # elif_cond_block 中，因此前置到返回列表。
+        if _elif_pre_stmts:
+            return list(_elif_pre_stmts) + [_elif_if_stmt]
+        return [_elif_if_stmt]
 
     def _extract_condition_for_elif_block(self, cond_block, region: IfRegion = None):
         cond_instrs = []
