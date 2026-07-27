@@ -14329,7 +14329,7 @@ AST 映射规则:
                     if eb in self.generated_blocks:
                         continue
                     nested_region = self.region_analyzer.get_region_for_block(eb)
-                    if nested_region and nested_region is not region and isinstance(nested_region, (IfRegion, LoopRegion, TryExceptRegion, WithRegion)):
+                    if nested_region and nested_region is not region and isinstance(nested_region, (IfRegion, LoopRegion, TryExceptRegion, WithRegion, MatchRegion, AssertRegion, TernaryRegion, BoolOpRegion)):
                         nr_id = id(nested_region)
                         if nr_id not in self._generated_regions and nr_id not in self._generating_regions:
                             nested_ast = self._generate_region(nested_region)
