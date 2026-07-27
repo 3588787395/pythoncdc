@@ -3635,12 +3635,16 @@ AST 映射规则:
                             _pre_stmts.append({'type': 'Raise', 'exc': None})
                         else:
                             _exc_instrs = [i for i in _stmt_instrs if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                            _exc_expr = self.expr_reconstructor.reconstruct(_exc_instrs) if _exc_instrs else None
-                            if _exc_expr is None and _exc_instrs:
-                                _exc_expr = self._build_statement(_exc_instrs)
-                                if _exc_expr and _exc_expr.get('type') == 'Expr':
-                                    _exc_expr = _exc_expr.get('value')
-                            _pre_stmts.append({'type': 'Raise', 'exc': _exc_expr})
+                            _raise_stmt = self._build_raise_stmt_from_instrs(_exc_instrs, _instr.arg)
+                            if _raise_stmt.get('type') == 'Raise':
+                                # 兜底：reconstruct 失败时尝试 _build_statement
+                                _exc_expr = _raise_stmt.get('exc')
+                                if _exc_expr is None and _exc_instrs:
+                                    _exc_expr = self._build_statement(_exc_instrs)
+                                    if _exc_expr and _exc_expr.get('type') == 'Expr':
+                                        _exc_expr = _exc_expr.get('value')
+                                    _raise_stmt = {'type': 'Raise', 'exc': _exc_expr}
+                            _pre_stmts.append(_raise_stmt)
                         _stmt_instrs = []
                         break
                     if _instr.opname == 'RETURN_CONST':
@@ -5858,11 +5862,8 @@ AST 映射规则:
                                 'WITH_EXCEPT_START', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH'):
                 continue
             if _instr.opname == 'RAISE_VARARGS':
-                _exc_expr = None
-                if _instr.arg >= 1 and _hdr_instrs:
-                    _exc_expr = self.expr_reconstructor.reconstruct(_hdr_instrs)
+                _raise_node = self._build_raise_stmt_from_instrs(_hdr_instrs, _instr.arg if _instr.arg else 0)
                 _hdr_instrs = []
-                _raise_node = {'type': 'Raise', 'exc': _exc_expr, 'cause': None}
                 _hdr_stmts.append(_raise_node)
                 continue
             if _instr.opname == 'COPY' and _instr.arg == COPY_STACK_TOP:
@@ -8459,11 +8460,9 @@ AST 映射规则:
                 import_pending_store = True
                 continue
             if instr.opname == 'RAISE_VARARGS':
-                exc_expr = None
-                if instr.arg >= 1 and pre_instrs:
-                    exc_expr = self.expr_reconstructor.reconstruct(pre_instrs)
+                _raise_stmt = self._build_raise_stmt_from_instrs(pre_instrs, instr.arg if instr.arg else 0)
                 pre_instrs = []
-                pre_stmts.append({'type': 'Raise', 'exc': exc_expr, 'cause': None})
+                pre_stmts.append(_raise_stmt)
                 continue
             if instr.opname == 'COPY' and instr.arg == COPY_STACK_TOP:
                 pre_instrs.append(instr)
@@ -14856,13 +14855,13 @@ AST 映射规则:
                 else:
                     all_instrs = stmt_instrs + [instr]
                     expr = self.expr_reconstructor.reconstruct(all_instrs)
-                    if expr and expr.get('type') == 'Raise':
+                    if expr and expr.get('type') in ('Raise', 'Assert'):
                         stmts.append(expr)
                     else:
-                        exc_expr = None
-                        if stmt_instrs:
-                            exc_expr = self.expr_reconstructor.reconstruct(stmt_instrs)
-                        stmts.append({'type': 'Raise', 'exc': exc_expr})
+                        # [R16-N1] 兜底：用 _build_raise_stmt_from_instrs 处理
+                        # LOAD_ASSERTION_ERROR 模式（返回 Assert）或普通 Raise
+                        _raise_stmt = self._build_raise_stmt_from_instrs(stmt_instrs, instr.arg)
+                        stmts.append(_raise_stmt)
                 stmt_instrs = []
                 continue
 
@@ -28454,14 +28453,28 @@ AST 映射规则:
                     exc_expr = self.expr_reconstructor.reconstruct(exc_instrs) if exc_instrs else None
                     stmts.append({'type': 'Raise', 'exc': exc_expr, 'cause': cause_expr})
                 else:
-                    exc_expr = None
-                    if stmt_instrs:
-                        exc_expr = self.expr_reconstructor.reconstruct(stmt_instrs)
-                    if exc_expr is None and stmt_instrs:
-                        exc_expr = self._build_statement(stmt_instrs)
-                        if exc_expr and exc_expr.get('type') == 'Expr':
-                            exc_expr = exc_expr.get('value')
-                    stmts.append({'type': 'Raise', 'exc': exc_expr})
+                    # [R16-N2] 区域归约算法原则：每个字节码模式对应唯一的 AST 节点。
+                    # Python 3.11+ 的 ``assert False, msg`` 字节码模式为：
+                    #   LOAD_ASSERTION_ERROR + <msg_instrs> + PRECALL 0 + CALL 0
+                    #   + RAISE_VARARGS 1
+                    # （CPython 3.11 对 ``assert False, msg`` 做常量折叠，去除 test
+                    # 跳转，直接生成失败路径）。
+                    # 必须把 RAISE_VARARGS 指令一并交给 expr_reconstructor 处理，
+                    # 这样 CALL 处理器能识别 LOAD_ASSERTION_ERROR 标记构造 Call 节点，
+                    # RAISE_VARARGS 处理器能将带标记的 Call 转换为 Assert 节点。
+                    # 若仅传 stmt_instrs（不含 RAISE_VARARGS），reconstruct 返回
+                    # Call(AssertionError, [msg])，被包装为 ``raise AssertionError(msg)``，
+                    # recompile 产生 ``LOAD_GLOBAL AssertionError`` 而非
+                    # ``LOAD_ASSERTION_ERROR``，字节码不一致。
+                    all_instrs = stmt_instrs + [instr]
+                    expr = self.expr_reconstructor.reconstruct(all_instrs)
+                    if expr and expr.get('type') in ('Raise', 'Assert'):
+                        stmts.append(expr)
+                    else:
+                        # [R16-N1] 兜底：用 _build_raise_stmt_from_instrs 处理
+                        # LOAD_ASSERTION_ERROR 模式（返回 Assert）或普通 Raise
+                        _raise_stmt = self._build_raise_stmt_from_instrs(stmt_instrs, instr.arg)
+                        stmts.append(_raise_stmt)
                 stmt_instrs = []
                 continue
 
@@ -29168,6 +29181,73 @@ AST 映射规则:
                 stmts.append(_stmt)
 
         return stmts
+
+    def _reconstruct_raise_exc(self, pre_instrs):
+        """[R16-N1] 从 RAISE_VARARGS 之前的指令重建异常表达式。
+
+        区域归约算法原则：每个字节码模式对应唯一的 AST 节点。
+        Python 3.11+ 的 ``assert False, msg`` 字节码模式为：
+            LOAD_ASSERTION_ERROR + <msg_instrs> + PRECALL 0 + CALL 0 + RAISE_VARARGS 1
+
+        CPython 3.11 对 ``assert False, msg`` 做常量折叠，去除 test 跳转，
+        直接生成 ``LOAD_ASSERTION_ERROR + msg + CALL 0 + RAISE_VARARGS 1``。
+        因此反编译此模式必须生成 ``assert False, msg`` 语句，recompile 后
+        才能产生 ``LOAD_ASSERTION_ERROR`` 字节码（若生成 ``raise AssertionError(msg)``
+        则 recompile 产生 ``LOAD_GLOBAL``，字节码不一致）。
+
+        检测 ``LOAD_ASSERTION_ERROR``，构造
+        ``Assert(test=Constant(False), msg=reconstruct(msg_instrs))``。
+        """
+        if not pre_instrs:
+            return None
+        has_lae = any(i.opname == 'LOAD_ASSERTION_ERROR' for i in pre_instrs)
+        if not has_lae:
+            return self.expr_reconstructor.reconstruct(pre_instrs)
+        lae_idx = None
+        for idx, i in enumerate(pre_instrs):
+            if i.opname == 'LOAD_ASSERTION_ERROR':
+                lae_idx = idx
+                break
+        if lae_idx is None:
+            return self.expr_reconstructor.reconstruct(pre_instrs)
+        after_instrs = pre_instrs[lae_idx + 1:]
+        msg_instrs = [i for i in after_instrs
+                      if i.opname not in ('PRECALL', 'CALL', 'PUSH_NULL',
+                                          'NOP', 'CACHE', 'RESUME')]
+        if msg_instrs:
+            msg_expr = self.expr_reconstructor.reconstruct(msg_instrs)
+            if msg_expr is None:
+                msg_expr = self._build_statement(msg_instrs)
+                if msg_expr and msg_expr.get('type') == 'Expr':
+                    msg_expr = msg_expr.get('value')
+            return {
+                'type': 'Assert',
+                'test': {'type': 'Constant', 'value': False, 'lineno': None},
+                'msg': msg_expr,
+                'lineno': None,
+            }
+        # 无 msg：assert False
+        return {
+            'type': 'Assert',
+            'test': {'type': 'Constant', 'value': False, 'lineno': None},
+            'msg': None,
+            'lineno': None,
+        }
+
+    def _build_raise_stmt_from_instrs(self, pre_instrs, raise_arg):
+        """[R16-N1] 从 RAISE_VARARGS 之前的指令构建 raise/assert 语句。
+
+        若 pre_instrs 含 ``LOAD_ASSERTION_ERROR``，返回 ``Assert`` 语句
+        （对应 ``assert False, msg`` 模式）；否则返回 ``Raise`` 语句。
+        """
+        if raise_arg == 0:
+            return {'type': 'Raise', 'exc': None, 'cause': None}
+        if not pre_instrs:
+            return {'type': 'Raise', 'exc': None, 'cause': None}
+        exc_expr = self._reconstruct_raise_exc(pre_instrs)
+        if exc_expr is not None and exc_expr.get('type') == 'Assert':
+            return exc_expr
+        return {'type': 'Raise', 'exc': exc_expr, 'cause': None}
 
     def _build_statement(self, instrs: List[Instruction]) -> Optional[Dict[str, Any]]:
         if not instrs:
