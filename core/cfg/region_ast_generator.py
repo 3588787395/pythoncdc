@@ -14349,7 +14349,16 @@ AST 映射规则:
                 for eb in _filtered_else:
                     if eb in self.generated_blocks:
                         continue
-                    nested_region = self.region_analyzer.get_region_for_block(eb)
+                    # [R18-N1 fix] 区域归约算法原则：每块唯一归属 + 父引用子入口。
+                    # else 块可能是嵌套 AssertRegion/IfRegion 等的入口块。
+                    # get_region_for_block 返回拥有该块的「父」区域（可能是当前
+                    # TryExceptRegion 自身），导致 nested_region is not region
+                    # 判定失败，进而把 assert 的条件块当作普通 if 条件处理
+                    # （如 `assert tmp > 0, msg` → 错误生成 `if tmp > 0: assert False`）。
+                    # 修正：优先用 get_entry_region_for_block 查找以该块为入口的
+                    # 嵌套区域（AssertRegion.is_block_entry 检查 condition_block==block），
+                    # 回退到 get_region_for_block 保留原行为。
+                    nested_region = self.region_analyzer.get_entry_region_for_block(eb) or self.region_analyzer.get_region_for_block(eb)
                     if nested_region and nested_region is not region and isinstance(nested_region, (IfRegion, LoopRegion, TryExceptRegion, WithRegion, MatchRegion, AssertRegion, TernaryRegion, BoolOpRegion)):
                         nr_id = id(nested_region)
                         if nr_id not in self._generated_regions and nr_id not in self._generating_regions:
