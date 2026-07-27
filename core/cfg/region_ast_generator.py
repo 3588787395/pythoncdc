@@ -7261,6 +7261,13 @@ AST 映射规则:
         region_id = id(region)
         self._generating_regions.add(region_id)
         pre_stmts, cond_instrs = self._if_extract_cond_instructions(cond_block, region)
+        # [R13-N1 fix] 同 _if_generate_normal：当 entry 与 condition_block 不同
+        # （BoolOpRegion 子节点模式），从 entry 块提取前置语句。
+        if (region.entry is not None and region.entry is not cond_block
+                and region.entry not in self.generated_blocks):
+            _entry_pre_stmts, _ = self._if_extract_cond_instructions(region.entry, region)
+            if _entry_pre_stmts:
+                pre_stmts = _entry_pre_stmts + pre_stmts
         condition = self._if_extract_condition_from_instructions(region, cond_block, cond_instrs)
         if hasattr(region, 'elif_conditions') and region.elif_conditions:
             for ec in region.elif_conditions:
@@ -9331,6 +9338,21 @@ AST 映射规则:
         self._or_else_block = None
         self._or_rhs_block = None
         pre_stmts, cond_instrs = self._if_extract_cond_instructions(cond_block, region)
+        # [R13-N1 fix] 区域归约算法原则 4（父引用子入口）+ 原则 2（每块唯一归属）：
+        # 当 IfRegion 的 entry 与 condition_block 不同（BoolOpRegion 子节点模式，
+        # 复合 `and`/`or` 条件），entry 块包含前置语句（如 `a = day1.isocalendar()`）
+        # 和复合条件的第一部分。原实现仅从 condition_block 提取 pre_stmts，导致
+        # entry 块的前置语句丢失（如 _is_same_type_date 的 `a = ...`, `b = ...`
+        # 赋值丢失，使 a/b 被编译为 LOAD_GLOBAL 而非 LOAD_FAST，字节码不一致）。
+        # 修正：当 entry 与 condition_block 不同且 entry 未被标记为已生成时，
+        # 额外从 entry 块提取 pre_stmts。这些 pre_stmts 是 entry 块中位于
+        # 条件指令之前的赋值语句（STORE_FAST/STORE_NAME 等），由
+        # _if_extract_cond_instructions 在遇到首个跳转指令时停止提取。
+        if (region.entry is not None and region.entry is not cond_block
+                and region.entry not in self.generated_blocks):
+            _entry_pre_stmts, _ = self._if_extract_cond_instructions(region.entry, region)
+            if _entry_pre_stmts:
+                pre_stmts = _entry_pre_stmts + pre_stmts
         condition = self._if_extract_condition_from_instructions(region, cond_block, cond_instrs)
         self.generated_blocks.add(cond_block)
         if hasattr(region, 'elif_conditions') and region.elif_conditions:
