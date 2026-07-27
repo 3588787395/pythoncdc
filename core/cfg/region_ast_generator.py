@@ -7609,6 +7609,53 @@ AST 映射规则:
                 result.append(trailing_return)
             else:
                 result = [result, trailing_return]
+        # [R23-N10 fix] 区域归约算法原则 4（父引用子入口）+ 原则 2（每块唯一归属）：
+        # 镜像 _if_generate_normal 末尾的 R18-N5 修复。IF_ELIF_CHAIN 类型的
+        # IfRegion 同样可能存在 merge_block 是嵌套 LoopRegion 的 for_iter_exit
+        # 的情况（如 load_get_exrights：if-elif 链中 elif body 含 for 循环，
+        # for 循环退出后到 merge_block `return data`）。R15-N5 会让 LoopRegion
+        # 跳过 merge_block，本 IfRegion 必须承担生成 merge_block 的责任。
+        # 触发条件与 _if_generate_normal 中的 R18-N5 修复完全一致：
+        #   1. merge_block 存在 + 不在 then_blocks/else_blocks 中
+        #   2. merge_block 是某 LoopRegion 的 else_blocks（for_iter_exit）
+        #   3. 该 LoopRegion 的 entry 在本 IfRegion 的 then_blocks 或 else_blocks 中
+        #   4. merge_block 不在任何嵌套结构区域（Try/With/Match）的 blocks 中
+        if (region.merge_block is not None
+                and region.merge_block not in region.then_blocks
+                and region.merge_block not in (region.else_blocks or [])):
+            _mb_in_nested_structural = False
+            for _nr in self.region_analyzer.regions:
+                if _nr is region:
+                    continue
+                if not isinstance(_nr, (TryExceptRegion, WithRegion, MatchRegion)):
+                    continue
+                if region.merge_block in _nr.blocks:
+                    _mb_in_nested_structural = True
+                    break
+            _should_emit_elif = False
+            if not _mb_in_nested_structural:
+                _then_block_set = set(region.then_blocks)
+                _else_block_set = set(region.else_blocks or [])
+                for _lr in self.region_analyzer.regions:
+                    if not isinstance(_lr, LoopRegion):
+                        continue
+                    if _lr is region:
+                        continue
+                    if region.merge_block not in _lr.else_blocks:
+                        continue
+                    if _lr.entry is not None and (_lr.entry in _then_block_set
+                                                   or _lr.entry in _else_block_set):
+                        _should_emit_elif = True
+                        break
+            if _should_emit_elif:
+                self.generated_blocks.discard(region.merge_block)
+                self.generated_offsets.discard(region.merge_block.start_offset)
+                _post_if_stmts_elif = self._generate_block_statements(region.merge_block)
+                if _post_if_stmts_elif:
+                    if isinstance(result, list):
+                        result = result + _post_if_stmts_elif
+                    else:
+                        result = [result] + _post_if_stmts_elif
         return result
 
     def _build_chained_compare_from_region_data(self, region: IfRegion) -> Optional[Dict[str, Any]]:
@@ -9928,10 +9975,15 @@ AST 映射规则:
         # 普遍性判据（基于 R15-N5 的触发条件）：
         #   1. merge_block 存在 + 不在 then_blocks/else_blocks 中
         #   2. merge_block 是某 LoopRegion 的 else_blocks（for_iter_exit）
-        #   3. 该 LoopRegion 的 entry 在本 IfRegion 的 then_blocks 中
-        #      （即 LoopRegion 作为 then 分支子区域被处理，R15-N5 会触发）
+        #   3. 该 LoopRegion 的 entry 在本 IfRegion 的 then_blocks 或 else_blocks 中
+        #      （即 LoopRegion 作为 then/else 分支子区域被处理，R15-N5 会触发）
         #   4. merge_block 不在任何嵌套结构区域（Try/With/Match）的 blocks 中
         # 满足以上条件时，merge_block 是纯粹的 post-if 顺序代码，由本 IfRegion 生成。
+        # [R23-N10 fix] 扩展条件 3：将 else_blocks 也纳入触发判据。
+        # 普遍化原理（区域归约算法原则 4）：当 LoopRegion 作为 if 的 else 分支子区域
+        # 被处理时，R15-N5 同样会触发让 LoopRegion 跳过 merge_block。IfRegion 必须承担
+        # 生成 merge_block 的责任。典型场景：`if cond: ... else: for ...: ... return data`
+        # 这里 merge_block 是 if-else 的汇合点，也是 for 循环的退出点。
         if (region.merge_block is not None
                 and region.merge_block not in region.then_blocks
                 and region.merge_block not in (region.else_blocks or [])):
@@ -9947,7 +9999,9 @@ AST 映射规则:
             _should_emit = False
             if not _mb_in_nested_structural:
                 # 检查 R15-N5 触发条件：merge_block 是嵌套 LoopRegion 的 for_iter_exit
+                # [R23-N10] 同时检查 then_blocks 和 else_blocks
                 _then_block_set = set(region.then_blocks)
+                _else_block_set = set(region.else_blocks or [])
                 for _lr in self.region_analyzer.regions:
                     if not isinstance(_lr, LoopRegion):
                         continue
@@ -9955,7 +10009,8 @@ AST 映射规则:
                         continue
                     if region.merge_block not in _lr.else_blocks:
                         continue
-                    if _lr.entry is not None and _lr.entry in _then_block_set:
+                    if _lr.entry is not None and (_lr.entry in _then_block_set
+                                                   or _lr.entry in _else_block_set):
                         _should_emit = True
                         break
             if _should_emit:
