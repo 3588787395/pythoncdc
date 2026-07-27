@@ -1279,7 +1279,7 @@ class CodeGenerator:
     def _filter_duplicate_if_in_else(self, else_nodes: List[Any], all_nodes: List[Any]) -> List[Any]:
         """
         [关键修复] 过滤掉else分支中与elif条件重复的嵌套if
-        
+
         这种情况发生在结构化分析错误地将elif识别为嵌套的if时。
         例如：
         if x > 10:
@@ -1293,16 +1293,31 @@ class CodeGenerator:
         """
         if not else_nodes:
             return []
-        
-        # 收集所有elif的条件
+
+        # [R23-N4 fix] 区域归约算法「一次正确」原则：使用对象标识避免自比较。
+        # 旧实现将 else_nodes 中的节点条件收集到 elif_conditions，导致 else body
+        # 中的合法嵌套 if 被过滤掉（其条件与自身匹配）。例如 check_index_code 的
+        # else 分支：
+        #   else:
+        #       index_code_list = data_proxy().get_blocks_codes_local('ZS')
+        #       if '%s.csv' % index_code.split('.')[0] not in index_code_list:
+        #           strategy_log.error(...)
+        #           return False
+        #       return True
+        # 嵌套 if 被错误过滤，只生成赋值语句，函数体被截断。
+        # 修复：只从 all_nodes 中收集不在 else_nodes 中的节点（即真正的 elif 节点）
+        # 的条件，避免 else body 中的嵌套 if 与自身比较。
+        else_node_ids = set(id(n) for n in else_nodes)
         elif_conditions = set()
         for node in all_nodes:
+            if id(node) in else_node_ids:
+                continue
             if isinstance(node, ASTIf) and node.test:
                 # 提取条件表达式
                 test_str = self._get_condition_str(node.test)
                 if test_str:
                     elif_conditions.add(test_str)
-        
+
         # 过滤掉与elif条件重复的嵌套if
         filtered = []
         for node in else_nodes:
@@ -1312,7 +1327,7 @@ class CodeGenerator:
                     # 这是重复的if，跳过
                     continue
             filtered.append(node)
-        
+
         return filtered
     
     def _get_condition_str(self, test) -> str:
