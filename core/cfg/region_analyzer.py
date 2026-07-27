@@ -9574,6 +9574,21 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                  'LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF'} |
                 FORWARD_CONDITIONAL_JUMP_OPS)
             if all(i.opname in pattern_related for i in block.instructions):
+                # [R23-N8 fix] 区域归约算法原则 2（每块唯一归属）：
+                # for 循环 `for k, v in ...:` 的循环体入口块含 UNPACK_SEQUENCE
+                # + STORE_FAST + 后续 if 条件（如 `if k != 'fields':`），
+                # 全部指令都在 pattern_related 集合中，会被误识别为 match-case
+                # 的 case pattern 块（如 multi_prod_to_dataframe 的
+                # `for k, v in data.items(): if k != 'fields': ...`）。
+                # 关键区分：match-case 的 UNPACK_SEQUENCE 前驱含 MATCH_SEQUENCE/
+                # MATCH_CLASS；for 循环的 UNPACK_SEQUENCE 前驱以 FOR_ITER 结尾。
+                # 当块含 UNPACK_SEQUENCE 但无 MATCH_* 操作码，且任一前驱以
+                # FOR_ITER 结尾时，此块是 for 循环体入口，不是 match case pattern。
+                if not self._has_match_op(block):
+                    for pred in block.predecessors:
+                        pred_last = pred.get_last_instruction()
+                        if pred_last and pred_last.opname == 'FOR_ITER':
+                            return False
                 return True
         meaningful = [i for i in block.instructions if i.opname not in NOISE_OPS]
         has_copy = any(i.opname == 'COPY' for i in meaningful)

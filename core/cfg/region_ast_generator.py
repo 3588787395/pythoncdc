@@ -4374,6 +4374,39 @@ AST 映射规则:
 
         return pre_stmts
 
+    def _is_for_iter_setup_of_ungenerated_loop(self, block: BasicBlock) -> bool:
+        """[R23-N9 fix] 区域归约算法原则 2（每块唯一归属）+
+        原则 3（嵌套即抽象节点）：
+
+        判断 block 是否是某个尚未生成的 LoopRegion 的 for_iter_setup 块。
+        此类块含 LOAD_*+GET_ITER（迭代器准备）及可能的前置赋值语句，
+        必须由 LoopRegion 生成器（_loop_generate_for）统一处理，提取
+        iter_expr 及前置赋值语句。若被其他生成路径（如 _generate_try 的
+        post-try 处理、_process_if_blocks 的顺序扫描）直接调用
+        _generate_block_statements，会导致：
+        1. 前置赋值语句（如 `i = 0`）被提前输出，LoopRegion 生成时
+           再次提取，产生重复语句。
+        2. LOAD_*+GET_ITER 被当作裸表达式输出（如 `fields`），而非
+           作为 for 循环的 iter_expr。
+
+        例外：当 for_iter_setup 与 LoopRegion 的 entry/header_block
+        是同一个块时（LOAD_*+GET_ITER+FOR_ITER 全在同一块），此块是
+        LoopRegion 的入口，必须由 _generate_region(LoopRegion) 生成，
+        不能跳过（见 R23-N8 fix）。
+
+        Returns:
+            True 若 block 是某个未生成 LoopRegion 的 for_iter_setup
+            且不是该 LoopRegion 的 entry/header_block。
+        """
+        for _lr in self.region_analyzer.regions:
+            if isinstance(_lr, LoopRegion):
+                _fis = _lr.metadata.get('for_iter_setup')
+                if _fis is block and _lr not in self._generated_regions:
+                    if _lr.entry is not block and _lr.header_block is not block:
+                        return True
+                    return False
+        return False
+
     def _loop_extract_for_iter_pre_stmts(self, instrs: List[Instruction], block: BasicBlock) -> Tuple[List[Dict[str,Any]], List[Instruction]]:
         """从for_iter_setup指令序列中提取前置赋值语句，返回(前置语句列表, 剩余迭代器指令)
 
@@ -12302,14 +12335,9 @@ AST 映射规则:
             # _loop_extract_for_iter_pre_stmts 已能正确提取前置赋值语句
             # （含 STORE_ATTR/STORE_SUBSCR/POP_TOP+CALL）和 iter 指令，
             # 无需在 _process_if_blocks 中重复处理。
-            _block_is_for_iter_setup = False
-            for _lr in self.region_analyzer.regions:
-                if isinstance(_lr, LoopRegion):
-                    _fis = _lr.metadata.get('for_iter_setup')
-                    if _fis is block and _lr not in self._generated_regions:
-                        _block_is_for_iter_setup = True
-                        break
-            if _block_is_for_iter_setup:
+            # [R23-N9 fix] 提取为独立 helper _is_for_iter_setup_of_ungenerated_loop，
+            # 供 _generate_try 的 post-try 处理等其他路径复用。
+            if self._is_for_iter_setup_of_ungenerated_loop(block):
                 self.generated_blocks.add(block)
                 self.generated_offsets.add(block.start_offset)
                 continue
@@ -14878,6 +14906,22 @@ AST 映射规则:
                     self.generated_blocks.discard(_ptb)
                     self.generated_offsets.discard(_ptb.start_offset)
                 if _ptb in self.generated_blocks:
+                    continue
+                # [R23-N9 fix] 区域归约算法原则 2（每块唯一归属）+
+                # 原则 3（嵌套即抽象节点）：
+                # post-try 块可能是某个尚未生成的 LoopRegion 的 for_iter_setup
+                # 块（含 LOAD_*+GET_ITER 及前置赋值语句，如 one_prod_to_dataframe
+                # 的 `try: ... except: ... i = 0; for item in fields:` 中，
+                # block@340 含 `i = 0` + `LOAD_FAST 'fields'` + `GET_ITER`）。
+                # 若直接调用 _generate_block_statements，会：
+                # 1. 前置赋值语句（`i = 0`）被提前输出，LoopRegion 生成时
+                #    再次提取（_fis_pre_stmts），产生重复语句。
+                # 2. LOAD_*+GET_ITER 被当作裸表达式（`fields`）输出，而非
+                #    作为 for 循环的 iter_expr。
+                # 修复：跳过此类块，交由 LoopRegion 生成器统一处理。
+                if self._is_for_iter_setup_of_ungenerated_loop(_ptb):
+                    self.generated_blocks.add(_ptb)
+                    self.generated_offsets.add(_ptb.start_offset)
                     continue
                 # 检查是否是嵌套区域的入口
                 _ptb_region = self.region_analyzer.get_entry_region_for_block(_ptb)
@@ -30889,6 +30933,18 @@ AST 映射规则:
             'POP_JUMP_BACKWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_TRUE',
             'POP_JUMP_IF_TRUE', 'POP_JUMP_IF_FALSE',
             'SETUP_ANNOTATIONS', 'IMPORT_NAME', 'IMPORT_FROM', 'IMPORT_STAR',
+            # [R23-N8 fix] 区域归约算法原则 2（每块唯一归属）+
+            # 原则 4（父引用子入口）：
+            # SWAP 是栈操作指令（交换栈顶元素），用于迭代器清理
+            # （如 for 循环中 return 的 SWAP+POP_TOP 模式），不
+            # 可能出现在注解表达式中。当 STORE_SUBSCR 后跟
+            # LOAD_FAST + SWAP + POP_TOP + RETURN_VALUE 时（如
+            # get_fundflow_day 的 `for item in prod_code: ...;
+            # return returninfo`），原逻辑将 LOAD_FAST 误识别为
+            # 注解表达式，生成错误的 `target: annotation = value`
+            # 而非 `target = value; return returninfo`。将 SWAP
+            # 加入边界集，使扫描在遇到 SWAP 时终止，不生成注解。
+            'SWAP',
         }
         for j in range(store_block_idx + 1, len(block_instrs)):
             bi = block_instrs[j]
