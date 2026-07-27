@@ -1,4 +1,4 @@
-"""R23-N6: 分析 date_convert 的 JUMP_FORWARD argval 差异"""
+"""分析api_get_financial的字节码差异"""
 import sys
 import dis
 import types
@@ -6,7 +6,7 @@ import types
 sys.path.insert(0, '/workspace')
 
 PYC = '/workspace/quotation.pyc'
-SRC = '/tmp/r22_decompiled.py'
+SRC = '/tmp/r23_decompiled.py'
 
 
 def load_pyc_code_objects(pyc_path):
@@ -48,29 +48,22 @@ def load_src_code_objects(src_path):
 
 
 def show(co, label):
-    print(f"\n=== {label} ===")
+    print(f"=== {label} ({co.co_name}) ===")
     for ins in dis.get_instructions(co):
         if ins.opname in ('EXTENDED_ARG', 'CACHE'):
             continue
-        print(f"  {ins.offset:4d}  {ins.opname:30s} {ins.argrepr}")
+        print(f"  {ins.offset:4d} {ins.opname:30s} {ins.argval!r}")
 
 
 def main():
     pyc_codes = load_pyc_code_objects(PYC)
     src_codes = load_src_code_objects(SRC)
 
-    name = 'date_convert'
+    name = 'api_get_financial'
+    print(f"\n{'='*60}\n# Function: {name}\n{'='*60}")
     show(pyc_codes[name], f"{name} PYC")
+    print()
     show(src_codes[name], f"{name} SRC")
-    print("\n--- 反编译源码 ---")
-    import re
-    with open(SRC, 'r') as f:
-        src = f.read()
-    match = re.search(rf'def {name}\(.*?\n(?=\ndef |\Z|@)', src, re.DOTALL)
-    if match:
-        print(match.group(0))
-    else:
-        print(f"未找到 {name}")
 
 
 if __name__ == '__main__':

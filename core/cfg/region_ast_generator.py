@@ -15262,6 +15262,35 @@ AST 映射规则:
                                 succ_instrs[1].opname in ('RETURN_VALUE', 'RETURN_CONST')):
                             _is_except_return_swap = True
                             break
+                        # [R23-N6 fix] 区域归约算法原则 2（每块唯一归属）：
+                        # 当 SWAP 单独成块（CPython 3.11+ 将 return-in-except 的
+                        # SWAP 切分到独立块），其后继块以 POP_EXCEPT 开头，中间夹有
+                        # as-var 清理指令（LOAD_CONST None/STORE_FAST 'e'/DELETE_FAST 'e'）
+                        # 然后 RETURN_VALUE。此前仅识别 POP_EXCEPT 紧接 RETURN_VALUE
+                        # 的简单模式，导致 return 值表达式被当作 Expr 语句输出
+                        # （丢失 return 关键字）。此处扩展为允许 POP_EXCEPT 与
+                        # RETURN_VALUE 之间存在清理指令，与同块检测逻辑（L15229+）
+                        # 保持一致。覆盖 api_get_financial 的 except handler
+                        # `return (re_error, re_data)` / `return (..., ...)` 等
+                        # 所有 except 内 return 且 SWAP 单独成块的形式。
+                        if succ_instrs and succ_instrs[0].opname == 'POP_EXCEPT':
+                            _succ_cleanup_only = True
+                            _succ_has_return = False
+                            for _sri in succ_instrs[1:]:
+                                if _sri.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                                    _succ_has_return = True
+                                    break
+                                if _sri.opname in ('LOAD_CONST', 'STORE_FAST', 'STORE_NAME',
+                                                   'STORE_GLOBAL', 'STORE_DEREF',
+                                                   'DELETE_FAST', 'DELETE_NAME', 'DELETE_GLOBAL',
+                                                   'DELETE_DEREF', 'POP_TOP', 'SWAP', 'POP_EXCEPT',
+                                                   'COPY', 'PRECALL', 'CALL', 'RERAISE'):
+                                    continue
+                                _succ_cleanup_only = False
+                                break
+                            if _succ_has_return and _succ_cleanup_only:
+                                _is_except_return_swap = True
+                                break
                 if _is_except_return_swap:
                     continue
                 stmt_instrs.append(instr)
