@@ -10957,9 +10957,41 @@ RegionType 枚举值: RegionType.ASSERT
                     if any(i.opname in ('RAISE_VARARGS', 'RETURN_VALUE') for i in _else_chain_end.instructions) or _else_chain_end.immediate_post_dominator is None:
                         _else_sink = True
                 if _then_sink and not _else_sink:
-                    merge = else_succ.immediate_post_dominator
+                    # [R14-N4 fix] 区域归约算法原则 2（每块唯一归属）：
+                    # 当 then 分支终态终止（RETURN_VALUE/RAISE），else_succ 可能是
+                    # after-if 点（下一条语句），而非真正的 else 分支。判据：else_succ
+                    # 有外部前驱（不属于当前 if 的条件结构块），说明 else_succ 被外层
+                    # 结构（如外层 if 的跳转目标）引用，是 after-if 点 → merge=else_succ
+                    # 创建 IF_THEN；否则 else_succ 是真正的 else → merge=其 post-dominator。
+                    # 失败模式：get_balance_statement 等 9 个函数中，内层
+                    # `if report_types not in DEFAULT_REPORT_TYPES: return re_empty_data`
+                    # 的 then 以 RETURN_VALUE 终止，下一条语句 `if date is None and ...`
+                    # 被误识别为 else 分支，导致外层 if 跳转目标偏移 +54。
+                    # 镜像 L11031-11036 的 _else_has_external_pred 判据（该处仅在
+                    # else_succ 自身终态时触发，此处扩展到 then 终态场景）。
+                    _if_struct_blocks_thn = ({block, then_succ, else_succ,
+                                              _else_succ_original} | chain_blocks)
+                    _else_has_external_pred_thn = any(
+                        p not in _if_struct_blocks_thn
+                        for p in else_succ.predecessors
+                    )
+                    if _else_has_external_pred_thn:
+                        merge = else_succ
+                    else:
+                        merge = else_succ.immediate_post_dominator
                 elif _else_sink and not _then_sink:
-                    merge = then_succ.immediate_post_dominator
+                    # [R14-N4 fix] 对称：当 else 分支终态终止，then_succ 可能是
+                    # after-if 点。若 then_succ 有外部前驱 → merge=then_succ。
+                    _if_struct_blocks_els = ({block, then_succ, else_succ,
+                                              _else_succ_original} | chain_blocks)
+                    _then_has_external_pred_els = any(
+                        p not in _if_struct_blocks_els
+                        for p in then_succ.predecessors
+                    )
+                    if _then_has_external_pred_els:
+                        merge = then_succ
+                    else:
+                        merge = then_succ.immediate_post_dominator
                 # [wl32 fix] When both branches sink but one is a BREAK/PURE_BREAK
                 # block, the code after the if is sequential (not an else-branch).
                 # Set merge to the non-BREAK successor so the BREAK branch is
@@ -11017,7 +11049,17 @@ RegionType 枚举值: RegionType.ASSERT
                         _else_last_instr = else_succ.get_last_instruction()
                         _else_is_terminal = (_else_last_instr is not None
                                              and _else_last_instr.opname in ('RETURN_VALUE', 'RETURN_CONST', 'RAISE_VARARGS'))
-                        if _else_is_terminal:
+                        # [R14-N5 fix] 扩展 R14-N4/R23：当 then 分支终态终止
+                        # （_then_sink=True）时，else_succ 即使不是终态块（如条件块），
+                        # 若有外部前驱则也是 after-if 点。这处理 _else_sink 通过链式
+                        # 检查被误设为 True 的情况——else 分支最终到达函数末尾 return，
+                        # 但 else_succ 本身（如 `if date is None:` 条件块）不是 sink。
+                        # 失败模式：get_balance_statement 等 9 个函数中，内层
+                        # `if report_types not in DEFAULT_REPORT_TYPES: return re_empty_data`
+                        # 的 then 以 RETURN_VALUE 终止，else_succ（offset 400）是
+                        # `if date is None:` 条件块，有外部前驱（外层 if 的跳转目标），
+                        # 被误识别为 else 分支导致 `elif date is None:` 错误嵌套。
+                        if _else_is_terminal or _then_sink:
                             # [R23 if84 regression fix] 区域归约算法原则 2（每块唯一
                             # 归属）：排除集须含当前 if 自己的条件结构块——链式比较
                             # 中间块（chain_blocks，如 `0 < a < 10` 的第二比较块）与
