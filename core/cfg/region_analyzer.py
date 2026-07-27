@@ -11725,6 +11725,16 @@ RegionType 枚举值: RegionType.ASSERT
             # 而是包含实际代码的块，不应被合并为 elif 链。
             # 例如: try body 中 "result = transform(item); if result is None: continue"
             # 的 block 同时包含赋值和条件跳转，不应被视为 elif。
+            # [R22-N1 fix] 扩展 body 语句检测：函数调用语句（CALL + POP_TOP）
+            # 也应被识别为 body 语句。典型场景（get_opt_objects）：
+            #   try:
+            #       check_datetime(date)           # CALL + POP_TOP (语句)
+            #       if len(date) != 8 and ...:     # 条件
+            #           ...
+            # block 11 同时包含 check_datetime(date) 语句和 if 条件，
+            # 不应被 _check_elif_chain 识别为 elif 条件块。否则 IF_ELIF_CHAIN
+            # 会错误吸收 try 体和 post-try 代码，导致 check_datetime 丢失、
+            # try-except 结构错位。
             _fe_last = first_else.get_last_instruction()
             if _fe_last and _fe_last.opname in FORWARD_CONDITIONAL_JUMP_OPS:
                 _has_body_stmt = any(
@@ -11735,6 +11745,22 @@ RegionType 枚举值: RegionType.ASSERT
                     for i in first_else.instructions
                     if i.offset < _fe_last.offset
                 )
+                if not _has_body_stmt:
+                    # 检测函数调用语句：CALL 后跟 POP_TOP（丢弃返回值）
+                    # 此模式表示独立的函数调用语句，不是条件表达式的一部分。
+                    # 条件表达式中的 CALL 结果会被 COMPARE_OP/POP_JUMP 消费，
+                    # 不会紧跟 POP_TOP。
+                    _fe_instrs_before_jump = [
+                        i for i in first_else.instructions
+                        if i.offset < _fe_last.offset
+                        and i.opname not in NOISE_OPS
+                        and i.opname not in ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG')
+                    ]
+                    for _idx, _i in enumerate(_fe_instrs_before_jump):
+                        if _i.opname == 'CALL' and _idx + 1 < len(_fe_instrs_before_jump):
+                            if _fe_instrs_before_jump[_idx + 1].opname == 'POP_TOP':
+                                _has_body_stmt = True
+                                break
                 if _has_body_stmt:
                     return None
             if first_else in self.block_to_region:
@@ -16043,6 +16069,56 @@ RegionType 枚举值: RegionType.ASSERT
         return region
 
     def _detect_boolop_conditional_chain(self, start_block: BasicBlock, claimed: Set[BasicBlock], skip_claimed_check: bool = False) -> Optional[List[Tuple[BasicBlock, str]]]:
+        # [R22-N3 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3（嵌套即抽象节点）：
+        # 当链的起始块在条件跳转之前包含 body 语句（函数调用语句 CALL+POP_TOP、
+        # 赋值 STORE_*、BINARY_OP、DELETE_* 等），该块不是纯 BoolOp 操作数块，
+        # 而是包含实际代码的「body + 条件」块。此场景下不应启动 BoolOp 链检测，
+        # 否则 BoolOpRegion 会抢占该块，导致 body 语句丢失、IfRegion 无法创建。
+        # 典型场景（get_opt_objects）：
+        #   try:
+        #       check_datetime(date)           # CALL + POP_TOP (语句)
+        #       if len(date) != 8 and ...:     # 条件
+        #           ...
+        # block 11 同时包含 check_datetime(date) 语句和 if 条件，
+        # 不应被 _detect_boolop_conditional_chain 识别为 BoolOp 链起始。
+        # 否则 BoolOpRegion(entry=11) 抢占 block 11/4，IfRegion(entry=11)
+        # 无法创建，try 体生成 pass。
+        # [R22-N3b] 排除 MatchRegion 块：match-case 的模式检查块（如
+        # UNPACK_SEQUENCE + STORE_FAST + COMPARE_OP + POP_JUMP_IF_TRUE）
+        # 也含 STORE_* 指令，但 STORE_* 来自 match subject 解包，不是 body
+        # 语句。MatchRegion 在 Phase 1 识别（先于 BoolOp），但块可能已被
+        # TryExceptRegion 等父区域注册到 block_to_region，故遍历 self.regions
+        # 检查 start_block 是否属于任何 MatchRegion。
+        _sb_in_match = False
+        for _mr in self._filter_regions(self.regions, MatchRegion):
+            if start_block in _mr.blocks:
+                _sb_in_match = True
+                break
+        _sb_last = start_block.get_last_instruction()
+        if (not _sb_in_match
+                and _sb_last and _sb_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)):
+            _sb_has_body = any(
+                i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
+                             'STORE_DEREF', 'STORE_ATTR', 'STORE_SUBSCR',
+                             'BINARY_OP', 'DELETE_NAME', 'DELETE_FAST',
+                             'DELETE_GLOBAL', 'DELETE_ATTR', 'DELETE_SUBSCR')
+                for i in start_block.instructions
+                if i.offset < _sb_last.offset
+            )
+            if not _sb_has_body:
+                _sb_instrs_before_jump = [
+                    i for i in start_block.instructions
+                    if i.offset < _sb_last.offset
+                    and i.opname not in NOISE_OPS
+                    and i.opname not in ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG')
+                ]
+                for _idx, _i in enumerate(_sb_instrs_before_jump):
+                    if _i.opname == 'CALL' and _idx + 1 < len(_sb_instrs_before_jump):
+                        if _sb_instrs_before_jump[_idx + 1].opname == 'POP_TOP':
+                            _sb_has_body = True
+                            break
+            if _sb_has_body:
+                return None
         chain: List[Tuple[BasicBlock, str]] = []
         current = start_block
         visited = set()
@@ -17112,10 +17188,38 @@ RegionType 枚举值: RegionType.ASSERT
                                         -(ranges[id(c)][1] - ranges[id(c)][0])
                                     ))
                             else:
-                                best_parent = max(candidates, key=lambda c: (
-                                    region_priority.get(type(c).__name__, 1),
-                                    -(ranges[id(c)][1] - ranges[id(c)][0])
-                                ))
+                                # [R22-N2 fix] 区域归约算法原则 3（嵌套即抽象节点）：
+                                # 当 child 是 IfRegion 且存在 TryExceptRegion 候选
+                                # 其 try_blocks 包含 child.entry 时，child 是 try 体内的
+                                # 嵌套结构，应优先由 TryExceptRegion 作为父级。
+                                # 典型场景（get_opt_objects）：
+                                #   try:
+                                #       check_datetime(date)
+                                #       if len(date) != 8 and ...:  # IfRegion(entry=11)
+                                #           ...
+                                #   except AssertionError: ...
+                                # IfRegion(entry=11) 与 TryExceptRegion(entry=11) 共享
+                                # entry（block 11），且 IfRegion 的 blocks 全部在
+                                # TryExceptRegion.try_blocks 内。原逻辑因 IfRegion 优先级
+                                # (5) > TryExceptRegion (3) 而选择外层 IfRegion(entry=1)
+                                # 作为父级，导致 TryExceptRegion.children 为空，try body
+                                # 生成 pass，check_datetime 和 if 语句丢失。
+                                _try_parent_cand = None
+                                if isinstance(child, IfRegion):
+                                    for _cand in candidates:
+                                        if (isinstance(_cand, TryExceptRegion)
+                                                and _cand is not child
+                                                and getattr(_cand, 'try_blocks', None)
+                                                and child.entry in _cand.try_blocks):
+                                            _try_parent_cand = _cand
+                                            break
+                                if _try_parent_cand:
+                                    best_parent = _try_parent_cand
+                                else:
+                                    best_parent = max(candidates, key=lambda c: (
+                                        region_priority.get(type(c).__name__, 1),
+                                        -(ranges[id(c)][1] - ranges[id(c)][0])
+                                    ))
                     if child is not best_parent and child not in best_parent.children:
                         entry_block = child.entry
                         if entry_block and self.block_to_region.get(entry_block) is child:
