@@ -3072,7 +3072,17 @@ AST 映射规则:
                 # [R5 Fix 1] 唯一块归属：若 for_iter_setup 已被其他区域（如前序
                 # 循环的 sequential_after_loop）标记为已生成，则其前缀语句已输出，
                 # 不再重复抽取 pre_stmts（仅抽取 iter_expr 供本 for 循环使用）。
-                if _fis_pre_stmts and for_iter_setup not in self.generated_blocks:
+                # [R11-N1 fix] 区域归约算法原则 2（每块唯一归属）：generate() 在
+                # 入口块是 LoopRegion 的 for_iter_setup 时（L297），会预先将
+                # entry_block 标记为已生成以防止顺序块扫描重复处理。但这会导致
+                # 此处 guard 错误跳过 pre_stmts 输出（如 dict_to_dataframe 的
+                # `df = {}` 即 BUILD_MAP+STORE_FAST 被提取但未输出）。修正：
+                # 只有当 for_iter_setup 不属于本 region（即被前序循环声明）时
+                # 才跳过；若 for_iter_setup 是本 region 的 setup 块（entry_block
+                # 是本循环的前驱），即使已被 generate() 标记也必须输出 pre_stmts。
+                _fis_is_self_setup = (for_iter_setup in region.blocks or
+                                      for_iter_setup is region.metadata.get('for_iter_setup'))
+                if _fis_pre_stmts and (_fis_is_self_setup or for_iter_setup not in self.generated_blocks):
                     pre_stmts.extend(_fis_pre_stmts)
                 iter_expr = self.expr_reconstructor.reconstruct(_fis_iter_instrs) if _fis_iter_instrs else None
                 if iter_expr is None and instrs:

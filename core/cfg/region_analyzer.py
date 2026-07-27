@@ -1651,69 +1651,15 @@ class RegionAnalyzer:
                     if instr.argval not in local_vars and instr.argval not in free_vars:
                         load_global_names.append(instr.argval)
 
-        if load_global_names:
-            try:
-                import builtins
-                builtin_names = set(dir(builtins))
-            except ImportError:
-                builtin_names = set()
-
-            import_stores = set()
-            func_class_names = set()
-            non_import_stores = set()
-
-            _parents_to_check = []
-            _cur_parent = self.parent_code
-            if _cur_parent is None:
-                _cur_parent = getattr(self.cfg, 'code', None)
-            while _cur_parent is not None and hasattr(_cur_parent, 'co_name') and _cur_parent.co_name != '<module>':
-                _parents_to_check.append(_cur_parent)
-                if hasattr(_cur_parent, 'co_consts'):
-                    for const in _cur_parent.co_consts:
-                        if hasattr(const, 'co_name') and const.co_name != '<module>':
-                            func_class_names.add(const.co_name)
-                _cur_parent = None
-                if hasattr(self, '_top_level_code') and self._top_level_code is not None:
-                    _cur_parent = self._top_level_code
-                    break
-            if _cur_parent is not None and hasattr(_cur_parent, 'co_name') and _cur_parent.co_name == '<module>':
-                _parents_to_check.append(_cur_parent)
-
-            for parent in _parents_to_check:
-                if not hasattr(parent, 'co_consts'):
-                    continue
-                for const in parent.co_consts:
-                    if hasattr(const, 'co_name') and const.co_name != '<module>':
-                        func_class_names.add(const.co_name)
-
-                parent_instrs = list(_dis.get_instructions(parent))
-                for i, instr in enumerate(parent_instrs):
-                    if instr.opname in ('STORE_NAME', 'STORE_GLOBAL'):
-                        is_import_store = False
-                        for j in range(i - 1, max(i - 10, -1), -1):
-                            if parent_instrs[j].opname in ('IMPORT_NAME', 'IMPORT_FROM'):
-                                is_import_store = True
-                                break
-                            if parent_instrs[j].opname in ('STORE_NAME', 'STORE_GLOBAL'):
-                                break
-                        if is_import_store:
-                            import_stores.add(instr.argval)
-                        else:
-                            non_import_stores.add(instr.argval)
-
-            for name in load_global_names:
-                if name in global_names:
-                    continue
-                if name in builtin_names:
-                    continue
-                if name in import_stores:
-                    continue
-                if name in func_class_names:
-                    continue
-                if non_import_stores and name not in non_import_stores:
-                    continue
-                global_names.append(name)
-
+        # [R11-N2 fix] 区域归约算法原则：global 声明必须由字节码驱动。
+        # Python 语义要求：函数内 `global X` 仅当函数对 X 执行 STORE_GLOBAL 或
+        # DELETE_GLOBAL 时才需要；仅 LOAD_GLOBAL X（读取模块变量）不需要 global
+        # 声明。原实现基于 LOAD_GLOBAL 推断 global 名字，会错误地在仅读取模块
+        # 变量的函数中生成 `global X` 声明，进而通过 CPython 的名称解析规则反向
+        # 污染模块级 STORE_NAME → STORE_GLOBAL（如 quotation.pyc 的
+        # DumploadDailyFile/SIM_PATH/is_utc 等），导致模块级字节码不一致。
+        # 修正：删除 LOAD_GLOBAL 推断分支，仅保留 STORE_GLOBAL/DELETE_GLOBAL
+        # 驱动的 global_names。
         result = []
         if global_names:
             result.append({'type': 'Global', 'names': global_names})
