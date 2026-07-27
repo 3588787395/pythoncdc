@@ -9268,7 +9268,37 @@ AST 映射规则:
                         if region.elif_bodies and len(region.elif_bodies) > 0:
                             _elif_then_offsets = {b.start_offset for b in region.elif_bodies[0]}
                         _elif_negate = (_elif_last.argval in _elif_then_offsets) != _elif_if_true
-                    elif_condition = _negate_expr(_elif_boolop_expr) if _elif_negate else _elif_boolop_expr
+                    if _elif_negate:
+                        # [R23-N3 fix] 区域归约算法「一次正确」原则：elif 条件路径
+                        # 的 negate 逻辑与 _if_extract_condition_from_instructions 中
+                        # 的 R23-N2 fix 一致。当 BoolOp 表达式是 `a and (b or c)` 形式
+                        # （由 _try_build_and_inner_or_pattern 构建，最后一个操作数是
+                        # BoolOp(or, ...)），且需要取反时，`not` 应只应用到 `or` 子表达式，
+                        # 生成 `a and not (b or c)`，而非 `not (a and (b or c))`。
+                        # 原始 pyc 源码 `elif a and not (b or c):` 编译为：
+                        #   a; POP_JUMP_IF_FALSE → merge  (a 假时跳过整个 and)
+                        #   b; POP_JUMP_IF_TRUE → merge   (b 真时 not(b or c) 假，and 假，跳 merge)
+                        #   c; POP_JUMP_IF_TRUE → merge   (c 真时跳 merge)
+                        # 旧逻辑将 `not` 应用到整个 `a and (b or c)`，生成
+                        # `not (a and (b or c))`，编译为不同字节码（a 假时跳到 elif body
+                        # 而非 merge），导致字节码不一致。
+                        # 普遍性: 覆盖 `a and not (b or c)` / `a and not (b or c or d)` /
+                        # `a and b and not (c or d)` 等所有 and 链 + 末尾 not(or) 形式。
+                        if (isinstance(_elif_boolop_expr, dict)
+                                and _elif_boolop_expr.get('type') == 'BoolOp'
+                                and _elif_boolop_expr.get('op') == 'and'
+                                and _elif_boolop_expr.get('values')
+                                and isinstance(_elif_boolop_expr['values'][-1], dict)
+                                and _elif_boolop_expr['values'][-1].get('type') == 'BoolOp'
+                                and _elif_boolop_expr['values'][-1].get('op') == 'or'):
+                            _negated_or = _negate_expr(_elif_boolop_expr['values'][-1])
+                            _elif_boolop_expr = dict(_elif_boolop_expr)
+                            _elif_boolop_expr['values'] = list(_elif_boolop_expr['values'][:-1]) + [_negated_or]
+                            elif_condition = _elif_boolop_expr
+                        else:
+                            elif_condition = _negate_expr(_elif_boolop_expr)
+                    else:
+                        elif_condition = _elif_boolop_expr
                     for _b in elif_boolop.blocks:
                         self.generated_blocks.add(_b)
                     if elif_boolop.merge_block:
@@ -11336,7 +11366,34 @@ AST 映射规则:
                         if 'TRUE' in _last_ci.opname:
                             _boolop_negate = True
                 if _boolop_negate:
-                    boolop_expr = _negate_expr(boolop_expr)
+                    # [R23-N2 fix] 区域归约算法「一次正确」原则：当 BoolOp 表达式
+                    # 是 `a and (b or c)` 形式（由 _try_build_and_inner_or_pattern
+                    # 构建，最后一个操作数是 BoolOp(or, ...)），且最后一个链块的
+                    # 跳转是 IF_TRUE（表明 `not` 应该应用），`not` 应该只应用到
+                    # `or` 子表达式上，而非整个 `and` 表达式。
+                    # 原始 pyc 源码 `if a and not (b or c):` 编译为：
+                    #   a; POP_JUMP_IF_FALSE → merge  (a 假时跳过整个 and)
+                    #   b; POP_JUMP_IF_TRUE → merge   (b 真时 not(b or c) 假，and 假，跳 merge)
+                    #   c; POP_JUMP_IF_TRUE → merge   (c 真时跳 merge)
+                    # 旧逻辑将 `not` 应用到整个 `a and (b or c)`，生成
+                    # `not (a and (b or c))`，编译为不同的字节码（a 假时跳到 if 体
+                    # 而非 merge），导致字节码不一致。
+                    # 修复后生成 `a and not (b or c)`，CPython 重新编译为
+                    # 与原始一致的字节码。
+                    # 普遍性: 覆盖 `a and not (b or c)` / `a and not (b or c or d)` /
+                    # `a and b and not (c or d)` 等所有 and 链 + 末尾 not(or) 形式。
+                    if (isinstance(boolop_expr, dict)
+                            and boolop_expr.get('type') == 'BoolOp'
+                            and boolop_expr.get('op') == 'and'
+                            and boolop_expr.get('values')
+                            and isinstance(boolop_expr['values'][-1], dict)
+                            and boolop_expr['values'][-1].get('type') == 'BoolOp'
+                            and boolop_expr['values'][-1].get('op') == 'or'):
+                        _negated_or = _negate_expr(boolop_expr['values'][-1])
+                        boolop_expr = dict(boolop_expr)
+                        boolop_expr['values'] = list(boolop_expr['values'][:-1]) + [_negated_or]
+                    else:
+                        boolop_expr = _negate_expr(boolop_expr)
                 # [CPython peephole] BoolOp result used in a comparison:
                 # `if (a or b) == c:` compiles to:
                 #   LOAD a; JUMP_IF_TRUE_OR_POP to merge
@@ -18880,6 +18937,14 @@ AST 映射规则:
             if _grouped_result is not None:
                 return _grouped_result
             # 分组重建失败时回退到 or_groups 算法
+        # [R23-N2 fix] 检测 `a and (b or c)` 模式（or 子表达式作为 and 链的
+        # 最后一个操作数）。当所有 'and' 块的 IF_FALSE 跳转目标 = merge_block
+        # 且所有 'or' 块的 IF_TRUE 跳转目标 = merge_block 时，or 嵌套在 and 内部。
+        # or_groups 平坦化算法会错误地生成 `(a and b) or c`（丢失括号），
+        # 此检测优先构建 `and(a, or(b, c))` 保留正确的嵌套结构。
+        _and_inner_or_result = self._try_build_and_inner_or_pattern(region)
+        if _and_inner_or_result is not None:
+            return _and_inner_or_result
         # 使用or_groups算法处理混合and/or优先级
         # 核心原理：Python中and绑定比or更紧
         # 当op从'and'变为'or'时，当前值是'and'段的最后一个值（外层or的短路跳转）
@@ -19204,6 +19269,135 @@ AST 映射规则:
         if _has_unary_not and result:
             result = {'type': 'UnaryOp', 'op': 'not', 'operand': result}
         return result
+
+    def _try_build_and_inner_or_pattern(self, region: 'BoolOpRegion') -> Optional[Dict[str, Any]]:
+        """[R23-N2 fix] 区域归约算法「一次正确」原则：检测 `a and (b or c)` 模式
+        （或更一般地 `a1 and a2 and ... and (b1 or b2 or ...)`），其中 `or`
+        子表达式是 `and` 链的最后一个操作数。
+
+        算法角色：模式检测器（Pattern Detector）+ 表达式重建器
+
+        【字节码模式】
+        源码: `if a and (b or c):`  或  `if a and not (b or c):`
+        op_chain: [(b1, 'and'), (b2, 'or'), (b3, 'or')]
+        - b1 (and): POP_JUMP_FORWARD_IF_FALSE → merge_block
+          (a 为假时跳过整个 and，到 merge)
+        - b2 (or): POP_JUMP_FORWARD_IF_TRUE → merge_block
+          (b 为真时 (b or c) 为真，and 继续... 但这里跳到 merge)
+        - b3 (or): POP_JUMP_FORWARD_IF_TRUE → merge_block
+          (c 为真时跳到 merge)
+
+        【与 (a and b) or c 的关键区别】
+        - `a and (b or c)`: a 的 IF_FALSE → merge（and 的出口 = merge）
+          b/c 的 IF_TRUE → merge（or 的出口 = merge，与 and 的出口相同）
+          → or 是 and 的最后一个操作数（嵌套在 and 内部）
+        - `(a and b) or c`: a 的 IF_FALSE → c（and 的出口 = c，不是 merge）
+          b 的 IF_TRUE → merge（or 的出口 = merge）
+          → or 是 and 的外层（默认优先级，无需括号）
+
+        【检测条件】
+        1. op_chain 至少 2 个元素
+        2. 第一个元素是 'and'，后续至少一个 'or'
+        3. 找到第一个 'or' 的索引（边界）
+        4. 所有 'and' 块（边界之前）的 IF_FALSE 目标 = merge_block
+        5. 所有 'or' 块（边界及之后）的 IF_TRUE 目标 = merge_block
+
+        【生成的 AST】
+        `a and (b or c)` → BoolOp(and, [a, BoolOp(or, [b, c])])
+        注意：此方法不处理 `not`，`not` 由 IfRegion 的 _boolop_negate 逻辑处理。
+        但当此模式被检测到时，IfRegion 应将 `not` 应用到 `or` 子表达式上，
+        而非整个 `and` 表达式（见 IfRegion _boolop_negate 逻辑的 R23-N2 fix）。
+
+        【普遍性】
+        覆盖 `a and (b or c)` / `a and (b or c or d)` /
+        `a and b and (c or d)` / `a and b and (c or d or e)` 等所有
+        `and 链 + 末尾 or 子表达式` 形式。
+        """
+        op_chain = region.op_chain
+        if not op_chain or len(op_chain) < 2:
+            return None
+        # 条件1: 第一个元素是 'and'
+        if op_chain[0][1] != 'and':
+            return None
+        # 条件2: 后续至少一个 'or'
+        or_indices = [i for i, (_, op) in enumerate(op_chain) if op == 'or']
+        if not or_indices:
+            return None
+        # 条件3: 找到边界（第一个 'or' 的索引）
+        boundary = or_indices[0]
+        # 所有 'and' 块应在边界之前，所有 'or' 块应在边界及之后
+        and_blocks = [b for b, op in op_chain[:boundary]]
+        or_blocks = [b for b, op in op_chain[boundary:]]
+        # 验证：边界之前都是 'and'，边界及之后都是 'or'
+        for _, op in op_chain[:boundary]:
+            if op != 'and':
+                return None
+        for _, op in op_chain[boundary:]:
+            if op != 'or':
+                return None
+        # 条件4 & 5: 检查跳转目标
+        if region.merge_block is None:
+            return None
+        merge_offset = region.merge_block.start_offset
+        STRIP_JUMP_OPS = SHORT_CIRCUIT_JUMP_OPS | FORWARD_CONDITIONAL_JUMP_OPS
+        # 'and' 块的 IF_FALSE 目标 = merge
+        for b in and_blocks:
+            li = b.get_last_instruction()
+            if (li is None or li.argval != merge_offset
+                    or li.opname not in STRIP_JUMP_OPS
+                    or 'FALSE' not in li.opname):
+                return None
+        # 'or' 块的 IF_TRUE 目标 = merge
+        for b in or_blocks:
+            li = b.get_last_instruction()
+            if (li is None or li.argval != merge_offset
+                    or li.opname not in STRIP_JUMP_OPS
+                    or 'TRUE' not in li.opname):
+                return None
+        # 检测成功，重建操作数表达式
+        and_operands: List[Dict[str, Any]] = []
+        or_operands: List[Dict[str, Any]] = []
+        for b in and_blocks:
+            expr = self._reconstruct_boolop_operand(b, region)
+            if expr is None:
+                return None
+            and_operands.append(expr)
+        for b in or_blocks:
+            expr = self._reconstruct_boolop_operand(b, region)
+            if expr is None:
+                return None
+            or_operands.append(expr)
+        # 构建 AST: and([and_operands..., or([or_operands...])])
+        if len(or_operands) == 1:
+            or_expr = or_operands[0]
+        else:
+            or_expr = {'type': 'BoolOp', 'op': 'or', 'values': or_operands}
+        and_values = and_operands + [or_expr]
+        if len(and_values) == 1:
+            return and_values[0]
+        return {'type': 'BoolOp', 'op': 'and', 'values': and_values}
+
+    def _reconstruct_boolop_operand(self, chain_block: 'BasicBlock',
+                                     region: 'BoolOpRegion') -> Optional[Dict[str, Any]]:
+        """[R23-N2 fix] 重建 BoolOp 链块的操作数表达式（复用 _build_boolop_expression
+        中的指令过滤和重建逻辑）。"""
+        STRIP_JUMP_OPS = SHORT_CIRCUIT_JUMP_OPS | FORWARD_CONDITIONAL_JUMP_OPS
+        instrs = [i for i in chain_block.instructions
+                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+        last_instr = chain_block.get_last_instruction()
+        if last_instr and last_instr.opname in STRIP_JUMP_OPS:
+            pure_instrs = [i for i in instrs if i != last_instr]
+        else:
+            clean_instrs = []
+            for i in instrs:
+                if i.opname in ('POP_TOP', 'RETURN_VALUE', 'RETURN_CONST',
+                                'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'):
+                    break
+                clean_instrs.append(i)
+            pure_instrs = clean_instrs if clean_instrs else (list(instrs[:1]) if instrs else [])
+        if not pure_instrs:
+            return None
+        return self.expr_reconstructor.reconstruct(pure_instrs)
 
     def _build_boolop_augassign_target(self, region: 'BoolOpRegion') -> Optional[Dict[str, Any]]:
         """[R11-err4/5/6] 从首 chain_block 前缀指令重建 AugAssign 的属性/下标 target。
