@@ -12417,6 +12417,20 @@ RegionType 枚举值: RegionType.ASSERT
                         ss_last = ss.get_last_instruction()
                         if ss_last and ss_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
                             return False
+            # [R14-N2 fix] 条件块（以条件跳转结尾）如果不是 BoolOp 链中的
+            # 条件延续块（跳转目标 == 另一个后继），则不是 ternary 值块。
+            # 在 BoolOp 链 `x if a and b else y` 中，条件链块
+            # `LOAD b; POP_JUMP_IF_FALSE false_block` 的跳转目标是 false_block
+            # （另一个后继）。在嵌套 if `if a: if b: ...` 中，嵌套条件块的
+            # 跳转目标不是另一个后继，不应被识别为 ternary。
+            for i, s in enumerate(succs):
+                s_last = s.get_last_instruction()
+                if (s_last and s_last.argval is not None
+                        and s_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)):
+                    other = succs[1 - i]
+                    jt = self.cfg.get_block_by_offset(s_last.argval)
+                    if jt is not other:
+                        return False
             if not (self._is_single_expression_block(succs[0]) and
                     self._is_single_expression_block(succs[1])):
                 return False
@@ -12966,6 +12980,15 @@ RegionType 枚举值: RegionType.ASSERT
                 # true_block/false_block 已更新为 chained compare 完成后的
                 # 真正值块（单表达式块），header block 的直接后继不是值块，
                 # 跳过 _is_ternary_block 检查（该检查基于 header 的直接后继）。
+                # [R14-N2 fix] 如果 true_block 以条件跳转结尾且跳转目标不是
+                # false_block，这是嵌套 if（如 `if a: if b: ...`），不是 ternary。
+                # BoolOp 链中条件块跳转目标 == false_block；嵌套 if 跳转目标不同。
+                _true_last_check = true_block.get_last_instruction()
+                if (_true_last_check and _true_last_check.argval is not None
+                        and _true_last_check.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)):
+                    _jt_check = self.cfg.get_block_by_offset(_true_last_check.argval)
+                    if _jt_check is not false_block:
+                        return None
                 false_is_ternary = False
                 # Detect JUMP_FORWARD pattern: ternary in while-loop condition.
                 # When true_block ends with FORWARD_CONDITIONAL_JUMP (the while

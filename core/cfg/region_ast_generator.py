@@ -3708,6 +3708,31 @@ AST 映射规则:
                         _eps_instrs = []
                         continue
 
+                    # [R14-N3 fix] 区域归约算法原则 2（每块唯一归属）：
+                    # while 循环条件块中的 STORE_SUBSCR/STORE_ATTR 赋值（如
+                    # `params['page_no'] = str(page_no)`、`obj.attr = value`）必须作为
+                    # 独立 pre_stmt 提取，否则会落入 fallback `_eps_instrs.append`
+                    # 累积但永不构建为语句，导致赋值丢失。镜像 IfRegion 条件块
+                    # R10-N2 修复 (L8368-8383) 与入口块 R10-N1 修复 (L447-467)。
+                    # 失败模式：cash_collection_ability 等 13 个函数中，for 循环体内
+                    # 嵌套 while 循环，while 条件块同时包含 for 体的前置赋值
+                    # `params['page_no'] = str(page_no)`（STORE_SUBSCR）。未提取时
+                    # FOR_ITER 目标偏移因循环体字节码缩短而错误（pyc:1178 vs src:1142）。
+                    if _instr.opname == 'STORE_SUBSCR':
+                        _eps_instrs.append(_instr)
+                        _stmt = self._build_subscript_assign(_eps_instrs)
+                        if _stmt:
+                            pre_stmts.append(_stmt)
+                        _eps_instrs = []
+                        continue
+                    if _instr.opname == 'STORE_ATTR':
+                        _eps_instrs.append(_instr)
+                        _stmt = self._build_attr_assign(_eps_instrs)
+                        if _stmt:
+                            pre_stmts.append(_stmt)
+                        _eps_instrs = []
+                        continue
+
                     if _instr.opname in ('DELETE_SUBSCR', 'DELETE_ATTR'):
                         _eps_instrs.append(_instr)
 
@@ -7339,7 +7364,19 @@ AST 映射规则:
                     stmt['value'].get('type') == 'Constant' and
                     stmt['value'].get('value') is None)
 
-        if elif_part and then_stmts and len(then_stmts) > 1:
+        # [R14-N1 fix] 仅当 then-block 不以 RETURN_VALUE/RETURN_CONST 结尾时
+        # 才剥离隐式 return None。当 then-block 以 RETURN_VALUE/RETURN_CONST
+        # 结尾时，return 是源码中的显式语句（如 `if not x: return`），剥离会
+        # 导致字节码不一致（jump_target_diff: 跳转目标偏移因缺少 LOAD_CONST +
+        # RETURN_VALUE 而提前 2~4 字节）。
+        _then_has_explicit_return = False
+        for _tb in (region.then_blocks or []):
+            _tb_last = _tb.get_last_instruction()
+            if _tb_last and _tb_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                _then_has_explicit_return = True
+                break
+        if (elif_part and then_stmts and len(then_stmts) > 1
+                and not _then_has_explicit_return):
             while then_stmts and _is_implicit_return_none(then_stmts[-1]):
                 then_stmts.pop()
 
