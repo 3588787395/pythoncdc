@@ -106,13 +106,7 @@ def get_real_exrights_param(param):
     else:
         return params.get(param)
 def get_token():
-    token_value = ''
-    if not os.path.exists(OPNE_TOKEN_PATH):
-        return token_value
-    else:
-        with open(OPNE_TOKEN_PATH, 'r') as f:
-            token_value = f.read()
-        return token_value
+    pass
 def api_get(url, params=None, request_times=1):
     token_value = get_token()
     if not token_value:
@@ -658,71 +652,71 @@ def change_his_to_forward(security, data, exrights_data, start, end, typet):
         firstdate = list(data.index)[0].tz_localize(None).to_pydatetime().strftime('%Y%m%d')
         if start != firstdate:
             start = firstdate
-        if len(start) > 8:
-            start = start[:8]
-        if len(end) > 8:
-            end = end[:8]
-        startDateIndex = datetime.strptime(start, '%Y%m%d').strftime('%Y-%m-%d 00:00:00')
-        endDateIndex = datetime.strptime(end, '%Y%m%d').strftime('%Y-%m-%d 00:00:00')
-        fields = ['open', 'close', 'high', 'low', 'price']
-        if typet == 6:
-            fields = ['open', 'close', 'high', 'low', 'price', 'preclose', 'high_limit', 'low_limit']
-        series = exrights_data[security]
-        if series.empty:
-            return data
-        elif series[startDateIndex:].empty:
-            return data
-        elif startDateIndex == endDateIndex:
-            n = list(series[startDateIndex:].index)[0]
-            if n == startDateIndex:
-                if len(series[startDateIndex:].index) > 1:
-                    n = list(series[startDateIndex:].index)[1]
-                else:
-                    return data
-                data = data * float(series.loc[n, 'exer_forward_a']) + float(series.loc[n, 'exer_forward_b'])
-                return round(data, 2)
-        preindex = None
-        tmpdata = None
-        if len(series[startDateIndex:].index) > 0:
-            tmpstartindex = series[startDateIndex:].index[0]
-        else:
-            tmpstartindex = None
-        if len(series[endDateIndex:].index) > 1:
-            tmpendindex = series[endDateIndex:].index[1]
-        else:
-            tmpendindex = None
-        for n in list(series[tmpstartindex:tmpendindex].index):
-            if data[preindex:n].empty:
-                continue
-            elif len(data[preindex:n].index) == 1:
-                if list(data[preindex:n].index)[0].tz_localize(None) == pandas.Timestamp(datetime.strptime(start, '%Y%m%d')):
-                    continue
-                elif list(data[preindex:n].index)[0].tz_localize(None) == pandas.Timestamp(datetime.strptime(end, '%Y%m%d')):
-                    pass
-            if preindex is None:
-                tmpdata = data[preindex:n]
-                if tmpdata[n:].empty:
-                    data.loc[preindex:n, fields] = round(data[preindex:n][fields] * float(series.loc[n, 'exer_forward_a']) + float(series.loc[n, 'exer_forward_b']), 2)
-                    tmpdata = tmpdata
-                else:
-                    data.loc[preindex:data[preindex:n][:-1].index[-1], fields] = round(data[preindex:n][:-1][fields] * float(series.loc[n, 'exer_forward_a']) + float(series.loc[n, 'exer_forward_b']), 2)
-                    tmpdata = tmpdata[:-1]
-            else:
-                tmp = data[preindex:n]
-                if tmp[n:].empty:
-                    data.loc[preindex:n, fields] = round(data[preindex:n][fields] * float(series.loc[n, 'exer_forward_a']) + float(series.loc[n, 'exer_forward_b']), 2)
-                    tmp = tmp
-                else:
-                    data.loc[preindex:data[preindex:n][:-1].index[-1], fields] = round(data[preindex:n][:-1][fields] * float(series.loc[n, 'exer_forward_a']) + float(series.loc[n, 'exer_forward_b']), 2)
-                    tmp = tmp[:-1]
-                tmpdata = tmpdata.append(tmp)
-            if preindex != n:
-                preindex = n
-        if preindex:
-            tmpdata = tmpdata.append(data[preindex:])
-        if tmpdata is not None:
-            data = tmpdata
+    if len(start) > 8:
+        start = start[:8]
+    if len(end) > 8:
+        end = end[:8]
+    startDateIndex = datetime.strptime(start, '%Y%m%d').strftime('%Y-%m-%d 00:00:00')
+    endDateIndex = datetime.strptime(end, '%Y%m%d').strftime('%Y-%m-%d 00:00:00')
+    fields = ['open', 'close', 'high', 'low', 'price']
+    if typet == 6:
+        fields = ['open', 'close', 'high', 'low', 'price', 'preclose', 'high_limit', 'low_limit']
+    series = exrights_data[security]
+    if series.empty:
         return data
+    if series[startDateIndex:].empty:
+        return data
+    if startDateIndex == endDateIndex:
+        n = list(series[startDateIndex:].index)[0]
+        if n == startDateIndex:
+            if len(series[startDateIndex:].index) > 1:
+                n = list(series[startDateIndex:].index)[1]
+            else:
+                return data
+            data = data * float(series.loc[n, 'exer_forward_a']) + float(series.loc[n, 'exer_forward_b'])
+            return round(data, 2)
+    preindex = None
+    tmpdata = None
+    if len(series[startDateIndex:].index) > 0:
+        tmpstartindex = series[startDateIndex:].index[0]
+    else:
+        tmpstartindex = None
+    if len(series[endDateIndex:].index) > 1:
+        tmpendindex = series[endDateIndex:].index[1]
+    else:
+        tmpendindex = None
+    for n in list(series[tmpstartindex:tmpendindex].index):
+        if data[preindex:n].empty:
+            continue
+        elif len(data[preindex:n].index) == 1:
+            if list(data[preindex:n].index)[0].tz_localize(None) == pandas.Timestamp(datetime.strptime(start, '%Y%m%d')):
+                continue
+            elif list(data[preindex:n].index)[0].tz_localize(None) == pandas.Timestamp(datetime.strptime(end, '%Y%m%d')):
+                pass
+        if preindex is None:
+            tmpdata = data[preindex:n]
+            if tmpdata[n:].empty:
+                data.loc[preindex:n, fields] = round(data[preindex:n][fields] * float(series.loc[n, 'exer_forward_a']) + float(series.loc[n, 'exer_forward_b']), 2)
+                tmpdata = tmpdata
+            else:
+                data.loc[preindex:data[preindex:n][:-1].index[-1], fields] = round(data[preindex:n][:-1][fields] * float(series.loc[n, 'exer_forward_a']) + float(series.loc[n, 'exer_forward_b']), 2)
+                tmpdata = tmpdata[:-1]
+        else:
+            tmp = data[preindex:n]
+            if tmp[n:].empty:
+                data.loc[preindex:n, fields] = round(data[preindex:n][fields] * float(series.loc[n, 'exer_forward_a']) + float(series.loc[n, 'exer_forward_b']), 2)
+                tmp = tmp
+            else:
+                data.loc[preindex:data[preindex:n][:-1].index[-1], fields] = round(data[preindex:n][:-1][fields] * float(series.loc[n, 'exer_forward_a']) + float(series.loc[n, 'exer_forward_b']), 2)
+                tmp = tmp[:-1]
+            tmpdata = tmpdata.append(tmp)
+        if preindex != n:
+            preindex = n
+    if preindex:
+        tmpdata = tmpdata.append(data[preindex:])
+    if tmpdata is not None:
+        data = tmpdata
+    return data
 def change_his_to_backward(security, data, exrights_data, start, end, typet):
     if len(data) == 0:
         return data
@@ -730,73 +724,73 @@ def change_his_to_backward(security, data, exrights_data, start, end, typet):
         firstdate = list(data.index)[0].tz_localize(None).to_pydatetime().strftime('%Y%m%d')
         if start != firstdate:
             start = firstdate
-        if len(start) > 8:
-            start = start[:8]
-        if len(end) > 8:
-            end = end[:8]
-        startDateIndex = datetime.strptime(start, '%Y%m%d').strftime('%Y-%m-%d 00:00:00')
-        endDateIndex = datetime.strptime(end, '%Y%m%d').strftime('%Y-%m-%d 00:00:00')
-        fields = ['open', 'close', 'high', 'low', 'price']
-        if typet == 6:
-            fields = ['open', 'close', 'high', 'low', 'price', 'preclose', 'high_limit', 'low_limit']
-        series = exrights_data[security]
-        if series.empty:
-            return data
-        elif series[:endDateIndex].empty:
-            return data
-        elif startDateIndex == endDateIndex:
-            n = list(series[:endDateIndex].index)[-1]
-            data[fields] = data[fields] * float(series.loc[n, 'exer_backward_a']) + float(series.loc[n, 'exer_backward_b'])
-            return round(data, 2)
-        elif len(series[:startDateIndex].index) > 1:
-            if startDateIndex in series.index:
-                if len(series[:startDateIndex].index) >= 2:
-                    tmpstartindex = series[:startDateIndex].index[-2]
-                else:
-                    tmpstartindex = None
-            else:
-                tmpstartindex = series[:startDateIndex].index[-1]
-        else:
-            tmpstartindex = None
-        if len(series[endDateIndex:].index) > 0:
-            tmpendindex = series[endDateIndex:].index[0]
-        else:
-            tmpendindex = None
-        firsttime = list(data.index)[0].tz_localize(None).to_pydatetime().strftime('%H%M%S')
-        indexlist = list(series[tmpstartindex:tmpendindex].index)
-        preindex = None
-        tmpdata = None
-        predataindex = None
-        for n in indexlist:
-            if int(firsttime) > 0:
-                curdataindex = n.replace('00:00:00', '09:31:00')
-            else:
-                curdataindex = n
-            if preindex is None:
-                t = datetime.strptime(curdataindex, '%Y-%m-%d %H:%M:%S')
-                pret = t + qdt.timedelta(days=-1)
-                preday = datetime.strftime(pret, '%Y-%m-%d %H:%M:%S')
-                tmpdata = data[:preday].copy()
-                if preindex != n:
-                    preindex = n
-                if predataindex != curdataindex:
-                    predataindex = curdataindex
-            elif data[predataindex:curdataindex].empty:
-                break
-            elif curdataindex in data.index:
-                curdatetime = datetime.strptime(curdataindex, '%Y-%m-%d %H:%M:%S')
-                y_curdataindex = (curdatetime - timedelta(days=1)).strftime('%Y-%m-%d') + ' 23:59:59'
-                if len(data[predataindex:y_curdataindex]) == 0:
-                    pass
-            else:
-                data.loc[predataindex:data[predataindex:curdataindex].index[-1], fields] = round(data[predataindex:curdataindex][fields] * float(series.loc[preindex, 'exer_backward_a']) + float(series.loc[preindex, 'exer_backward_b']), 2)
-                tmpdata = tmpdata.append(data[predataindex:curdataindex])
-        if predataindex and len(data[predataindex:]) > 0:
-            data.loc[predataindex:data[predataindex:].index[-1], fields] = round(data[predataindex:][fields] * float(series.loc[preindex, 'exer_backward_a']) + float(series.loc[preindex, 'exer_backward_b']), 2)
-            tmpdata = tmpdata.append(data[predataindex:])
-        if tmpdata is not None:
-            data = tmpdata
+    if len(start) > 8:
+        start = start[:8]
+    if len(end) > 8:
+        end = end[:8]
+    startDateIndex = datetime.strptime(start, '%Y%m%d').strftime('%Y-%m-%d 00:00:00')
+    endDateIndex = datetime.strptime(end, '%Y%m%d').strftime('%Y-%m-%d 00:00:00')
+    fields = ['open', 'close', 'high', 'low', 'price']
+    if typet == 6:
+        fields = ['open', 'close', 'high', 'low', 'price', 'preclose', 'high_limit', 'low_limit']
+    series = exrights_data[security]
+    if series.empty:
         return data
+    if series[:endDateIndex].empty:
+        return data
+    if startDateIndex == endDateIndex:
+        n = list(series[:endDateIndex].index)[-1]
+        data[fields] = data[fields] * float(series.loc[n, 'exer_backward_a']) + float(series.loc[n, 'exer_backward_b'])
+        return round(data, 2)
+    elif len(series[:startDateIndex].index) > 1:
+        if startDateIndex in series.index:
+            if len(series[:startDateIndex].index) >= 2:
+                tmpstartindex = series[:startDateIndex].index[-2]
+            else:
+                tmpstartindex = None
+        else:
+            tmpstartindex = series[:startDateIndex].index[-1]
+    else:
+        tmpstartindex = None
+    if len(series[endDateIndex:].index) > 0:
+        tmpendindex = series[endDateIndex:].index[0]
+    else:
+        tmpendindex = None
+    firsttime = list(data.index)[0].tz_localize(None).to_pydatetime().strftime('%H%M%S')
+    indexlist = list(series[tmpstartindex:tmpendindex].index)
+    preindex = None
+    tmpdata = None
+    predataindex = None
+    for n in indexlist:
+        if int(firsttime) > 0:
+            curdataindex = n.replace('00:00:00', '09:31:00')
+        else:
+            curdataindex = n
+        if preindex is None:
+            t = datetime.strptime(curdataindex, '%Y-%m-%d %H:%M:%S')
+            pret = t + qdt.timedelta(days=-1)
+            preday = datetime.strftime(pret, '%Y-%m-%d %H:%M:%S')
+            tmpdata = data[:preday].copy()
+            if preindex != n:
+                preindex = n
+            if predataindex != curdataindex:
+                predataindex = curdataindex
+        elif data[predataindex:curdataindex].empty:
+            break
+        elif curdataindex in data.index:
+            curdatetime = datetime.strptime(curdataindex, '%Y-%m-%d %H:%M:%S')
+            y_curdataindex = (curdatetime - timedelta(days=1)).strftime('%Y-%m-%d') + ' 23:59:59'
+            if len(data[predataindex:y_curdataindex]) == 0:
+                pass
+        else:
+            data.loc[predataindex:data[predataindex:curdataindex].index[-1], fields] = round(data[predataindex:curdataindex][fields] * float(series.loc[preindex, 'exer_backward_a']) + float(series.loc[preindex, 'exer_backward_b']), 2)
+            tmpdata = tmpdata.append(data[predataindex:curdataindex])
+    if predataindex and len(data[predataindex:]) > 0:
+        data.loc[predataindex:data[predataindex:].index[-1], fields] = round(data[predataindex:][fields] * float(series.loc[preindex, 'exer_backward_a']) + float(series.loc[preindex, 'exer_backward_b']), 2)
+        tmpdata = tmpdata.append(data[predataindex:])
+    if tmpdata is not None:
+        data = tmpdata
+    return data
 def get_exrights_data(stocks, start):
     if len(start) > 8:
         start = start[:8]
@@ -894,34 +888,32 @@ def get_price(security, start_date=None, end_date=None, frequency='daily', field
     frequency = FREQUENCYNAME_DICT.get(frequency, frequency)
     if frequency not in ALL_FREQUENCY:
         strategy_log.error('不支持查询频率周期为：%s 的数据，请输入正确的频率周期' % frequency)
-        return None
-    else:
-        current_date = datetime.now().strftime('%Y%m%d')
-        if end_date is None:
-            from fly.common.tradingday_calendar import get_start_day
-            tmp_start_date, tmp_end_date = get_start_day(end_date=current_date, count=2, type='daily')
-            if current_date == tmp_end_date:
-                end_date = tmp_start_date
-            else:
-                end_date = tmp_end_date
+    current_date = datetime.now().strftime('%Y%m%d')
+    if end_date is None:
+        from fly.common.tradingday_calendar import get_start_day
+        tmp_start_date, tmp_end_date = get_start_day(end_date=current_date, count=2, type='daily')
+        if current_date == tmp_end_date:
+            end_date = tmp_start_date
         else:
-            end_date = check_datetime_common(end_date)
-            if end_date is None:
-                return None
-            elif end_date[0:8] == datetime.now().strftime('%Y%m%d'):
-                end_date = (datetime.now() + qdt.timedelta(-1)).strftime('%Y%m%d')
-        if start_date is not None:
-            start_date = check_datetime_common(start_date)
-            if start_date is None:
-                return None
-            elif start_date[0:8] >= current_date:
-                strategy_log.error('start_date大于等于当前日期，请检查')
-                return None
-            elif start_date[0:8] > end_date[0:8]:
-                strategy_log.error('start_date大于end_date，请检查')
-                return None
-        nd_array = get_price_common(security, start_date, end_date, frequency, fields, fq, count, is_string, is_dict)
-        return nd_array
+            end_date = tmp_end_date
+    else:
+        end_date = check_datetime_common(end_date)
+        if end_date is None:
+            return None
+        elif end_date[0:8] == datetime.now().strftime('%Y%m%d'):
+            end_date = (datetime.now() + qdt.timedelta(-1)).strftime('%Y%m%d')
+    if start_date is not None:
+        start_date = check_datetime_common(start_date)
+        if start_date is None:
+            return None
+        elif start_date[0:8] >= current_date:
+            strategy_log.error('start_date大于等于当前日期，请检查')
+            return None
+        elif start_date[0:8] > end_date[0:8]:
+            strategy_log.error('start_date大于end_date，请检查')
+            return None
+    nd_array = get_price_common(security, start_date, end_date, frequency, fields, fq, count, is_string, is_dict)
+    return nd_array
 @check_arg
 def get_history(count, frequency='1d', field=None, security_list=None, fq=None, skip_suspended=False, include=False, query_date=None, fill='nan', is_dict=False):
     ClearAllCache()
@@ -1879,875 +1871,876 @@ def get_balance_statement(security, date=None, report_types=None, start_year=Non
     error_re, re_security = convert_to_list(security)
     if error_re['error_no'] != 0:
         return re_empty_data
+    security = re_security
+    error_re, re_fields = convert_to_list(fields)
+    if error_re['error_no'] != 0:
+        return re_empty_data
     else:
-        security = re_security
-        error_re, re_fields = convert_to_list(fields)
-        if error_re['error_no'] != 0:
+        fields = re_fields
+        if date and isVaildDate(str(date)):
+            date = change_date_format(date)
+    if report_types is not None:
+        DEFAULT_REPORT_TYPES = [1, 2, 3, 4]
+        if isinstance(report_types, str):
+            report_types = int(report_types)
+        if report_types not in DEFAULT_REPORT_TYPES:
             return re_empty_data
-        else:
-            fields = re_fields
-            if date and isVaildDate(str(date)):
-                date = change_date_format(date)
-            if report_types is not None:
-                DEFAULT_REPORT_TYPES = [1, 2, 3, 4]
-                if isinstance(report_types, str):
-                    report_types = int(report_types)
-                if report_types not in DEFAULT_REPORT_TYPES:
-                    return re_empty_data
-            if date is None and start_year is None and end_year is None:
-                date = time.strftime('%Y-%m-%d')
-            try:
-                column_basis = ['secu_code', 'secu_abbr', 'company_type', 'publ_date', 'end_date']
-                column_temp = get_fields(fans='balance_fields', fields=fields)
-                column = list(set(column_basis).union(set(column_temp)))
-                list_base = ['secu_code', 'secu_abbr', 'company_type', 'publ_date', 'end_date']
-                if date is not None:
-                    DataFrame_temp = pandas.DataFrame(index=security, columns=column).drop('secu_code', axis=1)
-                    DataFrame_temp.index.name = 'secu_code'
-                    year_temp = int(date[:4])
-                    quarter_temp = pandas.Period(date, 'Q-DEC').quarter
-                    if report_types is None:
-                        if quarter_temp == 1:
-                            quarter_temp = 4
-                            year_temp -= 1
-                        else:
-                            quarter_temp -= 1
-                    elif quarter_temp <= report_types:
-                        quarter_temp = report_types
-                        year_temp -= 1
-                    else:
-                        quarter_temp = report_types
-                    report_types = str(quarter_temp)
-                    start_year = str(year_temp)
-                    end_year = str(year_temp)
-                    error_return, data_return = balance_statement(str(security), report_types, start_year, end_year, str(column), merge_type)
-                    if error_return['error_no'] != 0:
-                        print('获取GTN数据异常，请联系管理员，异常信息：%s' % error_return)
-                        return re_empty_data
-                    elif data_return.empty:
-                        return DataFrame_temp
-                    elif date_type is None:
-                        data_return = data_return[data_return.publ_date < date]
-                    data_return.index = data_return['secu_code'].tolist()
-                    DataFrame_temp.update(data_return)
-                    re_data = DataFrame_temp.replace('--', str(numpy.nan))
-                    for i in re_data.columns:
-                        if i not in list_base:
-                            re_data[i] = re_data[i].astype('float64')
-                    re_data.index.name = 'secu_code'
-                    return re_data
+    if date is None and start_year is None and end_year is None:
+        date = time.strftime('%Y-%m-%d')
+    try:
+        column_basis = ['secu_code', 'secu_abbr', 'company_type', 'publ_date', 'end_date']
+        column_temp = get_fields(fans='balance_fields', fields=fields)
+        column = list(set(column_basis).union(set(column_temp)))
+        list_base = ['secu_code', 'secu_abbr', 'company_type', 'publ_date', 'end_date']
+        if date is not None:
+            DataFrame_temp = pandas.DataFrame(index=security, columns=column).drop('secu_code', axis=1)
+            DataFrame_temp.index.name = 'secu_code'
+            year_temp = int(date[:4])
+            quarter_temp = pandas.Period(date, 'Q-DEC').quarter
+            if report_types is None:
+                if quarter_temp == 1:
+                    quarter_temp = 4
+                    year_temp -= 1
                 else:
-                    data = {}
-                    DataFrame_date = get_date_index(report_types, start_year, end_year, column).drop('end_date', axis=1)
-                    error_re, data_df = balance_statement(str(security), report_types, start_year, end_year, str(column), merge_type)
-                    if error_re['error_no'] != 0:
-                        for code in security:
-                            data[code] = re_empty_data
-                        return pandas.Panel(data)
-                    elif data_df.empty:
-                        for code in security:
-                            data[code] = DataFrame_date
-                        return pandas.Panel(data)
-                    else:
-                        data_df.index = data_df['end_date'].tolist()
-                        data_df = data_df.replace('--', str(numpy.nan))
-                        for i in data_df.columns:
-                            if i not in list_base:
-                                data_df[i] = data_df[i].astype('float64')
-                        data_df = fill_missing_stock_data(security, data_df)
-                        data_df = data_df.set_index(['end_date', 'secu_code'])
-                        re_pandas = data_df.to_panel().swapaxes('items', 'minor')
-                        return re_pandas
-            except BaseException as x:
-                system_log.error(get_traceback_message())
-                raise x
+                    quarter_temp -= 1
+            elif quarter_temp <= report_types:
+                quarter_temp = report_types
+                year_temp -= 1
+            else:
+                quarter_temp = report_types
+            report_types = str(quarter_temp)
+            start_year = str(year_temp)
+            end_year = str(year_temp)
+            error_return, data_return = balance_statement(str(security), report_types, start_year, end_year, str(column), merge_type)
+            if error_return['error_no'] != 0:
+                print('获取GTN数据异常，请联系管理员，异常信息：%s' % error_return)
+                return re_empty_data
+            elif data_return.empty:
+                return DataFrame_temp
+            elif date_type is None:
+                data_return = data_return[data_return.publ_date < date]
+            data_return.index = data_return['secu_code'].tolist()
+            DataFrame_temp.update(data_return)
+            re_data = DataFrame_temp.replace('--', str(numpy.nan))
+            for i in re_data.columns:
+                if i not in list_base:
+                    re_data[i] = re_data[i].astype('float64')
+            re_data.index.name = 'secu_code'
+            return re_data
+        else:
+            data = {}
+            DataFrame_date = get_date_index(report_types, start_year, end_year, column).drop('end_date', axis=1)
+            error_re, data_df = balance_statement(str(security), report_types, start_year, end_year, str(column), merge_type)
+            if error_re['error_no'] != 0:
+                for code in security:
+                    data[code] = re_empty_data
+                return pandas.Panel(data)
+            elif data_df.empty:
+                for code in security:
+                    data[code] = DataFrame_date
+                return pandas.Panel(data)
+            else:
+                data_df.index = data_df['end_date'].tolist()
+                data_df = data_df.replace('--', str(numpy.nan))
+                for i in data_df.columns:
+                    if i not in list_base:
+                        data_df[i] = data_df[i].astype('float64')
+                data_df = fill_missing_stock_data(security, data_df)
+                data_df = data_df.set_index(['end_date', 'secu_code'])
+                re_pandas = data_df.to_panel().swapaxes('items', 'minor')
+                return re_pandas
+            return None
+    except BaseException as x:
+        system_log.error(get_traceback_message())
+        raise x
 def get_income_statement(security, date=None, report_types=None, start_year=None, end_year=None, fields=None, date_type=None, merge_type=None):
     re_empty_data = pandas.DataFrame()
     re_data = pandas.DataFrame()
     error_re, re_security = convert_to_list(security)
     if error_re['error_no'] != 0:
         return re_empty_data
+    security = re_security
+    error_re, re_fields = convert_to_list(fields)
+    if error_re['error_no'] != 0:
+        return re_empty_data
     else:
-        security = re_security
-        error_re, re_fields = convert_to_list(fields)
-        if error_re['error_no'] != 0:
+        fields = re_fields
+        if date and isVaildDate(str(date)):
+            date = change_date_format(date)
+    if report_types is not None:
+        DEFAULT_REPORT_TYPES = [1, 2, 3, 4]
+        if isinstance(report_types, str):
+            report_types = int(report_types)
+        if report_types not in DEFAULT_REPORT_TYPES:
             return re_empty_data
-        else:
-            fields = re_fields
-            if date and isVaildDate(str(date)):
-                date = change_date_format(date)
-            if report_types is not None:
-                DEFAULT_REPORT_TYPES = [1, 2, 3, 4]
-                if isinstance(report_types, str):
-                    report_types = int(report_types)
-                if report_types not in DEFAULT_REPORT_TYPES:
-                    return re_empty_data
-            if date is None and start_year is None and end_year is None:
-                date = time.strftime('%Y-%m-%d')
-            try:
-                column_basis = ['secu_code', 'secu_abbr', 'company_type', 'publ_date', 'end_date']
-                column_temp = get_fields(fans='income_fields', fields=fields)
-                column = list(set(column_basis).union(set(column_temp)))
-                list_base = ['secu_code', 'secu_abbr', 'company_type', 'publ_date', 'end_date']
-                if date is not None:
-                    DataFrame_temp = pandas.DataFrame(index=security, columns=column).drop('secu_code', axis=1)
-                    DataFrame_temp.index.name = 'secu_code'
-                    year_temp = int(date[:4])
-                    quarter_temp = pandas.Period(date, 'Q-DEC').quarter
-                    if report_types is None:
-                        if quarter_temp == 1:
-                            quarter_temp = 4
-                            year_temp -= 1
-                        else:
-                            quarter_temp -= 1
-                    elif quarter_temp <= report_types:
-                        quarter_temp = report_types
-                        year_temp -= 1
-                    else:
-                        quarter_temp = report_types
-                    report_types = str(quarter_temp)
-                    start_year = str(year_temp)
-                    end_year = str(year_temp)
-                    error_return, data_return = income_statement(str(security), report_types, start_year, end_year, str(column), merge_type)
-                    if error_return['error_no'] != 0:
-                        print('获取GTN数据异常，请联系管理员，异常信息：%s' % error_return)
-                        return re_empty_data
-                    elif data_return.empty:
-                        return DataFrame_temp
-                    elif date_type is None:
-                        data_return = data_return[data_return.publ_date < date]
-                    data_return.index = data_return['secu_code'].tolist()
-                    DataFrame_temp.update(data_return)
-                    re_data = DataFrame_temp.replace('--', str(numpy.nan))
-                    for i in re_data.columns:
-                        if i not in list_base:
-                            re_data[i] = re_data[i].astype('float64')
-                    re_data.index.name = 'secu_code'
-                    return re_data
+    if date is None and start_year is None and end_year is None:
+        date = time.strftime('%Y-%m-%d')
+    try:
+        column_basis = ['secu_code', 'secu_abbr', 'company_type', 'publ_date', 'end_date']
+        column_temp = get_fields(fans='income_fields', fields=fields)
+        column = list(set(column_basis).union(set(column_temp)))
+        list_base = ['secu_code', 'secu_abbr', 'company_type', 'publ_date', 'end_date']
+        if date is not None:
+            DataFrame_temp = pandas.DataFrame(index=security, columns=column).drop('secu_code', axis=1)
+            DataFrame_temp.index.name = 'secu_code'
+            year_temp = int(date[:4])
+            quarter_temp = pandas.Period(date, 'Q-DEC').quarter
+            if report_types is None:
+                if quarter_temp == 1:
+                    quarter_temp = 4
+                    year_temp -= 1
                 else:
-                    data = {}
-                    DataFrame_date = get_date_index(report_types, start_year, end_year, column).drop('end_date', axis=1)
-                    error_re, data_df = income_statement(str(security), report_types, start_year, end_year, str(column), merge_type)
-                    if error_re['error_no'] != 0:
-                        for code in security:
-                            data[code] = re_empty_data
-                        return pandas.Panel(data)
-                    elif data_df.empty:
-                        for code in security:
-                            data[code] = DataFrame_date
-                        return pandas.Panel(data)
-                    else:
-                        data_df = data_df.replace('--', str(numpy.nan))
-                        for i in data_df.columns:
-                            if i not in list_base:
-                                data_df[i] = data_df[i].astype('float64')
-                        data_df = fill_missing_stock_data(security, data_df)
-                        data_df = data_df.set_index(['end_date', 'secu_code'])
-                        re_pandas = data_df.to_panel().swapaxes('items', 'minor')
-                        return re_pandas
-            except BaseException as x:
-                system_log.error(get_traceback_message())
-                raise x
+                    quarter_temp -= 1
+            elif quarter_temp <= report_types:
+                quarter_temp = report_types
+                year_temp -= 1
+            else:
+                quarter_temp = report_types
+            report_types = str(quarter_temp)
+            start_year = str(year_temp)
+            end_year = str(year_temp)
+            error_return, data_return = income_statement(str(security), report_types, start_year, end_year, str(column), merge_type)
+            if error_return['error_no'] != 0:
+                print('获取GTN数据异常，请联系管理员，异常信息：%s' % error_return)
+                return re_empty_data
+            elif data_return.empty:
+                return DataFrame_temp
+            elif date_type is None:
+                data_return = data_return[data_return.publ_date < date]
+            data_return.index = data_return['secu_code'].tolist()
+            DataFrame_temp.update(data_return)
+            re_data = DataFrame_temp.replace('--', str(numpy.nan))
+            for i in re_data.columns:
+                if i not in list_base:
+                    re_data[i] = re_data[i].astype('float64')
+            re_data.index.name = 'secu_code'
+            return re_data
+        else:
+            data = {}
+            DataFrame_date = get_date_index(report_types, start_year, end_year, column).drop('end_date', axis=1)
+            error_re, data_df = income_statement(str(security), report_types, start_year, end_year, str(column), merge_type)
+            if error_re['error_no'] != 0:
+                for code in security:
+                    data[code] = re_empty_data
+                return pandas.Panel(data)
+            elif data_df.empty:
+                for code in security:
+                    data[code] = DataFrame_date
+                return pandas.Panel(data)
+            else:
+                data_df = data_df.replace('--', str(numpy.nan))
+                for i in data_df.columns:
+                    if i not in list_base:
+                        data_df[i] = data_df[i].astype('float64')
+                data_df = fill_missing_stock_data(security, data_df)
+                data_df = data_df.set_index(['end_date', 'secu_code'])
+                re_pandas = data_df.to_panel().swapaxes('items', 'minor')
+                return re_pandas
+            return None
+    except BaseException as x:
+        system_log.error(get_traceback_message())
+        raise x
 def get_cashflow_statement(security, date=None, report_types=None, start_year=None, end_year=None, fields=None, date_type=None, merge_type=None):
     re_empty_data = pandas.DataFrame()
     re_data = pandas.DataFrame()
     error_re, re_security = convert_to_list(security)
     if error_re['error_no'] != 0:
         return re_empty_data
+    security = re_security
+    error_re, re_fields = convert_to_list(fields)
+    if error_re['error_no'] != 0:
+        return re_empty_data
     else:
-        security = re_security
-        error_re, re_fields = convert_to_list(fields)
-        if error_re['error_no'] != 0:
+        fields = re_fields
+        if date and isVaildDate(str(date)):
+            date = change_date_format(date)
+    if report_types is not None:
+        DEFAULT_REPORT_TYPES = [1, 2, 3, 4]
+        if isinstance(report_types, str):
+            report_types = int(report_types)
+        if report_types not in DEFAULT_REPORT_TYPES:
             return re_empty_data
-        else:
-            fields = re_fields
-            if date and isVaildDate(str(date)):
-                date = change_date_format(date)
-            if report_types is not None:
-                DEFAULT_REPORT_TYPES = [1, 2, 3, 4]
-                if isinstance(report_types, str):
-                    report_types = int(report_types)
-                if report_types not in DEFAULT_REPORT_TYPES:
-                    return re_empty_data
-            if date is None and start_year is None and end_year is None:
-                date = time.strftime('%Y-%m-%d')
-            try:
-                column_basis = ['secu_code', 'secu_abbr', 'company_type', 'publ_date', 'end_date']
-                column_temp = get_fields(fans='cashflow_fields', fields=fields)
-                column = list(set(column_basis).union(set(column_temp)))
-                list_base = ['secu_code', 'secu_abbr', 'company_type', 'publ_date', 'end_date']
-                if date is not None:
-                    DataFrame_temp = pandas.DataFrame(index=security, columns=column).drop('secu_code', axis=1)
-                    DataFrame_temp.index.name = 'secu_code'
-                    year_temp = int(date[:4])
-                    quarter_temp = pandas.Period(date, 'Q-DEC').quarter
-                    if report_types is None:
-                        if quarter_temp == 1:
-                            quarter_temp = 4
-                            year_temp -= 1
-                        else:
-                            quarter_temp -= 1
-                    elif quarter_temp <= report_types:
-                        quarter_temp = report_types
-                        year_temp -= 1
-                    else:
-                        quarter_temp = report_types
-                    report_types = str(quarter_temp)
-                    start_year = str(year_temp)
-                    end_year = str(year_temp)
-                    error_return, data_return = cashflow_statement(str(security), report_types, start_year, end_year, str(column), merge_type)
-                    if error_return['error_no'] != 0:
-                        print('获取GTN数据异常，请联系管理员，异常信息：%s' % error_return)
-                        return re_empty_data
-                    elif data_return.empty:
-                        return DataFrame_temp
-                    elif date_type is None:
-                        data_return = data_return[data_return.publ_date < date]
-                    data_return.index = data_return['secu_code'].tolist()
-                    DataFrame_temp.update(data_return)
-                    re_data = DataFrame_temp.replace('--', str(numpy.nan))
-                    for i in re_data.columns:
-                        if i not in list_base:
-                            re_data[i] = re_data[i].astype('float64')
-                    re_data.index.name = 'secu_code'
-                    return re_data
+    if date is None and start_year is None and end_year is None:
+        date = time.strftime('%Y-%m-%d')
+    try:
+        column_basis = ['secu_code', 'secu_abbr', 'company_type', 'publ_date', 'end_date']
+        column_temp = get_fields(fans='cashflow_fields', fields=fields)
+        column = list(set(column_basis).union(set(column_temp)))
+        list_base = ['secu_code', 'secu_abbr', 'company_type', 'publ_date', 'end_date']
+        if date is not None:
+            DataFrame_temp = pandas.DataFrame(index=security, columns=column).drop('secu_code', axis=1)
+            DataFrame_temp.index.name = 'secu_code'
+            year_temp = int(date[:4])
+            quarter_temp = pandas.Period(date, 'Q-DEC').quarter
+            if report_types is None:
+                if quarter_temp == 1:
+                    quarter_temp = 4
+                    year_temp -= 1
                 else:
-                    data = {}
-                    DataFrame_date = get_date_index(report_types, start_year, end_year, column).drop('end_date', axis=1)
-                    error_re, data_df = cashflow_statement(str(security), report_types, start_year, end_year, str(column), merge_type)
-                    if error_re['error_no'] != 0:
-                        for code in security:
-                            data[code] = re_empty_data
-                        return pandas.Panel(data)
-                    elif data_df.empty:
-                        for code in security:
-                            data[code] = DataFrame_date
-                        return pandas.Panel(data)
-                    else:
-                        data_df = data_df.replace('--', str(numpy.nan))
-                        for i in data_df.columns:
-                            if i not in list_base:
-                                data_df[i] = data_df[i].astype('float64')
-                        data_df = fill_missing_stock_data(security, data_df)
-                        data_df = data_df.set_index(['end_date', 'secu_code'])
-                        re_pandas = data_df.to_panel().swapaxes('items', 'minor')
-                        return re_pandas
-            except BaseException as x:
-                system_log.error(get_traceback_message())
-                raise x
+                    quarter_temp -= 1
+            elif quarter_temp <= report_types:
+                quarter_temp = report_types
+                year_temp -= 1
+            else:
+                quarter_temp = report_types
+            report_types = str(quarter_temp)
+            start_year = str(year_temp)
+            end_year = str(year_temp)
+            error_return, data_return = cashflow_statement(str(security), report_types, start_year, end_year, str(column), merge_type)
+            if error_return['error_no'] != 0:
+                print('获取GTN数据异常，请联系管理员，异常信息：%s' % error_return)
+                return re_empty_data
+            elif data_return.empty:
+                return DataFrame_temp
+            elif date_type is None:
+                data_return = data_return[data_return.publ_date < date]
+            data_return.index = data_return['secu_code'].tolist()
+            DataFrame_temp.update(data_return)
+            re_data = DataFrame_temp.replace('--', str(numpy.nan))
+            for i in re_data.columns:
+                if i not in list_base:
+                    re_data[i] = re_data[i].astype('float64')
+            re_data.index.name = 'secu_code'
+            return re_data
+        else:
+            data = {}
+            DataFrame_date = get_date_index(report_types, start_year, end_year, column).drop('end_date', axis=1)
+            error_re, data_df = cashflow_statement(str(security), report_types, start_year, end_year, str(column), merge_type)
+            if error_re['error_no'] != 0:
+                for code in security:
+                    data[code] = re_empty_data
+                return pandas.Panel(data)
+            elif data_df.empty:
+                for code in security:
+                    data[code] = DataFrame_date
+                return pandas.Panel(data)
+            else:
+                data_df = data_df.replace('--', str(numpy.nan))
+                for i in data_df.columns:
+                    if i not in list_base:
+                        data_df[i] = data_df[i].astype('float64')
+                data_df = fill_missing_stock_data(security, data_df)
+                data_df = data_df.set_index(['end_date', 'secu_code'])
+                re_pandas = data_df.to_panel().swapaxes('items', 'minor')
+                return re_pandas
+            return None
+    except BaseException as x:
+        system_log.error(get_traceback_message())
+        raise x
 def get_growth_ability(security, date=None, report_types=None, start_year=None, end_year=None, fields=None, date_type=None):
     re_empty_data = pandas.DataFrame()
     re_data = pandas.DataFrame()
     error_re, re_security = convert_to_list(security)
     if error_re['error_no'] != 0:
         return re_empty_data
+    security = re_security
+    error_re, re_fields = convert_to_list(fields)
+    if error_re['error_no'] != 0:
+        return re_empty_data
     else:
-        security = re_security
-        error_re, re_fields = convert_to_list(fields)
-        if error_re['error_no'] != 0:
+        fields = re_fields
+        if date and isVaildDate(str(date)):
+            date = change_date_format(date)
+    if report_types is not None:
+        DEFAULT_REPORT_TYPES = [1, 2, 3, 4]
+        if isinstance(report_types, str):
+            report_types = int(report_types)
+        if report_types not in DEFAULT_REPORT_TYPES:
             return re_empty_data
-        else:
-            fields = re_fields
-            if date and isVaildDate(str(date)):
-                date = change_date_format(date)
-            if report_types is not None:
-                DEFAULT_REPORT_TYPES = [1, 2, 3, 4]
-                if isinstance(report_types, str):
-                    report_types = int(report_types)
-                if report_types not in DEFAULT_REPORT_TYPES:
-                    return re_empty_data
-            if date is None and start_year is None and end_year is None:
-                date = time.strftime('%Y-%m-%d')
-            try:
-                column_basis = ['secu_code', 'secu_abbr', 'publ_date', 'end_date']
-                column_temp = get_fields('growth_fields', fields)
-                column = list(set(column_basis).union(set(column_temp)))
-                list_base = ['secu_code', 'secu_abbr', 'publ_date', 'end_date']
-                if date is not None:
-                    DataFrame_temp = pandas.DataFrame(index=security, columns=column).drop('secu_code', axis=1)
-                    DataFrame_temp.index.name = 'secu_code'
-                    year_temp = int(date[:4])
-                    quarter_temp = pandas.Period(date, 'Q-DEC').quarter
-                    if report_types is None:
-                        if quarter_temp == 1:
-                            quarter_temp = 4
-                            year_temp -= 1
-                        else:
-                            quarter_temp -= 1
-                    elif quarter_temp <= report_types:
-                        quarter_temp = report_types
-                        year_temp -= 1
-                    else:
-                        quarter_temp = report_types
-                    report_types = str(quarter_temp)
-                    start_year = str(year_temp)
-                    end_year = str(year_temp)
-                    error_return, data_return = growth_ability(str(security), report_types, start_year, end_year, str(column))
-                    if error_return['error_no'] != 0:
-                        print('获取GTN数据异常，请联系管理员，异常信息：%s' % error_return)
-                        return re_empty_data
-                    elif data_return.empty:
-                        return DataFrame_temp
-                    elif date_type is None:
-                        data_return = data_return[data_return.publ_date < date]
-                    data_return.index = data_return['secu_code'].tolist()
-                    DataFrame_temp.update(data_return)
-                    re_data = DataFrame_temp.replace('--', str(numpy.nan))
-                    for i in re_data.columns:
-                        if i not in list_base:
-                            re_data[i] = re_data[i].astype('float64')
-                    re_data.index.name = 'secu_code'
-                    return re_data
+    if date is None and start_year is None and end_year is None:
+        date = time.strftime('%Y-%m-%d')
+    try:
+        column_basis = ['secu_code', 'secu_abbr', 'publ_date', 'end_date']
+        column_temp = get_fields('growth_fields', fields)
+        column = list(set(column_basis).union(set(column_temp)))
+        list_base = ['secu_code', 'secu_abbr', 'publ_date', 'end_date']
+        if date is not None:
+            DataFrame_temp = pandas.DataFrame(index=security, columns=column).drop('secu_code', axis=1)
+            DataFrame_temp.index.name = 'secu_code'
+            year_temp = int(date[:4])
+            quarter_temp = pandas.Period(date, 'Q-DEC').quarter
+            if report_types is None:
+                if quarter_temp == 1:
+                    quarter_temp = 4
+                    year_temp -= 1
                 else:
-                    data = {}
-                    DataFrame_date = get_date_index(report_types, start_year, end_year, column).drop('end_date', axis=1)
-                    error_re, data_df = growth_ability(str(security), report_types, start_year, end_year, str(column))
-                    if error_re['error_no'] != 0:
-                        for code in security:
-                            data[code] = re_empty_data
-                        return pandas.Panel(data)
-                    elif data_df.empty:
-                        for code in security:
-                            data[code] = DataFrame_date
-                        return pandas.Panel(data)
-                    else:
-                        data_df = data_df.replace('--', str(numpy.nan))
-                        for i in data_df.columns:
-                            if i not in list_base:
-                                data_df[i] = data_df[i].astype('float64')
-                        data_df = fill_missing_stock_data(security, data_df)
-                        data_df = data_df.set_index(['end_date', 'secu_code'])
-                        re_pandas = data_df.to_panel().swapaxes('items', 'minor')
-                        return re_pandas
-            except BaseException as x:
-                system_log.error(get_traceback_message())
-                raise x
+                    quarter_temp -= 1
+            elif quarter_temp <= report_types:
+                quarter_temp = report_types
+                year_temp -= 1
+            else:
+                quarter_temp = report_types
+            report_types = str(quarter_temp)
+            start_year = str(year_temp)
+            end_year = str(year_temp)
+            error_return, data_return = growth_ability(str(security), report_types, start_year, end_year, str(column))
+            if error_return['error_no'] != 0:
+                print('获取GTN数据异常，请联系管理员，异常信息：%s' % error_return)
+                return re_empty_data
+            elif data_return.empty:
+                return DataFrame_temp
+            elif date_type is None:
+                data_return = data_return[data_return.publ_date < date]
+            data_return.index = data_return['secu_code'].tolist()
+            DataFrame_temp.update(data_return)
+            re_data = DataFrame_temp.replace('--', str(numpy.nan))
+            for i in re_data.columns:
+                if i not in list_base:
+                    re_data[i] = re_data[i].astype('float64')
+            re_data.index.name = 'secu_code'
+            return re_data
+        else:
+            data = {}
+            DataFrame_date = get_date_index(report_types, start_year, end_year, column).drop('end_date', axis=1)
+            error_re, data_df = growth_ability(str(security), report_types, start_year, end_year, str(column))
+            if error_re['error_no'] != 0:
+                for code in security:
+                    data[code] = re_empty_data
+                return pandas.Panel(data)
+            elif data_df.empty:
+                for code in security:
+                    data[code] = DataFrame_date
+                return pandas.Panel(data)
+            else:
+                data_df = data_df.replace('--', str(numpy.nan))
+                for i in data_df.columns:
+                    if i not in list_base:
+                        data_df[i] = data_df[i].astype('float64')
+                data_df = fill_missing_stock_data(security, data_df)
+                data_df = data_df.set_index(['end_date', 'secu_code'])
+                re_pandas = data_df.to_panel().swapaxes('items', 'minor')
+                return re_pandas
+            return None
+    except BaseException as x:
+        system_log.error(get_traceback_message())
+        raise x
 def get_profit_ability(security, date=None, report_types=None, start_year=None, end_year=None, fields=None, date_type=None):
     re_empty_data = pandas.DataFrame()
     re_data = pandas.DataFrame()
     error_re, re_security = convert_to_list(security)
     if error_re['error_no'] != 0:
         return re_empty_data
+    security = re_security
+    error_re, re_fields = convert_to_list(fields)
+    if error_re['error_no'] != 0:
+        return re_empty_data
     else:
-        security = re_security
-        error_re, re_fields = convert_to_list(fields)
-        if error_re['error_no'] != 0:
+        fields = re_fields
+        if date and isVaildDate(str(date)):
+            date = change_date_format(date)
+    if report_types is not None:
+        DEFAULT_REPORT_TYPES = [1, 2, 3, 4]
+        if isinstance(report_types, str):
+            report_types = int(report_types)
+        if report_types not in DEFAULT_REPORT_TYPES:
             return re_empty_data
-        else:
-            fields = re_fields
-            if date and isVaildDate(str(date)):
-                date = change_date_format(date)
-            if report_types is not None:
-                DEFAULT_REPORT_TYPES = [1, 2, 3, 4]
-                if isinstance(report_types, str):
-                    report_types = int(report_types)
-                if report_types not in DEFAULT_REPORT_TYPES:
-                    return re_empty_data
-            if date is None and start_year is None and end_year is None:
-                date = time.strftime('%Y-%m-%d')
-            try:
-                column_basis = ['secu_code', 'secu_abbr', 'publ_date', 'end_date']
-                column_temp = get_fields('profit_fields', fields)
-                column = list(set(column_basis).union(set(column_temp)))
-                list_base = ['secu_code', 'secu_abbr', 'publ_date', 'end_date']
-                if date is not None:
-                    DataFrame_temp = pandas.DataFrame(index=security, columns=column).drop('secu_code', axis=1)
-                    DataFrame_temp.index.name = 'secu_code'
-                    year_temp = int(date[:4])
-                    quarter_temp = pandas.Period(date, 'Q-DEC').quarter
-                    if report_types is None:
-                        if quarter_temp == 1:
-                            quarter_temp = 4
-                            year_temp -= 1
-                        else:
-                            quarter_temp -= 1
-                    elif quarter_temp <= report_types:
-                        quarter_temp = report_types
-                        year_temp -= 1
-                    else:
-                        quarter_temp = report_types
-                    report_types = str(quarter_temp)
-                    start_year = str(year_temp)
-                    end_year = str(year_temp)
-                    error_return, data_return = profit_ability(str(security), report_types, start_year, end_year, str(column))
-                    if error_return['error_no'] != 0:
-                        print('获取GTN数据异常，请联系管理员，异常信息：%s' % error_return)
-                        return re_empty_data
-                    elif data_return.empty:
-                        return DataFrame_temp
-                    elif date_type is None:
-                        data_return = data_return[data_return.publ_date < date]
-                    data_return.index = data_return['secu_code'].tolist()
-                    DataFrame_temp.update(data_return)
-                    re_data = DataFrame_temp.replace('--', str(numpy.nan))
-                    for i in re_data.columns:
-                        if i not in list_base:
-                            re_data[i] = re_data[i].astype('float64')
-                    re_data.index.name = 'secu_code'
-                    return re_data
+    if date is None and start_year is None and end_year is None:
+        date = time.strftime('%Y-%m-%d')
+    try:
+        column_basis = ['secu_code', 'secu_abbr', 'publ_date', 'end_date']
+        column_temp = get_fields('profit_fields', fields)
+        column = list(set(column_basis).union(set(column_temp)))
+        list_base = ['secu_code', 'secu_abbr', 'publ_date', 'end_date']
+        if date is not None:
+            DataFrame_temp = pandas.DataFrame(index=security, columns=column).drop('secu_code', axis=1)
+            DataFrame_temp.index.name = 'secu_code'
+            year_temp = int(date[:4])
+            quarter_temp = pandas.Period(date, 'Q-DEC').quarter
+            if report_types is None:
+                if quarter_temp == 1:
+                    quarter_temp = 4
+                    year_temp -= 1
                 else:
-                    data = {}
-                    DataFrame_date = get_date_index(report_types, start_year, end_year, column).drop('end_date', axis=1)
-                    error_re, data_df = profit_ability(str(security), report_types, start_year, end_year, str(column))
-                    if error_re['error_no'] != 0:
-                        for code in security:
-                            data[code] = re_empty_data
-                        return pandas.Panel(data)
-                    elif data_df.empty:
-                        for code in security:
-                            data[code] = DataFrame_date
-                        return pandas.Panel(data)
-                    else:
-                        data_df = data_df.replace('--', str(numpy.nan))
-                        for i in data_df.columns:
-                            if i not in list_base:
-                                data_df[i] = data_df[i].astype('float64')
-                        data_df = fill_missing_stock_data(security, data_df)
-                        data_df = data_df.set_index(['end_date', 'secu_code'])
-                        re_pandas = data_df.to_panel().swapaxes('items', 'minor')
-                        return re_pandas
-            except BaseException as x:
-                system_log.error(get_traceback_message())
-                raise x
+                    quarter_temp -= 1
+            elif quarter_temp <= report_types:
+                quarter_temp = report_types
+                year_temp -= 1
+            else:
+                quarter_temp = report_types
+            report_types = str(quarter_temp)
+            start_year = str(year_temp)
+            end_year = str(year_temp)
+            error_return, data_return = profit_ability(str(security), report_types, start_year, end_year, str(column))
+            if error_return['error_no'] != 0:
+                print('获取GTN数据异常，请联系管理员，异常信息：%s' % error_return)
+                return re_empty_data
+            elif data_return.empty:
+                return DataFrame_temp
+            elif date_type is None:
+                data_return = data_return[data_return.publ_date < date]
+            data_return.index = data_return['secu_code'].tolist()
+            DataFrame_temp.update(data_return)
+            re_data = DataFrame_temp.replace('--', str(numpy.nan))
+            for i in re_data.columns:
+                if i not in list_base:
+                    re_data[i] = re_data[i].astype('float64')
+            re_data.index.name = 'secu_code'
+            return re_data
+        else:
+            data = {}
+            DataFrame_date = get_date_index(report_types, start_year, end_year, column).drop('end_date', axis=1)
+            error_re, data_df = profit_ability(str(security), report_types, start_year, end_year, str(column))
+            if error_re['error_no'] != 0:
+                for code in security:
+                    data[code] = re_empty_data
+                return pandas.Panel(data)
+            elif data_df.empty:
+                for code in security:
+                    data[code] = DataFrame_date
+                return pandas.Panel(data)
+            else:
+                data_df = data_df.replace('--', str(numpy.nan))
+                for i in data_df.columns:
+                    if i not in list_base:
+                        data_df[i] = data_df[i].astype('float64')
+                data_df = fill_missing_stock_data(security, data_df)
+                data_df = data_df.set_index(['end_date', 'secu_code'])
+                re_pandas = data_df.to_panel().swapaxes('items', 'minor')
+                return re_pandas
+            return None
+    except BaseException as x:
+        system_log.error(get_traceback_message())
+        raise x
 def get_eps(security, date=None, report_types=None, start_year=None, end_year=None, fields=None, date_type=None):
     re_empty_data = pandas.DataFrame()
     re_data = pandas.DataFrame()
     error_re, re_security = convert_to_list(security)
     if error_re['error_no'] != 0:
         return re_empty_data
+    security = re_security
+    error_re, re_fields = convert_to_list(fields)
+    if error_re['error_no'] != 0:
+        return re_empty_data
     else:
-        security = re_security
-        error_re, re_fields = convert_to_list(fields)
-        if error_re['error_no'] != 0:
+        fields = re_fields
+        if date and isVaildDate(str(date)):
+            date = change_date_format(date)
+    if report_types is not None:
+        DEFAULT_REPORT_TYPES = [1, 2, 3, 4]
+        if isinstance(report_types, str):
+            report_types = int(report_types)
+        if report_types not in DEFAULT_REPORT_TYPES:
             return re_empty_data
-        else:
-            fields = re_fields
-            if date and isVaildDate(str(date)):
-                date = change_date_format(date)
-            if report_types is not None:
-                DEFAULT_REPORT_TYPES = [1, 2, 3, 4]
-                if isinstance(report_types, str):
-                    report_types = int(report_types)
-                if report_types not in DEFAULT_REPORT_TYPES:
-                    return re_empty_data
-            if date is None and start_year is None and end_year is None:
-                date = time.strftime('%Y-%m-%d')
-            try:
-                column_basis = ['secu_code', 'secu_abbr', 'publ_date', 'end_date']
-                column_temp = get_fields('eps_fields', fields)
-                column = list(set(column_basis).union(set(column_temp)))
-                list_base = ['secu_code', 'secu_abbr', 'publ_date', 'end_date']
-                if date is not None:
-                    DataFrame_temp = pandas.DataFrame(index=security, columns=column).drop('secu_code', axis=1)
-                    DataFrame_temp.index.name = 'secu_code'
-                    year_temp = int(date[:4])
-                    quarter_temp = pandas.Period(date, 'Q-DEC').quarter
-                    if report_types is None:
-                        if quarter_temp == 1:
-                            quarter_temp = 4
-                            year_temp -= 1
-                        else:
-                            quarter_temp -= 1
-                    elif quarter_temp <= report_types:
-                        quarter_temp = report_types
-                        year_temp -= 1
-                    else:
-                        quarter_temp = report_types
-                    report_types = str(quarter_temp)
-                    start_year = str(year_temp)
-                    end_year = str(year_temp)
-                    error_return, data_return = eps(str(security), report_types, start_year, end_year, str(column))
-                    if error_return['error_no'] != 0:
-                        print('获取GTN数据异常，请联系管理员，异常信息：%s' % error_return)
-                        return re_empty_data
-                    elif data_return.empty:
-                        return DataFrame_temp
-                    elif date_type is None:
-                        data_return = data_return[data_return.publ_date < date]
-                    data_return.index = data_return['secu_code'].tolist()
-                    DataFrame_temp.update(data_return)
-                    re_data = DataFrame_temp.replace('--', str(numpy.nan))
-                    for i in re_data.columns:
-                        if i not in list_base:
-                            re_data[i] = re_data[i].astype('float64')
-                    re_data.index.name = 'secu_code'
-                    return re_data
+    if date is None and start_year is None and end_year is None:
+        date = time.strftime('%Y-%m-%d')
+    try:
+        column_basis = ['secu_code', 'secu_abbr', 'publ_date', 'end_date']
+        column_temp = get_fields('eps_fields', fields)
+        column = list(set(column_basis).union(set(column_temp)))
+        list_base = ['secu_code', 'secu_abbr', 'publ_date', 'end_date']
+        if date is not None:
+            DataFrame_temp = pandas.DataFrame(index=security, columns=column).drop('secu_code', axis=1)
+            DataFrame_temp.index.name = 'secu_code'
+            year_temp = int(date[:4])
+            quarter_temp = pandas.Period(date, 'Q-DEC').quarter
+            if report_types is None:
+                if quarter_temp == 1:
+                    quarter_temp = 4
+                    year_temp -= 1
                 else:
-                    data = {}
-                    DataFrame_date = get_date_index(report_types, start_year, end_year, column).drop('end_date', axis=1)
-                    error_re, data_df = eps(str(security), report_types, start_year, end_year, str(column))
-                    if error_re['error_no'] != 0:
-                        for code in security:
-                            data[code] = re_empty_data
-                        return pandas.Panel(data)
-                    elif data_df.empty:
-                        for code in security:
-                            data[code] = DataFrame_date
-                        return pandas.Panel(data)
-                    else:
-                        data_df = data_df.replace('--', str(numpy.nan))
-                        for i in data_df.columns:
-                            if i not in list_base:
-                                data_df[i] = data_df[i].astype('float64')
-                        data_df = fill_missing_stock_data(security, data_df)
-                        data_df = data_df.set_index(['end_date', 'secu_code'])
-                        re_pandas = data_df.to_panel().swapaxes('items', 'minor')
-                        return re_pandas
-            except BaseException as x:
-                system_log.error(get_traceback_message())
-                raise x
+                    quarter_temp -= 1
+            elif quarter_temp <= report_types:
+                quarter_temp = report_types
+                year_temp -= 1
+            else:
+                quarter_temp = report_types
+            report_types = str(quarter_temp)
+            start_year = str(year_temp)
+            end_year = str(year_temp)
+            error_return, data_return = eps(str(security), report_types, start_year, end_year, str(column))
+            if error_return['error_no'] != 0:
+                print('获取GTN数据异常，请联系管理员，异常信息：%s' % error_return)
+                return re_empty_data
+            elif data_return.empty:
+                return DataFrame_temp
+            elif date_type is None:
+                data_return = data_return[data_return.publ_date < date]
+            data_return.index = data_return['secu_code'].tolist()
+            DataFrame_temp.update(data_return)
+            re_data = DataFrame_temp.replace('--', str(numpy.nan))
+            for i in re_data.columns:
+                if i not in list_base:
+                    re_data[i] = re_data[i].astype('float64')
+            re_data.index.name = 'secu_code'
+            return re_data
+        else:
+            data = {}
+            DataFrame_date = get_date_index(report_types, start_year, end_year, column).drop('end_date', axis=1)
+            error_re, data_df = eps(str(security), report_types, start_year, end_year, str(column))
+            if error_re['error_no'] != 0:
+                for code in security:
+                    data[code] = re_empty_data
+                return pandas.Panel(data)
+            elif data_df.empty:
+                for code in security:
+                    data[code] = DataFrame_date
+                return pandas.Panel(data)
+            else:
+                data_df = data_df.replace('--', str(numpy.nan))
+                for i in data_df.columns:
+                    if i not in list_base:
+                        data_df[i] = data_df[i].astype('float64')
+                data_df = fill_missing_stock_data(security, data_df)
+                data_df = data_df.set_index(['end_date', 'secu_code'])
+                re_pandas = data_df.to_panel().swapaxes('items', 'minor')
+                return re_pandas
+            return None
+    except BaseException as x:
+        system_log.error(get_traceback_message())
+        raise x
 def get_cash_collection_ability(security, date=None, report_types=None, start_year=None, end_year=None, fields=None, date_type=None):
     re_empty_data = pandas.DataFrame()
     re_data = pandas.DataFrame()
     error_re, re_security = convert_to_list(security)
     if error_re['error_no'] != 0:
         return re_empty_data
+    security = re_security
+    error_re, re_fields = convert_to_list(fields)
+    if error_re['error_no'] != 0:
+        return re_empty_data
     else:
-        security = re_security
-        error_re, re_fields = convert_to_list(fields)
-        if error_re['error_no'] != 0:
+        fields = re_fields
+        if date and isVaildDate(str(date)):
+            date = change_date_format(date)
+    if report_types is not None:
+        DEFAULT_REPORT_TYPES = [1, 2, 3, 4]
+        if isinstance(report_types, str):
+            report_types = int(report_types)
+        if report_types not in DEFAULT_REPORT_TYPES:
             return re_empty_data
-        else:
-            fields = re_fields
-            if date and isVaildDate(str(date)):
-                date = change_date_format(date)
-            if report_types is not None:
-                DEFAULT_REPORT_TYPES = [1, 2, 3, 4]
-                if isinstance(report_types, str):
-                    report_types = int(report_types)
-                if report_types not in DEFAULT_REPORT_TYPES:
-                    return re_empty_data
-            if date is None and start_year is None and end_year is None:
-                date = time.strftime('%Y-%m-%d')
-            try:
-                column_basis = ['secu_code', 'secu_abbr', 'publ_date', 'end_date']
-                column_temp = get_fields('cash_collection_fields', fields)
-                column = list(set(column_basis).union(set(column_temp)))
-                list_base = ['secu_code', 'secu_abbr', 'publ_date', 'end_date']
-                if date is not None:
-                    DataFrame_temp = pandas.DataFrame(index=security, columns=column).drop('secu_code', axis=1)
-                    DataFrame_temp.index.name = 'secu_code'
-                    year_temp = int(date[:4])
-                    quarter_temp = pandas.Period(date, 'Q-DEC').quarter
-                    if report_types is None:
-                        if quarter_temp == 1:
-                            quarter_temp = 4
-                            year_temp -= 1
-                        else:
-                            quarter_temp -= 1
-                    elif quarter_temp <= report_types:
-                        quarter_temp = report_types
-                        year_temp -= 1
-                    else:
-                        quarter_temp = report_types
-                    report_types = str(quarter_temp)
-                    start_year = str(year_temp)
-                    end_year = str(year_temp)
-                    error_return, data_return = cash_collection_ability(str(security), report_types, start_year, end_year, str(column))
-                    if error_return['error_no'] != 0:
-                        print('获取GTN数据异常，请联系管理员，异常信息：%s' % error_return)
-                        return re_empty_data
-                    elif data_return.empty:
-                        return DataFrame_temp
-                    elif date_type is None:
-                        data_return = data_return[data_return.publ_date < date]
-                    data_return.index = data_return['secu_code'].tolist()
-                    DataFrame_temp.update(data_return)
-                    re_data = DataFrame_temp.replace('--', str(numpy.nan))
-                    for i in re_data.columns:
-                        if i not in list_base:
-                            re_data[i] = re_data[i].astype('float64')
-                    re_data.index.name = 'secu_code'
-                    return re_data
+    if date is None and start_year is None and end_year is None:
+        date = time.strftime('%Y-%m-%d')
+    try:
+        column_basis = ['secu_code', 'secu_abbr', 'publ_date', 'end_date']
+        column_temp = get_fields('cash_collection_fields', fields)
+        column = list(set(column_basis).union(set(column_temp)))
+        list_base = ['secu_code', 'secu_abbr', 'publ_date', 'end_date']
+        if date is not None:
+            DataFrame_temp = pandas.DataFrame(index=security, columns=column).drop('secu_code', axis=1)
+            DataFrame_temp.index.name = 'secu_code'
+            year_temp = int(date[:4])
+            quarter_temp = pandas.Period(date, 'Q-DEC').quarter
+            if report_types is None:
+                if quarter_temp == 1:
+                    quarter_temp = 4
+                    year_temp -= 1
                 else:
-                    data = {}
-                    DataFrame_date = get_date_index(report_types, start_year, end_year, column).drop('end_date', axis=1)
-                    error_re, data_df = cash_collection_ability(str(security), report_types, start_year, end_year, str(column))
-                    if error_re['error_no'] != 0:
-                        for code in security:
-                            data[code] = re_empty_data
-                        return pandas.Panel(data)
-                    elif data_df.empty:
-                        for code in security:
-                            data[code] = DataFrame_date
-                        return pandas.Panel(data)
-                    else:
-                        data_df = data_df.replace('--', str(numpy.nan))
-                        for i in data_df.columns:
-                            if i not in list_base:
-                                data_df[i] = data_df[i].astype('float64')
-                        data_df = fill_missing_stock_data(security, data_df)
-                        data_df = data_df.set_index(['end_date', 'secu_code'])
-                        re_pandas = data_df.to_panel().swapaxes('items', 'minor')
-                        return re_pandas
-            except BaseException as x:
-                system_log.error(get_traceback_message())
-                raise x
+                    quarter_temp -= 1
+            elif quarter_temp <= report_types:
+                quarter_temp = report_types
+                year_temp -= 1
+            else:
+                quarter_temp = report_types
+            report_types = str(quarter_temp)
+            start_year = str(year_temp)
+            end_year = str(year_temp)
+            error_return, data_return = cash_collection_ability(str(security), report_types, start_year, end_year, str(column))
+            if error_return['error_no'] != 0:
+                print('获取GTN数据异常，请联系管理员，异常信息：%s' % error_return)
+                return re_empty_data
+            elif data_return.empty:
+                return DataFrame_temp
+            elif date_type is None:
+                data_return = data_return[data_return.publ_date < date]
+            data_return.index = data_return['secu_code'].tolist()
+            DataFrame_temp.update(data_return)
+            re_data = DataFrame_temp.replace('--', str(numpy.nan))
+            for i in re_data.columns:
+                if i not in list_base:
+                    re_data[i] = re_data[i].astype('float64')
+            re_data.index.name = 'secu_code'
+            return re_data
+        else:
+            data = {}
+            DataFrame_date = get_date_index(report_types, start_year, end_year, column).drop('end_date', axis=1)
+            error_re, data_df = cash_collection_ability(str(security), report_types, start_year, end_year, str(column))
+            if error_re['error_no'] != 0:
+                for code in security:
+                    data[code] = re_empty_data
+                return pandas.Panel(data)
+            elif data_df.empty:
+                for code in security:
+                    data[code] = DataFrame_date
+                return pandas.Panel(data)
+            else:
+                data_df = data_df.replace('--', str(numpy.nan))
+                for i in data_df.columns:
+                    if i not in list_base:
+                        data_df[i] = data_df[i].astype('float64')
+                data_df = fill_missing_stock_data(security, data_df)
+                data_df = data_df.set_index(['end_date', 'secu_code'])
+                re_pandas = data_df.to_panel().swapaxes('items', 'minor')
+                return re_pandas
+            return None
+    except BaseException as x:
+        system_log.error(get_traceback_message())
+        raise x
 def get_operating_ability(security, date=None, report_types=None, start_year=None, end_year=None, fields=None, date_type=None):
     re_empty_data = pandas.DataFrame()
     re_data = pandas.DataFrame()
     error_re, re_security = convert_to_list(security)
     if error_re['error_no'] != 0:
         return re_empty_data
+    security = re_security
+    error_re, re_fields = convert_to_list(fields)
+    if error_re['error_no'] != 0:
+        return re_empty_data
     else:
-        security = re_security
-        error_re, re_fields = convert_to_list(fields)
-        if error_re['error_no'] != 0:
+        fields = re_fields
+        if date and isVaildDate(str(date)):
+            date = change_date_format(date)
+    if report_types is not None:
+        DEFAULT_REPORT_TYPES = [1, 2, 3, 4]
+        if isinstance(report_types, str):
+            report_types = int(report_types)
+        if report_types not in DEFAULT_REPORT_TYPES:
             return re_empty_data
-        else:
-            fields = re_fields
-            if date and isVaildDate(str(date)):
-                date = change_date_format(date)
-            if report_types is not None:
-                DEFAULT_REPORT_TYPES = [1, 2, 3, 4]
-                if isinstance(report_types, str):
-                    report_types = int(report_types)
-                if report_types not in DEFAULT_REPORT_TYPES:
-                    return re_empty_data
-            if date is None and start_year is None and end_year is None:
-                date = time.strftime('%Y-%m-%d')
-            try:
-                column_basis = ['secu_code', 'secu_abbr', 'publ_date', 'end_date']
-                column_temp = get_fields('operating_fields', fields)
-                column = list(set(column_basis).union(set(column_temp)))
-                list_base = ['secu_code', 'secu_abbr', 'publ_date', 'end_date']
-                if date is not None:
-                    DataFrame_temp = pandas.DataFrame(index=security, columns=column).drop('secu_code', axis=1)
-                    DataFrame_temp.index.name = 'secu_code'
-                    year_temp = int(date[:4])
-                    quarter_temp = pandas.Period(date, 'Q-DEC').quarter
-                    if report_types is None:
-                        if quarter_temp == 1:
-                            quarter_temp = 4
-                            year_temp -= 1
-                        else:
-                            quarter_temp -= 1
-                    elif quarter_temp <= report_types:
-                        quarter_temp = report_types
-                        year_temp -= 1
-                    else:
-                        quarter_temp = report_types
-                    report_types = str(quarter_temp)
-                    start_year = str(year_temp)
-                    end_year = str(year_temp)
-                    error_return, data_return = operating_ability(str(security), report_types, start_year, end_year, str(column))
-                    if error_return['error_no'] != 0:
-                        print('获取GTN数据异常，请联系管理员，异常信息：%s' % error_return)
-                        return re_empty_data
-                    elif data_return.empty:
-                        return DataFrame_temp
-                    elif date_type is None:
-                        data_return = data_return[data_return.publ_date < date]
-                    data_return.index = data_return['secu_code'].tolist()
-                    DataFrame_temp.update(data_return)
-                    re_data = DataFrame_temp.replace('--', str(numpy.nan))
-                    for i in re_data.columns:
-                        if i not in list_base:
-                            re_data[i] = re_data[i].astype('float64')
-                    re_data.index.name = 'secu_code'
-                    return re_data
+    if date is None and start_year is None and end_year is None:
+        date = time.strftime('%Y-%m-%d')
+    try:
+        column_basis = ['secu_code', 'secu_abbr', 'publ_date', 'end_date']
+        column_temp = get_fields('operating_fields', fields)
+        column = list(set(column_basis).union(set(column_temp)))
+        list_base = ['secu_code', 'secu_abbr', 'publ_date', 'end_date']
+        if date is not None:
+            DataFrame_temp = pandas.DataFrame(index=security, columns=column).drop('secu_code', axis=1)
+            DataFrame_temp.index.name = 'secu_code'
+            year_temp = int(date[:4])
+            quarter_temp = pandas.Period(date, 'Q-DEC').quarter
+            if report_types is None:
+                if quarter_temp == 1:
+                    quarter_temp = 4
+                    year_temp -= 1
                 else:
-                    data = {}
-                    DataFrame_date = get_date_index(report_types, start_year, end_year, column).drop('end_date', axis=1)
-                    error_re, data_df = operating_ability(str(security), report_types, start_year, end_year, str(column))
-                    if error_re['error_no'] != 0:
-                        for code in security:
-                            data[code] = re_empty_data
-                        return pandas.Panel(data)
-                    elif data_df.empty:
-                        for code in security:
-                            data[code] = DataFrame_date
-                        return pandas.Panel(data)
-                    else:
-                        data_df = data_df.replace('--', str(numpy.nan))
-                        for i in data_df.columns:
-                            if i not in list_base:
-                                data_df[i] = data_df[i].astype('float64')
-                        data_df = fill_missing_stock_data(security, data_df)
-                        data_df = data_df.set_index(['end_date', 'secu_code'])
-                        re_pandas = data_df.to_panel().swapaxes('items', 'minor')
-                        return re_pandas
-            except BaseException as x:
-                system_log.error(get_traceback_message())
-                raise x
+                    quarter_temp -= 1
+            elif quarter_temp <= report_types:
+                quarter_temp = report_types
+                year_temp -= 1
+            else:
+                quarter_temp = report_types
+            report_types = str(quarter_temp)
+            start_year = str(year_temp)
+            end_year = str(year_temp)
+            error_return, data_return = operating_ability(str(security), report_types, start_year, end_year, str(column))
+            if error_return['error_no'] != 0:
+                print('获取GTN数据异常，请联系管理员，异常信息：%s' % error_return)
+                return re_empty_data
+            elif data_return.empty:
+                return DataFrame_temp
+            elif date_type is None:
+                data_return = data_return[data_return.publ_date < date]
+            data_return.index = data_return['secu_code'].tolist()
+            DataFrame_temp.update(data_return)
+            re_data = DataFrame_temp.replace('--', str(numpy.nan))
+            for i in re_data.columns:
+                if i not in list_base:
+                    re_data[i] = re_data[i].astype('float64')
+            re_data.index.name = 'secu_code'
+            return re_data
+        else:
+            data = {}
+            DataFrame_date = get_date_index(report_types, start_year, end_year, column).drop('end_date', axis=1)
+            error_re, data_df = operating_ability(str(security), report_types, start_year, end_year, str(column))
+            if error_re['error_no'] != 0:
+                for code in security:
+                    data[code] = re_empty_data
+                return pandas.Panel(data)
+            elif data_df.empty:
+                for code in security:
+                    data[code] = DataFrame_date
+                return pandas.Panel(data)
+            else:
+                data_df = data_df.replace('--', str(numpy.nan))
+                for i in data_df.columns:
+                    if i not in list_base:
+                        data_df[i] = data_df[i].astype('float64')
+                data_df = fill_missing_stock_data(security, data_df)
+                data_df = data_df.set_index(['end_date', 'secu_code'])
+                re_pandas = data_df.to_panel().swapaxes('items', 'minor')
+                return re_pandas
+            return None
+    except BaseException as x:
+        system_log.error(get_traceback_message())
+        raise x
 def get_debt_paying_ability(security, date=None, report_types=None, start_year=None, end_year=None, fields=None, date_type=None):
     re_empty_data = pandas.DataFrame()
     re_data = pandas.DataFrame()
     error_re, re_security = convert_to_list(security)
     if error_re['error_no'] != 0:
         return re_empty_data
+    security = re_security
+    error_re, re_fields = convert_to_list(fields)
+    if error_re['error_no'] != 0:
+        return re_empty_data
     else:
-        security = re_security
-        error_re, re_fields = convert_to_list(fields)
-        if error_re['error_no'] != 0:
+        fields = re_fields
+        if date and isVaildDate(str(date)):
+            date = change_date_format(date)
+    if report_types is not None:
+        DEFAULT_REPORT_TYPES = [1, 2, 3, 4]
+        if isinstance(report_types, str):
+            report_types = int(report_types)
+        if report_types not in DEFAULT_REPORT_TYPES:
             return re_empty_data
-        else:
-            fields = re_fields
-            if date and isVaildDate(str(date)):
-                date = change_date_format(date)
-            if report_types is not None:
-                DEFAULT_REPORT_TYPES = [1, 2, 3, 4]
-                if isinstance(report_types, str):
-                    report_types = int(report_types)
-                if report_types not in DEFAULT_REPORT_TYPES:
-                    return re_empty_data
-            if date is None and start_year is None and end_year is None:
-                date = time.strftime('%Y-%m-%d')
-            try:
-                column_basis = ['secu_code', 'secu_abbr', 'publ_date', 'end_date']
-                column_temp = get_fields('debt_paying_fields', fields)
-                column = list(set(column_basis).union(set(column_temp)))
-                list_base = ['secu_code', 'secu_abbr', 'publ_date', 'end_date']
-                if date is not None:
-                    DataFrame_temp = pandas.DataFrame(index=security, columns=column).drop('secu_code', axis=1)
-                    DataFrame_temp.index.name = 'secu_code'
-                    year_temp = int(date[:4])
-                    quarter_temp = pandas.Period(date, 'Q-DEC').quarter
-                    if report_types is None:
-                        if quarter_temp == 1:
-                            quarter_temp = 4
-                            year_temp -= 1
-                        else:
-                            quarter_temp -= 1
-                    elif quarter_temp <= report_types:
-                        quarter_temp = report_types
-                        year_temp -= 1
-                    else:
-                        quarter_temp = report_types
-                    report_types = str(quarter_temp)
-                    start_year = str(year_temp)
-                    end_year = str(year_temp)
-                    error_return, data_return = debt_paying_ability(str(security), report_types, start_year, end_year, str(column))
-                    if error_return['error_no'] != 0:
-                        print('获取GTN数据异常，请联系管理员，异常信息：%s' % error_return)
-                        return re_empty_data
-                    elif data_return.empty:
-                        return DataFrame_temp
-                    elif date_type is None:
-                        data_return = data_return[data_return.publ_date < date]
-                    data_return.index = data_return['secu_code'].tolist()
-                    DataFrame_temp.update(data_return)
-                    re_data = DataFrame_temp.replace('--', str(numpy.nan))
-                    for i in re_data.columns:
-                        if i not in list_base:
-                            re_data[i] = re_data[i].astype('float64')
-                    re_data.index.name = 'secu_code'
-                    return re_data
+    if date is None and start_year is None and end_year is None:
+        date = time.strftime('%Y-%m-%d')
+    try:
+        column_basis = ['secu_code', 'secu_abbr', 'publ_date', 'end_date']
+        column_temp = get_fields('debt_paying_fields', fields)
+        column = list(set(column_basis).union(set(column_temp)))
+        list_base = ['secu_code', 'secu_abbr', 'publ_date', 'end_date']
+        if date is not None:
+            DataFrame_temp = pandas.DataFrame(index=security, columns=column).drop('secu_code', axis=1)
+            DataFrame_temp.index.name = 'secu_code'
+            year_temp = int(date[:4])
+            quarter_temp = pandas.Period(date, 'Q-DEC').quarter
+            if report_types is None:
+                if quarter_temp == 1:
+                    quarter_temp = 4
+                    year_temp -= 1
                 else:
-                    data = {}
-                    DataFrame_date = get_date_index(report_types, start_year, end_year, column).drop('end_date', axis=1)
-                    error_re, data_df = debt_paying_ability(str(security), report_types, start_year, end_year, str(column))
-                    if error_re['error_no'] != 0:
-                        for code in security:
-                            data[code] = re_empty_data
-                        return pandas.Panel(data)
-                    elif data_df.empty:
-                        for code in security:
-                            data[code] = DataFrame_date
-                        return pandas.Panel(data)
-                    else:
-                        data_df = data_df.replace('--', str(numpy.nan))
-                        for i in data_df.columns:
-                            if i not in list_base:
-                                data_df[i] = data_df[i].astype('float64')
-                        data_df = fill_missing_stock_data(security, data_df)
-                        data_df = data_df.set_index(['end_date', 'secu_code'])
-                        re_pandas = data_df.to_panel().swapaxes('items', 'minor')
-                        return re_pandas
-            except BaseException as x:
-                system_log.error(get_traceback_message())
-                raise x
+                    quarter_temp -= 1
+            elif quarter_temp <= report_types:
+                quarter_temp = report_types
+                year_temp -= 1
+            else:
+                quarter_temp = report_types
+            report_types = str(quarter_temp)
+            start_year = str(year_temp)
+            end_year = str(year_temp)
+            error_return, data_return = debt_paying_ability(str(security), report_types, start_year, end_year, str(column))
+            if error_return['error_no'] != 0:
+                print('获取GTN数据异常，请联系管理员，异常信息：%s' % error_return)
+                return re_empty_data
+            elif data_return.empty:
+                return DataFrame_temp
+            elif date_type is None:
+                data_return = data_return[data_return.publ_date < date]
+            data_return.index = data_return['secu_code'].tolist()
+            DataFrame_temp.update(data_return)
+            re_data = DataFrame_temp.replace('--', str(numpy.nan))
+            for i in re_data.columns:
+                if i not in list_base:
+                    re_data[i] = re_data[i].astype('float64')
+            re_data.index.name = 'secu_code'
+            return re_data
+        else:
+            data = {}
+            DataFrame_date = get_date_index(report_types, start_year, end_year, column).drop('end_date', axis=1)
+            error_re, data_df = debt_paying_ability(str(security), report_types, start_year, end_year, str(column))
+            if error_re['error_no'] != 0:
+                for code in security:
+                    data[code] = re_empty_data
+                return pandas.Panel(data)
+            elif data_df.empty:
+                for code in security:
+                    data[code] = DataFrame_date
+                return pandas.Panel(data)
+            else:
+                data_df = data_df.replace('--', str(numpy.nan))
+                for i in data_df.columns:
+                    if i not in list_base:
+                        data_df[i] = data_df[i].astype('float64')
+                data_df = fill_missing_stock_data(security, data_df)
+                data_df = data_df.set_index(['end_date', 'secu_code'])
+                re_pandas = data_df.to_panel().swapaxes('items', 'minor')
+                return re_pandas
+            return None
+    except BaseException as x:
+        system_log.error(get_traceback_message())
+        raise x
 def get_share_change(security, date=None, fields=None):
     re_empty_data = pandas.DataFrame()
     re_data = pandas.DataFrame()
     error_re, re_security = convert_to_list(security)
     if error_re['error_no'] != 0:
         return re_empty_data
+    security = re_security
+    error_re, re_fields = convert_to_list(fields)
+    if error_re['error_no'] != 0:
+        return re_empty_data
     else:
-        security = re_security
-        error_re, re_fields = convert_to_list(fields)
-        if error_re['error_no'] != 0:
+        fields = re_fields
+        if date and isVaildDate(str(date)):
+            date = change_date_format(date)
+    match date:
+        case None:
+            date = time.strftime('%Y-%m-%d')
+    try:
+        column_basis = ['secu_code', 'secu_abbr', 'change_date']
+        column_temp = get_fields('share_change_fields', fields)
+        column = list(set(column_basis).union(set(column_temp)))
+        list_base = ['secu_code', 'secu_abbr', 'change_date', 'shares_change_reason']
+        DataFrame_temp = pandas.DataFrame(index=security, columns=column).drop('secu_code', axis=1)
+        DataFrame_temp.index.name = 'secu_code'
+        year = date[:4]
+        start_year = int(year) - 1
+        end_year = year
+        error_return, data_return = share_change(str(security), str(start_year), str(end_year), str(column))
+        if error_return['error_no'] != 0:
+            print('获取GTN数据异常，请联系管理员，异常信息：%s' % error_return)
             return re_empty_data
+        elif data_return.empty or 'secu_code' not in data_return.columns:
+            return DataFrame_temp
         else:
-            fields = re_fields
-            if date and isVaildDate(str(date)):
-                date = change_date_format(date)
-            match date:
-                case None:
-                    date = time.strftime('%Y-%m-%d')
-            try:
-                column_basis = ['secu_code', 'secu_abbr', 'change_date']
-                column_temp = get_fields('share_change_fields', fields)
-                column = list(set(column_basis).union(set(column_temp)))
-                list_base = ['secu_code', 'secu_abbr', 'change_date', 'shares_change_reason']
-                DataFrame_temp = pandas.DataFrame(index=security, columns=column).drop('secu_code', axis=1)
-                DataFrame_temp.index.name = 'secu_code'
-                year = date[:4]
-                start_year = int(year) - 1
-                end_year = year
-                error_return, data_return = share_change(str(security), str(start_year), str(end_year), str(column))
-                if error_return['error_no'] != 0:
-                    print('获取GTN数据异常，请联系管理员，异常信息：%s' % error_return)
-                    return re_empty_data
-                elif data_return.empty or 'secu_code' not in data_return.columns:
-                    return DataFrame_temp
-                else:
-                    data_return = data_return[data_return.change_date < date]
-                    re_data = data_return.sort('change_date', ascending=False).drop_duplicates(['secu_code'])
-                    if re_data.empty:
-                        return DataFrame_temp
-                    else:
-                        re_data.index = re_data['secu_code'].tolist()
-                        DataFrame_temp.update(re_data)
-                        re_data = DataFrame_temp.replace('--', str(numpy.nan))
-                        for i in re_data.columns:
-                            if i not in list_base:
-                                re_data[i] = re_data[i].astype('float64')
-                        re_data.index.name = 'secu_code'
-                        return re_data
-            except BaseException as x:
-                system_log.error(get_traceback_message())
-                raise x
+            data_return = data_return[data_return.change_date < date]
+            re_data = data_return.sort('change_date', ascending=False).drop_duplicates(['secu_code'])
+            if re_data.empty:
+                return DataFrame_temp
+            else:
+                re_data.index = re_data['secu_code'].tolist()
+                DataFrame_temp.update(re_data)
+                re_data = DataFrame_temp.replace('--', str(numpy.nan))
+                for i in re_data.columns:
+                    if i not in list_base:
+                        re_data[i] = re_data[i].astype('float64')
+                re_data.index.name = 'secu_code'
+                return re_data
+                return None
+        return None
+    except BaseException as x:
+        system_log.error(get_traceback_message())
+        raise x
 def get_valuation(security, date=None, fields=None):
     re_empty_data = pandas.DataFrame()
     re_data = pandas.DataFrame()
     error_re, re_security = convert_to_list(security)
     if error_re['error_no'] != 0:
         return re_empty_data
+    security = re_security
+    error_re, re_fields = convert_to_list(fields)
+    if error_re['error_no'] != 0:
+        return re_empty_data
     else:
-        security = re_security
-        error_re, re_fields = convert_to_list(fields)
-        if error_re['error_no'] != 0:
+        fields = re_fields
+        if date and isVaildDate(str(date)):
+            date = change_date_format(date)
+    try:
+        column_basis = ['secu_code', 'trading_day', 'total_value']
+        column_temp = get_fields('valuation_fields', fields)
+        column = list(set(column_basis).union(set(column_temp)))
+        list_base = ['secu_code', 'secu_abbr', 'trading_day', 'turnover_rate', 'dividend_ratio']
+        DataFrame_temp = pandas.DataFrame(index=security, columns=column).drop('secu_code', axis=1)
+        DataFrame_temp.index.name = 'secu_code'
+        error_return, data_return = valuation(str(security), date, str(column))
+        if error_return['error_no'] != 0:
+            print('获取GTN数据异常，请联系管理员，异常信息：%s' % error_return)
             return re_empty_data
+        elif data_return.empty:
+            return DataFrame_temp
         else:
-            fields = re_fields
-            if date and isVaildDate(str(date)):
-                date = change_date_format(date)
-            try:
-                column_basis = ['secu_code', 'trading_day', 'total_value']
-                column_temp = get_fields('valuation_fields', fields)
-                column = list(set(column_basis).union(set(column_temp)))
-                list_base = ['secu_code', 'secu_abbr', 'trading_day', 'turnover_rate', 'dividend_ratio']
-                DataFrame_temp = pandas.DataFrame(index=security, columns=column).drop('secu_code', axis=1)
-                DataFrame_temp.index.name = 'secu_code'
-                error_return, data_return = valuation(str(security), date, str(column))
-                if error_return['error_no'] != 0:
-                    print('获取GTN数据异常，请联系管理员，异常信息：%s' % error_return)
-                    return re_empty_data
-                elif data_return.empty:
-                    return DataFrame_temp
-                else:
-                    data_return.index = data_return['secu_code'].tolist()
-                    DataFrame_temp.update(data_return)
-                    re_data = DataFrame_temp.replace('--', str(numpy.nan))
-                    for i in re_data.columns:
-                        if i not in list_base:
-                            re_data[i] = re_data[i].astype('float64')
-                    re_data.index.name = 'secu_code'
-                    return re_data
-            except BaseException as x:
-                system_log.error(get_traceback_message())
-                raise x
+            data_return.index = data_return['secu_code'].tolist()
+            DataFrame_temp.update(data_return)
+            re_data = DataFrame_temp.replace('--', str(numpy.nan))
+            for i in re_data.columns:
+                if i not in list_base:
+                    re_data[i] = re_data[i].astype('float64')
+            re_data.index.name = 'secu_code'
+            return re_data
+        return None
+    except BaseException as x:
+        system_log.error(get_traceback_message())
+        raise x
 def get_valuation_new(security, date=None, fields=None, access_data_type=20):
     re_empty_data = pandas.DataFrame()
     re_data = pandas.DataFrame()
@@ -2765,6 +2758,10 @@ def get_valuation_new(security, date=None, fields=None, access_data_type=20):
         error_re, re_fields = convert_to_list(fields)
         if error_re['error_no'] != 0:
             return re_empty_data
+        fields = re_fields
+        if date and isVaildDate(str(date)):
+            date = date_str_type_change(date, '%Y-%m-%d', '%Y%m%d')
+        try:
             column_temp = get_fields('valuation_new_fields', fields)
             column = []
             change_column_dict = {'return_on_equity': 'roe', 'net_asset_value_per_share': 'naps'}
@@ -2793,9 +2790,9 @@ def get_valuation_new(security, date=None, fields=None, access_data_type=20):
                         re_data[i] = re_data[i].astype('float64')
                 re_data.index.name = 'secu_code'
                 return re_data.drop('secu_code', axis=1)
-        fields = re_fields
-        if date and isVaildDate(str(date)):
-            date = date_str_type_change(date, '%Y-%m-%d', '%Y%m%d')
+        except BaseException as x:
+            system_log.error(get_traceback_message())
+            raise x
 def isVaildDate(date):
     try:
         if '-' in date:
@@ -2974,25 +2971,7 @@ def get_block_info(block_type):
     return data_proxy().get_block_info(block_type)
 @check_arg
 def get_market_detail(finance_mic):
-    df = pandas.DataFrame()
-    if not isinstance(finance_mic, str):
-        return df
-    else:
-        finance_mic = finance_mic.replace('XSHG', 'SS').replace('XSHE', 'SZ')
-        if finance_mic not in FINANCE_MIC_INFO:
-            user_log.warning('请入参合法的市场代码')
-            return df
-        else:
-            try:
-                file = '/home/fly/data/market_detail_info/market_detail_%s_info.pickle' % finance_mic
-                with open(file, 'rb') as f:
-                    loaded_dict = pickle.load(f)
-                return pandas.DataFrame.from_dict(loaded_dict).T
-            except:
-                system_log.error(get_traceback_message())
-                return df
-            if True:
-                pass
+    pass
 def get_market_detail_online(finance_mic):
     df = pandas.DataFrame()
     url = '%s/market/detail' % OPEN_API_QUOTE_URL

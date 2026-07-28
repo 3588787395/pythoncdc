@@ -11242,6 +11242,37 @@ RegionType 枚举值: RegionType.ASSERT
                         _else_chain_end = _next
                     if any(i.opname in ('RAISE_VARARGS', 'RETURN_VALUE') for i in _else_chain_end.instructions) or _else_chain_end.immediate_post_dominator is None:
                         _else_sink = True
+                # [R30-8 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（归约顺序）：
+                # 当 _then_sink 是真 sink（有 RETURN_VALUE/RAISE_VARARGS + 无后继）而
+                # _else_sink 仅因 immediate_post_dominator is None 被误判为 True
+                #（else_succ 有后继且无 RETURN/RAISE，ipdom=None 由 try-except 异常边
+                # 或多出口导致），且 else 分支会过度收集（>15 块，说明 ipdom=None 导致
+                # _collect_branch_blocks 吸收整个函数体），将 _else_sink 修正为 False。
+                #
+                # 典型场景（get_valuation_new）：if error_re: return re_empty_data;
+                # fields = re_fields; ...  → then 是 RETURN_VALUE（真 sink），
+                # else 是 fields=re_fields（有后继），但 try-except 异常边使
+                # else_succ.immediate_post_dominator=None，_else_sink 误判为 True，
+                # 导致 merge 计算跳过 _then_sink 分支，_collect_branch_blocks
+                # 过度收集 else 分支（整个函数体 28+ 块），反编译结果被截断。
+                #
+                # 安全性：仅当 then 是真 sink（RETURN/RAISE + 无后继）且 else 分支
+                # 严重过度收集（>15 块）时触发。阈值 15 避免影响正常 if-else 结构
+                #（正常 else 分支通常 <10 块）。此时 if-else 和 if-no-else 产生相同
+                # 字节码（编译器优化掉 RETURN_VALUE 后的死代码 JUMP_FORWARD）。
+                if (_then_sink and _else_sink
+                        and not then_succ.successors
+                        and any(i.opname in ('RAISE_VARARGS', 'RETURN_VALUE')
+                                for i in then_succ.instructions)
+                        and else_succ.successors
+                        and not any(i.opname in ('RAISE_VARARGS', 'RETURN_VALUE')
+                                    for i in else_succ.instructions)):
+                    _r30_8_stop = {then_succ} | (boundary_stop - {else_succ})
+                    _r30_8_test = self._collect_branch_blocks(
+                        else_succ, None, _r30_8_stop)
+                    if len(_r30_8_test) > 15:
+                        _else_sink = False
+
                 if _then_sink and not _else_sink:
                     # [R14-N4 fix] 区域归约算法原则 2（每块唯一归属）：
                     # 当 then 分支终态终止（RETURN_VALUE/RAISE），else_succ 可能是
@@ -11262,6 +11293,11 @@ RegionType 枚举值: RegionType.ASSERT
                         for p in else_succ.predecessors
                     )
                     if _else_has_external_pred_thn:
+                        merge = else_succ
+                    elif else_succ.immediate_post_dominator is None:
+                        # [R30-8 fix] 当 then 是真 sink 且 else 的 ipdom=None
+                        #（try-except 异常边等导致），merge=else_succ 使 else_blocks
+                        # 为空，代码作为 post-if 顺序语句处理。安全性同上。
                         merge = else_succ
                     else:
                         merge = else_succ.immediate_post_dominator
