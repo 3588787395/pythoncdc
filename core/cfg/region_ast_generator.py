@@ -272,6 +272,11 @@ class RegionASTGenerator:
 
         if entry_block and entry_block not in self.generated_blocks:
             entry_region = self.region_analyzer.get_entry_region_for_block(entry_block) or self.region_analyzer.get_region_for_block(entry_block)
+            import os as _os
+            if _os.environ.get('R23N21_DEBUG'):
+                import sys as _sys
+                _er_name = type(entry_region).__name__ if entry_region else None
+                print(f"[R23N21-DBG] generate() entry_block={entry_block.start_offset} entry_region={_er_name}", file=_sys.stderr)
             for r in self.regions:
                 if isinstance(r, LoopRegion) and (r.condition_block is entry_block or
                     (r.header_block and entry_block.start_offset in [s.start_offset for s in r.header_block.predecessors])):
@@ -288,8 +293,20 @@ class RegionASTGenerator:
                 pass
             elif isinstance(entry_region, IfRegion) and entry_region.condition_block == entry_block:
                 pass
+            # [R23-N21 fix] BoolOpRegion 作为入口区域时，入口块可能包含前置语句
+            # （如 ClearAllCache(); is_string = False）。这些语句不属于布尔表达式，
+            # 必须在此提取。原实现直接 pass 导致前置语句丢失。使用
+            # _if_extract_cond_instructions 提取前置语句（正确处理表达式语句、
+            # 赋值、import 等），然后标记 entry_block 为已生成。
             elif isinstance(entry_region, BoolOpRegion):
-                pass
+                _boolop_pre_stmts, _ = self._if_extract_cond_instructions(entry_block, None)
+                if _boolop_pre_stmts:
+                    ast_nodes.extend(_boolop_pre_stmts)
+                self.generated_blocks.add(entry_block)
+                import os as _os
+                if _os.environ.get('R23N21_DEBUG'):
+                    import sys as _sys
+                    print(f"[R23N21-DBG] generate() BoolOpRegion entry={entry_block.start_offset} pre_stmts={len(_boolop_pre_stmts)}", file=_sys.stderr)
             elif isinstance(entry_region, TernaryRegion):
                 # [R8-07 fix] TernaryRegion entry may contain import statements
                 # before the ternary condition preload (e.g., `from x import y as z
@@ -327,7 +344,24 @@ class RegionASTGenerator:
                     _import_pending_store = False
 
                     for _instr in entry_block.instructions:
-                        if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL'):
+                        # [R23-N22 fix] 区域归约算法原则 2（每块唯一归属）：
+                        # 入口块中的表达式语句（如 ClearAllCache() 调用）以
+                        # LOAD_* + PRECALL + CALL + POP_TOP 序列表示。原实现将
+                        # POP_TOP 直接 continue，导致 _stmt_instrs 中累积的 CALL
+                        # 表达式永不刷出，ClearAllCache() 丢失。修复：遇到 POP_TOP
+                        # 时，若 _stmt_instrs 含 CALL，构建 Expr 语句并刷出。
+                        if _instr.opname == 'POP_TOP':
+                            if _stmt_instrs:
+                                _has_call = any(_i.opname in ('CALL', 'CALL_FUNCTION', 'CALL_METHOD', 'CALL_FUNCTION_KW', 'CALL_FUNCTION_EX') for _i in _stmt_instrs)
+                                if _has_call:
+                                    _stmt = self._build_statement(_stmt_instrs)
+                                    if _stmt:
+                                        _pre_stmts.append(_stmt)
+                                    _stmt_instrs = []
+                            if _import_pending_store:
+                                _import_pending_store = False
+                            continue
+                        if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
                             continue
                         if _instr.opname in FORWARD_JUMP_OPS or _instr.opname in BACKWARD_JUMP_OPS:
                             break
@@ -9859,11 +9893,23 @@ AST 映射规则:
         # 额外从 entry 块提取 pre_stmts。这些 pre_stmts 是 entry 块中位于
         # 条件指令之前的赋值语句（STORE_FAST/STORE_NAME 等），由
         # _if_extract_cond_instructions 在遇到首个跳转指令时停止提取。
-        if (region.entry is not None and region.entry is not cond_block
-                and region.entry not in self.generated_blocks):
-            _entry_pre_stmts, _ = self._if_extract_cond_instructions(region.entry, region)
-            if _entry_pre_stmts:
-                pre_stmts = _entry_pre_stmts + pre_stmts
+        # [R23-N21 fix] 当 entry 块被 BoolOpRegion 标记为 generated（作为
+        # outer condition），仍需提取前置语句。BoolOpRegion 仅消费条件指令，
+        # 前置语句（如 ClearAllCache(); is_string = False）不属于布尔表达式，
+        # 必须由 IfRegion 负责生成。否则 `ClearAllCache(); if x or y:` 中的
+        # ClearAllCache() 调用会丢失。
+        # [R23-N22 fix] R23-N21 的 BoolOpRegion 覆盖逻辑已废弃：generate() 的
+        # 入口块处理（else 分支）现已正确处理 POP_TOP+CALL 表达式语句（如
+        # ClearAllCache()），并将 entry_block 标记为 generated。此处再覆盖
+        # _should_extract_entry=True 会导致前置语句被重复提取（如
+        # get_trading_day_by_date 的 import 被生成两次）。移除 BoolOpRegion
+        # 覆盖，仅依赖 generated_blocks 标记判断是否需要提取。
+        if (region.entry is not None and region.entry is not cond_block):
+            _should_extract_entry = (region.entry not in self.generated_blocks)
+            if _should_extract_entry:
+                _entry_pre_stmts, _ = self._if_extract_cond_instructions(region.entry, region)
+                if _entry_pre_stmts:
+                    pre_stmts = _entry_pre_stmts + pre_stmts
         condition = self._if_extract_condition_from_instructions(region, cond_block, cond_instrs)
         self.generated_blocks.add(cond_block)
         if hasattr(region, 'elif_conditions') and region.elif_conditions:

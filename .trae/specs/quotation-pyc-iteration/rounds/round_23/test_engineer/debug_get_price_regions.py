@@ -56,7 +56,8 @@ def main():
         entry = r.entry.start_offset if r.entry else None
         if isinstance(r, IfRegion):
             merge = r.merge_block.start_offset if r.merge_block else None
-            print(f"  {rtype} entry={entry} merge={merge}")
+            cond = r.condition_block.start_offset if hasattr(r, 'condition_block') and r.condition_block else None
+            print(f"  {rtype} entry={entry} merge={merge} cond={cond}")
             print(f"    then_blocks: {[b.start_offset for b in r.then_blocks] if r.then_blocks else []}")
             if r.elif_conditions:
                 print(f"    elif_conditions: {len(r.elif_conditions)}")
@@ -69,6 +70,8 @@ def main():
             print(f"    op_chain: {[(b.start_offset, op) for b, op in r.op_chain]}")
             print(f"    merge_block: {r.merge_block.start_offset if r.merge_block else None}")
             print(f"    body_block: {r.body_block.start_offset if r.body_block else None}")
+            print(f"    prefix_block: {r.prefix_block.start_offset if r.prefix_block else None}")
+            print(f"    blocks: {[b.start_offset for b in r.blocks]}")
         else:
             print(f"  {rtype} entry={entry}")
 

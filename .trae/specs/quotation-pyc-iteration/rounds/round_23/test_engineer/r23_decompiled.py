@@ -892,6 +892,7 @@ def get_trade_days(start_date=None, end_date=None, count=None):
     return calendar_get_trade_days(start_date, end_date, count)
 @check_arg
 def get_price(security, start_date=None, end_date=None, frequency='daily', fields=None, fq=None, count=None, is_dict=False):
+    ClearAllCache()
     is_string = False
     if security is None or len(security) == 0:
         strategy_log.error('security不能为空')
