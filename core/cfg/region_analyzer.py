@@ -11947,6 +11947,17 @@ RegionType 枚举值: RegionType.ASSERT
                         break
                     if 'IF_TRUE' in _ft_last.opname:
                         break
+                    # [R23-N23 fix] A BoolOp chain block must be a pure
+                    # condition block — it must NOT contain STORE instructions
+                    # (which indicate a body/assignment statement). Without
+                    # this check, `elif A: B = ...; if B < C: ...` is wrongly
+                    # treated as `elif A and B < C:` because the body block
+                    # (containing B = ... + POP_JUMP_IF_FALSE) appears to be a
+                    # second chain block jumping to the same merge.
+                    if any(i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
+                                        'STORE_DEREF', 'STORE_SUBSCR', 'STORE_ATTR')
+                           for i in _ft_next.instructions):
+                        break
                     if _ft_last.argval != _inline_merge_offset:
                         if not (_merge_is_implicit_return and _ft_last.argval is not None and _is_implicit_return_block(self.cfg.get_block_by_offset(_ft_last.argval))):
                             break
@@ -15825,6 +15836,19 @@ RegionType 枚举值: RegionType.ASSERT
                             or _cb_ft_last.opname not in BOOLOP_JUMP_OPS):
                         _all_ternary_cond = False
                         break
+                    # [R23-N23 fix] A ternary value block produces a value on
+                    # the stack — it must NOT contain STORE instructions (which
+                    # consume values). If the fall-through has STOREs, it's a
+                    # statement body (e.g., an if-body with assignments), not a
+                    # ternary value block. This prevents Edit H from wrongly
+                    # firing for `if A and B: ... elif C:` where B's fall-through
+                    # is the if-body (which may end with a conditional jump from
+                    # a nested if, falsely passing the BOOLOP_JUMP_OPS check).
+                    _STORE_OPS = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
+                                  'STORE_DEREF', 'STORE_SUBSCR', 'STORE_ATTR')
+                    if any(i.opname in _STORE_OPS for i in _cb_ft.instructions):
+                        _all_ternary_cond = False
+                        break
                 if _is_value_block and _all_ternary_cond:
                     # Follow value block's fallthrough to find real merge.
                     # Value block's last instr is a conditional jump — the
@@ -16091,6 +16115,15 @@ RegionType 枚举值: RegionType.ASSERT
                     or _cb_ft_last.opname not in _BOOLOP_CHAIN_JUMPS):
                 _all_ternary_cond_c = False
                 break
+            # [R23-N23 fix] A ternary value block produces a value on the
+            # stack — it must NOT contain STORE instructions. If the
+            # fall-through has STOREs, it's a statement body (e.g., an
+            # if-body), not a ternary value block. See Edit H for details.
+            _STORE_OPS_C = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
+                            'STORE_DEREF', 'STORE_SUBSCR', 'STORE_ATTR')
+            if any(i.opname in _STORE_OPS_C for i in _cb_ft.instructions):
+                _all_ternary_cond_c = False
+                break
         if _all_ternary_cond_c:
             for _cb, _ in chain:
                 _cb_last = _cb.get_last_instruction()
@@ -16238,6 +16271,31 @@ RegionType 枚举值: RegionType.ASSERT
                     if _depth <= 0:
                         _cond_start_offset = _ci.offset
                         break
+            # [R23-N23 fix] 对 IF_FALSE/IF_TRUE，当条件是简单变量真值测试
+            # （LOAD_FAST/LOAD_NAME + POP_JUMP_IF_FALSE/TRUE）时，也进行栈深度
+            # 回溯。这处理 `if A and B:` 的第一操作数 A 为简单变量的 `and` 短路
+            # 模式，当块含前置赋值（listing_date = ...; if listing_date and ...:）
+            # 时，避免前置 STORE_FAST 被误判为 body。限制为简单变量测试，避免
+            # 影响复杂条件（CALL/COMPARE_OP 等）的场景。
+            elif _sb_last.opname in ('POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_FORWARD_IF_TRUE',
+                                     'POP_JUMP_IF_FALSE', 'POP_JUMP_IF_TRUE'):
+                _prev_instrs = [i for i in start_block.instructions
+                                if i.offset < _sb_last.offset
+                                and i.opname not in ('NOP', 'CACHE', 'EXTENDED_ARG', 'RESUME')]
+                if _prev_instrs and _prev_instrs[-1].opname in ('LOAD_FAST', 'LOAD_NAME',
+                                                                  'LOAD_GLOBAL', 'LOAD_DEREF'):
+                    _depth = -1
+                    _cond_start_offset = _sb_last.offset
+                    for _ci in reversed(start_block.instructions):
+                        if _ci.offset >= _sb_last.offset:
+                            continue
+                        if _ci.opname in ('NOP', 'CACHE', 'EXTENDED_ARG', 'RESUME'):
+                            continue
+                        _cpush, _cpop = self._stack_effect(_ci)
+                        _depth += _cpush - _cpop
+                        if _depth <= 0:
+                            _cond_start_offset = _ci.offset
+                            break
             _sb_has_body = any(
                 i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
                              'STORE_DEREF', 'STORE_ATTR', 'STORE_SUBSCR',

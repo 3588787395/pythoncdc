@@ -17,4 +17,8 @@ print(f"[decompile] elapsed={elapsed:.2f}s, len={len(src)}")
 with open(OUT, 'w', encoding='utf-8') as f:
     f.write(src)
 
+# Also copy to /tmp for the stats script
+import shutil
+shutil.copy(OUT, '/tmp/r23_decompiled.py')
+
 print(f"[decompile] wrote {OUT}")
