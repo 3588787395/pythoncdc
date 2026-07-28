@@ -10156,7 +10156,17 @@ AST 映射规则:
                 else:
                     break
             return stmts
-        then_stmts = _strip_implicit_return_none(then_stmts)
+        # [R30-4 fix] 区域归约算法原则 2（每块唯一归属）：
+        # 仅当 merge_block 存在时才剥离 then 分支末尾的隐式 return None。
+        # 当 merge_block 为 None 时，then 分支是终态路径（所有路径
+        # return/raise），末尾的 return None 是源码中的显式语句
+        # （如 ``if isinstance(date, int): ...; return None``）。
+        # 剥离它会导致该 return None 块的语句丢失，违反每块唯一归属
+        # 原则（块属于此区域但语句被丢弃）。典型失败模式：
+        # get_stock_exrights 中 IfRegion@520 (merge=None) 的 then 分支
+        # 末尾 block@640 (return None) 被剥离，导致字节码偏移 -4。
+        if region.merge_block is not None:
+            then_stmts = _strip_implicit_return_none(then_stmts)
         if then_stmts and isinstance(then_stmts[0], dict) and then_stmts[0].get('type') == 'If' and then_stmts[0].get('orelse'):
             _ts0 = then_stmts[0]
             _ts0_orelse = _strip_implicit_return_none(_ts0.get('orelse', []))

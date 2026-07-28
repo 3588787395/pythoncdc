@@ -145,6 +145,7 @@ def api_get_financial(url, params=None, request_times=0):
     token_value = get_token()
     if not token_value:
         print('ERROR:获取token失败！')
+        return None
     else:
         real_url = url_concat(url, params)
         headers = {'Authorization': 'Bearer %s' % token_value}
@@ -900,6 +901,7 @@ def get_price(security, start_date=None, end_date=None, frequency='daily', field
     frequency = FREQUENCYNAME_DICT.get(frequency, frequency)
     if frequency not in ALL_FREQUENCY:
         strategy_log.error('不支持查询频率周期为：%s 的数据，请输入正确的频率周期' % frequency)
+        return None
     else:
         current_date = datetime.now().strftime('%Y%m%d')
         if end_date is None:
@@ -932,6 +934,7 @@ def get_history(count, frequency='1d', field=None, security_list=None, fq=None, 
     ClearAllCache()
     if count <= 0:
         strategy_log.error('count不能小于等于0')
+        return None
     else:
         is_string = False
         if security_list is None:
@@ -3198,7 +3201,7 @@ def get_stock_exrights(stock_code, date=None):
     exrights = load_get_exrights(stock_code)[stock_code]
     exrights = exrights.copy()
     if exrights.empty:
-        pass
+        return None
     else:
         exrights.index = exrights.pop('date')
         exrights.rename(columns={'allottedCount': 'allotted_ps', 'rationedCount': 'rationed_ps', 'rationedPrice': 'rationed_px', 'bonusPrice': 'bonus_ps'}, inplace=True)
@@ -3216,6 +3219,7 @@ def get_stock_exrights(stock_code, date=None):
             right_list = exrights.index == date
             if right_list.any():
                 return exrights[right_list]
+            return None
         return None
 def get_valuation_info(count, date, stocks, filled=False):
     if isinstance(stocks, str):
@@ -3597,6 +3601,7 @@ def get_trading_day_by_date(query_date, day=0):
     from fly.common.tradingday_calendar import get_trading_day_date
     if type(query_date) != str or len(query_date) != 8:
         strategy_log.error('query_date输入有问题，请检查')
+        return None
     else:
         trading_day = get_trading_day_date(query_date, day)
         trading_day = trading_day.strftime('%Y%m%d')
