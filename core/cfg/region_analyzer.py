@@ -13559,6 +13559,29 @@ RegionType 枚举值: RegionType.ASSERT
                         self._is_single_expression_block(false_block)):
                     return None
 
+                # [R30-11 fix] 区域归约算法原则 2（每块唯一归属）：
+                # 当 chain_blocks > 1（BoolOp 条件链 ternary，如 `x if a and b else y`），
+                # true_block/false_block 必须是值块（以 JUMP_FORWARD 或 fallthrough 结尾），
+                # 不能是独立的条件块（以 POP_JUMP_IF_* 结尾）。
+                # _is_single_expression_block 会剥离尾部条件跳转指令，使条件块
+                #（如嵌套 if-header）误判为值块，导致整个 if 语句被错误归约为
+                # TernaryRegion。
+                # 典型场景（load_bars_from_hundsun）：
+                #   if os.path.exists(...) and typet == 6:   # blk1+blk2 chain
+                #       if isinstance(stocks, str): ...      # blk3 = true_block
+                #   if len(start) > 8: ...                   # blk16 = false_block
+                # blk3 和 blk16 都是独立的 if-header（条件块），不是三元值块。
+                # 已存在的 TernaryRegion entry 例外（嵌套三元 `(y if c2 else z)`
+                # 的条件块在自底向上归约中已被归约）。
+                for _vb in (true_block, false_block):
+                    _vb_last = _vb.get_last_instruction()
+                    if (_vb_last and _vb_last.argval is not None
+                            and _vb_last.opname in (
+                                FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)):
+                        _vb_existing = self.block_to_region.get(_vb)
+                        if not isinstance(_vb_existing, TernaryRegion):
+                            return None
+
                 # 修复：检查值块是否包含CALL指令但返回值未被使用
                 # 如果是，则这是语句（如print()）而非表达式，不应识别为Ternary
                 if _is_call_without_value_used(true_block) or _is_call_without_value_used(false_block):

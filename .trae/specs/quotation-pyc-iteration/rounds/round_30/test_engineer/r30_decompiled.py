@@ -420,21 +420,21 @@ def build_future_fill_time(suffix, typet, start, end):
                     total_dts.append(today + item)
         elif typet == 4:
             if suffix == 'T.CCFX':
-                market_time = set()
+                market_time = {'11:30:00', '15:15:00', '15:00:00', '10:00:00', '11:00:00', '14:00:00', '14:30:00', '13:30:00', '10:30:00'}
             elif suffix in ('XZCE', 'XDCE', 'XSGE'):
-                market_time = set()
+                market_time = {'09:30:00', '11:15:00', '13:45:00', '15:00:00', '14:15:00', '10:00:00', '10:45:00', '14:45:00'}
             else:
-                market_time = set()
+                market_time = {'11:30:00', '15:00:00', '10:00:00', '11:00:00', '14:00:00', '14:30:00', '13:30:00', '10:30:00'}
             for today in trade_days:
                 for item in market_time:
                     total_dts.append(today + ' ' + item)
         elif typet == 13:
             if suffix == 'T.CCFX':
-                market_time = set()
+                market_time = {'15:00:00', '11:30:00', '15:15:00'}
             elif suffix in ('XZCE', 'XDCE', 'XSGE'):
                 market_time = {'11:15:00', '15:00:00'}
             else:
-                market_time = set()
+                market_time = {'15:00:00', '11:30:00', '15:15:00'}
             for today in trade_days:
                 for item in market_time:
                     total_dts.append(today + ' ' + item)
@@ -501,14 +501,30 @@ def build_current_period_df(nowdataframe, index_data=False):
         tmp = pandas.DataFrame(tempdict, index=index)
         return tmp
 def load_bars_from_hundsun(stocks, typet, start, end):
-    source_start = len(start[8:]) == 4 and start[8:] or '0000'
-    source_end = end[8:] or '1530'
-    collections(isinstance(stocks, str) if os.path.exists(DumploadDailyFile) and typet == 6 else len(start) > 8)
-    if len(diffset) < len(stocks):
-        sectionstocks = list(set(stocks).intersection(set(dailypanel.items)))
-        dailypanel = dailypanel.ix[:, source_start:source_end]
-        retpanel = dailypanel.ix[sectionstocks, :]
-        stocks = list(diffset)
+    data = collections.OrderedDict()
+    retpanel = pandas.Panel()
+    if os.path.exists(DumploadDailyFile):
+        source_start = len(start[8:]) == 4 and start[8:] or '0000'
+        source_end = end[8:] or '1530'
+        if typet == 6:
+            if isinstance(stocks, str):
+                stocks = [stocks]
+            from fly.dumpload import load_daily
+            reload(load_daily)
+            dailypanel = load_daily.cshare
+            if not dailypanel.empty:
+                dailypanel = dailypanel.ix[:, source_start:source_end]
+                retpanel = dailypanel.ix[stocks, :]
+                return retpanel
+                if len(diffset) < len(stocks):
+                    sectionstocks = list(set(stocks).intersection(set(dailypanel.items)))
+                    dailypanel = dailypanel.ix[:, source_start:source_end]
+                    retpanel = dailypanel.ix[sectionstocks, :]
+                    stocks = list(diffset)
+    if len(start) > 8:
+        start_temp = start[:8]
+    else:
+        start_temp = start
     if len(end) > 8:
         end_temp = end[:8]
     else:
