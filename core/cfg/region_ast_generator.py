@@ -4295,6 +4295,42 @@ AST 映射规则:
             if _is_child_loop_fis:
                 self.generated_blocks.add(block)
                 continue
+            # [R30 fix] 区域归约算法原则 1（自底向上归约）+ 原则 4（父引用子入口）：
+            # 在 dispatch 处理子区域入口之前，先 flush body_blocks_no_header 中
+            # 偏移量 < 当前块的普通块。否则 dispatch 会将子区域直接追加到
+            # body_stmts，而这些普通块（偏移量更小）会被 _loop_postprocess
+            # 放到子区域之后，导致顺序错误（如 `data = return_data['data']`
+            # 出现在 try-except 之后，而非之前）。
+            # 仅在当前块是子区域入口时 flush，避免对普通块提前 flush 破坏
+            # if-else 链检测（_if_generate_branch_stmts 需要完整块序列）。
+            if body_blocks_no_header:
+                _is_child_entry_pre = False
+                _er_pre = self.region_analyzer.get_entry_region_for_block(block)
+                if _er_pre and _er_pre.entry is block and _er_pre is not region:
+                    if isinstance(_er_pre, (TryExceptRegion, WithRegion, LoopRegion, MatchRegion, IfRegion)):
+                        _is_child_entry_pre = True
+                if not _is_child_entry_pre:
+                    # 也检查是否是子 LoopRegion 的 header_block/condition_block
+                    for _ch in (region.children or []):
+                        if isinstance(_ch, LoopRegion) and _ch is not region:
+                            if _ch.header_block is block or (_ch.condition_block is block and _ch.condition_block is not None):
+                                _is_child_entry_pre = True
+                                break
+                if _is_child_entry_pre:
+                    _cur_offset_pre = block.start_offset
+                    _before_pre = [b for b in body_blocks_no_header if b.start_offset < _cur_offset_pre]
+                    if _before_pre:
+                        _after_pre = [b for b in body_blocks_no_header if b.start_offset >= _cur_offset_pre]
+                        _branch_stmts_pre = self._if_generate_branch_stmts(_before_pre)
+                        if _branch_stmts_pre and body_stmts:
+                            _last_bt_pre = body_stmts[-1].get('type') if isinstance(body_stmts[-1], dict) else None
+                            if _last_bt_pre in ('Try', 'If', 'For', 'While', 'With'):
+                                while _branch_stmts_pre and isinstance(_branch_stmts_pre[0], dict) and _branch_stmts_pre[0].get('type') == 'Continue':
+                                    _branch_stmts_pre.pop(0)
+                        if _branch_stmts_pre:
+                            body_stmts.extend(_branch_stmts_pre)
+                        body_blocks_no_header.clear()
+                        body_blocks_no_header.extend(_after_pre)
             handled = self._loop_dispatch_block(
                 block, region, child_info, boolop_for_while,
                 body_stmts, body_blocks_no_header, back_edge_stmts, natural_back_edge,
@@ -5404,6 +5440,25 @@ AST 映射规则:
             if _sli_instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
                 _self_loop_instrs.append(_sli_instr)
                 _stmt = self._build_store_statement(_self_loop_instrs, block=hdr)
+                if _stmt:
+                    _self_loop_stmts.append(_stmt)
+                _self_loop_instrs = []
+                continue
+            # [R30 fix] 区域归约算法原则 2（每块唯一归属）：
+            # STORE_SUBSCR/STORE_ATTR 赋值（如 `params['start_pos'] += 10000`、
+            # `obj.attr = value`）必须作为独立语句提取，否则会被累积到
+            # _self_loop_instrs 中，在遇到后续 STORE_FAST 时被 _build_store_statement
+            # 错误合并或丢失。镜像 _loop_extract_pre_stmts_from_instrs 的 R10-N7 修复。
+            if _sli_instr.opname == 'STORE_SUBSCR':
+                _self_loop_instrs.append(_sli_instr)
+                _stmt = self._build_subscript_assign(_self_loop_instrs)
+                if _stmt:
+                    _self_loop_stmts.append(_stmt)
+                _self_loop_instrs = []
+                continue
+            if _sli_instr.opname == 'STORE_ATTR':
+                _self_loop_instrs.append(_sli_instr)
+                _stmt = self._build_attr_assign(_self_loop_instrs)
                 if _stmt:
                     _self_loop_stmts.append(_stmt)
                 _self_loop_instrs = []
@@ -8729,8 +8784,8 @@ AST 映射规则:
                 stmt = self._build_store_statement(pre_instrs, block=cond_block)
                 if stmt:
                     pre_stmts.append(stmt)
+                    pre_seen_store = True
                 pre_instrs = []
-                pre_seen_store = True
                 continue
             # [R10-N2 fix] 区域归约算法原则 2（每块唯一归属）：
             # IfRegion 条件块中的 STORE_SUBSCR/STORE_ATTR 赋值（如
@@ -8743,16 +8798,16 @@ AST 映射规则:
                 stmt = self._build_subscript_assign(pre_instrs)
                 if stmt:
                     pre_stmts.append(stmt)
+                    pre_seen_store = True
                 pre_instrs = []
-                pre_seen_store = True
                 continue
             if instr.opname == 'STORE_ATTR':
                 pre_instrs.append(instr)
                 stmt = self._build_attr_assign(pre_instrs)
                 if stmt:
                     pre_stmts.append(stmt)
+                    pre_seen_store = True
                 pre_instrs = []
-                pre_seen_store = True
                 continue
             if instr.opname == 'COMPARE_OP' and pre_seen_store:
                 pre_instrs = []
@@ -9566,7 +9621,14 @@ AST 映射规则:
                     if elif_boolop.merge_block:
                         _final_else_offsets = {b.start_offset for b in region.elif_final_else} if region.elif_final_else else set()
                         if elif_boolop.merge_block.start_offset not in _final_else_offsets:
-                            self.generated_blocks.add(elif_boolop.merge_block)
+                            # [R30 fix] 同 line 9832 修复：merge_block 可能是后续顶级区域的入口
+                            _merge_is_top_entry_2 = False
+                            for _tr in self.regions:
+                                if getattr(_tr, 'parent', None) is None and _tr.entry is elif_boolop.merge_block:
+                                    _merge_is_top_entry_2 = True
+                                    break
+                            if not _merge_is_top_entry_2:
+                                self.generated_blocks.add(elif_boolop.merge_block)
         if elif_condition is None:
             _inline_chain_info = getattr(region, 'inline_boolop_chains', {}).get(id(elif_cond_block))
             if _inline_chain_info:
@@ -9775,7 +9837,18 @@ AST 映射规则:
                         if region.elif_final_else:
                             _final_else_offsets = {b.start_offset for b in region.elif_final_else}
                         if _last_elif_boolop.merge_block and _last_elif_boolop.merge_block.start_offset not in _final_else_offsets:
-                            self.generated_blocks.add(_last_elif_boolop.merge_block)
+                            # [R30 fix] 区域归约算法原则 1（自底向上归约）+ 原则 3（嵌套即抽象节点）：
+                            # merge_block 可能是后续顶级区域的入口（如另一个 IfRegion 的 entry）。
+                            # 若将其标记为 generated_blocks，会导致后续区域在顶级循环中被跳过
+                            # （all(b in generated_blocks) 检查通过），造成代码块丢失。
+                            # 修复：仅当 merge_block 不是任何顶级区域的 entry 时才标记为已生成。
+                            _merge_is_top_entry = False
+                            for _tr in self.regions:
+                                if getattr(_tr, 'parent', None) is None and _tr.entry is _last_elif_boolop.merge_block:
+                                    _merge_is_top_entry = True
+                                    break
+                            if not _merge_is_top_entry:
+                                self.generated_blocks.add(_last_elif_boolop.merge_block)
                 if _last_elif_condition is None:
                     _inline_chain_info = getattr(region, 'inline_boolop_chains', {}).get(id(_last_elif_cond_block))
                     if _inline_chain_info:
