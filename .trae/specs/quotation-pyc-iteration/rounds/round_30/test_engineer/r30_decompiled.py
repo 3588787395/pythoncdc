@@ -271,14 +271,6 @@ def one_prod_to_dataframe(data, prod_code, data_type=None):
                         index.append(f"{v[0:4]!s}-{v[4:6]!s}-{v[6:8]!s} {v[8:10]!s}:{v[10:12]!s}:{'00'!s}")
                     elif i == 0:
                         index.append(f'{v[0:4]!s}-{v[4:6]!s}-{v[6:8]!s} {v[8:10]!s}:{v[10:12]!s}:{v[12:14]!s}')
-                elif i == 0 and len(v) == 10:
-                    pass
-                elif i == 0:
-                    pass
-                elif i == 0:
-                    pass
-                elif i == 0:
-                    pass
                 if len(v) == 11:
                     pass
                 elif i == 0 and len(v) == 12:
@@ -311,17 +303,19 @@ def fill_minute_or_day_blank(klines, nowstart, nowend, typet, stocks, forward='p
         suffix = stocks.split('T.' + suffix if suffix == 'CCFX' and code[:1] == 'T' else suffix)
         if len(dts) > 0:
             source_start = len(source_start[8:]) == 4 and source_start[8:] or '0000'
-            source_end = source_end[8:] or '1530'
-            dts = dts.index
-            if forward == 'back':
-                temp_close = numpy.array([klines['close'][-1]] * len(dts))
-                temp_value = numpy.array([numpy.nan] * len(dts))
-                klines_back = pandas.DataFrame({'open': temp_close, 'close': temp_close, 'high': temp_close, 'low': temp_close, 'volume': temp_value, 'money': temp_value}, index=dts)
-                klines = pandas.concat([klines, klines_back])
-            else:
-                temp_value = numpy.array([numpy.nan] * len(dts))
-                klines_pre = pandas.DataFrame({'open': temp_value, 'close': temp_value, 'high': temp_value, 'low': temp_value, 'volume': temp_value, 'money': temp_value}, index=dts)
-                klines = pandas.concat([klines_pre, klines], sort=True)
+            """1530"""
+            dts = dts[(~dts.index < source_start) & (~dts.index > source_end)]
+            if source_end[8:] or '1530':
+                dts = dts.index
+                if forward == 'back':
+                    temp_close = numpy.array([klines['close'][-1]] * len(dts))
+                    temp_value = numpy.array([numpy.nan] * len(dts))
+                    klines_back = pandas.DataFrame({'open': temp_close, 'close': temp_close, 'high': temp_close, 'low': temp_close, 'volume': temp_value, 'money': temp_value}, index=dts)
+                    klines = pandas.concat([klines, klines_back])
+                else:
+                    temp_value = numpy.array([numpy.nan] * len(dts))
+                    klines_pre = pandas.DataFrame({'open': temp_value, 'close': temp_value, 'high': temp_value, 'low': temp_value, 'volume': temp_value, 'money': temp_value}, index=dts)
+                    klines = pandas.concat([klines_pre, klines], sort=True)
     return klines
 def load_minute_or_day_kline(stocks, typet, start, end):
     if is_binary == '1':
@@ -687,13 +681,12 @@ def change_his_to_forward(security, data, exrights_data, start, end, typet):
                     return data
                 data = data * float(series.loc[n, 'exer_forward_a']) + float(series.loc[n, 'exer_forward_b'])
                 return round(data, 2)
+        preindex = None
+        tmpdata = None
+        if len(series[startDateIndex:].index) > 0:
+            tmpstartindex = series[startDateIndex:].index[0]
         else:
-            preindex = None
-            tmpdata = None
-            if len(series[startDateIndex:].index) > 0:
-                tmpstartindex = series[startDateIndex:].index[0]
-            else:
-                tmpstartindex = None
+            tmpstartindex = None
         if len(series[endDateIndex:].index) > 1:
             tmpendindex = series[endDateIndex:].index[1]
         else:
@@ -706,7 +699,7 @@ def change_his_to_forward(security, data, exrights_data, start, end, typet):
                     continue
                 elif list(data[preindex:n].index)[0].tz_localize(None) == pandas.Timestamp(datetime.strptime(end, '%Y%m%d')):
                     pass
-            elif preindex is None:
+            if preindex is None:
                 tmpdata = data[preindex:n]
                 if tmpdata[n:].empty:
                     data.loc[preindex:n, fields] = round(data[preindex:n][fields] * float(series.loc[n, 'exer_forward_a']) + float(series.loc[n, 'exer_forward_b']), 2)

@@ -11393,6 +11393,29 @@ RegionType 枚举值: RegionType.ASSERT
             then_stop = {else_succ} | (boundary_stop - {then_succ})
             else_stop = {then_succ} | (boundary_stop - {else_succ})
             then_blocks = self._collect_branch_blocks(then_succ, merge, then_stop)
+            # [R30-7 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（归约顺序）：
+            # 当 else_succ 有来自 then_blocks 的前驱时，它是 then body 的 merge
+            # 点（独立 if 语句），不是 else 分支体。典型场景（change_his_to_forward）：
+            #   if A: continue
+            #   elif B:
+            #       if C: continue
+            #       elif D: pass       # D's pass falls through to E
+            #   if E: ...              # E is a SEPARATE if, NOT elif E
+            #   else: ...
+            #
+            # 当 block@1304(B) 被独立识别为 IfRegion 时，then_succ=C@1368,
+            # else_succ=E@1748。E 的前驱包含 D@1558 和 D body@1746（来自
+            # B 的 then body = then_blocks）。设 merge=else_succ 使 else_blocks
+            # 为空，B 无 else，E 作为独立 if 语句处理。
+            #
+            # 正常 if-else/elif 中，else_succ 的唯一前驱是 block（条件块），
+            # then body 的 JUMP_FORWARD 跳到 merge（不在 else_succ），不会
+            # 落到 else_succ。仅当 then body 末尾 fall-through 到 else_succ
+            #（独立 if 场景）时触发。
+            if then_blocks and merge is not else_succ:
+                _r30_7_then_set = set(then_blocks)
+                if any(p in _r30_7_then_set for p in else_succ.predecessors):
+                    merge = else_succ
             else_blocks = self._collect_branch_blocks(else_succ, merge, else_stop)
             # 区域归约算法：try/with handler 块过滤
             # 仅当 if 条件块本身不在 handler 块集合中时才过滤 then/else 中的 handler 块。
@@ -12226,7 +12249,77 @@ RegionType 枚举值: RegionType.ASSERT
                                                     for p in inner_else_succ.predecessors)
                         if _ie_has_external_pred:
                             inner_merge = inner_else_succ
+            # [R30-6 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（归约顺序）：
+            # 当 elif body 的入口块（inner_then_succ）是条件块，且其 FALSE 跳转
+            # 目标等于 inner_else_succ 时，inner_else_succ 是 elif 链的合并点
+            #（merge），而非 else 分支体。典型场景（change_his_to_forward）：
+            #   if A: return           # sink
+            #   elif B: return         # sink
+            #   elif C:                # condition
+            #       n = ...            # elif body entry (conditional block)
+            #       if D:              # nested condition (same block)
+            #           ...
+            #           return         # sink
+            #       # D's FALSE → merge (direct jump, no JUMP_FORWARD)
+            #   # C's FALSE → merge (same merge point)
+            #   post_code              # merge
+            #
+            # C's FALSE 和 D's FALSE 都直接跳到 merge（post-if 代码），表明
+            # elif 链没有 else 分支。但 NCPD/sink 分析把 inner_merge 设为
+            # inner_else_succ 的 post-dominator（更远的块），导致
+            # inner_else_blocks=[merge, ...] 被错误识别为 else 分支体。AST
+            # 生成时把 post-if 代码包进 else 块，编译器为 elif body 末尾生成
+            # 额外 JUMP_FORWARD 跳过 else，导致字节码 diff=+1。
+            #
+            # 修复：检测 inner_then_succ 是否为条件块且其 FALSE 目标等于
+            # inner_else_succ。若是，则 inner_else_succ 是多分支汇聚的合并点
+            #（elif 条件的 FALSE 和 elif body 内部条件的 FALSE 都指向它），
+            # 设 inner_merge=inner_else_succ，使 inner_else_blocks 为空
+            #（entry==merge），避免把 post-if 代码误识别为 else 体。
+            #
+            # 安全性：当 elif body 入口的 FALSE 直接跳到 inner_else_succ（无
+            # 中间 JUMP_FORWARD），说明编译器优化掉了跳转——这仅在 FALSE 路径
+            # 无需跳过 else 体时发生（即原代码无 else，或 elif body 末尾为
+            # return 终态使 else 体紧随其后）。两种情况下，"无 else" 与
+            # "有 else" 产生相同字节码，故生成"无 else"始终安全。
+            if inner_merge is not inner_else_succ and inner_then_succ is not inner_else_succ:
+                _r30_6_its_last = inner_then_succ.get_last_instruction()
+                if (_r30_6_its_last is not None
+                        and _r30_6_its_last.argval is not None
+                        and _r30_6_its_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)
+                        and 'IF_FALSE' in _r30_6_its_last.opname):
+                    _r30_6_false_target = self.cfg.get_block_by_offset(_r30_6_its_last.argval)
+                    if _r30_6_false_target is inner_else_succ:
+                        inner_merge = inner_else_succ
             inner_then_blocks = self._collect_branch_blocks(inner_then_succ, inner_merge, {inner_else_succ} | _inner_boundary_stop)
+            # [R30-7 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（归约顺序）：
+            # 当 inner_else_succ（候选下一 elif 条件 / else 入口）有来自
+            # inner_then_blocks 的前驱时，它是 then body 的 merge 点（独立 if
+            # 语句），不是 elif 条件或 else 体。典型场景（change_his_to_forward）：
+            #   if A: continue
+            #   elif B:
+            #       if C: continue
+            #       elif D: pass       # D's pass falls through to E
+            #   if E: ...              # E is a SEPARATE if, NOT elif E
+            #   else: ...
+            #
+            # 控制流：B false → E（条件跳转），D false → E（条件跳转），
+            #         D true → E（fall-through）。E cond 的前驱包含 D 的块
+            #        （来自 B 的 then body = inner_then_blocks）。
+            #
+            # 正常 elif 链中，elif body 的 JUMP_FORWARD 跳到 merge（整个
+            # if-elif-else 之后），不会跳到下一 elif 条件。因此
+            # inner_else_succ 不应有来自 inner_then_blocks 的前驱。当检测到
+            # 此情况时，设 inner_merge = inner_else_succ，使 inner_else_blocks
+            # 为空（entry==merge），B 无 else，E 作为独立 if 语句处理。
+            #
+            # 安全性：continue/break/return 路径跳到循环 header/函数出口，
+            # 不会落到 inner_else_succ，故不影响正常控制流。boolop/ternary
+            # elif 的链中块不在 inner_then_blocks 中（它们在 else 分支侧）。
+            if inner_merge is not inner_else_succ and inner_then_blocks:
+                _r30_7_then_set = set(inner_then_blocks)
+                if any(p in _r30_7_then_set for p in inner_else_succ.predecessors):
+                    inner_merge = inner_else_succ
             inner_else_blocks = self._collect_branch_blocks(inner_else_succ, inner_merge, {inner_then_succ} | _inner_boundary_stop)
             # [R25-12 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3（嵌套即
             # 抽象节点）：镜像外层 IfRegion 的 try/with handler 块过滤
