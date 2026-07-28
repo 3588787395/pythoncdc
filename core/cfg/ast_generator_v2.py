@@ -775,6 +775,13 @@ class ExpressionReconstructor:
                                     'value': item,
                                     'lineno': instr.starts_line,
                                 })
+                        elif isinstance(const_val, (tuple, list)):
+                            for item in const_val:
+                                elts.append({
+                                    'type': 'Constant',
+                                    'value': item,
+                                    'lineno': instr.starts_line,
+                                })
                     else:
                         elts.append({
                             'type': 'Starred',
