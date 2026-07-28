@@ -20,6 +20,7 @@
 from enum import Enum, auto
 from typing import List, Dict, Set, Optional, Tuple, Any, Iterable
 from dataclasses import dataclass, field
+import os
 
 from .basic_block import BasicBlock, Instruction
 from .cfg_builder import ControlFlowGraph
@@ -709,7 +710,32 @@ class TryExceptRegion(Region):
         return self.entry == block
 
     def contains_block(self, block) -> bool:
-        return block in self.try_blocks
+        # [R23-N20 fix] 区域归约算法原则 2（每块唯一归属）：
+        # 原实现只检查 try_blocks，导致 handler body 块（except_handlers 的
+        # hblocks）、else_blocks、finally_blocks 都返回 False。这使
+        # _should_skip_block_for_if_region 误判 handler body 块"不属于"
+        # TryExceptRegion 而返回 True（跳过 IfRegion 创建），导致 except
+        # handler 内的 if-else（如 `if load_count > 5: raise else: extend`）
+        # 不被识别为 IfRegion，反编译生成 `if x: pass else: y; raise`（raise
+        # 被错误移到 if-else 之外）。
+        # 修复：contains_block 应检查区域所有内容块（try + handler + else +
+        # finally + handler_entry + cleanup），与 block_to_region 映射一致。
+        # cleanup_blocks 的 IfRegion 跳过由 try_cleanup_blocks 检查（在
+        # _should_skip_block_for_if_region 之前）单独处理，不依赖此处。
+        if block in self.try_blocks:
+            return True
+        for _, _, hblocks in self.except_handlers:
+            if block in hblocks:
+                return True
+        if block in self.handler_entry_blocks:
+            return True
+        if self.else_blocks and block in self.else_blocks:
+            return True
+        if self.finally_blocks and block in self.finally_blocks:
+            return True
+        if self.cleanup_blocks and block in self.cleanup_blocks:
+            return True
+        return False
 
     def else_block_conflict(self, block) -> bool:
         return False
@@ -10481,9 +10507,14 @@ RegionType 枚举值: RegionType.ASSERT
                     break
         elif block_region is not None:
             if not block_region.contains_block(block):
+                if os.environ.get('_R23N20_DEBUG') and block.start_offset == 342:
+                    import traceback
+                    print(f"[R23N20-DBG] block@342 skip: not contains_block", flush=True)
                 return True
             if type(block_region) is TryExceptRegion:
                 if any(lr.condition_block == block for lr in loop_regions):
+                    if os.environ.get('_R23N20_DEBUG') and block.start_offset == 342:
+                        print(f"[R23N20-DBG] block@342 skip: is loop condition_block", flush=True)
                     return True
                 block_in_loop = any(block in lr.blocks for lr in loop_regions)
                 if block_in_loop:
@@ -10491,7 +10522,11 @@ RegionType 枚举值: RegionType.ASSERT
                     if len(cond_succs_ib) == 2:
                         for _cs in cond_succs_ib:
                             _cs_role = self.block_roles.get(_cs.start_offset)
+                            if os.environ.get('_R23N20_DEBUG') and block.start_offset == 342:
+                                print(f"[R23N20-DBG] block@342 cs@{_cs.start_offset} role={_cs_role}", flush=True)
                             if _cs_role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
+                                if os.environ.get('_R23N20_DEBUG') and block.start_offset == 342:
+                                    print(f"[R23N20-DBG] block@342 skip: cs BREAK/PURE_BREAK", flush=True)
                                 return True
             # [Phase 4 回归修复] BoolOpRegion 作为循环复合条件（如
             # `while a > 0 and b > 0:`）时，CPython 3.11 在循环入口和
@@ -10518,8 +10553,16 @@ RegionType 枚举值: RegionType.ASSERT
                         and any(i.opname.startswith('JUMP_BACKWARD') or i.opname in BACKWARD_CONDITIONAL_JUMP_OPS for i in block.instructions)
                         for lr in loop_regions
                     )
+                    if os.environ.get('_R23N20_DEBUG') and block.start_offset == 342:
+                        print(f"[R23N20-DBG] block@342 cond_succs_check: is_loop_backedge_target={is_loop_backedge_target}", flush=True)
+                        print(f"  block.successors={[s.start_offset for s in block.successors]}", flush=True)
+                        print(f"  block.instructions opnames={[i.opname for i in block.instructions]}", flush=True)
                     if is_loop_backedge_target:
+                        if os.environ.get('_R23N20_DEBUG') and block.start_offset == 342:
+                            print(f"[R23N20-DBG] block@342 skip: is_loop_backedge_target", flush=True)
                         return True
+        if os.environ.get('_R23N20_DEBUG') and block.start_offset == 342:
+            print(f"[R23N20-DBG] block@342 NOT skipped (return False)", flush=True)
         return False
 
     def _identify_conditional_regions(self, loop_regions: List[Region],
@@ -15010,14 +15053,30 @@ RegionType 枚举值: RegionType.ASSERT
                     for i in block.instructions
                     if i.opname not in NOISE_OPS
                 )
+                import os as _os
+                if _os.environ.get('R23N21_DEBUG') and block.start_offset == 0:
+                    import sys as _sys
+                    _b38 = self.cfg.get_block_by_offset(38)
+                    print(f"[R23N21-DBG] block=0 in claimed=True, has_jump={has_jump}, b38_in_b2r={_b38 in self.block_to_region if _b38 else 'N/A'}, b38_in_claimed={_b38 in claimed if _b38 else 'N/A'}", file=_sys.stderr)
                 if not has_jump:
                     continue
+            import os as _os
+            if _os.environ.get('R23N21_DEBUG') and block.start_offset == 0:
+                import sys as _sys
+                _b38 = self.cfg.get_block_by_offset(38)
+                print(f"[R23N21-DBG] block=0 about to call _detect_boolop_chain_start, b38_in_b2r={_b38 in self.block_to_region if _b38 else 'N/A'}, b38_in_claimed={_b38 in claimed if _b38 else 'N/A'}, skip_claimed_for_b0={block in claimed}", file=_sys.stderr)
             chain = self._detect_boolop_chain_start(block, claimed)
             if chain is None:
                 continue
             region = self._create_boolop_region_from_chain(chain, claimed)
             if region:
                 boolop_regions.append(region)
+            import os as _os
+            if _os.environ.get('R23N21_DEBUG') and block.start_offset == 0:
+                import sys as _sys
+                print(f"[R23N21-DBG] block=0 chain={[(b.start_offset, op) for b, op in chain] if chain else None} region={type(region).__name__ if region else None}", file=_sys.stderr)
+                if region is None and chain:
+                    print(f"[R23N21-DBG]   chain was detected but region creation failed", file=_sys.stderr)
         trimmed = []
         for br in boolop_regions:
             if len(br.op_chain) < 2:
@@ -16151,12 +16210,41 @@ RegionType 枚举值: RegionType.ASSERT
                         if _nxt.opname in ('STORE_FAST', 'STORE_NAME',
                                            'STORE_GLOBAL', 'STORE_DEREF'):
                             _import_store_offsets.add(_nxt.offset)
+            # [R23-N21 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3（嵌套即
+            # 抽象节点）：对 NONE_CHECK_OPS (POP_JUMP_FORWARD_IF_NONE/NOT_NONE)，
+            # 条件是单个操作数的 None 测试。当块在条件之前有前置语句（如函数调用、
+            # 赋值），原实现的 _sb_has_body 检查会扫描整个块（POP_JUMP 之前），
+            # 误判前置语句为 body 语句，阻止 BoolOp 链检测。
+            # 这导致 `if security is None or len(security) == 0:` 被错误识别为
+            # `if security is not None: if len(security) == 0: ...`（条件被否定、
+            # 结构被嵌套），因为包含前置语句的入口块（如 ClearAllCache(); is_string
+            # = False; if security is None or ...:）被 _detect_boolop_conditional_chain
+            # 跳过，IfRegion 将 `or` 短路模式误识别为否定条件的嵌套 if。
+            # 修复：对 NONE_CHECK_OPS，通过栈深度回溯找到条件的起始指令（操作数
+            # 入栈点），仅检查条件起始之后的 body 语句。前置语句（条件起始之前）
+            # 不阻止 BoolOp 链检测。对其他条件跳转（IF_FALSE/TRUE），保持原行为
+            # （_cond_start_offset=0，扫描整个块），因为它们的条件可能更复杂。
+            _cond_start_offset = 0
+            if _sb_last.opname in NONE_CHECK_OPS:
+                _depth = -1  # POP_JUMP 弹 1（被测试的操作数）
+                _cond_start_offset = _sb_last.offset
+                for _ci in reversed(start_block.instructions):
+                    if _ci.offset >= _sb_last.offset:
+                        continue
+                    if _ci.opname in ('NOP', 'CACHE', 'EXTENDED_ARG', 'RESUME'):
+                        continue
+                    _cpush, _cpop = self._stack_effect(_ci)
+                    _depth += _cpush - _cpop
+                    if _depth <= 0:
+                        _cond_start_offset = _ci.offset
+                        break
             _sb_has_body = any(
                 i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
                              'STORE_DEREF', 'STORE_ATTR', 'STORE_SUBSCR',
                              'BINARY_OP', 'DELETE_NAME', 'DELETE_FAST',
                              'DELETE_GLOBAL', 'DELETE_ATTR', 'DELETE_SUBSCR')
                 and i.offset not in _import_store_offsets
+                and i.offset >= _cond_start_offset
                 for i in start_block.instructions
                 if i.offset < _sb_last.offset
             )
@@ -16164,6 +16252,7 @@ RegionType 枚举值: RegionType.ASSERT
                 _sb_instrs_before_jump = [
                     i for i in start_block.instructions
                     if i.offset < _sb_last.offset
+                    and i.offset >= _cond_start_offset
                     and i.opname not in NOISE_OPS
                     and i.opname not in ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG')
                 ]
@@ -16172,8 +16261,17 @@ RegionType 枚举值: RegionType.ASSERT
                         if _sb_instrs_before_jump[_idx + 1].opname == 'POP_TOP':
                             _sb_has_body = True
                             break
+            import os as _os
+            if _os.environ.get('R23N21_DEBUG'):
+                import sys as _sys
+                print(f"[R23N21-DBG] start_block={start_block.start_offset} _sb_last={_sb_last.opname} _cond_start_offset={_cond_start_offset} _sb_has_body={_sb_has_body}", file=_sys.stderr)
             if _sb_has_body:
                 return None
+        import os as _os
+        _dbg = bool(_os.environ.get('R23N21_DEBUG'))
+        if _dbg:
+            import sys as _sys
+            print(f"[R23N21-DBG] passed _sb_has_body check, building chain", file=_sys.stderr)
         chain: List[Tuple[BasicBlock, str]] = []
         current = start_block
         visited = set()
@@ -16182,7 +16280,12 @@ RegionType 枚举值: RegionType.ASSERT
         while current and current.start_offset not in visited:
             visited.add(current.start_offset)
             last = current.get_last_instruction()
+            if _dbg:
+                import sys as _sys
+                print(f"[R23N21-DBG] loop: current={current.start_offset} last={last.opname if last else None}", file=_sys.stderr)
             if not last or last.opname not in BOOLOP_CHAIN_JUMPS:
+                if _dbg:
+                    print(f"[R23N21-DBG]   break: last not in BOOLOP_CHAIN_JUMPS", file=_sys.stderr)
                 break
             if current in self.block_to_region:
                 existing_reg = self.block_to_region.get(current)
@@ -16248,7 +16351,35 @@ RegionType 枚举值: RegionType.ASSERT
                     if (_ft_last_b is not None
                             and _ft_last_b.opname == 'JUMP_FORWARD'):
                         break
-            op_type = 'and' if ('FALSE' in last.opname or '_IF_NONE' in last.opname) else 'or'
+            # [R23-N21 fix] 区域归约算法原则 1（归约顺序）+ 原则 2（每块唯一
+            # 归属）：IF_NONE/IF_NOT_NONE 的 op_type 需要根据跳转目标判断。
+            # IF_NONE 语义："TOS is None -> jump"，既可能是 or 短路（条件
+            # True 时跳到 body），也可能是 and 短路（条件 False 时跳到
+            # exit）。IF_NOT_NONE 同理。
+            # 判断方法：观察跳转目标的末指令。
+            # - 跳转目标末指令是条件跳转 -> exit/next condition -> and 短路
+            # - 跳转目标末指令不是条件跳转（RETURN_VALUE, STORE 等）->
+            #   body -> or 短路
+            # 这正确处理 `if security is None or len(security) == 0:` 模式：
+            # - block@0 IF_NONE->76(body): 76 末指令是 RETURN_VALUE ->
+            #   or 短路 -> op_type='or'
+            # - block@38 IF_FALSE->120(exit): 120 末指令是 IF_FALSE ->
+            #   and 短路 -> op_type='and'（但这是 or 链的最后操作数）
+            # 原逻辑把 _IF_NONE 统一归类为 'and'，导致 or 链被误识别为
+            # and 链，验证阶段跳转目标不等价而 pop chain，最终 IfRegion
+            # 将 `or` 短路模式误识别为否定条件的嵌套 if。
+            if last.opname in NONE_CHECK_OPS:
+                _jt_for_op = self.cfg.get_block_by_offset(last.argval) if last.argval is not None else None
+                if _jt_for_op is not None:
+                    _jt_for_op_last = _jt_for_op.get_last_instruction()
+                    if _jt_for_op_last and _jt_for_op_last.opname in BOOLOP_CHAIN_JUMPS:
+                        op_type = 'and'  # jump target 是条件跳转 -> exit -> and 短路
+                    else:
+                        op_type = 'or'   # jump target 不是条件跳转 -> body -> or 短路
+                else:
+                    op_type = 'and'  # 默认
+            else:
+                op_type = 'and' if 'FALSE' in last.opname else 'or'
             chain.append((current, op_type))
             # [CPython peephole P4 + P5 interaction] Chained compare as
             # BoolOp operand hop. When `if a < b < c and d < e < f:` is

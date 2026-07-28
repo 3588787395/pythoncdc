@@ -7,7 +7,7 @@ sys.path.insert(0, '/workspace')
 from pycdc import decompile_pyc
 
 PYC = '/workspace/quotation.pyc'
-OUT = '/tmp/r23_decompiled.py'
+OUT = '/workspace/.trae/specs/quotation-pyc-iteration/rounds/round_23/test_engineer/r23_decompiled.py'
 
 t0 = time.time()
 src = decompile_pyc(PYC, use_cfg=False, cfg_hybrid=False)
