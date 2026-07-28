@@ -4347,7 +4347,7 @@ class ASTReturn(ASTNode):
     """返回节点 - 性能优化版本"""
     
     # 添加__slots__优化
-    __slots__ = ('_value', '_rettype', 'offset', '_in_function')
+    __slots__ = ('_value', '_rettype', 'offset', '_in_function', '_explicit_return')
     
     class RetType(Enum):
         RETURN = 0

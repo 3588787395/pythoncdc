@@ -1702,6 +1702,12 @@ class CodeGenerator:
         
         node = flattened[0]
         if isinstance(node, ASTReturn):
+            # [R23-N16 fix] 显式 return（来自真实 RETURN_VALUE/RETURN_CONST 指令）
+            # 不应被过滤。except handler 内的 `else: return None` 是显式 return，
+            # 生成真实字节码（POP_EXCEPT+cleanup+LOAD_CONST None+RETURN_VALUE），
+            # 必须保留。仅过滤隐式 return None（fallthrough）。
+            if getattr(node, '_explicit_return', False):
+                return False
             if node.value is None:
                 return True
             if hasattr(node.value, 'value') and node.value.value is None:

@@ -634,6 +634,10 @@ class CFGASTConverter:
             ret = ASTReturn(None)
         # [关键修复] 设置 _in_function 属性为 True，确保 return 语句能被正确生成
         ret._in_function = True
+        # [R23-N16 fix] 保留 _explicit_return 标记（来自真实 RETURN_VALUE/RETURN_CONST
+        # 指令的显式 return），供 code_generator 区分显式 return None 与隐式 fallthrough。
+        if node_dict.get('_explicit_return'):
+            ret._explicit_return = True
         return ret
 
     def _convert_yield(self, node_dict: Dict[str, Any]) -> ASTYield:

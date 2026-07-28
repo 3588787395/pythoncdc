@@ -11460,7 +11460,24 @@ RegionType 枚举值: RegionType.ASSERT
                 real_merge = set()
                 elif_candidates = set()
                 for sb in shared_blocks:
-                    if len(sb.conditional_successors) == 2:
+                    # [R23-N17 fix] 区域归约算法原则 2（每块唯一归属）：
+                    # 原实现仅根据「2 个条件后继」判断 elif 候选，但当某条件块
+                    # 同时被 then 和 else 分支的前驱引用时，它是 if-else 的汇合
+                    # 点（merge），不是 elif 条件。失败模式：get_index_stocks 的
+                    # 外层 `if date is not None: ... else: date=time.strftime(...)`
+                    # 之后紧跟 `if check_index_code(security):`。内层 if 条件块
+                    # @286 同时被 then 体的 @126 (JUMP_FORWARD) 和 else 体的 @210
+                    # (fallthrough) 引用，是真正的 merge。原实现将其归入
+                    # elif_candidates 留在 else_blocks，导致 merge 错设为 @316
+                    # （RETURN_VALUE 终态块），反编译时 `if check_index_code` 被
+                    # 错误嵌入外层 if 的 then 分支。修复：检查 shared 块的前驱
+                    # 是否同时来自 then 和 else 分支，若是则归为 real_merge。
+                    has_then_pred = any(p in then_set for p in sb.predecessors)
+                    has_else_pred = any(p in else_set for p in sb.predecessors)
+                    if has_then_pred and has_else_pred:
+                        # 同时被两个分支引用 → merge 点，不是 elif
+                        real_merge.add(sb)
+                    elif len(sb.conditional_successors) == 2:
                         # 有2个条件后继的块可能是elif条件，保留在else_blocks中
                         elif_candidates.add(sb)
                     else:

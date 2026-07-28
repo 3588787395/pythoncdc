@@ -9192,6 +9192,29 @@ AST 映射规则:
                 return True
         return False
 
+    def _r23n16_blocks_have_explicit_return(self, blocks) -> bool:
+        """[R23-N16 fix] 检查块列表中最后一个实际块是否以 RETURN_VALUE 结尾。
+        用于区分显式 return（生成真实 RETURN_VALUE 字节码）和隐式 fallthrough
+        （JUMP_FORWARD to merge）。except handler 内的显式 return None 不应被弹出。
+        """
+        if not blocks:
+            return False
+        # 从后向前找最后一个实际块（跳过 cleanup/RERAISE 块）
+        for b in reversed(blocks):
+            if not b.instructions:
+                continue
+            last_instr = b.get_last_instruction()
+            if last_instr and last_instr.opname == 'RETURN_VALUE':
+                return True
+            if last_instr and last_instr.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+                # fallthrough → 隐式 return None
+                return False
+            # RERAISE/cleanup 块，继续向前找
+            if last_instr and last_instr.opname in ('RERAISE', 'POP_EXCEPT'):
+                continue
+            return False
+        return False
+
     def _if_generate_elif_chain(self, region: IfRegion) -> List[Dict[str, Any]]:
         if not getattr(region, 'elif_conditions', None):
             return [self._if_generate_normal(region)]
@@ -9500,13 +9523,17 @@ AST 映射规则:
         if region.elif_bodies:
             elif_body_stmts = self._process_if_blocks(region.elif_bodies[0], region, branch='elif')
             elif_body_stmts = [s for s in elif_body_stmts if not (s.get('type') == 'Expr' and isinstance(s.get('value'), dict) and s['value'].get('type') == 'Constant')]
-            while (elif_body_stmts and
-                   isinstance(elif_body_stmts[-1], dict) and
-                   elif_body_stmts[-1].get('type') == 'Return' and
-                   isinstance(elif_body_stmts[-1].get('value'), dict) and
-                   elif_body_stmts[-1]['value'].get('type') == 'Constant' and
-                   elif_body_stmts[-1]['value'].get('value') is None):
-                elif_body_stmts.pop()
+            # [R23-N16 fix] 仅当 elif body 非显式 return（末尾块以 JUMP_FORWARD 结尾，
+            # 即 fallthrough）时才弹出隐式 return None。except handler 内的显式
+            # return None 生成真实字节码（POP_EXCEPT+cleanup+RETURN_VALUE），必须保留。
+            if not self._r23n16_blocks_have_explicit_return(region.elif_bodies[0]):
+                while (elif_body_stmts and
+                       isinstance(elif_body_stmts[-1], dict) and
+                       elif_body_stmts[-1].get('type') == 'Return' and
+                       isinstance(elif_body_stmts[-1].get('value'), dict) and
+                       elif_body_stmts[-1]['value'].get('type') == 'Constant' and
+                       elif_body_stmts[-1]['value'].get('value') is None):
+                    elif_body_stmts.pop()
         nested_elif_stmts = None
         if len(region.elif_conditions) > 1:
             remaining_elifs = region.elif_conditions[2:]
@@ -9579,13 +9606,14 @@ AST 映射规则:
                 if len(region.elif_bodies) > 1:
                     last_elif_body_stmts = self._process_if_blocks(region.elif_bodies[1], region, branch='elif')
                     last_elif_body_stmts = [s for s in last_elif_body_stmts if not (s.get('type') == 'Expr' and isinstance(s.get('value'), dict) and s['value'].get('type') == 'Constant')]
-                    while (last_elif_body_stmts and
-                           isinstance(last_elif_body_stmts[-1], dict) and
-                           last_elif_body_stmts[-1].get('type') == 'Return' and
-                           isinstance(last_elif_body_stmts[-1].get('value'), dict) and
-                           last_elif_body_stmts[-1]['value'].get('type') == 'Constant' and
-                           last_elif_body_stmts[-1]['value'].get('value') is None):
-                        last_elif_body_stmts.pop()
+                    if not self._r23n16_blocks_have_explicit_return(region.elif_bodies[1]):
+                        while (last_elif_body_stmts and
+                               isinstance(last_elif_body_stmts[-1], dict) and
+                               last_elif_body_stmts[-1].get('type') == 'Return' and
+                               isinstance(last_elif_body_stmts[-1].get('value'), dict) and
+                               last_elif_body_stmts[-1]['value'].get('type') == 'Constant' and
+                               last_elif_body_stmts[-1]['value'].get('value') is None):
+                            last_elif_body_stmts.pop()
                 _last_elif_condition = _r23n7_last_elif_chained
                 _last_elif_boolop = self.region_analyzer.get_region_for_block(_last_elif_cond_block)
                 if not isinstance(_last_elif_boolop, BoolOpRegion):
@@ -9656,13 +9684,14 @@ AST 映射规则:
                     )
                     if not _efe_is_continue_only:
                         final_else_stmts = self._process_if_blocks(region.elif_final_else, region, branch='else')
-                        while (final_else_stmts and
-                               isinstance(final_else_stmts[-1], dict) and
-                               final_else_stmts[-1].get('type') == 'Return' and
-                               isinstance(final_else_stmts[-1].get('value'), dict) and
-                               final_else_stmts[-1]['value'].get('type') == 'Constant' and
-                               final_else_stmts[-1]['value'].get('value') is None):
-                            final_else_stmts.pop()
+                        if not self._r23n16_blocks_have_explicit_return(region.elif_final_else):
+                            while (final_else_stmts and
+                                   isinstance(final_else_stmts[-1], dict) and
+                                   final_else_stmts[-1].get('type') == 'Return' and
+                                   isinstance(final_else_stmts[-1].get('value'), dict) and
+                                   final_else_stmts[-1]['value'].get('type') == 'Constant' and
+                                   final_else_stmts[-1]['value'].get('value') is None):
+                                final_else_stmts.pop()
                         if final_else_stmts:
                             nested_elif_stmts[0]['orelse'] = final_else_stmts
         final_else_stmts = None
@@ -9674,13 +9703,14 @@ AST 映射规则:
             )
             if not _efe_is_continue_only_2:
                 final_else_stmts = self._process_if_blocks(region.elif_final_else, region, branch='else')
-            while (final_else_stmts and
-                   isinstance(final_else_stmts[-1], dict) and
-                   final_else_stmts[-1].get('type') == 'Return' and
-                   isinstance(final_else_stmts[-1].get('value'), dict) and
-                   final_else_stmts[-1]['value'].get('type') == 'Constant' and
-                   final_else_stmts[-1]['value'].get('value') is None):
-                final_else_stmts.pop()
+            if not self._r23n16_blocks_have_explicit_return(region.elif_final_else):
+                while (final_else_stmts and
+                       isinstance(final_else_stmts[-1], dict) and
+                       final_else_stmts[-1].get('type') == 'Return' and
+                       isinstance(final_else_stmts[-1].get('value'), dict) and
+                       final_else_stmts[-1]['value'].get('type') == 'Constant' and
+                       final_else_stmts[-1]['value'].get('value') is None):
+                    final_else_stmts.pop()
         elif_orelse = nested_elif_stmts if nested_elif_stmts else (final_else_stmts if final_else_stmts else [])
         _elif_if_stmt = {'type': 'If', '_is_elif': True, 'test': elif_condition if elif_condition else {'type': 'Constant', 'value': True}, 'body': elif_body_stmts if elif_body_stmts else [{'type': 'Pass'}], 'orelse': elif_orelse}
         # [R10-N3 fix] 前置 elif 条件块中的赋值语句（如 `fields = re_fields`）。
@@ -29350,14 +29380,23 @@ AST 映射规则:
                                 stmts.append(stmt)
                     stmt_instrs = []
                     continue
+                # [R23-N16 fix] 标记 _explicit_return=True 仅当块处于 except handler
+                # 上下文（含 POP_EXCEPT/PUSH_EXC_INFO 指令）时。except handler 内的
+                # 显式 return None 生成真实字节码（POP_EXCEPT+cleanup+RETURN_VALUE），
+                # 与 fallthrough (JUMP_FORWARD) 不同，必须保留。
+                _r23n16_in_except = any(
+                    _i.opname in ('POP_EXCEPT', 'PUSH_EXC_INFO')
+                    for _i in block.instructions
+                )
+                _r23n16_ret_flag = {'_explicit_return': True} if _r23n16_in_except else {}
                 if stmt_instrs:
                     ret_expr = self.expr_reconstructor.reconstruct(stmt_instrs)
                     if ret_expr and not (ret_expr.get('type') == 'Constant' and ret_expr.get('value') is None):
-                        stmts.append({'type': 'Return', 'value': ret_expr})
+                        stmts.append({'type': 'Return', **_r23n16_ret_flag, 'value': ret_expr})
                     else:
-                        stmts.append({'type': 'Return', 'value': {'type': 'Constant', 'value': None}})
+                        stmts.append({'type': 'Return', **_r23n16_ret_flag, 'value': {'type': 'Constant', 'value': None}})
                 else:
-                    stmts.append({'type': 'Return', 'value': {'type': 'Constant', 'value': None}})
+                    stmts.append({'type': 'Return', **_r23n16_ret_flag, 'value': {'type': 'Constant', 'value': None}})
                 stmt_instrs = []
                 continue
 
