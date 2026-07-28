@@ -7507,8 +7507,83 @@ AST 映射规则:
                     ) and len(b.instructions) <= 2:
                         _blocks_to_remove.add(b)
                 region.then_blocks = [b for b in region.then_blocks if b not in _blocks_to_remove]
+        # [R23-N18 fix] 区域归约算法原则 2（每块唯一归属）+ 部分合并模式：
+        # 当 IF_ELIF_CHAIN 的 if 分支和 elif/else 分支有不同的合并点时
+        # （if 分支 JUMP 到 merge_block，但 elif/else 有自己的子合并点），
+        # 生成嵌套 if-else 结构而非扁平 if-elif-else。
+        # 典型场景（date_convert）：
+        #   if report_types is None:
+        #       ...  # if branch with own data_return (@200)
+        #       JUMP to merge (342)
+        #   elif month_temp <= report_types:
+        #       ...  # elif body (@268)
+        #       JUMP to sub-merge (288)
+        #   else:
+        #       ...  # else body (@284)
+        #       fall through to sub-merge (288)
+        #   sub-merge (288): shared tail of elif/else
+        #       data_return = ...
+        #       fall through to merge (342)
+        #   merge (342): return data_return
+        #
+        # 原实现将 @288 作为"loose block"在 if-elif-else 之后生成，
+        # 导致 if 分支的 JUMP_FORWARD 目标从 342 变为 288（跳到共享 tail），
+        # 与原始字节码不一致。
+        #
+        # 修复：检测部分合并模式，将子合并块语句追加到 else 分支末尾
+        # （作为嵌套 if-elif-else 之后的语句），使 if 分支 JUMP 到 merge_block。
+        _r23n18_partial_merge_block = None
+        if (getattr(region, 'elif_conditions', None)
+                and getattr(region, 'elif_bodies', None)
+                and getattr(region, 'elif_final_else', None)
+                and region.merge_block is not None
+                and len(region.elif_bodies) > 0
+                and region.elif_bodies[0]
+                and region.elif_final_else):
+            _r23n18_elif_body_last = region.elif_bodies[0][-1]
+            _r23n18_else_body_last = region.elif_final_else[-1]
+            _r23n18_elif_succs = set(_r23n18_elif_body_last.successors)
+            _r23n18_else_succs = set(_r23n18_else_body_last.successors)
+            _r23n18_common_succs = _r23n18_elif_succs & _r23n18_else_succs
+            for _r23n18_cs in _r23n18_common_succs:
+                if (_r23n18_cs is not region.merge_block
+                        and _r23n18_cs not in region.blocks
+                        and _r23n18_cs not in self.generated_blocks):
+                    _r23n18_cs_region = self.region_analyzer.get_region_for_block(_r23n18_cs)
+                    if (_r23n18_cs_region is None
+                            or _r23n18_cs_region.region_type.name == 'BASIC'):
+                        _r23n18_partial_merge_block = _r23n18_cs
+                        break
         then_stmts = self._if_generate_then_branch(region)
         elif_part = self._if_generate_elif_chain(region)
+        # [R23-N18] 部分合并模式：将子合并块语句追加到 elif/else 链末尾
+        # [R23-N18-v2 fix] 区域归约算法原则 4（父引用子入口）+ 字节码等价：
+        # 原实现仅移除 _is_elif 标记，但 code_generator 在 _is_nested_if 未设置
+        # 且 test 非简单变量时仍将首个 If 当作 elif 处理，导致追加的 sub_merge
+        # 语句被包在重复的 else 块中（SyntaxError: 重复 else）。
+        # 修复：将内层 If 标记为 _is_nested_if=True，强制 code_generator 走 else
+        # 分支生成 `else: if ...: ... else: ...; sub_merge_stmts`，使 if 分支
+        # JUMP 直接到 merge_block，elif/else 分支共享 sub_merge 后 fall through。
+        if _r23n18_partial_merge_block is not None:
+            _r23n18_sub_merge_stmts = self._process_if_blocks(
+                [_r23n18_partial_merge_block], region, branch='else')
+            self.generated_blocks.add(_r23n18_partial_merge_block)
+            if _r23n18_sub_merge_stmts:
+                # 设置 _is_nested_if=True，使嵌套 if 作为 else 中的独立 if-else 生成，
+                # 而非 elif（elif 模式下 orelse 只能是单个 If 节点，无法追加额外语句）
+                if isinstance(elif_part, list):
+                    for _ep in elif_part:
+                        if isinstance(_ep, dict) and _ep.get('type') == 'If':
+                            _ep.pop('_is_elif', None)
+                            _ep['_is_nested_if'] = True
+                    elif_part = elif_part + _r23n18_sub_merge_stmts
+                elif isinstance(elif_part, dict):
+                    if elif_part.get('type') == 'If':
+                        elif_part.pop('_is_elif', None)
+                        elif_part['_is_nested_if'] = True
+                    elif_part = [elif_part] + _r23n18_sub_merge_stmts
+                else:
+                    elif_part = _r23n18_sub_merge_stmts
         self._generating_regions.discard(region_id)
         self._generated_regions.add(region_id)
 
