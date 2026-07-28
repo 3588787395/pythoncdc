@@ -1102,7 +1102,7 @@ def valuation_new(security, date=None, fields=None):
             for i in data:
                 data_out.append(i)
             returnDf = pandas.DataFrame(data_out)
-            change_column_dict = {'return_on_equity': 'roe', 'net_asset_value_per_share': 'naps', 'stock_abbr': 'secu_abbr', 'stock_code': 'secu_code'}
+            change_column_dict = {'market_value_a': 'total_value', 'circulate_market_value_a': 'float_value', 'price_cash_flow_ratio': 'pcf', 'price_sales_ratio': 'ps', 'price_sales_ratio_ttm': 'ps_ttm', 'price_earnings_ratio_ttm': 'pe_ttm', 'capital_amount_a': 'a_shares', 'circulate_amount_a': 'a_floats', 'trailing_price_earnings_ratio': 'pe_dynamic', 'price_earnings_ratio': 'pe_static', 'circulate_amount_b': 'b_floats', 'capital_amount_b': 'b_shares', 'capital_amount_h': 'h_shares', 'capital_amount': 'total_shares', 'turnover_ratio': 'turnover_rate', 'trailing_dividend_yield_ratio': 'dividend_ratio', 'price_to_book_ratio': 'pb', 'return_on_equity': 'roe', 'net_asset_value_per_share': 'naps', 'stock_abbr': 'secu_abbr', 'stock_code': 'secu_code'}
             returnDf.rename(columns=change_column_dict, inplace=True)
             returnDf['trading_day'] = last_trading_day
             def get_IQE_code(code):
@@ -2758,7 +2758,7 @@ def get_valuation_new(security, date=None, fields=None, access_data_type=20):
     try:
         column_temp = get_fields('valuation_new_fields', fields)
         column = []
-        change_column_dict = {'return_on_equity': 'roe', 'net_asset_value_per_share': 'naps'}
+        change_column_dict = {'market_value_a': 'total_value', 'circulate_market_value_a': 'float_value', 'price_cash_flow_ratio': 'pcf', 'price_sales_ratio': 'ps', 'price_sales_ratio_ttm': 'ps_ttm', 'price_earnings_ratio_ttm': 'pe_ttm', 'capital_amount_a': 'a_shares', 'circulate_amount_a': 'a_floats', 'trailing_price_earnings_ratio': 'pe_dynamic', 'price_earnings_ratio': 'pe_static', 'circulate_amount_b': 'b_floats', 'capital_amount_b': 'b_shares', 'capital_amount_h': 'h_shares', 'capital_amount': 'total_shares', 'turnover_ratio': 'turnover_rate', 'trailing_dividend_yield_ratio': 'dividend_ratio', 'price_to_book_ratio': 'pb', 'return_on_equity': 'roe', 'net_asset_value_per_share': 'naps'}
         for i in column_temp:
             for k, v in change_column_dict.items():
                 if i == v:

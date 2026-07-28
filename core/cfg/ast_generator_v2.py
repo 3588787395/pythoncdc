@@ -706,6 +706,36 @@ class ExpressionReconstructor:
                 'lineno': instr.starts_line
             })
 
+        # [R30-9] MAP_ADD - Python 3.11+ 字典字面量中添加键值对
+        # 用于大字典字面量：BUILD_MAP 0; LOAD key; LOAD value; MAP_ADD 1; ...
+        # 栈状态: [dict, key, value] -> [updated_dict]
+        # 语义：弹出 value 和 key，添加到栈中下面的 dict 对象中
+        elif opname == 'MAP_ADD':
+            if len(self.stack) >= 3:
+                value = self.stack.pop()
+                key = self.stack.pop()
+                target = self.stack.pop()
+                if not (isinstance(target, dict) and target.get('type') == 'Dict'):
+                    target = {
+                        'type': 'Dict',
+                        'keys': [],
+                        'values': [],
+                        'lineno': instr.starts_line,
+                    }
+                target.get('keys', []).append(key)
+                target.get('values', []).append(value)
+                self.stack.append(target)
+            elif len(self.stack) >= 2:
+                # fallback: 只有 key 和 value，没有 target dict
+                value = self.stack.pop()
+                key = self.stack.pop()
+                self.stack.append({
+                    'type': 'Dict',
+                    'keys': [key],
+                    'values': [value],
+                    'lineno': instr.starts_line,
+                })
+
         # [Round7-03] 构建集合
         elif opname == 'BUILD_SET':
             count = instr.arg if instr.arg is not None else 0
