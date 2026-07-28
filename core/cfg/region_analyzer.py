@@ -1729,6 +1729,82 @@ class RegionAnalyzer:
     def _find_nearest_common_post_dominator(self, block_a: BasicBlock, block_b: BasicBlock) -> Optional[BasicBlock]:
         return self.dom_analyzer.find_nearest_common_post_dominator_two(block_a, block_b)
 
+    def _compute_merge_from_jump_targets(self, header: BasicBlock,
+                                          then_succ: BasicBlock,
+                                          else_succ: BasicBlock) -> Optional[BasicBlock]:
+        """[R29] 通过 JUMP_FORWARD 目标可达性分析计算 if-elif 链的合并点。
+
+        区域归约算法原则 2（每块唯一归属）+ 原则 4（归约顺序）：
+        当 NCPD 返回 None（因某分支以 return/raise 终态，破坏 post-dominator
+        关系）时，通过分析 then/else 分支的 JUMP_FORWARD 目标可达性来计算
+        正确的合并点。
+
+        典型场景（if-elif 链末尾分支 return）：
+            if x == 1: y = 10     # then body → JUMP_FORWARD → M
+            elif x == 2: y = 20   # elif body → JUMP_FORWARD → M
+            elif x == 3: return y # last elif → return (sink)
+            if y is None: ...     # M = merge of if-elif chain
+
+        NCPD(then_succ, else_succ) = None 因 else 分支可经 last elif return
+        而不经 M。但 then_succ 的 JUMP_FORWARD 目标 M 仍从 else_succ 可达
+        （经非 return 的 elif 分支）。
+
+        算法：
+        1. 获取 then_succ 的 JUMP_FORWARD 目标（then_exit）
+        2. 检查 then_exit 是否从 else_succ 可达（BFS，排除 sink 路径）
+        3. 若可达，merge = then_exit
+        4. 对称地检查 else_succ 的 JUMP_FORWARD 目标
+        """
+        _exclude = {header, then_succ, else_succ}
+
+        # 1. 检查 then_succ 的 JUMP_FORWARD 目标
+        _then_exit = self._get_jump_forward_target(then_succ)
+        if _then_exit is not None and _then_exit not in _exclude:
+            if self._is_reachable_bfs(else_succ, _then_exit, _exclude):
+                return _then_exit
+
+        # 2. 对称：检查 else_succ 的 JUMP_FORWARD 目标
+        _else_exit = self._get_jump_forward_target(else_succ)
+        if _else_exit is not None and _else_exit not in _exclude:
+            if self._is_reachable_bfs(then_succ, _else_exit, _exclude):
+                return _else_exit
+
+        return None
+
+    def _get_jump_forward_target(self, block: BasicBlock) -> Optional[BasicBlock]:
+        """获取块的 JUMP_FORWARD/JUMP_ABSOLUTE 目标块。"""
+        _last = block.get_last_instruction()
+        if _last and _last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+            if _last.argval is not None:
+                return self.cfg.get_block_by_offset(_last.argval)
+        return None
+
+    def _is_reachable_bfs(self, start: BasicBlock, target: BasicBlock,
+                          exclude: Set[BasicBlock]) -> bool:
+        """BFS 检查 target 是否从 start 可达，排除指定块和回边。
+
+        不跟随 JUMP_BACKWARD（回边），不进入 exclude 中的块。
+        遇到 target 即返回 True。
+        """
+        if start == target:
+            return True
+        visited = {start}
+        worklist = [start]
+        while worklist:
+            current = worklist.pop(0)
+            _last = current.get_last_instruction()
+            # 不跟随回边
+            if _last and _last.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'):
+                continue
+            for succ in current.successors:
+                if succ == target:
+                    return True
+                if succ in visited or succ in exclude:
+                    continue
+                visited.add(succ)
+                worklist.append(succ)
+        return False
+
 
     def _collect_blocks_on_path(self, entry: BasicBlock, exit_block: BasicBlock, stop_set: Optional[Set[BasicBlock]] = None) -> Set[BasicBlock]:
         result: Set[BasicBlock] = set()
@@ -11258,6 +11334,23 @@ RegionType 枚举值: RegionType.ASSERT
                             if _else_has_external_pred:
                                 merge = else_succ
 
+            # [R29 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（归约顺序）：
+            # 当 NCPD 返回 None（因某分支以 return/raise 终态，破坏 post-dominator
+            # 关系）且现有 sink 处理未设置 merge 时，通过 JUMP_FORWARD 目标可达性
+            # 分析计算正确的合并点。典型场景（if-elif 链末尾分支 return）：
+            #   if x == 1: y = 10     # then body → JUMP_FORWARD → M
+            #   elif x == 2: y = 20   # elif body → JUMP_FORWARD → M
+            #   elif x == 3: return y # last elif → return (sink)
+            #   if y is None: ...     # M = merge of if-elif chain
+            # NCPD(then_succ, else_succ) = None 因 else 分支可经 last elif return
+            # 而不经 M。但 then_succ 的 JUMP_FORWARD 目标 M 仍从 else_succ 可达
+            # （经非 return 的 elif 分支）。设 merge=M 防止 _collect_branch_blocks
+            # 过度收集和 _check_elif_chain 将 M 误识别为 elif 条件（导致 block
+            # 被多个 IfRegion 争抢，违反每块唯一归属）。
+            if merge is None:
+                merge = self._compute_merge_from_jump_targets(
+                    block, then_succ, else_succ)
+
             # Fix: 当条件块在 TryExceptRegion 的 try_blocks 中时，
             # 分支收集可能越过 try 体边界（通过 JUMP_FORWARD 到循环条件等），
             # 需要计算 try 体边界块（try 体外的直接后继），作为 BFS 的额外停止点，
@@ -12015,6 +12108,16 @@ RegionType 枚举值: RegionType.ASSERT
                 return None
             inner_then_succ, inner_else_succ = sorted(inner_cond_succs, key=lambda s: s.start_offset)
             inner_merge = self._find_nearest_common_post_dominator(inner_then_succ, inner_else_succ)
+            # [R29 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（归约顺序）：
+            # 当内层 elif 的 else 分支入口等于外层 merge 时，inner_merge 应设为
+            # merge_，使 inner_else_blocks 为空（entry==merge）。否则
+            # _collect_branch_blocks 会从 merge 点开始过度收集，把 post-if 代码
+            # （如 `if y is None: return 0`）误识别为更多 elif 条件，导致 block
+            # 被多个 IfRegion 争抢（违反每块唯一归属）。典型场景：if-elif 链末尾
+            # 分支以 return 终态，NCPD 返回 None，但外层 merge 已通过
+            # _compute_merge_from_jump_targets 正确计算。
+            if inner_merge is None and merge_ is not None and inner_else_succ == merge_:
+                inner_merge = merge_
             if inner_merge is None:
                 _it_sink = any(i.opname in ('RAISE_VARARGS', 'RETURN_VALUE') for i in inner_then_succ.instructions) or inner_then_succ.immediate_post_dominator is None
                 _ie_sink = any(i.opname in ('RAISE_VARARGS', 'RETURN_VALUE') for i in inner_else_succ.instructions) or inner_else_succ.immediate_post_dominator is None
