@@ -3961,6 +3961,16 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                 if s not in body_set and s != natural_exit:
                     if any(i.opname in ('RAISE_VARARGS', 'RERAISE') for i in s.instructions):
                         continue
+                    # [R24-N1 fix] 区域归约算法 — break 检测精确化：
+                    # RETURN_VALUE/RETURN_CONST 块是 return 语句的目标，不是 break。
+                    # return 退出整个函数而非循环，不触发 for-else 语义（for-else
+                    # 仅在 break 时跳过）。将 return 块误归为 break 会导致
+                    # has_break=True，进而错误生成 for-else 结构（如 valuation
+                    # 中 while 循环内的 `return (resp_error, pandas.DataFrame())`
+                    # 导致外层 for 循环被误判为含 break，try-except 被放入 for body
+                    # 而非循环后的顺序代码，FOR_ITER 目标偏移 +276）。
+                    if any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in s.instructions):
+                        continue
                     if not any(i.opname in ('PUSH_EXC_INFO', 'WITH_EXCEPT_START') for i in s.instructions):
                         if any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in s.instructions):
                             if is_back_edge_condition:
@@ -3974,7 +3984,7 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
                                                 and i.opname not in PURE_JUMP_OPS
                                                 and i.opname not in ('RETURN_VALUE', 'RETURN_CONST')]
                                 _has_exc_handler = any(
-                                    any(i.opname in ('PUSH_EXC_INFO', 'WITH_EXCEPT_START') 
+                                    any(i.opname in ('PUSH_EXC_INFO', 'WITH_EXCEPT_START')
                                         for i in _sb.instructions)
                                     for _sb in b.successors if _sb != s
                                 ) or any(

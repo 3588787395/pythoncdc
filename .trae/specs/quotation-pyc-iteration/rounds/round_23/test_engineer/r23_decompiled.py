@@ -465,24 +465,21 @@ def change_future_real_date(stock, start, end):
     if future_param:
         listing_date = future_param.get('listing_date')
         delivery_date = future_param.get('delivery_date')
-        if listing_date:
-            if delivery_date:
-                listing_date = listing_date.strftime('%Y%m%d')
-                delivery_date = delivery_date.strftime('%Y%m%d')
-                if listing_date > start[:8]:
-                    start = listing_date
-                if delivery_date < end[:8]:
-                    end = delivery_date
-            elif listing_date:
-                listing_date = listing_date.strftime('%Y%m%d')
-                if listing_date > start[:8]:
-                    start = listing_date
-            elif delivery_date and delivery_date < end[:8]:
+        if listing_date and delivery_date:
+            listing_date = listing_date.strftime('%Y%m%d')
+            delivery_date = delivery_date.strftime('%Y%m%d')
+            if listing_date > start[:8]:
+                start = listing_date
+            if delivery_date < end[:8]:
                 end = delivery_date
         elif listing_date:
-            pass
-        elif delivery_date and delivery_date < end[:8]:
-            pass
+            listing_date = listing_date.strftime('%Y%m%d')
+            if listing_date > start[:8]:
+                start = listing_date
+        elif delivery_date:
+            delivery_date = delivery_date.strftime('%Y%m%d')
+            if delivery_date < end[:8]:
+                end = delivery_date
     return (start, end)
 def filter_duplicated_date(klines):
     klines['date'] = klines.index
@@ -684,13 +681,15 @@ def change_his_to_forward(security, data, exrights_data, start, end, typet):
             return data
         elif series[startDateIndex:].empty:
             return data
-        elif startDateIndex == endDateIndex and n == startDateIndex:
-            if len(series[startDateIndex:].index) > 1:
-                n = list(series[startDateIndex:].index)[1]
-                data = data * float(series.loc[n, 'exer_forward_a']) + float(series.loc[n, 'exer_forward_b'])
-                return round(data, 2)
-            else:
-                return data
+        elif startDateIndex == endDateIndex:
+            n = list(series[startDateIndex:].index)[0]
+            if n == startDateIndex:
+                if len(series[startDateIndex:].index) > 1:
+                    n = list(series[startDateIndex:].index)[1]
+                    data = data * float(series.loc[n, 'exer_forward_a']) + float(series.loc[n, 'exer_forward_b'])
+                    return round(data, 2)
+                else:
+                    return data
         else:
             preindex = None
             tmpdata = None
@@ -1106,30 +1105,29 @@ def valuation_new(security, date=None, fields=None):
             page_no += 1
             params['page_no'] = str(page_no)
             return_data['data'].extend(resp_data['data']['list'])
-        try:
-            if data:
-                data_out = []
-                for i in data:
-                    data_out.append(i)
-                returnDf = pandas.DataFrame(data_out)
-                change_column_dict = {'return_on_equity': 'roe', 'net_asset_value_per_share': 'naps', 'stock_abbr': 'secu_abbr', 'stock_code': 'secu_code'}
-                returnDf.rename(columns=change_column_dict, inplace=True)
-                returnDf['trading_day'] = last_trading_day
-                def get_IQE_code(code):
-                    code = str(code)
-                    if code[0] == '6':
-                        code = code[:6] + '.SS'
-                    else:
-                        code = code[:6] + '.SZ'
-                    return code
-                returnDf['secu_code'] = returnDf.apply(lambda x: get_IQE_code(x['secu_code']), axis=1)
-                return ({'error_no': 0, 'error_info': ''}, returnDf)
-            return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
-        except BaseException as x:
-            system_log.error(get_traceback_message())
-            raise x
-    else:
-        data = return_data['data']
+    data = return_data['data']
+    try:
+        if data:
+            data_out = []
+            for i in data:
+                data_out.append(i)
+            returnDf = pandas.DataFrame(data_out)
+            change_column_dict = {'return_on_equity': 'roe', 'net_asset_value_per_share': 'naps', 'stock_abbr': 'secu_abbr', 'stock_code': 'secu_code'}
+            returnDf.rename(columns=change_column_dict, inplace=True)
+            returnDf['trading_day'] = last_trading_day
+            def get_IQE_code(code):
+                code = str(code)
+                if code[0] == '6':
+                    code = code[:6] + '.SS'
+                else:
+                    code = code[:6] + '.SZ'
+                return code
+            returnDf['secu_code'] = returnDf.apply(lambda x: get_IQE_code(x['secu_code']), axis=1)
+            return ({'error_no': 0, 'error_info': ''}, returnDf)
+        return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
+    except BaseException as x:
+        system_log.error(get_traceback_message())
+        raise x
 @lru_cache(None)
 def valuation(security, date=None, fields=None):
     return_data = {}
@@ -1171,19 +1169,18 @@ def valuation(security, date=None, fields=None):
             page_no += 1
             params['page_no'] = str(page_no)
             return_data['data'].extend(resp_data['data'])
-        try:
-            if data:
-                data_out = []
-                for i in data:
-                    data_out.append(i)
-                returnDf = pandas.DataFrame(data_out)
-                return ({'error_no': 0, 'error_info': ''}, returnDf)
-            return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
-        except BaseException as x:
-            system_log.error(get_traceback_message())
-            raise x
-    else:
-        data = return_data['data']
+    data = return_data['data']
+    try:
+        if data:
+            data_out = []
+            for i in data:
+                data_out.append(i)
+            returnDf = pandas.DataFrame(data_out)
+            return ({'error_no': 0, 'error_info': ''}, returnDf)
+        return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
+    except BaseException as x:
+        system_log.error(get_traceback_message())
+        raise x
 @lru_cache(None)
 def balance_statement(security, report_types=None, start_year=None, end_year=None, fields=None, merge_type=None):
     return_data = {}

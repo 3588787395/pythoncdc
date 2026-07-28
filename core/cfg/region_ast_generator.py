@@ -6988,6 +6988,16 @@ AST 映射规则:
             try_block = try_region.entry
             if try_block in self.generated_blocks:
                 continue
+            # [R24-N1 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（父引用子入口）：
+            # 若 TryExceptRegion 的入口块在 LoopRegion 的 else_blocks 中，则该
+            # TryExceptRegion 属于 for-else 子句（或循环自然退出后的顺序代码），
+            # 不属于循环体。跳过此 TryExceptRegion，交由 else_blocks 的
+            # _if_generate_branch_stmts 生成。否则 try-except 会错误地出现在
+            # 循环体内（如 valuation 中 `for ...: while ...:` 后的 try-except
+            # 被放入 for body，而 `data = return_data['data']` 被放入 orelse，
+            # 导致结构颠倒、字节码 FOR_ITER 目标偏移 +276）。
+            if region.else_blocks and try_block in region.else_blocks:
+                continue
             try_id = id(try_region)
             if try_id in self._generated_regions or try_id in self._generating_regions:
                 self.generated_blocks.add(try_block)
