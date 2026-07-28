@@ -16410,6 +16410,18 @@ RegionType 枚举值: RegionType.ASSERT
             # the chain so the IfExp is preserved as a Call arg instead of
             # being folded into `if A and B:` with constants emitted as
             # docstrings.
+            #
+            # [R28-N1 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3（嵌套即
+            # 抽象节点）：IfExp 的 true_value 块是【值块】（仅压栈，不含语句），
+            # 而 AND 链的 body 块是【语句块】（含 STORE_*/RETURN_*/RAISE_* 等）。
+            # 原检查仅看 fall-through 末指令是否为 JUMP_FORWARD，无法区分两者。
+            # 例如 share_change 中 `if start_year is not None and end_year is
+            # None:` 的第二个条件块 @118 的 fall-through 是 body @122
+            # （params['start_year'] = start_year; JUMP_FORWARD 182），@122 含
+            # STORE_SUBSCR，是 body 不是 IfExp value block。原检查误判为 IfExp
+            # 并中断链，导致 AND 链退化为嵌套 if，跳转目标偏移 +62。
+            # 修复：仅当 fall-through 不含语句指令（STORE_*/RETURN_*/RAISE_*
+            # 等）时才中断——IfExp value block 不含语句，body block 含语句。
             if chain:
                 _ft_succs_b = list(current.conditional_successors)
                 _ft_cand_b = next((s for s in _ft_succs_b
@@ -16418,7 +16430,34 @@ RegionType 枚举值: RegionType.ASSERT
                     _ft_last_b = _ft_cand_b.get_last_instruction()
                     if (_ft_last_b is not None
                             and _ft_last_b.opname == 'JUMP_FORWARD'):
-                        break
+                        # [R28-N1 fix] body 块含语句指令（STORE/RETURN/RAISE
+                        # 等），不是 IfExp value block，不中断链。
+                        _ft_has_stmt = any(
+                            i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
+                                         'STORE_DEREF', 'STORE_SUBSCR', 'STORE_ATTR',
+                                         'RETURN_VALUE', 'RETURN_CONST',
+                                         'RAISE_VARARGS', 'RERAISE',
+                                         'DELETE_NAME', 'DELETE_FAST',
+                                         'DELETE_GLOBAL', 'DELETE_ATTR',
+                                         'DELETE_SUBSCR')
+                            for i in _ft_cand_b.instructions
+                            if i.offset != _ft_last_b.offset
+                        )
+                        if not _ft_has_stmt:
+                            # 也检查 CALL+POP_TOP（表达式语句）
+                            _ft_instrs_no_noise = [
+                                i for i in _ft_cand_b.instructions
+                                if i.opname not in NOISE_OPS
+                                and i.offset != _ft_last_b.offset
+                            ]
+                            for _fi_idx, _fi in enumerate(_ft_instrs_no_noise):
+                                if (_fi.opname == 'CALL'
+                                        and _fi_idx + 1 < len(_ft_instrs_no_noise)
+                                        and _ft_instrs_no_noise[_fi_idx + 1].opname == 'POP_TOP'):
+                                    _ft_has_stmt = True
+                                    break
+                        if not _ft_has_stmt:
+                            break
             # [R23-N21 fix] 区域归约算法原则 1（归约顺序）+ 原则 2（每块唯一
             # 归属）：IF_NONE/IF_NOT_NONE 的 op_type 需要根据跳转目标判断。
             # IF_NONE 语义："TOS is None -> jump"，既可能是 or 短路（条件
@@ -16947,6 +16986,24 @@ RegionType 枚举值: RegionType.ASSERT
             if has_operator_boundary:
                 unified_chain = self._try_unify_mixed_boolop_chain(chain, first_jt)
                 if unified_chain and len(unified_chain) >= 2:
+                    # [R28-N2 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3
+                    # （嵌套即抽象节点）：当混合链未被 _try_unify 扩展（仍是
+                    # 2元素），需验证第一个操作数的跳转目标是第二个操作数的某个
+                    # 后继（跳转目标或 fall-through）。在合法的2元素 BoolOp 链
+                    # 中，A 的短路跳转目标必然是 B 的某个直接后继——要么是 B 的
+                    # fall-through（body），要么是 B 的跳转目标（exit）。如果 A
+                    # 的目标既不是 B 的 fall-through 也不是 B 的跳转目标，说明
+                    # 这是嵌套 if-else 被误识别为混合 BoolOp 链：A 跳转到外层
+                    # else 块，B 跳转到内层 else 块，两者分属不同 if 区域，不
+                    # 应合并为单个 BoolOp 区域。例如 cash_collection_ability 中
+                    # `if start_year is None: if end_year is None: body else:
+                    # inner_else else: outer_else`，block@140 IF_NOT_NONE→362
+                    # （外层 else）与 block@144 IF_NOT_NONE→282（内层 else）
+                    # 被误合并为 BoolOp(and)，导致 @140 跳转目标从 362 变为 282。
+                    if (len(unified_chain) == 2
+                            and unified_chain[0][1] != unified_chain[1][1]):
+                        if not self._is_valid_2elem_mixed_chain(unified_chain):
+                            return None
                     return unified_chain
             elif not self._is_nested_if_else_pattern(chain):
                 unified_chain = self._try_unify_mixed_boolop_chain(chain, first_jt)
@@ -17003,6 +17060,36 @@ RegionType 枚举值: RegionType.ASSERT
                     if not all_same_op:
                         return True
         return False
+
+    def _is_valid_2elem_mixed_chain(self, chain: List[Tuple[BasicBlock, str]]) -> bool:
+        """验证2元素混合BoolOp链的结构合法性。
+
+        区域归约算法原则 2（每块唯一归属）+ 原则 3（嵌套即抽象节点）：
+        在合法的2元素 BoolOp 链 [(A, op_A), (B, op_B)] 中，A 的短路跳转
+        目标必然是 B 的某个直接后继（conditional_successors）——要么是 B
+        的 fall-through（body），要么是 B 的跳转目标（exit）。
+
+        如果 A 的跳转目标既不是 B 的 fall-through 也不是 B 的跳转目标，
+        说明这是嵌套 if-else 被误识别为 BoolOp 链：A 跳转到外层 else 块，
+        B 跳转到内层 else 块，两者分属不同 if 区域，不应合并为单个 BoolOp
+        区域。此时应返回 False，让 IfRegion 检测器正确处理嵌套结构。
+        """
+        if len(chain) != 2:
+            return True
+        (blk_a, _), (blk_b, _) = chain
+        instr_a = blk_a.get_last_instruction()
+        instr_b = blk_b.get_last_instruction()
+        if not instr_a or instr_a.argval is None:
+            return True
+        if not instr_b or instr_b.argval is None:
+            return True
+        a_target = self.cfg.get_block_by_offset(instr_a.argval)
+        if a_target is None:
+            return True
+        b_succs = set(blk_b.conditional_successors)
+        if a_target not in b_succs:
+            return False
+        return True
 
     def _try_unify_mixed_boolop_chain(self, initial_chain, outer_target):
         result = list(initial_chain)
