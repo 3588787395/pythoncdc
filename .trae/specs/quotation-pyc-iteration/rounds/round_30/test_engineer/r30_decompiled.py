@@ -3438,15 +3438,14 @@ def get_option_info():
             data_out = []
             for i in data:
                 for key, value in i.items():
-                    if not key == 'price_change_ratio':
-                        if key == 'trading_time_desc':
-                            continue
-                        elif isinstance(value, dict):
-                            dict1.update(value)
-                            continue
-                        else:
-                            dict1[key] = value
-                            continue
+                    if key == 'price_change_ratio' or key == 'trading_time_desc':
+                        continue
+                    elif isinstance(value, dict):
+                        dict1.update(value)
+                        continue
+                    else:
+                        dict1[key] = value
+                        continue
                 data_out.append(copy.deepcopy(dict1))
             return data_out
         else:

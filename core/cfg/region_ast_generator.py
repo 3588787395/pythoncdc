@@ -10214,6 +10214,44 @@ AST 映射规则:
                         _outer_cond = _negate_expr(condition) if _merge_op == 'or' else condition
                         condition = {'type': 'BoolOp', 'op': _merge_op, 'values': [_outer_cond, inner_cond]}
                         then_stmts = inner_body
+        # [R30-5 fix] 区域归约算法原则 4（父引用子入口）+ 原则 3（嵌套即抽象节点）：
+        # 当 IfRegion 条件被取反（TRUE 路径跳到 continue 目标，不在 then_blocks），
+        # 且 then_stmts[0] 是 body=[Continue] 且有 orelse 的 If，模式为：
+        #   if not A: if B: continue; elif/else...
+        # 应重组为：
+        #   if A or B: continue; elif/else...
+        # 典型场景：`for ...: if key == 'X' or key == 'Y': continue; elif...`
+        # 编译为 POP_JUMP_IF_TRUE to <shared_continue>（A 短路），
+        # 然后 POP_JUMP_IF_FALSE to <after>（B 失败跳过 continue），
+        # 共享同一个 JUMP_BACKWARD。若生成 `if not A: if B: continue...`，
+        # 当 A 为真时跳过 if body 到循环末尾，编译器生成额外 JUMP_BACKWARD
+        # （隐式 continue），导致字节码 diff=+1。
+        # 判据：
+        #   1. condition 是 UnaryOp(Not, ...)（条件被取反）
+        #   2. then_stmts[0] 是 If，body == [Continue]，且有 orelse
+        #   3. 无 elif_conditions、无 else_stmts
+        _r30_5_post_extra = None
+        if (isinstance(condition, dict) and condition.get('type') == 'UnaryOp'
+                and condition.get('op') == 'not'
+                and then_stmts and isinstance(then_stmts[0], dict)
+                and then_stmts[0].get('type') == 'If'
+                and len(then_stmts[0].get('body', [])) == 1
+                and isinstance(then_stmts[0]['body'][0], dict)
+                and then_stmts[0]['body'][0].get('type') == 'Continue'
+                and then_stmts[0].get('orelse')
+                and not getattr(region, 'elif_conditions', None)
+                and not else_stmts):
+            _r30_5_outer_cond = condition.get('operand', condition)
+            _r30_5_inner_if = then_stmts[0]
+            _r30_5_inner_cond = _r30_5_inner_if.get('test')
+            _r30_5_inner_orelse = _r30_5_inner_if.get('orelse', [])
+            _r30_5_remaining = then_stmts[1:]
+            condition = {'type': 'BoolOp', 'op': 'or',
+                         'values': [_r30_5_outer_cond, _r30_5_inner_cond]}
+            then_stmts = [{'type': 'Continue'}]
+            else_stmts = _r30_5_inner_orelse
+            if _r30_5_remaining:
+                _r30_5_post_extra = _r30_5_remaining
         result = {'type': 'If', 'test': condition, 'body': then_stmts, 'orelse': else_stmts if else_stmts else None}
         self._generating_regions.discard(region_id)
         self._generated_regions.add(region_id)
@@ -10279,6 +10317,11 @@ AST 映射规则:
                         if_result = if_result + _post_if_stmts
                     else:
                         if_result = [if_result] + _post_if_stmts
+        if _r30_5_post_extra:
+            if isinstance(if_result, list):
+                if_result = if_result + _r30_5_post_extra
+            else:
+                if_result = [if_result] + _r30_5_post_extra
         return if_result
 
     def _try_build_await_condition(self, region: IfRegion, cond_block: 'BasicBlock') -> Optional[Dict[str, Any]]:
