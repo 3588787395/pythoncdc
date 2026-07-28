@@ -682,10 +682,10 @@ def change_his_to_forward(security, data, exrights_data, start, end, typet):
             if n == startDateIndex:
                 if len(series[startDateIndex:].index) > 1:
                     n = list(series[startDateIndex:].index)[1]
-                    data = data * float(series.loc[n, 'exer_forward_a']) + float(series.loc[n, 'exer_forward_b'])
-                    return round(data, 2)
                 else:
                     return data
+                data = data * float(series.loc[n, 'exer_forward_a']) + float(series.loc[n, 'exer_forward_b'])
+                return round(data, 2)
         else:
             preindex = None
             tmpdata = None
@@ -3206,6 +3206,12 @@ def get_stock_exrights(stock_code, date=None):
             return exrights
         elif isinstance(date, datetime) or isinstance(date, qdt.date):
             date = str(date)
+        if isinstance(date, str):
+            date = date.replace('-', '')[:8]
+            if date.isdigit():
+                date = int(date)
+            else:
+                return None
         if isinstance(date, int):
             right_list = exrights.index == date
             if right_list.any():

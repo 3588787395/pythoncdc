@@ -9621,13 +9621,20 @@ AST 映射规则:
                     if elif_boolop.merge_block:
                         _final_else_offsets = {b.start_offset for b in region.elif_final_else} if region.elif_final_else else set()
                         if elif_boolop.merge_block.start_offset not in _final_else_offsets:
-                            # [R30 fix] 同 line 9832 修复：merge_block 可能是后续顶级区域的入口
-                            _merge_is_top_entry_2 = False
+                            # [R30-2 fix] 区域归约算法原则 2（每块唯一归属）：
+                            # merge_block 不仅可能是顶级区域入口，也可能是嵌套区域
+                            # 入口（如 get_stock_exrights 中 IfRegion@342 是 IfRegion@0
+                            # 的子区域，entry=342 同时是 IfRegion@102 的 merge_block）。
+                            # 若将其标记为 generated_blocks，嵌套区域在父区域的块迭代
+                            # 中被跳过（all(b in generated_blocks) 检查通过），造成
+                            # 代码块丢失。修复：检查 merge_block 是否为任何区域的 entry
+                            # （不限于顶级区域），若是则不标记。
+                            _merge_is_region_entry_2 = False
                             for _tr in self.regions:
-                                if getattr(_tr, 'parent', None) is None and _tr.entry is elif_boolop.merge_block:
-                                    _merge_is_top_entry_2 = True
+                                if _tr.entry is elif_boolop.merge_block:
+                                    _merge_is_region_entry_2 = True
                                     break
-                            if not _merge_is_top_entry_2:
+                            if not _merge_is_region_entry_2:
                                 self.generated_blocks.add(elif_boolop.merge_block)
         if elif_condition is None:
             _inline_chain_info = getattr(region, 'inline_boolop_chains', {}).get(id(elif_cond_block))
@@ -9837,17 +9844,19 @@ AST 映射规则:
                         if region.elif_final_else:
                             _final_else_offsets = {b.start_offset for b in region.elif_final_else}
                         if _last_elif_boolop.merge_block and _last_elif_boolop.merge_block.start_offset not in _final_else_offsets:
-                            # [R30 fix] 区域归约算法原则 1（自底向上归约）+ 原则 3（嵌套即抽象节点）：
-                            # merge_block 可能是后续顶级区域的入口（如另一个 IfRegion 的 entry）。
-                            # 若将其标记为 generated_blocks，会导致后续区域在顶级循环中被跳过
-                            # （all(b in generated_blocks) 检查通过），造成代码块丢失。
-                            # 修复：仅当 merge_block 不是任何顶级区域的 entry 时才标记为已生成。
-                            _merge_is_top_entry = False
+                            # [R30-2 fix] 区域归约算法原则 2（每块唯一归属）：
+                            # merge_block 也可能是
+                            # 嵌套区域入口（非顶级），如 get_stock_exrights 中
+                            # IfRegion@342（parent=IfRegion@0）的 entry=342 是
+                            # IfRegion@102 的 merge_block。原 R30 修复仅检查顶级区域
+                            # 入口，嵌套区域入口仍被错误标记。修复：检查 merge_block
+                            # 是否为任何区域的 entry（不限于顶级区域），若是则不标记。
+                            _merge_is_region_entry = False
                             for _tr in self.regions:
-                                if getattr(_tr, 'parent', None) is None and _tr.entry is _last_elif_boolop.merge_block:
-                                    _merge_is_top_entry = True
+                                if _tr.entry is _last_elif_boolop.merge_block:
+                                    _merge_is_region_entry = True
                                     break
-                            if not _merge_is_top_entry:
+                            if not _merge_is_region_entry:
                                 self.generated_blocks.add(_last_elif_boolop.merge_block)
                 if _last_elif_condition is None:
                     _inline_chain_info = getattr(region, 'inline_boolop_chains', {}).get(id(_last_elif_cond_block))
@@ -12268,6 +12277,23 @@ AST 映射规则:
         _nested_if_entry_generate = {}
         for b in _block_set:
             _nr = self.region_analyzer.get_region_for_block(b)
+            # [R30-3 fix] 区域归约算法原则 4（父引用子入口）+ 原则 2（每块唯一归属）：
+            # 当父 IfRegion（如 IfRegion@0）的 then/else blocks 包含嵌套 IfRegion
+            # 的 entry 块时，block_to_region 可能把 entry 块的所有权分配给父区域
+            # 而非嵌套区域（优先级/范围竞争）。此时 get_region_for_block 返回父
+            # 区域本身，`_nr is not region` 检查失败，嵌套 IfRegion 被当作普通
+            # 顺序块处理，导致整个 if 结构丢失。
+            # 失败模式：get_stock_exrights 中 IfRegion@0 的 else 分支包含块 342
+            # （IfRegion@342 的 entry）。block_to_region[342]=IfRegion@0（父），
+            # 原检查 `_nr is not region` 为 False，IfRegion@342 未被识别为嵌套
+            # 区域，`if isinstance(date, str):` 整块代码丢失。
+            # 修复：用 get_entry_region_for_block 找到以 b 为 entry 的区域（不
+            # 依赖 block_to_region 的所有权分配），若该区域是不同的 IfRegion 则
+            # 用它替代 _nr。
+            if _nr is None or _nr is region or not isinstance(_nr, IfRegion) or _nr.entry is not b:
+                _er = self.region_analyzer.get_entry_region_for_block(b)
+                if isinstance(_er, IfRegion) and _er is not region and _er.entry is b:
+                    _nr = _er
             if isinstance(_nr, IfRegion) and _nr is not region and _nr.entry is not None:
                 if _nr.entry in _block_set and b != _nr.entry:
                     # [R21-C5 fix] 使用真值检查而非 `is not None`：空列表 [] 也表示

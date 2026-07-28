@@ -1754,8 +1754,37 @@ class RegionAnalyzer:
         2. 检查 then_exit 是否从 else_succ 可达（BFS，排除 sink 路径）
         3. 若可达，merge = then_exit
         4. 对称地检查 else_succ 的 JUMP_FORWARD 目标
+
+        [R30-2 fix] 区域归约算法原则 2（每块唯一归属）：
+        当一个分支是纯 sink（无后继，以 RETURN_VALUE/RETURN_CONST/RAISE_VARARGS
+        终态）时，merge 是另一个分支的 JUMP_FORWARD 目标——不需要从 sink 可达，
+        因为 sink 永远不会到达 merge，但 merge 仍是 if 结构的合并点。
+
+        典型场景（get_stock_exrights 中 if-isdigit）：
+            if date.isdigit():     # condition
+                date = int(date)   # then body → JUMP_FORWARD → M
+            else:
+                return None        # else body → sink (RETURN_VALUE)
+            if isinstance(date, int): ...  # M = merge
+
+        NCPD(then_succ, else_succ) = None 因 else 分支 return。原算法要求
+        merge 从 else_succ 可达，但 else 是纯 sink 不可达，导致 merge=None，
+        _collect_branch_blocks 过度收集 then 分支（越过 M 吸收后续语句），
+        违反每块唯一归属。
         """
         _exclude = {header, then_succ, else_succ}
+
+        # [R30-2 fix] 纯 sink 分支：merge 是另一分支的 JUMP_FORWARD 目标
+        _then_is_sink = not then_succ.successors
+        _else_is_sink = not else_succ.successors
+        if _else_is_sink and not _then_is_sink:
+            _then_exit = self._get_jump_forward_target(then_succ)
+            if _then_exit is not None and _then_exit not in _exclude:
+                return _then_exit
+        if _then_is_sink and not _else_is_sink:
+            _else_exit = self._get_jump_forward_target(else_succ)
+            if _else_exit is not None and _else_exit not in _exclude:
+                return _else_exit
 
         # 1. 检查 then_succ 的 JUMP_FORWARD 目标
         _then_exit = self._get_jump_forward_target(then_succ)
@@ -11581,7 +11610,35 @@ RegionType 枚举值: RegionType.ASSERT
             non_break_else = [b for b in else_blocks if not _is_loop_break_block(b)]
             if not non_continue_break_else or all(self._is_trivial_block(b) for b in non_continue_break_else):
                 if not any(_is_loop_continue_block(b) for b in non_break_else) and not any(_is_loop_break_block(b) for b in else_blocks):
-                    else_blocks = []
+                    # [R30-3 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3
+                    # （嵌套即抽象节点）：
+                    # 当 then 分支以 JUMP_FORWARD 终止（显式跳过 else 分支到
+                    # merge 点），且 else 分支仅含 return None 块时，else 是
+                    # 真实的 else 体（如 ``if date.isdigit(): date=int(date)
+                    # else: return None``），不应被作为 trivial 清除。
+                    # 失败模式：get_stock_exrights 中 IfRegion@384 的 then 块
+                    # @484 (date=int(date)) 以 JUMP_FORWARD 520 结尾，else 块
+                    # @516 (return None) 是显式 else 体。原逻辑将 @516 视为
+                    # trivial 清除 else_blocks，导致 return None 丢失，反编译
+                    # 输出缺少 else 分支，字节码偏移 +5。
+                    # 判据：then 分支最后一块以 JUMP_FORWARD/JUMP_ABSOLUTE 终止
+                    # （跳到 merge 点），且 else 中存在 return None 终态块
+                    # （无后继）。此时 else 是结构化的显式 return 分支。
+                    _then_jumps_over_else = False
+                    if then_blocks and merge is not None:
+                        _tl = then_blocks[-1].get_last_instruction()
+                        if _tl and _tl.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+                            _tl_target = (self.cfg.get_block_by_offset(_tl.argval)
+                                          if _tl.argval is not None else None)
+                            if _tl_target is merge:
+                                _has_return_else = any(
+                                    (not b.successors
+                                     and self._is_return_none_block(b))
+                                    for b in else_blocks)
+                                if _has_return_else:
+                                    _then_jumps_over_else = True
+                    if not _then_jumps_over_else:
+                        else_blocks = []
         if else_blocks:
             then_terminates_with_raise = False
             if then_blocks:
