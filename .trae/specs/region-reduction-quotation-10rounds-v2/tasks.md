@@ -61,21 +61,21 @@
 
 ### 阶段一：测试工程师
 
-- [ ] R13-1 反编译 + diff（输出到 round_13）
-- [ ] R13-2 ≥10 最小复现实例（重点针对 get_date_and_count while 循环 if/elif 链语句丢失）
+- [x] R13-1 反编译 + diff（输出到 round_13，`decompile_report.md` 已生成；基线 144/150=96.00% 无退化）
+- [x] R13-2 ≥10 最小复现实例（`minimal_repros/repro_01..repro_10.py`，重点针对 get_date_and_count while 循环 if/elif 链语句丢失）
 
 ### 阶段二：修复工程师
 
-- [ ] R13-3 根因分析（Loop+Conditional while 循环 if/elif 链的完整生成）
-- [ ] R13-4 按算法修复 + docstring 更新
-- [ ] R13-5 回归测试（quotation.pyc 一致函数数 ≥ R12；既有矩阵 0 退化）
-- [ ] R13-6 fix_report.md
+- [x] R13-3 根因分析（双层根因：A LoopRegion 反向链走吸收外层 if/elif/else 条件块；B while 无 break 时 `_find_loop_else` 误识别 else_blocks；见 `fix_report.md` §2）
+- [ ] R13-4 按算法修复 + docstring 更新 — 尝试 A+B（反向链走 fall-through 校验 + 无 break 不识别 else_blocks）因 -27→-63 退化已回退（见 `fix_report.md` §3）；完整修复需先解决 IfRegion else-branch 块收集穿透嵌套 LoopRegion，deferred 至后续轮次
+- [x] R13-5 回归测试（quotation.pyc 一致函数数 144/150 == R12；既有矩阵 9 fail/318 pass/11 skip 0 退化；IMPORT_OK）
+- [x] R13-6 fix_report.md（`repair_engineer/fix_report.md`）
 
 ### 验证与提交
 
-- [ ] R13-7 一致函数数 ≥ 轮 12
-- [ ] R13-8 反模式自检 + 编译通过
-- [ ] R13-9 commit + push `rr-r13:`
+- [x] R13-7 一致函数数 ≥ 轮 12（144 == 144，无退化）
+- [x] R13-8 反模式自检 + 编译通过（G3/G4 0 新增；IMPORT_OK）
+- [ ] R13-9 commit + push `rr-r13:` 到 origin
 
 ## 轮 14 (Round 14) — 跳转目标归一化（one_prod_to_dataframe / change_his_to_backward）
 
