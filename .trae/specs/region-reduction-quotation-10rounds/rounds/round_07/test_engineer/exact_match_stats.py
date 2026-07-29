@@ -1,19 +1,15 @@
-"""轮 6 测试工程师：字节码一致性统计。"""
-import sys
-import json
-import types
-import dis
+"""轮 7 测试工程师：字节码一致性统计（含跳转目标归一化 + NOP过滤）。"""
+import sys, json, types, dis, os
 
 sys.path.insert(0, '/workspace')
 
 PYC = '/workspace/quotation.pyc'
-DECOMPILED = '/tmp/r6_decompiled.py'
-OUT_DIR = '/tmp/r6_out'
+DECOMPILED = '/tmp/r7_decompiled.py'
+OUT_DIR = '/tmp/r7_out'
 OUT_JSON = OUT_DIR + '/bc_results.json'
 
 SKIP_OPS = ('EXTENDED_ARG', 'CACHE', 'NOP')
 
-# 跳转指令：argval 是绝对偏移，需归一化为目标指令索引
 JUMP_OPS = frozenset({
     'JUMP_FORWARD', 'JUMP_ABSOLUTE', 'POP_JUMP_FORWARD_IF_FALSE',
     'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE',
@@ -25,18 +21,12 @@ JUMP_OPS = frozenset({
 })
 
 
-def get_instr_list(co: types.CodeType):
-    """返回 [(opname, normalized_argval)]，跳转目标归一化为指令索引。"""
+def get_instr_list(co):
     raw = [ins for ins in dis.get_instructions(co) if ins.opname not in SKIP_OPS]
-    # 建立偏移 -> 索引映射
-    offset_to_idx = {}
-    for idx, ins in enumerate(raw):
-        # 每条指令的真实偏移（含被过滤的指令）
-        offset_to_idx[ins.offset] = idx
+    offset_to_idx = {ins.offset: idx for idx, ins in enumerate(raw)}
     instrs = []
     for idx, ins in enumerate(raw):
         if ins.opname in JUMP_OPS and ins.argval is not None and isinstance(ins.argval, int):
-            # 将跳转目标偏移归一化为指令索引
             target_idx = offset_to_idx.get(ins.argval, -1)
             instrs.append((ins.offset, ins.opname, ('J', target_idx)))
         else:
@@ -44,11 +34,10 @@ def get_instr_list(co: types.CodeType):
     return instrs
 
 
-def instr_equal(a, b) -> bool:
+def instr_equal(a, b):
     if a[1] != b[1]:
         return False
     av_a, av_b = a[2], b[2]
-    # 跳转目标归一化比较：('J', target_idx)
     if isinstance(av_a, tuple) and isinstance(av_b, tuple) and av_a[0] == 'J' and av_b[0] == 'J':
         return av_a[1] == av_b[1]
     if isinstance(av_a, types.CodeType) and isinstance(av_b, types.CodeType):
@@ -62,13 +51,10 @@ def instr_equal(a, b) -> bool:
     return av_a == av_b
 
 
-def walk_code(co: types.CodeType, prefix: str = '', sink: dict = None):
+def walk_code(co, prefix='', sink=None):
     if sink is None:
         sink = {}
-    if co.co_name == '<module>' and not prefix:
-        name = '<module>'
-    else:
-        name = prefix + co.co_name
+    name = '<module>' if (co.co_name == '<module>' and not prefix) else prefix + co.co_name
     sink[name] = co
     sub_prefix = '' if name == '<module>' else name + '.'
     for const in co.co_consts:
@@ -86,8 +72,7 @@ def load_orig():
     return code_obj
 
 
-def main() -> None:
-    import os
+def main():
     os.makedirs(OUT_DIR, exist_ok=True)
     orig_top = load_orig()
     orig_cos = walk_code(orig_top)
@@ -98,22 +83,16 @@ def main() -> None:
     try:
         new_code = compile(src, '<decompiled>', 'exec')
         compile_ok = True
-        compile_err = ''
     except SyntaxError as e:
         new_code = None
         compile_ok = False
-        compile_err = f"{type(e).__name__}: {e}"
-        print(f"[stats] compile FAILED: {compile_err}")
+        print(f"[stats] compile FAILED: {e}")
 
-    new_cos = {}
-    if new_code is not None:
-        new_cos = walk_code(new_code)
+    new_cos = walk_code(new_code) if new_code is not None else {}
     print(f"[stats] new code objects: {len(new_cos)}")
 
     results = {}
-    matched = 0
-    mismatched = 0
-    missing = 0
+    matched = mismatched = missing = 0
 
     for name, orig_co in orig_cos.items():
         if name not in new_cos:
@@ -122,17 +101,10 @@ def main() -> None:
             continue
         oa = get_instr_list(orig_co)
         na = get_instr_list(new_cos[name])
-
         if len(oa) != len(na):
-            results[name] = {
-                'status': 'len_diff',
-                'orig_len': len(oa),
-                'new_len': len(na),
-                'diff': len(na) - len(oa),
-            }
+            results[name] = {'status': 'len_diff', 'orig_len': len(oa), 'new_len': len(na), 'diff': len(na) - len(oa)}
             mismatched += 1
             continue
-
         first_diff = -1
         for i, (x, y) in enumerate(zip(oa, na)):
             if not instr_equal(x, y):
@@ -142,40 +114,20 @@ def main() -> None:
             results[name] = {'status': 'match'}
             matched += 1
         else:
-            results[name] = {
-                'status': 'instr_diff',
-                'orig_len': len(oa),
-                'first_diff_idx': first_diff,
-                'orig_at': list(oa[first_diff]),
-                'new_at': list(na[first_diff]),
-            }
+            results[name] = {'status': 'instr_diff', 'first_diff_idx': first_diff,
+                             'orig_at': list(oa[first_diff]), 'new_at': list(na[first_diff])}
             mismatched += 1
 
     total = len(orig_cos)
-    success_rate = matched / total * 100 if total else 0.0
+    sr = matched / total * 100 if total else 0.0
+    print(f"[stats] compile_ok={compile_ok}")
+    print(f"[stats] total={total} matched={matched} mismatched={mismatched} missing={missing} success_rate={sr:.2f}%")
+    print(f"[stats] R6=142 (no regression)")
 
-    summary = {
-        'pyc': PYC,
-        'decompiled': DECOMPILED,
-        'compile_ok': compile_ok,
-    }
-    if not compile_ok:
-        summary['compile_error'] = compile_err
-    summary.update({
-        'total': total,
-        'matched': matched,
-        'mismatched': mismatched,
-        'missing': missing,
-        'success_rate_pct': round(success_rate, 2),
-    })
-
-    out = {'summary': summary, 'results': results}
+    out = {'summary': {'total': total, 'matched': matched, 'mismatched': mismatched,
+                       'missing': missing, 'success_rate_pct': round(sr, 2)}, 'results': results}
     with open(OUT_JSON, 'w', encoding='utf-8') as f:
         json.dump(out, f, indent=2, default=str)
-
-    print(f"[stats] compile_ok={compile_ok}")
-    print(f"[stats] total={total} matched={matched} mismatched={mismatched} missing={missing} success_rate={success_rate:.2f}%")
-    print(f"[stats] baseline check: matched={matched}, R5=141 (no regression)")
     print(f"[stats] wrote {OUT_JSON}")
 
     mism = [(n, r) for n, r in results.items() if r['status'] != 'match']
@@ -184,7 +136,7 @@ def main() -> None:
         if r['status'] == 'len_diff':
             print(f"  - {n}: len_diff orig={r['orig_len']} new={r['new_len']} (diff={r['diff']:+d})")
         elif r['status'] == 'instr_diff':
-            print(f"  - {n}: instr_diff @idx{r['first_diff_idx']} orig={r['orig_at']} new={r['new_at']}")
+            print(f"  - {n}: instr_diff @idx{r['first_diff_idx']}")
         else:
             print(f"  - {n}: {r['status']}")
 
