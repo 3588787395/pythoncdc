@@ -420,11 +420,11 @@ def build_future_fill_time(suffix, typet, start, end):
                     total_dts.append(today + item)
         elif typet == 4:
             if suffix == 'T.CCFX':
-                market_time = {'11:30:00', '15:15:00', '15:00:00', '10:00:00', '11:00:00', '14:00:00', '14:30:00', '13:30:00', '10:30:00'}
+                market_time = {'15:00:00', '10:30:00', '14:30:00', '15:15:00', '10:00:00', '13:30:00', '14:00:00', '11:30:00', '11:00:00'}
             elif suffix in ('XZCE', 'XDCE', 'XSGE'):
-                market_time = {'09:30:00', '11:15:00', '13:45:00', '15:00:00', '14:15:00', '10:00:00', '10:45:00', '14:45:00'}
+                market_time = {'15:00:00', '11:15:00', '10:00:00', '14:45:00', '14:15:00', '10:45:00', '09:30:00', '13:45:00'}
             else:
-                market_time = {'11:30:00', '15:00:00', '10:00:00', '11:00:00', '14:00:00', '14:30:00', '13:30:00', '10:30:00'}
+                market_time = {'15:00:00', '10:30:00', '14:30:00', '10:00:00', '13:30:00', '14:00:00', '11:30:00', '11:00:00'}
             for today in trade_days:
                 for item in market_time:
                     total_dts.append(today + ' ' + item)
@@ -438,18 +438,15 @@ def build_future_fill_time(suffix, typet, start, end):
             for today in trade_days:
                 for item in market_time:
                     total_dts.append(today + ' ' + item)
-    else:
+    elif suffix == 'T.CCFX':
         market_time = ['10:30:00', '11:30:00', '14:00:00', '15:00:00', '15:15:00']
-        market_time = ['10:00:00', '11:15:00', '14:15:00', '15:00:00']
-    if suffix == 'T.CCFX':
-        pass
     elif suffix in ('XZCE', 'XDCE', 'XSGE'):
-        pass
+        market_time = ['10:00:00', '11:15:00', '14:15:00', '15:00:00']
     else:
         market_time = ['10:30:00', '11:30:00', '14:00:00', '15:00:00']
     for today in trade_days:
         for item in market_time:
-            pass
+            total_dts.append(today + ' ' + item)
     if total_dts:
         total_dts.sort()
         total_dts = pandas.to_datetime(total_dts)
@@ -1001,7 +998,7 @@ def get_date_and_count(query_date, count, candle_period):
                 start_date = str(year) + str(month) + '01'
             else:
                 start_date = str(year) + '0' + str(month) + '01'
-        while count == 1 and count > 0:
+        elif count == 1 and count > 0:
             if month - count <= 0:
                 year -= 1
                 count -= month
@@ -1009,11 +1006,11 @@ def get_date_and_count(query_date, count, candle_period):
             else:
                 month = month - count
                 count = 0
+        start_date = this_month_start_date
         if month in (10, 11, 12):
             start_date = str(year) + str(month) + '01'
         else:
             start_date = str(year) + '0' + str(month) + '01'
-        start_date = this_month_start_date
     elif candle_period == 9:
         query_date = datetime.strftime(query_date, '%Y%m%d')
         this_year_start_date = query_date[:4] + '0101'
@@ -1033,13 +1030,13 @@ def get_date_and_count(query_date, count, candle_period):
         if end_quater == 0:
             end_date = str(year - 1) + '1231'
             this_quater_start_date = str(year) + '0101'
-        if end_quater == 1:
+        elif end_quater == 1:
             end_date = str(year) + '0331'
             this_quater_start_date = str(year) + '0401'
-        if end_quater == 2:
+        elif end_quater == 2:
             end_date = str(year) + '0630'
             this_quater_start_date = str(year) + '0701'
-        if end_quater == 3:
+        elif end_quater == 3:
             end_date = str(year) + '0930'
             this_quater_start_date = str(year) + '1001'
         query_date = datetime.strftime(query_date, '%Y%m%d')
@@ -1058,7 +1055,7 @@ def get_date_and_count(query_date, count, candle_period):
                 start_date = str(year) + str(month) + '01'
             else:
                 start_date = str(year) + '0' + str(month) + '01'
-        while count == 1 and count > 0:
+        elif count == 1 and count > 0:
             if month // 3 - count < 0:
                 year -= 1
                 count -= month // 3
@@ -1066,9 +1063,9 @@ def get_date_and_count(query_date, count, candle_period):
             else:
                 month = month - count * 3
                 count = 0
+        start_date = this_quater_start_date
         if month in (10, 11, 12):
             start_date = str(year) + str(month) + '01'
-        start_date = this_quater_start_date
         start_date = str(year) + '0' + str(month) + '01'
     return (start_date, query_date)
 @lru_cache(None)

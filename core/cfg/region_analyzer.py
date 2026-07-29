@@ -11480,52 +11480,67 @@ RegionType 枚举值: RegionType.ASSERT
                 else_blocks = [b for b in else_blocks if b in try_body_set or b == else_succ]
 
             if isinstance(block_region, LoopRegion):
-                loop_body_set = set(block_region.body_blocks)
-                if block_region.condition_block:
-                    loop_body_set.add(block_region.condition_block)
-                _loop_back_edge_blocks = set()
-                # Conditional back-edge blocks (POP_JUMP_BACKWARD_IF_TRUE/FALSE → header/condition)
-                # are the loop's condition recheck blocks. They belong to the LOOP (unique block
-                # ownership per "No More Gotos" §4.2), NOT any nested IF. Including them in
-                # if-else branches causes the loop condition to be duplicated inside the body.
-                _conditional_back_edge_blocks = set()
-                if hasattr(block_region, 'back_edge_block') and block_region.back_edge_block:
-                    _loop_back_edge_blocks.add(block_region.back_edge_block)
-                    _be_last = block_region.back_edge_block.get_last_instruction()
-                    if _be_last and _be_last.opname in BACKWARD_CONDITIONAL_JUMP_OPS:
-                        _conditional_back_edge_blocks.add(block_region.back_edge_block)
-                if hasattr(block_region, 'back_edge_blocks') and block_region.back_edge_blocks:
-                    _loop_back_edge_blocks.update(block_region.back_edge_blocks)
-                    for _beb in block_region.back_edge_blocks:
-                        _beb_last = _beb.get_last_instruction()
-                        if _beb_last and _beb_last.opname in BACKWARD_CONDITIONAL_JUMP_OPS:
-                            _conditional_back_edge_blocks.add(_beb)
-                for lb in block_region.body_blocks:
-                    last = lb.get_last_instruction()
-                    if last and last.opname in BACKWARD_CONDITIONAL_JUMP_OPS:
-                        target = self.cfg.get_block_by_offset(last.argval) if last.argval is not None else None
-                        if target == block_region.header_block or target == block_region.condition_block:
-                            _loop_back_edge_blocks.add(lb)
-                            _conditional_back_edge_blocks.add(lb)
-                _else_before_filter = list(else_blocks)
-                # Conditional back-edge blocks are ALWAYS excluded from if-else branches
-                # (unique block ownership: they belong to LoopRegion, not IfRegion).
-                else_blocks = [b for b in else_blocks if b not in _conditional_back_edge_blocks and (b in loop_body_set or self._block_exits_loop(b, block_region)) and (b not in _loop_back_edge_blocks or b == else_succ) and b != block]
-                _then_back_edge_blocks = set()
-                for _tbe in _loop_back_edge_blocks:
-                    _tbe_meaningful = [i for i in _tbe.instructions
-                                       if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP')
-                                       and i.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
-                                                           'JUMP_FORWARD', 'JUMP_ABSOLUTE')
-                                       and i.opname not in ('POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_FORWARD_IF_FALSE',
-                                                           'POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE')
-                                       and i.opname not in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF',
-                                                           'LOAD_CONST', 'LOAD_ATTR', 'LOAD_METHOD')
-                                       and i.opname not in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP')
-                                       and i.opname not in ('RETURN_VALUE', 'RETURN_CONST')]
-                    if not _tbe_meaningful:
-                        _then_back_edge_blocks.add(_tbe)
-                then_blocks = [b for b in then_blocks if b not in _conditional_back_edge_blocks and (b not in _then_back_edge_blocks or b == then_succ) and b != block]
+                # [R30-21 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4
+                #（归约顺序）：当 if 条件块在 LoopRegion 的 else_blocks 中
+                #（而非 body_blocks 中）时，if 语句位于循环之后（for-else 或
+                # 循环后代码），不是循环体内的嵌套 if。此时不应过滤
+                # then/else_blocks，因为 if 的分支是循环后的独立代码。
+                # 典型场景（build_future_fill_time）：
+                #   for ...: ...
+                #   if total_dts:              # block 2660, in LoopRegion else_blocks
+                #       total_dts.sort()
+                #   else:                      # block 2746, NOT in loop body
+                #       total_dts = pandas.to_datetime([])
+                _block_in_loop_body_r30_21 = (
+                    block in set(block_region.body_blocks)
+                    or block == block_region.condition_block)
+                if _block_in_loop_body_r30_21:
+                    loop_body_set = set(block_region.body_blocks)
+                    if block_region.condition_block:
+                        loop_body_set.add(block_region.condition_block)
+                    _loop_back_edge_blocks = set()
+                    # Conditional back-edge blocks (POP_JUMP_BACKWARD_IF_TRUE/FALSE → header/condition)
+                    # are the loop's condition recheck blocks. They belong to the LOOP (unique block
+                    # ownership per "No More Gotos" §4.2), NOT any nested IF. Including them in
+                    # if-else branches causes the loop condition to be duplicated inside the body.
+                    _conditional_back_edge_blocks = set()
+                    if hasattr(block_region, 'back_edge_block') and block_region.back_edge_block:
+                        _loop_back_edge_blocks.add(block_region.back_edge_block)
+                        _be_last = block_region.back_edge_block.get_last_instruction()
+                        if _be_last and _be_last.opname in BACKWARD_CONDITIONAL_JUMP_OPS:
+                            _conditional_back_edge_blocks.add(block_region.back_edge_block)
+                    if hasattr(block_region, 'back_edge_blocks') and block_region.back_edge_blocks:
+                        _loop_back_edge_blocks.update(block_region.back_edge_blocks)
+                        for _beb in block_region.back_edge_blocks:
+                            _beb_last = _beb.get_last_instruction()
+                            if _beb_last and _beb_last.opname in BACKWARD_CONDITIONAL_JUMP_OPS:
+                                _conditional_back_edge_blocks.add(_beb)
+                    for lb in block_region.body_blocks:
+                        last = lb.get_last_instruction()
+                        if last and last.opname in BACKWARD_CONDITIONAL_JUMP_OPS:
+                            target = self.cfg.get_block_by_offset(last.argval) if last.argval is not None else None
+                            if target == block_region.header_block or target == block_region.condition_block:
+                                _loop_back_edge_blocks.add(lb)
+                                _conditional_back_edge_blocks.add(lb)
+                    _else_before_filter = list(else_blocks)
+                    # Conditional back-edge blocks are ALWAYS excluded from if-else branches
+                    # (unique block ownership: they belong to LoopRegion, not IfRegion).
+                    else_blocks = [b for b in else_blocks if b not in _conditional_back_edge_blocks and (b in loop_body_set or self._block_exits_loop(b, block_region)) and (b not in _loop_back_edge_blocks or b == else_succ) and b != block]
+                    _then_back_edge_blocks = set()
+                    for _tbe in _loop_back_edge_blocks:
+                        _tbe_meaningful = [i for i in _tbe.instructions
+                                           if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP')
+                                           and i.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+                                                               'JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                                           and i.opname not in ('POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_FORWARD_IF_FALSE',
+                                                               'POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE')
+                                           and i.opname not in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF',
+                                                               'LOAD_CONST', 'LOAD_ATTR', 'LOAD_METHOD')
+                                           and i.opname not in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP')
+                                           and i.opname not in ('RETURN_VALUE', 'RETURN_CONST')]
+                        if not _tbe_meaningful:
+                            _then_back_edge_blocks.add(_tbe)
+                    then_blocks = [b for b in then_blocks if b not in _conditional_back_edge_blocks and (b not in _then_back_edge_blocks or b == then_succ) and b != block]
 
             all_condition_blocks = {condition_block} | chain_blocks
 
