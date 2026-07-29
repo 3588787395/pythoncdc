@@ -20238,10 +20238,89 @@ AST 映射规则:
                         'value': boolop_expr,
                     })
                 else:
+                    # [R30-13 fix] BoolOp as sub-expression of a larger rhs.
+                    # When merge_block has expression continuation (BINARY_OP/
+                    # CALL/etc.) before STORE, the boolop is a sub-expression
+                    # of a larger assignment rhs (e.g. `x = f(a and b, c)`).
+                    # Splice the boolop into the prefix + merge continuation to
+                    # build the full rhs expression.
+                    #   典型场景（load_bars_from_hundsun）:
+                    #   source_start = qdt.datetime.strptime(
+                    #       start[:8] + (len(start[8:]) == 4 and start[8:] or '0000'),
+                    #       '%Y%m%d%H%M')
+                    #   BoolOp `len(start[8:]) == 4 and start[8:] or '0000'` 是
+                    #   strptime 调用的子表达式。首 chain_block 的前缀
+                    #   （qdt.datetime.strptime, start[:8]）留在栈上，merge_block
+                    #   的 BINARY_OP + / CALL 消费 boolop 结果完成表达式。
+                    _full_rhs = boolop_expr
+                    if region.merge_block:
+                        _mnn = [i for i in region.merge_block.instructions
+                                if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                        _si = None
+                        for _ki, _instr in enumerate(_mnn):
+                            if _instr.opname in ('STORE_FAST', 'STORE_NAME',
+                                                 'STORE_GLOBAL', 'STORE_DEREF'):
+                                _si = _ki
+                                break
+                        # Expression continuation = instructions before STORE
+                        # (not just SWAP for augassign — that's handled above).
+                        if _si is not None and _si >= 1:
+                            _pre_store = _mnn[:_si]
+                            import os as _os_dbg_r30_13
+                            if _os_dbg_r30_13.environ.get('R30_13_DEBUG'):
+                                import sys as _sys_dbg_r30_13
+                                _fcb_dbg = op_chain[0][0] if op_chain else None
+                                print(f"[R30-13] value_target={region.value_target} merge={region.merge_block.start_offset} _si={_si} _pre_store={[(i.opname, i.argval) for i in _pre_store]} first_chain={_fcb_dbg.start_offset if _fcb_dbg else None}", file=_sys_dbg_r30_13.stderr)
+                            # Build initial stack: process first chain block's
+                            # prefix to get residual stack (values left on stack
+                            # by the expression prefix), then replace the
+                            # condition (top of residual) with the full boolop.
+                            _init_stack = [boolop_expr]
+                            if op_chain:
+                                _fcb = op_chain[0][0]
+                                _pinstrs = self.region_analyzer.identify_block_prefix_instructions(_fcb)
+                                _STORE_CHK = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
+                                              'STORE_DEREF', 'STORE_ATTR', 'STORE_SUBSCR')
+                                if _pinstrs:
+                                    # The prefix may contain STOREs from a
+                                    # consuming parent region (e.g. when this
+                                    # boolop's first chain block is another
+                                    # boolop's merge_block). Instructions up to
+                                    # and including the last STORE are already
+                                    # handled; only process the "true prefix"
+                                    # after the last STORE to get the residual
+                                    # stack for this boolop's expression.
+                                    _last_store_idx = -1
+                                    for _pi, _pinstr in enumerate(_pinstrs):
+                                        if _pinstr.opname in _STORE_CHK:
+                                            _last_store_idx = _pi
+                                    _true_prefix = _pinstrs[_last_store_idx + 1:] if _last_store_idx >= 0 else _pinstrs
+                                    if _true_prefix:
+                                        try:
+                                            self.expr_reconstructor.reconstruct(_true_prefix)
+                                            _res = [s for s in self.expr_reconstructor.stack
+                                                   if s.get('type') != 'PUSH_NULL']
+                                            if _res:
+                                                # Top of residual is the boolop
+                                                # condition (already extracted into
+                                                # boolop_expr). Replace it with the
+                                                # full boolop expression so the merge
+                                                # continuation consumes the right value.
+                                                _res[-1] = boolop_expr
+                                                _init_stack = _res
+                                        except Exception:
+                                            pass
+                            try:
+                                _spliced = self.expr_reconstructor.reconstruct(
+                                    _pre_store, initial_stack=_init_stack)
+                                if _spliced is not None:
+                                    _full_rhs = _spliced
+                            except Exception:
+                                pass
                     results.append({
                         'type': 'Assign',
                         'targets': [{'type': 'Name', 'id': region.value_target, 'ctx': 'Store'}],
-                        'value': boolop_expr,
+                        'value': _full_rhs,
                     })
                 if region.merge_block:
                     _merge_instrs = [i for i in region.merge_block.instructions

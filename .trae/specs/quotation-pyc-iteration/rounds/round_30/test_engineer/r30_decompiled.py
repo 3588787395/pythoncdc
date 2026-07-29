@@ -302,7 +302,7 @@ def fill_minute_or_day_blank(klines, nowstart, nowend, typet, stocks, forward='p
     if nowend >= nowstart:
         suffix = stocks.split('T.' + suffix if suffix == 'CCFX' and code[:1] == 'T' else suffix)
         if len(dts) > 0:
-            source_start = len(source_start[8:]) == 4 and source_start[8:] or '0000'
+            source_start = qdt.datetime.strptime(source_start[:8] + (len(source_start[8:]) == 4 and source_start[8:] or '0000'), '%Y%m%d%H%M')
             """1530"""
             dts = dts[(~dts.index < source_start) & (~dts.index > source_end)]
             if source_end[8:] or '1530':
@@ -420,21 +420,21 @@ def build_future_fill_time(suffix, typet, start, end):
                     total_dts.append(today + item)
         elif typet == 4:
             if suffix == 'T.CCFX':
-                market_time = {'15:00:00', '10:30:00', '14:30:00', '15:15:00', '10:00:00', '13:30:00', '14:00:00', '11:30:00', '11:00:00'}
+                market_time = {'10:00:00', '14:30:00', '11:00:00', '14:00:00', '11:30:00', '10:30:00', '15:15:00', '15:00:00', '13:30:00'}
             elif suffix in ('XZCE', 'XDCE', 'XSGE'):
-                market_time = {'15:00:00', '11:15:00', '10:00:00', '14:45:00', '14:15:00', '10:45:00', '09:30:00', '13:45:00'}
+                market_time = {'10:45:00', '10:00:00', '14:15:00', '09:30:00', '11:15:00', '15:00:00', '14:45:00', '13:45:00'}
             else:
-                market_time = {'15:00:00', '10:30:00', '14:30:00', '10:00:00', '13:30:00', '14:00:00', '11:30:00', '11:00:00'}
+                market_time = {'10:00:00', '14:30:00', '11:00:00', '14:00:00', '11:30:00', '10:30:00', '15:00:00', '13:30:00'}
             for today in trade_days:
                 for item in market_time:
                     total_dts.append(today + ' ' + item)
         elif typet == 13:
             if suffix == 'T.CCFX':
-                market_time = {'15:00:00', '11:30:00', '15:15:00'}
+                market_time = {'15:15:00', '15:00:00', '11:30:00'}
             elif suffix in ('XZCE', 'XDCE', 'XSGE'):
                 market_time = {'11:15:00', '15:00:00'}
             else:
-                market_time = {'15:00:00', '11:30:00', '15:15:00'}
+                market_time = {'15:15:00', '15:00:00', '11:30:00'}
             for today in trade_days:
                 for item in market_time:
                     total_dts.append(today + ' ' + item)
@@ -501,7 +501,7 @@ def load_bars_from_hundsun(stocks, typet, start, end):
     data = collections.OrderedDict()
     retpanel = pandas.Panel()
     if os.path.exists(DumploadDailyFile):
-        source_start = len(start[8:]) == 4 and start[8:] or '0000'
+        source_start = qdt.datetime.strptime(start[:8] + (len(start[8:]) == 4 and start[8:] or '0000'), '%Y%m%d%H%M')
         source_end = end[8:] or '1530'
         if typet == 6:
             if isinstance(stocks, str):
@@ -509,15 +509,11 @@ def load_bars_from_hundsun(stocks, typet, start, end):
             from fly.dumpload import load_daily
             reload(load_daily)
             dailypanel = load_daily.cshare
-            if not dailypanel.empty:
+            if not dailypanel.empty and len(diffset) < len(stocks):
+                sectionstocks = list(set(stocks).intersection(set(dailypanel.items)))
                 dailypanel = dailypanel.ix[:, source_start:source_end]
-                retpanel = dailypanel.ix[stocks, :]
-                return retpanel
-                if len(diffset) < len(stocks):
-                    sectionstocks = list(set(stocks).intersection(set(dailypanel.items)))
-                    dailypanel = dailypanel.ix[:, source_start:source_end]
-                    retpanel = dailypanel.ix[sectionstocks, :]
-                    stocks = list(diffset)
+                retpanel = dailypanel.ix[sectionstocks, :]
+                stocks = list(diffset)
     if len(start) > 8:
         start_temp = start[:8]
     else:
@@ -542,7 +538,7 @@ def load_bars_from_hundsun(stocks, typet, start, end):
     else:
         panel = pandas.Panel(data, minor_axis=['open', 'close', 'high', 'low', 'volume', 'price', 'money'])
     if len(data) > 0:
-        source_start = len(start[8:]) == 4 and start[8:] or '0000'
+        source_start = qdt.datetime.strptime(start[:8] + (len(start[8:]) == 4 and start[8:] or '0000'), '%Y%m%d%H%M')
         source_end = end[8:] or '1530'
     if len(panel.major_axis) != 0:
         if typet == 6:
@@ -634,6 +630,9 @@ def get_str_data(rdata, count, typet):
             for j in range(len(is_all_nan)):
                 if is_all_nan[j] == True and j == len(is_all_nan) - 1:
                     data_is_nan = 1
+                else:
+                    not_nan_icount = j
+                    break
             numpy.nan if data_is_nan == 1 else stock_df.ix[datas[0]:datas[-1] + 1]['volume'].sum()
             numpy.nan
             stock_df.ix[datas[0]:datas[-1] + 1]['money'].sum()

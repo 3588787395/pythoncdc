@@ -4952,6 +4952,24 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
     def _block_exits_loop(self, block, loop_region):
         if hasattr(loop_region, 'else_blocks') and block in loop_region.else_blocks:
             return False
+        # [R30-23 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（归约顺序）：
+        # 块在 break_blocks 中时是 break 语句，退出循环。这处理 for 循环 break
+        # 的 JUMP_FORWARD 被窥孔优化为 fallthrough 的情况——块以 POP_TOP（break
+        # 的迭代器清理）结尾，fallthrough 到循环出口，无显式 JUMP_FORWARD。
+        # 典型场景（get_str_data block 838）：
+        #   for j in range(len(is_all_nan)):
+        #       if is_all_nan[j] == True:
+        #           if j == len(is_all_nan) - 1:
+        #               data_is_nan = 1
+        #       else:                    # block 838
+        #           not_nan_icount = j
+        #           break                 # POP_TOP（清理迭代器）+ fallthrough 到 844
+        # block 838 不在 body_blocks（自然循环体算法不含 break 块），但在
+        # break_blocks 中。若 _block_exits_loop 返回 False，IfRegion 的 else_blocks
+        # 过滤器会移除 838，导致 else 分支（含 break）丢失，反编译输出缺少
+        # `else: not_nan_icount = j; break`，后续指令错位（diff=-56）。
+        if hasattr(loop_region, 'break_blocks') and block in loop_region.break_blocks:
+            return True
         last = block.get_last_instruction()
         if last and last.opname in ('RETURN_VALUE', 'RETURN_CONST', 'RAISE_VARARGS', 'RERAISE'):
             return True
