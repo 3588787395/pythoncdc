@@ -11882,14 +11882,59 @@ RegionType 枚举值: RegionType.ASSERT
                 _e = _r.condition_block or getattr(_r, 'header_block', None) or _r.entry
                 if _e:
                     _lre.add(_e)
-                    _lrbs.append((_r.blocks, _e))
+                    # [R30-24 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4：
+                    # _lrbs 用于 in-loop 判定和分支过滤（移除属于循环的块）。
+                    # 必须用循环真实体（body_blocks + condition_block +
+                    # header_block + back_edge_block），而非 LoopRegion.blocks
+                    #（含 else_blocks 即 post-loop 代码）。post-loop 块属于循环
+                    # 之后的代码，不应被当作"循环内块"从 post-loop if 的分支中
+                    # 移除。典型场景（valuation）：`if data:` 在 LoopRegion 的
+                    # else_blocks 中，其 then/else 分支块也在 else_blocks 中，
+                    # 若用 _r.blocks 过滤会清空 then/else，生成 `if data: pass`。
+                    _true_body = set(_r.body_blocks)
+                    if _r.condition_block is not None:
+                        _true_body.add(_r.condition_block)
+                    if getattr(_r, 'header_block', None) is not None:
+                        _true_body.add(_r.header_block)
+                    if getattr(_r, 'back_edge_block', None) is not None:
+                        _true_body.add(_r.back_edge_block)
+                    _lrbs.append((_true_body, _e))
         for _or in (boolop_regions or []) + (ternary_regions or []):
             if hasattr(_or, 'blocks') and _or.entry:
                 for _ob in _or.blocks:
                     if _ob != _or.entry:
                         _boolop_ternary_blocks[_ob] = _or
         if _lre:
-            _if_in_loop = any(block in _lb for _lb, _le in _lrbs)
+            # [R30-24 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（归约顺序）：
+            # _if_in_loop 判定必须基于循环真实体（body_blocks + condition_block +
+            # header_block + back_edge_block），而非 LoopRegion.blocks（含
+            # else_blocks 即 post-loop 代码）。当 if 条件块仅在 else_blocks 中
+            #（post-loop if）时，if 位于循环之后，不是循环体内嵌套 if。此时若
+            # 误判为 in-loop，else 分支过滤器（仅保留 body_blocks 或 exit-loop
+            # 块）会移除 post-loop if 的 else 分支。典型场景（build_future_fill_time）:
+            #   for ...: ...
+            #   if total_dts:              # block 2660, in LoopRegion else_blocks
+            #       total_dts.sort()
+            #   else:                      # block 2746, NOT in loop body → filtered
+            #       total_dts = pandas.to_datetime([])
+            # 与 R30-21（_identify_conditional_regions 中的同类过滤）保持一致：
+            # 用 body_blocks + condition_block 判定 in-loop，排除 else_blocks。
+            def _find_containing_loop_body(blk):
+                for _r in self._filter_regions(list(self.block_to_region.values()), LoopRegion):
+                    if blk not in _r.blocks:
+                        continue
+                    _true_body = set(_r.body_blocks)
+                    if _r.condition_block is not None:
+                        _true_body.add(_r.condition_block)
+                    if getattr(_r, 'header_block', None) is not None:
+                        _true_body.add(_r.header_block)
+                    if getattr(_r, 'back_edge_block', None) is not None:
+                        _true_body.add(_r.back_edge_block)
+                    if blk in _true_body:
+                        return _r
+                return None
+            _containing_loop_r30_24 = _find_containing_loop_body(block)
+            _if_in_loop = _containing_loop_r30_24 is not None
             if not _if_in_loop:
                 then_blocks = [b for b in then_blocks if b in _lre or not any(b in _lb and b != _le for _lb, _le in _lrbs)]
                 else_blocks = [b for b in else_blocks if b in _lre or not any(b in _lb and b != _le for _lb, _le in _lrbs)]
@@ -11926,11 +11971,9 @@ RegionType 枚举值: RegionType.ASSERT
                                or b not in _boolop_ternary_blocks
                                or b in _lre]
             else:
-                _loop_region = None
-                for _r in self._filter_regions(list(self.block_to_region.values()), LoopRegion):
-                    if block in _r.blocks:
-                        _loop_region = _r
-                        break
+                # [R30-24 fix] 使用上方 _find_containing_loop_body 的结果，避免
+                # 误选 block 仅在 else_blocks 中的 LoopRegion（post-loop if 场景）。
+                _loop_region = _containing_loop_r30_24
                 if _loop_region:
                     _loop_body_only = set(_loop_region.body_blocks)
                     if _loop_region.condition_block:

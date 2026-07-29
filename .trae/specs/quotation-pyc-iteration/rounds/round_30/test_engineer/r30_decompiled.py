@@ -285,7 +285,8 @@ def one_prod_to_dataframe(data, prod_code, data_type=None):
             if time_index != i:
                 columns.append(get_real_param(item))
             i = i + 1
-    columns = ['open', 'close', 'high', 'low', 'volume', 'money']
+    else:
+        columns = ['open', 'close', 'high', 'low', 'volume', 'money']
     return pandas.DataFrame(df, columns=columns, index=index)
 def kline_to_dataframe(data, prod_code):
     return one_prod_to_dataframe(data, prod_code, 'kline')
@@ -420,21 +421,21 @@ def build_future_fill_time(suffix, typet, start, end):
                     total_dts.append(today + item)
         elif typet == 4:
             if suffix == 'T.CCFX':
-                market_time = {'10:00:00', '14:30:00', '11:00:00', '14:00:00', '11:30:00', '10:30:00', '15:15:00', '15:00:00', '13:30:00'}
+                market_time = {'11:00:00', '14:00:00', '10:00:00', '13:30:00', '15:15:00', '10:30:00', '15:00:00', '11:30:00', '14:30:00'}
             elif suffix in ('XZCE', 'XDCE', 'XSGE'):
-                market_time = {'10:45:00', '10:00:00', '14:15:00', '09:30:00', '11:15:00', '15:00:00', '14:45:00', '13:45:00'}
+                market_time = {'14:15:00', '09:30:00', '11:15:00', '10:00:00', '10:45:00', '14:45:00', '15:00:00', '13:45:00'}
             else:
-                market_time = {'10:00:00', '14:30:00', '11:00:00', '14:00:00', '11:30:00', '10:30:00', '15:00:00', '13:30:00'}
+                market_time = {'11:00:00', '14:00:00', '10:00:00', '13:30:00', '10:30:00', '15:00:00', '11:30:00', '14:30:00'}
             for today in trade_days:
                 for item in market_time:
                     total_dts.append(today + ' ' + item)
         elif typet == 13:
             if suffix == 'T.CCFX':
-                market_time = {'15:15:00', '15:00:00', '11:30:00'}
+                market_time = {'11:30:00', '15:15:00', '15:00:00'}
             elif suffix in ('XZCE', 'XDCE', 'XSGE'):
                 market_time = {'11:15:00', '15:00:00'}
             else:
-                market_time = {'15:15:00', '15:00:00', '11:30:00'}
+                market_time = {'11:30:00', '15:15:00', '15:00:00'}
             for today in trade_days:
                 for item in market_time:
                     total_dts.append(today + ' ' + item)
@@ -450,7 +451,8 @@ def build_future_fill_time(suffix, typet, start, end):
     if total_dts:
         total_dts.sort()
         total_dts = pandas.to_datetime(total_dts)
-    total_dts = pandas.to_datetime([])
+    else:
+        total_dts = pandas.to_datetime([])
     return total_dts
 def change_future_real_date(stock, start, end):
     future_param = get_future_param(stock)
@@ -1065,7 +1067,8 @@ def get_date_and_count(query_date, count, candle_period):
         start_date = this_quater_start_date
         if month in (10, 11, 12):
             start_date = str(year) + str(month) + '01'
-        start_date = str(year) + '0' + str(month) + '01'
+        else:
+            start_date = str(year) + '0' + str(month) + '01'
     return (start_date, query_date)
 @lru_cache(None)
 def valuation_new(security, date=None, fields=None):
@@ -1126,7 +1129,8 @@ def valuation_new(security, date=None, fields=None):
                 return code
             returnDf['secu_code'] = returnDf.apply(lambda x: get_IQE_code(x['secu_code']), axis=1)
             return ({'error_no': 0, 'error_info': ''}, returnDf)
-        return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
+        else:
+            return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
     except BaseException as x:
         system_log.error(get_traceback_message())
         raise x
@@ -1179,7 +1183,8 @@ def valuation(security, date=None, fields=None):
                 data_out.append(i)
             returnDf = pandas.DataFrame(data_out)
             return ({'error_no': 0, 'error_info': ''}, returnDf)
-        return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
+        else:
+            return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
     except BaseException as x:
         system_log.error(get_traceback_message())
         raise x
