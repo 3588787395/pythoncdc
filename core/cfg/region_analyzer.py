@@ -16271,9 +16271,16 @@ RegionType 枚举值: RegionType.ASSERT
                 # 双角色块检查：块是已存在 BoolOpRegion 的 merge_block
                 # 且不在其 op_chain 中、自身以 SHORT_CIRCUIT_JUMP_OPS 结尾。
                 _last_for_dual = block.get_last_instruction()
+                # [R6 fix] 区域归约算法原则 3（嵌套即抽象节点）+ 原则 4（入口引用语义）：
+                # 双角色块（BoolOpRegion.merge_block 同时是新 BoolOp 链起始）原仅覆盖
+                # SHORT_CIRCUIT_JUMP_OPS（JUMP_IF_*_OR_POP）。但 `A and B or C` 三元
+                # 模式下，merge 块尾部以 POP_JUMP_FORWARD_IF_FALSE 开始下一个三元条件
+                # （FORWARD_CONDITIONAL_JUMP_OPS）。若不放宽，紧随前一 BoolOp 归约后的
+                # 第二个 and/or 三元无法被识别（如 fill_minute_or_day_blank 中两条
+                # strptime(... or 'NNNN') 语句，第二条被吞、'1530' 泄漏为杂散字符串）。
                 _is_dual_role = (
                     _last_for_dual is not None
-                    and _last_for_dual.opname in SHORT_CIRCUIT_JUMP_OPS
+                    and _last_for_dual.opname in (SHORT_CIRCUIT_JUMP_OPS | FORWARD_CONDITIONAL_JUMP_OPS)
                     and existing.merge_block is block
                     and block not in {b for b, _ in existing.op_chain}
                 )
@@ -16938,6 +16945,20 @@ RegionType 枚举值: RegionType.ASSERT
             if _os.environ.get('R23N21_DEBUG'):
                 import sys as _sys
                 print(f"[R23N21-DBG] start_block={start_block.start_offset} _sb_last={_sb_last.opname} _cond_start_offset={_cond_start_offset} _sb_has_body={_sb_has_body}", file=_sys.stderr)
+            # [R6 fix] 区域归约算法原则 3（嵌套即抽象节点）+ 原则 4（入口引用语义）：
+            # 双角色块（start_block 是已存在 BoolOpRegion 的 merge_block，且不在其
+            # op_chain 中）——块内的 STORE_*/BINARY_OP 是前一 BoolOp 归约后的续接
+            # 代码（如 ternary 完成赋值 + 下一语句前缀），不是独立 body 语句。此时
+            # 不应因 _sb_has_body 跳过，否则第二个 and/or 三元（条件位于该 merge 块
+            # 尾部）无法识别为 BoolOpRegion（fill_minute_or_day_blank 的 source_end
+            # = strptime(... or '1530') 被吞）。与 _detect_boolop_chain_start 的
+            # 双角色放行（FORWARD_CONDITIONAL_JUMP_OPS）配套。
+            if _sb_has_body:
+                _existing_dual_br = self.block_to_region.get(start_block)
+                if (isinstance(_existing_dual_br, BoolOpRegion)
+                        and getattr(_existing_dual_br, 'merge_block', None) is start_block
+                        and start_block not in {b for b, _ in (_existing_dual_br.op_chain or [])}):
+                    _sb_has_body = False
             if _sb_has_body:
                 return None
         import os as _os
@@ -16963,7 +16984,18 @@ RegionType 枚举值: RegionType.ASSERT
             if current in self.block_to_region:
                 existing_reg = self.block_to_region.get(current)
                 if isinstance(existing_reg, BoolOpRegion):
-                    break
+                    # [R6 fix] 区域归约算法原则 3（嵌套即抽象节点）+ 原则 4（入口引用语义）：
+                    # 双角色起始块——start_block 是已存在 BoolOpRegion 的 merge_block
+                    # 且不在其 op_chain 中时，它同时是前一 BoolOp 的归并点与新链的入口，
+                    # 允许作为新链起始继续遍历（与 _detect_boolop_chain_start 的双角色
+                    # 放行、_sb_has_body 旁路配套）。仅对非起始块或在 op_chain 内的块
+                    # 保持 break，避免与已存在 BoolOpRegion 块重叠。
+                    if (current is start_block
+                            and existing_reg.merge_block is current
+                            and current not in {b for b, _ in (existing_reg.op_chain or [])}):
+                        pass
+                    else:
+                        break
                 # [R4 Fix 1] assert not (or-chain) → and flip:
                 # _identify_assert_regions runs BEFORE _identify_boolop_regions
                 # and registers all AssertRegion blocks (entry,

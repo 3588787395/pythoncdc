@@ -8758,8 +8758,16 @@ AST 映射规则:
         
         return None
 
-    def _if_extract_cond_instructions(self, cond_block: 'BasicBlock', region: IfRegion) -> Tuple[List[Dict], List]:
-        """提取条件块的前置语句和条件指令"""
+    def _if_extract_cond_instructions(self, cond_block: 'BasicBlock', region: IfRegion,
+                                       boolop_merge_target: Optional[str] = None) -> Tuple[List[Dict], List]:
+        """提取条件块的前置语句和条件指令
+
+        [R6 fix] boolop_merge_target: 当 cond_block 同时是某 BoolOpRegion 的
+        merge_block，且该 BoolOpRegion 已由 _generate_boolop 生成赋值时，传入
+        value_target（如 'y'）。本函数将跳过 cond_block 内该 value_target 的
+        STORE_* 及其之前所有指令（已被 BoolOpRegion 消费），仅从该 STORE_* 之后
+        提取 pre_stmts（如 z = b[...]）和 cond_instrs（如 len(z) > 0）。
+        """
         pre_stmts, pre_instrs, pre_seen_store, pre_unpack_info, import_pending_store = [], [], False, None, False
         # [R23 Bug1 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（父引用子入口）：
         # 当 cond_block 同时是某个 TernaryRegion 的 merge_block（merge_context='store'）
@@ -8775,7 +8783,21 @@ AST 映射规则:
                     and getattr(_r, 'merge_context', None) in ('store', 'return')):
                 _cond_block_is_ternary_merge = True
                 break
-        for instr in cond_block.instructions:
+        # [R6 fix] 当 boolop_merge_target 非空时，cond_block 的前段（直到该
+        # value_target 的 STORE_* 及其之前所有指令）已被 BoolOpRegion 消费为
+        # 完整赋值表达式。仅处理该 STORE_* 之后的指令，提取后续 pre_stmts
+        # （如 z = b[...]）和真正的 if 条件（如 len(z) > 0）。
+        _iter_instrs = list(cond_block.instructions)
+        if boolop_merge_target is not None:
+            _skip_idx = -1
+            for _i, _instr in enumerate(_iter_instrs):
+                if (_instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
+                        and _instr.argval == boolop_merge_target):
+                    _skip_idx = _i
+                    break
+            if _skip_idx >= 0:
+                _iter_instrs = _iter_instrs[_skip_idx + 1:]
+        for instr in _iter_instrs:
             if instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
                 continue
             if instr.opname == 'POP_TOP':
@@ -8905,9 +8927,23 @@ AST 映射规则:
                 pre_instrs = []
                 continue
             pre_instrs.append(instr)
+        # [R6 fix] 当 boolop_merge_target 非空时，cond_block 的前段（已被
+        # BoolOpRegion 消费）已通过 _iter_instrs 切片排除。但 _iter_instrs
+        # 中仍可能包含后续 STORE_* 指令（如 z = b[...]），这些指令是 pre_stmt
+        # 的一部分，不是 if 条件。cond_instrs 应从最后一个 STORE_* 之后开始
+        # 收集，避免把赋值表达式误当作 if 条件（如把 `len(b[8:]) == 4 and
+        # b[8:] or '1530'` 当作 `if len(z) > 0:` 的条件）。
+        _cond_iter_source = _iter_instrs
+        if boolop_merge_target is not None:
+            _last_store_in_iter = -1
+            for _i, _instr in enumerate(_iter_instrs):
+                if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                    _last_store_in_iter = _i
+            if _last_store_in_iter >= 0:
+                _cond_iter_source = _iter_instrs[_last_store_in_iter + 1:]
         cond_instrs = []
         prev_was_copy = False
-        for instr in cond_block.instructions:
+        for instr in _cond_iter_source:
             if instr.opname in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL'):
                 continue
             if (instr.opname in FORWARD_JUMP_OPS or instr.opname in BACKWARD_JUMP_OPS) and instr.opname not in NONE_CHECK_OPS:
@@ -10066,7 +10102,63 @@ AST 映射规则:
         self._or_then_block = None
         self._or_else_block = None
         self._or_rhs_block = None
-        pre_stmts, cond_instrs = self._if_extract_cond_instructions(cond_block, region)
+        # [R6 fix] 区域归约算法原则 3（嵌套即抽象节点）+ 原则 4（入口引用语义）：
+        # 当 IfRegion 的 cond_block 同时是某 BoolOpRegion 的 merge_block，且该
+        # BoolOpRegion 的 enclosing 不是本 IfRegion（即 BoolOpRegion 在本 IfRegion
+        # 之外，merge_block 是其赋值目标），cond_block 的前段属于 BoolOpRegion 的
+        # 赋值表达式（BINARY_OP/CALL/STORE_*），不应被 IfRegion 当作 pre_stmt 或
+        # cond_instrs 提取。先调用 _generate_boolop 生成完整赋值（如
+        # `y = g(b[:8] + (len(b[8:]) == 4 and b[8:] or '1530'), '%Y%m%d%H%M')`），
+        # 再从 cond_block 的 STORE_* 之后提取真正的 if 条件（如 `len(z) > 0`）。
+        # 否则 BoolOpRegion 的赋值表达式丢失（fill_minute_or_day_blank 的 source_end
+        # = strptime(... or '1530') 被吞），且 '1530' 错误归为 if 条件。
+        _boolop_merge_owner = None
+        for _r in self.regions:
+            if (not isinstance(_r, BoolOpRegion)
+                    or getattr(_r, 'merge_block', None) is not cond_block
+                    or _r is region
+                    or id(_r) in self._generated_regions
+                    or id(_r) in self._generating_regions
+                    or _r.entry is None
+                    or _r.entry is cond_block):
+                continue
+            # BoolOpRegion 的 enclosing 不能是本 IfRegion（否则应是 outer condition
+            # 走 _is_outer_condition 路径，由 _generate_boolop 自身处理）。
+            _bo_enc = _r.find_enclosing_parent((IfRegion,))
+            if _bo_enc is region:
+                continue
+            # BoolOpRegion 必须有 value_target（独立赋值模式），且其 merge_block
+            # 内有 STORE_* 指令消费其表达式结果。
+            if not _r.value_target:
+                continue
+            _has_store_in_merge = any(
+                i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
+                for i in cond_block.instructions
+            )
+            if not _has_store_in_merge:
+                continue
+            _boolop_merge_owner = _r
+            break
+        pre_stmts, cond_instrs = [], []
+        if _boolop_merge_owner is not None:
+            _bo_result = self._generate_boolop(_boolop_merge_owner)
+            if _bo_result:
+                if isinstance(_bo_result, list):
+                    pre_stmts.extend(_bo_result)
+                else:
+                    pre_stmts.append(_bo_result)
+            self._generated_regions.add(id(_boolop_merge_owner))
+            # BoolOpRegion 已生成完整赋值（含 merge_block 内 BINARY_OP/CALL/
+            # STORE_*）。让 _if_extract_cond_instructions 跳过该赋值段，
+            # 仅从赋值 STORE_* 之后提取后续 pre_stmts（如 z = b[...]）和
+            # 真正的 if 条件（如 len(z) > 0）。
+            _bo_pre, _bo_cond = self._if_extract_cond_instructions(
+                cond_block, region,
+                boolop_merge_target=_boolop_merge_owner.value_target)
+            pre_stmts.extend(_bo_pre)
+            cond_instrs = _bo_cond
+        else:
+            pre_stmts, cond_instrs = self._if_extract_cond_instructions(cond_block, region)
         # [R13-N1 fix] 区域归约算法原则 4（父引用子入口）+ 原则 2（每块唯一归属）：
         # 当 IfRegion 的 entry 与 condition_block 不同（BoolOpRegion 子节点模式，
         # 复合 `and`/`or` 条件），entry 块包含前置语句（如 `a = day1.isocalendar()`）
@@ -11518,11 +11610,27 @@ AST 映射规则:
         # 由 BoolOpRegion 整体重建（BoolOp(or, [x, await g()])），而非由
         # _try_build_await_condition 截断为纯 `await g()`。先检查 BoolOpRegion
         # 归属，跳过 await 截断，让后续 BoolOpRegion 路径处理。
+        # [R6 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3（嵌套即抽象节点）：
+        # 当 cond_block 同时是某 BoolOpRegion 的 merge_block（如
+        # `y = g(... or '1530'); if len(z) > 0:` 中 y 赋值后的 if 入口块），
+        # 且该 BoolOpRegion 已被 _generate_boolop 生成（_generated_regions）
+        # 时，cond_block 仅是 BoolOpRegion 的赋值归并点，本 IfRegion 引用的是
+        # cond_block 内 STORE_* 之后的真正 if 条件（由 cond_instrs 传入）。
+        # 不应走 BoolOpRegion 路径把 '1530' 错当作 if 条件。
         _cond_in_boolop = False
         for _r in self.regions:
             if (isinstance(_r, BoolOpRegion)
                     and cond_block in _r.blocks
                     and len(_r.op_chain) >= 2):
+                # [R6 fix] 排除已被 _generate_boolop 生成的 BoolOpRegion
+                # （其 merge_block 现在服务于本 IfRegion 的真实条件）
+                if id(_r) in self._generated_regions:
+                    continue
+                # [R6 fix] 排除 merge_block == cond_block 但 entry != cond_block
+                # 的 BoolOpRegion（赋值归并点场景，非 outer condition 场景）
+                if (getattr(_r, 'merge_block', None) is cond_block
+                        and _r.entry is not cond_block):
+                    continue
                 _cond_in_boolop = True
                 break
         if not _cond_in_boolop:
@@ -11873,6 +11981,19 @@ AST 映射规则:
                             continue
                     boolop_region_for_cond = r
                     break
+        # [R6 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3（嵌套即抽象节点）：
+        # 当 boolop_region_for_cond 的 merge_block == cond_block 但 entry !=
+        # cond_block（赋值归并点场景：cond_block 同时是某 BoolOpRegion 的
+        # merge_block 和本 IfRegion 的 cond_block），且该 BoolOpRegion 已被
+        # _generate_boolop 生成时，cond_block 内的 if 条件是 STORE_* 之后的
+        # 独立表达式（由 cond_instrs 传入），不应回退到 BoolOpRegion 的
+        # _build_boolop_expression（否则 '1530' 被错当作 if 条件）。强制走
+        # cond_instrs 路径重建 if 条件。
+        if (isinstance(boolop_region_for_cond, BoolOpRegion)
+                and getattr(boolop_region_for_cond, 'merge_block', None) is cond_block
+                and boolop_region_for_cond.entry is not cond_block
+                and id(boolop_region_for_cond) in self._generated_regions):
+            boolop_region_for_cond = None
         # [Cluster 4] Chained-compare phantom BoolOpRegion suppression.
         # When the IfRegion carries chained_compare_blocks, the chained
         # compare's short-circuit jumps (POP_JUMP_IF_FALSE per middle
