@@ -11,7 +11,7 @@ DECOMPILED = '/tmp/r6_decompiled.py'
 OUT_DIR = '/tmp/r6_out'
 OUT_JSON = OUT_DIR + '/bc_results.json'
 
-SKIP_OPS = ('EXTENDED_ARG', 'CACHE')
+SKIP_OPS = ('EXTENDED_ARG', 'CACHE', 'NOP')
 
 
 def get_instr_list(co: types.CodeType):
