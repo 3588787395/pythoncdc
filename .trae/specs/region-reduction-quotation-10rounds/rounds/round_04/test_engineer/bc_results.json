@@ -1,0 +1,500 @@
+{
+  "summary": {
+    "pyc": "/workspace/quotation.pyc",
+    "decompiled": "/tmp/r4_decompiled.py",
+    "compile_ok": true,
+    "total": 150,
+    "matched": 141,
+    "mismatched": 9,
+    "missing": 0,
+    "success_rate_pct": 94.0
+  },
+  "results": {
+    "<module>": {
+      "status": "len_diff",
+      "orig_len": 1082,
+      "new_len": 1023,
+      "diff": -59
+    },
+    "getLogger": {
+      "status": "match"
+    },
+    "getLogger.Void": {
+      "status": "match"
+    },
+    "getLogger.Void.__getattr__": {
+      "status": "match"
+    },
+    "getLogger.Void.__setattr__": {
+      "status": "match"
+    },
+    "getLogger.Void.__call__": {
+      "status": "match"
+    },
+    "getLogger.Void.__repr__": {
+      "status": "match"
+    },
+    "get_quote": {
+      "status": "match"
+    },
+    "get_real_param": {
+      "status": "match"
+    },
+    "get_open_param": {
+      "status": "match"
+    },
+    "get_real_exrights_param": {
+      "status": "match"
+    },
+    "get_token": {
+      "status": "match"
+    },
+    "api_get": {
+      "status": "match"
+    },
+    "api_get_financial": {
+      "status": "match"
+    },
+    "get_kline": {
+      "status": "match"
+    },
+    "get_holiday_online": {
+      "status": "match"
+    },
+    "one_prod_to_dataframe": {
+      "status": "len_diff",
+      "orig_len": 444,
+      "new_len": 455,
+      "diff": 11
+    },
+    "kline_to_dataframe": {
+      "status": "match"
+    },
+    "datetimeindex_astype": {
+      "status": "match"
+    },
+    "datetimeindex_astype.<lambda>": {
+      "status": "match"
+    },
+    "fill_minute_or_day_blank": {
+      "status": "len_diff",
+      "orig_len": 241,
+      "new_len": 199,
+      "diff": -42
+    },
+    "load_minute_or_day_kline": {
+      "status": "match"
+    },
+    "get_minute_or_day_fill_time": {
+      "status": "match"
+    },
+    "build_future_fill_time": {
+      "status": "instr_diff",
+      "orig_len": 671,
+      "first_diff_idx": 226,
+      "orig_at": [
+        1050,
+        "JUMP_FORWARD",
+        2660
+      ],
+      "new_at": [
+        1050,
+        "JUMP_FORWARD",
+        2586
+      ]
+    },
+    "build_future_fill_time.<listcomp>": {
+      "status": "match"
+    },
+    "change_future_real_date": {
+      "status": "match"
+    },
+    "filter_duplicated_date": {
+      "status": "match"
+    },
+    "build_current_period_df": {
+      "status": "match"
+    },
+    "build_current_period_df.<lambda>": {
+      "status": "match"
+    },
+    "load_bars_from_hundsun": {
+      "status": "len_diff",
+      "orig_len": 501,
+      "new_len": 327,
+      "diff": -174
+    },
+    "load_get_price": {
+      "status": "len_diff",
+      "orig_len": 226,
+      "new_len": 201,
+      "diff": -25
+    },
+    "obtain_date": {
+      "status": "match"
+    },
+    "get_str_data": {
+      "status": "len_diff",
+      "orig_len": 317,
+      "new_len": 269,
+      "diff": -48
+    },
+    "_is_same_type_date": {
+      "status": "match"
+    },
+    "change_his_to_forward": {
+      "status": "match"
+    },
+    "change_his_to_backward": {
+      "status": "len_diff",
+      "orig_len": 578,
+      "new_len": 522,
+      "diff": -56
+    },
+    "get_exrights_data": {
+      "status": "match"
+    },
+    "load_get_exrights": {
+      "status": "match"
+    },
+    "load_get_exrights.choose_data_from_dict": {
+      "status": "match"
+    },
+    "load_get_index_stocks": {
+      "status": "match"
+    },
+    "load_get_industry_stocks": {
+      "status": "match"
+    },
+    "get_trading_day": {
+      "status": "match"
+    },
+    "get_all_trades_days": {
+      "status": "match"
+    },
+    "get_trade_days": {
+      "status": "match"
+    },
+    "get_price": {
+      "status": "match"
+    },
+    "get_history": {
+      "status": "match"
+    },
+    "get_date_and_count": {
+      "status": "len_diff",
+      "orig_len": 714,
+      "new_len": 687,
+      "diff": -27
+    },
+    "valuation_new": {
+      "status": "match"
+    },
+    "valuation_new.get_IQE_code": {
+      "status": "match"
+    },
+    "valuation_new.<lambda>": {
+      "status": "match"
+    },
+    "valuation": {
+      "status": "match"
+    },
+    "balance_statement": {
+      "status": "match"
+    },
+    "income_statement": {
+      "status": "match"
+    },
+    "cashflow_statement": {
+      "status": "match"
+    },
+    "growth_ability": {
+      "status": "match"
+    },
+    "profit_ability": {
+      "status": "match"
+    },
+    "eps": {
+      "status": "match"
+    },
+    "cash_collection_ability": {
+      "status": "match"
+    },
+    "operating_ability": {
+      "status": "match"
+    },
+    "debt_paying_ability": {
+      "status": "match"
+    },
+    "share_change": {
+      "status": "match"
+    },
+    "get_balance_statement": {
+      "status": "match"
+    },
+    "get_income_statement": {
+      "status": "match"
+    },
+    "get_cashflow_statement": {
+      "status": "match"
+    },
+    "get_growth_ability": {
+      "status": "match"
+    },
+    "get_profit_ability": {
+      "status": "match"
+    },
+    "get_eps": {
+      "status": "match"
+    },
+    "get_cash_collection_ability": {
+      "status": "match"
+    },
+    "get_operating_ability": {
+      "status": "match"
+    },
+    "get_debt_paying_ability": {
+      "status": "match"
+    },
+    "get_share_change": {
+      "status": "match"
+    },
+    "get_valuation": {
+      "status": "match"
+    },
+    "get_valuation_new": {
+      "status": "match"
+    },
+    "isVaildDate": {
+      "status": "match"
+    },
+    "get_exrights": {
+      "status": "match"
+    },
+    "check_index_code": {
+      "status": "match"
+    },
+    "get_index_stocks": {
+      "status": "match"
+    },
+    "get_Ashares": {
+      "status": "match"
+    },
+    "get_Bshares": {
+      "status": "match"
+    },
+    "get_STshares": {
+      "status": "match"
+    },
+    "get_stock_status": {
+      "status": "match"
+    },
+    "check_industry_code": {
+      "status": "match"
+    },
+    "get_industry_stocks": {
+      "status": "match"
+    },
+    "check_stock": {
+      "status": "match"
+    },
+    "check_stocks": {
+      "status": "match"
+    },
+    "check_frequency": {
+      "status": "match"
+    },
+    "symbol": {
+      "status": "match"
+    },
+    "dict_to_dataframe": {
+      "status": "match"
+    },
+    "multi_prod_to_dataframe": {
+      "status": "match"
+    },
+    "market_list_to_dataframe": {
+      "status": "match"
+    },
+    "tick_to_dataframe": {
+      "status": "match"
+    },
+    "trend_to_dataframe": {
+      "status": "match"
+    },
+    "trend5day_to_dataframe": {
+      "status": "match"
+    },
+    "real_to_dataframe": {
+      "status": "match"
+    },
+    "get_market_list": {
+      "status": "match"
+    },
+    "get_market_list.<listcomp>": {
+      "status": "match"
+    },
+    "get_tick": {
+      "status": "match"
+    },
+    "get_block_info": {
+      "status": "match"
+    },
+    "get_market_detail": {
+      "status": "match"
+    },
+    "get_market_detail_online": {
+      "status": "match"
+    },
+    "get_klines": {
+      "status": "match"
+    },
+    "get_real": {
+      "status": "match"
+    },
+    "get_trend": {
+      "status": "match"
+    },
+    "get_trend5day": {
+      "status": "match"
+    },
+    "convert_to_list": {
+      "status": "match"
+    },
+    "get_fields": {
+      "status": "match"
+    },
+    "get_date_index": {
+      "status": "match"
+    },
+    "get_date_index.<lambda>": {
+      "status": "match"
+    },
+    "fill_missing_stock_data": {
+      "status": "match"
+    },
+    "date_convert": {
+      "status": "match"
+    },
+    "get_open_data": {
+      "status": "match"
+    },
+    "get_fundamentals": {
+      "status": "match"
+    },
+    "get_fundflow_day_single": {
+      "status": "match"
+    },
+    "get_fundflow_day": {
+      "status": "match"
+    },
+    "get_block_stocks": {
+      "status": "match"
+    },
+    "get_stock_blocks": {
+      "status": "match"
+    },
+    "get_stock_exrights": {
+      "status": "match"
+    },
+    "get_valuation_info": {
+      "status": "match"
+    },
+    "get_valuation_info.<lambda>": {
+      "status": "match"
+    },
+    "get_valuation_new_info": {
+      "status": "match"
+    },
+    "get_valuation_new_info.<lambda>": {
+      "status": "match"
+    },
+    "get_fundamentals_daily_info": {
+      "status": "match"
+    },
+    "get_fundamentals_daily_info.<lambda>": {
+      "status": "match"
+    },
+    "get_stock_name": {
+      "status": "match"
+    },
+    "get_stock_info": {
+      "status": "match"
+    },
+    "get_merged_data": {
+      "status": "match"
+    },
+    "is_ST_stock_real": {
+      "status": "match"
+    },
+    "is_ST_stock": {
+      "status": "match"
+    },
+    "is_halt_stock_real": {
+      "status": "match"
+    },
+    "is_halt_stock": {
+      "status": "match"
+    },
+    "get_industries": {
+      "status": "match"
+    },
+    "get_fundflow_order_rank": {
+      "status": "match"
+    },
+    "get_user_name": {
+      "status": "match"
+    },
+    "get_opt_objects": {
+      "status": "match"
+    },
+    "get_opt_last_dates": {
+      "status": "match"
+    },
+    "get_opt_contracts": {
+      "status": "match"
+    },
+    "get_contract_info": {
+      "status": "match"
+    },
+    "get_option_info": {
+      "status": "match"
+    },
+    "get_cb_info": {
+      "status": "match"
+    },
+    "get_cb_calender_info": {
+      "status": "match"
+    },
+    "get_cb_time_info": {
+      "status": "match"
+    },
+    "get_trend_data": {
+      "status": "match"
+    },
+    "get_reits_list": {
+      "status": "match"
+    },
+    "check_limit": {
+      "status": "match"
+    },
+    "check_jq_code": {
+      "status": "match"
+    },
+    "trans_jq_code": {
+      "status": "match"
+    },
+    "get_current_kline_count": {
+      "status": "match"
+    },
+    "filter_stock_by_status": {
+      "status": "match"
+    },
+    "get_trading_day_by_date": {
+      "status": "match"
+    },
+    "get_dominant_contract": {
+      "status": "match"
+    }
+  }
+}

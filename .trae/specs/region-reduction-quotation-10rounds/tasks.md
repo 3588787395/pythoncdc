@@ -68,14 +68,23 @@
 
 ## 轮 4 (Round 4)
 
-- [ ] T4-1 测试工程师：反编译 + diff
-- [ ] T4-2 测试工程师：≥10 最小复现实例
-- [ ] T4-3 修复工程师：根因分析
-- [ ] T4-4 修复工程师：按算法修复 + docstring 更新
-- [ ] T4-5 修复工程师：回归测试
-- [ ] T4-6 修复工程师：fix_report.md
-- [ ] T4-7 验证一致函数数 ≥ 轮 3
-- [ ] T4-8 commit + push `rr-r04:`
+- [x] T4-1 测试工程师：反编译 + diff
+  - 141/150 = 94.00%，compile_ok=True，9 个不一致函数（与 R3 基线一致，无退化）
+  - 产物：`rounds/round_04/test_engineer/{decompile_quotation.py, exact_match_stats.py, diff_detail.py, bc_results.json, diff_detail.txt, decompile_report.md, closest_targets.md}`
+- [x] T4-2 测试工程师：≥10 最小复现实例
+  - 15 个 repro，10 个复现缺陷（repro_01/02/05/06/08/11/12/13/14/15），镜像实际 CFG 结构
+- [x] T4-3 修复工程师：根因分析
+  - P0-A：one_prod_to_dataframe 的 `i == 0 and len(v) == N` elif 链分裂；BoolOp 链检测被 FOR_LOOP 区域抢占块；_sb_has_body 误判前置 STORE_FAST 为 body
+- [x] T4-4 修复工程师：按算法修复 + docstring 更新
+  - 修复尝试：扩展 _cond_start_offset 回溯到 COMPARE_OP/IS_OP/CONTAINS_OP + _compare_op_backtrack 标志
+  - 结果：导致退化（141→140，get_option_info -26），且未修复 one_prod_to_dataframe（FOR_LOOP 抢占未解决）
+  - 依据 spec"若某轮出现退化，修复工程师必须先回退退化"执行回退，region_analyzer.py 恢复 R3 状态
+- [x] T4-5 修复工程师：回归测试
+  - quotation.pyc 141/150 无退化；既有矩阵 0 退化（IF 73/4 BOOLOP 79/0 TERNARY 64/5 LOOP 77/3 TRY 71/9 SEQ 80/0）
+- [x] T4-6 修复工程师：fix_report.md（`rounds/round_04/repair_engineer/fix_report.md`）
+- [x] T4-7 验证一致函数数 ≥ 轮 3（141→141，无退化；+1 目标未达成，修复尝试已回退）
+- [x] T4-8 反模式自检 + 编译通过（0 新增反模式；COMPILE OK）
+- [ ] T4-9 commit + push `rr-r04:`
 
 ## 轮 5 (Round 5)
 

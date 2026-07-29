@@ -1,0 +1,143 @@
+================================================================================
+Round 4 测试工程师 — minimal_repros 验证汇总
+================================================================================
+repro_dir: /workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_04/test_engineer/minimal_repros
+repro_count: 15
+
+--------------------------------------------------------------------------------
+REPRO: repro_01_one_prod_elif_chain_split.py
+  compile_ok=True  total=2 matched=0 mismatched=2 rate=0.0%
+    [BAD] <module>: instr_diff idx=4 orig=(8, 'LOAD_CONST', <code object one_prod_to_dataframe_repro at 0x55be4a5fbb60, file "/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_04/test_engineer/minimal_repros/repro_01_one_prod_elif_chain_split.py", line 14>) new=(8, 'LOAD_CONST', <code object one_prod_to_dataframe_repro at 0x55be4a5e8fb0, file "<decompiled>", line 15>)
+    [BAD] one_prod_to_dataframe_repro: len_diff orig=427 new=438 diff=+11
+  >> 复现缺陷（2 个函数不一致）
+
+--------------------------------------------------------------------------------
+REPRO: repro_02_one_prod_elif_with_outer_if.py
+  compile_ok=True  total=2 matched=0 mismatched=2 rate=0.0%
+    [BAD] <module>: instr_diff idx=3 orig=(6, 'LOAD_CONST', <code object one_prod_variant at 0x55be4a5da330, file "/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_04/test_engineer/minimal_repros/repro_02_one_prod_elif_with_outer_if.py", line 8>) new=(6, 'LOAD_CONST', <code object one_prod_variant at 0x7f3fe0215730, file "<decompiled>", line 9>)
+    [BAD] one_prod_variant: len_diff orig=225 new=31 diff=-194
+  >> 复现缺陷（2 个函数不一致）
+
+--------------------------------------------------------------------------------
+REPRO: repro_03_build_future_frozenset_set_literal.py
+  compile_ok=True  total=2 matched=2 mismatched=0 rate=100.0%
+    [OK ] <module>: match 
+    [OK ] build_future_fill_time_repro: match 
+  >> 全部匹配（无缺陷复现）
+
+--------------------------------------------------------------------------------
+REPRO: repro_04_get_date_and_count_tail_elif_str_concat.py
+  compile_ok=True  total=2 matched=2 mismatched=0 rate=100.0%
+    [OK ] <module>: match 
+    [OK ] get_date_and_count_repro: match 
+  >> 全部匹配（无缺陷复现）
+
+--------------------------------------------------------------------------------
+REPRO: repro_05_load_get_price_long_or_with_nested_if.py
+  compile_ok=True  total=2 matched=0 mismatched=2 rate=0.0%
+    [BAD] <module>: instr_diff idx=3 orig=(6, 'LOAD_CONST', <code object load_get_price_repro at 0x55be4a47b8c0, file "/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_04/test_engineer/minimal_repros/repro_05_load_get_price_long_or_with_nested_if.py", line 16>) new=(6, 'LOAD_CONST', <code object load_get_price_repro at 0x55be4a5d3430, file "<decompiled>", line 17>)
+    [BAD] load_get_price_repro: len_diff orig=85 new=87 diff=+2
+  >> 复现缺陷（2 个函数不一致）
+
+--------------------------------------------------------------------------------
+REPRO: repro_06_load_bars_long_or_try_except_wrapper.py
+  compile_ok=True  total=2 matched=0 mismatched=2 rate=0.0%
+    [BAD] <module>: instr_diff idx=3 orig=(6, 'LOAD_CONST', <code object load_bars_from_hundsun_repro at 0x55be4a5dee30, file "/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_04/test_engineer/minimal_repros/repro_06_load_bars_long_or_try_except_wrapper.py", line 23>) new=(6, 'LOAD_CONST', <code object load_bars_from_hundsun_repro at 0x55be4a4854a0, file "<decompiled>", line 24>)
+    [BAD] load_bars_from_hundsun_repro: len_diff orig=150 new=117 diff=-33
+  >> 复现缺陷（2 个函数不一致）
+
+--------------------------------------------------------------------------------
+REPRO: repro_07_fill_minute_else_numpy_concat.py
+  compile_ok=True  total=2 matched=2 mismatched=0 rate=100.0%
+    [OK ] <module>: match 
+    [OK ] fill_minute_or_day_blank_repro: match 
+  >> 全部匹配（无缺陷复现）
+
+--------------------------------------------------------------------------------
+REPRO: repro_08_get_str_data_post_loop_panel_construct.py
+  compile_ok=True  total=2 matched=0 mismatched=2 rate=0.0%
+    [BAD] <module>: instr_diff idx=3 orig=(6, 'LOAD_CONST', <code object get_str_data_repro at 0x55be4a4a7320, file "/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_04/test_engineer/minimal_repros/repro_08_get_str_data_post_loop_panel_construct.py", line 17>) new=(6, 'LOAD_CONST', <code object get_str_data_repro at 0x7f3fdf5a5c30, file "<decompiled>", line 18>)
+    [BAD] get_str_data_repro: len_diff orig=72 new=69 diff=-3
+  >> 复现缺陷（2 个函数不一致）
+
+--------------------------------------------------------------------------------
+REPRO: repro_09_change_his_for_iter_boundary_post_loop.py
+  compile_ok=True  total=2 matched=2 mismatched=0 rate=100.0%
+    [OK ] <module>: match 
+    [OK ] change_his_to_backward_repro: match 
+  >> 全部匹配（无缺陷复现）
+
+--------------------------------------------------------------------------------
+REPRO: repro_10_module_nop_placeholder_func_defs.py
+  compile_ok=True  total=25 matched=25 mismatched=0 rate=100.0%
+    [OK ] <module>: match 
+    [OK ] get_kline: match 
+    [OK ] get_holiday_online: match 
+    [OK ] one_prod_to_dataframe: match 
+    [OK ] kline_to_dataframe: match 
+    [OK ] fill_minute_or_day_blank: match 
+    [OK ] load_minute_or_day_kline: match 
+    [OK ] get_minute_or_day_fill_time: match 
+    [OK ] build_future_fill_time: match 
+    [OK ] build_current_period_df: match 
+    [OK ] load_bars_from_hundsun: match 
+    [OK ] load_get_price: match 
+    [OK ] get_str_data: match 
+    [OK ] change_his_to_forward: match 
+    [OK ] change_his_to_backward: match 
+    [OK ] get_date_and_count: match 
+    [OK ] get_trend_data: match 
+    [OK ] get_reits_list: match 
+    [OK ] check_limit: match 
+    [OK ] check_jq_code: match 
+    [OK ] trans_jq_code: match 
+    [OK ] get_current_kline_count: match 
+    [OK ] filter_stock_by_status: match 
+    [OK ] get_trading_day_by_date: match 
+    [OK ] get_dominant_contract: match 
+  >> 全部匹配（无缺陷复现）
+
+--------------------------------------------------------------------------------
+REPRO: repro_11_one_prod_elif_in_elif_time_index.py
+  compile_ok=True  total=2 matched=0 mismatched=2 rate=0.0%
+    [BAD] <module>: instr_diff idx=3 orig=(6, 'LOAD_CONST', <code object one_prod_variant_no_try at 0x55be4a5f28e0, file "/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_04/test_engineer/minimal_repros/repro_11_one_prod_elif_in_elif_time_index.py", line 9>) new=(6, 'LOAD_CONST', <code object one_prod_variant_no_try at 0x55be4a5ef2b0, file "<decompiled>", line 10>)
+    [BAD] one_prod_variant_no_try: len_diff orig=317 new=328 diff=+11
+  >> 复现缺陷（2 个函数不一致）
+
+--------------------------------------------------------------------------------
+REPRO: repro_12_build_future_listcomp_in_loop_with_set.py
+  compile_ok=True  total=3 matched=0 mismatched=3 rate=0.0%
+    [BAD] <module>: instr_diff idx=3 orig=(6, 'LOAD_CONST', <code object build_future_variant at 0x7f3fdfdd0ce0, file "/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_04/test_engineer/minimal_repros/repro_12_build_future_listcomp_in_loop_with_set.py", line 15>) new=(6, 'LOAD_CONST', <code object build_future_variant at 0x7f3fdfba36e0, file "<decompiled>", line 16>)
+    [BAD] build_future_variant: len_diff orig=80 new=64 diff=-16
+    [BAD] build_future_variant.<listcomp>: missing 
+  >> 复现缺陷（3 个函数不一致）
+
+--------------------------------------------------------------------------------
+REPRO: repro_13_one_prod_elif_3_branches.py
+  compile_ok=True  total=2 matched=0 mismatched=2 rate=0.0%
+    [BAD] <module>: instr_diff idx=3 orig=(6, 'LOAD_CONST', <code object one_prod_minimal at 0x55be4a611560, file "/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_04/test_engineer/minimal_repros/repro_13_one_prod_elif_3_branches.py", line 8>) new=(6, 'LOAD_CONST', <code object one_prod_minimal at 0x55be4a4974d0, file "<decompiled>", line 9>)
+    [BAD] one_prod_minimal: instr_diff idx=7 orig=(16, 'FOR_ITER', 578) new=(16, 'FOR_ITER', 580)
+  >> 复现缺陷（2 个函数不一致）
+
+--------------------------------------------------------------------------------
+REPRO: repro_14_one_prod_elif_with_str_assign_prefix.py
+  compile_ok=True  total=2 matched=0 mismatched=2 rate=0.0%
+    [BAD] <module>: instr_diff idx=3 orig=(6, 'LOAD_CONST', <code object one_prod_with_prefix at 0x55be4a5f1380, file "/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_04/test_engineer/minimal_repros/repro_14_one_prod_elif_with_str_assign_prefix.py", line 8>) new=(6, 'LOAD_CONST', <code object one_prod_with_prefix at 0x7f3fe01eb3c0, file "<decompiled>", line 9>)
+    [BAD] one_prod_with_prefix: len_diff orig=222 new=21 diff=-201
+  >> 复现缺陷（2 个函数不一致）
+
+--------------------------------------------------------------------------------
+REPRO: repro_15_get_str_data_nested_for_post_construct.py
+  compile_ok=True  total=2 matched=0 mismatched=2 rate=0.0%
+    [BAD] <module>: instr_diff idx=3 orig=(6, 'LOAD_CONST', <code object get_str_data_variant at 0x55be4a5e2410, file "/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_04/test_engineer/minimal_repros/repro_15_get_str_data_nested_for_post_construct.py", line 9>) new=(6, 'LOAD_CONST', <code object get_str_data_variant at 0x55be4a6189a0, file "<decompiled>", line 10>)
+    [BAD] get_str_data_variant: len_diff orig=89 new=86 diff=-3
+  >> 复现缺陷（2 个函数不一致）
+
+================================================================================
+汇总
+================================================================================
+repro 总数: 15
+复现缺陷 repro 数: 10
+全部匹配 repro 数: 5
+编译失败 repro 数: 0
+

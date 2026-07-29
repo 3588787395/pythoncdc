@@ -1,0 +1,422 @@
+{
+  "repro_01_one_prod_elif_chain_split.py": {
+    "compile_ok": true,
+    "total": 2,
+    "matched": 0,
+    "mismatched": 2,
+    "success_rate": 0.0,
+    "details": [
+      [
+        "<module>",
+        "instr_diff",
+        "idx=4 orig=(8, 'LOAD_CONST', <code object one_prod_to_dataframe_repro at 0x55be4a5fbb60, file \"/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_04/test_engineer/minimal_repros/repro_01_one_prod_elif_chain_split.py\", line 14>) new=(8, 'LOAD_CONST', <code object one_prod_to_dataframe_repro at 0x55be4a5e8fb0, file \"<decompiled>\", line 15>)"
+      ],
+      [
+        "one_prod_to_dataframe_repro",
+        "len_diff",
+        "orig=427 new=438 diff=+11"
+      ]
+    ],
+    "src": "# Source Generated with Decompyle++ (Python version)\n# File: repro.pyc (Python 3.11)\n\n__doc__ = \"\"\"repro_01: `if i == 0 and len(v) == N:` elif \u94fe\u88ab\u62c6\u5206\u4e3a\u4e24\u4e2a if \u7ed3\u6784\uff08one_prod_to_dataframe\uff09\u3002\n\nR4 \u91cd\u70b9\u76ee\u6807\uff1aone_prod_to_dataframe +11 \u6307\u4ee4\u3002\u539f\u59cb\u51fd\u6570\u542b 5 \u4e2a `if i == 0 and len(v) == N:` elif \u5206\u652f\uff0c\n\u53cd\u7f16\u8bd1\u5668\u5c06 `i == 0` \u62c6\u4e3a\u5916\u5c42 if\uff0c`len(v) == N` \u62c6\u4e3a\u5185\u5c42 if\uff0c\u5bfc\u81f4 elif \u94fe\u5206\u88c2\u3001\u90e8\u5206\u6761\u4ef6\u4e22\u5931\u3001body \u4e22\u5931\u4e3a pass\u3002\n\n\u672c repro \u955c\u50cf one_prod_to_dataframe \u7684\u5b9e\u9645 CFG\uff1a\n  - \u5916\u5c42 for item in prod: \u5faa\u73af\n  - \u5185\u5c42 for v in item: \u5faa\u73af\n  - if time_index != i: ... elif time_index is not None: v = str(v); if i == 0 and len(v) == N: ...\n  - 5 \u4e2a len(v) == N \u7684 elif \u5206\u652f\uff08N = 8, 10, 11, 12, 14\uff09\n\"\"\"\ndef one_prod_to_dataframe_repro(data, prod_code, data_type=None):\n    df = {}\n    fields = data.get('fields')\n    index = []\n    time_index = None\n    try:\n        time_index = fields.index('business_time')\n    except BaseException:\n        system_log.error(get_traceback_message())\n    try:\n        time_index = fields.index('min_time')\n    except BaseException:\n        system_log.error(get_traceback_message())\n    i = 0\n    for item in fields:\n        if time_index != i:\n            df[get_real_param(item)] = []\n        i = i + 1\n    prod = data.get(prod_code)\n    for item in prod:\n        i = 0\n        for v in item:\n            if time_index != i:\n                df[get_real_param(fields[i])].append(v)\n            elif time_index is not None:\n                v = str(v)\n                if i == 0:\n                    if len(v) == 8:\n                        index.append(f'{v[0:4]}-{v[4:6]}-{v[6:8]} 00:00:00')\n                    elif i == 0 and len(v) == 10:\n                        index.append(f'{v[0:4]}-{v[4:6]}-{v[6:8]} {v[8:10]}:00:00')\n                    elif i == 0:\n                        index.append(f'{v[0:4]}-{v[4:6]}-{v[6:8]} 0{v[8:9]}:{v[9:11]}:00')\n                    elif i == 0:\n                        index.append(f'{v[0:4]}-{v[4:6]}-{v[6:8]} {v[8:10]}:{v[10:12]}:00')\n                    elif i == 0:\n                        index.append(f'{v[0:4]}-{v[4:6]}-{v[6:8]} {v[8:10]}:{v[10:12]}:{v[12:14]}')\n                if len(v) == 11:\n                    pass\n                elif i == 0 and len(v) == 12:\n                    pass\n                elif i == 0 and len(v) == 14:\n                    pass\n            i = i + 1\n    columns = []\n    if data_type is None:\n        i = 0\n        for item in fields:\n            if time_index != i:\n                columns.append(get_real_param(item))\n            i = i + 1\n    else:\n        columns = ['open', 'close', 'high', 'low', 'volume', 'money']\n    return pandas.DataFrame(df, columns=columns, index=index)\n"
+  },
+  "repro_02_one_prod_elif_with_outer_if.py": {
+    "compile_ok": true,
+    "total": 2,
+    "matched": 0,
+    "mismatched": 2,
+    "success_rate": 0.0,
+    "details": [
+      [
+        "<module>",
+        "instr_diff",
+        "idx=3 orig=(6, 'LOAD_CONST', <code object one_prod_variant at 0x55be4a5da330, file \"/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_04/test_engineer/minimal_repros/repro_02_one_prod_elif_with_outer_if.py\", line 8>) new=(6, 'LOAD_CONST', <code object one_prod_variant at 0x7f3fe0215730, file \"<decompiled>\", line 9>)"
+      ],
+      [
+        "one_prod_variant",
+        "len_diff",
+        "orig=225 new=31 diff=-194"
+      ]
+    ],
+    "src": "# Source Generated with Decompyle++ (Python version)\n# File: repro.pyc (Python 3.11)\n\n__doc__ = \"\"\"repro_02: `if i == 0 and len(v) == N:` elif \u94fe\u5916\u5305 `elif time_index is not None:`\uff08one_prod \u53d8\u4f53\uff09\u3002\n\n\u955c\u50cf one_prod_to_dataframe \u7684\u5b9e\u9645 CFG \u5d4c\u5957\u7ed3\u6784\uff1aelif \u94fe\u4f4d\u4e8e `elif time_index is not None:` \u5206\u652f\u5185\uff0c\n\u4e14\u5206\u652f\u5185\u542b `v = str(v)` \u524d\u5e8f\u8d4b\u503c\u3002\u672c\u53d8\u4f53\u9a8c\u8bc1\u524d\u5e8f\u8d4b\u503c + \u5d4c\u5957 elif \u662f\u5426\u5f71\u54cd elif \u94fe\u5f52\u7ea6\u3002\n\"\"\"\ndef one_prod_variant(fields, prod):\n    index = []\n    time_index = 0\n    for item in prod:\n        i = 0\n        for v in item:\n            if time_index != i:\n                pass\n            elif time_index is not None:\n                pass\n            i = i + 1\n    return index\n"
+  },
+  "repro_03_build_future_frozenset_set_literal.py": {
+    "compile_ok": true,
+    "total": 2,
+    "matched": 2,
+    "mismatched": 0,
+    "success_rate": 100.0,
+    "details": [
+      [
+        "<module>",
+        "match",
+        null
+      ],
+      [
+        "build_future_fill_time_repro",
+        "match",
+        null
+      ]
+    ],
+    "src": "# Source Generated with Decompyle++ (Python version)\n# File: repro.pyc (Python 3.11)\n\n__doc__ = \"\"\"repro_03: \u96c6\u5408\u5b57\u9762\u91cf `{'a', 'b', ...}` \u7684\u5e38\u91cf\u5b58\u50a8\u4e3a tuple vs frozenset\uff08build_future_fill_time\uff09\u3002\n\nbuild_future_fill_time \u7684 5 \u5904 LOAD_CONST tuple \u2192 frozenset \u5dee\u5f02\u5c5e\u4e8e Python \u7f16\u8bd1\u5668\u7248\u672c\u5dee\u5f02\uff0c\n\u4e0d\u53ef\u901a\u8fc7\u7b97\u6cd5\u4fee\u590d\u3002\u672c repro \u7528\u4e8e\u6587\u6863\u5316\u8be5\u5dee\u5f02\uff1a\u539f\u59cb pyc \u7528\u65e7\u7248 Python \u7f16\u8bd1\uff0cset literal \u5e38\u91cf\u5b58\u4e3a tuple\uff1b\nPython 3.11.15 \u7f16\u8bd1\u65f6\uff0cset literal \u5e38\u91cf\u5b58\u4e3a frozenset\u3002\n\n\u955c\u50cf build_future_fill_time \u7684\u5b9e\u9645 CFG\uff1a\n  - for item in total_dts: \u5faa\u73af\n  - if typet == 2 and suffix == 'T.CCFX': market_time = {...}\n  - elif suffix in ('XZCE', 'XDCE', 'XSGE'): market_time = {...}\n  - \u96c6\u5408\u5b57\u9762\u91cf\u8d4b\u503c\u7ed9 market_time\n\"\"\"\ndef build_future_fill_time_repro(typet, suffix, total_dts):\n    result = []\n    for item in total_dts:\n        if typet == 2:\n            if suffix == 'T.CCFX':\n                market_time = {'13:30:00', '15:15:00', '15:00:00', '10:00:00', '14:30:00'}\n            elif suffix in ('XZCE', 'XDCE', 'XSGE'):\n                market_time = {'10:00:00', '09:30:00', '13:45:00', '11:15:00'}\n            else:\n                market_time = {'10:30:00', '10:00:00', '14:30:00', '13:30:00'}\n            if item in market_time:\n                result.append(item)\n            continue\n        elif typet == 6:\n            if suffix == 'T.CCFX':\n                market_time = {'15:15:00', '11:30:00', '15:00:00'}\n            else:\n                market_time = {'15:15:00', '11:30:00', '15:00:00'}\n            if item in market_time:\n                result.append(item)\n    return result\n"
+  },
+  "repro_04_get_date_and_count_tail_elif_str_concat.py": {
+    "compile_ok": true,
+    "total": 2,
+    "matched": 2,
+    "mismatched": 0,
+    "success_rate": 100.0,
+    "details": [
+      [
+        "<module>",
+        "match",
+        null
+      ],
+      [
+        "get_date_and_count_repro",
+        "match",
+        null
+      ]
+    ],
+    "src": "# Source Generated with Decompyle++ (Python version)\n# File: repro.pyc (Python 3.11)\n\n__doc__ = \"\"\"repro_04: \u5c3e\u90e8 elif \u5206\u652f\u4f53 `start_date = str(year) + str(month) + '01'` \u4e22\u5931\uff08get_date_and_count\uff09\u3002\n\nget_date_and_count \u7684 -27 \u6307\u4ee4\u5dee\u5f02\u6e90\u4e8e\u5c3e\u90e8 elif \u5206\u652f\u4f53\uff08\u5b57\u7b26\u4e32\u62fc\u63a5 + \u8d4b\u503c\uff09\u4e22\u5931\u3002\n\u955c\u50cf\u5b9e\u9645 CFG\uff1a\n  - if candle_period == 8: ... elif candle_period == 9: ... elif candle_period == 10: ...\n  - \u6bcf\u4e2a\u5206\u652f\u542b year/month \u8d4b\u503c + start_date \u5b57\u7b26\u4e32\u62fc\u63a5\n  - \u5c3e\u90e8 elif \u7684\u5b57\u7b26\u4e32\u62fc\u63a5 body \u4e22\u5931\n\"\"\"\ndef get_date_and_count_repro(candle_period, query_date):\n    if candle_period == 8:\n        year = query_date.year\n        month = query_date.month\n        if month <= 10:\n            month = month + 2\n        else:\n            year = year + 1\n            month = month - 10\n        start_date = str(year) + str(month).zfill(2)\n    elif candle_period == 9:\n        year = query_date.year\n        month = query_date.month\n        start_date = str(year) + str(month).zfill(2) + '01'\n    elif candle_period == 10:\n        year = query_date.year\n        month = query_date.month\n        start_date = str(year) + str(month) + '01'\n    return (start_date, query_date)\n"
+  },
+  "repro_05_load_get_price_long_or_with_nested_if.py": {
+    "compile_ok": true,
+    "total": 2,
+    "matched": 0,
+    "mismatched": 2,
+    "success_rate": 0.0,
+    "details": [
+      [
+        "<module>",
+        "instr_diff",
+        "idx=3 orig=(6, 'LOAD_CONST', <code object load_get_price_repro at 0x55be4a47b8c0, file \"/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_04/test_engineer/minimal_repros/repro_05_load_get_price_long_or_with_nested_if.py\", line 16>) new=(6, 'LOAD_CONST', <code object load_get_price_repro at 0x55be4a5d3430, file \"<decompiled>\", line 17>)"
+      ],
+      [
+        "load_get_price_repro",
+        "len_diff",
+        "orig=85 new=87 diff=+2"
+      ]
+    ],
+    "src": "# Source Generated with Decompyle++ (Python version)\n# File: repro.pyc (Python 3.11)\n\n__doc__ = \"\"\"repro_05: \u957f or \u94fe `is_utc=='0' and (typet==1 or ... or typet==13)` + \u524d\u5bfc\u5d4c\u5957 if\uff08load_get_price\uff09\u3002\n\nR3 \u4fee\u590d\u5728\u7cbe\u7b80 repro \u4e0a\u6709\u6548\uff0c\u4f46 load_get_price \u7684\u539f\u59cb CFG \u542b `if len(panel.major_axis) != 0:` \u524d\u5bfc\u5d4c\u5957 if\uff0c\n\u672a\u89e6\u53d1\u4e0e\u7cbe\u7b80 repro \u76f8\u540c\u7684\u4ee3\u7801\u8def\u5f84\u3002\u672c repro \u955c\u50cf\u539f\u59cb CFG\uff1a\u524d\u5bfc if + \u957f or \u94fe + elif\u3002\n\n\u955c\u50cf load_get_price \u7684\u5b9e\u9645 CFG\uff1a\n  - if len(panel.major_axis) != 0:\uff08\u524d\u5bfc\u5d4c\u5957 if\uff09\n    - if is_utc == '0' and (typet == 1 or typet == 2 or ... or typet == 13):\n        panel.major_axis = panel.major_axis.tz_convert('Asia/Shanghai')\n    - elif typet == 6:\n        panel.major_axis = panel.major_axis.tz_localize(pytz.utc)\n  - if _typet in (7, 8, 9, 15): panel = get_str_data(panel, count, _typet)\n\"\"\"\ndef load_get_price_repro(panel, is_utc, typet, count, _typet, stocks):\n    if len(panel.major_axis) != 0:\n        if (is_utc == '0' and typet == 1 or typet == 2 or typet == 3 or typet == 4 or typet == 5 or typet == 13) == 6:\n            panel.major_axis = panel.major_axis.tz_convert('Asia/Shanghai')\n        elif typet == 6:\n            panel.major_axis = panel.major_axis.tz_localize(pytz.utc)\n    if _typet in (7, 8, 9, 15):\n        panel = get_str_data(panel, count, _typet)\n    if isinstance(stocks, str):\n        rdata = panel[stocks]\n    else:\n        rdata = panel\n    return rdata\n"
+  },
+  "repro_06_load_bars_long_or_try_except_wrapper.py": {
+    "compile_ok": true,
+    "total": 2,
+    "matched": 0,
+    "mismatched": 2,
+    "success_rate": 0.0,
+    "details": [
+      [
+        "<module>",
+        "instr_diff",
+        "idx=3 orig=(6, 'LOAD_CONST', <code object load_bars_from_hundsun_repro at 0x55be4a5dee30, file \"/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_04/test_engineer/minimal_repros/repro_06_load_bars_long_or_try_except_wrapper.py\", line 23>) new=(6, 'LOAD_CONST', <code object load_bars_from_hundsun_repro at 0x55be4a4854a0, file \"<decompiled>\", line 24>)"
+      ],
+      [
+        "load_bars_from_hundsun_repro",
+        "len_diff",
+        "orig=150 new=117 diff=-33"
+      ]
+    ],
+    "src": "# Source Generated with Decompyle++ (Python version)\n# File: repro.pyc (Python 3.11)\n\n__doc__ = \"\"\"repro_06: \u957f or \u94fe + try/except \u5305\u88f9 + `if len(data) > 0:` \u5305\u88f9\u5c42\uff08load_bars_from_hundsun\uff09\u3002\n\nload_bars_from_hundsun \u7684 -174 \u6307\u4ee4\u5dee\u5f02\u6e90\u4e8e\u957f or \u94fe\u5206\u652f\u4f53\u4e22\u5931\u3002R3 \u4fee\u590d\u672a\u89e6\u8fbe\u539f\u59cb CFG \u8def\u5f84\uff0c\n\u539f\u56e0\u662f\u539f\u59cb\u51fd\u6570\u542b `if os.path.exists(DumploadDailyFile):` \u524d\u5bfc\u5d4c\u5957 if + `if len(data) > 0:` \u5305\u88f9\u5c42 + try/except \u4e0a\u4e0b\u6587\u3002\n\u672c repro \u955c\u50cf\u539f\u59cb CFG \u7684\u4e09\u5c42\u5d4c\u5957\u7ed3\u6784\u3002\n\n\u955c\u50cf load_bars_from_hundsun \u7684\u5b9e\u9645 CFG\uff1a\n  - retpanel = pandas.Panel()\n  - if os.path.exists(DumploadDailyFile):\uff08\u524d\u5bfc if\uff09\n    - if typet == 6: ...\n    - if isinstance(stocks, str): stocks = [stocks]\n    - try: ... except: ...\n  - if len(data) > 0:\uff08\u5305\u88f9\u5c42\uff09\n    - panel = pandas.Panel(data, ...)\n    - if len(panel.major_axis) != 0:\n      - if is_utc == '0' and (typet == 1 or ... or typet == 13): panel.major_axis = tz_convert\n      - elif typet == 6: panel.major_axis = tz_localize\n  - if retpanel.empty: retpanel = pandas.concat([retpanel, panel])\n  - return retpanel\n\"\"\"\ndef load_bars_from_hundsun_repro(stocks, typet, start, end, is_utc, data, retpanel):\n    if os.path.exists(DumploadDailyFile):\n        if typet == 6:\n            source_start = qdt.datetime.strptime(start, '%Y%m%d%H%M')\n        if isinstance(stocks, str):\n            stocks = [stocks]\n        try:\n            panel = pandas.Panel(data, major_axis=dts)\n        except BaseException:\n            system_log.error(get_traceback_message())\n    if len(data) > 0:\n        panel = pandas.Panel(data, items=['open', 'close', 'high', 'low', 'volume', 'price', 'money'])\n        if len(panel.major_axis) != 0:\n            panel.major_axis = panel.major_axis.tz_localize('Asia/Shanghai').tz_convert('UTC')\n            panel.major_axis = panel.major_axis.tz_localize(pytz.utc)\n    if retpanel.empty:\n        panel = pandas.concat([retpanel, panel])\n    return panel\n"
+  },
+  "repro_07_fill_minute_else_numpy_concat.py": {
+    "compile_ok": true,
+    "total": 2,
+    "matched": 2,
+    "mismatched": 0,
+    "success_rate": 100.0,
+    "details": [
+      [
+        "<module>",
+        "match",
+        null
+      ],
+      [
+        "fill_minute_or_day_blank_repro",
+        "match",
+        null
+      ]
+    ],
+    "src": "# Source Generated with Decompyle++ (Python version)\n# File: repro.pyc (Python 3.11)\n\n__doc__ = \"\"\"repro_07: else \u5206\u652f `numpy.array` + `pandas.DataFrame` + `pandas.concat` \u4e22\u5931\uff08fill_minute_or_day_blank\uff09\u3002\n\nfill_minute_or_day_blank \u7684 -42 \u6307\u4ee4\u5dee\u5f02\u6e90\u4e8e else \u5206\u652f\uff08numpy.array + pandas.concat\uff09\u4e22\u5931\u3002\n\u955c\u50cf\u5b9e\u9645 CFG\uff1a\n  - if nowend >= nowstart: ... else: klines = pandas.concat([klines_pre, klines])\n  - else \u5206\u652f\u542b numpy.array(numpy.nan) + pandas.DataFrame + pandas.concat\n\"\"\"\ndef fill_minute_or_day_blank_repro(nowend, nowstart, stocks, dts):\n    if nowend >= nowstart:\n        code = stocks.split('.')[0]\n        klines = []\n        for dt in dts:\n            if dt not in klines:\n                klines.append(dt)\n        klines_back = klines\n    else:\n        temp_value = numpy.array([numpy.nan] * len(dts))\n        klines_pre = pandas.DataFrame({'open': temp_value, 'close': temp_value, 'high': temp_value, 'low': temp_value, 'volume': temp_value, 'money': temp_value}, index=dts)\n        klines = pandas.concat([klines_pre, klines])\n    return klines\n"
+  },
+  "repro_08_get_str_data_post_loop_panel_construct.py": {
+    "compile_ok": true,
+    "total": 2,
+    "matched": 0,
+    "mismatched": 2,
+    "success_rate": 0.0,
+    "details": [
+      [
+        "<module>",
+        "instr_diff",
+        "idx=3 orig=(6, 'LOAD_CONST', <code object get_str_data_repro at 0x55be4a4a7320, file \"/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_04/test_engineer/minimal_repros/repro_08_get_str_data_post_loop_panel_construct.py\", line 17>) new=(6, 'LOAD_CONST', <code object get_str_data_repro at 0x7f3fdf5a5c30, file \"<decompiled>\", line 18>)"
+      ],
+      [
+        "get_str_data_repro",
+        "len_diff",
+        "orig=72 new=69 diff=-3"
+      ]
+    ],
+    "src": "# Source Generated with Decompyle++ (Python version)\n# File: repro.pyc (Python 3.11)\n\n__doc__ = \"\"\"repro_08: \u5faa\u73af\u540e `pandas.Panel(...)` \u6784\u9020\u8fb9\u754c\u4e22\u5931\uff08get_str_data\uff09\u3002\n\nget_str_data \u7684 -48 \u6307\u4ee4\u5dee\u5f02\u6e90\u4e8e\u5faa\u73af\u540e `pandas.Panel(order_data, items=[...])` \u6784\u9020\u4e22\u5931\u3002\n\u955c\u50cf\u5b9e\u9645 CFG\uff1a\n  - for stock, stock_df in rdata.items():\uff08\u4e3b\u5faa\u73af\uff09\n    - for i in datetime_index:\uff08\u5185\u5c42\u5faa\u73af\uff09\n      - if ...: datas.loc[i] = ...\n      - i += 1\n    - time_index.append(...)\n    - data.index = time_index\n    - order_data[stock] = data\n  - \u5faa\u73af\u540e\uff1adatas_penal = pandas.Panel(order_data, items=['open', 'close', ...])\n  - return datas_penal\n\"\"\"\ndef get_str_data_repro(rdata):\n    order_data = collections.OrderedDict()\n    for stock in rdata:\n        stock_df = rdata[stock]\n        datetime_index = stock_df.index\n        dates = []\n        data = stock_df\n        time_index = []\n        for i in datetime_index:\n            datas = data.loc[i]\n            if len(datas) > 0:\n                time_index.append(datetime_index[datas])\n            i = i + 1\n        order_data[stock] = data\n    datas_penal = pandas.Panel(order_data, items=['open', 'close', 'high', 'low', 'volume', 'price', 'money'])\n    return datas_penal\n"
+  },
+  "repro_09_change_his_for_iter_boundary_post_loop.py": {
+    "compile_ok": true,
+    "total": 2,
+    "matched": 2,
+    "mismatched": 0,
+    "success_rate": 100.0,
+    "details": [
+      [
+        "<module>",
+        "match",
+        null
+      ],
+      [
+        "change_his_to_backward_repro",
+        "match",
+        null
+      ]
+    ],
+    "src": "# Source Generated with Decompyle++ (Python version)\n# File: repro.pyc (Python 3.11)\n\n__doc__ = \"\"\"repro_09: FOR_ITER \u8fb9\u754c\u63d0\u524d\u6536\u655b + \u5faa\u73af\u540e if/None \u4e22\u5931\uff08change_his_to_backward\uff09\u3002\n\nchange_his_to_backward \u7684 -56 \u6307\u4ee4\u5dee\u5f02\u6e90\u4e8e FOR_ITER \u76ee\u6807\u63d0\u524d\u6536\u655b + \u5faa\u73af\u540e if/tmpdata/predataindex \u4e22\u5931\u3002\n\u955c\u50cf\u5b9e\u9645 CFG\uff1a\n  - for n in indexlist:\uff08\u4e3b\u5faa\u73af\uff09\n    - if int(firsttime) > 0: n = n.replace(...)\n    - if ...: ...\n  - \u5faa\u73af\u540e\uff1aif tmpdata is not None: data = tmpdata; return data\n  - \u542b series.loc[...] + float(...) + BINARY_OP \u7b49\u590d\u6742\u8868\u8fbe\u5f0f\n\"\"\"\ndef change_his_to_backward_repro(indexlist, firsttime, data, fields):\n    preindex = None\n    tmpdata = None\n    predataindex = None\n    for n in indexlist:\n        if int(firsttime) > 0:\n            n = n.replace('-', '')\n        if preindex is None:\n            preindex = n\n            continue\n        series = data.loc[preindex]\n        value = float(series.loc[preindex, 'exer_backward_a']) + float(series.loc[preindex, 'exer_backward_b'])\n        data.loc[predataindex, fields] = value / 2\n        tmpdata.append(data.loc[predataindex:])\n        if tmpdata is not None:\n            data = tmpdata\n        continue\n    return data\n"
+  },
+  "repro_10_module_nop_placeholder_func_defs.py": {
+    "compile_ok": true,
+    "total": 25,
+    "matched": 25,
+    "mismatched": 0,
+    "success_rate": 100.0,
+    "details": [
+      [
+        "<module>",
+        "match",
+        null
+      ],
+      [
+        "get_kline",
+        "match",
+        null
+      ],
+      [
+        "get_holiday_online",
+        "match",
+        null
+      ],
+      [
+        "one_prod_to_dataframe",
+        "match",
+        null
+      ],
+      [
+        "kline_to_dataframe",
+        "match",
+        null
+      ],
+      [
+        "fill_minute_or_day_blank",
+        "match",
+        null
+      ],
+      [
+        "load_minute_or_day_kline",
+        "match",
+        null
+      ],
+      [
+        "get_minute_or_day_fill_time",
+        "match",
+        null
+      ],
+      [
+        "build_future_fill_time",
+        "match",
+        null
+      ],
+      [
+        "build_current_period_df",
+        "match",
+        null
+      ],
+      [
+        "load_bars_from_hundsun",
+        "match",
+        null
+      ],
+      [
+        "load_get_price",
+        "match",
+        null
+      ],
+      [
+        "get_str_data",
+        "match",
+        null
+      ],
+      [
+        "change_his_to_forward",
+        "match",
+        null
+      ],
+      [
+        "change_his_to_backward",
+        "match",
+        null
+      ],
+      [
+        "get_date_and_count",
+        "match",
+        null
+      ],
+      [
+        "get_trend_data",
+        "match",
+        null
+      ],
+      [
+        "get_reits_list",
+        "match",
+        null
+      ],
+      [
+        "check_limit",
+        "match",
+        null
+      ],
+      [
+        "check_jq_code",
+        "match",
+        null
+      ],
+      [
+        "trans_jq_code",
+        "match",
+        null
+      ],
+      [
+        "get_current_kline_count",
+        "match",
+        null
+      ],
+      [
+        "filter_stock_by_status",
+        "match",
+        null
+      ],
+      [
+        "get_trading_day_by_date",
+        "match",
+        null
+      ],
+      [
+        "get_dominant_contract",
+        "match",
+        null
+      ]
+    ],
+    "src": "# Source Generated with Decompyle++ (Python version)\n# File: repro.pyc (Python 3.11)\n\n__doc__ = \"\"\"repro_10: \u6a21\u5757\u7ea7 NOP \u5360\u4f4d\u533a\u6bb5\u540e\u51fd\u6570\u5b9a\u4e49\u4e22\u5931\uff08<module>\uff09\u3002\n\n<module> \u7684 -59 \u6307\u4ee4\u5dee\u5f02\u6e90\u4e8e\u6a21\u5757\u7ea7 NOP \u5360\u4f4d\u533a\u6bb5\u540e 10 \u4e2a\u51fd\u6570\u5b9a\u4e49\u4e22\u5931\u3002\n\u955c\u50cf\u5b9e\u9645 CFG\uff1a\n  - \u6a21\u5757\u9876\u90e8\uff1aimport + \u82e5\u5e72\u51fd\u6570\u5b9a\u4e49\uff08check_arg \u88c5\u9970\u5668 + lambda\uff09\n  - \u4e2d\u90e8\uff1aNOP \u5360\u4f4d\u533a\u6bb5\uff08\u539f\u59cb pyc \u542b\u8fde\u7eed NOP \u6307\u4ee4\uff0c\u53ef\u80fd\u662f\u5b57\u8282\u7801\u5bf9\u9f50\u6216\u8c03\u8bd5\u4fe1\u606f\u5360\u4f4d\uff09\n  - \u5c3e\u90e8\uff1a10 \u4e2a\u51fd\u6570\u5b9a\u4e49\uff08get_trend_data, get_reits_list, check_limit, ...\uff09\u4e22\u5931\n\"\"\"\ndef get_kline(period):\n    return period\ndef get_holiday_online():\n    return None\ndef one_prod_to_dataframe(data, prod_code):\n    return data\ndef kline_to_dataframe(data):\n    return data\ndef fill_minute_or_day_blank(nowend, nowstart):\n    return nowend\ndef load_minute_or_day_kline(period):\n    return period\ndef get_minute_or_day_fill_time(nowstart, nowend):\n    return (nowstart, nowend)\ndef build_future_fill_time(typet, suffix):\n    return (typet, suffix)\ndef build_current_period_df(df):\n    return df\ndef load_bars_from_hundsun(stocks, typet):\n    return stocks\ndef load_get_price(panel, is_utc):\n    return panel\ndef get_str_data(rdata):\n    return rdata\ndef change_his_to_forward(data):\n    return data\ndef change_his_to_backward(data):\n    return data\ndef get_date_and_count(candle_period, query_date):\n    return (candle_period, query_date)\ndef get_trend_data():\n    return None\ndef get_reits_list():\n    return None\ndef check_limit():\n    return None\ndef check_jq_code():\n    return None\ndef trans_jq_code():\n    return None\ndef get_current_kline_count():\n    return None\ndef filter_stock_by_status():\n    return None\ndef get_trading_day_by_date():\n    return None\ndef get_dominant_contract():\n    return None\n"
+  },
+  "repro_11_one_prod_elif_in_elif_time_index.py": {
+    "compile_ok": true,
+    "total": 2,
+    "matched": 0,
+    "mismatched": 2,
+    "success_rate": 0.0,
+    "details": [
+      [
+        "<module>",
+        "instr_diff",
+        "idx=3 orig=(6, 'LOAD_CONST', <code object one_prod_variant_no_try at 0x55be4a5f28e0, file \"/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_04/test_engineer/minimal_repros/repro_11_one_prod_elif_in_elif_time_index.py\", line 9>) new=(6, 'LOAD_CONST', <code object one_prod_variant_no_try at 0x55be4a5ef2b0, file \"<decompiled>\", line 10>)"
+      ],
+      [
+        "one_prod_variant_no_try",
+        "len_diff",
+        "orig=317 new=328 diff=+11"
+      ]
+    ],
+    "src": "# Source Generated with Decompyle++ (Python version)\n# File: repro.pyc (Python 3.11)\n\n__doc__ = \"\"\"repro_11: `if i == 0 and len(v) == N:` elif \u94fe\u4f4d\u4e8e `elif time_index is not None:` \u5206\u652f\u5185\uff08one_prod \u53d8\u4f53 2\uff09\u3002\n\n\u8fdb\u4e00\u6b65\u955c\u50cf one_prod_to_dataframe \u7684\u5b9e\u9645 CFG\uff1aelif \u94fe\u4f4d\u4e8e `elif time_index is not None:` \u5206\u652f\u5185\uff0c\n\u4e14 `elif time_index is not None:` \u5206\u652f\u5185\u542b `v = str(v)` \u8d4b\u503c\u540e\u63a5 5 \u4e2a `if i == 0 and len(v) == N:` elif \u5206\u652f\u3002\n\u672c\u53d8\u4f53\u53bb\u6389 try/except \u7b80\u5316\uff0c\u805a\u7126 elif \u94fe\u5728 elif \u5206\u652f\u5185\u7684\u5f52\u7ea6\u884c\u4e3a\u3002\n\"\"\"\ndef one_prod_variant_no_try(fields, prod):\n    df = {}\n    index = []\n    time_index = 0\n    i = 0\n    for item in fields:\n        if time_index != i:\n            df[item] = []\n        i = i + 1\n    for item in prod:\n        i = 0\n        for v in item:\n            if time_index != i:\n                df[fields[i]].append(v)\n            elif time_index is not None:\n                v = str(v)\n                if i == 0:\n                    if len(v) == 8:\n                        index.append(f'{v[0:4]}-{v[4:6]}-{v[6:8]} 00:00:00')\n                    elif i == 0 and len(v) == 10:\n                        index.append(f'{v[0:4]}-{v[4:6]}-{v[6:8]} {v[8:10]}:00:00')\n                    elif i == 0:\n                        index.append(f'{v[0:4]}-{v[4:6]}-{v[6:8]} 0{v[8:9]}:{v[9:11]}:00')\n                    elif i == 0:\n                        index.append(f'{v[0:4]}-{v[4:6]}-{v[6:8]} {v[8:10]}:{v[10:12]}:00')\n                    elif i == 0:\n                        index.append(f'{v[0:4]}-{v[4:6]}-{v[6:8]} {v[8:10]}:{v[10:12]}:{v[12:14]}')\n                if len(v) == 11:\n                    pass\n                elif i == 0 and len(v) == 12:\n                    pass\n                elif i == 0 and len(v) == 14:\n                    pass\n            i = i + 1\n    return (df, index)\n"
+  },
+  "repro_12_build_future_listcomp_in_loop_with_set.py": {
+    "compile_ok": true,
+    "total": 3,
+    "matched": 0,
+    "mismatched": 3,
+    "success_rate": 0.0,
+    "details": [
+      [
+        "<module>",
+        "instr_diff",
+        "idx=3 orig=(6, 'LOAD_CONST', <code object build_future_variant at 0x7f3fdfdd0ce0, file \"/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_04/test_engineer/minimal_repros/repro_12_build_future_listcomp_in_loop_with_set.py\", line 15>) new=(6, 'LOAD_CONST', <code object build_future_variant at 0x7f3fdfba36e0, file \"<decompiled>\", line 16>)"
+      ],
+      [
+        "build_future_variant",
+        "len_diff",
+        "orig=80 new=64 diff=-16"
+      ],
+      [
+        "build_future_variant.<listcomp>",
+        "missing",
+        null
+      ]
+    ],
+    "src": "# Source Generated with Decompyle++ (Python version)\n# File: repro.pyc (Python 3.11)\n\n__doc__ = \"\"\"repro_12: listcomp + set literal \u5728\u5faa\u73af\u5185 + JUMP_FORWARD \u8df3\u8f6c\u76ee\u6807\u504f\u79fb\uff08build_future \u53d8\u4f53\uff09\u3002\n\nbuild_future_fill_time \u7684 JUMP_FORWARD \u504f\u79fb 74 \u5b57\u8282\u6e90\u4e8e frozenset \u5e38\u91cf\u5dee\u5f02\u7684\u8fde\u9501\u540e\u679c\u3002\n\u672c repro \u955c\u50cf listcomp + set literal \u5728\u5faa\u73af\u5185\u7684\u7ed3\u6784\uff0c\u9a8c\u8bc1 listcomp \u5f52\u7ea6\u662f\u5426\u5f71\u54cd JUMP_FORWARD \u8df3\u8f6c\u76ee\u6807\u3002\n\n\u955c\u50cf build_future_fill_time \u7684\u5b9e\u9645 CFG\uff1a\n  - for item in total_dts:\uff08\u5916\u5c42\u5faa\u73af\uff09\n    - if typet == 2 and suffix == 'T.CCFX':\n      - market_time = [x for x in items if x in {'09:30', '10:00', '11:30'}]  # listcomp + set\n    - elif typet == 6: ...\n  - JUMP_FORWARD \u5230\u51fd\u6570\u672b\u5c3e\uff08return\uff09\n\"\"\"\ndef build_future_variant(typet, suffix, total_dts, items):\n    result = []\n    for item in total_dts:\n        if typet == 2:\n            if suffix == 'T.CCFX':\n                market_time = {'13:30:00', '15:15:00', '15:00:00', '10:00:00', '14:30:00'}\n                continue\n            elif suffix in ('XZCE', 'XDCE', 'XSGE'):\n                market_time = {'10:00:00', '09:30:00', '13:45:00', '11:15:00'}\n                if item in market_time:\n                    result.append(item)\n            continue\n        elif typet == 6 and suffix == 'T.CCFX':\n            market_time = {'15:15:00', '11:30:00', '15:00:00'}\n            if item in market_time:\n                result.append(item)\n    return result\n"
+  },
+  "repro_13_one_prod_elif_3_branches.py": {
+    "compile_ok": true,
+    "total": 2,
+    "matched": 0,
+    "mismatched": 2,
+    "success_rate": 0.0,
+    "details": [
+      [
+        "<module>",
+        "instr_diff",
+        "idx=3 orig=(6, 'LOAD_CONST', <code object one_prod_minimal at 0x55be4a611560, file \"/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_04/test_engineer/minimal_repros/repro_13_one_prod_elif_3_branches.py\", line 8>) new=(6, 'LOAD_CONST', <code object one_prod_minimal at 0x55be4a4974d0, file \"<decompiled>\", line 9>)"
+      ],
+      [
+        "one_prod_minimal",
+        "instr_diff",
+        "idx=7 orig=(16, 'FOR_ITER', 578) new=(16, 'FOR_ITER', 580)"
+      ]
+    ],
+    "src": "# Source Generated with Decompyle++ (Python version)\n# File: repro.pyc (Python 3.11)\n\n__doc__ = \"\"\"repro_13: `if i == 0 and len(v) == N:` elif \u94fe\uff083 \u5206\u652f\u53d8\u4f53\uff0cone_prod \u6700\u5c0f\u5316\uff09\u3002\n\n\u6700\u5c0f\u5316 one_prod_to_dataframe \u7684 elif \u94fe\u5206\u88c2\u7f3a\u9677\uff1a\u4ec5\u4fdd\u7559 3 \u4e2a `if i == 0 and len(v) == N:` \u5206\u652f\uff0c\n\u53bb\u6389 try/except \u548c\u5916\u5c42 for \u5faa\u73af\uff0c\u805a\u7126 elif \u94fe\u5206\u88c2\u7684\u6838\u5fc3\u6a21\u5f0f\u3002\n\"\"\"\ndef one_prod_minimal(item):\n    index = []\n    i = 0\n    for v in item:\n        if i == 0:\n            if len(v) == 8:\n                index.append(f'{v[0:4]}-{v[4:6]}-{v[6:8]} 00:00:00')\n            elif i == 0 and len(v) == 10:\n                index.append(f'{v[0:4]}-{v[4:6]}-{v[6:8]} {v[8:10]}:00:00')\n            elif i == 0 and len(v) == 12:\n                index.append(f'{v[0:4]}-{v[4:6]}-{v[6:8]} {v[8:10]}:{v[10:12]}:00')\n        i = i + 1\n    return index\n"
+  },
+  "repro_14_one_prod_elif_with_str_assign_prefix.py": {
+    "compile_ok": true,
+    "total": 2,
+    "matched": 0,
+    "mismatched": 2,
+    "success_rate": 0.0,
+    "details": [
+      [
+        "<module>",
+        "instr_diff",
+        "idx=3 orig=(6, 'LOAD_CONST', <code object one_prod_with_prefix at 0x55be4a5f1380, file \"/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_04/test_engineer/minimal_repros/repro_14_one_prod_elif_with_str_assign_prefix.py\", line 8>) new=(6, 'LOAD_CONST', <code object one_prod_with_prefix at 0x7f3fe01eb3c0, file \"<decompiled>\", line 9>)"
+      ],
+      [
+        "one_prod_with_prefix",
+        "len_diff",
+        "orig=222 new=21 diff=-201"
+      ]
+    ],
+    "src": "# Source Generated with Decompyle++ (Python version)\n# File: repro.pyc (Python 3.11)\n\n__doc__ = \"\"\"repro_14: `if i == 0 and len(v) == N:` elif \u94fe + \u524d\u5e8f `v = str(v)` \u8d4b\u503c\uff08one_prod \u53d8\u4f53 3\uff09\u3002\n\n\u955c\u50cf one_prod_to_dataframe \u7684 elif \u94fe\u524d\u5e8f `v = str(v)` \u8d4b\u503c\u5bf9 elif \u94fe\u5f52\u7ea6\u7684\u5f71\u54cd\u3002\n\u524d\u5e8f\u8d4b\u503c\u4f4d\u4e8e elif \u94fe\u6240\u5728\u5206\u652f\u4f53\u7684\u5f00\u5934\uff0c\u53ef\u80fd\u5e72\u6270\u6761\u4ef6\u5757\u7684\u5f52\u5c5e\u5224\u5b9a\u3002\n\"\"\"\ndef one_prod_with_prefix(item, time_index):\n    index = []\n    i = 0\n    for v in item:\n        if time_index != i:\n            pass\n        i = i + 1\n    return index\n"
+  },
+  "repro_15_get_str_data_nested_for_post_construct.py": {
+    "compile_ok": true,
+    "total": 2,
+    "matched": 0,
+    "mismatched": 2,
+    "success_rate": 0.0,
+    "details": [
+      [
+        "<module>",
+        "instr_diff",
+        "idx=3 orig=(6, 'LOAD_CONST', <code object get_str_data_variant at 0x55be4a5e2410, file \"/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_04/test_engineer/minimal_repros/repro_15_get_str_data_nested_for_post_construct.py\", line 9>) new=(6, 'LOAD_CONST', <code object get_str_data_variant at 0x55be4a6189a0, file \"<decompiled>\", line 10>)"
+      ],
+      [
+        "get_str_data_variant",
+        "len_diff",
+        "orig=89 new=86 diff=-3"
+      ]
+    ],
+    "src": "# Source Generated with Decompyle++ (Python version)\n# File: repro.pyc (Python 3.11)\n\n__doc__ = \"\"\"repro_15: \u5d4c\u5957 for \u5faa\u73af + \u5faa\u73af\u540e pandas.Panel \u6784\u9020\uff08get_str_data \u53d8\u4f53\uff09\u3002\n\nget_str_data \u7684 -48 \u6307\u4ee4\u5dee\u5f02\u6e90\u4e8e\u5faa\u73af\u540e `pandas.Panel(order_data, items=[...])` \u6784\u9020\u4e22\u5931\u3002\nrepro_08 \u4ec5 -3 diff\uff08\u63a5\u8fd1\u5339\u914d\u4f46\u672a\u590d\u73b0\u5b8c\u6574\u7f3a\u9677\uff09\uff0c\u672c\u53d8\u4f53\u589e\u52a0\u5d4c\u5957 for + if/None + STORE_SUBSCR\uff0c\n\u66f4\u8d34\u8fd1\u539f\u59cb CFG\u3002\n\"\"\"\ndef get_str_data_variant(rdata):\n    order_data = collections.OrderedDict()\n    for stock in rdata:\n        stock_df = rdata[stock]\n        datetime_index = stock_df.index\n        data = stock_df\n        time_index = []\n        i = 0\n        for i in datetime_index:\n            datas = data.loc[i]\n            if len(datas) > 0:\n                time_index.append(datetime_index[datas[-1]])\n            else:\n                time_index.append(None)\n            data.loc[i, 'money'] = datas['money'].sum()\n        order_data[stock] = data\n    datas_penal = pandas.Panel(order_data, items=['open', 'close', 'high', 'low', 'volume', 'price', 'money'])\n    return datas_penal\n"
+  }
+}

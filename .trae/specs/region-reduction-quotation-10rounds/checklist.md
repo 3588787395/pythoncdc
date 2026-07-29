@@ -111,21 +111,26 @@
 
 ### 阶段一：测试工程师
 
-- [ ] R4-1 反编译 + 字节码 diff
-- [ ] R4-2 ≥10 最小复现实例
+- [x] R4-1 反编译 + 字节码 diff（`decompile_report.md`）
+  - 141/150 = 94.00%，compile_ok=True，9 个不一致函数（与 R3 基线一致，无退化）
+- [x] R4-2 ≥10 最小复现实例
+  - 15 个 repro，10 个复现缺陷（镜像实际 CFG 结构）
 
 ### 阶段二：修复工程师
 
-- [ ] R4-3 根因分析完成
-- [ ] R4-4 按算法修复 + docstring 更新
-- [ ] R4-5 回归测试通过
-- [ ] R4-6 `fix_report.md` 生成
+- [x] R4-3 根因分析完成（one_prod_to_dataframe elif 链分裂：BoolOp 检测被 FOR_LOOP 抢占块 + _sb_has_body 误判前置 STORE_FAST）
+- [x] R4-4 按算法修复 + docstring 更新
+  - 修复尝试：COMPARE_OP 回溯扩展 BoolOp 检测；导致 get_option_info 退化（141→140），依据 spec 回退
+  - region_analyzer.py 恢复 R3 状态（修复尝试已回退，无 net 代码变更）
+- [x] R4-5 回归测试通过
+  - quotation.pyc 141/150 无退化；既有矩阵 0 退化（IF 73/4 BOOLOP 79/0 TERNARY 64/5 LOOP 77/3 TRY 71/9 SEQ 80/0）
+- [x] R4-6 `fix_report.md` 生成（含修复点、退化根因、回退决策、回归结果、残留不一致数、R5 建议）
 
 ### 验证与提交
 
-- [ ] R4-7 一致函数数 ≥ 轮 3
-- [ ] R4-8 反模式自检通过
-- [ ] R4-9 编译通过
+- [x] R4-7 一致函数数 ≥ 轮 3（141→141，无退化；+1 目标未达成，修复尝试已回退）
+- [x] R4-8 反模式自检通过（G3：0 新增；region_analyzer.py 无 net 变更）
+- [x] R4-9 编译通过（IMPORT_OK）
 - [ ] R4-10 commit + push `rr-r04:`
 
 ## 轮 5 (Round 5)
