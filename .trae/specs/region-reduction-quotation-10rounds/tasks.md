@@ -168,28 +168,36 @@
   - 既有矩阵 0 退化（IF 73/4 LOOP 77/3 BOOLOP 79/0 TERNARY 64/5 TRY 71/9 SEQ 80/0）
 - [x] T9-6 修复工程师：fix_report.md（`rounds/round_09/repair_engineer/fix_report.md`）
 - [x] T9-7 验证一致函数数 ≥ 轮 8（142≥142，无退化；change_his_to_backward len_diff 归零）
-- [ ] T9-8 commit + push `rr-r09:`
+- [x] T9-8 commit + push `rr-r09:`（0d1f70e..023804a）
 
 ## 轮 10 (Round 10)
 
-- [ ] T10-1 测试工程师：反编译 + diff
-- [ ] T10-2 测试工程师：≥10 最小复现实例（若残留 < 10 则记录为已达成退出条件）
-- [ ] T10-3 修复工程师：根因分析
-- [ ] T10-4 修复工程师：按算法修复 + docstring 更新
-- [ ] T10-5 修复工程师：回归测试
-- [ ] T10-6 修复工程师：fix_report.md
-- [ ] T10-7 验证一致函数数 ≥ 轮 9，目标 100%
-- [ ] T10-8 commit + push `rr-r10:`
+- [x] T10-1 测试工程师：反编译 + diff（142/150=94.67%，9 不一致；产物 rounds/round_10/test_engineer/）
+- [x] T10-2 测试工程师：≥10 最小复现实例（残留 < 10 个不一致函数，记录为已达成退出条件 E2）
+- [x] T10-3 修复工程师：根因分析
+  - 缺陷 1（-88 指令）：`_if_generate_then_branch` 第二循环仅凭 entry ∈ then_blocks 判定归属，BoolOp 子表达式被外层 IfRegion 跨层提前生成（违反原则 1+2）
+  - 缺陷 2（-11 指令）：`_generate_boolop` post-STORE 提取调用 `_generate_block_statements(merge_block)` 因 generated 检查返回 []，且块首 BINARY_OP 无法重构（违反原则 2）
+- [x] T10-4 修复工程师：按算法修复 + docstring 更新
+  - 修复点 1：`_if_generate_then_branch` 第二循环添加 `find_enclosing_parent` 守卫（原则 1+2）
+  - 修复点 2：`_if_generate_then_branch` children 循环添加双角色块检测（原则 1+4，约束：merge_block 非其它区域 entry）
+  - 修复点 3：`_generate_boolop` post-STORE 提取改为 `_generate_stmts_from_instrs` 直接重建（原则 2，约束：merge_block 非其它区域 entry）
+  - docstring：`_if_generate_then_branch` 第 3 节更新
+- [x] T10-5 修复工程师：回归测试
+  - quotation.pyc 142/150 → 143/150（+1，单调递增）；load_bars_from_hundsun -88→0（完全修复）；load_get_price -26→-2（部分改善）
+  - control_flow_matrix 9 fail / 318 pass / 11 skip（== 基线，0 退化）
+- [x] T10-6 修复工程师：fix_report.md + final_residual.md（残留 7 个不一致函数，未达 100%，按 spec 输出残留清单）
+- [x] T10-7 验证一致函数数 ≥ 轮 9（142→143，单调递增；成功率 94.67%→95.33%）
+- [x] T10-8 commit + push `rr-r10:`
 
 ## 最终验证
 
-- [ ] TF-1 共 10 次 commit + push 完成（`git log --grep="rr-r"` 计数 ≥ 10）
-- [ ] TF-2 quotation.pyc 字节码一致函数数 = 总函数数（100%），或残留不一致清单写入 `final_residual.md`
-- [ ] TF-3 既有区域测试矩阵无退化（IF/LOOP/TRY/WITH/MATCH/BOOLOP/TERNARY/CC/SEQ/ASSERT）
-- [ ] TF-4 算法 4 原则 FULLY COMPLIANT
-- [ ] TF-5 无反模式残留
-- [ ] TF-6 `python -c "import core.cfg.region_analyzer; import core.cfg.region_ast_generator"` 编译通过
-- [ ] TF-7 所有涉及的 `_identify_*_regions` / `_generate_*` 方法 docstring 已按 6 节模板更新
+- [x] TF-1 共 10 次 commit + push 完成（rr-r01..rr-r10）
+- [x] TF-2 quotation.pyc 字节码一致函数数 143/150（95.33%），残留 7 个不一致清单写入 `final_residual.md`（未达 100%）
+- [x] TF-3 既有区域测试矩阵无退化（control_flow_matrix 基线 9 fail/318 pass == R10 后 9 fail/318 pass，全程 0 退化）
+- [x] TF-4 算法 4 原则 FULLY COMPLIANT（自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 入口引用语义）
+- [x] TF-5 无反模式残留（0 新增 `_fix_/_hack_/_workaround_` 等前缀，0 新增硬编码深度上限）
+- [x] TF-6 `python -c "import core.cfg.region_analyzer; import core.cfg.region_ast_generator"` 编译通过（IMPORT_OK）
+- [x] TF-7 全部 11 类 `_identify_*_regions` 识别方法 docstring 已按 6 节模板更新（11/11，R8 完成）
 
 # Task Dependencies
 

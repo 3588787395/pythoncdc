@@ -9046,7 +9046,12 @@ AST 映射规则:
         2. 归约顺序：自底向上——子区域（BoolOp/Ternary/嵌套 If/Loop/Try）
            先于 then 体发射；本方法在父 IfRegion 生成阶段调用。
         3. 唯一归属判定：每个 then 块只由本方法或其委托的 _process_if_blocks
-           发射一次；generated_blocks 为已发射标记集。
+           发射一次；generated_blocks 为已发射标记集。第二循环（遍历全部
+           self.regions 收集 top-level BoolOp/Ternary）以 find_enclosing_parent
+           守卫：已有更近的归属父区域（嵌套于 then 分支内的子 IfRegion/Loop/
+           Try/With/Match，且非当前 region）的 BoolOp/Ternary 跳过，交由该
+           父区域自底向上归约时生成（then_blocks 列出全部 then 分支块含深层
+           嵌套块，仅凭 entry ∈ then_blocks 不足以判定归属）。
         4. 嵌套处理：嵌套子区域作为单个抽象节点参与 then 体发射，父区域
            不展开子区域内部块。
         5. 入口引用语义：then_blocks 引用子区域 entry；本方法对子区域 entry
@@ -9116,7 +9121,37 @@ AST 映射规则:
             if not hasattr(child, 'entry') or child.entry is None:
                 continue
             if child.entry in self.generated_blocks:
-                continue
+                # [R10 fix 2] 区域归约算法原则 1（自底向上归约）+ 原则 2（每块
+                # 唯一归属）：双角色块检测。child.entry 同时是已生成 BoolOpRegion
+                # R1 的 merge_block 与本 child（BoolOpRegion R2）的 entry。R1 生成
+                # 时（_generate_boolop）将 merge_block 标记为 generated，但这仅
+                # 表示 R1 的赋值已发射，不代表 R2 已归约。若跳过 R2，R2 的
+                # value_target 赋值与 merge_block 内 STORE 之后的独立语句将丢失。
+                # 约束：仅当 R2.merge_block 不是任何其它区域的 entry 时才适用——
+                # 否则 _generate_boolop 会将 merge_block 标记为 generated，导致
+                # 以该块为 entry 的后续 IfRegion/LoopRegion 被跳过（退化）。
+                # 典型场景（load_bars_from_hundsun `if len(data) > 0:` 体）：
+                #   source_start = strptime(... or '0000')  ← R1@1724 merge=1862
+                #   source_end = strptime(... or '1530')    ← R2@1862 entry=1862（双角色）
+                #   panel = panel.ix[:, source_start:source_end]  ← R2 merge=2022（非任何区域 entry）
+                _is_dual_role_entry = False
+                if isinstance(child, BoolOpRegion) and child.merge_block is not None:
+                    _merge_is_other_entry = False
+                    for _r10_ck in self.regions:
+                        if (_r10_ck is not child
+                                and getattr(_r10_ck, 'entry', None) is child.merge_block):
+                            _merge_is_other_entry = True
+                            break
+                    if not _merge_is_other_entry:
+                        for _r10_dr in self.regions:
+                            if (isinstance(_r10_dr, BoolOpRegion)
+                                    and _r10_dr is not child
+                                    and _r10_dr.merge_block is child.entry
+                                    and id(_r10_dr) in self._generated_regions):
+                                _is_dual_role_entry = True
+                                break
+                if not _is_dual_role_entry:
+                    continue
             if child.entry.start_offset not in then_entry_offsets:
                 if not any(b in then_block_set for b in child.blocks):
                     continue
@@ -9243,6 +9278,23 @@ AST 映射规则:
                                 break
                     if _has_if_parent_same_entry:
                         continue
+                # [R10 fix] 区域归约算法原则 1（自底向上归约）+ 原则 2（每块唯一归属）：
+                # 本第二循环遍历全部 self.regions，仅凭 entry ∈ then_blocks（then_blocks
+                # 列出 then 分支内全部块，含深层嵌套子区域的块）不足以判定归属——必须
+                # 检查最近的归属父区域。若 BoolOp/Ternary 已有更近的归属父区域（嵌套于
+                # then 分支内的子 IfRegion/LoopRegion/TryExcept/With/Match，且非当前
+                # region），则交由该父区域归约时生成（自底向上），当前 region 跨层提前
+                # 生成会违反唯一归属并将赋值语句提升到外层 if 体之前。
+                # 典型场景：load_bars_from_hundsun 中 source_start = strptime(... or
+                # '0000') 的 BoolOp 子表达式（BoolOpRegion@286，归属父 IfRegion@214
+                # `if not dailypanel.empty:`）被外层 IfRegion@0 `if os.path.exists:`
+                # 的第二循环提前生成，导致 source_start 赋值提升到 if os.path.exists:
+                # 与 if typet==6: 之间（-88 字节码差异）。无归属父区域（top-level
+                # 表达式区域，parent=None）的不跳过，由本循环正常生成（保留 Round5-05
+                # 链式比较 top-level BoolOp 的合法路径）。
+                _r10_enclosing = r.find_enclosing_parent(self._STRUCTURAL_REGION_TYPES)
+                if _r10_enclosing is not None and _r10_enclosing is not region:
+                    continue
                 r_id = id(r)
                 if r_id in self._generated_regions or r_id in self._generating_regions:
                     continue
@@ -20817,27 +20869,44 @@ AST 映射规则:
                 if region.merge_block:
                     _merge_instrs = [i for i in region.merge_block.instructions
                                     if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                    _after_store = False
                     _store_ops_set = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
                                       'STORE_ATTR', 'STORE_SUBSCR')
-                    for i in _merge_instrs:
-                        if i.opname in _store_ops_set:
-                            _after_store = True
-                            continue
-                        if _after_store and i.opname not in ('JUMP_FORWARD', 'JUMP_BACKWARD',
-                                                              'JUMP_ABSOLUTE', 'JUMP_BACKWARD_NO_INTERRUPT'):
-                            _stmts = self._generate_block_statements(region.merge_block)
-                            for s in _stmts:
-                                # Skip the Assign/AugAssign that re-targets value_target
-                                # (already emitted above) — keep everything else.
-                                _s_target_id = None
-                                if s.get('type') == 'Assign' and s.get('targets'):
-                                    _s_target_id = s['targets'][0].get('id') if s['targets'] else None
-                                elif s.get('type') == 'AugAssign' and s.get('target'):
-                                    _s_target_id = s['target'].get('id')
-                                if _s_target_id != region.value_target:
-                                    results.append(s)
+                    # [R10 fix 3] 区域归约算法原则 2（每块唯一归属）+ 原则 1
+                    # （自底向上归约）：merge_block 已在上方标记为 generated，且块首
+                    # 可能含 BoolOp 链残留表达式（BINARY_OP 等消费栈值的指令），
+                    # _generate_block_statements 会因 generated 检查返回 [] 且无法从
+                    # 部分表达式重构。改为直接从 value_target STORE 之后的指令重建
+                    # 独立语句（如 panel = panel.ix[:, source_start:source_end]）。
+                    # 这些语句不属于 BoolOpRegion（其归属仅到 value_target STORE
+                    # 为止），应归属外层 IfRegion then-body，由本方法透传给父调用者。
+                    # 约束：若 merge_block 同时是另一区域的 entry（双角色块，如
+                    # R1.merge=1862 同时是 R2.entry），STORE 之后的指令归属该后续
+                    # 区域（R2 的 chain blocks），不可在此提取，否则会重复发射为
+                    # 独立 Expr（违反原则 2 每块唯一归属）。
+                    _merge_is_other_entry_r10f3 = False
+                    for _r10f3_r in self.regions:
+                        if (_r10f3_r is not region
+                                and getattr(_r10f3_r, 'entry', None) is region.merge_block):
+                            _merge_is_other_entry_r10f3 = True
                             break
+                    if not _merge_is_other_entry_r10f3:
+                        _first_store_idx = -1
+                        for _psi, i in enumerate(_merge_instrs):
+                            if i.opname in _store_ops_set:
+                                _first_store_idx = _psi
+                                break
+                        if _first_store_idx >= 0:
+                            _post_store_clean = []
+                            for _pi in _merge_instrs[_first_store_idx + 1:]:
+                                if _pi.opname in ('JUMP_FORWARD', 'JUMP_BACKWARD',
+                                                  'JUMP_ABSOLUTE', 'JUMP_BACKWARD_NO_INTERRUPT'):
+                                    break
+                                _post_store_clean.append(_pi)
+                            if _post_store_clean:
+                                _stmts = self._generate_stmts_from_instrs(
+                                    _post_store_clean, region.merge_block)
+                                for s in _stmts:
+                                    results.append(s)
             else:
                 has_short_circuit_op = any(
                     cb.get_last_instruction() and cb.get_last_instruction().opname in SHORT_CIRCUIT_JUMP_OPS
