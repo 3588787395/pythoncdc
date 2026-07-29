@@ -244,21 +244,25 @@
 
 ### 阶段一：测试工程师
 
-- [ ] R9-1 反编译 + 字节码 diff
-- [ ] R9-2 ≥10 最小复现实例
+- [x] R9-1 反编译 + 字节码 diff（142/150=94.67%，8 不一致）
+- [x] R9-2 ≥10 最小复现实例（10 个 repro 全部 py_compile 通过，覆盖 5 len_diff 函数 + Loop/Conditional 嵌套缺陷模式）
 
 ### 阶段二：修复工程师
 
-- [ ] R9-3 根因分析完成
-- [ ] R9-4 按算法修复 + docstring 更新
-- [ ] R9-5 回归测试通过
-- [ ] R9-6 `fix_report.md` 生成
+- [x] R9-3 根因分析完成（P0：`_if_generate_then_branch` else_stmts_check 探针副作用导致 else 体丢失，违反原则 2+4）
+- [x] R9-4 按算法修复 + docstring 更新
+  - 修复点：移除 `_if_generate_then_branch` 的 else_stmts_check 探针调用（-4 行）
+  - docstring：`_if_generate_then_branch` 6 节模板 + [Round 9 fix] 段
+- [x] R9-5 回归测试通过
+  - quotation.pyc 142/150 无退化；change_his_to_backward len_diff -57→instr_diff@296（指令数 578=578 归零）
+  - 既有矩阵 0 退化（IF 73/4 LOOP 77/3 BOOLOP 79/0 TERNARY 64/5 TRY 71/9 SEQ 80/0）
+- [x] R9-6 `fix_report.md` 生成（`rounds/round_09/repair_engineer/fix_report.md`）
 
 ### 验证与提交
 
-- [ ] R9-7 一致函数数 ≥ 轮 8
-- [ ] R9-8 反模式自检通过
-- [ ] R9-9 编译通过
+- [x] R9-7 一致函数数 ≥ 轮 8（142≥142，无退化；change_his_to_backward len_diff 归零）
+- [x] R9-8 反模式自检通过（G3：0 新增前缀方法；G4：0 新增硬编码深度上限）
+- [x] R9-9 编译通过（IMPORT_OK）
 - [ ] R9-10 commit + push `rr-r09:`
 
 ## 轮 10 (Round 10)

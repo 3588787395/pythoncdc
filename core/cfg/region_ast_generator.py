@@ -9036,7 +9036,35 @@ AST 映射规则:
         return pre_stmts, cond_instrs
 
     def _if_generate_then_branch(self, region: IfRegion) -> List[Dict[str, Any]]:
-        """生成 then 分支的语句列表"""
+        """生成 then 分支的语句列表。
+
+        6 节模板（Round 9 fix 涉及方法）：
+        1. 算法依据：No More Gotos §3.1——IfRegion 的 then 体由 then_blocks
+           中的顺序块与嵌套子区域（作为抽象节点）构成。空 then 体在循环中
+           按 then 块出口语义判定为 Break（then 块跳转到循环 break_blocks）
+           或 Pass（fallthrough）。
+        2. 归约顺序：自底向上——子区域（BoolOp/Ternary/嵌套 If/Loop/Try）
+           先于 then 体发射；本方法在父 IfRegion 生成阶段调用。
+        3. 唯一归属判定：每个 then 块只由本方法或其委托的 _process_if_blocks
+           发射一次；generated_blocks 为已发射标记集。
+        4. 嵌套处理：嵌套子区域作为单个抽象节点参与 then 体发射，父区域
+           不展开子区域内部块。
+        5. 入口引用语义：then_blocks 引用子区域 entry；本方法对子区域 entry
+           调用 _generate_region(child) 完整生成。
+        6. 反编译流程：扫描子区域 → _process_if_blocks(then_blocks) →
+           空 then 循环内 Break/Pass 判定 → 返回 stmts 列表。
+
+        [Round 9 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（入口引用语义）：
+        原 _if_generate_then_branch 在空 then + 循环上下文中调用
+        _if_generate_else_branch 作为"是否存在 else 体"的探针检查。该调用
+        有副作用——会将 else_blocks 标记为 generated_blocks。由于探针结果
+        仅作布尔判定（无论真假 then 均为 Pass），else 体语句被丢弃。随后
+        _if_generate_normal 第二次调用 _if_generate_else_branch 时，else 块
+        已标记为已生成，返回空，导致 else 体整段丢失（如 change_his_to_backward
+        的 `if len(...)==0:` 内层 if 的 else 体 data.loc[...] = round(...) 丢失，
+        len_diff=-57）。修复：移除探针调用，then 空 + 非循环出口时直接 Pass，
+        else 体由 _if_generate_normal 的正规 _if_generate_else_branch 调用生成。
+        """
         _expr_child_stmts = []
         then_entry_offsets = {b.start_offset for b in region.then_blocks} if region.then_blocks else set()
         then_block_set = set(region.then_blocks) if region.then_blocks else set()
@@ -9421,10 +9449,6 @@ AST 映射规则:
                     for b in region.then_blocks:
                         self.generated_blocks.add(b)
                     self.generated_offsets.update(b.start_offset for b in region.then_blocks)
-                    return then_stmts
-                else_stmts_check = self._if_generate_else_branch(region)
-                if else_stmts_check:
-                    then_stmts = [{'type': 'Pass'}]
                     return then_stmts
             then_stmts = [{'type': 'Pass'}]
         return then_stmts
