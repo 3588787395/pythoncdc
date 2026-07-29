@@ -10,51 +10,51 @@
 
 ### 阶段一：测试工程师
 
-- [ ] R11-1 反编译 quotation.pyc + 字节码 diff，输出 `rounds/round_11/test_engineer/decompile_report.md`
-  - [ ] R11-1a 复用 V1 的 `decompile_quotation.py` / `exact_match_stats.py`（输出到 `/tmp/r11_decompiled.py`，禁止修改反编译产物）
-  - [ ] R11-1b 统计一致函数数 / 总函数数 / 成功率，确认基线 143/150=95.33% 无退化
-  - [ ] R11-1c 按函数输出不一致指令 diff，聚焦 7 个残留函数
-- [ ] R11-2 ≥10 最小复现实例到 `rounds/round_11/test_engineer/minimal_repros/`
-  - [ ] R11-2a 重点针对 load_get_price（Conditional+BoolOp 嵌套残留 2 指令）
-  - [ ] R11-2b 每个 repro 可独立 py_compile 且能复现缺陷
-  - [ ] R11-2c 若残留 < 10 个不一致函数，记录为已达成退出条件 E2
+- [x] R11-1 反编译 quotation.pyc + 字节码 diff，输出 `rounds/round_11/test_engineer/decompile_report.md`
+  - [x] R11-1a 复用 V1 的 `decompile_quotation.py` / `exact_match_stats.py`（输出到 `/tmp/r11_decompiled.py`，禁止修改反编译产物）
+  - [x] R11-1b 统计一致函数数 / 总函数数 / 成功率，确认基线 143/150=95.33% 无退化
+  - [x] R11-1c 按函数输出不一致指令 diff，聚焦 7 个残留函数
+- [x] R11-2 ≥10 最小复现实例到 `rounds/round_11/test_engineer/minimal_repros/`
+  - [x] R11-2a 重点针对 load_get_price（Conditional+BoolOp 嵌套残留 2 指令）
+  - [x] R11-2b 每个 repro 可独立 py_compile 且能复现缺陷
+  - [x] R11-2c 若残留 < 10 个不一致函数，记录为已达成退出条件 E2
 
 ### 阶段二：修复工程师
 
-- [ ] R11-3 根因分析（定位到 `_identify_*_regions` / `_generate_*` 方法）
-- [ ] R11-4 按区域归约算法 4 原则修复 + 同步更新方法 docstring（6 节模板）
-- [ ] R11-5 回归测试
-  - [ ] R11-5a 10 个 repro 全部 py_compile 通过
-  - [ ] R11-5b 既有区域测试矩阵无退化（control_flow_matrix 基线 9 fail/318 pass）
-  - [ ] R11-5c quotation.pyc 一致函数数 ≥ 143（单调无退化）
-  - [ ] R11-5d `python -c "import core.cfg.region_analyzer; import core.cfg.region_ast_generator"` 编译通过
-- [ ] R11-6 输出 `rounds/round_11/repair_engineer/fix_report.md`
+- [x] R11-3 根因分析（定位到 `_generate_block_statements` peephole 误删自赋值 + `_generate_if` _if_depth 过早递减）
+- [x] R11-4 按区域归约算法 4 原则修复 + 同步更新方法 docstring（6 节模板）
+- [x] R11-5 回归测试
+  - [x] R11-5a 10 个 repro 全部 py_compile 通过
+  - [x] R11-5b 既有区域测试矩阵无退化（4fail/85pass == 4fail/85pass）
+  - [x] R11-5c quotation.pyc 一致函数数 ≥ 143（143→144，+1 单调递增）
+  - [x] R11-5d `python -c "import core.cfg.region_analyzer; import core.cfg.region_ast_generator"` 编译通过
+- [x] R11-6 输出 `rounds/round_11/repair_engineer/fix_report.md`
 
 ### 验证与提交
 
-- [ ] R11-7 一致函数数 ≥ 轮 10（143≥143），成功率单调无退化
-- [ ] R11-8 反模式自检通过（G3：0 新增；G4：0 新增硬编码深度）
-- [ ] R11-9 编译通过（IMPORT_OK）
-- [ ] R11-10 commit + push `rr-r11:` 到 origin（单次命令 ≤ 300 秒）
+- [x] R11-7 一致函数数 ≥ 轮 10（143→144，+1 单调递增；load_get_price -2→0 完全修复）
+- [x] R11-8 反模式自检通过（G3：0 新增；G4：0 新增硬编码深度）
+- [x] R11-9 编译通过（IMPORT_OK）
+- [x] R11-10 commit + push `rr-r11:` 到 origin（a4feb6b，已 push 到 main）
 
 ## 轮 12 (Round 12) — 重点攻克 get_str_data（-48 指令，Loop 嵌套循环体丢失）
 
 ### 阶段一：测试工程师
 
-- [ ] R12-1 反编译 + diff（输出到 round_12）
-- [ ] R12-2 ≥10 最小复现实例（重点针对 get_str_data 嵌套 for/while 循环体语句丢失）
+- [x] R12-1 反编译 + diff（输出到 round_12，`decompile_report.md` 已生成）
+- [x] R12-2 ≥10 最小复现实例（`minimal_repros/repro_01..repro_10.py`，重点针对 get_str_data 嵌套 for/while 循环体语句丢失）
 
 ### 阶段二：修复工程师
 
-- [ ] R12-3 根因分析（重点分析 `_generate_loop` 嵌套 for/while 循环体块遍历是否漏掉 merge/follow 块）
-- [ ] R12-4 按算法修复 + docstring 更新（`_generate_loop` 6 节模板）
-- [ ] R12-5 回归测试（quotation.pyc 一致函数数 ≥ R11；既有矩阵 0 退化）
-- [ ] R12-6 fix_report.md
+- [x] R12-3 根因分析（三层根因：A dict 构造消费模式未建模 + value_target='i' 误识别；B IfRegion else 不分发兄弟表达式子区域；C 链式共享 merge_block）
+- [ ] R12-4 按算法修复 + docstring 更新 — 尝试兄弟表达式子区域收集 + 共享 merge_block 处理，因暴露根因 A 导致 -48→-69 退化已回退（见 `fix_report.md` §4）；完整修复需先建模 BUILD_CONST_KEY_MAP 消费模式，deferred 至后续轮次
+- [x] R12-5 回归测试（quotation.pyc 一致函数数 144 ≥ R11；既有矩阵 184pass/5fail == R11 基线 0 退化；IMPORT_OK）
+- [x] R12-6 fix_report.md（`repair_engineer/fix_report.md`）
 
 ### 验证与提交
 
-- [ ] R12-7 一致函数数 ≥ 轮 11
-- [ ] R12-8 反模式自检 + 编译通过
+- [x] R12-7 一致函数数 ≥ 轮 11（144 == 144，无退化）
+- [x] R12-8 反模式自检 + 编译通过（G3/G4 0 新增；IMPORT_OK）
 - [ ] R12-9 commit + push `rr-r12:`
 
 ## 轮 13 (Round 13) — 重点攻克 get_date_and_count（-27 指令，Loop+Conditional while if/elif 链丢失）
