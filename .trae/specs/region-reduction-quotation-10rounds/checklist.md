@@ -84,22 +84,28 @@
 
 ### 阶段一：测试工程师
 
-- [ ] R3-1 反编译 + 字节码 diff
-- [ ] R3-2 ≥10 最小复现实例
+- [x] R3-1 反编译 + 字节码 diff
+  - 141/150 = 94.00%，compile_ok=True，9 个不一致函数（与 R2 基线一致，无退化）
+- [x] R3-2 ≥10 最小复现实例
+  - 12 个 repro，12/12 复现缺陷
 
 ### 阶段二：修复工程师
 
-- [ ] R3-3 根因分析完成
-- [ ] R3-4 按算法修复 + docstring 更新
-- [ ] R3-5 回归测试通过
-- [ ] R3-6 `fix_report.md` 生成
+- [x] R3-3 根因分析完成（P0-B 长 or 链：_is_valid_2elem_mixed_chain 误判 + BoolOpRegion 内部块被 IfRegion 吞并）
+- [x] R3-4 按算法修复 + docstring 更新
+  - 修复点 1：`_detect_boolop_conditional_chain`（region_analyzer.py）and(or-chain) 入口引用语义判定
+  - 修复点 2：`_identify_conditional_regions`（region_analyzer.py）BoolOpRegion 内部块从 all_condition_blocks 移除
+  - docstring：`_detect_boolop_conditional_chain` 第 4 节 + `_identify_conditional_regions` 第 3 节新增 R3 修复段
+- [x] R3-5 回归测试通过
+  - repro 0/12 完全通过（repro_03 +1 / repro_10 +2 指令数收窄，部分改善，0 退化）；既有矩阵 0 退化（IF 73/4 BOOLOP 79/0 TERNARY 64/5 LOOP 77/3 TRY 71/9 SEQ 80/0）
+- [x] R3-6 `fix_report.md` 生成
 
 ### 验证与提交
 
-- [ ] R3-7 一致函数数 ≥ 轮 2
-- [ ] R3-8 反模式自检通过
-- [ ] R3-9 编译通过
-- [ ] R3-10 commit + push `rr-r03:`
+- [x] R3-7 一致函数数 ≥ 轮 2（141→141，无退化）
+- [x] R3-8 反模式自检通过（G3：0 新增）
+- [x] R3-9 编译通过（IMPORT_OK）
+- [x] R3-10 commit + push `rr-r03:`（已执行）
 
 ## 轮 4 (Round 4)
 

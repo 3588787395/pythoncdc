@@ -10805,6 +10805,17 @@ RegionType 枚举值: RegionType.ASSERT
            - guard 块排除: 位于 case body 内且前向跳转到同 MatchRegion case_block 的块跳过
            - TernaryRegion 值块排除: BoolOpRegion 是 TernaryRegion 的 true/false value block 时跳过
            - 每个基本块经 block_to_region 唯一归属一个 IfRegion
+           [Round 3 fix P0-B] 当 if 条件是一个 BoolOpRegion（如
+           `is_utc=='0' and (typet==1 or ... or typet==13)`），BoolOpRegion
+           的内部操作数块（op_chain 中除 entry 外的块）归属 BoolOpRegion，
+           不应被 IfRegion 的 all_condition_blocks 吞并。从 all_condition_blocks
+           中移除 BoolOpRegion 内部块（保留 entry 作为条件引用入口），
+           chain_blocks 保持不变（用于 _collect_branch_blocks 边界停止集）。
+           依据原则 2（每块唯一归属）+ 原则 3（嵌套即抽象节点）+ 原则 4
+           （入口引用语义）：IfRegion 通过 entry 引用 BoolOpRegion 作为抽象
+           条件节点，BoolOpRegion 作为子区域挂载于 IfRegion。否则
+           IF_ELIF_CHAIN(priority=30) 覆盖 BOOL_OP(priority=20) 导致 or 链
+           条件被错误折叠为 `(boolop) == 6`（elif 条件合并进 if 条件）。
 
         4. 归约语义（与父区域的契约）
            - 入口块: 条件判断块（region.entry，含 POP_JUMP_FORWARD_IF_*）
@@ -11655,6 +11666,30 @@ RegionType 枚举值: RegionType.ASSERT
                     then_blocks = [b for b in then_blocks if b not in _conditional_back_edge_blocks and (b not in _then_back_edge_blocks or b == then_succ) and b != block]
 
             all_condition_blocks = {condition_block} | chain_blocks
+
+            # [R3 fix P0-B] 区域归约算法原则 2（每块唯一归属）+ 原则 3
+            # （嵌套即抽象节点）+ 原则 4（入口引用语义）：
+            # 当 if 条件是一个 BoolOpRegion（如 `is_utc == '0' and
+            # (typet==1 or ... or typet==13)`），BoolOpRegion 的内部操作数
+            # 块（op_chain 中除 entry 外的块）归属 BoolOpRegion，不应被
+            # IfRegion 的 blocks 集合吞并。IfRegion 通过 entry 引用
+            # BoolOpRegion 作为抽象条件节点（原则 4），BoolOpRegion 作为
+            # 子区域挂载于 IfRegion（原则 3）。
+            #
+            # 缺陷模式：load_bars_from_hundsun / load_get_price 中
+            # `if is_utc == '0' and (typet==1 or ... or typet==13):` 的
+            # BoolOp 链（blocks=[180,202,...,262]）被 IF_ELIF_CHAIN 的
+            # all_blocks 吞并，block_to_region 重建时 IF_ELIF_CHAIN
+            # (priority=30) 覆盖 BOOL_OP (priority=20)，导致 BoolOpRegion
+            # 的内部块归属丢失，AST 生成时 or 链条件被错误折叠为
+            # `(boolop) == 6`（elif 条件被合并进 if 条件）。
+            #
+            # 修复：从 all_condition_blocks 中移除 BoolOpRegion 的内部块
+            # （保留 entry 作为条件引用入口）。chain_blocks 保持不变（用于
+            # _collect_branch_blocks 的边界停止集，防止条件块被收入 then/else）。
+            if isinstance(block_region, BoolOpRegion) and block_region.entry == block:
+                _r3_boolop_internal = set(b for b, _ in block_region.op_chain) - {block}
+                all_condition_blocks -= _r3_boolop_internal
 
             # [聚类2 修复] 检测 await 前驱链：当 condition_block 的前驱链包含
             # await 轮询自循环（SEND+YIELD_VALUE+JUMP_BACKWARD_NO_INTERRUPT）和
@@ -16759,6 +16794,15 @@ RegionType 枚举值: RegionType.ASSERT
            _is_valid_2elem_mixed_chain 验证：若首 'and' 操作数短路目标不在
            第二 'or' 操作数后继集内，说明该操作数属外层 if 条件，返回 None
            让 IfRegion 检测器处理嵌套结构（原则 3 嵌套即抽象节点）。
+           [Round 3 fix P0-B] 对 `A and (B or C or ... or D)` 长 or 链，
+           原 _is_valid_2elem_mixed_chain 仅检查 A 目标是否在第二 'or' 操作数
+           B 的后继集内，对 and(or-chain) 模式误判为嵌套 if-else 而拒绝。
+           补充判定：若 A 的跳转目标 == 链中最后一个 'or' 操作数 D 的跳转目标
+           （两者共用同一 exit/else 入口），则为合法 and(or-chain)，接受；
+           否则确为嵌套 if-else（A 跳外层 else，末 or 跳内层 else），拒绝。
+           依据原则 4（入口引用语义）：合法 BoolOp 链的所有「失败路径」
+           汇聚到同一 exit 入口（覆盖 load_bars_from_hundsun / load_get_price
+           的 -174/-25 指令丢失）。
         5. 入口引用语义：BoolOpRegion 以链首块为 entry，父 IfRegion 的条件
            表达式引用该 entry；归约后父区域只见 entry，不见内部操作数块。
         6. 反编译流程：链 → _try_unify_mixed_boolop_chain 统一为
@@ -17584,7 +17628,34 @@ RegionType 枚举值: RegionType.ASSERT
                             and unified_chain[1][1] == 'or'):
                         if not self._is_valid_2elem_mixed_chain(
                                 [unified_chain[0], unified_chain[1]]):
-                            return None
+                            # [R3 fix P0-B] 区域归约算法原则 4（入口引用语义）
+                            # + 原则 1（自底向上归约）：合法的
+                            # `A and (B or C or ... or D)` 长 or 链中，首个
+                            # 'and' 操作数 A 的短路跳转目标（exit/else）必然
+                            # 与最后一个 'or' 操作数 D 的短路跳转目标相同
+                            # （两者共用同一 exit/else 入口）。原 _is_valid_
+                            # 2elem_mixed_chain 仅检查 A 的目标是否在第二个
+                            # 'or' 操作数 B 的后继集内，对 `and(or-chain)` 模式
+                            # 误判为嵌套 if-else 而拒绝（覆盖 load_bars_from_
+                            # hundsun / load_get_price 的 -174/-25 指令丢失）。
+                            # 补充：若 A 的跳转目标 == 链中最后一个 'or' 操作数
+                            # 的跳转目标，则为合法 and(or-chain)，接受；否则
+                            # 确为嵌套 if-else（A 跳外层 else，末 or 跳内层
+                            # else），拒绝。此判定依据入口引用语义：合法 BoolOp
+                            # 链的所有「失败路径」汇聚到同一 exit 入口。
+                            _first_and_blk_r3 = unified_chain[0][0]
+                            _last_or_blk_r3 = None
+                            for _b_r3, _op_r3 in reversed(unified_chain):
+                                if _op_r3 == 'or':
+                                    _last_or_blk_r3 = _b_r3
+                                    break
+                            _fa_last_r3 = _first_and_blk_r3.get_last_instruction()
+                            _lo_last_r3 = (_last_or_blk_r3.get_last_instruction()
+                                           if _last_or_blk_r3 else None)
+                            if not (_fa_last_r3 and _fa_last_r3.argval is not None
+                                    and _lo_last_r3 and _lo_last_r3.argval is not None
+                                    and _fa_last_r3.argval == _lo_last_r3.argval):
+                                return None
                     return unified_chain
             elif not self._is_nested_if_else_pattern(chain):
                 unified_chain = self._try_unify_mixed_boolop_chain(chain, first_jt)

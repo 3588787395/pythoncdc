@@ -49,14 +49,22 @@
 
 ## 轮 3 (Round 3)
 
-- [ ] T3-1 测试工程师：反编译 + diff
-- [ ] T3-2 测试工程师：≥10 最小复现实例
-- [ ] T3-3 修复工程师：根因分析
-- [ ] T3-4 修复工程师：按算法修复 + docstring 更新
-- [ ] T3-5 修复工程师：回归测试
-- [ ] T3-6 修复工程师：fix_report.md
-- [ ] T3-7 验证一致函数数 ≥ 轮 2
-- [ ] T3-8 commit + push `rr-r03:`
+- [x] T3-1 测试工程师：反编译 + diff
+  - 141/150 = 94.00%，compile_ok=True，9 个不一致函数（与 R2 基线一致，无退化）
+  - 产物：`rounds/round_03/test_engineer/{decompile_quotation.py, exact_match_stats.py, diff_detail.py, bc_results.json, diff_detail.txt, decompile_report.md}`
+- [x] T3-2 测试工程师：≥10 最小复现实例
+  - 12 个 repro，12/12 复现缺陷（覆盖 FOR_ITER 边界 / 长 or 链 / listcomp 跳转目标 / 循环后构造 / 模块级 NOP）
+- [x] T3-3 修复工程师：根因分析
+  - P0-B：长 or 链 `A and (B or C or ... or D)` 被 `_is_valid_2elem_mixed_chain` 误判为嵌套 if-else 而拒绝 BoolOp 链（违反原则 4 入口引用语义）；BoolOpRegion 内部块被 IfRegion all_condition_blocks 吞并（违反原则 2 每块唯一归属）
+- [x] T3-4 修复工程师：按算法修复 + docstring 更新
+  - 修复点 1：`_detect_boolop_conditional_chain` and(or-chain) 入口引用语义判定（A 与末 or 跳转目标相等性）
+  - 修复点 2：`_identify_conditional_regions` BoolOpRegion 内部块从 all_condition_blocks 移除
+  - docstring：`_detect_boolop_conditional_chain` 第 4 节 + `_identify_conditional_regions` 第 3 节新增 `[Round 3 fix P0-B]` 段
+- [x] T3-5 修复工程师：回归测试
+  - repro 0/12 完全通过（repro_03 +1 / repro_10 +2 指令数收窄，部分改善）；既有矩阵 0 退化（IF 73/4 BOOLOP 79/0 TERNARY 64/5 LOOP 77/3 TRY 71/9 SEQ 80/0）
+- [x] T3-6 修复工程师：fix_report.md（`rounds/round_03/repair_engineer/fix_report.md`）
+- [x] T3-7 验证一致函数数 ≥ 轮 2（141→141，无退化；R3 修复改变长 or 链 repro 行为但原始 quotation.pyc CFG 路径未触达，diff 不变）
+- [x] T3-8 commit + push `rr-r03:`（已执行）
 
 ## 轮 4 (Round 4)
 

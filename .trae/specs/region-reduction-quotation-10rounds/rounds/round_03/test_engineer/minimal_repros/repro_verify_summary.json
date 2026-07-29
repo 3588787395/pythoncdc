@@ -1,0 +1,151 @@
+{
+  "repros": [
+    {
+      "file": "repro_01_for_iter_target_early.py",
+      "status": "reproduces",
+      "total": 2,
+      "matched": 0,
+      "mismatched": 2,
+      "first_bad": {
+        "name": "<module>",
+        "status": "instr_diff",
+        "extra": "idx=3 orig=(6, 'LOAD_CONST', <code object change_his_to_backward at 0x55c33e237150, file \"/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_03/test_engineer/minimal_repros/repro_01_for_iter_target_early.py\", line 9>) new=(6, 'LOAD_CONST', <code object change_his_to_backward at 0x55c33e23b6c0, file \"<decompiled>\", line 10>)"
+      }
+    },
+    {
+      "file": "repro_02_post_loop_panel_construct.py",
+      "status": "reproduces",
+      "total": 2,
+      "matched": 0,
+      "mismatched": 2,
+      "first_bad": {
+        "name": "<module>",
+        "status": "instr_diff",
+        "extra": "idx=11 orig=(22, 'LOAD_CONST', <code object get_str_data at 0x55c33e2450f0, file \"/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_03/test_engineer/minimal_repros/repro_02_post_loop_panel_construct.py\", line 11>) new=(22, 'LOAD_CONST', <code object get_str_data at 0x55c33e398e20, file \"<decompiled>\", line 12>)"
+      }
+    },
+    {
+      "file": "repro_03_long_or_chain_body_pass.py",
+      "status": "reproduces",
+      "total": 2,
+      "matched": 0,
+      "mismatched": 2,
+      "first_bad": {
+        "name": "<module>",
+        "status": "instr_diff",
+        "extra": "idx=3 orig=(6, 'LOAD_CONST', <code object load_bars_from_hundsun at 0x55c33e3ad840, file \"/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_03/test_engineer/minimal_repros/repro_03_long_or_chain_body_pass.py\", line 12>) new=(6, 'LOAD_CONST', <code object load_bars_from_hundsun at 0x55c33e398e20, file \"<decompiled>\", line 13>)"
+      }
+    },
+    {
+      "file": "repro_04_long_or_chain_if_and_body.py",
+      "status": "reproduces",
+      "total": 2,
+      "matched": 0,
+      "mismatched": 2,
+      "first_bad": {
+        "name": "<module>",
+        "status": "instr_diff",
+        "extra": "idx=3 orig=(6, 'LOAD_CONST', <code object load_get_price at 0x55c33e20f3d0, file \"/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_03/test_engineer/minimal_repros/repro_04_long_or_chain_if_and_body.py\", line 15>) new=(6, 'LOAD_CONST', <code object load_get_price at 0x55c33e39bf40, file \"<decompiled>\", line 16>)"
+      }
+    },
+    {
+      "file": "repro_05_listcomp_jump_target_nested_for.py",
+      "status": "reproduces",
+      "total": 3,
+      "matched": 1,
+      "mismatched": 2,
+      "first_bad": {
+        "name": "<module>",
+        "status": "instr_diff",
+        "extra": "idx=3 orig=(6, 'LOAD_CONST', <code object build_future_fill_time at 0x55c33e3a7790, file \"/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_03/test_engineer/minimal_repros/repro_05_listcomp_jump_target_nested_for.py\", line 9>) new=(6, 'LOAD_CONST', <code object build_future_fill_time at 0x55c33e3a2560, file \"<decompiled>\", line 10>)"
+      }
+    },
+    {
+      "file": "repro_06_long_or_chain_first_cond.py",
+      "status": "reproduces",
+      "total": 2,
+      "matched": 0,
+      "mismatched": 2,
+      "first_bad": {
+        "name": "<module>",
+        "status": "instr_diff",
+        "extra": "idx=3 orig=(6, 'LOAD_CONST', <code object adjust_panel_first at 0x7fc3994f2010, file \"/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_03/test_engineer/minimal_repros/repro_06_long_or_chain_first_cond.py\", line 8>) new=(6, 'LOAD_CONST', <code object adjust_panel_first at 0x7fc399545d30, file \"<decompiled>\", line 9>)"
+      }
+    },
+    {
+      "file": "repro_07_long_or_chain_else_branch.py",
+      "status": "reproduces",
+      "total": 2,
+      "matched": 0,
+      "mismatched": 2,
+      "first_bad": {
+        "name": "<module>",
+        "status": "instr_diff",
+        "extra": "idx=3 orig=(6, 'LOAD_CONST', <code object adjust_panel_else at 0x7fc3994df4b0, file \"/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_03/test_engineer/minimal_repros/repro_07_long_or_chain_else_branch.py\", line 9>) new=(6, 'LOAD_CONST', <code object adjust_panel_else at 0x7fc3994dd530, file \"<decompiled>\", line 10>)"
+      }
+    },
+    {
+      "file": "repro_08_for_iter_while_subscr_post.py",
+      "status": "reproduces",
+      "total": 2,
+      "matched": 0,
+      "mismatched": 2,
+      "first_bad": {
+        "name": "<module>",
+        "status": "instr_diff",
+        "extra": "idx=3 orig=(6, 'LOAD_CONST', <code object process_with_while at 0x55c33e231b60, file \"/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_03/test_engineer/minimal_repros/repro_08_for_iter_while_subscr_post.py\", line 9>) new=(6, 'LOAD_CONST', <code object process_with_while at 0x55c33e3a7790, file \"<decompiled>\", line 10>)"
+      }
+    },
+    {
+      "file": "repro_09_for_loop_body_tail_subscr.py",
+      "status": "reproduces",
+      "total": 2,
+      "matched": 0,
+      "mismatched": 2,
+      "first_bad": {
+        "name": "<module>",
+        "status": "instr_diff",
+        "extra": "idx=3 orig=(6, 'LOAD_CONST', <code object process_rows at 0x7fc398cc9230, file \"/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_03/test_engineer/minimal_repros/repro_09_for_loop_body_tail_subscr.py\", line 9>) new=(6, 'LOAD_CONST', <code object process_rows at 0x7fc399f03670, file \"<decompiled>\", line 10>)"
+      }
+    },
+    {
+      "file": "repro_10_long_or_chain_elif_tz.py",
+      "status": "reproduces",
+      "total": 2,
+      "matched": 0,
+      "mismatched": 2,
+      "first_bad": {
+        "name": "<module>",
+        "status": "instr_diff",
+        "extra": "idx=3 orig=(6, 'LOAD_CONST', <code object adjust_panel at 0x7fc398cc9630, file \"/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_03/test_engineer/minimal_repros/repro_10_long_or_chain_elif_tz.py\", line 8>) new=(6, 'LOAD_CONST', <code object adjust_panel at 0x7fc3994df670, file \"<decompiled>\", line 9>)"
+      }
+    },
+    {
+      "file": "repro_11_listcomp_not_guard_two_branch.py",
+      "status": "reproduces",
+      "total": 3,
+      "matched": 1,
+      "mismatched": 2,
+      "first_bad": {
+        "name": "<module>",
+        "status": "instr_diff",
+        "extra": "idx=3 orig=(6, 'LOAD_CONST', <code object build_future_fill_time_guard at 0x7fc3994df9f0, file \"/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_03/test_engineer/minimal_repros/repro_11_listcomp_not_guard_two_branch.py\", line 9>) new=(6, 'LOAD_CONST', <code object build_future_fill_time_guard at 0x7fc3994df670, file \"<decompiled>\", line 10>)"
+      }
+    },
+    {
+      "file": "repro_12_for_loop_tail_post_construct.py",
+      "status": "reproduces",
+      "total": 2,
+      "matched": 0,
+      "mismatched": 2,
+      "first_bad": {
+        "name": "<module>",
+        "status": "instr_diff",
+        "extra": "idx=7 orig=(14, 'LOAD_CONST', <code object build_frame at 0x55c33e3b0a50, file \"/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_03/test_engineer/minimal_repros/repro_12_for_loop_tail_post_construct.py\", line 10>) new=(14, 'LOAD_CONST', <code object build_frame at 0x55c33e363b40, file \"<decompiled>\", line 11>)"
+      }
+    }
+  ],
+  "total_repros": 12,
+  "reproduces_count": 12,
+  "pass_count": 0
+}
