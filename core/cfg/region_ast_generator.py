@@ -28399,6 +28399,43 @@ AST 映射规则:
         return stmts
 
     def _generate_block_statements(self, block: BasicBlock, _cjb_parent: BasicBlock = None) -> List[Dict[str, Any]]:
+        """_generate_block_statements - 基本块 AST 语句生成（BasicBlock → ast.stmt 列表）
+
+        输入契约:
+          - 接收 BasicBlock 及可选的父块 _cjb_parent（用于条件跳转上下文）。
+          - 若 block 已在 generated_blocks / generated_offsets 中，返回空列表（去重）。
+          - block.instructions 为该块的原始字节码指令序列。
+
+        AST 映射规则:
+          - 输出 AST 节点: ast.Assign / ast.Expr / ast.Return / ast.Break / ast.Pass 等。
+          - 循环内 break 检测: POP_TOP(迭代器清理) + LOAD_CONST None + RETURN_VALUE → ast.Break。
+          - BlockRole.BREAK/PURE_BREAK 块: trivial return-none → ast.Break；
+            否则走 _generate_return_ast 重建 Return 节点。
+          - NOP + RETURN trivial 块: 根据行号跨度判断 while True + break 模式。
+          - 通用语句重建: 按指令序列重建表达式与赋值（LOAD_*/STORE_*/CALL/BINARY_OP 等），
+            自赋值语句（如 `panel = panel`）作为真实指令产出 ast.Assign 节点。
+
+        子区域处理:
+          - 本方法处理单个基本块，不直接递归子区域。
+          - generated_blocks / generated_offsets 标记已生成块，避免外层区域重复生成。
+          - _loop_depth 用于区分循环体内外的 break 检测逻辑。
+
+        字节码一致性约束:
+          - 块内所有有语义指令必须被完整映射到 AST 节点，不得丢弃。
+          - 自赋值语句（LOAD_FAST x + STORE_FAST x）是原始字节码中的真实指令，
+            必须产出 Assign 节点以保持字节码一致（R11 fix）。
+          - break/return 转换必须与原始跳转语义一致。
+
+          本方法遵循区域归约算法 4 核心原则:
+            自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口
+
+          R11 修复（P0，自赋值 peephole 移除）：原实现在本方法中包含一段 peephole
+          优化，将 `LOAD_FAST x + STORE_FAST x`（自赋值）替换为 Pass。该模式匹配
+          属于跨层启发式规则，违反原则 4（入口引用语义）及「禁止用模式匹配替代算法」
+          「后处理修正（一次正确原则）」。移除后，自赋值块走正常语句生成路径，产出
+          ast.Assign 节点（如 `panel = panel`），恢复 load_get_price 函数循环退出后
+          被丢弃的 2 条指令（orig idx 198 LOAD_FAST 'panel' + idx 199 STORE_FAST 'panel'）。
+        """
         if block in self.generated_blocks or block.start_offset in self.generated_offsets:
             return []
         if any(i.opname == 'BINARY_OP' for i in block.instructions):
@@ -28471,18 +28508,11 @@ AST 映射规则:
                     self.generated_offsets.add(block.start_offset)
                     return [{'type': 'Break'}]
 
-        meaningful = [i for i in block.instructions
-                     if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-        if len(meaningful) == 2:
-            load_instr = meaningful[0]
-            store_instr = meaningful[1]
-            load_ops = ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF')
-            store_ops = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
-            if (load_instr.opname in load_ops and store_instr.opname in store_ops
-                and load_instr.argval == store_instr.argval):
-                self.generated_blocks.add(block)
-                return [{'type': 'Pass'}]
-
+        # [R11 fix] 移除自赋值 peephole（LOAD_FAST x + STORE_FAST x → Pass）。
+        # 该模式匹配属于跨层启发式规则，违反区域归约算法原则 4（入口引用语义）
+        # 及「禁止用模式匹配替代算法」「后处理修正（一次正确原则）」。
+        # 自赋值语句（如 `panel = panel`）是原始字节码中的真实指令，必须通过
+        # 正常语句生成路径产出 Assign 节点，不得被 peephole 丢弃。
         pass_return_stmts = None
         instrs = block.instructions
         if len(instrs) >= 2:

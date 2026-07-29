@@ -1206,17 +1206,17 @@ class CodeGenerator:
                 self._write_line(f'elif {elif_test_code}:')
                 
                 # 生成elif的body
-                # [关键修复] 临时增加if深度，确保elif body中的self-assignment不会被跳过
+                # [R11 fix] 临时增加if深度，确保elif body及else body中的
+                # self-assignment不会被跳过（_if_depth 在整个 elif/else 处理期间保持 > 0）
                 self._if_depth += 1
                 self._increase_indent()
                 self._generate_block(first_node.body)
                 self._decrease_indent()
-                self._if_depth -= 1
-                
+
                 # 递归处理elif的orelse（可能是另一个elif或else）
                 if first_node.orelse and first_node.orelse.nodes:
                     self._generate_elif_or_else(first_node.orelse)
-                
+
                 # [关键修复] 处理orelse中剩余的节点（非elif部分）
                 if len(node.orelse.nodes) > 1:
                     remaining_nodes = node.orelse.nodes[1:]
@@ -1231,6 +1231,7 @@ class CodeGenerator:
                         for n in filtered_nodes:
                             self._generate_node(n)
                         self._decrease_indent()
+                self._if_depth -= 1
             else:
                 # [关键修复] 只有当else块有实际内容时才生成else
                 # [修复] 不过滤return None，因为这在某些情况下是有意义的逻辑分支
