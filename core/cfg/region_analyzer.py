@@ -14525,6 +14525,19 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 for instr in merge_block.instructions:
                     if instr.opname in NOISE_OPS:
                         continue
+                    # [R18 根因 A] STORE_SUBSCR (如 `data.loc[i] = ...`) 是下标
+                    # 赋值目标，不是简单变量赋值。value_target 保持 None（表示
+                    # 非简单变量目标），由 container_type / 后续 AST 生成路径处理。
+                    # 依「每块唯一归属」: STORE_SUBSCR 是 ternary 值的消费者
+                    # （经 BUILD_CONST_KEY_MAP 等容器构造），其后续指令属于下一
+                    # 条语句，不应继续扫描到后续 STORE_FAST 而误识别 value_target。
+                    # 历史问题：get_str_data 中 TernaryRegion@1226 的 merge_block
+                    # 含 BUILD_CONST_KEY_MAP + STORE_SUBSCR，扫描跳过 STORE_SUBSCR
+                    # 继续到 STORE_FAST 'i' (i += 1)，误赋 value_target='i'，
+                    # 导致生成 `i = (ternary)` 而非 dict 构造。
+                    if instr.opname == 'STORE_SUBSCR':
+                        merge_context = 'store'
+                        break
                     if instr.opname in ('STORE_FAST', 'STORE_NAME',
                                         'STORE_GLOBAL', 'STORE_DEREF'):
                         # [R14 类别 C] walrus + 三元 + 后续操作模式检测：

@@ -157,25 +157,25 @@
 - [ ] R17-8 反模式自检 + 编译通过
 - [ ] R17-9 commit + push `rr-r17:`
 
-## 轮 18 (Round 18) — 综合回归与残留收尾
+## 轮 18 (Round 18) — 重点修复 get_str_data 根因 A（STORE_SUBSCR value_target 误识别）
 
 ### 阶段一：测试工程师
 
-- [ ] R18-1 反编译 + diff（输出到 round_18）
-- [ ] R18-2 ≥10 最小复现实例（综合覆盖残留缺陷模式）
+- [x] R18-1 反编译 + diff（输出到 round_18，`decompile_report.md` 已生成；基线 147/150=98.00% 无退化）
+- [x] R18-2 ≥10 最小复现实例（`minimal_repros/repro_01..repro_10.py`，重点针对 BUILD_CONST_KEY_MAP+STORE_SUBSCR dict 构造消费模式）
 
 ### 阶段二：修复工程师
 
-- [ ] R18-3 根因分析（残留缺陷综合定位）
-- [ ] R18-4 按算法修复 + docstring 更新
-- [ ] R18-5 回归测试（quotation.pyc 一致函数数 ≥ R17；既有矩阵 0 退化）
-- [ ] R18-6 fix_report.md
+- [x] R18-3 根因分析完成（根因 A：TernaryRegion value_target 对 STORE_SUBSCR 误识别为下标变量 'i'；B/C deferred 避免退化）
+- [x] R18-4 按算法修复 + docstring 更新（`region_analyzer.py` merge_block 扫描循环新增 STORE_SUBSCR 检测分支，4 原则合规）
+- [x] R18-5 回归测试通过（quotation.pyc 一致函数数 147/150 == R17；矩阵 9 fail/318 pass/11 skip stash 验证 0 退化；IMPORT_OK；10 repros compile OK）
+- [x] R18-6 `fix_report.md` 生成（`repair_engineer/fix_report.md`）
 
 ### 验证与提交
 
-- [ ] R18-7 一致函数数 ≥ 轮 17
-- [ ] R18-8 反模式自检 + 编译通过
-- [ ] R18-9 commit + push `rr-r18:`
+- [x] R18-7 一致函数数 ≥ 轮 17（147 == 147，无退化）
+- [x] R18-8 反模式自检 + 编译通过（G3/G4 0 新增；IMPORT_OK）
+- [ ] R18-9 commit + push `rr-r18:` 到 origin
 
 ## 轮 19 (Round 19) — 综合回归与残留收尾
 
