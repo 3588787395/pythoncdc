@@ -24,18 +24,28 @@
   - repro 10→8（repro_06/09 通过）；既有矩阵 0 退化
 - [x] T1-6 修复工程师：输出 `rounds/round_01/repair_engineer/fix_report.md`
 - [x] T1-7 验证一致函数数 ≥ 基线，成功率单调递增（141→141，无退化）
-- [ ] T1-8 commit + push `rr-r01:` 到 origin/main
+- [x] T1-8 commit + push `rr-r01:` 到 origin/main（ec8ca39..21507b7）
 
 ## 轮 2 (Round 2)
 
-- [ ] T2-1 测试工程师：反编译 + diff（同 T1-1，输出到 round_02）
-- [ ] T2-2 测试工程师：≥10 最小复现实例
-- [ ] T2-3 修复工程师：根因分析
-- [ ] T2-4 修复工程师：按算法修复 + docstring 更新
-- [ ] T2-5 修复工程师：回归测试
-- [ ] T2-6 修复工程师：fix_report.md
-- [ ] T2-7 验证一致函数数 ≥ 轮 1
-- [ ] T2-8 commit + push `rr-r02:`
+- [x] T2-1 测试工程师：反编译 + diff（同 T1-1，输出到 round_02）
+  - 141/150 = 94.00%，compile_ok=True，9 个不一致函数（与 R1 基线一致，无退化）
+- [x] T2-2 测试工程师：≥10 最小复现实例
+  - 21 个 repro，13 个复现缺陷（repro_01/02/03/05/06/08/09/15/16/17/19/20/21）
+- [x] T2-3 修复工程师：根因分析
+  - P0-1：循环体内 STORE_SUBSCR 固定指令数切分 + 循环变量重赋值被吞并
+  - P0-2：三元条件链块未提取前序 STORE_* 赋值 + _detect_ternary_context 误判前序 LOAD_METHOD
+- [x] T2-4 修复工程师：按算法修复 + docstring 更新
+  - 修复点 1：新增 `_split_subscr_operands`（栈效应切分）+ 更新 4 处 STORE_SUBSCR 处理（region_ast_generator.py）
+  - 修复点 2：`_generate_block_statements` 循环变量重赋值仅当无前序表达式时跳过（region_ast_generator.py）
+  - 修复点 3：`_build_ternary_boolop_condition` 新增 pre_stmts 参数提取前序赋值（region_ast_generator.py）
+  - 修复点 4：`_detect_ternary_context` 前序 STORE_* 跳过 LOAD_METHOD 扫描（region_analyzer.py）
+  - docstring 更新：`_identify_ternary_regions` / `_generate_loop` / `_split_subscr_operands` + 内部注释标注 R2-P0
+- [x] T2-5 修复工程师：回归测试
+  - repro 13→4（repro_01/05/06/08/16/17/19/20/21 通过，9 个修复）；既有矩阵 0 退化
+- [x] T2-6 修复工程师：fix_report.md（`rounds/round_02/repair_engineer/fix_report.md`）
+- [x] T2-7 验证一致函数数 ≥ 轮 1（141→141，无退化；fill_minute_or_day_blank +12、get_str_data +5 指令恢复）
+- [x] T2-8 commit + push `rr-r02:`（已执行）
 
 ## 轮 3 (Round 3)
 

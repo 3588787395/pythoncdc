@@ -1723,6 +1723,70 @@ class RegionASTGenerator:
 
         return result if result else None
 
+    def _split_subscr_operands(self, expr_instrs: List[Instruction]):
+        """按栈效应切分 STORE_SUBSCR 的三个操作数 (value, container, index)。
+
+        算法依据:
+          STORE_SUBSCR 语义为 ``TOS1[TOS] = TOS2``，从栈顶依次弹出 index (TOS)、
+          container (TOS1)、value (TOS2)。三个操作数各自是「净栈效应 +1 且前缀
+          不下探到 0 以下」的完整子表达式。本方法按栈效应自栈顶（指令序列末尾）
+          逐个剥离最小完整后缀，不依赖固定指令数，因而能正确处理多指令容器
+          （如 ``data.loc`` = ``LOAD_FAST + LOAD_ATTR``，净效应 +1）与多指令索引
+          （如 ``a + b`` = ``LOAD + LOAD + BINARY_OP``）。
+
+        归约顺序 / 唯一归属判定:
+          自末尾向前剥离两段（index、container），剩余前缀即为 value。剥离以
+          ``dis.stack_effect`` 为唯一判据，每个操作数独占一段指令区间，互不重叠
+          （每块唯一归属）。任一操作数为空即视为切分失败返回 None。
+
+        入口引用语义:
+          每个操作数作为一个完整表达式参与归约：container → Subscript.value，
+          index → Subscript.slice，value → 赋值右值。三者由调用方经
+          ``expr_reconstructor.reconstruct`` 验证为非空后才发射 Assign 节点，
+          未通过验证则按原 STORE_SUBSCR 路径处理（零退化）。
+
+        返回:
+          (value_instrs, container_instrs, index_instrs) 三元组；切分失败返回 None。
+        """
+        import dis as _dis
+
+        def _eff(ins):
+            if ins.opname in ('EXTENDED_ARG', 'CACHE', 'RESUME', 'NOP'):
+                return 0
+            try:
+                return _dis.stack_effect(ins.opcode, ins.arg)
+            except (ValueError, TypeError):
+                return 0
+
+        def _peel_one(instrs):
+            # 自末尾向前查找「净效应 +1 且前缀恒 >=0」的最小后缀（一个完整表达式）。
+            n = len(instrs)
+            for k in range(n - 1, -1, -1):
+                suffix = instrs[k:]
+                net = 0
+                valid = True
+                for ins in suffix:
+                    net += _eff(ins)
+                    if net < 0:
+                        valid = False
+                        break
+                if valid and net == 1:
+                    return instrs[:k], suffix
+            return instrs, []
+
+        if len(expr_instrs) < MIN_INSTRS_FOR_SUBSCR_ASSIGN:
+            return None
+        rest, index = _peel_one(expr_instrs)
+        if not index:
+            return None
+        rest2, container = _peel_one(rest)
+        if not container:
+            return None
+        value = rest2
+        if not value:
+            return None
+        return value, container, index
+
     def _build_effective_stmts(self, block: BasicBlock, effective: List[Instruction]) -> List[Dict[str, Any]]:
         stmts, expr_instrs, seen_for = [], [], set()
         # [R11-batch3 err 9-12] Skip for-target instructions (STORE_ATTR/STORE_SUBSCR + their
@@ -1766,6 +1830,18 @@ class RegionASTGenerator:
                 expr_instrs = []
                 continue
             if instr.opname == 'STORE_SUBSCR' and len(expr_instrs) >= MIN_INSTRS_FOR_SUBSCR_ASSIGN:
+                # [R2-P0-1] 按栈效应切分 value/container/index，支持多指令容器
+                # (如 data.loc = LOAD_FAST+LOAD_ATTR)。零退化：切分/重建失败时
+                # 回退到原单指令切分逻辑。
+                _split = self._split_subscr_operands(expr_instrs)
+                if _split is not None:
+                    v = self.expr_reconstructor.reconstruct(_split[0])
+                    c = self.expr_reconstructor.reconstruct(_split[1])
+                    idx = self.expr_reconstructor.reconstruct(_split[2])
+                    if v and c and idx:
+                        stmts.append({'type': 'Assign', 'targets': [{'type': 'Subscript', 'value': c, 'slice': idx, 'ctx': 'Store'}], 'value': v})
+                        expr_instrs = []
+                        continue
                 v, c, idx = (self.expr_reconstructor.reconstruct(expr_instrs[:-2]),
                             self.expr_reconstructor.reconstruct([expr_instrs[-2]]),
                             self.expr_reconstructor.reconstruct([expr_instrs[-1]]))
@@ -2841,6 +2917,15 @@ AST 映射规则:
   - 字节码匹配状态: 100% 完全匹配（while_loop 120/120 + for_loop 193/193 = 313/313）
   - 本方法遵循区域归约算法 4 核心原则:
     自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口
+  - R2 修复（P0-1，循环体内迭代变量重赋值）：_generate_block_statements 在
+    处理循环体块时，对 for_target_names 中的 STORE_* 仅当无前序表达式
+    （stmt_instrs 为空）时跳过——这是 FOR_ITER 的裸 STORE 目标（已由
+    `for n in ...:` 发射）。有前序表达式时为循环体内对迭代变量的重赋值
+    （如 `for n in ...: n = n.replace('-', '')`），依「每块唯一归属」归属
+    独立 Assign 节点，落入下方 STORE 赋值重建分支。原实现把重赋值当 FOR_ITER
+    store 跳过、仅发射裸 Expr（POP_TOP），丢失赋值目标（repro_05/19 缺陷）。
+    UNPACK_SEQUENCE 多目标的裸 STORE 由 for_target_consumed_offsets /
+    _loop_process_body_block 路径独立处理，不进入此分支。
         """
         header = region.header_block
         if header is None:
@@ -20538,7 +20623,8 @@ AST 映射规则:
 
         return results if results is not None and len(results) > 0 else None
 
-    def _build_ternary_boolop_condition(self, region: TernaryRegion) -> Optional[Dict]:
+    def _build_ternary_boolop_condition(self, region: TernaryRegion,
+                                        pre_stmts: Optional[List[Dict[str, Any]]] = None) -> Optional[Dict]:
         """构建三元表达式中嵌套的BoolOp条件
 
         当TernaryRegion有condition_chain_blocks（长度>1）时调用，
@@ -20576,6 +20662,11 @@ AST 映射规则:
             'POP_JUMP_IF_TRUE', 'POP_JUMP_FORWARD_IF_TRUE',
             'POP_JUMP_BACKWARD_IF_TRUE', 'JUMP_IF_TRUE_OR_POP',
         })
+        # [R2-P0-2] 前序赋值 STORE_* 操作码集合，用于从 condition_chain_blocks
+        # 的块中切分出前序语句（详见下方提取逻辑）。
+        _STORE_OPS_R2P02 = frozenset({
+            'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+        })
         chain = getattr(region, 'condition_chain_blocks', None)
         if not chain or len(chain) <= 1:
             return None
@@ -20593,6 +20684,29 @@ AST 映射规则:
                 if cop is None:
                     cop = 'or' if last.opname in _TRUE_JUMP_OPS_R20N1 else 'and'
                 instrs = [i for i in instrs if i != last]
+            # [R2-P0-2] 区域归约算法原则 2（每块唯一归属）+ 原则 1（自底向上归约）：
+            # condition_chain_blocks 的块可能含前序赋值语句（如
+            # `code = stocks.split('.')[0]` 出现在 `suffix == 'CCFX'` 之前）。
+            # CPython 编译器将无跳转分隔的前序语句与条件链首块合并到同一基本块
+            # （前序 STORE_FAST 与条件 POP_JUMP_IF_FALSE 同块）。前序赋值归属
+            # 独立 Assign 节点，不归属 TernaryRegion 条件表达式。在重建 BoolOp
+            # 条件前，按最后一条 STORE_* 切分：前序段（含 STORE_*）经
+            # _build_statements_from_instructions 提取为 pre_stmt（支持方法调用/
+            # subscript 等复杂右值），剩余段重建为条件操作数。
+            # 普遍性：覆盖 `code = f(x); y if a and b else z` 等前序语句与 BoolOp
+            # 条件链块合并的所有形态；无 STORE_* 的常规条件链块不受影响（向后兼容）。
+            if pre_stmts is not None and instrs:
+                _last_store_idx = -1
+                for _k, _ins in enumerate(instrs):
+                    if _ins.opname in _STORE_OPS_R2P02:
+                        _last_store_idx = _k
+                if _last_store_idx >= 0:
+                    _pred_instrs = instrs[:_last_store_idx + 1]
+                    _cond_instrs = instrs[_last_store_idx + 1:]
+                    _pred_stmts = self._build_statements_from_instructions(_pred_instrs)
+                    if _pred_stmts:
+                        pre_stmts.extend(_pred_stmts)
+                        instrs = _cond_instrs
             if instrs:
                 sub = self.expr_reconstructor.reconstruct(instrs)
                 if sub:
@@ -21233,7 +21347,11 @@ AST 映射规则:
             if _nested_false_expr is not None:
                 false_expr = _nested_false_expr
         elif region.condition_chain_blocks and len(region.condition_chain_blocks) > 1:
-            cond_expr = self._build_ternary_boolop_condition(region)
+            # [R2-P0-2] 传入 pre_stmts 以提取 condition_chain_blocks 块内合并的
+            # 前序赋值语句（如 `code = stocks.split('.')[0]`）。依「每块唯一归属」:
+            # 前序赋值归属独立 Assign 节点，由 _build_ternary_boolop_condition 切分
+            # 后写入 pre_stmts，随后与本三元 Assign 一同发射。
+            cond_expr = self._build_ternary_boolop_condition(region, pre_stmts)
         elif (getattr(region, 'chained_compare_ops', None)
                 and len(region.chained_compare_ops) >= 2
                 and getattr(region, 'chained_compare_blocks', None)):
@@ -28021,6 +28139,25 @@ AST 映射规则:
                             _eff_expr_instrs = []
                             continue
                         if _instr.opname == 'STORE_SUBSCR' and len(_eff_expr_instrs) >= MIN_INSTRS_FOR_SUBSCR_ASSIGN:
+                            # [R2-P0-1] 栈效应切分支持多指令容器（data.loc = LOAD+LOAD_ATTR）。
+                            _split = self._split_subscr_operands(_eff_expr_instrs)
+                            if _split is not None:
+                                _val_expr = self.expr_reconstructor.reconstruct(_split[0])
+                                _cont_expr = self.expr_reconstructor.reconstruct(_split[1])
+                                _idx_expr = self.expr_reconstructor.reconstruct(_split[2])
+                                if _val_expr and _cont_expr and _idx_expr:
+                                    _eff_stmts.append({
+                                        'type': 'Assign',
+                                        'targets': [{
+                                            'type': 'Subscript',
+                                            'value': _cont_expr,
+                                            'slice': _idx_expr,
+                                            'ctx': 'Store',
+                                        }],
+                                        'value': _val_expr,
+                                    })
+                                    _eff_expr_instrs = []
+                                    continue
                             _val_expr = self.expr_reconstructor.reconstruct(_eff_expr_instrs[:-2])
                             _cont_expr = self.expr_reconstructor.reconstruct([_eff_expr_instrs[-2]])
                             _idx_expr = self.expr_reconstructor.reconstruct([_eff_expr_instrs[-1]])
@@ -28135,6 +28272,25 @@ AST 映射规则:
                             _be_expr_instrs = []
                             continue
                         if _instr.opname == 'STORE_SUBSCR' and len(_be_expr_instrs) >= MIN_INSTRS_FOR_SUBSCR_ASSIGN:
+                            # [R2-P0-1] 栈效应切分支持多指令容器（data.loc = LOAD+LOAD_ATTR）。
+                            _split = self._split_subscr_operands(_be_expr_instrs)
+                            if _split is not None:
+                                _val_expr = self.expr_reconstructor.reconstruct(_split[0])
+                                _cont_expr = self.expr_reconstructor.reconstruct(_split[1])
+                                _idx_expr = self.expr_reconstructor.reconstruct(_split[2])
+                                if _val_expr and _cont_expr and _idx_expr:
+                                    _be_stmts.append({
+                                        'type': 'Assign',
+                                        'targets': [{
+                                            'type': 'Subscript',
+                                            'value': _cont_expr,
+                                            'slice': _idx_expr,
+                                            'ctx': 'Store',
+                                        }],
+                                        'value': _val_expr,
+                                    })
+                                    _be_expr_instrs = []
+                                    continue
                             _val_expr = self.expr_reconstructor.reconstruct(_be_expr_instrs[:-2])
                             _cont_expr = self.expr_reconstructor.reconstruct([_be_expr_instrs[-2]])
                             _idx_expr = self.expr_reconstructor.reconstruct([_be_expr_instrs[-1]])
@@ -29483,13 +29639,20 @@ AST 映射规则:
                 if instr.argval in _ft_names and self.block_role(block) in (BlockRole.LOOP_BODY, BlockRole.NORMAL):
                     if not hasattr(self, '_gbs_seen_ft'):
                         self._gbs_seen_ft = set()
-                    if instr.argval not in self._gbs_seen_ft:
+                    # [R2-P0-1 fix] 仅当无前序表达式（stmt_instrs 为空）时跳过——
+                    # 这是 FOR_ITER 的裸 STORE 目标（已由 `for n in ...:` 发射）。
+                    # 有前序表达式时为循环体内对迭代变量的重赋值（如
+                    # `for n in ...: n = n.replace('-', '')`），依「每块唯一归属」
+                    # 归属独立 Assign 节点，不跳过，落入下方 STORE 赋值重建分支。
+                    # 原实现不区分二者，把重赋值的 STORE 当 FOR_ITER store 跳过、
+                    # 仅发射裸 Expr（POP_TOP），丢失赋值目标（repro_05/19 缺陷）。
+                    # UNPACK_SEQUENCE 多目标（`for a,b in ...`）的裸 STORE 仍满足
+                    # stmt_instrs 仅含 UNPACK_SEQUENCE 之外无表达式的形态由
+                    # for_target_consumed_offsets / _loop_process_body_block 路径
+                    # 独立处理，不进入此分支；此处仅守护 _generate_block_statements
+                    # 路径下的重赋值。
+                    if instr.argval not in self._gbs_seen_ft and not stmt_instrs:
                         self._gbs_seen_ft.add(instr.argval)
-                        if stmt_instrs:
-                            _stmt = self._build_statement(stmt_instrs)
-                            if _stmt:
-                                stmts.append(_stmt)
-                            stmt_instrs = []
                         continue
             if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF') and stmt_instrs:
                 has_copy = any(i.opname == 'COPY' and i.arg == 1 for i in stmt_instrs)
@@ -30566,6 +30729,20 @@ AST 映射规则:
             # 不应作为孤立 Expr 泄漏。与 _build_effective_stmts 中的 STORE_SUBSCR
             # 处理保持一致（多语句回边块走本路径，单语句块走 _build_effective_stmts）。
             if _instr.opname == 'STORE_SUBSCR' and len(_buf) >= MIN_INSTRS_FOR_SUBSCR_ASSIGN:
+                # [R2-P0-1] 栈效应切分支持多指令容器（data.loc = LOAD+LOAD_ATTR）。
+                _split = self._split_subscr_operands(_buf)
+                if _split is not None:
+                    _v = self.expr_reconstructor.reconstruct(_split[0])
+                    _c = self.expr_reconstructor.reconstruct(_split[1])
+                    _idx = self.expr_reconstructor.reconstruct(_split[2])
+                    if _v and _c and _idx:
+                        _stmts.append({
+                            'type': 'Assign',
+                            'targets': [{'type': 'Subscript', 'value': _c, 'slice': _idx, 'ctx': 'Store'}],
+                            'value': _v,
+                        })
+                        _buf = []
+                        continue
                 _v = self.expr_reconstructor.reconstruct(_buf[:-2])
                 _c = self.expr_reconstructor.reconstruct([_buf[-2]])
                 _idx = self.expr_reconstructor.reconstruct([_buf[-1]])

@@ -49,28 +49,36 @@
 - [x] R1-7 一致函数数 ≥ 基线（成功率单调递增）（141→141，无退化，结构修复已落地）
 - [x] R1-8 反模式自检通过（G3：0 新增）
 - [x] R1-9 `python -c "import core.cfg.region_analyzer; import core.cfg.region_ast_generator"` 编译通过
-- [ ] R1-10 commit + push `rr-r01:` 到 origin/main
+- [x] R1-10 commit + push `rr-r01:` 到 origin/main（ec8ca39..21507b7）
 
 ## 轮 2 (Round 2)
 
 ### 阶段一：测试工程师
 
-- [ ] R2-1 反编译 + 字节码 diff（`decompile_report.md`）
-- [ ] R2-2 ≥10 最小复现实例
+- [x] R2-1 反编译 + 字节码 diff（`decompile_report.md`）
+  - 141/150 = 94.00%，compile_ok=True，9 个不一致函数（与 R1 基线一致，无退化）
+- [x] R2-2 ≥10 最小复现实例
+  - 21 个 repro，13 个复现缺陷
 
 ### 阶段二：修复工程师
 
-- [ ] R2-3 根因分析完成
-- [ ] R2-4 按算法修复 + docstring 更新
-- [ ] R2-5 回归测试通过
-- [ ] R2-6 `fix_report.md` 生成
+- [x] R2-3 根因分析完成（P0-1 STORE_SUBSCR 切分 + 循环变量重赋值；P0-2 三元前序赋值 + LOAD_METHOD 误判）
+- [x] R2-4 按算法修复 + docstring 更新
+  - 修复点 1：`_split_subscr_operands` 栈效应切分（region_ast_generator.py）
+  - 修复点 2：`_generate_block_statements` 循环变量重赋值（region_ast_generator.py）
+  - 修复点 3：`_build_ternary_boolop_condition` pre_stmts 提取（region_ast_generator.py）
+  - 修复点 4：`_detect_ternary_context` 前序 STORE_* 跳过（region_analyzer.py）
+  - docstring：`_identify_ternary_regions` / `_generate_loop` / `_split_subscr_operands` + R2-P0 注释
+- [x] R2-5 回归测试通过
+  - repro 13→4（9 个修复：repro_01/05/06/08/16/17/19/20/21）；既有矩阵 0 退化（IF 73/4 BOOLOP 79/0 TERNARY 64/5 LOOP 77/3 TRY 71/9 SEQ 80/0）
+- [x] R2-6 `fix_report.md` 生成（含修复点、算法依据、4 原则对应条款、回归结果、残留不一致数）
 
 ### 验证与提交
 
-- [ ] R2-7 一致函数数 ≥ 轮 1
-- [ ] R2-8 反模式自检通过
-- [ ] R2-9 编译通过
-- [ ] R2-10 commit + push `rr-r02:`
+- [x] R2-7 一致函数数 ≥ 轮 1（141→141，无退化；fill_minute_or_day_blank +12、get_str_data +5 指令恢复）
+- [x] R2-8 反模式自检通过（G3：0 新增）
+- [x] R2-9 编译通过（`import core.cfg.region_analyzer; import core.cfg.region_ast_generator` → COMPILE OK）
+- [x] R2-10 commit + push `rr-r02:`（已执行）
 
 ## 轮 3 (Round 3)
 

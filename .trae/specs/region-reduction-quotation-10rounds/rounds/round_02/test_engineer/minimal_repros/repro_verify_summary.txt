@@ -1,0 +1,127 @@
+======================================================================
+Round 2 minimal_repros 验证摘要
+======================================================================
+总 repro 数: 21
+py_compile 通过: 21
+复现缺陷（反编译后字节码不一致）: 13
+未复现: 8
+
+说明：复现 = 至少一个 code object 的 dis 指令序列与原始不一致
+      （len_diff / instr_diff / missing 均计为复现）
+
+编号    文件名                                             compile   复现      total/matched
+------------------------------------------------------------------------------------------
+01    repro_01_for_loc_subscr_assign_lost.py          OK        YES     2/0
+02    repro_02_for_post_loop_panel_construct.py       OK        YES     2/0
+03    repro_03_for_iter_target_early.py               OK        YES     2/0
+04    repro_04_for_tail_if_none_reassign.py           OK        no      2/2
+05    repro_05_for_method_chain_append.py             OK        YES     2/0
+06    repro_06_ternary_merged_with_call.py            OK        YES     2/0
+07    repro_07_if_else_ternary_branch_lost.py         OK        no      2/2
+08    repro_08_ternary_and_short_circuit.py           OK        YES     2/0
+09    repro_09_nested_for_listcomp_jump_target.py     OK        YES     3/1
+10    repro_10_for_append_listcomp.py                 OK        no      3/3
+11    repro_11_module_func_defs_lost.py               OK        no      14/14
+12    repro_12_tail_spurious_return.py                OK        no      2/2
+13    repro_13_elif_tail_string_concat.py             OK        no      2/2
+14    repro_14_seq_if_reassign_isinstance_tail.py     OK        no      2/2
+15    repro_15_long_or_chain_body_pass.py             OK        YES     2/0
+16    repro_16_nested_for_dict_subscr_post_loop.py    OK        YES     3/1
+17    repro_17_ternary_in_dict_method_chain.py        OK        YES     2/0
+18    repro_18_for_elif_append_tail_spurious.py       OK        no      2/2
+19    repro_19_for_while_loc_subscr_append.py         OK        YES     2/0
+20    repro_20_ternary_in_return_and_or.py            OK        YES     2/0
+21    repro_21_for_continue_dict_subscr_assign.py     OK        YES     3/1
+
+=== 各 repro 复现明细 ===
+
+--- repro_01_for_loc_subscr_assign_lost.py ---
+  total=2 matched=0 mismatched=2 reproduces=True
+    [BAD] <module>: instr_diff idx=7 orig=(14, 'LOAD_CONST', <code object get_str_data at 0x5638d3303ba0, file "/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_02/test_engineer/minimal_repros/repro_01_for_loc_subscr_assign_lost.py", line 10>) new=(14, 'LOAD_CONST', <code object get_str_data at 0x5638d32ffa10, file "<decompiled>", line 11>)
+    [BAD] get_str_data: len_diff orig=106 new=95
+
+--- repro_02_for_post_loop_panel_construct.py ---
+  total=2 matched=0 mismatched=2 reproduces=True
+    [BAD] <module>: instr_diff idx=11 orig=(22, 'LOAD_CONST', <code object get_str_data at 0x5638d3300fa0, file "/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_02/test_engineer/minimal_repros/repro_02_for_post_loop_panel_construct.py", line 11>) new=(22, 'LOAD_CONST', <code object get_str_data at 0x5638d3453180, file "<decompiled>", line 12>)
+    [BAD] get_str_data: len_diff orig=107 new=104
+
+--- repro_03_for_iter_target_early.py ---
+  total=2 matched=0 mismatched=2 reproduces=True
+    [BAD] <module>: instr_diff idx=7 orig=(14, 'LOAD_CONST', <code object change_his_to_backward at 0x5638d34106a0, file "/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_02/test_engineer/minimal_repros/repro_03_for_iter_target_early.py", line 11>) new=(14, 'LOAD_CONST', <code object change_his_to_backward at 0x5638d32ed460, file "<decompiled>", line 12>)
+    [BAD] change_his_to_backward: len_diff orig=98 new=81
+
+--- repro_04_for_tail_if_none_reassign.py ---
+  total=2 matched=2 mismatched=0 reproduces=False
+
+--- repro_05_for_method_chain_append.py ---
+  total=2 matched=0 mismatched=2 reproduces=True
+    [BAD] <module>: instr_diff idx=3 orig=(6, 'LOAD_CONST', <code object change_his_to_backward at 0x5638d334c290, file "/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_02/test_engineer/minimal_repros/repro_05_for_method_chain_append.py", line 10>) new=(6, 'LOAD_CONST', <code object change_his_to_backward at 0x5638d3006470, file "<decompiled>", line 11>)
+    [BAD] change_his_to_backward: len_diff orig=84 new=74
+
+--- repro_06_ternary_merged_with_call.py ---
+  total=2 matched=0 mismatched=2 reproduces=True
+    [BAD] <module>: instr_diff idx=4 orig=(8, 'LOAD_CONST', <code object fill_blank at 0x5638d3304b70, file "/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_02/test_engineer/minimal_repros/repro_06_ternary_merged_with_call.py", line 12>) new=(8, 'LOAD_CONST', <code object fill_blank at 0x5638d32f96f0, file "<decompiled>", line 13>)
+    [BAD] fill_blank: len_diff orig=72 new=68
+
+--- repro_07_if_else_ternary_branch_lost.py ---
+  total=2 matched=2 mismatched=0 reproduces=False
+
+--- repro_08_ternary_and_short_circuit.py ---
+  total=2 matched=0 mismatched=2 reproduces=True
+    [BAD] <module>: instr_diff idx=3 orig=(6, 'LOAD_CONST', <code object parse_suffix at 0x7f0486ec9b80, file "/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_02/test_engineer/minimal_repros/repro_08_ternary_and_short_circuit.py", line 10>) new=(6, 'LOAD_CONST', <code object parse_suffix at 0x7f04872d9a30, file "<decompiled>", line 11>)
+    [BAD] parse_suffix: len_diff orig=29 new=21
+
+--- repro_09_nested_for_listcomp_jump_target.py ---
+  total=3 matched=1 mismatched=2 reproduces=True
+    [BAD] <module>: instr_diff idx=3 orig=(6, 'LOAD_CONST', <code object build_future_fill_time at 0x5638d3349f90, file "/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_02/test_engineer/minimal_repros/repro_09_nested_for_listcomp_jump_target.py", line 17>) new=(6, 'LOAD_CONST', <code object build_future_fill_time at 0x5638d3303930, file "<decompiled>", line 18>)
+    [BAD] build_future_fill_time: len_diff orig=137 new=139
+
+--- repro_10_for_append_listcomp.py ---
+  total=3 matched=3 mismatched=0 reproduces=False
+
+--- repro_11_module_func_defs_lost.py ---
+  total=14 matched=14 mismatched=0 reproduces=False
+
+--- repro_12_tail_spurious_return.py ---
+  total=2 matched=2 mismatched=0 reproduces=False
+
+--- repro_13_elif_tail_string_concat.py ---
+  total=2 matched=2 mismatched=0 reproduces=False
+
+--- repro_14_seq_if_reassign_isinstance_tail.py ---
+  total=2 matched=2 mismatched=0 reproduces=False
+
+--- repro_15_long_or_chain_body_pass.py ---
+  total=2 matched=0 mismatched=2 reproduces=True
+    [BAD] <module>: instr_diff idx=3 orig=(6, 'LOAD_CONST', <code object load_bars_from_hundsun at 0x5638d3466720, file "/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_02/test_engineer/minimal_repros/repro_15_long_or_chain_body_pass.py", line 14>) new=(6, 'LOAD_CONST', <code object load_bars_from_hundsun at 0x5638d34106a0, file "<decompiled>", line 15>)
+    [BAD] load_bars_from_hundsun: len_diff orig=94 new=64
+
+--- repro_16_nested_for_dict_subscr_post_loop.py ---
+  total=3 matched=1 mismatched=2 reproduces=True
+    [BAD] <module>: instr_diff idx=11 orig=(22, 'LOAD_CONST', <code object get_str_data at 0x5638d341fe70, file "/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_02/test_engineer/minimal_repros/repro_16_nested_for_dict_subscr_post_loop.py", line 12>) new=(22, 'LOAD_CONST', <code object get_str_data at 0x5638d3418450, file "<decompiled>", line 13>)
+    [BAD] get_str_data: len_diff orig=104 new=92
+
+--- repro_17_ternary_in_dict_method_chain.py ---
+  total=2 matched=0 mismatched=2 reproduces=True
+    [BAD] <module>: instr_diff idx=12 orig=(24, 'LOAD_CONST', <code object fill_blank at 0x5638d3414670, file "/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_02/test_engineer/minimal_repros/repro_17_ternary_in_dict_method_chain.py", line 12>) new=(24, 'LOAD_CONST', <code object fill_blank at 0x5638d3418120, file "<decompiled>", line 13>)
+    [BAD] fill_blank: len_diff orig=122 new=118
+
+--- repro_18_for_elif_append_tail_spurious.py ---
+  total=2 matched=2 mismatched=0 reproduces=False
+
+--- repro_19_for_while_loc_subscr_append.py ---
+  total=2 matched=0 mismatched=2 reproduces=True
+    [BAD] <module>: instr_diff idx=3 orig=(6, 'LOAD_CONST', <code object change_his_to_backward at 0x5638d341fe70, file "/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_02/test_engineer/minimal_repros/repro_19_for_while_loc_subscr_append.py", line 9>) new=(6, 'LOAD_CONST', <code object change_his_to_backward at 0x5638d346a110, file "<decompiled>", line 10>)
+    [BAD] change_his_to_backward: instr_diff idx=27 orig=(116, 'STORE_FAST', 'n') new=(116, 'POP_TOP', None)
+
+--- repro_20_ternary_in_return_and_or.py ---
+  total=2 matched=0 mismatched=2 reproduces=True
+    [BAD] <module>: instr_diff idx=3 orig=(6, 'LOAD_CONST', <code object fill_blank at 0x7f0486d53890, file "/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_02/test_engineer/minimal_repros/repro_20_ternary_in_return_and_or.py", line 8>) new=(6, 'LOAD_CONST', <code object fill_blank at 0x7f04872e8420, file "<decompiled>", line 9>)
+    [BAD] fill_blank: len_diff orig=37 new=34
+
+--- repro_21_for_continue_dict_subscr_assign.py ---
+  total=3 matched=1 mismatched=2 reproduces=True
+    [BAD] <module>: instr_diff idx=7 orig=(14, 'LOAD_CONST', <code object get_str_data at 0x5638d32fb9e0, file "/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_02/test_engineer/minimal_repros/repro_21_for_continue_dict_subscr_assign.py", line 10>) new=(14, 'LOAD_CONST', <code object get_str_data at 0x7f0486ea87f0, file "<decompiled>", line 11>)
+    [BAD] get_str_data: len_diff orig=81 new=69
+
+结论: 13/21 个 repro 复现缺陷（要求 ≥10）

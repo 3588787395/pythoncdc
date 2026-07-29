@@ -1,0 +1,531 @@
+{
+  "summary": {
+    "total_repros": 21,
+    "compile_ok": 21,
+    "reproduces_defect": 13,
+    "not_reproduced": 8
+  },
+  "results": [
+    {
+      "file": "repro_01_for_loc_subscr_assign_lost.py",
+      "compile_ok": true,
+      "total": 2,
+      "matched": 0,
+      "mismatched": 2,
+      "success_rate": 0.0,
+      "reproduces": true,
+      "details": [
+        {
+          "name": "<module>",
+          "status": "instr_diff",
+          "extra": "idx=7 orig=(14, 'LOAD_CONST', <code object get_str_data at 0x5638d3303ba0, file \"/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_02/test_engineer/minimal_repros/repro_01_for_loc_subscr_assign_lost.py\", line 10>) new=(14, 'LOAD_CONST', <code object get_str_data at 0x5638d32ffa10, file \"<decompiled>\", line 11>)"
+        },
+        {
+          "name": "get_str_data",
+          "status": "len_diff",
+          "extra": "orig=106 new=95"
+        }
+      ]
+    },
+    {
+      "file": "repro_02_for_post_loop_panel_construct.py",
+      "compile_ok": true,
+      "total": 2,
+      "matched": 0,
+      "mismatched": 2,
+      "success_rate": 0.0,
+      "reproduces": true,
+      "details": [
+        {
+          "name": "<module>",
+          "status": "instr_diff",
+          "extra": "idx=11 orig=(22, 'LOAD_CONST', <code object get_str_data at 0x5638d3300fa0, file \"/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_02/test_engineer/minimal_repros/repro_02_for_post_loop_panel_construct.py\", line 11>) new=(22, 'LOAD_CONST', <code object get_str_data at 0x5638d3453180, file \"<decompiled>\", line 12>)"
+        },
+        {
+          "name": "get_str_data",
+          "status": "len_diff",
+          "extra": "orig=107 new=104"
+        }
+      ]
+    },
+    {
+      "file": "repro_03_for_iter_target_early.py",
+      "compile_ok": true,
+      "total": 2,
+      "matched": 0,
+      "mismatched": 2,
+      "success_rate": 0.0,
+      "reproduces": true,
+      "details": [
+        {
+          "name": "<module>",
+          "status": "instr_diff",
+          "extra": "idx=7 orig=(14, 'LOAD_CONST', <code object change_his_to_backward at 0x5638d34106a0, file \"/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_02/test_engineer/minimal_repros/repro_03_for_iter_target_early.py\", line 11>) new=(14, 'LOAD_CONST', <code object change_his_to_backward at 0x5638d32ed460, file \"<decompiled>\", line 12>)"
+        },
+        {
+          "name": "change_his_to_backward",
+          "status": "len_diff",
+          "extra": "orig=98 new=81"
+        }
+      ]
+    },
+    {
+      "file": "repro_04_for_tail_if_none_reassign.py",
+      "compile_ok": true,
+      "total": 2,
+      "matched": 2,
+      "mismatched": 0,
+      "success_rate": 100.0,
+      "reproduces": false,
+      "details": [
+        {
+          "name": "<module>",
+          "status": "match",
+          "extra": null
+        },
+        {
+          "name": "filter_data",
+          "status": "match",
+          "extra": null
+        }
+      ]
+    },
+    {
+      "file": "repro_05_for_method_chain_append.py",
+      "compile_ok": true,
+      "total": 2,
+      "matched": 0,
+      "mismatched": 2,
+      "success_rate": 0.0,
+      "reproduces": true,
+      "details": [
+        {
+          "name": "<module>",
+          "status": "instr_diff",
+          "extra": "idx=3 orig=(6, 'LOAD_CONST', <code object change_his_to_backward at 0x5638d334c290, file \"/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_02/test_engineer/minimal_repros/repro_05_for_method_chain_append.py\", line 10>) new=(6, 'LOAD_CONST', <code object change_his_to_backward at 0x5638d3006470, file \"<decompiled>\", line 11>)"
+        },
+        {
+          "name": "change_his_to_backward",
+          "status": "len_diff",
+          "extra": "orig=84 new=74"
+        }
+      ]
+    },
+    {
+      "file": "repro_06_ternary_merged_with_call.py",
+      "compile_ok": true,
+      "total": 2,
+      "matched": 0,
+      "mismatched": 2,
+      "success_rate": 0.0,
+      "reproduces": true,
+      "details": [
+        {
+          "name": "<module>",
+          "status": "instr_diff",
+          "extra": "idx=4 orig=(8, 'LOAD_CONST', <code object fill_blank at 0x5638d3304b70, file \"/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_02/test_engineer/minimal_repros/repro_06_ternary_merged_with_call.py\", line 12>) new=(8, 'LOAD_CONST', <code object fill_blank at 0x5638d32f96f0, file \"<decompiled>\", line 13>)"
+        },
+        {
+          "name": "fill_blank",
+          "status": "len_diff",
+          "extra": "orig=72 new=68"
+        }
+      ]
+    },
+    {
+      "file": "repro_07_if_else_ternary_branch_lost.py",
+      "compile_ok": true,
+      "total": 2,
+      "matched": 2,
+      "mismatched": 0,
+      "success_rate": 100.0,
+      "reproduces": false,
+      "details": [
+        {
+          "name": "<module>",
+          "status": "match",
+          "extra": null
+        },
+        {
+          "name": "fill_blank",
+          "status": "match",
+          "extra": null
+        }
+      ]
+    },
+    {
+      "file": "repro_08_ternary_and_short_circuit.py",
+      "compile_ok": true,
+      "total": 2,
+      "matched": 0,
+      "mismatched": 2,
+      "success_rate": 0.0,
+      "reproduces": true,
+      "details": [
+        {
+          "name": "<module>",
+          "status": "instr_diff",
+          "extra": "idx=3 orig=(6, 'LOAD_CONST', <code object parse_suffix at 0x7f0486ec9b80, file \"/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_02/test_engineer/minimal_repros/repro_08_ternary_and_short_circuit.py\", line 10>) new=(6, 'LOAD_CONST', <code object parse_suffix at 0x7f04872d9a30, file \"<decompiled>\", line 11>)"
+        },
+        {
+          "name": "parse_suffix",
+          "status": "len_diff",
+          "extra": "orig=29 new=21"
+        }
+      ]
+    },
+    {
+      "file": "repro_09_nested_for_listcomp_jump_target.py",
+      "compile_ok": true,
+      "total": 3,
+      "matched": 1,
+      "mismatched": 2,
+      "success_rate": 33.33,
+      "reproduces": true,
+      "details": [
+        {
+          "name": "<module>",
+          "status": "instr_diff",
+          "extra": "idx=3 orig=(6, 'LOAD_CONST', <code object build_future_fill_time at 0x5638d3349f90, file \"/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_02/test_engineer/minimal_repros/repro_09_nested_for_listcomp_jump_target.py\", line 17>) new=(6, 'LOAD_CONST', <code object build_future_fill_time at 0x5638d3303930, file \"<decompiled>\", line 18>)"
+        },
+        {
+          "name": "build_future_fill_time",
+          "status": "len_diff",
+          "extra": "orig=137 new=139"
+        },
+        {
+          "name": "build_future_fill_time.<listcomp>",
+          "status": "match",
+          "extra": null
+        }
+      ]
+    },
+    {
+      "file": "repro_10_for_append_listcomp.py",
+      "compile_ok": true,
+      "total": 3,
+      "matched": 3,
+      "mismatched": 0,
+      "success_rate": 100.0,
+      "reproduces": false,
+      "details": [
+        {
+          "name": "<module>",
+          "status": "match",
+          "extra": null
+        },
+        {
+          "name": "build_fill_time",
+          "status": "match",
+          "extra": null
+        },
+        {
+          "name": "build_fill_time.<listcomp>",
+          "status": "match",
+          "extra": null
+        }
+      ]
+    },
+    {
+      "file": "repro_11_module_func_defs_lost.py",
+      "compile_ok": true,
+      "total": 14,
+      "matched": 14,
+      "mismatched": 0,
+      "success_rate": 100.0,
+      "reproduces": false,
+      "details": [
+        {
+          "name": "<module>",
+          "status": "match",
+          "extra": null
+        },
+        {
+          "name": "check_arg",
+          "status": "match",
+          "extra": null
+        },
+        {
+          "name": "check_arg.wrapper",
+          "status": "match",
+          "extra": null
+        },
+        {
+          "name": "api_get_financial",
+          "status": "match",
+          "extra": null
+        },
+        {
+          "name": "get_kline",
+          "status": "match",
+          "extra": null
+        },
+        {
+          "name": "get_holiday_online",
+          "status": "match",
+          "extra": null
+        },
+        {
+          "name": "get_reits_list",
+          "status": "match",
+          "extra": null
+        },
+        {
+          "name": "check_limit",
+          "status": "match",
+          "extra": null
+        },
+        {
+          "name": "check_jq_code",
+          "status": "match",
+          "extra": null
+        },
+        {
+          "name": "trans_jq_code",
+          "status": "match",
+          "extra": null
+        },
+        {
+          "name": "get_current_kline_count",
+          "status": "match",
+          "extra": null
+        },
+        {
+          "name": "filter_stock_by_status",
+          "status": "match",
+          "extra": null
+        },
+        {
+          "name": "get_trading_day_by_date",
+          "status": "match",
+          "extra": null
+        },
+        {
+          "name": "get_dominant_contract",
+          "status": "match",
+          "extra": null
+        }
+      ]
+    },
+    {
+      "file": "repro_12_tail_spurious_return.py",
+      "compile_ok": true,
+      "total": 2,
+      "matched": 2,
+      "mismatched": 0,
+      "success_rate": 100.0,
+      "reproduces": false,
+      "details": [
+        {
+          "name": "<module>",
+          "status": "match",
+          "extra": null
+        },
+        {
+          "name": "one_prod_to_dataframe",
+          "status": "match",
+          "extra": null
+        }
+      ]
+    },
+    {
+      "file": "repro_13_elif_tail_string_concat.py",
+      "compile_ok": true,
+      "total": 2,
+      "matched": 2,
+      "mismatched": 0,
+      "success_rate": 100.0,
+      "reproduces": false,
+      "details": [
+        {
+          "name": "<module>",
+          "status": "match",
+          "extra": null
+        },
+        {
+          "name": "get_date_and_count",
+          "status": "match",
+          "extra": null
+        }
+      ]
+    },
+    {
+      "file": "repro_14_seq_if_reassign_isinstance_tail.py",
+      "compile_ok": true,
+      "total": 2,
+      "matched": 2,
+      "mismatched": 0,
+      "success_rate": 100.0,
+      "reproduces": false,
+      "details": [
+        {
+          "name": "<module>",
+          "status": "match",
+          "extra": null
+        },
+        {
+          "name": "load_get_price",
+          "status": "match",
+          "extra": null
+        }
+      ]
+    },
+    {
+      "file": "repro_15_long_or_chain_body_pass.py",
+      "compile_ok": true,
+      "total": 2,
+      "matched": 0,
+      "mismatched": 2,
+      "success_rate": 0.0,
+      "reproduces": true,
+      "details": [
+        {
+          "name": "<module>",
+          "status": "instr_diff",
+          "extra": "idx=3 orig=(6, 'LOAD_CONST', <code object load_bars_from_hundsun at 0x5638d3466720, file \"/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_02/test_engineer/minimal_repros/repro_15_long_or_chain_body_pass.py\", line 14>) new=(6, 'LOAD_CONST', <code object load_bars_from_hundsun at 0x5638d34106a0, file \"<decompiled>\", line 15>)"
+        },
+        {
+          "name": "load_bars_from_hundsun",
+          "status": "len_diff",
+          "extra": "orig=94 new=64"
+        }
+      ]
+    },
+    {
+      "file": "repro_16_nested_for_dict_subscr_post_loop.py",
+      "compile_ok": true,
+      "total": 3,
+      "matched": 1,
+      "mismatched": 2,
+      "success_rate": 33.33,
+      "reproduces": true,
+      "details": [
+        {
+          "name": "<module>",
+          "status": "instr_diff",
+          "extra": "idx=11 orig=(22, 'LOAD_CONST', <code object get_str_data at 0x5638d341fe70, file \"/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_02/test_engineer/minimal_repros/repro_16_nested_for_dict_subscr_post_loop.py\", line 12>) new=(22, 'LOAD_CONST', <code object get_str_data at 0x5638d3418450, file \"<decompiled>\", line 13>)"
+        },
+        {
+          "name": "get_str_data",
+          "status": "len_diff",
+          "extra": "orig=104 new=92"
+        },
+        {
+          "name": "get_str_data.<listcomp>",
+          "status": "match",
+          "extra": null
+        }
+      ]
+    },
+    {
+      "file": "repro_17_ternary_in_dict_method_chain.py",
+      "compile_ok": true,
+      "total": 2,
+      "matched": 0,
+      "mismatched": 2,
+      "success_rate": 0.0,
+      "reproduces": true,
+      "details": [
+        {
+          "name": "<module>",
+          "status": "instr_diff",
+          "extra": "idx=12 orig=(24, 'LOAD_CONST', <code object fill_blank at 0x5638d3414670, file \"/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_02/test_engineer/minimal_repros/repro_17_ternary_in_dict_method_chain.py\", line 12>) new=(24, 'LOAD_CONST', <code object fill_blank at 0x5638d3418120, file \"<decompiled>\", line 13>)"
+        },
+        {
+          "name": "fill_blank",
+          "status": "len_diff",
+          "extra": "orig=122 new=118"
+        }
+      ]
+    },
+    {
+      "file": "repro_18_for_elif_append_tail_spurious.py",
+      "compile_ok": true,
+      "total": 2,
+      "matched": 2,
+      "mismatched": 0,
+      "success_rate": 100.0,
+      "reproduces": false,
+      "details": [
+        {
+          "name": "<module>",
+          "status": "match",
+          "extra": null
+        },
+        {
+          "name": "one_prod_to_dataframe",
+          "status": "match",
+          "extra": null
+        }
+      ]
+    },
+    {
+      "file": "repro_19_for_while_loc_subscr_append.py",
+      "compile_ok": true,
+      "total": 2,
+      "matched": 0,
+      "mismatched": 2,
+      "success_rate": 0.0,
+      "reproduces": true,
+      "details": [
+        {
+          "name": "<module>",
+          "status": "instr_diff",
+          "extra": "idx=3 orig=(6, 'LOAD_CONST', <code object change_his_to_backward at 0x5638d341fe70, file \"/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_02/test_engineer/minimal_repros/repro_19_for_while_loc_subscr_append.py\", line 9>) new=(6, 'LOAD_CONST', <code object change_his_to_backward at 0x5638d346a110, file \"<decompiled>\", line 10>)"
+        },
+        {
+          "name": "change_his_to_backward",
+          "status": "instr_diff",
+          "extra": "idx=27 orig=(116, 'STORE_FAST', 'n') new=(116, 'POP_TOP', None)"
+        }
+      ]
+    },
+    {
+      "file": "repro_20_ternary_in_return_and_or.py",
+      "compile_ok": true,
+      "total": 2,
+      "matched": 0,
+      "mismatched": 2,
+      "success_rate": 0.0,
+      "reproduces": true,
+      "details": [
+        {
+          "name": "<module>",
+          "status": "instr_diff",
+          "extra": "idx=3 orig=(6, 'LOAD_CONST', <code object fill_blank at 0x7f0486d53890, file \"/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_02/test_engineer/minimal_repros/repro_20_ternary_in_return_and_or.py\", line 8>) new=(6, 'LOAD_CONST', <code object fill_blank at 0x7f04872e8420, file \"<decompiled>\", line 9>)"
+        },
+        {
+          "name": "fill_blank",
+          "status": "len_diff",
+          "extra": "orig=37 new=34"
+        }
+      ]
+    },
+    {
+      "file": "repro_21_for_continue_dict_subscr_assign.py",
+      "compile_ok": true,
+      "total": 3,
+      "matched": 1,
+      "mismatched": 2,
+      "success_rate": 33.33,
+      "reproduces": true,
+      "details": [
+        {
+          "name": "<module>",
+          "status": "instr_diff",
+          "extra": "idx=7 orig=(14, 'LOAD_CONST', <code object get_str_data at 0x5638d32fb9e0, file \"/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_02/test_engineer/minimal_repros/repro_21_for_continue_dict_subscr_assign.py\", line 10>) new=(14, 'LOAD_CONST', <code object get_str_data at 0x7f0486ea87f0, file \"<decompiled>\", line 11>)"
+        },
+        {
+          "name": "get_str_data",
+          "status": "len_diff",
+          "extra": "orig=81 new=69"
+        },
+        {
+          "name": "get_str_data.<listcomp>",
+          "status": "match",
+          "extra": null
+        }
+      ]
+    }
+  ]
+}

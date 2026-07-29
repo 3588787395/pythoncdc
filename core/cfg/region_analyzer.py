@@ -12964,6 +12964,20 @@ RegionType 枚举值: RegionType.ASSERT
         （skip_ternary=True），优先保留 BoolOp。这是有意为之的保守策略，与
         归约算法 4 核心原则一致（自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 /
         父引用子入口）。
+
+        7. R2 修复：_detect_ternary_context 前序 STORE_* 跳过（P0-2）
+        ----------------------------------------------------------
+        调用上下文检测（_detect_ternary_context 的 LOAD_METHOD 分支）扫描
+        condition_block 寻找消费 ternary 的 LOAD_METHOD。当 cond_block 含前序
+        赋值（如 `code = stocks.split('.')[0]` 的 LOAD_METHOD split 在
+        STORE_FAST code 之前）时，该 LOAD_METHOD 属于前序 Assign 节点而非
+        三元的调用上下文。修复：扫描前先定位最后一条 STORE_FAST/NAME/GLOBAL/
+        DEREF，仅在其后寻找 LOAD_METHOD，与 _build_ternary_boolop_condition
+        的前序切分（同 STORE 操作码集合）保持一致。
+        依「每块唯一归属」+「入口引用语义」：前序赋值归属独立 Assign 节点，
+        三元 cond 入口从最后一条 STORE_* 之后开始。无 STORE_* 时从块首扫描
+        （向后兼容，覆盖合法 obj.method(ternary) 形态）。
+        覆盖 repro_06/17/20（三元被错误包装为 stocks.split(ternary)）。
         """
 
         def _can_be_ternary_header(block):
@@ -13431,8 +13445,31 @@ RegionType 枚举值: RegionType.ASSERT
                         i.opname in ('PRECALL', 'CALL') for i in merge_block.instructions
                         if i.opname not in NOISE_OPS)
                     if _has_call_in_merge and len(instrs) >= 2:
+                        # [R2-P0-2 fix] 跳过前序 STORE_* 赋值语句后扫描 LOAD_METHOD。
+                        # 当 cond_block 含前序赋值（如 `code = stocks.split('.')[0]` 的
+                        # LOAD_METHOD split 在 STORE_FAST code 之前）时，该 LOAD_METHOD
+                        # 属于前序 Assign 节点而非三元表达式的调用上下文。若不跳过，会把
+                        # 前序 method call 误判为三元的 func_call_info，生成错误的
+                        # `obj.method(ternary)`（repro_06/17/20 缺陷）。
+                        # 依「每块唯一归属」+「入口引用语义」：前序赋值的指令归属独立
+                        # Assign 节点，三元 cond 入口从最后一条 STORE_* 之后开始。仅
+                        # 扫描最后一条 STORE_FAST/NAME/GLOBAL/DEREF 之后的指令寻找
+                        # LOAD_METHOD，与 _build_ternary_boolop_condition 的前序切分
+                        # （同 STORE 操作码集合）保持一致。无 STORE_* 时从块首扫描
+                        # （向后兼容，覆盖合法 obj.method(ternary) 形态）。
+                        _TERNARY_PRE_STORE_OPS = frozenset({
+                            'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+                        })
+                        _scan_start = 0
+                        _last_store_idx = -1
+                        for _s_idx, _s_i in enumerate(instrs):
+                            if _s_i.opname in _TERNARY_PRE_STORE_OPS:
+                                _last_store_idx = _s_idx
+                        if _last_store_idx >= 0:
+                            _scan_start = _last_store_idx + 1
                         _method_idx = None
-                        for _idx, _i in enumerate(instrs):
+                        for _idx in range(_scan_start, len(instrs)):
+                            _i = instrs[_idx]
                             if _i.opname == 'LOAD_METHOD':
                                 _method_idx = _idx
                                 break
