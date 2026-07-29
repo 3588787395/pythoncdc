@@ -1,10 +1,16 @@
-"""轮 5 测试工程师：按函数输出不一致指令 diff。
+"""轮 4 测试工程师：按函数输出不一致指令 diff。
 
 对 9 个不一致函数，输出 orig vs new 的完整指令 diff（带 offset/opname/argval），
-写入 diff_detail.txt。
+写入 diff_detail.txt。重点标注每个函数第一处不一致位置及其上下文（前后 10 条指令），
+用于后续根因定位。
 
-R5 重点：对 build_future_fill_time 输出完整 orig vs new 指令序列对照（671 条），
-标注所有 JUMP_FORWARD/JUMP_BACKWARD 目标差异点，定位偏移 74 字节的确切指令对。
+比较策略：
+  - 长度不等：用序列对齐找出首个发散区段，输出首处发散上下文 + 末尾发散上下文
+  - 长度相等但某条不一致：定位 first_diff idx，输出 [idx-10, idx+10] 区间
+
+R4 重点定位：
+  - one_prod_to_dataframe 尾部 spurious return +11（最易 +1）
+  - build_future_fill_time JUMP_FORWARD 跳转目标偏移 74 字节（指令数相同，仅跳转目标错）
 """
 import sys
 import json
@@ -15,14 +21,14 @@ sys.path.insert(0, '/workspace')
 
 PYC = '/workspace/quotation.pyc'
 DECOMPILED = '/tmp/r5_decompiled.py'
-OUT_DIR = '/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_05/test_engineer'
+OUT_DIR = '/tmp/r5_out2'
 OUT_TXT = OUT_DIR + '/diff_detail.txt'
-BC_JSON = OUT_DIR + '/bc_results.json'
+BC_JSON = '/tmp/r5_out/bc_results.json'
 
 SKIP_OPS = ('EXTENDED_ARG', 'CACHE')
 CONTEXT = 10
 
-# 9 个不一致函数
+# 9 个不一致函数（R3 后状态，与基线一致）
 TARGET_FUNCS = [
     '<module>',
     'one_prod_to_dataframe',
@@ -34,13 +40,6 @@ TARGET_FUNCS = [
     'change_his_to_backward',
     'get_date_and_count',
 ]
-
-JUMP_OPS = (
-    'JUMP_FORWARD', 'JUMP_BACKWARD',
-    'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_FORWARD_IF_TRUE',
-    'POP_JUMP_BACKWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_TRUE',
-    'POP_JUMP_IF_FALSE', 'POP_JUMP_IF_TRUE',
-)
 
 
 def get_instr_list(co: types.CodeType):
@@ -122,7 +121,7 @@ def main() -> None:
 
     lines = []
     lines.append("=" * 80)
-    lines.append("Round 5 测试工程师 — 9 个不一致函数指令 diff 详情")
+    lines.append("Round 4 测试工程师 — 9 个不一致函数指令 diff 详情")
     lines.append("=" * 80)
     lines.append(f"pyc: {PYC}")
     lines.append(f"decompiled: {DECOMPILED}")
@@ -136,8 +135,8 @@ def main() -> None:
     lines.append("  - 跳过 EXTENDED_ARG / CACHE")
     lines.append("  - code object 类型 argval 显示 <code name len=N>")
     lines.append("  - 首处不一致位置标 [FIRST DIFF]，前后各展示 10 条上下文")
-    lines.append("  - R5 重点定位 build_future_fill_time JUMP_FORWARD 2660→2586 (偏移 74 字节)")
-    lines.append("    + one_prod_to_dataframe 尾部 spurious return (+11)")
+    lines.append("  - R1/R2/R3 已修复 boolop/STORE_SUBSCR/三元前序/长 or 链入口引用语义；")
+    lines.append("    R4 重点定位 one_prod 尾部 spurious return (+11) / build_future JUMP_FORWARD 跳转目标偏移")
     lines.append("")
 
     for fname in TARGET_FUNCS:
@@ -174,9 +173,9 @@ def main() -> None:
         lines.append(f"  NEW : {instr_repr(na_ins) if na_ins else '<end>'}")
         lines.append("")
         lines.append(f"--- CONTEXT [idx-{CONTEXT}, idx+{CONTEXT}] ---")
-        lines.append(f"{'idx':>5} | {'ORIG':<60} | {'NEW':<60}")
         lo = max(0, idx - CONTEXT)
         hi = min(max(len(oa), len(na)), idx + CONTEXT + 1)
+        lines.append(f"{'idx':>5} | {'ORIG':<60} | {'NEW':<60}")
         for i in range(lo, hi):
             o_part = instr_repr(oa[i]) if i < len(oa) else '<end>'
             n_part = instr_repr(na[i]) if i < len(na) else '<end>'
@@ -221,72 +220,6 @@ def main() -> None:
                 else:
                     lines.append("  sub-code top-level equal")
                 lines.append("")
-
-        # ===== R5 特殊：对 build_future_fill_time 输出完整指令序列对照 + 跳转差异 =====
-        if fname == 'build_future_fill_time':
-            lines.append("=" * 80)
-            lines.append("### build_future_fill_time 完整指令对照（671 条）与跳转差异标注 ###")
-            lines.append("=" * 80)
-            n = min(len(oa), len(na))
-            lines.append(f"共 {n} 条指令对照（orig_len={len(oa)}, new_len={len(na)}）")
-            lines.append("")
-            # 收集所有差异点
-            diff_points = []
-            for i in range(n):
-                a = oa[i]
-                b = na[i]
-                if a[1] != b[1] or a[2] != b[2]:
-                    diff_points.append(i)
-            lines.append(f"差异点总数: {len(diff_points)}")
-            lines.append("")
-            lines.append("--- 所有差异点（含跳转目标差异）---")
-            for i in diff_points:
-                a = oa[i]
-                b = na[i]
-                is_jump = a[1] in JUMP_OPS or b[1] in JUMP_OPS
-                tag = " [JUMP]" if is_jump else ""
-                lines.append(f"  idx={i:4d}{tag}")
-                lines.append(f"    ORIG: {instr_repr(a)}")
-                lines.append(f"    NEW : {instr_repr(b)}")
-                # 若是 JUMP_FORWARD，计算偏移差
-                if a[1] == 'JUMP_FORWARD' and b[1] == 'JUMP_FORWARD':
-                    off_a = a[2] if isinstance(a[2], int) else None
-                    off_b = b[2] if isinstance(b[2], int) else None
-                    if off_a is not None and off_b is not None:
-                        delta = off_a - off_b
-                        lines.append(f"    JUMP_FORWARD 目标偏移差: orig-new = {delta} 字节"
-                                     f" ({delta} / 2 = {delta/2} 条指令)")
-            lines.append("")
-            # 计算每个 JUMP_FORWARD 差异点对应的目标块
-            lines.append("--- JUMP_FORWARD 差异点目标块分析 ---")
-            # 建 offset -> idx 映射
-            off_to_idx_orig = {ins[0]: i for i, ins in enumerate(oa)}
-            off_to_idx_new = {ins[0]: i for i, ins in enumerate(na)}
-            for i in diff_points:
-                a = oa[i]
-                b = na[i]
-                if a[1] != 'JUMP_FORWARD' or b[1] != 'JUMP_FORWARD':
-                    continue
-                if not (isinstance(a[2], int) and isinstance(b[2], int)):
-                    continue
-                tgt_o = a[2]
-                tgt_n = b[2]
-                lines.append(f"  JUMP_FORWARD @ orig_offset={a[0]} (idx={i}):")
-                lines.append(f"    ORIG 目标 offset={tgt_o}")
-                lines.append(f"    NEW  目标 offset={tgt_n}")
-                lines.append(f"    偏移差={tgt_o - tgt_n} 字节")
-                # orig 目标处的指令
-                if tgt_o in off_to_idx_orig:
-                    tidx = off_to_idx_orig[tgt_o]
-                    lines.append(f"    ORIG 目标处指令 (idx={tidx}): {instr_repr(oa[tidx])}")
-                else:
-                    lines.append(f"    ORIG 目标 offset={tgt_o} 不在 orig 指令边界（可能落在 EXTENDED_ARG/对齐）")
-                if tgt_n in off_to_idx_new:
-                    tidx = off_to_idx_new[tgt_n]
-                    lines.append(f"    NEW  目标处指令 (idx={tidx}): {instr_repr(na[tidx])}")
-                else:
-                    lines.append(f"    NEW  目标 offset={tgt_n} 不在 new 指令边界（可能落在 EXTENDED_ARG/对齐）")
-            lines.append("")
 
     out = "\n".join(lines) + "\n"
     with open(OUT_TXT, 'w', encoding='utf-8') as f:

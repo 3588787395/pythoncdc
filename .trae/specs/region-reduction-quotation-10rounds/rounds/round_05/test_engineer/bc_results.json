@@ -79,8 +79,8 @@
     "fill_minute_or_day_blank": {
       "status": "len_diff",
       "orig_len": 241,
-      "new_len": 199,
-      "diff": -42
+      "new_len": 211,
+      "diff": -30
     },
     "load_minute_or_day_kline": {
       "status": "match"

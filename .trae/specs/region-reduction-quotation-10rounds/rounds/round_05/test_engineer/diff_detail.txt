@@ -1,5 +1,5 @@
 ================================================================================
-Round 5 测试工程师 — 9 个不一致函数指令 diff 详情
+Round 4 测试工程师 — 9 个不一致函数指令 diff 详情
 ================================================================================
 pyc: /workspace/quotation.pyc
 decompiled: /tmp/r5_decompiled.py
@@ -11,8 +11,8 @@ total=150 matched=141 mismatched=9 missing=0 success_rate=94.0%
   - 跳过 EXTENDED_ARG / CACHE
   - code object 类型 argval 显示 <code name len=N>
   - 首处不一致位置标 [FIRST DIFF]，前后各展示 10 条上下文
-  - R5 重点定位 build_future_fill_time JUMP_FORWARD 2660→2586 (偏移 74 字节)
-    + one_prod_to_dataframe 尾部 spurious return (+11)
+  - R1/R2/R3 已修复 boolop/STORE_SUBSCR/三元前序/长 or 链入口引用语义；
+    R4 重点定位 one_prod 尾部 spurious return (+11) / build_future JUMP_FORWARD 跳转目标偏移
 
 ================================================================================
 FUNCTION: <module>
@@ -175,14 +175,14 @@ new  instructions: 455
 ================================================================================
 FUNCTION: fill_minute_or_day_blank
 STATUS: len_diff
-orig_len=241 new_len=199 diff=-42
+orig_len=241 new_len=211 diff=-30
 --------------------------------------------------------------------------------
 orig instructions: 241
-new  instructions: 199
+new  instructions: 211
 
 --- FIRST DIFF @ idx=4 ---
   ORIG:    14 POP_JUMP_FORWARD_IF_FALSE 1206
-  NEW :    14 POP_JUMP_FORWARD_IF_FALSE 1006
+  NEW :    14 POP_JUMP_FORWARD_IF_FALSE 1030
 
 --- CONTEXT [idx-10, idx+10] ---
   idx | ORIG                                                         | NEW                                                         
@@ -190,7 +190,7 @@ new  instructions: 199
     1        2 LOAD_FAST                'nowend'                      |     2 LOAD_FAST                'nowend'                     
     2        4 LOAD_FAST                'nowstart'                    |     4 LOAD_FAST                'nowstart'                   
     3        6 COMPARE_OP               '>='                          |     6 COMPARE_OP               '>='                         
-    4 >>    14 POP_JUMP_FORWARD_IF_FALSE 1206                         |    14 POP_JUMP_FORWARD_IF_FALSE 1006                        
+    4 >>    14 POP_JUMP_FORWARD_IF_FALSE 1206                         |    14 POP_JUMP_FORWARD_IF_FALSE 1030                        
     5       16 LOAD_FAST                'stocks'                      |    16 LOAD_FAST                'stocks'                     
     6       18 LOAD_METHOD              'split'                       |    18 LOAD_METHOD              'split'                      
     7       40 LOAD_CONST               '.'                           |    40 LOAD_CONST               '.'                          
@@ -202,25 +202,13 @@ new  instructions: 199
    13       70 LOAD_FAST                'stocks'                      |    70 LOAD_FAST                'stocks'                     
    14       72 LOAD_METHOD              'split'                       |    72 LOAD_METHOD              'split'                      
 
---- TAIL DIVERGE (common_prefix_len=199) ---
+--- TAIL DIVERGE (common_prefix_len=211) ---
   idx | ORIG                                                         | NEW                                                         
-  194      982 LOAD_FAST                'klines'                      |   990 PRECALL                  2                            
-  195      984 LOAD_FAST                'klines_back'                 |   994 CALL                     2                            
-  196      986 BUILD_LIST               2                             |  1004 STORE_FAST               'klines'                     
-  197      988 PRECALL                  1                             |  1006 LOAD_FAST                'klines'                     
-  198      992 CALL                     1                             |  1008 RETURN_VALUE             None                         
-  199     1002 STORE_FAST               'klines'                      | <end>                                                       
-  200     1004 JUMP_FORWARD             1206                          | <end>                                                       
-  201     1006 LOAD_GLOBAL              'numpy'                       | <end>                                                       
-  202     1018 LOAD_ATTR                'array'                       | <end>                                                       
-  203     1028 LOAD_GLOBAL              'numpy'                       | <end>                                                       
-  204     1040 LOAD_ATTR                'nan'                         | <end>                                                       
-  205     1050 BUILD_LIST               1                             | <end>                                                       
-  206     1052 LOAD_GLOBAL              'len'                         | <end>                                                       
-  207     1064 LOAD_FAST                'dts'                         | <end>                                                       
-  208     1066 PRECALL                  1                             | <end>                                                       
-  209     1070 CALL                     1                             | <end>                                                       
-  210     1080 BINARY_OP                5                             | <end>                                                       
+  206     1052 LOAD_GLOBAL              'len'                         |  1014 PRECALL                  2                            
+  207     1064 LOAD_FAST                'dts'                         |  1018 CALL                     2                            
+  208     1066 PRECALL                  1                             |  1028 STORE_FAST               'klines'                     
+  209     1070 CALL                     1                             |  1030 LOAD_FAST                'klines'                     
+  210     1080 BINARY_OP                5                             |  1032 RETURN_VALUE             None                         
   211     1084 PRECALL                  1                             | <end>                                                       
   212     1088 CALL                     1                             | <end>                                                       
   213     1098 STORE_FAST               'temp_value'                  | <end>                                                       
@@ -287,91 +275,6 @@ new  instructions: 671
   234     1076 POP_JUMP_FORWARD_IF_FALSE 1096                         |  1076 POP_JUMP_FORWARD_IF_FALSE 1096                        
   235     1078 LOAD_CONST               '09:35:00'                    |  1078 LOAD_CONST               '09:35:00'                   
   236     1080 LOAD_CONST               '11:30:00'                    |  1080 LOAD_CONST               '11:30:00'                   
-
-================================================================================
-### build_future_fill_time 完整指令对照（671 条）与跳转差异标注 ###
-================================================================================
-共 671 条指令对照（orig_len=671, new_len=671）
-
-差异点总数: 13
-
---- 所有差异点（含跳转目标差异）---
-  idx= 201
-    ORIG:   956 LOAD_CONST               <code <listcomp> len=13>
-    NEW :   956 LOAD_CONST               <code <listcomp> len=13>
-  idx= 226 [JUMP]
-    ORIG:  1050 JUMP_FORWARD             2660
-    NEW :  1050 JUMP_FORWARD             2586
-    JUMP_FORWARD 目标偏移差: orig-new = 74 字节 (74 / 2 = 37.0 条指令)
-  idx= 344
-    ORIG:  1564 LOAD_CONST               <code <listcomp> len=13>
-    NEW :  1564 LOAD_CONST               <code <listcomp> len=13>
-  idx= 369 [JUMP]
-    ORIG:  1658 JUMP_FORWARD             2660
-    NEW :  1658 JUMP_FORWARD             2586
-    JUMP_FORWARD 目标偏移差: orig-new = 74 字节 (74 / 2 = 37.0 条指令)
-  idx= 487
-    ORIG:  2172 LOAD_CONST               <code <listcomp> len=13>
-    NEW :  2172 LOAD_CONST               <code <listcomp> len=13>
-  idx= 512 [JUMP]
-    ORIG:  2264 JUMP_FORWARD             2660
-    NEW :  2264 JUMP_FORWARD             2586
-    JUMP_FORWARD 目标偏移差: orig-new = 74 字节 (74 / 2 = 37.0 条指令)
-  idx= 522
-    ORIG:  2292 LOAD_CONST               ('13:30:00', '15:15:00', '15:00:00', '11:30:00', '14:00:00', '10:00:00', '10:30:00', '14:30:00', '11:00:00')
-    NEW :  2292 LOAD_CONST               frozenset({'13:30:00', '15:15:00', '15:00:00', '11:30:00', '14:00:00', '10:00:00', '10:30:00', '14:30:00', '11:00:00'})
-  idx= 531
-    ORIG:  2310 LOAD_CONST               ('14:45:00', '11:15:00', '10:45:00', '14:15:00', '13:45:00', '15:00:00', '10:00:00', '09:30:00')
-    NEW :  2310 LOAD_CONST               frozenset({'14:45:00', '11:15:00', '10:45:00', '15:00:00', '13:45:00', '14:15:00', '10:00:00', '09:30:00'})
-  idx= 536
-    ORIG:  2320 LOAD_CONST               ('13:30:00', '15:00:00', '11:30:00', '14:00:00', '10:00:00', '10:30:00', '14:30:00', '11:00:00')
-    NEW :  2320 LOAD_CONST               frozenset({'13:30:00', '15:00:00', '11:30:00', '14:00:00', '10:00:00', '10:30:00', '14:30:00', '11:00:00'})
-  idx= 559 [JUMP]
-    ORIG:  2400 JUMP_FORWARD             2660
-    NEW :  2400 JUMP_FORWARD             2586
-    JUMP_FORWARD 目标偏移差: orig-new = 74 字节 (74 / 2 = 37.0 条指令)
-  idx= 569
-    ORIG:  2428 LOAD_CONST               ('15:15:00', '15:00:00', '11:30:00')
-    NEW :  2428 LOAD_CONST               frozenset({'15:15:00', '15:00:00', '11:30:00'})
-  idx= 583
-    ORIG:  2456 LOAD_CONST               ('15:15:00', '15:00:00', '11:30:00')
-    NEW :  2456 LOAD_CONST               frozenset({'15:15:00', '15:00:00', '11:30:00'})
-  idx= 606 [JUMP]
-    ORIG:  2536 JUMP_FORWARD             2660
-    NEW :  2536 JUMP_FORWARD             2586
-    JUMP_FORWARD 目标偏移差: orig-new = 74 字节 (74 / 2 = 37.0 条指令)
-
---- JUMP_FORWARD 差异点目标块分析 ---
-  JUMP_FORWARD @ orig_offset=1050 (idx=226):
-    ORIG 目标 offset=2660
-    NEW  目标 offset=2586
-    偏移差=74 字节
-    ORIG 目标处指令 (idx=649):  2660 LOAD_FAST                'total_dts'
-    NEW  目标处指令 (idx=629):  2586 LOAD_FAST                'trade_days'
-  JUMP_FORWARD @ orig_offset=1658 (idx=369):
-    ORIG 目标 offset=2660
-    NEW  目标 offset=2586
-    偏移差=74 字节
-    ORIG 目标处指令 (idx=649):  2660 LOAD_FAST                'total_dts'
-    NEW  目标处指令 (idx=629):  2586 LOAD_FAST                'trade_days'
-  JUMP_FORWARD @ orig_offset=2264 (idx=512):
-    ORIG 目标 offset=2660
-    NEW  目标 offset=2586
-    偏移差=74 字节
-    ORIG 目标处指令 (idx=649):  2660 LOAD_FAST                'total_dts'
-    NEW  目标处指令 (idx=629):  2586 LOAD_FAST                'trade_days'
-  JUMP_FORWARD @ orig_offset=2400 (idx=559):
-    ORIG 目标 offset=2660
-    NEW  目标 offset=2586
-    偏移差=74 字节
-    ORIG 目标处指令 (idx=649):  2660 LOAD_FAST                'total_dts'
-    NEW  目标处指令 (idx=629):  2586 LOAD_FAST                'trade_days'
-  JUMP_FORWARD @ orig_offset=2536 (idx=606):
-    ORIG 目标 offset=2660
-    NEW  目标 offset=2586
-    偏移差=74 字节
-    ORIG 目标处指令 (idx=649):  2660 LOAD_FAST                'total_dts'
-    NEW  目标处指令 (idx=629):  2586 LOAD_FAST                'trade_days'
 
 ================================================================================
 FUNCTION: load_bars_from_hundsun

@@ -8838,11 +8838,18 @@ AST 映射规则:
                     import_pending_store = False
                     continue
                 # [R23 Bug1 fix] cond_block 是 TernaryRegion 的 merge_block：
-                # STORE_* 及其之前的指令已被 TernaryRegion 消费，跳过 pre_stmt
-                # 提取，仅保留条件指令提取（在循环外的 cond_instrs 收集中处理）。
+                # 仅第一个 STORE_* 及其之前的指令已被 TernaryRegion 消费（ternary
+                # 的赋值目标）。后续 STORE_* 是同块内的独立赋值（如
+                # `source_start = nowstart; dts = get_minute_or_day_fill_time(...)`），
+                # 必须作为 pre_stmt 提取，否则 IfRegion 条件块内前置赋值丢失，
+                # 反编译产物引用未定义变量（fill_minute_or_day_blank 的 -42 指令缺失）。
+                # [R5 fix] 原则 2（每块唯一归属）：ternary 归约范围仅到其 STORE_* 为止，
+                # 不延伸到同块后续指令。第一个 STORE_* 跳过后清除标志，后续 STORE_*
+                # 走正常 pre_stmt 提取路径。
                 if _cond_block_is_ternary_merge:
                     pre_instrs = []
                     pre_seen_store = True
+                    _cond_block_is_ternary_merge = False
                     continue
                 is_walrus = len(pre_instrs) >= 2 and pre_instrs[-1].opname == 'COPY' and pre_instrs[-1].arg == 1
                 if pre_unpack_info is not None:

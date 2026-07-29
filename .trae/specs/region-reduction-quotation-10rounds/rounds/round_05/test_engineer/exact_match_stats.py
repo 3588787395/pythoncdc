@@ -1,4 +1,4 @@
-"""轮 5 测试工程师：字节码一致性统计。
+"""轮 4 测试工程师：字节码一致性统计。
 
 加载 quotation.pyc 原始 code objects（core.pyc_loader_v2.load_pyc_file_v2）
 与反编译产物 /tmp/r5_decompiled.py 编译后的 code objects，
@@ -10,7 +10,7 @@
 输出每函数状态（match / len_diff / instr_diff / missing），
 统计 matched / total / success_rate，写入 bc_results.json。
 
-确认基线 141 / 150 可复现。
+确认基线 141 / 150 可复现（R3 后无退化）。
 """
 import sys
 import json
@@ -21,7 +21,7 @@ sys.path.insert(0, '/workspace')
 
 PYC = '/workspace/quotation.pyc'
 DECOMPILED = '/tmp/r5_decompiled.py'
-OUT_DIR = '/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_05/test_engineer'
+OUT_DIR = '/tmp/r5_out'
 OUT_JSON = OUT_DIR + '/bc_results.json'
 
 SKIP_OPS = ('EXTENDED_ARG', 'CACHE')

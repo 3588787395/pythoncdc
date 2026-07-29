@@ -137,22 +137,29 @@
 
 ### 阶段一：测试工程师
 
-- [ ] R5-1 反编译 + 字节码 diff
-- [ ] R5-2 ≥10 最小复现实例
+- [x] R5-1 反编译 + 字节码 diff（`decompile_report.md`）
+  - 141/150 = 94.00%，compile_ok=True，9 个不一致函数（与 R4 基线一致，无退化）
+- [x] R5-2 ≥10 最小复现实例
+  - 11 个 repro（repro_01..repro_10 + repro_else_nested），全部 py_compile 通过
 
 ### 阶段二：修复工程师
 
-- [ ] R5-3 根因分析完成
-- [ ] R5-4 按算法修复 + docstring 更新
-- [ ] R5-5 回归测试通过
-- [ ] R5-6 `fix_report.md` 生成
+- [x] R5-3 根因分析完成
+  - P0-A：`_if_extract_cond_instructions` 中 `_cond_block_is_ternary_merge` 标志对 cond_block（TernaryRegion.merge_block）内所有 STORE_* 生效，导致 ternary STORE_* 之后的独立赋值被跳过（违反原则 2 每块唯一归属）
+- [x] R5-4 按算法修复 + docstring 更新
+  - 修复点：`_if_extract_cond_instructions`（region_ast_generator.py L8849-8853）第一个 STORE_* 跳过后清除 `_cond_block_is_ternary_merge = False`，后续 STORE_* 走正常 pre_stmt 提取路径
+  - 算法依据：No More Gots §3.1 — 基本块内顺序指令按偏序归约，ternary 归约范围仅到其 STORE_* 为止
+- [x] R5-5 回归测试通过
+  - quotation.pyc 141/150 无退化；fill_minute_or_day_blank diff -42→-30（恢复 3 条赋值）
+  - 既有矩阵 0 退化（IF 3 fail / TERNARY 2 fail / BOOLOP 1 fail / TRY 1 fail / LOOP 1 fail — 全部 pre-existing，stash 对比确认）
+- [x] R5-6 `fix_report.md` 生成（`rounds/round_05/repair_engineer/fix_report.md`）
 
 ### 验证与提交
 
-- [ ] R5-7 一致函数数 ≥ 轮 4
-- [ ] R5-8 反模式自检通过
-- [ ] R5-9 编译通过
-- [ ] R5-10 commit + push `rr-r05:`
+- [x] R5-7 一致函数数 ≥ 轮 4（141→141，无退化；fill_minute_or_day_blank 部分改善）
+- [x] R5-8 反模式自检通过（G3：0 新增；G4：0 新增硬编码深度）
+- [x] R5-9 编译通过（IMPORT_OK）
+- [x] R5-10 commit + push `rr-r05:`
 
 ## 轮 6 (Round 6)
 
