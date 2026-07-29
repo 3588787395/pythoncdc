@@ -73,7 +73,7 @@
 
 - [x] R12-7 一致函数数 ≥ 轮 11（144 == 144，无退化）
 - [x] R12-8 反模式自检 + 编译通过（G3/G4 0 新增；IMPORT_OK）
-- [ ] R12-9 commit + push `rr-r12:`
+- [x] R12-9 commit + push `rr-r12:` 到 origin（ff1a898，已 push 到 main）
 
 ## 轮 13 (Round 13) — 重点攻克 get_date_and_count（-27 指令，Loop+Conditional while if/elif 链丢失）
 
