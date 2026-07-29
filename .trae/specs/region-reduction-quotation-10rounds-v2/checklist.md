@@ -93,7 +93,7 @@
 
 - [x] R13-7 一致函数数 ≥ 轮 12（144 == 144，无退化）
 - [x] R13-8 反模式自检 + 编译通过（G3/G4 0 新增；IMPORT_OK）
-- [ ] R13-9 commit + push `rr-r13:` 到 origin
+- [x] R13-9 commit + push `rr-r13:` 到 origin（d726e6f，已 push 到 main）
 
 ## 轮 14 (Round 14) — 跳转目标归一化（one_prod_to_dataframe / change_his_to_backward）
 
