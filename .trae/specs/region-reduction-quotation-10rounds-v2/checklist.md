@@ -195,24 +195,24 @@
 - [x] R18-8 反模式自检 + 编译通过（G3/G4 0 新增；IMPORT_OK）
 - [x] R18-9 commit + push `rr-r18:` 到 origin（6e64e87，已 push 到 main）
 
-## 轮 19 (Round 19) — 综合回归与残留收尾
+## 轮 19 (Round 19) — 重点修复 get_str_data 根因 B/C（在 R18 修复根因 A 基础上）
 
 ### 阶段一：测试工程师
 
-- [ ] R19-1 反编译 + 字节码 diff（`decompile_report.md`）
-- [ ] R19-2 ≥10 最小复现实例（综合覆盖残留缺陷模式）
+- [x] R19-1 反编译 + 字节码 diff（`decompile_report.md`，基线 147/150=98.00% 无退化）
+- [x] R19-2 ≥10 最小复现实例（重点针对根因 B/C：兄弟 TernaryRegion 在 IfRegion else / 链式共享 merge_block）
 
 ### 阶段二：修复工程师
 
-- [ ] R19-3 根因分析完成（残留缺陷综合定位）
-- [ ] R19-4 按算法修复 + docstring 更新
-- [ ] R19-5 回归测试通过
-- [ ] R19-6 `fix_report.md` 生成
+- [x] R19-3 根因分析完成（根因 B：_process_if_blocks 遗漏兄弟表达式子区域；根因 C：链式共享 merge_block 独占标记）
+- [ ] R19-4 按算法修复 + docstring 更新 — 尝试 B+C 因 -48→-84 退化已回退（见 `fix_report.md` §4）；完整修复需先建模 BUILD_CONST_KEY_MAP 消费模式，deferred
+- [x] R19-5 回归测试通过（147/150 == R18；既有矩阵 stash 验证 0 退化；IMPORT_OK；10 repros compile OK）
+- [x] R19-6 `fix_report.md` 生成
 
 ### 验证与提交
 
-- [ ] R19-7 一致函数数 ≥ 轮 18
-- [ ] R19-8 反模式自检 + 编译通过
+- [x] R19-7 一致函数数 ≥ 轮 18（147 == 147，无退化）
+- [x] R19-8 反模式自检 + 编译通过（G3/G4 0 新增；代码 diff 为空已回退；IMPORT_OK）
 - [ ] R19-9 commit + push `rr-r19:`
 
 ## 轮 20 (Round 20) — 最终验证与收尾
