@@ -7697,6 +7697,36 @@ AST 映射规则:
             if _entry_pre_stmts:
                 pre_stmts = _entry_pre_stmts + pre_stmts
         condition = self._if_extract_condition_from_instructions(region, cond_block, cond_instrs)
+        # [R8 fix] 区域归约算法原则 4（入口引用语义）+ 原则 2（每块唯一归属）：
+        # 主条件块（condition_block）可能是复合条件（如 `i == 0 and len(v) == N`
+        # 由两个短路条件块组成），记录在 IfRegion.inline_boolop_chains 中
+        # （key=id(cond_block)，value={'blocks':[b1,b2],'op':'and'}）。
+        # _if_extract_condition_from_instructions 仅从 cond_block 单块指令提取
+        # 条件（如 `i == 0`），丢失后续短路块的 len(v) == N 比较部分；且后续块
+        # 未被标记 generated，被作为独立语句重复生成（如 IfRegion@1006 被作为
+        # 独立 `if len(v) == 11:` 重复生成，并级联复制 @1202/@1410 elif）。
+        # 镜像 _if_generate_elif_chain 主体的 inline_boolop_chains 查找路径
+        # （本文件 L9830-9844），当 ibc 有 cond_block 条目时，重建复合 BoolOp
+        # 条件并标记链中后续块为 generated。
+        # 依原则 4：父区域通过 entry 引用子区域，不展开子区域所有块；嵌套
+        # IfRegion 继承父区域的复合条件语义，主条件与 elif 条件同等处理，
+        # 保持复合条件完整。依原则 2：复合条件的后续块由本 IfRegion 唯一归属
+        # （标记 generated），不被外层循环/序列重复生成。
+        _main_ibc = getattr(region, 'inline_boolop_chains', {}).get(id(cond_block))
+        if _main_ibc:
+            _chain_blocks = _main_ibc['blocks']
+            _chain_op = _main_ibc['op']
+            _main_parts = []
+            for _cb in _chain_blocks:
+                _cb_instrs = [i for i in _cb.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL') and i.opname not in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS | BACKWARD_JUMP_OPS) and i.opname not in ('JUMP_FORWARD', 'JUMP_BACKWARD')]
+                if _cb_instrs:
+                    _part = self.expr_reconstructor.reconstruct(_cb_instrs)
+                    if _part:
+                        _main_parts.append(_part)
+            if len(_main_parts) >= 2:
+                condition = {'type': 'BoolOp', 'op': _chain_op, 'values': _main_parts}
+                for _cb in _chain_blocks[1:]:
+                    self.generated_blocks.add(_cb)
         if hasattr(region, 'elif_conditions') and region.elif_conditions:
             for ec in region.elif_conditions:
                 self.generated_blocks.add(ec)
@@ -9565,6 +9595,82 @@ AST 映射规则:
         return False
 
     def _if_generate_elif_chain(self, region: IfRegion) -> List[Dict[str, Any]]:
+        """生成 if-elif[-else] 链中 elif 部分的 AST（由 _if_generate_full_elif_chain 调用）。
+
+        ═══════════════════════════════════════════════════════════════════════
+        1. 算法依据
+        ═══════════════════════════════════════════════════════════════════════
+        No More Gotos §3.1（条件区域归约）：if-elif-else 链是 Conditional
+        区域的展开形式，每个 elif 条件块是独立的基本块，以 POP_JUMP_IF_FALSE
+        结尾跳到下一个 elif/else/merge。Python 字节码将 `A and B`（短路 and）
+        编译为两个连续条件块（A; POP_JUMP_IF_FALSE → next; B; POP_JUMP_IF_FALSE
+        → next），两者共同组成一个 elif 的复合条件，记录在
+        IfRegion.inline_boolop_chains（key=id(elif 条件块)，value={'blocks':
+        [b1, b2], 'op': 'and'}）。
+
+        ═══════════════════════════════════════════════════════════════════════
+        2. 归约顺序
+        ═══════════════════════════════════════════════════════════════════════
+        自底向上：先归约 elif body 内的嵌套区域（TryExcept/Loop/BoolOp 等），
+        再归约 elif 链本身。本方法处理 elif 链的 AST 生成（识别阶段已完成，
+        region_analyzer._identify_conditional_regions 已建立 IfRegion 含
+        elif_conditions/elif_bodies）。嵌套 elif 链（剩余 elif > 1 时）通过
+        构造嵌套 IfRegion 递归归约（见第 4 节）。
+
+        ═══════════════════════════════════════════════════════════════════════
+        3. 唯一归属判定
+        ═══════════════════════════════════════════════════════════════════════
+        elif 条件块（elif_cond_block = region.elif_conditions[0]）属本
+        IfRegion，方法入口立即 self.generated_blocks.add(elif_cond_block)。
+        复合条件的后续短路块（inline_boolop_chains[elif_cond_block]['blocks'][1:]
+        ）也由本 IfRegion 唯一归属：当 ibc 命中并重建复合 BoolOp 条件时，
+        将 chain_blocks[1:] 标记 generated，防止外层循环/序列将其作为独立
+        `if <len(v)==N>:` 重复生成（[R8 fix] 修复 one_prod_to_dataframe 的
+        elif 链条件污染：原实现未标记后续块，导致 IfRegion@1006 被作为独立
+        if 重复生成，级联复制 @1202/@1410 elif）。block_to_region canonical
+        owner 守卫：嵌套 IfRegion（构造的 nested_elif）继承父 region 的
+        ibc 条目（[R8 fix] _nested_inline_chains 传播），不跨层引用父区域块。
+
+        ═══════════════════════════════════════════════════════════════════════
+        4. 嵌套处理
+        ═══════════════════════════════════════════════════════════════════════
+        嵌套即抽象节点：当 len(region.elif_conditions) > 1 且剩余 elif 非空
+        时，构造嵌套 IfRegion（entry=elif_conditions[1]，elif_conditions=
+        remaining_elifs）作为单个抽象节点递归生成，结果标记 _is_elif=True
+        挂到当前 elif 链的 orelse。[R8 fix] 原则 4（入口引用语义）+ 原则 2：
+        嵌套 IfRegion 继承父 region 的 inline_boolop_chains 条目
+        （_nested_inline_chains，覆盖 elif_conditions[1] + remaining_elifs），
+        使嵌套 elif 的复合条件提取（本方法 ibc 查找路径）不退化为仅取首个
+        条件块。若不传播，嵌套 elif 条件丢失 len(v)==N 比较，且 len 条件块
+        未标记 generated 被重复生成。嵌套 IfRegion 通过 entry 引用，不展开
+        子区域所有块（nested_blocks 仅含 elif_conditions/bodies/final_else）。
+
+        ═══════════════════════════════════════════════════════════════════════
+        5. 入口引用语义
+        ═══════════════════════════════════════════════════════════════════════
+        父区域（_if_generate_full_elif_chain）通过 entry 引用本 elif 链的
+        首个 elif 条件块（elif_conditions[0]），不展开所有 elif 块。本方法
+        返回 elif 链的 AST（List[If(_is_elif=True)]），由父区域挂到 then
+        分支的 orelse。嵌套 IfRegion 的 entry = elif_conditions[1]，父区域
+        不直接引用嵌套 IfRegion 的内部块。[R8 fix] 主条件（_if_generate_
+        full_elif_chain）与 elif 条件同等处理 ibc：主条件块若有 ibc 条目，
+        重建复合 BoolOp 并标记后续块 generated（镜像本方法 ibc 路径）。
+
+        ═══════════════════════════════════════════════════════════════════════
+        6. 反编译流程
+        ═══════════════════════════════════════════════════════════════════════
+        elif 条件提取优先级（elif_condition 逐步回退）：
+          (a) chained_compare（链式比较 IfRegion 子区域）
+          (b) R23-N7 链式比较模式检测（TryExcept claim 的 elif 条件块）
+          (c) BoolOpRegion（elif 条件块是 BoolOpRegion entry）
+          (d) [R8 fix] inline_boolop_chains（复合短路条件，ibc 命中时
+              重建 BoolOp 并标记 chain_blocks[1:] generated）
+          (e) TernaryRegion（while_cond 三元作为 elif 条件）
+          (f) elif_cond_instrs 单块重建（expr_reconstructor + negate）
+        elif body 经 _process_if_blocks 生成，剥离隐式 return None（除非
+        显式 return）。剩余 elif > 1 时构造嵌套 IfRegion 递归；剩余 = 1 时
+        作为 last elif 直接生成（含 R23-N7 链式比较 + BoolOpRegion + ibc）。
+        """
         if not getattr(region, 'elif_conditions', None):
             return [self._if_generate_normal(region)]
         # [关键修复] 当 elif_final_else 只包含 cleanup 块(POP_TOP + JUMP)时，
@@ -9914,12 +10020,32 @@ AST 映射规则:
                     nested_blocks.update(body)
                 if region.elif_final_else:
                     nested_blocks.update(region.elif_final_else)
+                # [R8 fix] 区域归约算法原则 4（入口引用语义）+ 原则 2（每块唯一归属）：
+                # 内层 elif 链是独立 Conditional 区域，其复合条件（如 `i == 0 and
+                # len(v) == N` 由两个短路条件块组成）记录在父 IfRegion.inline_
+                # boolop_chains 中（key=id(elif 条件块)，value={'blocks':[b1,b2],
+                # 'op':'and'}）。构建嵌套 IfRegion 处理剩余 elif（elif_conditions[1:]
+                # ）时，必须将对应的 inline_boolop_chains 条目传递给嵌套 IfRegion。
+                # 否则嵌套 elif 条件提取（_if_generate_elif_chain 主体的
+                # inline_boolop_chains 查找路径）退化为仅取首个条件块（如 `i == 0`），
+                # 丢失 len(v) == N 比较部分，且 len 条件块未被标记 generated 导致
+                # 级联 IfRegion（如 IfRegion@1006）被作为独立 if 重复生成。
+                # 依原则 4：父区域通过 entry 引用子区域，不展开子区域所有块；嵌套
+                # IfRegion 继承父区域的复合条件语义，保持 elif 条件完整。
+                _nested_inline_chains = {}
+                _parent_inline_chains = getattr(region, 'inline_boolop_chains', {})
+                if _parent_inline_chains:
+                    for _ec in [region.elif_conditions[1]] + remaining_elifs:
+                        _ec_key = id(_ec)
+                        if _ec_key in _parent_inline_chains:
+                            _nested_inline_chains[_ec_key] = _parent_inline_chains[_ec_key]
                 nested_elif = IfRegion(
                     region_type=RegionType.IF_ELIF_CHAIN, entry=region.elif_conditions[1],
                     blocks=nested_blocks, condition_block=region.elif_conditions[1],
                     then_blocks=region.elif_bodies[1] if len(region.elif_bodies) > 1 else [],
                     elif_conditions=remaining_elifs, elif_bodies=region.elif_bodies[2:],
                     elif_final_else=region.elif_final_else, chained_compare_blocks=nested_chained,
+                    inline_boolop_chains=_nested_inline_chains,
                 )
                 nested_ast = self._generate_region(nested_elif)
                 if nested_ast:

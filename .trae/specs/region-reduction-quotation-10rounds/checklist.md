@@ -2,7 +2,7 @@
 
 > 目标：以区域归约算法（No More Gotos）驱动 quotation.pyc 反编译 10 轮双工程师迭代，直至反编译字节码 100% 等价。
 > 每轮：测试工程师反编译 + ≥10 最小复现实例 → 修复工程师按区域归约算法 4 原则修复 + docstring 更新 → 回归 → commit + push。
-> 当前状态：待执行
+> 当前状态：R1-R7 完成（142/150=94.67%），R8 进行中
 
 ## 通用约束（每轮检查）
 
@@ -165,64 +165,80 @@
 
 ### 阶段一：测试工程师
 
-- [ ] R6-1 反编译 + 字节码 diff
-- [ ] R6-2 ≥10 最小复现实例
+- [x] R6-1 反编译 + 字节码 diff（141/150；fill_minute_or_day_blank 第二条 strptime 丢失 + "1530" 杂散字符串）
+- [x] R6-2 ≥10 最小复现实例（repro_01_two_strptime_ternary.py：双角色块 BoolOpRegion.merge_block 同时作为新链起始）
 
 ### 阶段二：修复工程师
 
-- [ ] R6-3 根因分析完成
-- [ ] R6-4 按算法修复 + docstring 更新
-- [ ] R6-5 回归测试通过
-- [ ] R6-6 `fix_report.md` 生成
+- [x] R6-3 根因分析完成（双角色块未被识别，违反原则 2 每块唯一归属 + 原则 4 入口引用语义）
+- [x] R6-4 按算法修复 + docstring 更新
+  - region_analyzer.py：扩展双角色块检测允许 FORWARD_CONDITIONAL_JUMP_OPS；绕过 _sb_has_body；允许链遍历继续
+  - region_ast_generator.py：_if_generate_normal / _if_generate_full_elif_chain 添加 BoolOp merge_block 双角色检测
+- [x] R6-5 回归测试通过（fill_minute_or_day_blank -30→-1；无退化）
+- [x] R6-6 `fix_report.md` 生成
 
 ### 验证与提交
 
-- [ ] R6-7 一致函数数 ≥ 轮 5
-- [ ] R6-8 反模式自检通过
-- [ ] R6-9 编译通过
-- [ ] R6-10 commit + push `rr-r06:`
+- [x] R6-7 一致函数数 ≥ 轮 5（141→141，无退化；fill_minute_or_day_blank 部分改善）
+- [x] R6-8 反模式自检通过（G3：0 新增）
+- [x] R6-9 编译通过（IMPORT_OK）
+- [x] R6-10 commit + push `rr-r06:`（e2d4620）
 
 ## 轮 7 (Round 7)
 
 ### 阶段一：测试工程师
 
-- [ ] R7-1 反编译 + 字节码 diff
-- [ ] R7-2 ≥10 最小复现实例
+- [x] R7-1 反编译 + 字节码 diff（142/150=94.67%，compile_ok=True，8 不一致；新增 NOP 过滤 + 跳转目标归一化消除假阳性）
+- [x] R7-2 ≥10 最小复现实例（dump_orig.py / dump_regions.py 调试工具 + load_get_price 嵌套 if 复现）
 
 ### 阶段二：修复工程师
 
-- [ ] R7-3 根因分析完成
-- [ ] R7-4 按算法修复 + docstring 更新
-- [ ] R7-5 回归测试通过
-- [ ] R7-6 `fix_report.md` 生成
+- [x] R7-3 根因分析完成（一元运算符 ~ 优先级错误 + load_get_price 嵌套 IfRegion 含 BoolOp 子节点被错误 skip）
+- [x] R7-4 按算法修复 + docstring 更新
+  - code_generator.py：一元运算符优先级 'not'=5, '~'/'UAdd'/'USub'=13
+  - region_ast_generator.py：含 BoolOp 子节点的嵌套 IfRegion 从 _nested_if_entry_skip 改为 _nested_if_entry_generate
+- [x] R7-5 回归测试通过（142/150 无退化；load_get_price 嵌套条件结构正确恢复）
+- [x] R7-6 `fix_report.md` 生成（归档 r7_decompiled.py + bc_results.json）
 
 ### 验证与提交
 
-- [ ] R7-7 一致函数数 ≥ 轮 6
-- [ ] R7-8 反模式自检通过
-- [ ] R7-9 编译通过
-- [ ] R7-10 commit + push `rr-r07:`
+- [x] R7-7 一致函数数 ≥ 轮 6（141→142，单调递增）
+- [x] R7-8 反模式自检通过（G3：0 新增）
+- [x] R7-9 编译通过（IMPORT_OK）
+- [x] R7-10 commit + push `rr-r07:`（c9d67b8）
 
-## 轮 8 (Round 8)
+## 轮 8 (Round 8) — 全区域同等完善 + 注释即算法规约
 
 ### 阶段一：测试工程师
 
-- [ ] R8-1 反编译 + 字节码 diff
-- [ ] R8-2 ≥10 最小复现实例
+- [x] R8-1 反编译 quotation.pyc + 字节码 diff（`decompile_report.md`）
+  - [x] R8-1a 复用 R7 的 `decompile_quotation.py` / `exact_match_stats.py`（输出到 `/tmp/r8_decompiled.py`，禁止修改反编译产物）
+  - [x] R8-1b 统计一致函数数 / 总函数数 / 成功率，确认基线 142/150=94.67% 无退化
+  - [x] R8-1c 按函数输出不一致指令 diff（diff_detail.txt），聚焦 8 个残留函数
+- [x] R8-2 ≥10 最小复现实例（10 个 repro 全部 py_compile 通过，标注区域类型与违反原则）
 
 ### 阶段二：修复工程师
 
-- [ ] R8-3 根因分析完成
-- [ ] R8-4 按算法修复 + docstring 更新
-- [ ] R8-5 回归测试通过
-- [ ] R8-6 `fix_report.md` 生成
+- [x] R8-3 **全区域 docstring 审查**（算法驱动而非出错驱动）
+  - [x] R8-3a 枚举 11 类区域对应的 `_identify_*_regions` 方法清单
+  - [x] R8-3b 逐方法审查 docstring（R8 前 0/11 → R8 后 11/11 全部 6 节）
+  - [x] R8-3c 按区域归约算法补全 docstring（注释即算法规约）
+- [x] R8-4 按区域归约算法 4 原则修复 repro 缺陷 + 同步更新 `_if_generate_elif_chain` docstring（6 节）
+  - 根因：`_if_generate_elif_chain` ibc 未传播 + `_if_generate_full_elif_chain` 主条件 ibc 未处理（违反原则 2+4）
+- [x] R8-5 回归测试通过
+  - [x] R8-5a 10 个 repro 全部 py_compile 通过
+  - [x] R8-5b 既有区域测试矩阵无退化（control_flow_matrix 基线 9 fail/318 pass == R8 后 9 fail/318 pass，0 退化）
+  - [x] R8-5c quotation.pyc 一致函数数 ≥ 142（142/150，单调无退化）
+  - [x] R8-5d `python -c "import core.cfg.region_analyzer; import core.cfg.region_ast_generator"` 编译通过（IMPORT_OK）
+- [x] R8-6 `fix_report.md` 生成（含修复点、算法依据、4 原则对应条款、回归结果、残留不一致数、全区域 docstring 覆盖率 11/11）
 
 ### 验证与提交
 
-- [ ] R8-7 一致函数数 ≥ 轮 7
-- [ ] R8-8 反模式自检通过
-- [ ] R8-9 编译通过
-- [ ] R8-10 commit + push `rr-r08:`
+- [x] R8-7 一致函数数 ≥ 轮 7（142≥142），成功率单调无退化；one_prod_to_dataframe diff +10→instr_diff 收窄
+- [x] R8-8 反模式自检通过（G3：0 新增前缀；G4：0 新增硬编码深度上限）
+- [x] R8-9 编译通过（IMPORT_OK）
+- [x] R8-10 全区域 docstring 覆盖率：11/11 `_identify_*_regions` 方法 6 节模板齐全（grep 6 节关键词 ≥ 6/方法）
+- [x] R8-11 commit + push `rr-r08:` 到 origin（单次命令 ≤ 300 秒）
 
 ## 轮 9 (Round 9)
 

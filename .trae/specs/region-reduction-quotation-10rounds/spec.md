@@ -118,6 +118,27 @@
 - 用模式匹配替代算法
 - 后处理修正（一次正确原则）
 
+### Requirement: 所有区域类型同等完善（Round 8 强化）
+
+系统 SHALL 对全部 11 类区域（Loop / TryExcept / With / Match / NestedMatch / Assert / ChainedCompare / Conditional / Ternary / BoolOp / Sequence）的 `_identify_*_regions` 识别方法与对应 `_generate_*` 生成方法**同等**完成算法逻辑沉淀，禁止仅完善"当前出错"的区域类型。
+
+#### Scenario: 全区域 docstring 覆盖
+- **WHEN** Round 8 完成
+- **THEN** 全部 11 类区域的 `_identify_*_regions` / `_generate_*` 方法 docstring 均已按 6 节统一模板填写（算法依据 / 归约顺序 / 唯一归属判定 / 嵌套处理 / 入口引用语义 / 反编译流程）
+- **AND** 每节内容与该方法代码逻辑**一致**（注释即文档，注释即算法规约）
+- **AND** `grep -cE "算法依据|归约顺序|唯一归属判定|嵌套处理|入口引用语义|反编译流程"` 在每个目标方法 docstring 范围内 ≥ 6
+
+#### Scenario: 反编译逻辑写入识别方法注释
+- **WHEN** 修复工程师分析任一区域模式
+- **THEN** 该区域的反编译逻辑（CFG 模式 → 区域分类 → 归约 → AST 映射的完整推理链）MUST 写入对应 `_identify_*_regions` / `_generate_*` 方法的 docstring 注释
+- **AND** 注释中明确标注该区域相对其它区域的归约顺序（自底向上层级）
+- **AND** 注释中明确标注本区域的唯一归属判定（含 `block_to_region` canonical owner 守卫）
+
+#### Scenario: 算法驱动而非出错驱动
+- **WHEN** 修复工程师完善某区域类型
+- **THEN** 完善依据是区域归约算法对该区域类型的规约，而非"该区域当前是否在 quotation.pyc 中出错"
+- **AND** 即使某区域类型在 quotation.pyc 中当前无错误，也 MUST 按 6 节模板完成 docstring 与逻辑审查
+
 ## REMOVED Requirements
 
 无移除项。沿用 `quotation-pyc-iteration` 的 baseline 与测试基础设施，但不复用其 `use_cfg=False` 路径的修复历史。

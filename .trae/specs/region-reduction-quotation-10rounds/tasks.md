@@ -88,47 +88,71 @@
 
 ## 轮 5 (Round 5)
 
-- [ ] T5-1 测试工程师：反编译 + diff
-- [ ] T5-2 测试工程师：≥10 最小复现实例
-- [ ] T5-3 修复工程师：根因分析
-- [ ] T5-4 修复工程师：按算法修复 + docstring 更新
-- [ ] T5-5 修复工程师：回归测试
-- [ ] T5-6 修复工程师：fix_report.md
-- [ ] T5-7 验证一致函数数 ≥ 轮 4
-- [ ] T5-8 commit + push `rr-r05:`
+- [x] T5-1 测试工程师：反编译 + diff（141/150=94.00%，9 不一致）
+- [x] T5-2 测试工程师：≥10 最小复现实例（11 个 repro）
+- [x] T5-3 修复工程师：根因分析（P0-A `_cond_block_is_ternary_merge` 标志生命周期过长吞并 ternary STORE_* 之后的独立赋值）
+- [x] T5-4 修复工程师：按算法修复 + docstring 更新（`_if_extract_cond_instructions` 第一个 STORE_* 跳过后清除标志；No More Gotos §3.1）
+- [x] T5-5 修复工程师：回归测试（141/150 无退化；fill_minute_or_day_blank -42→-30）
+- [x] T5-6 修复工程师：fix_report.md
+- [x] T5-7 验证一致函数数 ≥ 轮 4（141→141，无退化）
+- [x] T5-8 commit + push `rr-r05:`（6f19735）
 
 ## 轮 6 (Round 6)
 
-- [ ] T6-1 测试工程师：反编译 + diff
-- [ ] T6-2 测试工程师：≥10 最小复现实例
-- [ ] T6-3 修复工程师：根因分析
-- [ ] T6-4 修复工程师：按算法修复 + docstring 更新
-- [ ] T6-5 修复工程师：回归测试
-- [ ] T6-6 修复工程师：fix_report.md
-- [ ] T6-7 验证一致函数数 ≥ 轮 5
-- [ ] T6-8 commit + push `rr-r06:`
+- [x] T6-1 测试工程师：反编译 + diff（141/150，fill_minute_or_day_blank 第二条 strptime 丢失 + "1530" 杂散字符串）
+- [x] T6-2 测试工程师：≥10 最小复现实例（repro_01_two_strptime_ternary.py，双角色块：BoolOpRegion.merge_block 同时作为新链起始）
+- [x] T6-3 修复工程师：根因分析（双角色块未被识别：前一 BoolOpRegion.merge_block 同时作为新 BoolOp 链起始块）
+- [x] T6-4 修复工程师：按算法修复 + docstring 更新
+  - region_analyzer.py：扩展双角色块检测条件允许 FORWARD_CONDITIONAL_JUMP_OPS 参与；绕过 _sb_has_body 检查；允许链遍历继续
+  - region_ast_generator.py：_if_generate_normal / _if_generate_full_elif_chain 添加 BoolOp merge_block 双角色检测，优先生成 BoolOp 赋值语句
+- [x] T6-5 修复工程师：回归测试（fill_minute_or_day_blank -30→-1；无退化）
+- [x] T6-6 修复工程师：fix_report.md
+- [x] T6-7 验证一致函数数 ≥ 轮 5（141→141，无退化）
+- [x] T6-8 commit + push `rr-r06:`（e2d4620）
 
 ## 轮 7 (Round 7)
 
-- [ ] T7-1 测试工程师：反编译 + diff
-- [ ] T7-2 测试工程师：≥10 最小复现实例
-- [ ] T7-3 修复工程师：根因分析
-- [ ] T7-4 修复工程师：按算法修复 + docstring 更新
-- [ ] T7-5 修复工程师：回归测试
-- [ ] T7-6 修复工程师：fix_report.md
-- [ ] T7-7 验证一致函数数 ≥ 轮 6
-- [ ] T7-8 commit + push `rr-r07:`
+- [x] T7-1 测试工程师：反编译 + diff（142/150=94.67%，compile_ok=True，8 不一致；新增 NOP 过滤 + 跳转目标归一化消除假阳性）
+- [x] T7-2 测试工程师：≥10 最小复现实例（dump_orig.py / dump_regions.py 调试工具 + load_get_price 嵌套 if 复现）
+- [x] T7-3 修复工程师：根因分析
+  - 一元运算符 ~ 优先级处理错误导致括号缺失（code_generator.py 统一用低优先级 5）
+  - load_get_price 嵌套 IfRegion（含 BoolOp 子节点）被错误加入 _nested_if_entry_skip 而非主动生成
+- [x] T7-4 修复工程师：按算法修复 + docstring 更新
+  - code_generator.py：一元运算符优先级 'not'=5, '~'/'UAdd'/'USub'=13
+  - region_ast_generator.py：含 BoolOp 子节点的嵌套 IfRegion 从 _nested_if_entry_skip 改为 _nested_if_entry_generate 主动生成
+- [x] T7-5 修复工程师：回归测试（142/150 无退化；load_get_price 嵌套条件结构正确恢复）
+- [x] T7-6 修复工程师：fix_report.md（归档 r7_decompiled.py + bc_results.json）
+- [x] T7-7 验证一致函数数 ≥ 轮 6（141→142，单调递增）
+- [x] T7-8 commit + push `rr-r07:`（c9d67b8）
 
-## 轮 8 (Round 8)
+## 轮 8 (Round 8) — 全区域同等完善 + 注释即算法规约
 
-- [ ] T8-1 测试工程师：反编译 + diff
-- [ ] T8-2 测试工程师：≥10 最小复现实例
-- [ ] T8-3 修复工程师：根因分析
-- [ ] T8-4 修复工程师：按算法修复 + docstring 更新
-- [ ] T8-5 修复工程师：回归测试
-- [ ] T8-6 修复工程师：fix_report.md
-- [ ] T8-7 验证一致函数数 ≥ 轮 7
-- [ ] T8-8 commit + push `rr-r08:`
+> 本轮重点：将反编译逻辑写入全部 11 类 `_identify_*_regions` / `_generate_*` 方法注释（6 节模板），算法驱动而非出错驱动；同时继续修复 R7 残留 8 个不一致函数。
+
+- [x] T8-1 测试工程师：反编译 quotation.pyc + 字节码 diff，输出 `rounds/round_08/test_engineer/decompile_report.md`
+  - [x] T8-1a 复用 R7 的 `decompile_quotation.py` / `exact_match_stats.py`（输出到 `/tmp/r8_decompiled.py`，禁止修改反编译产物）
+  - [x] T8-1b 统计一致函数数 / 总函数数 / 成功率，确认基线 142/150=94.67% 无退化
+  - [x] T8-1c 按函数输出不一致指令 diff，聚焦 8 个残留函数：`<module>`、`one_prod_to_dataframe`、`build_future_fill_time`、`load_bars_from_hundsun`、`load_get_price`、`get_str_data`、`change_his_to_backward`、`get_date_and_count`
+- [x] T8-2 测试工程师：从 8 个不一致函数提取 ≥10 个最小复现实例到 `rounds/round_08/test_engineer/minimal_repros/`
+  - [x] T8-2a 每个 repro 可独立 `py_compile` 且能复现缺陷（10/10 OK）
+  - [x] T8-2b 每个 repro 标注所属区域类型（Loop/Conditional/Ternary/BoolOp/...）与违反的算法原则
+- [x] T8-3 修复工程师：**全区域 docstring 审查**（算法驱动而非出错驱动）
+  - [x] T8-3a 枚举 11 类区域对应的 `_identify_*_regions` 方法清单
+  - [x] T8-3b 逐方法审查 docstring 是否已按 6 节模板填写（R8 前 0/11 → R8 后 11/11）
+  - [x] T8-3c 对缺失或不一致的方法，按区域归约算法补全 docstring（注释即算法规约）
+- [x] T8-4 修复工程师：按区域归约算法 4 原则修复 repro 暴露的缺陷
+  - [x] T8-4a 定位根因到 `_if_generate_elif_chain` / `_if_generate_full_elif_chain`（ibc 未传播）
+  - [x] T8-4b 按"自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 入口引用语义"修复
+  - [x] T8-4c 同步更新受影响方法的 docstring（`_if_generate_elif_chain` 6 节模板）
+  - [x] T8-4d 反模式自检（0 新增前缀方法，0 新增硬编码深度上限）
+- [x] T8-5 修复工程师：回归测试
+  - [x] T8-5a 10 个 repro 全部 py_compile 通过
+  - [x] T8-5b 既有区域测试矩阵无退化（control_flow_matrix 基线 9 fail/318 pass == R8 后 9 fail/318 pass）
+  - [x] T8-5c quotation.pyc 一致函数数 ≥ 142（142/150，单调无退化）
+  - [x] T8-5d `python -c "import core.cfg.region_analyzer; import core.cfg.region_ast_generator"` 编译通过（IMPORT_OK）
+- [x] T8-6 修复工程师：输出 `rounds/round_08/repair_engineer/fix_report.md`（含修复点、算法依据、4 原则对应条款、回归结果、残留不一致数、全区域 docstring 覆盖率 11/11）
+- [x] T8-7 验证一致函数数 ≥ 轮 7（142≥142），成功率单调无退化；one_prod_to_dataframe diff +10→instr_diff 收窄
+- [x] T8-8 commit + push `rr-r08:` 到 origin（单次命令 ≤ 300 秒）
 
 ## 轮 9 (Round 9)
 

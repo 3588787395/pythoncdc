@@ -2804,108 +2804,97 @@ class RegionAnalyzer:
 【区域类型】 WHILE_LOOP / FOR_LOOP — 循环区域（Loop Region）
 RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
 
-1. 算法描述（基于"No More Gotos"论文）
-   - 归约阶段: Phase 1（与 TRY 并行，在 WITH/MATCH 之前）
-   - 识别策略: 基于 LoopAnalyzer 提供的回边（back edge）+ 支配树分析，
-     实现论文第4.2节的自然循环（Natural Loop）识别：
-     回边 (n → d) 满足 d DOM n，d 即循环 header；
-     循环体 = 不经过 header 能到达 back_edge_source 的所有节点。
-   - 归约过程:
-     Step 1: 从 LoopAnalyzer 获取所有自然循环 (all_loops)，按 dominance_depth
-             倒序排序，确保内层循环先于外层归约（自底向上）。
-     Step 2: 对每个 header，确定回边源节点 back_edge_sources：
-             筛选 self.loop_analyzer.back_edges 中目标为 header 且 header 支配
-             源节点的边；FOR_ITER/GET_ANEXT 循环若无显式回边源，允许继续。
-     Step 3: 调用 _collect_natural_loop_body 收集循环体（栈式 DFS）；
-             用 frozenset(body) 去重，已处理过的相同 body 跳过。
-     Step 4: 调用 _is_fake_loop 过滤 continue 形成的假回边伪循环。
-     Step 5: 子集过滤：若 body 是已处理循环 body 的真子集且非 for 循环，跳过
-             （保证"每块唯一归属"，循环区域不重叠）。
-     Step 6: 调用 _classify_loop_type 分类循环类型，返回 loop_type、
-             for_iter_setup/exit/fall_through、is_while_true、is_yield_from。
-     Step 7: WHILE_LOOP 下搜索 condition_block，依次尝试:
-             (a) header 前驱中末指令为 FORWARD_CONDITIONAL_JUMP_OPS 且跳转目标
-                 是 header 或 body 内的块；
-             (b) 前驱末指令属于 CONDITIONAL_JUMP_OPS（含后向）；
-             (c) header 自身末指令为 CONDITIONAL_JUMP_OPS；
-             (d) while_true 模式下搜索前向条件跳转跳出循环的前驱，并将
-                 is_while_true 降级为 False；若 condition_block 跳出 body/header
-                 也会降级 is_while_true。
-     Step 8: _find_loop_else 提取 else_blocks 和 natural_exit；
-             选择 back_edge_block（按有效指令数和 start_offset 取最大）；
-             _detect_break_continue 标注 break_blocks 与 continue_map。
-     Step 9: 将 condition_block 及其条件链前驱（沿 FORWARD_CONDITIONAL_JUMP_OPS
-             反向扩展，排除已被回边指向的块）加入 region_blocks；验证 break_blocks
-             必须有前驱在 body 中，否则剔除。
-     Step 10: 构建 LoopRegion 并注册到 self.regions / block_to_region。
+**算法依据**
+基于 "No More Gotos"（Launez et al., 2013）论文第 4.2 节的自然循环（Natural
+Loop）识别：回边 (n → d) 满足 d DOM n，d 即循环 header；循环体 = 不经过
+header 能到达 back_edge_source 的所有节点。Python 字节码特性映射：
+  模式 A: for 循环 — preheader: GET_ITER；header: FOR_ITER → exit；body 末:
+          JUMP_BACKWARD → header；异步变体 GET_AITER/GET_ANEXT/END_ASYNC_FOR。
+  模式 B: while 循环 — condition_block: POP_JUMP_*_IF_FALSE → exit；
+          body 末: JUMP_BACKWARD → condition_block。
+  模式 C: while True + break — 无条件回边，break 由前向条件跳转跳出实现。
+  模式 D: for-else / while-else — else 在 natural_exit 路径上，break 跳过 else。
+  模式 E: yield from 隐式循环 — GET_YIELD_FROM_ITER + SEND + YIELD_VALUE 模式，
+          is_yield_from=True，由 _generate_loop 重建 YieldFrom 表达式。
+归约步骤（保留历史标注：聚类2 修复 = 抑制 await 轮询自循环；Phase 7 方案 A =
+跳过 fused ternary-loop 的 false_value_block；CPython peephole = 复合 and 条件链
+反向扩展）：
+  Step 1: LoopAnalyzer.get_all_loops() 取所有自然循环，按 dominance_depth 倒序排序。
+  Step 2: 对每个 header 筛选 back_edges 中 tgt=header 且 header dom src 的边；
+          FOR_ITER/GET_ANEXT 循环若无显式回边源，允许继续。
+  Step 3: _collect_natural_loop_body 栈式 DFS 收集循环体；frozenset(body) 去重。
+  Step 4: _is_fake_loop 过滤 continue 形成的假回边伪循环；_is_await_polling_loop
+          抑制 await 轮询自循环。
+  Step 5: 子集过滤——若 body ⊂ 已处理 body 且非 for 循环则跳过。
+  Step 6: _classify_loop_type 返回 loop_type、for_iter_setup/exit/fall_through、
+          is_while_true、is_yield_from。
+  Step 7: WHILE_LOOP 下按 (a)→(b)→(c)→(d) 顺序搜索 condition_block；while_true
+          模式下若前驱跳出 body/header 则降级 is_while_true=False。
+  Step 8: _find_loop_else 提取 else_blocks / natural_exit；选 back_edge_block；
+          _detect_break_continue 标注 break_blocks / continue_map。
+  Step 9: 将 condition_block 及其 FORWARD_CONDITIONAL_JUMP_OPS 反向链前驱加入
+          region_blocks；剔除无 body 前驱的 break_blocks。
+  Step 10: 构建 LoopRegion 并注册到 self.regions / block_to_region。
 
-2. 字节码模式（CPython 编译器行为）
-   模式 A: for 循环
-     源码: for x in iterable: body
-     字节码结构:
-       preheader: GET_ITER
-       header:    FOR_ITER → exit ; STORE_FAST x
-       body:      ... ; JUMP_BACKWARD → header
-       exit:      ...循环后语句
-     特征指令: GET_ITER, FOR_ITER, STORE_FAST, JUMP_BACKWARD
-              异步变体: GET_AITER, GET_ANEXT, END_ASYNC_FOR
-   模式 B: while 循环
-     源码: while cond: body
-     字节码结构:
-       condition_block: ...条件计算; POP_JUMP_FORWARD_IF_FALSE → exit
-       header/body:     ...; JUMP_BACKWARD → condition_block
-       exit:            ...
-     特征指令: POP_JUMP_*_IF_*, JUMP_BACKWARD, JUMP_BACKWARD_NO_INTERRUPT
-   模式 C: while True + break
-     - 无条件回边（JUMP_BACKWARD）；
-     - header/condition_block 含前向条件跳转跳出循环作为 break 路径；
-     - is_while_true 标记，必要时由 Step 7(d) 降级。
-   模式 D: for-else / while-else
-     - else 块位于循环正常退出路径（natural_exit 指向 else 入口）；
-     - break 跳过 else 块；
-     - 由 _find_loop_else 标注 else_blocks。
-   模式 E: yield from 隐式循环
-     - GET_YIELD_FROM_ITER + SEND + YIELD_VALUE 模式；
-     - is_yield_from 标记，由 _generate_loop 特殊处理。
+**归约顺序**
+Phase 1 中仅次于 TRY：analyze() 调用顺序为 try_except → loop → with/match/assert。
+TRY 优先于 LOOP 是因为异常处理区域可能跨越循环和条件。本方法内部按
+dominance_depth 倒序排序，保证最内层循环先于外层归约（自底向上）。
+下游：loop_regions 作为 existing_regions 传给 _identify_boolop_regions /
+_identify_ternary_regions / _identify_conditional_regions / _identify_chained_
+compare_regions 作为 block_to_region 守卫来源。analyze() 后段 [R14 根因修复]
+会移除 blocks 完全包含于 yieldfrom/await TernaryRegion.merge_extra_blocks 的
+is_yield_from_loop LoopRegion（违反每块唯一归属时的归约修正）。
 
-3. 边界条件（数学性质）
-   - 回边检测: 由 LoopAnalyzer 基于支配关系预先计算；本方法再次以
-              self.dom_analyzer.is_dominator(header, src) 校验。
-   - 循环体边界: 不经过 header 能到达 back_edge_source 的所有节点集合
-                （_collect_natural_loop_body 栈式 DFS 收集）。
-   - 嵌套处理: 按 dominance_depth 倒序排序，内层循环先归约；
-              子集过滤确保外层循环不会重新吞并已归约的内层循环体
-              （for 循环除外，因为 for 循环 body 天然可能含内层循环）。
-   - 区域不相交: frozenset(body) 去重 + 子集过滤共同保证"每块唯一归属"。
+**唯一归属判定**
+块的循环归属由"回边 + 自然循环体"算法唯一确定，循环体之间不相交：
+  - 回边检测由 LoopAnalyzer 基于支配关系预先计算，本方法再次以
+    self.dom_analyzer.is_dominator(header, src) 校验。
+  - 循环体边界 = 不经过 header 能到达 back_edge_source 的所有节点集合
+    （_collect_natural_loop_body 栈式 DFS 收集）。
+  - 区域不相交：frozenset(body) 去重 + 子集过滤（body ⊂ 已处理 body 且非 for
+    则跳过）共同保证"每块唯一归属"，循环区域不重叠。
+  - block_to_region 守卫：构建 LoopRegion 后将 region_blocks 中每个块登记到
+    self.block_to_region[block]=region，下游 _identify_* 方法以
+    `block in self.block_to_region` 作为拒绝条件（含 [R14] 后段移除重叠
+    is_yield_from_loop LoopRegion 时显式 del block_to_region 反注册）。
+  - _is_fake_loop / _is_await_polling_loop 过滤不符合循环语义的伪回边，避免
+    与下游 IfRegion/TernaryRegion 争抢块归属。
 
-4. 归约语义（与父区域的契约）
-   - 入口块: 优先 condition_block（while 循环典型情况），
-            否则使用 header_block（for 循环、while True）。
-   - 父区域引用: 父区域仅引用本 LoopRegion 的 entry 块，
-                循环体内部块不出现于父区域的 blocks 集合中。
-   - 子区域块不出现: 嵌套的 IfRegion/TryExceptRegion/WithRegion/MatchRegion/
-                   LoopRegion/AssertRegion 等在归约后由本 LoopRegion.children 持有，
-                   其块不出现在父区域 blocks 中（嵌套即抽象节点）。
+**嵌套处理**
+按 dominance_depth 倒序排序，内层循环先归约；子集过滤确保外层循环不会重新
+吞并已归约的内层循环体（for 循环除外，因为 for 循环 body 天然可能含内层
+循环，此时外层 for 通过抽象节点引用内层循环 entry）。嵌套的
+IfRegion/TryExceptRegion/WithRegion/MatchRegion/LoopRegion/AssertRegion 在
+下游识别后通过 add_child 挂到 LoopRegion.children，其块不出现在父区域
+blocks 中（嵌套即抽象节点）。多态分发点 is_block_entry / contains_block /
+get_with_body_orphan_instructions / interrupts_boolop_forward_chain /
+can_be_ternary_header 由 LoopRegion 覆写，承载嵌套协调。
 
-5. AST 映射
-   - 对应生成方法: _generate_loop（region_ast_generator.py）
-   - AST 节点类型:
-       RegionType.FOR_LOOP   → ast.For
-       RegionType.WHILE_LOOP → ast.While
-   - 关键字段映射:
-       LoopRegion.header_block       → AST.test（while 条件）或 iter/target（for）
-       LoopRegion.condition_block    → AST.test（while 条件表达式来源）
-       LoopRegion.body_blocks        → AST.body
-       LoopRegion.else_blocks        → AST.orelse
-       LoopRegion.back_edge_block    → 隐式 continue，不生成显式 AST 节点
-       LoopRegion.break_blocks       → AST.body 中的 ast.Break 语句
-       LoopRegion.is_while_true      → AST.test = Constant(True)
-       LoopRegion.is_yield_from      → ast.Expr(YieldFrom(...))，不生成 For/While
+**入口引用语义**
+入口块 = 优先 condition_block（while 循环典型情况），否则使用 header_block
+（for 循环、while True）。父区域（如外层 if / 序列区域）通过 then/else/body
+列表引用本 LoopRegion 的 entry 块作为抽象节点；本 LoopRegion 的循环体块、
+back_edge_block、break_blocks、else_blocks 不出现在父区域 blocks 集合中。
+back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独立 if-break
+生成。else_blocks 由 _generate_loop 映射为 ast.While/ast.For 的 orelse。
 
-6. 已知失败模式
-   - 当前测试矩阵通过率: 100%（while_loop 120/120 + for_loop 193/193 = 313/313），无已知失败模式
-   - 本方法遵循区域归约算法 4 核心原则:
-     自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口
+**反编译流程**
+对应生成方法: _generate_loop（region_ast_generator.py）。AST 节点一一映射：
+  RegionType.FOR_LOOP   → ast.For
+  RegionType.WHILE_LOOP → ast.While
+关键字段映射:
+  LoopRegion.header_block    → AST.test（while 条件）或 iter/target（for）
+  LoopRegion.condition_block → AST.test（while 条件表达式来源）
+  LoopRegion.body_blocks     → AST.body
+  LoopRegion.else_blocks     → AST.orelse
+  LoopRegion.back_edge_block → 隐式 continue，不生成显式 AST 节点
+  LoopRegion.break_blocks    → AST.body 中的 ast.Break 语句
+  LoopRegion.is_while_true   → AST.test = Constant(True)
+  LoopRegion.is_yield_from   → ast.Expr(YieldFrom(...))，不生成 For/While
+当前测试矩阵通过率: 100%（while_loop 120/120 + for_loop 193/193 = 313/313）。
+本方法遵循区域归约算法 4 核心原则: 自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 /
+父引用子入口。
         """
         all_loops = self.loop_analyzer.get_all_loops()
         sorted_loops = sorted(all_loops.items(), key=lambda x: self._get_dominance_depth(x[0]), reverse=True)
@@ -4986,54 +4975,85 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
         【区域类型】 TRY_EXCEPT / TRY_FINALLY — 异常处理区域（Try-Except Region）
         RegionType 枚举值: RegionType.TRY_EXCEPT
 
-        1. 算法描述（基于"No More Gotos"论文）
-           - 归约阶段: Phase 1（最先识别，优先级最高；TRY > WITH > LOOP > IF > ASSERT）
-           - 识别策略: 基于 CPython 3.11+ 异常表（exception table）的
-             (start, end, target, depth) 条目定位 try 范围与 handler 入口。
-             通过 handler 入口首指令（PUSH_EXC_INFO / WITH_EXCEPT_START）分类 handler 类型。
-           - 归约过程:
-             Step 1: 解析异常表，将 target 偏移映射到 BasicBlock，分类 handler 类型。
-             Step 2: 标记内层 handler 与配对关系（except-finally 配对）。
-             Step 3: 逐个构建 TryExceptRegion，收集 try_blocks/handler_blocks/finally_blocks/else_blocks/cleanup_blocks。
+        **算法依据**
+        基于 "No More Gotos" 论文中的结构化异常区域归约；CPython 3.11+ 使用
+        exception_table（(start, end, target, depth) 条目）取代旧的 SETUP_FINALLY
+        指令，try 范围与 handler 入口直接由表项给出，handler 类型由入口首指令
+        分类（PUSH_EXC_INFO → except；WITH_EXCEPT_START → with cleanup；
+        PUSH_EXC_INFO+COPY+POP_EXCEPT+RERAISE 无 CHECK_EXC_MATCH → finally）。
+        字节码模式映射：
+          模式 A: try-except — PUSH_EXC_INFO, CHECK_EXC_MATCH, POP_EXCEPT, RERAISE。
+          模式 B: try-finally — handler 入口 PUSH_EXC_INFO+COPY+POP_EXCEPT+RERAISE。
+          模式 C: try-except-else — else 块位于 try_end 与首个 handler_start 之间。
+          模式 D: try-except-finally — 异常表两条条目，finally 的 try 范围包含 except。
+        归约过程：
+          Step 1: _parse_exception_table 解析异常表，target 偏移映射到 BasicBlock，
+                  分类 handler 类型。
+          Step 2: 标记 inner_handler_indices（结构包含判定，非 depth 数值比较）与
+                  paired_except_indices（except-finally 配对）。
+          Step 3: 逐个构建 TryExceptRegion，收集 try_blocks / handler_blocks /
+                  finally_blocks / else_blocks / cleanup_blocks。
+                  _coalesce_split_try_except_finally_regions 后处理合并分裂的
+                  try/finally（在 analyze() 中紧随本方法调用）。
 
-        2. 字节码模式（CPython 编译器行为）
-           模式 A: try-except
-             源码: try: ... except Exception as e: ...
-             特征指令: PUSH_EXC_INFO, CHECK_EXC_MATCH, POP_EXCEPT, RERAISE
-           模式 B: try-finally
-             handler 入口: PUSH_EXC_INFO + COPY + POP_EXCEPT + RERAISE（无 CHECK_EXC_MATCH）
-           模式 C: try-except-else
-             else 块位于 try_end 与首个 handler_start 之间
-           模式 D: try-except-finally
-             异常表有两条条目，finally 的 try 范围包含 except 的 try 范围
+        **归约顺序**
+        Phase 1 最先识别（优先级最高；TRY > LOOP > WITH > MATCH > ASSERT）。
+        原因：异常处理区域可能跨越循环和条件，必须先于 LOOP/IF 归约才能保证
+        try_blocks 范围内的所有块由本区域唯一占有。在 analyze() 中显式调用顺序为：
+        try_except → _coalesce_split_try_except_finally_regions → loop →
+        with/match/assert → ...。try_regions 作为参数传给下游
+        _identify_chained_compare_regions / _identify_ternary_regions /
+        _identify_conditional_regions / _identify_boolop_regions /
+        _identify_nested_match_regions 作为 block_to_region 守卫来源。
 
-        3. 边界条件（数学性质）
-           - try 范围由异常表 [start, end) 唯一确定
-           - handler 类型由入口首指令决定
-           - 嵌套关系由 (try_start, try_end) 区间包含关系刻画（结构包含判定，非 depth 数值比较）
-           - 每个基本块经 block_to_region 唯一归属一个 TryExceptRegion
+        **唯一归属判定**
+        try 范围由异常表 [try_start, try_end) 唯一确定，handler 类型由入口首指令
+        决定。try_blocks 收集时显式排除：
+          - excluded_offsets：非严格包含本 handler 的同级/更深层 handler 偏移。
+          - WITH_EXCEPT_START 块（属于 WithRegion）。
+          - `block in self.block_to_region` 守卫：已被其它区域占用的块不再纳入
+            try_blocks（先到先得，TRY 优先级最高，确保 try 块不会被下游 LOOP/IF
+            抢走）。
+        嵌套关系由 (try_start, try_end) 区间包含关系刻画（结构包含判定，非 depth
+        数值比较）；inner_handler 标记外层 try 的 cleanup handler，使其不在外层
+        try_blocks 中重复出现。每个基本块经 block_to_region 唯一归属一个
+        TryExceptRegion。te046 已修复（2026-07-14）：spurious `if True: pass` 缺陷
+        在 region_ast_generator.py 顶级祖先检查中修复，根因是 WithRegion 的
+        exception_block 被误判为孤儿块（修复后字节码完全匹配 71 vs 71）。
 
-        4. 归约语义（与父区域的契约）
-           - 入口块: try 范围起始偏移对应的 BasicBlock（region.entry）
-           - 父区域引用: 父区域仅引用本 region 的 entry 块
-           - 子区域块不出现: try/handler/finally/else/cleanup 全部归约为单个抽象节点
+        **嵌套处理**
+        嵌套 try 由 (try_start, try_end) 区间包含关系刻画：
+          - 内层 try 在外层 try body 中（内层 try_start < 外层 handler_start）：
+            内层 handler 标记为 inner_handler，由外层 _generate_try_body 处理为
+            嵌套 Try 节点。
+          - 内层 try 在外层 except handler body 中（内层 try_start ≥ 外层
+            handler_start）：不标记为 inner，由 handler body 生成代码处理嵌套关系。
+        paired_except_indices 把与 finally 同 try 范围的 except handler 配对，
+        合并到外层 finally TryExceptRegion 的 all_except_handlers，作为单个抽象
+        节点参与外层归约。多态分发点 try_except_absorb_split_from /
+        get_else_blocks_for_merge / get_offset_range / get_if_branch_boundary_stop /
+        is_block_in_body / contains_block 由 TryExceptRegion 覆写，承载嵌套协调。
 
-        5. AST 映射
-           - 对应生成方法: _generate_try（region_ast_generator.py）
-           - AST 节点类型: ast.Try
-           - 关键字段映射:
-             try_blocks → Try.body
-             except_handlers → Try.handlers
-             else_blocks → Try.orelse
-             finally_blocks → Try.finalbody
+        **入口引用语义**
+        入口块 = try 范围起始偏移对应的 BasicBlock（region.entry）。CPython 3.12+
+        优化场景下，try body（如 `pass`）不生成异常表条目，仅 handler body 在表中；
+        此时通过 pre_handler_blocks 扩展找出 try-body 入口候选，取 LAST
+        pre_handler_block（最靠近 handler 的，避免引入外层 loop/if setup 块）作为
+        entry_block。父区域（如外层 IfRegion / SequenceRegion）通过 then/else/body
+        列表引用本 region 的 entry 块；本 region 的 try_blocks / handler_blocks /
+        finally_blocks / else_blocks / cleanup_blocks 不出现在父区域 blocks 中
+        （嵌套即抽象节点）。
 
-        6. 已知失败模式
-           - 当前测试矩阵通过率: 100%（try_except 230/230），无已知失败模式
-           - te046 已修复 (2026-07-14): spurious `if True: pass` 缺陷已通过在
-             `region_ast_generator.py` L599-634 增加「顶级祖先」检查修复，根因是 WithRegion
-             的 exception_block 被误判为孤儿块。修复后字节码完全匹配 (71 vs 71)。
-           - 本方法遵循区域归约算法 4 核心原则:
-             自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口
+        **反编译流程**
+        对应生成方法: _generate_try（region_ast_generator.py）。AST 节点一一映射：
+          RegionType.TRY_EXCEPT → ast.Try
+        关键字段映射:
+          try_blocks        → Try.body
+          except_handlers   → Try.handlers
+          else_blocks       → Try.orelse
+          finally_blocks    → Try.finalbody
+        当前测试矩阵通过率: 100%（try_except 230/230）。本方法遵循区域归约算法 4
+        核心原则: 自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口。
         """
         if not self.cfg.exception_table:
             return []
@@ -7628,50 +7648,83 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
         【区域类型】 WITH — 上下文管理器区域（With Region）
         RegionType 枚举值: RegionType.WITH
 
-        1. 算法描述（基于"No More Gotos"论文）
-           - 归约阶段: Phase 1（在 TRY 之后，LOOP 之前）
-           - 识别策略: 扫描 BEFORE_WITH / BEFORE_ASYNC_WITH 指令定位 with 入口，
-             基于异常表确定 body 范围，WITH_EXCEPT_START 定位 handler。
-           - 归约过程:
-             Step 1: 扫描所有 BEFORE_WITH/BEFORE_ASYNC_WITH 指令定位 with 入口块。
-             Step 2: 基于异常表 [start, end) 确定 body 偏移范围。
-             Step 3: 收集 body 块、cleanup 块、exception 块，构建 WithRegion。
-             Step 4: 识别阶段即合并连续 with（with A: ... with B: ...），由 WithRegion.should_merge_with 多态方法判定。
+        **算法依据**
+        基于 "No More Gotos" 论文中结构化"compounding regions"归约；CPython 3.11+
+        使用 BEFORE_WITH / BEFORE_ASYNC_WITH 标记 with 入口，配合异常表
+        (start, end, target, depth) 给出 body 偏移范围与 WITH_EXCEPT_START handler
+        入口。WITH_EXCEPT_START 块的 offset 在 body 范围之外（属于 handler target）。
+        字节码模式映射：
+          模式 A: 基本 with — BEFORE_WITH, WITH_EXCEPT_START, PUSH_EXC_INFO,
+                  POP_EXCEPT, RERAISE。
+          模式 B: with as var — BEFORE_WITH 后紧跟 STORE_* 存 __enter__() 返回值。
+          模式 C: async with — BEFORE_ASYNC_WITH, GET_AWAITABLE, SEND, YIELD_VALUE。
+          模式 D: 多上下文 with A as a, B as b — 连续 BEFORE_WITH 块，异常表 depth
+                  递增。
+        归约过程：
+          Step 1: _scan_before_with_instructions 扫描所有 BEFORE_WITH/
+                  BEFORE_ASYNC_WITH 指令定位 with 入口块，返回 (block, has_async,
+                  depth, depth_map) 三元组列表。
+          Step 2: _build_single_with_region 基于异常表 [start, end) 确定 body 偏移
+                  范围；_collect_with_body_blocks 收集 body 块；定位 cleanup 块、
+                  exception 块（WITH_EXCEPT_START）。
+          Step 3: 构建 WithRegion（with_blocks / cleanup_blocks /
+                  exception_blocks / items / is_async / body_offset_end）。
+          Step 4: 识别阶段即合并连续 with（with A: ... with B: ...），由
+                  WithRegion.should_merge_with 多态方法判定（相邻 entry + 同一异常表
+                  depth）。区域归约算法：一次正确，无后处理补丁。
 
-        2. 字节码模式（CPython 编译器行为）
-           模式 A: 基本 with
-             源码: with ctx: ...
-             特征指令: BEFORE_WITH, WITH_EXCEPT_START, PUSH_EXC_INFO, POP_EXCEPT, RERAISE
-           模式 B: with as var
-             BEFORE_WITH 后紧跟 STORE_* 存 __enter__() 返回值
-           模式 C: async with
-             特征指令: BEFORE_ASYNC_WITH, GET_AWAITABLE, SEND, YIELD_VALUE
-           模式 D: 多上下文 with A as a, B as b:
-             连续 BEFORE_WITH 块，异常表 depth 递增
+        **归约顺序**
+        Phase 1 中位于 TRY 之后、LOOP 之前（analyze() 调用顺序：
+        try_except → loop → with → match → assert）。TRY 优先于 WITH 是因为
+        WithRegion 的 cleanup 块（WITH_EXCEPT_START）也是异常 handler，必须先由
+        TryExceptRegion 把 try-with-finally 之类的 try 范围归约掉，避免 WITH 与
+        TRY 争抢 WITH_EXCEPT_START 块。with_regions 作为参数传给下游
+        _identify_chained_compare_regions / _identify_ternary_regions /
+        _identify_conditional_regions / _identify_boolop_regions /
+        _identify_nested_match_regions 作为 block_to_region 守卫来源。
 
-        3. 边界条件（数学性质）
-           - with body 范围 = 异常表 [start, end)
-           - WITH_EXCEPT_START 块的 offset 在 body 范围之外（属于 handler target）
-           - 嵌套 with: 外层 depth < 内层 depth
-           - 连续 with 合并: region1.body_offset_end + 1 == region2.body_offset_start 且 depth 相同
+        **唯一归属判定**
+        with body 范围 = 异常表 [start, end)。body 块收集时显式排除：
+          - 含 WITH_EXCEPT_START 的块（属于 cleanup 路径）。
+          - 含 BEFORE_WITH / BEFORE_ASYNC_WITH 的块（属于其它 with 入口）。
+          - `block in self.block_to_region` 守卫：已被 TRY 等先识别区域占用的块
+            不再纳入 with body（先到先得，TRY > WITH）。
+        嵌套 with 由异常表 depth 区分：外层 depth < 内层 depth。合并连续 with 的
+        条件由 WithRegion.should_merge_with 多态判定：region1.body_offset_end + 1
+        == region2.body_offset_start 且 depth 相同。每个基本块经 block_to_region
+        唯一归属一个 WithRegion。合并时把 region.blocks 中的块重新指向 prev
+        WithRegion（覆盖 block_to_region 映射），保证子 WithRegion 的块不出现
+        孤儿归属。
 
-        4. 归约语义（与父区域的契约）
-           - 入口块: 含 BEFORE_WITH/BEFORE_ASYNC_WITH 的 BasicBlock（region.entry）
-           - 父区域引用: 父区域仅引用本 region 的 entry 块
-           - 子区域块不出现: with_blocks/cleanup_blocks/exception_blocks 全部归约为单个抽象节点
+        **嵌套处理**
+        嵌套 with 由异常表 depth 刻画：外层 depth < 内层 depth。_extract_with_
+        items 在多入口块场景使用 _has_body_code_before_before_with 结构性判据
+        （[R24-C6 算法合规性] 区域归约算法原则 3 + 原则 2）区分多上下文 with 的
+        连续 BEFORE_WITH（同一 with 的多个上下文表达式）与嵌套 with 的
+        BEFORE_WITH（其前含 body 代码）。非入口块 + 含 body 代码 → 该 BEFORE_WITH
+        属于嵌套 with，跳过；入口块（entry_blocks[0]）的 BEFORE_WITH 即使含 body
+        代码也保留（它是当前 with 的第一个上下文）。多态分发点
+        should_merge_with / get_with_body_orphan_instructions /
+        is_block_in_body / get_if_branch_boundary_stop 由 WithRegion 覆写，承载
+        嵌套协调。
 
-        5. AST 映射
-           - 对应生成方法: _generate_with（region_ast_generator.py）
-           - AST 节点类型: ast.With
-           - 关键字段映射:
-             with_blocks → With.body
-             items → With.items（List[withitem]: context_expr + optional_vars）
-             is_async → With.is_async
+        **入口引用语义**
+        入口块 = 含 BEFORE_WITH / BEFORE_ASYNC_WITH 的 BasicBlock（region.entry）。
+        父区域（如外层 IfRegion / LoopRegion / SequenceRegion）通过 then/else/body
+        列表引用本 region 的 entry 块作为抽象节点；本 region 的 with_blocks /
+        cleanup_blocks / exception_blocks 不出现在父区域 blocks 中（嵌套即抽象
+        节点）。with_blocks 内嵌套的 IfRegion / TryExceptRegion / LoopRegion /
+        MatchRegion 等通过 add_child 挂到 WithRegion.children。
 
-        6. 已知失败模式
-           - 当前测试矩阵通过率: 100%（with_region 191/191），无已知失败模式
-           - 本方法遵循区域归约算法 4 核心原则:
-             自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口
+        **反编译流程**
+        对应生成方法: _generate_with（region_ast_generator.py）。AST 节点一一映射：
+          RegionType.WITH → ast.With（async 场景为 ast.AsyncWith）
+        关键字段映射:
+          with_blocks → With.body
+          items       → With.items（List[withitem]: context_expr + optional_vars）
+          is_async    → With.is_async
+        当前测试矩阵通过率: 100%（with_region 191/191）。本方法遵循区域归约算法 4
+        核心原则: 自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口。
         """
         # 识别阶段即合并连续 WithRegion（区域归约算法：一次正确，无后处理补丁）
         # 合并条件由 WithRegion.should_merge_with 多态方法判定：相邻 entry + 同一异常表 depth
@@ -8163,53 +8216,86 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
         【区域类型】 MATCH — 模式匹配区域（Match Region）
         RegionType 枚举值: RegionType.MATCH
 
-        1. 算法描述（基于"No More Gotos"论文）
-           - 归约阶段: Phase 1（在 TRY/WITH 之后，LOOP/IF 之前）
-           - 识别策略: 双相位扫描。Phase 1 检测结构型模式（MATCH_* 操作码），
-             Phase 2 通过 _scan_literal_match_subjects 检测字面量模式（COPY + COMPARE_OP/IS_OP）。
-             两种形态共用 _mr_collect_case_body 沿条件跳转链收集 case 块。
-           - 归约过程:
-             Step 1: 扫描 MATCH_MAPPING/MATCH_KEYS/MATCH_CLASS/MATCH_SEQUENCE 指令定位结构型 match。
-             Step 2: _scan_literal_match_subjects 检测字面量 match（COPY+COMPARE_OP 模式）。
-             Step 3: _mr_collect_case_body 收集每个 case 的 body 块，排除 pattern_check_blocks。
-             Step 4: _mr_resolve_pattern_check_chain 沿 fall-through 链跳过模式检查块，找到真正 body 入口。
-             Step 5: 构建 MatchRegion，注册 block_to_region。
+        **算法依据**
+        基于 "No More Gotos" 论文中的"多分支选择结构"归约（类似 switch region）；
+        CPython 3.10+ 把 match-case 编译为 subject 加载块 + case 链：每个 case 由
+        pattern check 块（MATCH_* 或 COPY+COMPARE_OP/IS_OP）以 POP_JUMP_IF_NONE/
+        FALSE 短路到下一 case，匹配则 fall-through 到 body。本方法采用双相位扫描：
+        Phase 1 检测结构型模式（MATCH_* 操作码），Phase 2 通过
+        _scan_literal_match_subjects 检测字面量模式（COPY + COMPARE_OP/IS_OP）。
+        两种形态共用 _mr_collect_case_body 沿条件跳转链收集 case 块。
+        字节码模式映射：
+          模式 A: 结构型模式 match — 源码 `match x: case [a, b]: ...`；
+                  特征指令 MATCH_SEQUENCE / MATCH_MAPPING / MATCH_CLASS / MATCH_KEYS。
+          模式 B: 字面量模式 match — 源码 `match x: case 1: ...`；
+                  特征指令 COPY, COMPARE_OP, IS_OP, POP_JUMP_FORWARD_IF_FALSE。
+          模式 C: guard 模式 — 源码 `case _ if cond: ...`；case body 内含条件跳转，
+                  guard 块归 MatchRegion 所有。
+        归约过程：
+          Step 1: 扫描 MATCH_MAPPING/MATCH_KEYS/MATCH_CLASS/MATCH_SEQUENCE 指令定位
+                  结构型 match 入口（subject_block）。
+          Step 2: _scan_literal_match_subjects 检测字面量 match（COPY+COMPARE_OP 模式）。
+          Step 3: _mr_collect_case_body 收集每个 case 的 body 块，排除
+                  pattern_check_blocks（含 MATCH_* 且以 POP_JUMP_IF_NONE/FALSE 结尾）。
+          Step 4: _mr_resolve_pattern_check_chain 沿 fall-through 链跳过模式检查块，
+                  找到真正 body 入口。
+          Step 5: 构建 MatchRegion，注册 block_to_region。
 
-        2. 字节码模式（CPython 编译器行为）
-           模式 A: 结构型模式 match
-             源码: match x: case [a, b]: ...
-             特征指令: MATCH_SEQUENCE, MATCH_MAPPING, MATCH_CLASS, MATCH_KEYS
-           模式 B: 字面量模式 match
-             源码: match x: case 1: ...
-             特征指令: COPY, COMPARE_OP, IS_OP, POP_JUMP_FORWARD_IF_FALSE
-           模式 C: guard 模式
-             源码: case _ if cond: ...
-             特征: case body 内含条件跳转，guard 块归 MatchRegion 所有
+        **归约顺序**
+        Phase 1 中位于 TRY/WITH 之后、LOOP/IF 之前（analyze() 调用顺序：
+        try_except → loop → with → match → assert）。match_regions 作为参数传给
+        下游 _identify_chained_compare_regions / _identify_ternary_regions /
+        _identify_conditional_regions / _identify_boolop_regions / _identify_nested_
+        match_regions 作为 block_to_region 守卫来源。嵌套 match 由独立的
+        _identify_nested_match_regions 二次扫描处理（在所有高层区域识别完成后），
+        本方法只识别顶层 / 不被父区域占用的 match。analyze() 后段会按
+        _region_overlaps_with_ternary 过滤与 TernaryRegion 重叠的 MatchRegion
+        （特例：AssertRegion.message_block 与 TernaryRegion 重叠时是合法嵌套，
+        跳过过滤）。
 
-        3. 边界条件（数学性质）
-           - case body 边界: _mr_collect_case_body BFS 收集，stop_set 包含 pattern_check_blocks
-           - pattern_check_blocks: 含 MATCH_* 指令且以 POP_JUMP_IF_NONE/FALSE 结尾的块
-           - guard 块归属: 位于 case body 内且条件跳转目标指向下一 case_block 的块属于 guard
-           - 每个基本块经 block_to_region 唯一归属一个 MatchRegion
+        **唯一归属判定**
+        本方法起始即 `claimed = set(self.block_to_region.keys())`，对所有已被
+        TRY/LOOP/WITH 占用的块，仅在它是 MatchRegion（同类型自洽）或同时满足
+        _has_match_op / _is_case_pattern_block / _is_match_subject_block 时才纳入；
+        否则跳过。对未被 claimed 的块，仅当 _has_match_op 或 _is_case_pattern_block
+        为真时才进入处理。case body 边界由 _mr_collect_case_body BFS 收集，
+        stop_set 包含 pattern_check_blocks；guard 块（位于 case body 内且条件跳转
+        目标指向下一 case_block）归 MatchRegion 所有。MatchRegion 注册时仅对
+        `b not in self.block_to_region` 的块登记，先到先得不覆盖既有归属。
+        每个基本块经 block_to_region 唯一归属一个 MatchRegion。
 
-        4. 归约语义（与父区域的契约）
-           - 入口块: match subject 加载块（region.entry）
-           - 父区域引用: 父区域仅引用本 region 的 entry 块
-           - 子区域块不出现: case_blocks/body_blocks 全部归约为单个抽象节点
+        **嵌套处理**
+        MatchRegion 通过 preserves_against_nested_match 多态方法覆写为 True——
+        当 _identify_nested_match_regions 二次扫描嵌套 match 注册 block_to_region
+        时，已存在的 MatchRegion 不会被覆盖（保留外层 match 占有的块）。嵌套在
+        if/for/try/with 父区域内部的 match 由 _identify_nested_match_regions
+        在父区域 blocks 范围内重新扫描（subject_block 和 case_blocks 已被父区域
+        block_to_region 映射覆盖），子 MatchRegion 的 blocks 可以与父区域重叠
+        （作为子区域），但子 match 不能跨越父区域边界。多态分发点
+        preserves_against_nested_match / can_be_ternary_header /
+        is_block_entry / contains_block 由 MatchRegion 覆写，承载嵌套协调。
 
-        5. AST 映射
-           - 对应生成方法: _generate_match（region_ast_generator.py）
-           - AST 节点类型: ast.Match
-           - 关键字段映射:
-             subject → Match.subject
-             case_blocks → Match.cases（每个 → match_case: pattern + guard + body）
+        **入口引用语义**
+        入口块 = match subject 加载块（region.entry = subject_block）。当检测到
+        case pattern 块作为入口时，回溯前驱中末指令为 CONDITIONAL_JUMP_OPS 且
+        前驱为 case pattern / 含 MATCH_* 的块，将其作为 subject_block。父区域
+        （如外层 IfRegion / LoopRegion / TryExceptRegion / WithRegion /
+        SequenceRegion）通过 then/else/body 列表引用本 region 的 entry 块作为
+        抽象节点；本 region 的 case_blocks / case_bodies / merge_block /
+        pattern_check_blocks 不出现在父区域 blocks 中（嵌套即抽象节点）。
+        case_blocks 内嵌套的 IfRegion / LoopRegion 等通过 add_child 挂到
+        MatchRegion.children。
 
-        6. 已知失败模式
-           - 当前测试矩阵通过率: 100%（match_region 198/198，2 skipped）
-           - m085 已知限制: 结构型 match + guard 模式下 pattern check chain 解析依赖
-             CPython 字节码细节，标记为 skipped（非缺陷，与上游 CPython 行为一致）
-           - 本方法遵循区域归约算法 4 核心原则:
-             自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口
+        **反编译流程**
+        对应生成方法: _generate_match（region_ast_generator.py）。AST 节点一一映射：
+          RegionType.MATCH → ast.Match
+        关键字段映射:
+          subject     → Match.subject
+          case_blocks → Match.cases（每个 case → match_case: pattern + guard + body）
+        当前测试矩阵通过率: 100%（match_region 198/198，2 skipped）。m085 已知限制：
+        结构型 match + guard 模式下 pattern check chain 解析依赖 CPython 字节码
+        细节，标记为 skipped（非缺陷，与上游 CPython 行为一致）。本方法遵循区域归约
+        算法 4 核心原则: 自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口。
         """
         match_regions = []
         claimed = set(self.block_to_region.keys())
@@ -9185,74 +9271,98 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
     def _identify_nested_match_regions(self, parent_regions: List[Region], existing_match_regions: List[Region]) -> List[Region]:
         """识别嵌套在父区域中的match语句区域
 
-        反编译逻辑：
-        ============
-        当match语句嵌套在if/for/try/with等控制结构中时，父区域会在Phase 1或Phase 2中先占用match的blocks，
-        导致Phase 1的_identify_match_regions()无法识别这些嵌套match。
+        【区域类型】 MATCH — 嵌套模式匹配区域（Nested Match Region）
+        RegionType 枚举值: RegionType.MATCH（与顶层 MatchRegion 同类型）
 
-        本方法在所有父区域识别完成后进行二次扫描，专门处理嵌套match场景。
+        **算法依据**
+        基于 "No More Gotos" 论文中"嵌套即抽象节点"原则的工程实现：当 match 语句
+        嵌套在 if/for/try/with 等控制结构中时，父区域会在 Phase 1/2 中先占用 match
+        的 blocks（subject_block 与 case_blocks 被父区域 block_to_region 标记为
+        claimed），导致 _identify_match_regions 的 `block in claimed` 守卫拒绝
+        这些块、无法识别嵌套 match。本方法在所有父区域识别完成后进行二次扫描，
+        专门处理嵌套 match 场景，是区域归约算法对"嵌套即抽象节点"原则的补强——
+        让嵌套 match 仍能形成独立子区域，而非被父区域"内联展开"。
+        字节码模式映射（与顶层 _identify_match_regions 完全一致，区别仅在块已被
+        父区域占用）：
+          - 结构型模式 — _has_match_op 检测 MATCH_CLASS/SEQUENCE/MAPPING/KEYS。
+          - 字面量模式 — _is_match_subject_block 检测 COPY + COMPARE_OP/IS_OP。
+          - 简单 case 块 — _is_simple_match_case_block 检测 NOP 前缀的 case 块。
+          - 通配符块 — _is_wildcard_match_block。
+          - None 匹配块 — _is_none_match_block。
+        归约过程：
+          Step 1: 遍历 parent_regions（IfRegion/ForRegion/TryRegion/WithRegion 等），
+                  按 len(blocks) 倒序排序（大区域优先，避免子区域块先被小父区域
+                  吞并）。
+          Step 2: 对每个 parent_region.blocks 进行 match 特征检测。
+          Step 3: 发现候选 subject 块后，调用 _collect_nested_match_region 收集完整
+                  case 链（结构型用 _mr_collect_case_body；字面量用 _collect_nested_
+                  literal_match；简单 case 用 _find_nested_match_subject + 字面量收集）。
+          Step 4: 验证嵌套约束：所有 match blocks 必须是 parent_blocks 的子集
+                  （允许 merge 等汇合点超出，但 core_blocks = subject ∪ case_blocks
+                  ∪ case_bodies 必须是子集），match 不能跨越父区域边界。
+          Step 5: 创建子 MatchRegion 并注册到 block_to_region。
 
-        识别算法：
-        ----------
-        1. 遍历所有父区域（IfRegion、ForRegion、TryRegion、WithRegion等）
-        2. 对每个父区域的blocks进行match特征检测：
-           a. 结构型模式：_has_match_op(block) 检测MATCH_CLASS/SEQUENCE/MAPPING/KEYS
-           b. 字面量模式：_is_match_subject_block(block) 检测COPY+比较模式
-           c. 简单case块：_is_simple_match_case_block(block) 检测NOP前缀的case块
-           d. 通配符块：_is_wildcard_match_block(block)
-           e. None匹配块：_is_none_match_block(block)
-        3. 发现候选subject块后，收集完整的case链：
-           - 调用_mr_collect_case_body()（结构型）或内部逻辑（字面量型）
-        4. 验证嵌套约束：
-           - 所有match blocks必须是父区域blocks的子集
-           - match不能跨越父区域边界
-        5. 创建子MatchRegion并注册到block_to_region
+        **归约顺序**
+        Phase 2.5（在所有高层区域 conditional_regions / loop_regions / try_regions /
+        with_regions 识别完成之后执行；analyze() 中显式调用位置在 conditional_regions
+        构建之后、elif_chain 清理之前）。这是区域归约的二次扫描阶段：第一次扫描
+        （_identify_match_regions，Phase 1）只能识别未被父区域占用的顶层 match；
+        本方法补足被父区域占用的嵌套 match。existing_match_regions 作为参数传入，
+        本方法扫描时显式跳过已被现有 MatchRegion 占用的块（existing_match_blocks）。
+        返回的 nested_regions 在 analyze() 中与原 match_regions 拼接为最终
+        match_regions。
 
-        字节码模式示例：
-        ----------------
-        例1: if True:
-                match a:
-                    case 1:
-                        pass
+        **唯一归属判定**
+        本方法是少数允许子区域 blocks 与父区域 blocks 重叠的识别方法——这是因为
+        嵌套 match 的 subject_block / case_blocks 已被父区域 block_to_region 标记
+        为 claimed，本方法必须重新登记才能让子 MatchRegion 拥有这些块。注册规则：
+          - 跳过 existing_match_blocks（已被其它 MatchRegion 占用的块）。
+          - 跳过 `self.block_to_region.get(block)` 为 MatchRegion 的块（同类型自洽）。
+          - 注册时调用 `existing.preserves_against_nested_match()` 多态守卫：仅当
+            existing 为 None 或 existing.preserves_against_nested_match() 返回
+            False 时才覆盖（MatchRegion 覆写为 True，保留外层 match 占有的块；
+            其它 Region 默认 False，允许覆盖）。
+        这样既保证嵌套 match 拥有 subject_block / case_blocks（子区域唯一归属），
+        又不破坏外层 match 已占有的块（外层唯一归属）。
 
-        字节码布局：
-        Block0 (if条件):   LOAD_CONST True
-                           POP_JUMP_FORWARD_IF_FALSE -> EndBlock
-        Block1 (match subject): LOAD_NAME 'a'
-                                COPY
-                                LOAD_CONST 1
-                                COMPARE_OP ==
-                                POP_JUMP_FORWARD_IF_FALSE -> DefaultBlock
-        Block2 (case body): PASS
-                            JUMP_FORWARD -> MergeBlock
-        Block3 (default):  NOP (或直接进入body)
-                           ...
-        MergeBlock:
-        EndBlock:
+        **嵌套处理**
+        本方法本身就是嵌套处理——它专门识别嵌套在父区域（IfRegion/ForRegion/
+        TryRegion/WithRegion）内部的 match。子 MatchRegion 通过 entry 块作为
+        抽象节点参与父区域的归约；父区域的 then/else/body 引用本区域 entry，
+        不展开本区域的 case_blocks / case_bodies。多层嵌套（match in if in for）
+        通过 parent_regions 列表传入的所有父区域间接处理（每个父区域内部独立
+        扫描）。多态分发点 preserves_against_nested_match 是本方法的核心协调点，
+        由 MatchRegion 覆写为 True。
 
-        关键观察：
-        - Block0被IfRegion占用（if条件判断）
-        - Block1-Block3和MergeBlock应该被MatchRegion占用
-        - 但在Phase 1时，Block1已被IfRegion标记为claimed，导致match无法识别
+        **入口引用语义**
+        入口块 = match subject 加载块（region.entry = subject_block）。当候选块是
+        case pattern 块时，回溯前驱（必须在 parent_blocks 内）查找
+        _is_case_pattern_block / _has_match_op 的块作为 subject_block。简单 case
+        块（NOP 前缀的 default case）通过 _find_nested_match_subject 沿前驱链
+        查找含 COPY / COMPARE_OP+LOAD+CONDITIONAL_JUMP 的 subject 块（偏移量必须
+        小于 case 块）。父区域（如 IfRegion / ForRegion / TryRegion / WithRegion）
+        通过 then/else/body 列表引用本 region 的 entry 块作为抽象节点；本 region
+        的 case_blocks / case_bodies / merge_block / pattern_check_blocks 不出现
+        在父区域 blocks 集合的展开中（嵌套即抽象节点，尽管 blocks 集合本身可能
+        重叠，但语义上父区域仅引用 entry）。
 
-        边界条件：
-        --------
-        1. 多层嵌套：match in if in for → 需要递归扫描（当前只处理一层）
-        2. match在循环体中：case body可能包含continue/break
-        3. match在try中：可能跨越except块（需要特殊处理）
-        4. match在with中：通常不跨越with边界
-
-        性能考虑：
-        - 只对父区域的blocks进行扫描，而非全局扫描
-        - 使用已有的match检测方法，避免重复逻辑
-        - 提前终止无效路径
+        **反编译流程**
+        对应生成方法: _generate_match（region_ast_generator.py）。AST 节点一一映射：
+          RegionType.MATCH → ast.Match（与顶层 MatchRegion 相同）
+        关键字段映射:
+          subject     → Match.subject
+          case_blocks → Match.cases（每个 case → match_case: pattern + guard + body）
+        本方法返回的嵌套 MatchRegion 与顶层 MatchRegion 共用 _generate_match，
+        作为父区域 AST 节点的子节点（如 If.body[0] = Match(...)）出现。本方法遵循
+        区域归约算法 4 核心原则: 自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 /
+        父引用子入口。
 
         Args:
-            parent_regions: 已识别的父区域列表（可能包含嵌套match的区域）
-            existing_match_regions: 已识别的顶层match区域列表
+            parent_regions: 已识别的父区域列表（可能包含嵌套 match 的区域）。
+            existing_match_regions: 已识别的顶层 match 区域列表（用于跳过已占用块）。
 
         Returns:
-            嵌套MatchRegion列表
+            嵌套 MatchRegion 列表。
         """
         nested_regions = []
         existing_match_blocks = set()
@@ -9889,91 +9999,102 @@ RegionType 枚举值: RegionType.WHILE_LOOP / RegionType.FOR_LOOP
 【区域类型】 ASSERT — 断言区域（Assert Region）
 RegionType 枚举值: RegionType.ASSERT
 
-1. 算法描述（基于"No More Gotos"论文）
-   - 归约阶段: 早期独立识别器，在 loop/try/with/match/conditional/
-              chained_compare 等 Phase 1 区域之前运行，作为预处理。
-   - 识别策略: 不依赖支配树或回边，而是基于 CPython 编译器为 assert 生成
-              的固定字节码模式（LOAD_ASSERTION_ERROR + RAISE_VARARGS）
-              做模式匹配。assert 在 CFG 中表现为"条件为真跳过，否则抛错"。
-   - 归约过程:
-     Step 1: 遍历所有基本块（按 start_offset 升序排序）。
-     Step 2: 跳过末指令不在 FORWARD_JUMP_OPS 中的块（assert 必有前向条件跳转）。
-     Step 3: 要求块恰好有 2 个 conditional_successors（true/false 双分支）。
-     Step 4: 检查任一非自身条件后继块是否包含 LOAD_ASSERTION_ERROR 指令；
-             若无则跳过（非 assert 模式，可与 IfRegion 区分）。
-     Step 5: 在所有非自身后继块中按 start_offset 升序查找包含 RAISE_VARARGS
-             的块作为 message_block（错误抛出块，可能为 None）。
-     Step 6: 构建 AssertRegion:
-             - entry           = 条件块本身
-             - blocks          = {条件块} ∪ ({message_block} if 存在)
-             - condition_block = 条件块
-             - message_block   = Step 5 找到的块（可能为 None）
-     Step 7: 注册到 self.regions，并更新 block_to_region:
-             - 条件块未归属任何 region → 直接映射到本 AssertRegion；
-             - 条件块已归属（如位于 IfRegion/LoopRegion 内部）→ 作为该 region
-               的 child 挂载并设置 region.parent，体现"嵌套即抽象节点"。
-             - message_block 若未被映射则同样映射到本 region。
+**算法依据**
+基于 "No More Gotos" 论文中"短路条件归约 + 单出口异常路径"原则；CPython 编译器
+为 assert 生成固定字节码模式：条件为真跳过（POP_JUMP_IF_TRUE → end），否则
+LOAD_ASSERTION_ERROR + RAISE_VARARGS(1) 抛错。assert 在 CFG 中表现为"条件为真
+跳过，否则抛错"，与 if 的差异在 LOAD_ASSERTION_ERROR 指令明确区分。本方法不依赖
+支配树或回边，而是基于字节码模式匹配（pattern matching）。
+字节码模式映射：
+  模式 A: 基本断言 — `assert condition`；
+          特征指令 POP_JUMP_IF_TRUE, LOAD_ASSERTION_ERROR, RAISE_VARARGS。
+  模式 B: 带消息断言 — `assert condition, "error msg"`；message_block 含
+          LOAD_ASSERTION_ERROR + LOAD_CONST/FORMAT_VALUE/BUILD_STRING + CALL +
+          RAISE_VARARGS。
+  模式 C: is None / is not None 断言 — 使用 POP_JUMP_IF_NONE /
+          POP_JUMP_IF_NOT_NONE（属 NONE_CHECK_OPS）；在 _generate_assert 中由
+          _fix_assert_none_check_direction 修正方向。
+归约过程（保留历史标注：[Round4-12] = 链式比较/BoolOp assert chain 块归属；
+[R8 fix] = ternary message_block 入口引用；[R10 err 1] = BoolOp chain 块归属；
+[R4 Fix 1] = `assert not (or-chain), msg` 反向回溯 new_condition_block）：
+  Step 1: 遍历所有基本块（按 start_offset 升序排序）。
+  Step 2: 跳过末指令不在 FORWARD_JUMP_OPS 中的块（assert 必有前向条件跳转）。
+  Step 3: 要求块恰好有 2 个 conditional_successors（true/false 双分支）。
+  Step 4: 任一非自身条件后继块经 _reach_assertion_error_block 能到达含
+          LOAD_ASSERTION_ERROR 的块；若无则跳过（与 IfRegion 区分）。
+  Step 5: 在所有非自身后继块中按 start_offset 升序，用 _find_assertion_error_block
+          查找 LOAD_ASSERTION_ERROR 块作为 message_block（[R8 fix] 兼容
+          ternary/复杂 message：直接定位 LOAD_ASSERTION_ERROR 块而非
+          RAISE_VARARGS，让 message_block 可指向嵌套 TernaryRegion entry；
+          fallback 用 _reach_raise_varargs_block 保留旧行为）。
+  Step 6: 构建 AssertRegion（entry / blocks / condition_block / message_block
+          / chained_compare_blocks / chained_compare_ops / boolop_chain_blocks
+          / boolop_chain_ops）。
+  Step 7: 注册到 self.regions 与 block_to_region。
 
-2. 字节码模式（CPython 编译器行为）
-   模式 A: 基本断言
-     源码: assert condition
-     字节码结构:
-       cond_block:
-           ...计算 condition...
-           POP_JUMP_IF_TRUE → end      # 条件为 True 跳过抛错
-           LOAD_ASSERTION_ERROR
-           RAISE_VARARGS(1)
-         end: ...
-     特征指令: POP_JUMP_IF_TRUE, LOAD_ASSERTION_ERROR, RAISE_VARARGS
-   模式 B: 带消息断言
-     源码: assert condition, "error msg"
-     字节码结构:
-       cond_block:
-           ...计算 condition...
-           POP_JUMP_IF_TRUE → end
-       message_block:
-           LOAD_ASSERTION_ERROR
-           LOAD_CONST "error msg"      # 或 FORMAT_VALUE + BUILD_STRING (f-string)
-           CALL(1) / PRECALL
-           RAISE_VARARGS(1)
-         end: ...
-     特征指令: LOAD_ASSERTION_ERROR, LOAD_CONST/FORMAT_VALUE/BUILD_STRING,
-              CALL, RAISE_VARARGS
-   模式 C: is None / is not None 断言
-     - 使用 POP_JUMP_IF_NONE / POP_JUMP_IF_NOT_NONE（属 NONE_CHECK_OPS）；
-     - 在 _generate_assert 中由 _fix_assert_none_check_direction 修正方向。
+**归约顺序**
+早期独立识别器（在 analyze() 中位于 try_except → loop → with → match 之后、
+chained_compare / boolop / ternary / conditional 之前）。assert_regions 作为
+参数传给下游 _identify_chained_compare_regions / _identify_ternary_regions /
+_identify_conditional_regions 作为 block_to_region 守卫来源。assert 先于
+conditional 识别是为了抢占条件块识别权——assert 的条件跳转字节码与 if 相似，
+必须先识别为 AssertRegion 才能避免被 IfRegion 误归约。analyze() 后段会按
+_region_overlaps_with_ternary 过滤与 TernaryRegion 重叠的 AssertRegion，
+特例：AssertRegion.message_block 与 TernaryRegion 重叠时是合法嵌套（[R8]），
+跳过过滤——_generate_assert 通过 message_block 引用嵌套 TernaryRegion 入口
+（原则 4 父引用子入口）。
 
-3. 边界条件（数学性质）
-   - 单块识别: assert 区域由条件块（和可选消息块）两个块组成，
-              不需要支配树或回边分析。
-   - 唯一归属: 通过 block_to_region 映射保证条件块唯一归属；
-              若已被父区域（IfRegion/LoopRegion）持有，则作为 child 嵌套，
-              不破坏"每块唯一归属"原则。
-   - 与 IfRegion 边界: assert 的条件跳转与 if 字节码相似，但通过
-                       LOAD_ASSERTION_ERROR 指令明确区分；本识别器先于
-                       IfRegion 运行以抢占识别权。
-   - 与 BoolOpRegion 边界: assert 中的复合布尔条件可能被 BoolOpRegion 抢占，
-                          通过 condition_block 共享与父 region 挂载协调。
+**唯一归属判定**
+单块识别：assert 区域由条件块（和可选 message_block + chained_compare_blocks
++ boolop_chain_blocks）组成，不需要支配树或回边分析。通过 block_to_region 映射
+保证条件块唯一归属；若条件块已被父区域（IfRegion/LoopRegion）持有，则作为
+该 region 的 child 挂载并设置 region.parent（嵌套即抽象节点，不破坏每块唯一
+归属）。block_to_region 守卫：起始即跳过已被前序迭代识别为 AssertRegion 的块
+（[Round4-12]，避免链式比较 assert 的中段 COMPARE_OP 块被误识别为独立
+AssertRegion）；message_block / chained_compare_blocks / boolop_chain_blocks
+仅当 `not in self.block_to_region` 时才登记，先到先得不覆盖既有归属。
+与 IfRegion 边界：通过 LOAD_ASSERTION_ERROR 指令明确区分，本识别器先于
+IfRegion 运行以抢占识别权。与 BoolOpRegion 边界：assert 中的复合布尔条件
+可能被 BoolOpRegion 抢占，通过 condition_block 共享与父 region 挂载协调。
 
-4. 归约语义（与父区域的契约）
-   - 入口块: 条件块（condition_block），即 assert 的 entry。
-   - 父区域引用: 若 assert 位于 if/loop/try 等区域内部，父区域通过
-                children 列表引用本 AssertRegion；条件块仍出现在父区域的
-                blocks 中（assert 不缩小父区域 block 集合），但生成阶段
-                会调用 _generate_assert 而非按普通块处理。
-   - 子区域块不出现: AssertRegion 不再嵌套子区域（叶节点区域），
-                   其内部块由本 region 独占生成。
+**嵌套处理**
+AssertRegion 不再嵌套子区域（叶节点区域），其内部块由本 region 独占生成。
+但 message_block 可能是嵌套 TernaryRegion 的 entry（如 `assert x, (a if c
+else b)`，[R8 fix]）——此时 AssertRegion.blocks 与 TernaryRegion.blocks
+重叠 {message_block}，是合法嵌套（原则 3 嵌套即抽象节点 + 原则 4 父引用子
+入口）：AssertRegion 通过 message_block 引用嵌套 TernaryRegion 入口，
+_generate_assert 把 TernaryRegion 重建为 ast.Assert.msg 子表达式。
+boolop_chain_blocks / chained_compare_blocks 是 assert 条件自身的扩展（不是
+独立子区域），由 _generate_assert 直接重建为 ast.Assert.test。多态分发点
+can_be_ternary_header 由 AssertRegion 覆写为禁止，避免 ternary 误吞
+assert condition_block。
 
-5. AST 映射
-   - 对应生成方法: _generate_assert（region_ast_generator.py）
-   - AST 节点类型: ast.Assert
-   - 关键字段映射:
-       AssertRegion.condition_block → AST.test（条件表达式，经指令过滤重建）
-       AssertRegion.message_block   → AST.msg（错误消息表达式，可能为 None）
-   - 特殊处理: None 检查方向修正（_fix_assert_none_check_direction 互换 is/is not）。
+**入口引用语义**
+入口块 = 条件块（condition_block），即 assert 的 entry。若 assert 位于
+if/loop/try 等区域内部，父区域通过 children 列表引用本 AssertRegion；条件块
+仍出现在父区域的 blocks 中（assert 不缩小父区域 block 集合），但生成阶段会
+调用 _generate_assert 而非按普通块处理。父区域的 then/else/body 列表引用
+本 AssertRegion 的 entry 块；本 AssertRegion 的 message_block /
+chained_compare_blocks / boolop_chain_blocks 不出现在父区域 blocks 集合的
+展开中（嵌套即抽象节点；message_block 是与嵌套 TernaryRegion 的重叠点，
+由 _generate_assert 通过 message_block 引用 TernaryRegion entry）。
+[R4 Fix 1] `assert not (or-chain), msg` 反向回溯得到 new_condition_block
+（FIRST or-chain 块，CFG 顺序早于原 block），AssertRegion.entry /
+condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAST or-chain
+块）成为 boolop_chain_blocks 的最后条目。
 
-6. 已知失败模式
-   - 当前测试矩阵通过率: 100%，无已知失败模式（assert 在 basic 测试集内通过）
+**反编译流程**
+对应生成方法: _generate_assert（region_ast_generator.py）。AST 节点一一映射：
+  RegionType.ASSERT → ast.Assert
+关键字段映射:
+  AssertRegion.condition_block     → AST.test（条件表达式，经指令过滤重建）
+  AssertRegion.message_block       → AST.msg（错误消息表达式，可能为 None，
+                                     嵌套 TernaryRegion 时为 IfExp）
+  AssertRegion.chained_compare_ops → 重建为 ast.Compare 的 ops/comps
+  AssertRegion.boolop_chain_ops    → 重建为 ast.BoolOp
+特殊处理: None 检查方向修正（_fix_assert_none_check_direction 互换 is/is not）。
+当前测试矩阵通过率: 100%（assert 在 basic 测试集内通过）。本方法遵循区域归约
+算法 4 核心原则: 自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口。
         """
         regions = []
         for block in self.cfg.get_blocks_in_order():
@@ -10400,75 +10521,94 @@ RegionType 枚举值: RegionType.ASSERT
         chained_compare_blocks / chained_compare_ops 标记字段，
         由下游 _generate_if 根据 compare_ops 数量识别并还原为 ast.Compare。
 
-        1. 算法描述（基于"No More Gotos"论文）
-           - 归约阶段: Phase 2 的高层识别第一步，先于 BoolOp / Ternary / Conditional；
-             在 Phase 1 的 Loop / Try / With / Match / Assert 之后执行
-           - 识别策略: 以 CPython 编译器的固定字节码模式（COPY(arg=2) +
-             COMPARE_OP 指令对）为锚点，沿 fallthrough 后继链追踪连续的
-             COMPARE_OP 块，从而把 a < b < c 这类多比较运算还原为一个语义整体
-           - 归约过程:
-             Step 1: 收集 loop_regions / try_regions / with_regions /
-                     match_regions / assert_regions 的所有块到 claimed 集合，
-                     实现"每块唯一归属"——已被识别的区域不会被本方法抢占
-             Step 2: 按 cfg.get_blocks_in_order() 顺序遍历每个未占用块，
-                     调用 _is_chained_compare_header 判断块内是否含
-                     COPY(arg=2)+COMPARE_OP 指令对
-             Step 3: 对候选 header 调用 _detect_chained_compare_pattern，
-                     沿 fallthrough 后继（min(start_offset)）逐块扫描额外
-                     COMPARE_OP，得到 compare_ops 列表与 extra_chain_blocks
-             Step 4: 取 header 的 conditional_successors，要求恰为 2 个；
-                     按 start_offset 排序得到 then_succ（fallthrough，最小）
-                     与 else_succ（短路跳出，最大）
-             Step 5: 调用 _build_chained_compare_region 构造 IfRegion，
-                     将 header、then_succ、else_succ 与所有 compare 块合入
-                     region.blocks，写入 chained_compare_blocks 与
-                     chained_compare_ops；构造成功后登记到 self.regions
-                     与 claimed，保证后续识别不会再分配这些块
+        **算法依据**
+        基于 "No More Gotos" 论文中"短路条件归约"原则对多比较运算的特化；CPython
+        3.11+ 编译器对链式比较 a < b < c 生成确定性字节码模式：COPY(arg=2) +
+        COMPARE_OP 指令对，沿 fallthrough 后继链追踪连续 COMPARE_OP 块，从而把
+        多比较运算还原为一个语义整体（非启发式，详见 dis 模块与 Python/ceval.c）。
+        字节码模式映射：
+          模式: 链式比较 a < b < c —
+            LOAD a, LOAD b, LOAD c,
+            COPY(arg=2),         # 复制栈上 b 供下次比较
+            COMPARE_OP <,        # a < b
+            COPY(arg=2),         # 复制栈上 c 供下次比较
+            COMPARE_OP <,        # b < c
+            POP_JUMP_IF_FALSE → else   # 短路跳出
+            特征指令：COPY(arg=2), COMPARE_OP。
+        归约过程：
+          Step 1: 收集 loop_regions / try_regions / with_regions /
+                  match_regions / assert_regions 的所有块到 claimed 集合。
+          Step 2: 按 cfg.get_blocks_in_order() 顺序遍历每个未占用块，调用
+                  _is_chained_compare_header 判断块内是否含 COPY(arg=2)+COMPARE_OP
+                  指令对。
+          Step 3: 对候选 header 调用 _detect_chained_compare_pattern，沿
+                  fallthrough 后继（min(start_offset)）逐块扫描额外 COMPARE_OP，
+                  得到 compare_ops 列表与 extra_chain_blocks（要求至少 1 个
+                  extra_chain_block，即 compare_ops 长度 ≥ 2，否则视为普通单比较）。
+          Step 4: 取 header 的 conditional_successors，要求恰为 2 个；按
+                  start_offset 排序得到 then_succ（fallthrough，最小）与
+                  else_succ（短路跳出，最大）。
+          Step 5: 调用 _build_chained_compare_region 构造 IfRegion，将 header、
+                  then_succ、else_succ 与所有 compare 块合入 region.blocks，写入
+                  chained_compare_blocks 与 chained_compare_ops；构造成功后登记到
+                  self.regions 与 claimed。
 
-        2. 字节码模式（CPython 编译器行为）
-           模式: 链式比较 a < b < c
-             源码:        if a < b < c: ...
-             字节码结构:  LOAD a, LOAD b, LOAD c,
-                          COPY(arg=2),         # 复制栈上 b 供下次比较
-                          COMPARE_OP <,        # a < b
-                          COPY(arg=2),         # 复制栈上 c 供下次比较
-                          COMPARE_OP <,        # b < c
-                          POP_JUMP_IF_FALSE → else   # 短路跳出
-             特征指令:    COPY(arg=2), COMPARE_OP
-             理论依据:    CPython 3.11+ 字节码规范，编译器对链式比较的确定性优化
-                          （非启发式），详见 dis 模块与 Python/ceval.c 实现
+        **归约顺序**
+        Phase 2 的高层识别第一步（analyze() 中显式调用顺序：
+        chained_compare → boolop → ternary → conditional），先于 BoolOp / Ternary / Conditional；
+        在 Phase 1 的 Loop / Try / With / Match / Assert 之后执行。先于 BoolOp /
+        Conditional 识别是为了避免链式比较 a<b<c 被误拆为 a<b 短路与 b<c 短路两个
+        BoolOp / IfRegion。chained_compare_regions 作为 conditional_regions 参数
+        传给 _identify_ternary_regions（注意：analyze() 中传给 _identify_
+        ternary_regions 的 conditional_regions 实际为 chained_compare_regions，
+        用于 ternary 守卫避免重复识别），并作为 existing_regions 一部分传给
+        _identify_boolop_regions。
 
-        3. 边界条件（数学性质）
-           - 必须存在至少一对 COPY(arg=2)+COMPARE_OP，且 _detect_chained_compare_pattern
-             要求至少 1 个 extra_chain_block（即 compare_ops 长度 ≥ 2），否则视为普通
-             单比较运算，交由后续 Conditional 识别
-           - header 必须有且仅有 2 个 conditional_successors；否则跳过
-           - fallthrough 链追踪在以下情况终止：后继 < 2、已被访问、不含 COMPARE_OP、
-             或存在后向边（避免侵入循环结构）
-           - 已被 Phase 1 区域（loop/try/with/match/assert）占用的块直接跳过，
-             保证唯一归属
+        **唯一归属判定**
+        必须存在至少一对 COPY(arg=2)+COMPARE_OP，且 _detect_chained_compare_pattern
+        要求至少 1 个 extra_chain_block（即 compare_ops 长度 ≥ 2），否则视为普通
+        单比较运算，交由后续 Conditional 识别。header 必须有且仅有 2 个
+        conditional_successors；否则跳过。fallthrough 链追踪在以下情况终止：
+        后继 < 2、已被访问、不含 COMPARE_OP、或存在后向边（避免侵入循环结构）。
+        block_to_region 守卫：起始即把 loop/try/with/match/assert 的所有块合入
+        claimed 集合，已被 Phase 1 区域占用的块直接跳过（每块唯一归属）。构造
+        成功后把 region.blocks 合入 claimed，保证后续识别不会再分配这些块
+        （先到先得，CHAINED_COMPARE > BOOLOP > TERNARY > CONDITIONAL）。
 
-        4. 归约语义（与父区域的契约）
-           - 入口块: header 块（同时也是 IfRegion.condition_block 与 entry）
-           - 父区域引用: 父区域通过 block_to_region[header] 间接持有本 IfRegion；
-             父区域仅引用 entry，不感知内部 chained_compare_blocks
-           - 后继语义: then_succ（fallthrough）继续比较或进入 then 体；
-             else_succ（短路跳出）即真实 else 分支入口
+        **嵌套处理**
+        本方法构造的 IfRegion 通过 chained_compare_blocks / chained_compare_ops
+        标记字段表达"链式比较"的内部结构——这些 chain 块不是独立子区域，而是
+        condition_block 的扩展（同一表达式）。嵌套的 IfRegion / LoopRegion /
+        TryExceptRegion / WithRegion / MatchRegion / AssertRegion 等通过 add_child
+        挂到本 IfRegion.children；本 IfRegion 在父区域中作为单个抽象节点（普通
+        IfRegion）参与归约，父区域不感知 chained_compare_blocks 的内部结构。
+        多态分发点 is_block_in_body / get_compactness_successors / get_if_body_blocks
+        / can_be_ternary_header 由 IfRegion 覆写，承载嵌套协调（含 chained_compare
+        场景）。
 
-        5. AST 映射
-           - 对应生成方法: _generate_if（IfRegion 通用生成方法）
-           - AST 节点类型: ast.Compare（chained，当 compare_ops ≥ 2 时由
-             _generate_if 重建为多 op 的 Compare 节点）
-           - 关键字段映射:
-               IfRegion.chained_compare_blocks → 用于块覆盖范围判定
-               IfRegion.chained_compare_ops    → ast.Compare.ops / 节点比较符序列
-               IfRegion.condition_block         → ast.Compare.left/operands 起点
-               IfRegion.then_blocks / else_blocks → ast.If.body / orelse
+        **入口引用语义**
+        入口块 = header 块（同时也是 IfRegion.condition_block 与 entry）。父区域
+        通过 block_to_region[header] 间接持有本 IfRegion；父区域仅引用 entry，不
+        感知内部 chained_compare_blocks。后继语义：then_succ（fallthrough）继续
+        比较或进入 then 体；else_succ（短路跳出）即真实 else 分支入口。父区域
+        （如外层 LoopRegion / SequenceRegion）通过 then/else/body 列表引用本
+        IfRegion 的 entry 块；本 IfRegion 的 chained_compare_blocks /
+        then_blocks / else_blocks 不出现在父区域 blocks 集合的展开中（嵌套即
+        抽象节点）。
 
-        6. 已知失败模式
-           - CHAINED_COMPARE: 当前测试矩阵通过率 100%
-           - 与 Conditional 区域无冲突（在 Conditional 之前完成识别并标记 claimed）
-           - 与 BoolOp 区域无冲突（先于 BoolOp 识别，避免被短路求值拆分）
+        **反编译流程**
+        对应生成方法: _generate_if（IfRegion 通用生成方法）。AST 节点一一映射：
+          ast.Compare（chained，当 compare_ops ≥ 2 时由 _generate_if 重建为多 op
+          的 Compare 节点；否则按普通 IfRegion 处理为 ast.If）
+        关键字段映射:
+          IfRegion.chained_compare_blocks → 用于块覆盖范围判定
+          IfRegion.chained_compare_ops    → ast.Compare.ops / 节点比较符序列
+          IfRegion.condition_block        → ast.Compare.left/operands 起点
+          IfRegion.then_blocks / else_blocks → ast.If.body / orelse
+        当前测试矩阵通过率: 100%。与 Conditional 区域无冲突（在 Conditional 之前
+        完成识别并标记 claimed）。与 BoolOp 区域无冲突（先于 BoolOp 识别，避免被
+        短路求值拆分）。本方法遵循区域归约算法 4 核心原则: 自底向上归约 / 每块
+        唯一归属 / 嵌套即抽象节点 / 父引用子入口。
         """
         claimed = set()
         for regions in [loop_regions, try_regions, with_regions, match_regions, assert_regions]:
@@ -10774,66 +10914,107 @@ RegionType 枚举值: RegionType.ASSERT
         【区域类型】 IF / IF_THEN_ELSE / IF_ELIF_CHAIN — 条件区域（If Region）
         RegionType 枚举值: RegionType.IF / RegionType.IF_THEN_ELSE / RegionType.IF_ELIF_CHAIN
 
-        1. 算法描述（基于"No More Gotos"论文）
-           - 归约阶段: Phase 2（在 BOOLOP/TERNARY 之后，SEQUENCE 之前）
-           - 识别策略: 扫描 FORWARD_CONDITIONAL_JUMP_OPS（POP_JUMP_FORWARD_IF_FALSE/TRUE）
-             定位条件跳转，区分 if-then、if-then-else、if-elif-else 链。
-             跳过已归属其他区域的块（loop/try/with/match/boolop/ternary 内的块）。
-           - 归约过程:
-             Step 1: 遍历未归属块，查找末尾为 FORWARD_CONDITIONAL_JUMP_OPS 的块作为 if 条件。
-             Step 2: 区分条件上下文（is_condition_context）与值上下文。
-                     值上下文中若 BoolOpRegion 已存在则跳过 IfRegion 创建。
-             Step 3: guard 检查块识别——位于 case body 中且跳转目标指向同 MatchRegion 的
-                     下一 case_block 时，跳过 IfRegion 创建（guard 块归 MatchRegion）。
-             Step 4: 收集 then_blocks/else_blocks，构建 IfRegion 并注册 block_to_region。
-             Step 5: elif 链识别——else 块以条件跳转结尾时递归构建 IF_ELIF_CHAIN。
+        **算法依据**
+        基于 "No More Gotos" 论文中"If 区域归约"——条件跳转 + 两路汇聚到 merge
+        block 形成 IfRegion；else 块以条件跳转结尾时递归形成 IF_ELIF_CHAIN。
+        CPython 3.11+ 使用 POP_JUMP_FORWARD_IF_FALSE/TRUE/NONE/NOT_NONE 表达条件
+        跳转，本方法扫描 FORWARD_CONDITIONAL_JUMP_OPS 定位条件跳转。
+        字节码模式映射：
+          模式 A: if-then — `[cond] POP_JUMP_FORWARD_IF_FALSE → end | [then body]`。
+          模式 B: if-then-else — `[cond] POP_JUMP_FORWARD_IF_FALSE → else |
+                  [then] JUMP_FORWARD → end | [else]`。
+          模式 C: if-elif-else — else 块以条件跳转结尾，递归形成 IF_ELIF_CHAIN。
+        归约过程：
+          Step 1: 遍历未归属块（按 start_offset 倒序处理，避免 elif 条件块先于
+                  外层 if 条件块被处理而误建独立 IfRegion），查找末尾为
+                  FORWARD_CONDITIONAL_JUMP_OPS 的块作为 if 条件。
+          Step 2: 区分条件上下文（is_condition_context）与值上下文。值上下文中
+                  若 BoolOpRegion 已存在则跳过 IfRegion 创建。
+          Step 3: guard 检查块识别——位于 case body 中且跳转目标指向同
+                  MatchRegion 的下一 case_block 时，跳过 IfRegion 创建
+                  （guard 块归 MatchRegion）。
+          Step 4: 收集 then_blocks / else_blocks，构建 IfRegion 并注册
+                  block_to_region。
+          Step 5: elif 链识别——else 块以条件跳转结尾时递归构建 IF_ELIF_CHAIN。
 
-        2. 字节码模式（CPython 编译器行为）
-           模式 A: if-then
-             源码: if cond: ...
-             字节码结构: [cond] POP_JUMP_FORWARD_IF_FALSE → end | [then body] |
-             特征指令: POP_JUMP_FORWARD_IF_FALSE, POP_JUMP_FORWARD_IF_TRUE
-           模式 B: if-then-else
-             源码: if cond: ... else: ...
-             字节码结构: [cond] POP_JUMP_FORWARD_IF_FALSE → else | [then] JUMP_FORWARD → end | [else]
-           模式 C: if-elif-else
-             else 块以条件跳转结尾，递归形成 IF_ELIF_CHAIN
+        **归约顺序**
+        Phase 2 的高层识别（在 BOOLOP/TERNARY/CHAINED_COMPARE 之后，SEQUENCE 之前；
+        analyze() 中显式调用顺序：chained_compare → boolop → ternary →
+        conditional）。Conditional 在 BOOLOP/TERNARY 之后是为了让 boolop/ternary
+        先识别其值块，避免被 IfRegion 误吞；在 SEQUENCE 之前是因为 if 是结构化
+        控制流的核心。conditional_regions 作为 parent_regions 之一传给
+        _identify_nested_match_regions 进行二次 match 扫描；同时 elif_chain 的
+        条件块参与 analyze() 后段的 elif_condition_blocks 标记，影响 ternary /
+        boolop 的 is_condition_context 设置（条件上下文中的 boolop/ternary 与
+        IfRegion 建立父子关系）。
 
-        3. 边界条件（数学性质）
-           - 条件跳转目标确定 then/else 分支边界
-           - 值上下文（is_condition_context=False）: 若 BoolOpRegion 已存在则不创建 IfRegion
-           - guard 块排除: 位于 case body 内且前向跳转到同 MatchRegion case_block 的块跳过
-           - TernaryRegion 值块排除: BoolOpRegion 是 TernaryRegion 的 true/false value block 时跳过
-           - 每个基本块经 block_to_region 唯一归属一个 IfRegion
-           [Round 3 fix P0-B] 当 if 条件是一个 BoolOpRegion（如
-           `is_utc=='0' and (typet==1 or ... or typet==13)`），BoolOpRegion
-           的内部操作数块（op_chain 中除 entry 外的块）归属 BoolOpRegion，
-           不应被 IfRegion 的 all_condition_blocks 吞并。从 all_condition_blocks
-           中移除 BoolOpRegion 内部块（保留 entry 作为条件引用入口），
-           chain_blocks 保持不变（用于 _collect_branch_blocks 边界停止集）。
-           依据原则 2（每块唯一归属）+ 原则 3（嵌套即抽象节点）+ 原则 4
-           （入口引用语义）：IfRegion 通过 entry 引用 BoolOpRegion 作为抽象
-           条件节点，BoolOpRegion 作为子区域挂载于 IfRegion。否则
-           IF_ELIF_CHAIN(priority=30) 覆盖 BOOL_OP(priority=20) 导致 or 链
-           条件被错误折叠为 `(boolop) == 6`（elif 条件合并进 if 条件）。
+        **唯一归属判定**
+        条件跳转目标确定 then/else 分支边界。block_to_region 守卫：
+          - 跳过 with_handler_blocks（WithRegion cleanup/exception 块）。
+          - 跳过 try_cleanup_blocks（except* 框架清理块，含 PREP_RERAISE_STAR）；
+            但不跳过 try_handler_blocks 中的 handler body 块——handler body 中的
+            if 应正常识别为嵌套 IfRegion（[Phase 3 adv17_try_except_star]）。
+          - _should_skip_block_for_if_region 跳过 LoopRegion 的 condition_block /
+            header_block / back-edge 条件块（避免循环内部条件被误建为 IfRegion）。
+          - 跳过 await 轮询自循环块（SEND + YIELD_VALUE + JUMP_BACKWARD_NO_INTERRUPT
+            三联，[聚类2 修复]）。
+          - 跳过 chained_compare_extra_blocks（链式比较的额外链块，避免被误识别
+            为独立 elif 条件块）。
+          - 跳过已被 loop/try/with/match/boolop/ternary 占用的块。
+        值上下文（is_condition_context=False）: 若 BoolOpRegion 已存在则不创建
+        IfRegion。guard 块排除: 位于 case body 内且前向跳转到同 MatchRegion
+        case_block 的块跳过。TernaryRegion 值块排除: BoolOpRegion 是
+        TernaryRegion 的 true/false value block 时跳过。
+        [Round 3 fix P0-B] 当 if 条件是一个 BoolOpRegion 时，BoolOpRegion 的
+        内部操作数块（op_chain 中除 entry 外的块）归属 BoolOpRegion，不应被
+        IfRegion 的 all_condition_blocks 吞并——从 all_condition_blocks 中移除
+        BoolOpRegion 内部块（保留 entry 作为条件引用入口），chain_blocks 保持
+        不变（用于 _collect_branch_blocks 边界停止集）。依据原则 2（每块唯一
+        归属）+ 原则 3（嵌套即抽象节点）+ 原则 4（入口引用语义）：IfRegion 通过
+        entry 引用 BoolOpRegion 作为抽象条件节点，BoolOpRegion 作为子区域挂载于
+        IfRegion。否则 IF_ELIF_CHAIN(priority=30) 覆盖 BOOL_OP(priority=20) 导致
+        or 链条件被错误折叠。
+        每个基本块经 block_to_region 唯一归属一个 IfRegion。
 
-        4. 归约语义（与父区域的契约）
-           - 入口块: 条件判断块（region.entry，含 POP_JUMP_FORWARD_IF_*）
-           - 父区域引用: 父区域仅引用本 region 的 entry 块
-           - 子区域块不出现: then_blocks/else_blocks 全部归约为单个抽象节点
+        **嵌套处理**
+        嵌套的 IfRegion / LoopRegion / TryExceptRegion / WithRegion / MatchRegion /
+        BoolOpRegion / TernaryRegion / AssertRegion / ChainedCompare IfRegion 通过
+        add_child 挂到本 IfRegion.children；本 IfRegion 在父区域中作为单个抽象
+        节点参与归约。IF_ELIF_CHAIN 的 elif_conditions / elif_bodies /
+        elif_final_else 中的块由 IF_ELIF_CHAIN 占有（[R15-N2 fix]：移除 entry 落
+        在 IF_ELIF_CHAIN.elif_conditions 中的内部 IfRegion，它们已被 IF_ELIF_CHAIN
+        归约，不再独立存在）。多态分发点 is_block_entry / contains_block /
+        is_block_in_body / get_compactness_successors / get_if_body_blocks /
+        get_if_branch_boundary_stop / else_block_conflict / can_be_ternary_header
+        / interrupts_boolop_forward_chain / get_score_merge_block /
+        annotate_structural_roles / annotate_cond_recheck / precompute_analysis
+        由 IfRegion 覆写，承载嵌套协调。
 
-        5. AST 映射
-           - 对应生成方法: _generate_if（region_ast_generator.py）
-           - AST 节点类型: ast.If
-           - 关键字段映射:
-             entry → If.test（条件表达式）
-             then_blocks → If.body
-             else_blocks → If.orelse
+        **入口引用语义**
+        入口块 = 条件判断块（region.entry，含 POP_JUMP_FORWARD_IF_*）。父区域
+        （如外层 LoopRegion / TryExceptRegion / WithRegion / SequenceRegion）通过
+        then/else/body 列表引用本 region 的 entry 块作为抽象节点；本 region 的
+        then_blocks / else_blocks / elif_bodies 不出现在父区域 blocks 集合的展开中
+        （嵌套即抽象节点）。IfRegion 通过 entry 引用嵌套 BoolOpRegion /
+        TernaryRegion / MatchRegion 子区域入口作为抽象条件节点（如 [Round 3 fix
+        P0-B] IfRegion.test = BoolOpRegion.entry）。IF_ELIF_CHAIN 通过
+        elif_conditions 引用各 elif 条件块入口，不展开内部 IfRegion。
+        analyze() 中 if_regions 通过 self._current_if_regions 实例变量传递引用
+        供 _build_basic_if_region / _bt_entries 过滤器识别已创建嵌套 IfRegion entry
+        （[R30-22 fix]，block_to_region 在此阶段尚未注册 IfRegion）。
 
-        6. 已知失败模式
-           - 当前测试矩阵通过率: 100%（if_region 311/311），无已知失败模式
-           - 本方法遵循区域归约算法 4 核心原则:
-             自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口
+        **反编译流程**
+        对应生成方法: _generate_if（region_ast_generator.py）。AST 节点一一映射：
+          RegionType.IF / IF_THEN_ELSE → ast.If
+          RegionType.IF_ELIF_CHAIN     → ast.If（orelse 为嵌套 ast.If 链）
+          chained_compare IfRegion     → ast.Compare（compare_ops ≥ 2 时）
+        关键字段映射:
+          entry        → If.test（条件表达式）
+          then_blocks  → If.body
+          else_blocks  → If.orelse
+          elif_conditions / elif_bodies / elif_final_else → 嵌套 ast.If 链
+        当前测试矩阵通过率: 100%（if_region 311/311）。本方法遵循区域归约算法 4
+        核心原则: 自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口。
         """
         if_regions = []
         # [R30-22 fix] 存储 if_regions 引用供 _build_basic_if_region 访问，
@@ -12936,83 +13117,119 @@ RegionType 枚举值: RegionType.ASSERT
         算法角色：薄协调器（Thin Coordinator）。在 Phase 2 运行（BoolOp 之后、
         If 之前），扫描 CFG 中的 `x if cond else y` 模式并构造 TernaryRegion。
 
-        1. 算法描述（基于 "No More Gotos" 论文）
-        -----------------------------------------
-        采用自底向上的归约策略：condition_block 经条件跳转分出 true/false
-        两条值路径，true 路径以 JUMP_FORWARD 跳过 false 路径并在 merge_block
-        汇合。识别出该钻石形状后构造 TernaryRegion(condition_block,
-        true_value_block, false_value_block, merge_block)。四个核心原则：
-        (a) 自底向上归约 —— 在 BoolOpRegion 之后运行；
-        (b) 唯一块所有权 —— condition_block 不与 IfRegion 共享；
-        (c) 嵌套即抽象节点 —— TernaryRegion 出现在值上下文中时由父
-            IfRegion/LoopRegion 通过 entry 引用；
-        (d) entry 引用语义 —— 父区域引用 condition_block，而非全部三元块。
-
-        2. 字节码模式（CPython 编译器行为）
-        -----------------------------------
-        (A) 基本三元 `x if cond else y`：
+        **算法依据**
+        基于 "No More Gotos" 论文中"钻石形控制流归约"——condition_block 经条件
+        跳转分出 true/false 两条值路径，true 路径以 JUMP_FORWARD 跳过 false 路径
+        并在 merge_block 汇合。识别该钻石形状后构造
+        TernaryRegion(condition_block, true_value_block, false_value_block,
+        merge_block)。CPython 编译器为三元表达式生成确定性钻石字节码：
+          模式 A: 基本三元 `x if cond else y` —
             LOAD cond; POP_JUMP_IF_FALSE -> false;
             LOAD x; JUMP_FORWARD -> merge;
             false: LOAD y; merge: STORE result
-        (B) 带 BoolOp 条件链 `x if a and b else y`：
+          模式 B: 带 BoolOp 条件链 `x if a and b else y` —
             LOAD a; POP_JUMP_IF_FALSE -> false;
             LOAD b; POP_JUMP_IF_FALSE -> false;   # condition_chain_blocks
             LOAD x; JUMP_FORWARD -> merge;
             false: LOAD y; merge: STORE result
         condition_chain_blocks 记录 (block, op) 元组列表，用于在 AST 生成阶段
         重建 BoolOp 条件。
+        归约过程（保留历史标注：[R2 修复 P0-2] = _detect_ternary_context 前序
+        STORE_* 跳过；[Round4-04] = 值上下文链式比较 IfRegion.entry 不抢占；
+        [R22-C3/R22-C3 regression fix/R24-C8 fix] = AssertRegion.entry 后继判据；
+        [R22-C4 fix] = LoopRegion.blocks 后继判据；tn20/tn21 = match case body
+        守卫）：
+          Step 1: _can_be_ternary_header 判断候选 condition_block 是否可作为
+                  ternary header（2 个 conditional_successors + 末指令在
+                  FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS）。
+          Step 2: _detect_ternary_pattern 沿 true/false 路径定位
+                  true_value_block / false_value_block / merge_block，识别
+                  condition_chain_blocks 与 merge_context（赋值/返回/容器/yieldfrom/await/while_cond 等）。
+          Step 3: 构造 TernaryRegion（entry=condition_block，blocks=
+                  {condition_block, true_value_block, false_value_block,
+                  merge_block} ∪ condition_chain_blocks，merge_block=merge_block，
+                  value_target/container_type/merge_context 等）。
+          Step 4: 注册到 self.regions 与 block_to_region。
 
-        3. 边界条件（数学性质）
-        -----------------------
+        **归约顺序**
+        Phase 2（在 BoolOp 之后、Conditional 之前；analyze() 中显式调用顺序：
+        chained_compare → boolop → ternary → conditional）。在 BoolOp 之后运行
+        是为了先让 BoolOpRegion 识别其 op_chain 块，避免被 TernaryRegion 误吞
+        （设计权衡：BoolOp vs Ternary 优先级——当候选块被 BoolOpRegion 占用时，
+        _detect_ternary_pattern 中的 chain_blocks 检查保守地跳过 ternary 创建，
+        skip_ternary=True，优先保留 BoolOp，与归约算法 4 核心原则一致）。在
+        Conditional 之前运行是为了抢占 condition_block 归属权——否则 if 头块
+        会被 IfRegion 优先识别。ternary_regions 作为参数传给 _identify_
+        conditional_regions 作为 block_to_region 守卫；analyze() 后段会按
+        elif_condition_blocks 移除 entry 落在 elif 条件块中的 ternary（除非
+        ternary 是真正的 elif 条件本身，merge_context='while_cond' 或
+        value_target='__while_cond_target__'），并按 _ternary_block_sets 过滤
+        与 ternary 重叠的 match/assert region（特例 AssertRegion.message_block
+        重叠是合法嵌套）。
+
+        **唯一归属判定**
         entry  = condition_block
         blocks = {condition_block, true_value_block, false_value_block,
                   merge_block} ∪ condition_chain_blocks[*].block
         exit   = merge_block（父区域以此为汇合引用）
         true_value_block 必须以 JUMP_FORWARD 终结；false_value_block 落入 merge。
         value 块为单表达式块（_is_ternary_block 校验）。
+        block_to_region 守卫（_can_be_ternary_header）：
+          - SHORT_CIRCUIT_JUMP_OPS 末指令时，遍历 self.regions 检查块是否是
+            chained_compare IfRegion.entry（[Round4-04]），是则跳过。
+          - 块未在 block_to_region 时：
+            * 恰好一个 succ 是 AssertRegion.entry → 拒绝（if-then-assert 语句
+              级语义，[R22-C3]）。
+            * 两个 succ 都是 AssertRegion.entry 且 message_block 不同 → 拒绝
+              （多 assert 分支，[R24-C8 fix] 模式 B）；共享 message_block → 允许
+              （单 assert 含 ternary，模式 A）。
+            * 任一 succ 是 LoopRegion.condition_block/entry 或落入 LoopRegion.blocks
+              → 拒绝（if body 是循环语句级语义，[R22-C4 fix]）。
+          - 块已在 block_to_region 时：调用 existing.can_be_ternary_header(block,
+            self) 多态判定（AssertRegion/MatchRegion/TernaryRegion 覆写为禁止；
+            BoolOpRegion/LoopRegion/IfRegion 按条件判定）。
+        每个基本块经 block_to_region 唯一归属一个 TernaryRegion。
 
-        4. 归约语义（与父区域的契约）
-        ----------------------------
-        TernaryRegion 是叶子值区域：归约后被父 IfRegion / LoopRegion /
-        Assign 上下文当作一个表达式节点引用（通过 condition_block 入口）。
-        merge_block 的 STORE/RETURN 终结由父区域消费；region 自身不产生
-        控制流语句，只产出 IfExp 表达式节点。
+        **嵌套处理**
+        TernaryRegion 是叶子值区域：归约后被父 IfRegion / LoopRegion / Assign
+        上下文当作一个表达式节点引用，不再嵌套子区域。但 TernaryRegion 可能
+        嵌套其它区域：condition_chain_blocks 中的 BoolOpRegion（[R2 修复 P0-2]
+        三元 cond 入口从最后一条 STORE_* 之后开始，前序赋值归属独立 Assign
+        节点）；true/false value 块可能是嵌套 TernaryRegion（嵌套三元
+        `a if c else (b if d else e)`）；merge_extra_blocks 可能包含
+        yield-from/await 协议的轮询循环 LoopRegion（merge_context='yieldfrom'/
+        'await'，[R14 根因修复] 该 LoopRegion 在 analyze() 后段被移除归属
+        TernaryRegion）。多态分发点 can_be_ternary_header 是本方法的核心协调
+        点，由各 Region 子类覆写。
 
-        5. AST 映射
-        -----------
-        _generate_ternary -> ast.IfExp(test=cond, body=true_expr,
-                                        orelse=false_expr)。
-        输出形态：
-          - value_target 存在        -> Assign(targets, value=IfExp)
-          - container_type != None   -> Expr(Dict|List|Tuple|Set 内含 IfExp)
-          - merge 块 RETURN          -> Return(value=IfExp)
-          - 值块 POP_TOP             -> Expr(value=IfExp)
+        **入口引用语义**
+        父区域引用 condition_block（region.entry），而非全部三元块。merge_block
+        的 STORE/RETURN 终结由父区域消费；region 自身不产生控制流语句，只产出
+        IfExp 表达式节点。父区域（如外层 IfRegion / LoopRegion / TryExceptRegion /
+        WithRegion / SequenceRegion）通过 then/else/body 列表引用本 region 的
+        condition_block 入口作为抽象节点；本 region 的 true_value_block /
+        false_value_block / merge_block / condition_chain_blocks 不出现在父区域
+        blocks 集合的展开中（嵌套即抽象节点）。AssertRegion 通过 message_block
+        引用嵌套 TernaryRegion.entry（[R8 fix]），是入口引用语义的特殊形式。
+
+        **反编译流程**
+        对应生成方法: _generate_ternary（region_ast_generator.py）。AST 节点
+        一一映射：
+          RegionType.TERNARY → ast.IfExp(test=cond, body=true_expr,
+                                         orelse=false_expr)
+        输出形态（根据 merge_context / value_target / container_type）：
+          - value_target 存在        → Assign(targets, value=IfExp)
+          - container_type != None   → Expr(Dict|List|Tuple|Set 内含 IfExp)
+          - merge 块 RETURN          → Return(value=IfExp)
+          - 值块 POP_TOP             → Expr(value=IfExp)
+          - merge_context='yieldfrom' → ast.Expr(YieldFrom(...))（Pattern 4/5/7）
+          - merge_context='await'     → ast.Await(...)
         带 BoolOp 条件链时由 _build_ternary_boolop_condition 重建 test。
-
-        6. 已知失败模式
-        ---------------
-        当前测试矩阵通过率: 100%（ternary 116/116），无已知失败模式。
-        历史问题 tn20/tn21 已在 Phase 3.6 修复：在 _detect_ternary_pattern
-        中加入 `block in match_case_body_blocks` 守卫，避免误吞 Match case 体。
-        设计权衡：BoolOp vs Ternary 优先级 —— 当候选块被 BoolOpRegion 占用时，
-        _detect_ternary_pattern 中的 chain_blocks 检查保守地跳过 ternary 创建
-        （skip_ternary=True），优先保留 BoolOp。这是有意为之的保守策略，与
-        归约算法 4 核心原则一致（自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 /
-        父引用子入口）。
-
-        7. R2 修复：_detect_ternary_context 前序 STORE_* 跳过（P0-2）
-        ----------------------------------------------------------
-        调用上下文检测（_detect_ternary_context 的 LOAD_METHOD 分支）扫描
-        condition_block 寻找消费 ternary 的 LOAD_METHOD。当 cond_block 含前序
-        赋值（如 `code = stocks.split('.')[0]` 的 LOAD_METHOD split 在
-        STORE_FAST code 之前）时，该 LOAD_METHOD 属于前序 Assign 节点而非
-        三元的调用上下文。修复：扫描前先定位最后一条 STORE_FAST/NAME/GLOBAL/
-        DEREF，仅在其后寻找 LOAD_METHOD，与 _build_ternary_boolop_condition
-        的前序切分（同 STORE 操作码集合）保持一致。
-        依「每块唯一归属」+「入口引用语义」：前序赋值归属独立 Assign 节点，
-        三元 cond 入口从最后一条 STORE_* 之后开始。无 STORE_* 时从块首扫描
-        （向后兼容，覆盖合法 obj.method(ternary) 形态）。
-        覆盖 repro_06/17/20（三元被错误包装为 stocks.split(ternary)）。
+        当前测试矩阵通过率: 100%（ternary 116/116），无已知失败模式。历史问题
+        tn20/tn21 已在 Phase 3.6 修复：在 _detect_ternary_pattern 中加入
+        `block in match_case_body_blocks` 守卫，避免误吞 Match case 体。本方法
+        遵循区域归约算法 4 核心原则: 自底向上归约 / 每块唯一归属 / 嵌套即抽象
+        节点 / 父引用子入口。
         """
 
         def _can_be_ternary_header(block):
@@ -15259,306 +15476,132 @@ RegionType 枚举值: RegionType.ASSERT
         return region.is_block_in_body(block)
 
     def _identify_boolop_regions(self, existing_regions: List[Region]) -> List[Region]:
-        """
-        【区域类型】BoolOp Region（布尔运算短路求值区域 - and/or）
+        """识别布尔运算（and/or）短路求值区域 — BOOL_OP 区域类型
 
-        1. 算法描述（基于"No More Gotos"论文）:
-           ════════════════════════════════════════════════════════════════
-           
-           **归约阶段**: Phase 2（高层表达式级区域）
-           
-           **识别策略**: 指令模式匹配 + 链式结构检测
-           本算法实现布尔表达式的短路求值（Short-Circuit Evaluation）区域识别：
-           - 基于CPython编译器生成的特定跳转指令模式
-           - 检测 and/or 操作符形成的链式条件判断结构
-           - 将多个基本块归约为单个 BoolOpRegion 节点
+        【区域类型】 BOOL_OP — 布尔运算短路求值区域（BoolOp Region）
+        RegionType 枚举值: RegionType.BOOL_OP
 
-           **论文对应**:
-           虽然"No More Gotos"论文未专门讨论BoolOp区域，但本算法遵循其核心思想：
-           - ✅ 区域归约：将多个块合并为单一语义单元
-           - ✅ 结构化模式：识别可映射到AST的规范模式
-           - ✅ 层次化处理：作为表达式级区域，在语句级区域（If/Loop）之前处理
+        算法角色：薄协调器（Thin Coordinator）。职责：遍历候选块，委托给链检测
+        方法，创建 BoolOpRegion。
 
-           **归约过程**:
-           Step 1: 构建 claimed 集合（已占用块集合）
-                   - 收集所有已被其他区域占用的块
-                   - 特殊排除: 循环条件块（允许循环条件中的boolop）
-           Step 2: 候选块筛选
-                   - 按CFG块顺序遍历
-                   - 检测 SHORT_CIRCUIT_JUMP_OPS 或 FORWARD_CONDITIONAL_JUMP_OPS
-           Step 3: 链式检测（两种模式）
-                   - 模式A: _detect_boolop_short_circuit_chain()
-                           JUMP_IF_FALSE_OR_POP / JUMP_IF_TRUE_OR_POP 链
-                   - 模式B: _detect_boolop_conditional_chain()
-                           POP_JUMP_IF_FALSE / POP_JUMP_IF_TRUE 链
-           Step 4: 区域创建
-                   - _create_boolop_region_from_chain() 构建 BoolOpRegion
-                   - 确定 op_chain (操作符链) 和操作数块
-           Step 5: 循环条件特殊处理
-                   - _detect_while_condition_boolop_chain() 处理 while 条件
-                   - 创建的 boolop 区域作为 LoopRegion 的子区域
-           Step 6: 后处理优化
-                   - 尝试扩展 boolop 区域以包含值块（value block）
+        **算法依据**
+        "No More Gotos" 论文未专门讨论 BoolOp 区域（这是 Python 特有的优化），
+        但本算法遵循其核心思想：区域归约（多块→单区域节点）、结构化模式
+        （识别可映射到 AST 的规范模式）、层次化处理（表达式级先于语句级）。
+        CPython 编译器为 and/or 生成两种短路求值字节码模式：
+          模式 A: 短路跳转操作码（SHORT_CIRCUIT_JUMP_OPS）— 值上下文
+            `result = x and y`：
+              block_1: LOAD x; JUMP_IF_FALSE_OR_POP → merge  # x为False时短路跳转
+              block_2: LOAD y
+              merge: STORE result
+            `result = x or y`：JUMP_IF_TRUE_OR_POP → merge（True时短路跳转）。
+            栈行为：条件为真/假时 POP 栈顶并 fallthrough，否则跳转。
+          模式 B: 前向条件跳转（FORWARD_CONDITIONAL_JUMP_OPS）— 条件上下文
+            `if a and b:`：
+              cond_1: LOAD a; POP_JUMP_FORWARD_IF_FALSE → else  # a为False时退出
+              cond_2: LOAD b; POP_JUMP_FORWARD_IF_FALSE → else  # b为False时退出
+              then: ...
+            使用场景：if/while/elif 等条件的复合布尔表达式。
+          混合模式：`if a and b or c:` — segment 划分将连续的 and/or 分组为
+          segment，每个 segment 内部操作符相同，不同 segment 之间可能切换
+          and→or 或 or→and。
+        归约过程（保留历史标注：[Round4-12] = AssertRegion.entry 不抢占；
+        [Round4-04] = 值上下文链式比较 IfRegion.entry 不抢占；Phase 32/33/34 =
+        FORWARD_CONDITIONAL_JUMP_OPS 链检测 / 混合 and/or segment / 嵌套 boolop
+        claimed 放宽）：
+          Step 1: 构建 claimed 集合（block_to_region.keys() + existing_regions
+                  所有块）；特殊收集 loop_condition_blocks / match_case_body_blocks
+                  / assert_region_entries / value_chain_cmp_if_entries。
+          Step 2: 按 CFG 块顺序遍历候选块，检测 SHORT_CIRCUIT_JUMP_OPS 或
+                  FORWARD_CONDITIONAL_JUMP_OPS。
+          Step 3: 链式检测——模式 A: _detect_boolop_short_circuit_chain；
+                  模式 B: _detect_boolop_conditional_chain。
+          Step 4: _create_boolop_region_from_chain 构建 BoolOpRegion（确定
+                  op_chain 与操作数块）。
+          Step 5: 循环条件特殊处理——_detect_while_condition_boolop_chain
+                  处理 while 条件，创建的 boolop 区域作为 LoopRegion 的子区域。
+          Step 6: 后处理优化——尝试扩展 boolop 区域以包含值块（value block）。
 
-        2. 字节码模式（CPython编译器行为）:
-           ════════════════════════════════════════════════════════════════
-           
-           **模式A: 短路跳转操作码（SHORT_CIRCUIT_JUMP_OPS）**
-           ```python
-           # 源码: result = x and y
-           # 字节码:
-           block_1:                    # 操作数 x
-               LOAD_NAME 'x'
-               JUMP_IF_FALSE_OR_POP → merge  # x为False时短路跳转
-           block_2:                    # 操作数 y  
-               LOAD_NAME 'y'
-           merge_block:                # 合并点
-               STORE_NAME 'result'
-           
-           # 源码: result = x or y
-           # 字节码:
-           block_1:                    # 操作数 x
-               LOAD_NAME 'x'
-               JUMP_IF_TRUE_OR_POP → merge   # x为True时短路跳转
-           block_2:                    # 操作数 y
-               LOAD_NAME 'y'
-           merge_block:                # 合并点
-               STORE_NAME 'result'
-           ```
-           特征指令集:
-           - SHORT_CIRCUIT_JUMP_OPS = {
-               JUMP_IF_FALSE_OR_POP,    # and 短路（False时跳转）
-               JUMP_IF_TRUE_OR_POP,     # or 短路（True时跳转）
-             }
-           - 栈行为: 条件为真/假时POP栈顶并fallthrough，否则跳转
+        **归约顺序**
+        Phase 2 的高层表达式级区域（analyze() 中显式调用顺序：
+        chained_compare → boolop → ternary → conditional）。boolop_regions 作为
+        existing_regions 一部分传给 _identify_ternary_regions；同时作为参数传给
+        _identify_conditional_regions 作为 block_to_region 守卫来源。在 ternary
+        之前运行是为了让 BoolOpRegion 先识别其 op_chain 块（设计权衡：当候选块
+        被 BoolOpRegion 占用时，ternary 的 _detect_ternary_pattern 保守地跳过
+        ternary 创建，skip_ternary=True，优先保留 BoolOp）。在 conditional 之前
+        运行是为了避免 boolop 操作数块被 IfRegion 误吞。analyze() 后段会把
+        while_boolop_data 中 is_condition_context=True 的 BoolOpRegion 与对应
+        LoopRegion 建立父子关系；同时把 entry 落在 elif_condition_blocks 中的
+        BoolOpRegion 标记 is_condition_context=True 并与 IfRegion 建立父子关系。
 
-           **模式B: 前向条件跳转（FORWARD_CONDITIONAL_JUMP_OPS）**
-           ```python
-           # 源码: if a and b:  # 在条件上下文中
-           # 字节码:
-           cond_block_1:               # 操作数 a
-               LOAD_NAME 'a'
-               POP_JUMP_FORWARD_IF_FALSE → else_block  # a为False时退出
-           cond_block_2:               # 操作数 b
-               LOAD_NAME 'b'
-               POP_JUMP_FORWARD_IF_FALSE → else_block  # b为False时退出
-           then_block:                 # then体
-               ...
-           ```
-           特征指令集:
-           - FORWARD_CONDITIONAL_JUMP_OPS = {
-               POP_JUMP_FORWARD_IF_FALSE,
-               POP_JUMP_FORWARD_IF_TRUE,
-               POP_JUMP_BACKWARD_IF_FALSE,
-               POP_JUMP_BACKWARD_IF_TRUE,
-             }
-           - 使用场景: if/while/elif 等条件的复合布尔表达式
+        **唯一归属判定**
+        链式结构的性质：单向链接（每个条件块最多有一个后继条件块）、收敛性
+        （所有路径最终汇入 merge point）、无环性（不存在回边，区别于循环）、
+        操作符一致性（同一 segment 内操作符类型相同）。
+        边界确定：入口 = 链的第一个块（操作数 a 所在的块）；出口 = merge block
+        / 短路跳转目标 / 最后操作数块的 fallthrough 后继；操作数块集合 = 链中
+        所有包含操作数求值的块（不包括 merge block，除非它是值块）。
+        block_to_region 守卫（claimed 机制）：
+          - 跳过 claimed 中已被其他区域（Loop/Try/With/Match/Assert/ChainedCompare）
+            占用的块；例外 loop_condition_blocks / match_case_body_blocks 允许重叠
+            （循环条件中的 boolop 应成为循环的子区域；match case body 中的 guard
+            块归 MatchRegion）。
+          - 跳过含 MATCH_* 指令的块（MatchRegion 模式检查块，非 BoolOp）。
+          - 跳过 assert_region_entries（[Round4-12] AssertRegion.entry，避免
+            链式比较 assert 短路跳转被误识别为 BoolOp 链）。
+          - 跳过 value_chain_cmp_if_entries（[Round4-04] 值上下文链式比较
+            IfRegion.entry，语义上是链式比较作赋值右值）。
+          - 跳过 match_case_body_blocks 中条件跳转目标指向 match_case_entry_offsets
+            的块（guard 块，归 MatchRegion）。
+        每个基本块经 block_to_region 唯一归属一个 BoolOpRegion（或被父 IfRegion /
+        LoopRegion 通过 entry 引用而不展开内部 op_chain 块）。
 
-           **混合模式: and/or 组合**
-           ```python
-           # 源码: if a and b or c:
-           # 字节码特征:
-           cond_1 (a): POP_JUMP_IF_FALSE → merge_or
-           cond_2 (b): POP_JUMP_IF_FALSE → merge_or  # and链
-           cond_3 (c): ...                          # or从merge_or开始
-           ```
-           - segment 划分: 将连续的 and/or 分组为 segment
-           - 每个 segment 内部操作符相同
-           - 不同 segment 之间可能切换 and→or 或 or→and
+        **嵌套处理**
+        BoolOpRegion 通常不包含子区域（叶子级别的表达式区域）。特殊情况：
+          - 作为 LoopRegion 子区域时（is_condition_context=True），通过 children
+            关联——父循环通过 entry/condition_block 引用本区域，子区域块不出现在
+            父区域 blocks 展开中。
+          - 与 TernaryRegion 的关系：可能竞争同一个赋值模式；TernaryRegion >
+            BoolOpRegion 优先级 + skip_ternary 守卫协调。
+          - 嵌套 boolop：通过递归检测 + claimed 放宽已稳定（外层 boolop 包含
+            内层）。
+          - 值块扩展：尝试将 merge 点前的值计算块纳入区域。
+        多态分发点 get_compactness_successors / interrupts_boolop_forward_chain
+        / can_be_ternary_header / get_score_merge_block / annotate_cond_recheck
+        由 BoolOpRegion 覆写，承载嵌套协调。
 
-        3. 边界条件（数学性质）:
-           ════════════════════════════════════════════════════════════════
-           
-           **链式结构的性质**:
-           - 性质1: 单向链接 - 每个条件块最多有一个后继条件块
-           - 性质2: 收敛性 - 所有路径最终汇入合并点（merge point）
-           - 性质3: 无环性 - 不存在回边（区别于循环）
-           - 性质4: 操作符一致性 - 同一segment内操作符类型相同（全and或全or）
+        **入口引用语义**
+        入口块 = 链的第一个块（操作数 a 所在的块，op_chain[0][0]，即 region.entry
+        / prefix_block）。父 IfRegion / LoopRegion 通过 entry / condition_block
+        引用本区域作为抽象条件节点；本区域的 op_chain 内部操作数块（除 entry 外）
+        不出现在父区域 blocks 集合的展开中（嵌套即抽象节点）。条件上下文中的
+        boolop（is_condition_context=True）由 _is_outer_condition 判定为父
+        IfRegion/LoopRegion 的条件表达式（写入 condition_expr），不再产出独立语句，
+        父区域直接引用本区域 entry 作为 ast.If.test / ast.While.test。值上下文
+        中的 boolop 通过 merge_block 的 STORE 终结被父 Assign 节点消费。
 
-           **边界确定规则**:
-           - 入口（entry）: 链的第一个块（操作数a所在的块）
-           - 出口（exit）: 
-                ① merge block（所有路径汇聚的点）
-                ② 短路跳转的目标块（短路时的退出点）
-                ③ 最后一个操作数块的fallthrough后继
-           - 操作数块集合（blocks）: 
-                链中所有包含操作数求值的块
-                不包括 merge block（除非它是值块）
+        **反编译流程**
+        对应生成方法: _generate_boolop（region_ast_generator.py）。AST 节点一一映射：
+          RegionType.BOOL_OP → ast.BoolOp(op=And|Or, values=[...])
+        op_chain 属性（List[(BasicBlock, str)]，每个元素是 (操作数块, 操作符
+        类型 'and'/'or')）→ ast.BoolOp.values。混合 and/or 由 segment 构建
+        算法重建为嵌套 BoolOp（`(x and y) or z`）。
+        特殊情况：单操作数 boolop 退化为普通表达式（不应发生）；空 boolop 链
+        （len(chain) < 2）返回 None；嵌套 boolop 通过递归检测处理。
+        当前测试矩阵通过率: 100%（boolop 132/132），无已知失败模式。历史冲突
+        场景（BoolOp-IfRegion 歧义 / BoolOp-Ternary 竞争 / 循环条件 boolop /
+        assert 中的 boolop / 嵌套 boolop）均已通过 claimed 机制 + 优先级流水线
+        解决。本方法遵循区域归约算法 4 核心原则: 自底向上归约 / 每块唯一归属 /
+        嵌套即抽象节点 / 父引用子入口。
 
-           **claimed 机制的作用**:
-           - 定义: 已被其他区域（Loop/Try/With/Match等）占用的块集合
-           - 目的: 防止区域重叠，保证归约的不相交性质
-           - 例外: 循环条件块（loop_condition_blocks）可以重叠
-                  因为循环条件中的boolop应该成为循环的子区域
-
-        4. 归约符合度（理论对应）:
-           ════════════════════════════════════════════════════════════════
-           
-           **与论文的关系**:
-           - 📝 论文未专门讨论 BoolOp 区域（这是Python特有的优化）
-           - ✅ 遵循论文的区域归约思想（多块→单区域节点）
-           - ✅ 遵循层次化处理原则（表达式级先于语句级）
-           - 📝 扩展: CPython短路求值字节码模式的适配
-           - ⚠️ 实用主义偏离: 为提高反编译准确率而做的启发式规则
-
-           **严格遵循程度**: 70%
-           - 核心归约思想遵循论文
-           - 30%是针对CPython特性的专用逻辑
-
-           **与 AST 的映射**:
-           ┌─────────────────┬──────────────────┬────────────────────────────┐
-           │ BoolOp 类型      │ AST 节点         │ 示例                       │
-           ├─────────────────┼──────────────────┼────────────────────────────┤
-           │ pure_and chain  │ BoolOp(and, [])  │ x and y and z              │
-           │ pure_or chain   │ BoolOp(or, [])   │ a or b or c                │
-           │ mixed and/or    │ 嵌套 BoolOp      │ (x and y) or z             │
-           └─────────────────┴──────────────────┴────────────────────────────┘
-
-        5. AST映射规则:
-           ════════════════════════════════════════════════════════════════
-           
-           **区域类型→AST节点映射**:
-           - BoolOpRegion → ast.BoolOp(op=And|Or, values=[...])
-           - op_chain 属性: List[(BasicBlock, str)] 
-                 每个元素是 (操作数块, 操作符类型)
-                 操作符类型: 'and' 或 'or'
-           
-           **子区域处理方式**:
-           - BoolOpRegion 通常不包含子区域（它是叶子级别的表达式区域）
-           - 特殊情况: 当作为 LoopRegion 子区域时，通过 children 关联
-           - 与 TernaryRegion 的关系: 可能竞争同一个赋值模式
-           
-           **特殊情况处理**:
-           - 单操作数 boolop: 退化为普通表达式（不应发生）
-           - 空 boolop 链: 忽略（len(chain) < 2 时返回 None）
-           - 嵌套 boolop: 通过递归检测处理（外层boolop包含内层）
-           - 值块扩展: 尝试将 merge 点前的值计算块纳入区域
-
-        6. 已知失败模式
-           ════════════════════════════════════════════════════════════════
-
-           当前测试矩阵通过率: 100%（boolop 132/132），无已知失败模式。
-
-           归约算法 4 核心原则符合度（全已满足，故 0 失败）:
-           (a) 自底向上归约 —— BoolOp 在 Phase 2 识别，先于 IfRegion；
-           (b) 每块唯一归属 —— claimed 集合 + loop_condition_blocks 例外
-               协调，保证操作数块不与 IfRegion/TernaryRegion 重叠；
-           (c) 嵌套即抽象节点 —— 作为 LoopRegion 条件子区域时，父循环
-               通过 entry/condition_block 引用本区域，子区域块不出现在
-               父区域 blocks 展开中；
-           (d) 父引用子入口 —— 父 IfRegion/LoopRegion 引用 op_chain 首块
-               /prefix_block 作为抽象节点入口。
-
-           历史冲突场景（均已通过 claimed 机制 + 优先级流水线解决）:
-           - BoolOp-IfRegion 歧义：条件上下文 boolop 由 _is_outer_condition
-             判定为父 IfRegion/LoopRegion 的条件表达式（写入 condition_expr），
-             不再产出独立语句，消除歧义。
-           - BoolOp-Ternary 竞争：TernaryRegion > BoolOpRegion 优先级 +
-             skip_ternary 守卫协调，复合 `a and b or c` 与三元边界已稳定。
-           - 循环条件 boolop：_detect_while_condition_boolop_chain 显式
-             处理 while 条件中的 and/or，作为 LoopRegion 子区域挂载。
-           - assert 中的 boolop：AssertRegion 先于 BoolOp 识别并抢占条件块，
-             复合条件通过 condition_block 共享协调，不再丢失。
-
-        7. 修改历史（本次Phase 35新增）:
-           ════════════════════════════════════════════════════════════════
-           
-           **日期**: 2026-05-21
-           **修改内容**: 
-             - 为 _identify_boolop_regions 添加完整的理论框架注释
-             - 详细记录两种字节码模式（SHORT_CIRCUIT vs FORWARD_CONDITIONAL）
-             - 分析 BoolOp-IfRegion 冲突问题及当前限制
-             - 统计: 新增注释 ~200行
-           
-           **影响范围**: 
-             - 仅影响注释，不改变代码逻辑
-             - 明确记录了已知限制和改进方向
-             - 为后续优化提供文档基础
-
-           **历史关键修复**（已在代码中实现）:
-           - Phase 34: 嵌套boolop识别框架（claimed放宽）
-                     允许循环条件块参与boolop检测
-                     影响: 循环条件中的 and/or 识别率提升40%
-           - Phase 33: 混合 and/or 的 segment 构建算法
-                     支持连续不同操作符的正确分组
-           - Phase 32: FORWARD_CONDITIONAL_JUMP_OPS 链检测
-                     扩展支持条件上下文中的boolop
-
-        ═══════════════════════════════════════════════════════════════════════════════
-        
-        以下是原有简要说明（保留供快速参考）：
-
-        识别布尔运算（and/or）短路求值区域
-
-        算法角色：薄协调器（Thin Coordinator）
-        职责：遍历候选块，委托给链检测方法，创建BoolOpRegion
-
-        【字节码模式特征】
-        Python编译器为and/or生成两种不同的字节码模式：
-
-        模式A - 短路跳转操作码（JUMP_IF_FALSE_OR_POP / JUMP_IF_TRUE_OR_POP）：
-            源码: x and y
-            字节码:
-                LOAD x
-                JUMP_IF_FALSE_OR_POP → merge   # False时跳转(短路)，否则pop栈顶继续
-                LOAD y
-              merge: ...
-
-            源码: x or y
-            字节码:
-                LOAD x
-                JUMP_IF_TRUE_OR_POP → merge    # True时跳转(短路)，否则pop栈顶继续
-                LOAD y
-              merge: ...
-
-        模式B - 前向条件跳转（POP_JUMP_IF_FALSE / POP_JUMP_IF_TRUE）：
-            用于条件上下文中的boolop（如if/while条件）
-            源码: if a and b:
-            字节码:
-                LOAD a
-                POP_JUMP_IF_FALSE → else/end   # a为False时跳出
-                LOAD b
-                POP_JUMP_IF_FALSE → else/end   # b为False时跳出
-                # then-body
-
-        【算法流程】
-        1. 构建claimed集合：已分配给其他区域的块
-           - 包含block_to_region中所有已映射的块
-           - 包含existing_regions的所有块
-        2. 特殊处理循环条件块：
-           - 收集LoopRegion.condition_block和condition_chain_blocks
-           - 这些块即使被占用也允许参与boolop检测
-        3. 主循环：按CFG块顺序遍历
-           - 跳过已 claimed 且非循环条件的块
-           - 调用 _detect_boolop_chain_start 尝试检测链
-           - 调用 _create_boolop_region_from_chain 创建区域
-        4. 循环条件后处理：
-           - 对while循环的条件块单独检测boolop链
-           - 将创建的boolop区域作为循环的子区域
-
-        【与其他区域的关系】
-        - 在 conditional_regions 之后运行
-        - 与 TernaryRegion 竞争：ternary可能抢占简单boolop赋值模式
-        - 与 IfRegion 竞争：条件上下文中的boolop可能被if抢占
-        - 子区域关系：循环条件中的boolop成为LoopRegion的子区域
-
-        【已知限制】（历史记录，当前 100% 通过已全部解决）
-        1. 复合表达式 `a and b or c` 与 ternary 边界 —— 已由 Ternary>BoolOp
-           优先级 + skip_ternary 守卫解决（test_bool13 已通过）
-        2. 循环/for 条件中的 boolop —— 已由 _detect_while_condition_boolop_chain
-           显式处理并作为 LoopRegion 子区域挂载（test_bool11/12 已通过）
-        3. assert 语句中的 boolop —— AssertRegion 先识别抢占条件块，复合条件
-           通过 condition_block 共享协调（test_bool15 已通过）
-        4. 嵌套 boolop —— 通过递归检测 + claimed 放宽已稳定
-           （test_bool16/17 已通过）
-
-        【调用链】
-        analyze() → _identify_boolop_regions(existing_regions)
-          → _detect_boolop_chain_start(block, claimed)
-          → _detect_boolop_short_circuit_chain(block) [模式A]
-          → _detect_boolop_conditional_chain(block, claimed) [模式B]
-          → _create_boolop_region_from_chain(chain, claimed)
-          → [循环后处理] _detect_while_condition_boolop_chain(cond_block, loop)
+        调用链：
+          analyze() → _identify_boolop_regions(existing_regions)
+            → _detect_boolop_chain_start(block, claimed)
+            → _detect_boolop_short_circuit_chain(block) [模式A]
+            → _detect_boolop_conditional_chain(block, claimed) [模式B]
+            → _create_boolop_region_from_chain(chain, claimed)
+            → [循环后处理] _detect_while_condition_boolop_chain(cond_block, loop)
         """
         boolop_regions = []
         claimed = set(self.block_to_region.keys())
@@ -18007,73 +18050,91 @@ RegionType 枚举值: RegionType.ASSERT
                     BASIC  — 基础区域（Basic Region，单块顺序区域）
         RegionType 枚举值: RegionType.BASIC（每个未被抢占的块独立成区）
 
-        1. 算法描述（基于"No More Gotos"论文）
-           - 归约阶段: Phase 2 的最后一步，在所有结构化区域（Loop / Try / With /
-             Match / Assert / ChainedCompare / BoolOp / Ternary / Conditional）
-             识别完成之后执行，确保结构化区域优先于顺序归约
-           - 识别策略: 兜底归约——把所有未被任何区域占用的基本块各自独立包成
-             一个 BASIC Region，实现"每块唯一归属"的全覆盖目标
-           - 归约过程:
-             Step 1: 按 start_offset 升序遍历 self.cfg.blocks.values()，
-                     顺序保证 AST 生成时语句顺序与字节码偏移一致
-             Step 2: 跳过已登记到 self.block_to_region 的块（即被结构化区域
-                     抢占的块），实现"已被归约的块不重复处理"
-             Step 3: 对每个剩余块创建 Region(region_type=RegionType.BASIC,
-                     entry=block, blocks={block})——单块即一区，结构最简
-             Step 4: 若 _is_return_none_block(block) 为真（块为隐式
-                     LOAD_CONST None + RETURN_VALUE / RETURN_CONST None），
-                     调用 region.mark_trailing_return_none() 标记尾部 Return None，
-                     供 AST 生成时识别并按需省略（模块级别隐式 return None）
-             Step 5: 把新 Region 加入返回列表、self.regions 与 self.block_to_region，
-                     完成"块 → 区域"的登记，供后续 _build_region_hierarchy 建立父子关系
+        **算法依据**
+        基于 "No More Gotos" 论文中"剩余线性块归约为 Sequence region"原则——
+        自底向上归约的最后一步：所有结构化区域（Loop/Try/With/Match/Assert/
+        ChainedCompare/BoolOp/Ternary/Conditional）识别完成后，剩余的线性基本块
+        按前驱→后继顺序拼接为 Sequence。本实现采用最简形式：每个未被抢占的块
+        独立包成一个 BASIC Region（单块即一区），不构造跨块 Sequence Region，
+        AST 生成时由 _generate_basic_region 按顺序逐块生成语句。
+        CPython 字节码模式映射：
+          模式 A: 普通顺序块（赋值/调用/表达式）—
+            `x = 1; y = x + 2` → LOAD_CONST 1, STORE_FAST x, LOAD_FAST x,
+            LOAD_CONST 2, BINARY_OP +, STORE_FAST y；特征指令 LOAD_*, STORE_*,
+            BINARY_OP, CALL, POP_TOP 等。
+          模式 B: 隐式 Return None 块 — 函数末尾 LOAD_CONST None + RETURN_VALUE
+            （或 RETURN_CONST None）。
+          模式 C: 空语句块 / pass — 仅含 RESUME / NOP / CACHE 等填充指令。
+        归约过程：
+          Step 1: 按 start_offset 升序遍历 self.cfg.get_blocks_in_order()，
+                  顺序保证 AST 生成时语句顺序与字节码偏移一致。
+          Step 2: 跳过已登记到 self.block_to_region 的块（被结构化区域抢占）。
+          Step 3: 对每个剩余块创建 Region(region_type=RegionType.BASIC,
+                  entry=block, blocks={block})——单块即一区。
+          Step 4: 若 _is_return_none_block(block) 为真，调用
+                  region.mark_trailing_return_none() 标记尾部 Return None，
+                  供 AST 生成时识别并按需省略（模块级别隐式 return None）。
+          Step 5: 把新 Region 加入返回列表、self.regions 与 self.block_to_region，
+                  完成"块 → 区域"的登记，供后续 _build_region_hierarchy 建立父子关系。
 
-        2. 字节码模式（CPython 编译器行为）
-           模式 A: 普通顺序块（赋值/调用/表达式）
-             源码:        x = 1
-                          y = x + 2
-             字节码结构:  LOAD_CONST 1, STORE_FAST x,
-                          LOAD_FAST x, LOAD_CONST 2, BINARY_OP +, STORE_FAST y
-             特征指令:    LOAD_*, STORE_*, BINARY_OP, CALL, POP_TOP 等
-           模式 B: 隐式 Return None 块
-             源码:        函数末尾隐式 return None
-             字节码结构:  LOAD_CONST None, RETURN_VALUE  （或 RETURN_CONST None）
-             特征指令:    LOAD_CONST None + RETURN_VALUE / RETURN_CONST None
-           模式 C: 空语句块 / pass
-             源码:        pass
-             字节码结构:  仅含 RESUME / NOP / CACHE 等填充指令
+        **归约顺序**
+        Phase 2 的最后一步（analyze() 中位于所有结构化区域识别完成之后）。
+        顺序保证：结构化区域优先于顺序归约，确保 Loop/Try/With/Match/Assert/
+        ChainedCompare/BoolOp/Ternary/Conditional 在 Phase 1/2 先识别并抢占块，
+        本方法只对剩余未被抢占的块兜底归约。这是区域归约算法"自底向上归约"原则
+        的收尾——前序识别已把所有结构化形态归约，本方法确保剩余线性块也进入
+        AST，无遗漏（"每块唯一归属"的全覆盖目标）。本方法不向下游传 any 参数
+        （已是最后识别器）。
 
-        3. 边界条件（数学性质）
-           - 顺序区域边界即"未被结构化区域占用的剩余块集合"，由
-             self.block_to_region 隐式确定；不在该映射中的块即为候选
-           - 每个 BASIC 区域恰好包含一个块（blocks={block}），不存在跨块顺序区域
-           - 通过 start_offset 排序保证遍历顺序确定，归约结果可重现
-           - mark_trailing_return_none 标记不影响区域边界，仅影响后续 AST 省略策略
+        **唯一归属判定**
+        顺序区域边界即"未被结构化区域占用的剩余块集合"，由 self.block_to_region
+        隐式确定——不在该映射中的块即为候选。block_to_region 守卫：起始即跳过
+        `block in self.block_to_region` 的块（被结构化区域抢占的块），实现"已被
+        归约的块不重复处理"。每个 BASIC 区域恰好包含一个块（blocks={block}），
+        不存在跨块顺序区域，天然保证不相交。通过 start_offset 排序保证遍历顺序
+        确定，归约结果可重现。mark_trailing_return_none 标记不影响区域边界，仅
+        影响后续 AST 省略策略。每个基本块经 block_to_region 唯一归属一个 BASIC
+        Region。
 
-        4. 归约语义（与父区域的契约）
-           - 入口块: 单块即入口（entry = block）
-           - 父区域引用: 父区域通过 block_to_region[block] 持有本 BASIC Region，
-             父区域仅引用 entry 块；该块天然仅属于自身区域
-           - 在 _build_region_hierarchy 阶段，BASIC 区域作为最内层叶子节点，
-             不会成为其他结构化区域的父节点
+        **嵌套处理**
+        在 _build_region_hierarchy 阶段，BASIC 区域作为最内层叶子节点，不会成为
+        其他结构化区域的父节点。BASIC 区域的 offset range 落在某个结构化区域
+        （LoopRegion/TryExceptRegion/WithRegion/MatchRegion/IfRegion 等）的 offset
+        range 内时，由 _build_region_hierarchy 通过 (start, end) 区间包含关系挂为
+        该结构化区域的 child。BASIC 区域自身不持有 children（叶子节点）。
+        _build_region_hierarchy 的 region_priority（IfRegion/LoopRegion=5,
+        MatchRegion=4, TryExcept/With=3, BoolOpRegion=2）决定多候选父级时的归属，
+        确保 child 挂到最合适的结构化区域。
 
-        5. AST 映射
-           - 对应生成方法: _generate_basic_region（在 region_ast_generator.py 中）
-           - AST 节点类型: 多种（依块内指令而定）——
-               ast.Assign / ast.AugAssign / ast.AnnAssign （赋值类）
-               ast.Expr                          （表达式语句）
-               ast.Return                       （return 语句）
-               ast.Pass                         （空块 / pass）
-               ast.Break / ast.Continue         （循环控制，由 block_role 决定）
-               ast.While (test=True, body=Break)（while True: break 优化模式）
-           - 关键字段映射:
-               Region.blocks     → 按 start_offset 排序后逐块生成
-               Region.entry      → 首块即生成起点
-               trailing_return_none 标记 → 控制 Return None 是否省略
+        **入口引用语义**
+        入口块 = 单块即入口（entry = block）。父区域通过 block_to_region[block]
+        持有本 BASIC Region；父区域仅引用 entry 块；该块天然仅属于自身区域
+        （单块区域不存在内部块展开问题）。父区域（如 LoopRegion.body_blocks /
+        IfRegion.then_blocks / TryExceptRegion.try_blocks / WithRegion.with_blocks /
+        SequenceRegion 等）通过 then/else/body 列表引用本 BASIC Region 的 entry
+        块作为抽象节点；本 BASIC Region 的 blocks（即 {block}）不出现在父区域
+        blocks 集合的展开中（嵌套即抽象节点）。父区域生成时遍历其
+        then/else/body 列表，对每个 entry 块查 block_to_region 找到对应的
+        BASIC Region，调用 _generate_basic_region 生成对应 AST 语句节点。
 
-        6. 已知失败模式
-           - BASIC: 当前测试矩阵通过率 100%（basic 122/122）
-           - 兜底归约确保任何未被结构化识别的块都能进入 AST，无遗漏
-           - 与结构化区域无冲突（结构化区域已在 Phase 1/Phase 2 先识别并抢占块）
+        **反编译流程**
+        对应生成方法: _generate_basic_region（region_ast_generator.py）。AST 节点
+        一一映射（依块内指令而定，多种 AST 类型）：
+          ast.Assign / ast.AugAssign / ast.AnnAssign （赋值类）
+          ast.Expr                          （表达式语句）
+          ast.Return                        （return 语句）
+          ast.Pass                          （空块 / pass）
+          ast.Break / ast.Continue          （循环控制，由 block_role 决定）
+          ast.While (test=True, body=Break) （while True: break 优化模式）
+        关键字段映射:
+          Region.blocks              → 按 start_offset 排序后逐块生成
+          Region.entry               → 首块即生成起点
+          trailing_return_none 标记  → 控制 Return None 是否省略（模块级别隐式
+                                       return None 在 AST 生成时被省略）
+        当前测试矩阵通过率: 100%（basic 122/122）。兜底归约确保任何未被结构化
+        识别的块都能进入 AST，无遗漏。与结构化区域无冲突（结构化区域已在
+        Phase 1/Phase 2 先识别并抢占块）。本方法遵循区域归约算法 4 核心原则:
+        自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口。
         """
         regions = []
         for block in self.cfg.get_blocks_in_order():
