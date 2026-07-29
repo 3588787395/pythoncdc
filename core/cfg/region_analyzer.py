@@ -11501,6 +11501,22 @@ RegionType 枚举值: RegionType.ASSERT
             # 不触发于 get_price（merge 由 _compute_merge_from_jump_targets 正确计算）。
             # 此时 if-else 和 if-no-else 产生相同字节码（编译器优化掉 RETURN_VALUE 后
             # 的死代码 JUMP_FORWARD）。
+            # [R30-25 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（归约顺序）：
+            # 不触发于 else_succ 是条件块（潜在 elif 条件）的场景。当 then 是 sink
+            #（RETURN_VALUE）且 else_succ 是条件块（2 个条件后继 + 末尾为
+            # FORWARD_CONDITIONAL_JUMP）时，这是 if-elif 链模式，应交给
+            # _build_elif_region / _check_elif_chain 处理：它们会正确识别 elif
+            # 条件、elif body 和 merge 点。若在此设 merge=else_succ，会使
+            # else_blocks 为空（entry==merge），阻止 IF_ELIF_CHAIN 创建，
+            # 导致 elif 条件块被独立识别为 IfRegion，破坏嵌套结构。
+            # 典型场景（load_bars_from_hundsun）：
+            #   if len(diffset) == 0:        # block 584, cond
+            #       ...; return retpanel     # block 748, RETURN_VALUE (sink)
+            #   elif len(diffset) < len(stocks):  # block 824, cond (else_succ)
+            #       ...                       # block 888, elif body
+            #   # merge at 1120
+            # 原逻辑设 merge=824（else_succ），使 else_blocks=[]，IF_ELIF_CHAIN
+            # 无法创建，824 被独立识别为 IF_THEN，AST 生成丢失 elif 嵌套结构。
             if (merge is None
                     and not then_succ.successors
                     and any(i.opname in ('RAISE_VARARGS', 'RETURN_VALUE')
@@ -11508,11 +11524,19 @@ RegionType 枚举值: RegionType.ASSERT
                     and else_succ.successors
                     and not any(i.opname in ('RAISE_VARARGS', 'RETURN_VALUE')
                                 for i in else_succ.instructions)):
-                _r30_8_stop = {then_succ} | (boundary_stop - {else_succ})
-                _r30_8_test = self._collect_branch_blocks(
-                    else_succ, None, _r30_8_stop)
-                if len(_r30_8_test) > 25:
-                    merge = else_succ
+                # else_succ 是条件块（潜在 elif 条件）时跳过，交给 elif 链检测
+                _r30_25_else_last = else_succ.get_last_instruction()
+                _r30_25_else_is_cond = (
+                    len(else_succ.conditional_successors) == 2
+                    and _r30_25_else_last is not None
+                    and _r30_25_else_last.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                )
+                if not _r30_25_else_is_cond:
+                    _r30_8_stop = {then_succ} | (boundary_stop - {else_succ})
+                    _r30_8_test = self._collect_branch_blocks(
+                        else_succ, None, _r30_8_stop)
+                    if len(_r30_8_test) > 25:
+                        merge = else_succ
 
             # Fix: 当条件块在 TryExceptRegion 的 try_blocks 中时，
             # 分支收集可能越过 try 体边界（通过 JUMP_FORWARD 到循环条件等），

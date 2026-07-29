@@ -8690,7 +8690,31 @@ AST 映射规则:
                     and getattr(_r, 'merge_context', None) in ('store', 'return')):
                 _cond_block_is_ternary_merge = True
                 break
-        for instr in cond_block.instructions:
+        # [R30-12 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（父引用子入口）：
+        # 当 cond_block 同时是某 BoolOpRegion 的 merge_block 时，cond_block 的首条
+        # 指令是 BINARY_OP（`and`/`or` 的合并操作），其操作数在前序块（BoolOp 的
+        # 非 merge 块）中。需要将这些前序块的指令前置到 cond_block 指令之前，使
+        # 表达式重建能正确还原完整表达式（如 `source_end = strptime(end[8:] or '1530',
+        # '%Y%m%d%H%M')` 中的 `end[8:] or '1530'` 跨越 blocks 562/582/584）。
+        _r30_12_boolop_prefix_instrs = []
+        if not _cond_block_is_ternary_merge:
+            _r30_12_boolop_region = None
+            for _r in self.regions:
+                if (isinstance(_r, BoolOpRegion)
+                        and getattr(_r, 'merge_block', None) is cond_block):
+                    _r30_12_boolop_region = _r
+                    break
+            if _r30_12_boolop_region is not None:
+                _r30_12_non_merge = [b for b in _r30_12_boolop_region.blocks
+                                     if b is not cond_block]
+                _r30_12_non_merge.sort(key=lambda b: b.start_offset)
+                for _nmb in _r30_12_non_merge:
+                    for _instr in _nmb.instructions:
+                        if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                            continue
+                        _r30_12_boolop_prefix_instrs.append(_instr)
+        _r30_12_all_instrs = _r30_12_boolop_prefix_instrs + list(cond_block.instructions)
+        for instr in _r30_12_all_instrs:
             if instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
                 continue
             if instr.opname == 'POP_TOP':
@@ -12380,6 +12404,30 @@ AST 映射规则:
                                 _nr_blocks_in_set = all(_nb in _block_set for _nb in _nr.blocks)
                                 if _nr_blocks_in_set:
                                     _nested_if_entry_generate[b] = _nr
+                    else:
+                        # [R30-12 fix] 区域归约算法原则 4（父引用子入口）+ 原则 2（每块唯一归属）：
+                        # IF_ELIF_CHAIN（或含 chained_compare）的嵌套 IfRegion 入口块也
+                        # 需要主动生成整个区域。原实现仅处理无 elif/chained_compare 的简单
+                        # IfRegion，IF_ELIF_CHAIN 入口块落入普通块处理，导致 if-elif 结构
+                        # 丢失（then body 被当作普通顺序块、elif 条件/体丢失）。
+                        # 典型场景（load_bars_from_hundsun）：
+                        #   if not dailypanel.empty:           # IF_THEN@214
+                        #       source_end = strptime(...)     # block 584 prefix
+                        #       diffset = set(stocks)...      # block 584 prefix
+                        #       if len(diffset) == 0:         # IF_ELIF_CHAIN@584 entry=584
+                        #           ...; return retpanel     # block 748
+                        #       elif len(diffset) < len(...): # block 824
+                        #           ...                       # block 888
+                        # IF_ELIF_CHAIN@584 的 entry=584 同时是 BoolOp@562 的 merge_block，
+                        # BoolOp@562 生成时会标记 584 为已生成，阻止 IF_ELIF_CHAIN 生成。
+                        # 修复：将 IF_ELIF_CHAIN 入口加入 _nested_if_entry_generate，并在
+                        # BoolOp 生成时跳过 merge 为嵌套 IfRegion 入口的情况。
+                        _nr_id = id(_nr)
+                        if (_nr_id not in self._generated_regions
+                                and _nr_id not in self._generating_regions):
+                            _nr_blocks_in_set = all(_nb in _block_set for _nb in _nr.blocks)
+                            if _nr_blocks_in_set:
+                                _nested_if_entry_generate[b] = _nr
         for block in sorted(blocks, key=lambda b: b.start_offset):
             if block in self.generated_blocks:
                 continue
@@ -12489,18 +12537,35 @@ AST 映射规则:
                         self._generated_regions.add(child_id)
                         continue
                 if child_id not in self._generated_regions and child_id not in self._generating_regions:
-                    if isinstance(child, BoolOpRegion):
-                        child_ast = self._generate_boolop(child)
-                    else:
-                        child_ast = self._generate_ternary(child)
-                    if child_ast:
-                        if isinstance(child_ast, list):
-                            stmts.extend(child_ast)
+                    # [R30-12 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（父引用子入口）：
+                    # 当 BoolOpRegion 的 merge_block 是某嵌套 IfRegion（IF_ELIF_CHAIN）
+                    # 的入口时，BoolOp 表达式是 IfRegion 入口块中赋值语句的子表达式
+                    # （如 `source_end = strptime(end[8:] or '1530', ...)` 中 `or`），
+                    # 不应作为独立 Expr 语句生成。跳过 BoolOp 生成，将非 merge 块标记
+                    # 为已生成，merge 块交由 IfRegion 生成处理。
+                    _skip_boolop_for_elif = False
+                    if (isinstance(child, BoolOpRegion)
+                            and child.merge_block is not None
+                            and child.merge_block in _nested_if_entry_generate):
+                        _skip_boolop_for_elif = True
+                        for _sb in child.blocks:
+                            if _sb is not child.merge_block:
+                                self.generated_blocks.add(_sb)
+                                self.generated_offsets.add(_sb.start_offset)
+                        self._generated_regions.add(child_id)
+                    if not _skip_boolop_for_elif:
+                        if isinstance(child, BoolOpRegion):
+                            child_ast = self._generate_boolop(child)
                         else:
-                            stmts.append(child_ast)
-                    for b in child.blocks:
-                        self.generated_blocks.add(b)
-                    self._generated_regions.add(child_id)
+                            child_ast = self._generate_ternary(child)
+                        if child_ast:
+                            if isinstance(child_ast, list):
+                                stmts.extend(child_ast)
+                            else:
+                                stmts.append(child_ast)
+                        for b in child.blocks:
+                            self.generated_blocks.add(b)
+                        self._generated_regions.add(child_id)
                 continue
             if any(i.opname == 'PUSH_EXC_INFO' for i in block.instructions):
                 _is_handler_entry = False
