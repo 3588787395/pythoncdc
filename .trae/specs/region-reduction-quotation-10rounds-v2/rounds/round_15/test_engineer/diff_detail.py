@@ -1,0 +1,93 @@
+"""R15 测试工程师：按函数输出不一致指令 diff，生成 diff_detail.txt。
+
+FOCUS 为 V2 R15 的 5 个残留函数（one_prod_to_dataframe 已在 R14 修复，不再列入）：
+- <module>: co_filename 元数据差异
+- build_future_fill_time: instr_diff@226（R15 重点：listcomp code 对象 + 跳转目标偏移）
+- get_str_data: len_diff -48（R12 遗留）
+- change_his_to_backward: instr_diff@296（R14 defer，指令重排）
+- get_date_and_count: len_diff -27（R13 遗留）
+"""
+import sys, json, types, dis, os
+
+sys.path.insert(0, '/workspace')
+from exact_match_stats import get_instr_list, walk_code, load_orig, PYC, DECOMPILED, OUT_DIR, JUMP_OPS, SKIP_OPS
+
+DIFF_TXT = OUT_DIR + '/diff_detail.txt'
+REPORT_MD = '/workspace/.trae/specs/region-reduction-quotation-10rounds-v2/rounds/round_15/test_engineer/decompile_report.md'
+
+# R15 FOCUS：5 个残留函数（one_prod_to_dataframe 已修复）
+FOCUS = ['<module>', 'build_future_fill_time',
+         'get_str_data', 'change_his_to_backward', 'get_date_and_count']
+
+
+def fmt(ins):
+    off, op, av = ins
+    if isinstance(av, tuple) and av[0] == 'J':
+        return f"{off:>4} {op:<28} ->[{av[1]}]"
+    if isinstance(av, types.CodeType):
+        return f"{off:>4} {op:<28} <code {av.co_name}>"
+    return f"{off:>4} {op:<28} {av!r}"
+
+
+def _eq_av(a, b):
+    av_a, av_b = a[2], b[2]
+    if isinstance(av_a, tuple) and isinstance(av_b, tuple) and av_a[0] == 'J' and av_b[0] == 'J':
+        return av_a[1] == av_b[1]
+    if isinstance(av_a, types.CodeType) or isinstance(av_b, types.CodeType):
+        return False
+    return av_a == av_b
+
+
+def dump_pair(name, oa, na, fh):
+    fh.write(f"\n=== {name}  (orig_len={len(oa)} new_len={len(na)} diff={len(na)-len(oa):+d}) ===\n")
+    n = max(len(oa), len(na))
+    first_diff = -1
+    for i in range(n):
+        a = oa[i] if i < len(oa) else None
+        b = na[i] if i < len(na) else None
+        eq = a is not None and b is not None and a[1] == b[1] and _eq_av(a, b)
+        mark = '  ' if eq else '!!'
+        if not eq and first_diff < 0:
+            first_diff = i
+        al = fmt(a) if a else '(missing)'
+        bl = fmt(b) if b else '(missing)'
+        fh.write(f"{i:>4} {mark} O:{al}\n       {mark} N:{bl}\n")
+    fh.write(f"first_diff_idx={first_diff}\n")
+
+
+def main():
+    os.makedirs(OUT_DIR, exist_ok=True)
+    orig_top = load_orig()
+    orig_cos = walk_code(orig_top)
+    with open(DECOMPILED, 'r', encoding='utf-8') as f:
+        src = f.read()
+    new_code = compile(src, '<decompiled>', 'exec')
+    new_cos = walk_code(new_code)
+
+    with open(OUT_DIR + '/bc_results.json') as f:
+        bc = json.load(f)
+    results = bc['results']
+    summary = bc['summary']
+
+    with open(DIFF_TXT, 'w', encoding='utf-8') as fh:
+        for name in FOCUS:
+            if name not in orig_cos or name not in new_cos:
+                fh.write(f"\n=== {name}: MISSING ===\n")
+                continue
+            oa = get_instr_list(orig_cos[name])
+            na = get_instr_list(new_cos[name])
+            dump_pair(name, oa, na, fh)
+
+    print(f"[diff_detail] wrote {DIFF_TXT}")
+    for name in FOCUS:
+        r = results.get(name, {})
+        if r.get('status') == 'len_diff':
+            print(f"  {name}: len_diff {r['orig_len']}->{r['new_len']} ({r['diff']:+d})")
+        elif r.get('status') == 'instr_diff':
+            print(f"  {name}: instr_diff@{r['first_diff_idx']} orig={r['orig_at']} new={r['new_at']}")
+        else:
+            print(f"  {name}: {r.get('status', '?')}")
+
+
+if __name__ == '__main__':
+    main()
