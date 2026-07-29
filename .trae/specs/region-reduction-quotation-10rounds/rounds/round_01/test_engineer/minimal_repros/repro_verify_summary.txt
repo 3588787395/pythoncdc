@@ -1,0 +1,140 @@
+================================================================================
+Round 1 minimal_repros 验证摘要
+================================================================================
+repro 目录: /workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_01/test_engineer/minimal_repros
+repro 总数: 15
+
+文件                                                 compile   total  match   bad   rate%    复现
+-----------------------------------------------------------------------------------------------
+repro_01_if_else_complex_branch.py                 OK            2      0     2    0.00     是
+repro_02_long_elif_chain.py                        OK            2      2     0  100.00     否
+repro_03_for_body_truncation.py                    OK            2      0     2    0.00     是
+repro_04_nested_for_jump_target.py                 OK            3      0     3    0.00     是
+repro_05_module_many_funcs.py                      OK           13     13     0  100.00     否
+repro_06_if_reassign_or_chain.py                   OK            2      2     0  100.00     否
+repro_07_for_complex_body_tail.py                  OK            2      0     2    0.00     是
+repro_08_elif_nested_arithmetic.py                 OK            2      2     0  100.00     否
+repro_09_long_elif_method_chain.py                 OK            2      2     0  100.00     否
+repro_10_ternary_in_arg.py                         OK            2      0     2    0.00     是
+repro_11_for_subscript_assign.py                   OK            2      2     0  100.00     否
+repro_12_nested_if_for_break.py                    OK            2      0     2    0.00     是
+repro_13_and_or_short_circuit.py                   OK            2      0     2    0.00     是
+repro_14_for_method_chain_tail_if.py               OK            2      0     2    0.00     是
+repro_15_nested_if_for_concat.py                   OK            2      2     0  100.00     否
+-----------------------------------------------------------------------------------------------
+复现缺陷的 repro 数: 8 / 15
+
+=== 各 repro 首处不一致详情 ===
+
+[repro_01_if_else_complex_branch.py]
+  py_compile_ok: True
+  decompile_ok: True
+  compile_ok:   True
+  total=2 matched=0 mismatched=2 rate=0.0%
+  reproduces_defect: True
+  first_mismatch: fill_blank: len_diff orig=88 new=65
+
+[repro_02_long_elif_chain.py]
+  py_compile_ok: True
+  decompile_ok: True
+  compile_ok:   True
+  total=2 matched=2 mismatched=0 rate=100.0%
+  reproduces_defect: False
+
+[repro_03_for_body_truncation.py]
+  py_compile_ok: True
+  decompile_ok: True
+  compile_ok:   True
+  total=2 matched=0 mismatched=2 rate=0.0%
+  reproduces_defect: True
+  first_mismatch: get_str_data: len_diff orig=77 new=74
+
+[repro_04_nested_for_jump_target.py]
+  py_compile_ok: True
+  decompile_ok: True
+  compile_ok:   True
+  total=3 matched=0 mismatched=3 rate=0.0%
+  reproduces_defect: True
+  first_mismatch: build_future_fill_time: instr_diff idx=17 orig=(64, 'LOAD_CONST', <code object <listcomp> at 0x7f7dca87e730, file "/workspace/.trae/specs/region-reduction-quotation-10rounds/rounds/round_01/test_engineer/minimal_repros/repro_04_nested_for_jump_target.py", line 13>) new=(64, 'LOAD_CONST', <code object <listcomp> at 0x7f7dca87d480, file "<d>", line 14>)
+
+[repro_05_module_many_funcs.py]
+  py_compile_ok: True
+  decompile_ok: True
+  compile_ok:   True
+  total=13 matched=13 mismatched=0 rate=100.0%
+  reproduces_defect: False
+
+[repro_06_if_reassign_or_chain.py]
+  py_compile_ok: True
+  decompile_ok: True
+  compile_ok:   True
+  total=2 matched=2 mismatched=0 rate=100.0%
+  reproduces_defect: False
+
+[repro_07_for_complex_body_tail.py]
+  py_compile_ok: True
+  decompile_ok: True
+  compile_ok:   True
+  total=2 matched=0 mismatched=2 rate=0.0%
+  reproduces_defect: True
+  first_mismatch: change_his_to_backward: instr_diff idx=24 orig=(102, 'STORE_FAST', 'n') new=(102, 'POP_TOP', None)
+
+[repro_08_elif_nested_arithmetic.py]
+  py_compile_ok: True
+  decompile_ok: True
+  compile_ok:   True
+  total=2 matched=2 mismatched=0 rate=100.0%
+  reproduces_defect: False
+
+[repro_09_long_elif_method_chain.py]
+  py_compile_ok: True
+  decompile_ok: True
+  compile_ok:   True
+  total=2 matched=2 mismatched=0 rate=100.0%
+  reproduces_defect: False
+
+[repro_10_ternary_in_arg.py]
+  py_compile_ok: True
+  decompile_ok: True
+  compile_ok:   True
+  total=2 matched=0 mismatched=2 rate=0.0%
+  reproduces_defect: True
+  first_mismatch: parse_source: len_diff orig=78 new=47
+
+[repro_11_for_subscript_assign.py]
+  py_compile_ok: True
+  decompile_ok: True
+  compile_ok:   True
+  total=2 matched=2 mismatched=0 rate=100.0%
+  reproduces_defect: False
+
+[repro_12_nested_if_for_break.py]
+  py_compile_ok: True
+  decompile_ok: True
+  compile_ok:   True
+  total=2 matched=0 mismatched=2 rate=0.0%
+  reproduces_defect: True
+  first_mismatch: filter_data: len_diff orig=35 new=34
+
+[repro_13_and_or_short_circuit.py]
+  py_compile_ok: True
+  decompile_ok: True
+  compile_ok:   True
+  total=2 matched=0 mismatched=2 rate=0.0%
+  reproduces_defect: True
+  first_mismatch: parse_endpoints: len_diff orig=55 new=39
+
+[repro_14_for_method_chain_tail_if.py]
+  py_compile_ok: True
+  decompile_ok: True
+  compile_ok:   True
+  total=2 matched=0 mismatched=2 rate=0.0%
+  reproduces_defect: True
+  first_mismatch: get_str_data: len_diff orig=90 new=87
+
+[repro_15_nested_if_for_concat.py]
+  py_compile_ok: True
+  decompile_ok: True
+  compile_ok:   True
+  total=2 matched=2 mismatched=0 rate=100.0%
+  reproduces_defect: False

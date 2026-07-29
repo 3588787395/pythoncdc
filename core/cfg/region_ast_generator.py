@@ -12279,7 +12279,32 @@ AST 映射规则:
         return True
 
     def _process_if_blocks(self, blocks, region: IfRegion, branch: str = 'then') -> List[Dict[str, Any]]:
-        """处理 if/else 分支的块列表"""
+        """处理 if/else 分支的块列表。
+
+        6 节模板（Round 1 fix 涉及方法）：
+        1. 算法依据：No More Gotos 结构化归约——IfRegion 的 then/else 体由
+           其 entry 后继块序列构成；嵌套子区域（LoopRegion/TryExceptRegion/
+           WithRegion/MatchRegion/BoolOpRegion/TernaryRegion）作为单个抽象
+           节点参与父 IfRegion 体发射，父区域不展开子区域内部块。
+        2. 归约顺序：自底向上——子区域先于父 IfRegion 归约；本方法在父
+           IfRegion 生成阶段调用，此时子区域已归约完毕，blocks 中出现的
+           子区域非入口块应跳过（交由子区域生成流程处理），不在此发射。
+        3. 唯一归属判定：每个块只由其 canonical owner 区域发射一次。
+           generated_blocks / generated_offsets 为已发射标记集；本方法扫描
+           blocks 时遇到已在标记集中的块直接 continue，避免双重发射。
+        4. 嵌套处理：嵌套 IfRegion 的 then/else 块（_nested_if_skip 集合）
+           [Round 1 fix] 仅跳过不标记为已生成，交由嵌套 IfRegion 的生成流程
+           （_nested_if_entry_generate 或子区域循环 _generate_region）统一
+           标记。原实现过早标记导致嵌套 if 体退化为 pass、else 体丢失
+           （违反原则 3 嵌套即抽象节点 + 原则 4 入口引用语义）。与
+           _nested_if_entry_skip 保持一致：仅跳过不标记。
+        5. 入口引用语义：父 IfRegion 的 then/else 列表引用子区域 entry，
+           不展开子区域所有块；child_entries / child_expr_regions 记录子区域
+           entry，发射时以 entry 为锚点调用 _generate_region(child)。
+        6. 反编译流程：扫描 blocks → 跳过已生成/子区域非入口块 → 对子区域
+           entry 调用 _generate_region → 对普通块调用 _generate_block_statements
+           → 收集为 stmts 列表返回，映射为 AST If.body / orelse。
+        """
         stmts: List[Dict[str, Any]] = []
         child_region_blocks = set()
         child_entries = set()
@@ -12384,8 +12409,19 @@ AST 映射规则:
             if block in self.generated_blocks:
                 continue
             if block in _nested_if_skip:
-                self.generated_blocks.add(block)
-                self.generated_offsets.add(block.start_offset)
+                # [Round 1 fix] 区域归约算法原则 3（嵌套即抽象节点）+ 原则 4
+                # （入口引用语义）：不标记为已生成，交由嵌套 IfRegion 的生成
+                # 流程（_nested_if_entry_generate 或子区域循环 _generate_region）
+                # 统一标记。原实现过早标记嵌套 IfRegion 的 then/else 块为已生成，
+                # 导致后续 _generate_region(child) 处理嵌套 IfRegion 时，
+                # _process_if_blocks([then_block], child, 'then') 发现 then 块
+                # 已在 generated_blocks 中而跳过，嵌套 if 体退化为 `pass`，
+                # else 体丢失。与 _nested_if_entry_skip（line 12391）保持一致：
+                # 仅跳过不标记，让嵌套 IfRegion 的 _if_generate_then_branch /
+                # _if_generate_else_branch 正常处理 then/else 块。嵌套 IfRegion
+                # 生成完成后，其所有 blocks 会在子区域循环（line ~9120）或
+                # _nested_if_entry_generate（line ~12407）中统一标记，不会
+                # 双重发射。
                 continue
             if block in _nested_if_entry_skip:
                 # [R12-N1] 不标记为已生成，交由子区域循环 _generate_region(child) 处理

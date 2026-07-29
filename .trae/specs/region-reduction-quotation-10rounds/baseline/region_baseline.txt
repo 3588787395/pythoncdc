@@ -1,0 +1,9 @@
+=== 区域归约路径反编译基线 ===
+pyc: /workspace/quotation.pyc
+decompile_elapsed_s: 2.18
+compile_ok: True
+total_functions: 150
+matched_functions: 141
+mismatched_functions: 9
+missing_functions: 0
+success_rate_pct: 94.00

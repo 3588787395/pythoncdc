@@ -16705,6 +16705,28 @@ RegionType 枚举值: RegionType.ASSERT
         return region
 
     def _detect_boolop_conditional_chain(self, start_block: BasicBlock, claimed: Set[BasicBlock], skip_claimed_check: bool = False) -> Optional[List[Tuple[BasicBlock, str]]]:
+        """从 start_block 起检测 BoolOp 短路链（and/or），返回 [(block, op)] 或 None。
+
+        6 节模板（Round 1 fix 涉及方法，由 _identify_boolop_regions 调用）：
+        1. 算法依据：No More Gotos 短路归约——POP_JUMP_IF_TRUE/FALSE 链对应
+           Python `and`/`or` 短路语义；同一 BoolOp 的操作数块按短路跳转目标
+           串联，最终汇合到 merge 块。
+        2. 归约顺序：自底向上——BoolOp 在 Conditional 之前识别；本方法扫描
+           链时仅收集纯操作数块，遇 body+条件混合块（含 CALL/STORE 等）不
+           启动，交由 IfRegion 处理。
+        3. 唯一归属判定：claimed 集合守卫——已被其它区域认领的块不纳入链；
+           链内块短路目标须落在链内块集或 merge/exit 块，外漂目标
+           （_has_foreign_target_in_chain）意味着首操作数属外层 IfRegion。
+        4. 嵌套处理：嵌套 IfRegion 的条件块不可被外层 BoolOp 链吸收。
+           [Round 1 fix] 对长 and→or 混合链的首个边界用
+           _is_valid_2elem_mixed_chain 验证：若首 'and' 操作数短路目标不在
+           第二 'or' 操作数后继集内，说明该操作数属外层 if 条件，返回 None
+           让 IfRegion 检测器处理嵌套结构（原则 3 嵌套即抽象节点）。
+        5. 入口引用语义：BoolOpRegion 以链首块为 entry，父 IfRegion 的条件
+           表达式引用该 entry；归约后父区域只见 entry，不见内部操作数块。
+        6. 反编译流程：链 → _try_unify_mixed_boolop_chain 统一为
+           [('and'|'or', ...)] → _generate_boolop 发射 ast.BoolOp。
+        """
         # [R22-N3 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3（嵌套即抽象节点）：
         # 当链的起始块在条件跳转之前包含 body 语句（函数调用语句 CALL+POP_TOP、
         # 赋值 STORE_*、BINARY_OP、DELETE_* 等），该块不是纯 BoolOp 操作数块，
@@ -17505,6 +17527,26 @@ RegionType 枚举值: RegionType.ASSERT
                     if (len(unified_chain) == 2
                             and unified_chain[0][1] != unified_chain[1][1]):
                         if not self._is_valid_2elem_mixed_chain(unified_chain):
+                            return None
+                    # [Round 1 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3
+                    # （嵌套即抽象节点）：将 2 元素混合链的合法性验证推广到更长
+                    # 混合链的「首个 and→or 边界」。缺陷模式：外层 `if cond:`
+                    # 的条件块（IF_FALSE → 外层 else）被误当作混合链的首个
+                    # 'and' 操作数，与内层 `or` 链合并为扁平的
+                    # `cond and X or Y or ...`，破坏嵌套 if-else 结构（违反
+                    # 原则 3：嵌套即抽象节点；原则 2：外层 if 条件块唯一归属
+                    # 外层 IfRegion）。合法的 and→or 边界中，首个 'and' 操作数
+                    # 的短路目标必然是第二个 'or' 操作数的某个直接后继（fall-
+                    # through 到下一 or 组，或跳转到 merge）——与 2 元素链同构。
+                    # 若目标不在后继集合内，说明首操作数属于外层 IfRegion，应
+                    # 返回 None 让 IfRegion 检测器处理嵌套结构。仅检查 and→or
+                    # 边界（or→and 边界不涉及外层 if 条件误吸收，保持原行为
+                    # 避免退化）。
+                    if (len(unified_chain) > 2
+                            and unified_chain[0][1] == 'and'
+                            and unified_chain[1][1] == 'or'):
+                        if not self._is_valid_2elem_mixed_chain(
+                                [unified_chain[0], unified_chain[1]]):
                             return None
                     return unified_chain
             elif not self._is_nested_if_else_pattern(chain):
