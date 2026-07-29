@@ -7641,7 +7641,54 @@ AST 映射规则:
                             return result
         region_id = id(region)
         self._generating_regions.add(region_id)
-        pre_stmts, cond_instrs = self._if_extract_cond_instructions(cond_block, region)
+        # [R7 fix] 区域归约算法原则 3（嵌套即抽象节点）+ 原则 4（入口引用语义）：
+        # 同 _if_generate_normal 的 R6 fix。当 IF_ELIF_CHAIN 的 cond_block 同时
+        # 是某 BoolOpRegion 的 merge_block（且该 BoolOpRegion 有 value_target，
+        # 即独立赋值模式），cond_block 的前段属于 BoolOpRegion 的赋值表达式
+        # （BINARY_OP/CALL/STORE_*），不应被 elif chain 当作 cond_instrs 提取。
+        # 先调用 _generate_boolop 生成完整赋值（如
+        # `source_end = strptime(end[:8] + (... or '1530'), '%Y%m%d%H%M')`），
+        # 再从 cond_block 的 STORE_* 之后提取真正的 if 条件（如 `len(diffset)==0`）。
+        # 否则 BoolOpRegion 的赋值表达式丢失，且 BoolOp 表达式错误归为 if 条件。
+        _elif_boolop_merge_owner = None
+        for _r in self.regions:
+            if (not isinstance(_r, BoolOpRegion)
+                    or getattr(_r, 'merge_block', None) is not cond_block
+                    or _r is region
+                    or id(_r) in self._generated_regions
+                    or id(_r) in self._generating_regions
+                    or _r.entry is None
+                    or _r.entry is cond_block):
+                continue
+            _bo_enc = _r.find_enclosing_parent((IfRegion,))
+            if _bo_enc is region:
+                continue
+            if not _r.value_target:
+                continue
+            _has_store_in_merge = any(
+                i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
+                for i in cond_block.instructions
+            )
+            if not _has_store_in_merge:
+                continue
+            _elif_boolop_merge_owner = _r
+            break
+        pre_stmts, cond_instrs = [], []
+        if _elif_boolop_merge_owner is not None:
+            _bo_result = self._generate_boolop(_elif_boolop_merge_owner)
+            if _bo_result:
+                if isinstance(_bo_result, list):
+                    pre_stmts.extend(_bo_result)
+                else:
+                    pre_stmts.append(_bo_result)
+            self._generated_regions.add(id(_elif_boolop_merge_owner))
+            _bo_pre, _bo_cond = self._if_extract_cond_instructions(
+                cond_block, region,
+                boolop_merge_target=_elif_boolop_merge_owner.value_target)
+            pre_stmts.extend(_bo_pre)
+            cond_instrs = _bo_cond
+        else:
+            pre_stmts, cond_instrs = self._if_extract_cond_instructions(cond_block, region)
         # [R13-N1 fix] 同 _if_generate_normal：当 entry 与 condition_block 不同
         # （BoolOpRegion 子节点模式），从 entry 块提取前置语句。
         if (region.entry is not None and region.entry is not cond_block
@@ -12605,8 +12652,33 @@ AST 映射规则:
                             isinstance(_c, BoolOpRegion) and _c.entry is _nr.entry
                             for _c in getattr(_nr, 'children', [])
                         )
+                        import os as _os_dbg5
+                        if _os_dbg5.environ.get('R7_DEBUG_IFGEN') == '1' and b.start_offset in (192, 584):
+                            import sys as _sys_dbg5
+                            _ch_entries = [type(_c).__name__ + '@' + str(_c.entry.start_offset) if getattr(_c, 'entry', None) else type(_c).__name__ for _c in getattr(_nr, 'children', [])]
+                            print(f"[R7DBG] _nested_if check block={b.start_offset} IfRegion@{_nr.entry.start_offset} has_boolop_child={_has_boolop_child} children={_ch_entries} _nr.blocks={[blk.start_offset for blk in _nr.blocks]} _block_set={sorted(x.start_offset for x in _block_set)}", file=_sys_dbg5.stderr)
                         if _has_boolop_child:
-                            _nested_if_entry_skip.add(b)
+                            # [R7 fix] 区域归约算法原则 3（嵌套即抽象节点）+ 原则 2
+                            # （每块唯一归属）：原 R12-N1 实现将入口块加入
+                            # _nested_if_entry_skip，期望子区域循环生成 BoolOpRegion。
+                            # 但子区域循环只处理 BoolOp/Ternary，不处理 IfRegion；
+                            # 且 BoolOpRegion（条件上下文）仅写 condition_expr 返回
+                            # None，不生成 if 体。结果嵌套 IfRegion 整体丢失，if 体
+                            # 语句被提升到外层无条件执行（如 load_get_price 的
+                            # `if typet==1 or ... or typet==13:` 被丢弃，tz_convert
+                            # 直接挂在 `if is_utc == '0':` 下）。
+                            # 修复：改为 _nested_if_entry_generate，主动生成整个
+                            # IfRegion。_if_generate_normal 的条件提取会通过
+                            # _if_extract_condition_from_instructions 找到
+                            # BoolOpRegion 并重建完整 BoolOp 条件表达式。
+                            _nr_id = id(_nr)
+                            if (_nr_id not in self._generated_regions
+                                    and _nr_id not in self._generating_regions):
+                                _nr_blocks_in_set = all(_nb in _block_set for _nb in _nr.blocks)
+                                if _nr_blocks_in_set:
+                                    _nested_if_entry_generate[b] = _nr
+                                else:
+                                    _nested_if_entry_skip.add(b)
                         else:
                             # [R18-N6 fix] 无 BoolOpRegion 子节点的嵌套 IfRegion：
                             # 主动生成整个嵌套 IfRegion（含 entry 块中的前置语句）。
@@ -12618,6 +12690,27 @@ AST 映射规则:
                                 _nr_blocks_in_set = all(_nb in _block_set for _nb in _nr.blocks)
                                 if _nr_blocks_in_set:
                                     _nested_if_entry_generate[b] = _nr
+                                    import os as _os_dbg4
+                                    if _os_dbg4.environ.get('R7_DEBUG_IFGEN') == '1':
+                                        import sys as _sys_dbg4
+                                        print(f"[R7DBG] _nested_if_entry_generate[boolop_child] block={b.start_offset} IfRegion@{_nr.entry.start_offset}", file=_sys_dbg4.stderr)
+                    else:
+                        # [R7 fix] 区域归约算法原则 3（嵌套即抽象节点）+ 原则 2
+                        # （每块唯一归属）：当嵌套 IfRegion 有 elif/chained_compare
+                        # （如 IF_ELIF_CHAIN）时，原实现不将其加入
+                        # _nested_if_entry_generate，导致父 IfRegion 的
+                        # _process_if_blocks 将嵌套 IfRegion 的 then/elif/else 块
+                        # 作为普通块处理，在 if 语句之前误发射 then 体语句（如
+                        # load_bars_from_hundsun 的 dailypanel 切片/return 出现在
+                        # `if len(diffset)==0:` 之前，且 if 体退化为 pass）。
+                        # 修复：对有 elif/chained_compare 的嵌套 IfRegion，同样主动
+                        # 生成整个区域，其非入口块由 generated_blocks 标记跳过。
+                        _nr_id = id(_nr)
+                        if (_nr_id not in self._generated_regions
+                                and _nr_id not in self._generating_regions):
+                            _nr_blocks_in_set = all(_nb in _block_set for _nb in _nr.blocks)
+                            if _nr_blocks_in_set:
+                                _nested_if_entry_generate[b] = _nr
         for block in sorted(blocks, key=lambda b: b.start_offset):
             if block in self.generated_blocks:
                 continue
