@@ -201,36 +201,36 @@
 
 ### 阶段一：测试工程师
 
-- [ ] R20-1 反编译 + diff（输出到 round_20）
-- [ ] R20-2 ≥10 最小复现实例（若残留 < 10 个不一致函数，记录为已达成退出条件 E2）
+- [x] R20-1 反编译 + diff（输出到 round_20，`decompile_report.md` 已生成；最终基线 147/150=98.00% 无退化）
+- [x] R20-2 ≥10 最小复现实例（`minimal_repros/repro_01..repro_10.py`，覆盖 3 残留函数根因；残留不一致函数 3 < 10，已达成退出条件 E2）
 
 ### 阶段二：修复工程师
 
-- [ ] R20-3 根因分析（最终残留缺陷定位）
-- [ ] R20-4 按算法修复 + docstring 更新
-- [ ] R20-5 回归测试（quotation.pyc 一致函数数 ≥ R19；既有矩阵 0 退化）
-- [ ] R20-6 fix_report.md + final_residual_v2.md（若未达 100%，输出残留清单）
+- [x] R20-3 根因分析（最终残留缺陷定位：get_str_data 三层根因 A/B/C、change_his_to_backward 指令重排、get_date_and_count 双层根因 A/B；见 `fix_report.md` §2）
+- [x] R20-4 按算法修复 + docstring 更新 — change_his_to_backward 归一化评估为不可安全修复（真实指令重排，非语义等价跳转目标）；3 残留函数均涉及深层结构性改动，R12/R13/R19 已验证局部修复退化，确认无法安全修复，维持 147 基线
+- [x] R20-5 回归测试（quotation.pyc 一致函数数 147/150 == R19；既有矩阵 9 fail/318 pass/11 skip == 基线 0 退化；IMPORT_OK；10 repros compile OK）
+- [x] R20-6 `fix_report.md` + `final_residual_v2.md` 生成（残留 3 个函数清单 + V3 后续迭代建议）
 
 ### 验证与提交
 
-- [ ] R20-7 一致函数数 ≥ 轮 19
-- [ ] R20-8 反模式自检 + 编译通过
-- [ ] R20-9 commit + push `rr-r20:`
+- [x] R20-7 一致函数数 ≥ 轮 19（147 == 147，无退化）
+- [x] R20-8 反模式自检 + 编译通过（G3/G4 0 新增；core/ 与 HEAD 字节一致；IMPORT_OK）
+- [x] R20-9 commit + push `rr-r20:`
 
 ## 最终验证（V2 10 轮完成后）
 
-- [ ] V2-F1 共 10 次 commit + push 完成（rr-r11..rr-r20）
-- [ ] V2-F2 quotation.pyc 字节码一致函数数达到目标（目标 150/150=100%；若未达，输出 `final_residual_v2.md`）
-- [ ] V2-F3 既有区域测试矩阵无退化（control_flow_matrix 基线 9 fail/318 pass 全程 0 退化）
-- [ ] V2-F4 算法 4 原则 FULLY COMPLIANT（自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 入口引用语义）
-- [ ] V2-F5 无反模式残留（0 新增 `_fix_/_hack_/_workaround_` 等前缀，0 新增硬编码深度上限）
-- [ ] V2-F6 `python -c "import core.cfg.region_analyzer; import core.cfg.region_ast_generator"` 编译通过
-- [ ] V2-F7 全部 11 类 `_identify_*_regions` 识别方法 docstring 维持 6 节统一模板（11/11，继承 V1 R8）
+- [x] V2-F1 共 10 次 commit + push 完成（rr-r11..rr-r20）
+- [x] V2-F2 quotation.pyc 字节码一致函数数达到目标（目标 150/150=100% 未达；输出 `final_residual_v2.md` 残留 3 个）
+- [x] V2-F3 既有区域测试矩阵无退化（control_flow_matrix 基线 9 fail/318 pass/11 skip 全程 0 退化）
+- [x] V2-F4 算法 4 原则 FULLY COMPLIANT（自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 入口引用语义）
+- [x] V2-F5 无反模式残留（0 新增 `_fix_/_hack_/_workaround_` 等前缀，0 新增硬编码深度上限）
+- [x] V2-F6 `python -c "import core.cfg.region_analyzer; import core.cfg.region_ast_generator"` 编译通过
+- [x] V2-F7 全部 11 类 `_identify_*_regions` 识别方法 docstring 维持 6 节统一模板（11/11，继承 V1 R8）
 
 ## 退出条件（每轮后检查）
 
-- [ ] V2-E1 quotation.pyc 反编译字节码不一致函数数 = 0（100% 一致）
-- [ ] V2-E2 最近一轮测试工程师可提取新增最小复现实例 < 10 个
+- [ ] V2-E1 quotation.pyc 反编译字节码不一致函数数 = 0（100% 一致）— 未达成，残留 3 个
+- [x] V2-E2 最近一轮测试工程师可提取新增最小复现实例 < 10 个 — 已达成（残留不一致函数 3 < 10）
 
 ## 备注
 
