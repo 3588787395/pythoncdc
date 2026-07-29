@@ -3300,7 +3300,12 @@ class CodeGenerator:
 
         elif isinstance(node, ASTUnary):
             result = self._generate_unary(node)
-            current_precedence = self._precedence['not']
+            # [R7 fix] 根据运算符类型设置正确优先级
+            _uv = node.op.value if hasattr(node.op, 'value') else node.op
+            if _uv == 3:  # not
+                current_precedence = self._precedence['not']
+            else:  # ~, +x, -x
+                current_precedence = self._precedence['~x']
         
         elif isinstance(node, ASTCall):
             result = self._generate_call(node)
@@ -3654,7 +3659,15 @@ class CodeGenerator:
         # [关键修复] node.op 可能是枚举值或整数，需要获取其值
         op_value = node.op.value if hasattr(node.op, 'value') else node.op
         op_str = op_map.get(op_value, '+')
-        operand_code = self._generate_expression(node.operand, self._precedence['not'])
+
+        # [R7 fix] 不同一元运算符优先级不同：not=5（低），而 ~/-x/+x=13（高）。
+        # 旧代码对所有一元运算符统一用 precedence['not']，导致 ~(a<b) 被渲染为
+        # ~a<b（丢括号，重新解析成 (~a)<b），字节码不一致。按 op 取正确优先级。
+        if op_value == 3:  # not
+            current_precedence = self._precedence['not']
+        else:  # ~, +x, -x
+            current_precedence = self._precedence['~x']
+        operand_code = self._generate_expression(node.operand, current_precedence)
 
         return f'{op_str}{operand_code}'
     
@@ -3682,7 +3695,12 @@ class CodeGenerator:
         if isinstance(node, ASTCompare):
             return self._precedence['==']
         if isinstance(node, ASTUnary):
-            return self._precedence['not']
+            # [R7 fix] not=5, 而 ~/-x/+x=13
+            _uv = node.op.value if hasattr(node.op, 'value') else node.op
+            if _uv == 3:  # not
+                return self._precedence['not']
+            else:  # ~, +x, -x
+                return self._precedence['~x']
         if isinstance(node, ASTBinary):
             # ASTBinary 同时承担算术与布尔运算；按 op 字符串查表
             if isinstance(node.op, str):
@@ -4667,7 +4685,19 @@ class CodeGenerator:
         op_str = op_map.get(op, 'not ')
         operand = node.get('operand', {})
         operand_prec = self._get_dict_expr_precedence(operand)
-        current_precedence = self._precedence['not']
+        # [R7 fix] 不同一元运算符优先级不同：not=5（低），而 ~/-x/+x=13（高）。
+        # 旧代码对所有一元运算符统一用 precedence['not']，导致 ~(a<b) 被渲染为
+        # ~a<b（丢括号，重新解析成 (~a)<b），字节码不一致。按 op 取正确优先级。
+        if op in ('Not', 'not', 'not '):
+            current_precedence = self._precedence['not']
+        elif op in ('Invert', '~'):
+            current_precedence = self._precedence['~x']
+        elif op in ('USub', '-'):
+            current_precedence = self._precedence['-x']
+        elif op in ('UAdd', '+'):
+            current_precedence = self._precedence['+x']
+        else:
+            current_precedence = self._precedence['not']
 
         if operand_prec < current_precedence:
             operand_code = self._generate_expression(operand, current_precedence)
