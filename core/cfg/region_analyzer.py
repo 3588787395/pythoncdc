@@ -10622,10 +10622,74 @@ RegionType 枚举值: RegionType.ASSERT
                     break
         elif block_region is not None:
             if not block_region.contains_block(block):
-                if os.environ.get('_R23N20_DEBUG') and block.start_offset == 342:
-                    import traceback
-                    print(f"[R23N20-DBG] block@342 skip: not contains_block", flush=True)
-                return True
+                # [R30-22 fix] 区域归约算法原则 1（自底向上归约）+
+                # 原则 2（每块唯一归属）：BoolOpRegion 的 merge_block 在
+                # 值上下文（is_condition_context=False）下被注册到
+                # block_to_region，但 contains_block 对 merge_block 返回
+                # False（仅 entry 返回 True）。若 merge_block 在 STORE 之后
+                # 含尾部条件跳转（if/while 条件），该条件属于独立的 IfRegion，
+                # 不应被跳过。典型场景（load_bars_from_hundsun）：
+                #   source_end = strptime(end[:8] + (len(...) == 4 and ... or '1530'), ...)
+                #   diffset = set(stocks).difference(...)
+                #   if len(diffset) == 0:        # 尾部条件跳转
+                #       ...
+                # merge_block 同时承载 BoolOp 值消费（STORE source_end）+
+                # diffset 赋值 + if 条件。BoolOpRegion 仅拥有 STORE 之前部分，
+                # 尾部条件跳转应归 IfRegion。若跳过，IfRegion 不创建，
+                # if 体（含 return）被父区域直接展开，结构坍塌。
+                if (isinstance(block_region, BoolOpRegion)
+                        and block_region.merge_block is block
+                        and not getattr(block_region, 'is_condition_context', False)):
+                    _r30_22_last = block.get_last_instruction()
+                    if (_r30_22_last is not None
+                            and _r30_22_last.opname in FORWARD_CONDITIONAL_JUMP_OPS):
+                        _r30_22_has_store = any(
+                            i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
+                                        'STORE_DEREF', 'STORE_ATTR', 'STORE_SUBSCR')
+                            for i in block.instructions
+                            if i.offset < _r30_22_last.offset
+                        )
+                        if not _r30_22_has_store:
+                            return True
+                        # [R30-22b] 排除尾部条件属于另一个 BoolOp 链的情况。
+                        # 典型反例（load_bars_from_hundsun block 424）：
+                        #   source_start = strptime(... + (len(...) == 4 and ... or '0000'), ...)
+                        #   # block 424 = source_start BoolOp 的 merge，STORE 之后
+                        #   # 紧接 source_end BoolOp 的首链块条件
+                        #   # (len(end[8:]) == 4, POP_JUMP_FORWARD_IF_FALSE 582)
+                        # block 424 的尾部条件跳转的 fallthrough (562) 是另一个
+                        # BoolOpRegion 的 entry。此条件是 BoolOp 链的一部分，
+                        # 不是 if 语句，不应创建 IfRegion。判别：fallthrough 或
+                        # jump target 是任一 BoolOpRegion.entry → 属于 BoolOp 链。
+                        _r30_22_ft = None
+                        _r30_22_jt = None
+                        _r30_22_succs = list(block.conditional_successors)
+                        for _s in _r30_22_succs:
+                            if _s.start_offset == _r30_22_last.argval:
+                                _r30_22_jt = _s
+                            else:
+                                _r30_22_ft = _s
+                        _r30_22_is_boolop_chain = False
+                        for _bor_chk in self._filter_regions(
+                                self.regions, BoolOpRegion):
+                            if _bor_chk is block_region:
+                                continue
+                            _bor_entry = getattr(_bor_chk, 'entry', None)
+                            if _bor_entry is not None and (
+                                    _bor_entry is _r30_22_ft
+                                    or _bor_entry is _r30_22_jt):
+                                _r30_22_is_boolop_chain = True
+                                break
+                        if _r30_22_is_boolop_chain:
+                            return True
+                        # 允许 IfRegion 创建
+                    else:
+                        return True
+                else:
+                    if os.environ.get('_R23N20_DEBUG') and block.start_offset == 342:
+                        import traceback
+                        print(f"[R23N20-DBG] block@342 skip: not contains_block", flush=True)
+                    return True
             if type(block_region) is TryExceptRegion:
                 if any(lr.condition_block == block for lr in loop_regions):
                     if os.environ.get('_R23N20_DEBUG') and block.start_offset == 342:
@@ -10743,6 +10807,12 @@ RegionType 枚举值: RegionType.ASSERT
              自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口
         """
         if_regions = []
+        # [R30-22 fix] 存储 if_regions 引用供 _build_basic_if_region 访问，
+        # 使 _bt_entries 过滤器能识别已创建的嵌套 IfRegion entry（如
+        # BoolOpRegion merge_block 同时作为 IfRegion entry 的情况）。
+        # block_to_region 在此阶段尚未注册 IfRegion（统一在 analyze() 末尾
+        # 重建），故需通过实例变量传递。
+        self._current_if_regions = if_regions
         try_handler_blocks = set()
         # [Phase 3 adv17_try_except_star] try_cleanup_blocks 仅含 except* 框架
         # 清理块（PREP_RERAISE_STAR 等），在主循环中跳过 IfRegion 创建。
@@ -11809,6 +11879,20 @@ RegionType 枚举值: RegionType.ASSERT
                 for _or2 in (boolop_regions or []) + (ternary_regions or []):
                     if _or2.entry:
                         _bt_entries.add(_or2.entry)
+                # [R30-22 fix] 区域归约算法原则 3（嵌套即抽象节点）+
+                # 原则 4（父引用子入口）：BoolOpRegion 的 merge_block 可能
+                # 同时是嵌套 IfRegion 的 entry（当 merge_block 在 STORE 之后
+                # 含尾部条件跳转时）。此时 merge_block 虽在 BoolOpRegion.blocks
+                # 中（作为内部块），但它也是 IfRegion 的入口，必须保留在父
+                # IfRegion 的 then_blocks 中作为抽象节点。否则 IfRegion 丢失，
+                # if 体被父区域直接展开。block_to_region 在此阶段尚未注册
+                # IfRegion（统一在 analyze() 末尾重建），改用
+                # self._current_if_regions 收集已创建的 IfRegion entry。
+                _r30_22_if_entries = getattr(self, '_current_if_regions', None)
+                if _r30_22_if_entries:
+                    for _ifr in _r30_22_if_entries:
+                        if hasattr(_ifr, 'entry') and _ifr.entry is not None:
+                            _bt_entries.add(_ifr.entry)
                 # [Phase 3 adv11_while_walrus_boolop] LoopRegion 入口（entry/
                 # condition_block/header_block）即使同时是 BoolOpRegion 的
                 # 链块（如 ``if c: while (x:=f()) and g():``，Block 3 既是
