@@ -1279,7 +1279,7 @@ class CodeGenerator:
     def _filter_duplicate_if_in_else(self, else_nodes: List[Any], all_nodes: List[Any]) -> List[Any]:
         """
         [关键修复] 过滤掉else分支中与elif条件重复的嵌套if
-        
+
         这种情况发生在结构化分析错误地将elif识别为嵌套的if时。
         例如：
         if x > 10:
@@ -1293,16 +1293,31 @@ class CodeGenerator:
         """
         if not else_nodes:
             return []
-        
-        # 收集所有elif的条件
+
+        # [R23-N4 fix] 区域归约算法「一次正确」原则：使用对象标识避免自比较。
+        # 旧实现将 else_nodes 中的节点条件收集到 elif_conditions，导致 else body
+        # 中的合法嵌套 if 被过滤掉（其条件与自身匹配）。例如 check_index_code 的
+        # else 分支：
+        #   else:
+        #       index_code_list = data_proxy().get_blocks_codes_local('ZS')
+        #       if '%s.csv' % index_code.split('.')[0] not in index_code_list:
+        #           strategy_log.error(...)
+        #           return False
+        #       return True
+        # 嵌套 if 被错误过滤，只生成赋值语句，函数体被截断。
+        # 修复：只从 all_nodes 中收集不在 else_nodes 中的节点（即真正的 elif 节点）
+        # 的条件，避免 else body 中的嵌套 if 与自身比较。
+        else_node_ids = set(id(n) for n in else_nodes)
         elif_conditions = set()
         for node in all_nodes:
+            if id(node) in else_node_ids:
+                continue
             if isinstance(node, ASTIf) and node.test:
                 # 提取条件表达式
                 test_str = self._get_condition_str(node.test)
                 if test_str:
                     elif_conditions.add(test_str)
-        
+
         # 过滤掉与elif条件重复的嵌套if
         filtered = []
         for node in else_nodes:
@@ -1312,7 +1327,7 @@ class CodeGenerator:
                     # 这是重复的if，跳过
                     continue
             filtered.append(node)
-        
+
         return filtered
     
     def _get_condition_str(self, test) -> str:
@@ -1687,6 +1702,12 @@ class CodeGenerator:
         
         node = flattened[0]
         if isinstance(node, ASTReturn):
+            # [R23-N16 fix] 显式 return（来自真实 RETURN_VALUE/RETURN_CONST 指令）
+            # 不应被过滤。except handler 内的 `else: return None` 是显式 return，
+            # 生成真实字节码（POP_EXCEPT+cleanup+LOAD_CONST None+RETURN_VALUE），
+            # 必须保留。仅过滤隐式 return None（fallthrough）。
+            if getattr(node, '_explicit_return', False):
+                return False
             if node.value is None:
                 return True
             if hasattr(node.value, 'value') and node.value.value is None:
@@ -3765,9 +3786,25 @@ class CodeGenerator:
     
     def _generate_attribute(self, node: ASTAttribute) -> str:
         """生成属性访问表达式"""
-        # [关键修复] 使用0作为parent_precedence，确保不会添加括号
-        # 属性访问的value部分不需要括号，例如 self.children.append 而不是 (self.children).append
-        value_code = self._generate_expression(node.value, 0)
+        # [R21-N2 fix] 使用属性访问的优先级（16）作为 parent_precedence，
+        # 而非 0。这样低优先级的子表达式（如 BinOp，precedence=11）会自动
+        # 添加括号，例如 `(a + b).strftime(...)` 而非 `a + b.strftime(...)`。
+        #
+        # 为什么 0 是错的：
+        #   parent_precedence=0 时，_generate_expression 中的判定
+        #   `parent_precedence > 0 and current_precedence < parent_precedence`
+        #   永远为 False，导致任何子表达式都不会加括号。
+        #
+        # 为什么 16（attribute）是对的：
+        #   - Attribute value 是 Name/Constant（precedence=17，atom）：
+        #     17 < 16 为 False，不加括号 → `x.method`、`self.children.append` ✓
+        #   - Attribute value 是 Attribute（precedence=16）：
+        #     16 < 16 为 False，不加括号 → `a.b.c` ✓
+        #   - Attribute value 是 BinOp（precedence=11）：
+        #     11 < 16 为 True，加括号 → `(a + b).method` ✓
+        #   - Attribute value 是 Call（precedence=16）：
+        #     16 < 16 为 False，不加括号 → `f().method` ✓
+        value_code = self._generate_expression(node.value, self._precedence['attribute'])
         return f'{value_code}.{node.attr}'
     
     def _generate_subscript(self, node: ASTSubscript) -> str:

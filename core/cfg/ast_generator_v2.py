@@ -706,6 +706,36 @@ class ExpressionReconstructor:
                 'lineno': instr.starts_line
             })
 
+        # [R30-9] MAP_ADD - Python 3.11+ 字典字面量中添加键值对
+        # 用于大字典字面量：BUILD_MAP 0; LOAD key; LOAD value; MAP_ADD 1; ...
+        # 栈状态: [dict, key, value] -> [updated_dict]
+        # 语义：弹出 value 和 key，添加到栈中下面的 dict 对象中
+        elif opname == 'MAP_ADD':
+            if len(self.stack) >= 3:
+                value = self.stack.pop()
+                key = self.stack.pop()
+                target = self.stack.pop()
+                if not (isinstance(target, dict) and target.get('type') == 'Dict'):
+                    target = {
+                        'type': 'Dict',
+                        'keys': [],
+                        'values': [],
+                        'lineno': instr.starts_line,
+                    }
+                target.get('keys', []).append(key)
+                target.get('values', []).append(value)
+                self.stack.append(target)
+            elif len(self.stack) >= 2:
+                # fallback: 只有 key 和 value，没有 target dict
+                value = self.stack.pop()
+                key = self.stack.pop()
+                self.stack.append({
+                    'type': 'Dict',
+                    'keys': [key],
+                    'values': [value],
+                    'lineno': instr.starts_line,
+                })
+
         # [Round7-03] 构建集合
         elif opname == 'BUILD_SET':
             count = instr.arg if instr.arg is not None else 0
@@ -739,6 +769,13 @@ class ExpressionReconstructor:
                     elif isinstance(iterable, dict) and iterable.get('type') == 'Constant':
                         const_val = iterable.get('value')
                         if isinstance(const_val, frozenset):
+                            for item in const_val:
+                                elts.append({
+                                    'type': 'Constant',
+                                    'value': item,
+                                    'lineno': instr.starts_line,
+                                })
+                        elif isinstance(const_val, (tuple, list)):
                             for item in const_val:
                                 elts.append({
                                     'type': 'Constant',
@@ -1160,7 +1197,7 @@ class ExpressionReconstructor:
             # 弹出函数对象
             if self.stack:
                 func = self.stack.pop()
-                
+
                 # [关键修复] 处理 PUSH_NULL 标记
                 while func and func.get('type') == 'PUSH_NULL':
                     if self.stack:
@@ -1168,7 +1205,44 @@ class ExpressionReconstructor:
                     else:
                         func = None
                         break
-            
+
+            # [R16-N1] LOAD_ASSERTION_ERROR 模式特殊处理：
+            # ``assert x, msg`` 字节码为
+            #   LOAD_ASSERTION_ERROR + <msg> + PRECALL 0 + CALL 0 + RAISE_VARARGS 1
+            # CALL 0 (argc=0) 时，按标准语义栈顶 <msg> 被当作 func 弹出，
+            # 而真正的 callable ``Name('AssertionError')``（带
+            # ``_from_load_assertion_error`` 标记）还留在栈上。
+            # 检测此情况：把 func 实际作为 msg 参数，构造
+            # ``Call(Name('AssertionError'), [msg])``，并保留标记到 Call 节点，
+            # 供 RAISE_VARARGS 处理器识别并转换为 ``Assert(False, msg)`` 语句
+            # （CPython 3.11 对 ``assert False, msg`` 做常量折叠，生成
+            # ``LOAD_ASSERTION_ERROR + msg + CALL 0 + RAISE_VARARGS 1``，
+            # 无 test 跳转；recompile ``assert False, msg`` 才能产生相同字节码）。
+            if (func is not None
+                    and self.stack
+                    and isinstance(self.stack[-1], dict)
+                    and self.stack[-1].get('_from_load_assertion_error') is True):
+                lae_node = self.stack.pop()
+                if '_from_load_assertion_error' in lae_node:
+                    del lae_node['_from_load_assertion_error']
+                self.stack.append({
+                    'type': 'Call',
+                    'func': lae_node,
+                    'args': [func],
+                    'kwargs': [],
+                    'lineno': instr.starts_line,
+                    '_from_load_assertion_error': True
+                })
+                return None
+
+            # [R16-N1] 无 msg 的 assert 模式：``LOAD_ASSERTION_ERROR + PRECALL 0
+            # + CALL 0``（即 ``raise AssertionError``）。func 自身带标记，
+            # 清除标记后走普通 CALL 路径生成 ``Call(Name('AssertionError'), [])``。
+            if (func is not None and isinstance(func, dict)
+                    and func.get('_from_load_assertion_error') is True):
+                if '_from_load_assertion_error' in func:
+                    del func['_from_load_assertion_error']
+
             # [关键修复] 处理函数调用
             if func:
                 # [关键修复] 检查是否是推导式调用或多装饰器调用（仅当argc==0时）
@@ -1523,12 +1597,23 @@ class ExpressionReconstructor:
                     })
         
         # [关键修复] Python 3.11+ LOAD_ASSERTION_ERROR 指令
+        # [R16-N1] 区域归约算法原则：每个字节码模式对应唯一的 AST 节点。
+        # LOAD_ASSERTION_ERROR 是 CPython 3.11+ 的专用指令，用于 assert 语句
+        # 的失败路径。其特殊语义：随后的 ``PRECALL 0 + CALL 0`` 中 argc=0，
+        # 但栈顶的 msg 表达式实际是 ``AssertionError(msg)`` 的参数（CPython
+        # 优化：LOAD_ASSERTION_ERROR 不算 callable，CALL 0 时 msg 已在栈上
+        # 但不计入 argc）。
+        # 标记 ``_from_load_assertion_error``，供 CALL 处理器识别并特殊构造
+        # ``Call(Name('AssertionError'), [msg])``，避免错误地把 msg 当作
+        # callable 生成 ``Call(func=Constant(msg), args=[])``（最终被
+        # CodeGenerator 渲染为 RuntimeError(msg)）。
         elif opname == 'LOAD_ASSERTION_ERROR':
             self.stack.append({
                 'type': 'Name',
                 'id': 'AssertionError',
                 'ctx': 'Load',
-                'lineno': instr.starts_line
+                'lineno': instr.starts_line,
+                '_from_load_assertion_error': True
             })
         
         # [关键修复] Python 3.11+ RAISE 指令
@@ -1563,11 +1648,36 @@ class ExpressionReconstructor:
             elif instr.arg == 1:
                 if self.stack:
                     exc = self.stack.pop()
-                    self.stack.append({
-                        'type': 'Raise',
-                        'exc': exc,
-                        'lineno': instr.starts_line
-                    })
+                    # [R16-N1] 检测 LOAD_ASSERTION_ERROR 模式：
+                    # ``assert False, msg`` 编译为
+                    #   LOAD_ASSERTION_ERROR + msg + PRECALL 0 + CALL 0 + RAISE_VARARGS 1
+                    # （CPython 3.11 常量折叠，无 test 跳转）。
+                    # CALL 处理器已在 Call 节点上保留 ``_from_load_assertion_error``
+                    # 标记。此时应生成 ``Assert(test=Constant(False), msg=msg)``
+                    # 语句，recompile 后才能产生 ``LOAD_ASSERTION_ERROR`` 字节码
+                    # （而非 ``raise AssertionError(msg)`` 的 ``LOAD_GLOBAL``）。
+                    if (isinstance(exc, dict)
+                            and exc.get('type') == 'Call'
+                            and exc.get('_from_load_assertion_error') is True):
+                        msg = None
+                        args = exc.get('args', [])
+                        if args:
+                            msg = args[0]
+                        if '_from_load_assertion_error' in exc:
+                            del exc['_from_load_assertion_error']
+                        self.stack.append({
+                            'type': 'Assert',
+                            'test': {'type': 'Constant', 'value': False,
+                                     'lineno': instr.starts_line},
+                            'msg': msg,
+                            'lineno': instr.starts_line
+                        })
+                    else:
+                        self.stack.append({
+                            'type': 'Raise',
+                            'exc': exc,
+                            'lineno': instr.starts_line
+                        })
             elif instr.arg == 0:
                 self.stack.append({
                     'type': 'Reraise',

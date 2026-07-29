@@ -634,6 +634,10 @@ class CFGASTConverter:
             ret = ASTReturn(None)
         # [关键修复] 设置 _in_function 属性为 True，确保 return 语句能被正确生成
         ret._in_function = True
+        # [R23-N16 fix] 保留 _explicit_return 标记（来自真实 RETURN_VALUE/RETURN_CONST
+        # 指令的显式 return），供 code_generator 区分显式 return None 与隐式 fallthrough。
+        if node_dict.get('_explicit_return'):
+            ret._explicit_return = True
         return ret
 
     def _convert_yield(self, node_dict: Dict[str, Any]) -> ASTYield:
@@ -1184,9 +1188,28 @@ class CFGASTConverter:
         
         # [修复-E3] 处理ops的两种格式:
         # 1. 字符串列表: ['==', '!=']
-        # 2. 对象列表: [{'type': 'CompareOp', 'op': '=='}]
-        if ops and isinstance(ops, list) and len(ops) > 0 and isinstance(ops[0], dict):
-            ops = [op.get('op', '==') if isinstance(op, dict) else op for op in ops]
+        # 2. 对象列表: [{'type': 'CompareOp', 'op': '=='}] 或 [{'type': 'IsNot'}]
+        # [R23-N19 fix] 统一规范化比较操作符：
+        # - 同时支持 'op' 和 'type' 字段（region_ast_generator 的 _build_boolop_expression
+        #   使用 'type' 字段存放 'IsNot'/'Is'，导致此处默认回退为 '=='，把
+        #   `start_year is not None` 错误生成为 `start_year == None`）
+        # - 规范化大小写：'IsNot' → 'is not', 'Is' → 'is', 'Eq' → '==' 等，
+        #   使其匹配 op_map 的小写键。同时处理字符串列表格式（如 ['IsNot']）
+        _OP_NORMALIZE = {
+            'Is': 'is', 'IsNot': 'is not',
+            'Eq': '==', 'NotEq': '!=',
+            'Lt': '<', 'LtE': '<=',
+            'Gt': '>', 'GtE': '>=',
+            'In': 'in', 'NotIn': 'not in',
+        }
+        _norm_ops = []
+        for op in ops:
+            if isinstance(op, dict):
+                _raw = op.get('op') or op.get('type') or '=='
+            else:
+                _raw = op
+            _norm_ops.append(_OP_NORMALIZE.get(_raw, _raw))
+        ops = _norm_ops
         
         # [关键修复] 将字符串操作符转换为整数
         op_map = {

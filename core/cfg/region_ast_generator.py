@@ -43,28 +43,18 @@ _NEGATE_CMP_MAP = {
 }
 
 def _negate_expr(expr: Dict[str, Any]) -> Dict[str, Any]:
+    # [R22-N5 fix] 区域归约算法「一次正确」原则：保留原始比较运算符，
+    # 用 not() 包裹而非反转运算符。
+    # 原始 pyc `x == y; POP_JUMP_IF_TRUE` 来自源码 `not (x == y)`，
+    # CPython 3.11+ 优化掉 UNARY_NOT，直接用 POP_JUMP_IF_TRUE。
+    # 旧逻辑反转运算符（== → !=）生成 `x != y`，编译为
+    # `!= + POP_JUMP_IF_FALSE`，字节码不一致。
+    # 修复后生成 `not (x == y)`，CPython 重新编译为
+    # `== + POP_JUMP_IF_TRUE`，与原始字节码一致。
+    # 普遍性: 覆盖 not (x == y) / not (x != y) / not (x < y) 等所有
+    # not-Compare 形式，以及 not (BoolOp) 等复合形式。
     if expr.get('type') == 'UnaryOp' and expr.get('op') == 'not':
         return expr.get('operand', expr)
-    if expr.get('type') == 'Compare':
-        ops = expr.get('ops')
-        op = expr.get('op')
-        if ops and isinstance(ops, list) and len(ops) == 1:
-            op_val = ops[0]
-            if isinstance(op_val, dict):
-                op_type = op_val.get('type', '')
-                negate_map = {
-                    'Eq': 'NotEq', 'NotEq': 'Eq',
-                    'Lt': 'GtE', 'GtE': 'Lt',
-                    'Gt': 'LtE', 'LtE': 'Gt',
-                    'In': 'NotIn', 'NotIn': 'In',
-                    'Is': 'IsNot', 'IsNot': 'Is',
-                }
-                if op_type in negate_map:
-                    r = dict(expr); r['ops'] = [{'type': negate_map[op_type]}]; return r
-            elif op_val in _NEGATE_CMP_MAP:
-                r = dict(expr); r['ops'] = [_NEGATE_CMP_MAP[op_val]]; return r
-        if op and isinstance(op, str) and op in _NEGATE_CMP_MAP:
-            r = dict(expr); r['op'] = _NEGATE_CMP_MAP[op]; return r
     return {'type': 'UnaryOp', 'op': 'not', 'operand': expr}
 
 from .basic_block import BasicBlock, Instruction
@@ -282,6 +272,11 @@ class RegionASTGenerator:
 
         if entry_block and entry_block not in self.generated_blocks:
             entry_region = self.region_analyzer.get_entry_region_for_block(entry_block) or self.region_analyzer.get_region_for_block(entry_block)
+            import os as _os
+            if _os.environ.get('R23N21_DEBUG'):
+                import sys as _sys
+                _er_name = type(entry_region).__name__ if entry_region else None
+                print(f"[R23N21-DBG] generate() entry_block={entry_block.start_offset} entry_region={_er_name}", file=_sys.stderr)
             for r in self.regions:
                 if isinstance(r, LoopRegion) and (r.condition_block is entry_block or
                     (r.header_block and entry_block.start_offset in [s.start_offset for s in r.header_block.predecessors])):
@@ -298,8 +293,20 @@ class RegionASTGenerator:
                 pass
             elif isinstance(entry_region, IfRegion) and entry_region.condition_block == entry_block:
                 pass
+            # [R23-N21 fix] BoolOpRegion 作为入口区域时，入口块可能包含前置语句
+            # （如 ClearAllCache(); is_string = False）。这些语句不属于布尔表达式，
+            # 必须在此提取。原实现直接 pass 导致前置语句丢失。使用
+            # _if_extract_cond_instructions 提取前置语句（正确处理表达式语句、
+            # 赋值、import 等），然后标记 entry_block 为已生成。
             elif isinstance(entry_region, BoolOpRegion):
-                pass
+                _boolop_pre_stmts, _ = self._if_extract_cond_instructions(entry_block, None)
+                if _boolop_pre_stmts:
+                    ast_nodes.extend(_boolop_pre_stmts)
+                self.generated_blocks.add(entry_block)
+                import os as _os
+                if _os.environ.get('R23N21_DEBUG'):
+                    import sys as _sys
+                    print(f"[R23N21-DBG] generate() BoolOpRegion entry={entry_block.start_offset} pre_stmts={len(_boolop_pre_stmts)}", file=_sys.stderr)
             elif isinstance(entry_region, TernaryRegion):
                 # [R8-07 fix] TernaryRegion entry may contain import statements
                 # before the ternary condition preload (e.g., `from x import y as z
@@ -337,7 +344,24 @@ class RegionASTGenerator:
                     _import_pending_store = False
 
                     for _instr in entry_block.instructions:
-                        if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL'):
+                        # [R23-N22 fix] 区域归约算法原则 2（每块唯一归属）：
+                        # 入口块中的表达式语句（如 ClearAllCache() 调用）以
+                        # LOAD_* + PRECALL + CALL + POP_TOP 序列表示。原实现将
+                        # POP_TOP 直接 continue，导致 _stmt_instrs 中累积的 CALL
+                        # 表达式永不刷出，ClearAllCache() 丢失。修复：遇到 POP_TOP
+                        # 时，若 _stmt_instrs 含 CALL，构建 Expr 语句并刷出。
+                        if _instr.opname == 'POP_TOP':
+                            if _stmt_instrs:
+                                _has_call = any(_i.opname in ('CALL', 'CALL_FUNCTION', 'CALL_METHOD', 'CALL_FUNCTION_KW', 'CALL_FUNCTION_EX') for _i in _stmt_instrs)
+                                if _has_call:
+                                    _stmt = self._build_statement(_stmt_instrs)
+                                    if _stmt:
+                                        _pre_stmts.append(_stmt)
+                                    _stmt_instrs = []
+                            if _import_pending_store:
+                                _import_pending_store = False
+                            continue
+                        if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
                             continue
                         if _instr.opname in FORWARD_JUMP_OPS or _instr.opname in BACKWARD_JUMP_OPS:
                             break
@@ -440,6 +464,27 @@ class RegionASTGenerator:
                                 _stmt_instrs = []
                                 continue
                             _stmt = self._build_store_statement(_stmt_instrs, block=entry_block)
+                            if _stmt:
+                                _pre_stmts.append(_stmt)
+                            _stmt_instrs = []
+                            continue
+                        # [R10-N1 fix] 区域归约算法原则 2（每块唯一归属）：
+                        # 入口块中的 STORE_SUBSCR/STORE_ATTR 赋值（如
+                        # `return_data['data'] = []`、`obj.attr = value`）必须作为
+                        # 独立 pre_stmt 提取，否则会被累积到 _stmt_instrs 中，在
+                        # 遇到后续 STORE_FAST 时被 _build_store_statement 错误合并
+                        # 或在循环结束时丢失。balance_statement 等 9 个 financial
+                        # statement 函数的 `return_data['data'] = []` 因此丢失。
+                        if _instr.opname == 'STORE_SUBSCR':
+                            _stmt_instrs.append(_instr)
+                            _stmt = self._build_subscript_assign(_stmt_instrs)
+                            if _stmt:
+                                _pre_stmts.append(_stmt)
+                            _stmt_instrs = []
+                            continue
+                        if _instr.opname == 'STORE_ATTR':
+                            _stmt_instrs.append(_instr)
+                            _stmt = self._build_attr_assign(_stmt_instrs)
                             if _stmt:
                                 _pre_stmts.append(_stmt)
                             _stmt_instrs = []
@@ -572,18 +617,8 @@ class RegionASTGenerator:
                                 continue
                             _stmt_instrs.append(_instr)
 
-                        # [R8 Fix 1 / D6] 当 entry_block 是 TryExceptRegion entry 且
-                        # 含非 STORE 指令（try body，如 `return 1`）时，不可标记为
-                        # generated，否则 _generate_try_body 会跳过该块，try body 被
-                        # 丢弃为 `pass`（te12tryexceptreturn_valueerror 回归）。
-                        # 依「每块唯一归属」：entry_block 归 TryExceptRegion，由
-                        # _generate_try_body 处理。仅当无前导赋值（_pre_stmts 为空）
-                        # 且有剩余指令（try body）时跳过标记，避免与前导赋值场景冲突。
-                        if _stmt_instrs and not _pre_stmts:
-                            entry_ast = []
-                        else:
-                            self.generated_blocks.add(entry_block)
-                            entry_ast = _pre_stmts
+                        self.generated_blocks.add(entry_block)
+                        entry_ast = _pre_stmts
                 else:
                     _wildcard_match = self._detect_undetected_wildcard_match(entry_block)
                     if _wildcard_match:
@@ -1688,31 +1723,6 @@ class RegionASTGenerator:
 
         return result if result else None
 
-    def _is_orphan_load_expr(self, expr: Any) -> bool:
-        """[R7 Fix 2 / D5] 检测孤立 LOAD 表达式（无副作用的 Name/Attribute/Subscript/Iter）。
-
-        在 except handler 或循环 setup 块中，LOAD_FAST/LOAD_ATTR/LOAD_SUBSCR
-        + POP_TOP 序列是字节码生成器产生的无副作用表达式（如 `prod`、
-        `panel.items`、`re_data.columns`），不应作为独立 Expr 语句发射。
-        Iter 包裹的 Name/Attribute/Subscript 同理（如 GET_ITER 产物的
-        `Iter(Name('prod'))`）。
-        依「每块唯一归属」：这些 LOAD 序列归循环 setup 或 except 机制，
-        不作为用户语句；Call/BinOp/BoolOp/Compare/Yield 等可能有副作用，
-        不视为孤立 LOAD，保留发射。
-        """
-        if not isinstance(expr, dict):
-            return False
-        etype = expr.get('type')
-        if etype == 'Name':
-            return True
-        if etype == 'Attribute':
-            return self._is_orphan_load_expr(expr.get('value'))
-        if etype == 'Subscript':
-            return self._is_orphan_load_expr(expr.get('value'))
-        if etype == 'Iter':
-            return self._is_orphan_load_expr(expr.get('value'))
-        return False
-
     def _build_effective_stmts(self, block: BasicBlock, effective: List[Instruction]) -> List[Dict[str, Any]]:
         stmts, expr_instrs, seen_for = [], [], set()
         # [R11-batch3 err 9-12] Skip for-target instructions (STORE_ATTR/STORE_SUBSCR + their
@@ -1745,18 +1755,13 @@ class RegionASTGenerator:
                 seen_for.add(instr.argval)
                 if expr_instrs:
                     e = self.expr_reconstructor.reconstruct(expr_instrs)
-                    # [R7 Fix 2 / D5] 抑制孤立 Name/Attr/Subscript Expr：
-                    # LOAD + POP_TOP 序列中重建出的纯 LOAD 表达式（如 `prod`）
-                    # 是字节码生成器产物的无副作用语句，依「每块唯一归属」
-                    # 归循环 setup / except 机制，不作为用户 Expr 发射。
-                    if e and not self._is_orphan_load_expr(e):
+                    if e:
                         stmts.append({'type': 'Expr', 'value': e})
                     expr_instrs = []
                 continue
             if instr.opname == 'POP_TOP' and expr_instrs:
                 e = self.expr_reconstructor.reconstruct(expr_instrs)
-                # [R7 Fix 2 / D5] 抑制孤立 Name/Attr/Subscript Expr（同上）。
-                if e and not self._is_orphan_load_expr(e):
+                if e:
                     stmts.append({'type': 'Expr', 'value': e})
                 expr_instrs = []
                 continue
@@ -1788,8 +1793,7 @@ class RegionASTGenerator:
                                                   'RAISE_VARARGS', 'IMPORT_NAME') for i in expr_instrs):
                         return stmts
             e = self.expr_reconstructor.reconstruct(expr_instrs)
-            # [R7 Fix 2 / D5] 抑制孤立 Name/Attr/Subscript Expr（同上）。
-            if e and not self._is_orphan_load_expr(e):
+            if e:
                 stmts.append({'type': 'Expr', 'value': e})
         return stmts
 
@@ -3020,17 +3024,6 @@ AST 映射规则:
                     continue
                 if ib not in self.generated_blocks:
                     ib_stmts = self._generate_block_statements(ib)
-                    # [R7 Fix 2 / D5] 抑制 init_blocks 末尾的孤立 Name/Attr/Subscript Expr：
-                    # 当 init_block 末尾为 LOAD_FAST/LOAD_ATTR/LOAD_SUBSCR 序列且无 STORE/CALL
-                    # 消费时（如 `prod = data.get(prod_code)` 后跟 `LOAD_FAST prod` 喂给下一块的
-                    # GET_ITER），该末尾 LOAD 是 for 循环迭代器表达式的一部分，依「每块唯一归属」
-                    # 归属 for_iter_setup 机制代码，不作为用户 Expr 发射。
-                    # 算法依据：唯一块归属 + 入口引用语义
-                    if ib_stmts and isinstance(ib_stmts[-1], dict):
-                        _last = ib_stmts[-1]
-                        if (_last.get('type') == 'Expr'
-                                and self._is_orphan_load_expr(_last.get('value'))):
-                            ib_stmts = ib_stmts[:-1]
                     pre_stmts.extend(ib_stmts)
                     self.generated_blocks.add(ib)
                     self.generated_offsets.add(ib.start_offset)
@@ -3103,7 +3096,17 @@ AST 映射规则:
                 # [R5 Fix 1] 唯一块归属：若 for_iter_setup 已被其他区域（如前序
                 # 循环的 sequential_after_loop）标记为已生成，则其前缀语句已输出，
                 # 不再重复抽取 pre_stmts（仅抽取 iter_expr 供本 for 循环使用）。
-                if _fis_pre_stmts and for_iter_setup not in self.generated_blocks:
+                # [R11-N1 fix] 区域归约算法原则 2（每块唯一归属）：generate() 在
+                # 入口块是 LoopRegion 的 for_iter_setup 时（L297），会预先将
+                # entry_block 标记为已生成以防止顺序块扫描重复处理。但这会导致
+                # 此处 guard 错误跳过 pre_stmts 输出（如 dict_to_dataframe 的
+                # `df = {}` 即 BUILD_MAP+STORE_FAST 被提取但未输出）。修正：
+                # 只有当 for_iter_setup 不属于本 region（即被前序循环声明）时
+                # 才跳过；若 for_iter_setup 是本 region 的 setup 块（entry_block
+                # 是本循环的前驱），即使已被 generate() 标记也必须输出 pre_stmts。
+                _fis_is_self_setup = (for_iter_setup in region.blocks or
+                                      for_iter_setup is region.metadata.get('for_iter_setup'))
+                if _fis_pre_stmts and (_fis_is_self_setup or for_iter_setup not in self.generated_blocks):
                     pre_stmts.extend(_fis_pre_stmts)
                 iter_expr = self.expr_reconstructor.reconstruct(_fis_iter_instrs) if _fis_iter_instrs else None
                 if iter_expr is None and instrs:
@@ -3271,6 +3274,44 @@ AST 映射规则:
                     _exclude_blocks.add(_parent_loop.condition_block)
                 if _exclude_blocks:
                     _filtered_else_blocks = [b for b in _filtered_else_blocks if b not in _exclude_blocks]
+            # [R13-N2 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（父引用子入口）：
+            # 当前循环的 for_iter_exit（else_blocks 中的块）可能是另一个后续
+            # LoopRegion 的 for_iter_setup（如 `for x in a: ... for y in b: ...`
+            # 中第一个循环退出后的 `b + GET_ITER` 块）。原实现把该块当作
+            # sequential_after_loop 输出为独立 Expr（如 `data`），导致重复输出
+            # （for_iter_setup 的 LOAD 部分既作为 Expr 输出，又作为第二个循环的
+            # iter_expr）。修正：排除属于其他 LoopRegion for_iter_setup 的块，
+            # 交由该 LoopRegion 的 _loop_generate_for 完整处理。
+            _other_loop_fis = set()
+            for _r in self.regions:
+                if isinstance(_r, LoopRegion) and _r is not region:
+                    _fis = _r.metadata.get('for_iter_setup')
+                    if _fis is not None and _fis in _filtered_else_blocks:
+                        _other_loop_fis.add(_fis)
+            if _other_loop_fis:
+                _filtered_else_blocks = [b for b in _filtered_else_blocks
+                                         if b not in _other_loop_fis]
+            # [R15-N5 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（父引用子入口）：
+            # 当前循环的 else_blocks（for_iter_exit）可能同时是祖先 IfRegion 的
+            # merge_block（如 get_valuation_info 中 `if filled: ... for stock in
+            # ...: ... return data_dict`，block 550 `return data_dict` 既是 for
+            # 循环的 FOR_ITER 目标，也是 `if filled` 的 POP_JUMP_FORWARD_IF_FALSE
+            # 目标）。若循环将此块作为 sequential_after_loop 输出，return 会被放
+            # 在 if body 内部（`if filled: ...; for ...: ...; return data_dict`），
+            # 而原始源码中 return 在 if 之后（`if filled: ...; for ...: ...` +
+            # `return data_dict`），导致 recompiled 字节码多出隐式 `return None`
+            # （delta=-4，3 个函数）。修复：排除属于祖先 IfRegion merge_block 的
+            # 块，交由祖先 IfRegion 作为 post-if 代码生成。
+            _ancestor_if_merge_blocks = set()
+            for _r in self.regions:
+                if (isinstance(_r, IfRegion) and _r is not region
+                        and id(_r) in self._generating_regions
+                        and getattr(_r, 'merge_block', None) is not None):
+                    if _r.merge_block in _filtered_else_blocks:
+                        _ancestor_if_merge_blocks.add(_r.merge_block)
+            if _ancestor_if_merge_blocks:
+                _filtered_else_blocks = [b for b in _filtered_else_blocks
+                                         if b not in _ancestor_if_merge_blocks]
             else_stmts = self._if_generate_branch_stmts(_filtered_else_blocks) if _filtered_else_blocks else []
 
         # 过滤for循环else子句中多余的return None（隐式函数返回，非for-else语义）
@@ -3618,12 +3659,16 @@ AST 映射规则:
                             _pre_stmts.append({'type': 'Raise', 'exc': None})
                         else:
                             _exc_instrs = [i for i in _stmt_instrs if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                            _exc_expr = self.expr_reconstructor.reconstruct(_exc_instrs) if _exc_instrs else None
-                            if _exc_expr is None and _exc_instrs:
-                                _exc_expr = self._build_statement(_exc_instrs)
-                                if _exc_expr and _exc_expr.get('type') == 'Expr':
-                                    _exc_expr = _exc_expr.get('value')
-                            _pre_stmts.append({'type': 'Raise', 'exc': _exc_expr})
+                            _raise_stmt = self._build_raise_stmt_from_instrs(_exc_instrs, _instr.arg)
+                            if _raise_stmt.get('type') == 'Raise':
+                                # 兜底：reconstruct 失败时尝试 _build_statement
+                                _exc_expr = _raise_stmt.get('exc')
+                                if _exc_expr is None and _exc_instrs:
+                                    _exc_expr = self._build_statement(_exc_instrs)
+                                    if _exc_expr and _exc_expr.get('type') == 'Expr':
+                                        _exc_expr = _exc_expr.get('value')
+                                    _raise_stmt = {'type': 'Raise', 'exc': _exc_expr}
+                            _pre_stmts.append(_raise_stmt)
                         _stmt_instrs = []
                         break
                     if _instr.opname == 'RETURN_CONST':
@@ -3708,6 +3753,31 @@ AST 映射规则:
                                             _s.get('value', {}).get('id') == _dec_name):
                                             pre_stmts.pop(_i)
                                             break
+                            pre_stmts.append(_stmt)
+                        _eps_instrs = []
+                        continue
+
+                    # [R14-N3 fix] 区域归约算法原则 2（每块唯一归属）：
+                    # while 循环条件块中的 STORE_SUBSCR/STORE_ATTR 赋值（如
+                    # `params['page_no'] = str(page_no)`、`obj.attr = value`）必须作为
+                    # 独立 pre_stmt 提取，否则会落入 fallback `_eps_instrs.append`
+                    # 累积但永不构建为语句，导致赋值丢失。镜像 IfRegion 条件块
+                    # R10-N2 修复 (L8368-8383) 与入口块 R10-N1 修复 (L447-467)。
+                    # 失败模式：cash_collection_ability 等 13 个函数中，for 循环体内
+                    # 嵌套 while 循环，while 条件块同时包含 for 体的前置赋值
+                    # `params['page_no'] = str(page_no)`（STORE_SUBSCR）。未提取时
+                    # FOR_ITER 目标偏移因循环体字节码缩短而错误（pyc:1178 vs src:1142）。
+                    if _instr.opname == 'STORE_SUBSCR':
+                        _eps_instrs.append(_instr)
+                        _stmt = self._build_subscript_assign(_eps_instrs)
+                        if _stmt:
+                            pre_stmts.append(_stmt)
+                        _eps_instrs = []
+                        continue
+                    if _instr.opname == 'STORE_ATTR':
+                        _eps_instrs.append(_instr)
+                        _stmt = self._build_attr_assign(_eps_instrs)
+                        if _stmt:
                             pre_stmts.append(_stmt)
                         _eps_instrs = []
                         continue
@@ -4208,6 +4278,59 @@ AST 映射规则:
             if block == child_info.get('iter_setup_block'):
                 self.generated_blocks.add(block)
                 continue
+            # [R14-N9 fix] 区域归约算法原则 2（每块唯一归属）：
+            # 跳过子 LoopRegion 的 for_iter_setup 块——这些块由子循环的
+            # _generate_loop 处理（提取 pre_stmts + iter_expr）。若不跳过，
+            # 父循环会将其作为普通块处理（输出 BUILD_MAP+STORE_FAST 等为
+            # 独立语句），随后子循环又提取同样的 pre_stmts，导致重复输出
+            # （如 get_stock_info 中 `info_dict = {}` 出现两次，FOR_ITER
+            # 目标偏移 +4）。
+            _is_child_loop_fis = False
+            for _child in (region.children or []):
+                if isinstance(_child, LoopRegion):
+                    _cfis = _child.metadata.get('for_iter_setup')
+                    if _cfis is block:
+                        _is_child_loop_fis = True
+                        break
+            if _is_child_loop_fis:
+                self.generated_blocks.add(block)
+                continue
+            # [R30 fix] 区域归约算法原则 1（自底向上归约）+ 原则 4（父引用子入口）：
+            # 在 dispatch 处理子区域入口之前，先 flush body_blocks_no_header 中
+            # 偏移量 < 当前块的普通块。否则 dispatch 会将子区域直接追加到
+            # body_stmts，而这些普通块（偏移量更小）会被 _loop_postprocess
+            # 放到子区域之后，导致顺序错误（如 `data = return_data['data']`
+            # 出现在 try-except 之后，而非之前）。
+            # 仅在当前块是子区域入口时 flush，避免对普通块提前 flush 破坏
+            # if-else 链检测（_if_generate_branch_stmts 需要完整块序列）。
+            if body_blocks_no_header:
+                _is_child_entry_pre = False
+                _er_pre = self.region_analyzer.get_entry_region_for_block(block)
+                if _er_pre and _er_pre.entry is block and _er_pre is not region:
+                    if isinstance(_er_pre, (TryExceptRegion, WithRegion, LoopRegion, MatchRegion, IfRegion)):
+                        _is_child_entry_pre = True
+                if not _is_child_entry_pre:
+                    # 也检查是否是子 LoopRegion 的 header_block/condition_block
+                    for _ch in (region.children or []):
+                        if isinstance(_ch, LoopRegion) and _ch is not region:
+                            if _ch.header_block is block or (_ch.condition_block is block and _ch.condition_block is not None):
+                                _is_child_entry_pre = True
+                                break
+                if _is_child_entry_pre:
+                    _cur_offset_pre = block.start_offset
+                    _before_pre = [b for b in body_blocks_no_header if b.start_offset < _cur_offset_pre]
+                    if _before_pre:
+                        _after_pre = [b for b in body_blocks_no_header if b.start_offset >= _cur_offset_pre]
+                        _branch_stmts_pre = self._if_generate_branch_stmts(_before_pre)
+                        if _branch_stmts_pre and body_stmts:
+                            _last_bt_pre = body_stmts[-1].get('type') if isinstance(body_stmts[-1], dict) else None
+                            if _last_bt_pre in ('Try', 'If', 'For', 'While', 'With'):
+                                while _branch_stmts_pre and isinstance(_branch_stmts_pre[0], dict) and _branch_stmts_pre[0].get('type') == 'Continue':
+                                    _branch_stmts_pre.pop(0)
+                        if _branch_stmts_pre:
+                            body_stmts.extend(_branch_stmts_pre)
+                        body_blocks_no_header.clear()
+                        body_blocks_no_header.extend(_after_pre)
             handled = self._loop_dispatch_block(
                 block, region, child_info, boolop_for_while,
                 body_stmts, body_blocks_no_header, back_edge_stmts, natural_back_edge,
@@ -4307,17 +4430,56 @@ AST 映射规则:
                         for pred in child.header_block.predecessors:
                             if any(instr.opname in ('GET_ITER', 'GET_AITER') for instr in pred.instructions):
                                 if pred in region.body_blocks:
-                                    _pre_stmts = self._loop_extract_pre_stmts_from_block(pred)
-                                    if _pre_stmts:
-                                        body_stmts.extend(_pre_stmts)
+                                    # [R14-N9 fix] 区域归约算法原则 2（每块唯一归属）：
+                                    # 不在此处提取子循环 for_iter_setup 的前置语句——
+                                    # 子循环的 _generate_loop 会通过
+                                    # _loop_extract_for_iter_pre_stmts 提取 pre_stmts
+                                    # 并在 for 语句之前输出。若此处也提取并加入
+                                    # body_stmts，会导致重复输出（如 get_stock_info
+                                    # 中 `info_dict = {}` 出现两次，FOR_ITER 目标
+                                    # 偏移 +4）。仅标记为已生成，防止父循环体处理
+                                    # 重复输出。
                                     self.generated_blocks.add(pred)
                                 break
 
         return pre_stmts
 
+    def _is_for_iter_setup_of_ungenerated_loop(self, block: BasicBlock) -> bool:
+        """[R23-N9 fix] 区域归约算法原则 2（每块唯一归属）+
+        原则 3（嵌套即抽象节点）：
+
+        判断 block 是否是某个尚未生成的 LoopRegion 的 for_iter_setup 块。
+        此类块含 LOAD_*+GET_ITER（迭代器准备）及可能的前置赋值语句，
+        必须由 LoopRegion 生成器（_loop_generate_for）统一处理，提取
+        iter_expr 及前置赋值语句。若被其他生成路径（如 _generate_try 的
+        post-try 处理、_process_if_blocks 的顺序扫描）直接调用
+        _generate_block_statements，会导致：
+        1. 前置赋值语句（如 `i = 0`）被提前输出，LoopRegion 生成时
+           再次提取，产生重复语句。
+        2. LOAD_*+GET_ITER 被当作裸表达式输出（如 `fields`），而非
+           作为 for 循环的 iter_expr。
+
+        例外：当 for_iter_setup 与 LoopRegion 的 entry/header_block
+        是同一个块时（LOAD_*+GET_ITER+FOR_ITER 全在同一块），此块是
+        LoopRegion 的入口，必须由 _generate_region(LoopRegion) 生成，
+        不能跳过（见 R23-N8 fix）。
+
+        Returns:
+            True 若 block 是某个未生成 LoopRegion 的 for_iter_setup
+            且不是该 LoopRegion 的 entry/header_block。
+        """
+        for _lr in self.region_analyzer.regions:
+            if isinstance(_lr, LoopRegion):
+                _fis = _lr.metadata.get('for_iter_setup')
+                if _fis is block and _lr not in self._generated_regions:
+                    if _lr.entry is not block and _lr.header_block is not block:
+                        return True
+                    return False
+        return False
+
     def _loop_extract_for_iter_pre_stmts(self, instrs: List[Instruction], block: BasicBlock) -> Tuple[List[Dict[str,Any]], List[Instruction]]:
         """从for_iter_setup指令序列中提取前置赋值语句，返回(前置语句列表, 剩余迭代器指令)
-        
+
         当for循环前有赋值语句时(如 result = [] / found = None)，CPython将这些语句
         和GET_ITER放在同一个基本块中。此方法将前置STORE语句提取出来作为pre_stmts，
         只保留迭代器相关指令(GET_ITER之前的LOAD等)用于表达式重建。
@@ -4326,7 +4488,48 @@ AST 映射规则:
         _remaining: List[Instruction] = []
         _buf: List[Instruction] = []
         _store_ops = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
+        # [R14-N8 fix] 区域归约算法原则 2（每块唯一归属）：
+        # for_iter_setup 块可能含多个 GET_ITER（如 listcomp 的参数
+        # `trade_times = [x for x in trade_times]` 中 listcomp 的 GET_ITER
+        # 和 for 循环的 GET_ITER 在同一块）。只有最后一个 GET_ITER 是
+        # for 循环的迭代器设置，中间的 GET_ITER 属于表达式的一部分。
+        # 预计算最后一个 GET_ITER 的索引，只在该处分割 pre_stmts / iter_instrs。
+        _last_get_iter_idx = -1
+        for _i, _instr in enumerate(instrs):
+            if _instr.opname in ('GET_ITER', 'GET_AITER'):
+                _last_get_iter_idx = _i
+        _import_pending_store = False
         for _idx, _instr in enumerate(instrs):
+            # [R15-N4 fix] 区域归约算法原则 2（每块唯一归属）：
+            # for_iter_setup 块可能含 import 语句（如 get_valuation_info 中
+            # `if filled: from fly.common.tradingday_calendar import trading_days`）。
+            # IMPORT_NAME 前的 LOAD_CONST (level=0) + LOAD_CONST (fromlist) 是
+            # import 的参数，不是独立语句。IMPORT_NAME + IMPORT_FROM + STORE_* +
+            # POP_TOP 构成完整的 ImportFrom 语句。若不特殊处理，LOAD_CONST
+            # (fromlist) + STORE_FAST 会被 _build_store_statement 误识别为
+            # `trading_days = ('trading_days',)`，且 IMPORT_NAME/IMPORT_FROM 被
+            # 累积到 _buf 后推入 _remaining（迭代器指令），导致 import 语句丢失
+            # （delta=+4）。
+            if _instr.opname == 'IMPORT_NAME':
+                _buf = []
+                _import_result = self._process_instruction(_instr, block, [])
+                if _import_result:
+                    if isinstance(_import_result, list):
+                        _pre_stmts.extend(_import_result)
+                    else:
+                        _pre_stmts.append(_import_result)
+                _import_pending_store = True
+                continue
+            if _instr.opname == 'IMPORT_FROM':
+                _import_pending_store = True
+                continue
+            if _instr.opname in _store_ops and _import_pending_store:
+                _buf = []
+                _import_pending_store = False
+                continue
+            if _instr.opname == 'POP_TOP' and _import_pending_store:
+                _import_pending_store = False
+                continue
             if _instr.opname in _store_ops:
                 _buf.append(_instr)
                 _stmt = self._build_store_statement(_buf, block=block)
@@ -4334,7 +4537,41 @@ AST 映射规则:
                     _pre_stmts.append(_stmt)
                 _buf = []
                 continue
-            if _instr.opname in ('GET_ITER', 'GET_AITER'):
+            # [R10-N6 fix] 区域归约算法原则 2（每块唯一归属）：
+            # for 循环前驱块（含 GET_ITER）中的 STORE_SUBSCR/STORE_ATTR 赋值
+            # （如 `data_return.index = ...`、`dict[key] = ...`）必须作为独立
+            # pre_stmt 提取，否则会被累积到 _buf 中并在 GET_ITER 处理时被推入
+            # _remaining（迭代器指令）而丢失。9 个 get_xxx_statement 函数的
+            # `data_return.index = ...`（STORE_ATTR）因此丢失。
+            if _instr.opname == 'STORE_SUBSCR':
+                _buf.append(_instr)
+                _stmt = self._build_subscript_assign(_buf)
+                if _stmt:
+                    _pre_stmts.append(_stmt)
+                _buf = []
+                continue
+            if _instr.opname == 'STORE_ATTR':
+                _buf.append(_instr)
+                _stmt = self._build_attr_assign(_buf)
+                if _stmt:
+                    _pre_stmts.append(_stmt)
+                _buf = []
+                continue
+            # [R10-N6 fix] POP_TOP 作为 CALL 表达式语句的终结符
+            # （如 `DataFrame_temp.update(...)`）。当 _buf 中含 CALL 时，POP_TOP
+            # 标志一个独立表达式语句，必须构建为 Expr 语句，否则会被推入
+            # _remaining 而丢失。
+            if _instr.opname == 'POP_TOP':
+                if _buf and any(i.opname in ('CALL', 'CALL_FUNCTION', 'CALL_METHOD',
+                                              'CALL_FUNCTION_KW', 'CALL_FUNCTION_EX') for i in _buf):
+                    _stmt = self._build_statement(_buf)
+                    if _stmt:
+                        _pre_stmts.append(_stmt)
+                    _buf = []
+                    continue
+            # [R14-N8 fix] 只在最后一个 GET_ITER 处分割——中间的 GET_ITER
+            # （如 listcomp 参数的 GET_ITER）属于表达式，留在 _buf 中。
+            if _instr.opname in ('GET_ITER', 'GET_AITER') and _idx == _last_get_iter_idx:
                 if _buf:
                     _remaining.extend(_buf)
                     _buf = []
@@ -4349,6 +4586,7 @@ AST 映射规则:
         """从for循环的内层iter_setup前驱块提取前置语句"""
         _pre_stmts: List[Dict[str, Any]] = []
         _stmt_instrs: List[Instruction] = []
+        _import_pending_store = False
         for _instr in pred.instructions:
             if _instr.opname in ('GET_ITER', 'GET_AITER'):
                 break
@@ -4361,9 +4599,47 @@ AST 映射规则:
             if _instr.opname in ('POP_EXCEPT', 'PUSH_EXC_INFO', 'RERAISE',
                                 'WITH_EXCEPT_START', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH'):
                 continue
+            # [R15-N4 fix] 镜像 _loop_extract_for_iter_pre_stmts 的 IMPORT_NAME 处理。
+            if _instr.opname == 'IMPORT_NAME':
+                _stmt_instrs = []
+                _import_result = self._process_instruction(_instr, pred, [])
+                if _import_result:
+                    if isinstance(_import_result, list):
+                        _pre_stmts.extend(_import_result)
+                    else:
+                        _pre_stmts.append(_import_result)
+                _import_pending_store = True
+                continue
+            if _instr.opname == 'IMPORT_FROM':
+                _import_pending_store = True
+                continue
+            if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_DEREF') and _import_pending_store:
+                _stmt_instrs = []
+                _import_pending_store = False
+                continue
+            if _instr.opname == 'POP_TOP' and _import_pending_store:
+                _import_pending_store = False
+                continue
             if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_DEREF'):
                 _stmt_instrs.append(_instr)
                 _stmt = self._build_statement(list(_stmt_instrs))
+                if _stmt:
+                    _pre_stmts.append(_stmt)
+                _stmt_instrs = []
+                continue
+            # [R10-N6 fix] 区域归约算法原则 2（每块唯一归属）：
+            # for 循环内层 iter_setup 前驱块中的 STORE_SUBSCR/STORE_ATTR 赋值
+            # 必须作为独立 pre_stmt 提取。镜像 _loop_extract_for_iter_pre_stmts。
+            if _instr.opname == 'STORE_SUBSCR':
+                _stmt_instrs.append(_instr)
+                _stmt = self._build_subscript_assign(list(_stmt_instrs))
+                if _stmt:
+                    _pre_stmts.append(_stmt)
+                _stmt_instrs = []
+                continue
+            if _instr.opname == 'STORE_ATTR':
+                _stmt_instrs.append(_instr)
+                _stmt = self._build_attr_assign(list(_stmt_instrs))
                 if _stmt:
                     _pre_stmts.append(_stmt)
                 _stmt_instrs = []
@@ -5168,6 +5444,25 @@ AST 映射规则:
                     _self_loop_stmts.append(_stmt)
                 _self_loop_instrs = []
                 continue
+            # [R30 fix] 区域归约算法原则 2（每块唯一归属）：
+            # STORE_SUBSCR/STORE_ATTR 赋值（如 `params['start_pos'] += 10000`、
+            # `obj.attr = value`）必须作为独立语句提取，否则会被累积到
+            # _self_loop_instrs 中，在遇到后续 STORE_FAST 时被 _build_store_statement
+            # 错误合并或丢失。镜像 _loop_extract_pre_stmts_from_instrs 的 R10-N7 修复。
+            if _sli_instr.opname == 'STORE_SUBSCR':
+                _self_loop_instrs.append(_sli_instr)
+                _stmt = self._build_subscript_assign(_self_loop_instrs)
+                if _stmt:
+                    _self_loop_stmts.append(_stmt)
+                _self_loop_instrs = []
+                continue
+            if _sli_instr.opname == 'STORE_ATTR':
+                _self_loop_instrs.append(_sli_instr)
+                _stmt = self._build_attr_assign(_self_loop_instrs)
+                if _stmt:
+                    _self_loop_stmts.append(_stmt)
+                _self_loop_instrs = []
+                continue
             _self_loop_instrs.append(_sli_instr)
         if _self_loop_instrs:
             _stmt = self._build_statement(_self_loop_instrs)
@@ -5679,11 +5974,8 @@ AST 映射规则:
                                 'WITH_EXCEPT_START', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH'):
                 continue
             if _instr.opname == 'RAISE_VARARGS':
-                _exc_expr = None
-                if _instr.arg >= 1 and _hdr_instrs:
-                    _exc_expr = self.expr_reconstructor.reconstruct(_hdr_instrs)
+                _raise_node = self._build_raise_stmt_from_instrs(_hdr_instrs, _instr.arg if _instr.arg else 0)
                 _hdr_instrs = []
-                _raise_node = {'type': 'Raise', 'exc': _exc_expr, 'cause': None}
                 _hdr_stmts.append(_raise_node)
                 continue
             if _instr.opname == 'COPY' and _instr.arg == COPY_STACK_TOP:
@@ -5735,6 +6027,28 @@ AST 映射规则:
                     continue
                 _hdr_instrs.append(_instr)
                 _stmt = self._build_store_statement(_hdr_instrs, block=block)
+                if _stmt:
+                    _hdr_stmts.append(_stmt)
+                _hdr_instrs = []
+                _seen_store = True
+                continue
+            # [R10-N5 fix] 区域归约算法原则 2（每块唯一归属）：
+            # while 循环 header 块（同时含循环前置语句和 while 条件）中的
+            # STORE_SUBSCR/STORE_ATTR 赋值（如 `params['page_no'] = str(page_no)`、
+            # `obj.attr = value`）必须作为独立 pre_stmt 提取，否则会被累积到
+            # _hdr_instrs 中，在遇到后续 STORE_FAST 时被 _build_store_statement
+            # 错误合并或丢失。镜像入口块 R10-N1 修复 (L447-467)。
+            if _instr.opname == 'STORE_SUBSCR':
+                _hdr_instrs.append(_instr)
+                _stmt = self._build_subscript_assign(_hdr_instrs)
+                if _stmt:
+                    _hdr_stmts.append(_stmt)
+                _hdr_instrs = []
+                _seen_store = True
+                continue
+            if _instr.opname == 'STORE_ATTR':
+                _hdr_instrs.append(_instr)
+                _stmt = self._build_attr_assign(_hdr_instrs)
                 if _stmt:
                     _hdr_stmts.append(_stmt)
                 _hdr_instrs = []
@@ -6192,6 +6506,25 @@ AST 映射规则:
             if _nbi.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
                 _buf.append(_nbi)
                 _stmt = self._build_store_statement(_buf, block=block)
+                if _stmt:
+                    _pre_stmts.append(_stmt)
+                _buf = []
+                continue
+            # [R10-N7 fix] 区域归约算法原则 2（每块唯一归属）：
+            # 回边块（back_edge_block）中的 STORE_SUBSCR/STORE_ATTR 赋值（如
+            # `params['page_no'] = str(page_no)`、`obj.attr = value`）必须作为
+            # 独立 pre_stmt 提取，否则会被累积到 _buf 中，在遇到后续 POP_TOP
+            # 时被 _build_statement 错误合并或丢失。镜像入口块 R10-N1 修复。
+            if _nbi.opname == 'STORE_SUBSCR':
+                _buf.append(_nbi)
+                _stmt = self._build_subscript_assign(_buf)
+                if _stmt:
+                    _pre_stmts.append(_stmt)
+                _buf = []
+                continue
+            if _nbi.opname == 'STORE_ATTR':
+                _buf.append(_nbi)
+                _stmt = self._build_attr_assign(_buf)
                 if _stmt:
                     _pre_stmts.append(_stmt)
                 _buf = []
@@ -6710,6 +7043,16 @@ AST 映射规则:
             try_block = try_region.entry
             if try_block in self.generated_blocks:
                 continue
+            # [R24-N1 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（父引用子入口）：
+            # 若 TryExceptRegion 的入口块在 LoopRegion 的 else_blocks 中，则该
+            # TryExceptRegion 属于 for-else 子句（或循环自然退出后的顺序代码），
+            # 不属于循环体。跳过此 TryExceptRegion，交由 else_blocks 的
+            # _if_generate_branch_stmts 生成。否则 try-except 会错误地出现在
+            # 循环体内（如 valuation 中 `for ...: while ...:` 后的 try-except
+            # 被放入 for body，而 `data = return_data['data']` 被放入 orelse，
+            # 导致结构颠倒、字节码 FOR_ITER 目标偏移 +276）。
+            if region.else_blocks and try_block in region.else_blocks:
+                continue
             try_id = id(try_region)
             if try_id in self._generated_regions or try_id in self._generating_regions:
                 self.generated_blocks.add(try_block)
@@ -7130,6 +7473,28 @@ AST 映射规则:
         cond_block = region.condition_block
         if cond_block is None:
             return {'type': 'Pass'}
+        # [R18-N2 fix] 区域归约算法原则：每个结构在识别阶段就正确分类。
+        # IF_ELIF_CHAIN 的 elif 条件块应是纯粹的条件表达式块，不应同时是
+        # TryExceptRegion/WithRegion/LoopRegion/MatchRegion 等结构区域的入口。
+        # 当 elif 条件块是结构区域入口时（如 `if date is None: ... else:
+        # try: check_datetime(date); if ...: ...` 被错误识别为
+        # `if date is None: ... elif <try entry>: ...`），elif 链识别错误，
+        # 应降级为普通 if-else 处理（else 分支含嵌套 TryExceptRegion）。
+        # 依「每块唯一归属」：elif 条件块是结构区域入口时，结构区域拥有该块，
+        # elif 链不能抢占。
+        if getattr(region, 'elif_conditions', None):
+            _should_degrade_to_normal = False
+            for _ec in region.elif_conditions:
+                _ec_entry_region = self.region_analyzer.get_entry_region_for_block(_ec)
+                if isinstance(_ec_entry_region, (TryExceptRegion, WithRegion, LoopRegion, MatchRegion)):
+                    _should_degrade_to_normal = True
+                    break
+            if _should_degrade_to_normal:
+                # 清除 elif 结构，降级为普通 if-else
+                region.elif_conditions = None
+                region.elif_bodies = None
+                region.elif_final_else = None
+                return self._if_generate_normal(region)
         if (getattr(region, 'elif_conditions', None) and len(region.elif_conditions) == 1):
             elif_cond = region.elif_conditions[0]
             cond_last = cond_block.get_last_instruction()
@@ -7192,6 +7557,13 @@ AST 映射规则:
         region_id = id(region)
         self._generating_regions.add(region_id)
         pre_stmts, cond_instrs = self._if_extract_cond_instructions(cond_block, region)
+        # [R13-N1 fix] 同 _if_generate_normal：当 entry 与 condition_block 不同
+        # （BoolOpRegion 子节点模式），从 entry 块提取前置语句。
+        if (region.entry is not None and region.entry is not cond_block
+                and region.entry not in self.generated_blocks):
+            _entry_pre_stmts, _ = self._if_extract_cond_instructions(region.entry, region)
+            if _entry_pre_stmts:
+                pre_stmts = _entry_pre_stmts + pre_stmts
         condition = self._if_extract_condition_from_instructions(region, cond_block, cond_instrs)
         if hasattr(region, 'elif_conditions') and region.elif_conditions:
             for ec in region.elif_conditions:
@@ -7234,8 +7606,83 @@ AST 映射规则:
                     ) and len(b.instructions) <= 2:
                         _blocks_to_remove.add(b)
                 region.then_blocks = [b for b in region.then_blocks if b not in _blocks_to_remove]
+        # [R23-N18 fix] 区域归约算法原则 2（每块唯一归属）+ 部分合并模式：
+        # 当 IF_ELIF_CHAIN 的 if 分支和 elif/else 分支有不同的合并点时
+        # （if 分支 JUMP 到 merge_block，但 elif/else 有自己的子合并点），
+        # 生成嵌套 if-else 结构而非扁平 if-elif-else。
+        # 典型场景（date_convert）：
+        #   if report_types is None:
+        #       ...  # if branch with own data_return (@200)
+        #       JUMP to merge (342)
+        #   elif month_temp <= report_types:
+        #       ...  # elif body (@268)
+        #       JUMP to sub-merge (288)
+        #   else:
+        #       ...  # else body (@284)
+        #       fall through to sub-merge (288)
+        #   sub-merge (288): shared tail of elif/else
+        #       data_return = ...
+        #       fall through to merge (342)
+        #   merge (342): return data_return
+        #
+        # 原实现将 @288 作为"loose block"在 if-elif-else 之后生成，
+        # 导致 if 分支的 JUMP_FORWARD 目标从 342 变为 288（跳到共享 tail），
+        # 与原始字节码不一致。
+        #
+        # 修复：检测部分合并模式，将子合并块语句追加到 else 分支末尾
+        # （作为嵌套 if-elif-else 之后的语句），使 if 分支 JUMP 到 merge_block。
+        _r23n18_partial_merge_block = None
+        if (getattr(region, 'elif_conditions', None)
+                and getattr(region, 'elif_bodies', None)
+                and getattr(region, 'elif_final_else', None)
+                and region.merge_block is not None
+                and len(region.elif_bodies) > 0
+                and region.elif_bodies[0]
+                and region.elif_final_else):
+            _r23n18_elif_body_last = region.elif_bodies[0][-1]
+            _r23n18_else_body_last = region.elif_final_else[-1]
+            _r23n18_elif_succs = set(_r23n18_elif_body_last.successors)
+            _r23n18_else_succs = set(_r23n18_else_body_last.successors)
+            _r23n18_common_succs = _r23n18_elif_succs & _r23n18_else_succs
+            for _r23n18_cs in _r23n18_common_succs:
+                if (_r23n18_cs is not region.merge_block
+                        and _r23n18_cs not in region.blocks
+                        and _r23n18_cs not in self.generated_blocks):
+                    _r23n18_cs_region = self.region_analyzer.get_region_for_block(_r23n18_cs)
+                    if (_r23n18_cs_region is None
+                            or _r23n18_cs_region.region_type.name == 'BASIC'):
+                        _r23n18_partial_merge_block = _r23n18_cs
+                        break
         then_stmts = self._if_generate_then_branch(region)
         elif_part = self._if_generate_elif_chain(region)
+        # [R23-N18] 部分合并模式：将子合并块语句追加到 elif/else 链末尾
+        # [R23-N18-v2 fix] 区域归约算法原则 4（父引用子入口）+ 字节码等价：
+        # 原实现仅移除 _is_elif 标记，但 code_generator 在 _is_nested_if 未设置
+        # 且 test 非简单变量时仍将首个 If 当作 elif 处理，导致追加的 sub_merge
+        # 语句被包在重复的 else 块中（SyntaxError: 重复 else）。
+        # 修复：将内层 If 标记为 _is_nested_if=True，强制 code_generator 走 else
+        # 分支生成 `else: if ...: ... else: ...; sub_merge_stmts`，使 if 分支
+        # JUMP 直接到 merge_block，elif/else 分支共享 sub_merge 后 fall through。
+        if _r23n18_partial_merge_block is not None:
+            _r23n18_sub_merge_stmts = self._process_if_blocks(
+                [_r23n18_partial_merge_block], region, branch='else')
+            self.generated_blocks.add(_r23n18_partial_merge_block)
+            if _r23n18_sub_merge_stmts:
+                # 设置 _is_nested_if=True，使嵌套 if 作为 else 中的独立 if-else 生成，
+                # 而非 elif（elif 模式下 orelse 只能是单个 If 节点，无法追加额外语句）
+                if isinstance(elif_part, list):
+                    for _ep in elif_part:
+                        if isinstance(_ep, dict) and _ep.get('type') == 'If':
+                            _ep.pop('_is_elif', None)
+                            _ep['_is_nested_if'] = True
+                    elif_part = elif_part + _r23n18_sub_merge_stmts
+                elif isinstance(elif_part, dict):
+                    if elif_part.get('type') == 'If':
+                        elif_part.pop('_is_elif', None)
+                        elif_part['_is_nested_if'] = True
+                    elif_part = [elif_part] + _r23n18_sub_merge_stmts
+                else:
+                    elif_part = _r23n18_sub_merge_stmts
         self._generating_regions.discard(region_id)
         self._generated_regions.add(region_id)
 
@@ -7246,7 +7693,19 @@ AST 映射规则:
                     stmt['value'].get('type') == 'Constant' and
                     stmt['value'].get('value') is None)
 
-        if elif_part and then_stmts and len(then_stmts) > 1:
+        # [R14-N1 fix] 仅当 then-block 不以 RETURN_VALUE/RETURN_CONST 结尾时
+        # 才剥离隐式 return None。当 then-block 以 RETURN_VALUE/RETURN_CONST
+        # 结尾时，return 是源码中的显式语句（如 `if not x: return`），剥离会
+        # 导致字节码不一致（jump_target_diff: 跳转目标偏移因缺少 LOAD_CONST +
+        # RETURN_VALUE 而提前 2~4 字节）。
+        _then_has_explicit_return = False
+        for _tb in (region.then_blocks or []):
+            _tb_last = _tb.get_last_instruction()
+            if _tb_last and _tb_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                _then_has_explicit_return = True
+                break
+        if (elif_part and then_stmts and len(then_stmts) > 1
+                and not _then_has_explicit_return):
             while then_stmts and _is_implicit_return_none(then_stmts[-1]):
                 then_stmts.pop()
 
@@ -7280,8 +7739,37 @@ AST 映射规则:
                             if _then_or_elif_has_implicit_return_none:
                                 break
                     if not _then_or_elif_has_implicit_return_none:
-                        trailing_return = orelse[0]
-                        last_elif['orelse'] = []
+                        # [R15-N3 fix] 区域归约算法原则 4（父引用子入口）+ 字节码等价：
+                        # 仅当 merge_block 是简单的隐式 return None 块（即 post-if
+                        # 无实际代码）时，才可将 else 分支的 return 提升为函数末尾
+                        # return。当 merge_block 含实际 post-if 代码（如
+                        # get_valuation_info 中 block 104 含 check_stocks(stock_list)
+                        # /date=str(date)/data_dict=... 等语句）时，提升会改变语义：
+                        # 原始结构 `if-elif-else: return {}; post-if code` 中 return
+                        # 仅在 else 分支执行，post-if 代码在 then/elif fall-through 后
+                        # 执行；提升后 `if-elif; return {}; post-if code` 中 return
+                        # 总是执行，post-if 代码被跳过（且不会出现在反编译输出中）。
+                        # 典型场景（get_valuation_info / get_valuation_new_info /
+                        # get_fundamentals_daily_info 等 3 个函数）：
+                        #   if isinstance(stocks, str):
+                        #       stock_list = [stocks]
+                        #   elif isinstance(stocks, Iterable):
+                        #       stock_list = stocks
+                        #   else:
+                        #       return {}
+                        #   check_stocks(stock_list)   # merge 104, post-if code
+                        #   ...
+                        # 修复：检测 merge_block 是否含实际语句；若是则不提升。
+                        _can_lift_else_return = True
+                        _merge_block = getattr(region, 'merge_block', None)
+                        if _merge_block is not None:
+                            _mb_meaningful = [i for i in _merge_block.instructions
+                                              if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+                            if not self._is_implicit_return_block(_mb_meaningful):
+                                _can_lift_else_return = False
+                        if _can_lift_else_return:
+                            trailing_return = orelse[0]
+                            last_elif['orelse'] = []
                 elif isinstance(orelse, list) and len(orelse) >= 1:
                     if _is_implicit_return_none(orelse[-1]):
                         trailing_return = orelse[-1]
@@ -7295,6 +7783,53 @@ AST 映射规则:
                 result.append(trailing_return)
             else:
                 result = [result, trailing_return]
+        # [R23-N10 fix] 区域归约算法原则 4（父引用子入口）+ 原则 2（每块唯一归属）：
+        # 镜像 _if_generate_normal 末尾的 R18-N5 修复。IF_ELIF_CHAIN 类型的
+        # IfRegion 同样可能存在 merge_block 是嵌套 LoopRegion 的 for_iter_exit
+        # 的情况（如 load_get_exrights：if-elif 链中 elif body 含 for 循环，
+        # for 循环退出后到 merge_block `return data`）。R15-N5 会让 LoopRegion
+        # 跳过 merge_block，本 IfRegion 必须承担生成 merge_block 的责任。
+        # 触发条件与 _if_generate_normal 中的 R18-N5 修复完全一致：
+        #   1. merge_block 存在 + 不在 then_blocks/else_blocks 中
+        #   2. merge_block 是某 LoopRegion 的 else_blocks（for_iter_exit）
+        #   3. 该 LoopRegion 的 entry 在本 IfRegion 的 then_blocks 或 else_blocks 中
+        #   4. merge_block 不在任何嵌套结构区域（Try/With/Match）的 blocks 中
+        if (region.merge_block is not None
+                and region.merge_block not in region.then_blocks
+                and region.merge_block not in (region.else_blocks or [])):
+            _mb_in_nested_structural = False
+            for _nr in self.region_analyzer.regions:
+                if _nr is region:
+                    continue
+                if not isinstance(_nr, (TryExceptRegion, WithRegion, MatchRegion)):
+                    continue
+                if region.merge_block in _nr.blocks:
+                    _mb_in_nested_structural = True
+                    break
+            _should_emit_elif = False
+            if not _mb_in_nested_structural:
+                _then_block_set = set(region.then_blocks)
+                _else_block_set = set(region.else_blocks or [])
+                for _lr in self.region_analyzer.regions:
+                    if not isinstance(_lr, LoopRegion):
+                        continue
+                    if _lr is region:
+                        continue
+                    if region.merge_block not in _lr.else_blocks:
+                        continue
+                    if _lr.entry is not None and (_lr.entry in _then_block_set
+                                                   or _lr.entry in _else_block_set):
+                        _should_emit_elif = True
+                        break
+            if _should_emit_elif:
+                self.generated_blocks.discard(region.merge_block)
+                self.generated_offsets.discard(region.merge_block.start_offset)
+                _post_if_stmts_elif = self._generate_block_statements(region.merge_block)
+                if _post_if_stmts_elif:
+                    if isinstance(result, list):
+                        result = result + _post_if_stmts_elif
+                    else:
+                        result = [result] + _post_if_stmts_elif
         return result
 
     def _build_chained_compare_from_region_data(self, region: IfRegion) -> Optional[Dict[str, Any]]:
@@ -8191,11 +8726,9 @@ AST 映射规则:
                 import_pending_store = True
                 continue
             if instr.opname == 'RAISE_VARARGS':
-                exc_expr = None
-                if instr.arg >= 1 and pre_instrs:
-                    exc_expr = self.expr_reconstructor.reconstruct(pre_instrs)
+                _raise_stmt = self._build_raise_stmt_from_instrs(pre_instrs, instr.arg if instr.arg else 0)
                 pre_instrs = []
-                pre_stmts.append({'type': 'Raise', 'exc': exc_expr, 'cause': None})
+                pre_stmts.append(_raise_stmt)
                 continue
             if instr.opname == 'COPY' and instr.arg == COPY_STACK_TOP:
                 pre_instrs.append(instr)
@@ -8251,8 +8784,30 @@ AST 映射规则:
                 stmt = self._build_store_statement(pre_instrs, block=cond_block)
                 if stmt:
                     pre_stmts.append(stmt)
+                    pre_seen_store = True
                 pre_instrs = []
-                pre_seen_store = True
+                continue
+            # [R10-N2 fix] 区域归约算法原则 2（每块唯一归属）：
+            # IfRegion 条件块中的 STORE_SUBSCR/STORE_ATTR 赋值（如
+            # `params['page_no'] = str(page_no)`、`obj.attr = value`）必须作为
+            # 独立 pre_stmt 提取，否则会被累积到 pre_instrs 中，在遇到后续
+            # STORE_FAST 时被 _build_store_statement 错误合并或在条件指令收集
+            # 阶段丢失。镜像入口块 R10-N1 修复 (L447-467)。
+            if instr.opname == 'STORE_SUBSCR':
+                pre_instrs.append(instr)
+                stmt = self._build_subscript_assign(pre_instrs)
+                if stmt:
+                    pre_stmts.append(stmt)
+                    pre_seen_store = True
+                pre_instrs = []
+                continue
+            if instr.opname == 'STORE_ATTR':
+                pre_instrs.append(instr)
+                stmt = self._build_attr_assign(pre_instrs)
+                if stmt:
+                    pre_stmts.append(stmt)
+                    pre_seen_store = True
+                pre_instrs = []
                 continue
             if instr.opname == 'COMPARE_OP' and pre_seen_store:
                 pre_instrs = []
@@ -8435,6 +8990,26 @@ AST 映射规则:
                 # [Round5-05] 跳过属于 chain-compare IfRegion 的 BoolOp/Ternary
                 if r.entry.start_offset in _chain_cmp_block_offsets:
                     continue
+                # [R12-N2 fix] 区域归约算法原则 3（嵌套即抽象节点）+ 原则 4（父引用子入口）：
+                # 当 BoolOpRegion 是某 IfRegion 的子节点且共享同一 entry 时，该
+                # BoolOpRegion 是 IfRegion 的条件表达式（如 `if a and b: body`），
+                # 不是独立表达式。若在此预扫描中处理 BoolOpRegion 并标记其块为已生成，
+                # 会导致后续子区域循环跳过父 IfRegion（entry 已生成），if/else 体丢失
+                # （如 _is_same_type_date 的 `typet == 7` 分支坍塌为 `pass`）。
+                # 修正：跳过此类 BoolOpRegion，交由子区域循环 _generate_region(if_parent)
+                # 完整处理（含条件重建 + then/else 体）。
+                if isinstance(r, BoolOpRegion):
+                    _has_if_parent_same_entry = False
+                    for _pr in self.regions:
+                        if (isinstance(_pr, IfRegion) and _pr is not region
+                                and _pr.entry is r.entry
+                                and r in (_pr.children or [])):
+                            # 确认父 IfRegion 也是当前 region 的子节点（属于 then 分支）
+                            if any(_pr is _c for _c in (region.children or [])):
+                                _has_if_parent_same_entry = True
+                                break
+                    if _has_if_parent_same_entry:
+                        continue
                 r_id = id(r)
                 if r_id in self._generated_regions or r_id in self._generating_regions:
                     continue
@@ -8501,7 +9076,7 @@ AST 映射规则:
         elif_body_block_set = set()
         if hasattr(region, 'elif_conditions') and region.elif_conditions:
             elif_cond_set = set(region.elif_conditions)
-        if hasattr(region, 'elif_bodies'):
+        if hasattr(region, 'elif_bodies') and region.elif_bodies:
             for body in region.elif_bodies:
                 elif_body_block_set.update(body)
         for child in (region.children or []):
@@ -8549,7 +9124,21 @@ AST 映射规则:
                 _child_in_then = False
                 if region.condition_block:
                     for _succ in region.condition_block.successors:
-                        if _succ in (region.else_blocks or []):
+                        # [R18-N4 fix] 区域归约算法原则 4（父引用子入口）+
+                        # 原则 1（从最内层到最外层识别区域，归约顺序）：
+                        # 条件块的 then 后继应在 then_blocks 中。若后继不在
+                        # then_blocks 中（如 else_blocks 中的块或 bridge 块
+                        # 如 NOP），不应跟随其后继查找 child.entry，否则会把
+                        # else 分支的子区域误判为 then。
+                        # 例如 get_opt_objects: cond_block 0 的后继 162 (NOP)
+                        # 不在 then_blocks 中，但其后继 164 是
+                        # TryExceptRegion.entry 且在 else_blocks 中。原代码因
+                        # 162 不在 else_blocks 中（162 属于 TryExceptRegion
+                        # 的内部块，归约后 else_blocks 只引用 entry 164）而
+                        # 跟随到 164，误把 TryExceptRegion 放入 then 分支，
+                        # 导致 try 块出现在 if date is None: return ... 之后
+                        # （不可达代码），函数体被截断。
+                        if _succ not in then_block_set:
                             continue
                         if child.entry in _succ.successors or child.entry is _succ:
                             _child_in_then = True
@@ -8560,6 +9149,12 @@ AST 映射规则:
                                 break
                         if _child_in_then:
                             break
+                # [R18-N4 safety] 区域归约算法原则 2（每块唯一归属）：
+                # 若 child.entry 在 else_blocks 中，child 属于 else 分支，
+                # 不应放入 then。即使后继检查误判（如 bridge 块链），也强制
+                # 修正。
+                if _child_in_then and region.else_blocks and child.entry in region.else_blocks:
+                    _child_in_then = False
                 if not _child_in_then and not (region.else_blocks and child.entry in region.else_blocks):
                     _child_in_then = True
                 if _child_in_then:
@@ -8657,17 +9252,49 @@ AST 映射规则:
             # function body sequence, not the try/with setup.
             _reachable_children_c3 = []
             _child_block_set_c3 = set()
+            # [R10-N5 fix] 区域归约算法原则 2（每块唯一归属）：两阶段收集。
+            # 第一阶段收集复合子区域（TryExceptRegion/WithRegion/LoopRegion），
+            # 它们的 blocks 可能包含嵌套的 IfRegion.entry；第二阶段再收集
+            # IfRegion 子区域，跳过 entry 已被第一阶段占用的（嵌套 IfRegion
+            # 应交由外层复合区域的 _generate_region 递归处理）。
+            # 例如 TestDEEP12RecursivePatternWithExceptions 中外层 IfRegion 的
+            # else 分支同时含 TryExceptRegion 与 IfRegion，IfRegion 的 entry
+            # 在 TryExceptRegion.body_blocks 内，若平铺展开会与 TryExceptRegion
+            # 发生块所有权冲突，覆盖 TryExcept 的 AST。
+            # 镜像 then 分支 L8599 的 generated_blocks 检查（then 分支逐个即时
+            # 生成并标记，else 分支两阶段收集需显式追踪 _claimed_blocks_c3）。
+            _claimed_blocks_c3 = set()
+            def _try_collect_c3(child):
+                if not hasattr(child, 'entry') or child.entry is None:
+                    return False
+                if child.entry in self.generated_blocks:
+                    return False
+                if child.entry in _claimed_blocks_c3:
+                    return False
+                if not self._is_child_reachable_from_blocks(child, region.else_blocks):
+                    return False
+                _reachable_children_c3.append(child)
+                for b in child.blocks:
+                    _child_block_set_c3.add(b)
+                    _claimed_blocks_c3.add(b)
+                return True
+            # 第一阶段：复合子区域（Try/With/Loop）
             for child in (region.children or []):
                 if not isinstance(child, (TryExceptRegion, WithRegion, LoopRegion)):
                     continue
-                if not hasattr(child, 'entry') or child.entry is None:
+                _try_collect_c3(child)
+            # 第二阶段：IfRegion 子区域（含 R10-N4 修复，识别嵌套 if/elif）
+            for child in (region.children or []):
+                if not isinstance(child, IfRegion):
                     continue
-                if child.entry in self.generated_blocks:
-                    continue
-                if self._is_child_reachable_from_blocks(child, region.else_blocks):
-                    _reachable_children_c3.append(child)
+                # [R10-N4 fix] 跳过 is_empty_then_chained_compare 的子 IfRegion
+                # 这种子区域是链式比较模式的内部结构，不是真正的 if 语句
+                # （镜像 then 分支 L8462-8465）。
+                if getattr(child, 'is_empty_then_chained_compare', False):
                     for b in child.blocks:
-                        _child_block_set_c3.add(b)
+                        self.generated_blocks.add(b)
+                    continue
+                _try_collect_c3(child)
             _entry_to_child_c3 = {c.entry: c for c in _reachable_children_c3}
             _sorted_else_c3 = sorted(region.else_blocks, key=lambda b: b.start_offset)
             _seq_buffer_c3 = []
@@ -8739,6 +9366,29 @@ AST 映射规则:
                 return True
         return False
 
+    def _r23n16_blocks_have_explicit_return(self, blocks) -> bool:
+        """[R23-N16 fix] 检查块列表中最后一个实际块是否以 RETURN_VALUE 结尾。
+        用于区分显式 return（生成真实 RETURN_VALUE 字节码）和隐式 fallthrough
+        （JUMP_FORWARD to merge）。except handler 内的显式 return None 不应被弹出。
+        """
+        if not blocks:
+            return False
+        # 从后向前找最后一个实际块（跳过 cleanup/RERAISE 块）
+        for b in reversed(blocks):
+            if not b.instructions:
+                continue
+            last_instr = b.get_last_instruction()
+            if last_instr and last_instr.opname == 'RETURN_VALUE':
+                return True
+            if last_instr and last_instr.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+                # fallthrough → 隐式 return None
+                return False
+            # RERAISE/cleanup 块，继续向前找
+            if last_instr and last_instr.opname in ('RERAISE', 'POP_EXCEPT'):
+                continue
+            return False
+        return False
+
     def _if_generate_elif_chain(self, region: IfRegion) -> List[Dict[str, Any]]:
         if not getattr(region, 'elif_conditions', None):
             return [self._if_generate_normal(region)]
@@ -8762,6 +9412,15 @@ AST 映射规则:
                 region.elif_final_else = _expanded_final_else
         elif_cond_block = region.elif_conditions[0]
         self.generated_blocks.add(elif_cond_block)
+        # [R10-N3 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（父引用子入口）：
+        # elif 条件块中可能含前置赋值语句（如 `fields = re_fields` 在
+        # get_growth_ability / get_balance_statement 等 10 个 financial statement
+        # 函数中）。下面的手动指令循环只为提取条件指令 (elif_cond_instrs)，
+        # 遇到 STORE_FAST 时直接清空 elif_cond_instrs，导致前置赋值丢失。
+        # 调用 _if_extract_cond_instructions 复用 if 条件块的 pre_stmt 提取逻辑
+        # （含 R10-N2 的 STORE_SUBSCR/STORE_ATTR 处理），将 pre_stmts 前置到
+        # 返回结果中。
+        _elif_pre_stmts, _ = self._if_extract_cond_instructions(elif_cond_block, region)
         elif_cond_instrs = []
         prev_was_copy = False
         for instr in elif_cond_block.instructions:
@@ -8818,6 +9477,46 @@ AST 映射规则:
                                 if not _eb_meaningful:
                                     self.generated_blocks.add(_eb)
                             break
+        # [R23-N7 fix] 区域归约算法原则 4（父引用子入口）+
+        # 原则 2（每块唯一归属）：
+        # elif 条件本身是链式比较（如 `elif 400 <= e2.code <= 499:`）时，
+        # 若该 elif 条件块被外层 TryExceptRegion.blocks 集合 claim（因
+        # TryExceptRegion.blocks 是 try+handlers+else 的并集），
+        # _identify_chained_compare_regions 会跳过它，未创建独立的链式比较
+        # IfRegion 子区域。此处直接从 elif_cond_block 检测链式比较模式并
+        # 重建 Compare AST 节点，镜像 _build_chained_compare_from_region_data
+        # 的多策略重建流程（attr/call/literal/default）。
+        if elif_condition is None:
+            _r23n7_cc_info = self.region_analyzer._detect_chained_compare_pattern(
+                elif_cond_block)
+            if _r23n7_cc_info and len(_r23n7_cc_info.get('compare_ops', [])) >= 2:
+                _r23n7_chain_blocks = list(_r23n7_cc_info.get('extra_chain_blocks', []))
+                _r23n7_ops = list(_r23n7_cc_info.get('compare_ops', []))
+                _r23n7_chained = self._try_build_attr_middle_from_blocks(
+                    elif_cond_block, _r23n7_chain_blocks, _r23n7_ops)
+                if _r23n7_chained is None:
+                    _r23n7_chained = self._try_build_method_call_from_blocks(
+                        elif_cond_block, _r23n7_chain_blocks, _r23n7_ops) \
+                        if hasattr(self, '_try_build_method_call_from_blocks') else None
+                if _r23n7_chained is None:
+                    _r23n7_chained = self._try_build_call_middle_from_blocks(
+                        elif_cond_block, _r23n7_chain_blocks, _r23n7_ops)
+                if _r23n7_chained is None:
+                    _r23n7_chained = self._try_build_literal_middle_from_blocks(
+                        elif_cond_block, _r23n7_chain_blocks, _r23n7_ops)
+                if _r23n7_chained is None:
+                    _r23n7_chained = self._build_assert_chained_compare(
+                        elif_cond_block, _r23n7_chain_blocks, _r23n7_ops)
+                if _r23n7_chained is not None:
+                    elif_condition = _r23n7_chained
+                    # 用简单 namespace 模拟 IfRegion 供后续 or 模式检测使用
+                    class _R23N7_NS:
+                        pass
+                    _elif_cc_region = _R23N7_NS()
+                    _elif_cc_region.chained_compare_blocks = _r23n7_chain_blocks
+                    self.generated_blocks.add(elif_cond_block)
+                    for _r23n7_ccb in _r23n7_chain_blocks:
+                        self.generated_blocks.add(_r23n7_ccb)
         # [关键修复] 检测 elif 条件中链式比较后的 or 模式
         # 当 elif 条件是 "chained_compare or something" 时，需要检测 or 右操作数并合并
         if elif_condition is not None and _elif_cc_region is not None:
@@ -8886,13 +9585,57 @@ AST 映射规则:
                         if region.elif_bodies and len(region.elif_bodies) > 0:
                             _elif_then_offsets = {b.start_offset for b in region.elif_bodies[0]}
                         _elif_negate = (_elif_last.argval in _elif_then_offsets) != _elif_if_true
-                    elif_condition = _negate_expr(_elif_boolop_expr) if _elif_negate else _elif_boolop_expr
+                    if _elif_negate:
+                        # [R23-N3 fix] 区域归约算法「一次正确」原则：elif 条件路径
+                        # 的 negate 逻辑与 _if_extract_condition_from_instructions 中
+                        # 的 R23-N2 fix 一致。当 BoolOp 表达式是 `a and (b or c)` 形式
+                        # （由 _try_build_and_inner_or_pattern 构建，最后一个操作数是
+                        # BoolOp(or, ...)），且需要取反时，`not` 应只应用到 `or` 子表达式，
+                        # 生成 `a and not (b or c)`，而非 `not (a and (b or c))`。
+                        # 原始 pyc 源码 `elif a and not (b or c):` 编译为：
+                        #   a; POP_JUMP_IF_FALSE → merge  (a 假时跳过整个 and)
+                        #   b; POP_JUMP_IF_TRUE → merge   (b 真时 not(b or c) 假，and 假，跳 merge)
+                        #   c; POP_JUMP_IF_TRUE → merge   (c 真时跳 merge)
+                        # 旧逻辑将 `not` 应用到整个 `a and (b or c)`，生成
+                        # `not (a and (b or c))`，编译为不同字节码（a 假时跳到 elif body
+                        # 而非 merge），导致字节码不一致。
+                        # 普遍性: 覆盖 `a and not (b or c)` / `a and not (b or c or d)` /
+                        # `a and b and not (c or d)` 等所有 and 链 + 末尾 not(or) 形式。
+                        if (isinstance(_elif_boolop_expr, dict)
+                                and _elif_boolop_expr.get('type') == 'BoolOp'
+                                and _elif_boolop_expr.get('op') == 'and'
+                                and _elif_boolop_expr.get('values')
+                                and isinstance(_elif_boolop_expr['values'][-1], dict)
+                                and _elif_boolop_expr['values'][-1].get('type') == 'BoolOp'
+                                and _elif_boolop_expr['values'][-1].get('op') == 'or'):
+                            _negated_or = _negate_expr(_elif_boolop_expr['values'][-1])
+                            _elif_boolop_expr = dict(_elif_boolop_expr)
+                            _elif_boolop_expr['values'] = list(_elif_boolop_expr['values'][:-1]) + [_negated_or]
+                            elif_condition = _elif_boolop_expr
+                        else:
+                            elif_condition = _negate_expr(_elif_boolop_expr)
+                    else:
+                        elif_condition = _elif_boolop_expr
                     for _b in elif_boolop.blocks:
                         self.generated_blocks.add(_b)
                     if elif_boolop.merge_block:
                         _final_else_offsets = {b.start_offset for b in region.elif_final_else} if region.elif_final_else else set()
                         if elif_boolop.merge_block.start_offset not in _final_else_offsets:
-                            self.generated_blocks.add(elif_boolop.merge_block)
+                            # [R30-2 fix] 区域归约算法原则 2（每块唯一归属）：
+                            # merge_block 不仅可能是顶级区域入口，也可能是嵌套区域
+                            # 入口（如 get_stock_exrights 中 IfRegion@342 是 IfRegion@0
+                            # 的子区域，entry=342 同时是 IfRegion@102 的 merge_block）。
+                            # 若将其标记为 generated_blocks，嵌套区域在父区域的块迭代
+                            # 中被跳过（all(b in generated_blocks) 检查通过），造成
+                            # 代码块丢失。修复：检查 merge_block 是否为任何区域的 entry
+                            # （不限于顶级区域），若是则不标记。
+                            _merge_is_region_entry_2 = False
+                            for _tr in self.regions:
+                                if _tr.entry is elif_boolop.merge_block:
+                                    _merge_is_region_entry_2 = True
+                                    break
+                            if not _merge_is_region_entry_2:
+                                self.generated_blocks.add(elif_boolop.merge_block)
         if elif_condition is None:
             _inline_chain_info = getattr(region, 'inline_boolop_chains', {}).get(id(elif_cond_block))
             if _inline_chain_info:
@@ -8968,13 +9711,17 @@ AST 映射规则:
         if region.elif_bodies:
             elif_body_stmts = self._process_if_blocks(region.elif_bodies[0], region, branch='elif')
             elif_body_stmts = [s for s in elif_body_stmts if not (s.get('type') == 'Expr' and isinstance(s.get('value'), dict) and s['value'].get('type') == 'Constant')]
-            while (elif_body_stmts and
-                   isinstance(elif_body_stmts[-1], dict) and
-                   elif_body_stmts[-1].get('type') == 'Return' and
-                   isinstance(elif_body_stmts[-1].get('value'), dict) and
-                   elif_body_stmts[-1]['value'].get('type') == 'Constant' and
-                   elif_body_stmts[-1]['value'].get('value') is None):
-                elif_body_stmts.pop()
+            # [R23-N16 fix] 仅当 elif body 非显式 return（末尾块以 JUMP_FORWARD 结尾，
+            # 即 fallthrough）时才弹出隐式 return None。except handler 内的显式
+            # return None 生成真实字节码（POP_EXCEPT+cleanup+RETURN_VALUE），必须保留。
+            if not self._r23n16_blocks_have_explicit_return(region.elif_bodies[0]):
+                while (elif_body_stmts and
+                       isinstance(elif_body_stmts[-1], dict) and
+                       elif_body_stmts[-1].get('type') == 'Return' and
+                       isinstance(elif_body_stmts[-1].get('value'), dict) and
+                       elif_body_stmts[-1]['value'].get('type') == 'Constant' and
+                       elif_body_stmts[-1]['value'].get('value') is None):
+                    elif_body_stmts.pop()
         nested_elif_stmts = None
         if len(region.elif_conditions) > 1:
             remaining_elifs = region.elif_conditions[2:]
@@ -9009,19 +9756,53 @@ AST 映射规则:
                                 item['_is_elif'] = True
                     nested_elif_stmts = [nested_ast]
             else:
+                _last_elif_cond_block = region.elif_conditions[1]
+                # [R23-N7 fix] 区域归约算法原则 4（父引用子入口）+
+                # 原则 2（每块唯一归属）：
+                # 最后一个 elif 条件本身是链式比较（如
+                # `elif 400 <= e2.code <= 499:`）时，若该块被外层
+                # TryExceptRegion.blocks 集合 claim，未创建独立链式比较
+                # IfRegion 子区域，则直接从 _last_elif_cond_block 检测
+                # 链式比较模式并重建 Compare AST 节点。
+                # 关键：在 body 处理之前标记 chain blocks 为已生成，
+                # 避免 chain blocks（如 block@720 含 `LOAD_CONST 499 +
+                # COMPARE_OP <=`）被 _process_if_blocks 误处理为独立
+                # `if 499: pass` 语句。
+                _r23n7_last_elif_chained = None
+                _r23n7_cc_info3 = self.region_analyzer._detect_chained_compare_pattern(
+                    _last_elif_cond_block)
+                if _r23n7_cc_info3 and len(_r23n7_cc_info3.get('compare_ops', [])) >= 2:
+                    _r23n7_chain_blocks3 = list(_r23n7_cc_info3.get('extra_chain_blocks', []))
+                    _r23n7_ops3 = list(_r23n7_cc_info3.get('compare_ops', []))
+                    _r23n7_chained3 = self._try_build_attr_middle_from_blocks(
+                        _last_elif_cond_block, _r23n7_chain_blocks3, _r23n7_ops3)
+                    if _r23n7_chained3 is None:
+                        _r23n7_chained3 = self._try_build_call_middle_from_blocks(
+                            _last_elif_cond_block, _r23n7_chain_blocks3, _r23n7_ops3)
+                    if _r23n7_chained3 is None:
+                        _r23n7_chained3 = self._try_build_literal_middle_from_blocks(
+                            _last_elif_cond_block, _r23n7_chain_blocks3, _r23n7_ops3)
+                    if _r23n7_chained3 is None:
+                        _r23n7_chained3 = self._build_assert_chained_compare(
+                            _last_elif_cond_block, _r23n7_chain_blocks3, _r23n7_ops3)
+                    if _r23n7_chained3 is not None:
+                        _r23n7_last_elif_chained = _r23n7_chained3
+                        self.generated_blocks.add(_last_elif_cond_block)
+                        for _r23n7_ccb3 in _r23n7_chain_blocks3:
+                            self.generated_blocks.add(_r23n7_ccb3)
                 last_elif_body_stmts = []
                 if len(region.elif_bodies) > 1:
                     last_elif_body_stmts = self._process_if_blocks(region.elif_bodies[1], region, branch='elif')
                     last_elif_body_stmts = [s for s in last_elif_body_stmts if not (s.get('type') == 'Expr' and isinstance(s.get('value'), dict) and s['value'].get('type') == 'Constant')]
-                    while (last_elif_body_stmts and
-                           isinstance(last_elif_body_stmts[-1], dict) and
-                           last_elif_body_stmts[-1].get('type') == 'Return' and
-                           isinstance(last_elif_body_stmts[-1].get('value'), dict) and
-                           last_elif_body_stmts[-1]['value'].get('type') == 'Constant' and
-                           last_elif_body_stmts[-1]['value'].get('value') is None):
-                        last_elif_body_stmts.pop()
-                _last_elif_cond_block = region.elif_conditions[1]
-                _last_elif_condition = None
+                    if not self._r23n16_blocks_have_explicit_return(region.elif_bodies[1]):
+                        while (last_elif_body_stmts and
+                               isinstance(last_elif_body_stmts[-1], dict) and
+                               last_elif_body_stmts[-1].get('type') == 'Return' and
+                               isinstance(last_elif_body_stmts[-1].get('value'), dict) and
+                               last_elif_body_stmts[-1]['value'].get('type') == 'Constant' and
+                               last_elif_body_stmts[-1]['value'].get('value') is None):
+                            last_elif_body_stmts.pop()
+                _last_elif_condition = _r23n7_last_elif_chained
                 _last_elif_boolop = self.region_analyzer.get_region_for_block(_last_elif_cond_block)
                 if not isinstance(_last_elif_boolop, BoolOpRegion):
                     _last_elif_boolop = region.find_descendant_region_for_block(_last_elif_cond_block, (BoolOpRegion,))
@@ -9063,7 +9844,20 @@ AST 映射规则:
                         if region.elif_final_else:
                             _final_else_offsets = {b.start_offset for b in region.elif_final_else}
                         if _last_elif_boolop.merge_block and _last_elif_boolop.merge_block.start_offset not in _final_else_offsets:
-                            self.generated_blocks.add(_last_elif_boolop.merge_block)
+                            # [R30-2 fix] 区域归约算法原则 2（每块唯一归属）：
+                            # merge_block 也可能是
+                            # 嵌套区域入口（非顶级），如 get_stock_exrights 中
+                            # IfRegion@342（parent=IfRegion@0）的 entry=342 是
+                            # IfRegion@102 的 merge_block。原 R30 修复仅检查顶级区域
+                            # 入口，嵌套区域入口仍被错误标记。修复：检查 merge_block
+                            # 是否为任何区域的 entry（不限于顶级区域），若是则不标记。
+                            _merge_is_region_entry = False
+                            for _tr in self.regions:
+                                if _tr.entry is _last_elif_boolop.merge_block:
+                                    _merge_is_region_entry = True
+                                    break
+                            if not _merge_is_region_entry:
+                                self.generated_blocks.add(_last_elif_boolop.merge_block)
                 if _last_elif_condition is None:
                     _inline_chain_info = getattr(region, 'inline_boolop_chains', {}).get(id(_last_elif_cond_block))
                     if _inline_chain_info:
@@ -9080,36 +9874,6 @@ AST 映射规则:
                             _last_elif_condition = {'type': 'BoolOp', 'op': _chain_op, 'values': _elif_parts}
                             for _cb in _chain_blocks:
                                 self.generated_blocks.add(_cb)
-                # [R9-D3 in-elif fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3（嵌套即抽象节点）：
-                # 最后一个 elif 条件本身是 chained compare（如 `elif 400 <= e2.code <= 499:`）
-                # 时，从对应的子 IfRegion（含 chained_compare_ops/chained_compare_blocks）
-                # 重建链式比较 Compare 节点。镜像 line 8796-8820 的首段 elif 处理逻辑。
-                # 原逻辑仅覆盖首段 elif（elif_conditions[0]）的 chained compare 检查，
-                # 漏掉末段 elif（elif_conditions[-1]），导致 `elif 400 <= e2.code <= 499:`
-                # 退化为 `elif 400 <= e2.code: if 499: pass`（chained compare 被拆分）。
-                # 依「每块唯一归属」: chained_compare_blocks 归属子 IfRegion，由子 IfRegion
-                # 重建为单个 Compare 节点；不归属外层 elif 的条件头。
-                if _last_elif_condition is None:
-                    for _r in self.regions:
-                        if (isinstance(_r, IfRegion)
-                                and _r.entry is _last_elif_cond_block
-                                and getattr(_r, 'chained_compare_ops', None)):
-                            _last_chained = self._build_chained_compare_from_region_data(_r)
-                            if _last_chained:
-                                _last_elif_condition = _last_chained
-                                self.generated_blocks.add(_last_elif_cond_block)
-                                for _ccb in (_r.chained_compare_blocks or []):
-                                    self.generated_blocks.add(_ccb)
-                                if hasattr(_r, 'merge_block') and _r.merge_block:
-                                    self.generated_blocks.add(_r.merge_block)
-                                for _eb in (_r.else_blocks or []):
-                                    _eb_meaningful = [i for i in _eb.instructions
-                                                      if i.opname not in ('RESUME', 'NOP', 'CACHE', 'POP_TOP',
-                                                                          'JUMP_FORWARD', 'JUMP_BACKWARD',
-                                                                          'RETURN_VALUE', 'RETURN_CONST')]
-                                    if not _eb_meaningful:
-                                        self.generated_blocks.add(_eb)
-                            break
                 if _last_elif_condition is None:
                     _last_elif_condition = self._extract_condition_for_elif_block(_last_elif_cond_block, region)
                 nested_elif_stmts = [{'type': 'If', '_is_elif': True, 'test': _last_elif_condition if _last_elif_condition else {'type': 'Constant', 'value': True}, 'body': last_elif_body_stmts if last_elif_body_stmts else [{'type': 'Pass'}], 'orelse': []}]
@@ -9121,13 +9885,14 @@ AST 映射规则:
                     )
                     if not _efe_is_continue_only:
                         final_else_stmts = self._process_if_blocks(region.elif_final_else, region, branch='else')
-                        while (final_else_stmts and
-                               isinstance(final_else_stmts[-1], dict) and
-                               final_else_stmts[-1].get('type') == 'Return' and
-                               isinstance(final_else_stmts[-1].get('value'), dict) and
-                               final_else_stmts[-1]['value'].get('type') == 'Constant' and
-                               final_else_stmts[-1]['value'].get('value') is None):
-                            final_else_stmts.pop()
+                        if not self._r23n16_blocks_have_explicit_return(region.elif_final_else):
+                            while (final_else_stmts and
+                                   isinstance(final_else_stmts[-1], dict) and
+                                   final_else_stmts[-1].get('type') == 'Return' and
+                                   isinstance(final_else_stmts[-1].get('value'), dict) and
+                                   final_else_stmts[-1]['value'].get('type') == 'Constant' and
+                                   final_else_stmts[-1]['value'].get('value') is None):
+                                final_else_stmts.pop()
                         if final_else_stmts:
                             nested_elif_stmts[0]['orelse'] = final_else_stmts
         final_else_stmts = None
@@ -9139,15 +9904,22 @@ AST 映射规则:
             )
             if not _efe_is_continue_only_2:
                 final_else_stmts = self._process_if_blocks(region.elif_final_else, region, branch='else')
-            while (final_else_stmts and
-                   isinstance(final_else_stmts[-1], dict) and
-                   final_else_stmts[-1].get('type') == 'Return' and
-                   isinstance(final_else_stmts[-1].get('value'), dict) and
-                   final_else_stmts[-1]['value'].get('type') == 'Constant' and
-                   final_else_stmts[-1]['value'].get('value') is None):
-                final_else_stmts.pop()
+            if not self._r23n16_blocks_have_explicit_return(region.elif_final_else):
+                while (final_else_stmts and
+                       isinstance(final_else_stmts[-1], dict) and
+                       final_else_stmts[-1].get('type') == 'Return' and
+                       isinstance(final_else_stmts[-1].get('value'), dict) and
+                       final_else_stmts[-1]['value'].get('type') == 'Constant' and
+                       final_else_stmts[-1]['value'].get('value') is None):
+                    final_else_stmts.pop()
         elif_orelse = nested_elif_stmts if nested_elif_stmts else (final_else_stmts if final_else_stmts else [])
-        return [{'type': 'If', '_is_elif': True, 'test': elif_condition if elif_condition else {'type': 'Constant', 'value': True}, 'body': elif_body_stmts if elif_body_stmts else [{'type': 'Pass'}], 'orelse': elif_orelse}]
+        _elif_if_stmt = {'type': 'If', '_is_elif': True, 'test': elif_condition if elif_condition else {'type': 'Constant', 'value': True}, 'body': elif_body_stmts if elif_body_stmts else [{'type': 'Pass'}], 'orelse': elif_orelse}
+        # [R10-N3 fix] 前置 elif 条件块中的赋值语句（如 `fields = re_fields`）。
+        # 这些语句在语义上属于 elif 之前的外层函数体序列，但物理上位于
+        # elif_cond_block 中，因此前置到返回列表。
+        if _elif_pre_stmts:
+            return list(_elif_pre_stmts) + [_elif_if_stmt]
+        return [_elif_if_stmt]
 
     def _extract_condition_for_elif_block(self, cond_block, region: IfRegion = None):
         cond_instrs = []
@@ -9203,6 +9975,33 @@ AST 映射规则:
         self._or_else_block = None
         self._or_rhs_block = None
         pre_stmts, cond_instrs = self._if_extract_cond_instructions(cond_block, region)
+        # [R13-N1 fix] 区域归约算法原则 4（父引用子入口）+ 原则 2（每块唯一归属）：
+        # 当 IfRegion 的 entry 与 condition_block 不同（BoolOpRegion 子节点模式，
+        # 复合 `and`/`or` 条件），entry 块包含前置语句（如 `a = day1.isocalendar()`）
+        # 和复合条件的第一部分。原实现仅从 condition_block 提取 pre_stmts，导致
+        # entry 块的前置语句丢失（如 _is_same_type_date 的 `a = ...`, `b = ...`
+        # 赋值丢失，使 a/b 被编译为 LOAD_GLOBAL 而非 LOAD_FAST，字节码不一致）。
+        # 修正：当 entry 与 condition_block 不同且 entry 未被标记为已生成时，
+        # 额外从 entry 块提取 pre_stmts。这些 pre_stmts 是 entry 块中位于
+        # 条件指令之前的赋值语句（STORE_FAST/STORE_NAME 等），由
+        # _if_extract_cond_instructions 在遇到首个跳转指令时停止提取。
+        # [R23-N21 fix] 当 entry 块被 BoolOpRegion 标记为 generated（作为
+        # outer condition），仍需提取前置语句。BoolOpRegion 仅消费条件指令，
+        # 前置语句（如 ClearAllCache(); is_string = False）不属于布尔表达式，
+        # 必须由 IfRegion 负责生成。否则 `ClearAllCache(); if x or y:` 中的
+        # ClearAllCache() 调用会丢失。
+        # [R23-N22 fix] R23-N21 的 BoolOpRegion 覆盖逻辑已废弃：generate() 的
+        # 入口块处理（else 分支）现已正确处理 POP_TOP+CALL 表达式语句（如
+        # ClearAllCache()），并将 entry_block 标记为 generated。此处再覆盖
+        # _should_extract_entry=True 会导致前置语句被重复提取（如
+        # get_trading_day_by_date 的 import 被生成两次）。移除 BoolOpRegion
+        # 覆盖，仅依赖 generated_blocks 标记判断是否需要提取。
+        if (region.entry is not None and region.entry is not cond_block):
+            _should_extract_entry = (region.entry not in self.generated_blocks)
+            if _should_extract_entry:
+                _entry_pre_stmts, _ = self._if_extract_cond_instructions(region.entry, region)
+                if _entry_pre_stmts:
+                    pre_stmts = _entry_pre_stmts + pre_stmts
         condition = self._if_extract_condition_from_instructions(region, cond_block, cond_instrs)
         self.generated_blocks.add(cond_block)
         if hasattr(region, 'elif_conditions') and region.elif_conditions:
@@ -9357,7 +10156,17 @@ AST 映射规则:
                 else:
                     break
             return stmts
-        then_stmts = _strip_implicit_return_none(then_stmts)
+        # [R30-4 fix] 区域归约算法原则 2（每块唯一归属）：
+        # 仅当 merge_block 存在时才剥离 then 分支末尾的隐式 return None。
+        # 当 merge_block 为 None 时，then 分支是终态路径（所有路径
+        # return/raise），末尾的 return None 是源码中的显式语句
+        # （如 ``if isinstance(date, int): ...; return None``）。
+        # 剥离它会导致该 return None 块的语句丢失，违反每块唯一归属
+        # 原则（块属于此区域但语句被丢弃）。典型失败模式：
+        # get_stock_exrights 中 IfRegion@520 (merge=None) 的 then 分支
+        # 末尾 block@640 (return None) 被剥离，导致字节码偏移 -4。
+        if region.merge_block is not None:
+            then_stmts = _strip_implicit_return_none(then_stmts)
         if then_stmts and isinstance(then_stmts[0], dict) and then_stmts[0].get('type') == 'If' and then_stmts[0].get('orelse'):
             _ts0 = then_stmts[0]
             _ts0_orelse = _strip_implicit_return_none(_ts0.get('orelse', []))
@@ -9405,12 +10214,114 @@ AST 映射规则:
                         _outer_cond = _negate_expr(condition) if _merge_op == 'or' else condition
                         condition = {'type': 'BoolOp', 'op': _merge_op, 'values': [_outer_cond, inner_cond]}
                         then_stmts = inner_body
+        # [R30-5 fix] 区域归约算法原则 4（父引用子入口）+ 原则 3（嵌套即抽象节点）：
+        # 当 IfRegion 条件被取反（TRUE 路径跳到 continue 目标，不在 then_blocks），
+        # 且 then_stmts[0] 是 body=[Continue] 且有 orelse 的 If，模式为：
+        #   if not A: if B: continue; elif/else...
+        # 应重组为：
+        #   if A or B: continue; elif/else...
+        # 典型场景：`for ...: if key == 'X' or key == 'Y': continue; elif...`
+        # 编译为 POP_JUMP_IF_TRUE to <shared_continue>（A 短路），
+        # 然后 POP_JUMP_IF_FALSE to <after>（B 失败跳过 continue），
+        # 共享同一个 JUMP_BACKWARD。若生成 `if not A: if B: continue...`，
+        # 当 A 为真时跳过 if body 到循环末尾，编译器生成额外 JUMP_BACKWARD
+        # （隐式 continue），导致字节码 diff=+1。
+        # 判据：
+        #   1. condition 是 UnaryOp(Not, ...)（条件被取反）
+        #   2. then_stmts[0] 是 If，body == [Continue]，且有 orelse
+        #   3. 无 elif_conditions、无 else_stmts
+        _r30_5_post_extra = None
+        if (isinstance(condition, dict) and condition.get('type') == 'UnaryOp'
+                and condition.get('op') == 'not'
+                and then_stmts and isinstance(then_stmts[0], dict)
+                and then_stmts[0].get('type') == 'If'
+                and len(then_stmts[0].get('body', [])) == 1
+                and isinstance(then_stmts[0]['body'][0], dict)
+                and then_stmts[0]['body'][0].get('type') == 'Continue'
+                and then_stmts[0].get('orelse')
+                and not getattr(region, 'elif_conditions', None)
+                and not else_stmts):
+            _r30_5_outer_cond = condition.get('operand', condition)
+            _r30_5_inner_if = then_stmts[0]
+            _r30_5_inner_cond = _r30_5_inner_if.get('test')
+            _r30_5_inner_orelse = _r30_5_inner_if.get('orelse', [])
+            _r30_5_remaining = then_stmts[1:]
+            condition = {'type': 'BoolOp', 'op': 'or',
+                         'values': [_r30_5_outer_cond, _r30_5_inner_cond]}
+            then_stmts = [{'type': 'Continue'}]
+            else_stmts = _r30_5_inner_orelse
+            if _r30_5_remaining:
+                _r30_5_post_extra = _r30_5_remaining
         result = {'type': 'If', 'test': condition, 'body': then_stmts, 'orelse': else_stmts if else_stmts else None}
         self._generating_regions.discard(region_id)
         self._generated_regions.add(region_id)
         if_result = result
         if pre_stmts:
             if_result = pre_stmts + [if_result]
+        # [R18-N5 fix] 区域归约算法原则 4（父引用子入口）+ 原则 2（每块唯一归属）：
+        # 当 IfRegion.merge_block 同时是其内嵌 LoopRegion 的 else_blocks（for_iter_exit）
+        # 时，R15-N5 修复会让 LoopRegion 跳过 merge_block（避免在 if body 内重复输出
+        # return）。但 IfRegion 此前不会生成 merge_block 的 post-if 代码，导致
+        # `if cond: ... for ...: ... return data_dict` 中 return 丢失。
+        # 普遍性判据（基于 R15-N5 的触发条件）：
+        #   1. merge_block 存在 + 不在 then_blocks/else_blocks 中
+        #   2. merge_block 是某 LoopRegion 的 else_blocks（for_iter_exit）
+        #   3. 该 LoopRegion 的 entry 在本 IfRegion 的 then_blocks 或 else_blocks 中
+        #      （即 LoopRegion 作为 then/else 分支子区域被处理，R15-N5 会触发）
+        #   4. merge_block 不在任何嵌套结构区域（Try/With/Match）的 blocks 中
+        # 满足以上条件时，merge_block 是纯粹的 post-if 顺序代码，由本 IfRegion 生成。
+        # [R23-N10 fix] 扩展条件 3：将 else_blocks 也纳入触发判据。
+        # 普遍化原理（区域归约算法原则 4）：当 LoopRegion 作为 if 的 else 分支子区域
+        # 被处理时，R15-N5 同样会触发让 LoopRegion 跳过 merge_block。IfRegion 必须承担
+        # 生成 merge_block 的责任。典型场景：`if cond: ... else: for ...: ... return data`
+        # 这里 merge_block 是 if-else 的汇合点，也是 for 循环的退出点。
+        if (region.merge_block is not None
+                and region.merge_block not in region.then_blocks
+                and region.merge_block not in (region.else_blocks or [])):
+            _mb_in_nested_structural = False
+            for _nr in self.region_analyzer.regions:
+                if _nr is region:
+                    continue
+                if not isinstance(_nr, (TryExceptRegion, WithRegion, MatchRegion)):
+                    continue
+                if region.merge_block in _nr.blocks:
+                    _mb_in_nested_structural = True
+                    break
+            _should_emit = False
+            if not _mb_in_nested_structural:
+                # 检查 R15-N5 触发条件：merge_block 是嵌套 LoopRegion 的 for_iter_exit
+                # [R23-N10] 同时检查 then_blocks 和 else_blocks
+                _then_block_set = set(region.then_blocks)
+                _else_block_set = set(region.else_blocks or [])
+                for _lr in self.region_analyzer.regions:
+                    if not isinstance(_lr, LoopRegion):
+                        continue
+                    if _lr is region:
+                        continue
+                    if region.merge_block not in _lr.else_blocks:
+                        continue
+                    if _lr.entry is not None and (_lr.entry in _then_block_set
+                                                   or _lr.entry in _else_block_set):
+                        _should_emit = True
+                        break
+            if _should_emit:
+                # R15-N5 已确保 LoopRegion 跳过 merge_block（未输出其语句），
+                # 但 _process_if_blocks 处理 LoopRegion 后会将 nested.blocks 全部
+                # 标记为 generated（含 merge_block）。此处需先清除标记，否则
+                # _generate_block_statements 会因已生成而返回空列表。
+                self.generated_blocks.discard(region.merge_block)
+                self.generated_offsets.discard(region.merge_block.start_offset)
+                _post_if_stmts = self._generate_block_statements(region.merge_block)
+                if _post_if_stmts:
+                    if isinstance(if_result, list):
+                        if_result = if_result + _post_if_stmts
+                    else:
+                        if_result = [if_result] + _post_if_stmts
+        if _r30_5_post_extra:
+            if isinstance(if_result, list):
+                if_result = if_result + _r30_5_post_extra
+            else:
+                if_result = [if_result] + _r30_5_post_extra
         return if_result
 
     def _try_build_await_condition(self, region: IfRegion, cond_block: 'BasicBlock') -> Optional[Dict[str, Any]]:
@@ -10912,7 +11823,34 @@ AST 映射规则:
                         if 'TRUE' in _last_ci.opname:
                             _boolop_negate = True
                 if _boolop_negate:
-                    boolop_expr = _negate_expr(boolop_expr)
+                    # [R23-N2 fix] 区域归约算法「一次正确」原则：当 BoolOp 表达式
+                    # 是 `a and (b or c)` 形式（由 _try_build_and_inner_or_pattern
+                    # 构建，最后一个操作数是 BoolOp(or, ...)），且最后一个链块的
+                    # 跳转是 IF_TRUE（表明 `not` 应该应用），`not` 应该只应用到
+                    # `or` 子表达式上，而非整个 `and` 表达式。
+                    # 原始 pyc 源码 `if a and not (b or c):` 编译为：
+                    #   a; POP_JUMP_IF_FALSE → merge  (a 假时跳过整个 and)
+                    #   b; POP_JUMP_IF_TRUE → merge   (b 真时 not(b or c) 假，and 假，跳 merge)
+                    #   c; POP_JUMP_IF_TRUE → merge   (c 真时跳 merge)
+                    # 旧逻辑将 `not` 应用到整个 `a and (b or c)`，生成
+                    # `not (a and (b or c))`，编译为不同的字节码（a 假时跳到 if 体
+                    # 而非 merge），导致字节码不一致。
+                    # 修复后生成 `a and not (b or c)`，CPython 重新编译为
+                    # 与原始一致的字节码。
+                    # 普遍性: 覆盖 `a and not (b or c)` / `a and not (b or c or d)` /
+                    # `a and b and not (c or d)` 等所有 and 链 + 末尾 not(or) 形式。
+                    if (isinstance(boolop_expr, dict)
+                            and boolop_expr.get('type') == 'BoolOp'
+                            and boolop_expr.get('op') == 'and'
+                            and boolop_expr.get('values')
+                            and isinstance(boolop_expr['values'][-1], dict)
+                            and boolop_expr['values'][-1].get('type') == 'BoolOp'
+                            and boolop_expr['values'][-1].get('op') == 'or'):
+                        _negated_or = _negate_expr(boolop_expr['values'][-1])
+                        boolop_expr = dict(boolop_expr)
+                        boolop_expr['values'] = list(boolop_expr['values'][:-1]) + [_negated_or]
+                    else:
+                        boolop_expr = _negate_expr(boolop_expr)
                 # [CPython peephole] BoolOp result used in a comparison:
                 # `if (a or b) == c:` compiles to:
                 #   LOAD a; JUMP_IF_TRUE_OR_POP to merge
@@ -11359,8 +12297,56 @@ AST 映射规则:
                         child_expr_regions[child.entry] = child
         _block_set = set(blocks)
         _nested_if_skip = set()
+        # [R12-N1 fix] 区域归约算法原则 4：归约后父区域的 then/else 列表引用子区域
+        # 的入口，而不是子区域的所有块。但 _process_if_blocks 仍会扫描 then_blocks 中的
+        # 所有块。原实现仅跳过子 IfRegion 的非入口块（_nested_if_skip），入口块仍被
+        # 作为普通块处理并标记为已生成，导致后续子区域循环（L8598）检测到
+        # `child.entry in self.generated_blocks` 而跳过整个子 IfRegion，子区域体丢失
+        # （如 _is_same_type_date 的 `typet == 7` 分支显示 `pass`）。
+        # 修正：当子 IfRegion 的入口块同时是 BoolOpRegion 的入口时（复合条件模式），
+        # 跳过入口块（不标记已生成），交由子区域循环 _generate_region(child) 完整处理。
+        _nested_if_entry_skip = set()
+        # [R18-N6 fix] 区域归约算法原则 4（父引用子入口）+ 原则 2（每块唯一归属）：
+        # 当 elif_final_else（或 then/else blocks）中的块是某嵌套 IfRegion 的 entry
+        # 且该嵌套 IfRegion 无 BoolOpRegion 子节点、无 chained_compare、无 elif 时，
+        # 原实现将该 entry 块作为普通顺序块处理（_generate_block_statements），仅生成
+        # entry 块中的前置语句（如赋值），而嵌套 IfRegion 的 if 条件和 then/else 体
+        # 丢失。后续 then 块的 return 也会触发 "after Return" 检查跳过 else 块。
+        # 例如 check_index_code 的 else 分支：
+        #   index_code_list = data_proxy().get_blocks_codes_local('ZS')
+        #   if '%s.csv' % index_code.split('.')[0] not in index_code_list:
+        #       strategy_log.error(...)
+        #       return False
+        #   else:
+        #       return True
+        # 嵌套 IfRegion(entry=block 9) 不在父 IfRegion.children 中（区域分析器未
+        # 建立 parent-child 关系），因此不会被 _if_generate_then/else_branch 的
+        # children 遍历命中。_process_if_blocks 将 block 9 作为普通块处理，仅生成
+        # 赋值，block 10（then）的 return False 导致 block 11（else）被 "after
+        # Return" 检查跳过，return True 丢失。
+        # 修复：检测 entry 块是嵌套 IfRegion 入口的情况，主动调用 _generate_region
+        # 生成嵌套 IfRegion（其 _if_generate_normal 会提取 entry 块中的前置语句
+        # 作为 pre_stmts），替代普通块处理。
+        _nested_if_entry_generate = {}
         for b in _block_set:
             _nr = self.region_analyzer.get_region_for_block(b)
+            # [R30-3 fix] 区域归约算法原则 4（父引用子入口）+ 原则 2（每块唯一归属）：
+            # 当父 IfRegion（如 IfRegion@0）的 then/else blocks 包含嵌套 IfRegion
+            # 的 entry 块时，block_to_region 可能把 entry 块的所有权分配给父区域
+            # 而非嵌套区域（优先级/范围竞争）。此时 get_region_for_block 返回父
+            # 区域本身，`_nr is not region` 检查失败，嵌套 IfRegion 被当作普通
+            # 顺序块处理，导致整个 if 结构丢失。
+            # 失败模式：get_stock_exrights 中 IfRegion@0 的 else 分支包含块 342
+            # （IfRegion@342 的 entry）。block_to_region[342]=IfRegion@0（父），
+            # 原检查 `_nr is not region` 为 False，IfRegion@342 未被识别为嵌套
+            # 区域，`if isinstance(date, str):` 整块代码丢失。
+            # 修复：用 get_entry_region_for_block 找到以 b 为 entry 的区域（不
+            # 依赖 block_to_region 的所有权分配），若该区域是不同的 IfRegion 则
+            # 用它替代 _nr。
+            if _nr is None or _nr is region or not isinstance(_nr, IfRegion) or _nr.entry is not b:
+                _er = self.region_analyzer.get_entry_region_for_block(b)
+                if isinstance(_er, IfRegion) and _er is not region and _er.entry is b:
+                    _nr = _er
             if isinstance(_nr, IfRegion) and _nr is not region and _nr.entry is not None:
                 if _nr.entry in _block_set and b != _nr.entry:
                     # [R21-C5 fix] 使用真值检查而非 `is not None`：空列表 [] 也表示
@@ -11371,12 +12357,57 @@ AST 映射规则:
                     _has_elif = bool(getattr(_nr, 'elif_conditions', None))
                     if not _has_cc and not _has_elif:
                         _nested_if_skip.add(b)
+                elif b == _nr.entry and _nr.entry in _block_set:
+                    # [R12-N1] 入口块同时是 BoolOpRegion 入口时跳过（复合条件模式）
+                    _has_cc = bool(getattr(_nr, 'chained_compare_blocks', None))
+                    _has_elif = bool(getattr(_nr, 'elif_conditions', None))
+                    if not _has_cc and not _has_elif:
+                        # 检查子 IfRegion 是否包含 BoolOpRegion（复合 and/or 条件）
+                        _has_boolop_child = any(
+                            isinstance(_c, BoolOpRegion) and _c.entry is _nr.entry
+                            for _c in getattr(_nr, 'children', [])
+                        )
+                        if _has_boolop_child:
+                            _nested_if_entry_skip.add(b)
+                        else:
+                            # [R18-N6 fix] 无 BoolOpRegion 子节点的嵌套 IfRegion：
+                            # 主动生成整个嵌套 IfRegion（含 entry 块中的前置语句）。
+                            _nr_id = id(_nr)
+                            if (_nr_id not in self._generated_regions
+                                    and _nr_id not in self._generating_regions):
+                                # 确保嵌套 IfRegion 的所有 blocks 都在当前 blocks 列表中，
+                                # 避免生成不属于当前分支的块。
+                                _nr_blocks_in_set = all(_nb in _block_set for _nb in _nr.blocks)
+                                if _nr_blocks_in_set:
+                                    _nested_if_entry_generate[b] = _nr
         for block in sorted(blocks, key=lambda b: b.start_offset):
             if block in self.generated_blocks:
                 continue
             if block in _nested_if_skip:
                 self.generated_blocks.add(block)
                 self.generated_offsets.add(block.start_offset)
+                continue
+            if block in _nested_if_entry_skip:
+                # [R12-N1] 不标记为已生成，交由子区域循环 _generate_region(child) 处理
+                continue
+            # [R18-N6 fix] 生成嵌套 IfRegion（无 BoolOpRegion 子节点的情况）
+            if block in _nested_if_entry_generate:
+                _nr = _nested_if_entry_generate[block]
+                _nr_id = id(_nr)
+                self._generating_regions.add(_nr_id)
+                try:
+                    _nr_ast = self._generate_region(_nr)
+                finally:
+                    self._generating_regions.discard(_nr_id)
+                if _nr_ast:
+                    if isinstance(_nr_ast, list):
+                        stmts.extend(_nr_ast)
+                    else:
+                        stmts.append(_nr_ast)
+                for _nb in _nr.blocks:
+                    self.generated_blocks.add(_nb)
+                    self.generated_offsets.add(_nb.start_offset)
+                self._generated_regions.add(_nr_id)
                 continue
             # [Round5-10] 跨块 await 列表元素赋值：r = [await g(), await h()]
             if self._try_generate_await_list_assign(block, stmts):
@@ -11654,6 +12685,29 @@ AST 映射规则:
                     if bs:
                         stmts.extend(bs)
                 self.generated_blocks.add(block)
+                continue
+            # [R14-N7 fix] 区域归约算法原则 2（每块唯一归属）：
+            # for_iter_setup 块（含 LOAD_FAST iterable + GET_ITER）是
+            # LoopRegion 的一部分，由 LoopRegion 生成器处理（提取 iter_expr
+            # 及前置赋值语句 _loop_extract_for_iter_pre_stmts）。
+            # 但在 _process_if_blocks 中按 start_offset 排序处理时，
+            # for_iter_setup 块在 LoopRegion entry 之前被处理，此时
+            # LoopRegion 尚未生成，for_iter_setup 未被标记为已生成。
+            # 若不跳过，块内指令会被作为裸表达式/赋值语句输出（如
+            # `data_df.columns` → LOAD_FAST+LOAD_ATTR+POP_TOP 而非
+            # GET_ITER+FOR_ITER），导致 GET_ITER 丢失（10 个函数）或
+            # 迭代器变量被误输出为裸表达式（如 `l`，delta=-4）。
+            # [R14-N7c fix] 移除 R14-N7b 的指令类型过滤——该过滤排除了
+            # 含 LOAD_ATTR/LOAD_METHOD/CALL 等指令的块，但这些指令在
+            # iter 表达式（如 `for x in obj.attr:`）和前置赋值中普遍存在。
+            # _loop_extract_for_iter_pre_stmts 已能正确提取前置赋值语句
+            # （含 STORE_ATTR/STORE_SUBSCR/POP_TOP+CALL）和 iter 指令，
+            # 无需在 _process_if_blocks 中重复处理。
+            # [R23-N9 fix] 提取为独立 helper _is_for_iter_setup_of_ungenerated_loop，
+            # 供 _generate_try 的 post-try 处理等其他路径复用。
+            if self._is_for_iter_setup_of_ungenerated_loop(block):
+                self.generated_blocks.add(block)
+                self.generated_offsets.add(block.start_offset)
                 continue
             nested = self.region_analyzer.get_entry_region_for_block(block)
             if nested and isinstance(nested, (IfRegion, LoopRegion, TryExceptRegion, WithRegion, MatchRegion, AssertRegion, TernaryRegion, BoolOpRegion)):
@@ -11939,7 +12993,28 @@ AST 映射规则:
                                 bs.pop()
                                 if not bs or bs[-1].get('type') not in ('Break', 'Continue', 'Return', 'Raise'):
                                     bs.append({'type': 'Break'})
-                if bs and isinstance(bs[-1], dict) and bs[-1].get('type') == 'Expr' and any(
+                # [R17-N1 fix] 区域归约算法原则：每个字节码模式对应唯一的 AST 节点。
+                # Expr 语句（含 POP_TOP）的值已被丢弃，不应提升为 Return。
+                # 例如 `data.sort(...); return data` 的字节码为：
+                #   Block A: LOAD_FAST data + LOAD_METHOD sort + ... + CALL + POP_TOP
+                #   Block B (RETURN): LOAD_FAST data + RETURN_VALUE
+                # Block A 末尾的 POP_TOP 表示 `data.sort(...)` 是语句（值被丢弃），
+                # Block B 加载新值 `data` 返回。原逻辑仅检查后继块角色为 RETURN 就
+                # 将 Expr 提升为 Return，导致 `return data.sort(...)` 错误生成。
+                # 修正：检查块末尾（跳过 JUMP 指令）是否为 POP_TOP。若是，说明
+                # Expr 是语句，不应提升。
+                _block_ends_with_pop_top_r17 = False
+                _non_noise_r17 = [i for i in block.instructions
+                                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                if _non_noise_r17:
+                    _li_r17 = len(_non_noise_r17) - 1
+                    while _li_r17 >= 0 and _non_noise_r17[_li_r17].opname in (
+                        'JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD',
+                        'JUMP_BACKWARD_NO_INTERRUPT'):
+                        _li_r17 -= 1
+                    if _li_r17 >= 0 and _non_noise_r17[_li_r17].opname == 'POP_TOP':
+                        _block_ends_with_pop_top_r17 = True
+                if bs and isinstance(bs[-1], dict) and bs[-1].get('type') == 'Expr' and not _block_ends_with_pop_top_r17 and any(
                     (self.region_analyzer.get_block_role(s) in (BlockRole.RETURN, BlockRole.RETURN_NONE)
                      and not self.region_analyzer._is_with_exit_cleanup(s)
                      and not (_in_loop and self._is_loop_break_return(s)))
@@ -13662,6 +14737,82 @@ AST 映射规则:
             _pre_consumed_handler_bodies = _handler_body_blocks & self.generated_blocks
             self.generated_blocks.update(_handler_body_blocks)
 
+            # [R19-N2 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（父引用子入口）：
+            # try-except 的 post-try 代码块（如 `return returndata`）是 try-except
+            # 正常出口后的代码，不属于 try_blocks/else_blocks/handler_blocks/cleanup_blocks。
+            # 但 region_analyzer 可能将其误归入 except handler 内的 IfRegion 的
+            # then_blocks（因为 handler 内的 if-then 分支也会跳转到 post-try 块）。
+            # 例如 api_get 的 block 604 (`return returndata`) 同时是：
+            #   - else_block 270 的 JUMP_FORWARD 目标（try 正常出口）
+            #   - IfRegion(entry=292) then_blocks 的最后一个块（handler 内 if-then 的 merge）
+            # 当 IfRegion 生成时，block 604 被作为 then-branch 的 `return returndata`
+            # 生成，导致 post-try 代码丢失（应放在 try-except 之后，而非 if-then 之内）。
+            # 修复：在 handler body 生成之前，识别 post-try 块并标记为 generated，
+            # 使 IfRegion 跳过它们；在 return 之前清除标记并生成 post-try 代码。
+            _region_block_set_r19n2 = set(region.blocks)
+            _post_try_blocks_r19n2 = []
+            _post_try_seen_r19n2 = set()
+            # [R19-N2 fix] 收集所有 IfRegion 的 merge_block，用于排除不应作为
+            # post-try 代码生成的块。当 post-try 块同时是某个祖先 IfRegion 的
+            # merge_block 时（如 check_frequency 的 block 398），它应该由
+            # IfRegion 的 merge_block 处理逻辑生成，而非作为 post-try 代码生成。
+            # 否则会导致 post-try 代码被放在 try-except 之内（嵌套在 IfRegion 的
+            # then-branch 中），而非 try-except 之后。
+            # [R19-N2 fix] 收集所有 IfRegion 的 merge_block，用于排除不应作为
+            # post-try 代码生成的块。当 post-try 块同时是某个祖先 IfRegion 的
+            # merge_block 时（如 check_frequency 的 block 398），它应该由
+            # IfRegion 的 merge_block 处理逻辑生成，而非作为 post-try 代码生成。
+            # 否则会导致 post-try 代码被放在 try-except 之内（嵌套在 IfRegion 的
+            # then-branch 中），而非 try-except 之后。
+            #
+            # [R20-N2 fix] 仅排除「非子级」IfRegion 的 merge_block。
+            # 若 IfRegion 是 try-except 的子区域（entry 在 try-except 的 blocks 内），
+            # 其 merge_block 指向区域外部的 post-try 块（如 isVaildDate 的
+            # block 4 `return True`），必须作为 post-try 生成，否则会被丢失。
+            # 若 IfRegion 是 try-except 的祖先/兄弟（entry 不在 blocks 内），
+            # 其 merge_block 是 post-if 代码（如 check_frequency 的 block 18），
+            # 应由该 IfRegion 自身生成，不作为 post-try。
+            # 判定：IfRegion.entry 不在 _region_block_set_r19n2 中 → 非子级 → 排除。
+            _all_if_merge_blocks_r19n2 = set()
+            for _r in self.regions:
+                if isinstance(_r, IfRegion) and _r.merge_block is not None:
+                    if _r.entry not in _region_block_set_r19n2:
+                        _all_if_merge_blocks_r19n2.add(_r.merge_block)
+            # 从 else_blocks 的后继中查找 post-try 块
+            if region.else_blocks:
+                for _eb in region.else_blocks:
+                    for _succ in _eb.successors:
+                        if (_succ not in _region_block_set_r19n2
+                                and _succ not in _post_try_seen_r19n2):
+                            # 排除是祖先 IfRegion merge_block 的块
+                            if _succ in _all_if_merge_blocks_r19n2:
+                                continue
+                            _post_try_seen_r19n2.add(_succ)
+                            _post_try_blocks_r19n2.append(_succ)
+            # 如果没有 else_blocks，从 try_blocks 的正常出口查找
+            if not _post_try_blocks_r19n2:
+                for _tb in region.try_blocks:
+                    for _succ in _tb.successors:
+                        if (_succ not in _region_block_set_r19n2
+                                and _succ not in _post_try_seen_r19n2
+                                and _succ not in _handler_entry_blocks):
+                            # 排除 RERAISE/cleanup 块
+                            _has_reraise = any(
+                                i.opname == 'RERAISE' for i in _succ.instructions)
+                            if _has_reraise:
+                                continue
+                            # 排除是祖先 IfRegion merge_block 的块
+                            if _succ in _all_if_merge_blocks_r19n2:
+                                continue
+                            _post_try_seen_r19n2.add(_succ)
+                            _post_try_blocks_r19n2.append(_succ)
+            # 标记 post-try 块为 generated，使 IfRegion 跳过它们
+            _post_try_pre_generated_r19n2 = set()
+            for _ptb in _post_try_blocks_r19n2:
+                if _ptb not in self.generated_blocks:
+                    _post_try_pre_generated_r19n2.add(_ptb)
+                    self.generated_blocks.add(_ptb)
+
             body_stmts = self._generate_try_body(region)
 
             self.generated_blocks -= (_handler_entry_blocks - _pre_consumed_handler_entries)
@@ -13935,8 +15086,17 @@ AST 映射规则:
                 for eb in _filtered_else:
                     if eb in self.generated_blocks:
                         continue
-                    nested_region = self.region_analyzer.get_region_for_block(eb)
-                    if nested_region and nested_region is not region and isinstance(nested_region, (IfRegion, LoopRegion, TryExceptRegion, WithRegion)):
+                    # [R18-N1 fix] 区域归约算法原则：每块唯一归属 + 父引用子入口。
+                    # else 块可能是嵌套 AssertRegion/IfRegion 等的入口块。
+                    # get_region_for_block 返回拥有该块的「父」区域（可能是当前
+                    # TryExceptRegion 自身），导致 nested_region is not region
+                    # 判定失败，进而把 assert 的条件块当作普通 if 条件处理
+                    # （如 `assert tmp > 0, msg` → 错误生成 `if tmp > 0: assert False`）。
+                    # 修正：优先用 get_entry_region_for_block 查找以该块为入口的
+                    # 嵌套区域（AssertRegion.is_block_entry 检查 condition_block==block），
+                    # 回退到 get_region_for_block 保留原行为。
+                    nested_region = self.region_analyzer.get_entry_region_for_block(eb) or self.region_analyzer.get_region_for_block(eb)
+                    if nested_region and nested_region is not region and isinstance(nested_region, (IfRegion, LoopRegion, TryExceptRegion, WithRegion, MatchRegion, AssertRegion, TernaryRegion, BoolOpRegion)):
                         nr_id = id(nested_region)
                         if nr_id not in self._generated_regions and nr_id not in self._generating_regions:
                             nested_ast = self._generate_region(nested_region)
@@ -14104,6 +15264,64 @@ AST 映射规则:
                 try_ast['finalbody'] = finalbody_stmts
             elif region.has_finally:
                 try_ast['finalbody'] = [{'type': 'Pass'}]
+
+            # [R19-N2 fix] 生成 post-try 代码（try-except 正常出口后的代码）。
+            # 之前标记的 post-try 块现在清除标记并生成。
+            _post_try_stmts_r19n2 = []
+            for _ptb in _post_try_blocks_r19n2:
+                # 清除标记（仅清除我们设置的，不影响其他标记）
+                if _ptb in _post_try_pre_generated_r19n2:
+                    self.generated_blocks.discard(_ptb)
+                    self.generated_offsets.discard(_ptb.start_offset)
+                if _ptb in self.generated_blocks:
+                    continue
+                # [R23-N9 fix] 区域归约算法原则 2（每块唯一归属）+
+                # 原则 3（嵌套即抽象节点）：
+                # post-try 块可能是某个尚未生成的 LoopRegion 的 for_iter_setup
+                # 块（含 LOAD_*+GET_ITER 及前置赋值语句，如 one_prod_to_dataframe
+                # 的 `try: ... except: ... i = 0; for item in fields:` 中，
+                # block@340 含 `i = 0` + `LOAD_FAST 'fields'` + `GET_ITER`）。
+                # 若直接调用 _generate_block_statements，会：
+                # 1. 前置赋值语句（`i = 0`）被提前输出，LoopRegion 生成时
+                #    再次提取（_fis_pre_stmts），产生重复语句。
+                # 2. LOAD_*+GET_ITER 被当作裸表达式（`fields`）输出，而非
+                #    作为 for 循环的 iter_expr。
+                # 修复：跳过此类块，交由 LoopRegion 生成器统一处理。
+                if self._is_for_iter_setup_of_ungenerated_loop(_ptb):
+                    self.generated_blocks.add(_ptb)
+                    self.generated_offsets.add(_ptb.start_offset)
+                    continue
+                # 检查是否是嵌套区域的入口
+                _ptb_region = self.region_analyzer.get_entry_region_for_block(_ptb)
+                if _ptb_region and _ptb_region is not region:
+                    _nrid = id(_ptb_region)
+                    if (_nrid not in self._generated_regions
+                            and _nrid not in self._generating_regions):
+                        self._generating_regions.add(_nrid)
+                        try:
+                            _nr_ast = self._generate_region(_ptb_region)
+                        finally:
+                            self._generating_regions.discard(_nrid)
+                        if _nr_ast:
+                            if isinstance(_nr_ast, list):
+                                _post_try_stmts_r19n2.extend(_nr_ast)
+                            else:
+                                _post_try_stmts_r19n2.append(_nr_ast)
+                        for _b in _ptb_region.blocks:
+                            self.generated_blocks.add(_b)
+                        self._generated_regions.add(_nrid)
+                        continue
+                # 普通块：生成语句
+                _pt_stmts = self._generate_block_statements(_ptb)
+                if _pt_stmts:
+                    _post_try_stmts_r19n2.extend(_pt_stmts)
+                self.generated_blocks.add(_ptb)
+
+            if _post_try_stmts_r19n2:
+                if isinstance(try_ast, list):
+                    try_ast = try_ast + _post_try_stmts_r19n2
+                else:
+                    try_ast = [try_ast] + _post_try_stmts_r19n2
 
             return try_ast
         finally:
@@ -14332,18 +15550,9 @@ AST 映射规则:
         # 旧的无条件 True 会误跳 block 中部的 POP_TOP（如 call 结果丢弃的 POP_TOP），
         # 导致 call 表达式被误绑定为后续 Assign 的 value。仅当首条非噪声指令是 POP_TOP
         # 时才跳过（依「每块唯一归属」：call 结果丢弃的 POP_TOP 归 Expr 语句）。
-        # [R8 Fix 1 / D6 / te049] bare except: handler 的 PUSH_EXC_INFO + POP_TOP
-        # 序列中，PUSH_EXC_INFO 是 except 框架指令（与 CHECK_EXC_MATCH 等同列于
-        # 下方过滤集合），未纳入噪声列表会导致初始化循环停在 PUSH_EXC_INFO，
-        # skip_initial_pop 误判为 False，使得 POP_TOP（exc_info discard）被加入
-        # stmt_instrs，后续 RETURN_VALUE reconstruct 失败 fallback 至 `return None`
-        # 而非真实 `return <const>`。依「每块唯一归属」：PUSH_EXC_INFO 等 except
-        # 框架指令归 handler 头部，与 RESUME/NOP 等同视为噪声。
         skip_initial_pop = False
         for _instr in block.instructions:
-            if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
-                                 'PUSH_EXC_INFO', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH',
-                                 'WITH_EXCEPT_START'):
+            if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
                 continue
             if exc_dispatch_jump_offset is not None and _instr.offset <= exc_dispatch_jump_offset:
                 continue
@@ -14368,11 +15577,7 @@ AST 映射规则:
 
             if instr.opname == 'POP_TOP' and not skip_initial_pop and stmt_instrs:
                 expr = self.expr_reconstructor.reconstruct(stmt_instrs)
-                # [R7 Fix 2 / D5] 抑制孤立 Name/Attr/Subscript Expr：
-                # except handler 内 LOAD_FAST as_var + POP_TOP 是异常变量
-                # 加载的无副作用序列，依「每块唯一归属」归 except 机制，不作为
-                # 用户 Expr 发射。
-                if expr and not self._is_orphan_load_expr(expr):
+                if expr:
                     stmts.append({'type': 'Expr', 'value': expr})
                 stmt_instrs = []
                 continue
@@ -14475,13 +15680,13 @@ AST 映射规则:
                 else:
                     all_instrs = stmt_instrs + [instr]
                     expr = self.expr_reconstructor.reconstruct(all_instrs)
-                    if expr and expr.get('type') == 'Raise':
+                    if expr and expr.get('type') in ('Raise', 'Assert'):
                         stmts.append(expr)
                     else:
-                        exc_expr = None
-                        if stmt_instrs:
-                            exc_expr = self.expr_reconstructor.reconstruct(stmt_instrs)
-                        stmts.append({'type': 'Raise', 'exc': exc_expr})
+                        # [R16-N1] 兜底：用 _build_raise_stmt_from_instrs 处理
+                        # LOAD_ASSERTION_ERROR 模式（返回 Assert）或普通 Raise
+                        _raise_stmt = self._build_raise_stmt_from_instrs(stmt_instrs, instr.arg)
+                        stmts.append(_raise_stmt)
                 stmt_instrs = []
                 continue
 
@@ -14542,15 +15747,17 @@ AST 映射规则:
                                 succ_instrs[1].opname in ('RETURN_VALUE', 'RETURN_CONST')):
                             _is_except_return_swap = True
                             break
-                        # [R7 Fix 1 / D9] 扩展 successor 检测：POP_EXCEPT +
-                        # as-var cleanup (LOAD_CONST None/STORE_FAST same_var/
-                        # DELETE_FAST same_var) + RETURN_VALUE 模式。此前仅
-                        # 识别 POP_EXCEPT→RETURN_VALUE 紧邻模式，导致 successor
-                        # 块中的 as-var cleanup + RETURN_VALUE 未被识别为 except
-                        # 机制代码，SWAP 被加入 stmt_instrs，触发后续 RETURN_VALUE
-                        # None 被错误发射为 spurious `return None`。
-                        # 依「每块唯一归属」：as-var cleanup 块归 except 机制，
-                        # 不作为独立 return 语句发射。
+                        # [R23-N6 fix] 区域归约算法原则 2（每块唯一归属）：
+                        # 当 SWAP 单独成块（CPython 3.11+ 将 return-in-except 的
+                        # SWAP 切分到独立块），其后继块以 POP_EXCEPT 开头，中间夹有
+                        # as-var 清理指令（LOAD_CONST None/STORE_FAST 'e'/DELETE_FAST 'e'）
+                        # 然后 RETURN_VALUE。此前仅识别 POP_EXCEPT 紧接 RETURN_VALUE
+                        # 的简单模式，导致 return 值表达式被当作 Expr 语句输出
+                        # （丢失 return 关键字）。此处扩展为允许 POP_EXCEPT 与
+                        # RETURN_VALUE 之间存在清理指令，与同块检测逻辑（L15229+）
+                        # 保持一致。覆盖 api_get_financial 的 except handler
+                        # `return (re_error, re_data)` / `return (..., ...)` 等
+                        # 所有 except 内 return 且 SWAP 单独成块的形式。
                         if succ_instrs and succ_instrs[0].opname == 'POP_EXCEPT':
                             _succ_cleanup_only = True
                             _succ_has_return = False
@@ -14568,14 +15775,6 @@ AST 映射规则:
                                 break
                             if _succ_has_return and _succ_cleanup_only:
                                 _is_except_return_swap = True
-                                # 标记 successor 块的清理指令为跳过，使主 RETURN_VALUE
-                                # 处理时 stmt_instrs 仍保留 return 值，从而正确生成
-                                # Return 语句而非 spurious return None。
-                                for _sri in succ_instrs:
-                                    if _sri.opname in ('RETURN_VALUE', 'RETURN_CONST'):
-                                        break
-                                    skip_offsets.add(_sri.offset)
-                                self.generated_blocks.add(succ)
                                 break
                 if _is_except_return_swap:
                     continue
@@ -14672,13 +15871,7 @@ AST 映射规则:
                         if target_block:
                             _then_succ = None
                             for succ in block.successors:
-                                # [R7 Fix 3 / D4] 跳过 exception_successors：except handler
-                                # 体内的 as-var 清理块 (LOAD_CONST None → STORE_FAST →
-                                # DELETE_FAST → RERAISE) 是 except 机制的清理块，被
-                                # CFG 作为 exception_successor 加入 successors。若被
-                                # 误选为 then-block，会泄漏 `del e2`。依「每块唯一归属」：
-                                # 清理块归 except 框架，不作为用户 if-body。
-                                if succ != target_block and succ not in block.exception_successors:
+                                if succ != target_block:
                                     _then_succ = succ
                                     then_stmts = self._generate_block_statements(succ)
                                     self.generated_blocks.add(succ)
@@ -14909,6 +16102,15 @@ AST 映射规则:
         _imp_name_instr = None
         _imp_from_pending = None
         _imp_pairs = []
+        # [R22-N4 fix] UNPACK_SEQUENCE / UNPACK_EX 状态机。
+        # 字节码模式: <value_expr> + UNPACK_SEQUENCE N + N×STORE_* →
+        #   (t1, t2, ..., tN) = value_expr
+        # 依「每块唯一归属」: UNPACK_SEQUENCE + N×STORE_* 序列归属单一
+        # Assign(Tuple(targets), value) 语句节点，不拆分为 N 个独立 Assign。
+        # 依「自底向上归约」: UNPACK_SEQUENCE 是归约入口（消费 iterable，
+        # 产生 N 个栈值），N×STORE_* 绑定名字。镜像 _if_extract_cond_instructions
+        # 的同名逻辑。
+        _bsi_unpack_info = None
         for instr in instrs:
             if instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
                 continue
@@ -14961,6 +16163,26 @@ AST 映射规则:
                         _imp_pairs.append((_imp_from_pending.argval or '', None))
                     _imp_from_pending = instr
                 continue
+            if instr.opname == 'UNPACK_SEQUENCE':
+                # [R22-N4 fix] UNPACK_SEQUENCE N: 消费栈顶 iterable，产生 N 个值。
+                # 前驱 stmt_instrs 是值表达式。设置 unpack_info，等待 N 个 STORE_*。
+                val_instrs = [i for i in stmt_instrs
+                              if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                val = self.expr_reconstructor.reconstruct(val_instrs) if val_instrs else None
+                _bsi_unpack_info = {'value': val, 'targets': [], 'count': instr.arg}
+                stmt_instrs = []
+                continue
+            if instr.opname == 'UNPACK_EX':
+                val_instrs = [i for i in stmt_instrs
+                              if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                val = self.expr_reconstructor.reconstruct(val_instrs) if val_instrs else None
+                arg = instr.argval
+                before, after = arg & 0xFF, (arg >> 8) & 0xFF
+                _bsi_unpack_info = {'value': val, 'targets': [],
+                                     'count': before + 1 + after,
+                                     'is_starred': True, 'starred_idx': before}
+                stmt_instrs = []
+                continue
             if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
                 if _imp_name_instr is not None:
                     if _imp_from_pending is not None:
@@ -14988,6 +16210,30 @@ AST 映射规则:
                     # 再 flush（可能有多个 name）。此处不 flush。
                     # 但若已无 pending 且 pairs 非空，且下一条不是 IMPORT_FROM，
                     # 则需在下次循环由非 import 指令触发 flush。
+                    continue
+                # [R22-N4 fix] UNPACK_SEQUENCE 状态机：收集 N 个 STORE_* 目标，
+                # 全部到齐后生成 Assign(Tuple(targets), value)。
+                if _bsi_unpack_info is not None:
+                    is_starred = _bsi_unpack_info.get('is_starred', False)
+                    starred_idx = _bsi_unpack_info.get('starred_idx', -1)
+                    current_target_idx = len(_bsi_unpack_info['targets'])
+                    if is_starred and current_target_idx == starred_idx:
+                        _bsi_unpack_info['targets'].append(
+                            {'type': 'Starred',
+                             'value': {'type': 'Name', 'id': instr.argval, 'ctx': 'Store'}})
+                    else:
+                        _bsi_unpack_info['targets'].append(
+                            {'type': 'Name', 'id': instr.argval, 'ctx': 'Store'})
+                    if len(_bsi_unpack_info['targets']) == _bsi_unpack_info['count']:
+                        target = {'type': 'Tuple',
+                                  'elts': _bsi_unpack_info['targets'],
+                                  'ctx': 'Store'}
+                        if _bsi_unpack_info['value']:
+                            stmts.append({'type': 'Assign',
+                                          'targets': [target],
+                                          'value': _bsi_unpack_info['value']})
+                        _bsi_unpack_info = None
+                    stmt_instrs = []
                     continue
                 stmt = self._build_store_statement(stmt_instrs + [instr], block=block)
                 if stmt:
@@ -18205,6 +19451,14 @@ AST 映射规则:
             if _grouped_result is not None:
                 return _grouped_result
             # 分组重建失败时回退到 or_groups 算法
+        # [R23-N2 fix] 检测 `a and (b or c)` 模式（or 子表达式作为 and 链的
+        # 最后一个操作数）。当所有 'and' 块的 IF_FALSE 跳转目标 = merge_block
+        # 且所有 'or' 块的 IF_TRUE 跳转目标 = merge_block 时，or 嵌套在 and 内部。
+        # or_groups 平坦化算法会错误地生成 `(a and b) or c`（丢失括号），
+        # 此检测优先构建 `and(a, or(b, c))` 保留正确的嵌套结构。
+        _and_inner_or_result = self._try_build_and_inner_or_pattern(region)
+        if _and_inner_or_result is not None:
+            return _and_inner_or_result
         # 使用or_groups算法处理混合and/or优先级
         # 核心原理：Python中and绑定比or更紧
         # 当op从'and'变为'or'时，当前值是'and'段的最后一个值（外层or的短路跳转）
@@ -18529,6 +19783,135 @@ AST 映射规则:
         if _has_unary_not and result:
             result = {'type': 'UnaryOp', 'op': 'not', 'operand': result}
         return result
+
+    def _try_build_and_inner_or_pattern(self, region: 'BoolOpRegion') -> Optional[Dict[str, Any]]:
+        """[R23-N2 fix] 区域归约算法「一次正确」原则：检测 `a and (b or c)` 模式
+        （或更一般地 `a1 and a2 and ... and (b1 or b2 or ...)`），其中 `or`
+        子表达式是 `and` 链的最后一个操作数。
+
+        算法角色：模式检测器（Pattern Detector）+ 表达式重建器
+
+        【字节码模式】
+        源码: `if a and (b or c):`  或  `if a and not (b or c):`
+        op_chain: [(b1, 'and'), (b2, 'or'), (b3, 'or')]
+        - b1 (and): POP_JUMP_FORWARD_IF_FALSE → merge_block
+          (a 为假时跳过整个 and，到 merge)
+        - b2 (or): POP_JUMP_FORWARD_IF_TRUE → merge_block
+          (b 为真时 (b or c) 为真，and 继续... 但这里跳到 merge)
+        - b3 (or): POP_JUMP_FORWARD_IF_TRUE → merge_block
+          (c 为真时跳到 merge)
+
+        【与 (a and b) or c 的关键区别】
+        - `a and (b or c)`: a 的 IF_FALSE → merge（and 的出口 = merge）
+          b/c 的 IF_TRUE → merge（or 的出口 = merge，与 and 的出口相同）
+          → or 是 and 的最后一个操作数（嵌套在 and 内部）
+        - `(a and b) or c`: a 的 IF_FALSE → c（and 的出口 = c，不是 merge）
+          b 的 IF_TRUE → merge（or 的出口 = merge）
+          → or 是 and 的外层（默认优先级，无需括号）
+
+        【检测条件】
+        1. op_chain 至少 2 个元素
+        2. 第一个元素是 'and'，后续至少一个 'or'
+        3. 找到第一个 'or' 的索引（边界）
+        4. 所有 'and' 块（边界之前）的 IF_FALSE 目标 = merge_block
+        5. 所有 'or' 块（边界及之后）的 IF_TRUE 目标 = merge_block
+
+        【生成的 AST】
+        `a and (b or c)` → BoolOp(and, [a, BoolOp(or, [b, c])])
+        注意：此方法不处理 `not`，`not` 由 IfRegion 的 _boolop_negate 逻辑处理。
+        但当此模式被检测到时，IfRegion 应将 `not` 应用到 `or` 子表达式上，
+        而非整个 `and` 表达式（见 IfRegion _boolop_negate 逻辑的 R23-N2 fix）。
+
+        【普遍性】
+        覆盖 `a and (b or c)` / `a and (b or c or d)` /
+        `a and b and (c or d)` / `a and b and (c or d or e)` 等所有
+        `and 链 + 末尾 or 子表达式` 形式。
+        """
+        op_chain = region.op_chain
+        if not op_chain or len(op_chain) < 2:
+            return None
+        # 条件1: 第一个元素是 'and'
+        if op_chain[0][1] != 'and':
+            return None
+        # 条件2: 后续至少一个 'or'
+        or_indices = [i for i, (_, op) in enumerate(op_chain) if op == 'or']
+        if not or_indices:
+            return None
+        # 条件3: 找到边界（第一个 'or' 的索引）
+        boundary = or_indices[0]
+        # 所有 'and' 块应在边界之前，所有 'or' 块应在边界及之后
+        and_blocks = [b for b, op in op_chain[:boundary]]
+        or_blocks = [b for b, op in op_chain[boundary:]]
+        # 验证：边界之前都是 'and'，边界及之后都是 'or'
+        for _, op in op_chain[:boundary]:
+            if op != 'and':
+                return None
+        for _, op in op_chain[boundary:]:
+            if op != 'or':
+                return None
+        # 条件4 & 5: 检查跳转目标
+        if region.merge_block is None:
+            return None
+        merge_offset = region.merge_block.start_offset
+        STRIP_JUMP_OPS = SHORT_CIRCUIT_JUMP_OPS | FORWARD_CONDITIONAL_JUMP_OPS
+        # 'and' 块的 IF_FALSE 目标 = merge
+        for b in and_blocks:
+            li = b.get_last_instruction()
+            if (li is None or li.argval != merge_offset
+                    or li.opname not in STRIP_JUMP_OPS
+                    or 'FALSE' not in li.opname):
+                return None
+        # 'or' 块的 IF_TRUE 目标 = merge
+        for b in or_blocks:
+            li = b.get_last_instruction()
+            if (li is None or li.argval != merge_offset
+                    or li.opname not in STRIP_JUMP_OPS
+                    or 'TRUE' not in li.opname):
+                return None
+        # 检测成功，重建操作数表达式
+        and_operands: List[Dict[str, Any]] = []
+        or_operands: List[Dict[str, Any]] = []
+        for b in and_blocks:
+            expr = self._reconstruct_boolop_operand(b, region)
+            if expr is None:
+                return None
+            and_operands.append(expr)
+        for b in or_blocks:
+            expr = self._reconstruct_boolop_operand(b, region)
+            if expr is None:
+                return None
+            or_operands.append(expr)
+        # 构建 AST: and([and_operands..., or([or_operands...])])
+        if len(or_operands) == 1:
+            or_expr = or_operands[0]
+        else:
+            or_expr = {'type': 'BoolOp', 'op': 'or', 'values': or_operands}
+        and_values = and_operands + [or_expr]
+        if len(and_values) == 1:
+            return and_values[0]
+        return {'type': 'BoolOp', 'op': 'and', 'values': and_values}
+
+    def _reconstruct_boolop_operand(self, chain_block: 'BasicBlock',
+                                     region: 'BoolOpRegion') -> Optional[Dict[str, Any]]:
+        """[R23-N2 fix] 重建 BoolOp 链块的操作数表达式（复用 _build_boolop_expression
+        中的指令过滤和重建逻辑）。"""
+        STRIP_JUMP_OPS = SHORT_CIRCUIT_JUMP_OPS | FORWARD_CONDITIONAL_JUMP_OPS
+        instrs = [i for i in chain_block.instructions
+                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+        last_instr = chain_block.get_last_instruction()
+        if last_instr and last_instr.opname in STRIP_JUMP_OPS:
+            pure_instrs = [i for i in instrs if i != last_instr]
+        else:
+            clean_instrs = []
+            for i in instrs:
+                if i.opname in ('POP_TOP', 'RETURN_VALUE', 'RETURN_CONST',
+                                'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'):
+                    break
+                clean_instrs.append(i)
+            pure_instrs = clean_instrs if clean_instrs else (list(instrs[:1]) if instrs else [])
+        if not pure_instrs:
+            return None
+        return self.expr_reconstructor.reconstruct(pure_instrs)
 
     def _build_boolop_augassign_target(self, region: 'BoolOpRegion') -> Optional[Dict[str, Any]]:
         """[R11-err4/5/6] 从首 chain_block 前缀指令重建 AugAssign 的属性/下标 target。
@@ -18855,10 +20238,89 @@ AST 映射规则:
                         'value': boolop_expr,
                     })
                 else:
+                    # [R30-13 fix] BoolOp as sub-expression of a larger rhs.
+                    # When merge_block has expression continuation (BINARY_OP/
+                    # CALL/etc.) before STORE, the boolop is a sub-expression
+                    # of a larger assignment rhs (e.g. `x = f(a and b, c)`).
+                    # Splice the boolop into the prefix + merge continuation to
+                    # build the full rhs expression.
+                    #   典型场景（load_bars_from_hundsun）:
+                    #   source_start = qdt.datetime.strptime(
+                    #       start[:8] + (len(start[8:]) == 4 and start[8:] or '0000'),
+                    #       '%Y%m%d%H%M')
+                    #   BoolOp `len(start[8:]) == 4 and start[8:] or '0000'` 是
+                    #   strptime 调用的子表达式。首 chain_block 的前缀
+                    #   （qdt.datetime.strptime, start[:8]）留在栈上，merge_block
+                    #   的 BINARY_OP + / CALL 消费 boolop 结果完成表达式。
+                    _full_rhs = boolop_expr
+                    if region.merge_block:
+                        _mnn = [i for i in region.merge_block.instructions
+                                if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                        _si = None
+                        for _ki, _instr in enumerate(_mnn):
+                            if _instr.opname in ('STORE_FAST', 'STORE_NAME',
+                                                 'STORE_GLOBAL', 'STORE_DEREF'):
+                                _si = _ki
+                                break
+                        # Expression continuation = instructions before STORE
+                        # (not just SWAP for augassign — that's handled above).
+                        if _si is not None and _si >= 1:
+                            _pre_store = _mnn[:_si]
+                            import os as _os_dbg_r30_13
+                            if _os_dbg_r30_13.environ.get('R30_13_DEBUG'):
+                                import sys as _sys_dbg_r30_13
+                                _fcb_dbg = op_chain[0][0] if op_chain else None
+                                print(f"[R30-13] value_target={region.value_target} merge={region.merge_block.start_offset} _si={_si} _pre_store={[(i.opname, i.argval) for i in _pre_store]} first_chain={_fcb_dbg.start_offset if _fcb_dbg else None}", file=_sys_dbg_r30_13.stderr)
+                            # Build initial stack: process first chain block's
+                            # prefix to get residual stack (values left on stack
+                            # by the expression prefix), then replace the
+                            # condition (top of residual) with the full boolop.
+                            _init_stack = [boolop_expr]
+                            if op_chain:
+                                _fcb = op_chain[0][0]
+                                _pinstrs = self.region_analyzer.identify_block_prefix_instructions(_fcb)
+                                _STORE_CHK = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
+                                              'STORE_DEREF', 'STORE_ATTR', 'STORE_SUBSCR')
+                                if _pinstrs:
+                                    # The prefix may contain STOREs from a
+                                    # consuming parent region (e.g. when this
+                                    # boolop's first chain block is another
+                                    # boolop's merge_block). Instructions up to
+                                    # and including the last STORE are already
+                                    # handled; only process the "true prefix"
+                                    # after the last STORE to get the residual
+                                    # stack for this boolop's expression.
+                                    _last_store_idx = -1
+                                    for _pi, _pinstr in enumerate(_pinstrs):
+                                        if _pinstr.opname in _STORE_CHK:
+                                            _last_store_idx = _pi
+                                    _true_prefix = _pinstrs[_last_store_idx + 1:] if _last_store_idx >= 0 else _pinstrs
+                                    if _true_prefix:
+                                        try:
+                                            self.expr_reconstructor.reconstruct(_true_prefix)
+                                            _res = [s for s in self.expr_reconstructor.stack
+                                                   if s.get('type') != 'PUSH_NULL']
+                                            if _res:
+                                                # Top of residual is the boolop
+                                                # condition (already extracted into
+                                                # boolop_expr). Replace it with the
+                                                # full boolop expression so the merge
+                                                # continuation consumes the right value.
+                                                _res[-1] = boolop_expr
+                                                _init_stack = _res
+                                        except Exception:
+                                            pass
+                            try:
+                                _spliced = self.expr_reconstructor.reconstruct(
+                                    _pre_store, initial_stack=_init_stack)
+                                if _spliced is not None:
+                                    _full_rhs = _spliced
+                            except Exception:
+                                pass
                     results.append({
                         'type': 'Assign',
                         'targets': [{'type': 'Name', 'id': region.value_target, 'ctx': 'Store'}],
-                        'value': boolop_expr,
+                        'value': _full_rhs,
                     })
                 if region.merge_block:
                     _merge_instrs = [i for i in region.merge_block.instructions
@@ -19061,15 +20523,39 @@ AST 映射规则:
         - 假设所有操作符类型相同（纯and链或纯or链）
         - 不处理混合and/or（那种情况应该在识别阶段被拆分）
         """
+        # [R20-N1 fix] condition_chain_blocks 有两种存储格式：
+        #   - BoolOp→Ternary 升级路径: [(block, op), ...] 元组列表
+        #   - 直接 ternary 模式识别路径: [block, ...] 纯块列表
+        # 此前代码假定所有元素均为元组，导致直接识别路径下抛出
+        # `ValueError: too many values to unpack (expected 2)`，
+        # 使整个函数（如 fill_minute_or_day_blank）反编译失败退化为 `pass`。
+        # 修复：对每个元素先判定类型，纯块则从末尾条件跳转方向推导 op：
+        #   POP_JUMP_*_IF_FALSE → 'and'（短路于假）
+        #   POP_JUMP_*_IF_TRUE  → 'or'（短路于真）
+        _FALSE_JUMP_OPS_R20N1 = frozenset({
+            'POP_JUMP_IF_FALSE', 'POP_JUMP_FORWARD_IF_FALSE',
+            'POP_JUMP_BACKWARD_IF_FALSE', 'JUMP_IF_FALSE_OR_POP',
+        })
+        _TRUE_JUMP_OPS_R20N1 = frozenset({
+            'POP_JUMP_IF_TRUE', 'POP_JUMP_FORWARD_IF_TRUE',
+            'POP_JUMP_BACKWARD_IF_TRUE', 'JUMP_IF_TRUE_OR_POP',
+        })
         chain = getattr(region, 'condition_chain_blocks', None)
         if not chain or len(chain) <= 1:
             return None
         values = []
         op_type = None
-        for cb, cop in chain:
+        for item in chain:
+            if isinstance(item, tuple):
+                cb, cop = item[0], item[1]
+            else:
+                cb = item
+                cop = None
             instrs = [i for i in cb.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
             last = cb.get_last_instruction()
-            if last and last.opname in ('POP_JUMP_IF_FALSE', 'POP_JUMP_IF_TRUE', 'JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP'):
+            if last and last.opname in (_FALSE_JUMP_OPS_R20N1 | _TRUE_JUMP_OPS_R20N1):
+                if cop is None:
+                    cop = 'or' if last.opname in _TRUE_JUMP_OPS_R20N1 else 'and'
                 instrs = [i for i in instrs if i != last]
             if instrs:
                 sub = self.expr_reconstructor.reconstruct(instrs)
@@ -20031,6 +21517,39 @@ AST 映射规则:
                                 'value': val_expr,
                             })
                         cond_start_idx = i + 1
+                    else:
+                        # [R22-N4 fix] 区域归约算法原则 2（每块唯一归属）：
+                        # 当 STORE_* 前驱含非 LOAD_ 指令（如 UNPACK_SEQUENCE、
+                        # BUILD_TUPLE、CALL 等）时，简单 backward LOAD_* 扫描失败。
+                        # 典型场景: `log, is_trade = getLogger()` 编译为
+                        #   LOAD_GLOBAL getLogger + PRECALL + CALL + UNPACK_SEQUENCE 2
+                        #   + STORE_FAST log + STORE_FAST is_trade
+                        # UNPACK_SEQUENCE 打断了 LOAD_ 链，load_instrs 为空，
+                        # cond_start_idx 不推进，STORE 指令污染 filtered_cond，
+                        # 导致三元条件重建失败，前驱语句丢失。
+                        # 依「每块唯一归属」: 解包赋值指令归属独立 Assign 语句节点，
+                        # 不归属 TernaryRegion 条件表达式。
+                        # 依「自底向上归约」: 前驱语句归约为独立 AST 节点，ternary
+                        # 仅拥有条件 + 值 + merge 块。
+                        # 普遍性: 覆盖 a, b = func() / a = b = expr / a, *b = iter
+                        # 等所有含非 LOAD_ 前驱的 STORE 模式。
+                        _store_end = i
+                        _k = i + 1
+                        while _k < len(cond_instrs):
+                            if cond_instrs[_k].opname in (
+                                    'STORE_FAST', 'STORE_NAME',
+                                    'STORE_GLOBAL', 'STORE_DEREF'):
+                                _store_end = _k
+                                _k += 1
+                            else:
+                                break
+                        _pred_instrs = list(cond_instrs[cond_start_idx:_store_end + 1])
+                        _pred_stmts = self._build_statements_from_instructions(
+                            _pred_instrs)
+                        if _pred_stmts:
+                            pre_stmts.extend(_pred_stmts)
+                        cond_start_idx = _store_end + 1
+                        i = _store_end
 
                 i += 1
 
@@ -21708,6 +23227,19 @@ AST 映射规则:
                                             and _r.condition_block is region.merge_block):
                                         _shared_with_nested_if_cond = True
                                         break
+                        # [R23-N5 fix] 检测 merge_block 是否同时是某 LoopRegion
+                        # 的 for_iter_setup 块。判据：存在 LoopRegion 其 metadata
+                        # 的 for_iter_setup 是本 region.merge_block。此时 STORE_* 之后
+                        # 的指令（LOAD ...; GET_ITER）归属 LoopRegion 的 iter setup，
+                        # 不应被 ternary 发射为独立 Expr 语句。
+                        _shared_with_loop_for_iter_setup = False
+                        if _non_noise_remaining and region.merge_block is not None:
+                            for _r in self.regions:
+                                if (isinstance(_r, LoopRegion)
+                                        and _r is not region
+                                        and _r.metadata.get('for_iter_setup') is region.merge_block):
+                                    _shared_with_loop_for_iter_setup = True
+                                    break
                         _is_trivial_ret = False
                         if len(_non_noise_remaining) <= 2:
                             _no_pop = [i for i in _non_noise_remaining
@@ -21735,6 +23267,23 @@ AST 映射规则:
                             # [R23 Bug1 fix] merge_block 同时是嵌套 IfRegion 的
                             # entry/condition_block；STORE_* 之后的指令属于嵌套
                             # IfRegion 的条件，不发射为独立语句。
+                            pass
+                        elif _shared_with_loop_for_iter_setup:
+                            # [R23-N5 fix] 区域归约算法原则 2（每块唯一归属）
+                            # + 原则 4（父引用子入口）：当 ternary 的 merge_block
+                            # 同时是嵌套 LoopRegion 的 for_iter_setup 块（典型场景：
+                            # `count = count if count else 0; for x in datass_list[-count:]: ...`
+                            # 中 ternary 的 STORE_count 与 for 循环的 iter setup
+                            # LOAD datass_list; ...; BINARY_SUBSCR; GET_ITER 被合并
+                            # 到同一基本块），STORE_* 之后的指令属于嵌套 LoopRegion
+                            # 的 for_iter_setup，由 LoopRegion 的 _loop_generate_for
+                            # 提取为 iter_expr，不应被本 TernaryRegion 作为独立
+                            # Expr(Iter(...)) 语句发射（否则会重复生成 iter 表达式，
+                            # 导致字节码不一致：datass_list[-count:] 出现两次）。
+                            # 普遍性: 覆盖 `x = a if c else b; for y in f(x): ...`
+                            # / `x = a if c else b; for y in obj[x:]: ...` 等所有
+                            # ternary 赋值 + 紧接 for 循环且 iter setup 与 STORE
+                            # 同块的形式。
                             pass
                         elif _non_noise_remaining and self._merge_block_is_loop_back_edge(region):
                             # [R6-02 fix] merge_block 同时是 LoopRegion 的 back_edge_block
@@ -26258,55 +27807,15 @@ AST 映射规则:
     def _generate_block_statements(self, block: BasicBlock, _cjb_parent: BasicBlock = None) -> List[Dict[str, Any]]:
         if block in self.generated_blocks or block.start_offset in self.generated_offsets:
             return []
-
-        # [R7 Fix 3 / D4] 检测 as-var 清理块并整体抑制：
-        # except handler 的 as-var 清理块（CPython 3.11+ 生成）形如
-        #   LOAD_CONST None → STORE_* as_var → DELETE_* as_var → RERAISE
-        # 或 POP_EXCEPT → LOAD_CONST None → STORE_* as_var → DELETE_* as_var
-        #   → [LOAD_CONST None → STORE_* as_var → DELETE_* as_var →] (RERAISE | RETURN_VALUE)
-        # 是 except 机制的清理代码，被 CFG 作为独立 basic block 处理。若被
-        # _generate_block_statements 处理，DELETE_FAST 会被发射为 `del as_var`
-        # （如 `del e2`、`del x`）。依「每块唯一归属」：清理块归 except 框架，
-        # 不作为用户语句发射；块内若含 RETURN_VALUE 也是清理路径的隐式 return，
-        # 真正的 return 值在 SWAP 前的块中。仅当块内全部指令都是清理指令
-        # 且至少含一组 as-var 清理序列时抑制。
-        _meaningful_d4 = [i for i in block.instructions
-                          if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-        _cleanup_ops_d4 = {'POP_EXCEPT', 'POP_TOP', 'STORE_FAST', 'STORE_NAME',
-                           'STORE_GLOBAL', 'STORE_DEREF', 'DELETE_FAST', 'DELETE_NAME',
-                           'DELETE_GLOBAL', 'DELETE_DEREF', 'RERAISE', 'RETURN_VALUE',
-                           'RETURN_CONST', 'SWAP', 'COPY', 'JUMP_FORWARD', 'JUMP_ABSOLUTE',
-                           'EXTENDED_ARG'}
-        _all_cleanup_d4 = True
-        for _mi in _meaningful_d4:
-            if _mi.opname == 'LOAD_CONST':
-                if _mi.argval is not None:
-                    _all_cleanup_d4 = False
-                    break
-                continue
-            if _mi.opname not in _cleanup_ops_d4:
-                _all_cleanup_d4 = False
-                break
-        if _all_cleanup_d4 and len(_meaningful_d4) >= 3:
-            _has_asvar_cleanup_d4 = False
-            for _i in range(len(_meaningful_d4) - 2):
-                if (_meaningful_d4[_i].opname == 'LOAD_CONST'
-                        and _meaningful_d4[_i].argval is None
-                        and _meaningful_d4[_i + 1].opname in ('STORE_FAST', 'STORE_NAME',
-                                                               'STORE_GLOBAL', 'STORE_DEREF')
-                        and _meaningful_d4[_i + 2].opname in ('DELETE_FAST', 'DELETE_NAME',
-                                                               'DELETE_GLOBAL', 'DELETE_DEREF')
-                        and _meaningful_d4[_i + 1].argval == _meaningful_d4[_i + 2].argval):
-                    _has_asvar_cleanup_d4 = True
-                    break
-            if _has_asvar_cleanup_d4:
-                self.generated_blocks.add(block)
-                self.generated_offsets.add(block.start_offset)
-                return []
-
         if any(i.opname == 'BINARY_OP' for i in block.instructions):
             pass
-
+        import os as _os_dbg
+        if _os_dbg.environ.get('R23N6_DEBUG2'):
+            _has_bt2 = any(i.opname == 'BUILD_TUPLE' and i.arg == 2 for i in block.instructions)
+            if _has_bt2:
+                import sys as _sys_dbg
+                _last_op = [i.opname for i in block.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')][-3:]
+                print(f"[R23N6-DBG2] _generate_block_statements block@{block.start_offset} try_depth={self._try_depth} last3ops={_last_op} succs={[s.start_offset for s in block.successors]}", file=_sys_dbg.stderr)
         # 区域归约算法：通用break检测
         # 在循环体内，POP_TOP(迭代器清理) + LOAD_CONST None + RETURN_VALUE = break
         # 此模式出现在for循环的try块中的if-break结构中
@@ -26465,15 +27974,13 @@ AST 映射规则:
                             _seen_for_targets3.add(_instr.argval)
                             if _eff_expr_instrs:
                                 _expr = self.expr_reconstructor.reconstruct(_eff_expr_instrs)
-                                # [R7 Fix 2 / D5] 抑制孤立 Name/Attr/Subscript Expr。
-                                if _expr and not self._is_orphan_load_expr(_expr):
+                                if _expr:
                                     _eff_stmts.append({'type': 'Expr', 'value': _expr})
                             _eff_expr_instrs = []
                             continue
                         if _instr.opname == 'POP_TOP' and _eff_expr_instrs:
                             _expr = self.expr_reconstructor.reconstruct(_eff_expr_instrs)
-                            # [R7 Fix 2 / D5] 抑制孤立 Name/Attr/Subscript Expr。
-                            if _expr and not self._is_orphan_load_expr(_expr):
+                            if _expr:
                                 _eff_stmts.append({'type': 'Expr', 'value': _expr})
                             _eff_expr_instrs = []
                             continue
@@ -26518,9 +28025,7 @@ AST 映射规则:
                             if _eff_has_return_succ:
                                 _eff_stmts.append({'type': 'Return', 'value': _expr})
                             else:
-                                # [R7 Fix 2 / D5] 抑制孤立 Name/Attr/Subscript Expr。
-                                if not self._is_orphan_load_expr(_expr):
-                                    _eff_stmts.append({'type': 'Expr', 'value': _expr})
+                                _eff_stmts.append({'type': 'Expr', 'value': _expr})
                 stmts = _eff_stmts
                 if stmts:
                     self.generated_blocks.add(block)
@@ -26757,6 +28262,12 @@ AST 映射规则:
 
         # 收集所有特殊模式检测结果，而不是首次命中就返回
         # 这对于包含多种语句类型的大块（如模块级代码）至关重要
+        import os as _os_dbg_main
+        if _os_dbg_main.environ.get('R23N6_DEBUG5'):
+            _has_bt2_main = any(i.opname == 'BUILD_TUPLE' and i.arg == 2 for i in block.instructions)
+            if _has_bt2_main:
+                import sys as _sys_dbg_main
+                print(f"[R23N6-DBG5] block@{block.start_offset} reached main stmts processing (block_role={_block_role}, try_depth={self._try_depth})", file=_sys_dbg_main.stderr)
         
         _chain_instrs = [i for i in block.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
         _chain_result = None
@@ -27398,6 +28909,13 @@ AST 映射规则:
                     _unpack_result = _ua_stmts if _ua_stmts else None
         if _unpack_result is not None:
             stmts.extend(_unpack_result)
+            # [R23-N6 fix] UNPACK_SEQUENCE 块在 except handler 内时，末尾 Expr
+            # 可能是 return 值（SWAP+POP_EXCEPT+RETURN_VALUE 链路）。UNPACK_SEQUENCE
+            # 处理路径会提前 return，主语句处理路径的 R23-N6 修复无法触达。
+            # 此处调用通用 helper 确保 return 关键字不丢失（如 `return (a, b)`）。
+            # 依「每块唯一归属」: return 值表达式归 Return 语句，UNPACK_SEQUENCE
+            # 归 Assign 语句，两者共存于同一 block 时由本调用统一修正。
+            self._apply_r23n6_return_promotion(block, stmts, _block_role)
             self.generated_blocks.add(block)
             return stmts
 
@@ -27647,6 +29165,29 @@ AST 映射规则:
         stmt_instrs: List[Instruction] = []
         skip_offsets: Set[int] = set()
         _import_skip = False
+
+        # [R19-N3 fix] 检测 as-var 清理指令模式（except handler 的 `as x` 变量清理）。
+        # CPython 3.11+ 在 except handler 退出时生成清理序列：
+        #   [POP_EXCEPT] LOAD_CONST None → STORE_FAST <var> → DELETE_FAST <var>
+        #   → [JUMP_FORWARD merge | RETURN_VALUE | RERAISE]
+        # 这些是框架指令（清理异常绑定变量），不应生成 `del <var>` 语句。
+        # 此前 _generate_block_statements 未过滤此模式，导致 cleanup 块（如
+        # api_get 的 block 578/566/588）被错误生成 `del x` 语句。
+        # 依「每块唯一归属」：as-var 清理归 except 机制，不产生源码语句。
+        _STORE_OPS_R19N3 = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
+        _DELETE_OPS_R19N3 = ('DELETE_FAST', 'DELETE_NAME', 'DELETE_GLOBAL', 'DELETE_DEREF')
+        for _ii, _instr in enumerate(block.instructions):
+            if _instr.opname == 'LOAD_CONST' and _instr.argval is None:
+                if _ii + 2 < len(block.instructions):
+                    _store = block.instructions[_ii + 1]
+                    _delete = block.instructions[_ii + 2]
+                    if (_store.opname in _STORE_OPS_R19N3
+                            and _delete.opname in _DELETE_OPS_R19N3
+                            and _store.argval == _delete.argval):
+                        # 确认是 as-var 清理模式，跳过 LOAD_CONST None + STORE + DELETE
+                        skip_offsets.add(_instr.offset)
+                        skip_offsets.add(_store.offset)
+                        skip_offsets.add(_delete.offset)
 
         for instr in block.instructions:
             if instr.opname in self.SKIP_OPS:
@@ -28164,14 +29705,28 @@ AST 映射规则:
                     exc_expr = self.expr_reconstructor.reconstruct(exc_instrs) if exc_instrs else None
                     stmts.append({'type': 'Raise', 'exc': exc_expr, 'cause': cause_expr})
                 else:
-                    exc_expr = None
-                    if stmt_instrs:
-                        exc_expr = self.expr_reconstructor.reconstruct(stmt_instrs)
-                    if exc_expr is None and stmt_instrs:
-                        exc_expr = self._build_statement(stmt_instrs)
-                        if exc_expr and exc_expr.get('type') == 'Expr':
-                            exc_expr = exc_expr.get('value')
-                    stmts.append({'type': 'Raise', 'exc': exc_expr})
+                    # [R16-N2] 区域归约算法原则：每个字节码模式对应唯一的 AST 节点。
+                    # Python 3.11+ 的 ``assert False, msg`` 字节码模式为：
+                    #   LOAD_ASSERTION_ERROR + <msg_instrs> + PRECALL 0 + CALL 0
+                    #   + RAISE_VARARGS 1
+                    # （CPython 3.11 对 ``assert False, msg`` 做常量折叠，去除 test
+                    # 跳转，直接生成失败路径）。
+                    # 必须把 RAISE_VARARGS 指令一并交给 expr_reconstructor 处理，
+                    # 这样 CALL 处理器能识别 LOAD_ASSERTION_ERROR 标记构造 Call 节点，
+                    # RAISE_VARARGS 处理器能将带标记的 Call 转换为 Assert 节点。
+                    # 若仅传 stmt_instrs（不含 RAISE_VARARGS），reconstruct 返回
+                    # Call(AssertionError, [msg])，被包装为 ``raise AssertionError(msg)``，
+                    # recompile 产生 ``LOAD_GLOBAL AssertionError`` 而非
+                    # ``LOAD_ASSERTION_ERROR``，字节码不一致。
+                    all_instrs = stmt_instrs + [instr]
+                    expr = self.expr_reconstructor.reconstruct(all_instrs)
+                    if expr and expr.get('type') in ('Raise', 'Assert'):
+                        stmts.append(expr)
+                    else:
+                        # [R16-N1] 兜底：用 _build_raise_stmt_from_instrs 处理
+                        # LOAD_ASSERTION_ERROR 模式（返回 Assert）或普通 Raise
+                        _raise_stmt = self._build_raise_stmt_from_instrs(stmt_instrs, instr.arg)
+                        stmts.append(_raise_stmt)
                 stmt_instrs = []
                 continue
 
@@ -28187,14 +29742,23 @@ AST 映射规则:
                                 stmts.append(stmt)
                     stmt_instrs = []
                     continue
+                # [R23-N16 fix] 标记 _explicit_return=True 仅当块处于 except handler
+                # 上下文（含 POP_EXCEPT/PUSH_EXC_INFO 指令）时。except handler 内的
+                # 显式 return None 生成真实字节码（POP_EXCEPT+cleanup+RETURN_VALUE），
+                # 与 fallthrough (JUMP_FORWARD) 不同，必须保留。
+                _r23n16_in_except = any(
+                    _i.opname in ('POP_EXCEPT', 'PUSH_EXC_INFO')
+                    for _i in block.instructions
+                )
+                _r23n16_ret_flag = {'_explicit_return': True} if _r23n16_in_except else {}
                 if stmt_instrs:
                     ret_expr = self.expr_reconstructor.reconstruct(stmt_instrs)
                     if ret_expr and not (ret_expr.get('type') == 'Constant' and ret_expr.get('value') is None):
-                        stmts.append({'type': 'Return', 'value': ret_expr})
+                        stmts.append({'type': 'Return', **_r23n16_ret_flag, 'value': ret_expr})
                     else:
-                        stmts.append({'type': 'Return', 'value': {'type': 'Constant', 'value': None}})
+                        stmts.append({'type': 'Return', **_r23n16_ret_flag, 'value': {'type': 'Constant', 'value': None}})
                 else:
-                    stmts.append({'type': 'Return', 'value': {'type': 'Constant', 'value': None}})
+                    stmts.append({'type': 'Return', **_r23n16_ret_flag, 'value': {'type': 'Constant', 'value': None}})
                 stmt_instrs = []
                 continue
 
@@ -28213,13 +29777,7 @@ AST 映射规则:
                     continue
 
                 pop_expr = self.expr_reconstructor.reconstruct(stmt_instrs)
-                # [R7 Fix 2 / D5] 抑制孤立 Name/Attr/Subscript Expr：
-                # LOAD_FAST/LOAD_ATTR/LOAD_SUBSCR + POP_TOP 序列中重建出的
-                # 纯 LOAD 表达式（如 `prod`、`panel.items`、`re_data.columns`）
-                # 是字节码生成器产物的无副作用语句，依「每块唯一归属」归循环
-                # setup / except 机制，不作为用户 Expr 发射。Call/BinOp/BoolOp/
-                # Compare 等可能有副作用，不视为孤立 LOAD，保留发射。
-                if pop_expr and pop_expr.get('type') not in ('Constant',) and not self._is_orphan_load_expr(pop_expr):
+                if pop_expr and pop_expr.get('type') not in ('Constant',):
                     stmts.append({'type': 'Expr', 'value': pop_expr})
                     stmt_instrs = []
                     continue
@@ -28292,6 +29850,12 @@ AST 映射规则:
                 if has_yield_from_before:
                     stmt_instrs = []
         if stmt_instrs:
+            import os as _os_dbg_lf
+            if _os_dbg_lf.environ.get('R23N6_DEBUG4'):
+                _has_bt2_lf = any(i.opname == 'BUILD_TUPLE' and i.arg == 2 for i in block.instructions)
+                if _has_bt2_lf:
+                    import sys as _sys_dbg_lf
+                    print(f"[R23N6-DBG4] block@{block.start_offset} reached leftover stmt_instrs (count={len(stmt_instrs)}, last_op={stmt_instrs[-1].opname if stmt_instrs else None})", file=_sys_dbg_lf.stderr)
             return_succ = None
             for succ in block.conditional_successors:
                 if self.block_role(succ) in (BlockRole.RETURN, BlockRole.RETURN_NONE):
@@ -28435,7 +29999,7 @@ AST 映射规则:
                                 pass
                             else:
                                 _sp2_expr = self.expr_reconstructor.reconstruct(_sp2_remaining)
-                                if _sp2_expr and not self._is_orphan_load_expr(_sp2_expr):
+                                if _sp2_expr:
                                     _sp2_split.append({'type': 'Expr', 'value': _sp2_expr})
             split_stmts = _sp2_split
             if len(split_stmts) > 1:
@@ -28443,13 +30007,16 @@ AST 映射规则:
             else:
                 stmt = self._build_statement(stmt_instrs)
                 if stmt:
-                    # [R7 Fix 2 / D5] 抑制孤立 Name/Attr/Subscript Expr：
-                    # 块末剩余的纯 LOAD 指令（如 for 循环 setup 块的
-                    # LOAD_FAST prod）不应作为用户 Expr 发射。
-                    # 算法依据：唯一块归属 + 入口引用语义
-                    if not (isinstance(stmt, dict) and stmt.get('type') == 'Expr'
-                            and self._is_orphan_load_expr(stmt.get('value'))):
-                        stmts.append(stmt)
+                    stmts.append(stmt)
+
+        # [R23-N6 debug] 追踪 block@456 是否到达此处
+        import os as _os_dbg_r23n6_trace
+        if _os_dbg_r23n6_trace.environ.get('R23N6_TRACE'):
+            _has_bt2_trace = any(i.opname == 'BUILD_TUPLE' and i.arg == 2 for i in block.instructions)
+            if _has_bt2_trace:
+                import sys as _sys_dbg_trace
+                _stmt_types_trace = [s.get('type') if isinstance(s, dict) else type(s).__name__ for s in stmts]
+                print(f"[R23N6-TRACE] block@{block.start_offset} reached post-stmt_instrs stmts_count={len(stmts)} types={_stmt_types_trace} try_depth={self._try_depth}", file=_sys_dbg_trace.stderr)
 
         if stmts and self.cfg.name != '<module>':
             has_return_value = any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in block.instructions)
@@ -28458,18 +30025,6 @@ AST 映射规则:
                 if isinstance(last, dict) and last.get('type') == 'Expr':
                     val = last.get('value')
                     if isinstance(val, dict) and val.get('type') == 'Compare':
-                        stmts[-1] = {'type': 'Return', 'value': val}
-                    # [R9-D6 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（入口引用语义）：
-                    # except handler 内 if/else 分支块含 return-through-cleanup 模式
-                    # （<return value> + SWAP + POP_EXCEPT + as-var cleanup + RETURN_VALUE）
-                    # 时，return 值表达式应归 Return 语句，as-var cleanup 归 except 机制。
-                    # 原转换逻辑仅处理 Expr(Compare)，遗漏 Expr(Tuple/Dict/Call) —— 即
-                    # D6 bare Expr 缺陷（return 关键字丢失，返回值作为裸 Expr 发射）。
-                    # 判据（结构性）：_find_return_through_cleanup_chain 检测同块内的
-                    # POP_EXCEPT + as-var cleanup + RETURN_VALUE 模式。对合法非 return
-                    # Expr 安全：该模式是 except handler 独有的 return 路径，普通块不含
-                    # POP_EXCEPT + as-var cleanup 序列。
-                    elif self._find_return_through_cleanup_chain(block):
                         stmts[-1] = {'type': 'Return', 'value': val}
             else:
                 all_succs_are_return = False
@@ -28487,33 +30042,165 @@ AST 映射规则:
                             stmts[-1] = {'type': 'Return', 'value': val}
                             for succ in cond_succs:
                                 self.generated_blocks.add(succ)
-                # [R9-D6 fix v3] 区域归约算法原则 2（每块唯一归属）+ 原则 4（入口引用语义）：
-                # except handler 内 if/else 分支块的 return 值在当前块，但
-                # SWAP + POP_EXCEPT + as-var cleanup + RETURN_VALUE 跨多个后继块
-                # （CPython 3.11+ exception table 在 SWAP 边界拆分 basic block）。
-                # v2 禁用跨后继路径因 _find_return_chain_via_successors 过宽（接受任意
-                # cleanup-only+RETURN 块）导致 try body 误判（TRY 78/2→74/6 回归）。
-                # v3 收紧判据：用 _find_return_chain_via_successors 走 cleanup-only 后继链，
-                # 但最终含 RETURN_VALUE 的块 MUST 额外通过 _find_return_through_cleanup_chain
-                # 检查（含 POP_EXCEPT + as-var cleanup：LOAD_CONST None → STORE_FAST e →
-                # DELETE_FAST e，同名变量）。该 as-var cleanup 模式是 except handler 独有
-                # （`except E as e:` 的 e 清理），try body return 不含 as-var cleanup
-                # （无 as 变量），故对 try body 安全。
-                # 算法依据：原则 2（return 值块归 Return 语句，cleanup 块归 except 机制，
-                # 各唯一归属）；原则 4（return 值表达式引用入口语义）。
-                if not all_succs_are_return:
-                    last = stmts[-1] if stmts else None
-                    if (isinstance(last, dict) and last.get('type') == 'Expr'
-                            and isinstance(last.get('value'), dict)
-                            and last['value'].get('type') in ('Tuple', 'Dict', 'Call', 'Compare', 'List', 'Set', 'Name', 'Attribute', 'Subscript', 'BinOp', 'BoolOp', 'IfExp')):
-                        _ret_path = self._find_return_chain_via_successors(block)
-                        if _ret_path and self._find_return_through_cleanup_chain(_ret_path[-1]):
-                            stmts[-1] = {'type': 'Return', 'value': last['value']}
-                            for _rb in _ret_path:
-                                self.generated_blocks.add(_rb)
+        # [R23-N6 fix] 区域归约算法原则 2（每块唯一归属）+
+        # 原则 4（父引用子入口）：
+        # 当当前 block 末尾以值构建指令（如 BUILD_TUPLE/BUILD_MAP/BUILD_CONST_KEY_MAP
+        # /LOAD_FAST/LOAD_CONST/CALL等）结束、且其后继链路为
+        #   succ1 (SWAP-only) → succ2 (POP_EXCEPT + as-var cleanup + RETURN_VALUE)
+        # 时（CPython 3.11+ 将 except handler 内的 `return <expr>` 编译为：
+        # 当前 block 构建 return 值 → SWAP 切换异常状态 → POP_EXCEPT 弹出
+        # 异常栈 → LOAD_CONST None/STORE_FAST e/DELETE_FAST e 清理 as 变量 →
+        # RETURN_VALUE），需将末尾 Expr 提升为 Return，否则会丢失 return 关键字
+        # （如 `return (re_error, re_data)` 被输出为裸 `(re_error, re_data)`）。
+        # 普遍性：覆盖 except handler 内任意 return（return tuple / return dict /
+        # return call / return name / return constant）且 SWAP 被切到独立块的形式。
+        # 关键判据：block 末尾（跳过 JUMP）必须是值构建指令（如 BUILD_TUPLE/CALL/
+        # LOAD_FAST 等），不能是 POP_TOP——POP_TOP 表示值被丢弃（语句），return
+        # 值是后续 LOAD_CONST None（隐式 return None），不应将前一个 Expr 提升
+        # 为 Return（否则会把 `print(...); return None` 错误提升为 `return print(...)`）。
+        import os as _os_dbg_pre
+        if _os_dbg_pre.environ.get('R23N6_DEBUG3'):
+            _has_bt2_pre = any(i.opname == 'BUILD_TUPLE' and i.arg == 2 for i in block.instructions)
+            if _has_bt2_pre:
+                import sys as _sys_dbg_pre
+                _stmt_types = [s.get('type') if isinstance(s, dict) else type(s).__name__ for s in stmts]
+                print(f"[R23N6-DBG3] pre-fix block@{block.start_offset} try_depth={self._try_depth} stmts_count={len(stmts)} stmt_types={_stmt_types}", file=_sys_dbg_pre.stderr)
+        # [R23-N6 fix] 区域归约算法原则 2（每块唯一归属）+
+        # 原则 4（父引用子入口）：
+        # 触发条件：block 处于 except handler 上下文中。判据二选一：
+        #   (a) self._try_depth > 0（进入 TryExceptRegion 时已递增）
+        #   (b) block_role == EXCEPT_STORE / EXCEPT_HANDLER（区域分析标注的
+        #       异常处理角色）—— 覆盖 try_depth 未正确传递的嵌套 IfRegion
+        #       场景：except handler 内嵌套 if/elif/else，IfRegion 作为子区域
+        #       被独立处理时，try_depth 可能未被传递，但 block_role 仍准确
+        #       反映 block 的异常处理语义归属。
+        _r23n6_in_except_context = (self._try_depth > 0
+                                    or _block_role in (BlockRole.EXCEPT_STORE,
+                                                       BlockRole.EXCEPT_HANDLER))
+        if stmts and _r23n6_in_except_context:
+            _last_stmt = stmts[-1]
+            if isinstance(_last_stmt, dict) and _last_stmt.get('type') == 'Expr':
+                # 检查 block 末尾（跳过 JUMP）是否为 POP_TOP（语句标志）
+                _block_ends_with_pop_top_r23n6 = False
+                _non_noise_r23n6 = [i for i in block.instructions
+                                    if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                if _non_noise_r23n6:
+                    _li_r23n6 = len(_non_noise_r23n6) - 1
+                    while _li_r23n6 >= 0 and _non_noise_r23n6[_li_r23n6].opname in (
+                        'JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD',
+                        'JUMP_BACKWARD_NO_INTERRUPT'):
+                        _li_r23n6 -= 1
+                    if _li_r23n6 >= 0 and _non_noise_r23n6[_li_r23n6].opname == 'POP_TOP':
+                        _block_ends_with_pop_top_r23n6 = True
+                if not _block_ends_with_pop_top_r23n6:
+                    _chain = self._find_return_chain_via_successors(block)
+                    if _chain:
+                        import os as _os_dbg
+                        if _os_dbg.environ.get('R23N6_DEBUG'):
+                            import sys as _sys_dbg
+                            print(f"[R23N6-DBG] block@{block.start_offset} try_depth={self._try_depth} chain={[b.start_offset for b in _chain]}", file=_sys_dbg.stderr)
+                        _expr_val = _last_stmt.get('value')
+                        # 跳过隐式 return None：若 Expr 值为 Constant None，
+                        # 不提升为 Return（避免 spurious `return None`）。
+                        if not (isinstance(_expr_val, dict)
+                                and _expr_val.get('type') == 'Constant'
+                                and _expr_val.get('value') is None):
+                            stmts[-1] = {'type': 'Return', 'value': _expr_val}
+                        else:
+                            stmts[-1] = {'type': 'Return', 'value': None}
+                        for _rb in _chain:
+                            self.generated_blocks.add(_rb)
+                            self.generated_offsets.add(_rb.start_offset)
+                    else:
+                        import os as _os_dbg
+                        if _os_dbg.environ.get('R23N6_DEBUG'):
+                            import sys as _sys_dbg
+                            print(f"[R23N6-DBG] block@{block.start_offset} try_depth={self._try_depth} NO chain (last instrs: {[i.opname for i in _non_noise_r23n6[-3:]]})", file=_sys_dbg.stderr)
+            else:
+                import os as _os_dbg
+                if _os_dbg.environ.get('R23N6_DEBUG'):
+                    import sys as _sys_dbg
+                    print(f"[R23N6-DBG] block@{block.start_offset} try_depth={self._try_depth} last_stmt is not Expr: {_last_stmt!r}", file=_sys_dbg.stderr)
+        elif stmts:
+            import os as _os_dbg
+            if _os_dbg.environ.get('R23N6_DEBUG'):
+                import sys as _sys_dbg
+                _last_stmt = stmts[-1]
+                _is_expr = isinstance(_last_stmt, dict) and _last_stmt.get('type') == 'Expr'
+                if _is_expr:
+                    print(f"[R23N6-DBG] block@{block.start_offset} try_depth={self._try_depth} SKIPPED (try_depth=0) but last is Expr", file=_sys_dbg.stderr)
+        else:
+            import os as _os_dbg
+            if _os_dbg.environ.get('R23N6_DEBUG'):
+                import sys as _sys_dbg
+                _has_bt2 = any(i.opname == 'BUILD_TUPLE' and i.arg == 2 for i in block.instructions)
+                if _has_bt2:
+                    print(f"[R23N6-DBG] block@{block.start_offset} try_depth={self._try_depth} EMPTY stmts (block has BUILD_TUPLE 2)", file=_sys_dbg.stderr)
 
         self.generated_blocks.add(block)
         return stmts
+
+    def _apply_r23n6_return_promotion(self, block: 'BasicBlock',
+                                      stmts: List[Dict[str, Any]],
+                                      block_role: 'BlockRole') -> None:
+        """[R23-N6 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（父引用子入口）。
+
+        当 block 处于 except handler 上下文、末尾以值构建指令结束、且后继链路为
+          succ1 (SWAP-only) → succ2 (POP_EXCEPT + as-var cleanup + RETURN_VALUE)
+        时（CPython 3.11+ 将 except handler 内的 ``return <expr>`` 编译为：
+        当前 block 构建 return 值 → SWAP 切换异常状态 → POP_EXCEPT 弹出异常栈 →
+        清理 as 变量 → RETURN_VALUE），需将末尾 Expr 提升为 Return，否则会丢失
+        return 关键字。
+
+        触发条件（判据二选一）：
+          (a) self._try_depth > 0（进入 TryExceptRegion 时已递增）
+          (b) block_role == EXCEPT_STORE / EXCEPT_HANDLER —— 覆盖 try_depth 未
+              正确传递的嵌套 IfRegion 场景。
+
+        关键判据：block 末尾（跳过 JUMP）必须是值构建指令，不能是 POP_TOP
+        （POP_TOP 表示值被丢弃的语句，return 值是后续 LOAD_CONST None）。
+
+        本方法直接修改 ``stmts`` 列表（将末尾 Expr 替换为 Return），并标记
+        return 链路中的清理块为已生成。调用者负责后续 ``return stmts``。
+        """
+        if not stmts:
+            return
+        _r23n6_in_except_context = (self._try_depth > 0
+                                    or block_role in (BlockRole.EXCEPT_STORE,
+                                                      BlockRole.EXCEPT_HANDLER))
+        if not _r23n6_in_except_context:
+            return
+        _last_stmt = stmts[-1]
+        if not (isinstance(_last_stmt, dict) and _last_stmt.get('type') == 'Expr'):
+            return
+        # 检查 block 末尾（跳过 JUMP）是否为 POP_TOP（语句标志）
+        _non_noise_r23n6 = [i for i in block.instructions
+                            if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+        _block_ends_with_pop_top_r23n6 = False
+        if _non_noise_r23n6:
+            _li_r23n6 = len(_non_noise_r23n6) - 1
+            while _li_r23n6 >= 0 and _non_noise_r23n6[_li_r23n6].opname in (
+                'JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD',
+                'JUMP_BACKWARD_NO_INTERRUPT'):
+                _li_r23n6 -= 1
+            if _li_r23n6 >= 0 and _non_noise_r23n6[_li_r23n6].opname == 'POP_TOP':
+                _block_ends_with_pop_top_r23n6 = True
+        if _block_ends_with_pop_top_r23n6:
+            return
+        _chain = self._find_return_chain_via_successors(block)
+        if not _chain:
+            return
+        _expr_val = _last_stmt.get('value')
+        # 跳过隐式 return None：若 Expr 值为 Constant None，不提升为 Return。
+        if not (isinstance(_expr_val, dict)
+                and _expr_val.get('type') == 'Constant'
+                and _expr_val.get('value') is None):
+            stmts[-1] = {'type': 'Return', 'value': _expr_val}
+        else:
+            stmts[-1] = {'type': 'Return', 'value': None}
+        for _rb in _chain:
+            self.generated_blocks.add(_rb)
+            self.generated_offsets.add(_rb.start_offset)
 
     def _find_await_store_target(self, block: 'BasicBlock') -> Optional[str]:
         """[Round4-14] 查找 await 表达式后的赋值目标。
@@ -28927,6 +30614,73 @@ AST 映射规则:
 
         return stmts
 
+    def _reconstruct_raise_exc(self, pre_instrs):
+        """[R16-N1] 从 RAISE_VARARGS 之前的指令重建异常表达式。
+
+        区域归约算法原则：每个字节码模式对应唯一的 AST 节点。
+        Python 3.11+ 的 ``assert False, msg`` 字节码模式为：
+            LOAD_ASSERTION_ERROR + <msg_instrs> + PRECALL 0 + CALL 0 + RAISE_VARARGS 1
+
+        CPython 3.11 对 ``assert False, msg`` 做常量折叠，去除 test 跳转，
+        直接生成 ``LOAD_ASSERTION_ERROR + msg + CALL 0 + RAISE_VARARGS 1``。
+        因此反编译此模式必须生成 ``assert False, msg`` 语句，recompile 后
+        才能产生 ``LOAD_ASSERTION_ERROR`` 字节码（若生成 ``raise AssertionError(msg)``
+        则 recompile 产生 ``LOAD_GLOBAL``，字节码不一致）。
+
+        检测 ``LOAD_ASSERTION_ERROR``，构造
+        ``Assert(test=Constant(False), msg=reconstruct(msg_instrs))``。
+        """
+        if not pre_instrs:
+            return None
+        has_lae = any(i.opname == 'LOAD_ASSERTION_ERROR' for i in pre_instrs)
+        if not has_lae:
+            return self.expr_reconstructor.reconstruct(pre_instrs)
+        lae_idx = None
+        for idx, i in enumerate(pre_instrs):
+            if i.opname == 'LOAD_ASSERTION_ERROR':
+                lae_idx = idx
+                break
+        if lae_idx is None:
+            return self.expr_reconstructor.reconstruct(pre_instrs)
+        after_instrs = pre_instrs[lae_idx + 1:]
+        msg_instrs = [i for i in after_instrs
+                      if i.opname not in ('PRECALL', 'CALL', 'PUSH_NULL',
+                                          'NOP', 'CACHE', 'RESUME')]
+        if msg_instrs:
+            msg_expr = self.expr_reconstructor.reconstruct(msg_instrs)
+            if msg_expr is None:
+                msg_expr = self._build_statement(msg_instrs)
+                if msg_expr and msg_expr.get('type') == 'Expr':
+                    msg_expr = msg_expr.get('value')
+            return {
+                'type': 'Assert',
+                'test': {'type': 'Constant', 'value': False, 'lineno': None},
+                'msg': msg_expr,
+                'lineno': None,
+            }
+        # 无 msg：assert False
+        return {
+            'type': 'Assert',
+            'test': {'type': 'Constant', 'value': False, 'lineno': None},
+            'msg': None,
+            'lineno': None,
+        }
+
+    def _build_raise_stmt_from_instrs(self, pre_instrs, raise_arg):
+        """[R16-N1] 从 RAISE_VARARGS 之前的指令构建 raise/assert 语句。
+
+        若 pre_instrs 含 ``LOAD_ASSERTION_ERROR``，返回 ``Assert`` 语句
+        （对应 ``assert False, msg`` 模式）；否则返回 ``Raise`` 语句。
+        """
+        if raise_arg == 0:
+            return {'type': 'Raise', 'exc': None, 'cause': None}
+        if not pre_instrs:
+            return {'type': 'Raise', 'exc': None, 'cause': None}
+        exc_expr = self._reconstruct_raise_exc(pre_instrs)
+        if exc_expr is not None and exc_expr.get('type') == 'Assert':
+            return exc_expr
+        return {'type': 'Raise', 'exc': exc_expr, 'cause': None}
+
     def _build_statement(self, instrs: List[Instruction]) -> Optional[Dict[str, Any]]:
         if not instrs:
             return None
@@ -29007,11 +30761,10 @@ AST 映射规则:
                 if isinstance(arg, dict) and arg.get('type') == 'FunctionObject':
                     return self._build_function_def(func_obj=arg, decorator=expr)
 
-        _ret_expr_node = {
+        return {
             'type': 'Expr',
             'value': expr,
         }
-        return _ret_expr_node
 
     def _build_multi_target_unpack(self, block: BasicBlock) -> Optional[List[Dict[str, Any]]]:
         """[R11-err4/5] 多目标解包重建: a, b = c = d, e 或 a, b = e, f = g, h。
@@ -29636,6 +31389,18 @@ AST 映射规则:
             'POP_JUMP_BACKWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_TRUE',
             'POP_JUMP_IF_TRUE', 'POP_JUMP_IF_FALSE',
             'SETUP_ANNOTATIONS', 'IMPORT_NAME', 'IMPORT_FROM', 'IMPORT_STAR',
+            # [R23-N8 fix] 区域归约算法原则 2（每块唯一归属）+
+            # 原则 4（父引用子入口）：
+            # SWAP 是栈操作指令（交换栈顶元素），用于迭代器清理
+            # （如 for 循环中 return 的 SWAP+POP_TOP 模式），不
+            # 可能出现在注解表达式中。当 STORE_SUBSCR 后跟
+            # LOAD_FAST + SWAP + POP_TOP + RETURN_VALUE 时（如
+            # get_fundflow_day 的 `for item in prod_code: ...;
+            # return returninfo`），原逻辑将 LOAD_FAST 误识别为
+            # 注解表达式，生成错误的 `target: annotation = value`
+            # 而非 `target = value; return returninfo`。将 SWAP
+            # 加入边界集，使扫描在遇到 SWAP 时终止，不生成注解。
+            'SWAP',
         }
         for j in range(store_block_idx + 1, len(block_instrs)):
             bi = block_instrs[j]
@@ -29838,9 +31603,34 @@ AST 映射规则:
                         'value': value_expr,
                     }
 
-        obj_expr = self.expr_reconstructor.reconstruct(obj_instrs[-1:])
+        # [R14-N6 fix] 多层属性链赋值（如 `a.b.c = value`）：
+        # 字节码为 [LOAD_CONST value, LOAD_FAST a, LOAD_ATTR b, STORE_ATTR c]
+        # 栈顺序: [value, a.b]，STORE_ATTR 弹出 obj(a.b) 和 value，存到 a.b.c。
+        # 此前 obj_instrs[-1:] 仅取最后一条指令（LOAD_ATTR b），导致：
+        #   - obj 被重建为 Name('b') 而非 Attribute(a, 'b')
+        #   - value 被重建为 [LOAD_CONST value, LOAD_FAST a] → Name('a')
+        #   - 生成 `b.c = a` 而非 `a.b.c = value`
+        # 修复：从 store_idx 向前扫描，找到完整的对象链
+        #   [LOAD_FAST/LOAD_NAME/LOAD_GLOBAL] + [LOAD_ATTR]*
+        # 对象链之前的指令是 value。
+        _obj_chain_start = len(obj_instrs)  # index into obj_instrs
+        for j in range(len(obj_instrs) - 1, -1, -1):
+            _i = obj_instrs[j]
+            if _i.opname == 'LOAD_ATTR':
+                _obj_chain_start = j
+                continue
+            if _i.opname in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF'):
+                _obj_chain_start = j
+                break
+            # Any other instruction marks the boundary between value and object
+            break
+
+        _obj_chain_instrs = obj_instrs[_obj_chain_start:]
+        _value_instrs = obj_instrs[:_obj_chain_start]
+
+        obj_expr = self.expr_reconstructor.reconstruct(_obj_chain_instrs)
         if obj_expr is None:
-            obj_expr = {'type': 'Name', 'id': str(obj_instrs[-1].argval), 'ctx': 'Load'}
+            obj_expr = {'type': 'Name', 'id': str(_obj_chain_instrs[-1].argval), 'ctx': 'Load'}
 
         target = {
             'type': 'Attribute',
@@ -29849,7 +31639,7 @@ AST 映射规则:
             'ctx': 'Store',
         }
 
-        value_instrs = obj_instrs[:-1]
+        value_instrs = _value_instrs
         if value_instrs:
             value_expr = self.expr_reconstructor.reconstruct(value_instrs)
             if value_expr is None:
