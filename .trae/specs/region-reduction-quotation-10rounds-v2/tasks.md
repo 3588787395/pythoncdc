@@ -175,7 +175,7 @@
 
 - [x] R18-7 一致函数数 ≥ 轮 17（147 == 147，无退化）
 - [x] R18-8 反模式自检 + 编译通过（G3/G4 0 新增；IMPORT_OK）
-- [ ] R18-9 commit + push `rr-r18:` 到 origin
+- [x] R18-9 commit + push `rr-r18:` 到 origin（6e64e87，已 push 到 main）
 
 ## 轮 19 (Round 19) — 综合回归与残留收尾
 
