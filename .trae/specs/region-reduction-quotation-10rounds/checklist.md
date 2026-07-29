@@ -131,7 +131,7 @@
 - [x] R4-7 一致函数数 ≥ 轮 3（141→141，无退化；+1 目标未达成，修复尝试已回退）
 - [x] R4-8 反模式自检通过（G3：0 新增；region_analyzer.py 无 net 变更）
 - [x] R4-9 编译通过（IMPORT_OK）
-- [ ] R4-10 commit + push `rr-r04:`
+- [x] R4-10 commit + push `rr-r04:`（已执行，72b0d13）
 
 ## 轮 5 (Round 5)
 

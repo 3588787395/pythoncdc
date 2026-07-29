@@ -84,7 +84,7 @@
 - [x] T4-6 修复工程师：fix_report.md（`rounds/round_04/repair_engineer/fix_report.md`）
 - [x] T4-7 验证一致函数数 ≥ 轮 3（141→141，无退化；+1 目标未达成，修复尝试已回退）
 - [x] T4-8 反模式自检 + 编译通过（0 新增反模式；COMPILE OK）
-- [ ] T4-9 commit + push `rr-r04:`
+- [x] T4-9 commit + push `rr-r04:`（已执行，72b0d13）
 
 ## 轮 5 (Round 5)
 
