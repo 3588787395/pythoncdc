@@ -213,7 +213,7 @@
 
 - [x] R19-7 一致函数数 ≥ 轮 18（147 == 147，无退化）
 - [x] R19-8 反模式自检 + 编译通过（G3/G4 0 新增；代码 diff 为空已回退；IMPORT_OK）
-- [ ] R19-9 commit + push `rr-r19:`
+- [x] R19-9 commit + push `rr-r19:` 到 origin（84d6697，已 push 到 main）
 
 ## 轮 20 (Round 20) — 最终验证与收尾
 
