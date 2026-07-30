@@ -97,25 +97,42 @@
 - [ ] R23-8 反模式自检 + 编译通过（G3/G4 0 新增；IMPORT_OK）
 - [ ] R23-9 commit + push `rr-r23:` 到 origin
 
-## 轮 24 (Round 24) — 重点攻克 get_date_and_count 穿透缺陷
+## 轮 24 (Round 24) — 攻克 change_his_to_backward (IF 吸收兄弟) + get_date_and_count (LOOP 吸收外层条件) — 达成 100%
 
 ### 阶段一：测试工程师
 
-- [ ] R24-1 反编译 + 字节码 diff（`decompile_report.md`）
-- [ ] R24-2 ≥10 最小复现实例（重点针对 IfRegion else-branch 块收集穿透嵌套 LoopRegion）
+- [x] R24-1 反编译 + 字节码 diff（`decompile_report.md`）— 基线 148/150=98.67%
+- [x] R24-2 ≥10 最小复现实例（8 个 repro 覆盖两类缺陷：A=IF 吸收循环末尾兄弟 4 个，B=LOOP 吸收外层条件+loop_else 4 个，全部复现）
 
 ### 阶段二：修复工程师
 
-- [ ] R24-3 根因分析完成（IfRegion else-branch 块收集穿透嵌套 LoopRegion）
-- [ ] R24-4 按算法修复 + docstring 更新（_process_if_blocks 守卫：跳过 parent 是嵌套 LoopRegion 的块）
-- [ ] R24-5 回归测试通过（quotation.pyc 一致函数数 ≥ R23；矩阵 0 退化；IMPORT_OK）
-- [ ] R24-6 `fix_report.md` 生成
+- [x] R24-3 根因分析完成
+  - 缺陷A：`_identify_conditional_regions`/`_check_elif_chain` 循环体内 if/elif/else 链公共汇聚后继块误并入 then
+  - 缺陷B：`_detect_while_condition_boolop_chain` 反向链回溯把外层 elif 条件块误吸收为 while boolop 链操作数（`cond_in_loop=False` 时未终止）
+- [x] R24-4 按算法修复 + docstring 更新
+  - 缺陷A：循环感知 merge 重算（_find_enclosing_loop/_is_loop_exit_block/_compute_in_loop_if_merge）
+  - 缺陷B：`_detect_while_condition_boolop_chain` 新增 `if not cond_in_loop: break` 守卫 + `_identify_loop_regions` `_p_is_outer_elif` 配套
+- [x] R24-5 回归测试通过（quotation.pyc 一致函数数 150/150=100%，矩阵 318 pass/9 fail/11 skip 与基线一致 0 退化，IMPORT_OK）
+- [x] R24-6 `fix_report.md` 生成
 
 ### 验证与提交
 
-- [ ] R24-7 一致函数数 ≥ 轮 23
-- [ ] R24-8 反模式自检 + 编译通过（G3/G4 0 新增；IMPORT_OK）
-- [ ] R24-9 commit + push `rr-r24:` 到 origin
+- [x] R24-7 一致函数数 150/150 ≥ 轮 23（148/150）— 达成 V3-E1（100%）+ V3-E2
+- [x] R24-8 反模式自检 + 编译通过（G3/G4 0 新增；IMPORT_OK）
+- [x] R24-9 commit + push `rr-r24:` 到 origin（commit df96e42）
+
+### 比较方法严格性评估（用户追加任务）
+
+- [x] R24-10 三档口径实测（严格逐条 90.67% / L1 98% / 归一化 100%）— `comparison_method_evaluation.md`
+- [x] R24-11 4 项豁免合理性裁定（跳过填充✅ / code 递归忽略元数据✅ / 跳转目标等价✅必要 / 常量等价⚠️防御性保留）
+- [x] R24-12 结论：不应进一步收紧到 L1（3 个 L1 差异为 CPython 编译器对齐 offset 偏移，非反编译缺陷）；归一化口径为合理主口径，L1 作辅助诊断（0 真实操作码差异）
+
+## 退出条件达成（R24 提前退出）
+
+- [x] V3-E1 反编译 quotation.pyc 字节码 100% 等价（归一化口径 150/150）— R24 达成
+- [x] V3-E2 操作码层面 0 真实差异（L1 辅助口径，3 个纯 offset 偏移均豁免合理）
+- [x] 既有区域测试矩阵 0 退化
+- 注：R25-R30 无需执行（用户确认提前退出）；如未来出现新目标 .pyc 可重启 V4 迭代
 
 ## 轮 25 (Round 25) — get_date_and_count 根因 A（Loop 反向链 fall-through 校验）
 
