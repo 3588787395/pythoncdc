@@ -11066,6 +11066,14 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
           Step 4: 收集 then_blocks / else_blocks，构建 IfRegion 并注册
                   block_to_region。
           Step 5: elif 链识别——else 块以条件跳转结尾时递归构建 IF_ELIF_CHAIN。
+          Step 6 ([R26-Defect3]): 主条件 'and' 短路链检测——首条件块含前置语句
+                  时 _detect_boolop_conditional_chain 的 _sb_has_body 守卫跳过，
+                  不创建 BoolOpRegion。此处镜像 _check_elif_chain 的 inline_boolop_
+                  chain 检测：沿 IF_FALSE 同一 false 目标的连续纯条件块组成 'and'
+                  链，condition_block 重定向到链末块，链信息存入
+                  main_inline_boolop_chain → IfRegion.inline_boolop_chains。
+                  merge 计算失败时（then-body 含 return 致 post-dominator 为 None）
+                  安全回退撤销重定向（原则 1+2）。
 
         **归约顺序**
         Phase 2 的高层识别（在 BOOLOP/TERNARY/CHAINED_COMPARE 之后，SEQUENCE 之前；
@@ -11132,6 +11140,12 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
         analyze() 中 if_regions 通过 self._current_if_regions 实例变量传递引用
         供 _build_basic_if_region / _bt_entries 过滤器识别已创建嵌套 IfRegion entry
         （[R30-22 fix]，block_to_region 在此阶段尚未注册 IfRegion）。
+        [R26-Defect3] 复合 'and' 条件：entry=首链块（含前置语句），
+        condition_block 重定向到链末块（条件求值终态点）。父区域仍通过 entry
+        引用 IfRegion；AST 生成（_if_generate_normal）通过 entry!=cond_block
+        分支提取 entry 前置语句 + inline_boolop_chains 重建完整 BoolOp 条件。
+        generate() 入口处理识别此模式（inline_boolop_chains 首块==entry），
+        不将 entry 作为基本语句提取标记 generated（避免 IfRegion 被派发丢弃）。
 
         **反编译流程**
         对应生成方法: _generate_if（region_ast_generator.py）。AST 节点一一映射：
@@ -11588,6 +11602,83 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     if _is_ternary_value_block:
                         continue
 
+            # [R26-Defect3 fix] 区域归约算法原则 1（自底向上归约）+ 原则 2
+            #（每块唯一归属）+ 原则 4（入口引用语义）+ No More Gotos §3
+            #（If 区域归约）：主 if 条件可能是复合 `and` 短路条件（如
+            # `if i == 0 and len(v) == 8:`），编译为多个连续条件块，每块
+            # POP_JUMP_IF_FALSE 跳同一 false 目标。当首条件块含前置语句
+            #（如 `v = str(v); if i == 0 and ...:`）时，_detect_boolop_
+            # conditional_chain 的 _sb_has_body 守卫跳过该块，不创建
+            # BoolOpRegion。导致主条件仅取首块（`i == 0`），次块
+            #（`len(v) == 8`）被作为嵌套 IfRegion 条件，外层 if 的 false
+            # 跳目标从「下一 elif」变为「循环末尾」（多 1 条 EXTENDED_ARG），
+            # 字节码布局不一致（one_prod_to_dataframe 缺陷3）。
+            #
+            # 修复：镜像 _check_elif_chain 的 inline_boolop_chain 检测
+            #（L12760-12808），在主条件块上检测 `and` 短路链。首块
+            #（condition_block）可能含前置语句（pre-stmts，由 AST 生成时
+            # entry pre-stmt 提取处理），故不检查首块的 STORE_*；仅检查后续
+            # 块必须为纯条件块（无 STORE_*）且跳同一 false 目标。检测到链后：
+            # condition_block 重定向到链末块（真正的 then/else 分支点），
+            # chain_blocks 纳入所有链块（防止 _collect_branch_blocks 误吸收），
+            # _main_inline_boolop_chain 记录链信息传给 _build_elif_region /
+            # _build_basic_if_region，最终存入 IfRegion.inline_boolop_chains。
+            #
+            # 依原则 4：父 IfRegion 通过 entry 引用首块（含前置语句），
+            # condition_block 指向链末块（条件求值终态点），AST 生成时重建
+            # 完整 BoolOp 条件（_if_generate_full_elif_chain / _if_generate_
+            # normal 的 _main_ibc 查找路径）。依原则 2：链中所有块由本
+            # IfRegion 唯一归属（chain_blocks 标记），不被外层重复生成。
+            _main_inline_boolop_chain = None
+            _main_orig_cond_block = None
+            _main_orig_chain_blocks = set()
+            if not chain_blocks:
+                _main_cond_last = condition_block.get_last_instruction()
+                if (_main_cond_last is not None
+                        and _main_cond_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)
+                        and 'IF_FALSE' in _main_cond_last.opname
+                        and _main_cond_last.argval is not None):
+                    _main_chain = [condition_block]
+                    _main_current = condition_block
+                    _main_merge_offset = _main_cond_last.argval
+                    _main_visited = {condition_block.start_offset}
+                    while True:
+                        _main_ft_next = None
+                        _main_cur_last = _main_current.get_last_instruction()
+                        if _main_cur_last and _main_cur_last.argval is not None:
+                            for _s in _main_current.successors:
+                                if _s.start_offset not in _main_visited and _s.start_offset != _main_cur_last.argval:
+                                    _main_ft_next = _s
+                                    break
+                        if _main_ft_next is None or _main_ft_next.start_offset in _main_visited:
+                            break
+                        _main_ft_last = _main_ft_next.get_last_instruction()
+                        if _main_ft_last is None or _main_ft_last.opname not in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS):
+                            break
+                        if 'IF_TRUE' in _main_ft_last.opname:
+                            break
+                        if any(i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
+                                            'STORE_DEREF', 'STORE_SUBSCR', 'STORE_ATTR')
+                               for i in _main_ft_next.instructions):
+                            break
+                        if _main_ft_last.argval != _main_merge_offset:
+                            break
+                        _main_visited.add(_main_ft_next.start_offset)
+                        _main_chain.append(_main_ft_next)
+                        _main_current = _main_ft_next
+                    if len(_main_chain) >= 2:
+                        _main_inline_boolop_chain = {'blocks': list(_main_chain), 'op': 'and'}
+                        # 重定向 condition_block 到链末块（真正的 then/else 分支点），
+                        # chain_blocks 纳入所有链块（防止 _collect_branch_blocks /
+                        # _check_elif_chain 误吸收）。保存原始 condition_block 供
+                        # 安全回退使用（merge 计算失败时恢复，避免 then-body 含 return
+                        # 时 post-dominator 异常导致的回归）。AST 生成时 _main_ibc
+                        # 通过 id(cond_block)=id(链末块) 取出链信息，重建完整 BoolOp。
+                        _main_orig_cond_block = condition_block
+                        _main_orig_chain_blocks = set(chain_blocks)
+                        condition_block = _main_chain[-1]
+                        chain_blocks = set(_main_chain)
+
             cond_succs = list(condition_block.conditional_successors)
             if len(cond_succs) != 2:
                 continue
@@ -11881,6 +11972,37 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     if len(_r30_8_test) > 25:
                         merge = else_succ
 
+            # [R26-Defect3 safety] 区域归约算法原则 1（自底向上归约）+ 原则 2
+            #（每块唯一归属）：当主条件 'and' 链检测重定向了 condition_block，
+            # 但所有 merge 计算均失败（merge=None，典型场景：then-body 含 return
+            # 导致重定向后 then_succ 的 post-dominator 为 None），撤销重定向，
+            # 恢复原始 condition_block 重新计算 merge。依原则 4：不重定向时
+            # condition_block=首块，then_succ=次条件块（无 return，post-dominator
+            # 正确），merge 可正确计算。_main_inline_boolop_chain 清空，该 if
+            # 保持 R25 行为（主条件取首块，次块作为嵌套 IfRegion），不引入回归。
+            if (merge is None and _main_inline_boolop_chain is not None
+                    and _main_orig_cond_block is not None):
+                condition_block = _main_orig_cond_block
+                chain_blocks = _main_orig_chain_blocks
+                _main_inline_boolop_chain = None
+                cond_succs = list(condition_block.conditional_successors)
+                if len(cond_succs) == 2:
+                    then_succ, else_succ = sorted(cond_succs, key=lambda s: s.start_offset)
+                    _else_succ_original = else_succ
+                    merge = self._find_nearest_common_post_dominator(then_succ, else_succ)
+                    if merge is not None:
+                        _r24a_loop = self._find_enclosing_loop(block)
+                        if _r24a_loop is not None and merge not in _r24a_loop.blocks:
+                            _r24a_exclude = ({block, then_succ, else_succ,
+                                             _else_succ_original} | chain_blocks)
+                            _r24a_in_loop_merge = self._compute_in_loop_if_merge(
+                                then_succ, else_succ, _r24a_loop, _r24a_exclude)
+                            if _r24a_in_loop_merge is not None:
+                                merge = _r24a_in_loop_merge
+                    if merge is None:
+                        merge = self._compute_merge_from_jump_targets(
+                            block, then_succ, else_succ)
+
             # Fix: 当条件块在 TryExceptRegion 的 try_blocks 中时，
             # 分支收集可能越过 try 体边界（通过 JUMP_FORWARD 到循环条件等），
             # 需要计算 try 体边界块（try 体外的直接后继），作为 BFS 的额外停止点，
@@ -12035,12 +12157,13 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 all_condition_blocks.update(_await_pred_blocks)
                 chain_blocks.update(_await_pred_blocks)
 
-            region = self._build_elif_region(block, then_blocks, else_blocks, merge, all_condition_blocks, condition_block, boundary_stop=boundary_stop, ternary_regions=ternary_regions)
+            region = self._build_elif_region(block, then_blocks, else_blocks, merge, all_condition_blocks, condition_block, boundary_stop=boundary_stop, ternary_regions=ternary_regions, main_inline_boolop_chain=_main_inline_boolop_chain)
             if region is None:
                 region = self._build_basic_if_region(block, then_blocks, else_blocks, merge,
                                                       all_condition_blocks, condition_block,
                                                       boolop_regions=boolop_regions,
-                                                      ternary_regions=ternary_regions)
+                                                      ternary_regions=ternary_regions,
+                                                      main_inline_boolop_chain=_main_inline_boolop_chain)
             # 如果检测到链式比较，设置链式比较信息到区域上
             if region is not None and chained_compare_info:
                 region.chained_compare_blocks = list(chained_compare_info.get('extra_chain_blocks', []))
@@ -12081,7 +12204,7 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     return r
         return None
 
-    def _build_basic_if_region(self, block, then_blocks, else_blocks, merge, all_condition_blocks, condition_block=None, boolop_regions=None, ternary_regions=None):
+    def _build_basic_if_region(self, block, then_blocks, else_blocks, merge, all_condition_blocks, condition_block=None, boolop_regions=None, ternary_regions=None, main_inline_boolop_chain=None):
         """
         构建基础 if/if-else 区域（非 elif 链）
 
@@ -12114,6 +12237,12 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             merge: 后向支配合并点（两个分支的汇合点，可能为 None）
             all_condition_blocks: 条件相关的所有块集合（含 BoolOp chain）
             condition_block: 实际包含条件跳转指令的块（可能不同于 entry）
+            main_inline_boolop_chain: [R26-Defect3] 主条件 'and' 短路链信息
+                （{'blocks':[首块,...,末块],'op':'and'}），由 _identify_conditional_
+                regions Step 6 检测。存入 IfRegion.inline_boolop_chains
+                （key=id(condition_block)），供 AST 生成重建完整 BoolOp 条件
+                （`if A and B:` 而非 `if A: if B:`）。依原则 2（每块唯一归属）+
+                原则 4（入口引用语义）。
 
         Returns:
             IfRegion: 构建好的区域对象，region_type 为 IF_THEN 或 IF_THEN_ELSE
@@ -12388,10 +12517,18 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     else_blocks = [b for b in else_blocks if b in _loop_body_only or self._block_exits_loop(b, _loop_region)]
         region_type = RegionType.IF_THEN_ELSE if else_blocks else RegionType.IF_THEN
         all_blocks = all_condition_blocks | set(then_blocks) | set(else_blocks)
+        # [R26-Defect3 fix] 主条件的 inline_boolop_chain 也存入 IF_THEN /
+        # IF_THEN_ELSE 区域（无 elif 链时的回退路径），key=id(condition_block)。
+        # AST 生成时 _if_generate_normal 的 _main_ibc 查找路径取出主条件链，
+        # 重建完整 BoolOp 条件，避免 `if A and B:` 被拆成 `if A: if B:`。
+        _basic_inline_chains = {}
+        if main_inline_boolop_chain and condition_block is not None:
+            _basic_inline_chains[id(condition_block)] = main_inline_boolop_chain
         region = IfRegion(
             region_type=region_type, entry=block, blocks=all_blocks,
             exit=merge, condition_block=condition_block if condition_block is not None else block, then_blocks=then_blocks,
             else_blocks=else_blocks, merge_block=merge,
+            inline_boolop_chains=_basic_inline_chains,
         )
         if then_blocks and self._check_block_has_trailing_return_none(then_blocks[-1]):
             region.mark_trailing_return_none()
@@ -12399,7 +12536,7 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             region.mark_trailing_return_none()
         return region
 
-    def _build_elif_region(self, block, then_blocks, else_blocks, merge, all_condition_blocks, condition_block=None, boundary_stop=None, ternary_regions=None):
+    def _build_elif_region(self, block, then_blocks, else_blocks, merge, all_condition_blocks, condition_block=None, boundary_stop=None, ternary_regions=None, main_inline_boolop_chain=None):
         """_build_elif_region — 构建 if/elif/else 链区域（IF_ELIF_CHAIN）
 
         【区域类型】 IF_ELIF_CHAIN — if/elif/else 链条件区域
@@ -12453,6 +12590,10 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
         IF_ELIF_CHAIN 通过 elif_conditions / elif_bodies / elif_final_else
         引用这些入口，不展开内部嵌套 IfRegion（嵌套即抽象节点）。嵌套
         BoolOpRegion 的 op_chain 末块作为 elif 条件块入口引用。
+        [R26-Defect3] main_inline_boolop_chain（主条件 'and' 链）合并到
+        inline_boolop_chains（key=id(condition_block)），与 elif 链的
+        inline_boolop_chain 同等处理，保证主条件与 elif 条件的复合 'and'
+        条件提取一致（one_prod_to_dataframe 缺陷3）。
 
         **反编译流程**
         对应生成方法: _generate_if（region_ast_generator.py）+ _generate_elif_or_else
@@ -13242,6 +13383,15 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             all_blocks.update(body)
         if elif_info.get("final_else"):
             all_blocks.update(elif_info["final_else"])
+        # [R26-Defect3 fix] 合并主条件的 inline_boolop_chain 到 elif 链的
+        # inline_boolop_chains 字典。主条件（condition_block）的 `and` 短路链
+        # 由 _identify_conditional_regions 检测（main_inline_boolop_chain），
+        # key=id(condition_block)，与 elif 条件的 inline_boolop_chains 同构。
+        # AST 生成时 _if_generate_full_elif_chain 的 _main_ibc 查找路径
+        #（L7715）通过 id(cond_block) 取出主条件链，重建完整 BoolOp 条件。
+        _merged_inline_chains = dict(elif_info.get("inline_boolop_chains", {}))
+        if main_inline_boolop_chain and condition_block is not None:
+            _merged_inline_chains[id(condition_block)] = main_inline_boolop_chain
         region = IfRegion(
             region_type=RegionType.IF_ELIF_CHAIN, entry=block, blocks=all_blocks,
             exit=merge, condition_block=condition_block if condition_block is not None else block, then_blocks=then_blocks,
@@ -13249,7 +13399,7 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             elif_conditions=elif_info["conditions"],
             elif_bodies=elif_info["bodies"],
             elif_final_else=elif_info.get("final_else", []),
-            inline_boolop_chains=elif_info.get("inline_boolop_chains", {}),
+            inline_boolop_chains=_merged_inline_chains,
         )
         if then_blocks and self._check_block_has_trailing_return_none(then_blocks[-1]):
             region.mark_trailing_return_none()

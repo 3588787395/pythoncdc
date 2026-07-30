@@ -293,6 +293,35 @@ class RegionASTGenerator:
                 pass
             elif isinstance(entry_region, IfRegion) and entry_region.condition_block == entry_block:
                 pass
+            # [R26-Defect3 fix] 区域归约算法原则 4（入口引用语义）+ 原则 1
+            #（自底向上归约）+ 原则 2（每块唯一归属）+ No More Gotos §3（If
+            # 区域归约）：当主条件是复合 'and' 短路条件（如
+            # `if os.path.exists(f) and typet == 6:`），'and' 链检测将
+            # condition_block 重定向到链末块（真正的 then/else 分支点），
+            # 故 condition_block != entry_block，但 IfRegion 仍以 entry_block
+            # 为入口（首链块，含前置语句 data=...; retpanel=...）。
+            #
+            # 此时不应在 generate() 入口处理中将 entry_block 作为基本语句提取
+            # 并标记 generated —— 否则 _generate_if_region 派发检测到
+            # entry in generated_blocks（L7231）会丢弃整个 IfRegion（return []，
+            # 丢失 if 条件 + body，load_bars_from_hundsun -195 回归）。
+            #
+            # 依原则 4：父序列通过 entry 引用 IfRegion，IfRegion 的
+            # _if_generate_normal 负责：①提取 entry 前置语句（entry != cond_block
+            # 分支，L10432）②通过 inline_boolop_chains 重建完整 BoolOp 条件
+            #（_main_ibc 查找路径，L10453）③生成 if + body。entry_block 不在
+            # 此处标记 generated，由 _if_generate_normal 统一归属（标记 cond_block
+            # 与链中其余块为 generated，L10466/10468）。
+            #
+            # 判据：inline_boolop_chains 存在以 entry_block 为首块的链（'and'
+            # 链检测的签名）；elif 链的 inline_boolop_chain 以 elif 条件块为
+            # 首块，entry_block 不会匹配，故不影响 elif/普通 if 入口处理。
+            elif (isinstance(entry_region, IfRegion)
+                    and entry_region.entry is entry_block
+                    and any(isinstance(_ch, dict) and _ch.get('blocks')
+                            and _ch['blocks'][0] is entry_block
+                            for _ch in (getattr(entry_region, 'inline_boolop_chains', None) or {}).values())):
+                pass
             # [R23-N21 fix] BoolOpRegion 作为入口区域时，入口块可能包含前置语句
             # （如 ClearAllCache(); is_string = False）。这些语句不属于布尔表达式，
             # 必须在此提取。原实现直接 pass 导致前置语句丢失。使用
@@ -10436,6 +10465,35 @@ AST 映射规则:
                 if _entry_pre_stmts:
                     pre_stmts = _entry_pre_stmts + pre_stmts
         condition = self._if_extract_condition_from_instructions(region, cond_block, cond_instrs)
+        # [R26-Defect3 fix] 区域归约算法原则 4（入口引用语义）+ 原则 2（每块唯一
+        # 归属）+ No More Gotos §3（If 区域归约）：主条件块（condition_block）
+        # 可能是复合条件（如 `a[0] == b[0] and a[1] == b[1]` 由两个短路条件块
+        # 组成），记录在 IfRegion.inline_boolop_chains 中
+        # （key=id(cond_block)，value={'blocks':[b1,b2],'op':'and'}）。
+        # _if_extract_condition_from_instructions 仅从 cond_block 单块指令提取
+        # 条件（如 `a[1] == b[1]`），丢失首块的 `a[0] == b[0]` 比较部分；且首块
+        # 未被标记 generated，被作为独立语句重复生成。镜像 _if_generate_full_
+        # elif_chain 的 _main_ibc 查找路径（L7715），当 ibc 有 cond_block 条目时，
+        # 重建复合 BoolOp 条件并标记链中其余块为 generated。
+        # 依原则 4：父区域通过 entry 引用子区域，不展开子区域所有块；嵌套
+        # IfRegion 继承父区域的复合条件语义，主条件与 elif 条件同等处理，
+        # 保持复合条件完整。依原则 2：复合条件的其余块由本 IfRegion 唯一归属
+        # （标记 generated），不被外层循环/序列重复生成。
+        _main_ibc = getattr(region, 'inline_boolop_chains', {}).get(id(cond_block))
+        if _main_ibc:
+            _chain_blocks = _main_ibc['blocks']
+            _chain_op = _main_ibc['op']
+            _main_parts = []
+            for _cb in _chain_blocks:
+                _cb_instrs = [i for i in _cb.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL') and i.opname not in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS | BACKWARD_JUMP_OPS) and i.opname not in ('JUMP_FORWARD', 'JUMP_BACKWARD')]
+                if _cb_instrs:
+                    _part = self.expr_reconstructor.reconstruct(_cb_instrs)
+                    if _part:
+                        _main_parts.append(_part)
+            if len(_main_parts) >= 2:
+                condition = {'type': 'BoolOp', 'op': _chain_op, 'values': _main_parts}
+                for _cb in _chain_blocks[1:]:
+                    self.generated_blocks.add(_cb)
         self.generated_blocks.add(cond_block)
         if hasattr(region, 'elif_conditions') and region.elif_conditions:
             for elif_cond in region.elif_conditions:
