@@ -3197,7 +3197,38 @@ AST 映射规则:
                         for b in r.blocks:
                             self.generated_blocks.add(b)
                     break
-        if not _ternary_for_iter and for_iter_setup and for_iter_setup in self.cfg.blocks.values():
+        # [R1-07 fix] 区域归约算法原则 4（父引用子入口）+ 原则 2（每块唯一
+        # 归属）：``for x in (a or b):`` 中，``a or b`` 编译为
+        # ``JUMP_IF_TRUE_OR_POP`` 短路链，其 merge_block 即 for_iter_setup
+        # （``GET_ITER`` 块）。父 For 循环通过 merge_block 引用 BoolOpRegion
+        # 子节点。BoolOpRegion 的 op_chain 块归属该表达式区域（不作为独立
+        # 语句泄漏），父循环读取 boolop 表达式作为 iter_expr。镜像 ternary-for-iter
+        # 处理（上方 TernaryRegion 分支）。
+        if iter_expr is None and for_iter_setup and for_iter_setup in self.cfg.blocks.values():
+            _boolop_for_iter = None
+            for _r in self.region_analyzer.regions:
+                if (isinstance(_r, BoolOpRegion) and _r.merge_block is not None
+                        and _r.merge_block is for_iter_setup):
+                    _boolop_for_iter = _r
+                    break
+            if _boolop_for_iter is None:
+                _fis_owner_b = self.region_analyzer.get_region_for_block(for_iter_setup)
+                if isinstance(_fis_owner_b, BoolOpRegion):
+                    _boolop_for_iter = _fis_owner_b
+            if _boolop_for_iter is not None:
+                # _generate_boolop 的 iter-context 分支可能已写入 condition_expr
+                # 并标记块已生成；优先复用，否则现场重建。
+                _boolop_expr = getattr(_boolop_for_iter, 'condition_expr', None)
+                if _boolop_expr is None:
+                    _boolop_expr = self._build_boolop_expression(_boolop_for_iter)
+                if _boolop_expr is not None:
+                    iter_expr = _boolop_expr
+                    for _b in _boolop_for_iter.blocks:
+                        self.generated_blocks.add(_b)
+                        self.generated_offsets.add(_b.start_offset)
+                    _boolop_for_iter.condition_expr = _boolop_expr
+                    self._generated_regions.add(id(_boolop_for_iter))
+        if iter_expr is None and not _ternary_for_iter and for_iter_setup and for_iter_setup in self.cfg.blocks.values():
             _fis_owner = self.region_analyzer.get_region_for_block(for_iter_setup)
             if isinstance(_fis_owner, TernaryRegion) and getattr(_fis_owner, 'merge_context', None) == 'iter':
                 ternary_stmts = self._generate_ternary(_fis_owner)
@@ -4149,6 +4180,88 @@ AST 映射规则:
                     if cb != cond_block:
                         self.generated_blocks.add(cb)
                         self.generated_offsets.add(cb.start_offset)
+        # [R1-04 fix] 区域归约算法原则 4（父引用子入口）：while 链式比较条件
+        # （如 ``while 0 < x < 10:``）由 condition_block（首段，COPY(2)+
+        # COMPARE_OP）+ condition_chain_blocks（后续段，各含 COMPARE_OP）引用。
+        # RegionAnalyzer 检测到 pre-loop 链式比较链时设 is_chained_compare_cond
+        # 并存 chained_compare_ops。此处复用 _build_assert_chained_compare
+        # （assert 链式比较重建器，签名相同：cond_block + chain_blocks + ops）
+        # 重建 ast.Compare。重建后标记 chain 块为已生成（每块唯一归属），并
+        # 抑制回边重检块（header 尾部首段 + back_edge 后续段，CPython 在回边
+        # 复制 while 条件求值）。
+        if (condition is None and cond_block
+                and region.metadata.get('is_chained_compare_cond')
+                and region.condition_chain_blocks):
+            _cc_ops = region.metadata.get('chained_compare_ops') or []
+            _cc_chain = [cb for cb in region.condition_chain_blocks if cb is not None]
+            if (len(_cc_ops) >= 2 and _cc_chain
+                    and self.region_analyzer._is_chained_compare_header(cond_block)):
+                _cc_cond = self._build_assert_chained_compare(
+                    cond_block, _cc_chain, _cc_ops)
+                if _cc_cond is not None:
+                    condition = _cc_cond
+                    for _ccb in _cc_chain:
+                        self.generated_blocks.add(_ccb)
+                        self.generated_offsets.add(_ccb.start_offset)
+                    self.generated_blocks.add(cond_block)
+                    self.generated_offsets.add(cond_block.start_offset)
+                    # [R1-04 fix] 区域归约算法原则 2（每块唯一归属）：CPython 在
+                    # 回边处复制 while 条件求值。链式比较回边重检跨两块：header
+                    # 尾部（首段 COPY+COMPARE_OP）+ back_edge（末段 COMPARE_OP）。
+                    # header 还含 body 语句（如 ``x += 1``）在重检之前——提取 store
+                    # 为 body 语句，抑制重检部分。back_edge 是纯重检——整块抑制。
+                    # 判据：body 块以条件跳转结尾，且末条 STORE 之后含 COPY/
+                    # COMPARE_OP（重检）→ 提取 store、整块标记已生成；back_edge
+                    # 块仅含 COMPARE_OP + 条件跳转（纯重检）→ 整块标记已生成。
+                    for _b in region.body_blocks:
+                        if _b in self.generated_blocks:
+                            continue
+                        _b_last = _b.get_last_instruction()
+                        if not _b_last or _b_last.opname not in CONDITIONAL_JUMP_OPS:
+                            continue
+                        _b_instrs = [i for i in _b.instructions
+                                     if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                        _b_non_jmp = [i for i in _b_instrs if i != _b_last]
+                        _last_store_idx = -1
+                        for _si, _i in enumerate(_b_non_jmp):
+                            if _i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                                _last_store_idx = _si
+                        if _last_store_idx >= 0:
+                            _post_store = _b_non_jmp[_last_store_idx + 1:]
+                            _is_recheck = any(i.opname in ('COPY', 'COMPARE_OP', 'IS_OP', 'CONTAINS_OP')
+                                              for i in _post_store)
+                            if _is_recheck:
+                                _store_instrs = _b_non_jmp[:_last_store_idx + 1]
+                                _store_stmt = self._build_store_statement(_store_instrs, block=_b)
+                                if _store_stmt:
+                                    _store_stmt.pop('_decorator_block', None)
+                                    recheck_store_stmts.append(_store_stmt)
+                                self.generated_blocks.add(_b)
+                                self.generated_offsets.add(_b.start_offset)
+                                continue
+                        # Pure recheck: back_edge block with only COMPARE_OP + jump
+                        if _b is region.back_edge_block:
+                            _has_only_compare = all(
+                                i.opname in ('LOAD_CONST', 'LOAD_FAST', 'LOAD_NAME',
+                                             'LOAD_GLOBAL', 'LOAD_DEREF', 'COPY', 'SWAP',
+                                             'COMPARE_OP', 'IS_OP', 'CONTAINS_OP', 'POP_TOP')
+                                for i in _b_non_jmp)
+                            if _has_only_compare:
+                                self.generated_blocks.add(_b)
+                                self.generated_offsets.add(_b.start_offset)
+                                continue
+                        # [R1-04] Chained-compare short-circuit exit blocks
+                        # (POP_TOP + LOAD_CONST + RETURN_VALUE) land in body_blocks
+                        # because they are reachable from the header's recheck. They
+                        # are loop exits, not body statements — suppress them.
+                        if _b_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                            _is_trivial_exit = all(
+                                i.opname in ('POP_TOP', 'LOAD_CONST', 'COPY', 'SWAP',
+                                             'NOP', 'CACHE', 'RESUME', 'PUSH_NULL')
+                                for i in _b_non_jmp)
+                            if _is_trivial_exit:
+                                self.generated_blocks.add(_b)
+                                self.generated_offsets.add(_b.start_offset)
         if condition is None and cond_block:
             cond_instrs = []
             prev_was_copy = False
@@ -4792,6 +4905,43 @@ AST 映射规则:
                              back_edge_source_blocks: List[Tuple[BasicBlock, int]] = None) -> bool:
         """纯粹根据block_role分发到对应的处理器，返回是否已处理"""
         header = region.header_block
+        # [R1-12 fix] 区域归约算法原则 4（父引用子入口）+ 原则 2（每块唯一
+        # 归属）：``while a: yield from inner()`` 中，``yield from`` 协议
+        # 编译为 setup 块（含 GET_YIELD_FROM_ITER + LOAD_CONST None）+
+        # SEND/YIELD_VALUE 自循环（is_yield_from_loop 子 LoopRegion）。
+        # setup 块是 ``yield from <expr>`` 的求值序言，不是用户写的独立
+        # 语句，也不应被 _loop_handle_header 当作普通 header 块输出
+        # ``None``（LOAD_CONST None 泄漏）。父循环通过 is_yield_from_loop
+        # 子区域入口引用它：调用 _generate_region 触发 _generate_loop 的
+        # is_yield_from_loop 分支，从 setup 块的 GET_YIELD_FROM_ITER 前缀
+        # 指令重建迭代器表达式，返回 Expr(YieldFrom(<expr>))，并标记
+        # setup+self-loop 块已生成（每块唯一归属）。
+        if any(i.opname == 'GET_YIELD_FROM_ITER' for i in block.instructions):
+            _yf_setup_child = None
+            for _child in (region.children or []):
+                if (isinstance(_child, LoopRegion)
+                        and _child.metadata.get('is_yield_from_loop')
+                        and _child.header_block is not None
+                        and block in _child.header_block.predecessors):
+                    _yf_setup_child = _child
+                    break
+            if _yf_setup_child is not None:
+                _yf_id = id(_yf_setup_child)
+                if (_yf_id not in self._generated_regions
+                        and _yf_id not in self._generating_regions):
+                    _yf_ast = self._generate_region(_yf_setup_child)
+                    if _yf_ast:
+                        if isinstance(_yf_ast, list):
+                            body_stmts.extend(_yf_ast)
+                        else:
+                            body_stmts.append(_yf_ast)
+                    self._generated_regions.add(_yf_id)
+                for _b in _yf_setup_child.blocks:
+                    self.generated_blocks.add(_b)
+                    self.generated_offsets.add(_b.start_offset)
+                self.generated_blocks.add(block)
+                self.generated_offsets.add(block.start_offset)
+                return True
         if block == header:
             _entry_region = self.region_analyzer.get_entry_region_for_block(block)
             _try_at_header = None
@@ -4845,6 +4995,24 @@ AST 映射规则:
                 if all(i.opname in ('SEND', 'YIELD_VALUE', 'RESUME',
                                     'JUMP_BACKWARD_NO_INTERRUPT', 'NOP', 'CACHE')
                        for i in _child.entry.instructions):
+                    # [R1-12 fix] 区域归约算法原则 4（父引用子入口）：当该
+                    # SEND/YIELD 自循环是 yield-from 协议（is_yield_from_loop）
+                    # 时，它是用户可见的 ``yield from <expr>`` 语句，不是
+                    # async for/with 的挂起协议。调用 _generate_region 重建
+                    # YieldFrom 表达式（setup 前驱块由其 is_yield_from_loop
+                    # 分支自行收集并标记已生成）。async for/with 挂起协议
+                    # （非 yield-from）保持原行为——仅标记已生成、不输出语句。
+                    if _child.metadata.get('is_yield_from_loop'):
+                        _yf_id = id(_child)
+                        if (_yf_id not in self._generated_regions
+                                and _yf_id not in self._generating_regions):
+                            _yf_ast = self._generate_region(_child)
+                            if _yf_ast:
+                                if isinstance(_yf_ast, list):
+                                    body_stmts.extend(_yf_ast)
+                                else:
+                                    body_stmts.append(_yf_ast)
+                            self._generated_regions.add(_yf_id)
                     for _b in _child.blocks:
                         self.generated_blocks.add(_b)
                     self._generated_regions.add(id(_child))
@@ -5096,6 +5264,64 @@ AST 映射规则:
             and region.condition_block is not None
             and region.condition_block != header):
             if _header_if_region is not None:
+                # [R1-16 fix] 区域归约算法原则 2（每块唯一归属）：CPython 3.11+
+                # 在回边处复制整个 while 条件求值。对多操作数 ``and`` 链（如
+                # ``a and b and c``），回边重检拆成多个块，header 块同时承载
+                # 循环体首语句与首操作数的回边重检（``LOAD a; POP_JUMP_IF_FALSE``）。
+                # 区域分析会在 header 处识别出一个 IfRegion（其 then/else 含后续
+                # 重检块与出口块），但该 IfRegion 实为 boolop 条件回边重检，不归属
+                # 循环体。当 boolop_for_while 已识别该复合条件时，若 header 以
+                # FORWARD_CONDITIONAL_JUMP 结尾且沿 fallthrough 链可抵达以
+                # BACKWARD_CONDITIONAL_JUMP 结尾的回边块，则该 IfRegion 是重检链，
+                # 必须抑制——仅提取 header 的 body 语句，重检部分由 BoolOpRegion
+                # 归约（每块唯一归属：重检块归条件，body 块归循环体）。
+                if boolop_for_while is not None:
+                    _hdr_last_i = header.get_last_instruction()
+                    if (_hdr_last_i is not None
+                            and _hdr_last_i.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                            and _hdr_last_i.argval is not None):
+                        _be_block = region.back_edge_block
+                        if _be_block is not None:
+                            _chain_visited = {header.start_offset}
+                            _chain_cur = None
+                            for _succ_ft in header.successors:
+                                if _succ_ft.start_offset != _hdr_last_i.argval:
+                                    _chain_cur = _succ_ft
+                                    break
+                            _chain_is_recheck = False
+                            _chain_limit = 0
+                            while (_chain_cur is not None
+                                   and _chain_cur.start_offset not in _chain_visited
+                                   and _chain_limit < 32):
+                                _chain_limit += 1
+                                _chain_visited.add(_chain_cur.start_offset)
+                                if _chain_cur is _be_block:
+                                    _cl_i = _chain_cur.get_last_instruction()
+                                    if _cl_i and _cl_i.opname in BACKWARD_CONDITIONAL_JUMP_OPS:
+                                        _chain_is_recheck = True
+                                    break
+                                _cl_i = _chain_cur.get_last_instruction()
+                                if not _cl_i or _cl_i.opname not in FORWARD_CONDITIONAL_JUMP_OPS:
+                                    break
+                                _cl_jt = (self.cfg.get_block_by_offset(_cl_i.argval)
+                                          if _cl_i.argval is not None else None)
+                                _next_ft = None
+                                for _cs in _chain_cur.successors:
+                                    if _cl_jt is None or _cs.start_offset != _cl_jt.start_offset:
+                                        _next_ft = _cs
+                                        break
+                                _chain_cur = _next_ft
+                            if _chain_is_recheck:
+                                _self_loop_stmts = self._loop_extract_self_loop_stmts(header)
+                                body_stmts.extend(_self_loop_stmts)
+                                _if_id_sup = id(_header_if_region)
+                                self._generated_regions.add(_if_id_sup)
+                                for _b in _header_if_region.blocks:
+                                    self.generated_blocks.add(_b)
+                                    self.generated_offsets.add(_b.start_offset)
+                                self.generated_blocks.add(header)
+                                self.generated_offsets.add(header.start_offset)
+                                return
                 # Header处有IfRegion（如 while cond: if x==5: continue; if x==1: break; ...）
                 # 此时header是if条件块，需要生成该IfRegion作为循环体的第一个语句
                 _if_id = id(_header_if_region)
@@ -5161,6 +5387,30 @@ AST 映射规则:
                         for _eb in _child_while_cond.else_blocks:
                             if _eb in _parent_keys and _eb in self.generated_blocks:
                                 self.generated_blocks.discard(_eb)
+                    return
+                _hdr_last = header.get_last_instruction()
+                _exit_succs = [s for s in header.successors
+                               if self.region_analyzer.get_block_role(s) in
+                               (BlockRole.BREAK, BlockRole.PURE_BREAK,
+                                BlockRole.RETURN, BlockRole.RETURN_NONE)]
+                _back_edge_succ = (region.back_edge_block in header.successors)
+                # [R1-11 fix] 区域归约算法原则 1（自底向上归约）+ 原则 4
+                # （父引用子入口）：当 while 循环 header 块以条件跳转结尾，一
+                # 个后继是 break/return 出口块、另一个后继就是回边块自身时，
+                # 源码结构是 `if <header expr>: break/return` —— break/return
+                # 是 then 分支，回边是隐式 continue（else 分支）。此时整个
+                # if-break 语句的归约结果就在 header 内（含 walrus 副作用如
+                # `if (n := f()): break`），必须调用 _loop_process_header_instructions
+                # 指令级重建，否则 self-loop 抑制路径会吞掉 header 全部语句使
+                # 循环体退化为 pass。
+                # 精确条件（避免误伤 while19/wl31 等 if-continue/if-else-break）：
+                #   * header 以 FORWARD_CONDITIONAL_JUMP 结尾
+                #   * 恰有一个后继是 break/return 出口
+                #   * 另一个后继就是 region.back_edge_block（隐式 continue）
+                if (_hdr_last and _hdr_last.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                        and len(_exit_succs) == 1 and _back_edge_succ
+                        and len(header.successors) == 2):
+                    self._loop_process_header_instructions(header, region, body_stmts)
                     return
                 _self_loop_stmts = self._loop_extract_self_loop_stmts(header)
                 body_stmts.extend(_self_loop_stmts)
@@ -5620,6 +5870,48 @@ AST 映射规则:
                             if _ft_last_i and _ft_last_i.opname in BACKWARD_CONDITIONAL_JUMP_OPS:
                                 _is_compound_loop_cond = True
                             break
+                # [R1-16 fix] 区域归约算法原则 2（每块唯一归属）：CPython 3.11+
+                # 在回边处复制整个 while 条件求值。对多操作数 ``and`` 链（如
+                # ``a and b and c``），回边重检拆成多个块：前 N-1 个操作数块以
+                # FORWARD_CONDITIONAL_JUMP 跳向各自出口，末操作数块以
+                # BACKWARD_CONDITIONAL_JUMP 跳回 header（回边）。header 块同时
+                # 承载循环体首语句与首操作数 ``a`` 的回边重检。直接 fallthrough
+                # 检查只覆盖 2 操作数情形（fallthrough 即回边块）；对 3+ 操作数，
+                # fallthrough 是中间重检块（FORWARD 跳转），需沿 fallthrough 链
+                # 前进直到抵达以 BACKWARD_CONDITIONAL_JUMP 结尾的回边块。这些重检
+                # 块归属 while 条件（BoolOpRegion），不归属循环体，故 header 的
+                # 重检部分必须抑制，仅保留 body 语句。
+                if not _is_compound_loop_cond:
+                    _be_block = getattr(self._current_loop, 'back_edge_block', None)
+                    if _be_block is not None:
+                        _chain_visited = {hdr.start_offset}
+                        _chain_cur = None
+                        for _succ_ft in hdr.successors:
+                            if _succ_ft.start_offset != _cond_break_instr.argval:
+                                _chain_cur = _succ_ft
+                                break
+                        _chain_limit = 0
+                        while (_chain_cur is not None
+                               and _chain_cur.start_offset not in _chain_visited
+                               and _chain_limit < 32):
+                            _chain_limit += 1
+                            _chain_visited.add(_chain_cur.start_offset)
+                            if _chain_cur is _be_block:
+                                _cl_i = _chain_cur.get_last_instruction()
+                                if _cl_i and _cl_i.opname in BACKWARD_CONDITIONAL_JUMP_OPS:
+                                    _is_compound_loop_cond = True
+                                break
+                            _cl_i = _chain_cur.get_last_instruction()
+                            if not _cl_i or _cl_i.opname not in FORWARD_CONDITIONAL_JUMP_OPS:
+                                break
+                            _cl_jt = (self.cfg.get_block_by_offset(_cl_i.argval)
+                                      if _cl_i.argval is not None else None)
+                            _next_ft = None
+                            for _cs in _chain_cur.successors:
+                                if _cl_jt is None or _cs.start_offset != _cl_jt.start_offset:
+                                    _next_ft = _cs
+                                    break
+                            _chain_cur = _next_ft
             if _is_compound_loop_cond:
                 return _self_loop_stmts
             _cb_instrs = [i for i in hdr.instructions[_cond_break_start_idx:]
@@ -6285,6 +6577,16 @@ AST 映射规则:
         _split_idx = -1
         for _ci_i, _ci in enumerate(_cond_instrs):
             if _ci.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                # [R1-11 fix] 区域归约算法原则 2（每块唯一归属）：walrus
+                # 赋值（COPY 1 + STORE_*，如 `if (n := f()): break`）是
+                # 条件表达式内的子节点，不是独立前驱语句。其 COPY 把值留栈
+                # 供 POP_JUMP_IF_* 测试，STORE 是 NamedExpr 副作用。在此
+                # 处切分会丢弃整个 walrus 表达式使条件为空（body 退化为
+                # pass）。跳过 walrus STORE，让 expr_reconstructor 重建为
+                # NamedExpr 作为 if 条件。
+                if _ci_i > 0 and _cond_instrs[_ci_i - 1].opname == 'COPY' \
+                        and _cond_instrs[_ci_i - 1].arg == 1:
+                    continue
                 _split_idx = _ci_i
         if _split_idx >= 0:
             _cond_instrs = _cond_instrs[_split_idx + 1:]
@@ -6388,6 +6690,24 @@ AST 映射规则:
             return True
         return False
 
+    def _block_is_pure_continue(self, block: BasicBlock) -> bool:
+        """[R1-01 fix] 判断块是否为纯 continue（无 body 语句）。
+
+        区域归约算法原则 2（每块唯一归属）：含真实 body 语句（STORE/CALL/
+        BINARY_OP 等副作用指令）的块不是纯 continue——其 body 语句必须作为
+        循环体归约结果输出，JUMP_BACKWARD 作为隐式回边抑制。此函数仅在
+        if-branch 生成时使用，区分纯 continue 分支（生成 Continue 语句）与
+        含 body 语句的 fall-through 分支（留作顺序归约）。"""
+        if block is None:
+            return False
+        _meaningful = [i for i in block.instructions
+                       if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP')
+                       and i.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+                                            'JUMP_FORWARD', 'JUMP_ABSOLUTE')]
+        if _meaningful:
+            return False
+        return self._block_is_continue_target(block)
+
     def _is_with_exit_back_edge(self, block: BasicBlock) -> bool:
         if not self._current_loop:
             return False
@@ -6431,6 +6751,11 @@ AST 映射规则:
         _split_idx = -1
         for _ci_i, _ci in enumerate(_cond_instrs):
             if _ci.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                # [R1-11 fix] 同 _loop_handle_exit_successors：walrus
+                # COPY 1 + STORE_* 是条件表达式内子节点，不可在此切分。
+                if _ci_i > 0 and _cond_instrs[_ci_i - 1].opname == 'COPY' \
+                        and _cond_instrs[_ci_i - 1].arg == 1:
+                    continue
                 _split_idx = _ci_i
         if _split_idx >= 0:
             _cond_instrs = _cond_instrs[_split_idx + 1:]
@@ -6448,6 +6773,29 @@ AST 映射规则:
                     _else_succ = _fall_through
                 _then_is_continue = self._block_is_continue_target(_then_succ)
                 _else_is_continue = self._block_is_continue_target(_else_succ)
+                _then_is_pure_cont = self._block_is_pure_continue(_then_succ)
+                _else_is_pure_cont = self._block_is_pure_continue(_else_succ)
+                # [R1-01 fix] 区域归约算法原则 4（父引用子入口）+ 原则 2
+                # （每块唯一归属）：当 then 是纯 continue（无 body 语句）而
+                # else 含 body 语句时，源码结构是 `if cond: continue; <body>`
+                # — body 在 if 之后顺序执行，不是 else 分支。生成 if 仅含
+                # continue 分支，else 后继块留给循环体顺序归约（其
+                # JUMP_BACKWARD 作为隐式回边由角色分发抑制，不会泄漏为
+                # 显式 continue）。对称处理 else 为 continue 的情况（条件取反）。
+                # 这避免 else body 块被 if 消费后其 JUMP_BACKWARD 被当作
+                # 显式 continue 生成（`else: b=1; continue` 多余 continue）。
+                if _then_is_pure_cont and not _else_is_pure_cont:
+                    self.generated_blocks.add(_then_succ)
+                    self.generated_offsets.add(_then_succ.start_offset)
+                    _hdr_stmts.append({'type': 'If', 'test': _expr,
+                                       'body': [{'type': 'Continue'}]})
+                    return
+                if _else_is_pure_cont and not _then_is_pure_cont:
+                    self.generated_blocks.add(_else_succ)
+                    self.generated_offsets.add(_else_succ.start_offset)
+                    _hdr_stmts.append({'type': 'If', 'test': _negate_expr(_expr),
+                                       'body': [{'type': 'Continue'}]})
+                    return
                 if _then_is_continue:
                     _then_stmts = [{'type': 'Continue'}]
                 else:
@@ -15459,6 +15807,21 @@ AST 映射规则:
             # 如果没有 else_blocks，从 try_blocks 的正常出口查找
             if not _post_try_blocks_r19n2:
                 for _tb in region.try_blocks:
+                    # [R1-02 fix] 区域归约算法原则 2（每块唯一归属）：
+                    # try_blocks 中角色为 BREAK/PURE_BREAK 的块是循环内的
+                    # break 语句（如 `try: if i == 0: break` 的 POP_TOP+
+                    # JUMP_FORWARD 块），其后继是循环 break 目标（循环后代码），
+                    # 属于外层循环的出口区域，不是 try-except 的正常 fall-through
+                    # 出口。若收集为 post-try 块，break 目标（如
+                    # `for: try: ... break` 后的 `return i`）会被拉进 try-except
+                    # 之内（嵌在循环体），破坏循环出口边界
+                    # （test_r1_for_try_except_break_continue）。CONTINUE 角色源块
+                    # 的后继是循环 header（回边），同样不属于 post-try。跳过这些
+                    # 循环控制角色源块的后继。
+                    _tb_role_pt = self.region_analyzer.get_block_role(_tb)
+                    if _tb_role_pt in (BlockRole.BREAK, BlockRole.PURE_BREAK,
+                                       BlockRole.CONTINUE, BlockRole.PURE_CONTINUE):
+                        continue
                     for _succ in _tb.successors:
                         if (_succ not in _region_block_set_r19n2
                                 and _succ not in _post_try_seen_r19n2
@@ -20834,6 +21197,29 @@ AST 映射规则:
                     boolop_expr = _negate_expr(boolop_expr)
                 region.condition_expr = boolop_expr
             return None
+
+        # [R1-07 fix] 区域归约算法原则 4（父引用子入口）+ 原则 2（每块唯一
+        # 归属）：``for x in (a or b):`` 中，``a or b`` 的 BoolOpRegion 以
+        # for_iter_setup（``GET_ITER`` 块）为 merge_block。该 BoolOpRegion 不
+        # 是独立语句，而是父 For 循环的 iter 表达式（父循环通过 merge_block
+        # 引用子节点）。此时不应发射独立 Expr 语句，而应重建 boolop 表达式写
+        # 入 condition_expr，供父 For 的 _loop_generate_for 读取，并标记块已
+        # 生成以避免顺序扫描重复输出。
+        if (not _is_outer_condition
+                and region.merge_block is not None
+                and not getattr(region, 'is_condition_context', False)):
+            for _lr in self.region_analyzer.regions:
+                if (isinstance(_lr, LoopRegion)
+                        and _lr.region_type == RegionType.FOR_LOOP
+                        and _lr.metadata.get('for_iter_setup') is region.merge_block):
+                    for _bb in region.blocks:
+                        self.generated_blocks.add(_bb)
+                        self.generated_offsets.add(_bb.start_offset)
+                    _iter_boolop_expr = self._build_boolop_expression(region)
+                    if _iter_boolop_expr is not None:
+                        region.condition_expr = _iter_boolop_expr
+                    self._generated_regions.add(id(region))
+                    return None
 
         # [P5 + Cluster 4 interaction] Standalone If condition — when
         # BoolOpRegion.is_condition_context is True but there is no
@@ -28994,6 +29380,35 @@ AST 映射规则:
                     self.generated_blocks.add(block)
                     self.generated_offsets.add(block.start_offset)
                     return [{'type': 'Break'}]
+
+            # [R1-02 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4
+            # （父引用子入口）：try 体内的 if-break 块（如 `if i == 0: break`）
+            # 编译为 POP_TOP（弹出比较结果）+ JUMP_FORWARD（跳到循环出口）。
+            # 此块已被 _detect_break_continue 标记为 BlockRole.BREAK，但其末尾
+            # 指令是 JUMP_FORWARD 而非 RETURN_VALUE，故上方 _has_return_instr
+            # 与 _is_trivial_ret 分支均不匹配。若不在此生成 Break，块会走通用
+            # 语句生成路径产出 pass（POP_TOP/JUMP_FORWARD 无可重建表达式），
+            # 使 break 丢失、循环结构破坏。判据：块角色为 BREAK/PURE_BREAK，
+            # 末尾指令为 JUMP_FORWARD/JUMP_ABSOLUTE（非 RETURN），且所有有效
+            # 指令仅为栈清理（POP_TOP/COPY/SWAP/NOP）+ 跳转——无 STORE/CALL
+            # 等副作用语句。此时整块语义就是 break 语句。
+            if not _has_return_instr:
+                _last_instr = block.get_last_instruction()
+                if _last_instr and _last_instr.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+                    _side_effect_ops = {'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+                                        'CALL', 'CALL_FUNCTION', 'CALL_METHOD',
+                                        'BINARY_OP', 'BINARY_SUBSCR',
+                                        'LOAD_ATTR', 'LOAD_METHOD', 'GET_ITER',
+                                        'FOR_ITER', 'UNPACK_SEQUENCE',
+                                        'STORE_SUBSCR', 'STORE_ATTR',
+                                        'RAISE_VARARGS', 'YIELD_VALUE', 'YIELD_FROM'}
+                    _has_side_effect = any(i.opname in _side_effect_ops
+                                          for i in _meaningful
+                                          if i.opname not in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'))
+                    if not _has_side_effect:
+                        self.generated_blocks.add(block)
+                        self.generated_offsets.add(block.start_offset)
+                        return [{'type': 'Break'}]
 
         # [R11 fix] 移除自赋值 peephole（LOAD_FAST x + STORE_FAST x → Pass）。
         # 该模式匹配属于跨层启发式规则，违反区域归约算法原则 4（入口引用语义）

@@ -3043,6 +3043,15 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 self._classify_loop_type(header, body)
 
             condition_block = None
+            # [R1-04 fix] 区域归约算法原则 1（自底向上归约）+ 原则 2
+            # （每块唯一归属）+ 原则 4（父引用子入口）：while 链式比较条件
+            # （如 ``while 0 < x < 10:``）相关数据。pre-loop 条件链块（COPY+
+            # COMPARE_OP 首段 + 后续 COMPARE_OP 段 + JUMP_FORWARD 到 header）
+            # 需被循环唯一归属，否则被 _identify_chained_compare_regions 抢占
+            # 为独立 IfRegion。下方 while-true 检测到链式比较时填充。
+            _cc_pre_loop_blocks: List[BasicBlock] = []
+            _cc_chain_blocks: List[BasicBlock] = []
+            _cc_ops: List[str] = []
             if loop_type == RegionType.WHILE_LOOP:
                 for pred in sorted(header.predecessors, key=lambda p: p.start_offset):
                     if pred in body:
@@ -3096,12 +3105,82 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                             target = self.cfg.get_block_by_offset(cond_last.argval)
                             if target not in body and target != header:
                                 is_while_true = False
+                # [R1-04 fix] 区域归约算法原则 1（自底向上归约）+ 原则 2
+                # （每块唯一归属）+ 原则 4（父引用子入口）：while 链式比较条件
+                # （如 ``while 0 < x < 10:``）编译为 pre-loop 条件链
+                # （COPY(2)+COMPARE_OP 首段 + 后续 COMPARE_OP 段 + JUMP_FORWARD
+                # 到 header）+ 回边重检链（header 尾部首段 + back_edge 后续段）。
+                # 原条件块检测只看 header 直接前驱，而链式比较的 JUMP_FORWARD
+                # 前驱非条件跳转，导致 condition_block=None、循环识别为 while-true。
+                # pre-loop 链块未被循环归属，被 _identify_chained_compare_regions
+                # 抢占为独立 IfRegion（``if 0 < x < 10: pass``），循环降级为
+                # ``while 10:``。修复：while-true 且 header 直接前驱为跳到 header
+                # 的 JUMP_FORWARD 块时，沿前驱链回溯找链式比较首段
+                # （_is_chained_compare_header + _detect_chained_compare_pattern），
+                # 设 condition_block 为首段、is_while_true=False。链块归属由下方
+                # region_blocks 处理（每块唯一归属），条件重建由 AST 生成器
+                # _loop_generate_while 的链式比较分支处理（父引用子入口）。
+                if condition_block is None and is_while_true:
+                    for _cc_pred in sorted(header.predecessors, key=lambda p: p.start_offset):
+                        if _cc_pred in body:
+                            continue
+                        _cc_pred_last = _cc_pred.get_last_instruction()
+                        if (not _cc_pred_last
+                                or _cc_pred_last.opname not in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                                or _cc_pred_last.argval is None):
+                            continue
+                        if self.cfg.get_block_by_offset(_cc_pred_last.argval) is not header:
+                            continue
+                        # _cc_pred is JUMP_FORWARD-to-header (e.g. B28). Walk
+                        # back through predecessors to find a chained compare
+                        # header (COPY(2)+COMPARE_OP).
+                        _walk = _cc_pred
+                        _visited_walk = {_cc_pred}
+                        _chain_head = None
+                        _chain_extra: List[BasicBlock] = []
+                        _chain_ops: List[str] = []
+                        for _ in range(16):
+                            _walk_preds = [p for p in _walk.predecessors
+                                           if p not in _visited_walk]
+                            if not _walk_preds:
+                                break
+                            _walk = _walk_preds[0]
+                            _visited_walk.add(_walk)
+                            if self._is_chained_compare_header(_walk):
+                                _cc_info = self._detect_chained_compare_pattern(_walk)
+                                if _cc_info and _cc_info.get('extra_chain_blocks'):
+                                    _chain_head = _walk
+                                    _chain_extra = list(_cc_info['extra_chain_blocks'])
+                                    _chain_ops = list(_cc_info['compare_ops'])
+                                    break
+                        if _chain_head is not None:
+                            condition_block = _chain_head
+                            is_while_true = False
+                            _cc_pre_loop_blocks = list(_visited_walk)
+                            _cc_chain_blocks = _chain_extra
+                            _cc_ops = _chain_ops
+                            break
             else_blocks, natural_exit = self._find_loop_else(header, body, loop_type, for_iter_exit, condition_block=condition_block)
             else_blocks = else_blocks or []
             self._current_loop_blocks = body
             back_edges_for_header = [src for src, tgt in self.loop_analyzer.back_edges if tgt == header]
             if back_edges_for_header:
+                # [R1-02 fix] 区域归约算法原则 1（自底向上归约）+ 原则 2
+                # （每块唯一归属）：循环的自然回边是正常控制流（循环体正常
+                # 完成后跳回 header），不含异常处理清理指令。显式 continue/break
+                # 退出 except/finally 处理器时必须执行处理器尾声（POP_EXCEPT 等）
+                # 再跳转，故其回边块含异常清理指令。原选择键以「有效指令数 +
+                # 偏移」排序，把 POP_EXCEPT 当作 body 指令，使 except 内 continue
+                # 块（如 `except E: continue` 的 POP_EXCEPT+JUMP_BACKWARD）被选为
+                # 自然回边，导致真正的隐式回边被误标 CONTINUE、continue 语句丢失
+                # （test_r1_for_try_except_break_continue）。新增主排序键：优先选
+                # 不含异常清理指令（POP_EXCEPT/PUSH_EXC_INFO/RERAISE/CHECK_EXC_MATCH/
+                # WITH_EXCEPT_START）的回边块。try-finally 的正常路径回边块不含
+                # 这些指令（仅异常 reraise 路径含），故不受影响。
+                _EXC_EPILOGUE_OPS = ('POP_EXCEPT', 'PUSH_EXC_INFO', 'RERAISE',
+                                     'CHECK_EXC_MATCH', 'WITH_EXCEPT_START')
                 back_edge_block = max(back_edges_for_header, key=lambda b: (
+                    0 if any(i.opname in _EXC_EPILOGUE_OPS for i in b.instructions) else 1,
                     len([i for i in b.instructions
                          if i.opname not in NOISE_OPS
                          and i.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
@@ -3111,6 +3190,32 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
             else:
                 back_edge_block = None
             break_blocks, continue_map = self._detect_break_continue(body, header, natural_exit, natural_back_edge=back_edge_block, condition_block=condition_block)
+
+            # [R1-04 fix] 区域归约算法原则 2（每块唯一归属）：链式比较 while
+            # 条件的短路出口块（如 ``while 0 < x < 10:`` 中 ``0 < x`` 为假时
+            # POP_JUMP_FORWARD_IF_FALSE → trivial return None 块）被
+            # _detect_break_continue 的 break-peephole 检测误判为 break
+            # （块无后继 + LOAD_CONST None + RETURN_VALUE + 前驱为 FORWARD
+            # 条件跳转）。但它们是条件假出口（循环自然退出），非用户 break。
+            # 判据：前驱块含 COPY(2)+COMPARE_OP（链式比较重检模式），其条件
+            # 跳转目标为短路出口 → 不是 break。真 break 的前驱是 body if 语句
+            # （COMPARE_OP 无 COPY），其 fallthrough 为 break 目标。从
+            # break_blocks 移除这些短路出口块，避免 has_break 误设与 else 误生。
+            if _cc_chain_blocks:
+                _cc_false_exits = set()
+                for _b in body:
+                    if not self._is_chained_compare_header(_b):
+                        continue
+                    _b_last = _b.get_last_instruction()
+                    if (not _b_last or _b_last.opname not in FORWARD_CONDITIONAL_JUMP_OPS
+                            or _b_last.argval is None):
+                        continue
+                    _b_target = self.cfg.get_block_by_offset(_b_last.argval)
+                    if (_b_target is not None and _b_target != header
+                            and self._is_trivial_return_block(_b_target)):
+                        _cc_false_exits.add(_b_target)
+                if _cc_false_exits:
+                    break_blocks = {b for b in break_blocks if b not in _cc_false_exits}
 
             region_blocks = set(body)
             if condition_block and condition_block not in body:
@@ -3244,6 +3349,17 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                                             _next_cb = p
                                         break
                         _cb = _next_cb
+            # [R1-04 fix] 区域归约算法原则 2（每块唯一归属）：链式比较 pre-loop
+            # 条件链块（COPY+COMPARE_OP 首段 + 后续段 + JUMP_FORWARD 到 header）
+            # 归属本 LoopRegion，阻止 _identify_chained_compare_regions 抢占为
+            # 独立 IfRegion。上方 while-true 检测到链式比较时填充
+            # _cc_pre_loop_blocks。condition_block 为首段，_cc_chain_blocks 为
+            # 后续段（供 AST 生成器重建 ast.Compare），JUMP_FORWARD 桥块仅为
+            # 控制流连接，三者合入 region_blocks。
+            if _cc_pre_loop_blocks:
+                for _cc_blk in _cc_pre_loop_blocks:
+                    if _cc_blk not in body:
+                        region_blocks.add(_cc_blk)
             verified_break_blocks = set()
             if break_blocks:
                 for break_block in break_blocks:
@@ -3305,6 +3421,16 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                     self.block_roles[_bb.start_offset] = BlockRole.BREAK
             region.metadata.update({'for_iter_setup': for_iter_setup, 'for_iter_exit': for_iter_exit,
                                    'for_iter_fall_through': for_iter_fall_through})
+            # [R1-04 fix] 区域归约算法原则 4（父引用子入口）：链式比较 while
+            # 条件由 condition_block（首段）+ condition_chain_blocks（后续段）
+            # 引用，AST 生成器 _loop_generate_while 通过这两个入口重建
+            # ast.Compare。chained_compare_ops 存储比较运算符序列。父区域
+            # （SequenceRegion）仅引用 LoopRegion.entry（=condition_block），
+            # 不感知内部链块结构（嵌套即抽象节点）。
+            if _cc_chain_blocks:
+                region.condition_chain_blocks = list(_cc_chain_blocks)
+                region.metadata['chained_compare_ops'] = list(_cc_ops)
+                region.metadata['is_chained_compare_cond'] = True
             if loop_type == RegionType.WHILE_LOOP and condition_block and condition_block == header:
                 region.metadata['is_degenerate_while'] = any(
                     i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_DEREF')
@@ -3376,7 +3502,7 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 recheck_blocks.add(block)
             region.condition_recheck_blocks = recheck_blocks
 
-            if region.condition_block:
+            if region.condition_block and not region.metadata.get('is_chained_compare_cond'):
                 cond_block = region.condition_block
                 chain = [cond_block]
                 visited = {cond_block}
@@ -4194,6 +4320,19 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                     # 导致外层 for 循环被误判为含 break，try-except 被放入 for body
                     # 而非循环后的顺序代码，FOR_ITER 目标偏移 +276）。
                     if any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in s.instructions):
+                        # [R1-09 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4
+                        # （父引用子入口）：while-else 中 break 跳到循环后的
+                        # return 块（如 `while a:\n  if b: break\nelse: return 1\nreturn 2`）
+                        # 编译为源块末尾的无条件 JUMP_FORWARD → <return 块>。这与
+                        # 循环内 `return`（RETURN_VALUE 经条件 fall-through 到达）不同：
+                        # 前者源块以无条件 JUMP_FORWARD/JUMP_ABSOLUTE 结尾（break 模式），
+                        # 后者源块以条件跳转结尾（return 是真分支 fall-through）。原
+                        # [R24-N1 fix] 一律跳过 return 块导致此 break 丢失、
+                        # has_break=False、else 子句降级为循环后顺序语句、循环后 return
+                        # 丢失。判据：源块 b 末尾为无条件 JUMP_FORWARD/JUMP_ABSOLUTE →
+                        # s 是 break 目标（循环后代码），计入 break_blocks_set。
+                        if last and last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+                            break_blocks_set.add(s)
                         continue
                     if not any(i.opname in ('PUSH_EXC_INFO', 'WITH_EXCEPT_START') for i in s.instructions):
                         if any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in s.instructions):
@@ -5522,6 +5661,56 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                                     break
 
             all_blocks = set(try_blocks) | all_handler_blocks_set | set(finally_blocks)
+
+            # [R1-02 fix] 区域归约算法原则 1（自底向上归约）+ 原则 2
+            # （每块唯一归属）：CPython 3.11+ 异常表只覆盖可能抛出异常的指令，
+            # 不可抛出的 if-then/if-else 分支体（如 `break`、`continue`、
+            # `pass`）被移出 try 范围 [try_start, try_end)。这些分支体块位于
+            # (try_end, handler_start) 偏移区间，是 try 体内条件分支的一部分，
+            # 不是 try-else 子句。不过滤会被 _find_try_else_blocks 误归为
+            # try-else，导致 break/continue 丢失、循环结构破坏。
+            #
+            # 判据：候选块是 try_blocks 中某块的 CONDITIONAL_JUMP 后继（if-then
+            # fall-through 或 if-else jump target），位于 [try_start,
+            # handler_start) 区间，非 handler 块，未被其它区域占用。
+            # 此扩展将这些 if-分支体块并入 try_blocks，使 try 体完整。
+            # try-else 子句（try 体正常完成后经 JUMP_FORWARD 跳到的块）不受
+            # 影响——它通过无条件 JUMP_FORWARD 到达，不是 CONDITIONAL_JUMP 后继。
+            if try_blocks and all_except_handlers:
+                _expanded_try = list(try_blocks)
+                _try_block_set = set(try_blocks)
+                _handler_offset = handler_info['handler_start']
+                _try_start_min = min(b.start_offset for b in try_blocks)
+                _changed = True
+                while _changed:
+                    _changed = False
+                    for _tb in list(_expanded_try):
+                        _tb_last = _tb.get_last_instruction()
+                        if not _tb_last:
+                            continue
+                        if _tb_last.opname not in CONDITIONAL_JUMP_OPS:
+                            continue
+                        for _succ in _tb.successors:
+                            if _succ in _try_block_set:
+                                continue
+                            if _succ in all_handler_blocks_set:
+                                continue
+                            if _succ in self.block_to_region:
+                                continue
+                            if _succ == handler_entry_block or _succ == finally_entry_block:
+                                continue
+                            if any(i.opname == 'PUSH_EXC_INFO' for i in _succ.instructions):
+                                continue
+                            if _succ.start_offset < _try_start_min:
+                                continue
+                            if _succ.start_offset >= _handler_offset:
+                                continue
+                            _expanded_try.append(_succ)
+                            _try_block_set.add(_succ)
+                            _changed = True
+                if len(_expanded_try) > len(try_blocks):
+                    try_blocks = _expanded_try
+                    all_blocks = set(try_blocks) | all_handler_blocks_set | set(finally_blocks)
 
             # Pattern A fix: Include the normal-path finally body in all_blocks so it's
             # consumed by the TRY_FINALLY region (marked as generated in _generate_try),
@@ -7142,11 +7331,24 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
         first_handler_entry = min(b.start_offset for b in handler_entries)
         if first_handler_entry <= try_body_max_end:
             return []
+        # [R1-02 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 1
+        # （自底向上归约）：try-else 子句语义是「try 体正常完成后执行的代
+        # 码」，必须位于 try 范围之外。已被 try_blocks 收集的块（位于异常
+        # 表 try 范围 [try_start, try_end) 内）是 try 体的一部分——包括
+        # try 体内的 if-then break/continue 块（如 `try: if i == 0: break`）。
+        # 这些 if-then 体块虽然在偏移上落在 (try_body_max_end,
+        # first_handler_entry) 区间，但它们是 try 体的条件分支，不是 try-else。
+        # 不过滤会把 if-break 体误归为 try-else，导致 break 丢失、return
+        # 被拉入循环体（参见 test_r1_for_try_except_break_continue）。
+        _try_body_set = set(try_body_blocks)
+        _try_region_blocks = set(getattr(try_region, 'blocks', []))
         inner_else = []
         for block in self.cfg.get_blocks_in_order():
             if (block.start_offset > try_body_max_end and
                 block.start_offset < first_handler_entry and
                 block not in all_handler_blocks and
+                block not in _try_body_set and
+                block not in _try_region_blocks and
                 not self._is_pass_or_return_none_block(block)):
                 inner_else.append(block)
         return inner_else
@@ -16440,6 +16642,14 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 if pred in loop.blocks and _pred_non_walrus_store:
                     break
             pred_succs = list(pred.conditional_successors)
+            # [R1-06 fix] 区域归约算法原则 2（每块唯一归属）：标记前驱是否为
+            # 「已验证的循环出口跳转前驱」——其 fall-through 继续求值循环条件
+            # （cond_in_loop）且跳转目标是循环出口（else_outside）。此标记用于
+            # 下方 op_type 不匹配时判定为「取反操作数」（如 ``while not a and b:``
+            # 中 ``not a`` 块用 POP_JUMP_IF_TRUE 跳出口，跳转方向与 ``and`` 链
+            # 的常规 IF_FALSE 相反，代表 ``not X`` 操作数）。子检查以 ``break``
+            # 退出循环，故到达 op_type 判定时该标记为真即表示前驱已通过验证。
+            _verified_exit_pred = False
             if len(pred_succs) == 2:
                 pred_jump_target = self.cfg.get_block_by_offset(pred_last.argval) if pred_last.argval is not None else None
                 pred_ft = next((s for s in pred_succs if s != pred_jump_target), None)
@@ -16462,7 +16672,23 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     if not cond_in_loop:
                         break
                     if cond_in_loop and else_outside:
-                        if pred_ft == cond_block or pred_ft == loop.header_block:
+                        _verified_exit_pred = True
+                        # [R1-16 fix] 区域归约算法原则 1（自底向上归约）+
+                        # 原则 2（每块唯一归属）：复合 ``and`` 条件链回溯。
+                        # CPython 在回边处复制 while 条件求值，每个 ``and``
+                        # 操作数对应一个前向短路块（跳到循环出口）。回溯从
+                        # cond_block（末操作数）逐个向前吸收前驱操作数。
+                        # 原判据 ``pred_ft == cond_block or pred_ft == header``
+                        # 只接受 cond_block 的直接前驱（首步），对 3+ 操作数
+                        # 链（如 ``a and b and c``：从 c 回溯到 b 再到 a），
+                        # 第二步 pred_ft 是中间操作数 b（== current），既非
+                        # cond_block(c) 也非 header，命中 ``else: break`` 使首
+                        # 操作数 a 泄漏为循环体末尾 ``if a: pass else: break``
+                        # （违反每块唯一归属）。修正：前驱的 fall-through 只需
+                        # 继续求值链中下一操作数（== current，回溯游标），即视
+                        # 为合法链内前驱。内层重检变量守卫仍排除外层 if/elif
+                        # 条件块。
+                        if pred_ft == cond_block or pred_ft == loop.header_block or pred_ft == current:
                             _pred_cond_instrs = [(i.opname, i.argval) for i in pred.instructions
                                                  if i.opname not in NOISE_OPS
                                                  and i.opname not in FORWARD_CONDITIONAL_JUMP_OPS
@@ -16516,6 +16742,7 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                         else:
                             break
                     elif pred_ft.start_offset in visited and else_outside:
+                        _verified_exit_pred = True
                         _reeval_vars = set()
                         _reeval_queue = [loop.header_block]
                         _reeval_visited = set()
@@ -16538,6 +16765,24 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                             break
             pred_op = 'and' if 'FALSE' in pred_last.opname else 'or'
             if pred_op != op_type:
+                # [R1-06 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4
+                # （父引用子入口）：while 条件 boolop 链中，已验证的「循环出口
+                # 跳转前驱」若跳转方向与链 op_type 相反（``and`` 链中
+                # POP_JUMP_IF_TRUE / ``or`` 链中 POP_JUMP_IF_FALSE），代表
+                # 取反操作数 ``not X``（CPython 优化掉 UNARY_NOT，改以反转跳转
+                # 方向实现 ``not``）。例如 ``while not a and b:`` 中 ``not a``
+                # 块用 POP_JUMP_IF_TRUE 跳出口（``and`` 链常规为 IF_FALSE）。
+                # 此时不应中断链——前驱仍是该 ``and`` 组的操作数，仅多一层
+                # ``not``。以链 op_type 入链（而非 pred_op），让 AST 生成器
+                # 的隐式 ``not`` 逻辑（_build_boolop_expression: chain_op=='and'
+                # and 'TRUE' in jump → UnaryOp(not, X)）正确包裹。仅对「未验证
+                # 出口前驱」的 op_type 不匹配保持中断（真混合 and/or 链的组
+                # 转换由 AST 生成器 or_groups 算法处理，其前驱跳转目标不在
+                # 循环出口）。
+                if _verified_exit_pred:
+                    chain.insert(0, (pred, op_type))
+                    current = pred
+                    continue
                 break
             chain.insert(0, (pred, pred_op))
             current = pred
