@@ -631,23 +631,38 @@ class RegionASTGenerator:
                         self.generated_blocks.add(entry_block)
                         entry_ast = []
                     else:
-                        _pre_stmts: List[Dict[str, Any]] = []
-                        _stmt_instrs: List[Instruction] = []
+                        # [rcm-r01 fix] 区域归约算法原则 3（嵌套即抽象节点）+
+                        # 原则 4（入口引用语义）：当 entry_block 同时是
+                        # TryExceptRegion 的入口（entry_block is region.entry）
+                        # 时，整个块属于 try 体（CPython 3.11+ 优化：不可抛出
+                        # 异常的指令被移出异常表，try 体与函数入口同块）。
+                        # 此时不应将 entry_block 标记为 generated，否则
+                        # _generate_try_body 会跳过该块，导致 try 体坍缩为 pass。
+                        # 让 _generate_try 通过入口引用语义处理该块（作为抽象
+                        # 节点），try 体语句（return/if/函数调用等）由
+                        # _generate_try_body → _generate_block_statements 生成。
+                        # CPython 优化保证：不可抛出异常的语句无论在 try 内外，
+                        # 字节码布局相同，故归入 try 体不改变字节码一致性。
+                        if entry_block is _entry_region.entry:
+                            entry_ast = []
+                        else:
+                            _pre_stmts: List[Dict[str, Any]] = []
+                            _stmt_instrs: List[Instruction] = []
 
-                        for _instr in entry_block.instructions:
-                            if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL'):
-                                continue
-                            if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                            for _instr in entry_block.instructions:
+                                if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL'):
+                                    continue
+                                if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                                    _stmt_instrs.append(_instr)
+                                    _stmt = self._build_store_statement(_stmt_instrs, block=entry_block)
+                                    if _stmt:
+                                        _pre_stmts.append(_stmt)
+                                    _stmt_instrs = []
+                                    continue
                                 _stmt_instrs.append(_instr)
-                                _stmt = self._build_store_statement(_stmt_instrs, block=entry_block)
-                                if _stmt:
-                                    _pre_stmts.append(_stmt)
-                                _stmt_instrs = []
-                                continue
-                            _stmt_instrs.append(_instr)
 
-                        self.generated_blocks.add(entry_block)
-                        entry_ast = _pre_stmts
+                            self.generated_blocks.add(entry_block)
+                            entry_ast = _pre_stmts
                 else:
                     _wildcard_match = self._detect_undetected_wildcard_match(entry_block)
                     if _wildcard_match:
@@ -14756,6 +14771,19 @@ AST 映射规则:
                 else:
                     pass
                 if isinstance(nr, (LoopRegion, IfRegion, WithRegion, MatchRegion, BoolOpRegion, TernaryRegion, AssertRegion)):
+                    # [rcm-r01 fix] 区域归约算法原则 3（嵌套即抽象节点）+
+                    # 原则 1（自底向上归约）：当多个区域共享同一入口块时
+                    # （如 IfRegion.entry == BoolOpRegion.entry == 条件块），
+                    # BoolOpRegion 是 IfRegion 的子区域（作为 if 条件的一部分），
+                    # 不应由 try body 直接生成——否则仅生成布尔条件片段，丢失
+                    # if/elif/else 整体结构（try 体坍缩为 pass）。
+                    # 跳过「父区域拥有同一入口块」的子区域，让外层区域
+                    # （如 IfRegion）作为单个抽象节点生成，其内部由
+                    # _generate_if_region 负责递归生成 BoolOpRegion 条件。
+                    _nr_parent = getattr(nr, 'parent', None)
+                    if (_nr_parent is not None and _nr_parent is not region
+                            and getattr(_nr_parent, 'entry', None) is block):
+                        continue
                     for b in nr.blocks:
                         self.generated_blocks.discard(b)
                     if isinstance(nr, TernaryRegion) and not getattr(nr, 'value_target', None) and not nr.merge_block:
@@ -19365,6 +19393,18 @@ AST 映射规则:
         - 含 CONTAINS_OP：类似，op 为 In/NotIn
         - 否则：返回原 boolop_expr（boolop 结果直接做真值测试）
 
+        【rcm-r01 结构性守卫】
+        在检查 COMPARE_OP 之前，先做两项结构性判据（非实例特征启发式）：
+        1. 若 merge_block 同时是【另一个区域】的 entry（如 if-elif 链中
+           主 if 条件 BoolOpRegion 的 merge_block 是 elif 条件 BoolOpRegion
+           的 entry），依「每块唯一归属」merge_block 属于该 elif 条件区域，
+           非本 BoolOpRegion 的比较目标 → 不包裹。
+        2. 兜底：BoolOpRegion.op_chain 全部使用控制流短路跳转
+           （POP_JUMP_IF_FALSE/TRUE）时，boolop 结果已被真值测试消费，
+           merge_block 是下一分支入口（elif/else），非值上下文比较目标
+           （CPython `if (a or b) == c:` 必用 JUMP_IF_*_OR_POP 值上下文
+           短路）→ 不包裹。
+
         【4 原则合规】
         - 自底向上归约：BoolOp 先归约为抽象节点，Compare 引用其为操作数。
         - 每块唯一归属：merge_block 属于 BoolOpRegion，标记为 generated。
@@ -19380,6 +19420,40 @@ AST 映射规则:
             return boolop_expr
         # Check if merge_block is already marked as generated (avoid double-processing)
         if merge_block in self.generated_blocks:
+            return boolop_expr
+        # [rcm-r01 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3（嵌套即抽象
+        # 节点）：当 BoolOpRegion 的 merge_block 同时是【另一个区域】的 entry
+        # （如 if-elif 链中，主 if 条件 BoolOpRegion@8 的 merge_block=102 同时
+        # 是 elif 条件 BoolOpRegion@102 的 entry），merge_block 属于该 elif
+        # 条件区域，而非本 BoolOpRegion 的比较目标。此时 merge_block 中的
+        # COMPARE_OP（如 `sys.version_info[0] == 3`）属于 elif 条件表达式，
+        # 不应包裹到主 if 条件上（否则生成 `(a and b) == 3` 这种错误条件）。
+        # 仅当 merge_block 不属于任何其他区域（即它是真正的值上下文归并点，
+        # CPython peephole `if (a or b) == c:` 模式）时，才允许包裹 Compare。
+        # 该判据是结构性的（基于 block_to_region 归属），非实例特征启发式。
+        _merge_owner = self.region_analyzer.block_to_region.get(merge_block)
+        if (_merge_owner is not None
+                and _merge_owner is not boolop_region
+                and getattr(_merge_owner, 'entry', None) is merge_block):
+            return boolop_expr
+        # [rcm-r01 fix 续] 若区域分析未将 merge_block 归属到某区域（边界场景），
+        # 兜底判据：BoolOpRegion 的 op_chain 全部使用控制流短路跳转
+        # （POP_JUMP_IF_FALSE/TRUE）时，boolop 结果已被真值测试消费，
+        # merge_block 是下一分支入口（elif/else），非值上下文比较目标。
+        # CPython `if (a or b) == c:` 模式必用 JUMP_IF_TRUE/FALSE_OR_POP
+        # （值上下文短路，结果留栈供 COMPARE_OP 消费）。
+        _all_control_flow = True
+        for _cb, _op in boolop_region.op_chain:
+            _last = _cb.get_last_instruction()
+            if (_last is None
+                    or _last.opname not in (
+                        'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_FALSE',
+                        'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_TRUE',
+                        'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_BACKWARD_IF_NONE',
+                        'POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_BACKWARD_IF_NOT_NONE')):
+                _all_control_flow = False
+                break
+        if _all_control_flow:
             return boolop_expr
         # Extract comparison-related instructions from merge_block
         _CMP_SKIP_OPS = frozenset({

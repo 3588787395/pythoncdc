@@ -1,0 +1,83 @@
+# 区域测试矩阵基线通过率
+# 生成时间: 2026-07-30 20:58:00
+# 项目: region-comment-multi-pyc-iteration
+# 测试范围: tests/exhaustive/ + tests/control_flow_matrix/ + tests/iteration/IF/
+
+## 总览
+
+| 区域类型 | 总测试数 | 通过数 | 失败数 | 通过率 |
+|----------|----------|--------|--------|--------|
+| IF | 1355 | 1309 | 46 | 96.60% |
+| LOOP | 313 | 295 | 18 | 94.25% |
+| TRY | 230 | 208 | 22 | 90.43% |
+| WITH | 191 | 184 | 7 | 96.34% |
+| MATCH | 198 | 192 | 6 | 96.97% |
+| ASSERT | 无测试 | - | - | - |
+| BOOLOP | 133 | 133 | 0 | 100.00% |
+| TERNARY | 598 | 530 | 68 | 88.63% |
+| CHAINED_COMPARE | 无测试 | - | - | - |
+| SEQUENCE | 无测试 | - | - | - |
+| **合计** | 3614 | 3429 | 185 | 94.88% |
+
+说明：
+- IF = tests/exhaustive/if_region (864) + tests/iteration/IF/round-01 (491)
+- LOOP = tests/exhaustive/for_loop (193) + tests/exhaustive/while_loop (120)
+- TRY = tests/exhaustive/try_except (230)
+- WITH = tests/exhaustive/with_region (191)
+- MATCH = tests/exhaustive/match_region (198)
+- BOOLOP = tests/exhaustive/boolop (133)
+- TERNARY = tests/exhaustive/ternary (598)
+- ASSERT / CHAINED_COMPARE / SEQUENCE: 项目中无对应独立区域测试目录（ASSERT 相关用例归入 basic 类别，未作为独立区域类型）
+- 合计包含下方"补充统计"中的 basic / nested / control_flow_matrix
+
+## 补充统计（非区域类型，单独列出以完整呈现基线）
+
+| 类别 | 总测试数 | 通过数 | 失败数 | 通过率 |
+|------|----------|--------|--------|--------|
+| exhaustive/basic | 122 | 122 | 0 | 100.00% |
+| exhaustive/nested | 285 | 271 | 14 | 95.09% |
+| control_flow_matrix/L1 | 52 | 52 | 0 | 100.00% |
+| control_flow_matrix/L1_EXP | 12 | 11 | 1 | 91.67% |
+| control_flow_matrix/L1_CF | 12 | 12 | 0 | 100.00% |
+| control_flow_matrix/L2 | 30 | 30 | 0 | 100.00% |
+| control_flow_matrix/L2_EX | 49 | 49 | 0 | 100.00% |
+| control_flow_matrix/L3 | 18 | 16 | 2 | 88.89% |
+| control_flow_matrix/L3_CO | 16 | 15 | 1 | 93.75% |
+| control_flow_matrix 小计 | 189 | 185 | 4 | 97.88% |
+
+## 失败用例清单（前 20 个）
+
+失败原因分类（exhaustive 181 个失败）：bytecode_mismatch=151, region_type_mismatch=29, copy_placeholder_bug=1。
+
+- [IF] tests/exhaustive/if_region/test_adv01_nested_ternary_cond.py: 字节码不一致 (verify_bytecode_equivalence 失败)
+- [LOOP] tests/exhaustive/while_loop/test_l15whiletruebreak_a.py: 字节码不一致 (verify_bytecode_equivalence 失败)
+- [LOOP] tests/exhaustive/for_loop/test_fl13forbreakelse_a.py: 字节码不一致 (verify_bytecode_equivalence 失败)
+- [TRY] tests/exhaustive/try_except/test_te029.py: 字节码不一致 (verify_bytecode_equivalence 失败)
+- [WITH] tests/exhaustive/with_region/test_w05withtry_a_indexerror.py: 字节码不一致 (verify_bytecode_equivalence 失败)
+- [MATCH] tests/exhaustive/match_region/test_m031.py: 字节码不一致 (verify_bytecode_equivalence 失败)
+- [TERNARY] tests/exhaustive/ternary/test_r10_ternary_multi_abstractmethod.py: 字节码不一致 (verify_bytecode_equivalence 失败)
+- [nested] tests/exhaustive/nested/test_n09while_try_except_a_indexerror.py: 字节码不一致 (verify_bytecode_equivalence 失败)
+- [IF] tests/exhaustive/if_region/test_adv01_walrus_or.py: 字节码不一致 (verify_bytecode_equivalence 失败)
+- [IF] tests/exhaustive/if_region/test_adv10_multi_mixed_compare.py: 反编译输出含 <copy_placeholder_2> 占位符
+- [TRY] tests/exhaustive/try_except/test_te033.py: 区域类型校验失败 (反编译结果中未找到预期结构)
+- [CFM/L1_EXP] tests/control_flow_matrix TestXP07NestedTernary: 嵌套三元表达式反编译异常
+- [CFM/L3] tests/control_flow_matrix TestDEEP12RecursivePatternWithExceptions: 递归模式与异常组合字节码不一致
+- [CFM/L3] tests/control_flow_matrix TestDEEP16ParallelTaskCoordinator: 并行任务协调器结构反编译失败
+- [CFM/L3_CO] tests/control_flow_matrix TestCO09WhileIfWhileBreak: while+if+while+break 组合控制流不一致
+- [TERNARY] tests/exhaustive/ternary/test_r11_ternary_assert_return_consumer.py: 字节码不一致 (verify_bytecode_equivalence 失败)
+- [nested] tests/exhaustive/nested/test_n13try_for_if_break_n_valueerror.py: 字节码不一致 (verify_bytecode_equivalence 失败)
+- [IF] tests/exhaustive/if_region/test_adv02_isnone_or_chaincmp.py: 字节码不一致 (verify_bytecode_equivalence 失败)
+- [LOOP] tests/exhaustive/while_loop/test_l15whiletruebreak_n.py: 字节码不一致 (verify_bytecode_equivalence 失败)
+- [LOOP] tests/exhaustive/for_loop/test_fl13forbreakelse_n.py: 字节码不一致 (verify_bytecode_equivalence 失败)
+
+## 备注
+
+- 此为迭代起始基线，后续每轮修复后通过率不退化
+- 测试运行命令:
+  - exhaustive: `python tests/exhaustive/run_tests.py --format json --output <tmp>.json` (耗时 70.9s)
+  - control_flow_matrix: `python -m control_flow_matrix.run_tests --format json --output <tmp>.json` (在 tests/ 目录下执行)
+  - iteration/IF: `python -m pytest tests/iteration/IF/round-01/ -q --tb=no` (耗时 13.0s, 491 passed)
+- 总执行耗时约 90s，未超 280s 预算
+- iteration/IF/round-01 测试为编译可执行性校验 (compile 成功即通过)；STATUS.md 中记录的 4 个 MISSING_ELIF bug (test_422/429/430/431) 需通过更严格的 verify_decompilation 字节码比对才能暴露，本基线的 IF 行已纳入 491 个 iteration 用例
+- exhaustive 失败集中在字节码一致性校验 (151/181)，主要涉及链式比较、嵌套三元、walrus、await 等复杂条件表达式
+- control_flow_matrix 失败 4 例集中在 L1_EXP / L3 / L3_CO 级别（深层嵌套与组合控制流）
