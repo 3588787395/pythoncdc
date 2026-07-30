@@ -2039,9 +2039,10 @@
     "size": 15280,
     "function_count": 3,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.3333333333333333,
+    "bytecode_match_rate": 0.3333,
     "ok_py_generated": true,
-    "last_tested_round": 0
+    "last_tested_round": 11,
+    "error": "R11 Pattern C2 tuple-unpack no-SWAP fixed in _adjust_start_date (2 true_diffs: trailing LOAD_CONST None residual); run function 375 true_diffs (separate pattern)"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/__init__.pyc",

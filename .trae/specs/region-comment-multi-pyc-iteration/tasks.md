@@ -94,7 +94,11 @@
   - [x] T2.10.2 修复工程师：按区域归约算法修复 → `rounds/round_10/repair_engineer/fix_report.md`（Pattern Q 修复，_generate_joined_str + _generate_joined_str_from_dict + FormattedValue 顶层分支 定界符选择重构；7/7 DEFECT-REPRO 修复；backtest failed→partial 50%，handle_backtest_build 100% 一致）
   - [x] T2.10.3 commit + push `rcm-r10:`
   - 残留：backtest.pyc `<module>` 8 true_diffs（NOP padding / LOAD_CONST 顺序，Pattern R 模块级）/ 跨轮残留 T3/T2/A2/B/C/E/F/M2/G3 不变
-- [ ] T2.11 第 11 轮（持续，直到所有 pyc `decompile_status = ok`）
+- [x] T2.11 第 11 轮（取 pyc #8: IQEngine/main.pyc，R07 残留 Pattern C2，partial 优先）
+  - [x] T2.11.1 测试工程师：取下一个 pyc，反编译 + 字节码 diff → `rounds/round_11/test_engineer/decompile_report.md`（partial 33.33%，Pattern C2 tuple unpack no-SWAP，2 BUG：守卫过保守 + cond_block 路径缺失，12 复现实例 10 DEFECT-REPRO/2 NO-DEFECT）
+  - [x] T2.11.2 修复工程师：按区域归约算法修复 → `rounds/round_11/repair_engineer/fix_report.md`（Pattern C2 BUG A 守卫白名单→黑名单 + BUG B _if_extract_cond_instructions 添加 C2 检测；7 真实缺陷 repro 全修复；main.pyc _adjust_start_date tuple 解包修复，残留 2 trailing-return diffs）
+  - [x] T2.11.3 commit + push `rcm-r11:`
+  - 残留：main.pyc `_adjust_start_date` 2 true_diffs（trailing LOAD_CONST None）/ `run` 375 true_diffs（独立模式）/ 跨轮残留 T3/T2/A2/B/C/E/F/M2/G3/R 不变
 - [ ] T2.NN ... 持续直到退出条件满足
 
 > 注：轮次数不设上限，持续直到所有 pyc 文件所有函数 100% 字节码一致。

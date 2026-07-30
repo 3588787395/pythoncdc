@@ -215,7 +215,24 @@
   - [x] R10-13 pyc_index.json 已更新（backtest partial/0.5/ok_py=True/round=10，error 清除）
   - [x] R10-14 commit + push `rcm-r10:`
   - 残留：backtest.pyc `<module>` 8 true_diffs（NOP padding / LOAD_CONST 顺序，Pattern R 模块级）/ 跨轮残留 T3/T2/A2/B/C/E/F/M2/G3 不变
-- [ ] R11+ 持续直到所有 pyc `decompile_status = ok`
+- [x] R11 通用清单全部通过（取 pyc #8: IQEngine/main.pyc，R07 残留 Pattern C2，partial 优先）
+  - [x] R11-0 该轮取的 pyc 文件路径已记录（IQEngine/main.pyc，decompile_status=partial）
+  - [x] R11-1 测试工程师 `decompile_report.md` 已生成（partial 33.33%，Pattern C2 tuple unpack no-SWAP，2 BUG：守卫过保守 BUG A + cond_block 路径缺失 BUG B，12 复现实例 10 DEFECT-REPRO/2 NO-DEFECT）
+  - [x] R11-2 ≥ 10 个最小复现实例已归档（12 个，10 DEFECT-REPRO 含 7 真实缺陷 + 3 code-object 身份噪声 / 2 NO-DEFECT CTRL）
+  - [x] R11-3 修复工程师 `fix_report.md` 已生成（Pattern C2 BUG A 守卫白名单→黑名单 + BUG B _if_extract_cond_instructions 添加 C2 检测）
+  - [x] R11-4 N/A（未修改 `_identify_*_regions` 方法，无需更新 6 节 docstring）
+  - [x] R11-5 涉及的 `_generate_*` 方法 docstring 已按 4 节模板更新（`_if_extract_cond_instructions` docstring 第 1 节追加 [R11 fix] Pattern C2 段；`_generate_block_statements` _noswap_unpack_result 守卫注释重写为 [R11 fix] BUG A）
+  - [x] R11-6 既有测试矩阵无退化（Post-R11 == R10 基线: 1 failed, 154 passed, 19 errors，零回归）
+  - [x] R11-7 12 复现实例全部验证（修复后 0 真实缺陷；10 verify DEFECT-REPRO 均为 code-object 身份噪声，dis.dis 确认 f 字节码一致；2 CTRL NO-DEFECT）
+  - [x] R11-8 反模式自检通过（0 新增 _fix_/_merge_/_patch_ 等前缀；_c2_skip_until 为循环索引跳过机制，_noswap/_c2 为语义命名）
+  - [x] R11-9 算法 4 原则 FULLY COMPLIANT（自底向上归约 / 每块唯一归属【强化：RHS/LHS 分层归属，BUG A 守卫不再误判 return 表达式，BUG B N 个 STORE 一次性归属】/ 嵌套抽象节点 / 入口引用语义【强化：父 Assign 通过 Tuple 子节点引用 N 个 RHS/LHS】）
+  - [x] R11-10 `python -c "import core.cfg.region_ast_generator; import core.cfg.code_generator"` 编译通过
+  - [x] R11-11 累计成功率 ≥ 上一轮（R10 67.28% → R11 71.30%，单调递增；main.pyc _adjust_start_date tuple 解包修复，match_rate 持平 33.33% 残留 trailing-return）
+  - [x] R11-12 N/A（本 pyc 未达 100%，未生成新 OK.py；mainOK.py 由 single 命令刷新，编译通过）
+  - [x] R11-13 pyc_index.json 已更新（main partial/0.3333/ok_py=True/round=11，error 记录 R11 Pattern C2 修复 + trailing-return/run 残留）
+  - [x] R11-14 commit + push `rcm-r11:`
+  - 残留：main.pyc `_adjust_start_date` 2 true_diffs（trailing LOAD_CONST None）/ `run` 375 true_diffs（独立模式）/ 跨轮残留 T3/T2/A2/B/C/E/F/M2/G3/R 不变
+- [ ] R12+ 持续直到所有 pyc `decompile_status = ok`
 
 ## 阶段三（Phase 3：全量验证与 +OK 生成）
 

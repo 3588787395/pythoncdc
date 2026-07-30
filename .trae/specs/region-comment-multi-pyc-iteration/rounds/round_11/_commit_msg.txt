@@ -1,0 +1,34 @@
+rcm-r11: fix Pattern C2 tuple-unpack no-SWAP (BUG A guard + BUG B cond_block path) in _adjust_start_date
+
+Pattern C2: Python 3.11 peephole optimizer removes SWAP 2 for in-function
+tuple unpack (a, b = c, d), leaving LOAD/LOAD/STORE/STORE in reversed store
+order. The _noswap_unpack_result detector existed but had two bugs:
+
+BUG A (guard too conservative, _generate_block_statements L30722): the
+post-STORE guard used a whitelist (noise_after) that omitted BUILD_TUPLE /
+BINARY_OP, so "a, b = ...; return a, b" and "x, y = ...; return x + y"
+were misclassified as having trailing statements and downgraded, losing the
+tuple unpack. Replaced whitelist with blacklist of statement-level ops
+(STORE/POP_JUMP/JUMP/RAISE/IMPORT/FOR_ITER) + no-return-expression check,
+allowing return expressions (LOAD/BUILD/OP + RETURN_VALUE) to pass.
+
+BUG B (block never reaches _generate_block_statements, _if_extract_cond
+_instructions L9565): the else-branch entry block (tuple unpack + if
+condition merged into one cond_block) was processed by _if_generate_normal
+via _if_extract_cond_instructions, which handled each STORE independently
+via _build_store_statement, losing tuple unpack semantics. Added Pattern C2
+detection (N>=2 consecutive simple-name STOREs, no SWAP/UNPACK, stack>=N)
+that builds the tuple-unpack assignment in one shot, with _c2_skip_until to
+skip consumed stores. Aligned with _noswap_unpack_result algorithm.
+
+Results:
+- main.pyc: _adjust_start_date tuple unpack fixed
+  (origin_start_date, origin_end_date = (...) now correct), 2 residual
+  true_diffs (trailing LOAD_CONST None, separate pattern); match_rate
+  33.33% unchanged (1/3); run function 375 diffs (separate pattern)
+- repros: 7 real defects (repro_02/03/04/05/06/07/09) all fixed; 10
+  verify DEFECT-REPRO are code-object identity noise (dis.dis confirms f
+  bytecode identical); 2 CTRL NO-DEFECT
+- regression: 1 failed, 154 passed, 19 errors (== R10 baseline, zero
+  regression)
+- cumulative rate: 67.28% -> 71.30%

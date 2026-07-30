@@ -9566,7 +9566,7 @@ AST 映射规则:
                                        boolop_merge_target: Optional[str] = None) -> Tuple[List[Dict], List]:
         """提取条件块的前置语句和条件指令。
 
-        4 节模板（Round 9 fix 涉及方法）：
+        4 节模板（Round 9 fix 涉及方法 / R11 fix 涉及方法）：
         1. 算法依据：No More Gotos §3.1——IfRegion 条件块（cond_block）在
            POP_JUMP_IF_FALSE 之前可能混入前置语句（pre_stmts，如赋值/表达式
            语句/import）与真正的条件指令（cond_instrs）。本方法单趟正向扫描
@@ -9574,6 +9574,13 @@ AST 映射规则:
            STORE_*/STORE_SUBSCR/STORE_ATTR/IMPORT_NAME/RAISE_VARARGS 等终结一条
            pre_stmt 并发射；跳转指令终止扫描；其余指令累积到 pre_instrs 等待
            终结。cond_instrs 从最后一个 STORE_* 之后收集（去掉 RESUME/NOP/跳转）。
+           [R11 fix] Pattern C2：cond_block 可能合并 tuple 解包（N 个 LOAD + N 个
+           反源序 STORE，无 SWAP）+ if 条件（如 main.pyc _adjust_start_date 的
+           else 入口块）。原实现逐 STORE 调用 _build_store_statement，每个 STORE
+           弹 TOS 作为独立赋值，丢失 tuple 解包语义。现检测 N≥2 连续简单名 STORE
+           （前缀无 SWAP/UNPACK_SEQUENCE，栈深度≥N），一次性构建 tuple 解包赋值，
+           用 _c2_skip_until 跳过已消费的后续 STORE，与 _generate_block_statements
+           的 _noswap_unpack_result 对齐。
         2. 归约顺序：自底向上——本方法在父 IfRegion 生成阶段被调用，cond_block
            内已消费的子区域（TernaryRegion merge_block / BoolOpRegion
            value_target）指令先被排除（见第 3 节），再扫描剩余指令提取 pre_stmts
@@ -9631,7 +9638,13 @@ AST 映射规则:
                     break
             if _skip_idx >= 0:
                 _iter_instrs = _iter_instrs[_skip_idx + 1:]
+        # [R11 fix] BUG B: Pattern C2 tuple-unpack without SWAP 在 IfRegion cond_block
+        # 前置语句中的一次性消费需要跨多条 STORE 指令，用 _c2_skip_until 跳过已消费的
+        # 后续 STORE，避免它们被逐 STORE 重复处理（丢失 tuple 解包语义）。
+        _c2_skip_until = 0
         for _instr_idx, instr in enumerate(_iter_instrs):
+            if _instr_idx < _c2_skip_until:
+                continue
             if instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
                 continue
             if instr.opname == 'POP_TOP':
@@ -9724,6 +9737,69 @@ AST 映射规则:
                     pre_instrs = []
                     pre_seen_store = True
                     continue
+                # [R11 fix] BUG B: Pattern C2 tuple-unpack without SWAP 在 IfRegion
+                # cond_block 前置语句中的检测。cond_block 可能合并 tuple 解包 + if
+                # 条件（如 main.pyc _adjust_start_date 的 else 入口块: LOAD, LOAD,
+                # STORE, STORE, LOAD_GLOBAL len, ..., POP_JUMP）。原实现逐 STORE 调用
+                # _build_store_statement，每个 STORE 弹 TOS 作为独立赋值，丢失 tuple
+                # 解包语义（origin_start_date 丢失，反编译产物引用未定义变量）。
+                # 检测 N≥2 连续简单名 STORE（前缀无 SWAP/UNPACK_SEQUENCE），与
+                # _generate_block_statements 的 _noswap_unpack_result 对齐：N 个值按
+                # 加载顺序对应 N 个源序目标，N 个 STORE 按 *反源序* 弹栈消费。
+                # 算法依据：原则 2（每块唯一归属）—— RHS 表达式片段（N 个 LOAD 栈帧）
+                # 与 LHS 目标片段（N 个 STORE）分别归属不同层；原则 4（入口引用语义）
+                # —— 父 Assign 节点通过 Tuple 子节点引用 N 个 RHS 子表达式与 N 个 LHS
+                # 子目标。用 _c2_skip_until 跳过已消费的后续 STORE。
+                if not is_walrus:
+                    _c2_stores = [instr]
+                    _c2_peek = _instr_idx + 1
+                    while _c2_peek < len(_iter_instrs):
+                        _c2_ni = _iter_instrs[_c2_peek]
+                        if _c2_ni.opname in ('STORE_FAST', 'STORE_NAME',
+                                             'STORE_GLOBAL', 'STORE_DEREF'):
+                            _c2_stores.append(_c2_ni)
+                            _c2_peek += 1
+                        else:
+                            break
+                    _c2_n = len(_c2_stores)
+                    if _c2_n >= 2:
+                        _c2_val_instrs = [i for i in pre_instrs
+                                          if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                        _c2_has_swap = any(i.opname == 'SWAP' for i in _c2_val_instrs)
+                        _c2_has_unpack = any(i.opname in ('UNPACK_SEQUENCE', 'UNPACK_EX')
+                                             for i in _c2_val_instrs)
+                        if not _c2_has_swap and not _c2_has_unpack:
+                            self.expr_reconstructor.reset()
+                            for _c2_vi in _c2_val_instrs:
+                                self.expr_reconstructor._process_instruction(_c2_vi)
+                            _c2_stack = [s for s in self.expr_reconstructor.stack
+                                         if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+                            if len(_c2_stack) >= _c2_n:
+                                # STORE 按反源序排列（first store 弹 TOS = 最后加载值）。
+                                _c2_targets = [{
+                                    'type': 'Name',
+                                    'id': _s.argval if _s.argval else f'var_{_s.arg}',
+                                    'ctx': 'Store',
+                                    'lineno': _s.starts_line,
+                                } for _s in reversed(_c2_stores)]
+                                _c2_rhs_elts = [_c2_stack[-_c2_n + _si] for _si in range(_c2_n)]
+                                _c2_rhs_expr = ({
+                                    'type': 'Tuple', 'elts': _c2_rhs_elts, 'ctx': 'Load',
+                                } if len(_c2_rhs_elts) != 1 else _c2_rhs_elts[0])
+                                pre_stmts.append({
+                                    'type': 'Assign',
+                                    'targets': [{
+                                        'type': 'Tuple',
+                                        'elts': _c2_targets,
+                                        'ctx': 'Store',
+                                    }],
+                                    'value': _c2_rhs_expr,
+                                    'lineno': _c2_targets[0].get('lineno'),
+                                })
+                                pre_instrs = []
+                                pre_seen_store = True
+                                _c2_skip_until = _c2_peek
+                                continue
                 if is_walrus:
                     pre_instrs.append(instr)
                     pre_seen_store = True
@@ -30658,6 +30734,155 @@ AST 映射规则:
                                 _mixed_chain_result = _mixed_chain_stmts
         if _mixed_chain_result is not None:
             stmts.extend(_mixed_chain_result)
+            self.generated_blocks.add(block)
+            return stmts
+
+        # [R11 fix] Pattern C2: tuple unpack WITHOUT SWAP (peephole-optimized).
+        # 字节码布局: LOAD v1, ..., LOAD vN, STORE tN, STORE tN-1, ..., STORE t1
+        # （N 个 STORE 按 *反源序* 排列，无 SWAP/UNPACK_SEQUENCE）
+        # 例: a, b = c, d  ->  LOAD c, LOAD d, STORE b, STORE a
+        #
+        # 触发场景：Python 3.11 函数体内 `a, b = expr1, expr2` 经窥孔优化器消除
+        # SWAP 2（因 STORE 已按栈弹出顺序排列，SWAP 冗余）。main.pyc 的
+        # `_adjust_start_date` 即此模式（origin_start_date, origin_end_date = ...）。
+        #
+        # 算法依据：区域归约算法原则 2（每块唯一归属）—— RHS 表达式片段（N 个 LOAD
+        # 栈帧）与 LHS 目标片段（N 个 STORE）分别归属不同层；N 个值按加载顺序对应
+        # N 个源序目标，N 个 STORE 按 *反源序* 弹栈消费。父 Assign 节点通过 Tuple
+        # 子节点引用 N 个 RHS 子表达式与 N 个 LHS 子目标（原则 4：入口引用语义）。
+        #
+        # 守卫（非补丁，基于字节码结构标记）：
+        #   1. N >= 2 个连续简单名 STORE（与 SWAP 路径互斥）
+        #   2. value 片段无 SWAP / UNPACK_SEQUENCE / UNPACK_EX
+        #   3. value 片段无 statement-ending 指令（STORE/POP_TOP/RETURN/...）
+        #   4. 栈模拟后栈深度 >= N（与 chain-assign `a=b=c` 区分：后者 COPY 1 后
+        #      栈仅 1 值，N 个 STORE 但只 1 值，不会满足深度 >= N）
+        _noswap_unpack_result = None
+        if len(_chain_instrs) >= 3:
+            _ns_first_store_idx = None
+            for _ci, _instr in enumerate(_chain_instrs):
+                if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                    _ns_first_store_idx = _ci
+                    break
+            if _ns_first_store_idx is not None and _ns_first_store_idx >= 1:
+                _ns_stores = []
+                _ns_walk = _ns_first_store_idx
+                while _ns_walk < len(_chain_instrs):
+                    _instr = _chain_instrs[_ns_walk]
+                    if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                        _ns_stores.append(_instr)
+                        _ns_walk += 1
+                    else:
+                        break
+                _ns_n = len(_ns_stores)
+                if _ns_n >= 2:
+                    _ns_value_instrs = _chain_instrs[:_ns_first_store_idx]
+                    _ns_has_swap = any(i.opname == 'SWAP' for i in _ns_value_instrs)
+                    _ns_has_unpack = any(i.opname in ('UNPACK_SEQUENCE', 'UNPACK_EX')
+                                         for i in _ns_value_instrs)
+                    _ns_terminal_ops = (
+                        'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+                        'STORE_SUBSCR', 'STORE_ATTR',
+                        'POP_TOP', 'RETURN_VALUE', 'RETURN_CONST',
+                        'RAISE_VARARGS', 'IMPORT_NAME',
+                    )
+                    _ns_value_ok = (not _ns_has_swap and not _ns_has_unpack
+                                    and not any(i.opname in _ns_terminal_ops
+                                                for i in _ns_value_instrs))
+                    if _ns_value_ok:
+                        self.expr_reconstructor.reset()
+                        for _vin in _ns_value_instrs:
+                            self.expr_reconstructor._process_instruction(_vin)
+                        _ns_stack = [s for s in self.expr_reconstructor.stack
+                                     if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+                        if len(_ns_stack) >= _ns_n:
+                            # Guard: post-STORE 指令必须构成 return 表达式（表达式构建
+                            # 指令 LOAD/BUILD/BINARY_OP/COMPARE_OP/CALL/... + RETURN_VALUE）
+                            # 或仅为 cleanup 噪声。出现语句级指令（另一 STORE 序列 /
+                            # POP_JUMP if 条件 / RAISE / IMPORT / JUMP / FOR_ITER）或
+                            # 无 return 的表达式语句（如 print()）时降级，交回正常处理路径。
+                            # [R11 fix] BUG A: 旧实现用白名单（noise_after）判定，遗漏
+                            # BUILD_TUPLE / BINARY_OP 等 return 表达式构建指令，导致
+                            # `a, b = ...; return a, b` 与 `x, y = ...; return x + y` 等
+                            # 模式被误判为"有后续语句"而降级，tuple 解包丢失。改用黑名单
+                            # （语句级指令集）+ 无 return 表达式判定，仅当出现真正的语句级
+                            # 指令或无 return 的非噪声表达式时降级。
+                            _ns_after = _chain_instrs[_ns_walk:]
+                            _ns_noise = ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
+                                         'POP_TOP', 'COPY', 'SWAP',
+                                         'POP_EXCEPT', 'PUSH_EXC_INFO')
+                            _ns_has_return = any(
+                                _i.opname in ('RETURN_VALUE', 'RETURN_CONST')
+                                for _i in _ns_after)
+                            _ns_stmt_prefixes = ('STORE_', 'POP_JUMP_', 'JUMP_',
+                                                 'SETUP_')
+                            _ns_stmt_ops = ('RAISE_VARARGS', 'IMPORT_NAME',
+                                            'FOR_ITER', 'WITH_EXCEPT_START',
+                                            'END_ASYNC_FOR')
+                            _ns_has_stmt = any(
+                                _i.opname in _ns_stmt_ops
+                                or any(_i.opname.startswith(_p)
+                                       for _p in _ns_stmt_prefixes)
+                                for _i in _ns_after)
+                            _ns_has_expr_no_ret = (
+                                not _ns_has_return
+                                and any(_i.opname not in _ns_noise
+                                        for _i in _ns_after))
+                            if _ns_has_stmt or _ns_has_expr_no_ret:
+                                _ns_n = 0  # 降级：不触发本路径
+                        if _ns_n >= 2:
+                            # STORE 在字节码中按反源序排列（first store 弹 TOS = 最后加载值）。
+                            # 反转得到源序目标: reversed(bytecode_stores) → [target_1, ..., target_N]
+                            _ns_source_targets = []
+                            for _store_instr in reversed(_ns_stores):
+                                _ns_source_targets.append({
+                                    'type': 'Name',
+                                    'id': _store_instr.argval if _store_instr.argval
+                                          else f'var_{_store_instr.arg}',
+                                    'ctx': 'Store',
+                                    'lineno': _store_instr.starts_line,
+                                })
+                            # RHS 表达式按加载顺序（源序）: stack[-N] = 第一个值, stack[-1] = 最后值
+                            _ns_rhs_elts = [_ns_stack[-_ns_n + _si] for _si in range(_ns_n)]
+                            _ns_rhs_expr = {
+                                'type': 'Tuple',
+                                'elts': _ns_rhs_elts,
+                                'ctx': 'Load',
+                            } if len(_ns_rhs_elts) != 1 else _ns_rhs_elts[0]
+                            _ns_stmts = [{
+                                'type': 'Assign',
+                                'targets': [{
+                                    'type': 'Tuple',
+                                    'elts': _ns_source_targets,
+                                    'ctx': 'Store',
+                                }],
+                                'value': _ns_rhs_expr,
+                                'lineno': _ns_source_targets[0].get('lineno'),
+                            }]
+                            # 处理 N 个 STORE 之后的剩余指令（如 RETURN_VALUE）
+                            _ns_remaining = _chain_instrs[_ns_walk:]
+                            if _ns_remaining:
+                                _has_return_ns = any(i.opname in ('RETURN_VALUE', 'RETURN_CONST')
+                                                     for i in _ns_remaining)
+                                if _has_return_ns:
+                                    _rv_instrs_ns = []
+                                    for _instr in _ns_remaining:
+                                        if _instr.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                                            break
+                                        if _instr.opname not in ('RESUME', 'NOP', 'CACHE', 'POP_TOP',
+                                                                  'PUSH_NULL', 'COPY', 'SWAP',
+                                                                  'POP_EXCEPT', 'PUSH_EXC_INFO'):
+                                            _rv_instrs_ns.append(_instr)
+                                    _return_value_ns = (self.expr_reconstructor.reconstruct(_rv_instrs_ns)
+                                                        if _rv_instrs_ns else None)
+                                    _ns_stmts.append({
+                                        'type': 'Return',
+                                        'value': _return_value_ns if _return_value_ns
+                                                 else {'type': 'Constant', 'value': None}
+                                    })
+                            _noswap_unpack_result = _ns_stmts
+        if _noswap_unpack_result is not None:
+            stmts.extend(_noswap_unpack_result)
             self.generated_blocks.add(block)
             return stmts
 
