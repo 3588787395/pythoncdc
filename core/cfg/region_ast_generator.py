@@ -16004,6 +16004,25 @@ AST 映射规则:
             的 exception_block 被误判为孤儿块。修复后字节码完全匹配 (71 vs 71)。
           - 本方法遵循区域归约算法 4 核心原则:
             自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口
+
+        [R08 fix] Pattern T3 — post-try 块检测消费外层 handler_entry:
+          - 缺陷: post-try 块检测（else_blocks 分支 + try_blocks 分支）未查询
+            block_to_region 权威归属，把外层 TryExceptRegion 的 handler_entry
+            （如 graph.pyc create_full_graph 的 block 640）误收集为内层
+            try-except 的 post-try 块并标记 generated。外层 _generate_try 的
+            handler 循环检测到 handler_entry in generated_blocks → 跳过 except
+            → 外层 try 未关闭 → SyntaxError。
+          - 触发条件: 外层 try-except 包裹 for/while-loop，内层 try-except 在
+            循环体内；内层 else_blocks/try_blocks 的后继经 CFG 异常边指向外层
+            handler_entry。
+          - 修复: 在两处 post-try 块收集循环中追加 block_to_region 归属守卫
+            （与 R07 Pattern T 的 _generate_with / _process_if_blocks 守卫同
+            模式）：若后继块被其他区域拥有，则不消费，交由拥有者区域处理。
+          - 算法依据: 原则 2「每块唯一归属」— block_to_region 是区域分析阶段
+            建立的权威归属映射，生成层 post-try 检测必须以此为准。
+          - 非补丁: 守卫基于权威映射，无硬编码 offset / 无跨区域启发式 / 无
+            后处理；与 R07 Pattern T 守卫语义一致，仅位置不同（_generate_try
+            post-try 检测 vs _generate_with / _process_if_blocks 标记循环）。
         """
         region_id = id(region)
         self._generating_regions.add(region_id)
@@ -16146,6 +16165,21 @@ AST 映射规则:
                             # 排除是祖先 IfRegion merge_block 的块
                             if _succ in _all_if_merge_blocks_r19n2:
                                 continue
+                            # [R08 fix] 区域归约算法原则 2（每块唯一归属）：
+                            # post-try 块检测不得消费其他区域拥有的块。当
+                            # try-except 嵌套在外层 try-except 内（如 graph.pyc
+                            # create_full_graph：外层 try/except BaseException 包裹
+                            # for-loop，内层 try/except KeyError 在循环体内），
+                            # else_blocks 的后继可能通过 CFG 异常边指向外层
+                            # handler_entry（如 block 640）。若收集为 post-try 块
+                            # 并标记 generated，外层 _generate_try 的 handler 循环
+                            # 会跳过该 handler_entry → 外层 except 丢失 → try 未关闭
+                            # → SyntaxError。依「每块唯一归属」：block_to_region 是
+                            # 区域分析阶段建立的权威归属映射，post-try 检测必须以此
+                            # 为准，不消费非本区域拥有的块，交由拥有者区域处理。
+                            _succ_owner_pt = self.region_analyzer.block_to_region.get(_succ)
+                            if _succ_owner_pt is not None and _succ_owner_pt is not region:
+                                continue
                             _post_try_seen_r19n2.add(_succ)
                             _post_try_blocks_r19n2.append(_succ)
             # 如果没有 else_blocks，从 try_blocks 的正常出口查找
@@ -16177,6 +16211,16 @@ AST 映射规则:
                                 continue
                             # 排除是祖先 IfRegion merge_block 的块
                             if _succ in _all_if_merge_blocks_r19n2:
+                                continue
+                            # [R08 fix] 区域归约算法原则 2（每块唯一归属）：
+                            # 同 else_blocks 分支守卫：try_blocks 后继可能通过
+                            # CFG 异常边指向兄弟/祖先 TryExceptRegion 的
+                            # handler_entry（仅排除 _handler_entry_blocks 不够，
+                            # 因为那只覆盖本 region 的 handler entries）。若消费为
+                            # post-try 块，拥有者区域的 _generate_try 会跳过
+                            # except → try 未关闭。依权威映射 block_to_region 判定。
+                            _succ_owner_pt = self.region_analyzer.block_to_region.get(_succ)
+                            if _succ_owner_pt is not None and _succ_owner_pt is not region:
                                 continue
                             _post_try_seen_r19n2.add(_succ)
                             _post_try_blocks_r19n2.append(_succ)

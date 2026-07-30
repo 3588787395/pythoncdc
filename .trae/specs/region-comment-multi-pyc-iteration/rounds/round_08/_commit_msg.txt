@@ -1,0 +1,22 @@
+rcm-r08: fix Pattern T3 in graph.pyc (_generate_try post-try block detection)
+
+Add block_to_region ownership guards to both branches (else_blocks +
+try_blocks) of the post-try block detection in _generate_try, mirroring
+the R07 Pattern T fix in _generate_with / _process_if_blocks.
+
+Root cause: when a try-except is nested inside an outer try-except that
+wraps a for/while-loop, the inner else_blocks/try_blocks successors
+include the outer handler_entry via CFG exception edges. Without the
+ownership guard, the inner _generate_try collected the outer
+handler_entry (e.g. graph.pyc create_full_graph block 640) as a
+post-try block and marked it generated. The outer _generate_try then
+skipped the except handler (handler_entry in generated_blocks) -> try
+without except -> SyntaxError.
+
+Result:
+- graph.pyc: failed (0/0, SyntaxError) -> partial (27/31, 87.10%)
+- repro_11 (T3 mirror): ERROR (SyntaxError) -> compiles (76 residual diffs)
+- Regression: 1 failed, 154 passed, 19 errors (identical to R07 baseline)
+- Cumulative success rate: 58.99% -> 70.90% (monotonic increase)
+
+Push-pending: network DNS down, commit is LOCAL only.

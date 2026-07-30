@@ -79,7 +79,11 @@
   - [x] T2.07.2 修复工程师：按区域归约算法修复 → `rounds/round_07/repair_engineer/fix_report.md`（Pattern G f-string 花括号转义 + Pattern T 3 处 block_to_region 归属守卫；4 G repro 全修复，1/2 T repro 全修复 1 编译通过；backtest 编译通过，main partial 33%；graph 残留 Pattern T3）
   - [x] T2.07.3 commit + push `rcm-r07:`
   - 残留：Pattern T3（graph.pyc 嵌套 try in loop，_generate_try post-try 检测消费 handler）/ Pattern T2（except body drop）/ repro_05 trailing-return / 跨轮残留 A2/B/C/E/F/M2 不变
-- [ ] T2.08 第 08 轮
+- [x] T2.08 第 08 轮（取 pyc #7: IQCommon/graph.pyc，R07 残留 Pattern T3，failed 优先）
+  - [x] T2.08.1 测试工程师：取下一个 pyc，反编译 + 字节码 diff → `rounds/round_08/test_engineer/decompile_report.md`（failed 0% → partial 87.10%，27/31 一致，Pattern T3 _generate_try post-try 检测消费外层 handler_entry，14 复现实例 6 DEFECT/8 NO-DEFECT）
+  - [x] T2.08.2 修复工程师：按区域归约算法修复 → `rounds/round_08/repair_engineer/fix_report.md`（Pattern T3 修复，_generate_try post-try 块检测 else_blocks + try_blocks 两分支追加 block_to_region 归属守卫；repro_11 ERROR→DEFECT-REPRO 编译通过；graph.pyc failed→partial 87.10%）
+  - [x] T2.08.3 commit `rcm-r08:`（LOCAL only — push 失败网络 DNS 故障，push-pending）
+  - 残留：graph.pyc 4 mismatch 函数（create_full_graph OUTER parent 误判 + 3 函数独立模式）/ 跨轮残留 T2/A2/B/C/E/F/M2 不变
 - [ ] T2.09 第 09 轮
 - [ ] T2.10 第 10 轮
 - [ ] T2.11 第 11 轮（持续，直到所有 pyc `decompile_status = ok`）

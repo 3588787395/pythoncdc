@@ -164,7 +164,23 @@
   - [x] R07-13 pyc_index.json 已更新（backtest failed/0.0；main partial/0.3333；graph failed/0.0）
   - [x] R07-14 commit + push `rcm-r07:`
   - 残留：Pattern T3（graph.pyc 嵌套 try in loop）/ Pattern T2（except body drop）/ repro_05 trailing-return / 跨轮残留 A2/B/C/E/F/M2 不变
-- [ ] R08 通用清单全部通过（取 pyc #8）
+- [x] R08 通用清单全部通过（取 pyc #7: IQCommon/graph.pyc，R07 残留 Pattern T3，failed 优先级高于 partial/pending）
+  - [x] R08-0 该轮取的 pyc 文件路径已记录（IQCommon/graph.pyc，decompile_status=failed→partial）
+  - [x] R08-1 测试工程师 `decompile_report.md` 已生成（failed 0/0 SyntaxError → partial 87.10% 27/31 一致，Pattern T3 _generate_try post-try 检测消费外层 handler_entry，14 复现实例 6 DEFECT/8 NO-DEFECT）
+  - [x] R08-2 ≥ 10 个最小复现实例已归档（14 个，修复前 6 DEFECT 含 1 ERROR / 8 NO-DEFECT；修复后 6 DEFECT-REPRO / 8 NO-DEFECT，repro_11 T3 镜像 ERROR→编译通过）
+  - [x] R08-3 修复工程师 `fix_report.md` 已生成（Pattern T3 修复，_generate_try post-try 块检测 else_blocks + try_blocks 两分支追加 block_to_region 归属守卫）
+  - [x] R08-4 涉及的 `_generate_*` 方法 docstring 已按 4 节模板更新（`_generate_try` 追加 [R08 fix] 节，说明 Pattern T3 缺陷/触发条件/修复/算法依据/非补丁声明）
+  - [x] R08-5 N/A（未修改 `_identify_*_regions` 方法，无需更新 6 节 docstring）
+  - [x] R08-6 既有测试矩阵无退化（Post-R08 == R07 基线: 1 failed, 154 passed, 19 errors，零回归）
+  - [x] R08-7 14 复现实例全部验证（修复后 6 DEFECT-REPRO / 8 NO-DEFECT；repro_11 T3 镜像从 ERROR→编译通过；8 NO-DEFECT 不变）
+  - [x] R08-8 反模式自检通过（0 新增 _fix_/_merge_/_patch_ 等前缀；守卫基于权威映射 block_to_region）
+  - [x] R08-9 算法 4 原则 FULLY COMPLIANT（自底向上归约 / 每块唯一归属【强化：2 处守卫，与 R07 Pattern T 3 处守卫形成完整闭环】/ 嵌套抽象节点 / 入口引用语义）
+  - [x] R08-10 `python -c "import core.cfg.region_analyzer; import core.cfg.region_ast_generator; import core.cfg.code_generator"` 编译通过
+  - [x] R08-11 累计成功率 ≥ 上一轮（R07 58.99% → R08 70.90%，单调递增；本 pyc failed 0%→partial 87.10%）
+  - [x] R08-12 N/A（本 pyc 未达 100%，未生成新 OK.py；graphOK.py 由 single 命令刷新，编译通过）
+  - [x] R08-13 pyc_index.json 已更新（graph partial/0.8710/ok_py=True/round=8，error 清除）
+  - [x] R08-14 commit `rcm-r08:`（LOCAL only — push 失败网络 DNS 故障，push-pending，commit message body 已注明）
+  - 残留：graph.pyc 4 mismatch 函数（create_full_graph OUTER parent 误判 + _get_influence_task/_process_task_queue/is_cycle 独立模式）/ 跨轮残留 T2/A2/B/C/E/F/M2 不变
 - [ ] R09 通用清单全部通过（取 pyc #9）
 - [ ] R10 通用清单全部通过（取 pyc #10）
 - [ ] R11+ 持续直到所有 pyc `decompile_status = ok`
