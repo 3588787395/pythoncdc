@@ -12400,6 +12400,69 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
         return region
 
     def _build_elif_region(self, block, then_blocks, else_blocks, merge, all_condition_blocks, condition_block=None, boundary_stop=None, ternary_regions=None):
+        """_build_elif_region — 构建 if/elif/else 链区域（IF_ELIF_CHAIN）
+
+        【区域类型】 IF_ELIF_CHAIN — if/elif/else 链条件区域
+        由 _identify_conditional_regions 在 Step 5（else 块以条件跳转结尾）调用，
+        递归展开嵌套 elif，返回 conditions/bodies/final_else 三元组供调用方组装
+        IF_ELIF_CHAIN（priority=30）。
+
+        **算法依据**
+        基于 "No More Gotos" §3「If 区域归约」：else 块首块若以
+        FORWARD_CONDITIONAL_JUMP_OPS 结尾，则它是下一个 elif 条件块，递归
+        _check_elif_chain 将 else 链展开为 conditions 列表 + bodies 列表 +
+        final_else。干净 elif 链中每个 elif 两路分支均汇聚于外层 merge（[R25-
+        Defect2 fix] 判据③）。内嵌 _check_elif_chain 负责单层 elif 判定：
+        - 跳过链式比较清理块（POP_TOP+JUMP）定位真正的 elif 条件块；
+        - 排除含 body 语句（STORE/CALL+POP_TOP）的块（非纯条件块）；
+        - 处理三元作为 elif 条件（while_cond 上下文）或 else 体内容
+          （非条件上下文）的场景。
+
+        **归约顺序**
+        Phase 2 条件区域识别的下游方法。在 _identify_conditional_regions 收集
+        then_blocks/else_blocks/merge 后调用。先计算 try/with handler 块集合
+        （_elif_try_handler_blocks / _elif_with_handler_blocks，镜像外层
+        _identify_conditional_regions L10306-10334），再嵌套定义
+        _check_elif_chain 递归展开 elif 链。R17 修正循环内 boundary_stop
+        （移除终态块保留 loop header），R21-C4 修正 break 目标归属，
+        R25-12 修正 elif body 内 try/with handler 块过滤。
+
+        **唯一归属判定**
+        [R25-Defect2 fix] 核心判据（原则 2 + 原则 3）：当外层 if 的 else 体以
+        嵌套 if 开头、且嵌套 if 两路分支汇聚点 inner_merge ≠ 外层合并点 merge_
+        时，说明嵌套 if 之后有尾随语句属于外层 else 体——这是「else 内嵌套 if +
+        尾随语句」结构，非 elif 链。返回 None 阻止 elif 链构建，调用方改用原
+        else_blocks 构建 IF_THEN_ELSE（嵌套 if 作子 IfRegion、尾随语句作 else
+        体内兄弟节点）。全部满足才返回 None：①inner_merge 非 None ②merge_ 非
+        None ③inner_merge ≠ merge_ ④外层 else 不在循环内（循环内 break/continue
+        经 R24-A 修正可合法不等）⑤inner_merge 非终态块（RETURN/RAISE/RERAISE，
+        终态汇聚属共享退出非尾随）。break 目标块（R21-C4）保留在 boundary_stop
+        中不归 elif body；elif body 内 try/with handler 块（R25-12）过滤排除。
+
+        **嵌套处理**
+        _check_elif_chain 递归调用自身展开多层 elif。每层 elif 的 then_blocks
+        /else_blocks 通过 _collect_branch_blocks 收集，嵌套 IfRegion /
+        LoopRegion / TryExceptRegion / BoolOpRegion / TernaryRegion 作为抽象
+        节点不展开。三元（while_cond）作为单个 elif 条件整块引用（adv15）。
+        返回 None 时调用方用 inner_else_blocks 作 final_else，保留完整 else 体
+        （含三元，adv15_non_conditional）。
+
+        **入口引用语义**
+        conditions 列表引用各 elif 条件块入口（POP_JUMP_FORWARD_IF_* 块），
+        bodies 列表引用各 elif then 体块，final_else 引用最终 else 体块。
+        IF_ELIF_CHAIN 通过 elif_conditions / elif_bodies / elif_final_else
+        引用这些入口，不展开内部嵌套 IfRegion（嵌套即抽象节点）。嵌套
+        BoolOpRegion 的 op_chain 末块作为 elif 条件块入口引用。
+
+        **反编译流程**
+        对应生成方法: _generate_if（region_ast_generator.py）+ _generate_elif_or_else
+        （code_generator.py）。IF_ELIF_CHAIN → ast.If（orelse 为嵌套 ast.If 链），
+        elif_conditions → 各 ast.If.test，elif_bodies → 各 ast.If.body，
+        elif_final_else → 最内层 ast.If.orelse。[R25-Defect2 fix] code_generator
+        _generate_if 中 _r25_d2_has_non_if_trailing 守卫：orelse 含非 If 尾随节点
+        时不展平为 elif，作为 else 块整体渲染。本方法遵循区域归约算法 4 核心原则:
+        自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 入口引用语义。
+        """
         # [R17 fix] When collecting inner elif branch blocks inside a loop, the loop's
         # boundary_stop (which includes break/return exit blocks and the loop header)
         # prevents collecting terminal blocks that are part of the elif chain (e.g.,
@@ -12939,6 +13002,43 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 _r30_7_then_set = set(inner_then_blocks)
                 if any(p in _r30_7_then_set for p in inner_else_succ.predecessors):
                     inner_merge = inner_else_succ
+            # [R25-Defect2 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3
+            #（嵌套即抽象节点）+ No More Gotos §3（If 区域归约）：
+            # 当外层 if 的 else 体以嵌套 if/elif/else 开头、且该嵌套 if 两路
+            # 分支的汇聚点（inner_merge）不等于外层合并点（merge_）时，说明
+            # 嵌套 if 之后仍有尾随语句（trailing）属于外层 else 体——这是
+            #「else 内嵌套 if + 尾随语句」结构，而非 if/elif 链。若强行识别为
+            # elif 链，尾随语句会被本方法末尾的 _elif_struct_blocks 过滤剔出
+            # else_blocks 并外提为 if/elif/else 之后的兄弟语句，导致外层 then
+            # 分支末尾的 JUMP_FORWARD 落点从外层合并点偏移到尾随语句入口
+            #（build_future_fill_time：5 个 typet!=5 分支的 JUMP_FORWARD 落到
+            # else 内的 for 循环而非 `if total_dts:`），运行期因尾随语句依赖
+            # 的变量未定义而 NameError。
+            # 判据（全部满足才返回 None）：
+            #   ① inner_merge 非 None（NCPD 求得，非 sink 终态场景；sink 场景
+            #      NCPD 返回 None，不会进入此分支）；
+            #   ② merge_ 非 None（外层有合并点）；
+            #   ③ inner_merge ≠ merge_（嵌套分支汇聚于外层合并点之前 → 有尾随；
+            #      干净 elif 链中两路分支均跳/落到外层 merge，inner_merge==merge_；
+            #      R29/R30-6/R30-7 修正亦将 inner_merge 置为 merge_ 或
+            #      inner_else_succ(=merge_)，不会误触发）；
+            #   ④ 外层 else 不在循环内（循环内 break/continue 经 R24-A 修正，
+            #      inner_merge 可能合法地不等于 merge_，不予干预）；
+            #   ⑤ inner_merge 非终态块（RETURN/RAISE/RERAISE）——终态汇聚属
+            #      共享退出，非尾随语句。
+            # 返回 None 后，调用方用原 else_blocks 构建 IF_THEN_ELSE：嵌套 if
+            # 作为子 IfRegion、尾随语句作为 else 体内兄弟子节点（子 LoopRegion
+            # 或 BASIC 块），每块唯一归属，符合原则 2/3。
+            if (inner_merge is not None and merge_ is not None
+                    and inner_merge is not merge_
+                    and self._find_enclosing_loop(first_else) is None):
+                _r25_d2_last = inner_merge.get_last_instruction()
+                _r25_d2_terminal = (_r25_d2_last is not None
+                                    and _r25_d2_last.opname in (
+                                        'RETURN_VALUE', 'RETURN_CONST',
+                                        'RAISE_VARARGS', 'RERAISE'))
+                if not _r25_d2_terminal:
+                    return None
             inner_else_blocks = self._collect_branch_blocks(inner_else_succ, inner_merge, {inner_then_succ} | _inner_boundary_stop)
             # [R25-12 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3（嵌套即
             # 抽象节点）：镜像外层 IfRegion 的 try/with handler 块过滤

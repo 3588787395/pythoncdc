@@ -1134,7 +1134,34 @@ class CodeGenerator:
             self._generate_node(child)
     
     def _generate_if(self, node: ASTIf) -> None:
-        """生成if语句"""
+        """生成 if/elif/else 语句（AST → 源码渲染）
+
+        **算法依据**
+        基于 "No More Gotos" §3「If 区域归约」的渲染侧：IfRegion（IF /
+        IF_THEN_ELSE / IF_ELIF_CHAIN）经 region_ast_generator 转为 ast.If
+        后，由本方法渲染为 Python 源码。elif 链通过 orelse 嵌套 ast.If 表达，
+        本方法将 orelse[0] 为 ast.If 的结构展平为 `elif`（_generate_elif_or_else
+        递归），否则作为 `else:` 块整体渲染。
+
+        **elif 展平规则（区域归约算法原则 3：嵌套即抽象节点）**
+        orelse 展平为 elif 仅在以下条件全部满足时合法：
+          - orelse[0] 是 ASTIf 且有实际 body；
+          - 该 ASTIf 未标记 _is_nested_if（else 中的独立嵌套 if，非 elif）；
+          - 非疑似 else 中嵌套 if（is_likely_nested_if_in_else，简单变量条件）；
+          - [R25-Defect2 fix] orelse 不含非 If 尾随节点
+            （_r25_d2_has_non_if_trailing）：当 orelse = [If, <非If语句>] 时，
+            是「else 块含嵌套 if + 尾随语句」，必须作为 `else:` 块整体渲染，
+            不得展平（否则产生 `elif/else/else` 畸形语法，且割裂 else 体破坏
+            外层 then 的 JUMP_FORWARD 落点）。典型场景 build_future_fill_time：
+            else 体内嵌套 if/elif/else + 尾随 for 循环。
+
+        **反编译流程**
+        对应区域方法: _identify_conditional_regions / _build_elif_region
+        （region_analyzer.py）。IF_ELIF_CHAIN 的 elif_conditions / elif_bodies /
+        elif_final_else 经 region_ast_generator 组装为嵌套 ast.If 链，本方法
+        将其展平为 `if/elif/.../else` 源码。复合条件（_detect_compound_condition）
+        优先处理，将 body 为空 + orelse 含 If 的结构合并为单条复合条件 if。
+        """
         is_nested = getattr(node, '_is_nested_if', False)
 
         # [关键修复] 检测复合条件模式
@@ -1197,9 +1224,22 @@ class CodeGenerator:
                 if test_is_simple:
                     is_likely_nested_if_in_else = True
             
+            # [R25-Defect2 fix] 区域归约算法原则 3（嵌套即抽象节点）+ No More
+            # Gotos §3：elif 展平（orelse[0] 作为 elif）仅在 orelse 恰好是
+            #「单个 If」或「If + 若干可过滤的重复 If」时合法。当 orelse 含
+            # 非若尾随语句（如 else 体内的尾随 for 循环）时，orelse=[If, For]
+            # 是「else 块含嵌套 if + 尾随语句」，必须作为 `else:` 块整体渲染
+            #（else: <嵌套 if> <尾随语句>），不得把 If 展平为 elif 后把尾随
+            # 语句作为第二个 else 输出（产生 `elif/else/else` 畸形语法）。
+            # 典型场景 build_future_fill_time：else 体内嵌套 if/elif/else +
+            # 尾随 for 循环，外层 then 的 JUMP_FORWARD 须跳过整个 else（含
+            # 尾随 for）到合并点。elif 展平会割裂 else 体，破坏控制流。
+            _r25_d2_has_non_if_trailing = any(
+                not isinstance(_n, ASTIf) for _n in node.orelse.nodes[1:])
             if isinstance(first_node, ASTIf) and first_node.body and first_node.body.nodes \
                     and not getattr(first_node, '_is_nested_if', False) \
-                    and not is_likely_nested_if_in_else:
+                    and not is_likely_nested_if_in_else \
+                    and not _r25_d2_has_non_if_trailing:
                 # 生成elif
                 # [关键修复] 使用优先级0避免在elif条件中添加不必要的括号
                 elif_test_code = self._generate_expression(first_node.test, 0)
