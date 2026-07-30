@@ -774,7 +774,11 @@ class CodeGenerator:
 
         body = node.get('body', [])
 
-        if self._is_simple_single_statement(body):
+        # [R4-09 fix] async with 不可使用单行 body：CPython 3.11 在 with body
+        # 起始处（新行）插入 NOP 标记异常表边界，单行 body 省略该 NOP，导致
+        # await 轮询循环的 JUMP_BACKWARD_NO_INTERRUPT 目标偏移差 2 字节，
+        # 字节码等价比较失败。同步 with 无 JUMP_BACKWARD_NO_INTERRUPT，不受影响。
+        if self._is_simple_single_statement(body) and not is_async:
             stmt_line = self._generate_single_stmt_line(body[0])
             if stmt_line:
                 self._write_line(f'{header} {stmt_line}')

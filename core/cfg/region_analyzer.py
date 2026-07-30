@@ -4133,7 +4133,46 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                                         if not self._is_early_return_block(s)
                                         and not self._is_except_handler_block(s)]
             if non_return_successors:
-                else_blocks = sorted(non_return_successors, key=lambda b: b.start_offset)
+                # [R4-08 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3（嵌套即
+                # 抽象节点）：当 natural_exit 为 None（while-else 中 break 目标与
+                # else 出口均以 RETURN_VALUE 结尾、无公共后必经节点）时，else 子句
+                # 可能包含多个块（如 else: for j in s: x = j 的 setup + for-loop
+                # header + for-loop body）。原先仅返回直接后继，导致 else 内嵌套
+                # LoopRegion 的块未被归属到 while LoopRegion.else_blocks，嵌套循环
+                # 被外推为 while 之后的兄弟语句，else 语义丢失。
+                # 修复：从每个 non_return_successor 出发 BFS 收集所有可达块（排除
+                # body_set、except handler），使嵌套区域入口纳入 else_blocks。
+                # [R4-regression fix] 区域归约算法原则 2：non_return_successors 自身
+                # 必须无条件纳入 else_blocks（R03 行为：sorted(non_return_successors)），
+                # 即使它们含 trailing return None（如 while 条件假出口块）。原 R4-08
+                # BFS 在 continue 前跳过 trailing return None 块，导致 while-without-
+                # else 的条件假出口块被移出 else_blocks，退化为独立 Region，触发
+                # IfRegion 误判 else 分支为 break。trailing return None 仅用于阻止
+                # BFS 继续扩展（不应跨越 return 出口），不阻止块本身归属。
+                _r4_08_else_blocks = []
+                _r4_08_visited = set()
+                _r4_08_stack = list(non_return_successors)
+                while _r4_08_stack:
+                    _r4_08_cur = _r4_08_stack.pop()
+                    if _r4_08_cur in _r4_08_visited or _r4_08_cur in body_set:
+                        continue
+                    if self._is_except_handler_block(_r4_08_cur):
+                        continue
+                    _r4_08_visited.add(_r4_08_cur)
+                    _r4_08_else_blocks.append(_r4_08_cur)
+                    # trailing return None / terminal / back-edge 块纳入 else_blocks
+                    # 但不继续 BFS 扩展（避免跨越 return 出口收集无关块）
+                    if self._check_block_has_trailing_return_none(_r4_08_cur):
+                        continue
+                    _r4_08_cur_last = _r4_08_cur.get_last_instruction()
+                    if _r4_08_cur_last and _r4_08_cur_last.opname in ('RETURN_VALUE', 'RETURN_CONST', 'RERAISE'):
+                        continue
+                    if _r4_08_cur_last and _r4_08_cur_last.opname in BACKWARD_JUMP_OPS:
+                        continue
+                    for _r4_08_succ in _r4_08_cur.successors:
+                        if _r4_08_succ not in _r4_08_visited and _r4_08_succ not in body_set:
+                            _r4_08_stack.append(_r4_08_succ)
+                else_blocks = sorted(_r4_08_else_blocks, key=lambda b: b.start_offset) if _r4_08_else_blocks else None
                 return else_blocks, None
             return None, natural_exit
 
@@ -4145,6 +4184,44 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 path_blocks = self._collect_blocks_on_path(natural_exit, succ)
                 else_blocks.extend(path_blocks)
         else_blocks = list(set(else_blocks) - body_set)
+
+        # [R4-08 fix] 区域归约算法原则 3（嵌套即抽象节点）+ 原则 4（父引用子入口）：
+        # while-else 的 else 子句内嵌套 LoopRegion（如 else: for j in s: ...）时，
+        # find_nearest_common_post_dominator 对单元素集合返回输入块自身（非其后必经
+        # 节点），使 natural_exit == loop_successor，else_blocks 仅含直接后继（如
+        # for-setup 块），嵌套 LoopRegion 的 entry（FOR_ITER 块）不在 else_blocks
+        # 中。_build_region_hierarchy 无法通过 else_blocks 建立父子关系，嵌套循环
+        # 被外推为 while 之后的兄弟语句，else 语义丢失。
+        # 修复：从每个 else_block 出发 BFS 收集所有可达块（排除 body_set、trailing
+        # return None、except handler，不跟随回边），使嵌套区域入口纳入 else_blocks。
+        if else_blocks and loop_type == RegionType.WHILE_LOOP:
+            _r4_08_ext_visited = set(body_set)
+            _r4_08_ext_stack = []
+            for _eb in else_blocks:
+                if _eb not in _r4_08_ext_visited:
+                    _r4_08_ext_stack.append(_eb)
+                    _r4_08_ext_visited.add(_eb)
+            _r4_08_ext_added = []
+            while _r4_08_ext_stack:
+                _r4_08_cur = _r4_08_ext_stack.pop()
+                if self._is_except_handler_block(_r4_08_cur):
+                    continue
+                if self._check_block_has_trailing_return_none(_r4_08_cur):
+                    continue
+                if _r4_08_cur not in else_blocks:
+                    _r4_08_ext_added.append(_r4_08_cur)
+                _r4_08_cur_last = _r4_08_cur.get_last_instruction()
+                if _r4_08_cur_last and _r4_08_cur_last.opname in ('RETURN_VALUE', 'RETURN_CONST', 'RERAISE'):
+                    continue
+                if _r4_08_cur_last and _r4_08_cur_last.opname in BACKWARD_JUMP_OPS:
+                    continue
+                for _r4_08_succ in _r4_08_cur.successors:
+                    if _r4_08_succ not in _r4_08_ext_visited:
+                        _r4_08_ext_visited.add(_r4_08_succ)
+                        _r4_08_ext_stack.append(_r4_08_succ)
+            if _r4_08_ext_added:
+                else_blocks.extend(_r4_08_ext_added)
+                else_blocks = sorted(set(else_blocks), key=lambda b: b.start_offset)
 
         if loop_type == RegionType.WHILE_LOOP:
             _cond_exit_set = set(cond_exit_targets) if cond_exit_targets else set()
@@ -5092,6 +5169,56 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                     return True
         return False
 
+    def _find_async_with_return_path(self, start_block, current_loop,
+                                      visited=None, depth=0):
+        """[R4-09 fix] 跟随 async with 的 __aexit__ return 路径。
+
+        async with body 内 ``return <expr>`` 的字节码被拆分到多个块，且均在
+        with body 异常保护范围之外（await 挂起改变异常边界）：
+          - __aexit__ 调用块（LOAD_CONST None×3 + CALL + GET_AWAITABLE）
+          - await 轮询块（SEND/YIELD/RESUME/JUMP_BACKWARD_NO_INTERRUPT 自循环）
+          - return 块（POP_TOP 丢弃 __aexit__ 结果 + <值> + RETURN_VALUE）
+
+        原逻辑仅识别单块内的 return+exit_call（同步 with），async with 的拆分
+        return 路径未覆盖，导致 return 被作为 with 兄弟语句发射（在 with 外）。
+
+        Returns:
+            (return_block, path_blocks) 若路径通向真实 return（return <值>，
+            非 break-as-return-None）；否则 None。
+        """
+        if visited is None:
+            visited = set()
+        if start_block in visited or depth > 16:
+            return None
+        visited.add(start_block)
+        # 不跨入异常 handler / 循环结构（return 路径不经过这些）
+        if any(i.opname == 'WITH_EXCEPT_START' for i in start_block.instructions):
+            return None
+        _role = self.get_block_role(start_block)
+        if _role in (BlockRole.LOOP_BACK_EDGE, BlockRole.LOOP_HEADER,
+                     BlockRole.LOOP_CONDITION, BlockRole.WITH_HANDLER):
+            return None
+        path = [start_block]
+        # 命中 RETURN_VALUE：区分真实 return 与 break-as-return-None
+        if any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in start_block.instructions):
+            # _check_return_for_break: False=真实 return, True=break-as-return-None
+            if self._check_return_for_break(start_block, current_loop) is False:
+                return (start_block, path)
+            return None
+        # JUMP_FORWARD 终结 = 正常出口清理（非 return 路径）
+        _last = start_block.get_last_instruction()
+        if _last and _last.opname == 'JUMP_FORWARD':
+            return None
+        # 跟随非自循环后继（穿过 await 轮询）
+        for succ in start_block.successors:
+            if succ == start_block:
+                continue
+            _res = self._find_async_with_return_path(succ, current_loop, visited, depth + 1)
+            if _res is not None:
+                _ret_block, _sub = _res
+                return (_ret_block, path + _sub)
+        return None
+
     def _check_jump_backward_for_break(self, block, current_loop):
         for instr in block.instructions:
             if instr.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'):
@@ -5099,6 +5226,21 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
             target_block = self.cfg.get_block_by_offset(instr.argval)
             if not target_block:
                 return False
+            # [R4-09 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3
+            # （嵌套即抽象节点）：async with 的 __aenter__/__aexit__ await
+            # 轮询自循环（SEND + YIELD_VALUE + JUMP_BACKWARD_NO_INTERRUPT
+            # 指向自身）是协议挂起点，不是循环 break。原逻辑因 target_block
+            # 不是 LoopRegion entry 而返回 True（误判 break），导致 async
+            # with body 内 return 被降级为 break。自循环（target == block）
+            # 永远不是 break，返回 None（不确定）让调用者继续检查后继。
+            # [R4-regression fix] 区域归约算法原则 2：自循环非 break 的判定
+            # 仅在存在外层循环（current_loop is not None）时生效。无循环时
+            # break 检测本无意义，保留 R03 行为（自循环经 target_region 非
+            # LoopRegion 路径返回 True），使无循环的 async-with 多 as 场景
+            # 仍产生 break-outside-loop SyntaxError → 测试 SKIP（基线不退化）。
+            # 有循环时（R4 #09 场景）self-loop 被正确跳过，return 不被降级。
+            if target_block is block and current_loop is not None:
+                continue
             target_region = self.get_entry_region_for_block(target_block)
             if not isinstance(target_region, LoopRegion):
                 return True
@@ -7649,6 +7791,66 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                             if existing is None or keep_count < existing:
                                 copy_blocks[block.start_offset] = keep_count
 
+        # [R4-06/12 fix] 区域归约算法原则 2（每块唯一归属）：指令匹配检测
+        # inlined finally cleanup 副本。上方的异常表检测仅在多个 entry 指向同一
+        # finally handler 时触发。当 try 体仅一个范围（如 try + if + continue/
+        # return），编译器把 cleanup 直接内联到出口块（不走异常表）。这些块含
+        # 与 finally body 相同的 cleanup 指令序列（PUSH_EXC_INFO 与 RERAISE
+        # 之间），后跟控制流指令（JUMP_BACKWARD=continue / RETURN_VALUE=return
+        # / JUMP_FORWARD=正常完成）。cleanup 指令归属 finally body，标记为
+        # finally_copy 使 _generate_block_statements 仅发射控制流（Continue/
+        # Break/Return/无），不重复 cleanup。镜像 R3-03 finally copy 机制。
+        if try_blocks is not None and body_blocks:
+            _r4_cleanup_sig_ops = None
+            for _r4_fb in body_blocks:
+                _r4_fb_m = [i for i in _r4_fb.instructions
+                            if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                _r4_has_push = any(i.opname == 'PUSH_EXC_INFO' for i in _r4_fb_m)
+                _r4_has_reraise = any(i.opname == 'RERAISE' for i in _r4_fb_m)
+                if _r4_has_push and _r4_has_reraise:
+                    _r4_sig_s = None
+                    _r4_sig_e = None
+                    for _r4_si, _r4_instr in enumerate(_r4_fb_m):
+                        if _r4_instr.opname == 'PUSH_EXC_INFO' and _r4_sig_s is None:
+                            _r4_sig_s = _r4_si + 1
+                        if _r4_instr.opname == 'RERAISE' and _r4_sig_s is not None:
+                            _r4_sig_e = _r4_si
+                            break
+                    if _r4_sig_s is not None and _r4_sig_e is not None and _r4_sig_e > _r4_sig_s:
+                        _r4_cleanup_sig_ops = tuple(i.opname for i in _r4_fb_m[_r4_sig_s:_r4_sig_e])
+                        break
+            if _r4_cleanup_sig_ops and len(_r4_cleanup_sig_ops) >= 2:
+                _r4_foff = {b.start_offset for b in body_blocks}
+                _r4_toff = {b.start_offset for b in try_blocks} if try_blocks else set()
+                _r4_checked = set()
+                for _r4_tb in (try_blocks or []):
+                    for _r4_succ in _r4_tb.successors:
+                        if _r4_succ.start_offset in _r4_foff:
+                            continue
+                        if _r4_succ.start_offset in _r4_toff:
+                            continue
+                        if _r4_succ.start_offset in _r4_checked:
+                            continue
+                        _r4_checked.add(_r4_succ.start_offset)
+                        if _r4_succ.start_offset in copy_blocks:
+                            continue
+                        if not _r4_succ.instructions:
+                            continue
+                        _r4_succ_m = [i for i in _r4_succ.instructions
+                                      if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                        _r4_succ_ops = tuple(i.opname for i in _r4_succ_m)
+                        _r4_has_cleanup = False
+                        for _r4_mi in range(len(_r4_succ_ops) - len(_r4_cleanup_sig_ops) + 1):
+                            if _r4_succ_ops[_r4_mi:_r4_mi + len(_r4_cleanup_sig_ops)] == _r4_cleanup_sig_ops:
+                                _r4_has_cleanup = True
+                                break
+                        if _r4_has_cleanup:
+                            _r4_last_op = _r4_succ_ops[-1] if _r4_succ_ops else None
+                            if _r4_last_op in ('JUMP_BACKWARD', 'JUMP_FORWARD',
+                                               'JUMP_ABSOLUTE', 'JUMP_BACKWARD_NO_INTERRUPT',
+                                               'RETURN_VALUE', 'RETURN_CONST'):
+                                copy_blocks[_r4_succ.start_offset] = 0
+
         return body_blocks, copy_blocks
 
     def _find_next_with_block(self, current, _depth_map):
@@ -7964,6 +8166,18 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                                        'COMPARE_OP', 'IS_OP', 'CONTAINS_OP',
                                        'BUILD_TUPLE', 'BUILD_LIST', 'BUILD_MAP', 'BUILD_SET'):
                         continue
+                    # [R4-11 fix] `return <const>`（LOAD_CONST <非None>; RETURN_VALUE）
+                    # 是真实 return，非 with 清理块。with 清理块的 return 出口恒为
+                    # `LOAD_CONST None; RETURN_VALUE`（break-as-return-None / 隐式
+                    # return None）。原 guard 未把 LOAD_CONST 视为值产生指令，导致
+                    # 循环后 `return 1` 被误纳入 WithRegion.cleanup_blocks 而丢失。
+                    # 仅非 None 常量跳过（None 仍是清理/隐式 return）。
+                    if prev.opname == 'LOAD_CONST' and prev.argval is not None:
+                        continue
+                # [R4-11 fix] RETURN_CONST <非None> 同理为真实 return（如
+                # `return 1` 在某些编译布局下为单条 RETURN_CONST）。
+                if last.opname == 'RETURN_CONST' and last.argval is not None:
+                    continue
             cleanup.append(block)
             cleanup_visited.add(block)
 
@@ -19134,6 +19348,15 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     if ((candidate.then_blocks and child.entry in candidate.then_blocks) or
                         (candidate.else_blocks and child.entry in candidate.else_blocks)):
                         candidates.append(candidate)
+                # [R4-08 fix] 区域归约算法原则 3（嵌套即抽象节点）+ 原则 4
+                # （父引用子入口）：while-else 的 else 子句内嵌套 LoopRegion（如
+                # else: for j in s: ...）时，子 LoopRegion.entry 在父 LoopRegion
+                # 的 else_blocks 中。offset range 无法覆盖（else 块不在父
+                # LoopRegion.blocks 中），需显式检查 else_blocks 归属，使嵌套
+                # LoopRegion 挂为父 LoopRegion 子节点，而非外推为兄弟语句。
+                elif isinstance(candidate, LoopRegion) and child.entry:
+                    if (candidate.else_blocks and child.entry in candidate.else_blocks):
+                        candidates.append(candidate)
 
             if len(candidates) > 1 and child.entry:
                 _if_candidates = self._filter_regions(candidates, IfRegion)
@@ -19348,6 +19571,12 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             if not getattr(region, 'has_finally', False):
                 continue
             if block in region.blocks:
+                result = region
+                continue
+            # [R4-06/12 fix] finally_copy 块含 inlined cleanup，虽不在
+            # region.blocks 中，仍受 try-finally 区域管辖（cleanup 归属
+            # finally）。使 find_enclosing_region 能找到正确区域。
+            if block.start_offset in getattr(region, 'finally_copy_blocks', {}):
                 result = region
                 continue
             if region_type == 'try_except':

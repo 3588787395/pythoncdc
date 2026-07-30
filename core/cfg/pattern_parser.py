@@ -973,6 +973,26 @@ class PatternParser:
                                     'BUILD_SET', 'BUILD_STRING')
                       for i in instrs)
 
+        # [R4-03 fix] 区域归约算法原则 2（每块唯一归属）：case body 块（含赋值
+        # 语句 `y = 1` / `x = a`）不应被误判为 pattern continuation 块。原
+        # `_is_pattern_block_for_as` 仅检查 LOAD_GLOBAL/CALL/RETURN 等显式 body
+        # 指令，但 case body 的赋值（LOAD_CONST + STORE_NAME / LOAD_NAME +
+        # STORE_NAME）中 LOAD_CONST/STORE_NAME 均在 pattern_ops 内，被误判为
+        # pattern 块，导致 _find_last_store_on_success_path 把 body 赋值的
+        # STORE 当作 as 绑定（如 `case 1 | 2: y = 1` 中 STORE_NAME y 被误识为
+        # as y，附加到每个 or 分支 → `case 1 as y | 2 as y` 语法错误）。
+        # 判据：pattern 上下文中 LOAD_CONST 永远跟 COMPARE_OP（字面量比较）或
+        # 被 UNPACK_*/MATCH_* 消费，绝不直接跟 STORE_*；LOAD_NAME 在非
+        # MATCH_CLASS 上下文中跟 STORE_* 是 body 赋值。检测到此类赋值序列时，
+        # 块为 body 块（返回 False）。
+        if has_pattern and not has_body:
+            for _bi, _bins in enumerate(instrs):
+                if _bins.opname in ('LOAD_CONST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_FAST', 'LOAD_DEREF'):
+                    _next_bi = instrs[_bi + 1] if _bi + 1 < len(instrs) else None
+                    if _next_bi is not None and _next_bi.opname in self.STORE_OPS:
+                        has_body = True
+                        break
+
         return has_pattern and not has_body
 
     def _find_store_in_successors(self, case_block: BasicBlock) -> Optional[str]:
@@ -1140,7 +1160,14 @@ class PatternParser:
                     # 不应记录为capture也不应设为as_name，直接跳过
                     if slot != -1:
                         slot_actions.setdefault(slot, {'type': 'capture', 'name': var_name})
-                else:
+                elif seen_pattern_instr:
+                    # [R4-04 fix] 区域归约算法原则 2（每块唯一归属）：as_name 的
+                    # STORE 必须出现在 pattern 匹配指令（MATCH_*/GET_LEN/UNPACK_*/
+                    # COMPARE_OP）之后——as 绑定在所有 pattern 匹配成功后才 STORE
+                    # 保存的 subject 副本。若 STORE 出现在 seen_pattern_instr 之前，
+                    # 它是 case header 块前导的 for-target STORE（`for i in r: match
+                    # s: case [a, *b]:` 中 for-target STORE_NAME i 与 match subject
+                    # LOAD_NAME s 同块），不归属 pattern，不应误设为 as_name。
                     as_name = var_name
             elif instr.opname == 'LOAD_CONST' and idx + 1 < len(filtered) and filtered[idx + 1].opname == 'COMPARE_OP':
                 literal_val = instr.argval
