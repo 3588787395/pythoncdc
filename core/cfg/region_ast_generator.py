@@ -10691,6 +10691,43 @@ AST 映射规则:
         if_result = result
         if pre_stmts:
             if_result = pre_stmts + [if_result]
+        # [R23 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（入口引用语义）：
+        # 当 IfRegion.merge_block 是当前循环的 back_edge_block（纯 JUMP_BACKWARD）
+        # 且 IfRegion 无 else_blocks 时，if 的 true 分支（fallthrough 到 merge）和
+        # false 分支（POP_JUMP_IF_FALSE → merge）均指向回边，continue 为无条件兄弟
+        # 语句。若不生成显式 Continue 兄弟节点，父 IfRegion 的条件合并逻辑（L10612）
+        # 会将本 if 与外层 if 条件合并为 `if A and B:`，改变 false 分支跳转目标
+        # （回边→post-loop = continue→break 语义错误）。
+        # 典型场景：get_str_data 的
+        #   `for j: if A: if B: stmt; continue; else: break`
+        # 内层 if B 的 merge=回边，两分支均→回边（无条件 continue）。
+        # 判据：
+        #   1. 当前在循环上下文中（_current_loop is not None）
+        #   2. merge_block == _current_loop.back_edge_block
+        #   3. back_edge_block 仅含 JUMP_BACKWARD（无有意义指令 = 纯 continue 回边）
+        #   4. 无 else_blocks（else_stmts 为空 = 两分支均指向回边）
+        # 满足时追加 Continue 作为 if 的兄弟语句（在 if 之后），并标记 back_edge_block
+        # 为已生成（避免循环体 _loop_handle_back_edge 重复处理）。
+        if (self._current_loop is not None
+                and region.merge_block is not None
+                and region.merge_block is getattr(self._current_loop, 'back_edge_block', None)
+                and not else_stmts):
+            _r23_be_blk = region.merge_block
+            _r23_be_last = _r23_be_blk.get_last_instruction() if _r23_be_blk else None
+            _r23_be_meaningful = ([i for i in _r23_be_blk.instructions
+                                   if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
+                                                        'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')]
+                                  if _r23_be_blk else [1])
+            if (_r23_be_last is not None
+                    and _r23_be_last.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                    and not _r23_be_meaningful):
+                _r23_cont = {'type': 'Continue'}
+                if isinstance(if_result, list):
+                    if_result = if_result + [_r23_cont]
+                else:
+                    if_result = [if_result, _r23_cont]
+                self.generated_blocks.add(_r23_be_blk)
+                self.generated_offsets.add(_r23_be_blk.start_offset)
         # [R18-N5 fix] 区域归约算法原则 4（父引用子入口）+ 原则 2（每块唯一归属）：
         # 当 IfRegion.merge_block 同时是其内嵌 LoopRegion 的 else_blocks（for_iter_exit）
         # 时，R15-N5 修复会让 LoopRegion 跳过 merge_block（避免在 if body 内重复输出
