@@ -74,7 +74,11 @@
   - [x] T2.06.2 修复工程师：无需修复（pyc 首次验证即 100%）→ `rounds/round_06/repair_engineer/fix_report.md`（no repair needed）
   - [x] T2.06.3 commit + push `rcm-r06:`
   - 残留：无新增；跨轮残留 Pattern A2/B/C/E/F/M2 不变
-- [ ] T2.07 第 07 轮
+- [x] T2.07 第 07 轮（取 pyc #6: IQCommon/backtest/backtest.pyc，新 pyc 轮询）
+  - [x] T2.07.1 测试工程师：取下一个 pyc，反编译 + 字节码 diff → `rounds/round_07/test_engineer/decompile_report.md`（failed 0%，backtestOK.py 含 2 处语法错误 Pattern G + Pattern T，13 复现实例 9 DEFECT/4 NO-DEFECT）
+  - [x] T2.07.2 修复工程师：按区域归约算法修复 → `rounds/round_07/repair_engineer/fix_report.md`（Pattern G f-string 花括号转义 + Pattern T 3 处 block_to_region 归属守卫；4 G repro 全修复，1/2 T repro 全修复 1 编译通过；backtest 编译通过，main partial 33%；graph 残留 Pattern T3）
+  - [x] T2.07.3 commit + push `rcm-r07:`
+  - 残留：Pattern T3（graph.pyc 嵌套 try in loop，_generate_try post-try 检测消费 handler）/ Pattern T2（except body drop）/ repro_05 trailing-return / 跨轮残留 A2/B/C/E/F/M2 不变
 - [ ] T2.08 第 08 轮
 - [ ] T2.09 第 09 轮
 - [ ] T2.10 第 10 轮

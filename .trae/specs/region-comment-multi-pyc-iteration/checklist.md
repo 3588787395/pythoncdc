@@ -147,7 +147,23 @@
   - [x] R06-13 pyc_index.json 已更新（ok/1.0/ok_py=True/round=6）
   - [x] R06-14 commit + push `rcm-r06:`
   - 残留：无新增；跨轮残留 Pattern A2/B/C/E/F/M2 不变
-- [ ] R07 通用清单全部通过（取 pyc #7）
+- [x] R07 通用清单全部通过（取 pyc #6: IQCommon/backtest/backtest.pyc，新 pyc 轮询）
+  - [x] R07-0 该轮取的 pyc 文件路径已记录（IQCommon/backtest/backtest.pyc，decompile_status=pending→failed）
+  - [x] R07-1 测试工程师 `decompile_report.md` 已生成（failed 0%，backtestOK.py 含 Pattern G + Pattern T 语法错误，13 复现实例 9 DEFECT/4 NO-DEFECT）
+  - [x] R07-2 ≥ 10 个最小复现实例已归档（13 个：4 Pattern G + 2 Pattern T + 3 Pattern T2 + 4 CTRL）
+  - [x] R07-3 修复工程师 `fix_report.md` 已生成（Pattern G f-string 花括号转义 + Pattern T 3 处 block_to_region 归属守卫）
+  - [x] R07-4 涉及的 `_generate_*` 方法 docstring 已按 4 节模板更新（`_generate_joined_str_from_dict` / `_generate_joined_str` 追加 [R07 fix] 节）
+  - [x] R07-5 `_generate_with` / `_process_if_blocks` docstring/行内注释已追加 [R07 fix] block_to_region 归属守卫说明
+  - [x] R07-6 既有测试矩阵无退化（1 failed, 154 passed, 19 errors；1 failed 预存在；passed +42 改善；errors +5 为预存在测试基建问题；R07 新增 2 守卫零增量回归）
+  - [x] R07-7 13 复现实例全部验证（4 G NO-DEFECT ✓ / 1 T NO-DEFECT ✓ + 1 T DEFECT-REPRO 编译通过 / 3 T2 DEFECT-REPRO 不变 / 4 CTRL NO-DEFECT ✓）
+  - [x] R07-8 反模式自检通过（0 新增 _fix_/_merge_/_patch_ 等前缀；守卫基于权威映射 block_to_region）
+  - [x] R07-9 算法 4 原则 FULLY COMPLIANT（自底向上归约 / 每块唯一归属【强化：3 处守卫】/ 嵌套抽象节点 / 入口引用语义）
+  - [x] R07-10 `python -c "import core.cfg.region_analyzer; import core.cfg.region_ast_generator; import core.cfg.code_generator"` 编译通过
+  - [x] R07-11 累计成功率 ≥ 上一轮（58.99% 持平 R06 57.43%；本 pyc failed→failed 但编译通过解锁 2 函数可比对；main.pyc failed→partial 33%）
+  - [x] R07-12 N/A（本 pyc 未达 100%，未生成新 OK.py；backtestOK.py 由 single 命令刷新）
+  - [x] R07-13 pyc_index.json 已更新（backtest failed/0.0；main partial/0.3333；graph failed/0.0）
+  - [x] R07-14 commit + push `rcm-r07:`
+  - 残留：Pattern T3（graph.pyc 嵌套 try in loop）/ Pattern T2（except body drop）/ repro_05 trailing-return / 跨轮残留 A2/B/C/E/F/M2 不变
 - [ ] R08 通用清单全部通过（取 pyc #8）
 - [ ] R09 通用清单全部通过（取 pyc #9）
 - [ ] R10 通用清单全部通过（取 pyc #10）

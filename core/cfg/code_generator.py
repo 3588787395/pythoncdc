@@ -4120,7 +4120,13 @@ class CodeGenerator:
         return f'{{{", ".join(elts_code)}}}'
 
     def _generate_joined_str_from_dict(self, node: Dict[str, Any]) -> str:
-        """[P2-2026] 生成字典格式的JoinedStr（f-string）"""
+        """[P2-2026] 生成字典格式的JoinedStr（f-string）
+
+        [R07 fix] f-string 字面字符串常量片段的 { } 必须转义为 {{ }}（与
+        FormattedValue 产生的真实 {expr} 区分）。否则重编时字面花括号被误解析
+        为替换字段，触发 SyntaxError（empty expression / backslash in expr）。
+        仅字面片段转义，FormattedValue 分支不动；format_spec 上下文不转义。
+        """
         values = node.get('values', [])
         if not values:
             return "''"
@@ -4229,10 +4235,15 @@ class CodeGenerator:
                 # 普通字符串部分
                 # [关键修复] 转义单引号和换行符，避免f-string语法错误
                 escaped = value.replace("'", "\\'").replace('\n', '\\n').replace('\r', '\\r')
+                # [R07 fix] f-string 字面片段的 { } 必须转义为 {{ }}，否则重编时
+                # 字面花括号被误解析为替换字段触发 SyntaxError。
+                escaped = escaped.replace('{', '{{').replace('}', '}}')
                 parts.append(escaped)
             elif isinstance(value, ASTConstant) and isinstance(value.value, str):
                 # [关键修复] f-string中的字符串常量不应该有引号
                 escaped = value.value.replace("'", "\\'").replace('\n', '\\n').replace('\r', '\\r')
+                # [R07 fix] 同上，字面字符串常量片段的花括号转义。
+                escaped = escaped.replace('{', '{{').replace('}', '}}')
                 parts.append(escaped)
             elif isinstance(value, ASTFormattedValue):
                 # 格式化值

@@ -14276,6 +14276,15 @@ AST 映射规则:
                     for b in nested.blocks:
                         if b in _parent_if_else_blocks:
                             continue
+                        # [R07 fix] 依「每块唯一归属」：跳过被其他区域（如
+                        # TryExceptRegion 的 handler_entry / handler body）拥有的
+                        # 块。nested.blocks 可能含并列区域（如 with 之后的 try-except）
+                        # 的 handler 块；若一并标记为 generated，_generate_try 会
+                        # 误判 handler 已消费而跳过 except，产生 try 未关闭
+                        # （SyntaxError: expected 'except' or 'finally'）。
+                        _b_owner = self.region_analyzer.block_to_region.get(b)
+                        if _b_owner is not None and _b_owner is not nested:
+                            continue
                         self.generated_blocks.add(b)
                     if isinstance(nested, LoopRegion) and nested.metadata.get('is_yield_from_loop'):
                         if nested.header_block:
@@ -18013,6 +18022,10 @@ AST 映射规则:
           - 字节码匹配状态: 100% 完全匹配（with_region 191/191）
           - 本方法遵循区域归约算法 4 核心原则:
             自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口
+          - [R07 fix] post-body 块循环（with_cleanup_blocks 分支）增加 block_to_region
+            归属守卫：跳过被其他区域（如 TryExceptRegion handler_entry）拥有的块。修复
+            with 与 try-except 并列时 WithRegion 误消费 try handler entry，导致
+            _generate_try 跳过 except、try 块未关闭的缺陷。依「每块唯一归属」。
         """
         region_id = id(region)
         self._generating_regions.add(region_id)
@@ -18056,6 +18069,17 @@ AST 映射规则:
                 if getattr(_r, 'else_blocks', None):
                     _ancestor_if_else_blocks.update(_r.else_blocks)
             with_cleanup_blocks -= _ancestor_if_else_blocks
+            # [R07 fix] 依「每块唯一归属」：从 with_cleanup_blocks 中排除被其他区域
+            # （如 TryExceptRegion handler_entry）拥有的块。当 with 与 try-except 并列
+            # （try 在 else 分支等，非嵌套于 with）时，R20-Bug7 的嵌套判定不覆盖此情形，
+            # handler entry 仍留在 with_cleanup_blocks 中被下方批量标记为 generated，
+            # 导致 _generate_try 跳过 except。由 block_to_region 权威归属判定排除。
+            _foreign_owned = set()
+            for _cb in with_cleanup_blocks:
+                _cb_owner = self.region_analyzer.block_to_region.get(_cb)
+                if _cb_owner is not None and _cb_owner is not region:
+                    _foreign_owned.add(_cb)
+            with_cleanup_blocks -= _foreign_owned
             for cb in with_cleanup_blocks:
                 self.generated_blocks.add(cb)
             body_end_offset = region.body_offset_end if region.body_offset_end is not None and region.body_offset_end > 0 else 0
@@ -18845,6 +18869,16 @@ AST 映射规则:
                         continue
                     if blk in _ancestor_if_else_blocks:
                         continue
+                    # [R07 fix] 依「每块唯一归属」：跳过被其他区域（如 TryExceptRegion
+                    # 的 handler_entry）拥有的块。当 with 与 try-except 并列（try 在
+                    # else 分支等）时，with 的 cleanup_blocks/exception_blocks 可能
+                    # 误含 try 的 handler entry；此处由 block_to_region 权威归属判定，
+                    # 不消费非本区域拥有的块，交由拥有者区域（_generate_try）处理。
+                    # 修复 _generate_try 因 handler_entry 已 consumed 而跳过 except、
+                    # 导致 try 块未关闭的缺陷。
+                    _blk_owner = self.region_analyzer.block_to_region.get(blk)
+                    if _blk_owner is not None and _blk_owner is not region:
+                        continue
                     if blk in with_cleanup_blocks:
                         self.generated_blocks.add(blk)
                         continue
@@ -18923,6 +18957,15 @@ AST 映射规则:
                 # [R20-Bug7 修复] 跳过祖先 IfRegion 的 elif_final_else / else_blocks 块。
                 # 这些块属于外层 if-elif-else 的 else 分支，不应被 with 标记为 generated。
                 if block in _ancestor_if_else_blocks:
+                    continue
+                # [R07 fix] 依「每块唯一归属」：跳过被其他区域（如 TryExceptRegion
+                # 的 handler_entry / handler body）拥有的块。post-body 循环（上方）
+                # 已有同样守卫；此处 region.blocks 整体标记循环必须重复同一守卫，
+                # 否则 with 会把 try-except 的 handler entry 标记为 generated，
+                # 导致 _generate_try 误判 handler 已消费而跳过 except，产生
+                # try 块未关闭（SyntaxError: expected 'except' or 'finally'）。
+                _blk_owner = self.region_analyzer.block_to_region.get(block)
+                if _blk_owner is not None and _blk_owner is not region:
                     continue
                 self.generated_blocks.add(block)
 
