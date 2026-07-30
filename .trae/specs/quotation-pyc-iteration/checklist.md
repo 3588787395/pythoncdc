@@ -439,6 +439,57 @@
 
 - [ ] R10-1 ~ R10-9
 
+## 第二批 10 轮迭代 (Round 31-40)
+
+> 起点：R30 后基线 127/143 = 88.81% 精确匹配，16 个函数字节码不一致，COMPILE_OK。
+> 目标：每轮提升成功率，最终达到 100% 字节码完全匹配。
+
+## 轮 31 (Round 31)
+
+- [ ] R31-1 测试工程师：反编译 quotation.pyc + 字节码 diff（`rounds/round_31/test_engineer/decompile_report.md`）
+- [ ] R31-2 测试工程师：≥10 最小复现实例（`rounds/round_31/test_engineer/minimal_repros/`）
+- [ ] R31-3 修复工程师：按区域归约算法修复（`rounds/round_31/repair_engineer/fix_report.md`）
+- [ ] R31-4 修复工程师：`_identify_*_regions` 方法 docstring 同步更新（6 项模板）
+- [ ] R31-5 回归测试通过（既有矩阵无退化 + 10+ repro 通过）
+- [ ] R31-6 commit + push `qpyc-r31:`
+- [ ] R31-7 成功率提升（精确匹配数 ≥ R30 基线 127）
+
+## 轮 32 (Round 32)
+
+- [ ] R32-1 ~ R32-7（同 R31 流程，commit `qpyc-r32:`）
+
+## 轮 33 (Round 33)
+
+- [ ] R33-1 ~ R33-7（同 R31 流程，commit `qpyc-r33:`）
+
+## 轮 34 (Round 34)
+
+- [ ] R34-1 ~ R34-7（同 R31 流程，commit `qpyc-r34:`）
+
+## 轮 35 (Round 35)
+
+- [ ] R35-1 ~ R35-7（同 R31 流程，commit `qpyc-r35:`）
+
+## 轮 36 (Round 36)
+
+- [ ] R36-1 ~ R36-7（同 R31 流程，commit `qpyc-r36:`）
+
+## 轮 37 (Round 37)
+
+- [ ] R37-1 ~ R37-7（同 R31 流程，commit `qpyc-r37:`）
+
+## 轮 38 (Round 38)
+
+- [ ] R38-1 ~ R38-7（同 R31 流程，commit `qpyc-r38:`）
+
+## 轮 39 (Round 39)
+
+- [ ] R39-1 ~ R39-7（同 R31 流程，commit `qpyc-r39:`）
+
+## 轮 40 (Round 40)
+
+- [ ] R40-1 ~ R40-7（同 R31 流程，commit `qpyc-r40:`）
+
 ## 退出条件（每轮后检查）
 
 - [ ] E1 quotation.pyc 反编译字节码不一致数 = 0

@@ -1,0 +1,105 @@
+{
+  "total": 143,
+  "exact_match": 127,
+  "instr_match": 0,
+  "instr_diff": [
+    {
+      "name": "<module>",
+      "pyc_instr": 1082,
+      "src_instr": 1023,
+      "diff": -59
+    },
+    {
+      "name": "get_date_and_count",
+      "pyc_instr": 726,
+      "src_instr": 696,
+      "diff": -30
+    },
+    {
+      "name": "one_prod_to_dataframe",
+      "pyc_instr": 452,
+      "src_instr": 453,
+      "diff": 1
+    },
+    {
+      "name": "Void",
+      "pyc_instr": 19,
+      "src_instr": 19,
+      "diff": 0
+    },
+    {
+      "name": "build_current_period_df",
+      "pyc_instr": 107,
+      "src_instr": 107,
+      "diff": 0
+    },
+    {
+      "name": "build_future_fill_time",
+      "pyc_instr": 677,
+      "src_instr": 677,
+      "diff": 0
+    },
+    {
+      "name": "change_his_to_backward",
+      "pyc_instr": 583,
+      "src_instr": 583,
+      "diff": 0
+    },
+    {
+      "name": "datetimeindex_astype",
+      "pyc_instr": 50,
+      "src_instr": 50,
+      "diff": 0
+    },
+    {
+      "name": "getLogger",
+      "pyc_instr": 43,
+      "src_instr": 43,
+      "diff": 0
+    },
+    {
+      "name": "get_date_index",
+      "pyc_instr": 84,
+      "src_instr": 84,
+      "diff": 0
+    },
+    {
+      "name": "get_fundamentals_daily_info",
+      "pyc_instr": 121,
+      "src_instr": 121,
+      "diff": 0
+    },
+    {
+      "name": "get_market_list",
+      "pyc_instr": 33,
+      "src_instr": 33,
+      "diff": 0
+    },
+    {
+      "name": "get_valuation_info",
+      "pyc_instr": 121,
+      "src_instr": 121,
+      "diff": 0
+    },
+    {
+      "name": "get_valuation_new_info",
+      "pyc_instr": 121,
+      "src_instr": 121,
+      "diff": 0
+    },
+    {
+      "name": "load_get_exrights",
+      "pyc_instr": 176,
+      "src_instr": 176,
+      "diff": 0
+    },
+    {
+      "name": "valuation_new",
+      "pyc_instr": 365,
+      "src_instr": 365,
+      "diff": 0
+    }
+  ],
+  "pyc_only": [],
+  "src_only": []
+}
