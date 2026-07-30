@@ -2117,19 +2117,43 @@ class CodeGenerator:
                 return 'None'
     
     def _generate_decorator(self, node: ASTNode) -> str:
-        """生成装饰器表达式（不使用括号包装）"""
+        """生成装饰器表达式（不使用优先级括号包装；Call 调用括号是语法必需）
+
+        1. 算法依据：每块唯一归属 — 装饰器节点的 AST 类型唯一决定其语法形式：
+           ASTName → `@name`（无调用），ASTCall → `@name(...)`（被调用）。
+           CPython 为 `@deco` 生成 `LOAD deco + MAKE_FUNCTION + CALL`（1 个 CALL，
+           deco(func) 应用），为 `@deco()` 生成 `PUSH_NULL + LOAD deco + PRECALL +
+           CALL + MAKE_FUNCTION + CALL`（2 个 CALL，先 deco() 再应用）。两种形式
+           字节码不同，必须通过 AST 节点类型区分渲染。
+        2. 归约顺序：AST → 源码生成阶段（最末期）。
+        3. 唯一归属判定：ASTCall 节点唯一归属「被调用的装饰器」`@deco(...)`，
+           无论是否有参数都必须发射调用括号 `()`；ASTName/ASTAttribute 唯一归属
+           「未被调用的装饰器」`@deco` / `@x.y`，不发射调用括号。
+        4. 嵌套处理：Attribute 链 `@x.y.z` 递归 _generate_decorator(value)。
+        5. 入口引用语义：父 FunctionDef.decorator_list 通过 `@expr` 行引用装饰器
+           子节点；Call 的 func 槽位引用被调用装饰器子节点。
+        6. 反编译流程：decorator AST 节点 → 按 AST 类型渲染 `@expr` 行。
+        7. [R05 fix] Pattern M — 装饰器调用坍缩（@deco() → @deco）：
+           旧版「F08 修复」在 args_code 为空时 `return func_code`（丢弃括号），
+           将 `@deco()`（ASTCall 零参）坍缩为 `@deco`（ASTName 形式），丢失
+           PUSH_NULL/PRECALL/CALL 三指令。根因：ASTCall 节点语义即「调用」，
+           与是否有参数无关；零参调用 `deco()` 仍需括号以触发 CALL 指令。
+           修复：ASTCall 分支始终发射 `func_code(...)`，args 为空时为 `func_code()`。
+           ASTName 分支不受影响（仍为 `@deco`）。依「父引用子入口」: 父
+           FunctionDef 通过 `@deco()` 行引用被调用的装饰器 Call 子节点。
+        """
         if isinstance(node, ASTCall):
             # 装饰器调用：直接生成调用表达式，不使用优先级包装
             func_code = self._generate_decorator(node.func)
             args_code = []
-            
+
             # 处理位置参数
             pparams = node.pparams if hasattr(node, 'pparams') else []
             for arg in pparams:
                 # [关键修复] 使用parent_precedence=0避免给常量添加括号
                 arg_code = self._generate_expression(arg, parent_precedence=0)
                 args_code.append(arg_code)
-            
+
             # [关键修复] 处理关键字参数
             kwparams = node.kwparams if hasattr(node, 'kwparams') else []
             for kw in kwparams:
@@ -2139,11 +2163,13 @@ class CodeGenerator:
                     # [关键修复] 使用parent_precedence=0避免给常量添加括号
                     kw_value = self._generate_expression(kw.value, parent_precedence=0)
                     args_code.append(f'{kw_name}={kw_value}')
-            
-            if args_code:
-                return f'{func_code}({", ".join(args_code)})'
-            else:
-                return func_code
+
+            # [R05 fix] Pattern M: ASTCall 节点语义即「调用」，无论是否有参数都
+            # 必须发射调用括号 ()。@deco()（零参调用）与 @deco（无调用）字节码
+            # 不同：前者含 PUSH_NULL/PRECALL/CALL，后者不含。ASTCall → @deco()，
+            # ASTName → @deco。旧版在此分支 args 为空时 return func_code（丢括号）
+            # 导致 @deco() 坍缩为 @deco。
+            return f'{func_code}({", ".join(args_code)})'
         elif isinstance(node, ASTName):
             return node.name if hasattr(node, 'name') else str(node)
         elif isinstance(node, ASTAttribute):

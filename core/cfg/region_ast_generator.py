@@ -1607,6 +1607,16 @@ class RegionASTGenerator:
         5. 入口引用语义：父 FunctionDef.decorator_list 引用各装饰器子节点。
         6. 反编译流程：从 MAKE_FUNCTION 向前扫描 → 收集 LOAD_NAME 等装饰器
            名 → 合并 LOAD_ATTR 链为 Attribute → 按 CALL 数确定参数化装饰器。
+        7. [R05 fix] Pattern M — 装饰器调用坍缩（@deco() → @deco）：
+           CPython 为 `@deco()`（零参调用）生成 `PUSH_NULL + LOAD_NAME deco +
+           PRECALL + CALL`（deco 调用）紧接 MAKE_FUNCTION。旧逻辑将 CALL 与
+           PRECALL/PUSH_NULL 一并跳过（视为噪声），且参数检测循环
+           `range(num_decorators - 1)` 排除最内层装饰器，导致零参 CALL 不可见，
+           `@deco()` 坍缩为 `@deco`（丢失 PUSH_NULL/PRECALL/CALL 三指令）。
+           修复：将 CALL 检测从 PRECALL/PUSH_NULL 跳过列表中分离，独立标记
+           `has_decorator_call`；循环扩展为 `range(num_decorators)` 覆盖最内层
+           装饰器；CALL 存在即发射 Call 节点（args 可为空）。依「父引用子入口」:
+           父 FunctionDef.decorator_list 通过 Call 节点引用被调用的装饰器子节点。
 
         Args:
             instructions: 基本块指令列表
@@ -1723,8 +1733,15 @@ class RegionASTGenerator:
 
         has_decorator_args = [False] * num_decorators
         arg_nodes_per_decorator = [[] for _ in range(num_decorators)]
+        # [R05 fix] Pattern M: track whether each decorator entry is itself invoked
+        # (i.e. @deco(...) form) by detecting a CALL between the decorator LOAD and
+        # the next boundary. Previously only `range(num_decorators - 1)` was scanned
+        # (excluding the innermost decorator), and a CALL with zero args (e.g.
+        # @deco()) was skipped as noise together with PRECALL/PUSH_NULL — collapsing
+        # @deco() to @deco (PUSH_NULL/PRECALL/CALL dropped). See docstring section 4.
+        has_decorator_call = [False] * num_decorators
 
-        for dec_i in range(num_decorators - 1):
+        for dec_i in range(num_decorators):
             # [R10-Fix1] Use end_idx (last instruction of this decorator entry)
             # instead of idx+1, so merged Attribute entries (x.setter) don't
             # treat the LOAD_ATTR as an arg.
@@ -1734,8 +1751,15 @@ class RegionASTGenerator:
             peek_idx = start_idx
             while peek_idx < end_idx:
                 peek_op = instructions[peek_idx].opname
-                if peek_op in ('PRECALL', 'PUSH_NULL', 'CALL', 'CALL_FUNCTION',
-                              'CALL_METHOD', 'CALL_FUNCTION_KW', 'CALL_FUNCTION_EX'):
+                # [R05 fix] Separate CALL detection from PRECALL/PUSH_NULL skip:
+                # a CALL between the decorator LOAD and the boundary means the
+                # decorator was invoked (@deco(...) form), even with zero args.
+                if peek_op in ('CALL', 'CALL_FUNCTION', 'CALL_METHOD',
+                              'CALL_FUNCTION_KW', 'CALL_FUNCTION_EX'):
+                    has_decorator_call[dec_i] = True
+                    peek_idx += 1
+                    continue
+                elif peek_op in ('PRECALL', 'PUSH_NULL'):
                     peek_idx += 1
                     continue
                 elif peek_op in ('LOAD_CONST',) and not hasattr(instructions[peek_idx].argval, 'co_code'):
@@ -1756,7 +1780,7 @@ class RegionASTGenerator:
         result = []
         for dec_i, entry in enumerate(decorator_entries[:num_decorators]):
             node = entry.get('node', {'type': 'Name', 'id': entry['name'], 'ctx': 'Load'})
-            if has_decorator_args[dec_i]:
+            if has_decorator_call[dec_i] or has_decorator_args[dec_i]:
                 result.append({
                     'type': 'Call',
                     'func': node,

@@ -64,7 +64,11 @@
   - [x] T2.04.2 修复工程师：按区域归约算法修复 → `rounds/round_04/repair_engineer/fix_report.md`（Pattern A 子模式 A1 BoolOp-in-try-body-if 坍缩修复，4/5 Pattern A repro 修复，实际 pyc match_rate 持平 53.33% — 实际函数触发 A2 子模式残留）
   - [x] T2.04.3 commit + push `rcm-r04:`
   - 残留：Pattern A 子模式 A2（9 函数）+ Pattern B/C/E 共 21 个不一致函数，后续轮次修复
-- [ ] T2.05 第 05 轮
+- [x] T2.05 第 05 轮（取 pyc #4: IQCommon/data/base_storage.pyc，新 pyc 轮询）
+  - [x] T2.05.1 测试工程师：取下一个 pyc，反编译 + 字节码 diff → `rounds/round_05/test_engineer/decompile_report.md`（80%→100%，1 mismatch，12 复现实例 7 DEFECT-REPRO/5 NO-DEFECT）
+  - [x] T2.05.2 修复工程师：按区域归约算法修复 → `rounds/round_05/repair_engineer/fix_report.md`（Pattern M 装饰器调用坍缩 @deco()→@deco 修复，_generate_decorator ASTCall 始终发射括号，11/12 repro NO-DEFECT，base_storage.pyc 100% 升级 ok）
+  - [x] T2.05.3 commit + push `rcm-r05:`
+  - 残留：Pattern M2（repro_11 堆叠装饰器嵌套错误，表达式重建层，后续轮次修复）
 - [ ] T2.06 第 06 轮
 - [ ] T2.07 第 07 轮
 - [ ] T2.08 第 08 轮

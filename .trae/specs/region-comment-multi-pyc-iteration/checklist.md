@@ -113,7 +113,23 @@
   - [x] R04-13 pyc_index.json 已更新（partial/0.5333/ok_py=True/round=4）
   - [x] R04-14 commit + push `rcm-r04:`
   - 残留：Pattern A 子模式 A2（9 函数，简单条件 + try-body if 坍缩，非 BoolOp 触发）+ Pattern B/C/E 共 21 个不一致函数，后续轮次修复
-- [ ] R05 通用清单全部通过（取 pyc #5）
+- [x] R05 通用清单全部通过（取 pyc #4: IQCommon/data/base_storage.pyc，新 pyc 轮询，非 klinedata.pyc）
+  - [x] R05-0 该轮取的 pyc 文件路径已记录（IQCommon/data/base_storage.pyc，decompile_status=pending → ok）
+  - [x] R05-1 测试工程师 `decompile_report.md` 已生成（80%→100%，1 mismatch，12 复现实例 7 DEFECT-REPRO/5 NO-DEFECT）
+  - [x] R05-2 ≥ 10 个最小复现实例已归档（12 个，修复后 11 NO-DEFECT / 1 DEFECT-REPRO）
+  - [x] R05-3 修复工程师 `fix_report.md` 已生成（Pattern M 装饰器调用坍缩修复，6/7 Pattern M repro 修复）
+  - [x] R05-4 涉及的 `_generate_*` 方法 docstring 已按 4 节模板更新（`_generate_decorator` 扩展为 7 节：算法依据/归约顺序/唯一归属/嵌套处理/入口引用/反编译流程/R05 fix）
+  - [x] R05-5 `_reconstruct_decorator_chain` docstring 已追加第 7 节 [R05 fix] Pattern M（has_decorator_call 跟踪 / CALL 检测分离）
+  - [x] R05-6 既有测试矩阵无退化（Post-R05 == R04 基线: 1 failed, 112 passed, 14 errors）
+  - [x] R05-7 12 复现实例全部验证（11 NO-DEFECT / 1 DEFECT-REPRO，6/7 Pattern M repro 修复）
+  - [x] R05-8 反模式自检通过（0 新增 _fix_/_merge_/_patch_ 等前缀）
+  - [x] R05-9 算法 4 原则 FULLY COMPLIANT（自底向上归约 / 每块唯一归属 / 嵌套抽象节点 / 入口引用语义）
+  - [x] R05-10 `python -c "import core.cfg.code_generator; import core.cfg.region_ast_generator"` 编译通过
+  - [x] R05-11 累计成功率 ≥ 上一轮（55.08% → 56.02%，单调递增；本 pyc 80%→100%）
+  - [x] R05-12 本 pyc 达 100%，base_storageOK.py 由 single 命令重新生成（未手工编辑）
+  - [x] R05-13 pyc_index.json 已更新（ok/1.0/ok_py=True/round=5）
+  - [x] R05-14 commit + push `rcm-r05:`
+  - 残留：Pattern M2（repro_11 堆叠装饰器嵌套错误，表达式重建层，后续轮次修复）
 - [ ] R06 通用清单全部通过（取 pyc #6）
 - [ ] R07 通用清单全部通过（取 pyc #7）
 - [ ] R08 通用清单全部通过（取 pyc #8）
