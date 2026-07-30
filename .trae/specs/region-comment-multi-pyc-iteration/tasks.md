@@ -47,11 +47,12 @@
 
 ### 首批轮次（按 pyc 字母序）
 
-- [x] T2.01 第 01 轮（取 pyc_index.json 第 1 个 pyc）
-  - [x] T2.01.1 测试工程师：取下一个 pyc，反编译 + 字节码 diff → `rounds/round_01/test_engineer/decompile_report.md`
-  - [x] T2.01.2 修复工程师：按区域归约算法修复 → `rounds/round_01/repair_engineer/fix_report.md`
-  - [x] T2.01.3 commit + push `rcm-r01:`
-- [ ] T2.02 第 02 轮（取第 2 个 pyc）
+- [x] T2.01 第 01 轮（取 pyc_index.json 第 1 个 pyc: IQCommon/__init__.pyc）
+  - [x] T2.01.1 测试工程师：取下一个 pyc，反编译 + 字节码 diff → `rounds/round_01/test_engineer/decompile_report.md`（0% → 50%，try 体坍缩缺陷，12 复现实例）
+  - [x] T2.01.2 修复工程师：按区域归约算法修复 → `rounds/round_01/repair_engineer/fix_report.md`（3 处修复，TRY 90.43%→96.96%，10/12 复现通过，get_python_version 100%）
+  - [x] T2.01.3 commit + push `rcm-r01:` (1cf0fde + 8d01fe3)
+  - 残留：repro_10 except return 值丢失 / repro_12 elif BoolOp 拆分（独立缺陷，后续轮次修复）
+- [ ] T2.02 第 02 轮（取第 2 个 pyc: IQCommon/api/__init__.pyc）
 - [ ] T2.03 第 03 轮（取第 3 个 pyc）
 - [ ] T2.04 第 04 轮
 - [ ] T2.05 第 05 轮
