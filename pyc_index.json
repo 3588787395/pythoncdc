@@ -75,11 +75,10 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/backtest/backtest.pyc",
     "size": 9047,
     "function_count": 2,
-    "decompile_status": "failed",
-    "bytecode_match_rate": 0.0,
+    "decompile_status": "partial",
+    "bytecode_match_rate": 0.5,
     "ok_py_generated": true,
-    "last_tested_round": 9,
-    "error": "R09: Pattern G2 f-string COMPARE_OP truncation fixed (5/25 -> 25/25 segments); residual SyntaxError from latent Pattern Q quoting bug ({'1'!s} in single-quoted f-string, code_generator.py). single cmd broken: py_compile.compile(quiet=2) returns None"
+    "last_tested_round": 10
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/common/__init__.pyc",

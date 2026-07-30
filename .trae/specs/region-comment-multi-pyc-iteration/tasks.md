@@ -89,7 +89,11 @@
   - [x] T2.09.2 修复工程师：按区域归约算法修复 → `rounds/round_09/repair_engineer/fix_report.md`（Pattern G2 修复，_if_extract_cond_instructions COMPARE_OP 清空加双重 FORMAT_VALUE 结构守卫；8/9 DEFECT-REPRO 修复；f-string 5/25→25/25 段；残留 repro_12 链式比较跨块误判 + latent Pattern Q quoting bug）
   - [x] T2.09.3 commit + push `rcm-r09:`
   - 残留：repro_12 Pattern G3（链式比较跨块误判）/ backtest.pyc Pattern Q（f-string quoting bug，latent，code_generator.py）/ 跨轮残留 T3/T2/A2/B/C/E/F/M2 不变
-- [ ] T2.10 第 10 轮
+- [x] T2.10 第 10 轮（取 pyc #6: IQCommon/backtest/backtest.pyc，R09 残留 Pattern Q，failed 优先）
+  - [x] T2.10.1 测试工程师：取下一个 pyc，反编译 + 字节码 diff → `rounds/round_10/test_engineer/decompile_report.md`（failed 0%，Pattern Q f-string 定界符引号冲突，handle_backtest_build SyntaxError line 69，10 复现实例 7 DEFECT-REPRO）
+  - [x] T2.10.2 修复工程师：按区域归约算法修复 → `rounds/round_10/repair_engineer/fix_report.md`（Pattern Q 修复，_generate_joined_str + _generate_joined_str_from_dict + FormattedValue 顶层分支 定界符选择重构；7/7 DEFECT-REPRO 修复；backtest failed→partial 50%，handle_backtest_build 100% 一致）
+  - [x] T2.10.3 commit + push `rcm-r10:`
+  - 残留：backtest.pyc `<module>` 8 true_diffs（NOP padding / LOAD_CONST 顺序，Pattern R 模块级）/ 跨轮残留 T3/T2/A2/B/C/E/F/M2/G3 不变
 - [ ] T2.11 第 11 轮（持续，直到所有 pyc `decompile_status = ok`）
 - [ ] T2.NN ... 持续直到退出条件满足
 

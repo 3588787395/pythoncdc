@@ -3185,10 +3185,14 @@ class CodeGenerator:
                 # _generate_joined_str_from_dict 调用本方法时不走本分支（它通过
                 # node_type 分发前的 if 链已处理 JoinedStr），因此不会双重包装。
                 _fv_inner = self._generate_formatted_value_from_dict(node)
-                if "'" in _fv_inner and '"' not in _fv_inner:
+                # [R10 fix] Pattern Q — 选择未出现在表达式片段中的引号作定界符
+                # （Python 3.11 f-string {expr} 内不允许定界符引号，不允许反斜杠转义）。
+                if "'" not in _fv_inner:
+                    return f"f'{_fv_inner}'"
+                elif '"' not in _fv_inner:
                     return f'f"{_fv_inner}"'
                 else:
-                    return f"f'{_fv_inner}'"
+                    return f"f'''{_fv_inner}'''"
             elif node_type == 'BinOp':
                 # [T1修复] dict-based BinOp 需要正确的优先级和括号处理
                 # 原先通过 _generate_annotation_from_dict 回退，不处理括号
@@ -4126,33 +4130,68 @@ class CodeGenerator:
         FormattedValue 产生的真实 {expr} 区分）。否则重编时字面花括号被误解析
         为替换字段，触发 SyntaxError（empty expression / backslash in expr）。
         仅字面片段转义，FormattedValue 分支不动；format_spec 上下文不转义。
+
+        [R10 fix] Pattern Q — FormattedValue 内表达式可能含字符串字面量（如
+        `{'1'!s}`、`{x != 'tick'!s}`）。Python 3.11 f-string 表达式片段（`{...}`
+        内）不允许出现定界符引号（未转义），也不允许反斜杠转义；因此定界符必须
+        避开所有表达式片段中出现的引号字符。旧逻辑扫描整个 content 选定界符，
+        当 content 同时含 `'`（来自 FormattedValue）和 `"`（来自字面片段）时
+        落入 else 分支选单引号定界，与 FormattedValue 内未转义的引号冲突 →
+        SyntaxError。修复：分两遍渲染 — 先渲染表达式片段并扫描其引号；选择未
+        出现在表达式片段中的引号作定界符；按定界符转义字面片段（仅转义定界符
+        引号 + 换行 + 花括号，另一引号原样保留）。算法依据：原则 2「每块唯一
+        归属」— 字面片段归字面层（可转义），表达式片段归表达式层（不可转义、
+        不可含定界符引号）；定界符选择由表达式片段内容决定。
         """
         values = node.get('values', [])
         if not values:
             return "''"
 
-        parts = []
+        # 第一遍：分类渲染。literal 项存原始字面文本（未转义），expr 项存已渲染
+        # 的表达式源码（含 {} 包裹）。两者分别处理以避免字面引号干扰定界符选择。
+        rendered = []  # list of (is_literal, text)
         for value in values:
             if isinstance(value, str):
-                escaped = value.replace("'", "\\'").replace('\n', '\\n').replace('\r', '\\r')
-                parts.append(escaped)
+                rendered.append((True, value))
             elif isinstance(value, dict):
                 value_type = value.get('type')
                 if value_type == 'Constant' and isinstance(value.get('value'), str):
-                    escaped = value['value'].replace("'", "\\'").replace('\n', '\\n').replace('\r', '\\r')
-                    parts.append(escaped)
+                    rendered.append((True, value['value']))
                 elif value_type == 'FormattedValue':
-                    parts.append(self._generate_formatted_value_from_dict(value))
+                    rendered.append((False, self._generate_formatted_value_from_dict(value)))
                 else:
-                    parts.append(self._generate_expression(value, 0))
+                    rendered.append((False, self._generate_expression(value, 0)))
             else:
-                parts.append(self._generate_expression(value, 0))
+                rendered.append((False, self._generate_expression(value, 0)))
+
+        # 第二遍：确定定界符。扫描表达式片段中出现的引号字符。
+        # Python 3.11 f-string 表达式片段（{...}）内不允许出现定界符引号（未转义），
+        # 也不允许反斜杠转义。因此必须选择未出现在任何表达式片段中的引号。
+        fv_has_single = any("'" in text for is_lit, text in rendered if not is_lit)
+        fv_has_double = any('"' in text for is_lit, text in rendered if not is_lit)
+        if not fv_has_single:
+            delim = "'"
+        elif not fv_has_double:
+            delim = '"'
+        else:
+            # 表达式片段同时含 ' 和 "：单/双引号定界符均冲突。
+            # 回退到三引号（仍可能冲突，但属罕见边界）。
+            delim = "'''"
+
+        # 第三遍：按定界符转义字面片段。仅转义定界符引号与换行；另一引号原样保留。
+        # 表达式片段不变（其引号已由定界符选择保证不冲突）。
+        # [R07 fix] 字面片段的 { } 仍需转义为 {{ }}。
+        parts = []
+        for is_lit, text in rendered:
+            if is_lit:
+                esc = text.replace(delim, '\\' + delim).replace('\n', '\\n').replace('\r', '\\r')
+                esc = esc.replace('{', '{{').replace('}', '}}')
+                parts.append(esc)
+            else:
+                parts.append(text)
 
         content = ''.join(parts)
-        if "'" in content and '"' not in content:
-            return f'f"{content}"'
-        else:
-            return f"f'{content}'"
+        return 'f' + delim + content + delim
 
     def _generate_formatted_value_from_dict(self, node: Dict[str, Any]) -> str:
         """[P2-2026] 生成字典格式的FormattedValue"""
@@ -4225,40 +4264,74 @@ class CodeGenerator:
         return ''.join(parts)
 
     def _generate_joined_str(self, node: ASTJoinedStr) -> str:
-        """生成f-string表达式"""
+        """生成f-string表达式
+
+        [R10 fix] Pattern Q — FormattedValue 内表达式可能含字符串字面量（如
+        `{'1'!s}`、`{x != 'tick'!s}`）。Python 3.11 f-string 表达式片段（`{...}`
+        内）不允许出现定界符引号（未转义），也不允许反斜杠转义；因此定界符必须
+        避开所有表达式片段中出现的引号字符。旧逻辑扫描整个 content 选定界符，
+        当 content 同时含 `'`（来自 FormattedValue 的 `'1'`）和 `"`（来自字面
+        片段 `"plugins"`）时落入 else 分支选单引号定界，与 FormattedValue 内
+        未转义的 `'1'` 冲突 → `SyntaxError: f-string: expecting '}'`。
+
+        修复（算法驱动，非补丁）— 分两遍渲染：
+        1. 先渲染所有 FormattedValue/表达式片段（含 `{}` 包裹），扫描其中出现
+           的引号字符；
+        2. 选择定界符：表达式片段无 `'` → 用 `'`；无 `"` → 用 `"`；两者皆有 →
+           三引号 `'''`（罕见边界）；
+        3. 按定界符转义字面片段：仅转义定界符引号（不总是 `'`）+ 换行 + 花括号
+           （[R07 fix]）；另一引号原样保留。
+
+        算法依据：原则 2「每块唯一归属」— 字面片段归字面层（可转义、可重新选
+        择引号），表达式片段归表达式层（不可转义、不可含定界符引号）；定界符
+        选择由表达式片段内容决定，确保表达式片段不变即可放入 f-string。
+        """
         if not hasattr(node, '_values') or not node._values:
             return "''"
 
-        parts = []
+        # 第一遍：分类渲染。literal 项存原始字面文本（未转义），expr 项存已渲染
+        # 的表达式源码（含 {} 包裹）。两者分别处理以避免字面引号干扰定界符选择。
+        rendered = []  # list of (is_literal, text)
         for value in node._values:
             if isinstance(value, str):
-                # 普通字符串部分
-                # [关键修复] 转义单引号和换行符，避免f-string语法错误
-                escaped = value.replace("'", "\\'").replace('\n', '\\n').replace('\r', '\\r')
-                # [R07 fix] f-string 字面片段的 { } 必须转义为 {{ }}，否则重编时
-                # 字面花括号被误解析为替换字段触发 SyntaxError。
-                escaped = escaped.replace('{', '{{').replace('}', '}}')
-                parts.append(escaped)
+                rendered.append((True, value))
             elif isinstance(value, ASTConstant) and isinstance(value.value, str):
-                # [关键修复] f-string中的字符串常量不应该有引号
-                escaped = value.value.replace("'", "\\'").replace('\n', '\\n').replace('\r', '\\r')
-                # [R07 fix] 同上，字面字符串常量片段的花括号转义。
-                escaped = escaped.replace('{', '{{').replace('}', '}}')
-                parts.append(escaped)
+                # 字面字符串常量片段（JoinedStr.values 中的 Constant str）
+                rendered.append((True, value.value))
             elif isinstance(value, ASTFormattedValue):
-                # 格式化值
-                parts.append(self._generate_formatted_value(value))
+                rendered.append((False, self._generate_formatted_value(value)))
             else:
-                # 其他类型，尝试生成表达式
                 # [关键修复] 使用0作为parent_precedence，避免表达式被添加括号
-                parts.append(self._generate_expression(value, 0))
+                rendered.append((False, self._generate_expression(value, 0)))
 
-        # 使用单引号或双引号，确保语法正确
-        content = ''.join(parts)
-        if "'" in content and '"' not in content:
-            return f'f"{content}"'
+        # 第二遍：确定定界符。扫描表达式片段中出现的引号字符。
+        # Python 3.11 f-string 表达式片段（{...}）内不允许出现定界符引号（未转义），
+        # 也不允许反斜杠转义。因此必须选择未出现在任何表达式片段中的引号。
+        fv_has_single = any("'" in text for is_lit, text in rendered if not is_lit)
+        fv_has_double = any('"' in text for is_lit, text in rendered if not is_lit)
+        if not fv_has_single:
+            delim = "'"
+        elif not fv_has_double:
+            delim = '"'
         else:
-            return f"f'{content}'"
+            # 表达式片段同时含 ' 和 "：单/双引号定界符均冲突。
+            # 回退到三引号（仍可能冲突，但属罕见边界）。
+            delim = "'''"
+
+        # 第三遍：按定界符转义字面片段。仅转义定界符引号与换行；另一引号原样保留。
+        # 表达式片段不变（其引号已由定界符选择保证不冲突）。
+        # [R07 fix] 字面片段的 { } 仍需转义为 {{ }}。
+        parts = []
+        for is_lit, text in rendered:
+            if is_lit:
+                esc = text.replace(delim, '\\' + delim).replace('\n', '\\n').replace('\r', '\\r')
+                esc = esc.replace('{', '{{').replace('}', '}}')
+                parts.append(esc)
+            else:
+                parts.append(text)
+
+        content = ''.join(parts)
+        return 'f' + delim + content + delim
     
     def _generate_formatted_value(self, node: ASTFormattedValue) -> str:
         """生成格式化值表达式"""

@@ -198,7 +198,23 @@
   - [x] R09-13 pyc_index.json 已更新（backtest last_tested_round=9，error 记录 R09 Pattern G2 修复 + Pattern Q 残留）
   - [x] R09-14 commit + push `rcm-r09:`
   - 残留：repro_12 Pattern G3（链式比较跨块误判，区域分析层）/ backtest.pyc Pattern Q（f-string quoting bug，latent，code_generator.py）/ 跨轮残留 T3/T2/A2/B/C/E/F/M2 不变
-- [ ] R10 通用清单全部通过（取 pyc #10）
+- [x] R10 通用清单全部通过（取 pyc #6: IQCommon/backtest/backtest.pyc，R09 残留 Pattern Q，failed 优先）
+  - [x] R10-0 该轮取的 pyc 文件路径已记录（IQCommon/backtest/backtest.pyc，decompile_status=failed→partial）
+  - [x] R10-1 测试工程师 `decompile_report.md` 已生成（failed 0%，Pattern Q f-string 定界符引号冲突，handle_backtest_build SyntaxError line 69，10 复现实例 7 DEFECT-REPRO / 3 NO-DEFECT）
+  - [x] R10-2 ≥ 10 个最小复现实例已归档（10 个，修复前 7 DEFECT-REPRO / 3 NO-DEFECT）
+  - [x] R10-3 修复工程师 `fix_report.md` 已生成（Pattern Q 修复，_generate_joined_str + _generate_joined_str_from_dict + FormattedValue 顶层分支 定界符选择重构）
+  - [x] R10-4 N/A（未修改 `_identify_*_regions` 方法，无需更新 6 节 docstring）
+  - [x] R10-5 涉及的 `_generate_*` 方法 docstring 已按 4 节模板更新（`_generate_joined_str` docstring 重写含 [R10 fix] Pattern Q 段；`_generate_joined_str_from_dict` docstring 追加 [R10 fix] 段；FormattedValue 顶层分支行内注释追加 [R10 fix]）
+  - [x] R10-6 既有测试矩阵无退化（Post-R10 == R09 基线: 1 failed, 154 passed, 19 errors，零回归）
+  - [x] R10-7 10 复现实例全部验证（修复后 0 DEFECT-REPRO / 10 NO-DEFECT）
+  - [x] R10-8 反模式自检通过（0 新增 _fix_/_merge_/_patch_ 等前缀；定界符选择基于 Python 3.11 f-string 语法约束）
+  - [x] R10-9 算法 4 原则 FULLY COMPLIANT（自底向上归约 / 每块唯一归属【强化：字面片段与表达式片段分层归属，定界符由表达式片段内容决定】/ 嵌套抽象节点 / 入口引用语义）
+  - [x] R10-10 `python -c "import core.cfg.region_analyzer; import core.cfg.region_ast_generator; import core.cfg.code_generator"` 编译通过
+  - [x] R10-11 累计成功率 ≥ 上一轮（R09 committed 67.05% → R10 67.28%，单调递增；backtest.pyc failed→partial 50%）
+  - [x] R10-12 N/A（本 pyc 未达 100%，未生成新 OK.py；backtestOK.py 由 _r10_diag.py 重新生成，编译通过，未手工编辑）
+  - [x] R10-13 pyc_index.json 已更新（backtest partial/0.5/ok_py=True/round=10，error 清除）
+  - [x] R10-14 commit + push `rcm-r10:`
+  - 残留：backtest.pyc `<module>` 8 true_diffs（NOP padding / LOAD_CONST 顺序，Pattern R 模块级）/ 跨轮残留 T3/T2/A2/B/C/E/F/M2/G3 不变
 - [ ] R11+ 持续直到所有 pyc `decompile_status = ok`
 
 ## 阶段三（Phase 3：全量验证与 +OK 生成）
