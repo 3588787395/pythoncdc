@@ -16872,6 +16872,24 @@ AST 映射规则:
                 stmt_instrs = []
                 _yield_cleanup_pending = True
                 continue
+            # [R21 fix] POP_TOP is a statement boundary for expression
+            # statements (e.g., `time_index.append(...)` compiles to
+            # <expr_instrs> + POP_TOP). Without this, the accumulated
+            # stmt_instrs are mixed with subsequent statement instructions
+            # (e.g., `i += 1`), causing the expression statement to be lost
+            # when _build_store_statement processes the combined instructions.
+            # 依「每块唯一归属」: <expr_instrs> + POP_TOP belong to a single
+            # Expr(expr) statement node, not mixed with the next statement.
+            if instr.opname == 'POP_TOP' and stmt_instrs:
+                _pop_expr_val = self.expr_reconstructor.reconstruct(list(stmt_instrs))
+                if _pop_expr_val is not None:
+                    if isinstance(_pop_expr_val, dict):
+                        _pop_expr_val = self._convert_lambda_function_objects(_pop_expr_val)
+                    stmts.append({'type': 'Expr', 'value': _pop_expr_val})
+                    stmt_instrs = []
+                    continue
+                # reconstruct failed — fall through to append POP_TOP so
+                # _build_statement can attempt handling at end of loop.
             stmt_instrs.append(instr)
         if stmt_instrs:
             stmt = self._build_statement(stmt_instrs)
@@ -22367,6 +22385,46 @@ AST 映射规则:
                         self.generated_blocks.add(block)
                     return results
 
+            # [R21 fix] Chained container pattern takes priority over
+            # merge_context dispatch. When the ternary's merge_block is another
+            # TernaryRegion's entry and that inner ternary has a container_type
+            # (dict/list/tuple/set), the ternary is part of a chained container
+            # construction (e.g., BUILD_CONST_KEY_MAP + STORE_SUBSCR dict
+            # assignment). The merge_context may be misclassified (e.g.,
+            # 'compare' when merge_block is the inner ternary's condition_block
+            # which contains a COMPARE_OP belonging to the inner ternary's own
+            # condition, not to a comparison consuming this ternary's result).
+            # Without this check, the ternary falls through to the merge_context
+            # dispatch (e.g., merge_ctx == 'compare' at L22443) and is emitted as
+            # a bare Expr(IfExp), while the inner ternary's container is emitted
+            # separately as an empty dict — losing all dict values.
+            # 依「自底向上归约」: outer ternary is reduced as part of the
+            #   container chain, not as a standalone expression.
+            # 依「每块唯一归属」: all chained ternaries' blocks belong to the
+            #   single container assignment statement.
+            # 依「父引用子入口」: parent container references chained ternaries
+            #   via merge_block → entry links.
+            if region.merge_block is not None:
+                _has_chained_container_inner = False
+                for _r in self.regions:
+                    if (isinstance(_r, TernaryRegion) and _r is not region
+                            and _r.entry is region.merge_block
+                            and getattr(_r, 'container_type', None) is not None):
+                        _has_chained_container_inner = True
+                        break
+                if _has_chained_container_inner:
+                    _chained_container_stmt = self._try_build_ternary_chained_container(
+                        region, ternary_expr)
+                    if _chained_container_stmt is not None:
+                        results.append(_chained_container_stmt)
+                        _post_extra = getattr(
+                            region, 'post_consumer_extra_stmts', None)
+                        if _post_extra:
+                            results.extend(_post_extra)
+                        for block in region.blocks:
+                            self.generated_blocks.add(block)
+                        return results
+
             # Phase 12修复: 根据merge_context决定输出格式（保守策略）
             if merge_ctx == 'iter':
                 # [R16-04/05 fix] Comprehension iter is ternary.
@@ -24110,6 +24168,10 @@ AST 映射规则:
                         region, ternary_expr)
                     if _chained_container is not None:
                         results.append(_chained_container)
+                        _post_extra = getattr(
+                            region, 'post_consumer_extra_stmts', None)
+                        if _post_extra:
+                            results.extend(_post_extra)
                         for block in region.blocks:
                             self.generated_blocks.add(block)
                         return results
@@ -26939,6 +27001,133 @@ AST 映射规则:
             _func_def['name'] = innermost.value_target
             return _func_def
 
+    def _extract_dict_prefix_values(self, condition_block) -> List[Dict[str, Any]]:
+        """从 ternary condition_block 的前缀指令中提取独立的值表达式列表。
+
+        用于 BUILD_CONST_KEY_MAP+STORE_SUBSCR dict 构建模式：当 dict 字面量
+        包含混合的纯 LOAD 值表达式和三元表达式时，纯 LOAD 值被编译为
+        condition_block 中条件测试之前的前缀指令序列（每条值表达式压栈一次）。
+        本方法将该前缀序列按栈语义切分为独立的值表达式。
+
+        算法角色:
+            辅助方法，供 _try_build_ternary_chained_container 的 dict 分支调用。
+        算法依据:
+            基于栈效应的向后扫描。每个值表达式净压栈 +1。从条件测试起点向前
+            反向扫描，每找到一段净效应 +1 的指令序列即为一个值表达式。
+            与 _generate_ternary 中 cond_val_start 检测使用相同的栈效应模型。
+        归约顺序:
+            自底向上——从最内层（最后压栈的值）向前逐段归约。
+        唯一归属判定:
+            condition_block 的前缀指令归属当前 ternary 的父 Dict 节点；
+            条件测试指令归属当前 ternary 的 IfExp test。
+        嵌套处理:
+            每个值表达式是 Dict 的一个独立 value 子节点，不与 ternary IfExp
+            嵌套。
+        入口引用语义:
+            父 Dict 通过各值表达式在 condition_block 中的压栈顺序引用它们。
+        反编译流程:
+            1. 过滤噪声指令，找到条件测试起点（向后扫描，needed=1）。
+            2. 对前缀 [0, cond_start) 反复向后扫描（needed=1），切分出各值段。
+            3. 对每段调用 expr_reconstructor.reconstruct 重建 AST。
+            4. 返回值表达式列表（压栈顺序）。
+        """
+        if condition_block is None:
+            return []
+        instrs = [i for i in condition_block.instructions
+                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+        if not instrs:
+            return []
+        cond_last = condition_block.get_last_instruction()
+
+        # --- 找到条件测试的起始位置（向后扫描，needed=1）---
+        cond_val_start = None
+        _needed = 1
+        for _ci_idx in range(len(instrs) - 1, -1, -1):
+            _ci = instrs[_ci_idx]
+            if _ci is cond_last:
+                continue
+            if _ci.opname in ('STORE_FAST', 'STORE_NAME',
+                              'STORE_GLOBAL', 'STORE_DEREF'):
+                cond_val_start = _ci_idx + 1
+                break
+            _push, _pop = self._ternary_prefix_stack_effect(_ci)
+            _needed = _needed - _push + _pop
+            if _needed <= 0:
+                cond_val_start = _ci_idx
+                break
+        if cond_val_start is None or cond_val_start == 0:
+            return []
+
+        # --- 对前缀 [0, cond_val_start) 反复向后扫描，切分值表达式 ---
+        prefix = instrs[:cond_val_start]
+        segments = []
+        pos = len(prefix)
+        while pos > 0:
+            _needed = 1
+            _start = None
+            for _ci_idx in range(pos - 1, -1, -1):
+                _ci = prefix[_ci_idx]
+                if _ci.opname in ('STORE_FAST', 'STORE_NAME',
+                                  'STORE_GLOBAL', 'STORE_DEREF'):
+                    _start = _ci_idx + 1
+                    break
+                _push, _pop = self._ternary_prefix_stack_effect(_ci)
+                _needed = _needed - _push + _pop
+                if _needed <= 0:
+                    _start = _ci_idx
+                    break
+            if _start is None:
+                break
+            segments.insert(0, prefix[_start:pos])
+            pos = _start
+
+        # --- 重建每个值表达式的 AST ---
+        result = []
+        for seg in segments:
+            if not seg:
+                continue
+            _expr = self.expr_reconstructor.reconstruct(list(seg))
+            if _expr is not None:
+                result.append(_expr)
+        return result
+
+    @staticmethod
+    def _ternary_prefix_stack_effect(instr) -> tuple:
+        """计算单条指令的栈效应 (push_count, pop_count)。
+
+        用于 _extract_dict_prefix_values 的前缀切分。覆盖 dict 值表达式中
+        常见的操作码（LOAD/BINARY_SUBSCR/CALL/BUILD_SLICE 等）。与
+        _generate_ternary 的 cond_val_start 检测使用相同的模型，但额外
+        处理 BINARY_SUBSCR 和 BUILD_SLICE（前者在条件检测中不出现但在
+        值表达式中常见）。
+        """
+        op = instr.opname
+        if op in ('LOAD_ATTR', 'LOAD_METHOD'):
+            return 1, 1
+        if op.startswith('LOAD_') or op == 'COPY':
+            return 1, 0
+        if op in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP'):
+            return 1, 2
+        if op == 'BINARY_OP':
+            return 1, 2
+        if op == 'BINARY_SUBSCR':
+            return 1, 2
+        if op.startswith('UNARY_'):
+            return 1, 1
+        if op == 'FORMAT_VALUE':
+            return 1, 1 if (instr.arg or 0) < 2 else 2
+        if op == 'BUILD_STRING':
+            return 1, instr.arg or 0
+        if op == 'BUILD_SLICE':
+            return 1, 2 + (instr.arg or 0)
+        if op.startswith('BUILD_'):
+            return 1, instr.arg or 0
+        if op in ('PRECALL', 'POP_TOP'):
+            return 0, 0
+        if op == 'CALL':
+            return 1, (instr.arg or 0) + 1
+        return 0, 0
+
     def _try_build_ternary_chained_container(self, region: TernaryRegion,
                                                ternary_expr: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """[Round9-11 / R4-P1] Outer ternary's merge_block is an inner
@@ -27347,13 +27536,46 @@ AST 映射规则:
             # 消费者 + const-key tuple，归约整个链为单一 Dict 节点。
             _const_keys = getattr(innermost, 'dict_const_keys', None)
             keys = []
+            dict_values = elts
             if _const_keys is not None:
-                if len(_const_keys) != len(ternary_chain):
-                    return None
-                for _ck in _const_keys:
-                    if isinstance(_ck, tuple):
-                        _ck = list(_ck)
-                    keys.append({'type': 'Constant', 'value': _ck})
+                # [R21 fix] BUILD_CONST_KEY_MAP with mixed prefix values +
+                # ternary values: 当 dict 字面量同时包含纯 LOAD 值表达式和
+                # 三元表达式时，CPython 3.11 将所有值按压栈顺序排列，三元
+                # 表达式之间的纯 LOAD 值编译为各 ternary condition_block 的
+                # 前缀指令。此时 len(dict_const_keys) > len(ternary_chain)
+                # （keys 数 = 纯 LOAD 值数 + ternary 数）。
+                # 旧版直接 `return None`，导致整个 dict 构建被放弃，5 个纯
+                # LOAD 值丢失，输出空 dict。
+                # 依「自底向上归约」+「每块唯一归属」：从每个 ternary 的
+                # condition_block 前缀提取纯 LOAD 值表达式，与 ternary IfExp
+                # 按压栈顺序合并为完整 values 列表，映射到 dict_const_keys。
+                if len(_const_keys) == len(ternary_chain):
+                    # 一一对应：每个 ternary 一个 key（原有行为）
+                    for _ck in _const_keys:
+                        if isinstance(_ck, tuple):
+                            _ck = list(_ck)
+                        keys.append({'type': 'Constant', 'value': _ck})
+                else:
+                    # 混合模式：提取各 ternary condition_block 前缀的纯值表达式
+                    all_values = []
+                    for tr in ternary_chain:
+                        _prefix_exprs = self._extract_dict_prefix_values(
+                            tr.condition_block)
+                        all_values.extend(_prefix_exprs)
+                        if tr is region:
+                            all_values.append(ternary_expr)
+                        else:
+                            _nested = self._build_nested_ternary_expr(tr)
+                            if _nested is None:
+                                return None
+                            all_values.append(_nested)
+                    if len(all_values) != len(_const_keys):
+                        return None
+                    dict_values = all_values
+                    for _ck in _const_keys:
+                        if isinstance(_ck, tuple):
+                            _ck = list(_ck)
+                        keys.append({'type': 'Constant', 'value': _ck})
             else:
                 for tr in ternary_chain:
                     _k = RegionAnalyzer.extract_dict_key_from_block(tr.condition_block)
@@ -27366,7 +27588,7 @@ AST 映射规则:
             container_info = {
                 'type': 'Dict',
                 'keys': keys,
-                'values': elts,
+                'values': dict_values,
             }
         else:
             return None
@@ -27383,6 +27605,102 @@ AST 映射规则:
                 'targets': [{'type': 'Name', 'id': value_target, 'ctx': 'Store'}],
                 'value': container_info,
             }
+        # [R21 fix] STORE_SUBSCR/STORE_ATTR consumer: the innermost merge_block
+        # contains STORE_SUBSCR or STORE_ATTR after the BUILD_* container
+        # construction, indicating the container is assigned to a subscript or
+        # attribute target (e.g., `data.loc[i] = {...}`). value_target is None
+        # in this pattern (R18 fix), so the value_target Assign path above does
+        # not handle it. Without this, the container is emitted as a bare
+        # Expr(Dict) and the STORE_SUBSCR is processed separately, producing an
+        # empty `data.loc[i] = {}`.
+        # 依「每块唯一归属」: merge_block's BUILD_* + target LOAD_* + STORE_*
+        # all belong to the container assignment; post-STORE instructions
+        # belong to the next statement (saved to post_consumer_extra_stmts).
+        # 依「父引用子入口」: parent Assign references the chained container
+        # via the STORE_SUBSCR/STORE_ATTR consumer in innermost merge_block.
+        if innermost_merge is not None:
+            _im_eff_store = [i for i in innermost_merge.instructions
+                             if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+            _store_idx = None
+            for _si, _sinstr in enumerate(_im_eff_store):
+                if _sinstr.opname in ('STORE_SUBSCR', 'STORE_ATTR'):
+                    _store_idx = _si
+                    break
+            if _store_idx is not None:
+                _store_op = _im_eff_store[_store_idx]
+                # Find the BUILD_* instruction (container construction) index
+                _build_idx = None
+                for _bi in range(_store_idx - 1, -1, -1):
+                    if _im_eff_store[_bi].opname.startswith('BUILD_'):
+                        _build_idx = _bi
+                        break
+                if _build_idx is not None:
+                    _target_instrs = [i for i in _im_eff_store[_build_idx + 1:_store_idx]
+                                      if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                    # Reconstruct target expression from target instructions.
+                    # For STORE_SUBSCR: stack = [obj, key] (TOS=key, TOS1=obj)
+                    # For STORE_ATTR: stack = [obj] (TOS=obj)
+                    self.expr_reconstructor.reset()
+                    self.expr_reconstructor.stack = []
+                    for _ti in _target_instrs:
+                        self.expr_reconstructor._process_instruction(_ti)
+                    _reg_stack = [s for s in self.expr_reconstructor.stack
+                                  if not (isinstance(s, dict)
+                                          and s.get('type') == 'PUSH_NULL')]
+                    _target_expr = None
+                    if _store_op.opname == 'STORE_SUBSCR' and len(_reg_stack) >= 2:
+                        _key = _reg_stack[-1]
+                        _obj = _reg_stack[-2]
+                        _target_expr = {
+                            'type': 'Subscript',
+                            'value': _obj,
+                            'slice': _key,
+                            'ctx': 'Store',
+                        }
+                    elif _store_op.opname == 'STORE_ATTR' and len(_reg_stack) >= 1:
+                        _obj = _reg_stack[-1]
+                        _attr_name = _store_op.argval
+                        _target_expr = {
+                            'type': 'Attribute',
+                            'value': _obj,
+                            'attr': str(_attr_name) if _attr_name is not None else '_',
+                            'ctx': 'Store',
+                        }
+                    if _target_expr is not None:
+                        # Extract post-store instructions as extra statements
+                        _after_store = _im_eff_store[_store_idx + 1:]
+                        if _after_store:
+                            _after_clean = [i for i in _after_store
+                                            if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                            # Strip implicit return None
+                            while (len(_after_clean) >= 2
+                                    and _after_clean[-1].opname == 'RETURN_VALUE'
+                                    and _after_clean[-2].opname == 'LOAD_CONST'
+                                    and _after_clean[-2].argval is None):
+                                _after_clean = _after_clean[:-2]
+                            while (_after_clean and _after_clean[-1].opname == 'RETURN_CONST'
+                                    and _after_clean[-1].argval is None):
+                                _after_clean = _after_clean[:-1]
+                            if _after_clean:
+                                _extra_stmts = self._build_statements_from_instructions(
+                                    list(_after_clean))
+                                while _extra_stmts and isinstance(_extra_stmts[-1], dict):
+                                    _last = _extra_stmts[-1]
+                                    if _last.get('type') == 'Return':
+                                        _rv = _last.get('value')
+                                        if _rv and isinstance(_rv, dict) \
+                                                and _rv.get('type') == 'Constant' \
+                                                and _rv.get('value') is None:
+                                            _extra_stmts = _extra_stmts[:-1]
+                                            continue
+                                    break
+                                if _extra_stmts:
+                                    region.post_consumer_extra_stmts = _extra_stmts
+                        return {
+                            'type': 'Assign',
+                            'targets': [_target_expr],
+                            'value': container_info,
+                        }
         # [R3 fix] Pattern: return (ternary1, ternary2) — chained container
         # 内层 ternary 的 merge_block 以 RETURN_VALUE 结尾（无 value_target），
         # 说明父级是 Return 语句消费 container。依「父引用子入口」：父 Return

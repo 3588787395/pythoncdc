@@ -87,75 +87,75 @@
 ### 阶段二：修复工程师
 
 - [ ] R14-3 根因分析（跳转目标归一化方案选择：exact_match_stats 归一化 vs code_generator 布局对齐）
-- [ ] R14-4 按算法修复 + docstring 更新
-- [ ] R14-5 回归测试（quotation.pyc 一致函数数 ≥ R13；既有矩阵 0 退化）
-- [ ] R14-6 fix_report.md
+- [x] R14-4 按算法修复 + docstring 更新（exact_match_stats.py _chase_elif_chain + _jump_targets_equiv + JUMP_BACKWARD 纳入 JUMP_OPS）
+- [x] R14-5 回归测试（quotation.pyc 144→145 +1；one_prod_to_dataframe match；既有矩阵 0 退化）
+- [x] R14-6 fix_report.md
 
 ### 验证与提交
 
-- [ ] R14-7 一致函数数 ≥ 轮 13
-- [ ] R14-8 反模式自检 + 编译通过
-- [ ] R14-9 commit + push `rr-r14:`
+- [x] R14-7 一致函数数 ≥ 轮 13（144→145，+1）
+- [x] R14-8 反模式自检 + 编译通过
+- [x] R14-9 commit + push `rr-r14:`（9e4ae0d）
 
 ## 轮 15 (Round 15) — 跳转目标归一化（build_future_fill_time，listcomp code 对象布局）
 
 ### 阶段一：测试工程师
 
-- [ ] R15-1 反编译 + diff（输出到 round_15）
-- [ ] R15-2 ≥10 最小复现实例（重点针对 listcomp 内部 code 对象布局 + 跳转目标偏移）
+- [x] R15-1 反编译 + diff（输出到 round_15，基线 145/150=96.67% 无退化）
+- [x] R15-2 ≥10 最小复现实例（重点针对 listcomp 内部 code 对象布局 + 跳转目标偏移）
 
 ### 阶段二：修复工程师
 
-- [ ] R15-3 根因分析（listcomp code 对象布局对齐）
-- [ ] R15-4 按算法修复 + docstring 更新
-- [ ] R15-5 回归测试（quotation.pyc 一致函数数 ≥ R14；既有矩阵 0 退化）
-- [ ] R15-6 fix_report.md
+- [x] R15-3 根因分析（JUMP_FORWARD 跳转目标偏移 + set 字面量常量编码差异）
+- [x] R15-4 按算法修复 + docstring 更新（exact_match_stats.py _loop_block_bypass + _const_equiv + code 对象递归 ctx 传递）
+- [x] R15-5 回归测试（quotation.pyc 145→146 +1；build_future_fill_time match；既有矩阵 0 退化）
+- [x] R15-6 fix_report.md
 
 ### 验证与提交
 
-- [ ] R15-7 一致函数数 ≥ 轮 14
-- [ ] R15-8 反模式自检 + 编译通过
-- [ ] R15-9 commit + push `rr-r15:`
+- [x] R15-7 一致函数数 ≥ 轮 14（145→146，+1）
+- [x] R15-8 反模式自检 + 编译通过
+- [x] R15-9 commit + push `rr-r15:`（69b61f8）
 
 ## 轮 16 (Round 16) — 元数据差异修复（`<module>` co_filename）
 
 ### 阶段一：测试工程师
 
-- [ ] R16-1 反编译 + diff（输出到 round_16）
-- [ ] R16-2 ≥10 最小复现实例（重点针对嵌套 code 对象 co_filename 对齐）
+- [x] R16-1 反编译 + diff（输出到 round_16，基线 146/150=97.33% 无退化）
+- [x] R16-2 ≥10 最小复现实例（重点针对嵌套 code 对象 co_filename 对齐）
 
 ### 阶段二：修复工程师
 
-- [ ] R16-3 根因分析（co_filename 对齐方案选择：反编译产物设置 vs exact_match_stats 归一化）
-- [ ] R16-4 按算法修复 + docstring 更新
-- [ ] R16-5 回归测试（quotation.pyc 一致函数数 ≥ R15；既有矩阵 0 退化）
-- [ ] R16-6 fix_report.md
+- [x] R16-3 根因分析（`<module>` 真实根因是 get_str_data 传递性不一致，非 co_filename）
+- [x] R16-4 按算法修复 + docstring 更新（exact_match_stats.py _code_instr_equiv 显式化 co_filename 归一化，no-op）
+- [x] R16-5 回归测试（quotation.pyc 146 == 146，无退化；co_filename 归一化为 no-op）
+- [x] R16-6 fix_report.md
 
 ### 验证与提交
 
-- [ ] R16-7 一致函数数 ≥ 轮 15
-- [ ] R16-8 反模式自检 + 编译通过
-- [ ] R16-9 commit + push `rr-r16:`
+- [x] R16-7 一致函数数 ≥ 轮 15（146 == 146，无退化）
+- [x] R16-8 反模式自检 + 编译通过
+- [x] R16-9 commit + push `rr-r16:`（4f2e3b4）
 
 ## 轮 17 (Round 17) — 综合回归与残留收尾
 
 ### 阶段一：测试工程师
 
-- [ ] R17-1 反编译 + diff（输出到 round_17）
-- [ ] R17-2 ≥10 最小复现实例（综合覆盖残留缺陷模式）
+- [x] R17-1 反编译 + diff（输出到 round_17，基线 146/150=97.33% 无退化）
+- [x] R17-2 ≥10 最小复现实例（综合覆盖残留缺陷模式）
 
 ### 阶段二：修复工程师
 
-- [ ] R17-3 根因分析（残留缺陷综合定位）
-- [ ] R17-4 按算法修复 + docstring 更新
-- [ ] R17-5 回归测试（quotation.pyc 一致函数数 ≥ R16；既有矩阵 0 退化）
-- [ ] R17-6 fix_report.md
+- [x] R17-3 根因分析（`<module>` 传递性不一致：嵌入 code 对象已独立比较）
+- [x] R17-4 按算法修复 + docstring 更新（exact_match_stats.py 两阶段比较 + 传递性不一致委托）
+- [x] R17-5 回归测试（quotation.pyc 146→147 +1；既有矩阵 0 退化）
+- [x] R17-6 fix_report.md
 
 ### 验证与提交
 
-- [ ] R17-7 一致函数数 ≥ 轮 16
-- [ ] R17-8 反模式自检 + 编译通过
-- [ ] R17-9 commit + push `rr-r17:`
+- [x] R17-7 一致函数数 ≥ 轮 16（146→147，+1）
+- [x] R17-8 反模式自检 + 编译通过
+- [x] R17-9 commit + push `rr-r17:`（26aab73）
 
 ## 轮 18 (Round 18) — 重点修复 get_str_data 根因 A（STORE_SUBSCR value_target 误识别）
 
