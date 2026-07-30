@@ -9564,13 +9564,43 @@ AST 映射规则:
 
     def _if_extract_cond_instructions(self, cond_block: 'BasicBlock', region: IfRegion,
                                        boolop_merge_target: Optional[str] = None) -> Tuple[List[Dict], List]:
-        """提取条件块的前置语句和条件指令
+        """提取条件块的前置语句和条件指令。
 
-        [R6 fix] boolop_merge_target: 当 cond_block 同时是某 BoolOpRegion 的
-        merge_block，且该 BoolOpRegion 已由 _generate_boolop 生成赋值时，传入
-        value_target（如 'y'）。本函数将跳过 cond_block 内该 value_target 的
-        STORE_* 及其之前所有指令（已被 BoolOpRegion 消费），仅从该 STORE_* 之后
-        提取 pre_stmts（如 z = b[...]）和 cond_instrs（如 len(z) > 0）。
+        4 节模板（Round 9 fix 涉及方法）：
+        1. 算法依据：No More Gotos §3.1——IfRegion 条件块（cond_block）在
+           POP_JUMP_IF_FALSE 之前可能混入前置语句（pre_stmts，如赋值/表达式
+           语句/import）与真正的条件指令（cond_instrs）。本方法单趟正向扫描
+           cond_block.instructions，按指令语义切分为 (pre_stmts, cond_instrs)：
+           STORE_*/STORE_SUBSCR/STORE_ATTR/IMPORT_NAME/RAISE_VARARGS 等终结一条
+           pre_stmt 并发射；跳转指令终止扫描；其余指令累积到 pre_instrs 等待
+           终结。cond_instrs 从最后一个 STORE_* 之后收集（去掉 RESUME/NOP/跳转）。
+        2. 归约顺序：自底向上——本方法在父 IfRegion 生成阶段被调用，cond_block
+           内已消费的子区域（TernaryRegion merge_block / BoolOpRegion
+           value_target）指令先被排除（见第 3 节），再扫描剩余指令提取 pre_stmts
+           与 cond_instrs。
+        3. 唯一归属判定：
+           - [R6 fix] boolop_merge_target 非空时，cond_block 前段（直到该
+             value_target 的 STORE_* 及其之前所有指令）已由 BoolOpRegion 消费
+             为完整赋值表达式；本方法仅处理该 STORE_* 之后的指令，提取后续
+             pre_stmts（如 z = b[...]）和真正的 if 条件（如 len(z) > 0）。
+           - [R23 Bug1 fix] 当 cond_block 同时是某 TernaryRegion 的 merge_block
+             （merge_context='store'/'return'）时，cond_block 中首个 STORE_* 及其
+             之前指令已被 TernaryRegion 消费为赋值语句（如
+             `result = {..., 'k': ternary, ...}`）。本 IfRegion 仅引用该 STORE_*
+             之后的指令作为 if 条件；首个 STORE_* 跳过后清标志，后续 STORE_* 走
+             正常 pre_stmt 提取路径（避免重复发射且避免退化为部分 dict）。
+           - [R09 fix] COMPARE_OP 清空守卫：原启发式在 `COMPARE_OP and
+             pre_seen_store` 时清空 pre_instrs（意图：最后一个 pre-statement
+             STORE 之后的首个 COMPARE_OP 视为 if 条件起点，丢弃杂散指令）。但
+             COMPARE_OP 可合法出现在 f-string 的 FormattedValue 内部（如
+             `f'{a != b}'`、`f'{enable_debug == "true"}'`）。当 pre_instrs 已含
+             FORMAT_VALUE（f-string 链中段的可靠结构标记，表明正处 f-string
+             表达式子链中），不清空 pre_instrs——否则 f-string 链被截断，
+             BUILD_STRING 仅弹出尾部片段，生成截断的 JoinedStr（backtest.pyc
+             user_code 赋值丢失 20/25 段）。无 FORMAT_VALUE 时保留原清空行为。
+        4. 入口引用语义：父 IfRegion.test 引用本方法返回的 cond_instrs 重建的
+           条件表达式；pre_stmts 作为 if 语句之前的独立语句发射。被排除的子
+           区域指令由各自父区域（TernaryRegion/BoolOpRegion）自底向上归约生成。
         """
         pre_stmts, pre_instrs, pre_seen_store, pre_unpack_info, import_pending_store = [], [], False, None, False
         # [R23 Bug1 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（父引用子入口）：
@@ -9601,7 +9631,7 @@ AST 映射规则:
                     break
             if _skip_idx >= 0:
                 _iter_instrs = _iter_instrs[_skip_idx + 1:]
-        for instr in _iter_instrs:
+        for _instr_idx, instr in enumerate(_iter_instrs):
             if instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
                 continue
             if instr.opname == 'POP_TOP':
@@ -9728,8 +9758,30 @@ AST 映射规则:
                 pre_instrs = []
                 continue
             if instr.opname == 'COMPARE_OP' and pre_seen_store:
-                pre_instrs = []
-                continue
+                # [R09 fix] 区域归约算法原则 2（每块唯一归属）：
+                # COMPARE_OP 可合法出现在 f-string 的 FormattedValue 内部
+                # （如 f'{a != b}'、f'{enable_debug == "true"}'）。若 pre_instrs
+                # 已含 FORMAT_VALUE（f-string 链中段的可靠结构标记），表明当前
+                # COMPARE_OP 属于 f-string 表达式子链，不应清空 pre_instrs——否则
+                # f-string 链被截断，BUILD_STRING 仅能弹出尾部片段，生成截断的
+                # JoinedStr。无 FORMAT_VALUE 时保留原清空行为（正常 if 条件提取：
+                # 最后一个 pre-statement STORE 之后的首个 COMPARE_OP 视为 if 条件
+                # 起点，丢弃累积的杂散指令）。
+                # 双重结构守卫（覆盖 f-string 内 COMPARE_OP 的两种位置）：
+                # (a) pre_instrs 已含 FORMAT_VALUE —— COMPARE_OP 位于 f-string
+                #     链中段（如 f'{a!s}_{a != b!s}'，COMPARE_OP 在某 FORMAT_VALUE 之后）。
+                # (b) COMPARE_OP 紧随其后即是 FORMAT_VALUE —— COMPARE_OP 是某
+                #     FormattedValue 的首个子表达式（如 f'{a != b!s}...'，COMPARE_OP
+                #     是 f-string 第一个 FormattedValue，其前无 FORMAT_VALUE）。
+                #     正常 if 条件的 COMPARE_OP 紧随其后是 POP_JUMP_IF_FALSE，不会命中。
+                _has_format_value = any(pi.opname == 'FORMAT_VALUE' for pi in pre_instrs)
+                _next_is_format_value = (
+                    _instr_idx + 1 < len(_iter_instrs)
+                    and _iter_instrs[_instr_idx + 1].opname == 'FORMAT_VALUE'
+                )
+                if not _has_format_value and not _next_is_format_value:
+                    pre_instrs = []
+                    continue
             pre_instrs.append(instr)
         # [R6 fix] 当 boolop_merge_target 非空时，cond_block 的前段（已被
         # BoolOpRegion 消费）已通过 _iter_instrs 切片排除。但 _iter_instrs

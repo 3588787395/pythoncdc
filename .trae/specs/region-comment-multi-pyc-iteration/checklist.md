@@ -181,7 +181,23 @@
   - [x] R08-13 pyc_index.json 已更新（graph partial/0.8710/ok_py=True/round=8，error 清除）
   - [x] R08-14 commit `rcm-r08:`（LOCAL only — push 失败网络 DNS 故障，push-pending，commit message body 已注明）
   - 残留：graph.pyc 4 mismatch 函数（create_full_graph OUTER parent 误判 + _get_influence_task/_process_task_queue/is_cycle 独立模式）/ 跨轮残留 T2/A2/B/C/E/F/M2 不变
-- [ ] R09 通用清单全部通过（取 pyc #9）
+- [x] R09 通用清单全部通过（取 pyc #6: IQCommon/backtest/backtest.pyc，R07 残留 Pattern G2，failed 优先）
+  - [x] R09-0 该轮取的 pyc 文件路径已记录（IQCommon/backtest/backtest.pyc，decompile_status=failed）
+  - [x] R09-1 测试工程师 `decompile_report.md` 已生成（failed 0%，Pattern G2 f-string COMPARE_OP 截断，handle_backtest_build true_diffs=327，14 复现实例 9 DEFECT-REPRO）
+  - [x] R09-2 ≥ 10 个最小复现实例已归档（14 个，9 DEFECT-REPRO / 5 NO-DEFECT）
+  - [x] R09-3 修复工程师 `fix_report.md` 已生成（Pattern G2 修复，_if_extract_cond_instructions COMPARE_OP 清空加双重 FORMAT_VALUE 结构守卫）
+  - [x] R09-4 N/A（未修改 `_identify_*_regions` 方法，无需更新 6 节 docstring）
+  - [x] R09-5 涉及的 `_generate_*` 辅助方法 docstring 已按 4 节模板更新（`_if_extract_cond_instructions` 重写为 4 节，第 3 节追加 [R09 fix] 段）
+  - [x] R09-6 既有测试矩阵无退化（Post-R09 == R08 基线: 1 failed, 154 passed, 19 errors，零回归）
+  - [x] R09-7 14 复现实例全部验证（修复后 1 DEFECT-REPRO / 13 NO-DEFECT；repro_12 为独立模式 Pattern G3 链式比较跨块误判）
+  - [x] R09-8 反模式自检通过（0 新增 _fix_/_merge_/_patch_ 等前缀；守卫基于字节码结构标记 FORMAT_VALUE 位置）
+  - [x] R09-9 算法 4 原则 FULLY COMPLIANT（自底向上归约 / 每块唯一归属【强化：COMPARE_OP 归属由 FORMAT_VALUE 结构标记判定】/ 嵌套抽象节点 / 入口引用语义）
+  - [x] R09-10 `python -c "import core.cfg.region_analyzer; import core.cfg.region_ast_generator; import core.cfg.code_generator"` 编译通过
+  - [x] R09-11 累计成功率 ≥ 上一轮（R08 70.90% → R09 70.90% 持平；backtest.pyc f-string 5/25→25/25 段结构修复，但 latent Pattern Q quoting bug 使 SyntaxError，可测量 match_rate 仍 0%，状态未变 failed）
+  - [x] R09-12 N/A（本 pyc 未达 100%，未生成新 OK.py；backtestOK.py 由 single 命令刷新，但 single 因 py_compile quiet=2 返回 None 的 pre-existing 工具 bug 无法自动测量）
+  - [x] R09-13 pyc_index.json 已更新（backtest last_tested_round=9，error 记录 R09 Pattern G2 修复 + Pattern Q 残留）
+  - [x] R09-14 commit + push `rcm-r09:`
+  - 残留：repro_12 Pattern G3（链式比较跨块误判，区域分析层）/ backtest.pyc Pattern Q（f-string quoting bug，latent，code_generator.py）/ 跨轮残留 T3/T2/A2/B/C/E/F/M2 不变
 - [ ] R10 通用清单全部通过（取 pyc #10）
 - [ ] R11+ 持续直到所有 pyc `decompile_status = ok`
 

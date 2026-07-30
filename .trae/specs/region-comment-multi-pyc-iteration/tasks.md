@@ -84,7 +84,11 @@
   - [x] T2.08.2 修复工程师：按区域归约算法修复 → `rounds/round_08/repair_engineer/fix_report.md`（Pattern T3 修复，_generate_try post-try 块检测 else_blocks + try_blocks 两分支追加 block_to_region 归属守卫；repro_11 ERROR→DEFECT-REPRO 编译通过；graph.pyc failed→partial 87.10%）
   - [x] T2.08.3 commit `rcm-r08:`（LOCAL only — push 失败网络 DNS 故障，push-pending）
   - 残留：graph.pyc 4 mismatch 函数（create_full_graph OUTER parent 误判 + 3 函数独立模式）/ 跨轮残留 T2/A2/B/C/E/F/M2 不变
-- [ ] T2.09 第 09 轮
+- [x] T2.09 第 09 轮（取 pyc #6: IQCommon/backtest/backtest.pyc，R07 残留 Pattern G2，failed 优先）
+  - [x] T2.09.1 测试工程师：取下一个 pyc，反编译 + 字节码 diff → `rounds/round_09/test_engineer/decompile_report.md`（failed 0%，Pattern G2 f-string COMPARE_OP 截断，handle_backtest_build true_diffs=327，14 复现实例 9 DEFECT-REPRO）
+  - [x] T2.09.2 修复工程师：按区域归约算法修复 → `rounds/round_09/repair_engineer/fix_report.md`（Pattern G2 修复，_if_extract_cond_instructions COMPARE_OP 清空加双重 FORMAT_VALUE 结构守卫；8/9 DEFECT-REPRO 修复；f-string 5/25→25/25 段；残留 repro_12 链式比较跨块误判 + latent Pattern Q quoting bug）
+  - [x] T2.09.3 commit + push `rcm-r09:`
+  - 残留：repro_12 Pattern G3（链式比较跨块误判）/ backtest.pyc Pattern Q（f-string quoting bug，latent，code_generator.py）/ 跨轮残留 T3/T2/A2/B/C/E/F/M2 不变
 - [ ] T2.10 第 10 轮
 - [ ] T2.11 第 11 轮（持续，直到所有 pyc `decompile_status = ok`）
 - [ ] T2.NN ... 持续直到退出条件满足
