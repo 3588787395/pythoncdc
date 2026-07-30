@@ -31506,7 +31506,47 @@ AST 映射规则:
         return target
 
     def _generate_stmts_from_instrs(self, instrs: List[Instruction], block: BasicBlock) -> List[Dict[str, Any]]:
-        """从指令列表中提取多条语句，用于回边块等多语句场景"""
+        """从指令列表中提取多条语句，用于回边块等多语句场景。
+
+        区域归约算法符合度:
+        ─────────────────────
+        本方法服务于 LoopRegion 回边块（back_edge_block）等多语句块场景。
+        回边块在区域归约后作为外层 LoopRegion body 的最后一个抽象节点，
+        其内部可能包含多条异构兄弟语句（属性赋值 / 下标赋值 / 变量赋值 /
+        表达式语句）。本方法按语句边界（STORE_ATTR / STORE_SUBSCR /
+        STORE_FAST 等）逐条归约，保证每条语句的字节码前驱 LOAD 归属本
+        赋值语句，不泄漏为孤立 Expr 也不被后续 STORE 吞并（原则 2：
+        每块唯一归属；原则 1：自底向上归约 — 回边块作为整体归约后再交
+        付外层 LoopRegion body）。
+
+        字节码模式:
+        ────────────
+        - STORE_ATTR: LOAD value, LOAD obj, [LOAD_ATTR ...], STORE_ATTR attr
+          → obj.attr = value（[R22] 新增，修复循环尾部 STORE_ATTR 兄弟语句
+          在 STORE_SUBSCR 之前被吞并丢失的问题）
+        - STORE_SUBSCR: LOAD value, LOAD container, LOAD index, STORE_SUBSCR
+          → container[index] = value
+        - STORE_FAST/NAME/GLOBAL/DEREF: LOAD value, STORE_* name → name = value
+        - POP_TOP: <expr instrs>, POP_TOP → expr 语句
+
+        参数:
+            instrs: 回边块过滤后的指令列表（已去除 RESUME/NOP/CACHE/PUSH_NULL
+                   及 JUMP_* 回边指令，已扣除 for_target 消费指令）
+            block: 指令所属的基本块（回边块）
+
+        返回:
+            AST 语句字典列表，每个元素格式为
+            {'type': 'Assign'|'AugAssign'|'Expr', ...}；空列表表示无有效语句
+
+        典型应用场景:
+        ─────────────
+        get_str_data 外层 for 循环回边块含两条兄弟赋值：
+        ``data.index = time_index`` (STORE_ATTR) +
+        ``order_data[stock] = data`` (STORE_SUBSCR)。
+        本方法逐条归约，先发射 STORE_ATTR 赋值并清空缓冲，再发射
+        STORE_SUBSCR 赋值，避免 STORE_ATTR 残留缓冲被 STORE_SUBSCR
+        重建吞并（R22 修复点）。
+        """
         _stmts: List[Dict[str, Any]] = []
         _buf: List[Instruction] = []
         for _instr in instrs:
@@ -31540,6 +31580,22 @@ AST 映射规则:
                         'targets': [{'type': 'Subscript', 'value': _c, 'slice': _idx, 'ctx': 'Store'}],
                         'value': _v,
                     })
+                _buf = []
+                continue
+            # [R22] STORE_ATTR 重建为 Attribute 赋值 (obj.attr = value)
+            # 字节码模式：LOAD value, LOAD obj, [LOAD_ATTR ...], STORE_ATTR attr
+            # 栈顺序：TOS1=obj, TOS0=value → obj.attr = value（STORE_ATTR 弹出
+            # obj 与 value）。算法依据：原则 2（每块唯一归属）— STORE_ATTR 的
+            # 前驱 LOAD value/obj 归属本属性赋值语句，不应残留缓冲被后续
+            # STORE_SUBSCR 重建吞并。与 _build_effective_stmts / _build_prefix_stmt_list
+            # 中的 STORE_ATTR 处理保持一致（多语句回边块走本路径，单语句块走
+            # _build_effective_stmts）。复用 _build_attr_assign 完成多层属性链 /
+            # 增强赋值（AugAssign）的统一重建。
+            if _instr.opname == 'STORE_ATTR':
+                _buf.append(_instr)
+                _stmt = self._build_attr_assign(_buf)
+                if _stmt:
+                    _stmts.append(_stmt)
                 _buf = []
                 continue
             if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF') and _buf:
