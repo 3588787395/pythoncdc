@@ -1834,6 +1834,100 @@ class RegionAnalyzer:
                 worklist.append(succ)
         return False
 
+    def _find_enclosing_loop(self, block: BasicBlock):
+        """返回包含 block 的最内层 LoopRegion（无则 None）。
+
+        用于 if/elif 区域的循环感知 merge 修正：当 if 嵌套于循环内、且其
+        某分支以 break/continue 退出循环时，循环出口块不是 if 的合并点。
+        """
+        candidates = []
+        for r in self._filter_regions(self.regions, LoopRegion):
+            if block in r.blocks:
+                candidates.append(r)
+        if not candidates:
+            return None
+        # 最内层 = 块数最少的循环（嵌套循环中内层块集最小）
+        return min(candidates, key=lambda r: len(r.blocks))
+
+    def _is_loop_exit_block(self, block: BasicBlock, loop_region) -> bool:
+        """判断 block 是否为循环出口块（break/continue/return 使控制流离开循环）。
+
+        判据：块末尾为 JUMP_FORWARD/JUMP_ABSOLUTE 且目标在循环外，或
+        JUMP_BACKWARD（回边到循环头，作为归约出口），或 RETURN/RAISE 终态。
+        这些块在循环内归约时视为汇（不再沿后继展开）。
+        """
+        last = block.get_last_instruction()
+        if last is None:
+            return False
+        if last.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'):
+            return True
+        if last.opname in ('RETURN_VALUE', 'RETURN_CONST', 'RAISE_VARARGS', 'RERAISE'):
+            return True
+        if last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+            for s in block.successors:
+                if s not in loop_region.blocks:
+                    return True
+        return False
+
+    def _compute_in_loop_if_merge(self, then_succ: BasicBlock, else_succ: BasicBlock,
+                                  loop_region, exclude: Set[BasicBlock]) -> Optional[BasicBlock]:
+        """计算循环内 if/elif 链的合并点（loop-aware merge）。
+
+        算法依据（No More Gotos §4.2 循环区域 + §3 If 区域归约 + 4 原则）：
+        - 原则 1（自底向上归约）：if 区域在循环体内归约时，其合并点是
+          非退出分支的汇聚块，而非循环出口。
+        - 原则 2（每块唯一归属）：循环末尾的兄弟语句块（汇聚后继）应归属
+          循环体（作为 LoopRegion.body 中的兄弟语句），不应被 then 分支吸收。
+        - 循环出口边（break/continue/return）不是 if 收敛的一部分：以循环
+          出口为 NCPD 时，then/else 分支会被过度收集，把循环末尾兄弟语句
+          拉进 then（违反每块唯一归属）。
+
+        算法：当 NCPD 返回循环出口块（在 loop_region.blocks 之外）时，取
+        非退出分支末尾的 JUMP_FORWARD 目标（位于循环内、不在 exclude 中），
+        若该目标可从对侧分支经【循环内路径】（不跨循环出口、不跨回边）到达，
+        则其为 if 的合并点。
+
+        Args:
+            then_succ/else_succ: if 的两路后继入口。
+            loop_region: 所属循环区域。
+            exclude: 当前 if 的条件结构块（header/then_succ/else_succ 等），
+                     候选合并点不得在其中。
+
+        Returns: 循环内合并块，或 None（无合法候选时回退到原 merge）。
+        """
+        loop_blocks = set(loop_region.blocks)
+
+        def _in_loop_reachable(start: BasicBlock, target: BasicBlock) -> bool:
+            """BFS 判断 target 是否可从 start 经循环内路径到达。
+
+            不跨循环出口块（break/continue/return 目标在循环外）、不跨回边
+            （JUMP_BACKWARD 目标为循环头）。循环出口块作为汇不展开其后继。
+            """
+            if start is target:
+                return True
+            visited = {start}
+            worklist = [start]
+            while worklist:
+                cur = worklist.pop(0)
+                if self._is_loop_exit_block(cur, loop_region):
+                    continue
+                for s in cur.successors:
+                    if s is target:
+                        return True
+                    if s in visited or s not in loop_blocks or s in exclude:
+                        continue
+                    visited.add(s)
+                    worklist.append(s)
+            return False
+
+        for branch, other in ((then_succ, else_succ), (else_succ, then_succ)):
+            _exit = self._get_jump_forward_target(branch)
+            if _exit is None or _exit in exclude or _exit not in loop_blocks:
+                continue
+            if _in_loop_reachable(other, _exit):
+                return _exit
+        return None
+
 
     def _collect_blocks_on_path(self, entry: BasicBlock, exit_block: BasicBlock, stop_set: Optional[Set[BasicBlock]] = None) -> Set[BasicBlock]:
         result: Set[BasicBlock] = set()
@@ -3095,6 +3189,42 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                                         and _accepted_equivalent_count < _back_edge_recheck_count
                                     )
                                     if p_target == _cb or p_target in body or p_target == header or _is_equivalent_exit:
+                                        # [R24-B fix] 区域归约算法原则 1（自底向上
+                                        # 归约）+ 原则 2（每块唯一归属）+ No More
+                                        # Gotos §4.2：区分【while 复合条件链前驱】
+                                        # 与【外层 if/elif 条件块】。后者以
+                                        # JUMP_FORWARD 的 FALSE 目标指向循环条件
+                                        # 块（else 分支落入循环），但其 TRUE 落入
+                                        # 另一分支（非循环出口、非循环体）。把它误
+                                        # 吸收进 LoopRegion 会吞掉外层 if/elif 条件
+                                        # 块，使外层 IfRegion 消失（违反每块唯一
+                                        # 归属），并把 while 条件并入外层 elif 守卫。
+                                        # 判据：p 的【非 _cb/非循环体】后继是否为
+                                        # 循环出口（natural_exit / 隐式 return None /
+                                        # early-return）。真条件链前驱的短路后继是
+                                        # 循环出口；外层 if/elif 的另一分支后继是真
+                                        # 非循环块。后者不吸收并终止回溯。
+                                        _p_other_succ = None
+                                        for _s in p.successors:
+                                            if (_s is _cb or _s in body
+                                                    or _s is header
+                                                    or _s is condition_block):
+                                                continue
+                                            _p_other_succ = _s
+                                            break
+                                        _p_is_outer_elif = False
+                                        if _p_other_succ is not None:
+                                            _p_other_is_exit = (
+                                                _p_other_succ is natural_exit
+                                                or self._is_trivial_return_block(_p_other_succ)
+                                                or self._check_block_has_trailing_return_none(_p_other_succ)
+                                                or self._is_early_return_block(_p_other_succ)
+                                            )
+                                            if not _p_other_is_exit:
+                                                _p_is_outer_elif = True
+                                        if _p_is_outer_elif:
+                                            _next_cb = None
+                                            break
                                         _has_back_edge_to_p = any(
                                             be.get_last_instruction() is not None and
                                             be.get_last_instruction().opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT') and
@@ -11508,6 +11638,27 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
 
             merge = self._find_nearest_common_post_dominator(then_succ, else_succ)
 
+            # [R24-A fix] 区域归约算法原则 1（自底向上归约）+ 原则 2（每块唯一
+            # 归属）+ No More Gotos §4.2（循环区域）/§3（If 区域归约）：
+            # 当 if 嵌套于循环内、且某分支以 break/continue/return 退出循环时，
+            # NCPD 会返回循环出口块（在 LoopRegion.blocks 之外）作为 merge。
+            # 但循环出口不是 if 的合并点——if 的合并点是非退出分支在循环内的
+            # 汇聚块（循环末尾的兄弟语句入口）。以循环出口为 merge 会使
+            # _collect_branch_blocks 越过 then 末尾的 JUMP_FORWARD，把循环末尾
+            # 兄弟语句（if/elif/else 链的公共汇聚后继块）误并入 then 分支，
+            # 违反每块唯一归属（兄弟语句应归属循环体）。
+            # 修正：当 merge 落在循环外时，用循环内 JUMP_FORWARD 目标可达性
+            # 重算合并点（_compute_in_loop_if_merge）。
+            if merge is not None:
+                _r24a_loop = self._find_enclosing_loop(block)
+                if _r24a_loop is not None and merge not in _r24a_loop.blocks:
+                    _r24a_exclude = {block, then_succ, else_succ,
+                                     _else_succ_original} | chain_blocks
+                    _r24a_in_loop_merge = self._compute_in_loop_if_merge(
+                        then_succ, else_succ, _r24a_loop, _r24a_exclude)
+                    if _r24a_in_loop_merge is not None:
+                        merge = _r24a_in_loop_merge
+
             if merge is None:
                 _then_sink = any(i.opname in ('RAISE_VARARGS', 'RETURN_VALUE') for i in then_succ.instructions) or then_succ.immediate_post_dominator is None
                 _else_sink = any(i.opname in ('RAISE_VARARGS', 'RETURN_VALUE') for i in else_succ.instructions) or else_succ.immediate_post_dominator is None
@@ -12630,6 +12781,32 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 return None
             inner_then_succ, inner_else_succ = sorted(inner_cond_succs, key=lambda s: s.start_offset)
             inner_merge = self._find_nearest_common_post_dominator(inner_then_succ, inner_else_succ)
+            # [R24-A fix] 区域归约算法原则 1（自底向上归约）+ 原则 2（每块唯一
+            # 归属）+ No More Gotos §4.2/§3：镜像外层 IfRegion 的循环感知 merge
+            # 修正。当内层 elif 嵌套于循环内、且其某分支以 break/continue 退出
+            # 循环时，NCPD 返回循环出口块作为 inner_merge。但循环出口不是 elif
+            # 的合并点——elif 的合并点应继承外层 if/elif 链的合并点（merge_，
+            # 已由外层 _compute_in_loop_if_merge 修正为循环内汇聚块）。否则
+            # _collect_branch_blocks 会从 inner_else_succ 越过 merge_ 把循环末尾
+            # 兄弟语句误收集进 final_else（违反每块唯一归属）。
+            # 判据：inner_merge 落在循环外，且 merge_ 落在循环内（外层已修正），
+            # 且 merge_ 从 inner_then_succ 与 inner_else_succ 经循环内路径可达。
+            # 则 inner_merge = merge_（elif 合并点继承外层链合并点）。
+            if inner_merge is not None and merge_ is not None:
+                _r24a_inner_loop = self._find_enclosing_loop(first_else)
+                if (_r24a_inner_loop is not None
+                        and inner_merge not in _r24a_inner_loop.blocks
+                        and merge_ in _r24a_inner_loop.blocks
+                        and merge_ is not first_else):
+                    _r24a_inner_exclude = {first_else, inner_then_succ,
+                                           inner_else_succ} | (_inner_boundary_stop or set())
+                    _r24a_inner_merge = self._compute_in_loop_if_merge(
+                        inner_then_succ, inner_else_succ, _r24a_inner_loop,
+                        _r24a_inner_exclude)
+                    if _r24a_inner_merge is not None:
+                        inner_merge = _r24a_inner_merge
+                    else:
+                        inner_merge = merge_
             # [R29 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（归约顺序）：
             # 当内层 elif 的 else 分支入口等于外层 merge 时，inner_merge 应设为
             # merge_，使 inner_else_blocks 为空（entry==merge）。否则
@@ -16022,6 +16199,18 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     else_outside = (pred_jump_target not in loop.blocks and
                                      pred_jump_target != loop.entry and
                                      pred_jump_target != loop.condition_block)
+                    # [R24-B fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3
+                    # （嵌套即抽象节点）+ No More Gotos §4.2：while 条件 boolop 链
+                    # 的合法前驱，其 fall-through 必须继续求值循环条件（cond_in_loop
+                    # 为真，如 `while A and B:` 中 A 的 fall-through → B=cond_block）。
+                    # 当 cond_in_loop 为假时，前驱的 fall-through 是外层 if/elif 的
+                    # then 体（位于循环外），前驱是【外层 if/elif 条件块】——其 else
+                    # 分支（跳转目标）落入循环条件。把它误吸收进 while 条件 boolop
+                    # 链会把 while 条件并入外层 elif 守卫（如 `elif count == 1 and
+                    # count > 0`），使外层 IfRegion 消失（违反每块唯一归属）。此时
+                    # 必须中断回溯，让外层 if/elif 由 IfRegion 归约。
+                    if not cond_in_loop:
+                        break
                     if cond_in_loop and else_outside:
                         if pred_ft == cond_block or pred_ft == loop.header_block:
                             _pred_cond_instrs = [(i.opname, i.argval) for i in pred.instructions

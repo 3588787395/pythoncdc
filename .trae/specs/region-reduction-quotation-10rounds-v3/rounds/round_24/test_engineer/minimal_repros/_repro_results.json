@@ -1,0 +1,50 @@
+[
+  {
+    "status": "match",
+    "py_path": "/workspace/.trae/specs/region-reduction-quotation-10rounds-v3/rounds/round_24/test_engineer/minimal_repros/repro_01_if_absorb_sibling_in_loop.py",
+    "orig_len": 48,
+    "new_len": 48
+  },
+  {
+    "status": "match",
+    "py_path": "/workspace/.trae/specs/region-reduction-quotation-10rounds-v3/rounds/round_24/test_engineer/minimal_repros/repro_02_if_absorb_sibling_while.py",
+    "orig_len": 62,
+    "new_len": 62
+  },
+  {
+    "status": "match",
+    "py_path": "/workspace/.trae/specs/region-reduction-quotation-10rounds-v3/rounds/round_24/test_engineer/minimal_repros/repro_03_if_absorb_sibling_elif_chain.py",
+    "orig_len": 51,
+    "new_len": 51
+  },
+  {
+    "status": "match",
+    "py_path": "/workspace/.trae/specs/region-reduction-quotation-10rounds-v3/rounds/round_24/test_engineer/minimal_repros/repro_04_if_absorb_sibling_minimal.py",
+    "orig_len": 41,
+    "new_len": 41
+  },
+  {
+    "status": "match",
+    "py_path": "/workspace/.trae/specs/region-reduction-quotation-10rounds-v3/rounds/round_24/test_engineer/minimal_repros/repro_05_loop_absorb_outer_cond_full.py",
+    "orig_len": 141,
+    "new_len": 141
+  },
+  {
+    "status": "match",
+    "py_path": "/workspace/.trae/specs/region-reduction-quotation-10rounds-v3/rounds/round_24/test_engineer/minimal_repros/repro_06_loop_absorb_outer_cond_else_only.py",
+    "orig_len": 81,
+    "new_len": 81
+  },
+  {
+    "status": "match",
+    "py_path": "/workspace/.trae/specs/region-reduction-quotation-10rounds-v3/rounds/round_24/test_engineer/minimal_repros/repro_07_loop_absorb_outer_cond_if_else.py",
+    "orig_len": 141,
+    "new_len": 141
+  },
+  {
+    "status": "match",
+    "py_path": "/workspace/.trae/specs/region-reduction-quotation-10rounds-v3/rounds/round_24/test_engineer/minimal_repros/repro_08_loop_absorb_outer_cond_simple_body.py",
+    "orig_len": 89,
+    "new_len": 89
+  }
+]
