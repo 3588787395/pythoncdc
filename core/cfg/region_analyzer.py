@@ -5108,8 +5108,30 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
         return None
 
     def _check_return_for_break(self, block, current_loop):
-        for instr in block.instructions:
-            if instr.opname == 'RETURN_VALUE':
+        _instrs = block.instructions
+        for _idx, _instr in enumerate(_instrs):
+            if _instr.opname == 'RETURN_VALUE':
+                # [R3-03 fix] Distinguish a real `return <value>` (with a
+                # non-None value on the stack) from a break lowered to a
+                # function-level `return None`. A with-body `return <expr>`
+                # leaves a value-producing instruction (LOAD_CONST non-None,
+                # LOAD_FAST/NAME, CALL, BUILD_*, etc.) immediately before
+                # RETURN_VALUE, whereas a break-as-return-None has
+                # `LOAD_CONST None` before it. Only the latter should be
+                # treated as a loop break.
+                if current_loop is not None:
+                    _j = _idx - 1
+                    while _j >= 0 and _instrs[_j].opname in ('NOP', 'CACHE'):
+                        _j -= 1
+                    if _j >= 0:
+                        _prev = _instrs[_j]
+                        if not (_prev.opname == 'LOAD_CONST'
+                                and _prev.argval is None):
+                            return False
+                return True if current_loop is not None else False
+            if _instr.opname == 'RETURN_CONST':
+                if current_loop is not None and _instr.argval is not None:
+                    return False
                 return True if current_loop is not None else False
         return None
 
@@ -5617,7 +5639,7 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                             all_handler_entry_blocks, all_handler_blocks_set)
 
                 handler_body_blocks, finally_copy_blocks = self._collect_finally_body_blocks(
-                    handler_entry_block, try_blocks, all_except_handlers if paired_except_infos else None)
+                    handler_entry_block, try_blocks, all_except_handlers)
 
                 all_handler_blocks_set |= set(handler_body_blocks) | {handler_entry_block}
                 finally_blocks = handler_body_blocks
@@ -5778,6 +5800,13 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 _visited_np = set()
                 _worklist_np = []
                 for tb in try_blocks:
+                    # [R3-03 fix] Skip successors of try_blocks ending with
+                    # backward jumps (loop back-edges). These successors target
+                    # enclosing LoopRegion headers/bodies and must not be
+                    # collected as normal-path finally body.
+                    _tb_last = tb.get_last_instruction()
+                    if _tb_last and _tb_last.opname in BACKWARD_JUMP_OPS:
+                        continue
                     for succ in tb.successors:
                         if succ in tb.exception_successors:
                             continue
@@ -5814,6 +5843,16 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                     _last_instr = _blk.get_last_instruction()
                     if _last_instr and _last_instr.opname in (
                             'RETURN_VALUE', 'RETURN_CONST', 'RERAISE'):
+                        continue
+                    # [R3-03 fix] Do not follow loop back-edges when collecting
+                    # normal-path finally body blocks. A backward jump (continue/
+                    # break in finally, or loop back-edge) targets an enclosing
+                    # LoopRegion's header/body, which must NOT be swallowed by the
+                    # TryExceptRegion (violates "bottom-up reduction" + "unique
+                    # block ownership"). The block itself (e.g., the continue
+                    # statement) is already added to _normal_path_blocks above;
+                    # only its successors are not followed.
+                    if _last_instr and _last_instr.opname in BACKWARD_JUMP_OPS:
                         continue
                     for _succ in _blk.successors:
                         # Pattern E fix: Also follow exception successors of
@@ -7455,6 +7494,18 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
 
                     last = current.get_last_instruction()
                     if last and last.opname in ('RETURN_VALUE', 'RETURN_CONST', 'RERAISE'):
+                        continue
+                    # [R3-03 fix] Do not follow backward jumps (loop back-edges,
+                    # continue/break in finally exception path) when collecting
+                    # finally body blocks. A backward jump targets an enclosing
+                    # LoopRegion's header/condition, which must NOT be swallowed
+                    # by the TryExceptRegion's finally body (violates "bottom-up
+                    # reduction" + "unique block ownership"). The block itself
+                    # (e.g., the continue/cleanup statement) is already added to
+                    # body_blocks above; only its successors are not followed.
+                    # This mirrors the R3-03 fix already applied to the
+                    # normal-path finally body collection (see _identify_try_except_regions).
+                    if last and last.opname in BACKWARD_JUMP_OPS:
                         continue
 
                     for succ2 in current.successors:

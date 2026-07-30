@@ -857,9 +857,17 @@ class PatternParser:
 
         # 策略2：沿成功路径BFS查找最后一个STORE_指令
         # as绑定的STORE_通常在pattern匹配链的最后（所有COMPARE_OP之后）
-        store_after_pattern = self._find_last_store_on_success_path(case_block)
-        if store_after_pattern:
-            return store_after_pattern
+        # [R3-03 fix] 区域归约算法原则 2（每块唯一归属）：as 绑定协议要求
+        # case header 用 COPY 保存 subject，随后在 fall-through 块 STORE。
+        # 若 case_block 无 COPY，则 fall-through 块中的 STORE 属于 case body
+        # 赋值（如 `for i in r: match i: case 1: x = 1` 中 case body 的
+        # STORE_NAME x），不是 as 绑定。无 COPY 时跳过本策略，避免吞并 body
+        # 赋值（与策略3的 has_copy_for_as 守卫一致）。
+        has_copy_in_case = any(i.opname == 'COPY' for i in filtered)
+        if has_copy_in_case:
+            store_after_pattern = self._find_last_store_on_success_path(case_block)
+            if store_after_pattern:
+                return store_after_pattern
 
         # 策略3：检查COPY指令 - 如果case_block有COPY，说明有as绑定
         # COPY保存subject用于后续的as绑定STORE_

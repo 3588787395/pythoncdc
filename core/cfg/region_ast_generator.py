@@ -5830,6 +5830,105 @@ AST 映射规则:
             _aw_stmts = self._reconstruct_await_block_stmts(hdr)
             if _aw_stmts is not None:
                 return _aw_stmts
+        # [R3 fix] 区域归约算法原则 2（每块唯一归属）：while 自循环 header 块同时
+        # 承载循环体语句与回边条件重检（CPython 3.11 在回边处复制 while 条件求值）。
+        # 下列前导检测在 _body_end_idx 启发式之前识别跨越该边界的完整语句模式
+        # （链式赋值 / 注解赋值）——这些模式的末尾 STORE_SUBSCR（注解写入）落在
+        # _body_end_idx 之后会被切片逻辑截断，导致注解/第二目标丢失。镜像
+        # _generate_block_statements 的 _chain_result / AnnAssign 检测：体语句归
+        # 循环体，回边重检归 while 条件，不互相吞并。
+        _sl_all = [i for i in hdr.instructions
+                   if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+        _sl_recheck_ops = ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF',
+                           'POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE',
+                           'POP_JUMP_IF_TRUE', 'POP_JUMP_IF_FALSE',
+                           'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+                           'JUMP_FORWARD', 'JUMP_ABSOLUTE')
+        # [R3-07 fix] 链式赋值 x = y = 1：
+        # <value>; COPY 1; STORE x; STORE y（末目标无 COPY，直接消费栈顶值）
+        if len(_sl_all) > MIN_INSTRS_FOR_CHAIN_ASSIGN_PATTERN:
+            _sl_store_indices = []
+            for _ci, _instr in enumerate(_sl_all):
+                if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                    _sl_store_indices.append(_ci)
+            if len(_sl_store_indices) >= 2:
+                _sl_first = _sl_store_indices[0]
+                if (_sl_first >= 1
+                        and _sl_all[_sl_first - 1].opname == 'COPY'
+                        and _sl_all[_sl_first - 1].arg == COPY_STACK_TOP):
+                    _sl_value_instrs = _sl_all[:_sl_first - 1]
+                    _sl_terminal = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+                                    'STORE_SUBSCR', 'STORE_ATTR', 'POP_TOP', 'RETURN_VALUE',
+                                    'RETURN_CONST', 'RAISE_VARARGS', 'IMPORT_NAME')
+                    _sl_value_ok = bool(_sl_value_instrs) and not any(
+                        i.opname in _sl_terminal for i in _sl_value_instrs)
+                    if (_sl_value_ok and len(_sl_value_instrs) == 1
+                            and _sl_value_instrs[0].opname in (
+                                'LOAD_CONST', 'LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL')):
+                        _sl_value_ok = True
+                    if _sl_value_ok:
+                        _sl_targets = []
+                        _sl_valid = True
+                        for _si, _sidx in enumerate(_sl_store_indices):
+                            if _si > 0:
+                                _prev = _sl_store_indices[_si - 1]
+                                _gap = _sl_all[_prev + 1:_sidx]
+                                if _si != len(_sl_store_indices) - 1:
+                                    if (not _gap or _gap[0].opname != 'COPY'
+                                            or _gap[0].arg != 1 or len(_gap) != 1):
+                                        _sl_valid = False
+                                        break
+                                else:
+                                    if len(_gap) != 0:
+                                        _sl_valid = False
+                                        break
+                            _sl_targets.append({
+                                'type': 'Name', 'id': _sl_all[_sidx].argval,
+                                'ctx': 'Store', 'lineno': _sl_all[_sidx].starts_line,
+                            })
+                        # 末 STORE 之后的剩余指令必须仅为回边重检（LOAD + 反向跳转）
+                        if _sl_valid and len(_sl_targets) >= 2:
+                            _sl_tail = _sl_all[_sl_store_indices[-1] + 1:]
+                            _sl_tail_pure = all(i.opname in _sl_recheck_ops for i in _sl_tail)
+                            if _sl_tail_pure:
+                                _sl_v = self.expr_reconstructor.reconstruct(_sl_value_instrs)
+                                if _sl_v is not None:
+                                    return [{
+                                        'type': 'Assign', 'targets': _sl_targets,
+                                        'value': _sl_v, 'is_chain_assign': True,
+                                        'lineno': _sl_value_instrs[0].starts_line,
+                                    }]
+        # [R3-08 fix] 注解赋值 x: int = 1：
+        # <value>; STORE_NAME x; <ann>; LOAD __annotations__; LOAD_CONST 'x'; STORE_SUBSCR
+        for _sl_si, _sl_instr in enumerate(_sl_all):
+            if (_sl_instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
+                    and _sl_si > 0):
+                _sl_rem = _sl_all[_sl_si + 1:]
+                _sl_ann_idx = None
+                for _ai in range(len(_sl_rem) - 2):
+                    if (_sl_rem[_ai].opname == 'LOAD_NAME'
+                            and _sl_rem[_ai].argval == '__annotations__'
+                            and _sl_rem[_ai + 1].opname == 'LOAD_CONST'
+                            and _sl_rem[_ai + 1].argval == _sl_instr.argval
+                            and _sl_rem[_ai + 2].opname == 'STORE_SUBSCR'):
+                        _sl_ann_idx = _ai
+                        break
+                if _sl_ann_idx is not None:
+                    _sl_after = _sl_rem[_sl_ann_idx + 3:]
+                    if all(i.opname in _sl_recheck_ops for i in _sl_after):
+                        _sl_val = self.expr_reconstructor.reconstruct(_sl_all[:_sl_si])
+                        _sl_ann_instrs = _sl_rem[:_sl_ann_idx]
+                        _sl_ann = self.expr_reconstructor.reconstruct(_sl_ann_instrs) if _sl_ann_instrs else None
+                        if _sl_ann is None and len(_sl_ann_instrs) == 1:
+                            _l0 = _sl_ann_instrs[0]
+                            if _l0.opname in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF'):
+                                _sl_ann = {'type': 'Name', 'id': _l0.argval, 'ctx': 'Load'}
+                        return [{
+                            'type': 'AnnAssign',
+                            'target': {'type': 'Name', 'id': _sl_instr.argval, 'ctx': 'Store',
+                                       'lineno': _sl_instr.starts_line},
+                            'annotation': _sl_ann, 'value': _sl_val,
+                        }]
         _self_loop_stmts: List[Dict[str, Any]] = []
         _self_loop_instrs: List[Instruction] = []
         _last_i = hdr.get_last_instruction()
@@ -5929,6 +6028,17 @@ AST 映射规则:
                         _cond_break_start_idx = _sli
                         _body_end_idx = _sli - 1
                         break
+        # [R3 fix] 区域归约算法原则 2（每块唯一归属）：while 自循环 header 的体
+        # 语句生成需识别 import / 解包赋值 / delete 等语句类型，否则这些指令
+        # 落入缓冲被当作孤立 Expr 或误重建为单目标赋值（如 `import os` 退化为
+        # `os = None`、`x, y = pair` 退化为 `x = pair`、`del obj.attr` 退化为
+        # `obj`）。下列状态机镜像 _build_statements_from_instructions /
+        # _generate_stmts_from_instrs 的同名处理（多语句自循环 header 走本路径，
+        # 普通块走 _generate_block_statements，回边块走 _generate_stmts_from_instrs）。
+        _sl_imp_name = None
+        _sl_imp_from = None
+        _sl_imp_pairs = []
+        _sl_unpack_info = None
         for _sli_idx, _sli_instr in enumerate(hdr.instructions):
             if _sli_instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
                 continue
@@ -5943,6 +6053,57 @@ AST 映射规则:
             if _sli_instr.opname in ('POP_EXCEPT', 'PUSH_EXC_INFO', 'RERAISE',
                                     'WITH_EXCEPT_START', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH'):
                 continue
+            # [R3-10 fix] IMPORT_NAME 启动 import 序列，先 flush 已累积的前一条语句。
+            if _sli_instr.opname == 'IMPORT_NAME':
+                if _self_loop_instrs:
+                    _prev = self._build_statement(list(_self_loop_instrs))
+                    if _prev:
+                        _self_loop_stmts.append(_prev)
+                    _self_loop_instrs = []
+                _sl_imp_name = _sli_instr
+                _sl_imp_from = None
+                _sl_imp_pairs = []
+                continue
+            if _sli_instr.opname == 'IMPORT_FROM':
+                if _sl_imp_name is not None:
+                    if _sl_imp_from is not None:
+                        _sl_imp_pairs.append((_sl_imp_from.argval or '', None))
+                    _sl_imp_from = _sli_instr
+                continue
+            # [R3-04 fix] UNPACK_SEQUENCE / UNPACK_EX：前驱 _self_loop_instrs 是值
+            # 表达式，设置 unpack_info 等待 N 个 STORE_* 绑定目标。
+            if _sli_instr.opname == 'UNPACK_SEQUENCE':
+                _vi = [i for i in _self_loop_instrs
+                       if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                _val = self.expr_reconstructor.reconstruct(_vi) if _vi else None
+                _sl_unpack_info = {'value': _val, 'targets': [], 'count': _sli_instr.arg,
+                                   'is_starred': False, 'starred_idx': -1}
+                _self_loop_instrs = []
+                continue
+            if _sli_instr.opname == 'UNPACK_EX':
+                _vi = [i for i in _self_loop_instrs
+                       if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                _val = self.expr_reconstructor.reconstruct(_vi) if _vi else None
+                _arg = _sli_instr.argval
+                _before, _after = _arg & 0xFF, (_arg >> 8) & 0xFF
+                _sl_unpack_info = {'value': _val, 'targets': [],
+                                   'count': _before + 1 + _after,
+                                   'is_starred': True, 'starred_idx': _before}
+                _self_loop_instrs = []
+                continue
+            # [R3-09 fix] DELETE_SUBSCR/DELETE_ATTR 重建为 Delete 语句。镜像
+            # _generate_stmts_from_instrs 的 R2-E fix（for 回边块路径），使 while
+            # 自循环 header 路径同样识别 del 语句，避免 `del obj.attr` 退化为裸 Expr。
+            if _sli_instr.opname in ('DELETE_SUBSCR', 'DELETE_ATTR'):
+                _self_loop_instrs.append(_sli_instr)
+                _del_stmts = self._build_delete_stmt(_sli_instr, _self_loop_instrs)
+                if _del_stmts:
+                    if isinstance(_del_stmts, list):
+                        _self_loop_stmts.extend(_del_stmts)
+                    else:
+                        _self_loop_stmts.append(_del_stmts)
+                _self_loop_instrs = []
+                continue
             if _sli_instr.opname == 'POP_TOP' and _self_loop_instrs:
                 _has_call = any(i.opname in ('CALL', 'CALL_FUNCTION', 'CALL_METHOD', 'CALL_FUNCTION_KW', 'CALL_FUNCTION_EX') for i in _self_loop_instrs)
                 if _has_call:
@@ -5953,6 +6114,44 @@ AST 映射规则:
                     _self_loop_instrs = []
                     continue
             if _sli_instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                # [R3-10 fix] import 序列终结：IMPORT_NAME + STORE_* → Import 节点
+                if _sl_imp_name is not None:
+                    if _sl_imp_from is not None:
+                        _imp_n = _sl_imp_from.argval or ''
+                        _sto_n = _sli_instr.argval
+                        _sl_imp_pairs.append((_imp_n, _sto_n if _sto_n != _imp_n else None))
+                        _sl_imp_from = None
+                    else:
+                        _module = _sl_imp_name.argval or ''
+                        _sto_n = _sli_instr.argval
+                        _self_loop_stmts.append({'type': 'Import',
+                                                 'names': [{'name': _module,
+                                                            'asname': _sto_n if _sto_n != _module else None}]})
+                        _sl_imp_name = None
+                        _sl_imp_pairs = []
+                    _self_loop_instrs = []
+                    continue
+                # [R3-04 fix] UNPACK 收集 N 个 STORE_* 目标，到齐后生成
+                # Assign(Tuple(targets), value)
+                if _sl_unpack_info is not None:
+                    _is_star = _sl_unpack_info.get('is_starred', False)
+                    _star_idx = _sl_unpack_info.get('starred_idx', -1)
+                    _cur = len(_sl_unpack_info['targets'])
+                    if _is_star and _cur == _star_idx:
+                        _sl_unpack_info['targets'].append(
+                            {'type': 'Starred',
+                             'value': {'type': 'Name', 'id': _sli_instr.argval, 'ctx': 'Store'}})
+                    else:
+                        _sl_unpack_info['targets'].append(
+                            {'type': 'Name', 'id': _sli_instr.argval, 'ctx': 'Store'})
+                    if len(_sl_unpack_info['targets']) == _sl_unpack_info['count']:
+                        _tgt = {'type': 'Tuple', 'elts': _sl_unpack_info['targets'], 'ctx': 'Store'}
+                        if _sl_unpack_info['value'] is not None:
+                            _self_loop_stmts.append({'type': 'Assign', 'targets': [_tgt],
+                                                     'value': _sl_unpack_info['value']})
+                        _sl_unpack_info = None
+                    _self_loop_instrs = []
+                    continue
                 _self_loop_instrs.append(_sli_instr)
                 _stmt = self._build_store_statement(_self_loop_instrs, block=hdr)
                 if _stmt:
@@ -17019,6 +17218,29 @@ AST 映射规则:
                         _jb_target = self.cfg.get_block_by_offset(instr.argval)
                         if _jb_target is not None and (_jb_target == self._current_loop.header_block or _jb_target == self._current_loop.condition_block):
                             _is_implicit_loop_back = True
+                    # [R3-03 fix] Bug #6: continue in finally exception path.
+                    # When a block in the finally exception path (containing
+                    # POP_EXCEPT/RERAISE framework) has JUMP_BACKWARD targeting
+                    # the enclosing loop's header/condition, it represents an
+                    # explicit `continue` statement inside the finally block.
+                    # The compiler duplicates the finally body for both normal
+                    # and exception paths, so this JUMP_BACKWARD is the
+                    # exception-path implementation of the same `continue`
+                    # statement. Without this, the `continue` is lost (emitted
+                    # as empty/pass). Per "each block unique ownership": block
+                    # belongs to TryExceptRegion's finally_blocks, but its
+                    # JUMP_BACKWARD semantics (continue) is owned by the
+                    # enclosing LoopRegion. Per "nested-as-abstract-node":
+                    # TryExceptRegion is an abstract node in the loop body.
+                    if _is_implicit_loop_back:
+                        _block_in_finally_exc_path = any(
+                            i.opname == 'POP_EXCEPT' for i in block.instructions)
+                        if _block_in_finally_exc_path:
+                            _tr_cf = self.region_analyzer.find_enclosing_region(
+                                block, 'try_finally', require_finally=True)
+                            if (_tr_cf is not None and _tr_cf.has_finally
+                                    and block in _tr_cf.finally_blocks):
+                                _is_implicit_loop_back = False
                     if not _is_implicit_loop_back:
                         stmts.append({'type': 'Continue'})
                 continue
@@ -17038,10 +17260,37 @@ AST 映射规则:
                             _then_succ = None
                             for succ in block.successors:
                                 if succ != target_block:
+                                    # [R3-03 fix] Bug #6: skip exception-cleanup
+                                    # successors when picking the then-block. In
+                                    # finally exception path, the block may have
+                                    # an exception-edge successor (cleanup block
+                                    # containing COPY/POP_EXCEPT/RERAISE) that is
+                                    # NOT the normal fall-through. Picking it as
+                                    # the then-block loses the real fall-through
+                                    # (e.g., `if b: continue` loses the continue
+                                    # body). Per "each block unique ownership":
+                                    # exception-cleanup blocks belong to the
+                                    # TryExceptRegion's finally exception path,
+                                    # not to the IfRegion's then-branch.
+                                    _is_exc_cleanup = any(
+                                        i.opname in ('RERAISE', 'POP_EXCEPT', 'PUSH_EXC_INFO')
+                                        for i in succ.instructions)
+                                    if _is_exc_cleanup:
+                                        continue
                                     _then_succ = succ
                                     then_stmts = self._generate_block_statements(succ)
                                     self.generated_blocks.add(succ)
                                     break
+                            # [R3-03 fix] Bug #6 fallback: if all non-target
+                            # successors are exception-cleanup blocks, pick the
+                            # first non-target successor (preserves prior behavior).
+                            if _then_succ is None:
+                                for succ in block.successors:
+                                    if succ != target_block:
+                                        _then_succ = succ
+                                        then_stmts = self._generate_block_statements(succ)
+                                        self.generated_blocks.add(succ)
+                                        break
                             if self._loop_depth > 0 and _then_succ is not None:
                                 _then_succ_role = self.region_analyzer.get_block_role(_then_succ)
                                 if _then_succ_role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
@@ -17049,6 +17298,40 @@ AST 映射规则:
                                         then_stmts = [{'type': 'Break'}]
                                     elif then_stmts and then_stmts[-1].get('type') != 'Break':
                                         then_stmts.append({'type': 'Break'})
+                                # [R3-03 fix] Bug #6: continue in finally body.
+                                # When the then-block is an exception-framework
+                                # bridge (POP_TOP/POP_EXCEPT only, generating no
+                                # user statements) whose successor is a continue
+                                # block (JUMP_BACKWARD to enclosing loop's
+                                # header/condition, possibly with POP_EXCEPT before
+                                # it as exception cleanup), emit Continue as the
+                                # then-body and mark the continue block as
+                                # generated (preventing a duplicate sibling
+                                # Continue from the finally body iteration).
+                                # Per "each block unique ownership": the continue
+                                # block is owned by the IfRegion's then-branch,
+                                # not as a standalone finally body statement.
+                                # Per "nested-as-abstract-node": the IfRegion is
+                                # an abstract node in the TryExceptRegion's
+                                # finally body.
+                                elif (not then_stmts or
+                                      (len(then_stmts) == 1 and then_stmts[0].get('type') == 'Pass')):
+                                    _cont_succ_cf = None
+                                    for _s_cf in _then_succ.successors:
+                                        _s_last_cf = _s_cf.get_last_instruction()
+                                        if (_s_last_cf
+                                                and _s_last_cf.opname in BACKWARD_JUMP_OPS
+                                                and _s_last_cf.argval is not None
+                                                and self._current_loop is not None):
+                                            _jb_t_cf = self.cfg.get_block_by_offset(_s_last_cf.argval)
+                                            if (_jb_t_cf is not None
+                                                    and (_jb_t_cf == self._current_loop.header_block
+                                                         or _jb_t_cf == self._current_loop.condition_block)):
+                                                _cont_succ_cf = _s_cf
+                                                break
+                                    if _cont_succ_cf is not None:
+                                        then_stmts = [{'type': 'Continue'}]
+                                        self.generated_blocks.add(_cont_succ_cf)
                             else_stmts = self._generate_block_statements(target_block)
                             self.generated_blocks.add(target_block)
                         if_stmt = {
@@ -18897,7 +19180,25 @@ AST 映射规则:
                     continue
                 if instr.opname in MATCH_OPS:
                     break
-                
+
+                # [R3-03 fix] 区域归约算法原则 2（每块唯一归属）：for 循环体内
+                # match 的 subject_block 同时是外层 for 的 for_iter_fall_through
+                # 块，块首的 for-target STORE_*（`for i in r: match i:` 中的
+                # STORE_NAME i）属于循环迭代机制，不归属 match subject。原实现
+                # 未跳过该 STORE_*，将其并入 subject_instrs，导致 subject 重建为
+                # `_`（reconstruct 把 STORE+LOAD 误识为绑定）。判据与
+                # _build_effective_stmts 的 for-target 跳过一致：当前块是外层
+                # for 循环的 for_iter_fall_through 且 STORE 目标名在
+                # for_target_names 中。break 仅对首个 for-target STORE 生效——
+                # 其后的 LOAD subject 才是真正 subject。
+                _enclosing_loop_for_target = None
+                if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                    _enclosing_loop_for_target = region.find_enclosing_parent((LoopRegion,))
+                    if (_enclosing_loop_for_target is not None
+                            and _enclosing_loop_for_target.metadata.get('for_iter_fall_through') is region.subject_block
+                            and instr.argval in _enclosing_loop_for_target.metadata.get('for_target_names', set())):
+                        continue
+
                 if is_literal_match:
                     # 字面量match：COPY之前的指令是subject，COPY及之后是pattern
                     PATTERN_STARTERS = ('COPY', 'COMPARE_OP', 'IS_OP')
@@ -29473,6 +29774,37 @@ AST 映射规则:
                     self.generated_blocks.add(block)
                     self.generated_offsets.add(block.start_offset)
                     return [{'type': 'Break'}]
+                # [R3-04 fix] try-finally break path: when a break inside a
+                # try-finally causes the compiler to inline the finally body
+                # into the break path, the block contains [finally body] +
+                # [break pattern: POP_TOP + LOAD_CONST None + RETURN_VALUE].
+                # The finally body is handled by the `finally:` clause, so we
+                # strip it and emit only `break`. Detected by matching the
+                # block's preceding instructions against the finally body
+                # signature extracted from the enclosing try-finally region's
+                # finally blocks.
+                elif (len(_no_pop) > 2 and
+                      _no_pop[-2].opname == 'LOAD_CONST' and _no_pop[-2].argval is None and
+                      _no_pop[-1].opname in ('RETURN_VALUE', 'RETURN_CONST')):
+                    _tr_cf = self.region_analyzer.find_enclosing_region(
+                        block, 'try_finally', require_finally=True)
+                    if _tr_cf is not None and _tr_cf.has_finally:
+                        _fb_filt = ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
+                                    'PUSH_EXC_INFO', 'POP_EXCEPT', 'RERAISE',
+                                    'COPY', 'POP_TOP', 'JUMP_BACKWARD',
+                                    'JUMP_FORWARD', 'JUMP_ABSOLUTE', 'PRECALL',
+                                    'RETURN_VALUE', 'RETURN_CONST')
+                        _fb_sig = [_i.opname for _fb in _tr_cf.finally_blocks
+                                   for _i in _fb.instructions
+                                   if _i.opname not in _fb_filt
+                                   and not (_i.opname == 'LOAD_CONST' and _i.argval is None)]
+                        _blk_pre = [_i.opname for _i in _no_pop[:-2]
+                                    if _i.opname not in _fb_filt
+                                    and not (_i.opname == 'LOAD_CONST' and _i.argval is None)]
+                        if _fb_sig and _blk_pre == _fb_sig:
+                            self.generated_blocks.add(block)
+                            self.generated_offsets.add(block.start_offset)
+                            return [{'type': 'Break'}]
 
         _block_role = self.region_analyzer.get_block_role(block)
         if _block_role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
@@ -30371,10 +30703,37 @@ AST 映射规则:
                             if target_cf is not None:
                                 target_block_cf = self.cfg.get_block_by_offset(target_cf)
                                 innermost_loop_cf = self.region_analyzer.find_enclosing_region(block, 'loop')
-                                if innermost_loop_cf and target_block_cf == innermost_loop_cf.header_block:
+                                # [R3-03 fix] Bug #6: find_enclosing_region checks
+                                # `block in region.blocks`, but finally exception path
+                                # blocks belong to the TryExceptRegion (not the
+                                # LoopRegion). Fall back to self._current_loop (set
+                                # during loop body generation, preserved across nested
+                                # region generation).
+                                if innermost_loop_cf is None and self._current_loop is not None:
+                                    innermost_loop_cf = self._current_loop
+                                if innermost_loop_cf and (target_block_cf == innermost_loop_cf.header_block
+                                                          or target_block_cf == innermost_loop_cf.condition_block):
                                     _is_implicit_cont = True
 
-                        if _is_implicit_cont and is_finally_copy:
+                        # [R3-03 fix] Bug #6: continue in finally exception path.
+                        # When a block in the finally exception path (containing
+                        # PUSH_EXC_INFO/RERAISE/POP_EXCEPT framework) has
+                        # JUMP_BACKWARD targeting the enclosing loop's
+                        # header/condition, it represents an explicit `continue`
+                        # statement inside the finally block. The compiler
+                        # duplicates the finally body for both normal and exception
+                        # paths, so this JUMP_BACKWARD is the exception-path
+                        # implementation of the same `continue` statement. Emit
+                        # Continue to preserve semantics. Without this, the
+                        # `continue` is lost and the finally body's `if b:`
+                        # becomes `if b: pass`. Per "each block unique ownership":
+                        # block belongs to TryExceptRegion's finally_blocks, but
+                        # its JUMP_BACKWARD semantics (continue) is owned by the
+                        # enclosing LoopRegion. Per "nested-as-abstract-node":
+                        # TryExceptRegion is an abstract node in the loop body.
+                        _is_exc_path_continue = (block in _exc_path_blocks and not is_finally_copy)
+
+                        if _is_implicit_cont and (is_finally_copy or _is_exc_path_continue):
                             inlined_result = [{'type': 'Continue'}]
                     elif last_instr_cf.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
                         if self.block_role(block) in (BlockRole.BREAK, BlockRole.PURE_BREAK):
@@ -32217,14 +32576,32 @@ AST 映射规则:
         """
         _stmts: List[Dict[str, Any]] = []
         _buf: List[Instruction] = []
-        for _instr in instrs:
-            # [R5 Fix 2] STORE_SUBSCR 重建为 Subscript 赋值 (container[index] = value)
-            # 而非裸 Name Expr。字节码模式：LOAD value, LOAD container, LOAD index, STORE_SUBSCR
-            # 栈顺序：TOS2=value, TOS1=container, TOS0=index → container[index] = value
-            # 算法依据：每块唯一归属 — STORE_SUBSCR 的 LOAD 前驱归属本赋值语句，
-            # 不应作为孤立 Expr 泄漏。与 _build_effective_stmts 中的 STORE_SUBSCR
-            # 处理保持一致（多语句回边块走本路径，单语句块走 _build_effective_stmts）。
+        _gi = 0
+        _gn = len(instrs)
+        while _gi < _gn:
+            _instr = instrs[_gi]
+            # [R3-06 fix] 区域归约算法原则 2（每块唯一归属）：augmented subscript
+            # 赋值（`d[k] += 1`）的 COPY/COPY/BINARY_SUBSCR/LOAD/BINARY_OP/SWAP/
+            # SWAP/STORE_SUBSCR 协议。原 STORE_SUBSCR 切分路径（_split_subscr_operands）
+            # 按栈效应三段切分 value/container/index，但 aug subscript 的 COPY/BINARY_OP
+            # 链使栈效应切分错位（`d[k] += 1` → `k[1] = d`）。先委托 _build_subscript_assign
+            # 重建：该方法识别 BINARY_OP(in-place) → AugAssign(target=Subscript, op, value)，
+            # 识别普通 STORE_SUBSCR → Assign(target=Subscript, value)。与 _build_effective_stmts
+            # / _generate_block_statements 等路径调用 _build_subscript_assign 保持一致
+            # （多语句回边块走本路径，单语句块走 _build_effective_stmts）。
             if _instr.opname == 'STORE_SUBSCR' and len(_buf) >= MIN_INSTRS_FOR_SUBSCR_ASSIGN:
+                _aug_stmt = self._build_subscript_assign(_buf + [_instr])
+                if _aug_stmt:
+                    _stmts.append(_aug_stmt)
+                    _buf = []
+                    _gi += 1
+                    continue
+                # [R5 Fix 2] STORE_SUBSCR 重建为 Subscript 赋值 (container[index] = value)
+                # 而非裸 Name Expr。字节码模式：LOAD value, LOAD container, LOAD index, STORE_SUBSCR
+                # 栈顺序：TOS2=value, TOS1=container, TOS0=index → container[index] = value
+                # 算法依据：每块唯一归属 — STORE_SUBSCR 的 LOAD 前驱归属本赋值语句，
+                # 不应作为孤立 Expr 泄漏。与 _build_effective_stmts 中的 STORE_SUBSCR
+                # 处理保持一致（多语句回边块走本路径，单语句块走 _build_effective_stmts）。
                 # [R2-P0-1] 栈效应切分支持多指令容器（data.loc = LOAD+LOAD_ATTR）。
                 _split = self._split_subscr_operands(_buf)
                 if _split is not None:
@@ -32238,6 +32615,7 @@ AST 映射规则:
                             'value': _v,
                         })
                         _buf = []
+                        _gi += 1
                         continue
                 _v = self.expr_reconstructor.reconstruct(_buf[:-2])
                 _c = self.expr_reconstructor.reconstruct([_buf[-2]])
@@ -32249,7 +32627,70 @@ AST 映射规则:
                         'value': _v,
                     })
                 _buf = []
+                _gi += 1
                 continue
+            # [R3-05 fix] 区域归约算法原则 2（每块唯一归属）：UNPACK_EX /
+            # UNPACK_SEQUENCE 多目标解包赋值（`a, *b = c` / `x, y = pair`）。
+            # 字节码模式：<value>; UNPACK_EX arg; (before+1+after)×STORE_* 或
+            # <value>; UNPACK_SEQUENCE N; N×STORE_*。UNPACK 消费栈顶 iterable
+            # 产生多个值，由后继 N 个 STORE_* 绑定。原实现未处理 UNPACK_*，
+            # UNPACK 落入缓冲被忽略，首个 STORE_* 触发 _build_store_statement
+            # 重建为单目标赋值（`a = c`），后续 STORE_* 目标丢失。本分支在
+            # 遇到 UNPACK_* 时前向收集后继 STORE_* 目标，构建单个
+            # Assign(targets=[Tuple([Name(a), Starred(Name(b))])], value=Name(c))，
+            # 与 _generate_block_statements 的 UNPACK 处理保持一致（多语句回边
+            # 块走本路径，while body 单语句块走 _generate_block_statements）。
+            if _instr.opname in ('UNPACK_EX', 'UNPACK_SEQUENCE') and _buf:
+                _unpack_value_instrs = list(_buf)
+                _unpack_value_expr = self.expr_reconstructor.reconstruct(_unpack_value_instrs)
+                _unpack_targets: List[Dict[str, Any]] = []
+                _uj = _gi + 1
+                if _instr.opname == 'UNPACK_SEQUENCE':
+                    _ucount = _instr.arg if _instr.arg is not None else 0
+                    _ucollected = 0
+                    while _uj < _gn and _ucollected < _ucount:
+                        _uni = instrs[_uj]
+                        if _uni.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                            _unpack_targets.append({'type': 'Name', 'id': _uni.argval, 'ctx': 'Store'})
+                            _ucollected += 1
+                            _uj += 1
+                        else:
+                            break
+                else:  # UNPACK_EX: arg = before | (after << 8)
+                    _uarg = _instr.argval if _instr.argval is not None else _instr.arg
+                    if _uarg is None:
+                        _uarg = 0
+                    _ubefore = _uarg & 0xFF
+                    _uafter = (_uarg >> 8) & 0xFF
+                    _ucollected = 0
+                    while _uj < _gn and _ucollected < _ubefore:
+                        _uni = instrs[_uj]
+                        if _uni.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                            _unpack_targets.append({'type': 'Name', 'id': _uni.argval, 'ctx': 'Store'})
+                            _ucollected += 1
+                            _uj += 1
+                        else:
+                            break
+                    if _uj < _gn:
+                        _uni = instrs[_uj]
+                        if _uni.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                            _unpack_targets.append({'type': 'Starred', 'value': {'type': 'Name', 'id': _uni.argval, 'ctx': 'Store'}})
+                            _uj += 1
+                    _ucollected = 0
+                    while _uj < _gn and _ucollected < _uafter:
+                        _uni = instrs[_uj]
+                        if _uni.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                            _unpack_targets.append({'type': 'Name', 'id': _uni.argval, 'ctx': 'Store'})
+                            _ucollected += 1
+                            _uj += 1
+                        else:
+                            break
+                if _unpack_value_expr is not None and _unpack_targets:
+                    _unpack_target = {'type': 'Tuple', 'elts': _unpack_targets, 'ctx': 'Store'}
+                    _stmts.append({'type': 'Assign', 'targets': [_unpack_target], 'value': _unpack_value_expr})
+                    _buf = []
+                    _gi = _uj
+                    continue
             # [R22] STORE_ATTR 重建为 Attribute 赋值 (obj.attr = value)
             # 字节码模式：LOAD value, LOAD obj, [LOAD_ATTR ...], STORE_ATTR attr
             # 栈顺序：TOS1=obj, TOS0=value → obj.attr = value（STORE_ATTR 弹出
@@ -32265,6 +32706,7 @@ AST 映射规则:
                 if _stmt:
                     _stmts.append(_stmt)
                 _buf = []
+                _gi += 1
                 continue
             # [R2-E fix] 区域归约算法原则 2（每块唯一归属）：
             # DELETE_SUBSCR/DELETE_ATTR 重建为 Delete 语句 (del obj[key] /
@@ -32282,24 +32724,55 @@ AST 映射规则:
                 if _del_stmts:
                     _stmts.extend(_del_stmts)
                 _buf = []
+                _gi += 1
                 continue
             if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF') and _buf:
                 _stmt = self._build_store_statement(_buf + [_instr], block=block)
                 if _stmt:
                     _stmts.append(_stmt)
                 _buf = []
+                _gi += 1
                 continue
             if _instr.opname == 'POP_TOP' and _buf:
                 _stmt = self._build_statement(_buf)
                 if _stmt:
                     _stmts.append(_stmt)
                 _buf = []
+                _gi += 1
                 continue
             _buf.append(_instr)
+            _gi += 1
         if _buf:
-            _stmt = self._build_statement(_buf)
-            if _stmt:
-                _stmts.append(_stmt)
+            # [R3-12 fix] 区域归约算法原则 2（每块唯一归属）：抑制回边重检泄漏
+            # （无 IfRegion 场景）。while 条件在回边处的重检（LOAD a;
+            # POP_JUMP_BACKWARD → header）是循环迭代机制的一部分，不应作为
+            # 独立 Expr 发射。R02 簇 B 仅覆盖重检块被 IfRegion 吸收为 elif/else
+            # 的场景；本处覆盖无 IfRegion 的 while body——重检指令作为
+            # BoolOpRegion merge_block 的尾部残留（`while a: x = b or c` 中
+            # merge_block = [STORE x, LOAD a, POP_JUMP_BACKWARD_IF_TRUE]），
+            # 被 _generate_boolop 的 post-store 提取传入本方法。判据与
+            # _build_effective_stmts 末尾的 is_recheck 一致：末尾为条件跳转且
+            # 目标为当前循环 header/condition_block，且缓冲无 STORE/CALL 等副作用。
+            _last_buf = _buf[-1] if _buf else None
+            _is_be_recheck = (self._current_loop is not None
+                              and _last_buf is not None
+                              and _last_buf.opname in CONDITIONAL_JUMP_OPS
+                              and _last_buf.argval is not None)
+            if _is_be_recheck:
+                _recheck_tgt = self.cfg.get_block_by_offset(_last_buf.argval)
+                if (_recheck_tgt is not None
+                        and _recheck_tgt in (self._current_loop.header_block,
+                                             self._current_loop.condition_block)):
+                    if (not any(i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF') for i in _buf)
+                            and not any(i.opname in ('CALL', 'CALL_FUNCTION', 'CALL_METHOD',
+                                                      'CALL_FUNCTION_KW', 'CALL_FUNCTION_EX',
+                                                      'DELETE_SUBSCR', 'DELETE_ATTR',
+                                                      'RAISE_VARARGS', 'IMPORT_NAME') for i in _buf)):
+                        _buf = []
+            if _buf:
+                _stmt = self._build_statement(_buf)
+                if _stmt:
+                    _stmts.append(_stmt)
         return _stmts
 
     def _build_prefix_stmt_list(self, pre_instrs: List[Instruction], block: BasicBlock) -> List[Dict[str, Any]]:
