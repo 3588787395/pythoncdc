@@ -55,7 +55,8 @@
 - [x] Task 2.2: LOOP round_02 — commit 2c418ee (已 push; 12/12 修复完成 A for-else×4 + B while回边重检×4 + C break归属×1 + D for-iter walrus×1 + E for body del×1 + F await循环退化×1); while_loop+for_loop 5 failed (基线 18, -13 改善 无退化); ternary 22 failed 无退化; R01 5 failed 无退化
 - [x] Task 2.3: LOOP round_03 — commit 4d8e858 (已 push; 12/12 修复完成 A aug subscript + B match subject + C UNPACK_EX/UNPACK_SEQUENCE + D try-finally吞loop + E 无IfRegion回边重检 + F continue-in-finally + G with+return误判break + 1 bonus while_tuple_unpack); while_loop+for_loop 5 failed 无退化; R01 4 failed (1 bonus 改善); R02 0 failed 无退化; ternary 22 failed 无退化
 - [x] Task 2.4: LOOP round_04 — 12/12 修复完成 (import from/star + match or/sequence pattern + try-finally cleanup pollution + nested try + while-else for-in-else + break-in-finally + async while+async with+return + async while+try/finally+await + while+with+break); 4 退化修复 (R01 +2 / ternary +2 全部回滚到 baseline); while_loop+for_loop 5 failed 无退化; R01 4 failed 无退化; R02/R03 0 failed 无退化; ternary 22 failed 无退化; commit pending
-- [ ] Task 2.5 ~ 2.20
+- [x] Task 2.5: LOOP round_05 — 3/4 P0 bug 修复完成 (Bug #2 ternary break + Bug #5 nested try in except + Bug #8 finally raise) + 1 已知限制 (Bug #10 except handler break + finally cleanup 复制污染, R06+ 处理); while_loop+for_loop 5 failed 无退化; R01-R04 0 failed 无退化; ternary 22 failed 无退化; commit pending
+- [ ] Task 2.6 ~ 2.20
 
 ## Phase 2.5: TERNARY 区域（20 轮）
 - [x] Task T1.1: Ternary round_01 — 5 bug 修复 (walrus/compare/method_call/starred); 55 failed, 77 passed, 1 skipped (基线 60 failed, 72 passed)

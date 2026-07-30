@@ -743,6 +743,23 @@ class PatternParser:
                                     break
                     if not is_for_iter_store:
                         is_literal_match = False
+            # [R5 fix] 区域归约算法原则 2（每块唯一归属）：通配符
+            # case 带守卫（``case _ if <guard>:`）编译为 LOAD subject;
+            # POP_TOP（通配符丢弃）; <guard>; LOAD_CONST; COMPARE_OP;
+            # POP_JUMP_IF_FALSE。LOAD_CONST + COMPARE_OP 是 guard 而非
+            # pattern，前导的 LOAD + POP_TOP 标识通配符 pattern。
+            # 检测前导 LOAD + POP_TOP（subject discard）以区分 guard
+            # 与 literal pattern，避免将 guard 误判为 case 0:。
+            if is_literal_match:
+                _has_wildcard_discard = False
+                for _i in range(literal_compare_pos):
+                    if (instrs[_i].opname in self.LOAD_VAR_OPS
+                            and _i + 1 < literal_compare_pos
+                            and instrs[_i + 1].opname == 'POP_TOP'):
+                        _has_wildcard_discard = True
+                        break
+                if _has_wildcard_discard:
+                    is_literal_match = False
 
         if is_literal_match:
             result = self._extract_or_or_literal_pattern(instrs)
@@ -795,6 +812,30 @@ class PatternParser:
                 result['name'] = as_name
 
         return result
+
+    def _has_as_binding_copy(self, filtered) -> bool:
+        """区域归约算法原则 2（每块唯一归属）：区分 as-binding COPY 与
+        pattern-matching COPY。
+
+        as-binding COPY 出现在首个 MATCH_*/COMPARE_OP 模式指令**之前**
+        （保存 subject 供后续 as 绑定 STORE）。pattern-matching COPY 出现在
+        MATCH_CLASS **之后**（复制 match 结果供 POP_JUMP_IF_NONE 检查）。
+
+        class pattern 无参数（``case P():``）的 COPY 在 MATCH_CLASS 之后，
+        是 pattern-matching COPY——不应触发 as-binding 搜索，否则 case body
+        的 STORE_NAME y（``y = 1``）被误判为 as 绑定（违反每块唯一归属）。
+        """
+        pattern_start_idx = None
+        for i, instr in enumerate(filtered):
+            if instr.opname in self.MATCH_OPS or instr.opname in ('COMPARE_OP', 'IS_OP'):
+                pattern_start_idx = i
+                break
+        if pattern_start_idx is None:
+            return any(i.opname == 'COPY' for i in filtered)
+        for i in range(pattern_start_idx):
+            if filtered[i].opname == 'COPY':
+                return True
+        return False
 
     def _find_as_binding(self, case_block) -> Optional[str]:
         """
@@ -863,7 +904,11 @@ class PatternParser:
         # 赋值（如 `for i in r: match i: case 1: x = 1` 中 case body 的
         # STORE_NAME x），不是 as 绑定。无 COPY 时跳过本策略，避免吞并 body
         # 赋值（与策略3的 has_copy_for_as 守卫一致）。
-        has_copy_in_case = any(i.opname == 'COPY' for i in filtered)
+        # [R5 fix] 区域归约算法原则 2（每块唯一归属）：as-binding COPY 出现在
+        # MATCH_*/COMPARE_OP 之前，pattern-matching COPY 出现在之后（如
+        # `case P():` 的 COPY 在 MATCH_CLASS 之后）。仅 as-binding COPY 触发
+        # 本策略，避免 case body 的 STORE 被误判为 as 绑定。
+        has_copy_in_case = self._has_as_binding_copy(filtered)
         if has_copy_in_case:
             store_after_pattern = self._find_last_store_on_success_path(case_block)
             if store_after_pattern:
@@ -871,7 +916,7 @@ class PatternParser:
 
         # 策略3：检查COPY指令 - 如果case_block有COPY，说明有as绑定
         # COPY保存subject用于后续的as绑定STORE_
-        has_copy_for_as = any(i.opname == 'COPY' for i in filtered)
+        has_copy_for_as = self._has_as_binding_copy(filtered)
         if has_copy_for_as:
             # 沿所有后继路径查找STORE_指令
             as_name = self._find_store_in_successors(case_block)
@@ -1492,12 +1537,15 @@ class PatternParser:
             count = filtered[unpack_idx].argval if filtered[unpack_idx].argval is not None else 0
             if count == 0:
                 # 没有属性需要解包，检查是否有as绑定
-                for j in range(unpack_idx + 1, min(unpack_idx + 3, len(filtered))):
-                    if filtered[j].opname in self.STORE_OPS:
-                        as_name = filtered[j].argval
-                        break
-                    if filtered[j].opname not in ('POP_TOP', 'LOAD_CONST'):
-                        break
+                # [R5 fix] 区域归约算法原则 2（每块唯一归属）：as 绑定 STORE
+                # 紧跟 UNPACK_SEQUENCE 0（无中间指令）。``case P() as y:`` 编译
+                # 为 ``UNPACK_SEQUENCE 0; STORE_FAST y``。``case P():``（无 as）
+                # 编译为 ``UNPACK_SEQUENCE 0; LOAD_CONST <val>; STORE_*``——
+                # LOAD_CONST 是 case body 赋值的值加载，其后的 STORE 属于 body
+                # 而非 as 绑定。仅当 UNPACK_SEQUENCE 0 的下一条指令是 STORE_*
+                # 时才识别为 as 绑定，避免吞并 case body 赋值。
+                if unpack_idx + 1 < len(filtered) and filtered[unpack_idx + 1].opname in self.STORE_OPS:
+                    as_name = filtered[unpack_idx + 1].argval
             else:
                 # 按属性数量逐个处理
                 attr_idx = 0

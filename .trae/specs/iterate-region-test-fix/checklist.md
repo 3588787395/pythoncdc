@@ -353,3 +353,64 @@
 
 ## R15 已知限制（未修复 bug）
 - [ ] any_genexp skipped（与 R5 ternary_in_genexp 同嵌套 code object 机制，非新 bug，R5 已知限制延续）
+
+## LOOP 区域 Round 05 验证
+
+### SubTask 2.5.0: 基线确认
+- [x] test_findings.md 已产出 13 错误（基线 `timeout 280 python -m pytest tests/exhaustive/loop/round_05/ -q` → 13 failed / 0 pass / 0 skip / 0 error）
+- [x] 本轮聚焦 4 个 P0 bug：#2 ternary break / #5 nested try in except / #8 finally raise / #10 except break + finally cleanup
+- [x] while_loop+for_loop 基线 = 5 failed（R04 后）
+- [x] ternary 基线 = 22 failed（R04 后，无退化）
+- [x] if_region 基线 = 43 failed（R25 后，无退化）
+
+### SubTask 2.5.1 (P0): Bug #5 — except handler 内嵌套 try 边界错位
+- [x] `for i in r:\n  try: do()\n  except E:\n    try: x=1\n    except E2: y=2` 反编译保留外层 try + do() + except E handler 内含嵌套 try (`x=1; except E2: y=2`)，字节码等价（33 vs 33 指令）
+- [x] 修复依 4 原则：嵌套即抽象节点 — 内层 try entry 在外层 except_handler body 中时，作为 handler body 抽象节点由 `_generate_handler_body_statements` 处理，不在 `_generate_try_body` 中生成
+- [x] 验证：`timeout 30 python -m pytest tests/exhaustive/loop/round_05/test_r5_for_nested_try_in_except.py -q` 通过
+- [x] while_loop+for_loop 回归无退化
+- [x] ternary 回归无退化
+- [x] if_region 回归无退化
+
+### SubTask 2.5.2 (P0): Bug #2 — ternary 条件 + break 归属
+- [x] `def f():\n  while a:\n    if (x if cond else y): break` 反编译保留 `if (x if cond else y): break`，break 不丢失，字节码等价（12 vs 12 指令）
+- [x] 修复依 4 原则：每块唯一归属 — BREAK/CONTINUE 角色块在 IF 区域 then 分支跳过 merge-block 检查，由下方 BREAK/CONTINUE 逻辑发射 ast.Break / ast.Continue
+- [x] 验证：`timeout 30 python -m pytest tests/exhaustive/loop/round_05/test_r5_while_break_ternary.py -q` 通过
+- [x] while_loop+for_loop 回归无退化
+- [x] ternary 回归无退化
+- [x] if_region 回归无退化
+
+### SubTask 2.5.3 (P0): Bug #8 — finally 块内 raise 使正常路径不可达
+- [x] `while a:\n  try: do()\n  finally: raise E()` 反编译保留 while 循环 + try-finally（不退化为 if + try-except-else），raise 不重复，字节码等价（23 vs 23 指令）
+- [x] 修复依 4 原则：嵌套即抽象节点 — finally body 自我保护的 cleanup-only 异常表条目（COPY+POP_EXCEPT+RERAISE）正确识别，finally 异常路径 handler 不被拆为 except handler
+- [x] 验证：`timeout 30 python -m pytest tests/exhaustive/loop/round_05/test_r5_while_raise_finally.py -q` 通过
+- [x] while_loop+for_loop 回归无退化
+- [x] ternary 回归无退化
+- [x] if_region 回归无退化
+
+### SubTask 2.5.4 (P0): Bug #10 — except handler 内 break + finally cleanup 复制污染
+- [ ] `def f():\n  while a:\n    try: do()\n    except E:\n      if b: break\n    finally: cleanup()` 反编译为 `try: do() except E: if b: break finally: cleanup()`，cleanup 不被复制进 except break 路径，字节码等价（41 vs 41 指令）
+- [ ] 修复依 4 原则：每块唯一归属 — except handler body 生成时跳过已被 finally_copy_blocks 标记的 cleanup 块；父引用子入口 — except handler body 内 `if b:` 的 IfRegion 不被外层 TRY_FINALLY 块归属抑制
+- [ ] 验证：`timeout 30 python -m pytest tests/exhaustive/loop/round_05/test_r5_while_try_finally_break_except.py -q` 通过
+- [ ] while_loop+for_loop 回归无退化
+- [ ] ternary 回归无退化
+- [ ] if_region 回归无退化
+- [ ] control_flow_matrix 回归无退化
+
+### SubTask 2.5.5-8: 最终验证
+- [ ] 全量 while_loop+for_loop 回归 ≤ 5 failed（基线 5，无新增退化）
+- [ ] 跨区域 ternary 回归无退化
+- [ ] 跨区域 if_region 回归无退化
+- [ ] 跨区域 control_flow_matrix 回归无退化
+- [ ] 修复报告已写 — `rounds/loop/round_05/fix_report.md`
+- [ ] 所有修复均通过 4 原则论证，无跨区域启发式特例 / 后处理补丁 / 启发式优先级覆盖 / 扁平化 / 硬编码深度上限
+- [ ] 源代码无 debug 打印残留
+- [ ] 未修改任何 R04 passing 测试（仅新增 R05 测试）
+- [ ] 未创建根级 debug 文件（`_dbg_r5_regions.py` + `_dbg_r5_b4.py` 已清理）
+- [ ] 未 git commit（由父代理决定提交时机）
+
+## R05 已知限制（未修复 bug，R06+ 处理）
+- [ ] #01/#13 match guard 退化 if（subject 丢弃） — `_identify_match_regions` 对带 guard 的模式识别
+- [ ] #03/#04/#09/#12 except handler 内 break/continue 丢失 — `_detect_break_continue` + `_identify_try_except_regions` 对 except handler 内 break/continue（带 POP_EXCEPT 清理）的归属
+- [ ] #06 else 内 match case body 丢失 — `_find_loop_else` + `_identify_match_regions` 对 while-else 的 else 块内 match 的归约
+- [ ] #07 or-pattern + guard 拆分 — `_identify_match_regions` 对 or-pattern + guard 的归约
+- [ ] #11 class pattern 无参数 as 误判 — `_find_store_in_successors` 对 class pattern 无参数（MATCH_CLASS 参数 0）的 as 绑定归属

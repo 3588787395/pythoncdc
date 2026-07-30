@@ -14156,13 +14156,25 @@ AST 映射规则:
                     continue
             if block in child_region_blocks and block not in child_entries:
                 continue
+            # [R5-05 fix] 区域归约算法原则 2（每块唯一归属）：当 if 条件是
+            # ternary（`if (x if cond else y): break`），ternary 的两个值分支
+            # （load x / load y）在 truthiness check 后均跳转到 break 块。break
+            # 块因此有多个前驱（来自两个值分支的 truthy 路径），且
+            # break-as-return-None 模式使 break 块含 RETURN_VALUE。原 merge-block
+            # 检查（has_return + 多前驱 + 不在 then_blocks）误判 break 块为 if 后
+            # 的 merge 块而跳过，导致 break 丢失，if 体退化为 pass。修复：
+            # merge-block 检查前先取块角色，BREAK/CONTINUE 角色块跳过 merge-block
+            # 检查，由下方 BREAK/CONTINUE 处理逻辑发射 ast.Break / ast.Continue。
             if hasattr(region, 'region_type') and hasattr(region.region_type, 'name') and 'IF' in region.region_type.name and branch == 'then':
-                has_return = any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in block.instructions)
-                if has_return and len(block.predecessors) > 1 and block not in (getattr(region, 'then_blocks', []) or []):
-                    continue
-                if len(block.predecessors) > 1 and block not in (getattr(region, 'then_blocks', []) or []):
-                    if any(i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL') for i in block.instructions):
+                _r5_05_block_role = self.region_analyzer.get_block_role(block)
+                if _r5_05_block_role not in (BlockRole.BREAK, BlockRole.PURE_BREAK,
+                                              BlockRole.CONTINUE, BlockRole.PURE_CONTINUE):
+                    has_return = any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in block.instructions)
+                    if has_return and len(block.predecessors) > 1 and block not in (getattr(region, 'then_blocks', []) or []):
                         continue
+                    if len(block.predecessors) > 1 and block not in (getattr(region, 'then_blocks', []) or []):
+                        if any(i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL') for i in block.instructions):
+                            continue
             if stmts and stmts[-1].get('type') in ('Break', 'Continue', 'Return', 'Raise'):
                 if self._current_loop and block not in self._post_break_blocks:
                     self._post_break_blocks.append(block)
@@ -15599,10 +15611,29 @@ AST 映射规则:
                             break
                     if handler_in_range:
                         break
-                is_nested = is_child or is_in_try_blocks or is_before_try_start or handler_in_range
+                # [R5-05 fix] 区域归约算法原则 3（嵌套即抽象节点）+ 原则 2
+                # （每块唯一归属）：当内层 try 的 entry 在外层 try 的 except
+                # handler body 或 finally body 中时，内层 try 应作为 handler/
+                # finally body 的抽象节点由 _generate_handler_body_statements
+                # （或 finally body 生成）处理，不应在 try body 中生成。
+                # 原 is_child 判定仅检查 parent 关系，未区分内层 try 位于 try
+                # body 还是 handler body——导致 except handler 内嵌套 try 被
+                # _generate_try_body 误生成（标记为已生成），随后 handler body
+                # 生成时该内层 try 已生成被跳过，handler body 退化为内层 try
+                # body 的裸指令（如 `x = 1`），且内层 try 被错位提升到 try body。
+                is_entry_in_handler = False
+                for _, _, hblocks in region.except_handlers:
+                    if r.entry in hblocks:
+                        is_entry_in_handler = True
+                        break
+                if not is_entry_in_handler and getattr(region, 'finally_blocks', None):
+                    if r.entry in set(region.finally_blocks):
+                        is_entry_in_handler = True
+                is_child_in_try = is_child and not is_entry_in_handler
+                is_nested = is_child_in_try or is_in_try_blocks or is_before_try_start or handler_in_range
                 if is_nested and (r.parent is None or r.parent is region):
                     nested_is_smaller = r.try_offset_end - r.try_offset_start < region.try_offset_end - region.try_offset_start
-                    if nested_is_smaller or is_child:
+                    if nested_is_smaller or is_child_in_try:
                         nested_try_regions.append(r)
 
         _first_try_block_offset = min((b.start_offset for b in region.try_blocks), default=region.try_offset_start)
@@ -17631,9 +17662,20 @@ AST 映射规则:
                                     # exception-cleanup blocks belong to the
                                     # TryExceptRegion's finally exception path,
                                     # not to the IfRegion's then-branch.
-                                    _is_exc_cleanup = any(
-                                        i.opname in ('RERAISE', 'POP_EXCEPT', 'PUSH_EXC_INFO')
-                                        for i in succ.instructions)
+                                    # [R5 fix] 区域归约算法原则 2（每块唯一归属）：
+                                    # break 从 except handler 退出的块（如
+                                    # ``POP_EXCEPT; POP_TOP; LOAD_CONST None;
+                                    # RETURN_VALUE``）含 POP_EXCEPT（异常清理）
+                                    # 但也含 RETURN_VALUE（break 出口），是 break
+                                    # 退出而非异常清理。仅当块含 RERAISE/POP_EXCEPT
+                                    # 且不含 RETURN_VALUE/RETURN_CONST 时才判为异常
+                                    # 清理（RERAISE 重抛异常，无用户代码出口）。
+                                    _is_exc_cleanup = (
+                                        any(i.opname in ('RERAISE', 'POP_EXCEPT', 'PUSH_EXC_INFO')
+                                            for i in succ.instructions)
+                                        and not any(i.opname in ('RETURN_VALUE', 'RETURN_CONST')
+                                                   for i in succ.instructions)
+                                    )
                                     if _is_exc_cleanup:
                                         continue
                                     _then_succ = succ
@@ -17748,7 +17790,7 @@ AST 映射规则:
                                         if _loop_header:
                                             if (target_block.successors and
                                                 len(target_block.successors) == 1 and
-                                                    target_block.successors[0] == _loop_header):
+                                                    next(iter(target_block.successors)) == _loop_header):
                                                 _suppress_else = True
                                             elif any(i.opname == 'JUMP_BACKWARD' and i.argval == _loop_header.start_offset
                                                      for i in target_block.instructions):

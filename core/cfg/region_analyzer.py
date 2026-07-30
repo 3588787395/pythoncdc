@@ -2048,6 +2048,14 @@ class RegionAnalyzer:
             'YIELD_VALUE',
             'IMPORT_NAME', 'IMPORT_FROM', 'IMPORT_STAR',
             'GLOBAL', 'NONLOCAL',
+            # [R5 fix] 区域归约算法原则 2（每块唯一归属）：POP_EXCEPT 是
+            # except handler 的异常栈清理指令（语句级语义），不是三元表达式的
+            # 值指令。含 POP_EXCEPT 的块是 break/continue/return 从 except
+            # handler 退出的控制流块（如 `except E: if c: break` 的 break 路径
+            # ``POP_EXCEPT; POP_TOP; LOAD_CONST None; RETURN_VALUE``），不应
+            # 被识别为 ternary 值块——否则 TernaryRegion 抢占 except handler
+            # body 块，handler 退化为 ``pass``（违反每块唯一归属）。
+            'POP_EXCEPT',
             # [R18 Bug 2-3 修复] GET_YIELD_FROM_ITER 是 yield from 语句的迭代器
             # 获取指令，总是后跟 SEND 循环。含此指令的块是 yield from 语句的
             # setup 块（语句级语义），不是三元表达式的值块（表达式级语义）。
@@ -4336,6 +4344,47 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                                'WITH_EXCEPT_START')
                   for i in block.instructions)
 
+    def _is_except_break_exit(self, block) -> bool:
+        """区域归约算法 — 判定块是否为 break 退出 except handler 的出口块。
+
+        CPython 3.11 为 ``except E: if c: break`` 编译的 break 路径为
+        ``POP_EXCEPT``（清理异常处理栈）+ 迭代器清理 + 隐式返回 None：
+          ``POP_EXCEPT; POP_TOP; LOAD_CONST None; RETURN_VALUE``
+        其中 POP_EXCEPT 是块首条有效指令——它先于任何返回值加载，标识
+        "退出 except handler 的控制流"。与之对照，``except E: return <val>``
+        编译为 ``LOAD_CONST <val>; POP_EXCEPT; RETURN_VALUE``，值在 POP_EXCEPT
+        之前加载，故不会以 POP_EXCEPT 为首条指令。
+
+        本判据仅识别"POP_EXCEPT 首条 + 其后为 trivial 返回 None（无用户代码）"
+        的块，作为 break 出口（原则 2：break 指令被误判为 return 而丢弃）。
+        """
+        if not block or not block.instructions:
+            return False
+        instrs = block.instructions
+        _NOISE = ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')
+        idx = 0
+        while idx < len(instrs) and instrs[idx].opname in _NOISE:
+            idx += 1
+        if idx >= len(instrs) or instrs[idx].opname != 'POP_EXCEPT':
+            return False
+        has_return = False
+        for i in instrs[idx + 1:]:
+            if i.opname in _NOISE:
+                continue
+            if i.opname in ('POP_TOP', 'POP_BLOCK', 'POP_EXCEPT'):
+                continue
+            if i.opname == 'LOAD_CONST':
+                if i.argval is not None:
+                    return False
+                continue
+            if i.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                has_return = True
+                continue
+            if i.opname in PURE_JUMP_OPS:
+                continue
+            return False
+        return has_return
+
     def _detect_break_continue(self, loop_body: Set[BasicBlock], header: BasicBlock,
                                natural_exit: Optional[BasicBlock] = None,
                                natural_back_edge: Optional[BasicBlock] = None,
@@ -4435,6 +4484,15 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                         if (for_iter_exit is not None and s is not for_iter_exit
                                 and else_blocks and self._is_trivial_return_block(s)
                                 and not self._is_trivial_return_block(for_iter_exit)):
+                            break_blocks_set.add(s)
+                        # [R5 fix] 区域归约算法原则 2（每块唯一归属）：break 在
+                        # except handler 内（`except E: if c: break`）编译为
+                        # POP_EXCEPT（清理异常）+ trivial 返回 None（break 出口）。
+                        # POP_EXCEPT 作为块首条有效指令标识"退出 except handler"，
+                        # 与 `return <val>` in except（值先于 POP_EXCEPT 加载）方向
+                        # 相反。源块 b 末尾为前向条件跳转（`if c:` 选择 break 路径）。
+                        if (last and last.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                                and self._is_except_break_exit(s)):
                             break_blocks_set.add(s)
                         continue
                     if not any(i.opname in ('PUSH_EXC_INFO', 'WITH_EXCEPT_START') for i in s.instructions):
@@ -6921,6 +6979,46 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
             if _any_return_in_chain:
                 return 'finally'
 
+            # [R5-05 fix Bug #3] finally 块内含 raise 语句的识别：
+            # 当 finally body 本身含 raise（非 RERAISE），finally 的异常处理器
+            # （PUSH_EXC_INFO + ... + RAISE_VARARGS）重新执行 raise。此时 handler
+            # 块无 RERAISE/CHECK_EXC_MATCH，后继 cleanup 块（COPY+POP_EXCEPT+
+            # RERAISE）被正确跳过，链中无 RETURN_VALUE，导致默认分类为 'except'，
+            # try-finally 被误识为 try-except-else（finally 正常路径 raise 被当作
+            # else body，finally 异常路径被当作 except handler），finally 块 raise
+            # 被拆为 except + else 重复，且外层 while 因正常退出路径不可达退化为 if。
+            #
+            # 区域归约算法原则 3（嵌套即抽象节点）：finally 块的异常路径 handler
+            # （PUSH_EXC_INFO 入口）与 cleanup handler（COPY+POP_EXCEPT+RERAISE）
+            # 是 try-finally 结构的内部嵌套节点。判据：handler body 范围被另一条
+            # 异常表条目保护，且该条目的 target 是 cleanup-only 块（COPY+POP_EXCEPT+
+            # RERAISE，非 PUSH_EXC_INFO 开头）——这是 finally body 自我保护的标志。
+            if getattr(self.cfg, 'exception_table', None):
+                _handler_end_off = target_offset
+                for _instr in handler_block.instructions:
+                    if _instr.offset + 2 > _handler_end_off:
+                        _handler_end_off = _instr.offset + 2
+                for _entry in self.cfg.exception_table:
+                    _e_start = _entry.get('start', 0)
+                    _e_target = _entry.get('target', 0)
+                    if _e_target == target_offset:
+                        continue
+                    if _e_start < target_offset or _e_start >= _handler_end_off:
+                        continue
+                    _cleanup_blk = self.cfg.get_block_by_offset(_e_target)
+                    if _cleanup_blk is None or not _cleanup_blk.instructions:
+                        continue
+                    _c_first = _cleanup_blk.instructions[0].opname
+                    if _c_first in ('PUSH_EXC_INFO', 'WITH_EXCEPT_START'):
+                        continue
+                    _is_cleanup_only = (
+                        any(i.opname == 'COPY' for i in _cleanup_blk.instructions)
+                        and any(i.opname == 'POP_EXCEPT' for i in _cleanup_blk.instructions)
+                        and any(i.opname == 'RERAISE' for i in _cleanup_blk.instructions)
+                    )
+                    if _is_cleanup_only:
+                        return 'finally'
+
         return 'except'
 
     def _find_actual_handler_start(self, cleanup_block: BasicBlock, cleanup_offset: int,
@@ -9070,7 +9168,16 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                     idx += 1
                     continue
                 if op in ('UNPACK_SEQUENCE', 'UNPACK_EX'):
-                    saw_unpack = True
+                    # [R5 fix] 区域归约算法原则 2（每块唯一归属）：class
+                    # pattern 无位置参数（`case P():`）编译为
+                    # ``UNPACK_SEQUENCE 0``——0 个 sub-pattern 需要绑定，其后
+                    # 的 STORE 属于 case body 而非 pattern。仅当 count > 0 时
+                    # 才设 saw_unpack 消费后续 STORE。
+                    if op == 'UNPACK_SEQUENCE':
+                        _unpack_count = instrs[idx].argval
+                        saw_unpack = isinstance(_unpack_count, int) and _unpack_count > 0
+                    else:
+                        saw_unpack = True
                     idx += 1
                     continue
                 if op in STORE_OPS:
@@ -9774,16 +9881,25 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
         instrs = [i for i in block.instructions if i.opname not in NOISE_OPS]
         if len(instrs) < 2:
             return False
-        has_load = instrs[0].opname in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF')
+        # [R5 fix] 区域归约算法原则 3（嵌套即抽象节点）：循环体内的 match
+        # subject 块以 FOR_ITER 的 STORE_NAME <loop_var> 开头（循环变量赋值）。
+        # 跳过前导 STORE_* 以识别其后的 LOAD subject + POP_TOP（通配符丢弃）。
+        _start = 0
+        _STORE_OPS = ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF')
+        while _start < len(instrs) and instrs[_start].opname in _STORE_OPS:
+            _start += 1
+        if _start + 1 >= len(instrs):
+            return False
+        has_load = instrs[_start].opname in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF')
         if not has_load:
             return False
-        has_pop_top = instrs[1].opname == 'POP_TOP'
+        has_pop_top = instrs[_start + 1].opname == 'POP_TOP'
         if not has_pop_top:
             return False
         no_copy = not any(i.opname == 'COPY' for i in instrs)
         if not no_copy:
             return False
-        rest = instrs[2:]
+        rest = instrs[_start + 2:]
         if not rest:
             return True
         for pred in block.predecessors:
@@ -10327,7 +10443,14 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
     def _scan_literal_match_subjects(self, claimed):
         literal_regions = []
         for block in self.cfg.get_blocks_in_order():
-            if block in claimed:
+            _existing = self.block_to_region.get(block)
+            # [R5 fix] 区域归约算法原则 3（嵌套即抽象节点）：允许在
+            # LoopRegion 占有的块上检测 match（match-in-loop 嵌套）。
+            # MatchRegion 作为子区域与 LoopRegion 重叠，注册时不覆盖
+            # 已有归属（先到先得），符合每块唯一归属。
+            if _existing is not None and not isinstance(_existing, LoopRegion):
+                continue
+            if block in claimed and _existing is None:
                 continue
             is_copy_subject = self._is_match_subject_block(block)
             is_nop_case = self._is_simple_match_case_block(block)
@@ -10335,18 +10458,27 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
             is_none_match = self._is_none_match_block(block)
             if not is_copy_subject and not is_nop_case and not is_wildcard and not is_none_match:
                 continue
-            if self.block_to_region.get(block) is not None:
-                continue
             if block is None:
                 continue
             case_blocks_l, case_patterns_l, case_bodies_l = [], [], []
             all_blocks_l = {block}
             visited_l = set()
             if is_wildcard:
-                case_blocks_l.append(block)
-                case_patterns_l.append({'type': 'MatchAs'})
-                case_bodies_l.append([block])
-                current = None
+                # [R5 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4
+                # （父引用子入口）：通配符 case 带守卫（``case _ if <guard>:``
+                # 编译为 LOAD subject; POP_TOP; <guard>; COMPARE_OP;
+                # POP_JUMP_IF_FALSE <next_case>）。守卫使块以条件跳转结尾，
+                # 跳转目标是下一 case，fall-through 是 case body。此时不把
+                # 整块当单一 case body，而是令 while 循环沿条件跳转链收集
+                # 后续 case（与字面量 match subject 同路径）。
+                _wc_last = block.get_last_instruction()
+                if _wc_last and _wc_last.opname in CONDITIONAL_JUMP_OPS:
+                    current = block
+                else:
+                    case_blocks_l.append(block)
+                    case_patterns_l.append({'type': 'MatchAs'})
+                    case_bodies_l.append([block])
+                    current = None
             elif is_none_match:
                 case_blocks_l.append(block)
                 case_patterns_l.append({'type': 'MatchSingleton', 'value': None})
