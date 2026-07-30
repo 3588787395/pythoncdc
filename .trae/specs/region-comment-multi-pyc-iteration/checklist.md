@@ -94,7 +94,7 @@
   - [x] R03-10 编译通过
   - [x] R03-11 累计成功率 ≥ 上一轮（54.66% → 待 stats 复测，本 pyc 51.11%→53.33% 单调递增）
   - [x] R03-13 pyc_index.json 已更新（partial/0.5333/ok_py=True/round=3）
-  - [ ] R03-14 commit + push `rcm-r03:`（待执行）
+  - [x] R03-14 commit + push `rcm-r03:`（0ef0573 pushed to main）
   - 残留：Pattern A/B/C/E 共 21 个不一致函数，后续轮次修复
 - [ ] R04 通用清单全部通过（取 pyc #4）
 - [ ] R05 通用清单全部通过（取 pyc #5）
