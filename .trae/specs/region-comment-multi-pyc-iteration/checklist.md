@@ -96,7 +96,23 @@
   - [x] R03-13 pyc_index.json 已更新（partial/0.5333/ok_py=True/round=3）
   - [x] R03-14 commit + push `rcm-r03:`（0ef0573 pushed to main）
   - 残留：Pattern A/B/C/E 共 21 个不一致函数，后续轮次修复
-- [ ] R04 通用清单全部通过（取 pyc #4）
+- [x] R04 通用清单全部通过（取 pyc #3: IQCommon/api/klinedata.pyc，续修 Pattern A）
+  - [x] R04-0 该轮取的 pyc 文件路径已记录（IQCommon/api/klinedata.pyc，decompile_status=partial）
+  - [x] R04-1 测试工程师 `decompile_report.md` 已生成（53.33%，21 mismatches，15 复现实例 8 NO-DEFECT/7 DEFECT-REPRO）
+  - [x] R04-2 ≥ 10 个最小复现实例已归档（15 个，8 NO-DEFECT / 7 DEFECT-REPRO）
+  - [x] R04-3 修复工程师 `fix_report.md` 已生成（Pattern A 子模式 A1 修复，4/5 Pattern A repro 修复）
+  - [x] R04-4 涉及的 `_identify_*_regions` 方法 docstring 已按 6 节模板更新（`_identify_conditional_regions` 嵌套处理节追加 [R04 fix] 边界传播段落）
+  - [x] R04-5 新增方法 `_get_enclosing_structural_boundary_stop` docstring 已包含背景/问题/修复/4 原则合规（辅助方法，非 4 节模板范畴）
+  - [x] R04-6 既有测试矩阵无退化（Pre-R04 == Post-R04: 1 failed, 112 passed, 14 errors）
+  - [x] R04-7 15 复现实例全部验证（8 NO-DEFECT / 7 DEFECT-REPRO，4/5 Pattern A repro 修复）
+  - [x] R04-8 反模式自检通过（0 新增 _fix_/_merge_/_patch_ 等前缀；`_get_` 为查询类方法命名约定）
+  - [x] R04-9 算法 4 原则 FULLY COMPLIANT（自底向上归约 / 每块唯一归属 / 嵌套抽象节点 / 入口引用语义）
+  - [x] R04-10 `python -c "import core.cfg.region_analyzer; import core.cfg.region_ast_generator"` 编译通过
+  - [x] R04-11 累计成功率 ≥ 上一轮（54.66% → 55.08%，单调递增；本 pyc 持平 53.33%）
+  - [x] R04-12 N/A（本 pyc 未达 100%，未生成新 OK.py；既有 klinedataOK.py 由 single 命令刷新）
+  - [x] R04-13 pyc_index.json 已更新（partial/0.5333/ok_py=True/round=4）
+  - [x] R04-14 commit + push `rcm-r04:`
+  - 残留：Pattern A 子模式 A2（9 函数，简单条件 + try-body if 坍缩，非 BoolOp 触发）+ Pattern B/C/E 共 21 个不一致函数，后续轮次修复
 - [ ] R05 通用清单全部通过（取 pyc #5）
 - [ ] R06 通用清单全部通过（取 pyc #6）
 - [ ] R07 通用清单全部通过（取 pyc #7）

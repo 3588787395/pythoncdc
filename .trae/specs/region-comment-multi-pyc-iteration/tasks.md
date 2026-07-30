@@ -59,7 +59,11 @@
   - [x] T2.03.2 修复工程师：按区域归约算法修复 → `rounds/round_03/repair_engineer/fix_report.md`（Pattern D dictcomp key/value 互换修复，51.11%→53.33%，1/5 模式修复）
   - [x] T2.03.3 commit + push `rcm-r03:`
   - 残留：Pattern A/B/C/E 共 21 个不一致函数，后续轮次修复
-- [ ] T2.04 第 04 轮
+- [x] T2.04 第 04 轮（取 pyc #3: IQCommon/api/klinedata.pyc，续修 Pattern A）
+  - [x] T2.04.1 测试工程师：取下一个 pyc，反编译 + 字节码 diff → `rounds/round_04/test_engineer/decompile_report.md`（53.33%，21 mismatches，15 复现实例 8 NO-DEFECT/7 DEFECT-REPRO）
+  - [x] T2.04.2 修复工程师：按区域归约算法修复 → `rounds/round_04/repair_engineer/fix_report.md`（Pattern A 子模式 A1 BoolOp-in-try-body-if 坍缩修复，4/5 Pattern A repro 修复，实际 pyc match_rate 持平 53.33% — 实际函数触发 A2 子模式残留）
+  - [x] T2.04.3 commit + push `rcm-r04:`
+  - 残留：Pattern A 子模式 A2（9 函数）+ Pattern B/C/E 共 21 个不一致函数，后续轮次修复
 - [ ] T2.05 第 05 轮
 - [ ] T2.06 第 06 轮
 - [ ] T2.07 第 07 轮

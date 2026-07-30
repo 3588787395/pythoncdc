@@ -11329,6 +11329,16 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
         / interrupts_boolop_forward_chain / get_score_merge_block /
         annotate_structural_roles / annotate_cond_recheck / precompute_analysis
         由 IfRegion 覆写，承载嵌套协调。
+        [R04 fix] 边界传播：当 if 入口块的 block_to_region 归属为表达式区域
+        （BoolOpRegion/TernaryRegion，先于 IfRegion 识别而占用入口块），但该块
+        同时嵌套于外层 TryExceptRegion.try_blocks 或 LoopRegion.blocks 中时，
+        base Region.get_if_branch_boundary_stop 返回空集（表达式区域不提供结构
+        边界）。此时调用 _get_enclosing_structural_boundary_stop 回溯外层结构
+        区域的 get_if_branch_boundary_stop，将父区域边界传播到本 IfRegion 的
+        分支收集（_collect_branch_blocks），防止越过 try/loop 体边界误收集体外
+        块（Pattern A1: BoolOp 条件 + try-body if 坍缩）。该回溯是结构性的（基于
+        区域嵌套归属），不改变 block_to_region 直接归属（原则 2 不变），仅传播
+        边界（原则 4 父→子边界语义）。
 
         **入口引用语义**
         入口块 = 条件判断块（region.entry，含 POP_JUMP_FORWARD_IF_*）。父区域
@@ -11928,6 +11938,21 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 boundary_stop = block_region.get_if_branch_boundary_stop(block)
             else:
                 boundary_stop = set()
+            # [R04 fix] 区域归约算法原则 3（嵌套即抽象节点）+ 原则 2（每块唯一
+            # 归属）：当 block 的直接归属区域是表达式区域（BoolOpRegion /
+            # TernaryRegion 等，不提供结构边界——base Region.get_if_branch_boundary_stop
+            # 返回空集），但 block 嵌套于 TryExceptRegion.try_blocks 或
+            # LoopRegion.blocks 中时，if 分支收集必须使用外层结构区域的边界。
+            # 否则 _collect_branch_blocks 会越过 try/loop 体边界，把体外块（如
+            # try 后的 trailing return、except handler entry）误收集进
+            # elif_final_else / then_blocks，导致 IfRegion 跨越 try 边界、
+            # try/except 整体丢失（Pattern A: BoolOp 条件 + try-body if 坍缩）。
+            # 典型触发：`try: if x is None or y is None: return z / elif ...: ... /
+            # except: ... / return y` —— BoolOpRegion 占用 if 入口块（block_to_region
+            # 指向 BoolOpRegion），但该块同时属于 TryExceptRegion.try_blocks。
+            # 该判据是结构性的（基于区域嵌套归属），非实例特征启发式。
+            if not boundary_stop:
+                boundary_stop = self._get_enclosing_structural_boundary_stop(block)
 
             merge = self._find_nearest_common_post_dominator(then_succ, else_succ)
 
@@ -18739,6 +18764,57 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     worklist.append(succ)
 
         return collected
+
+    def _get_enclosing_structural_boundary_stop(self, block) -> set:
+        """[R04] 查找包含 block 的外层结构区域（TryExceptRegion / LoopRegion），
+        返回其 if-branch 边界停止集。
+
+        算法角色：结构边界回退解析器（Structural Boundary Fallback Resolver）
+        输入：block（IfRegion 入口块，被表达式区域 BoolOpRegion/TernaryRegion 占用）
+        输出：外层 TryExceptRegion/LoopRegion 的 get_if_branch_boundary_stop 结果
+
+        【背景】
+        block_to_region 按自底向上归约顺序赋值：BoolOpRegion（表达式区域）先于
+        IfRegion 识别，占用 if 入口块（如 `if x is None or y is None:` 的第一个
+        条件块）。但该块同时属于外层 TryExceptRegion.try_blocks（`try: if ...:` 的
+        try 体）。BoolOpRegion 继承 base Region.get_if_branch_boundary_stop 返回
+        空集，不提供结构边界。
+
+        【问题】
+        若 boundary_stop 为空，_collect_branch_blocks 会越过 try/loop 体边界，
+        把体外块（如 try 后的 trailing return、except handler entry）误收集进
+        elif_final_else / then_blocks，导致 IfRegion 跨越 try 边界、try/except
+        整体丢失（Pattern A: BoolOp 条件 + try-body if 坍缩）。
+
+        【修复】
+        遍历 self.regions 查找 block 所属的 TryExceptRegion（block in try_blocks）
+        或 LoopRegion（block in blocks），调用其 get_if_branch_boundary_stop。
+        优先返回 TryExceptRegion（try 体边界更严格）。该查找是结构性的（基于区域
+        嵌套归属），非实例特征启发式。
+
+        【4 原则合规】
+        - 自底向上归约：不改变归约顺序，仅在边界计算时回溯外层结构区域。
+        - 每块唯一归属：block 的直接归属（BoolOpRegion）不变；本方法仅查找
+          外层结构区域以获取边界，不改变 block_to_region。
+        - 嵌套即抽象节点：BoolOpRegion 嵌套于 IfRegion 嵌套于 TryExceptRegion；
+          IfRegion 的分支收集受外层 TryExceptRegion 边界约束。
+        - 父引用子入口：TryExceptRegion → IfRegion → BoolOpRegion，边界从父
+          （TryExceptRegion）传播到子（IfRegion）的分支收集。
+        """
+        _try_boundary = None
+        _loop_boundary = None
+        for region in self.regions:
+            if isinstance(region, TryExceptRegion):
+                if block in region.try_blocks:
+                    _try_boundary = region.get_if_branch_boundary_stop(block)
+                    if _try_boundary:
+                        return _try_boundary
+            elif isinstance(region, LoopRegion):
+                if block in region.blocks:
+                    _loop_boundary = region.get_if_branch_boundary_stop(block)
+        if _try_boundary:
+            return _try_boundary
+        return _loop_boundary or set()
 
     def _identify_sequence_regions(self, existing_regions: List[Region]) -> List[Region]:
         """识别顺序区域 / 基础区域（Sequence / Basic Region）
