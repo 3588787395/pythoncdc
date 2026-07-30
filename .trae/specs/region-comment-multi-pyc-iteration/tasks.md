@@ -69,7 +69,11 @@
   - [x] T2.05.2 修复工程师：按区域归约算法修复 → `rounds/round_05/repair_engineer/fix_report.md`（Pattern M 装饰器调用坍缩 @deco()→@deco 修复，_generate_decorator ASTCall 始终发射括号，11/12 repro NO-DEFECT，base_storage.pyc 100% 升级 ok）
   - [x] T2.05.3 commit + push `rcm-r05:`
   - 残留：Pattern M2（repro_11 堆叠装饰器嵌套错误，表达式重建层，后续轮次修复）
-- [ ] T2.06 第 06 轮
+- [x] T2.06 第 06 轮（取 pyc #5: IQCommon/data/basic_data_source.pyc，新 pyc 轮询）
+  - [x] T2.06.1 测试工程师：取下一个 pyc，反编译 + 字节码 diff → `rounds/round_06/test_engineer/decompile_report.md`（pending→100%，0 mismatch，10 控制组复现实例全部 NO-DEFECT）
+  - [x] T2.06.2 修复工程师：无需修复（pyc 首次验证即 100%）→ `rounds/round_06/repair_engineer/fix_report.md`（no repair needed）
+  - [x] T2.06.3 commit + push `rcm-r06:`
+  - 残留：无新增；跨轮残留 Pattern A2/B/C/E/F/M2 不变
 - [ ] T2.07 第 07 轮
 - [ ] T2.08 第 08 轮
 - [ ] T2.09 第 09 轮

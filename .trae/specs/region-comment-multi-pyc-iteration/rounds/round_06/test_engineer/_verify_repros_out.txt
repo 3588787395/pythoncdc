@@ -1,0 +1,27 @@
+﻿==============================================================================
+verifying 10 minimal repros
+==============================================================================
+  repro_01_isinstance_conditional_reassign.py
+    match=True (fns=2)  [NO-DEFECT]
+  repro_02_nested_for_dict_assign.py
+    match=True (fns=2)  [NO-DEFECT]
+  repro_03_if_else_for_continue.py
+    match=True (fns=2)  [NO-DEFECT]
+  repro_04_if_elif_else_nested_for.py
+    match=True (fns=2)  [NO-DEFECT]
+  repro_05_class_init_attr_assign.py
+    match=True (fns=3)  [NO-DEFECT]
+  repro_06_method_call_dispatch.py
+    match=True (fns=4)  [NO-DEFECT]
+  repro_07_for_get_default.py
+    match=True (fns=2)  [NO-DEFECT]
+  repro_08_for_key_getattr.py
+    match=True (fns=2)  [NO-DEFECT]
+  repro_09_ctrl_simple_if_no_boolop.py
+    match=True (fns=2)  [NO-DEFECT]
+  repro_10_ctrl_elif_chain_no_boolop.py
+    match=True (fns=2)  [NO-DEFECT]
+==============================================================================
+summary: 10 repros, DEFECT-REPRO=0, NO-DEFECT=10
+==============================================================================
+VERIFY_RESULT [{"name": "repro_01_isinstance_conditional_reassign.py", "verdict": "NO-DEFECT", "match": true, "mismatch_fn": null, "true_diffs": 0, "jump_diffs": 0, "first_diff": null, "error": null}, {"name": "repro_02_nested_for_dict_assign.py", "verdict": "NO-DEFECT", "match": true, "mismatch_fn": null, "true_diffs": 0, "jump_diffs": 0, "first_diff": null, "error": null}, {"name": "repro_03_if_else_for_continue.py", "verdict": "NO-DEFECT", "match": true, "mismatch_fn": null, "true_diffs": 0, "jump_diffs": 0, "first_diff": null, "error": null}, {"name": "repro_04_if_elif_else_nested_for.py", "verdict": "NO-DEFECT", "match": true, "mismatch_fn": null, "true_diffs": 0, "jump_diffs": 0, "first_diff": null, "error": null}, {"name": "repro_05_class_init_attr_assign.py", "verdict": "NO-DEFECT", "match": true, "mismatch_fn": null, "true_diffs": 0, "jump_diffs": 0, "first_diff": null, "error": null}, {"name": "repro_06_method_call_dispatch.py", "verdict": "NO-DEFECT", "match": true, "mismatch_fn": null, "true_diffs": 0, "jump_diffs": 0, "first_diff": null, "error": null}, {"name": "repro_07_for_get_default.py", "verdict": "NO-DEFECT", "match": true, "mismatch_fn": null, "true_diffs": 0, "jump_diffs": 0, "first_diff": null, "error": null}, {"name": "repro_08_for_key_getattr.py", "verdict": "NO-DEFECT", "match": true, "mismatch_fn": null, "true_diffs": 0, "jump_diffs": 0, "first_diff": null, "error": null}, {"name": "repro_09_ctrl_simple_if_no_boolop.py", "verdict": "NO-DEFECT", "match": true, "mismatch_fn": null, "true_diffs": 0, "jump_diffs": 0, "first_diff": null, "error": null}, {"name": "repro_10_ctrl_elif_chain_no_boolop.py", "verdict": "NO-DEFECT", "match": true, "mismatch_fn": null, "true_diffs": 0, "jump_diffs": 0, "first_diff": null, "error": null}]

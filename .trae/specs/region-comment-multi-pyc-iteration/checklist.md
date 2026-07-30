@@ -130,7 +130,23 @@
   - [x] R05-13 pyc_index.json 已更新（ok/1.0/ok_py=True/round=5）
   - [x] R05-14 commit + push `rcm-r05:`
   - 残留：Pattern M2（repro_11 堆叠装饰器嵌套错误，表达式重建层，后续轮次修复）
-- [ ] R06 通用清单全部通过（取 pyc #6）
+- [x] R06 通用清单全部通过（取 pyc #5: IQCommon/data/basic_data_source.pyc，新 pyc 轮询）
+  - [x] R06-0 该轮取的 pyc 文件路径已记录（IQCommon/data/basic_data_source.pyc，decompile_status=pending→ok）
+  - [x] R06-1 测试工程师 `decompile_report.md` 已生成（pending→100%，0 mismatches，10 控制组复现实例）
+  - [x] R06-2 ≥ 10 个最小复现实例已归档（10 个控制组，全部 NO-DEFECT；pyc 100% 一致，豁免 DEFECT-REPRO 要求）
+  - [x] R06-3 修复工程师 `fix_report.md` 已生成（无需修复，pyc 首次验证即 100%）
+  - [x] R06-4 N/A（未修改 `_identify_*_regions` 方法，无需更新 docstring）
+  - [x] R06-5 N/A（未修改 `_generate_*` 方法，无需更新 docstring）
+  - [x] R06-6 既有测试矩阵无退化（未修改代码，R05 基线不受影响）
+  - [x] R06-7 10 复现实例全部验证（10/10 NO-DEFECT）
+  - [x] R06-8 反模式自检通过（0 新增 _fix_/_merge_/_patch_ 等前缀，未修改代码）
+  - [x] R06-9 算法 4 原则 FULLY COMPLIANT（未修改代码，与 R05 一致）
+  - [x] R06-10 `python -c "import core.cfg.region_analyzer; import core.cfg.region_ast_generator"` 编译通过（R05 已验证，本轮未修改）
+  - [x] R06-11 累计成功率 ≥ 上一轮（56.02% → 57.43%，单调递增；本 pyc pending→100%）
+  - [x] R06-12 本 pyc 达 100%，basic_data_sourceOK.py 由 single 命令生成（未手工编辑）
+  - [x] R06-13 pyc_index.json 已更新（ok/1.0/ok_py=True/round=6）
+  - [x] R06-14 commit + push `rcm-r06:`
+  - 残留：无新增；跨轮残留 Pattern A2/B/C/E/F/M2 不变
 - [ ] R07 通用清单全部通过（取 pyc #7）
 - [ ] R08 通用清单全部通过（取 pyc #8）
 - [ ] R09 通用清单全部通过（取 pyc #9）
