@@ -70,7 +70,7 @@
   - [x] R01-11 累计成功率 ≥ 上一轮（0%→50%，单调递增）
   - [x] R01-12 OK.py 已生成且 py_compile 通过（get_python_version 100% 一致，<module> 仅 identity noise）
   - [x] R01-13 pyc_index.json 已更新（partial/0.5/ok_py=True/round=1）
-  - [ ] R01-14 commit + push `rcm-r01:`
+  - [x] R01-14 commit + push `rcm-r01:`（commit 1cf0fde，已 push 到 origin/main）
 - [ ] R02 通用清单全部通过（取 pyc #2）
 - [ ] R03 通用清单全部通过（取 pyc #3）
 - [ ] R04 通用清单全部通过（取 pyc #4）
