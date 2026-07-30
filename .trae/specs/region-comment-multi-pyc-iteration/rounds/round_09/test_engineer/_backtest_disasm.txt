@@ -1,0 +1,797 @@
+ 39           0 RESUME                   0
+
+ 42           2 LOAD_FAST                0 (user_id)
+              4 POP_JUMP_FORWARD_IF_NONE    10 (to 26)
+              6 LOAD_FAST                1 (strategy_id)
+              8 POP_JUMP_FORWARD_IF_NONE     8 (to 26)
+             10 LOAD_FAST                2 (frequency)
+             12 POP_JUMP_FORWARD_IF_NONE     6 (to 26)
+             14 LOAD_FAST                3 (start_time)
+             16 POP_JUMP_FORWARD_IF_NONE     4 (to 26)
+
+ 43          18 LOAD_FAST                4 (end_time)
+             20 POP_JUMP_FORWARD_IF_NONE     2 (to 26)
+             22 LOAD_FAST                5 (base_capital)
+             24 POP_JUMP_FORWARD_IF_NOT_NONE     8 (to 42)
+
+ 44     >>   26 LOAD_CONST               1 ('2')
+             28 LOAD_CONST               2 ('参数错误')
+             30 LOAD_CONST               3 (('code', 'message'))
+             32 BUILD_CONST_KEY_MAP      2
+             34 LOAD_CONST               0 (None)
+             36 LOAD_CONST               0 (None)
+             38 BUILD_TUPLE              3
+             40 RETURN_VALUE
+
+ 47     >>   42 LOAD_GLOBAL              1 (NULL + get_strategy)
+             54 LOAD_FAST                0 (user_id)
+             56 LOAD_FAST                1 (strategy_id)
+             58 PRECALL                  2
+             62 CALL                     2
+             72 STORE_FAST               6 (strategy)
+
+ 48          74 LOAD_FAST                6 (strategy)
+             76 LOAD_CONST               4 ('content')
+             78 BINARY_SUBSCR
+             88 STORE_FAST               7 (content)
+
+ 49          90 LOAD_FAST                6 (strategy)
+             92 LOAD_CONST               5 ('user_variables')
+             94 BINARY_SUBSCR
+            104 STORE_FAST               8 (user_variables)
+
+ 50         106 LOAD_FAST                6 (strategy)
+            108 LOAD_CONST               6 ('benchmark')
+            110 BINARY_SUBSCR
+            120 STORE_FAST               9 (benchmark)
+
+ 51         122 LOAD_FAST                6 (strategy)
+            124 LOAD_CONST               7 ('volume_limit')
+            126 BINARY_SUBSCR
+            136 STORE_FAST              10 (volume_limit)
+
+ 52         138 LOAD_FAST                6 (strategy)
+            140 LOAD_CONST               8 ('business_type')
+            142 BINARY_SUBSCR
+            152 STORE_FAST              11 (business_type)
+
+ 53         154 LOAD_FAST                6 (strategy)
+            156 LOAD_CONST               9 ('price_impact')
+            158 BINARY_SUBSCR
+            168 STORE_FAST              12 (price_impact)
+
+ 54         170 LOAD_FAST                6 (strategy)
+            172 LOAD_CONST              10 ('name')
+            174 BINARY_SUBSCR
+            184 STORE_FAST              13 (backtest_name)
+
+ 57         186 LOAD_GLOBAL              3 (NULL + get_docker_status)
+            198 LOAD_FAST                0 (user_id)
+            200 PRECALL                  1
+            204 CALL                     1
+            214 LOAD_CONST              11 (False)
+            216 IS_OP                    0
+            218 POP_JUMP_FORWARD_IF_FALSE     8 (to 236)
+
+ 58         220 LOAD_CONST               1 ('2')
+            222 LOAD_CONST              12 ('容器未启动')
+            224 LOAD_CONST               3 (('code', 'message'))
+            226 BUILD_CONST_KEY_MAP      2
+            228 LOAD_CONST               0 (None)
+            230 LOAD_CONST               0 (None)
+            232 BUILD_TUPLE              3
+            234 RETURN_VALUE
+
+ 61     >>  236 LOAD_GLOBAL              5 (NULL + get_host_mem)
+            248 PRECALL                  0
+            252 CALL                     0
+            262 STORE_FAST              14 (mem_value)
+
+ 62         264 LOAD_FAST               14 (mem_value)
+            266 LOAD_CONST              13 ('error_no')
+            268 BINARY_SUBSCR
+            278 LOAD_CONST              14 (0)
+            280 COMPARE_OP               3 (!=)
+            286 POP_JUMP_FORWARD_IF_FALSE    14 (to 316)
+
+ 64         288 LOAD_CONST               1 ('2')
+            290 LOAD_FAST               14 (mem_value)
+            292 LOAD_CONST              15 ('error_msg')
+            294 BINARY_SUBSCR
+            304 LOAD_CONST               3 (('code', 'message'))
+            306 BUILD_CONST_KEY_MAP      2
+            308 LOAD_CONST               0 (None)
+            310 LOAD_CONST               0 (None)
+            312 BUILD_TUPLE              3
+            314 RETURN_VALUE
+
+ 67     >>  316 NOP
+
+ 68         318 LOAD_GLOBAL              7 (NULL + whitelist_filter)
+            330 LOAD_FAST                7 (content)
+            332 PRECALL                  1
+            336 CALL                     1
+            346 STORE_FAST              15 (recode)
+
+ 69         348 LOAD_FAST               15 (recode)
+            350 LOAD_CONST              13 ('error_no')
+            352 BINARY_SUBSCR
+            362 LOAD_CONST              14 (0)
+            364 COMPARE_OP               3 (!=)
+            370 POP_JUMP_FORWARD_IF_FALSE    77 (to 526)
+
+ 70         372 LOAD_CONST              16 (',')
+            374 LOAD_METHOD              4 (join)
+            396 LOAD_FAST               15 (recode)
+            398 LOAD_CONST              17 ('error_list')
+            400 BINARY_SUBSCR
+            410 PRECALL                  1
+            414 CALL                     1
+            424 LOAD_CONST              18 ('被禁止使用')
+            426 BINARY_OP                0 (+)
+            430 STORE_FAST              16 (err_msg)
+
+ 71         432 LOAD_GLOBAL             11 (NULL + user_log)
+            444 LOAD_ATTR                6 (error)
+            454 LOAD_CONST              19 ('用户')
+            456 LOAD_FAST                0 (user_id)
+            458 FORMAT_VALUE             1 (str)
+            460 LOAD_CONST              20 ('回测创建失败，错误原因：')
+            462 LOAD_FAST               16 (err_msg)
+            464 FORMAT_VALUE             1 (str)
+            466 BUILD_STRING             4
+            468 PRECALL                  1
+            472 CALL                     1
+            482 POP_TOP
+
+ 72         484 LOAD_CONST              21 ('3')
+            486 LOAD_GLOBAL             15 (NULL + str)
+            498 LOAD_FAST               16 (err_msg)
+            500 PRECALL                  1
+            504 CALL                     1
+            514 LOAD_CONST               3 (('code', 'message'))
+            516 BUILD_CONST_KEY_MAP      2
+            518 LOAD_CONST               0 (None)
+            520 LOAD_CONST               0 (None)
+            522 BUILD_TUPLE              3
+            524 RETURN_VALUE
+
+ 69     >>  526 JUMP_FORWARD            93 (to 714)
+        >>  528 PUSH_EXC_INFO
+
+ 73         530 LOAD_GLOBAL             16 (ImportError)
+            542 CHECK_EXC_MATCH
+            544 POP_JUMP_FORWARD_IF_FALSE    36 (to 618)
+            546 STORE_FAST              17 (e)
+
+ 74         548 LOAD_CONST              21 ('3')
+            550 LOAD_GLOBAL             15 (NULL + str)
+            562 LOAD_FAST               17 (e)
+            564 LOAD_ATTR                9 (msg)
+            574 PRECALL                  1
+            578 CALL                     1
+            588 LOAD_CONST               3 (('code', 'message'))
+            590 BUILD_CONST_KEY_MAP      2
+            592 LOAD_CONST               0 (None)
+            594 LOAD_CONST               0 (None)
+            596 BUILD_TUPLE              3
+            598 SWAP                     2
+            600 POP_EXCEPT
+            602 LOAD_CONST               0 (None)
+            604 STORE_FAST              17 (e)
+            606 DELETE_FAST             17 (e)
+            608 RETURN_VALUE
+        >>  610 LOAD_CONST               0 (None)
+            612 STORE_FAST              17 (e)
+            614 DELETE_FAST             17 (e)
+            616 RERAISE                  1
+
+ 75     >>  618 LOAD_GLOBAL             20 (SyntaxError)
+            630 CHECK_EXC_MATCH
+            632 POP_JUMP_FORWARD_IF_FALSE    36 (to 706)
+            634 STORE_FAST              17 (e)
+
+ 76         636 LOAD_CONST              21 ('3')
+            638 LOAD_GLOBAL             15 (NULL + str)
+            650 LOAD_FAST               17 (e)
+            652 LOAD_ATTR                9 (msg)
+            662 PRECALL                  1
+            666 CALL                     1
+            676 LOAD_CONST               3 (('code', 'message'))
+            678 BUILD_CONST_KEY_MAP      2
+            680 LOAD_CONST               0 (None)
+            682 LOAD_CONST               0 (None)
+            684 BUILD_TUPLE              3
+            686 SWAP                     2
+            688 POP_EXCEPT
+            690 LOAD_CONST               0 (None)
+            692 STORE_FAST              17 (e)
+            694 DELETE_FAST             17 (e)
+            696 RETURN_VALUE
+        >>  698 LOAD_CONST               0 (None)
+            700 STORE_FAST              17 (e)
+            702 DELETE_FAST             17 (e)
+            704 RERAISE                  1
+
+ 75     >>  706 RERAISE                  0
+        >>  708 COPY                     3
+            710 POP_EXCEPT
+            712 RERAISE                  1
+
+ 79     >>  714 LOAD_GLOBAL             22 (os)
+            726 LOAD_ATTR               12 (path)
+            736 LOAD_METHOD              4 (join)
+            758 LOAD_GLOBAL             26 (STRATEGY_DIR_PATH)
+            770 LOAD_FAST                0 (user_id)
+            772 PRECALL                  2
+            776 CALL                     2
+            786 STORE_FAST              18 (strategy_dir)
+
+ 80         788 LOAD_FAST                1 (strategy_id)
+            790 LOAD_CONST              22 ('.dat')
+            792 BINARY_OP                0 (+)
+            796 STORE_FAST              19 (strategy_file)
+
+ 81         798 LOAD_GLOBAL             22 (os)
+            810 LOAD_ATTR               12 (path)
+            820 LOAD_METHOD              4 (join)
+            842 LOAD_FAST               18 (strategy_dir)
+            844 LOAD_FAST               19 (strategy_file)
+            846 PRECALL                  2
+            850 CALL                     2
+            860 STORE_FAST              20 (strategy_file_path)
+
+ 83         862 LOAD_GLOBAL             15 (NULL + str)
+            874 LOAD_GLOBAL             29 (NULL + uuid)
+            886 LOAD_ATTR               15 (uuid1)
+            896 PRECALL                  0
+            900 CALL                     0
+            910 PRECALL                  1
+            914 CALL                     1
+            924 STORE_FAST              21 (backtest_id)
+
+ 85         926 LOAD_GLOBAL             22 (os)
+            938 LOAD_ATTR               12 (path)
+            948 LOAD_METHOD              4 (join)
+            970 LOAD_GLOBAL             32 (BACKTEST_DIR_PATH)
+            982 LOAD_FAST               21 (backtest_id)
+            984 PRECALL                  2
+            988 CALL                     2
+            998 STORE_FAST              22 (backtest_id_path)
+
+ 86        1000 LOAD_GLOBAL             22 (os)
+           1012 LOAD_ATTR               12 (path)
+           1022 LOAD_METHOD              4 (join)
+           1044 LOAD_FAST               22 (backtest_id_path)
+           1046 LOAD_CONST              23 ('user_strategy.py')
+           1048 PRECALL                  2
+           1052 CALL                     2
+           1062 STORE_FAST              23 (strategy_path)
+
+ 89        1064 LOAD_GLOBAL             35 (NULL + dict)
+           1076 PRECALL                  0
+           1080 CALL                     0
+           1090 STORE_FAST              24 (accounts)
+
+ 90        1092 LOAD_FAST               11 (business_type)
+           1094 LOAD_CONST              24 ('rzrq')
+           1096 COMPARE_OP               2 (==)
+           1102 POP_JUMP_FORWARD_IF_FALSE     2 (to 1108)
+
+ 91        1104 LOAD_CONST              25 ('stock')
+           1106 STORE_FAST              11 (business_type)
+
+ 92     >> 1108 LOAD_FAST                5 (base_capital)
+           1110 LOAD_FAST               24 (accounts)
+           1112 LOAD_FAST               11 (business_type)
+           1114 STORE_SUBSCR
+
+ 94        1118 LOAD_FAST                2 (frequency)
+           1120 LOAD_CONST              26 ('minute')
+           1122 COMPARE_OP               2 (==)
+           1128 POP_JUMP_FORWARD_IF_FALSE     3 (to 1136)
+
+ 95        1130 LOAD_CONST              27 ('1m')
+           1132 STORE_FAST              25 (iqe_frequency)
+           1134 JUMP_FORWARD            26 (to 1188)
+
+ 96     >> 1136 LOAD_FAST                2 (frequency)
+           1138 LOAD_CONST              28 ('daily')
+           1140 COMPARE_OP               2 (==)
+           1146 POP_JUMP_FORWARD_IF_FALSE     3 (to 1154)
+
+ 97        1148 LOAD_CONST              29 ('1d')
+           1150 STORE_FAST              25 (iqe_frequency)
+           1152 JUMP_FORWARD            17 (to 1188)
+
+ 98     >> 1154 LOAD_FAST                2 (frequency)
+           1156 LOAD_CONST              30 ('tick')
+           1158 COMPARE_OP               2 (==)
+           1164 POP_JUMP_FORWARD_IF_FALSE     3 (to 1172)
+
+ 99        1166 LOAD_CONST              30 ('tick')
+           1168 STORE_FAST              25 (iqe_frequency)
+           1170 JUMP_FORWARD             8 (to 1188)
+
+101     >> 1172 LOAD_CONST               1 ('2')
+           1174 LOAD_CONST               2 ('参数错误')
+           1176 LOAD_CONST               3 (('code', 'message'))
+           1178 BUILD_CONST_KEY_MAP      2
+           1180 LOAD_CONST               0 (None)
+           1182 LOAD_CONST               0 (None)
+           1184 BUILD_TUPLE              3
+           1186 RETURN_VALUE
+
+103     >> 1188 LOAD_CONST              31 ('false')
+           1190 STORE_FAST              26 (enable_profiler)
+
+105        1192 LOAD_CONST              31 ('false')
+           1194 STORE_FAST              27 (enable_debug)
+
+107        1196 LOAD_CONST              21 ('3')
+           1198 STORE_FAST              28 (backtest_type)
+
+109        1200 LOAD_CONST              32 ('BACKTEST')
+
+110        1202 LOAD_FAST               25 (iqe_frequency)
+
+111        1204 LOAD_FAST                3 (start_time)
+
+112        1206 LOAD_FAST                4 (end_time)
+
+113        1208 LOAD_FAST               24 (accounts)
+
+114        1210 LOAD_FAST               23 (strategy_path)
+
+115        1212 LOAD_FAST               21 (backtest_id)
+
+116        1214 LOAD_FAST                9 (benchmark)
+
+117        1216 LOAD_FAST               11 (business_type)
+
+118        1218 LOAD_FAST                8 (user_variables)
+
+119        1220 LOAD_FAST               10 (volume_limit)
+
+120        1222 LOAD_CONST              33 ('type')
+           1224 LOAD_CONST              34 ('FILE')
+           1226 BUILD_MAP                1
+
+108        1228 LOAD_CONST              35 (('run_type', 'frequency', 'start_date', 'end_date', 'accounts', 'path', 'backtest_id', 'benchmark', 'business_type', 'user_variables', 'volume_limit', 'safe'))
+           1230 BUILD_CONST_KEY_MAP     12
+           1232 STORE_FAST              29 (iqe_strategy)
+
+122        1234 LOAD_CONST              36 ('"strategy": %s')
+           1236 LOAD_FAST               29 (iqe_strategy)
+           1238 BINARY_OP                6 (%)
+           1242 STORE_FAST              30 (iqe_general)
+
+124        1244 LOAD_GLOBAL             32 (BACKTEST_DIR_PATH)
+           1256 STORE_FAST              31 (backtest_path)
+
+125        1258 LOAD_GLOBAL             22 (os)
+           1270 LOAD_ATTR               12 (path)
+           1280 LOAD_METHOD              4 (join)
+           1302 LOAD_GLOBAL             32 (BACKTEST_DIR_PATH)
+           1314 LOAD_FAST               21 (backtest_id)
+           1316 LOAD_CONST              37 ('fly_so_error.log')
+           1318 PRECALL                  3
+           1322 CALL                     3
+           1332 STORE_FAST              32 (so_error_path)
+           1334 LOAD_CONST              38 ('\n# 用于打印so报错信息\nimport faulthandler\nfaulthandler.enable(open("')
+
+181        1336 LOAD_FAST               32 (so_error_path)
+           1338 FORMAT_VALUE             1 (str)
+           1340 LOAD_CONST              39 ('",\'a+\'), all_threads=True)\nfrom IQEngine.main import run\nfrom IQEngine.config import parse_config\n\nconfig = {\n')
+           1342 LOAD_FAST               30 (iqe_general)
+           1344 FORMAT_VALUE             1 (str)
+           1346 LOAD_CONST              40 (',\n"plugins": {\n    "plugin_system_trade": {\n        "enabled": False,\n    },\n    "plugin_system_simulation": {\n        "enabled": True,\n        "user_id": "')
+           1348 LOAD_FAST                0 (user_id)
+           1350 FORMAT_VALUE             1 (str)
+           1352 LOAD_CONST              41 ('",\n        "account_sync_steps": 10,\n    },\n    "plugin_system_log": {\n        "backtest": {\n            "backtest": "')
+           1354 LOAD_FAST               31 (backtest_path)
+           1356 FORMAT_VALUE             1 (str)
+           1358 LOAD_CONST              42 ('",\n            "backtest_info": "')
+           1360 LOAD_GLOBAL             36 (BACKTEST_INFO_FILENAME)
+           1372 FORMAT_VALUE             1 (str)
+           1374 LOAD_CONST              43 ('",\n            "backtest_sys": "')
+           1376 LOAD_GLOBAL             38 (BACKTEST_SYS_FILENAME)
+           1388 FORMAT_VALUE             1 (str)
+           1390 LOAD_CONST              44 ('",\n        },\n        "trade": {\n            "trade_normal": "/home/fly/sim_backtest/result/",\n            "trade_info": "trade_norm.log",\n            "trade_sys": "trade_norm_sys.log",\n        },\n        "enabled": ')
+
+182        1392 LOAD_CONST              45 ('1')
+           1394 FORMAT_VALUE             1 (str)
+           1396 LOAD_CONST              46 (',\n        "priority": 2,\n    },\n    "plugin_fly_data_source": {\n        "enabled": ')
+           1398 LOAD_FAST                2 (frequency)
+           1400 LOAD_CONST              30 ('tick')
+           1402 COMPARE_OP               3 (!=)
+           1408 FORMAT_VALUE             1 (str)
+           1410 LOAD_CONST              47 (',\n        "priority": 3,\n        "config_path": "/home/fly/config/IQData_config.yml"\n    },\n    "plugin_fly_data": {\n        "enabled": True,\n        "price_impact": ')
+           1412 LOAD_FAST               12 (price_impact)
+           1414 FORMAT_VALUE             1 (str)
+           1416 LOAD_CONST              48 ('\n    },\n    "plugin_system_debug": {\n        "enabled": ')
+           1418 LOAD_FAST               27 (enable_debug)
+           1420 LOAD_CONST              49 ('true')
+           1422 COMPARE_OP               2 (==)
+           1428 FORMAT_VALUE             1 (str)
+           1430 LOAD_CONST              50 (',\n        "debug_port": ')
+           1432 LOAD_GLOBAL             40 (DEFAULT_PORT)
+           1444 FORMAT_VALUE             1 (str)
+           1446 LOAD_CONST              51 (',\n    },\n    "plugin_fly_api": {\n        "enabled": True,\n    },\n},\n}\n\nconfig = parse_config(config)\nrun(config, user_variables=')
+
+183        1448 LOAD_FAST                8 (user_variables)
+           1450 FORMAT_VALUE             1 (str)
+           1452 LOAD_CONST              52 (')\n')
+
+128        1454 BUILD_STRING            25
+           1456 STORE_FAST              33 (user_code)
+
+186        1458 LOAD_GLOBAL             22 (os)
+           1470 LOAD_ATTR               12 (path)
+           1480 LOAD_METHOD              4 (join)
+           1502 LOAD_GLOBAL             32 (BACKTEST_DIR_PATH)
+           1514 LOAD_FAST                0 (user_id)
+           1516 LOAD_FAST               21 (backtest_id)
+           1518 PRECALL                  3
+           1522 CALL                     3
+           1532 STORE_FAST              34 (dir_path)
+
+187        1534 LOAD_GLOBAL             22 (os)
+           1546 LOAD_ATTR               12 (path)
+           1556 LOAD_METHOD             21 (exists)
+           1578 LOAD_FAST               34 (dir_path)
+           1580 PRECALL                  1
+           1584 CALL                     1
+           1594 POP_JUMP_FORWARD_IF_TRUE    41 (to 1678)
+
+188        1596 LOAD_GLOBAL             23 (NULL + os)
+           1608 LOAD_ATTR               22 (makedirs)
+           1618 LOAD_FAST               34 (dir_path)
+           1620 PRECALL                  1
+           1624 CALL                     1
+           1634 POP_TOP
+
+189        1636 LOAD_GLOBAL             23 (NULL + os)
+           1648 LOAD_ATTR               23 (chmod)
+           1658 LOAD_FAST               34 (dir_path)
+           1660 LOAD_CONST              53 (511)
+           1662 PRECALL                  2
+           1666 CALL                     2
+           1676 POP_TOP
+
+190     >> 1678 LOAD_CONST              54 ('%s/user_strategy.py')
+           1680 LOAD_FAST               34 (dir_path)
+           1682 BINARY_OP                6 (%)
+           1686 STORE_FAST              35 (user_strategy_path)
+
+191        1688 LOAD_GLOBAL             49 (NULL + open)
+           1700 LOAD_FAST               35 (user_strategy_path)
+           1702 LOAD_CONST              55 ('w')
+           1704 PRECALL                  2
+           1708 CALL                     2
+           1718 BEFORE_WITH
+           1720 STORE_FAST              36 (file_user)
+
+192        1722 LOAD_FAST               36 (file_user)
+           1724 LOAD_METHOD             25 (write)
+           1746 LOAD_FAST                7 (content)
+           1748 PRECALL                  1
+           1752 CALL                     1
+           1762 POP_TOP
+
+193        1764 LOAD_GLOBAL             23 (NULL + os)
+           1776 LOAD_ATTR               23 (chmod)
+           1786 LOAD_FAST               35 (user_strategy_path)
+           1788 LOAD_CONST              53 (511)
+           1790 PRECALL                  2
+           1794 CALL                     2
+           1804 POP_TOP
+
+191        1806 LOAD_CONST               0 (None)
+           1808 LOAD_CONST               0 (None)
+           1810 LOAD_CONST               0 (None)
+           1812 PRECALL                  2
+           1816 CALL                     2
+           1826 POP_TOP
+           1828 JUMP_FORWARD            11 (to 1852)
+        >> 1830 PUSH_EXC_INFO
+           1832 WITH_EXCEPT_START
+           1834 POP_JUMP_FORWARD_IF_TRUE     4 (to 1844)
+           1836 RERAISE                  2
+        >> 1838 COPY                     3
+           1840 POP_EXCEPT
+           1842 RERAISE                  1
+        >> 1844 POP_TOP
+           1846 POP_EXCEPT
+           1848 POP_TOP
+           1850 POP_TOP
+
+196     >> 1852 LOAD_GLOBAL             53 (NULL + verify_user_py_code)
+           1864 LOAD_FAST               35 (user_strategy_path)
+           1866 PRECALL                  1
+           1870 CALL                     1
+           1880 STORE_FAST              37 (error)
+
+197        1882 LOAD_FAST               37 (error)
+           1884 POP_JUMP_FORWARD_IF_NONE    87 (to 2060)
+
+198        1886 LOAD_GLOBAL             55 (NULL + isinstance)
+           1898 LOAD_FAST               37 (error)
+           1900 LOAD_GLOBAL             56 (CompileError)
+           1912 PRECALL                  2
+           1916 CALL                     2
+           1926 POP_JUMP_FORWARD_IF_FALSE    16 (to 1960)
+
+199        1928 LOAD_CONST               1 ('2')
+           1930 LOAD_CONST              56 ('编译错误：%s')
+           1932 LOAD_FAST               37 (error)
+           1934 LOAD_ATTR               29 (message)
+           1944 BINARY_OP                6 (%)
+           1948 LOAD_CONST               3 (('code', 'message'))
+           1950 BUILD_CONST_KEY_MAP      2
+           1952 LOAD_CONST               0 (None)
+           1954 LOAD_CONST               0 (None)
+           1956 BUILD_TUPLE              3
+           1958 RETURN_VALUE
+
+200     >> 1960 LOAD_GLOBAL             55 (NULL + isinstance)
+           1972 LOAD_FAST               37 (error)
+           1974 LOAD_GLOBAL             60 (UnknownError)
+           1986 PRECALL                  2
+           1990 CALL                     2
+           2000 POP_JUMP_FORWARD_IF_FALSE    16 (to 2034)
+
+201        2002 LOAD_CONST               1 ('2')
+           2004 LOAD_CONST              57 ('未知错误：%s')
+           2006 LOAD_FAST               37 (error)
+           2008 LOAD_ATTR               29 (message)
+           2018 BINARY_OP                6 (%)
+           2022 LOAD_CONST               3 (('code', 'message'))
+           2024 BUILD_CONST_KEY_MAP      2
+           2026 LOAD_CONST               0 (None)
+           2028 LOAD_CONST               0 (None)
+           2030 BUILD_TUPLE              3
+           2032 RETURN_VALUE
+
+203     >> 2034 LOAD_CONST               1 ('2')
+           2036 LOAD_FAST               37 (error)
+           2038 LOAD_ATTR               29 (message)
+           2048 LOAD_CONST               3 (('code', 'message'))
+           2050 BUILD_CONST_KEY_MAP      2
+           2052 LOAD_CONST               0 (None)
+           2054 LOAD_CONST               0 (None)
+           2056 BUILD_TUPLE              3
+           2058 RETURN_VALUE
+
+206     >> 2060 LOAD_CONST              58 ('%s/user_code.py')
+           2062 LOAD_FAST               34 (dir_path)
+           2064 BINARY_OP                6 (%)
+           2068 STORE_FAST              38 (user_code_path)
+
+207        2070 LOAD_GLOBAL             49 (NULL + open)
+           2082 LOAD_FAST               38 (user_code_path)
+           2084 LOAD_CONST              55 ('w')
+           2086 PRECALL                  2
+           2090 CALL                     2
+           2100 BEFORE_WITH
+           2102 STORE_FAST              39 (f)
+
+208        2104 LOAD_FAST               39 (f)
+           2106 LOAD_METHOD             25 (write)
+           2128 LOAD_FAST               33 (user_code)
+           2130 PRECALL                  1
+           2134 CALL                     1
+           2144 POP_TOP
+
+209        2146 LOAD_GLOBAL             23 (NULL + os)
+           2158 LOAD_ATTR               23 (chmod)
+           2168 LOAD_FAST               38 (user_code_path)
+           2170 LOAD_CONST              53 (511)
+           2172 PRECALL                  2
+           2176 CALL                     2
+           2186 POP_TOP
+
+207        2188 LOAD_CONST               0 (None)
+           2190 LOAD_CONST               0 (None)
+           2192 LOAD_CONST               0 (None)
+           2194 PRECALL                  2
+           2198 CALL                     2
+           2208 POP_TOP
+           2210 JUMP_FORWARD            11 (to 2234)
+        >> 2212 PUSH_EXC_INFO
+           2214 WITH_EXCEPT_START
+           2216 POP_JUMP_FORWARD_IF_TRUE     4 (to 2226)
+           2218 RERAISE                  2
+        >> 2220 COPY                     3
+           2222 POP_EXCEPT
+           2224 RERAISE                  1
+        >> 2226 POP_TOP
+           2228 POP_EXCEPT
+           2230 POP_TOP
+           2232 POP_TOP
+
+212     >> 2234 LOAD_GLOBAL             22 (os)
+           2246 LOAD_ATTR               12 (path)
+           2256 LOAD_METHOD              4 (join)
+           2278 LOAD_GLOBAL             26 (STRATEGY_DIR_PATH)
+           2290 LOAD_FAST                0 (user_id)
+           2292 LOAD_FAST                1 (strategy_id)
+           2294 LOAD_CONST              22 ('.dat')
+           2296 BINARY_OP                0 (+)
+           2300 PRECALL                  3
+           2304 CALL                     3
+           2314 STORE_FAST              23 (strategy_path)
+
+213        2316 LOAD_GLOBAL             22 (os)
+           2328 LOAD_ATTR               12 (path)
+           2338 LOAD_METHOD              4 (join)
+           2360 LOAD_GLOBAL             32 (BACKTEST_DIR_PATH)
+           2372 LOAD_FAST                0 (user_id)
+           2374 LOAD_FAST               21 (backtest_id)
+           2376 PRECALL                  3
+           2380 CALL                     3
+           2390 STORE_FAST              31 (backtest_path)
+
+214        2392 NOP
+
+215        2394 LOAD_GLOBAL             63 (NULL + shutil)
+           2406 LOAD_ATTR               32 (copy)
+           2416 LOAD_FAST               23 (strategy_path)
+           2418 LOAD_FAST               31 (backtest_path)
+           2420 PRECALL                  2
+           2424 CALL                     2
+           2434 POP_TOP
+           2436 JUMP_FORWARD            31 (to 2500)
+        >> 2438 PUSH_EXC_INFO
+
+216        2440 LOAD_GLOBAL             66 (FileExistsError)
+           2452 CHECK_EXC_MATCH
+           2454 POP_JUMP_FORWARD_IF_FALSE    18 (to 2492)
+           2456 STORE_FAST              17 (e)
+
+217        2458 LOAD_CONST               1 ('2')
+           2460 LOAD_CONST              59 ('策略文件缺失')
+           2462 LOAD_CONST               3 (('code', 'message'))
+           2464 BUILD_CONST_KEY_MAP      2
+           2466 LOAD_CONST               0 (None)
+           2468 LOAD_CONST               0 (None)
+           2470 BUILD_TUPLE              3
+           2472 SWAP                     2
+           2474 POP_EXCEPT
+           2476 LOAD_CONST               0 (None)
+           2478 STORE_FAST              17 (e)
+           2480 DELETE_FAST             17 (e)
+           2482 RETURN_VALUE
+        >> 2484 LOAD_CONST               0 (None)
+           2486 STORE_FAST              17 (e)
+           2488 DELETE_FAST             17 (e)
+           2490 RERAISE                  1
+
+216     >> 2492 RERAISE                  0
+        >> 2494 COPY                     3
+           2496 POP_EXCEPT
+           2498 RERAISE                  1
+
+219     >> 2500 LOAD_GLOBAL             68 (datetime)
+           2512 LOAD_ATTR               34 (datetime)
+           2522 LOAD_METHOD             35 (now)
+           2544 PRECALL                  0
+           2548 CALL                     0
+           2558 STORE_FAST              40 (time)
+
+221        2560 LOAD_GLOBAL             73 (NULL + len)
+           2572 LOAD_GLOBAL             75 (NULL + get_trade_days)
+           2584 LOAD_FAST                3 (start_time)
+           2586 LOAD_FAST                4 (end_time)
+           2588 PRECALL                  2
+           2592 CALL                     2
+           2602 PRECALL                  1
+           2606 CALL                     1
+           2616 STORE_FAST              41 (total_days)
+
+222        2618 LOAD_CONST              60 ('0')
+           2620 LOAD_METHOD             38 (ljust)
+           2642 LOAD_CONST              61 (22)
+           2644 LOAD_CONST              62 (' ')
+           2646 PRECALL                  2
+           2650 CALL                     2
+           2660 STORE_FAST              42 (algorithm_period_return)
+
+223        2662 LOAD_CONST              60 ('0')
+           2664 LOAD_METHOD             38 (ljust)
+           2686 LOAD_CONST              61 (22)
+           2688 LOAD_CONST              62 (' ')
+           2690 PRECALL                  2
+           2694 CALL                     2
+           2704 STORE_FAST              43 (max_drawdown)
+
+225        2706 LOAD_CONST              60 ('0')
+           2708 LOAD_METHOD             38 (ljust)
+           2730 LOAD_GLOBAL             73 (NULL + len)
+           2742 LOAD_GLOBAL             15 (NULL + str)
+           2754 LOAD_FAST               41 (total_days)
+           2756 PRECALL                  1
+           2760 CALL                     1
+           2770 PRECALL                  1
+           2774 CALL                     1
+           2784 LOAD_CONST              62 (' ')
+           2786 PRECALL                  2
+           2790 CALL                     2
+           2800 STORE_FAST              44 (current_days)
+
+226        2802 LOAD_GLOBAL             79 (NULL + save_backtest_info_csv_without_pd)
+
+227        2814 LOAD_FAST                0 (user_id)
+           2816 LOAD_FAST               21 (backtest_id)
+           2818 LOAD_FAST                1 (strategy_id)
+           2820 LOAD_FAST                5 (base_capital)
+           2822 LOAD_FAST                2 (frequency)
+           2824 LOAD_FAST               11 (business_type)
+           2826 LOAD_FAST               28 (backtest_type)
+
+228        2828 LOAD_FAST                3 (start_time)
+           2830 LOAD_FAST                4 (end_time)
+           2832 LOAD_FAST               40 (time)
+           2834 LOAD_FAST               42 (algorithm_period_return)
+           2836 LOAD_FAST               43 (max_drawdown)
+           2838 LOAD_FAST               44 (current_days)
+
+229        2840 LOAD_FAST               13 (backtest_name)
+           2842 LOAD_FAST               41 (total_days)
+
+226        2844 PRECALL                 15
+           2848 CALL                    15
+           2858 STORE_FAST              45 (info)
+
+231        2860 LOAD_FAST               45 (info)
+           2862 POP_JUMP_FORWARD_IF_TRUE     8 (to 2880)
+
+232        2864 LOAD_CONST               1 ('2')
+           2866 LOAD_CONST              63 ('保存回测信息失败')
+           2868 LOAD_CONST               3 (('code', 'message'))
+           2870 BUILD_CONST_KEY_MAP      2
+           2872 LOAD_CONST               0 (None)
+           2874 LOAD_CONST               0 (None)
+           2876 BUILD_TUPLE              3
+           2878 RETURN_VALUE
+
+231     >> 2880 LOAD_CONST              64 ('docker exec -d jupyter-')
+
+235        2882 LOAD_FAST                0 (user_id)
+           2884 FORMAT_VALUE             1 (str)
+           2886 LOAD_CONST              65 (' su - fly -c "/usr/bin/python3 /home/fly/backtest/')
+           2888 LOAD_FAST               21 (backtest_id)
+           2890 FORMAT_VALUE             1 (str)
+           2892 LOAD_CONST              66 ('/user_code.py" &')
+
+234        2894 BUILD_STRING             5
+           2896 STORE_FAST              46 (cell_code)
+
+236        2898 LOAD_CONST              45 ('1')
+           2900 LOAD_CONST              67 ('')
+           2902 LOAD_CONST               3 (('code', 'message'))
+           2904 BUILD_CONST_KEY_MAP      2
+           2906 LOAD_FAST               46 (cell_code)
+           2908 LOAD_FAST               21 (backtest_id)
+           2910 BUILD_TUPLE              3
+           2912 RETURN_VALUE
+ExceptionTable:
+  318 to 522 -> 528 [0]
+  528 to 546 -> 708 [1] lasti
+  548 to 596 -> 610 [1] lasti
+  598 to 598 -> 708 [1] lasti
+  610 to 634 -> 708 [1] lasti
+  636 to 684 -> 698 [1] lasti
+  686 to 686 -> 708 [1] lasti
+  698 to 706 -> 708 [1] lasti
+  1720 to 1804 -> 1830 [1] lasti
+  1830 to 1836 -> 1838 [3] lasti
+  1844 to 1844 -> 1838 [3] lasti
+  2102 to 2186 -> 2212 [1] lasti
+  2212 to 2218 -> 2220 [3] lasti
+  2226 to 2226 -> 2220 [3] lasti
+  2394 to 2434 -> 2438 [0]
+  2438 to 2456 -> 2494 [1] lasti
+  2458 to 2470 -> 2484 [1] lasti
+  2472 to 2472 -> 2494 [1] lasti
+  2484 to 2492 -> 2494 [1] lasti

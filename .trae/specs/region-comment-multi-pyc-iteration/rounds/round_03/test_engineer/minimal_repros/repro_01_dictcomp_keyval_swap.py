@@ -7,8 +7,3 @@
 # Expected vs actual bytecode diff: index 7 orig_arg='date' decomp_arg='idx' (true_diffs=1)
 def f(pairs):
     return {date: idx for idx, date in pairs}
-# --- verification result ---
-# verdict: DEFECT-REPRO
-# mismatch_fn: <dictcomp>
-# true_diffs: 1, jump_diffs: 0
-# first_diff: index=7 orig=LOAD_FAST 'date' vs decomp=LOAD_FAST 'idx'

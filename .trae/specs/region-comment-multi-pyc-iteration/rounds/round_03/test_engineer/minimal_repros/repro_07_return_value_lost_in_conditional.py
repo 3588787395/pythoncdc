@@ -19,8 +19,3 @@ def f(fields, asset, default):
     except BaseException:
         history = EMPTY if fields is None else EMPTY[fields]
     return history
-# --- verification result ---
-# verdict: DEFECT-REPRO
-# mismatch_fn: f
-# true_diffs: 32, jump_diffs: 11
-# first_diff: index=5 orig=POP_JUMP_FORWARD_IF_NOT_NONE 60 vs decomp=POP_JUMP_FORWARD_IF_NOT_NONE 64

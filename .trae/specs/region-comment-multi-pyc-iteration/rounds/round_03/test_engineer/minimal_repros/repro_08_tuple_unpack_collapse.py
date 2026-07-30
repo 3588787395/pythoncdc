@@ -13,8 +13,3 @@ def f(count, query_date):
     if start_000300 is None or end_000300 is None:
         return None
     return start_000300 + end_000300
-# --- verification result ---
-# verdict: DEFECT-REPRO
-# mismatch_fn: f
-# true_diffs: 3, jump_diffs: 0
-# first_diff: index=10 orig=POP_JUMP_FORWARD_IF_NONE 48 vs decomp=POP_JUMP_FORWARD_IF_NONE 62

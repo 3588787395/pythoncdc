@@ -10,8 +10,3 @@ def f(x, y, z):
             return x
         return y
     return z
-# --- verification result ---
-# verdict: DEFECT-REPRO
-# mismatch_fn: f
-# true_diffs: 4, jump_diffs: 0
-# first_diff: index=2 orig=POP_JUMP_FORWARD_IF_NONE 22 vs decomp=POP_JUMP_FORWARD_IF_NONE 18

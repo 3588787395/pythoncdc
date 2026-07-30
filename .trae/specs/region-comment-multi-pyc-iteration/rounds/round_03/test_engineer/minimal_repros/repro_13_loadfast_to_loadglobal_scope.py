@@ -14,8 +14,3 @@ def f(symbol, frequency, start_date, end_date):
         else:
             out.append(cur)
     return out
-# --- verification result ---
-# verdict: DEFECT-REPRO
-# mismatch_fn: f
-# true_diffs: 13, jump_diffs: 5
-# first_diff: index=20 orig=LOAD_METHOD 'append' vs decomp=LOAD_FAST 'out'

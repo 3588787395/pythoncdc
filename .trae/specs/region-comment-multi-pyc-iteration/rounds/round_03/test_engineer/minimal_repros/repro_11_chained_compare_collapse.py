@@ -12,8 +12,3 @@ def f(a, b, c, d):
     elif a <= b <= d:
         return b
     return d
-# --- verification result ---
-# verdict: DEFECT-REPRO
-# mismatch_fn: f
-# true_diffs: 16, jump_diffs: 0
-# first_diff: index=29 orig=LOAD_FAST 'a' vs decomp=LOAD_FAST 'd'

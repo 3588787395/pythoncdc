@@ -22,8 +22,3 @@ def f(frequency, items, default):
         return multi
     except BaseException:
         return default
-# --- verification result ---
-# verdict: NO-DEFECT
-# mismatch_fn: None
-# true_diffs: 0, jump_diffs: 0
-# 

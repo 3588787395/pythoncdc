@@ -17,8 +17,3 @@ def f(n, items, fields):
             out.append(items[i])
         system_log.info(i)
     return out
-# --- verification result ---
-# verdict: NO-DEFECT
-# mismatch_fn: None
-# true_diffs: 0, jump_diffs: 0
-# 

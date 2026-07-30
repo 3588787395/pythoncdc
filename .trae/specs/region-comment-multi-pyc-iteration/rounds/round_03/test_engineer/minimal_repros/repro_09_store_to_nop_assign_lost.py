@@ -23,8 +23,3 @@ def f(row, default):
         return out
     except BaseException:
         return EMPTY
-# --- verification result ---
-# verdict: NO-DEFECT
-# mismatch_fn: None
-# true_diffs: 0, jump_diffs: 0
-# 

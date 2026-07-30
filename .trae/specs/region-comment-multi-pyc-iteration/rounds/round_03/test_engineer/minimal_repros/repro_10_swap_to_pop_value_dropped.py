@@ -8,8 +8,3 @@ def f(a, b):
     if a > b:
         a, b = b, a
     return a, b
-# --- verification result ---
-# verdict: DEFECT-REPRO
-# mismatch_fn: f
-# true_diffs: 8, jump_diffs: 1
-# first_diff: index=5 orig=LOAD_FAST 'b' vs decomp=LOAD_FAST 'a'

@@ -16,8 +16,3 @@ try:
         data['a'] = 3
 except Exception:
     data['a'] = 0
-# --- verification result ---
-# verdict: NO-DEFECT
-# mismatch_fn: None
-# true_diffs: 0, jump_diffs: 0
-# 

@@ -11,8 +11,3 @@ def f(start_date, end_date):
         elif start_date < '20050101' <= end_date:
             start_date = '20050101'
     return start_date, end_date
-# --- verification result ---
-# verdict: DEFECT-REPRO
-# mismatch_fn: f
-# true_diffs: 0, jump_diffs: 1
-# first_diff: index=4 orig=POP_JUMP_FORWARD_IF_TRUE 78 vs decomp=POP_JUMP_FORWARD_IF_TRUE 26

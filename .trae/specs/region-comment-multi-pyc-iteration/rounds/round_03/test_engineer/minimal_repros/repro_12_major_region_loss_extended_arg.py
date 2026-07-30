@@ -19,8 +19,3 @@ def f(mode, a, b, c, d, e):
     except BaseException:
         pass
     return a
-# --- verification result ---
-# verdict: DEFECT-REPRO
-# mismatch_fn: f
-# true_diffs: 22, jump_diffs: 8
-# first_diff: index=30 orig=LOAD_FAST 'd' vs decomp=LOAD_CONST None
