@@ -4797,6 +4797,24 @@ AST 映射规则:
                 _import_pending_store = False
                 continue
             if _instr.opname in _store_ops:
+                # [R2-D fix] 区域归约算法原则 2（每块唯一归属）：
+                # walrus 命名表达式 `for x in (n := expr):` 编译为
+                # `expr; COPY; STORE_* n; GET_ITER`——COPY 复制栈顶，一份存入 n，
+                # 一份供 GET_ITER 消费。若把 COPY+STORE_* 当作前置赋值 `n = expr`
+                # 抽取为 pre_stmt，则 iter_expr 重建（L3273 _build_statement 回退
+                # 从完整 instrs 重建）仍生成 `(n := expr)`，导致 expr 双重求值
+                #（如 g() 调用两次），且 for_iter_setup 块双重归属（既作 pre_stmt
+                # 又作 iter_expr）。修正：STORE_* 前驱为 COPY 且后继非 STORE_*
+                #（区分链式赋值 `a = b = g()` 的 COPY+多 STORE）时，识别为 walrus，
+                # 不抽取为 pre_stmt，留在 _buf 经 _remaining 交 iter_expr 重建为
+                # NamedExpr。每块唯一归属：walrus 仅归属 iter_expr。
+                _r2d_is_walrus = (
+                    _buf and _buf[-1].opname == 'COPY'
+                    and (_idx + 1 >= len(instrs) or instrs[_idx + 1].opname not in _store_ops)
+                )
+                if _r2d_is_walrus:
+                    _buf.append(_instr)
+                    continue
                 _buf.append(_instr)
                 _stmt = self._build_store_statement(_buf, block=block)
                 if _stmt:
@@ -5715,9 +5733,103 @@ AST 映射规则:
                 if not _nested_region_generated:
                     self._loop_process_header_instructions(block, region, body_stmts)
 
+    def _reconstruct_await_block_stmts(self, block: BasicBlock) -> Optional[List[Dict[str, Any]]]:
+        """[R2-F fix] 重建 await setup 块（含 GET_AWAITABLE）为 ``await <expr>`` 语句。
+
+        区域归约算法原则 2（每块唯一归属）+ 原则 4（父引用子入口）：
+        CPython 为 ``await <expr>`` 生成的字节码布局：
+            await_setup block : ... <expr> ... ; GET_AWAITABLE ; LOAD_CONST None
+            wait_loop block   : SEND <exit> ; YIELD_VALUE ; RESUME ;
+                                JUMP_BACKWARD_NO_INTERRUPT <wait_loop>  (自循环)
+            fall_through block: POP_TOP  (await 作 Expr，丢弃结果)
+                              或 STORE_* x  (await 作赋值右值 ``x = await <expr>``)
+
+        await_setup 块唯一归属 Await 表达式：GET_AWAITABLE 之前的指令归约为
+        await 的 value 表达式，GET_AWAITABLE + LOAD_CONST None + SEND/YIELD_VALUE
+        是 await 协议实现（轮询自循环），不归属用户语句。本方法剥离协议指令，
+        重建 Await 节点，并依 fall_through 是否含 STORE_* 决定 Expr / Assign。
+
+        供 _generate_block_statements（普通 body 块）与 _loop_extract_self_loop_stmts
+        （while 循环 header 块）共用，确保 ``while a: await g()`` 的 header（await
+        setup）正确重建为 ``await g()``，而非将末尾 LOAD_CONST None（SEND 参数）
+        当作裸表达式。
+
+        Returns:
+            重建的语句列表（非空），或 None（块不含 GET_AWAITABLE / 重建失败）。
+        """
+        if not any(i.opname == 'GET_AWAITABLE' for i in block.instructions):
+            return None
+        _aw_stmts: List[Dict[str, Any]] = []
+        _aw_stmt_instrs: List[Instruction] = []
+        _aw_after_awaitable = False
+        for _instr in block.instructions:
+            if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP'):
+                continue
+            if _instr.opname == 'GET_AWAITABLE':
+                _aw_stmt_instrs.append(_instr)
+                _aw_after_awaitable = True
+                continue
+            if _aw_after_awaitable and _instr.opname == 'LOAD_CONST' and _instr.argval is None:
+                continue
+            if _aw_after_awaitable and _instr.opname == 'SEND':
+                continue
+            if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                _aw_stmt_instrs.append(_instr)
+                _aw_stmt = self._build_store_statement(_aw_stmt_instrs, block=block)
+                if _aw_stmt:
+                    _aw_stmts.append(_aw_stmt)
+                _aw_stmt_instrs = []
+                continue
+            if _instr.opname in ('JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE',
+                                'JUMP_BACKWARD_NO_INTERRUPT'):
+                break
+            if _instr.opname in FORWARD_JUMP_OPS or _instr.opname in BACKWARD_JUMP_OPS:
+                break
+            _aw_stmt_instrs.append(_instr)
+        if _aw_stmt_instrs:
+            _aw_expr = self.expr_reconstructor.reconstruct(_aw_stmt_instrs)
+            if _aw_expr:
+                if _aw_expr.get('type') == 'Await':
+                    # [Round4-14] await 作赋值右值时，字节码布局为：
+                    #   await_setup block (含 GET_AWAITABLE)
+                    #   → wait_loop block (SEND/YIELD_VALUE/RESUME/JUMP_BACKWARD_NO_INTERRUPT)
+                    #   → fall_through block (STORE_FAST x)
+                    # 若 fall_through 是单个 STORE_*，生成 Assign(target=x, value=Await(...))
+                    # 而非 Expr(Await(...))，并标记 fall_through 块已生成避免重复处理。
+                    _aw_target = self._find_await_store_target(block)
+                    if _aw_target is not None:
+                        _aw_stmts.append({
+                            'type': 'Assign',
+                            'targets': [{
+                                'type': 'Name',
+                                'id': _aw_target,
+                                'ctx': 'Store',
+                            }],
+                            'value': _aw_expr,
+                        })
+                    else:
+                        _aw_stmts.append({'type': 'Expr', 'value': _aw_expr})
+                else:
+                    _aw_stmt = self._build_statement(_aw_stmt_instrs)
+                    if _aw_stmt:
+                        _aw_stmts.append(_aw_stmt)
+        return _aw_stmts if _aw_stmts else None
+
     def _loop_extract_self_loop_stmts(self, hdr: BasicBlock) -> List[Dict[str, Any]]:
         """从self-loop header中提取普通语句（排除条件重检部分，处理条件break）"""
         import dis as _dis
+        # [R2-F fix] 区域归约算法原则 3（嵌套即抽象节点）+ 原则 2（每块唯一归属）：
+        # while 循环 header 若为 await setup 块（含 GET_AWAITABLE，后继为 SEND
+        # 轮询自循环），应重建为 ``await <expr>`` 语句，而非将末尾 LOAD_CONST None
+        # （SEND 参数）当作裸表达式。原 _loop_extract_self_loop_stmts 未识别 await
+        # 模式，导致 ``while a: await g()`` 的 body 退化为 ``None``（LOAD_CONST None
+        # 留在栈顶被重建为 Expr(Constant(None))，GET_AWAITABLE 前的 g() 丢失）。
+        # 委托给 _reconstruct_await_block_stmts（与 _generate_block_statements 共用
+        # await 重建逻辑）——await setup 块唯一归属 Await 表达式。
+        if any(i.opname == 'GET_AWAITABLE' for i in hdr.instructions):
+            _aw_stmts = self._reconstruct_await_block_stmts(hdr)
+            if _aw_stmts is not None:
+                return _aw_stmts
         _self_loop_stmts: List[Dict[str, Any]] = []
         _self_loop_instrs: List[Instruction] = []
         _last_i = hdr.get_last_instruction()
@@ -30507,64 +30619,12 @@ AST 映射规则:
             self.generated_blocks.add(block)
             return stmts
 
-        _await_result = None
-        _has_awaitable = any(i.opname == 'GET_AWAITABLE' for i in block.instructions)
-        if _has_awaitable:
-            _aw_stmts: List[Dict[str, Any]] = []
-            _aw_stmt_instrs: List[Instruction] = []
-            _aw_after_awaitable = False
-            for _instr in block.instructions:
-                if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP'):
-                    continue
-                if _instr.opname == 'GET_AWAITABLE':
-                    _aw_stmt_instrs.append(_instr)
-                    _aw_after_awaitable = True
-                    continue
-                if _aw_after_awaitable and _instr.opname == 'LOAD_CONST' and _instr.argval is None:
-                    continue
-                if _aw_after_awaitable and _instr.opname == 'SEND':
-                    continue
-                if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
-                    _aw_stmt_instrs.append(_instr)
-                    _aw_stmt = self._build_store_statement(_aw_stmt_instrs, block=block)
-                    if _aw_stmt:
-                        _aw_stmts.append(_aw_stmt)
-                    _aw_stmt_instrs = []
-                    continue
-                if _instr.opname in ('JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE',
-                                    'JUMP_BACKWARD_NO_INTERRUPT'):
-                    break
-                if _instr.opname in FORWARD_JUMP_OPS or _instr.opname in BACKWARD_JUMP_OPS:
-                    break
-                _aw_stmt_instrs.append(_instr)
-            if _aw_stmt_instrs:
-                _aw_expr = self.expr_reconstructor.reconstruct(_aw_stmt_instrs)
-                if _aw_expr:
-                    if _aw_expr.get('type') == 'Await':
-                        # [Round4-14] await 作赋值右值时，字节码布局为：
-                        #   await_setup block (含 GET_AWAITABLE)
-                        #   → wait_loop block (SEND/YIELD_VALUE/RESUME/JUMP_BACKWARD_NO_INTERRUPT)
-                        #   → fall_through block (STORE_FAST x)
-                        # 若 fall_through 是单个 STORE_*，生成 Assign(target=x, value=Await(...))
-                        # 而非 Expr(Await(...))，并标记 fall_through 块已生成避免重复处理。
-                        _aw_target = self._find_await_store_target(block)
-                        if _aw_target is not None:
-                            _aw_stmts.append({
-                                'type': 'Assign',
-                                'targets': [{
-                                    'type': 'Name',
-                                    'id': _aw_target,
-                                    'ctx': 'Store',
-                                }],
-                                'value': _aw_expr,
-                            })
-                        else:
-                            _aw_stmts.append({'type': 'Expr', 'value': _aw_expr})
-                    else:
-                        _aw_stmt = self._build_statement(_aw_stmt_instrs)
-                        if _aw_stmt:
-                            _aw_stmts.append(_aw_stmt)
-            _await_result = _aw_stmts if _aw_stmts else None
+        # [R2-F fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（父引用子入口）：
+        # await setup 块（含 GET_AWAITABLE，后继为 SEND 轮询自循环）的重建逻辑
+        # 提取为 _reconstruct_await_block_stmts，供 _generate_block_statements 与
+        # _loop_extract_self_loop_stmts 共用——await setup 块唯一归属 Await 表达式，
+        # 无论该块是普通 body 块还是 while 循环 header（如 ``while a: await g()``）。
+        _await_result = self._reconstruct_await_block_stmts(block)
         if _await_result is not None:
             stmts.extend(_await_result)
             self.generated_blocks.add(block)
@@ -32204,6 +32264,23 @@ AST 映射规则:
                 _stmt = self._build_attr_assign(_buf)
                 if _stmt:
                     _stmts.append(_stmt)
+                _buf = []
+                continue
+            # [R2-E fix] 区域归约算法原则 2（每块唯一归属）：
+            # DELETE_SUBSCR/DELETE_ATTR 重建为 Delete 语句 (del obj[key] /
+            # del obj.attr)。字节码模式：LOAD obj, LOAD key, DELETE_SUBSCR
+            # （DELETE_SUBSCR 弹出 [obj, key]）；LOAD obj, DELETE_ATTR attr
+            # （DELETE_ATTR 弹出 [obj]）。与 _process_instruction /
+            # _build_delete_stmt 的 Delete 重建保持一致（多语句回边块/for
+            # body 单语句块走本路径，普通块走 _process_instruction）。原实现
+            # 未处理 DELETE_*，回边块内 `del m[i]` 退化为裸 Expr：DELETE_SUBSCR
+            # 被当作未知指令，前驱 LOAD 残留缓冲被重建为孤立表达式（`i`），
+            # DELETE_SUBSCR 本身丢失，违反每块唯一归属。
+            if _instr.opname in ('DELETE_SUBSCR', 'DELETE_ATTR'):
+                _buf.append(_instr)
+                _del_stmts = self._build_delete_stmt(_instr, _buf)
+                if _del_stmts:
+                    _stmts.extend(_del_stmts)
                 _buf = []
                 continue
             if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF') and _buf:

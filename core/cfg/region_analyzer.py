@@ -555,6 +555,15 @@ class LoopRegion(Region):
             _be_last = self.back_edge_block.get_last_instruction()
             if _be_last and _be_last.opname in BACKWARD_CONDITIONAL_JUMP_OPS:
                 boundary.add(self.back_edge_block)
+        # [R2-B fix] 区域归约算法原则 2（每块唯一归属）：while-else 块
+        #（else_blocks）是循环自然退出时执行的子句，逻辑上在循环体之外，
+        # 归属 LoopRegion 的 else 子句。虽然 else_blocks 在 self.blocks 中
+        #（所有权归属），但不应被循环体内嵌套 IfRegion 的 elif 链吸收为
+        # final_else（否则 while-else 退化为 if-else 的 else，语义错误）。
+        # 将 else_blocks 加入 boundary_stop，使 _collect_branch_blocks 在
+        # BFS 时停止于 else 块，防止 IfRegion 越过循环边界吸收它们。
+        if self.else_blocks:
+            boundary.update(self.else_blocks)
         return boundary
 
     def interrupts_boolop_forward_chain(self, ft_succ) -> bool:
@@ -3189,7 +3198,7 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                     b.start_offset))
             else:
                 back_edge_block = None
-            break_blocks, continue_map = self._detect_break_continue(body, header, natural_exit, natural_back_edge=back_edge_block, condition_block=condition_block)
+            break_blocks, continue_map = self._detect_break_continue(body, header, natural_exit, natural_back_edge=back_edge_block, condition_block=condition_block, for_iter_exit=for_iter_exit, else_blocks=else_blocks)
 
             # [R1-04 fix] 区域归约算法原则 2（每块唯一归属）：链式比较 while
             # 条件的短路出口块（如 ``while 0 < x < 10:`` 中 ``0 < x`` 为假时
@@ -4253,7 +4262,9 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
     def _detect_break_continue(self, loop_body: Set[BasicBlock], header: BasicBlock,
                                natural_exit: Optional[BasicBlock] = None,
                                natural_back_edge: Optional[BasicBlock] = None,
-                               condition_block: Optional[BasicBlock] = None) -> Tuple[Set[BasicBlock], Dict[BasicBlock, str]]:
+                               condition_block: Optional[BasicBlock] = None,
+                               for_iter_exit: Optional[BasicBlock] = None,
+                               else_blocks: Optional[List[BasicBlock]] = None) -> Tuple[Set[BasicBlock], Dict[BasicBlock, str]]:
         """
         检测循环中的break和continue
 
@@ -4332,6 +4343,21 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                         # 丢失。判据：源块 b 末尾为无条件 JUMP_FORWARD/JUMP_ABSOLUTE →
                         # s 是 break 目标（循环后代码），计入 break_blocks_set。
                         if last and last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+                            break_blocks_set.add(s)
+                            continue
+                        # [R2-A fix] 区域归约算法原则 2（每块唯一归属）：for-else+break
+                        # 在模块级/函数尾（循环后无可执行代码）时，CPython 将 break
+                        # 目标内联为 `POP_TOP; LOAD_CONST None; RETURN_VALUE`（清除
+                        # 迭代器 + 隐式返回 None），而非 JUMP_FORWARD 到尾随 return 块。
+                        # 该块与循环内 `return None` 字节码完全等价，仅当循环存在真实
+                        # else（for_iter_exit 含实质语句且非 trivial return None）时才
+                        # 解释为 break——否则 else 子句不会被归属到循环，退化为顺序语句。
+                        # 安全性：`return None` 与 `break` 在此场景产生相同字节码，故
+                        # 两种解释均通过字节码等价校验；不触发 R24-N1 误判（return X，
+                        # X≠None 的块非 trivial return None，不进入此分支）。
+                        if (for_iter_exit is not None and s is not for_iter_exit
+                                and else_blocks and self._is_trivial_return_block(s)
+                                and not self._is_trivial_return_block(for_iter_exit)):
                             break_blocks_set.add(s)
                         continue
                     if not any(i.opname in ('PUSH_EXC_INFO', 'WITH_EXCEPT_START') for i in s.instructions):
@@ -4768,6 +4794,20 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
             if has_send and has_yield and has_jbni:
                 break
         if not (has_send and has_yield and has_jbni):
+            return False
+        # [R2-F fix] 区域归约算法原则 3（嵌套即抽象节点）+ 原则 1（自底向上归约）：
+        # await/async-for 轮询自循环的 header 必为 SEND/YIELD/JBNI 块本身（CPython
+        # 将 SEND+YIELD_VALUE+RESUME+JUMP_BACKWARD_NO_INTERRUPT 编入同一自循环块）。
+        # 仅 body 含三联不足以判定——外层 while 循环（``while a: await g()``）的
+        # body 含 await 轮询子循环时也满足 body 三联条件，导致 while 被误判为轮询
+        # 自循环而抑制，while 退化为 ``if (a and await g()): return None``（违反
+        # 「嵌套即抽象节点」——await 应嵌套入 while body，而非吞并 while）。
+        # 追加 header 三联检查：仅 header 自身含三联时才是真正的轮询自循环；外层
+        # 循环 header（await setup 块，含 GET_AWAITABLE 但无 SEND/YIELD/JBNI）不
+        # 满足 → 不抑制 → 正确物化为 LoopRegion，await 作为子节点嵌套入 while body。
+        if not any(i.opname == 'SEND' for i in header.instructions) \
+                or not any(i.opname == 'YIELD_VALUE' for i in header.instructions) \
+                or not any(i.opname == 'JUMP_BACKWARD_NO_INTERRUPT' for i in header.instructions):
             return False
 
         # 条件 3 + 4: 前驱链中含 GET_AWAITABLE 或 GET_ANEXT，且不含 GET_YIELD_FROM_ITER
@@ -11956,6 +11996,41 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
 
             merge = self._find_nearest_common_post_dominator(then_succ, else_succ)
 
+            # [R2-C fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（归约顺序）：
+            # 当 NCPD 返回的 merge 等于 then_succ/else_succ 之一，且该块是终态汇
+            #（无正常后继，即 RETURN_VALUE/RETURN_CONST/RAISE_VARARGS 出口 / 循环
+            # break 目标）时，该 merge 是 post-dominator 算法在非终止循环（如
+            # `while True: continue`）上的终止性假设产物——post-dominator 假设所有
+            # 路径最终到达出口，对可无限循环的 CFG 错误判定出口块 post-dominate
+            # 循环内所有块。终态汇不可能是 if 的合并点：合并点须被两分支汇聚到达，
+            # 而终态汇无后继，是分支的终点而非汇聚点。将 merge 置 None，交由下方既
+            # 有的 sink/BREAK 角色回退计算正确合并点。判据结构性（CFG 拓扑：无正常
+            # 后继），非指令特例，符合算法 4 原则。
+            # 典型场景（test_r2_while_true_break_continue_mix）：
+            #   while True:
+            #       if a: continue
+            #       if b: break    # then=B6(RETURN_VALUE 终态汇), else=B7(x=1)
+            #       x = 1
+            # NCPD(B6, B7) 错误返回 B6（因 while True+continue 可不终止），使
+            # then_blocks 空（entry→then_succ==merge）→ `if b: pass` + 独立 break。
+            # 重置后 BREAK 角色回退设 merge=B7，then_blocks={B6}→ `if b: break`。
+            if merge is not None and merge in (then_succ, else_succ):
+                _r2c_normal_succs = merge.successors - getattr(merge, 'exception_successors', set())
+                if not _r2c_normal_succs:
+                    # 终态汇仅当【非汇聚点】时才是退化的 merge：若 merge 的前驱
+                    # 只有条件块 block（即对侧分支未流入），则 merge 是分支终点
+                    # 而非两分支汇聚点，是 post-dominator 终止性假设的伪 merge，
+                    # 置 None 交回退处理。若 merge 有 block 以外的前驱（如 then
+                    # 体 fall-through 流入），则它是真汇聚点（即便无后继，作为
+                    # 模块/函数出口仍是合法 merge），保留。此判据结构性（前驱
+                    # 拓扑），避免误伤 `if c: z = a in b in c`（then 体 fall-through
+                    # 流入出口块，出口块 2 前驱=真汇聚）等合法 sink-merge。
+                    _r2c_struct_blocks = {block} | chain_blocks
+                    _r2c_has_converging_pred = any(
+                        p not in _r2c_struct_blocks for p in merge.predecessors)
+                    if not _r2c_has_converging_pred:
+                        merge = None
+
             # [R24-A fix] 区域归约算法原则 1（自底向上归约）+ 原则 2（每块唯一
             # 归属）+ No More Gotos §4.2（循环区域）/§3（If 区域归约）：
             # 当 if 嵌套于循环内、且某分支以 break/continue/return 退出循环时，
@@ -11978,6 +12053,40 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                         merge = _r24a_in_loop_merge
 
             if merge is None:
+                # [R2-C fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（归约顺序）：
+                # 当 then_succ/else_succ 是循环 break 块（BlockRole.BREAK/PURE_BREAK）
+                # 时，break 退出循环、永不与对侧分支汇聚，故对侧分支是顺序
+                # fall-through（下一条循环体语句），即 merge=对侧。此判据须优先于
+                # 下文 _then_sink/_else_sink 的 ipdom 回退——该回退把 break 的对侧
+                # fall-through当作真 else（merge=对侧.ipdom，常为循环顶），使 then
+                # 块（break）被 ipdom 之前的 BFS 过度收集、或使 break 脱离 if 体
+                #（then_blocks 含 break 之后语句）。镜像 L12083-12111 的 BREAK 角色
+                # 判据，前移至 sink 回退之前，使其在「仅 then sink(break)+else 非
+                # sink(fall-through)」场景生效（该场景 _then_sink 会先设 merge 使
+                # L12083 的 `if merge is None:` 不触发）。elif 守卫保留：对侧是
+                # elif 条件块（前向条件跳转+2 条件后继）时不设 merge，让 elif 链
+                # 检测处理（如 `if b: break / elif c: ...`）。
+                _r2c_then_role = self.get_block_role(then_succ)
+                _r2c_else_role = self.get_block_role(else_succ)
+                if _r2c_then_role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
+                    _r2c_else_last = else_succ.get_last_instruction()
+                    _r2c_else_is_elif = (
+                        len(else_succ.conditional_successors) == 2
+                        and _r2c_else_last is not None
+                        and _r2c_else_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)
+                    )
+                    if not _r2c_else_is_elif:
+                        merge = else_succ
+                elif _r2c_else_role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
+                    _r2c_then_last = then_succ.get_last_instruction()
+                    _r2c_then_is_elif = (
+                        len(then_succ.conditional_successors) == 2
+                        and _r2c_then_last is not None
+                        and _r2c_then_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)
+                    )
+                    if not _r2c_then_is_elif:
+                        merge = then_succ
+
                 _then_sink = any(i.opname in ('RAISE_VARARGS', 'RETURN_VALUE') for i in then_succ.instructions) or then_succ.immediate_post_dominator is None
                 _else_sink = any(i.opname in ('RAISE_VARARGS', 'RETURN_VALUE') for i in else_succ.instructions) or else_succ.immediate_post_dominator is None
                 if not _then_sink:
@@ -12002,7 +12111,7 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                         _else_chain_end = _next
                     if any(i.opname in ('RAISE_VARARGS', 'RETURN_VALUE') for i in _else_chain_end.instructions) or _else_chain_end.immediate_post_dominator is None:
                         _else_sink = True
-                if _then_sink and not _else_sink:
+                if merge is None and _then_sink and not _else_sink:
                     # [R14-N4 fix] 区域归约算法原则 2（每块唯一归属）：
                     # 当 then 分支终态终止（RETURN_VALUE/RAISE），else_succ 可能是
                     # after-if 点（下一条语句），而非真正的 else 分支。判据：else_succ
@@ -12030,7 +12139,7 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                         merge = else_succ
                     else:
                         merge = else_succ.immediate_post_dominator
-                elif _else_sink and not _then_sink:
+                elif merge is None and _else_sink and not _then_sink:
                     # [R14-N4 fix] 对称：当 else 分支终态终止，then_succ 可能是
                     # after-if 点。若 then_succ 有外部前驱 → merge=then_succ。
                     _if_struct_blocks_els = ({block, then_succ, else_succ,
@@ -13452,7 +13561,22 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 bodies.extend(deeper_elif['bodies'])
                 final_else = deeper_elif.get('final_else', [])
             elif inner_else_blocks:
-                final_else = inner_else_blocks
+                # [R2-B fix] 区域归约算法原则 2（每块唯一归属）：回边重检块
+                #（CPython 在回边处复制 while 条件求值，如
+                # `LOAD a; POP_JUMP_BACKWARD_IF_TRUE → body`）归属 LoopRegion，
+                # 不归属嵌套 IfRegion 的 else 分支。_collect_branch_blocks 因
+                # R21-C4 fix（stop.discard(entry)，L18734）会收集 entry 即使它在
+                # stop_set 中——这对 break/continue 块正确（它们是分支入口），
+                # 但对回边重检块错误（它是循环条件复制，非分支入口）。此处过滤
+                # 回边重检块（末指令为后向条件跳转），使其不被 IfRegion 的
+                # final_else 吸收而泄漏为虚假 `elif cond: pass / else: break`。
+                # 用指令判据而非 get_block_role：block_roles 在 _identify_conditional
+                # _regions 阶段尚未标注（_annotate_all_roles 在 L1634 之后）。
+                # 过滤后若 inner_else_blocks 为空，落入 else 分支（L13460），
+                # 由 _inner_boundary_stop 二次守卫。
+                final_else = [b for b in inner_else_blocks
+                              if not (b.get_last_instruction()
+                                      and b.get_last_instruction().opname in BACKWARD_CONDITIONAL_JUMP_OPS)]
             else:
                 last_instr = first_else.get_last_instruction()
                 if last_instr and last_instr.argval is not None:
