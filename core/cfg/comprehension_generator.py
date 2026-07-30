@@ -751,17 +751,25 @@ class ComprehensionGenerator:
         if final_depth < 1:
             return None
 
+        # [R03 fix] Find the LAST transition from depth==1 to depth>1.
+        # For dict comprehension {key: value}, key_expr is evaluated first
+        # (depth reaches 1), then value_expr starts (depth goes to 2).
+        # The split point is after the last instruction that leaves depth==1
+        # before value_expr begins.
+        # - Simple key {a: b}: depth [(0,1),(1,2)] → last transition at i=0 → split at 1
+        # - Compound key {a+b: c}: depth [(0,1),(1,2),(2,1),(3,2)] → last transition at i=2 → split at 3
+        # Region reduction: key_expr and value_expr are sibling sub-nodes of the
+        # dict comp element; the split point is the boundary where the parent
+        # (MAP_ADD) references child entry points (key entry / value entry).
+        last_transition_idx = None
         for i in range(len(depth_history) - 1):
             idx, depth = depth_history[i]
             next_idx, next_depth = depth_history[i + 1]
-            if depth == 1 and next_depth > 1 and i > 0:
-                return i + 1
+            if depth == 1 and next_depth > 1:
+                last_transition_idx = i
 
-        for i in range(len(depth_history) - 1):
-            idx, depth = depth_history[i]
-            next_idx, next_depth = depth_history[i + 1]
-            if depth == 1 and i > 0:
-                return i + 1
+        if last_transition_idx is not None:
+            return last_transition_idx + 1
 
         best_split = None
         for split_pos in range(1, len(instrs)):

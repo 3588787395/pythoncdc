@@ -48,6 +48,27 @@ def _classify_instruction(opname: str) -> str:
     return 'other'
 
 
+def _normalize_argval(argval: Any) -> Any:
+    """Normalize a LOAD_CONST argval to remove recompilation identity noise.
+
+    Recompiled code objects differ from the originals only by memory address
+    and embedded ``co_filename`` (original .py vs OK.py). String constants that
+    hold a .py/.pyc file path likewise differ only in the directory portion.
+    Neither is a real mismatch, so they are canonicalized before comparison:
+
+    - Code objects -> ``"<code object {co_name}>"`` (drops address & file path)
+    - Strings that look like a .py/.pyc file path -> basename only
+    - Anything else is returned unchanged.
+    """
+    if isinstance(argval, types.CodeType):
+        return f"<code object {argval.co_name}>"
+    if isinstance(argval, str):
+        low = argval.lower()
+        if (low.endswith('.py') or low.endswith('.pyc')) and ('/' in argval or '\\' in argval):
+            return os.path.basename(argval)
+    return argval
+
+
 def compare_bytecode(orig_code: types.CodeType, decomp_code: types.CodeType) -> Dict[str, Any]:
     orig_instrs = get_bytecode_instructions(orig_code)
     decomp_instrs = get_bytecode_instructions(decomp_code)
@@ -76,7 +97,7 @@ def compare_bytecode(orig_code: types.CodeType, decomp_code: types.CodeType) -> 
                 'index': idx,
                 'type': 'extra_in_decomp',
                 'decomp_op': decomp_instr.opname,
-                'decomp_arg': decomp_instr.argval,
+                'decomp_arg': _normalize_argval(decomp_instr.argval),
             })
             continue
 
@@ -85,9 +106,13 @@ def compare_bytecode(orig_code: types.CodeType, decomp_code: types.CodeType) -> 
                 'index': idx,
                 'type': 'missing_in_decomp',
                 'orig_op': orig_instr.opname,
-                'orig_arg': orig_instr.argval,
+                'orig_arg': _normalize_argval(orig_instr.argval),
             })
             continue
+
+        # Normalize argvals for both sides before comparison
+        orig_norm = _normalize_argval(orig_instr.argval)
+        decomp_norm = _normalize_argval(decomp_instr.argval)
 
         if orig_instr.opname != decomp_instr.opname:
             if _classify_instruction(orig_instr.opname) == 'jump' or _classify_instruction(decomp_instr.opname) == 'jump':
@@ -95,33 +120,33 @@ def compare_bytecode(orig_code: types.CodeType, decomp_code: types.CodeType) -> 
                     'index': idx,
                     'orig_op': orig_instr.opname,
                     'decomp_op': decomp_instr.opname,
-                    'orig_arg': orig_instr.argval,
-                    'decomp_arg': decomp_instr.argval,
+                    'orig_arg': orig_norm,
+                    'decomp_arg': decomp_norm,
                 })
             else:
                 result['true_diffs'].append({
                     'index': idx,
                     'orig_op': orig_instr.opname,
                     'decomp_op': decomp_instr.opname,
-                    'orig_arg': orig_instr.argval,
-                    'decomp_arg': decomp_instr.argval,
+                    'orig_arg': orig_norm,
+                    'decomp_arg': decomp_norm,
                 })
-        elif orig_instr.argval != decomp_instr.argval:
+        elif orig_norm != decomp_norm:
             if _classify_instruction(orig_instr.opname) == 'jump':
                 result['jump_diffs'].append({
                     'index': idx,
                     'orig_op': orig_instr.opname,
                     'decomp_op': decomp_instr.opname,
-                    'orig_arg': orig_instr.argval,
-                    'decomp_arg': decomp_instr.argval,
+                    'orig_arg': orig_norm,
+                    'decomp_arg': decomp_norm,
                 })
             else:
                 result['true_diffs'].append({
                     'index': idx,
                     'orig_op': orig_instr.opname,
                     'decomp_op': decomp_instr.opname,
-                    'orig_arg': orig_instr.argval,
-                    'decomp_arg': decomp_instr.argval,
+                    'orig_arg': orig_norm,
+                    'decomp_arg': decomp_norm,
                 })
 
     if not result['true_diffs'] and not result['jump_diffs']:

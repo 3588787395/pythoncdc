@@ -52,8 +52,13 @@
   - [x] T2.01.2 修复工程师：按区域归约算法修复 → `rounds/round_01/repair_engineer/fix_report.md`（3 处修复，TRY 90.43%→96.96%，10/12 复现通过，get_python_version 100%）
   - [x] T2.01.3 commit + push `rcm-r01:` (1cf0fde + 8d01fe3)
   - 残留：repro_10 except return 值丢失 / repro_12 elif BoolOp 拆分（独立缺陷，后续轮次修复）
-- [ ] T2.02 第 02 轮（取第 2 个 pyc: IQCommon/api/__init__.pyc）
-- [ ] T2.03 第 03 轮（取第 3 个 pyc）
+- [x] R01 残留澄清：tooling 修复（pyc_batch_verify.py + testqouter/round1/base.py 增加 code-object 身份噪声过滤）后，IQCommon/__init__.pyc 实测 100% 字节码一致（原 0.5 为 code-object 地址/路径噪声）；R01-12 状态升级为 ok
+- [x] T2.02 第 02 轮（取第 2 个 pyc: IQCommon/api/__init__.pyc，已 commit aab71b8）
+- [x] T2.03 第 03 轮（取第 3 个 pyc: IQCommon/api/klinedata.pyc）
+  - [x] T2.03.1 测试工程师：取下一个 pyc，反编译 + 字节码 diff → `rounds/round_03/test_engineer/decompile_report.md`（51.11%，22 mismatches，14 复现实例 10 DEFECT-REPRO）
+  - [x] T2.03.2 修复工程师：按区域归约算法修复 → `rounds/round_03/repair_engineer/fix_report.md`（Pattern D dictcomp key/value 互换修复，51.11%→53.33%，1/5 模式修复）
+  - [x] T2.03.3 commit + push `rcm-r03:`
+  - 残留：Pattern A/B/C/E 共 21 个不一致函数，后续轮次修复
 - [ ] T2.04 第 04 轮
 - [ ] T2.05 第 05 轮
 - [ ] T2.06 第 06 轮

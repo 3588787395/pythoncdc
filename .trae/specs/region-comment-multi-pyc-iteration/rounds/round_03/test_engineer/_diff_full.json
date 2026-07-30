@@ -1,0 +1,324 @@
+{
+  "total_functions": 45,
+  "matched_functions": 23,
+  "match_rate": 0.5111111111111111,
+  "mismatches": [
+    {
+      "name": "<dictcomp>",
+      "orig_count": 12,
+      "decomp_count": 12,
+      "jump_diffs": 0,
+      "true_diffs": 1,
+      "first_diff": {
+        "index": 7,
+        "orig_op": "LOAD_FAST",
+        "decomp_op": "LOAD_FAST",
+        "orig_arg": "date",
+        "decomp_arg": "idx"
+      }
+    },
+    {
+      "name": "<module>",
+      "orig_count": 545,
+      "decomp_count": 541,
+      "jump_diffs": 0,
+      "true_diffs": 189,
+      "first_diff": {
+        "index": 344,
+        "orig_op": "NOP",
+        "decomp_op": "LOAD_CONST",
+        "orig_arg": null,
+        "decomp_arg": [
+          null,
+          null,
+          false,
+          null,
+          null,
+          null
+        ]
+      }
+    },
+    {
+      "name": "_all_bars_of_cache",
+      "orig_count": 250,
+      "decomp_count": 253,
+      "jump_diffs": 39,
+      "true_diffs": 187,
+      "first_diff": {
+        "index": 29,
+        "orig_op": "LOAD_CONST",
+        "decomp_op": "LOAD_FAST",
+        "orig_arg": "20050101",
+        "decomp_arg": "start_date"
+      }
+    },
+    {
+      "name": "_all_bars_of_range",
+      "orig_count": 17,
+      "decomp_count": 16,
+      "jump_diffs": 0,
+      "true_diffs": 3,
+      "first_diff": {
+        "index": 14,
+        "orig_op": "NOP",
+        "decomp_op": "LOAD_FAST",
+        "orig_arg": null,
+        "decomp_arg": "data_array"
+      }
+    },
+    {
+      "name": "get_all_real_daily_kline",
+      "orig_count": 216,
+      "decomp_count": 214,
+      "jump_diffs": 28,
+      "true_diffs": 137,
+      "first_diff": {
+        "index": 51,
+        "orig_op": "LOAD_GLOBAL",
+        "decomp_op": "LOAD_FAST",
+        "orig_arg": "len",
+        "decomp_arg": "list_data"
+      }
+    },
+    {
+      "name": "get_all_real_minute_kline",
+      "orig_count": 305,
+      "decomp_count": 306,
+      "jump_diffs": 37,
+      "true_diffs": 191,
+      "first_diff": {
+        "index": 82,
+        "orig_op": "LOAD_GLOBAL",
+        "decomp_op": "LOAD_GLOBAL",
+        "orig_arg": "range",
+        "decomp_arg": "system_log"
+      }
+    },
+    {
+      "name": "get_history_common",
+      "orig_count": 536,
+      "decomp_count": 543,
+      "jump_diffs": 62,
+      "true_diffs": 367,
+      "first_diff": {
+        "index": 111,
+        "orig_op": "POP_JUMP_FORWARD_IF_NOT_NONE",
+        "decomp_op": "EXTENDED_ARG",
+        "orig_arg": 760,
+        "decomp_arg": 3
+      }
+    },
+    {
+      "name": "get_history_date_and_count_ifalse",
+      "orig_count": 468,
+      "decomp_count": 460,
+      "jump_diffs": 47,
+      "true_diffs": 313,
+      "first_diff": {
+        "index": 99,
+        "orig_op": "LOAD_GLOBAL",
+        "decomp_op": "LOAD_FAST",
+        "orig_arg": "datetime",
+        "decomp_arg": "query_date"
+      }
+    },
+    {
+      "name": "get_history_new",
+      "orig_count": 352,
+      "decomp_count": 262,
+      "jump_diffs": 9,
+      "true_diffs": 132,
+      "first_diff": {
+        "index": 65,
+        "orig_op": "EXTENDED_ARG",
+        "decomp_op": "EXTENDED_ARG",
+        "orig_arg": 2,
+        "decomp_arg": 1
+      }
+    },
+    {
+      "name": "get_kline_by_count",
+      "orig_count": 478,
+      "decomp_count": 478,
+      "jump_diffs": 80,
+      "true_diffs": 392,
+      "first_diff": {
+        "index": 2,
+        "orig_op": "POP_JUMP_FORWARD_IF_NONE",
+        "decomp_op": "EXTENDED_ARG",
+        "orig_arg": 18,
+        "decomp_arg": 4
+      }
+    },
+    {
+      "name": "get_kline_by_count_new",
+      "orig_count": 650,
+      "decomp_count": 640,
+      "jump_diffs": 125,
+      "true_diffs": 507,
+      "first_diff": {
+        "index": 14,
+        "orig_op": "UNPACK_SEQUENCE",
+        "decomp_op": "STORE_FAST",
+        "orig_arg": 2,
+        "decomp_arg": "start_000300"
+      }
+    },
+    {
+      "name": "get_kline_by_date_ndarray",
+      "orig_count": 239,
+      "decomp_count": 239,
+      "jump_diffs": 3,
+      "true_diffs": 0,
+      "first_diff": {
+        "index": 47,
+        "orig_op": "POP_JUMP_FORWARD_IF_TRUE",
+        "decomp_op": "POP_JUMP_FORWARD_IF_TRUE",
+        "orig_arg": 656,
+        "decomp_arg": 308
+      }
+    },
+    {
+      "name": "get_kline_by_date_new",
+      "orig_count": 332,
+      "decomp_count": 322,
+      "jump_diffs": 16,
+      "true_diffs": 43,
+      "first_diff": {
+        "index": 38,
+        "orig_op": "POP_JUMP_FORWARD_IF_NONE",
+        "decomp_op": "POP_JUMP_FORWARD_IF_NONE",
+        "orig_arg": 386,
+        "decomp_arg": 216
+      }
+    },
+    {
+      "name": "get_kline_by_date_one",
+      "orig_count": 193,
+      "decomp_count": 188,
+      "jump_diffs": 22,
+      "true_diffs": 126,
+      "first_diff": {
+        "index": 44,
+        "orig_op": "RETURN_VALUE",
+        "decomp_op": "POP_TOP",
+        "orig_arg": null,
+        "decomp_arg": null
+      }
+    },
+    {
+      "name": "get_multiminute_his_data",
+      "orig_count": 535,
+      "decomp_count": 439,
+      "jump_diffs": 30,
+      "true_diffs": 248,
+      "first_diff": {
+        "index": 18,
+        "orig_op": "EXTENDED_ARG",
+        "decomp_op": "EXTENDED_ARG",
+        "orig_arg": 5,
+        "decomp_arg": 3
+      }
+    },
+    {
+      "name": "get_multiminute_his_data_by_date",
+      "orig_count": 611,
+      "decomp_count": 606,
+      "jump_diffs": 62,
+      "true_diffs": 492,
+      "first_diff": {
+        "index": 48,
+        "orig_op": "LOAD_FAST",
+        "decomp_op": "LOAD_GLOBAL",
+        "orig_arg": "_1m_df_nan_data",
+        "decomp_arg": "get_kline_time_by_asset"
+      }
+    },
+    {
+      "name": "get_pre_date",
+      "orig_count": 193,
+      "decomp_count": 182,
+      "jump_diffs": 43,
+      "true_diffs": 117,
+      "first_diff": {
+        "index": 34,
+        "orig_op": "LOAD_GLOBAL",
+        "decomp_op": "LOAD_FAST",
+        "orig_arg": "len",
+        "decomp_arg": "frequency"
+      }
+    },
+    {
+      "name": "get_price_common",
+      "orig_count": 594,
+      "decomp_count": 605,
+      "jump_diffs": 94,
+      "true_diffs": 472,
+      "first_diff": {
+        "index": 28,
+        "orig_op": "POP_JUMP_FORWARD_IF_NONE",
+        "decomp_op": "LOAD_FAST",
+        "orig_arg": 174,
+        "decomp_arg": "start_date"
+      }
+    },
+    {
+      "name": "klineCacheData_to_dict",
+      "orig_count": 216,
+      "decomp_count": 137,
+      "jump_diffs": 22,
+      "true_diffs": 166,
+      "first_diff": {
+        "index": 30,
+        "orig_op": "STORE_FAST",
+        "decomp_op": "NOP",
+        "orig_arg": "symbol",
+        "decomp_arg": null
+      }
+    },
+    {
+      "name": "kline_datetime_list",
+      "orig_count": 413,
+      "decomp_count": 390,
+      "jump_diffs": 59,
+      "true_diffs": 208,
+      "first_diff": {
+        "index": 148,
+        "orig_op": "SWAP",
+        "decomp_op": "COMPARE_OP",
+        "orig_arg": 2,
+        "decomp_arg": ">"
+      }
+    },
+    {
+      "name": "np_tp_pd",
+      "orig_count": 189,
+      "decomp_count": 190,
+      "jump_diffs": 24,
+      "true_diffs": 111,
+      "first_diff": {
+        "index": 56,
+        "orig_op": "SWAP",
+        "decomp_op": "POP_TOP",
+        "orig_arg": 2,
+        "decomp_arg": null
+      }
+    },
+    {
+      "name": "to_pd_result",
+      "orig_count": 215,
+      "decomp_count": 219,
+      "jump_diffs": 21,
+      "true_diffs": 161,
+      "first_diff": {
+        "index": 35,
+        "orig_op": "POP_JUMP_FORWARD_IF_NOT_NONE",
+        "decomp_op": "EXTENDED_ARG",
+        "orig_arg": 648,
+        "decomp_arg": 1
+      }
+    }
+  ],
+  "missing_in_decomp": [],
+  "extra_in_decomp": []
+}

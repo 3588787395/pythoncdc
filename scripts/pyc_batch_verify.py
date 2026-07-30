@@ -91,6 +91,59 @@ def _extract_code_objects(code_obj):
     return result
 
 
+def _classify_decompile_status(rate, ok_py_generated, py_compile_ok):
+    """根据验证结果对 decompile_status 进行分类。
+
+    - 'ok'      : bytecode_match_rate == 1.0 AND py_compile 成功 AND OK.py 已生成
+    - 'partial' : 0 < bytecode_match_rate < 1.0（反编译成功但未 100% 匹配）
+    - 'failed'  : 反编译或 py_compile 失败（rate == 0.0 或流水线异常）
+    - 'pending' : 未验证条目的初始状态（此处不产生）
+    """
+    if not ok_py_generated or not py_compile_ok:
+        return 'failed'
+    if rate == 1.0:
+        return 'ok'
+    if rate > 0.0:
+        return 'partial'
+    return 'failed'
+
+
+def _update_index_entry(pyc_path, fields, clear_keys=None, index_path=None):
+    """在 pyc_index.json 中查找匹配 pyc_path 的条目并更新字段。
+
+    路径匹配对大小写和分隔符不敏感（Windows 兼容）。
+    找到并回写返回 True，否则返回 False。
+    """
+    if index_path is None:
+        index_path = DEFAULT_INDEX_PATH
+    index_path = str(index_path)
+    index_file = Path(index_path)
+    if not index_file.exists():
+        return False
+
+    try:
+        with open(index_file, 'r', encoding='utf-8') as f:
+            entries = json.load(f)
+    except (json.JSONDecodeError, OSError):
+        return False
+
+    target = os.path.normcase(os.path.normpath(pyc_path))
+    found = False
+    for entry in entries:
+        ep = entry.get('path', '')
+        if ep and os.path.normcase(os.path.normpath(ep)) == target:
+            entry.update(fields)
+            for k in (clear_keys or []):
+                entry.pop(k, None)
+            found = True
+            break
+
+    if found:
+        with open(index_file, 'w', encoding='utf-8') as f:
+            json.dump(entries, f, ensure_ascii=False, indent=2)
+    return found
+
+
 # ════════════════════════════════════════════════════════════════════
 # 1. 单 pyc 反编译 + OK.py 生成
 # ════════════════════════════════════════════════════════════════════
@@ -332,13 +385,14 @@ def batch_verify(index_path: str = None, max_count: int = None, round_num: int =
             print(f'    DIFF ERROR: {diff["error"]}')
             continue
 
-        # 步骤 3: 更新条目（pipeline 成功完成）
+        # 步骤 3: 更新条目（pipeline 成功完成：decompile + py_compile 均成功）
         rate = diff['match_rate']
+        status = _classify_decompile_status(rate, ok_py_generated=True, py_compile_ok=True)
         entry['bytecode_match_rate'] = rate
-        entry['decompile_status'] = 'ok'
+        entry['decompile_status'] = status
         entry['last_tested_round'] = round_num
         entry.pop('error', None)  # 清除之前可能的失败记录
-        print(f'    OK: {diff["total_functions"]} funcs, '
+        print(f'    {status.upper()}: {diff["total_functions"]} funcs, '
               f'{diff["matched_functions"]} matched, rate={rate:.2%}')
 
     # 写回 pyc_index.json
@@ -359,8 +413,8 @@ def cumulative_stats(index_path: str = None) -> dict:
     """读取 pyc_index.json，统计所有已验证 pyc（last_tested_round > 0）的累计成功率。
 
     返回 dict:
-      {total_pyc, verified_pyc, ok_pyc, total_functions,
-       matched_functions, cumulative_match_rate}
+      {total_pyc, verified_pyc, ok_pyc, partial_pyc, failed_pyc,
+       total_functions, matched_functions, cumulative_match_rate}
     """
     if index_path is None:
         index_path = DEFAULT_INDEX_PATH
@@ -371,6 +425,8 @@ def cumulative_stats(index_path: str = None) -> dict:
         'total_pyc': 0,
         'verified_pyc': 0,
         'ok_pyc': 0,
+        'partial_pyc': 0,
+        'failed_pyc': 0,
         'total_functions': 0,
         'matched_functions': 0,
         'cumulative_match_rate': 0.0,
@@ -388,14 +444,21 @@ def cumulative_stats(index_path: str = None) -> dict:
     total_pyc = len(entries)
     verified_pyc = 0
     ok_pyc = 0
+    partial_pyc = 0
+    failed_pyc = 0
     total_functions = 0
     matched_functions = 0
 
     for e in entries:
         if e.get('last_tested_round', 0) > 0:
             verified_pyc += 1
-            if e.get('decompile_status') == 'ok':
+            status = e.get('decompile_status')
+            if status == 'ok':
                 ok_pyc += 1
+            elif status == 'partial':
+                partial_pyc += 1
+            elif status == 'failed':
+                failed_pyc += 1
             fc = e.get('function_count', 0)
             rate = e.get('bytecode_match_rate', 0.0)
             total_functions += fc
@@ -407,6 +470,8 @@ def cumulative_stats(index_path: str = None) -> dict:
         'total_pyc': total_pyc,
         'verified_pyc': verified_pyc,
         'ok_pyc': ok_pyc,
+        'partial_pyc': partial_pyc,
+        'failed_pyc': failed_pyc,
         'total_functions': total_functions,
         'matched_functions': matched_functions,
         'cumulative_match_rate': cumulative_rate,
@@ -417,10 +482,12 @@ def cumulative_stats(index_path: str = None) -> dict:
 # CLI 命令处理
 # ════════════════════════════════════════════════════════════════════
 
-def _print_diff_report(diff: dict):
+def _print_diff_report(diff: dict, decompile_status: str = None):
     """打印单个 pyc 的字节码 diff 报告。"""
     print()
     print('字节码 diff 报告:')
+    if decompile_status is not None:
+        print(f'  decompile_status:   {decompile_status}')
     print(f'  total_functions:   {diff["total_functions"]}')
     print(f'  matched_functions: {diff["matched_functions"]}')
     print(f'  match_rate:        {diff["match_rate"]:.2%}')
@@ -445,6 +512,8 @@ def _print_stats(stats: dict):
     print(f'  total_pyc:             {stats["total_pyc"]}')
     print(f'  verified_pyc:          {stats["verified_pyc"]}')
     print(f'  ok_pyc:                {stats["ok_pyc"]}')
+    print(f'  partial_pyc:           {stats["partial_pyc"]}')
+    print(f'  failed_pyc:            {stats["failed_pyc"]}')
     print(f'  total_functions:       {stats["total_functions"]}')
     print(f'  matched_functions:     {stats["matched_functions"]}')
     print(f'  cumulative_match_rate: {stats["cumulative_match_rate"]:.2%}')
@@ -452,20 +521,49 @@ def _print_stats(stats: dict):
 
 
 def _cmd_single(pyc_path: str, ok_py_path: str) -> int:
-    """single 子命令：反编译 + 生成 OK.py + 字节码 diff + 打印报告。"""
+    """single 子命令：反编译 + 生成 OK.py + 字节码 diff + 打印报告 + 回写 pyc_index.json。"""
     pyc_path = str(Path(pyc_path).resolve())
     print(f'[SINGLE] {pyc_path}')
 
     single = decompile_single(pyc_path, ok_py_path)
     if not single['success']:
         print(f'  FAILED: {single["error"]}')
+        _update_index_entry(pyc_path, {
+            'decompile_status': 'failed',
+            'bytecode_match_rate': 0.0,
+            'ok_py_generated': False,
+            'error': single['error'],
+        })
         return 1
 
     print(f'  OK.py: {single["ok_py_path"]}')
     print(f'  source: {len(single["source"])} chars')
 
     diff = bytecode_diff(pyc_path, single['ok_py_path'])
-    _print_diff_report(diff)
+
+    if diff.get('error'):
+        # py_compile 或加载失败：decompile 成功但 recompile 失败
+        status = _classify_decompile_status(0.0, ok_py_generated=True, py_compile_ok=False)
+        rate = 0.0
+        fields = {
+            'decompile_status': status,
+            'bytecode_match_rate': rate,
+            'ok_py_generated': True,
+            'error': diff['error'],
+        }
+        clear_keys = None
+    else:
+        rate = diff['match_rate']
+        status = _classify_decompile_status(rate, ok_py_generated=True, py_compile_ok=True)
+        fields = {
+            'decompile_status': status,
+            'bytecode_match_rate': rate,
+            'ok_py_generated': True,
+        }
+        clear_keys = ['error']  # 清除之前可能的失败记录
+
+    _print_diff_report(diff, decompile_status=status)
+    _update_index_entry(pyc_path, fields, clear_keys=clear_keys)
     return 0
 
 
