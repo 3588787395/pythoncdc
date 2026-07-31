@@ -281,7 +281,7 @@
   - [x] R14-11 累计成功率 ≥ 上一轮（R13 30 verified 285/431=66.01% → R14 31 verified 290/437=66.36%，本 pyc +5 matched，单调递增）
   - [x] R14-12 N/A（本 pyc 未达 100%，未生成新 OK.py；toolsOK.py 由 single 命令刷新，编译通过）
   - [x] R14-13 pyc_index.json 已更新（tools partial/0.8333/ok_py=True/round=14）
-  - [x] R14-14 commit `rcm-r14:`
+  - [x] R14-14 commit + push `rcm-r14:`（commit 869e2e6，push 到 origin/main 成功）
   - 残留：get_qry_date 1 mismatch（NOP 行标记噪声 / Pattern R，非语义缺陷，不可修复）/ 跨轮残留 T3/T2/A2/B/C/E/F/M2/G3/R 不变
 - [ ] R14+ 持续直到所有 pyc `decompile_status = ok`
 
