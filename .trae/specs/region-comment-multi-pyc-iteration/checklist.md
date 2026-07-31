@@ -298,7 +298,7 @@
   - [x] R15-11 累计成功率 ≥ 上一轮（R14 31 verified 290/437=66.36% → R15 32 verified 294/443=66.37%，本 pyc +1 matched，单调递增）
   - [x] R15-12 N/A（本 pyc 未达 100%，未生成新 OK.py；trade_scheduleOK.py 由 single 命令刷新，编译通过）
   - [x] R15-13 pyc_index.json 已更新（trade_schedule partial/0.6667/ok_py=True/round=15）
-  - [x] R15-14 commit + push `rcm-r15:`
+  - [x] R15-14 commit + push `rcm-r15:`（commit d4c1d1b，push 到 origin/main 成功 83c53de..d4c1d1b）
   - 残留：is_stock/future_trade_time_now 2 mismatch（BOOLOP-in-return 模式：chained-compare + BoolOp OR 短路在 return 上下文被误分解为 if+pass，根因较深留待后续轮次）/ 跨轮残留 T3/T2/A2/B/C/E/F/M2/G3/R 不变
 - [x] R16 通用清单全部通过（取 pyc #11: IQCommon/strategy/common.pyc，新 pyc 轮询，pending 优先）
   - [x] R16-0 该轮取的 pyc 文件路径已记录（IQCommon/strategy/common.pyc，decompile_status=pending→ok）
@@ -315,7 +315,7 @@
   - [x] R16-11 累计成功率 ≥ 上一轮（R15 33 verified 299/449=66.59% → R16 34 verified 302/452=66.81%，本 pyc +3 matched，单调递增）
   - [x] R16-12 本 pyc 达 100%，commonOK.py 由 single 命令生成（未手工编辑）
   - [x] R16-13 pyc_index.json 已更新（ok/1.0/ok_py=True/round=16）
-  - [x] R16-14 commit `rcm-r16:`（LOCAL commit 12a796d — push 失败网络连接故障 github.com:443 不可达，push-pending，3 次重试均失败）
+  - [x] R16-14 commit `rcm-r16:`（LOCAL commit f19a571 — push 失败网络连接故障 github.com:443 不可达，push-pending，4 次重试均失败；待网络恢复后执行 `git push <remote-url> main`）
   - 残留：无新增；跨轮残留 Pattern T3/T2/A2/B/C/E/F/M2/G3/R 及 R15 BOOLOP-in-return 不变
 - [ ] R15+ 持续直到所有 pyc `decompile_status = ok`
 
