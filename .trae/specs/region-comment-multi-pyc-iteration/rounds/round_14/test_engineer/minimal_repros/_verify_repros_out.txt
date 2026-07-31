@@ -1,0 +1,15 @@
+﻿Found 12 repros
+  repro_01_gqd_curr_nested_if_in_else.py                       DEFECT-REPRO   2/3 matched, 36 diffs, fns=['get_qry_date_curr']
+  repro_02_gqd_pre_nested_if_in_else.py                        DEFECT-REPRO   2/3 matched, 52 diffs, fns=['get_qry_date_pre']
+  repro_03_nested_if_in_else_minimal.py                        DEFECT-REPRO   1/2 matched, 21 diffs, fns=['nested_if_in_else']
+  repro_04_nested_if_in_else_with_return.py                    DEFECT-REPRO   1/2 matched, 32 diffs, fns=['nested_if_inner']
+  repro_05_gqd_full_mirror.py                                  DEFECT-REPRO   2/3 matched, 180 diffs, fns=['get_qry_date']
+  repro_06_nested_if_in_else_isinstance.py                     DEFECT-REPRO   1/2 matched, 25 diffs, fns=['nested_isinstance']
+  repro_07_nested_if_in_else_with_call.py                      DEFECT-REPRO   1/2 matched, 35 diffs, fns=['nested_call_branch']
+  repro_08_isVaildDate_shared_return.py                        NO-DEFECT      2/2 matched
+  repro_09_isVaildDate_variant.py                              NO-DEFECT      4/4 matched
+  repro_10_endswith_simple_elif.py                             NO-DEFECT      2/2 matched
+  repro_11_decimal_round_try_except.py                         NO-DEFECT      2/2 matched
+  repro_12_date_str_type_change_simple.py                      NO-DEFECT      2/2 matched
+
+Summary: 7 DEFECT-REPRO, 5 NO-DEFECT, 0 ERROR

@@ -8702,6 +8702,69 @@ AST 映射规则:
                             or _r23n18_cs_region.region_type.name == 'BASIC'):
                         _r23n18_partial_merge_block = _r23n18_cs
                         break
+        # [R14 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（入口引用语义）：
+        # 当 IF_ELIF_CHAIN 的 then_blocks 包含某嵌套 IF 区域（IF_THEN_ELSE 或
+        # IF_ELIF_CHAIN）的 merge_block 时，该 merge_block 是嵌套 IF 与外层
+        # IF_ELIF_CHAIN 共享的尾随语句块（如 tools.pyc isVaildDate 中
+        # `return True` 块 182：内层 if/else 的 JUMP_FORWARD 与外层 elif/else
+        # 的 fall-through 均指向该块）。原实现将 merge_block 作为 then_blocks
+        # 的最后一个块，由 _if_generate_then_branch 当作 then-branch 的尾随语句
+        # 生成，导致 `return True` 被错误地放在 if-branch 内部，而非
+        # if/elif/else 链之后。修复：检测共享 merge_block，从 then_blocks 中
+        # 暂时移除，待 if/elif/else 组装完成后作为 post-if 尾随语句生成。
+        # 算法依据：
+        #   - 原则 2：merge_block 唯一归属于外层 IF_ELIF_CHAIN（作为 post-if
+        #     尾随语句），不归属于 then-branch
+        #   - 原则 4：外层 IF_ELIF_CHAIN 通过 post-if 尾随语句引用 merge_block
+        #     入口；then-branch 通过嵌套 IF 子区域入口引用内层 if/else
+        _r14_shared_post_if_blocks: List[Any] = []
+        _r14_then_blocks_set = set(region.then_blocks) if region.then_blocks else set()
+        if _r14_then_blocks_set:
+            for _r14_r in self.regions:
+                if not isinstance(_r14_r, IfRegion):
+                    continue
+                if _r14_r is region:
+                    continue
+                if _r14_r.entry is None or _r14_r.entry not in _r14_then_blocks_set:
+                    continue
+                _r14_mb = getattr(_r14_r, 'merge_block', None)
+                if _r14_mb is None or _r14_mb not in _r14_then_blocks_set:
+                    continue
+                # merge_block 必须不在当前 region 的 else_blocks 中（else 分支块）
+                if _r14_mb in (region.else_blocks or []):
+                    continue
+                # merge_block 必须不是当前 region 的 merge_block（由 R23-N10 处理）
+                if _r14_mb is region.merge_block:
+                    continue
+                # merge_block 必须不在任何嵌套结构区域（Try/With/Match，其 entry
+                # 在当前 IF 的 then/else 分支内）的 blocks 中（由结构区域负责生成）。
+                # 注意：祖先结构区域（如外层 try 包含整个 if/elif/else）的 blocks
+                # 包含 merge_block 是正常的——此时 merge_block 仍由当前 IF 负责
+                # 生成（作为 post-if 尾随语句），不跳过。
+                _r14_mb_in_structural = False
+                _r14_else_blocks_set_r14 = set(region.else_blocks or [])
+                for _r14_nr in self.region_analyzer.regions:
+                    if _r14_nr is region:
+                        continue
+                    if not isinstance(_r14_nr, (TryExceptRegion, WithRegion, MatchRegion)):
+                        continue
+                    if _r14_mb in _r14_nr.blocks:
+                        _r14_nr_entry = getattr(_r14_nr, 'entry', None)
+                        if (_r14_nr_entry is not None
+                                and (_r14_nr_entry in _r14_then_blocks_set
+                                     or _r14_nr_entry in _r14_else_blocks_set_r14)):
+                            _r14_mb_in_structural = True
+                            break
+                if _r14_mb_in_structural:
+                    continue
+                if _r14_mb not in _r14_shared_post_if_blocks:
+                    _r14_shared_post_if_blocks.append(_r14_mb)
+        if _r14_shared_post_if_blocks:
+            _r14_original_then_blocks = region.then_blocks
+            region.then_blocks = [b for b in region.then_blocks
+                                  if b not in set(_r14_shared_post_if_blocks)]
+        else:
+            _r14_original_then_blocks = None
         then_stmts = self._if_generate_then_branch(region)
         elif_part = self._if_generate_elif_chain(region)
         # [R23-N18] 部分合并模式：将子合并块语句追加到 elif/else 链末尾
@@ -8879,6 +8942,24 @@ AST 映射规则:
                         result = result + _post_if_stmts_elif
                     else:
                         result = [result] + _post_if_stmts_elif
+        # [R14 fix] 生成共享 merge_block 作为 post-if 尾随语句。
+        # 此时 if/elif/else 已组装完成（含 trailing_return 提升），共享
+        # merge_block 的语句（如 `return True`）应作为 if/elif/else 之后的
+        # 尾随语句生成，符合源码语义（`return True` 在 if/elif/else 链之后，
+        # 由所有分支 JUMP_FORWARD/fall-through 共享）。
+        if _r14_shared_post_if_blocks:
+            if _r14_original_then_blocks is not None:
+                region.then_blocks = _r14_original_then_blocks
+            _r14_post_if_stmts = self._process_if_blocks(
+                _r14_shared_post_if_blocks, region, branch='then')
+            for _r14_mb in _r14_shared_post_if_blocks:
+                self.generated_blocks.add(_r14_mb)
+                self.generated_offsets.add(_r14_mb.start_offset)
+            if _r14_post_if_stmts:
+                if isinstance(result, list):
+                    result = result + _r14_post_if_stmts
+                else:
+                    result = [result] + _r14_post_if_stmts
         return result
 
     def _build_chained_compare_from_region_data(self, region: IfRegion) -> Optional[Dict[str, Any]]:

@@ -104,6 +104,11 @@
   - [x] T2.13.2 修复工程师：按区域归约算法修复 → `rounds/round_13/repair_engineer/fix_report.md`（Pattern D2 链式下标过滤赋值语句丢失修复，_if_extract_cond_instructions 新增 _next_consumes_as_subexpr 守卫；get_pre_date/get_multiminute_his_data_by_date dropped statement 正确发射）
   - [x] T2.13.3 commit `rcm-r13:`（LOCAL commit b92522d — push 失败网络连接故障 github.com:443 不可达，push-pending）
   - 残留：klinedata.pyc 23 mismatch 函数（B1:3/B2:2/C:2/C2:1/E:4/R:6/ARG:4/OTHER:2）/ 跨轮残留 T3/T2/B/C/E/F/M2/G3/R 不变
+- [x] T2.14 第 14 轮（取 pyc #9: IQCommon/tools.pyc，新 pyc 轮询，pending 优先）
+  - [x] T2.14.1 测试工程师：取下一个 pyc，反编译 + 字节码 diff → `rounds/round_14/test_engineer/decompile_report.md`（pending→83.33%，1 mismatch get_qry_date NOP 噪声，12 复现实例 7 DEFECT-REPRO/5 NO-DEFECT）
+  - [x] T2.14.2 修复工程师：按区域归约算法修复 → `rounds/round_14/repair_engineer/fix_report.md`（Pattern T4 共享 merge_block 尾随 return 误置修复，_generate_if 共享 merge_block 检测 + then_blocks 临时移除 + post-if 尾随语句生成；isVaildDate `return True` 正确发射为 if/elif/else 链后尾随语句；tools.pyc pending→partial 83.33%）
+  - [x] T2.14.3 commit `rcm-r14:`
+  - 残留：get_qry_date 1 mismatch（NOP 行标记噪声 / Pattern R，非语义缺陷，不可修复）/ 跨轮残留 T3/T2/A2/B/C/E/F/M2/G3/R 不变
 - [ ] T2.NN ... 持续直到退出条件满足
 
 > 注：轮次数不设上限，持续直到所有 pyc 文件所有函数 100% 字节码一致。

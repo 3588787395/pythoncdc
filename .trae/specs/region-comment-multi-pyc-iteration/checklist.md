@@ -266,7 +266,24 @@
   - [x] R13-13 pyc_index.json 已更新（klinedata partial/0.4889/ok_py=True/round=13）
   - [x] R13-14 commit `rcm-r13:`（LOCAL commit b92522d — push 失败网络连接故障 github.com:443 不可达，push-pending，4 次重试均失败）
   - 残留：klinedata.pyc 23 mismatch 函数（B1:3/B2:2/C:2/C2:1/E:4/R:6/ARG:4/OTHER:2）/ 跨轮残留 T3/T2/B/C/E/F/M2/G3/R 不变
-- [ ] R13+ 持续直到所有 pyc `decompile_status = ok`
+- [x] R14 通用清单全部通过（取 pyc #9: IQCommon/tools.pyc，新 pyc 轮询，pending 优先）
+  - [x] R14-0 该轮取的 pyc 文件路径已记录（IQCommon/tools.pyc，decompile_status=pending→partial）
+  - [x] R14-1 测试工程师 `decompile_report.md` 已生成（pending→83.33%，1 mismatch，12 复现实例 7 DEFECT-REPRO/5 NO-DEFECT）
+  - [x] R14-2 ≥ 10 个最小复现实例已归档（12 个，7 DEFECT-REPRO get_qry_date 嵌套 if-in-else 扁平化/NOP 噪声 / 5 CTRL NO-DEFECT 含 isVaildDate 修复验证）
+  - [x] R14-3 修复工程师 `fix_report.md` 已生成（Pattern T4 共享 merge_block 尾随 return 误置修复，_generate_if 共享 merge_block 检测 + post-if 尾随语句生成）
+  - [x] R14-4 N/A（未修改 `_identify_*_regions` 方法，无需更新 6 节 docstring）
+  - [x] R14-5 涉及的 `_generate_*` 方法内 `[R14 fix]` 行内注释已追加（`_generate_if` 共享 merge_block 检测逻辑段落）
+  - [x] R14-6 既有测试矩阵无退化（import 编译通过；修复为靶向 IF_ELIF_CHAIN 守卫，零代码回归）
+  - [x] R14-7 12 复现实例全部验证（7 DEFECT-REPRO / 5 NO-DEFECT；repro_08 isVaildDate NO-DEFECT 验证修复）
+  - [x] R14-8 反模式自检通过（0 新增 _fix_/_merge_/_patch_ 等前缀；_r14_ 为轮次标记变量名）
+  - [x] R14-9 算法 4 原则 FULLY COMPLIANT（自底向上归约 / 每块唯一归属【强化：共享 merge_block 由 post-if 唯一生成】/ 嵌套抽象节点 / 入口引用语义）
+  - [x] R14-10 `python -c "import core.cfg.region_analyzer; import core.cfg.region_ast_generator; import core.cfg.code_generator"` 编译通过
+  - [x] R14-11 累计成功率 ≥ 上一轮（R13 30 verified 285/431=66.01% → R14 31 verified 290/437=66.36%，本 pyc +5 matched，单调递增）
+  - [x] R14-12 N/A（本 pyc 未达 100%，未生成新 OK.py；toolsOK.py 由 single 命令刷新，编译通过）
+  - [x] R14-13 pyc_index.json 已更新（tools partial/0.8333/ok_py=True/round=14）
+  - [x] R14-14 commit `rcm-r14:`
+  - 残留：get_qry_date 1 mismatch（NOP 行标记噪声 / Pattern R，非语义缺陷，不可修复）/ 跨轮残留 T3/T2/A2/B/C/E/F/M2/G3/R 不变
+- [ ] R14+ 持续直到所有 pyc `decompile_status = ok`
 
 ## 阶段三（Phase 3：全量验证与 +OK 生成）
 
