@@ -300,6 +300,23 @@
   - [x] R15-13 pyc_index.json 已更新（trade_schedule partial/0.6667/ok_py=True/round=15）
   - [x] R15-14 commit + push `rcm-r15:`
   - 残留：is_stock/future_trade_time_now 2 mismatch（BOOLOP-in-return 模式：chained-compare + BoolOp OR 短路在 return 上下文被误分解为 if+pass，根因较深留待后续轮次）/ 跨轮残留 T3/T2/A2/B/C/E/F/M2/G3/R 不变
+- [x] R16 通用清单全部通过（取 pyc #11: IQCommon/strategy/common.pyc，新 pyc 轮询，pending 优先）
+  - [x] R16-0 该轮取的 pyc 文件路径已记录（IQCommon/strategy/common.pyc，decompile_status=pending→ok）
+  - [x] R16-1 测试工程师 `decompile_report.md` 已生成（pending→100%，0 mismatches，10 控制组复现实例）
+  - [x] R16-2 ≥ 10 个最小复现实例已归档（10 个控制组，全部 NO-DEFECT；pyc 100% 一致，豁免 DEFECT-REPRO 要求）
+  - [x] R16-3 修复工程师无修复（无需修复，pyc 首次验证即 100%）
+  - [x] R16-4 N/A（未修改 `_identify_*_regions` 方法，无需更新 docstring）
+  - [x] R16-5 N/A（未修改 `_generate_*` 方法，无需更新 docstring）
+  - [x] R16-6 既有测试矩阵无退化（未修改代码，R15 基线不受影响）
+  - [x] R16-7 10 复现实例全部验证（10/10 NO-DEFECT）
+  - [x] R16-8 反模式自检通过（0 新增 _fix_/_merge_/_patch_ 等前缀，未修改代码）
+  - [x] R16-9 算法 4 原则 FULLY COMPLIANT（未修改代码，与 R15 一致）
+  - [x] R16-10 `python -c "import core.cfg.region_analyzer; import core.cfg.region_ast_generator; import core.cfg.code_generator"` 编译通过（R15 已验证，本轮未修改）
+  - [x] R16-11 累计成功率 ≥ 上一轮（R15 33 verified 299/449=66.59% → R16 34 verified 302/452=66.81%，本 pyc +3 matched，单调递增）
+  - [x] R16-12 本 pyc 达 100%，commonOK.py 由 single 命令生成（未手工编辑）
+  - [x] R16-13 pyc_index.json 已更新（ok/1.0/ok_py=True/round=16）
+  - [x] R16-14 commit `rcm-r16:`（LOCAL commit 12a796d — push 失败网络连接故障 github.com:443 不可达，push-pending，3 次重试均失败）
+  - 残留：无新增；跨轮残留 Pattern T3/T2/A2/B/C/E/F/M2/G3/R 及 R15 BOOLOP-in-return 不变
 - [ ] R15+ 持续直到所有 pyc `decompile_status = ok`
 
 ## 阶段三（Phase 3：全量验证与 +OK 生成）

@@ -114,6 +114,11 @@
   - [x] T2.15.2 修复工程师：按区域归约算法修复 → `rounds/round_15/repair_engineer/fix_report.md`（continue-sink 误并 else 分支修复，_identify_conditional_regions then_succ JUMP_BACKWARD→包围循环 header_block 检测 + merge=else_succ 创建 IF_THEN；get_trading_schedule 内层 for 循环恢复为 post-if 语句；trade_schedule.pyc 诊断 50%→partial 66.67%）
   - [x] T2.15.3 commit `rcm-r15:`
   - 残留：is_stock/future_trade_time_now 2 mismatch（BOOLOP-in-return 模式，根因较深留待后续轮次）/ 跨轮残留 T3/T2/A2/B/C/E/F/M2/G3/R 不变
+- [x] T2.16 第 16 轮（取 pyc #11: IQCommon/strategy/common.pyc，新 pyc 轮询，pending 优先）
+  - [x] T2.16.1 测试工程师：取下一个 pyc，反编译 + 字节码 diff → `rounds/round_16/test_engineer/decompile_report.md`（pending→100%，0 mismatch，10 控制组复现实例全部 NO-DEFECT）
+  - [x] T2.16.2 修复工程师：无需修复（pyc 首次验证即 100%）→ 无 fix_report（pyc 100% 一致，豁免）
+  - [x] T2.16.3 commit `rcm-r16:`（LOCAL commit 12a796d — push 失败网络故障 github.com:443 不可达，push-pending，3 次重试均失败）
+  - 残留：无新增；跨轮残留 T3/T2/A2/B/C/E/F/M2/G3/R 及 R15 BOOLOP-in-return 不变
 - [ ] T2.NN ... 持续直到退出条件满足
 
 > 注：轮次数不设上限，持续直到所有 pyc 文件所有函数 100% 字节码一致。
