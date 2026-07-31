@@ -289,6 +289,21 @@ class RegionASTGenerator:
                     _match_ast = self._generate_match(_wildcard_match)
                     if _match_ast:
                         ast_nodes.append(_match_ast)
+                # [R6-13/14/15 fix] 区域归约算法原则 4（父引用子入口）+
+                # 原则 2（每块唯一归属）：while_true 循环前的 init 块（如
+                # `n = 0`）是 header 的前驱但非 condition_block（while_true
+                # 无条件块）。原实现直接标记 generated 并 pass，丢弃 init
+                # 语句。修复：仅当 while_true 且 entry_block 非 condition_block
+                # 且含 STORE 指令（init 特征）时，提取其语句作为 pre_stmts
+                # 发射，再标记 generated。其他情况（for_iter_setup、条件链
+                # 前驱等）由各自区域生成器统一处理。
+                if (entry_region.is_while_true
+                        and entry_region.condition_block is not entry_block
+                        and any(i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
+                                for i in entry_block.instructions)):
+                    _loop_init_stmts = self._generate_block_statements(entry_block)
+                    if _loop_init_stmts:
+                        ast_nodes.extend(_loop_init_stmts)
                 self.generated_blocks.add(entry_block)
                 pass
             elif isinstance(entry_region, IfRegion) and entry_region.condition_block == entry_block:
@@ -4113,7 +4128,16 @@ AST 映射规则:
             boolop_expr = self._build_boolop_expression(boolop_for_while)
             if boolop_expr:
                 condition = boolop_expr
-                pre_stmts = []
+                # [R06 fix] 区域归约算法原则 3（嵌套即抽象节点）+ 原则 4
+                # （父引用子入口）：BoolOpRegion 是 while 条件的内部子区域，
+                # 循环 test 引用其 entry（=cond_block）作为抽象表达式节点。
+                # cond_block 中位于 BoolOp 表达式之前的 STORE 指令是前置初始化
+                # 语句（如 ``a = 0``），不属于 BoolOp 表达式 —— 上方 step 5
+                # （cond_block != header 分支，L3811）已通过 _has_prev_copy 守卫
+                # 过滤 walrus（COPY+STORE 留栈），仅提取纯初始化赋值。原实现
+                # ``pre_stmts = []`` 清空了这些初始化，导致 ``a = 0`` 等前置
+                # 赋值丢失（R6-01/02/03/04/05/06）。保留 step 5 提取的前置语句，
+                # 仅追加非 cond_block 链块的赋值（下方循环），避免双重提取。
                 loop_blocks = set(region.blocks)
                 for b in boolop_for_while.blocks:
                     if b not in loop_blocks:
@@ -4674,6 +4698,15 @@ AST 映射规则:
                 if bb_last and bb_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE') and bb_last.argval is not None:
                     _bb_target = self.cfg.get_block_by_offset(bb_last.argval)
                     if _bb_target and _bb_target not in child.blocks:
+                        # [R6-11/12 fix] The break target itself being outside
+                        # the outer loop (e.g., a terminal return-None block at
+                        # module/function end) is a break-to-outer. The prior
+                        # successor-based check failed for terminal targets with
+                        # no successors (``any(...)`` over an empty list is
+                        # False), dropping the outer ``break``.
+                        if _bb_target not in region.blocks:
+                            _child_has_break_to_outer = True
+                            break
                         _tgt_succs = list(_bb_target.successors)
                         if any(s not in region.blocks for s in _tgt_succs):
                             _child_has_break_to_outer = True
@@ -7369,7 +7402,25 @@ AST 映射规则:
         """处理自然回边块（条件重检查），返回是否已处理"""
         _nbe_last = block.get_last_instruction()
         if not (_nbe_last and _nbe_last.opname in BACKWARD_CONDITIONAL_JUMP_OPS):
-            return False
+            # [R6-11/12 fix] Algorithm 4 Principle 3 (nesting = abstract node):
+            # A for-loop natural back edge is a pure unconditional JUMP_BACKWARD
+            # to the FOR_ITER header — the implicit loop iteration, NOT an
+            # explicit ``continue``. Without this branch, the pure JUMP_BACKWARD
+            # block falls through to ``_if_generate_branch_stmts`` which emits a
+            # spurious ``continue`` inside the for body. Only skip PURE back edge
+            # blocks (no meaningful instructions); blocks with increments
+            # (while-loop stores) fall through to normal processing to preserve
+            # their statements.
+            if not (_nbe_last and _nbe_last.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')):
+                return False
+            _nbe_meaningful = [i for i in block.instructions
+                               if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP')
+                               and i.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')]
+            if _nbe_meaningful:
+                return False
+            self.generated_blocks.add(block)
+            self.generated_offsets.add(block.start_offset)
+            return True
         _nbe_has_store = any(i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
                             for i in block.instructions)
         if _nbe_has_store:
@@ -21682,6 +21733,46 @@ AST 映射规则:
                 elif (chain_op == 'or' and 'FALSE' in _jump_op
                       and chain_idx < len(op_chain) - 1):
                     sub_expr = {'type': 'UnaryOp', 'op': 'not', 'operand': sub_expr}
+                elif (chain_op == 'or' and 'TRUE' in _jump_op
+                      and chain_idx == len(op_chain) - 1
+                      and last_instr.opname in CONDITIONAL_JUMP_OPS):
+                    # [R6-04/05 fix] OR last block with IF_TRUE → exit
+                    # indicates implicit ``not`` on the last operand.
+                    # CPython inverts the jump: ``X or not Y`` compiles the
+                    # last block as ``LOAD Y; POP_JUMP_IF_TRUE exit`` (Y true
+                    # → ``not Y`` false → OR's last operand false → exit).
+                    # Normal OR last block has IF_FALSE → exit (false → exit);
+                    # IF_TRUE → exit means the operand is ``not Y``. This
+                    # mirrors the existing AND-IF_TRUE rule (line above) for
+                    # the OR-last-block position. Algorithm 4 Principle 4:
+                    # the loop's test references the BoolOpRegion's entry as
+                    # the abstract expression; the last operand's implicit
+                    # ``not`` must be reconstructed verbatim (no De Morgan
+                    # flip), honoring Principle 3 (nesting = abstract node).
+                    #
+                    # Guard 1: only for CONDITIONAL jumps (POP_JUMP_IF_*),
+                    # not SHORT_CIRCUIT (JUMP_IF_TRUE_OR_POP is the normal
+                    # ``or`` short-circuit in expression BoolOps, not ``not``).
+                    #
+                    # Guard 2: don't fire if the FIRST block has IF_TRUE with
+                    # chain_op 'or', which indicates ``not (X or Y)`` in an IF
+                    # region where the op_type fix wasn't applied (both blocks
+                    # IF_TRUE → exit). In that case the entire OR is negated,
+                    # not just the last operand; firing here would produce
+                    # ``X or not Y`` instead of ``not X and not Y`` (De
+                    # Morgan). For while loops, the op_type fix corrects the
+                    # first block to 'and', so this guard doesn't block the
+                    # while-loop ``not (X or Y)`` case (which needs ``not`` on
+                    # both operands via the existing AND rule + this rule).
+                    _first_block, _first_op = op_chain[0]
+                    _first_last = _first_block.get_last_instruction()
+                    _is_not_paren_or_in_if = (
+                        _first_last is not None
+                        and 'TRUE' in _first_last.opname
+                        and _first_op == 'or'
+                    )
+                    if not _is_not_paren_or_in_if:
+                        sub_expr = {'type': 'UnaryOp', 'op': 'not', 'operand': sub_expr}
             # Group transition for sub_expr
             if sub_expr is not None:
                 if current_group_op is None:

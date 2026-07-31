@@ -3409,6 +3409,13 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
             # implicit function return. Unique block ownership: the exit belongs to LoopRegion.
             # Only include trivial exit blocks (LOAD_CONST None; RETURN_VALUE) that are implicit
             # returns — non-trivial exits are real statements and stay standalone.
+            # [R6-10 fix] 区域归约算法原则 2（每块唯一归属）：原实现使用
+            # _check_block_has_trailing_return_none，该函数仅检查块尾的
+            # LOAD_CONST None+RETURN_VALUE，忽略块前段的实际语句（如
+            # `print('end')`）。这导致含 post-loop 语句的退出块被错误吸收
+            # 进 LoopRegion，post-loop 语句被丢弃。改用 _is_trivial_return_block：
+            # 仅当退出块整体为隐式 return None（无其他有语义指令）时才吸收，
+            # 含真实语句的退出块保持独立，由父序列区域生成（父引用子入口）。
             if back_edge_block:
                 for _be_succ in back_edge_block.successors:
                     if _be_succ in body or _be_succ == header:
@@ -3417,7 +3424,7 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                         continue
                     if _be_succ == condition_block:
                         continue
-                    if self._check_block_has_trailing_return_none(_be_succ):
+                    if self._is_trivial_return_block(_be_succ):
                         region_blocks.add(_be_succ)
             ordered_body = sorted(body, key=lambda b: b.start_offset)
             entry = condition_block or header
@@ -3706,7 +3713,33 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
             parent_body = set()
             for pl in parent_loops:
                 parent_body.update(pl.body_blocks)
-            spurious = [eb for eb in lr.else_blocks if eb in parent_body]
+            # [R6-11/12 fix] Algorithm 4 Principle 2 (unique ownership) +
+            # Principle 3 (nesting = abstract node): an else_block that is an
+            # explicit ``continue`` targeting a parent loop's header (e.g.,
+            # ``for ... else: continue`` where continue jumps back to the outer
+            # for header) is NOT spurious. It belongs to the child loop's else
+            # clause (the abstract node), not the parent's body. The parent
+            # loop references the child loop's entry as the abstract node; the
+            # continue inside the else is part of that abstract node. Removing
+            # it would drop the ``else: continue`` clause (R6-11/12) and the
+            # outer ``break`` that the AST generator synthesizes from the
+            # child break-to-outer pattern.
+            _r6_parent_headers = set()
+            for pl in parent_loops:
+                if pl.header_block is not None:
+                    _r6_parent_headers.add(pl.header_block)
+            spurious = []
+            for eb in lr.else_blocks:
+                if eb not in parent_body:
+                    continue
+                eb_last = eb.get_last_instruction()
+                if (eb_last is not None
+                        and eb_last.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                        and eb_last.argval is not None):
+                    _eb_target = self.cfg.get_block_by_offset(eb_last.argval)
+                    if _eb_target in _r6_parent_headers:
+                        continue
+                spurious.append(eb)
             if not spurious:
                 continue
             for eb in spurious:
@@ -17010,9 +17043,14 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
         for region in self._filter_regions(existing_regions, LoopRegion):
             if region.condition_block is None:
                 continue
-            if any(region.condition_block in r.blocks
-                   for r in self._filter_regions(boolop_regions, BoolOpRegion)):
-                continue
+            # [R6-02..06 fix] 区域归约算法原则 1（自底向上归约）+ 原则 3
+            # （嵌套即抽象节点）+ 原则 4（父引用子入口）：原实现在
+            # condition_block 已被通用 boolop 检测占用时直接 continue，
+            # 跳过 while 条件链检测。但通用检测仅捕获纯条件块（无 STORE），
+            # 遗漏含 init+首操作数的块（如 ``a=0;b=0;a<1`` 块），导致
+            # BoolOpRegion 不完整（缺首操作数），while test 重建丢项。
+            # 修复：不再 continue，而是运行 while 条件链检测；若新链比已
+            # 有 BoolOpRegion 更长（覆盖更多操作数），替换已有区域。
             loop_cond = region.condition_block
             chain = self._detect_while_condition_boolop_chain(loop_cond, region)
             if chain and len(chain) >= 2:
@@ -17024,8 +17062,16 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     for _eb in _extra_blocks:
                         boolop_region.blocks.discard(_eb)
                     _to_remove_br = []
+                    _new_br_blocks = set(boolop_region.blocks)
                     for _bri, _br in enumerate(boolop_regions):
-                        if _br.entry == boolop_region.entry and len(_br.op_chain) < len(boolop_region.op_chain):
+                        # [R6-02..06 fix] 替换条件扩展：原仅按相同 entry +
+                        # 更短 op_chain 替换。新增：已有 BoolOpRegion 的
+                        # blocks 是新 BoolOpRegion blocks 的子集时也替换
+                        # （覆盖通用检测创建的不完整区域）。
+                        _old_br_blocks = set(_br.blocks)
+                        _is_subset = _old_br_blocks <= _new_br_blocks and _old_br_blocks != _new_br_blocks
+                        if ((_br.entry == boolop_region.entry and len(_br.op_chain) < len(boolop_region.op_chain))
+                                or _is_subset):
                             _to_remove_br.append(_bri)
                     for _bri in sorted(_to_remove_br, reverse=True):
                         _old_br = boolop_regions.pop(_bri)
@@ -17211,7 +17257,16 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 # 只有当 predecessor 位于循环内部时，STORE_FAST 才可能
                 # 表示循环体中的赋值语句，此时应中断链。
                 # [Phase 3 adv11] 但海象 STORE 不算循环体赋值，仍允许扩展。
-                if pred in loop.blocks and _pred_non_walrus_store:
+                # [R6-02..06 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4
+                # （父引用子入口）：原判据 ``pred in loop.blocks`` 使用区域
+                # blocks 集合，该集合含被吸收的条件链前驱块（如 ``a=0;b=0;
+                # a<1`` 块，通过 Step 9 反向回溯加入 region_blocks）。这些
+                # 前驱块虽在 region_blocks 中，但语义上是循环前 init+条件
+                # 首操作数，非循环体赋值。改用 ``loop.body_blocks``：仅当
+                # 前驱真在循环体内（会被回边重访）时，STORE 才是 body 赋值，
+                # 中断链。这使得 ``while a<1 and b<1 and c<1:`` 的首操作数
+                # 块（含 a=0 等 init）正确纳入 boolop 链，避免首操作数丢失。
+                if pred in set(loop.body_blocks) and _pred_non_walrus_store:
                     break
             pred_succs = list(pred.conditional_successors)
             # [R1-06 fix] 区域归约算法原则 2（每块唯一归属）：标记前驱是否为
@@ -17478,6 +17533,34 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
         if not last or last.opname not in BOOLOP_CHAIN_JUMPS:
             return None
         op_type = 'and' if 'FALSE' in last.opname else 'or'
+        # [R6-03/04/05 fix] Algorithm 4 Principle 4 (parent references child
+        # entry): the while-loop's test references the BoolOpRegion's entry
+        # (cond_block) as the abstract expression node. The op_type of the
+        # first chain block must reflect the true BoolOp operator, not the
+        # raw jump direction. CPython inverts the jump direction for implicit
+        # ``not`` on the first operand: ``not X or Y`` compiles as
+        # ``LOAD X; POP_JUMP_IF_FALSE body`` (IF_FALSE because ``not X`` is
+        # true when X is false → OR short-circuit to body), and
+        # ``not X and Y`` compiles as ``LOAD X; POP_JUMP_IF_TRUE exit``
+        # (IF_TRUE because ``not X`` is false when X is true → AND short-
+        # circuit to exit). The direction-based detection misclassifies
+        # these as 'and' / 'or' respectively. Use the jump target to
+        # determine the true op_type: jump to body (header or body_blocks)
+        # → 'or' (true short-circuits to body); jump to exit (outside loop)
+        # → 'and' (false short-circuits to exit). Only override when the
+        # direction-based detection is clearly wrong (IF_FALSE→body or
+        # IF_TRUE→exit); leave normal cases (IF_FALSE→exit, IF_TRUE→body)
+        # to the direction-based detection.
+        _first_jt = self.cfg.get_block_by_offset(last.argval) if last.argval is not None else None
+        if _first_jt is not None:
+            _jt_is_body = (_first_jt == loop.header_block or _first_jt in loop.body_blocks)
+            _jt_is_exit = (_first_jt not in loop.blocks)
+            if _jt_is_body and 'FALSE' in last.opname:
+                # IF_FALSE → body: OR with implicit ``not`` on first operand.
+                op_type = 'or'
+            elif _jt_is_exit and 'TRUE' in last.opname:
+                # IF_TRUE → exit: AND with implicit ``not`` on first operand.
+                op_type = 'and'
         chain.append((cond_block, op_type))
         visited = {cond_block.start_offset}
         current = cond_block
