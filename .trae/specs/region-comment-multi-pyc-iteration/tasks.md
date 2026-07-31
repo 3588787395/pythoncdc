@@ -109,6 +109,11 @@
   - [x] T2.14.2 修复工程师：按区域归约算法修复 → `rounds/round_14/repair_engineer/fix_report.md`（Pattern T4 共享 merge_block 尾随 return 误置修复，_generate_if 共享 merge_block 检测 + then_blocks 临时移除 + post-if 尾随语句生成；isVaildDate `return True` 正确发射为 if/elif/else 链后尾随语句；tools.pyc pending→partial 83.33%）
   - [x] T2.14.3 commit `rcm-r14:`
   - 残留：get_qry_date 1 mismatch（NOP 行标记噪声 / Pattern R，非语义缺陷，不可修复）/ 跨轮残留 T3/T2/A2/B/C/E/F/M2/G3/R 不变
+- [x] T2.15 第 15 轮（取 pyc #10: IQCommon/trade_schedule.pyc，新 pyc 轮询，pending 优先）
+  - [x] T2.15.1 测试工程师：取下一个 pyc，反编译 + 字节码 diff → `rounds/round_15/test_engineer/decompile_report.md`（诊断 50%→post-fix 66.67%，2 mismatch is_stock/future BOOLOP-in-return，12 复现实例 7 DEFECT-REPRO/5 NO-DEFECT）
+  - [x] T2.15.2 修复工程师：按区域归约算法修复 → `rounds/round_15/repair_engineer/fix_report.md`（continue-sink 误并 else 分支修复，_identify_conditional_regions then_succ JUMP_BACKWARD→包围循环 header_block 检测 + merge=else_succ 创建 IF_THEN；get_trading_schedule 内层 for 循环恢复为 post-if 语句；trade_schedule.pyc 诊断 50%→partial 66.67%）
+  - [x] T2.15.3 commit `rcm-r15:`
+  - 残留：is_stock/future_trade_time_now 2 mismatch（BOOLOP-in-return 模式，根因较深留待后续轮次）/ 跨轮残留 T3/T2/A2/B/C/E/F/M2/G3/R 不变
 - [ ] T2.NN ... 持续直到退出条件满足
 
 > 注：轮次数不设上限，持续直到所有 pyc 文件所有函数 100% 字节码一致。

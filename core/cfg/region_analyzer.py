@@ -12449,6 +12449,52 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     if _r24a_in_loop_merge is not None:
                         merge = _r24a_in_loop_merge
 
+            # [R15 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（归约顺序）：
+            # 当 then_succ 以 JUMP_BACKWARD 终止、且目标为包围循环的循环头（continue
+            # 语义）时，then 分支退出当前循环迭代、永不与对侧分支在循环内汇聚，故
+            # 对侧分支（else_succ）是顺序 fall-through（if 之后的下一条循环体语句，
+            # 即 post-if 语句），merge 应为 else_succ。此判据须优先于下文 sink 回退
+            #——NCPD(continue_sink, post_if) 返回循环头（continue 目标 + 对侧分支经
+            # 循环末尾 back-edge 也回到循环头），使 merge=循环头，_collect_branch_blocks
+            # 越过 else_succ 收集循环末尾兄弟语句（如内层 for 循环），违反每块唯一
+            # 归属（兄弟语句应归属循环体作 post-if 语句）。
+            # 典型场景（get_trading_schedule）：
+            #   for s, e in trading_time:        # outer FOR_ITER @64 (loop header)
+            #       if s > 1200:                  # block 66, cond
+            #           continue                  # block 86, JUMP_BACKWARD → 64
+            #       for i in range(s+..., e+1):   # block 88 (post-if statement)
+            #           time_set.add(divmod(i, 60))
+            # NCPD(86, 88) = 64（循环头），使 else_blocks=[88,132,134]（内层 for 循环
+            # 被误并入 else 分支）。修正：检测 then_succ 是 continue sink，设 merge=
+            # else_succ=88，else_blocks 为空（entry==merge），创建 IF_THEN，block 88
+            # 作为 post-if 语句归循环体。
+            # 注：BlockRole.CONTINUE 在此阶段尚未标注（_annotate_all_roles 后置），
+            # 故直接检查指令：then_succ 末尾为 JUMP_BACKWARD(_NO_INTERRUPT) 且
+            # argval=包围循环 header_block.start_offset。镜像 L12466-12476 的 BREAK
+            # 角色判据（_r2c_then_role），扩展到 continue 语义。elif 守卫保留：else_succ
+            # 是 elif 条件块（前向条件跳转+2 条件后继）时不设 merge，让 elif 链检测
+            # 处理（如 `if b: continue / elif c:`）。
+            # 安全性：LoopRegion.get_if_branch_boundary_stop 将 header_block 加入
+            # boundary_stop（L544），故 continue 目标（循环头）在 stop 集中，
+            # _collect_branch_blocks 不会沿 JUMP_BACKWARD 回边过度收集循环体。
+            if merge is not None:
+                _r15_loop = self._find_enclosing_loop(block)
+                if _r15_loop is not None:
+                    _r15_header = getattr(_r15_loop, 'header_block', None)
+                    if _r15_header is not None:
+                        _r15_then_last = then_succ.get_last_instruction()
+                        if (_r15_then_last is not None
+                                and _r15_then_last.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                                and _r15_then_last.argval == _r15_header.start_offset):
+                            _r15_else_last = else_succ.get_last_instruction()
+                            _r15_else_is_elif = (
+                                len(else_succ.conditional_successors) == 2
+                                and _r15_else_last is not None
+                                and _r15_else_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)
+                            )
+                            if not _r15_else_is_elif:
+                                merge = else_succ
+
             if merge is None:
                 # [R2-C fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（归约顺序）：
                 # 当 then_succ/else_succ 是循环 break 块（BlockRole.BREAK/PURE_BREAK）

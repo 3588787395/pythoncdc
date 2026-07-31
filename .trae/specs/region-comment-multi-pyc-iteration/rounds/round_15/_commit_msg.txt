@@ -1,0 +1,32 @@
+rcm-r15: fix continue-sink误并else分支 (trade_schedule.pyc 50%->66.67%)
+
+R15 of region-comment-multi-pyc-iteration spec. Target pyc:
+site-packages/IQCommon/trade_schedule.pyc (6 functions).
+
+Defect: get_trading_schedule `for s,e: if s>1200: continue; for i in range(...): ...`
+— NCPD(then_succ=continue_block, else_succ=post_if) returned the enclosing loop
+header (continue target + else branch via loop back-edge both reach it), so
+_collect_branch_blocks mis-attributed the inner for-loop (post-if statement) to
+the else branch, dropping it as dead code after the continue.
+
+Region dump before: IF_THEN_ELSE entry=66 merge=64 then=[86] else=[88,132,134]
+Region dump after:  IF_THEN      entry=66 merge=88 then=[86] else=[]
+
+Fix in core/cfg/region_analyzer.py _identify_conditional_regions: when then_succ
+ends with JUMP_BACKWARD whose target is the enclosing LoopRegion.header_block
+(continue semantics), set merge=else_succ so else_blocks is empty (entry==merge),
+creating IF_THEN; the post-if statement is owned by the parent loop body.
+- elif guard preserved (else_succ is elif condition -> defer to elif detection)
+- safe: LoopRegion.get_if_branch_boundary_stop adds header_block to boundary_stop,
+  so _collect_branch_blocks stops at the continue target (no over-collection)
+- dual to R2-C BREAK handling (JUMP_FORWARD exit); R15 covers continue (JUMP_BACKWARD)
+
+Results:
+- trade_schedule.pyc: 50% (3/6) -> 66.67% (4/6), decompile_status=partial
+  fixed: get_trading_schedule (inner for-loop restored)
+  residual: is_stock/future_trade_time_now (BOOLOP-in-return, deeper root cause)
+- 12 minimal repros: 7 DEFECT-REPRO (BOOLOP-in-return residual) / 5 NO-DEFECT
+  (repro_08-10 validate R15 fix; repro_11-12 regression controls)
+- cumulative: 290/437=66.36% -> 294/443=66.37% (32 verified pyc)
+- regression: R14 repros unchanged (7/5); tools.pyc still 83.33% (5/6)
+- algorithm-4 principles FULLY COMPLIANT; no forbidden prefixes (_r15_ round tag)

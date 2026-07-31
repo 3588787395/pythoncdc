@@ -283,7 +283,24 @@
   - [x] R14-13 pyc_index.json 已更新（tools partial/0.8333/ok_py=True/round=14）
   - [x] R14-14 commit + push `rcm-r14:`（commit 869e2e6，push 到 origin/main 成功）
   - 残留：get_qry_date 1 mismatch（NOP 行标记噪声 / Pattern R，非语义缺陷，不可修复）/ 跨轮残留 T3/T2/A2/B/C/E/F/M2/G3/R 不变
-- [ ] R14+ 持续直到所有 pyc `decompile_status = ok`
+- [x] R15 通用清单全部通过（取 pyc #10: IQCommon/trade_schedule.pyc，新 pyc 轮询，pending 优先）
+  - [x] R15-0 该轮取的 pyc 文件路径已记录（IQCommon/trade_schedule.pyc，decompile_status=pending→partial）
+  - [x] R15-1 测试工程师 `decompile_report.md` 已生成（诊断 50%→post-fix 66.67%，2 mismatch，12 复现实例 7 DEFECT-REPRO/5 NO-DEFECT）
+  - [x] R15-2 ≥ 10 个最小复现实例已归档（12 个，7 DEFECT-REPRO is_stock/future BOOLOP-in-return 残留 / 5 CTRL NO-DEFECT 含 get_trading_schedule continue-sink 修复验证）
+  - [x] R15-3 修复工程师 `fix_report.md` 已生成（continue-sink 误并 else 分支修复，_identify_conditional_regions then_succ JUMP_BACKWARD→循环头检测 + merge=else_succ 创建 IF_THEN）
+  - [x] R15-4 涉及的 `_identify_*_regions` 方法内 `[R15 fix]` 行内注释已追加（continue-sink 检测逻辑段落，6 节主 docstring 未改——靶向 merge 计算逻辑，与 R14 惯例一致）
+  - [x] R15-5 N/A（未修改 `_generate_*` 方法，R15 修复在 `_identify_conditional_regions` 内）
+  - [x] R15-6 既有测试矩阵无退化（import 编译通过；R14 repros 结果不变 7 DEFECT/5 NO-DEFECT；tools.pyc 仍 83.33% 5/6）
+  - [x] R15-7 12 复现实例全部验证（7 DEFECT-REPRO / 5 NO-DEFECT；repro_08-10 get_trading_schedule continue 变体 NO-DEFECT 验证修复）
+  - [x] R15-8 反模式自检通过（0 新增 _fix_/_merge_/_patch_ 等前缀；_r15_ 为轮次标记变量名）
+  - [x] R15-9 算法 4 原则 FULLY COMPLIANT（自底向上归约 / 每块唯一归属【强化：post-if 语句由父循环体唯一生成】/ 嵌套抽象节点 / 入口引用语义）
+  - [x] R15-10 `python -c "import core.cfg.region_analyzer; import core.cfg.region_ast_generator; import core.cfg.code_generator"` 编译通过
+  - [x] R15-11 累计成功率 ≥ 上一轮（R14 31 verified 290/437=66.36% → R15 32 verified 294/443=66.37%，本 pyc +1 matched，单调递增）
+  - [x] R15-12 N/A（本 pyc 未达 100%，未生成新 OK.py；trade_scheduleOK.py 由 single 命令刷新，编译通过）
+  - [x] R15-13 pyc_index.json 已更新（trade_schedule partial/0.6667/ok_py=True/round=15）
+  - [x] R15-14 commit + push `rcm-r15:`
+  - 残留：is_stock/future_trade_time_now 2 mismatch（BOOLOP-in-return 模式：chained-compare + BoolOp OR 短路在 return 上下文被误分解为 if+pass，根因较深留待后续轮次）/ 跨轮残留 T3/T2/A2/B/C/E/F/M2/G3/R 不变
+- [ ] R15+ 持续直到所有 pyc `decompile_status = ok`
 
 ## 阶段三（Phase 3：全量验证与 +OK 生成）
 
