@@ -119,6 +119,11 @@
   - [x] T2.16.2 修复工程师：无需修复（pyc 首次验证即 100%）→ 无 fix_report（pyc 100% 一致，豁免）
   - [x] T2.16.3 commit `rcm-r16:`（LOCAL commit 12a796d — push 失败网络故障 github.com:443 不可达，push-pending，3 次重试均失败）
   - 残留：无新增；跨轮残留 T3/T2/A2/B/C/E/F/M2/G3/R 及 R15 BOOLOP-in-return 不变
+- [x] T2.17 第 17 轮（取 pyc: IQCommon/strategy/zt_api.pyc，新 pyc 轮询）
+  - [x] T2.17.1 测试工程师：取下一个 pyc，反编译 + 字节码 diff → `rounds/round_17/test_engineer/decompile_report.md`（pending→100%，0 mismatch，10 控制组复现实例全部 NO-DEFECT）
+  - [x] T2.17.2 修复工程师：无需修复（pyc 首次验证即 100%）→ 无 fix_report（pyc 100% 一致，豁免）
+  - [x] T2.17.3 commit + push `rcm-r17:`
+  - 残留：无新增；跨轮残留 T3/T2/A2/B/C/E/F/M2/G3/R 及 R15 BOOLOP-in-return 不变
 - [ ] T2.NN ... 持续直到退出条件满足
 
 > 注：轮次数不设上限，持续直到所有 pyc 文件所有函数 100% 字节码一致。
