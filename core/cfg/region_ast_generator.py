@@ -9765,6 +9765,15 @@ AST 映射规则:
              表达式子链中），不清空 pre_instrs——否则 f-string 链被截断，
              BUILD_STRING 仅弹出尾部片段，生成截断的 JoinedStr（backtest.pyc
              user_code 赋值丢失 20/25 段）。无 FORMAT_VALUE 时保留原清空行为。
+           - [R13 fix] 链式下标过滤守卫：COMPARE_OP 亦可合法出现在链式下标过滤
+             表达式 `df[df['col'] > val]` 的内部——此时 COMPARE_OP 的结果由
+             BINARY_SUBSCR 消费（作为下标索引），而非由 POP_JUMP_IF_* 消费（作为
+             if 条件）。若依 R09 启发式清空 pre_instrs，则
+             `length = len(df[df['col'] > val])` 的 RHS 前段被丢弃，reconstruct
+             失败返回 None，整条赋值语句被静默丢失（klinedata.pyc get_pre_date
+             idx 34-44 / get_multiminute_his_data_by_date idx 48-55）。判据：
+             COMPARE_OP 紧随其后是 BINARY_SUBSCR/BINARY_OP/CALL 等表达式构造
+             指令时，COMPARE_OP 是子表达式而非 if 条件起点，不清空 pre_instrs。
         4. 入口引用语义：父 IfRegion.test 引用本方法返回的 cond_instrs 重建的
            条件表达式；pre_stmts 作为 if 语句之前的独立语句发射。被排除的子
            区域指令由各自父区域（TernaryRegion/BoolOpRegion）自底向上归约生成。
@@ -10015,7 +10024,27 @@ AST 映射规则:
                     _instr_idx + 1 < len(_iter_instrs)
                     and _iter_instrs[_instr_idx + 1].opname == 'FORMAT_VALUE'
                 )
-                if not _has_format_value and not _next_is_format_value:
+                # [R13 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（入口引用语义）：
+                # COMPARE_OP 可合法出现在链式下标过滤表达式 `df[df['col'] > val]`
+                # 的内部——此时 COMPARE_OP 的结果由 BINARY_SUBSCR 消费（作为下标索引），
+                # 而非由 POP_JUMP_IF_* 消费（作为 if 条件）。若依 R09 启发式清空
+                # pre_instrs，则 `length = len(df[df['col'] > val])` 的 RHS 前段
+                # （LOAD_GLOBAL len ... LOAD_FAST val）被丢弃，仅剩 [BINARY_SUBSCR,
+                # PRECALL, CALL, STORE_FAST] 4 条指令，reconstruct 失败返回 None，
+                # 整条赋值语句被静默丢失（klinedata.pyc get_pre_date idx 34-44 /
+                # get_multiminute_his_data_by_date idx 48-55）。判据：COMPARE_OP
+                # 紧随其后是 BINARY_SUBSCR（下标过滤）或 BINARY_OP/CALL 等表达式
+                # 构造指令时，COMPARE_OP 是子表达式而非 if 条件起点，不清空
+                # pre_instrs——COMPARE_OP 归属后续 STORE_FAST 的 RHS（父 Assign
+                # 通过 Subscript 子节点引用 COMPARE_OP 子表达式）。
+                _next_consumes_as_subexpr = (
+                    _instr_idx + 1 < len(_iter_instrs)
+                    and _iter_instrs[_instr_idx + 1].opname in (
+                        'BINARY_SUBSCR', 'BINARY_OP', 'PRECALL', 'CALL',
+                        'BUILD_TUPLE', 'BUILD_LIST', 'BUILD_SET', 'BUILD_MAP')
+                )
+                if (not _has_format_value and not _next_is_format_value
+                        and not _next_consumes_as_subexpr):
                     pre_instrs = []
                     continue
             pre_instrs.append(instr)

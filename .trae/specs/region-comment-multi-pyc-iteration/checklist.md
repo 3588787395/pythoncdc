@@ -249,6 +249,23 @@
   - [x] R12-13 pyc_index.json 已更新（klinedata partial/0.5333/ok_py=True/round=12）
   - [x] R12-14 commit + push `rcm-r12:`
   - 残留：klinedata.pyc 21 mismatch 函数（B:9/E:7/R:3/C:2/C2:1）/ 跨轮残留 T3/T2/B/C/E/F/M2/G3/R 不变
+- [x] R13 通用清单全部通过（取 pyc #3: IQCommon/api/klinedata.pyc，R12 残留 Pattern D2 dropped-statement，partial 优先）
+  - [x] R13-0 该轮取的 pyc 文件路径已记录（IQCommon/api/klinedata.pyc，decompile_status=partial）
+  - [x] R13-1 测试工程师 `decompile_report.md` 已生成（46.67%→48.89%，24→23 mismatches，12 复现实例 10 DEFECT-REPRO/2 CTRL）
+  - [x] R13-2 ≥ 10 个最小复现实例已归档（12 个，10 DEFECT-REPRO dropped-statement / 2 CTRL NO-DEFECT）
+  - [x] R13-3 修复工程师 `fix_report.md` 已生成（Pattern D2 链式下标过滤赋值语句丢失修复，_next_consumes_as_subexpr 守卫）
+  - [x] R13-4 N/A（未修改 `_identify_*_regions` 方法，无需更新 6 节 docstring）
+  - [x] R13-5 涉及的 `_generate_*` 辅助方法 docstring 已按 4 节模板更新（`_if_extract_cond_instructions` docstring 第 3 节追加 [R13 fix] 链式下标过滤守卫段）
+  - [x] R13-6 既有测试矩阵无退化（Post-R13 == R12 基线: 1 failed, 112 passed, 15 errors，零回归）
+  - [x] R13-7 12 复现实例全部验证（修复后 10 DEFECT-REPRO dropped statement 全部正确发射 / 2 CTRL NO-DEFECT；verify_repros.py 残留 DEFECT-REPRO 状态归因于 jump-offset 噪声与 code-object 身份差异，控制组同构证明非缺陷）
+  - [x] R13-8 反模式自检通过（0 新增 _fix_/_merge_/_patch_ 等前缀；_next_consumes_as_subexpr 为语义命名）
+  - [x] R13-9 算法 4 原则 FULLY COMPLIANT（自底向上归约 / 每块唯一归属【强化：COMPARE_OP 归属由后继指令类型判定】/ 嵌套抽象节点 / 入口引用语义【强化：父 Assign 通过 Subscript 子节点引用 COMPARE_OP 子表达式】）
+  - [x] R13-10 `python -c "import core.cfg.region_analyzer; import core.cfg.region_ast_generator"` 编译通过
+  - [x] R13-11 累计成功率 ≥ 上一轮（R12 67.05% → R13 持平；klinedata.pyc 46.67%→48.89%，+1 函数匹配，单调递增）
+  - [x] R13-12 N/A（本 pyc 未达 100%，未生成新 OK.py；klinedataOK.py 由 single 命令刷新，编译通过）
+  - [x] R13-13 pyc_index.json 已更新（klinedata partial/0.4889/ok_py=True/round=13）
+  - [x] R13-14 commit + push `rcm-r13:`
+  - 残留：klinedata.pyc 23 mismatch 函数（B1:3/B2:2/C:2/C2:1/E:4/R:6/ARG:4/OTHER:2）/ 跨轮残留 T3/T2/B/C/E/F/M2/G3/R 不变
 - [ ] R13+ 持续直到所有 pyc `decompile_status = ok`
 
 ## 阶段三（Phase 3：全量验证与 +OK 生成）

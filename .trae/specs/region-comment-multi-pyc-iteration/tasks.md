@@ -99,6 +99,11 @@
   - [x] T2.11.2 修复工程师：按区域归约算法修复 → `rounds/round_11/repair_engineer/fix_report.md`（Pattern C2 BUG A 守卫白名单→黑名单 + BUG B _if_extract_cond_instructions 添加 C2 检测；7 真实缺陷 repro 全修复；main.pyc _adjust_start_date tuple 解包修复，残留 2 trailing-return diffs）
   - [x] T2.11.3 commit + push `rcm-r11:`
   - 残留：main.pyc `_adjust_start_date` 2 true_diffs（trailing LOAD_CONST None）/ `run` 375 true_diffs（独立模式）/ 跨轮残留 T3/T2/A2/B/C/E/F/M2/G3/R 不变
+- [x] T2.13 第 13 轮（取 pyc #3: IQCommon/api/klinedata.pyc，R12 残留 Pattern D2 dropped-statement，partial 优先）
+  - [x] T2.13.1 测试工程师：取下一个 pyc，反编译 + 字节码 diff → `rounds/round_13/test_engineer/decompile_report.md`（46.67%→48.89%，24→23 mismatches，12 复现实例 10 DEFECT-REPRO/2 CTRL）
+  - [x] T2.13.2 修复工程师：按区域归约算法修复 → `rounds/round_13/repair_engineer/fix_report.md`（Pattern D2 链式下标过滤赋值语句丢失修复，_if_extract_cond_instructions 新增 _next_consumes_as_subexpr 守卫；get_pre_date/get_multiminute_his_data_by_date dropped statement 正确发射）
+  - [x] T2.13.3 commit + push `rcm-r13:`
+  - 残留：klinedata.pyc 23 mismatch 函数（B1:3/B2:2/C:2/C2:1/E:4/R:6/ARG:4/OTHER:2）/ 跨轮残留 T3/T2/B/C/E/F/M2/G3/R 不变
 - [ ] T2.NN ... 持续直到退出条件满足
 
 > 注：轮次数不设上限，持续直到所有 pyc 文件所有函数 100% 字节码一致。
