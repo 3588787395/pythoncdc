@@ -1,0 +1,15 @@
+﻿[R12-VERIFY] 11 repros
+======================================================================
+  repro_01_try_if_else_return: NO-DEFECT (2/2)
+  repro_02_try_if_elif_else_return: NO-DEFECT (2/2)
+  repro_03_try_if_elif_elif_else_return: NO-DEFECT (2/2)
+  repro_04_try_if_return_else_return: NO-DEFECT (2/2)
+  repro_05_try_if_return_else_assign: NO-DEFECT (2/2)
+  repro_06_try_if_call_else_return: NO-DEFECT (2/2)
+  repro_07_try_nested_if_return: NO-DEFECT (2/2)
+  repro_08_try_if_multi_return: NO-DEFECT (2/2)
+  repro_09_try_if_compare_else_return: NO-DEFECT (2/2)
+  repro_10_ctrl_no_try_if_else_return: NO-DEFECT (2/2)
+  repro_11_ctrl_try_if_no_return: NO-DEFECT (2/2)
+======================================================================
+[R12-VERIFY] DEFECT-REPRO=0 NO-DEFECT=11 ERROR=0

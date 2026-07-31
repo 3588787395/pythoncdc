@@ -15157,6 +15157,32 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     return False
                 last = effective[-1]
                 if last.opname not in ('RETURN_VALUE', 'RETURN_CONST'):
+                    # [R12 fix] Pattern A2: try-body exception edge splitting.
+                    # In a try body, `LOAD_FAST a` + `RETURN_VALUE` are split
+                    # into separate blocks (LOAD_FAST has an exception edge to
+                    # the handler, RETURN_VALUE does not). The LOAD_FAST block
+                    # appears as a single-expression value block, but its sole
+                    # non-exception successor is the RETURN_VALUE block, making
+                    # it a return-statement body — not a ternary value branch.
+                    # 区域归约算法原则 3（嵌套即抽象节点）：try-body 内的
+                    # LOAD + RETURN_VALUE 是被异常边切开的单个 return 语句，
+                    # 应作为整体判定为 return body。判据结构性（CFG 异常边
+                    # 拓扑），非实例特征启发式。
+                    # 典型触发：`try: if x == 1: return a / else: return b /
+                    # except: return c`（klinedata.pyc 9 函数 Pattern A2）。
+                    _exc_succs = getattr(blk, 'exception_successors', set())
+                    if _exc_succs:
+                        _normal_succs = [s for s in blk.successors
+                                         if s not in _exc_succs]
+                        if len(_normal_succs) == 1:
+                            _succ_eff = [i for i in _normal_succs[0].instructions
+                                         if i.opname not in NOISE_OPS]
+                            if (_succ_eff
+                                    and _succ_eff[-1].opname in (
+                                        'RETURN_VALUE', 'RETURN_CONST')
+                                    and not any(i.opname == 'POP_TOP'
+                                                for i in _succ_eff[:-1])):
+                                return True
                     return False
                 for i in effective[:-1]:
                     if i.opname == 'POP_TOP':

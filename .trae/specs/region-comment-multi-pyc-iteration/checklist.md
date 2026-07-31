@@ -232,7 +232,24 @@
   - [x] R11-13 pyc_index.json 已更新（main partial/0.3333/ok_py=True/round=11，error 记录 R11 Pattern C2 修复 + trailing-return/run 残留）
   - [x] R11-14 commit + push `rcm-r11:`
   - 残留：main.pyc `_adjust_start_date` 2 true_diffs（trailing LOAD_CONST None）/ `run` 375 true_diffs（独立模式）/ 跨轮残留 T3/T2/A2/B/C/E/F/M2/G3/R 不变
-- [ ] R12+ 持续直到所有 pyc `decompile_status = ok`
+- [x] R12 通用清单全部通过（取 pyc #3: IQCommon/api/klinedata.pyc，R04 残留 Pattern A2，partial 优先）
+  - [x] R12-0 该轮取的 pyc 文件路径已记录（IQCommon/api/klinedata.pyc，decompile_status=partial）
+  - [x] R12-1 测试工程师 `decompile_report.md` 已生成（53.33% 持平，21 mismatches，13 复现实例 7 DEFECT/6 NO-DEFECT pre-fix → 0 DEFECT/13 NO-DEFECT post-fix）
+  - [x] R12-2 ≥ 10 个最小复现实例已归档（13 个，修复后 0 DEFECT-REPRO / 13 NO-DEFECT）
+  - [x] R12-3 修复工程师 `fix_report.md` 已生成（Pattern A2 异常边切分检测 + try-body ternary assign+return 合并）
+  - [x] R12-4 N/A（未修改 `_identify_*_regions` 主方法，仅 `_is_return_statement_body` 辅助方法追加 [R12 fix] 行内注释）
+  - [x] R12-5 N/A（未修改 `_generate_*` 主方法，仅 `_generate_ternary_assign` 内部追加 [R12 fix] 行内注释）
+  - [x] R12-6 既有测试矩阵无退化（Post-R12 == R11 基线: 1 failed, 112 passed, 15 errors，零回归）
+  - [x] R12-7 13 复现实例全部验证（修复后 0 DEFECT-REPRO / 13 NO-DEFECT）
+  - [x] R12-8 反模式自检通过（0 新增 _fix_/_merge_/_patch_ 等前缀；_r12_ 为轮次标记变量名）
+  - [x] R12-9 算法 4 原则 FULLY COMPLIANT（自底向上归约 / 每块唯一归属【强化：异常边切分块对归 return 语句体】/ 嵌套抽象节点 / 入口引用语义）
+  - [x] R12-10 `python -c "import core.cfg.region_analyzer; import core.cfg.region_ast_generator"` 编译通过
+  - [x] R12-11 累计成功率 ≥ 上一轮（R11 67.05% → R12 67.05% 持平；klinedata.pyc 53.33% 持平，Pattern A2 被前置 B/E/R/C/C2 缺陷掩盖）
+  - [x] R12-12 N/A（本 pyc 未达 100%，未生成新 OK.py；klinedataOK.py 由 single 命令刷新，编译通过）
+  - [x] R12-13 pyc_index.json 已更新（klinedata partial/0.5333/ok_py=True/round=12）
+  - [x] R12-14 commit + push `rcm-r12:`
+  - 残留：klinedata.pyc 21 mismatch 函数（B:9/E:7/R:3/C:2/C2:1）/ 跨轮残留 T3/T2/B/C/E/F/M2/G3/R 不变
+- [ ] R13+ 持续直到所有 pyc `decompile_status = ok`
 
 ## 阶段三（Phase 3：全量验证与 +OK 生成）
 

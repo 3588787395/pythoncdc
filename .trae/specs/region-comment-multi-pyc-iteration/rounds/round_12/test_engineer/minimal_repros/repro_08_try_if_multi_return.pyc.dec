@@ -1,0 +1,14 @@
+# Source Generated with Decompyle++ (Python version)
+# File: repro_08_try_if_multi_return.pyc (Python 3.11)
+
+def f(x, a, b, c, d):
+    try:
+        if x == 1:
+            if a:
+                return b
+            else:
+                return c
+        else:
+            return d
+    except BaseException:
+        return a

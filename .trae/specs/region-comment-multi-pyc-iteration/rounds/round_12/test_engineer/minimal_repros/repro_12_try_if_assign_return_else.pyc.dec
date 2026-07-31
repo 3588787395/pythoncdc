@@ -1,0 +1,13 @@
+# Source Generated with Decompyle++ (Python version)
+# File: repro_12_try_if_assign_return_else.pyc (Python 3.11)
+
+def f(x, a, b, c, d):
+    try:
+        if x == 1:
+            a = b
+            return a
+        else:
+            c = d
+    except BaseException:
+        return c
+    return c

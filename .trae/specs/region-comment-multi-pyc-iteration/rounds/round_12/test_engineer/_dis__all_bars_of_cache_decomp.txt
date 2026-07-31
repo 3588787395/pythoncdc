@@ -1,0 +1,309 @@
+# DECOMP dis.dis(_all_bars_of_cache)
+101           0 RESUME                   0
+
+102           2 LOAD_GLOBAL              1 (NULL + change_symbol_suffix_reverse)
+             14 LOAD_FAST                0 (symbol)
+             16 PRECALL                  1
+             20 CALL                     1
+             30 STORE_FAST               0 (symbol)
+
+103          32 LOAD_GLOBAL              3 (NULL + str)
+             44 LOAD_FAST                1 (start_time)
+             46 PRECALL                  1
+             50 CALL                     1
+             60 LOAD_CONST               1 (0)
+             62 LOAD_CONST               2 (8)
+             64 BUILD_SLICE              2
+             66 BINARY_SUBSCR
+             76 STORE_FAST               5 (start_date)
+
+104          78 LOAD_GLOBAL              3 (NULL + str)
+             90 LOAD_FAST                2 (end_time)
+             92 PRECALL                  1
+             96 CALL                     1
+            106 LOAD_CONST               1 (0)
+            108 LOAD_CONST               2 (8)
+            110 BUILD_SLICE              2
+            112 BINARY_SUBSCR
+            122 STORE_FAST               6 (end_date)
+
+105         124 LOAD_FAST                5 (start_date)
+            126 LOAD_FAST                6 (end_date)
+            128 COMPARE_OP               4 (>)
+            134 EXTENDED_ARG             1
+            136 POP_JUMP_FORWARD_IF_TRUE   486 (to 1110)
+
+106         138 LOAD_FAST                5 (start_date)
+            140 LOAD_CONST               3 ('20050101')
+            142 COMPARE_OP               0 (<)
+            148 POP_JUMP_FORWARD_IF_FALSE    33 (to 216)
+            150 LOAD_FAST                6 (end_date)
+            152 LOAD_CONST               3 ('20050101')
+            154 COMPARE_OP               0 (<)
+            160 POP_JUMP_FORWARD_IF_FALSE    27 (to 216)
+
+107         162 LOAD_GLOBAL              5 (NULL + np)
+            174 LOAD_ATTR                3 (array)
+            184 BUILD_LIST               0
+            186 LOAD_GLOBAL              8 (LIST_DTYPE)
+            198 KW_NAMES                 4
+            200 PRECALL                  2
+            204 CALL                     2
+            214 RETURN_VALUE
+
+108     >>  216 LOAD_FAST                5 (start_date)
+            218 LOAD_CONST               3 ('20050101')
+            220 SWAP                     2
+            222 COPY                     2
+            224 COMPARE_OP               0 (<)
+            230 POP_JUMP_FORWARD_IF_FALSE     6 (to 244)
+            232 LOAD_FAST                6 (end_date)
+            234 COMPARE_OP               1 (<=)
+            240 POP_JUMP_FORWARD_IF_FALSE     5 (to 252)
+            242 JUMP_FORWARD             2 (to 248)
+        >>  244 POP_TOP
+            246 JUMP_FORWARD             2 (to 252)
+
+109     >>  248 LOAD_CONST               3 ('20050101')
+            250 STORE_FAST               5 (start_date)
+
+110     >>  252 LOAD_GLOBAL             10 (history_cache)
+            264 LOAD_CONST               5 (1)
+            266 COMPARE_OP               2 (==)
+            272 POP_JUMP_FORWARD_IF_FALSE   112 (to 498)
+
+111         274 LOAD_GLOBAL             13 (NULL + get_cache)
+            286 LOAD_FAST                0 (symbol)
+            288 LOAD_FAST                3 (frequency)
+            290 LOAD_FAST                5 (start_date)
+            292 LOAD_FAST                6 (end_date)
+            294 PRECALL                  4
+            298 CALL                     4
+            308 UNPACK_SEQUENCE          2
+            312 STORE_FAST               7 (error_no)
+            314 STORE_FAST               8 (data)
+
+112         316 LOAD_FAST                7 (error_no)
+            318 LOAD_CONST               1 (0)
+            320 COMPARE_OP               2 (==)
+            326 POP_JUMP_FORWARD_IF_FALSE    85 (to 498)
+
+113         328 LOAD_GLOBAL              5 (NULL + np)
+            340 LOAD_ATTR                3 (array)
+            350 LOAD_CONST               6 (<code object <listcomp> at 0x000001A8D7BE7B40, file "F:\Downloads\pythoncdc-main\site-packages\IQCommon\api\klinedataOK.py", line 113>)
+            352 MAKE_FUNCTION            0
+            354 LOAD_FAST                8 (data)
+            356 GET_ITER
+            358 PRECALL                  0
+            362 CALL                     0
+            372 LOAD_GLOBAL              8 (LIST_DTYPE)
+            384 KW_NAMES                 4
+            386 PRECALL                  2
+            390 CALL                     2
+            400 STORE_FAST               9 (data_array)
+
+114         402 LOAD_FAST                3 (frequency)
+            404 LOAD_CONST               7 ('1d')
+            406 COMPARE_OP               2 (==)
+            412 POP_JUMP_FORWARD_IF_FALSE    40 (to 494)
+            414 LOAD_GLOBAL             15 (NULL + len)
+            426 LOAD_FAST                9 (data_array)
+            428 PRECALL                  1
+            432 CALL                     1
+            442 LOAD_CONST               1 (0)
+            444 COMPARE_OP               4 (>)
+            450 POP_JUMP_FORWARD_IF_FALSE    21 (to 494)
+
+115         452 LOAD_CONST               5 (1)
+            454 LOAD_FAST                9 (data_array)
+            456 LOAD_CONST               8 ('is_open')
+            458 BINARY_SUBSCR
+            468 LOAD_FAST                9 (data_array)
+            470 LOAD_CONST               9 ('volume')
+            472 BINARY_SUBSCR
+            482 LOAD_CONST               1 (0)
+            484 COMPARE_OP               4 (>)
+            490 STORE_SUBSCR
+
+116     >>  494 LOAD_FAST                9 (data_array)
+            496 RETURN_VALUE
+
+117     >>  498 LOAD_GLOBAL             16 (LOCAL_KLINE)
+            510 LOAD_CONST               1 (0)
+            512 COMPARE_OP               2 (==)
+            518 POP_JUMP_FORWARD_IF_FALSE   112 (to 744)
+
+118         520 NOP
+
+119         522 LOAD_GLOBAL             19 (NULL + get_bar_by_zmq)
+            534 LOAD_FAST                0 (symbol)
+            536 LOAD_GLOBAL             20 (FREQUENCY_TO_INT)
+            548 LOAD_FAST                3 (frequency)
+            550 BINARY_SUBSCR
+            560 LOAD_FAST                5 (start_date)
+            562 LOAD_FAST                6 (end_date)
+            564 PRECALL                  4
+            568 CALL                     4
+            578 STORE_FAST               9 (data_array)
+            580 JUMP_FORWARD           216 (to 1014)
+        >>  582 PUSH_EXC_INFO
+
+120         584 LOAD_GLOBAL             22 (BaseException)
+            596 CHECK_EXC_MATCH
+            598 POP_JUMP_FORWARD_IF_FALSE    68 (to 736)
+            600 POP_TOP
+
+121         602 LOAD_GLOBAL             25 (NULL + strategy_log)
+            614 LOAD_ATTR               13 (error)
+            624 LOAD_CONST              10 ('代码：')
+            626 LOAD_FAST                0 (symbol)
+            628 FORMAT_VALUE             1 (str)
+            630 LOAD_CONST              11 (', 通过zmq获取参数异常， 异常信息为：')
+            632 LOAD_GLOBAL             29 (NULL + get_traceback_message)
+            644 PRECALL                  0
+            648 CALL                     0
+            658 FORMAT_VALUE             1 (str)
+            660 BUILD_STRING             4
+            662 PRECALL                  1
+            666 CALL                     1
+            676 POP_TOP
+
+122         678 LOAD_GLOBAL              5 (NULL + np)
+            690 LOAD_ATTR                3 (array)
+            700 BUILD_LIST               0
+            702 LOAD_GLOBAL              8 (LIST_DTYPE)
+            714 KW_NAMES                 4
+            716 PRECALL                  2
+            720 CALL                     2
+            730 STORE_FAST               9 (data_array)
+            732 POP_EXCEPT
+            734 JUMP_FORWARD           139 (to 1014)
+
+120     >>  736 RERAISE                  0
+        >>  738 COPY                     3
+            740 POP_EXCEPT
+            742 RERAISE                  1
+
+124     >>  744 LOAD_CONST               1 (0)
+            746 COPY                     1
+            748 STORE_FAST              10 (tmp_start_date)
+            750 STORE_FAST              11 (tmp_end_date)
+
+125         752 NOP
+
+126         754 LOAD_GLOBAL             31 (NULL + set_params_to_kwargs_new)
+            766 LOAD_FAST                4 (asset)
+            768 LOAD_FAST                5 (start_date)
+            770 LOAD_FAST                6 (end_date)
+            772 LOAD_FAST                3 (frequency)
+            774 PRECALL                  4
+            778 CALL                     4
+            788 UNPACK_SEQUENCE          2
+            792 STORE_FAST              10 (tmp_start_date)
+            794 STORE_FAST              11 (tmp_end_date)
+
+127         796 LOAD_GLOBAL             33 (NULL + _all_bars_of_range)
+            808 LOAD_FAST                0 (symbol)
+            810 LOAD_FAST               10 (tmp_start_date)
+            812 LOAD_FAST               11 (tmp_end_date)
+            814 LOAD_FAST                3 (frequency)
+            816 PRECALL                  4
+            820 CALL                     4
+            830 STORE_FAST               9 (data_array)
+            832 JUMP_FORWARD            90 (to 1014)
+        >>  834 PUSH_EXC_INFO
+
+128         836 LOAD_GLOBAL             22 (BaseException)
+            848 CHECK_EXC_MATCH
+            850 POP_JUMP_FORWARD_IF_FALSE    77 (to 1006)
+            852 POP_TOP
+
+129         854 LOAD_GLOBAL             25 (NULL + strategy_log)
+            866 LOAD_ATTR               13 (error)
+            876 LOAD_CONST              12 ('代码：[')
+            878 LOAD_FAST                0 (symbol)
+            880 FORMAT_VALUE             1 (str)
+            882 LOAD_CONST              13 ('], 获取参数异常，参数为：起始日期[')
+            884 LOAD_FAST               10 (tmp_start_date)
+            886 FORMAT_VALUE             1 (str)
+            888 LOAD_CONST              14 ('],结束日期[')
+            890 LOAD_FAST               11 (tmp_end_date)
+            892 FORMAT_VALUE             1 (str)
+            894 LOAD_CONST              15 ('],频率[')
+            896 LOAD_FAST                3 (frequency)
+            898 FORMAT_VALUE             1 (str)
+            900 LOAD_CONST              16 ('], 异常信息为：')
+            902 LOAD_GLOBAL             29 (NULL + get_traceback_message)
+            914 PRECALL                  0
+            918 CALL                     0
+            928 FORMAT_VALUE             1 (str)
+            930 BUILD_STRING            10
+            932 PRECALL                  1
+            936 CALL                     1
+            946 POP_TOP
+
+130         948 LOAD_GLOBAL              5 (NULL + np)
+            960 LOAD_ATTR                3 (array)
+            970 BUILD_LIST               0
+            972 LOAD_GLOBAL              8 (LIST_DTYPE)
+            984 KW_NAMES                 4
+            986 PRECALL                  2
+            990 CALL                     2
+           1000 STORE_FAST               9 (data_array)
+           1002 POP_EXCEPT
+           1004 JUMP_FORWARD             4 (to 1014)
+
+128     >> 1006 RERAISE                  0
+        >> 1008 COPY                     3
+           1010 POP_EXCEPT
+           1012 RERAISE                  1
+
+131     >> 1014 LOAD_FAST                3 (frequency)
+           1016 LOAD_CONST               7 ('1d')
+           1018 COMPARE_OP               2 (==)
+           1024 POP_JUMP_FORWARD_IF_FALSE    40 (to 1106)
+           1026 LOAD_GLOBAL             15 (NULL + len)
+           1038 LOAD_FAST                9 (data_array)
+           1040 PRECALL                  1
+           1044 CALL                     1
+           1054 LOAD_CONST               1 (0)
+           1056 COMPARE_OP               4 (>)
+           1062 POP_JUMP_FORWARD_IF_FALSE    21 (to 1106)
+
+132        1064 LOAD_CONST               5 (1)
+           1066 LOAD_FAST                9 (data_array)
+           1068 LOAD_CONST               8 ('is_open')
+           1070 BINARY_SUBSCR
+           1080 LOAD_FAST                9 (data_array)
+           1082 LOAD_CONST               9 ('volume')
+           1084 BINARY_SUBSCR
+           1094 LOAD_CONST               1 (0)
+           1096 COMPARE_OP               4 (>)
+           1102 STORE_SUBSCR
+
+133     >> 1106 LOAD_FAST                9 (data_array)
+           1108 RETURN_VALUE
+
+105     >> 1110 LOAD_CONST               0 (None)
+           1112 RETURN_VALUE
+ExceptionTable:
+  522 to 578 -> 582 [0]
+  582 to 730 -> 738 [1] lasti
+  736 to 736 -> 738 [1] lasti
+  754 to 830 -> 834 [0]
+  834 to 1000 -> 1008 [1] lasti
+  1006 to 1006 -> 1008 [1] lasti
+
+Disassembly of <code object <listcomp> at 0x000001A8D7BE7B40, file "F:\Downloads\pythoncdc-main\site-packages\IQCommon\api\klinedataOK.py", line 113>:
+113           0 RESUME                   0
+              2 BUILD_LIST               0
+              4 LOAD_FAST                0 (.0)
+        >>    6 FOR_ITER                17 (to 42)
+              8 STORE_FAST               1 (_d)
+             10 LOAD_GLOBAL              1 (NULL + tuple)
+             22 LOAD_FAST                1 (_d)
+             24 PRECALL                  1
+             28 CALL                     1
+             38 LIST_APPEND              2
+             40 JUMP_BACKWARD           18 (to 6)
+        >>   42 RETURN_VALUE

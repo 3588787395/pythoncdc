@@ -1,0 +1,22 @@
+﻿[R12-VERIFY] 11 repros
+======================================================================
+  repro_01_try_if_else_return: DEFECT-REPRO (1/2) true_diffs=14 jump_diffs=3 mismatch_fn=f
+      first_diff: {'index': 9, 'orig_op': 'RETURN_VALUE', 'decomp_op': 'POP_TOP', 'orig_arg': None, 'decomp_arg': None}
+  repro_02_try_if_elif_else_return: DEFECT-REPRO (1/2) true_diffs=14 jump_diffs=4 mismatch_fn=f
+      first_diff: {'index': 15, 'orig_op': 'RETURN_VALUE', 'decomp_op': 'POP_TOP', 'orig_arg': None, 'decomp_arg': None}
+  repro_03_try_if_elif_elif_else_return: DEFECT-REPRO (1/2) true_diffs=14 jump_diffs=5 mismatch_fn=f
+      first_diff: {'index': 21, 'orig_op': 'RETURN_VALUE', 'decomp_op': 'POP_TOP', 'orig_arg': None, 'decomp_arg': None}
+  repro_04_try_if_return_else_return: DEFECT-REPRO (1/2) true_diffs=14 jump_diffs=3 mismatch_fn=f
+      first_diff: {'index': 7, 'orig_op': 'RETURN_VALUE', 'decomp_op': 'POP_TOP', 'orig_arg': None, 'decomp_arg': None}
+  repro_05_try_if_return_else_assign: NO-DEFECT (2/2)
+  repro_06_try_if_call_else_return: NO-DEFECT (2/2)
+  repro_07_try_nested_if_return: DEFECT-REPRO (1/2) true_diffs=15 jump_diffs=4 mismatch_fn=f
+      first_diff: {'index': 11, 'orig_op': 'RETURN_VALUE', 'decomp_op': 'POP_TOP', 'orig_arg': None, 'decomp_arg': None}
+  repro_08_try_if_multi_return: DEFECT-REPRO (1/2) true_diffs=15 jump_diffs=4 mismatch_fn=f
+      first_diff: {'index': 11, 'orig_op': 'RETURN_VALUE', 'decomp_op': 'POP_TOP', 'orig_arg': None, 'decomp_arg': None}
+  repro_09_try_if_compare_else_return: DEFECT-REPRO (1/2) true_diffs=14 jump_diffs=3 mismatch_fn=f
+      first_diff: {'index': 9, 'orig_op': 'RETURN_VALUE', 'decomp_op': 'POP_TOP', 'orig_arg': None, 'decomp_arg': None}
+  repro_10_ctrl_no_try_if_else_return: NO-DEFECT (2/2)
+  repro_11_ctrl_try_if_no_return: NO-DEFECT (2/2)
+======================================================================
+[R12-VERIFY] DEFECT-REPRO=7 NO-DEFECT=4 ERROR=0

@@ -1,0 +1,313 @@
+# ORIG dis.dis(klineCacheData_to_dict)
+1495           0 RESUME                   0
+
+1496           2 LOAD_GLOBAL              1 (NULL + OrderedDict)
+              14 PRECALL                  0
+              18 CALL                     0
+              28 STORE_FAST               5 (data_dict)
+
+1497          30 LOAD_FAST                1 (df_nan_data)
+              32 LOAD_CONST               1 ('datetime')
+              34 BINARY_SUBSCR
+              44 LOAD_METHOD              1 (tolist)
+              66 PRECALL                  0
+              70 CALL                     0
+              80 STORE_FAST               6 (df_date_list)
+
+1498          82 LOAD_GLOBAL              5 (NULL + len)
+              94 LOAD_FAST                6 (df_date_list)
+              96 PRECALL                  1
+             100 CALL                     1
+             110 STORE_FAST               7 (df_date_list_len)
+
+1499         112 LOAD_FAST                3 (fq)
+             114 LOAD_CONST               2 ('post')
+             116 COMPARE_OP               2 (==)
+             122 POP_JUMP_FORWARD_IF_FALSE    20 (to 164)
+
+1500         124 LOAD_FAST                4 (tmp_dividends)
+             126 LOAD_METHOD              3 (keys)
+             148 PRECALL                  0
+             152 CALL                     0
+             162 STORE_FAST               8 (dividends_stock)
+
+1501     >>  164 LOAD_FAST                0 (symbols)
+             166 GET_ITER
+         >>  168 EXTENDED_ARG             1
+             170 FOR_ITER               468 (to 1108)
+             172 STORE_FAST               9 (symbol)
+
+1502         174 NOP
+
+1503         176 LOAD_GLOBAL              9 (NULL + copy)
+             188 LOAD_ATTR                5 (deepcopy)
+             198 LOAD_FAST                1 (df_nan_data)
+             200 PRECALL                  1
+             204 CALL                     1
+             214 STORE_FAST              10 (kline_ndarray)
+
+1504         216 LOAD_FAST                2 (dict_data)
+             218 LOAD_FAST                9 (symbol)
+             220 BINARY_SUBSCR
+             230 STORE_FAST              11 (list_data)
+
+1506         232 LOAD_GLOBAL              5 (NULL + len)
+             244 LOAD_FAST               11 (list_data)
+             246 PRECALL                  1
+             250 CALL                     1
+             260 LOAD_CONST               3 (0)
+             262 COMPARE_OP               2 (==)
+             268 POP_JUMP_FORWARD_IF_FALSE     6 (to 282)
+
+1507         270 LOAD_FAST               10 (kline_ndarray)
+             272 LOAD_FAST                5 (data_dict)
+             274 LOAD_FAST                9 (symbol)
+             276 STORE_SUBSCR
+
+1508         280 JUMP_BACKWARD           57 (to 168)
+
+1510     >>  282 LOAD_GLOBAL             13 (NULL + list)
+             294 LOAD_GLOBAL             15 (NULL + zip)
+             306 LOAD_FAST               11 (list_data)
+             308 CALL_FUNCTION_EX         0
+             310 PRECALL                  1
+             314 CALL                     1
+             324 LOAD_CONST               3 (0)
+             326 BINARY_SUBSCR
+             336 STORE_FAST              12 (list_data_date)
+
+1511         338 LOAD_GLOBAL             17 (NULL + range)
+             350 LOAD_FAST                7 (df_date_list_len)
+             352 PRECALL                  1
+             356 CALL                     1
+             366 GET_ITER
+         >>  368 FOR_ITER                70 (to 510)
+             370 STORE_FAST              13 (i)
+
+1512         372 NOP
+
+1514         374 LOAD_FAST               12 (list_data_date)
+             376 LOAD_METHOD              9 (index)
+             398 LOAD_FAST                6 (df_date_list)
+             400 LOAD_FAST               13 (i)
+             402 BINARY_SUBSCR
+             412 PRECALL                  1
+             416 CALL                     1
+             426 STORE_FAST              14 (datetime_index)
+
+1516         428 LOAD_GLOBAL             21 (NULL + tuple)
+             440 LOAD_FAST               11 (list_data)
+             442 LOAD_FAST               14 (datetime_index)
+             444 BINARY_SUBSCR
+             454 PRECALL                  1
+             458 CALL                     1
+             468 LOAD_FAST               10 (kline_ndarray)
+             470 LOAD_FAST               13 (i)
+             472 STORE_SUBSCR
+             476 JUMP_BACKWARD           55 (to 368)
+         >>  478 PUSH_EXC_INFO
+
+1517         480 LOAD_GLOBAL             22 (BaseException)
+             492 CHECK_EXC_MATCH
+             494 POP_JUMP_FORWARD_IF_FALSE     3 (to 502)
+             496 POP_TOP
+
+1518         498 POP_EXCEPT
+             500 JUMP_BACKWARD           67 (to 368)
+
+1517     >>  502 RERAISE                  0
+         >>  504 COPY                     3
+             506 POP_EXCEPT
+             508 RERAISE                  1
+
+1519     >>  510 LOAD_FAST                3 (fq)
+             512 LOAD_CONST               2 ('post')
+             514 COMPARE_OP               2 (==)
+             520 POP_JUMP_FORWARD_IF_FALSE   215 (to 952)
+             522 LOAD_FAST                9 (symbol)
+             524 LOAD_FAST                4 (tmp_dividends)
+             526 CONTAINS_OP              0
+             528 POP_JUMP_FORWARD_IF_FALSE   211 (to 952)
+
+1520         530 NOP
+
+1522         532 LOAD_FAST                9 (symbol)
+             534 LOAD_METHOD             12 (replace)
+             556 LOAD_CONST               4 ('SS')
+             558 LOAD_CONST               5 ('XSHG')
+             560 PRECALL                  2
+             564 CALL                     2
+             574 LOAD_METHOD             12 (replace)
+             596 LOAD_CONST               6 ('SZ')
+             598 LOAD_CONST               7 ('XSHE')
+             600 PRECALL                  2
+             604 CALL                     2
+             614 LOAD_FAST                8 (dividends_stock)
+             616 CONTAINS_OP              0
+             618 POP_JUMP_FORWARD_IF_FALSE    95 (to 810)
+
+1523         620 LOAD_FAST                4 (tmp_dividends)
+             622 LOAD_FAST                9 (symbol)
+             624 LOAD_METHOD             12 (replace)
+             646 LOAD_CONST               4 ('SS')
+             648 LOAD_CONST               5 ('XSHG')
+             650 PRECALL                  2
+             654 CALL                     2
+             664 LOAD_METHOD             12 (replace)
+             686 LOAD_CONST               6 ('SZ')
+             688 LOAD_CONST               7 ('XSHE')
+             690 PRECALL                  2
+             694 CALL                     2
+             704 BINARY_SUBSCR
+             714 STORE_FAST              15 (dividends)
+
+1525         716 LOAD_CONST               8 (<code object <dictcomp> at 0x000001A8D6A13D30, file "./fly_docker_py311/IQCommon/api/klinedata.py", line 1525>)
+             718 MAKE_FUNCTION            0
+
+1527         720 LOAD_FAST               15 (dividends)
+             722 LOAD_METHOD             13 (items)
+             744 PRECALL                  0
+             748 CALL                     0
+
+1525         758 GET_ITER
+             760 PRECALL                  0
+             764 CALL                     0
+             774 STORE_FAST              16 (dividend_dict)
+
+1529         776 LOAD_GLOBAL             29 (NULL + get_post_data)
+             788 LOAD_FAST               10 (kline_ndarray)
+             790 LOAD_FAST                9 (symbol)
+             792 LOAD_FAST               16 (dividend_dict)
+             794 PRECALL                  3
+             798 CALL                     3
+             808 STORE_FAST              10 (kline_ndarray)
+         >>  810 JUMP_FORWARD            70 (to 952)
+         >>  812 PUSH_EXC_INFO
+
+1530         814 LOAD_GLOBAL             22 (BaseException)
+             826 CHECK_EXC_MATCH
+             828 POP_JUMP_FORWARD_IF_FALSE    57 (to 944)
+             830 POP_TOP
+
+1531         832 LOAD_GLOBAL             31 (NULL + get_traceback_message)
+             844 PRECALL                  0
+             848 CALL                     0
+             858 STORE_FAST              17 (error_info)
+
+1532         860 LOAD_GLOBAL             33 (NULL + system_log)
+             872 LOAD_ATTR               17 (error)
+             882 LOAD_CONST               9 ('代码：{} 后复权除权异常:{}')
+             884 LOAD_METHOD             18 (format)
+             906 LOAD_FAST                9 (symbol)
+             908 LOAD_FAST               17 (error_info)
+             910 PRECALL                  2
+             914 CALL                     2
+             924 PRECALL                  1
+             928 CALL                     1
+             938 POP_TOP
+             940 POP_EXCEPT
+             942 JUMP_FORWARD             4 (to 952)
+
+1530     >>  944 RERAISE                  0
+         >>  946 COPY                     3
+             948 POP_EXCEPT
+             950 RERAISE                  1
+
+1533     >>  952 LOAD_FAST               10 (kline_ndarray)
+             954 LOAD_FAST                5 (data_dict)
+             956 LOAD_FAST                9 (symbol)
+             958 STORE_SUBSCR
+             962 EXTENDED_ARG             1
+             964 JUMP_BACKWARD          399 (to 168)
+         >>  966 PUSH_EXC_INFO
+
+1534         968 LOAD_GLOBAL             22 (BaseException)
+             980 CHECK_EXC_MATCH
+             982 POP_JUMP_FORWARD_IF_FALSE    58 (to 1100)
+             984 POP_TOP
+
+1535         986 LOAD_GLOBAL             31 (NULL + get_traceback_message)
+             998 PRECALL                  0
+            1002 CALL                     0
+            1012 STORE_FAST              17 (error_info)
+
+1536        1014 LOAD_GLOBAL             33 (NULL + system_log)
+            1026 LOAD_ATTR               17 (error)
+            1036 LOAD_CONST              10 ('代码：{} K线数据解析异常：{}')
+            1038 LOAD_METHOD             18 (format)
+            1060 LOAD_FAST                9 (symbol)
+            1062 LOAD_FAST               17 (error_info)
+            1064 PRECALL                  2
+            1068 CALL                     2
+            1078 PRECALL                  1
+            1082 CALL                     1
+            1092 POP_TOP
+            1094 POP_EXCEPT
+            1096 EXTENDED_ARG             1
+            1098 JUMP_BACKWARD          466 (to 168)
+
+1534     >> 1100 RERAISE                  0
+         >> 1102 COPY                     3
+            1104 POP_EXCEPT
+            1106 RERAISE                  1
+
+1537     >> 1108 LOAD_FAST                5 (data_dict)
+            1110 RETURN_VALUE
+ExceptionTable:
+  176 to 278 -> 966 [1]
+  282 to 370 -> 966 [1]
+  374 to 474 -> 478 [2]
+  476 to 476 -> 966 [1]
+  478 to 496 -> 504 [3] lasti
+  498 to 500 -> 966 [1]
+  502 to 502 -> 504 [3] lasti
+  504 to 528 -> 966 [1]
+  532 to 808 -> 812 [1]
+  810 to 810 -> 966 [1]
+  812 to 938 -> 946 [2] lasti
+  940 to 942 -> 966 [1]
+  944 to 944 -> 946 [2] lasti
+  946 to 960 -> 966 [1]
+  966 to 1092 -> 1102 [2] lasti
+  1100 to 1100 -> 1102 [2] lasti
+
+Disassembly of <code object <dictcomp> at 0x000001A8D6A13D30, file "./fly_docker_py311/IQCommon/api/klinedata.py", line 1525>:
+               0 MAKE_CELL                2 (item)
+
+1525           2 RESUME                   0
+               4 BUILD_MAP                0
+               6 LOAD_FAST                0 (.0)
+         >>    8 FOR_ITER                25 (to 60)
+
+1527          10 UNPACK_SEQUENCE          2
+              14 STORE_FAST               1 (key)
+              16 STORE_DEREF              2 (item)
+
+1526          18 LOAD_FAST                1 (key)
+              20 LOAD_CLOSURE             2 (item)
+              22 BUILD_TUPLE              1
+              24 LOAD_CONST               0 (<code object <listcomp> at 0x000001A8D6A1B750, file "./fly_docker_py311/IQCommon/api/klinedata.py", line 1526>)
+              26 MAKE_FUNCTION            8 (closure)
+              28 LOAD_GLOBAL              0 (DIVIDEND_COLUMNS)
+              40 GET_ITER
+              42 PRECALL                  0
+              46 CALL                     0
+
+1525          56 MAP_ADD                  2
+              58 JUMP_BACKWARD           26 (to 8)
+         >>   60 RETURN_VALUE
+
+Disassembly of <code object <listcomp> at 0x000001A8D6A1B750, file "./fly_docker_py311/IQCommon/api/klinedata.py", line 1526>:
+               0 COPY_FREE_VARS           1
+
+1526           2 RESUME                   0
+               4 BUILD_LIST               0
+               6 LOAD_FAST                0 (.0)
+         >>    8 FOR_ITER                10 (to 30)
+              10 STORE_FAST               1 (c)
+              12 LOAD_DEREF               2 (item)
+              14 LOAD_FAST                1 (c)
+              16 BINARY_SUBSCR
+              26 LIST_APPEND              2
+              28 JUMP_BACKWARD           11 (to 8)
+         >>   30 RETURN_VALUE

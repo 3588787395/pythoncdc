@@ -25492,21 +25492,67 @@ AST 映射规则:
                             # 若 _be_cond_start is None/0 → 整个 _non_noise_remaining
                             # 都是条件重检，不发射任何 extra statements
                         elif _non_noise_remaining:
-                            # 有实际后续语句 —— 使用 _build_statements_from_instructions 重建
-                            _extra_stmts = self._build_statements_from_instructions(
-                                list(_non_noise_remaining))
-                            # 剥离尾部隐式 return None（由外层补齐）
-                            while _extra_stmts and isinstance(_extra_stmts[-1], dict):
-                                _last = _extra_stmts[-1]
-                                if _last.get('type') == 'Return':
-                                    _rv = _last.get('value')
-                                    if _rv and isinstance(_rv, dict) \
-                                            and _rv.get('type') == 'Constant' \
-                                            and _rv.get('value') is None:
-                                        _extra_stmts = _extra_stmts[:-1]
-                                        continue
-                                break
-                            results.extend(_extra_stmts)
+                            # [R12 fix] Pattern A2: try-body ternary assign + return.
+                            # 在 try 体内，`a = b if c else d; return a` 的字节码
+                            # 被异常边切开：merge_block 含 STORE_FAST a + LOAD_FAST a
+                            # （有异常边），后继块为 RETURN_VALUE（无异常边）。LOAD_FAST a
+                            # 是 return 的值表达式，不应作为独立 Expr 语句发射，而应与
+                            # RETURN_VALUE 后继块合并为 Return 语句。
+                            # 依「每块唯一归属」: merge_block 归 TernaryRegion，但
+                            # LOAD_FAST a + RETURN_VALUE 是被异常边切开的单个 return
+                            # 语句，应作为整体生成 Return。判据结构性（CFG 异常边
+                            # 拓扑 + 后继块 RETURN_VALUE），非实例特征启发式。
+                            # 典型触发：klinedata.pyc 9 函数 Pattern A2 中
+                            # `try: if x == 1: a = b if c is None else d; return a`。
+                            _r12_ret_handled = False
+                            _r12_exc_succs = getattr(
+                                region.merge_block, 'exception_successors', set())
+                            _r12_normal_succs = [s for s in region.merge_block.successors
+                                                 if s not in _r12_exc_succs]
+                            if (len(_r12_normal_succs) == 1
+                                    and not any(i.opname == 'POP_TOP'
+                                                for i in _non_noise_remaining)):
+                                _r12_succ_eff = [
+                                    i for i in _r12_normal_succs[0].instructions
+                                    if i.opname not in NOISE_OPS]
+                                if (_r12_succ_eff
+                                        and _r12_succ_eff[-1].opname == 'RETURN_VALUE'
+                                        and not any(i.opname == 'POP_TOP'
+                                                    for i in _r12_succ_eff[:-1])):
+                                    _r12_succ_pre = [
+                                        i for i in _r12_succ_eff
+                                        if i.opname != 'RETURN_VALUE']
+                                    _r12_ret_instrs = (
+                                        list(_non_noise_remaining) + _r12_succ_pre)
+                                    _r12_ret_expr = self.expr_reconstructor.reconstruct(
+                                        _r12_ret_instrs)
+                                    if _r12_ret_expr is not None:
+                                        results.append({
+                                            'type': 'Return',
+                                            'value': _r12_ret_expr,
+                                        })
+                                        self.generated_blocks.add(_r12_normal_succs[0])
+                                        for block in region.blocks:
+                                            self.generated_blocks.add(block)
+                                        _r12_ret_handled = True
+                            if _r12_ret_handled:
+                                pass  # return 已发射，跳过后续 _build_statements 路径
+                            else:
+                                # 有实际后续语句 —— 使用 _build_statements_from_instructions 重建
+                                _extra_stmts = self._build_statements_from_instructions(
+                                    list(_non_noise_remaining))
+                                # 剥离尾部隐式 return None（由外层补齐）
+                                while _extra_stmts and isinstance(_extra_stmts[-1], dict):
+                                    _last = _extra_stmts[-1]
+                                    if _last.get('type') == 'Return':
+                                        _rv = _last.get('value')
+                                        if _rv and isinstance(_rv, dict) \
+                                                and _rv.get('type') == 'Constant' \
+                                                and _rv.get('value') is None:
+                                            _extra_stmts = _extra_stmts[:-1]
+                                            continue
+                                    break
+                                results.extend(_extra_stmts)
                         else:
                             # 无后续指令 —— 走旧逻辑的 Return 处理路径（lambda 等）
                             merge_instrs = [i for i in region.merge_block.instructions

@@ -1,0 +1,11 @@
+# Source Generated with Decompyle++ (Python version)
+# File: repro_04_try_if_return_else_return.pyc (Python 3.11)
+
+def f(x, a, b, c):
+    try:
+        if x:
+            return a
+        else:
+            return b
+    except BaseException:
+        return c

@@ -1,0 +1,223 @@
+# DECOMP dis.dis(np_tp_pd)
+1526           0 RESUME                   0
+
+1527           2 LOAD_GLOBAL              1 (NULL + len)
+              14 LOAD_FAST                0 (nd_array_or_dict)
+              16 PRECALL                  1
+              20 CALL                     1
+              30 LOAD_CONST               1 (0)
+              32 COMPARE_OP               2 (==)
+              38 POP_JUMP_FORWARD_IF_FALSE    19 (to 78)
+
+1528          40 LOAD_GLOBAL              3 (NULL + pd)
+              52 LOAD_ATTR                2 (DataFrame)
+              62 PRECALL                  0
+              66 CALL                     0
+              76 RETURN_VALUE
+
+1529     >>   78 LOAD_CONST               2 ('datetime')
+              80 LOAD_FAST                1 (field_ori)
+              82 CONTAINS_OP              0
+              84 POP_JUMP_FORWARD_IF_FALSE    21 (to 128)
+
+1530          86 LOAD_FAST                1 (field_ori)
+              88 LOAD_METHOD              3 (remove)
+             110 LOAD_CONST               2 ('datetime')
+             112 PRECALL                  1
+             116 CALL                     1
+             126 POP_TOP
+
+1531     >>  128 LOAD_FAST                2 (is_string)
+             130 POP_JUMP_FORWARD_IF_FALSE   105 (to 342)
+
+1532         132 LOAD_FAST                0 (nd_array_or_dict)
+             134 LOAD_METHOD              4 (items)
+             156 PRECALL                  0
+             160 CALL                     0
+             170 GET_ITER
+             172 FOR_ITER                82 (to 338)
+             174 UNPACK_SEQUENCE          2
+             178 STORE_FAST               5 (security)
+             180 STORE_FAST               6 (nd_array)
+
+1533         182 LOAD_GLOBAL             11 (NULL + tuple)
+             194 LOAD_FAST                6 (nd_array)
+             196 LOAD_CONST               2 ('datetime')
+             198 BINARY_SUBSCR
+             208 PRECALL                  1
+             212 CALL                     1
+             222 STORE_FAST               7 (t)
+
+1534         224 LOAD_GLOBAL              3 (NULL + pd)
+             236 LOAD_ATTR                2 (DataFrame)
+             246 LOAD_GLOBAL             13 (NULL + SymbolDF)
+             258 LOAD_FAST                6 (nd_array)
+             260 LOAD_FAST                1 (field_ori)
+             262 BINARY_SUBSCR
+             272 LOAD_GLOBAL             15 (NULL + nd_array_to_datetime_index)
+             284 LOAD_FAST                7 (t)
+             286 PRECALL                  1
+             290 CALL                     1
+             300 KW_NAMES                 3
+             302 PRECALL                  2
+             306 CALL                     2
+             316 PRECALL                  1
+             320 CALL                     1
+             330 POP_TOP
+
+1535         332 POP_TOP
+             334 LOAD_CONST               0 (None)
+             336 RETURN_VALUE
+
+1532     >>  338 LOAD_CONST               0 (None)
+             340 RETURN_VALUE
+
+1537     >>  342 LOAD_CONST               4 (())
+             344 STORE_FAST               8 (bench_tuple)
+
+1538         346 LOAD_GLOBAL             17 (NULL + range)
+             358 LOAD_GLOBAL              1 (NULL + len)
+             370 LOAD_FAST                4 (bench_type)
+             372 PRECALL                  1
+             376 CALL                     1
+             386 PRECALL                  1
+             390 CALL                     1
+             400 GET_ITER
+         >>  402 FOR_ITER                53 (to 510)
+             404 STORE_FAST               9 (d_count)
+
+1539         406 LOAD_FAST                9 (d_count)
+             408 LOAD_CONST               1 (0)
+             410 COMPARE_OP               2 (==)
+             416 POP_JUMP_FORWARD_IF_FALSE     1 (to 420)
+
+1540         418 JUMP_BACKWARD            9 (to 402)
+
+1541     >>  420 LOAD_FAST                4 (bench_type)
+             422 LOAD_FAST                9 (d_count)
+             424 BINARY_SUBSCR
+             434 LOAD_GLOBAL             18 (np)
+             446 LOAD_ATTR               10 (int64)
+             456 COMPARE_OP               2 (==)
+             462 POP_JUMP_FORWARD_IF_FALSE     6 (to 476)
+
+1542         464 LOAD_FAST                8 (bench_tuple)
+             466 LOAD_CONST               5 ((0,))
+             468 BINARY_OP               13 (+=)
+             472 STORE_FAST               8 (bench_tuple)
+
+1543         474 JUMP_BACKWARD           37 (to 402)
+
+1545     >>  476 LOAD_FAST                8 (bench_tuple)
+             478 LOAD_GLOBAL             18 (np)
+             490 LOAD_ATTR               11 (nan)
+             500 BUILD_TUPLE              1
+             502 BINARY_OP               13 (+=)
+             506 STORE_FAST               8 (bench_tuple)
+             508 JUMP_BACKWARD           54 (to 402)
+
+1546     >>  510 LOAD_GLOBAL              1 (NULL + len)
+             522 LOAD_FAST                3 (index_t)
+             524 PRECALL                  1
+             528 CALL                     1
+             538 STORE_FAST              10 (bench_len)
+
+1547         540 LOAD_CONST               6 ('code')
+             542 BUILD_LIST               0
+             544 BUILD_MAP                1
+             546 STORE_FAST              11 (field_data_dict)
+
+1548         548 LOAD_FAST                1 (field_ori)
+             550 GET_ITER
+         >>  552 FOR_ITER                 7 (to 568)
+             554 STORE_FAST              12 (field)
+
+1549         556 BUILD_LIST               0
+             558 LOAD_FAST               11 (field_data_dict)
+             560 LOAD_FAST               12 (field)
+             562 STORE_SUBSCR
+             566 JUMP_BACKWARD            8 (to 552)
+
+1550     >>  568 BUILD_LIST               0
+             570 STORE_FAST              13 (dates)
+
+1551         572 LOAD_FAST                0 (nd_array_or_dict)
+             574 LOAD_METHOD              4 (items)
+             596 PRECALL                  0
+             600 CALL                     0
+             610 GET_ITER
+         >>  612 FOR_ITER               133 (to 880)
+             614 UNPACK_SEQUENCE          2
+             618 STORE_FAST               5 (security)
+             620 STORE_FAST               6 (nd_array)
+
+1552         622 LOAD_GLOBAL             25 (NULL + _align_data_to_benchmark)
+             634 LOAD_FAST                6 (nd_array)
+             636 LOAD_FAST                3 (index_t)
+             638 LOAD_FAST                8 (bench_tuple)
+             640 LOAD_FAST               10 (bench_len)
+             642 LOAD_FAST                5 (security)
+             644 PRECALL                  5
+             648 CALL                     5
+             658 STORE_FAST               6 (nd_array)
+
+1553         660 LOAD_FAST               13 (dates)
+             662 LOAD_METHOD             13 (extend)
+             684 LOAD_FAST                6 (nd_array)
+             686 LOAD_CONST               2 ('datetime')
+             688 BINARY_SUBSCR
+             698 PRECALL                  1
+             702 CALL                     1
+             712 POP_TOP
+
+1554         714 LOAD_FAST               11 (field_data_dict)
+             716 LOAD_CONST               6 ('code')
+             718 BINARY_SUBSCR
+             728 LOAD_METHOD             13 (extend)
+             750 LOAD_FAST                5 (security)
+             752 BUILD_LIST               1
+             754 LOAD_GLOBAL              1 (NULL + len)
+             766 LOAD_FAST                6 (nd_array)
+             768 PRECALL                  1
+             772 CALL                     1
+             782 BINARY_OP                5 (*)
+             786 PRECALL                  1
+             790 CALL                     1
+             800 POP_TOP
+
+1555         802 LOAD_FAST                1 (field_ori)
+             804 GET_ITER
+         >>  806 FOR_ITER                35 (to 878)
+             808 STORE_FAST              12 (field)
+
+1556         810 LOAD_FAST               11 (field_data_dict)
+             812 LOAD_FAST               12 (field)
+             814 BINARY_SUBSCR
+             824 LOAD_METHOD             13 (extend)
+             846 LOAD_FAST                6 (nd_array)
+             848 LOAD_FAST               12 (field)
+             850 BINARY_SUBSCR
+             860 PRECALL                  1
+             864 CALL                     1
+             874 POP_TOP
+             876 JUMP_BACKWARD           36 (to 806)
+
+1555     >>  878 JUMP_BACKWARD          134 (to 612)
+
+1557     >>  880 LOAD_GLOBAL              3 (NULL + pd)
+             892 LOAD_ATTR                2 (DataFrame)
+             902 LOAD_FAST               11 (field_data_dict)
+             904 LOAD_GLOBAL             15 (NULL + nd_array_to_datetime_index)
+             916 LOAD_GLOBAL             11 (NULL + tuple)
+             928 LOAD_FAST               13 (dates)
+             930 PRECALL                  1
+             934 CALL                     1
+             944 PRECALL                  1
+             948 CALL                     1
+             958 KW_NAMES                 3
+             960 PRECALL                  2
+             964 CALL                     2
+             974 STORE_FAST              14 (pd_all_array)
+
+1558         976 LOAD_FAST               14 (pd_all_array)
+             978 RETURN_VALUE

@@ -1,0 +1,16 @@
+# Source Generated with Decompyle++ (Python version)
+# File: repro_03_try_if_elif_elif_else_return.pyc (Python 3.11)
+
+def f(x, a, b, c, d, e):
+    try:
+        if x == 1:
+            return a
+        elif x == 2:
+            return b
+        elif x == 3:
+            return c
+        else:
+            return d
+        return None
+    except BaseException:
+        return e

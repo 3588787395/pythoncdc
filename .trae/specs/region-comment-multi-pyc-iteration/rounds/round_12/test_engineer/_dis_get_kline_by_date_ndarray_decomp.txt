@@ -1,0 +1,249 @@
+# DECOMP dis.dis(get_kline_by_date_ndarray)
+728           0 RESUME                   0
+
+729           2 LOAD_FAST                0 (symbol)
+              4 LOAD_METHOD              0 (replace)
+             26 LOAD_CONST               1 ('.XSHE')
+             28 LOAD_CONST               2 ('.SZ')
+             30 PRECALL                  2
+             34 CALL                     2
+             44 LOAD_METHOD              0 (replace)
+             66 LOAD_CONST               3 ('.XSHG')
+             68 LOAD_CONST               4 ('.SS')
+             70 PRECALL                  2
+             74 CALL                     2
+             84 STORE_FAST               0 (symbol)
+
+730          86 LOAD_GLOBAL              3 (NULL + str)
+             98 LOAD_GLOBAL              4 (datetime)
+            110 LOAD_ATTR                2 (datetime)
+            120 LOAD_METHOD              3 (now)
+            142 PRECALL                  0
+            146 CALL                     0
+            156 LOAD_METHOD              4 (strftime)
+            178 LOAD_CONST               5 ('%Y%m%d')
+            180 PRECALL                  1
+            184 CALL                     1
+            194 PRECALL                  1
+            198 CALL                     1
+            208 STORE_FAST               4 (curr_date)
+
+731         210 LOAD_GLOBAL              3 (NULL + str)
+            222 LOAD_CONST               6 ('kline')
+            224 LOAD_FAST                0 (symbol)
+            226 LOAD_FAST                1 (frequency_int)
+            228 LOAD_FAST                4 (curr_date)
+            230 LOAD_FAST                4 (curr_date)
+            232 BUILD_LIST               5
+            234 PRECALL                  1
+            238 CALL                     1
+            248 STORE_FAST               5 (params)
+
+732         250 NOP
+
+733         252 LOAD_GLOBAL             11 (NULL + api_get_from_zeromq)
+            264 LOAD_FAST                5 (params)
+            266 PRECALL                  1
+            270 CALL                     1
+            280 UNPACK_SEQUENCE          2
+            284 STORE_FAST               6 (redata)
+            286 STORE_FAST               7 (flag)
+
+734         288 LOAD_CONST               7 (0)
+            290 STORE_FAST               8 (count)
+
+735         292 LOAD_FAST                6 (redata)
+            294 POP_JUMP_FORWARD_IF_TRUE     6 (to 308)
+            296 LOAD_FAST                8 (count)
+            298 LOAD_CONST               8 (2)
+            300 COMPARE_OP               0 (<)
+            306 POP_JUMP_FORWARD_IF_FALSE   174 (to 656)
+
+736     >>  308 LOAD_GLOBAL             13 (NULL + time)
+            320 LOAD_ATTR                7 (sleep)
+            330 LOAD_CONST               9 (1)
+            332 PRECALL                  1
+            336 CALL                     1
+            346 POP_TOP
+
+737         348 LOAD_FAST                7 (flag)
+            350 LOAD_CONST               9 (1)
+            352 COMPARE_OP               2 (==)
+            358 POP_JUMP_FORWARD_IF_FALSE    56 (to 472)
+
+738         360 LOAD_GLOBAL             17 (NULL + system_log)
+            372 LOAD_ATTR                9 (debug)
+            382 LOAD_CONST              10 ('获取K线数据异常，现在进行第{}次重试')
+            384 LOAD_METHOD             10 (format)
+            406 LOAD_GLOBAL              3 (NULL + str)
+            418 LOAD_FAST                8 (count)
+            420 LOAD_CONST               9 (1)
+            422 BINARY_OP                0 (+)
+            426 PRECALL                  1
+            430 CALL                     1
+            440 PRECALL                  1
+            444 CALL                     1
+            454 PRECALL                  1
+            458 CALL                     1
+            468 POP_TOP
+            470 JUMP_FORWARD            61 (to 594)
+
+739     >>  472 LOAD_FAST                7 (flag)
+            474 LOAD_CONST              11 (-1)
+            476 COMPARE_OP               2 (==)
+            482 POP_JUMP_FORWARD_IF_FALSE    55 (to 594)
+
+740         484 LOAD_GLOBAL             17 (NULL + system_log)
+            496 LOAD_ATTR                9 (debug)
+            506 LOAD_CONST              12 ('获取K线数据返回为空，现在进行第{}次重试')
+            508 LOAD_METHOD             10 (format)
+            530 LOAD_GLOBAL              3 (NULL + str)
+            542 LOAD_FAST                8 (count)
+            544 LOAD_CONST               9 (1)
+            546 BINARY_OP                0 (+)
+            550 PRECALL                  1
+            554 CALL                     1
+            564 PRECALL                  1
+            568 CALL                     1
+            578 PRECALL                  1
+            582 CALL                     1
+            592 POP_TOP
+
+741     >>  594 LOAD_GLOBAL             11 (NULL + api_get_from_zeromq)
+            606 LOAD_FAST                5 (params)
+            608 PRECALL                  1
+            612 CALL                     1
+            622 UNPACK_SEQUENCE          2
+            626 STORE_FAST               6 (redata)
+            628 STORE_FAST               7 (flag)
+
+742         630 LOAD_FAST                8 (count)
+            632 LOAD_CONST               9 (1)
+            634 BINARY_OP               13 (+=)
+            638 STORE_FAST               8 (count)
+
+743         640 LOAD_FAST                6 (redata)
+            642 POP_TOP
+
+744         644 LOAD_FAST                8 (count)
+            646 LOAD_CONST               8 (2)
+            648 COMPARE_OP               0 (<)
+            654 POP_TOP
+
+745     >>  656 LOAD_FAST                6 (redata)
+            658 POP_JUMP_FORWARD_IF_FALSE   116 (to 892)
+
+746         660 LOAD_FAST                6 (redata)
+            662 JUMP_IF_TRUE_OR_POP      5 (to 674)
+            664 LOAD_FAST                8 (count)
+            666 LOAD_CONST               8 (2)
+            668 COMPARE_OP               0 (<)
+        >>  674 GET_ITER
+        >>  676 FOR_ITER               105 (to 888)
+            678 STORE_FAST               9 (i)
+
+747         680 LOAD_GLOBAL             22 (df_date_list)
+            692 LOAD_FAST                9 (i)
+            694 BINARY_SUBSCR
+            704 LOAD_GLOBAL             24 (list_data_date)
+            716 CONTAINS_OP              0
+            718 POP_JUMP_FORWARD_IF_FALSE    83 (to 886)
+
+748         720 LOAD_GLOBAL             24 (list_data_date)
+            732 LOAD_METHOD             13 (index)
+            754 LOAD_GLOBAL             22 (df_date_list)
+            766 LOAD_FAST                9 (i)
+            768 BINARY_SUBSCR
+            778 PRECALL                  1
+            782 CALL                     1
+            792 STORE_FAST              10 (datetime_index)
+
+749         794 LOAD_GLOBAL             28 (list_data)
+            806 LOAD_FAST               10 (datetime_index)
+            808 BINARY_SUBSCR
+            818 STORE_FAST              11 (list_index_data)
+
+750         820 LOAD_GLOBAL             31 (NULL + deal_hq_list_to_cacahe)
+            832 LOAD_FAST               11 (list_index_data)
+            834 PRECALL                  1
+            838 CALL                     1
+            848 STORE_FAST              12 (list_new_data)
+
+751         850 LOAD_GLOBAL             33 (NULL + tuple)
+            862 LOAD_FAST               12 (list_new_data)
+            864 PRECALL                  1
+            868 CALL                     1
+            878 LOAD_FAST                2 (kline_ndarray)
+            880 LOAD_FAST                9 (i)
+            882 STORE_SUBSCR
+
+752     >>  886 JUMP_BACKWARD          106 (to 676)
+
+753     >>  888 LOAD_FAST                2 (kline_ndarray)
+            890 RETURN_VALUE
+
+754     >>  892 LOAD_FAST                7 (flag)
+            894 LOAD_CONST               9 (1)
+            896 COMPARE_OP               2 (==)
+            902 POP_JUMP_FORWARD_IF_FALSE    21 (to 946)
+
+755         904 LOAD_GLOBAL             17 (NULL + system_log)
+            916 LOAD_ATTR                9 (debug)
+            926 LOAD_CONST              13 ('K线数据转化异常，默认返回空值')
+            928 PRECALL                  1
+            932 CALL                     1
+            942 POP_TOP
+            944 JUMP_FORWARD            26 (to 998)
+
+756     >>  946 LOAD_FAST                7 (flag)
+            948 LOAD_CONST              11 (-1)
+            950 COMPARE_OP               2 (==)
+            956 POP_JUMP_FORWARD_IF_FALSE    20 (to 998)
+
+757         958 LOAD_GLOBAL             17 (NULL + system_log)
+            970 LOAD_ATTR                9 (debug)
+            980 LOAD_CONST              14 ('K线数据返回空值')
+            982 PRECALL                  1
+            986 CALL                     1
+            996 POP_TOP
+        >>  998 JUMP_FORWARD            62 (to 1124)
+        >> 1000 PUSH_EXC_INFO
+
+758        1002 LOAD_GLOBAL             34 (Exception)
+           1014 CHECK_EXC_MATCH
+           1016 POP_JUMP_FORWARD_IF_FALSE    49 (to 1116)
+           1018 STORE_FAST              13 (e)
+
+759        1020 LOAD_GLOBAL             17 (NULL + system_log)
+           1032 LOAD_ATTR                9 (debug)
+           1042 LOAD_CONST              15 ('K线数据获取失败, 异常：{}')
+           1044 LOAD_METHOD             10 (format)
+           1066 LOAD_FAST               13 (e)
+           1068 PRECALL                  1
+           1072 CALL                     1
+           1082 PRECALL                  1
+           1086 CALL                     1
+           1096 POP_TOP
+           1098 POP_EXCEPT
+           1100 LOAD_CONST               0 (None)
+           1102 STORE_FAST              13 (e)
+           1104 DELETE_FAST             13 (e)
+           1106 JUMP_FORWARD             8 (to 1124)
+        >> 1108 LOAD_CONST               0 (None)
+           1110 STORE_FAST              13 (e)
+           1112 DELETE_FAST             13 (e)
+           1114 RERAISE                  1
+
+758     >> 1116 RERAISE                  0
+        >> 1118 COPY                     3
+           1120 POP_EXCEPT
+           1122 RERAISE                  1
+
+760     >> 1124 LOAD_FAST                2 (kline_ndarray)
+           1126 RETURN_VALUE
+ExceptionTable:
+  252 to 888 -> 1000 [0]
+  892 to 996 -> 1000 [0]
+  1000 to 1018 -> 1118 [1] lasti
+  1020 to 1096 -> 1108 [1] lasti
+  1108 to 1116 -> 1118 [1] lasti
