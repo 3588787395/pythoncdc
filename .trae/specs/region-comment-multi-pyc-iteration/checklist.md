@@ -264,7 +264,7 @@
   - [x] R13-11 累计成功率 ≥ 上一轮（R12 67.05% → R13 持平；klinedata.pyc 46.67%→48.89%，+1 函数匹配，单调递增）
   - [x] R13-12 N/A（本 pyc 未达 100%，未生成新 OK.py；klinedataOK.py 由 single 命令刷新，编译通过）
   - [x] R13-13 pyc_index.json 已更新（klinedata partial/0.4889/ok_py=True/round=13）
-  - [x] R13-14 commit + push `rcm-r13:`
+  - [x] R13-14 commit `rcm-r13:`（LOCAL commit b92522d — push 失败网络连接故障 github.com:443 不可达，push-pending，4 次重试均失败）
   - 残留：klinedata.pyc 23 mismatch 函数（B1:3/B2:2/C:2/C2:1/E:4/R:6/ARG:4/OTHER:2）/ 跨轮残留 T3/T2/B/C/E/F/M2/G3/R 不变
 - [ ] R13+ 持续直到所有 pyc `decompile_status = ok`
 
