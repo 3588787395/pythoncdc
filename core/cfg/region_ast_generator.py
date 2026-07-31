@@ -18608,6 +18608,16 @@ AST 映射规则:
             KW_NAMES（R18 同步修复），确保 keyword 参数名随 CALL 一起传入
             reconstruct，重编后 with 上下文调用的 encoding= 等关键字不被丢弃。
             依「表达式完整性」+ 表达式归约无信息丢失。
+          - [R19 fix] if-drop Defect 3：WithRegion.cleanup_blocks 误消费 with 语句
+            之后的 if 守卫块（POP_JUMP_* 结尾的兄弟 IfRegion 条件块）。根因在
+            region_analyzer._collect_normal_exit_cleanup（_identify_with_regions
+            路径）的 has_user_code 检查不识别条件跳转指令，将 `if b is not None:`
+            守卫块当线性清理块收集，导致 _generate_with 将其标记为 generated，
+            守卫丢失、body 作为孤儿无条件语句残留。R19 在 _collect_normal_exit_cleanup
+            增加 POP_JUMP_* 结构守卫（命中即终止清理扫描——清理区线性、终止于 with
+            自然出口）+ block_to_region 归属守卫（镜像 R07 Pattern T）。本方法
+            _generate_with 的 with_cleanup_blocks 集合因此不再含 post-with if 守卫，
+            下游 _generate_if 正确接管该块。依「每块唯一归属」+「清理边界=自然出口」。
         """
         region_id = id(region)
         self._generating_regions.add(region_id)

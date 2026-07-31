@@ -129,6 +129,11 @@
   - [x] T2.18.2 修复工程师：按区域归约算法修复 → `rounds/round_18/repair_engineer/fix_report.md`（Pattern KW_NAMES with 上下文管理器调用关键字参数丢失修复，_extract_with_items ctx_expr 白名单 +KW_NAMES，trade_strategy_add true_diffs 189→61；11/11 复现实例 NO-DEFECT）
   - [x] T2.18.3 commit + push `rcm-r18:`
   - 残留：strategy.pyc 0/2=0% failed（<module> Pattern R2 不可修复字节码优化器 artifact + trade_strategy_add if-drop Defect 3 新发现 R19 修复目标）/ 跨轮残留 T3/T2/A2/B/C/E/F/M2/G3/R 及 R15 BOOLOP-in-return 不变
+- [x] T2.19 第 19 轮（取 pyc: IQCommon/strategy/strategy.pyc 续修 if-drop Defect 3 + 轮询 IQCommon/strategy/const.pyc）
+  - [x] T2.19.1 测试工程师：反编译 + 字节码 diff → `rounds/round_19/test_engineer/decompile_report.md`（strategy failed 0%→partial 50%，trade_strategy_add if-drop 守卫恢复；const.pyc pending→ok 100%；11 复现实例 6 DEFECT-REPRO + 5 CTRL 全部 NO-DEFECT）
+  - [x] T2.19.2 修复工程师：按区域归约算法修复 → `rounds/round_19/repair_engineer/fix_report.md`（WithRegion if-drop Defect 3 修复，_collect_normal_exit_cleanup +POP_JUMP_* 结构守卫 break + block_to_region 归属守卫；strategy 0/2→1/2，const 100%；11/11 复现实例 NO-DEFECT）
+  - [x] T2.19.3 commit + push `rcm-r19:`
+  - 残留：strategy.pyc 1/2=50% partial（<module> Pattern R2 不可修复）/ 跨轮残留 T3/T2/A2/B/C/E/F/M2/G3/R 及 R15 BOOLOP-in-return 不变
 - [ ] T2.NN ... 持续直到退出条件满足
 
 > 注：轮次数不设上限，持续直到所有 pyc 文件所有函数 100% 字节码一致。

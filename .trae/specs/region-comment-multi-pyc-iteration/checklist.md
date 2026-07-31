@@ -351,6 +351,23 @@
   - [x] R18-13 pyc_index.json 已更新（failed/0.0/ok_py=True/round=18）
   - [x] R18-14 commit + push `rcm-r18:` `git push <remote-url> main`
   - 残留：新增 Defect 3 if-drop/return-drop（WithRegion cleanup 误消费 with 语句之后块，R19 修复目标）；<module> Pattern R2 不可修复；跨轮残留 Pattern T3/T2/A2/B/C/C2/E/F/M2/G3/R 及 R15 BOOLOP-in-return 不变
+- [x] R19 通用清单全部通过（取 pyc: IQCommon/strategy/strategy.pyc 续修 if-drop Defect 3 + 轮询 IQCommon/strategy/const.pyc）
+  - [x] R19-0 该轮取的 pyc 文件路径已记录（strategy.pyc failed→partial 50% 续修 + const.pyc pending→ok 100% 轮询）
+  - [x] R19-1 测试工程师 `decompile_report.md` 已生成（strategy 0%→50%，trade_strategy_add 守卫恢复；const 100%；11 复现实例 6 DEFECT-REPRO + 5 CTRL 全部 NO-DEFECT）
+  - [x] R19-2 ≥ 10 个最小复现实例已归档（11 个：6 DEFECT-REPRO post-with if/elif/return 守卫 + 5 CTRL，全部 NO-DEFECT）
+  - [x] R19-3 修复工程师修复 WithRegion if-drop Defect 3 → `rounds/round_19/repair_engineer/fix_report.md`（_collect_normal_exit_cleanup +POP_JUMP_* 结构守卫 break + block_to_region 归属守卫）
+  - [x] R19-4 `_identify_with_regions` docstring 已更新（「唯一归属判定」+[R19 fix] cleanup_blocks 边界守卫段落）
+  - [x] R19-5 `_generate_with` docstring 已更新（+[R19 fix] 段落，if-drop Defect 3 根因与修复链路）
+  - [x] R19-6 既有测试矩阵无退化（R18 repros 11/11 NO-DEFECT 不变，零回归）
+  - [x] R19-7 11 复现实例全部验证（11/11 NO-DEFECT，6 DEFECT-REPRO 经修复后全部 NO-DEFECT）
+  - [x] R19-8 反模式自检通过（0 新增 _fix_/_merge_/_patch_ 等前缀，修复为现有方法内 +2 道守卫）
+  - [x] R19-9 算法 4 原则 FULLY COMPLIANT（自底向上归约/每块唯一归属强化/嵌套即抽象节点/父引用子入口）
+  - [x] R19-10 `python -c "import core.cfg.region_analyzer; import core.cfg.region_ast_generator; import core.cfg.code_generator"` 编译通过（exit 0）
+  - [x] R19-11 累计成功率（R18 36 verified 306/458=66.81% → R19 37 verified 308/459=67.10%，+0.29 pp 单调递增）
+  - [x] R19-12 strategy.pyc 1/2=50% partial（trade_strategy_add 100%，<module> Pattern R2 不可修复），strategyOK.py 由 single 命令生成（未手工编辑）；const.pyc 100% ok，constOK.py 已生成
+  - [x] R19-13 pyc_index.json 已更新（strategy partial/0.5/ok_py=True/round=19；const ok/1.0/ok_py=True/round=19）
+  - [x] R19-14 commit + push `rcm-r19:` `git push <remote-url> main`
+  - 残留：strategy.pyc <module> Pattern R2 不可修复；main.pyc 深度残留 failed 不阻塞；Defect 3 已闭环；跨轮残留 Pattern T3/T2/A2/B/C/C2/E/F/M2/G3/R 及 R15 BOOLOP-in-return 不变
 - [ ] R15+ 持续直到所有 pyc `decompile_status = ok`
 
 ## 阶段三（Phase 3：全量验证与 +OK 生成）

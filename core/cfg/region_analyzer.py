@@ -8251,6 +8251,30 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
             if has_user_code:
                 continue
             last = block.get_last_instruction()
+            # [R19 fix] if-drop Defect 3: a block whose last instruction is a
+            # conditional jump (POP_JUMP_*) is a sibling IfRegion condition block,
+            # NOT with normal-exit cleanup. With normal-exit cleanup is structurally
+            # LINEAR — it always ends with POP_EXCEPT / RERAISE / POP_TOP /
+            # JUMP_FORWARD / RETURN (the __exit__(None,None,None) call + stack
+            # unwind), never a conditional branch. The WITH cleanup region is
+            # contiguous and terminates at the WITH block's natural exit (the
+            # JUMP_FORWARD target of the __exit__ call). Once the scan reaches a
+            # conditional-jump block, it has entered post-with sibling code (an
+            # if-guard such as `if strategy_lv2_name is not None:`). Consuming it
+            # would drop the if-guard and leave the body as an orphan unconditional
+            # statement. Per "unique block ownership" the conditional-jump block
+            # belongs to a sibling IfRegion (identified later in the
+            # TRY>LOOP>WITH>...>IF pipeline), so terminate the cleanup scan.
+            if last and last.opname.startswith('POP_JUMP_'):
+                break
+            # [R19 fix] block_to_region ownership guard (mirrors R07 Pattern T in
+            # _generate_with): a block already owned by a non-WithRegion (e.g. a
+            # TRY/LOOP region identified earlier in the pipeline) cannot be with
+            # cleanup. Defends against over-consumption when a sibling region was
+            # registered before WITH.
+            _owner = self.block_to_region.get(block)
+            if _owner is not None and not isinstance(_owner, WithRegion):
+                continue
             if last and last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
                 meaningful = [i for i in block.instructions
                               if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP',
@@ -8424,6 +8448,11 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
           - 含 BEFORE_WITH / BEFORE_ASYNC_WITH 的块（属于其它 with 入口）。
           - `block in self.block_to_region` 守卫：已被 TRY 等先识别区域占用的块
             不再纳入 with body（先到先得，TRY > WITH）。
+        [R19 fix] cleanup_blocks 边界守卫：_collect_normal_exit_cleanup 收集
+        normal-exit 清理块时，遇 POP_JUMP_* 结尾的块即终止扫描（条件跳转=兄弟
+        IfRegion 条件块，非线性清理块；清理区终止于 with 自然出口），并增加
+        block_to_region 归属守卫排除已被非-WithRegion 占用的块。修复 post-with
+        `if b is not None:` 守卫被误纳入 cleanup_blocks 致 if-drop Defect 3。
         嵌套 with 由异常表 depth 区分：外层 depth < 内层 depth。合并连续 with 的
         条件由 WithRegion.should_merge_with 多态判定：region1.body_offset_end + 1
         == region2.body_offset_start 且 depth 相同。每个基本块经 block_to_region
