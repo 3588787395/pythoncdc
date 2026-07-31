@@ -8691,12 +8691,21 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                     i += 1
                     continue
                 # 收集所有看起来是加载/调用的指令
+                # [R18 fix] 包含 KW_NAMES：with 上下文管理器调用若带关键字参数
+                # （如 `with open(path, 'r', encoding='utf-8') as f:`），字节码
+                # 形如 LOAD_CONST('utf-8'); KW_NAMES ('encoding',); PRECALL; CALL。
+                # 旧白名单遗漏 KW_NAMES，导致 ctx_expr 丢失该指令，下游
+                # ExpressionReconstructor.reconstruct 把 'utf-8' 当位置参数，
+                # 重编后 WITH 上下文调用的 encoding= 关键字被丢弃（与原始字节码
+                # 不一致）。依「每块唯一归属」+ 表达式完整性：KW_NAMES 是上下文
+                # 表达式的组成部分，必须随 CALL 一起收集。
                 if instr.opname in ('LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_ATTR', 'LOAD_FAST',
                                    'LOAD_CONST', 'LOAD_METHOD', 'CALL', 'PRECALL',
                                    'PUSH_NULL', 'SWAP', 'COPY', 'BINARY_SUBSCR',
                                    'BINARY_OP', 'BUILD_TUPLE', 'BUILD_LIST', 'BUILD_MAP',
                                    'BUILD_SET', 'BUILD_STRING', 'BUILD_SLICE',
-                                   'UNPACK_SEQUENCE', 'IS_OP', 'CONTAINS_OP'):
+                                   'UNPACK_SEQUENCE', 'IS_OP', 'CONTAINS_OP',
+                                   'KW_NAMES'):
                     ctx_expr.append(instr)
                 i += 1
 

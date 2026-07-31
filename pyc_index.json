@@ -373,10 +373,10 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/strategy.pyc",
     "size": 4975,
     "function_count": 2,
-    "decompile_status": "pending",
+    "decompile_status": "failed",
     "bytecode_match_rate": 0.0,
-    "ok_py_generated": false,
-    "last_tested_round": 0
+    "ok_py_generated": true,
+    "last_tested_round": 18
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/wizard_quant_api.pyc",

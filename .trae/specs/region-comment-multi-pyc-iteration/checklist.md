@@ -334,6 +334,23 @@
   - [x] R17-13 pyc_index.json 已更新（ok/1.0/ok_py=True/round=17）
   - [x] R17-14 commit + push `rcm-r17:`
   - 残留：无新增；跨轮残留 Pattern T3/T2/A2/B/C/E/F/M2/G3/R 及 R15 BOOLOP-in-return 不变
+- [x] R18 通用清单全部通过（取 pyc: IQCommon/strategy/strategy.pyc，新 pyc 轮询）
+  - [x] R18-0 该轮取的 pyc 文件路径已记录（IQCommon/strategy/strategy.pyc，decompile_status=pending→failed）
+  - [x] R18-1 测试工程师 `decompile_report.md` 已生成（pending→0%，2 mismatches，11 复现实例 8 DEFECT-REPRO + 3 CTRL 全部 NO-DEFECT）
+  - [x] R18-2 ≥ 10 个最小复现实例已归档（11 个：8 DEFECT-REPRO with-keyword-drop + 3 CTRL，全部 NO-DEFECT）
+  - [x] R18-3 修复工程师修复 KW_NAMES 关键字参数丢失 → `rounds/round_18/repair_engineer/fix_report.md`（ctx_expr 白名单 +KW_NAMES，trade_strategy_add true_diffs 189→61）
+  - [x] R18-4 N/A（未修改 `_identify_*_regions` 方法，无需更新 docstring）
+  - [x] R18-5 `_generate_with` docstring 已更新（+[R18 fix] 段落，with 上下文管理器调用关键字参数保留链路）
+  - [x] R18-6 既有测试矩阵无退化（R17 repros 10/10 NO-DEFECT 不变，零回归）
+  - [x] R18-7 11 复现实例全部验证（11/11 NO-DEFECT，8 DEFECT-REPRO 经修复后全部 NO-DEFECT）
+  - [x] R18-8 反模式自检通过（0 新增 _fix_/_merge_/_patch_ 等前缀，修复为白名单 +1 项）
+  - [x] R18-9 算法 4 原则 FULLY COMPLIANT（自底向上归约/每块唯一归属/嵌套即抽象节点/父引用子入口）
+  - [x] R18-10 `python -c "import core.cfg.region_analyzer; import core.cfg.region_ast_generator; import core.cfg.code_generator"` 编译通过（exit 0）
+  - [x] R18-11 累计成功率（R17 35 verified 306/456=67.11% → R18 36 verified 306/458=66.81%，下降 -0.30 pp；非回归，来自新 pyc 0/2 + <module> Pattern R2 不可修复 + trade_strategy_add if-drop 新发现）
+  - [x] R18-12 本 pyc 0/2=0% failed，strategyOK.py 由 single 命令生成（未手工编辑），KW_NAMES encoding= 保留
+  - [x] R18-13 pyc_index.json 已更新（failed/0.0/ok_py=True/round=18）
+  - [x] R18-14 commit + push `rcm-r18:` `git push <remote-url> main`
+  - 残留：新增 Defect 3 if-drop/return-drop（WithRegion cleanup 误消费 with 语句之后块，R19 修复目标）；<module> Pattern R2 不可修复；跨轮残留 Pattern T3/T2/A2/B/C/C2/E/F/M2/G3/R 及 R15 BOOLOP-in-return 不变
 - [ ] R15+ 持续直到所有 pyc `decompile_status = ok`
 
 ## 阶段三（Phase 3：全量验证与 +OK 生成）

@@ -18600,6 +18600,14 @@ AST 映射规则:
             归属守卫：跳过被其他区域（如 TryExceptRegion handler_entry）拥有的块。修复
             with 与 try-except 并列时 WithRegion 误消费 try handler entry，导致
             _generate_try 跳过 except、try 块未关闭的缺陷。依「每块唯一归属」。
+          - [R18 fix] with 上下文管理器调用的关键字参数保留：with-item 重建通过
+            region.items → context_instrs → expr_instrs → expr_reconstructor.reconstruct
+            链路生成 context_expr。当 with 上下文调用带关键字参数（如
+            `with open(path, 'r', encoding='utf-8') as f:`）时，字节码含 KW_NAMES
+            指令。region_analyzer._extract_with_items 的 ctx_expr 白名单现已包含
+            KW_NAMES（R18 同步修复），确保 keyword 参数名随 CALL 一起传入
+            reconstruct，重编后 with 上下文调用的 encoding= 等关键字不被丢弃。
+            依「表达式完整性」+ 表达式归约无信息丢失。
         """
         region_id = id(region)
         self._generating_regions.add(region_id)

@@ -124,6 +124,11 @@
   - [x] T2.17.2 修复工程师：无需修复（pyc 首次验证即 100%）→ 无 fix_report（pyc 100% 一致，豁免）
   - [x] T2.17.3 commit + push `rcm-r17:`
   - 残留：无新增；跨轮残留 T3/T2/A2/B/C/E/F/M2/G3/R 及 R15 BOOLOP-in-return 不变
+- [x] T2.18 第 18 轮（取 pyc: IQCommon/strategy/strategy.pyc，新 pyc 轮询）
+  - [x] T2.18.1 测试工程师：取下一个 pyc，反编译 + 字节码 diff → `rounds/round_18/test_engineer/decompile_report.md`（pending→failed 0%，2 mismatches，11 复现实例 8 DEFECT-REPRO + 3 CTRL 全部 NO-DEFECT）
+  - [x] T2.18.2 修复工程师：按区域归约算法修复 → `rounds/round_18/repair_engineer/fix_report.md`（Pattern KW_NAMES with 上下文管理器调用关键字参数丢失修复，_extract_with_items ctx_expr 白名单 +KW_NAMES，trade_strategy_add true_diffs 189→61；11/11 复现实例 NO-DEFECT）
+  - [x] T2.18.3 commit + push `rcm-r18:`
+  - 残留：strategy.pyc 0/2=0% failed（<module> Pattern R2 不可修复字节码优化器 artifact + trade_strategy_add if-drop Defect 3 新发现 R19 修复目标）/ 跨轮残留 T3/T2/A2/B/C/E/F/M2/G3/R 及 R15 BOOLOP-in-return 不变
 - [ ] T2.NN ... 持续直到退出条件满足
 
 > 注：轮次数不设上限，持续直到所有 pyc 文件所有函数 100% 字节码一致。
