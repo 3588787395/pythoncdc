@@ -134,6 +134,11 @@
   - [x] T2.19.2 修复工程师：按区域归约算法修复 → `rounds/round_19/repair_engineer/fix_report.md`（WithRegion if-drop Defect 3 修复，_collect_normal_exit_cleanup +POP_JUMP_* 结构守卫 break + block_to_region 归属守卫；strategy 0/2→1/2，const 100%；11/11 复现实例 NO-DEFECT）
   - [x] T2.19.3 commit + push `rcm-r19:`
   - 残留：strategy.pyc 1/2=50% partial（<module> Pattern R2 不可修复）/ 跨轮残留 T3/T2/A2/B/C/E/F/M2/G3/R 及 R15 BOOLOP-in-return 不变
+- [x] T2.20 第 20 轮（取 pyc: IQCommon/logger/__init__.pyc，新 pyc 轮询）
+  - [x] T2.20.1 测试工程师：反编译 + 字节码 diff → `rounds/round_20/test_engineer/decompile_report.md`（logger/__init__.pyc 90.91%→100%，Pattern SIG kwonly/*vararg 签名重建；12 复现实例 kwonly/vararg 控制组全部 NO-DEFECT）
+  - [x] T2.20.2 修复工程师：按区域归约算法修复 → `rounds/round_20/repair_engineer/fix_report.md`（装载器 co_kwonlyargcount/co_posonlyargcount 硬编码→读取真实值；user_print 签名恢复，22/22 100%；12/12 复现实例 NO-DEFECT）
+  - [x] T2.20.3 commit + push `rcm-r20:`（LOCAL commit 2819533 — push 失败网络连接故障 github.com:443 不可达，push-pending，3 次重试均失败；待网络恢复后执行 `git push origin main`）
+  - 残留：无新增（logger/__init__.pyc 100% ok）；跨轮残留 T3/T2/A2/B/C/E/F/M2/G3/R 及 R15 BOOLOP-in-return 不变
 - [ ] T2.NN ... 持续直到退出条件满足
 
 > 注：轮次数不设上限，持续直到所有 pyc 文件所有函数 100% 字节码一致。

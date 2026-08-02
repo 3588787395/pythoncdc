@@ -2105,6 +2105,22 @@ class RegionASTGenerator:
 
         Args:
             code_obj: 可选的代码对象。如果为None，则使用self.cfg.code
+
+        [R20 fix] 背景/问题/修复/算法合规:
+            - 背景: 本方法按 CPython 3.11+ co_varnames 布局重建函数签名
+              (positional, kwonly, *vararg, **kwarg, locals)，依赖 code_obj
+              提供的 co_kwonlyargcount / co_posonlyargcount。
+            - 问题: pyc_loader_v2.py 硬编码 kw_only_arg_count=0，导致
+              to_python_code() 产出的 CodeType co_kwonlyargcount=0；此处
+              kwonly_count=0 使 *vararg 索引被算到第一个 kwonly 名上
+              (如 `def user_print(*args, sep=' ', ...)` 被重建为
+              `def user_print(*sep)`)，kwonly 形参全部丢失。
+            - 修复: 装载器改为从 code object 读取真实 co_kwonlyargcount /
+              co_posonlyargcount (pyc_loader_v2.py marshal_to_pyc_obj
+              code 分支)。本方法逻辑本身正确，只需收到正确的输入。
+            - 算法合规: 「自底向上归约」中函数签名是父 FunctionDef 的
+              原子属性；签名数据正确后，MAKE_FUNCTION 默认值引用语义
+              (kw_defaults 与 kwonly 形参位置严格对齐) 自动恢复。
         """
         if code_obj is None:
             code_obj = getattr(self.cfg, 'code', None)

@@ -368,6 +368,23 @@
   - [x] R19-13 pyc_index.json 已更新（strategy partial/0.5/ok_py=True/round=19；const ok/1.0/ok_py=True/round=19）
   - [x] R19-14 commit + push `rcm-r19:` `git push <remote-url> main`
   - 残留：strategy.pyc <module> Pattern R2 不可修复；main.pyc 深度残留 failed 不阻塞；Defect 3 已闭环；跨轮残留 Pattern T3/T2/A2/B/C/C2/E/F/M2/G3/R 及 R15 BOOLOP-in-return 不变
+- [x] R20 通用清单全部通过（取 pyc: IQCommon/logger/__init__.pyc，新 pyc 轮询）
+  - [x] R20-0 该轮取的 pyc 文件路径已记录（IQCommon/logger/__init__.pyc，decompile_status=partial → ok）
+  - [x] R20-1 测试工程师 `decompile_report.md` 已生成（90.91%→100%，Pattern SIG kwonly/*vararg 签名重建，12 复现实例 kwonly/vararg 控制组全部 NO-DEFECT）
+  - [x] R20-2 ≥ 10 个最小复现实例已归档（12 个，全部 NO-DEFECT；pyc 修复后 100% 一致）
+  - [x] R20-3 修复工程师 `fix_report.md` 已生成（装载器 co_kwonlyargcount/co_posonlyargcount 硬编码→读取真实值，Pattern SIG）
+  - [x] R20-4 涉及的 `_identify_*_regions` 方法 docstring：N/A（未修改区域识别方法）
+  - [x] R20-5 `_extract_function_args` docstring 已更新（+[R20 fix] 背景/问题/修复/算法合规 4 节）
+  - [x] R20-6 既有测试矩阵无退化（R19 repros 11/11 NO-DEFECT 不变，零回归）
+  - [x] R20-7 12 复现实例全部验证（12/12 NO-DEFECT）
+  - [x] R20-8 反模式自检通过（0 新增 _fix_/_merge_/_patch_ 等前缀）
+  - [x] R20-9 算法 4 原则 FULLY COMPLIANT（签名是 FunctionDef 原子属性，装载器保证归约输入准确）
+  - [x] R20-10 `python -c "import core.cfg.region_analyzer; import core.cfg.region_ast_generator; import core.cfg.code_generator; import core.pyc_loader_v2"` 编译通过（exit 0）
+  - [x] R20-11 累计成功率（R19 37 verified 308/459=67.10% → R20 38 verified 330/481=68.61%，+1.51 pp 单调递增）
+  - [x] R20-12 本 pyc 达 100%，`__init__OK.py` 由 single 命令生成且 py_compile 通过（未手工编辑）
+  - [x] R20-13 pyc_index.json 已更新（logger/__init__.pyc ok/1.0/ok_py=True/round=20）
+  - [x] R20-14 commit + push `rcm-r20:`（LOCAL commit 2819533 — push 失败网络连接故障 github.com:443 不可达，push-pending，3 次重试均失败；待网络恢复后执行 `git push origin main`）
+  - 残留：无新增（logger/__init__.pyc 100% ok）；跨轮残留 Pattern T3/T2/A2/B/C/C2/E/F/M2/G3/R 及 R15 BOOLOP-in-return 不变
 - [ ] R15+ 持续直到所有 pyc `decompile_status = ok`
 
 ## 阶段三（Phase 3：全量验证与 +OK 生成）

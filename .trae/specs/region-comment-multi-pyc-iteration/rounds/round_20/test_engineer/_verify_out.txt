@@ -1,0 +1,16 @@
+﻿[SINGLE] F:\Downloads\pythoncdc-main\site-packages\IQCommon\logger\__init__.pyc
+  OK.py: F:\Downloads\pythoncdc-main\site-packages\IQCommon\logger\__init__OK.py
+  source: 4374 chars
+
+字节码 diff 报告:
+  decompile_status:   partial
+  total_functions:   22
+  matched_functions: 20
+  match_rate:        90.91%
+  missing_in_decomp: []
+  extra_in_decomp:   []
+  mismatches (2):
+    - <module>: orig=104 decomp=98 jump_diffs=0 true_diffs=38
+      first_diff: {'index': 64, 'orig_op': 'LOAD_CONST', 'decomp_op': 'LOAD_CONST', 'orig_arg': ' ', 'decomp_arg': '<code object user_print>'}
+    - user_print: orig=21 decomp=21 jump_diffs=0 true_diffs=2
+      first_diff: {'index': 5, 'orig_op': 'LOAD_FAST', 'decomp_op': 'LOAD_GLOBAL', 'orig_arg': 'args', 'decomp_arg': 'args'}

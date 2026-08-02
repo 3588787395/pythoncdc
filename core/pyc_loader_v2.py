@@ -65,8 +65,20 @@ def marshal_to_pyc_obj(obj, module: PycModule) -> Optional[PycRef]:
         pyc_code.num_locals = obj.co_nlocals
         pyc_code.stack_size = obj.co_stacksize
         pyc_code.flags = obj.co_flags
-        pyc_code.pos_only_arg_count = 0
-        pyc_code.kw_only_arg_count = 0
+        # [R20 fix] kwonly/posonly arg count must be read from the code object,
+        # not hardcoded to 0. The old code hardcoding 0 caused to_python_code()
+        # to produce a CodeType with co_kwonlyargcount=0, which broke signature
+        # reconstruction in RegionASTGenerator._extract_function_args: with
+        # kwonly_count=0 the *vararg index was computed as 0 (picking the first
+        # kwonly name as *args) and all kwonly args were dropped — e.g.
+        # `def user_print(*args, sep=' ', end='', file=None, flush=None):`
+        # decompiled as `def user_print(*sep):`. Reading the real counts makes
+        # _extract_function_args' kwonly-then-vararg layout logic (which already
+        # follows CPython 3.11+ co_varnames ordering) receive correct inputs.
+        # This is a loader fix (not a region-analysis patch): the region code
+        # was already correct; it was being fed wrong co_kwonlyargcount.
+        pyc_code.pos_only_arg_count = getattr(obj, 'co_posonlyargcount', 0)
+        pyc_code.kw_only_arg_count = getattr(obj, 'co_kwonlyargcount', 0)
         
         # [关键修复] 使用 PycBytes 类存储字节码，避免解码为字符串
         pyc_code.code = Ref(PycBytes(PycObject.TYPE_STRING))
