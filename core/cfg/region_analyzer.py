@@ -3676,15 +3676,57 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 if hasattr(lr, 'body_blocks') and lr.body_blocks:
                     loop_body_blocks.update(lr.body_blocks)
             try_blocks_set = set(tr.try_blocks) if tr.try_blocks else set()
+            # [R21 fix] 区域归约算法原则 1（自底向上归约）+ 原则 3（嵌套即抽象节点）：
+            # _cleanup_try_else_in_loop_body 原逻辑只检查 try_blocks_set 中块的
+            # 后继来判定 else 块是否 spurious。但 try-end 块（try_offset_end 对应
+            # 的块，如 JUMP_FORWARD 跳到 else 入口）可能不在 try_blocks 中
+            #（_find_try_else_blocks 发现 else 块后，try_blocks 被过滤移除了
+            # else_set，try_end_block 可能也被移除）。这导致 try_end_block 的
+            # JUMP_FORWARD→else 后继未被检查，else 块被误判为 spurious 并删除
+            #（handlers.pyc _target stream 版本的 try-else 丢失）。
+            # 修复：将 try_end_block 加入后继检查集合。try_end_block 以
+            # JUMP_FORWARD 直达 else 入口是 try-else 的标准模式（Pattern TE）。
+            _try_end_block = None
+            _try_end_offset = getattr(tr, 'try_offset_end', None)
+            if _try_end_offset is not None:
+                _try_end_block = self.cfg.get_block_by_offset(_try_end_offset)
+            _blocks_to_check = try_blocks_set
+            if _try_end_block is not None and _try_end_block not in _blocks_to_check:
+                _blocks_to_check = try_blocks_set | {_try_end_block}
+            # [R21 fix] 区域归约算法原则 1（自底向上归约）+ 原则 3（嵌套即抽象节点）：
+            # else 块形成链式结构（如 514→642→682），只有首块是 try_end_block
+            # 的直接后继。如果仅检查直接后继，链中的后续块会被误判为 spurious
+            # 并删除。修复：从 try_end_block 的直接后继出发，在 else_blocks 中
+            # 做可达性分析，所有从 else 入口可达的 else 块都不应被判定为 spurious。
+            _else_entry_blocks = set()
+            if _try_end_block is not None:
+                for _succ in _try_end_block.successors:
+                    if _succ in set(tr.else_blocks):
+                        _else_entry_blocks.add(_succ)
+            _non_spurious_else = set()
+            if _else_entry_blocks:
+                _else_set = set(tr.else_blocks)
+                _queue = list(_else_entry_blocks)
+                _visited = set()
+                while _queue:
+                    _b = _queue.pop(0)
+                    if _b in _visited:
+                        continue
+                    _visited.add(_b)
+                    _non_spurious_else.add(_b)
+                    for _s in _b.successors:
+                        if _s in _else_set and _s not in _visited:
+                            _queue.append(_s)
             spurious = [eb for eb in tr.else_blocks
                         if eb in loop_body_blocks
                         and self.block_roles.get(eb.start_offset) not in (BlockRole.PURE_CONTINUE, BlockRole.CONTINUE)
-                        and not any(tb in try_blocks_set
+                        and eb not in _non_spurious_else
+                        and not any(tb in _blocks_to_check
                                     and eb in tb.successors
                                     and tb.get_last_instruction() is not None
                                     and tb.get_last_instruction().opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT', 'JUMP_ABSOLUTE')
                                     and tb.get_last_instruction().opname not in CONDITIONAL_JUMP_OPS
-                                    for tb in try_blocks_set)]
+                                    for tb in _blocks_to_check)]
             if not spurious:
                 continue
             for eb in spurious:
@@ -7591,6 +7633,57 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
             if alternative_merges and not try_end_is_back_edge:
                 merge_point = alternative_merges[0]
             else:
+                # [R21 fix] Pattern TE — try-end JUMP_FORWARD 跳过 handler 到 else。
+                # 区域归约算法原则 1（自底向上归约）+ 原则 3（嵌套即抽象节点）：
+                # 当 try 体正常出口以 JUMP_FORWARD 跳过整个 handler 区间到达
+                # else 子句，而 handler 以 continue/break/return 退出循环（无公
+                # 共后支配点）时，alternative_merges 为空。此时 try_end_block
+                # 的 JUMP_FORWARD 目标就是 else 子句入口。从该入口可达的、
+                # 不属于 try 体 / handler / 循环回边的块即为 else_blocks。
+                # 例如 handlers.pyc _target (stream) 的 try-else：
+                #   try: text = stream.read()  → JUMP_FORWARD 514 (else 入口)
+                #   except (IOError,...): continue  → JUMP_BACKWARD 2 (循环头)
+                #   else: msg = encode(text); ...
+                # 旧逻辑：merge_point=None, alternative_merges=[], 降级到
+                # (try_end=336, first_handler=338) 区间 → 空 → 返回空。
+                # 修复：检测 try_end_block JUMP_FORWARD 目标 > precise_handler_end
+                # 且不在 handler 集合中 → 从目标收集 else 块。
+                _te_else_blocks = []
+                if (try_end_block and try_end_block.instructions and
+                        not try_end_is_back_edge):
+                    _te_jf_target = None
+                    for _te_i in try_end_block.instructions:
+                        if _te_i.opname == 'JUMP_FORWARD':
+                            _te_jf_target = _te_i.argval
+                            break
+                    if (_te_jf_target is not None and
+                            _te_jf_target > precise_handler_end):
+                        _te_target_block = self.cfg.get_block_by_offset(_te_jf_target)
+                        if (_te_target_block is not None and
+                                _te_target_block not in all_handler_blocks and
+                                _te_target_block not in set(try_region.blocks)):
+                            # BFS 从 JUMP_FORWARD 目标收集 else 块
+                            _te_visited = set()
+                            _te_queue = [_te_target_block]
+                            _te_handler_set = all_handler_blocks | set(try_region.blocks)
+                            while _te_queue:
+                                _te_b = _te_queue.pop(0)
+                                if _te_b in _te_visited:
+                                    continue
+                                _te_visited.add(_te_b)
+                                if _te_b in _te_handler_set:
+                                    continue
+                                # 排除循环回边目标（continue 目标=循环头）
+                                if self._is_back_edge_target(_te_b, try_end_offset):
+                                    continue
+                                if not self._is_pass_or_return_none_block(_te_b):
+                                    _te_else_blocks.append(_te_b)
+                                for _te_s in _te_b.successors:
+                                    if _te_s not in _te_visited:
+                                        _te_queue.append(_te_s)
+                if _te_else_blocks:
+                    return _te_else_blocks
+
                 handler_entry_offsets = []
                 for heb in try_region.handler_entry_blocks:
                     if heb.start_offset >= try_end_offset:
@@ -7693,6 +7786,13 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
             return True
         
         return False
+
+    def _is_back_edge_target(self, block, try_end_offset):
+        """[R21] 判断块是否是循环回边目标（即循环头块）。
+        try-else 的 else 块 BFS 收集时需排除循环头——它是 continue 语句
+        的跳转目标，不属于 else 子句。简单判据：块的偏移 < try_end_offset
+        （else 块偏移应 > handler 区间）。"""
+        return block.start_offset < try_end_offset
 
     def _is_reachable_from(self, start: BasicBlock, target: BasicBlock,
                            exclude: Set[BasicBlock]) -> bool:

@@ -16836,6 +16836,36 @@ AST 映射规则:
                             break
                     if _in_other_nested:
                         continue
+                    # [R21 fix] Pattern TE — handler 中的 continue/break/return。
+                    # 区域归约算法原则 1（自底向上归约）+ 原则 3（嵌套即抽象节点）：
+                    # handler 块可能以 JUMP_BACKWARD（continue）或 JUMP_FORWARD（break）
+                    # 或 RETURN_VALUE（return）退出。当 handler body 块的 block_role
+                    # 是 CONTINUE/PURE_CONTINUE 时，直接生成 Continue 语句；是
+                    # BREAK/PURE_BREAK 时生成 Break 语句。否则 _generate_handler_body_statements
+                    # 会将 POP_EXCEPT+JUMP_BACKWARD 过滤为空，导致 handler body
+                    # 被填充为 pass（如 te001 的 `except ValueError: continue` → `pass`）。
+                    _hb_role = self.region_analyzer.get_block_role(hb)
+                    if _hb_role in (BlockRole.CONTINUE, BlockRole.PURE_CONTINUE):
+                        handler_body.append({'type': 'Continue'})
+                        self.generated_blocks.add(hb)
+                        continue
+                    if _hb_role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
+                        handler_body.append({'type': 'Break'})
+                        self.generated_blocks.add(hb)
+                        continue
+                    # [R21 fix] handler 中的 return 语句：当 handler body 块以
+                    # RETURN_VALUE/RETURN_CONST 结束且 block_role 是 RETURN 时，
+                    # 检测 return 值。POP_EXCEPT 被过滤后只剩 LOAD_CONST(None)+
+                    # RETURN_VALUE → 应生成 `return` 而非 `return None`（在 loop
+                    # 上下文中 `return None` 可能被误转为 Break）。
+                    if _hb_role == BlockRole.RETURN:
+                        hbs = self._generate_handler_body_statements(hb)
+                        if hbs:
+                            handler_body.extend(hbs)
+                        else:
+                            handler_body.append({'type': 'Return', 'value': {'type': 'Constant', 'value': None}})
+                        self.generated_blocks.add(hb)
+                        continue
                     hbs = self._generate_handler_body_statements(hb)
                     if hbs:
                         handler_body.extend(hbs)
@@ -16996,6 +17026,54 @@ AST 映射规则:
                     )
                     if eb_role in (BlockRole.BREAK, BlockRole.PURE_BREAK) and _eb_in_loop:
                         orelse_stmts.append({'type': 'Break'})
+                        self.generated_blocks.add(eb)
+                        continue
+                    # [R21 fix] Pattern TE — else 块中的 LOOP_BACK_EDGE 块。
+                    # 区域归约算法原则 1（自底向上归约）+ 原则 3（嵌套即抽象节点）：
+                    # try-else 的 else 子句中可能包含循环尾部回边块（如 write(msg) +
+                    # flush() + POP_JUMP_BACKWARD_IF_TRUE）。_generate_block_statements
+                    # 会把 POP_JUMP_BACKWARD_IF_TRUE 误识别为 if 条件，把循环体
+                    # 的后续块当作 then/else 分支（如 handlers.pyc _target 的
+                    # block@682 → 整个循环体被拉入 If）。修复：当 else 块的 role
+                    # 是 LOOP_BACK_EDGE 时，只生成回边指令之前的用户语句（隐式
+                    # continue 语义），跳过循环条件检测指令。
+                    if eb_role == BlockRole.LOOP_BACK_EDGE and _eb_in_loop:
+                        # 找到循环条件检测起始点：LOAD_ATTR(条件属性) +
+                        # POP_JUMP_BACKWARD_IF_* 之前的所有指令为用户语句
+                        _cond_start = None
+                        _instrs_no_noise = [i for i in eb.instructions
+                                            if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'EXTENDED_ARG')]
+                        # 从后往前找循环回边条件指令
+                        for _ri_idx in range(len(_instrs_no_noise) - 1, -1, -1):
+                            _ri = _instrs_no_noise[_ri_idx]
+                            if _ri.opname in ('POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE',
+                                              'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'):
+                                # 回边条件之前的 LOAD_ATTR 也是条件一部分
+                                _cond_start = _ri_idx
+                                while _cond_start > 0 and _instrs_no_noise[_cond_start - 1].opname in ('LOAD_ATTR', 'LOAD_FAST', 'EXTENDED_ARG'):
+                                    _cond_start -= 1
+                                break
+                        if _cond_start is not None and _cond_start > 0:
+                            # 生成条件之前的用户语句
+                            _user_instrs = _instrs_no_noise[:_cond_start]
+                            _stmt_instrs_r21 = []
+                            for _ui in _user_instrs:
+                                _stmt_instrs_r21.append(_ui)
+                                if _ui.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                                    store_stmt = self._build_store_statement(_stmt_instrs_r21, block=eb)
+                                    if store_stmt:
+                                        orelse_stmts.append(store_stmt)
+                                    _stmt_instrs_r21 = []
+                                elif _ui.opname == 'POP_TOP' and _stmt_instrs_r21:
+                                    expr = self.expr_reconstructor.reconstruct(_stmt_instrs_r21[:-1] if _stmt_instrs_r21[-1] is not _ui else _stmt_instrs_r21)
+                                    if expr:
+                                        orelse_stmts.append({'type': 'Expr', 'value': expr})
+                                    _stmt_instrs_r21 = []
+                            # 处理残余指令
+                            if _stmt_instrs_r21:
+                                expr = self.expr_reconstructor.reconstruct(_stmt_instrs_r21)
+                                if expr:
+                                    orelse_stmts.append({'type': 'Expr', 'value': expr})
                         self.generated_blocks.add(eb)
                         continue
                     ebs = self._generate_block_statements(eb)
@@ -32608,6 +32686,69 @@ AST 映射规则:
                         stmt_instrs = []
                         skip_offsets.update(skip_remaining)
                         continue
+                # [R21 fix] Pattern SIG2：no-SWAP 反源序连续 STORE = 元组解包赋值。
+                # 区域归约算法原则 1（自底向上）+ 原则 3（嵌套即抽象节点）：
+                # 固定长度元组解包 `t1, t2, ..., tn = e1, e2, ..., en`（n>=2，n 较小
+                # 时无 UNPACK_SEQUENCE）在 CPython 3.11+ 编译为：
+                #   <e1> <e2> ... <en> STORE tn ... STORE t2 STORE t1
+                # 即所有 RHS 表达式依次压栈后，按**反源序**连续 STORE（首个 STORE
+                # 弹出 TOS = 最后一个 RHS 值）。与独立赋值 `a = e1; b = e2`（STORE 间
+                # 夹有 LOAD 等指令、每个 STORE 前恰 1 个栈值）的结构判据：STORE 连续
+                # 相邻（N>=2）且前置 stmt_instrs 重建出 >= N 的栈深度。N 个 STORE 必须
+                # 整体归约为单一 Tuple 目标 Assign；若逐个 `_build_store_statement`
+                # 重建，首个 STORE 会把全部 N 个值指令当作同一 RHS（reconstruct 仅
+                # 返回栈顶），其余 RHS 值与后随 STORE 静默丢失（handlers.pyc `_target`
+                # 的 `command, data = item[0], item[1:]` 被误生成 `data = item[1:]`）。
+                if instr.opname in _STORE_OPS_R19N3 and stmt_instrs:
+                    _s2_stores = [instr]
+                    _s2_blk = block.instructions
+                    _s2_bi = _s2_blk.index(instr) + 1
+                    while _s2_bi < len(_s2_blk):
+                        _s2_ni = _s2_blk[_s2_bi]
+                        if _s2_ni.opname in _STORE_OPS_R19N3:
+                            _s2_stores.append(_s2_ni)
+                            _s2_bi += 1
+                        else:
+                            break
+                    if len(_s2_stores) >= 2:
+                        _s2_val_instrs = [i for i in stmt_instrs
+                                          if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                        _s2_has_swap = any(i.opname == 'SWAP' for i in _s2_val_instrs)
+                        _s2_has_unpack = any(i.opname in ('UNPACK_SEQUENCE', 'UNPACK_EX')
+                                             for i in _s2_val_instrs)
+                        _s2_has_copy = any(i.opname == 'COPY' for i in _s2_val_instrs)
+                        if not _s2_has_swap and not _s2_has_unpack and not _s2_has_copy:
+                            self.expr_reconstructor.reset()
+                            for _s2_vi in _s2_val_instrs:
+                                self.expr_reconstructor._process_instruction(_s2_vi)
+                            _s2_stack = [s for s in self.expr_reconstructor.stack
+                                         if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+                            if len(_s2_stack) >= len(_s2_stores):
+                                _s2_targets = [{
+                                    'type': 'Name',
+                                    'id': _s.argval if _s.argval else f'var_{_s.arg}',
+                                    'ctx': 'Store',
+                                    'lineno': _s.starts_line,
+                                } for _s in reversed(_s2_stores)]
+                                _s2_rhs_elts = [_s2_stack[-len(_s2_stores) + _si]
+                                                 for _si in range(len(_s2_stores))]
+                                _s2_rhs_expr = ({
+                                    'type': 'Tuple', 'elts': _s2_rhs_elts, 'ctx': 'Load',
+                                } if len(_s2_rhs_elts) != 1 else _s2_rhs_elts[0])
+                                stmts.append({
+                                    'type': 'Assign',
+                                    'targets': [{
+                                        'type': 'Tuple',
+                                        'elts': _s2_targets,
+                                        'ctx': 'Store',
+                                    }],
+                                    'value': _s2_rhs_expr,
+                                    'lineno': _s2_targets[0].get('lineno'),
+                                })
+                                stmt_instrs = []
+                                for _s2_s in _s2_stores[1:]:
+                                    skip_offsets.add(_s2_s.offset)
+                                continue
                 store_stmt = self._build_store_statement(stmt_instrs + [instr], block=block)
                 if store_stmt:
                     stmts.append(store_stmt)
