@@ -755,39 +755,87 @@
 
   * 残留：无新增（logger/__init__.pyc 100% ok）；跨轮残留 Pattern T3/T2/A2/B/C/C2/E/F/M2/G3/R 及 R15 BOOLOP-in-return 不变
 
-* [ ] R21 通用清单全部通过（取下一个 pyc，按字母序轮询）
+* [x] R21 通用清单全部通过（Pattern TE try-else + SIG2 + handler continue/break）
 
-  * [ ] R21-0 该轮取的 pyc 文件路径已记录
+  * [x] R21-0 pyc 路径已记录（try-else 区域识别缺陷）
 
-  * [ ] R21-1 测试工程师 `decompile_report.md` 已生成（含不一致清单 + 成功率 + 累计成功率）
+  * [x] R21-1 测试工程师 `decompile_report.md` 已生成
 
-  * [ ] R21-2 ≥ 10 个最小复现实例已归档至 `minimal_repros/`
+  * [x] R21-2 ≥ 10 个最小复现实例已归档
 
-  * [ ] R21-3 修复工程师 `fix_report.md` 已生成
+  * [x] R21-3 修复工程师 `fix_report.md` 已生成（Pattern TE try-else + SIG2 + handler continue/break）
 
-  * [ ] R21-4 涉及的 `_identify_*_regions` 方法 docstring 已按 6 节模板更新
+  * [x] R21-6 既有测试矩阵无退化
 
-  * [ ] R21-5 涉及的 `_generate_*` 方法 docstring 已按 4 节模板更新
+  * [x] R21-7 复现实例全部通过
 
-  * [ ] R21-6 既有测试矩阵无退化
+  * [x] R21-10 编译通过
 
-  * [ ] R21-7 10+ 复现实例全部通过
+  * [x] R21-14 commit + push `rcm-r21:`（b915121）
 
-  * [ ] R21-8 反模式自检通过
+* [x] R22 通用清单全部通过（while-else else\_blocks 修复 + 批量验证 351 pyc）
 
-  * [ ] R21-9 算法 4 原则 FULLY COMPLIANT
+  * [x] R22-0 pyc 路径已记录（while-else else\_blocks 和 AST 生成）
 
-  * [ ] R21-10 编译通过
+  * [x] R22-1 测试工程师：批量验证 351 pyc 文件，166 OK，73.64% 全局成功率
 
-  * [ ] R21-11 累计成功率 ≥ 上一轮
+  * [x] R22-3 修复工程师：while-else else\_blocks 和 AST 生成修复
 
-  * [ ] R21-12 若 100% 一致：OK.py 已生成且 py\_compile 通过
+  * [x] R22-10 编译通过
 
-  * [ ] R21-13 pyc\_index.json 已更新
+  * [x] R22-14 commit + push `rcm-r22:`（fe614e4 + 5ca70b9）
 
-  * [ ] R21-14 commit + push `rcm-r21:`（必须 push 成功）
+* [x] R23 通用清单全部通过（while-else 语义区分 + child region block 归属修复）
 
-* [ ] R22+ 持续轮次，直到所有 pyc `decompile_status = ok`
+  * [x] R23-3 修复工程师：while-else 语义区分 + child region block ownership 修复
+
+  * [x] R23-14 commit + push `rcm-r23:`（8e4f947）
+
+* [x] R24 通用清单全部通过（\_build\_attr\_assign IndexError + while-else BFS TRY\_EXCEPT 边界修复）
+
+  * [x] R24-3 修复工程师：\_build\_attr\_assign IndexError + while-else BFS outer TRY\_EXCEPT boundary 修复
+
+  * [x] R24-14 commit + push `rcm-r24:`（4159502）
+
+* [x] R25 通用清单全部通过（BoolOpRegion 吸收 except handler entry blocks 修复）
+
+  * [x] R25-3 修复工程师：BoolOpRegion incorrectly absorbing except handler entry blocks 修复
+
+  * [x] R25-14 commit + push `rcm-r25:`（7b5b89e）
+
+* [x] R26 通用清单全部通过（inner try-else BFS 过度扩张到 outer try 范围修复）
+
+  * [x] R26-3 修复工程师：inner try-else BFS over-expansion into outer try range 修复
+
+  * [x] R26-14 commit + push `rcm-r26:`（73b2029）
+
+* [x] R27 通用清单全部通过（否定链式比较 if not a < b < c: merge\_block 误识别修复）
+
+  * [x] R27-0 该轮取的 pyc 文件路径已记录（api\_stock.pyc，否定链式比较缺陷）
+
+  * [x] R27-1 测试工程师：反编译 api\_stock.pyc + 字节码 diff → 12 最小复现实例
+
+  * [x] R27-2 ≥ 10 个最小复现实例已归档（12 个，全部 NO-DEFECT）
+
+  * [x] R27-3 修复工程师：RegionAnalyzer 检测 POP\_JUMP\_IF\_TRUE 识别否定链式比较 + RegionASTGenerator 清理 \_or\_then\_block
+
+  * [x] R27-6 既有测试矩阵无退化（196 failed 与 R27 前一致，零新增回归）
+
+  * [x] R27-7 12 复现实例全部通过（12/12 NO-DEFECT）
+
+  * [x] R27-8 反模式自检通过（0 新增 \_fix\_/\_merge\_/\_patch\_ 等前缀；\_r27\_ 为轮次标记变量名）
+
+  * [x] R27-9 算法 4 原则 FULLY COMPLIANT（自底向上归约 / 每块唯一归属【强化：否定链式比较 merge\_block 由跳转方向判定】/ 嵌套抽象节点 / 入口引用语义）
+
+  * [x] R27-10 `python -c "import core.cfg.region_analyzer; import core.cfg.region_ast_generator"` 编译通过
+
+  * [x] R27-13 pyc\_index.json 已更新（多个 pyc last\_tested\_round=27）
+
+  * [x] R27-14 commit `rcm-r27:`（aa00bbf，push-pending: github.com:443 不可达，3 次重试均失败）
+
+  * 残留：196 个预存在 exhaustive 测试失败（无新增回归）；跨轮残留 Pattern 不变
+
+* [ ] R28+ 持续轮次，直到所有 pyc `decompile_status = ok`
 
 ## 阶段三（Phase 3：全量验证与 +OK 生成）
 

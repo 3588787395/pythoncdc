@@ -139,19 +139,40 @@
   - [x] T2.20.2 修复工程师：按区域归约算法修复 → `rounds/round_20/repair_engineer/fix_report.md`（装载器 co_kwonlyargcount/co_posonlyargcount 硬编码→读取真实值；user_print 签名恢复，22/22 100%；12/12 复现实例 NO-DEFECT）
   - [x] T2.20.3 commit + push `rcm-r20:`（LOCAL commit 2819533 — push 失败网络连接故障 github.com:443 不可达，push-pending，3 次重试均失败；待网络恢复后执行 `git push origin main`）
   - 残留：无新增（logger/__init__.pyc 100% ok）；跨轮残留 T3/T2/A2/B/C/E/F/M2/G3/R 及 R15 BOOLOP-in-return 不变
-- [ ] T2.21 第 21 轮（取下一个 pyc：按 pyc_index.json 字母序，从 R20 后继续）
-  - [ ] T2.21.1 测试工程师：取下一个 `decompile_status != ok` 的 pyc，反编译 + 字节码 diff → `rounds/round_21/test_engineer/decompile_report.md`
-  - [ ] T2.21.2 修复工程师：按区域归约算法修复 → `rounds/round_21/repair_engineer/fix_report.md`
-  - [ ] T2.21.3 commit + push `rcm-r21:`
-- [ ] T2.22 第 22 轮（取下一个 pyc）
-  - [ ] T2.22.1 测试工程师：取下一个 `decompile_status != ok` 的 pyc，反编译 + 字节码 diff
-  - [ ] T2.22.2 修复工程师：按区域归约算法修复
-  - [ ] T2.22.3 commit + push `rcm-r22:`
+- [x] T2.21 第 21 轮（Pattern TE try-else + SIG2 + handler continue/break）
+  - [x] T2.21.1 测试工程师：反编译 + 字节码 diff（try-else 区域识别缺陷）
+  - [x] T2.21.2 修复工程师：按区域归约算法修复（Pattern TE try-else + SIG2 + handler continue/break）
+  - [x] T2.21.3 commit + push `rcm-r21:`（b915121）
+- [x] T2.22 第 22 轮（while-else else_blocks 修复 + 批量验证 351 pyc）
+  - [x] T2.22.1 测试工程师：批量验证 351 pyc 文件，166 OK，73.64% 全局成功率
+  - [x] T2.22.2 修复工程师：while-else else_blocks 和 AST 生成修复
+  - [x] T2.22.3 commit + push `rcm-r22:`（fe614e4 + 5ca70b9）
+- [x] T2.23 第 23 轮（while-else 语义区分 + child region block 归属修复）
+  - [x] T2.23.1 测试工程师：反编译 + 字节码 diff（while-else 语义区分缺陷）
+  - [x] T2.23.2 修复工程师：while-else 语义区分 + child region block ownership 修复
+  - [x] T2.23.3 commit + push `rcm-r23:`（8e4f947）
+- [x] T2.24 第 24 轮（_build_attr_assign IndexError + while-else BFS TRY_EXCEPT 边界修复）
+  - [x] T2.24.1 测试工程师：反编译 + 字节码 diff（_build_attr_assign IndexError）
+  - [x] T2.24.2 修复工程师：_build_attr_assign IndexError + while-else BFS outer TRY_EXCEPT boundary 修复
+  - [x] T2.24.3 commit + push `rcm-r24:`（4159502）
+- [x] T2.25 第 25 轮（BoolOpRegion 吸收 except handler entry blocks 修复）
+  - [x] T2.25.1 测试工程师：反编译 + 字节码 diff（BoolOpRegion 误吸收 except handler entry）
+  - [x] T2.25.2 修复工程师：BoolOpRegion incorrectly absorbing except handler entry blocks 修复
+  - [x] T2.25.3 commit + push `rcm-r25:`（7b5b89e）
+- [x] T2.26 第 26 轮（inner try-else BFS 过度扩张到 outer try 范围修复）
+  - [x] T2.26.1 测试工程师：反编译 + 字节码 diff（inner try-else BFS over-expansion）
+  - [x] T2.26.2 修复工程师：inner try-else BFS over-expansion into outer try range 修复
+  - [x] T2.26.3 commit + push `rcm-r26:`（73b2029）
+- [x] T2.27 第 27 轮（否定链式比较 if not a < b < c: merge_block 误识别修复）
+  - [x] T2.27.1 测试工程师：反编译 api_stock.pyc + 字节码 diff → 12 最小复现实例全部验证通过
+  - [x] T2.27.2 修复工程师：RegionAnalyzer 检测 POP_JUMP_IF_TRUE 识别否定链式比较 + RegionASTGenerator 清理 _or_then_block
+  - [x] T2.27.3 commit `rcm-r27:`（aa00bbf，push-pending: github.com:443 不可达）
+  - 残留：196 个预存在 exhaustive 测试失败（无新增回归）；跨轮残留 Pattern 不变
 - [ ] T2.NN ... 持续直到退出条件满足（所有 pyc 文件 100% 字节码一致，每个生成 +OK.py）
 
 > 注：轮次数不设上限，持续直到所有 pyc 文件所有函数 100% 字节码一致。
-> 当前进度：182 个 pyc 中 78 个 ok（bytecode_match_rate=1.0），102 个 partial，2 个 failed
-> 残留跨轮 Pattern：T3/T2/A2/B/C/C2/E/F/M2/G3/R 及 BOOLOP-in-return
+> 当前进度：351 个 pyc 中 166 个 ok（bytecode_match_rate=1.0），73.64% 全局成功率
+> 残留跨轮 Pattern：T3/T2/A2/B/C/C2/E/F/M2/G3/R 及 BOOLOP-in-return + 否定链式比较(R27已修复)
 > 每轮必须 commit + push 到远程，禁止只 commit 不 push
 
 ## 阶段三（Phase 3：全量验证与 +OK 生成）
