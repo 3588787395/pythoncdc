@@ -4143,6 +4143,15 @@ AST 映射规则:
                                 break
                     if _skip_boolop:
                         break
+            # [R25 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3（嵌套即
+            # 抽象节点）：BoolOpRegion 的 prefix_block 是 except handler 入口
+            # （含 PUSH_EXC_INFO）时，它跨越了异常处理边界，不应作为 while
+            # 条件。例如 `except BaseException: while x != 0:` 中，
+            # PUSH_EXC_INFO 块被错误合并到 `BaseException and x != 0` 条件。
+            if not _skip_boolop and boolop_for_while.prefix_block:
+                _pf_instrs = getattr(boolop_for_while.prefix_block, 'instructions', [])
+                if any(i.opname == 'PUSH_EXC_INFO' for i in _pf_instrs):
+                    _skip_boolop = True
             if _skip_boolop:
                 boolop_for_while = None
 

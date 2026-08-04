@@ -7744,6 +7744,11 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                             _te_visited = set()
                             _te_queue = [_te_target_block]
                             _te_handler_set = all_handler_blocks | set(try_region.blocks)
+                            # [R25 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3
+                            # （嵌套即抽象节点）：BFS 收集 else 块时，不能跨
+                            # 越外层 TryExceptRegion 的 else_blocks 边界。
+                            # 否则内层 try-else 会吞并外层 try-else 的块。
+                            _te_body_set = set(getattr(try_region, 'try_blocks', []))
                             while _te_queue:
                                 _te_b = _te_queue.pop(0)
                                 if _te_b in _te_visited:
@@ -7754,11 +7759,21 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                                 # 排除循环回边目标（continue 目标=循环头）
                                 if self._is_back_edge_target(_te_b, try_end_offset):
                                     continue
+                                # [R25 fix] 块属于外层 TRY_EXCEPT else 时不纳入
+                                if self._is_outer_try_except_else_block(_te_b, _te_body_set):
+                                    continue
+                                # [R25 fix] 块是循环回边条件检查块（含 BACKWARD 跳转）
+                                # 时不纳入——它属于循环结构，不属于 try-else。
+                                _te_b_last = _te_b.get_last_instruction()
+                                if _te_b_last and _te_b_last.opname in BACKWARD_JUMP_OPS:
+                                    continue
                                 if not self._is_pass_or_return_none_block(_te_b):
                                     _te_else_blocks.append(_te_b)
                                 for _te_s in _te_b.successors:
                                     if _te_s not in _te_visited:
-                                        _te_queue.append(_te_s)
+                                        # [R25 fix] 不将外层 TRY_EXCEPT else 块加入 BFS 队列
+                                        if not self._is_outer_try_except_else_block(_te_s, _te_body_set):
+                                            _te_queue.append(_te_s)
                 if _te_else_blocks:
                     return _te_else_blocks
 
@@ -17129,6 +17144,18 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                                  'MATCH_KEYS', 'MATCH_MAPPING_KEYS')
                    for i in block.instructions):
                 continue
+            # [R25 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3（嵌套即抽象节点）：
+            # 含 PUSH_EXC_INFO/CHECK_EXC_MATCH 等异常处理指令的块是
+            # TryExceptRegion 的 handler 入口，不应被 BoolOpRegion 抢占。
+            # 与 _identify_conditional_regions (line 12194) 守卫一致。
+            # 例如 `except BaseException:` 的 handler 入口含 PUSH_EXC_INFO +
+            # CHECK_EXC_MATCH + POP_JUMP_FORWARD_IF_FALSE，若不排除则
+            # 被识别为 BoolOp 链起点，产生 `while BaseException and x != 0`
+            # 错误条件。
+            if any(i.opname in ('PUSH_EXC_INFO', 'CHECK_EXC_MATCH',
+                                 'CHECK_EG_MATCH', 'PREP_RERAISE_STAR')
+                   for i in block.instructions):
+                continue
             # [Round4-12] AssertRegion.entry 不应被识别为 BoolOp 链起点
             if block in assert_region_entries:
                 continue
@@ -17446,6 +17473,16 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             if isinstance(_pred_region, LoopRegion) and _pred_region is not loop and _pred_region.condition_block is pred:
                 pred_is_other_loop_cond = True
             if pred_is_other_loop_cond:
+                break
+            # [R25 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3（嵌套即
+            # 抽象节点）：except handler 入口块（含 PUSH_EXC_INFO）不应被
+            # 吸收进 while 条件 boolop 链。例如 `except BaseException: while
+            # x != 0:` 中，PUSH_EXC_INFO 块是 handler 入口，回溯将其纳入
+            # 会产生 `while BaseException and x != 0` 错误条件。
+            if any(i.opname in ('PUSH_EXC_INFO', 'CHECK_EXC_MATCH',
+                                 'CHECK_EG_MATCH', 'PREP_RERAISE_STAR',
+                                 'WITH_EXCEPT_START')
+                   for i in pred.instructions):
                 break
             _pred_has_store = any(i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
                                    for i in pred.instructions
