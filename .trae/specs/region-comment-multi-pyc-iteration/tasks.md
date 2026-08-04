@@ -139,9 +139,20 @@
   - [x] T2.20.2 修复工程师：按区域归约算法修复 → `rounds/round_20/repair_engineer/fix_report.md`（装载器 co_kwonlyargcount/co_posonlyargcount 硬编码→读取真实值；user_print 签名恢复，22/22 100%；12/12 复现实例 NO-DEFECT）
   - [x] T2.20.3 commit + push `rcm-r20:`（LOCAL commit 2819533 — push 失败网络连接故障 github.com:443 不可达，push-pending，3 次重试均失败；待网络恢复后执行 `git push origin main`）
   - 残留：无新增（logger/__init__.pyc 100% ok）；跨轮残留 T3/T2/A2/B/C/E/F/M2/G3/R 及 R15 BOOLOP-in-return 不变
-- [ ] T2.NN ... 持续直到退出条件满足
+- [ ] T2.21 第 21 轮（取下一个 pyc：按 pyc_index.json 字母序，从 R20 后继续）
+  - [ ] T2.21.1 测试工程师：取下一个 `decompile_status != ok` 的 pyc，反编译 + 字节码 diff → `rounds/round_21/test_engineer/decompile_report.md`
+  - [ ] T2.21.2 修复工程师：按区域归约算法修复 → `rounds/round_21/repair_engineer/fix_report.md`
+  - [ ] T2.21.3 commit + push `rcm-r21:`
+- [ ] T2.22 第 22 轮（取下一个 pyc）
+  - [ ] T2.22.1 测试工程师：取下一个 `decompile_status != ok` 的 pyc，反编译 + 字节码 diff
+  - [ ] T2.22.2 修复工程师：按区域归约算法修复
+  - [ ] T2.22.3 commit + push `rcm-r22:`
+- [ ] T2.NN ... 持续直到退出条件满足（所有 pyc 文件 100% 字节码一致，每个生成 +OK.py）
 
 > 注：轮次数不设上限，持续直到所有 pyc 文件所有函数 100% 字节码一致。
+> 当前进度：182 个 pyc 中 78 个 ok（bytecode_match_rate=1.0），102 个 partial，2 个 failed
+> 残留跨轮 Pattern：T3/T2/A2/B/C/C2/E/F/M2/G3/R 及 BOOLOP-in-return
+> 每轮必须 commit + push 到远程，禁止只 commit 不 push
 
 ## 阶段三（Phase 3：全量验证与 +OK 生成）
 

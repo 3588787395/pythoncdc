@@ -69,6 +69,7 @@
 - 禁止 `_fix_` / `_merge_` / `_patch_` / `_fallback_` / `_hack_` / `_workaround_` / `_temp_` 前缀方法名
 - 禁止修改反编译生成的 `+OK.py` 文件
 - 禁止任何投机取巧（如针对特定 pyc 的硬编码绕过）
+- 禁止跳过任何 pyc 文件，必须逐步进行
 
 ### F. 命令预算
 
@@ -83,6 +84,15 @@
 测试应尽快使成功率增加。每轮修复后必须验证：
 - 当前 pyc 的字节码一致函数数 ≥ 上一轮该 pyc 的函数数
 - 累计成功率（跨所有已验证 pyc）单调递增，禁止下降
+
+### H. 每轮强制 commit + push
+
+每轮必须 commit + push 到远程仓库，禁止只 commit 不 push：
+- GitHub 远程仓库必须与本地同步
+- 每轮结束前必须验证 push 成功
+- push 失败则重试直到成功（血泪教训：R4-6 因未 push 全部丢失）
+- commit message 前缀 `rcm-rNN:`
+- push 凭证：已配置 credential.helper=store
 
 ## Impact
 
@@ -242,17 +252,23 @@
 4. 针对每处不一致，构造最小复现实例（最小 .py 源码 → 编译 → 反编译 → 字节码 diff）
 5. 归档 ≥ 10 个最小复现实例至 `rounds/round_NN/test_engineer/minimal_repros/repro_NN_*.py`
 6. 若该 pyc 100% 一致：在同目录生成 `<name>OK.py`，更新 pyc_index.json
+7. 统计反编译前后字节码一致函数数与成功率
 
 ### 修复工程师职责（每轮）
 1. 阅读测试工程师的 `decompile_report.md` 与 `minimal_repros/`
 2. 对每个不一致，定位到 `_identify_*_regions` 或 `_generate_*` 方法
 3. 按「No More Gotos」+ 区域归约算法完善逻辑（不得引入补丁）
-4. 同步更新方法 docstring（6 节 / 4 节模板）
+4. 同步更新方法 docstring（6 节 / 4 节模板）——将反编译逻辑写入识别方法注释
 5. 运行回归测试（既有测试矩阵不退化，≤ 280s）
 6. 验证该轮 10+ 复现实例全部通过
 7. 输出 `fix_report.md`：修复点 + 算法依据 + 注释更新清单 + 回归结果 + 残留不一致数
 8. 若该 pyc 修复后 100% 一致：生成 `<name>OK.py`，更新 pyc_index.json
-9. commit + push（前缀 `rcm-rNN:`，≤ 300s）
+9. commit + push（前缀 `rcm-rNN:`，≤ 300s）——每轮必须 push 到远程
+
+### 迭代终止条件
+- 循环迭代直到所有 pyc 文件所有函数 100% 字节码一致
+- 所有 pyc 文件生成同名 `+OK.py` 且字节码完全匹配
+- 不设固定轮数上限，持续进行直到完全反编译
 
 ### 退出条件
 - `pyc_index.json` 中所有条目 `decompile_status = ok`
