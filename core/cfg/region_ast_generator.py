@@ -4407,7 +4407,25 @@ AST 映射规则:
         if not _filtered_else_blocks:
             else_stmts = []
         else:
-            else_stmts = self._if_generate_branch_stmts(_filtered_else_blocks) if _filtered_else_blocks else []
+            # [R22 fix] 区域归约算法原则 2（每块唯一归属）+ while-else 语义：
+            # while-else 的 else_blocks 可能包含 NOP 空块（如 CPython 的 while
+            # 条件假出口占位块）和 return 块（如 else: return func）。当 NOP
+            # 块是 else 入口但不含用户语句时，_if_generate_branch_stmts 可能
+            # 因空语句不生成任何内容，导致 else body 为空。修复：遍历
+            # else_blocks 中的所有块，为每个非空块生成语句，确保 else body
+            # 包含所有用户代码（特别是 return 语句）。
+            else_stmts = []
+            for _eb in _filtered_else_blocks:
+                if _eb in self.generated_blocks:
+                    continue
+                _eb_stmts = self._generate_block_statements(_eb)
+                if _eb_stmts:
+                    else_stmts.extend(_eb_stmts)
+                    self.generated_blocks.add(_eb)
+                    self.generated_offsets.add(_eb.start_offset)
+            # Fallback: if direct generation failed, try _if_generate_branch_stmts
+            if not else_stmts:
+                else_stmts = self._if_generate_branch_stmts(_filtered_else_blocks) if _filtered_else_blocks else []
 
         if else_stmts and getattr(region, 'has_trailing_return_none', False):
             _non_trivial = [s for s in else_stmts if not self._is_trailing_return_none_statement(s)]

@@ -4327,8 +4327,27 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                             b_target = self.cfg.get_block_by_offset(b_last.argval) if b_last.argval is not None else None
                             if b_target in _break_targets:
                                 _break_trampoline_blocks.add(b)
+                # [R22 fix] 区域归约算法原则 2（每块唯一归属）+ while-else
+                # 语义：当 break 目标块同时也是 else 块的后继（如 while-else
+                # 中 else body 含 return，break 也跳到同一 return 块），该块
+                # 是 else body 的一部分，不应被 _is_early_return_block 排除。
+                # 判据：从 else_blocks 中非 _break_targets 的块可达的后继
+                # （即 else 块的逻辑延续）即使 _is_early_return_block 也保留。
+                _else_reachable_from_non_break = set()
+                for _eb in else_blocks:
+                    if _eb in _break_targets or _eb in _break_trampoline_blocks:
+                        continue
+                    _eb_last = _eb.get_last_instruction()
+                    if _eb_last and _eb_last.opname in ('RETURN_VALUE', 'RETURN_CONST', 'RERAISE'):
+                        continue
+                    if _eb_last and _eb_last.opname in BACKWARD_JUMP_OPS:
+                        continue
+                    for _eb_succ in _eb.successors:
+                        if _eb_succ not in _break_trampoline_blocks:
+                            _else_reachable_from_non_break.add(_eb_succ)
                 else_blocks = [b for b in else_blocks
                                if (b in _cond_exit_set)
+                               or (b in _else_reachable_from_non_break)
                                or (b not in _cond_exit_set
                                    and not self._is_early_return_block(b)
                                    and not self._is_except_handler_block(b)
