@@ -35077,10 +35077,10 @@ AST 映射规则:
         # 此前 obj_instrs[-1:] 仅取最后一条指令（LOAD_ATTR b），导致：
         #   - obj 被重建为 Name('b') 而非 Attribute(a, 'b')
         #   - value 被重建为 [LOAD_CONST value, LOAD_FAST a] → Name('a')
-        #   - 生成 `b.c = a` 而非 `a.b.c = value`
-        # 修复：从 store_idx 向前扫描，找到完整的对象链
-        #   [LOAD_FAST/LOAD_NAME/LOAD_GLOBAL] + [LOAD_ATTR]*
+        # [R24 fix] 从 store_idx 向前扫描，找到完整的对象链
+        # [LOAD_FAST/LOAD_NAME/LOAD_GLOBAL/LOAD_DEREF] + [LOAD_ATTR]*
         # 对象链之前的指令是 value。
+        # 但如果扫描遇到不匹配的指令（如 CALL, METHOD 等），需要回退
         _obj_chain_start = len(obj_instrs)  # index into obj_instrs
         for j in range(len(obj_instrs) - 1, -1, -1):
             _i = obj_instrs[j]
@@ -35096,9 +35096,18 @@ AST 映射规则:
         _obj_chain_instrs = obj_instrs[_obj_chain_start:]
         _value_instrs = obj_instrs[:_obj_chain_start]
 
+        # [R24 fix] 如果对象链为空（所有指令都不是 LOAD_ATTR/LOAD_*），
+        # 回退到使用完整 obj_instrs 进行重建
+        if not _obj_chain_instrs:
+            _obj_chain_instrs = obj_instrs
+            _value_instrs = []
+
         obj_expr = self.expr_reconstructor.reconstruct(_obj_chain_instrs)
         if obj_expr is None:
-            obj_expr = {'type': 'Name', 'id': str(_obj_chain_instrs[-1].argval), 'ctx': 'Load'}
+            if _obj_chain_instrs:
+                obj_expr = {'type': 'Name', 'id': str(_obj_chain_instrs[-1].argval), 'ctx': 'Load'}
+            else:
+                return None
 
         target = {
             'type': 'Attribute',

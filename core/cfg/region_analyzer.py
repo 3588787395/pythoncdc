@@ -4208,6 +4208,10 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                         continue
                     if self._is_except_handler_block(_r4_08_cur):
                         continue
+                    # [R24 fix] 区域归约算法原则 2（每块唯一归属）：
+                    # 块属于外层 TRY_EXCEPT 的 else 时，不纳入 while 的 else_blocks
+                    if self._is_outer_try_except_else_block(_r4_08_cur, body_set):
+                        continue
                     _r4_08_visited.add(_r4_08_cur)
                     _r4_08_else_blocks.append(_r4_08_cur)
                     # trailing return None / terminal / back-edge 块纳入 else_blocks
@@ -4221,7 +4225,9 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                         continue
                     for _r4_08_succ in _r4_08_cur.successors:
                         if _r4_08_succ not in _r4_08_visited and _r4_08_succ not in body_set:
-                            _r4_08_stack.append(_r4_08_succ)
+                            # [R24 fix] 不将外层 TRY_EXCEPT else 块加入 BFS 栈
+                            if not self._is_outer_try_except_else_block(_r4_08_succ, body_set):
+                                _r4_08_stack.append(_r4_08_succ)
                 else_blocks = sorted(_r4_08_else_blocks, key=lambda b: b.start_offset) if _r4_08_else_blocks else None
                 return else_blocks, None
             return None, natural_exit
@@ -4258,6 +4264,10 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                     continue
                 if self._check_block_has_trailing_return_none(_r4_08_cur):
                     continue
+                # [R24 fix] 区域归约算法原则 2（每块唯一归属）：
+                # 块属于外层 TRY_EXCEPT 的 else 时，不纳入 while 的 else_blocks
+                if self._is_outer_try_except_else_block(_r4_08_cur, body_set):
+                    continue
                 if _r4_08_cur not in else_blocks:
                     _r4_08_ext_added.append(_r4_08_cur)
                 _r4_08_cur_last = _r4_08_cur.get_last_instruction()
@@ -4267,6 +4277,10 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                     continue
                 for _r4_08_succ in _r4_08_cur.successors:
                     if _r4_08_succ not in _r4_08_ext_visited:
+                        # [R24 fix] 不将外层 TRY_EXCEPT else 块加入 BFS 栈
+                        if self._is_outer_try_except_else_block(_r4_08_succ, body_set):
+                            _r4_08_ext_visited.add(_r4_08_succ)
+                            continue
                         _r4_08_ext_visited.add(_r4_08_succ)
                         _r4_08_ext_stack.append(_r4_08_succ)
             if _r4_08_ext_added:
@@ -4421,6 +4435,34 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
         return any(i.opname in ('PUSH_EXC_INFO', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH',
                                'WITH_EXCEPT_START')
                   for i in block.instructions)
+
+    def _is_outer_try_except_else_block(self, block: BasicBlock, loop_body: Set[BasicBlock]) -> bool:
+        """[R24 fix] Check if a block belongs to an outer TRY_EXCEPT region's else_blocks.
+
+        区域归约算法原则 2（每块唯一归属）+ 原则 3（嵌套即抽象节点）：
+        当 while 循环嵌套在 try-except 中时，try-except 的 else 块（Python
+        try...else 语义：无异常时执行的代码）不应被 while 循环的 else_blocks
+        BFS 扩展收集。否则 while 循环的 else 会跨越边界吞并 try 的 else 块，
+        违反「每块唯一归属」。
+
+        判据：块属于某个已识别 TryExceptRegion 的 else_blocks，且该
+        TryExceptRegion 的 entry 不在 loop_body 中（说明 try-except 是外层结构）。
+
+        Returns True if block should be excluded from loop else_blocks.
+        """
+        for region in self.regions:
+            if not isinstance(region, TryExceptRegion):
+                continue
+            region_else = getattr(region, 'else_blocks', None)
+            if not region_else:
+                continue
+            if block not in region_else:
+                continue
+            # 该块属于某个 TryExceptRegion 的 else —— 检查是否为外层
+            region_entry = getattr(region, 'entry', None)
+            if region_entry and region_entry not in loop_body:
+                return True
+        return False
 
     def _is_except_break_exit(self, block) -> bool:
         """区域归约算法 — 判定块是否为 break 退出 except handler 的出口块。
