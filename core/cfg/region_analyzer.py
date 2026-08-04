@@ -4464,52 +4464,6 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 return True
         return False
 
-    def _is_outer_try_except_try_range_block(self, block: BasicBlock, current_try_region) -> bool:
-        """[R26 fix] Check if a block belongs to an outer TryExceptRegion's try offset range.
-
-        区域归约算法原则 2（每块唯一归属）+ 原则 3（嵌套即抽象节点）：
-        当内层 try-except 嵌套在外层 try-except 中时，内层 try 的 else BFS
-        不应扩展到外层 try 的 try_offset 范围内的块。否则内层 else 会吞并
-        外层 try 体中的块，导致外层 TryExceptRegion 的 try_blocks 缺失。
-
-        判据：块的 offset 在某个外层异常处理结构的 try 范围内。外层结构
-        由 _parse_exception_table 的 handler_infos 确定——内层 try 识别时
-        外层 TryExceptRegion 可能尚未构建（handler_infos 按 try_start
-        排序，内层可能先于外层），故不能依赖 self.regions。
-
-        Returns True if block should be excluded from inner try else_blocks.
-        """
-        _block_start = block.start_offset
-        # 获取当前 try 的 offset 范围
-        _current_try_start = getattr(current_try_region, 'try_start_offset', None)
-        _current_try_end = getattr(current_try_region, 'try_offset_end', None)
-        # 如果 try_region 没有 try_start_offset，从 entry 推断
-        if _current_try_start is None:
-            _current_entry = getattr(current_try_region, 'entry', None)
-            _current_try_start = _current_entry.start_offset if _current_entry else None
-        if _current_try_start is None or _current_try_end is None:
-            return False
-        # 使用 handler_infos（_parse_exception_table 的结果），而非 self.regions
-        _handler_infos = getattr(self, 'handler_infos', None)
-        if not _handler_infos:
-            return False
-        for info in _handler_infos:
-            # 跳过 with 类型（with 语句不是 try-except 外层）
-            if info.get('handler_type') == 'with':
-                continue
-            info_try_start = info.get('try_start', 0)
-            info_try_end = info.get('try_end', 0)
-            # 跳过当前 try 自身（try_start/try_end 相同）
-            if info_try_start == _current_try_start and info_try_end == _current_try_end:
-                continue
-            # 确认是外层：info 的 try_start < 当前 try_start 且 try_end > 当前 try_end
-            if not (info_try_start < _current_try_start and info_try_end > _current_try_end):
-                continue
-            # 检查块是否在外层 try 的 offset 范围内
-            if info_try_start <= _block_start < info_try_end:
-                return True
-        return False
-
     def _is_except_break_exit(self, block) -> bool:
         """区域归约算法 — 判定块是否为 break 退出 except handler 的出口块。
 
@@ -7808,13 +7762,6 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                                 # [R25 fix] 块属于外层 TRY_EXCEPT else 时不纳入
                                 if self._is_outer_try_except_else_block(_te_b, _te_body_set):
                                     continue
-                                # [R26 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3
-                                # （嵌套即抽象节点）：块属于外层 TryExceptRegion 的
-                                # try_offset 范围时不纳入内层 else。否则内层 else
-                                # BFS 会跨越外层 try 边界吞并外层 try 体中的块，
-                                # 导致外层 TryExceptRegion 的 try_blocks 缺失。
-                                if self._is_outer_try_except_try_range_block(_te_b, try_region):
-                                    continue
                                 # [R25 fix] 块是循环回边条件检查块（含 BACKWARD 跳转）
                                 # 时不纳入——它属于循环结构，不属于 try-else。
                                 _te_b_last = _te_b.get_last_instruction()
@@ -7826,9 +7773,7 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                                     if _te_s not in _te_visited:
                                         # [R25 fix] 不将外层 TRY_EXCEPT else 块加入 BFS 队列
                                         if not self._is_outer_try_except_else_block(_te_s, _te_body_set):
-                                            # [R26 fix] 不将外层 TRY_EXCEPT try 范围块加入 BFS 队列
-                                            if not self._is_outer_try_except_try_range_block(_te_s, try_region):
-                                                _te_queue.append(_te_s)
+                                            _te_queue.append(_te_s)
                 if _te_else_blocks:
                     return _te_else_blocks
 
@@ -7845,9 +7790,6 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                             block not in all_handler_blocks and
                             block not in try_region.blocks and
                             not self._is_pass_or_return_none_block(block)):
-                            # [R26 fix] 同上：排除外层 try 范围内的块
-                            if self._is_outer_try_except_try_range_block(block, try_region):
-                                continue
                             else_blocks.append(block)
                     return else_blocks
                 inner_else = self._find_inner_else_blocks(try_region, try_end_offset,
@@ -7863,11 +7805,6 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 block not in all_handler_blocks and
                 block not in try_region.blocks and
                 not self._is_pass_or_return_none_block(block)):
-                # [R26 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3
-                # （嵌套即抽象节点）：块属于外层 TryExceptRegion 的
-                # try_offset 范围时不纳入内层 else。
-                if self._is_outer_try_except_try_range_block(block, try_region):
-                    continue
                 else_blocks.append(block)
 
         if not else_blocks:
@@ -14514,22 +14451,74 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             if op_idx < len(compare_ops) - 1:
                 ft_succs = sorted(current_ft.successors, key=lambda s: s.start_offset)
                 current_ft = next((s for s in ft_succs if s is not short_circuit_succ), None)
+        # [R27 fix] Negated chained comparison: if not a < b < c: body
+        # When the last compare block ends with POP_JUMP_FORWARD_IF_TRUE:
+        #   - Jump target = True path (chain succeeded) → merge (skip body)
+        #   - Fallthrough = False path (chain failed) → body (e.g., raise)
+        # When POP_JUMP_FORWARD_IF_FALSE (normal, if a < b < c: body):
+        #   - Fallthrough = True path (chain succeeded) → merge
+        #   - Jump target = False path (chain failed) → else/cleanup
+        # 算法依据: 区域归约算法原则 4（入口引用语义）—— merge_block 是
+        # 父区域引用本区域的出口点。当条件被否定时，True 路径（跳转目标）
+        # 是跳过体执行的出口，即 merge_block。
+        _r27_negated = False
+        merge_block = None
         if all_compare_blocks:
             last_compare = all_compare_blocks[-1]
+            lc_last = last_compare.get_last_instruction()
             lc_succs = sorted(last_compare.successors, key=lambda s: s.start_offset)
             real_then = next((s for s in lc_succs if s is not short_circuit_succ), None)
+            if (lc_last is not None
+                    and 'IF_TRUE' in lc_last.opname
+                    and lc_last.argval is not None):
+                # Negated: merge = jump target (True path = skip body)
+                _r27_negated = True
+                _r27_jump_target = self.cfg.get_block_by_offset(lc_last.argval)
+                merge_block = _r27_jump_target
+            else:
+                merge_block = real_then
+        else:
+            merge_block = real_then
         real_else = short_circuit_succ
         then_blocks = [real_then] if real_then else []
         else_blocks = [real_else] if real_else else []
         if not then_blocks or not else_blocks:
             return None
         all_blocks = {header, ft_succ, real_then, real_else} | set(all_compare_blocks) | chain_blocks
+        # [R27 fix] When negated, merge_block is the post-if continuation
+        # (e.g., return percent). Do NOT add it to all_blocks — it must
+        # remain unclaimed so the parent sequence/region generates it as a
+        # post-if statement. When not negated, merge_block IS the body
+        # entry (fallthrough) and should be in all_blocks.
+        if merge_block is not None and not _r27_negated:
+            all_blocks.add(merge_block)
+        # [R27 fix] When negated (if not a < b < c: body), the fallthrough
+        # (real_then) is the if-body entry (e.g., raise block). The fallthrough
+        # may be a pure JUMP_FORWARD connector — follow it to find the actual
+        # body block. When not negated, then_blocks=[] (body is after
+        # merge_block, handled by parent region).
+        _r27_then_blocks = []
+        if _r27_negated and real_then:
+            _r27_body = real_then
+            _ft_last = real_then.get_last_instruction()
+            if (_ft_last and _ft_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                    and _ft_last.argval is not None):
+                _r27_jt = self.cfg.get_block_by_offset(_ft_last.argval)
+                if _r27_jt is not None:
+                    _r27_body = _r27_jt
+                    all_blocks.add(_r27_body)
+            _r27_then_blocks = [_r27_body]
         region = IfRegion(
             region_type=RegionType.IF, entry=header, blocks=all_blocks,
-            condition_block=header, then_blocks=[], else_blocks=[real_else],
-            merge_block=real_then, chained_compare_blocks=all_compare_blocks,
+            condition_block=header, then_blocks=_r27_then_blocks,
+            else_blocks=[real_else],
+            merge_block=merge_block, chained_compare_blocks=all_compare_blocks,
             chained_compare_ops=compare_ops,
         )
+        if _r27_negated:
+            if not hasattr(region, 'metadata'):
+                region.metadata = {}
+            region.metadata['is_negated_chained_compare'] = True
         return region
 
     def _is_chained_compare_header(self, block: BasicBlock) -> bool:

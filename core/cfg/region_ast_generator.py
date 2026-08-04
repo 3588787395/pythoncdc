@@ -13696,6 +13696,11 @@ AST 映射规则:
                         last = _chain_negate_fallback
                 else:
                     last = _chain_negate_fallback
+                # [R27 fix] When there is no or-rhs block, this is NOT an
+                # or pattern. Clear _or_then_block so the negate check
+                # below uses region.then_blocks instead of jump target.
+                if _or_rhs_block is None:
+                    _or_then_block = None
                 negate = False
                 if last is not None:
                     if last.opname in NONE_CHECK_OPS:
