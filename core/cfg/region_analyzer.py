@@ -4303,6 +4303,25 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                         _else_is_skipped_by_break = True
                     break
             if not _break_targets:
+                # [R23 fix] 区域归约算法原则 2（每块唯一归属）+ while-else 语义：
+                # Python while...else 语义：else 块只在循环正常完成（无 break 中断）
+                # 时执行。当循环体内没有 break 语句时，在字节码层面无法区分"while-else
+                # 的 else 块"和"while 后的普通后继代码"——两者字节码完全相同。
+                # 
+                # 然而，else_blocks 仍需保留（而非设为 None），因为：
+                # 1. AST 生成层（_generate_loop）通过 R5 Fix 1 / R23 fix 区分：
+                #    - for 循环：else_stmts 始终作为 orelse（Python for-else 语义明确）
+                #    - while 无 break：else_stmts 转为顺序语句（无法确认 else 子句意图）
+                #    - while 有 break：else_stmts 作为 orelse（break 跳过 else 是核心语义）
+                # 2. 若此处设 else_blocks=None，while 后的代码不会被 LoopRegion 消费，
+                #    但也不会被任何其他 Region 消费——导致这些块丢失。
+                # 3. 保留 else_blocks 允许 _generate_loop 正确处理：无 break 时转为
+                #    sequential_after_loop，有 break 时转为 orelse。
+                #
+                # 缺陷模式（stk_resample_days_bars / repro_23_02）：
+                #   while j < n: ... if j == n: ... for idx in range(...): ...
+                #   原缺陷不在 else_blocks 是否存在，而在 else_blocks 包含的内容
+                #   被错误放入 if 的 else 分支。真正修复在 AST 生成层（R23 fix）。
                 if natural_exit and else_blocks:
                     _filtered = [b for b in else_blocks
                                  if not self._is_early_return_block(b)
@@ -4311,8 +4330,6 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                         else_blocks = _filtered
                     else:
                         else_blocks = None
-                else:
-                    else_blocks = None
             elif _else_is_skipped_by_break:
                 _break_trampoline_blocks = set()
                 for b in else_blocks:

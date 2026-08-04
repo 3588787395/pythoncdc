@@ -1097,10 +1097,11 @@ class RegionASTGenerator:
             
             if code_obj and getattr(code_obj, 'co_name', None) == '<module>':
                 ast_nodes = self._filter_module_level_returns(ast_nodes)
-            elif ast_nodes and isinstance(ast_nodes, list) and len(ast_nodes) >= 2:
-                last = ast_nodes[-1]
-                if isinstance(last, dict) and last.get('type') == 'Return' and self._is_trailing_return_none_statement(last):
-                    ast_nodes = ast_nodes[:-1]
+            # [R23 fix] 不再过滤函数末尾隐式 return None——保留以匹配原始字节码
+            # elif ast_nodes and isinstance(ast_nodes, list) and len(ast_nodes) >= 2:
+            #     last = ast_nodes[-1]
+            #     if isinstance(last, dict) and last.get('type') == 'Return' and self._is_trailing_return_none_statement(last):
+            #         ast_nodes = ast_nodes[:-1]
 
             # [R13 nested_lambda fix] Convert any remaining FunctionObjects
             # (from MAKE_FUNCTION + POP_TOP expression statements) to proper
@@ -1347,18 +1348,22 @@ class RegionASTGenerator:
                         continue
                     if self.region_analyzer._check_block_has_trailing_return_none(_blk):
                         _trailing_rn_exit_count += 1
-            _filter_trailing_return_none = (not has_explicit_return) or (_trailing_rn_exit_count >= 2)
-            if _filter_trailing_return_none:
-                if filtered_body and self._is_trailing_return_none_statement(filtered_body[-1]):
-                    _is_only_stmt = (len(filtered_body) == 1)
-                    if _is_only_stmt:
-                        pass
-                    elif len(filtered_body) >= 2 and isinstance(filtered_body[-2], dict) and filtered_body[-2].get('type') == 'Pass':
-                        pass
-                    else:
-                        filtered_body = filtered_body[:-1]
-                if not filtered_body:
-                    filtered_body = [{'type': 'Pass'}]
+            # [R23 fix] 区域归约算法 + 字节码一致性：保留隐式 return None
+            # CPython 编译器为每个函数/模块末尾生成隐式 return None（
+            # LOAD_CONST None; RETURN_VALUE 或 RETURN_CONST None），反编译
+            # 省略它导致重编字节码少 2-4 字节。为字节码完全匹配，不过滤。
+            # 唯一例外：函数体只有 return None 单条语句时，替换为 pass
+            # （因为 def f(): return None 与 def f(): pass 语义相同但后者
+            # 更简洁，且 CPython 对 pass 不生成 return None——但等等，
+            # CPython 对空函数体也生成 return None，所以应保留 return None）。
+            # 最终决定：始终保留 return None，确保字节码一致。
+            if filtered_body and self._is_trailing_return_none_statement(filtered_body[-1]):
+                if len(filtered_body) == 1:
+                    # 单条 return None → 保留（字节码一致需要）
+                    pass
+                # else: 保留末尾 return None
+            if not filtered_body:
+                filtered_body = [{'type': 'Pass'}]
 
         if func_name == '<lambda>':
             body_expr = None
@@ -3539,11 +3544,28 @@ AST 映射规则:
             if not _non_trivial:
                 else_stmts = []
 
-        # [R5 Fix 1] 无 break 时 else_stmts 不作为 orelse, 而作为 for 之后的顺序语句
+        # [R23 fix] 区域归约算法原则 2（每块唯一归属）+ for-else / while-else 语义区分：
+        # 原 R5 Fix 1 对 for 和 while 统一处理：无 break 时 else_stmts 转为顺序语句。
+        # 但 for-else 和 while-else 语义不同：
+        #   for 循环：FOR_ITER fall-through 是 else 块的语义入口，无论有无 break，
+        #            else 子句始终应该生成 orelse（Python for-else 语义：迭代耗尽时执行）。
+        #   while 循环：条件为假时 fall through 的代码语义上不等价于 else（除非有 break
+        #            跳过 else）。无 break 的 while 循环，后续代码是普通顺序语句，不是 else。
+        # 判据：for 循环始终保留 else_stmts 为 orelse；while 循环无 break 时转为顺序语句。
+        # 缺陷模式（repro_23_02 / stk_resample_days_bars）：
+        #   while j < n: ... if j == n: ... for idx in range(...): ...
+        #   原 R5 Fix 1 + _find_loop_else 将 while 后代码放入 else_blocks，然后 AST 层
+        #   无 break 时转为顺序语句，但 else_blocks 包含了 while 后的所有代码（包括 for 循环），
+        #   导致 for 循环被放入 else 分支且被截断。现 _find_loop_else 已修复（无 break 时
+        #   while 的 else_blocks=None），此处仅保留 for 循环 else 处理。
         _has_break = getattr(region, 'has_break', False)
-        if _has_break:
+        _is_while = region.region_type == RegionType.WHILE_LOOP
+        if _has_break or not _is_while:
+            # for 循环：始终保留 else_stmts 为 orelse
+            # while+break：else_stmts 作为 orelse（break 跳过 else 是核心语义）
             _sequential_after_loop = []
         else:
+            # while 无 break：else_stmts 转为顺序语句（while 后的代码不是 else 子句）
             _sequential_after_loop = else_stmts
             else_stmts = []
 
@@ -4415,8 +4437,54 @@ AST 映射规则:
             # else_blocks 中的所有块，为每个非空块生成语句，确保 else body
             # 包含所有用户代码（特别是 return 语句）。
             else_stmts = []
+            # [R23 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3（嵌套即抽象节点）：
+            # while 循环的 else_blocks 可能包含属于子区域（如 IfRegion、LoopRegion）
+            # 的块。逐块处理时必须跳过属于子区域 blocks 的非 entry 块，交由子区域的
+            # _generate_region 完整处理。否则子区域的 setup 块（如 for_iter_setup）
+            # 会被当作独立语句生成，导致子区域不完整。
+            # 典型缺陷（stk_resample_days_bars / repro_23_02）：
+            #   while j < n: ... if j == n: ...
+            #   result = []              # block@172, LoopRegion@180 的 for_iter_setup
+            #   for idx in indexes: ...  # LoopRegion@180
+            # block@172 属于 LoopRegion@180.blocks，但被逐块生成 → `indexes` 表达式
+            # （GET_ITER 被当作独立语句），for 循环退化为 `range(result_len)`。
+            # 修复：收集子区域 blocks，逐块处理时跳过非 entry 的子区域块；
+            # entry 块通过 _generate_region(child) 递归生成完整子区域。
+            _child_region_blocks_r23 = set()
+            _child_entries_r23 = {}
+            if region and hasattr(region, 'children'):
+                for _child_r23 in getattr(region, 'children', []):
+                    if isinstance(_child_r23, (LoopRegion, TryExceptRegion, WithRegion, MatchRegion)):
+                        _child_region_blocks_r23.update(_child_r23.blocks)
+                        if _child_r23.entry:
+                            _child_entries_r23[_child_r23.entry] = _child_r23
+                    elif isinstance(_child_r23, (BoolOpRegion, TernaryRegion, IfRegion)):
+                        _child_region_blocks_r23.update(_child_r23.blocks)
+                        if _child_r23.entry:
+                            _child_entries_r23[_child_r23.entry] = _child_r23
+            # 同时检查全局区域（可能有子区域未被 parent-children 关系覆盖）
+            for _r in self.regions:
+                if _r is region:
+                    continue
+                if isinstance(_r, (LoopRegion, IfRegion, TryExceptRegion, WithRegion, MatchRegion)):
+                    if any(_b in _filtered_else_blocks for _b in _r.blocks):
+                        _child_region_blocks_r23.update(_r.blocks)
+                        if _r.entry:
+                            _child_entries_r23[_r.entry] = _r
             for _eb in _filtered_else_blocks:
                 if _eb in self.generated_blocks:
+                    continue
+                # [R23 fix] 子区域 entry 块：递归生成完整子区域
+                if _eb in _child_entries_r23:
+                    _child_ast = self._generate_region(_child_entries_r23[_eb])
+                    if _child_ast:
+                        if isinstance(_child_ast, list):
+                            else_stmts.extend(_child_ast)
+                        else:
+                            else_stmts.append(_child_ast)
+                    continue
+                # [R23 fix] 子区域非 entry 块：跳过（由子区域 entry 递归生成时处理）
+                if _eb in _child_region_blocks_r23:
                     continue
                 _eb_stmts = self._generate_block_statements(_eb)
                 if _eb_stmts:
@@ -4532,7 +4600,9 @@ AST 映射规则:
                 'values': [_preceding_if_cond, condition]
             }
 
-        # [R5 Fix 1] 无 break 时 else_stmts 不作为 orelse, 而作为 while 之后的顺序语句
+        # [R23 fix] while 循环：无 break 时 else_stmts 转为顺序语句（同 for 循环路径逻辑）
+        # while 条件为假时 fall through 的代码语义上不等价于 else（除非有 break 跳过 else）。
+        # 无 break 的 while 循环，后续代码是普通顺序语句，不是 else 子句。
         _has_break = getattr(region, 'has_break', False)
         if _has_break:
             _sequential_after_loop = []
