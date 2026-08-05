@@ -76,7 +76,7 @@ class ComprehensionGenerator:
         if not comp_indices:
             return None
 
-        # [R11-err3] async comprehension 的 await 模板 (GET_AWAITABLE + SEND +
+        # async comprehension 的 await 模板 (GET_AWAITABLE + SEND +
         # YIELD_VALUE + RESUME + JUMP_BACKWARD_NO_INTERRUPT + STORE_*) 跨多个
         # 基本块。先把后续 fallthrough 块的指令合并进来，并把它们标记为已生成，
         # 避免被外层 _generate_block_statements 当作独立语句重复处理。
@@ -113,7 +113,7 @@ class ComprehensionGenerator:
 
         for comp_idx, comp_code in comp_indices:
             pre_comp_instrs = instrs[prev_end:comp_idx - 1]
-            # [R25-10 fix] 区域归约算法原则 3（嵌套即抽象节点）：当 comprehension 是
+            # 区域归约算法原则 3（嵌套即抽象节点）：当 comprehension 是
             # 更大表达式的子节点时（如 `return (sum(items), len(items), [listcomp])`），
             # pre_comp_instrs 会包含未被 STORE/POP_TOP/IMPORT 消费的值生产指令
             # （LOAD_GLOBAL/CALL/BUILD_* 等），这些值留在栈上与 comprehension 一起
@@ -131,7 +131,7 @@ class ComprehensionGenerator:
                 pre_stmts = self._generate_pre_comp_stmts(pre_comp_instrs, instrs, prev_end, region_ast_gen=region_ast_gen)
                 all_stmts.extend(pre_stmts)
 
-            # [R11-err3] async comprehension 外层使用 GET_AITER 而非 GET_ITER。
+            # async comprehension 外层使用 GET_AITER 而非 GET_ITER。
             # 字节码: MAKE_FUNCTION, LOAD_* iter, GET_AITER, PRECALL, CALL,
             # GET_AWAITABLE, LOAD_CONST None, SEND, YIELD_VALUE, RESUME,
             # JUMP_BACKWARD_NO_INTERRUPT, STORE_* result
@@ -162,7 +162,7 @@ class ComprehensionGenerator:
                     if instrs[idx].opname == 'CALL':
                         break
 
-            # [R11-err3] async comprehension 在 CALL 后有一段 await 循环
+            # async comprehension 在 CALL 后有一段 await 循环
             # (GET_AWAITABLE + LOAD_CONST None + SEND + YIELD_VALUE + RESUME +
             # JUMP_BACKWARD_NO_INTERRUPT)。这段是 CPython 自动生成的 await
             # 模板，重建时归约到 await 表达式语句的语义内（listcomp 已含 is_async），
@@ -252,7 +252,7 @@ class ComprehensionGenerator:
 
             comp_value = wrapper_call if wrapper_call is not None else comp_ast
 
-            # [R25-10 fix] 区域归约算法原则 3（嵌套即抽象节点）：post-wrapper
+            # 区域归约算法原则 3（嵌套即抽象节点）：post-wrapper
             # 指令含表达式构建指令（BUILD_TUPLE/BINARY_OP 等）时，comprehension
             # 是更大表达式的子节点（如 `return ([listcomp], max(items))` 中
             # listcomp 被后续 BUILD_TUPLE 2 消费）。返回 None 让标准
@@ -291,10 +291,10 @@ class ComprehensionGenerator:
 
         remaining_instrs = instrs[prev_end:]
         if remaining_instrs:
-            remaining_stmts = self._generate_remaining_stmts(remaining_instrs)
+            remaining_stmts = self._generate_remaining_stmts(remaining_instrs, region_ast_gen=region_ast_gen)
             all_stmts.extend(remaining_stmts)
 
-        # [R11-err3] async comprehension 跨块的 fallthrough 已被合并处理，
+        # async comprehension 跨块的 fallthrough 已被合并处理，
         # 标记延伸块为已生成，避免外层 _generate_block_statements 重复处理。
         if _extra_async_blocks and region_ast_gen is not None:
             for _eb in _extra_async_blocks:
@@ -358,7 +358,14 @@ class ComprehensionGenerator:
             current_instrs.append(instr)
         return stmts
 
-    def _generate_remaining_stmts(self, remaining_instrs):
+    def _generate_remaining_stmts(self, remaining_instrs, region_ast_gen=None):
+        # [R33] 推导式后的剩余指令可能包含类定义（LOAD_BUILD_CLASS +
+        # MAKE_FUNCTION + CALL + STORE_*）或函数定义（MAKE_FUNCTION +
+        # CALL + STORE_*）。直接用 expr_reconstructor.reconstruct + Assign
+        # 会将 __build_class__ 调用包装为 Assign(value=Call(__build_class__))
+        # 而非 ClassDef。当 region_ast_gen 可用时，委托其 _build_store_statement
+        # 进行高级语句识别（ClassDef/FunctionDef/装饰器/walrus 等），
+        # 与 _generate_pre_comp_stmts 保持一致。
         stmts = []
         current_instrs = []
         for instr in remaining_instrs:
@@ -373,16 +380,21 @@ class ComprehensionGenerator:
                 continue
             if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
                 current_instrs.append(instr)
-                value_instrs = current_instrs[:-1]
-                store_instr = current_instrs[-1]
-                if value_instrs:
-                    value_expr = self.expr_reconstructor.reconstruct(value_instrs)
-                    if value_expr:
-                        stmts.append({
-                            'type': 'Assign',
-                            'targets': [{'type': 'Name', 'id': store_instr.argval, 'ctx': 'Store'}],
-                            'value': value_expr,
-                        })
+                if region_ast_gen is not None:
+                    store_stmt = region_ast_gen._build_store_statement(current_instrs)
+                    if store_stmt:
+                        stmts.append(store_stmt)
+                else:
+                    value_instrs = current_instrs[:-1]
+                    store_instr = current_instrs[-1]
+                    if value_instrs:
+                        value_expr = self.expr_reconstructor.reconstruct(value_instrs)
+                        if value_expr:
+                            stmts.append({
+                                'type': 'Assign',
+                                'targets': [{'type': 'Name', 'id': store_instr.argval, 'ctx': 'Store'}],
+                                'value': value_expr,
+                            })
                 current_instrs = []
                 continue
             current_instrs.append(instr)
@@ -430,7 +442,7 @@ class ComprehensionGenerator:
         if store_idx is None:
             return None
 
-        # [R9-17/18/05 fix] 优先尝试 Pattern B：三元作 if-filter。
+        # 优先尝试 Pattern B：三元作 if-filter。
         # 模式: ``[elt for x in iter if (a if c else b)]``
         # 区分依据: BOTH 真假分支以 BACKWARD 条件跳转（filter skip）结束。
         # 依「父引用子入口」：父推导式通过 merge 块的 elt 指令引用三元
@@ -489,7 +501,7 @@ class ComprehensionGenerator:
                         elt_expr = ternary_info
             else:
                 elt_expr = ternary_info
-            # [R6-10/12/13 fix] ternary + filter 共存时也提取 filter。
+            # ternary + filter 共存时也提取 filter。
             # _extract_comp_ifs 看到 FORWARD ternary 跳转会 break（不 return），
             # 已收集的 BACKWARD filter segments 会被处理为 ifs。
             ifs, _ = self._extract_comp_ifs(all_instrs, store_idx, append_idx)
@@ -510,7 +522,7 @@ class ComprehensionGenerator:
 
         is_async = 0
         for instr in all_instrs:
-            # [R11-err3] async comprehension 内层用 GET_ANEXT 而非 FOR_ITER，
+            # async comprehension 内层用 GET_ANEXT 而非 FOR_ITER，
             # 外层用 GET_AITER 而非 GET_ITER。任一出现即标记 is_async=1。
             if instr.opname in ('GET_AITER', 'GET_ANEXT', 'END_ASYNC_FOR'):
                 is_async = 1
@@ -553,7 +565,7 @@ class ComprehensionGenerator:
 
         is_async = 0
         for instr in all_instrs:
-            # [R11-err3] 同单 for 路径，检测 async 标记。
+            # 同单 for 路径，检测 async 标记。
             if instr.opname in ('GET_AITER', 'GET_ANEXT', 'END_ASYNC_FOR'):
                 is_async = 1
                 break
@@ -613,7 +625,7 @@ class ComprehensionGenerator:
         # 元素提取：从 innermost_store_idx + 1 到 append_idx
         elt_start_idx = innermost_store_idx + 1
 
-        # [R9-17/18/05 fix] 优先尝试 Pattern B：三元作 if-filter。
+        # 优先尝试 Pattern B：三元作 if-filter。
         # 同 _parse_comprehension_inner 中的 Pattern B 逻辑，但作用域是
         # 最内层 for body。依「父引用子入口」原则同上。
         _ternary_filter_info = self._detect_comp_ternary_as_filter(
@@ -654,7 +666,7 @@ class ComprehensionGenerator:
                         elt_expr = ternary_info
             else:
                 elt_expr = ternary_info
-            # [R6-10/12/13 fix] ternary + filter 共存时也提取 filter，
+            # ternary + filter 共存时也提取 filter，
             # 挂到最内层 generator。
             ifs, _ = self._extract_comp_ifs(all_instrs, innermost_store_idx, append_idx)
             if ifs:
@@ -751,7 +763,7 @@ class ComprehensionGenerator:
         if final_depth < 1:
             return None
 
-        # [R03 fix] Find the LAST transition from depth==1 to depth>1.
+        # Find the LAST transition from depth==1 to depth>1.
         # For dict comprehension {key: value}, key_expr is evaluated first
         # (depth reaches 1), then value_expr starts (depth goes to 2).
         # The split point is after the last instruction that leaves depth==1
@@ -882,7 +894,7 @@ class ComprehensionGenerator:
                 # 三元条件不应被提取为过滤条件，而应作为元素表达式的一部分
                 if hasattr(instr, 'argval') and instr.argval is not None:
                     if instr.argval < append_offset and 'BACKWARD' not in instr.opname:
-                        # [R6-10/12/13 fix] FORWARD ternary cond 跳转 — break
+                        # FORWARD ternary cond 跳转 — break
                         # 出循环让已收集的 filter segments 被处理，而非 return
                         # 丢弃 filters。elt_start_idx 保持为 current_start
                         # （最后一个 filter 之后，ternary cond 之前），由
@@ -1024,9 +1036,7 @@ class ComprehensionGenerator:
 
         三元模式特征：条件跳转的目标在LIST_APPEND之前（跳转到false值），
         而不是跳过整个元素表达式（过滤器模式）。
-        字节码模式：condition → POP_JUMP_IF_FALSE false_value → true_value → JUMP_FORWARD merge → false_value → LIST_APPEND
-
-        [R6-10/12/13 fix] 支持 ternary + filter 共存：BACKWARD filter 跳转
+        字节码模式：condition → POP_JUMP_IF_FALSE false_value → true_value → JUMP_FORWARD merge → false_value → LIST_APPEND 支持 ternary + filter 共存：BACKWARD filter 跳转
         （跳回 FOR_ITER）会被跳过，继续寻找 FORWARD ternary cond 跳转。
         cond_instrs 从最后一个 filter 跳转之后开始，避免包含 filter 指令。
         """
@@ -1034,16 +1044,16 @@ class ComprehensionGenerator:
 
         # 查找STORE和LIST_APPEND之间的条件跳转
         cond_jump_idx = None
-        # [R6-10/12/13 fix] 记录最后一个 BACKWARD filter 跳转的索引，
+        # 记录最后一个 BACKWARD filter 跳转的索引，
         # cond_instrs 从此之后开始（跳过 filter 条件指令）。
         last_filter_end = store_idx
         for idx in range(store_idx + 1, append_idx):
             instr = all_instrs[idx]
             if instr.opname in CONDITIONAL_JUMP_OPS:
-                # [R13-batch3] BACKWARD 条件跳转是过滤器模式（跳回 FOR_ITER
+                # BACKWARD 条件跳转是过滤器模式（跳回 FOR_ITER
                 # 循环开始以跳过当前元素），不是三元模式。三元模式使用 FORWARD
                 # 跳转跳到 false 值（在 true 值之后、LIST_APPEND 之前）。
-                # [R6-10/12/13 fix] 跳过 BACKWARD filter 跳转继续寻找 FORWARD
+                # 跳过 BACKWARD filter 跳转继续寻找 FORWARD
                 # ternary cond 跳转，支持 ternary + filter 共存。
                 if 'BACKWARD' in instr.opname:
                     last_filter_end = idx
@@ -1063,7 +1073,7 @@ class ComprehensionGenerator:
         false_target_offset = cond_instr.argval
 
         # 分离条件指令、true值指令、false值指令
-        # [R6-10/12/13 fix] 条件指令从最后一个 filter 跳转之后开始，
+        # 条件指令从最后一个 filter 跳转之后开始，
         # 避免把 filter 条件指令包含进 ternary cond 表达式。
         cond_instrs = all_instrs[last_filter_end + 1:cond_jump_idx]
 
@@ -1106,7 +1116,7 @@ class ComprehensionGenerator:
         # [Round7-08] 若有 merge_offset，false 值区域只到 merge_offset 之前。
         # merge_offset 之后是指令属于后续表达式（如 dict comp 的 value），
         # 不应作为 false 分支的一部分。
-        # [R9-19 fix] _merge_block_idx 标记 merge_offset 处的指令索引，
+        # _merge_block_idx 标记 merge_offset 处的指令索引，
         # 用于检测 walrus(COPY 1 + STORE_*) 副作用模式。
         _merge_block_idx = None
         if merge_offset is not None:
@@ -1139,7 +1149,7 @@ class ComprehensionGenerator:
         if false_expr is None:
             return None
 
-        # [R9-19 fix] walrus(ternary) 模式检测：ternary merge 块后跟
+        # walrus(ternary) 模式检测：ternary merge 块后跟
         # COPY 1 + STORE_* 序列（walrus 副作用捕获），将 IfExp 包装为
         # NamedExpr(target, IfExp)。
         # 字节码: <ternary merge> → COPY 1 → STORE_* n → LIST_APPEND/SET_ADD/YIELD_VALUE
@@ -1181,7 +1191,7 @@ class ComprehensionGenerator:
     def _detect_comp_ternary_as_filter(self, all_instrs: List[Instruction],
                                         store_idx: int,
                                         append_idx: int) -> Optional[Tuple[Dict[str, Any], int]]:
-        """[R9-17/18/05 fix] 检测推导式中「三元作 if-filter」模式。
+        """ 检测推导式中「三元作 if-filter」模式。
 
         模式: ``[elt for x in iter if (a if c else b)]``
 
@@ -1206,7 +1216,7 @@ class ComprehensionGenerator:
         作为 if-filter 条件，元素独立重建。
         """
         append_offset = all_instrs[append_idx].offset if append_idx < len(all_instrs) else float('inf')
-        # [R9-05 fix] async comprehension 内层用 GET_ANEXT 而非 FOR_ITER，
+        # async comprehension 内层用 GET_ANEXT 而非 FOR_ITER，
         # filter skip 跳回目标可能是 GET_ANEXT/SEND 块而非 FOR_ITER。
         # 此处不再强制要求 FOR_ITER 存在（async comp 由调用方上下文保证
         # 是推导式）。依「算法驱动」：守卫只看 BACKWARD 跳转特征，

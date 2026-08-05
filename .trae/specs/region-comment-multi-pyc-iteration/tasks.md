@@ -168,10 +168,34 @@
   - [x] T2.27.2 修复工程师：RegionAnalyzer 检测 POP_JUMP_IF_TRUE 识别否定链式比较 + RegionASTGenerator 清理 _or_then_block
   - [x] T2.27.3 commit `rcm-r27:`（aa00bbf，push-pending: github.com:443 不可达）
   - 残留：196 个预存在 exhaustive 测试失败（无新增回归）；跨轮残留 Pattern 不变
+- [x] T2.28 第 28 轮（空 except body pass 生成 + try/except/finally/else 全路径修复）
+  - [x] T2.28.1 测试工程师：反编译 + 字节码 diff（空 except body 导致 IndentationError）
+  - [x] T2.28.2 修复工程师：空 except body pass 生成修复，code_generator.py 所有 body 生成路径添加输出跟踪
+  - [x] T2.28.3 commit `rcm-r28:`
+- [x] T2.29 第 29 轮（未实施代码修复，残留 6 个失败文件根因分析）
+  - [x] T2.29.1 测试工程师：反编译 + 字节码 diff
+  - [x] T2.29.2 修复工程师：未实施修复，根因涉及深层算法问题
+  - [x] T2.29.3 commit `rcm-r29:`
+- [x] T2.30 第 30 轮（ASTSlice 独立表达式 slice() 函数调用修复）
+  - [x] T2.30.1 测试工程师：反编译 + 字节码 diff（ASTSlice 作为独立表达式导致 SyntaxError）
+  - [x] T2.30.2 修复工程师：_generate_slice_in_subscript 方法 + _generate_subscript 检测 ASTSlice 绕过分发
+  - [x] T2.30.3 commit `rcm-r30:`
+- [x] T2.31 第 31 轮（重复 case _ 通配符去重修复）
+  - [x] T2.31.1 测试工程师：反编译 + 字节码 diff（matcher.pyc 重复 case _ 导致 SyntaxError）
+  - [x] T2.31.2 修复工程师：dict + AST 路径 MatchAs 无 name 无 guard 只保留最后一个
+  - [x] T2.31.3 commit `rcm-r31:`
+- [x] T2.32 第 32 轮（_compute_merge_from_jump_targets 后继链 JUMP_FORWARD 搜索修复）
+  - [x] T2.32.1 测试工程师：反编译 + 字节码 diff（pboxAccount_jupyterhub.pyc merge_block 为 None）
+  - [x] T2.32.2 修复工程师：_find_jump_forward_in_successors BFS 搜索 JUMP_FORWARD 目标（最多 3 层深）
+  - [x] T2.32.3 commit `rcm-r32:`（累计匹配率 81.91%）
+- [x] T2.33 第 33 轮（ComprehensionGenerator._generate_remaining_stmts 委托 _build_store_statement 修复）
+  - [x] T2.33.1 测试工程师：反编译 bar.pyc + 字节码 diff（bar.pyc 1.72% → 81.03%，__build_class__ 误判为 Assign）
+  - [x] T2.33.2 修复工程师：_generate_remaining_stmts 签名新增 region_ast_gen 参数，STORE 处理委托 _build_store_statement
+  - [x] T2.33.3 commit `rcm-r33:`（累计匹配率 82.91%，+66 matched_functions）
 - [ ] T2.NN ... 持续直到退出条件满足（所有 pyc 文件 100% 字节码一致，每个生成 +OK.py）
 
 > 注：轮次数不设上限，持续直到所有 pyc 文件所有函数 100% 字节码一致。
-> 当前进度：351 个 pyc 中 166 个 ok（bytecode_match_rate=1.0），73.64% 全局成功率
+> 当前进度：402 个 pyc 中 222 个 ok（bytecode_match_rate=1.0），82.91% 累计匹配率
 > 残留跨轮 Pattern：T3/T2/A2/B/C/C2/E/F/M2/G3/R 及 BOOLOP-in-return + 否定链式比较(R27已修复)
 > 每轮必须 commit + push 到远程，禁止只 commit 不 push
 
