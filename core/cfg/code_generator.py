@@ -397,6 +397,24 @@ class CodeGenerator:
             subject_code = self._generate_expression(subject) if isinstance(subject, dict) else str(subject)
             self._write_line(f'match {subject_code}:')
             cases = node.get('cases', [])
+            # [R31 fix] 去重重复的 case _ (wildcard) 模式
+            # 当模式识别错误导致多个 case _ 出现时，Python 语法只允许最后一个。
+            wildcard_indices = []
+            for idx, case in enumerate(cases):
+                if not isinstance(case, dict):
+                    continue
+                pattern = case.get('pattern', {})
+                guard = case.get('guard')
+                if guard:
+                    continue
+                # Detect wildcard: pattern is None, or MatchAs with no name, or pattern dict with type None
+                if pattern is None or (isinstance(pattern, dict) and 
+                    (pattern.get('type') is None or pattern.get('type') == 'MatchAs') and 
+                    not pattern.get('name')):
+                    wildcard_indices.append(idx)
+            if len(wildcard_indices) > 1:
+                keep = set(wildcard_indices[-1:])
+                cases = [c for i, c in enumerate(cases) if i not in set(wildcard_indices) - keep]
             # Increase indent for case bodies
             self._increase_indent()
             for case in cases:
@@ -3019,14 +3037,48 @@ class CodeGenerator:
         # 生成match主题
         subject_code = self._generate_expression(node.subject, parent_precedence=0)
         self._write_line(f'match {subject_code}:')
-        
+
         # 增加缩进
         self.indent_level += 1
-        
+
+        # [R31 fix] 去重重复的 case _ (wildcard) 模式
+        # 当模式识别错误导致多个 case _ 出现时，Python 语法要求只有最后一个
+        # case _ 是有效的（前面的会导致 SyntaxError: wildcard makes
+        # remaining patterns unreachable）。
+        # 策略：检测 pattern 为 wildcard（'_' 或 None）且无 guard 的 case，只保留最后一个。
+        cases = node.cases
+        wildcard_indices = []
+        for idx, case in enumerate(cases):
+            pattern = getattr(case, 'pattern', None)
+            guard = getattr(case, 'guard', None)
+            if guard:
+                continue
+            # Pattern is None → wildcard
+            if pattern is None:
+                wildcard_indices.append(idx)
+                continue
+            # Pattern is dict with type None or MatchAs without name → wildcard
+            if isinstance(pattern, dict):
+                ptype = pattern.get('type')
+                if ptype is None or ptype == 'MatchAs':
+                    if not pattern.get('name'):
+                        wildcard_indices.append(idx)
+                        continue
+            # Pattern is ASTName with id='_' → wildcard (from MatchAs conversion)
+            if isinstance(pattern, ASTName) and pattern.name == '_':
+                wildcard_indices.append(idx)
+                continue
+            # Pattern has .pattern attribute that is None → wildcard
+            if hasattr(pattern, 'pattern') and pattern.pattern is None:
+                wildcard_indices.append(idx)
+        if len(wildcard_indices) > 1:
+            # Keep only the last wildcard case
+            cases = [c for i, c in enumerate(cases) if i not in wildcard_indices[:-1]]
+
         # 生成所有case
-        for case in node.cases:
+        for case in cases:
             self._generate_case(case)
-        
+
         # 恢复缩进
         self.indent_level -= 1
 
