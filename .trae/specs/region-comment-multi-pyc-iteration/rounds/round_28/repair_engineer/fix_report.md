@@ -1,25 +1,24 @@
 # R28 修复工程师报告
 
-## 轮次类型
-批量验证轮次 — 无代码修复，仅状态升级。
+## 修复点
 
-## 修复内容
-本轮无代码修复。R28 是纯验证轮次，对 R21-R27 累积修复后的全量 pyc 文件进行字节码一致性验证，
-将已达到 100% 匹配的 28 个文件从 partial/failed 升级为 ok。
+### Fix 1: 空 except body（try/except/finally/else 全路径）
+- **文件**: `core/cfg/code_generator.py`
+- **问题**: `_generate_try_dict` 和 `_generate_try`/`_generate_except_handler` 中，当 body/handler_body/orelse/finalbody 非空但节点不产生输出时，不生成 `pass`，导致 `IndentationError`
+- **修复**: 在所有 body 生成路径（dict 和 AST 节点两套）添加输出跟踪：记录生成前后的 output 值，若相等则写 `pass`
+- **算法依据**: 每块唯一归属 — 空块归 `pass` 语句，不泄漏到相邻块
 
-## pyc_index.json 更新
-- 28 个文件升级为 ok（decompile_status=ok, bytecode_match_rate=1.0）
-- 15 个文件更新 bytecode_match_rate（改善但未达 100%）
-- 144 个文件更新 last_tested_round=28（匹配率无变化）
-- 20 个文件保持 failed 状态
+### Fix 2: nonlocal 声明误添加不在父作用域的变量
+- **文件**: `core/cfg/region_analyzer.py`
+- **问题**: `_detect_global_declarations` 中 STORE_DEREF 检测路径添加了不在父函数 co_cellvars 中的变量，导致 `SyntaxError: no binding for nonlocal`
+- **修复**: 在第一个检测路径（STORE_DEREF）添加父函数 co_cellvars 验证；在 fallback 路径添加 STORE_DEREF/DELETE_DEREF 指令验证
+- **算法依据**: 字节码驱动 — nonlocal 声明必须由 co_freevars + parent co_cellvars 双重验证
 
-## 算法 4 原则合规
-本轮无代码修改，与 R27 一致 FULLY COMPLIANT。
+## 注释更新
+- `_generate_try_dict`: `[R28 fix]` 标记输出跟踪逻辑
+- `_generate_try`: `[R28 fix]` 标记 AST 节点路径输出跟踪
+- `_generate_except_handler`: `[R28 fix]` 标记 handler body 输出跟踪
+- `_detect_global_declarations`: `[R28 fix]` 标记 parent cellvars 验证
 
-## 残留缺陷
-| 缺陷模式 | 数量 | 后续修复目标 |
-|----------|------|-------------|
-| empty_else | 8 | R29 修复目标 |
-| syntax_error | 8 | R30+ 修复目标 |
-| ast_function_def | 3 | R30+ 修复目标 |
-| empty_except | 1 | R30+ 修复目标 |
+## 回归结果
+4 个文件从 failed → partial，无新增回归。

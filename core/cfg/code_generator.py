@@ -636,6 +636,8 @@ class CodeGenerator:
 
         self._write_line('try:')
         self._increase_indent()
+        # [R28 fix] Track output to detect empty body (same pattern as except handler)
+        _try_output_before = self.output.getvalue()
         if body:
             for body_node in body:
                 if isinstance(body_node, dict):
@@ -646,7 +648,8 @@ class CodeGenerator:
                             self._generate_dict_node(sub_node)
                 else:
                     self._generate_node(body_node)
-        else:
+        _try_output_after = self.output.getvalue()
+        if _try_output_after == _try_output_before:
             self._write_line('pass')
         self._decrease_indent()
 
@@ -692,13 +695,18 @@ class CodeGenerator:
                 else:
                     self._write_line(header)
                     self._increase_indent()
+                    # [R28 fix] Track output before/after to detect empty body.
+                    # handler_body may be non-empty (e.g., [None] or [{}]) but
+                    # produce no output, leaving except: without pass → SyntaxError.
+                    _output_before = self.output.getvalue()
                     if handler_body:
                         for h_node in handler_body:
                             if isinstance(h_node, dict):
                                 self._generate_dict_node(h_node)
                             else:
                                 self._generate_node(h_node)
-                    else:
+                    _output_after = self.output.getvalue()
+                    if _output_after == _output_before:
                         self._write_line('pass')
                     self._decrease_indent()
 
@@ -710,20 +718,26 @@ class CodeGenerator:
                 else:
                     self._write_line('else:')
                     self._increase_indent()
+                    _else_out_before = self.output.getvalue()
                     for else_node in orelse:
                         if isinstance(else_node, dict):
                             self._generate_dict_node(else_node)
                         else:
                             self._generate_node(else_node)
+                    if self.output.getvalue() == _else_out_before:
+                        self._write_line('pass')
                     self._decrease_indent()
             else:
                 self._write_line('else:')
                 self._increase_indent()
+                _else_out_before = self.output.getvalue()
                 for else_node in orelse:
                     if isinstance(else_node, dict):
                         self._generate_dict_node(else_node)
                     else:
                         self._generate_node(else_node)
+                if self.output.getvalue() == _else_out_before:
+                    self._write_line('pass')
                 self._decrease_indent()
 
         if finalbody:
@@ -734,20 +748,26 @@ class CodeGenerator:
                 else:
                     self._write_line('finally:')
                     self._increase_indent()
+                    _final_out_before = self.output.getvalue()
                     for final_node in finalbody:
                         if isinstance(final_node, dict):
                             self._generate_dict_node(final_node)
                         else:
                             self._generate_node(final_node)
+                    if self.output.getvalue() == _final_out_before:
+                        self._write_line('pass')
                     self._decrease_indent()
             else:
                 self._write_line('finally:')
                 self._increase_indent()
+                _final_out_before = self.output.getvalue()
                 for final_node in finalbody:
                     if isinstance(final_node, dict):
                         self._generate_dict_node(final_node)
                     else:
                         self._generate_node(final_node)
+                if self.output.getvalue() == _final_out_before:
+                    self._write_line('pass')
                 self._decrease_indent()
 
     def _generate_with_dict(self, node: Dict[str, Any], async_prefix: str = '') -> None:
@@ -895,10 +915,14 @@ class CodeGenerator:
                 self._write_line('else:')
                 self._if_depth += 1
                 self._increase_indent()
+                # [R30 fix] pass fallback: if body nodes produce no output, emit pass
+                _pos_before = self.output.tell()
                 if orelse:
                     for child in orelse:
                         self._generate_node(child)
                 else:
+                    self._write_line('pass')
+                if self.output.tell() == _pos_before:
                     self._write_line('pass')
                 self._decrease_indent()
                 self._if_depth -= 1
@@ -985,6 +1009,82 @@ class CodeGenerator:
                                                                    'For', 'While', 'If', 'Try'):
                 self._generate_dict_node(value)
                 return
+            
+            # [R30 fix] 处理 value 为 ASTFunctionDef 的情况
+            # 当反编译器将函数定义作为赋值值时，应生成函数定义语句而非赋值语句
+            if isinstance(value, ASTFunctionDef):
+                if targets_code and targets_code[0].isidentifier():
+                    value._name = targets_code[0]
+                self._generate_function_def(value)
+                return
+            
+            # [R30 fix] 处理含 ASTFunctionDef 的 Call（__build_class__ 或装饰器模式）
+            if isinstance(value, dict) and value.get('type') == 'Call':
+                _call_func = value.get('func', {})
+                _call_args = value.get('args', [])
+                _is_build_class = (value.get('is_class_def') or 
+                    (isinstance(_call_func, dict) and _call_func.get('type') == 'Name' 
+                     and _call_func.get('id') == '__build_class__'))
+                if _is_build_class and any(isinstance(a, ASTFunctionDef) for a in _call_args):
+                    _class_name = targets_code[0] if targets_code else 'UnknownClass'
+                    _bases = []
+                    for a in _call_args:
+                        if isinstance(a, ASTFunctionDef):
+                            continue
+                        elif isinstance(a, dict) and a.get('type') == 'Constant' and isinstance(a.get('value'), str):
+                            _class_name = a.get('value')
+                        else:
+                            _bases.append(self._generate_expression(a, 0))
+                    _bases_str = '(' + ', '.join(_bases) + ')' if _bases else ''
+                    self._write_line(f'class {_class_name}{_bases_str}:')
+                    self._increase_indent()
+                    _generated_body = False
+                    for a in _call_args:
+                        if isinstance(a, ASTFunctionDef):
+                            if a.body and hasattr(a.body, 'nodes'):
+                                for body_node in a.body.nodes:
+                                    self._generate_node(body_node)
+                                _generated_body = True
+                            elif isinstance(a.body, list):
+                                for body_node in a.body:
+                                    self._generate_node(body_node)
+                                _generated_body = True
+                    if not _generated_body:
+                        self._write_line('pass')
+                    self._decrease_indent()
+                    return
+                # 装饰器模式: decorator(<ASTFunctionDef>)
+                for a in _call_args:
+                    if isinstance(a, ASTFunctionDef):
+                        _deco_name = ''
+                        if isinstance(_call_func, dict):
+                            if _call_func.get('type') == 'Attribute':
+                                _val = self._generate_expression(_call_func.get('value', {}), 0)
+                                _deco_name = f'{_val}.{_call_func.get("attr", "")}'
+                            elif _call_func.get('type') == 'Name':
+                                _deco_name = _call_func.get('id', '')
+                        if _deco_name:
+                            self._write_line(f'@{_deco_name}')
+                        if targets_code and targets_code[0].isidentifier():
+                            a._name = targets_code[0]
+                        self._generate_function_def(a)
+                        return
+                    elif isinstance(a, ASTCall) and isinstance(getattr(a, 'func', None), ASTFunctionDef):
+                        _func_def = a.func
+                        _deco_name = ''
+                        if isinstance(_call_func, dict):
+                            if _call_func.get('type') == 'Attribute':
+                                _val = self._generate_expression(_call_func.get('value', {}), 0)
+                                _deco_name = f'{_val}.{_call_func.get("attr", "")}'
+                            elif _call_func.get('type') == 'Name':
+                                _deco_name = _call_func.get('id', '')
+                        if _deco_name:
+                            self._write_line(f'@{_deco_name}')
+                        if targets_code and targets_code[0].isidentifier():
+                            _func_def._name = targets_code[0]
+                        self._generate_function_def(_func_def)
+                        return
+            
             value_code = self._generate_expression(value)
         
         # [关键修复-2026] 元组解包赋值优化
@@ -1085,6 +1185,8 @@ class CodeGenerator:
         if orelse:
             self._write_line('else:')
             self._increase_indent()
+            # [R30 fix] pass fallback: if body nodes produce no output, emit pass
+            _pos_before = self.output.tell()
             # [修复-L05] 过滤else末尾与函数体重复的return
             # 只有当else有多个语句时才过滤最后的return
             # 如果return是唯一语句则保留（避免空else块）
@@ -1097,6 +1199,8 @@ class CodeGenerator:
             else:
                 for child in orelse:
                     self._generate_node(child)
+            if self.output.tell() == _pos_before:
+                self._write_line('pass')
             self._decrease_indent()
     
     def _generate_while_dict(self, node: Dict[str, Any]) -> None:
@@ -1203,7 +1307,11 @@ class CodeGenerator:
         # 生成then分支
         self._increase_indent()
         if node.body and node.body.nodes:
+            # [R30 fix] pass fallback: if body nodes produce no output, emit pass
+            _pos_before = self.output.tell()
             self._generate_block(node.body)
+            if self.output.tell() == _pos_before:
+                self._write_line('pass')
         else:
             self._write_line('pass')
         self._decrease_indent()
@@ -1561,8 +1669,11 @@ class CodeGenerator:
                 if filtered_nodes:
                     self._write_line('else:')
                     self._increase_indent()
+                    _pos_before = self.output.tell()
                     for n in filtered_nodes:
                         self._generate_node(n)
+                    if self.output.tell() == _pos_before:
+                        self._write_line('pass')
                     self._decrease_indent()
                 return
             
@@ -1575,8 +1686,11 @@ class CodeGenerator:
                 if filtered_nodes:
                     self._write_line('else:')
                     self._increase_indent()
+                    _pos_before = self.output.tell()
                     for n in filtered_nodes:
                         self._generate_node(n)
+                    if self.output.tell() == _pos_before:
+                        self._write_line('pass')
                     self._decrease_indent()
                 return
             
@@ -1611,8 +1725,11 @@ class CodeGenerator:
                         # 生成else
                         self._write_line('else:')
                         self._increase_indent()
+                        _pos_before = self.output.tell()
                         for n in filtered_nodes:
                             self._generate_node(n)
+                        if self.output.tell() == _pos_before:
+                            self._write_line('pass')
                         self._decrease_indent()
             elif elif_node.orelse and elif_node.orelse.nodes:
                 # [关键修复] 只有当orelse.nodes中没有剩余节点时，才处理elif_node.orelse
@@ -1627,8 +1744,11 @@ class CodeGenerator:
             if filtered_nodes:
                 self._write_line('else:')
                 self._increase_indent()
+                _pos_before = self.output.tell()
                 for n in filtered_nodes:
                     self._generate_node(n)
+                if self.output.tell() == _pos_before:
+                    self._write_line('pass')
                 self._decrease_indent()
     
     def _generate_for(self, node: ASTFor) -> None:
@@ -1665,7 +1785,11 @@ class CodeGenerator:
             else:
                 self._write_line('else:')
                 self._increase_indent()
+                # [R30 fix] pass fallback: if body nodes produce no output, emit pass
+                _pos_before = self.output.tell()
                 self._generate_block(else_block)
+                if self.output.tell() == _pos_before:
+                    self._write_line('pass')
                 self._decrease_indent()
 
     def _generate_for_target(self, target) -> str:
@@ -1815,9 +1939,12 @@ class CodeGenerator:
         
         # 生成try体
         self._increase_indent()
+        # [R28 fix] Track output to detect empty body (nodes present but no output)
+        _try_out_before = self.output.getvalue()
         if node.body and node.body.nodes:
             self._generate_block(node.body)
-        else:
+        _try_out_after = self.output.getvalue()
+        if _try_out_after == _try_out_before:
             self._write_line('pass')
         self._decrease_indent()
         
@@ -1829,14 +1956,20 @@ class CodeGenerator:
         if node.orelse and node.orelse.nodes:
             self._write_line('else:')
             self._increase_indent()
+            _else_out_before = self.output.getvalue()
             self._generate_block(node.orelse)
+            if self.output.getvalue() == _else_out_before:
+                self._write_line('pass')
             self._decrease_indent()
         
         # 生成finally分支
         if node.finalbody and node.finalbody.nodes:
             self._write_line('finally:')
             self._increase_indent()
+            _final_out_before = self.output.getvalue()
             self._generate_block(node.finalbody)
+            if self.output.getvalue() == _final_out_before:
+                self._write_line('pass')
             self._decrease_indent()
     
     def _generate_except_handler(self, handler: ASTExceptHandler) -> None:
@@ -1875,9 +2008,12 @@ class CodeGenerator:
                 self._write_line(f'{except_keyword}:')
         
         self._increase_indent()
+        # [R28 fix] Track output to detect empty handler body
+        _handler_out_before = self.output.getvalue()
         if handler.body and handler.body.nodes:
             self._generate_block(handler.body)
-        else:
+        _handler_out_after = self.output.getvalue()
+        if _handler_out_after == _handler_out_before:
             self._write_line('pass')
         self._decrease_indent()
     
@@ -2459,6 +2595,74 @@ class CodeGenerator:
             # Python中 Slice 不能作为独立的赋值值（如 x = a:b 是无效语法）
             if isinstance(node.value, ASTSlice):
                 value_code = self._generate_slice_as_call(node.value)
+            elif isinstance(node.value, ASTFunctionDef):
+                # [R30 fix] ASTNode路径: 赋值值为函数定义时，生成函数定义语句
+                if target_code.isidentifier():
+                    node.value._name = target_code
+                self._generate_function_def(node.value)
+                return
+            elif isinstance(node.value, ASTCall):
+                # [R30 fix] ASTNode路径: 检查 __build_class__ 或装饰器模式
+                _call_func = node.value.func
+                _call_args = node.value.args if hasattr(node.value, 'args') else []
+                _is_build_class = isinstance(_call_func, ASTName) and _call_func.name == '__build_class__'
+                if _is_build_class and any(isinstance(a, ASTFunctionDef) for a in _call_args):
+                    _class_name = target_code
+                    _bases = []
+                    for a in _call_args:
+                        if isinstance(a, ASTFunctionDef):
+                            continue
+                        elif isinstance(a, ASTConstant) and isinstance(a.value, str):
+                            _class_name = a.value
+                        else:
+                            _bases.append(self._generate_expression(a, 0))
+                    _bases_str = '(' + ', '.join(_bases) + ')' if _bases else ''
+                    self._write_line(f'class {_class_name}{_bases_str}:')
+                    self._increase_indent()
+                    _generated_body = False
+                    for a in _call_args:
+                        if isinstance(a, ASTFunctionDef):
+                            if a.body and hasattr(a.body, 'nodes'):
+                                for body_node in a.body.nodes:
+                                    self._generate_node(body_node)
+                                _generated_body = True
+                            elif isinstance(a.body, list):
+                                for body_node in a.body:
+                                    self._generate_node(body_node)
+                                    _generated_body = True
+                    if not _generated_body:
+                        self._write_line('pass')
+                    self._decrease_indent()
+                    return
+                # 检查装饰器模式: decorator(<ASTFunctionDef>)
+                for a in _call_args:
+                    if isinstance(a, ASTFunctionDef):
+                        _deco_name = ''
+                        if isinstance(_call_func, ASTAttribute):
+                            _deco_name = f'{self._generate_expression(_call_func.value, 0)}.{_call_func.attr}'
+                        elif isinstance(_call_func, ASTName):
+                            _deco_name = _call_func.name
+                        if _deco_name:
+                            self._write_line(f'@{_deco_name}')
+                        if target_code.isidentifier():
+                            a._name = target_code
+                        self._generate_function_def(a)
+                        return
+                    elif isinstance(a, ASTCall) and isinstance(getattr(a, 'func', None), ASTFunctionDef):
+                        _func_def = a.func
+                        _deco_name = ''
+                        if isinstance(_call_func, ASTAttribute):
+                            _deco_name = f'{self._generate_expression(_call_func.value, 0)}.{_call_func.attr}'
+                        elif isinstance(_call_func, ASTName):
+                            _deco_name = _call_func.name
+                        if _deco_name:
+                            self._write_line(f'@{_deco_name}')
+                        if target_code.isidentifier():
+                            _func_def._name = target_code
+                        self._generate_function_def(_func_def)
+                        return
+                # [R30 fix] ASTCall 但不匹配特殊模式时，按普通表达式处理
+                value_code = self._generate_expression(node.value, 0)
             else:
                 value_code = self._generate_expression(node.value, 0)
         else:
@@ -3479,6 +3683,23 @@ class CodeGenerator:
                     result = f'yield {value_code}'
                 else:
                     result = 'yield'
+            current_precedence = self._precedence['atom']
+        
+        elif isinstance(node, ASTFunctionDef):
+            # [R30 fix] ASTFunctionDef 作为表达式出现时的回退处理
+            # 正常情况下应在赋值处理中转换为函数定义语句，
+            # 到这里说明它出现在了不预期的位置（如函数参数）
+            # 生成一个 lambda 占位符以避免 <ASTFunctionDef> 字面量
+            if self.verbose:
+                logger.warning(f"ASTFunctionDef appeared as expression: {node.name}")
+            result = f'lambda *args, **kwargs: None'
+            current_precedence = self._precedence['lambda']
+        
+        elif isinstance(node, ASTClassDef):
+            # [R30 fix] ASTClassDef 作为表达式出现时的回退处理
+            if self.verbose:
+                logger.warning(f"ASTClassDef appeared as expression: {node.name}")
+            result = 'type("", (), {})'
             current_precedence = self._precedence['atom']
         
         else:

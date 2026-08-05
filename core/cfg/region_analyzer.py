@@ -1697,14 +1697,34 @@ class RegionAnalyzer:
                         load_global_names.append(instr.argval)
                 if instr.opname == 'STORE_DEREF' and instr.argval not in nonlocal_names:
                     if instr.argval in free_vars and instr.argval not in cell_vars:
-                        nonlocal_names.append(instr.argval)
+                        # [R28 fix] Verify the variable is actually in the parent's
+                        # cellvars. If not, it may be a free var from a grandparent
+                        # scope or a compiler artifact, and declaring it nonlocal
+                        # would cause SyntaxError.
+                        parent_code = getattr(self, 'parent_code', None)
+                        if parent_code is not None and hasattr(parent_code, 'co_cellvars'):
+                            parent_cellvars = set(getattr(parent_code, 'co_cellvars', ()))
+                            if instr.argval in parent_cellvars:
+                                nonlocal_names.append(instr.argval)
+                        else:
+                            nonlocal_names.append(instr.argval)
 
         if not nonlocal_names and free_vars:
+            # [R28 fix] Only declare nonlocal for free variables that are actually
+            # assigned (STORE_DEREF) or deleted (DELETE_DEREF) in this function.
+            # The previous fallback added ALL free vars from parent cellvars,
+            # including read-only variables, causing SyntaxError when the variable
+            # is not actually in an enclosing function scope or is a parameter.
+            store_deref_names = set()
+            for instr in _dis.get_instructions(code_obj):
+                if instr.opname in ('STORE_DEREF', 'DELETE_DEREF'):
+                    store_deref_names.add(instr.argval)
             parent_code = getattr(self, 'parent_code', None)
             if parent_code is not None and hasattr(parent_code, 'co_name') and parent_code.co_name != '<module>':
                 parent_cellvars = set(getattr(parent_code, 'co_cellvars', ()))
                 for fv in free_vars:
-                    if fv in parent_cellvars and fv not in nonlocal_names:
+                    if (fv in parent_cellvars and fv not in nonlocal_names
+                            and fv in store_deref_names):
                         nonlocal_names.append(fv)
 
         if not global_names:
