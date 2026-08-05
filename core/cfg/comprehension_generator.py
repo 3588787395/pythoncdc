@@ -307,35 +307,64 @@ class ComprehensionGenerator:
         stmts = []
         current_instrs = []
         _import_pending = False
+        _import_module = ''
+        _import_pairs = []  # [(imported_name, stored_name), ...]
+        _import_is_from = False
+
+        def _flush_import():
+            """Build and append Import/ImportFrom node from collected _import_pairs."""
+            nonlocal _import_pending, _import_module, _import_pairs, _import_is_from
+            if not _import_pending:
+                return
+            if _import_is_from:
+                names_list = []
+                for _imp_n, _sto_n in _import_pairs:
+                    _alias = _sto_n if _sto_n != _imp_n else None
+                    names_list.append({'name': _imp_n, 'asname': _alias})
+                stmts.append({'type': 'ImportFrom', 'module': _import_module, 'names': names_list})
+            else:
+                # Plain import: _import_pairs has (module, stored_name)
+                for _imp_n, _sto_n in _import_pairs:
+                    # `import os.path` stores `os` (top-level module).
+                    # `import os.path as path` stores `os.path` as `path`.
+                    # When stored_name == first component of module name,
+                    # it's a plain `import module.submodule` (no asname).
+                    _top_level = _imp_n.split('.')[0]
+                    _alias = _sto_n if _sto_n != _top_level else None
+                    stmts.append({'type': 'Import', 'names': [{'name': _imp_n, 'asname': _alias}]})
+            _import_pending = False
+            _import_module = ''
+            _import_pairs = []
+            _import_is_from = False
+
         for instr in pre_instrs:
             if instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP'):
-                if current_instrs:
-                    continue
                 continue
             if instr.opname == 'IMPORT_NAME':
+                # Flush previous import if any
+                _flush_import()
+                # IMPORT_NAME 前的 LOAD_CONST (level=0) + LOAD_CONST (fromlist 元组)
+                # 是 import 的参数，不是独立语句——直接丢弃。
+                current_instrs = []
                 _import_pending = True
-                current_instrs.append(instr)
+                _import_module = instr.argval if instr.argval else ''
+                _import_pairs = []
+                _import_is_from = False
                 continue
             if instr.opname == 'IMPORT_FROM':
-                current_instrs.append(instr)
+                _import_is_from = True
+                _import_pairs.append((instr.argval if instr.argval else '', instr.argval if instr.argval else ''))
                 continue
             if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
                 if _import_pending:
-                    current_instrs.append(instr)
-                    expr = self.expr_reconstructor.reconstruct(current_instrs)
-                    if expr:
-                        if expr.get('type') == 'Import':
-                            stmts.append({'type': 'Import', 'names': expr.get('names', [])})
-                        elif expr.get('type') == 'ImportFrom':
-                            stmts.append(expr)
-                        else:
-                            stmts.append({
-                                'type': 'Assign',
-                                'targets': [{'type': 'Name', 'id': instr.argval, 'ctx': 'Store'}],
-                                'value': expr,
-                            })
-                    current_instrs = []
-                    _import_pending = False
+                    stored_name = instr.argval
+                    if _import_is_from and _import_pairs:
+                        # Update last pair's stored_name
+                        _imp_n, _ = _import_pairs[-1]
+                        _import_pairs[-1] = (_imp_n, stored_name)
+                    else:
+                        # Plain import: (module, stored_name)
+                        _import_pairs.append((_import_module, stored_name))
                     continue
                 current_instrs.append(instr)
                 if region_ast_gen is not None:
@@ -355,7 +384,11 @@ class ComprehensionGenerator:
                             })
                 current_instrs = []
                 continue
+        # Non-import instruction: flush any pending import
+            _flush_import()
             current_instrs.append(instr)
+        # Flush any remaining import
+        _flush_import()
         return stmts
 
     def _generate_remaining_stmts(self, remaining_instrs, region_ast_gen=None):
@@ -368,17 +401,63 @@ class ComprehensionGenerator:
         # 与 _generate_pre_comp_stmts 保持一致。
         stmts = []
         current_instrs = []
+        _import_pending = False
+        _import_module = ''
+        _import_pairs = []
+        _import_is_from = False
+
+        def _flush_import():
+            nonlocal _import_pending, _import_module, _import_pairs, _import_is_from
+            if not _import_pending:
+                return
+            if _import_is_from:
+                names_list = []
+                for _imp_n, _sto_n in _import_pairs:
+                    _alias = _sto_n if _sto_n != _imp_n else None
+                    names_list.append({'name': _imp_n, 'asname': _alias})
+                stmts.append({'type': 'ImportFrom', 'module': _import_module, 'names': names_list})
+            else:
+                for _imp_n, _sto_n in _import_pairs:
+                    _top_level = _imp_n.split('.')[0]
+                    _alias = _sto_n if _sto_n != _top_level else None
+                    stmts.append({'type': 'Import', 'names': [{'name': _imp_n, 'asname': _alias}]})
+            _import_pending = False
+            _import_module = ''
+            _import_pairs = []
+            _import_is_from = False
+
         for instr in remaining_instrs:
             if instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP'):
                 continue
             if instr.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                _flush_import()
                 if current_instrs:
                     value_expr = self.expr_reconstructor.reconstruct(current_instrs)
                     if value_expr:
                         stmts.append({'type': 'Return', 'value': value_expr})
                     current_instrs = []
                 continue
+            if instr.opname == 'IMPORT_NAME':
+                _flush_import()
+                current_instrs = []
+                _import_pending = True
+                _import_module = instr.argval if instr.argval else ''
+                _import_pairs = []
+                _import_is_from = False
+                continue
+            if instr.opname == 'IMPORT_FROM':
+                _import_is_from = True
+                _import_pairs.append((instr.argval if instr.argval else '', instr.argval if instr.argval else ''))
+                continue
             if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                if _import_pending:
+                    stored_name = instr.argval
+                    if _import_is_from and _import_pairs:
+                        _imp_n, _ = _import_pairs[-1]
+                        _import_pairs[-1] = (_imp_n, stored_name)
+                    else:
+                        _import_pairs.append((_import_module, stored_name))
+                    continue
                 current_instrs.append(instr)
                 if region_ast_gen is not None:
                     store_stmt = region_ast_gen._build_store_statement(current_instrs)
@@ -397,7 +476,9 @@ class ComprehensionGenerator:
                             })
                 current_instrs = []
                 continue
+            _flush_import()
             current_instrs.append(instr)
+        _flush_import()
         if current_instrs:
             value_expr = self.expr_reconstructor.reconstruct(current_instrs)
             if value_expr:
