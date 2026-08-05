@@ -4137,6 +4137,9 @@ class CodeGenerator:
                 # 多维数组切片：将元组元素展开为逗号分隔的形式
                 slice_codes = [self._generate_expression(elt, 0) for elt in node.slice.elts]
                 slice_code = ', '.join(slice_codes)
+        elif isinstance(node.slice, ASTSlice):
+            # [R30 fix] Slice 在 Subscript 内部时直接生成 lower:upper:step 格式
+            slice_code = self._generate_slice_in_subscript(node.slice)
         else:
             # [关键修复] 使用0作为parent_precedence，避免下标被添加括号
             slice_code = self._generate_expression(node.slice, 0)
@@ -4188,14 +4191,12 @@ class CodeGenerator:
         else:
             return self._generate_expression(node, 0)
 
-    def _generate_slice(self, node: ASTSlice) -> str:
-        """生成切片表达式"""
-        # [关键修复] 正确处理切片边界，当为None时返回空字符串
+    def _generate_slice_in_subscript(self, node: ASTSlice) -> str:
+        """生成切片表达式（在 [] 内部使用，格式为 lower:upper:step）"""
         lower = node.left
         upper = node.right
         step = node.step
 
-        # [关键修复] 检查lower/upper/step是否是ASTConstant(None)
         lower_is_none = lower is None or (isinstance(lower, ASTConstant) and lower.value is None)
         upper_is_none = upper is None or (isinstance(upper, ASTConstant) and upper.value is None)
         step_is_none = step is None or (isinstance(step, ASTConstant) and step.value is None)
@@ -4204,11 +4205,22 @@ class CodeGenerator:
         upper_str = self._generate_expression(upper, 0) if not upper_is_none else ""
         step_str = self._generate_expression(step, 0) if not step_is_none else None
 
-        # 格式为 "lower:upper" 或 "lower:upper:step"
         if step_str:
             return f"{lower_str}:{upper_str}:{step_str}"
         else:
             return f"{lower_str}:{upper_str}"
+
+    def _generate_slice(self, node: ASTSlice) -> str:
+        """生成切片表达式（独立使用时，返回 slice() 函数调用）
+        
+        [R30 fix] 当 ASTSlice 作为独立表达式出现时（不在 Subscript 内），
+        不能生成 lower:upper 格式（Python 语法不允许），
+        改为返回 slice(lower, upper, step) 函数调用。
+        
+        在 Subscript 内部时，由 _generate_subscript 直接调用
+        _generate_slice_in_subscript 生成 lower:upper 格式。
+        """
+        return self._generate_slice_as_call(node)
 
     def _generate_slice_as_function_call(self, node: Dict[str, Any]) -> str:
         """

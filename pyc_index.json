@@ -2299,11 +2299,10 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc",
     "size": 22990,
     "function_count": 27,
-    "decompile_status": "failed",
-    "bytecode_match_rate": 0.0,
+    "decompile_status": "partial",
+    "bytecode_match_rate": 0.4166666666666667,
     "ok_py_generated": true,
-    "last_tested_round": 29,
-    "error": "load_compiled_failed: TypeError: expected str, bytes or os.PathLike object, not NoneType"
+    "last_tested_round": 29
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data_source/__init__.pyc",
