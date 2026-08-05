@@ -3370,6 +3370,27 @@ class CodeGenerator:
                 # 使用标准 AST 风格的 'keywords' 字段。两者都读取以保证 keyword 不丢失。
                 keywords = node.get('keywords', []) or node.get('kwargs', [])
 
+                # [R31 fix] ''.join([Constant, FormattedValue, ...]) → f-string
+                # 当反编译器将 BUILD_STRING 结果错误识别为 ''.join([...]) 时，
+                # 将其转换回 f-string 以保证语法正确性。
+                # 检测模式：func = Attribute(value=Constant(''), attr='join'),
+                # args[0] = List(elts=[Constant, FormattedValue, ...])
+                if (isinstance(func, dict) and func.get('type') == 'Attribute' and
+                    func.get('attr') == 'join'):
+                    func_value = func.get('value', {})
+                    if (isinstance(func_value, dict) and
+                        func_value.get('type') == 'Constant' and
+                        func_value.get('value') == '' and
+                        len(args) == 1 and not keywords and
+                        isinstance(args[0], dict) and args[0].get('type') == 'List'):
+                        elts = args[0].get('elts', [])
+                        # Check if elts contain at least one FormattedValue
+                        has_fv = any(isinstance(e, dict) and e.get('type') == 'FormattedValue' for e in elts)
+                        if has_fv:
+                            # Convert to JoinedStr dict and generate as f-string
+                            joined_str = {'type': 'JoinedStr', 'values': elts}
+                            return self._generate_joined_str_from_dict(joined_str)
+
                 if (len(args) == 1 and not keywords and
                     isinstance(args[0], dict) and args[0].get('type') in ('GeneratorExp', 'GenExpr')):
                     gen_code = self._generate_gen_expr_from_dict(args[0])
@@ -4112,6 +4133,20 @@ class CodeGenerator:
         if isinstance(node.func, ASTConstant) and isinstance(getattr(node.func, 'value', None), str):
             error_msg = node.func.value
             return f"RuntimeError({repr(error_msg)})"
+
+        # [R31 fix] ''.join([Constant, FormattedValue, ...]) → f-string
+        # 当反编译器将 BUILD_STRING 结果错误识别为 ''.join([...]) 时，
+        # 将其转换回 f-string 以保证语法正确性。
+        if isinstance(node.func, ASTAttribute) and getattr(node.func, 'attr', None) == 'join':
+            func_value = getattr(node.func, 'value', None)
+            if isinstance(func_value, ASTConstant) and func_value.value == '':
+                pparams = node.pparams if hasattr(node, 'pparams') else []
+                if len(pparams) == 1 and isinstance(pparams[0], ASTList):
+                    elts = pparams[0].elts
+                    has_fv = any(isinstance(e, ASTFormattedValue) for e in elts)
+                    if has_fv:
+                        joined = ASTJoinedStr(values=list(elts))
+                        return self._generate_joined_str(joined)
         
         # [关键修复] 使用call优先级，确保属性访问和方法调用不会添加括号
         # 例如 f.write('x') 而不是 (f.write)('x')
