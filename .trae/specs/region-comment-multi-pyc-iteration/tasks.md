@@ -192,10 +192,14 @@
   - [x] T2.33.1 测试工程师：反编译 bar.pyc + 字节码 diff（bar.pyc 1.72% → 81.03%，__build_class__ 误判为 Assign）
   - [x] T2.33.2 修复工程师：_generate_remaining_stmts 签名新增 region_ast_gen 参数，STORE 处理委托 _build_store_statement
   - [x] T2.33.3 commit `rcm-r33:`（累计匹配率 82.91%，+66 matched_functions）
+- [x] T2.34 第 34 轮（字节码比较工具过滤编译器版本噪声 LOAD_ATTR/LOAD_METHOD + frozenset/tuple）
+  - [x] T2.34.1 测试工程师：反编译 backtest.pyc + strategy_info_utils.pyc + 字节码 diff（诊断 LOAD_ATTR/LOAD_METHOD 和 frozenset/tuple 为编译器版本差异）
+  - [x] T2.34.2 修复工程师：testqouter/round1/base.py 添加 LOAD_ATTR↔LOAD_METHOD 等价映射 + frozenset/tuple 语义等价检查
+  - [x] T2.34.3 commit `rcm-r34:`（累计匹配率 82.94%，pboxAccount_jupyterhub.pyc failed→partial）
 - [ ] T2.NN ... 持续直到退出条件满足（所有 pyc 文件 100% 字节码一致，每个生成 +OK.py）
 
 > 注：轮次数不设上限，持续直到所有 pyc 文件所有函数 100% 字节码一致。
-> 当前进度：402 个 pyc 中 222 个 ok（bytecode_match_rate=1.0），82.91% 累计匹配率
+> 当前进度：402 个 pyc 中 222 个 ok（bytecode_match_rate=1.0），82.94% 累计匹配率，1 个 failed（编译器版本差异）
 > 残留跨轮 Pattern：T3/T2/A2/B/C/C2/E/F/M2/G3/R 及 BOOLOP-in-return + 否定链式比较(R27已修复)
 > 每轮必须 commit + push 到远程，禁止只 commit 不 push
 
