@@ -1827,6 +1827,23 @@ class RegionAnalyzer:
             if self._is_reachable_bfs(then_succ, _else_exit, _exclude):
                 return _else_exit
 
+        # [R32 fix] 当 then_succ/else_succ 本身没有 JUMP_FORWARD 时，
+        # 搜索其后继链（最多 3 层深）中的 JUMP_FORWARD 目标。
+        # 典型场景：if account is None: ... if account is None: return ...
+        # pboxAccounts[...] = account  # JUMP_FORWARD → merge
+        # Block@72(then_succ) 的末尾是条件跳转而非 JUMP_FORWARD，
+        # 但其后继链中的 Block@430 有 JUMP_FORWARD → Block@1154(merge)。
+        if _then_exit is None:
+            _then_exits = self._find_jump_forward_in_successors(then_succ, _exclude, max_depth=3)
+            for _candidate in _then_exits:
+                if self._is_reachable_bfs(else_succ, _candidate, _exclude):
+                    return _candidate
+        if _else_exit is None:
+            _else_exits = self._find_jump_forward_in_successors(else_succ, _exclude, max_depth=3)
+            for _candidate in _else_exits:
+                if self._is_reachable_bfs(then_succ, _candidate, _exclude):
+                    return _candidate
+
         return None
 
     def _get_jump_forward_target(self, block: BasicBlock) -> Optional[BasicBlock]:
@@ -1836,6 +1853,40 @@ class RegionAnalyzer:
             if _last.argval is not None:
                 return self.cfg.get_block_by_offset(_last.argval)
         return None
+
+    def _find_jump_forward_in_successors(self, block: BasicBlock,
+                                          exclude: set,
+                                          max_depth: int = 3) -> list:
+        """[R32] 在块的后继链中搜索所有 JUMP_FORWARD 目标。
+
+        当 then_succ/else_succ 本身不以 JUMP_FORWARD 结尾时（如条件跳转），
+        沿后继链向下搜索（BFS，最多 max_depth 层），找到所有 JUMP_FORWARD
+        目标块。跳过 exclude 中的块和 RETURN/RAISE 终端块。
+        返回目标块列表（按搜索顺序）。
+        """
+        results = []
+        visited = {block}
+        worklist = [(block, 0)]
+        while worklist:
+            current, depth = worklist.pop(0)
+            # Check JUMP_FORWARD before depth limit, so blocks at max_depth
+            # are still checked for their JUMP_FORWARD target.
+            _last = current.get_last_instruction()
+            if _last and _last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+                if _last.argval is not None:
+                    target = self.cfg.get_block_by_offset(_last.argval)
+                    if target is not None and target not in exclude and target not in results:
+                        results.append(target)
+            if depth >= max_depth:
+                continue
+            # Skip terminal blocks (don't expand their successors)
+            if _last and _last.opname in ('RETURN_VALUE', 'RETURN_CONST', 'RAISE_VARARGS', 'RERAISE'):
+                continue
+            for succ in current.successors:
+                if succ not in visited and succ not in exclude:
+                    visited.add(succ)
+                    worklist.append((succ, depth + 1))
+        return results
 
     def _is_reachable_bfs(self, start: BasicBlock, target: BasicBlock,
                           exclude: Set[BasicBlock]) -> bool:
