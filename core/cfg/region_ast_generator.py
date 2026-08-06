@@ -31239,6 +31239,18 @@ AST 映射规则:
                                 _eff_stmts.append(_stmt)
                             _eff_expr_instrs = []
                             continue
+                        # [R39 fix] DELETE_SUBSCR/DELETE_ATTR -> Delete stmt.
+                        # del obj.attr / del container[key] in CONTINUE blocks
+                        # had DELETE_* dropped and LOAD preds emitted as Expr.
+                        if _instr.opname in ('DELETE_SUBSCR', 'DELETE_ATTR') and _eff_expr_instrs:
+                            _del_stmt = self._build_delete_stmt(_instr, _eff_expr_instrs + [_instr])
+                            if _del_stmt:
+                                if isinstance(_del_stmt, list):
+                                    _eff_stmts.extend(_del_stmt)
+                                else:
+                                    _eff_stmts.append(_del_stmt)
+                            _eff_expr_instrs = []
+                            continue
                         _eff_expr_instrs.append(_instr)
                     if _eff_expr_instrs:
                         _expr = self.expr_reconstructor.reconstruct(_eff_expr_instrs)
@@ -31834,7 +31846,13 @@ AST 映射规则:
                                         for _i in _ns_after))
                             if _ns_has_stmt or _ns_has_expr_no_ret:
                                 _ns_n = 0  # 降级：不触发本路径
-                        if _ns_n >= 2:
+                        # [R39 fix] Stack depth guard: when expr_reconstructor
+                        # simulated stack has fewer than _ns_n elements
+                        # (e.g. nested for-loop conditional branch causes
+                        # incomplete stack tracking), skip tuple unpack
+                        # path to prevent _ns_stack[-_ns_n + _si] IndexError
+                        # that drops the entire function body (pass).
+                        if _ns_n >= 2 and len(_ns_stack) >= _ns_n:
                             # STORE 在字节码中按反源序排列（first store 弹 TOS = 最后加载值）。
                             # 反转得到源序目标: reversed(bytecode_stores) → [target_1, ..., target_N]
                             _ns_source_targets = []

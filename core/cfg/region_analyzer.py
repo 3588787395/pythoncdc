@@ -2233,6 +2233,7 @@ class RegionAnalyzer:
         STATEMENT_TERMINATORS = frozenset({
             'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
             'STORE_SUBSCR', 'STORE_ATTR',
+            'DELETE_SUBSCR', 'DELETE_ATTR',
             'RETURN_VALUE', 'RETURN_CONST',
             'RAISE_VARARGS', 'IMPORT_NAME', 'IMPORT_FROM',
             'YIELD_VALUE', 'YIELD_FROM', 'POP_TOP'
