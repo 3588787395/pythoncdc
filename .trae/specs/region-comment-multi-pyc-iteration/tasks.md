@@ -212,11 +212,35 @@
   - [x] T2.38.1 测试工程师：反编译 bar.pyc + 字节码 diff（__getitem__ 中 `value is DEFAULT or callable(value)` 被误反编译为 `not value is DEFAULT`）
   - [x] T2.38.2 修复工程师：region_analyzer.py _detect_boolop_conditional_chain 栈深度回溯扩展 — 对 POP_JUMP_IF_TRUE（or 短路）增加 IS_OP/CONTAINS_OP/COMPARE_OP 触发条件，使前置赋值的 STORE_FAST 不被误判为 body 语句；POP_JUMP_IF_FALSE（and 短路）保持原行为避免回归
   - [x] T2.38.3 commit `rcm-r38:`（累计匹配率 86.37%，229 OK / 173 partial / 0 failed，5715/6617 函数匹配）
+- [x] T2.39 第 39 轮（live_future_position 函数体丢失 + DELETE_SUBSCR 修复）
+  - [x] T2.39.1 测试工程师：诊断 load_from_kwargs 函数体反编译为 pass
+  - [x] T2.39.2 修复工程师：region_ast_generator.py 栈深度守卫 + DELETE_SUBSCR/DELETE_ATTR 显式处理
+  - [x] T2.39.3 commit `rcm-r39:`（86.44%，229 OK）
+- [x] T2.40 第 40 轮（dict comprehension 方法调用栈深度计算修复）
+  - [x] T2.40.1 测试工程师：分析 dictcomp 中 value.strftime 导致 key/value 分割错误
+  - [x] T2.40.2 修复工程师：comprehension_generator.py _find_dict_kv_split_point _get_stack_delta LOAD_METHOD 修复
+  - [x] T2.40.3 commit `rcm-r40:`（86.44%，229 OK）
+- [x] T2.41 第 41 轮（POP_JUMP_*_IF_NONE 跳转指令分类修复）
+  - [x] T2.41.1 测试工程师：全量扫描发现 71 个函数的 first true_diff 是 POP_JUMP_*_IF_NONE 跳转目标差异
+  - [x] T2.41.2 修复工程师：base.py _classify_instruction jump_ops 集合添加 6 个 Python 3.11 跳转指令
+  - [x] T2.41.3 commit `rcm-r41:`（86.44% → 86.67%，229 OK）
+- [x] T2.42 第 42 轮（COPY_FREE_VARS/MAKE_CELL 噪声过滤 + PUSH_EXC_INFO 根因分析）
+  - [x] T2.42.1 测试工程师：分析 COPY_FREE_VARS 导致指令对齐错位（16 个函数）
+  - [x] T2.42.2 修复工程师：base.py _filter_noise_instrs 添加 COPY_FREE_VARS/MAKE_CELL 到噪声集
+  - [x] T2.42.3 commit `rcm-r42:`（86.67%，229 OK）
+- [x] T2.43 第 43 轮（Python 名称重整修复）
+  - [x] T2.43.1 测试工程师：发现 _BaseDatabase__load_table_names 应为 __load_table_names
+  - [x] T2.43.2 修复工程师：region_ast_generator.py 新增 _is_mangled_name + _safe_set_func_name，替换 9 处 func_def['name'] = target_name
+  - [x] T2.43.3 commit `rcm-r43:`（86.67% → 86.96%，231 OK）
+- [x] T2.44 第 44 轮（尾部隐式 return None 修剪 + PUSH_EXC_INFO 根因分析）
+  - [x] T2.44.1 测试工程师：分析 ?->LOAD_CONST 模式（22 个函数尾部多出 return None）
+  - [x] T2.44.2 修复工程师：base.py compare_bytecode 添加尾部 return None 修剪逻辑
+  - [x] T2.44.3 commit `rcm-r44:`（86.96% → 87.08%，232 OK）
 - [ ] T2.NN ... 持续直到退出条件满足（所有 pyc 文件 100% 字节码一致，每个生成 +OK.py）
 
 > 注：轮次数不设上限，持续直到所有 pyc 文件所有函数 100% 字节码一致。
-> 当前进度：402 个 pyc 中 229 个 ok（bytecode_match_rate=1.0），86.37% 累计匹配率，0 个 failed
-> 残留跨轮 Pattern：T3/T2/A2/B/C/C2/E/F/M2/G3/R 及 BOOLOP-in-return + 否定链式比较(R27已修复)
+> 当前进度：402 个 pyc 中 232 个 ok（bytecode_match_rate=1.0），87.08% 累计匹配率，0 个 failed
+> 残留主要问题：PUSH_EXC_INFO try-except 结构重建不完整（113 个函数）、LOAD_GLOBAL->LOAD_FAST 指令错位（59 个函数）
 > 每轮必须 commit + push 到远程，禁止只 commit 不 push
 
 ## 阶段三（Phase 3：全量验证与 +OK 生成）
