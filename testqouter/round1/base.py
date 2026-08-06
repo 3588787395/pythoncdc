@@ -113,6 +113,27 @@ def compare_bytecode(orig_code: types.CodeType, decomp_code: types.CodeType) -> 
     orig_instrs = _filter_noise_instrs(orig_instrs_raw)
     decomp_instrs = _filter_noise_instrs(decomp_instrs_raw)
 
+    # [R44] Trim trailing implicit "return None" from decompiled code.
+    # Python functions implicitly return None. The compiler may or may not
+    # emit an explicit LOAD_CONST None + RETURN_VALUE at the end depending
+    # on whether the function body ends with a bare expression, a return
+    # statement, or falls off the end. The decompiler sometimes adds an
+    # extra return None that wasn't in the original, causing 2 false
+    # true_diffs. Trim it if the original doesn't have it.
+    def _ends_with_return_none(instrs):
+        if len(instrs) >= 2:
+            last = instrs[-1]
+            second_last = instrs[-2]
+            return (last.opname == 'RETURN_VALUE'
+                    and second_last.opname == 'LOAD_CONST'
+                    and second_last.argval is None)
+        return False
+
+    if (_ends_with_return_none(decomp_instrs)
+            and not _ends_with_return_none(orig_instrs)
+            and len(decomp_instrs) > len(orig_instrs)):
+        decomp_instrs = decomp_instrs[:-2]
+
     result = {
         'match': False,
         'orig_count': len(orig_instrs),
