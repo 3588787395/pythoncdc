@@ -841,10 +841,33 @@ class ComprehensionGenerator:
         if len(instrs) < 2:
             return None
 
+        # [R40 fix] Track LOAD_METHOD calling convention to correct CALL
+        # stack delta. In Python 3.11, LOAD_METHOD pushes NULL+method
+        # (delta +1: pops obj, pushes 2). CALL n then pops n+2 (n args +
+        # callable + NULL) and pushes 1, delta = -(n+1). Without
+        # LOAD_METHOD (e.g. LOAD_ATTR), CALL n pops n+1 (n args +
+        # callable), delta = -n. The original _get_stack_delta returns
+        # -(n)+1 for CALL, which is incorrect for both cases and causes
+        # dict comp key/value split point detection to fail when the key
+        # contains a method call (e.g. {v.strftime('%Y-%m-%d'): k}).
         stack_depth = 0
         depth_history = []
+        _has_load_method = False
 
         for i, instr in enumerate(instrs):
+            if instr.opname == 'LOAD_METHOD':
+                _has_load_method = True
+            elif instr.opname == 'CALL':
+                if _has_load_method:
+                    # CALL with LOAD_METHOD: delta = -(n+1)
+                    delta = -(instr.arg + 1)
+                else:
+                    # CALL without LOAD_METHOD: delta = -(n)
+                    delta = -instr.arg
+                _has_load_method = False
+                stack_depth += delta
+                depth_history.append((i, stack_depth))
+                continue
             delta = self._get_stack_delta(instr)
             stack_depth += delta
             depth_history.append((i, stack_depth))
