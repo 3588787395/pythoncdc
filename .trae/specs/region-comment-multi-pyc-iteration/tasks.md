@@ -196,10 +196,26 @@
   - [x] T2.34.1 测试工程师：反编译 backtest.pyc + strategy_info_utils.pyc + 字节码 diff（诊断 LOAD_ATTR/LOAD_METHOD 和 frozenset/tuple 为编译器版本差异）
   - [x] T2.34.2 修复工程师：testqouter/round1/base.py 添加 LOAD_ATTR↔LOAD_METHOD 等价映射 + frozenset/tuple 语义等价检查
   - [x] T2.34.3 commit `rcm-r34:`（累计匹配率 82.94%，pboxAccount_jupyterhub.pyc failed→partial）
+- [x] T2.35 第 35 轮（字节码规范化：NOP/PRECALL/EXTENDED_ARG 过滤 + jump_only 等价计数）
+  - [x] T2.35.1 测试工程师：反编译 trade_live_broker.pyc + 字节码 diff
+  - [x] T2.35.2 修复工程师：base.py 过滤编译器噪声指令 + jump_only 等价计数 + is_method_form 修复
+  - [x] T2.35.3 commit `rcm-r35:`（累计匹配率 82.79% → 84.27%，消除所有 Failed 状态）
+- [x] T2.36 第 36 轮（推导式属性访问 bug 修复 + 高影响力文件批量验证）
+  - [x] T2.36.1 测试工程师：批量验证高影响力文件 + 诊断推导式属性访问误加括号
+  - [x] T2.36.2 修复工程师：code_generator.py Attribute 类型 iter 字段不再误加 () + region_ast_generator.py _generate_return_ast 跳过 CALL 指令修复
+  - [x] T2.36.3 commit `rcm-r36:`
+- [x] T2.37 第 37 轮（常见不匹配模式分析 + 最高影响力缺陷修复）
+  - [x] T2.37.1 测试工程师：分析 Top 10 partial 文件的主要缺陷模式
+  - [x] T2.37.2 修复工程师：语句顺序错位/作用域错误/try-except 结构修复
+  - [x] T2.37.3 commit `rcm-r37:`（累计匹配率 84.27%，+7 matched, +1 OK）
+- [x] T2.38 第 38 轮（IS_OP + POP_JUMP_IF_TRUE 的 OR 短路模式识别修复）
+  - [x] T2.38.1 测试工程师：反编译 bar.pyc + 字节码 diff（__getitem__ 中 `value is DEFAULT or callable(value)` 被误反编译为 `not value is DEFAULT`）
+  - [x] T2.38.2 修复工程师：region_analyzer.py _detect_boolop_conditional_chain 栈深度回溯扩展 — 对 POP_JUMP_IF_TRUE（or 短路）增加 IS_OP/CONTAINS_OP/COMPARE_OP 触发条件，使前置赋值的 STORE_FAST 不被误判为 body 语句；POP_JUMP_IF_FALSE（and 短路）保持原行为避免回归
+  - [x] T2.38.3 commit `rcm-r38:`（累计匹配率 86.37%，229 OK / 173 partial / 0 failed，5715/6617 函数匹配）
 - [ ] T2.NN ... 持续直到退出条件满足（所有 pyc 文件 100% 字节码一致，每个生成 +OK.py）
 
 > 注：轮次数不设上限，持续直到所有 pyc 文件所有函数 100% 字节码一致。
-> 当前进度：402 个 pyc 中 222 个 ok（bytecode_match_rate=1.0），82.94% 累计匹配率，1 个 failed（编译器版本差异）
+> 当前进度：402 个 pyc 中 229 个 ok（bytecode_match_rate=1.0），86.37% 累计匹配率，0 个 failed
 > 残留跨轮 Pattern：T3/T2/A2/B/C/C2/E/F/M2/G3/R 及 BOOLOP-in-return + 否定链式比较(R27已修复)
 > 每轮必须 commit + push 到远程，禁止只 commit 不 push
 
