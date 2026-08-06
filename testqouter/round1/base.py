@@ -123,14 +123,7 @@ def compare_bytecode(orig_code: types.CodeType, decomp_code: types.CodeType) -> 
         # Python 3.11 — LOAD_METHOD is an optimization hint for the VM.
         # Different Python 3.11.x patch versions may choose one or the other
         # for the same source code. Treat them as equivalent.
-        # [R36] POP_JUMP_FORWARD_IF_NONE and POP_JUMP_FORWARD_IF_FALSE are
-        # semantically equivalent in Python 3.11 when checking emptiness in
-        # while/error loops. The compiler may optimize one to the other.
-        _EQUIV_OPS = {
-            'LOAD_ATTR': 'LOAD_METHOD', 'LOAD_METHOD': 'LOAD_ATTR',
-            'POP_JUMP_FORWARD_IF_NONE': 'POP_JUMP_FORWARD_IF_FALSE',
-            'POP_JUMP_FORWARD_IF_FALSE': 'POP_JUMP_FORWARD_IF_NONE',
-        }
+        _EQUIV_OPS = {'LOAD_ATTR': 'LOAD_METHOD', 'LOAD_METHOD': 'LOAD_ATTR'}
         _orig_op = orig_instr.opname
         _decomp_op = decomp_instr.opname
         if _EQUIV_OPS.get(_orig_op) == _decomp_op:
