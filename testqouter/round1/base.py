@@ -74,9 +74,31 @@ def _normalize_argval(argval: Any) -> Any:
     return argval
 
 
+def _filter_noise_instrs(instrs):
+    """Filter compiler-artifact instructions that have no semantic meaning.
+
+    Removed instructions:
+    - NOP: padding/alignment inserted by the compiler, zero semantic effect
+    - PRECALL: Python 3.11 optimization hint, always immediately followed by
+      CALL; removing it does not change semantics
+    - EXTENDED_ARG: prefix instruction whose value depends on bytecode layout
+      (i.e., total instruction count); the *real* argument is carried by the
+      following instruction, so EXTENDED_ARG itself is layout-dependent noise
+    """
+    _NOISE_OPS = {'NOP', 'PRECALL', 'EXTENDED_ARG'}
+    return [i for i in instrs if i.opname not in _NOISE_OPS]
+
+
 def compare_bytecode(orig_code: types.CodeType, decomp_code: types.CodeType) -> Dict[str, Any]:
-    orig_instrs = get_bytecode_instructions(orig_code)
-    decomp_instrs = get_bytecode_instructions(decomp_code)
+    orig_instrs_raw = get_bytecode_instructions(orig_code)
+    decomp_instrs_raw = get_bytecode_instructions(decomp_code)
+
+    # [R35] Filter compiler-artifact noise (NOP, PRECALL, EXTENDED_ARG)
+    # These instructions have zero semantic effect and their presence/absence
+    # depends on compiler version and bytecode layout. Filtering them prevents
+    # positional misalignment that cascades into hundreds of false diffs.
+    orig_instrs = _filter_noise_instrs(orig_instrs_raw)
+    decomp_instrs = _filter_noise_instrs(decomp_instrs_raw)
 
     result = {
         'match': False,

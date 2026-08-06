@@ -713,13 +713,38 @@ class RegionASTGenerator:
                                 is_contained = True
                                 break
                         elif isinstance(other, BoolOpRegion) and isinstance(r, IfRegion):
+                            # [R36] If the IfRegion's entry is in the BoolOpRegion's
+                            # blocks AND the BoolOpRegion owns that entry (via
+                            # block_to_region), the IfRegion is a spurious artifact
+                            # (e.g. value-context chained compare detected as IfRegion
+                            # whose entry is a BoolOp chain block). Filter it out so
+                            # the BoolOpRegion handles generation.
+                            if (r.entry and r.entry in other.blocks
+                                    and self.region_analyzer.block_to_region.get(r.entry) is other):
+                                is_contained = True
+                                break
                             if r.condition_block and r.condition_block in other.blocks:
                                 pass
                             else:
                                 is_contained = True
                                 break
                         elif isinstance(r, BoolOpRegion) and isinstance(other, IfRegion):
+                            # [R36] If the BoolOpRegion owns its entry block (via
+                            # block_to_region), it should NOT be filtered out even
+                            # if the entry is in another IfRegion's blocks. This
+                            # happens when value-context chained compares are
+                            # operands of `and`/`or` — the chained compare's
+                            # merge_block (a BoolOp jump block) is the BoolOp's
+                            # entry, and it's also in the chained compare
+                            # IfRegion's blocks. The BoolOpRegion owns the entry.
                             if r.entry and r.entry == other.entry:
+                                entry_owner = self.region_analyzer.block_to_region.get(r.entry)
+                                if entry_owner is r:
+                                    pass
+                                else:
+                                    is_contained = True
+                                    break
+                            elif r.entry and r.entry in other.blocks:
                                 entry_owner = self.region_analyzer.block_to_region.get(r.entry)
                                 if entry_owner is r:
                                     pass
@@ -935,8 +960,11 @@ class RegionASTGenerator:
                           if id(r) not in loop_condition_boolops
                           and id(r) not in ternary_absorbed_boolops]
         
-        sorted_other = sorted(other_regions, key=lambda r: r.entry.start_offset if r.entry else 0)
-        top_level_regions = boolop_regions + sorted_other
+        # [R36 fix] BoolOpRegion sorted by entry offset with other regions,
+        # instead of being hardcoded at the front, to avoid return statements
+        # appearing before preceding assignment statements.
+        all_regions = boolop_regions + other_regions
+        top_level_regions = sorted(all_regions, key=lambda r: r.entry.start_offset if r.entry else 0)
 
         # 区域归约算法：释放孤儿块
         # 当内部区域被过滤掉（因为其entry在外层区域的blocks中）时，
@@ -8255,6 +8283,20 @@ AST 映射规则:
         """
         if region.region_type.name == 'IF_ELIF_CHAIN':
             return self._if_generate_full_elif_chain(region)
+        # [R36] Skip IfRegions whose entry is owned by a BoolOpRegion.
+        # This happens when value-context chained compares are operands of
+        # `and`/`or` (e.g. `return A < x < B or C < x < D`). The chained
+        # compare IfRegions have entries that are BoolOp chain blocks, and
+        # the BoolOpRegion owns them via block_to_region. Without this check,
+        # the IfRegion generates `if ... : pass`, consuming blocks that the
+        # BoolOpRegion needs for expression reconstruction.
+        if region.entry is not None:
+            _entry_owner = self.region_analyzer.block_to_region.get(region.entry)
+            if isinstance(_entry_owner, BoolOpRegion) and _entry_owner is not region:
+                # [R36] Don't mark blocks as generated — the BoolOpRegion will
+                # handle them. Just skip this IfRegion.
+                self._generated_regions.add(id(region))
+                return []
         # [Round4-04] 链式比较作赋值右值（`z = 0 < a < 10`）模式：
         # condition_block 末尾是 JUMP_IF_FALSE_OR_POP/JUMP_IF_TRUE_OR_POP（值上下文
         # 短路跳转，非控制流），merge_block 含 STORE_*。此时不能生成 If 语句，
@@ -8263,6 +8305,41 @@ AST 映射规则:
         _vc_assign = self._generate_value_context_chain_compare_assign(region)
         if _vc_assign is not None:
             return _vc_assign
+        # [R36] Value-context chained compare as BoolOp operand (e.g.
+        # `return A < x < B or C < x < D`). The IfRegion has
+        # chained_compare_ops, condition_block ends with SHORT_CIRCUIT_JUMP_OPS,
+        # but merge_block has no STORE_* (instead it has JUMP_IF_TRUE_OR_POP
+        # or JUMP_IF_FALSE_OR_POP — the BoolOp short-circuit). Without this
+        # check, _if_generate_normal creates `if A < x < B: pass`, consuming
+        # blocks that belong to the BoolOpRegion. Fix: detect this pattern,
+        # cache the chained compare expression for the BoolOp generator, mark
+        # blocks as generated, and return [] to skip IfRegion generation.
+        if (getattr(region, 'chained_compare_ops', None)
+                and len(region.chained_compare_ops) >= 2
+                and getattr(region, 'chained_compare_blocks', None)):
+            _cond_block = region.condition_block
+            if _cond_block is not None:
+                _cb_last = _cond_block.get_last_instruction()
+                if _cb_last and _cb_last.opname in SHORT_CIRCUIT_JUMP_OPS:
+                    _merge = getattr(region, 'merge_block', None)
+                    if _merge is not None:
+                        _merge_last = _merge.get_last_instruction()
+                        # [R36 fix] Extended: chained compare is in value context
+                        # when merge_block does NOT end with FORWARD_CONDITIONAL_JUMP_OPS
+                        # (which would indicate an `if` condition). Value-context
+                        # merge blocks end with SHORT_CIRCUIT_JUMP_OPS (BoolOp operand),
+                        # RETURN_VALUE (direct return), JUMP_FORWARD (connector), etc.
+                        if (_merge_last and _merge_last.opname not in FORWARD_CONDITIONAL_JUMP_OPS):
+                            # merge_block is NOT an if condition — value context
+                            _cc_expr = self._build_chained_compare_from_region_data(region)
+                            if _cc_expr is not None:
+                                if not hasattr(self, '_chain_compare_expr_cache'):
+                                    self._chain_compare_expr_cache = {}
+                                self._chain_compare_expr_cache[id(_merge)] = _cc_expr
+                                # [R36] Don't mark blocks as generated — the
+                                # BoolOpRegion will handle them via _try_build_chained_compare_in_boolop.
+                                self._generated_regions.add(id(region))
+                                return []
         if region.entry and region.entry in self.generated_blocks:
             boolop_child = None
             if region.children:
@@ -10652,18 +10729,25 @@ AST 映射规则:
                 continue
             if elif_body_block_set and child.blocks and any(b in elif_body_block_set for b in child.blocks if hasattr(b, 'start_offset')):
                 continue
-            child_reachable_from_then = self._is_child_reachable_from_blocks(child, region.then_blocks)
-            if not child_reachable_from_then:
-                then_offset_min = min((b.start_offset for b in region.then_blocks), default=None)
-                then_offset_max = max((b.start_offset for b in region.then_blocks), default=None)
-                if then_offset_min is not None and then_offset_max is not None:
-                    child_block_offsets = {b.start_offset for b in child.blocks}
-                    has_overlap = any(
-                        then_offset_min <= bo <= then_offset_max
-                        for bo in child_block_offsets
-                    )
-                    if has_overlap:
-                        child_reachable_from_then = True
+            # [R36 fix] _is_child_reachable_from_blocks may follow back edges
+            # (JUMP_BACKWARD → loop header → if condition → else entry), giving
+            # a false positive for children in the else branch. Explicitly
+            # exclude children whose entry is in else_blocks.
+            if region.else_blocks and child.entry in set(region.else_blocks):
+                child_reachable_from_then = False
+            else:
+                child_reachable_from_then = self._is_child_reachable_from_blocks(child, region.then_blocks)
+                if not child_reachable_from_then:
+                    then_offset_min = min((b.start_offset for b in region.then_blocks), default=None)
+                    then_offset_max = max((b.start_offset for b in region.then_blocks), default=None)
+                    if then_offset_min is not None and then_offset_max is not None:
+                        child_block_offsets = {b.start_offset for b in child.blocks}
+                        has_overlap = any(
+                            then_offset_min <= bo <= then_offset_max
+                            for bo in child_block_offsets
+                        )
+                        if has_overlap:
+                            child_reachable_from_then = True
             if child_reachable_from_then:
                 child_id = id(child)
                 if child_id not in self._generated_regions and child_id not in self._generating_regions:
@@ -10823,7 +10907,37 @@ AST 映射规则:
                     return False
                 if child.entry in _claimed_blocks_c3:
                     return False
-                if not self._is_child_reachable_from_blocks(child, region.else_blocks):
+                # [R36 fix] Skip value-context chained compare IfRegions.
+                # These have chained_compare_ops, condition_block ending with
+                # SHORT_CIRCUIT_JUMP_OPS, and merge_block NOT ending with
+                # FORWARD_CONDITIONAL_JUMP_OPS. They are value expressions
+                # (BoolOp operands, return values), not if statements.
+                # Collecting them would cause the caller to mark their blocks
+                # as generated, preventing BoolOpRegion from processing them.
+                if (isinstance(child, IfRegion)
+                        and getattr(child, 'chained_compare_ops', None)
+                        and len(child.chained_compare_ops) >= 2
+                        and getattr(child, 'chained_compare_blocks', None)):
+                    _cb = getattr(child, 'condition_block', None)
+                    if _cb is not None:
+                        _cb_last = _cb.get_last_instruction()
+                        if _cb_last and _cb_last.opname in SHORT_CIRCUIT_JUMP_OPS:
+                            _mb = getattr(child, 'merge_block', None)
+                            if _mb is not None:
+                                _mb_last = _mb.get_last_instruction()
+                                if (_mb_last and _mb_last.opname not in FORWARD_CONDITIONAL_JUMP_OPS):
+                                    for b in child.blocks:
+                                        _child_block_set_c3.add(b)
+                                        _claimed_blocks_c3.add(b)
+                                    return False
+                # [R36 fix] child.entry may be directly in else_blocks
+                # (not just reachable via successors). This happens when
+                # the else branch starts with a for-loop (GET_ITER block).
+                # The for-loop's entry block has no predecessor in else_blocks
+                # (it's reached from the if condition's false branch), so
+                # _is_child_reachable_from_blocks returns False.
+                _entry_in_else = child.entry in set(region.else_blocks)
+                if not _entry_in_else and not self._is_child_reachable_from_blocks(child, region.else_blocks):
                     return False
                 _reachable_children_c3.append(child)
                 for b in child.blocks:
@@ -10835,7 +10949,19 @@ AST 映射规则:
                 if not isinstance(child, (TryExceptRegion, WithRegion, LoopRegion)):
                     continue
                 _try_collect_c3(child)
-            # 第二阶段：IfRegion 子区域（含 R10-N4 修复，识别嵌套 if/elif）
+            # [R36 fix-3] Second phase: BoolOpRegion / TernaryRegion children.
+            # Must be collected BEFORE IfRegion children. Value-context chained
+            # compare IfRegions have merge_block == BoolOpRegion entry. If
+            # IfRegion is collected first, it claims the merge_block via
+            # _claimed_blocks_c3, preventing BoolOpRegion collection.
+            # By collecting BoolOpRegion first, its entry is claimed, and then
+            # the value-context IfRegion (whose entry is its condition_block,
+            # not the merge_block) can be skipped properly.
+            for child in (region.children or []):
+                if not isinstance(child, (BoolOpRegion, TernaryRegion)):
+                    continue
+                _try_collect_c3(child)
+            # 第三阶段：IfRegion 子区域（含 R10-N4 修复，识别嵌套 if/elif）
             for child in (region.children or []):
                 if not isinstance(child, IfRegion):
                     continue
@@ -21365,6 +21491,8 @@ AST 映射规则:
         (a<b<c, d<e<f) 由 ``_identify_chained_compare_regions`` 识别为一个
         IfRegion（带 ``chained_compare_ops`` / ``chained_compare_blocks``）。
         该识别在 BoolOp 识别之前发生（自底向上归约：链式比较是更小的归约单元）。
+        [R36] Also handles the case where chain_block is the merge_block of a
+        preceding chained compare (value-context, cached by _generate_if).
         随后 BoolOp 链检测把每个链式比较的 entry 作为单个操作数加入 op_chain
         （通过 hop 逻辑跳过链式比较内部块），因此 op_chain 中每个 chain_block
         可能是某个链式比较 IfRegion 的 entry。
@@ -21389,12 +21517,22 @@ AST 映射规则:
         - 嵌套即抽象节点：链式比较 IfRegion 作为 BoolOp 的抽象操作数节点。
         - 父引用子入口：BoolOp 的 op_chain 引用链式比较 IfRegion 的 entry。
         """
+        # [R36] Check cache first — _generate_if may have cached the chained
+        # compare expression when it detected the IfRegion is a BoolOp operand.
+        if hasattr(self, '_chain_compare_expr_cache'):
+            _cached = self._chain_compare_expr_cache.get(id(chain_block))
+            if _cached is not None:
+                return _cached
         for r in self.regions:
             if (isinstance(r, IfRegion)
                     and r.entry is chain_block
                     and getattr(r, 'chained_compare_ops', None)
                     and len(r.chained_compare_ops) >= 2
-                    and getattr(r, 'chained_compare_blocks', None)):
+                    and getattr(r, 'chained_compare_blocks', None)
+                    # [R36] Ensure condition_block matches chain_block to avoid
+                    # matching spurious IfRegions whose entry is a BoolOp jump
+                    # block but whose condition_block is a different block.
+                    and r.condition_block is chain_block):
                 cc_expr = self._build_chained_compare_from_region_data(r)
                 if cc_expr is not None:
                     # Mark chained compare internal blocks as generated so the
@@ -21414,6 +21552,26 @@ AST 映射规则:
                     # check fails and the IfRegion is duplicated, producing
                     # `if 0 < x < 10 and y != 0:\n    pass\nif 0 < x < 10
                     # and y != 0:\n    pass`.
+                    for b in r.blocks:
+                        self.generated_blocks.add(b)
+                    return cc_expr
+                return None
+        # [R36] When chain_block has no value load (just a short-circuit jump
+        # like JUMP_IF_TRUE_OR_POP), it may be the merge_block of a preceding
+        # chained compare IfRegion. This happens in patterns like:
+        #   return A < x < B or C < x < D
+        # where the first chained compare has merge_block = the `or` jump block.
+        # The BoolOp chain starts at the `or` block because the chained compare
+        # entry is skipped by value_chain_cmp_if_entries guard. Without this
+        # check, the first operand of `or` is lost.
+        for r in self.regions:
+            if (isinstance(r, IfRegion)
+                    and getattr(r, 'merge_block', None) is chain_block
+                    and getattr(r, 'chained_compare_ops', None)
+                    and len(r.chained_compare_ops) >= 2
+                    and getattr(r, 'chained_compare_blocks', None)):
+                cc_expr = self._build_chained_compare_from_region_data(r)
+                if cc_expr is not None:
                     for b in r.blocks:
                         self.generated_blocks.add(b)
                     return cc_expr
@@ -22098,8 +22256,14 @@ AST 映射规则:
             # 当作 `and a` 的额外操作数，输出 `x or ((a if c else b) and a)`。
             # 依「每块唯一归属」：ternary 的 true/false 块归属 TernaryRegion
             # （此处由 nested_ternary 表达），不归属 BoolOpRegion 的操作数链。
+            # [R36] Also skip when chained_compare_expr was found — the
+            # fall-through block is the chained compare's continuation
+            # (e.g. the second COMPARE_OP in `a < b < c`), not a separate
+            # BoolOp operand. Without this, `return A < x < B or C < x < D`
+            # produces `... or C < x < D and D` (extra D from ft block).
             next_chain_block = op_chain[chain_idx + 1][0] if chain_idx + 1 < len(op_chain) else None
             if (nested_ternary is None
+                    and chained_compare_expr is None
                     and last_instr and last_instr.opname in STRIP_JUMP_OPS and last_instr.argval is not None):
                 ft_succs = sorted(chain_block.conditional_successors, key=lambda s: s.start_offset)
                 ft_block = next((s for s in ft_succs
@@ -22152,6 +22316,12 @@ AST 映射规则:
             last_chain_block = op_chain[-1][0]
             last_instr = last_chain_block.get_last_instruction()
             last_chain_op = op_chain[-1][1]
+            # [R36] Skip end-of-loop fall-through when the last chain block was
+            # already processed as a chained compare operand. The fall-through
+            # block is the chained compare's continuation, not a separate operand.
+            _last_cc_expr = self._try_build_chained_compare_in_boolop(last_chain_block, region)
+            if _last_cc_expr is not None:
+                last_instr = None  # Skip fall-through processing
             if last_instr and last_instr.opname in STRIP_JUMP_OPS:
                 ft_succs = sorted(last_chain_block.conditional_successors, key=lambda s: s.start_offset)
                 ft_block = next((s for s in ft_succs
@@ -22548,6 +22718,24 @@ AST 映射规则:
                     if chain_block == _enclosing.condition_block:
                         _is_outer_condition = True
                         break
+            # [R36] If the BoolOp's merge_block (or its successor) ends with
+            # RETURN_VALUE, the BoolOp is a standalone return expression,
+            # not an outer condition. This happens when a value-context
+            # chained compare is an operand of `or`/`and` in a return statement
+            # (e.g. `return A < x < B or C < x < D`). The enclosing IfRegion
+            # is a spurious artifact of the chained compare detection whose
+            # blocks overlap with the BoolOpRegion.
+            if _is_outer_condition and region.merge_block:
+                _mb_last = region.merge_block.get_last_instruction()
+                _mb_is_return = (_mb_last and _mb_last.opname in ('RETURN_VALUE', 'RETURN_CONST'))
+                if not _mb_is_return:
+                    for _ms in region.merge_block.successors:
+                        _ms_last = _ms.get_last_instruction()
+                        if _ms_last and _ms_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                            _mb_is_return = True
+                            break
+                if _mb_is_return:
+                    _is_outer_condition = False
 
         if _is_outer_condition:
             for block in region.blocks:
@@ -22866,6 +23054,7 @@ AST 映射规则:
                     for cb, _ in op_chain
                 )
                 _merge_is_return_only = False
+                _merge_return_followup = None  # [R36] RETURN_VALUE block reached via cleanup
                 if region.merge_block:
                     _merge_non_noise = [i for i in region.merge_block.instructions
                                        if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
@@ -22874,6 +23063,29 @@ AST 映射规则:
                         _last_merge = region.merge_block.get_last_instruction()
                         if _last_merge and _last_merge.opname in ('RETURN_VALUE', 'RETURN_CONST'):
                             _merge_is_return_only = True
+                    # [R36] BoolOp merge_block may be a chained-compare cleanup
+                    # block (SWAP 2; POP_TOP) whose successor is RETURN_VALUE.
+                    # Pattern: `return A < x < B or C < x < D` — the `or` short
+                    # circuit jump target and the second chained compare's
+                    # cleanup both lead to a RETURN_VALUE block. Follow the
+                    # successor chain to find it.
+                    if not _merge_is_return_only:
+                        _merge_last = region.merge_block.get_last_instruction()
+                        if _merge_last and _merge_last.opname not in ('RETURN_VALUE', 'RETURN_CONST', 'JUMP_BACKWARD',
+                                                                       'JUMP_BACKWARD_NO_INTERRUPT'):
+                            _merge_succs = list(region.merge_block.successors)
+                            for _ms in _merge_succs:
+                                _ms_non_noise = [i for i in _ms.instructions
+                                                 if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                                if _ms_non_noise and all(i.opname in ('RETURN_VALUE', 'RETURN_CONST', 'LOAD_CONST',
+                                                                       'LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL',
+                                                                       'LOAD_DEREF')
+                                                          for i in _ms_non_noise):
+                                    _ms_last = _ms.get_last_instruction()
+                                    if _ms_last and _ms_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                                        _merge_is_return_only = True
+                                        _merge_return_followup = _ms
+                                        break
                 _has_if_like_then = False
                 if op_chain:
                     _lc = op_chain[-1][0]
@@ -22885,6 +23097,8 @@ AST 映射规则:
                                 _has_if_like_then = True
                                 break
                 if _merge_is_return_only and not _has_if_like_then:
+                    if _merge_return_followup is not None:
+                        self.generated_blocks.add(_merge_return_followup)
                     results.append({'type': 'Return', 'value': boolop_expr})
                 elif has_short_circuit_op and not _has_if_like_then:
                     results.append({'type': 'Expr', 'value': boolop_expr})
@@ -30953,7 +31167,14 @@ AST 映射规则:
                 return [{'type': 'Continue'}]
             return []
         elif block_role == BlockRole.CONTINUE:
-            effective = self.region_analyzer.effective_instructions.get(block.start_offset)
+            # [R36 fix] Use full block instructions instead of effective_instructions.
+            # effective_instructions stops at the first POP_TOP (STATEMENT_TERMINATORS),
+            # so blocks with multiple expression statements (e.g. two append calls
+            # followed by JUMP_BACKWARD) lose all but the first statement.
+            effective = [i for i in block.instructions
+                         if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
+                                             'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+                                             'JUMP_FORWARD', 'JUMP_ABSOLUTE')]
             if effective:
                 _eff_stmts = []
                 if effective:
@@ -35333,7 +35554,8 @@ AST 映射规则:
                         break
                     skip_ops = ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL',
                                 'COPY', 'POP_EXCEPT', 'PUSH_EXC_INFO',
-                                'PRECALL', 'CALL')
+                                'PRECALL')
+                    # [R35] Do NOT skip CALL - needed for comprehension reconstruction
                     if not has_swap_pattern:
                         skip_ops = skip_ops + ('SWAP',)
                     if instr.opname in skip_ops:
@@ -35357,8 +35579,9 @@ AST 映射规则:
                      self.cfg.code.co_flags & 0x20)
                 )
                 _skip_base = ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL',
-                              'COPY', 'POP_EXCEPT', 'PUSH_EXC_INFO',
-                              'PRECALL', 'CALL')
+              'COPY', 'POP_EXCEPT', 'PUSH_EXC_INFO',
+              'PRECALL')
+                # [R35] Do NOT skip CALL - needed for comprehension reconstruction
                 _skip_with_swap = _skip_base + ('SWAP',)
                 _skip_ops = _skip_base if is_in_gen_loop else _skip_with_swap
                 for bi in block.instructions:

@@ -151,6 +151,15 @@ class ComprehensionGenerator:
             if iter_expr is None:
                 iter_expr = {'type': 'Name', 'id': '<iterator>'}
 
+            # [R35] Fix: is_method_form causes false Call wrapping in comprehensions.
+            # When LOAD_ATTR is followed by GET_ITER (not CALL), the attribute is
+            # being iterated, not called. The is_method_form flag is a compiler
+            # optimization hint (arg & 1), not a definitive indicator of a method
+            # call. Strip it from the iter expression to prevent downstream code
+            # (ast_generator_v2.py lines ~24022) from wrapping Attribute in Call.
+            if isinstance(iter_expr, dict) and iter_expr.get('type') == 'Attribute':
+                iter_expr.pop('is_method_form', None)
+
             comp_ast = self.parse_comprehension_inner(comp_code, iter_expr)
             if comp_ast is None:
                 continue

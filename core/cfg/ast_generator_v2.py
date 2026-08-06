@@ -706,7 +706,7 @@ class ExpressionReconstructor:
                 'lineno': instr.starts_line
             })
 
-        # [R30-9] MAP_ADD - Python 3.11+ 字典字面量中添加键值对
+        # MAP_ADD - Python 3.11+ 字典字面量中添加键值对
         # 用于大字典字面量：BUILD_MAP 0; LOAD key; LOAD value; MAP_ADD 1; ...
         # 栈状态: [dict, key, value] -> [updated_dict]
         # 语义：弹出 value 和 key，添加到栈中下面的 dict 对象中
@@ -750,7 +750,7 @@ class ExpressionReconstructor:
                 'lineno': instr.starts_line
             })
 
-        # [R11-err7] SET_UPDATE - Python 3.11+ 集合扩展指令
+        # SET_UPDATE - Python 3.11+ 集合扩展指令
         # 用于 `{*a, *b}` 等含 starred 元素的集合字面量：
         #   BUILD_SET 0; LOAD a; SET_UPDATE 1; LOAD b; SET_UPDATE 1
         # 栈状态: [set, iterable] -> [updated_set]
@@ -850,7 +850,7 @@ class ExpressionReconstructor:
                         'Starred', 'NamedExpr', 'Await', 'Yield', 'YieldFrom',
                         'JoinedStr', 'FormattedValue', 'Lambda', 'ListComp',
                         'SetComp', 'DictComp', 'GeneratorExp'):
-                    # [R4 Bug 9 修复] LIST_EXTEND 用复合表达式扩展列表：
+                    # LIST_EXTEND 用复合表达式扩展列表：
                     # `[*(ternary)]` / `[*(a if c else b)]` 的字节码是
                     # BUILD_LIST 0 + ternary 求值 + LIST_EXTEND 1。
                     # 任意"非字面量"表达式都应包成 Starred 以保留 *expr 语义。
@@ -1206,7 +1206,7 @@ class ExpressionReconstructor:
                         func = None
                         break
 
-            # [R16-N1] LOAD_ASSERTION_ERROR 模式特殊处理：
+            # LOAD_ASSERTION_ERROR 模式特殊处理：
             # ``assert x, msg`` 字节码为
             #   LOAD_ASSERTION_ERROR + <msg> + PRECALL 0 + CALL 0 + RAISE_VARARGS 1
             # CALL 0 (argc=0) 时，按标准语义栈顶 <msg> 被当作 func 弹出，
@@ -1235,7 +1235,7 @@ class ExpressionReconstructor:
                 })
                 return None
 
-            # [R16-N1] 无 msg 的 assert 模式：``LOAD_ASSERTION_ERROR + PRECALL 0
+            # 无 msg 的 assert 模式：``LOAD_ASSERTION_ERROR + PRECALL 0
             # + CALL 0``（即 ``raise AssertionError``）。func 自身带标记，
             # 清除标记后走普通 CALL 路径生成 ``Call(Name('AssertionError'), [])``。
             if (func is not None and isinstance(func, dict)
@@ -1267,7 +1267,7 @@ class ExpressionReconstructor:
                                 'lineno': instr.starts_line
                             })
                         elif self.stack and self.stack[-1].get('type') == 'FunctionObject':
-                            # [R11-err1/3] lambda 装饰器: @lambda f: ... def g(): ...
+                            # lambda 装饰器: @lambda f: ... def g(): ...
                             # 字节码: LOAD_CONST <lambda code>; MAKE_FUNCTION;
                             #         LOAD_CONST <g code>; MAKE_FUNCTION; PRECALL 0; CALL 0
                             # 区域归约算法: 当 argc==0 且栈顶两个均为 FunctionObject 时，
@@ -1597,7 +1597,7 @@ class ExpressionReconstructor:
                     })
         
         # [关键修复] Python 3.11+ LOAD_ASSERTION_ERROR 指令
-        # [R16-N1] 区域归约算法原则：每个字节码模式对应唯一的 AST 节点。
+        # 区域归约算法原则：每个字节码模式对应唯一的 AST 节点。
         # LOAD_ASSERTION_ERROR 是 CPython 3.11+ 的专用指令，用于 assert 语句
         # 的失败路径。其特殊语义：随后的 ``PRECALL 0 + CALL 0`` 中 argc=0，
         # 但栈顶的 msg 表达式实际是 ``AssertionError(msg)`` 的参数（CPython
@@ -1648,7 +1648,7 @@ class ExpressionReconstructor:
             elif instr.arg == 1:
                 if self.stack:
                     exc = self.stack.pop()
-                    # [R16-N1] 检测 LOAD_ASSERTION_ERROR 模式：
+                    # 检测 LOAD_ASSERTION_ERROR 模式：
                     # ``assert False, msg`` 编译为
                     #   LOAD_ASSERTION_ERROR + msg + PRECALL 0 + CALL 0 + RAISE_VARARGS 1
                     # （CPython 3.11 常量折叠，无 test 跳转）。
@@ -2239,9 +2239,7 @@ class ExpressionReconstructor:
         - comp_type: 'GeneratorExp'
         - iter_node: Iter(Name(row))
 
-        返回: GeneratorExp(elt=Compare(...), generators=[comprehension(target=Name(row), ...)])
-
-        [R13-batch3] 委托 ComprehensionGenerator.parse_comprehension_inner 进行完整
+        返回: GeneratorExp(elt=Compare(...), generators=[comprehension(target=Name(row), ...)]) 委托 ComprehensionGenerator.parse_comprehension_inner 进行完整
         重建（含 filter / key-value / 三元元素），避免 ifs 硬编码为 [] 导致
         listcomp/setcomp 的 if 过滤条件、dictcomp 的 key/value、listcomp 的三元
         元素在 if 条件上下文中丢失。仅当 ComprehensionGenerator 失败时回退到
@@ -7215,7 +7213,7 @@ class ASTGeneratorV2:
                         # 但原始字节码中有 CALL 指令，所以这应该是一个方法调用
                         # 但只有当 is_method_form 为 True 时才转换（Python 3.11+ 标志位）
                         elif isinstance(iter_obj, dict) and iter_obj.get('type') == 'Attribute':
-                            is_method_form = iter_obj.get('is_method_form', False)
+                            is_method_form = False  # [R35] Disabled: compiler hint, not reliable for iter context
                             if is_method_form:
                                 # 将 Attribute 转换为 Call 节点（方法调用）
                                 iter_obj = {
@@ -24000,7 +23998,7 @@ class ASTGeneratorV2:
                                         # 如果内部值是 Attribute 类型，并且原始字节码中有 CALL 指令
                                         # 那么这应该是一个方法调用，而不是属性访问
                                         if isinstance(inner_value, dict) and inner_value.get('type') == 'Attribute':
-                                            is_method_form = inner_value.get('is_method_form', False)
+                                            is_method_form = False  # [R35] Disabled: compiler hint, not reliable for iter context
                                             if is_method_form:
                                                 # 将 Attribute 转换为 Call 节点（方法调用）
                                                 iter_obj = {
@@ -24017,20 +24015,16 @@ class ASTGeneratorV2:
                                             # 使用内部值
                                             iter_obj = inner_value
                                     
-                                    # [关键修复] 处理 Attribute 类型的迭代对象
-                                    # 当推导式的迭代对象是方法调用时（如 data.values()）
-                                    # iter_obj 是 Attribute 类型，需要转换为 Call 类型
-                                    # 但只有当 is_method_form 为 True 时才转换（Python 3.11+ 标志位）
+                                    # [R35] Fix: is_method_form should NOT convert Attribute to Call
+                                    # in comprehension iter context. The is_method_form flag is a
+                                    # compiler optimization hint, not a definitive indicator of a
+                                    # method call. When LOAD_ATTR is followed by GET_ITER (not CALL),
+                                    # the attribute is being iterated, not called. If the attribute
+                                    # IS a method call (e.g. data.values()), the CALL instruction
+                                    # would have been processed earlier and iter_obj would already
+                                    # be a Call node.
                                     elif isinstance(iter_obj, dict) and iter_obj.get('type') == 'Attribute':
-                                        is_method_form = iter_obj.get('is_method_form', False)
-                                        if is_method_form:
-                                            iter_obj = {
-                                                'type': 'Call',
-                                                'func': iter_obj,
-                                                'args': [],
-                                                'kwargs': [],
-                                                'lineno': iter_obj.get('lineno', 1)
-                                            }
+                                        pass  # Keep as Attribute, do not convert to Call
                                     
                                     # 移除FunctionObject、null（如果有）和iter_obj
                                     new_stack = stack[:func_object_idx] + stack[iter_obj_idx + 1:]
@@ -24467,7 +24461,7 @@ class ASTGeneratorV2:
                                     })
                                 set_obj['elts'] = elts
                         elif iterable and iterable.get('type') not in ('Tuple', 'List', 'Constant'):
-                            # [R11-err7] 通配可迭代对象作为 Starred 元素加入集合
+                            # 通配可迭代对象作为 Starred 元素加入集合
                             # 字节码 `{*a, *b}`: BUILD_SET 0; LOAD a; SET_UPDATE; LOAD b; SET_UPDATE
                             # 每个 SET_UPDATE 的 iterable 是非字面量（Name/Call/...），
                             # 对应源码 `*<iterable>`。归约为 Starred 节点追加到 Set.elts。
@@ -24654,7 +24648,7 @@ class ASTGeneratorV2:
                     inner_value = func.get('value', {})
                     # 如果内部值是 Attribute 类型且 is_method_form=True，转换为 Call 节点
                     if isinstance(inner_value, dict) and inner_value.get('type') == 'Attribute':
-                        is_method_form = inner_value.get('is_method_form', False)
+                        is_method_form = False  # [R35] Disabled: compiler hint, not reliable for iter context
                         if is_method_form:
                             # 将 Attribute 转换为 Call 节点（方法调用）
                             func = {
@@ -24820,7 +24814,7 @@ class ASTGeneratorV2:
                                 # 那么这应该是一个方法调用，而不是属性访问
                                 # [关键修复] 只有当 is_method_form 为 True 时才转换为 Call 节点
                                 if isinstance(inner_value, dict) and inner_value.get('type') == 'Attribute':
-                                    is_method_form = inner_value.get('is_method_form', False)
+                                    is_method_form = False  # [R35] Disabled: compiler hint, not reliable for iter context
                                     if is_method_form:
                                         # 将 Attribute 转换为 Call 节点（方法调用）
                                         iter_obj = {
