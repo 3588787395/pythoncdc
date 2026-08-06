@@ -25506,7 +25506,7 @@ AST 映射规则:
                                         'value': _func_def,
                                     })
                                 else:
-                                    _func_def['name'] = region.value_target
+                                    self._safe_set_func_name(_func_def, region.value_target)
                                     results.append(_func_def)
                                 for block in region.blocks:
                                     self.generated_blocks.add(block)
@@ -29190,7 +29190,7 @@ AST 映射规则:
                 'value': _func_def,
             }
         else:
-            _func_def['name'] = innermost.value_target
+            self._safe_set_func_name(_func_def, innermost.value_target)
             return _func_def
 
     def _extract_dict_prefix_values(self, condition_block) -> List[Dict[str, Any]]:
@@ -33746,6 +33746,22 @@ AST 映射规则:
                 return target
         return None
 
+    def _is_mangled_name(self, target_name, co_name):
+        """Detect if target_name is the mangled form of co_name."""
+        if not co_name or not target_name:
+            return False
+        if not (co_name.startswith('__') and not co_name.endswith('__')):
+            return False
+        return target_name.endswith(co_name) and target_name != co_name
+
+    def _safe_set_func_name(self, func_def, target_name):
+        """Safely set function name, avoiding name mangling override."""
+        if func_def.get('type') in ('FunctionDef', 'AsyncFunctionDef'):
+            co_name = func_def.get('name', '')
+            if self._is_mangled_name(target_name, co_name):
+                return
+        func_def['name'] = target_name
+
     def _process_instruction(self, instr, block, stmt_instrs=None):
         opname = instr.opname
 
@@ -34552,7 +34568,7 @@ AST 映射规则:
                         if func_def.get('type') == 'Lambda':
                             return expr
                         if target_name and func_def.get('type') in ('FunctionDef', 'AsyncFunctionDef'):
-                            func_def['name'] = target_name
+                            self._safe_set_func_name(func_def, target_name)
                         return func_def
             return expr
 
@@ -34726,7 +34742,7 @@ AST 映射规则:
                     'value': func_def,
                 }
             if func_def.get('name') == target_name or func_def.get('type') in ('FunctionDef', 'AsyncFunctionDef'):
-                func_def['name'] = target_name
+                self._safe_set_func_name(func_def, target_name)
             return func_def
 
         if value.get('type') == 'Call':
@@ -34743,7 +34759,7 @@ AST 映射规则:
                 if isinstance(arg, dict) and arg.get('type') == 'FunctionObject':
                     func_def = self._build_function_def(func_obj=arg, decorator=value)
                     if func_def.get('type') in ('FunctionDef', 'AsyncFunctionDef'):
-                        func_def['name'] = target_name
+                        self._safe_set_func_name(func_def, target_name)
                         return func_def
             
             _ffid_stack = [value]
@@ -34769,7 +34785,7 @@ AST 映射规则:
                 func_obj, _ = func_obj_info
                 func_def = self._build_function_def(func_obj=func_obj, decorator=value)
                 if func_def.get('type') in ('FunctionDef', 'AsyncFunctionDef'):
-                    func_def['name'] = target_name
+                    self._safe_set_func_name(func_def, target_name)
                     return func_def
 
             if func.get('type') == 'FunctionObject' and not args:
@@ -34805,7 +34821,7 @@ AST 映射规则:
                             func_def = self._build_function_def(
                                 func_obj=func, decorator=decorator_call)
                             if func_def.get('type') in ('FunctionDef', 'AsyncFunctionDef'):
-                                func_def['name'] = target_name
+                                self._safe_set_func_name(func_def, target_name)
                                 return func_def
                 if block is not None:
                     _fpd_visited = set()
@@ -34865,7 +34881,7 @@ AST 映射规则:
                         }
                         func_def = self._build_function_def(func_obj=func, decorator=decorator_call)
                         if func_def.get('type') in ('FunctionDef', 'AsyncFunctionDef'):
-                            func_def['name'] = target_name
+                            self._safe_set_func_name(func_def, target_name)
                             func_def['_decorator_block'] = dec_block
                             return func_def
 
