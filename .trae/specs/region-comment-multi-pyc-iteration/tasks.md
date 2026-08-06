@@ -236,6 +236,10 @@
   - [x] T2.44.1 测试工程师：分析 ?->LOAD_CONST 模式（22 个函数尾部多出 return None）
   - [x] T2.44.2 修复工程师：base.py compare_bytecode 添加尾部 return None 修剪逻辑
   - [x] T2.44.3 commit `rcm-r44:`（86.96% → 87.08%，232 OK）
+- [x] T2.45 第 45 轮（except handler return 值丢失修复 + top 30 partial 分析）
+  - [x] T2.45.1 测试工程师：分析 top 30 partial pyc 失败模式 + klinedata.pyc 字节码 diff → `rounds/round_45/test_engineer/decompile_report.md`（87.08%，12 复现实例 2 DEFECT-REPRO/10 NO-DEFECT）
+  - [x] T2.45.2 修复工程师：except handler return 值丢失修复 → `rounds/round_45/repair_engineer/fix_report.md`（POP_EXCEPT 后 skip_offsets 仅跳过 as-var 清理链+RETURN_VALUE，不跳过 return 值表达式；repro_01 DEFECT→NO-DEFECT）
+  - [x] T2.45.3 commit + push `rcm-r45:`
 - [ ] T2.NN ... 持续直到退出条件满足（所有 pyc 文件 100% 字节码一致，每个生成 +OK.py）
 
 > 注：轮次数不设上限，持续直到所有 pyc 文件所有函数 100% 字节码一致。
