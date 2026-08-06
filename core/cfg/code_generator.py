@@ -284,7 +284,7 @@ class CodeGenerator:
                                     'AsyncWith'):
                         self._generate_dict_node(expr)
                         return
-                    # [R20-Bug7 修复] 过滤 with __exit__ 残留调用：dict 格式
+                    # 过滤 with __exit__ 残留调用：dict 格式
                     # Call(func=Constant(None), args=[Constant(None), Constant(None)])
                     # 此模式来自 with 块 __exit__ 字节码泄漏，输出会变成
                     # `None(None, None)` 垃圾代码，导致语法错误。
@@ -397,7 +397,7 @@ class CodeGenerator:
             subject_code = self._generate_expression(subject) if isinstance(subject, dict) else str(subject)
             self._write_line(f'match {subject_code}:')
             cases = node.get('cases', [])
-            # [R31 fix] 去重重复的 case _ (wildcard) 模式
+            # 去重重复的 case _ (wildcard) 模式
             # 当模式识别错误导致多个 case _ 出现时，Python 语法只允许最后一个。
             wildcard_indices = []
             for idx, case in enumerate(cases):
@@ -551,7 +551,7 @@ class CodeGenerator:
             的注解元组 (name, type) 对解析并写入 arg['annotation']，但旧
             _generate_arguments_dict 仅发射 `name`/`name=default`，丢弃注解，
             导致 `def f(x: int)` 重编为 `def f(x)`，BUILD_TUPLE 元素数不匹配
-            （test_r11_ternary_overload 34 vs 30）。依「父引用子入口」: 父
+            （test_overload 34 vs 30）。依「父引用子入口」: 父
             FunctionDef 通过 BUILD_TUPLE 引用形参 annotation 子节点。"""
             if isinstance(arg, dict):
                 arg_name = arg.get('arg', '')
@@ -654,7 +654,7 @@ class CodeGenerator:
 
         self._write_line('try:')
         self._increase_indent()
-        # [R28 fix] Track output to detect empty body (same pattern as except handler)
+        # Track output to detect empty body (same pattern as except handler)
         _try_output_before = self.output.getvalue()
         if body:
             for body_node in body:
@@ -713,7 +713,7 @@ class CodeGenerator:
                 else:
                     self._write_line(header)
                     self._increase_indent()
-                    # [R28 fix] Track output before/after to detect empty body.
+                    # Track output before/after to detect empty body.
                     # handler_body may be non-empty (e.g., [None] or [{}]) but
                     # produce no output, leaving except: without pass → SyntaxError.
                     _output_before = self.output.getvalue()
@@ -812,7 +812,7 @@ class CodeGenerator:
 
         body = node.get('body', [])
 
-        # [R4-09 fix] async with 不可使用单行 body：CPython 3.11 在 with body
+        # async with 不可使用单行 body：CPython 3.11 在 with body
         # 起始处（新行）插入 NOP 标记异常表边界，单行 body 省略该 NOP，导致
         # await 轮询循环的 JUMP_BACKWARD_NO_INTERRUPT 目标偏移差 2 字节，
         # 字节码等价比较失败。同步 with 无 JUMP_BACKWARD_NO_INTERRUPT，不受影响。
@@ -933,7 +933,7 @@ class CodeGenerator:
                 self._write_line('else:')
                 self._if_depth += 1
                 self._increase_indent()
-                # [R30 fix] pass fallback: if body nodes produce no output, emit pass
+                # pass fallback: if body nodes produce no output, emit pass
                 _pos_before = self.output.tell()
                 if orelse:
                     for child in orelse:
@@ -1028,7 +1028,7 @@ class CodeGenerator:
                 self._generate_dict_node(value)
                 return
             
-            # [R30 fix] 处理 value 为 ASTFunctionDef 的情况
+            # 处理 value 为 ASTFunctionDef 的情况
             # 当反编译器将函数定义作为赋值值时，应生成函数定义语句而非赋值语句
             if isinstance(value, ASTFunctionDef):
                 if targets_code and targets_code[0].isidentifier():
@@ -1036,7 +1036,7 @@ class CodeGenerator:
                 self._generate_function_def(value)
                 return
             
-            # [R30 fix] 处理含 ASTFunctionDef 的 Call（__build_class__ 或装饰器模式）
+            # 处理含 ASTFunctionDef 的 Call（__build_class__ 或装饰器模式）
             if isinstance(value, dict) and value.get('type') == 'Call':
                 _call_func = value.get('func', {})
                 _call_args = value.get('args', [])
@@ -1203,7 +1203,7 @@ class CodeGenerator:
         if orelse:
             self._write_line('else:')
             self._increase_indent()
-            # [R30 fix] pass fallback: if body nodes produce no output, emit pass
+            # pass fallback: if body nodes produce no output, emit pass
             _pos_before = self.output.tell()
             # [修复-L05] 过滤else末尾与函数体重复的return
             # 只有当else有多个语句时才过滤最后的return
@@ -1274,11 +1274,10 @@ class CodeGenerator:
           - orelse[0] 是 ASTIf 且有实际 body；
           - 该 ASTIf 未标记 _is_nested_if（else 中的独立嵌套 if，非 elif）；
           - 非疑似 else 中嵌套 if（is_likely_nested_if_in_else，简单变量条件）；
-          - [R25-Defect2 fix] orelse 不含非 If 尾随节点
-            （_r25_d2_has_non_if_trailing）：当 orelse = [If, <非If语句>] 时，
-            是「else 块含嵌套 if + 尾随语句」，必须作为 `else:` 块整体渲染，
-            不得展平（否则产生 `elif/else/else` 畸形语法，且割裂 else 体破坏
-            外层 then 的 JUMP_FORWARD 落点）。典型场景 build_future_fill_time：
+          - orelse 不含尾随兄弟节点（has_trailing_siblings）：当 orelse 含
+            多个节点时，是「else 块含嵌套 if + 尾随语句」，必须作为 `else:`
+            块整体渲染，不得展平（否则产生 `elif/else/else` 畸形语法）。
+            典型场景 build_future_fill_time：
             else 体内嵌套 if/elif/else + 尾随 for 循环。
 
         **反编译流程**
@@ -1325,7 +1324,7 @@ class CodeGenerator:
         # 生成then分支
         self._increase_indent()
         if node.body and node.body.nodes:
-            # [R30 fix] pass fallback: if body nodes produce no output, emit pass
+            # pass fallback: if body nodes produce no output, emit pass
             _pos_before = self.output.tell()
             self._generate_block(node.body)
             if self.output.tell() == _pos_before:
@@ -1354,29 +1353,37 @@ class CodeGenerator:
                 if test_is_simple:
                     is_likely_nested_if_in_else = True
             
-            # [R25-Defect2 fix] 区域归约算法原则 3（嵌套即抽象节点）+ No More
-            # Gotos §3：elif 展平（orelse[0] 作为 elif）仅在 orelse 恰好是
-            #「单个 If」或「If + 若干可过滤的重复 If」时合法。当 orelse 含
-            # 非若尾随语句（如 else 体内的尾随 for 循环）时，orelse=[If, For]
-            # 是「else 块含嵌套 if + 尾随语句」，必须作为 `else:` 块整体渲染
-            #（else: <嵌套 if> <尾随语句>），不得把 If 展平为 elif 后把尾随
-            # 语句作为第二个 else 输出（产生 `elif/else/else` 畸形语法）。
-            # 典型场景 build_future_fill_time：else 体内嵌套 if/elif/else +
-            # 尾随 for 循环，外层 then 的 JUMP_FORWARD 须跳过整个 else（含
-            # 尾随 for）到合并点。elif 展平会割裂 else 体，破坏控制流。
-            _r25_d2_has_non_if_trailing = any(
-                not isinstance(_n, ASTIf) for _n in node.orelse.nodes[1:])
+            # elif 展平：orelse 中只有 1 个 If 节点时才合法展平为 elif。
+            # 合法 elif 链中后续 elif 嵌套在该节点的 orelse 中，不会出现在
+            # 当前 orelse 列表。orelse 中任何额外节点都是尾随兄弟节点，
+            # 属于 else 体内嵌套 if 之后的代码。展平为 elif 会导致尾随节点
+            # 作为第二个 else 输出，产生 elif/else/else 畸形语法。
+            # 先过滤与 elif 条件重复的 If 节点，避免误判。
+            orelse_tail = node.orelse.nodes[1:]
+            if orelse_tail:
+                filtered_tail = self._filter_duplicate_if_in_else(
+                    orelse_tail, node.orelse.nodes)
+                filtered_tail = [n for n in filtered_tail
+                                  if not self._is_only_return_none([n])]
+                if filtered_tail:
+                    node.orelse._nodes = [node.orelse._nodes[0]] + filtered_tail
+                    has_trailing_siblings = True
+                else:
+                    node.orelse._nodes = [node.orelse._nodes[0]]
+                    has_trailing_siblings = False
+            else:
+                has_trailing_siblings = False
             if isinstance(first_node, ASTIf) and first_node.body and first_node.body.nodes \
                     and not getattr(first_node, '_is_nested_if', False) \
                     and not is_likely_nested_if_in_else \
-                    and not _r25_d2_has_non_if_trailing:
+                    and not has_trailing_siblings:
                 # 生成elif
                 # [关键修复] 使用优先级0避免在elif条件中添加不必要的括号
                 elif_test_code = self._generate_expression(first_node.test, 0)
                 self._write_line(f'elif {elif_test_code}:')
                 
                 # 生成elif的body
-                # [R11 fix] 临时增加if深度，确保elif body及else body中的
+                # 临时增加if深度，确保elif body及else body中的
                 # self-assignment不会被跳过（_if_depth 在整个 elif/else 处理期间保持 > 0）
                 self._if_depth += 1
                 self._increase_indent()
@@ -1465,7 +1472,7 @@ class CodeGenerator:
         if not else_nodes:
             return []
 
-        # [R23-N4 fix] 区域归约算法「一次正确」原则：使用对象标识避免自比较。
+        # 区域归约算法「一次正确」原则：使用对象标识避免自比较。
         # 旧实现将 else_nodes 中的节点条件收集到 elif_conditions，导致 else body
         # 中的合法嵌套 if 被过滤掉（其条件与自身匹配）。例如 check_index_code 的
         # else 分支：
@@ -1803,7 +1810,7 @@ class CodeGenerator:
             else:
                 self._write_line('else:')
                 self._increase_indent()
-                # [R30 fix] pass fallback: if body nodes produce no output, emit pass
+                # pass fallback: if body nodes produce no output, emit pass
                 _pos_before = self.output.tell()
                 self._generate_block(else_block)
                 if self.output.tell() == _pos_before:
@@ -1889,7 +1896,7 @@ class CodeGenerator:
         
         node = flattened[0]
         if isinstance(node, ASTReturn):
-            # [R23-N16 fix] 显式 return（来自真实 RETURN_VALUE/RETURN_CONST 指令）
+            # 显式 return（来自真实 RETURN_VALUE/RETURN_CONST 指令）
             # 不应被过滤。except handler 内的 `else: return None` 是显式 return，
             # 生成真实字节码（POP_EXCEPT+cleanup+LOAD_CONST None+RETURN_VALUE），
             # 必须保留。仅过滤隐式 return None（fallthrough）。
@@ -1957,7 +1964,7 @@ class CodeGenerator:
         
         # 生成try体
         self._increase_indent()
-        # [R28 fix] Track output to detect empty body (nodes present but no output)
+        # Track output to detect empty body (nodes present but no output)
         _try_out_before = self.output.getvalue()
         if node.body and node.body.nodes:
             self._generate_block(node.body)
@@ -2026,7 +2033,7 @@ class CodeGenerator:
                 self._write_line(f'{except_keyword}:')
         
         self._increase_indent()
-        # [R28 fix] Track output to detect empty handler body
+        # Track output to detect empty handler body
         _handler_out_before = self.output.getvalue()
         if handler.body and handler.body.nodes:
             self._generate_block(handler.body)
@@ -2291,7 +2298,7 @@ class CodeGenerator:
         5. 入口引用语义：父 FunctionDef.decorator_list 通过 `@expr` 行引用装饰器
            子节点；Call 的 func 槽位引用被调用装饰器子节点。
         6. 反编译流程：decorator AST 节点 → 按 AST 类型渲染 `@expr` 行。
-        7. [R05 fix] Pattern M — 装饰器调用坍缩（@deco() → @deco）：
+        7. Pattern M — 装饰器调用坍缩（@deco() → @deco）：
            旧版「F08 修复」在 args_code 为空时 `return func_code`（丢弃括号），
            将 `@deco()`（ASTCall 零参）坍缩为 `@deco`（ASTName 形式），丢失
            PUSH_NULL/PRECALL/CALL 三指令。根因：ASTCall 节点语义即「调用」，
@@ -2322,7 +2329,7 @@ class CodeGenerator:
                     kw_value = self._generate_expression(kw.value, parent_precedence=0)
                     args_code.append(f'{kw_name}={kw_value}')
 
-            # [R05 fix] Pattern M: ASTCall 节点语义即「调用」，无论是否有参数都
+            # Pattern M: ASTCall 节点语义即「调用」，无论是否有参数都
             # 必须发射调用括号 ()。@deco()（零参调用）与 @deco（无调用）字节码
             # 不同：前者含 PUSH_NULL/PRECALL/CALL，后者不含。ASTCall → @deco()，
             # ASTName → @deco。旧版在此分支 args 为空时 return func_code（丢括号）
@@ -2614,13 +2621,13 @@ class CodeGenerator:
             if isinstance(node.value, ASTSlice):
                 value_code = self._generate_slice_as_call(node.value)
             elif isinstance(node.value, ASTFunctionDef):
-                # [R30 fix] ASTNode路径: 赋值值为函数定义时，生成函数定义语句
+                # ASTNode路径: 赋值值为函数定义时，生成函数定义语句
                 if target_code.isidentifier():
                     node.value._name = target_code
                 self._generate_function_def(node.value)
                 return
             elif isinstance(node.value, ASTCall):
-                # [R30 fix] ASTNode路径: 检查 __build_class__ 或装饰器模式
+                # ASTNode路径: 检查 __build_class__ 或装饰器模式
                 _call_func = node.value.func
                 _call_args = node.value.args if hasattr(node.value, 'args') else []
                 _is_build_class = isinstance(_call_func, ASTName) and _call_func.name == '__build_class__'
@@ -2679,7 +2686,7 @@ class CodeGenerator:
                             _func_def._name = target_code
                         self._generate_function_def(_func_def)
                         return
-                # [R30 fix] ASTCall 但不匹配特殊模式时，按普通表达式处理
+                # ASTCall 但不匹配特殊模式时，按普通表达式处理
                 value_code = self._generate_expression(node.value, 0)
             else:
                 value_code = self._generate_expression(node.value, 0)
@@ -2911,7 +2918,7 @@ class CodeGenerator:
                 inner_func = func.func
                 if isinstance(inner_func, ASTName) and inner_func.name == 'open':
                     return  # 跳过open()()(None, None)形式的调用
-            # [R20-Bug7 修复] 过滤 Call(func=Constant(None), args=[Constant(None), Constant(None)])
+            # 过滤 Call(func=Constant(None), args=[Constant(None), Constant(None)])
             # 这是 with 语句 __exit__ 调用泄漏为独立 Expr 语句的形式，输出会变成
             # `None(None, None)` 垃圾代码。检测模式：func 是 None 常量，args 全是 None 常量。
             if isinstance(func, ASTConstant) and func.value is None:
@@ -3041,7 +3048,7 @@ class CodeGenerator:
         # 增加缩进
         self.indent_level += 1
 
-        # [R31 fix] 去重重复的 case _ (wildcard) 模式
+        # 去重重复的 case _ (wildcard) 模式
         # 当模式识别错误导致多个 case _ 出现时，Python 语法要求只有最后一个
         # case _ 是有效的（前面的会导致 SyntaxError: wildcard makes
         # remaining patterns unreachable）。
@@ -3370,7 +3377,7 @@ class CodeGenerator:
                 # 使用标准 AST 风格的 'keywords' 字段。两者都读取以保证 keyword 不丢失。
                 keywords = node.get('keywords', []) or node.get('kwargs', [])
 
-                # [R31 fix] ''.join([Constant, FormattedValue, ...]) → f-string
+                # ''.join([Constant, FormattedValue, ...]) → f-string
                 # 当反编译器将 BUILD_STRING 结果错误识别为 ''.join([...]) 时，
                 # 将其转换回 f-string 以保证语法正确性。
                 # 检测模式：func = Attribute(value=Constant(''), attr='join'),
@@ -3424,7 +3431,7 @@ class CodeGenerator:
                 return self._generate_lambda_from_dict(node)
             elif node_type == 'Starred':
                 # [聚类7 修复] *args 渲染：Call 的位置参数中的 Starred 节点
-                # [R4 Bug 9 修复] 当 Starred.value 是低优先级复合表达式
+                # 当 Starred.value 是低优先级复合表达式
                 # （IfExp/BoolOp/NamedExpr/lambda/Yield 等）时必须加括号，
                 # 否则 `*(items if cond else [])` 会被渲染为
                 # `*items if cond else []` 导致语法错误（starred 与
@@ -3466,7 +3473,7 @@ class CodeGenerator:
                 # _generate_joined_str_from_dict 调用本方法时不走本分支（它通过
                 # node_type 分发前的 if 链已处理 JoinedStr），因此不会双重包装。
                 _fv_inner = self._generate_formatted_value_from_dict(node)
-                # [R10 fix] Pattern Q — 选择未出现在表达式片段中的引号作定界符
+                # Pattern Q — 选择未出现在表达式片段中的引号作定界符
                 # （Python 3.11 f-string {expr} 内不允许定界符引号，不允许反斜杠转义）。
                 if "'" not in _fv_inner:
                     return f"f'{_fv_inner}'"
@@ -3550,7 +3557,7 @@ class CodeGenerator:
                     elt_codes = [self._generate_expression(e, 0) for e in elts]
                     return f'[{", ".join(elt_codes)}]'
                 elif node_type == 'Set':
-                    # [R12-06 fix] dict-based Set rendering (mirrors List with
+                    # dict-based Set rendering (mirrors List with
                     # `{...}` braces). Falls back to annotation path otherwise.
                     elts = node.get('elts', [])
                     if elts:
@@ -3567,7 +3574,7 @@ class CodeGenerator:
                         # 渲染为 ``**expr``（无 key: value 对）。
                         if (isinstance(k, dict) and k.get('type') == 'Starred'
                                 and v is None):
-                            # [R12-02 fix] 当 Starred.value 是低优先级复合表达式
+                            # 当 Starred.value 是低优先级复合表达式
                             # （IfExp/BoolOp/NamedExpr/lambda/Yield 等）时必须加
                             # 括号，否则 `{**(a if c else b)}` 会被渲染为
                             # `{**a if c else b}` 导致语法错误。同 Call 位置参数的
@@ -3652,7 +3659,7 @@ class CodeGenerator:
 
         elif isinstance(node, ASTUnary):
             result = self._generate_unary(node)
-            # [R7 fix] 根据运算符类型设置正确优先级
+            # 根据运算符类型设置正确优先级
             _uv = node.op.value if hasattr(node.op, 'value') else node.op
             if _uv == 3:  # not
                 current_precedence = self._precedence['not']
@@ -3759,7 +3766,7 @@ class CodeGenerator:
             current_precedence = self._precedence['atom']
         
         elif isinstance(node, ASTFunctionDef):
-            # [R30 fix] ASTFunctionDef 作为表达式出现时的回退处理
+            # ASTFunctionDef 作为表达式出现时的回退处理
             # 正常情况下应在赋值处理中转换为函数定义语句，
             # 到这里说明它出现在了不预期的位置（如函数参数）
             # 生成一个 lambda 占位符以避免 <ASTFunctionDef> 字面量
@@ -3769,7 +3776,7 @@ class CodeGenerator:
             current_precedence = self._precedence['lambda']
         
         elif isinstance(node, ASTClassDef):
-            # [R30 fix] ASTClassDef 作为表达式出现时的回退处理
+            # ASTClassDef 作为表达式出现时的回退处理
             if self.verbose:
                 logger.warning(f"ASTClassDef appeared as expression: {node.name}")
             result = 'type("", (), {})'
@@ -3981,7 +3988,7 @@ class CodeGenerator:
         # 这样可以正确添加括号，例如 (a + b) * c
         current_precedence = self._precedence.get(op_str, 11)
 
-        # [R6-Fix2] 获取子表达式的实际优先级。
+        # 获取子表达式的实际优先级。
         # 必须在 ASTBinary 之前检查 ASTCompare / ASTSlice（它们继承自 ASTBinary），
         # 否则 ASTCompare.op（CMP_*，0-11）会被 ASTBinary.BinOp 的 op_map 误解析
         # （例如 CMP_GREATER_EQUAL=5 会被映射为 BIN_MODULO='%'），
@@ -4029,7 +4036,7 @@ class CodeGenerator:
         op_value = node.op.value if hasattr(node.op, 'value') else node.op
         op_str = op_map.get(op_value, '+')
 
-        # [R7 fix] 不同一元运算符优先级不同：not=5（低），而 ~/-x/+x=13（高）。
+        # 不同一元运算符优先级不同：not=5（低），而 ~/-x/+x=13（高）。
         # 旧代码对所有一元运算符统一用 precedence['not']，导致 ~(a<b) 被渲染为
         # ~a<b（丢括号，重新解析成 (~a)<b），字节码不一致。按 op 取正确优先级。
         if op_value == 3:  # not
@@ -4064,7 +4071,7 @@ class CodeGenerator:
         if isinstance(node, ASTCompare):
             return self._precedence['==']
         if isinstance(node, ASTUnary):
-            # [R7 fix] not=5, 而 ~/-x/+x=13
+            # not=5, 而 ~/-x/+x=13
             _uv = node.op.value if hasattr(node.op, 'value') else node.op
             if _uv == 3:  # not
                 return self._precedence['not']
@@ -4134,7 +4141,7 @@ class CodeGenerator:
             error_msg = node.func.value
             return f"RuntimeError({repr(error_msg)})"
 
-        # [R31 fix] ''.join([Constant, FormattedValue, ...]) → f-string
+        # ''.join([Constant, FormattedValue, ...]) → f-string
         # 当反编译器将 BUILD_STRING 结果错误识别为 ''.join([...]) 时，
         # 将其转换回 f-string 以保证语法正确性。
         if isinstance(node.func, ASTAttribute) and getattr(node.func, 'attr', None) == 'join':
@@ -4187,7 +4194,7 @@ class CodeGenerator:
     
     def _generate_attribute(self, node: ASTAttribute) -> str:
         """生成属性访问表达式"""
-        # [R21-N2 fix] 使用属性访问的优先级（16）作为 parent_precedence，
+        # 使用属性访问的优先级（16）作为 parent_precedence，
         # 而非 0。这样低优先级的子表达式（如 BinOp，precedence=11）会自动
         # 添加括号，例如 `(a + b).strftime(...)` 而非 `a + b.strftime(...)`。
         #
@@ -4225,7 +4232,7 @@ class CodeGenerator:
                 slice_codes = [self._generate_expression(elt, 0) for elt in node.slice.elts]
                 slice_code = ', '.join(slice_codes)
         elif isinstance(node.slice, ASTSlice):
-            # [R30 fix] Slice 在 Subscript 内部时直接生成 lower:upper:step 格式
+            # Slice 在 Subscript 内部时直接生成 lower:upper:step 格式
             slice_code = self._generate_slice_in_subscript(node.slice)
         else:
             # [关键修复] 使用0作为parent_precedence，避免下标被添加括号
@@ -4300,7 +4307,7 @@ class CodeGenerator:
     def _generate_slice(self, node: ASTSlice) -> str:
         """生成切片表达式（独立使用时，返回 slice() 函数调用）
         
-        [R30 fix] 当 ASTSlice 作为独立表达式出现时（不在 Subscript 内），
+        当 ASTSlice 作为独立表达式出现时（不在 Subscript 内），
         不能生成 lower:upper 格式（Python 语法不允许），
         改为返回 slice(lower, upper, step) 函数调用。
         
@@ -4448,14 +4455,10 @@ class CodeGenerator:
         return f'{{{", ".join(elts_code)}}}'
 
     def _generate_joined_str_from_dict(self, node: Dict[str, Any]) -> str:
-        """[P2-2026] 生成字典格式的JoinedStr（f-string）
-
-        [R07 fix] f-string 字面字符串常量片段的 { } 必须转义为 {{ }}（与
+        """[P2-2026] 生成字典格式的JoinedStr（f-string） f-string 字面字符串常量片段的 { } 必须转义为 {{ }}（与
         FormattedValue 产生的真实 {expr} 区分）。否则重编时字面花括号被误解析
         为替换字段，触发 SyntaxError（empty expression / backslash in expr）。
-        仅字面片段转义，FormattedValue 分支不动；format_spec 上下文不转义。
-
-        [R10 fix] Pattern Q — FormattedValue 内表达式可能含字符串字面量（如
+        仅字面片段转义，FormattedValue 分支不动；format_spec 上下文不转义。 Pattern Q — FormattedValue 内表达式可能含字符串字面量（如
         `{'1'!s}`、`{x != 'tick'!s}`）。Python 3.11 f-string 表达式片段（`{...}`
         内）不允许出现定界符引号（未转义），也不允许反斜杠转义；因此定界符必须
         避开所有表达式片段中出现的引号字符。旧逻辑扫描整个 content 选定界符，
@@ -4504,7 +4507,7 @@ class CodeGenerator:
 
         # 第三遍：按定界符转义字面片段。仅转义定界符引号与换行；另一引号原样保留。
         # 表达式片段不变（其引号已由定界符选择保证不冲突）。
-        # [R07 fix] 字面片段的 { } 仍需转义为 {{ }}。
+        # 字面片段的 { } 仍需转义为 {{ }}。
         parts = []
         for is_lit, text in rendered:
             if is_lit:
@@ -4588,9 +4591,7 @@ class CodeGenerator:
         return ''.join(parts)
 
     def _generate_joined_str(self, node: ASTJoinedStr) -> str:
-        """生成f-string表达式
-
-        [R10 fix] Pattern Q — FormattedValue 内表达式可能含字符串字面量（如
+        """生成f-string表达式 Pattern Q — FormattedValue 内表达式可能含字符串字面量（如
         `{'1'!s}`、`{x != 'tick'!s}`）。Python 3.11 f-string 表达式片段（`{...}`
         内）不允许出现定界符引号（未转义），也不允许反斜杠转义；因此定界符必须
         避开所有表达式片段中出现的引号字符。旧逻辑扫描整个 content 选定界符，
@@ -4604,7 +4605,7 @@ class CodeGenerator:
         2. 选择定界符：表达式片段无 `'` → 用 `'`；无 `"` → 用 `"`；两者皆有 →
            三引号 `'''`（罕见边界）；
         3. 按定界符转义字面片段：仅转义定界符引号（不总是 `'`）+ 换行 + 花括号
-           （[R07 fix]）；另一引号原样保留。
+           （ ）；另一引号原样保留。
 
         算法依据：原则 2「每块唯一归属」— 字面片段归字面层（可转义、可重新选
         择引号），表达式片段归表达式层（不可转义、不可含定界符引号）；定界符
@@ -4644,7 +4645,7 @@ class CodeGenerator:
 
         # 第三遍：按定界符转义字面片段。仅转义定界符引号与换行；另一引号原样保留。
         # 表达式片段不变（其引号已由定界符选择保证不冲突）。
-        # [R07 fix] 字面片段的 { } 仍需转义为 {{ }}。
+        # 字面片段的 { } 仍需转义为 {{ }}。
         parts = []
         for is_lit, text in rendered:
             if is_lit:
@@ -4954,8 +4955,13 @@ class CodeGenerator:
             if isinstance(iter_obj, dict):
                 iter_type = iter_obj.get('type', '')
                 if iter_type == 'Attribute':
-                    # Attribute 类型：添加括号变成方法调用
-                    iter_code = self._generate_annotation_from_dict(iter_obj) + '()'
+                    # [R35] Fix: Attribute type should be rendered as-is (e.g. self.orders),
+                    # NOT as a method call (self.orders()). The previous code added '()'
+                    # which incorrectly turned attribute access into method calls.
+                    # If the attribute IS a method call (e.g. data.values()), the iter
+                    # field would already be a Call type (func=Attribute, args=[]),
+                    # not a bare Attribute type.
+                    iter_code = self._generate_expression(iter_obj, 0)
                 elif iter_type == 'Iter':
                     # Iter 类型：解包并直接使用内部值，不添加iter()包装
                     value = iter_obj.get('value', {})
@@ -4964,7 +4970,7 @@ class CodeGenerator:
                     else:
                         iter_code = self._generate_expression(value, 0)
                 elif iter_type == 'IfExp':
-                    # [R16-04/05 fix] 推导式 iter 是 IfExp 时必须加括号，
+                    # 推导式 iter 是 IfExp 时必须加括号，
                     # 否则 `[v for v in a if c else b]` 会被解析为
                     # `[v for v in a if c] else b`（语法错误）。
                     iter_code = self._generate_expression(iter_obj, 0)
@@ -4982,7 +4988,7 @@ class CodeGenerator:
             for if_clause in ifs:
                 if isinstance(if_clause, dict):
                     if_code = self._generate_annotation_from_dict(if_clause)
-                    # [R9-17/18/05 fix] 推导式 if 条件是 IfExp 时必须加括号，
+                    # 推导式 if 条件是 IfExp 时必须加括号，
                     # 否则 `[i for i in r if a if c else b]` 会被解析为
                     # `[i for i in r if a] if c else b`（语法错误）。
                     if if_clause.get('type') == 'IfExp':
@@ -5160,7 +5166,7 @@ class CodeGenerator:
         op_str = op_map.get(op, 'not ')
         operand = node.get('operand', {})
         operand_prec = self._get_dict_expr_precedence(operand)
-        # [R7 fix] 不同一元运算符优先级不同：not=5（低），而 ~/-x/+x=13（高）。
+        # 不同一元运算符优先级不同：not=5（低），而 ~/-x/+x=13（高）。
         # 旧代码对所有一元运算符统一用 precedence['not']，导致 ~(a<b) 被渲染为
         # ~a<b（丢括号，重新解析成 (~a)<b），字节码不一致。按 op 取正确优先级。
         if op in ('Not', 'not', 'not '):
@@ -5330,18 +5336,20 @@ class CodeGenerator:
                 # [关键修复] 使用0作为parent_precedence，避免目标变量被添加括号
                 target_code = self._generate_expression(target_obj, 0)
             
-            # [关键修复] 迭代对象可能是字典（如 {'type': 'Call', ...}）或ASTNode
+            # [R35] Fix: iter Attribute should be rendered as-is (self.orders),
+            # NOT as a method call (self.orders()). The previous code added '()'
+            # which incorrectly turned attribute access into method calls.
+            # If the attribute IS a method call (e.g. data.values()), the iter
+            # field would already be a Call type, not a bare Attribute.
             iter_obj = gen._iter
             if isinstance(iter_obj, dict):
                 iter_type = iter_obj.get('type', '')
                 if iter_type == 'Attribute':
-                    # [关键修复] 对于 Attribute 类型（如 original.items），添加括号变成方法调用
-                    iter_code = self._generate_annotation_from_dict(iter_obj) + '()'
+                    iter_code = self._generate_expression(iter_obj, 0)
                 else:
                     iter_code = self._generate_annotation_from_dict(iter_obj)
             elif isinstance(iter_obj, ASTAttribute):
-                # [关键修复] 对于 ASTAttribute 类型（如 original.items），添加括号变成方法调用
-                iter_code = self._generate_expression(iter_obj, 0) + '()'
+                iter_code = self._generate_expression(iter_obj, 0)
             else:
                 iter_code = self._generate_expression(iter_obj, 0)
             
@@ -5355,7 +5363,7 @@ class CodeGenerator:
                 for if_clause in gen._ifs:
                     # [关键修复] 使用0作为parent_precedence，避免条件被添加括号
                     if_code = self._generate_expression(if_clause, 0)
-                    # [R9-17/18/05 fix] 推导式 if 条件是 IfExp 时必须加括号
+                    # 推导式 if 条件是 IfExp 时必须加括号
                     # （见 _generate_comprehensions_from_dict 同名修复）。
                     if hasattr(if_clause, '_node_type') and if_clause._node_type == 'IfExp':
                         if_code = f'({if_code})'
@@ -5483,7 +5491,7 @@ class CodeGenerator:
             # 处理关键字参数
             for kw in kwargs:
                 if isinstance(kw, dict):
-                    # [R20-Bug8 修复] KeywordStarred (**kwargs / **{...}) 渲染为 **<value>
+                    # KeywordStarred (**kwargs / **{...}) 渲染为 **<value>
                     # 此前仅处理普通 keyword (arg=value)，对 KeywordStarred 类型直接套用
                     # `arg=value` 模板，导致 `**{k: v+1}` 错译为 `=Dict[k, v + 1]` 垃圾。
                     if kw.get('type') == 'KeywordStarred':
