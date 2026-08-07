@@ -4229,7 +4229,19 @@ class CodeGenerator:
                 slice_code = 'None'
             else:
                 # 多维数组切片：将元组元素展开为逗号分隔的形式
-                slice_codes = [self._generate_expression(elt, 0) for elt in node.slice.elts]
+                # [R55 fix] 区域归约算法原则 4（入口引用语义）：
+                # ASTSlice 在 Subscript 的元组 slice 内（如 data.loc[a:b, fields]）
+                # 应生成 a:b 格式，不是 slice(a, b) 调用。原代码对元组元素
+                # 统一调用 _generate_expression，ASTSlice 走 _generate_slice
+                # → slice() 调用路径，导致 data.loc[slice(a,b), fields]，
+                # 重编后 LOAD_GLOBAL slice + CALL 代替 BUILD_SLICE，字节码不匹配。
+                # 修复：元组内的 ASTSlice 用 _generate_slice_in_subscript 生成。
+                slice_codes = []
+                for elt in node.slice.elts:
+                    if isinstance(elt, ASTSlice):
+                        slice_codes.append(self._generate_slice_in_subscript(elt))
+                    else:
+                        slice_codes.append(self._generate_expression(elt, 0))
                 slice_code = ', '.join(slice_codes)
         elif isinstance(node.slice, ASTSlice):
             # Slice 在 Subscript 内部时直接生成 lower:upper:step 格式
