@@ -130,7 +130,7 @@ class CFGBuilder:
         self.instructions = []
         try:
             for instr in dis.get_instructions(self.code_obj):
-                # [R12-batch1] KW_NAMES 的 arg 是 co_consts 索引，dis 不会自动
+                # KW_NAMES 的 arg 是 co_consts 索引，dis 不会自动
                 # 解析 argval（返回 <unknown>）。这里手动解析为关键字参数名元组，
                 # 使所有下游消费者（栈模拟、ast_generator_v2 等）都能直接使用 argval。
                 # 否则 `f(x=ternary) > 0` 等场景的关键字参数会被错误地当作位置参数。
@@ -250,7 +250,7 @@ class CFGBuilder:
                     if i + 1 < len(blocks):
                         block.add_successor(blocks[i + 1])
             elif last_instr.opname == 'RETURN_GENERATOR':
-                # [R9 聚类A] RETURN_GENERATOR 是生成器/异步函数的 setup 指令，
+                # RETURN_GENERATOR 是生成器/异步函数的 setup 指令，
                 # 语义上 fall-through 到下一条指令（在后续 resume 时执行）。
                 # 若不连接后继，block 0 成为孤立块且被 _identify_exit_blocks
                 # 标记为 is_exit，破坏 post-dominator 分析（virtual_exit 误连），
@@ -298,7 +298,7 @@ class CFGBuilder:
             if not block.successors:
                 if block.instructions:
                     last_instr = block.get_last_instruction()
-                    # [R9 聚类A] RETURN_GENERATOR 不是真正的 return，是生成器
+                    # RETURN_GENERATOR 不是真正的 return，是生成器
                     # setup。在 _connect_blocks 中已 fall-through 到下一条指令，
                     # 因此该块必然有后继，不会进入此分支。此处仅作为安全兜底：
                     # 若某 RETURN_GENERATOR 块确实无后继（异常 CFG），不标记为

@@ -1,0 +1,65 @@
+=== is_stock_trade_time_now ===
+def is_stock_trade_time_now(now=None):
+    if now is None:
+        now = datetime.datetime.now().time()
+    return STOCK_AM_OPEN < now < STOCK_AM_CLOSE or STOCK_PM_OPEN < now < STOCK_PM_CLOSE
+=== END ===
+
+=== is_future_trade_time_now ===
+def is_future_trade_time_now(now=None):
+    if now is None:
+        now = datetime.datetime.now().time()
+    return FUTURE_AM_OPEN < now < FUTURE_AM_CLOSE or FUTURE_PM_OPEN < now < FUTURE_PM_CLOSE
+=== END ===
+
+=== get_trading_time_tuple ===
+def get_trading_time_tuple(trading_time):
+    _trading_time_list = list()
+    for tuple_time in trading_time:
+        if tuple_time[0] > tuple_time[1]:
+            _trading_time_list.append((tuple_time[0], 1440))
+            _trading_time_list.append((0, tuple_time[1]))
+            continue
+        _trading_time_list.append(tuple_time)
+        continue
+    else:
+        if len(_trading_time_list) > 0:
+            return tuple(_trading_time_list)
+        else:
+            return trading_time
+=== END ===
+
+=== is_stock_trade_trigger ===
+def is_stock_trade_trigger(am_open, am_close, pm_open, pm_close, pm_over, freq, now=None):
+    if now is None:
+        now = datetime.datetime.now().time()
+    if freq == Frequency.DAILY.value:
+        now_date = datetime.date.today()
+        time_delta = datetime.timedelta(microseconds=10)
+        delay_delta = datetime.timedelta(minutes=5)
+        now_timestamp = datetime.datetime.combine(now_date, now)
+        pm_over_timestamp = datetime.datetime.combine(now_date, pm_over)
+        if now_timestamp - time_delta > pm_over_timestamp and pm_over_timestamp + delay_delta > now_timestamp:
+            return True
+        return False
+    else:
+        return am_open <= now < am_close or pm_open <= now < pm_close
+=== END ===
+
+=== is_future_trade_trigger ===
+def is_future_trade_trigger(am_open, am_close, pm_open, pm_close, pm_over, freq, now=None):
+    if now is None:
+        now = datetime.datetime.now().time()
+    if freq == Frequency.DAILY.value:
+        now_date = datetime.date.today()
+        time_delta = datetime.timedelta(microseconds=10)
+        delay_delta = datetime.timedelta(minutes=5)
+        now_timestamp = datetime.datetime.combine(now_date, now)
+        pm_over_timestamp = datetime.datetime.combine(now_date, pm_over)
+        if now_timestamp - time_delta > pm_over_timestamp and pm_over_timestamp + delay_delta > now_timestamp:
+            return True
+        return False
+    else:
+        return am_open < now < am_close or pm_open < now < pm_close
+
+=== END ===

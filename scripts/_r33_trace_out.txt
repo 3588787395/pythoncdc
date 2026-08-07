@@ -1,0 +1,18 @@
+﻿Regions found: 1
+  Region: entry=0, blocks=[0]
+
+Entry block: @0
+Entry block instructions count: 128
+Entry region: Region
+  entry=0
+  blocks=[0]
+
+block_to_region for entry block: Region(region_type=<RegionType.BASIC: 1>, entry=BasicBlock(1, offset=0-422, instrs=128), blocks={BasicBlock(1, offset=0-422, instrs=128)}, exit=None, parent=None, children=[], metadata={}, has_trailing_return_none=False)
+
+Regions containing entry block: 1
+  Region: entry=0
+
+Is entry_block the entry of entry_region? True
+
+Top-level regions: 1
+  Region: entry=0

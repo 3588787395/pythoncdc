@@ -1,0 +1,45 @@
+﻿=== Block@74 ===
+  instructions: 21
+    74 LOAD_FAST                      _trading_time_list
+    76 LOAD_METHOD                    append
+    98 LOAD_FAST                      tuple_time
+   100 LOAD_CONST                     0
+   102 BINARY_SUBSCR                  None
+   112 LOAD_CONST                     1440
+   114 BUILD_TUPLE                    2
+   116 PRECALL                        1
+   120 CALL                           1
+   130 POP_TOP                        None
+   132 LOAD_FAST                      _trading_time_list
+   134 LOAD_METHOD                    append
+   156 LOAD_CONST                     0
+   158 LOAD_FAST                      tuple_time
+   160 LOAD_CONST                     1
+   162 BINARY_SUBSCR                  None
+   172 BUILD_TUPLE                    2
+   174 PRECALL                        1
+   178 CALL                           1
+   188 POP_TOP                        None
+   190 JUMP_BACKWARD                  34
+
+  block_role: BlockRole.CONTINUE
+
+  effective_instructions: 10
+    74 LOAD_FAST                      _trading_time_list
+    76 LOAD_METHOD                    append
+    98 LOAD_FAST                      tuple_time
+   100 LOAD_CONST                     0
+   102 BINARY_SUBSCR                  None
+   112 LOAD_CONST                     1440
+   114 BUILD_TUPLE                    2
+   116 PRECALL                        1
+   120 CALL                           1
+   130 POP_TOP                        None
+
+=== LoopRegion@34 ===
+  parent: NoneType@None
+  children: [('IfRegion', 36), ('IfRegion', 236)]
+
+=== IfRegion@36 ===
+  parent: LoopRegion@34
+  children: []

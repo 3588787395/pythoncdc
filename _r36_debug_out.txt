@@ -1,0 +1,22 @@
+﻿IfRegion@66 children:
+  LoopRegion@124
+    blocks=[86, 124, 126]
+    body_blocks=[124, 126]
+  LoopRegion@238
+    blocks=[238, 240, 200]
+    body_blocks=[238, 240]
+  LoopRegion@360
+    blocks=[316, 360, 362]
+    body_blocks=[360, 362]
+
+Before then branch generation:
+  block@316 in generated_blocks: False
+
+After then branch generation:
+  block@316 in generated_blocks: True
+  block@360 in generated_blocks: True
+  block@362 in generated_blocks: True
+  then_stmts = [{'type': 'For', 'target': {'type': 'Name', 'id': 'i', 'ctx': 'Store'}, 'iter': {'type': 'Call', 'func': {'type': 'Name', 'id': 'range', 'ctx': 'Load', 'lineno': 180}, 'args': [{'type': 'BinOp', 'left': {'type': 'Name', 'id': 's', 'ctx': 'Load', 'lineno': None}, 'op': '+', 'right': {'type': 'Name', 'id': 'start_time_delta', 'ctx': 'Load', 'lineno': None}, 'lineno': None}, {'type': 'BinOp', 'left': {'type': 'Name', 'id': 'e', 'ctx': 'Load', 'lineno': None}, 'op': '+', 'right': {'type': 'Constant', 'value': 1, 'lineno': None}, 'lineno': None}], 'kwargs': [], 'lineno': None}, 'body': [{'type': 'Expr', 'value': {'type': 'Call', 'func': {'type': 'Attribute', 'value': {'type': 'Name', 'id': 'time_set', 'ctx': 'Load', 'lineno': 181}, 'attr': 'add', 'ctx': 'Load', 'lineno': None}, 'args': [{'type': 'Call', 'func': {'type': 'Name', 'id': 'divmod', 'ctx': 'Load', 'lineno': None}, 'args': [{'type': 'Name', 'id': 'i', 'ctx': 'Load', 'lineno': None}, {'type': 'Constant', 'value': 60, 'lineno': None}], 'kwargs': [], 'lineno': None}], 'kwargs': [], 'lineno': None}}]}]
+
+After else branch generation:
+  else_stmts = None

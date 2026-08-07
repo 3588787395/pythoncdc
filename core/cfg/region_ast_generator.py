@@ -22892,16 +22892,25 @@ AST 映射规则:
             pre_stmts = self._build_prefix_stmt_list(pre_instrs, region.prefix_block) if pre_instrs else []
         elif op_chain:
             first_chain_block = op_chain[0][0]
-            pre_instrs = self.region_analyzer.identify_block_prefix_instructions(first_chain_block)
-            last_store_idx = -1
-            for idx, instr in enumerate(pre_instrs):
-                if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
-                    last_store_idx = idx
-            if last_store_idx >= 0:
-                filtered_pre_instrs = pre_instrs[:last_store_idx + 1]
-                pre_stmts = self._build_prefix_stmt_list(filtered_pre_instrs, first_chain_block) if filtered_pre_instrs else []
-            else:
+            # [R46] 区域归约算法原则 2（每块唯一归属）：当 first_chain_block
+            # 已被 generate() 入口处理提取过前置语句（标记为 generated），
+            # 不应在此重复提取。典型场景：a = None; a = a or x.close 中
+            # 入口块同时是 BoolOpRegion 的首个 chain block，generate() 的
+            # BoolOpRegion 入口分支已通过 _if_extract_cond_instructions
+            # 提取 a = None，若此处再次提取会导致重复输出。
+            if first_chain_block in self.generated_blocks:
                 pre_stmts = []
+            else:
+                pre_instrs = self.region_analyzer.identify_block_prefix_instructions(first_chain_block)
+                last_store_idx = -1
+                for idx, instr in enumerate(pre_instrs):
+                    if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                        last_store_idx = idx
+                if last_store_idx >= 0:
+                    filtered_pre_instrs = pre_instrs[:last_store_idx + 1]
+                    pre_stmts = self._build_prefix_stmt_list(filtered_pre_instrs, first_chain_block) if filtered_pre_instrs else []
+                else:
+                    pre_stmts = []
 
         results = list(pre_stmts)
         if skip_store_targets:

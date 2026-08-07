@@ -1,0 +1,172 @@
+﻿=== Original get_trading_schedule bytecode ===
+ 73           0 RESUME                   0
+
+ 75           2 LOAD_GLOBAL              1 (NULL + set)
+             14 PRECALL                  0
+             18 CALL                     0
+             28 STORE_FAST               2 (time_set)
+
+ 76          30 LOAD_GLOBAL              3 (NULL + int)
+             42 LOAD_FAST                1 (is_backtest)
+             44 PRECALL                  1
+             48 CALL                     1
+             58 STORE_FAST               3 (start_time_delta)
+
+ 77          60 LOAD_FAST                0 (trading_time)
+             62 GET_ITER
+        >>   64 FOR_ITER                72 (to 210)
+             66 UNPACK_SEQUENCE          2
+             70 STORE_FAST               4 (s)
+             72 STORE_FAST               5 (e)
+
+ 78          74 LOAD_FAST                4 (s)
+             76 LOAD_CONST               1 (1200)
+             78 COMPARE_OP               4 (>)
+             84 POP_JUMP_FORWARD_IF_FALSE     1 (to 88)
+
+ 79          86 JUMP_BACKWARD           12 (to 64)
+
+ 80     >>   88 LOAD_GLOBAL              5 (NULL + range)
+            100 LOAD_FAST                4 (s)
+            102 LOAD_FAST                3 (start_time_delta)
+            104 BINARY_OP                0 (+)
+            108 LOAD_FAST                5 (e)
+            110 LOAD_CONST               2 (1)
+            112 BINARY_OP                0 (+)
+            116 PRECALL                  2
+            120 CALL                     2
+            130 GET_ITER
+        >>  132 FOR_ITER                37 (to 208)
+            134 STORE_FAST               6 (i)
+
+ 81         136 LOAD_FAST                2 (time_set)
+            138 LOAD_METHOD              3 (add)
+            160 LOAD_GLOBAL              9 (NULL + divmod)
+            172 LOAD_FAST                6 (i)
+            174 LOAD_CONST               3 (60)
+            176 PRECALL                  2
+            180 CALL                     2
+            190 PRECALL                  1
+            194 CALL                     1
+            204 POP_TOP
+            206 JUMP_BACKWARD           38 (to 132)
+
+ 80     >>  208 JUMP_BACKWARD           73 (to 64)
+
+ 82     >>  210 LOAD_FAST                2 (time_set)
+            212 RETURN_VALUE
+
+=== Decompiled get_trading_schedule bytecode ===
+ 10           0 RESUME                   0
+
+ 12           2 LOAD_GLOBAL              1 (NULL + set)
+             14 PRECALL                  0
+             18 CALL                     0
+             28 STORE_FAST               2 (time_set)
+
+ 13          30 LOAD_GLOBAL              3 (NULL + int)
+             42 LOAD_FAST                1 (is_backtest)
+             44 PRECALL                  1
+             48 CALL                     1
+             58 STORE_FAST               3 (start_time_delta)
+
+ 14          60 LOAD_FAST                0 (trading_time)
+             62 GET_ITER
+        >>   64 FOR_ITER                72 (to 210)
+             66 UNPACK_SEQUENCE          2
+             70 STORE_FAST               4 (s)
+             72 STORE_FAST               5 (e)
+
+ 15          74 LOAD_FAST                4 (s)
+             76 LOAD_CONST               1 (1200)
+             78 COMPARE_OP               4 (>)
+             84 POP_JUMP_FORWARD_IF_FALSE     1 (to 88)
+
+ 16          86 JUMP_BACKWARD           12 (to 64)
+
+ 17     >>   88 LOAD_GLOBAL              5 (NULL + range)
+            100 LOAD_FAST                4 (s)
+            102 LOAD_FAST                3 (start_time_delta)
+            104 BINARY_OP                0 (+)
+            108 LOAD_FAST                5 (e)
+            110 LOAD_CONST               2 (1)
+            112 BINARY_OP                0 (+)
+            116 PRECALL                  2
+            120 CALL                     2
+            130 GET_ITER
+        >>  132 FOR_ITER                37 (to 208)
+            134 STORE_FAST               6 (i)
+
+ 18         136 LOAD_FAST                2 (time_set)
+            138 LOAD_METHOD              3 (add)
+            160 LOAD_GLOBAL              9 (NULL + divmod)
+            172 LOAD_FAST                6 (i)
+            174 LOAD_CONST               3 (60)
+            176 PRECALL                  2
+            180 CALL                     2
+            190 PRECALL                  1
+            194 CALL                     1
+            204 POP_TOP
+            206 JUMP_BACKWARD           38 (to 132)
+
+ 17     >>  208 JUMP_BACKWARD           73 (to 64)
+
+ 20     >>  210 LOAD_FAST                2 (time_set)
+            212 RETURN_VALUE
+=== Reference get_trading_schedule bytecode ===
+  7           0 RESUME                   0
+
+  9           2 LOAD_GLOBAL              1 (NULL + set)
+             14 PRECALL                  0
+             18 CALL                     0
+             28 STORE_FAST               2 (time_set)
+
+ 10          30 LOAD_GLOBAL              3 (NULL + int)
+             42 LOAD_FAST                1 (is_backtest)
+             44 PRECALL                  1
+             48 CALL                     1
+             58 STORE_FAST               3 (start_time_delta)
+
+ 11          60 LOAD_FAST                0 (trading_time)
+             62 GET_ITER
+        >>   64 FOR_ITER                72 (to 210)
+             66 UNPACK_SEQUENCE          2
+             70 STORE_FAST               4 (s)
+             72 STORE_FAST               5 (e)
+
+ 12          74 LOAD_FAST                4 (s)
+             76 LOAD_CONST               1 (1200)
+             78 COMPARE_OP               4 (>)
+             84 POP_JUMP_FORWARD_IF_FALSE     1 (to 88)
+
+ 13          86 JUMP_BACKWARD           12 (to 64)
+
+ 14     >>   88 LOAD_GLOBAL              5 (NULL + range)
+            100 LOAD_FAST                4 (s)
+            102 LOAD_FAST                3 (start_time_delta)
+            104 BINARY_OP                0 (+)
+            108 LOAD_FAST                5 (e)
+            110 LOAD_CONST               2 (1)
+            112 BINARY_OP                0 (+)
+            116 PRECALL                  2
+            120 CALL                     2
+            130 GET_ITER
+        >>  132 FOR_ITER                37 (to 208)
+            134 STORE_FAST               6 (i)
+
+ 15         136 LOAD_FAST                2 (time_set)
+            138 LOAD_METHOD              3 (add)
+            160 LOAD_GLOBAL              9 (NULL + divmod)
+            172 LOAD_FAST                6 (i)
+            174 LOAD_CONST               3 (60)
+            176 PRECALL                  2
+            180 CALL                     2
+            190 PRECALL                  1
+            194 CALL                     1
+            204 POP_TOP
+            206 JUMP_BACKWARD           38 (to 132)
+
+ 14     >>  208 JUMP_BACKWARD           73 (to 64)
+
+ 16     >>  210 LOAD_FAST                2 (time_set)
+            212 RETURN_VALUE

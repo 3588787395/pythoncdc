@@ -65,7 +65,7 @@ def marshal_to_pyc_obj(obj, module: PycModule) -> Optional[PycRef]:
         pyc_code.num_locals = obj.co_nlocals
         pyc_code.stack_size = obj.co_stacksize
         pyc_code.flags = obj.co_flags
-        # [R20 fix] kwonly/posonly arg count must be read from the code object,
+        # kwonly/posonly arg count must be read from the code object,
         # not hardcoded to 0. The old code hardcoding 0 caused to_python_code()
         # to produce a CodeType with co_kwonlyargcount=0, which broke signature
         # reconstruction in RegionASTGenerator._extract_function_args: with

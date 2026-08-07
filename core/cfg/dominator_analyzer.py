@@ -135,7 +135,7 @@ class DominatorAnalyzer:
                     dom.dominated_blocks.add(block)
 
     def _compute_post_dominators(self) -> None:
-        # [R9 聚类A] post-dominator 后继集选择策略（Option C 精细化）：
+        # post-dominator 后继集选择策略（Option C 精细化）：
         # 原实现排除 exception_successors，对 async for / await 场景产生致命
         # 错误：async for 的轮询块唯一非循环出口是异常边（END_ASYNC_FOR），
         # 排除异常边后 post-dominator 不收敛，导致 merge_block=None。

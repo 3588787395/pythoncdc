@@ -1,0 +1,20 @@
+﻿=== Checking child reachability from then_blocks ===
+  LoopRegion@124: reachable=True, entry_in_then=True, entry_in_else=False, offset_overlap=True
+    child.blocks=[86, 124, 126]
+    then_blocks range: 86-314
+  LoopRegion@238: reachable=True, entry_in_then=True, entry_in_else=False, offset_overlap=True
+    child.blocks=[238, 240, 200]
+    then_blocks range: 86-314
+  LoopRegion@360: reachable=True, entry_in_then=False, entry_in_else=True, offset_overlap=False
+    child.blocks=[316, 360, 362]
+    then_blocks range: 86-314
+
+=== Tracing _if_generate_then_branch ===
+  _generate_region called for LoopRegion@360
+  _generate_region returned: dict with 1 item(s)
+
+  then_stmts has 1 items
+    [0] type=For
+        range args: [{'type': 'BinOp', 'left': {'type': 'Name', 'id': 's', 'ctx': 'Load', 'lineno': None}, 'op': '+', 'right': {'type': 'Name', 'id': 'start_time_delta', 'ctx': 'Load', 'lineno': None}, 'lineno': None}, {'type': 'BinOp', 'left': {'type': 'Name', 'id': 'e', 'ctx': 'Load', 'lineno': None}, 'op': '+', 'right': {'type': 'Constant', 'value': 1, 'lineno': None}, 'lineno': None}]
+
+  generated_blocks after then: [124, 238, 314, 316, 360, 362]

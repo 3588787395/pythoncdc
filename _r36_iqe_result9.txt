@@ -1,0 +1,21 @@
+﻿Done. Output written to _r36_iqe_func_output.txt
+  trading_time_to_str: MISMATCH (orig=12, decomp=12)
+    First diff at instruction 3:
+      orig:  ('LOAD_CONST', <code object <listcomp> at 0x000001CACF798FF0, file "./fly_docker_py311/IQEngine/utils/trade_schedule.py", line 164>, 26)
+      decomp: ('LOAD_CONST', <code object <listcomp> at 0x000001CACCE53E10, file "<decompiled>", line 31>, 26)
+  get_trading_schedule: MATCH (89 instructions)
+  get_trading_time_tuple: MATCH (59 instructions)
+  is_stock_trade_time_now: MATCH (36 instructions)
+  is_future_trade_time_now: MATCH (36 instructions)
+  is_stock_trade_trigger: MISMATCH (orig=94, decomp=98)
+    First diff at instruction 75:
+      orig:  ('JUMP_IF_FALSE_OR_POP', 486, 474)
+      decomp: ('POP_JUMP_FORWARD_IF_FALSE', 488, 474)
+    Length mismatch: orig=94, decomp=98
+  is_future_trade_trigger: MISMATCH (orig=94, decomp=98)
+    First diff at instruction 75:
+      orig:  ('JUMP_IF_FALSE_OR_POP', 486, 474)
+      decomp: ('POP_JUMP_FORWARD_IF_FALSE', 488, 474)
+    Length mismatch: orig=94, decomp=98
+
+Match rate: 4/7 = 57.14%

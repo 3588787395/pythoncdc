@@ -1,0 +1,1 @@
+﻿      first_diff: {'index': 111, 'orig_op': 'POP_JUMP_FORWARD_IF_NOT_NONE', 'decomp_op': 'EXTENDED_ARG', 'orig_arg': 760, 'decomp_arg': 3}

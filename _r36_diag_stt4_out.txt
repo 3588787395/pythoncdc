@@ -1,0 +1,11 @@
+﻿generated_blocks after then: [144, 434, 452, 456]
+
+=== Tracing else branch ===
+
+  else_stmts = [{'type': 'Expr', 'value': {'type': 'Compare', 'left': {'type': 'Name', 'id': 'am_open', 'ctx': 'Load', 'lineno': 254}, 'ops': ['<='], 'comparators': [{'type': 'Name', 'id': 'now', 'ctx': 'Load', 'lineno': None}], 'lineno': None}}, {'type': 'Expr', 'value': {'type': 'Name', 'id': 'am_close', 'ctx': 'Load', 'lineno': None}}, {'type': 'Return', 'value': {'type': 'BoolOp', 'op': 'and', 'values': [{'type': 'Compare', 'left': {'type': 'Name', 'id': 'pm_open', 'ctx': 'Load', 'lineno': None}, 'ops': ['<='], 'comparators': [{'type': 'Name', 'id': 'now', 'ctx': 'Load', 'lineno': None}], 'lineno': None}, {'type': 'Name', 'id': 'pm_close', 'ctx': 'Load', 'lineno': None}]}}]
+  [0] type=Expr
+  [1] type=Expr
+  [2] type=Return
+
+  generated_blocks after else: [144, 434, 452, 456, 460, 476, 486, 490, 492, 508, 518, 522]
+  else_blocks not generated: []

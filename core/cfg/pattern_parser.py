@@ -227,7 +227,7 @@ class PatternParser:
                             is_pattern_block = True
                             is_guard_like = True
 
-            # [R16 模式 B 修复] 识别简单变量 guard 块
+            # 识别简单变量 guard 块
             # 例如 `case Point(x=1, y=2) if z:` 的 guard `if z` 字节码为
             # LOAD_NAME z / POP_JUMP_FORWARD_IF_FALSE → after_match
             # 此类块无 DEFINITIVE_PATTERN_OPS 也无 COMPARE_OP，需要专门识别。
@@ -312,7 +312,7 @@ class PatternParser:
         if not all_instrs:
             return None
 
-        # [R16 模式 B/E 回归防护] 计算 case header 块（pattern_blocks[0]）的指令数。
+        # 计算 case header 块（pattern_blocks[0]）的指令数。
         # 如果 guard 指令位于 case header 块内（guard_start < first_block_instr_count），
         # 说明 guard 与 case header 在同一基本块中（如 `case _ if x > 0` 的字节码：
         # LOAD_NAME x / POP_TOP / LOAD_NAME x / LOAD_CONST 0 / COMPARE_OP > / POP_JUMP_IF_FALSE）。
@@ -393,7 +393,7 @@ class PatternParser:
                             break
 
         if guard_start is not None and guard_end is not None:
-            # [R16 回归防护] guard 位于 case header 块内时不提取（避免与 body 重复）
+            # guard 位于 case header 块内时不提取（避免与 body 重复）
             if guard_start < first_block_instr_count:
                 return None
 
@@ -416,7 +416,7 @@ class PatternParser:
                     if has_match_class and all_instrs[i].opname in self.LOAD_VAR_OPS:
                         pattern_loaded_names.add(all_instrs[i].argval)
 
-                # [R16 模式 B/E 修复] 允许 guard 引用外部变量
+                # 允许 guard 引用外部变量
                 # Python 语义允许 guard 引用任何作用域内的变量（如 `case 1 if y > 0`
                 # 中 y 是外部变量）。_collect_pattern_blocks 已通过跳转目标分析
                 # （_jumps_to_next_case）区分 guard 块与 body 内 if 语句，因此
@@ -502,10 +502,10 @@ class PatternParser:
                 if instr.opname in self.LOAD_VAR_OPS:
                     if (i + 1 < len(all_instrs) and
                         all_instrs[i + 1].opname in ('POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_IF_FALSE')):
-                        # [R16 回归防护] guard 位于 case header 块内时不提取
+                        # guard 位于 case header 块内时不提取
                         if i < first_block_instr_count:
                             break
-                        # [R16 模式 B 修复] 简单变量 guard（如 `if z`）允许外部变量
+                        # 简单变量 guard（如 `if z`）允许外部变量
                         # _collect_pattern_blocks 已通过跳转目标分析区分 guard 与 body if
                         var_name = instr.argval
                         return {'type': 'Name', 'id': var_name}
@@ -743,7 +743,7 @@ class PatternParser:
                                     break
                     if not is_for_iter_store:
                         is_literal_match = False
-            # [R5 fix] 区域归约算法原则 2（每块唯一归属）：通配符
+            # 区域归约算法原则 2（每块唯一归属）：通配符
             # case 带守卫（``case _ if <guard>:`）编译为 LOAD subject;
             # POP_TOP（通配符丢弃）; <guard>; LOAD_CONST; COMPARE_OP;
             # POP_JUMP_IF_FALSE。LOAD_CONST + COMPARE_OP 是 guard 而非
@@ -898,13 +898,13 @@ class PatternParser:
 
         # 策略2：沿成功路径BFS查找最后一个STORE_指令
         # as绑定的STORE_通常在pattern匹配链的最后（所有COMPARE_OP之后）
-        # [R3-03 fix] 区域归约算法原则 2（每块唯一归属）：as 绑定协议要求
+        # 区域归约算法原则 2（每块唯一归属）：as 绑定协议要求
         # case header 用 COPY 保存 subject，随后在 fall-through 块 STORE。
         # 若 case_block 无 COPY，则 fall-through 块中的 STORE 属于 case body
         # 赋值（如 `for i in r: match i: case 1: x = 1` 中 case body 的
         # STORE_NAME x），不是 as 绑定。无 COPY 时跳过本策略，避免吞并 body
         # 赋值（与策略3的 has_copy_for_as 守卫一致）。
-        # [R5 fix] 区域归约算法原则 2（每块唯一归属）：as-binding COPY 出现在
+        # 区域归约算法原则 2（每块唯一归属）：as-binding COPY 出现在
         # MATCH_*/COMPARE_OP 之前，pattern-matching COPY 出现在之后（如
         # `case P():` 的 COPY 在 MATCH_CLASS 之后）。仅 as-binding COPY 触发
         # 本策略，避免 case body 的 STORE 被误判为 as 绑定。
@@ -1018,7 +1018,7 @@ class PatternParser:
                                     'BUILD_SET', 'BUILD_STRING')
                       for i in instrs)
 
-        # [R4-03 fix] 区域归约算法原则 2（每块唯一归属）：case body 块（含赋值
+        # 区域归约算法原则 2（每块唯一归属）：case body 块（含赋值
         # 语句 `y = 1` / `x = a`）不应被误判为 pattern continuation 块。原
         # `_is_pattern_block_for_as` 仅检查 LOAD_GLOBAL/CALL/RETURN 等显式 body
         # 指令，但 case body 的赋值（LOAD_CONST + STORE_NAME / LOAD_NAME +
@@ -1206,7 +1206,7 @@ class PatternParser:
                     if slot != -1:
                         slot_actions.setdefault(slot, {'type': 'capture', 'name': var_name})
                 elif seen_pattern_instr:
-                    # [R4-04 fix] 区域归约算法原则 2（每块唯一归属）：as_name 的
+                    # 区域归约算法原则 2（每块唯一归属）：as_name 的
                     # STORE 必须出现在 pattern 匹配指令（MATCH_*/GET_LEN/UNPACK_*/
                     # COMPARE_OP）之后——as 绑定在所有 pattern 匹配成功后才 STORE
                     # 保存的 subject 副本。若 STORE 出现在 seen_pattern_instr 之前，
@@ -1381,8 +1381,7 @@ class PatternParser:
         return result
 
     def _count_class_pattern_instrs(self, instrs: List[Instruction]) -> int:
-        """
-        [R16 模式 D] 计算嵌套 class pattern 消耗的指令数
+        """ 计算嵌套 class pattern 消耗的指令数
 
         用于在 _extract_class_pattern 的属性循环中跳过内层 class pattern 的所有指令。
         内层 class pattern 结构：
@@ -1476,7 +1475,7 @@ class PatternParser:
         as_name = None
         pos_count = 0
 
-        # [R16 模式 C 修复] 保留 POP_TOP 指令
+        # 保留 POP_TOP 指令
         # UNPACK_SEQUENCE 之后的 POP_TOP 对应通配符 _ 位置参数（如 `Point(_, _)`），
         # 必须保留以便后续循环识别为 MatchAs 模式。此前过滤掉 POP_TOP 导致
         # `Point(_, _)` 退化为 `Point()`，重编字节码缺失 UNPACK_SEQUENCE + POP_TOP。
@@ -1537,7 +1536,7 @@ class PatternParser:
             count = filtered[unpack_idx].argval if filtered[unpack_idx].argval is not None else 0
             if count == 0:
                 # 没有属性需要解包，检查是否有as绑定
-                # [R5 fix] 区域归约算法原则 2（每块唯一归属）：as 绑定 STORE
+                # 区域归约算法原则 2（每块唯一归属）：as 绑定 STORE
                 # 紧跟 UNPACK_SEQUENCE 0（无中间指令）。``case P() as y:`` 编译
                 # 为 ``UNPACK_SEQUENCE 0; STORE_FAST y``。``case P():``（无 as）
                 # 编译为 ``UNPACK_SEQUENCE 0; LOAD_CONST <val>; STORE_*``——
@@ -1552,7 +1551,7 @@ class PatternParser:
                 j = unpack_idx + 1
                 while j < len(filtered) and attr_idx < count:
                     instr = filtered[j]
-                    # [R16 模式 D 修复] 嵌套 class pattern（如 Outer(x=Inner(1))）
+                    # 嵌套 class pattern（如 Outer(x=Inner(1))）
                     # 字节码特征：LOAD_NAME/LOAD_GLOBAL + LOAD_CONST(tuple) + MATCH_CLASS
                     # 递归提取内层 class pattern 作为当前属性的值
                     if (instr.opname in ('LOAD_NAME', 'LOAD_GLOBAL') and
