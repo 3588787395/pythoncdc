@@ -4260,52 +4260,44 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                                         if not self._is_early_return_block(s)
                                         and not self._is_except_handler_block(s)]
             if non_return_successors:
-                # 区域归约算法原则 2（每块唯一归属）+ 原则 3（嵌套即
-                # 抽象节点）：当 natural_exit 为 None（while-else 中 break 目标与
-                # else 出口均以 RETURN_VALUE 结尾、无公共后必经节点）时，else 子句
-                # 可能包含多个块（如 else: for j in s: x = j 的 setup + for-loop
-                # header + for-loop body）。原先仅返回直接后继，导致 else 内嵌套
-                # LoopRegion 的块未被归属到 while LoopRegion.else_blocks，嵌套循环
-                # 被外推为 while 之后的兄弟语句，else 语义丢失。
-                # 修复：从每个 non_return_successor 出发 BFS 收集所有可达块（排除
-                # body_set、except handler），使嵌套区域入口纳入 else_blocks。
-                # 区域归约算法原则 2：non_return_successors 自身
-                # 必须无条件纳入 else_blocks（R03 行为：sorted(non_return_successors)），
-                # 即使它们含 trailing return None（如 while 条件假出口块）。原 R4-08
-                # BFS 在 continue 前跳过 trailing return None 块，导致 while-without-
-                # else 的条件假出口块被移出 else_blocks，退化为独立 Region，触发
-                # IfRegion 误判 else 分支为 break。trailing return None 仅用于阻止
-                # BFS 继续扩展（不应跨越 return 出口），不阻止块本身归属。
-                _08_else_blocks = []
-                _08_visited = set()
-                _08_stack = list(non_return_successors)
-                while _08_stack:
-                    _08_cur = _08_stack.pop()
-                    if _08_cur in _08_visited or _08_cur in body_set:
-                        continue
-                    if self._is_except_handler_block(_08_cur):
-                        continue
-                    # 区域归约算法原则 2（每块唯一归属）：
-                    # 块属于外层 TRY_EXCEPT 的 else 时，不纳入 while 的 else_blocks
-                    if self._is_outer_try_except_else_block(_08_cur, body_set):
-                        continue
-                    _08_visited.add(_08_cur)
-                    _08_else_blocks.append(_08_cur)
-                    # trailing return None / terminal / back-edge 块纳入 else_blocks
-                    # 但不继续 BFS 扩展（避免跨越 return 出口收集无关块）
-                    if self._check_block_has_trailing_return_none(_08_cur):
-                        continue
-                    _08_cur_last = _08_cur.get_last_instruction()
-                    if _08_cur_last and _08_cur_last.opname in ('RETURN_VALUE', 'RETURN_CONST', 'RERAISE'):
-                        continue
-                    if _08_cur_last and _08_cur_last.opname in BACKWARD_JUMP_OPS:
-                        continue
-                    for _08_succ in _08_cur.successors:
-                        if _08_succ not in _08_visited and _08_succ not in body_set:
-                            # 不将外层 TRY_EXCEPT else 块加入 BFS 栈
-                            if not self._is_outer_try_except_else_block(_08_succ, body_set):
-                                _08_stack.append(_08_succ)
-                else_blocks = sorted(_08_else_blocks, key=lambda b: b.start_offset) if _08_else_blocks else None
+                # [R54 fix] 区域归约算法原则 2（每块唯一归属）+
+                # 原则 3（嵌套即抽象节点）：
+                # R4-08 BFS 扩展专为 while-else 设计（while 条件可能有多个
+                # 出口导致 natural_exit=None，else 子句可能包含嵌套区域）。
+                # 对 FOR 循环不适用——FOR_ITER 退出目标明确定义 natural_exit，
+                # else_blocks 应仅为直接后继。BFS 扩展会越过 for 循环边界
+                # 吸收循环体内的 try-except 块（如 get_cb_time_info 的
+                # LoopRegion@0 else_blocks 从 1 块膨胀为 19 块）。
+                # 修复：FOR_LOOP 使用 R26 的直接后继方式；WHILE_LOOP
+                # 保留 R4-08 BFS 扩展（处理 natural_exit=None 场景）。
+                if loop_type == RegionType.WHILE_LOOP:
+                    _08_else_blocks = []
+                    _08_visited = set()
+                    _08_stack = list(non_return_successors)
+                    while _08_stack:
+                        _08_cur = _08_stack.pop()
+                        if _08_cur in _08_visited or _08_cur in body_set:
+                            continue
+                        if self._is_except_handler_block(_08_cur):
+                            continue
+                        if self._is_outer_try_except_else_block(_08_cur, body_set):
+                            continue
+                        _08_visited.add(_08_cur)
+                        _08_else_blocks.append(_08_cur)
+                        if self._check_block_has_trailing_return_none(_08_cur):
+                            continue
+                        _08_cur_last = _08_cur.get_last_instruction()
+                        if _08_cur_last and _08_cur_last.opname in ('RETURN_VALUE', 'RETURN_CONST', 'RERAISE'):
+                            continue
+                        if _08_cur_last and _08_cur_last.opname in BACKWARD_JUMP_OPS:
+                            continue
+                        for _08_succ in _08_cur.successors:
+                            if _08_succ not in _08_visited and _08_succ not in body_set:
+                                if not self._is_outer_try_except_else_block(_08_succ, body_set):
+                                    _08_stack.append(_08_succ)
+                    else_blocks = sorted(_08_else_blocks, key=lambda b: b.start_offset) if _08_else_blocks else None
+                else:
+                    else_blocks = sorted(non_return_successors, key=lambda b: b.start_offset)
                 return else_blocks, None
             return None, natural_exit
 
@@ -4318,52 +4310,16 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 else_blocks.extend(path_blocks)
         else_blocks = list(set(else_blocks) - body_set)
 
-        # 区域归约算法原则 3（嵌套即抽象节点）+ 原则 4（父引用子入口）：
-        # while-else 的 else 子句内嵌套 LoopRegion（如 else: for j in s: ...）时，
-        # find_nearest_common_post_dominator 对单元素集合返回输入块自身（非其后必经
-        # 节点），使 natural_exit == loop_successor，else_blocks 仅含直接后继（如
-        # for-setup 块），嵌套 LoopRegion 的 entry（FOR_ITER 块）不在 else_blocks
-        # 中。_build_region_hierarchy 无法通过 else_blocks 建立父子关系，嵌套循环
-        # 被外推为 while 之后的兄弟语句，else 语义丢失。
-        # 修复：从每个 else_block 出发 BFS 收集所有可达块（排除 body_set、trailing
-        # return None、except handler，不跟随回边），使嵌套区域入口纳入 else_blocks。
-        if else_blocks and loop_type == RegionType.WHILE_LOOP:
-            _08_ext_visited = set(body_set)
-            _08_ext_stack = []
-            for _eb in else_blocks:
-                if _eb not in _08_ext_visited:
-                    _08_ext_stack.append(_eb)
-                    _08_ext_visited.add(_eb)
-            _08_ext_added = []
-            while _08_ext_stack:
-                _08_cur = _08_ext_stack.pop()
-                if self._is_except_handler_block(_08_cur):
-                    continue
-                if self._check_block_has_trailing_return_none(_08_cur):
-                    continue
-                # 区域归约算法原则 2（每块唯一归属）：
-                # 块属于外层 TRY_EXCEPT 的 else 时，不纳入 while 的 else_blocks
-                if self._is_outer_try_except_else_block(_08_cur, body_set):
-                    continue
-                if _08_cur not in else_blocks:
-                    _08_ext_added.append(_08_cur)
-                _08_cur_last = _08_cur.get_last_instruction()
-                if _08_cur_last and _08_cur_last.opname in ('RETURN_VALUE', 'RETURN_CONST', 'RERAISE'):
-                    continue
-                if _08_cur_last and _08_cur_last.opname in BACKWARD_JUMP_OPS:
-                    continue
-                for _08_succ in _08_cur.successors:
-                    if _08_succ not in _08_ext_visited:
-                        # 不将外层 TRY_EXCEPT else 块加入 BFS 栈
-                        if self._is_outer_try_except_else_block(_08_succ, body_set):
-                            _08_ext_visited.add(_08_succ)
-                            continue
-                        _08_ext_visited.add(_08_succ)
-                        _08_ext_stack.append(_08_succ)
-            if _08_ext_added:
-                else_blocks.extend(_08_ext_added)
-                else_blocks = sorted(set(else_blocks), key=lambda b: b.start_offset)
-
+        # [R54 fix] 区域归约算法原则 2（每块唯一归属）+
+        # 原则 3（嵌套即抽象节点）：
+        # R4-08 BFS 扩展专为 while-else 设计——当 while 循环有 break 时，
+        # else 子句可能包含嵌套 LoopRegion（如 else: for j in s: ...），
+        # BFS 从 natural_exit 出发收集可达块，使嵌套区域入口纳入 else_blocks。
+        # 但无 break 时，else 子句与顺序代码在字节码层面不可区分（L4388 注释），
+        # BFS 会越过循环边界吸收循环体后的所有顺序代码（如 try-except、
+        # 嵌套循环等），导致 else_blocks 过度膨胀（如 get_cb_time_info 的
+        # while temp: 循环 else_blocks 从 1 块膨胀为 19 块）。
+        # 修复：将 break target 检测提前到 BFS 之前，仅在有 break 时运行 BFS。
         if loop_type == RegionType.WHILE_LOOP:
             _cond_exit_set = set(cond_exit_targets) if cond_exit_targets else set()
             _break_targets = set()
@@ -4387,6 +4343,49 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                                     if _b_pred_last and _b_pred_last.opname in FORWARD_CONDITIONAL_JUMP_OPS:
                                         _break_targets.add(_b)
                                         break
+        else:
+            _break_targets = set()
+            _cond_exit_set = set()
+
+        # [R54 fix] BFS 扩展仅在有 break 时运行（原则 2：每块唯一归属）
+        # 无 break 时 else_blocks 保持为直接后继，避免过度膨胀。
+        # 有 break 时，else 子句可能包含嵌套 LoopRegion，需要 BFS 扩展
+        # 使嵌套区域入口纳入 else_blocks（原 R4-08 逻辑）。
+        if else_blocks and loop_type == RegionType.WHILE_LOOP and _break_targets:
+            _08_ext_visited = set(body_set)
+            _08_ext_stack = []
+            for _eb in else_blocks:
+                if _eb not in _08_ext_visited:
+                    _08_ext_stack.append(_eb)
+                    _08_ext_visited.add(_eb)
+            _08_ext_added = []
+            while _08_ext_stack:
+                _08_cur = _08_ext_stack.pop()
+                if self._is_except_handler_block(_08_cur):
+                    continue
+                if self._check_block_has_trailing_return_none(_08_cur):
+                    continue
+                if self._is_outer_try_except_else_block(_08_cur, body_set):
+                    continue
+                if _08_cur not in else_blocks:
+                    _08_ext_added.append(_08_cur)
+                _08_cur_last = _08_cur.get_last_instruction()
+                if _08_cur_last and _08_cur_last.opname in ('RETURN_VALUE', 'RETURN_CONST', 'RERAISE'):
+                    continue
+                if _08_cur_last and _08_cur_last.opname in BACKWARD_JUMP_OPS:
+                    continue
+                for _08_succ in _08_cur.successors:
+                    if _08_succ not in _08_ext_visited:
+                        if self._is_outer_try_except_else_block(_08_succ, body_set):
+                            _08_ext_visited.add(_08_succ)
+                            continue
+                        _08_ext_visited.add(_08_succ)
+                        _08_ext_stack.append(_08_succ)
+            if _08_ext_added:
+                else_blocks.extend(_08_ext_added)
+                else_blocks = sorted(set(else_blocks), key=lambda b: b.start_offset)
+
+        if loop_type == RegionType.WHILE_LOOP:
             _else_is_skipped_by_break = False
             for _eb in else_blocks:
                 if _eb not in _break_targets:
