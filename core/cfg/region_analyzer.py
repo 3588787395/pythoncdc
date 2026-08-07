@@ -7829,7 +7829,37 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                                     break
                             if _handler_also_jumps_to_target:
                                 break
-                        if not _handler_also_jumps_to_target:
+                        # [R51 fix] 区域归约算法原则 2（每块唯一归属）+
+                        # 原则 3（嵌套即抽象节点）：
+                        # 当 JUMP_FORWARD 目标从任何 handler 都不可达时（所有
+                        # handler 以 return/break/continue/reraise 终止），
+                        # 该目标是 try-except 后的顺序代码（post-try merge
+                        # point），不是 else 子句。真正的 try-else 要求至少
+                        # 一个 handler 非终止——handler fall-through 或 jump 到
+                        # else 之后的 merge point，使 else 块位于 handler 与
+                        # merge point 之间。当所有 handler 终止时，try-else
+                        # 与 try-without-else 语义等价、字节码相同，应取更
+                        # 简单的无 else 形式。
+                        # 判据：从所有 handler 块出发 BFS，检查是否可达
+                        # JUMP_FORWARD 目标块。不可达 → 跳过 else 收集。
+                        _te_target_reachable_from_handler = False
+                        _te_handler_bfs_visited = set()
+                        _te_handler_bfs_queue = []
+                        for _, _, _hblocks_r51 in try_region.except_handlers:
+                            for _hb_r51 in _hblocks_r51:
+                                _te_handler_bfs_queue.append(_hb_r51)
+                        while _te_handler_bfs_queue:
+                            _hb_r51 = _te_handler_bfs_queue.pop(0)
+                            if _hb_r51 in _te_handler_bfs_visited:
+                                continue
+                            _te_handler_bfs_visited.add(_hb_r51)
+                            if _hb_r51.start_offset == _te_jf_target:
+                                _te_target_reachable_from_handler = True
+                                break
+                            for _succ_r51 in _hb_r51.successors:
+                                if _succ_r51 not in _te_handler_bfs_visited:
+                                    _te_handler_bfs_queue.append(_succ_r51)
+                        if not _handler_also_jumps_to_target and _te_target_reachable_from_handler:
                             _te_target_block = self.cfg.get_block_by_offset(_te_jf_target)
                             if (_te_target_block is not None and
                                     _te_target_block not in all_handler_blocks and

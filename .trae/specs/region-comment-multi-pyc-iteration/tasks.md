@@ -240,6 +240,14 @@
   - [x] T2.45.1 测试工程师：分析 top 30 partial pyc 失败模式 + klinedata.pyc 字节码 diff → `rounds/round_45/test_engineer/decompile_report.md`（87.08%，12 复现实例 2 DEFECT-REPRO/10 NO-DEFECT）
   - [x] T2.45.2 修复工程师：except handler return 值丢失修复 → `rounds/round_45/repair_engineer/fix_report.md`（POP_EXCEPT 后 skip_offsets 仅跳过 as-var 清理链+RETURN_VALUE，不跳过 return 值表达式；repro_01 DEFECT→NO-DEFECT）
   - [x] T2.45.3 commit + push `rcm-r45:`
+- [x] T2.50 第 50 轮（quotation.pyc 回归修复 - shared merge_block guard）
+  - [x] T2.50.1 测试工程师：分文件定位 quotation.pyc 17 mismatch 根因 → `rounds/round_50/test_engineer/decompile_report.md`
+  - [x] T2.50.2 修复工程师：_if_generate_full_elif_chain shared merge_block guard → `rounds/round_50/repair_engineer/fix_report.md`（88.50%，241 OK，quotation 90.67%→136/150）
+  - [x] T2.50.3 commit + push `rcm-r50:`
+- [x] T2.51 第 51 轮（quotation.pyc try-else false positive 修复 - handler 可达性 BFS）
+  - [x] T2.51.1 测试工程师：分文件定位 + 逐 commit 二分 + R27 变更逐项测试 → `rounds/round_51/test_engineer/decompile_report.md`（根因：R21 TE 模式检查在 handler 全终止时误检测 try-else）
+  - [x] T2.51.2 修复工程师：_find_try_else_blocks 添加 handler 可达性 BFS 检查 → `rounds/round_51/repair_engineer/fix_report.md`（quotation 88.67%→89.33%，批量 88.50%→88.64%，0 failed，无回归）
+  - [x] T2.51.3 commit + push `rcm-r51:`
 - [ ] T2.NN ... 持续直到退出条件满足（所有 pyc 文件 100% 字节码一致，每个生成 +OK.py）
 
 > 注：轮次数不设上限，持续直到所有 pyc 文件所有函数 100% 字节码一致。
