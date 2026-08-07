@@ -252,6 +252,10 @@
   - [x] T2.52.1 测试工程师：区域结构对比 + block_to_region 映射检查 + boundary_stop 分析 → `rounds/round_52/test_engineer/decompile_report.md`（根因：boundary_stop 未合并 LoopRegion 边界，BFS 越过循环边界吸收 try_blocks）
   - [x] T2.52.2 修复工程师：boundary_stop 始终合并所有外层结构区域边界 + _get_enclosing_structural_boundary_stop 收集所有结构区域边界 → `rounds/round_52/repair_engineer/fix_report.md`（quotation 89.33%→90.67%，批量 88.64%→88.67%，245 OK，0 failed，无回归）
   - [x] T2.52.3 commit + push `rcm-r52:`
+- [x] T2.53 第 53 轮（quotation.pyc 残留分析 - LoopRegion else_blocks 过度膨胀 + IfRegion 过度收缩）
+  - [x] T2.53.1 测试工程师：区域结构对比 R26/R50/R52 → `rounds/round_53/test_engineer/decompile_report.md`（结论：get_cb_calender_info try-else false positive 在 R26 也存在，get_cb_time_info LoopRegion else_blocks 过度膨胀是 R50 前遗留）
+  - [x] T2.53.2 修复工程师：纯分析轮次，无代码修改 → `rounds/round_53/repair_engineer/fix_report.md`（建议：逐 commit 二分 _find_loop_else 或聚焦 region_ast_generator.py 的 5 个 mismatch）
+  - [x] T2.53.3 commit（无修改，仅报告）
 - [ ] T2.NN ... 持续直到退出条件满足（所有 pyc 文件 100% 字节码一致，每个生成 +OK.py）
 
 > 注：轮次数不设上限，持续直到所有 pyc 文件所有函数 100% 字节码一致。
