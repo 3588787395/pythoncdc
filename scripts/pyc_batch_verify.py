@@ -232,6 +232,11 @@ def bytecode_diff(pyc_path: str, ok_py_path: str) -> dict:
     # py_compile 编译 OK.py 为 code object
     try:
         cfile = py_compile.compile(ok_py_path, doraise=True, quiet=2)
+        # [R49 fix] py_compile.compile() 在 quiet=2 模式下可能返回 None
+        # 即使编译成功（仅有 SyntaxWarning 时）。手动构造 pyc 路径作为回退。
+        if cfile is None:
+            import importlib.util
+            cfile = importlib.util.cache_from_source(ok_py_path)
     except py_compile.PyCompileError as e:
         result['error'] = f'py_compile_failed: {e}'
         return result
