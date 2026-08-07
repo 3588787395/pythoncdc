@@ -248,6 +248,10 @@
   - [x] T2.51.1 测试工程师：分文件定位 + 逐 commit 二分 + R27 变更逐项测试 → `rounds/round_51/test_engineer/decompile_report.md`（根因：R21 TE 模式检查在 handler 全终止时误检测 try-else）
   - [x] T2.51.2 修复工程师：_find_try_else_blocks 添加 handler 可达性 BFS 检查 → `rounds/round_51/repair_engineer/fix_report.md`（quotation 88.67%→89.33%，批量 88.50%→88.64%，0 failed，无回归）
   - [x] T2.51.3 commit + push `rcm-r51:`
+- [x] T2.52 第 52 轮（quotation.pyc IfRegion 过度膨胀修复 - boundary_stop 合并外层结构区域边界）
+  - [x] T2.52.1 测试工程师：区域结构对比 + block_to_region 映射检查 + boundary_stop 分析 → `rounds/round_52/test_engineer/decompile_report.md`（根因：boundary_stop 未合并 LoopRegion 边界，BFS 越过循环边界吸收 try_blocks）
+  - [x] T2.52.2 修复工程师：boundary_stop 始终合并所有外层结构区域边界 + _get_enclosing_structural_boundary_stop 收集所有结构区域边界 → `rounds/round_52/repair_engineer/fix_report.md`（quotation 89.33%→90.67%，批量 88.64%→88.67%，245 OK，0 failed，无回归）
+  - [x] T2.52.3 commit + push `rcm-r52:`
 - [ ] T2.NN ... 持续直到退出条件满足（所有 pyc 文件 100% 字节码一致，每个生成 +OK.py）
 
 > 注：轮次数不设上限，持续直到所有 pyc 文件所有函数 100% 字节码一致。

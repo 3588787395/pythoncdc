@@ -12745,8 +12745,20 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             # except: ... / return y` —— BoolOpRegion 占用 if 入口块（block_to_region
             # 指向 BoolOpRegion），但该块同时属于 TryExceptRegion.try_blocks。
             # 该判据是结构性的（基于区域嵌套归属），非实例特征启发式。
-            if not boundary_stop:
-                boundary_stop = self._get_enclosing_structural_boundary_stop(block)
+            # [R52 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3
+            #（嵌套即抽象节点）：
+            # 原逻辑仅在 boundary_stop 为空时（block_to_region 指向表达式
+            # 区域）才回溯外层结构区域边界。但当 block_to_region 指向
+            # TryExceptRegion 时，其 get_if_branch_boundary_stop 只返回
+            # try 体外后继（如 handler entry），不包含内层 LoopRegion 的
+            # 边界（循环体外后继、回边块等）。IfRegion 嵌套于
+            # LoopRegion 嵌套于 TryExceptRegion 时，BFS 会越过循环边界
+            # 吸收循环体外的 try_blocks（如 for 循环后的 data_out.append
+            # 语句块），导致 IfRegion.then_blocks 过度膨胀、循环体代码丢失。
+            # 修复：始终合并所有外层结构区域（TryExceptRegion +
+            # LoopRegion）的边界。_get_enclosing_structural_boundary_stop
+            # 遍历 self.regions 收集所有包含 block 的结构区域边界。
+            boundary_stop = boundary_stop | self._get_enclosing_structural_boundary_stop(block)
 
             merge = self._find_nearest_common_post_dominator(then_succ, else_succ)
 
@@ -19855,20 +19867,22 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
         - 父引用子入口：TryExceptRegion → IfRegion → BoolOpRegion，边界从父
           （TryExceptRegion）传播到子（IfRegion）的分支收集。
         """
-        _try_boundary = None
-        _loop_boundary = None
+        # [R52 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3
+        #（嵌套即抽象节点）：收集所有包含 block 的外层结构区域
+        #（TryExceptRegion + LoopRegion）的边界，取并集。
+        # 原逻辑在找到第一个 TryExceptRegion 边界后立即返回，忽略了
+        # 内层 LoopRegion 的边界。当 IfRegion 嵌套于 LoopRegion 嵌套
+        # 于 TryExceptRegion 时，BFS 需要同时受 try 体边界和循环体
+        # 边界约束，否则会越过循环边界吸收循环体外的 try_blocks。
+        _all_boundary = set()
         for region in self.regions:
             if isinstance(region, TryExceptRegion):
                 if block in region.try_blocks:
-                    _try_boundary = region.get_if_branch_boundary_stop(block)
-                    if _try_boundary:
-                        return _try_boundary
+                    _all_boundary |= region.get_if_branch_boundary_stop(block)
             elif isinstance(region, LoopRegion):
                 if block in region.blocks:
-                    _loop_boundary = region.get_if_branch_boundary_stop(block)
-        if _try_boundary:
-            return _try_boundary
-        return _loop_boundary or set()
+                    _all_boundary |= region.get_if_branch_boundary_stop(block)
+        return _all_boundary
 
     def _identify_sequence_regions(self, existing_regions: List[Region]) -> List[Region]:
         """识别顺序区域 / 基础区域（Sequence / Basic Region）
