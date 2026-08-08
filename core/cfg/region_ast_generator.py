@@ -4975,7 +4975,9 @@ AST 映射规则:
         _pre_stmts: List[Dict[str, Any]] = []
         _remaining: List[Instruction] = []
         _buf: List[Instruction] = []
-        _store_ops = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
+        # [R58 fix] Added STORE_ATTR and STORE_SUBSCR to support
+        # attribute and subscript assignments (obj.attr = value, obj[key] = value)
+        _store_ops = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF', 'STORE_ATTR', 'STORE_SUBSCR')
         # 区域归约算法原则 2（每块唯一归属）：
         # for_iter_setup 块可能含多个 GET_ITER（如 listcomp 的参数
         # `trade_times = [x for x in trade_times]` 中 listcomp 的 GET_ITER
@@ -34864,6 +34866,51 @@ AST 映射规则:
         if store_instr is None:
             return None
 
+        # [R58 fix] Handle STORE_ATTR: the last LOAD_* in value_instrs is the
+        # object (e.g., `trade` in `trade._attr = value`), not part of the value.
+        # For STORE_SUBSCR: the last two LOAD_* are key and object.
+        _store_attr_target = None
+        if store_instr.opname == 'STORE_ATTR':
+            # Find the last LOAD_* instruction - it's the object for the attribute
+            _obj_idx = -1
+            for _vi in range(len(value_instrs) - 1, -1, -1):
+                if value_instrs[_vi].opname in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF'):
+                    _obj_idx = _vi
+                    break
+            if _obj_idx >= 0:
+                _obj_instr = value_instrs[_obj_idx]
+                _obj_node = {'type': 'Name', 'id': str(_obj_instr.argval), 'ctx': 'Load'}
+                _store_attr_target = {
+                    'type': 'Attribute',
+                    'value': _obj_node,
+                    'attr': str(store_instr.argval) if store_instr.argval else '_',
+                    'ctx': 'Store'
+                }
+                # Remove the object LOAD from value_instrs so it's not part of the value
+                value_instrs = value_instrs[:_obj_idx]
+        elif store_instr.opname == 'STORE_SUBSCR':
+            # Find the last two LOAD_* instructions - key and object
+            _key_idx = -1
+            _obj_idx2 = -1
+            for _vi in range(len(value_instrs) - 1, -1, -1):
+                if value_instrs[_vi].opname in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF'):
+                    if _key_idx < 0:
+                        _key_idx = _vi
+                    elif _obj_idx2 < 0:
+                        _obj_idx2 = _vi
+                        break
+            if _key_idx >= 0 and _obj_idx2 >= 0:
+                _obj_instr2 = value_instrs[_obj_idx2]
+                _key_instr = value_instrs[_key_idx]
+                _store_attr_target = {
+                    'type': 'Subscript',
+                    'value': {'type': 'Name', 'id': str(_obj_instr2.argval), 'ctx': 'Load'},
+                    'slice': {'type': 'Name', 'id': str(_key_instr.argval), 'ctx': 'Load'} if _key_instr.opname in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF') else {'type': 'Constant', 'value': _key_instr.argval},
+                    'ctx': 'Store'
+                }
+                # Remove the object and key LOAD from value_instrs
+                value_instrs = value_instrs[:_obj_idx2]
+
         target_name = store_instr.argval if store_instr.argval else f'var_{store_instr.arg}'
 
         value = None
@@ -34871,6 +34918,12 @@ AST 映射规则:
             value = self.expr_reconstructor.reconstruct(value_instrs)
 
         if value is None:
+            # If value is None but we have a STORE_ATTR target, try to reconstruct
+            # with all original instrs (minus the store)
+            if _store_attr_target is not None:
+                # If no value_instrs, the value might be on the stack from a previous expression
+                # For now, return None to let other paths handle it
+                return None
             return None
 
         # [Round9-14] Inline lambda call: `(lambda x, y: x+y)(x=1, y=2)` is
@@ -35054,6 +35107,13 @@ AST 映射规则:
             aug['target'] = target
             return aug
 
+        # [R58 fix] Use STORE_ATTR/STORE_SUBSCR target if available
+        if _store_attr_target is not None:
+            return {
+                'type': 'Assign',
+                'targets': [_store_attr_target],
+                'value': value,
+            }
         target = {
             'type': 'Name',
             'id': target_name,
