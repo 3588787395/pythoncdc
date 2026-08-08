@@ -17598,6 +17598,48 @@ AST 映射规则:
                 if cb not in self.generated_blocks:
                     self.generated_blocks.add(cb)
 
+            # [R56 fix] Pattern TRY-NO-HANDLER: handlers 为空且无 finalbody 时不生成 Try 节点
+            if not handlers and not finalbody_stmts and not region.has_finally:
+                _r56_result = list(body_stmts) if body_stmts else []
+                if orelse_stmts:
+                    _r56_result.extend(orelse_stmts)
+                _post_try_stmts_r56 = []
+                for _ptb in _post_try_blocks_r19n2:
+                    if _ptb in _post_try_pre_generated_r19n2:
+                        self.generated_blocks.discard(_ptb)
+                        self.generated_offsets.discard(_ptb.start_offset)
+                    if _ptb in self.generated_blocks:
+                        continue
+                    if self._is_for_iter_setup_of_ungenerated_loop(_ptb):
+                        self.generated_blocks.add(_ptb)
+                        self.generated_offsets.add(_ptb.start_offset)
+                        continue
+                    _ptb_region = self.region_analyzer.get_entry_region_for_block(_ptb)
+                    if _ptb_region and _ptb_region is not region:
+                        _nrid = id(_ptb_region)
+                        if (_nrid not in self._generated_regions and _nrid not in self._generating_regions):
+                            self._generating_regions.add(_nrid)
+                            try:
+                                _nr_ast = self._generate_region(_ptb_region)
+                            finally:
+                                self._generating_regions.discard(_nrid)
+                            if _nr_ast:
+                                if isinstance(_nr_ast, list):
+                                    _post_try_stmts_r56.extend(_nr_ast)
+                                else:
+                                    _post_try_stmts_r56.append(_nr_ast)
+                            for _b in _ptb_region.blocks:
+                                self.generated_blocks.add(_b)
+                            self._generated_regions.add(_nrid)
+                            continue
+                    _pt_stmts = self._generate_block_statements(_ptb)
+                    if _pt_stmts:
+                        _post_try_stmts_r56.extend(_pt_stmts)
+                    self.generated_blocks.add(_ptb)
+                if _post_try_stmts_r56:
+                    _r56_result.extend(_post_try_stmts_r56)
+                return _r56_result
+
             try_ast = {
                 'type': 'Try',
                 'body': body_stmts if body_stmts else [{'type': 'Pass'}],

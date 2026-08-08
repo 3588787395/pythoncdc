@@ -652,6 +652,23 @@ class CodeGenerator:
         orelse = node.get('orelse', [])
         finalbody = node.get('finalbody', [])
 
+        # [R56 fix] Defense in depth: if handlers is empty and no finalbody,
+        # skip the try: keyword and just generate body statements directly.
+        # try: without except:/finally: is a SyntaxError.
+        if not handlers and not finalbody:
+            if orelse:
+                body = list(body) + list(orelse)
+            for body_node in body:
+                if isinstance(body_node, dict):
+                    self._generate_dict_node(body_node)
+                elif isinstance(body_node, list):
+                    for sub_node in body_node:
+                        if isinstance(sub_node, dict):
+                            self._generate_dict_node(sub_node)
+                else:
+                    self._generate_node(body_node)
+            return
+
         self._write_line('try:')
         self._increase_indent()
         # Track output to detect empty body (same pattern as except handler)

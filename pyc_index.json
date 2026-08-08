@@ -48,10 +48,11 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/klinedata.pyc",
     "size": 117633,
     "function_count": 64,
-    "decompile_status": "partial",
-    "bytecode_match_rate": 0.6222222222222222,
-    "ok_py_generated": true,
-    "last_tested_round": 1
+    "decompile_status": "failed",
+    "bytecode_match_rate": 0.0,
+    "ok_py_generated": false,
+    "last_tested_round": 1,
+    "error": "subprocess_killed: timeout (300s)"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/wrapper.pyc",
@@ -552,10 +553,11 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/strategy_info_utils.pyc",
     "size": 59800,
     "function_count": 30,
-    "decompile_status": "partial",
-    "bytecode_match_rate": 0.7857142857142857,
-    "ok_py_generated": true,
-    "last_tested_round": 1
+    "decompile_status": "failed",
+    "bytecode_match_rate": 0.0,
+    "ok_py_generated": false,
+    "last_tested_round": 1,
+    "error": "subprocess_crashed (rc=0)"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/t2_utils.pyc",
@@ -570,11 +572,10 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc",
     "size": 83014,
     "function_count": 41,
-    "decompile_status": "failed",
-    "bytecode_match_rate": 0.0,
+    "decompile_status": "partial",
+    "bytecode_match_rate": 0.525,
     "ok_py_generated": true,
-    "last_tested_round": 1,
-    "error": "load_compiled_failed: FileNotFoundError: [Errno 2] No such file or directory: 'F:\\\\Downloads\\\\pythoncdc-main\\\\site-packages\\\\IQCommon\\\\util\\\\__pycache__\\\\trade_info_utilsOK.cpython-311.pyc'"
+    "last_tested_round": 56
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/tradingday_info_utils.pyc",
@@ -1435,11 +1436,10 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/real_quote.pyc",
     "size": 69572,
     "function_count": 45,
-    "decompile_status": "failed",
-    "bytecode_match_rate": 0.0,
+    "decompile_status": "partial",
+    "bytecode_match_rate": 0.6818,
     "ok_py_generated": true,
-    "last_tested_round": 1,
-    "error": "load_compiled_failed: FileNotFoundError: [Errno 2] No such file or directory: 'F:\\\\Downloads\\\\pythoncdc-main\\\\site-packages\\\\IQData\\\\plugins\\\\plugin_system_realquote\\\\__pycache__\\\\real_quoteOK.cpython-311.pyc'"
+    "last_tested_round": 56
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/__init__.pyc",
@@ -2912,10 +2912,11 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc",
     "size": 212327,
     "function_count": 128,
-    "decompile_status": "partial",
-    "bytecode_match_rate": 0.6974789915966386,
-    "ok_py_generated": true,
-    "last_tested_round": 1
+    "decompile_status": "failed",
+    "bytecode_match_rate": 0.0,
+    "ok_py_generated": false,
+    "last_tested_round": 1,
+    "error": "subprocess_killed: timeout (300s)"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade_account/__init__.pyc",
