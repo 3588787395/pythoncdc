@@ -5282,6 +5282,46 @@ AST 映射规则:
                     self._generated_regions.add(id(_child))
                     return True
                 break
+        # [R61 fix] BoolOpRegion entry dispatch in loop body.
+        # Region reduction algorithm principle 4 (parent references child entry)
+        # + principle 2 (unique block ownership) + principle 3 (nesting = abstract
+        # node): when a loop body block is the entry of a BoolOpRegion (value-
+        # context short-circuit, e.g. `x = a or b`), it must be dispatched to
+        # _generate_boolop. Without this, the BoolOpRegion entry block is processed
+        # by _generate_block_statements as a plain expression statement, collapsing
+        # `a or b` to just `b` (dropping `a` + JUMP_IF_TRUE_OR_POP + COPY + STORE).
+        _boolop_entry_region = None
+        for _child in (region.children or []):
+            if (isinstance(_child, BoolOpRegion)
+                    and _child.entry is block
+                    and not getattr(_child, 'is_condition_context', False)):
+                _bid = id(_child)
+                if (_bid not in self._generated_regions
+                        and _bid not in self._generating_regions):
+                    _boolop_entry_region = _child
+                break
+        if _boolop_entry_region is None:
+            _er_b = self.region_analyzer.get_entry_region_for_block(block)
+            if (_er_b is not None
+                    and isinstance(_er_b, BoolOpRegion)
+                    and _er_b.entry is block
+                    and not getattr(_er_b, 'is_condition_context', False)):
+                _bid = id(_er_b)
+                if (_bid not in self._generated_regions
+                        and _bid not in self._generating_regions):
+                    _boolop_entry_region = _er_b
+        if _boolop_entry_region is not None:
+            _boolop_ast = self._generate_region(_boolop_entry_region)
+            if _boolop_ast:
+                if isinstance(_boolop_ast, list):
+                    body_stmts.extend(_boolop_ast)
+                else:
+                    body_stmts.append(_boolop_ast)
+            for _b in _boolop_entry_region.blocks:
+                self.generated_blocks.add(_b)
+                self.generated_offsets.add(_b.start_offset)
+            self._generated_regions.add(id(_boolop_entry_region))
+            return True
         block_role = self.region_analyzer.get_block_role(block)
         if block_role in (BlockRole.CONTINUE, BlockRole.PURE_CONTINUE):
             # 修复: 检查被标记为CONTINUE的块是否真的只包含跳转指令
@@ -14584,6 +14624,35 @@ AST 映射规则:
                         self.generated_blocks.add(b)
                     self._generated_regions.add(child_id)
                 continue
+            # [R61 fix] BoolOpRegion fallback: when BoolOpRegion's parent is
+            # the enclosing LoopRegion (not the current IfRegion), it won't
+            # appear in child_expr_regions (which is built from region.children).
+            # Use get_entry_region_for_block to find it. This fixes the
+            # JUMP_IF_TRUE_OR_POP expression assignment collapse pattern where
+            # `x = a or b` inside an if-body has BoolOpRegion.parent=LoopRegion.
+            if not hasattr(self, '_r61_boolop_fallback_checked'):
+                self._r61_boolop_fallback_checked = set()
+            if block not in self._r61_boolop_fallback_checked:
+                self._r61_boolop_fallback_checked.add(block)
+                _r61_er = self.region_analyzer.get_entry_region_for_block(block)
+                if (_r61_er is not None
+                        and isinstance(_r61_er, BoolOpRegion)
+                        and _r61_er.entry is block
+                        and not getattr(_r61_er, 'is_condition_context', False)):
+                    _r61_bid = id(_r61_er)
+                    if (_r61_bid not in self._generated_regions
+                            and _r61_bid not in self._generating_regions):
+                        _r61_ast = self._generate_boolop(_r61_er)
+                        if _r61_ast:
+                            if isinstance(_r61_ast, list):
+                                stmts.extend(_r61_ast)
+                            else:
+                                stmts.append(_r61_ast)
+                        for _r61_b in _r61_er.blocks:
+                            self.generated_blocks.add(_r61_b)
+                            self.generated_offsets.add(_r61_b.start_offset)
+                        self._generated_regions.add(_r61_bid)
+                        continue
             if any(i.opname == 'PUSH_EXC_INFO' for i in block.instructions):
                 _is_handler_entry = False
                 for _r in self.region_analyzer.regions:
@@ -23096,8 +23165,31 @@ AST 映射规则:
                     #   strptime 调用的子表达式。首 chain_block 的前缀
                     #   （qdt.datetime.strptime, start[:8]）留在栈上，merge_block
                     #   的 BINARY_OP + / CALL 消费 boolop 结果完成表达式。
-                    _full_rhs = boolop_expr
+                    # [R61 fix] Chained assignment detection: COPY + multiple
+                    # STORE_* in merge_block. Pattern: `base_price = price = expr`
+                    # generates `COPY 1; STORE_FAST price; STORE_FAST base_price`.
+                    # The COPY duplicates the boolop result for the second store
+                    # target. Collect all STORE targets and create a multi-target
+                    # Assign, skipping expression continuation splicing (COPY is
+                    # not an expression op) and post-store processing.
+                    _chained_targets_r61 = None
                     if region.merge_block:
+                        _mnn_r61 = [i for i in region.merge_block.instructions
+                                    if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                        _STORE_TYPES_R61 = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
+                        if (len(_mnn_r61) >= 3
+                                and _mnn_r61[0].opname == 'COPY'
+                                and _mnn_r61[1].opname in _STORE_TYPES_R61
+                                and _mnn_r61[2].opname in _STORE_TYPES_R61):
+                            _chained_targets_r61 = []
+                            for _ci in _mnn_r61[1:]:
+                                if _ci.opname in _STORE_TYPES_R61:
+                                    _chained_targets_r61.append(
+                                        {'type': 'Name', 'id': _ci.argval, 'ctx': 'Store'})
+                                else:
+                                    break
+                    _full_rhs = boolop_expr
+                    if region.merge_block and not _chained_targets_r61:
                         _mnn = [i for i in region.merge_block.instructions
                                 if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
                         _si = None
@@ -23161,11 +23253,19 @@ AST 映射规则:
                                     _full_rhs = _spliced
                             except Exception:
                                 pass
-                    results.append({
-                        'type': 'Assign',
-                        'targets': [{'type': 'Name', 'id': region.value_target, 'ctx': 'Store'}],
-                        'value': _full_rhs,
-                    })
+                    if _chained_targets_r61:
+                        results.append({
+                            'type': 'Assign',
+                            'targets': _chained_targets_r61,
+                            'value': boolop_expr,
+                            'is_chain_assign': True,
+                        })
+                    else:
+                        results.append({
+                            'type': 'Assign',
+                            'targets': [{'type': 'Name', 'id': region.value_target, 'ctx': 'Store'}],
+                            'value': _full_rhs,
+                        })
                 if region.merge_block:
                     _merge_instrs = [i for i in region.merge_block.instructions
                                     if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
@@ -23190,11 +23290,26 @@ AST 映射规则:
                             _merge_is_other_entry_r10f3 = True
                             break
                     if not _merge_is_other_entry_r10f3:
-                        _first_store_idx = -1
-                        for _psi, i in enumerate(_merge_instrs):
-                            if i.opname in _store_ops_set:
-                                _first_store_idx = _psi
-                                break
+                        # [R61 fix] When chained targets are detected (COPY +
+                        # multiple STOREs), find the LAST store in the chain
+                        # so post-store processing handles instructions after
+                        # all chained stores (e.g. new_kwargs[k] = [price, amount]
+                        # after `price = base_price = expr`).
+                        if _chained_targets_r61:
+                            _first_store_idx = -1
+                            _STORE_TYPES_R61_chk = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
+                            for _psi, i in enumerate(_merge_instrs):
+                                if i.opname in _STORE_TYPES_R61_chk:
+                                    _first_store_idx = _psi
+                                    # Don't break - continue to find the last one
+                                elif _first_store_idx >= 0 and i.opname not in _STORE_TYPES_R61_chk:
+                                    break
+                        else:
+                            _first_store_idx = -1
+                            for _psi, i in enumerate(_merge_instrs):
+                                if i.opname in _store_ops_set:
+                                    _first_store_idx = _psi
+                                    break
                         if _first_store_idx >= 0:
                             _post_store_clean = []
                             for _pi in _merge_instrs[_first_store_idx + 1:]:
@@ -24317,7 +24432,8 @@ AST 映射规则:
                         cond_start_idx = i + 1
                         i += 1
                         continue
-                if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+                                   'STORE_SUBSCR', 'STORE_ATTR'):
                     # Check if the predecessor range contains
                     # MAKE_FUNCTION. If so, the predecessor is a function/
                     # method def (LOAD_CONST <code> + MAKE_FUNCTION + STORE_NAME),
@@ -24415,6 +24531,21 @@ AST 映射规则:
                         _pred_stmts = self._build_statements_from_instructions(
                             _pred_instrs)
                         pre_stmts.extend(_pred_stmts)
+                        cond_start_idx = i + 1
+                        i += 1
+                        continue
+
+                    # [R61 fix] Handle STORE_SUBSCR/STORE_ATTR in condition block
+                    # as pre-statements (e.g. `new_kwargs[key] = [price, amount]`
+                    # before a ternary condition). The backward LOAD_* scan below
+                    # only works for simple Name targets; Subscript/Attribute
+                    # targets need full instruction reconstruction.
+                    if instr.opname in ('STORE_SUBSCR', 'STORE_ATTR'):
+                        _pred_instrs = list(cond_instrs[cond_start_idx:i + 1])
+                        _pred_stmts = self._build_statements_from_instructions(
+                            _pred_instrs)
+                        if _pred_stmts:
+                            pre_stmts.extend(_pred_stmts)
                         cond_start_idx = i + 1
                         i += 1
                         continue
