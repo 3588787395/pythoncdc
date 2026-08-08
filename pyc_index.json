@@ -572,10 +572,11 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc",
     "size": 83014,
     "function_count": 41,
-    "decompile_status": "partial",
-    "bytecode_match_rate": 0.525,
-    "ok_py_generated": true,
-    "last_tested_round": 56
+    "decompile_status": "failed",
+    "bytecode_match_rate": 0.0,
+    "ok_py_generated": false,
+    "last_tested_round": 1,
+    "error": "subprocess_killed: timeout (300s)"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/tradingday_info_utils.pyc",
@@ -1437,9 +1438,9 @@
     "size": 69572,
     "function_count": 45,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.6818,
+    "bytecode_match_rate": 0.6818181818181818,
     "ok_py_generated": true,
-    "last_tested_round": 56
+    "last_tested_round": 1
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/__init__.pyc",
