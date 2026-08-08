@@ -18630,6 +18630,73 @@ AST 映射规则:
                 stmt_instrs = []
                 continue
 
+            # [R64 fix] Handle import statements in except handler body.
+            # Without this, `import json` in except handler is misinterpreted
+            # as `json = None` (treating LOAD_CONST None as value, STORE_NAME
+            # as assignment). The preceding LOAD_CONST (level=0) + LOAD_CONST
+            # (fromlist) in stmt_instrs are import parameters, not statements.
+            if instr.opname == 'IMPORT_NAME':
+                stmt_instrs = []
+                _r64_mod = instr.argval if instr.argval else ''
+                _r64_idx = block.instructions.index(instr)
+                _r64_rest = block.instructions[_r64_idx + 1:]
+                _r64_skip = set()
+                # from m import *: IMPORT_NAME + IMPORT_STAR
+                _r64_star = False
+                for _ri in _r64_rest:
+                    if _ri.opname == 'IMPORT_STAR':
+                        _r64_star = True
+                        _r64_skip.add(_ri.offset)
+                        break
+                    if _ri.opname not in ('LOAD_CONST', 'PUSH_NULL', 'NOP', 'CACHE'):
+                        break
+                if _r64_star:
+                    stmts.append({'type': 'ImportFrom', 'module': _r64_mod,
+                                 'names': [{'name': '*', 'asname': None}]})
+                    skip_offsets.update(_r64_skip)
+                    continue
+                # from m import x: IMPORT_NAME + IMPORT_FROM + STORE
+                _r64_has_from = any(_ri.opname == 'IMPORT_FROM' for _ri in _r64_rest[:4])
+                if _r64_has_from:
+                    _r64_names = []
+                    _ii = 0
+                    while _ii < len(_r64_rest) - 1:
+                        _curr = _r64_rest[_ii]
+                        _next = _r64_rest[_ii + 1] if _ii + 1 < len(_r64_rest) else None
+                        if _curr.opname == 'IMPORT_FROM':
+                            _in = _curr.argval if _curr.argval else ''
+                            _as = None
+                            if _next and _next.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                                _as = _next.argval
+                                _r64_skip.add(_curr.offset)
+                                _r64_skip.add(_next.offset)
+                                _ii += 2
+                            else:
+                                _as = _in
+                                _r64_skip.add(_curr.offset)
+                                _ii += 1
+                            _r64_names.append({'name': _in, 'asname': _as if _as != _in else None})
+                        elif _curr.opname in ('POP_TOP', 'POP_EXCEPT', 'JUMP_FORWARD',
+                                               'RERAISE', 'COPY', 'RESUME', 'NOP', 'CACHE'):
+                            _ii += 1
+                        else:
+                            _ii += 1
+                    if _r64_names:
+                        stmts.append({'type': 'ImportFrom', 'module': _r64_mod,
+                                     'names': _r64_names})
+                        skip_offsets.update(_r64_skip)
+                        continue
+                # import m: IMPORT_NAME + STORE_NAME
+                for _ri in _r64_rest:
+                    if _ri.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                        _r64_skip.add(_ri.offset)
+                        stmts.append({'type': 'Import', 'names': [{'name': _r64_mod, 'asname': None}]})
+                        skip_offsets.update(_r64_skip)
+                        break
+                    if _ri.opname not in ('LOAD_CONST', 'PUSH_NULL', 'NOP', 'CACHE'):
+                        break
+                continue
+
             stmt_instrs.append(instr)
 
         if stmt_instrs:

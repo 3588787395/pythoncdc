@@ -1650,8 +1650,8 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/account/portfolio.pyc",
     "size": 24047,
     "function_count": 58,
-    "decompile_status": "partial",
-    "bytecode_match_rate": 0.98,
+    "decompile_status": "ok",
+    "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
     "last_tested_round": 1
   },
