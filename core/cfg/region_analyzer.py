@@ -4216,6 +4216,17 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                     return None, natural_exit
             else:
                 if for_iter_exit and for_iter_exit not in body_set:
+                    # R59: for_iter_exit might be a pure JUMP_FORWARD block
+                    # (e.g., for-loop fall-through to next if-elif branch).
+                    # This is NOT a real for-else block - it's just the loop's
+                    # exit jump. Only treat as else if it has real statements.
+                    _fe_instrs = [i for i in for_iter_exit.instructions
+                                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG')]
+                    _fe_is_pure_jump = (len(_fe_instrs) <= 1
+                                        and _fe_instrs
+                                        and _fe_instrs[0].opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'))
+                    if _fe_is_pure_jump:
+                        return None, natural_exit
                     return [for_iter_exit], natural_exit
                 return None, natural_exit
 
@@ -19526,7 +19537,26 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             _first_last = chain[0][0].get_last_instruction()
             if (len(chain) >= 2 and all(c[1] == 'or' for c in chain)
                 and _first_last and 'TRUE' in _first_last.opname):
-                return chain
+                # R59: Distinguish `or` expression from if/elif chain.
+                # In `or`: first block's jump target == second block's fall-through
+                # (both conditions' True paths converge to same body).
+                # In if/elif: first block's jump target != second block's
+                # fall-through (different bodies).
+                # Example: `if typet == 5: ... elif typet == 1: ...` compiles as
+                # POP_JUMP_IF_TRUE (block 284) → 2538 (if-body for typet==5),
+                # fall-through to block 302 (elif condition), which jumps to 1052
+                # (else). 2538 != 302's fall-through → if/elif, not `or`.
+                _first_jt = self.cfg.get_block_by_offset(_first_last.argval) if _first_last.argval is not None else None
+                _second_blk = chain[1][0]
+                _second_last = _second_blk.get_last_instruction()
+                _second_ft = None
+                if _second_last and _second_last.argval is not None:
+                    _second_ft = next((s for s in _second_blk.conditional_successors
+                                      if s.start_offset != _second_last.argval), None)
+                if _first_jt is not None and _second_ft is not None and _first_jt is _second_ft:
+                    return chain
+                # If first jump target != second fall-through, it's if/elif, not `or`
+                return None
             return None
         if self._is_nested_if_else_pattern(chain):
             return None

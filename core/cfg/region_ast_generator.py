@@ -4748,7 +4748,17 @@ AST 映射规则:
                     while _anc_r405 is not None and _anc_r405 is not region:
                         _anc_r405 = getattr(_anc_r405, 'parent', None)
                     if _anc_r405 is region:
-                        continue
+                        # R59: 当 block 所属区域的直接父区域已被生成时（如
+                        # for_iter_exit 块是 while 循环 entry，while 的 parent
+                        # 是已生成的 for 循环），该 block 不会被父区域处理
+                        #（不在其 blocks 中），不应跳过——由当前循环处理。
+                        # 典型：get_str_data 中 block 146 是 LoopRegion@98 的
+                        # for_iter_exit，同时是 LoopRegion@146 (while) 的 entry。
+                        # LoopRegion@146.parent = LoopRegion@98（已生成），
+                        # 但 block 146 不在 LoopRegion@98 的 blocks 中。
+                        _parent_gen = id(getattr(_blk_region_r405, 'parent', None)) in self._generated_regions
+                        if not _parent_gen:
+                            continue
             if block in region.else_blocks:
                 is_in_child = any(block in r.blocks for r in (region.children or []))
                 if not is_in_child:
@@ -8293,10 +8303,21 @@ AST 映射规则:
         if region.entry is not None:
             _entry_owner = self.region_analyzer.block_to_region.get(region.entry)
             if isinstance(_entry_owner, BoolOpRegion) and _entry_owner is not region:
-                # [R36] Don't mark blocks as generated — the BoolOpRegion will
-                # handle them. Just skip this IfRegion.
-                self._generated_regions.add(id(region))
-                return []
+                # R59: BoolOpRegion 作为 IfRegion 的条件子区域（value_target=None，
+                # parent 是本 IfRegion）时，BoolOpRegion 不生成独立语句——它的
+                # op_chain (date and date != now_date) 应作为 IfRegion 的 test 条件。
+                # 原实现直接 return [] 跳过 IfRegion，导致 valuation 的初始化语句
+                # (return_data={}; params={...}) 和 if 条件全部丢失（219 true_diffs）。
+                # 修正：当 BoolOpRegion 是条件模式且是本 IfRegion 的子区域时，
+                # 不跳过 IfRegion，让 _if_generate_normal 处理 pre_stmts 提取和
+                # 条件重建（包括 BoolOpRegion 的 and/or 链）。
+                if not getattr(_entry_owner, 'value_target', None) and _entry_owner.parent is region:
+                    pass  # Don't skip — let _if_generate_normal handle it
+                else:
+                    # [R36] Don't mark blocks as generated — the BoolOpRegion will
+                    # handle them. Just skip this IfRegion.
+                    self._generated_regions.add(id(region))
+                    return []
         # [Round4-04] 链式比较作赋值右值（`z = 0 < a < 10`）模式：
         # condition_block 末尾是 JUMP_IF_FALSE_OR_POP/JUMP_IF_TRUE_OR_POP（值上下文
         # 短路跳转，非控制流），merge_block 含 STORE_*。此时不能生成 If 语句，
@@ -8981,14 +9002,26 @@ AST 映射规则:
                             break
                 if _structural:
                     continue
+                # R58: merge_block must be reachable from else branch to be shared.
+                # If only reachable from then_blocks, it's not a shared post-if block.
+                _else_reachable = False
+                _all_else = list(region.else_blocks or []) + list(getattr(region, 'elif_conditions', None) or [])
+                for _eb in _all_else:
+                    if _mb in _eb.successors:
+                        _else_reachable = True
+                        break
+                if not _else_reachable:
+                    continue
                 if _mb not in _blocks:
                     _blocks.append(_mb)
         if _blocks:
-            _blocks = region.then_blocks
+            _r57_shared_mb = list(_blocks)
+            _r57_saved_then = region.then_blocks
             region.then_blocks = [b for b in region.then_blocks
-                                  if b not in set(_blocks)]
+                                  if b not in set(_r57_shared_mb)]
         else:
-            _blocks = None
+            _r57_shared_mb = None
+            _r57_saved_then = None
         then_stmts = self._if_generate_then_branch(region)
         elif_part = self._if_generate_elif_chain(region)
         # 部分合并模式：将子合并块语句追加到 elif/else 链末尾
@@ -9171,12 +9204,12 @@ AST 映射规则:
         # merge_block 的语句（如 `return True`）应作为 if/elif/else 之后的
         # 尾随语句生成，符合源码语义（`return True` 在 if/elif/else 链之后，
         # 由所有分支 JUMP_FORWARD/fall-through 共享）。
-        if _blocks:
-            if _blocks is not None:
-                region.then_blocks = _blocks
+        if _r57_shared_mb:
+            if _r57_saved_then is not None:
+                region.then_blocks = _r57_saved_then
             _stmts = self._process_if_blocks(
-                _blocks, region, branch='then')
-            for _mb in _blocks:
+                _r57_shared_mb, region, branch='then')
+            for _mb in _r57_shared_mb:
                 self.generated_blocks.add(_mb)
                 self.generated_offsets.add(_mb.start_offset)
             if _stmts:
@@ -14379,6 +14412,26 @@ AST 映射规则:
                             _nr_blocks_in_set = all(_nb in _block_set for _nb in _nr.blocks)
                             if _nr_blocks_in_set:
                                 _nested_if_entry_generate[b] = _nr
+        # R59: Detect LoopRegion whose for_iter_setup block is in blocks.
+        # When a LoopRegion's setup block (containing BUILD_LIST/GET_ITER etc.)
+        # appears in then/else blocks, it must be generated via _generate_region
+        # rather than as a standalone block statement.
+        _loop_entry_generate = {}
+        for b in _block_set:
+            if b in self.generated_blocks:
+                continue
+            for _lr in self.region_analyzer.regions:
+                if not isinstance(_lr, LoopRegion):
+                    continue
+                if _lr is region:
+                    continue
+                _fis = _lr.metadata.get('for_iter_setup')
+                if _fis is b and _lr.entry is not None:
+                    _lr_id = id(_lr)
+                    if (_lr_id not in self._generated_regions
+                            and _lr_id not in self._generating_regions):
+                        _loop_entry_generate[b] = _lr
+                    break
         for block in sorted(blocks, key=lambda b: b.start_offset):
             if block in self.generated_blocks:
                 continue
@@ -14418,6 +14471,25 @@ AST 映射规则:
                     self.generated_blocks.add(_nb)
                     self.generated_offsets.add(_nb.start_offset)
                 self._generated_regions.add(_nr_id)
+                continue
+            # R59: Generate LoopRegion whose for_iter_setup is in blocks
+            if block in _loop_entry_generate:
+                _lr = _loop_entry_generate[block]
+                _lr_id = id(_lr)
+                self._generating_regions.add(_lr_id)
+                try:
+                    _lr_ast = self._generate_region(_lr)
+                finally:
+                    self._generating_regions.discard(_lr_id)
+                if _lr_ast:
+                    if isinstance(_lr_ast, list):
+                        stmts.extend(_lr_ast)
+                    else:
+                        stmts.append(_lr_ast)
+                for _lb in _lr.blocks:
+                    self.generated_blocks.add(_lb)
+                    self.generated_offsets.add(_lb.start_offset)
+                self._generated_regions.add(_lr_id)
                 continue
             # [Round5-10] 跨块 await 列表元素赋值：r = [await g(), await h()]
             if self._try_generate_await_list_assign(block, stmts):

@@ -49,7 +49,7 @@
     "size": 117633,
     "function_count": 64,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.4888888888888889,
+    "bytecode_match_rate": 0.6222222222222222,
     "ok_py_generated": true,
     "last_tested_round": 1
   },
@@ -184,7 +184,7 @@
     "size": 44652,
     "function_count": 32,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.625,
+    "bytecode_match_rate": 0.75,
     "ok_py_generated": true,
     "last_tested_round": 1
   },
@@ -202,7 +202,7 @@
     "size": 21290,
     "function_count": 21,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.8421052631578947,
+    "bytecode_match_rate": 0.8947368421052632,
     "ok_py_generated": true,
     "last_tested_round": 1
   },
@@ -238,7 +238,7 @@
     "size": 13269,
     "function_count": 34,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.84375,
+    "bytecode_match_rate": 0.9375,
     "ok_py_generated": true,
     "last_tested_round": 1
   },
@@ -364,7 +364,7 @@
     "size": 58024,
     "function_count": 65,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.9142857142857143,
+    "bytecode_match_rate": 0.9428571428571428,
     "ok_py_generated": true,
     "last_tested_round": 1
   },
@@ -436,7 +436,7 @@
     "size": 25571,
     "function_count": 24,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.6666666666666666,
+    "bytecode_match_rate": 0.7619047619047619,
     "ok_py_generated": true,
     "last_tested_round": 1
   },
@@ -553,7 +553,7 @@
     "size": 59800,
     "function_count": 30,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.75,
+    "bytecode_match_rate": 0.7857142857142857,
     "ok_py_generated": true,
     "last_tested_round": 1
   },
@@ -570,10 +570,11 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc",
     "size": 83014,
     "function_count": 41,
-    "decompile_status": "partial",
-    "bytecode_match_rate": 0.525,
+    "decompile_status": "failed",
+    "bytecode_match_rate": 0.0,
     "ok_py_generated": true,
-    "last_tested_round": 1
+    "last_tested_round": 1,
+    "error": "load_compiled_failed: FileNotFoundError: [Errno 2] No such file or directory: 'F:\\\\Downloads\\\\pythoncdc-main\\\\site-packages\\\\IQCommon\\\\util\\\\__pycache__\\\\trade_info_utilsOK.cpython-311.pyc'"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/tradingday_info_utils.pyc",
@@ -1227,8 +1228,8 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/basic_data_source.pyc",
     "size": 30398,
     "function_count": 43,
-    "decompile_status": "partial",
-    "bytecode_match_rate": 0.975609756097561,
+    "decompile_status": "ok",
+    "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
     "last_tested_round": 1
   },
@@ -1363,7 +1364,7 @@
     "size": 32276,
     "function_count": 16,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.8666666666666667,
+    "bytecode_match_rate": 0.9333333333333333,
     "ok_py_generated": true,
     "last_tested_round": 1
   },
@@ -1434,10 +1435,11 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/real_quote.pyc",
     "size": 69572,
     "function_count": 45,
-    "decompile_status": "partial",
-    "bytecode_match_rate": 0.6363636363636364,
+    "decompile_status": "failed",
+    "bytecode_match_rate": 0.0,
     "ok_py_generated": true,
-    "last_tested_round": 1
+    "last_tested_round": 1,
+    "error": "load_compiled_failed: FileNotFoundError: [Errno 2] No such file or directory: 'F:\\\\Downloads\\\\pythoncdc-main\\\\site-packages\\\\IQData\\\\plugins\\\\plugin_system_realquote\\\\__pycache__\\\\real_quoteOK.cpython-311.pyc'"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/__init__.pyc",
@@ -1480,7 +1482,7 @@
     "size": 23525,
     "function_count": 29,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.75,
+    "bytecode_match_rate": 0.7916666666666666,
     "ok_py_generated": true,
     "last_tested_round": 1
   },
@@ -1498,7 +1500,7 @@
     "size": 12749,
     "function_count": 31,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.8275862068965517,
+    "bytecode_match_rate": 0.9310344827586207,
     "ok_py_generated": true,
     "last_tested_round": 1
   },
@@ -1722,8 +1724,8 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/config/config.pyc",
     "size": 10779,
     "function_count": 11,
-    "decompile_status": "partial",
-    "bytecode_match_rate": 0.9090909090909091,
+    "decompile_status": "ok",
+    "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
     "last_tested_round": 1
   },
@@ -1903,7 +1905,7 @@
     "size": 23046,
     "function_count": 20,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.3684210526315789,
+    "bytecode_match_rate": 0.42105263157894735,
     "ok_py_generated": true,
     "last_tested_round": 1
   },
@@ -2029,7 +2031,7 @@
     "size": 48870,
     "function_count": 120,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.8285714285714286,
+    "bytecode_match_rate": 0.8476190476190476,
     "ok_py_generated": true,
     "last_tested_round": 1
   },
@@ -2128,7 +2130,7 @@
     "size": 40363,
     "function_count": 19,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.6666666666666666,
+    "bytecode_match_rate": 0.7777777777777778,
     "ok_py_generated": true,
     "last_tested_round": 1
   },
@@ -2227,7 +2229,7 @@
     "size": 19179,
     "function_count": 16,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.6666666666666666,
+    "bytecode_match_rate": 0.7333333333333333,
     "ok_py_generated": true,
     "last_tested_round": 1
   },
@@ -2515,7 +2517,7 @@
     "size": 28905,
     "function_count": 67,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.95,
+    "bytecode_match_rate": 0.9833333333333333,
     "ok_py_generated": true,
     "last_tested_round": 1
   },
@@ -2560,7 +2562,7 @@
     "size": 14728,
     "function_count": 14,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.8571428571428571,
+    "bytecode_match_rate": 0.9285714285714286,
     "ok_py_generated": true,
     "last_tested_round": 1
   },
@@ -2713,7 +2715,7 @@
     "size": 67327,
     "function_count": 43,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.7428571428571429,
+    "bytecode_match_rate": 0.7714285714285715,
     "ok_py_generated": true,
     "last_tested_round": 1
   },
@@ -2911,7 +2913,7 @@
     "size": 212327,
     "function_count": 128,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.680672268907563,
+    "bytecode_match_rate": 0.6974789915966386,
     "ok_py_generated": true,
     "last_tested_round": 1
   },
@@ -3019,7 +3021,7 @@
     "size": 12980,
     "function_count": 31,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.8275862068965517,
+    "bytecode_match_rate": 0.9310344827586207,
     "ok_py_generated": true,
     "last_tested_round": 1
   },
@@ -3190,7 +3192,7 @@
     "size": 6992,
     "function_count": 6,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.6666666666666666,
+    "bytecode_match_rate": 0.8333333333333334,
     "ok_py_generated": true,
     "last_tested_round": 1
   },
@@ -3244,7 +3246,7 @@
     "size": 53107,
     "function_count": 66,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.8307692307692308,
+    "bytecode_match_rate": 0.8461538461538461,
     "ok_py_generated": true,
     "last_tested_round": 1
   },
@@ -3271,7 +3273,7 @@
     "size": 11914,
     "function_count": 16,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.875,
+    "bytecode_match_rate": 0.9375,
     "ok_py_generated": true,
     "last_tested_round": 1
   },
@@ -3369,8 +3371,8 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quotation.pyc",
     "size": 209494,
     "function_count": 153,
-    "decompile_status": "partial",
-    "bytecode_match_rate": 0.9370629370629371,
+    "decompile_status": "ok",
+    "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
     "last_tested_round": 1
   },
@@ -3379,7 +3381,7 @@
     "size": 127591,
     "function_count": 92,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.6790123456790124,
+    "bytecode_match_rate": 0.7283950617283951,
     "ok_py_generated": true,
     "last_tested_round": 1
   },
@@ -3433,7 +3435,7 @@
     "size": 36794,
     "function_count": 27,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.782608695652174,
+    "bytecode_match_rate": 0.8260869565217391,
     "ok_py_generated": true,
     "last_tested_round": 1
   },
@@ -3505,7 +3507,7 @@
     "size": 29507,
     "function_count": 64,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.9,
+    "bytecode_match_rate": 0.9333333333333333,
     "ok_py_generated": true,
     "last_tested_round": 1
   },

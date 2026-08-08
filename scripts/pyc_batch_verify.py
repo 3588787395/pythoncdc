@@ -15,6 +15,7 @@
 """
 
 import argparse
+import gc
 import io
 import json
 import marshal
@@ -35,6 +36,44 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 DEFAULT_INDEX_PATH = str(PROJECT_ROOT / 'pyc_index.json')
 DECOMPILE_TIMEOUT = 60  # 秒，反编译单文件超时阈值
+MEMORY_LIMIT_MB = 512  # 单个 pyc 反编译内存上限（MB），超过则跳过防止崩溃
+
+
+def _get_rss_mb() -> float:
+    """返回当前进程 RSS（常驻内存），单位 MB。"""
+    try:
+        import resource
+        rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss
+        if sys.platform == 'darwin':
+            return rss / (1024 * 1024)
+        return rss / 1024
+    except (AttributeError, OSError, ImportError):
+        try:
+            import psutil
+            return psutil.Process(os.getpid()).memory_info().rss / (1024 * 1024)
+        except ImportError:
+            return 0.0
+
+
+def _check_memory_limit(pyc_path: str) -> bool:
+    """检查当前进程内存是否超过上限。返回 True 表示超限。"""
+    rss = _get_rss_mb()
+    if rss > MEMORY_LIMIT_MB:
+        print(f'    MEMORY WARNING: RSS={rss:.1f}MB > limit={MEMORY_LIMIT_MB}MB, '
+              f'skipping {pyc_path}')
+        return True
+    return False
+
+
+def _cleanup_after_pyc():
+    """单个 pyc 处理完毕后清理内存，防止累积占用。"""
+    gc.collect()
+    _mods_to_clean = [
+        m for m in list(sys.modules.keys())
+        if m.startswith(('pycdc.', 'core.cfg.', 'core.pyc_loader'))
+    ]
+    for m in _mods_to_clean:
+        del sys.modules[m]
 
 
 # ════════════════════════════════════════════════════════════════════
@@ -351,6 +390,16 @@ def batch_verify(index_path: str = None, max_count: int = None, round_num: int =
             print('    FAILED: pyc file not found')
             continue
 
+        # 内存上限检查：防止大 pyc 导致进程崩溃
+        if _check_memory_limit(pyc_path):
+            entry['decompile_status'] = 'failed'
+            entry['error'] = f'memory_limit_exceeded (RSS={_get_rss_mb():.1f}MB)'
+            entry['bytecode_match_rate'] = 0.0
+            entry['ok_py_generated'] = False
+            entry['last_tested_round'] = round_num
+            _cleanup_after_pyc()
+            continue
+
         # 步骤 1: 反编译 + 生成 OK.py
         try:
             single = decompile_single(pyc_path)
@@ -403,6 +452,9 @@ def batch_verify(index_path: str = None, max_count: int = None, round_num: int =
         entry.pop('error', None)  # 清除之前可能的失败记录
         print(f'    {status.upper()}: {diff["total_functions"]} funcs, '
               f'{diff["matched_functions"]} matched, rate={rate:.2%}')
+
+        # 单个 pyc 处理完毕，清理内存防止累积占用
+        _cleanup_after_pyc()
 
     # 写回 pyc_index.json
     with open(index_file, 'w', encoding='utf-8') as f:

@@ -174,10 +174,12 @@ def _identify_xxx_regions(self, ...):
 1. IMPORT_OK（`import core.cfg.region_analyzer; import core.cfg.region_ast_generator`）
 2. COMPILE_OK（反编译产物 `compile()` 通过）
 3. repro 全部 match
-4. 归一化口径不退化（≥ 上轮）
-5. L1 严格口径逐项核查
-6. 既有区域测试矩阵无退化（318 pass / 9 fail / 11 skip）
-7. 反模式自检（G3 0 新增前缀方法，G4 0 硬编码深度上限）
+4. **quotation.pyc 必须 100% 匹配**（`pyc_batch_verify.py single site-packages/fly/data/quotation.pyc`，match_rate=1.0）
+5. 归一化口径不退化（≥ 上轮）
+6. L1 严格口径逐项核查
+7. 既有区域测试矩阵无退化（318 pass / 9 fail / 11 skip）
+8. 反模式自检（G3 0 新增前缀方法，G4 0 硬编码深度上限）
+9. 批量验证无回归（`pyc_batch_verify.py batch`，cumulative_match_rate ≥ 上轮）
 
 ### 6.3 提交规则
 - 每轮必须 commit + push 到远程
