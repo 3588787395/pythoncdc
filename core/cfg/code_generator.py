@@ -4099,8 +4099,15 @@ class CodeGenerator:
             if isinstance(node.op, str):
                 op_str = node.op
             else:
+                # [R65 fix] 之前只映射 13→'and' 14→'or'，其余整数 op
+                # 默认回退为 '+'，导致 * (op=2) 被当作 + (优先级 11 而非 12)，
+                # 进而 C / (B * D) 的右操作数 * 不加括号，输出 C / B * D，
+                # 语义从 C/(B*D) 变成 (C/B)*D，字节码不一致。
+                # 修复：完整映射所有 BinOp 整数值到操作符字符串。
                 _op_map = {
-                    13: 'and', 14: 'or',
+                    0: '.', 1: '**', 2: '*', 3: '/', 4: '//', 5: '%',
+                    6: '+', 7: '-', 8: '<<', 9: '>>', 10: '&', 11: '^',
+                    12: '|', 13: 'and', 14: 'or', 15: '@',
                 }
                 op_str = _op_map.get(node.op, '+')
             return self._precedence.get(op_str, 11)

@@ -11875,23 +11875,49 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             # contains the loop increment + back-edge condition re-check (e.g.,
             # 'i += 1' followed by 'i < len(data)' which exits if false). It is
             # part of the loop's back-edge condition, not a standalone if statement.
+            # [R65 fix] while 循环回边条件块检测：block 在 LoopRegion 的
+            # body_blocks 中，末尾是 POP_JUMP_FORWARD_IF_FALSE 跳向循环自然退出
+            #（else_blocks），fallthrough 是回边条件链（含 POP_JUMP_BACKWARD_IF_TRUE
+            # 跳回循环 header/condition）。这种块是 while 回边条件重检，不是 if 语句。
+            # 典型：`while left_amount > 0 and ...:` 循环体中 `left_amount -= consumed_amount`
+            # 后跟 `left_amount > 0; POP_JUMP_FORWARD_IF_FALSE <loop_exit>`。
+            # block_roles 在此阶段尚未填充，必须用 LoopRegion 结构信息判断。
             if last_instr and last_instr.opname in FORWARD_CONDITIONAL_JUMP_OPS:
                 _be_cond_succs = list(block.conditional_successors)
                 if len(_be_cond_succs) == 2:
                     _be_jump_target = self.cfg.get_block_by_offset(last_instr.argval) if last_instr.argval is not None else None
                     _be_ft_succ = next((s for s in _be_cond_succs if s != _be_jump_target), None)
                     if _be_ft_succ and _be_jump_target:
+                        # 用 block_roles（如果已填充）
                         _be_ft_role = self.block_roles.get(_be_ft_succ.start_offset)
                         _be_jt_role = self.block_roles.get(_be_jump_target.start_offset)
-                        # Fallthrough is the back_edge_block (LOOP_BACK_EDGE role)
-                        # and jump target is a loop exit (BREAK role)
-                        if _be_ft_role == BlockRole.LOOP_BACK_EDGE and _be_jt_role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
+                        _be_loop_exit_roles = (BlockRole.BREAK, BlockRole.PURE_BREAK,
+                                               BlockRole.LOOP_ELSE)
+                        _be_back_edge_roles = (BlockRole.LOOP_BACK_EDGE, BlockRole.CONTINUE)
+                        if _be_ft_role in _be_back_edge_roles and _be_jt_role in _be_loop_exit_roles:
                             return True
-                        # Fallthrough leads to a backward conditional jump (back edge)
-                        # and jump target is a loop exit (BREAK role)
                         _be_ft_last = _be_ft_succ.get_last_instruction()
                         if (_be_ft_last and _be_ft_last.opname in BACKWARD_CONDITIONAL_JUMP_OPS
-                                and _be_jt_role in (BlockRole.BREAK, BlockRole.PURE_BREAK)):
+                                and _be_jt_role in _be_loop_exit_roles):
+                            return True
+                        # block_roles 未填充时，用 LoopRegion 结构信息
+                        _be_jt_is_loop_exit = (
+                            _be_jump_target in block_region.else_blocks or
+                            _be_jump_target not in block_region.blocks or
+                            (hasattr(block_region, 'exit_block') and
+                             block_region.exit_block is not None and
+                             _be_jump_target is block_region.exit_block)
+                        )
+                        _be_ft_is_back_edge = (
+                            _be_ft_last is not None and
+                            _be_ft_last.opname in BACKWARD_CONDITIONAL_JUMP_OPS and
+                            _be_ft_last.argval is not None and
+                            (block_region.header_block is not None and
+                             _be_ft_last.argval == block_region.header_block.start_offset or
+                             (block_region.condition_block is not None and
+                              _be_ft_last.argval == block_region.condition_block.start_offset))
+                        )
+                        if _be_jt_is_loop_exit and _be_ft_is_back_edge:
                             return True
         elif block_region is None:
             for _lr in loop_regions:

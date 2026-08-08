@@ -4295,10 +4295,26 @@ AST 映射规则:
                         # Extract the store statement (e.g., 'i += 1') and mark the
                         # block as generated so the condition check is not emitted.
                         store_instrs = non_jmp_instrs[:last_store_idx + 1]
-                        _store_stmt = self._build_store_statement(store_instrs, block=b)
-                        if _store_stmt:
-                            _store_stmt.pop('_decorator_block', None)
-                            recheck_store_stmts.append(_store_stmt)
+                        _store_segs = []
+                        _cur_seg = []
+                        for _si in store_instrs:
+                            _cur_seg.append(_si)
+                            if _si.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF', 'STORE_SUBSCR', 'STORE_ATTR'):
+                                _store_segs.append(_cur_seg)
+                                _cur_seg = []
+                        if _cur_seg:
+                            _store_segs.append(_cur_seg)
+                        for _seg in _store_segs:
+                            if not _seg:
+                                continue
+                            _store_stmt = self._build_store_statement(_seg, block=b)
+                            if _store_stmt:
+                                _store_stmt.pop('_decorator_block', None)
+                                recheck_store_stmts.append(_store_stmt)
+                            else:
+                                _seg_stmt = self._build_statement(_seg)
+                                if _seg_stmt:
+                                    recheck_store_stmts.append(_seg_stmt)
                         boolop_recheck_blocks.add(b)
                         continue
                     load_names = set()
