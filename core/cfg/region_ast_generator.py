@@ -18006,7 +18006,8 @@ AST 映射规则:
         # 时才跳过（依「每块唯一归属」：call 结果丢弃的 POP_TOP 归 Expr 语句）。
         skip_initial_pop = False
         for _instr in block.instructions:
-            if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+            if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
+                                 'PUSH_EXC_INFO'):
                 continue
             if exc_dispatch_jump_offset is not None and _instr.offset <= exc_dispatch_jump_offset:
                 continue
