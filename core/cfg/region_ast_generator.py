@@ -25402,6 +25402,56 @@ AST 映射规则:
                                     _preload_instrs.append(_bounds + [_ki])
                                 # else: BUILD_SLICE consumed the ternary result;
                                 # don't append (output is ternary-derived).
+                            elif _ki.opname == 'BINARY_SUBSCR':
+                                # BINARY_SUBSCR consumes 2 items (obj, index)
+                                # and pushes 1 result (obj[index]).
+                                # Pattern: `', '.join(keys[:10])` compiles to
+                                # cond preload LOAD_CONST ', ', LOAD_METHOD join,
+                                # LOAD_FAST keys, [slice], BINARY_SUBSCR, PRECALL,
+                                # CALL. Without this branch BINARY_SUBSCR is
+                                # silently dropped, so ', '.join and keys and
+                                # slice stay as 3 separate preload items instead
+                                # of 1 combined expression.
+                                if len(_preload_instrs) >= 2:
+                                    _subscr_idx = _preload_instrs.pop()
+                                    _subscr_obj = _preload_instrs.pop()
+                                    _combined_subscr = []
+                                    for _item in (_subscr_obj, _subscr_idx):
+                                        if isinstance(_item, list):
+                                            _combined_subscr.extend(_item)
+                                        else:
+                                            _combined_subscr.append(_item)
+                                    _combined_subscr.append(_ki)
+                                    _preload_instrs.append(_combined_subscr)
+                                # else: consumed the ternary result; don't append.
+                            elif _ki.opname == 'PRECALL':
+                                # PRECALL is a no-op hint in Python 3.11+;
+                                # skip it (same as in expression reconstructor).
+                                pass
+                            elif _ki.opname == 'CALL':
+                                # CALL consumes nargs+1 items (func + nargs args)
+                                # and pushes 1 result. Pattern: see BINARY_SUBSCR
+                                # above — CALL combines ', '.join and keys[:10]
+                                # into the final expression.
+                                _call_nargs = _ki.arg or 0
+                                if len(_preload_instrs) >= _call_nargs + 1:
+                                    _call_items = []
+                                    for _ in range(_call_nargs):
+                                        _item = _preload_instrs.pop()
+                                        if isinstance(_item, list):
+                                            _call_items = _item + _call_items
+                                        else:
+                                            _call_items.insert(0, _item)
+                                    _func_item = _preload_instrs.pop()
+                                    _combined_call = []
+                                    if isinstance(_func_item, list):
+                                        _combined_call.extend(_func_item)
+                                    else:
+                                        _combined_call.append(_func_item)
+                                    _combined_call.extend(_call_items)
+                                    _combined_call.append(_ki)
+                                    _preload_instrs.append(_combined_call)
+                                # else: consumed the ternary result; don't append.
                             # Other ops (e.g. PRECALL/CALL for prior decorator
                             # applications) are not preload-relevant; ignore.
                         _preload_stack = []
