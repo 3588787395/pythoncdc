@@ -1976,9 +1976,27 @@ class RegionASTGenerator:
                 expr_instrs = []
                 continue
             if instr.opname.startswith('STORE') and expr_instrs:
-                s = self._build_statement(expr_instrs + [instr])
+                # [R66 fix] STORE_ATTR with AugAssign pattern (self.x += y)
+                # _build_statement -> reconstruct returns wrong result for
+                # STORE_ATTR because the expression reconstructor's stack
+                # handling differs from STORE_FAST. Use _build_attr_assign
+                # which correctly handles augmented attribute assignment.
+                if instr.opname == 'STORE_ATTR':
+                    s = self._build_attr_assign(expr_instrs + [instr])
+                else:
+                    s = self._build_statement(expr_instrs + [instr])
                 if s:
                     stmts.append(s)
+                expr_instrs = []
+                continue
+            # [R66 fix] DELETE_SUBSCR/DELETE_ATTR -> Delete stmt
+            if instr.opname in ('DELETE_SUBSCR', 'DELETE_ATTR') and expr_instrs:
+                del_stmts = self._build_delete_stmt(instr, expr_instrs + [instr])
+                if del_stmts:
+                    if isinstance(del_stmts, list):
+                        stmts.extend(del_stmts)
+                    else:
+                        stmts.append(del_stmts)
                 expr_instrs = []
                 continue
             expr_instrs.append(instr)
@@ -14849,6 +14867,15 @@ AST 映射规则:
                         stmts.extend(cb_result)
                         continue
             effective = self.region_analyzer.effective_instructions.get(block.start_offset)
+            # [R66 fix] For LOOP_BACK_EDGE, use ALL meaningful instructions instead of
+            # effective_instructions which stops at the first POP_TOP. This fixes
+            # multi-statement back edge blocks (e.g. user_log.debug(...) +
+            # self._total_cash += position.market_value + del self._positions[symbol])
+            # where effective_instructions only captures the first statement.
+            if role == BlockRole.LOOP_BACK_EDGE:
+                effective = [i for i in block.instructions
+                             if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
+                                                 'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')]
             if role == BlockRole.LOOP_BACK_EDGE and effective is not None:
                 if self._current_loop and self._is_with_exit_back_edge(block):
                     stmts.append({'type': 'Continue'})
@@ -31742,7 +31769,14 @@ AST 映射规则:
                     return [{'type': 'Break'}]
 
         if block_role == BlockRole.LOOP_BACK_EDGE:
-            effective = self.region_analyzer.effective_instructions.get(block.start_offset)
+            # [R66 fix] Use ALL meaningful instructions, not just effective_instructions.
+            # effective_instructions stops at the first POP_TOP (statement terminator),
+            # causing multi-statement back edge blocks (e.g. user_log.debug(...) +
+            # self._total_cash += position.market_value + del self._positions[symbol])
+            # to lose all statements after the first POP_TOP.
+            effective = [i for i in block.instructions
+                         if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
+                                             'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')]
             if effective:
                 _be_stmts = []
                 if effective:
@@ -31803,9 +31837,24 @@ AST 映射规则:
                             _be_expr_instrs = []
                             continue
                         if _instr.opname.startswith('STORE') and _be_expr_instrs:
-                            _stmt = self._build_statement(_be_expr_instrs + [_instr])
+                            # [R66 fix] Use _build_attr_assign for STORE_ATTR
+                            # to correctly handle augmented attribute assignments
+                            if _instr.opname == 'STORE_ATTR':
+                                _stmt = self._build_attr_assign(_be_expr_instrs + [_instr])
+                            else:
+                                _stmt = self._build_statement(_be_expr_instrs + [_instr])
                             if _stmt:
                                 _be_stmts.append(_stmt)
+                            _be_expr_instrs = []
+                            continue
+                        # [R66 fix] Handle DELETE_SUBSCR/DELETE_ATTR in back edge blocks
+                        if _instr.opname in ('DELETE_SUBSCR', 'DELETE_ATTR') and _be_expr_instrs:
+                            _del_stmts = self._build_delete_stmt(_instr, _be_expr_instrs + [_instr])
+                            if _del_stmts:
+                                if isinstance(_del_stmts, list):
+                                    _be_stmts.extend(_del_stmts)
+                                else:
+                                    _be_stmts.append(_del_stmts)
                             _be_expr_instrs = []
                             continue
                         _be_expr_instrs.append(_instr)

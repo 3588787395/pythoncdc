@@ -24883,18 +24883,28 @@ class ASTGeneratorV2:
                 if len(stack) >= 2:
                     obj = stack.pop()     # 先弹出对象（self）- 栈顶
                     value = stack.pop()   # 后弹出值（name）- 次栈顶
-                    statements.append({
-                        'type': 'Assign',
-                        'targets': [{
+                    if isinstance(value, dict) and value.get('type') == 'AugAssign':
+                        value['target'] = {
                             'type': 'Attribute',
                             'value': obj,
                             'attr': instr.argval,
                             'ctx': 'Store',
                             'lineno': instr.starts_line
-                        }],
-                        'value': value,
-                        'lineno': instr.starts_line
-                    })
+                        }
+                        self.stack.append(value)
+                    else:
+                        self.stack.append({
+                            'type': 'Assign',
+                            'targets': [{
+                                'type': 'Attribute',
+                                'value': obj,
+                                'attr': instr.argval,
+                                'ctx': 'Store',
+                                'lineno': instr.starts_line
+                            }],
+                            'value': value,
+                            'lineno': instr.starts_line
+                        })
 
             # POP_TOP - 弹出栈顶值
             elif opname == 'POP_TOP':
