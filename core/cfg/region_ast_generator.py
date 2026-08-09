@@ -31685,7 +31685,11 @@ AST 映射规则:
                             _eff_expr_instrs = []
                             continue
                         if _instr.opname.startswith('STORE') and _eff_expr_instrs:
-                            _stmt = self._build_statement(_eff_expr_instrs + [_instr])
+                            # [R66 fix] Use _build_attr_assign for STORE_ATTR
+                            if _instr.opname == 'STORE_ATTR':
+                                _stmt = self._build_attr_assign(_eff_expr_instrs + [_instr])
+                            else:
+                                _stmt = self._build_statement(_eff_expr_instrs + [_instr])
                             if _stmt:
                                 _eff_stmts.append(_stmt)
                             _eff_expr_instrs = []
