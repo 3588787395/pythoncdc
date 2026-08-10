@@ -206,6 +206,7 @@ async def simple_coroutine():
     return '协程完成'
 async def multiple_coroutines():
     results = await asyncio.gather(simple_coroutine(), simple_coroutine(), simple_coroutine())
+    return results
 class AsyncClass:
     async def async_method(self):
         await asyncio.sleep(0.1)
