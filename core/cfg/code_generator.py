@@ -3831,12 +3831,15 @@ class CodeGenerator:
                 # 检测是否是多行字符串
                 if '\n' in value:
                     # 多行字符串使用三引号
-                    if '"""' in value:
+                    # Escape backslash and carriage return to preserve them
+                    # (backslash would start escape sequence, \r may be stripped by file I/O)
+                    escaped = value.replace('\\', '\\\\').replace('\r', '\\r')
+                    if '"""' in escaped:
                         # 如果包含三引号，使用单引号三引号
-                        return f"'''{value}'''"
+                        return f"'''{escaped}'''"
                     else:
                         # 否则使用双引号三引号
-                        return f'"""{value}"""'
+                        return f'"""{escaped}"""'
                 else:
                     # 单行字符串
                     # 使用ascii编码来生成repr，但保留中文字符
