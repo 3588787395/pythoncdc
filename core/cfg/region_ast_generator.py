@@ -268,8 +268,14 @@ class RegionASTGenerator:
         entry_block = self.cfg.entry_block
         if entry_block is not None:
             if self.region_analyzer.metadata.get('is_generator_entry'):
-                self.generated_blocks.add(entry_block)
-                entry_block = self.region_analyzer.metadata.get('generator_entry_block', entry_block)
+                gen_entry = self.region_analyzer.metadata.get('generator_entry_block', entry_block)
+                # Only mark the prologue block as generated if it is different from
+                # the resume block (Case A: entry is the RETURN_GENERATOR prologue).
+                # When they are the same (Case B: entry IS the resume block),
+                # marking it generated would skip the entire body.
+                if gen_entry is not entry_block:
+                    self.generated_blocks.add(entry_block)
+                entry_block = gen_entry
 
         ast_nodes = []
 

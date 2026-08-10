@@ -20467,12 +20467,66 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
         return self._find_enclosing_region(block, target_types, require_finally=require_finally, region_type=region_type)
 
     def _compute_generator_entry_metadata(self) -> None:
+        """Compute metadata for generator/coroutine entry points.
+
+        ## Region Type
+        SEQUENCE (entry prologue handling)
+
+        ## Algorithm Description
+        CPython 3.11+ generator/coroutine functions start with a RETURN_GENERATOR
+        + POP_TOP prologue at offset 0. The CFG builder splits this into a separate
+        block. Two cases arise:
+        - Case A: entry_block IS the RETURN_GENERATOR prologue block (all instrs
+          are RETURN_GENERATOR/POP_TOP/RESUME/CACHE/NOP). Find the resume block
+          (the successor containing RESUME 0).
+        - Case B: entry_block is already the block AFTER the prologue (detected
+          via predecessor check). entry_block IS the resume block — no search needed.
+
+        No More Gotos §3.1 (entry block handling): the prologue block is marked
+        as generated (skip), and the resume block becomes the effective entry.
+
+        ## Bytecode Pattern
+        RETURN_GENERATOR None; POP_TOP None; RESUME 0; <body>
+
+        ## Boundary Conditions
+        - Prologue block contains only RETURN_GENERATOR/POP_TOP/CACHE/NOP
+        - Resume block contains RESUME 0 (not RESUME 1/3 which are yield/await resumes)
+        - Prologue block is marked as generated (block_to_region = None)
+
+        ## Reduction Semantics
+        - Prologue block: marked generated, skipped during AST generation
+        - Resume block: set as generator_entry_block in metadata
+        - Region reduction principle 2 (unique ownership): prologue belongs to
+          entry prologue, not any structured region
+
+        ## AST Mapping & Known Failure Patterns
+        - generator_entry_block metadata → AST generator uses it as the starting
+          point for body generation
+        - Known failure: if find_generator_resume_block is called with entry_block
+          that is already the resume block (Case B), it finds the wrong block
+          (e.g., SEND/YIELD loop with RESUME 3 instead of the actual body entry)
+        """
         entry_block = self.cfg.entry_block
         if entry_block is not None:
             is_generator_entry = all(
                 instr.opname in ('RETURN_GENERATOR', 'POP_TOP', 'RESUME', 'CACHE', 'NOP')
                 for instr in entry_block.instructions
             ) and any(instr.opname == 'RETURN_GENERATOR' for instr in entry_block.instructions)
+            # Case B: entry_block is NOT the prologue, but a predecessor is.
+            # In this case, entry_block IS already the resume block.
+            if not is_generator_entry:
+                for pred in entry_block.predecessors:
+                    if (any(i.opname == 'RETURN_GENERATOR' for i in pred.instructions) and
+                        all(i.opname in ('RETURN_GENERATOR', 'POP_TOP', 'CACHE', 'NOP')
+                            for i in pred.instructions)):
+                        is_generator_entry = True
+                        # Mark the prologue block as generated so it's skipped
+                        self.block_to_region[pred] = None  # release from any region
+                        # entry_block is already the resume block — no search needed
+                        self.metadata['generator_entry_block'] = entry_block
+                        self.metadata['is_generator_entry'] = True
+                        return
+            # Case A: entry_block IS the prologue — find the resume block
             if is_generator_entry:
                 resume_block = self.find_generator_resume_block(entry_block)
                 self.metadata['generator_entry_block'] = resume_block if resume_block else entry_block
@@ -20485,11 +20539,21 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             self.metadata['is_generator_entry'] = False
 
     def find_generator_resume_block(self, entry_block: BasicBlock) -> Optional[BasicBlock]:
+        """Find the resume block (containing RESUME 0) that follows a RETURN_GENERATOR prologue.
+
+        RESUME 0 is the initial resume of a generator/coroutine.
+        RESUME 1 and RESUME 3 are yield/await suspension resumes — NOT the entry.
+        """
+        # First check direct successors (most reliable)
+        for succ in entry_block.successors:
+            if any(instr.opname == 'RESUME' and instr.argval == 0 for instr in succ.instructions):
+                return succ
+        # Fallback: check all blocks for RESUME 0 with entry_block as predecessor
         for block in self.cfg.blocks.values():
-            if block != entry_block and any(instr.opname == 'RESUME' for instr in block.instructions):
-                has_return_gen_pred = any(p == entry_block for p in block.predecessors)
-                if has_return_gen_pred or not block.predecessors:
-                    return block
+            if block != entry_block:
+                if any(instr.opname == 'RESUME' and instr.argval == 0 for instr in block.instructions):
+                    if any(p == entry_block for p in block.predecessors):
+                        return block
         return None
 
     def _precompute_all_generator_data(self, all_regions: List[Region]) -> None:
