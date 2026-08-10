@@ -39,24 +39,24 @@ def control_flow_examples():
             break
     else:
         print('没有找到3')
-        counter = 0
-        while counter < 5:
-            print(f'计数器: {counter}')
-            counter += 1
-        while counter < 10:
-            if counter == 7:
-                break
-            counter += 1
-        else:
-            for i in range(10):
-                if i == 3:
-                    continue
-                elif i == 7:
-                    break
-                else:
-                    print(i)
-            return result
+    counter = 0
+    while counter < 5:
+        print(f'计数器: {counter}')
+        counter += 1
+    while counter < 10:
+        if counter == 7:
+            break
+        counter += 1
+    else:
         print('循环正常结束')
+    for i in range(10):
+        if i == 3:
+            continue
+        elif i == 7:
+            break
+        else:
+            print(i)
+    return result
 def exception_handling_examples():
     try:
         result = 10 / 0

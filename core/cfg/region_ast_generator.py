@@ -3608,10 +3608,20 @@ AST 映射规则:
             # 将该 entry 追加到 _filtered_else_blocks，使 _process_if_blocks 能识别
             # 并生成该子区域。
             if _filtered_else_blocks:
+                # [Round 04 fix] break target exclusion
+                _break_target_set = set()
+                if region.break_blocks:
+                    _body_set = set(region.body_blocks) | {region.header_block}
+                    for _bb in region.break_blocks:
+                        for _bsucc in _bb.successors:
+                            if _bsucc not in _body_set:
+                                _break_target_set.add(_bsucc)
                 _added = set()
                 for _eb in _filtered_else_blocks:
                     for _succ in _eb.successors:
                         if _succ in _added or _succ in _filtered_else_blocks:
+                            continue
+                        if _succ in _break_target_set:
                             continue
                         _succ_er = self.region_analyzer.get_entry_region_for_block(_succ)
                         if isinstance(_succ_er, RegionASTGenerator._STRUCTURAL_REGION_TYPES):

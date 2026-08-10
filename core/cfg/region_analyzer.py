@@ -4185,10 +4185,18 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
             if break_targets:
                 post_else = self.dom_analyzer.find_nearest_common_post_dominator(set(break_targets))
                 if post_else and post_else in break_targets and len(break_targets) == 1:
-                    for succ in post_else.successors:
-                        if succ not in body_set:
-                            post_else = succ
-                            break
+                    # Only advance post_else past the break target if it's a trivial
+                    # jump block (single JUMP_FORWARD/JUMP_ABSOLUTE). If the break
+                    # target has real statements (e.g., `counter = 0`), it is the
+                    # first block AFTER the for-else, not part of the else block.
+                    _bt_meaningful = [i for i in post_else.instructions
+                                      if i.opname not in ('NOP', 'CACHE', 'EXTENDED_ARG', 'RESUME')]
+                    if (len(_bt_meaningful) == 1
+                            and _bt_meaningful[0].opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')):
+                        for succ in post_else.successors:
+                            if succ not in body_set:
+                                post_else = succ
+                                break
                 if post_else and post_else != for_iter_exit:
                     else_blocks = []
                     visited = set()
@@ -4386,6 +4394,12 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                     continue
                 if self._is_outer_try_except_else_block(_08_cur, body_set):
                     continue
+                # [Round 04 fix] 区域归约算法原则 2（每块唯一归属）+
+                # while-else 语义：break 目标是 while-else 之后的第一个块，
+                # 不属于 else 子句。BFS 扩展遇到 break 目标时必须停止，
+                # 否则 else_blocks 会吸收 break 后的所有顺序代码。
+                if _08_cur in _break_targets:
+                    continue
                 if _08_cur not in else_blocks:
                     _08_ext_added.append(_08_cur)
                 _08_cur_last = _08_cur.get_last_instruction()
@@ -4398,11 +4412,21 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                         if self._is_outer_try_except_else_block(_08_succ, body_set):
                             _08_ext_visited.add(_08_succ)
                             continue
+                        # [Round 04 fix] 不将 break 目标推入 BFS 栈
+                        if _08_succ in _break_targets:
+                            _08_ext_visited.add(_08_succ)
+                            continue
                         _08_ext_visited.add(_08_succ)
                         _08_ext_stack.append(_08_succ)
             if _08_ext_added:
                 else_blocks.extend(_08_ext_added)
                 else_blocks = sorted(set(else_blocks), key=lambda b: b.start_offset)
+
+        # [Round 04 fix] 区域归约算法原则 2（每块唯一归属）+ while-else 语义：
+        # break 目标是 while-else 之后的第一个块，不属于 else 子句。
+        # 从 else_blocks 中剔除 break 目标，确保 break 跳过的代码不在 else 中。
+        if else_blocks and _break_targets:
+            else_blocks = [b for b in else_blocks if b not in _break_targets]
 
         if loop_type == RegionType.WHILE_LOOP:
             _else_is_skipped_by_break = False
