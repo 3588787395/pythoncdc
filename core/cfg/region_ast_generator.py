@@ -23285,6 +23285,13 @@ AST 映射规则:
                             'value': boolop_expr,
                         })
                         self._generated_regions.add(id(region))
+                        # [R77] Unmark merge_block so remaining instructions
+                        # (after STORE_ATTR) can be processed by the caller.
+                        # This handles functions like trade.create_trade where
+                        # the merge_block has multiple sequential assignments.
+                        self.generated_blocks.discard(region.merge_block)
+                        if hasattr(region.merge_block, 'start_offset') and region.merge_block.start_offset in self.generated_offsets:
+                            self.generated_offsets.discard(region.merge_block.start_offset)
                         return pre_stmts + results if pre_stmts else results
             # [R68] BoolOp with STORE_SUBSCR target (e.g. `d['k'] = a or b`).
             # When value_target is None but merge_block contains STORE_SUBSCR,
@@ -31471,7 +31478,14 @@ AST 映射规则:
           ast.Assign 节点（如 `panel = panel`），恢复 load_get_price 函数循环退出后
           被丢弃的 2 条指令（orig idx 198 LOAD_FAST 'panel' + idx 199 STORE_FAST 'panel'）。
         """
-        if block in self.generated_blocks or block.start_offset in self.generated_offsets:
+        if block in self.generated_blocks:
+            return []
+        # Check if ALL meaningful instructions in this block are in generated_offsets.
+        # If only some are (e.g. STORE_FAST from await assignment), we should still
+        # process the remaining instructions (e.g. LOAD_FAST + RETURN_VALUE).
+        _meaningful = [i for i in block.instructions
+                       if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+        if _meaningful and all(i.offset in self.generated_offsets for i in _meaningful):
             return []
         if any(i.opname == 'BINARY_OP' for i in block.instructions):
             pass
