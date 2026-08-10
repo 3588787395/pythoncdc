@@ -75,17 +75,18 @@ def exception_handling_examples():
     else:
         print('文件读取成功')
     try:
-        try:
-            try:
-                risky_call()
-            except ValueError:
-                print('内部错误处理')
-        except Exception:
-            print('外部错误处理')
         risky_operation()
     except Exception as e:
         print(f'错误: {e}')
     else:
+        try:
+            risky_call()
+        except ValueError:
+            print('内部错误处理')
+        try:
+            pass
+        except Exception:
+            print('外部错误处理')
         return data
     finally:
         print('清理操作')

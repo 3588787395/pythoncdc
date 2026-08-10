@@ -16299,7 +16299,10 @@ AST 映射规则:
                 if not is_entry_in_handler and getattr(region, 'finally_blocks', None):
                     if r.entry in set(region.finally_blocks):
                         is_entry_in_handler = True
-                is_child_in_try = is_child and not is_entry_in_handler
+                # [Round 05 fix] nested try whose entry is in else_blocks
+                # belongs to the else clause, not the try body.
+                is_entry_in_else = bool(getattr(region, 'else_blocks', None) and r.entry in set(region.else_blocks))
+                is_child_in_try = is_child and not is_entry_in_handler and not is_entry_in_else
                 is_nested = is_child_in_try or is_in_try_blocks or is_before_try_start or handler_in_range
                 if is_nested and (r.parent is None or r.parent is region):
                     nested_is_smaller = r.try_offset_end - r.try_offset_start < region.try_offset_end - region.try_offset_start
