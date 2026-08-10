@@ -23280,6 +23280,35 @@ AST 映射规则:
                         })
                         self._generated_regions.add(id(region))
                         return pre_stmts + results if pre_stmts else results
+            # [R68] BoolOp with STORE_SUBSCR target (e.g. `d['k'] = a or b`).
+            # When value_target is None but merge_block contains STORE_SUBSCR,
+            # the BoolOp expression is the rhs of a subscript assignment.
+            if (not region.value_target
+                    and not getattr(region, 'is_augassign', False)
+                    and region.merge_block is not None):
+                _ss_r68 = None
+                for _ii_r68, _mi_r68 in enumerate(_mb_r67):
+                    if _mi_r68.opname == 'STORE_SUBSCR':
+                        _ss_r68 = _ii_r68
+                        break
+                if _ss_r68 is not None and _ss_r68 >= 2:
+                    _key_instrs_r68 = [_mb_r67[_ss_r68 - 1]]
+                    _obj_instrs_r68 = _mb_r67[:_ss_r68 - 1]
+                    _obj_expr_r68 = self.expr_reconstructor.reconstruct(_obj_instrs_r68)
+                    _key_expr_r68 = self.expr_reconstructor.reconstruct(_key_instrs_r68)
+                    if _obj_expr_r68 is not None and _key_expr_r68 is not None:
+                        results.append({
+                            'type': 'Assign',
+                            'targets': [{
+                                'type': 'Subscript',
+                                'value': _obj_expr_r68,
+                                'slice': _key_expr_r68,
+                                'ctx': 'Store',
+                            }],
+                            'value': boolop_expr,
+                        })
+                        self._generated_regions.add(id(region))
+                        return pre_stmts + results if pre_stmts else results
             if region.value_target or (getattr(region, 'is_augassign', False)
                                        and getattr(region, 'augassign_target_kind', None) in ('attr', 'subscr')):
                 # AugAssign with BoolOp rhs (`x += a and b`):
