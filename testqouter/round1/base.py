@@ -98,7 +98,7 @@ def _filter_noise_instrs(instrs):
       and has zero semantic effect — actual closure access is via
       LOAD_DEREF/STORE_DEREF/LOAD_CLOSURE.
     """
-    _NOISE_OPS = {'NOP', 'PRECALL', 'EXTENDED_ARG', 'COPY_FREE_VARS', 'MAKE_CELL', 'RESUME'}
+    _NOISE_OPS = {'NOP', 'PRECALL', 'EXTENDED_ARG', 'COPY_FREE_VARS', 'MAKE_CELL', 'RESUME', 'CACHE'}
     return [i for i in instrs if i.opname not in _NOISE_OPS]
 
 
