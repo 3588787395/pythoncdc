@@ -283,8 +283,13 @@ class RegionASTGenerator:
             for r in self.regions:
                 if isinstance(r, LoopRegion) and (r.condition_block is entry_block or
                     (r.header_block and entry_block.start_offset in [s.start_offset for s in r.header_block.predecessors])):
-                    entry_region = r
-                    break
+                    # [Round6-whileTrue 修复] 仅当 entry_block 属于循环区域（在
+                    # blocks 或 body_blocks 中）时才将 entry_region 设为该循环。
+                    # 否则 entry_block 是循环前的预语句块（如 steps=...;
+                    # engine.set_engine(engine)），不应被循环吸收。
+                    if entry_block in r.blocks or entry_block in getattr(r, 'body_blocks', []):
+                        entry_region = r
+                        break
             if isinstance(entry_region, LoopRegion) and (entry_region.condition_block == entry_block or
                 (entry_region.header_block and entry_block.start_offset in [s.start_offset for s in entry_region.header_block.predecessors])):
                 _wildcard_match = self._detect_undetected_wildcard_match(entry_block)
@@ -12034,7 +12039,12 @@ AST 映射规则:
             if not _cb:
                 return False
             _last = _cb.get_last_instruction()
-            if not _last or _last.opname not in NONE_CHECK_OPS or _last.argval is None:
+            if not _last or _last.argval is None:
+                return False
+            # [Round6-CONTAINS_OP] NONE_CHECK_OPS or POP_JUMP_IF_TRUE are OR-success
+            _is_or_candidate = (_last.opname in NONE_CHECK_OPS
+                                or 'IF_TRUE' in _last.opname)
+            if not _is_or_candidate:
                 return False
             _jt_block = self.cfg.get_block_by_offset(_last.argval)
             if _jt_block is None:
