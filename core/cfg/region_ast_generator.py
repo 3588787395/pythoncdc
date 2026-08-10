@@ -23251,6 +23251,35 @@ AST 映射规则:
                 self.generated_blocks.add(block)
             if region.merge_block:
                 self.generated_blocks.add(region.merge_block)
+            # [R67] BoolOp with STORE_ATTR target (e.g. `obj.attr = a or b`).
+            # When value_target is None but merge_block contains STORE_ATTR,
+            # the BoolOp expression is the rhs of an attribute assignment.
+            if (not region.value_target
+                    and not getattr(region, 'is_augassign', False)
+                    and region.merge_block is not None):
+                _mb_r67 = [i for i in region.merge_block.instructions
+                           if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                _sa_r67 = None
+                for _ii_r67, _mi_r67 in enumerate(_mb_r67):
+                    if _mi_r67.opname == 'STORE_ATTR':
+                        _sa_r67 = _ii_r67
+                        break
+                if _sa_r67 is not None and _sa_r67 > 0:
+                    _obj_r67 = self.expr_reconstructor.reconstruct(_mb_r67[:_sa_r67])
+                    _attr_r67 = _mb_r67[_sa_r67].argval
+                    if _obj_r67 is not None and _attr_r67:
+                        results.append({
+                            'type': 'Assign',
+                            'targets': [{
+                                'type': 'Attribute',
+                                'value': _obj_r67,
+                                'attr': _attr_r67,
+                                'ctx': 'Store',
+                            }],
+                            'value': boolop_expr,
+                        })
+                        self._generated_regions.add(id(region))
+                        return pre_stmts + results if pre_stmts else results
             if region.value_target or (getattr(region, 'is_augassign', False)
                                        and getattr(region, 'augassign_target_kind', None) in ('attr', 'subscr')):
                 # AugAssign with BoolOp rhs (`x += a and b`):
@@ -34225,11 +34254,21 @@ AST 映射规则:
                 i for i in succ.instructions
                 if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP')
             ]
-            if store_instrs and len(non_noise) == 1 and non_noise[0] is store_instrs[0]:
+            # [R01 fix] Region reduction principle 2 (unique block ownership) + 4 (entry reference):
+            # await assignment fall-through may contain STORE_* + subsequent instructions
+            # (e.g. `x = await ...; return x` has STORE_FAST + LOAD_FAST + RETURN_VALUE).
+            # Original required len(non_noise) == 1, causing await expr to be dropped when
+            # fall-through had additional statements. Fix: only check first non-noise instr
+            # is STORE_*. Mark only STORE_* offset as generated, not entire block, so
+            # subsequent statements are still processed by _generate_block_statements.
+            if store_instrs and non_noise and non_noise[0] is store_instrs[0]:
                 store_i = store_instrs[0]
                 target = store_i.argval if store_i.argval else f'var_{store_i.arg}'
-                # 标记该块已生成，避免后续作为独立赋值语句重复处理
-                self.generated_blocks.add(succ)
+                # Mark STORE_* offset as generated to avoid duplicate assignment
+                self.generated_offsets.add(store_i.offset)
+                # If fall-through has only STORE_*, mark entire block as generated
+                if len(non_noise) == 1:
+                    self.generated_blocks.add(succ)
                 return target
         return None
 
