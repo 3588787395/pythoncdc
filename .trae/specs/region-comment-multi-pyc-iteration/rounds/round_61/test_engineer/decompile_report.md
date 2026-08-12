@@ -1,41 +1,60 @@
-# R61 测试工程师报告
+# 测试工程师报告 - Round 61
 
-## 分析目标
-分析 `live_future_position.pyc` 中 `load_from_kwargs` 函数的字节码不匹配问题。
+## 目标文件
+- **pyc路径**: `site-packages/IQCommon/api/klinedata.pyc`
+- **反编译输出**: `site-packages/IQCommon/api/klinedataOK.py`
+- **源代码长度**: 91,131 字符
 
-## 分析结果
+## 字节码一致性结果
+- **匹配率**: 62.22%
+- **匹配函数数**: 28 / 45
+- **不匹配函数数**: 17
 
-### 问题定位
-- **文件**: `live_future_position.pyc`
-- **函数**: `load_from_kwargs`
-- **原始字节码**: 110 条指令
-- **反编译字节码**: 99 条指令
-- **首次差异**: index 57, orig=COPY, decomp=STORE_FAST price
+## 不匹配函数清单
 
-### 根因分析
-原始字节码中的模式：
-```
-COPY 1              ← 链式赋值标志
-STORE_FAST price    ← 第一个目标
-STORE_FAST base_price ← 第二个目标
-```
-对应 Python 源码：`price = base_price = base_price or engine.get_previous_bar(self.symbol).close`
+| 函数名 | 差异数 | 首个差异 |
+|--------|--------|----------|
+| get_kline_by_count_new | 430 | UNPACK_SEQUENCE→STORE_FAST (参数解包错误) |
+| get_all_real_minute_kline | 171 | LOAD_GLOBAL copy→LOAD_GLOBAL range |
+| get_history_common | 277 | LOAD_FAST fields→BUILD_LIST 1 |
+| get_history_date_and_count_ifalse | 276 | LOAD_GLOBAL datetime→LOAD_FAST query_date |
+| get_all_real_daily_kline | 113 | LOAD_GLOBAL copy→LOAD_FAST symbol |
+| get_kline_by_date_ndarray | 111 | LOAD_GLOBAL api_get_from_zeromq→LOAD_FAST redata |
+| get_kline_by_count | 21 | LOAD_GLOBAL system_log→LOAD_FAST fields |
+| get_kline_by_date_new | 24 | LOAD_GLOBAL system_log→LOAD_FAST fields |
+| get_kline_by_date_one | 21 | LOAD_GLOBAL system_log→LOAD_FAST fields |
+| get_history_new | 38 | LOAD_FAST real_data_len→LOAD_GLOBAL len |
 
-反编译器只生成了单目标赋值 `price = ...`，缺少了 `base_price = price`。
+## 分析结论
 
-此外，TernaryRegion 的条件块（block 290）中的 `STORE_SUBSCR` 指令（`new_kwargs[key + '_holding_list'] = [price, amount]`）未被正确提取为前缀语句，导致该赋值丢失。
+**当前状态**: 部分一致 (28/45 = 62.22%)
 
-### 修复范围
-修复影响了以下文件（均从 partial 提升为 100% OK）：
-1. `live_future_position.pyc`: 63/64 → 64/64 (100%)
-2. `option_position.pyc`: 59/60 → 60/60 (100%)
-3. `live_option_position.pyc`: 50/51 → 51/51 (100%)
+**主要问题模式**:
 
-### 回归验证
-- `backtest.pyc`: 2/2 (100%) ← 未受影响
-- `enumerate.pyc`: 18/18 (100%) ← 未受影响
-- `future_position.pyc`: 70/72 (97.22%) ← 未受影响（pre-existing）
+### Pattern P1: 参数解包错误 (get_kline_by_count_new, 430 diffs)
+- **症状**: UNPACK_SEQUENCE 2 变成 STORE_FAST start_000300
+- **根因**: 可能是 `try-except` 嵌套导致参数解包丢失
+- **影响**: 函数参数列表被错误归约
 
-## 总结成功率
-- 修复前: 242/402 = 60.20%
-- 修复后: 244/402 = 60.70%
+### Pattern P2: 赋值语句顺序错位 (多个函数)
+- **症状**: LOAD_FAST fields → BUILD_LIST 或 LOAD_GLOBAL system_log 误识别
+- **根因**: try/except 结构导致语句边界判定错误
+- **影响**: 属性访问和日志调用位置错误
+
+### Pattern P3: 控制流边界扩张
+- **症状**: 多达 277 个 true_diffs (get_history_common)
+- **根因**: 区域边界 BFS 过度扩张，吸收了外层语句
+- **影响**: 大量语句顺序和结构错误
+
+**下一步行动**:
+- 创建 12 个最小复现实例（覆盖 Pattern P1/P2/P3）
+- 定位到 `_identify_with_regions` 或 `_identify_conditional_regions` 的边界判定逻辑
+
+## 与上一轮对比
+- 上一轮 (R60): 全局匹配率 89.07%, 0 failed
+- 本轮 (R61): 本文件匹配率 62.22%, 17 个不匹配函数
+- 变化: 本轮为首次针对 klinedata.pyc 的专门分析
+
+## 备注
+- klinedata.pyc 有 64 个 code objects，但 bytecode_diff 只报告了 45 个函数
+- 可能存在嵌套 code objects（如推导式、类定义）需要单独分析
