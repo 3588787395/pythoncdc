@@ -385,6 +385,7 @@ class RegionASTGenerator:
                     _pre_stmts: List[Dict[str, Any]] = []
                     _stmt_instrs: List[Instruction] = []
                     _import_pending_store = False
+                    _entry_unpack_info = None
 
                     for _instr in entry_block.instructions:
                         # 区域归约算法原则 2（每块唯一归属）：
@@ -490,10 +491,36 @@ class RegionASTGenerator:
                         if _instr.opname == 'IMPORT_FROM':
                             _import_pending_store = True
                             continue
+                        if _instr.opname in ('UNPACK_SEQUENCE', 'UNPACK_EX'):
+                            _val_instrs = [i for i in _stmt_instrs if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                            _val = self.expr_reconstructor.reconstruct(_val_instrs) if _val_instrs else None
+                            if _instr.opname == 'UNPACK_SEQUENCE':
+                                _entry_unpack_info = {'value': _val, 'targets': [], 'count': _instr.arg}
+                            else:
+                                _arg = _instr.argval
+                                _before, _after = _arg & 0xFF, (_arg >> 8) & 0xFF
+                                _entry_unpack_info = {'value': _val, 'targets': [], 'count': _before + 1 + _after, 'is_starred': True, 'starred_idx': _before}
+                            _stmt_instrs = []
+                            continue
                         if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
                             if _import_pending_store:
                                 _stmt_instrs = []
                                 _import_pending_store = False
+                                continue
+                            if _entry_unpack_info is not None:
+                                _tgt_name = _instr.argval if _instr.argval else f'var_{_instr.arg}'
+                                _is_starred = _entry_unpack_info.get('is_starred', False)
+                                _starred_idx = _entry_unpack_info.get('starred_idx', -1)
+                                if _is_starred and len(_entry_unpack_info['targets']) == _starred_idx:
+                                    _entry_unpack_info['targets'].append({'type': 'Starred', 'value': {'type': 'Name', 'id': _tgt_name, 'ctx': 'Store'}})
+                                else:
+                                    _entry_unpack_info['targets'].append({'type': 'Name', 'id': _tgt_name, 'ctx': 'Store'})
+                                if len(_entry_unpack_info['targets']) == _entry_unpack_info['count']:
+                                    _target = {'type': 'Tuple', 'elts': _entry_unpack_info['targets'], 'ctx': 'Store'}
+                                    if _entry_unpack_info['value']:
+                                        _pre_stmts.append({'type': 'Assign', 'targets': [_target], 'value': _entry_unpack_info['value']})
+                                    _entry_unpack_info = None
+                                _stmt_instrs = []
                                 continue
                             _stmt_instrs.append(_instr)
                             # [聚类1 修复] walrus 副作用归属：当 COPY(1) 紧邻 STORE 时，
