@@ -6537,6 +6537,19 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                         _starts_at_known = (_ee_start in _chain_target_set)
                         _shares_target = (_ee_target in _chain_target_set)
                         if _in_try_body or _starts_at_known or _shares_target:
+                            # [R91] 区域归约算法原则 2（每块唯一归属）：
+                            # 当 _starts_at_known 或 _shares_target 匹配时，如果
+                            # target 指向了外层/兄弟 try 的 handler entry（在
+                            # excluded_offsets 中），则不加入链。否则外层 try 的
+                            # handler body 和清理路径（RERAISE 等）会被错误地
+                            # 吸收到当前 try 的 cleanup_blocks，导致块归属混乱。
+                            # 示例：内层 try(474-502) 的 handler body 中的
+                            # POP_EXCEPT 块(554) 有异常表条目 start=554,target=568
+                            # （外层 try 的 handler），_starts_at_known 匹配后
+                            # target=568 被加入 _chain_target_set，进而外层 try
+                            # 的所有清理块(622,624)被链入内层 try 的 cleanup。
+                            if not _in_try_body and _ee_target in excluded_offsets:
+                                continue
                             _chain_entry_ids.add(id(_ee))
                             _chain_target_set.add(_ee_target)
                             _chain_changed = True
@@ -6747,7 +6760,13 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 if getattr(region_a, 'enclosing_try', None) is not None:
                     break
 
-                if (region_a.try_offset_start >= region_b.try_offset_start and
+                # [R90] 区域归约算法原则 2（每块唯一归属）+ 原则 1
+                # （自底向上归约）：两个 TryExceptRegion 的 try_offset_start
+                # 相同时，它们是平级 try-except 块（如 else 块中的连续
+                # try-except），不是嵌套关系。只有 try_offset_start 严格
+                # 大于外层时才可能是嵌套。否则会把平级 try 错误设为子区域，
+                # 导致 blocks 重叠和 block_to_region 归属混乱。
+                if (region_a.try_offset_start > region_b.try_offset_start and
                     region_a.try_offset_end <= region_b.try_offset_end and
                     (region_a.try_offset_end - region_a.try_offset_start) <
                     (region_b.try_offset_end - region_b.try_offset_start)):
@@ -6779,6 +6798,39 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 if not region_a.else_blocks:
                     region_a.has_else = False
                 region_a.blocks = [b for b in region_a.blocks if b not in shared_else]
+
+        # [R90] 区域归约算法原则 2（每块唯一归属）：平级 TryExceptRegion
+        # 之间可能有 else_blocks 重叠（如 else 块中的连续 try-except 块，
+        # 第一个 try 的 _find_try_else_blocks BFS 可能收集到第二个 try
+        # 的块）。遍历所有 TryExceptRegion，对于 else_blocks 中已被其他
+        # 区域（非 enclosing_try）注册的块，从 else_blocks 中移除并更新
+        # block_to_region 归属为拥有者区域。
+        for region_a in self._filter_regions(new_regions, TryExceptRegion):
+            if not hasattr(region_a, 'else_blocks') or not region_a.else_blocks:
+                continue
+            _filtered_else = []
+            _removed_else = []
+            for eb in region_a.else_blocks:
+                _eb_owner = self.block_to_region.get(eb)
+                if (_eb_owner is not None and _eb_owner is not region_a
+                        and isinstance(_eb_owner, TryExceptRegion)):
+                    # 块已被其他 TryExceptRegion 注册，从当前 else_blocks 移除
+                    _removed_else.append(eb)
+                    continue
+                _filtered_else.append(eb)
+            if _removed_else:
+                region_a.else_blocks = _filtered_else
+                if not _filtered_else:
+                    region_a.has_else = False
+                _removed_set = set(_removed_else)
+                _kept_set = set(_filtered_else)
+                region_a.blocks = [b for b in region_a.blocks
+                                   if b not in _removed_set]
+                # 更新 block_to_region：被移除的块归属保持为拥有者区域
+                # （已经是 _eb_owner，无需修改）
+                # 但需要确保被移除的块不在 region_a 的 try_blocks 中
+                region_a.try_blocks = [b for b in region_a.try_blocks
+                                       if b not in _removed_set]
 
         return new_regions
 
@@ -7934,6 +7986,10 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                                     if _te_b_last and _te_b_last.opname in BACKWARD_JUMP_OPS:
                                         continue
                                     if not self._is_pass_or_return_none_block(_te_b):
+                                        # [R91] 排除已被嵌套 TryExceptRegion 拥有的块
+                                        _te_owner = self.block_to_region.get(_te_b)
+                                        if _te_owner is not None and _te_owner is not try_region:
+                                            continue
                                         _te_else_blocks.append(_te_b)
                                     for _te_s in _te_b.successors:
                                         if _te_s not in _te_visited:
@@ -7956,6 +8012,9 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                             block not in all_handler_blocks and
                             block not in try_region.blocks and
                             not self._is_pass_or_return_none_block(block)):
+                            _owner = self.block_to_region.get(block)
+                            if _owner is not None and _owner is not try_region:
+                                continue
                             else_blocks.append(block)
                     return else_blocks
                 inner_else = self._find_inner_else_blocks(try_region, try_end_offset,
@@ -7971,6 +8030,15 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 block not in all_handler_blocks and
                 block not in try_region.blocks and
                 not self._is_pass_or_return_none_block(block)):
+                # [R91] 区域归约算法原则 2（每块唯一归属）+ 原则 3
+                # （嵌套即抽象节点）：else 块收集不得吞并已被嵌套
+                # TryExceptRegion 拥有的块。否则外层 try-finally 的
+                # else_blocks 会吸收内层 try-except 的所有块（try body +
+                # handler body + cleanup），导致内层 try 在 else 中被
+                # 重复生成、块归属混乱、字节码不匹配。
+                _owner = self.block_to_region.get(block)
+                if _owner is not None and _owner is not try_region:
+                    continue
                 else_blocks.append(block)
 
         if not else_blocks:
