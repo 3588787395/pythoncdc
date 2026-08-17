@@ -16331,11 +16331,14 @@ AST 映射规则:
                             and ns['value'].get('value') is True):
                         i += 1
                 merged = cvs[0] if len(cvs) == 1 else {'type': 'BoolOp', 'op': 'And', 'values': cvs}
-                result.append({'type': 'Return', 'value': merged} if i > start + len(cvs)
+                # [R98] Fix: original code used `for _ in [0]` which creates a
+                # generator object instead of a dict, causing AttributeError.
+                _is_return = (i > start + len(cvs)
                               or (i < len(stmts) and isinstance(stmts[i], dict) and stmts[i].get('type') == 'Return'
                                   and isinstance(stmts[i].get('value'), dict) and stmts[i]['value'].get('type') == 'Constant'
-                                  and stmts[i]['value'].get('value') is False and (i := i + 1) or True)
-                              else {'type': 'Expr', 'value': merged} for _ in [0])
+                                  and stmts[i]['value'].get('value') is False and (i := i + 1) or True))
+                result.append({'type': 'Return', 'value': merged} if _is_return
+                              else {'type': 'Expr', 'value': merged})
                 if result[-1].get('type') != 'Return':
                     result.pop()
                     for cv in cvs:

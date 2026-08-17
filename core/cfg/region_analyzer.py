@@ -12933,6 +12933,34 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     if not _pred:
                         merge = None
 
+            # [R98] Fix: When NCPD returns merge==then_succ (or merge==else_succ)
+            # due to post-dominator circularity in loops, but that block has
+            # only the condition block as predecessor (meaning it's NOT a real
+            # merge point — it's a branch body), correct the merge.
+            # A real merge point must have predecessors from BOTH branches.
+            # This happens in while-True loops where the back-edge creates
+            # post-dominator cycles, causing NCPD to return the fall-through
+            # successor as merge instead of the actual convergence point.
+            # Safety check: only apply when inside a loop (where post-dominator
+            # circularity occurs) to avoid breaking non-loop if-then patterns.
+            if merge is not None and merge in (then_succ, else_succ):
+                _cond_blocks = {block} | chain_blocks
+                _merge_preds = [p for p in merge.predecessors if p not in _cond_blocks]
+                if not _merge_preds:
+                    # merge has no external predecessors — it's a branch body, not merge
+                    # Check if the other successor has predecessors from both branches
+                    _other = else_succ if merge == then_succ else then_succ
+                    _other_preds = [p for p in _other.predecessors if p not in _cond_blocks]
+                    # Only correct if block is inside a loop (where NCPD can go wrong
+                    # due to back-edges creating false post-dominator relationships).
+                    # Use loop_regions parameter (self.regions not yet initialized).
+                    _in_loop = any(block in lr.blocks for lr in loop_regions)
+                    if _other_preds and _in_loop:
+                        # The other successor IS the real merge (has external preds)
+                        merge = _other
+                    elif not _other_preds and not _in_loop:
+                        merge = None
+
             # 区域归约算法原则 1（自底向上归约）+ 原则 2（每块唯一
             # 归属）+ No More Gotos §4.2（循环区域）/§3（If 区域归约）：
             # 当 if 嵌套于循环内、且某分支以 break/continue/return 退出循环时，

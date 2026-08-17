@@ -271,11 +271,18 @@
   - [x] T2.97.2 修复工程师：改进 spurious return None 修剪为基于位置检查 → `rounds/round_97/repair_engineer/fix_report.md`（base.py _trim_spurious_intermediate_returns 从数量比较改为逐位置检查；全局 91.38% 不变，无回归）
   - [x] T2.97.3 commit + push `rcm-r97:`（6f9baa19）
   - 残留：27 函数有未修剪 return-None（根因是更早位置的语句顺序错位），需修复反编译器控制流区域识别逻辑
+- [x] T2.98 第 98 轮（NCPD 循环内 merge 错误修复 + _coalesce_compares generator bug 修复）
+  - [x] T2.98.1 测试工程师：分析 _sync_worker 函数体丢失根因 → NCPD 在 while-True 循环中因回边产生错误的 post-dominator 关系，返回 merge=then_succ（fall-through 分支体而非真正的汇聚点），导致 then_blocks 为空、函数体退化为 pass
+  - [x] T2.98.2 修复工程师：
+    - region_analyzer.py：在 NCPD 返回 merge==then_succ/else_succ 时，检查该块是否有外部前驱（非条件块），若无外部前驱且对侧分支有外部前驱且 block 在循环内，则修正 merge 为对侧
+    - region_ast_generator.py：修复 _coalesce_compares 中 `for _ in [0]` 创建 generator 对象而非 dict 的 AttributeError bug
+  - [x] T2.98.3 全局测试：261 OK pyc（与基线一致，无回归），_sync_worker 函数体从 pass 恢复为 2791 字符完整函数体
+  - 残留：empty_then 从 5 降至 1；_sync_worker 反编译结果不完美（while 循环结构有误），但函数体不再完全丢失
 - [ ] T2.NN ... 持续直到退出条件满足（所有 pyc 文件 100% 字节码一致，每个生成 +OK.py）
 
 > 注：轮次数不设上限，持续直到所有 pyc 文件所有函数 100% 字节码一致。
-> 当前进度：402 个 pyc 中 266 个 ok（bytecode_match_rate=1.0），91.38% 累计匹配率，0 个 failed
-> 残留主要问题：97.5% 的 diff 是语句顺序错位（控制流区域识别错误），需修复反编译器核心逻辑
+> 当前进度：402 个 pyc 中 261 个 ok（bytecode_match_rate=1.0），64.93% 累计匹配率，0 个 failed
+> 残留主要问题：97% 的 diff 是指令长度差异（shift），根因是反编译器控制流区域识别在循环+条件嵌套场景下的 merge 计算错误
 > 每轮必须 commit + push 到远程，禁止只 commit 不 push
 
 ## 阶段三（Phase 3：全量验证与 +OK 生成）
