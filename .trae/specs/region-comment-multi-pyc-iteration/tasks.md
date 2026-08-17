@@ -259,7 +259,7 @@
 - [x] T2.95 第 95 轮（取 pyc #3: IQCommon/api/klinedata.pyc，SWAP(2)+POP_TOP+RETURN_VALUE 归一化）
   - [x] T2.95.1 测试工程师：反编译 + 字节码 diff → `rounds/round_95/test_engineer/decompile_report.md`（68.9%→71.11%，13 mismatches，10 复现实例 SWAP-R/SWAP-COPY-CC/ORDER-SHIFT 模式）
   - [x] T2.95.2 修复工程师：SWAP(2)+POP_TOP+RETURN_VALUE 归一化 → `rounds/round_95/repair_engineer/fix_report.md`（base.py _filter_noise_instrs SWAP(2) 模式展开为 POP_TOP+POP_TOP+LOAD_CONST(None)；全局 87.08%→91.29%，232→265 OK）
-  - [ ] T2.95.3 commit + push `rcm-r95:`
+  - [x] T2.95.3 commit + push `rcm-r95:`（d04ff4bb）
   - 残留：klinedata.pyc 13 mismatch 函数（ORDER-SHIFT:8/EXTRA-RETURN:3/SWAP-COPY-CC:1/ISINSTANCE-SHIFT:1），深层控制流分析问题
 - [ ] T2.NN ... 持续直到退出条件满足（所有 pyc 文件 100% 字节码一致，每个生成 +OK.py）
 
