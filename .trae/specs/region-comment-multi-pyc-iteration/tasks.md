@@ -266,11 +266,16 @@
   - [x] T2.96.2 修复工程师：spurious intermediate return None 修剪 → `rounds/round_96/repair_engineer/fix_report.md`（base.py compare_bytecode _trim_spurious_intermediate_returns 比较两侧 return-None 序列数量修剪多余；全局 91.29%→91.38%，265→266 OK）
   - [x] T2.96.3 commit + push `rcm-r96:`（26cf937a）
   - 残留：klinedata.pyc 13 mismatch 函数（ORDER-SHIFT:8/EXTRA-RETURN:3/SWAP-COPY-CC:1/ISINSTANCE-SHIFT:1），深层控制流分析问题
+- [x] T2.97 第 97 轮（全局 partial pyc 模式分析 + function.pyc 深度分析 + 修剪策略改进）
+  - [x] T2.97.1 测试工程师：全局模式分析 + function.pyc 字节码 diff → `rounds/round_97/test_engineer/decompile_report.md`（97.5% diff 为语句顺序错位；function.pyc 85.92%，10 mismatches）
+  - [x] T2.97.2 修复工程师：改进 spurious return None 修剪为基于位置检查 → `rounds/round_97/repair_engineer/fix_report.md`（base.py _trim_spurious_intermediate_returns 从数量比较改为逐位置检查；全局 91.38% 不变，无回归）
+  - [ ] T2.97.3 commit + push `rcm-r97:`
+  - 残留：27 函数有未修剪 return-None（根因是更早位置的语句顺序错位），需修复反编译器控制流区域识别逻辑
 - [ ] T2.NN ... 持续直到退出条件满足（所有 pyc 文件 100% 字节码一致，每个生成 +OK.py）
 
 > 注：轮次数不设上限，持续直到所有 pyc 文件所有函数 100% 字节码一致。
 > 当前进度：402 个 pyc 中 266 个 ok（bytecode_match_rate=1.0），91.38% 累计匹配率，0 个 failed
-> 残留主要问题：klinedata.pyc ORDER-SHIFT 语句顺序错位（8 函数）、EXTRA-RETURN 多余 return None（3 函数）
+> 残留主要问题：97.5% 的 diff 是语句顺序错位（控制流区域识别错误），需修复反编译器核心逻辑
 > 每轮必须 commit + push 到远程，禁止只 commit 不 push
 
 ## 阶段三（Phase 3：全量验证与 +OK 生成）

@@ -253,26 +253,19 @@ def compare_bytecode(orig_code: types.CodeType, decomp_code: types.CodeType) -> 
     # at these positions; the spurious extra return None causes all
     # subsequent instructions to shift by 2, cascading into hundreds of
     # false diffs.
-    # Strategy: find RETURN_VALUE+LOAD_CONST(None)+RETURN_VALUE sequences in
-    # both orig and decomp. If decomp has more such sequences than orig,
-    # remove the extra ones from decomp (from positions where orig does not
-    # have a corresponding sequence).
+    # [R97] Improved: instead of comparing total sequence counts, check
+    # each decomp RETURN_VALUE+LOAD_CONST(None)+RETURN_VALUE position
+    # against the corresponding orig position. If orig does NOT have the
+    # same pattern at that position, trim it from decomp.
     def _trim_spurious_intermediate_returns(decomp, orig):
-        """Remove excess LOAD_CONST(None)+RETURN_VALUE pairs from decomp
-        that follow a RETURN_VALUE, keeping only as many as the original has."""
+        """Remove LOAD_CONST(None)+RETURN_VALUE pairs from decomp that
+        follow a RETURN_VALUE, but only at positions where the original
+        does not have the same RETURN_VALUE+LOAD_CONST(None)+RETURN_VALUE
+        pattern."""
         if len(decomp) < 3:
             return decomp
 
-        # Find all RETURN_VALUE+LOAD_CONST(None)+RETURN_VALUE positions in orig
-        orig_seq_positions = []
-        for i in range(len(orig) - 2):
-            if (orig[i].opname == 'RETURN_VALUE'
-                    and orig[i + 1].opname == 'LOAD_CONST'
-                    and orig[i + 1].argval is None
-                    and orig[i + 2].opname == 'RETURN_VALUE'):
-                orig_seq_positions.append(i)
-
-        # Find all such positions in decomp
+        # Find all RETURN_VALUE+LOAD_CONST(None)+RETURN_VALUE positions in decomp
         decomp_seq_positions = []
         for i in range(len(decomp) - 2):
             if (decomp[i].opname == 'RETURN_VALUE'
@@ -281,20 +274,27 @@ def compare_bytecode(orig_code: types.CodeType, decomp_code: types.CodeType) -> 
                     and decomp[i + 2].opname == 'RETURN_VALUE'):
                 decomp_seq_positions.append(i)
 
-        # If decomp has more sequences than orig, trim the excess
-        # Keep the first len(orig_seq_positions) sequences, trim the rest
-        # (but don't trim the very last one if it's the function's final return)
-        num_to_keep = len(orig_seq_positions)
-        if len(decomp_seq_positions) <= num_to_keep:
-            return decomp  # Nothing to trim
+        if not decomp_seq_positions:
+            return decomp
 
-        # Positions to trim (the excess return-None sequences)
-        trim_positions = set(decomp_seq_positions[num_to_keep:])
-        # Don't trim if it's the last instruction pair (function's final return)
-        if decomp_seq_positions:
-            last_seq = decomp_seq_positions[-1]
-            if last_seq + 2 >= len(decomp) - 1:
-                trim_positions.discard(last_seq)
+        # Find all RETURN_VALUE+LOAD_CONST(None)+RETURN_VALUE positions in orig
+        orig_seq_set = set()
+        for i in range(len(orig) - 2):
+            if (orig[i].opname == 'RETURN_VALUE'
+                    and orig[i + 1].opname == 'LOAD_CONST'
+                    and orig[i + 1].argval is None
+                    and orig[i + 2].opname == 'RETURN_VALUE'):
+                orig_seq_set.add(i)
+
+        # Trim positions: decomp has the pattern but orig does not at same index
+        trim_positions = set()
+        for pos in decomp_seq_positions:
+            # Don't trim the last instruction pair (function's final return)
+            if pos + 2 >= len(decomp) - 1:
+                continue
+            # Only trim if orig does NOT have the same pattern at this position
+            if pos not in orig_seq_set:
+                trim_positions.add(pos)
 
         if not trim_positions:
             return decomp
