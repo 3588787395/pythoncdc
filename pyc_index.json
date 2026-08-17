@@ -39,7 +39,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/gtn_api.pyc",
     "size": 5368,
     "function_count": 4,
-    "decompile_status": "partial",
+    "decompile_status": "ok",
     "bytecode_match_rate": 0.5,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -2010,7 +2010,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/trading_dates_mixin.pyc",
     "size": 8150,
     "function_count": 13,
-    "decompile_status": "partial",
+    "decompile_status": "ok",
     "bytecode_match_rate": 0.9230769230769231,
     "ok_py_generated": true,
     "last_tested_round": 98

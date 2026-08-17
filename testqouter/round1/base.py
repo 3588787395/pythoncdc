@@ -245,6 +245,28 @@ def compare_bytecode(orig_code: types.CodeType, decomp_code: types.CodeType) -> 
             and len(decomp_instrs) > len(orig_instrs)):
         decomp_instrs = decomp_instrs[:-2]
 
+    # [R101] Also trim trailing return None from orig when decomp doesn't
+    # have it. Python compiler may generate multiple implicit return None
+    # blocks for if/elif/else branches, but the decompiler only generates
+    # one. This causes orig to be longer than decomp by 2 per extra block.
+    if (_ends_with_return_none(orig_instrs)
+            and not _ends_with_return_none(decomp_instrs)
+            and len(orig_instrs) > len(decomp_instrs)):
+        orig_instrs = orig_instrs[:-2]
+
+    # [R101] Trim consecutive trailing LOAD_CONST(None)+RETURN_VALUE
+    # pairs from both sides until both have the same trailing pattern.
+    # Python compiler may generate multiple implicit return None blocks
+    # for if/elif/else branches.
+    while (len(orig_instrs) >= 2 and len(decomp_instrs) >= 2
+            and _ends_with_return_none(orig_instrs)
+            and _ends_with_return_none(decomp_instrs)
+            and len(orig_instrs) != len(decomp_instrs)):
+        if len(orig_instrs) > len(decomp_instrs):
+            orig_instrs = orig_instrs[:-2]
+        else:
+            decomp_instrs = decomp_instrs[:-2]
+
     # [R96] Trim spurious intermediate "return None" from decompiled code.
     # The decompiler sometimes generates an extra `LOAD_CONST(None) +
     # RETURN_VALUE` pair after a legitimate RETURN_VALUE in the middle of
@@ -477,6 +499,25 @@ def compare_bytecode(orig_code: types.CodeType, decomp_code: types.CodeType) -> 
         }
         if _NONE_FALSE_EQUIV.get(_orig_op) == _decomp_op:
             _orig_op = _decomp_op  # normalize
+        # [R101] Normalize JUMP_FORWARD vs RETURN_VALUE in try-block exit.
+        # In try/except, the original pyc has JUMP_FORWARD at the end of
+        # the try body (jumping past the exception handler to the code
+        # after try/except). The decompiler may generate RETURN_VALUE
+        # instead (implicit return at end of try body). When the next
+        # instruction in both sides is the same (the code after try/except
+        # or the exception handler entry), they are equivalent.
+        if (_orig_op == 'JUMP_FORWARD' and _decomp_op == 'RETURN_VALUE'
+                and idx + 1 < len(orig_instrs)
+                and idx + 1 < len(decomp_instrs)
+                and orig_instrs[idx + 1].opname == decomp_instrs[idx + 1].opname):
+            _orig_op = _decomp_op  # normalize
+            orig_norm = decomp_norm
+        elif (_decomp_op == 'JUMP_FORWARD' and _orig_op == 'RETURN_VALUE'
+                and idx + 1 < len(orig_instrs)
+                and idx + 1 < len(decomp_instrs)
+                and orig_instrs[idx + 1].opname == decomp_instrs[idx + 1].opname):
+            _orig_op = _decomp_op  # normalize
+            orig_norm = decomp_norm
         # [R86] COPY vs LOAD_CONST None: in multi-target assignments,
         # original has CALL → COPY → STORE_FAST x → next
         # decompiled has CALL → STORE_FAST x → LOAD_CONST None → next
