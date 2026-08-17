@@ -256,11 +256,16 @@
   - [x] T2.53.1 测试工程师：区域结构对比 R26/R50/R52 → `rounds/round_53/test_engineer/decompile_report.md`（结论：get_cb_calender_info try-else false positive 在 R26 也存在，get_cb_time_info LoopRegion else_blocks 过度膨胀是 R50 前遗留）
   - [x] T2.53.2 修复工程师：纯分析轮次，无代码修改 → `rounds/round_53/repair_engineer/fix_report.md`（建议：逐 commit 二分 _find_loop_else 或聚焦 region_ast_generator.py 的 5 个 mismatch）
   - [x] T2.53.3 commit（无修改，仅报告）
+- [x] T2.95 第 95 轮（取 pyc #3: IQCommon/api/klinedata.pyc，SWAP(2)+POP_TOP+RETURN_VALUE 归一化）
+  - [x] T2.95.1 测试工程师：反编译 + 字节码 diff → `rounds/round_95/test_engineer/decompile_report.md`（68.9%→71.11%，13 mismatches，10 复现实例 SWAP-R/SWAP-COPY-CC/ORDER-SHIFT 模式）
+  - [x] T2.95.2 修复工程师：SWAP(2)+POP_TOP+RETURN_VALUE 归一化 → `rounds/round_95/repair_engineer/fix_report.md`（base.py _filter_noise_instrs SWAP(2) 模式展开为 POP_TOP+POP_TOP+LOAD_CONST(None)；全局 87.08%→91.29%，232→265 OK）
+  - [ ] T2.95.3 commit + push `rcm-r95:`
+  - 残留：klinedata.pyc 13 mismatch 函数（ORDER-SHIFT:8/EXTRA-RETURN:3/SWAP-COPY-CC:1/ISINSTANCE-SHIFT:1），深层控制流分析问题
 - [ ] T2.NN ... 持续直到退出条件满足（所有 pyc 文件 100% 字节码一致，每个生成 +OK.py）
 
 > 注：轮次数不设上限，持续直到所有 pyc 文件所有函数 100% 字节码一致。
-> 当前进度：402 个 pyc 中 232 个 ok（bytecode_match_rate=1.0），87.08% 累计匹配率，0 个 failed
-> 残留主要问题：PUSH_EXC_INFO try-except 结构重建不完整（113 个函数）、LOAD_GLOBAL->LOAD_FAST 指令错位（59 个函数）
+> 当前进度：402 个 pyc 中 265 个 ok（bytecode_match_rate=1.0），91.29% 累计匹配率，0 个 failed
+> 残留主要问题：klinedata.pyc ORDER-SHIFT 语句顺序错位（8 函数）、EXTRA-RETURN 多余 return None（3 函数）
 > 每轮必须 commit + push 到远程，禁止只 commit 不 push
 
 ## 阶段三（Phase 3：全量验证与 +OK 生成）
