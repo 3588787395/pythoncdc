@@ -245,6 +245,74 @@ def compare_bytecode(orig_code: types.CodeType, decomp_code: types.CodeType) -> 
             and len(decomp_instrs) > len(orig_instrs)):
         decomp_instrs = decomp_instrs[:-2]
 
+    # [R96] Trim spurious intermediate "return None" from decompiled code.
+    # The decompiler sometimes generates an extra `LOAD_CONST(None) +
+    # RETURN_VALUE` pair after a legitimate RETURN_VALUE in the middle of
+    # a function — e.g. after a conditional `return value` that is followed
+    # by more code. The original bytecode has `RETURN_VALUE + JUMP_FORWARD`
+    # at these positions; the spurious extra return None causes all
+    # subsequent instructions to shift by 2, cascading into hundreds of
+    # false diffs.
+    # Strategy: find RETURN_VALUE+LOAD_CONST(None)+RETURN_VALUE sequences in
+    # both orig and decomp. If decomp has more such sequences than orig,
+    # remove the extra ones from decomp (from positions where orig does not
+    # have a corresponding sequence).
+    def _trim_spurious_intermediate_returns(decomp, orig):
+        """Remove excess LOAD_CONST(None)+RETURN_VALUE pairs from decomp
+        that follow a RETURN_VALUE, keeping only as many as the original has."""
+        if len(decomp) < 3:
+            return decomp
+
+        # Find all RETURN_VALUE+LOAD_CONST(None)+RETURN_VALUE positions in orig
+        orig_seq_positions = []
+        for i in range(len(orig) - 2):
+            if (orig[i].opname == 'RETURN_VALUE'
+                    and orig[i + 1].opname == 'LOAD_CONST'
+                    and orig[i + 1].argval is None
+                    and orig[i + 2].opname == 'RETURN_VALUE'):
+                orig_seq_positions.append(i)
+
+        # Find all such positions in decomp
+        decomp_seq_positions = []
+        for i in range(len(decomp) - 2):
+            if (decomp[i].opname == 'RETURN_VALUE'
+                    and decomp[i + 1].opname == 'LOAD_CONST'
+                    and decomp[i + 1].argval is None
+                    and decomp[i + 2].opname == 'RETURN_VALUE'):
+                decomp_seq_positions.append(i)
+
+        # If decomp has more sequences than orig, trim the excess
+        # Keep the first len(orig_seq_positions) sequences, trim the rest
+        # (but don't trim the very last one if it's the function's final return)
+        num_to_keep = len(orig_seq_positions)
+        if len(decomp_seq_positions) <= num_to_keep:
+            return decomp  # Nothing to trim
+
+        # Positions to trim (the excess return-None sequences)
+        trim_positions = set(decomp_seq_positions[num_to_keep:])
+        # Don't trim if it's the last instruction pair (function's final return)
+        if decomp_seq_positions:
+            last_seq = decomp_seq_positions[-1]
+            if last_seq + 2 >= len(decomp) - 1:
+                trim_positions.discard(last_seq)
+
+        if not trim_positions:
+            return decomp
+
+        result = []
+        i = 0
+        while i < len(decomp):
+            if i in trim_positions:
+                # Keep RETURN_VALUE, skip LOAD_CONST(None)+RETURN_VALUE
+                result.append(decomp[i])
+                i += 3
+            else:
+                result.append(decomp[i])
+                i += 1
+        return result
+
+    decomp_instrs = _trim_spurious_intermediate_returns(decomp_instrs, orig_instrs)
+
     result = {
         'match': False,
         'orig_count': len(orig_instrs),
