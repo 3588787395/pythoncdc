@@ -48,7 +48,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/klinedata.pyc",
     "size": 117633,
     "function_count": 41,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.6829268292682927,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -102,7 +102,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/common/main.pyc",
     "size": 34261,
     "function_count": 30,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.8333333333333334,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -183,7 +183,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/finance.pyc",
     "size": 44652,
     "function_count": 21,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.7142857142857143,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -201,7 +201,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/local_finance.pyc",
     "size": 21290,
     "function_count": 16,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.875,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -255,7 +255,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/graph.pyc",
     "size": 23827,
     "function_count": 27,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.8148148148148148,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -282,7 +282,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/logger/handlers.pyc",
     "size": 15042,
     "function_count": 17,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.9411764705882353,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -318,7 +318,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/profiler_func.pyc",
     "size": 12806,
     "function_count": 13,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.9230769230769231,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -363,7 +363,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/jq_trans_module.pyc",
     "size": 58024,
     "function_count": 32,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.9375,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -381,7 +381,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/wizard_quant_api.pyc",
     "size": 44531,
     "function_count": 48,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.8333333333333334,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -435,7 +435,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/common_func.pyc",
     "size": 25571,
     "function_count": 18,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.7777777777777778,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -489,7 +489,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/fileio_utils.pyc",
     "size": 24483,
     "function_count": 13,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.6923076923076923,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -525,7 +525,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/request_utils.pyc",
     "size": 4701,
     "function_count": 3,
-    "decompile_status": "partial",
+    "decompile_status": "ok",
     "bytecode_match_rate": 0.6666666666666666,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -552,7 +552,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/strategy_info_utils.pyc",
     "size": 59800,
     "function_count": 25,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.76,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -570,7 +570,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc",
     "size": 83014,
     "function_count": 38,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.5,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -606,7 +606,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/utils.pyc",
     "size": 14043,
     "function_count": 20,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.7,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -1038,7 +1038,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_history_data_source/history_data_source.pyc",
     "size": 25503,
     "function_count": 16,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.9375,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -1182,7 +1182,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db_tools/db_base.pyc",
     "size": 21809,
     "function_count": 28,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.9642857142857143,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -1308,7 +1308,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/history_data_source.pyc",
     "size": 39226,
     "function_count": 15,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.8,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -1434,7 +1434,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/real_quote.pyc",
     "size": 69572,
     "function_count": 42,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.6666666666666666,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -1560,7 +1560,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/profiler_func.pyc",
     "size": 9103,
     "function_count": 12,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.9166666666666666,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -1632,7 +1632,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/account/base_position.pyc",
     "size": 5477,
     "function_count": 17,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.9411764705882353,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -1848,7 +1848,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/executor.pyc",
     "size": 10189,
     "function_count": 9,
-    "decompile_status": "partial",
+    "decompile_status": "ok",
     "bytecode_match_rate": 0.8888888888888888,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -1929,7 +1929,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy_universe.pyc",
     "size": 6671,
     "function_count": 9,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.6666666666666666,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -1974,7 +1974,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/data_proxy.pyc",
     "size": 5062,
     "function_count": 8,
-    "decompile_status": "partial",
+    "decompile_status": "ok",
     "bytecode_match_rate": 0.875,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -2091,7 +2091,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/__init__.pyc",
     "size": 14079,
     "function_count": 18,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.9444444444444444,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -2118,7 +2118,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/base.pyc",
     "size": 30588,
     "function_count": 38,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.9210526315789473,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -2298,7 +2298,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc",
     "size": 22990,
     "function_count": 22,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.7272727272727273,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -2325,7 +2325,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data_source/fly_data_source.pyc",
     "size": 44328,
     "function_count": 67,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.8805970149253731,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -2415,7 +2415,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/stock_account.pyc",
     "size": 18254,
     "function_count": 23,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.9565217391304348,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -2469,7 +2469,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/future_position.pyc",
     "size": 37059,
     "function_count": 70,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.9714285714285714,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -2523,7 +2523,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/stock_position.pyc",
     "size": 15894,
     "function_count": 36,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.9444444444444444,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -2577,7 +2577,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc",
     "size": 25996,
     "function_count": 11,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.7272727272727273,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -2640,7 +2640,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_log/__init__.pyc",
     "size": 11912,
     "function_count": 9,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.7777777777777778,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -2712,7 +2712,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc",
     "size": 67327,
     "function_count": 32,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.75,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -2793,7 +2793,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_simulation/__init__.pyc",
     "size": 1999,
     "function_count": 5,
-    "decompile_status": "partial",
+    "decompile_status": "ok",
     "bytecode_match_rate": 0.8,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -2802,7 +2802,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_simulation/broker.pyc",
     "size": 19255,
     "function_count": 22,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.9090909090909091,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -2910,7 +2910,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc",
     "size": 212327,
     "function_count": 116,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.6982758620689655,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -2928,7 +2928,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade_account/trade_stock_account.pyc",
     "size": 4901,
     "function_count": 11,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.9090909090909091,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -3072,7 +3072,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/profiler_func.pyc",
     "size": 13747,
     "function_count": 13,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.9230769230769231,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -3108,7 +3108,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/scheduler.pyc",
     "size": 41237,
     "function_count": 42,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.6428571428571429,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -3243,7 +3243,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/flytools.pyc",
     "size": 53107,
     "function_count": 63,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.9047619047619048,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -3261,7 +3261,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/future_contract_info.pyc",
     "size": 20515,
     "function_count": 27,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.8518518518518519,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -3270,7 +3270,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/future_param.pyc",
     "size": 11914,
     "function_count": 15,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.9333333333333333,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -3306,7 +3306,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/market_time.pyc",
     "size": 8629,
     "function_count": 9,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.7777777777777778,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -3324,7 +3324,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/op_station.pyc",
     "size": 8313,
     "function_count": 8,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.875,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -3387,7 +3387,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quote_handler.pyc",
     "size": 73417,
     "function_count": 53,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.7735849056603774,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -3405,7 +3405,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/fly/dockerspawner/dockerspawner.pyc",
     "size": 20949,
     "function_count": 23,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.8695652173913043,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -3567,7 +3567,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/flyAccount.pyc",
     "size": 23934,
     "function_count": 22,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.8181818181818182,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -3585,7 +3585,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/ptradeAccount.pyc",
     "size": 75970,
     "function_count": 136,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.9338235294117647,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -3594,7 +3594,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/ptradeFutureAccount.pyc",
     "size": 40917,
     "function_count": 37,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.8648648648648649,
     "ok_py_generated": true,
     "last_tested_round": 98
@@ -3603,7 +3603,7 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/ptradeOptionAccount.pyc",
     "size": 35773,
     "function_count": 37,
-    "decompile_status": "partial",
+    "decompile_status": "error",
     "bytecode_match_rate": 0.8918918918918919,
     "ok_py_generated": true,
     "last_tested_round": 98
