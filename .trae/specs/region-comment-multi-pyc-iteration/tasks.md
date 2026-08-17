@@ -269,7 +269,7 @@
 - [x] T2.97 第 97 轮（全局 partial pyc 模式分析 + function.pyc 深度分析 + 修剪策略改进）
   - [x] T2.97.1 测试工程师：全局模式分析 + function.pyc 字节码 diff → `rounds/round_97/test_engineer/decompile_report.md`（97.5% diff 为语句顺序错位；function.pyc 85.92%，10 mismatches）
   - [x] T2.97.2 修复工程师：改进 spurious return None 修剪为基于位置检查 → `rounds/round_97/repair_engineer/fix_report.md`（base.py _trim_spurious_intermediate_returns 从数量比较改为逐位置检查；全局 91.38% 不变，无回归）
-  - [ ] T2.97.3 commit + push `rcm-r97:`
+  - [x] T2.97.3 commit + push `rcm-r97:`（6f9baa19）
   - 残留：27 函数有未修剪 return-None（根因是更早位置的语句顺序错位），需修复反编译器控制流区域识别逻辑
 - [ ] T2.NN ... 持续直到退出条件满足（所有 pyc 文件 100% 字节码一致，每个生成 +OK.py）
 
