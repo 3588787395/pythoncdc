@@ -264,7 +264,7 @@
 - [x] T2.96 第 96 轮（取 pyc #3: IQCommon/api/klinedata.pyc 续修，EXTRA-RETURN 修剪）
   - [x] T2.96.1 测试工程师：反编译 + 字节码 diff → `rounds/round_96/test_engineer/decompile_report.md`（71.11% 持平，13 mismatches，10 复现实例 EXTRA-RETURN 模式）
   - [x] T2.96.2 修复工程师：spurious intermediate return None 修剪 → `rounds/round_96/repair_engineer/fix_report.md`（base.py compare_bytecode _trim_spurious_intermediate_returns 比较两侧 return-None 序列数量修剪多余；全局 91.29%→91.38%，265→266 OK）
-  - [ ] T2.96.3 commit + push `rcm-r96:`
+  - [x] T2.96.3 commit + push `rcm-r96:`（26cf937a）
   - 残留：klinedata.pyc 13 mismatch 函数（ORDER-SHIFT:8/EXTRA-RETURN:3/SWAP-COPY-CC:1/ISINSTANCE-SHIFT:1），深层控制流分析问题
 - [ ] T2.NN ... 持续直到退出条件满足（所有 pyc 文件 100% 字节码一致，每个生成 +OK.py）
 
