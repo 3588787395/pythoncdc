@@ -1,0 +1,118 @@
+﻿
+======================================================================
+DEFECT: repro_04_cf2_while_else_break
+======================================================================
+--- ORIGINAL SOURCE ---
+# while-else with break
+def test():
+    counter = 0
+    while counter < 10:
+        if counter == 5:
+            break
+        counter += 1
+    else:
+        print("loop completed")
+    return counter
+
+--- DECOMPILED SOURCE ---
+def test():
+    counter = 0
+    while counter < 10:
+        if counter == 5:
+            break
+        counter += 1
+    else:
+        print('loop completed')
+        return counter
+
+--- BYTECODE DIFF: <module>.test ---
+true_diffs: 13, jump_diffs: 5
+orig_ops (26): ['RESUME', 'LOAD_CONST', 'STORE_FAST', 'LOAD_FAST', 'LOAD_CONST', 'COMPARE_OP', 'POP_JUMP_FORWARD_IF_FALSE', 'LOAD_FAST', 'LOAD_CONST', 'COMPARE_OP', 'POP_JUMP_FORWARD_IF_FALSE', 'JUMP_FORWARD', 'LOAD_FAST', 'LOAD_CONST', 'BINARY_OP', 'STORE_FAST', 'LOAD_FAST', 'LOAD_CONST', 'COMPARE_OP', 'POP_JUMP_BACKWARD_IF_TRUE']...
+decomp_ops (27): ['RESUME', 'LOAD_CONST', 'STORE_FAST', 'LOAD_FAST', 'LOAD_CONST', 'COMPARE_OP', 'POP_JUMP_FORWARD_IF_FALSE', 'LOAD_FAST', 'LOAD_CONST', 'COMPARE_OP', 'POP_JUMP_FORWARD_IF_FALSE', 'LOAD_CONST', 'RETURN_VALUE', 'LOAD_FAST', 'LOAD_CONST', 'BINARY_OP', 'STORE_FAST', 'LOAD_FAST', 'LOAD_CONST', 'COMPARE_OP']...
+  TD: {'index': 12, 'orig_op': 'LOAD_FAST', 'decomp_op': 'RETURN_VALUE', 'orig_arg': 'counter', 'decomp_arg': None}
+  TD: {'index': 13, 'orig_op': 'LOAD_CONST', 'decomp_op': 'LOAD_FAST', 'orig_arg': 1, 'decomp_arg': 'counter'}
+  TD: {'index': 14, 'orig_op': 'BINARY_OP', 'decomp_op': 'LOAD_CONST', 'orig_arg': 13, 'decomp_arg': 1}
+  TD: {'index': 15, 'orig_op': 'STORE_FAST', 'decomp_op': 'BINARY_OP', 'orig_arg': 'counter', 'decomp_arg': 13}
+  TD: {'index': 16, 'orig_op': 'LOAD_FAST', 'decomp_op': 'STORE_FAST', 'orig_arg': 'counter', 'decomp_arg': 'counter'}
+  TD: {'index': 17, 'orig_op': 'LOAD_CONST', 'decomp_op': 'LOAD_FAST', 'orig_arg': 10, 'decomp_arg': 'counter'}
+  TD: {'index': 18, 'orig_op': 'COMPARE_OP', 'decomp_op': 'LOAD_CONST', 'orig_arg': '<', 'decomp_arg': 10}
+  TD: {'index': 21, 'orig_op': 'LOAD_CONST', 'decomp_op': 'LOAD_GLOBAL', 'orig_arg': 'loop completed', 'decomp_arg': 'print'}
+  JD: {'index': 6, 'orig_op': 'POP_JUMP_FORWARD_IF_FALSE', 'decomp_op': 'POP_JUMP_FORWARD_IF_FALSE', 'orig_arg': 54, 'decomp_arg': 56}
+  JD: {'index': 10, 'orig_op': 'POP_JUMP_FORWARD_IF_FALSE', 'decomp_op': 'POP_JUMP_FORWARD_IF_FALSE', 'orig_arg': 32, 'decomp_arg': 34}
+  JD: {'index': 11, 'orig_op': 'JUMP_FORWARD', 'decomp_op': 'LOAD_CONST', 'orig_arg': 84, 'decomp_arg': None}
+  JD: {'index': 19, 'orig_op': 'POP_JUMP_BACKWARD_IF_TRUE', 'decomp_op': 'COMPARE_OP', 'orig_arg': 18, 'decomp_arg': '<'}
+  JD: {'index': 20, 'orig_op': 'LOAD_GLOBAL', 'decomp_op': 'POP_JUMP_BACKWARD_IF_TRUE', 'orig_arg': 'print', 'decomp_arg': 18}
+
+======================================================================
+DEFECT: repro_07_te1_try_except_else_finally
+======================================================================
+--- ORIGINAL SOURCE ---
+# try-except-else-finally
+def test():
+    try:
+        result = 10 / 2
+    except ZeroDivisionError:
+        result = "error"
+    else:
+        print("success")
+    finally:
+        print("cleanup")
+    return result
+
+--- DECOMPILED SOURCE ---
+def test():
+    try:
+        result = 5.0
+        print('success')
+    except ZeroDivisionError:
+        result = 'error'
+    else:
+        return result
+    finally:
+        print('cleanup')
+
+--- BYTECODE DIFF: <module>.test ---
+true_diffs: 29, jump_diffs: 5
+orig_ops (37): ['RESUME', 'LOAD_CONST', 'STORE_FAST', 'LOAD_GLOBAL', 'LOAD_CONST', 'CALL', 'POP_TOP', 'JUMP_FORWARD', 'PUSH_EXC_INFO', 'LOAD_GLOBAL', 'CHECK_EXC_MATCH', 'POP_JUMP_FORWARD_IF_FALSE', 'POP_TOP', 'LOAD_CONST', 'STORE_FAST', 'POP_EXCEPT', 'JUMP_FORWARD', 'RERAISE', 'COPY', 'POP_EXCEPT']...
+decomp_ops (41): ['RESUME', 'LOAD_CONST', 'STORE_FAST', 'LOAD_GLOBAL', 'LOAD_CONST', 'CALL', 'POP_TOP', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_CONST', 'CALL', 'POP_TOP', 'RETURN_VALUE', 'PUSH_EXC_INFO', 'LOAD_GLOBAL', 'CHECK_EXC_MATCH', 'POP_JUMP_FORWARD_IF_FALSE', 'POP_TOP', 'LOAD_CONST', 'STORE_FAST']...
+  TD: {'index': 8, 'orig_op': 'PUSH_EXC_INFO', 'decomp_op': 'LOAD_GLOBAL', 'orig_arg': None, 'decomp_arg': 'print'}
+  TD: {'index': 9, 'orig_op': 'LOAD_GLOBAL', 'decomp_op': 'LOAD_CONST', 'orig_arg': 'ZeroDivisionError', 'decomp_arg': 'cleanup'}
+  TD: {'index': 10, 'orig_op': 'CHECK_EXC_MATCH', 'decomp_op': 'CALL', 'orig_arg': None, 'decomp_arg': 1}
+  TD: {'index': 12, 'orig_op': 'POP_TOP', 'decomp_op': 'RETURN_VALUE', 'orig_arg': None, 'decomp_arg': None}
+  TD: {'index': 13, 'orig_op': 'LOAD_CONST', 'decomp_op': 'PUSH_EXC_INFO', 'orig_arg': 'error', 'decomp_arg': None}
+  TD: {'index': 14, 'orig_op': 'STORE_FAST', 'decomp_op': 'LOAD_GLOBAL', 'orig_arg': 'result', 'decomp_arg': 'ZeroDivisionError'}
+  TD: {'index': 15, 'orig_op': 'POP_EXCEPT', 'decomp_op': 'CHECK_EXC_MATCH', 'orig_arg': None, 'decomp_arg': None}
+  TD: {'index': 17, 'orig_op': 'RERAISE', 'decomp_op': 'POP_TOP', 'orig_arg': 0, 'decomp_arg': None}
+  JD: {'index': 7, 'orig_op': 'JUMP_FORWARD', 'decomp_op': 'LOAD_FAST', 'orig_arg': 76, 'decomp_arg': 'result'}
+  JD: {'index': 11, 'orig_op': 'POP_JUMP_FORWARD_IF_FALSE', 'decomp_op': 'POP_TOP', 'orig_arg': 68, 'decomp_arg': None}
+  JD: {'index': 16, 'orig_op': 'JUMP_FORWARD', 'decomp_op': 'POP_JUMP_FORWARD_IF_FALSE', 'orig_arg': 76, 'decomp_arg': 100}
+  JD: {'index': 21, 'orig_op': 'LOAD_GLOBAL', 'decomp_op': 'JUMP_FORWARD', 'orig_arg': 'print', 'decomp_arg': 108}
+  JD: {'index': 25, 'orig_op': 'JUMP_FORWARD', 'decomp_op': 'RERAISE', 'orig_arg': 148, 'decomp_arg': 1}
+
+======================================================================
+DEFECT: repro_10_as1_async_await_body
+======================================================================
+--- ORIGINAL SOURCE ---
+# async function with await
+import asyncio
+async def test():
+    results = await asyncio.gather(task1(), task2())
+    return results
+
+--- DECOMPILED SOURCE ---
+import asyncio
+async def test():
+    return results
+
+--- BYTECODE DIFF: <module>.test ---
+true_diffs: 16, jump_diffs: 0
+orig_ops (19): ['RETURN_GENERATOR', 'POP_TOP', 'RESUME', 'LOAD_GLOBAL', 'LOAD_ATTR', 'LOAD_GLOBAL', 'CALL', 'LOAD_GLOBAL', 'CALL', 'CALL', 'GET_AWAITABLE', 'LOAD_CONST', 'SEND', 'YIELD_VALUE', 'RESUME', 'JUMP_BACKWARD_NO_INTERRUPT', 'STORE_FAST', 'LOAD_FAST', 'RETURN_VALUE']...
+decomp_ops (5): ['RETURN_GENERATOR', 'POP_TOP', 'RESUME', 'LOAD_GLOBAL', 'RETURN_VALUE']...
+  TD: {'index': 3, 'orig_op': 'LOAD_GLOBAL', 'decomp_op': 'LOAD_GLOBAL', 'orig_arg': 'asyncio', 'decomp_arg': 'results'}
+  TD: {'index': 4, 'orig_op': 'LOAD_ATTR', 'decomp_op': 'RETURN_VALUE', 'orig_arg': 'gather', 'decomp_arg': None}
+  TD: {'index': 5, 'type': 'missing_in_decomp', 'orig_op': 'LOAD_GLOBAL', 'orig_arg': 'task1'}
+  TD: {'index': 6, 'type': 'missing_in_decomp', 'orig_op': 'CALL', 'orig_arg': 0}
+  TD: {'index': 7, 'type': 'missing_in_decomp', 'orig_op': 'LOAD_GLOBAL', 'orig_arg': 'task2'}
+  TD: {'index': 8, 'type': 'missing_in_decomp', 'orig_op': 'CALL', 'orig_arg': 0}
+  TD: {'index': 9, 'type': 'missing_in_decomp', 'orig_op': 'CALL', 'orig_arg': 2}
+  TD: {'index': 10, 'type': 'missing_in_decomp', 'orig_op': 'GET_AWAITABLE', 'orig_arg': 0}

@@ -17519,6 +17519,17 @@ AST 映射规则:
                     finally:
                         self._generating_regions.discard(id(_nested_ternary_for_handler))
                     _t_expr = None
+                    # [R94 fix] When _generate_ternary returns multiple
+                    # statements (pre_stmts + ternary assign), the
+                    # pre_stmts contain user statements that were in the
+                    # ternary's condition_block (e.g. `error_info =
+                    # get_traceback_message(); system_log.error(...)`).
+                    # These must be added to handler_body, not discarded.
+                    # 依「每块唯一归属」: pre_stmts belong to independent
+                    # AST nodes, not the TernaryRegion's exc_type.
+                    # Per "parent references child entry": parent
+                    # ExceptHandler references ternary's IfExp as exc_type
+                    # and pre_stmts as handler body predecessors.
                     if _t_stmts and len(_t_stmts) == 1:
                         _t_node = _t_stmts[0]
                         if (_t_node.get('type') == 'Expr'
@@ -17527,6 +17538,22 @@ AST 映射规则:
                         elif (_t_node.get('type') == 'Assign'
                                 and _t_node.get('value', {}).get('type') == 'IfExp'):
                             _t_expr = _t_node['value']
+                    elif _t_stmts and len(_t_stmts) > 1:
+                        # Multi-statement: pre_stmts + ternary node.
+                        # Extract IfExp from the last statement.
+                        _last_t = _t_stmts[-1]
+                        if (_last_t.get('type') == 'Assign'
+                                and _last_t.get('value', {}).get('type') == 'IfExp'):
+                            _t_expr = _last_t['value']
+                            # Pre-stmts go into handler_body (before
+                            # any existing handler_body statements).
+                            _pre_stmts_for_body = _t_stmts[:-1]
+                            handler_body = list(_pre_stmts_for_body) + handler_body
+                        elif (_last_t.get('type') == 'Expr'
+                                and _last_t.get('value', {}).get('type') == 'IfExp'):
+                            _t_expr = _last_t['value']
+                            _pre_stmts_for_body = _t_stmts[:-1]
+                            handler_body = list(_pre_stmts_for_body) + handler_body
                     if _t_expr is not None:
                         handler_node['exc_type'] = _t_expr
                     elif exc_type:
@@ -24823,6 +24850,39 @@ AST 映射规则:
                         cond_start_idx = i + 1
                         i += 1
                         continue
+                # [R94 fix] Handle POP_TOP as expression statement terminator
+                # in condition_block. When condition_block contains multiple
+                # user statements before the ternary condition (e.g. in an
+                # except handler: `error_info = get_traceback_message();
+                # system_log.error(...); <ternary condition>`), the
+                # `system_log.error(...)` call is terminated by POP_TOP.
+                # Without this, the call instructions are not extracted as
+                # pre_stmts and are silently dropped.
+                # 依「每块唯一归属」: POP_TOP-terminated expression belongs
+                # to its own Expr statement node, not the TernaryRegion's
+                # condition. Per "bottom-up reduction": predecessor Expr is
+                # reduced as independent AST node, ternary only owns cond +
+                # value + merge blocks.
+                # 普遍性: covers any Expr statement (function call, method
+                # call, etc.) that appears before the ternary condition in
+                # the same basic block.
+                if instr.opname == 'POP_TOP' and i > cond_start_idx:
+                    _pop_instrs = list(cond_instrs[cond_start_idx:i])
+                    if _pop_instrs:
+                        _pop_expr = self.expr_reconstructor.reconstruct(_pop_instrs)
+                        if _pop_expr is not None:
+                            pre_stmts.append({
+                                'type': 'Expr',
+                                'value': _pop_expr,
+                            })
+                        else:
+                            _pop_stmts = self._build_statements_from_instructions(
+                                _pop_instrs)
+                            if _pop_stmts:
+                                pre_stmts.extend(_pop_stmts)
+                    cond_start_idx = i + 1
+                    i += 1
+                    continue
                 if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
                                    'STORE_SUBSCR', 'STORE_ATTR'):
                     # Check if the predecessor range contains

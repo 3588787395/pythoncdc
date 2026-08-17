@@ -1,0 +1,67 @@
+﻿======================================================================
+ASYNC FUNCTION: test()
+======================================================================
+co_name: test
+co_flags: 131 (CO_COROUTINE=256)
+Is coroutine: False
+co_varnames: ('results',)
+co_consts: (None,)
+
+--- ORIGINAL BYTECODE ---
+  3           0 RETURN_GENERATOR
+              2 POP_TOP
+              4 RESUME                   0
+
+  4           6 LOAD_GLOBAL              1 (NULL + asyncio)
+             18 LOAD_ATTR                1 (gather)
+             28 LOAD_GLOBAL              5 (NULL + task1)
+             40 PRECALL                  0
+             44 CALL                     0
+             54 LOAD_GLOBAL              7 (NULL + task2)
+             66 PRECALL                  0
+             70 CALL                     0
+             80 PRECALL                  2
+             84 CALL                     2
+             94 GET_AWAITABLE            0
+             96 LOAD_CONST               0 (None)
+        >>   98 SEND                     3 (to 106)
+            100 YIELD_VALUE
+            102 RESUME                   3
+            104 JUMP_BACKWARD_NO_INTERRUPT     4 (to 98)
+        >>  106 STORE_FAST               0 (results)
+
+  5         108 LOAD_FAST                0 (results)
+            110 RETURN_VALUE
+
+--- CFG BLOCKS (4 blocks) ---
+  Block 1: instrs=[('RETURN_GENERATOR', None)]
+    succs=[2], preds=[]
+  Block 2: instrs=[('POP_TOP', None), ('RESUME', 0), ('LOAD_GLOBAL', 'asyncio'), ('LOAD_ATTR', 'gather'), ('LOAD_GLOBAL', 'task1'), ('PRECALL', 0), ('CALL', 0), ('LOAD_GLOBAL', 'task2'), ('PRECALL', 0), ('CALL', 0), ('PRECALL', 2), ('CALL', 2), ('GET_AWAITABLE', 0), ('LOAD_CONST', None)]
+    succs=[98], preds=[0]
+  Block 3: instrs=[('SEND', 106), ('YIELD_VALUE', None), ('RESUME', 3), ('JUMP_BACKWARD_NO_INTERRUPT', 98)]
+    succs=[98, 106], preds=[2, 98]
+  Block 4: instrs=[('STORE_FAST', 'results'), ('LOAD_FAST', 'results'), ('RETURN_VALUE', None)]
+    succs=[], preds=[98]
+
+--- REGION ANALYSIS ---
+  Region: type=RegionType.BASIC, entry=0
+    blocks=[0]
+  Region: type=RegionType.BASIC, entry=2
+    blocks=[2]
+  Region: type=RegionType.BASIC, entry=98
+    blocks=[98]
+  Region: type=RegionType.BASIC, entry=106
+    blocks=[106]
+
+--- block_to_region mapping ---
+python : Traceback (most recent call last):
+所在位置 行:1 字符: 144
++ ... d f:\Downloads\pythoncdc-main; python _tmp_diag_async.py 2>&1 | Out-F ...
++                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Traceback (most recent call last)::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  File "F:\Downloads\pythoncdc-main\_tmp_diag_async.py", line 67, in <module>
+    for block_offset, region in sorted(analyzer.block_to_region.items()):
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: '<' not supported between instances of 'BasicBlock' and 'BasicBlock'

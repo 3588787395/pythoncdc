@@ -1,0 +1,493 @@
+﻿
+======================================================================
+ORIGINAL BYTECODE: <module>
+======================================================================
+  0           0 RESUME                   0
+
+  1           2 LOAD_CONST               0 ('\nPython�﷨�ṹ�ۺϲ����ļ�\n���ڲ��Է���������ȫ������\n')
+              4 STORE_NAME               0 (__doc__)
+
+ 11           6 LOAD_CONST               1 (10)
+              8 STORE_NAME               1 (x)
+
+ 12          10 LOAD_CONST               2 (3.14)
+             12 STORE_NAME               2 (y)
+
+ 13          14 LOAD_CONST               3 ('Hello, World!')
+             16 STORE_NAME               3 (z)
+
+ 14          18 LOAD_CONST               4 (True)
+             20 STORE_NAME               4 (flag)
+
+ 15          22 LOAD_CONST               5 (None)
+             24 STORE_NAME               5 (none_value)
+
+ 18          26 LOAD_CONST               6 ((1, 2, 3))
+             28 UNPACK_SEQUENCE          3
+             32 STORE_NAME               6 (a)
+             34 STORE_NAME               7 (b)
+             36 STORE_NAME               8 (c)
+
+ 19          38 LOAD_CONST               7 (0)
+             40 COPY                     1
+             42 STORE_NAME               1 (x)
+             44 COPY                     1
+             46 STORE_NAME               2 (y)
+             48 STORE_NAME               3 (z)
+
+ 22          50 BUILD_LIST               0
+             52 LOAD_CONST               8 ((1, 2, 3, 4, 5))
+             54 LIST_EXTEND              1
+             56 STORE_NAME               9 (my_list)
+
+ 23          58 LOAD_CONST               6 ((1, 2, 3))
+             60 STORE_NAME              10 (my_tuple)
+
+ 24          62 LOAD_CONST               9 ('Alice')
+             64 LOAD_CONST              10 (25)
+             66 LOAD_CONST              11 (('name', 'age'))
+             68 BUILD_CONST_KEY_MAP      2
+             70 STORE_NAME              11 (my_dict)
+
+ 25          72 BUILD_SET                0
+             74 LOAD_CONST              12 (frozenset({1, 2, 3, 4}))
+             76 SET_UPDATE               1
+             78 STORE_NAME              12 (my_set)
+
+ 28          80 LOAD_CONST              13 (<code object <listcomp> at 0x000001ABBF6F0AC0, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 28>)
+             82 MAKE_FUNCTION            0
+             84 PUSH_NULL
+             86 LOAD_NAME               13 (range)
+             88 LOAD_CONST               1 (10)
+             90 PRECALL                  1
+             94 CALL                     1
+            104 GET_ITER
+            106 PRECALL                  0
+            110 CALL                     0
+            120 STORE_NAME              14 (squares)
+
+ 29         122 LOAD_CONST              14 (<code object <listcomp> at 0x000001ABBF6E5110, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 29>)
+            124 MAKE_FUNCTION            0
+            126 PUSH_NULL
+            128 LOAD_NAME               13 (range)
+            130 LOAD_CONST               1 (10)
+            132 PRECALL                  1
+            136 CALL                     1
+            146 GET_ITER
+            148 PRECALL                  0
+            152 CALL                     0
+            162 STORE_NAME              15 (even_squares)
+
+ 32         164 LOAD_CONST              15 (<code object <dictcomp> at 0x000001ABBF7043B0, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 32>)
+            166 MAKE_FUNCTION            0
+            168 PUSH_NULL
+            170 LOAD_NAME               13 (range)
+            172 LOAD_CONST              16 (5)
+            174 PRECALL                  1
+            178 CALL                     1
+            188 GET_ITER
+            190 PRECALL                  0
+            194 CALL                     0
+            204 STORE_NAME              16 (square_dict)
+
+ 35         206 LOAD_CONST              17 (<code object <setcomp> at 0x000001ABBF6F0B90, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 35>)
+            208 MAKE_FUNCTION            0
+            210 PUSH_NULL
+            212 LOAD_NAME               13 (range)
+            214 LOAD_CONST               1 (10)
+            216 PRECALL                  1
+            220 CALL                     1
+            230 GET_ITER
+            232 PRECALL                  0
+            236 CALL                     0
+            246 STORE_NAME              17 (unique_squares)
+
+ 41         248 LOAD_CONST              18 (<code object control_flow_examples at 0x000001ABBF2859E0, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 41>)
+            250 MAKE_FUNCTION            0
+            252 STORE_NAME              18 (control_flow_examples)
+
+ 96         254 LOAD_CONST              19 (<code object exception_handling_examples at 0x000001ABBF805340, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 96>)
+            256 MAKE_FUNCTION            0
+            258 STORE_NAME              19 (exception_handling_examples)
+
+138         260 LOAD_CONST              20 (<code object risky_operation at 0x000001ABBF8E00F0, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 138>)
+            262 MAKE_FUNCTION            0
+            264 STORE_NAME              20 (risky_operation)
+
+141         266 LOAD_CONST              21 (<code object risky_call at 0x000001ABBF8E01B0, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 141>)
+            268 MAKE_FUNCTION            0
+            270 STORE_NAME              21 (risky_call)
+
+148         272 LOAD_CONST              88 ((10,))
+            274 LOAD_CONST              22 (<code object simple_function at 0x000001ABBF6F0ED0, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 148>)
+            276 MAKE_FUNCTION            1 (defaults)
+            278 STORE_NAME              22 (simple_function)
+
+152         280 LOAD_CONST              23 (<code object function_with_args at 0x000001ABBF704110, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 152>)
+            282 MAKE_FUNCTION            0
+            284 STORE_NAME              23 (function_with_args)
+
+156         286 LOAD_CONST              24 (<code object function_with_kwargs at 0x000001ABBF7534B0, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 156>)
+            288 MAKE_FUNCTION            0
+            290 STORE_NAME              24 (function_with_kwargs)
+
+160         292 LOAD_CONST              25 (<code object function_with_both at 0x000001ABBF6EBC30, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 160>)
+            294 MAKE_FUNCTION            0
+            296 STORE_NAME              25 (function_with_both)
+
+164         298 LOAD_CONST              26 (<code object recursive_function at 0x000001ABBF880630, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 164>)
+            300 MAKE_FUNCTION            0
+            302 STORE_NAME              26 (recursive_function)
+
+171         304 LOAD_CONST              27 (<code object <lambda> at 0x000001ABBF6F1620, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 171>)
+            306 MAKE_FUNCTION            0
+            308 STORE_NAME              27 (square)
+
+172         310 LOAD_CONST              28 (<code object <lambda> at 0x000001ABBF771140, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 172>)
+            312 MAKE_FUNCTION            0
+            314 STORE_NAME              28 (add)
+
+178         316 PUSH_NULL
+            318 LOAD_BUILD_CLASS
+            320 LOAD_CONST              29 (<code object BaseClass at 0x000001ABBF539590, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 178>)
+            322 MAKE_FUNCTION            0
+            324 LOAD_CONST              30 ('BaseClass')
+            326 PRECALL                  2
+            330 CALL                     2
+            340 STORE_NAME              29 (BaseClass)
+
+205         342 PUSH_NULL
+            344 LOAD_BUILD_CLASS
+            346 LOAD_CONST              31 (<code object DerivedClass at 0x000001ABBF8EC030, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 205>)
+            348 MAKE_FUNCTION            0
+            350 LOAD_CONST              32 ('DerivedClass')
+            352 LOAD_NAME               29 (BaseClass)
+            354 PRECALL                  3
+            358 CALL                     3
+            368 STORE_NAME              30 (DerivedClass)
+
+222         370 PUSH_NULL
+            372 LOAD_BUILD_CLASS
+            374 LOAD_CONST              33 (<code object AbstractClass at 0x000001ABBF704730, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 222>)
+            376 MAKE_FUNCTION            0
+            378 LOAD_CONST              34 ('AbstractClass')
+            380 PRECALL                  2
+            384 CALL                     2
+            394 STORE_NAME              31 (AbstractClass)
+
+231         396 PUSH_NULL
+            398 LOAD_BUILD_CLASS
+            400 LOAD_CONST              35 (<code object ConcreteClass at 0x000001ABBF773EC0, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 231>)
+            402 MAKE_FUNCTION            0
+            404 LOAD_CONST              36 ('ConcreteClass')
+            406 LOAD_NAME               31 (AbstractClass)
+            408 PRECALL                  3
+            412 CALL                     3
+            422 STORE_NAME              32 (ConcreteClass)
+
+236         424 PUSH_NULL
+            426 LOAD_BUILD_CLASS
+            428 LOAD_CONST              37 (<code object MixinA at 0x000001ABBF8F0030, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 236>)
+            430 MAKE_FUNCTION            0
+            432 LOAD_CONST              38 ('MixinA')
+            434 PRECALL                  2
+            438 CALL                     2
+            448 STORE_NAME              33 (MixinA)
+
+240         450 PUSH_NULL
+            452 LOAD_BUILD_CLASS
+            454 LOAD_CONST              39 (<code object MixinB at 0x000001ABBF8F0100, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 240>)
+            456 MAKE_FUNCTION            0
+            458 LOAD_CONST              40 ('MixinB')
+            460 PRECALL                  2
+            464 CALL                     2
+            474 STORE_NAME              34 (MixinB)
+
+244         476 PUSH_NULL
+            478 LOAD_BUILD_CLASS
+            480 LOAD_CONST              41 (<code object MultipleInheritanceClass at 0x000001ABBF8F01D0, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 244>)
+            482 MAKE_FUNCTION            0
+            484 LOAD_CONST              42 ('MultipleInheritanceClass')
+            486 LOAD_NAME               29 (BaseClass)
+            488 LOAD_NAME               33 (MixinA)
+            490 LOAD_NAME               34 (MixinB)
+            492 PRECALL                  5
+            496 CALL                     5
+            506 STORE_NAME              35 (MultipleInheritanceClass)
+
+253         508 LOAD_CONST              43 (<code object simple_decorator at 0x000001ABBF8F02A0, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 253>)
+            510 MAKE_FUNCTION            0
+            512 STORE_NAME              36 (simple_decorator)
+
+261         514 LOAD_NAME               36 (simple_decorator)
+
+262         516 LOAD_CONST              44 (<code object decorated_function at 0x000001ABBF8E06F0, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 261>)
+            518 MAKE_FUNCTION            0
+
+261         520 PRECALL                  0
+            524 CALL                     0
+
+262         534 STORE_NAME              37 (decorated_function)
+
+266         536 LOAD_CONST              45 (<code object decorator_with_args at 0x000001ABBF8F0440, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 266>)
+            538 MAKE_FUNCTION            0
+            540 STORE_NAME              38 (decorator_with_args)
+
+274         542 PUSH_NULL
+            544 LOAD_NAME               38 (decorator_with_args)
+            546 LOAD_CONST              46 ('hello')
+            548 LOAD_CONST              47 ('world')
+            550 PRECALL                  2
+            554 CALL                     2
+
+275         564 LOAD_CONST              48 (<code object complex_decorated_function at 0x000001ABBF8E07B0, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 274>)
+            566 MAKE_FUNCTION            0
+
+274         568 PRECALL                  0
+            572 CALL                     0
+
+275         582 STORE_NAME              39 (complex_decorated_function)
+
+279         584 LOAD_CONST              49 (<code object simple_generator at 0x000001ABBF704E30, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 279>)
+            586 MAKE_FUNCTION            0
+            588 STORE_NAME              40 (simple_generator)
+
+284         590 LOAD_CONST              50 (<code object generator_with_condition at 0x000001ABBF882430, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 284>)
+            592 MAKE_FUNCTION            0
+            594 STORE_NAME              41 (generator_with_condition)
+
+290         596 LOAD_CONST              51 (<code object <genexpr> at 0x000001ABBF704F10, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 290>)
+            598 MAKE_FUNCTION            0
+            600 PUSH_NULL
+            602 LOAD_NAME               13 (range)
+            604 LOAD_CONST               1 (10)
+            606 PRECALL                  1
+            610 CALL                     1
+            620 GET_ITER
+            622 PRECALL                  0
+            626 CALL                     0
+            636 STORE_NAME              42 (gen_expr)
+
+293         638 PUSH_NULL
+            640 LOAD_BUILD_CLASS
+            642 LOAD_CONST              52 (<code object CustomContextManager at 0x000001ABBF893130, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 293>)
+            644 MAKE_FUNCTION            0
+            646 LOAD_CONST              53 ('CustomContextManager')
+            648 PRECALL                  2
+            652 CALL                     2
+            662 STORE_NAME              43 (CustomContextManager)
+
+302         664 LOAD_CONST              54 (<code object use_context_manager at 0x000001ABBF805680, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 302>)
+            666 MAKE_FUNCTION            0
+            668 STORE_NAME              44 (use_context_manager)
+
+315         670 LOAD_CONST               7 (0)
+            672 LOAD_CONST               5 (None)
+            674 IMPORT_NAME             45 (asyncio)
+            676 STORE_NAME              45 (asyncio)
+
+317         678 LOAD_CONST              55 (<code object simple_coroutine at 0x000001ABBF882330, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 317>)
+            680 MAKE_FUNCTION            0
+            682 STORE_NAME              46 (simple_coroutine)
+
+321         684 LOAD_CONST              56 (<code object multiple_coroutines at 0x000001ABBF592B80, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 321>)
+            686 MAKE_FUNCTION            0
+            688 STORE_NAME              47 (multiple_coroutines)
+
+329         690 PUSH_NULL
+            692 LOAD_BUILD_CLASS
+            694 LOAD_CONST              57 (<code object AsyncClass at 0x000001ABBF8F0510, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 329>)
+            696 MAKE_FUNCTION            0
+            698 LOAD_CONST              58 ('AsyncClass')
+            700 PRECALL                  2
+            704 CALL                     2
+            714 STORE_NAME              48 (AsyncClass)
+
+339         716 LOAD_CONST               7 (0)
+            718 LOAD_CONST               5 (None)
+            720 IMPORT_NAME             49 (os)
+            722 STORE_NAME              49 (os)
+
+340         724 LOAD_CONST               7 (0)
+            726 LOAD_CONST               5 (None)
+            728 IMPORT_NAME             50 (sys)
+            730 STORE_NAME              50 (sys)
+
+341         732 LOAD_CONST               7 (0)
+            734 LOAD_CONST              59 (('defaultdict', 'Counter'))
+            736 IMPORT_NAME             51 (collections)
+            738 IMPORT_FROM             52 (defaultdict)
+            740 STORE_NAME              52 (defaultdict)
+            742 IMPORT_FROM             53 (Counter)
+            744 STORE_NAME              53 (Counter)
+            746 POP_TOP
+
+342         748 LOAD_CONST               7 (0)
+            750 LOAD_CONST              60 (('sqrt', 'pi'))
+            752 IMPORT_NAME             54 (math)
+            754 IMPORT_FROM             55 (sqrt)
+            756 STORE_NAME              55 (sqrt)
+            758 IMPORT_FROM             56 (pi)
+            760 STORE_NAME              56 (pi)
+            762 POP_TOP
+
+345         764 LOAD_CONST               7 (0)
+            766 LOAD_CONST               5 (None)
+            768 IMPORT_NAME             57 (numpy)
+            770 STORE_NAME              58 (np)
+
+346         772 LOAD_CONST               7 (0)
+            774 LOAD_CONST               5 (None)
+            776 IMPORT_NAME             59 (pandas)
+            778 STORE_NAME              60 (pd)
+
+356         780 LOAD_CONST              61 (<code object complex_expressions at 0x000001ABBF7E31F0, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 356>)
+            782 MAKE_FUNCTION            0
+            784 STORE_NAME              61 (complex_expressions)
+
+390         786 LOAD_CONST              62 (<code object string_operations at 0x000001ABBF727750, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 390>)
+            788 MAKE_FUNCTION            0
+            790 STORE_NAME              62 (string_operations)
+
+423         792 LOAD_CONST              63 (<code object file_operations at 0x000001ABBF7B27D0, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 423>)
+            794 MAKE_FUNCTION            0
+            796 STORE_NAME              63 (file_operations)
+
+446         798 LOAD_CONST              64 (<code object complex_data_structures at 0x000001ABBF5112C0, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 446>)
+            800 MAKE_FUNCTION            0
+            802 STORE_NAME              64 (complex_data_structures)
+
+478         804 LOAD_CONST               7 (0)
+            806 LOAD_CONST              65 (('List', 'Dict', 'Tuple', 'Optional', 'Union', 'Any'))
+            808 IMPORT_NAME             65 (typing)
+            810 IMPORT_FROM             66 (List)
+            812 STORE_NAME              66 (List)
+            814 IMPORT_FROM             67 (Dict)
+            816 STORE_NAME              67 (Dict)
+            818 IMPORT_FROM             68 (Tuple)
+            820 STORE_NAME              68 (Tuple)
+            822 IMPORT_FROM             69 (Optional)
+            824 STORE_NAME              69 (Optional)
+            826 IMPORT_FROM             70 (Union)
+            828 STORE_NAME              70 (Union)
+            830 IMPORT_FROM             71 (Any)
+            832 STORE_NAME              71 (Any)
+            834 POP_TOP
+
+480         836 LOAD_CONST              66 ('name')
+            838 LOAD_NAME               72 (str)
+            840 LOAD_CONST              67 ('age')
+            842 LOAD_NAME               73 (int)
+            844 LOAD_CONST              68 ('return')
+            846 LOAD_NAME               72 (str)
+            848 BUILD_TUPLE              6
+            850 LOAD_CONST              69 (<code object typed_function at 0x000001ABBF8F05E0, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 480>)
+            852 MAKE_FUNCTION            4 (annotations)
+python : Traceback (most recent call last):
+所在位置 行:1 字符: 144
++ ... d f:\Downloads\pythoncdc-main; python _tmp_disasm_r01.py 2>&1 | Out-F ...
++                                    ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Traceback (most recent call last)::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  File "F:\Downloads\pythoncdc-main\_tmp_disasm_r01.py", line 59, in <module>
+    main()
+  File "F:\Downloads\pythoncdc-main\_tmp_disasm_r01.py", line 40, in main
+    dis.dis(code)
+  File "D:\Python\Lib\dis.py", line 104, in dis
+            854 STORE_NAME              74 (typed_function)
+
+484         856 PUSH_NULL
+            858 LOAD_BUILD_CLASS
+            860 LOAD_CONST              70 (<code object TypedClass at 0x000001ABBF882830, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 484>)
+            862 MAKE_FUNCTION            0
+            864 LOAD_CONST              71 ('TypedClass')
+            866 PRECALL                  2
+            870 CALL                     2
+            880 STORE_NAME              75 (TypedClass)
+
+492         882 LOAD_CONST              72 ('value')
+            884 LOAD_NAME               70 (Union)
+            886 LOAD_NAME               73 (int)
+            888 LOAD_NAME               72 (str)
+            890 LOAD_CONST               5 (None)
+            892 BUILD_TUPLE              3
+            894 BINARY_SUBSCR
+            904 LOAD_CONST              68 ('return')
+            906 LOAD_NAME               69 (Optional)
+            908 LOAD_NAME               72 (str)
+            910 BINARY_SUBSCR
+            920 BUILD_TUPLE              4
+            922 LOAD_CONST              73 (<code object process_value at 0x000001ABBF8934B0, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 492>)
+            924 MAKE_FUNCTION            4 (annotations)
+            926 STORE_NAME              76 (process_value)
+
+501         928 PUSH_NULL
+            930 LOAD_BUILD_CLASS
+            932 LOAD_CONST              74 (<code object OperatorOverloadClass at 0x000001ABBF882D30, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 501>)
+            934 MAKE_FUNCTION            0
+            936 LOAD_CONST              75 ('OperatorOverloadClass')
+            938 PRECALL                  2
+            942 CALL                     2
+            952 STORE_NAME              77 (OperatorOverloadClass)
+
+530         954 PUSH_NULL
+            956 LOAD_BUILD_CLASS
+            958 LOAD_CONST              76 (<code object MetaClass at 0x000001ABBF893830, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 530>)
+            960 MAKE_FUNCTION            0
+            962 LOAD_CONST              77 ('MetaClass')
+            964 LOAD_NAME               78 (type)
+            966 PRECALL                  3
+            970 CALL                     3
+            980 STORE_NAME              79 (MetaClass)
+
+536         982 PUSH_NULL
+            984 LOAD_BUILD_CLASS
+            986 LOAD_CONST              78 (<code object MetaClassExample at 0x000001ABBF8F0920, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 536>)
+            988 MAKE_FUNCTION            0
+            990 LOAD_CONST              79 ('MetaClassExample')
+            992 LOAD_NAME               79 (MetaClass)
+            994 KW_NAMES                80
+            996 PRECALL                  3
+           1000 CALL                     3
+           1010 STORE_NAME              80 (MetaClassExample)
+
+544        1012 LOAD_CONST              81 (<code object main at 0x000001ABBF8058B0, file "d:\Desktop\ptrade���\python_syntax_comprehensive_test.py", line 544>)
+           1014 MAKE_FUNCTION            0
+           1016 STORE_NAME              81 (main)
+
+584        1018 LOAD_NAME               82 (__name__)
+           1020 LOAD_CONST              82 ('__main__')
+           1022 COMPARE_OP               2 (==)
+           1028 POP_JUMP_FORWARD_IF_FALSE    10 (to 1050)
+
+585        1030 PUSH_NULL
+           1032 LOAD_NAME               81 (main)
+           1034 PRECALL                  0
+           1038 CALL                     0
+           1048 POP_TOP
+
+591     >> 1050 LOAD_CONST              83 ('ȫ�ֳ���')
+           1052 STORE_NAME              83 (GLOBAL_CONSTANT)
+
+592        1054 LOAD_CONST               4 (True)
+           1056 LOAD_CONST              84 ('1.0.0')
+           1058 LOAD_CONST              85 (('debug', 'version'))
+           1060 BUILD_CONST_KEY_MAP      2
+           1062 STORE_NAME              84 (_config)
+
+595        1064 PUSH_NULL
+           1066 LOAD_NAME               85 (print)
+           1068 LOAD_CONST              86 ('ģ���ʼ�����')
+           1070 PRECALL                  1
+           1074 CALL                     1
+           1084 POP_TOP
+
+    _disassemble_recursive(x, file=file, depth=depth, show_caches=show_caches, adaptive=adaptive)
+  File "D:\Python\Lib\dis.py", line 530, in _disassemble_recursive
+    disassemble(co, file=file, show_caches=show_caches, adaptive=adaptive)
+  File "D:\Python\Lib\dis.py", line 523, in disassemble
+    _disassemble_bytes(_get_code_array(co, adaptive),
+  File "D:\Python\Lib\dis.py", line 573, in _disassemble_bytes
+    print(instr._disassemble(lineno_width, is_current_instr, offset_width),
+UnicodeEncodeError: 'gbk' codec can't encode character '\u2705' in position 117: illegal multibyte sequence
