@@ -6465,6 +6465,16 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                         if _last_i is None or _last_i.opname not in (
                                 'RETURN_VALUE', 'RETURN_CONST'):
                             continue
+                        # 区域归约算法原则 2（每块唯一归属）：
+                        # 当 try-except 无 finally 时，CPython 异常表的 try 范围
+                        # [try_start, try_end) 不包含 else 块代码。else 块的
+                        # return 语句块（offset >= try_end）不应被收集到
+                        # try_blocks 中，否则 _find_try_else_blocks 无法识别
+                        # else 块（block not in _try_body_set 排除条件会过滤它）。
+                        # 判据：块的 start_offset >= try_end_for_blocks → else 块
+                        # 候选，不添加到 try_blocks。
+                        if succ.start_offset >= try_end_for_blocks:
+                            continue
                         _explicit_return_blocks_r21n1.append(succ)
                 if _explicit_return_blocks_r21n1:
                     for _eb in _explicit_return_blocks_r21n1:
@@ -6732,6 +6742,31 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
             if else_blocks:
                 region.has_else = True
                 region.else_blocks = else_blocks
+
+            # 区域归约算法原则 2（每块唯一归属）+ 原则 3（嵌套即抽象节点）：
+            # 当 has_finally=True 且 has_else=True 时，CPython 将 finally 正常路径
+            # 代码副本嵌入 else 块的 return 路径中。这些块（含 STORE_SUBSCR +
+            # RETURN_VALUE）不是 try 体代码，也不是 else 块代码，而是 finally
+            # 正常路径副本。它们应从 try_blocks 中移除，由 finally 生成器统一
+            # 处理（finally_blocks 中的异常路径 + 正常路径副本）。
+            # 判据：try_blocks 中位于 else 块之后、handler 之前的块，如果包含
+            # STORE_SUBSCR + RETURN_VALUE，则为 finally 正常路径副本。
+            if region.has_finally and region.has_else and try_blocks:
+                _else_offsets = set(b.start_offset for b in else_blocks)
+                _else_max = max(b.start_offset for b in else_blocks) if else_blocks else 0
+                _handler_min = min(b.start_offset for b in all_handler_entry_blocks) if all_handler_entry_blocks else float('inf')
+                _finally_normal_path = []
+                for _tb in try_blocks:
+                    if _tb.start_offset > _else_max and _tb.start_offset < _handler_min:
+                        _tb_instrs = [i for i in _tb.instructions
+                                      if i.opname not in NOISE_OPS]
+                        if (_tb_instrs and _tb_instrs[-1].opname == 'RETURN_VALUE'
+                                and any(i.opname == 'STORE_SUBSCR' for i in _tb_instrs)):
+                            _finally_normal_path.append(_tb)
+                if _finally_normal_path:
+                    _fnp_set = set(_finally_normal_path)
+                    try_blocks = [b for b in try_blocks if b not in _fnp_set]
+                    region.try_blocks = try_blocks
 
             if cleanup_blocks:
                 region.cleanup_blocks = cleanup_blocks
@@ -8050,6 +8085,42 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
         return else_blocks
 
     def _find_inner_else_blocks(self, try_region, try_end_offset, all_handler_blocks):
+        """_find_inner_else_blocks — 在 try 范围内查找 else 块
+
+        ## 1. 区域类型
+        TRY_EXCEPT 的 else 子句块（else_blocks）
+
+        ## 2. 算法描述
+        基于 "No More Gotos" 论文中的区域归约：try-else 的 else 子句位于
+        try 体真实结束位置与首个 handler 入口之间。CPython 3.11+ 异常表
+        的 try 范围 [try_start, try_end) 可能覆盖 else+finally 正常路径
+        （当 has_finally=True 时），导致 else 块代码被收集到 try_blocks 中。
+        此时需要从 try_blocks 中识别并分离 else 块。
+
+        归约顺序：在 _find_try_else_blocks 之后调用，作为回退路径。
+        4 原则：每块唯一归属（else 块从 try_blocks 分离后不再属于 try 体）；
+        嵌套即抽象节点（else 块作为 try-except 的 orelse 子节点）。
+
+        ## 3. 字节码模式
+        try 体最后一条业务指令 → [else 块: LOAD_FAST + RETURN_VALUE] →
+        [finally 正常路径: LOAD_CONST + STORE_SUBSCR] → handler 入口(PUSH_EXC_INFO)
+        当 has_finally=True 时，else 块和 finally 正常路径在 try_blocks 中。
+
+        ## 4. 边界条件
+        - try_body_max_end: try 体最后一个有异常边的块的最后一条业务指令偏移
+        - first_handler_entry: 第一个 handler 入口偏移
+        - else 块范围: (try_body_max_end, first_handler_entry)
+        - 当 has_finally=True 时，try_blocks 中位于此范围的块也是 else 候选
+
+        ## 5. 归约语义
+        else 块从 try_blocks 分离后，try_blocks 不再包含 else 块代码。
+        父区域通过 orelse 字段引用 else 块入口。
+
+        ## 6. AST 映射 + 已知失败模式
+        else_blocks → Try.orelse
+        已知失败：try-except-else-finally 中 else 块有 return 时，
+        else 块被包含在 try_blocks 中（异常表覆盖），需要特殊分离逻辑。
+        """
         try_body_blocks = getattr(try_region, 'try_blocks', [])
         if not try_body_blocks:
             return []
@@ -8081,14 +8152,59 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
         # 被拉入循环体（参见 test_continue）。
         _try_body_set = set(try_body_blocks)
         _try_region_blocks = set(getattr(try_region, 'blocks', []))
+        _has_finally = getattr(try_region, 'has_finally', False)
+        _finally_blocks_set = set(getattr(try_region, 'finally_blocks', []))
         inner_else = []
         for block in self.cfg.get_blocks_in_order():
             if (block.start_offset > try_body_max_end and
                 block.start_offset < first_handler_entry and
                 block not in all_handler_blocks and
-                block not in _try_body_set and
-                block not in _try_region_blocks and
                 not self._is_pass_or_return_none_block(block)):
+                # 当 has_finally=True 时，CPython 异常表的 try 范围覆盖
+                # else+finally 正常路径，else 块代码可能被收集到 try_blocks
+                # 中。此时 try_blocks 中位于 (try_body_max_end,
+                # first_handler_entry) 区间的块是 else 块候选，不应排除。
+                # 区域归约算法原则 2（每块唯一归属）：这些块从 try_blocks
+                # 分离后归属 else_blocks，不再属于 try 体。
+                # 判据：块不在 finally_blocks 中（finally 正常路径代码
+                # 由 finally 生成器处理），且块包含 RETURN_VALUE（else
+                # 块的 return 语句）或块是 else 块的入口（try 体最后
+                # 块的 fall-through 后继）。
+                if not _has_finally and block in _try_body_set:
+                    continue
+                if not _has_finally and block in _try_region_blocks:
+                    continue
+                if _has_finally and block in _try_body_set:
+                    # 排除 finally 正常路径块（由 finally 生成器处理）
+                    if block in _finally_blocks_set:
+                        continue
+                    # finally 异常路径块（PUSH_EXC_INFO 开头）也排除
+                    _block_instrs = [i for i in block.instructions
+                                     if i.opname not in NOISE_OPS]
+                    if _block_instrs and _block_instrs[0].opname == 'PUSH_EXC_INFO':
+                        continue
+                    # RERAISE-only 块也排除
+                    if all(i.opname in ('RERAISE', 'COPY', 'POP_EXCEPT', 'POP_TOP',
+                                         'LOAD_CONST', 'STORE_FAST', 'DELETE_FAST')
+                           for i in _block_instrs):
+                        continue
+                    # finally 正常路径块排除：当 has_finally=True 时，
+                    # CPython 将 finally 代码副本嵌入 else 块的 return 路径中。
+                    # 这些块的指令模式与 finally_blocks 中的块相同
+                    # （LOAD_CONST + STORE_SUBSCR 等），后跟 RETURN_VALUE。
+                    # 判据：块的指令以 finally 代码模式开头且以 RETURN_VALUE
+                    # 结尾（如 LOAD_CONST('done') + LOAD_FAST + LOAD_CONST('final')
+                    # + STORE_SUBSCR + RETURN_VALUE）。
+                    # 区域归约算法原则 2（每块唯一归属）：finally 正常路径
+                    # 代码由 finally 生成器统一处理，不归属 else_blocks。
+                    if _block_instrs and _block_instrs[-1].opname == 'RETURN_VALUE':
+                        # 检查是否包含 STORE_SUBSCR（finally 代码特征）
+                        _has_store_subscr = any(i.opname == 'STORE_SUBSCR' for i in _block_instrs)
+                        if _has_store_subscr:
+                            continue
+                _owner = self.block_to_region.get(block)
+                if _owner is not None and _owner is not try_region:
+                    continue
                 inner_else.append(block)
         return inner_else
 
