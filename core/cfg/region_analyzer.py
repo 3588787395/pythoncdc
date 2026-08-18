@@ -13158,9 +13158,9 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 # L12083 的 `if merge is None:` 不触发）。elif 守卫保留：对侧是
                 # elif 条件块（前向条件跳转+2 条件后继）时不设 merge，让 elif 链
                 # 检测处理（如 `if b: break / elif c: ...`）。
-                _role = self.get_block_role(then_succ)
-                _role = self.get_block_role(else_succ)
-                if _role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
+                _then_role = self.get_block_role(then_succ)
+                _else_role = self.get_block_role(else_succ)
+                if _then_role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
                     _last = else_succ.get_last_instruction()
                     _elif = (
                         len(else_succ.conditional_successors) == 2
@@ -13169,7 +13169,7 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     )
                     if not _elif:
                         merge = else_succ
-                elif _role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
+                elif _else_role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
                     _last = then_succ.get_last_instruction()
                     _elif = (
                         len(then_succ.conditional_successors) == 2
