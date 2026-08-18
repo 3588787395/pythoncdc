@@ -11883,11 +11883,15 @@ AST 映射规则:
                 nested_elif_stmts = [{'type': 'If', '_is_elif': True, 'test': _last_elif_condition if _last_elif_condition else {'type': 'Constant', 'value': True}, 'body': last_elif_body_stmts if last_elif_body_stmts else [{'type': 'Pass'}], 'orelse': []}]
                 if region.elif_final_else:
                     _efe_is_continue_only = all(
-                        (self.region_analyzer.get_block_role(b) in (BlockRole.PURE_CONTINUE, BlockRole.CONTINUE)
-                         and not [i for i in b.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP', 'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT', 'JUMP_FORWARD', 'JUMP_ABSOLUTE')])
+                        (not [i for i in b.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP', 'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT', 'JUMP_FORWARD', 'JUMP_ABSOLUTE')])
+                        and any(i.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT') for i in b.instructions)
                         for b in region.elif_final_else
                     )
-                    if not _efe_is_continue_only:
+                    if _efe_is_continue_only:
+                        for _fe_b in region.elif_final_else:
+                            self.generated_blocks.add(_fe_b)
+                        nested_elif_stmts[0]['orelse'] = [{'type': 'Continue'}]
+                    else:
                         final_else_stmts = self._process_if_blocks(region.elif_final_else, region, branch='else')
                         if not self._r23n16_blocks_have_explicit_return(region.elif_final_else):
                             while (final_else_stmts and
@@ -11899,7 +11903,7 @@ AST 映射规则:
                                 final_else_stmts.pop()
                         if final_else_stmts:
                             nested_elif_stmts[0]['orelse'] = final_else_stmts
-        final_else_stmts = None
+                        final_else_stmts = None
         if not nested_elif_stmts and region.elif_final_else:
             _efe_is_continue_only_2 = all(
                 (self.region_analyzer.get_block_role(b) in (BlockRole.PURE_CONTINUE, BlockRole.CONTINUE)
