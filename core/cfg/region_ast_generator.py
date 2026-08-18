@@ -16535,7 +16535,16 @@ AST 映射规则:
                     elif (len(_m_instrs) == 1 and
                           _m_instrs[0].opname == 'RETURN_CONST' and _m_instrs[0].argval is not None):
                         _is_simple_nontrivial_return = True
-                if not has_exc_instr and (succs_outside or is_terminal) and pred_in_try and not _is_simple_nontrivial_return:
+                # [R08 fix] Do not skip continue-only blocks (NOP + JUMP_BACKWARD).
+                # These are try-body continue statements, not finally normal-path copies.
+                # A continue block has only JUMP_BACKWARD (and noise) instructions.
+                _is_continue_block = False
+                _blk_meaningful = [i for i in block.instructions
+                                   if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                if _blk_meaningful and all(i.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                                            for i in _blk_meaningful):
+                    _is_continue_block = True
+                if not _is_continue_block and not has_exc_instr and (succs_outside or is_terminal) and pred_in_try and not _is_simple_nontrivial_return:
                     self.generated_blocks.add(block)
                     continue
 

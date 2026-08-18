@@ -8188,6 +8188,16 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                                          'LOAD_CONST', 'STORE_FAST', 'DELETE_FAST')
                            for i in _block_instrs):
                         continue
+                    # [R08 fix] continue-only 块排除：try 体末尾的 continue
+                    # 被编译为 NOP + JUMP_BACKWARD，在 try 异常表范围之外，
+                    # 位于 (try_body_max_end, first_handler_entry) 区间内。
+                    # 但它是 try 体的 continue 语句，不是 else 块。
+                    # 判据：块只含 JUMP_BACKWARD（和噪声指令），不含其他有效指令。
+                    _non_jump_instrs = [i for i in _block_instrs
+                                        if i.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+                                                             'JUMP_FORWARD', 'JUMP_ABSOLUTE')]
+                    if not _non_jump_instrs and any(i.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT') for i in _block_instrs):
+                        continue
                     # finally 正常路径块排除：当 has_finally=True 时，
                     # CPython 将 finally 代码副本嵌入 else 块的 return 路径中。
                     # 这些块的指令模式与 finally_blocks 中的块相同
