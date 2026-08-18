@@ -18118,12 +18118,18 @@ AST 映射规则:
                     and r1.argval == r2.argval):
                 continue
             # as-var cleanup 命中，检查其后是否紧跟 RETURN_VALUE / RETURN_CONST
+            # [R06 fix] Allow return value expression (LOAD_CONST, LOAD_FAST, etc.)
+            # between as-var cleanup and RETURN_VALUE. Original code breaks on
+            # non-RETURN_VALUE instructions, causing return value expressions to
+            # be misidentified as non-cleanup instructions, returning False.
             for ri in remaining[r_idx + 3:]:
                 if ri.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
                     continue
                 if ri.opname in ('RETURN_VALUE', 'RETURN_CONST'):
                     return True
-                break
+                # Allow return value expression instructions between cleanup
+                # and RETURN_VALUE (e.g. LOAD_CONST False in `return False`)
+                continue
         return False
 
     def _generate_handler_body_statements(self, block: BasicBlock) -> List[Dict[str, Any]]:
@@ -18317,6 +18323,12 @@ AST 映射规则:
                         # that forms the return value expression. Old code
                         # unconditionally skipped ALL LOAD_CONST after POP_EXCEPT,
                         # erasing return values (e.g. `return 0` -> `return None`).
+                        # [R06 fix] Skip ALL instructions between as-var cleanup
+                        # and RETURN_VALUE (including return value expression),
+                        # because the return value was already reconstructed above
+                        # (line 18294-18308). Original code broke on non-noise
+                        # instructions, leaving return value instructions un-skipped,
+                        # causing duplicate Return statements.
                         skip_offsets.add(r0.offset)
                         skip_offsets.add(r1.offset)
                         skip_offsets.add(r2.offset)
@@ -18329,7 +18341,10 @@ AST 映射规则:
                                                'PUSH_NULL', 'EXTENDED_ARG'):
                                 skip_offsets.add(ri.offset)
                             else:
-                                break
+                                # [R06 fix] Also skip return value expression
+                                # instructions (LOAD_CONST, LOAD_FAST, CALL, etc.)
+                                # to prevent duplicate Return generation
+                                skip_offsets.add(ri.offset)
                         continue
                 has_return_after = any(i.opname in ('RETURN_VALUE', 'RETURN_CONST')
                                        for i in remaining_after
