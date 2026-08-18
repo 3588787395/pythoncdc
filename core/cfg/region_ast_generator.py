@@ -11905,12 +11905,20 @@ AST 映射规则:
                             nested_elif_stmts[0]['orelse'] = final_else_stmts
                         final_else_stmts = None
         if not nested_elif_stmts and region.elif_final_else:
+            # [R04 fix] Mirror first check (line 11885-11888): use instruction-based
+            # detection instead of block role. A LOOP_BACK_EDGE block can also be a
+            # continue statement. When elif_final_else blocks contain only
+            # JUMP_BACKWARD, identify as else: continue.
             _efe_is_continue_only_2 = all(
-                (self.region_analyzer.get_block_role(b) in (BlockRole.PURE_CONTINUE, BlockRole.CONTINUE)
-                 and not [i for i in b.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP', 'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT', 'JUMP_FORWARD', 'JUMP_ABSOLUTE')])
+                (not [i for i in b.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP', 'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT', 'JUMP_FORWARD', 'JUMP_ABSOLUTE')])
+                and any(i.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT') for i in b.instructions)
                 for b in region.elif_final_else
             )
-            if not _efe_is_continue_only_2:
+            if _efe_is_continue_only_2:
+                for _fe_b in region.elif_final_else:
+                    self.generated_blocks.add(_fe_b)
+                final_else_stmts = [{'type': 'Continue'}]
+            else:
                 final_else_stmts = self._process_if_blocks(region.elif_final_else, region, branch='else')
             if not self._r23n16_blocks_have_explicit_return(region.elif_final_else):
                 while (final_else_stmts and
