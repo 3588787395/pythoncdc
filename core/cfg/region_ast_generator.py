@@ -6948,7 +6948,11 @@ AST 映射规则:
         _elif_expr = self.expr_reconstructor.reconstruct(_elif_cond_instrs)
         if _elif_expr is None:
             return None
-        _negate = 'IF_TRUE' in _jt_last.opname or 'IF_NONE' in _jt_last.opname
+        _is_elif_if_false = 'IF_FALSE' in _jt_last.opname
+        if _is_elif_if_false:
+            _negate = False
+        else:
+            _negate = 'IF_TRUE' in _jt_last.opname or 'IF_NONE' in _jt_last.opname
         _elif_cond = _negate_expr(_elif_expr) if _negate else _elif_expr
         _elif_jt_offset = _jt_last.argval
         _elif_ft_block = None
@@ -7415,8 +7419,12 @@ AST 映射规则:
                     self._loop_build_if_with_exit_branches(_expr, _is_if_false, _fall_through, _jump_block,
                                                            _exit_succs, _block_succ_break, _block_succ_return, _hdr_stmts)
                 elif _block_succ_return and not _block_succ_break and not [_s for s in _exit_succs if s not in _block_succ_return]:
-                    _negate = (not _is_if_false) if _jumps_inside else _is_if_false
-                    _cond_expr = _negate_expr(_expr) if _negate else _expr
+                    if _is_if_false:
+                        _then_succ = _fall_through
+                        _else_succ = _jump_block
+                    else:
+                        _then_succ = _jump_block
+                        _else_succ = _fall_through
                     _return_block = _block_succ_return[0]
                     _return_role = self.region_analyzer.get_block_role(_return_block)
                     if _return_role in (BlockRole.RETURN, BlockRole.RETURN_NONE):
@@ -7425,7 +7433,10 @@ AST 映射规则:
                     else:
                         _return_stmts = self._generate_block_statements(_return_block)
                     _return_body = _return_stmts if _return_stmts else [{'type': 'Return', 'value': {'type': 'Constant', 'value': None}}]
-                    _hdr_stmts.append({'type': 'If', 'test': _cond_expr, 'body': _return_body})
+                    if _return_block == _then_succ:
+                        _hdr_stmts.append({'type': 'If', 'test': _expr, 'body': _return_body})
+                    else:
+                        _hdr_stmts.append({'type': 'If', 'test': _negate_expr(_expr), 'body': _return_body})
                     self.generated_blocks.add(_return_block)
                     self.generated_offsets.add(_return_block.start_offset)
                 else:
@@ -7452,22 +7463,37 @@ AST 映射规则:
                     if not _is_jump_to_continue and _fall_through:
                         _is_jump_to_continue = self._block_is_continue_target(_fall_through)
                     if _is_jump_to_break and not _is_if_false:
-                        # jump_if_true to break: "条件True→break", 需要取反为"条件Not→body"
                         _negate = True
+                        _cond_expr = _negate_expr(_expr) if _negate else _expr
+                        _hdr_stmts.append({'type': 'If', 'test': _cond_expr, 'body': [{'type': 'Break'}]})
                     elif _is_jump_to_break and _is_if_false:
-                        # jump_if_false to break: "条件False→break", 即"条件True→body", 不取反
                         _negate = False
+                        _cond_expr = _negate_expr(_expr) if _negate else _expr
+                        _hdr_stmts.append({'type': 'If', 'test': _cond_expr, 'body': [{'type': 'Break'}]})
                     elif _is_jump_to_continue:
-                        # jump to loop header (continue): 保持原有取反逻辑
-                        _negate = _is_if_false
+                        if _is_if_false:
+                            _then_succ = _fall_through
+                            _else_succ = _jump_block
+                        else:
+                            _then_succ = _jump_block
+                            _else_succ = _fall_through
+                        _then_stmts_full = self._generate_block_statements(_then_succ) if _then_succ else []
+                        if not _then_stmts_full:
+                            _then_stmts_full = [{'type': 'Pass'}]
+                        self.generated_blocks.add(_then_succ)
+                        self.generated_offsets.add(_then_succ.start_offset)
+                        self.generated_blocks.add(_else_succ)
+                        self.generated_offsets.add(_else_succ.start_offset)
+                        _hdr_stmts.append({'type': 'If', 'test': _expr,
+                                           'body': _then_stmts_full,
+                                           'orelse': [{'type': 'Continue'}]})
                     elif _jumps_inside:
                         _negate = not _is_if_false
+                        _cond_expr = _negate_expr(_expr) if _negate else _expr
+                        _hdr_stmts.append({'type': 'If', 'test': _cond_expr, 'body': [{'type': 'Break'}]})
                     else:
                         _negate = _is_if_false
-                    _cond_expr = _negate_expr(_expr) if _negate else _expr
-                    if _is_jump_to_continue:
-                        _hdr_stmts.append({'type': 'If', 'test': _cond_expr, 'body': [{'type': 'Continue'}]})
-                    else:
+                        _cond_expr = _negate_expr(_expr) if _negate else _expr
                         _hdr_stmts.append({'type': 'If', 'test': _cond_expr, 'body': [{'type': 'Break'}]})
         for _bs in [s for s in block.successors if s not in _loop_body_set] + _block_succ_break:
             if self.region_analyzer.get_block_role(_bs) in (BlockRole.PURE_BREAK, BlockRole.BREAK):
