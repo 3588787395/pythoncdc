@@ -1,0 +1,179 @@
+co_consts: ('函数1: 复杂数据验证 - 包含多层if-elif-else和异常处理', '数据为空', False, 0, '第', '项为负数: ', 100, '项过大: ', '项有效: ', '项为空字符串', 50, '项字符串过长', '项字符串有效: ', '项类型不支持: ', True, '数据验证异常: ', None)
+co_names: ('print', 'enumerate', 'isinstance', 'int', 'str', 'len', 'type', 'Exception')
+co_varnames: ('self', 'data', 'i', 'item', 'e')
+co_exceptiontable: b'\x95A"D1\x00\xc19A\x12D1\x00\xc3\rA D1\x00\xc41\nE\x18\x03\xc4;\x12E\x13\x03\xc5\x13\x05E\x18\x03'
+
+--- Disassembly ---
+     0  RESUME                             0  0
+     2  LOAD_FAST                          1  data
+     4  POP_JUMP_FORWARD_IF_TRUE          17  40
+     6  LOAD_GLOBAL                        1  print
+    18  LOAD_CONST                         1  数据为空
+    20  PRECALL                            1  1
+    24  CALL                               1  1
+    34  POP_TOP                               
+    36  LOAD_CONST                         2  False
+    38  RETURN_VALUE                          
+    40  NOP                                   
+    42  LOAD_GLOBAL                        3  enumerate
+    54  LOAD_FAST                          1  data
+    56  PRECALL                            1  1
+    60  CALL                               1  1
+    70  GET_ITER                              
+    72  EXTENDED_ARG                       1  1
+    74  FOR_ITER                         265  606
+    76  UNPACK_SEQUENCE                    2  2
+    80  STORE_FAST                         2  i
+    82  STORE_FAST                         3  item
+    84  LOAD_GLOBAL                        5  isinstance
+    96  LOAD_FAST                          3  item
+    98  LOAD_GLOBAL                        6  int
+   110  PRECALL                            2  2
+   114  CALL                               2  2
+   124  POP_JUMP_FORWARD_IF_FALSE         80  286
+   126  LOAD_FAST                          3  item
+   128  LOAD_CONST                         3  0
+   130  COMPARE_OP                         0  <
+   136  POP_JUMP_FORWARD_IF_FALSE         22  182
+   138  LOAD_GLOBAL                        1  print
+   150  LOAD_CONST                         4  第
+   152  LOAD_FAST                          2  i
+   154  FORMAT_VALUE                       0  (None, False)
+   156  LOAD_CONST                         5  项为负数: 
+   158  LOAD_FAST                          3  item
+   160  FORMAT_VALUE                       0  (None, False)
+   162  BUILD_STRING                       4  4
+   164  PRECALL                            1  1
+   168  CALL                               1  1
+   178  POP_TOP                               
+   180  JUMP_BACKWARD                     55  72
+   182  LOAD_FAST                          3  item
+   184  LOAD_CONST                         6  100
+   186  COMPARE_OP                         4  >
+   192  POP_JUMP_FORWARD_IF_FALSE         24  242
+   194  LOAD_GLOBAL                        1  print
+   206  LOAD_CONST                         4  第
+   208  LOAD_FAST                          2  i
+   210  FORMAT_VALUE                       0  (None, False)
+   212  LOAD_CONST                         7  项过大: 
+   214  LOAD_FAST                          3  item
+   216  FORMAT_VALUE                       0  (None, False)
+   218  BUILD_STRING                       4  4
+   220  PRECALL                            1  1
+   224  CALL                               1  1
+   234  POP_TOP                               
+   236  POP_TOP                               
+   238  LOAD_CONST                         2  False
+   240  RETURN_VALUE                          
+   242  LOAD_GLOBAL                        1  print
+   254  LOAD_CONST                         4  第
+   256  LOAD_FAST                          2  i
+   258  FORMAT_VALUE                       0  (None, False)
+   260  LOAD_CONST                         8  项有效: 
+   262  LOAD_FAST                          3  item
+   264  FORMAT_VALUE                       0  (None, False)
+   266  BUILD_STRING                       4  4
+   268  PRECALL                            1  1
+   272  CALL                               1  1
+   282  POP_TOP                               
+   284  JUMP_BACKWARD                    107  72
+   286  LOAD_GLOBAL                        5  isinstance
+   298  LOAD_FAST                          3  item
+   300  LOAD_GLOBAL                        8  str
+   312  PRECALL                            2  2
+   316  CALL                               2  2
+   326  POP_JUMP_FORWARD_IF_FALSE        102  532
+   328  LOAD_GLOBAL                       11  len
+   340  LOAD_FAST                          3  item
+   342  PRECALL                            1  1
+   346  CALL                               1  1
+   356  LOAD_CONST                         3  0
+   358  COMPARE_OP                         2  ==
+   364  POP_JUMP_FORWARD_IF_FALSE         22  410
+   366  LOAD_GLOBAL                        1  print
+   378  LOAD_CONST                         4  第
+   380  LOAD_FAST                          2  i
+   382  FORMAT_VALUE                       0  (None, False)
+   384  LOAD_CONST                         9  项为空字符串
+   386  BUILD_STRING                       3  3
+   388  PRECALL                            1  1
+   392  CALL                               1  1
+   402  POP_TOP                               
+   404  POP_TOP                               
+   406  LOAD_CONST                         2  False
+   408  RETURN_VALUE                          
+   410  LOAD_GLOBAL                       11  len
+   422  LOAD_FAST                          3  item
+   424  PRECALL                            1  1
+   428  CALL                               1  1
+   438  LOAD_CONST                        10  50
+   440  COMPARE_OP                         4  >
+   446  POP_JUMP_FORWARD_IF_FALSE         20  488
+   448  LOAD_GLOBAL                        1  print
+   460  LOAD_CONST                         4  第
+   462  LOAD_FAST                          2  i
+   464  FORMAT_VALUE                       0  (None, False)
+   466  LOAD_CONST                        11  项字符串过长
+   468  BUILD_STRING                       3  3
+   470  PRECALL                            1  1
+   474  CALL                               1  1
+   484  POP_TOP                               
+   486  JUMP_BACKWARD                    208  72
+   488  LOAD_GLOBAL                        1  print
+   500  LOAD_CONST                         4  第
+   502  LOAD_FAST                          2  i
+   504  FORMAT_VALUE                       0  (None, False)
+   506  LOAD_CONST                        12  项字符串有效: 
+   508  LOAD_FAST                          3  item
+   510  FORMAT_VALUE                       0  (None, False)
+   512  BUILD_STRING                       4  4
+   514  PRECALL                            1  1
+   518  CALL                               1  1
+   528  POP_TOP                               
+   530  JUMP_BACKWARD                    230  72
+   532  LOAD_GLOBAL                        1  print
+   544  LOAD_CONST                         4  第
+   546  LOAD_FAST                          2  i
+   548  FORMAT_VALUE                       0  (None, False)
+   550  LOAD_CONST                        13  项类型不支持: 
+   552  LOAD_GLOBAL                       13  type
+   564  LOAD_FAST                          3  item
+   566  PRECALL                            1  1
+   570  CALL                               1  1
+   580  FORMAT_VALUE                       0  (None, False)
+   582  BUILD_STRING                       4  4
+   584  PRECALL                            1  1
+   588  CALL                               1  1
+   598  POP_TOP                               
+   600  POP_TOP                               
+   602  LOAD_CONST                         2  False
+   604  RETURN_VALUE                          
+   606  LOAD_CONST                        14  True
+   608  RETURN_VALUE                          
+   610  PUSH_EXC_INFO                         
+   612  LOAD_GLOBAL                       14  Exception
+   624  CHECK_EXC_MATCH                       
+   626  POP_JUMP_FORWARD_IF_FALSE         29  686
+   628  STORE_FAST                         4  e
+   630  LOAD_GLOBAL                        1  print
+   642  LOAD_CONST                        15  数据验证异常: 
+   644  LOAD_FAST                          4  e
+   646  FORMAT_VALUE                       0  (None, False)
+   648  BUILD_STRING                       2  2
+   650  PRECALL                            1  1
+   654  CALL                               1  1
+   664  POP_TOP                               
+   666  POP_EXCEPT                            
+   668  LOAD_CONST                        16  
+   670  STORE_FAST                         4  e
+   672  DELETE_FAST                        4  e
+   674  LOAD_CONST                         2  False
+   676  RETURN_VALUE                          
+   678  LOAD_CONST                        16  
+   680  STORE_FAST                         4  e
+   682  DELETE_FAST                        4  e
+   684  RERAISE                            1  1
+   686  RERAISE                            0  0
+   688  COPY                               3  3
+   690  POP_EXCEPT                            
+   692  RERAISE                            1  1
