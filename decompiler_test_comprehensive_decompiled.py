@@ -41,7 +41,6 @@ class DataProcessor:
             except Exception as e:
                 print(f'数据验证异常: {e}')
                 return False
-                return False
             return False
     def process_with_loops(self, data: List[int]) -> List[int]:
         result = []
@@ -98,7 +97,6 @@ class DataProcessor:
                 return inner_calc(x, y) * 2
             except Exception as e:
                 print(f'计算错误: {e}')
-                return -1
                 return -1
         if x < 0 or y < 0:
             return abs(inner_calc(abs(x), abs(y)))
@@ -270,10 +268,9 @@ class DataProcessor:
                 results['error'] = '输入数据类型不支持'
         except Exception as e:
             results['integration_error'] = f'集成测试失败: {e}'
-        else:
-            return results
         finally:
             results['final_message'] = '集成测试完成'
+        return results
 def main():
     processor = DataProcessor('test_source')
     test_data = [1, 2, 3, -5, 10, 25, '15', 'abc', 7, 8, 9, 12]

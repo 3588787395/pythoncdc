@@ -7989,48 +7989,66 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                                 if _succ_r51 not in _te_handler_bfs_visited:
                                     _te_handler_bfs_queue.append(_succ_r51)
                         if not _handler_also_jumps_to_target and _te_target_reachable_from_handler:
-                            _te_target_block = self.cfg.get_block_by_offset(_te_jf_target)
-                            if (_te_target_block is not None and
-                                    _te_target_block not in all_handler_blocks and
-                                    _te_target_block not in set(try_region.blocks)):
-                                # BFS 从 JUMP_FORWARD 目标收集 else 块
-                                _te_visited = set()
-                                _te_queue = [_te_target_block]
-                                _te_handler_set = all_handler_blocks | set(try_region.blocks)
-                                # 区域归约算法原则 2（每块唯一归属）+ 原则 3
-                                # （嵌套即抽象节点）：BFS 收集 else 块时，不能跨
-                                # 越外层 TryExceptRegion 的 else_blocks 边界。
-                                # 否则内层 try-else 会吞并外层 try-else 的块。
-                                _te_body_set = set(getattr(try_region, 'try_blocks', []))
-                                while _te_queue:
-                                    _te_b = _te_queue.pop(0)
-                                    if _te_b in _te_visited:
-                                        continue
-                                    _te_visited.add(_te_b)
-                                    if _te_b in _te_handler_set:
-                                        continue
-                                    # 排除循环回边目标（continue 目标=循环头）
-                                    if self._is_back_edge_target(_te_b, try_end_offset):
-                                        continue
-                                    # 块属于外层 TRY_EXCEPT else 时不纳入
-                                    if self._is_outer_try_except_else_block(_te_b, _te_body_set):
-                                        continue
-                                    # 块是循环回边条件检查块（含 BACKWARD 跳转）
-                                    # 时不纳入——它属于循环结构，不属于 try-else。
-                                    _te_b_last = _te_b.get_last_instruction()
-                                    if _te_b_last and _te_b_last.opname in BACKWARD_JUMP_OPS:
-                                        continue
-                                    if not self._is_pass_or_return_none_block(_te_b):
-                                        # [R91] 排除已被嵌套 TryExceptRegion 拥有的块
-                                        _te_owner = self.block_to_region.get(_te_b)
-                                        if _te_owner is not None and _te_owner is not try_region:
+                            # [dtc-r09 fix] 区域归约算法原则 2（每块唯一归属）+
+                            # 原则 3（嵌套即抽象节点）：当 has_finally=True 且
+                            # try_end_block 是 finally 正常路径副本块时，其
+                            # JUMP_FORWARD 目标是 try-except-else-finally 之后的
+                            # post-try 代码（如 `return results`），不是 else 子句。
+                            # CPython 编译器将 finally 正常路径副本放在 try body
+                            # 和 handler 之后，副本末尾的 JUMP_FORWARD 跳到
+                            # post-try 代码。误将 post-try 代码识别为 else 块
+                            # 会导致反编译输出中出现错误的 `else: return results`
+                            # 而非正确的 `finally: ...; return results`。
+                            # 判据：try_end_block 在 finally_copy_blocks 中，
+                            # 或 try_end_block 的指令序列与 finally_blocks 匹配。
+                            _is_finally_copy_end = False
+                            if getattr(try_region, 'has_finally', False):
+                                _fc_offsets = set(getattr(try_region, 'finally_copy_blocks', {}).keys())
+                                if try_end_block and try_end_block.start_offset in _fc_offsets:
+                                    _is_finally_copy_end = True
+                            if not _is_finally_copy_end:
+                                _te_target_block = self.cfg.get_block_by_offset(_te_jf_target)
+                                if (_te_target_block is not None and
+                                        _te_target_block not in all_handler_blocks and
+                                        _te_target_block not in set(try_region.blocks)):
+                                    # BFS 从 JUMP_FORWARD 目标收集 else 块
+                                    _te_visited = set()
+                                    _te_queue = [_te_target_block]
+                                    _te_handler_set = all_handler_blocks | set(try_region.blocks)
+                                    # 区域归约算法原则 2（每块唯一归属）+ 原则 3
+                                    # （嵌套即抽象节点）：BFS 收集 else 块时，不能跨
+                                    # 越外层 TryExceptRegion 的 else_blocks 边界。
+                                    # 否则内层 try-else 会吞并外层 try-else 的块。
+                                    _te_body_set = set(getattr(try_region, 'try_blocks', []))
+                                    while _te_queue:
+                                        _te_b = _te_queue.pop(0)
+                                        if _te_b in _te_visited:
                                             continue
-                                        _te_else_blocks.append(_te_b)
-                                    for _te_s in _te_b.successors:
-                                        if _te_s not in _te_visited:
-                                            # 不将外层 TRY_EXCEPT else 块加入 BFS 队列
-                                            if not self._is_outer_try_except_else_block(_te_s, _te_body_set):
-                                                _te_queue.append(_te_s)
+                                        _te_visited.add(_te_b)
+                                        if _te_b in _te_handler_set:
+                                            continue
+                                        # 排除循环回边目标（continue 目标=循环头）
+                                        if self._is_back_edge_target(_te_b, try_end_offset):
+                                            continue
+                                        # 块属于外层 TRY_EXCEPT else 时不纳入
+                                        if self._is_outer_try_except_else_block(_te_b, _te_body_set):
+                                            continue
+                                        # 块是循环回边条件检查块（含 BACKWARD 跳转）
+                                        # 时不纳入——它属于循环结构，不属于 try-else。
+                                        _te_b_last = _te_b.get_last_instruction()
+                                        if _te_b_last and _te_b_last.opname in BACKWARD_JUMP_OPS:
+                                            continue
+                                        if not self._is_pass_or_return_none_block(_te_b):
+                                            # [R91] 排除已被嵌套 TryExceptRegion 拥有的块
+                                            _te_owner = self.block_to_region.get(_te_b)
+                                            if _te_owner is not None and _te_owner is not try_region:
+                                                continue
+                                            _te_else_blocks.append(_te_b)
+                                        for _te_s in _te_b.successors:
+                                            if _te_s not in _te_visited:
+                                                # 不将外层 TRY_EXCEPT else 块加入 BFS 队列
+                                                if not self._is_outer_try_except_else_block(_te_s, _te_body_set):
+                                                    _te_queue.append(_te_s)
                 if _te_else_blocks:
                     return _te_else_blocks
 
