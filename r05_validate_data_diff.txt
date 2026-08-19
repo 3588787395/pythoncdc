@@ -1,0 +1,44 @@
+
+================================================================================
+Function: DataProcessor.validate_data
+Original: 173 instructions
+Decompiled: 145 instructions
+================================================================================
+
+First divergence at instruction index 16:
+  Original:  offset=72  EXTENDED_ARG              1
+  Decompiled: offset=72  FOR_ITER                  484
+
+Context (instructions 13 to 36):
+  [ 13] O@  56 D@  56 | O: PRECALL                   1                             | D: PRECALL                   1                             OK
+  [ 14] O@  60 D@  60 | O: CALL                      1                             | D: CALL                      1                             OK
+  [ 15] O@  70 D@  70 | O: GET_ITER                                                | D: GET_ITER                                                OK
+  [ 16] O@  72 D@  72 | O: EXTENDED_ARG              1                             | D: FOR_ITER                  484                           DIFF
+  [ 17] O@  74 D@  74 | O: FOR_ITER                  606                           | D: UNPACK_SEQUENCE           2                             DIFF
+  [ 18] O@  76 D@  78 | O: UNPACK_SEQUENCE           2                             | D: STORE_FAST                i                             DIFF
+  [ 19] O@  80 D@  80 | O: STORE_FAST                i                             | D: STORE_FAST                item                          DIFF
+  [ 20] O@  82 D@  82 | O: STORE_FAST                item                          | D: LOAD_GLOBAL               isinstance                    DIFF
+  [ 21] O@  84 D@  94 | O: LOAD_GLOBAL               isinstance                    | D: LOAD_FAST                 item                          DIFF
+  [ 22] O@  96 D@  96 | O: LOAD_FAST                 item                          | D: LOAD_GLOBAL               int                           DIFF
+  [ 23] O@  98 D@ 108 | O: LOAD_GLOBAL               int                           | D: PRECALL                   2                             DIFF
+  [ 24] O@ 110 D@ 112 | O: PRECALL                   2                             | D: CALL                      2                             DIFF
+  [ 25] O@ 114 D@ 122 | O: CALL                      2                             | D: POP_JUMP_FORWARD_IF_FALSE 282                           DIFF
+  [ 26] O@ 124 D@ 124 | O: POP_JUMP_FORWARD_IF_FALSE 286                           | D: LOAD_FAST                 item                          DIFF
+  [ 27] O@ 126 D@ 126 | O: LOAD_FAST                 item                          | D: LOAD_CONST                0                             DIFF
+  [ 28] O@ 128 D@ 128 | O: LOAD_CONST                0                             | D: COMPARE_OP                <                             DIFF
+  [ 29] O@ 130 D@ 134 | O: COMPARE_OP                <                             | D: POP_JUMP_FORWARD_IF_FALSE 180                           DIFF
+  [ 30] O@ 136 D@ 136 | O: POP_JUMP_FORWARD_IF_FALSE 182                           | D: LOAD_GLOBAL               print                         DIFF
+  [ 31] O@ 138 D@ 148 | O: LOAD_GLOBAL               print                         | D: LOAD_CONST                第                             DIFF
+  [ 32] O@ 150 D@ 150 | O: LOAD_CONST                第                             | D: LOAD_FAST                 i                             DIFF
+  [ 33] O@ 152 D@ 152 | O: LOAD_FAST                 i                             | D: FORMAT_VALUE              (None, False)                 DIFF
+  [ 34] O@ 154 D@ 154 | O: FORMAT_VALUE              (None, False)                 | D: LOAD_CONST                项为负数:                         DIFF
+  [ 35] O@ 156 D@ 156 | O: LOAD_CONST                项为负数:                         | D: LOAD_FAST                 item                          DIFF
+
+EXTENDED_ARG in original: True
+EXTENDED_ARG in decompiled: False
+
+Original exception table: 954122443100c1394112443100c30d4120443100c4310a451803c43b12451303c51305451803
+Decompiled exception table: 954237433500c30e24433500c3350a441c03c33f12441703c41705441c03
+
+Original co_consts: ('函数1: 复杂数据验证 - 包含多层if-elif-else和异常处理', '数据为空', False, 0, '第', '项为负数: ', 100, '项过大: ', '项有效: ', '项为空字符串', 50, '项字符串过长', '项字符串有效: ', '项类型不支持: ', True, '数据验证异常: ', None)
+Decompiled co_consts: (None, '数据为空', False, 0, '第', '项为负数: ', 100, '项过大: ', '项有效: ', 50, '项类型不支持: ', True, '数据验证异常: ')
