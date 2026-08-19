@@ -7588,10 +7588,16 @@ AST 映射规则:
                                        'body': [{'type': 'Continue'}]})
                     return
                 if _else_is_pure_cont and not _then_is_pure_cont:
+                    _then_stmts_full = self._generate_block_statements(_then_succ)
+                    if not _then_stmts_full:
+                        _then_stmts_full = [{'type': 'Pass'}]
+                    self.generated_blocks.add(_then_succ)
+                    self.generated_offsets.add(_then_succ.start_offset)
                     self.generated_blocks.add(_else_succ)
                     self.generated_offsets.add(_else_succ.start_offset)
-                    _hdr_stmts.append({'type': 'If', 'test': _negate_expr(_expr),
-                                       'body': [{'type': 'Continue'}]})
+                    _hdr_stmts.append({'type': 'If', 'test': _expr,
+                                       'body': _then_stmts_full,
+                                       'orelse': [{'type': 'Continue'}]})
                     return
                 if _then_is_continue:
                     _then_stmts = [{'type': 'Continue'}]
