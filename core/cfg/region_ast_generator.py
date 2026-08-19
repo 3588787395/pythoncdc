@@ -17340,6 +17340,50 @@ AST 映射规则:
                                 continue
                             _post_try_seen_r19n2.add(_succ)
                             _post_try_blocks_r19n2.append(_succ)
+            # [R08 fix] Also check finally_copy_blocks successors for post-try blocks.
+            # When has_finally=True, CPython creates finally normal-path copies
+            # (in finally_copy_blocks) that end with JUMP_FORWARD to post-try code
+            # (e.g., `return None` after try-except-else-finally). These post-try
+            # blocks are not reachable from else_blocks or try_blocks successors.
+            # [dtc-r08 fix] 区域归约算法原则 2（每块唯一归属）：
+            # 当 has_finally=True 且 else 分支含 return 时，CPython 编译器将
+            # finally 正常路径副本的 JUMP_FORWARD 目标设为 try-except-else-finally
+            # 之后的代码（如 `return None`）。该目标块在区域识别阶段被纳入
+            # TryExceptRegion.blocks（因其在 try_offset 范围内），但不属于
+            # try_blocks / else_blocks / finally_blocks / handler_blocks /
+            # finally_copy_keys 中的任何部分。依「每块唯一归属」：该块的结构
+            # 归属是 post-try 顺序代码，而非 try/except/else/finally 的任何子结构。
+            # 因此不应以 `_succ not in _region_block_set` 排除，而应检查后继块
+            # 是否属于已知结构部分，若不属于则收集为 post-try 块。
+            if not _post_try_blocks_r19n2 and getattr(region, 'finally_copy_blocks', None):
+                _try_off_set = set(b.start_offset for b in region.try_blocks)
+                _else_off_set = set(b.start_offset for b in region.else_blocks) if region.else_blocks else set()
+                _fin_off_set = set(b.start_offset for b in region.finally_blocks)
+                _h_off_set = set()
+                for _et, _en, _hbs in region.except_handlers:
+                    for _hb in _hbs:
+                        _h_off_set.add(_hb.start_offset)
+                _fc_key_set = set(region.finally_copy_blocks.keys())
+                _known_struct = _try_off_set | _else_off_set | _fin_off_set | _h_off_set | _fc_key_set
+                for _fc_offset, _fc_keep in region.finally_copy_blocks.items():
+                    _fc_block = self.cfg.get_block_by_offset(_fc_offset)
+                    if _fc_block is None:
+                        continue
+                    for _succ in _fc_block.successors:
+                        if (_succ.start_offset not in _known_struct
+                                and _succ not in _post_try_seen_r19n2
+                                and _succ not in _handler_entry_blocks):
+                            _has_reraise = any(
+                                i.opname == 'RERAISE' for i in _succ.instructions)
+                            if _has_reraise:
+                                continue
+                            if _succ in _all_if_merge_blocks_r19n2:
+                                continue
+                            _succ_owner_pt = self.region_analyzer.block_to_region.get(_succ)
+                            if _succ_owner_pt is not None and _succ_owner_pt is not region:
+                                continue
+                            _post_try_seen_r19n2.add(_succ)
+                            _post_try_blocks_r19n2.append(_succ)
             # 标记 post-try 块为 generated，使 IfRegion 跳过它们
             _post_try_pre_generated_r19n2 = set()
             for _ptb in _post_try_blocks_r19n2:
@@ -17950,10 +17994,16 @@ AST 映射规则:
             # 之前标记的 post-try 块现在清除标记并生成。
             _post_try_stmts_r19n2 = []
             for _ptb in _post_try_blocks_r19n2:
-                # 清除标记（仅清除我们设置的，不影响其他标记）
-                if _ptb in _post_try_pre_generated_r19n2:
-                    self.generated_blocks.discard(_ptb)
-                    self.generated_offsets.discard(_ptb.start_offset)
+                # [dtc-r08 fix] 区域归约算法原则 2（每块唯一归属）：
+                # post-try 块的结构归属是 try-except 之后的顺序代码。即使该块
+                # 在 try body / handler 生成过程中被误标记为 generated（如
+                # finally 正常路径副本块的后继，含 RETURN_VALUE 的块在
+                # _generate_block_statements 中被处理时标记了 offset），也必须
+                # 清除标记并生成语句，否则 post-try 代码（如 `return None`）
+                # 会丢失。原实现仅清除 _post_try_pre_generated_r19n2 中的块，
+                # 漏掉了被其他逻辑标记的块。
+                self.generated_blocks.discard(_ptb)
+                self.generated_offsets.discard(_ptb.start_offset)
                 if _ptb in self.generated_blocks:
                     continue
                 # 区域归约算法原则 2（每块唯一归属）+
@@ -17988,10 +18038,18 @@ AST 映射规则:
                                 _post_try_stmts_r19n2.extend(_nr_ast)
                             else:
                                 _post_try_stmts_r19n2.append(_nr_ast)
-                        for _b in _ptb_region.blocks:
-                            self.generated_blocks.add(_b)
-                        self._generated_regions.add(_nrid)
-                        continue
+                            for _b in _ptb_region.blocks:
+                                self.generated_blocks.add(_b)
+                            self._generated_regions.add(_nrid)
+                            continue
+                        # [dtc-r08 fix] 区域归约算法原则 2（每块唯一归属）：
+                        # 当 _generate_region 返回空（如 BASIC Region 仅含
+                        # `LOAD_CONST None; RETURN_VALUE` 的 post-try 块），
+                        # 回退到 _generate_block_statements 生成语句，否则
+                        # post-try 代码（如 `return None`）会丢失。
+                        # 清除标记后重新生成
+                        self.generated_blocks.discard(_ptb)
+                        self.generated_offsets.discard(_ptb.start_offset)
                 # 普通块：生成语句
                 _pt_stmts = self._generate_block_statements(_ptb)
                 if _pt_stmts:
