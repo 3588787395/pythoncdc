@@ -14,4 +14,3 @@ def test_try_wrap_for_else_break(data):
             return True
     except Exception as e:
         return False
-        return False

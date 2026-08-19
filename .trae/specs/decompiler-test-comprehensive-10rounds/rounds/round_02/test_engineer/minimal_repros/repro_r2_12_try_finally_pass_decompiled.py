@@ -8,6 +8,7 @@ def test_try_finally_pass(data):
         try:
             converted = int(item)
             result.append(converted)
+            continue
         except Exception:
             pass
         finally:

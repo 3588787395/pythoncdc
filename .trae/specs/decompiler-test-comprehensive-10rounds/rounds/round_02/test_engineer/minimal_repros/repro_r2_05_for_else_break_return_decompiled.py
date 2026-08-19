@@ -8,6 +8,8 @@ def test_for_else_break_return(data):
             break
         elif item < 0:
             continue
+        else:
+            continue
     else:
         return True
     return False

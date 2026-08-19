@@ -14,5 +14,4 @@ def test_except_duplicate_return(data):
     except Exception as e:
         print(f'error: {e}')
         return False
-        return False
     return False

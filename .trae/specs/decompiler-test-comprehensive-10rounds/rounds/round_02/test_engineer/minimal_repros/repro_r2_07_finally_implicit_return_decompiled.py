@@ -12,3 +12,4 @@ def test_finally_implicit_return(data):
         return results
     finally:
         results['final'] = 'done'
+    return None

@@ -9,6 +9,10 @@ def test_multi_elif_break(data):
                 continue
             elif item > 100:
                 break
+            else:
+                continue
+        else:
+            break
     else:
         return True
     return False
