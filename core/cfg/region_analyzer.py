@@ -8542,6 +8542,54 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                             _hb_list = _eh[2]
                             if _hb_list:
                                 _source_blocks.extend(_hb_list)
+                # R12 fix: try_blocks 中含 POP_EXCEPT 的块是 except handler
+                # 的出口块（_collect_body 在 POP_EXCEPT 处停止收集 handler body）。
+                # 这些块的后继可能是 finally 副本（如 POP_EXCEPT -> print ->
+                # JUMP_BACKWARD）。外层 try-except-finally 的 except_handlers
+                # 不包含内层 except handler 的 body，但内层 except handler 的
+                # POP_EXCEPT 出口块在 try_blocks 中。将这些块也加入
+                # _source_blocks，使其后继被正确检查。
+                for _tb in (try_blocks or []):
+                    if any(i.opname == 'POP_EXCEPT' for i in _tb.instructions):
+                        if _tb not in _source_blocks:
+                            _source_blocks.append(_tb)
+                # R12 fix 2: try_blocks 可能不包含内层 except handler 的
+                # POP_EXCEPT 出口块（因为异常表范围不同）。通过异常表
+                # 找到所有指向外层 except handler（或 finally handler）的
+                # 条目范围内的 POP_EXCEPT 块，加入 _source_blocks。
+                # 这确保嵌套 try-except 中的 POP_EXCEPT 块也被检查。
+                if self.cfg.exception_table:
+                    _try_offsets = _toff
+                    _handler_offsets = {b.start_offset for b in body_blocks}
+                    _except_offsets = set()
+                    if except_handlers:
+                        for _eh in except_handlers:
+                            if isinstance(_eh, (list, tuple)) and len(_eh) >= 3:
+                                _hb_list = _eh[2]
+                                if _hb_list:
+                                    for _hb in _hb_list:
+                                        _except_offsets.add(_hb.start_offset)
+                    # R12 fix 3: 也检查所有异常表条目范围内的 POP_EXCEPT 块
+                    # 不限制 target，因为嵌套 except handler 的异常表条目
+                    # 可能指向内层 handler entry（如 278），但 POP_EXCEPT
+                    # 块本身是内层 except handler body 的一部分，其后继
+                    # 可能是 finally 副本
+                    for _entry in self.cfg.exception_table:
+                        _target = _entry.get('target', 0)
+                        _start = _entry.get('start', 0)
+                        _end = _entry.get('end', 0)
+                        if _start >= _end:
+                            continue
+                        for _block in self.cfg.blocks.values():
+                            if _block.start_offset in _foff:
+                                continue
+                            if _block in _source_blocks:
+                                continue
+                            if _block.start_offset in copy_blocks:
+                                continue
+                            if any(_start <= i.offset < _end for i in _block.instructions):
+                                if any(i.opname == 'POP_EXCEPT' for i in _block.instructions):
+                                    _source_blocks.append(_block)
                 for _tb in _source_blocks:
                     for _succ in _tb.successors:
                         if _succ.start_offset in _foff:

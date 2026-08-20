@@ -18069,9 +18069,16 @@ AST 映射规则:
                         finalbody_stmts.append(nested_ast)
                     for b in nr.blocks:
                         self.generated_blocks.add(b)
+                # [R12 fix] 子区域的 blocks/cleanup_blocks/then_blocks 可能
+                # 包含当前区域的 finally_blocks（CPython 3.11 异常表：内层
+                # try 的 cleanup 路径 fall through 到外层 finally 的异常路径
+                # 块）。子区域生成时会将这些块标记为 generated_blocks，导致
+                # 下面的循环跳过它们，finalbody 退化为 Pass。
+                # 修复：在遍历之前，将 finally_blocks 从 generated_blocks
+                # 中移除，确保它们被正确生成。
                 for fb in region.finally_blocks:
-                    if fb in self.generated_blocks:
-                        continue
+                    self.generated_blocks.discard(fb)
+                for fb in region.finally_blocks:
                     if fb.start_offset in _generated_finally_offsets:
                         continue
                     # finally body 中的 ternary 应委托给
