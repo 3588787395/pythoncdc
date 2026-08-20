@@ -768,24 +768,10 @@ class TryExceptRegion(Region):
         if block not in self.try_blocks:
             return set()
         try_body_set = set(self.try_blocks) | set(self.else_blocks)
-        # 区域归约算法原则 3（嵌套即抽象节点）+ 原则 4（父引用子入口）：
-        # 嵌套 TryExceptRegion（parent 是当前 region）的 entry 及其 blocks
-        # 是 try body 内的合法子区域内容。原逻辑把内层 try 的 entry 块
-        # （如 Block@70，不在外层 try_blocks 中但属于内层 TryExceptRegion
-        # 的 try body）当作"try 体外后继"加入 boundary，导致
-        # _collect_branch_blocks 从 then_succ 遍历到内层 try entry 时停止，
-        # IfRegion 的 then 分支退化为仅含 NOP 块（嵌套 try-except 丢失）。
-        # 修复：收集所有 parent 为当前 region 的嵌套 TryExceptRegion 的 blocks，
-        # 将它们视为 try body 的一部分，不作为边界停止点。
-        _nested_try_blocks = set()
-        for _r in getattr(self, 'children', []) or []:
-            if isinstance(_r, TryExceptRegion):
-                _nested_try_blocks.update(_r.blocks)
-        _extended_try_body = try_body_set | _nested_try_blocks
         boundary = set()
-        for tb in _extended_try_body:
+        for tb in try_body_set:
             for succ in tb.successors:
-                if succ not in _extended_try_body:
+                if succ not in try_body_set:
                     boundary.add(succ)
         return boundary
 
@@ -4791,25 +4777,6 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                                 if _s_target == header or _s_target in header.predecessors:
                                     continue_map[s] = 'CONTINUE'
                                     continue
-                            # [R8 fix] 区域归约算法原则 2（每块唯一归属）：
-                            # 含有效用户代码（CALL/STORE/BUILD等副作用指令）的
-                            # 后继块不是纯 break 目标——它是循环内 if 分支的
-                            # fall-through body（如 `if x: print(...); return False`）。
-                            # 真正的 break 目标块仅含跳转/清理指令（POP_TOP/JUMP等）。
-                            # 将含用户代码的块误标为 BREAK 会导致：
-                            # 1. has_break=True 误触发 for-else
-                            # 2. AST 生成器生成 break 而非 print+return
-                            # 3. print 语句丢失、return False 位置错误
-                            _s_meaningful = [i for i in s.instructions
-                                             if i.opname not in NOISE_OPS
-                                             and i.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
-                                                                  'JUMP_FORWARD', 'JUMP_ABSOLUTE')
-                                             and i.opname not in CONDITIONAL_JUMP_OPS
-                                             and i.opname not in SHORT_CIRCUIT_JUMP_OPS
-                                             and i.opname not in ('POP_TOP',)]
-                            if _s_meaningful:
-                                # 含有效用户代码，不是纯 break 目标，跳过
-                                continue
                             break_blocks_set.add(s)
                 elif s == natural_exit and ne_is_terminator:
                     if last and last.opname in FORWARD_CONDITIONAL_JUMP_OPS:
@@ -8522,29 +8489,21 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                         _ops = tuple(i.opname for i in _m[_s:_e])
                         break
             if _ops and len(_ops) >= 2:
+                # 区域归约算法原则 2（每块唯一归属）：
+                # _ops 是 finally 异常路径中 PUSH_EXC_INFO 与 RERAISE 之间的
+                # 指令序列（cleanup 指令）。用它来匹配 try_block 后继块中的
+                # cleanup 子序列。注意：_ops 可能包含用户代码（如 print 调用），
+                # 此时 finally 正常路径副本也包含相同的用户代码。keep_count
+                # 应保留用户代码部分，仅跳过 cleanup 指令本身。
+                _cleanup_ops = _ops  # 保存原始 cleanup 指令序列
                 _foff = {b.start_offset for b in body_blocks}
                 _toff = {b.start_offset for b in try_blocks} if try_blocks else set()
                 _checked = set()
-                # 区域归约算法原则 2（每块唯一归属）：
-                # finally 块的内联副本可能出现在两类出口块的后继中：
-                # (1) try_blocks 的后继 — try 体正常退出时的 finally 副本
-                #     (如 JUMP_FORWARD 到 finally 正常路径)
-                # (2) handler body blocks 的后继 — except 块退出时的 finally 副本
-                #     (如 POP_EXCEPT 后跟 finally 副本，再跟 continue/return)
-                # 此前仅检查 (1)，导致 (2) 中的 finally 副本被 LoopRegion
-                # 或 IfRegion 错误占用（违反唯一归属原则）。此处增加 (2)
-                # 的检查，使 except handler 退出路径上的 finally 副本也被
-                # 正确标记为 finally_copy。
-                _source_blocks = list(try_blocks or [])
-                if except_handlers:
-                    for _eh in except_handlers:
-                        if isinstance(_eh, (list, tuple)) and len(_eh) >= 3:
-                            _hb_list = _eh[2]
-                            if _hb_list:
-                                _source_blocks.extend(_hb_list)
-                for _tb in _source_blocks:
+                for _tb in (try_blocks or []):
                     for _succ in _tb.successors:
                         if _succ.start_offset in _foff:
+                            continue
+                        if _succ.start_offset in _toff:
                             continue
                         if _succ.start_offset in _checked:
                             continue
@@ -8555,18 +8514,30 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                             continue
                         _m = [i for i in _succ.instructions
                                       if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                        _ops_succ = tuple(i.opname for i in _m)
+                        _succ_ops = tuple(i.opname for i in _m)
                         _cleanup = False
-                        for _mi in range(len(_ops_succ) - len(_ops) + 1):
-                            if _ops_succ[_mi:_mi + len(_ops)] == _ops:
+                        _cleanup_start = -1
+                        for _mi in range(len(_succ_ops) - len(_cleanup_ops) + 1):
+                            if _succ_ops[_mi:_mi + len(_cleanup_ops)] == _cleanup_ops:
                                 _cleanup = True
+                                _cleanup_start = _mi
                                 break
                         if _cleanup:
-                            _op = _ops_succ[-1] if _ops_succ else None
+                            _op = _succ_ops[-1] if _succ_ops else None
                             if _op in ('JUMP_BACKWARD', 'JUMP_FORWARD',
                                                'JUMP_ABSOLUTE', 'JUMP_BACKWARD_NO_INTERRUPT',
                                                'RETURN_VALUE', 'RETURN_CONST'):
-                                copy_blocks[_succ.start_offset] = 0
+                                # 区域归约算法原则 2（每块唯一归属）：
+                                # finally 正常路径副本包含与异常路径相同的用户代码
+                                # （在 cleanup 指令序列中）。keep_count 应保留
+                                # cleanup 序列之前的用户代码（如有），而非设为 0。
+                                # 当 cleanup 序列从块开头开始（_cleanup_start=0），
+                                # 说明整个块都是 cleanup + 控制流，keep_count=0。
+                                # 当 cleanup 序列前有用户代码，保留这些代码。
+                                if _cleanup_start > 0:
+                                    copy_blocks[_succ.start_offset] = _cleanup_start
+                                else:
+                                    copy_blocks[_succ.start_offset] = 0
 
         return body_blocks, copy_blocks
 
@@ -13555,25 +13526,10 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             # 后过滤：确保没有 try 体外的块混入，但保留直接后继块（then_succ/else_succ）
             # 因为它们是 if 条件的直接分支目标（如 break/continue 块），即使不在 try 体内
             # 也应保留在 then/else 分支中。
-            # 区域归约算法原则 3（嵌套即抽象节点）+ 原则 4（父引用子入口）：
-            # 当 if 条件块在外层 TryExceptRegion 的 try_blocks 中，且 if 的 then/else
-            # 分支包含嵌套 TryExceptRegion 的 entry 块时（如 `if isinstance(item, str):
-            # try: ... except ValueError: ...` 中 try 的 entry 不在外层 try_blocks 中，
-            # 而是内层 TryExceptRegion 独占的 try body 块），原过滤逻辑会错误移除这些
-            # 嵌套 try 的 entry 块，导致 IfRegion 的 then 分支退化为空（仅含 NOP），
-            # 内层 try-except 被提升到外层 try body 之外（结构错位 + isinstance 条件丢失）。
-            # 修复：收集所有 parent 为当前 block_region 的嵌套 TryExceptRegion 的 entry
-            # 及其 blocks，在后过滤中保留这些块（它们是合法的嵌套区域内容）。
             if isinstance(block_region, TryExceptRegion) and block in block_region.try_blocks:
                 try_body_set = set(block_region.try_blocks) | set(block_region.else_blocks)
-                # 收集嵌套 TryExceptRegion 的所有块（parent 是当前 block_region）
-                _nested_try_block_set = set()
-                for _r in getattr(block_region, 'children', []) or []:
-                    if isinstance(_r, TryExceptRegion):
-                        _nested_try_block_set.update(_r.blocks)
-                _keep_set = try_body_set | _nested_try_block_set
-                then_blocks = [b for b in then_blocks if b in _keep_set or b == then_succ]
-                else_blocks = [b for b in else_blocks if b in _keep_set or b == else_succ]
+                then_blocks = [b for b in then_blocks if b in try_body_set or b == then_succ]
+                else_blocks = [b for b in else_blocks if b in try_body_set or b == else_succ]
 
             if isinstance(block_region, LoopRegion):
                 # 区域归约算法原则 2（每块唯一归属）+ 原则 4

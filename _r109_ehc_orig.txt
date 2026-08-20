@@ -1,0 +1,226 @@
+=== DataProcessor.exception_handling_complex ===
+argcount=2, varnames=('self', 'data', 'result', 'item', 'converted', 'e')
+consts count=15
+  const[0]: '函数4: 复杂异常处理 - 多层try-except-finally'
+  const[1]: 0
+  const[2]: ('valid_data', 'errors', 'processed_count')
+  const[3]: 'valid_data'
+  const[4]: 'errors'
+  const[5]: '字符串转换失败: '
+  const[6]: '处理完成项目: '
+  const[7]: 100
+  const[8]: 10
+  const[9]: 2
+  const[10]: '数值处理错误: '
+  const[11]: None
+  const[12]: 'processed_count'
+  const[13]: 1
+  const[14]: '外层处理错误: '
+
+=== Instructions ===
+     0 RESUME                         
+     2 BUILD_LIST                     
+     4 BUILD_LIST                     
+     6 LOAD_CONST                     0
+     8 LOAD_CONST                     ('valid_data', 'errors', 'processed_count')
+    10 BUILD_CONST_KEY_MAP            
+    12 STORE_FAST                     result
+    14 LOAD_FAST                      data
+    16 GET_ITER                       
+    18 EXTENDED_ARG                   
+    20 FOR_ITER                       to 852
+    22 STORE_FAST                     item
+    24 NOP                            
+    26 LOAD_GLOBAL                    NULL + isinstance
+    38 LOAD_FAST                      item
+    40 LOAD_GLOBAL                    str
+    52 PRECALL                        
+    56 CALL                           
+    66 POP_JUMP_FORWARD_IF_FALSE      to 284
+    68 NOP                            
+    70 LOAD_GLOBAL                    NULL + int
+    82 LOAD_FAST                      item
+    84 PRECALL                        
+    88 CALL                           
+    98 STORE_FAST                     converted
+   100 LOAD_FAST                      result
+   102 LOAD_CONST                     'valid_data'
+   104 BINARY_SUBSCR                  
+   114 LOAD_METHOD                    append
+   136 LOAD_FAST                      converted
+   138 PRECALL                        
+   142 CALL                           
+   152 POP_TOP                        
+   154 JUMP_FORWARD                   to 288
+   156 PUSH_EXC_INFO                  
+   158 LOAD_GLOBAL                    ValueError
+   170 CHECK_EXC_MATCH                
+   172 POP_JUMP_FORWARD_IF_FALSE      to 276
+   174 POP_TOP                        
+   176 LOAD_FAST                      result
+   178 LOAD_CONST                     'errors'
+   180 BINARY_SUBSCR                  
+   190 LOAD_METHOD                    append
+   212 LOAD_CONST                     '字符串转换失败: '
+   214 LOAD_FAST                      item
+   216 FORMAT_VALUE                   
+   218 BUILD_STRING                   
+   220 PRECALL                        
+   224 CALL                           
+   234 POP_TOP                        
+   236 POP_EXCEPT                     
+   238 LOAD_GLOBAL                    NULL + print
+   250 LOAD_CONST                     '处理完成项目: '
+   252 LOAD_FAST                      item
+   254 FORMAT_VALUE                   
+   256 BUILD_STRING                   
+   258 PRECALL                        
+   262 CALL                           
+   272 POP_TOP                        
+   274 JUMP_BACKWARD                  to 18
+   276 RERAISE                        
+   278 COPY                           
+   280 POP_EXCEPT                     
+   282 RERAISE                        
+   284 LOAD_FAST                      item
+   286 STORE_FAST                     converted
+   288 NOP                            
+   290 LOAD_FAST                      converted
+   292 LOAD_CONST                     100
+   294 COMPARE_OP                     >
+   300 POP_JUMP_FORWARD_IF_FALSE      to 364
+   302 LOAD_FAST                      result
+   304 LOAD_CONST                     'valid_data'
+   306 BINARY_SUBSCR                  
+   316 LOAD_METHOD                    append
+   338 LOAD_FAST                      converted
+   340 LOAD_CONST                     10
+   342 BINARY_OP                      //
+   346 PRECALL                        
+   350 CALL                           
+   360 POP_TOP                        
+   362 JUMP_FORWARD                   to 518
+   364 LOAD_FAST                      converted
+   366 LOAD_CONST                     0
+   368 COMPARE_OP                     <
+   374 POP_JUMP_FORWARD_IF_FALSE      to 458
+   376 LOAD_FAST                      result
+   378 LOAD_CONST                     'valid_data'
+   380 BINARY_SUBSCR                  
+   390 LOAD_METHOD                    append
+   412 LOAD_GLOBAL                    NULL + abs
+   424 LOAD_FAST                      converted
+   426 PRECALL                        
+   430 CALL                           
+   440 PRECALL                        
+   444 CALL                           
+   454 POP_TOP                        
+   456 JUMP_FORWARD                   to 518
+   458 LOAD_FAST                      result
+   460 LOAD_CONST                     'valid_data'
+   462 BINARY_SUBSCR                  
+   472 LOAD_METHOD                    append
+   494 LOAD_FAST                      converted
+   496 LOAD_CONST                     2
+   498 BINARY_OP                      *
+   502 PRECALL                        
+   506 CALL                           
+   516 POP_TOP                        
+   518 JUMP_FORWARD                   to 626
+   520 PUSH_EXC_INFO                  
+   522 LOAD_GLOBAL                    Exception
+   534 CHECK_EXC_MATCH                
+   536 POP_JUMP_FORWARD_IF_FALSE      to 618
+   538 STORE_FAST                     e
+   540 LOAD_FAST                      result
+   542 LOAD_CONST                     'errors'
+   544 BINARY_SUBSCR                  
+   554 LOAD_METHOD                    append
+   576 LOAD_CONST                     '数值处理错误: '
+   578 LOAD_FAST                      e
+   580 FORMAT_VALUE                   
+   582 BUILD_STRING                   
+   584 PRECALL                        
+   588 CALL                           
+   598 POP_TOP                        
+   600 POP_EXCEPT                     
+   602 LOAD_CONST                     None
+   604 STORE_FAST                     e
+   606 DELETE_FAST                    e
+   608 JUMP_FORWARD                   to 626
+   610 LOAD_CONST                     None
+   612 STORE_FAST                     e
+   614 DELETE_FAST                    e
+   616 RERAISE                        
+   618 RERAISE                        
+   620 COPY                           
+   622 POP_EXCEPT                     
+   624 RERAISE                        
+   626 LOAD_FAST                      result
+   628 LOAD_CONST                     'processed_count'
+   630 COPY                           
+   632 COPY                           
+   634 BINARY_SUBSCR                  
+   644 LOAD_CONST                     1
+   646 BINARY_OP                      +=
+   650 SWAP                           
+   652 SWAP                           
+   654 STORE_SUBSCR                   
+   658 JUMP_FORWARD                   to 766
+   660 PUSH_EXC_INFO                  
+   662 LOAD_GLOBAL                    Exception
+   674 CHECK_EXC_MATCH                
+   676 POP_JUMP_FORWARD_IF_FALSE      to 758
+   678 STORE_FAST                     e
+   680 LOAD_FAST                      result
+   682 LOAD_CONST                     'errors'
+   684 BINARY_SUBSCR                  
+   694 LOAD_METHOD                    append
+   716 LOAD_CONST                     '外层处理错误: '
+   718 LOAD_FAST                      e
+   720 FORMAT_VALUE                   
+   722 BUILD_STRING                   
+   724 PRECALL                        
+   728 CALL                           
+   738 POP_TOP                        
+   740 POP_EXCEPT                     
+   742 LOAD_CONST                     None
+   744 STORE_FAST                     e
+   746 DELETE_FAST                    e
+   748 JUMP_FORWARD                   to 766
+   750 LOAD_CONST                     None
+   752 STORE_FAST                     e
+   754 DELETE_FAST                    e
+   756 RERAISE                        
+   758 RERAISE                        
+   760 COPY                           
+   762 POP_EXCEPT                     
+   764 RERAISE                        
+   766 LOAD_GLOBAL                    NULL + print
+   778 LOAD_CONST                     '处理完成项目: '
+   780 LOAD_FAST                      item
+   782 FORMAT_VALUE                   
+   784 BUILD_STRING                   
+   786 PRECALL                        
+   790 CALL                           
+   800 POP_TOP                        
+   802 EXTENDED_ARG                   
+   804 JUMP_BACKWARD                  to 18
+   806 PUSH_EXC_INFO                  
+   808 LOAD_GLOBAL                    NULL + print
+   820 LOAD_CONST                     '处理完成项目: '
+   822 LOAD_FAST                      item
+   824 FORMAT_VALUE                   
+   826 BUILD_STRING                   
+   828 PRECALL                        
+   832 CALL                           
+   842 POP_TOP                        
+   844 RERAISE                        
+   846 COPY                           
+   848 POP_EXCEPT                     
+   850 RERAISE                        
+   852 LOAD_FAST                      result
+   854 RETURN_VALUE                   
+
+=== Exception Table ===
+  Error: module 'dis' has no attribute 'ExceptionTable'

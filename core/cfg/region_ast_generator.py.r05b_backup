@@ -6948,11 +6948,7 @@ AST 映射规则:
         _elif_expr = self.expr_reconstructor.reconstruct(_elif_cond_instrs)
         if _elif_expr is None:
             return None
-        _is_elif_if_false = 'IF_FALSE' in _jt_last.opname
-        if _is_elif_if_false:
-            _negate = False
-        else:
-            _negate = 'IF_TRUE' in _jt_last.opname or 'IF_NONE' in _jt_last.opname
+        _negate = 'IF_TRUE' in _jt_last.opname or 'IF_NONE' in _jt_last.opname
         _elif_cond = _negate_expr(_elif_expr) if _negate else _elif_expr
         _elif_jt_offset = _jt_last.argval
         _elif_ft_block = None
@@ -14678,21 +14674,6 @@ AST 映射规则:
                             and _lr_id not in self._generating_regions):
                         _loop_entry_generate[b] = _lr
                     break
-        _try_entry_generate = {}
-        for b in _block_set:
-            if b in self.generated_blocks:
-                continue
-            for _tr in self.region_analyzer.regions:
-                if not isinstance(_tr, TryExceptRegion):
-                    continue
-                if _tr is region:
-                    continue
-                if _tr.entry is not b:
-                    continue
-                _tr_id = id(_tr)
-                if (_tr_id not in self._generated_regions and _tr_id not in self._generating_regions):
-                    _try_entry_generate[b] = _tr
-                break
         for block in sorted(blocks, key=lambda b: b.start_offset):
             if block in self.generated_blocks:
                 continue
@@ -14751,24 +14732,6 @@ AST 映射规则:
                     self.generated_blocks.add(_lb)
                     self.generated_offsets.add(_lb.start_offset)
                 self._generated_regions.add(_lr_id)
-                continue
-            if block in _try_entry_generate:
-                _tr = _try_entry_generate[block]
-                _tr_id = id(_tr)
-                self._generating_regions.add(_tr_id)
-                try:
-                    _tr_ast = self._generate_region(_tr)
-                finally:
-                    self._generating_regions.discard(_tr_id)
-                if _tr_ast:
-                    if isinstance(_tr_ast, list):
-                        stmts.extend(_tr_ast)
-                    else:
-                        stmts.append(_tr_ast)
-                for _tb in _tr.blocks:
-                    self.generated_blocks.add(_tb)
-                    self.generated_offsets.add(_tb.start_offset)
-                self._generated_regions.add(_tr_id)
                 continue
             # [Round5-10] 跨块 await 列表元素赋值：r = [await g(), await h()]
             if self._try_generate_await_list_assign(block, stmts):
@@ -15121,17 +15084,6 @@ AST 映射规则:
                     bs = self._generate_block_statements(block)
                     if bs:
                         stmts.extend(bs)
-                # [R8 fix] LOOP_BACK_EDGE 含有效用户指令时 JUMP_BACKWARD
-                # 是显式 continue（非自然回边），必须输出 Continue 以
-                # 保持字节码等价性（缺少 JUMP_BACKWARD 导致字节码差异）。
-                _be_last2 = block.get_last_instruction()
-                if _be_last2 and _be_last2.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'):
-                    if self._current_loop:
-                        _loop_hdr = self._current_loop.header_block
-                        if _loop_hdr and _be_last2.argval is not None:
-                            _be_target = self.cfg.get_block_by_offset(_be_last2.argval)
-                            if _be_target and _be_target == _loop_hdr:
-                                stmts.append({'type': 'Continue'})
                 self.generated_blocks.add(block)
                 continue
             # 区域归约算法原则 2（每块唯一归属）：
@@ -15520,43 +15472,9 @@ AST 映射规则:
                         bs[-1] = {'type': 'Return', 'value': bs[-1]['value']}
                 stmts.extend(bs)
             self.generated_blocks.add(block)
-            # [R8 fix] 区域归约算法原则 2（每块唯一归属）：
-            # elif_final_else 中的块（如 `else: print(...); return False`）
-            # 的后继如果是 RETURN 块（含 LOAD_CONST+RETURN_VALUE），
-            # 需要继续处理该后继块以生成 return 语句。否则 return 语句
-            # 丢失或被外层错误归位为 Try 之后的独立 return。
-            _block_role = self.region_analyzer.get_block_role(block)
-            if _block_role in (BlockRole.TRY_BODY, BlockRole.LOOP_BODY, BlockRole.LOOP_BACK_EDGE):
-                for _succ in block.successors:
-                    if _succ in self.generated_blocks:
-                        continue
-                    if any(i.opname in ('PUSH_EXC_INFO', 'WITH_EXCEPT_START') for i in _succ.instructions):
-                        continue
-                    _succ_role = self.region_analyzer.get_block_role(_succ)
-                    _succ_last = _succ.get_last_instruction()
-                    if _succ_last and _succ_last.opname == 'RETURN_VALUE':
-                        # 后继是 RETURN 块，生成 return 语句
-                        _ret_stmts = self._generate_block_statements(_succ)
-                        if _ret_stmts:
-                            stmts.extend(_ret_stmts)
-                        else:
-                            _ret_ast = self._generate_return_ast(_succ)
-                            if _ret_ast:
-                                stmts.append(_ret_ast)
-                            else:
-                                stmts.append({'type': 'Return', 'value': {'type': 'Constant', 'value': None}})
-                        self.generated_blocks.add(_succ)
-                        self.generated_offsets.add(_succ.start_offset)
-                        break
         return stmts
 
     def _try_generate_conditional_break(self, block: BasicBlock) -> Optional[List[Dict[str, Any]]]:
-        # [Round 6 fix] Do not process structural region entry blocks
-        _block_er = self.region_analyzer.get_entry_region_for_block(block)
-        if _block_er is not None and isinstance(_block_er, RegionASTGenerator._STRUCTURAL_REGION_TYPES):
-            _er_id = id(_block_er)
-            if _er_id not in self._generated_regions and _er_id not in self._generating_regions:
-                return None
         result = self._try_generate_conditional_break_or_continue(block)
         if result is not None:
             return result
@@ -16237,19 +16155,7 @@ AST 映射规则:
                     if (_bn_else_last is not None
                         and _bn_else_last.opname in FORWARD_CONDITIONAL_JUMP_OPS | BACKWARD_CONDITIONAL_JUMP_OPS
                         and self._current_loop is not None):
-                        # [Round 6 fix] Don't recursively process blocks that are
-                        # entry points of structural regions (IfRegion, LoopRegion,
-                        # TryExceptRegion, etc.). The recursive call would mark the
-                        # block as generated and produce incorrect break/continue
-                        # code, losing the region's internal structure (then_blocks,
-                        # else_blocks, merge_block). Let _process_if_blocks handle
-                        # these blocks through the _nested_if_entry_generate path.
-                        _bn_else_is_region_entry = False
-                        _bn_else_er = self.region_analyzer.get_entry_region_for_block(_bn_else_block)
-                        if _bn_else_er is not None and isinstance(_bn_else_er, RegionASTGenerator._STRUCTURAL_REGION_TYPES):
-                            _bn_else_is_region_entry = True
-                        if not _bn_else_is_region_entry:
-                            _bn_else_cb_result = self._try_generate_conditional_break_or_continue(_bn_else_block)
+                        _bn_else_cb_result = self._try_generate_conditional_break_or_continue(_bn_else_block)
                     if _bn_else_cb_result is not None:
                         _bn_else_stmts = _bn_else_cb_result
                     else:
@@ -16524,17 +16430,7 @@ AST 映射规则:
                 # belongs to the else clause, not the try body.
                 is_entry_in_else = bool(getattr(region, 'else_blocks', None) and r.entry in set(region.else_blocks))
                 is_child_in_try = is_child and not is_entry_in_handler and not is_entry_in_else
-                _is_in_if_branch = False
-                for _ir in self.region_analyzer.regions:
-                    if (isinstance(_ir, IfRegion) and _ir is not region
-                            and getattr(_ir, 'parent', None) is region
-                            and _ir.entry is not None):
-                        _ir_then_set = set(_ir.then_blocks) if _ir.then_blocks else set()
-                        _ir_else_set = set(_ir.else_blocks) if _ir.else_blocks else set()
-                        if r.entry in _ir_then_set or r.entry in _ir_else_set:
-                            _is_in_if_branch = True
-                            break
-                is_nested = (is_child_in_try or is_in_try_blocks or is_before_try_start or handler_in_range) and not _is_in_if_branch
+                is_nested = is_child_in_try or is_in_try_blocks or is_before_try_start or handler_in_range
                 if is_nested and (r.parent is None or r.parent is region):
                     nested_is_smaller = r.try_offset_end - r.try_offset_start < region.try_offset_end - region.try_offset_start
                     if nested_is_smaller or is_child_in_try:
@@ -16556,16 +16452,7 @@ AST 映射规则:
             # _first_try_block_offset 的内层 try，遗漏了 entry 在 try 范围内但不
             # 属于 try_blocks 的内层 try（main loop 永远不会到达它）。
             _ntr_entry_in_try_blocks = ntr.entry in _outer_try_blocks_set
-            # Check if this nested try should be deferred until after an IfRegion
-            _defer_for_if = False
-            for _ir in self.region_analyzer.regions:
-                if (isinstance(_ir, IfRegion) and _ir is not region
-                        and getattr(_ir, 'parent', None) is region
-                        and _ir.merge_block is not None):
-                    if ntr.entry.start_offset > _ir.merge_block.start_offset:
-                        _defer_for_if = True
-                        break
-            if (ntr.entry.start_offset <= _first_try_block_offset or not _ntr_entry_in_try_blocks) and not _defer_for_if:
+            if ntr.entry.start_offset <= _first_try_block_offset or not _ntr_entry_in_try_blocks:
                 if id(ntr) not in self._generated_regions and id(ntr) not in self._generating_regions:
                     self.generated_blocks.discard(ntr.entry)
                     for b in ntr.try_blocks:
@@ -17227,33 +17114,6 @@ AST 映射规则:
                         for b in child.blocks:
                             self.generated_blocks.add(b)
                         self._generated_regions.add(child_id)
-
-        # Generate deferred nested try regions (those after an IfRegion merge_block)
-        for ntr in sorted(nested_try_regions, key=lambda r: r.try_offset_start):
-            if id(ntr) in self._generated_regions or id(ntr) in self._generating_regions:
-                continue
-            _defer_for_if2 = False
-            for _ir in self.region_analyzer.regions:
-                if (isinstance(_ir, IfRegion) and _ir is not region
-                        and getattr(_ir, 'parent', None) is region
-                        and _ir.merge_block is not None):
-                    if ntr.entry.start_offset > _ir.merge_block.start_offset:
-                        _defer_for_if2 = True
-                        break
-            if _defer_for_if2:
-                self.generated_blocks.discard(ntr.entry)
-                for b in ntr.try_blocks:
-                    self.generated_blocks.discard(b)
-                for _, _, hblocks in ntr.except_handlers:
-                    for hb in hblocks:
-                        self.generated_blocks.discard(hb)
-                for cb in ntr.cleanup_blocks:
-                    self.generated_blocks.discard(cb)
-                nested_ast = self._generate_try(ntr)
-                if nested_ast:
-                    body_stmts.append(nested_ast)
-                for b in ntr.blocks:
-                    self.generated_blocks.add(b)
 
         return body_stmts
 
@@ -18380,8 +18240,7 @@ AST 映射规则:
                           if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
                                                'PUSH_EXC_INFO', 'POP_EXCEPT', 'POP_TOP',
                                                'CHECK_EXC_MATCH', 'CHECK_EG_MATCH',
-                                               'WITH_EXCEPT_START', 'EXTENDED_ARG',
-                                               'RERAISE', 'COPY')
+                                               'WITH_EXCEPT_START', 'EXTENDED_ARG')
                           and i.opname not in _EXC_STAR_FRAMEWORK_OPS]
         exc_dispatch_jump_offset = None
         for idx, instr in enumerate(block.instructions):
