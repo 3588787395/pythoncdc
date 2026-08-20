@@ -15479,6 +15479,12 @@ AST 映射规则:
         return stmts
 
     def _try_generate_conditional_break(self, block: BasicBlock) -> Optional[List[Dict[str, Any]]]:
+        # [Round 6 fix] Do not process structural region entry blocks
+        _block_er = self.region_analyzer.get_entry_region_for_block(block)
+        if _block_er is not None and isinstance(_block_er, RegionASTGenerator._STRUCTURAL_REGION_TYPES):
+            _er_id = id(_block_er)
+            if _er_id not in self._generated_regions and _er_id not in self._generating_regions:
+                return None
         result = self._try_generate_conditional_break_or_continue(block)
         if result is not None:
             return result
@@ -16159,7 +16165,19 @@ AST 映射规则:
                     if (_bn_else_last is not None
                         and _bn_else_last.opname in FORWARD_CONDITIONAL_JUMP_OPS | BACKWARD_CONDITIONAL_JUMP_OPS
                         and self._current_loop is not None):
-                        _bn_else_cb_result = self._try_generate_conditional_break_or_continue(_bn_else_block)
+                        # [Round 6 fix] Don't recursively process blocks that are
+                        # entry points of structural regions (IfRegion, LoopRegion,
+                        # TryExceptRegion, etc.). The recursive call would mark the
+                        # block as generated and produce incorrect break/continue
+                        # code, losing the region's internal structure (then_blocks,
+                        # else_blocks, merge_block). Let _process_if_blocks handle
+                        # these blocks through the _nested_if_entry_generate path.
+                        _bn_else_is_region_entry = False
+                        _bn_else_er = self.region_analyzer.get_entry_region_for_block(_bn_else_block)
+                        if _bn_else_er is not None and isinstance(_bn_else_er, RegionASTGenerator._STRUCTURAL_REGION_TYPES):
+                            _bn_else_is_region_entry = True
+                        if not _bn_else_is_region_entry:
+                            _bn_else_cb_result = self._try_generate_conditional_break_or_continue(_bn_else_block)
                     if _bn_else_cb_result is not None:
                         _bn_else_stmts = _bn_else_cb_result
                     else:
