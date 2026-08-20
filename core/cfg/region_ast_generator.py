@@ -16556,6 +16556,12 @@ AST 映射规则:
             # _first_try_block_offset 的内层 try，遗漏了 entry 在 try 范围内但不
             # 属于 try_blocks 的内层 try（main loop 永远不会到达它）。
             _ntr_entry_in_try_blocks = ntr.entry in _outer_try_blocks_set
+            # [R13 fix] 当嵌套 try 的 entry 不在 try_blocks 中但
+            # try_offset_start 对应的块在 try_blocks 中时，不在预循环
+            # 中生成，而是在 try_blocks 遍历到该块时生成，以确保正确的
+            # 语句顺序（如 processed_count 应在第二个 try 之后）。
+            _ntr_try_start_in_try_blocks = any(
+                b.start_offset == ntr.try_offset_start for b in region.try_blocks)
             # Check if this nested try should be deferred until after an IfRegion
             _defer_for_if = False
             for _ir in self.region_analyzer.regions:
@@ -16565,7 +16571,12 @@ AST 映射规则:
                     if ntr.entry.start_offset > _ir.merge_block.start_offset:
                         _defer_for_if = True
                         break
-            if (ntr.entry.start_offset <= _first_try_block_offset or not _ntr_entry_in_try_blocks) and not _defer_for_if:
+            _pre_generate = (ntr.entry.start_offset <= _first_try_block_offset or not _ntr_entry_in_try_blocks)
+            # 当 entry 不在 try_blocks 中但 try_offset_start 在 try_blocks 中时，
+            # 延迟到 try_blocks 遍历时生成。
+            if not _ntr_entry_in_try_blocks and _ntr_try_start_in_try_blocks:
+                _pre_generate = False
+            if _pre_generate and not _defer_for_if:
                 if id(ntr) not in self._generated_regions and id(ntr) not in self._generating_regions:
                     self.generated_blocks.discard(ntr.entry)
                     for b in ntr.try_blocks:
@@ -16691,7 +16702,22 @@ AST 映射规则:
 
             is_nested_try_entry = False
             for ntr in nested_try_regions:
-                if ntr.entry == block and id(ntr) not in self._generated_regions and id(ntr) not in self._generating_regions:
+                if id(ntr) in self._generated_regions or id(ntr) in self._generating_regions:
+                    continue
+                # [R13 fix] 当嵌套 try 的 entry 等于当前块时生成
+                # （entry 在 try_blocks 中的情况）
+                if ntr.entry == block:
+                    nested_ast = self._generate_try(ntr)
+                    if nested_ast:
+                        body_stmts.append(nested_ast)
+                    for b in ntr.blocks:
+                        self.generated_blocks.add(b)
+                    is_nested_try_entry = True
+                    break
+                # [R13 fix] 当嵌套 try 的 try_offset_start 等于当前块的
+                # start_offset 时生成（entry 不在 try_blocks 中但
+                # try_offset_start 在 try_blocks 中的情况）
+                if ntr.try_offset_start == block.start_offset and ntr.entry not in _outer_try_blocks_set:
                     nested_ast = self._generate_try(ntr)
                     if nested_ast:
                         body_stmts.append(nested_ast)
@@ -17735,6 +17761,42 @@ AST 映射规则:
                     if hbs:
                         handler_body.extend(hbs)
                     self.generated_blocks.add(hb)
+                # [R13 fix] 检查 handler_blocks 中最后一个块的后续块是否包含
+                # continue/break 语句。CPython 3.11 编译器在 try-except-finally
+                # 中，会将 finally 内容内联到 except handler 的退出路径中。
+                # 当 except handler 以 continue/break 退出时，finally 副本
+                # + continue/break 会被放在一个单独的块中（不在 handler_blocks
+                # 中，而是作为 handler 的后继块）。这个块是外层 finally 的拷贝
+                # （finally_copy_blocks），但其中的 continue/break 语句应该
+                # 被保留在 handler body 中。
+                for hb in handler_blocks:
+                    for _succ in hb.successors:
+                        if _succ in self.generated_blocks:
+                            continue
+                        _succ_role = self.region_analyzer.get_block_role(_succ)
+                        if _succ_role in (BlockRole.CONTINUE, BlockRole.PURE_CONTINUE):
+                            # 检查后继块是否是外层 finally 的拷贝
+                            _is_finally_copy = False
+                            for _r in self.region_analyzer.regions:
+                                if (isinstance(_r, TryExceptRegion) and _r.has_finally
+                                        and _succ.start_offset in _r.finally_copy_blocks):
+                                    _is_finally_copy = True
+                                    break
+                            if _is_finally_copy:
+                                handler_body.append({'type': 'Continue'})
+                                self.generated_blocks.add(_succ)
+                                break
+                        elif _succ_role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
+                            _is_finally_copy = False
+                            for _r in self.region_analyzer.regions:
+                                if (isinstance(_r, TryExceptRegion) and _r.has_finally
+                                        and _succ.start_offset in _r.finally_copy_blocks):
+                                    _is_finally_copy = True
+                                    break
+                            if _is_finally_copy:
+                                handler_body.append({'type': 'Break'})
+                                self.generated_blocks.add(_succ)
+                                break
                 handler_node = {'type': 'ExceptHandler', 'body': handler_body if handler_body else [{'type': 'Pass'}]}
                 if exc_name:
                     handler_node['name'] = exc_name
