@@ -4939,7 +4939,7 @@ class CodeGenerator:
         
         # 生成键值代码
         if isinstance(key, dict):
-            key_code = self._generate_annotation_from_dict(key)
+            key_code = self._generate_expression(key, 0)
         else:
             key_code = self._generate_expression(key, 0)
         
