@@ -1222,14 +1222,20 @@ class CodeGenerator:
             self._increase_indent()
             # pass fallback: if body nodes produce no output, emit pass
             _pos_before = self.output.tell()
-            # [修复-L05] 过滤else末尾与函数体重复的return
-            # 只有当else有多个语句时才过滤最后的return
-            # 如果return是唯一语句则保留（避免空else块）
+            # [R13 fix] 只过滤 else 末尾的 return None（隐式函数返回），
+            # 不过滤 return <expr>（显式返回值，如 return self）。
+            # 原实现过滤所有 Return，导致 return self 被丢失。
             if len(orelse) > 1:
                 for i, child in enumerate(orelse):
                     is_last = (i == len(orelse) - 1)
                     if is_last and isinstance(child, dict) and child.get('type') == 'Return':
-                        continue
+                        _ret_val = child.get('value')
+                        _is_none = (_ret_val is None or
+                                    (isinstance(_ret_val, dict) and
+                                     _ret_val.get('type') == 'Constant' and
+                                     _ret_val.get('value') is None))
+                        if _is_none:
+                            continue
                     self._generate_node(child)
             else:
                 for child in orelse:
