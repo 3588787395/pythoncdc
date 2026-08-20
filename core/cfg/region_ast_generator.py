@@ -19321,10 +19321,20 @@ AST 映射规则:
                     else:
                         stmts.append({'type': 'Import',
                                       'names': [{'name': _module, 'asname': None}]})
+                # [R13 fix] IMPORT_NAME 前的 LOAD_CONST (level=0) +
+                # LOAD_CONST (fromlist=None) 是 import 的参数，不是独立
+                # 语句。如果 stmt_instrs 只包含 LOAD_CONST，丢弃它们，
+                # 不生成 None 表达式。
                 if stmt_instrs:
-                    _prev_stmt = self._build_statement(list(stmt_instrs))
-                    if _prev_stmt:
-                        stmts.append(_prev_stmt)
+                    _all_load_const = all(
+                        i.opname == 'LOAD_CONST'
+                        for i in stmt_instrs
+                        if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')
+                    )
+                    if not _all_load_const:
+                        _prev_stmt = self._build_statement(list(stmt_instrs))
+                        if _prev_stmt:
+                            stmts.append(_prev_stmt)
                     stmt_instrs = []
                 _imp_name_instr = instr
                 _imp_from_pending = None
