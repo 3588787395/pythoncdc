@@ -4777,6 +4777,25 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                                 if _s_target == header or _s_target in header.predecessors:
                                     continue_map[s] = 'CONTINUE'
                                     continue
+                            # [R8 fix] 区域归约算法原则 2（每块唯一归属）：
+                            # 含有效用户代码（CALL/STORE/BUILD等副作用指令）的
+                            # 后继块不是纯 break 目标——它是循环内 if 分支的
+                            # fall-through body（如 `if x: print(...); return False`）。
+                            # 真正的 break 目标块仅含跳转/清理指令（POP_TOP/JUMP等）。
+                            # 将含用户代码的块误标为 BREAK 会导致：
+                            # 1. has_break=True 误触发 for-else
+                            # 2. AST 生成器生成 break 而非 print+return
+                            # 3. print 语句丢失、return False 位置错误
+                            _s_meaningful = [i for i in s.instructions
+                                             if i.opname not in NOISE_OPS
+                                             and i.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+                                                                  'JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                                             and i.opname not in CONDITIONAL_JUMP_OPS
+                                             and i.opname not in SHORT_CIRCUIT_JUMP_OPS
+                                             and i.opname not in ('POP_TOP',)]
+                            if _s_meaningful:
+                                # 含有效用户代码，不是纯 break 目标，跳过
+                                continue
                             break_blocks_set.add(s)
                 elif s == natural_exit and ne_is_terminator:
                     if last and last.opname in FORWARD_CONDITIONAL_JUMP_OPS:

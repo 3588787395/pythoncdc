@@ -15088,6 +15088,17 @@ AST 映射规则:
                     bs = self._generate_block_statements(block)
                     if bs:
                         stmts.extend(bs)
+                # [R8 fix] LOOP_BACK_EDGE 含有效用户指令时 JUMP_BACKWARD
+                # 是显式 continue（非自然回边），必须输出 Continue 以
+                # 保持字节码等价性（缺少 JUMP_BACKWARD 导致字节码差异）。
+                _be_last2 = block.get_last_instruction()
+                if _be_last2 and _be_last2.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'):
+                    if self._current_loop:
+                        _loop_hdr = self._current_loop.header_block
+                        if _loop_hdr and _be_last2.argval is not None:
+                            _be_target = self.cfg.get_block_by_offset(_be_last2.argval)
+                            if _be_target and _be_target == _loop_hdr:
+                                stmts.append({'type': 'Continue'})
                 self.generated_blocks.add(block)
                 continue
             # 区域归约算法原则 2（每块唯一归属）：
@@ -15476,6 +15487,34 @@ AST 映射规则:
                         bs[-1] = {'type': 'Return', 'value': bs[-1]['value']}
                 stmts.extend(bs)
             self.generated_blocks.add(block)
+            # [R8 fix] 区域归约算法原则 2（每块唯一归属）：
+            # elif_final_else 中的块（如 `else: print(...); return False`）
+            # 的后继如果是 RETURN 块（含 LOAD_CONST+RETURN_VALUE），
+            # 需要继续处理该后继块以生成 return 语句。否则 return 语句
+            # 丢失或被外层错误归位为 Try 之后的独立 return。
+            _block_role = self.region_analyzer.get_block_role(block)
+            if _block_role in (BlockRole.TRY_BODY, BlockRole.LOOP_BODY, BlockRole.LOOP_BACK_EDGE):
+                for _succ in block.successors:
+                    if _succ in self.generated_blocks:
+                        continue
+                    if any(i.opname in ('PUSH_EXC_INFO', 'WITH_EXCEPT_START') for i in _succ.instructions):
+                        continue
+                    _succ_role = self.region_analyzer.get_block_role(_succ)
+                    _succ_last = _succ.get_last_instruction()
+                    if _succ_last and _succ_last.opname == 'RETURN_VALUE':
+                        # 后继是 RETURN 块，生成 return 语句
+                        _ret_stmts = self._generate_block_statements(_succ)
+                        if _ret_stmts:
+                            stmts.extend(_ret_stmts)
+                        else:
+                            _ret_ast = self._generate_return_ast(_succ)
+                            if _ret_ast:
+                                stmts.append(_ret_ast)
+                            else:
+                                stmts.append({'type': 'Return', 'value': {'type': 'Constant', 'value': None}})
+                        self.generated_blocks.add(_succ)
+                        self.generated_offsets.add(_succ.start_offset)
+                        break
         return stmts
 
     def _try_generate_conditional_break(self, block: BasicBlock) -> Optional[List[Dict[str, Any]]]:
@@ -18262,7 +18301,8 @@ AST 映射规则:
                           if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
                                                'PUSH_EXC_INFO', 'POP_EXCEPT', 'POP_TOP',
                                                'CHECK_EXC_MATCH', 'CHECK_EG_MATCH',
-                                               'WITH_EXCEPT_START', 'EXTENDED_ARG')
+                                               'WITH_EXCEPT_START', 'EXTENDED_ARG',
+                                               'RERAISE', 'COPY')
                           and i.opname not in _EXC_STAR_FRAMEWORK_OPS]
         exc_dispatch_jump_offset = None
         for idx, instr in enumerate(block.instructions):
