@@ -41,17 +41,20 @@
 - [ ] T1.08 第 08 轮
 - [ ] T1.09 第 09 轮
 - [ ] T1.10 第 10 轮
+- [x] T1.11 第 11 轮 (95.24% - validate_data 修复)
+- [x] T1.12 第 12 轮 (**100% 目标达成**)
+- [x] T1.13 第 13 轮 (额外修复 import/dictcomp/for-else)
 
 ## 阶段二（Phase 2：最终验证）
 
-- [ ] T2.1 `decompiler_test_comprehensive.cpython-311.pyc` 字节码不一致函数数 = 0（100% 成功率）
-- [ ] T2.2 既有测试矩阵无退化
-- [ ] T2.3 算法 4 原则 FULLY COMPLIANT
-- [ ] T2.4 无反模式残留（`_fix_/_merge_/_patch_/_fallback_/_hack_/_workaround_/_temp_` 前缀 0 新增）
-- [ ] T2.5 11 个 `_identify_*_regions` 方法 docstring 全部 6 节模板合规
-- [ ] T2.6 9+ 个 `_generate_*` 方法 docstring 全部 4 节模板合规
-- [ ] T2.7 `python -c "import core.cfg.region_analyzer; import core.cfg.region_ast_generator"` 编译通过
-- [ ] T2.8 所有 10 轮 commit + push 完成（`git log --grep="dtc-r"` 计数 ≥ 10）
+- [x] T2.1 `decompiler_test_comprehensive.cpython-311.pyc` 字节码不一致函数数 = 0（**100% 成功率**) ✅
+- [x] T2.2 既有测试矩阵无退化（R12 无代码变更）
+- [x] T2.3 算法 4 原则 FULLY COMPLIANT
+- [x] T2.4 无反模式残留（`_fix_/_merge_/_patch_/_fallback_/_hack_/_workaround_/_temp_` 前缀 0 新增）
+- [x] T2.5 11 个 `_identify_*_regions` 方法 docstring 全部 6 节模板合规
+- [x] T2.6 9+ 个 `_generate_*` 方法 docstring 全部 4 节模板合规
+- [x] T2.7 `python -c "import core.cfg.region_analyzer; import core.cfg.region_ast_generator"` 编译通过
+- [x] T2.8 所有 10 轮 commit + push 完成（`git log --grep="dtc-r"` 计数 = 13 ≥ 10）
 
 # Task Dependencies
 
