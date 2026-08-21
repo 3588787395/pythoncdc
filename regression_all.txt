@@ -1,0 +1,5 @@
+﻿FAILED tests/control_flow_matrix/test_l1_expression.py::TestXP07NestedTernary::test_structure_correct
+FAILED tests/control_flow_matrix/test_l2_nested.py::TestLO09NestedForWithBreakElse::test_structure_correct
+FAILED tests/control_flow_matrix/test_l3_combinations.py::TestCO09WhileIfWhileBreak::test_structure_correct
+FAILED tests/control_flow_matrix/test_l3_combinations.py::TestCO14ForForIfBreak::test_structure_correct
+4 failed, 106 passed in 6.15s

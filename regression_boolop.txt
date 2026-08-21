@@ -1,0 +1,5 @@
+﻿tests\exhaustive\P1_expressions\test_P1_complete.py:174: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/exhaustive/bool_op/test_bool19_ternary_combo.py::TestBool19TernaryCombo::test_decompile
+FAILED tests/exhaustive/P1_expressions/test_P1_complete.py::TestT04_TernaryWithBoolOp::test_structure_correct
+2 failed, 32 passed in 4.66s

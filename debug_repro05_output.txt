@@ -1,0 +1,27 @@
+﻿LoopRegion: entry=40
+IfRegion: entry=0
+  then=[36]
+  else=[34]
+  merge=90
+  cond=0
+IfRegion: entry=0
+  then=[32, 36, 40, 88]
+  else=None
+  merge=92
+  cond=0
+Region: entry=0
+Region: entry=22
+Region: entry=32
+Region: entry=34
+Region: entry=88
+Region: entry=90
+Region: entry=92
+
+Decompiled:
+def test(a, b, c):
+    result = []
+    if not a < b <= c:
+        for item in (1, 2, 3):
+            result.append(item)
+    return result
+

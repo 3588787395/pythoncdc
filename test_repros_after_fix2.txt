@@ -1,0 +1,40 @@
+﻿[PASS] repro_01_if_not_with_for.py
+[PASS] repro_01_try_except_chained.py
+[FAIL] repro_02_if_not_for_else.py: test: code mismatch
+  [18] ORIG: POP_JUMP_FORWARD_IF_TRUE to 124
+  [18] DECP: POP_JUMP_FORWARD_IF_TRUE to 72
+[PASS] repro_02_try_except_no_except.py
+[FAIL] repro_03_for_else_if_not.py: test: code mismatch
+  [8] ORIG: FOR_ITER to 122
+  [8] DECP: FOR_ITER to 124
+[PASS] repro_03_try_except_globals.py
+[FAIL] repro_04_nested_for_if_not_continue.py: test: code mismatch
+  [8] ORIG: FOR_ITER to 132
+  [8] DECP: FOR_ITER to 134
+[PASS] repro_04_try_except_return_else.py
+[FAIL] repro_05_if_not_comparison_chain.py: test: code mismatch
+  [11] ORIG: POP_JUMP_FORWARD_IF_TRUE to 90
+  [11] DECP: POP_JUMP_FORWARD_IF_TRUE to 88
+[FAIL] repro_06_for_if_not_method.py: test: code mismatch
+  [8] ORIG: FOR_ITER to 196
+  [8] DECP: FOR_ITER to 198
+[FAIL] repro_07_try_except_for_else.py: test: code mismatch
+  [11] ORIG: FOR_ITER to 86
+  [11] DECP: FOR_ITER to 88
+[FAIL] repro_08_for_if_not_log.py: test: code mismatch
+  [8] ORIG: FOR_ITER to 188
+  [8] DECP: FOR_ITER to 192
+[FAIL] repro_09_nested_for_else.py: test: code mismatch
+  [8] ORIG: FOR_ITER to 146
+  [8] DECP: FOR_ITER to 148
+[FAIL] repro_10_for_if_not_re_sub.py: test: code mismatch
+  [8] ORIG: FOR_ITER to 252
+  [8] DECP: FOR_ITER to 254
+[FAIL] repro_11_for_else_store_subscr.py: test: code mismatch
+  [15] ORIG: POP_JUMP_FORWARD_IF_TRUE to 80
+  [15] DECP: POP_JUMP_FORWARD_IF_TRUE to 70
+[FAIL] repro_12_if_not_for_append.py: test: code mismatch
+  [13] ORIG: FOR_ITER to 158
+  [13] DECP: FOR_ITER to 162
+
+=== SUMMARY: 5 passed, 11 failed ===

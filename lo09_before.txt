@@ -1,0 +1,10 @@
+﻿        for_count = len(self.find_all_nodes(tree, ast.For))
+        self.assertEqual(for_count, 2, "Ӧ����2��forѭ��")
+        break_node = self.find_node(tree, ast.Break)
+>       self.assertIsNotNone(break_node)
+E       AssertionError: unexpectedly None
+
+tests\control_flow_matrix\test_l2_nested.py:372: AssertionError
+=========================== short test summary info ===========================
+FAILED tests/control_flow_matrix/test_l2_nested.py::TestLO09NestedForWithBreakElse::test_structure_correct
+1 failed in 1.46s

@@ -1,0 +1,18 @@
+﻿[PASS] repro_01_if_not_with_for.py
+[PASS] repro_01_try_except_chained.py
+[PASS] repro_02_if_not_for_else.py
+[PASS] repro_02_try_except_no_except.py
+[PASS] repro_03_for_else_if_not.py
+[PASS] repro_03_try_except_globals.py
+[PASS] repro_04_nested_for_if_not_continue.py
+[PASS] repro_04_try_except_return_else.py
+[PASS] repro_05_if_not_comparison_chain.py
+[PASS] repro_06_for_if_not_method.py
+[PASS] repro_07_try_except_for_else.py
+[PASS] repro_08_for_if_not_log.py
+[PASS] repro_09_nested_for_else.py
+[PASS] repro_10_for_if_not_re_sub.py
+[PASS] repro_11_for_else_store_subscr.py
+[PASS] repro_12_if_not_for_append.py
+
+=== SUMMARY: 16 passed, 0 failed ===

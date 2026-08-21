@@ -1,0 +1,66 @@
+﻿=== Decompiled ===
+# Source Generated with Decompyle++ (Python version)
+# File: test_lo09.pyc (Python 3.10)
+
+for category in categories:
+    found = False
+    for item in category.items:
+        if matches(item):
+            found = True
+            process(item)
+    if not found:
+        log_no_match(category)
+
+
+=== Original bytecode ===
+  0           0 RESUME                   0
+
+  1           2 LOAD_NAME                0 (categories)
+              4 GET_ITER
+        >>    6 FOR_ITER                53 (to 114)
+              8 STORE_NAME               1 (category)
+
+  2          10 LOAD_CONST               0 (False)
+             12 STORE_NAME               2 (found)
+
+  3          14 LOAD_NAME                1 (category)
+             16 LOAD_ATTR                3 (items)
+             26 GET_ITER
+        >>   28 FOR_ITER                28 (to 86)
+             30 STORE_NAME               4 (item)
+
+  4          32 PUSH_NULL
+             34 LOAD_NAME                5 (matches)
+             36 LOAD_NAME                4 (item)
+             38 PRECALL                  1
+             42 CALL                     1
+             52 POP_JUMP_FORWARD_IF_FALSE    15 (to 84)
+
+  5          54 LOAD_CONST               1 (True)
+             56 STORE_NAME               2 (found)
+
+  6          58 PUSH_NULL
+             60 LOAD_NAME                6 (process)
+             62 LOAD_NAME                4 (item)
+             64 PRECALL                  1
+             68 CALL                     1
+             78 POP_TOP
+
+  7          80 POP_TOP
+             82 JUMP_FORWARD             1 (to 86)
+
+  4     >>   84 JUMP_BACKWARD           29 (to 28)
+
+  8     >>   86 LOAD_NAME                2 (found)
+             88 POP_JUMP_FORWARD_IF_TRUE    11 (to 112)
+
+  9          90 PUSH_NULL
+             92 LOAD_NAME                7 (log_no_match)
+             94 LOAD_NAME                1 (category)
+             96 PRECALL                  1
+            100 CALL                     1
+            110 POP_TOP
+        >>  112 JUMP_BACKWARD           54 (to 6)
+
+  1     >>  114 LOAD_CONST               2 (None)
+            116 RETURN_VALUE

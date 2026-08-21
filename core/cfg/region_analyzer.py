@@ -2391,6 +2391,13 @@ class RegionAnalyzer:
                         # 修复: 只有当块只包含跳转指令时才标记为CONTINUE
                         # 如果块包含有意义的非跳转语句（如赋值、函数调用等），
                         # 则不应该标记为CONTINUE，而应该标记为LOOP_BODY
+                        #
+                        # 区域归约算法原则2（每块唯一归属）：continue 块是循环
+                        # 控制流的结构性节点，不应被误判为 LOOP_BODY。
+                        # POP_TOP 在 `if not cond: continue` 模式中是 not 取反
+                        # 的框架指令（弹出 POP_JUMP_FORWARD_IF_FALSE 留下的 False
+                        # 值），不是有意义语句。当块仅含 POP_TOP + JUMP_BACKWARD
+                        # 时，应归类为 CONTINUE 而非 LOOP_BODY。
                         block_non_jump_instrs = [
                             i for i in block.instructions
                             if i.opname not in NOISE_OPS
@@ -2399,11 +2406,16 @@ class RegionAnalyzer:
                             and i.opname not in CONDITIONAL_JUMP_OPS
                             and i.opname not in SHORT_CIRCUIT_JUMP_OPS
                         ]
-                        if block_non_jump_instrs:
+                        # POP_TOP 作为 if-not 取反的框架指令时不应阻止 CONTINUE 分类
+                        # 判据：非跳转指令仅含 POP_TOP（CLEANUP_OPS 子集）
+                        _is_not_negation_cleanup = all(
+                            i.opname in ('POP_TOP',) for i in block_non_jump_instrs
+                        )
+                        if block_non_jump_instrs and not _is_not_negation_cleanup:
                             # 有意义语句，标记为LOOP_BODY而不是CONTINUE
                             self._assign_region_role(block.start_offset, BlockRole.LOOP_BODY)
                         else:
-                            # 纯跳转块，可以安全地标记为CONTINUE
+                            # 纯跳转块或仅含框架 POP_TOP 的块，标记为CONTINUE
                             self._assign_region_role(block.start_offset, BlockRole.CONTINUE)
                 elif last.opname in BACKWARD_CONDITIONAL_JUMP_OPS:
                     self._assign_region_role(block.start_offset, BlockRole.LOOP_BACK_EDGE)
@@ -13088,15 +13100,47 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                         then_succ = s
                         break
                 # 调整 else_succ：跳过清理块（POP_TOP + JUMP），直接指向清理块的后继
-                _else_instrs = [i for i in else_succ.instructions
-                                if i.opname not in NOISE_OPS
-                                and i.opname not in ('RESUME', 'NOP', 'CACHE')]
-                _else_is_cleanup = all(
-                    i.opname in ('POP_TOP', 'JUMP_FORWARD', 'JUMP_ABSOLUTE')
-                    for i in _else_instrs
-                ) and len(else_succ.successors) == 1
-                if _else_is_cleanup:
-                    else_succ = list(else_succ.successors)[0]
+                # [spf-r01-fix6] 当链式比较末尾使用 POP_JUMP_FORWARD_IF_TRUE
+                # （if-not 模式，如 `if not a < b <= c:`）时，最后一个比较块的
+                # 跳转目标才是真正的 else 分支入口。清理块的后继属于 then 分支。
+                # 例如：block 56 POP_JUMP_IF_TRUE → 124 (else: pass / continue sink)
+                #       block 68 POP_TOP → 70 (then 分支的 LOAD_CONST)
+                # 原 else_succ=68 → 跳过后继=70（错误，70 是 then 分支）
+                # 修正：else_succ = 链式比较末尾 POP_JUMP_IF_TRUE 的跳转目标=124
+                _last_compare_last = last_compare.get_last_instruction()
+                _is_if_not = (_last_compare_last is not None
+                              and _last_compare_last.opname in ('POP_JUMP_FORWARD_IF_TRUE',
+                                                                'POP_JUMP_IF_TRUE',
+                                                                'POP_JUMP_BACKWARD_IF_TRUE')
+                              and _last_compare_last.argval is not None)
+                if _is_if_not:
+                    _if_not_target = self.cfg.get_block_by_offset(_last_compare_last.argval)
+                    # [spf-r01-fix6b] 仅在循环内（else: pass 编译为 JUMP_BACKWARD 回边）
+                    # 才将 else_succ 改为 IF_TRUE 跳转目标。非循环内 `else: pass`
+                    # 编译为 NOP，由 fix3 在 AST 生成时处理 merge_block NOP。
+                    _in_loop_ctx = any(block in lr.blocks for lr in loop_regions)
+                    if _if_not_target is not None and _in_loop_ctx:
+                        else_succ = _if_not_target
+                    else:
+                        _else_instrs = [i for i in else_succ.instructions
+                                        if i.opname not in NOISE_OPS
+                                        and i.opname not in ('RESUME', 'NOP', 'CACHE')]
+                        _else_is_cleanup = all(
+                            i.opname in ('POP_TOP', 'JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                            for i in _else_instrs
+                        ) and len(else_succ.successors) == 1
+                        if _else_is_cleanup:
+                            else_succ = list(else_succ.successors)[0]
+                else:
+                    _else_instrs = [i for i in else_succ.instructions
+                                    if i.opname not in NOISE_OPS
+                                    and i.opname not in ('RESUME', 'NOP', 'CACHE')]
+                    _else_is_cleanup = all(
+                        i.opname in ('POP_TOP', 'JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                        for i in _else_instrs
+                    ) and len(else_succ.successors) == 1
+                    if _else_is_cleanup:
+                        else_succ = list(else_succ.successors)[0]
 
             # Fix: 当条件块在 TryExceptRegion 的 try_blocks 中时，
             # 分支收集可能越过 try 体边界（通过 JUMP_FORWARD 到循环条件等），
@@ -13267,6 +13311,29 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                             )
                             if not _elif:
                                 merge = else_succ
+                        # [spf-r01-fix4] 对称检测：当 else_succ 是 continue sink
+                        # 且 then_succ 以 JUMP_FORWARD 结尾（if-not 链式比较模式）时，
+                        # else 分支是 else: pass（在循环内编译为 JUMP_BACKWARD 回边），
+                        # then 分支包含实际代码（for 循环等）。设 merge=else_succ 使
+                        # then_blocks 包含完整 then 分支（含 for 循环），else_blocks 为空。
+                        # AST 生成时 _is_chained_compare_cleanup_else 检测 merge_block 为
+                        # continue sink（JUMP_BACKWARD）→ 生成 else: pass。
+                        # 精确条件（避免回归）：
+                        #   1. else_succ 是 JUMP_BACKWARD 到循环头（continue sink）
+                        #   2. then_succ 以 JUMP_FORWARD 结尾（非 JUMP_BACKWARD = 非 continue）
+                        #   3. then_succ 的 JUMP_FORWARD 目标不等于当前 merge（有实际 then 体）
+                        _else_last2 = else_succ.get_last_instruction()
+                        if (_else_last2 is not None
+                                and _else_last2.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                                and _else_last2.argval == _header.start_offset):
+                            _then_last2 = then_succ.get_last_instruction()
+                            if (_then_last2 is not None
+                                    and _then_last2.opname == 'JUMP_FORWARD'
+                                    and _then_last2.argval is not None):
+                                _jf_target = self.cfg.get_block_by_offset(_then_last2.argval)
+                                if _jf_target is not None and _jf_target != else_succ:
+                                    merge = else_succ
+
 
             if merge is None:
                 # 区域归约算法原则 2（每块唯一归属）+ 原则 4（归约顺序）：

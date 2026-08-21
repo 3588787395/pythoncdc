@@ -11136,6 +11136,21 @@ AST 映射规则:
             return self._if_generate_elif_chain(region)
         if region.chained_compare_blocks and region.else_blocks:
             if self._is_chained_compare_cleanup_else(region):
+                # [spf-r01-fix3] 当 merge_block 仅含 NOP 时，源码有 `else: pass`
+                # （CPython 3.11+ 为 else: pass 生成 NOP 占位指令）。丢弃 else 会导致
+                # 重新编译时不生成 NOP，使 POP_JUMP_FORWARD_IF_TRUE 目标偏移 -2。
+                # 典型：`if not a < b <= c: for... else: pass`（非循环内）
+                # [spf-r01-fix5] 扩展：在循环内 `else: pass` 编译为 JUMP_BACKWARD
+                # 回边（隐式 continue），不生成 NOP。merge_block 仅含 JUMP_BACKWARD
+                # 时也需生成 else: pass，否则丢失回边指令导致 FOR_ITER 目标偏移 -2。
+                # 典型：`for x: if not a < x <= b: for item: ... else: pass`（循环内）
+                _mb = getattr(region, 'merge_block', None)
+                if _mb is not None:
+                    _mb_meaningful = [i for i in _mb.instructions
+                                      if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
+                                                          'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')]
+                    if not _mb_meaningful:
+                        return [{'type': 'Pass'}]
                 return None
         if region.else_blocks:
             else_stmts = []
@@ -12426,13 +12441,27 @@ AST 映射规则:
             if (_last is not None
                     and _last.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
                     and not _meaningful):
-                _cont = {'type': 'Continue'}
-                if isinstance(if_result, list):
-                    if_result = if_result + [_cont]
-                else:
-                    if_result = [if_result, _cont]
-                self.generated_blocks.add(_blk)
-                self.generated_offsets.add(_blk.start_offset)
+                # [spf-r01-fix1] 仅当 then_blocks 中存在以显式 JUMP_BACKWARD 结尾的
+                # 块时才生成 Continue。若 then_blocks 末块以非跳转指令结尾
+                # （fall-through 到 merge/back_edge），是循环自然回边（隐式
+                # continue），不生成显式 Continue——否则编译器生成额外
+                # JUMP_BACKWARD，导致 FOR_ITER 目标偏移 +2。
+                # 典型：for k,v in d.items(): if not k < 'm': <body>
+                _has_explicit_continue = False
+                for _tb in (region.then_blocks or []):
+                    _tb_last = _tb.get_last_instruction()
+                    if (_tb_last is not None
+                            and _tb_last.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')):
+                        _has_explicit_continue = True
+                        break
+                if _has_explicit_continue:
+                    _cont = {'type': 'Continue'}
+                    if isinstance(if_result, list):
+                        if_result = if_result + [_cont]
+                    else:
+                        if_result = [if_result, _cont]
+                    self.generated_blocks.add(_blk)
+                    self.generated_offsets.add(_blk.start_offset)
         # 区域归约算法原则 4（父引用子入口）+ 原则 2（每块唯一归属）：
         # 当 IfRegion.merge_block 同时是其内嵌 LoopRegion 的 else_blocks（for_iter_exit）
         # 时，R15-N5 修复会让 LoopRegion 跳过 merge_block（避免在 if body 内重复输出
