@@ -134,6 +134,15 @@ class RegionASTGenerator:
         # 依「每块唯一归属」: import 指令归属 generate() 预扫描（父模块体），
         # ternary cond_block 仅拥有 condition preload 指令。
         self._entry_import_extracted_blocks: Set[BasicBlock] = set()
+        # [Round 08 修复] 记录已被 generate() 入口处理发射过前置语句的
+        # BoolOpRegion 入口块。旋转 while 复合条件中该区域同时是 LoopRegion
+        # 条件子区域，_generate_loop 的 op_chain 前置语句分段器会对同一链块
+        # 重复提取 STORE 赋值（`out = []` 双份）。分段器据此跳过。
+        # [R08b 扩展] 同一记录亦用于 WithRegion：generate() 入口处理的
+        # WithRegion 分支发射 entry_block 的 BEFORE_WITH 前置赋值后登记，
+        # _generate_with 的 pre-BEFORE_WITH 前缀提取据此跳过，消除
+        # `d = ...` / `x = compute()` 等前导赋值双份发射（每块唯一归属）。
+        self._entry_prefix_emitted_blocks: Set[BasicBlock] = set()
 
     def block_role(self, block: 'BasicBlock') -> 'BlockRole':
         return self.region_analyzer.get_block_role(block)
@@ -341,10 +350,17 @@ class RegionASTGenerator:
             # 必须在此提取。原实现直接 pass 导致前置语句丢失。使用
             # _if_extract_cond_instructions 提取前置语句（正确处理表达式语句、
             # 赋值、import 等），然后标记 entry_block 为已生成。
+            #
+            # [Round 08 修复] 记录前置语句已发射的入口块（_entry_prefix_emitted_blocks）：
+            # 旋转 while 复合条件场景中，该 BoolOpRegion 同时是 LoopRegion 的
+            # 条件子区域，_generate_loop 的 op_chain 前置语句分段器会对同一链块
+            # 再做一次 STORE 分段提取——两处各发射一份相同赋值（如 `out = []`
+            # 出现两次，违反每块唯一归属）。记录后由分段器跳过已发射块。
             elif isinstance(entry_region, BoolOpRegion):
                 _boolop_pre_stmts, _ = self._if_extract_cond_instructions(entry_block, None)
                 if _boolop_pre_stmts:
                     ast_nodes.extend(_boolop_pre_stmts)
+                    self._entry_prefix_emitted_blocks.add(entry_block)
                 self.generated_blocks.add(entry_block)
                 import os as _os
                 if _os.environ.get('R23N21_DEBUG'):
@@ -664,6 +680,12 @@ class RegionASTGenerator:
                             continue
                         _stmt_instrs.append(_instr)
 
+                    # [R08b fix] 前置语句已由本分支发射，登记 entry_block；
+                    # _generate_with 的 pre-BEFORE_WITH 前缀提取据此跳过，
+                    # 防止同一前导赋值（如 `d = datetime.now()`）双份发射
+                    # （每块唯一归属：前导语句归属函数体顺序扫描）。
+                    if _pre_stmts:
+                        self._entry_prefix_emitted_blocks.add(entry_block)
                     self.generated_blocks.add(entry_block)
                     entry_ast = _pre_stmts
                 elif _entry_region and isinstance(_entry_region, TryExceptRegion):
@@ -4394,9 +4416,30 @@ AST 映射规则:
                         self.generated_blocks.add(b)
                         self.generated_offsets.add(b.start_offset)
                 if boolop_for_while.merge_block and boolop_for_while.merge_block not in loop_blocks:
-                    self.generated_blocks.add(boolop_for_while.merge_block)
+                    # [Round 08 修复] 条件上下文（while 复合条件）的 merge 是
+                    # 循环假出口：仅当其为平凡块（LOAD_CONST None/RETURN 类）
+                    # 时才抑制——非平凡出口块承载真实后续语句（如 `return out`
+                    #），必须交还其归属区域发射，否则尾部语句丢失。
+                    _mb_r08 = boolop_for_while.merge_block
+                    _mb_mark_r08 = True
+                    if getattr(boolop_for_while, 'is_condition_context', False):
+                        _mb_eff_r08 = [i for i in _mb_r08.instructions
+                                       if i.opname not in ('RESUME', 'NOP', 'CACHE',
+                                                           'PUSH_NULL', 'POP_TOP',
+                                                           'JUMP_FORWARD', 'JUMP_ABSOLUTE')]
+                        _mb_mark_r08 = all(
+                            (i.opname == 'LOAD_CONST' and i.argval is None)
+                            or i.opname in ('RETURN_VALUE', 'RETURN_CONST')
+                            for i in _mb_eff_r08)
+                    if _mb_mark_r08:
+                        self.generated_blocks.add(_mb_r08)
                 for chain_block, _ in boolop_for_while.op_chain:
                     if chain_block != cond_block and chain_block not in loop_blocks:
+                        # [Round 08 修复] 该链块的前置语句已由 generate() 入口
+                        # 处理发射（_entry_prefix_emitted_blocks 记录）时跳过，
+                        # 防止 `out = []` 等赋值双份发射（每块唯一归属）。
+                        if chain_block in self._entry_prefix_emitted_blocks:
+                            continue
                         chain_instrs = [i for i in chain_block.instructions
                                        if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
                         last_i = chain_block.get_last_instruction()
@@ -4504,6 +4547,77 @@ AST 映射规则:
                                 if s not in self.generated_blocks:
                                     self.generated_blocks.add(s)
                                     self.generated_offsets.add(s.start_offset)
+                # [Round 08 修复] 旋转 while 复合条件的闩锁重检链吸收。
+                # CPython 在回边处复制条件求值：多操作数 and 条件的闩锁由
+                # 「若干 IF_FALSE→循环出口 的重检块 + 末尾
+                # POP_JUMP_BACKWARD_IF_TRUE→header 回边块」组成。自然循环体收
+                # 集只含回边块，前置重检块不被任何区域认领 → 被顶层顺序扫描
+                # 渲染成循环体内的伪 if（其 false 目标即出口块，连带吞掉后续
+                # return 语句）。判据（结构性，非特判）：未被认领的块、以
+                # FORWARD 条件跳转结尾、目标为 condition_block 的出口（或等价
+                # 平凡出口）、fallthrough 直达回边块或已吸收的链块、且块内无
+                # STORE（纯条件求值）。依「每块唯一归属」将其抑制为隐式条件
+                # 重求值。
+                _latch_recheck_blocks = set()
+                _be = getattr(region, 'back_edge_block', None)
+                _cb = region.condition_block
+                if (_be is not None and _cb is not None and _be is not region.header_block):
+                    _be_last = _be.get_last_instruction()
+                    _cb_last = _cb.get_last_instruction()
+                    if (_be_last is not None
+                            and _be_last.opname in BACKWARD_CONDITIONAL_JUMP_OPS
+                            and _cb_last is not None
+                            and _cb_last.argval is not None
+                            and _cb_last.opname in CONDITIONAL_JUMP_OPS):
+                        _cond_exit = self.cfg.get_block_by_offset(_cb_last.argval)
+                        if _cond_exit is not None:
+                            _frontier = [_be]
+                            _seen_latch = {_be, region.header_block}
+                            while _frontier:
+                                _cur = _frontier.pop()
+                                for _p in _cur.predecessors:
+                                    if _p in _seen_latch or _p is region.header_block:
+                                        continue
+                                    if _p in region.body_blocks or _p in region.blocks:
+                                        continue
+                                    if _p in self.generated_blocks:
+                                        continue
+                                    _owner_p = self.region_analyzer.block_to_region.get(_p)
+                                    if _owner_p is not None:
+                                        continue
+                                    _p_last = _p.get_last_instruction()
+                                    if (not _p_last
+                                            or _p_last.opname not in FORWARD_CONDITIONAL_JUMP_OPS
+                                            or _p_last.argval is None):
+                                        continue
+                                    _tgt = self.cfg.get_block_by_offset(_p_last.argval)
+                                    if not (_tgt is _cond_exit
+                                            or self._is_equivalent_exit_block(_tgt, _cond_exit)):
+                                        continue
+                                    _p_ft = next((s for s in _p.successors
+                                                  if s.start_offset != _p_last.argval), None)
+                                    # fallthrough 必须直达回边块、已吸收链块或
+                                    # 循环体（闩锁链的连接性判据）
+                                    if not (_p_ft is _be
+                                            or _p_ft in _latch_recheck_blocks
+                                            or _p_ft in region.body_blocks):
+                                        continue
+                                    # 纯条件求值守卫：块内不得含 STORE（含 walrus
+                                    # 赋值的闩锁块须走 recheck_store_stmts 提取路
+                                    # 径，此处不吸收以免丢失每次迭代的赋值）。
+                                    _p_instrs_eff = [i for i in _p.instructions
+                                                     if i.opname not in NOISE_OPS]
+                                    if any(i.opname in ('STORE_FAST', 'STORE_NAME',
+                                                        'STORE_GLOBAL', 'STORE_DEREF',
+                                                        'STORE_SUBSCR', 'STORE_ATTR')
+                                           for i in _p_instrs_eff[:-1]):
+                                        continue
+                                    _latch_recheck_blocks.add(_p)
+                                    _seen_latch.add(_p)
+                                    _frontier.append(_p)
+                for _lb in _latch_recheck_blocks:
+                    self.generated_blocks.add(_lb)
+                    self.generated_offsets.add(_lb.start_offset)
 
         if condition is None and cond_block:
             _cond_chain_expr = region.condition_chain_expr
@@ -4924,6 +5038,47 @@ AST 映射规则:
         for block in region.body_blocks:
             if block in self.generated_blocks:
                 continue
+            # [Round 08 修复] 直接子 LoopRegion 的条件链块优先触发整循环生成。
+            # 嵌套复合 while 中，子循环的预测试块同时是其 BoolOp 条件孙区域的
+            # 链块；若按后代归属跳过或被表达式区域抢先渲染，子 while 整体结构
+            # 丢失（退化为 `if <cond>:` + 伪重检 if）。依「父引用子入口 +
+            # 嵌套即抽象节点」：块属于直接子 LoopRegion 的入口/条件块/其
+            # BoolOp 条件链块时，由该子循环统一生成。仅标记子循环自身块——
+            # 孙区域的归属由各自生成路径决定（每块唯一归属）。
+            _r08_nested_loop_child = None
+            for _dc in getattr(region, 'children', []):
+                if not isinstance(_dc, LoopRegion) or _dc.entry is None:
+                    continue
+                if (id(_dc) in self._generated_regions
+                        or id(_dc) in self._generating_regions):
+                    continue
+                _dc_cond_blocks = {_dc.entry}
+                if _dc.header_block is not None:
+                    _dc_cond_blocks.add(_dc.header_block)
+                if _dc.condition_block is not None:
+                    _dc_cond_blocks.add(_dc.condition_block)
+                for _gcc in getattr(_dc, 'children', []):
+                    if isinstance(_gcc, BoolOpRegion):
+                        for _cbk, _ in (_gcc.op_chain or []):
+                            _dc_cond_blocks.add(_cbk)
+                        if getattr(_gcc, 'prefix_block', None) is not None:
+                            _dc_cond_blocks.add(_gcc.prefix_block)
+                if block in _dc_cond_blocks:
+                    _r08_nested_loop_child = _dc
+                    break
+            if _r08_nested_loop_child is not None:
+                _nlc_id_r08 = id(_r08_nested_loop_child)
+                if (_nlc_id_r08 not in self._generated_regions
+                        and _nlc_id_r08 not in self._generating_regions):
+                    nested_ast = self._generate_region(_r08_nested_loop_child)
+                    if nested_ast:
+                        if isinstance(nested_ast, list):
+                            body_stmts.extend(nested_ast)
+                        else:
+                            body_stmts.append(nested_ast)
+                for b in _r08_nested_loop_child.blocks:
+                    self.generated_blocks.add(b)
+                continue
             # 跳过属于后代区域的块（非直接子区域 entry）。
             # 这些块由其所属区域生成（直接子区域由 dispatch 触发生成，
             # 孙区域由直接子区域生成）。仅直接子区域 entry 不跳过。
@@ -4943,7 +5098,18 @@ AST 映射规则:
                         # LoopRegion@146.parent = LoopRegion@98（已生成），
                         # 但 block 146 不在 LoopRegion@98 的 blocks 中。
                         _parent_gen = id(getattr(_blk_region_r405, 'parent', None)) in self._generated_regions
-                        if not _parent_gen:
+                        # [Round 08 修复] 循环结构块（header/back_edge）唯一归属
+                        # 本 LoopRegion。try 包裹 while 的形态中，TryExceptRegion
+                        # 作为本循环的子区域其 blocks 覆盖 header 块——若按后代
+                        # 归属跳过，则子 try 自身不会渲染该结构块（它只展开自己
+                        # 的 handler），循环体语句丢失（body 退化为 pass）。结构块
+                        # 始终由本循环分发处理。
+                        _is_loop_structural_r08 = (
+                            block is region.header_block
+                            or block is region.back_edge_block
+                            or (region.condition_block is not None
+                                and block is region.condition_block))
+                        if not _parent_gen and not _is_loop_structural_r08:
                             continue
             if block in region.else_blocks:
                 is_in_child = any(block in r.blocks for r in (region.children or []))
@@ -5830,6 +5996,86 @@ AST 映射规则:
                 self.generated_offsets.add(block.start_offset)
                 return
             else:
+                # [Round 08 修复] 旋转 while 复合条件的闩锁重检尾抑制
+                # （header 无嵌套 IfRegion 形态）。CPython 在回边复制条件求值，
+                # 多操作数 and 条件的末次重检与循环体末语句合并为同一块：header
+                # 以「重检求值 + POP_JUMP_FORWARD_IF_FALSE→循环出口」结尾，其后继
+                # fallthrough 链直达以 BACKWARD 条件跳转结尾的回边块。原实现此场景
+                # 落入通用 header 指令重建（_loop_process_header_instructions），把
+                # 重检尾渲染成循环体内的伪 if（`if not d['k'] == 0: return out /
+                # else: pass`），并吞掉其出口目标块中的后续 return 语句。
+                # 判据（结构性，非特判）：boolop_for_while 存在、header 尾部前向
+                # 条件跳转目标是 condition_block 的出口块（或等价平凡出口）、
+                # fallthrough 链直达回边块、且极性与链操作数一致（'and' 链用
+                # IF_FALSE；仅当链含取反操作数——IF_TRUE 短路——时允许 IF_TRUE）。
+                # 命中时仅提取 header 体语句，重检尾由 BoolOp 条件归约吸收。
+                if boolop_for_while is not None:
+                    _hdr_last_r08 = header.get_last_instruction()
+                    if (_hdr_last_r08 is not None
+                            and _hdr_last_r08.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                            and _hdr_last_r08.argval is not None):
+                        _cb_r08 = region.condition_block
+                        _cb_last_r08 = (_cb_r08.get_last_instruction()
+                                        if _cb_r08 is not None else None)
+                        _cond_exit_r08 = None
+                        if (_cb_last_r08 is not None
+                                and _cb_last_r08.argval is not None
+                                and _cb_last_r08.opname in CONDITIONAL_JUMP_OPS):
+                            _cond_exit_r08 = self.cfg.get_block_by_offset(
+                                _cb_last_r08.argval)
+                        _hdr_jt_r08 = self.cfg.get_block_by_offset(
+                            _hdr_last_r08.argval)
+                        if (_cond_exit_r08 is not None and _hdr_jt_r08 is not None
+                                and (_hdr_jt_r08 is _cond_exit_r08
+                                     or self._is_equivalent_exit_block(
+                                         _hdr_jt_r08, _cond_exit_r08))):
+                            _polarity_ok_r08 = (
+                                'FALSE' in _hdr_last_r08.opname
+                                or any(
+                                    (cb.get_last_instruction() is not None
+                                     and 'TRUE' in cb.get_last_instruction().opname)
+                                    for cb, _ in boolop_for_while.op_chain))
+                            _be_r08 = region.back_edge_block
+                            if _polarity_ok_r08 and _be_r08 is not None:
+                                _chain_cur_r08 = None
+                                for _s_r08 in header.successors:
+                                    if _s_r08.start_offset != _hdr_last_r08.argval:
+                                        _chain_cur_r08 = _s_r08
+                                        break
+                                _chain_visited_r08 = {header.start_offset}
+                                _chain_is_recheck_r08 = False
+                                _chain_limit_r08 = 0
+                                while (_chain_cur_r08 is not None
+                                       and _chain_cur_r08.start_offset not in _chain_visited_r08
+                                       and _chain_limit_r08 < 32):
+                                    _chain_limit_r08 += 1
+                                    _chain_visited_r08.add(_chain_cur_r08.start_offset)
+                                    if _chain_cur_r08 is _be_r08:
+                                        _cl_r08 = _chain_cur_r08.get_last_instruction()
+                                        if (_cl_r08 is not None
+                                                and _cl_r08.opname in BACKWARD_CONDITIONAL_JUMP_OPS):
+                                            _chain_is_recheck_r08 = True
+                                        break
+                                    _cl_r08 = _chain_cur_r08.get_last_instruction()
+                                    if (not _cl_r08
+                                            or _cl_r08.opname not in FORWARD_CONDITIONAL_JUMP_OPS):
+                                        break
+                                    _cl_jt_r08 = (
+                                        self.cfg.get_block_by_offset(_cl_r08.argval)
+                                        if _cl_r08.argval is not None else None)
+                                    _next_ft_r08 = None
+                                    for _cs_r08 in _chain_cur_r08.successors:
+                                        if (_cl_jt_r08 is None
+                                                or _cs_r08.start_offset != _cl_jt_r08.start_offset):
+                                            _next_ft_r08 = _cs_r08
+                                            break
+                                    _chain_cur_r08 = _next_ft_r08
+                                if _chain_is_recheck_r08:
+                                    _self_loop_stmts = self._loop_extract_self_loop_stmts(header)
+                                    body_stmts.extend(_self_loop_stmts)
+                                    self.generated_blocks.add(header)
+                                    self.generated_offsets.add(header.start_offset)
+                                    return
                 _is_for_iter_setup = False
                 for _cr in region.iter_descendants((LoopRegion,)):
                     if _cr.region_type == RegionType.FOR_LOOP and _cr.metadata.get('for_iter_setup') == header:
@@ -17269,6 +17515,50 @@ AST 映射规则:
             if is_nested_try_entry:
                 continue
 
+            # [Round 08 修复] 直接子 LoopRegion 的条件链块优先触发整循环生成。
+            # try 体遍历按块推进：旋转 while 复合条件的预测试首块同时是子
+            # BoolOpRegion 的 entry，若先命中该表达式子区域并单独渲染，while
+            # 整体结构丢失（退化为 `if <cond>: pass`）。依「父引用子入口 +
+            # 嵌套即抽象节点」：块属于直接子 LoopRegion 的入口/条件块/其
+            # BoolOp 条件链块时，应由该循环子区域统一生成（条件由 BoolOp
+            # 孙区域归约，体语句由循环归约）。仅标记子循环自身块——孙区域的
+            # 归属由各自生成路径决定。
+            _r08_loop_child = None
+            for _dc in getattr(region, 'children', []):
+                if not isinstance(_dc, LoopRegion) or _dc.entry is None:
+                    continue
+                if (id(_dc) in self._generated_regions
+                        or id(_dc) in self._generating_regions):
+                    continue
+                _dc_cond_blocks = {_dc.entry}
+                if _dc.condition_block is not None:
+                    _dc_cond_blocks.add(_dc.condition_block)
+                for _gcc in getattr(_dc, 'children', []):
+                    if isinstance(_gcc, BoolOpRegion):
+                        for _cbk, _ in (_gcc.op_chain or []):
+                            _dc_cond_blocks.add(_cbk)
+                        if getattr(_gcc, 'prefix_block', None) is not None:
+                            _dc_cond_blocks.add(_gcc.prefix_block)
+                if block in _dc_cond_blocks:
+                    _r08_loop_child = _dc
+                    break
+            if _r08_loop_child is not None:
+                _lc_id_r08 = id(_r08_loop_child)
+                if (_lc_id_r08 not in self._generated_regions
+                        and _lc_id_r08 not in self._generating_regions):
+                    for b in _r08_loop_child.blocks:
+                        self.generated_blocks.discard(b)
+                    nested_ast = self._generate_region(_r08_loop_child)
+                    if nested_ast:
+                        if isinstance(nested_ast, list):
+                            body_stmts.extend(nested_ast)
+                        else:
+                            body_stmts.append(nested_ast)
+                for b in _r08_loop_child.blocks:
+                    self.generated_blocks.add(b)
+                self.generated_blocks.add(block)
+                continue
+
             is_nested_region_entry = False
             for nr in self.region_analyzer.regions:
                 if nr is region or nr.entry != block:
@@ -17840,6 +18130,16 @@ AST 映射规则:
             else_blocks → Try.orelse（has_else 为真且非空时）
             finally_blocks → Try.finalbody（finally copy 块去重，只保留一份）
           - handler 顺序: 按 handler_entry_blocks 的 start_offset 排序
+          - try_try嵌套补偿: 异常表 target ≥ try_offset_end 且不在
+            handler_entry_blocks 中的 PUSH_EXC_INFO 块视为被分析器遗漏的外层
+            handler，将当前 handlers 包装为内层 Try。资格判据（R08b）：该条目
+            的异常表保护区间 [start, end) 必须与当前 region 的 try body 区间
+            [try_offset_start, try_offset_end) 相交（编译器嵌套保护区间 ⇒ 外层
+            handler 必然覆盖内层 try body）；不相交的条目属于后续兄弟 try 语句，
+            不得吸收（否则产生多个裸 except → "default 'except:' must be last"）。
+            同一 target 块只吸收一次；外层 handler 的 exc_type 从入口块字节码
+            推导（CHECK_EXC_MATCH 前的 LOAD_NAME/LOAD_GLOBAL），无匹配指令时
+            才是裸 except
 
         子区域处理:
           - 嵌套 TryExceptRegion: 在 try body 中检测内层 region，递归调用 _generate_try
@@ -18424,11 +18724,30 @@ AST 映射规则:
                 _existing_handler_offsets.add(heb.start_offset)
             _region_block_set = set(region.blocks)
             _outer_handler_entries = []
+            _outer_handler_seen_offsets = set()
             if self.cfg.exception_table:
                 for entry in self.cfg.exception_table:
                     target = entry.get('target', entry.get('handler_start', None))
                     if target is not None and target not in _existing_handler_offsets:
                         if target >= region.try_offset_end:
+                            # [R08b fix] 外层 handler 的资格判据来自字节码异常表
+                            # 的真实保护区间：CPython 编译器对嵌套 try 生成的
+                            # 异常表区间是嵌套的——真正的外层 handler 条目必然
+                            # 覆盖内层 try body（[try_offset_start,
+                            # try_offset_end) 与条目 [start, end) 相交）。
+                            # 仅凭 target >= try_offset_end 会把同一函数中
+                            # 「后续兄弟 try 语句」的 handler（其保护区间与当前
+                            # try body 完全不相交，如 kill_trade_process 中
+                            # 后续两个独立 try 的 BaseException handler）误吸收
+                            # 为外层裸 except，产生多个裸 except → SyntaxError:
+                            # default 'except:' must be last。区间不相交的条目
+                            # 属于其他语句，不构成本 region 的外层 handler。
+                            _entry_start = entry.get('start')
+                            _entry_end = entry.get('end')
+                            if (_entry_start is not None and _entry_end is not None
+                                    and (_entry_end <= region.try_offset_start
+                                         or _entry_start >= region.try_offset_end)):
+                                continue
                             target_block = self.cfg.get_block_by_offset(target)
                             if (target_block and
                                 target_block not in self.generated_blocks and
@@ -18442,7 +18761,10 @@ AST 映射规则:
                                     i.opname == 'PUSH_EXC_INFO'
                                     for i in target_block.instructions
                                 )
-                                if has_push_exc:
+                                if has_push_exc and target not in _outer_handler_seen_offsets:
+                                    # 同一 handler 块只吸收一次（多条异常表行可指向
+                                    # 同一 target），防止重复发射同一 except 处理器。
+                                    _outer_handler_seen_offsets.add(target)
                                     _outer_handler_entries.append(target_block)
             if _outer_handler_entries and handlers:
                 _inner_try = {
@@ -18472,6 +18794,21 @@ AST 映射规则:
                         'type': 'ExceptHandler',
                         'body': _outer_body if _outer_body else [{'type': 'Pass'}]
                     }
+                    # [R08b fix] 外层 handler 的异常类型必须来自其入口块的
+                    # 字节码结构（CHECK_EXC_MATCH 之前的 LOAD_NAME/LOAD_GLOBAL），
+                    # 与 region_analyzer._extract_except_handler 的推导一致；
+                    # 仅当块中无 CHECK_EXC_MATCH 时才是真正的裸 except。
+                    _CHECK_OPS_r08b = ('CHECK_EXC_MATCH', 'CHECK_EG_MATCH')
+                    _pre_check_names_r08b = []
+                    for _instr in _outer_block.instructions:
+                        if _instr.opname in _CHECK_OPS_r08b:
+                            break
+                        if _instr.opname in ('LOAD_NAME', 'LOAD_GLOBAL'):
+                            _pre_check_names_r08b.append(_instr.argval)
+                    if len(_pre_check_names_r08b) == 1:
+                        _outer_handler['exc_type'] = {'type': 'Name', 'id': str(_pre_check_names_r08b[0]), 'ctx': 'Load'}
+                    elif len(_pre_check_names_r08b) > 1:
+                        _outer_handler['exc_type'] = {'type': 'Name', 'id': '(' + ', '.join(str(n) for n in _pre_check_names_r08b) + ')', 'ctx': 'Load'}
                     handlers.append(_outer_handler)
 
             _skipped_outer = self._skipped_outer_try
@@ -20408,6 +20745,12 @@ AST 映射规则:
             自然出口）+ block_to_region 归属守卫（镜像 R07 Pattern T）。本方法
             _generate_with 的 with_cleanup_blocks 集合因此不再含 post-with if 守卫，
             下游 _generate_if 正确接管该块。依「每块唯一归属」+「清理边界=自然出口」。
+          - pre-BEFORE_WITH 前缀唯一归属（R08b）：entry_block 中 BEFORE_WITH
+            之前、以 STORE_* 结尾的前导赋值段（如 `d = datetime.now()`）归属
+            函数体顺序扫描。generate() 入口处理的 WithRegion 分支发射该前缀后
+            登记于 _entry_prefix_emitted_blocks；本方法仅在无登记时（with 嵌套
+            于其他结构、顺序扫描未经过其入口）才补发射。两处都发射会导致前导
+            赋值双份输出、re-compile 后 co_code 变长（394 vs 528 字节形态）。
         """
         region_id = id(region)
         self._generating_regions.add(region_id)
@@ -21382,6 +21725,18 @@ AST 映射规则:
             # is handled separately via region.items; only the pre-context
             # assignment segment (ending with STORE_*) is emitted here.
             _entry_block_c2 = getattr(region, 'entry', None)
+            # [R08b fix] 该前缀已由 generate() 入口处理的 WithRegion 分支发射过
+            # （_entry_prefix_emitted_blocks 登记）时不得重复提取——否则 with
+            # 语句前的前导赋值（与 with 上下文 setup 同块、以 STORE_* 结尾）
+            # 会被双份发射（如 TradeOperationLogger.write 的
+            # `d = datetime.now()` / `add_header = not os.path.exists(...)`）。
+            # 依「每块唯一归属」：前导语句归属函数体顺序扫描，with 只拥有
+            # BEFORE_WITH 起的上下文与 body。仅当无登记时（with 嵌套于其他
+            # 结构、顺序扫描未经过其入口）才由本方法补发射，保留原
+            # file assignment lost 修复的能力。
+            if (_entry_block_c2 is not None
+                    and _entry_block_c2 in self._entry_prefix_emitted_blocks):
+                _entry_block_c2 = None
             if _entry_block_c2 is not None:
                 _entry_instrs_c2 = list(_entry_block_c2.instructions)
                 _bw_idx_c2 = None

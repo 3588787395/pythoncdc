@@ -1834,14 +1834,74 @@ class RegionAnalyzer:
         # 纯 sink 分支：merge 是另一分支的 JUMP_FORWARD 目标
         _then_is_sink = not then_succ.successors
         _else_is_sink = not else_succ.successors
+
+        def _resolve_sink_side_merge(branch_succ, sink_succ):
+            """[Round 08 修复] 纯 sink 分支场景下，从另一分支后继链解析 merge。
+
+            文档已确立的原则（见上方 docstring）：当某分支是纯 sink（以
+            RETURN/RAISE 终态）时，它永远不会到达 merge，故 merge 取另一分支
+            的 JUMP_FORWARD 目标、无需从 sink 可达。原实现仅检查该分支入口块的
+            直连 JUMP_FORWARD；当分支体首块被嵌套结构（如旋转 while 的条件块）
+            抽象化、其出口跳板块（else_blocks 中的纯 JUMP_FORWARD 块）位于链上
+            更深处时，直连查找落空 → merge=None → 分支收集越过真实合并点，把
+            后续语句区域（如尾部 for 循环）误吞进 then 体（违反每块唯一归属，
+            get_block_stocks 形态）。
+            补全：沿后继链（浅层优先，最多 3 层）搜索纯跳转桥块，取其目标为
+            merge。有效性判据（结构性，非特判）：
+              1. 经典「跳过 sink 分支」布局——跳板块位于 sink 分支入口之前、
+                 目标位于其后（``if A: <body>; JF→M | SINK@else | M``）；目标
+                 不满足此位置关系时不是本 if 的合并点（可能是嵌套结构内部汇合
+                 点或无关跳转），拒绝；
+              2. 桥块与其目标的直接归属区域不同——即目标是桥块所属区域的出口
+                 外语句（如循环的 after-exit 代码），而非该区域内部汇合点。
+            sink 永不到达 merge，故不做可达性验证。
+            """
+            visited = {branch_succ}
+            queue = [(branch_succ, 0)]
+            while queue:
+                blk, depth = queue.pop(0)
+                blk_last = blk.get_last_instruction()
+                if (blk is not branch_succ
+                        and blk_last is not None
+                        and blk_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                        and blk_last.argval is not None):
+                    tgt = self.cfg.get_block_by_offset(blk_last.argval)
+                    if (tgt is not None and tgt not in _exclude
+                            and tgt.start_offset > sink_succ.start_offset
+                            and blk.start_offset < sink_succ.start_offset):
+                        _owner_bridge = self.block_to_region.get(blk)
+                        _owner_target = self.block_to_region.get(tgt)
+                        if (_owner_bridge is None or _owner_target is None
+                                or _owner_bridge is not _owner_target):
+                            return tgt
+                if depth >= 3:
+                    continue
+                for s in blk.successors:
+                    if s in visited or s in _exclude:
+                        continue
+                    s_last = s.get_last_instruction()
+                    if (s_last is not None
+                            and s_last.opname in ('RETURN_VALUE', 'RETURN_CONST',
+                                                  'RAISE_VARARGS')):
+                        continue
+                    visited.add(s)
+                    queue.append((s, depth + 1))
+            return None
+
         if _else_is_sink and not _then_is_sink:
             _then_exit = self._get_jump_forward_target(then_succ)
             if _then_exit is not None and _then_exit not in _exclude:
                 return _then_exit
+            _via_chain = _resolve_sink_side_merge(then_succ, else_succ)
+            if _via_chain is not None and _via_chain not in _exclude:
+                return _via_chain
         if _then_is_sink and not _else_is_sink:
             _else_exit = self._get_jump_forward_target(else_succ)
             if _else_exit is not None and _else_exit not in _exclude:
                 return _else_exit
+            _via_chain = _resolve_sink_side_merge(else_succ, then_succ)
+            if _via_chain is not None and _via_chain not in _exclude:
+                return _via_chain
 
         # 1. 检查 then_succ 的 JUMP_FORWARD 目标
         _then_exit = self._get_jump_forward_target(then_succ)
@@ -4343,10 +4403,60 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                     _08_else_blocks = []
                     _08_visited = set()
                     _08_stack = list(non_return_successors)
+                    _08_foreign_owned = False
                     while _08_stack:
                         _08_cur = _08_stack.pop()
                         if _08_cur in _08_visited or _08_cur in body_set:
                             continue
+                        # [Round 08 修复] 同入口包围式 try 边界：候选 else 块被某
+                        # TryExceptRegion 认领，且该 try 的 entry 与本循环的入口/
+                        # 条件块相同（``try: while ...:`` 编译为同一入口块的形态）
+                        # 时，出口续流属于该 try 的正常路径——继续收集会使循环吞
+                        # 并 try 的出口跳板与后续语句、父子嵌套倒置（try 反挂为循
+                        # 环子区域），handler 与尾部代码丢失。而循环体内的子 try
+                        # （entry 在循环体内部，如 logger._target）其出口跳板仍是
+                        # 本循环的顺序续流，照常收集。
+                        _08_owner = self.block_to_region.get(_08_cur)
+                        if isinstance(_08_owner, TryExceptRegion):
+                            _t_entry_off = getattr(
+                                getattr(_08_owner, 'entry', None), 'start_offset', None)
+                            # 锚点 = header + 条件块 + 条件块上游的同出口预测试
+                            # 链（复合 and 条件的首操作数块与 try 同入口形态）
+                            _loop_anchor_offs = {header.start_offset}
+                            if condition_block is not None:
+                                _cb_off = condition_block.start_offset
+                                _loop_anchor_offs.add(_cb_off)
+                                _cond_last_a = condition_block.get_last_instruction()
+                                if (_cond_last_a is not None
+                                        and _cond_last_a.argval is not None):
+                                    _a_exit = self.cfg.get_block_by_offset(
+                                        _cond_last_a.argval)
+                                    _a_frontier = [condition_block]
+                                    _a_seen = {_cb_off}
+                                    _a_depth = 0
+                                    while _a_frontier and _a_depth < 4:
+                                        _a_depth += 1
+                                        _a_next = []
+                                        for _acb in _a_frontier:
+                                            for _ap in _acb.predecessors:
+                                                if _ap.start_offset in _a_seen:
+                                                    continue
+                                                _ap_last = _ap.get_last_instruction()
+                                                if (_ap_last is None
+                                                        or _ap_last.opname not in FORWARD_CONDITIONAL_JUMP_OPS
+                                                        or _ap_last.argval is None):
+                                                    continue
+                                                _ap_tgt = self.cfg.get_block_by_offset(
+                                                    _ap_last.argval)
+                                                if _ap_tgt is not _a_exit:
+                                                    continue
+                                                _a_seen.add(_ap.start_offset)
+                                                _loop_anchor_offs.add(_ap.start_offset)
+                                                _a_next.append(_ap)
+                                        _a_frontier = _a_next
+                            if _t_entry_off is not None and _t_entry_off in _loop_anchor_offs:
+                                _08_foreign_owned = True
+                                break
                         if self._is_except_handler_block(_08_cur):
                             continue
                         if self._is_outer_try_except_else_block(_08_cur, body_set):
@@ -4364,6 +4474,8 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                             if _08_succ not in _08_visited and _08_succ not in body_set:
                                 if not self._is_outer_try_except_else_block(_08_succ, body_set):
                                     _08_stack.append(_08_succ)
+                    if _08_foreign_owned:
+                        return None, natural_exit
                     else_blocks = sorted(_08_else_blocks, key=lambda b: b.start_offset) if _08_else_blocks else None
                 else:
                     else_blocks = sorted(non_return_successors, key=lambda b: b.start_offset)
@@ -18351,7 +18463,31 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 break
             chain.insert(0, (pred, pred_op))
             current = pred
-        return chain if len(chain) >= 1 else None
+        if len(chain) < 2:
+            return chain if len(chain) >= 1 else None
+        # 区域归约算法原则 2（每块唯一归属）+ 原则 3（嵌套即抽象节点）
+        # + R07 all_same_target 判据：合法 and/or 复合条件的所有操作数块的
+        # 条件跳转目标必须收敛到同一出口块。二元素及任意长度链均逐操作数
+        # 校验，任一操作数目标不一致即整条链不折叠——CPython 对
+        # ``if A: ... while B:`` 的旋转布局中，外层 if 测试块（false→外层
+        # else）与 while 预测试/条件块（false→循环出口）仅是 CFG 前驱关系
+        # 而非并列布尔操作数，二者 false 目标必然不同；不校验会把嵌套结构
+        # 误折叠成扁平复合条件，使外层 IfRegion 消失、预测试块语句无处
+        # 归属（get_block_stocks 形态）。拒绝折叠后交由 IfRegion 保持嵌套
+        # 结构与每块唯一归属。
+        _head_last = chain[0][0].get_last_instruction()
+        _head_exit = (self.cfg.get_block_by_offset(_head_last.argval)
+                      if _head_last is not None and _head_last.argval is not None
+                      else None)
+        if _head_exit is None:
+            return None
+        for _cb, _ in chain[1:]:
+            _cl = _cb.get_last_instruction()
+            if _cl is None or _cl.argval is None:
+                return None
+            if self.cfg.get_block_by_offset(_cl.argval) is not _head_exit:
+                return None
+        return chain
 
     def _is_fused_ternary_false_value_block(self, pred: BasicBlock, header: BasicBlock) -> bool:
         """检测 pred 是否是 fused ternary-loop 的 false_value_block。
@@ -18509,6 +18645,19 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
         first_jt = self.cfg.get_block_by_offset(first_last.argval) if first_last and first_last.argval is not None else None
         if first_jt is None:
             return None
+        # 区域归约算法原则 2（每块唯一归属）+ R07 all_same_target 判据：
+        # and/or 链折叠的唯一合法性判据是「所有操作数块的条件跳转目标收敛到
+        # 同一出口块」。二元素及任意长度链均逐操作数校验，任一操作数目标
+        # 不一致即整条链不折叠（嵌套结构交由 IfRegion 归约）。
+        #
+        # [Round 08 修复] 原实现此处之后另有「fallthrough 一致性」回退分支，
+        # 且其中对链尾块（``cb == chain[-1][0]``，配合 ``len(chain) >= 2``）
+        # 无条件 continue 豁免——对二元素链 chain[1:] 恰为链尾自身，校验
+        # 退化为恒真旁路：all_same_target 主判据拒绝的目标不一致链被回退
+        # 分支无条件放行（外层 if 测试 false→外层 else 与 while 预测试
+        # false→循环出口的嵌套形态被误折叠成扁平 and 链）。依「任何不一致
+        # 都不折叠」原则移除该回退分支，禁止任何 len(chain) 旁路跳过逐操作数
+        # 校验。
         all_same_target = True
         for cb, _ in chain:
             cl = cb.get_last_instruction()
@@ -18520,28 +18669,6 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 all_same_target = False
                 break
         if all_same_target:
-            return chain
-        first_ft = None
-        first_instr = chain[0][0].get_last_instruction()
-        if first_instr and first_instr.argval is not None:
-            first_succs = list(chain[0][0].conditional_successors)
-            first_ft = next((s for s in first_succs if s.start_offset != first_instr.argval), None)
-        if first_ft is None:
-            return None
-        all_ft_consistent = True
-        for cb, _ in chain[1:]:
-            cl = cb.get_last_instruction()
-            if not cl or cl.argval is None:
-                all_ft_consistent = False
-                break
-            if len(chain) >= 2 and cb == chain[-1][0]:
-                continue
-            cb_succs = list(cb.conditional_successors)
-            cb_ft = next((s for s in cb_succs if s.start_offset != cl.argval), None)
-            if cb_ft != first_ft:
-                all_ft_consistent = False
-                break
-        if all_ft_consistent:
             return chain
         return None
 
