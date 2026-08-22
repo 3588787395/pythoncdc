@@ -3910,26 +3910,7 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 )
                 if not shared_condition:
                     continue
-
-                # [R02 fix] 条件重检假循环变体（提前判定，不依赖 else 内容）：
-                # inner 与 outer 共享同一 condition_block，且 inner.header 是
-                # outer.header 的直接后继（CPython 把 `while x:` 的循环末重检
-                # POP_JUMP_BACKWARD_IF_TRUE 直接跳到 body 首块形成"假循环"），
-                # 且 inner.back_edge_block 以 BACKWARD_CONDITIONAL_JUMP_OPS 结尾
-                # 跳回 inner.header。此时 inner 是外层 while 的循环末条件重检，
-                # 必须过滤，否则生成嵌套 while 结构、多出 JUMP_BACKWARD。
-                if (inner.condition_block is not None
-                        and inner.condition_block == outer.condition_block
-                        and inner.back_edge_block):
-                    _bel = inner.back_edge_block.get_last_instruction()
-                    if (_bel and _bel.opname in BACKWARD_CONDITIONAL_JUMP_OPS
-                            and _bel.argval is not None
-                            and self.cfg.get_block_by_offset(_bel.argval) == inner.header_block):
-                        _outer_succ_offsets = {s.start_offset for s in outer.header_block.successors}
-                        if inner.header_block.start_offset in _outer_succ_offsets:
-                            fake_loop_region_ids.add(id(inner))
-                            break
-
+                
                 inner_else_blocks = set(inner.else_blocks or [])
                 if not inner_else_blocks:
                     continue
@@ -3963,25 +3944,6 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                     if back_edge_last and back_edge_last.opname in ('POP_JUMP_BACKWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_FALSE'):
                         fake_loop_region_ids.add(id(inner))
                         break
-                    # [R02 fix] 条件重检假循环变体：back edge 是条件回跳
-                    # （POP_JUMP_*_IF_TRUE/FALSE to header）之外的形态——
-                    # back edge 块本身是条件跳转块，跳到 header 的是 TRUE 分支。
-                    # 判据：inner 与 outer 共享同一 condition_block（同一 while
-                    # 源码条件的入口检查），且 inner.header 是 outer.header 的
-                    # 直接 fall-through 后继（CPython 把 `while x:` 的循环末
-                    # 重检 POP_JUMP_BACKWARD_IF_TRUE 直接跳到 body 首块），
-                    # 且 inner 的 back edge 块以 BACKWARD_CONDITIONAL_JUMP_OPS
-                    # 结尾。此时 inner 不是独立源码循环，而是外层 while 的
-                    # 循环末条件重检，必须过滤，否则生成嵌套 while 结构。
-                    if back_edge_last and back_edge_last.opname in BACKWARD_CONDITIONAL_JUMP_OPS \
-                            and back_edge_last.argval is not None \
-                            and self.cfg.get_block_by_offset(back_edge_last.argval) == inner.header_block \
-                            and inner.condition_block is not None \
-                            and inner.condition_block == outer.condition_block:
-                        _outer_succ_offsets = {s.start_offset for s in outer.header_block.successors}
-                        if inner.header_block.start_offset in _outer_succ_offsets:
-                            fake_loop_region_ids.add(id(inner))
-                            break
         
         return fake_loop_region_ids
 
@@ -5052,19 +5014,7 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 for i in header.instructions
             )
             _fwd_queue = []
-            # [R02 fix] header 自带条件出口（POP_JUMP_FORWARD_IF_FALSE/IF_TRUE
-            # 跳到 body 外）时循环有自然出口，不是 while-true。此时禁止前向
-            # 收集后继块——自然出口块（如 while 结束后的 if）属于循环后的
-            # 序列代码，不属于循环体。否则 exit 块被吞进 body，下游
-            # _is_while_true 误判为 True，生成 `while True:` 包裹结构，
-            # 多出一条 JUMP_BACKWARD 与原始字节码不一致。
-            _header_has_conditional_exit = False
-            if _header_last is not None and _header_last.opname in FORWARD_CONDITIONAL_JUMP_OPS \
-                    and _header_last.argval is not None:
-                _hdr_exit_target = self.cfg.get_block_by_offset(_header_last.argval)
-                if _hdr_exit_target is not None and _hdr_exit_target not in body and _hdr_exit_target != header:
-                    _header_has_conditional_exit = True
-            if not _is_async_send_loop and not _header_has_conditional_exit:
+            if not _is_async_send_loop:
                 # [Phase 3 adv17_while_multi_if_flow] 此前仅从 header 的
                 # 后继开始前向遍历，遗漏了通过回边收集的 body 块的后继。
                 # 例如 while True 内多 if + return 1：Block 22（if y）由

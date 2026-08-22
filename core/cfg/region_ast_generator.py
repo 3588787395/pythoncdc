@@ -3944,6 +3944,23 @@ AST 映射规则:
             if region.is_while_true and cond_block is None:
                 body_stmts = self._loop_generate_body(region)
                 result = {'type': 'While', 'test': {'type': 'Constant', 'value': True}, 'body': body_stmts if body_stmts else [{'type': 'Pass'}]}
+                # [R03 fix4] CPython `while x:` 优化形态：入口检查(POP_JUMP_
+                # FORWARD_IF_FALSE→exit) + 循环末重检(POP_JUMP_BACKWARD_IF_TRUE
+                # →body 首块) 会被循环分析拆成外层 while-true + 内层 while-x
+                # 两层。此处合并：While(True, [While(x,...), *rest]) →
+                # While(x,...); *rest。真实源码不会写 while True: while x:
+                # （中间无 break），该形状只来自重检拆分。
+                if (result['test'].get('value') is True
+                        and body_stmts and len(body_stmts) >= 1
+                        and isinstance(body_stmts[0], dict)
+                        and body_stmts[0].get('type') == 'While'
+                        and not any(s.get('type') == 'Break' for s in body_stmts[1:])):
+                    _inner = body_stmts[0]
+                    _rest = body_stmts[1:]
+                    output = list(pre_stmts)
+                    output.append(_inner)
+                    output.extend(_rest)
+                    return output
                 output = list(pre_stmts)
                 output.append(result)
                 return output
@@ -3951,6 +3968,15 @@ AST 映射规则:
             if region.is_while_true and cond_block == region.header_block:
                 body_stmts = self._loop_generate_body(region)
                 result = {'type': 'While', 'test': {'type': 'Constant', 'value': True}, 'body': body_stmts if body_stmts else [{'type': 'Pass'}]}
+                # [R03 fix4b] 同 fix4：重检拆分形态合并（cond==header 分支）
+                if (body_stmts and len(body_stmts) >= 1
+                        and isinstance(body_stmts[0], dict)
+                        and body_stmts[0].get('type') == 'While'
+                        and not any(s.get('type') == 'Break' for s in body_stmts[1:])):
+                    output = list(pre_stmts)
+                    output.append(body_stmts[0])
+                    output.extend(body_stmts[1:])
+                    return output
                 output = list(pre_stmts)
                 output.append(result)
                 return output
@@ -3958,6 +3984,15 @@ AST 映射规则:
             if region.is_while_true and cond_block == region.header_block:
                 body_stmts = self._loop_generate_body(region)
                 result = {'type': 'While', 'test': {'type': 'Constant', 'value': True}, 'body': body_stmts if body_stmts else [{'type': 'Pass'}]}
+                # [R03 fix4c] 同 fix4：重检拆分形态合并（重复分支）
+                if (body_stmts and len(body_stmts) >= 1
+                        and isinstance(body_stmts[0], dict)
+                        and body_stmts[0].get('type') == 'While'
+                        and not any(s.get('type') == 'Break' for s in body_stmts[1:])):
+                    output = list(pre_stmts)
+                    output.append(body_stmts[0])
+                    output.extend(body_stmts[1:])
+                    return output
                 output = list(pre_stmts)
                 output.append(result)
                 return output
@@ -6781,6 +6816,28 @@ AST 映射规则:
                         _ft_is_exit = (_ft_role in (BlockRole.RETURN, BlockRole.RETURN_NONE, BlockRole.BREAK, BlockRole.PURE_BREAK) or
                             _fall_through_block not in self._current_loop.body_blocks and _fall_through_block != self._current_loop.header_block)
                         if not _ft_is_exit:
+                            # [R03 fix] fall-through 块是子区域入口（如嵌套
+                            # IfRegion 的 if-break）时，委托子区域生成——
+                            # 直接 GBS 只重建块内数据语句，子区域的条件结构
+                            # （if ... break/continue）会丢失。
+                            _ft_entry_region = self.region_analyzer.get_entry_region_for_block(_fall_through_block) \
+                                if hasattr(self, 'region_analyzer') else None
+                            if (_ft_entry_region is not None
+                                    and type(_ft_entry_region).__name__ != 'Region'
+                                    and getattr(_ft_entry_region, 'entry', None) is _fall_through_block):
+                                _ft_child_id = id(_ft_entry_region)
+                                if (_ft_child_id not in self._generated_regions
+                                        and _ft_child_id not in self._generating_regions):
+                                    _ft_ast = self._generate_region(_ft_entry_region)
+                                    if _ft_ast:
+                                        # [R03 fix2] 同 L6857：只标记入口块
+                                        self.generated_blocks.add(_fall_through_block)
+                                        self._generated_regions.add(_ft_child_id)
+                                        if isinstance(_ft_ast, list):
+                                            _self_loop_stmts.extend(_ft_ast)
+                                        else:
+                                            _self_loop_stmts.append(_ft_ast)
+                                        return _self_loop_stmts
                             _then_stmts = self._generate_block_statements(_fall_through_block)
                             if _fall_through_block not in self.generated_blocks:
                                 self.generated_blocks.add(_fall_through_block)
@@ -6854,6 +6911,29 @@ AST 映射规则:
                                     if _ft_in_body and _ft_role3 not in (BlockRole.RETURN, BlockRole.RETURN_NONE, BlockRole.BREAK, BlockRole.PURE_BREAK):
                                         _jt_is_break = True
                         if _jt_is_break:
+                            # [R03 fix] fall-through 是子区域入口时委托子区域
+                            # 生成（保留嵌套 if-break 结构），同 L6784 修复。
+                            _ft_entry_region2 = self.region_analyzer.get_entry_region_for_block(_fall_through_block) \
+                                if hasattr(self, 'region_analyzer') else None
+                            if (_ft_entry_region2 is not None
+                                    and type(_ft_entry_region2).__name__ != 'Region'
+                                    and getattr(_ft_entry_region2, 'entry', None) is _fall_through_block):
+                                _ft_child_id2 = id(_ft_entry_region2)
+                                if (_ft_child_id2 not in self._generated_regions
+                                        and _ft_child_id2 not in self._generating_regions):
+                                    _ft_ast2 = self._generate_region(_ft_entry_region2)
+                                    if _ft_ast2:
+                                        # [R03 fix2] 只标记子区域实际发射的入口块，
+                                        # 不标记 region.blocks 全集——区域块集合
+                                        # 可能过度收集（含后续顺序语句块），
+                                        # 全量标记会吞掉循环体剩余语句。
+                                        self.generated_blocks.add(_fall_through_block)
+                                        self._generated_regions.add(_ft_child_id2)
+                                        if isinstance(_ft_ast2, list):
+                                            _self_loop_stmts.extend(_ft_ast2)
+                                        else:
+                                            _self_loop_stmts.append(_ft_ast2)
+                                        return _self_loop_stmts
                             _then_stmts2 = self._generate_block_statements(_fall_through_block)
                             if _fall_through_block not in self.generated_blocks:
                                 self.generated_blocks.add(_fall_through_block)
@@ -33853,7 +33933,20 @@ AST 映射规则:
                     if (_last_i and _last_i.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
                             and _last_i.argval is not None):
                         _tgt = self.cfg.get_block_by_offset(_last_i.argval)
-                        if _tgt is not None and getattr(_tgt, 'loop_header', False):
+                        # [R03 fix3] 不依赖 loop_header 属性（LoopAnalyzer 标注
+                        # 可能未覆盖），改用区域分析器的块角色：CONTINUE/
+                        # PURE_CONTINUE/LOOP_BACK_EDGE 块的 JUMP_BACKWARD 即
+                        # continue 语义。
+                        _is_continue = False
+                        if _tgt is not None:
+                            if getattr(_tgt, 'loop_header', False):
+                                _is_continue = True
+                            else:
+                                _tgt_role = self.region_analyzer.get_block_role(entry_block)
+                                if _tgt_role in (BlockRole.CONTINUE, BlockRole.PURE_CONTINUE,
+                                                 BlockRole.LOOP_BACK_EDGE):
+                                    _is_continue = True
+                        if _is_continue:
                             if not any(s.get('type') == 'Continue' for s in stmt_list):
                                 stmt_list.append({'type': 'Continue'})
 
