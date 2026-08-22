@@ -9022,7 +9022,11 @@ AST 映射规则:
             _chain_op = _main_ibc['op']
             _main_parts = []
             for _cb in _chain_blocks:
-                _cb_instrs = [i for i in _cb.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL') and i.opname not in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS | BACKWARD_JUMP_OPS) and i.opname not in ('JUMP_FORWARD', 'JUMP_BACKWARD')]
+                # [R01 fix] NONE_CHECK_OPS 不能过滤：它们表达 `x is (not) None`
+                # 比较（如 `if A and x is not None:`）。expr_reconstructor 已按
+                # if 语义处理（IF_NOT_NONE→is None, IF_NONE→is not None），
+                # 保留后重建出 Compare 节点，重编译与原始 IF_NONE 字节码一致。
+                _cb_instrs = [i for i in _cb.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL') and (i.opname not in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS | BACKWARD_JUMP_OPS) or i.opname in NONE_CHECK_OPS) and i.opname not in ('JUMP_FORWARD', 'JUMP_BACKWARD')]
                 if _cb_instrs:
                     _part = self.expr_reconstructor.reconstruct(_cb_instrs)
                     if _part:
@@ -11423,6 +11427,10 @@ AST 映射规则:
         """
         if not getattr(region, 'elif_conditions', None):
             return [self._if_generate_normal(region)]
+        # [R01 fix] 初始化 final_else_stmts，防止当 nested_elif_stmts=[]
+        # 且 region.elif_final_else=[] 时访问未初始化变量导致
+        # UnboundLocalError（函数体退化为 pass 的根因之一）
+        final_else_stmts = []
         # [关键修复] 当 elif_final_else 只包含 cleanup 块(POP_TOP + JUMP)时，
         # 跟随跳转找到真正的 else body 块
         if region.elif_final_else:
@@ -11674,7 +11682,11 @@ AST 映射规则:
                 _chain_op = _inline_chain_info['op']
                 _elif_parts = []
                 for _cb in _chain_blocks:
-                    _cb_instrs = [i for i in _cb.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL') and i.opname not in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS | BACKWARD_JUMP_OPS) and i.opname not in ('JUMP_FORWARD', 'JUMP_BACKWARD')]
+                    # [R01 fix] NONE_CHECK_OPS 不能过滤：它们表达 `x is (not) None`
+                    # 比较（如 `if A and x is not None:`）。expr_reconstructor 已按
+                    # if 语义处理（IF_NOT_NONE→is None, IF_NONE→is not None），
+                    # 保留后重建出 Compare 节点，重编译与原始 IF_NONE 字节码一致。
+                    _cb_instrs = [i for i in _cb.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL') and (i.opname not in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS | BACKWARD_JUMP_OPS) or i.opname in NONE_CHECK_OPS) and i.opname not in ('JUMP_FORWARD', 'JUMP_BACKWARD')]
                     if _cb_instrs:
                         _part = self.expr_reconstructor.reconstruct(_cb_instrs)
                         if _part:
@@ -11916,7 +11928,11 @@ AST 映射规则:
                         _chain_op = _inline_chain_info['op']
                         _elif_parts = []
                         for _cb in _chain_blocks:
-                            _cb_instrs = [i for i in _cb.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL') and i.opname not in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS | BACKWARD_JUMP_OPS) and i.opname not in ('JUMP_FORWARD', 'JUMP_BACKWARD')]
+                            # [R01 fix] NONE_CHECK_OPS 不能过滤：它们表达 `x is (not) None`
+                            # 比较（如 `if A and x is not None:`）。expr_reconstructor 已按
+                            # if 语义处理（IF_NOT_NONE→is None, IF_NONE→is not None），
+                            # 保留后重建出 Compare 节点，重编译与原始 IF_NONE 字节码一致。
+                            _cb_instrs = [i for i in _cb.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL') and (i.opname not in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS | BACKWARD_JUMP_OPS) or i.opname in NONE_CHECK_OPS) and i.opname not in ('JUMP_FORWARD', 'JUMP_BACKWARD')]
                             if _cb_instrs:
                                 _part = self.expr_reconstructor.reconstruct(_cb_instrs)
                                 if _part:
@@ -11976,6 +11992,10 @@ AST 映射规则:
                        final_else_stmts[-1]['value'].get('value') is None):
                     final_else_stmts.pop()
         elif_orelse = nested_elif_stmts if nested_elif_stmts else (final_else_stmts if final_else_stmts else [])
+        # [R01 fix] final_else_stmts 仅在 region.elif_final_else 非空时赋值。
+        # 当 nested_elif_stmts=[] 且 region.elif_final_else=[] 时，原代码
+        # 访问未初始化的 final_else_stmts 导致 UnboundLocalError，进而
+        # 使整个函数体退化为 pass。修复：在函数入口初始化 final_else_stmts=[]。
         _elif_if_stmt = {'type': 'If', '_is_elif': True, 'test': elif_condition if elif_condition else {'type': 'Constant', 'value': True}, 'body': elif_body_stmts if elif_body_stmts else [{'type': 'Pass'}], 'orelse': elif_orelse}
         # 前置 elif 条件块中的赋值语句（如 `fields = re_fields`）。
         # 这些语句在语义上属于 elif 之前的外层函数体序列，但物理上位于
@@ -12142,7 +12162,11 @@ AST 映射规则:
             _chain_op = _main_ibc['op']
             _main_parts = []
             for _cb in _chain_blocks:
-                _cb_instrs = [i for i in _cb.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL') and i.opname not in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS | BACKWARD_JUMP_OPS) and i.opname not in ('JUMP_FORWARD', 'JUMP_BACKWARD')]
+                # [R01 fix] NONE_CHECK_OPS 不能过滤：它们表达 `x is (not) None`
+                # 比较（如 `if A and x is not None:`）。expr_reconstructor 已按
+                # if 语义处理（IF_NOT_NONE→is None, IF_NONE→is not None），
+                # 保留后重建出 Compare 节点，重编译与原始 IF_NONE 字节码一致。
+                _cb_instrs = [i for i in _cb.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL') and (i.opname not in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS | BACKWARD_JUMP_OPS) or i.opname in NONE_CHECK_OPS) and i.opname not in ('JUMP_FORWARD', 'JUMP_BACKWARD')]
                 if _cb_instrs:
                     _part = self.expr_reconstructor.reconstruct(_cb_instrs)
                     if _part:
