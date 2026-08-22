@@ -18145,6 +18145,15 @@ AST 映射规则:
           - 嵌套 TryExceptRegion: 在 try body 中检测内层 region，递归调用 _generate_try
           - try_blocks 中的 IfRegion/LoopRegion/WithRegion: 通过块→区域映射识别入口，递归生成
           - finally copy 块: 正常路径与异常路径各有一份副本，生成时只保留 finalbody 一份
+          - [R09 fix] 结构化 finalbody 的子区域派发：block_to_region 归属按
+            REGION_TYPE_PRIORITY（TRY_FINALLY=70 > IF/FOR=30/60）判给父 Try，
+            get_entry_region_for_block(fb) 对 finally 体中的 if/for 条件块返回
+            region 自身。finalbody 循环在归属失效时按「entry==fb」回溯真正的
+            结构化子区域并派发生成；循环内已被子区域覆盖的成员块跳过裸语句
+            发射（每块唯一归属），消除结构化 finally 体的语句重复/丢失。
+            孤儿 finally 帧（空/不可抛异常 try 体，见
+            RegionAnalyzer._identify_empty_body_finally_regions）经此路径以
+            try: pass / finalbody 完整重建。
 
         字节码一致性约束:
           - 框架指令过滤: PUSH_EXC_INFO/POP_EXCEPT/CHECK_EXC_MATCH/RERAISE 不生成源码
@@ -19021,12 +19030,37 @@ AST 映射规则:
                 for fb in region.finally_blocks:
                     if fb.start_offset in _generated_finally_offsets:
                         continue
-                    # finally body 中的 ternary 应委托给
+                    # [R09 fix] 每块唯一归属：本循环内子区域派发（上方分支）
+                    # 已把其覆盖块标记为 generated。后续遍历到这些非入口成员
+                    # 块时不得再走裸语句发射，否则结构化 finally 体出现语句
+                    # 重复（如 repro_07 的 a()/for 体/y() 各多出一份）。
+                    if fb in self.generated_blocks:
+                        _generated_finally_offsets.add(fb.start_offset)
+                        continue
                     # _generate_ternary 归约为 IfExp，而非被
                     # _generate_handler_body_statements 误处理为 if-else + 泄漏
                     # 表达式。依「嵌套即抽象节点」：嵌套 ternary 在父 Try.finalbody
                     # 中作为单个抽象节点。仿 R6-06 handler body 修复（L11719-11737）。
+                    # [R09 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4
+                    # （父引用子入口）：block_to_region 的归属由
+                    # REGION_TYPE_PRIORITY 决定（TRY_FINALLY=70 > IF=30），
+                    # 结构化 finally 体中的 if/for 条件块会归属父 Try 而非其
+                    # 子区域。此时 get_entry_region_for_block(fb) 返回 region
+                    # 自身，子区域派发失效，退化为 _generate_handler_body_
+                    # statements 的裸语句发射——if/for 结构丢失或与子区域
+                    # 输出重复。修复：当归属为自身/非结构化时，按「entry==fb」
+                    # 在全部结构化区域中解析真正的子区域（入口引用语义）。
                     _fb_region = self.region_analyzer.get_entry_region_for_block(fb)
+                    if not (_fb_region is not None
+                            and isinstance(_fb_region, (LoopRegion, IfRegion, WithRegion, TernaryRegion))
+                            and _fb_region is not region):
+                        for _cr in self.region_analyzer.regions:
+                            if (_cr is region
+                                    or getattr(_cr, 'entry', None) is not fb
+                                    or not isinstance(_cr, (LoopRegion, IfRegion, WithRegion, TernaryRegion))):
+                                continue
+                            _fb_region = _cr
+                            break
                     if _fb_region and isinstance(_fb_region, (LoopRegion, IfRegion, WithRegion, TernaryRegion)):
                         _nrid = id(_fb_region)
                         if _nrid not in self._generated_regions and _nrid not in self._generating_regions and _fb_region is not region:

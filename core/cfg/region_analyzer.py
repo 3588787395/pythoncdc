@@ -1304,6 +1304,9 @@ class RegionAnalyzer:
         # - 其他结构依赖前两者的结果
         try_regions = self._identify_try_except_regions()
         try_regions = self._coalesce_split_try_except_finally_regions(try_regions)
+        # [R09 fix] 空/不可抛异常 try 体 + finally 的孤儿帧识别（结构判据，
+        # 见方法 docstring；常规配对因编译器省略 try 范围表项而失效）。
+        try_regions = self._identify_empty_body_finally_regions(try_regions)
         loop_regions = self._identify_loop_regions()
         with_regions = self._identify_with_regions()
         match_regions = self._identify_match_regions()
@@ -2016,6 +2019,43 @@ class RegionAnalyzer:
             return None
         # 最内层 = 块数最少的循环（嵌套循环中内层块集最小）
         return min(candidates, key=lambda r: len(r.blocks))
+
+    def _is_post_merge_sibling_head(self, block: BasicBlock) -> bool:
+        """判断循环耗尽出口候选块是否为「合并点之后兄弟结构」的头块。
+
+        区域归约算法原则 2（每块唯一归属）+ No More Gotos §4.2：
+        FOR_ITER 耗尽跳转目标 / while 条件假出口在字节码层面同时承担两种
+        角色——真 loop-else 的入口，或合并点之后兄弟语句结构（If/Try/
+        嵌套循环等）的入口。无 break 证据时两者不可区分；若把兄弟结构
+        头块吞进循环节（blocks+else_blocks），该块即被双重归属，其上的
+        IfRegion/TryRegion 会丢失、误嵌套或被合成伪 else（R09 缺陷家族：
+        compile_help.pyc 偏移 876–916 尾随 if 整体丢弃等）。
+
+        判据（纯 CFG 结构判据，无 depth/pyc 特判）：
+        1. 块已被先归约的非循环结构化区域（TryExcept/With/Match/Assert）
+           登记为入口 → 明确的兄弟结构头；
+        2. 块末条指令为前向条件跳转（POP_JUMP_FORWARD_IF_* /
+           JUMP_IF_*_OR_POP）→ 它是 If/BoolOp 条件结构的头块；
+        3. 块内含 FOR_ITER / GET_ANEXT → 它是另一循环结构的头块。
+
+        满足任一条即不得计入循环节。真正的 loop-else 由 break 目标的
+        后必经关系（post-dominator）路径单独证明，不经过本判定。
+        """
+        if block is None:
+            return False
+        owner = self.block_to_region.get(block)
+        if owner is not None and not isinstance(owner, LoopRegion):
+            if getattr(owner, 'entry', None) is block:
+                return True
+        last = block.get_last_instruction()
+        if last is not None:
+            if (last.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                    or last.opname in SHORT_CIRCUIT_JUMP_OPS):
+                return True
+        for instr in block.instructions:
+            if instr.opname in ('FOR_ITER', 'GET_ANEXT'):
+                return True
+        return False
 
     def _is_loop_exit_block(self, block: BasicBlock, loop_region) -> bool:
         """判断 block 是否为循环出口块（break/continue/return 使控制流离开循环）。
@@ -3150,6 +3190,13 @@ is_yield_from_loop LoopRegion（违反每块唯一归属时的归约修正）。
     is_yield_from_loop LoopRegion 时显式 del block_to_region 反注册）。
   - _is_fake_loop / _is_await_polling_loop 过滤不符合循环语义的伪回边，避免
     与下游 IfRegion/TernaryRegion 争抢块归属。
+  - [R09 边界规则] FOR_ITER 耗尽跳转目标 / while 条件假出口属于「合并点之后
+    兄弟结构」，不属于循环节（除非确为 loop-else 且有 break 目标后必经关系
+    证据）。无 break 时，若出口候选块是兄弟结构头块（_is_post_merge_sibling_
+    head：末条指令为前向条件跳转、已被先归约结构化区域登记为入口、或含
+    FOR_ITER/GET_ANEXT），_find_loop_else 将其排除出 blocks+else_blocks，
+    归还其归属结构——否则该块被循环与尾随 IfRegion 双重归属，导致尾随语句
+    整体丢弃/误嵌套/合成伪 else（compile_help.pyc 偏移 876–916 缺块家族）。
 
 **嵌套处理**
 按 dominance_depth 倒序排序，内层循环先归约；子集过滤确保外层循环不会重新
@@ -3177,7 +3224,8 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
   LoopRegion.header_block    → AST.test（while 条件）或 iter/target（for）
   LoopRegion.condition_block → AST.test（while 条件表达式来源）
   LoopRegion.body_blocks     → AST.body
-  LoopRegion.else_blocks     → AST.orelse
+  LoopRegion.else_blocks     → AST.orelse（仅在有 break 证据时；无证据的兄弟
+                               结构头块已按 R09 边界规则归还，不进入 orelse）
   LoopRegion.back_edge_block → 隐式 continue，不生成显式 AST 节点
   LoopRegion.break_blocks    → AST.body 中的 ast.Break 语句
   LoopRegion.is_while_true   → AST.test = Constant(True)
@@ -4233,10 +4281,18 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
            b. 找到break目标的最近公共后必经节点（post_else）
            c. 从for_iter_exit到post_else之间的块为else块
            d. 无break时，for_iter_exit本身就是else块
+              [R09 修正] 例外：for_iter_exit 为「合并点之后兄弟结构」头块
+              （_is_post_merge_sibling_head：前向条件跳转结尾 / 先归约
+              结构化区域入口 / 含 FOR_ITER·GET_ANEXT）时不计入循环节，
+              归还兄弟结构——无 break 证据时真 loop-else 与顺序后继在字节码
+              层面不可区分，吞并只会造成双重归属（尾随 IfRegion 丢失/误嵌套/
+              伪 else，compile_help.pyc 偏移 876–916 缺块根因）。
         2. while循环：
            a. 收集header和body块的所有不在body_set中的后继
            b. 找到loop_successors的最近公共后必经节点（natural_exit）
            c. 从natural_exit可达的块（不在body_set中）为else块
+              [R09 修正] 无 break 时，候选中属于「合并点之后兄弟结构」头块的
+              同样排除（_is_post_merge_sibling_head），普通顺序块仍由循环消费。
 
         边界条件：
         - 无else块时loop_successors为空
@@ -4248,7 +4304,8 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
 
         区域归约算法符合度：
         - 基于后必经节点分析，符合编译器理论
-        - else块与break目标通过post-dominator区分
+        - else块与break目标通过post-dominator区分（有break证据才成立，
+          符合「回边证据」要求；无证据时以兄弟结构头判定归还归属）
         - else_is_follow标记需正确设置，确保AST生成时else作为orelse而非独立语句
         """
         body_set = loop_body | {header}
@@ -4344,6 +4401,16 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                                         and _fe_instrs
                                         and _fe_instrs[0].opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'))
                     if _fe_is_pure_jump:
+                        return None, natural_exit
+                    # [R09 fix] 区域归约算法原则 2（每块唯一归属）：
+                    # 无 break 证据时，FOR_ITER 耗尽目标块若为「合并点之后
+                    # 兄弟结构」的头块（If/BoolOp 条件头、先归约结构化区域
+                    # 入口或嵌套循环头），不得计入循环节（blocks+else_blocks）。
+                    # 真正的 loop-else 仅由上方 break 目标后必经路径证明；
+                    # 此处吞并会使尾随 IfRegion 双重归属 → 丢失/误嵌套/伪 else
+                    # （compile_help.pyc 偏移 876–916 缺块根因）。归还给兄弟
+                    # 结构后由其归属区域经父级顺序位置正常发射。
+                    if self._is_post_merge_sibling_head(for_iter_exit):
                         return None, natural_exit
                     return [for_iter_exit], natural_exit
                 return None, natural_exit
@@ -4610,9 +4677,17 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 #   原缺陷不在 else_blocks 是否存在，而在 else_blocks 包含的内容
                 #   被错误放入 if 的 else 分支。真正修复在 AST 生成层（R23 fix）。
                 if natural_exit and else_blocks:
+                    # [R09 fix] 区域归约算法原则 2（每块唯一归属）：
+                    # while 无 break 时 else_blocks 与顺序后继在字节码层面
+                    # 不可区分。若候选块是「合并点之后兄弟结构」的头块
+                    # （If/BoolOp 条件头、先归约结构化区域入口、嵌套循环头），
+                    # 必须归还给该兄弟结构——否则双重归属导致尾随 IfRegion
+                    # 双重发射 + 合成伪 else（repro_05 形态）。普通顺序块仍
+                    # 由 LoopRegion 消费（见上方 2./3. 说明），不丢失。
                     _filtered = [b for b in else_blocks
                                  if not self._is_early_return_block(b)
-                                 and not self._is_except_handler_block(b)]
+                                 and not self._is_except_handler_block(b)
+                                 and not self._is_post_merge_sibling_head(b)]
                     if _filtered:
                         else_blocks = _filtered
                     else:
@@ -7062,6 +7137,180 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
         if _to_remove:
             try_regions = [r for r in try_regions if id(r) not in _to_remove]
         return try_regions
+
+    def _identify_empty_body_finally_regions(self, try_regions: list) -> list:
+        """识别「空/不可抛异常 try 体 + finally」的孤儿 finally 帧。
+
+        【区域类型】 TRY_FINALLY — 孤儿 finally 帧区域
+        RegionType 枚举值: RegionType.TRY_FINALLY
+
+        **算法依据**
+        CPython 3.11 对 ``try: <不可抛异常体> finally: BODY`` 的布局：
+          - 正常路径：BODY 内联副本紧跟 try 体的 NOP 帧指令；
+          - 异常路径：PUSH_EXC_INFO + BODY 逐块副本 + RAISE + COPY/POP_EXCEPT/
+            RERAISE 自清理尾；
+          - 异常表：仅有帧自清理条目（start=帧头, end=cleanup, target=cleanup,
+            depth=1, lasti=True）——try 体范围条目被编译器省略（不可抛异常）。
+        该形态缺少「try 范围 → handler」表项，常规配对逻辑无法建立 try/handler
+        关联，产出 entry 悬空、has_finally=False 的退化 TryExceptRegion，BODY
+        两份副本被拆散到不同分支发射（R09 repro_07 形态）。
+
+        **结构判据**（纯 CFG + 异常表结构，无 depth/pyc 特判）：
+          1. 块 H 含 PUSH_EXC_INFO 且无任何前驱（不可达帧头）、且无任何异常表
+             条目以 H.start_offset 为 target；
+          2. 存在异常表条目 start == H.start_offset（帧自清理签名），其 target
+             块 T 以 COPY, POP_EXCEPT, RERAISE 开头；
+          3. 帧体 = [H, T) 内沿正常边可达的块序列（终止于 RAISE_VARARGS），
+             其逐块 meaningful 操作码序列与 H 之前的某连续块序列（正常路径
+             副本）完全一致（剥离 PUSH_EXC_INFO 与 NOISE 后比较）。
+        三条同时满足才归约；任何一条不满足保持原区域不变。
+
+        **归约顺序**
+        在 _identify_try_except_regions 与 _coalesce_split_try_except_finally_
+        regions 之后调用。命中时移除覆盖同批块的退化 TryExceptRegion
+        （has_finally=False 且无 handler），以本区域替代——每块唯一归属。
+
+        **唯一归属判定**
+        正常副本 blocks → finally_blocks（生成 finalbody 一份语句）；异常帧
+        blocks + cleanup 尾 → cleanup_blocks（框架指令不生成源码，由
+        try/finally 语句整体表达）；try_blocks 为空（try 体语义为 pass，
+        编译器重新生成 NOP 帧指令）。所有 blocks 登记 block_to_region。
+
+        **嵌套处理**
+        finally_blocks 中的 IfRegion/LoopRegion 等子区域照常由后续 Phase 2+
+        识别并通过入口引用语义挂载（_generate_try 的 finalbody 生成路径按
+        entry 归约子区域）。
+
+        **入口引用语义**
+        entry = 正常路径副本首块（函数入口块）。父级序列经该入口引用本区域。
+
+        **反编译流程**
+        对应生成方法 _generate_try：try_blocks 空 → Try.body=[Pass]；
+        finally_blocks → Try.finalbody（嵌套子区域按入口归约）；cleanup_blocks
+        标记 generated 不发射。重编译恢复 NOP 帧、两份 BODY 副本与自清理
+        异常表条目。
+        """
+        extab = list(getattr(self.cfg, 'exception_table', None) or [])
+        if not extab:
+            return try_regions
+        blocks_by_offset = {b.start_offset: b for b in self.cfg.blocks.values()}
+        extab_targets = set()
+        for _e in extab:
+            _t = _e.get('target')
+            if _t is not None:
+                extab_targets.add(_t)
+        _NOISE_OPS_LOCAL = ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG', 'PUSH_NULL')
+
+        def _meaningful_ops(block):
+            return [i.opname for i in block.instructions
+                    if i.opname not in _NOISE_OPS_LOCAL
+                    and i.opname != 'PUSH_EXC_INFO']
+
+        new_regions = list(try_regions)
+        for _H in sorted(self.cfg.blocks.values(), key=lambda b: b.start_offset):
+            _h_off = _H.start_offset
+            if _h_off in extab_targets:
+                continue
+            if not any(i.opname == 'PUSH_EXC_INFO' for i in _H.instructions):
+                continue
+            if _H.predecessors:
+                continue
+            _frame_entry = next((e for e in extab if e.get('start') == _h_off), None)
+            if _frame_entry is None:
+                continue
+            _T = blocks_by_offset.get(_frame_entry.get('target'))
+            if _T is None:
+                continue
+            _t_ops = [i.opname for i in _T.instructions]
+            if _t_ops[:3] != ['COPY', 'POP_EXCEPT', 'RERAISE']:
+                continue
+            # 帧体收集：[H, T) 沿正常边 BFS，RAISE_VARARGS 终止
+            _frame = []
+            _seen = set()
+            _stack = [_H]
+            _ok = True
+            while _stack:
+                _b = _stack.pop()
+                if _b.start_offset in _seen or _b is _T:
+                    continue
+                _seen.add(_b.start_offset)
+                if not (_h_off <= _b.start_offset < _T.start_offset):
+                    _ok = False
+                    break
+                _frame.append(_b)
+                _last = _b.get_last_instruction()
+                if _last is None or _last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                    _ok = False
+                    break
+                if any(i.opname == 'RAISE_VARARGS' for i in _b.instructions):
+                    continue
+                for _s2 in sorted(_b.successors, key=lambda x: x.start_offset):
+                    if _s2.start_offset not in _seen:
+                        _stack.append(_s2)
+            if not _ok or not _frame:
+                continue
+            _frame.sort(key=lambda b: b.start_offset)
+            # 正常副本对齐：在 H 之前的块中按偏移序贪心匹配逐块操作码序列
+            _earlier = sorted((b for b in self.cfg.blocks.values()
+                               if b.start_offset < _h_off),
+                              key=lambda b: b.start_offset)
+            _twins = []
+            _cursor = 0
+            _matched_all = True
+            for _fb in _frame:
+                _f_ops = _meaningful_ops(_fb)
+                _found = None
+                _j = _cursor
+                while _j < len(_earlier):
+                    if _meaningful_ops(_earlier[_j]) == _f_ops:
+                        _found = _earlier[_j]
+                        _cursor = _j + 1
+                        break
+                    _j += 1
+                if _found is None:
+                    _matched_all = False
+                    break
+                _twins.append(_found)
+            if not _matched_all or len(_twins) != len(_frame):
+                continue
+            # 移除覆盖同批帧块的退化 TryExceptRegion（每块唯一归属）
+            _frame_set = set(_frame) | {_T} | set(_twins)
+            _to_remove = []
+            for _r in list(new_regions):
+                if (type(_r) is TryExceptRegion
+                        and not getattr(_r, 'has_finally', False)
+                        and (set(_r.blocks) & _frame_set)):
+                    _to_remove.append(_r)
+            for _r in _to_remove:
+                new_regions.remove(_r)
+                if _r in self.regions:
+                    self.regions.remove(_r)
+                for _rb in list(_r.blocks):
+                    if _rb in self.block_to_region and self.block_to_region[_rb] is _r:
+                        del self.block_to_region[_rb]
+            region = TryExceptRegion(
+                region_type=RegionType.TRY_FINALLY,
+                entry=_twins[0],
+                blocks=set(_frame) | {_T} | set(_twins),
+                # try 体语义为 pass（不可抛异常）。放 entry 哨兵块并置
+                # finally_copy_blocks[entry]=0：_generate_try 的 R07 回退
+                # （try_blocks 空则取全部 blocks）不会触发，body 循环按
+                # fc_keep==0 跳过哨兵块，Try.body 归约为 [Pass]。
+                try_blocks=[_twins[0]],
+                has_finally=True,
+                try_offset_start=_twins[0].start_offset,
+                try_offset_end=max(b.end_offset for b in _twins),
+                handler_entry_blocks=[],
+            )
+            region.finally_copy_blocks = {_twins[0].start_offset: 0}
+            region.finally_blocks = list(_twins)
+            region.cleanup_blocks = sorted(list(_frame) + [_T],
+                                           key=lambda b: b.start_offset)
+            self.regions.append(region)
+            for _rb in region.blocks:
+                self.block_to_region[_rb] = region
+            new_regions.append(region)
+        return new_regions
 
     def _parse_exception_table(self) -> List[Dict[str, Any]]:
         """
@@ -20439,6 +20688,13 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
         3. 纯拓扑收集，不依赖任何区域归属信息
         4. 符合结构化程序定理：if结构的then/else分支在merge点汇合
 
+        [R09 fix] 边扩展语义：只沿正常控制流边展开。exception-table 隐式边
+        （exception_successors）指向 handler/清理尾块，不属于任何 if 分支体；
+        当全部后继均为异常边时回退为全后继展开（保持旧行为）。此前依赖
+        boundary_stop 拦截异常边，查询块不在外层循环/try 归属内时（如 R09
+        将 FOR_ITER 耗尽出口归还兄弟结构后的尾随 IfRegion），try 尾块会被
+        吸进 then_blocks 造成分支体污染。
+
         注意：不使用block_to_region排除，区域归属冲突由上层调用者处理
         """
         if entry == merge:
@@ -20473,7 +20729,18 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             if any(i.opname in ('PUSH_EXC_INFO', 'WITH_EXCEPT_START') for i in block.instructions):
                 continue
 
-            for succ in sorted(block.successors, key=lambda s: s.start_offset):
+            # [R09 fix] 区域归约算法原则 2（每块唯一归属）：
+            # 分支体收集只沿正常控制流边展开。exception-table 隐式边
+            # （exception_successors）指向 handler/清理尾块（如 except 尾声
+            # LOAD_CONST None; STORE; DELETE; RERAISE），不属于任何 if 分支体。
+            # 原实现依赖 boundary_stop 拦截这些隐式边；一旦查询块不在外层
+            # 循环/try 的 blocks 归属内（如 R09 将 FOR_ITER 耗尽出口块归还
+            # 兄弟结构后的尾随 IfRegion），异常边会把 try 尾块吸进
+            # then_blocks/else_blocks，造成分支体污染与语句错位。
+            _exc_succs = getattr(block, 'exception_successors', set()) or set()
+            _ordered_succs = sorted(block.successors, key=lambda s: s.start_offset)
+            _normal_succs = [s for s in _ordered_succs if s not in _exc_succs]
+            for succ in (_normal_succs or _ordered_succs):
                 if succ not in visited:
                     worklist.append(succ)
 
