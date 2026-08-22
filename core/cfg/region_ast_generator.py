@@ -6908,6 +6908,25 @@ AST 映射规则:
                                     'orelse': [],
                                 })
                             else:
+                                # [R02 fix] _if_body_type='Continue' 且
+                                # fall-through 块（continue 目标）含有效语句时，
+                                # 必须保留语句再追加 Continue（如
+                                # `if cond: tb = tb.tb_next; continue`）。
+                                # 直接输出 [Continue] 会丢失副作用赋值。
+                                if _fall_through_block is not None and _if_body_type == 'Continue':
+                                    _cont_stmts = self._generate_block_statements(_fall_through_block)
+                                    if _cont_stmts and any(s.get('type') != 'Continue' for s in _cont_stmts):
+                                        if not any(s.get('type') == 'Continue' for s in _cont_stmts):
+                                            _cont_stmts.append({'type': 'Continue'})
+                                        self.generated_blocks.add(_fall_through_block)
+                                        self.generated_offsets.add(_fall_through_block.start_offset)
+                                        _self_loop_stmts.append({
+                                            'type': 'If',
+                                            'test': _cb_cond,
+                                            'body': _cont_stmts,
+                                            'orelse': [],
+                                        })
+                                        return _self_loop_stmts
                                 _self_loop_stmts.append({
                                     'type': 'If',
                                     'test': _cb_cond,
@@ -7625,14 +7644,37 @@ AST 映射规则:
                                        'body': _then_stmts_full,
                                        'orelse': [{'type': 'Continue'}]})
                     return
+                # [R02 fix] 分支块角色为 CONTINUE 但含有效语句时（如
+                # `if cond: tb = tb.tb_next; continue`），不能直接用 [Continue]
+                # 替换整个分支体——必须先重建块内语句再追加 Continue，
+                # 否则 continue 前的副作用赋值丢失，且语义变为死循环。
                 if _then_is_continue:
-                    _then_stmts = [{'type': 'Continue'}]
+                    _then_stmts = self._generate_block_statements(_then_succ)
+                    _has_real_then = any(
+                        not (s.get('type') == 'Continue') for s in _then_stmts)
+                    if not _then_stmts or not _has_real_then:
+                        _then_stmts = [{'type': 'Continue'}]
+                    else:
+                        if not any(s.get('type') == 'Continue' for s in _then_stmts):
+                            _then_stmts.append({'type': 'Continue'})
+                        self.generated_blocks.add(_then_succ)
+                        self.generated_offsets.add(_then_succ.start_offset)
                 else:
                     _then_stmts = self._generate_block_statements(_then_succ)
                     if not _then_stmts:
                         _then_stmts = [{'type': 'Pass'}]
+                # [R02 fix] 同 then 分支：CONTINUE 角色但含有效语句时保留语句
                 if _else_is_continue:
-                    _else_stmts = [{'type': 'Continue'}]
+                    _else_stmts = self._generate_block_statements(_else_succ)
+                    _has_real_else = any(
+                        not (s.get('type') == 'Continue') for s in _else_stmts)
+                    if not _else_stmts or not _has_real_else:
+                        _else_stmts = [{'type': 'Continue'}]
+                    else:
+                        if not any(s.get('type') == 'Continue' for s in _else_stmts):
+                            _else_stmts.append({'type': 'Continue'})
+                        self.generated_blocks.add(_else_succ)
+                        self.generated_offsets.add(_else_succ.start_offset)
                 else:
                     _else_stmts = self._generate_block_statements(_else_succ)
                     if not _else_stmts:
@@ -33798,6 +33840,25 @@ AST 映射规则:
                         self.generated_blocks.add(_eb)
                         if _es:
                             _cjb_else_stmts.extend(_es)
+
+                # [R02 fix] 分支入口块以 JUMP_BACKWARD 跳回循环 header 时，
+                # 该块是 continue 语句（可带前置副作用语句，如
+                # `if cond: tb = tb.tb_next; continue`）。_generate_block_
+                # statements 只重建块内数据语句，JUMP_BACKWARD 的 continue
+                # 语义在此补上，否则 continue 丢失导致语义变为顺序执行。
+                def _cjb_append_continue(stmt_list, entry_block):
+                    if not entry_block or not stmt_list:
+                        return
+                    _last_i = entry_block.get_last_instruction()
+                    if (_last_i and _last_i.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                            and _last_i.argval is not None):
+                        _tgt = self.cfg.get_block_by_offset(_last_i.argval)
+                        if _tgt is not None and getattr(_tgt, 'loop_header', False):
+                            if not any(s.get('type') == 'Continue' for s in stmt_list):
+                                stmt_list.append({'type': 'Continue'})
+
+                _cjb_append_continue(_cjb_then_stmts, _cjb_then_entry)
+                _cjb_append_continue(_cjb_else_stmts, _cjb_else_entry)
 
                 if not _cjb_then_stmts:
                     _cjb_then_stmts = [{'type': 'Pass'}]
