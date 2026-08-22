@@ -3950,11 +3950,26 @@ AST 映射规则:
                 # 两层。此处合并：While(True, [While(x,...), *rest]) →
                 # While(x,...); *rest。真实源码不会写 while True: while x:
                 # （中间无 break），该形状只来自重检拆分。
-                if (result['test'].get('value') is True
+                #
+                # [R04 fix] 区分真嵌套：外层有专属回边（back_edge_block 位于
+                # 内层 While 覆盖范围之后，如 live.pyc 的 JUMP_BACKWARD 324→90）
+                # 时是真实的 while X: 包裹两个内层 while，不可合并。
+                _can_merge = (result['test'].get('value') is True
                         and body_stmts and len(body_stmts) >= 1
                         and isinstance(body_stmts[0], dict)
                         and body_stmts[0].get('type') == 'While'
-                        and not any(s.get('type') == 'Break' for s in body_stmts[1:])):
+                        and not any(s.get('type') == 'Break' for s in body_stmts[1:]))
+                if _can_merge:
+                    _outer_be = getattr(region, 'back_edge_block', None)
+                    _child_loops = [c for c in (region.children or [])
+                                    if type(c).__name__ == 'LoopRegion' and c.entry]
+                    if (_outer_be is not None and _child_loops):
+                        _inner_min = min(c.entry.start_offset for c in _child_loops)
+                        _inner_max = max(max(b.start_offset for b in c.blocks)
+                                         for c in _child_loops)
+                        if not (_inner_min <= _outer_be.start_offset <= _inner_max):
+                            _can_merge = False
+                if _can_merge:
                     _inner = body_stmts[0]
                     _rest = body_stmts[1:]
                     output = list(pre_stmts)
