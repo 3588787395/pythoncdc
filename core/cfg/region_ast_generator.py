@@ -1185,6 +1185,13 @@ class RegionASTGenerator:
             # concrete Lambda/FunctionDef AST node.
             ast_nodes = [self._convert_lambda_function_objects(s) if isinstance(s, dict) else s
                          for s in ast_nodes]
+            # 模块级 docstring 判定与函数/类同规则（CPython 3.11 常量表约定：
+            # 有 docstring 时 const[0]=docstring、None 懒插入；无 docstring 时
+            # None 占据 const[0]）。丢弃模块级 docstring 会使重编译后所有后续
+            # LOAD_CONST/KW_NAMES 的常量索引整体偏移 1。
+            _module_doc_stmt = self._detect_docstring_statement(code_obj)
+            if _module_doc_stmt is not None:
+                ast_nodes = [_module_doc_stmt] + ast_nodes
             return {
                 'type': 'Module',
                 'body': ast_nodes,
@@ -1200,10 +1207,57 @@ class RegionASTGenerator:
         # expression-level lambdas in function/class bodies also need conversion.
         ast_nodes = [self._convert_lambda_function_objects(s) if isinstance(s, dict) else s
                      for s in ast_nodes]
+        # 函数体/类体 docstring 判定：嵌套代码对象经递归 generate() 到达此处，
+        # 每个 FunctionDef/ClassDef 的 body 首语句按精确判定规则恢复 docstring，
+        # 保证重编译时常量表布局（const[0]=docstring）与原字节码一致。
+        _doc_stmt = self._detect_docstring_statement(code_obj)
+        if _doc_stmt is not None:
+            ast_nodes = [_doc_stmt] + ast_nodes
         if is_class_body:
             return self._build_class_def(func_name, ast_nodes)
         else:
             return self._build_function_def(func_name, ast_nodes)
+
+    def _detect_docstring_statement(self, code_obj):
+        """按 CPython 3.11 常量表约定判定 co_consts[0] 是否纯 docstring。
+
+        输入契约:
+          - code_obj: 与当前 CFG 对应的 types.CodeType（self.cfg.code）；
+            cfg 由 CFGBuilder 构建时已保留 code_obj 引用（cfg.code）与完整
+            指令流（含 oparg），无需额外数据通路。
+
+        精确判定规则（算法化，不特判任何文件/函数名）:
+          1. len(co_consts) > 0 且 isinstance(co_consts[0], str) 是前提；
+             否则直接返回 None（无 docstring 时 CPython 让 None 占据 const[0]，
+             或首常量是运行期使用的其他对象）。
+          2. 扫描本代码对象全部指令流：若存在以 0 为常量索引的取常量指令
+             （LOAD_CONST / RETURN_CONST / KW_NAMES 的 arg==0），说明 const[0]
+             参与运行期求值——无论其后随 STORE_*/STORE_NAME（普通赋值）还是
+             出现在其他表达式上下文，都不是纯 docstring，返回 None。
+          3. 取常量指令从未引用索引 0 ⇒ const[0] 仅承载文档字符串
+             （CPython 不为其生成任何字节码），返回 Expr(Constant(str)) 节点。
+
+        AST 映射规则:
+          - 返回 {'type': 'Expr', 'value': {'type': 'Constant', 'value': <str>}}，
+            由调用方置于函数体/类体/模块体的第一条语句位置；渲染层将其输出为
+            字符串字面量表达式语句，重编译后编译器重新把它放回 const[0]。
+
+        字节码一致性约束:
+          - 该判定统一适用于函数、类、模块级代码对象。误报方向受规则 2 守卫：
+            首语句是字符串赋值（repro_12 形态 `s = 'text'`）时 LOAD_CONST 0 出现
+            且后随 STORE_*，不会误判为 docstring。
+        """
+        if code_obj is None or not hasattr(code_obj, 'co_consts'):
+            return None
+        consts = code_obj.co_consts
+        if not consts or not isinstance(consts[0], str):
+            return None
+        _CONST_INDEX_OPS = ('LOAD_CONST', 'RETURN_CONST', 'KW_NAMES')
+        for block in self.cfg.blocks.values():
+            for instr in block.instructions:
+                if instr.opname in _CONST_INDEX_OPS and instr.arg == 0:
+                    return None
+        return {'type': 'Expr', 'value': {'type': 'Constant', 'value': consts[0]}}
 
 
     def _build_function_def(self, func_name: str = None, body: List[Dict[str, Any]] = None,
@@ -11277,6 +11331,22 @@ AST 映射规则:
             return self._if_generate_elif_chain(region)
         if region.chained_compare_blocks and region.else_blocks:
             if self._is_chained_compare_cleanup_else(region):
+                # [Round 07 根因 B 补充判定] 循环内链式比较的 else 可能承载真实
+                # break：else 块仅含栈清理（POP_TOP）+ 无条件跳出，且跳出目标在
+                # 包围循环之外（越过 for-else 套件）。此形态是 `else: break` 的
+                # 编译产物，不能按纯清理丢弃——丢弃会使重编译丢失 POP_TOP +
+                # JUMP_FORWARD，导致 FOR_ITER 目标偏移 -2。判据：
+                # _else_blocks_exit_enclosing_loop（else 块末跳转目标不在
+                # _current_loop.blocks 内）。非循环上下文或目标仍在循环内时，
+                # 维持既有清理语义。
+                if self._else_blocks_exit_enclosing_loop(region.else_blocks):
+                    else_stmts = []
+                    _seq_stmts_break = self._process_if_blocks(
+                        sorted(region.else_blocks, key=lambda b: b.start_offset),
+                        region, branch='else')
+                    if _seq_stmts_break:
+                        else_stmts.extend(_seq_stmts_break)
+                    return else_stmts if else_stmts else None
                 # [spf-r01-fix3] 当 merge_block 仅含 NOP 时，源码有 `else: pass`
                 # （CPython 3.11+ 为 else: pass 生成 NOP 占位指令）。丢弃 else 会导致
                 # 重新编译时不生成 NOP，使 POP_JUMP_FORWARD_IF_TRUE 目标偏移 -2。
@@ -11431,6 +11501,39 @@ AST 映射规则:
             else_stmts = self._process_if_blocks(region.elif_final_else, region, branch='else')
             return else_stmts if else_stmts else None
         return None
+
+    def _else_blocks_exit_enclosing_loop(self, else_blocks):
+        """判定链式比较清理型 else 是否实际承载跳出包围循环的 break。
+
+        输入契约:
+          - else_blocks: IfRegion.else_blocks（基本块列表）。
+
+        AST 映射规则: 返回 bool。True 时调用方按普通 else 分支生成
+        （BREAK 角色块由 _process_if_blocks 输出 Break 语句），不再按
+        纯清理丢弃。
+
+        子区域处理: 只读判定，不改变块归属。
+
+        字节码一致性约束:
+          - `else: break` 编译为 POP_TOP + JUMP_FORWARD，目标越过 for-else
+            套件、落在 LoopRegion.blocks 之外；纯清理形态（`else: pass` 或
+            链式比较短路清理）的跳转目标仍在循环块集合内。以
+            「末指令为无条件前向跳转且目标不在 _current_loop.blocks」区分两者。
+            无包围循环时恒返回 False（保持既有语义）。
+        """
+        if not else_blocks or self._current_loop is None:
+            return False
+        _loop_block_offsets = {b.start_offset
+                               for b in (getattr(self._current_loop, 'blocks', None) or [])}
+        for blk in else_blocks:
+            last = blk.get_last_instruction()
+            if (last is not None
+                    and last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                    and last.argval is not None):
+                tgt = self.cfg.get_block_by_offset(last.argval)
+                if tgt is not None and tgt.start_offset not in _loop_block_offsets:
+                    return True
+        return False
 
     def _is_chained_compare_cleanup_else(self, region: IfRegion) -> bool:
         if not region.else_blocks:
@@ -12181,6 +12284,86 @@ AST 映射规则:
                 return _negate_expr(expr) if negate else expr
         return {'type': 'Constant', 'value': True}
 
+    def _cond_block_branch_targets(self, cond_block):
+        """_cond_block_branch_targets — 条件块双分支目标块提取
+
+        输入契约:
+          - cond_block: BasicBlock，其末指令应为条件跳转
+            （FORWARD/BACKWARD_CONDITIONAL_JUMP_OPS）；否则两分量均为 None。
+
+        AST 映射规则: 无直接 AST 输出，为折叠决策提供字节码拓扑判据。
+
+        子区域处理: 仅读取指令与后继，不修改任何块归属。
+
+        字节码一致性约束:
+          - 返回 (jump_target_block, fallthrough_block)。jump 目标取自末指令
+            argval 解析的块；fall-through 取条件后继中非 jump 目标的块。
+            嵌套 if 与扁平 and 的区分完全依赖这两个目标的同一性比较，
+            不引入任何深度上限或文件级特判。
+        """
+        if cond_block is None:
+            return None, None
+        last = cond_block.get_last_instruction()
+        if last is None or last.argval is None or last.opname not in (
+                FORWARD_CONDITIONAL_JUMP_OPS | BACKWARD_CONDITIONAL_JUMP_OPS):
+            return None, None
+        jump_target = self.cfg.get_block_by_offset(last.argval)
+        fallthrough = None
+        for s in cond_block.successors:
+            if (jump_target is None
+                    or s.start_offset != jump_target.start_offset):
+                fallthrough = s
+                break
+        return jump_target, fallthrough
+
+    def _condition_chain_targets_consistent(self, cond_blocks, op_type):
+        """_condition_chain_targets_consistent — BoolOp 折叠的短路出口目标一致性判定
+
+        输入契约:
+          - cond_blocks: [外层条件块, 内层条件块...]（顺序即求值顺序）；
+          - op_type: 'and' 或 'or'（由调用方按既有 or 短路检测确定）。
+
+        AST 映射规则: 返回 bool。True 才允许把整条链折叠为单个 BoolOp；
+        False 时保持嵌套 IfRegion 结构由既有嵌套渲染机制输出。
+
+        子区域处理: 只读判定；被拒绝折叠的内层条件仍归其自身 IfRegion
+        （每块唯一归属不变）。
+
+        字节码一致性约束（根因 B 判定规则）:
+          - CPython 对 `if A and B:` 的编译产物中，每个操作数条件的 false
+            短路出口指向同一 else/exit 块；对嵌套
+            `if A: if B: ... else: E`，外层 false→else 入口 E、内层
+            false→then 末尾 JUMP_FORWARD，两个目标必然不同。
+            故 'and' 判据 = 所有操作数的条件跳转目标是同一块。
+          - 对 `if A or B:`，各操作数的 true 出口汇聚到共享 body 块：
+            非末操作数 true 出口=其跳转目标、末操作数 true 出口=其
+            fall-through；相邻操作数以 fall-through 串联。
+            故 'or' 判据 = FT(c_i)==c_{i+1} 且 JT(非末 c_i)==FT(c_last)。
+          - 已知失败模式: 混合 and/or 链由上游统一逻辑处理，不经本判定；
+            本判定仅约束同构链的折叠许可，防止嵌套形态被错误扁平化
+            （repro_05/07/08 形态）。
+        """
+        if not cond_blocks or len(cond_blocks) < 2:
+            return True
+        targets = [self._cond_block_branch_targets(c) for c in cond_blocks]
+        if any(t == (None, None) for t in targets):
+            return False
+        if op_type == 'and':
+            first_jt = targets[0][0]
+            for jt, _ft in targets[1:]:
+                if jt is not first_jt:
+                    return False
+            return True
+        # 'or': fall-through 串联 + 非 true 出口汇聚到末操作数 fall-through
+        for i in range(len(cond_blocks) - 1):
+            if targets[i][1] is not cond_blocks[i + 1]:
+                return False
+        shared_body = targets[-1][1]
+        for i in range(len(cond_blocks) - 1):
+            if targets[i][0] is not shared_body:
+                return False
+        return True
+
     def _if_generate_normal(self, region: IfRegion) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         cond_block = region.condition_block
         if cond_block is None:
@@ -12490,6 +12673,32 @@ AST 映射规则:
                 _ts0_stripped['body'] = _ts0_body if _ts0_body else [{'type': 'Pass'}]
                 _ts0_stripped['orelse'] = None
                 then_stmts = [_ts0_stripped] + then_stmts[1:]
+        # [Round 07 根因 B] 条件折叠的目标一致性判据：
+        # 嵌套 `if A: if B: ...` 与扁平 `if A and B:` 在区域归约后都表现为
+        # 外层 IfRegion 的 then 首语句是内层 If。两者的字节码区分在于短路出口
+        # 目标：扁平 and 的各操作数 false 跳转指向同一 else/exit 块；嵌套形态中
+        # 外层 false→else 入口、内层 false→then 末尾 JUMP_FORWARD，目标必然不同。
+        # 因此折叠前必须验证「每个操作数的短路出口目标是同一块」（or 链按
+        # true 出口一致性判定），不满足则保持嵌套结构由既有渲染机制输出，
+        # 而非在渲染层强行合并（区域归约"一次正确"原则）。
+        _fold_child_if_regions = sorted(
+            (r for r in self.region_analyzer.regions
+             if isinstance(r, IfRegion) and r is not region
+             and getattr(r, 'entry', None) is not None
+             and any(getattr(b, 'start_offset', None) == r.entry.start_offset
+                     for b in (region.then_blocks or []))),
+            key=lambda r: r.entry.start_offset)
+        _fold_op_mode = 'or' if _detect_or_short_circuit() else 'and'
+
+        def _fold_chain_consistent(inner_depth):
+            """验证外层条件与前 inner_depth 个嵌套条件满足目标一致性。"""
+            blocks = [getattr(region, 'condition_block', None) or region.entry]
+            for ir in _fold_child_if_regions[:inner_depth]:
+                blocks.append(getattr(ir, 'condition_block', None) or ir.entry)
+            if any(b is None for b in blocks) or len(blocks) < inner_depth + 1:
+                return False
+            return self._condition_chain_targets_consistent(blocks, _fold_op_mode)
+
         if then_stmts and isinstance(then_stmts[0], dict) and then_stmts[0].get('type') == 'If' and not then_stmts[0].get('orelse'):
             _merge_conds = [condition]
             _remaining = then_stmts[:]
@@ -12500,6 +12709,11 @@ AST 映射规则:
                 _inner_cond = _inner.get('test')
                 _inner_body = _inner.get('body', [])
                 if not _inner_cond:
+                    break
+                # 目标一致性守卫：候选链 [外层, 内层1..内层k] 的短路出口目标
+                # 必须同一块，否则保持嵌套（repro_05/08 形态在此被拒绝折叠）。
+                if (len(_merge_conds) > len(_fold_child_if_regions)
+                        or not _fold_chain_consistent(len(_merge_conds))):
                     break
                 if _is_pass_like(_inner_body):
                     _merge_conds.append(_inner_cond)
@@ -12513,7 +12727,7 @@ AST 映射规则:
                 else:
                     break
             if len(_merge_conds) > 1:
-                _merge_op = 'or' if _detect_or_short_circuit() else 'and'
+                _merge_op = _fold_op_mode
                 if _merge_op == 'or':
                     _merge_conds[0] = _negate_expr(_merge_conds[0])
                 condition = {'type': 'BoolOp', 'op': _merge_op, 'values': _merge_conds}
@@ -12521,13 +12735,42 @@ AST 映射规则:
             else:
                 inner_cond = then_stmts[0].get('test')
                 inner_body = then_stmts[0].get('body', [])
-                if inner_cond and len(then_stmts) == 1 and not _is_pass_like(inner_body):
+                if (inner_cond and len(then_stmts) == 1
+                        and not _is_pass_like(inner_body)
+                        # 目标一致性守卫同样适用于单层折叠（while 循环被守卫
+                        # 中断后走到此分支的场景）。
+                        and len(_fold_child_if_regions) >= 1
+                        and _fold_chain_consistent(1)):
                     inner_ir_with_else = _find_nested_ifregion_with_else(region)
                     if inner_ir_with_else is None:
-                        _merge_op = 'or' if _detect_or_short_circuit() else 'and'
+                        _merge_op = _fold_op_mode
                         _outer_cond = _negate_expr(condition) if _merge_op == 'or' else condition
                         condition = {'type': 'BoolOp', 'op': _merge_op, 'values': [_outer_cond, inner_cond]}
                         then_stmts = inner_body
+        elif (then_stmts and isinstance(then_stmts[0], dict)
+                and then_stmts[0].get('type') == 'If'
+                and then_stmts[0].get('orelse')
+                and len(then_stmts) == 1
+                and not getattr(region, 'elif_conditions', None)
+                and not else_stmts):
+            # [Round 07 根因 B] or 短路链的内层带 orelse 形态（repro_07）：
+            # `if A or B: X else: Y` 的编译产物是外层条件 true 出口直达共享
+            # body、末操作数以反向跳转指向 else。区域归约产出外层 IF_THEN +
+            # 内层 IF_THEN_ELSE 的嵌套结构，若按嵌套渲染会得到语义相反的
+            # `if not A: if B: X else: Y`。仅当 or 模式且短路出口目标一致
+            # （FT(外层)==内层条件块 且 JT(外层)==FT(内层条件块)）时才折叠为
+            # 单个 BoolOp(or)：外层条件取反作为首操作数，内层 test 为末操作数，
+            # 内层 orelse 升为整体 orelse。不一致时维持嵌套输出不变。
+            if _fold_op_mode == 'or' and _fold_chain_consistent(1):
+                _w_inner_if = then_stmts[0]
+                _w_inner_test = _w_inner_if.get('test')
+                _w_inner_body = _w_inner_if.get('body') or []
+                _w_inner_orelse = _w_inner_if.get('orelse') or []
+                if _w_inner_test and _w_inner_body and _w_inner_orelse:
+                    condition = {'type': 'BoolOp', 'op': 'or',
+                                 'values': [_negate_expr(condition), _w_inner_test]}
+                    then_stmts = _w_inner_body
+                    else_stmts = _w_inner_orelse
         # 区域归约算法原则 4（父引用子入口）+ 原则 3（嵌套即抽象节点）：
         # 当 IfRegion 条件被取反（TRUE 路径跳到 continue 目标，不在 then_blocks），
         # 且 then_stmts[0] 是 body=[Continue] 且有 orelse 的 If，模式为：
@@ -13783,6 +14026,64 @@ AST 映射规则:
                 negate = jumps_to_then != if_true
         return _negate_expr(compare_expr) if negate else compare_expr
 
+    def _then_entry_offsets_excluding_connectors(self, region: IfRegion) -> set:
+        """_then_entry_offsets_excluding_connectors — then 体入口偏移集合（排除纯跳转连接块）
+
+        输入契约:
+          - region: IfRegion，读取其 then_blocks。
+
+        AST 映射规则: 返回 {start_offset}。纯连接块（有效指令仅剩一条
+        无条件跳转：JUMP_BACKWARD/JUMP_FORWARD/JUMP_ABSOLUTE）被排除——
+        它们不含语句，是分支汇聚点或回边中继，"跳转到它"不构成
+        "进入 then 体"，不能参与条件极性（negate）判定。
+
+        子区域处理: 只读；不改变块归属与 generated 标记。
+
+        字节码一致性约束:
+          - 用于 _if_extract_condition_from_instructions 的极性判定：
+            循环内链式比较的两条出口（false 清理路径与 true 路径）常共用
+            同一回边连接块；误把它计入 then 入口会使条件被取反为
+            `not (...)`，重编译后 POP_JUMP 方向翻转、字节码整体偏移。
+        """
+        offsets = set()
+        for b in (getattr(region, 'then_blocks', None) or []):
+            instrs = [i for i in b.instructions
+                      if i.opname not in ('RESUME', 'NOP', 'CACHE',
+                                          'EXTENDED_ARG', 'PUSH_NULL')]
+            if (len(instrs) == 1 and instrs[0].opname in (
+                    'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+                    'JUMP_FORWARD', 'JUMP_ABSOLUTE')):
+                continue
+            offsets.add(b.start_offset)
+        return offsets
+
+    def _block_is_structural_for_iter_exit(self, block) -> bool:
+        """_block_is_structural_for_iter_exit — 判定块是否某循环的 FOR_ITER 耗尽出口
+
+        输入契约:
+          - block: BasicBlock（CONTINUE/PURE_CONTINUE 角色的纯跳转块）。
+
+        AST 映射规则: 返回 bool。True 表示该块是某个 LoopRegion 的结构性
+        迭代收尾块（metadata['for_iter_exit']），其回边跳转由对应 For 节点
+        重编译时自然生成——不得补发显式 Continue。False 表示源码级显式
+        continue 的出口块（continue 位于体内、FOR_ITER 目标位于体后，
+        二者不会是同一块），必须输出 Continue 保持字节码等价。
+
+        子区域处理: 只读查询 self.region_analyzer.regions；不改变归属。
+
+        字节码一致性约束:
+          - 双层 for 场景（check_strategy 形态）：内层 FOR_ITER 耗尽目标
+            即为外层迭代回边连接块。若按 CONTINUE 角色再补发 Continue，
+            重编译出现两个连续 JUMP_BACKWARD，FOR_ITER 目标整体偏移 +2。
+        """
+        for r in self.region_analyzer.regions:
+            if not isinstance(r, LoopRegion):
+                continue
+            meta = getattr(r, 'metadata', None)
+            if isinstance(meta, dict) and meta.get('for_iter_exit') is block:
+                return True
+        return False
+
     def _if_extract_condition_from_instructions(self, region: IfRegion, cond_block: 'BasicBlock', cond_instrs: List) -> Dict[str, Any]:
         # [Round 2 修复] 当 cond_block 属于某个多操作数 BoolOpRegion 时
         # （如 `if x or await g():` 中 await 的 truthy 测试块），条件应
@@ -14338,7 +14639,14 @@ AST 映射规则:
                         if _or_then_block:
                             _real_then_offsets = {_or_then_block.start_offset}
                         else:
-                            _real_then_offsets = {b.start_offset for b in region.then_blocks}
+                            # [Round 07 极性判定修正] 汇合点排除：链式比较位于
+                            # 循环内且两分支共用回边时，区域归约会把回边块
+                            # （纯 JUMP_BACKWARD 连接块，如 for 循环的迭代收尾块）
+                            # 收入 then_blocks。它同时是条件 false 出口与 true 路径
+                            # 的汇聚点——不含任何语句，进入它绝不等于"进入 then 体"。
+                            # 若不排除，jumps_to_then 恒真，条件被错误取反为
+                            # `not (...)`，重编译后跳转方向翻转、字节码偏移。
+                            _real_then_offsets = self._then_entry_offsets_excluding_connectors(region)
                         jumps_to_then = jump_target in _real_then_offsets
                         negate = jumps_to_then != if_true
                 return _negate_expr(compare_expr) if negate else compare_expr
@@ -14355,7 +14663,9 @@ AST 映射规则:
                         if_true2 = 'IF_TRUE' in last2.opname
                     jump_target2 = last2.argval
                     if jump_target2 is not None:
-                        then_start_offsets2 = {b.start_offset for b in region.then_blocks}
+                        # [Round 07 极性判定修正] 同上：排除纯跳转连接块，
+                        # 避免把汇合点/回边误判为 then 体入口导致条件被取反。
+                        then_start_offsets2 = self._then_entry_offsets_excluding_connectors(region)
                         jumps_to_then2 = jump_target2 in then_start_offsets2
                         negate = jumps_to_then2 != if_true2
                 expr = self._convert_lambda_function_objects(expr)
@@ -15190,7 +15500,15 @@ AST 映射规则:
                     self.generated_blocks.add(block)
                     self.generated_offsets.add(block.start_offset)
                     continue
-                stmts.append({'type': 'Continue'})
+                # [Round 07 迭代收尾排除] 纯跳转 CONTINUE 角色块若同时是某个
+                # 嵌套 LoopRegion 的 for_iter_exit（FOR_ITER 耗尽出口），它是该
+                # 循环语句的结构性迭代收尾——For 节点重编译时会重新生成这条
+                # 出口跳转，补发显式 Continue 会叠加一个多余 JUMP_BACKWARD，
+                # 使 FOR_ITER 退出目标偏移 +2（check_strategy 双层循环形态）。
+                # 源码级显式 continue 的块不会成为任何循环的 for_iter_exit
+                # （continue 位于体内，FOR_ITER 目标位于体后）。
+                if not self._block_is_structural_for_iter_exit(block):
+                    stmts.append({'type': 'Continue'})
                 self.generated_blocks.add(block)
                 self.generated_offsets.add(block.start_offset)
                 continue
@@ -15314,14 +15632,20 @@ AST 映射规则:
                 # [R8 fix] LOOP_BACK_EDGE 含有效用户指令时 JUMP_BACKWARD
                 # 是显式 continue（非自然回边），必须输出 Continue 以
                 # 保持字节码等价性（缺少 JUMP_BACKWARD 导致字节码差异）。
-                _be_last2 = block.get_last_instruction()
-                if _be_last2 and _be_last2.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'):
-                    if self._current_loop:
-                        _loop_hdr = self._current_loop.header_block
-                        if _loop_hdr and _be_last2.argval is not None:
-                            _be_target = self.cfg.get_block_by_offset(_be_last2.argval)
-                            if _be_target and _be_target == _loop_hdr:
-                                stmts.append({'type': 'Continue'})
+                # [Round 07 收敛点排除] 仅当块含有效用户指令时才补发
+                # Continue。纯连接回边块（有效指令为空、仅剩无条件
+                # JUMP_BACKWARD，如循环体末尾的自然迭代收尾块）是两条分支
+                # 的汇合点——其回边已由循环结构本身保证，补发 Continue 会
+                # 产生多余的后向跳转，使 FOR_ITER 退出目标偏移 +2。
+                if effective:
+                    _be_last2 = block.get_last_instruction()
+                    if _be_last2 and _be_last2.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'):
+                        if self._current_loop:
+                            _loop_hdr = self._current_loop.header_block
+                            if _loop_hdr and _be_last2.argval is not None:
+                                _be_target = self.cfg.get_block_by_offset(_be_last2.argval)
+                                if _be_target and _be_target == _loop_hdr:
+                                    stmts.append({'type': 'Continue'})
                 self.generated_blocks.add(block)
                 continue
             # 区域归约算法原则 2（每块唯一归属）：
@@ -16840,7 +17164,21 @@ AST 映射规则:
                 for _b in _tr.blocks:
                     self.generated_blocks.add(_b)
 
-        for block in sorted(region.try_blocks, key=lambda b: b.start_offset):
+        # [R07 fix] 嵌套 try 的 try_blocks 可能为空（分析器对嵌套 try 的
+        # try_blocks 提取失败，但 region.blocks 已含正确块集）。此时回退到
+        # region.blocks 减去 handler/finally 块，否则 try 体坍缩为 Pass、
+        # 其中语句（如 listcomp 赋值）全部丢失。
+        _try_blocks_eff = list(region.try_blocks)
+        if not _try_blocks_eff:
+            _handler_off = set()
+            for _hbs in (getattr(region, 'except_handlers', None) or []):
+                for _hb in (_hbs[2] if isinstance(_hbs, (list, tuple)) and len(_hbs) > 2 else []):
+                    _handler_off.add(_hb.start_offset)
+            _handler_off.update(b.start_offset for b in (region.handler_entry_blocks or []))
+            for _b in sorted(region.blocks, key=lambda x: x.start_offset):
+                if _b.start_offset not in _handler_off:
+                    _try_blocks_eff.append(_b)
+        for block in sorted(_try_blocks_eff, key=lambda b: b.start_offset):
             if block in self.generated_blocks:
                 continue
 

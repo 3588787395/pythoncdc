@@ -562,8 +562,24 @@ class LoopRegion(Region):
         # final_else（否则 while-else 退化为 if-else 的 else，语义错误）。
         # 将 else_blocks 加入 boundary_stop，使 _collect_branch_blocks 在
         # BFS 时停止于 else 块，防止 IfRegion 越过循环边界吸收它们。
+        # [Round 07 边界细化] 该保护仅对「查询块位于循环体内」的场景成立。
+        # 当查询块本身位于本区域的 else 套件内（如外层 for-else 套件中
+        # 嵌套的第二个循环内的 if 条件块），本区域的 else_blocks 是它的
+        # 外围顺序代码而非"循环出口"——此时整体加入 boundary 会把套件内
+        # 下游块误设为 BFS 停止点：嵌套 if 的 then 分支收集在第一个真路径
+        # 后继处即中断，退化为 `pass`（check_strategy 双 for-else 形态：
+        # 第二个循环的 `if X: <内层 for>` 变成 `if X: pass` + 兄弟 for）。
+        # 判据：block ∈ else_blocks 且不在 body_proper（body_blocks ∪
+        # condition_block）中，才视为"位于 else 套件内"而跳过整体注入；
+        # 查询块在循环体内时保持既有保护不变。
         if self.else_blocks:
-            boundary.update(self.else_blocks)
+            _body_proper = set(self.body_blocks)
+            if self.condition_block:
+                _body_proper.add(self.condition_block)
+            _query_in_else_suite = (block in set(self.else_blocks)
+                                    and block not in _body_proper)
+            if not _query_in_else_suite:
+                boundary.update(self.else_blocks)
         return boundary
 
     def interrupts_boolop_forward_chain(self, ft_succ) -> bool:

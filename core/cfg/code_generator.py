@@ -1285,30 +1285,28 @@ class CodeGenerator:
     def _generate_if(self, node: ASTIf) -> None:
         """生成 if/elif/else 语句（AST → 源码渲染）
 
-        **算法依据**
-        基于 "No More Gotos" §3「If 区域归约」的渲染侧：IfRegion（IF /
-        IF_THEN_ELSE / IF_ELIF_CHAIN）经 region_ast_generator 转为 ast.If
-        后，由本方法渲染为 Python 源码。elif 链通过 orelse 嵌套 ast.If 表达，
-        本方法将 orelse[0] 为 ast.If 的结构展平为 `elif`（_generate_elif_or_else
-        递归），否则作为 `else:` 块整体渲染。
+        输入契约:
+          - 接收 ast.If 节点（test/body/orelse）；orelse[0] 为 ast.If 时按
+            elif 链展平，否则整体作为 else: 块渲染。
 
-        **elif 展平规则（区域归约算法原则 3：嵌套即抽象节点）**
-        orelse 展平为 elif 仅在以下条件全部满足时合法：
-          - orelse[0] 是 ASTIf 且有实际 body；
-          - 该 ASTIf 未标记 _is_nested_if（else 中的独立嵌套 if，非 elif）；
-          - 非疑似 else 中嵌套 if（is_likely_nested_if_in_else，简单变量条件）；
-          - orelse 不含尾随兄弟节点（has_trailing_siblings）：当 orelse 含
-            多个节点时，是「else 块含嵌套 if + 尾随语句」，必须作为 `else:`
-            块整体渲染，不得展平（否则产生 `elif/else/else` 畸形语法）。
-            典型场景 build_future_fill_time：
-            else 体内嵌套 if/elif/else + 尾随 for 循环。
+        AST 映射规则:
+          - test → `if <expr>:`；body 逐节点渲染（空则 pass）；
+          - elif 展平条件：orelse[0] 是有 body 的 ast.If 且未标记
+            _is_nested_if / 非 else 中嵌套 if / 无尾随兄弟节点——满足才输出
+            `elif`，否则输出 `else:` 块；
+          - [Round 07 语义边界] then 以 Continue/Break 结尾且处于循环内时，
+            仅当 orelse 含非跳转语句才允许"提升 orelse 为兄弟语句"
+            （该场景下 else 渲染与提升字节等价）；orelse 全为 Break/Continue
+            时必须保留 else: 渲染——提升会使 break 变成无条件执行，
+            字节码从 POP_TOP+JUMP_FORWARD(越过 for-else) 退化为自然回边。
 
-        **反编译流程**
-        对应区域方法: _identify_conditional_regions / _build_elif_region
-        （region_analyzer.py）。IF_ELIF_CHAIN 的 elif_conditions / elif_bodies /
-        elif_final_else 经 region_ast_generator 组装为嵌套 ast.If 链，本方法
-        将其展平为 `if/elif/.../else` 源码。复合条件（_detect_compound_condition）
-        优先处理，将 body 为空 + orelse 含 If 的结构合并为单条复合条件 if。
+        子区域处理:
+          - body/orelse/嵌套 If 均经 _generate_block/_generate_node 递归渲染，
+            elif 链由 _generate_elif_or_else 递归展开。
+
+        字节码一致性约束:
+          - 条件跳转方向与分支布局须与原字节码一致；错误提升 `else: break`
+            会丢失 for-else 的越过跳转（FOR_ITER 目标偏移 +2）。
         """
         is_nested = getattr(node, '_is_nested_if', False)
 
@@ -1439,12 +1437,22 @@ class CodeGenerator:
                 
                 # [关键修复-2026] 如果then分支以continue/break结束，
                 # 且当前在循环体内，则else块实际上是循环体的后续代码，
-                # 不应该作为if-else的一部分，而是直接输出到当前层级
+                # 不应该作为if-else的一部分，而是直接输出到当前层级。
+                # [Round 07 语义边界] 本抑制仅对普通语句成立——把
+                # `else: <普通语句>` 提升为兄弟语句与 else 渲染字节等价；
+                # 但 orelse 全为跳转语句（Break/Continue）时提升会改变
+                # 语义：`else: break` 被提升后 break 变成无条件执行，
+                # 字节码从 POP_TOP+JUMP_FORWARD(越过 for-else) 退化为
+                # 自然回边。故此时必须保留 else 渲染。
                 should_generate_else = True
                 if node.body and node.body.nodes:
                     last_then_node = node.body.nodes[-1]
                     if isinstance(last_then_node, (ASTContinue, ASTBreak)) and self._loop_depth > 0:
-                        should_generate_else = False
+                        _orelse_all_jump_stmts = all(
+                            isinstance(n, (ASTContinue, ASTBreak))
+                            for n in node.orelse.nodes)
+                        if not _orelse_all_jump_stmts:
+                            should_generate_else = False
                 
                 if node.orelse.nodes:
                     if should_generate_else:
