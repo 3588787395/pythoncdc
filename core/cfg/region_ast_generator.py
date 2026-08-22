@@ -15720,6 +15720,12 @@ AST 映射规则:
                 for _succ in block.successors:
                     if _succ in self.generated_blocks:
                         continue
+                    # [R05 fix] 后继是本 IfRegion 的 merge_block 时不可拉入
+                    # then 体——merge 块从 if-false 路径也可达（如
+                    # `if c: a=X` 后的 CommonException(...) + return 对两条
+                    # 路径共享），拉入会使 false 路径语句错误进入 then 分支。
+                    if region is not None and getattr(region, 'merge_block', None) is _succ:
+                        continue
                     if any(i.opname in ('PUSH_EXC_INFO', 'WITH_EXCEPT_START') for i in _succ.instructions):
                         continue
                     _succ_role = self.region_analyzer.get_block_role(_succ)
