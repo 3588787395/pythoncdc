@@ -15717,8 +15717,15 @@ AST 映射规则:
             # 丢失或被外层错误归位为 Try 之后的独立 return。
             _block_role = self.region_analyzer.get_block_role(block)
             if _block_role in (BlockRole.TRY_BODY, BlockRole.LOOP_BODY, BlockRole.LOOP_BACK_EDGE):
+                # [R06 fix] 本块语句已以 Return 结尾时，后继 RETURN 块是
+                # 不可达死代码（如 `return r` 后跟的 `return None`），
+                # 拉入会产生源码中不存在的死语句。
+                _then_ends_with_return = (stmts and isinstance(stmts[-1], dict)
+                                          and stmts[-1].get('type') == 'Return')
                 for _succ in block.successors:
                     if _succ in self.generated_blocks:
+                        continue
+                    if _then_ends_with_return:
                         continue
                     # [R05 fix] 后继是本 IfRegion 的 merge_block 时不可拉入
                     # then 体——merge 块从 if-false 路径也可达（如
