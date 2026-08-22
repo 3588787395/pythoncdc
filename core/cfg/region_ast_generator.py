@@ -20785,6 +20785,16 @@ AST 映射规则:
             登记于 _entry_prefix_emitted_blocks；本方法仅在无登记时（with 嵌套
             于其他结构、顺序扫描未经过其入口）才补发射。两处都发射会导致前导
             赋值双份输出、re-compile 后 co_code 变长（394 vs 528 字节形态）。
+          - pre-BEFORE_WITH 语句终结符边界（R10/W10）：entry_block 中
+            BEFORE_WITH 之前的前置段按语句终结符（STORE_FAST/STORE_NAME/
+            STORE_GLOBAL/STORE_DEREF/STORE_SUBSCR/STORE_ATTR ∪ POP_TOP）
+            回溯切分：终结符及其之前的完整语句单元（赋值以 STORE_* 结尾、
+            表达式语句以 POP_TOP 结尾）全部发射为顺序前置语句；终结符之后
+            的尾段是 with 上下文表达式，归属 region.items。旧实现仅回溯到
+            最近一条 STORE_*，CALL…POP_TOP 形态的兄弟表达式语句落在 STORE_*
+            与 BEFORE_WITH 之间被整体丢弃（循环体内 with 前线性段、
+            TryRegion 兄弟位双触发面）。与 region_analyzer._extract_with_items
+            的上下文边界互补，无重叠、无遗漏。
         """
         region_id = id(region)
         self._generating_regions.add(region_id)
@@ -21779,16 +21789,31 @@ AST 映射规则:
                         _bw_idx_c2 = _ii
                         break
                 if _bw_idx_c2 is not None:
-                    _last_store_idx_c2 = None
+                    # [R10/W10 fix] 前置段按「语句终结符」切分，终结符集合 =
+                    # STORE_FAST/STORE_NAME/STORE_GLOBAL/STORE_DEREF/STORE_SUBSCR/
+                    # STORE_ATTR ∪ POP_TOP。该集合与
+                    # region_analyzer._extract_with_items 的上下文表达式边界
+                    # （start_search 回溯 STORE_*/POP_TOP + 收集时遇
+                    # STORE_SUBSCR/STORE_ATTR 前向清空）完全互补：终结符及其
+                    # 之前的指令构成完整语句单元（赋值以 STORE_* 结尾、表达式
+                    # 语句以 POP_TOP 结尾），全部归属函数体顺序序列并在此发射；
+                    # 最后一条终结符之后的尾段是 with 上下文表达式（其值由
+                    # BEFORE_WITH 消费），归属 region.items，不在此发射。
+                    # 旧实现仅回溯到最近一条 STORE_*，CALL…POP_TOP 形态的兄弟
+                    # 表达式语句（如循环体内 p1(n)、try 兄弟位
+                    # df.to_excel(...)）落在 STORE_* 与 BEFORE_WITH 之间，
+                    # 既不在前缀发射范围、也不在 ctx 提取范围，被整体丢弃。
+                    _last_term_idx_c2 = None
                     for _ii in range(_bw_idx_c2 - 1, -1, -1):
                         if _entry_instrs_c2[_ii].opname in (
                                 'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
-                                'STORE_DEREF', 'STORE_SUBSCR', 'STORE_ATTR'):
-                            _last_store_idx_c2 = _ii
+                                'STORE_DEREF', 'STORE_SUBSCR', 'STORE_ATTR',
+                                'POP_TOP'):
+                            _last_term_idx_c2 = _ii
                             break
-                    if _last_store_idx_c2 is not None:
+                    if _last_term_idx_c2 is not None:
                         _pre_bw_instrs_c2 = [
-                            _i for _i in _entry_instrs_c2[:_last_store_idx_c2 + 1]
+                            _i for _i in _entry_instrs_c2[:_last_term_idx_c2 + 1]
                             if _i.opname not in NOISE_OPS
                         ]
                         _pre_bw_stmts_c2 = self._build_statements_from_instructions(

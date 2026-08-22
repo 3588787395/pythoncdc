@@ -8407,6 +8407,25 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                             if _hb_r51.start_offset == _te_jf_target:
                                 _te_target_reachable_from_handler = True
                                 break
+                            # [R10/W10] handler 块以 JUMP_BACKWARD（continue/
+                            # back-edge）终止时不再沿后继扩展：回边指向循环头，
+                            # 从循环头可达整个循环体（含 try 体自身与其
+                            # JUMP_FORWARD 正常出口），若照常扩展会把 post-try
+                            # 顺序代码误判为「handler 可达」，从而把 try/except
+                            # 之后的兄弟语句（表达式/赋值/with）错误收编为
+                            # else_blocks。依「每块唯一归属」+ 控制流边判据：
+                            # handler 经回边退出即告终止（R51 本义「所有 handler
+                            # 以 return/break/continue/reraise 终止」），真正的
+                            # handler→目标前向可达性不会经由向后跳转边。
+                            _hb_last_r51 = None
+                            for _hb_i_r51 in reversed(_hb_r51.instructions):
+                                if _hb_i_r51.opname in ('RESUME', 'NOP', 'CACHE'):
+                                    continue
+                                _hb_last_r51 = _hb_i_r51
+                                break
+                            if (_hb_last_r51 is not None and
+                                    _hb_last_r51.opname in BACKWARD_JUMP_OPS):
+                                continue
                             for _succ_r51 in _hb_r51.successors:
                                 if _succ_r51 not in _te_handler_bfs_visited:
                                     _te_handler_bfs_queue.append(_succ_r51)
