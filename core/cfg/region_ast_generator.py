@@ -10822,6 +10822,21 @@ AST 映射规则:
             if _instr_idx < _c2_skip_until:
                 continue
             if instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                # [W11-B fix] 语句边界孤立 NOP 构造保留（镜像
+                # _generate_block_statements 同名逻辑）：cond_block 前置语句段
+                # （pre_stmts）中的编译器折叠残留 NOP 被丢弃会导致 re-compile
+                # 偏移错位（如 main.pyc run 的 STORE_FAST executor 与
+                # executor.run(...) 调用之间的孤立 NOP，位于 IfRegion 条件块
+                # 前置语句提取路径）。try 帧标记与异常表汇合锚点由
+                # _is_orphan_boundary_nop 内部判据排除。语句边界判定：
+                # pre_instrs 为空（前一前置语句已终结发射）。
+                if (instr.opname == 'NOP' and not pre_instrs
+                        and self._is_orphan_boundary_nop(instr, cond_block.instructions)):
+                    pre_stmts.append({
+                        'type': 'While',
+                        'test': {'type': 'Constant', 'value': False},
+                        'body': [{'type': 'Pass'}],
+                    })
                 continue
             if instr.opname == 'POP_TOP':
                 if pre_instrs:
@@ -17255,6 +17270,27 @@ AST 映射规则:
         return result
 
     def _generate_try_body(self, region: TryExceptRegion) -> List[Dict[str, Any]]:
+        """_generate_try_body — TryExceptRegion.try_blocks → ast.Try.body
+
+        嵌套 try 派发（nested_try_regions 预循环）判定并集：
+          - is_child_in_try：parent 关系 + entry 未被 handler/else 持有；
+          - is_in_try_blocks：内层 entry 在外层 try_blocks 中；
+          - is_before_try_start：内层 entry 先于外层 try_offset_start 且
+            跨越该起点（外层 NOP 块之后、try_block 之前的形态）；
+          - handler_in_range：内层 handler 入口落在外层保护跨度内；
+          - [W11 fix] span containment：内层保护跨度
+            [r.try_offset_start, r.try_offset_end) ⊆ 外层跨度——嵌套
+            try-in-try 共享异常表保护起点时（如 repro_07 的
+            `try: v = p.load() / finally: pass`，内外层 try_offset_start
+            同为 10），前三个判据全部失效，唯有跨度包含能捕获该内层
+            try，否则其 try 体语句整体丢失。命中后内层 region 作为抽象
+            节点在预循环中整树生成（每块唯一归属不变）。
+        _is_in_if_branch 排除项对所有判据生效：entry 已归属兄弟 IfRegion
+        分支的内层 try 由该 IfRegion 的分支体派发，不在此预生成。
+
+        :param region: 外层 TryExceptRegion
+        :return: try body 语句字典列表
+        """
         body_stmts: List[Dict[str, Any]] = []
 
         nested_try_regions = []
@@ -17297,6 +17333,26 @@ AST 映射规则:
                 # belongs to the else clause, not the try body.
                 is_entry_in_else = bool(getattr(region, 'else_blocks', None) and r.entry in set(region.else_blocks))
                 is_child_in_try = is_child and not is_entry_in_handler and not is_entry_in_else
+                # [W11 fix] 内层 try 完全包含于外层 try 保护跨度（span containment）：
+                # CPython 3.11 嵌套 try（try-in-try，内层无 handler 或为
+                # try/finally 形态）的内层 region.entry 可能与外层 try_offset_start
+                # 重合（异常表保护区间共享起点），此时 is_before_try_start 的严格
+                # 小于判定失效、is_in_try_blocks 亦不成立（内层 entry 块被内层
+                # region 唯一归属），外层 try body 预循环永不派发该内层 try——
+                # 其 try 体语句整体丢失（如 repro_07：`try: v = p.load()
+                # finally: pass` 整个消失）。结构判据：内层保护跨度
+                # [r.try_offset_start, r.try_offset_end) ⊆ 外层跨度，且 entry
+                # 未被外层的 handler/else 持有（上方已排除）。归属仍由
+                # 「每块唯一归属」保证：内层块归内层 region，仅作为抽象节点在
+                # 外层 try body 中整树生成。
+                _is_span_contained = (
+                    getattr(r, 'try_offset_start', None) is not None
+                    and getattr(r, 'try_offset_end', None) is not None
+                    and r is not region
+                    and region.try_offset_start is not None
+                    and region.try_offset_end is not None
+                    and r.try_offset_start >= region.try_offset_start
+                    and r.try_offset_end <= region.try_offset_end)
                 _is_in_if_branch = False
                 for _ir in self.region_analyzer.regions:
                     if (isinstance(_ir, IfRegion) and _ir is not region
@@ -17307,7 +17363,8 @@ AST 映射规则:
                         if r.entry in _ir_then_set or r.entry in _ir_else_set:
                             _is_in_if_branch = True
                             break
-                is_nested = (is_child_in_try or is_in_try_blocks or is_before_try_start or handler_in_range) and not _is_in_if_branch
+                is_nested = (is_child_in_try or is_in_try_blocks or is_before_try_start
+                             or handler_in_range or _is_span_contained) and not _is_in_if_branch
                 if is_nested and (r.parent is None or r.parent is region):
                     nested_is_smaller = r.try_offset_end - r.try_offset_start < region.try_offset_end - region.try_offset_start
                     if nested_is_smaller or is_child_in_try:
@@ -18114,6 +18171,319 @@ AST 映射规则:
 
         return body_stmts
 
+    def _find_finally_normal_copy_blocks(self, region: TryExceptRegion) -> list:
+        """W11-A：定位 finally 正常路径副本的有序块序列（复合体重组发射源）。
+
+        【区域类型】 TRY_FINALLY 双副本布局中的正常路径副本
+        RegionType 枚举值: RegionType.TRY_FINALLY
+
+        **算法描述**
+        CPython 3.11 对 ``try/finally`` 编译出两份 finally 体副本：
+          - 正常路径副本：无 PUSH_EXC_INFO 帧头，尾部 JUMP_FORWARD 出界
+            （或 RETURN_VALUE）；结构化子区域（IfRegion/WithRegion 等）
+            登记在该副本的块上；
+          - 异常路径副本：region.finally_blocks，PUSH_EXC_INFO 帧头 +
+            COPY/POP_EXCEPT/RERAISE 自清理尾。
+        当体含复合结构时，若 finalbody 从异常副本按块线性发射，会产生
+        语句重排、with 头/体拆散、空体副本重复发射与终止符漂移（家族
+        W11-A）。finalbody 必须以正常副本为唯一语句源、按原偏移序重组。
+
+        **字节码模式**
+        控制流收敛锚点：try 体末块、各 except handler 末块（以及 else 末块）
+        全部以 JUMP_FORWARD/JUMP_ABSOLUTE 或直接边汇入正常路径副本首块 K，
+        且 K.start_offset < exc_start（CPython 布局：正常副本先于异常副本）。
+        两份副本共享同一语句序列，但异常框架不同：正常副本含 with 的
+        WITH_EXCEPT_START 分发链（POP_JUMP_FORWARD_IF_TRUE/RERAISE/COPY/
+        POP_EXCEPT/POP_TOP 清理尾），异常副本以 PUSH_EXC_INFO 开头且 with
+        框架块常被登记进子区域而非 finally_blocks——因此逐操作码镜像比对
+        不成立，不能作为判据。
+
+        **边界条件**
+          1. region.has_finally 且 finally_blocks 非空；exc_start =
+             min(finally_blocks.start_offset)，exc_last = max(finally 块末
+             指令偏移)；
+          2. 候选锚点 K（全部要求 K 不含异常框架指令 PUSH_EXC_INFO/
+             CHECK_EXC_MATCH/CHECK_EG_MATCH/WITH_EXCEPT_START/POP_EXCEPT/
+             RERAISE，且 K.start_offset < exc_start）：
+             a. finally_copy_blocks 的 key 块；
+             b. 异常表推导边界 max{entry.end : entry.target ∈ fin_offsets,
+                entry.end <= exc_start}（保护区间终点 = 正常副本起点）；
+             c. 收敛后继：本区域 try_blocks ∪ handler 体块的末跳转目标
+                （JUMP_FORWARD/JUMP_ABSOLUTE argval）落在 [0, exc_start)
+                内的无框架块——即「try/handler 正常出口的共同汇入点」；
+          3. 从 K 沿后继收集 [K.start_offset, exc_start) 内全部可达块
+              （BFS，终止于出界跳转/RETURN_VALUE/RETURN_CONST）；
+           4. 复合门控：序列 ≥2 块且存在结构化子区域（If/With/Loop/Ternary）
+              入口落在序列内——纯线性 finally 走既有 finally_blocks 路径；
+           5. 出界校验：序列内所有前向出界跳转目标必须 > exc_last 或为
+              RETURN 终止——正常副本只向前汇入 post-try 代码，绝不回入
+              异常副本区间，防止把 post-try 兄弟代码误收进副本。
+         任一候选满足全部判据即返回其按偏移升序的块列表；否则返回 []。
+
+         **候选锚点与序列校验（W11 修复补遗）**
+           a. 候选集全量升序收集，Loop 入口块不作锚点（try 体循环头被误锚
+              会把循环整段吞进副本，如 op_station __new__ 的 FOR_LOOP@202
+              抢占真副本入口）；首个候选未通过校验时回退下一候选；
+           b. 回边守卫：序列内回边目标不得先于锚点（argval < lo），否则
+              说明收集起点切入 try 体子结构中部；
+           c. 纯 epilogue 修剪：异常副本无 RETURN 时，仅含 LOAD_CONST None
+              + RETURN_VALUE / 单条 RETURN_CONST 的块是函数收尾隐式 return
+              副本（生成器 resume 落点），修剪出序列；混合块保留；
+           d. 复合体门控：修剪后的序列须含 WithRegion 子结构、≥2 个结构化
+              子区域、或存在不属于任何子区域的兄弟线性段——单一普通 if
+              独占 finally 体（user_log_control 形态）交由 legacy 路径。
+
+        **归约语义**
+        序列首块 K 即父级 finally 体的逻辑入口；finalbody 以该序列为唯一
+        语句源按偏移序重组：结构化子区域经入口引用语义整树派发（复合块
+        IfRegion⊂WithRegion 不拆散），线性段逐块裸语句发射；纯框架块
+        （with/except 清理尾，无数据类操作码）与异常路径副本仅登记归属
+        不发射。
+
+        **AST 映射 + 已知失败模式**
+        序列 → ast.Try.finalbody 的语句列表；异常副本不产生任何 AST 节点
+        （RERAISE 终止语义由 try/finally 语句整体表达）。已知失败模式：
+        若误用异常副本作语句源会复现 W11-A 四指纹（错序/拆散/空体副本/
+        RERAISE→RETURN_VALUE 漂移）；若把 post-try 代码收进序列会造成
+        finally 外语句泄漏——由判据 5 阻断。
+        """
+        if not getattr(region, 'has_finally', False):
+            return []
+        fin_blocks = sorted(getattr(region, 'finally_blocks', None) or [],
+                            key=lambda b: b.start_offset)
+        if not fin_blocks:
+            return []
+        exc_start = min(b.start_offset for b in fin_blocks)
+        fin_offsets = {b.start_offset for b in fin_blocks}
+        _frame_ops = {'PUSH_EXC_INFO', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH',
+                      'WITH_EXCEPT_START', 'POP_EXCEPT', 'RERAISE'}
+        _noise_ops = ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'EXTENDED_ARG')
+        _strip_ops = set(_frame_ops) | {'COPY', 'SWAP',
+                                        'JUMP_FORWARD', 'JUMP_ABSOLUTE'}
+        exc_last = max((b.get_last_instruction().offset for b in fin_blocks
+                        if b.get_last_instruction() is not None),
+                       default=exc_start)
+
+        def _frame_free(blk):
+            return not any(i.opname in _frame_ops for i in blk.instructions)
+
+        # 锚点 = 正常路径后必经点（post-dominator）：对 try 体/handler/else
+        # 的全部成员块求「正常边可达集」（排除异常边与终止块），交集的最小
+        # 偏移块即所有正常出口路径的共同汇入点 = finally 正常副本入口。
+        # 纯 CFG 结构判据，不依赖 finally_copy_blocks 的登记质量（其中可能
+        # 混入 try 体内部块，如 main.pyc 的 3246），也不受 try 体内部
+        # 条件汇合块的干扰（它们只出现在部分路径的可达集中，被交集剔除）。
+        fcb = getattr(region, 'finally_copy_blocks', None) or {}
+        _exit_src_blocks = set()
+        for b in getattr(region, 'try_blocks', None) or []:
+            _exit_src_blocks.add(b.start_offset)
+        for _hi in range(len(getattr(region, 'except_handlers', None) or [])):
+            _hbs = getattr(region, 'handler_body_blocks', None) or []
+            if _hi < len(_hbs):
+                for _hb in _hbs[_hi]:
+                    _exit_src_blocks.add(_hb.start_offset)
+        for b in getattr(region, 'else_blocks', None) or []:
+            _exit_src_blocks.add(b.start_offset)
+
+        _TERM_OPS = ('RETURN_VALUE', 'RETURN_CONST', 'RAISE_VARARGS', 'RERAISE')
+
+        def _normal_succs(blk):
+            """正常控制流后继（排除异常边：PUSH_EXC_INFO 帧头块/异常副本块）。"""
+            last_i = blk.get_last_instruction()
+            if last_i is None:
+                return []
+            if last_i.opname in _TERM_OPS:
+                return []
+            res = []
+            for s2 in blk.successors:
+                if s2.start_offset >= exc_start or s2.start_offset in fin_offsets:
+                    continue
+                if any(i.opname in ('PUSH_EXC_INFO', 'RERAISE')
+                       for i in s2.instructions[:1]):
+                    continue
+                res.append(s2)
+            return res
+
+        _common = None
+        for off in sorted(_exit_src_blocks):
+            blk = self.cfg.get_block_by_offset(off)
+            if blk is None:
+                continue
+            reach = set()
+            stack = [s2 for s2 in _normal_succs(blk)]
+            while stack:
+                b3 = stack.pop()
+                if b3.start_offset in reach:
+                    continue
+                reach.add(b3.start_offset)
+                for s3 in _normal_succs(b3):
+                    if s3.start_offset not in reach:
+                        stack.append(s3)
+            if not reach:
+                continue
+            if _common is None:
+                _common = set(reach)
+            else:
+                _common &= reach
+            if not _common:
+                break
+        candidates = []
+        _loop_entry_offsets = set()
+        for r2 in self.region_analyzer.regions:
+            if isinstance(r2, LoopRegion):
+                e2 = getattr(r2, 'entry', None)
+                if e2 is not None:
+                    _loop_entry_offsets.add(e2.start_offset)
+        if _common:
+            # [W11-A 收敛锚点候选集] 全量收集（升序）：首个候选若未通过后续
+            # 结构校验（回边守卫/出界校验），可回退到下一候选。Loop 入口块
+            # 不作锚点——它是 try 体内部循环结构的头部，被误选为收敛点会把
+            # try 体循环整段误判为 finally 正常路径副本（如 op_station
+            # __new__：FOR_LOOP@202 抢占真副本入口 266）。注意 If/BoolOp/
+            # Ternary 条件入口是合法副本首块（finally 首语句可为 if），
+            # 不得排除。
+            for coff in sorted(_common):
+                cblk = self.cfg.get_block_by_offset(coff)
+                if cblk is None or not _frame_free(cblk):
+                    continue
+                if coff in _loop_entry_offsets:
+                    continue
+                candidates.append(cblk)
+
+        seen_anchor_offsets = set()
+        for start_blk in sorted(candidates, key=lambda b: b.start_offset):
+            lo = start_blk.start_offset
+            if lo in seen_anchor_offsets:
+                continue
+            seen_anchor_offsets.add(lo)
+            seen = set()
+            stack = [start_blk]
+            while stack:
+                b = stack.pop()
+                if b.start_offset in seen:
+                    continue
+                seen.add(b.start_offset)
+                last = b.get_last_instruction()
+                if last is None:
+                    break
+                if last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                    continue
+                if last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                                   *BACKWARD_JUMP_OPS):
+                    tgt_off = last.argval
+                    tgt_blk = (self.cfg.get_block_by_offset(tgt_off)
+                               if tgt_off is not None else None)
+                    if tgt_blk is not None and lo <= tgt_blk.start_offset < exc_start:
+                        stack.append(tgt_blk)
+                    continue
+                for s2 in sorted(b.successors, key=lambda x: x.start_offset):
+                    if s2.start_offset not in seen and lo <= s2.start_offset < exc_start:
+                        stack.append(s2)
+            if len(seen) < 2:
+                continue
+            # [W11-A 回边守卫] 序列内回边目标不得先于锚点（argval < lo）：
+            # 锚点落在某循环体中部时（循环头被 G1 排除后的残余块），其
+            # 回边指向前于锚点的循环头——说明收集起点切入了 try 体子结构
+            # 中部，非 finally 正常路径副本入口。真副本序列的回边（finally
+            # 体自身含 while 循环）目标必在 [lo, exc_start) 内。
+            _backedge_before_anchor = False
+            for off in sorted(seen):
+                blk2 = self.cfg.get_block_by_offset(off)
+                if blk2 is None:
+                    continue
+                last2 = blk2.get_last_instruction()
+                if (last2 is not None and last2.opname in BACKWARD_JUMP_OPS
+                        and last2.argval is not None and last2.argval < lo):
+                    _backedge_before_anchor = True
+                    break
+            if _backedge_before_anchor:
+                continue
+            seq = [self.cfg.get_block_by_offset(off)
+                   for off in sorted(seen)]
+            has_struct_child = False
+            for r2 in self.region_analyzer.regions:
+                if isinstance(r2, (IfRegion, WithRegion, LoopRegion, TernaryRegion)):
+                    e2 = getattr(r2, 'entry', None)
+                    if e2 is not None and e2.start_offset in seen:
+                        has_struct_child = True
+                        break
+            if not has_struct_child:
+                continue
+            # [W11-A 尾部终止符修剪] 纯 epilogue 块（仅含 LOAD_CONST None +
+            # RETURN_VALUE / 单条 RETURN_CONST，无任何数据类指令）是函数收尾
+            # 隐式 return 的独立副本（生成器 resume 路径的跳转落点），不属于
+            # finally 体语句——除非异常路径副本本身含 RETURN（源码
+            # `finally: return ...` 时两副本均镜像含 RETURN）。仅当块内除
+            # 终止对之外无真实语句时整块修剪；混合块（真实 finally 语句与
+            # 尾部隐式 return 同块，如 main.pyc run 的 release/print 尾块）
+            # 必须保留——其 return 对由语句构建器的隐式返回语义吸收。
+            _fin_has_return = any(
+                i.opname in ('RETURN_VALUE', 'RETURN_CONST')
+                for fb in region.finally_blocks
+                for i in fb.instructions)
+            if not _fin_has_return:
+                _trimmed_seq = []
+                for b in seq:
+                    last_i = b.get_last_instruction()
+                    if last_i is not None and last_i.opname in ('RETURN_VALUE',
+                                                                'RETURN_CONST'):
+                        _body_instrs = [i for i in b.instructions
+                                        if i.opname not in NOISE_OPS]
+                        _is_pure_epilogue = (
+                            len(_body_instrs) == 1
+                            or (len(_body_instrs) == 2
+                                and _body_instrs[0].opname == 'LOAD_CONST'
+                                and _body_instrs[0].argval is None))
+                        if _is_pure_epilogue:
+                            continue
+                    _trimmed_seq.append(b)
+                seq = _trimmed_seq
+                if len(seq) < 2:
+                    continue
+            # [W11-A 复合体门控] 双副本重组仅服务于「复合 finally 体」：序列
+            # 含 WithRegion 子结构、或 ≥2 个结构化子区域、或存在不属于任何
+            # 子区域的兄弟线性段。单一普通 if 独占整个 finally 体（无兄弟
+            # 语句，如 user_log_control 的 `finally: if disabled: enable()`）
+            # 不是 W11-A 形态——该形态由既有 legacy finalbody 路径正确处理，
+            # 强行走重组路径会把函数 epilogue 副本误发射为 `return None`。
+            _child_entries = []
+            for r2 in self.region_analyzer.regions:
+                if isinstance(r2, (IfRegion, WithRegion, LoopRegion, TernaryRegion)):
+                    e2 = getattr(r2, 'entry', None)
+                    if e2 is not None and e2.start_offset in seen:
+                        _child_entries.append((type(r2), r2))
+            _covered = set()
+            for _t2, r2 in _child_entries:
+                for b3 in getattr(r2, 'blocks', None) or []:
+                    _covered.add(b3.start_offset)
+                e2 = getattr(r2, 'entry', None)
+                if e2 is not None:
+                    _covered.add(e2.start_offset)
+            _has_sibling_linear = any(
+                b.start_offset not in _covered for b in seq)
+            _has_with_child = any(issubclass(t2, WithRegion) for t2, _ in _child_entries)
+            if not (_has_with_child or len(_child_entries) >= 2
+                    or _has_sibling_linear):
+                continue
+            # 出界校验：前向出界跳转只能汇入 post-try 区（> exc_last）或终止
+            _exit_ok = True
+            for off in sorted(seen):
+                blk = self.cfg.get_block_by_offset(off)
+                if blk is None:
+                    continue
+                last = blk.get_last_instruction()
+                if (last is not None
+                        and last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                        and last.argval is not None
+                        and not (lo <= last.argval < exc_start)
+                        and last.argval <= exc_last):
+                    _exit_ok = False
+                    break
+            if not _exit_ok:
+                continue
+            return seq
+        return []
+
     def _generate_try(self, region: TryExceptRegion) -> Dict[str, Any]:
         """_generate_try — TryExceptRegion → ast.Try 映射
 
@@ -18145,6 +18515,20 @@ AST 映射规则:
           - 嵌套 TryExceptRegion: 在 try body 中检测内层 region，递归调用 _generate_try
           - try_blocks 中的 IfRegion/LoopRegion/WithRegion: 通过块→区域映射识别入口，递归生成
           - finally copy 块: 正常路径与异常路径各有一份副本，生成时只保留 finalbody 一份
+          - [W11-A fix] 双副本复合体重组：当检测到 finally 正常路径副本序列
+            （_find_finally_normal_copy_blocks：finally_copy_blocks key 或异常表
+            保护区间终点为起点、无框架指令、先于异常副本、含结构化子区域且与
+            异常副本操作码镜像一致），finalbody 以该序列为唯一语句源按原偏移序
+            重组发射——子区域经 get_entry_region_for_block / entry==nb 派发整树
+            生成（IfRegion⊂WithRegion 等复合块不再拆散），线性段由
+            _generate_handler_body_statements 发射；纯框架块（WITH_EXCEPT_START /
+            PUSH_EXC_INFO / RERAISE 清理尾，无任何数据类操作码）跳过不发射。
+            异常路径副本（finally_blocks）作为同一逻辑体的框架副本仅登记归属，
+            不再参与 finalbody 发射——消除错序、with 头体拆散、空体副本重复与
+            终止符漂移（异常副本 RERAISE 收尾语义保持原样，不以 RETURN_VALUE
+            替代）。post-try 收集的 known_struct 同步纳入正常副本块偏移，
+            防止其被误判为 post-try 代码提前泄漏。未命中双副本复合形态时保持
+            原有 finally_blocks 迭代路径不变。
           - [R09 fix] 结构化 finalbody 的子区域派发：block_to_region 归属按
             REGION_TYPE_PRIORITY（TRY_FINALLY=70 > IF/FOR=30/60）判给父 Try，
             get_entry_region_for_block(fb) 对 finally 体中的 if/for 条件块返回
@@ -18274,6 +18658,13 @@ AST 映射规则:
                         _handler_body_blocks.add(hb)
             _pre_consumed_handler_bodies = _handler_body_blocks & self.generated_blocks
             self.generated_blocks.update(_handler_body_blocks)
+
+            # [W11-A fix] 尽早定位 finally 正常路径副本序列（复合体重组发射源）。
+            # post-try 收集与 finalbody 生成都需要该序列：正常副本成员块属于
+            # finally 体结构（每块唯一归属），不得被 fc 后继扫描误收集为
+            # post-try 块提前泄漏到 try 语句之外。
+            _w11a_nc_blocks = self._find_finally_normal_copy_blocks(region)
+            _w11a_nc_offsets = {b.start_offset for b in _w11a_nc_blocks}
 
             # 区域归约算法原则 2（每块唯一归属）+ 原则 4（父引用子入口）：
             # try-except 的 post-try 代码块（如 `return returndata`）是 try-except
@@ -18408,7 +18799,10 @@ AST 映射规则:
                     for _hb in _hbs:
                         _h_off_set.add(_hb.start_offset)
                 _fc_key_set = set(region.finally_copy_blocks.keys())
-                _known_struct = _try_off_set | _else_off_set | _fin_off_set | _h_off_set | _fc_key_set
+                # [W11-A fix] finally 正常路径副本成员块属于 finalbody 结构，
+                # 不作为 post-try 候选（否则 with 头/体被拆散泄漏到 try 外）。
+                _known_struct = (_try_off_set | _else_off_set | _fin_off_set
+                                 | _h_off_set | _fc_key_set | _w11a_nc_offsets)
                 for _fc_offset, _fc_keep in region.finally_copy_blocks.items():
                     _fc_block = self.cfg.get_block_by_offset(_fc_offset)
                     if _fc_block is None:
@@ -19018,68 +19412,167 @@ AST 映射规则:
                         finalbody_stmts.append(nested_ast)
                     for b in nr.blocks:
                         self.generated_blocks.add(b)
-                # [R12 fix] 子区域的 blocks/cleanup_blocks/then_blocks 可能
-                # 包含当前区域的 finally_blocks（CPython 3.11 异常表：内层
-                # try 的 cleanup 路径 fall through 到外层 finally 的异常路径
-                # 块）。子区域生成时会将这些块标记为 generated_blocks，导致
-                # 下面的循环跳过它们，finalbody 退化为 Pass。
-                # 修复：在遍历之前，将 finally_blocks 从 generated_blocks
-                # 中移除，确保它们被正确生成。
-                for fb in region.finally_blocks:
-                    self.generated_blocks.discard(fb)
-                for fb in region.finally_blocks:
-                    if fb.start_offset in _generated_finally_offsets:
-                        continue
-                    # [R09 fix] 每块唯一归属：本循环内子区域派发（上方分支）
-                    # 已把其覆盖块标记为 generated。后续遍历到这些非入口成员
-                    # 块时不得再走裸语句发射，否则结构化 finally 体出现语句
-                    # 重复（如 repro_07 的 a()/for 体/y() 各多出一份）。
-                    if fb in self.generated_blocks:
-                        _generated_finally_offsets.add(fb.start_offset)
-                        continue
-                    # _generate_ternary 归约为 IfExp，而非被
-                    # _generate_handler_body_statements 误处理为 if-else + 泄漏
-                    # 表达式。依「嵌套即抽象节点」：嵌套 ternary 在父 Try.finalbody
-                    # 中作为单个抽象节点。仿 R6-06 handler body 修复（L11719-11737）。
-                    # [R09 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4
-                    # （父引用子入口）：block_to_region 的归属由
-                    # REGION_TYPE_PRIORITY 决定（TRY_FINALLY=70 > IF=30），
-                    # 结构化 finally 体中的 if/for 条件块会归属父 Try 而非其
-                    # 子区域。此时 get_entry_region_for_block(fb) 返回 region
-                    # 自身，子区域派发失效，退化为 _generate_handler_body_
-                    # statements 的裸语句发射——if/for 结构丢失或与子区域
-                    # 输出重复。修复：当归属为自身/非结构化时，按「entry==fb」
-                    # 在全部结构化区域中解析真正的子区域（入口引用语义）。
-                    _fb_region = self.region_analyzer.get_entry_region_for_block(fb)
-                    if not (_fb_region is not None
-                            and isinstance(_fb_region, (LoopRegion, IfRegion, WithRegion, TernaryRegion))
-                            and _fb_region is not region):
-                        for _cr in self.region_analyzer.regions:
-                            if (_cr is region
-                                    or getattr(_cr, 'entry', None) is not fb
-                                    or not isinstance(_cr, (LoopRegion, IfRegion, WithRegion, TernaryRegion))):
+                if _w11a_nc_blocks:
+                    # [W11-A fix] 双副本复合体重组：finalbody 以 finally 正常路径
+                    # 副本序列为唯一语句源，按原偏移序发射。复合子区域
+                    # （IfRegion⊂WithRegion 等）经入口引用语义整树派发，with 头/体
+                    # 不再拆散；纯框架块（异常帧/WITH_EXCEPT_START/RERAISE 清理尾）
+                    # 跳过；异常路径副本（finally_blocks）作为同一逻辑体的框架副本
+                    # 仅登记归属，不重复发射——其 RERAISE 收尾终止语义由 try/finally
+                    # 语句整体表达，不以 RETURN_VALUE 替代（消除终止符漂移与空体
+                    # 副本）。
+                    _W11A_DATA_OPS = {
+                        'LOAD_FAST', 'LOAD_FAST_CHECK', 'LOAD_DEREF', 'LOAD_NAME',
+                        'LOAD_GLOBAL', 'LOAD_ATTR', 'LOAD_METHOD', 'LOAD_CLOSURE',
+                        'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+                        'STORE_ATTR', 'STORE_SUBSCR',
+                        'CALL', 'CALL_FUNCTION', 'CALL_METHOD', 'CALL_FUNCTION_KW',
+                        'PRECALL', 'BINARY_OP', 'BINARY_SUBSCR', 'COMPARE_OP',
+                        'UNARY_OP', 'UNARY_NEGATIVE', 'UNARY_NOT', 'CONTAINS_OP',
+                        'IS_OP', 'BUILD_LIST', 'BUILD_TUPLE', 'BUILD_MAP',
+                        'BUILD_SET', 'BUILD_STRING', 'BUILD_SLICE', 'FORMAT_VALUE',
+                        'LIST_APPEND', 'MAP_ADD', 'SET_ADD', 'LIST_EXTEND',
+                        'IMPORT_NAME', 'IMPORT_FROM', 'IMPORT_STAR',
+                        'UNPACK_SEQUENCE', 'GET_ITER', 'FOR_ITER',
+                        'RETURN_VALUE', 'RETURN_CONST', 'RAISE_VARARGS',
+                        'YIELD_VALUE', 'MAKE_FUNCTION', 'DELETE_FAST',
+                    }
+
+                    def _w11a_is_framework_only(bk):
+                        return not any(i.opname in _W11A_DATA_OPS
+                                       for i in bk.instructions)
+
+                    # [W11-A fix] 子树声明：派发结构化子区域时，其嵌套子区域
+                    # （如 IfRegion 的 BoolOp 条件块、WithRegion 成员）的块同属
+                    # 该子树，必须一并声明为已消费——否则非入口成员块（如
+                    # BoolOp 的第二操作数块）会退化为 HBS 裸语句发射（产生
+                    # `if <cond>: pass` 垃圾），且提前标记后继兄弟区域的块使
+                    # 其生成退化为空。判据：region.blocks 含已声明块的子区域
+                    # 随父声明传递闭包。
+                    _w11a_claimed = set()
+
+                    def _w11a_claim_region_tree(root_region):
+                        stack = [root_region]
+                        _seen_rids = {id(root_region)}
+                        while stack:
+                            r3 = stack.pop()
+                            r3_blocks = getattr(r3, 'blocks', None) or []
+                            for b3 in r3_blocks:
+                                _w11a_claimed.add(b3.start_offset)
+                            for r4 in self.region_analyzer.regions:
+                                e4 = getattr(r4, 'entry', None)
+                                if (r4 is not r3 and e4 is not None
+                                        and id(r4) not in _seen_rids
+                                        and id(r4) not in self._generated_regions
+                                        and any(b3 is e4 or b3.start_offset == e4.start_offset
+                                                for b3 in r3_blocks)):
+                                    _seen_rids.add(id(r4))
+                                    stack.append(r4)
+
+                    for nb in _w11a_nc_blocks:
+                        if nb.start_offset in _generated_finally_offsets:
+                            continue
+                        if nb.start_offset in _w11a_claimed:
+                            self.generated_blocks.add(nb)
+                            _generated_finally_offsets.add(nb.start_offset)
+                            continue
+                        if _w11a_is_framework_only(nb):
+                            self.generated_blocks.add(nb)
+                            _generated_finally_offsets.add(nb.start_offset)
+                            continue
+                        _nb_region = self.region_analyzer.get_entry_region_for_block(nb)
+                        if not (_nb_region is not None
+                                and isinstance(_nb_region, (LoopRegion, IfRegion, WithRegion, TernaryRegion))
+                                and _nb_region is not region):
+                            for _cr in self.region_analyzer.regions:
+                                if (_cr is region
+                                        or getattr(_cr, 'entry', None) is not nb
+                                        or not isinstance(_cr, (LoopRegion, IfRegion, WithRegion, TernaryRegion))):
+                                    continue
+                                _nb_region = _cr
+                                break
+                        if _nb_region and isinstance(_nb_region, (LoopRegion, IfRegion, WithRegion, TernaryRegion)):
+                            _nrid = id(_nb_region)
+                            if _nrid not in self._generated_regions and _nrid not in self._generating_regions and _nb_region is not region:
+                                _nr_ast = self._generate_region(_nb_region)
+                                if _nr_ast:
+                                    if isinstance(_nr_ast, list):
+                                        finalbody_stmts.extend(_nr_ast)
+                                    else:
+                                        finalbody_stmts.append(_nr_ast)
+                                _w11a_claim_region_tree(_nb_region)
+                                for b in _nb_region.blocks:
+                                    self.generated_blocks.add(b)
+                                    _generated_finally_offsets.add(b.start_offset)
+                                self._generated_regions.add(_nrid)
+                                _generated_finally_offsets.add(nb.start_offset)
                                 continue
-                            _fb_region = _cr
-                            break
-                    if _fb_region and isinstance(_fb_region, (LoopRegion, IfRegion, WithRegion, TernaryRegion)):
-                        _nrid = id(_fb_region)
-                        if _nrid not in self._generated_regions and _nrid not in self._generating_regions and _fb_region is not region:
-                            _nr_ast = self._generate_region(_fb_region)
-                            if _nr_ast:
-                                if isinstance(_nr_ast, list):
-                                    finalbody_stmts.extend(_nr_ast)
-                                else:
-                                    finalbody_stmts.append(_nr_ast)
-                            for b in _fb_region.blocks:
-                                self.generated_blocks.add(b)
-                            self._generated_regions.add(_nrid)
+                        nbs = self._generate_handler_body_statements(nb)
+                        if nbs:
+                            finalbody_stmts.extend(nbs)
+                        self.generated_blocks.add(nb)
+                        _generated_finally_offsets.add(nb.start_offset)
+                    # 异常路径副本静默登记：同一逻辑体的异常帧副本不再发射，
+                    # 防止顶层遗留扫描将其作为裸语句泄漏。
+                    for fb in region.finally_blocks:
+                        self.generated_blocks.add(fb)
+                        _generated_finally_offsets.add(fb.start_offset)
+                else:
+                    for fb in region.finally_blocks:
+                        self.generated_blocks.discard(fb)
+                    for fb in region.finally_blocks:
+                        if fb.start_offset in _generated_finally_offsets:
+                            continue
+                        # [R09 fix] 每块唯一归属：本循环内子区域派发（上方分支）
+                        # 已把其覆盖块标记为 generated。后续遍历到这些非入口成员
+                        # 块时不得再走裸语句发射，否则结构化 finally 体出现语句
+                        # 重复（如 repro_07 的 a()/for 体/y() 各多出一份）。
+                        if fb in self.generated_blocks:
                             _generated_finally_offsets.add(fb.start_offset)
                             continue
-                    fbs = self._generate_handler_body_statements(fb)
-                    if fbs:
-                        finalbody_stmts.extend(fbs)
-                    self.generated_blocks.add(fb)
-                    _generated_finally_offsets.add(fb.start_offset)
+                        # _generate_ternary 归约为 IfExp，而非被
+                        # _generate_handler_body_statements 误处理为 if-else + 泄漏
+                        # 表达式。依「嵌套即抽象节点」：嵌套 ternary 在父 Try.finalbody
+                        # 中作为单个抽象节点。仿 R6-06 handler body 修复（L11719-11737）。
+                        # [R09 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4
+                        # （父引用子入口）：block_to_region 的归属由
+                        # REGION_TYPE_PRIORITY 决定（TRY_FINALLY=70 > IF=30），
+                        # 结构化 finally 体中的 if/for 条件块会归属父 Try 而非其
+                        # 子区域。此时 get_entry_region_for_block(fb) 返回 region
+                        # 自身，子区域派发失效，退化为 _generate_handler_body_
+                        # statements 的裸语句发射——if/for 结构丢失或与子区域
+                        # 输出重复。修复：当归属为自身/非结构化时，按「entry==fb」
+                        # 在全部结构化区域中解析真正的子区域（入口引用语义）。
+                        _fb_region = self.region_analyzer.get_entry_region_for_block(fb)
+                        if not (_fb_region is not None
+                                and isinstance(_fb_region, (LoopRegion, IfRegion, WithRegion, TernaryRegion))
+                                and _fb_region is not region):
+                            for _cr in self.region_analyzer.regions:
+                                if (_cr is region
+                                        or getattr(_cr, 'entry', None) is not fb
+                                        or not isinstance(_cr, (LoopRegion, IfRegion, WithRegion, TernaryRegion))):
+                                    continue
+                                _fb_region = _cr
+                                break
+                        if _fb_region and isinstance(_fb_region, (LoopRegion, IfRegion, WithRegion, TernaryRegion)):
+                            _nrid = id(_fb_region)
+                            if _nrid not in self._generated_regions and _nrid not in self._generating_regions and _fb_region is not region:
+                                _nr_ast = self._generate_region(_fb_region)
+                                if _nr_ast:
+                                    if isinstance(_nr_ast, list):
+                                        finalbody_stmts.extend(_nr_ast)
+                                    else:
+                                        finalbody_stmts.append(_nr_ast)
+                                for b in _fb_region.blocks:
+                                    self.generated_blocks.add(b)
+                                self._generated_regions.add(_nrid)
+                                _generated_finally_offsets.add(fb.start_offset)
+                                continue
+                        fbs = self._generate_handler_body_statements(fb)
+                        if fbs:
+                            finalbody_stmts.extend(fbs)
+                        self.generated_blocks.add(fb)
+                        _generated_finally_offsets.add(fb.start_offset)
 
             for cb in region.cleanup_blocks:
                 if cb not in self.generated_blocks:
@@ -19463,6 +19956,18 @@ AST 映射规则:
             if instr.offset in skip_offsets:
                 continue
             if instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                # [W11-B fix] 语句边界孤立 NOP 构造保留（镜像
+                # _generate_block_statements 同名逻辑）：handler/finally 体
+                # 线性段中的编译器折叠残留 NOP 被丢弃同样会导致 re-compile
+                # 偏移错位。try 帧标记与异常表汇合锚点由
+                # _is_orphan_boundary_nop 内部判据排除。
+                if (instr.opname == 'NOP' and not stmt_instrs
+                        and self._is_orphan_boundary_nop(instr, block.instructions)):
+                    stmts.append({
+                        'type': 'While',
+                        'test': {'type': 'Constant', 'value': False},
+                        'body': [{'type': 'Pass'}],
+                    })
                 continue
 
             if instr.opname == 'POP_TOP' and skip_initial_pop:
@@ -20961,6 +21466,22 @@ AST 映射规则:
                 nested_region = self.region_analyzer.get_entry_region_for_block(block)
                 if not nested_region:
                     nested_region = self.region_analyzer.get_region_for_block(block)
+                # [W11-A fix] 祖先排除：块归属解析按 REGION_TYPE_PRIORITY
+                # 可能命中包含本 WithRegion 的祖先结构化区域（如外层
+                # TryExceptRegion 以 TRY_FINALLY=70 持有 with 体成员块）。
+                # 「嵌套即抽象节点」：祖先永远不是当前区域的嵌套子结构；
+                # 若不排除，_generate_with 会把祖先当作 nested region 走
+                # 「try_blocks 已全部生成 → 登记全部 blocks 并返回 None」
+                # 分支，导致 with 体语句被清空、后继兄弟块被提前标记
+                # generated（repro_01/main.pyc 的 finally if+with 形态）。
+                # 结构判据：候选区域的 blocks 含本区域 entry ⇒ 候选是祖先
+                # （子结构的成员块不可能覆盖父结构入口），置空处理。
+                if nested_region is not None:
+                    _w11a_self_entry = getattr(region, 'entry', None)
+                    if (_w11a_self_entry is not None
+                            and nested_region is not region
+                            and _w11a_self_entry in (getattr(nested_region, 'blocks', None) or [])):
+                        nested_region = None
                 if not nested_region or nested_region is region or nested_region is region.parent:
                     for _r in self.regions:
                         if isinstance(_r, (BoolOpRegion, TernaryRegion)) and _r.entry == block and _r is not region:
@@ -32926,6 +33447,90 @@ AST 映射规则:
 
 
 
+    def _is_orphan_boundary_nop(self, instr, block_instrs=None) -> bool:
+        """W11-B：判定 NOP 是否为「语句边界孤立 NOP」（编译器折叠残留）。
+
+        **区域类型** 顺序语句段中的编译器折叠残留（如 ``while False: pass``），
+        可能无任何跳转来源，也可能恰为循环出口/前向跳转的落点（FOR_ITER
+        耗尽边、结构连接跳转恰好指向折叠位置）。
+
+        **结构判据**（纯 CFG + 异常表结构，无 depth/pyc 特判）——以下四类
+        结构性 NOP 均由源码结构在重编译时自动再生，必须否决：
+          V-T (try 帧标记)：从本指令起的连续 NOP 游程（run）终点若与异常表
+             某条目的 start 精确重合，则游程内全部 NOP 是 ``try:`` 帧标记
+             （CPython 3.11 为每条 ``try:`` 语句发射标记 NOP，嵌套 N 层 try
+             即 N 个连续标记 NOP，保护区间起点统一紧随游程之后）。try 标记
+             由 TryRegion 自己持有，不在此重建；
+          V-S (结构汇合锚点)：作为跳转目标的 NOP 若恰有异常表条目以其偏移为
+             end（如 try-finally 正常路径副本的收尾跳转目标——finally 体
+             入口锚点），该 NOP 由 try/finally 语句重编译时自动再生；
+          V-B (空结构体标记)：前一非噪声指令是条件弹出跳转且其目标恰为本
+             NOP 之后一条指令（跳转「跨过」本 NOP）——该 NOP 是 ``if/while
+             cond: pass`` 空体占位，由条件结构的空体 Pass 发射路径再生，
+             额外构造会引入多余 const 并使 co_consts 错位；
+          V-L (循环头锚点)：NOP 的后继指令偏移是循环回边目标（存在
+             BACKWARD_JUMP_OPS 跳转指向 offset+2）——该 NOP 是 ``while``
+             循环头锚点（循环头需真实指令承接回边），由循环语句本身再生；
+          其余 NOP 即编译器死构造折叠残留，对应源码级空语句构造，必须显式
+          还原——否则 re-compile 后其后继指令整体错位。
+
+        **发射约定**
+        调用方在语句边界（stmt_instrs/pre_instrs 为空）处将其还原为
+        ``while False:`` 缩进 ``pass``——实测恰好编译为单个孤立 NOP、无附加
+        跳转，保证后续指令偏移对齐。
+
+        :param instr: 候选 NOP 指令
+        :param block_instrs: 可选，所在基本块的完整指令序列（用于精确计算
+            连续 NOP 游程终点与 V-B 前驱判定；缺省时退化为单 NOP 游程）
+        """
+        nop_off = getattr(instr, 'offset', None)
+        if nop_off is None:
+            return False
+        run_end = nop_off + 2
+        prev_nonnoise = None
+        if block_instrs:
+            seen_run = False
+            for bi in block_instrs:
+                if bi.offset < nop_off:
+                    if bi.opname not in NOISE_OPS:
+                        prev_nonnoise = bi
+                    continue
+                if bi.opname == 'NOP':
+                    seen_run = True
+                    run_end = bi.offset + 2
+                elif seen_run or bi.offset > nop_off:
+                    break
+        extab = getattr(self.cfg, 'exception_table', None) or []
+        for entry in extab:
+            start = entry.get('start')
+            if start is not None and start == run_end:
+                return False
+            end = entry.get('end')
+            if (end is not None and end == nop_off
+                    and getattr(instr, 'is_jump_target', False)):
+                return False
+        # V-B：前驱条件弹出跳转跨过本 NOP（空结构体 Pass 占位）。
+        # CFG 在条件跳转之后切分基本块，前驱可能位于前一块末尾——
+        # 因此在全 CFG 范围内按精确偏移（nop_off-2）定位前驱指令。
+        _prev_off = nop_off - 2
+        # V-L：后继指令是循环回边目标（while 循环头锚点）
+        _succ_target = nop_off + 2
+        for blk in self.cfg.get_blocks_in_order():
+            last = blk.get_last_instruction()
+            if (last is not None and last.opname in BACKWARD_JUMP_OPS
+                    and last.argval == _succ_target):
+                return False
+            # 条件回边（如 while-not 循环的条件反向跳出）同为回边形态
+            for bi2 in blk.instructions:
+                if (bi2.opname in BACKWARD_CONDITIONAL_JUMP_OPS
+                        and bi2.argval == _succ_target):
+                    return False
+                if bi2.offset == _prev_off:
+                    if (bi2.opname in CONDITIONAL_JUMP_OPS
+                            and getattr(bi2, 'argval', None) == _succ_target):
+                        return False
+        return True
+
     def _generate_basic_region(self, region: Region) -> List[Dict[str, Any]]:
         """生成基础区域 AST（Basic Region → statement list）
 
@@ -34777,6 +35382,27 @@ AST 映射规则:
 
         for instr in block.instructions:
             if instr.opname in self.SKIP_OPS:
+                # [W11-B fix] 语句边界孤立 NOP 构造保留：编译器折叠残留
+                # （如两语句间的 ``while False: pass``）在字节码中表现为一个
+                # 孤立 NOP——多数无任何跳转来源，也可能恰为循环出口/结构
+                # 连接跳转的落点（FOR_ITER 耗尽边指向折叠位置，如
+                # repro_08/main.pyc 形态）。此前该 NOP 被无条件当作噪声丢弃，
+                # re-compile 后其后继指令整体错位（co_code 从该位置起永不
+                # 一致）。结构判据（无 depth/pyc 特判，见
+                # _is_orphan_boundary_nop docstring）：
+                #   1. opname == 'NOP' 且处于语句边界（stmt_instrs 为空，
+                #      前一语句已完整发射）；try 帧标记与异常表汇合锚点
+                #      （源码结构重编译时自动再生）由判据内部排除；
+                #   2. 非上述两类 → 编译器死构造折叠残留，发射等价源码构造
+                #      while False: + 缩进 pass——实测恰好编译为单个孤立
+                #      NOP、无附加跳转，恢复偏移对齐。
+                if (instr.opname == 'NOP' and not stmt_instrs
+                        and self._is_orphan_boundary_nop(instr, block.instructions)):
+                    stmts.append({
+                        'type': 'While',
+                        'test': {'type': 'Constant', 'value': False},
+                        'body': [{'type': 'Pass'}],
+                    })
                 continue
 
             if instr.offset in skip_offsets:

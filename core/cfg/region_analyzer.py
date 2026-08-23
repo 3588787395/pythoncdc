@@ -8239,12 +8239,56 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 # - 非过渡块（入口含真实指令）：body 非空即纳入。
                 # - 过渡块（入口仅 POP_TOP/JUMP）：body 块数 > 1 才纳入
                 #   （except* 清理过渡块 body 仅 1 块，不纳入）。
-                _is_real_handler = body and (not _is_transition or len(body) > 1)
                 if _is_real_handler:
                     chain_handlers.append((exc_type, exc_name, body))
                     chain_entries.append(next_block)
                 break
         return chain_handlers, chain_entries
+
+    def _w11_unprotected_else_candidate(self, try_region, block) -> bool:
+        """[W12 fix] 判定已登记在 try_blocks/blocks 中的块是否为异常表终点
+        unprotected 的 else 体候选。
+
+        **区域类型** TRY_EXCEPT（无 finally）的显式 ``else:`` 子句体
+
+        **结构判据**（纯异常表 + 控制流边，无偏移/文件特判）：
+          1. 块起点 ≥ try_offset_end：CPython 3.11 编译器把不可抛出的
+             else 体语句移出异常表保护范围，显式 ``else:`` 体整体落在
+             [try_offset_end, first_handler_entry) 区间。位于保护终点之后
+             的指令不受本 try handler 保护——语义上只能是 else 体（真正的
+             post-try 代码位于 handler 之后，被 first_handler_entry 上界
+             排除）；反之，保护范围内的 try 体成员不受本判据影响；
+          2. 块以 JUMP_FORWARD 正常完成连接子终结：else 体出口跳过 handler
+             区间汇入 post-try merge point。以 RETURN_VALUE/RETURN_CONST
+             终结的块是 R21-N1「编译器外提的 try 体 return」模式，保留
+             try 体归属；含 PUSH_EXC_INFO/RERAISE/POP_EXCEPT/CHECK_EXC_MATCH
+             的块属异常框架，一律排除；
+          3. handler 出口语义闭合：至少一个 handler 成员块以相同 JUMP_FORWARD
+             目标正常退出（handler 异常退出与 else 正常退出在同一 merge 汇合）
+             ——证明该目标可从两条路径共同到达且 else 位于其间被跳过，
+             try-else 语义成立。
+
+        **归约语义**
+        满足时该块从 try_blocks 分离归属 else_blocks（调用方负责移除与
+        has_else 标记），AST 映射为 ast.Try.orelse。
+        """
+        toff = getattr(try_region, 'try_offset_end', None)
+        if toff is None or block.start_offset < toff:
+            return False
+        blk_instrs = [i for i in block.instructions if i.opname not in NOISE_OPS]
+        if not blk_instrs or blk_instrs[-1].opname != 'JUMP_FORWARD':
+            return False
+        if any(i.opname in ('RETURN_VALUE', 'RETURN_CONST', 'PUSH_EXC_INFO',
+                            'RERAISE', 'POP_EXCEPT', 'CHECK_EXC_MATCH')
+               for i in blk_instrs):
+            return False
+        jf_target = blk_instrs[-1].argval
+        for _, _, hblocks_w in getattr(try_region, 'except_handlers', None) or []:
+            for hb_w in hblocks_w:
+                for hi_w in hb_w.instructions:
+                    if hi_w.opname == 'JUMP_FORWARD' and hi_w.argval == jf_target:
+                        return True
+        return False
 
     def _find_try_else_blocks(self, try_region) -> List[BasicBlock]:
         if not hasattr(try_region, 'except_handlers') or not try_region.except_handlers:
@@ -8504,8 +8548,16 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                         if (block.start_offset >= try_end_offset and
                             block.start_offset < first_handler_entry and
                             block not in all_handler_blocks and
-                            block not in try_region.blocks and
                             not self._is_pass_or_return_none_block(block)):
+                            # [W12 fix] 异常表终点 unprotected 块的 else 识别：
+                            # 显式 else 体被编译器移出异常表保护范围后仍登记在
+                            # try_region.blocks/try_blocks 中。此类块满足结构判据
+                            # （见 _w11_unprotected_else_candidate）时从 try 体中
+                            # 分离为 else 候选；其余 try 体成员块维持原排除语义。
+                            if (block in try_region.blocks
+                                    and not self._w11_unprotected_else_candidate(
+                                        try_region, block)):
+                                continue
                             _owner = self.block_to_region.get(block)
                             if _owner is not None and _owner is not try_region:
                                 continue
@@ -8579,6 +8631,12 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
         else_blocks → Try.orelse
         已知失败：try-except-else-finally 中 else 块有 return 时，
         else 块被包含在 try_blocks 中（异常表覆盖），需要特殊分离逻辑。
+        [W12 fix] 无 finally 且显式 else 体被编译器移出异常表保护范围时，
+        else 块同样会登记在 try_blocks 中——此类「异常表终点 unprotected」
+        块（start ≥ try_offset_end、以 JUMP_FORWARD 正常完成连接子终结、
+        handler 出口同目标汇合）经 _w11_unprotected_else_candidate 判据
+        从 try_blocks 分离归属 else_blocks；以 RETURN_* 终结的外提 return
+        块（R21-N1 模式）仍保留 try 体归属。
         """
         try_body_blocks = getattr(try_region, 'try_blocks', [])
         if not try_body_blocks:
@@ -8630,9 +8688,19 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 # 块的 return 语句）或块是 else 块的入口（try 体最后
                 # 块的 fall-through 后继）。
                 if not _has_finally and block in _try_body_set:
-                    continue
+                    # [W12 fix] 异常表终点 unprotected 块的 else 识别：
+                    # 显式 else 体被编译器移出异常表保护范围后仍登记在
+                    # try_blocks 中。结构判据（unprotected + JUMP_FORWARD
+                    # 正常完成连接子 + handler 出口同目标汇合，且排除
+                    # R21-N1 return 外提模式）见
+                    # _w11_unprotected_else_candidate。
+                    if not self._w11_unprotected_else_candidate(try_region, block):
+                        continue
                 if not _has_finally and block in _try_region_blocks:
-                    continue
+                    # 同上：unprotected（异常表终点之后）且以 JUMP_FORWARD
+                    # 正常完成连接子终结的块才是 else 候选；其余仍归 try 体。
+                    if not self._w11_unprotected_else_candidate(try_region, block):
+                        continue
                 if _has_finally and block in _try_body_set:
                     # 排除 finally 正常路径块（由 finally 生成器处理）
                     if block in _finally_blocks_set:
