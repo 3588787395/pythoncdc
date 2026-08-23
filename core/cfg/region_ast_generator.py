@@ -19198,20 +19198,26 @@ AST 映射规则:
                         'body': _outer_body if _outer_body else [{'type': 'Pass'}]
                     }
                     # [R08b fix] 外层 handler 的异常类型必须来自其入口块的
-                    # 字节码结构（CHECK_EXC_MATCH 之前的 LOAD_NAME/LOAD_GLOBAL），
+                    # 字节码结构（CHECK_EXC_MATCH 之前的表达式段），
                     # 与 region_analyzer._extract_except_handler 的推导一致；
                     # 仅当块中无 CHECK_EXC_MATCH 时才是真正的裸 except。
+                    # [W12 fix] 表达式段经通用归约器完整重建（属性链/下标/
+                    # 调用/deref 成分全保留），与主路径共享同一结构判据；
+                    # 空段（无 CHECK_* 的真裸 except 帧才返回 None）不设
+                    # exc_type 键，绝不静默退化为裸 except。
                     _CHECK_OPS_r08b = ('CHECK_EXC_MATCH', 'CHECK_EG_MATCH')
-                    _pre_check_names_r08b = []
+                    _pre_check_instrs_r08b = []
                     for _instr in _outer_block.instructions:
                         if _instr.opname in _CHECK_OPS_r08b:
                             break
-                        if _instr.opname in ('LOAD_NAME', 'LOAD_GLOBAL'):
-                            _pre_check_names_r08b.append(_instr.argval)
-                    if len(_pre_check_names_r08b) == 1:
-                        _outer_handler['exc_type'] = {'type': 'Name', 'id': str(_pre_check_names_r08b[0]), 'ctx': 'Load'}
-                    elif len(_pre_check_names_r08b) > 1:
-                        _outer_handler['exc_type'] = {'type': 'Name', 'id': '(' + ', '.join(str(n) for n in _pre_check_names_r08b) + ')', 'ctx': 'Load'}
+                        if _instr.opname == 'PUSH_EXC_INFO':
+                            _pre_check_instrs_r08b = []
+                            continue
+                        _pre_check_instrs_r08b.append(_instr)
+                    if any(_i.opname in _CHECK_OPS_r08b for _i in _outer_block.instructions):
+                        _exc_node_r08b = self.region_analyzer._reconstruct_except_match_expr(_pre_check_instrs_r08b)
+                        if _exc_node_r08b is not None:
+                            _outer_handler['exc_type'] = _exc_node_r08b
                     handlers.append(_outer_handler)
 
             _skipped_outer = self._skipped_outer_try

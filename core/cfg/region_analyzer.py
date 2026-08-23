@@ -20,6 +20,7 @@
 from enum import Enum, auto
 from typing import List, Dict, Set, Optional, Tuple, Any, Iterable
 from dataclasses import dataclass, field
+import logging
 import os
 
 from .basic_block import BasicBlock, Instruction
@@ -7954,10 +7955,114 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
             all_handler_blocks_set.add(heb)
         return handler_body
 
+    # [W12 fix] except 匹配表达式重建：框架噪声指令（不携带表达式语义）
+    _EXPR_NOISE_OPS = frozenset({'NOP', 'CACHE', 'RESUME', 'PUSH_NULL'})
+
+    # [W12 fix] 纯变量加载指令（仅把名字压栈，不组合出新值）
+    _EXPR_PURE_LOAD_OPS = frozenset({
+        'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_FAST', 'LOAD_FAST_CHECK',
+        'LOAD_DEREF', 'LOAD_CLOSURE',
+    })
+
+    # [W12 fix] 允许作为异常匹配表达式根节点的表达式 AST 类型白名单
+    _EXPR_NODE_TYPES = frozenset({
+        'Constant', 'Name', 'Attribute', 'Subscript', 'Call',
+        'Tuple', 'List', 'Set', 'Dict', 'BinOp', 'UnaryOp', 'Compare',
+        'BoolOp', 'IfExp', 'Starred', 'JoinedStr', 'FormattedValue',
+    })
+
+    def _collect_pre_check_instrs(self, handler_entry: BasicBlock,
+                                  check_ops: Tuple[str, ...]) -> List[Instruction]:
+        """收集 PUSH_EXC_INFO 之后、首个 CHECK_* 之前的表达式指令段。
+
+        异常匹配表达式的字节码帧定义：handler 入口块以 PUSH_EXC_INFO 开始，
+        其后到 CHECK_EXC_MATCH/CHECK_EG_MATCH 之间的线性指令段即匹配
+        表达式的求值序列；再次遇到 PUSH_EXC_INFO 时重置收集（取最后一个
+        异常帧之后的段）。无 PUSH_EXC_INFO 的块退化为整段前缀（兼容历史
+        行为）。
+        """
+        pre: List[Instruction] = []
+        for instr in handler_entry.instructions:
+            if instr.opname in check_ops:
+                break
+            if instr.opname == 'PUSH_EXC_INFO':
+                pre = []
+                continue
+            pre.append(instr)
+        return pre
+
+    def _reconstruct_except_match_expr(self, pre_check_instrs: List[Instruction]):
+        """从 pre-CHECK 指令段重建 except 匹配表达式的完整节点（W12）。
+
+        结构判据（无深度/文件名/名字前缀特判）：指令段中除纯变量加载与
+        框架噪声外不存在任何组合指令时，沿用既有字符串行为（单名返回
+        名字字符串）；存在组合指令（LOAD_ATTR/BINARY_SUBSCR/CALL/
+        BUILD_TUPLE 等）时，调用通用表达式归约器 ExpressionReconstructor
+        按字节码序重建完整表达式 dict，完整保留属性链、下标、调用与闭包
+        deref 成分，并以「归约后栈上恰余一个白名单类型节点」为接受判据。
+
+        无法识别的形态（控制流/存储混入、归约失败、栈残留不唯一）显式
+        告警并保守回退为 ``'Exception'``——严禁静默降级为裸 ``except:``
+        （捕获一切异常的语义反转，且在 handler 链中部产生 SyntaxError）。
+        仅当输入段为空（真正的裸 except 帧）时返回 None。
+
+        Returns:
+            Optional[Union[str, dict]]：可被 region_ast_generator 直通发射
+            的异常类型节点；空段返回 None。
+        """
+        seg = [i for i in pre_check_instrs if i.opname not in self._EXPR_NOISE_OPS]
+        loads = [i.argval for i in seg if i.opname in self._EXPR_PURE_LOAD_OPS]
+        composing = [i for i in seg if i.opname not in self._EXPR_PURE_LOAD_OPS]
+
+        if not composing:
+            # 纯加载段：保持既有行为（单名 → 名字字符串；多裸名取首名）
+            if len(loads) == 1:
+                return loads[0]
+            if len(loads) > 1:
+                return loads[0]
+            return None
+
+        expr = None
+        _has_control_flow = any(
+            i.opname.endswith('JUMP') or i.opname.startswith('JUMP')
+            or i.opname.startswith('STORE_') or i.opname.startswith('RETURN')
+            or i.opname.startswith('RERAISE')
+            for i in composing
+        )
+        if not _has_control_flow:
+            try:
+                from .ast_generator_v2 import ExpressionReconstructor
+                reconstructor = ExpressionReconstructor()
+                expr = reconstructor.reconstruct(list(seg))
+                residual = [
+                    s for s in reconstructor.stack
+                    if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')
+                ]
+                # 接受判据：整段归约后栈上恰余一个白名单类型的表达式节点，
+                # 保证所有成分都被完整吸收、无成分缺失。
+                if len(residual) == 1 and isinstance(expr, dict) \
+                        and expr.get('type') in self._EXPR_NODE_TYPES:
+                    return expr
+            except Exception:  # noqa: BLE001
+                expr = None
+
+        logging.getLogger(__name__).warning(
+            '[W12] except 匹配表达式含未识别指令形态 %s，保守回退为 '
+            'Exception（避免裸 except 语义反转/SyntaxError）',
+            sorted({i.opname for i in composing}),
+        )
+        return 'Exception'
+
     def _extract_except_handler(self, handler_entry: BasicBlock) -> Tuple[Optional[str], Optional[str], List[BasicBlock]]:
         """提取handler的异常类型、异常名称和body块
 
         合并了_extract_exc_type、_extract_exc_name、_extract_handler_body的逻辑。
+
+        [W12 fix] 异常类型不再只认 CHECK_* 前的 LOAD_NAME/LOAD_GLOBAL：
+        由 _reconstruct_except_match_expr 对 PUSH_EXC_INFO 之后、CHECK_*
+        之前的完整表达式指令段按字节码序重建——纯加载段维持既有字符串
+        行为，组合段产出完整表达式 dict（属性链/下标/调用/deref 全保留），
+        无法识别时回退 'Exception'，绝不静默退化为裸 except。
         """
         def _collect_body(entry):
             _blocks: List[BasicBlock] = []
@@ -8018,29 +8123,26 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 return exc_type, exc_name, handler_body_blocks
 
         # [Phase 3 adv17_try_except_star] 同时支持 CHECK_EXC_MATCH（普通 except）
-        # 和 CHECK_EG_MATCH（except* 异常组）。两者之前的 LOAD_NAME/LOAD_GLOBAL
-        # 是异常类型，之后的 STORE_* 是 as 变量名。
+        # 和 CHECK_EG_MATCH（except* 异常组）。两者之前的表达式栈是异常匹配
+        # 表达式，之后的 STORE_* 是 as 变量名。
         _CHECK_OPS = ('CHECK_EXC_MATCH', 'CHECK_EG_MATCH')
         has_check_exc = any(i.opname in _CHECK_OPS for i in handler_entry.instructions)
         if has_check_exc:
-            pre_check_instrs = []
-            for instr in handler_entry.instructions:
-                if instr.opname in _CHECK_OPS:
-                    break
-                if instr.opname in ('LOAD_NAME', 'LOAD_GLOBAL'):
-                    pre_check_instrs.append(instr.argval)
-            if len(pre_check_instrs) == 1:
-                exc_type = pre_check_instrs[0]
-            elif len(pre_check_instrs) > 1:
-                has_build_tuple = any(
-                    i.opname == 'BUILD_TUPLE' and i.argval == len(pre_check_instrs)
-                    for i in handler_entry.instructions
-                    if i.opname not in _CHECK_OPS
+            # [W12 fix] 收集 PUSH_EXC_INFO 之后、CHECK_* 之前的完整表达式
+            # 指令段并重建完整匹配表达式。此前只收集 LOAD_NAME/LOAD_GLOBAL
+            # 的 argval，丢弃 LOAD_ATTR/BINARY_SUBSCR/CALL 等成分
+            # （`except exception.IQInvalidArgument:` 被截断为
+            # `except exception:`），非 Name 根时更退化为裸 except（语义反转）。
+            pre_check_instrs = self._collect_pre_check_instrs(handler_entry, _CHECK_OPS)
+            exc_type = self._reconstruct_except_match_expr(pre_check_instrs)
+            if exc_type is None:
+                # 有 CHECK_* 却无表达式段（畸形帧）：显式回退，
+                # 不允许落到 None → 裸 except。
+                logging.getLogger(__name__).warning(
+                    '[W12] handler 入口块 %s 含 CHECK_* 但表达式段为空，'
+                    '保守回退为 Exception', handler_entry.start_offset,
                 )
-                if has_build_tuple:
-                    exc_type = '(' + ', '.join(pre_check_instrs) + ')'
-                else:
-                    exc_type = pre_check_instrs[0]
+                exc_type = 'Exception'
 
             seen_check = False
             for instr in handler_entry.instructions:
