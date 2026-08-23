@@ -18334,23 +18334,29 @@ class ASTGeneratorV2:
             orelse = []
         
         # [关键修复] 修复finally块中的问题：
-        # 1. 移除finally块中的return语句（finally块不应该有return）
+        # 1. [W13 fix] Python 语义允许 return 直接位于 finally 体（此时
+        #    CPython 3.11 编译正常/异常两份镜像副本，return 同时吞没在途
+        #    异常）。此前 _remove_returns 断言"finally 块不应该有 return"，
+        #    把 Return(expr) 降级为裸 Expr——返回值丢失。现保留 finalbody
+        #    中的 Return 语句原样发射（与 RegionASTGenerator W11-A/W13
+        #    双副本重组路径语义一致），防止切换管线时缺陷复发。
         # 2. 修复if语句的顺序（按照块的offset排序）
         if finalbody:
-            # 移除return语句
+            # [W13 fix] 不再移除/降级 finally 内的 return 语句
             def _remove_returns(stmt_list):
-                """递归移除return语句"""
+                """[W13 fix] 保留 Return 语句：仅递归遍历嵌套结构。
+
+                历史上此函数把 Return(expr) 改写为 Expr(expr)，依据是
+                "finally 块不应该有 return"——该断言与 Python 语义不符
+                （``finally: return X`` 合法且吞没在途异常）。为保持函数
+                签名与调用点兼容，保留为透传遍历。
+                """
                 result = []
                 for stmt in stmt_list:
                     if isinstance(stmt, dict):
                         if stmt.get('type') == 'Return':
-                            # 将return <expr>转换为<expr>（作为表达式语句）
-                            if stmt.get('value'):
-                                result.append({
-                                    'type': 'Expr',
-                                    'value': stmt['value'],
-                                    'lineno': stmt.get('lineno')
-                                })
+                            # [W13 fix] Return(<expr>) 原样保留，不再降级
+                            result.append(stmt)
                             continue
                         # 递归处理嵌套结构
                         if 'body' in stmt and isinstance(stmt['body'], list):

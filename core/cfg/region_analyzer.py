@@ -7571,6 +7571,118 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
         result.sort(key=lambda h: (-h.get('depth', 0), h['try_end'] - h['try_start'], h['try_start']))
         return result
 
+    # [W13] finally 双副本 return 形态的框架/噪声操作码：SWAP/POP_TOP/COPY
+    # 为纯栈操纵（弃异常/弃迭代器簿记），PUSH_EXC_INFO/POP_EXCEPT/CHECK_*/
+    # WITH_EXCEPT_START/RERAISE 为异常帧——均不产生用户语句、不参与双副本
+    # 数据流镜像比对。
+    _W13_FRAME_OPS = frozenset({
+        'PUSH_EXC_INFO', 'POP_EXCEPT', 'COPY', 'SWAP', 'POP_TOP',
+        'WITH_EXCEPT_START', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH', 'RERAISE',
+    })
+    # 前置镜像正常副本侧的禁用集：异常帧标记；SWAP/POP_TOP/COPY 允许——
+    # 循环体内的正常副本以 SWAP2/POP_TOP 弃迭代器簿记，属纯栈操纵。
+    _W13_NORMAL_BAN_OPS = frozenset({
+        'PUSH_EXC_INFO', 'POP_EXCEPT', 'RERAISE',
+        'WITH_EXCEPT_START', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH',
+    })
+    _W13_NOISE_OPS = frozenset({'RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
+                                'EXTENDED_ARG'})
+    _W13_TERM_OPS = ('RETURN_VALUE', 'RETURN_CONST')
+
+    @classmethod
+    def _w13_data_stream(cls, instrs):
+        """[W13] 提取指令流的用户数据序列 [(opname, argval), ...]。
+
+        过滤噪声与框架/栈操纵操作码；跳转不产生数据同样过滤。CPython 3.11
+        对 ``finally: return X`` 编译的正常/异常两份副本语句序列经此归约后
+        完全一致（含 RETURN 终止符）。
+        """
+        stream = []
+        for i in instrs:
+            op = i.opname
+            if op in cls._W13_NOISE_OPS or op in cls._W13_FRAME_OPS:
+                continue
+            if 'JUMP' in op:
+                continue
+            stream.append((op, getattr(i, 'argval', None)))
+        return stream
+
+    def _is_w13_finally_return_exc_copy(self, handler_block: BasicBlock) -> bool:
+        """[W13] 判定 PUSH_EXC_INFO+POP_TOP 帧是否为 finally-return 异常副本。
+
+        **结构判据（无 depth 硬编码 / 无 pyc 特判 / 无反模式前缀命名）**
+          a. 从 handler 入口沿后继收集异常副本块：含 RERAISE 的块是
+             COPY/POP_EXCEPT/RERAISE 自清理帧，跳过不产生语句；含 CHECK_*/
+             WITH_EXCEPT_START 的块说明存在 except 分派框架，非纯 finally；
+          b. 所有非清理路径必须以 RETURN_VALUE/RETURN_CONST 终止（源码
+             return 直接位于 finally 时异常副本各路径均以 RETURN 收尾，
+             异常由 return 语义吞没）；遇条件跳转超出线性判据保守拒绝；
+          c. 副本数据流（_w13_data_stream 按偏移序拼接）非空；
+          d. 双副本镜像：存在前置候选块 B（B.start_offset < 入口偏移），
+             B 以 RETURN 终止、无框架指令与跳转、B 数据流与副本数据流完全
+             一致。真 bare except 无第二副本，唯一前置 RETURN 块是 post-try
+             隐式 ``return None``，其 Constant None 数据流与副本不一致。
+
+        返回 True 表示该帧应归类为 'finally'（finally 异常路径副本），
+        False 表示维持 bare except 分类。
+        """
+        exc_stream = []
+        visited = {id(handler_block)}
+        stack = [handler_block]
+        while stack:
+            b = stack.pop()
+            instrs = list(b.instructions)
+            ops = [i.opname for i in instrs]
+            if any(op in ('CHECK_EXC_MATCH', 'CHECK_EG_MATCH',
+                          'WITH_EXCEPT_START') for op in ops):
+                return False
+            if 'RERAISE' in ops:
+                continue
+            terminated = False
+            for i in instrs:
+                op = i.opname
+                if op in self._W13_NOISE_OPS or op in self._W13_FRAME_OPS:
+                    continue
+                if op in self._W13_TERM_OPS:
+                    exc_stream.append((op, getattr(i, 'argval', None)))
+                    terminated = True
+                    continue
+                if 'JUMP' in op:
+                    if op not in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+                        return False
+                    tgt = (self.cfg.get_block_by_offset(i.argval)
+                           if getattr(i, 'argval', None) is not None else None)
+                    if tgt is not None and id(tgt) not in visited:
+                        visited.add(id(tgt))
+                        stack.append(tgt)
+                    continue
+                exc_stream.append((op, getattr(i, 'argval', None)))
+            if not terminated:
+                succs = [s for s in b.successors if id(s) not in visited]
+                if not succs:
+                    return False
+                for s in succs:
+                    visited.add(id(s))
+                    stack.append(s)
+        if not exc_stream:
+            return False
+        entry_off = handler_block.start_offset
+        for blk in sorted(self.cfg.blocks.values(),
+                          key=lambda x: x.start_offset):
+            if blk.start_offset >= entry_off:
+                break
+            last = blk.get_last_instruction()
+            if last is None or last.opname not in self._W13_TERM_OPS:
+                continue
+            if any(i.opname in self._W13_NORMAL_BAN_OPS for i in blk.instructions):
+                continue
+            if any('JUMP' in i.opname for i in blk.instructions):
+                continue
+            normal_stream = self._w13_data_stream(blk.instructions)
+            if normal_stream and normal_stream == exc_stream:
+                return True
+        return False
+
     def _classify_handler_type(self, handler_block: BasicBlock, target_offset: int, depth: int) -> Optional[str]:
         """
         基于入口块指令特征统一分类 handler 类型
@@ -7624,6 +7736,10 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
         **规则6: 默认 → 'except'**
         ─────────────────────────────
         如果以上所有规则都无法匹配，默认归类为 'except'
+        [W13 fix] 例外：入口为 PUSH_EXC_INFO+POP_TOP 同形帧时，须先经
+        _is_w13_finally_return_exc_copy 结构判据区分真 bare except 与
+        ``finally: return <expr>`` 的异常路径副本——后者存在前置镜像正常
+        副本块（双副本数据流一致、以 RETURN 终止），归类为 'finally'。
 
         ═══════════════════════════════════════════════════════════════════════════════
         【cleanup RERAISE vs 真正的 RERAISE】
@@ -7716,13 +7832,26 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
             _push_exc_idx = next((idx for idx, i in enumerate(handler_block.instructions) if i.opname == 'PUSH_EXC_INFO'), -1)
             _is_bare_except = (_push_exc_idx >= 0 and _push_exc_idx + 1 < len(handler_block.instructions)
                                and handler_block.instructions[_push_exc_idx + 1].opname == 'POP_TOP')
-            if _is_bare_except:
-                return 'except'
             _any_return_in_chain = any(
                 i.opname in ('RETURN_VALUE', 'RETURN_CONST')
                 for b in _all_visited
                 for i in b.instructions
             )
+            if _is_bare_except:
+                # [W13 fix] PUSH_EXC_INFO 后紧跟 POP_TOP 的帧有两种同形来源：
+                # 真 bare except（弃异常后执行 handler 体，经 POP_EXCEPT 汇入
+                # post-try 代码）与 ``finally: return <expr>`` 的异常路径副本
+                # （POP_TOP 弃异常后镜像执行 finally 体并以 RETURN 终止）。
+                # 判据必须结构性区分：仅当异常链全部终止于 RETURN 且存在前置
+                # 镜像正常副本块（_is_w13_finally_return_exc_copy：双副本
+                # 数据流一致、以 RETURN 终止、无框架指令）时归类为 finally——
+                # 此时该帧是 finally 异常副本而非 except handler。真 bare
+                # except 无第二副本，其唯一前置 RETURN 块是 post-try 隐式
+                # ``return None``（LOAD_CONST None），数据流与异常副本不一致。
+                if (_any_return_in_chain
+                        and self._is_w13_finally_return_exc_copy(handler_block)):
+                    return 'finally'
+                return 'except'
             if _any_return_in_chain:
                 return 'finally'
 

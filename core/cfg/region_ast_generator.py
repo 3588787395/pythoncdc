@@ -580,6 +580,13 @@ class RegionASTGenerator:
                             continue
                         _stmt_instrs.append(_instr)
 
+                    # [W13 fix] 前置语句已由本分支发射时登记 entry_block：
+                    # 当 entry_block 同时是本 LoopRegion 的 for_iter_setup 块，
+                    # _loop_generate_for 的 fis 前缀提取据此跳过，防止同一前导
+                    # 赋值（如循环前 `n = 0`）双份发射（每块唯一归属；与
+                    # R08b 在 WithRegion 分支的登记语义一致）。
+                    if _pre_stmts:
+                        self._entry_prefix_emitted_blocks.add(entry_block)
                     self.generated_blocks.add(entry_block)
                     entry_ast = _pre_stmts
                 elif _entry_region and isinstance(_entry_region, WithRegion):
@@ -3494,7 +3501,13 @@ AST 映射规则:
                 # 是本循环的前驱），即使已被 generate() 标记也必须输出 pre_stmts。
                 _fis_is_self_setup = (for_iter_setup in region.blocks or
                                       for_iter_setup is region.metadata.get('for_iter_setup'))
-                if _fis_pre_stmts and (_fis_is_self_setup or for_iter_setup not in self.generated_blocks):
+                # [W13 fix] 每块唯一归属：for_iter_setup 的前缀语句若已由
+                # generate() 入口前置语句路径发射（_entry_prefix_emitted_blocks
+                # 登记，如循环头块兼含循环前赋值 `n = 0` 的 repro_06 形态），
+                # 此处不再重复发射；iter_expr 仍照常抽取。
+                if (_fis_pre_stmts
+                        and for_iter_setup not in self._entry_prefix_emitted_blocks
+                        and (_fis_is_self_setup or for_iter_setup not in self.generated_blocks)):
                     pre_stmts.extend(_fis_pre_stmts)
                 iter_expr = self.expr_reconstructor.reconstruct(_fis_iter_instrs) if _fis_iter_instrs else None
                 if iter_expr is None and instrs:
@@ -18171,6 +18184,154 @@ AST 映射规则:
 
         return body_stmts
 
+    # [W13] finally 双副本 return 形态的框架操作码：SWAP/POP_TOP/COPY 为纯栈
+    # 操纵（弃异常/弃迭代器簿记），PUSH_EXC_INFO/POP_EXCEPT/CHECK_*/
+    # WITH_EXCEPT_START/RERAISE 为异常帧，均不产生用户语句、不参与双副本
+    # 数据流镜像比对。
+    _W13_FRAME_OPS = frozenset({
+        'PUSH_EXC_INFO', 'POP_EXCEPT', 'COPY', 'SWAP', 'POP_TOP',
+        'WITH_EXCEPT_START', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH', 'RERAISE',
+    })
+    # 正常路径副本侧的禁用集：异常帧标记（正常副本无在途异常，绝不出现）；
+    # SWAP/POP_TOP/COPY 允许出现——循环体内的正常副本以 SWAP2/POP_TOP 弃
+    # 迭代器簿记（repro_06 block@26），属纯栈操纵。
+    _W13_NORMAL_BAN_OPS = frozenset({
+        'PUSH_EXC_INFO', 'POP_EXCEPT', 'RERAISE',
+        'WITH_EXCEPT_START', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH',
+    })
+    _W13_NOISE_OPS = frozenset({'RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
+                                'EXTENDED_ARG'})
+    _W13_TERM_OPS = ('RETURN_VALUE', 'RETURN_CONST')
+
+    @classmethod
+    def _w13_data_stream(cls, instrs):
+        """[W13] 提取指令流的用户数据序列 [(opname, argval), ...]。
+
+        过滤噪声（RESUME/NOP/CACHE 等）与框架/栈操纵操作码（_W13_FRAME_OPS），
+        跳转指令不产生数据同样过滤——两份 finally 副本的语句序列经此归约后
+        应完全一致（含 RETURN 终止符）。含内联缓存的 CALL/BINARY_SUBSCR 等
+        其 CACHE 尾随指令已被噪声集覆盖。
+        """
+        stream = []
+        for i in instrs:
+            op = i.opname
+            if op in cls._W13_NOISE_OPS or op in cls._W13_FRAME_OPS:
+                continue
+            if 'JUMP' in op:
+                continue
+            stream.append((op, getattr(i, 'argval', None)))
+        return stream
+
+    def _is_w13_single_return_normal_copy(self, region, blk, exc_start,
+                                          fin_blocks):
+        """[W13] 判定 blk 是否为 ``finally: return <expr>`` 双副本的正常路径
+        单块副本。
+
+        【区域类型】 TRY_FINALLY 双副本布局中的正常路径单块副本
+        RegionType 枚举值: RegionType.TRY_FINALLY
+
+        **字节码模式**
+        CPython 3.11 对 ``try: body \n finally: return X`` 编译出两份镜像
+        副本：正常路径副本被异常表边界切分为独立单块（LOAD_*;RETURN_VALUE，
+        或含前置用户语句如赋值，见 repro_10），异常路径副本以 PUSH_EXC_INFO
+        帧头起始、按 SWAP2/POP_TOP 弃异常保值、POP_EXCEPT 后以同一 RETURN
+        终止；循环体内的形态另含一组 SWAP2/POP_TOP 弃迭代器簿记
+        （repro_06 block@26）。
+
+        **结构判据（无 depth 硬编码 / 无 pyc 特判）**
+          a. blk 以 RETURN_VALUE/RETURN_CONST 终止且不含任何框架指令；
+          b. blk.start_offset < exc_start（正常副本先于异常副本布局）；
+          c. 异常路径副本（fin_blocks）含 RETURN 终止符——源码 return 直接
+             位于 finally 时两副本均镜像含 RETURN；
+          d. 双副本数据流镜像：blk 的 _w13_data_stream 与 fin_blocks 按偏移序
+             拼接的数据流完全一致且非空。SWAP/POP_TOP 等纯栈操纵与跳转不参与
+             比对；真 bare except 的唯一前置 RETURN 块是 post-try 隐式
+             ``return None``（Constant None），其数据流与异常副本不一致而被
+             本判据排除。
+        """
+        if blk is None or not blk.instructions:
+            return False
+        if blk.start_offset >= exc_start:
+            return False
+        last = blk.get_last_instruction()
+        if last is None or last.opname not in self._W13_TERM_OPS:
+            return False
+        if any(i.opname in self._W13_NORMAL_BAN_OPS for i in blk.instructions):
+            return False
+        if 'JUMP' in last.opname:
+            return False
+        # [W13 精化] 副本内的 POP_TOP 只允许「SWAP n; POP_TOP; RETURN」迭代器
+        # 弃置对（循环体内正常副本形态）；表达式语句弃值（LOAD_*;POP_TOP）是
+        # 多语句 finalbody（如 ``<expr>\n return …``）的标志——该形态的异常副本
+        # 数据流虽可能镜像一致，但其尾语句并非单一 return（旧产物
+        # inform_infoOK 形态），交由 legacy 路径处理，不在此收编。
+        _core_instrs = [i for i in blk.instructions
+                        if i.opname not in self._W13_NOISE_OPS]
+        for _idx, _ins in enumerate(_core_instrs):
+            if _ins.opname != 'POP_TOP':
+                continue
+            _prev = _core_instrs[_idx - 1] if _idx > 0 else None
+            _next = (_core_instrs[_idx + 1]
+                     if _idx + 1 < len(_core_instrs) else None)
+            if not (_prev is not None and _prev.opname == 'SWAP'
+                    and _next is not None
+                    and _next.opname in self._W13_TERM_OPS):
+                return False
+        # 判据 c：异常副本镜像含 RETURN（finally 内 return 的编译学标志）
+        if not any(i.opname in self._W13_TERM_OPS
+                   for fb in fin_blocks for i in fb.instructions):
+            return False
+        normal_stream = self._w13_data_stream(blk.instructions)
+        if not normal_stream:
+            return False
+        exc_stream = []
+        for fb in sorted(fin_blocks, key=lambda b: b.start_offset):
+            exc_stream.extend(self._w13_data_stream(fb.instructions))
+        return normal_stream == exc_stream
+
+    def _count_nested_try_marker_levels(self, region):
+        """[W13] 由 try 帧标记 NOP 游程长度推断嵌套 try 层数（超出单层部分）。
+
+        **结构判据**（纯字节码结构，无 depth 硬编码 / 无 pyc 特判）
+        CPython 3.11 为每条 ``try:`` 语句在其保护区间起点发射一个标记 NOP，
+        嵌套 N 层 try（内层 try 是外层 try 体首语句）即产生 N 个连续标记
+        NOP——游程终点与异常表最内层条目的 start 精确重合。扁平单层
+        ``try/except/finally`` 与嵌套两层 ``try: try: ... except: ...
+        finally: ...`` 的异常表形状完全一致，唯一差异即标记 NOP 个数；
+        因此游程长度是嵌套层数的唯一结构性信号。
+
+        返回需要额外包裹的内层 Try 层数 = max(0, 游程长度 - 1)
+        （单层 Try 语句自身重编译时再生一个标记）。仅当 region 同时具有
+        except handlers 与 finally 时适用（纯嵌套 try-except 由
+        nested_try_regions 机制处理）。
+        """
+        if not (getattr(region, 'has_finally', False)
+                and getattr(region, 'except_handlers', None)):
+            return 0
+        heb_offs = {b.start_offset for b in region.handler_entry_blocks}
+        extab = getattr(self.cfg, 'exception_table', None) or []
+        e1 = None
+        for e in extab:
+            if e.get('target') in heb_offs:
+                if e1 is None or e.get('start', 1 << 30) < e1.get('start', 1 << 30):
+                    e1 = e
+        if e1 is None:
+            return 0
+        start = e1.get('start')
+        if not isinstance(start, int) or start <= 0:
+            return 0
+        nop_offs = set()
+        for b in self.cfg.get_blocks_in_order():
+            for i in b.instructions:
+                if i.opname == 'NOP':
+                    nop_offs.add(i.offset)
+        run_len = 0
+        off = start - 2
+        while off in nop_offs:
+            run_len += 1
+            off -= 2
+        return max(0, run_len - 1)
+
     def _find_finally_normal_copy_blocks(self, region: TryExceptRegion) -> list:
         """W11-A：定位 finally 正常路径副本的有序块序列（复合体重组发射源）。
 
@@ -18232,6 +18393,17 @@ AST 映射规则:
            d. 复合体门控：修剪后的序列须含 WithRegion 子结构、≥2 个结构化
               子区域、或存在不属于任何子区域的兄弟线性段——单一普通 if
               独占 finally 体（user_log_control 形态）交由 legacy 路径。
+
+         **单块正常路径副本形态（W13 修复补遗）**
+           ``finally: return <expr>``（含前置用户语句变体）的正常路径副本
+           被异常表边界切分为独立单块，无结构化子区域、不成多块序列——
+           上述多块门控不覆盖。新增判据：锚点收集结果恰为单块时，经
+           _is_w13_single_return_normal_copy 校验（RETURN 终止 / 无框架
+           指令 / 异常副本镜像含 RETURN / 双副本 _w13_data_stream 完全
+           一致）后返回该单块序列，与多块副本统一走偏移序重组派发，
+           finalbody 以正常副本为唯一语句源发射 Return(<expr>)；未命中
+           维持原拒绝路径。SWAP/POP_TOP 等纯栈操纵不参与镜像比对，也
+           不产生用户语句（异常帧弃异常/循环弃迭代器簿记）。
 
         **归约语义**
         序列首块 K 即父级 finally 体的逻辑入口；finalbody 以该序列为唯一
@@ -18351,6 +18523,13 @@ AST 映射规则:
                 candidates.append(cblk)
 
         seen_anchor_offsets = set()
+        # [W13] 异常路径副本是否含 RETURN 终止符：源码 return 直接位于
+        # finally 时 CPython 双副本均镜像含 RETURN，是单块正常副本判据的
+        # 前置条件（提前计算，多块修剪段复用）。
+        _fin_has_return = any(
+            i.opname in ('RETURN_VALUE', 'RETURN_CONST')
+            for fb in region.finally_blocks
+            for i in fb.instructions)
         for start_blk in sorted(candidates, key=lambda b: b.start_offset):
             lo = start_blk.start_offset
             if lo in seen_anchor_offsets:
@@ -18379,6 +18558,20 @@ AST 映射规则:
                 for s2 in sorted(b.successors, key=lambda x: x.start_offset):
                     if s2.start_offset not in seen and lo <= s2.start_offset < exc_start:
                         stack.append(s2)
+            # [W13 fix] 单块正常路径副本形态：``finally: return <expr>`` 的
+            # 正常路径副本被异常表边界切分为独立单块（LOAD_*;RETURN_VALUE，
+            # 或含前置用户语句），无结构化子区域、不成序列——W11-A 多块门控
+            # （len>=2 + 结构化子区域）不覆盖该形态。命中双副本镜像判据时与
+            # 多块副本统一：返回单块序列交由 finalbody 重组派发，以正常副本为
+            # 唯一语句源发射 Return(<expr>)。未命中则维持原 len<2 拒绝路径，
+            # R11 既有行为零改动。
+            if len(seen) == 1:
+                _w13_blk = self.cfg.get_block_by_offset(next(iter(seen)))
+                if (_w13_blk is not None and _fin_has_return
+                        and self._is_w13_single_return_normal_copy(
+                            region, _w13_blk, exc_start, fin_blocks)):
+                    return [_w13_blk]
+                continue
             if len(seen) < 2:
                 continue
             # [W11-A 回边守卫] 序列内回边目标不得先于锚点（argval < lo）：
@@ -18417,10 +18610,7 @@ AST 映射规则:
             # 终止对之外无真实语句时整块修剪；混合块（真实 finally 语句与
             # 尾部隐式 return 同块，如 main.pyc run 的 release/print 尾块）
             # 必须保留——其 return 对由语句构建器的隐式返回语义吸收。
-            _fin_has_return = any(
-                i.opname in ('RETURN_VALUE', 'RETURN_CONST')
-                for fb in region.finally_blocks
-                for i in fb.instructions)
+            # （_fin_has_return 已在锚点循环前计算，供 W13 单块判据复用。）
             if not _fin_has_return:
                 _trimmed_seq = []
                 for b in seq:
@@ -19638,6 +19828,29 @@ AST 映射规则:
             elif region.has_finally:
                 try_ast['finalbody'] = [{'type': 'Pass'}]
 
+            # [W13 fix] 多重 try 帧标记的嵌套重建：try 帧标记 NOP 游程长度
+            # 等于源码嵌套 try 层数（V-T 判据），而扁平单层 try/except/finally
+            # 与嵌套两层 ``try: try: … except: … finally: …`` 的异常表形状完全
+            # 一致、唯一差异即标记个数。当游程长度 > 1（存在额外内层）且当前
+            # 区域同时持有 handlers 与 finally 时，将 handlers 下沉到内层 Try：
+            # 外层保留 body+finalbody，内层承载 body+handlers——重编译时每个
+            # Try 语句各再生一个标记 NOP，偏移与原字节码对齐（repro_11/
+            # inform_info 嵌套形态）。R08b 外层补偿路径（_skipped_outer）已自
+            # 行构造嵌套结构，不重复包裹；带 orelse 的归属歧义形态不适用。
+            _w13_wrap_levels = self._count_nested_try_marker_levels(region)
+            if (_w13_wrap_levels > 0 and handlers and not orelse_stmts
+                    and _skipped_outer is None):
+                _w13_inner = try_ast['body']
+                for _ in range(_w13_wrap_levels):
+                    _w13_inner = [{
+                        'type': 'Try',
+                        'body': _w13_inner,
+                        'handlers': [],
+                    }]
+                _w13_inner[-1]['handlers'] = handlers
+                try_ast['body'] = _w13_inner
+                try_ast['handlers'] = []
+
             # 生成 post-try 代码（try-except 正常出口后的代码）。
             # 之前标记的 post-try 块现在清除标记并生成。
             _post_try_stmts_r19n2 = []
@@ -19848,6 +20061,25 @@ AST 映射规则:
         return False
 
     def _generate_handler_body_statements(self, block: BasicBlock) -> List[Dict[str, Any]]:
+        """_generate_handler_body_statements — handler/finally 体单块语句发射。
+
+        输入契约:
+          - 接收 BasicBlock（except handler 体块或 finally 副本线性段成员块）
+          - 输出该块的 AST 语句列表（字典形式）
+
+        字节码一致性约束:
+          - 框架指令过滤: PUSH_EXC_INFO/POP_EXCEPT/CHECK_EXC_MATCH/
+            CHECK_EG_MATCH/WITH_EXCEPT_START/RERAISE/COPY 不生成源码
+          - as-var 清理: LOAD_CONST(None)+STORE+DELETE 归 except 机制，
+            其后 RETURN 重建为 Return(expr)（repro_07/R45 判据）
+          - [W13 fix] 跨块栈传值 return 链：SWAP n; POP_TOP; RETURN(_CONST)
+            是循环体内 finally 正常副本的返回序列（SWAP 提值、POP_TOP 弃
+            迭代器簿记），SWAP/POP_TOP 为纯栈操纵不产生用户语句，装载序列
+            归 RETURN 重建为单一 Return(expr)，禁止降级为裸 Expr 或伪造
+            Return(None)；异常路径副本的跨块链（前驱块压值 + POP_EXCEPT;
+            RETURN 终止块）由 _find_finally_normal_copy_blocks 的 W13 单块
+            判据整体接管，异常副本静默登记不再逐块进入本方法。
+        """
         # [Phase 3 adv17_try_except_star] 检测是否是 except* 框架块
         _is_except_star_block = any(i.opname in ('CHECK_EG_MATCH', 'PREP_RERAISE_STAR') for i in block.instructions)
         _EXC_STAR_FRAMEWORK_OPS = ()
@@ -20187,6 +20419,20 @@ AST 映射规则:
                                 if _ri.opname in ('RETURN_VALUE', 'RETURN_CONST'):
                                     break
                                 skip_offsets.add(_ri.offset)
+                # [W13 fix] SWAP n; POP_TOP; RETURN(_CONST)：循环体内
+                # try-finally 正常路径副本的返回序列——SWAP 把返回值提到栈顶，
+                # POP_TOP 弃置循环簿记值（如 for 迭代器），RETURN 终止。纯栈
+                # 操纵不产生用户语句：跳过 SWAP，并让紧随的 POP_TOP 经
+                # skip_initial_pop 消费，使 stmt_instrs 保留的装载序列归下方
+                # RETURN 处理重建为单一 Return(expr)（否则 LOAD 被当裸语句
+                # 发射为 Expr，返回值丢失）。
+                if (not _is_except_return_swap and len(remaining_nospace) >= 2
+                        and remaining_nospace[0].opname == 'POP_TOP'
+                        and remaining_nospace[1].opname in ('RETURN_VALUE',
+                                                            'RETURN_CONST')
+                        and stmt_instrs):
+                    _is_except_return_swap = True
+                    skip_initial_pop = True
                 if not _is_except_return_swap and not remaining_nospace:
                     for succ in block.successors:
                         succ_instrs = [i for i in succ.instructions
