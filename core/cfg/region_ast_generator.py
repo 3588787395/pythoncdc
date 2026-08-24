@@ -34508,6 +34508,63 @@ AST 映射规则:
             self.generated_blocks.add(block)
         return stmts
 
+    def _w16_split_value_groups(self, instrs: List[Any]) -> Optional[List[List[Any]]]:
+        """_w16_split_value_groups - 将目标 obj/key 指令序列按「栈值」分组（W16）
+
+        算法描述:
+          CPython 属性容器（LOAD_FAST self; LOAD_ATTR _record）是两条指令产生
+          一个栈值。链式赋值目标校验必须按栈值计数而非指令条数，否则
+          ``records = self._record[key] = []`` 这类属性/下标混合链会被误判
+          放弃，落入遗留回退后属性名被降级为裸名。
+
+        字节码模式:
+          值起始指令: LOAD_CONST / LOAD_FAST / LOAD_NAME / LOAD_GLOBAL /
+                      LOAD_DEREF / LOAD_CLOSURE —— 开启新栈值组。
+          中缀延续指令: LOAD_ATTR / LOAD_METHOD / BINARY_OP / BINARY_SUBSCR /
+                      BINARY_SLICE / CONTAINS_OP / UNARY_* / BUILD_SLICE /
+                      BINARY_LSHIFT 等 —— 依附当前栈值组（净栈效应 0 或消费
+                      组内值），不产生新组。
+          其他指令（条件跳转、STORE、CALL 之外未列明的栈重排等）一律拒绝，
+          交还调用方走保守路径。
+
+        边界条件:
+          - 空序列 → 返回 []（由调用方按所需栈值数判定）；
+          - 首条指令即中缀延续 → 无宿主值组，返回 None。
+
+        归约语义:
+          每个分组即一个完整表达式指令单元；STORE_ATTR 要求恰好 1 组，
+          STORE_SUBSCR 要求恰好 2 组（容器组在前、键组在后）。
+
+        AST 映射:
+          单指令组用 expr_reconstructor._load_instr_to_ast 直转；
+          多指令组用 expr_reconstructor.reconstruct 整体重建。
+
+        已知失败模式:
+          键表达式含函数调用（PRECALL/CALL）时本方法返回 None——调用链
+          目标仍由既有逐指令校验路径或后续增强覆盖。
+        """
+        _value_start_ops = (
+            'LOAD_CONST', 'LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL',
+            'LOAD_DEREF', 'LOAD_CLOSURE',
+        )
+        _infix_ops = (
+            'LOAD_ATTR', 'LOAD_METHOD', 'BINARY_OP', 'BINARY_SUBSCR',
+            'BINARY_SLICE', 'CONTAINS_OP',
+            'UNARY_NEGATIVE', 'UNARY_NOT', 'UNARY_INVERT',
+            'BUILD_SLICE', 'BINARY_LSHIFT',
+        )
+        groups: List[List[Any]] = []
+        for instr in instrs:
+            if instr.opname in _value_start_ops:
+                groups.append([instr])
+            elif instr.opname in _infix_ops:
+                if not groups:
+                    return None
+                groups[-1].append(instr)
+            else:
+                return None
+        return groups
+
     def _generate_block_statements(self, block: BasicBlock, _cjb_parent: BasicBlock = None) -> List[Dict[str, Any]]:
         """_generate_block_statements - 基本块 AST 语句生成（BasicBlock → ast.stmt 列表）
 
@@ -35326,11 +35383,19 @@ AST 映射规则:
                                     'lineno': _store_instr_m.starts_line,
                                 })
                             elif _store_op_m == 'STORE_ATTR':
-                                if (len(_obj_key_m) != 1
-                                        or not _obj_key_m[0].opname.startswith('LOAD_')):
+                                # [W16] 按栈值分组校验：属性容器（LOAD obj; LOAD_ATTR x）
+                                # 是两条指令一个栈值，禁止按指令条数拒绝
+                                _groups_attr_m = self._w16_split_value_groups(_obj_key_m)
+                                if not _groups_attr_m or len(_groups_attr_m) != 1:
                                     _valid_m = False
                                     break
-                                _obj_ast_m = self.expr_reconstructor._load_instr_to_ast(_obj_key_m[0])
+                                if len(_groups_attr_m[0]) == 1:
+                                    _obj_ast_m = self.expr_reconstructor._load_instr_to_ast(_groups_attr_m[0][0])
+                                else:
+                                    _obj_ast_m = self.expr_reconstructor.reconstruct(_groups_attr_m[0])
+                                if _obj_ast_m is None:
+                                    _valid_m = False
+                                    break
                                 _targets_m.append({
                                     'type': 'Attribute',
                                     'value': _obj_ast_m,
@@ -35339,13 +35404,22 @@ AST 映射规则:
                                     'lineno': _store_instr_m.starts_line,
                                 })
                             elif _store_op_m == 'STORE_SUBSCR':
-                                if (len(_obj_key_m) != 2
-                                        or not _obj_key_m[0].opname.startswith('LOAD_')
-                                        or not _obj_key_m[1].opname.startswith('LOAD_')):
+                                # [W16] 按栈值分组校验：恰好 2 组（容器组在前、键组在后）
+                                _groups_sub_m = self._w16_split_value_groups(_obj_key_m)
+                                if not _groups_sub_m or len(_groups_sub_m) != 2:
                                     _valid_m = False
                                     break
-                                _obj_ast_m = self.expr_reconstructor._load_instr_to_ast(_obj_key_m[0])
-                                _key_ast_m = self.expr_reconstructor._load_instr_to_ast(_obj_key_m[1])
+                                if len(_groups_sub_m[0]) == 1:
+                                    _obj_ast_m = self.expr_reconstructor._load_instr_to_ast(_groups_sub_m[0][0])
+                                else:
+                                    _obj_ast_m = self.expr_reconstructor.reconstruct(_groups_sub_m[0])
+                                if len(_groups_sub_m[1]) == 1:
+                                    _key_ast_m = self.expr_reconstructor._load_instr_to_ast(_groups_sub_m[1][0])
+                                else:
+                                    _key_ast_m = self.expr_reconstructor.reconstruct(_groups_sub_m[1])
+                                if _obj_ast_m is None or _key_ast_m is None:
+                                    _valid_m = False
+                                    break
                                 _targets_m.append({
                                     'type': 'Subscript',
                                     'value': _obj_ast_m,
