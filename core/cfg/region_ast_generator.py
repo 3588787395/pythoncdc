@@ -34546,6 +34546,8 @@ AST 映射规则:
         _value_start_ops = (
             'LOAD_CONST', 'LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL',
             'LOAD_DEREF', 'LOAD_CLOSURE',
+            # 零消费构造器：直接压入一个新栈值
+            'BUILD_LIST', 'BUILD_SET', 'BUILD_MAP', 'BUILD_STRING',
         )
         _infix_ops = (
             'LOAD_ATTR', 'LOAD_METHOD', 'BINARY_OP', 'BINARY_SUBSCR',
@@ -35332,16 +35334,53 @@ AST 映射规则:
                                      'STORE_SUBSCR', 'STORE_ATTR'):
                     _mixed_store_indices.append((_ci, _instr.opname))
             _has_complex_m = any(_op in ('STORE_SUBSCR', 'STORE_ATTR') for _, _op in _mixed_store_indices)
+            import os as _os_w16g
+            if _os_w16g.environ.get('R16_DEBUG'):
+                import sys as _sys_w16g
+                print(f'[W16G] block@{getattr(block, "start_offset", "?")} stores={[(i, op) for i, op in _mixed_store_indices]} complex={_has_complex_m}', file=_sys_w16g.stderr)
             if _has_complex_m and len(_mixed_store_indices) >= 2:
                 _first_store_idx_m, _first_op_m = _mixed_store_indices[0]
                 # 首目标前必须是 COPY 1（值复制边界）。要求首目标是简单 STORE_NAME
                 # （CPython 对 a = b[k] = c.d = e 的 codegen：首目标用 STORE_NAME + 紧邻 COPY 1）
                 _value_instrs_m = None
+                _w16_first_attr_obj_group = None
                 if (_first_op_m in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
                         and _first_store_idx_m >= 1
                         and _chain_instrs[_first_store_idx_m - 1].opname == 'COPY'
                         and _chain_instrs[_first_store_idx_m - 1].arg == COPY_STACK_TOP):
                     _value_instrs_m = _chain_instrs[:_first_store_idx_m - 1]
+                elif (_first_op_m in ('STORE_ATTR', 'STORE_SUBSCR')
+                        and _first_store_idx_m >= 2):
+                    # [W16-B] 首目标为属性/下标：CPython 布局为
+                    # [值指令...][COPY 1][对象/键装载][STORE_ATTR|STORE_SUBSCR]
+                    # —— 对象装载位于 COPY 与 STORE 之间。自 STORE 向前收集
+                    # 连续装载指令为对象窗口，其左邻必须是 COPY 1。
+                    _loadish_ops_w16 = (
+                        'LOAD_CONST', 'LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL',
+                        'LOAD_DEREF', 'LOAD_CLOSURE', 'LOAD_ATTR', 'LOAD_METHOD',
+                        'BINARY_OP', 'BINARY_SUBSCR', 'BINARY_SLICE',
+                        'CONTAINS_OP', 'BUILD_LIST', 'BUILD_SET', 'BUILD_MAP',
+                        'BUILD_STRING', 'UNARY_NEGATIVE', 'UNARY_NOT', 'UNARY_INVERT',
+                    )
+                    _obj_win_start_m = _first_store_idx_m
+                    while (_obj_win_start_m > 0
+                           and _chain_instrs[_obj_win_start_m - 1].opname in _loadish_ops_w16):
+                        _obj_win_start_m -= 1
+                    if (_obj_win_start_m < _first_store_idx_m
+                            and _obj_win_start_m >= 1
+                            and _chain_instrs[_obj_win_start_m - 1].opname == 'COPY'
+                            and _chain_instrs[_obj_win_start_m - 1].arg == COPY_STACK_TOP):
+                        import os as _os_w16
+                        if _os_w16.environ.get('R16_DEBUG'):
+                            import sys as _sys_w16
+                            print(f'[W16B] attr-first gate HIT win={_obj_win_start_m}:{_first_store_idx_m}', file=_sys_w16.stderr)
+                        _w16_first_obj_groups = self._w16_split_value_groups(
+                            _chain_instrs[_obj_win_start_m:_first_store_idx_m])
+                        _need_groups_m = 1 if _first_op_m == 'STORE_ATTR' else 2
+                        if (_w16_first_obj_groups is not None
+                                and len(_w16_first_obj_groups) == _need_groups_m):
+                            _w16_first_attr_obj_group = _w16_first_obj_groups
+                            _value_instrs_m = _chain_instrs[:_obj_win_start_m - 1]
                 if _value_instrs_m:
                     _value_terminal_ops_m = (
                         'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
@@ -35353,8 +35392,53 @@ AST 映射规则:
                     if _value_clean_m:
                         _targets_m = []
                         _valid_m = True
-                        _last_si_m = len(_mixed_store_indices) - 1
-                        for _si, (_store_idx_m, _store_op_m) in enumerate(_mixed_store_indices):
+                        # [W16-A2] 动态链终止：逐目标扩展；非末目标的间隙以
+                        # COPY 1 开头（值复制），首个无 COPY 前导的间隙即末
+                        # 目标（直接消耗栈顶值），其后指令为链后兄弟语句
+                        _chain_len_m = 1
+                        while _chain_len_m < len(_mixed_store_indices):
+                            _cur_idx_m = _mixed_store_indices[_chain_len_m][0]
+                            _prev_idx_m = _mixed_store_indices[_chain_len_m - 1][0]
+                            _gap_chk_m = _chain_instrs[_prev_idx_m + 1:_cur_idx_m]
+                            _chain_len_m += 1
+                            if not (_gap_chk_m and _gap_chk_m[0].opname == 'COPY' and _gap_chk_m[0].arg == 1):
+                                break
+                        _last_si_m = _chain_len_m - 1
+                        for _si, (_store_idx_m, _store_op_m) in enumerate(_mixed_store_indices[:_chain_len_m]):
+                            if (_si == 0 and _first_op_m in ('STORE_ATTR', 'STORE_SUBSCR')
+                                    and _w16_first_attr_obj_group is not None):
+                                # [W16-B] 首目标属性/下标：对象组已在入口拆分
+                                _store_instr_m = _chain_instrs[_first_store_idx_m]
+                                def _w16_group_ast_m(g):
+                                    if len(g) == 1:
+                                        return self.expr_reconstructor._load_instr_to_ast(g[0])
+                                    return self.expr_reconstructor.reconstruct(g)
+                                if _first_op_m == 'STORE_ATTR':
+                                    _obj_ast_m = _w16_group_ast_m(_w16_first_attr_obj_group[0])
+                                    if _obj_ast_m is None:
+                                        _valid_m = False
+                                        break
+                                    _targets_m.append({
+                                        'type': 'Attribute',
+                                        'value': _obj_ast_m,
+                                        'attr': _store_instr_m.argval,
+                                        'ctx': 'Store',
+                                        'lineno': _store_instr_m.starts_line,
+                                    })
+                                else:
+                                    _obj_ast_m = _w16_group_ast_m(_w16_first_attr_obj_group[0])
+                                    _key_ast_m = _w16_group_ast_m(_w16_first_attr_obj_group[1])
+                                    if _obj_ast_m is None or _key_ast_m is None:
+                                        _valid_m = False
+                                        break
+                                    _targets_m.append({
+                                        'type': 'Subscript',
+                                        'value': _obj_ast_m,
+                                        'slice': _key_ast_m,
+                                        'ctx': 'Store',
+                                        'lineno': _store_instr_m.starts_line,
+                                    })
+                                continue
                             if _si == 0:
                                 # 首目标 obj/key 在 COPY 1 与 STORE 之间（简单目标为空）
                                 _obj_key_m = _chain_instrs[_first_store_idx_m:_store_idx_m]
@@ -35437,18 +35521,39 @@ AST 映射规则:
                                     'is_chain_assign': True,
                                     'lineno': _value_instrs_m[0].starts_line,
                                 }]
-                                _last_store_idx_m = _mixed_store_indices[-1][0]
+                                _last_store_idx_m = _mixed_store_indices[_last_si_m][0]
                                 _remaining_m = _chain_instrs[_last_store_idx_m + 1:]
                                 if _remaining_m:
-                                    _has_return_m = any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in _remaining_m)
-                                    if _has_return_m:
-                                        _rv_instrs_m = []
-                                        for _instr in _remaining_m:
-                                            if _instr.opname in ('RETURN_VALUE', 'RETURN_CONST'):
-                                                break
-                                            if _instr.opname not in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL',
-                                                                'COPY', 'SWAP', 'POP_EXCEPT', 'PUSH_EXC_INFO'):
-                                                _rv_instrs_m.append(_instr)
+                                    # 以首个 RETURN 为界拆分：链后兄弟语句体 + 返回值
+                                    _cut_m = len(_remaining_m)
+                                    for _ii, _instr in enumerate(_remaining_m):
+                                        if _instr.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                                            _cut_m = _ii
+                                            break
+                                    _body_m = _remaining_m[:_cut_m]
+                                    _has_ret_m = _cut_m < len(_remaining_m)
+                                    _body_clean_m = [i for i in _body_m
+                                                     if i.opname not in ('RESUME', 'NOP', 'CACHE',
+                                                                         'COPY', 'SWAP', 'PUSH_NULL',
+                                                                         'POP_EXCEPT', 'PUSH_EXC_INFO')]
+                                    _has_jump_m = any(i.opname.startswith('JUMP')
+                                                      or i.opname.startswith('POP_JUMP')
+                                                      or i.opname == 'FOR_ITER'
+                                                      for i in _body_clean_m)
+                                    _last_store_pos_m = -1
+                                    for _ii, _instr in enumerate(_body_clean_m):
+                                        if (_instr.opname.startswith('STORE_')
+                                                or _instr.opname in ('STORE_SUBSCR', 'STORE_ATTR')):
+                                            _last_store_pos_m = _ii
+                                    if _body_clean_m and not _has_jump_m:
+                                        # 链后兄弟语句（无跳转直线段）通用重建
+                                        _tail_stmts_m = self._build_statements_from_instructions(
+                                            _body_clean_m[:_last_store_pos_m + 1])
+                                        if _tail_stmts_m:
+                                            _mixed_chain_stmts.extend(_tail_stmts_m)
+                                    if _has_ret_m:
+                                        # 返回值：最后一个 STORE 之后的装载序列
+                                        _rv_instrs_m = _body_clean_m[_last_store_pos_m + 1:]
                                         _return_value_m = self.expr_reconstructor.reconstruct(_rv_instrs_m) if _rv_instrs_m else None
                                         _mixed_chain_stmts.append({
                                             'type': 'Return',
