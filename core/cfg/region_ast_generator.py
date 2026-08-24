@@ -9722,8 +9722,10 @@ AST 映射规则:
         self._generated_regions.add(region_id)
 
         def _is_implicit_return_none(stmt):
+            # [W14-B 修复] 指令背书（_explicit_return）的 Return 不是隐式返回
             return (isinstance(stmt, dict) and
                     stmt.get('type') == 'Return' and
+                    not stmt.get('_explicit_return') and
                     isinstance(stmt.get('value'), dict) and
                     stmt['value'].get('type') == 'Constant' and
                     stmt['value'].get('value') is None)
@@ -12126,7 +12128,37 @@ AST 映射规则:
                     _last_chain_block = elif_boolop.op_chain[-1][0] if elif_boolop.op_chain else elif_cond_block
                     _elif_last = _last_chain_block.get_last_instruction()
                     _elif_negate = False
-                    if _elif_last and _elif_last.argval is not None and _elif_last.opname in FORWARD_CONDITIONAL_JUMP_OPS:
+                    # [W14-A 修复] 全员同目标 and 链（含负极性操作数）不做整体
+                    # 取反：极性已由 implicit-not 逐项携带（`A and not B`）。
+                    # 判据与识别端同目标归一一致：所有成员原始跳转目标同一块
+                    # 且存在 IF_FALSE 成员。此时按跳转方向取反会错写为
+                    # `not (A and not B)`（真值表改变）。
+                    _w14_uniform_and = False
+                    if len(elif_boolop.op_chain) >= 2:
+                        _w14_tgts = []
+                        for _w14_b, _ in elif_boolop.op_chain:
+                            _w14_li = _w14_b.get_last_instruction()
+                            if _w14_li is None or getattr(_w14_li, 'argval', None) is None:
+                                _w14_tgts = None
+                                break
+                            _w14_tb = self.cfg.get_block_by_offset(_w14_li.argval)
+                            if _w14_tb is None:
+                                _w14_tgts = None
+                                break
+                            _w14_tgts.append(_w14_tb)
+                        if (_w14_tgts
+                                and all(t is _w14_tgts[0] for t in _w14_tgts)):
+                            # [R14c 修复] 全员 IF_TRUE 族跳转的同目标链是负极性
+                            # or 链（`not (A or B ...)`，识别端保持 'or' 不归一），
+                            # 不算 uniform-and，整体取反必须生效——否则丢 `not`
+                            # 且操作数比较运算被二次取反。判据与识别端镜像。
+                            _w14_all_true = all(
+                                _w14_b.get_last_instruction() is not None
+                                and 'TRUE' in _w14_b.get_last_instruction().opname
+                                for _w14_b, _ in elif_boolop.op_chain)
+                            if not _w14_all_true:
+                                _w14_uniform_and = True
+                    if _elif_last and _elif_last.argval is not None and _elif_last.opname in FORWARD_CONDITIONAL_JUMP_OPS and not _w14_uniform_and:
                         # 6. 已知失败模式: R19 Bug 10-12 - elif 条件为 BoolOp 含 `is not None`/`or`
                         # 时, 简单 opname 检查 ('NONE' in opname) 会错误取反. 正确逻辑应基于跳转目标
                         # 是否为 then body (参考 _extract_condition_for_elif_block).
@@ -12394,6 +12426,23 @@ AST 映射规则:
                         if isinstance(_r, BoolOpRegion) and _last_elif_cond_block in _r.blocks:
                             _last_elif_boolop = _r
                             break
+                # [W14-A 修复·归属校验] BoolOpRegion.blocks 可能吸收了相邻
+                # 嵌套 if 的条件块（真/假出口目标与链共同出口不一致的块），
+                # 仅 blocks 成员不足以证明该 elif 条件属于此 BoolOp 链。必须
+                # 以 op_chain 操作数块成员为准，否则会把上一臂的条件表达式
+                # 错配到本臂（并叠加取反），产生跨臂条件污染。
+                if isinstance(_last_elif_boolop, BoolOpRegion):
+                    if not any(_last_elif_cond_block is _cb
+                               for _cb, _ in (_last_elif_boolop.op_chain or [])):
+                        _last_elif_boolop = None
+                # [W14-A 修复] 归属校验：BoolOpRegion.blocks 可能吸收了相邻
+                # 嵌套 if 的条件块（真/假出口目标与链共同出口不一致的块），
+                # 仅 blocks 成员不足以证明该 elif 条件属于此 BoolOp 链。
+                # 必须以 op_chain 操作数块成员为准，否则会把上一臂的条件
+                # 表达式错配到本臂（并叠加取反），产生跨臂条件污染。
+                if isinstance(_last_elif_boolop, BoolOpRegion):
+                    if not any(_last_elif_cond_block is _cb for _cb, _ in (_last_elif_boolop.op_chain or [])):
+                        _last_elif_boolop = None
                 if isinstance(_last_elif_boolop, BoolOpRegion):
                     if region.entry and any(b.start_offset == region.entry.start_offset for b in _last_elif_boolop.blocks):
                         _last_elif_boolop = None
@@ -12921,6 +12970,11 @@ AST 映射规则:
             if not stmts:
                 return stmts
             while stmts and isinstance(stmts[-1], dict) and stmts[-1].get('type') == 'Return':
+                # [W14-B 修复] 携带 _explicit_return 标记的 Return 由块内真实
+                # RETURN_VALUE/RETURN_CONST 指令生成，是源码显式语句，
+                # 不得作为"隐式 return None"剥离。
+                if stmts[-1].get('_explicit_return'):
+                    break
                 _rv = stmts[-1].get('value')
                 if _rv and _rv.get('type') == 'Constant' and _rv.get('value') is None:
                     stmts = stmts[:-1]
@@ -14784,7 +14838,35 @@ AST 映射规则:
             if boolop_expr:
                 _boolop_negate = False
                 _last_cb = boolop_region_for_cond.op_chain[-1][0] if boolop_region_for_cond.op_chain else None
-                if _last_cb:
+                # [W14-A 修复] 全员同目标 and 链（含负极性操作数）不做整体取反：
+                # 极性已由 implicit-not 逐项携带，判据与识别端同目标归一一致。
+                # [R14c 修复] 全员 IF_TRUE 族跳转的同目标链是负极性 or 链
+                # （`not (A or B ...)`，识别端已保持 'or' 不归一），整体取反
+                # 必须生效——否则丢 `not` 且操作数比较运算被二次取反
+                # （== → !=、in → not in），co_code 与 orig 不一致。判据与
+                # 识别端「全员 TRUE 跳不归一」镜像对称。
+                _w14_uniform_and = False
+                if len(boolop_region_for_cond.op_chain) >= 2:
+                    _w14_tgts = []
+                    for _w14_b, _ in boolop_region_for_cond.op_chain:
+                        _w14_li = _w14_b.get_last_instruction()
+                        if _w14_li is None or getattr(_w14_li, 'argval', None) is None:
+                            _w14_tgts = None
+                            break
+                        _w14_tb = self.cfg.get_block_by_offset(_w14_li.argval)
+                        if _w14_tb is None:
+                            _w14_tgts = None
+                            break
+                        _w14_tgts.append(_w14_tb)
+                    if (_w14_tgts
+                            and all(t is _w14_tgts[0] for t in _w14_tgts)):
+                        _w14_all_true = all(
+                            _w14_b.get_last_instruction() is not None
+                            and 'TRUE' in _w14_b.get_last_instruction().opname
+                            for _w14_b, _ in boolop_region_for_cond.op_chain)
+                        if not _w14_all_true:
+                            _w14_uniform_and = True
+                if _last_cb and not _w14_uniform_and:
                     _last_ci = _last_cb.get_last_instruction()
                     if _last_ci and _last_ci.argval is not None and _last_ci.opname in FORWARD_CONDITIONAL_JUMP_OPS:
                         if 'TRUE' in _last_ci.opname:
@@ -16284,9 +16366,14 @@ AST 映射规则:
                                   if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
                 if _non_noise_r17:
                     _li_r17 = len(_non_noise_r17) - 1
+                    # [W14 修复] EXTENDED_ARG 是参数扩展前缀指令，无语义，
+                    # 回溯时必须跳过；否则大偏移跳转（如 JUMP_FORWARD 前
+                    # 带 EXTENDED_ARG）会遮蔽 POP_TOP，令 Expr 被错误提升
+                    # 为 Return（pboxAccount 创建臂成功日志被写成
+                    # `return app_log.info(...)`）。
                     while _li_r17 >= 0 and _non_noise_r17[_li_r17].opname in (
                         'JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD',
-                        'JUMP_BACKWARD_NO_INTERRUPT'):
+                        'JUMP_BACKWARD_NO_INTERRUPT', 'EXTENDED_ARG'):
                         _li_r17 -= 1
                     if _li_r17 >= 0 and _non_noise_r17[_li_r17].opname == 'POP_TOP':
                         _block_ends_with_pop_top_r17 = True
@@ -24823,6 +24910,27 @@ AST 映射规则:
             # BoolOp operand. Without this, `return A < x < B or C < x < D`
             # produces `... or C < x < D and D` (extra D from ft block).
             next_chain_block = op_chain[chain_idx + 1][0] if chain_idx + 1 < len(op_chain) else None
+            # [W14-A 修复·真/假出口目标对判据] 同目标链的 fall-through 块
+            # 仅当其自身条件跳转目标与链共同出口一致时才是下一操作数；
+            # 否则是分支体内嵌套 if 的条件块，禁止吸收为附加操作数。
+            _w14_mid_uniform_t = None
+            if len(op_chain) >= 2:
+                _w14_mid_ok = True
+                for _w14_b, _ in op_chain:
+                    _w14_li = _w14_b.get_last_instruction()
+                    _w14_tb = (self.cfg.get_block_by_offset(_w14_li.argval)
+                               if (_w14_li is not None and getattr(_w14_li, 'argval', None) is not None)
+                               else None)
+                    if _w14_tb is None:
+                        _w14_mid_ok = False
+                        break
+                    if _w14_mid_uniform_t is None:
+                        _w14_mid_uniform_t = _w14_tb
+                    elif _w14_tb is not _w14_mid_uniform_t:
+                        _w14_mid_ok = False
+                        break
+                if not _w14_mid_ok:
+                    _w14_mid_uniform_t = None
             if (nested_ternary is None
                     and chained_compare_expr is None
                     and last_instr and last_instr.opname in STRIP_JUMP_OPS and last_instr.argval is not None):
@@ -24838,6 +24946,18 @@ AST 映射规则:
                                  # 它们是 await 轮询链的一部分，已由 _try_build_await_boolop_operand
                                  # 在下一个 chain_block 处理，不应作为独立值块重复求值。
                                  and not any(i.opname == 'GET_AWAITABLE' for i in s.instructions)), None)
+                if (ft_block is not None and _w14_mid_uniform_t is not None):
+                    _w14_ft_li = ft_block.get_last_instruction()
+                    # [R14b] 仅当 ft 块自身以条件跳转结尾时才需要目标一致性校验：
+                    # 嵌套 if 条件块的必然特征是尾部条件跳转指向别处；而
+                    # `return A and B and C` 的末操作数块以取值指令/RETURN 结尾，
+                    # 不可能是嵌套条件块，必须保留为合法末位操作数。
+                    if (_w14_ft_li is not None
+                            and _w14_ft_li.opname in STRIP_JUMP_OPS
+                            and getattr(_w14_ft_li, 'argval', None) is not None):
+                        _w14_ft_t = self.cfg.get_block_by_offset(_w14_ft_li.argval)
+                        if _w14_ft_t is not _w14_mid_uniform_t:
+                            ft_block = None
                 if ft_block:
                     processed_ft_blocks.add(ft_block.start_offset)
                     ft_instrs = [i for i in ft_block.instructions
@@ -24892,6 +25012,36 @@ AST 映射规则:
                                  and s.start_offset not in processed_ft_blocks
                                  # [Round 2 修复] 同上：跳过 await setup 块
                                  and not any(i.opname == 'GET_AWAITABLE' for i in s.instructions)), None)
+                # [W14-A 修复·真/假出口目标对判据] 同目标链（全体成员原始跳转
+                # 目标同一块）的末成员 fall-through 块，仅当其自身的条件跳转
+                # 目标也与链共同出口一致时才是下一个操作数；否则该块是分支体
+                # 内嵌套 if 的条件块（其 false-exit 指向内层 else，必然偏离
+                # 共同出口），追加会把嵌套结构扁平化为多余操作数。
+                if (ft_block is not None and len(op_chain) >= 2):
+                    _w14_common_t = None
+                    _w14_uniform = True
+                    for _w14_b, _ in op_chain:
+                        _w14_li = _w14_b.get_last_instruction()
+                        _w14_tb = (self.cfg.get_block_by_offset(_w14_li.argval)
+                                   if (_w14_li is not None and getattr(_w14_li, 'argval', None) is not None)
+                                   else None)
+                        if _w14_tb is None:
+                            _w14_uniform = False
+                            break
+                        if _w14_common_t is None:
+                            _w14_common_t = _w14_tb
+                        elif _w14_tb is not _w14_common_t:
+                            _w14_uniform = False
+                            break
+                    if _w14_uniform and _w14_common_t is not None:
+                        _w14_ft_li = ft_block.get_last_instruction()
+                        # [R14b] 同上：仅尾部条件跳转块才可能是嵌套 if 条件块
+                        if (_w14_ft_li is not None
+                                and _w14_ft_li.opname in STRIP_JUMP_OPS
+                                and getattr(_w14_ft_li, 'argval', None) is not None):
+                            _w14_ft_t = self.cfg.get_block_by_offset(_w14_ft_li.argval)
+                            if _w14_ft_t is not _w14_common_t:
+                                ft_block = None
                 if ft_block and ft_block in region.blocks:
                     processed_ft_blocks.add(ft_block.start_offset)
                     ft_instrs = [i for i in ft_block.instructions
@@ -25317,7 +25467,36 @@ AST 映射规则:
             if boolop_expr:
                 _boolop_negate = False
                 _last_cb = region.op_chain[-1][0] if region.op_chain else None
-                if _last_cb:
+                # [W14-A 修复] 全员同目标 and 链（含负极性操作数）不做整体取反：
+                # 操作数极性已由 implicit-not 逐项携带（`A and not B`），若再按
+                # 末成员跳转方向整体取反会错写为 `not (A and B)`（真值表改变）。
+                # 判据与识别端（_detect_boolop_conditional_chain 同目标归一）
+                # 一致：所有成员原始跳转目标同一块且存在 IF_FALSE 成员。
+                _w14_uniform_and = False
+                if len(region.op_chain) >= 2:
+                    _w14_tgts = []
+                    for _w14_b in region.op_chain:
+                        _w14_li = _w14_b[0].get_last_instruction()
+                        if _w14_li is None or getattr(_w14_li, 'argval', None) is None:
+                            _w14_tgts = None
+                            break
+                        _w14_tb = self.cfg.get_block_by_offset(_w14_li.argval)
+                        if _w14_tb is None:
+                            _w14_tgts = None
+                            break
+                        _w14_tgts.append(_w14_tb)
+                    if (_w14_tgts
+                            and all(t is _w14_tgts[0] for t in _w14_tgts)):
+                        # [R14c 修复] 全员 IF_TRUE 族跳转的同目标链是负极性 or 链
+                        # （`not (A or B ...)`，识别端保持 'or' 不归一），不算
+                        # uniform-and，整体取反必须生效。判据与识别端镜像。
+                        _w14_all_true = all(
+                            _w14_b[0].get_last_instruction() is not None
+                            and 'TRUE' in _w14_b[0].get_last_instruction().opname
+                            for _w14_b in region.op_chain)
+                        if not _w14_all_true:
+                            _w14_uniform_and = True
+                if _last_cb and not _w14_uniform_and:
                     _last_ci = _last_cb.get_last_instruction()
                     if _last_ci and _last_ci.argval is not None and _last_ci.opname in FORWARD_CONDITIONAL_JUMP_OPS:
                         if 'TRUE' in _last_ci.opname or 'NONE' in _last_ci.opname:
@@ -36279,15 +36458,48 @@ AST 映射规则:
                                 stmts.append(stmt)
                     stmt_instrs = []
                     continue
-                # 标记 _explicit_return=True 仅当块处于 except handler
-                # 上下文（含 POP_EXCEPT/PUSH_EXC_INFO 指令）时。except handler 内的
-                # 显式 return None 生成真实字节码（POP_EXCEPT+cleanup+RETURN_VALUE），
-                # 与 fallthrough (JUMP_FORWARD) 不同，必须保留。
+                # [W14-B 修复] 标记条件扩展：fallthrough 前驱背书的分支内
+                # 显式 return 同样保护；函数尾仅跳转边可达的 trivial 返回块
+                # （隐式返回的 jump-threading 产物）维持可剥离。
                 _r23n16_in_except = any(
                     _i.opname in ('POP_EXCEPT', 'PUSH_EXC_INFO')
                     for _i in block.instructions
                 )
-                _r23n16_ret_flag = {'_explicit_return': True} if _r23n16_in_except else {}
+                _r23n16_ret_flag = ({'_explicit_return': True}
+                                    if (_r23n16_in_except
+                                        or self._w14_has_following_code(block))
+                                    else {})
+                # [W14-B 修复·纯裸返回判定] 仅当块内 RETURN 之前只有
+                # LOAD_CONST None（+噪声前缀）——即真正的裸 return 块——时，
+                # 空 stmt_instrs 的合成 Return(None) 才携带显式标记；否则是
+                # 表达式被前置处理器消费后的重建残差（如 return [] 的
+                # BUILD_LIST 已入语句流），不标记、维持基线剥离行为。
+                _w14_pre_ret = []
+                try:
+                    _w14_ridx = block.instructions.index(instr)
+                    _w14_pre_ret = [x for x in block.instructions[:_w14_ridx]
+                                    if x.opname not in ('NOP', 'CACHE', 'EXTENDED_ARG', 'RESUME')]
+                except ValueError:
+                    pass
+                # 源码显式裸 return 的字节码形如 [...; LOAD_CONST None;
+                # RETURN_VALUE]——RETURN 紧前方必有显式 None 装载；仅含孤立
+                # RETURN_VALUE 的块其返回值来自前驱块跨块压栈（如 return []
+                # 的 BUILD_LIST 在前一块），不是源码裸 return，不标记。
+                _w14_trailing_none = bool(_w14_pre_ret)
+                if _w14_pre_ret and not (_w14_pre_ret[-1].opname == 'LOAD_CONST'
+                                         and _w14_pre_ret[-1].argval is None):
+                    _w14_trailing_none = False
+                if not _w14_trailing_none and not _r23n16_in_except:
+                    _r23n16_ret_flag = {}
+                if not stmt_instrs and _w14_pre_ret:
+                    # [W14-B 修复·空语句流回溯重建]
+                    _w14_pre_val = [x for x in _w14_pre_ret
+                                    if x.opname not in ('POP_EXCEPT', 'PUSH_EXC_INFO')]
+                    _w14_re_expr = self.expr_reconstructor.reconstruct(_w14_pre_val) if _w14_pre_val else None
+                    if _w14_re_expr is not None:
+                        stmts.append({'type': 'Return', **_r23n16_ret_flag, 'value': _w14_re_expr})
+                        stmt_instrs = []
+                        continue
                 if stmt_instrs:
                     ret_expr = self.expr_reconstructor.reconstruct(stmt_instrs)
                     if ret_expr and not (ret_expr.get('type') == 'Constant' and ret_expr.get('value') is None):
@@ -36716,9 +36928,10 @@ AST 映射规则:
         _block_ends_with_pop_top_r23n6 = False
         if _non_noise_r23n6:
             _li_r23n6 = len(_non_noise_r23n6) - 1
+            # [W14 修复] 同上：EXTENDED_ARG 前缀指令必须跳过。
             while _li_r23n6 >= 0 and _non_noise_r23n6[_li_r23n6].opname in (
                 'JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD',
-                'JUMP_BACKWARD_NO_INTERRUPT'):
+                'JUMP_BACKWARD_NO_INTERRUPT', 'EXTENDED_ARG'):
                 _li_r23n6 -= 1
             if _li_r23n6 >= 0 and _non_noise_r23n6[_li_r23n6].opname == 'POP_TOP':
                 _block_ends_with_pop_top_r23n6 = True
@@ -38602,10 +38815,97 @@ AST 映射规则:
                     return False
         return has_return and has_load_none
 
+    def _block_has_fallthrough_predecessor(self, block) -> bool:
+        """[W14-B 判据] 块是否存在 fallthrough（顺序执行流入）前驱。
+
+        区域归约算法原则 4（入口引用语义）：源码显式的裸 `return`
+        （LOAD_CONST None; RETURN_VALUE）位于分支体内，其块由前一块
+        顺序流入（fallthrough 边）；而 CPython 对函数尾隐式 return None
+        做 jump-threading 时为每条出边生成独立的 trivial 返回块，这些
+        块只有条件跳转边前驱、无 fallthrough 前驱。据此区分：
+        有 fallthrough 前驱的是源码显式语句，标记 _explicit_return 保护；
+        仅跳转边可达的函数尾 trivial 块是隐式返回的编译器产物，不得作为
+        语句发射（否则多出 LOAD_CONST/RETURN_VALUE，co_code 不一致）。
+        """
+        for p in getattr(block, 'predecessors', ()) or ():
+            li = p.get_last_instruction()
+            if li is None:
+                succs = list(getattr(p, 'successors', ()) or ())
+                if len(succs) == 1 and succs[0] is block:
+                    return True
+                continue
+            if li.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                             'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'):
+                # 无条件跳转边：非 fallthrough
+                continue
+            if li.opname in ('RETURN_VALUE', 'RETURN_CONST',
+                             'RAISE_VARARGS', 'RERAISE'):
+                # 控制流离开函数：无后继语义
+                continue
+            ft_succ = next((s2 for s2 in p.conditional_successors
+                            if s2 is not None and s2.start_offset != li.argval), None)
+            if ft_succ is block:
+                return True
+        return False
+
+    def _w14_has_following_code(self, block) -> bool:
+        """[W14-B 判据] 该 return 块之后是否仍存在可达的非平凡代码。
+
+        区域归约算法原则 2（每块唯一归属）+ 支配关系：源码显式的裸
+        `return`（LOAD_CONST None; RETURN_VALUE）位于分支体内，其后必然
+        跟随同函数内其他可执行块（兄弟臂、汇合点后续语句）；而 CPython
+        对「所有路径流出函数」的隐式 return None 做 jump-threading 产生的
+        trivial 返回块位于函数尾部，其后没有非平凡代码。据此区分：
+        - 后随非平凡代码 → 源码显式语句，标记 _explicit_return 保护；
+        - 函数尾 trivial 块（其后只有同类返回块或无块）→ 隐式返回的
+          编译器产物，不得作为语句发射。
+        """
+        _trivial_tail_ops = ('RETURN_VALUE', 'RETURN_CONST')
+        _noise = ('NOP', 'CACHE', 'EXTENDED_ARG', 'RESUME')
+        blocks = self.cfg.blocks
+        it = blocks.values() if isinstance(blocks, dict) else blocks
+        for b in it:
+            if b is block or b.start_offset <= block.start_offset:
+                continue
+            mi = [x for x in b.instructions if x.opname not in _noise]
+            while mi and mi[-1].opname in _trivial_tail_ops:
+                mi.pop()
+                if mi and mi[-1].opname == 'LOAD_CONST' and mi[-1].argval is None:
+                    mi.pop()
+            if mi:
+                return True
+        return False
+
+    def _w14_explicit_return_flag(self, block) -> dict:
+        """[W14-B] Return 节点的 _explicit_return 标记判定。
+
+        显式条件（任一成立即指令背书的显式返回）：
+        1. 块处于 except handler 上下文（含 POP_EXCEPT/PUSH_EXC_INFO）：
+           R23-N16 原判据，handler 内 return 生成真实 cleanup 序列；
+        2. 块之后仍有可达非平凡代码（_w14_has_following_code）：分支体内
+           的源码显式 return——其块后跟兄弟臂/汇合点后续语句。
+        函数尾 jump-threading 的 trivial 返回块两者皆否，不标记，
+        维持基线 strip 行为。
+        """
+        _in_except = any(i.opname in ('POP_EXCEPT', 'PUSH_EXC_INFO')
+                         for i in block.instructions)
+        if _in_except or self._w14_has_following_code(block):
+            return {'_explicit_return': True}
+        return {}
+
     def _generate_return_ast(self, block: BasicBlock, return_instr: Instruction = None) -> Dict[str, Any]:
+        # [W14-B 修复] 裸 return（Constant None）仅在指令背书为源码显式语句时
+        # 携带 _explicit_return=True；函数尾仅跳转边可达的 trivial 返回块是
+        # 隐式返回的编译器产物（jump-threading 产物），不标记、维持可剥离。
+        _ret_flag = self._w14_explicit_return_flag(block)
+        """由块内真实 RETURN 指令构建 Return 节点。
+
+        [W14-B 修复] 本方法产出的全部 Return 均携带 _explicit_return=True
+        （指令背书的显式返回），下游隐式-return-None strip 不得剥离。
+        """
         if return_instr is not None:
             if return_instr.opname == 'RETURN_CONST':
-                return {'type': 'Return', 'value': {'type': 'Constant', 'value': return_instr.argval}}
+                return {'type': 'Return', **_ret_flag, 'value': {'type': 'Constant', 'value': return_instr.argval}}
             if return_instr.opname == 'RETURN_VALUE':
                 instrs = block.instructions
                 return_idx = None
@@ -38616,16 +38916,16 @@ AST 映射规则:
                 if return_idx is not None and return_idx > 0:
                     prev = instrs[return_idx - 1]
                     if prev.opname == 'LOAD_CONST' and prev.argval is None:
-                        return {'type': 'Return', 'value': {'type': 'Constant', 'value': None}}
-                
+                        return {'type': 'Return', **_ret_flag, 'value': {'type': 'Constant', 'value': None}}
+
                 has_swap_pattern = False
                 if return_idx is not None and return_idx >= 3:
                     _maybe_swap = instrs[return_idx - 2]
                     _maybe_pop = instrs[return_idx - 1]
-                    if (_maybe_swap.opname == 'SWAP' and 
+                    if (_maybe_swap.opname == 'SWAP' and
                         _maybe_pop.opname == 'POP_TOP'):
                         has_swap_pattern = True
-                
+
                 value_instrs = []
                 for instr in block.instructions:
                     if instr == return_instr:
@@ -38642,18 +38942,18 @@ AST 映射规则:
                 if value_instrs:
                     expr = self.expr_reconstructor.reconstruct(value_instrs)
                     if expr:
-                        return {'type': 'Return', 'value': expr}
-                return {'type': 'Return', 'value': {'type': 'Constant', 'value': None}}
+                        return {'type': 'Return', **_ret_flag, 'value': expr}
+                return {'type': 'Return', **_ret_flag, 'value': {'type': 'Constant', 'value': None}}
 
         for instr in reversed(block.instructions):
             if instr.opname == 'RETURN_CONST':
-                return {'type': 'Return', 'value': {'type': 'Constant', 'value': instr.argval}}
+                return {'type': 'Return', **_ret_flag, 'value': {'type': 'Constant', 'value': instr.argval}}
             if instr.opname == 'RETURN_VALUE':
                 value_instrs = []
                 is_in_gen_loop = (
                     self._current_loop is not None or
-                    (hasattr(self.cfg, 'code') and 
-                     hasattr(self.cfg.code, 'co_flags') and 
+                    (hasattr(self.cfg, 'code') and
+                     hasattr(self.cfg.code, 'co_flags') and
                      self.cfg.code.co_flags & 0x20)
                 )
                 _skip_base = ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL',
@@ -38671,9 +38971,9 @@ AST 映射规则:
                 if value_instrs:
                     expr = self.expr_reconstructor.reconstruct(value_instrs)
                     if expr:
-                        return {'type': 'Return', 'value': expr}
-                return {'type': 'Return', 'value': None}
-        return {'type': 'Return', 'value': None}
+                        return {'type': 'Return', **_ret_flag, 'value': expr}
+                return {'type': 'Return', **_ret_flag, 'value': None}
+        return {'type': 'Return', **_ret_flag, 'value': None}
 
 
 

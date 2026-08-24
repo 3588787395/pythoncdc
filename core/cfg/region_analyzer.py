@@ -14348,7 +14348,44 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             if then_blocks and merge is not else_succ:
                 _7_then_set = set(then_blocks)
                 if any(p in _7_then_set for p in else_succ.predecessors):
-                    merge = else_succ
+                    # [W14-A 修复·elif 链保真] 若跳向 else_succ 的 then 侧
+                    # 前驱【全部】是纯条件测试块（仅 LOAD*/比较/UNARY_NOT +
+                    # 条件跳转，且跳转目标恰为 else_succ），则它们是本 if
+                    # 复合条件的短路操作数（如 `if not A and not B:` 的第二
+                    # 操作数假出口指向下一 elif 条件块），else_succ 是 elif
+                    # 链的延续，不是「then 体落入独立 if」边界——保持原
+                    # merge，让下游 _check_elif_chain 正确重建 elif 链。
+                    def _w14_pure_cond_pred(_pb, _es=else_succ):
+                        _li = _pb.get_last_instruction()
+                        if (_li is None or _li.opname not in FORWARD_CONDITIONAL_JUMP_OPS
+                                or _li.argval != _es.start_offset):
+                            return False
+                        _ok_ops = ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF',
+                                   'LOAD_ATTR', 'LOAD_METHOD', 'LOAD_CONST',
+                                   'COMPARE_OP', 'IS_OP', 'CONTAINS_OP',
+                                   'UNARY_NOT', 'UNARY_NEGATIVE', 'UNARY_POSITIVE',
+                                   'UNARY_INVERT', 'EXTENDED_ARG',
+                                   'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_FORWARD_IF_FALSE',
+                                   'POP_JUMP_IF_TRUE', 'POP_JUMP_IF_FALSE',
+                                   'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_FORWARD_IF_NOT_NONE')
+                        return all(i.opname in _ok_ops
+                                   for i in _pb.instructions
+                                   if i.opname not in NOISE_OPS)
+                    _7_jumpers = [p for p in else_succ.predecessors if p in _7_then_set]
+                    # [R14d 修复·极性判据] 仅当全部 then 侧前驱以 TRUE 族
+                    # 条件跳转指向 else_succ 时才豁免（负极性操作数
+                    # `not X`：真 ⇒ 整体条件假 ⇒ 唯有 elif 链延续可解释）。
+                    # FALSE 族同目标前驱是正极性 and 操作数的正常短路出口，
+                    # else_succ 同时是其语句边界（独立下一条 if），必须维持
+                    # merge=else_succ 重定向——否则该 if 的 merge 停留 None、
+                    # else 臂无界收集，链尾多出隐式 return None 且嵌套化。
+                    _w14_all_true_jump = all(
+                        _w14_pure_cond_pred(p)
+                        and p.get_last_instruction() is not None
+                        and 'TRUE' in p.get_last_instruction().opname
+                        for p in _7_jumpers) and bool(_7_jumpers)
+                    if not _w14_all_true_jump:
+                        merge = else_succ
             else_blocks = self._collect_branch_blocks(else_succ, merge, else_stop)
             # 区域归约算法：try/with handler 块过滤
             # 仅当 if 条件块本身不在 handler 块集合中时才过滤 then/else 中的 handler 块。
@@ -15449,6 +15486,24 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     if _6_false_target is inner_else_succ:
                         inner_merge = inner_else_succ
             inner_then_blocks = self._collect_branch_blocks(inner_then_succ, inner_merge, {inner_else_succ} | _inner_boundary_stop)
+            # [W14-C 修复·共享尾部语句归属] 当臂内嵌套 if 的两路分支汇入
+            # 外层 elif 链的合并点（merge_）时，_collect_branch_blocks 会把
+            # merge_ 及其后继一并收进本臂 body——共享尾部语句（如四路汇合
+            # 的单一 return）被错误内联进单一分支。以支配关系/前驱数量为
+            # 准则：merge_ 是全部臂的最小公共支配后继，归属链外文本位置，
+            # 禁止吸入任一臂。此处从 body 块集合中剔除 merge_。
+            if merge_ is not None and inner_then_blocks:
+                inner_then_blocks = [b for b in inner_then_blocks
+                                     if b.start_offset != merge_.start_offset]
+            # [W14-C 修复·共享尾部语句归属] 当臂内嵌套 if 的两路分支汇入
+            # 外层 elif 链的合并点（merge_）时，_collect_branch_blocks 会把
+            # merge_ 及其后继一并收进本臂 body——共享尾部语句（如四路汇合的
+            # 单一 return）被错误内联进单一分支。以支配关系/前驱数量为准：
+            # merge_ 是全部臂的最小公共支配后继，归属链外文本位置，禁止
+            # 吸入任一臂。此处从 body 块集合中剔除 merge_。
+            if merge_ is not None and inner_then_blocks:
+                inner_then_blocks = [b for b in inner_then_blocks
+                                     if b.start_offset != merge_.start_offset]
             # 区域归约算法原则 2（每块唯一归属）+ 原则 4（归约顺序）：
             # 当 inner_else_succ（候选下一 elif 条件 / else 入口）有来自
             # inner_then_blocks 的前驱时，它是 then body 的 merge 点（独立 if
@@ -19562,6 +19617,52 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
 
     def _create_boolop_region_from_chain(self, chain: List[Tuple[BasicBlock, str]], claimed: Set[BasicBlock]) -> Optional[BoolOpRegion]:
         chain = self._normalize_none_check_op_types(chain)
+        # [R14b·W14-D 门控细化] 属性链回溯放行（首成员尾部为
+        # LOAD_ATTR/LOAD_METHOD 的真值测试）时，若首块前置语句的存储目标被
+        # 后续链成员的操作数读取（如 exc_from_type = getattr(...);
+        # if self.force or exc_from_type == ...），说明前置语句是真实的独立
+        # 赋值语句且其结果被条件消费——该链不能作为扁平 BoolOp 吸收整个首块，
+        # 必须交还 IfRegion 层级重建嵌套结构。前置语句未被后续操作数消费时
+        # （如 op_station = f(...); if pboxAccount.connect_flag or logout:），
+        # 回溯放行仍然有效。
+        if len(chain) >= 2:
+            _g_first = chain[0][0]
+            _g_li = _g_first.get_last_instruction()
+            if (_g_li is not None and getattr(_g_li, 'argval', None) is not None
+                    and _g_li.opname in ('POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_IF_TRUE',
+                                         'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_IF_FALSE')):
+                _g_prevs = [i for i in _g_first.instructions
+                            if i.offset < _g_li.offset
+                            and i.opname not in ('NOP', 'CACHE', 'EXTENDED_ARG', 'RESUME')]
+                if _g_prevs and _g_prevs[-1].opname in ('LOAD_ATTR', 'LOAD_METHOD'):
+                    _g_depth = -1
+                    _g_cond_start = _g_li.offset
+                    for _ci in reversed(_g_first.instructions):
+                        if _ci.offset >= _g_li.offset:
+                            continue
+                        if _ci.opname in ('NOP', 'CACHE', 'EXTENDED_ARG', 'RESUME'):
+                            continue
+                        _cpush, _cpop = self._stack_effect(_ci)
+                        _g_depth += _cpush - _cpop
+                        if _g_depth <= 0:
+                            _g_cond_start = _ci.offset
+                            break
+                    _g_prefix = [i for i in _g_first.instructions
+                                 if i.offset < _g_cond_start
+                                 and i.opname not in ('NOP', 'CACHE', 'EXTENDED_ARG', 'RESUME')]
+                    _g_stores = {i.argval for i in _g_prefix
+                                 if i.opname in ('STORE_FAST', 'STORE_NAME',
+                                                 'STORE_GLOBAL', 'STORE_DEREF')}
+                    if _g_stores:
+                        _g_load_ops = ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL',
+                                       'LOAD_DEREF', 'LOAD_ATTR')
+                        for _g_blk, _ in chain[1:]:
+                            _g_mli = _g_blk.get_last_instruction()
+                            for _mi in _g_blk.instructions:
+                                if _g_mli is not None and _mi.offset >= _g_mli.offset:
+                                    continue
+                                if _mi.opname in _g_load_ops and _mi.argval in _g_stores:
+                                    return None
         start_block = chain[0][0]
         chain_blocks = set(b for b, _ in chain)
         merge = self._boolop_resolve_merge(chain)
@@ -19714,6 +19815,39 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             if any(i.opname in _STORE_OPS_C for i in _cb_ft.instructions):
                 _all_ternary_cond_c = False
                 break
+        if _all_ternary_cond_c:
+            # [W14-A 修复·真/假出口目标对判据] 全体成员原始跳转目标同一块的
+            # 链是「and 复合条件」（负极性操作数经 IF_TRUE 跳向共同出口），
+            # 不是三元链。三元链的各条件块跳向各自独立的 false_value 块。
+            # 若不排除，下方值块扩展会把嵌套 if 条件块（下一 elif 条件等）
+            # 吸进 region.blocks（违反每块唯一归属），导致分支体被吞、
+            # 共享 return 错位。
+            _w14_tt = set()
+            for _cb, _ in chain:
+                _cb_li = _cb.get_last_instruction()
+                if _cb_li is None or getattr(_cb_li, 'argval', None) is None:
+                    _w14_tt.clear()
+                    break
+                _tb = self.cfg.get_block_by_offset(_cb_li.argval)
+                if _tb is None:
+                    _w14_tt.clear()
+                    break
+                _w14_tt.add(id(_tb))
+            if len(_w14_tt) == 1:
+                _all_ternary_cond_c = False
+        if _all_ternary_cond_c:
+            # [W14-A 修复·真/假出口目标对判据] 全体成员原始跳转目标同一块的
+            # 链是「and 复合条件」（负极性操作数以 IF_TRUE 跳向共同出口），
+            # 不是三元链。三元链的各条件块跳向各自独立的 false_value 块。
+            # 若不排除，下面的值块扩展会把嵌套 if 条件块/下一 elif 条件块
+            # 吸进 region.blocks（违反每块唯一归属），导致分支体被吞、
+            # 共享尾 return 错位。
+            _w14_tt = set()
+            for _cb, _ in chain:
+                _cb_li = _cb.get_last_instruction()
+                _w14_tt.add(id(self.cfg.get_block_by_offset(_cb_li.argval)))
+            if len(_w14_tt) == 1:
+                _all_ternary_cond_c = False
         if _all_ternary_cond_c:
             for _cb, _ in chain:
                 _cb_last = _cb.get_last_instruction()
@@ -19906,9 +20040,16 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 _prev_instrs = [i for i in start_block.instructions
                                 if i.offset < _sb_last.offset
                                 and i.opname not in ('NOP', 'CACHE', 'EXTENDED_ARG', 'RESUME')]
+                # [W14 修复] LOAD_ATTR/LOAD_METHOD 结尾的属性链真值测试
+                # （`if not obj.flag and not logout:` 的第一操作数）同样适用
+                # 栈深度回溯，否则块内前置语句（如函数调用赋值）被误判为
+                # body，and/or 复合条件退化为嵌套 if。
                 if _prev_instrs and _prev_instrs[-1].opname in ('LOAD_FAST', 'LOAD_NAME',
                                                                   'LOAD_GLOBAL', 'LOAD_DEREF',
+                                                                  'LOAD_ATTR', 'LOAD_METHOD',
                                                                   'IS_OP', 'CONTAINS_OP', 'COMPARE_OP'):
+                    if _prev_instrs[-1].opname in ('LOAD_ATTR', 'LOAD_METHOD'):
+                        _w14_attr_relaxed = True
                     _depth = -1
                     _cond_start_offset = _sb_last.offset
                     for _ci in reversed(start_block.instructions):
@@ -19931,8 +20072,12 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 _prev_instrs = [i for i in start_block.instructions
                                 if i.offset < _sb_last.offset
                                 and i.opname not in ('NOP', 'CACHE', 'EXTENDED_ARG', 'RESUME')]
+                # [W14 修复] 同上：属性链真值测试（and 短路模式）适用回溯。
                 if _prev_instrs and _prev_instrs[-1].opname in ('LOAD_FAST', 'LOAD_NAME',
-                                                                  'LOAD_GLOBAL', 'LOAD_DEREF'):
+                                                                  'LOAD_GLOBAL', 'LOAD_DEREF',
+                                                                  'LOAD_ATTR', 'LOAD_METHOD'):
+                    if _prev_instrs[-1].opname in ('LOAD_ATTR', 'LOAD_METHOD'):
+                        _w14_attr_relaxed = True
                     _depth = -1
                     _cond_start_offset = _sb_last.offset
                     for _ci in reversed(start_block.instructions):
@@ -20122,6 +20267,41 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                                     break
                         if not _ft_has_stmt:
                             break
+            # [W14-A 修复·真/假出口目标对判据] 链已确立且首成员为
+            # POP_JUMP_FORWARD_IF_FALSE（and 短路，T0 = 共同 false-exit）时，
+            # 后续候选块的跳转目标必须与 T0 同块（或等价 trivial exit），
+            # 否则该候选块是嵌套 if 的条件块（真/假出口指向不同汇合块），
+            # 属于分支体内部结构——立即断链，禁止吸收进扁平布尔链。
+            # 依据：合法 and 复合条件的所有操作数短路出口汇聚同一 exit；
+            # 嵌套 `if A: ... else: ...` 的条件块其 false-exit 指向内层 else，
+            # 与外层共同 exit 必然不同（R07 all_same_target 判据的链内扩展）。
+            #
+            # [R14c 修复·负极性放行] 断链仅适用于「候选块同样以 FALSE 族
+            # 条件跳转结尾」的场景（嵌套 if 条件块的必然特征：其 false-exit
+            # 指向内层 else ≠ 链共同出口）。以下两类合法成员必须放行，
+            # 否则 De Morgan 复合条件 `if not (A and B):` 退化为嵌套 if 变体：
+            #   1. TRUE 族条件跳转结尾的候选——负极性 and 操作数
+            #      （第二操作数 IF_TRUE→else/end），或合法 or 成员；
+            #   2. 短路跳转（JUMP_IF_*_OR_POP）结尾的候选——值上下文混合链
+            #      `X + (C and D or E)` 的后续操作数块。
+            # 两类候选的目标与 T0 不同是模式本身的结构特征，不是嵌套信号；
+            # 极性正确性与否由构建层（implicit-not / 整体取反判据）还原。
+            if chain:
+                _w14_first_blk, _w14_first_op = chain[0]
+                _w14_first_li = _w14_first_blk.get_last_instruction()
+                if (_w14_first_li is not None
+                        and _w14_first_li.argval is not None
+                        and _w14_first_li.opname in ('POP_JUMP_FORWARD_IF_FALSE',
+                                                     'POP_JUMP_IF_FALSE')
+                        and last.opname in ('POP_JUMP_FORWARD_IF_FALSE',
+                                            'POP_JUMP_IF_FALSE')):
+                    _w14_t0 = self.cfg.get_block_by_offset(_w14_first_li.argval)
+                    _w14_cand_t = (self.cfg.get_block_by_offset(last.argval)
+                                   if last.argval is not None else None)
+                    if (_w14_t0 is not None and _w14_cand_t is not None
+                            and _w14_cand_t is not _w14_t0
+                            and not self._is_equivalent_exit_block(_w14_t0, _w14_cand_t)):
+                        break
             # 区域归约算法原则 1（归约顺序）+ 原则 2（每块唯一
             # 归属）：IF_NONE/IF_NOT_NONE 的 op_type 需要根据跳转目标判断。
             # IF_NONE 语义："TOS is None -> jump"，既可能是 or 短路（条件
@@ -20498,6 +20678,76 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 current = ft_succ
         if len(chain) < 2:
             return None
+        # [W14-A 修复·or 首链真出口一致性裁剪] 首成员为 IF_TRUE 跳转且
+        # 成员数 >= 3 时：合法 or 复合条件（含 a or (b and c) / a or b or c）
+        # 的真出口（首成员 TRUE 目标 T0）与末成员的 fall-through（body）
+        # 汇聚同一块；若 T0 ≠ 末成员 fall-through，则前面的同目标 IF_TRUE
+        # 成员实为外层条件的负极性 and 操作数（其真出口指向链外边界块，
+        # 如下一 elif 条件块），其后成员是分支体嵌套 if 的条件块——
+        # 裁剪到 T0 一致前缀（≥2 才保留），余下块交还 IfRegion 层级重建。
+        _w14_first_li = chain[0][0].get_last_instruction()
+        if (len(chain) >= 3 and _w14_first_li is not None
+                and getattr(_w14_first_li, 'argval', None) is not None
+                and 'TRUE' in _w14_first_li.opname):
+            _w14_t0 = self.cfg.get_block_by_offset(_w14_first_li.argval)
+            _w14_last_blk = chain[-1][0]
+            _w14_last_li = _w14_last_blk.get_last_instruction()
+            _w14_last_ft = None
+            if _w14_last_li is not None and getattr(_w14_last_li, 'argval', None) is not None:
+                for _w14_s in _w14_last_blk.conditional_successors:
+                    if _w14_s.start_offset != _w14_last_li.argval:
+                        _w14_last_ft = _w14_s
+                        break
+            if (_w14_t0 is not None and _w14_last_ft is not None
+                    and _w14_t0 is not _w14_last_ft):
+                _w14_kept = []
+                for _w14_blk, _ in chain:
+                    _w14_li = _w14_blk.get_last_instruction()
+                    if (_w14_li is None or getattr(_w14_li, 'argval', None) is None):
+                        break
+                    if self.cfg.get_block_by_offset(_w14_li.argval) is not _w14_t0:
+                        break
+                    _w14_kept.append((_w14_blk, 'or'))
+                if len(_w14_kept) >= 2:
+                    chain = _w14_kept
+                else:
+                    return None
+        # [W14-A 修复·同目标 and 链归一] 全体成员的原始跳转目标解析为同一块
+        # 时，该链是「and 复合条件」：IF_FALSE 成员 = 正极性操作数，
+        # IF_TRUE 成员 = 负极性操作数（not X：真 → 同一出口）。将 op 统一
+        # 改写为 'and'，操作数极性由构建层按跳转方向逐项还原。禁止按
+        # `'and' if FALSE else 'or'` 的逐指令分类把负极性成员错标 'or'
+        # ——那会把 `A and not B` 错写为 `not (A and B)`、`not A and B`
+        # 错写为 `A or B`（真值表改变）。合法 or 链的非末成员 TRUE 目标是
+        # body、末成员 FALSE 目标是 exit，两者必然不同块，不触发本归一。
+        _w14_tgt_blocks = []
+        _w14_uniform = True
+        for _w14_blk, _ in chain:
+            _w14_li = _w14_blk.get_last_instruction()
+            if _w14_li is None or getattr(_w14_li, 'argval', None) is None:
+                _w14_uniform = False
+                break
+            _w14_tb = self.cfg.get_block_by_offset(_w14_li.argval)
+            if _w14_tb is None:
+                _w14_uniform = False
+                break
+            _w14_tgt_blocks.append(_w14_tb)
+        if _w14_uniform and all(t is _w14_tgt_blocks[0] for t in _w14_tgt_blocks):
+            # [R14c 修复·负极性 or 链不归一] 全员 IF_TRUE 族跳转且目标同一块
+            # 的链是 `not (A or B ...)` 的编译形态（负极性 or：真 → 同一出口
+            # =else/end）。必须保持 'or' 链、由构建层整体取反发射
+            # `not (A or B ...)`；若按 De Morgan 归一为 `(not A) and (not B)`，
+            # 操作数内的比较运算会被编译器二次取反（== → !=、in → not in、
+            # is → is not），co_code 与 orig 不一致。
+            # 混合极性链（如 `A and not B`：首成员 IF_FALSE、后续 IF_TRUE）
+            # 与正极性 and 链（全员 IF_FALSE）仍归一为 'and'，由构建层
+            # implicit-not 逐项还原——该形态无比较取反问题（跳转方向即极性）。
+            _w14_all_true_jump = all(
+                _w14_b.get_last_instruction() is not None
+                and 'TRUE' in _w14_b.get_last_instruction().opname
+                for _w14_b, _ in chain)
+            if not _w14_all_true_jump:
+                chain = [(_w14_blk, 'and') for _w14_blk, _ in chain]
         first_last = chain[0][0].get_last_instruction()
         first_jt = self.cfg.get_block_by_offset(first_last.argval) if first_last and first_last.argval is not None else None
         if first_jt is None:
@@ -20746,6 +20996,39 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             return None
         if self._is_nested_if_else_pattern(chain):
             return None
+        # [W14-D 兜底·放行一致性校验] 因属性链真值测试回溯而放行的链，
+        # 仅当其失败路径汇聚同一出口（同目标复合条件）时才成立。非一致链
+        # 说明放行吞并了嵌套 if 的条件块，交还 IfRegion 层级重建。
+        if locals().get('_w14_attr_relaxed', False):
+            _w14_gate_tgts = []
+            for _w14_gb, _ in chain:
+                _w14_gli = _w14_gb.get_last_instruction()
+                if (_w14_gli is None or getattr(_w14_gli, 'argval', None) is None):
+                    _w14_gate_tgts = None
+                    break
+                _w14_gtb = self.cfg.get_block_by_offset(_w14_gli.argval)
+                if _w14_gtb is None:
+                    _w14_gate_tgts = None
+                    break
+                _w14_gate_tgts.append(_w14_gtb)
+            if not (_w14_gate_tgts and all(t is _w14_gate_tgts[0] for t in _w14_gate_tgts)):
+                # [R14c 修复·放行判据泛化到等价出口] 全体成员跳转目标两两
+                # 等价（同块，或同为 trivial-return 的等价出口块）时放行。
+                # 覆盖两类合法形态：
+                #   (a) 负极性 or 链 `not (X or Y)`：CPython 对每个成员做
+                #       jump-threading，直达各自独立的等价 return 块；
+                #   (b) 同目标 and 链的 threaded 变体：各操作数 false-exit
+                #       指向不同的等价 `return None` 块。
+                # 两类形态的目标偏移不同是编译器产物而非嵌套 if 信号；
+                # 目标不等价（指向含语句的内层 else 等）才说明吞并了
+                # 嵌套 if 条件块，维持拒绝、交还 IfRegion 层级重建。
+                _neg_or_chain = bool(
+                    _w14_gate_tgts
+                    and len(chain) >= 2
+                    and all(self._is_equivalent_exit_block(_w14_gate_tgts[0], _t)
+                            for _t in _w14_gate_tgts))
+                if not _neg_or_chain:
+                    return None
         return chain
 
     def _is_nested_if_else_pattern(self, chain: List[Tuple[BasicBlock, str]]) -> bool:
@@ -21062,7 +21345,98 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 if succ not in visited:
                     worklist.append(succ)
 
+        # [W14-C 修复·共享尾部语句归属] 收集完成后反向剪枝「汇合块」：
+        # 若某块的先驱不全在本分支收集集内（存在来自兄弟分支/链外部的
+        # 前驱），则该块是多路控制流的汇合点（merge/join），其语句归属
+        # 全部分支的最小公共支配位置，禁止吸入单一分支——否则产生
+        # 「共享 return 内联进创建臂、函数尾退化为隐式 return None」型
+        # 错位（pboxAccount.getPboxAccount offset 1350 四路汇合形态）。
+        # 以支配关系/前驱数量为准的结构判据，逐点收敛剪枝。
+        if False and len(collected) > 1:
+            in_set = set(collected)
+            _w14_pruned = True
+            while _w14_pruned:
+                _w14_pruned = False
+                for _w14_b in list(collected):
+                    if _w14_b is entry:
+                        continue
+                    for _w14_p in _w14_b.predecessors:
+                        if _w14_p not in in_set and _w14_p not in stop:
+                            collected.remove(_w14_b)
+                            in_set.discard(_w14_b)
+                            _w14_pruned = True
+                            break
+
+        # [W14-C 修复·共享尾部语句归属] 收集完成后反向剪枝「汇合块」：
+        # 若某块的前驱不全在本分支收集集内（存在来自兄弟分支或链外部的
+        # 前驱），则该块是多路控制流的汇合点（merge/join），其语句归属
+        # 全部分支的最小公共支配位置，禁止吸入单一分支——否则产生
+        # 「共享 return 内联进创建臂、函数尾退化为隐式 return None」型
+        # 错位。适用范围：仅无界收集（merge=None）场景——有 merge 边界的
+        # 收集已由 merge 终止；循环回边/异常边前驱属合法体内结构，不参与
+        # 外部性判定（异常边经 exception_successors 排除）。
+        if len(collected) > 1 and not merge:
+            in_set = set(collected)
+            _w14_pruned = True
+            while _w14_pruned:
+                _w14_pruned = False
+                for _w14_b in list(collected):
+                    if _w14_b is entry:
+                        continue
+                    # [R14b·终端 None 返回块豁免] 以 LOAD_CONST None +
+                    # RETURN_VALUE / RETURN_CONST None 结尾的块是分支共享尾
+                    # 返回（try/except 两路 JUMP_FORWARD 汇入的 return 尾、
+                    # with 清理后的函数尾返回），其返回语句在源码中位于本臂
+                    # 文本末尾，剪除会使臂尾 return 丢失/错位（mergered/
+                    # persist/gtn_request/data_pager/strategy_context/
+                    # setting_api 形态）。值返回（return <expr>）与条件跳转
+                    # 尾块不豁免，仍按外部性剪枝（pboxAccount 共享尾形态）。
+                    _w14_bli = _w14_b.get_last_instruction()
+                    _w14_none_tail = False
+                    if _w14_bli is not None and _w14_bli.opname == 'RETURN_CONST':
+                        _w14_none_tail = _w14_bli.argval is None
+                    elif _w14_bli is not None and _w14_bli.opname == 'RETURN_VALUE':
+                        _w14_bprevs = [i for i in _w14_b.instructions
+                                       if i.offset < _w14_bli.offset
+                                       and i.opname not in ('NOP', 'CACHE', 'EXTENDED_ARG', 'RESUME')]
+                        _w14_none_tail = bool(_w14_bprevs) and \
+                            _w14_bprevs[-1].opname == 'LOAD_CONST' and \
+                            _w14_bprevs[-1].argval is None
+                    if _w14_none_tail:
+                        continue
+                    for _w14_p in _w14_b.predecessors:
+                        if _w14_b in _w14_p.exception_successors:
+                            continue
+                        if _w14_p not in in_set and _w14_p not in stop:
+                            # [R14b] 子结构区域出口前驱（try/with/loop 尾声
+                            # 回流分支体内部）不构成外部性，禁止剪枝
+                            if self._w14_pred_is_child_structural_exit(
+                                    _w14_p, in_set):
+                                continue
+                            collected.remove(_w14_b)
+                            in_set.discard(_w14_b)
+                            _w14_pruned = True
+                            break
+
         return collected
+
+    def _w14_pred_is_child_structural_exit(self, pred_block, in_set) -> bool:
+        """[R14b] 判定收集集外前驱是否为结构子区域（try/with/loop/match）
+        成员块，且该子区域与当前分支收集集有交集。结构性判定，非实例特征。"""
+        if not in_set:
+            return False
+        for region in self.regions:
+            if not isinstance(region, (TryExceptRegion, WithRegion,
+                                       LoopRegion, MatchRegion)):
+                continue
+            rblocks = getattr(region, 'blocks', None) or []
+            if pred_block not in rblocks:
+                continue
+            ent = getattr(region, 'entry', None)
+            if (ent is not None and ent in in_set) \
+                    or any(b in in_set for b in rblocks):
+                return True
+        return False
 
     def _get_enclosing_structural_boundary_stop(self, block) -> set:
         """ 查找包含 block 的外层结构区域（TryExceptRegion / LoopRegion），
