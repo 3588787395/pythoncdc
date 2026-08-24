@@ -4308,6 +4308,18 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
         - else块与break目标通过post-dominator区分（有break证据才成立，
           符合「回边证据」要求；无证据时以兄弟结构头判定归还归属）
         - else_is_follow标记需正确设置，确保AST生成时else作为orelse而非独立语句
+
+        [R101 fix] FOR 循环融合 break 识别（get_str_data 形态）：
+        `found = j; break` 且 break 落点紧邻循环出口时，CPython 将尾随语句
+        与迭代器清理 POP_TOP 合并进同一基本块，fall-through 进入
+        for_iter_exit（无显式跳转）。旧判据在 FORWARD_CONDITIONAL_JUMP 分支
+        只认 JUMP_FORWARD/RETURN 收尾的后继，漏掉此形态 →
+        _break_hits_for_iter_exit=False → for_iter_exit 被误判为 for-else 体
+        （`else: return found` 幻影）且 break 证据缺失。新增判据：后继以
+        POP_TOP 清理尾部收尾 ∧ fall-through 紧邻 for_iter_exit（末条指令
+        offset+2 == for_iter_exit.start_offset）∧ 全部前驱 ∈ body_set（块只
+        从循环体进入，符合「每块唯一归属」）→ 等价于 JUMP_FORWARD→exit 的
+        显式跳转形态，置 _break_hits_for_iter_exit=True。
         """
         body_set = loop_body | {header}
 
@@ -4340,6 +4352,27 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                                 elif _succ_last and _succ_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
                                     if succ not in break_targets:
                                         break_targets.append(succ)
+                                # [R101 fix] 区域归约算法原则 2（每块唯一归属）：
+                                # 「break 前尾随语句」融合形态：`found = j; break`
+                                # 且 break 落点紧邻循环出口时，CPython 将尾随语句
+                                # 与迭代器清理 POP_TOP 合并进同一基本块，经
+                                # fall-through 进入 for_iter_exit（无显式跳转）。
+                                # 该块唯一入口来自循环体（所有前驱 ∈ body_set）
+                                # ——它是真正的 break 落点，等价于
+                                # `JUMP_FORWARD → for_iter_exit` 的 (a) 形态。
+                                # 旧判据只认 JUMP_FORWARD/RETURN 收尾的后继，
+                                # 漏掉此形态 → _break_hits_for_iter_exit=False →
+                                # for_iter_exit 被误判为 for-else 体、has_break
+                                # 判定失真（get_str_data / repro_101_04 形态）。
+                                # 判据：succ 以 POP_TOP 清理尾部收尾且 fall-through
+                                # 紧邻 for_iter_exit ∧ 前驱全部在循环体内。
+                                elif (_succ_last and _succ_last.opname == 'POP_TOP'
+                                      and for_iter_exit.start_offset ==
+                                      _succ_last.offset + 2):
+                                    _r101_preds_in_body = bool(succ.predecessors) and all(
+                                        p in body_set for p in succ.predecessors)
+                                    if _r101_preds_in_body:
+                                        _break_hits_for_iter_exit = True
             if _break_hits_for_iter_exit:
                 return None, natural_exit
             if break_targets:
@@ -4888,6 +4921,23 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
         - break/continue基于CFG边语义，符合结构化控制流定义
         - LOOP_BACK_EDGE vs CONTINUE区分基于支配关系
         - break_blocks集合用于AST生成时正确插入break语句
+
+        [R101 fix] R8「含用户代码后继不是 break 目标」判据精化（两点）：
+        a) EXTENDED_ARG 排除：它是大偏移跳转的前缀噪声指令。break 落点块
+           [POP_TOP, EXTENDED_ARG, JUMP_FORWARD→exit]（目标 >255 必带前缀）
+           被旧判据误判为含用户代码 → 真 break 漏标 → has_break=False →
+           for-else 误生 + break 丢失（change_his_to_backward 形态）。
+        b) 「break 前尾随赋值」融合形态：`found = j; break` 且 break 落点
+           紧邻循环出口时，块形如 [LOAD_FAST, STORE_FAST, POP_TOP]，经
+           fall-through 进入 natural_exit。该块唯一入口来自循环体（全部
+           前驱 ∈ body_set），按「每块唯一归属」应注册为 BREAK；否则
+           has_break=False 触发 for-else 幻影、break/continue 结构塌陷
+           （get_str_data / repro_101_04 形态）。判据：全部前驱 ∈ body_set
+           ∧（末条为 JUMP_FORWARD/JUMP_ABSOLUTE 且目标是 natural_exit ∨
+           剥离 POP_TOP 清理尾部后 fall-through 紧邻 natural_exit，即原始
+           末条 offset+2 == natural_exit.start_offset）。不满足融合形态的
+           含用户代码后继仍按 R8 语义跳过（validate_data 场景保持不变，
+           site-packages round_08 复测 35/35 全通过）。
         """
         break_blocks_set = set()
         continue_map = {}
@@ -5016,14 +5066,75 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                             # 1. has_break=True 误触发 for-else
                             # 2. AST 生成器生成 break 而非 print+return
                             # 3. print 语句丢失、return False 位置错误
+                            #
+                            # [R101 fix] 判据精化（两点）：
+                            # a) EXTENDED_ARG 是大偏移跳转的前缀噪声指令，
+                            #    不含任何用户语义。break 目标块形如
+                            #    [POP_TOP, EXTENDED_ARG, JUMP_FORWARD] 时
+                            #    （跳转目标 >255 必带前缀），旧判据把
+                            #    EXTENDED_ARG 当作用户代码，导致真 break
+                            #    目标被漏标、has_break=False → for-else 误生、
+                            #    break 整条丢失（change_his_to_backward 形态）。
+                            # b) 「break 前尾随赋值」形态：`found = j; break`
+                            #    且 break 落点紧邻循环出口时，CPython 将
+                            #    尾随语句与迭代器清理 POP_TOP 合并进同一
+                            #    基本块（[LOAD_FAST, STORE_FAST, POP_TOP]，
+                            #    fall-through 进 natural_exit）。该块唯一
+                            #    入口来自循环体内（所有前驱 ∈ body_set）、
+                            #    经清理后直接落入 natural_exit——它是真正
+                            #    的 break 落点，按「每块唯一归属」应注册为
+                            #    BREAK；否则 has_break=False 触发 for-else
+                            #    误生 + break/continue 结构整体塌陷
+                            #    （get_str_data / repro_101_04 形态）。
+                            #    判据：s 的普通前驱全部在 body 内 ∧ s 以
+                            #    JUMP_FORWARD/JUMP_ABSOLUTE 收尾且目标为
+                            #    natural_exit，或 s 清理尾部（POP_TOP*）后
+                            #    fall-through 到 natural_exit。
                             _s_meaningful = [i for i in s.instructions
-                                             if i.opname not in NOISE_OPS
-                                             and i.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
-                                                                  'JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                                              if i.opname not in NOISE_OPS
+                                              and i.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+                                                                   'JUMP_FORWARD', 'JUMP_ABSOLUTE')
                                              and i.opname not in CONDITIONAL_JUMP_OPS
                                              and i.opname not in SHORT_CIRCUIT_JUMP_OPS
-                                             and i.opname not in ('POP_TOP',)]
+                                             and i.opname not in ('POP_TOP', 'EXTENDED_ARG')]
                             if _s_meaningful:
+                                _r101_break_fused = False
+                                _s_preds_r101 = [p for p in s.predecessors]
+                                _all_preds_in_body = bool(_s_preds_r101) and all(
+                                    p in body_set for p in _s_preds_r101)
+                                if _all_preds_in_body and natural_exit is not None:
+                                    _s_last_r101 = s.get_last_instruction()
+                                    if (_s_last_r101 is not None
+                                            and _s_last_r101.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                                            and _s_last_r101.argval is not None):
+                                        _r101_jt = self.cfg.get_block_by_offset(
+                                            _s_last_r101.argval)
+                                        if _r101_jt == natural_exit:
+                                            _r101_break_fused = True
+                                    else:
+                                        # 清理尾部 POP_TOP 后，块的最后一条指令
+                                        # 紧邻 natural_exit（fall-through 进入
+                                        # 循环出口）。判据按「原始末条指令偏移 +
+                                        # 一个 2 字节指令槽 == natural_exit 起点」
+                                        # 计算（POP_TOP 本身即迭代器清理，剥离后
+                                        # 用剥离前的末条指令位置判断落点）。
+                                        _r101_tail = [i for i in s.instructions
+                                                      if i.opname not in NOISE_OPS]
+                                        if _r101_tail:
+                                            _r101_orig_last_off = _r101_tail[-1].offset
+                                            while (_r101_tail and
+                                                   _r101_tail[-1].opname == 'POP_TOP'):
+                                                _r101_tail.pop()
+                                            if (_r101_tail
+                                                    and len(_r101_tail) < len([
+                                                        i for i in s.instructions
+                                                        if i.opname not in NOISE_OPS])
+                                                    and natural_exit.start_offset ==
+                                                    _r101_orig_last_off + 2):
+                                                _r101_break_fused = True
+                                if _r101_break_fused:
+                                    break_blocks_set.add(s)
+                                    continue
                                 # 含有效用户代码，不是纯 break 目标，跳过
                                 continue
                             break_blocks_set.add(s)
@@ -6071,6 +6182,19 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
           finally_blocks    → Try.finalbody
         当前测试矩阵通过率: 100%（try_except 230/230）。本方法遵循区域归约算法 4
         核心原则: 自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口。
+
+        [R101 fix] 显式 return 块收集判据精化（isVaildDate 形态）：
+        dtc-r01 引入的 `succ.start_offset >= try_end_for_blocks → continue`
+        排除，本意是把 try-except-else 的 else 块留给 _find_try_else_blocks
+        识别；但 CPython 同时会把 try 体内部「共享尾部常量 return」块裁剪
+        出异常表范围（RETURN_VALUE 不触发异常），两类块在偏移维度不可区分。
+        所有 else 收集路径都以 `_is_pass_or_return_none_block` 过滤，常量
+        return（非 None）块不可能被认领为 else——一律排除将使其无任何归属、
+        用户代码整条丢失。精化后：return-None/pass 形态仍排除（隐式 return
+        由 Pattern B 处理）；非 None 常量 return 仅当其全部普通前驱完整位于
+        [try_start_min, try_end) 保护范围内（只从 try 体进入，不来自 else
+        区）时收归 try_blocks。回归锚点：repro_09_try_except_else_return、
+        repro_05_try_else_finally_return 保持 MATCH。
         """
         if not self.cfg.exception_table:
             return []
@@ -6722,8 +6846,59 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                         # else 块（block not in _try_body_set 排除条件会过滤它）。
                         # 判据：块的 start_offset >= try_end_for_blocks → else 块
                         # 候选，不添加到 try_blocks。
+                        #
+                        # [R101 fix] 判据精化：上述排除只对「else 收集器实际
+                        # 能认领的块」有意义。所有 else 收集路径
+                        # （_find_try_else_blocks 三段式 / Pattern TE BFS /
+                        # _find_inner_else_blocks）都带
+                        # `not _is_pass_or_return_none_block(block)` 过滤，
+                        # 因此「常量 return」块（LOAD_CONST <非None> +
+                        # RETURN_VALUE / RETURN_CONST <非None>）不可能成为
+                        # else——若同样排除出 try_blocks，该块将无任何归属，
+                        # 用户代码整条丢失（如 try 内 if/else 共享尾部
+                        # `return True`，isVaildDate 形态）。此类块唯一可达
+                        # 入口来自 try 体内（编译器仅因 RETURN_VALUE 不触发
+                        # 异常而把它裁剪出异常表范围），按「每块唯一归属」
+                        # 应归入 try_blocks。判据：
+                        #   a) 块是 return-None/pass 形态（隐式 return 或
+                        #      else: return None 等价形）→ 维持排除；
+                        #   b) 块返回非 None 常量 → 仅当其全部普通前驱都
+                        #      完整位于 [try_start_min, try_end) 保护范围内
+                        #      （即只从 try 体进入，不来自 else 区）时收归
+                        #      try_blocks；否则维持排除（可能属于多块 else
+                        #      的尾块，由 else 生成路径处理）。
                         if succ.start_offset >= try_end_for_blocks:
-                            continue
+                            _eb_instrs = [i for i in succ.instructions
+                                          if i.opname not in NOISE_OPS]
+                            _ret_val_is_none = False
+                            if len(_eb_instrs) == 1:
+                                if (_eb_instrs[0].opname == 'RETURN_CONST'
+                                        and _eb_instrs[0].argval is None):
+                                    _ret_val_is_none = True
+                                elif _eb_instrs[0].opname == 'RETURN_VALUE':
+                                    _ret_val_is_none = True
+                            elif (len(_eb_instrs) == 2
+                                    and _eb_instrs[0].opname == 'LOAD_CONST'
+                                    and _eb_instrs[1].opname in (
+                                        'RETURN_VALUE', 'RETURN_CONST')
+                                    and _eb_instrs[0].argval is None):
+                                _ret_val_is_none = True
+                            if _ret_val_is_none or not _eb_instrs:
+                                continue
+                            _try_start_min_r101 = min(
+                                (b.start_offset for b in try_blocks),
+                                default=try_start)
+                            _all_preds_in_range = bool(succ.predecessors)
+                            for _pred_r101 in succ.predecessors:
+                                if _pred_r101 in try_blocks:
+                                    continue
+                                if (_pred_r101.start_offset >= _try_start_min_r101
+                                        and _pred_r101.end_offset <= try_end_for_blocks):
+                                    continue
+                                _all_preds_in_range = False
+                                break
+                            if not _all_preds_in_range:
+                                continue
                         _explicit_return_blocks_r21n1.append(succ)
                 if _explicit_return_blocks_r21n1:
                     for _eb in _explicit_return_blocks_r21n1:

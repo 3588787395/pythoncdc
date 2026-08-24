@@ -284,6 +284,11 @@
   - [x] T2.100.3 验证：check_strategy.pyc 实测 match_rate=1.0 / status=ok / check_strategyOK.py 生成且 py_compile 通过；10/10 复现实例 MATCH；stash 对照回归（R07/08/11/14/15/16/19/20/21 repros 缺陷清单逐一相同，零回归）；resource_utilsOK.py 由批量工具按 HEAD 行为再生成（docstring 恢复 + 显式 return None，非手工编辑）
   - [x] T2.100.4 commit + push `rcm-r100:`
   - 残留：历史轮次既有 nested-try/nested-if-in-else DEFECT 与基线一致不变
+- [x] T2.101 第 101 轮（quotation.pyc 验证轮：发现回归并修复回 100%）
+  - [x] T2.101.1 测试工程师 → `rounds/round_101/test_engineer/decompile_report.md`：quotation.pyc 实测 97.90%（140/143）确认回归（归因 41bfaea9 dtc-r01 + 18c55e62 Round 8）；3 不一致函数 isVaildDate/change_his_to_backward/get_str_data；14 复现实例（3 DEFECT + 11 CTRL）；全局 289 ok / 91.19%；提名 strategy_context.pyc
+  - [x] T2.101.2 修复工程师 → `rounds/round_101/repair_engineer/fix_report.md`：仅改 core/cfg/region_analyzer.py（+180/-5，未 revert 任何提交）——`_identify_try_except_regions` 精化 dtc-r01 try_end 排除判据（非 None 常量 return 且前驱全在保护域内收归 try_blocks）；`_find_loop_else` FOR 分支融合 break 识别（POP_TOP 收尾 ∧ fall-through 紧邻 for_iter_exit）；`_detect_break_continue` `_s_meaningful` 排除 EXTENDED_ARG + 融合块 BREAK 注册；三方法 docstring 追加 [R101 fix]
+  - [x] T2.101.3 验证：quotation.pyc ok / 143/143 / 100%；14/14 repros MATCH；round_100 repros 10/10；round_15/19/94~97/dtc/site-packages 各套件持平或改善（dtc round_02 +1）；16 代表性 pyc 抽查无一下降；全局恢复 290 ok / 112 partial / 91.25%
+  - [x] T2.101.4 commit + push `rcm-r101:`
 - [ ] T2.NN ... 持续直到退出条件满足（所有 pyc 文件 100% 字节码一致，每个生成 +OK.py）
 
 > 注：轮次数不设上限，持续直到所有 pyc 文件所有函数 100% 字节码一致。

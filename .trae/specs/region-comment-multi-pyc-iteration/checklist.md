@@ -867,7 +867,39 @@
 
   * [x] R100-14 commit + push `rcm-r100:`
 
-* [ ] R101+ 持续轮次，直到所有 pyc `decompile_status = ok`
+* [x] R101 通用清单全部通过（quotation.pyc 验证轮：回归发现→修复→恢复 100%）
+
+  * [x] R101-0 该轮取的 pyc 文件路径已记录（fly/data/quotation.pyc，实测 partial 97.90%→修复后 ok/1.0）
+
+  * [x] R101-1 测试工程师 `decompile_report.md` 已生成（3 不一致函数 + 回归归因 41bfaea9/18c55e62 + 全局 289 ok / 91.19% + partial 候选表）
+
+  * [x] R101-2 ≥ 10 个最小复现实例已归档（14 个：3 DEFECT-REPRO + 11 NO-DEFECT 控制组，post-fix 14/14 MATCH）
+
+  * [x] R101-3 修复工程师 `fix_report.md` 已生成（region_analyzer.py 三方法判据精化，未 revert 提交）
+
+  * [x] R101-4 涉及的 `_identify_*_regions` 方法 docstring 已按 6 节模板更新（\_identify\_try\_except\_regions / \_find\_loop\_else / \_detect\_break\_continue 追加 [R101 fix] 段）
+
+  * [x] R101-5 N/A（未修改 `_generate_*` 方法）
+
+  * [x] R101-6 既有测试矩阵无退化（round_100 10/10；round_15/19/94~97、dtc、site-packages 套件持平或改善；16 pyc 抽查无下降）
+
+  * [x] R101-7 14 复现实例全部通过（DEFECT-REPRO 3→0，MATCH 14/14）
+
+  * [x] R101-8 反模式自检通过（0 新增禁止前缀；判据为结构性条件）
+
+  * [x] R101-9 算法 4 原则 FULLY COMPLIANT（每块唯一归属【强化：try_end 边界块归属由前驱保护域判定】/ 融合块 BREAK 注册基于 CFG 结构）
+
+  * [x] R101-10 `python -c "import core.cfg.region_analyzer; import core.cfg.region_ast_generator; import core.cfg.code_generator"` 编译通过
+
+  * [x] R101-11 累计成功率 ≥ 上一轮（91.19% → 91.25%，290 ok 恢复，单调递增）
+
+  * [x] R101-12 quotationOK.py 已生成且 py_compile 通过
+
+  * [x] R101-13 pyc_index.json 已更新（quotation ok/1.0；const/order/strategy_context 测量刷新）
+
+  * [x] R101-14 commit + push `rcm-r101:`
+
+* [ ] R102+ 持续轮次，直到所有 pyc `decompile_status = ok`
 
 ## 阶段三（Phase 3：全量验证与 +OK 生成）
 
