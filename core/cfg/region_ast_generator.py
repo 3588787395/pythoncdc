@@ -2077,6 +2077,29 @@ class RegionASTGenerator:
                 expr_instrs = []
                 continue
             if instr.opname == 'STORE_SUBSCR' and len(expr_instrs) >= MIN_INSTRS_FOR_SUBSCR_ASSIGN:
+                # [R102 fix] 增广下标赋值（``d[k] += v``）的 CPython 3.11 协议：
+                #   LOAD container, LOAD key, COPY n, COPY n, BINARY_SUBSCR,
+                #   <value>, BINARY_OP(in-place, arg>=13), SWAP*, STORE_SUBSCR。
+                # SWAP 的净栈效应为 0 但重排栈值，使 _split_subscr_operands 的
+                # 「净效应 +1 后缀」三段切分在 SWAP 段边界错位（基址/索引对调、
+                # 增广语义退化为普通赋值）。判据为纯栈协议结构特征（区域归约
+                # 算法的栈效应判据）：存在 in-place BINARY_OP(arg>=13) 且其后继
+                # 至少一条 SWAP、且存在 COPY(arg>=2) 目标复制。命中时委托
+                # _build_subscript_assign 重建 AugAssign(target=Subscript)——
+                # 与回边块路径 / _generate_block_statements 的既有委托一致；
+                # 未命中或委托失败则走原切分路径（零退化）。
+                _r102_aug = any(
+                    i.opname == 'BINARY_OP' and i.arg is not None and i.arg >= 13
+                    and any(s.opname == 'SWAP' for s in expr_instrs[_ei + 1:])
+                    for _ei, i in enumerate(expr_instrs))
+                if _r102_aug and any(
+                        c.opname == 'COPY' and c.arg is not None and c.arg >= 2
+                        for c in expr_instrs):
+                    _r102_aug_stmt = self._build_subscript_assign(expr_instrs + [instr])
+                    if _r102_aug_stmt is not None:
+                        stmts.append(_r102_aug_stmt)
+                        expr_instrs = []
+                        continue
                 # 按栈效应切分 value/container/index，支持多指令容器
                 # (如 data.loc = LOAD_FAST+LOAD_ATTR)。零退化：切分/重建失败时
                 # 回退到原单指令切分逻辑。
@@ -3515,6 +3538,36 @@ AST 映射规则:
                 # generate() 入口前置语句路径发射（_entry_prefix_emitted_blocks
                 # 登记，如循环头块兼含循环前赋值 `n = 0` 的 repro_06 形态），
                 # 此处不再重复发射；iter_expr 仍照常抽取。
+                # [R102 fix] 每块唯一归属：for_iter_setup 块同时是某个
+                # TernaryRegion 的 merge_block 时（如 ``data_trans = {.. 三元 ..}``
+                # 赋值后紧跟内层 ``for item in field:``，字典归约与循环迭代
+                # 准备共享同一基本块），该块中终结于三元 value_target 写回的
+                # 前缀语句（LOAD_CONST 键元组 + BUILD_CONST_KEY_MAP + STORE）
+                # 归属三元区域发射，本处不得再按普通前缀赋值重复抽取——否则
+                # 独立重建出缺值空 Dict 并二次绑定同一目标（`x = {...}` 后多出
+                # `x = {}`）。判据为纯结构特征（merge_block 与 setup 块同址 +
+                # 非迭代上下文 + 目标名一致），不依赖生成时序状态。
+                _r102_tern_merge_targets = set()
+                if for_iter_setup is not None:
+                    for _tr in self.region_analyzer.regions:
+                        if (isinstance(_tr, TernaryRegion)
+                                and _tr.merge_block is not None
+                                and (_tr.merge_block is for_iter_setup
+                                     or _tr.merge_block.start_offset == for_iter_setup.start_offset)
+                                and getattr(_tr, 'merge_context', None) != 'iter'
+                                and getattr(_tr, 'value_target', None)):
+                            _r102_tern_merge_targets.add(_tr.value_target)
+                if _fis_pre_stmts and _r102_tern_merge_targets:
+                    _filtered_pre = []
+                    for _ps in _fis_pre_stmts:
+                        _ps_tgts = _ps.get('targets') if isinstance(_ps, dict) else None
+                        if (_ps_tgts and len(_ps_tgts) == 1
+                                and isinstance(_ps_tgts[0], dict)
+                                and _ps_tgts[0].get('type') == 'Name'
+                                and _ps_tgts[0].get('id') in _r102_tern_merge_targets):
+                            continue
+                        _filtered_pre.append(_ps)
+                    _fis_pre_stmts = _filtered_pre
                 if (_fis_pre_stmts
                         and for_iter_setup not in self._entry_prefix_emitted_blocks
                         and (_fis_is_self_setup or for_iter_setup not in self.generated_blocks)):
@@ -27256,6 +27309,21 @@ AST 映射规则:
           _identify_ternary_regions 的 BoolOpRegion 抢占 + skip_ternary=True
           守卫，Phase 5 修复了 IfRegion 对简单三元的过度抢占，BoolOp 条件链
           由 _build_ternary_boolop_condition 精确重建，短路语义完整保留。
+
+        [R102 fix]:
+        -----------
+        cond_val_start 向后扫描的栈效应表补齐 BINARY_SUBSCR = (push 1, pop 2)。
+        根因：条件测试含下标链时（如 BUILD_CONST_KEY_MAP 三键字典的第三值为
+        三元、其测试为 ``data[s]['k'] > now()``），BINARY_SUBSCR 被旧表按 0/0
+        计，扫描在测试内部提前满足 needed<=0，cond_val_start 深入测试中间，
+        测试前缀指令（``data[s]`` 的 LOAD+BINARY_SUBSCR）被误并入 preload_exprs。
+        该 ternary 作为 dict 第三值经 expr_reconstructor 以 initial_stack=
+        preload+[IfExp] 重建时，BUILD_CONST_KEY_MAP 按 initial_stack 尾部三项
+        配对键值，多出的 preload 条目使全部键值对错位一格（'stock_name' 配上
+        'listed_date' 的值）。修复后扫描穿越下标链回到真正的条件表达式起点，
+        preload 仅含字典前两个纯值表达式，与 _extract_dict_prefix_values /
+        _ternary_prefix_stack_effect 的既有栈效应模型完全一致。算法依据：
+        栈效应判据（区域归约算法的通用判据），无任何目标特定启发式。
         """
         cond_block = region.condition_block
         true_block = region.true_value_block
@@ -28465,6 +28533,17 @@ AST 映射规则:
                             _push = 1
                             _pop = 2
                         elif _ci.opname == 'BINARY_OP':
+                            _push = 1
+                            _pop = 2
+                        # [R102 fix] BINARY_SUBSCR 消费 (obj, key) 压入 obj[key]，
+                        # 净效应 +1（pop 2）。旧表缺失该操作码（按 0/0 处理），
+                        # 当条件测试含下标链（如 `data[s]['k'] > now()`）时，向后
+                        # 扫描在测试内部提前满足 needed<=0，把测试前缀指令误并入
+                        # preload_exprs；BUILD_CONST_KEY_MAP 多键字典按 initial_stack
+                        # 配对时整体错位一格（键 'name' 配上后一个值）。与
+                        # _ternary_prefix_stack_effect / _extract_dict_prefix_values
+                        # 的既有模型对齐：BINARY_SUBSCR = (push 1, pop 2)。
+                        elif _ci.opname == 'BINARY_SUBSCR':
                             _push = 1
                             _pop = 2
                         elif _ci.opname.startswith('UNARY_'):

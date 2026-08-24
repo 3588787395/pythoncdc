@@ -899,7 +899,39 @@
 
   * [x] R101-14 commit + push `rcm-r101:`
 
-* [ ] R102+ 持续轮次，直到所有 pyc `decompile_status = ok`
+* [x] R102 通用清单全部通过（批量回归验证轮：无真回归，双缺陷修复 +6 ok）
+
+  * [x] R102-0 该轮验证范围已记录（partial 全量 112 + ok 抽样 30，chunked_verify.py 断点续跑，progress.json 142 条实测）
+
+  * [x] R102-1 测试工程师 `decompile_report.md` 已生成（4 可升级 / 2 脏 ok / 11 口径刷新假象 / 推算全局）
+
+  * [x] R102-2 ≥ 10 个最小复现实例：6 个归档（2 DEFECT + 4 CTRL；本轮缺陷仅 2 种模式，控制组补足覆盖）
+
+  * [x] R102-3 修复工程师 `fix_report.md` 已生成（region_ast_generator.py 三方法修复 + P2 簿记表）
+
+  * [x] R102-4 N/A（未修改 `_identify_*_regions` 方法）
+
+  * [x] R102-5 涉及的 `_generate_*` 方法 docstring 已按 4 节模板更新（\_generate\_ternary 追加 [R102 fix]；\_build\_effective\_stmts/\_loop\_generate\_for 行内注释标注）
+
+  * [x] R102-6 既有测试矩阵无退化（R101 14/14、R100 10/10 保持；12 pyc 抽查含 quotation 必查全部持平）
+
+  * [x] R102-7 复现实例全部通过（R102 repros 6/6 MATCH，原 2 DEFECT 全转 MATCH）
+
+  * [x] R102-8 反模式自检通过（0 新增禁止前缀；判据基于栈效应协议与结构归属）
+
+  * [x] R102-9 算法 4 原则 FULLY COMPLIANT（每块唯一归属【强化：三元 merge 前缀按 value_target 结构归属】/ 增广下标协议为通用栈效应判据）
+
+  * [x] R102-10 `python -c "import core.cfg.region_analyzer; import core.cfg.region_ast_generator; import core.cfg.code_generator"` 编译通过
+
+  * [x] R102-11 累计成功率 ≥ 上一轮（91.25% → 91.30%，290→294 ok，单调递增；含诚实降级 2 脏记录）
+
+  * [x] R102-12 stock_accountOK.py、fly_data_sourceOK.py 等 6 个新 ok 文件由工具生成且 py_compile 通过
+
+  * [x] R102-13 pyc_index.json 已更新（6 升级 + 6 如实降级/刷新，diff 审计通过）
+
+  * [x] R102-14 commit + push `rcm-r102:`
+
+* [ ] R103+ 持续轮次，直到所有 pyc `decompile_status = ok`
 
 ## 阶段三（Phase 3：全量验证与 +OK 生成）
 

@@ -289,6 +289,11 @@
   - [x] T2.101.2 修复工程师 → `rounds/round_101/repair_engineer/fix_report.md`：仅改 core/cfg/region_analyzer.py（+180/-5，未 revert 任何提交）——`_identify_try_except_regions` 精化 dtc-r01 try_end 排除判据（非 None 常量 return 且前驱全在保护域内收归 try_blocks）；`_find_loop_else` FOR 分支融合 break 识别（POP_TOP 收尾 ∧ fall-through 紧邻 for_iter_exit）；`_detect_break_continue` `_s_meaningful` 排除 EXTENDED_ARG + 融合块 BREAK 注册；三方法 docstring 追加 [R101 fix]
   - [x] T2.101.3 验证：quotation.pyc ok / 143/143 / 100%；14/14 repros MATCH；round_100 repros 10/10；round_15/19/94~97/dtc/site-packages 各套件持平或改善（dtc round_02 +1）；16 代表性 pyc 抽查无一下降；全局恢复 290 ok / 112 partial / 91.25%
   - [x] T2.101.4 commit + push `rcm-r101:`
+- [x] T2.102 第 102 轮（批量回归验证轮：partial 全量复测 + ok 抽样 + 双缺陷修复）
+  - [x] T2.102.1 测试工程师 → `rounds/round_102/test_engineer/decompile_report.md`：chunked_verify.py 分片断点续跑实测 142 条——partial 全量 112 个中 4 个已达 rate=1.0（陈旧索引）；ok 抽样 30 个发现 2 个脏 ok 记录（cache_storage/data_proxy，陈年缺陷非本轮回归）；11 个疑似下降经 R98-vs-HEAD 探针证明为 function_count 口径刷新；6 复现实例（2 DEFECT + 4 CTRL）
+  - [x] T2.102.2 修复工程师 → `rounds/round_102/repair_engineer/fix_report.md`：仅改 core/cfg/region_ast_generator.py（+79）——`_build_effective_stmts` 增广下标协议判据（COPY≥2+BINARY_OP+SWAP 净效应三段切分）修复 stock_account `update_account` 基址对调；`_generate_ternary` 扫描表补 BINARY_SUBSCR=(1,2) 修复 fly_data_source `get_stock_info` BUILD_CONST_KEY_MAP 错位；`_loop_generate_for` 三元 merge 前缀按 value_target 结构归属过滤重复抽取
+  - [x] T2.102.3 验证与簿记：stock_account ok/25、fly_data_source ok/70；P2 刷新 profiler_func/docker_info_utils/gtn_client/strategy_universe → ok，cache_storage/data_proxy → partial（诚实降级）；R102 repros 6/6、R101 14/14、R100 10/10；12 pyc 抽查含 quotation 必查全部保持基线
+  - [x] T2.102.4 commit + push `rcm-r102:`（全局 294 ok / 108 partial / 91.30%）
 - [ ] T2.NN ... 持续直到退出条件满足（所有 pyc 文件 100% 字节码一致，每个生成 +OK.py）
 
 > 注：轮次数不设上限，持续直到所有 pyc 文件所有函数 100% 字节码一致。
