@@ -2241,14 +2241,21 @@ class CodeGenerator:
             last = nodes[-1]
             _is_return_none = False
             if isinstance(last, ASTReturn):
-                if last.value is None or (isinstance(last.value, ASTConstant) and last.value.value is None):
+                # [R15-10] 指令背书的显式 return None（如多前驱共享汇合块）
+                # 是源码语句，不得作为隐式返回过滤。
+                if getattr(last, '_explicit_return', False):
+                    _is_return_none = False
+                elif last.value is None or (isinstance(last.value, ASTConstant) and last.value.value is None):
                     _is_return_none = True
             elif isinstance(last, dict) and last.get('type') == 'Return':
-                _val = last.get('value')
-                if _val is None:
-                    _is_return_none = True
-                elif isinstance(_val, dict) and _val.get('type') == 'Constant' and _val.get('value') is None:
-                    _is_return_none = True
+                if last.get('_explicit_return'):
+                    _is_return_none = False
+                else:
+                    _val = last.get('value')
+                    if _val is None:
+                        _is_return_none = True
+                    elif isinstance(_val, dict) and _val.get('type') == 'Constant' and _val.get('value') is None:
+                        _is_return_none = True
             if _is_return_none:
                 if not has_while_loop:
                     if len(nodes) == 1:

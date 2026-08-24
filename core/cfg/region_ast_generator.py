@@ -2798,6 +2798,16 @@ AST 映射规则:
         if _call_compare is not None:
             return _call_compare
 
+        # [W15-A 修复] 复合中缀操作数链式比较（属性链/方法调用链/下标/二元运算）。
+        # 单条 LOAD 提取路径会把 ``self._engine.trading_dt`` 截断为首段 ``self``、
+        # 把 ``o.get().v`` 替换为占位字面量。本路径按 CPython 链式比较语义在
+        # SWAP+COPY+COMPARE_OP 边界做逆向栈模拟，完整重建每个中间操作数表达式。
+        _complex_compare = self._try_build_complex_operand_chained_compare_from_blocks(
+            cond_block, list(chain_blocks), list(ops))
+        if _complex_compare is not None:
+            return _complex_compare
+
+
         left_instr = None
         comparator_instrs = []
         for block_idx, block in enumerate(all_blocks):
@@ -9035,6 +9045,12 @@ AST 映射规则:
              'targets': [{'type': 'Name', 'id': <store_target>, 'ctx': 'Store'}],
              'value': {'type': 'Compare', 'left': ..., 'ops': [...], 'comparators': [...]}}
 
+        [W15-B] merge_block 中 STORE_* 之后跟有真实语句时（如 ``r = a<=b<=c``
+        后紧跟 ``return r``），在 Assign 之后追加由 STORE 后缀指令重建的
+        后继语句列表，返回 [Assign, Return, ...]；尾部「LOAD_CONST None +
+        RETURN_VALUE」隐式返回模式按既有约定剥离不发射。纯栈操纵指令
+        （SWAP/COPY/POP_TOP）不产生用户语句，但真实语句不得被吞并。
+
         块归属: 标记 region.blocks 为 generated，避免父 IfRegion 重复处理。
         """
         if not getattr(region, 'chained_compare_ops', None) or len(region.chained_compare_ops) < 2:
@@ -9160,13 +9176,66 @@ AST 映射规则:
                         }
         if chained_cond is None:
             return None
+        # [W15-E' 修复] cond_block 中链式比较操作数序列之前可能存在完整
+        # 前驱语句（如 then 体 ``ntd = obj.calc(...)`` 与链式比较同块，
+        # price_validator can_submit_order L35）。vc 路径原先只重建 Compare，
+        # 块内前缀语句被标记 generated 一并丢弃，后继引用沦为悬空全局。
+        _pre_stmts = self._extract_vc_pre_store_statements(cond_block)
         # 标记所有 region.blocks 为已生成，避免父 IfRegion 重复处理。
         # 注意：merge_block 中的 LOAD_CONST None + RETURN_VALUE（隐式返回）由
         # 模块级包装负责剥离，本方法只生成 Assign 节点。
         for block in region.blocks:
             self.generated_blocks.add(block)
             self.generated_offsets.add(block.start_offset)
-        return {
+        # [W15-B 修复] merge_block 中 STORE_* 之后可能跟真实语句（最典型：
+        # ``r = a <= b <= c`` 后紧跟 ``return r``，merge_block 为
+        # STORE_FAST r; LOAD_FAST r; RETURN_VALUE）。原实现只发射 Assign，
+        # 将 STORE 之后指令一并标记 generated 丢弃，导致后继 return 蒸发
+        # （重编译为 LOAD_CONST None）。修复：剥离尾部「隐式 return None」
+        # 模式（LOAD_CONST None; RETURN_VALUE，与既有约定一致不发射）后，
+        # 若仍有有效指令则经 _build_statements_from_instructions 重建为
+        # 后继语句（Return/Assign/Expr 等）随 Assign 一并返回。
+        _post_store_stmts: List[Dict[str, Any]] = []
+        try:
+            _store_idx = merge_block.instructions.index(store_instr)
+        except ValueError:
+            _store_idx = -1
+        # [W15-E' 修复·后继控制流保留] STORE 后缀剥离隐式 return None 后仍含
+        # 条件跳转类指令（如 ``if r: return True`` 的 LOAD_FAST r;
+        # POP_JUMP_FORWARD_IF_FALSE），说明后继是跨块控制流语句；此时若存在以
+        # merge_block 为入口的兄弟区域，则不把 merge_block 标记 generated，
+        # 交由该区域按 CFG 正常生成后继语句（内联重建无法跨越块边界）。
+        # 结构判据：后缀含 POP_JUMP*/JUMP_IF_*_OR_POP 且兄弟区域存在；
+        # 纯直线后缀（RETURN_VALUE 结尾的完整语句）维持 W15-B 内联重建路径。
+        _trailing_control_open = False
+        if _store_idx >= 0:
+            _suffix = [
+                i for i in merge_block.instructions[_store_idx + 1:]
+                if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')
+            ]
+            # 剥离尾部隐式 return None（LOAD_CONST None; RETURN_VALUE）
+            while (_suffix and _suffix[-1].opname == 'RETURN_VALUE'
+                   and len(_suffix) >= 2
+                   and _suffix[-2].opname == 'LOAD_CONST'
+                   and _suffix[-2].argval is None):
+                _suffix = _suffix[:-2]
+            if _suffix and any(i.opname == 'RETURN_VALUE' for i in _suffix):
+                _post_store_stmts = self._build_statements_from_instructions(
+                    _suffix, merge_block)
+            elif (_suffix
+                  and any(i.opname.startswith(('POP_JUMP', 'JUMP_IF'))
+                          for i in _suffix)):
+                for _rr in self.regions:
+                    if _rr is not region and getattr(_rr, 'entry', None) is merge_block:
+                        _trailing_control_open = True
+                        break
+        if _trailing_control_open:
+            self.generated_blocks.discard(merge_block)
+            try:
+                self.generated_offsets.discard(merge_block.start_offset)
+            except AttributeError:
+                pass
+        _assign_node = {
             'type': 'Assign',
             'targets': [{
                 'type': 'Name',
@@ -9175,6 +9244,58 @@ AST 映射规则:
             }],
             'value': chained_cond,
         }
+        if _pre_stmts or _post_store_stmts:
+            _out = list(_pre_stmts) + [_assign_node]
+            _out.extend(_post_store_stmts)
+            return _out
+        return _assign_node
+
+    def _extract_vc_pre_store_statements(self, cond_block):
+        """[W15-E' 判定] 提取 cond_block 中链式比较操作数序列之前的完整前驱语句。
+
+        结构判据（正向栈深模拟，非实例特判）：
+          1. 定位块内首个 SWAP——CPython 链式比较首段特征（SWAP 前栈恰为
+             [left, middle1]，深度 2）；
+          2. 从块首累计 dis.stack_effect 至 SWAP 前：每个「栈深归零点」都是
+             完整语句边界（表达式已全部消费/绑定）；取最后一个归零点为
+             前驱语句与比较表达式的分界；
+          3. 分界前缀必须是直线代码（不含 JUMP*/POP_JUMP*/RETURN* 类指令，
+             否则视为控制流混杂，放弃提取维持原行为）；
+          4. 起始即深度 < 0 说明操作数来自前驱块（ternary preload 等形态），
+             不适用本路径。
+        """
+        import dis as _dis_mod
+        instrs = list(getattr(cond_block, 'instructions', []) or [])
+        swap_pos = None
+        for _idx, _ins in enumerate(instrs):
+            if _ins.opname == 'SWAP':
+                swap_pos = _idx
+                break
+        if swap_pos is None or swap_pos == 0:
+            return []
+        depth = 0
+        zero_idx = None
+        for _idx in range(swap_pos):
+            _ins = instrs[_idx]
+            try:
+                _eff = _dis_mod.stack_effect(_ins.opcode, _ins.arg)
+            except Exception:
+                return []
+            depth += _eff
+            if depth < 0:
+                return []
+            if depth == 0:
+                zero_idx = _idx
+        if zero_idx is None:
+            return []
+        prefix = instrs[:zero_idx + 1]
+        if not prefix:
+            return []
+        if any(i.opname.startswith(('JUMP', 'POP_JUMP', 'RETURN'))
+               for i in prefix):
+            return []
+        stmts = self._build_statements_from_instructions(prefix, cond_block)
+        return stmts or []
 
     def _build_chained_compare_with_ternary_middle(self, cond_block, chain_blocks, ops, ternary_region):
         """[Phase 3 adv15_ternary_in_chain_compare_body] 构建含三元中段的链式比较 Compare。
@@ -10644,6 +10765,138 @@ AST 映射规则:
             'comparators': comparators,
         }
 
+    def _try_build_complex_operand_chained_compare_from_blocks(self, cond_block, chain_blocks, ops):
+        """[W15-A 修复] 重建中间操作数为复合表达式的链式比较 Compare 节点。
+
+        [根因]
+        ``_build_assert_chained_compare`` 的通用路径只为每个操作数收集单条
+        LOAD_* 指令。当中缀操作数是属性链（``self._engine.trading_dt``）、
+        方法调用链（``o.get().v``）、下标（``m[k]``）或二元运算时，只有首条
+        LOAD 进入操作数集合：属性链被截断为根名（W15-A），方法调用中缀被
+        替换为占位字面量（灾难级损坏）。
+
+        [算法依据]
+        - 嵌套即抽象节点：每个操作数表达式整体作为一个 AST 子节点参与比较，
+          不可拆解为多条孤立 LOAD。
+        - CPython 链式比较字节码布局（3.11）：首段块以
+          ``LOAD left; LOAD middle1; SWAP n; COPY n; COMPARE_OP; JUMP_*``
+          结尾——SWAP 之前栈恰为 [left, middle1]。逆向栈模拟（对每条指令
+          回退 dis.stack_effect，深度降到 ≤1 处即 left 入栈边界）切分
+          left / middle1 指令范围，各段经 expr_reconstructor.reconstruct
+          完整重建；后续 chain_block 取其 COMPARE_OP 之前的全部指令作为
+          middle2..N 操作数。
+
+        [触发条件]
+        cond_block 或任一 chain_block 含复合操作数标记指令
+        （LOAD_METHOD / LOAD_ATTR / BINARY_SUBSCR / BINARY_OP / CALL），
+        且非 walrus、非 BUILD_* 字面量中缀（分别由专用路径处理）。
+
+        输入契约:
+          - cond_block: 链式比较首段块（含 SWAP+COPY+COMPARE_OP）
+          - chain_blocks: chained_compare_blocks（后续段，每段一个比较指令）
+          - ops: chained_compare_ops（如 ['<=', '<=']）
+
+        返回: Compare dict 或 None（模式不匹配或重建失败时）。
+        """
+        import dis as _dis
+        if cond_block is None:
+            return None
+        if not ops or len(ops) < 2:
+            return None
+        cond_instrs = [i for i in cond_block.instructions
+                       if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+        if not cond_instrs:
+            return None
+        # 触发条件：任一相关块含复合操作数标记指令（纯 LOAD 操作数不在此处理，
+        # 交回通用单条 LOAD 路径，避免行为面扩大）。
+        _complex_markers = {'LOAD_METHOD', 'LOAD_ATTR', 'BINARY_SUBSCR',
+                            'BINARY_OP', 'CALL'}
+        has_complex = any(i.opname in _complex_markers for i in cond_instrs)
+        if not has_complex:
+            for _cb in (chain_blocks or []):
+                if _cb is None:
+                    continue
+                if any(i.opname in _complex_markers for i in _cb.instructions):
+                    has_complex = True
+                    break
+        if not has_complex:
+            return None
+        # walrus 由 _try_build_walrus_chained_compare 处理
+        for idx in range(len(cond_instrs) - 1):
+            if (cond_instrs[idx].opname == 'COPY' and cond_instrs[idx].argval == 1
+                    and cond_instrs[idx + 1].opname in ('STORE_FAST', 'STORE_NAME',
+                                                        'STORE_GLOBAL', 'STORE_DEREF')):
+                return None
+        # literal-middle 由 _try_build_literal_middle_from_blocks 处理
+        for instr in cond_instrs:
+            if instr.opname in ('BUILD_LIST', 'BUILD_TUPLE', 'BUILD_SET'):
+                return None
+
+        # 定位首个 SWAP（链式比较特征）与首个比较指令
+        _compare_ops_set = {'COMPARE_OP', 'IS_OP', 'CONTAINS_OP'}
+        swap_idx = None
+        compare_idx = None
+        for idx, instr in enumerate(cond_instrs):
+            if instr.opname == 'SWAP' and swap_idx is None:
+                swap_idx = idx
+            if instr.opname in _compare_ops_set and compare_idx is None:
+                compare_idx = idx
+                break
+        if compare_idx is None or swap_idx is None:
+            return None
+
+        # SWAP 之前栈为 [left, middle1]（深度 2）。逆向栈模拟找到 left 入栈位置。
+        depth = 2
+        left_start = 0
+        for idx in range(swap_idx - 1, -1, -1):
+            instr = cond_instrs[idx]
+            try:
+                effect = _dis.stack_effect(instr.opcode, instr.arg)
+            except Exception:
+                effect = 0
+            depth -= effect
+            if depth <= 1:
+                left_start = idx
+                break
+        left_instrs = cond_instrs[:left_start]
+        middle1_instrs = cond_instrs[left_start:swap_idx]
+        if not left_instrs or not middle1_instrs:
+            return None
+        left_ast = self.expr_reconstructor.reconstruct(left_instrs)
+        middle1_ast = self.expr_reconstructor.reconstruct(middle1_instrs)
+        if left_ast is None or middle1_ast is None:
+            return None
+
+        # 各 chain_block 取比较指令之前的所有指令作为 middle2..N
+        _skip_ops = ({'COMPARE_OP', 'IS_OP', 'CONTAINS_OP', 'SWAP', 'COPY',
+                      'POP_TOP',
+                      'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_FALSE',
+                      'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_TRUE',
+                      'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'})
+        comparators = [middle1_ast]
+        for cb in chain_blocks:
+            if cb is None:
+                continue
+            cb_instrs = [i for i in cb.instructions
+                         if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')
+                         and i.opname not in _skip_ops]
+            if not cb_instrs:
+                continue
+            if len(cb_instrs) == 1 and cb_instrs[0].opname.startswith('LOAD_'):
+                comparators.append(self.expr_reconstructor._load_instr_to_ast(cb_instrs[0]))
+            else:
+                r = self.expr_reconstructor.reconstruct(cb_instrs)
+                if r is not None:
+                    comparators.append(r)
+        if len(comparators) != len(ops):
+            return None
+        return {
+            'type': 'Compare',
+            'left': left_ast,
+            'ops': list(ops),
+            'comparators': comparators,
+        }
+
     def _detect_boolop_after_chained_compare(self, region: IfRegion) -> Optional[tuple]:
         """
         [链式比较+BoolOp模式检测]
@@ -11080,8 +11333,29 @@ AST 映射规则:
                         'BINARY_SUBSCR', 'BINARY_OP', 'PRECALL', 'CALL',
                         'BUILD_TUPLE', 'BUILD_LIST', 'BUILD_SET', 'BUILD_MAP')
                 )
+                # [W15-E 修复] 赋值右值比较守卫：COMPARE_OP 之后（跳过噪声/
+                # 纯栈操纵/LOAD 指令）若终结于 STORE_*，则该 COMPARE_OP 是
+                # 后继赋值语句的右值子表达式（如 then 体 ``r = v <= w``），
+                # 不是 if 条件起点——清空 pre_instrs 会吞并整条赋值，使嵌套
+                # if 的消费变量沦为悬空全局引用。判据为栈消费语义：比较结果
+                # 由 STORE_* 终结 = 赋值上下文；由条件跳转/块尾终结 = 条件
+                # 上下文（维持原清空行为）。纯栈操纵指令（SWAP/COPY/POP_TOP）
+                # 属扫描噪声，不改变判定。
+                _next_is_assign_store = False
+                for _scan_i in range(_instr_idx + 1, len(_iter_instrs)):
+                    _ni = _iter_instrs[_scan_i]
+                    if _ni.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
+                                      'COPY', 'SWAP', 'POP_TOP'):
+                        continue
+                    if _ni.opname.startswith('LOAD_'):
+                        continue
+                    if _ni.opname in ('STORE_FAST', 'STORE_NAME',
+                                      'STORE_GLOBAL', 'STORE_DEREF'):
+                        _next_is_assign_store = True
+                    break
                 if (not _has_format_value and not _next_is_format_value
-                        and not _next_consumes_as_subexpr):
+                        and not _next_consumes_as_subexpr
+                        and not _next_is_assign_store):
                     pre_instrs = []
                     continue
             pre_instrs.append(instr)
@@ -11181,7 +11455,13 @@ AST 映射规则:
                 continue
             _vc_assign = self._generate_value_context_chain_compare_assign(_r)
             if _vc_assign is not None:
-                _chain_cmp_assign_stmts.append(_vc_assign)
+                # [W15-B] value-context 链式比较赋值可携带 STORE 后继语句
+                # （如 ``r = a<=b<=c`` + ``return r`` 的 Return 节点），
+                # 列表形态需展平追加，不得作为单节点嵌套。
+                if isinstance(_vc_assign, list):
+                    _chain_cmp_assign_stmts.extend(_vc_assign)
+                else:
+                    _chain_cmp_assign_stmts.append(_vc_assign)
                 self._generated_regions.add(_r_id)
                 # 标记内层 IfRegion 的子区域（BoolOp/Ternary）为已生成
                 for _child in (_r.children or []):
@@ -11191,9 +11471,20 @@ AST 映射规则:
                         self.generated_blocks.add(_b)
                         self.generated_offsets.add(_b.start_offset)
                 # merge_block 不在 region.blocks 内（仅作 STORE_* 读取），
-                # 单独标记避免 _process_if_blocks 把它当作独立语句处理
+                # 单独标记避免 _process_if_blocks 把它当作独立语句处理。
+                # [W15-E' 修复] 若 merge_block 同时是另一区域的 entry（如
+                # 链式比较赋值后跟嵌套 if），强制标记会令该区域被跳过、
+                # 后继控制流蒸发——此时不标记，由该区域按 CFG 正常生成。
                 _r_merge = getattr(_r, 'merge_block', None)
-                if _r_merge is not None and _r_merge not in self.generated_blocks:
+                _r_merge_is_other_entry = False
+                if _r_merge is not None:
+                    for _rm in self.regions:
+                        if (_rm is not _r
+                                and getattr(_rm, 'entry', None) is _r_merge):
+                            _r_merge_is_other_entry = True
+                            break
+                if (_r_merge is not None and _r_merge not in self.generated_blocks
+                        and not _r_merge_is_other_entry):
                     self.generated_blocks.add(_r_merge)
                     self.generated_offsets.add(_r_merge.start_offset)
         for child in (region.children or []):
@@ -12687,6 +12978,80 @@ AST 映射规则:
                 return False
         return True
 
+    def _merge_block_is_then_exclusive(self, region: IfRegion) -> bool:
+        """[W15-C 判定] IfRegion.merge_block 是否为真臂专属延续（可归入 then 体）。
+
+        结构判据（基于 CFG 前向可达性 + then 臂内容，非实例特判、非深度硬编码）：
+          1. merge_block 存在，且不在 then_blocks / else_blocks 中；
+          2. then 臂自身无有效语句——遍历 then_blocks 全部指令，剔除
+             纯栈操纵/连接件（RESUME/NOP/CACHE/PUSH_NULL、POP_TOP、
+             JUMP*/POP_JUMP*）后无剩余指令。真臂语句整体位于 merge_block
+             是 CPython「条件跳转跨过真身」布局的特征；若 then 臂已有
+             实际内容（如普通 if 的赋值体），merge_block 只是 if/else 之后
+             的顺序续接点（下一条语句的入口），归入 then 体将吞并后继
+             语句（conver_int14_to_string 回归即此误判）；
+          3. 收集条件链全部条件跳转的假出口目标块（condition_block 与
+             chained_compare_blocks 各块末条 POP_JUMP_* / JUMP_IF_*_OR_POP
+             的跳转目标）；
+          4. 从这些假出口沿 CFG 后继边做有界前向遍历——若 merge_block 可达，
+             说明假臂与真臂在 merge 汇合（共享汇合点），返回 False；
+          5. 不可达 → merge_block 是真臂专属延续，返回 True。
+
+        该判据覆盖 ``if a<=b<=c: return True``（无/有尾部兄弟语句）、
+        True/False 双极性，以及假出口经清理块（SWAP+POP_TOP）多跳后
+        才进入共享尾的一般形态；普通 ``if c: stmt`` 落空形态中假出口
+        目标即 merge_block 本身，天然返回 False，不改变既有行为。
+        """
+        mb = getattr(region, 'merge_block', None)
+        if mb is None:
+            return False
+        _then = set(region.then_blocks or [])
+        _else = set(region.else_blocks or [])
+        if mb in _then or mb in _else:
+            return False
+        # [W15-C 判据收紧] then 臂必须自身无有效语句——真身全在 merge_block。
+        # 普通 if/else 的 then 体含实际语句、merge_block 是后续代码入口，
+        # 不满足本形态（否则后继语句被错误吸入 then 体）。
+        _noise_ops = {'RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP'}
+        for _tb in (region.then_blocks or []):
+            for _ti in _tb.instructions:
+                if _ti.opname in _noise_ops:
+                    continue
+                if _ti.opname.startswith(('JUMP', 'POP_JUMP')):
+                    continue
+                return False
+        # 收集条件链的条件跳转假出口目标
+        false_targets = []
+        chain = [region.condition_block] + list(getattr(region, 'chained_compare_blocks', None) or [])
+        for cb in chain:
+            if cb is None:
+                continue
+            li = cb.get_last_instruction()
+            if li is None or li.argval is None:
+                continue
+            if (li.opname.startswith('POP_JUMP')
+                    or li.opname in ('JUMP_IF_TRUE_OR_POP', 'JUMP_IF_FALSE_OR_POP')):
+                tb = self.cfg.get_block_by_offset(li.argval)
+                if tb is not None:
+                    false_targets.append(tb)
+        # 有界前向遍历：从假出口出发是否可达 merge_block
+        seen = set()
+        stack = list(false_targets)
+        steps = 0
+        while stack and steps < 4096:
+            b = stack.pop()
+            steps += 1
+            bid = id(b)
+            if bid in seen:
+                continue
+            seen.add(bid)
+            if b is mb:
+                return False
+            for s in getattr(b, 'successors', ()) or ():
+                if s is not None and id(s) not in seen:
+                    stack.append(s)
+        return True
+
     def _if_generate_normal(self, region: IfRegion) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         cond_block = region.condition_block
         if cond_block is None:
@@ -12966,6 +13331,35 @@ AST 映射规则:
                 _else_gen = self._process_if_blocks(_inner_ir_with_else.else_blocks, region, branch='else')
                 if _else_gen:
                     else_stmts = _else_gen
+        # [W15-C 修复] 真臂专属汇合块归入 then 体。
+        # 链式比较（SWAP/COPY 序列）条件的 if 在 CPython 3.11 下布局为：
+        #   cond → chain(POP_JUMP_IF_FALSE→假出口) → JUMP_FORWARD 连接块(then_blocks)
+        #          → merge_block（真臂语句，如 LOAD_CONST True; RETURN_VALUE）
+        # merge_block 不在 then_blocks/else_blocks 中，且区域分析器把它排除在
+        # 两臂之外，导致真臂 return 值丢失、源码被重写为 ``if: pass / else:``。
+        # 结构判据：merge_block 存在、不在两臂列表中，且从条件链全部条件跳转
+        # 的假出口沿 CFG 前向可达性检验不可达（即仅由 then 路径到达）——满足时
+        # 该块是 then 臂专属延续，其语句必须归入 then 体发射，而非悬挂丢弃。
+        if (getattr(region, 'merge_block', None) is not None
+                and self._merge_block_is_then_exclusive(region)):
+            _mb_effective = [
+                i for i in region.merge_block.instructions
+                if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
+                                    'POP_TOP', 'JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                                    'JUMP_BACKWARD')
+            ]
+            if _mb_effective:
+                self.generated_blocks.discard(region.merge_block)
+                self.generated_offsets.discard(region.merge_block.start_offset)
+                _merge_then_stmts = self._generate_block_statements(region.merge_block)
+                if _merge_then_stmts:
+                    # 剔除空 then 体回填的合成 Pass，避免 `pass; return True`
+                    _kept = [s for s in (then_stmts or [])
+                             if not (isinstance(s, dict) and s.get('type') == 'Pass')]
+                    then_stmts = _kept + _merge_then_stmts
+                self.generated_blocks.add(region.merge_block)
+                self.generated_offsets.add(region.merge_block.start_offset)
+
         def _strip_implicit_return_none(stmts):
             if not stmts:
                 return stmts
@@ -15341,6 +15735,61 @@ AST 映射规则:
             self.generated_offsets.add(cb.start_offset)
         return True
 
+    def _break_block_is_chain_compare_loop_exit(self, block: BasicBlock) -> bool:
+        """[W15-D 判定] 本块是否为链式比较循环条件的假出口清理块。
+
+        结构判据（三者同时成立）：
+          1. 存在前驱块 P 以条件跳转（POP_JUMP_*）指向本块，且 P 的有效指令
+             同时含 SWAP、COPY、COMPARE_OP——CPython 链式比较首段的签名；
+          2. P 属于某个 LoopRegion 的 blocks/body_blocks（重查链在循环内）；
+          3. P 的条件为真的 fallthrough 后继沿无条件边（JUMP_FORWARD/
+             JUMP_ABSOLUTE）前进，可达「末条为 POP_JUMP_BACKWARD_* 且目标
+             为该循环节头」的块——即真路径回到循环头（重查语义）。
+
+        源码级真实 break 不满足判据 3：其所在块的无条件边指向循环出口而非
+        条件反跳回头的块；纯清理块若仅由无条件跳转前驱到达同样不满足判据 1。
+        """
+        _chain_signature = {'SWAP', 'COPY', 'COMPARE_OP'}
+        for p in getattr(block, 'predecessors', ()) or ():
+            li = p.get_last_instruction()
+            if li is None or not li.opname.startswith('POP_JUMP'):
+                continue
+            if li.argval != block.start_offset:
+                continue
+            p_eff = [i for i in p.instructions
+                     if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+            if not _chain_signature.issubset({i.opname for i in p_eff}):
+                continue
+            loop = None
+            for lr in self.region_analyzer.regions:
+                if not isinstance(lr, LoopRegion):
+                    continue
+                if (p in (lr.blocks or set())
+                        or p in (getattr(lr, 'body_blocks', None) or [])):
+                    loop = lr
+                    break
+            if loop is None:
+                continue
+            hdr = getattr(loop, 'header_block', None)
+            if hdr is None:
+                continue
+            ft_succs = [s for s in (getattr(p, 'successors', ()) or ())
+                        if getattr(s, 'start_offset', None) != li.argval]
+            cur = ft_succs[0] if ft_succs else None
+            steps = 0
+            while cur is not None and steps < 8:
+                cli = cur.get_last_instruction()
+                if (cli is not None and cli.opname.startswith('POP_JUMP_BACKWARD')
+                        and cli.argval == hdr.start_offset):
+                    return True
+                if cli is not None and cli.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+                    nxt = self.cfg.get_block_by_offset(cli.argval)
+                    cur = nxt if nxt is not None and nxt is not cur else None
+                    steps += 1
+                    continue
+                break
+        return False
+
     def _process_if_blocks(self, blocks, region: IfRegion, branch: str = 'then') -> List[Dict[str, Any]]:
         """处理 if/else 分支的块列表。
 
@@ -15802,6 +16251,21 @@ AST 映射规则:
                 continue
             role = self.region_analyzer.get_block_role(block)
             if role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
+                # [W15-D 修复] 链式比较循环条件的假出口清理块不是用户 break。
+                # while 条件为链式比较（SWAP/COPY 序列）时，循环体重查链的
+                # POP_JUMP_IF_FALSE 目标是纯清理块（POP_TOP + 跳转），其语义是
+                # 「循环条件为假 → 退出循环」，已由 while 节点的 test 表达；
+                # 若按 BLOCK 角色发射显式 Break，会在循环体前注入虚假 break、
+                # 真身变死代码。结构判据：存在前驱块以条件跳转指向本块，且该
+                # 前驱含 SWAP+COPY+COMPARE_OP 链式比较签名并属于当前循环，
+                # 且其条件为真的 fallthrough 路径经无跳转边可达以「条件反跳
+                # 回循环节头」结尾的块——三者同时成立才认定为本形态。
+                # 处置：仅标记 generated，不发射任何语句（重编译时 CPython
+                # 会为 while test 的假出口重新生成该清理块）。
+                if self._break_block_is_chain_compare_loop_exit(block):
+                    self.generated_blocks.add(block)
+                    self.generated_offsets.add(block.start_offset)
+                    continue
                 _meaningful_instrs = [
                     i for i in block.instructions
                     if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP')
@@ -16324,6 +16788,15 @@ AST 映射规则:
                             _all_succ_exit = False
                             break
                     if _all_succ_exit and block.successors:
+                        # [W15-D 修复] 链式比较循环条件的假出口清理块
+                        # （POP_TOP 等，语义为「循环条件为假 → 退出循环」）
+                        # 不发射显式 Break——while 节点的 test 已表达该退出；
+                        # 重编译时 CPython 会重新生成此清理块。判据见
+                        # _break_block_is_chain_compare_loop_exit。
+                        if self._break_block_is_chain_compare_loop_exit(block):
+                            self.generated_blocks.add(block)
+                            self.generated_offsets.add(block.start_offset)
+                            continue
                         stmts.append({'type': 'Break'})
                         self.generated_blocks.add(block)
                         self.generated_offsets.add(block.start_offset)
@@ -36461,13 +36934,16 @@ AST 映射规则:
                 # [W14-B 修复] 标记条件扩展：fallthrough 前驱背书的分支内
                 # 显式 return 同样保护；函数尾仅跳转边可达的 trivial 返回块
                 # （隐式返回的 jump-threading 产物）维持可剥离。
+                # [R15-10] 多前驱共享汇合块的裸 return None 同为源码语句，
+                # 经 _w14_join_bare_return_none 背书发射。
                 _r23n16_in_except = any(
                     _i.opname in ('POP_EXCEPT', 'PUSH_EXC_INFO')
                     for _i in block.instructions
                 )
                 _r23n16_ret_flag = ({'_explicit_return': True}
                                     if (_r23n16_in_except
-                                        or self._w14_has_following_code(block))
+                                        or self._w14_has_following_code(block)
+                                        or self._w14_join_bare_return_none(block))
                                     else {})
                 # [W14-B 修复·纯裸返回判定] 仅当块内 RETURN 之前只有
                 # LOAD_CONST None（+噪声前缀）——即真正的裸 return 块——时，
@@ -38876,6 +39352,47 @@ AST 映射规则:
                 return True
         return False
 
+    def _w14_join_bare_return_none(self, block) -> bool:
+        """[R15-10 判据] 多前驱共享汇合块的显式 return None。
+
+        结构判据（全部成立）：
+          1. 块指令恰为「LOAD_CONST None + RETURN_VALUE」裸返回形态；
+          2. 前驱数 ≥ 2，且每条入边都是条件跳转边（POP_JUMP_*）——即 ≥2 个
+             分支臂的假出口在本块汇合；
+          3. 无 fallthrough 前驱、无条件跳转前驱（jump-threading 产物由
+             无条件/单一边到达，不满足多条件边汇聚）。
+        汇聚语义：≥2 条件边共享同一汇合块意味着源码在此存在真实续接点，
+        其 return None 是用户语句，必须发射；否则重编译缺失该块导致
+        co_code 不一致（28 vs 32 字节冗余汇合块差异）。
+        """
+        instrs = [i for i in block.instructions
+                  if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+        if len(instrs) == 2:
+            if not (instrs[0].opname == 'LOAD_CONST'
+                    and instrs[0].argval is None
+                    and instrs[1].opname == 'RETURN_VALUE'):
+                return False
+        elif len(instrs) == 1:
+            if not (instrs[0].opname == 'RETURN_CONST'
+                    and instrs[0].argval is None):
+                return False
+        else:
+            return False
+        preds = list(getattr(block, 'predecessors', ()) or ())
+        if len(preds) < 2:
+            return False
+        cond_edges = 0
+        for p in preds:
+            li = p.get_last_instruction()
+            if li is None:
+                return False
+            if li.opname.startswith(('POP_JUMP', 'JUMP_IF')):
+                cond_edges += 1
+                continue
+            # fallthrough / 无条件跳转 / 终止指令前驱 → 非纯条件汇聚
+            return False
+        return cond_edges >= 2
+
     def _w14_explicit_return_flag(self, block) -> dict:
         """[W14-B] Return 节点的 _explicit_return 标记判定。
 
@@ -38883,13 +39400,17 @@ AST 映射规则:
         1. 块处于 except handler 上下文（含 POP_EXCEPT/PUSH_EXC_INFO）：
            R23-N16 原判据，handler 内 return 生成真实 cleanup 序列；
         2. 块之后仍有可达非平凡代码（_w14_has_following_code）：分支体内
-           的源码显式 return——其块后跟兄弟臂/汇合点后续语句。
+           的源码显式 return——其块后跟兄弟臂/汇合点后续语句；
+        3. [R15-10] 多前驱共享汇合块的裸 return None
+           （_w14_join_bare_return_none）：≥2 条件跳转边汇聚的续接点，
+           其 return None 是用户语句，门控不得误抑制。
         函数尾 jump-threading 的 trivial 返回块两者皆否，不标记，
         维持基线 strip 行为。
         """
         _in_except = any(i.opname in ('POP_EXCEPT', 'PUSH_EXC_INFO')
                          for i in block.instructions)
-        if _in_except or self._w14_has_following_code(block):
+        if (_in_except or self._w14_has_following_code(block)
+                or self._w14_join_bare_return_none(block)):
             return {'_explicit_return': True}
         return {}
 
