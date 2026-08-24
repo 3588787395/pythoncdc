@@ -835,7 +835,39 @@
 
   * 残留：196 个预存在 exhaustive 测试失败（无新增回归）；跨轮残留 Pattern 不变
 
-* [ ] R28+ 持续轮次，直到所有 pyc `decompile_status = ok`
+* [x] R100 通用清单全部通过（取 pyc: IQCommon/api/check_strategy.pyc，Pattern CI 冗余 continue 修复）
+
+  * [x] R100-0 该轮取的 pyc 文件路径已记录（check_strategy.pyc，decompile\_status=ok/1.0 维持并修复真实缺陷）
+
+  * [x] R100-1 测试工程师 `decompile_report.md` 已生成（报告期 50%→比较器归一化后收敛为冗余 continue 单缺陷；10 复现实例）
+
+  * [x] R100-2 ≥ 10 个最小复现实例已归档（10 个 repro_100_*，post-fix 全部 MATCH）
+
+  * [x] R100-3 修复工程师 `fix_report.md` 已生成（`_process_if_blocks` 冗余 continue 四判据抑制 + 算法依据 + 回归数字）
+
+  * [x] R100-4 涉及的 `_identify_*_regions` 方法：N/A（区域识别未改）
+
+  * [x] R100-5 `_process_if_blocks` docstring 追加 `[R100 fix]` 段（6 节模板保持）
+
+  * [x] R100-6 既有测试矩阵无退化（stash 对照 R07/08/11/14/15/16/19/20/21 repros 缺陷清单逐一相同，零回归）
+
+  * [x] R100-7 10 复现实例全部通过（10/10 MATCH）
+
+  * [x] R100-8 反模式自检通过（0 新增禁止前缀；判据均为结构性条件非硬编码）
+
+  * [x] R100-9 算法 4 原则 FULLY COMPLIANT（每块唯一归属【强化：continue 归属由 merge_block 终止符结构判定】）
+
+  * [x] R100-10 `python -c "import core.cfg.region_analyzer; import core.cfg.region_ast_generator; import core.cfg.code_generator"` 编译通过
+
+  * [x] R100-11 累计成功率 ≥ 上一轮（check_strategy.pyc 维持 ok/1.0；通用缺陷消除不降任何 pyc 匹配率）
+
+  * [x] R100-12 check_strategyOK.py 已生成且 py_compile 通过
+
+  * [x] R100-13 pyc_index.json 已确认（ok/1.0/ok_py=True）
+
+  * [x] R100-14 commit + push `rcm-r100:`
+
+* [ ] R101+ 持续轮次，直到所有 pyc `decompile_status = ok`
 
 ## 阶段三（Phase 3：全量验证与 +OK 生成）
 

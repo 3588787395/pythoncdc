@@ -15816,6 +15816,13 @@ AST 映射规则:
         6. 反编译流程：扫描 blocks → 跳过已生成/子区域非入口块 → 对子区域
            entry 调用 _generate_region → 对普通块调用 _generate_block_statements
            → 收集为 stmts 列表返回，映射为 AST If.body / orelse。
+
+        [R100 fix] 纯连接 continue 块的冗余抑制：当分支末块的 PURE_CONTINUE
+        回边已由「IfRegion.merge_block 末指令为 JUMP_BACKWARD→循环 header
+        （两分支在迭代末尾汇合）+ 分支体非空 + 本块为分支末块」的结构性
+        判据证明可由重编译自然再生时，不再补发显式 Continue（否则字节码
+        多出一条 JUMP_BACKWARD）。详见 CONTINUE 角色处理分支内的
+        [R100 fix] 行内注释。
         """
         stmts: List[Dict[str, Any]] = []
         child_region_blocks = set()
@@ -16328,7 +16335,42 @@ AST 映射规则:
                 # 源码级显式 continue 的块不会成为任何循环的 for_iter_exit
                 # （continue 位于体内，FOR_ITER 目标位于体后）。
                 if not self._block_is_structural_for_iter_exit(block):
-                    stmts.append({'type': 'Continue'})
+                    # [R100 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4
+                    # （入口引用语义）：纯连接 continue 块的冗余抑制。当以下
+                    # 结构性判据同时成立时，本块的 JUMP_BACKWARD 回边已由
+                    # 「if 为循环体末条语句」形态的重编译自然再生（条件假出口
+                    # 与 then 体各自生成回边连接块），补发显式 Continue 会
+                    # 叠加多余后向跳转（字节码 +1 JUMP_BACKWARD 偏移）：
+                    #   1. 所属 region 是 IfRegion 且存在 merge_block（≠本块）；
+                    #   2. merge_block 末指令为 JUMP_BACKWARD→当前循环 header：
+                    #      两分支在迭代末尾汇合，merge 本身即迭代终止符
+                    #      （如链式比较假出口 POP_TOP+JUMP_BACKWARD 清理块）；
+                    #   3. 本块是分支块列表中最后一个块：它是分支体的后置
+                    #      连接器而非源码级显式 continue——显式 continue 位于
+                    #      语句序列中间（其后还有 merge/post-if 代码），不满足
+                    #      判据 2 的「merge 即终止符」前提；
+                    #   4. 分支已产出至少一条语句：`if c: continue` 形态中
+                    #      纯 continue 块独占分支（stmts 为空），其回边不由
+                    #      循环结构保证，必须保留显式 Continue。
+                    _r100_suppress = False
+                    if (isinstance(region, IfRegion)
+                            and getattr(region, 'merge_block', None) is not None
+                            and region.merge_block is not block
+                            and stmts
+                            and blocks
+                            and block.start_offset == max(b.start_offset for b in blocks)):
+                        _r100_hdr = (getattr(self._current_loop, 'header_block', None)
+                                                     if self._current_loop else None)
+                        _r100_mlast = region.merge_block.get_last_instruction()
+                        if (_r100_hdr is not None and _r100_mlast is not None
+                                and _r100_mlast.opname in ('JUMP_BACKWARD',
+                                                           'JUMP_BACKWARD_NO_INTERRUPT')
+                                and _r100_mlast.argval is not None):
+                            _r100_mtgt = self.cfg.get_block_by_offset(_r100_mlast.argval)
+                            if _r100_mtgt is _r100_hdr:
+                                _r100_suppress = True
+                    if not _r100_suppress:
+                        stmts.append({'type': 'Continue'})
                 self.generated_blocks.add(block)
                 self.generated_offsets.add(block.start_offset)
                 continue

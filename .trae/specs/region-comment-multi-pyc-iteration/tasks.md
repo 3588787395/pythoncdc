@@ -278,6 +278,12 @@
     - region_ast_generator.py：修复 _coalesce_compares 中 `for _ in [0]` 创建 generator 对象而非 dict 的 AttributeError bug
   - [x] T2.98.3 全局测试：261 OK pyc（与基线一致，无回归），_sync_worker 函数体从 pass 恢复为 2791 字符完整函数体
   - 残留：empty_then 从 5 降至 1；_sync_worker 反编译结果不完美（while 循环结构有误），但函数体不再完全丢失
+- [x] T2.100 第 100 轮（取 pyc: IQCommon/api/check_strategy.pyc，Pattern CI 冗余 continue 补发修复，补完上次中断轮次）
+  - [x] T2.100.1 测试工程师：反编译 + 字节码 diff → `rounds/round_100/test_engineer/decompile_report.md`（报告期 50%，比较器 d4a9370f 归一化后实测缺陷收敛为 1 个：分支末块 PURE_CONTINUE 时冗余补发显式 continue；10 复现实例）
+  - [x] T2.100.2 修复工程师：`_process_if_blocks` CONTINUE/PURE_CONTINUE 分支追加 [R100 fix] 四条结构性判据冗余抑制（IfRegion + merge_block 末指令 JUMP_BACKWARD→循环 header + 分支末块 + 分支体非空）→ `rounds/round_100/repair_engineer/fix_report.md`
+  - [x] T2.100.3 验证：check_strategy.pyc 实测 match_rate=1.0 / status=ok / check_strategyOK.py 生成且 py_compile 通过；10/10 复现实例 MATCH；stash 对照回归（R07/08/11/14/15/16/19/20/21 repros 缺陷清单逐一相同，零回归）；resource_utilsOK.py 由批量工具按 HEAD 行为再生成（docstring 恢复 + 显式 return None，非手工编辑）
+  - [x] T2.100.4 commit + push `rcm-r100:`
+  - 残留：历史轮次既有 nested-try/nested-if-in-else DEFECT 与基线一致不变
 - [ ] T2.NN ... 持续直到退出条件满足（所有 pyc 文件 100% 字节码一致，每个生成 +OK.py）
 
 > 注：轮次数不设上限，持续直到所有 pyc 文件所有函数 100% 字节码一致。
