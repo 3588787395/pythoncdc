@@ -6883,21 +6883,24 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                                         'RETURN_VALUE', 'RETURN_CONST')
                                     and _eb_instrs[0].argval is None):
                                 _ret_val_is_none = True
-                            if _ret_val_is_none or not _eb_instrs:
-                                continue
-                            _try_start_min_r101 = min(
+                            # [W26 修复] 原 dtc-r01 hunk1 对 return-None 块
+                            # 无条件排除（>=try_end 即弃），打碎了
+                            # SymbolDict.__missing__ 的 try 体自身 return 块。
+                            # 统一判据：>=try_end 的块只有当其全部普通前驱
+                            # 都来自 try 保护范围内（纯 try 体进入）时才收归
+                            # try_blocks；存在范围外前驱（= else/后续代码候选）
+                            # 才排除。与下方非 None 返回的判据一致。
+                            _all_preds_in_range_w26 = bool(succ.predecessors)
+                            _w26_tsmin = min(
                                 (b.start_offset for b in try_blocks),
                                 default=try_start)
-                            _all_preds_in_range = bool(succ.predecessors)
-                            for _pred_r101 in succ.predecessors:
-                                if _pred_r101 in try_blocks:
+                            for _pred_w26 in succ.predecessors:
+                                if (_pred_w26.start_offset >= _w26_tsmin
+                                        and _pred_w26.end_offset <= try_end_for_blocks):
                                     continue
-                                if (_pred_r101.start_offset >= _try_start_min_r101
-                                        and _pred_r101.end_offset <= try_end_for_blocks):
-                                    continue
-                                _all_preds_in_range = False
+                                _all_preds_in_range_w26 = False
                                 break
-                            if not _all_preds_in_range:
+                            if (not _eb_instrs) or (not _all_preds_in_range_w26):
                                 continue
                         _explicit_return_blocks_r21n1.append(succ)
                 if _explicit_return_blocks_r21n1:
