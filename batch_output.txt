@@ -1,0 +1,1060 @@
+====================================================================================================
+  quotation.pyc 批量反编译 & 字节码比对
+====================================================================================================
+  PYC: F:\Downloads\pythoncdc-main\quotation.pyc
+
+>>> 步骤 1: 加载原始 pyc，提取 code objects
+    原始 code objects: 153 个
+    非 <module>: 152 个函数/类/推导式
+
+>>> 步骤 2: 反编译整个 quotation.pyc
+    反编译完成，180515 字符
+
+>>> 步骤 3: 编译反编译源码
+    编译成功
+    反编译后 code objects: 153 个
+
+>>> 步骤 4: 逐函数比对字节码
+    [1/152] getLogger MATCH (diff=0)
+    [2/152] getLogger.Void MATCH (diff=0)
+    [3/152] getLogger.Void.__getattr__ MATCH (diff=0)
+    [4/152] getLogger.Void.__setattr__ MATCH (diff=0)
+    [5/152] getLogger.Void.__call__ MATCH (diff=0)
+    [6/152] getLogger.Void.__repr__ MATCH (diff=0)
+    [7/152] get_quote MATCH (diff=0)
+    [8/152] get_real_param MATCH (diff=0)
+    [9/152] get_open_param MATCH (diff=0)
+    [10/152] get_real_exrights_param MATCH (diff=0)
+    [11/152] get_token MATCH (diff=0)
+    [12/152] api_get MATCH (diff=0)
+    [13/152] api_get_financial MATCH (diff=0)
+    [14/152] get_kline MATCH (diff=0)
+    [15/152] get_holiday_online MATCH (diff=0)
+    [16/152] one_prod_to_dataframe MATCH (diff=0)
+    [17/152] kline_to_dataframe MATCH (diff=0)
+    [18/152] datetimeindex_astype MATCH (diff=0)
+    [19/152] datetimeindex_astype.<lambda> MISMATCH (diff=1)
+    [20/152] datetimeindex_astype.<lambda> MATCH (diff=0)
+    [21/152] fill_minute_or_day_blank MATCH (diff=0)
+    [22/152] load_minute_or_day_kline MATCH (diff=0)
+    [23/152] get_minute_or_day_fill_time MATCH (diff=0)
+    [24/152] build_future_fill_time MATCH (diff=0)
+    [25/152] build_future_fill_time.<listcomp> MATCH (diff=0)
+    [26/152] build_future_fill_time.<listcomp> MATCH (diff=0)
+    [27/152] build_future_fill_time.<listcomp> MATCH (diff=0)
+    [28/152] change_future_real_date MATCH (diff=0)
+    [29/152] filter_duplicated_date MATCH (diff=0)
+    [30/152] build_current_period_df MATCH (diff=0)
+    [31/152] build_current_period_df.<lambda> MATCH (diff=0)
+    [32/152] load_bars_from_hundsun MATCH (diff=0)
+    [33/152] load_get_price MATCH (diff=0)
+    [34/152] obtain_date MATCH (diff=0)
+    [35/152] get_str_data MATCH (diff=0)
+    [36/152] _is_same_type_date MATCH (diff=0)
+    [37/152] change_his_to_forward MATCH (diff=0)
+    [38/152] change_his_to_backward MATCH (diff=0)
+    [39/152] get_exrights_data MATCH (diff=0)
+    [40/152] load_get_exrights MATCH (diff=0)
+    [41/152] load_get_exrights.choose_data_from_dict MATCH (diff=0)
+    [42/152] load_get_index_stocks MATCH (diff=0)
+    [43/152] load_get_industry_stocks MATCH (diff=0)
+    [44/152] get_trading_day MATCH (diff=0)
+    [45/152] get_all_trades_days MATCH (diff=0)
+    [46/152] get_trade_days MATCH (diff=0)
+    [47/152] get_price MATCH (diff=0)
+    [48/152] get_history MATCH (diff=0)
+    [49/152] get_date_and_count MATCH (diff=0)
+    [50/152] valuation_new MATCH (diff=0)
+    [51/152] valuation_new.get_IQE_code MATCH (diff=0)
+    [52/152] valuation_new.<lambda> MATCH (diff=0)
+    [53/152] valuation MATCH (diff=0)
+    [54/152] balance_statement MATCH (diff=0)
+    [55/152] income_statement MATCH (diff=0)
+    [56/152] cashflow_statement MATCH (diff=0)
+    [57/152] growth_ability MATCH (diff=0)
+    [58/152] profit_ability MATCH (diff=0)
+    [59/152] eps MATCH (diff=0)
+    [60/152] cash_collection_ability MATCH (diff=0)
+    [61/152] operating_ability MATCH (diff=0)
+    [62/152] debt_paying_ability MATCH (diff=0)
+    [63/152] share_change MATCH (diff=0)
+    [64/152] get_balance_statement MATCH (diff=0)
+    [65/152] get_income_statement MATCH (diff=0)
+    [66/152] get_cashflow_statement MATCH (diff=0)
+    [67/152] get_growth_ability MATCH (diff=0)
+    [68/152] get_profit_ability MATCH (diff=0)
+    [69/152] get_eps MATCH (diff=0)
+    [70/152] get_cash_collection_ability MATCH (diff=0)
+    [71/152] get_operating_ability MATCH (diff=0)
+    [72/152] get_debt_paying_ability MATCH (diff=0)
+    [73/152] get_share_change MATCH (diff=0)
+    [74/152] get_valuation MATCH (diff=0)
+    [75/152] get_valuation_new MATCH (diff=0)
+    [76/152] isVaildDate MATCH (diff=0)
+    [77/152] get_exrights MATCH (diff=0)
+    [78/152] check_index_code MATCH (diff=0)
+    [79/152] get_index_stocks MATCH (diff=0)
+    [80/152] get_Ashares MATCH (diff=0)
+    [81/152] get_Bshares MATCH (diff=0)
+    [82/152] get_STshares MATCH (diff=0)
+    [83/152] get_stock_status MATCH (diff=0)
+    [84/152] check_industry_code MATCH (diff=0)
+    [85/152] get_industry_stocks MATCH (diff=0)
+    [86/152] check_stock MATCH (diff=0)
+    [87/152] check_stocks MATCH (diff=0)
+    [88/152] check_frequency MATCH (diff=0)
+    [89/152] symbol MATCH (diff=0)
+    [90/152] dict_to_dataframe MATCH (diff=0)
+    [91/152] multi_prod_to_dataframe MATCH (diff=0)
+    [92/152] market_list_to_dataframe MATCH (diff=0)
+    [93/152] tick_to_dataframe MATCH (diff=0)
+    [94/152] trend_to_dataframe MATCH (diff=0)
+    [95/152] trend5day_to_dataframe MATCH (diff=0)
+    [96/152] real_to_dataframe MATCH (diff=0)
+    [97/152] get_market_list MATCH (diff=0)
+    [98/152] get_market_list.<listcomp> MATCH (diff=0)
+    [99/152] get_tick MATCH (diff=0)
+    [100/152] get_block_info MATCH (diff=0)
+    [101/152] get_market_detail MATCH (diff=0)
+    [102/152] get_market_detail_online MATCH (diff=0)
+    [103/152] get_klines MATCH (diff=0)
+    [104/152] get_real MATCH (diff=0)
+    [105/152] get_trend MATCH (diff=0)
+    [106/152] get_trend5day MATCH (diff=0)
+    [107/152] convert_to_list MATCH (diff=0)
+    [108/152] get_fields MATCH (diff=0)
+    [109/152] get_date_index MATCH (diff=0)
+    [110/152] get_date_index.<lambda> MATCH (diff=0)
+    [111/152] fill_missing_stock_data MATCH (diff=0)
+    [112/152] date_convert MATCH (diff=0)
+    [113/152] get_open_data MATCH (diff=0)
+    [114/152] get_fundamentals MATCH (diff=0)
+    [115/152] get_fundflow_day_single MATCH (diff=0)
+    [116/152] get_fundflow_day MATCH (diff=0)
+    [117/152] get_block_stocks MATCH (diff=0)
+    [118/152] get_stock_blocks MATCH (diff=0)
+    [119/152] get_stock_exrights MATCH (diff=0)
+    [120/152] get_valuation_info MATCH (diff=0)
+    [121/152] get_valuation_info.<lambda> MATCH (diff=0)
+    [122/152] get_valuation_new_info MATCH (diff=0)
+    [123/152] get_valuation_new_info.<lambda> MATCH (diff=0)
+    [124/152] get_fundamentals_daily_info MATCH (diff=0)
+    [125/152] get_fundamentals_daily_info.<lambda> MATCH (diff=0)
+    [126/152] get_stock_name MATCH (diff=0)
+    [127/152] get_stock_info MATCH (diff=0)
+    [128/152] get_merged_data MATCH (diff=0)
+    [129/152] is_ST_stock_real MATCH (diff=0)
+    [130/152] is_ST_stock MATCH (diff=0)
+    [131/152] is_halt_stock_real MATCH (diff=0)
+    [132/152] is_halt_stock MATCH (diff=0)
+    [133/152] get_industries MATCH (diff=0)
+    [134/152] get_fundflow_order_rank MATCH (diff=0)
+    [135/152] get_user_name MATCH (diff=0)
+    [136/152] get_opt_objects MATCH (diff=0)
+    [137/152] get_opt_last_dates MATCH (diff=0)
+    [138/152] get_opt_contracts MATCH (diff=0)
+    [139/152] get_contract_info MATCH (diff=0)
+    [140/152] get_option_info MATCH (diff=0)
+    [141/152] get_cb_info MATCH (diff=0)
+    [142/152] get_cb_calender_info MATCH (diff=0)
+    [143/152] get_cb_time_info MATCH (diff=0)
+    [144/152] get_trend_data MATCH (diff=0)
+    [145/152] get_reits_list MATCH (diff=0)
+    [146/152] check_limit MATCH (diff=0)
+    [147/152] check_jq_code MATCH (diff=0)
+    [148/152] trans_jq_code MATCH (diff=0)
+    [149/152] get_current_kline_count MATCH (diff=0)
+    [150/152] filter_stock_by_status MATCH (diff=0)
+    [151/152] get_trading_day_by_date MATCH (diff=0)
+    [152/152] get_dominant_contract MATCH (diff=0)
+
+====================================================================================================
+  汇总: 151/152 匹配 (99%), 1 不匹配
+  以下是 Top 10 差异最大的函数 + 用户关注函数
+====================================================================================================
+
+####################################################################################################
+  #1: datetimeindex_astype.<lambda>  [status=MISMATCH]
+  原始指令数: 6  |  反编译指令数: 6  |  真差: 1  |  跳转差: 0
+####################################################################################################
+
+── 原始字节码 (dis) ──
+       0: RESUME                         0
+       2: LOAD_FAST                      's'
+       4: LOAD_METHOD                    'strftime'
+      26: LOAD_CONST                     '%Y-%m-%d %H:%M:%S'
+      28: PRECALL                        1
+      32: CALL                           1
+      42: RETURN_VALUE                   
+
+── 反编译字节码 (dis) ──
+       0: RESUME                         0
+       2: LOAD_FAST                      's'
+       4: LOAD_METHOD                    'strftime'
+      26: LOAD_CONST                     '%Y-%m-%d'
+      28: PRECALL                        1
+      32: CALL                           1
+      42: RETURN_VALUE                   
+
+── 真实差异 (共 1 条) ──
+  [  3]   LOAD_CONST                     arg=%Y-%m-%d %H:%M:%S  -->  LOAD_CONST                     arg=%Y-%m-%d
+
+####################################################################################################
+  #2: check_stock  [status=MATCH]
+  原始指令数: 42  |  反编译指令数: 42  |  真差: 0  |  跳转差: 0
+####################################################################################################
+
+── 反编译源码 ──
+
+    def check_stock(s):
+        assert isinstance(s, str), "请使用字符串表示标的代码，例如'600570.SS'"
+        assert 11 >= len(s) >= 9, '请输入正确的标的代码'
+        assert s.split('.')[1] in ('SS', 'SZ', 'CCFX', 'XDCE', 'XSGE', 'XZCE', 'XBHS', 'XINE'), "请输入标的代码以'SS','SZ','CCFX','XDCE','XSGE','XZCE', 'XBHS', 'XINE'结尾"
+
+── 原始字节码 (dis) ──
+       0: RESUME                         0
+       2: LOAD_GLOBAL                    'isinstance'
+      14: LOAD_FAST                      's'
+      16: LOAD_GLOBAL                    'str'
+      28: PRECALL                        2
+      32: CALL                           2
+      42: POP_JUMP_FORWARD_IF_TRUE       64
+      44: LOAD_ASSERTION_ERROR           
+      46: LOAD_CONST                     "请使用字符串表示标的代码，例如'600570.SS'"
+      48: PRECALL                        0
+      52: CALL                           0
+      62: RAISE_VARARGS                  1
+      64: LOAD_CONST                     11
+      66: LOAD_GLOBAL                    'len'
+      78: LOAD_FAST                      's'
+      80: PRECALL                        1
+      84: CALL                           1
+      94: SWAP                           2
+      96: COPY                           2
+      98: COMPARE_OP                     '>='
+     104: POP_JUMP_FORWARD_IF_FALSE      118
+     106: LOAD_CONST                     9
+     108: COMPARE_OP                     '>='
+     114: POP_JUMP_FORWARD_IF_TRUE       140
+     116: JUMP_FORWARD                   120
+     118: POP_TOP                        
+     120: LOAD_ASSERTION_ERROR           
+     122: LOAD_CONST                     '请输入正确的标的代码'
+     124: PRECALL                        0
+     128: CALL                           0
+  ... (共 48 条指令)
+
+── 反编译字节码 (dis) ──
+       0: RESUME                         0
+       2: LOAD_GLOBAL                    'isinstance'
+      14: LOAD_FAST                      's'
+      16: LOAD_GLOBAL                    'str'
+      28: PRECALL                        2
+      32: CALL                           2
+      42: POP_JUMP_FORWARD_IF_TRUE       64
+      44: LOAD_ASSERTION_ERROR           
+      46: LOAD_CONST                     "请使用字符串表示标的代码，例如'600570.SS'"
+      48: PRECALL                        0
+      52: CALL                           0
+      62: RAISE_VARARGS                  1
+      64: LOAD_CONST                     11
+      66: LOAD_GLOBAL                    'len'
+      78: LOAD_FAST                      's'
+      80: PRECALL                        1
+      84: CALL                           1
+      94: SWAP                           2
+      96: COPY                           2
+      98: COMPARE_OP                     '>='
+     104: POP_JUMP_FORWARD_IF_FALSE      118
+     106: LOAD_CONST                     9
+     108: COMPARE_OP                     '>='
+     114: POP_JUMP_FORWARD_IF_TRUE       140
+     116: JUMP_FORWARD                   120
+     118: POP_TOP                        
+     120: LOAD_ASSERTION_ERROR           
+     122: LOAD_CONST                     '请输入正确的标的代码'
+     124: PRECALL                        0
+     128: CALL                           0
+  ... (共 48 条指令)
+
+####################################################################################################
+  #3: date_convert  [status=MATCH]
+  原始指令数: 82  |  反编译指令数: 82  |  真差: 0  |  跳转差: 0
+####################################################################################################
+
+── 反编译源码 ──
+
+    def date_convert(date, report_types):
+        dict_temp = {1: '03-31', 2: '06-30', 3: '09-30', 4: '12-31'}
+        date_temp = date.replace('-', '')
+        year_temp = int(date_temp[0:4])
+        month_temp = pandas.Period(date, 'Q-DEC').quarter
+        if report_types is None:
+            if month_temp == 1:
+                month_temp = 4
+                year_temp -= 1
+            else:
+                month_temp -= 1
+            data_return = str(year_temp) + '-' + dict_temp[month_temp]
+        else:
+            if month_temp <= report_types:
+                month_temp = report_types
+                year_temp -= 1
+            else:
+                month_temp = report_types
+            data_return = str(year_temp) + '-' + dict_temp[month_temp]
+        return data_return
+
+── 原始字节码 (dis) ──
+       0: RESUME                         0
+       2: LOAD_CONST                     '03-31'
+       4: LOAD_CONST                     '06-30'
+       6: LOAD_CONST                     '09-30'
+       8: LOAD_CONST                     '12-31'
+      10: LOAD_CONST                     (1, 2, 3, 4)
+      12: BUILD_CONST_KEY_MAP            4
+      14: STORE_FAST                     'dict_temp'
+      16: LOAD_FAST                      'date'
+      18: LOAD_METHOD                    'replace'
+      40: LOAD_CONST                     '-'
+      42: LOAD_CONST                     ''
+      44: PRECALL                        2
+      48: CALL                           2
+      58: STORE_FAST                     'date_temp'
+      60: LOAD_GLOBAL                    'int'
+      72: LOAD_FAST                      'date_temp'
+      74: LOAD_CONST                     0
+      76: LOAD_CONST                     4
+      78: BUILD_SLICE                    2
+      80: BINARY_SUBSCR                  
+      90: PRECALL                        1
+      94: CALL                           1
+     104: STORE_FAST                     'year_temp'
+     106: LOAD_GLOBAL                    'pandas'
+     118: LOAD_ATTR                      'Period'
+     128: LOAD_FAST                      'date'
+     130: LOAD_CONST                     'Q-DEC'
+     132: PRECALL                        2
+     136: CALL                           2
+  ... (共 87 条指令)
+
+── 反编译字节码 (dis) ──
+       0: RESUME                         0
+       2: LOAD_CONST                     '03-31'
+       4: LOAD_CONST                     '06-30'
+       6: LOAD_CONST                     '09-30'
+       8: LOAD_CONST                     '12-31'
+      10: LOAD_CONST                     (1, 2, 3, 4)
+      12: BUILD_CONST_KEY_MAP            4
+      14: STORE_FAST                     'dict_temp'
+      16: LOAD_FAST                      'date'
+      18: LOAD_METHOD                    'replace'
+      40: LOAD_CONST                     '-'
+      42: LOAD_CONST                     ''
+      44: PRECALL                        2
+      48: CALL                           2
+      58: STORE_FAST                     'date_temp'
+      60: LOAD_GLOBAL                    'int'
+      72: LOAD_FAST                      'date_temp'
+      74: LOAD_CONST                     0
+      76: LOAD_CONST                     4
+      78: BUILD_SLICE                    2
+      80: BINARY_SUBSCR                  
+      90: PRECALL                        1
+      94: CALL                           1
+     104: STORE_FAST                     'year_temp'
+     106: LOAD_GLOBAL                    'pandas'
+     118: LOAD_ATTR                      'Period'
+     128: LOAD_FAST                      'date'
+     130: LOAD_CONST                     'Q-DEC'
+     132: PRECALL                        2
+     136: CALL                           2
+  ... (共 87 条指令)
+
+####################################################################################################
+  #4: get_quote  [status=MATCH]
+  原始指令数: 19  |  反编译指令数: 19  |  真差: 0  |  跳转差: 0
+####################################################################################################
+
+── 反编译源码 ──
+
+    def get_quote():
+        global quote
+        if quote is None:
+            log, is_trade = getLogger()
+            quote = Quote(log, 'trade' if is_trade else 'backtest')
+        return quote
+
+── 原始字节码 (dis) ──
+       0: RESUME                         0
+       2: LOAD_GLOBAL                    'quote'
+      14: POP_JUMP_FORWARD_IF_NOT_NONE   90
+      16: LOAD_GLOBAL                    'getLogger'
+      28: PRECALL                        0
+      32: CALL                           0
+      42: UNPACK_SEQUENCE                2
+      46: STORE_FAST                     'log'
+      48: STORE_FAST                     'is_trade'
+      50: LOAD_GLOBAL                    'Quote'
+      62: LOAD_FAST                      'log'
+      64: LOAD_FAST                      'is_trade'
+      66: POP_JUMP_FORWARD_IF_FALSE      72
+      68: LOAD_CONST                     'trade'
+      70: JUMP_FORWARD                   74
+      72: LOAD_CONST                     'backtest'
+      74: PRECALL                        2
+      78: CALL                           2
+      88: STORE_GLOBAL                   'quote'
+      90: LOAD_GLOBAL                    'quote'
+     102: RETURN_VALUE                   
+
+── 反编译字节码 (dis) ──
+       0: RESUME                         0
+       2: LOAD_GLOBAL                    'quote'
+      14: POP_JUMP_FORWARD_IF_NOT_NONE   90
+      16: LOAD_GLOBAL                    'getLogger'
+      28: PRECALL                        0
+      32: CALL                           0
+      42: UNPACK_SEQUENCE                2
+      46: STORE_FAST                     'log'
+      48: STORE_FAST                     'is_trade'
+      50: LOAD_GLOBAL                    'Quote'
+      62: LOAD_FAST                      'log'
+      64: LOAD_FAST                      'is_trade'
+      66: POP_JUMP_FORWARD_IF_FALSE      72
+      68: LOAD_CONST                     'trade'
+      70: JUMP_FORWARD                   74
+      72: LOAD_CONST                     'backtest'
+      74: PRECALL                        2
+      78: CALL                           2
+      88: STORE_GLOBAL                   'quote'
+      90: LOAD_GLOBAL                    'quote'
+     102: RETURN_VALUE                   
+
+####################################################################################################
+  #5: change_his_to_forward  [status=MATCH]
+  原始指令数: 547  |  反编译指令数: 547  |  真差: 0  |  跳转差: 13
+####################################################################################################
+
+── 反编译源码 ──
+
+    def change_his_to_forward(security, data, exrights_data, start, end, typet):
+        if len(data) == 0:
+            return data
+        else:
+            firstdate = list(data.index)[0].tz_localize(None).to_pydatetime().strftime('%Y%m%d')
+            if start != firstdate:
+                start = firstdate
+            if len(start) > 8:
+                start = start[:8]
+            if len(end) > 8:
+                end = end[:8]
+            startDateIndex = datetime.strptime(start, '%Y%m%d').strftime('%Y-%m-%d 00:00:00')
+            endDateIndex = datetime.strptime(end, '%Y%m%d').strftime('%Y-%m-%d 00:00:00')
+            fields = ['open', 'close', 'high', 'low', 'price']
+            if typet == 6:
+                fields = ['open', 'close', 'high', 'low', 'price', 'preclose', 'high_limit', 'low_limit']
+            series = exrights_data[security]
+            if series.empty:
+                return data
+            elif series[startDateIndex:].empty:
+                return data
+            elif startDateIndex == endDateIndex:
+                n = list(series[startDateIndex:].index)[0]
+                if n == startDateIndex:
+                    if len(series[startDateIndex:].index) > 1:
+                        n = list(series[startDateIndex:].index)[1]
+                    else:
+                        return data
+                    data = data * float(series.loc[n, 'exer_forward_a']) + float(series.loc[n, 'exer_forward_b'])
+                    return round(data, 2)
+            preindex = None
+            tmpdata = None
+            if len(series[startDateIndex:].index) > 0:
+                tmpstartindex = series[startDateIndex:].index[0]
+            else:
+                tmpstartindex = None
+            if len(series[endDateIndex:].index) > 1:
+                tmpendindex = series[endDateIndex:].index[1]
+            else:
+                tmpendindex = None
+    ... (共 71 行)
+
+── 原始字节码 (dis) ──
+       0: RESUME                         0
+       2: LOAD_GLOBAL                    'len'
+      14: LOAD_FAST                      'data'
+      16: PRECALL                        1
+      20: CALL                           1
+      30: LOAD_CONST                     0
+      32: COMPARE_OP                     '=='
+      38: POP_JUMP_FORWARD_IF_FALSE      44
+      40: LOAD_FAST                      'data'
+      42: RETURN_VALUE                   
+      44: LOAD_GLOBAL                    'list'
+      56: LOAD_FAST                      'data'
+      58: LOAD_ATTR                      'index'
+      68: PRECALL                        1
+      72: CALL                           1
+      82: LOAD_CONST                     0
+      84: BINARY_SUBSCR                  
+      94: LOAD_METHOD                    'tz_localize'
+     116: LOAD_CONST                     
+     118: PRECALL                        1
+     122: CALL                           1
+     132: LOAD_METHOD                    'to_pydatetime'
+     154: PRECALL                        0
+     158: CALL                           0
+     168: LOAD_METHOD                    'strftime'
+     190: LOAD_CONST                     '%Y%m%d'
+     192: PRECALL                        1
+     196: CALL                           1
+     206: STORE_FAST                     'firstdate'
+     208: LOAD_FAST                      'start'
+  ... (共 597 条指令)
+
+── 反编译字节码 (dis) ──
+       0: RESUME                         0
+       2: LOAD_GLOBAL                    'len'
+      14: LOAD_FAST                      'data'
+      16: PRECALL                        1
+      20: CALL                           1
+      30: LOAD_CONST                     0
+      32: COMPARE_OP                     '=='
+      38: POP_JUMP_FORWARD_IF_FALSE      44
+      40: LOAD_FAST                      'data'
+      42: RETURN_VALUE                   
+      44: LOAD_GLOBAL                    'list'
+      56: LOAD_FAST                      'data'
+      58: LOAD_ATTR                      'index'
+      68: PRECALL                        1
+      72: CALL                           1
+      82: LOAD_CONST                     0
+      84: BINARY_SUBSCR                  
+      94: LOAD_METHOD                    'tz_localize'
+     116: LOAD_CONST                     
+     118: PRECALL                        1
+     122: CALL                           1
+     132: LOAD_METHOD                    'to_pydatetime'
+     154: PRECALL                        0
+     158: CALL                           0
+     168: LOAD_METHOD                    'strftime'
+     190: LOAD_CONST                     '%Y%m%d'
+     192: PRECALL                        1
+     196: CALL                           1
+     206: STORE_FAST                     'firstdate'
+     208: LOAD_FAST                      'start'
+  ... (共 598 条指令)
+
+── 跳转差异 (共 13 条) ──
+  [229]   FOR_ITER                       arg=2914  -->  FOR_ITER                       arg=2916
+  [249]   POP_JUMP_FORWARD_IF_FALSE      arg=1748  -->  POP_JUMP_FORWARD_IF_FALSE      arg=2896
+  [272]   POP_JUMP_FORWARD_IF_FALSE      arg=1558  -->  POP_JUMP_FORWARD_IF_FALSE      arg=1560
+  [296]   POP_JUMP_FORWARD_IF_FALSE      arg=1748  -->  POP_JUMP_FORWARD_IF_FALSE      arg=2896
+  [298]   POP_JUMP_FORWARD_IF_NOT_NONE   arg=2306  -->  POP_JUMP_FORWARD_IF_NOT_NONE   arg=2308
+  [311]   POP_JUMP_FORWARD_IF_FALSE      arg=2012  -->  POP_JUMP_FORWARD_IF_FALSE      arg=2014
+  [350]   JUMP_FORWARD                   arg=2894  -->  JUMP_FORWARD                   arg=2896
+  [408]   JUMP_FORWARD                   arg=2894  -->  JUMP_FORWARD                   arg=2896
+  [421]   POP_JUMP_FORWARD_IF_FALSE      arg=2562  -->  POP_JUMP_FORWARD_IF_FALSE      arg=2564
+  [460]   JUMP_FORWARD                   arg=2852  -->  JUMP_FORWARD                   arg=2854
+  ... (共 13 条)
+
+####################################################################################################
+  #6: change_his_to_backward  [status=MATCH]
+  原始指令数: 529  |  反编译指令数: 529  |  真差: 0  |  跳转差: 0
+####################################################################################################
+
+── 反编译源码 ──
+
+    def change_his_to_backward(security, data, exrights_data, start, end, typet):
+        if len(data) == 0:
+            return data
+        else:
+            firstdate = list(data.index)[0].tz_localize(None).to_pydatetime().strftime('%Y%m%d')
+            if start != firstdate:
+                start = firstdate
+            if len(start) > 8:
+                start = start[:8]
+            if len(end) > 8:
+                end = end[:8]
+            startDateIndex = datetime.strptime(start, '%Y%m%d').strftime('%Y-%m-%d 00:00:00')
+            endDateIndex = datetime.strptime(end, '%Y%m%d').strftime('%Y-%m-%d 00:00:00')
+            fields = ['open', 'close', 'high', 'low', 'price']
+            if typet == 6:
+                fields = ['open', 'close', 'high', 'low', 'price', 'preclose', 'high_limit', 'low_limit']
+            series = exrights_data[security]
+            if series.empty:
+                return data
+            elif series[:endDateIndex].empty:
+                return data
+            elif startDateIndex == endDateIndex:
+                n = list(series[:endDateIndex].index)[-1]
+                data[fields] = data[fields] * float(series.loc[n, 'exer_backward_a']) + float(series.loc[n, 'exer_backward_b'])
+                return round(data, 2)
+            elif len(series[:startDateIndex].index) > 1:
+                if startDateIndex in series.index:
+                    if len(series[:startDateIndex].index) >= 2:
+                        tmpstartindex = series[:startDateIndex].index[-2]
+                    else:
+                        tmpstartindex = None
+                else:
+                    tmpstartindex = series[:startDateIndex].index[-1]
+            else:
+                tmpstartindex = None
+            if len(series[endDateIndex:].index) > 0:
+                tmpendindex = series[endDateIndex:].index[0]
+            else:
+                tmpendindex = None
+            firsttime = list(data.index)[0].tz_localize(None).to_pydatetime().strftime('%H%M%S')
+    ... (共 78 行)
+
+── 原始字节码 (dis) ──
+       0: RESUME                         0
+       2: LOAD_GLOBAL                    'len'
+      14: LOAD_FAST                      'data'
+      16: PRECALL                        1
+      20: CALL                           1
+      30: LOAD_CONST                     0
+      32: COMPARE_OP                     '=='
+      38: POP_JUMP_FORWARD_IF_FALSE      44
+      40: LOAD_FAST                      'data'
+      42: RETURN_VALUE                   
+      44: LOAD_GLOBAL                    'list'
+      56: LOAD_FAST                      'data'
+      58: LOAD_ATTR                      'index'
+      68: PRECALL                        1
+      72: CALL                           1
+      82: LOAD_CONST                     0
+      84: BINARY_SUBSCR                  
+      94: LOAD_METHOD                    'tz_localize'
+     116: LOAD_CONST                     
+     118: PRECALL                        1
+     122: CALL                           1
+     132: LOAD_METHOD                    'to_pydatetime'
+     154: PRECALL                        0
+     158: CALL                           0
+     168: LOAD_METHOD                    'strftime'
+     190: LOAD_CONST                     '%Y%m%d'
+     192: PRECALL                        1
+     196: CALL                           1
+     206: STORE_FAST                     'firstdate'
+     208: LOAD_FAST                      'start'
+  ... (共 583 条指令)
+
+── 反编译字节码 (dis) ──
+       0: RESUME                         0
+       2: LOAD_GLOBAL                    'len'
+      14: LOAD_FAST                      'data'
+      16: PRECALL                        1
+      20: CALL                           1
+      30: LOAD_CONST                     0
+      32: COMPARE_OP                     '=='
+      38: POP_JUMP_FORWARD_IF_FALSE      44
+      40: LOAD_FAST                      'data'
+      42: RETURN_VALUE                   
+      44: LOAD_GLOBAL                    'list'
+      56: LOAD_FAST                      'data'
+      58: LOAD_ATTR                      'index'
+      68: PRECALL                        1
+      72: CALL                           1
+      82: LOAD_CONST                     0
+      84: BINARY_SUBSCR                  
+      94: LOAD_METHOD                    'tz_localize'
+     116: LOAD_CONST                     
+     118: PRECALL                        1
+     122: CALL                           1
+     132: LOAD_METHOD                    'to_pydatetime'
+     154: PRECALL                        0
+     158: CALL                           0
+     168: LOAD_METHOD                    'strftime'
+     190: LOAD_CONST                     '%Y%m%d'
+     192: PRECALL                        1
+     196: CALL                           1
+     206: STORE_FAST                     'firstdate'
+     208: LOAD_FAST                      'start'
+  ... (共 583 条指令)
+
+####################################################################################################
+  #7: build_future_fill_time  [status=MATCH]
+  原始指令数: 636  |  反编译指令数: 636  |  真差: 0  |  跳转差: 0
+####################################################################################################
+
+── 反编译源码 ──
+
+    def build_future_fill_time(suffix, typet, start, end):
+        all_days = pandas.date_range(start=start[:8], end=end[:8], freq='B')
+        holidays = data_proxy().get_holiday_local()
+        trade_days = []
+        for item in all_days:
+            if item.strftime('%Y%m%d') not in holidays:
+                trade_days.append(item.strftime('%Y-%m-%d'))
+        total_dts = []
+        if not typet == 5:
+            if typet == 1:
+                tmp = MarketTime.get_instance().get_market_time(suffix)
+                open_am = tmp['open_am'][:2] + ':' + tmp['open_am'][-2:] + ':00'
+                close_am = tmp['close_am'][:2] + ':' + tmp['close_am'][-2:] + ':00'
+                open_pm = tmp['open_pm'][:2] + ':' + tmp['open_pm'][-2:] + ':00'
+                close_pm = tmp['close_pm'][:2] + ':' + tmp['close_pm'][-2:] + ':00'
+                market_time = {'open_am': open_am, 'close_am': close_am, 'open_pm': open_pm, 'close_pm': close_pm, 'freq': 'T'}
+                out_trade_times = pandas.date_range(start=market_time['close_am'], end=market_time['open_pm'], freq=market_time['freq'])[1:-1]
+                trade_times = pandas.date_range(start=market_time['open_am'], end=market_time['close_pm'], freq=market_time['freq'])
+                trade_times = trade_times[~numpy.in1d(trade_times, out_trade_times)]
+                trade_times = [item.strftime(' %H:%M:%S') for item in trade_times]
+                for today in trade_days:
+                    for item in trade_times:
+                        total_dts.append(today + item)
+            elif typet == 2:
+                if suffix == 'T.CCFX':
+                    market_time = {'open_am': '09:35:00', 'close_am': '11:30:00', 'open_pm': '13:05:00', 'close_pm': '15:15:00', 'freq': '5T'}
+                elif suffix in ('XZCE', 'XDCE', 'XSGE'):
+                    market_time = {'open_am1': '09:05:00', 'close_am1': '10:15:00', 'open_am2': '10:35:00', 'close_am2': '11:30:00', 'open_pm': '13:05:00', 'close_pm': '15:15:00', 'freq': '5T'}
+                else:
+                    market_time = {'open_am': '09:35:00', 'close_am': '11:30:00', 'open_pm': '13:35:00', 'close_pm': '15:00:00', 'freq': '5T'}
+                if suffix in ('XZCE', 'XDCE', 'XSGE'):
+                    dt_am = pandas.date_range(start=market_time['open_am1'], end=market_time['close_am1'], freq=market_time['freq'])
+                    dt_am2 = pandas.date_range(start=market_time['open_am2'], end=market_time['close_am2'], freq=market_time['freq'])
+                    dt_am = dt_am.append(dt_am2)
+                else:
+                    dt_am = pandas.date_range(start=market_time['open_am'], end=market_time['close_am'], freq=market_time['freq'])
+                dt_pm = pandas.date_range(start=market_time['open_pm'], end=market_time['close_pm'], freq=market_time['freq'])
+                trade_times = dt_am.append(dt_pm)
+                trade_times = [item.strftime(' %H:%M:%S') for item in trade_times]
+                for today in trade_days:
+    ... (共 97 行)
+
+── 原始字节码 (dis) ──
+       0: RESUME                         0
+       2: LOAD_GLOBAL                    'pandas'
+      14: LOAD_ATTR                      'date_range'
+      24: LOAD_FAST                      'start'
+      26: LOAD_CONST                     
+      28: LOAD_CONST                     8
+      30: BUILD_SLICE                    2
+      32: BINARY_SUBSCR                  
+      42: LOAD_FAST                      'end'
+      44: LOAD_CONST                     
+      46: LOAD_CONST                     8
+      48: BUILD_SLICE                    2
+      50: BINARY_SUBSCR                  
+      60: LOAD_CONST                     'B'
+      62: KW_NAMES                       <unknown>
+      64: PRECALL                        3
+      68: CALL                           3
+      78: STORE_FAST                     'all_days'
+      80: LOAD_GLOBAL                    'data_proxy'
+      92: PRECALL                        0
+      96: CALL                           0
+     106: LOAD_METHOD                    'get_holiday_local'
+     128: PRECALL                        0
+     132: CALL                           0
+     142: STORE_FAST                     'holidays'
+     144: BUILD_LIST                     0
+     146: STORE_FAST                     'trade_days'
+     148: LOAD_FAST                      'all_days'
+     150: GET_ITER                       
+     152: FOR_ITER                       284
+  ... (共 677 条指令)
+
+── 反编译字节码 (dis) ──
+       0: RESUME                         0
+       2: LOAD_GLOBAL                    'pandas'
+      14: LOAD_ATTR                      'date_range'
+      24: LOAD_FAST                      'start'
+      26: LOAD_CONST                     
+      28: LOAD_CONST                     8
+      30: BUILD_SLICE                    2
+      32: BINARY_SUBSCR                  
+      42: LOAD_FAST                      'end'
+      44: LOAD_CONST                     
+      46: LOAD_CONST                     8
+      48: BUILD_SLICE                    2
+      50: BINARY_SUBSCR                  
+      60: LOAD_CONST                     'B'
+      62: KW_NAMES                       <unknown>
+      64: PRECALL                        3
+      68: CALL                           3
+      78: STORE_FAST                     'all_days'
+      80: LOAD_GLOBAL                    'data_proxy'
+      92: PRECALL                        0
+      96: CALL                           0
+     106: LOAD_METHOD                    'get_holiday_local'
+     128: PRECALL                        0
+     132: CALL                           0
+     142: STORE_FAST                     'holidays'
+     144: BUILD_LIST                     0
+     146: STORE_FAST                     'trade_days'
+     148: LOAD_FAST                      'all_days'
+     150: GET_ITER                       
+     152: FOR_ITER                       284
+  ... (共 677 条指令)
+
+####################################################################################################
+  #8: build_current_period_df  [status=MATCH]
+  原始指令数: 101  |  反编译指令数: 101  |  真差: 0  |  跳转差: 0
+####################################################################################################
+
+── 反编译源码 ──
+
+    def build_current_period_df(nowdataframe, index_data=False):
+        if not nowdataframe.empty:
+            tempdict = OrderedDict()
+            index = None
+            if index_data:
+                index = [nowdataframe.index[-1]]
+            else:
+                tempdict['min_time'] = [nowdataframe.index[-1]]
+            tempdict['open'] = [nowdataframe['open'][0]]
+            tempdict['close'] = [nowdataframe['close'][-1]]
+            tempdict['high'] = [nowdataframe['high'].max()]
+            tempdict['low'] = [nowdataframe['low'].min()]
+            nowdataframe.loc['Row_sum'] = nowdataframe.apply(lambda x: x.sum())
+            tempdict['volume'] = [nowdataframe.loc['Row_sum']['volume']]
+            tempdict['money'] = [nowdataframe.loc['Row_sum']['money']]
+            tmp = pandas.DataFrame(tempdict, index=index)
+            return tmp
+
+── 原始字节码 (dis) ──
+       0: RESUME                         0
+       2: LOAD_FAST                      'nowdataframe'
+       4: LOAD_ATTR                      'empty'
+      14: POP_JUMP_FORWARD_IF_TRUE       508
+      16: LOAD_GLOBAL                    'OrderedDict'
+      28: PRECALL                        0
+      32: CALL                           0
+      42: STORE_FAST                     'tempdict'
+      44: LOAD_CONST                     
+      46: STORE_FAST                     'index'
+      48: LOAD_FAST                      'index_data'
+      50: POP_JUMP_FORWARD_IF_FALSE      82
+      52: LOAD_FAST                      'nowdataframe'
+      54: LOAD_ATTR                      'index'
+      64: LOAD_CONST                     -1
+      66: BINARY_SUBSCR                  
+      76: BUILD_LIST                     1
+      78: STORE_FAST                     'index'
+      80: JUMP_FORWARD                   116
+      82: LOAD_FAST                      'nowdataframe'
+      84: LOAD_ATTR                      'index'
+      94: LOAD_CONST                     -1
+      96: BINARY_SUBSCR                  
+     106: BUILD_LIST                     1
+     108: LOAD_FAST                      'tempdict'
+     110: LOAD_CONST                     'min_time'
+     112: STORE_SUBSCR                   
+     116: LOAD_FAST                      'nowdataframe'
+     118: LOAD_CONST                     'open'
+     120: BINARY_SUBSCR                  
+  ... (共 107 条指令)
+
+── 反编译字节码 (dis) ──
+       0: RESUME                         0
+       2: LOAD_FAST                      'nowdataframe'
+       4: LOAD_ATTR                      'empty'
+      14: POP_JUMP_FORWARD_IF_TRUE       508
+      16: LOAD_GLOBAL                    'OrderedDict'
+      28: PRECALL                        0
+      32: CALL                           0
+      42: STORE_FAST                     'tempdict'
+      44: LOAD_CONST                     
+      46: STORE_FAST                     'index'
+      48: LOAD_FAST                      'index_data'
+      50: POP_JUMP_FORWARD_IF_FALSE      82
+      52: LOAD_FAST                      'nowdataframe'
+      54: LOAD_ATTR                      'index'
+      64: LOAD_CONST                     -1
+      66: BINARY_SUBSCR                  
+      76: BUILD_LIST                     1
+      78: STORE_FAST                     'index'
+      80: JUMP_FORWARD                   116
+      82: LOAD_FAST                      'nowdataframe'
+      84: LOAD_ATTR                      'index'
+      94: LOAD_CONST                     -1
+      96: BINARY_SUBSCR                  
+     106: BUILD_LIST                     1
+     108: LOAD_FAST                      'tempdict'
+     110: LOAD_CONST                     'min_time'
+     112: STORE_SUBSCR                   
+     116: LOAD_FAST                      'nowdataframe'
+     118: LOAD_CONST                     'open'
+     120: BINARY_SUBSCR                  
+  ... (共 107 条指令)
+
+####################################################################################################
+  #9: get_real  [status=MATCH]
+  原始指令数: 28  |  反编译指令数: 28  |  真差: 0  |  跳转差: 0
+####################################################################################################
+
+── 反编译源码 ──
+
+    def get_real(en_prod_code, fields=None):
+        url = '%s/real' % OPEN_API_QUOTE_URL
+        params = {'en_prod_code': en_prod_code}
+        if fields:
+            params['fields'] = fields
+        return real_to_dataframe(api_get(url, params).get('data').get('snapshot'))
+
+── 原始字节码 (dis) ──
+       0: RESUME                         0
+       2: LOAD_CONST                     '%s/real'
+       4: LOAD_GLOBAL                    'OPEN_API_QUOTE_URL'
+      16: BINARY_OP                      6
+      20: STORE_FAST                     'url'
+      22: LOAD_CONST                     'en_prod_code'
+      24: LOAD_FAST                      'en_prod_code'
+      26: BUILD_MAP                      1
+      28: STORE_FAST                     'params'
+      30: LOAD_FAST                      'fields'
+      32: POP_JUMP_FORWARD_IF_FALSE      44
+      34: LOAD_FAST                      'fields'
+      36: LOAD_FAST                      'params'
+      38: LOAD_CONST                     'fields'
+      40: STORE_SUBSCR                   
+      44: LOAD_GLOBAL                    'real_to_dataframe'
+      56: LOAD_GLOBAL                    'api_get'
+      68: LOAD_FAST                      'url'
+      70: LOAD_FAST                      'params'
+      72: PRECALL                        2
+      76: CALL                           2
+      86: LOAD_METHOD                    'get'
+     108: LOAD_CONST                     'data'
+     110: PRECALL                        1
+     114: CALL                           1
+     124: LOAD_METHOD                    'get'
+     146: LOAD_CONST                     'snapshot'
+     148: PRECALL                        1
+     152: CALL                           1
+     162: PRECALL                        1
+  ... (共 32 条指令)
+
+── 反编译字节码 (dis) ──
+       0: RESUME                         0
+       2: LOAD_CONST                     '%s/real'
+       4: LOAD_GLOBAL                    'OPEN_API_QUOTE_URL'
+      16: BINARY_OP                      6
+      20: STORE_FAST                     'url'
+      22: LOAD_CONST                     'en_prod_code'
+      24: LOAD_FAST                      'en_prod_code'
+      26: BUILD_MAP                      1
+      28: STORE_FAST                     'params'
+      30: LOAD_FAST                      'fields'
+      32: POP_JUMP_FORWARD_IF_FALSE      44
+      34: LOAD_FAST                      'fields'
+      36: LOAD_FAST                      'params'
+      38: LOAD_CONST                     'fields'
+      40: STORE_SUBSCR                   
+      44: LOAD_GLOBAL                    'real_to_dataframe'
+      56: LOAD_GLOBAL                    'api_get'
+      68: LOAD_FAST                      'url'
+      70: LOAD_FAST                      'params'
+      72: PRECALL                        2
+      76: CALL                           2
+      86: LOAD_METHOD                    'get'
+     108: LOAD_CONST                     'data'
+     110: PRECALL                        1
+     114: CALL                           1
+     124: LOAD_METHOD                    'get'
+     146: LOAD_CONST                     'snapshot'
+     148: PRECALL                        1
+     152: CALL                           1
+     162: PRECALL                        1
+  ... (共 32 条指令)
+
+####################################################################################################
+  #10: get_index_stocks  [status=MATCH]
+  原始指令数: 64  |  反编译指令数: 64  |  真差: 0  |  跳转差: 0
+####################################################################################################
+
+── 反编译源码 ──
+
+    def get_index_stocks(security, date=None):
+        if date is not None:
+            try:
+                check_datetime(date)
+                if len(date) != 8:
+                    strategy_log.error('您输入的时间：%s格式不正确，请使用正确的格式：YYYYmmdd' % date)
+                    return []
+            except AssertionError:
+                strategy_log.error('您输入的时间：%s格式不正确，请使用正确的格式：YYYYmmdd' % date)
+                return []
+        else:
+            date = time.strftime('%Y%m%d', time.localtime())
+        if check_index_code(security):
+            result = load_get_index_stocks(security, date)
+            return result
+        else:
+            return []
+
+── 原始字节码 (dis) ──
+       0: RESUME                         0
+       2: LOAD_FAST                      'date'
+       4: POP_JUMP_FORWARD_IF_NONE       210
+       6: NOP                            
+       8: LOAD_GLOBAL                    'check_datetime'
+      20: LOAD_FAST                      'date'
+      22: PRECALL                        1
+      26: CALL                           1
+      36: POP_TOP                        
+      38: LOAD_GLOBAL                    'len'
+      50: LOAD_FAST                      'date'
+      52: PRECALL                        1
+      56: CALL                           1
+      66: LOAD_CONST                     8
+      68: COMPARE_OP                     '!='
+      74: POP_JUMP_FORWARD_IF_FALSE      126
+      76: LOAD_GLOBAL                    'strategy_log'
+      88: LOAD_ATTR                      'error'
+      98: LOAD_CONST                     '您输入的时间：%s格式不正确，请使用正确的格式：YYYYmmdd'
+     100: LOAD_FAST                      'date'
+     102: BINARY_OP                      6
+     106: PRECALL                        1
+     110: CALL                           1
+     120: POP_TOP                        
+     122: BUILD_LIST                     0
+     124: RETURN_VALUE                   
+     126: JUMP_FORWARD                   286
+     128: PUSH_EXC_INFO                  
+     130: LOAD_GLOBAL                    'AssertionError'
+     142: CHECK_EXC_MATCH                
+  ... (共 73 条指令)
+
+── 反编译字节码 (dis) ──
+       0: RESUME                         0
+       2: LOAD_FAST                      'date'
+       4: POP_JUMP_FORWARD_IF_NONE       210
+       6: NOP                            
+       8: LOAD_GLOBAL                    'check_datetime'
+      20: LOAD_FAST                      'date'
+      22: PRECALL                        1
+      26: CALL                           1
+      36: POP_TOP                        
+      38: LOAD_GLOBAL                    'len'
+      50: LOAD_FAST                      'date'
+      52: PRECALL                        1
+      56: CALL                           1
+      66: LOAD_CONST                     8
+      68: COMPARE_OP                     '!='
+      74: POP_JUMP_FORWARD_IF_FALSE      126
+      76: LOAD_GLOBAL                    'strategy_log'
+      88: LOAD_ATTR                      'error'
+      98: LOAD_CONST                     '您输入的时间：%s格式不正确，请使用正确的格式：YYYYmmdd'
+     100: LOAD_FAST                      'date'
+     102: BINARY_OP                      6
+     106: PRECALL                        1
+     110: CALL                           1
+     120: POP_TOP                        
+     122: BUILD_LIST                     0
+     124: RETURN_VALUE                   
+     126: JUMP_FORWARD                   286
+     128: PUSH_EXC_INFO                  
+     130: LOAD_GLOBAL                    'AssertionError'
+     142: CHECK_EXC_MATCH                
+  ... (共 73 条指令)
+
+====================================================================================================
+  完整排名 (Top 30 不匹配)
+====================================================================================================
+   1. datetimeindex_astype.<lambda>                    MISMATCH     orig=   6  decomp=   6  diff=   1  true=   1
+
+总函数数 = 152,  完全匹配 = 151,  不匹配/缺失 = 1
+Done.

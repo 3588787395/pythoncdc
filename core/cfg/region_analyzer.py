@@ -16961,6 +16961,7 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             # （chained_compare_ops/Blocks），非实例特征。
             _is_chained_compare_cond = False
             _cc_if_region = None
+            _cc_direct_info = None
             for _r in self.regions:
                 if (isinstance(_r, IfRegion)
                         and _r.region_type == RegionType.IF
@@ -16970,6 +16971,8 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     if (_cc_ops and len(_cc_ops) >= 2 and _cc_blocks):
                         _cc_if_region = _r
                     break
+            if _cc_if_region is None and self._is_chained_compare_header(block):
+                _cc_direct_info = self._detect_chained_compare_pattern(block)
             if _cc_if_region is not None:
                 _all_cc_blocks = [block] + list(_cc_if_region.chained_compare_blocks)
                 _last_cc_block = _all_cc_blocks[-1]
@@ -16984,8 +16987,6 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                         _cc_false = next((s for s in _lc_succs
                                           if s.start_offset == _lc_last.argval), None)
                         if _cc_true and _cc_false:
-                            # 最后比较块的 fallthrough 可能是纯 JUMP_FORWARD
-                            # 连接块（跳到 body），跟踪到真正的 body 值块。
                             _cc_true_eff = [i for i in _cc_true.instructions
                                             if i.opname not in NOISE_OPS]
                             if (len(_cc_true_eff) == 1
@@ -16995,7 +16996,35 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                                     _cc_true_eff[0].argval)
                                 if _body_block is not None:
                                     _cc_true = _body_block
-                            # 验证新的 true/false 块是单表达式块（ternary 值块）
+                            if (self._is_single_expression_block(_cc_true)
+                                    and self._is_single_expression_block(_cc_false)):
+                                true_block = _cc_true
+                                false_block = _cc_false
+                                _is_chained_compare_cond = True
+            elif _cc_direct_info is not None and len(_cc_direct_info.get('compare_ops', [])) >= 2:
+                _cc_extra = list(_cc_direct_info.get('extra_chain_blocks', []))
+                _all_cc_blocks = [block] + _cc_extra
+                _last_cc_block = _all_cc_blocks[-1]
+                _lc_last = _last_cc_block.get_last_instruction()
+                if _lc_last and _lc_last.opname in FORWARD_CONDITIONAL_JUMP_OPS:
+                    _lc_succs = sorted(
+                        _last_cc_block.conditional_successors,
+                        key=lambda s: s.start_offset)
+                    if len(_lc_succs) == 2:
+                        _cc_true = next((s for s in _lc_succs
+                                         if s.start_offset != _lc_last.argval), None)
+                        _cc_false = next((s for s in _lc_succs
+                                          if s.start_offset == _lc_last.argval), None)
+                        if _cc_true and _cc_false:
+                            _cc_true_eff = [i for i in _cc_true.instructions
+                                            if i.opname not in NOISE_OPS]
+                            if (len(_cc_true_eff) == 1
+                                    and _cc_true_eff[0].opname == 'JUMP_FORWARD'
+                                    and _cc_true_eff[0].argval is not None):
+                                _body_block = self.cfg.get_block_by_offset(
+                                    _cc_true_eff[0].argval)
+                                if _body_block is not None:
+                                    _cc_true = _body_block
                             if (self._is_single_expression_block(_cc_true)
                                     and self._is_single_expression_block(_cc_false)):
                                 true_block = _cc_true
@@ -18358,9 +18387,13 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 # [Phase 7 方案 D] ternary 条件本身是 chained compare 时，
                 # 传递 chained compare 属性供条件生成使用。
                 'chained_compare_ops': (list(_cc_if_region.chained_compare_ops)
-                                        if _is_chained_compare_cond and _cc_if_region else []),
+                                        if _is_chained_compare_cond and _cc_if_region else
+                                        (list(_cc_direct_info.get('compare_ops', []))
+                                         if _is_chained_compare_cond and _cc_direct_info else [])),
                 'chained_compare_blocks': (list(_cc_if_region.chained_compare_blocks)
-                                           if _is_chained_compare_cond and _cc_if_region else []),
+                                           if _is_chained_compare_cond and _cc_if_region else
+                                           (list(_cc_direct_info.get('extra_chain_blocks', []))
+                                            if _is_chained_compare_cond and _cc_direct_info else [])),
             }
 
         def _create_ternary_region_from_pattern(pattern):
@@ -18530,6 +18563,10 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
 
             container_type, func_call_info, dict_key_info, dict_const_keys = _detect_ternary_context(header, merge)
 
+            _cc_info = self._detect_chained_compare_pattern(header)
+            _cc_ops = list(_cc_info.get('compare_ops', [])) if _cc_info and len(_cc_info.get('compare_ops', [])) >= 2 else []
+            _cc_blocks = list(_cc_info.get('extra_chain_blocks', [])) if _cc_info and len(_cc_info.get('compare_ops', [])) >= 2 else []
+
             region = TernaryRegion(
                 region_type=RegionType.TERNARY,
                 entry=header,
@@ -18544,7 +18581,14 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 func_call_info=func_call_info,
                 dict_key_info=dict_key_info,
                 dict_const_keys=dict_const_keys,
+                chained_compare_ops=_cc_ops,
+                chained_compare_blocks=_cc_blocks,
             )
+
+            if region.chained_compare_ops and len(region.chained_compare_ops) >= 2:
+                self.compute_chained_compare_operands(region)
+                for cb in region.chained_compare_blocks:
+                    all_blocks.add(cb)
 
             return region
 

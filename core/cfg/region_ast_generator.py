@@ -24920,6 +24920,28 @@ AST 映射规则:
                         self.generated_blocks.add(b)
                     return cc_expr
                 return None
+        # [R106] Fallback: when no IfRegion with chained_compare_ops exists
+        # (e.g. _coalesce_chained_comparisons failed due to try/except nesting),
+        # detect chained compare directly from the chain_block's bytecode pattern.
+        if self.region_analyzer._is_chained_compare_header(chain_block):
+            _cc_info = self.region_analyzer._detect_chained_compare_pattern(chain_block)
+            if _cc_info and len(_cc_info.get('compare_ops', [])) >= 2:
+                _cc_ops = list(_cc_info['compare_ops'])
+                _cc_blocks = list(_cc_info.get('extra_chain_blocks', []))
+                _fake_region = type('FakeCCRegion', (), {
+                    'chained_compare_ops': _cc_ops,
+                    'chained_compare_blocks': _cc_blocks,
+                    'chained_comparator_instrs': [],
+                    'chained_left_instr': None,
+                    'condition_block': chain_block,
+                    'entry': chain_block,
+                })()
+                self.region_analyzer.compute_chained_compare_operands(_fake_region)
+                cc_expr = self._build_chained_compare_from_region_data(_fake_region)
+                if cc_expr is not None:
+                    for cb in _cc_blocks:
+                        self.generated_blocks.add(cb)
+                    return cc_expr
         return None
 
     def _try_build_nested_ternary_in_boolop(self, chain_block, region):
@@ -25656,17 +25678,26 @@ AST 映射规则:
                             ft_block = None
                 if ft_block:
                     processed_ft_blocks.add(ft_block.start_offset)
-                    ft_instrs = [i for i in ft_block.instructions
-                                 if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                    clean_ft = []
-                    for i in ft_instrs:
-                        if i.opname in ('POP_TOP', 'RETURN_VALUE', 'RETURN_CONST',
-                                       'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'):
-                            break
-                        clean_ft.append(i)
-                    if clean_ft:
-                        ft_expr = self.expr_reconstructor.reconstruct(clean_ft)
-                        if ft_expr:
+                    # [R106] When the fall-through block is a chained compare
+                    # header, use the full chained compare expression instead
+                    # of reconstructing the partial first compare from clean_ft.
+                    _il_ft_cc = self._try_build_chained_compare_in_boolop(ft_block, region)
+                    if _il_ft_cc is not None:
+                        ft_expr = _il_ft_cc
+                    else:
+                        ft_instrs = [i for i in ft_block.instructions
+                                     if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                        clean_ft = []
+                        for i in ft_instrs:
+                            if i.opname in ('POP_TOP', 'RETURN_VALUE', 'RETURN_CONST',
+                                           'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'):
+                                break
+                            clean_ft.append(i)
+                        if clean_ft:
+                            ft_expr = self.expr_reconstructor.reconstruct(clean_ft)
+                        else:
+                            ft_expr = None
+                    if ft_expr:
                             # ft_expr belongs to the same group as chain_op (no transition needed)
                             if current_group_op is None:
                                 current_group_op = chain_op
@@ -25740,23 +25771,41 @@ AST 映射规则:
                                 ft_block = None
                 if ft_block and ft_block in region.blocks:
                     processed_ft_blocks.add(ft_block.start_offset)
-                    ft_instrs = [i for i in ft_block.instructions
-                                 if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                    clean_ft = []
-                    for i in ft_instrs:
-                        if i.opname in ('POP_TOP', 'RETURN_VALUE', 'RETURN_CONST',
-                                       'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'):
-                            break
-                        clean_ft.append(i)
-                    if clean_ft:
-                        ft_expr = self.expr_reconstructor.reconstruct(clean_ft)
+                    # [R106] When the fall-through block is a chained compare
+                    # header, use the full chained compare expression instead
+                    # of reconstructing the partial first compare.
+                    _eol_ft_cc = self._try_build_chained_compare_in_boolop(ft_block, region)
+                    if _eol_ft_cc is not None:
+                        ft_expr = _eol_ft_cc
+                    else:
+                        ft_instrs = [i for i in ft_block.instructions
+                                     if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                        clean_ft = []
+                        for i in ft_instrs:
+                            if i.opname in ('POP_TOP', 'RETURN_VALUE', 'RETURN_CONST',
+                                           'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'):
+                                break
+                            clean_ft.append(i)
+                        if clean_ft:
+                            ft_expr = self.expr_reconstructor.reconstruct(clean_ft)
+                        else:
+                            ft_expr = None
                         if ft_expr:
                             if last_chain_op == 'or' and current_group_op == 'and':
                                 or_groups.append((current_group_op, current_group_values))
                                 or_groups.append(('or', [ft_expr]))
                                 current_group_values = []
                             elif current_group_op is None:
-                                or_groups.append((last_chain_op, [ft_expr]))
+                                # [R106] When no chain_block produced an expression
+                                # (e.g. chain_block was a pass-through JUMP_IF_FALSE_OR_POP
+                                # with no other instructions), the fall-through expression
+                                # IS the entire BoolOp value. Return it directly without
+                                # wrapping in BoolOp (avoids spurious `and expr`).
+                                for cb in getattr(region, 'blocks', []):
+                                    self.generated_blocks.add(cb)
+                                if region.merge_block:
+                                    self.generated_blocks.add(region.merge_block)
+                                return ft_expr
                             else:
                                 current_group_values.append(ft_expr)
         if current_group_values:
@@ -25767,22 +25816,44 @@ AST 映射规则:
         if len(segments) == 1 and len(segments[0][1]) == 1 and len(op_chain) == 1:
             chain_block = op_chain[0][0]
             chain_op = op_chain[0][1]
+            # [R106] When the chain_block is a chained compare header, the
+            # fall-through block is the chained compare's continuation (e.g.
+            # the second COMPARE_OP in `a < b < c`), not a separate BoolOp
+            # operand. Skip this special path to avoid appending the
+            # continuation as an extra `and`/`or` value.
+            _single_cc = self._try_build_chained_compare_in_boolop(chain_block, region)
+            if _single_cc is not None:
+                if region.merge_block:
+                    self.generated_blocks.add(region.merge_block)
+                return _single_cc
             last_instr = chain_block.get_last_instruction()
             if last_instr and last_instr.argval is not None and last_instr.opname in (SHORT_CIRCUIT_JUMP_OPS | FORWARD_CONDITIONAL_JUMP_OPS):
                 ft_succs = sorted(chain_block.conditional_successors, key=lambda s: s.start_offset)
                 ft_block = next((s for s in ft_succs if s.start_offset != last_instr.argval), None)
                 ft_expr = None
-                if ft_block:
-                    ft_instrs = [i for i in ft_block.instructions
-                                if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                    clean_ft = []
-                    for i in ft_instrs:
-                        if i.opname in ('POP_TOP', 'RETURN_VALUE', 'RETURN_CONST',
-                                       'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'):
-                            break
-                        clean_ft.append(i)
-                    if clean_ft:
-                        ft_expr = self.expr_reconstructor.reconstruct(clean_ft)
+                # [R106] If the ft_block was already processed in the in-loop
+                # fall-through (processed_ft_blocks), the segment's value already
+                # contains the ft expression. Don't duplicate it.
+                if ft_block and ft_block.start_offset in processed_ft_blocks:
+                    ft_expr = None
+                elif ft_block:
+                    # [R106] When the fall-through block is a chained compare
+                    # header, use the full chained compare expression instead
+                    # of reconstructing the partial first compare from ft_instrs.
+                    _ft_cc = self._try_build_chained_compare_in_boolop(ft_block, region)
+                    if _ft_cc is not None:
+                        ft_expr = _ft_cc
+                    else:
+                        ft_instrs = [i for i in ft_block.instructions
+                                    if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                        clean_ft = []
+                        for i in ft_instrs:
+                            if i.opname in ('POP_TOP', 'RETURN_VALUE', 'RETURN_CONST',
+                                           'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'):
+                                break
+                            clean_ft.append(i)
+                        if clean_ft:
+                            ft_expr = self.expr_reconstructor.reconstruct(clean_ft)
                 if ft_expr:
                     _result = {'type': 'BoolOp', 'op': chain_op, 'values': [segments[0][1][0], ft_expr]}
                     _has_unary_not = False
@@ -27625,6 +27696,26 @@ AST 映射规则:
             if cond_expr is not None:
                 for _cb in region.chained_compare_blocks:
                     self.generated_blocks.add(_cb)
+        elif (cond_block
+              and self.region_analyzer._is_chained_compare_header(cond_block)
+              and not getattr(region, 'chained_compare_ops', None)):
+            # [R106] TernaryRegion with chained compare condition but
+            # chained_compare_ops was not populated by region_analyzer
+            # (e.g. when IfRegion with cc was not created because
+            # _coalesce_chained_comparisons failed due to try/except).
+            # Detect directly and populate.
+            _cc_info = self.region_analyzer._detect_chained_compare_pattern(cond_block)
+            if _cc_info and len(_cc_info.get('compare_ops', [])) >= 2:
+                region.chained_compare_ops = list(_cc_info.get('compare_ops', []))
+                region.chained_compare_blocks = list(_cc_info.get('extra_chain_blocks', []))
+                self.region_analyzer.compute_chained_compare_operands(region)
+                cond_expr = self._build_chained_compare_from_region_data(region)
+                if cond_expr is not None:
+                    for _cb in region.chained_compare_blocks:
+                        self.generated_blocks.add(_cb)
+                else:
+                    region.chained_compare_ops = []
+                    region.chained_compare_blocks = []
         else:
             cond_instrs_raw = [i for i in cond_block.instructions
                                if i.opname not in ('RESUME', 'NOP', 'CACHE')]

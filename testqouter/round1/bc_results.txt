@@ -1,0 +1,25 @@
+Bytecode: MATCH=108, MISMATCH=16, ERROR=3, Total=127
+Bytecode match rate: 108/127 = 85%
+
+Mismatched (16):
+  test_b08_pass.py
+  test_e02_multi_except.py
+  test_e05_try_except_finally.py
+  test_e06_full_combination.py
+  test_e09_nested_try.py
+  test_l14_nested_while.py
+  test_n11_try_while_continue.py
+  test_n16_for_if_try_except.py
+  test_n17_if_for_break.py
+  test_n18_if_while_break.py
+  test_r1_multi_except_chain.py
+  test_r1_try_while_continue.py
+  test_r1_while_nested_try_break.py
+  test_r2q_26_get_quote_pattern.py
+  test_r2q_32_try_get_quote.py
+  test_w04_nested_with.py
+
+Errors (3):
+  test_r2q_08_assert_chain.py: 'gbk' codec can't decode byte 0xa6 in position 184: illegal multibyte sequence
+  test_r2q_25_full_check_stock.py: 'gbk' codec can't decode byte 0xad in position 203: illegal multibyte sequence
+  test_r2q_27_get_real_pattern.py: don't know how to disassemble NoneType objects

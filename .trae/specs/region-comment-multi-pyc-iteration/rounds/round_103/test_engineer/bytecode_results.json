@@ -1,0 +1,533 @@
+{
+  "matched": 52,
+  "total": 63,
+  "rate": 0.8253968253968254,
+  "jump_only": 3,
+  "mismatched": [
+    {
+      "function": "<module>.get_all_real_daily_kline",
+      "issue": "bytecode_mismatch",
+      "first_diff_offset": 147,
+      "diff_type": "different_opcode",
+      "diff_categories": {
+        "different_opcode": 24,
+        "different_argument": 2,
+        "missing_instruction": 1
+      },
+      "num_true_diffs": 27,
+      "num_jump_diffs": 5,
+      "orig_count": 188,
+      "decomp_count": 187,
+      "first_5_diffs": [
+        {
+          "index": 147,
+          "orig_op": "JUMP_FORWARD",
+          "decomp_op": "JUMP_BACKWARD",
+          "orig_arg": 898,
+          "decomp_arg": 86
+        },
+        {
+          "index": 162,
+          "orig_op": "JUMP_BACKWARD",
+          "decomp_op": "PUSH_EXC_INFO",
+          "orig_arg": 86,
+          "decomp_arg": null
+        },
+        {
+          "index": 163,
+          "orig_op": "PUSH_EXC_INFO",
+          "decomp_op": "LOAD_GLOBAL",
+          "orig_arg": null,
+          "decomp_arg": "BaseException"
+        },
+        {
+          "index": 164,
+          "orig_op": "LOAD_GLOBAL",
+          "decomp_op": "CHECK_EXC_MATCH",
+          "orig_arg": "BaseException",
+          "decomp_arg": null
+        },
+        {
+          "index": 165,
+          "orig_op": "CHECK_EXC_MATCH",
+          "decomp_op": "POP_JUMP_FORWARD_IF_FALSE",
+          "orig_arg": null,
+          "decomp_arg": 1034
+        }
+      ]
+    },
+    {
+      "function": "<module>.get_history_common",
+      "issue": "bytecode_mismatch",
+      "first_diff_offset": 156,
+      "diff_type": "different_opcode",
+      "diff_categories": {
+        "different_opcode": 280,
+        "different_argument": 37,
+        "extra_instruction": 7
+      },
+      "num_true_diffs": 324,
+      "num_jump_diffs": 9,
+      "orig_count": 481,
+      "decomp_count": 488,
+      "first_5_diffs": [
+        {
+          "index": 156,
+          "orig_op": "LOAD_FAST",
+          "decomp_op": "BUILD_LIST",
+          "orig_arg": "fields",
+          "decomp_arg": 1
+        },
+        {
+          "index": 157,
+          "orig_op": "CONTAINS_OP",
+          "decomp_op": "LOAD_FAST",
+          "orig_arg": 1,
+          "decomp_arg": "fields"
+        },
+        {
+          "index": 158,
+          "orig_op": "POP_JUMP_FORWARD_IF_FALSE",
+          "decomp_op": "BINARY_OP",
+          "orig_arg": 940,
+          "decomp_arg": 0
+        },
+        {
+          "index": 159,
+          "orig_op": "LOAD_CONST",
+          "decomp_op": "STORE_FAST",
+          "orig_arg": "datetime",
+          "decomp_arg": "fields"
+        },
+        {
+          "index": 160,
+          "orig_op": "BUILD_LIST",
+          "decomp_op": "LOAD_FAST",
+          "orig_arg": 1,
+          "decomp_arg": "fields"
+        }
+      ]
+    },
+    {
+      "function": "<module>.get_history_date_and_count_ifalse",
+      "issue": "bytecode_mismatch",
+      "first_diff_offset": 90,
+      "diff_type": "different_opcode",
+      "diff_categories": {
+        "different_opcode": 280,
+        "different_argument": 35,
+        "missing_instruction": 7
+      },
+      "num_true_diffs": 322,
+      "num_jump_diffs": 2,
+      "orig_count": 421,
+      "decomp_count": 414,
+      "first_5_diffs": [
+        {
+          "index": 90,
+          "orig_op": "LOAD_GLOBAL",
+          "decomp_op": "LOAD_FAST",
+          "orig_arg": "datetime",
+          "decomp_arg": "query_date"
+        },
+        {
+          "index": 91,
+          "orig_op": "LOAD_ATTR",
+          "decomp_op": "LOAD_GLOBAL",
+          "orig_arg": "datetime",
+          "decomp_arg": "datetime"
+        },
+        {
+          "index": 92,
+          "orig_op": "LOAD_METHOD",
+          "decomp_op": "LOAD_ATTR",
+          "orig_arg": "strptime",
+          "decomp_arg": "timedelta"
+        },
+        {
+          "index": 93,
+          "orig_op": "LOAD_FAST",
+          "decomp_op": "LOAD_CONST",
+          "orig_arg": "query_date",
+          "decomp_arg": 1
+        },
+        {
+          "index": 94,
+          "orig_op": "LOAD_CONST",
+          "decomp_op": "CALL",
+          "orig_arg": "%Y%m%d",
+          "decomp_arg": 1
+        }
+      ]
+    },
+    {
+      "function": "<module>.get_history_new",
+      "issue": "bytecode_mismatch",
+      "first_diff_offset": 285,
+      "diff_type": "different_argument",
+      "diff_categories": {
+        "different_opcode": 16,
+        "different_argument": 19,
+        "missing_instruction": 2
+      },
+      "num_true_diffs": 37,
+      "num_jump_diffs": 3,
+      "orig_count": 322,
+      "decomp_count": 320,
+      "first_5_diffs": [
+        {
+          "index": 285,
+          "orig_op": "JUMP_FORWARD",
+          "decomp_op": "LOAD_FAST",
+          "orig_arg": 1678,
+          "decomp_arg": "kline_data_dict"
+        },
+        {
+          "index": 286,
+          "orig_op": "LOAD_FAST",
+          "decomp_op": "RETURN_VALUE",
+          "orig_arg": "frequency",
+          "decomp_arg": null
+        },
+        {
+          "index": 287,
+          "orig_op": "LOAD_GLOBAL",
+          "decomp_op": "LOAD_FAST",
+          "orig_arg": "Multi_Minute_Frequency",
+          "decomp_arg": "frequency"
+        },
+        {
+          "index": 288,
+          "orig_op": "CONTAINS_OP",
+          "decomp_op": "LOAD_GLOBAL",
+          "orig_arg": 0,
+          "decomp_arg": "Multi_Minute_Frequency"
+        },
+        {
+          "index": 289,
+          "orig_op": "POP_JUMP_FORWARD_IF_FALSE",
+          "decomp_op": "CONTAINS_OP",
+          "orig_arg": 1626,
+          "decomp_arg": 0
+        }
+      ]
+    },
+    {
+      "function": "<module>.get_kline_by_date_ndarray",
+      "issue": "bytecode_mismatch",
+      "first_diff_offset": 97,
+      "diff_type": "different_opcode",
+      "diff_categories": {
+        "different_opcode": 78,
+        "different_argument": 6,
+        "missing_instruction": 23
+      },
+      "num_true_diffs": 107,
+      "num_jump_diffs": 1,
+      "orig_count": 210,
+      "decomp_count": 187,
+      "first_5_diffs": [
+        {
+          "index": 97,
+          "orig_op": "POP_JUMP_BACKWARD_IF_TRUE",
+          "decomp_op": "POP_TOP",
+          "orig_arg": 308,
+          "decomp_arg": null
+        },
+        {
+          "index": 101,
+          "orig_op": "LOAD_METHOD",
+          "decomp_op": "UNARY_NOT",
+          "orig_arg": "get",
+          "decomp_arg": null
+        },
+        {
+          "index": 102,
+          "orig_op": "LOAD_CONST",
+          "decomp_op": "JUMP_IF_FALSE_OR_POP",
+          "orig_arg": "data",
+          "decomp_arg": 676
+        },
+        {
+          "index": 103,
+          "orig_op": "CALL",
+          "decomp_op": "LOAD_FAST",
+          "orig_arg": 1,
+          "decomp_arg": "count"
+        },
+        {
+          "index": 104,
+          "orig_op": "LOAD_METHOD",
+          "decomp_op": "LOAD_CONST",
+          "orig_arg": "get",
+          "decomp_arg": 2
+        }
+      ]
+    },
+    {
+      "function": "<module>.get_kline_by_date_new",
+      "issue": "bytecode_mismatch",
+      "first_diff_offset": 253,
+      "diff_type": "different_opcode",
+      "diff_categories": {
+        "different_opcode": 1
+      },
+      "num_true_diffs": 1,
+      "num_jump_diffs": 13,
+      "orig_count": 301,
+      "decomp_count": 301,
+      "first_5_diffs": [
+        {
+          "index": 253,
+          "orig_op": "JUMP_FORWARD",
+          "decomp_op": "JUMP_BACKWARD",
+          "orig_arg": 1404,
+          "decomp_arg": 454
+        }
+      ]
+    },
+    {
+      "function": "<module>.get_multiminute_his_data",
+      "issue": "bytecode_mismatch",
+      "first_diff_offset": 344,
+      "diff_type": "different_opcode",
+      "diff_categories": {
+        "different_opcode": 107,
+        "different_argument": 15,
+        "missing_instruction": 12
+      },
+      "num_true_diffs": 134,
+      "num_jump_diffs": 10,
+      "orig_count": 479,
+      "decomp_count": 467,
+      "first_5_diffs": [
+        {
+          "index": 344,
+          "orig_op": "JUMP_FORWARD",
+          "decomp_op": "LOAD_GLOBAL",
+          "orig_arg": 1948,
+          "decomp_arg": "len"
+        },
+        {
+          "index": 345,
+          "orig_op": "LOAD_GLOBAL",
+          "decomp_op": "LOAD_FAST",
+          "orig_arg": "get_kline_by_count",
+          "decomp_arg": "fix_data"
+        },
+        {
+          "index": 346,
+          "orig_op": "LOAD_FAST",
+          "decomp_op": "CALL",
+          "orig_arg": "symbol",
+          "decomp_arg": 1
+        },
+        {
+          "index": 347,
+          "orig_op": "LOAD_FAST",
+          "decomp_op": "LOAD_CONST",
+          "orig_arg": "count_min",
+          "decomp_arg": 0
+        },
+        {
+          "index": 348,
+          "orig_op": "LOAD_FAST",
+          "decomp_op": "COMPARE_OP",
+          "orig_arg": "query_date",
+          "decomp_arg": "=="
+        }
+      ]
+    },
+    {
+      "function": "<module>.get_multiminute_his_data_by_date",
+      "issue": "bytecode_mismatch",
+      "first_diff_offset": 542,
+      "diff_type": "different_opcode",
+      "diff_categories": {
+        "different_opcode": 2,
+        "extra_instruction": 1
+      },
+      "num_true_diffs": 3,
+      "num_jump_diffs": 9,
+      "orig_count": 544,
+      "decomp_count": 545,
+      "first_5_diffs": [
+        {
+          "index": 542,
+          "orig_op": "LOAD_FAST",
+          "decomp_op": "JUMP_BACKWARD",
+          "orig_arg": "his_data_dict",
+          "decomp_arg": 1794
+        },
+        {
+          "index": 543,
+          "orig_op": "RETURN_VALUE",
+          "decomp_op": "LOAD_FAST",
+          "orig_arg": null,
+          "decomp_arg": "his_data_dict"
+        },
+        {
+          "index": 544,
+          "type": "extra_in_decomp",
+          "decomp_op": "RETURN_VALUE",
+          "decomp_arg": null
+        }
+      ]
+    },
+    {
+      "function": "<module>.get_price_common",
+      "issue": "bytecode_mismatch",
+      "first_diff_offset": 77,
+      "diff_type": "missing_instruction",
+      "diff_categories": {
+        "different_opcode": 141,
+        "different_argument": 9,
+        "missing_instruction": 273
+      },
+      "num_true_diffs": 423,
+      "num_jump_diffs": 15,
+      "orig_count": 537,
+      "decomp_count": 264,
+      "first_5_diffs": [
+        {
+          "index": 77,
+          "orig_op": "JUMP_FORWARD",
+          "decomp_op": "LOAD_GLOBAL",
+          "orig_arg": 438,
+          "decomp_arg": "strategy_log"
+        },
+        {
+          "index": 78,
+          "orig_op": "LOAD_FAST",
+          "decomp_op": "LOAD_ATTR",
+          "orig_arg": "count",
+          "decomp_arg": "error"
+        },
+        {
+          "index": 79,
+          "orig_op": "POP_JUMP_FORWARD_IF_NONE",
+          "decomp_op": "LOAD_CONST",
+          "orig_arg": 438,
+          "decomp_arg": "get_price仅支持fq为post、pre和dypre，请重新入参"
+        },
+        {
+          "index": 80,
+          "orig_op": "LOAD_GLOBAL",
+          "decomp_op": "CALL",
+          "orig_arg": "strategy_log",
+          "decomp_arg": 1
+        },
+        {
+          "index": 81,
+          "orig_op": "LOAD_ATTR",
+          "decomp_op": "POP_TOP",
+          "orig_arg": "error",
+          "decomp_arg": null
+        }
+      ]
+    },
+    {
+      "function": "<module>.kline_datetime_list",
+      "issue": "bytecode_mismatch",
+      "first_diff_offset": 150,
+      "diff_type": "different_opcode",
+      "diff_categories": {
+        "different_opcode": 195,
+        "different_argument": 33
+      },
+      "num_true_diffs": 228,
+      "num_jump_diffs": 8,
+      "orig_count": 389,
+      "decomp_count": 389,
+      "first_5_diffs": [
+        {
+          "index": 150,
+          "orig_op": "POP_JUMP_FORWARD_IF_TRUE",
+          "decomp_op": "POP_JUMP_FORWARD_IF_FALSE",
+          "orig_arg": 666,
+          "decomp_arg": 1704
+        },
+        {
+          "index": 151,
+          "orig_op": "LOAD_FAST",
+          "decomp_op": "LOAD_FAST",
+          "orig_arg": "time_count",
+          "decomp_arg": "am_open_datetime"
+        },
+        {
+          "index": 152,
+          "orig_op": "LOAD_CONST",
+          "decomp_op": "STORE_FAST",
+          "orig_arg": 1,
+          "decomp_arg": "min_datetime"
+        },
+        {
+          "index": 153,
+          "orig_op": "BINARY_OP",
+          "decomp_op": "LOAD_FAST",
+          "orig_arg": 23,
+          "decomp_arg": "frequency"
+        },
+        {
+          "index": 154,
+          "orig_op": "STORE_FAST",
+          "decomp_op": "LOAD_GLOBAL",
+          "orig_arg": "time_count",
+          "decomp_arg": "Frequency"
+        }
+      ]
+    },
+    {
+      "function": "<module>.to_pd_result",
+      "issue": "bytecode_mismatch",
+      "first_diff_offset": 61,
+      "diff_type": "different_opcode",
+      "diff_categories": {
+        "different_opcode": 94,
+        "different_argument": 7,
+        "missing_instruction": 22
+      },
+      "num_true_diffs": 123,
+      "num_jump_diffs": 2,
+      "orig_count": 185,
+      "decomp_count": 163,
+      "first_5_diffs": [
+        {
+          "index": 61,
+          "orig_op": "JUMP_FORWARD",
+          "decomp_op": "LOAD_FAST",
+          "orig_arg": 648,
+          "decomp_arg": "nd_array_or_dict"
+        },
+        {
+          "index": 62,
+          "orig_op": "LOAD_FAST",
+          "decomp_op": "LOAD_METHOD",
+          "orig_arg": "nd_array_or_dict",
+          "decomp_arg": "items"
+        },
+        {
+          "index": 63,
+          "orig_op": "LOAD_METHOD",
+          "decomp_op": "CALL",
+          "orig_arg": "items",
+          "decomp_arg": 0
+        },
+        {
+          "index": 64,
+          "orig_op": "CALL",
+          "decomp_op": "GET_ITER",
+          "orig_arg": 0,
+          "decomp_arg": null
+        },
+        {
+          "index": 65,
+          "orig_op": "GET_ITER",
+          "decomp_op": "FOR_ITER",
+          "orig_arg": null,
+          "decomp_arg": 570
+        }
+      ]
+    }
+  ]
+}
