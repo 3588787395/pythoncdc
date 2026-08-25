@@ -9471,6 +9471,13 @@ AST 映射规则:
         - _is_elif 标记：区分 elif 和普通嵌套 if（影响缩进和代码风格）
         - pre_stmts：条件表达式中的副作用语句（如函数调用的 POP_TOP）
         - generated_blocks 跟踪：防止重复生成 elif 条件块
+        - else-return 提升（字节码一致性约束）：当链尾 elif 的 orelse 恰为
+          单条 return 时，可将它提升为链后尾随语句——但前提必须可证：
+          region.merge_block 存在且为隐式 return None 块（链后无实际代码）。
+          merge_block 含实际语句或为 None（未知）时禁止提升：提升会把
+          `else: return X` 改写为落空语句，重编译丢失 JUMP_FORWARD→merge，
+          且语义上使 return 被非终态臂的落空路径误吞（W17-B，
+          gtn_request send_service / repro_01）。
 
         Args:
             region: IF_ELIF_CHAIN 类型的 IfRegion，包含:
@@ -9978,6 +9985,20 @@ AST 映射规则:
                                               if i.opname not in ('RESUME', 'NOP', 'CACHE')]
                             if not self._is_implicit_return_block(_mb_meaningful):
                                 _can_lift_else_return = False
+                        else:
+                            # 区域归约算法·字节码一致性约束（W17-B 修复）：
+                            # 「else-return 提升为链后尾随语句」是字节码等价变换，
+                            # 其前提是「链后无实际代码」——即 merge 块存在且恰为
+                            # 隐式 return None（arms 经 JUMP_FORWARD 汇入）。
+                            # merge_block=None 时该前提不可证（post-if 可能含实际
+                            # 语句，如 repro_01/gtn_request send_service 的内层链
+                            # merge=return list(rsp)）。此时提升会把 else 臂的
+                            # return 从 orelse 拆为兄弟语句，重编译丢失
+                            # JUMP_FORWARD→merge（1132→1130 字节），并改变执行
+                            # 语义（落空路径误吞 return）。前提不可证则禁止变换：
+                            # 保留 `else: return X` 原位发射，其重编译与原字节码
+                            # 逐指令一致（arms JF 越过 else 体直达隐式 return）。
+                            _can_lift_else_return = False
                         if _can_lift_else_return:
                             trailing_return = orelse[0]
                             last_elif['orelse'] = []

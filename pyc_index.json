@@ -1344,10 +1344,10 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_gtn_request/gtn_request.pyc",
     "size": 4163,
     "function_count": 5,
-    "decompile_status": "partial",
-    "bytecode_match_rate": 0.8,
+    "decompile_status": "ok",
+    "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 98
+    "last_tested_round": 103
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_hqsdk_data_source/__init__.pyc",
