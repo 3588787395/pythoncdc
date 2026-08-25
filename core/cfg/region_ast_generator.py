@@ -34880,6 +34880,72 @@ AST 映射规则:
             return []
         if any(i.opname == 'BINARY_OP' for i in block.instructions):
             pass
+        # [W22 修复·SWAP 弃顶返回（多语句块形态）] 块尾为 [.., SWAP,
+        # POP_TOP, RETURN_VALUE] 且块内还含前置语句（如
+        # to_pd_result blk@256：解包赋值 + 中间赋值 + swap-return 同块，
+        # n=26）。旧路径把尾缀调用当丢弃表达式（Expr+POP_TOP）并追加
+        # 隐式 return None，真实返回值丢失。切分算法：从 -4 向块首扫描，
+        # 后缀窗口仅允许表达式构建指令（白名单），取「可成功重建且不含
+        # STORE_*/跳转」的最大后缀为 Return 值段；其余前缀交回
+        # _build_statements_from_instructions 按语句边界重建。纯尾部小块
+        # （如 api_get_financial n=9）前缀为空，行为与既有正确路径一致。
+        _w22_last = block.get_last_instruction()
+        if (_w22_last is not None and _w22_last.opname == 'RETURN_VALUE'
+                and len(block.instructions) >= 4):
+            _w22_ops = [i.opname for i in block.instructions]
+            if (_w22_ops[-3] == 'SWAP' and _w22_ops[-2] == 'POP_TOP'):
+                _w22_expr_ops = {
+                    'LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF',
+                    'LOAD_ATTR', 'LOAD_CONST', 'LOAD_METHOD', 'LOAD_SUPER_ATTR',
+                    'BINARY_SUBSCR', 'BINARY_SLICE', 'BINARY_OP', 'COMPARE_OP',
+                    'CONTAINS_OP', 'BUILD_TUPLE', 'BUILD_LIST', 'BUILD_MAP',
+                    'BUILD_SET', 'BUILD_STRING', 'BUILD_SLICE', 'LIST_APPEND',
+                    'MAP_ADD', 'SET_ADD', 'CALL', 'PRECALL', 'KW_NAMES',
+                    'COPY', 'SWAP', 'UNARY_NEGATIVE', 'UNARY_NOT',
+                    'UNARY_INVERT', 'GET_ITER', 'FORMAT_SIMPLE', 'FORMAT_VALUE',
+                    'TO_BOOL',
+                }
+                _w22_best = None
+                # 守卫 1：SWAP 之下必须是 CALL 结果（惯用法本体）
+                if _w22_ops[-4] == 'CALL':
+                    # 守卫 2：前缀必须含至少一条赋值类语句（STORE_*）。
+                    # 纯「表达式语句 + return」块由既有路径正确处理
+                    # （Expr + Return），本切分只服务「多条赋值 + swap-return」
+                    # 同块形态；否则会把旧有的 Expr 尾调用吸进 Return 改变字节。
+                    _w22_has_store = any(
+                        block.instructions[_w22_j0].opname.startswith('STORE_')
+                        for _w22_j0 in range(0, len(block.instructions) - 3))
+                    if _w22_has_store:
+                        for _w22_j in range(len(block.instructions) - 3):
+                            _w22_seg = block.instructions[_w22_j:-3]
+                            if not _w22_seg:
+                                continue
+                            if any(i.opname not in _w22_expr_ops for i in _w22_seg):
+                                continue
+                            self.expr_reconstructor.reset()
+                            for _wi in _w22_seg:
+                                self.expr_reconstructor._process_instruction(_wi)
+                            _w22_stack = [s for s in self.expr_reconstructor.stack
+                                          if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+                            if len(_w22_stack) != 1:
+                                continue
+                            _w22_val = self.expr_reconstructor.reconstruct(_w22_seg)
+                            if _w22_val is not None:
+                                _w22_best = (_w22_j, _w22_val)
+                if _w22_best is not None:
+                    _w22_split, _w22_val = _w22_best
+                    _w22_prefix = block.instructions[:_w22_split]
+                    _w22_stmts = []
+                    if _w22_prefix:
+                        _w22_pre_stmts = self._build_statements_from_instructions(
+                            _w22_prefix, block)
+                        if _w22_pre_stmts:
+                            _w22_stmts.extend(_w22_pre_stmts)
+                    _w22_stmts.append({'type': 'Return', '_explicit_return': True,
+                                       'value': _w22_val})
+                    self.generated_blocks.add(block)
+                    self.generated_offsets.add(block.start_offset)
+                    return _w22_stmts
         import os as _os_dbg
         if _os_dbg.environ.get('R23N6_DEBUG2'):
             _has_bt2 = any(i.opname == 'BUILD_TUPLE' and i.arg == 2 for i in block.instructions)
