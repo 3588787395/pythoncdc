@@ -921,8 +921,8 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/interface.pyc",
     "size": 14519,
     "function_count": 41,
-    "decompile_status": "partial",
-    "bytecode_match_rate": 0.9512195121951219,
+    "decompile_status": "ok",
+    "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
     "last_tested_round": 98
   },

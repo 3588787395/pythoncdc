@@ -1821,7 +1821,7 @@ class RegionASTGenerator:
                     idx -= 1
                     continue
 
-            elif opname in ('LOAD_CONST',) and (isinstance(instr.argval, type(None)) or hasattr(instr.argval, 'co_code')):
+            elif opname in ('LOAD_CONST',) and (isinstance(instr.argval, type(None)) or hasattr(instr.argval, 'co_code') or isinstance(instr.argval, tuple)):
                 idx -= 1
                 continue
 
@@ -39349,9 +39349,15 @@ AST 映射规则:
                         _mf_idx_in_instrs = _ii
                         break
                 if _mf_idx_in_instrs is not None and _mf_idx_in_instrs > 0:
+                    _mf_instr = instrs[_mf_idx_in_instrs]
+                    _mf_flags = _mf_instr.arg or 0
                     _dec_pre = []
                     for _i in instrs[:_mf_idx_in_instrs]:
                         if _i.opname == 'LOAD_CONST' and hasattr(_i.argval, 'co_code'):
+                            continue
+                        if _mf_flags & 1 and _i.opname == 'LOAD_CONST' and isinstance(_i.argval, tuple):
+                            continue
+                        if _mf_flags & 2 and _i.opname == 'BUILD_CONST_KEY_MAP':
                             continue
                         if _i.opname in ('PRECALL', 'CALL', 'PUSH_NULL'):
                             continue
