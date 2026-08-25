@@ -13754,6 +13754,26 @@ AST 映射规则:
                         _should_emit = True
                         break
             if _should_emit:
+                # [W23 修复·共享尾跨层唯一归属] 当嵌套内层 IfRegion 与外层
+                # IfRegion 的 merge_block 为同一块（check_limit：is_trade 臂、
+                # query_date 链臂全部 JUMP_FORWARD 至同一 SymbolDict 尾块）
+                # 时，post-if 尾只能由最外层区域发射一次。原实现每层各自
+                # 触发 R15-N5 发射，共享 return 被复制进每个臂（字节码出现
+                # 两份 SymbolDict+RET、双合并点）。判据：存在另一 IfRegion
+                # 具有相同 merge 偏移且 entry 更小（更外层）⇒ 本层放弃发射
+                # （原则 2 每块唯一归属的跨层级推广；臂尾跳转由代码生成器
+                # 在嵌套落出时自然再生）。
+                _w23_mine = region.merge_block.start_offset
+                for _wr in self.region_analyzer.regions:
+                    if (_wr is not region and isinstance(_wr, IfRegion)
+                            and _wr.merge_block is not None
+                            and _wr.merge_block.start_offset == _w23_mine
+                            and _wr.entry is not None
+                            and region.entry is not None
+                            and _wr.entry.start_offset < region.entry.start_offset):
+                        _should_emit = False
+                        break
+            if _should_emit:
                 # R15-N5 已确保 LoopRegion 跳过 merge_block（未输出其语句），
                 # 但 _process_if_blocks 处理 LoopRegion 后会将 nested.blocks 全部
                 # 标记为 generated（含 merge_block）。此处需先清除标记，否则
