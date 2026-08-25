@@ -13413,7 +13413,15 @@ AST 映射规则:
                 _saved_else_blocks = getattr(region, 'else_blocks', [])
                 if self._or_else_block and self._or_else_block not in _saved_else_blocks:
                     region.else_blocks = list(_saved_else_blocks) + [self._or_else_block]
-                _or_else_stmts = self._process_if_blocks([self._or_else_block], region, branch='else')
+                # [W20 修复·塌陷防护] 短路 or 的 else 块可能不存在
+                # （_or_else_block=None，如 kline_datetime_list：or 右臂即函数
+                # 出口）。None 传入 _process_if_blocks 会在排序处抛
+                # AttributeError，整个函数体塌陷为空（1708→6 字节）。
+                # 无右块时 else 分支为空列表，直接跳过生成。
+                if self._or_else_block is not None:
+                    _or_else_stmts = self._process_if_blocks([self._or_else_block], region, branch='else')
+                else:
+                    _or_else_stmts = []
                 region.else_blocks = _saved_else_blocks
                 then_stmts = _or_then_stmts
                 else_stmts = _or_else_stmts
