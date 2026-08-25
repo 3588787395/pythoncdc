@@ -5773,6 +5773,7 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
             'RETURN_VALUE', 'RETURN_CONST', 'POP_EXCEPT',
             'JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
             'GET_AWAITABLE', 'SEND', 'YIELD_VALUE',
+            'SWAP', 'COPY', 'PUSH_NULL',
         }
         none_count = 0
         has_call = False
