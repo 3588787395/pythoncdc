@@ -7144,9 +7144,31 @@ AST 映射规则:
                 _cb_expr = self.expr_reconstructor.reconstruct(_cb_instrs)
                 if _cb_expr:
                     _cb_last = _cond_break_instr
-                    _if_false = 'IF_FALSE' in _cb_last.opname or 'IF_NOT_NONE' not in _cb_last.opname and 'IF_NONE' not in _cb_last.opname
-                    _negate = 'IF_TRUE' in _cb_last.opname or 'IF_NONE' in _cb_last.opname
-                    _cb_cond = _negate_expr(_cb_expr) if _negate else _cb_expr
+                    # [W18-C2 修复·NONE_CHECK 条件语义重建] 镜像
+                    # _try_generate_conditional_break_or_continue 的判据
+                    # （本文件 NONE_CHECK 处理约定）：条件跳转为
+                    # POP_JUMP_*_IF_NOT_NONE 时，「体=落空侧」的执行条件是
+                    # `x is None`；POP_JUMP_*_IF_NONE 则为 `x is not None`。
+                    # 原实现只按 IF_TRUE/IF_FALSE 计算极性，把 IS-NOT-NONE
+                    # 跳转当作真值测试，导致 `if it is None:` 退化为
+                    # `if it:`（repro_12）。字节码一致性约束：NONE_CHECK 是
+                    # 隐含 Compare(Is/IsNot None)，不是真值判断，二者重编译
+                    # 指令不同（COMPARE_OP vs 无），必须显式重建。
+                    _is_none_check_cb = _cb_last.opname in NONE_CHECK_OPS
+                    if _is_none_check_cb:
+                        if 'NOT_NONE' in _cb_last.opname:
+                            _cb_cond = {'type': 'Compare', 'left': _cb_expr,
+                                        'ops': [{'type': 'Is'}],
+                                        'comparators': [{'type': 'Constant', 'value': None}]}
+                        else:
+                            _cb_cond = {'type': 'Compare', 'left': _cb_expr,
+                                        'ops': [{'type': 'IsNot'}],
+                                        'comparators': [{'type': 'Constant', 'value': None}]}
+                        _if_false = False
+                    else:
+                        _if_false = 'IF_FALSE' in _cb_last.opname or 'IF_NOT_NONE' not in _cb_last.opname and 'IF_NONE' not in _cb_last.opname
+                        _negate = 'IF_TRUE' in _cb_last.opname or 'IF_NONE' in _cb_last.opname
+                        _cb_cond = _negate_expr(_cb_expr) if _negate else _cb_expr
                     _if_body_type = 'Break'
                     _fall_through_block = None
                     _jump_to_continue = False
@@ -7254,6 +7276,16 @@ AST 映射规则:
                                         if _ri.opname == 'LOAD_CONST' and _ri.argval is not None:
                                             _is_early_return = True
                                             break
+                                        if _ri.opname == 'LOAD_CONST' and _ri.argval is None:
+                                            # [W18-C1 修复] 裸 `return None`（LOAD_CONST None +
+                                            # RETURN_VALUE）也是显式早退。原扫描只认「有值」
+                                            # 前导，把 return-None 落空块误归入 Break 兜底分支，
+                                            # 产出 `if cond: break`（repro_12）。字节码判据：
+                                            # 循环出口含实际代码时，真 break 编译为
+                                            # JUMP_FORWARD→出口，而 return 终态为 RETURN_*；
+                                            # 二者可分，必须渲染 Return。
+                                            _is_early_return = True
+                                            break
                                         if _ri.opname not in ('NOP', 'CACHE', 'POP_TOP'):
                                             break
                             _is_early_raise_ft = False
@@ -7348,6 +7380,11 @@ AST 映射规则:
                                             _is_early_ret = True
                                             break
                                         if _ri2.opname == 'LOAD_CONST' and _ri2.argval is not None:
+                                            _is_early_ret = True
+                                            break
+                                        if _ri2.opname == 'LOAD_CONST' and _ri2.argval is None:
+                                            # [W18-C1 修复] 裸 return None 同为显式早退
+                                            # （判据与上方 _is_early_return 一致）。
                                             _is_early_ret = True
                                             break
                                         if _ri2.opname not in ('NOP', 'CACHE', 'POP_TOP'):
@@ -16347,6 +16384,29 @@ AST 映射规则:
                     self.generated_blocks.add(block)
                     self.generated_offsets.add(block.start_offset)
                     continue
+                # [W18-C1 修复·终态 return 块歧义判定] CPython 3.11 中 for 内
+                # `return None` 与「循环出口为隐式 return None 时的 break」
+                # 字节码同为 [POP_TOP, LOAD_CONST None, RETURN_VALUE]，角色
+                # 标注可能统一为 BREAK。判别式（区域归约算法·字节码一致性）：
+                # 块以 RETURN_VALUE/RETURN_CONST 终态且当前循环出口含实际
+                # 代码时，真 break 必为 [POP_TOP, JUMP_FORWARD→exit]，本块
+                # 只能是显式 return，必须渲染 Return（repro_13：`return out`
+                # 在循环后，return-None 臂被误发 Break，指令数 -2 且语义
+                # 改变）。出口全为隐式 return None 时保持既有 Break 行为
+                # （两种发射重编译逐指令一致，不引入回归）。
+                _w18_last = block.get_last_instruction()
+                if (_w18_last is not None
+                        and _w18_last.opname in ('RETURN_VALUE', 'RETURN_CONST')
+                        and not self._loop_exit_is_implicit_return_none(self._current_loop)):
+                    _ret_w18 = self._generate_return_ast(block)
+                    if _ret_w18 is not None:
+                        stmts.append(_ret_w18)
+                    else:
+                        stmts.append({'type': 'Return',
+                                      'value': {'type': 'Constant', 'value': None}})
+                    self.generated_blocks.add(block)
+                    self.generated_offsets.add(block.start_offset)
+                    continue
                 _meaningful_instrs = [
                     i for i in block.instructions
                     if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP')
@@ -16936,7 +16996,16 @@ AST 映射规则:
                     elif last_bs.get('type') == 'Return' and isinstance(last_bs.get('value'), dict) and last_bs['value'].get('type') == 'Constant' and last_bs['value'].get('value') is None:
                         if not block.successors or all(s not in _loop_body_set for s in block.successors):
                             _in_loop_else = (self._current_loop and block in (self._current_loop.else_blocks or []))
-                            if not _in_loop_else:
+                            # [W18-C1 修复·字节码歧义前提] 「循环内终态
+                            # return None ⇒ break」的改写仅在循环出口为隐式
+                            # return None 时重编译等价（此时 break 与 return
+                            # 字节码同形，可互换）。出口含实际代码时二者可
+                            # 区分：真 break 为 JUMP_FORWARD→exit，本块为
+                            # 终态 RETURN——必须保留 Return（repro_13：
+                            # `return out` 在循环后，误改写使指令数 -2 且
+                            # else 臂落空路径语义改变）。
+                            _w18_exit_ambig = self._loop_exit_is_implicit_return_none(self._current_loop)
+                            if not _in_loop_else and _w18_exit_ambig:
                                 bs.pop()
                                 if not bs or bs[-1].get('type') not in ('Break', 'Continue', 'Return', 'Raise'):
                                     bs.append({'type': 'Break'})
@@ -34709,6 +34778,51 @@ AST 映射规则:
                 return None
         return groups
 
+    def _loop_exit_is_implicit_return_none(self, loop) -> bool:
+        """_loop_exit_is_implicit_return_none - 循环出口歧义判定（W18-C1）
+
+        输入契约:
+          - loop: LoopRegion 或 None（无循环上下文）。
+
+        AST 映射规则: 返回 bool。True 表示该循环的所有「离开区域的直接后继」
+        均为隐式 return None 块——此时 CPython 3.11 将 for 内 `break` 与
+        `return None` 编译为同一字节码 [POP_TOP, LOAD_CONST None,
+        RETURN_VALUE]，两种源码重建重编译等价（歧义成立，可按既有约定渲染
+        Break）。False 表示存在含实际代码的出口块：真 break 必为
+        [POP_TOP, JUMP_FORWARD→exit]，终态 RETURN 块只能是显式 return，
+        必须渲染 Return。
+
+        子区域处理: 只读遍历 loop.blocks 的后继边，不修改任何归属。
+
+        字节码一致性约束:
+          - 歧义形态（全隐式 return None 出口）：Break/Return 两种发射的
+            重编译逐指令一致；
+          - 非歧义形态：Break 发射会丢失 RETURN_VALUE 并改变跳转拓扑
+            （指令数 -2），Return 发射与原字节码一致。
+        """
+        if loop is None:
+            return True
+        _inner = set(getattr(loop, 'blocks', None) or [])
+        if not _inner:
+            return True
+        _exits = []
+        _seen = set()
+        for _b in _inner:
+            for _s in getattr(_b, 'successors', None) or ():
+                if _s in _inner:
+                    continue
+                _key = _s.start_offset
+                if _key in _seen:
+                    continue
+                _seen.add(_key)
+                _exits.append(_s)
+        for _e in _exits:
+            _meaningful = [i for i in _e.instructions
+                           if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+            if not self._is_implicit_return_block(_meaningful):
+                return False
+        return True
+
     def _generate_block_statements(self, block: BasicBlock, _cjb_parent: BasicBlock = None) -> List[Dict[str, Any]]:
         """_generate_block_statements - 基本块 AST 语句生成（BasicBlock → ast.stmt 列表）
 
@@ -34779,9 +34893,22 @@ AST 映射规则:
                 if (len(_no_pop) == 2 and
                     _no_pop[0].opname == 'LOAD_CONST' and _no_pop[0].argval is None and
                     _no_pop[1].opname in ('RETURN_VALUE', 'RETURN_CONST')):
-                    self.generated_blocks.add(block)
-                    self.generated_offsets.add(block.start_offset)
-                    return [{'type': 'Break'}]
+                    # [W18-C1 修复·字节码歧义前提] CPython 3.11 中 for 循环的
+                    # `break` 与 `return None` 均编译为
+                    # [POP_TOP, LOAD_CONST None, RETURN_VALUE]——但仅当循环出口
+                    # 是「隐式 return None」块时二者重编译等价（break 直返 ==
+                    # return）。若循环出口含实际代码，真 break 必为
+                    # [POP_TOP, JUMP_FORWARD→exit]，该终态块只能是显式
+                    # `return None`，必须按 Return 发射（repro_13：
+                    # `return out` 在循环后，return-None 臂被误判 break，
+                    # 字节码 -2 且语义改变）。判据：枚举循环区域所有离开
+                    # 区域的后继；全部为隐式 return None 块 ⇒ 歧义成立，
+                    # 维持既有 Break 行为；否则走正常语句生成路径发射 Return。
+                    if self._loop_exit_is_implicit_return_none(self._current_loop):
+                        self.generated_blocks.add(block)
+                        self.generated_offsets.add(block.start_offset)
+                        return [{'type': 'Break'}]
+                    # 非歧义形态：真实 return None，落入下方正常生成路径
                 # try-finally break path: when a break inside a
                 # try-finally causes the compiler to inline the finally body
                 # into the break path, the block contains [finally body] +
@@ -36146,6 +36273,19 @@ AST 映射规则:
             return stmts
 
         _unpack_result = None
+        # [W19 修复·属性/下标目标的元组解包] `self.conn, self.cur = f()` 编译为
+        # [value...CALL][UNPACK_SEQUENCE N][LOAD obj][STORE_ATTR a]...（属性目标
+        # 带对象装载窗口；下标目标带容器+键窗口）。通用帧收集器只接受简单名
+        # STORE_*，本形态落入通用语句路径后被撕裂（mysql_conn.ResourceMySQL.
+        # __init__ 丢失解包赋值并伪造 self.conn = None）。专用解析器镜像 SWAP
+        # 多目标解析器的窗口法：目标对象装载窗口归属 LHS 子目标（原则 2 每块
+        # 唯一归属），值段归属 RHS；尾部隐式 return None 按 RETURN_NONE 角色
+        # 剥离，其余尾随语句交回通用重建。
+        _w19_unpack_stmts = self._build_attr_target_unpack(block)
+        if _w19_unpack_stmts is not None:
+            stmts.extend(_w19_unpack_stmts)
+            self.generated_blocks.add(block)
+            return stmts
         _has_unpack = any(i.opname in ('UNPACK_SEQUENCE', 'UNPACK_EX') for i in block.instructions)
         if _has_unpack:
             _has_unpack_ex = any(i.opname == 'UNPACK_EX' for i in block.instructions)
@@ -36294,6 +36434,70 @@ AST 映射规则:
                                     _ua_unpack_stack[-1]['targets'].append(_completed_tgt)
                             _ua_stmt_instrs = []
                             continue
+                        # [W19 修复·解包目标的属性/下标形式] `self.conn, self.cur =
+                        # f()` 编译为 [...CALL][UNPACK_SEQUENCE 2][LOAD self]
+                        # [STORE_ATTR conn][LOAD self][STORE_ATTR cur]。原帧收集器
+                        # 只接受简单名 STORE_*，STORE_ATTR 落入通用语句路径，目标
+                        # 窗口被撕裂（mysql_conn.ResourceMySQL.__init__ 丢失整个
+                        # 解包赋值并伪造 self.conn = None）。依原则 2（每块唯一
+                        # 归属）：目标对象装载窗口（LOAD_* / 属性链 / 下标键）归属
+                        # 本 Assign 的 LHS 子目标，从待定语句缓冲回拉；窗口法与
+                        # SWAP 多目标解析器一致。
+                        if (_instr.opname in ('STORE_ATTR', 'STORE_SUBSCR')
+                                and _ua_unpack_stack):
+                            # [W19·已废弃探针位] 目标收集改由 GBS 入口处的
+                            # _build_attr_target_unpack 统一处理（见 UNPACK
+                            # 段之前的调用点）；此处保留帧内回退窗口逻辑。
+                            _w19_win = []
+                            while _ua_stmt_instrs and _ua_stmt_instrs[-1].opname in (
+                                    'LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF',
+                                    'LOAD_ATTR', 'LOAD_CONST', 'BINARY_SUBSCR', 'BINARY_OP'):
+                                _w19_win.insert(0, _ua_stmt_instrs.pop())
+                            _w19_obj = None
+                            if _instr.opname == 'STORE_ATTR' and len(_w19_win) >= 1:
+                                self.expr_reconstructor.reset()
+                                for _win_i in _w19_win:
+                                    self.expr_reconstructor._process_instruction(_win_i)
+                                _w19_stack = [s for s in self.expr_reconstructor.stack
+                                              if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+                                if _w19_stack:
+                                    _w19_obj = _w19_stack[-1]
+                            elif _instr.opname == 'STORE_SUBSCR' and len(_w19_win) >= 2:
+                                self.expr_reconstructor.reset()
+                                for _win_i in _w19_win:
+                                    self.expr_reconstructor._process_instruction(_win_i)
+                                _w19_stack = [s for s in self.expr_reconstructor.stack
+                                              if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+                                if len(_w19_stack) >= 2:
+                                    _w19_obj = {'type': 'Subscript',
+                                                'value': _w19_stack[-2],
+                                                'slice': _w19_stack[-1],
+                                                'ctx': 'Store'}
+                            if _w19_obj is not None:
+                                _top_w19 = _ua_unpack_stack[-1]
+                                _top_w19['targets'].append(_w19_obj)
+                                while (_ua_unpack_stack
+                                       and len(_ua_unpack_stack[-1]['targets']) == _ua_unpack_stack[-1]['count']):
+                                    _completed_w19 = _ua_unpack_stack.pop()
+                                    _completed_tgt_w19 = {
+                                        'type': 'Tuple',
+                                        'elts': _completed_w19['targets'],
+                                        'ctx': 'Store',
+                                    }
+                                    if not _ua_unpack_stack:
+                                        if _completed_w19['value'] is not None:
+                                            _ua_stmts.append({
+                                                'type': 'Assign',
+                                                'targets': [_completed_tgt_w19],
+                                                'value': _completed_w19['value'],
+                                            })
+                                        break
+                                    else:
+                                        _ua_unpack_stack[-1]['targets'].append(_completed_tgt_w19)
+                                _ua_stmt_instrs = []
+                                continue
+                            # 窗口不足：恢复缓冲，走通用路径
+                            _ua_stmt_instrs.extend(_w19_win)
                         _ua_stmt_instrs.append(_instr)
                         _ua_stmt = self._build_store_statement(_ua_stmt_instrs, block=block)
                         if _ua_stmt:
@@ -38653,6 +38857,138 @@ AST 映射规则:
             'type': 'Expr',
             'value': expr,
         }
+
+    def _build_attr_target_unpack(self, block: BasicBlock) -> Optional[List[Dict[str, Any]]]:
+        """_build_attr_target_unpack - 属性/下标目标元组解包解析器（W19）
+
+        输入契约:
+          - block: 含 UNPACK_SEQUENCE 的基本块；目标可为简单名、属性
+            （[LOAD obj][STORE_ATTR]）或下标（[LOAD 容器][LOAD 键]
+            [STORE_SUBSCR]），允许混排（如 `a, self.b = f()`）。
+
+        AST 映射规则:
+          - 值段（UNPACK 之前）重建为 RHS 表达式；
+          - N 个目标按源序构成 Tuple(Store)；
+          - 发射单个 Assign(targets=[Tuple], value=RHS)；
+          - 尾部隐式 return None（LOAD_CONST None + RETURN_VALUE）按
+            RETURN_NONE 语义剥离；其余尾随语句交回通用指令重建。
+
+        子区域处理: 只读块内指令，不触碰子区域归属。
+
+        字节码一致性约束:
+          - 目标窗口回拉仅接受 LOAD_* / 属性链 / 下标键装载指令，
+            窗口不足即放弃（返回 None 走通用路径），不吞语句级指令；
+          - `self.conn, self.cur = self.getconn()` 重编译须逐指令还原
+            （UNPACK_SEQUENCE + LOAD self + STORE_ATTR 序列）。
+        """
+        _w19_all = [i for i in block.instructions
+                    if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+        if not _w19_all:
+            return None
+        _w19_unp_idx = None
+        for _wi, _winstr in enumerate(_w19_all):
+            if _winstr.opname == 'UNPACK_SEQUENCE':
+                _w19_unp_idx = _wi
+                break
+        if _w19_unp_idx is None or _w19_unp_idx == 0:
+            return None
+        _w19_count = _w19_all[_w19_unp_idx].arg
+        if not isinstance(_w19_count, int) or _w19_count < 2:
+            return None
+        _w19_value_instrs = _w19_all[:_w19_unp_idx]
+        # 值段不得含语句级指令（否则不是单一 RHS 表达式，放弃）
+        _w19_value_terminal = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+                               'STORE_SUBSCR', 'STORE_ATTR', 'POP_TOP',
+                               'RETURN_VALUE', 'RETURN_CONST', 'RAISE_VARARGS',
+                               'IMPORT_NAME')
+        if any(i.opname in _w19_value_terminal for i in _w19_value_instrs):
+            return None
+        _w19_value = self.expr_reconstructor.reconstruct(_w19_value_instrs)
+        if _w19_value is None:
+            return None
+        _w19_loadish = ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF',
+                        'LOAD_ATTR', 'LOAD_CONST', 'BINARY_SUBSCR', 'BINARY_OP')
+        _w19_targets = []
+        _w19_i = _w19_unp_idx + 1
+        while _w19_i < len(_w19_all) and len(_w19_targets) < _w19_count:
+            _winstr = _w19_all[_w19_i]
+            if _winstr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                _w19_targets.append({
+                    'type': 'Name',
+                    'id': _winstr.argval if _winstr.argval else f'var_{_winstr.arg}',
+                    'ctx': 'Store',
+                })
+                _w19_i += 1
+                continue
+            # 目标对象/键装载窗口：从上一目标结束处向后取连续 load-ish 指令，
+            # 直到 STORE_ATTR/STORE_SUBSCR。窗口内出现其他指令即放弃。
+            _w19_win_start = _w19_i
+            _w19_j = _w19_i
+            while (_w19_j < len(_w19_all)
+                   and _w19_all[_w19_j].opname in _w19_loadish):
+                _w19_j += 1
+            if (_w19_j >= len(_w19_all)
+                    or _w19_all[_w19_j].opname not in ('STORE_ATTR', 'STORE_SUBSCR')):
+                return None
+            _w19_win = _w19_all[_w19_win_start:_w19_j]
+            _w19_store = _w19_all[_w19_j]
+            if _w19_store.opname == 'STORE_ATTR':
+                if not _w19_win:
+                    return None
+                self.expr_reconstructor.reset()
+                for _win_i2 in _w19_win:
+                    self.expr_reconstructor._process_instruction(_win_i2)
+                _w19_stack2 = [s for s in self.expr_reconstructor.stack
+                               if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+                if not _w19_stack2:
+                    return None
+                _w19_targets.append({
+                    'type': 'Attribute',
+                    'value': _w19_stack2[-1],
+                    'attr': _w19_store.argval,
+                    'ctx': 'Store',
+                })
+            else:
+                if len(_w19_win) < 2:
+                    return None
+                self.expr_reconstructor.reset()
+                for _win_i2 in _w19_win:
+                    self.expr_reconstructor._process_instruction(_win_i2)
+                _w19_stack2 = [s for s in self.expr_reconstructor.stack
+                               if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+                if len(_w19_stack2) < 2:
+                    return None
+                _w19_targets.append({
+                    'type': 'Subscript',
+                    'value': _w19_stack2[-2],
+                    'slice': _w19_stack2[-1],
+                    'ctx': 'Store',
+                })
+            _w19_i = _w19_j + 1
+        if len(_w19_targets) != _w19_count:
+            return None
+        # 尾部准入（字节码一致性约束）：仅认领「尾部为空」或「恰为隐式
+        # return None」的块。其余形态（实值 RETURN、裸元组构建等）依赖
+        # 通用路径与后续块的 R23-N6 跨块 return 提升，本解析器抢占会
+        # 拆散该组合（quotation/api_get_financial 的
+        # `x, y = f(); return x, y` 退化为表达式语句 + 丢失 return）。
+        _w19_tail = _w19_all[_w19_i:]
+        _w19_is_implicit_ret = (
+            len(_w19_tail) == 2
+            and _w19_tail[0].opname == 'LOAD_CONST' and _w19_tail[0].argval is None
+            and _w19_tail[1].opname == 'RETURN_VALUE')
+        if _w19_tail and not _w19_is_implicit_ret:
+            return None
+        _w19_stmts = [{
+            'type': 'Assign',
+            'targets': [{'type': 'Tuple', 'elts': _w19_targets, 'ctx': 'Store'}],
+            'value': _w19_value,
+        }]
+        if not _w19_is_implicit_ret and _w19_tail:
+            _w19_trailing = self._build_statements_from_instructions(_w19_tail, block)
+            if _w19_trailing:
+                _w19_stmts.extend(_w19_trailing)
+        return _w19_stmts
 
     def _build_multi_target_unpack(self, block: BasicBlock) -> Optional[List[Dict[str, Any]]]:
         """ 多目标解包重建: a, b = c = d, e 或 a, b = e, f = g, h。
