@@ -21245,6 +21245,16 @@ AST 映射规则:
                             if _succ_has_return and _succ_cleanup_only:
                                 _is_except_return_swap = True
                                 break
+                if not _is_except_return_swap:
+                    for succ in block.successors:
+                        _succ_m = [i for i in succ.instructions
+                                   if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                        if (len(_succ_m) == 1
+                                and _succ_m[0].opname in ('RETURN_VALUE', 'RETURN_CONST')):
+                            _is_except_return_swap = True
+                            if remaining_nospace and remaining_nospace[0].opname == 'POP_TOP':
+                                skip_initial_pop = True
+                            break
                 if _is_except_return_swap:
                     continue
                 stmt_instrs.append(instr)
@@ -34966,6 +34976,59 @@ AST 映射规则:
                     self.generated_blocks.add(block)
                     self.generated_offsets.add(block.start_offset)
                     return _w22_stmts
+
+        # [W23 fix] Cross-block SWAP+POP_TOP → RETURN_VALUE:
+        # CPython 3.11 compiles `return <expr>` inside a for-else / try block
+        # as BUILD_* + SWAP n + POP_TOP (in one block) → RETURN_VALUE (in a
+        # separate trivial successor block). Without this detection, the
+        # dict/list/tuple value gets emitted as a bare Expr statement (losing
+        # the `return` keyword), and the successor RETURN_VALUE block produces
+        # nothing (try-depth skip). Fix: detect the pattern, reconstruct the
+        # return value from instructions before SWAP+POP_TOP, mark both blocks
+        # as generated, and emit a single Return node.
+        _w23_last = block.get_last_instruction()
+        if (_w23_last is not None
+                and _w23_last.opname == 'POP_TOP'
+                and len(block.instructions) >= 3):
+            _w23_ops = [i.opname for i in block.instructions]
+            if _w23_ops[-2] == 'SWAP':
+                for _w23_succ in block.successors:
+                    _w23_succ_m = [i for i in _w23_succ.instructions
+                                   if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                    if (len(_w23_succ_m) == 1
+                            and _w23_succ_m[0].opname in ('RETURN_VALUE', 'RETURN_CONST')):
+                        _w23_val_instrs = block.instructions[:-2]
+                        if _w23_val_instrs:
+                            _w23_val = self.expr_reconstructor.reconstruct(_w23_val_instrs)
+                            if _w23_val is not None:
+                                _w23_prefix_stmts = []
+                                _w23_store_idx = None
+                                for _w23_si in range(len(_w23_val_instrs)):
+                                    if _w23_val_instrs[_w23_si].opname.startswith('STORE_'):
+                                        _w23_store_idx = _w23_si
+                                if _w23_store_idx is not None:
+                                    _w23_pre_instrs = _w23_val_instrs[:_w23_store_idx + 1]
+                                    _w23_ret_instrs = _w23_val_instrs[_w23_store_idx + 1:]
+                                    _w23_pre_stmts = self._build_statements_from_instructions(
+                                        _w23_pre_instrs, block)
+                                    if _w23_pre_stmts:
+                                        _w23_prefix_stmts.extend(_w23_pre_stmts)
+                                    _w23_val = self.expr_reconstructor.reconstruct(
+                                        _w23_ret_instrs) if _w23_ret_instrs else None
+                                    if _w23_val is None:
+                                        continue
+                                _w23_prefix_stmts.append({
+                                    'type': 'Return',
+                                    '_explicit_return': True,
+                                    'value': _w23_val,
+                                })
+                                self.generated_blocks.add(block)
+                                self.generated_offsets.add(block.start_offset)
+                                self.generated_blocks.add(_w23_succ)
+                                self.generated_offsets.add(_w23_succ.start_offset)
+                                return _w23_prefix_stmts
+                        break
+
         import os as _os_dbg
         if _os_dbg.environ.get('R23N6_DEBUG2'):
             _has_bt2 = any(i.opname == 'BUILD_TUPLE' and i.arg == 2 for i in block.instructions)
