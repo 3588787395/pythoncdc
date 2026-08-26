@@ -5415,6 +5415,7 @@ AST 映射规则:
             if _instr.opname in ('GET_ITER', 'GET_AITER'):
                 _last_get_iter_idx = _i
         _import_pending_store = False
+        _unpack_skip_remaining = 0
         for _idx, _instr in enumerate(instrs):
             # 区域归约算法原则 2（每块唯一归属）：
             # for_iter_setup 块可能含 import 语句（如 get_valuation_info 中
@@ -5447,6 +5448,9 @@ AST 映射规则:
                 _import_pending_store = False
                 continue
             if _instr.opname in _store_ops:
+                if _unpack_skip_remaining > 0:
+                    _unpack_skip_remaining -= 1
+                    continue
                 # 区域归约算法原则 2（每块唯一归属）：
                 # walrus 命名表达式 `for x in (n := expr):` 编译为
                 # `expr; COPY; STORE_* n; GET_ITER`——COPY 复制栈顶，一份存入 n，
@@ -5470,6 +5474,42 @@ AST 映射规则:
                 if _stmt:
                     _pre_stmts.append(_stmt)
                 _buf = []
+                continue
+            if _instr.opname == 'UNPACK_SEQUENCE':
+                _val_instrs = [i for i in _buf if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                _val = self.expr_reconstructor.reconstruct(_val_instrs) if _val_instrs else None
+                _unpack_targets = []
+                _next_idx = _idx + 1
+                while _next_idx < len(instrs) and len(_unpack_targets) < _instr.arg:
+                    _ni = instrs[_next_idx]
+                    if _ni.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                        _next_idx += 1
+                        continue
+                    if _ni.opname in _store_ops:
+                        _unpack_targets.append({
+                            'type': 'Name',
+                            'id': _ni.argval if _ni.argval else 'var_{}'.format(_ni.arg),
+                            'ctx': 'Store',
+                            'lineno': _ni.starts_line,
+                        })
+                        _next_idx += 1
+                    else:
+                        break
+                if _unpack_targets and _val is not None:
+                    if len(_unpack_targets) == 1:
+                        _pre_stmts.append({
+                            'type': 'Assign',
+                            'targets': _unpack_targets,
+                            'value': _val,
+                        })
+                    else:
+                        _pre_stmts.append({
+                            'type': 'Assign',
+                            'targets': [{'type': 'Tuple', 'elts': _unpack_targets, 'ctx': 'Store'}],
+                            'value': _val,
+                        })
+                _buf = []
+                _unpack_skip_remaining = len(_unpack_targets)
                 continue
             # 区域归约算法原则 2（每块唯一归属）：
             # for 循环前驱块（含 GET_ITER）中的 STORE_SUBSCR/STORE_ATTR 赋值

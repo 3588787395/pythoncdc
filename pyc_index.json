@@ -2857,7 +2857,7 @@
     "size": 92306,
     "function_count": 69,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.8873239436619719,
+    "bytecode_match_rate": 0.9295774647887324,
     "ok_py_generated": true,
     "last_tested_round": 98
   },
@@ -2866,7 +2866,7 @@
     "size": 26297,
     "function_count": 10,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.7272727272727273,
+    "bytecode_match_rate": 0.8181818181818182,
     "ok_py_generated": true,
     "last_tested_round": 98
   },
@@ -2884,7 +2884,7 @@
     "size": 17231,
     "function_count": 8,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.5555555555555556,
+    "bytecode_match_rate": 0.6666666666666666,
     "ok_py_generated": true,
     "last_tested_round": 98
   },
@@ -2893,7 +2893,7 @@
     "size": 21607,
     "function_count": 9,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.7,
+    "bytecode_match_rate": 0.8,
     "ok_py_generated": true,
     "last_tested_round": 98
   },
@@ -3568,7 +3568,7 @@
     "size": 23934,
     "function_count": 22,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.7391304347826086,
+    "bytecode_match_rate": 0.782608695652174,
     "ok_py_generated": true,
     "last_tested_round": 98
   },
@@ -3595,7 +3595,7 @@
     "size": 40917,
     "function_count": 37,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.8421052631578947,
+    "bytecode_match_rate": 0.8947368421052632,
     "ok_py_generated": true,
     "last_tested_round": 98
   },
@@ -3604,7 +3604,7 @@
     "size": 35773,
     "function_count": 37,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.8947368421052632,
+    "bytecode_match_rate": 0.9210526315789473,
     "ok_py_generated": true,
     "last_tested_round": 98
   },
