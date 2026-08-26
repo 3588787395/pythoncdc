@@ -36602,7 +36602,14 @@ AST 映射规则:
                 # 顶层帧的 value 是字面量元组；嵌套帧的 value 为 None（隐式来自父帧解包）。
                 _ua_unpack_stack: List[Dict[str, Any]] = []
                 _ua_pending_import = None
+                _ua_skip_stores = 0
+                _ua_store_ops = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
                 for _instr in block.instructions:
+                    if _ua_skip_stores > 0:
+                        if _instr.opname in _ua_store_ops:
+                            _ua_skip_stores -= 1
+                            continue
+                        _ua_skip_stores = 0
                     if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
                         continue
                     if _instr.opname == 'IMPORT_NAME':
@@ -36746,6 +36753,60 @@ AST 映射规则:
                                 continue
                             # 窗口不足：恢复缓冲，走通用路径
                             _ua_stmt_instrs.extend(_w19_win)
+                        _ua_consec_count = 1
+                        _ua_blk_idx = block.instructions.index(_instr) + 1
+                        while _ua_blk_idx < len(block.instructions):
+                            _ua_ni = block.instructions[_ua_blk_idx]
+                            if _ua_ni.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                                _ua_blk_idx += 1
+                                continue
+                            if _ua_ni.opname in _ua_store_ops:
+                                _ua_consec_count += 1
+                                _ua_blk_idx += 1
+                            else:
+                                break
+                        if _ua_consec_count >= 2 and _ua_stmt_instrs:
+                            _ua_s2_val_instrs = [i for i in _ua_stmt_instrs
+                                                 if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                            _ua_s2_has_swap = any(i.opname == 'SWAP' for i in _ua_s2_val_instrs)
+                            _ua_s2_has_unpack = any(i.opname in ('UNPACK_SEQUENCE', 'UNPACK_EX')
+                                                    for i in _ua_s2_val_instrs)
+                            _ua_s2_has_copy = any(i.opname == 'COPY' for i in _ua_s2_val_instrs)
+                            if not _ua_s2_has_swap and not _ua_s2_has_unpack and not _ua_s2_has_copy:
+                                self.expr_reconstructor.reset()
+                                for _ua_vi in _ua_s2_val_instrs:
+                                    self.expr_reconstructor._process_instruction(_ua_vi)
+                                _ua_s2_stack = [s for s in self.expr_reconstructor.stack
+                                                if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+                                if len(_ua_s2_stack) >= _ua_consec_count:
+                                    _ua_s2_stores = [_instr]
+                                    _ua_si = block.instructions.index(_instr) + 1
+                                    while _ua_si < len(block.instructions):
+                                        _ua_sni = block.instructions[_ua_si]
+                                        if _ua_sni.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                                            _ua_si += 1
+                                            continue
+                                        if _ua_sni.opname in _ua_store_ops:
+                                            _ua_s2_stores.append(_ua_sni)
+                                            _ua_si += 1
+                                        else:
+                                            break
+                                    _ua_s2_targets = [{
+                                        'type': 'Name',
+                                        'id': _s.argval if _s.argval else f'var_{_s.arg}',
+                                        'ctx': 'Store',
+                                        'lineno': _s.starts_line,
+                                    } for _s in reversed(_ua_s2_stores)]
+                                    _ua_s2_rhs_elts = [_ua_s2_stack[-len(_ua_s2_stores) + _si]
+                                                       for _si in range(len(_ua_s2_stores))]
+                                    _ua_stmts.append({
+                                        'type': 'Assign',
+                                        'targets': [{'type': 'Tuple', 'elts': _ua_s2_targets, 'ctx': 'Store'}],
+                                        'value': {'type': 'Tuple', 'elts': _ua_s2_rhs_elts, 'ctx': 'Load'} if len(_ua_s2_rhs_elts) != 1 else _ua_s2_rhs_elts[0],
+                                    })
+                                    _ua_stmt_instrs = []
+                                    _ua_skip_stores = _ua_consec_count - 1
+                                    continue
                         _ua_stmt_instrs.append(_instr)
                         _ua_stmt = self._build_store_statement(_ua_stmt_instrs, block=block)
                         if _ua_stmt:
