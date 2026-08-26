@@ -1941,6 +1941,16 @@ class CodeGenerator:
     
     def _generate_while(self, node) -> None:
         """生成while循环"""
+        # [W28 修复] 常量假条件的 while（如 `while False: pass`）被 CPython
+        # 编译器完全消除，原 pyc 中无任何指令。分析端从残余结构误建的此类
+        # 幻影循环若照文发射，重编译虽也被消除，但会伴随生成多余的模块级
+        # return 脚手架（user_error <module> 多一条 RETURN_VALUE）。此处
+        # 直接跳过发射，与 Cython/CPython 行为一致。
+        _w28_test = node.get('test') if isinstance(node, dict) else getattr(node, 'test', None)
+        if (isinstance(_w28_test, dict)
+                and _w28_test.get('type') == 'Constant'
+                and not _w28_test.get('value', True)):
+            return
         # 生成while行
         # [关键修复] 使用0作为parent_precedence，避免条件被添加括号
         # 例如: while temp > 0: 而不是 while (temp > 0):
