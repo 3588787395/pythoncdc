@@ -9144,7 +9144,170 @@ AST 映射规则:
             if r is not region and isinstance(r, IfRegion) and hasattr(r, 'elif_conditions') and r.elif_conditions:
                 if region.entry in r.elif_conditions:
                     return []
+        _if_as_while = self._detect_if_region_as_while_loop(region)
+        if _if_as_while is not None:
+            return _if_as_while
         return self._if_generate_normal(region)
+
+    def _detect_if_region_as_while_loop(self, region: IfRegion) -> Optional[Union[Dict[str, Any], List[Dict[str, Any]]]]:
+        from core.cfg.region_analyzer import LoopRegion, BoolOpRegion
+        if region.else_blocks:
+            return None
+        if not region.then_blocks:
+            return None
+        _cond_block = getattr(region, 'condition_block', None)
+        if _cond_block is None:
+            return None
+        _matching_loop = None
+        for _r in self.regions:
+            if not isinstance(_r, LoopRegion):
+                continue
+            if getattr(_r, 'condition_block', None) is not _cond_block:
+                continue
+            if not _r.body_blocks:
+                continue
+            _overlap = set(region.then_blocks) & set(_r.body_blocks)
+            if not _overlap:
+                continue
+            _matching_loop = _r
+            break
+        if _matching_loop is None:
+            return None
+        self._generated_regions.add(id(region))
+        self._generated_regions.add(id(_matching_loop))
+        _if_entry = region.entry
+        _pre_stmts = []
+        if _if_entry and _if_entry is not _cond_block:
+            _pre_stmts, _ = self._if_extract_cond_instructions(_if_entry, region)
+            self.generated_blocks.add(_if_entry)
+            self.generated_offsets.add(_if_entry.start_offset)
+        _combined_cond = None
+        _boolop_child = None
+        for _c in (region.children or []):
+            if isinstance(_c, BoolOpRegion):
+                _boolop_child = _c
+                break
+        if _boolop_child is None:
+            for _r in self.regions:
+                if isinstance(_r, BoolOpRegion) and _r.parent is region:
+                    _boolop_child = _r
+                    break
+        if _boolop_child:
+            self._generated_regions.add(id(_boolop_child))
+            _boolop_expr = self._build_boolop_expression(_boolop_child)
+            if _boolop_expr:
+                _boolop_negate = False
+                _last_cb = _boolop_child.op_chain[-1][0] if _boolop_child.op_chain else None
+                if _last_cb:
+                    _last_ci = _last_cb.get_last_instruction()
+                    if _last_ci and _last_ci.opname in FORWARD_CONDITIONAL_JUMP_OPS:
+                        if 'TRUE' in _last_ci.opname or 'NONE' in _last_ci.opname:
+                            _boolop_negate = True
+                if _boolop_negate:
+                    _boolop_expr = _negate_expr(_boolop_expr)
+                _combined_cond = _boolop_expr
+            for _b in _boolop_child.blocks:
+                self.generated_blocks.add(_b)
+                self.generated_offsets.add(_b.start_offset)
+        if _combined_cond is None:
+            _combined_cond = self._build_while_combined_condition(region, _matching_loop)
+        _body_stmts = self._loop_generate_body(_matching_loop)
+        _cleaned_body = []
+        for _stmt in _body_stmts:
+            if isinstance(_stmt, dict) and _stmt.get('type') == 'If':
+                _if_test = _stmt.get('test', {})
+                _if_orelse = _stmt.get('orelse', [])
+                if (not _if_orelse
+                    and isinstance(_if_test, dict)
+                    and _if_test.get('type') == 'UnaryOp'
+                    and _if_test.get('op') == 'not'):
+                    _if_body = _stmt.get('body', [])
+                    _has_continue = any(
+                        isinstance(s, dict) and s.get('type') == 'Continue'
+                        for s in _if_body
+                    )
+                    _inner_is_back_edge_cond = False
+                    if len(_if_body) == 1 and isinstance(_if_body[0], dict) and _if_body[0].get('type') == 'If':
+                        _inner_body = _if_body[0].get('body', [])
+                        _inner_has_continue = any(isinstance(s, dict) and s.get('type') == 'Continue' for s in _inner_body)
+                        if _inner_has_continue:
+                            _inner_is_back_edge_cond = True
+                    if _has_continue or _inner_is_back_edge_cond:
+                        continue
+            _cleaned_body.append(_stmt)
+        _body_stmts = _cleaned_body
+        for _b in _matching_loop.blocks:
+            self.generated_blocks.add(_b)
+            self.generated_offsets.add(_b.start_offset)
+        for _b in region.blocks:
+            self.generated_blocks.add(_b)
+            self.generated_offsets.add(_b.start_offset)
+        _while_ast = {'type': 'While', 'test': _combined_cond or {'type': 'Constant', 'value': True}, 'body': _body_stmts if _body_stmts else [{'type': 'Pass'}]}
+        result = []
+        result.extend(_pre_stmts)
+        result.append(_while_ast)
+        if _matching_loop.else_blocks:
+            _else_stmts = self._if_generate_branch_stmts(blocks=_matching_loop.else_blocks)
+            _while_ast['orelse'] = _else_stmts if _else_stmts else []
+        return result
+
+    def _build_while_combined_condition(self, if_region, loop_region):
+        _if_entry = if_region.entry
+        _cond_block = if_region.condition_block
+        _part1_instrs = []
+        if _if_entry and _if_entry is not _cond_block:
+            _entry_last = _if_entry.get_last_instruction()
+            _found_cond = False
+            for _ii in reversed(_if_entry.instructions):
+                if _ii.opname in CONDITIONAL_JUMP_OPS:
+                    _found_cond = True
+                    continue
+                if _found_cond:
+                    if _ii.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'COPY', 'SWAP'):
+                        continue
+                    if _ii.opname in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF', 'LOAD_CONST',
+                                       'LOAD_ATTR', 'LOAD_METHOD', 'BINARY_OP', 'COMPARE_OP',
+                                       'CALL', 'CALL_FUNCTION', 'CALL_METHOD', 'UNARY_NOT',
+                                       'IS_OP', 'CONTAINS_OP', 'BUILD_TUPLE', 'BUILD_LIST'):
+                        _part1_instrs.insert(0, _ii)
+                    else:
+                        break
+            _negate1 = False
+            if _entry_last and _entry_last.opname in ('POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_TRUE'):
+                _negate1 = True
+        else:
+            _negate1 = False
+        _part2_instrs = []
+        _negate2 = False
+        if _cond_block:
+            _cond_last = _cond_block.get_last_instruction()
+            if _cond_last and _cond_last.opname in ('POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_TRUE'):
+                _negate2 = True
+            for _ii in _cond_block.instructions:
+                if _ii.opname in ('RESUME', 'NOP', 'CACHE'):
+                    continue
+                if _cond_last and _ii is _cond_last and _ii.opname in CONDITIONAL_JUMP_OPS:
+                    continue
+                _part2_instrs.append(_ii)
+        if not _part1_instrs and not _part2_instrs:
+            return None
+        _cond1 = None
+        if _part1_instrs:
+            _cond1 = self.expr_reconstructor.reconstruct(_part1_instrs)
+            if _cond1 and _negate1:
+                _cond1 = {'type': 'UnaryOp', 'op': 'Not', 'operand': _cond1}
+        _cond2 = None
+        if _part2_instrs:
+            _cond2 = self.expr_reconstructor.reconstruct(_part2_instrs)
+            if _cond2 and _negate2:
+                _cond2 = {'type': 'UnaryOp', 'op': 'Not', 'operand': _cond2}
+        if _cond1 and _cond2:
+            return {'type': 'BoolOp', 'op': 'And', 'values': [_cond1, _cond2]}
+        elif _cond1:
+            return _cond1
+        elif _cond2:
+            return _cond2
+        return None
 
     def _generate_value_context_chain_compare_assign(self, region: IfRegion) -> Optional[Dict[str, Any]]:
         """[Round4-04] 链式比较作赋值右值的 AST 生成。
