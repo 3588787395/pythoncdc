@@ -36813,6 +36813,27 @@ AST 映射规则:
                             _ua_stmts.append(_ua_stmt)
                         _ua_stmt_instrs = []
                         continue
+                    if _instr.opname == 'STORE_SUBSCR':
+                        _ua_stmt_instrs.append(_instr)
+                        _ua_stmt = self._build_subscript_assign(_ua_stmt_instrs)
+                        if _ua_stmt:
+                            _ua_stmts.append(_ua_stmt)
+                        _ua_stmt_instrs = []
+                        continue
+                    if _instr.opname == 'STORE_ATTR':
+                        _ua_stmt_instrs.append(_instr)
+                        _ua_stmt = self._build_attr_assign(_ua_stmt_instrs)
+                        if _ua_stmt:
+                            _ua_stmts.append(_ua_stmt)
+                        _ua_stmt_instrs = []
+                        continue
+                    if _instr.opname == 'RETURN_VALUE':
+                        _ua_stmt_instrs.append(_instr)
+                        _ua_stmt = self._build_statement(_ua_stmt_instrs)
+                        if _ua_stmt:
+                            _ua_stmts.append(_ua_stmt)
+                        _ua_stmt_instrs = []
+                        continue
                     if _instr.opname in ('JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'):
                         if _ua_stmt_instrs:
                             _ua_stmt = self._build_subscript_assign(_ua_stmt_instrs) or self._build_attr_assign(_ua_stmt_instrs) or self._build_statement(_ua_stmt_instrs)
