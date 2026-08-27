@@ -12245,6 +12245,25 @@ AST 映射规则:
                         return [{'type': 'Pass'}]
                 return None
         if region.else_blocks:
+            # [R115 fix] else 分支仅含 NOP-only 块（CPython 的 else: pass 模式）：
+            # CPython 为 `else: pass` 生成 JUMP_FORWARD(to merge) + NOP（条件跳转
+            # 目标）模式。若所有 else_blocks 仅有 NOISE_OPS 指令，则生成
+            # `else: pass`，否则重编译缺少 JUMP_FORWARD + NOP 导致字节码偏移错位。
+            _all_nop_else = all(
+                all(i.opname in NOISE_OPS for i in b.instructions)
+                for b in region.else_blocks)
+            if _all_nop_else and region.then_blocks:
+                _then_last = region.then_blocks[-1].get_last_instruction()
+                _merge_blk = getattr(region, 'merge_block', None)
+                if (_then_last is not None
+                        and _then_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                        and _merge_blk is not None):
+                    _then_target = (self.cfg.get_block_by_offset(_then_last.argval)
+                                    if _then_last.argval is not None else None)
+                    if _then_target is _merge_blk:
+                        for b in region.else_blocks:
+                            self.generated_blocks.add(b)
+                        return [{'type': 'Pass'}]
             else_stmts = []
             # file assignment lost before try: interleave
             # sub-regions (Try/With/Loop) and sequential blocks by offset

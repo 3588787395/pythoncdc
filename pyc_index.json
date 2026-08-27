@@ -2299,7 +2299,7 @@
     "size": 22990,
     "function_count": 22,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.75,
+    "bytecode_match_rate": 0.875,
     "ok_py_generated": true,
     "last_tested_round": 98
   },
@@ -2713,7 +2713,7 @@
     "size": 67327,
     "function_count": 32,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.8,
+    "bytecode_match_rate": 0.8285714285714286,
     "ok_py_generated": true,
     "last_tested_round": 98
   },

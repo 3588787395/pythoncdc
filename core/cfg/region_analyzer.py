@@ -14873,6 +14873,17 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                                     for b in else_blocks)
                                 if _has_return_else:
                                     _then_jumps_over_else = True
+                                # [R115 fix] else 分支仅含 NOP 块（else: pass）：
+                                # CPython 为 else: pass 生成 JUMP_FORWARD(to merge) +
+                                # NOP（条件跳转目标）模式。若清除 else_blocks，
+                                # 反编译输出缺少 else: pass，重编译后缺少
+                                # JUMP_FORWARD + NOP，导致字节码偏移错位。
+                                # 判据：then 末尾 JUMP_FORWARD 跳到 merge，且
+                                # else 仅含 NOP-only 块（条件跳转目标）。
+                                elif all(
+                                    all(i.opname in NOISE_OPS for i in b.instructions)
+                                    for b in else_blocks):
+                                    _then_jumps_over_else = True
                     if not _then_jumps_over_else:
                         else_blocks = []
         if else_blocks:
