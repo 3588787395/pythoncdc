@@ -8399,6 +8399,14 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 if _last and _last.opname in ('RETURN_VALUE', 'RETURN_CONST', 'RERAISE'):
                     continue
                 _has_pop_except = any(i.opname == 'POP_EXCEPT' for i in _current.instructions)
+                # [W21 fix] POP_EXCEPT + JUMP_FORWARD 结尾的块是 except handler
+                # 的正常退出路径——异常已处理完毕，JUMP_FORWARD 跳回 try 块之后
+                # 的代码。不应跟随此 JUMP_FORWARD 的目标，否则会把 try-except 之后
+                # 的所有模块级代码吞进 except handler body（load_algo.pyc 根因）。
+                # 判据：块含 POP_EXCEPT 且最后指令为 JUMP_FORWARD → handler 退出，
+                # 不跟踪任何后继。
+                if _has_pop_except and _last and _last.opname == 'JUMP_FORWARD':
+                    continue
                 for _succ in _current.successors:
                     # [Phase 3 adv17_try_except_star] 不跟踪异常后继
                     # （exception_successors）。except* handler body 的异常后继
@@ -13602,6 +13610,23 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
 
             if any(instr.opname in ('PUSH_EXC_INFO', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH', 'PREP_RERAISE_STAR') for instr in block.instructions):
                 continue
+
+            # 区域归约算法原则 2（每块唯一归属）+ 原则 1（自底向上归约）+
+            # 原则 3（嵌套即抽象节点）：
+            # 当 block 属于某 TryExceptRegion 的 finally_copy_blocks（finally
+            # 正常路径副本）时，block 是 finally 体的正常路径副本，其代码由
+            # TryExceptRegion 的 finally 生成器统一发射（_generate_try 的
+            # finalbody 生成路径），不应被 IfRegion 抢占。
+            # 判据：block_region 是 TryExceptRegion 且 block 的 start_offset
+            # 在该 region 的 finally_copy_blocks 字典的 key 集合中。
+            # 依据：TryExceptRegion 在 Phase 1 先于 IfRegion 识别（原则 1），
+            # finally 正常路径副本已被 _identify_try_except_regions 纳入
+            # all_blocks 并登记 block_to_region（原则 2），IfRegion 不应重复
+            # 创建覆盖这些块（原则 3：嵌套即抽象节点，父区域通过入口引用子区域）。
+            if isinstance(block_region, TryExceptRegion):
+                _fcp = getattr(block_region, 'finally_copy_blocks', None)
+                if _fcp and block.start_offset in _fcp:
+                    continue
 
             # 区域归约算法原则 4（父引用子入口）+ 原则 1（自底向上归约）+
             # 原则 2（每块唯一归属）：

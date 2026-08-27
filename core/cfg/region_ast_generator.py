@@ -20043,8 +20043,15 @@ AST 映射规则:
                 _fc_key_set = set(region.finally_copy_blocks.keys())
                 # [W11-A fix] finally 正常路径副本成员块属于 finalbody 结构，
                 # 不作为 post-try 候选（否则 with 头/体被拆散泄漏到 try 外）。
+                # [W21 fix] region.blocks（all_blocks）包含 finally 正常路径副本
+                # 的后继块（如隐式 return None 块、if 分支体块），这些块属于
+                # finally 正常路径结构，不应被收集为 post-try 代码。将
+                # region.blocks 全量纳入 _known_struct，确保 finally 副本的后继
+                # 块不被误判为 post-try 块而在 try 语句外作为裸语句泄漏。
+                _all_block_offsets = set(b.start_offset for b in region.blocks)
                 _known_struct = (_try_off_set | _else_off_set | _fin_off_set
-                                 | _h_off_set | _fc_key_set | _w11a_nc_offsets)
+                                 | _h_off_set | _fc_key_set | _w11a_nc_offsets
+                                 | _all_block_offsets)
                 for _fc_offset, _fc_keep in region.finally_copy_blocks.items():
                     _fc_block = self.cfg.get_block_by_offset(_fc_offset)
                     if _fc_block is None:
