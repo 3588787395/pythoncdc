@@ -6014,6 +6014,9 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
         skip_store_targets = set()
         if with_region.target:
             skip_store_targets.add(with_region.target)
+        for _item_ctx, _item_tgt in getattr(with_region, 'items', []) or []:
+            if isinstance(_item_tgt, str):
+                skip_store_targets.add(_item_tgt)
 
         if swap_idx is not None and swap_idx < exit_call_start:
             value_instrs = []
@@ -8395,8 +8398,7 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 _last = _current.get_last_instruction()
                 if _last and _last.opname in ('RETURN_VALUE', 'RETURN_CONST', 'RERAISE'):
                     continue
-                if any(i.opname == 'POP_EXCEPT' for i in _current.instructions):
-                    continue
+                _has_pop_except = any(i.opname == 'POP_EXCEPT' for i in _current.instructions)
                 for _succ in _current.successors:
                     # [Phase 3 adv17_try_except_star] 不跟踪异常后继
                     # （exception_successors）。except* handler body 的异常后继
@@ -8407,6 +8409,22 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                     if _succ not in _visited:
                         if _succ.start_offset in self._reraise_block_offsets:
                             continue
+                        # 当 POP_EXCEPT 块的异常后继指向外层 handler 时，
+                        # 不跟踪异常后继（已由上方 exception_successors 过滤）。
+                        # 但应跟踪正常后继——POP_EXCEPT 之后的正常路径是
+                        # handler 的实际代码（如 return 语句），而非框架指令。
+                        # 嵌套 try/except 中，CPython 因异常表覆盖范围边界
+                        # 将 POP_EXCEPT 与其后的 return 分裂为不同块
+                        # （如 block 56: POP_EXCEPT → block 58: return 0），
+                        # 若不跟踪正常后继，return 块会遗失到外层 try_blocks，
+                        # 导致 decompiler 输出 `except: pass; return 0` 而非
+                        # `except: return 0`。仅跟踪不含异常帧指令的后继块
+                        # （无 PUSH_EXC_INFO/CHECK_EXC_MATCH），避免误入
+                        # 外层 handler 或内嵌 try 的异常帧。
+                        if _has_pop_except:
+                            if any(i.opname in ('PUSH_EXC_INFO', 'CHECK_EXC_MATCH',
+                                                'CHECK_EG_MATCH') for i in _succ.instructions):
+                                continue
                         _worklist.append(_succ)
             return _blocks
 

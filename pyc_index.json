@@ -372,10 +372,10 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/strategy.pyc",
     "size": 4975,
     "function_count": 1,
-    "decompile_status": "partial",
-    "bytecode_match_rate": 0.5,
+    "decompile_status": "ok",
+    "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 98
+    "last_tested_round": 1
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/wizard_quant_api.pyc",
@@ -3351,10 +3351,10 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/user_error.pyc",
     "size": 5669,
     "function_count": 3,
-    "decompile_status": "partial",
-    "bytecode_match_rate": 0.75,
+    "decompile_status": "ok",
+    "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 98
+    "last_tested_round": 1
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/fly/data/__init__.pyc",

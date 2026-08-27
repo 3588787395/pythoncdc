@@ -188,44 +188,68 @@ class RegionASTGenerator:
                         break
                     elif block.instructions[_s].opname not in ('LOAD_CONST', 'PUSH_NULL'):
                         break
+                _fromlist_is_none = False
+                for _fi in range(_instr_idx - 1, max(_instr_idx - 4, -1), -1):
+                    _prev = block.instructions[_fi]
+                    if _prev.opname == 'LOAD_CONST':
+                        if _prev.argval is None:
+                            _fromlist_is_none = True
+                        break
+                    elif _prev.opname == 'PUSH_NULL':
+                        continue
+                    else:
+                        break
                 if _has_import_from:
-                    from_names = []
-                    _si = _instr_idx + 1
-                    while _si < len(block.instructions) - 1:
-                        _sc = block.instructions[_si]
-                        _sn = block.instructions[_si + 1]
-                        if _sc.opname == 'IMPORT_FROM':
-                            _imp_n = _sc.argval if _sc.argval else ''
-                            _sto_n = None
-                            if _sn.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
-                                _sto_n = _sn.argval
-                                _si += 2
-                            elif _sn.opname == 'IMPORT_FROM':
-                                _sto_n = _imp_n
-                                _si += 1
-                            else:
-                                _sto_n = _imp_n
+                    if _fromlist_is_none:
+                        _alias_name = None
+                        for _si in range(_instr_idx + 1, min(_instr_idx + 8, len(block.instructions))):
+                            if block.instructions[_si].opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                                _alias_name = block.instructions[_si].argval
+                                break
+                            if block.instructions[_si].opname in ('JUMP_FORWARD', 'RETURN_VALUE', 'RETURN_CONST', 'CALL', 'PRECALL'):
+                                break
+                        if _alias_name and _alias_name != module_name:
+                            _pre_stmts.append({'type': 'Import', 'names': [{'name': module_name, 'asname': _alias_name}]})
+                        else:
+                            _pre_stmts.append({'type': 'Import', 'names': [{'name': module_name, 'asname': None}]})
+                    else:
+                        from_names = []
+                        _si = _instr_idx + 1
+                        while _si < len(block.instructions) - 1:
+                            _sc = block.instructions[_si]
+                            _sn = block.instructions[_si + 1]
+                            if _sc.opname == 'IMPORT_FROM':
+                                _imp_n = _sc.argval if _sc.argval else ''
+                                _sto_n = None
+                                if _sn.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                                    _sto_n = _sn.argval
+                                    _si += 2
+                                elif _sn.opname == 'IMPORT_FROM':
+                                    _sto_n = _imp_n
+                                    _si += 1
+                                else:
+                                    _sto_n = _imp_n
+                                    _si += 1
+                                    continue
+                                if _imp_n:
+                                    from_names.append((_imp_n, _sto_n))
+                                continue
+                            elif _sc.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
                                 _si += 1
                                 continue
-                            if _imp_n:
-                                from_names.append((_imp_n, _sto_n))
-                            continue
-                        elif _sc.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
-                            _si += 1
-                            continue
-                        elif _sc.opname in ('LOAD_CONST', 'PUSH_NULL', 'POP_TOP'):
-                            _si += 1
-                            continue
-                        else:
-                            break
-                    if from_names:
-                        _nl = []
-                        for _ipd, _std in from_names:
-                            if _ipd != _std:
-                                _nl.append({'name': _ipd, 'asname': _std})
+                            elif _sc.opname in ('LOAD_CONST', 'PUSH_NULL', 'POP_TOP'):
+                                _si += 1
+                                continue
                             else:
-                                _nl.append({'name': _ipd, 'asname': None})
-                        _pre_stmts.append({'type': 'ImportFrom', 'module': module_name, 'names': _nl})
+                                break
+                        if from_names:
+                            _nl = []
+                            for _ipd, _std in from_names:
+                                if _ipd != _std:
+                                    _nl.append({'name': _ipd, 'asname': _std})
+                                else:
+                                    _nl.append({'name': _ipd, 'asname': None})
+                            _pre_stmts.append({'type': 'ImportFrom', 'module': module_name, 'names': _nl})
                 else:
                     _sn_list = []
                     for _si2 in range(_instr_idx + 1, len(block.instructions)):
@@ -6928,47 +6952,80 @@ AST 映射规则:
                         break
                     if hdr.instructions[_ii].opname not in ('LOAD_CONST', 'PUSH_NULL'):
                         break
+                _fromlist_is_none = False
+                for _fi in range(_imp_idx - 1, max(_imp_idx - 4, -1), -1):
+                    _prev = hdr.instructions[_fi]
+                    if _prev.opname == 'LOAD_CONST':
+                        if _prev.argval is None:
+                            _fromlist_is_none = True
+                        break
+                    elif _prev.opname == 'PUSH_NULL':
+                        continue
+                    else:
+                        break
                 if _imp_has_from:
-                    _from_names = []
-                    _ii = _imp_idx + 1
-                    while _ii < _imp_scan_end - 1:
-                        _curr = hdr.instructions[_ii]
-                        _next = hdr.instructions[_ii + 1]
-                        if _curr.opname == 'IMPORT_FROM':
-                            _in = _curr.argval if _curr.argval else ''
-                            _sn = None
-                            if _next.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
-                                _sn = _next.argval
-                                _sl_skip_offsets.add(_curr.offset)
-                                _sl_skip_offsets.add(_next.offset)
-                                _ii += 2
-                            elif _next.opname == 'IMPORT_FROM':
-                                _sn = _in
-                                _sl_skip_offsets.add(_curr.offset)
-                                _ii += 1
-                            else:
-                                _sn = _in
+                    if _fromlist_is_none:
+                        _alias_name = None
+                        for _si in range(_imp_idx + 1, min(_imp_idx + 8, _imp_scan_end)):
+                            if hdr.instructions[_si].opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                                _alias_name = hdr.instructions[_si].argval
+                                _sl_skip_offsets.add(hdr.instructions[_si].offset)
+                                break
+                            if hdr.instructions[_si].opname in ('JUMP_FORWARD', 'RETURN_VALUE', 'RETURN_CONST', 'CALL', 'PRECALL'):
+                                break
+                        # Mark all import-related instrs between IMPORT_NAME and the STORE as skipped
+                        for _mi in range(_imp_idx + 1, min(_imp_idx + 8, _imp_scan_end)):
+                            _mi_instr = hdr.instructions[_mi]
+                            _sl_skip_offsets.add(_mi_instr.offset)
+                            if _mi_instr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                                break
+                            if _mi_instr.opname in ('JUMP_FORWARD', 'RETURN_VALUE', 'RETURN_CONST', 'CALL', 'PRECALL'):
+                                break
+                        if _alias_name and _alias_name != _imp_module:
+                            _self_loop_stmts.append({'type': 'Import', 'names': [{'name': _imp_module, 'asname': _alias_name}]})
+                        else:
+                            _self_loop_stmts.append({'type': 'Import', 'names': [{'name': _imp_module, 'asname': None}]})
+                    else:
+                        _from_names = []
+                        _ii = _imp_idx + 1
+                        while _ii < _imp_scan_end - 1:
+                            _curr = hdr.instructions[_ii]
+                            _next = hdr.instructions[_ii + 1]
+                            if _curr.opname == 'IMPORT_FROM':
+                                _in = _curr.argval if _curr.argval else ''
+                                _sn = None
+                                if _next.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                                    _sn = _next.argval
+                                    _sl_skip_offsets.add(_curr.offset)
+                                    _sl_skip_offsets.add(_next.offset)
+                                    _ii += 2
+                                elif _next.opname == 'IMPORT_FROM':
+                                    _sn = _in
+                                    _sl_skip_offsets.add(_curr.offset)
+                                    _ii += 1
+                                else:
+                                    _sn = _in
+                                    _sl_skip_offsets.add(_curr.offset)
+                                    _ii += 1
+                                    continue
+                                if _in:
+                                    _from_names.append((_in, _sn if _sn != _in else None))
+                                continue
+                            elif _curr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
                                 _sl_skip_offsets.add(_curr.offset)
                                 _ii += 1
                                 continue
-                            if _in:
-                                _from_names.append((_in, _sn if _sn != _in else None))
-                            continue
-                        elif _curr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
-                            _sl_skip_offsets.add(_curr.offset)
-                            _ii += 1
-                            continue
-                        elif _curr.opname in ('LOAD_CONST', 'PUSH_NULL', 'POP_TOP'):
-                            _sl_skip_offsets.add(_curr.offset)
-                            _ii += 1
-                            continue
-                        else:
-                            break
-                    if _from_names:
-                        _nl = []
-                        for _ipd, _std in _from_names:
-                            _nl.append({'name': _ipd, 'asname': _std})
-                        _self_loop_stmts.append({'type': 'ImportFrom', 'module': _imp_module, 'names': _nl})
+                            elif _curr.opname in ('LOAD_CONST', 'PUSH_NULL', 'POP_TOP'):
+                                _sl_skip_offsets.add(_curr.offset)
+                                _ii += 1
+                                continue
+                            else:
+                                break
+                        if _from_names:
+                            _nl = []
+                            for _ipd, _std in _from_names:
+                                _nl.append({'name': _ipd, 'asname': _std})
+                            _self_loop_stmts.append({'type': 'ImportFrom', 'module': _imp_module, 'names': _nl})
                     continue
                 # 普通 import: IMPORT_NAME + STORE_*
                 _store_names = []
@@ -22075,16 +22132,26 @@ AST 映射规则:
                 _imp_name_instr = instr
                 _imp_from_pending = None
                 _imp_pairs = []
+                _imp_fromlist_is_none = False
+                for _fi in range(len(stmt_instrs) - 1, max(len(stmt_instrs) - 4, -1), -1):
+                    _prev = stmt_instrs[_fi]
+                    if _prev.opname == 'LOAD_CONST':
+                        if _prev.argval is None:
+                            _imp_fromlist_is_none = True
+                        break
+                    else:
+                        break
                 continue
             if instr.opname == 'IMPORT_FROM':
                 if _imp_name_instr is not None:
-                    # 前一个 IMPORT_FROM 未跟 STORE_* → 名字不变 (from m import a, b
-                    # 中 a 后面紧跟 IMPORT_FROM b 而非 STORE_NAME b 的情况不存在；
-                    # 但 `from m import *` 的 IMPORT_FROM '*' 后跟 STORE_NAME '*' 仍
-                    # 走 STORE_* 路径。此处保留 pending 以便 STORE_* 绑定 alias)。
                     if _imp_from_pending is not None:
-                        _imp_pairs.append((_imp_from_pending.argval or '', None))
+                        if _imp_fromlist_is_none:
+                            pass
+                        else:
+                            _imp_pairs.append((_imp_from_pending.argval or '', None))
                     _imp_from_pending = instr
+                continue
+            if instr.opname in ('SWAP', 'POP_TOP') and _imp_name_instr is not None and _imp_fromlist_is_none:
                 continue
             if instr.opname == 'UNPACK_SEQUENCE':
                 # UNPACK_SEQUENCE N: 消费栈顶 iterable，产生 N 个值。
@@ -22109,14 +22176,27 @@ AST 映射规则:
             if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
                 if _imp_name_instr is not None:
                     if _imp_from_pending is not None:
-                        # from module import name [as alias]
-                        _imp_n = _imp_from_pending.argval or ''
-                        _sto_n = instr.argval
-                        if _imp_n != _sto_n:
-                            _imp_pairs.append((_imp_n, _sto_n))
+                        if _imp_fromlist_is_none:
+                            _module = _imp_name_instr.argval or ''
+                            _sto_n = instr.argval
+                            if _module != _sto_n:
+                                stmts.append({'type': 'Import',
+                                              'names': [{'name': _module, 'asname': _sto_n}]})
+                            else:
+                                stmts.append({'type': 'Import',
+                                              'names': [{'name': _module, 'asname': None}]})
+                            _imp_name_instr = None
+                            _imp_from_pending = None
+                            _imp_pairs = []
+                            _imp_fromlist_is_none = False
                         else:
-                            _imp_pairs.append((_imp_n, None))
-                        _imp_from_pending = None
+                            _imp_n = _imp_from_pending.argval or ''
+                            _sto_n = instr.argval
+                            if _imp_n != _sto_n:
+                                _imp_pairs.append((_imp_n, _sto_n))
+                            else:
+                                _imp_pairs.append((_imp_n, None))
+                            _imp_from_pending = None
                     else:
                         # import module [as alias] — 终结 import 序列
                         _module = _imp_name_instr.argval or ''
@@ -23053,15 +23133,46 @@ AST 映射规则:
                     last_stmt = stmts[-1]
                     if last_stmt.get('type') == 'Expr':
                         has_return_successor = False
+                        _return_cleanup_blocks = []
                         for succ in block.successors:
                             has_swap = any(i.opname == 'SWAP' for i in succ.instructions)
                             has_return = any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in succ.instructions)
                             has_exit_call = self.region_analyzer.get_block_role(succ) is BlockRole.WITH_EXIT_CALL
                             if (has_swap and has_return) or (has_return and has_exit_call):
                                 has_return_successor = True
-                                self._mark_with_cleanup_generated(succ)
+                                _return_cleanup_blocks.append(succ)
                                 break
+                            if has_swap and has_exit_call and not has_return:
+                                _chain = succ
+                                _visited = {block, succ}
+                                _found = False
+                                while _chain is not None:
+                                    _next_chain = None
+                                    for _cs in _chain.successors:
+                                        _cs_has_return = any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in _cs.instructions)
+                                        _cs_has_swap = any(i.opname == 'SWAP' for i in _cs.instructions)
+                                        _cs_has_exit = self.region_analyzer.get_block_role(_cs) is BlockRole.WITH_EXIT_CALL
+                                        if _cs_has_return and (_cs_has_swap or _cs_has_exit):
+                                            has_return_successor = True
+                                            _return_cleanup_blocks.append(succ)
+                                            _return_cleanup_blocks.append(_cs)
+                                            _found = True
+                                            break
+                                        if _cs_has_swap and _cs_has_exit and not _cs_has_return:
+                                            if _cs not in _visited:
+                                                _visited.add(_cs)
+                                                _return_cleanup_blocks.append(_cs)
+                                                _next_chain = _cs
+                                                break
+                                    if _found:
+                                        break
+                                    _chain = _next_chain
+                                if has_return_successor:
+                                    break
                         if has_return_successor:
+                            for _rcb in _return_cleanup_blocks:
+                                self._mark_with_cleanup_generated(_rcb)
+                                self.generated_blocks.add(_rcb)
                             stmts[-1] = {'type': 'Return', 'value': last_stmt.get('value')}
 
                 body_stmts.extend(stmts)
@@ -37448,44 +37559,68 @@ AST 映射规则:
                         break
                     elif block.instructions[_i].opname not in ('LOAD_CONST', 'PUSH_NULL'):
                         break
+                _fromlist_is_none = False
+                for _fi in range(instr_idx - 1, max(instr_idx - 4, -1), -1):
+                    _prev = block.instructions[_fi]
+                    if _prev.opname == 'LOAD_CONST':
+                        if _prev.argval is None:
+                            _fromlist_is_none = True
+                        break
+                    elif _prev.opname == 'PUSH_NULL':
+                        continue
+                    else:
+                        break
                 if has_import_from:
-                    from_names = []
-                    _i = instr_idx + 1
-                    while _i < len(block.instructions) - 1:
-                        curr = block.instructions[_i]
-                        next_instr = block.instructions[_i + 1]
-                        if curr.opname == 'IMPORT_FROM':
-                            imported_name = curr.argval if curr.argval else ''
-                            stored_name = None
-                            if next_instr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
-                                stored_name = next_instr.argval
-                                _i += 2
-                            elif next_instr.opname == 'IMPORT_FROM':
-                                stored_name = imported_name
-                                _i += 1
-                            else:
-                                stored_name = imported_name
+                    if _fromlist_is_none:
+                        _alias_name = None
+                        for _si in range(instr_idx + 1, min(instr_idx + 8, len(block.instructions))):
+                            if block.instructions[_si].opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                                _alias_name = block.instructions[_si].argval
+                                break
+                            if block.instructions[_si].opname in ('JUMP_FORWARD', 'RETURN_VALUE', 'RETURN_CONST', 'CALL', 'PRECALL'):
+                                break
+                        if _alias_name and _alias_name != module_name:
+                            stmts.append({'type': 'Import', 'names': [{'name': module_name, 'asname': _alias_name}]})
+                        else:
+                            stmts.append({'type': 'Import', 'names': [{'name': module_name, 'asname': None}]})
+                    else:
+                        from_names = []
+                        _i = instr_idx + 1
+                        while _i < len(block.instructions) - 1:
+                            curr = block.instructions[_i]
+                            next_instr = block.instructions[_i + 1]
+                            if curr.opname == 'IMPORT_FROM':
+                                imported_name = curr.argval if curr.argval else ''
+                                stored_name = None
+                                if next_instr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                                    stored_name = next_instr.argval
+                                    _i += 2
+                                elif next_instr.opname == 'IMPORT_FROM':
+                                    stored_name = imported_name
+                                    _i += 1
+                                else:
+                                    stored_name = imported_name
+                                    _i += 1
+                                    continue
+                                if imported_name:
+                                    from_names.append((imported_name, stored_name))
+                                continue
+                            elif curr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
                                 _i += 1
                                 continue
-                            if imported_name:
-                                from_names.append((imported_name, stored_name))
-                            continue
-                        elif curr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
-                            _i += 1
-                            continue
-                        elif curr.opname in ('LOAD_CONST', 'PUSH_NULL', 'POP_TOP'):
-                            _i += 1
-                            continue
-                        else:
-                            break
-                    if from_names:
-                        names_list = []
-                        for _imported, _stored in from_names:
-                            if _imported != _stored:
-                                names_list.append({'name': _imported, 'asname': _stored})
+                            elif curr.opname in ('LOAD_CONST', 'PUSH_NULL', 'POP_TOP'):
+                                _i += 1
+                                continue
                             else:
-                                names_list.append({'name': _imported, 'asname': None})
-                        stmts.append({'type': 'ImportFrom', 'module': module_name, 'names': names_list})
+                                break
+                        if from_names:
+                            names_list = []
+                            for _imported, _stored in from_names:
+                                if _imported != _stored:
+                                    names_list.append({'name': _imported, 'asname': _stored})
+                                else:
+                                    names_list.append({'name': _imported, 'asname': None})
+                            stmts.append({'type': 'ImportFrom', 'module': module_name, 'names': names_list})
                 else:
                     store_names = []
                     for _i in range(instr_idx + 1, len(block.instructions)):
@@ -38596,44 +38731,69 @@ AST 映射规则:
                 elif block.instructions[i].opname not in ('LOAD_CONST', 'PUSH_NULL'):
                     break
 
+            _fromlist_is_none = False
+            for _fi in range(instr_idx - 1, max(instr_idx - 4, -1), -1):
+                _prev = block.instructions[_fi]
+                if _prev.opname == 'LOAD_CONST':
+                    if _prev.argval is None:
+                        _fromlist_is_none = True
+                    break
+                elif _prev.opname == 'PUSH_NULL':
+                    continue
+                else:
+                    break
+
             if has_import_from:
-                from_names = []
-                i = instr_idx + 1
-                while i < len(block.instructions) - 1:
-                    curr = block.instructions[i]
-                    next_instr = block.instructions[i + 1]
-                    if curr.opname == 'IMPORT_FROM':
-                        imported_name = curr.argval if curr.argval else ''
-                        stored_name = None
-                        if next_instr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
-                            stored_name = next_instr.argval
-                            i += 2
-                        elif next_instr.opname == 'IMPORT_FROM':
-                            stored_name = imported_name
-                            i += 1
-                        else:
-                            stored_name = imported_name
+                if _fromlist_is_none:
+                    _alias_name = None
+                    for _si in range(instr_idx + 1, min(instr_idx + 8, len(block.instructions))):
+                        if block.instructions[_si].opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                            _alias_name = block.instructions[_si].argval
+                            break
+                        if block.instructions[_si].opname in ('JUMP_FORWARD', 'RETURN_VALUE', 'RETURN_CONST', 'CALL', 'PRECALL'):
+                            break
+                    if _alias_name and _alias_name != module_name:
+                        return [{'type': 'Import', 'names': [{'name': module_name, 'asname': _alias_name}]}]
+                    else:
+                        return [{'type': 'Import', 'names': [{'name': module_name, 'asname': None}]}]
+                else:
+                    from_names = []
+                    i = instr_idx + 1
+                    while i < len(block.instructions) - 1:
+                        curr = block.instructions[i]
+                        next_instr = block.instructions[i + 1]
+                        if curr.opname == 'IMPORT_FROM':
+                            imported_name = curr.argval if curr.argval else ''
+                            stored_name = None
+                            if next_instr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                                stored_name = next_instr.argval
+                                i += 2
+                            elif next_instr.opname == 'IMPORT_FROM':
+                                stored_name = imported_name
+                                i += 1
+                            else:
+                                stored_name = imported_name
+                                i += 1
+                                continue
+                            if imported_name:
+                                from_names.append((imported_name, stored_name))
+                            continue
+                        elif curr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
                             i += 1
                             continue
-                        if imported_name:
-                            from_names.append((imported_name, stored_name))
-                        continue
-                    elif curr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
-                        i += 1
-                        continue
-                    elif curr.opname in ('LOAD_CONST', 'PUSH_NULL', 'POP_TOP'):
-                        i += 1
-                        continue
-                    else:
-                        break
-                if from_names:
-                    names_list = []
-                    for imported, stored in from_names:
-                        if imported != stored:
-                            names_list.append({'name': imported, 'asname': stored})
+                        elif curr.opname in ('LOAD_CONST', 'PUSH_NULL', 'POP_TOP'):
+                            i += 1
+                            continue
                         else:
-                            names_list.append({'name': imported, 'asname': None})
-                    return [{'type': 'ImportFrom', 'module': module_name, 'names': names_list}]
+                            break
+                    if from_names:
+                        names_list = []
+                        for imported, stored in from_names:
+                            if imported != stored:
+                                names_list.append({'name': imported, 'asname': stored})
+                            else:
+                                names_list.append({'name': imported, 'asname': None})
+                        return [{'type': 'ImportFrom', 'module': module_name, 'names': names_list}]
 
             store_names = []
             for i in range(instr_idx + 1, len(block.instructions)):

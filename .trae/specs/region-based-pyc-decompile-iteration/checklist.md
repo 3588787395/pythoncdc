@@ -1,0 +1,15 @@
+- [ ] IQCommon/strategy/strategy.pyc 反编译后所有函数字节码完全匹配
+- [ ] fly/dumpload/load_algo.pyc 反编译后所有函数字节码完全匹配
+- [ ] fly/common/user_error.pyc 反编译后所有函数字节码完全匹配
+- [ ] IQEngine/plugins/plugin_system_trade/send_message_api.pyc 反编译后所有函数字节码完全匹配
+- [ ] IQData/entry.pyc 反编译后所有函数字节码完全匹配
+- [ ] 每个 OK 的 pyc 在同目录下生成同名+OK.py 文件
+- [ ] pyc_index.json 中已修复的 pyc 状态更新为 "ok"
+- [ ] quotation.pyc 函数级匹配率不退化
+- [ ] 既有测试矩阵（pytest 子集）无退化
+- [ ] 无新增反模式前缀（_fix_/_merge_/_patch_/_fallback_/_hack_/_workaround_/_temp_）
+- [ ] 所有 _identify_*_regions 方法 docstring 包含 6 节
+- [ ] 所有 _generate_* 方法 docstring 包含 4 节
+- [ ] 每轮 commit + push 到远程成功
+- [ ] 所有命令执行不超过 300 秒
+- [ ] 每轮至少解决一个 pyc（字节码 100% 匹配）
