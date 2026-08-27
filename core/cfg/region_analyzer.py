@@ -19544,6 +19544,17 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
         _is_dual_role_block = False
         if block in claimed:
             existing = self.block_to_region.get(block)
+            # [R113 fix] Also check if block belongs to a recently created BoolOpRegion
+            # (even if block_to_region stores the parent TryExceptRegion/LoopRegion).
+            # Without this, overlapping BoolOpRegions can be created for chained compare
+            # patterns (e.g., block@94 and block@166 both creating BoolOpRegions that
+            # share block@168). When a block is in any BoolOpRegion's op_chain, it
+            # should not start a new chain unless dual-role conditions apply.
+            if not isinstance(existing, BoolOpRegion):
+                for _br in self.regions:
+                    if isinstance(_br, BoolOpRegion) and block in _br.blocks:
+                        existing = _br
+                        break
             if isinstance(existing, BoolOpRegion):
                 # 双角色块检查：块是已存在 BoolOpRegion 的 merge_block
                 # 且不在其 op_chain 中、自身以 SHORT_CIRCUIT_JUMP_OPS 结尾。
@@ -19611,6 +19622,12 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
         BOOLOP_JUMP_OPS = SHORT_CIRCUIT_JUMP_OPS | FORWARD_CONDITIONAL_JUMP_OPS
         if last_instr and last_instr.opname in SHORT_CIRCUIT_JUMP_OPS and last_instr.argval is not None:
             merge = self.cfg.get_block_by_offset(last_instr.argval)
+            # [R113 fix] If merge is a chained compare cleanup block (SWAP+POP_TOP),
+            # the real merge is further downstream. Walk through cleanup blocks.
+            if merge is not None and self._is_chained_compare_cleanup_block(merge):
+                _eff_merge = self._get_effective_merge_through_cleanup(merge)
+                if _eff_merge is not None:
+                    merge = _eff_merge
         elif last_instr and last_instr.opname in BOOLOP_JUMP_OPS and last_instr.argval is not None:
             merge = self.cfg.get_block_by_offset(last_instr.argval)
             for chain_block, _ in chain:
@@ -19893,6 +19910,42 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
         if not is_condition_context:
             self._boolop_expand_non_condition_blocks(chain, chain_blocks, merge)
         region_blocks = chain_blocks | ({merge} if merge else set())
+        # [R113 fix] Add intermediate blocks for chained compare operands.
+        # When a chain block's JUMP_IF_FALSE_OR_POP jumps to a cleanup block,
+        # the blocks between the chain block and the next chain block (or merge)
+        # are part of the chained compare evaluation and must be included.
+        for _cb_idx in range(len(chain)):
+            _cb, _cb_op = chain[_cb_idx]
+            _cb_last = _cb.get_last_instruction()
+            if _cb_last and _cb_last.opname in SHORT_CIRCUIT_JUMP_OPS and _cb_last.argval is not None:
+                _cb_jt = self.cfg.get_block_by_offset(_cb_last.argval)
+                if _cb_jt is not None and self._is_chained_compare_cleanup_block(_cb_jt):
+                    # Walk from cleanup to the next chain block or merge, adding all blocks
+                    _next_target = None
+                    if _cb_idx + 1 < len(chain):
+                        _next_target = chain[_cb_idx + 1][0]
+                    elif merge:
+                        _next_target = merge
+                    if _next_target is not None:
+                        _walk = _cb_jt
+                        _add_visited = set()
+                        while _walk and _walk.start_offset not in _add_visited:
+                            _add_visited.add(_walk.start_offset)
+                            if _walk == _next_target or _walk in chain_blocks:
+                                break
+                            region_blocks.add(_walk)
+                            _walk_norm = list(_walk.conditional_successors)
+                            _walk_last = _walk.get_last_instruction()
+                            if _walk_last and _walk_last.opname in SHORT_CIRCUIT_JUMP_OPS:
+                                _walk_ft = next((s for s in _walk.conditional_successors
+                                                 if s.start_offset != _walk_last.argval), None)
+                                if _walk_ft is not None:
+                                    _walk = _walk_ft
+                                    continue
+                            if len(_walk_norm) == 1:
+                                _walk = _walk_norm[0]
+                            else:
+                                break
         value_target = None
         # AugAssign detection: merge_block has BINARY_OP (in-place,
         # arg>=13) before STORE → `x += a and b`. The leading LOAD of value_target
@@ -21385,24 +21438,6 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                              not isinstance(self.block_to_region.get(succs[0]), BoolOpRegion))):
                         next_last = succs[0].get_last_instruction()
                         if next_last and next_last.opname in SHORT_CIRCUIT_JUMP_OPS:
-                            # [Phase 7 根因 E] fall-through 扩展普遍性判据
-                            # （短路跳转目标结构语义，非实例驱动）。
-                            #
-                            # 场景：current 是 chain 末尾 fall-through 块（最后
-                            # 操作数，如 `a or b or c` 中的 LOAD c），succs[0] 是
-                            # 它的 fall-through 后继 = chain 的 merge 块。若
-                            # succs[0] 末指令是短路跳转，说明 succs[0] 是
-                            # 「merge + 下一表达式 entry」合并块（表达式语句边界
-                            # ——结果被消费后下一表达式开始）。
-                            #
-                            # 普遍性判据（替代原 POP_TOP 首指令实例判据）：
-                            # succs[0] == chain[0] 的短路跳转目标（= chain merge）
-                            # → 不扩展（语句边界）。基于「短路跳转目标 = chain merge」
-                            # 的结构语义，不依赖具体指令（POP_TOP/STORE_*）。覆盖：
-                            # 表达式语句 `a or b or c\nd or e or f`、混合操作符
-                            # `a or b\nc and d`、赋值 `x = a or b\ny = c or d`
-                            # （后者 has_store 路径不走此分支）—— 全部由
-                            # 「succs[0] == chain[0] 短路目标」统一识别。
                             _first_last = chain[0][0].get_last_instruction()
                             _first_jt_offset = (_first_last.argval
                                                 if (_first_last
@@ -21411,7 +21446,7 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                                                 else None)
                             if (_first_jt_offset is not None
                                     and succs[0].start_offset == _first_jt_offset):
-                                pass  # succs[0] 是 chain merge = 语句边界，不扩展
+                                pass
                             else:
                                 current = succs[0]
                                 _is_first_iter = False
@@ -21425,6 +21460,60 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                             _is_first_iter = False
                             continue
                 break
+            # [R113 fix] 链式比较内部短路跳转处理。
+            # 当 JUMP_IF_FALSE_OR_POP 的目标是 SWAP+POP_TOP 清理块时，
+            # 当前块是链式比较的中间步骤（值上下文），不是独立的 and/or
+            # BoolOp 操作数。应将此块加入链（作为第一个/最后一个操作数的
+            # 入口），然后跳过链式比较内部块和 and/or 连接块，直接到
+            # 下一个操作数的入口。
+            #
+            # 例如 `1990 <= x <= 9999 and 1 <= y <= 4`：
+            #   block@94: COMPARE_OP(<=); JUMP_IF_FALSE_OR_POP → 162 (cleanup)
+            #   block@152: LOAD_CONST 9999; COMPARE_OP(<=); JUMP_FORWARD → 166
+            #   block@162: SWAP; POP_TOP  (cleanup → falls to 166)
+            #   block@166: JUMP_IF_FALSE_OR_POP → 236  (and connector)
+            #   block@168: LOAD_CONST 1; COMPARE_OP(<=); JUMP_IF_FALSE_OR_POP → 232
+            #
+            # block@94 是 and 的第一个操作数入口，block@166 是 and 的连接块，
+            # block@168 是第二个操作数入口。应生成链 [(94,'and'), (168,'and')]，
+            # merge=236。跳过 152/162/166，从 block@166 的 fall-through 继续。
+            if last.argval is not None:
+                _jt_block = self.cfg.get_block_by_offset(last.argval)
+                if _jt_block is not None and self._is_chained_compare_cleanup_block(_jt_block):
+                    op_type = 'and' if 'FALSE' in last.opname else 'or'
+                    chain.append((current, op_type))
+                    # Walk through the cleanup block to find the and/or connector
+                    # (the next JUMP_IF_FALSE_OR_POP that jumps to the real merge)
+                    _walk = _jt_block
+                    _walk_visited = set()
+                    while _walk and _walk.start_offset not in _walk_visited:
+                        _walk_visited.add(_walk.start_offset)
+                        _walk_last = _walk.get_last_instruction()
+                        if _walk_last and _walk_last.opname in SHORT_CIRCUIT_JUMP_OPS:
+                            # Found the and/or connector block. Its fall-through
+                            # successor is the next operand's entry.
+                            _conn_succs = list(_walk.conditional_successors)
+                            if len(_conn_succs) == 2:
+                                _conn_ft = next((s for s in _conn_succs
+                                                 if s.start_offset != _walk_last.argval), None)
+                                if _conn_ft is not None:
+                                    current = _conn_ft
+                                    _is_first_iter = False
+                                    break
+                            # Can't find fall-through; stop the chain
+                            current = None
+                            break
+                        # Not a short-circuit block; continue through fall-through.
+                        # Exclude exception successors (within try/except scope).
+                        _normal_succs = list(_walk.conditional_successors)
+                        if len(_normal_succs) == 1:
+                            _walk = next(iter(_normal_succs))
+                        else:
+                            current = None
+                            break
+                    else:
+                        current = None
+                    continue
             # [Phase 3 adv14_boolop_result_compare] 双角色块：start_block
             # 可能是已存在 BoolOpRegion 的 merge_block（如 ``(a and b) ==
             # (c and d)`` 中 Block 3）。此时 _detect_boolop_chain_start 已
@@ -21455,6 +21544,8 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 _first_jt = (self.cfg.get_block_by_offset(_first_last.argval)
                              if _first_last and _first_last.argval is not None
                              else None)
+                _cur_jt_eff = self._get_effective_merge_through_cleanup(_cur_jt) or _cur_jt
+                _first_jt_eff = (self._get_effective_merge_through_cleanup(_first_jt) or _first_jt) if _first_jt else None
                 # [Phase 7 boolop 3+ operand fix] 表达式语句的 BoolOp
                 # (JUMP_IF_*_OR_POP) 每个 short-circuit 跳转目标是一个独立的
                 # trivial return 块（POP_TOP + LOAD_CONST None + RETURN_VALUE）。
@@ -21464,8 +21555,17 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 # 修正：用 `_is_equivalent_exit_block` 替代身份比较 — 仅当
                 # 两个跳转目标语义不等价（如 `(a and b) == (c and d)` 中
                 # block0 跳到 LOAD c 块、block8 跳到 COMPARE_OP 块）才断链。
-                if (_first_jt is not None
-                        and not self._is_equivalent_exit_block(_cur_jt, _first_jt)):
+                # [R113 fix] 链式比较清理块（SWAP+POP_TOP）是值上下文链式比较的
+                # 中间产物，不是真正的 merge。JUMP_IF_FALSE_OR_POP 跳到清理块
+                # 时，有效 merge 是清理块的 fall-through 后继（下一个 and/or
+                # 操作块或最终 STORE 块）。例如 `1990 <= x <= 9999 and 1 <= y <= 4`
+                # 中，第一个 JUMP_IF_FALSE_OR_POP 跳到 SWAP+POP_TOP 清理块（→166），
+                # 第二个 JUMP_IF_FALSE_OR_POP 跳到 STORE 块（236），清理块的
+                # fall-through 恰好是第二个 JUMP_IF_FALSE_OR_POP 块——两者有效
+                # merge 相同，不应断链。使用 _cur_jt_eff / _first_jt_eff 代替
+                # _cur_jt / _first_jt 进行等价判断。
+                if (_first_jt_eff is not None
+                        and not self._is_equivalent_exit_block(_cur_jt_eff, _first_jt_eff)):
                     # [Phase 7 fix] 混合操作符表达式语句（如 `a and b or c`、
                     # `not (a and b) or (c and not d)`）：内层操作符的短路
                     # 目标是外层操作符块（链继续块，非 exit），外层操作符的
@@ -21478,8 +21578,8 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     # 是非 exit 中间块（LOAD c / COMPARE_OP），_cur_jt 与
                     # _first_jt 均非 exit，不触发此豁免，仍由上面的
                     # _is_equivalent_exit_block 正确断链。
-                    if not (self._is_exit_like_block(_cur_jt)
-                            or self._is_exit_like_block(_first_jt)):
+                    if not (self._is_exit_like_block(_cur_jt_eff)
+                            or self._is_exit_like_block(_first_jt_eff)):
                         break
             chain.append((current, op_type))
             succs = list(current.conditional_successors)
@@ -22145,6 +22245,31 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
         if self._is_trivial_return_block(block_a) and self._is_trivial_return_block(block_b):
             return True
         return False
+
+    def _is_chained_compare_cleanup_block(self, block: BasicBlock) -> bool:
+        meaningful = [i for i in block.instructions if i.opname not in NOISE_OPS]
+        if len(meaningful) == 2 and meaningful[0].opname == 'SWAP' and meaningful[1].opname == 'POP_TOP':
+            return True
+        return False
+
+    def _get_effective_merge_through_cleanup(self, jump_target: BasicBlock,
+                                               visited: Optional[Set[int]] = None) -> Optional[BasicBlock]:
+        if visited is None:
+            visited = set()
+        if jump_target.start_offset in visited:
+            return None
+        visited.add(jump_target.start_offset)
+        if self._is_chained_compare_cleanup_block(jump_target):
+            normal_succs = list(jump_target.conditional_successors)
+            if len(normal_succs) == 1:
+                return self._get_effective_merge_through_cleanup(next(iter(normal_succs)), visited)
+            return None
+        last = jump_target.get_last_instruction()
+        if last and last.opname in SHORT_CIRCUIT_JUMP_OPS:
+            next_jt = self.cfg.get_block_by_offset(last.argval) if last.argval is not None else None
+            if next_jt is not None:
+                return self._get_effective_merge_through_cleanup(next_jt, visited)
+        return jump_target
 
     def _is_trivial_return_block(self, block: BasicBlock) -> bool:
         meaningful = [i for i in block.instructions
