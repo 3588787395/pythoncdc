@@ -9506,7 +9506,10 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
 
     def _find_next_with_block(self, current, _depth_map):
         for succ in current.successors:
-            if succ in self.block_to_region or not any(
+            _owner = self.block_to_region.get(succ)
+            if _owner is not None and not isinstance(_owner, (TryExceptRegion, LoopRegion)):
+                continue
+            if not any(
                 i.opname in ('BEFORE_WITH', 'BEFORE_ASYNC_WITH') for i in succ.instructions
             ):
                 continue
