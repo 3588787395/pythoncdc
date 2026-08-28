@@ -4152,7 +4152,26 @@ AST 映射规则:
         if else_stmts:
             _non_trivial = [s for s in else_stmts if not self._is_trailing_return_none_statement(s)]
             if not _non_trivial:
-                else_stmts = []
+                # [F6 fix / Round 03] 区域归约算法原则 2（每块唯一归属）+ 回边证据：
+                # else 体只含 return None 时需区分两种形态：
+                #   (a) 无 break：else_blocks 来自自然出口路径（for_iter_exit 即
+                #       函数尾声），return None 是隐式函数返回，编译器自动补发，
+                #       丢弃正确（旧行为）。
+                #   (b) 有 break（回边证据）：else_blocks 由 break 目标的
+                #       后必经路径证明（post_else ≠ for_iter_exit，见
+                #       region_analyzer._find_loop_else）。隐式尾声必然位于
+                #       所有路径的汇合点——若 for_iter_exit 是尾声，break 会
+                #       直接跳入它（_break_hits_for_iter_exit=True →
+                #       else_blocks=None）。故此形态下 else 体中的
+                #       return None 只能是用户显式语句（else 路径在汇合点前
+                #       提前返回），丢弃会改变语义（repro_02：for-else 的
+                #       `else: return None` 整体丢失）。保留 orelse。
+                # 仅限 FOR_LOOP：while 的 else_blocks 由自然出口可达性计算，
+                # 有 break 时仍可能混入函数尾声，维持旧行为待独立复现再修。
+                if region.region_type == RegionType.FOR_LOOP and getattr(region, 'has_break', False):
+                    pass
+                else:
+                    else_stmts = []
 
         # 区域归约算法原则 2（每块唯一归属）+ for-else / while-else 语义区分：
         # 原 R5 Fix 1 对 for 和 while 统一处理：无 break 时 else_stmts 转为顺序语句。
@@ -12111,6 +12130,10 @@ AST 映射规则:
         else 体由 _if_generate_normal 的正规 _if_generate_else_branch 调用生成。
         """
         _expr_child_stmts = []
+        # [Round 03 F8 fix] 锚点组：预生成的表达式子区域语句与其入口块偏移
+        # 的绑定（(entry_offset, stmts)）。用于把语句按入口块地址序插回
+        # then 体（见方法末尾合并处的算法依据说明）。
+        _expr_child_anchor_groups = []
         then_entry_offsets = {b.start_offset for b in region.then_blocks} if region.then_blocks else set()
         then_block_set = set(region.then_blocks) if region.then_blocks else set()
         # [Round6-01] IS_OP/CONTAINS_OP 链式比较作赋值右值：
@@ -12286,7 +12309,15 @@ AST 映射规则:
                     if isinstance(child_ast, list):
                         _expr_child_stmts.extend(child_ast)
                     else:
-                        _expr_child_stmts.append(child_ast)
+                        child_ast = [child_ast]
+                        _expr_child_stmts.append(child_ast[0])
+                    # [Round 03 F8 fix] 记录锚点：入口块偏移 → 本子区域语句。
+                    # 入口块在 then_blocks 中时，语句将由 _process_if_blocks
+                    # 在该块位置（地址序）发射，而不是无条件前置。
+                    if (getattr(child, 'entry', None) is not None
+                            and child.entry in then_block_set):
+                        _expr_child_anchor_groups.append(
+                            (child.entry.start_offset, list(child_ast)))
                 for b in child.blocks:
                     self.generated_blocks.add(b)
                 self._generated_regions.add(child_id)
@@ -12405,15 +12436,46 @@ AST 映射规则:
                     if isinstance(child_ast, list):
                         _expr_child_stmts.extend(child_ast)
                     else:
-                        _expr_child_stmts.append(child_ast)
+                        child_ast = [child_ast]
+                        _expr_child_stmts.append(child_ast[0])
+                    # [Round 03 F8 fix] 回退扫描同样记录锚点（与 children 循环一致）
+                    if (getattr(r, 'entry', None) is not None
+                            and r.entry in then_block_set):
+                        _expr_child_anchor_groups.append(
+                            (r.entry.start_offset, list(child_ast)))
                 for b in r.blocks:
                     self.generated_blocks.add(b)
                 self._generated_regions.add(r_id)
-        then_stmts = self._process_if_blocks(region.then_blocks, region, branch='then')
+        # [Round 03 F8 fix] 表达式子区域语句的合并顺序修正。
+        # 算法依据（区域归约 4 原则之入口引用语义 + 自底向上归约）：
+        # 父 IfRegion 的 then 体是入口块的线性序列，语句发射顺序必须与
+        # 子区域入口块的地址序一致。原实现把预生成的 BoolOp/Ternary 语句
+        # （_expr_child_stmts）无条件插到 then 体最前；当 then 体为
+        # [嵌套 IfRegion(entry=o1), BoolOp 赋值(entry=o2), o1 < o2] 时顺序
+        # 被倒置为 [BoolOp, 嵌套 If]，且嵌套 If 被排到其后 _generate_boolop
+        # 合成的 return 之后成为不可达代码（F8 语句重排根因：
+        # plugin_system_debug.setup 单函数 115→18）。
+        # 修正：入口块属于 then_blocks 的子区域语句按入口块偏移「锚定」，
+        # 由 _process_if_blocks 的地址序扫描在锚点块位置发射；扫描未覆盖
+        # 的锚点（入口块已被其它路径生成/不在 then_blocks）与无锚点语句
+        # （如 loop_parent 整体生成）回退为前置，保持旧行为。
+        _anchor_map = {}
+        for _off, _grp in _expr_child_anchor_groups:
+            _anchor_map.setdefault(_off, []).extend(_grp)
+        then_stmts = self._process_if_blocks(region.then_blocks, region, branch='then',
+                                             anchor_stmts=_anchor_map)
+        _anchored_ids = set()
+        for _off, _grp in _expr_child_anchor_groups:
+            for _s in _grp:
+                _anchored_ids.add(id(_s))
+        _front_stmts = [s for s in _expr_child_stmts if id(s) not in _anchored_ids]
+        _leftover_anchor = []
+        for _off in sorted(_anchor_map):
+            _leftover_anchor.extend(_anchor_map[_off])
         if _chain_cmp_assign_stmts:
             then_stmts = _chain_cmp_assign_stmts + then_stmts
-        if _expr_child_stmts:
-            then_stmts = _expr_child_stmts + then_stmts
+        if _leftover_anchor or _front_stmts:
+            then_stmts = _leftover_anchor + _front_stmts + then_stmts
         elif_cond_set = set()
         elif_body_block_set = set()
         if hasattr(region, 'elif_conditions') and region.elif_conditions:
@@ -16547,10 +16609,11 @@ AST 映射规则:
                 break
         return False
 
-    def _process_if_blocks(self, blocks, region: IfRegion, branch: str = 'then') -> List[Dict[str, Any]]:
+    def _process_if_blocks(self, blocks, region: IfRegion, branch: str = 'then',
+                           anchor_stmts: dict = None) -> List[Dict[str, Any]]:
         """处理 if/else 分支的块列表。
 
-        6 节模板（Round 1 fix 涉及方法）：
+        6 节模板（Round 1 fix 涉及方法；Round 03 F8 fix 更新）：
         1. 算法依据：No More Gotos 结构化归约——IfRegion 的 then/else 体由
            其 entry 后继块序列构成；嵌套子区域（LoopRegion/TryExceptRegion/
            WithRegion/MatchRegion/BoolOpRegion/TernaryRegion）作为单个抽象
@@ -16570,9 +16633,17 @@ AST 映射规则:
         5. 入口引用语义：父 IfRegion 的 then/else 列表引用子区域 entry，
            不展开子区域所有块；child_entries / child_expr_regions 记录子区域
            entry，发射时以 entry 为锚点调用 _generate_region(child)。
-        6. 反编译流程：扫描 blocks → 跳过已生成/子区域非入口块 → 对子区域
-           entry 调用 _generate_region → 对普通块调用 _generate_block_statements
-           → 收集为 stmts 列表返回，映射为 AST If.body / orelse。
+           [Round 03 F8 fix] anchor_stmts（入口块偏移 → 预生成语句列表）：
+           预生成的 BoolOp/Ternary 表达式子区域语句按其入口块偏移锚定，
+           在地址序扫描到锚点块时发射（先于该块自身的其它处理）。算法依据：
+           then 体语句顺序必须与子区域入口块地址序一致（否则嵌套 If 会被
+           排到后生成的 BoolOp 赋值/合成 return 之后成为不可达代码）。
+           锚点发射置于 generated_blocks 检查之前，因为预生成流程已把
+           锚点子区域的全部块（含入口块）标记为已生成。
+        6. 反编译流程：扫描 blocks → 发射锚点语句 → 跳过已生成/子区域非
+           入口块 → 对子区域 entry 调用 _generate_region → 对普通块调用
+           _generate_block_statements → 收集为 stmts 列表返回，映射为
+           AST If.body / orelse。
 
         [R100 fix] 纯连接 continue 块的冗余抑制：当分支末块的 PURE_CONTINUE
         回边已由「IfRegion.merge_block 末指令为 JUMP_BACKWARD→循环 header
@@ -16763,6 +16834,13 @@ AST 映射规则:
                     _try_entry_generate[b] = _tr
                 break
         for block in sorted(blocks, key=lambda b: b.start_offset):
+            # [Round 03 F8 fix] 锚点发射：预生成的表达式子区域语句在其入口
+            # 块的地址序位置发射。必须置于 generated_blocks 检查之前——预
+            # 生成流程已把锚点子区域全部块（含入口块）标记为已生成，若放在
+            # 其后锚点块会被跳过导致语句丢失。剩余未消费锚点由调用方回退
+            # 前置（保持旧行为）。
+            if anchor_stmts and block.start_offset in anchor_stmts:
+                stmts.extend(anchor_stmts.pop(block.start_offset))
             if block in self.generated_blocks:
                 continue
             if block in _nested_if_skip:
@@ -31897,6 +31975,23 @@ AST 映射规则:
 
         merge_instrs = [i for i in region.merge_block.instructions
                         if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+        # [Round 03 F7 fix] 三元结果被 STORE_ATTR / STORE_SUBSCR / DELETE_SUBSCR
+        # 消费（作为属性/下标赋值目标）时，本函数是「语句级消费者」（assert/
+        # raise/yield/await/return-wrap/subscript-wrap）处理器，不应接管赋值。
+        # 否则 Pattern 8 会把 STORE 之后的方法调用 LOAD_METHOD+CALL+POP_TOP 误
+        # 重建成 Expr(self.method())，吞掉整条三元赋值及其后续语句（静默语义
+        # 错误）。结构性判据（基于 CFG 与支配关系）：merge 块内出现 STORE_ATTR/
+        # STORE_SUBSCR/DELETE_SUBSCR 即表明三元结果被「存放」到属性/下标槽位，
+        # 是赋值节点而非表达式节点。返回 None 让调用方（_generate_ternary）走
+        # _try_build_ternary_store_assign 生成正确的 Assign(target, IfExp) + 后续
+        # 语句（post_consumer_extra_stmts）。与 _try_build_ternary_merge_consumer_expr
+        # 的同类守卫判据一致（算法依据相同：每块唯一归属 + 父引用子入口）。
+        # 不影响合法形态：`(a if c else b).attr` / `(a if c else b)[k]` 作为
+        # Expr 语句时 merge 块是 LOAD_ATTR/LOAD_METHOD + POP_TOP（无 STORE_*），
+        # 不受影响。
+        if any(i.opname in ('STORE_ATTR', 'STORE_SUBSCR', 'DELETE_SUBSCR')
+               for i in merge_instrs):
+            return None
         # For yield-from (ternary), merge_block only holds
         # GET_YIELD_FROM_ITER + LOAD_CONST None; the SEND/YIELD_VALUE/RESUME/
         # JUMP_BACKWARD_NO_INTERRUPT polling loop and the POP_TOP block live in
@@ -33620,6 +33715,32 @@ AST 映射规则:
         if any(i.opname in ('LOAD_ASSERTION_ERROR', 'RAISE_VARARGS',
                             'PREP_RERAISE_STAR', 'RERAISE')
                for i in merge_all):
+            return None
+
+        # [Round 03 F7 fix] 当 merge_block 以 STORE_ATTR / STORE_SUBSCR /
+        # DELETE_SUBSCR 消费三元结果（三元作为属性/下标赋值的目标）时，三元是
+        # 一个赋值节点（Assign/Delete），不应被本函数当作单一表达式（方法接收者
+        # / 调用链 / binop 包裹）重建。否则下方的 _has_receiver_method（由赋值后
+        # 跟随的方法调用 LOAD_METHOD + CALL 误触发）会把整块 merge 重建成
+        # `return self.method()`，吞掉整条三元赋值及其后续语句 —— 这是静默语义
+        # 错误（运行行为被改且无报错）。
+        # 结构性判据（基于 CFG 与支配关系，非实例特征）：merge_block 内出现
+        # STORE_ATTR/STORE_SUBSCR/DELETE_SUBSCR 即表明三元结果被「存放」到一个
+        # 名字/属性/下标槽位，而非作为外层表达式的内层节点（后者由 CALL/BUILD_*
+        # /MAKE_FUNCTION 等消费，不含赋值落点）。依「每块唯一归属」：三元作为赋值
+        # 目标时，其消费指令 STORE_* 归属 TernaryRegion 的赋值节点，STORE_* 之后
+        # 的指令归属 post_consumer_extra_stmts（父函数的独立语句）；本函数仅处理
+        # 三元作为复合表达式内层节点（CALL/Build/Lambda 等）的情形。返回 None 让
+        # 调用方（_generate_ternary）走 _try_build_ternary_store_assign 正确生成
+        # `Assign(target, IfExp)` + 后续语句。
+        # 不影响合法形态：(a if c else b).method() 的 merge 块是
+        # `LOAD_METHOD + CALL + POP_TOP`（无 STORE_ATTR/SUBSCR），不受影响；
+        # lambda 默认参数 `def f(x=(a if c else b))` 的 merge 块以 STORE_NAME 收尾
+        # （非 STORE_ATTR/SUBSCR），不受影响。
+        _has_attr_subscr_store = any(
+            i.opname in ('STORE_ATTR', 'STORE_SUBSCR', 'DELETE_SUBSCR')
+            for i in merge_all)
+        if _has_attr_subscr_store:
             return None
 
         # Detect the BUILD_* instruction (multi-element container case).

@@ -2753,17 +2753,16 @@ class CodeGenerator:
         else:
             value_code = '<value>'
 
-        # [关键修复] 跳过导入相关的冗余赋值
-        # 例如: defaultdict = defaultdict, sqrt = sqrt, List = List
-        # 这些是由于导入语句后 STORE_NAME 生成的冗余代码
-        # [关键修复] 但保留if语句中的self-assignment（如 if x: x = x）
-        # 因为这些可能是原始代码逻辑的一部分
-        if target_code == value_code:
-            # 检查是否在if语句的body中
-            # 如果是，保留这个赋值，因为它可能是原始代码逻辑
-            # 如果不是（例如在模块级别），跳过它（可能是导入冗余）
-            if not self._is_in_if_body():
-                return
+        # [Round 03 F2 fix] 不再按文本等值（target_code == value_code）丢弃赋值。
+        # 算法依据（区域归约 4 原则 / 一次正确原则）：`x = x` 在原始字节码中是
+        # 真实的 LOAD_x + STORE_x 指令序列，AST 生成阶段必须为其产出 Assign 节点；
+        # 是否丢弃属于「事后文本启发式」，违反「一次正确」（每个结构在识别阶段
+        # 就正确分类，不靠后处理修正）。该跳过历史上为掩盖旧版 import 还原缺陷
+        # （import 后多生成一条冗余赋值）而设；import 生成已在区域归约路径修复，
+        # 掩盖对象不复存在。类体同名别名（`TickBar = TickBar`，绑定的是全局名）
+        # 与模块级自赋值均有真实语义，必须保留。
+        # 旧豁免条件 _is_in_if_body() 同步移除：保留与否不再依赖生成时的上下文
+        # 状态，而只取决于原始字节码中是否存在该指令序列。
         
         # [关键修复] 跳过异常处理的清理代码
         # 例如: e = None（异常变量清理）
