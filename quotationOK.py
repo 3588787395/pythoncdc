@@ -271,16 +271,15 @@ def one_prod_to_dataframe(data, prod_code, data_type=None):
                 elif i == 0 and len(v) == 14:
                     index.append(f'{v[0:4]!s}-{v[4:6]!s}-{v[6:8]!s} {v[8:10]!s}:{v[10:12]!s}:{v[12:14]!s}')
             i = i + 1
+    columns = []
+    if data_type is None:
+        i = 0
+        for item in fields:
+            if time_index != i:
+                columns.append(get_real_param(item))
+            i = i + 1
     else:
-        columns = []
-        if data_type is None:
-            i = 0
-            for item in fields:
-                if time_index != i:
-                    columns.append(get_real_param(item))
-                i = i + 1
-        else:
-            columns = ['open', 'close', 'high', 'low', 'volume', 'money']
+        columns = ['open', 'close', 'high', 'low', 'volume', 'money']
     return pandas.DataFrame(df, columns=columns, index=index)
 def kline_to_dataframe(data, prod_code):
     return one_prod_to_dataframe(data, prod_code, 'kline')
@@ -364,99 +363,100 @@ def build_future_fill_time(suffix, typet, start, end):
     for item in all_days:
         if item.strftime('%Y%m%d') not in holidays:
             trade_days.append(item.strftime('%Y-%m-%d'))
-        continue
-    else:
-        total_dts = []
-        if not typet == 5:
-            if typet == 1:
-                tmp = MarketTime.get_instance().get_market_time(suffix)
-                open_am = tmp['open_am'][:2] + ':' + tmp['open_am'][-2:] + ':00'
-                close_am = tmp['close_am'][:2] + ':' + tmp['close_am'][-2:] + ':00'
-                open_pm = tmp['open_pm'][:2] + ':' + tmp['open_pm'][-2:] + ':00'
-                close_pm = tmp['close_pm'][:2] + ':' + tmp['close_pm'][-2:] + ':00'
-                market_time = {'open_am': open_am, 'close_am': close_am, 'open_pm': open_pm, 'close_pm': close_pm, 'freq': 'T'}
-                out_trade_times = pandas.date_range(start=market_time['close_am'], end=market_time['open_pm'], freq=market_time['freq'])[1:-1]
-                trade_times = pandas.date_range(start=market_time['open_am'], end=market_time['close_pm'], freq=market_time['freq'])
-                trade_times = trade_times[~numpy.in1d(trade_times, out_trade_times)]
-                trade_times = [item.strftime(' %H:%M:%S') for item in trade_times]
-                for today in trade_days:
-                    for item in trade_times:
-                        total_dts.append(today + item)
-            elif typet == 2:
-                if suffix == 'T.CCFX':
-                    market_time = {'open_am': '09:35:00', 'close_am': '11:30:00', 'open_pm': '13:05:00', 'close_pm': '15:15:00', 'freq': '5T'}
-                elif suffix in ('XZCE', 'XDCE', 'XSGE'):
-                    market_time = {'open_am1': '09:05:00', 'close_am1': '10:15:00', 'open_am2': '10:35:00', 'close_am2': '11:30:00', 'open_pm': '13:05:00', 'close_pm': '15:15:00', 'freq': '5T'}
-                else:
-                    market_time = {'open_am': '09:35:00', 'close_am': '11:30:00', 'open_pm': '13:35:00', 'close_pm': '15:00:00', 'freq': '5T'}
-                if suffix in ('XZCE', 'XDCE', 'XSGE'):
-                    dt_am = pandas.date_range(start=market_time['open_am1'], end=market_time['close_am1'], freq=market_time['freq'])
-                    dt_am2 = pandas.date_range(start=market_time['open_am2'], end=market_time['close_am2'], freq=market_time['freq'])
-                    dt_am = dt_am.append(dt_am2)
-                else:
-                    dt_am = pandas.date_range(start=market_time['open_am'], end=market_time['close_am'], freq=market_time['freq'])
-                dt_pm = pandas.date_range(start=market_time['open_pm'], end=market_time['close_pm'], freq=market_time['freq'])
-                trade_times = dt_am.append(dt_pm)
-                trade_times = [item.strftime(' %H:%M:%S') for item in trade_times]
-                for today in trade_days:
-                    for item in trade_times:
-                        total_dts.append(today + item)
-            elif typet == 3:
-                if suffix == 'T.CCFX':
-                    market_time = {'open_am': '09:45:00', 'close_am': '11:30:00', 'open_pm': '13:15:00', 'close_pm': '15:15:00', 'freq': '15T'}
-                elif suffix in ('XZCE', 'XDCE', 'XSGE'):
-                    market_time = {'open_am1': '09:15:00', 'close_am1': '10:15:00', 'open_am2': '10:45:00', 'close_am2': '11:30:00', 'open_pm': '13:05:00', 'close_pm': '15:15:00', 'freq': '15T'}
-                else:
-                    market_time = {'open_am': '09:45:00', 'close_am': '11:30:00', 'open_pm': '13:15:00', 'close_pm': '15:00:00', 'freq': '15T'}
-                if suffix in ('XZCE', 'XDCE', 'XSGE'):
-                    dt_am = pandas.date_range(start=market_time['open_am1'], end=market_time['close_am1'], freq=market_time['freq'])
-                    dt_am2 = pandas.date_range(start=market_time['open_am2'], end=market_time['close_am2'], freq=market_time['freq'])
-                    dt_am = dt_am.append(dt_am2)
-                else:
-                    dt_am = pandas.date_range(start=market_time['open_am'], end=market_time['close_am'], freq=market_time['freq'])
-                dt_pm = pandas.date_range(start=market_time['open_pm'], end=market_time['close_pm'], freq=market_time['freq'])
-                trade_times = dt_am.append(dt_pm)
-                trade_times = [item.strftime(' %H:%M:%S') for item in trade_times]
-                for today in trade_days:
-                    for item in trade_times:
-                        total_dts.append(today + item)
-            elif typet == 4:
-                if suffix == 'T.CCFX':
-                    market_time = {'10:30:00', '15:00:00', '10:00:00', '14:30:00', '14:00:00', '13:30:00', '11:00:00', '15:15:00', '11:30:00'}
-                elif suffix in ('XZCE', 'XDCE', 'XSGE'):
-                    market_time = {'10:45:00', '15:00:00', '10:00:00', '14:45:00', '13:45:00', '09:30:00', '11:15:00', '14:15:00'}
-                else:
-                    market_time = {'10:30:00', '15:00:00', '10:00:00', '14:30:00', '14:00:00', '13:30:00', '11:00:00', '11:30:00'}
-                for today in trade_days:
-                    for item in market_time:
-                        total_dts.append(today + ' ' + item)
-            elif typet == 13:
-                if suffix == 'T.CCFX':
-                    market_time = {'15:15:00', '11:30:00', '15:00:00'}
-                elif suffix in ('XZCE', 'XDCE', 'XSGE'):
-                    market_time = {'11:15:00', '15:00:00'}
-                else:
-                    market_time = {'15:15:00', '11:30:00', '15:00:00'}
-                for today in trade_days:
-                    for item in market_time:
-                        total_dts.append(today + ' ' + item)
-        else:
+    total_dts = []
+    if not typet == 5:
+        if typet == 1:
+            tmp = MarketTime.get_instance().get_market_time(suffix)
+            open_am = tmp['open_am'][:2] + ':' + tmp['open_am'][-2:] + ':00'
+            close_am = tmp['close_am'][:2] + ':' + tmp['close_am'][-2:] + ':00'
+            open_pm = tmp['open_pm'][:2] + ':' + tmp['open_pm'][-2:] + ':00'
+            close_pm = tmp['close_pm'][:2] + ':' + tmp['close_pm'][-2:] + ':00'
+            market_time = {'open_am': open_am, 'close_am': close_am, 'open_pm': open_pm, 'close_pm': close_pm, 'freq': 'T'}
+            out_trade_times = pandas.date_range(start=market_time['close_am'], end=market_time['open_pm'], freq=market_time['freq'])[1:-1]
+            trade_times = pandas.date_range(start=market_time['open_am'], end=market_time['close_pm'], freq=market_time['freq'])
+            trade_times = trade_times[~numpy.in1d(trade_times, out_trade_times)]
+            trade_times = [item.strftime(' %H:%M:%S') for item in trade_times]
+            for today in trade_days:
+                for item in trade_times:
+                    total_dts.append(today + item)
+        elif typet == 2:
             if suffix == 'T.CCFX':
-                market_time = ['10:30:00', '11:30:00', '14:00:00', '15:00:00', '15:15:00']
+                market_time = {'open_am': '09:35:00', 'close_am': '11:30:00', 'open_pm': '13:05:00', 'close_pm': '15:15:00', 'freq': '5T'}
             elif suffix in ('XZCE', 'XDCE', 'XSGE'):
-                market_time = ['10:00:00', '11:15:00', '14:15:00', '15:00:00']
+                market_time = {'open_am1': '09:05:00', 'close_am1': '10:15:00', 'open_am2': '10:35:00', 'close_am2': '11:30:00', 'open_pm': '13:05:00', 'close_pm': '15:15:00', 'freq': '5T'}
             else:
-                market_time = ['10:30:00', '11:30:00', '14:00:00', '15:00:00']
+                market_time = {'open_am': '09:35:00', 'close_am': '11:30:00', 'open_pm': '13:35:00', 'close_pm': '15:00:00', 'freq': '5T'}
+            if suffix in ('XZCE', 'XDCE', 'XSGE'):
+                dt_am = pandas.date_range(start=market_time['open_am1'], end=market_time['close_am1'], freq=market_time['freq'])
+                dt_am2 = pandas.date_range(start=market_time['open_am2'], end=market_time['close_am2'], freq=market_time['freq'])
+                dt_am = dt_am.append(dt_am2)
+            else:
+                dt_am = pandas.date_range(start=market_time['open_am'], end=market_time['close_am'], freq=market_time['freq'])
+            dt_pm = pandas.date_range(start=market_time['open_pm'], end=market_time['close_pm'], freq=market_time['freq'])
+            trade_times = dt_am.append(dt_pm)
+            trade_times = [item.strftime(' %H:%M:%S') for item in trade_times]
+            for today in trade_days:
+                for item in trade_times:
+                    total_dts.append(today + item)
+        elif typet == 3:
+            if suffix == 'T.CCFX':
+                market_time = {'open_am': '09:45:00', 'close_am': '11:30:00', 'open_pm': '13:15:00', 'close_pm': '15:15:00', 'freq': '15T'}
+            elif suffix in ('XZCE', 'XDCE', 'XSGE'):
+                market_time = {'open_am1': '09:15:00', 'close_am1': '10:15:00', 'open_am2': '10:45:00', 'close_am2': '11:30:00', 'open_pm': '13:05:00', 'close_pm': '15:15:00', 'freq': '15T'}
+            else:
+                market_time = {'open_am': '09:45:00', 'close_am': '11:30:00', 'open_pm': '13:15:00', 'close_pm': '15:00:00', 'freq': '15T'}
+            if suffix in ('XZCE', 'XDCE', 'XSGE'):
+                dt_am = pandas.date_range(start=market_time['open_am1'], end=market_time['close_am1'], freq=market_time['freq'])
+                dt_am2 = pandas.date_range(start=market_time['open_am2'], end=market_time['close_am2'], freq=market_time['freq'])
+                dt_am = dt_am.append(dt_am2)
+            else:
+                dt_am = pandas.date_range(start=market_time['open_am'], end=market_time['close_am'], freq=market_time['freq'])
+            dt_pm = pandas.date_range(start=market_time['open_pm'], end=market_time['close_pm'], freq=market_time['freq'])
+            trade_times = dt_am.append(dt_pm)
+            trade_times = [item.strftime(' %H:%M:%S') for item in trade_times]
+            for today in trade_days:
+                for item in trade_times:
+                    total_dts.append(today + item)
+        elif typet == 4:
+            if suffix == 'T.CCFX':
+                market_time = {'13:30:00', '15:00:00', '15:15:00', '11:30:00', '11:00:00', '14:00:00', '10:00:00', '10:30:00', '14:30:00'}
+            elif suffix in ('XZCE', 'XDCE', 'XSGE'):
+                market_time = {'10:45:00', '15:00:00', '11:15:00', '14:15:00', '13:45:00', '10:00:00', '14:45:00', '09:30:00'}
+            else:
+                market_time = {'13:30:00', '15:00:00', '11:30:00', '11:00:00', '14:00:00', '10:00:00', '10:30:00', '14:30:00'}
             for today in trade_days:
                 for item in market_time:
                     total_dts.append(today + ' ' + item)
-        if total_dts:
-            total_dts.sort()
-            total_dts = pandas.to_datetime(total_dts)
+        elif typet == 13:
+            if suffix == 'T.CCFX':
+                market_time = {'11:30:00', '15:15:00', '15:00:00'}
+            elif suffix in ('XZCE', 'XDCE', 'XSGE'):
+                market_time = {'11:15:00', '15:00:00'}
+            else:
+                market_time = {'11:30:00', '15:15:00', '15:00:00'}
+            for today in trade_days:
+                for item in market_time:
+                    total_dts.append(today + ' ' + item)
+    else:
+        if suffix == 'T.CCFX':
+            market_time = ['10:30:00', '11:30:00', '14:00:00', '15:00:00', '15:15:00']
+        elif suffix in ('XZCE', 'XDCE', 'XSGE'):
+            market_time = ['10:00:00', '11:15:00', '14:15:00', '15:00:00']
         else:
-            total_dts = pandas.to_datetime([])
+            market_time = ['10:30:00', '11:30:00', '14:00:00', '15:00:00']
+        for today in trade_days:
+            for item in market_time:
+                total_dts.append(today + ' ' + item)
+    if total_dts:
+        total_dts.sort()
+        total_dts = pandas.to_datetime(total_dts)
+    else:
+        total_dts = pandas.to_datetime([])
     return total_dts
 def change_future_real_date(stock, start, end):
+    """
+        加载期货合约上市日期和交割日期
+    """
     future_param = get_future_param(stock)
     if future_param:
         listing_date = future_param.get('listing_date')
@@ -478,6 +478,9 @@ def change_future_real_date(stock, start, end):
                 end = delivery_date
     return (start, end)
 def filter_duplicated_date(klines):
+    """
+        去除重复数据
+    """
     klines['date'] = klines.index
     isdup = list(klines.duplicated(['date']))
     if True in isdup:
@@ -603,6 +606,12 @@ def load_get_price(stocks, typet, start, end, count, fq=None):
         rdata = panel
     return rdata
 def obtain_date(end_time, count):
+    """
+    根据截至日期和要统计的周期数，推算出起始日期
+    ：param end_time str：截止日期
+    ：count int：统计的周期数
+    ：return pandas.Timestamp:截止日期
+    """
     end_time_str = str(end_time)[:8]
     end_time = parse(end_time_str).date()
     weekday_end = end_time.weekday()
@@ -648,9 +657,9 @@ def get_str_data(rdata, count, typet):
                 if is_all_nan[j] == True:
                     if j == len(is_all_nan) - 1:
                         data_is_nan = 1
-                    continue
-                not_nan_icount = j
-                break
+                else:
+                    not_nan_icount = j
+                    break
             data.loc[i] = {'open': stock_df.ix[datas[not_nan_icount]]['open'], 'close': stock_df.ix[datas[-1]]['close'], 'high': stock_df.ix[datas]['high'].max(), 'low': stock_df.ix[datas]['low'].min(), 'volume': numpy.nan if data_is_nan == 1 else stock_df.ix[datas[0]:datas[-1] + 1]['volume'].sum(), 'price': stock_df.ix[datas[-1]]['price'], 'money': numpy.nan if data_is_nan == 1 else stock_df.ix[datas[0]:datas[-1] + 1]['money'].sum()}
             time_index.append(datetime_index[datas[-1]])
             i += 1
@@ -747,11 +756,10 @@ def change_his_to_forward(security, data, exrights_data, start, end, typet):
                         tmpdata = tmpdata.append(tmp)
             if preindex != n:
                 preindex = n
-        else:
-            if preindex:
-                tmpdata = tmpdata.append(data[preindex:])
-            if tmpdata is not None:
-                data = tmpdata
+        if preindex:
+            tmpdata = tmpdata.append(data[preindex:])
+        if tmpdata is not None:
+            data = tmpdata
         return data
 def change_his_to_backward(security, data, exrights_data, start, end, typet):
     if len(data) == 0:
@@ -846,9 +854,9 @@ def get_exrights_data(stocks, start):
                 tmpExrightsData[sec] = series[series[:index].index[-1]:]
                 continue
             tmpExrightsData[sec] = series[series[:index].index[-1]:]
-        else:
-            tmpExrightsData[sec] = series
             continue
+        tmpExrightsData[sec] = series
+        continue
     else:
         return tmpExrightsData
 def load_get_exrights(stocks):
@@ -2006,7 +2014,6 @@ def get_balance_statement(security, date=None, report_types=None, start_year=Non
                     for i in re_data.columns:
                         if i not in list_base:
                             re_data[i] = re_data[i].astype('float64')
-                        continue
                     else:
                         re_data.index.name = 'secu_code'
                         return re_data
@@ -2030,7 +2037,6 @@ def get_balance_statement(security, date=None, report_types=None, start_year=Non
                         for i in data_df.columns:
                             if i not in list_base:
                                 data_df[i] = data_df[i].astype('float64')
-                            continue
                         else:
                             data_df = fill_missing_stock_data(security, data_df)
                             data_df = data_df.set_index(['end_date', 'secu_code'])
@@ -2100,7 +2106,6 @@ def get_income_statement(security, date=None, report_types=None, start_year=None
                     for i in re_data.columns:
                         if i not in list_base:
                             re_data[i] = re_data[i].astype('float64')
-                        continue
                     else:
                         re_data.index.name = 'secu_code'
                         return re_data
@@ -2123,7 +2128,6 @@ def get_income_statement(security, date=None, report_types=None, start_year=None
                         for i in data_df.columns:
                             if i not in list_base:
                                 data_df[i] = data_df[i].astype('float64')
-                            continue
                         else:
                             data_df = fill_missing_stock_data(security, data_df)
                             data_df = data_df.set_index(['end_date', 'secu_code'])
@@ -2193,7 +2197,6 @@ def get_cashflow_statement(security, date=None, report_types=None, start_year=No
                     for i in re_data.columns:
                         if i not in list_base:
                             re_data[i] = re_data[i].astype('float64')
-                        continue
                     else:
                         re_data.index.name = 'secu_code'
                         return re_data
@@ -2216,7 +2219,6 @@ def get_cashflow_statement(security, date=None, report_types=None, start_year=No
                         for i in data_df.columns:
                             if i not in list_base:
                                 data_df[i] = data_df[i].astype('float64')
-                            continue
                         else:
                             data_df = fill_missing_stock_data(security, data_df)
                             data_df = data_df.set_index(['end_date', 'secu_code'])
@@ -2286,7 +2288,6 @@ def get_growth_ability(security, date=None, report_types=None, start_year=None, 
                     for i in re_data.columns:
                         if i not in list_base:
                             re_data[i] = re_data[i].astype('float64')
-                        continue
                     else:
                         re_data.index.name = 'secu_code'
                         return re_data
@@ -2309,7 +2310,6 @@ def get_growth_ability(security, date=None, report_types=None, start_year=None, 
                         for i in data_df.columns:
                             if i not in list_base:
                                 data_df[i] = data_df[i].astype('float64')
-                            continue
                         else:
                             data_df = fill_missing_stock_data(security, data_df)
                             data_df = data_df.set_index(['end_date', 'secu_code'])
@@ -2379,7 +2379,6 @@ def get_profit_ability(security, date=None, report_types=None, start_year=None, 
                     for i in re_data.columns:
                         if i not in list_base:
                             re_data[i] = re_data[i].astype('float64')
-                        continue
                     else:
                         re_data.index.name = 'secu_code'
                         return re_data
@@ -2402,7 +2401,6 @@ def get_profit_ability(security, date=None, report_types=None, start_year=None, 
                         for i in data_df.columns:
                             if i not in list_base:
                                 data_df[i] = data_df[i].astype('float64')
-                            continue
                         else:
                             data_df = fill_missing_stock_data(security, data_df)
                             data_df = data_df.set_index(['end_date', 'secu_code'])
@@ -2472,7 +2470,6 @@ def get_eps(security, date=None, report_types=None, start_year=None, end_year=No
                     for i in re_data.columns:
                         if i not in list_base:
                             re_data[i] = re_data[i].astype('float64')
-                        continue
                     else:
                         re_data.index.name = 'secu_code'
                         return re_data
@@ -2495,7 +2492,6 @@ def get_eps(security, date=None, report_types=None, start_year=None, end_year=No
                         for i in data_df.columns:
                             if i not in list_base:
                                 data_df[i] = data_df[i].astype('float64')
-                            continue
                         else:
                             data_df = fill_missing_stock_data(security, data_df)
                             data_df = data_df.set_index(['end_date', 'secu_code'])
@@ -2565,7 +2561,6 @@ def get_cash_collection_ability(security, date=None, report_types=None, start_ye
                     for i in re_data.columns:
                         if i not in list_base:
                             re_data[i] = re_data[i].astype('float64')
-                        continue
                     else:
                         re_data.index.name = 'secu_code'
                         return re_data
@@ -2588,7 +2583,6 @@ def get_cash_collection_ability(security, date=None, report_types=None, start_ye
                         for i in data_df.columns:
                             if i not in list_base:
                                 data_df[i] = data_df[i].astype('float64')
-                            continue
                         else:
                             data_df = fill_missing_stock_data(security, data_df)
                             data_df = data_df.set_index(['end_date', 'secu_code'])
@@ -2658,7 +2652,6 @@ def get_operating_ability(security, date=None, report_types=None, start_year=Non
                     for i in re_data.columns:
                         if i not in list_base:
                             re_data[i] = re_data[i].astype('float64')
-                        continue
                     else:
                         re_data.index.name = 'secu_code'
                         return re_data
@@ -2681,7 +2674,6 @@ def get_operating_ability(security, date=None, report_types=None, start_year=Non
                         for i in data_df.columns:
                             if i not in list_base:
                                 data_df[i] = data_df[i].astype('float64')
-                            continue
                         else:
                             data_df = fill_missing_stock_data(security, data_df)
                             data_df = data_df.set_index(['end_date', 'secu_code'])
@@ -2751,7 +2743,6 @@ def get_debt_paying_ability(security, date=None, report_types=None, start_year=N
                     for i in re_data.columns:
                         if i not in list_base:
                             re_data[i] = re_data[i].astype('float64')
-                        continue
                     else:
                         re_data.index.name = 'secu_code'
                         return re_data
@@ -2774,7 +2765,6 @@ def get_debt_paying_ability(security, date=None, report_types=None, start_year=N
                         for i in data_df.columns:
                             if i not in list_base:
                                 data_df[i] = data_df[i].astype('float64')
-                            continue
                         else:
                             data_df = fill_missing_stock_data(security, data_df)
                             data_df = data_df.set_index(['end_date', 'secu_code'])
@@ -2829,7 +2819,6 @@ def get_share_change(security, date=None, fields=None):
                         for i in re_data.columns:
                             if i not in list_base:
                                 re_data[i] = re_data[i].astype('float64')
-                            continue
                         else:
                             re_data.index.name = 'secu_code'
                             return re_data
@@ -2871,7 +2860,6 @@ def get_valuation(security, date=None, fields=None):
                     for i in re_data.columns:
                         if i not in list_base:
                             re_data[i] = re_data[i].astype('float64')
-                        continue
                     else:
                         re_data.index.name = 'secu_code'
                         return re_data
@@ -2879,6 +2867,10 @@ def get_valuation(security, date=None, fields=None):
                 system_log.error(get_traceback_message())
                 raise x
 def get_valuation_new(security, date=None, fields=None, access_data_type=20):
+    """
+    access_data_type:10-按截止日期的最新数据（含业绩快报、财报）取数；
+    access_data_type:20-按截止日期的最新财报数据（不含业绩快报）取数；
+    """
     re_empty_data = pandas.DataFrame()
     re_data = pandas.DataFrame()
     error_re, re_security = convert_to_list(security)
@@ -2890,51 +2882,47 @@ def get_valuation_new(security, date=None, fields=None, access_data_type=20):
     for stock in security:
         stock = stock[:6]
         stock_list.append(stock)
+    security = stock_list
+    error_re, re_fields = convert_to_list(fields)
+    if error_re['error_no'] != 0:
+        return re_empty_data
     else:
-        security = stock_list
-        error_re, re_fields = convert_to_list(fields)
-        if error_re['error_no'] != 0:
-            return re_empty_data
-        else:
-            fields = re_fields
-            if date and isVaildDate(str(date)):
-                date = date_str_type_change(date, '%Y-%m-%d', '%Y%m%d')
-            try:
-                column_temp = get_fields('valuation_new_fields', fields)
-                column = []
-                change_column_dict = {'market_value_a': 'total_value', 'circulate_market_value_a': 'float_value', 'price_cash_flow_ratio': 'pcf', 'price_sales_ratio': 'ps', 'price_sales_ratio_ttm': 'ps_ttm', 'price_earnings_ratio_ttm': 'pe_ttm', 'capital_amount_a': 'a_shares', 'circulate_amount_a': 'a_floats', 'trailing_price_earnings_ratio': 'pe_dynamic', 'price_earnings_ratio': 'pe_static', 'circulate_amount_b': 'b_floats', 'capital_amount_b': 'b_shares', 'capital_amount_h': 'h_shares', 'capital_amount': 'total_shares', 'turnover_ratio': 'turnover_rate', 'trailing_dividend_yield_ratio': 'dividend_ratio', 'price_to_book_ratio': 'pb', 'return_on_equity': 'roe', 'net_asset_value_per_share': 'naps'}
-                for i in column_temp:
-                    for k, v in change_column_dict.items():
-                        if i == v:
-                            column.append(k)
-                        continue
+        fields = re_fields
+        if date and isVaildDate(str(date)):
+            date = date_str_type_change(date, '%Y-%m-%d', '%Y%m%d')
+        try:
+            column_temp = get_fields('valuation_new_fields', fields)
+            column = []
+            change_column_dict = {'market_value_a': 'total_value', 'circulate_market_value_a': 'float_value', 'price_cash_flow_ratio': 'pcf', 'price_sales_ratio': 'ps', 'price_sales_ratio_ttm': 'ps_ttm', 'price_earnings_ratio_ttm': 'pe_ttm', 'capital_amount_a': 'a_shares', 'circulate_amount_a': 'a_floats', 'trailing_price_earnings_ratio': 'pe_dynamic', 'price_earnings_ratio': 'pe_static', 'circulate_amount_b': 'b_floats', 'capital_amount_b': 'b_shares', 'capital_amount_h': 'h_shares', 'capital_amount': 'total_shares', 'turnover_ratio': 'turnover_rate', 'trailing_dividend_yield_ratio': 'dividend_ratio', 'price_to_book_ratio': 'pb', 'return_on_equity': 'roe', 'net_asset_value_per_share': 'naps'}
+            for i in column_temp:
+                for k, v in change_column_dict.items():
+                    if i == v:
+                        column.append(k)
+            error_return, data_return = valuation_new(str(security), date, str(column))
+            if error_return['error_no'] != 0:
+                print('获取GTN数据异常，请联系管理员，异常信息：%s' % error_return)
+                return re_empty_data
+            elif data_return.empty:
+                column_basis = ['secu_code', 'trading_day', 'secu_abbr']
+                column = list(set(column_basis).union(set(column_temp)))
+                DataFrame_temp = pandas.DataFrame(index=security_list, columns=column).drop('secu_code', axis=1)
+                DataFrame_temp.index.name = 'secu_code'
+                return DataFrame_temp
+            else:
+                data_return.index = data_return['secu_code'].tolist()
+                re_data = data_return.replace('--', str(numpy.nan))
+                list_base = []
+                list_base = ['secu_code', 'secu_abbr', 'trading_day']
+                columns_list = list(re_data.columns)
+                for i in columns_list:
+                    if i not in list_base:
+                        re_data[i] = re_data[i].astype('float64')
                 else:
-                    error_return, data_return = valuation_new(str(security), date, str(column))
-                    if error_return['error_no'] != 0:
-                        print('获取GTN数据异常，请联系管理员，异常信息：%s' % error_return)
-                        return re_empty_data
-                    elif data_return.empty:
-                        column_basis = ['secu_code', 'trading_day', 'secu_abbr']
-                        column = list(set(column_basis).union(set(column_temp)))
-                        DataFrame_temp = pandas.DataFrame(index=security_list, columns=column).drop('secu_code', axis=1)
-                        DataFrame_temp.index.name = 'secu_code'
-                        return DataFrame_temp
-                    else:
-                        data_return.index = data_return['secu_code'].tolist()
-                        re_data = data_return.replace('--', str(numpy.nan))
-                        list_base = []
-                        list_base = ['secu_code', 'secu_abbr', 'trading_day']
-                        columns_list = list(re_data.columns)
-                        for i in columns_list:
-                            if i not in list_base:
-                                re_data[i] = re_data[i].astype('float64')
-                            continue
-                        else:
-                            re_data.index.name = 'secu_code'
-                            return re_data.drop('secu_code', axis=1)
-            except BaseException as x:
-                system_log.error(get_traceback_message())
-                raise x
+                    re_data.index.name = 'secu_code'
+                    return re_data.drop('secu_code', axis=1)
+        except BaseException as x:
+            system_log.error(get_traceback_message())
+            raise x
 def isVaildDate(date):
     try:
         if '-' in date:
@@ -2996,7 +2984,6 @@ def get_Bshares(date=None):
     for item in stocks:
         if item[:1] not in ('0', '3', '6'):
             real_return.append(item)
-        continue
     else:
         return real_return
 def get_STshares(date=None):
@@ -3198,7 +3185,7 @@ def get_trend5day(prod_code, fields=None):
 def convert_to_list(item):
     if item == '' or item == []:
         return ({'error_no': -1, 'error_info': '输入格式有误'}, [])
-    elif item and not (isinstance(item, str) or isinstance(item, list)):
+    elif item and not isinstance(item, str) and not isinstance(item, list):
         return ({'error_no': -1, 'error_info': '输入格式有误'}, [])
     elif isinstance(item, str):
         item = item.strip().split(',')
@@ -3240,6 +3227,13 @@ def get_date_index(report_types, start_year, end_year, column):
     df = pandas.DataFrame(index=index, columns=column)
     return df[::-1]
 def fill_missing_stock_data(security, data):
+    """
+    对年份类型返回的panel类型股票数据进行填充
+    end_date取所有返回数据的最大的不同日期集合值
+    :param security: 用户传入的股票代码列表
+    :param data: 获取的所有股票的财务数据
+    :return: 填充后的数据
+    """
     secu_code_return = data['secu_code'].unique()
     end_date_return = data['end_date'].unique()
     secu_filled_list = list(set(security) - set(secu_code_return))
@@ -3283,6 +3277,9 @@ def get_open_data(url, params):
     return data
 @check_arg
 def get_fundamentals(security, table, fields=None, date=None, start_year=None, end_year=None, report_types=None, date_type=None, merge_type=None, end_date=None, count=1, is_dict=True, is_dataframe=False):
+    """
+    获取财务数据
+    """
     today = time.strftime('%Y-%m-%d')
     return get_fundamentals_common(security, table, fields=fields, date=date, start_year=start_year, end_year=end_year, report_types=report_types, date_type=date_type, merge_type=merge_type, end_date=end_date, count=count, is_dict=is_dict, now=today, is_dataframe=is_dataframe)
 def get_fundflow_day_single(prod_code, get_type='range', start_date=None, end_date=None, date=None, search_direction=None, data_count=None, trans_or_order=None):
@@ -3333,6 +3330,10 @@ def get_block_stocks(block_code):
     return result
 @check_arg
 def get_stock_blocks(stock_code):
+    """
+    :param stock_code: str, the code of the stock. for example, '600570.SS'
+    :return:a list of the blocks code stock
+    """
     return data_proxy().get_stock_blocks(stock_code)
 @check_arg
 def get_stock_exrights(stock_code, date=None):
@@ -3478,7 +3479,6 @@ def get_fundflow_order_rank(prod_code=None, hq_type_code=None, start_pos=0, sort
             market = code_market_list[1]
             market = market.replace('XSHG', 'SS').replace('XSHE', 'SZ')
             r['prod_code'] = code + '.' + market
-        continue
     else:
         return temp_result
 @check_arg
@@ -3597,6 +3597,11 @@ def get_option_info():
         return []
 @check_arg
 def get_cb_info(date=None):
+    """
+    获取可转债信息
+    :param date: 查询日期
+    :return: df
+    """
     return get_cb_info_data(date)
 def get_cb_calender_info():
     currentYear = int(datetime.now().year)
@@ -3752,5 +3757,8 @@ def get_trading_day_by_date(query_date, day=0):
         return trading_day
 @check_arg
 def get_dominant_contract(contract, date=None):
+    """
+    获取主力合约
+    """
     today = time.strftime('%Y-%m-%d')
     return get_dominant_contract_common(contract, date=date, now=today)

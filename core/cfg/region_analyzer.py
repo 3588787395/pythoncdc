@@ -838,6 +838,14 @@ class WithRegion(Region):
     items: List[Tuple[List[Instruction], Optional[str]]] = field(default_factory=list)
     body_offset_start: int = 0
     body_offset_end: int = 0
+    # [Round 02 F5] with 的**出口块**（with 之后的第一块）与到达方式。
+    # exit_block 归父序列所有，不属于 WithRegion（原则 3/4）。
+    # exit_via_jump=True 表示 normal-exit __exit__ 块以无条件 JUMP_FORWARD 跳到
+    # 该块——只有「with 之后确实还有源码」时 CPython 才需要跳过内联的 handler，
+    # 故 exit_via_jump 是「exit_block 是真实源码（而非函数隐式 return）」的
+    # 结构性判据。见 _find_with_exit_block。
+    exit_block: Optional[Any] = None
+    exit_via_jump: bool = False
 
     def get_content_blocks(self) -> Set[BasicBlock]:
         return set(self.with_blocks)
@@ -6350,7 +6358,24 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 if block.start_offset in excluded_offsets:
                     continue
                 if block in self.block_to_region:
-                    continue
+                    # [R103] Allow blocks owned by an outer TryExceptRegion
+                    # whose else clause contains the current try-except.
+                    # When the current try is nested in an outer try's else,
+                    # the outer region owns the else blocks (which include
+                    # the current try's body blocks). Without this exception,
+                    # the inner try_blocks would be empty, losing all body
+                    # statements (e.g. graph.pyc _process_task_queue).
+                    _owner = self.block_to_region.get(block)
+                    if isinstance(_owner, TryExceptRegion):
+                        _owner_start = getattr(_owner, 'try_offset_start', None)
+                        if _owner_start is not None and _owner_start < try_start_for_blocks:
+                            # Outer try owns this block via its else clause.
+                            # Allow it to be included in the inner try_blocks.
+                            pass
+                        else:
+                            continue
+                    else:
+                        continue
                 try_blocks.append(block)
 
             # Track the try-body entry candidate from pre_handler_blocks expansion.
@@ -8405,7 +8430,13 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 # 的所有模块级代码吞进 except handler body（load_algo.pyc 根因）。
                 # 判据：块含 POP_EXCEPT 且最后指令为 JUMP_FORWARD → handler 退出，
                 # 不跟踪任何后继。
-                if _has_pop_except and _last and _last.opname == 'JUMP_FORWARD':
+                # [W27 fix] POP_EXCEPT + JUMP_BACKWARD 结尾的块是 except handler 中
+                # 的 continue/break 语句——异常已处理完毕，JUMP_BACKWARD 跳回循环头。
+                # 不跟随此目标，否则 BFS 会沿循环回边吞进整个循环体（包括 try body
+                # entry block），导致 try_blocks 被清空（global_param.pyc get_state 根因）。
+                if _has_pop_except and _last and (
+                        _last.opname == 'JUMP_FORWARD'
+                        or _last.opname in BACKWARD_JUMP_OPS):
                     continue
                 for _succ in _current.successors:
                     # [Phase 3 adv17_try_except_star] 不跟踪异常后继
@@ -8985,6 +9016,16 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                             block.start_offset < first_handler_entry and
                             block not in all_handler_blocks and
                             not self._is_pass_or_return_none_block(block)):
+                            # [W28 fix] 以 JUMP_BACKWARD 结尾的块是循环回边
+                            # （continue 语句），不是 try-else 子句。此块是 try 体
+                            # 的循环退出路径，被编译器移出异常表保护范围后出现在
+                            # [try_end, handler_entry) 区间。若误识别为 else 块，
+                            # 会导致 else 语句中出现 continue，且 try 体代码丢失
+                            # （_on_set_positions 根因）。
+                            _block_last = block.get_last_instruction()
+                            if (_block_last is not None and
+                                    _block_last.opname in BACKWARD_JUMP_OPS):
+                                continue
                             # [W12 fix] 异常表终点 unprotected 块的 else 识别：
                             # 显式 else 体被编译器移出异常表保护范围后仍登记在
                             # try_region.blocks/try_blocks 中。此类块满足结构判据
@@ -9900,6 +9941,75 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
         before_with_blocks.sort(key=lambda x: x[2])
         return before_with_blocks, depth_map
 
+    def _find_with_exit_block(self, with_entry_blocks, with_body,
+                              body_start, body_end) -> Tuple[Optional[BasicBlock], bool]:
+        """定位 with 区域的**出口块**（with 之后的第一块，不属于 WithRegion）。
+
+        **算法依据（单入口单出口区域 + 支配关系，非模式匹配）**
+        CPython 3.11 为 with 生成的代码布局是确定的「保护区 + 清理区」结构：
+              <ctx setup> BEFORE_WITH
+              <body>                      异常表 [body_start, body_end) → handler
+              <normal-exit __exit__(None,None,None)>   起始偏移 == body_end
+              handler: PUSH_EXCEPT_INFO / WITH_EXCEPT_START / ... / POP_TOP
+              <exit>:  with 之后的第一条语句
+        `body_end` 正是异常表给出的 body 上界，因此**含 body_end 偏移的块就是
+        with 的自然出口调用块**（normal-exit `__exit__`）。该块执行完毕后，控制
+        必然转移到「with 之后的代码」——它要么以 JUMP_FORWARD 显式跳到出口块
+        （with 之后还有语句时 CPython 必须跳过内联的 handler 代码），要么直接
+        fall-through 到出口块（with 是最后一条语句、handler 之后无代码可跳时）。
+        两种情况都给出同一个结论：**normal-exit 块的唯一转移目标 = with 的出口
+        块 X**。
+
+        依原则 3（嵌套即抽象节点）+ 原则 4（入口引用语义）：WithRegion 只归约
+        `with` 语句本身，是一个**单入口（BEFORE_WITH 块）单出口（X）**的区域；
+        X 是被父序列通过控制流「出口引用」的续接块，归父序列所有。把它并进
+        cleanup_blocks 会让 WithRegion 越界吞掉 with 之后的语句
+        （本轮 F5：`return` 被吞）。
+
+        唯一归属判定：X 只有在**确实被收进 cleanup_blocks** 时才被剔除（它不在
+        with_body / with_entry_blocks / 以 WITH_EXCEPT_START 为首的 handler 链
+        中——那些是 with 自身的块）。不属于 with 自身的块本来就未被收集，本方法
+        对其无副作用。
+
+        返回: (出口块, 是否由无条件跳转到达)。定位失败时返回 (None, False)。
+        """
+        if body_end is None or body_start is None or body_end <= body_start:
+            return None, False
+        owned = set(with_entry_blocks) | set(with_body)
+        # normal-exit 块：含 body_end 偏移的块（异常表 body 上界即其起始偏移）
+        normal_exit = None
+        for blk in self.cfg.get_blocks_in_order():
+            if blk.start_offset == body_end:
+                normal_exit = blk
+                break
+        if normal_exit is None:
+            for blk in self.cfg.get_blocks_in_order():
+                if any(i.offset == body_end for i in blk.instructions):
+                    normal_exit = blk
+                    break
+        if normal_exit is None or normal_exit in owned:
+            return None, False
+        last = normal_exit.get_last_instruction()
+        if last is None:
+            return None, False
+        target = None
+        via_jump = False
+        if last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+            if last.argval is not None:
+                target = self.cfg.get_block_by_offset(last.argval)
+                via_jump = True
+        elif last.opname in ('RETURN_VALUE', 'RETURN_CONST', 'RERAISE'):
+            # 自然出口块直接终结函数：with 之后无续接块。
+            return None, False
+        else:
+            # fall-through：后继必须唯一（线性出口，无分支）
+            succs = [s for s in normal_exit.successors if s is not normal_exit]
+            if len(succs) == 1:
+                target = succs[0]
+        if target is None or target in owned:
+            return None, False
+        return target, via_jump
+
     def _build_single_with_region(self, block, has_async, depth, depth_map):
         """构建单个with语句的区域对象。
 
@@ -9957,6 +10067,25 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
         body_start, body_end = self._get_with_body_range(last_with)
         with_body = self._collect_with_body_blocks(last_with, body_start, body_end)
         exception_blocks, cleanup_blocks = self._collect_with_cleanup_blocks(with_entry_blocks, with_body, body_start, body_end)
+        # [Round 02 F5] 剔除 with 的出口块：WithRegion 是单入口（BEFORE_WITH）
+        # 单出口（with 之后的第一块）区域。cleanup_blocks 的启发式扫描
+        # （_collect_normal_exit_cleanup）以「块内无用户代码」为判据，会把恰好
+        # 形态为 `LOAD_CONST None; RETURN_VALUE` 的**出口块**（即 with 之后的
+        # 显式/隐式 return）误收为清理块，导致 with 之后的那条语句被 WithRegion
+        # 吞掉并标记为 generated —— F5「with 之后的 bare return 丢失」。
+        # 结构性判据：normal-exit __exit__ 块（起始偏移 == 异常表 body_end）的
+        # 唯一转移目标即出口块，归父序列所有（详见 _find_with_exit_block）。
+        _with_exit_block, _with_exit_via_jump = self._find_with_exit_block(
+            with_entry_blocks, with_body, body_start, body_end)
+        region_exit_block = None
+        if _with_exit_block is not None and _with_exit_block in cleanup_blocks:
+            cleanup_blocks = [b for b in cleanup_blocks if b is not _with_exit_block]
+            owner = self.block_to_region.get(_with_exit_block)
+            if owner is not None and not isinstance(owner, WithRegion):
+                cleanup_blocks.append(_with_exit_block)
+                _with_exit_block = None
+        if _with_exit_block is not None:
+            region_exit_block = _with_exit_block
         all_blocks = set(with_entry_blocks) | set(with_body) | set(exception_blocks) | set(cleanup_blocks)
         region = WithRegion(
             region_type=RegionType.WITH, entry=block, blocks=all_blocks,
@@ -9964,6 +10093,13 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
             body_offset_start=body_start, body_offset_end=body_end,
         )
         region.is_async = bool(has_async)
+        # [Round 02 F5] 记录出口块。exit_via_jump 是「with 之后确有源码」的结构
+        # 判据：只有当控制流必须越过内联 handler 继续向下时，CPython 才会用
+        # 无条件 JUMP_FORWARD 跳到出口块；with 是最后一条语句时编译器让它直接
+        # fall-through 进函数隐式 return。生成阶段据此给出口块产生的
+        # `return None` 打 _explicit_return，避免被当作隐式返回过滤掉。
+        region.exit_block = region_exit_block
+        region.exit_via_jump = bool(_with_exit_via_jump) and region_exit_block is not None
         self._extract_with_items(with_entry_blocks, region)
         self.regions.append(region)
         for b in all_blocks:
@@ -10013,6 +10149,28 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
           Step 4: 识别阶段即合并连续 with（with A: ... with B: ...），由
                   WithRegion.should_merge_with 多态方法判定（相邻 entry + 同一异常表
                   depth）。区域归约算法：一次正确，无后处理补丁。
+          Step 5: [Round 02 F5] _find_with_exit_block 定位 with 的**出口块**（with
+                  之后的第一块）并把它从 cleanup_blocks 中剔除。WithRegion 是
+                  单入口（BEFORE_WITH 块）单出口（出口块）区域；出口块归父序列
+                  所有，仅以 region.exit_block / region.exit_via_jump 被引用。
+
+[Round 02 F5 修复] **出口块的控制流判据（结构判据，非形态判据）**
+CPython 3.11 把 with 的异常 handler **内联**在 body 之后，于是 with 之后的代码
+必须「越过」这段 handler。编译器只有两种做法，二者互斥且可判定：
+  (a) with 之后**确有源码**：normal-exit `__exit__` 块（起始偏移 == 异常表
+      body_end）以无条件 `JUMP_FORWARD` 跳到出口块 X，handler 夹在两者之间；
+  (b) with 是**最后一条语句**：normal-exit 块直接 fall-through 进函数的隐式
+      return，handler 排在 return 之后（无跳转）。
+因此「出口块由无条件转移到达」是「X 是 with 之后的真实源码」的**控制流判据**：
+它只依赖控制流边的性质（无条件转移 vs 顺序 fall-through）与异常表给出的
+body_end，不依赖 X 内部是否形如 `LOAD_CONST None; RETURN_VALUE`。
+这正好补上旧判据的缺口：_collect_normal_exit_cleanup 用「块内无用户代码」这一
+**形态**判据收集清理块，会把恰好形如隐式 return 的出口块（with 之后的 bare
+`return`）误收为清理块（其 RETURN_VALUE 守卫还显式放行了
+`LOAD_CONST None; RETURN_VALUE`），使 WithRegion 越界吞掉 with 之后的语句。
+依原则 3（嵌套即抽象节点）+ 原则 4（入口引用语义）：WithRegion 只归约 with
+语句本身，出口块由父序列通过控制流「出口引用」取得并生成；区域以 exit_block /
+exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）。
 
         **归约顺序**
         Phase 1 中位于 TRY 之后、LOOP 之前（analyze() 调用顺序：
@@ -10068,6 +10226,27 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
           with_blocks → With.body
           items       → With.items（List[withitem]: context_expr + optional_vars）
           is_async    → With.is_async
+
+**已知失败模式 / 本轮修复（Round 02）**
+- **F5（P0/P1，17 文件）：with / if 之后的 bare `return` 丢失，或被重排成
+  if/else 导致提前返回丢失。**
+  根因（两处叠加）：
+  1. `_collect_normal_exit_cleanup` 以「块内无用户代码」为判据，把形态为
+     `LOAD_CONST None; RETURN_VALUE` 的 **with 出口块**误收进 cleanup_blocks，
+     WithRegion 于是吞掉 with 之后的那条语句并标记为 generated。
+  2. 即使区域划分修正、Return 节点进入 AST，code_generator 的
+     `_filter_trailing_return_none` 仍按「函数末尾 return None 即隐式返回」
+     把它过滤掉——对普通函数这没错，但当 with 是倒数第二条语句时，CPython
+     必须生成越过 handler 的 JUMP_FORWARD，删掉 return 会连这条跳转一起消失。
+  定位: region_analyzer.py `_build_single_with_region`（cleanup_blocks 组装）
+        + 新增 `_find_with_exit_block`；
+        region_ast_generator.py 新增 `_with_jump_exit_blocks` /
+        `_mark_with_exit_return_explicit` / `_generate_block_statements` 包装层。
+  修复: 以「normal-exit __exit__ 块是否用无条件跳转到达出口块」为判据剔除出口
+        块（原则 3/4），并给出口块产生的 return None 打既有的 _explicit_return
+        指令背书，使其不被下游过滤。判据只有一份，复用既有通道，不新增后处理。
+  涉及复现: repro_08.py / repro_09.py（2/2 PASS）。
+
         当前测试矩阵通过率: 100%（with_region 191/191）。本方法遵循区域归约算法 4
         核心原则: 自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口。
         """
@@ -12399,6 +12578,27 @@ LOAD_ASSERTION_ERROR + RAISE_VARARGS(1) 抛错。assert 在 CFG 中表现为"条
   模式 C: is None / is not None 断言 — 使用 POP_JUMP_IF_NONE /
           POP_JUMP_IF_NOT_NONE（属 NONE_CHECK_OPS）；在 _generate_assert 中由
           _fix_assert_none_check_direction 修正方向。
+[Round 02 F4 修复] **入口块的直线段分解（栈纪律判据）**：
+基本块的定义是「极大直线指令序列，控制流只在块末转移」。因此 assert 的
+condition_block 在语义上承载**两段**内容：
+  (a) 前导段：若干条**已完结**的语句。语句的栈不变式是「执行完毕后值栈回到
+      块入口深度 0」——简单赋值 `x = e`、属性/下标赋值、增强赋值、表达式语句
+      `f()`、`import`、`raise`、`del` 全部满足该不变式，与具体语法形式无关；
+  (b) 条件段：从某条指令起把值栈从 0 抬升到 1，并由块末的条件跳转消费。
+于是「条件表达式起点」= 对块内指令做**前向栈深模拟**时，块末跳转之前
+**最后一次回到深度 0 的位置之后**的那条指令。这是纯数据流判据：只依赖
+CPython 为每条指令定义的 stack effect（dis.stack_effect），不依赖任何 opcode
+组合的模式表，故对任意赋值/调用/表达式形态都成立，且天然支持「前导段有多条
+语句」的情形（取最后一次归零点即覆盖全部）。
+反向（由跳转点回溯）与前向等价，但前向单趟即可完成，且不受 BoolOp/链式比较
+末段跳转方向歧义的影响。
+**归属结论**：前导段不属于 AssertRegion 本身——AssertRegion 只归约「条件 +
+失败路径」这一抽象（原则 3 嵌套即抽象节点）。前导段由**父序列**就地发射，
+位置在 ast.Assert 之前以保序；块仍整体归属 AssertRegion（原则 2 每块唯一
+归属），只是区域内部再按「语句 / 条件表达式」两个抽象层次展开。
+切分实现见 region_ast_generator._split_block_condition_prefix（保守：任一指令
+stack effect 不可得或模拟中栈下溢即放弃切分，退化为切分前行为）。
+
 归约过程（保留历史标注：[Round4-12] = 链式比较/BoolOp assert chain 块归属； = ternary message_block 入口引用； = BoolOp chain 块归属； = `assert not (or-chain), msg` 反向回溯 new_condition_block）：
   Step 1: 遍历所有基本块（按 start_offset 升序排序）。
   Step 2: 跳过末指令不在 FORWARD_JUMP_OPS 中的块（assert 必有前向条件跳转）。
@@ -12414,6 +12614,12 @@ LOAD_ASSERTION_ERROR + RAISE_VARARGS(1) 抛错。assert 在 CFG 中表现为"条
           / chained_compare_blocks / chained_compare_ops / boolop_chain_blocks
           / boolop_chain_ops）。
   Step 7: 注册到 self.regions 与 block_to_region。
+  Step 8: [Round 02 F4] 生成阶段（region_ast_generator._generate_assert）对
+          condition_block 做 Step「入口块直线段分解」：把前导段指令归约为语句
+          列表暂存，父序列（generate / _generate_block_statements / 循环体
+          处理器）在 ast.Assert 之前发射。前导段发射后登记
+          _assert_prefix_emitted_blocks，父序列的通用指令扫描据此跳过，保证
+          「每块唯一归属」不被破坏（不重复发射）。
 
 **归约顺序**
 早期独立识别器（在 analyze() 中位于 try_except → loop → with → match 之后、
@@ -12474,7 +12680,29 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                                      嵌套 TernaryRegion 时为 IfExp）
   AssertRegion.chained_compare_ops → 重建为 ast.Compare 的 ops/comps
   AssertRegion.boolop_chain_ops    → 重建为 ast.BoolOp
-特殊处理: None 检查方向修正（_fix_assert_none_check_direction 互换 is/is not）。
+特殊处理: None 检查方向修正（_invert_assert_none_check_direction 互换 is/is not）。
+
+**已知失败模式 / 本轮修复（Round 02）**
+- **F4（P0，17 文件 / 18 函数）：assert 之前紧邻的赋值语句被整体丢弃，被赋值
+  变量退化为 LOAD_GLOBAL（语义错误）。**
+  根因：`_generate_assert` 扫描 condition_block 重建条件表达式时，遇到
+  STORE_* 即执行 `cond_instrs = []` 重置，意图是「防止吸收前缀赋值」——但被
+  重置掉的指令**没有被任何一方发射**，于是 `amount = trade.amount`
+  （repro_05）、`y = self.compute(x)`（repro_07）整条消失；后续同名引用在符号
+  表里找不到局部绑定，编译成 LOAD_GLOBAL，从局部变量变成全局查找。
+  这不是形状差异而是语义错误，且影响面最广。
+  定位：region_ast_generator.py `_generate_assert` 的 cond_instrs 扫描循环
+  （STORE_* 分支，`cond_instrs = []`）。
+  修复：新增 `_split_block_condition_prefix`（栈纪律切分）+ `_collect_assert_
+  prefix_stmts` / `_take_assert_prefix_stmts`，把前导段用既有的
+  `_build_statements_from_instructions` 归约为语句，由父序列在 Assert 之前
+  发射。算法依据见上文「入口块的直线段分解」。
+  涉及复现：repro_05.py / repro_06.py / repro_07.py（3/3 PASS）。
+  历史遗留说明：旧的 `cond_instrs = []` 重置是「丢弃而非移交」——它满足
+  「条件表达式不含前缀指令」的局部正确性，却违反了原则 3 的下半句（区域不得
+  吞并同块内不属于它的语句）。本轮修复不改其局部正确性，只补上被吞语句的
+  归属（移交给父序列），因此是纯粹的原则 2/3 修正，不是后处理补丁。
+
 当前测试矩阵通过率: 100%（assert 在 basic 测试集内通过）。本方法遵循区域归约
 算法 4 核心原则: 自底向上归约 / 每块唯一归属 / 嵌套即抽象节点 / 父引用子入口。
         """
@@ -18734,6 +18962,32 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
         LoopRegion 建立父子关系；同时把 entry 落在 elif_condition_blocks 中的
         BoolOpRegion 标记 is_condition_context=True 并与 IfRegion 建立父子关系。
 
+        [Round 02 F3 修复] **块的指令级分区（一个块可横跨两条语句）**
+        基本块是「极大直线指令序列」，因此**一个块可以同时是上游区域的汇合块
+        与下游区域的入口块**。连续短路赋值即典型：
+            `o.x = a or env.a`   块布局: [a] JUMP_IF_TRUE_OR_POP → M1
+                                        [env.a] → M1
+            `o.y = b or env.b`   M1: LOAD o; STORE_ATTR x;  LOAD b; JUMP_IF_TRUE_OR_POP → M2
+                                        [env.b] → M2
+                                   M2: LOAD o; STORE_ATTR y; ...
+        块 M1 的前两条指令（`LOAD o; STORE_ATTR x`）是第 1 条 BoolOp 的**汇合
+        段**（值在此落到 STORE_ATTR），后两条指令（`LOAD b; JUMP_IF_TRUE_OR_POP`）
+        是第 2 条 BoolOp 的**入口段**（op_chain[0]）。两个 BoolOpRegion 都合法，
+        但 block_to_region 是**单值映射**，只能记录其中一个归属者（先到先得），
+        另一个区域虽存在却对 get_region_for_block 不可见 —— 于是它永远等不到
+        派发，其全部语句被上层的通用块语句生成压成一条裸表达式语句，并因提前
+        return 截断后续代码（F3：68 条指令剩 19 条）。
+        这不是「归属冲突」，而是**归属粒度**问题：原则 2 的正确读法是「每个块
+        在任何**层级**只归属一个区域」——同一个块可以按指令区间在不同层级分别
+        归属。识别阶段不做指令级切分（保持块粒度，避免牵动全部区域识别），改在
+        生成阶段由上游区域归约完成处显式移交：
+          上游 BoolOpRegion 在 merge_block 的 STORE_ATTR 处结束自己的归约，
+          其后剩余指令若属于某个**以该块为 entry 且向该块之外延伸**的下游区域，
+          则依原则 4（父引用子入口）派发到该区域（_downstream_region_entry）。
+        「向该块之外延伸」是必要的结构判据：只含该块一个块的退化容器区域
+        （analyzer 为未归约块建的普通 Region）不是下游区域，派发给它等价于走
+        通用块语句路径，会掩盖真正的下游区域并吞掉剩余语句。
+
         **唯一归属判定**
         链式结构的性质：单向链接（每个条件块最多有一个后继条件块）、收敛性
         （所有路径最终汇入 merge point）、无环性（不存在回边，区别于循环）、
@@ -18788,11 +19042,27 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
         算法重建为嵌套 BoolOp（`(x and y) or z`）。
         特殊情况：单操作数 boolop 退化为普通表达式（不应发生）；空 boolop 链
         （len(chain) < 2）返回 None；嵌套 boolop 通过递归检测处理。
-        当前测试矩阵通过率: 100%（boolop 132/132），无已知失败模式。历史冲突
-        场景（BoolOp-IfRegion 歧义 / BoolOp-Ternary 竞争 / 循环条件 boolop /
+        当前测试矩阵通过率: 100%（boolop 132/132）。历史冲突场景
+        （BoolOp-IfRegion 歧义 / BoolOp-Ternary 竞争 / 循环条件 boolop /
         assert 中的 boolop / 嵌套 boolop）均已通过 claimed 机制 + 优先级流水线
-        解决。本方法遵循区域归约算法 4 核心原则: 自底向上归约 / 每块唯一归属 /
-        嵌套即抽象节点 / 父引用子入口。
+        解决。
+
+**已知失败模式 / 本轮修复（Round 02）**
+- **F3（P2）：连续两条以上 `obj.attr = a or b.c`，从第 2 条起被截断为裸表达式
+  语句，其后语句全部丢失。**
+  根因: 见上文「块的指令级分区」。上游 BoolOpRegion 的 merge_block 同时是下游
+  BoolOpRegion 的 entry，而 block_to_region 单值映射只记了上游；下游区域对
+  get_region_for_block 不可见，永不被派发。上游区域的 R78 分支（STORE_ATTR
+  之后的剩余指令）退化成通用块语句生成，把 `LOAD b` 输出成裸表达式 `b`，
+  并把后续 `return o` 压成 `return env.b`，函数剩余部分整体消失。
+  定位: region_ast_generator.py `_generate_boolop` 的 R78 分支（STORE_ATTR 后
+        剩余指令处理）+ 新增 `_downstream_region_entry`。
+  修复: 剩余指令若属于「以该块为 entry 且 blocks 向该块之外延伸」的未生成区域，
+        则按原则 4 派发到该区域；否则保持原有通用路径。判据只依赖区域的 entry
+        指针、blocks 集合与生成状态（结构信息），不依赖任何 opcode 形态。
+  涉及复现: repro_03.py / repro_04.py（2/2 PASS）。
+- 本方法遵循区域归约算法 4 核心原则: 自底向上归约 / 每块唯一归属 /
+  嵌套即抽象节点 / 父引用子入口。
 
         调用链：
           analyze() → _identify_boolop_regions(existing_regions)

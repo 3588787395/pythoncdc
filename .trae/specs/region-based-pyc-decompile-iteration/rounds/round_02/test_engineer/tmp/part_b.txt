@@ -1,0 +1,1525 @@
+====================================================================================================
+[13] F:/Downloads/pythoncdc-main/site-packages/fly/common/op_station.pyc
+    func=__new__ orig=87 decomp=67 jump=2 true=43
+    first_diff: idx=43 orig=LOAD_CONST None -> decomp=LOAD_FAST 'cls'
+==== __new__  orig=98 decomp=78
+      0 | COPY_FREE_VARS                                           | COPY_FREE_VARS 
+      1 | RESUME                                                   | RESUME 
+      2 | LOAD_FAST cls                                            | LOAD_FAST cls
+      3 | LOAD_ATTR _instanced                                     | LOAD_ATTR _instanced
+>>    4 | POP_JUMP_FORWARD_IF_NOT_NONE to 442                      | POP_JUMP_FORWARD_IF_NOT_NONE to 378
+      5 | NOP                                                      | NOP 
+      6 | LOAD_FAST cls                                            | LOAD_FAST cls
+      7 | LOAD_ATTR lock                                           | LOAD_ATTR lock
+      8 | LOAD_METHOD acquire                                      | LOAD_METHOD acquire
+      9 | PRECALL                                                  | PRECALL 
+     10 | CALL                                                     | CALL 
+     11 | POP_TOP                                                  | POP_TOP 
+     12 | LOAD_FAST cls                                            | LOAD_FAST cls
+     13 | LOAD_ATTR _instanced                                     | LOAD_ATTR _instanced
+  ... (85 more)
+---- first_diff_index=4
+====================================================================================================
+[14] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_persist/json_persistance.pyc
+    func=persist orig=78 decomp=77 jump=1 true=46
+    first_diff: idx=31 orig=LOAD_CONST None -> decomp=JUMP_FORWARD 188
+==== persist  orig=85 decomp=84
+      0 | RESUME                                                   | RESUME 
+      1 | NOP                                                      | NOP 
+      2 | LOAD_FAST self                                           | LOAD_FAST self
+      3 | LOAD_ATTR _persist_data                                  | LOAD_ATTR _persist_data
+      4 | BUILD_MAP                                                | BUILD_MAP 
+      5 | COMPARE_OP !=                                            | COMPARE_OP !=
+>>    6 | POP_JUMP_FORWARD_IF_FALSE to 194                         | POP_JUMP_FORWARD_IF_FALSE to 192
+      7 | LOAD_GLOBAL NULL + codecs                                | LOAD_GLOBAL NULL + codecs
+      8 | LOAD_ATTR open                                           | LOAD_ATTR open
+      9 | LOAD_FAST self                                           | LOAD_FAST self
+     10 | LOAD_ATTR _file_path                                     | LOAD_ATTR _file_path
+     11 | LOAD_CONST 'w'                                           | LOAD_CONST 'w'
+     12 | LOAD_CONST 'utf-8'                                       | LOAD_CONST 'utf-8'
+     13 | KW_NAMES                                                 | KW_NAMES 
+     14 | PRECALL                                                  | PRECALL 
+     15 | CALL                                                     | CALL 
+  ... (70 more)
+---- first_diff_index=6
+====================================================================================================
+[15] F:/Downloads/pythoncdc-main/site-packages/IQEngine/account/trade.pyc
+    func=create_trade orig=68 decomp=19 jump=0 true=52
+    first_diff: idx=16 orig=JUMP_IF_TRUE_OR_POP 104 -> decomp=POP_TOP None
+==== create_trade  orig=71 decomp=21
+      0 | RESUME                                                   | RESUME 
+      1 | LOAD_GLOBAL NULL + Engine                                | LOAD_GLOBAL NULL + Engine
+      2 | LOAD_ATTR instance                                       | LOAD_ATTR instance
+      3 | PRECALL                                                  | PRECALL 
+      4 | CALL                                                     | CALL 
+      5 | STORE_FAST env                                           | STORE_FAST env
+      6 | PUSH_NULL                                                | PUSH_NULL 
+      7 | LOAD_FAST cls                                            | LOAD_FAST cls
+      8 | PRECALL                                                  | PRECALL 
+      9 | CALL                                                     | CALL 
+     10 | STORE_FAST trade                                         | STORE_FAST trade
+     11 | LOAD_FAST calendar_dt                                    | LOAD_FAST calendar_dt
+     12 | JUMP_IF_TRUE_OR_POP to 76                                | JUMP_IF_TRUE_OR_POP to 76
+     13 | LOAD_FAST env                                            | LOAD_FAST env
+     14 | LOAD_ATTR calendar_dt                                    | LOAD_ATTR calendar_dt
+     15 | LOAD_FAST trade                                          | LOAD_FAST trade
+     16 | STORE_ATTR _calendar_dt                                  | STORE_ATTR _calendar_dt
+     17 | LOAD_FAST trading_dt                                     | LOAD_FAST trading_dt
+>>   18 | JUMP_IF_TRUE_OR_POP to 104                               | POP_TOP 
+>>   19 | LOAD_FAST env                                            | LOAD_FAST trade_id
+>>   20 | LOAD_ATTR trading_dt                                     | RETURN_VALUE 
+>>   21 | LOAD_FAST trade                                          | -
+>>   22 | STORE_ATTR _trading_dt                                   | -
+>>   23 | LOAD_FAST price                                          | -
+>>   24 | LOAD_FAST trade                                          | -
+>>   25 | STORE_ATTR _price                                        | -
+>>   26 | LOAD_FAST amount                                         | -
+>>   27 | LOAD_FAST trade                                          | -
+  ... (44 more)
+---- first_diff_index=18
+====================================================================================================
+[16] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api_trade.pyc
+    func=order_market orig=215 decomp=215 jump=4 true=53
+    first_diff: idx=161 orig=JUMP_FORWARD 850 -> decomp=LOAD_GLOBAL 'strategy_log'
+==== order_market  orig=236 decomp=234
+      0 | RESUME                                                   | RESUME 
+      1 | LOAD_FAST security                                       | LOAD_FAST security
+      2 | LOAD_CONST None                                          | LOAD_CONST None
+      3 | LOAD_CONST 2                                             | LOAD_CONST 2
+      4 | BUILD_SLICE                                              | BUILD_SLICE 
+      5 | BINARY_SUBSCR                                            | BINARY_SUBSCR 
+      6 | LOAD_CONST ('11', '12')                                  | LOAD_CONST ('11', '12')
+      7 | CONTAINS_OP                                              | CONTAINS_OP 
+      8 | POP_JUMP_FORWARD_IF_FALSE to 70                          | POP_JUMP_FORWARD_IF_FALSE to 70
+      9 | LOAD_GLOBAL NULL + strategy_log                          | LOAD_GLOBAL NULL + strategy_log
+     10 | LOAD_ATTR error                                          | LOAD_ATTR error
+     11 | LOAD_CONST '可转债标的不支持市价委托类型，请修改下单方式'                      | LOAD_CONST '可转债标的不支持市价委托类型，请修改下单方式'
+     12 | PRECALL                                                  | PRECALL 
+     13 | CALL                                                     | CALL 
+     14 | POP_TOP                                                  | POP_TOP 
+     15 | LOAD_CONST None                                          | LOAD_CONST None
+     16 | RETURN_VALUE                                             | RETURN_VALUE 
+     17 | LOAD_FAST market_type                                    | LOAD_FAST market_type
+     18 | POP_JUMP_FORWARD_IF_NOT_NONE to 118                      | POP_JUMP_FORWARD_IF_NOT_NONE to 118
+     19 | LOAD_GLOBAL NULL + strategy_log                          | LOAD_GLOBAL NULL + strategy_log
+     20 | LOAD_ATTR error                                          | LOAD_ATTR error
+     21 | LOAD_CONST '市价委托时市价委托类型market_type为必传字段，委托取消'            | LOAD_CONST '市价委托时市价委托类型market_type为必传字段，委托取消'
+     22 | PRECALL                                                  | PRECALL 
+     23 | CALL                                                     | CALL 
+     24 | POP_TOP                                                  | POP_TOP 
+     25 | LOAD_CONST None                                          | LOAD_CONST None
+     26 | RETURN_VALUE                                             | RETURN_VALUE 
+     27 | LOAD_GLOBAL NULL + assure_asset                          | LOAD_GLOBAL NULL + assure_asset
+     28 | LOAD_FAST security                                       | LOAD_FAST security
+     29 | PRECALL                                                  | PRECALL 
+     30 | CALL                                                     | CALL 
+     31 | STORE_FAST asset                                         | STORE_FAST asset
+     32 | NOP                                                      | NOP 
+     33 | LOAD_GLOBAL NULL + int                                   | LOAD_GLOBAL NULL + int
+     34 | LOAD_FAST market_type                                    | LOAD_FAST market_type
+     35 | PRECALL                                                  | PRECALL 
+     36 | CALL                                                     | CALL 
+     37 | STORE_FAST market_type                                   | STORE_FAST market_type
+     38 | JUMP_FORWARD to 262                                      | JUMP_FORWARD to 262
+     39 | PUSH_EXC_INFO                                            | PUSH_EXC_INFO 
+     40 | LOAD_GLOBAL ValueError                                   | LOAD_GLOBAL ValueError
+     41 | CHECK_EXC_MATCH                                          | CHECK_EXC_MATCH 
+     42 | POP_JUMP_FORWARD_IF_FALSE to 254                         | POP_JUMP_FORWARD_IF_FALSE to 254
+     43 | POP_TOP                                                  | POP_TOP 
+     44 | LOAD_GLOBAL NULL + strategy_log                          | LOAD_GLOBAL NULL + strategy_log
+     45 | LOAD_ATTR error                                          | LOAD_ATTR error
+     46 | LOAD_CONST '市价类型传入错误，传入类型为：%s，委托取消'                      | LOAD_CONST '市价类型传入错误，传入类型为：%s，委托取消'
+     47 | LOAD_FAST market_type                                    | LOAD_FAST market_type
+     48 | BINARY_OP %                                              | BINARY_OP %
+     49 | PRECALL                                                  | PRECALL 
+     50 | CALL                                                     | CALL 
+     51 | POP_TOP                                                  | POP_TOP 
+     52 | POP_EXCEPT                                               | POP_EXCEPT 
+     53 | LOAD_CONST None                                          | LOAD_CONST None
+     54 | RETURN_VALUE                                             | RETURN_VALUE 
+     55 | RERAISE                                                  | RERAISE 
+     56 | COPY                                                     | COPY 
+     57 | POP_EXCEPT                                               | POP_EXCEPT 
+     58 | RERAISE                                                  | RERAISE 
+     59 | LOAD_GLOBAL NULL + EXCHANGE_TYPES_DICT                   | LOAD_GLOBAL NULL + EXCHANGE_TYPES_DICT
+     60 | LOAD_ATTR get                                            | LOAD_ATTR get
+     61 | LOAD_FAST asset                                          | LOAD_FAST asset
+     62 | LOAD_ATTR exchange                                       | LOAD_ATTR exchange
+     63 | LOAD_METHOD replace                                      | LOAD_METHOD replace
+     64 | LOAD_CONST 'XSHG'                                        | LOAD_CONST 'XSHG'
+     65 | LOAD_CONST 'SS'                                          | LOAD_CONST 'SS'
+     66 | PRECALL                                                  | PRECALL 
+     67 | CALL                                                     | CALL 
+     68 | LOAD_METHOD replace                                      | LOAD_METHOD replace
+     69 | LOAD_CONST 'XSHE'                                        | LOAD_CONST 'XSHE'
+     70 | LOAD_CONST 'SZ'                                          | LOAD_CONST 'SZ'
+     71 | PRECALL                                                  | PRECALL 
+     72 | CALL                                                     | CALL 
+     73 | PRECALL                                                  | PRECALL 
+     74 | CALL                                                     | CALL 
+     75 | STORE_FAST exchange_type                                 | STORE_FAST exchange_type
+     76 | LOAD_FAST exchange_type                                  | LOAD_FAST exchange_type
+     77 | LOAD_CONST '1'                                           | LOAD_CONST '1'
+     78 | COMPARE_OP ==                                            | COMPARE_OP ==
+     79 | POP_JUMP_FORWARD_IF_FALSE to 726                         | POP_JUMP_FORWARD_IF_FALSE to 726
+     80 | LOAD_GLOBAL REGISTRATION_CONTROL                         | LOAD_GLOBAL REGISTRATION_CONTROL
+     81 | LOAD_CONST '0'                                           | LOAD_CONST '0'
+     82 | COMPARE_OP ==                                            | COMPARE_OP ==
+     83 | POP_JUMP_FORWARD_IF_FALSE to 624                         | POP_JUMP_FORWARD_IF_FALSE to 624
+     84 | LOAD_FAST asset                                          | LOAD_FAST asset
+     85 | LOAD_ATTR symbol                                         | LOAD_ATTR symbol
+     86 | LOAD_CONST None                                          | LOAD_CONST None
+     87 | LOAD_CONST 3                                             | LOAD_CONST 3
+     88 | BUILD_SLICE                                              | BUILD_SLICE 
+     89 | BINARY_SUBSCR                                            | BINARY_SUBSCR 
+     90 | LOAD_CONST ('688', '689')                                | LOAD_CONST ('688', '689')
+     91 | CONTAINS_OP                                              | CONTAINS_OP 
+     92 | POP_JUMP_FORWARD_IF_FALSE to 562                         | POP_JUMP_FORWARD_IF_FALSE to 562
+     93 | LOAD_FAST limit_price                                    | LOAD_FAST limit_price
+     94 | POP_JUMP_FORWARD_IF_NOT_NONE to 508                      | POP_JUMP_FORWARD_IF_NOT_NONE to 508
+     95 | LOAD_GLOBAL NULL + strategy_log                          | LOAD_GLOBAL NULL + strategy_log
+     96 | LOAD_ATTR error                                          | LOAD_ATTR error
+     97 | LOAD_CONST '市价委托上证科创板股票时保护限价limit_price为必传字段，委托取消'       | LOAD_CONST '市价委托上证科创板股票时保护限价limit_price为必传字段，委托取消'
+     98 | PRECALL                                                  | PRECALL 
+     99 | CALL                                                     | CALL 
+    100 | POP_TOP                                                  | POP_TOP 
+    101 | LOAD_CONST None                                          | LOAD_CONST None
+    102 | RETURN_VALUE                                             | RETURN_VALUE 
+    103 | LOAD_FAST market_type                                    | LOAD_FAST market_type
+    104 | LOAD_CONST (0, 1, 2, 4)                                  | LOAD_CONST (0, 1, 2, 4)
+    105 | CONTAINS_OP                                              | CONTAINS_OP 
+    106 | POP_JUMP_FORWARD_IF_FALSE to 560                         | POP_JUMP_FORWARD_IF_FALSE to 560
+    107 | LOAD_GLOBAL NULL + strategy_log                          | LOAD_GLOBAL NULL + strategy_log
+    108 | LOAD_ATTR error                                          | LOAD_ATTR error
+    109 | LOAD_CONST '市价委托上证科创板股票时市价类型仅支持0、1、2、4类型，委托取消'           | LOAD_CONST '市价委托上证科创板股票时市价类型仅支持0、1、2、4类型，委托取消'
+    110 | PRECALL                                                  | PRECALL 
+    111 | CALL                                                     | CALL 
+    112 | POP_TOP                                                  | POP_TOP 
+    113 | LOAD_CONST None                                          | LOAD_CONST None
+    114 | RETURN_VALUE                                             | RETURN_VALUE 
+>>  115 | JUMP_FORWARD to 850                                      | JUMP_FORWARD to 892
+    116 | LOAD_FAST limit_price                                    | LOAD_FAST limit_price
+    117 | POP_JUMP_FORWARD_IF_NOT_NONE to 570                      | POP_JUMP_FORWARD_IF_NOT_NONE to 570
+    118 | LOAD_CONST 0                                             | LOAD_CONST 0
+    119 | STORE_FAST limit_price                                   | STORE_FAST limit_price
+    120 | LOAD_FAST market_type                                    | LOAD_FAST market_type
+    121 | LOAD_CONST (1, 4)                                        | LOAD_CONST (1, 4)
+    122 | CONTAINS_OP                                              | CONTAINS_OP 
+    123 | POP_JUMP_FORWARD_IF_FALSE to 622                         | POP_JUMP_FORWARD_IF_FALSE to 622
+    124 | LOAD_GLOBAL NULL + strategy_log                          | LOAD_GLOBAL NULL + strategy_log
+  ... (112 more)
+---- first_diff_index=115
+====================================================================================================
+[17] F:/Downloads/pythoncdc-main/site-packages/fly/common/aes_encrypt.pyc
+    func=code_encrypt_so orig=239 decomp=238 jump=3 true=56
+    first_diff: idx=182 orig=JUMP_FORWARD 1006 -> decomp=LOAD_CONST None
+==== code_encrypt_so  orig=271 decomp=270
+      0 | RESUME                                                   | RESUME 
+      1 | LOAD_GLOBAL NULL + get_code_setup                        | LOAD_GLOBAL NULL + get_code_setup
+      2 | LOAD_FAST path_setup                                     | LOAD_FAST path_setup
+      3 | PRECALL                                                  | PRECALL 
+      4 | CALL                                                     | CALL 
+      5 | STORE_FAST code_setup                                    | STORE_FAST code_setup
+      6 | LOAD_CONST '%s/setup.py'                                 | LOAD_CONST '%s/setup.py'
+      7 | LOAD_FAST path_setup                                     | LOAD_FAST path_setup
+      8 | BINARY_OP %                                              | BINARY_OP %
+      9 | STORE_FAST setup_file_path                               | STORE_FAST setup_file_path
+     10 | LOAD_GLOBAL NULL + open                                  | LOAD_GLOBAL NULL + open
+     11 | LOAD_FAST setup_file_path                                | LOAD_FAST setup_file_path
+     12 | LOAD_CONST 'w'                                           | LOAD_CONST 'w'
+     13 | PRECALL                                                  | PRECALL 
+     14 | CALL                                                     | CALL 
+     15 | BEFORE_WITH                                              | BEFORE_WITH 
+     16 | STORE_FAST file_setup                                    | STORE_FAST file_setup
+     17 | LOAD_FAST file_setup                                     | LOAD_FAST file_setup
+     18 | LOAD_METHOD write                                        | LOAD_METHOD write
+     19 | LOAD_FAST code_setup                                     | LOAD_FAST code_setup
+     20 | PRECALL                                                  | PRECALL 
+     21 | CALL                                                     | CALL 
+     22 | POP_TOP                                                  | POP_TOP 
+     23 | LOAD_GLOBAL NULL + os                                    | LOAD_GLOBAL NULL + os
+     24 | LOAD_ATTR chmod                                          | LOAD_ATTR chmod
+     25 | LOAD_FAST setup_file_path                                | LOAD_FAST setup_file_path
+     26 | LOAD_CONST 511                                           | LOAD_CONST 511
+     27 | PRECALL                                                  | PRECALL 
+     28 | CALL                                                     | CALL 
+     29 | POP_TOP                                                  | POP_TOP 
+     30 | LOAD_CONST None                                          | LOAD_CONST None
+     31 | LOAD_CONST None                                          | LOAD_CONST None
+     32 | LOAD_CONST None                                          | LOAD_CONST None
+     33 | PRECALL                                                  | PRECALL 
+     34 | CALL                                                     | CALL 
+     35 | POP_TOP                                                  | POP_TOP 
+     36 | JUMP_FORWARD to 206                                      | JUMP_FORWARD to 206
+     37 | PUSH_EXC_INFO                                            | PUSH_EXC_INFO 
+     38 | WITH_EXCEPT_START                                        | WITH_EXCEPT_START 
+     39 | POP_JUMP_FORWARD_IF_TRUE to 198                          | POP_JUMP_FORWARD_IF_TRUE to 198
+     40 | RERAISE                                                  | RERAISE 
+     41 | COPY                                                     | COPY 
+     42 | POP_EXCEPT                                               | POP_EXCEPT 
+     43 | RERAISE                                                  | RERAISE 
+     44 | POP_TOP                                                  | POP_TOP 
+     45 | POP_EXCEPT                                               | POP_EXCEPT 
+     46 | POP_TOP                                                  | POP_TOP 
+     47 | POP_TOP                                                  | POP_TOP 
+     48 | LOAD_FAST path_so                                        | LOAD_FAST path_so
+     49 | FORMAT_VALUE str                                         | FORMAT_VALUE str
+     50 | LOAD_CONST '/'                                           | LOAD_CONST '/'
+     51 | LOAD_FAST f_name                                         | LOAD_FAST f_name
+     52 | FORMAT_VALUE str                                         | FORMAT_VALUE str
+     53 | LOAD_CONST '.py'                                         | LOAD_CONST '.py'
+     54 | BUILD_STRING                                             | BUILD_STRING 
+     55 | STORE_FAST file_path                                     | STORE_FAST file_path
+     56 | LOAD_FAST path_so                                        | LOAD_FAST path_so
+     57 | FORMAT_VALUE str                                         | FORMAT_VALUE str
+     58 | LOAD_CONST '/'                                           | LOAD_CONST '/'
+     59 | LOAD_FAST f_name                                         | LOAD_FAST f_name
+     60 | FORMAT_VALUE str                                         | FORMAT_VALUE str
+     61 | LOAD_CONST '.c'                                          | LOAD_CONST '.c'
+     62 | BUILD_STRING                                             | BUILD_STRING 
+     63 | STORE_FAST file_c_path                                   | STORE_FAST file_c_path
+     64 | LOAD_CONST '%s/setup.py'                                 | LOAD_CONST '%s/setup.py'
+     65 | LOAD_FAST path_setup                                     | LOAD_FAST path_setup
+     66 | BINARY_OP %                                              | BINARY_OP %
+     67 | STORE_FAST setup_file_path                               | STORE_FAST setup_file_path
+     68 | NOP                                                      | NOP 
+     69 | LOAD_GLOBAL NULL + subprocess                            | LOAD_GLOBAL NULL + subprocess
+     70 | LOAD_ATTR Popen                                          | LOAD_ATTR Popen
+     71 | LOAD_CONST 'python3'                                     | LOAD_CONST 'python3'
+     72 | LOAD_FAST setup_file_path                                | LOAD_FAST setup_file_path
+     73 | LOAD_CONST 'build_ext'                                   | LOAD_CONST 'build_ext'
+     74 | BUILD_LIST                                               | BUILD_LIST 
+     75 | LOAD_GLOBAL subprocess                                   | LOAD_GLOBAL subprocess
+     76 | LOAD_ATTR PIPE                                           | LOAD_ATTR PIPE
+     77 | KW_NAMES                                                 | KW_NAMES 
+     78 | PRECALL                                                  | PRECALL 
+     79 | CALL                                                     | CALL 
+     80 | BEFORE_WITH                                              | BEFORE_WITH 
+     81 | STORE_FAST proc                                          | STORE_FAST proc
+     82 | LOAD_FAST proc                                           | LOAD_FAST proc
+     83 | LOAD_ATTR stderr                                         | LOAD_ATTR stderr
+     84 | LOAD_METHOD read                                         | LOAD_METHOD read
+     85 | PRECALL                                                  | PRECALL 
+     86 | CALL                                                     | CALL 
+     87 | LOAD_METHOD decode                                       | LOAD_METHOD decode
+     88 | LOAD_CONST 'utf-8'                                       | LOAD_CONST 'utf-8'
+     89 | PRECALL                                                  | PRECALL 
+     90 | CALL                                                     | CALL 
+     91 | STORE_FAST error                                         | STORE_FAST error
+     92 | LOAD_FAST error                                          | LOAD_FAST error
+     93 | EXTENDED_ARG                                             | EXTENDED_ARG 
+>>   94 | POP_JUMP_FORWARD_IF_FALSE to 1002                        | POP_JUMP_FORWARD_IF_FALSE to 1000
+     95 | LOAD_FAST error                                          | LOAD_FAST error
+     96 | LOAD_METHOD find                                         | LOAD_METHOD find
+     97 | LOAD_CONST 'Error compiling Cython file:'                | LOAD_CONST 'Error compiling Cython file:'
+     98 | PRECALL                                                  | PRECALL 
+     99 | CALL                                                     | CALL 
+    100 | STORE_FAST l                                             | STORE_FAST l
+    101 | LOAD_FAST l                                              | LOAD_FAST l
+    102 | LOAD_CONST -1                                            | LOAD_CONST -1
+    103 | COMPARE_OP !=                                            | COMPARE_OP !=
+  ... (168 more)
+---- first_diff_index=94
+====================================================================================================
+[18] F:/Downloads/pythoncdc-main/site-packages/IQData/entry.pyc
+    func=get_instance orig=149 decomp=142 jump=0 true=59
+    first_diff: idx=90 orig=LOAD_GLOBAL 'system_log' -> decomp=LOAD_CONST None
+==== get_instance  orig=177 decomp=169
+      0 | RESUME                                                   | RESUME 
+      1 | LOAD_GLOBAL NULL + system_log                            | LOAD_GLOBAL NULL + system_log
+      2 | LOAD_ATTR debug                                          | LOAD_ATTR debug
+      3 | LOAD_GLOBAL NULL + _                                     | LOAD_GLOBAL NULL + _
+      4 | LOAD_CONST '数据引擎启动运行'                                    | LOAD_CONST '数据引擎启动运行'
+      5 | PRECALL                                                  | PRECALL 
+      6 | CALL                                                     | CALL 
+      7 | PRECALL                                                  | PRECALL 
+      8 | CALL                                                     | CALL 
+      9 | POP_TOP                                                  | POP_TOP 
+     10 | LOAD_GLOBAL NULL + Engine                                | LOAD_GLOBAL NULL + Engine
+     11 | LOAD_FAST _config                                        | LOAD_FAST _config
+     12 | PRECALL                                                  | PRECALL 
+     13 | CALL                                                     | CALL 
+     14 | STORE_FAST engine                                        | STORE_FAST engine
+     15 | LOAD_GLOBAL NULL + PluginManager                         | LOAD_GLOBAL NULL + PluginManager
+     16 | PRECALL                                                  | PRECALL 
+     17 | CALL                                                     | CALL 
+     18 | STORE_FAST plugins_manager                               | STORE_FAST plugins_manager
+     19 | LOAD_FAST engine                                         | LOAD_FAST engine
+     20 | LOAD_ATTR config                                         | LOAD_ATTR config
+     21 | LOAD_ATTR add_in                                         | LOAD_ATTR add_in
+     22 | LOAD_ATTR enable_profiler                                | LOAD_ATTR enable_profiler
+     23 | POP_JUMP_FORWARD_IF_FALSE to 200                         | POP_JUMP_FORWARD_IF_FALSE to 200
+     24 | LOAD_FAST engine                                         | LOAD_FAST engine
+     25 | LOAD_METHOD enable_profiler                              | LOAD_METHOD enable_profiler
+     26 | PRECALL                                                  | PRECALL 
+     27 | CALL                                                     | CALL 
+     28 | POP_TOP                                                  | POP_TOP 
+     29 | NOP                                                      | NOP 
+     30 | LOAD_FAST plugins_manager                                | LOAD_FAST plugins_manager
+     31 | LOAD_METHOD set_engine                                   | LOAD_METHOD set_engine
+     32 | LOAD_FAST engine                                         | LOAD_FAST engine
+     33 | PRECALL                                                  | PRECALL 
+     34 | CALL                                                     | CALL 
+     35 | POP_TOP                                                  | POP_TOP 
+     36 | LOAD_FAST plugins_manager                                | LOAD_FAST plugins_manager
+     37 | LOAD_METHOD load                                         | LOAD_METHOD load
+     38 | PRECALL                                                  | PRECALL 
+     39 | CALL                                                     | CALL 
+     40 | POP_TOP                                                  | POP_TOP 
+     41 | LOAD_FAST engine                                         | LOAD_FAST engine
+     42 | LOAD_ATTR basic_data_handler                             | LOAD_ATTR basic_data_handler
+     43 | POP_JUMP_FORWARD_IF_NOT_NONE to 364                      | POP_JUMP_FORWARD_IF_NOT_NONE to 364
+     44 | LOAD_GLOBAL NULL + system_log                            | LOAD_GLOBAL NULL + system_log
+     45 | LOAD_ATTR debug                                          | LOAD_ATTR debug
+     46 | LOAD_GLOBAL NULL + _                                     | LOAD_GLOBAL NULL + _
+     47 | LOAD_CONST '数据引擎未指定基础数据插件'                               | LOAD_CONST '数据引擎未指定基础数据插件'
+     48 | PRECALL                                                  | PRECALL 
+     49 | CALL                                                     | CALL 
+     50 | PRECALL                                                  | PRECALL 
+     51 | CALL                                                     | CALL 
+     52 | POP_TOP                                                  | POP_TOP 
+     53 | LOAD_FAST engine                                         | LOAD_FAST engine
+     54 | LOAD_ATTR history_quote_handler                          | LOAD_ATTR history_quote_handler
+     55 | POP_JUMP_FORWARD_IF_NONE to 694                          | POP_JUMP_FORWARD_IF_NONE to 694
+     56 | LOAD_FAST plugins_manager                                | LOAD_FAST plugins_manager
+     57 | LOAD_METHOD get_plugin_name                              | LOAD_METHOD get_plugin_name
+     58 | LOAD_FAST engine                                         | LOAD_FAST engine
+     59 | LOAD_ATTR history_quote_handler                          | LOAD_ATTR history_quote_handler
+     60 | PRECALL                                                  | PRECALL 
+     61 | CALL                                                     | CALL 
+     62 | STORE_FAST plugin_name                                   | STORE_FAST plugin_name
+     63 | LOAD_FAST engine                                         | LOAD_FAST engine
+     64 | LOAD_ATTR config                                         | LOAD_ATTR config
+     65 | LOAD_METHOD convert_to_dict                              | LOAD_METHOD convert_to_dict
+     66 | PRECALL                                                  | PRECALL 
+     67 | CALL                                                     | CALL 
+     68 | LOAD_CONST 'plugins'                                     | LOAD_CONST 'plugins'
+     69 | BINARY_SUBSCR                                            | BINARY_SUBSCR 
+     70 | LOAD_FAST plugin_name                                    | LOAD_FAST plugin_name
+     71 | BINARY_SUBSCR                                            | BINARY_SUBSCR 
+     72 | LOAD_CONST 'enabled'                                     | LOAD_CONST 'enabled'
+     73 | BINARY_SUBSCR                                            | BINARY_SUBSCR 
+     74 | STORE_FAST plugin_switch                                 | STORE_FAST plugin_switch
+     75 | LOAD_FAST plugin_switch                                  | LOAD_FAST plugin_switch
+     76 | POP_JUMP_FORWARD_IF_FALSE to 694                         | POP_JUMP_FORWARD_IF_FALSE to 694
+     77 | LOAD_FAST engine                                         | LOAD_FAST engine
+     78 | LOAD_ATTR basic_data_handler                             | LOAD_ATTR basic_data_handler
+     79 | POP_JUMP_FORWARD_IF_NOT_NONE to 694                      | POP_JUMP_FORWARD_IF_NOT_NONE to 694
+     80 | LOAD_GLOBAL NULL + system_log                            | LOAD_GLOBAL NULL + system_log
+     81 | LOAD_ATTR debug                                          | LOAD_ATTR debug
+     82 | LOAD_GLOBAL NULL + _                                     | LOAD_GLOBAL NULL + _
+     83 | LOAD_CONST '数据引擎历史数据插件关联插件[{}]未加载，数据引擎启动失败'              | LOAD_CONST '数据引擎历史数据插件关联插件[{}]未加载，数据引擎启动失败'
+     84 | PRECALL                                                  | PRECALL 
+     85 | CALL                                                     | CALL 
+     86 | LOAD_METHOD format                                       | LOAD_METHOD format
+     87 | LOAD_FAST plugin_name                                    | LOAD_FAST plugin_name
+     88 | PRECALL                                                  | PRECALL 
+     89 | CALL                                                     | CALL 
+     90 | PRECALL                                                  | PRECALL 
+     91 | CALL                                                     | CALL 
+     92 | POP_TOP                                                  | POP_TOP 
+     93 | LOAD_GLOBAL NULL + RuntimeError                          | LOAD_GLOBAL NULL + RuntimeError
+     94 | LOAD_GLOBAL NULL + _                                     | LOAD_GLOBAL NULL + _
+     95 | LOAD_CONST '数据引擎基础数据插件没有配置'                              | LOAD_CONST '数据引擎基础数据插件没有配置'
+     96 | PRECALL                                                  | PRECALL 
+     97 | CALL                                                     | CALL 
+     98 | PRECALL                                                  | PRECALL 
+     99 | CALL                                                     | CALL 
+    100 | RAISE_VARARGS                                            | RAISE_VARARGS 
+    101 | LOAD_FAST engine                                         | LOAD_FAST engine
+    102 | LOAD_METHOD update_api                                   | LOAD_METHOD update_api
+    103 | LOAD_GLOBAL NULL + get_api                               | LOAD_GLOBAL NULL + get_api
+    104 | PRECALL                                                  | PRECALL 
+    105 | CALL                                                     | CALL 
+    106 | PRECALL                                                  | PRECALL 
+    107 | CALL                                                     | CALL 
+    108 | POP_TOP                                                  | POP_TOP 
+>>  109 | LOAD_GLOBAL NULL + system_log                            | NOP 
+>>  110 | LOAD_ATTR debug                                          | LOAD_CONST None
+>>  111 | LOAD_GLOBAL NULL + _                                     | RETURN_VALUE 
+>>  112 | LOAD_CONST '数据引擎启动成功'                                    | PUSH_EXC_INFO 
+>>  113 | PRECALL                                                  | LOAD_GLOBAL CustomException
+>>  114 | CALL                                                     | CHECK_EXC_MATCH 
+>>  115 | PRECALL                                                  | POP_JUMP_FORWARD_IF_FALSE to 974
+>>  116 | CALL                                                     | STORE_FAST ex
+>>  117 | POP_TOP                                                  | LOAD_GLOBAL NULL + parse_exception
+>>  118 | LOAD_FAST engine                                         | LOAD_FAST ex
+  ... (59 more)
+---- first_diff_index=109
+====================================================================================================
+[19] F:/Downloads/pythoncdc-main/site-packages/fly/common/common.pyc
+    func=api_get_from_zeromq orig=255 decomp=257 jump=8 true=59
+    first_diff: idx=195 orig=POP_EXCEPT None -> decomp=LOAD_FAST 'message'
+==== api_get_from_zeromq  orig=283 decomp=287
+      0 | RESUME                                                   | RESUME 
+      1 | LOAD_CONST (False, None)                                 | LOAD_CONST (False, None)
+>>    2 | LOAD_CONST <code object _get_params_address at 0x0000020 | LOAD_CONST <code object _get_params_address at 0x0000020
+      3 | MAKE_FUNCTION defaults                                   | MAKE_FUNCTION defaults
+      4 | STORE_FAST _get_params_address                           | STORE_FAST _get_params_address
+      5 | LOAD_CONST (None, None, False)                           | LOAD_CONST (None, None, False)
+>>    6 | LOAD_CONST <code object _get_socket_message at 0x0000020 | LOAD_CONST <code object _get_socket_message at 0x0000020
+      7 | MAKE_FUNCTION defaults                                   | MAKE_FUNCTION defaults
+      8 | STORE_FAST _get_socket_message                           | STORE_FAST _get_socket_message
+      9 | LOAD_GLOBAL NULL + zmq                                   | LOAD_GLOBAL NULL + zmq
+     10 | LOAD_ATTR Context                                        | LOAD_ATTR Context
+     11 | PRECALL                                                  | PRECALL 
+  ... (276 more)
+---- first_diff_index=2
+====================================================================================================
+[20] F:/Downloads/pythoncdc-main/site-packages/IQEngine/account/order.pyc
+    func=fill orig=69 decomp=51 jump=0 true=68
+    first_diff: idx=1 orig=LOAD_FAST 'trade' -> decomp=LOAD_FAST 'self'
+==== fill  orig=74 decomp=52
+      0 | RESUME                                                   | RESUME 
+>>    1 | LOAD_FAST trade                                          | LOAD_FAST self
+>>    2 | LOAD_ATTR amount                                         | LOAD_ATTR filled_amount
+>>    3 | STORE_FAST amount                                        | LOAD_GLOBAL amount
+>>    4 | LOAD_FAST self                                           | BINARY_OP +
+>>    5 | LOAD_ATTR filled_amount                                  | LOAD_FAST self
+>>    6 | LOAD_FAST amount                                         | LOAD_ATTR amount
+>>    7 | BINARY_OP +                                              | COMPARE_OP <=
+>>    8 | LOAD_FAST self                                           | POP_JUMP_FORWARD_IF_TRUE to 54
+>>    9 | LOAD_ATTR amount                                         | LOAD_ASSERTION_ERROR 
+>>   10 | COMPARE_OP <=                                            | RAISE_VARARGS 
+  ... (64 more)
+---- first_diff_index=1
+====================================================================================================
+[21] F:/Downloads/pythoncdc-main/site-packages/IQData/utils/profiler_func.pyc
+    func=<module> orig=116 decomp=112 jump=0 true=72
+    first_diff: idx=41 orig=LOAD_CONST 0 -> decomp=LOAD_CONST ['LineProfiler']
+==== <module>  orig=121 decomp=117
+      0 | RESUME                                                   | RESUME 
+      1 | LOAD_CONST 0                                             | LOAD_CONST 0
+      2 | LOAD_CONST None                                          | LOAD_CONST None
+      3 | IMPORT_NAME os                                           | IMPORT_NAME os
+      4 | STORE_NAME os                                            | STORE_NAME os
+      5 | LOAD_CONST 0                                             | LOAD_CONST 0
+      6 | LOAD_CONST None                                          | LOAD_CONST None
+      7 | IMPORT_NAME sys                                          | IMPORT_NAME sys
+      8 | STORE_NAME sys                                           | STORE_NAME sys
+      9 | LOAD_CONST 0                                             | LOAD_CONST 0
+     10 | LOAD_CONST None                                          | LOAD_CONST None
+     11 | IMPORT_NAME functools                                    | IMPORT_NAME functools
+     12 | STORE_NAME functools                                     | STORE_NAME functools
+     13 | LOAD_CONST 0                                             | LOAD_CONST 0
+     14 | LOAD_CONST None                                          | LOAD_CONST None
+     15 | IMPORT_NAME linecache                                    | IMPORT_NAME linecache
+     16 | STORE_NAME linecache                                     | STORE_NAME linecache
+     17 | NOP                                                      | NOP 
+     18 | LOAD_CONST 0                                             | LOAD_CONST 0
+     19 | LOAD_CONST ('StringIO',)                                 | LOAD_CONST ('StringIO',)
+     20 | IMPORT_NAME cStringIO                                    | IMPORT_NAME cStringIO
+     21 | IMPORT_FROM StringIO                                     | IMPORT_FROM StringIO
+     22 | STORE_NAME StringIO                                      | STORE_NAME StringIO
+     23 | POP_TOP                                                  | POP_TOP 
+     24 | JUMP_FORWARD to 84                                       | JUMP_FORWARD to 84
+     25 | PUSH_EXC_INFO                                            | PUSH_EXC_INFO 
+     26 | LOAD_NAME ImportError                                    | LOAD_NAME ImportError
+     27 | CHECK_EXC_MATCH                                          | CHECK_EXC_MATCH 
+     28 | POP_JUMP_FORWARD_IF_FALSE to 76                          | POP_JUMP_FORWARD_IF_FALSE to 76
+     29 | POP_TOP                                                  | POP_TOP 
+     30 | LOAD_CONST 0                                             | LOAD_CONST 0
+     31 | LOAD_CONST ('StringIO',)                                 | LOAD_CONST ('StringIO',)
+     32 | IMPORT_NAME io                                           | IMPORT_NAME io
+     33 | IMPORT_FROM StringIO                                     | IMPORT_FROM StringIO
+     34 | STORE_NAME StringIO                                      | STORE_NAME StringIO
+     35 | POP_TOP                                                  | POP_TOP 
+     36 | POP_EXCEPT                                               | POP_EXCEPT 
+     37 | JUMP_FORWARD to 84                                       | JUMP_FORWARD to 84
+     38 | RERAISE                                                  | RERAISE 
+     39 | COPY                                                     | COPY 
+     40 | POP_EXCEPT                                               | POP_EXCEPT 
+     41 | RERAISE                                                  | RERAISE 
+>>   42 | LOAD_CONST 0                                             | LOAD_CONST ('LineProfiler',)
+>>   43 | LOAD_CONST ('LineProfiler',)                             | STORE_NAME CLineProfiler
+>>   44 | IMPORT_NAME _line_profiler                               | LOAD_NAME sys
+>>   45 | IMPORT_FROM LineProfiler                                 | LOAD_ATTR version_info
+>>   46 | STORE_NAME CLineProfiler                                 | LOAD_CONST 0
+>>   47 | POP_TOP                                                  | BINARY_SUBSCR 
+>>   48 | LOAD_NAME sys                                            | LOAD_CONST 3
+>>   49 | LOAD_ATTR version_info                                   | COMPARE_OP ==
+>>   50 | LOAD_CONST 0                                             | STORE_NAME PY3
+>>   51 | BINARY_SUBSCR                                            | LOAD_NAME PY3
+  ... (70 more)
+---- first_diff_index=42
+====================================================================================================
+[22] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_persist/__init__.pyc
+    func=setup orig=161 decomp=163 jump=4 true=79
+    first_diff: idx=79 orig=JUMP_FORWARD 630 -> decomp=LOAD_GLOBAL 'os'
+==== setup  orig=180 decomp=188
+      0 | RESUME                                                   | RESUME 
+      1 | LOAD_FAST engine                                         | LOAD_FAST engine
+      2 | LOAD_FAST self                                           | LOAD_FAST self
+      3 | STORE_ATTR _engine                                       | STORE_ATTR _engine
+      4 | LOAD_CONST None                                          | LOAD_CONST None
+      5 | LOAD_FAST self                                           | LOAD_FAST self
+      6 | STORE_ATTR _persist_provider                             | STORE_ATTR _persist_provider
+      7 | NOP                                                      | NOP 
+      8 | LOAD_CONST None                                          | LOAD_CONST None
+      9 | STORE_FAST persist_provider                              | STORE_FAST persist_provider
+     10 | LOAD_FAST engine                                         | LOAD_FAST engine
+     11 | LOAD_ATTR config                                         | LOAD_ATTR config
+     12 | LOAD_ATTR strategy                                       | LOAD_ATTR strategy
+     13 | LOAD_ATTR persist                                        | LOAD_ATTR persist
+     14 | LOAD_ATTR enable                                         | LOAD_ATTR enable
+     15 | STORE_FAST persist_enable                                | STORE_FAST persist_enable
+     16 | LOAD_FAST persist_enable                                 | LOAD_FAST persist_enable
+     17 | POP_JUMP_FORWARD_IF_TRUE to 88                           | POP_JUMP_FORWARD_IF_TRUE to 88
+     18 | LOAD_CONST None                                          | LOAD_CONST None
+     19 | RETURN_VALUE                                             | RETURN_VALUE 
+     20 | LOAD_FAST engine                                         | LOAD_FAST engine
+     21 | LOAD_ATTR config                                         | LOAD_ATTR config
+     22 | LOAD_ATTR strategy                                       | LOAD_ATTR strategy
+     23 | LOAD_ATTR persist                                        | LOAD_ATTR persist
+     24 | LOAD_ATTR mod                                            | LOAD_ATTR mod
+     25 | LOAD_ATTR recorder                                       | LOAD_ATTR recorder
+     26 | STORE_FAST persist_record                                | STORE_FAST persist_record
+     27 | LOAD_FAST persist_record                                 | LOAD_FAST persist_record
+     28 | LOAD_CONST 'FileRecorder'                                | LOAD_CONST 'FileRecorder'
+     29 | COMPARE_OP ==                                            | COMPARE_OP ==
+     30 | EXTENDED_ARG                                             | EXTENDED_ARG 
+>>   31 | POP_JUMP_FORWARD_IF_FALSE to 802                         | POP_JUMP_FORWARD_IF_FALSE to 922
+     32 | LOAD_FAST engine                                         | LOAD_FAST engine
+     33 | LOAD_ATTR config                                         | LOAD_ATTR config
+     34 | LOAD_ATTR strategy                                       | LOAD_ATTR strategy
+     35 | LOAD_ATTR persist                                        | LOAD_ATTR persist
+     36 | LOAD_ATTR mod                                            | LOAD_ATTR mod
+     37 | LOAD_ATTR dir_path                                       | LOAD_ATTR dir_path
+     38 | STORE_FAST dir_path                                      | STORE_FAST dir_path
+     39 | LOAD_FAST engine                                         | LOAD_FAST engine
+     40 | LOAD_ATTR config                                         | LOAD_ATTR config
+  ... (148 more)
+---- first_diff_index=31
+====================================================================================================
+[23] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_client_db/client_db.pyc
+    func=request_mysql_server orig=88 decomp=53 jump=0 true=87
+    first_diff: idx=1 orig=LOAD_GLOBAL 'os' -> decomp=LOAD_GLOBAL 'context'
+==== request_mysql_server  orig=100 decomp=60
+      0 | RESUME                                                   | RESUME 
+>>    1 | LOAD_GLOBAL os                                           | LOAD_GLOBAL NULL + context
+>>    2 | LOAD_ATTR environ                                        | PRECALL 
+>>    3 | LOAD_METHOD get                                          | CALL 
+>>    4 | LOAD_CONST 'FLY_DB_SERVER'                               | BEFORE_WITH 
+>>    5 | LOAD_CONST 'http://'                                     | STORE_FAST req
+>>    6 | LOAD_GLOBAL config                                       | LOAD_FAST req
+>>    7 | LOAD_ATTR client_host                                    | LOAD_METHOD raise_for_status
+>>    8 | FORMAT_VALUE str                                         | PRECALL 
+>>    9 | LOAD_CONST ':'                                           | CALL 
+>>   10 | LOAD_GLOBAL config                                       | POP_TOP 
+  ... (90 more)
+---- first_diff_index=1
+====================================================================================================
+[24] F:/Downloads/pythoncdc-main/site-packages/IQCommon/logger/handlers.pyc
+    func=_target orig=108 decomp=98 jump=2 true=91
+    first_diff: idx=17 orig=JUMP_FORWARD 252 -> decomp=LOAD_FAST 'stream'
+==== _target  orig=203 decomp=198
+      0 | RESUME                                                   | RESUME 
+      1 | LOAD_GLOBAL sys                                          | LOAD_GLOBAL sys
+      2 | LOAD_ATTR version_info                                   | LOAD_ATTR version_info
+      3 | LOAD_CONST 0                                             | LOAD_CONST 0
+      4 | BINARY_SUBSCR                                            | BINARY_SUBSCR 
+      5 | LOAD_CONST 3                                             | LOAD_CONST 3
+      6 | COMPARE_OP ==                                            | COMPARE_OP ==
+>>    7 | POP_JUMP_FORWARD_IF_FALSE to 412                         | POP_JUMP_FORWARD_IF_FALSE to 408
+      8 | LOAD_GLOBAL sys                                          | LOAD_GLOBAL sys
+      9 | LOAD_ATTR version_info                                   | LOAD_ATTR version_info
+     10 | LOAD_CONST 1                                             | LOAD_CONST 1
+     11 | BINARY_SUBSCR                                            | BINARY_SUBSCR 
+     12 | LOAD_CONST 5                                             | LOAD_CONST 5
+     13 | COMPARE_OP ==                                            | COMPARE_OP ==
+>>   14 | POP_JUMP_FORWARD_IF_FALSE to 412                         | POP_JUMP_FORWARD_IF_FALSE to 408
+     15 | LOAD_FAST self                                           | LOAD_FAST self
+     16 | LOAD_ATTR running                                        | LOAD_ATTR running
+  ... (187 more)
+---- first_diff_index=7
+====================================================================================================
+[25] F:/Downloads/pythoncdc-main/site-packages/IQData/manager/plugin_manager.pyc
+    func=set_engine orig=184 decomp=184 jump=4 true=91
+    first_diff: idx=75 orig=JUMP_FORWARD 790 -> decomp=LOAD_FAST 'plugin_config'
+==== set_engine  orig=209 decomp=210
+      0 | RESUME                                                   | RESUME 
+      1 | LOAD_FAST engine                                         | LOAD_FAST engine
+      2 | LOAD_FAST self                                           | LOAD_FAST self
+      3 | STORE_ATTR _engine                                       | STORE_ATTR _engine
+      4 | LOAD_FAST self                                           | LOAD_FAST self
+      5 | LOAD_ATTR _engine                                        | LOAD_ATTR _engine
+      6 | LOAD_ATTR config                                         | LOAD_ATTR config
+      7 | STORE_FAST config                                        | STORE_FAST config
+      8 | LOAD_FAST config                                         | LOAD_FAST config
+      9 | LOAD_ATTR plugins                                        | LOAD_ATTR plugins
+     10 | LOAD_ATTR __dict__                                       | LOAD_ATTR __dict__
+     11 | GET_ITER                                                 | GET_ITER 
+     12 | FOR_ITER to 184                                          | FOR_ITER to 184
+     13 | STORE_FAST plugin_name                                   | STORE_FAST plugin_name
+     14 | LOAD_GLOBAL NULL + getattr                               | LOAD_GLOBAL NULL + getattr
+     15 | LOAD_FAST config                                         | LOAD_FAST config
+     16 | LOAD_ATTR plugins                                        | LOAD_ATTR plugins
+     17 | LOAD_FAST plugin_name                                    | LOAD_FAST plugin_name
+     18 | PRECALL                                                  | PRECALL 
+     19 | CALL                                                     | CALL 
+     20 | STORE_FAST plugin_config                                 | STORE_FAST plugin_config
+     21 | LOAD_FAST plugin_config                                  | LOAD_FAST plugin_config
+     22 | LOAD_ATTR enabled                                        | LOAD_ATTR enabled
+     23 | POP_JUMP_FORWARD_IF_TRUE to 126                          | POP_JUMP_FORWARD_IF_TRUE to 126
+     24 | JUMP_BACKWARD to 64                                      | JUMP_BACKWARD to 64
+     25 | LOAD_FAST self                                           | LOAD_FAST self
+     26 | LOAD_ATTR _plugin_list                                   | LOAD_ATTR _plugin_list
+     27 | LOAD_METHOD append                                       | LOAD_METHOD append
+     28 | LOAD_FAST plugin_name                                    | LOAD_FAST plugin_name
+     29 | LOAD_FAST plugin_config                                  | LOAD_FAST plugin_config
+     30 | BUILD_TUPLE                                              | BUILD_TUPLE 
+     31 | PRECALL                                                  | PRECALL 
+     32 | CALL                                                     | CALL 
+     33 | POP_TOP                                                  | POP_TOP 
+     34 | JUMP_BACKWARD to 64                                      | JUMP_BACKWARD to 64
+     35 | LOAD_GLOBAL NULL + enumerate                             | LOAD_GLOBAL NULL + enumerate
+     36 | LOAD_FAST self                                           | LOAD_FAST self
+     37 | LOAD_ATTR _plugin_list                                   | LOAD_ATTR _plugin_list
+     38 | PRECALL                                                  | PRECALL 
+     39 | CALL                                                     | CALL 
+     40 | GET_ITER                                                 | GET_ITER 
+     41 | EXTENDED_ARG                                             | EXTENDED_ARG 
+>>   42 | FOR_ITER to 1082                                         | FOR_ITER to 1084
+     43 | UNPACK_SEQUENCE                                          | UNPACK_SEQUENCE 
+     44 | STORE_FAST idx                                           | STORE_FAST idx
+     45 | UNPACK_SEQUENCE                                          | UNPACK_SEQUENCE 
+     46 | STORE_FAST plugin_name                                   | STORE_FAST plugin_name
+     47 | STORE_FAST user_plugin_config                            | STORE_FAST user_plugin_config
+     48 | LOAD_GLOBAL NULL + hasattr                               | LOAD_GLOBAL NULL + hasattr
+     49 | LOAD_FAST user_plugin_config                             | LOAD_FAST user_plugin_config
+     50 | LOAD_CONST 'load'                                        | LOAD_CONST 'load'
+     51 | PRECALL                                                  | PRECALL 
+  ... (159 more)
+---- first_diff_index=42
+====================================================================================================
+[26] F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/plugin_manager.pyc
+    func=set_engine orig=194 decomp=194 jump=4 true=100
+    first_diff: idx=75 orig=JUMP_FORWARD 832 -> decomp=LOAD_FAST 'plugin_config'
+==== set_engine  orig=221 decomp=222
+      0 | RESUME                                                   | RESUME 
+      1 | LOAD_FAST engine                                         | LOAD_FAST engine
+      2 | LOAD_FAST self                                           | LOAD_FAST self
+      3 | STORE_ATTR _engine                                       | STORE_ATTR _engine
+      4 | LOAD_FAST self                                           | LOAD_FAST self
+      5 | LOAD_ATTR _engine                                        | LOAD_ATTR _engine
+      6 | LOAD_ATTR config                                         | LOAD_ATTR config
+      7 | STORE_FAST config                                        | STORE_FAST config
+      8 | LOAD_FAST config                                         | LOAD_FAST config
+      9 | LOAD_ATTR plugins                                        | LOAD_ATTR plugins
+     10 | LOAD_ATTR __dict__                                       | LOAD_ATTR __dict__
+     11 | GET_ITER                                                 | GET_ITER 
+     12 | FOR_ITER to 184                                          | FOR_ITER to 184
+     13 | STORE_FAST plugin_name                                   | STORE_FAST plugin_name
+     14 | LOAD_GLOBAL NULL + getattr                               | LOAD_GLOBAL NULL + getattr
+     15 | LOAD_FAST config                                         | LOAD_FAST config
+     16 | LOAD_ATTR plugins                                        | LOAD_ATTR plugins
+     17 | LOAD_FAST plugin_name                                    | LOAD_FAST plugin_name
+     18 | PRECALL                                                  | PRECALL 
+     19 | CALL                                                     | CALL 
+     20 | STORE_FAST plugin_config                                 | STORE_FAST plugin_config
+     21 | LOAD_FAST plugin_config                                  | LOAD_FAST plugin_config
+     22 | LOAD_ATTR enabled                                        | LOAD_ATTR enabled
+     23 | POP_JUMP_FORWARD_IF_TRUE to 126                          | POP_JUMP_FORWARD_IF_TRUE to 126
+     24 | JUMP_BACKWARD to 64                                      | JUMP_BACKWARD to 64
+     25 | LOAD_FAST self                                           | LOAD_FAST self
+     26 | LOAD_ATTR _plugin_list                                   | LOAD_ATTR _plugin_list
+     27 | LOAD_METHOD append                                       | LOAD_METHOD append
+     28 | LOAD_FAST plugin_name                                    | LOAD_FAST plugin_name
+     29 | LOAD_FAST plugin_config                                  | LOAD_FAST plugin_config
+     30 | BUILD_TUPLE                                              | BUILD_TUPLE 
+     31 | PRECALL                                                  | PRECALL 
+     32 | CALL                                                     | CALL 
+     33 | POP_TOP                                                  | POP_TOP 
+     34 | JUMP_BACKWARD to 64                                      | JUMP_BACKWARD to 64
+     35 | LOAD_GLOBAL NULL + enumerate                             | LOAD_GLOBAL NULL + enumerate
+     36 | LOAD_FAST self                                           | LOAD_FAST self
+     37 | LOAD_ATTR _plugin_list                                   | LOAD_ATTR _plugin_list
+     38 | PRECALL                                                  | PRECALL 
+     39 | CALL                                                     | CALL 
+     40 | GET_ITER                                                 | GET_ITER 
+     41 | EXTENDED_ARG                                             | EXTENDED_ARG 
+>>   42 | FOR_ITER to 1164                                         | FOR_ITER to 1166
+     43 | UNPACK_SEQUENCE                                          | UNPACK_SEQUENCE 
+     44 | STORE_FAST idx                                           | STORE_FAST idx
+     45 | UNPACK_SEQUENCE                                          | UNPACK_SEQUENCE 
+     46 | STORE_FAST plugin_name                                   | STORE_FAST plugin_name
+     47 | STORE_FAST user_plugin_config                            | STORE_FAST user_plugin_config
+     48 | LOAD_GLOBAL NULL + hasattr                               | LOAD_GLOBAL NULL + hasattr
+     49 | LOAD_FAST user_plugin_config                             | LOAD_FAST user_plugin_config
+     50 | LOAD_CONST 'load_plugin'                                 | LOAD_CONST 'load_plugin'
+     51 | PRECALL                                                  | PRECALL 
+  ... (171 more)
+---- first_diff_index=42
+====================================================================================================
+[27] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_debug/__init__.pyc
+    func=setup orig=115 decomp=18 jump=1 true=109
+    first_diff: idx=6 orig=LOAD_CONST 0 -> decomp=LOAD_FAST 'config'
+==== setup  orig=134 decomp=18
+      0 | RESUME                                                   | RESUME 
+      1 | LOAD_FAST engine                                         | LOAD_FAST engine
+      2 | LOAD_ATTR config                                         | LOAD_ATTR config
+      3 | LOAD_ATTR other                                          | LOAD_ATTR other
+      4 | LOAD_ATTR enable_debug                                   | LOAD_ATTR enable_debug
+>>    5 | EXTENDED_ARG                                             | POP_JUMP_FORWARD_IF_FALSE to 88
+>>    6 | POP_JUMP_FORWARD_IF_FALSE to 834                         | LOAD_FAST config
+>>    7 | LOAD_CONST 0                                             | LOAD_ATTR timeout
+>>    8 | LOAD_CONST None                                          | JUMP_IF_TRUE_OR_POP to 52
+>>    9 | IMPORT_NAME ptvsd                                        | LOAD_CONST 10
+>>   10 | STORE_FAST ptvsd                                         | LOAD_FAST engine
+>>   11 | LOAD_GLOBAL NULL + get_python_version                    | LOAD_ATTR config
+>>   12 | PRECALL                                                  | LOAD_ATTR other
+>>   13 | CALL                                                     | STORE_ATTR enable_debug
+>>   14 | LOAD_CONST '3.11'                                        | LOAD_CONST None
+  ... (120 more)
+---- first_diff_index=5
+====================================================================================================
+[28] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db_tools/db_base.pyc
+    func=_get_session_maker orig=160 decomp=159 jump=1 true=126
+    first_diff: idx=32 orig=POP_JUMP_FORWARD_IF_NOT_NONE 240 -> decomp=POP_JUMP_FORWARD_IF_TRUE 238
+==== _get_session_maker  orig=5 decomp=5
+      0 | RESUME                                                   | RESUME 
+      1 | LOAD_GLOBAL NULL + NotImplementedError                   | LOAD_GLOBAL NULL + NotImplementedError
+      2 | PRECALL                                                  | PRECALL 
+      3 | CALL                                                     | CALL 
+      4 | RAISE_VARARGS                                            | RAISE_VARARGS 
+---- first_diff_index=None
+====================================================================================================
+[29] F:/Downloads/pythoncdc-main/site-packages/fly/oauthenticator/itn.pyc
+    func=authenticate orig=227 decomp=97 jump=1 true=130
+    first_diff: idx=97 orig=LOAD_FAST 'pwd' -> decomp=None None
+==== authenticate  orig=254 decomp=113
+      0 | RESUME                                                   | RESUME 
+      1 | LOAD_FAST handler                                        | LOAD_FAST handler
+      2 | LOAD_METHOD get_argument                                 | LOAD_METHOD get_argument
+      3 | LOAD_CONST 'username'                                    | LOAD_CONST 'username'
+      4 | LOAD_CONST False                                         | LOAD_CONST False
+      5 | PRECALL                                                  | PRECALL 
+      6 | CALL                                                     | CALL 
+      7 | STORE_FAST encode_userId                                 | STORE_FAST encode_userId
+      8 | LOAD_FAST handler                                        | LOAD_FAST handler
+      9 | LOAD_METHOD get_argument                                 | LOAD_METHOD get_argument
+     10 | LOAD_CONST 'password'                                    | LOAD_CONST 'password'
+     11 | LOAD_CONST False                                         | LOAD_CONST False
+     12 | PRECALL                                                  | PRECALL 
+     13 | CALL                                                     | CALL 
+     14 | STORE_FAST encode_pwd                                    | STORE_FAST encode_pwd
+     15 | LOAD_FAST handler                                        | LOAD_FAST handler
+     16 | LOAD_METHOD get_argument                                 | LOAD_METHOD get_argument
+     17 | LOAD_CONST 'op_station_info'                             | LOAD_CONST 'op_station_info'
+     18 | LOAD_CONST False                                         | LOAD_CONST False
+     19 | PRECALL                                                  | PRECALL 
+     20 | CALL                                                     | CALL 
+     21 | JUMP_IF_TRUE_OR_POP to 176                               | JUMP_IF_TRUE_OR_POP to 176
+     22 | LOAD_FAST handler                                        | LOAD_FAST handler
+     23 | LOAD_METHOD get_argument                                 | LOAD_METHOD get_argument
+     24 | LOAD_CONST 'ip_mac'                                      | LOAD_CONST 'ip_mac'
+     25 | LOAD_CONST ''                                            | LOAD_CONST ''
+     26 | PRECALL                                                  | PRECALL 
+     27 | CALL                                                     | CALL 
+     28 | STORE_FAST op_station                                    | STORE_FAST op_station
+     29 | LOAD_FAST handler                                        | LOAD_FAST handler
+     30 | LOAD_METHOD get_argument                                 | LOAD_METHOD get_argument
+     31 | LOAD_CONST 'account_type'                                | LOAD_CONST 'account_type'
+     32 | LOAD_CONST 'PBOX_PT_INTERFACE'                           | LOAD_CONST 'PBOX_PT_INTERFACE'
+     33 | PRECALL                                                  | PRECALL 
+     34 | CALL                                                     | CALL 
+     35 | STORE_FAST account_type                                  | STORE_FAST account_type
+     36 | LOAD_FAST handler                                        | LOAD_FAST handler
+     37 | LOAD_METHOD get_argument                                 | LOAD_METHOD get_argument
+     38 | LOAD_CONST 'login_type'                                  | LOAD_CONST 'login_type'
+     39 | LOAD_CONST None                                          | LOAD_CONST None
+     40 | PRECALL                                                  | PRECALL 
+     41 | CALL                                                     | CALL 
+     42 | STORE_FAST login_type                                    | STORE_FAST login_type
+     43 | LOAD_FAST handler                                        | LOAD_FAST handler
+     44 | LOAD_METHOD get_argument                                 | LOAD_METHOD get_argument
+     45 | LOAD_CONST 'agw_account'                                 | LOAD_CONST 'agw_account'
+     46 | LOAD_CONST ''                                            | LOAD_CONST ''
+     47 | PRECALL                                                  | PRECALL 
+     48 | CALL                                                     | CALL 
+     49 | STORE_FAST encode_agw_account                            | STORE_FAST encode_agw_account
+     50 | LOAD_FAST handler                                        | LOAD_FAST handler
+     51 | LOAD_METHOD get_argument                                 | LOAD_METHOD get_argument
+     52 | LOAD_CONST 'agw_password'                                | LOAD_CONST 'agw_password'
+     53 | LOAD_CONST ''                                            | LOAD_CONST ''
+     54 | PRECALL                                                  | PRECALL 
+     55 | CALL                                                     | CALL 
+     56 | STORE_FAST encode_agw_password                           | STORE_FAST encode_agw_password
+     57 | LOAD_GLOBAL AUTH_CODE                                    | LOAD_GLOBAL AUTH_CODE
+     58 | STORE_FAST auth_code                                     | STORE_FAST auth_code
+     59 | LOAD_GLOBAL ITNOAuthenticator                            | LOAD_GLOBAL ITNOAuthenticator
+     60 | LOAD_METHOD md5salt                                      | LOAD_METHOD md5salt
+     61 | LOAD_FAST auth_code                                      | LOAD_FAST auth_code
+     62 | PRECALL                                                  | PRECALL 
+     63 | CALL                                                     | CALL 
+     64 | STORE_FAST aeskey                                        | STORE_FAST aeskey
+     65 | LOAD_GLOBAL ITNOAuthenticator                            | LOAD_GLOBAL ITNOAuthenticator
+     66 | LOAD_METHOD getaesiv                                     | LOAD_METHOD getaesiv
+     67 | LOAD_FAST aeskey                                         | LOAD_FAST aeskey
+     68 | PRECALL                                                  | PRECALL 
+     69 | CALL                                                     | CALL 
+     70 | STORE_FAST aesiv                                         | STORE_FAST aesiv
+     71 | LOAD_GLOBAL ITNOAuthenticator                            | LOAD_GLOBAL ITNOAuthenticator
+     72 | LOAD_METHOD aesdecrypt                                   | LOAD_METHOD aesdecrypt
+     73 | LOAD_FAST encode_userId                                  | LOAD_FAST encode_userId
+     74 | LOAD_FAST aeskey                                         | LOAD_FAST aeskey
+     75 | LOAD_FAST aesiv                                          | LOAD_FAST aesiv
+     76 | PRECALL                                                  | PRECALL 
+     77 | CALL                                                     | CALL 
+     78 | STORE_FAST userId                                        | STORE_FAST userId
+     79 | LOAD_GLOBAL ITNOAuthenticator                            | LOAD_GLOBAL ITNOAuthenticator
+     80 | LOAD_METHOD aesdecrypt                                   | LOAD_METHOD aesdecrypt
+     81 | LOAD_FAST encode_pwd                                     | LOAD_FAST encode_pwd
+     82 | LOAD_FAST aeskey                                         | LOAD_FAST aeskey
+     83 | LOAD_FAST aesiv                                          | LOAD_FAST aesiv
+     84 | PRECALL                                                  | PRECALL 
+     85 | CALL                                                     | CALL 
+     86 | STORE_FAST pwd                                           | STORE_FAST pwd
+     87 | LOAD_GLOBAL ITNOAuthenticator                            | LOAD_GLOBAL ITNOAuthenticator
+     88 | LOAD_METHOD aesdecrypt                                   | LOAD_METHOD aesdecrypt
+     89 | LOAD_FAST encode_agw_account                             | LOAD_FAST encode_agw_account
+     90 | LOAD_FAST aeskey                                         | LOAD_FAST aeskey
+     91 | LOAD_FAST aesiv                                          | LOAD_FAST aesiv
+     92 | PRECALL                                                  | PRECALL 
+     93 | CALL                                                     | CALL 
+     94 | STORE_FAST agw_account                                   | STORE_FAST agw_account
+     95 | LOAD_GLOBAL ITNOAuthenticator                            | LOAD_GLOBAL ITNOAuthenticator
+     96 | LOAD_METHOD aesdecrypt                                   | LOAD_METHOD aesdecrypt
+     97 | LOAD_FAST encode_agw_password                            | LOAD_FAST encode_agw_password
+     98 | LOAD_FAST aeskey                                         | LOAD_FAST aeskey
+     99 | LOAD_FAST aesiv                                          | LOAD_FAST aesiv
+    100 | PRECALL                                                  | PRECALL 
+    101 | CALL                                                     | CALL 
+    102 | STORE_FAST agw_password                                  | STORE_FAST agw_password
+    103 | LOAD_FAST userId                                         | LOAD_FAST userId
+>>  104 | POP_JUMP_FORWARD_IF_TRUE to 742                          | POP_JUMP_FORWARD_IF_TRUE to 702
+>>  105 | LOAD_GLOBAL NULL + web                                   | NOP 
+>>  106 | LOAD_ATTR HTTPError                                      | LOAD_GLOBAL NULL + web
+>>  107 | LOAD_CONST 400                                           | LOAD_ATTR HTTPError
+>>  108 | LOAD_CONST 'oauth callback made without a username'      | LOAD_CONST 400
+>>  109 | PRECALL                                                  | LOAD_CONST 'oauth callback made without a username'
+>>  110 | CALL                                                     | PRECALL 
+>>  111 | RAISE_VARARGS                                            | CALL 
+>>  112 | LOAD_FAST pwd                                            | RAISE_VARARGS 
+>>  113 | POP_JUMP_FORWARD_IF_TRUE to 788                          | -
+  ... (141 more)
+---- first_diff_index=104
+====================================================================================================
+[30] F:/Downloads/pythoncdc-main/site-packages/fly/common/future_param.pyc
+    func=get_future_param orig=181 decomp=184 jump=2 true=133
+    first_diff: idx=49 orig=JUMP_FORWARD 314 -> decomp=POP_TOP None
+==== get_future_param  orig=199 decomp=202
+      0 | RESUME                                                   | RESUME 
+      1 | LOAD_FAST contract                                       | LOAD_FAST contract
+      2 | LOAD_METHOD split                                        | LOAD_METHOD split
+      3 | LOAD_CONST '.'                                           | LOAD_CONST '.'
+      4 | PRECALL                                                  | PRECALL 
+      5 | CALL                                                     | CALL 
+      6 | LOAD_CONST 0                                             | LOAD_CONST 0
+      7 | BINARY_SUBSCR                                            | BINARY_SUBSCR 
+      8 | STORE_FAST contract_code                                 | STORE_FAST contract_code
+      9 | LOAD_FAST contract                                       | LOAD_FAST contract
+     10 | LOAD_METHOD split                                        | LOAD_METHOD split
+     11 | LOAD_CONST '.'                                           | LOAD_CONST '.'
+     12 | PRECALL                                                  | PRECALL 
+     13 | CALL                                                     | CALL 
+     14 | LOAD_CONST 1                                             | LOAD_CONST 1
+     15 | BINARY_SUBSCR                                            | BINARY_SUBSCR 
+     16 | STORE_FAST market_code                                   | STORE_FAST market_code
+     17 | LOAD_GLOBAL NULL + load_future_info                      | LOAD_GLOBAL NULL + load_future_info
+     18 | LOAD_FAST contract_code                                  | LOAD_FAST contract_code
+     19 | LOAD_FAST market_code                                    | LOAD_FAST market_code
+     20 | PRECALL                                                  | PRECALL 
+     21 | CALL                                                     | CALL 
+     22 | STORE_FAST param_dict                                    | STORE_FAST param_dict
+     23 | LOAD_FAST param_dict                                     | LOAD_FAST param_dict
+     24 | EXTENDED_ARG                                             | EXTENDED_ARG 
+>>   25 | POP_JUMP_FORWARD_IF_FALSE to 958                         | POP_JUMP_FORWARD_IF_FALSE to 964
+     26 | LOAD_FAST param_dict                                     | LOAD_FAST param_dict
+     27 | LOAD_METHOD get                                          | LOAD_METHOD get
+     28 | LOAD_CONST 'if_real'                                     | LOAD_CONST 'if_real'
+     29 | LOAD_CONST None                                          | LOAD_CONST None
+     30 | PRECALL                                                  | PRECALL 
+     31 | CALL                                                     | CALL 
+     32 | LOAD_FAST param_dict                                     | LOAD_FAST param_dict
+     33 | LOAD_CONST 'if_real'                                     | LOAD_CONST 'if_real'
+     34 | STORE_SUBSCR                                             | STORE_SUBSCR 
+  ... (168 more)
+---- first_diff_index=25
+====================================================================================================
+[31] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/quote/get_stock_status.pyc
+    func=get_stock_status orig=177 decomp=42 jump=1 true=146
+    first_diff: idx=31 orig=JUMP_FORWARD 486 -> decomp=LOAD_GLOBAL 'strategy_log'
+==== get_stock_status  orig=202 decomp=49
+      0 | RESUME                                                   | RESUME 
+      1 | LOAD_GLOBAL NULL + isinstance                            | LOAD_GLOBAL NULL + isinstance
+      2 | LOAD_FAST stocks                                         | LOAD_FAST stocks
+      3 | LOAD_GLOBAL six                                          | LOAD_GLOBAL six
+      4 | LOAD_ATTR string_types                                   | LOAD_ATTR string_types
+      5 | PRECALL                                                  | PRECALL 
+      6 | CALL                                                     | CALL 
+      7 | POP_JUMP_FORWARD_IF_FALSE to 60                          | POP_JUMP_FORWARD_IF_FALSE to 60
+      8 | LOAD_FAST stocks                                         | LOAD_FAST stocks
+      9 | BUILD_LIST                                               | BUILD_LIST 
+     10 | STORE_FAST stocks                                        | STORE_FAST stocks
+     11 | LOAD_FAST query_type                                     | LOAD_FAST query_type
+     12 | LOAD_CONST ('ST', 'HALT', 'DELISTING', 'DELISTING_SORTIN | LOAD_CONST ('ST', 'HALT', 'DELISTING', 'DELISTING_SORTIN
+     13 | CONTAINS_OP                                              | CONTAINS_OP 
+     14 | POP_JUMP_FORWARD_IF_FALSE to 136                         | POP_JUMP_FORWARD_IF_FALSE to 136
+     15 | LOAD_GLOBAL NULL + RuntimeError                          | LOAD_GLOBAL NULL + RuntimeError
+     16 | LOAD_CONST 'get_stock_status传入的query_type参数{}错误，允许的输入限于S | LOAD_CONST 'get_stock_status传入的query_type参数{}错误，允许的输入限于S
+     17 | LOAD_METHOD format                                       | LOAD_METHOD format
+     18 | LOAD_FAST query_type                                     | LOAD_FAST query_type
+     19 | PRECALL                                                  | PRECALL 
+     20 | CALL                                                     | CALL 
+     21 | PRECALL                                                  | PRECALL 
+     22 | CALL                                                     | CALL 
+     23 | RAISE_VARARGS                                            | RAISE_VARARGS 
+     24 | LOAD_FAST query_date                                     | LOAD_FAST query_date
+>>   25 | POP_JUMP_FORWARD_IF_NOT_NONE to 238                      | POP_JUMP_FORWARD_IF_NOT_NONE to 236
+     26 | LOAD_GLOBAL NULL + Engine                                | LOAD_GLOBAL NULL + Engine
+     27 | LOAD_ATTR instance                                       | LOAD_ATTR instance
+     28 | PRECALL                                                  | PRECALL 
+     29 | CALL                                                     | CALL 
+     30 | LOAD_ATTR trading_dt                                     | LOAD_ATTR trading_dt
+     31 | LOAD_METHOD strftime                                     | LOAD_METHOD strftime
+     32 | LOAD_GLOBAL DATE_FORMAT                                  | LOAD_GLOBAL DATE_FORMAT
+     33 | PRECALL                                                  | PRECALL 
+     34 | CALL                                                     | CALL 
+  ... (168 more)
+---- first_diff_index=25
+====================================================================================================
+[32] F:/Downloads/pythoncdc-main/site-packages/fly/oauthenticator/oauth2.pyc
+    func=post orig=188 decomp=64 jump=0 true=154
+    first_diff: idx=20 orig=POP_JUMP_FORWARD_IF_NOT_NONE 990 -> decomp=POP_JUMP_FORWARD_IF_TRUE 206
+==== post  orig=198 decomp=196
+      0 | RETURN_GENERATOR                                         | RETURN_GENERATOR 
+      1 | POP_TOP                                                  | POP_TOP 
+      2 | RESUME                                                   | RESUME 
+      3 | LOAD_FAST self                                           | LOAD_FAST self
+      4 | LOAD_METHOD get_argument                                 | LOAD_METHOD get_argument
+      5 | LOAD_CONST 'username'                                    | LOAD_CONST 'username'
+      6 | LOAD_CONST False                                         | LOAD_CONST False
+      7 | PRECALL                                                  | PRECALL 
+      8 | CALL                                                     | CALL 
+      9 | STORE_FAST user_name                                     | STORE_FAST user_name
+     10 | LOAD_FAST self                                           | LOAD_FAST self
+     11 | LOAD_METHOD get_current_user                             | LOAD_METHOD get_current_user
+     12 | PRECALL                                                  | PRECALL 
+     13 | CALL                                                     | CALL 
+     14 | STORE_FAST user                                          | STORE_FAST user
+     15 | LOAD_FAST user                                           | LOAD_FAST user
+     16 | EXTENDED_ARG                                             | EXTENDED_ARG 
+>>   17 | POP_JUMP_FORWARD_IF_NOT_NONE to 982                      | POP_JUMP_FORWARD_IF_NOT_NONE to 978
+     18 | LOAD_FAST self                                           | LOAD_FAST self
+     19 | LOAD_ATTR authenticator                                  | LOAD_ATTR authenticator
+     20 | LOAD_METHOD authenticate                                 | LOAD_METHOD authenticate
+     21 | LOAD_FAST self                                           | LOAD_FAST self
+     22 | PRECALL                                                  | PRECALL 
+     23 | CALL                                                     | CALL 
+     24 | YIELD_VALUE                                              | YIELD_VALUE 
+     25 | RESUME                                                   | RESUME 
+     26 | UNPACK_SEQUENCE                                          | UNPACK_SEQUENCE 
+  ... (172 more)
+---- first_diff_index=17
+====================================================================================================
+[33] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/default_event_source.pyc
+    func=events orig=510 decomp=501 jump=2 true=156
+    first_diff: idx=352 orig=LOAD_FAST 'day' -> decomp=LOAD_FAST 'self'
+==== events  orig=587 decomp=577
+      0 | RETURN_GENERATOR                                         | RETURN_GENERATOR 
+      1 | POP_TOP                                                  | POP_TOP 
+      2 | RESUME                                                   | RESUME 
+      3 | LOAD_FAST self                                           | LOAD_FAST self
+      4 | LOAD_ATTR _engine                                        | LOAD_ATTR _engine
+      5 | LOAD_ATTR data_proxy                                     | LOAD_ATTR data_proxy
+      6 | LOAD_METHOD get_trading_dates                            | LOAD_METHOD get_trading_dates
+      7 | LOAD_FAST start_date                                     | LOAD_FAST start_date
+      8 | LOAD_FAST end_date                                       | LOAD_FAST end_date
+      9 | PRECALL                                                  | PRECALL 
+     10 | CALL                                                     | CALL 
+     11 | LOAD_FAST self                                           | LOAD_FAST self
+     12 | STORE_ATTR _trading_dates                                | STORE_ATTR _trading_dates
+     13 | LOAD_FAST frequency                                      | LOAD_FAST frequency
+     14 | LOAD_CONST '1d'                                          | LOAD_CONST '1d'
+     15 | COMPARE_OP ==                                            | COMPARE_OP ==
+     16 | EXTENDED_ARG                                             | EXTENDED_ARG 
+     17 | POP_JUMP_FORWARD_IF_FALSE to 800                         | POP_JUMP_FORWARD_IF_FALSE to 800
+     18 | LOAD_FAST self                                           | LOAD_FAST self
+     19 | LOAD_ATTR _trading_dates                                 | LOAD_ATTR _trading_dates
+     20 | GET_ITER                                                 | GET_ITER 
+     21 | EXTENDED_ARG                                             | EXTENDED_ARG 
+     22 | FOR_ITER to 796                                          | FOR_ITER to 796
+     23 | STORE_FAST day                                           | STORE_FAST day
+     24 | NOP                                                      | NOP 
+     25 | LOAD_FAST day                                            | LOAD_FAST day
+     26 | LOAD_METHOD to_pydatetime                                | LOAD_METHOD to_pydatetime
+     27 | PRECALL                                                  | PRECALL 
+     28 | CALL                                                     | CALL 
+     29 | STORE_FAST date                                          | STORE_FAST date
+     30 | JUMP_FORWARD to 258                                      | JUMP_FORWARD to 258
+     31 | PUSH_EXC_INFO                                            | PUSH_EXC_INFO 
+     32 | LOAD_GLOBAL AttributeError                               | LOAD_GLOBAL AttributeError
+     33 | CHECK_EXC_MATCH                                          | CHECK_EXC_MATCH 
+     34 | POP_JUMP_FORWARD_IF_FALSE to 250                         | POP_JUMP_FORWARD_IF_FALSE to 250
+     35 | POP_TOP                                                  | POP_TOP 
+     36 | LOAD_GLOBAL NULL + system_log                            | LOAD_GLOBAL NULL + system_log
+     37 | LOAD_ATTR error                                          | LOAD_ATTR error
+     38 | LOAD_GLOBAL NULL + get_traceback_message                 | LOAD_GLOBAL NULL + get_traceback_message
+     39 | PRECALL                                                  | PRECALL 
+     40 | CALL                                                     | CALL 
+     41 | PRECALL                                                  | PRECALL 
+     42 | CALL                                                     | CALL 
+     43 | POP_TOP                                                  | POP_TOP 
+     44 | LOAD_FAST day                                            | LOAD_FAST day
+     45 | STORE_FAST date                                          | STORE_FAST date
+     46 | POP_EXCEPT                                               | POP_EXCEPT 
+     47 | JUMP_FORWARD to 258                                      | JUMP_FORWARD to 258
+     48 | RERAISE                                                  | RERAISE 
+     49 | COPY                                                     | COPY 
+     50 | POP_EXCEPT                                               | POP_EXCEPT 
+     51 | RERAISE                                                  | RERAISE 
+     52 | LOAD_FAST date                                           | LOAD_FAST date
+     53 | LOAD_METHOD replace                                      | LOAD_METHOD replace
+     54 | LOAD_CONST 8                                             | LOAD_CONST 8
+     55 | LOAD_CONST 30                                            | LOAD_CONST 30
+     56 | KW_NAMES                                                 | KW_NAMES 
+     57 | PRECALL                                                  | PRECALL 
+     58 | CALL                                                     | CALL 
+     59 | STORE_FAST dt_before_trading                             | STORE_FAST dt_before_trading
+     60 | LOAD_FAST date                                           | LOAD_FAST date
+     61 | LOAD_METHOD replace                                      | LOAD_METHOD replace
+     62 | LOAD_CONST 15                                            | LOAD_CONST 15
+     63 | LOAD_CONST 0                                             | LOAD_CONST 0
+     64 | KW_NAMES                                                 | KW_NAMES 
+     65 | PRECALL                                                  | PRECALL 
+     66 | CALL                                                     | CALL 
+     67 | STORE_FAST dt_bar                                        | STORE_FAST dt_bar
+     68 | LOAD_FAST date                                           | LOAD_FAST date
+     69 | LOAD_METHOD replace                                      | LOAD_METHOD replace
+     70 | LOAD_CONST 15                                            | LOAD_CONST 15
+     71 | LOAD_CONST 30                                            | LOAD_CONST 30
+     72 | KW_NAMES                                                 | KW_NAMES 
+     73 | PRECALL                                                  | PRECALL 
+     74 | CALL                                                     | CALL 
+     75 | STORE_FAST dt_after_trading                              | STORE_FAST dt_after_trading
+     76 | LOAD_FAST self                                           | LOAD_FAST self
+     77 | LOAD_ATTR _engine                                        | LOAD_ATTR _engine
+     78 | LOAD_METHOD set_current_stage                            | LOAD_METHOD set_current_stage
+     79 | LOAD_GLOBAL EventEnum                                    | LOAD_GLOBAL EventEnum
+     80 | LOAD_ATTR BEFORE_TRADING_START                           | LOAD_ATTR BEFORE_TRADING_START
+     81 | PRECALL                                                  | PRECALL 
+     82 | CALL                                                     | CALL 
+     83 | POP_TOP                                                  | POP_TOP 
+     84 | LOAD_GLOBAL NULL + Event                                 | LOAD_GLOBAL NULL + Event
+     85 | LOAD_GLOBAL EventEnum                                    | LOAD_GLOBAL EventEnum
+     86 | LOAD_ATTR BEFORE_TRADING_START                           | LOAD_ATTR BEFORE_TRADING_START
+     87 | LOAD_FAST dt_before_trading                              | LOAD_FAST dt_before_trading
+     88 | LOAD_FAST dt_before_trading                              | LOAD_FAST dt_before_trading
+     89 | KW_NAMES                                                 | KW_NAMES 
+     90 | PRECALL                                                  | PRECALL 
+     91 | CALL                                                     | CALL 
+     92 | YIELD_VALUE                                              | YIELD_VALUE 
+     93 | RESUME                                                   | RESUME 
+     94 | POP_TOP                                                  | POP_TOP 
+     95 | LOAD_FAST self                                           | LOAD_FAST self
+     96 | LOAD_ATTR _engine                                        | LOAD_ATTR _engine
+     97 | LOAD_METHOD set_current_stage                            | LOAD_METHOD set_current_stage
+     98 | LOAD_GLOBAL EventEnum                                    | LOAD_GLOBAL EventEnum
+     99 | LOAD_ATTR HANDLE_DATA                                    | LOAD_ATTR HANDLE_DATA
+    100 | PRECALL                                                  | PRECALL 
+    101 | CALL                                                     | CALL 
+    102 | POP_TOP                                                  | POP_TOP 
+    103 | LOAD_GLOBAL NULL + Event                                 | LOAD_GLOBAL NULL + Event
+    104 | LOAD_GLOBAL EventEnum                                    | LOAD_GLOBAL EventEnum
+    105 | LOAD_ATTR HANDLE_DATA                                    | LOAD_ATTR HANDLE_DATA
+    106 | LOAD_FAST dt_bar                                         | LOAD_FAST dt_bar
+    107 | LOAD_FAST dt_bar                                         | LOAD_FAST dt_bar
+    108 | KW_NAMES                                                 | KW_NAMES 
+    109 | PRECALL                                                  | PRECALL 
+    110 | CALL                                                     | CALL 
+    111 | YIELD_VALUE                                              | YIELD_VALUE 
+    112 | RESUME                                                   | RESUME 
+    113 | POP_TOP                                                  | POP_TOP 
+    114 | LOAD_FAST self                                           | LOAD_FAST self
+    115 | LOAD_ATTR _engine                                        | LOAD_ATTR _engine
+    116 | LOAD_METHOD set_current_stage                            | LOAD_METHOD set_current_stage
+    117 | LOAD_GLOBAL EventEnum                                    | LOAD_GLOBAL EventEnum
+    118 | LOAD_ATTR AFTER_TRADING_END                              | LOAD_ATTR AFTER_TRADING_END
+    119 | PRECALL                                                  | PRECALL 
+    120 | CALL                                                     | CALL 
+    121 | POP_TOP                                                  | POP_TOP 
+    122 | LOAD_GLOBAL NULL + Event                                 | LOAD_GLOBAL NULL + Event
+    123 | LOAD_GLOBAL EventEnum                                    | LOAD_GLOBAL EventEnum
+    124 | LOAD_ATTR AFTER_TRADING_END                              | LOAD_ATTR AFTER_TRADING_END
+    125 | LOAD_FAST dt_after_trading                               | LOAD_FAST dt_after_trading
+    126 | LOAD_FAST dt_after_trading                               | LOAD_FAST dt_after_trading
+    127 | KW_NAMES                                                 | KW_NAMES 
+    128 | PRECALL                                                  | PRECALL 
+    129 | CALL                                                     | CALL 
+    130 | YIELD_VALUE                                              | YIELD_VALUE 
+    131 | RESUME                                                   | RESUME 
+    132 | POP_TOP                                                  | POP_TOP 
+    133 | EXTENDED_ARG                                             | EXTENDED_ARG 
+    134 | JUMP_BACKWARD to 108                                     | JUMP_BACKWARD to 108
+    135 | LOAD_CONST None                                          | LOAD_CONST None
+    136 | RETURN_VALUE                                             | RETURN_VALUE 
+    137 | LOAD_FAST frequency                                      | LOAD_FAST frequency
+    138 | LOAD_CONST '1m'                                          | LOAD_CONST '1m'
+    139 | COMPARE_OP ==                                            | COMPARE_OP ==
+    140 | EXTENDED_ARG                                             | EXTENDED_ARG 
+    141 | POP_JUMP_FORWARD_IF_FALSE to 2322                        | POP_JUMP_FORWARD_IF_FALSE to 2322
+    142 | LOAD_FAST self                                           | LOAD_FAST self
+    143 | LOAD_ATTR _trading_dates                                 | LOAD_ATTR _trading_dates
+    144 | GET_ITER                                                 | GET_ITER 
+    145 | EXTENDED_ARG                                             | EXTENDED_ARG 
+    146 | FOR_ITER to 2318                                         | FOR_ITER to 2318
+    147 | STORE_FAST day                                           | STORE_FAST day
+    148 | NOP                                                      | NOP 
+    149 | LOAD_FAST day                                            | LOAD_FAST day
+    150 | LOAD_METHOD to_pydatetime                                | LOAD_METHOD to_pydatetime
+    151 | PRECALL                                                  | PRECALL 
+    152 | CALL                                                     | CALL 
+    153 | STORE_FAST date                                          | STORE_FAST date
+    154 | JUMP_FORWARD to 978                                      | JUMP_FORWARD to 978
+    155 | PUSH_EXC_INFO                                            | PUSH_EXC_INFO 
+    156 | LOAD_GLOBAL AttributeError                               | LOAD_GLOBAL AttributeError
+    157 | CHECK_EXC_MATCH                                          | CHECK_EXC_MATCH 
+    158 | POP_JUMP_FORWARD_IF_FALSE to 970                         | POP_JUMP_FORWARD_IF_FALSE to 970
+    159 | POP_TOP                                                  | POP_TOP 
+    160 | LOAD_GLOBAL NULL + system_log                            | LOAD_GLOBAL NULL + system_log
+    161 | LOAD_ATTR error                                          | LOAD_ATTR error
+    162 | LOAD_GLOBAL NULL + get_traceback_message                 | LOAD_GLOBAL NULL + get_traceback_message
+    163 | PRECALL                                                  | PRECALL 
+    164 | CALL                                                     | CALL 
+    165 | PRECALL                                                  | PRECALL 
+    166 | CALL                                                     | CALL 
+    167 | POP_TOP                                                  | POP_TOP 
+    168 | LOAD_FAST day                                            | LOAD_FAST day
+    169 | STORE_FAST date                                          | STORE_FAST date
+    170 | POP_EXCEPT                                               | POP_EXCEPT 
+    171 | JUMP_FORWARD to 978                                      | JUMP_FORWARD to 978
+    172 | RERAISE                                                  | RERAISE 
+    173 | COPY                                                     | COPY 
+    174 | POP_EXCEPT                                               | POP_EXCEPT 
+    175 | RERAISE                                                  | RERAISE 
+    176 | LOAD_GLOBAL AccountType                                  | LOAD_GLOBAL AccountType
+    177 | LOAD_ATTR FUTURE                                         | LOAD_ATTR FUTURE
+    178 | LOAD_ATTR value                                          | LOAD_ATTR value
+    179 | LOAD_FAST self                                           | LOAD_FAST self
+    180 | LOAD_ATTR _engine                                        | LOAD_ATTR _engine
+    181 | LOAD_ATTR config                                         | LOAD_ATTR config
+    182 | LOAD_ATTR strategy                                       | LOAD_ATTR strategy
+    183 | LOAD_ATTR accounts                                       | LOAD_ATTR accounts
+    184 | CONTAINS_OP                                              | CONTAINS_OP 
+    185 | EXTENDED_ARG                                             | EXTENDED_ARG 
+    186 | POP_JUMP_FORWARD_IF_FALSE to 1742                        | POP_JUMP_FORWARD_IF_FALSE to 1742
+    187 | LOAD_CONST True                                          | LOAD_CONST True
+    188 | STORE_FAST before_trading_flag                           | STORE_FAST before_trading_flag
+    189 | LOAD_FAST date                                           | LOAD_FAST date
+    190 | LOAD_METHOD replace                                      | LOAD_METHOD replace
+    191 | LOAD_CONST 8                                             | LOAD_CONST 8
+    192 | LOAD_CONST 30                                            | LOAD_CONST 30
+    193 | KW_NAMES                                                 | KW_NAMES 
+    194 | PRECALL                                                  | PRECALL 
+    195 | CALL                                                     | CALL 
+    196 | STORE_FAST dt_before_trading                             | STORE_FAST dt_before_trading
+    197 | LOAD_FAST date                                           | LOAD_FAST date
+    198 | LOAD_METHOD replace                                      | LOAD_METHOD replace
+    199 | LOAD_CONST 15                                            | LOAD_CONST 15
+    200 | LOAD_CONST 30                                            | LOAD_CONST 30
+    201 | KW_NAMES                                                 | KW_NAMES 
+    202 | PRECALL                                                  | PRECALL 
+    203 | CALL                                                     | CALL 
+    204 | STORE_FAST last_dt                                       | STORE_FAST last_dt
+    205 | LOAD_FAST self                                           | LOAD_FAST self
+    206 | LOAD_METHOD _get_trading_minutes                         | LOAD_METHOD _get_trading_minutes
+    207 | LOAD_FAST date                                           | LOAD_FAST date
+    208 | LOAD_METHOD date                                         | LOAD_METHOD date
+    209 | PRECALL                                                  | PRECALL 
+    210 | CALL                                                     | CALL 
+    211 | PRECALL                                                  | PRECALL 
+    212 | CALL                                                     | CALL 
+    213 | STORE_FAST trading_minutes                               | STORE_FAST trading_minutes
+    214 | LOAD_FAST trading_minutes                                | LOAD_FAST trading_minutes
+    215 | GET_ITER                                                 | GET_ITER 
+    216 | FOR_ITER to 1606                                         | FOR_ITER to 1606
+    217 | STORE_FAST calendar_dt                                   | STORE_FAST calendar_dt
+    218 | LOAD_FAST before_trading_flag                            | LOAD_FAST before_trading_flag
+    219 | POP_JUMP_FORWARD_IF_FALSE to 1468                        | POP_JUMP_FORWARD_IF_FALSE to 1468
+    220 | LOAD_CONST False                                         | LOAD_CONST False
+    221 | STORE_FAST before_trading_flag                           | STORE_FAST before_trading_flag
+    222 | LOAD_FAST self                                           | LOAD_FAST self
+    223 | LOAD_ATTR _engine                                        | LOAD_ATTR _engine
+    224 | LOAD_METHOD set_current_stage                            | LOAD_METHOD set_current_stage
+    225 | LOAD_GLOBAL EventEnum                                    | LOAD_GLOBAL EventEnum
+    226 | LOAD_ATTR BEFORE_TRADING_START                           | LOAD_ATTR BEFORE_TRADING_START
+    227 | PRECALL                                                  | PRECALL 
+    228 | CALL                                                     | CALL 
+    229 | POP_TOP                                                  | POP_TOP 
+    230 | LOAD_GLOBAL NULL + Event                                 | LOAD_GLOBAL NULL + Event
+    231 | LOAD_GLOBAL EventEnum                                    | LOAD_GLOBAL EventEnum
+    232 | LOAD_ATTR BEFORE_TRADING_START                           | LOAD_ATTR BEFORE_TRADING_START
+    233 | LOAD_FAST calendar_dt                                    | LOAD_FAST calendar_dt
+    234 | LOAD_GLOBAL NULL + datetime                              | LOAD_GLOBAL NULL + datetime
+    235 | LOAD_ATTR timedelta                                      | LOAD_ATTR timedelta
+    236 | LOAD_CONST 30                                            | LOAD_CONST 30
+    237 | KW_NAMES                                                 | KW_NAMES 
+    238 | PRECALL                                                  | PRECALL 
+    239 | CALL                                                     | CALL 
+    240 | BINARY_OP -                                              | BINARY_OP -
+    241 | LOAD_FAST calendar_dt                                    | LOAD_FAST calendar_dt
+    242 | LOAD_GLOBAL NULL + datetime                              | LOAD_GLOBAL NULL + datetime
+    243 | LOAD_ATTR timedelta                                      | LOAD_ATTR timedelta
+    244 | LOAD_CONST 30                                            | LOAD_CONST 30
+    245 | KW_NAMES                                                 | KW_NAMES 
+    246 | PRECALL                                                  | PRECALL 
+    247 | CALL                                                     | CALL 
+    248 | BINARY_OP -                                              | BINARY_OP -
+    249 | KW_NAMES                                                 | KW_NAMES 
+    250 | PRECALL                                                  | PRECALL 
+    251 | CALL                                                     | CALL 
+    252 | YIELD_VALUE                                              | YIELD_VALUE 
+    253 | RESUME                                                   | RESUME 
+    254 | POP_TOP                                                  | POP_TOP 
+    255 | LOAD_FAST self                                           | LOAD_FAST self
+    256 | LOAD_ATTR _engine                                        | LOAD_ATTR _engine
+    257 | LOAD_METHOD set_current_stage                            | LOAD_METHOD set_current_stage
+    258 | LOAD_GLOBAL EventEnum                                    | LOAD_GLOBAL EventEnum
+    259 | LOAD_ATTR HANDLE_DATA                                    | LOAD_ATTR HANDLE_DATA
+    260 | PRECALL                                                  | PRECALL 
+    261 | CALL                                                     | CALL 
+    262 | POP_TOP                                                  | POP_TOP 
+    263 | LOAD_GLOBAL NULL + Event                                 | LOAD_GLOBAL NULL + Event
+    264 | LOAD_GLOBAL EventEnum                                    | LOAD_GLOBAL EventEnum
+    265 | LOAD_ATTR HANDLE_DATA                                    | LOAD_ATTR HANDLE_DATA
+    266 | LOAD_FAST calendar_dt                                    | LOAD_FAST calendar_dt
+    267 | LOAD_FAST calendar_dt                                    | LOAD_FAST calendar_dt
+    268 | KW_NAMES                                                 | KW_NAMES 
+    269 | PRECALL                                                  | PRECALL 
+    270 | CALL                                                     | CALL 
+    271 | YIELD_VALUE                                              | YIELD_VALUE 
+    272 | RESUME                                                   | RESUME 
+    273 | POP_TOP                                                  | POP_TOP 
+    274 | LOAD_FAST calendar_dt                                    | LOAD_FAST calendar_dt
+    275 | STORE_FAST last_dt                                       | STORE_FAST last_dt
+    276 | JUMP_BACKWARD to 1236                                    | JUMP_BACKWARD to 1236
+    277 | LOAD_FAST self                                           | LOAD_FAST self
+    278 | LOAD_ATTR _engine                                        | LOAD_ATTR _engine
+    279 | LOAD_METHOD set_current_stage                            | LOAD_METHOD set_current_stage
+    280 | LOAD_GLOBAL EventEnum                                    | LOAD_GLOBAL EventEnum
+    281 | LOAD_ATTR AFTER_TRADING_END                              | LOAD_ATTR AFTER_TRADING_END
+    282 | PRECALL                                                  | PRECALL 
+    283 | CALL                                                     | CALL 
+    284 | POP_TOP                                                  | POP_TOP 
+    285 | LOAD_GLOBAL NULL + Event                                 | LOAD_GLOBAL NULL + Event
+    286 | LOAD_GLOBAL EventEnum                                    | LOAD_GLOBAL EventEnum
+    287 | LOAD_ATTR AFTER_TRADING_END                              | LOAD_ATTR AFTER_TRADING_END
+    288 | LOAD_FAST last_dt                                        | LOAD_FAST last_dt
+    289 | LOAD_FAST last_dt                                        | LOAD_FAST last_dt
+    290 | KW_NAMES                                                 | KW_NAMES 
+    291 | PRECALL                                                  | PRECALL 
+    292 | CALL                                                     | CALL 
+    293 | YIELD_VALUE                                              | YIELD_VALUE 
+    294 | RESUME                                                   | RESUME 
+    295 | POP_TOP                                                  | POP_TOP 
+    296 | EXTENDED_ARG                                             | EXTENDED_ARG 
+    297 | JUMP_BACKWARD to 828                                     | JUMP_BACKWARD to 828
+    298 | LOAD_FAST date                                           | LOAD_FAST date
+    299 | LOAD_METHOD replace                                      | LOAD_METHOD replace
+    300 | LOAD_CONST 8                                             | LOAD_CONST 8
+    301 | LOAD_CONST 30                                            | LOAD_CONST 30
+    302 | KW_NAMES                                                 | KW_NAMES 
+    303 | PRECALL                                                  | PRECALL 
+    304 | CALL                                                     | CALL 
+    305 | STORE_FAST dt_before_trading                             | STORE_FAST dt_before_trading
+    306 | LOAD_FAST date                                           | LOAD_FAST date
+    307 | LOAD_METHOD replace                                      | LOAD_METHOD replace
+    308 | LOAD_CONST 15                                            | LOAD_CONST 15
+    309 | LOAD_CONST 30                                            | LOAD_CONST 30
+    310 | KW_NAMES                                                 | KW_NAMES 
+    311 | PRECALL                                                  | PRECALL 
+    312 | CALL                                                     | CALL 
+    313 | STORE_FAST dt_after_trading                              | STORE_FAST dt_after_trading
+    314 | LOAD_FAST self                                           | LOAD_FAST self
+    315 | LOAD_ATTR _engine                                        | LOAD_ATTR _engine
+    316 | LOAD_METHOD set_current_stage                            | LOAD_METHOD set_current_stage
+    317 | LOAD_GLOBAL EventEnum                                    | LOAD_GLOBAL EventEnum
+    318 | LOAD_ATTR BEFORE_TRADING_START                           | LOAD_ATTR BEFORE_TRADING_START
+    319 | PRECALL                                                  | PRECALL 
+    320 | CALL                                                     | CALL 
+    321 | POP_TOP                                                  | POP_TOP 
+    322 | LOAD_GLOBAL NULL + Event                                 | LOAD_GLOBAL NULL + Event
+    323 | LOAD_GLOBAL EventEnum                                    | LOAD_GLOBAL EventEnum
+    324 | LOAD_ATTR BEFORE_TRADING_START                           | LOAD_ATTR BEFORE_TRADING_START
+    325 | LOAD_FAST dt_before_trading                              | LOAD_FAST dt_before_trading
+    326 | LOAD_FAST dt_before_trading                              | LOAD_FAST dt_before_trading
+    327 | KW_NAMES                                                 | KW_NAMES 
+    328 | PRECALL                                                  | PRECALL 
+    329 | CALL                                                     | CALL 
+    330 | YIELD_VALUE                                              | YIELD_VALUE 
+    331 | RESUME                                                   | RESUME 
+    332 | POP_TOP                                                  | POP_TOP 
+    333 | LOAD_FAST self                                           | LOAD_FAST self
+    334 | LOAD_ATTR _engine                                        | LOAD_ATTR _engine
+    335 | LOAD_METHOD set_current_stage                            | LOAD_METHOD set_current_stage
+    336 | LOAD_GLOBAL EventEnum                                    | LOAD_GLOBAL EventEnum
+    337 | LOAD_ATTR HANDLE_DATA                                    | LOAD_ATTR HANDLE_DATA
+    338 | PRECALL                                                  | PRECALL 
+    339 | CALL                                                     | CALL 
+    340 | POP_TOP                                                  | POP_TOP 
+    341 | LOAD_FAST self                                           | LOAD_FAST self
+    342 | LOAD_METHOD _get_trading_minutes                         | LOAD_METHOD _get_trading_minutes
+    343 | LOAD_FAST date                                           | LOAD_FAST date
+    344 | LOAD_METHOD date                                         | LOAD_METHOD date
+    345 | PRECALL                                                  | PRECALL 
+    346 | CALL                                                     | CALL 
+    347 | PRECALL                                                  | PRECALL 
+    348 | CALL                                                     | CALL 
+    349 | GET_ITER                                                 | GET_ITER 
+    350 | FOR_ITER to 2182                                         | FOR_ITER to 2182
+    351 | STORE_FAST dt_bar                                        | STORE_FAST dt_bar
+    352 | LOAD_GLOBAL NULL + Event                                 | LOAD_GLOBAL NULL + Event
+    353 | LOAD_GLOBAL EventEnum                                    | LOAD_GLOBAL EventEnum
+    354 | LOAD_ATTR HANDLE_DATA                                    | LOAD_ATTR HANDLE_DATA
+    355 | LOAD_FAST dt_bar                                         | LOAD_FAST dt_bar
+    356 | LOAD_FAST dt_bar                                         | LOAD_FAST dt_bar
+    357 | KW_NAMES                                                 | KW_NAMES 
+    358 | PRECALL                                                  | PRECALL 
+    359 | CALL                                                     | CALL 
+    360 | YIELD_VALUE                                              | YIELD_VALUE 
+    361 | RESUME                                                   | RESUME 
+    362 | POP_TOP                                                  | POP_TOP 
+    363 | JUMP_BACKWARD to 2116                                    | JUMP_BACKWARD to 2116
+    364 | LOAD_FAST self                                           | LOAD_FAST self
+    365 | LOAD_ATTR _engine                                        | LOAD_ATTR _engine
+    366 | LOAD_METHOD set_current_stage                            | LOAD_METHOD set_current_stage
+    367 | LOAD_GLOBAL EventEnum                                    | LOAD_GLOBAL EventEnum
+    368 | LOAD_ATTR AFTER_TRADING_END                              | LOAD_ATTR AFTER_TRADING_END
+    369 | PRECALL                                                  | PRECALL 
+    370 | CALL                                                     | CALL 
+    371 | POP_TOP                                                  | POP_TOP 
+    372 | LOAD_GLOBAL NULL + Event                                 | LOAD_GLOBAL NULL + Event
+    373 | LOAD_GLOBAL EventEnum                                    | LOAD_GLOBAL EventEnum
+    374 | LOAD_ATTR AFTER_TRADING_END                              | LOAD_ATTR AFTER_TRADING_END
+    375 | LOAD_FAST dt_after_trading                               | LOAD_FAST dt_after_trading
+    376 | LOAD_FAST dt_after_trading                               | LOAD_FAST dt_after_trading
+    377 | KW_NAMES                                                 | KW_NAMES 
+    378 | PRECALL                                                  | PRECALL 
+    379 | CALL                                                     | CALL 
+    380 | YIELD_VALUE                                              | YIELD_VALUE 
+    381 | RESUME                                                   | RESUME 
+    382 | POP_TOP                                                  | POP_TOP 
+    383 | EXTENDED_ARG                                             | EXTENDED_ARG 
+    384 | JUMP_BACKWARD to 828                                     | JUMP_BACKWARD to 828
+    385 | LOAD_CONST None                                          | LOAD_CONST None
+    386 | RETURN_VALUE                                             | RETURN_VALUE 
+    387 | LOAD_FAST frequency                                      | LOAD_FAST frequency
+    388 | LOAD_CONST 'tick'                                        | LOAD_CONST 'tick'
+    389 | COMPARE_OP ==                                            | COMPARE_OP ==
+    390 | EXTENDED_ARG                                             | EXTENDED_ARG 
+>>  391 | POP_JUMP_FORWARD_IF_FALSE to 3328                        | POP_JUMP_FORWARD_IF_FALSE to 3280
+    392 | LOAD_FAST self                                           | LOAD_FAST self
+    393 | LOAD_ATTR _engine                                        | LOAD_ATTR _engine
+    394 | LOAD_ATTR data_proxy                                     | LOAD_ATTR data_proxy
+    395 | STORE_FAST data_proxy                                    | STORE_FAST data_proxy
+    396 | LOAD_FAST self                                           | LOAD_FAST self
+    397 | LOAD_ATTR _trading_dates                                 | LOAD_ATTR _trading_dates
+    398 | GET_ITER                                                 | GET_ITER 
+    399 | EXTENDED_ARG                                             | EXTENDED_ARG 
+>>  400 | FOR_ITER to 3324                                         | FOR_ITER to 3276
+  ... (187 more)
+---- first_diff_index=391
+====================================================================================================
+[34] F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/cache_storage.pyc
+    func=func_wrapper orig=270 decomp=240 jump=1 true=203
+    first_diff: idx=56 orig=LOAD_FAST 'cache_start' -> decomp=JUMP_FORWARD 266
+==== func_wrapper  orig=302 decomp=270
+      0 | COPY_FREE_VARS                                           | COPY_FREE_VARS 
+      1 | MAKE_CELL call_args                                      | MAKE_CELL call_args
+      2 | RESUME                                                   | RESUME 
+      3 | LOAD_GLOBAL NULL + inspect                               | LOAD_GLOBAL NULL + inspect
+      4 | LOAD_ATTR getcallargs                                    | LOAD_ATTR getcallargs
+      5 | LOAD_DEREF base_func                                     | LOAD_DEREF base_func
+      6 | BUILD_LIST                                               | BUILD_LIST 
+      7 | LOAD_FAST args                                           | LOAD_FAST args
+      8 | LIST_EXTEND                                              | LIST_EXTEND 
+      9 | LIST_TO_TUPLE                                            | LIST_TO_TUPLE 
+     10 | BUILD_MAP                                                | BUILD_MAP 
+     11 | LOAD_FAST kwargs                                         | LOAD_FAST kwargs
+     12 | DICT_MERGE                                               | DICT_MERGE 
+     13 | CALL_FUNCTION_EX                                         | CALL_FUNCTION_EX 
+     14 | STORE_DEREF call_args                                    | STORE_DEREF call_args
+     15 | LOAD_GLOBAL NULL + tuple                                 | LOAD_GLOBAL NULL + tuple
+     16 | LOAD_CLOSURE call_args                                   | LOAD_CLOSURE call_args
+     17 | BUILD_TUPLE                                              | BUILD_TUPLE 
+>>   18 | LOAD_CONST <code object <listcomp> at 0x0000020C12867030 | LOAD_CONST <code object <listcomp> at 0x0000020C12867430
+     19 | MAKE_FUNCTION closure                                    | MAKE_FUNCTION closure
+     20 | LOAD_DEREF argument_list                                 | LOAD_DEREF argument_list
+     21 | GET_ITER                                                 | GET_ITER 
+     22 | PRECALL                                                  | PRECALL 
+     23 | CALL                                                     | CALL 
+     24 | PRECALL                                                  | PRECALL 
+     25 | CALL                                                     | CALL 
+     26 | STORE_FAST static_args                                   | STORE_FAST static_args
+     27 | LOAD_GLOBAL NULL + to_timestamp                          | LOAD_GLOBAL NULL + to_timestamp
+  ... (275 more)
+---- first_diff_index=18
+====================================================================================================
+[35] F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/executor.pyc
+    func=check_before_trading orig=243 decomp=237 jump=3 true=215
+    first_diff: idx=24 orig=LOAD_CONST False -> decomp=LOAD_FAST 'self'
+==== check_before_trading  orig=264 decomp=258
+      0 | RESUME                                                   | RESUME 
+      1 | LOAD_FAST self                                           | LOAD_FAST self
+      2 | LOAD_ATTR _last_before_trading                           | LOAD_ATTR _last_before_trading
+      3 | LOAD_FAST event                                          | LOAD_FAST event
+      4 | LOAD_ATTR trading_dt                                     | LOAD_ATTR trading_dt
+      5 | LOAD_METHOD date                                         | LOAD_METHOD date
+      6 | PRECALL                                                  | PRECALL 
+      7 | CALL                                                     | CALL 
+      8 | COMPARE_OP ==                                            | COMPARE_OP ==
+      9 | POP_JUMP_FORWARD_IF_FALSE to 74                          | POP_JUMP_FORWARD_IF_FALSE to 74
+     10 | LOAD_CONST False                                         | LOAD_CONST False
+     11 | RETURN_VALUE                                             | RETURN_VALUE 
+     12 | LOAD_GLOBAL NULL + isinstance                            | LOAD_GLOBAL NULL + isinstance
+     13 | LOAD_FAST self                                           | LOAD_FAST self
+     14 | LOAD_ATTR _last_before_trading                           | LOAD_ATTR _last_before_trading
+     15 | LOAD_GLOBAL datetime                                     | LOAD_GLOBAL datetime
+     16 | LOAD_ATTR datetime                                       | LOAD_ATTR datetime
+     17 | PRECALL                                                  | PRECALL 
+     18 | CALL                                                     | CALL 
+>>   19 | POP_JUMP_FORWARD_IF_FALSE to 228                         | POP_JUMP_FORWARD_IF_FALSE to 318
+     20 | LOAD_FAST event                                          | LOAD_FAST event
+     21 | LOAD_ATTR trading_dt                                     | LOAD_ATTR trading_dt
+     22 | LOAD_ATTR hour                                           | LOAD_ATTR hour
+     23 | LOAD_CONST 18                                            | LOAD_CONST 18
+     24 | COMPARE_OP <=                                            | COMPARE_OP <=
+>>   25 | POP_JUMP_FORWARD_IF_FALSE to 172                         | POP_JUMP_FORWARD_IF_FALSE to 318
+>>   26 | LOAD_CONST False                                         | LOAD_FAST self
+>>   27 | RETURN_VALUE                                             | LOAD_ATTR _last_before_trading
+>>   28 | LOAD_FAST self                                           | LOAD_ATTR day
+  ... (236 more)
+---- first_diff_index=19
+====================================================================================================
+[36] F:/Downloads/pythoncdc-main/site-packages/IQCommon/graph.pyc
+    func=_process_task_queue orig=378 decomp=354 jump=1 true=304
+    first_diff: idx=69 orig=LOAD_FAST 'value_list' -> decomp=LOAD_FAST 'task_id'
+==== _process_task_queue  orig=421 decomp=395
+      0 | RESUME                                                   | RESUME 
+      1 | LOAD_FAST level                                          | LOAD_FAST level
+      2 | LOAD_CONST 0                                             | LOAD_CONST 0
+      3 | COMPARE_OP ==                                            | COMPARE_OP ==
+      4 | EXTENDED_ARG                                             | EXTENDED_ARG 
+>>    5 | POP_JUMP_FORWARD_IF_FALSE to 844                         | POP_JUMP_FORWARD_IF_FALSE to 780
+      6 | NOP                                                      | NOP 
+      7 | LOAD_FAST queue                                          | LOAD_FAST queue
+      8 | LOAD_FAST task_id                                        | LOAD_FAST task_id
+      9 | BINARY_SUBSCR                                            | BINARY_SUBSCR 
+     10 | STORE_FAST tmp_node_dict                                 | STORE_FAST tmp_node_dict
+     11 | NOP                                                      | NOP 
+     12 | LOAD_FAST tmp_node_dict                                  | LOAD_FAST tmp_node_dict
+     13 | LOAD_CONST 'head'                                        | LOAD_CONST 'head'
+     14 | BINARY_SUBSCR                                            | BINARY_SUBSCR 
+  ... (407 more)
+---- first_diff_index=5

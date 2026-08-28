@@ -1,0 +1,778 @@
+====================================================================================================
+[0] F:/Downloads/pythoncdc-main/site-packages/fly/common/user_error.pyc
+    func=<module> orig=47 decomp=48 jump=0 true=1
+    first_diff: idx=47 orig=None None -> decomp=RETURN_VALUE None
+==== <module>  orig=52 decomp=51
+      0 | RESUME                                                   | RESUME 
+      1 | LOAD_CONST 0                                             | LOAD_CONST 0
+      2 | LOAD_CONST None                                          | LOAD_CONST None
+      3 | IMPORT_NAME re                                           | IMPORT_NAME re
+      4 | STORE_NAME re                                            | STORE_NAME re
+      5 | LOAD_CONST '^  File "/home/fly/sim_backtest(/(?P<user_id | LOAD_CONST '^  File "/home/fly/sim_backtest(/(?P<user_id
+      6 | STORE_NAME compile_template                              | STORE_NAME compile_template
+      7 | LOAD_CONST '^  File "/home/fly/backtest(/(?P<user_id>[^/ | LOAD_CONST '^  File "/home/fly/backtest(/(?P<user_id>[^/
+      8 | STORE_NAME back_compile                                  | STORE_NAME back_compile
+      9 | LOAD_CONST '  用户策略, line %s, in %s\n'                    | LOAD_CONST '  用户策略, line %s, in %s\n'
+     10 | STORE_NAME error_template                                | STORE_NAME error_template
+     11 | LOAD_CONST '/home/fly/sim_backtest/'                     | LOAD_CONST '/home/fly/sim_backtest/'
+     12 | STORE_NAME sim_back_dir                                  | STORE_NAME sim_back_dir
+     13 | LOAD_CONST '/home/fly/backtest/'                         | LOAD_CONST '/home/fly/backtest/'
+     14 | STORE_NAME back_dir                                      | STORE_NAME back_dir
+     15 | LOAD_CONST '/usr/local/python3.5/lib/python3.5/site-pack | LOAD_CONST '/usr/local/python3.5/lib/python3.5/site-pack
+     16 | STORE_NAME python_dir                                    | STORE_NAME python_dir
+     17 | PUSH_NULL                                                | PUSH_NULL 
+     18 | LOAD_NAME re                                             | LOAD_NAME re
+     19 | LOAD_ATTR compile                                        | LOAD_ATTR compile
+     20 | LOAD_CONST '^    log\\.(?P<level>[^\\(]*)\\((?P<message> | LOAD_CONST '^    log\\.(?P<level>[^\\(]*)\\((?P<message>
+     21 | PRECALL                                                  | PRECALL 
+     22 | CALL                                                     | CALL 
+     23 | STORE_NAME reg_info                                      | STORE_NAME reg_info
+     24 | LOAD_CONST '    log.%s(%s)'                              | LOAD_CONST '    log.%s(%s)'
+     25 | STORE_NAME info_template                                 | STORE_NAME info_template
+     26 | PUSH_NULL                                                | PUSH_NULL 
+     27 | LOAD_NAME re                                             | LOAD_NAME re
+     28 | LOAD_ATTR compile                                        | LOAD_ATTR compile
+     29 | LOAD_CONST '^(?P<line_arrow>([ ]+|[-]*> ))(?P<line_no>[\ | LOAD_CONST '^(?P<line_arrow>([ ]+|[-]*> ))(?P<line_no>[\
+     30 | PRECALL                                                  | PRECALL 
+     31 | CALL                                                     | CALL 
+     32 | STORE_NAME back_line                                     | STORE_NAME back_line
+     33 | LOAD_CONST ', context.blotter.current_dt)'               | LOAD_CONST ', context.blotter.current_dt)'
+     34 | STORE_NAME date_info                                     | STORE_NAME date_info
+     35 | LOAD_CONST '^(?P<path>[^\n]*/user_strategy.?[\\d]*.py)'  | LOAD_CONST '^(?P<path>[^\n]*/user_strategy.?[\\d]*.py)'
+     36 | STORE_NAME pyflakes_error_template                       | STORE_NAME pyflakes_error_template
+     37 | LOAD_CONST 'user_strategy'                               | LOAD_CONST 'user_strategy'
+     38 | STORE_NAME strategy_file_name                            | STORE_NAME strategy_file_name
+>>   39 | LOAD_CONST <code object get_user_error_info at 0x0000025 | LOAD_CONST <code object get_user_error_info at 0x0000025
+     40 | MAKE_FUNCTION                                            | MAKE_FUNCTION 
+     41 | STORE_NAME get_user_error_info                           | STORE_NAME get_user_error_info
+>>   42 | LOAD_CONST <code object get_backtest_user_error_info at  | LOAD_CONST <code object get_backtest_user_error_info at 
+     43 | MAKE_FUNCTION                                            | MAKE_FUNCTION 
+     44 | STORE_NAME get_backtest_user_error_info                  | STORE_NAME get_backtest_user_error_info
+     45 | LOAD_CONST (None,)                                       | LOAD_CONST (None,)
+>>   46 | LOAD_CONST <code object get_pyflakes_error_info at 0x000 | LOAD_CONST <code object get_pyflakes_error_info at 0x000
+     47 | MAKE_FUNCTION defaults                                   | MAKE_FUNCTION defaults
+     48 | STORE_NAME get_pyflakes_error_info                       | STORE_NAME get_pyflakes_error_info
+  ... (4 more)
+---- first_diff_index=39
+====================================================================================================
+[1] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/api/api_stock.pyc
+    func=<module> orig=509 decomp=509 jump=0 true=1
+    first_diff: idx=111 orig=LOAD_CONST 10 -> decomp=LOAD_CONST None
+==== <module>  orig=598 decomp=598
+      0 | RESUME                                                   | RESUME 
+      1 | LOAD_CONST 0                                             | LOAD_CONST 0
+      2 | LOAD_CONST None                                          | LOAD_CONST None
+      3 | IMPORT_NAME six                                          | IMPORT_NAME six
+      4 | STORE_NAME six                                           | STORE_NAME six
+      5 | LOAD_CONST 0                                             | LOAD_CONST 0
+      6 | LOAD_CONST ('Decimal', 'getcontext')                     | LOAD_CONST ('Decimal', 'getcontext')
+      7 | IMPORT_NAME decimal                                      | IMPORT_NAME decimal
+      8 | IMPORT_FROM Decimal                                      | IMPORT_FROM Decimal
+      9 | STORE_NAME Decimal                                       | STORE_NAME Decimal
+     10 | IMPORT_FROM getcontext                                   | IMPORT_FROM getcontext
+     11 | STORE_NAME getcontext                                    | STORE_NAME getcontext
+     12 | POP_TOP                                                  | POP_TOP 
+     13 | LOAD_CONST 0                                             | LOAD_CONST 0
+     14 | LOAD_CONST ('assure_stock_asset', 'decorate_api_exc')    | LOAD_CONST ('assure_stock_asset', 'decorate_api_exc')
+     15 | IMPORT_NAME IQEngine.api.api_base                        | IMPORT_NAME IQEngine.api.api_base
+     16 | IMPORT_FROM assure_stock_asset                           | IMPORT_FROM assure_stock_asset
+     17 | STORE_NAME assure_stock_asset                            | STORE_NAME assure_stock_asset
+     18 | IMPORT_FROM decorate_api_exc                             | IMPORT_FROM decorate_api_exc
+     19 | STORE_NAME decorate_api_exc                              | STORE_NAME decorate_api_exc
+     20 | POP_TOP                                                  | POP_TOP 
+     21 | LOAD_CONST 0                                             | LOAD_CONST 0
+     22 | LOAD_CONST ('AccountType', 'ExecutionPhase', 'CompareEnu | LOAD_CONST ('AccountType', 'ExecutionPhase', 'CompareEnu
+     23 | IMPORT_NAME IQEngine.const                               | IMPORT_NAME IQEngine.const
+     24 | IMPORT_FROM AccountType                                  | IMPORT_FROM AccountType
+     25 | STORE_NAME AccountType                                   | STORE_NAME AccountType
+     26 | IMPORT_FROM ExecutionPhase                               | IMPORT_FROM ExecutionPhase
+     27 | STORE_NAME ExecutionPhase                                | STORE_NAME ExecutionPhase
+     28 | IMPORT_FROM CompareEnum                                  | IMPORT_FROM CompareEnum
+     29 | STORE_NAME CompareEnum                                   | STORE_NAME CompareEnum
+     30 | IMPORT_FROM EntrustDirection                             | IMPORT_FROM EntrustDirection
+     31 | STORE_NAME EntrustDirection                              | STORE_NAME EntrustDirection
+     32 | IMPORT_FROM FuturesDirection                             | IMPORT_FROM FuturesDirection
+     33 | STORE_NAME FuturesDirection                              | STORE_NAME FuturesDirection
+     34 | POP_TOP                                                  | POP_TOP 
+     35 | LOAD_CONST 0                                             | LOAD_CONST 0
+     36 | LOAD_CONST ('Engine',)                                   | LOAD_CONST ('Engine',)
+     37 | IMPORT_NAME IQEngine.core.engine                         | IMPORT_NAME IQEngine.core.engine
+     38 | IMPORT_FROM Engine                                       | IMPORT_FROM Engine
+     39 | STORE_NAME Engine                                        | STORE_NAME Engine
+     40 | POP_TOP                                                  | POP_TOP 
+     41 | LOAD_CONST 0                                             | LOAD_CONST 0
+     42 | LOAD_CONST ('ExecutionContext',)                         | LOAD_CONST ('ExecutionContext',)
+     43 | IMPORT_NAME IQEngine.core.execution_context              | IMPORT_NAME IQEngine.core.execution_context
+     44 | IMPORT_FROM ExecutionContext                             | IMPORT_FROM ExecutionContext
+     45 | STORE_NAME ExecutionContext                              | STORE_NAME ExecutionContext
+     46 | POP_TOP                                                  | POP_TOP 
+     47 | LOAD_CONST 0                                             | LOAD_CONST 0
+     48 | LOAD_CONST ('Order', 'MarketOrder', 'LimitOrder', 'GearO | LOAD_CONST ('Order', 'MarketOrder', 'LimitOrder', 'GearO
+     49 | IMPORT_NAME IQEngine.account.order                       | IMPORT_NAME IQEngine.account.order
+     50 | IMPORT_FROM Order                                        | IMPORT_FROM Order
+     51 | STORE_NAME Order                                         | STORE_NAME Order
+     52 | IMPORT_FROM MarketOrder                                  | IMPORT_FROM MarketOrder
+     53 | STORE_NAME MarketOrder                                   | STORE_NAME MarketOrder
+     54 | IMPORT_FROM LimitOrder                                   | IMPORT_FROM LimitOrder
+     55 | STORE_NAME LimitOrder                                    | STORE_NAME LimitOrder
+     56 | IMPORT_FROM GearOrder                                    | IMPORT_FROM GearOrder
+     57 | STORE_NAME GearOrder                                     | STORE_NAME GearOrder
+     58 | POP_TOP                                                  | POP_TOP 
+     59 | LOAD_CONST 0                                             | LOAD_CONST 0
+     60 | LOAD_CONST ('check_price',)                              | LOAD_CONST ('check_price',)
+     61 | IMPORT_NAME IQEngine.utils                               | IMPORT_NAME IQEngine.utils
+     62 | IMPORT_FROM check_price                                  | IMPORT_FROM check_price
+     63 | STORE_NAME check_price                                   | STORE_NAME check_price
+     64 | POP_TOP                                                  | POP_TOP 
+     65 | LOAD_CONST 0                                             | LOAD_CONST 0
+     66 | LOAD_CONST ('apply_rules', 'verify_arg')                 | LOAD_CONST ('apply_rules', 'verify_arg')
+     67 | IMPORT_NAME IQEngine.utils.arg_checker                   | IMPORT_NAME IQEngine.utils.arg_checker
+     68 | IMPORT_FROM apply_rules                                  | IMPORT_FROM apply_rules
+     69 | STORE_NAME apply_rules                                   | STORE_NAME apply_rules
+     70 | IMPORT_FROM verify_arg                                   | IMPORT_FROM verify_arg
+     71 | STORE_NAME verify_arg                                    | STORE_NAME verify_arg
+     72 | POP_TOP                                                  | POP_TOP 
+     73 | LOAD_CONST 0                                             | LOAD_CONST 0
+     74 | LOAD_CONST ('IQInvalidArgument',)                        | LOAD_CONST ('IQInvalidArgument',)
+     75 | IMPORT_NAME IQEngine.utils.exception                     | IMPORT_NAME IQEngine.utils.exception
+     76 | IMPORT_FROM IQInvalidArgument                            | IMPORT_FROM IQInvalidArgument
+     77 | STORE_NAME IQInvalidArgument                             | STORE_NAME IQInvalidArgument
+     78 | POP_TOP                                                  | POP_TOP 
+     79 | LOAD_CONST 0                                             | LOAD_CONST 0
+     80 | LOAD_CONST ('get_local_text',)                           | LOAD_CONST ('get_local_text',)
+     81 | IMPORT_NAME IQEngine.utils.i18n                          | IMPORT_NAME IQEngine.utils.i18n
+     82 | IMPORT_FROM get_local_text                               | IMPORT_FROM get_local_text
+     83 | STORE_NAME _                                             | STORE_NAME _
+     84 | POP_TOP                                                  | POP_TOP 
+     85 | LOAD_CONST 0                                             | LOAD_CONST 0
+     86 | LOAD_CONST ('strategy_log',)                             | LOAD_CONST ('strategy_log',)
+     87 | IMPORT_NAME IQCommon.logger                              | IMPORT_NAME IQCommon.logger
+     88 | IMPORT_FROM strategy_log                                 | IMPORT_FROM strategy_log
+     89 | STORE_NAME strategy_log                                  | STORE_NAME strategy_log
+     90 | POP_TOP                                                  | POP_TOP 
+     91 | LOAD_CONST 0                                             | LOAD_CONST 0
+     92 | LOAD_CONST ('market_close', 'market_open')               | LOAD_CONST ('market_close', 'market_open')
+     93 | IMPORT_NAME IQEngine.utils.scheduler                     | IMPORT_NAME IQEngine.utils.scheduler
+     94 | IMPORT_FROM market_close                                 | IMPORT_FROM market_close
+     95 | STORE_NAME market_close                                  | STORE_NAME market_close
+     96 | IMPORT_FROM market_open                                  | IMPORT_FROM market_open
+     97 | STORE_NAME market_open                                   | STORE_NAME market_open
+     98 | POP_TOP                                                  | POP_TOP 
+     99 | LOAD_CONST 0                                             | LOAD_CONST 0
+    100 | LOAD_CONST ('datetime_func',)                            | LOAD_CONST ('datetime_func',)
+    101 | IMPORT_NAME IQEngine.utils                               | IMPORT_NAME IQEngine.utils
+    102 | IMPORT_FROM datetime_func                                | IMPORT_FROM datetime_func
+    103 | STORE_NAME datetime_func                                 | STORE_NAME datetime_func
+    104 | POP_TOP                                                  | POP_TOP 
+    105 | LOAD_CONST 0                                             | LOAD_CONST 0
+    106 | LOAD_CONST ('order',)                                    | LOAD_CONST ('order',)
+    107 | IMPORT_NAME IQEngine.api.api_base                        | IMPORT_NAME IQEngine.api.api_base
+    108 | IMPORT_FROM order                                        | IMPORT_FROM order
+    109 | STORE_NAME order                                         | STORE_NAME order
+    110 | POP_TOP                                                  | POP_TOP 
+>>  111 | LOAD_CONST 10                                            | LOAD_CONST None
+    112 | PUSH_NULL                                                | PUSH_NULL 
+    113 | LOAD_NAME getcontext                                     | LOAD_NAME getcontext
+    114 | PRECALL                                                  | PRECALL 
+    115 | CALL                                                     | CALL 
+    116 | STORE_ATTR prec                                          | STORE_ATTR prec
+    117 | LOAD_CONST 'market_open'                                 | LOAD_CONST 'market_open'
+    118 | LOAD_CONST 'market_close'                                | LOAD_CONST 'market_close'
+    119 | BUILD_LIST                                               | BUILD_LIST 
+    120 | STORE_NAME __all__                                       | STORE_NAME __all__
+  ... (478 more)
+---- first_diff_index=111
+====================================================================================================
+[2] F:/Downloads/pythoncdc-main/site-packages/fly/common/convert.pyc
+    func=getchnstr orig=37 decomp=38 jump=2 true=3
+    first_diff: idx=35 orig=LOAD_FAST 'chn_str' -> decomp=JUMP_BACKWARD 10
+==== getchnstr  orig=39 decomp=40
+      0 | RESUME                                                   | RESUME 
+      1 | LOAD_CONST ''                                            | LOAD_CONST ''
+      2 | STORE_FAST chn_str                                       | STORE_FAST chn_str
+      3 | LOAD_FAST input_str                                      | LOAD_FAST input_str
+      4 | GET_ITER                                                 | GET_ITER 
+>>    5 | FOR_ITER to 160                                          | FOR_ITER to 162
+      6 | STORE_FAST c                                             | STORE_FAST c
+      7 | LOAD_FAST c                                              | LOAD_FAST c
+      8 | LOAD_GLOBAL CHN_DIGIT_MAP                                | LOAD_GLOBAL CHN_DIGIT_MAP
+      9 | LOAD_METHOD keys                                         | LOAD_METHOD keys
+     10 | PRECALL                                                  | PRECALL 
+     11 | CALL                                                     | CALL 
+     12 | CONTAINS_OP                                              | CONTAINS_OP 
+>>   13 | POP_JUMP_FORWARD_IF_TRUE to 104                          | POP_JUMP_FORWARD_IF_FALSE to 160
+     14 | LOAD_FAST c                                              | LOAD_FAST c
+  ... (26 more)
+---- first_diff_index=5
+====================================================================================================
+[3] F:/Downloads/pythoncdc-main/site-packages/IQEngine/account/base_account.pyc
+    func=__init__ orig=25 decomp=14 jump=0 true=15
+    first_diff: idx=10 orig=LOAD_FAST 'processed_trade' -> decomp=LOAD_FAST 'self'
+==== __init__  orig=29 decomp=15
+      0 | RESUME                                                   | RESUME 
+      1 | LOAD_FAST positions                                      | LOAD_FAST positions
+      2 | LOAD_FAST self                                           | LOAD_FAST self
+      3 | STORE_ATTR _positions                                    | STORE_ATTR _positions
+      4 | LOAD_CONST 0                                             | LOAD_CONST 0
+      5 | LOAD_FAST self                                           | LOAD_FAST self
+      6 | STORE_ATTR _frozen_cash                                  | STORE_ATTR _frozen_cash
+      7 | LOAD_FAST total_cash                                     | LOAD_FAST total_cash
+      8 | LOAD_FAST self                                           | LOAD_FAST self
+      9 | STORE_ATTR _total_cash                                   | STORE_ATTR _total_cash
+>>   10 | LOAD_FAST processed_trade                                | LOAD_FAST self
+>>   11 | POP_JUMP_FORWARD_IF_NONE to 52                           | LOAD_METHOD register_event
+>>   12 | LOAD_FAST processed_trade                                | PRECALL 
+>>   13 | JUMP_FORWARD to 78                                       | CALL 
+>>   14 | LOAD_GLOBAL NULL + set                                   | RETURN_VALUE 
+>>   15 | PRECALL                                                  | -
+>>   16 | CALL                                                     | -
+>>   17 | LOAD_FAST self                                           | -
+>>   18 | STORE_ATTR _processed_trade                              | -
+>>   19 | LOAD_CONST 0                                             | -
+  ... (10 more)
+---- first_diff_index=10
+====================================================================================================
+[4] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/__init__.pyc
+    func=_on_before_trading_start_trading_thread orig=62 decomp=62 jump=2 true=19
+    first_diff: idx=43 orig=LOAD_FAST 'order' -> decomp=JUMP_FORWARD 364
+==== _on_before_trading_start_trading_thread  orig=73 decomp=68
+      0 | RESUME                                                   | RESUME 
+      1 | LOAD_FAST self                                           | LOAD_FAST self
+      2 | LOAD_ATTR _engine                                        | LOAD_ATTR _engine
+      3 | LOAD_METHOD set_engine                                   | LOAD_METHOD set_engine
+      4 | LOAD_FAST self                                           | LOAD_FAST self
+      5 | LOAD_ATTR _engine                                        | LOAD_ATTR _engine
+      6 | PRECALL                                                  | PRECALL 
+      7 | CALL                                                     | CALL 
+      8 | POP_TOP                                                  | POP_TOP 
+      9 | LOAD_FAST self                                           | LOAD_FAST self
+     10 | LOAD_ATTR _will_be_ordered                               | LOAD_ATTR _will_be_ordered
+>>   11 | POP_JUMP_FORWARD_IF_FALSE to 422                         | POP_JUMP_FORWARD_IF_FALSE to 382
+     12 | LOAD_FAST self                                           | LOAD_FAST self
+     13 | LOAD_ATTR _will_be_ordered                               | LOAD_ATTR _will_be_ordered
+     14 | LOAD_METHOD pop                                          | LOAD_METHOD pop
+     15 | LOAD_CONST 0                                             | LOAD_CONST 0
+     16 | PRECALL                                                  | PRECALL 
+     17 | CALL                                                     | CALL 
+     18 | STORE_FAST order                                         | STORE_FAST order
+     19 | NOP                                                      | NOP 
+     20 | LOAD_GLOBAL datetime                                     | LOAD_GLOBAL datetime
+  ... (53 more)
+---- first_diff_index=11
+====================================================================================================
+[5] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/local_variables/finance.pyc
+    func=__missing__ orig=62 decomp=61 jump=0 true=27
+    first_diff: idx=35 orig=JUMP_FORWARD 296 -> decomp=LOAD_GLOBAL 'Position'
+==== __missing__  orig=70 decomp=69
+      0 | RESUME                                                   | RESUME 
+      1 | NOP                                                      | NOP 
+      2 | LOAD_GLOBAL NULL + endswith_transe_2to4                  | LOAD_GLOBAL NULL + endswith_transe_2to4
+      3 | LOAD_FAST symbol                                         | LOAD_FAST symbol
+      4 | PRECALL                                                  | PRECALL 
+      5 | CALL                                                     | CALL 
+      6 | STORE_FAST symbol                                        | STORE_FAST symbol
+      7 | LOAD_FAST self                                           | LOAD_FAST self
+      8 | LOAD_METHOD get                                          | LOAD_METHOD get
+      9 | LOAD_FAST symbol                                         | LOAD_FAST symbol
+     10 | LOAD_CONST None                                          | LOAD_CONST None
+     11 | PRECALL                                                  | PRECALL 
+     12 | CALL                                                     | CALL 
+     13 | STORE_FAST r                                             | STORE_FAST r
+     14 | LOAD_FAST r                                              | LOAD_FAST r
+     15 | POP_JUMP_FORWARD_IF_NONE to 86                           | POP_JUMP_FORWARD_IF_NONE to 86
+     16 | LOAD_FAST r                                              | LOAD_FAST r
+     17 | RETURN_VALUE                                             | RETURN_VALUE 
+     18 | LOAD_FAST symbol                                         | LOAD_FAST symbol
+     19 | LOAD_METHOD replace                                      | LOAD_METHOD replace
+     20 | LOAD_CONST 'XSHG'                                        | LOAD_CONST 'XSHG'
+     21 | LOAD_CONST 'SS'                                          | LOAD_CONST 'SS'
+     22 | PRECALL                                                  | PRECALL 
+     23 | CALL                                                     | CALL 
+     24 | LOAD_METHOD replace                                      | LOAD_METHOD replace
+     25 | LOAD_CONST 'XSHE'                                        | LOAD_CONST 'XSHE'
+     26 | LOAD_CONST 'SZ'                                          | LOAD_CONST 'SZ'
+     27 | PRECALL                                                  | PRECALL 
+     28 | CALL                                                     | CALL 
+     29 | STORE_FAST symbol                                        | STORE_FAST symbol
+     30 | LOAD_FAST self                                           | LOAD_FAST self
+     31 | LOAD_METHOD get                                          | LOAD_METHOD get
+     32 | LOAD_FAST symbol                                         | LOAD_FAST symbol
+     33 | LOAD_CONST None                                          | LOAD_CONST None
+     34 | PRECALL                                                  | PRECALL 
+     35 | CALL                                                     | CALL 
+     36 | STORE_FAST r                                             | STORE_FAST r
+     37 | LOAD_FAST r                                              | LOAD_FAST r
+     38 | POP_JUMP_FORWARD_IF_NONE to 222                          | POP_JUMP_FORWARD_IF_NONE to 222
+     39 | LOAD_FAST r                                              | LOAD_FAST r
+     40 | RETURN_VALUE                                             | RETURN_VALUE 
+>>   41 | JUMP_FORWARD to 296                                      | LOAD_GLOBAL NULL + Position
+>>   42 | PUSH_EXC_INFO                                            | LOAD_FAST self
+>>   43 | LOAD_GLOBAL AttributeError                               | LOAD_ATTR _engine
+>>   44 | LOAD_GLOBAL KeyError                                     | LOAD_FAST self
+>>   45 | BUILD_TUPLE                                              | LOAD_ATTR _engine
+>>   46 | CHECK_EXC_MATCH                                          | LOAD_ATTR portfolio
+>>   47 | POP_JUMP_FORWARD_IF_FALSE to 288                         | LOAD_ATTR positions
+>>   48 | POP_TOP                                                  | LOAD_FAST symbol
+>>   49 | LOAD_GLOBAL NULL + KeyError                              | BINARY_SUBSCR 
+>>   50 | LOAD_FAST symbol                                         | PRECALL 
+  ... (20 more)
+---- first_diff_index=41
+====================================================================================================
+[6] F:/Downloads/pythoncdc-main/site-packages/IQEngine/account/base_position.pyc
+    func=last_price orig=33 decomp=24 jump=0 true=31
+    first_diff: idx=2 orig=LOAD_ATTR 'isnan' -> decomp=LOAD_GLOBAL 'np'
+==== last_price  orig=39 decomp=28
+      0 | RESUME                                                   | RESUME 
+      1 | LOAD_GLOBAL NULL + np                                    | LOAD_GLOBAL NULL + np
+>>    2 | LOAD_ATTR isnan                                          | LOAD_GLOBAL NULL + np
+>>    3 | LOAD_FAST self                                           | LOAD_ATTR isnan
+>>    4 | LOAD_ATTR _last_price                                    | LOAD_FAST self
+>>    5 | PRECALL                                                  | LOAD_ATTR _last_price
+>>    6 | CALL                                                     | PRECALL 
+>>    7 | POP_JUMP_FORWARD_IF_TRUE to 66                           | CALL 
+>>    8 | LOAD_FAST self                                           | POP_JUMP_FORWARD_IF_FALSE to 78
+>>    9 | LOAD_ATTR _last_price                                    | LOAD_FAST self
+>>   10 | JUMP_FORWARD to 150                                      | LOAD_ATTR _last_price
+>>   11 | LOAD_GLOBAL NULL + Engine                                | JUMP_FORWARD to 162
+  ... (28 more)
+---- first_diff_index=2
+====================================================================================================
+[7] F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/data_proxy.pyc
+    func=DataProxy orig=37 decomp=33 jump=0 true=32
+    first_diff: idx=5 orig=LOAD_NAME 'TickBar' -> decomp=LOAD_CONST '<code object __init__>'
+==== DataProxy  orig=40 decomp=36
+      0 | RESUME                                                   | RESUME 
+      1 | LOAD_NAME __name__                                       | LOAD_NAME __name__
+      2 | STORE_NAME __module__                                    | STORE_NAME __module__
+      3 | LOAD_CONST 'DataProxy'                                   | LOAD_CONST 'DataProxy'
+      4 | STORE_NAME __qualname__                                  | STORE_NAME __qualname__
+>>    5 | LOAD_NAME TickBar                                        | LOAD_CONST <code object __init__ at 0x000002578A24EF50, 
+>>    6 | STORE_NAME TickBar                                       | MAKE_FUNCTION 
+>>    7 | LOAD_NAME BarData                                        | STORE_NAME __init__
+>>    8 | STORE_NAME BarData                                       | LOAD_CONST <code object __getattr__ at 0x000002578A6EA88
+>>    9 | LOAD_CONST <code object __init__ at 0x000002578A24E070,  | MAKE_FUNCTION 
+>>   10 | MAKE_FUNCTION                                            | STORE_NAME __getattr__
+>>   11 | STORE_NAME __init__                                      | PUSH_NULL 
+>>   12 | LOAD_CONST <code object __getattr__ at 0x000002578A6E920 | LOAD_NAME lru_cache
+>>   13 | MAKE_FUNCTION                                            | LOAD_CONST 10000
+>>   14 | STORE_NAME __getattr__                                   | PRECALL 
+  ... (26 more)
+---- first_diff_index=5
+====================================================================================================
+[8] F:/Downloads/pythoncdc-main/site-packages/IQData/utils/__init__.pyc
+    func=__init__ orig=34 decomp=28 jump=0 true=33
+    first_diff: idx=1 orig=LOAD_FAST 'd' -> decomp=LOAD_GLOBAL 'list'
+==== __init__  orig=41 decomp=32
+      0 | RESUME                                                   | RESUME 
+>>    1 | LOAD_FAST d                                              | LOAD_GLOBAL NULL + list
+>>    2 | POP_JUMP_FORWARD_IF_NONE to 10                           | LOAD_GLOBAL NULL + six
+>>    3 | LOAD_FAST d                                              | LOAD_ATTR iteritems
+>>    4 | JUMP_FORWARD to 36                                       | LOAD_FAST self
+>>    5 | LOAD_GLOBAL NULL + dict                                  | LOAD_ATTR __dict__
+      6 | PRECALL                                                  | PRECALL 
+      7 | CALL                                                     | CALL 
+>>    8 | LOAD_FAST self                                           | PRECALL 
+>>    9 | STORE_ATTR __dict__                                      | CALL 
+>>   10 | LOAD_GLOBAL NULL + list                                  | GET_ITER 
+  ... (31 more)
+---- first_diff_index=1
+====================================================================================================
+[9] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/datetime_func.pyc
+    func=change_2str_of_time_2_datetime orig=63 decomp=38 jump=0 true=33
+    first_diff: idx=30 orig=LOAD_GLOBAL 'datetime' -> decomp=LOAD_FAST 'endtime'
+==== change_2str_of_time_2_datetime  orig=67 decomp=40
+      0 | RESUME                                                   | RESUME 
+      1 | LOAD_GLOBAL datetime                                     | LOAD_GLOBAL datetime
+      2 | LOAD_ATTR datetime                                       | LOAD_ATTR datetime
+      3 | LOAD_METHOD strptime                                     | LOAD_METHOD strptime
+      4 | LOAD_FAST startttime                                     | LOAD_FAST startttime
+      5 | LOAD_CONST None                                          | LOAD_CONST None
+      6 | LOAD_CONST 8                                             | LOAD_CONST 8
+      7 | BUILD_SLICE                                              | BUILD_SLICE 
+      8 | BINARY_SUBSCR                                            | BINARY_SUBSCR 
+      9 | LOAD_GLOBAL NULL + len                                   | LOAD_GLOBAL NULL + len
+     10 | LOAD_FAST startttime                                     | LOAD_FAST startttime
+     11 | LOAD_CONST 8                                             | LOAD_CONST 8
+     12 | LOAD_CONST None                                          | LOAD_CONST None
+     13 | BUILD_SLICE                                              | BUILD_SLICE 
+     14 | BINARY_SUBSCR                                            | BINARY_SUBSCR 
+     15 | PRECALL                                                  | PRECALL 
+     16 | CALL                                                     | CALL 
+     17 | LOAD_CONST 4                                             | LOAD_CONST 4
+     18 | COMPARE_OP ==                                            | COMPARE_OP ==
+     19 | POP_JUMP_FORWARD_IF_FALSE to 138                         | POP_JUMP_FORWARD_IF_FALSE to 138
+     20 | LOAD_FAST startttime                                     | LOAD_FAST startttime
+     21 | LOAD_CONST 8                                             | LOAD_CONST 8
+     22 | LOAD_CONST None                                          | LOAD_CONST None
+     23 | BUILD_SLICE                                              | BUILD_SLICE 
+     24 | BINARY_SUBSCR                                            | BINARY_SUBSCR 
+     25 | JUMP_IF_TRUE_OR_POP to 140                               | JUMP_IF_TRUE_OR_POP to 140
+     26 | LOAD_CONST '0000'                                        | LOAD_CONST '0000'
+     27 | BINARY_OP +                                              | BINARY_OP +
+     28 | LOAD_CONST '%Y%m%d%H%M'                                  | LOAD_CONST '%Y%m%d%H%M'
+     29 | PRECALL                                                  | PRECALL 
+     30 | CALL                                                     | CALL 
+     31 | STORE_FAST source_start                                  | STORE_FAST source_start
+>>   32 | LOAD_GLOBAL datetime                                     | LOAD_FAST endtime
+>>   33 | LOAD_ATTR datetime                                       | LOAD_CONST 8
+>>   34 | LOAD_METHOD strptime                                     | LOAD_CONST None
+>>   35 | LOAD_FAST endtime                                        | BUILD_SLICE 
+>>   36 | LOAD_CONST None                                          | BINARY_SUBSCR 
+>>   37 | LOAD_CONST 8                                             | STORE_FAST source_end
+>>   38 | BUILD_SLICE                                              | LOAD_CONST '1530'
+>>   39 | BINARY_SUBSCR                                            | RETURN_VALUE 
+>>   40 | LOAD_GLOBAL NULL + len                                   | -
+>>   41 | LOAD_FAST endtime                                        | -
+  ... (26 more)
+---- first_diff_index=32
+====================================================================================================
+[10] F:/Downloads/pythoncdc-main/site-packages/IQData/utils/datetime_func.pyc
+    func=change_2str_of_time_2_datetime orig=63 decomp=38 jump=0 true=33
+    first_diff: idx=30 orig=LOAD_GLOBAL 'datetime' -> decomp=LOAD_FAST 'endtime'
+==== change_2str_of_time_2_datetime  orig=67 decomp=40
+      0 | RESUME                                                   | RESUME 
+      1 | LOAD_GLOBAL datetime                                     | LOAD_GLOBAL datetime
+      2 | LOAD_ATTR datetime                                       | LOAD_ATTR datetime
+      3 | LOAD_METHOD strptime                                     | LOAD_METHOD strptime
+      4 | LOAD_FAST startttime                                     | LOAD_FAST startttime
+      5 | LOAD_CONST None                                          | LOAD_CONST None
+      6 | LOAD_CONST 8                                             | LOAD_CONST 8
+      7 | BUILD_SLICE                                              | BUILD_SLICE 
+      8 | BINARY_SUBSCR                                            | BINARY_SUBSCR 
+      9 | LOAD_GLOBAL NULL + len                                   | LOAD_GLOBAL NULL + len
+     10 | LOAD_FAST startttime                                     | LOAD_FAST startttime
+     11 | LOAD_CONST 8                                             | LOAD_CONST 8
+     12 | LOAD_CONST None                                          | LOAD_CONST None
+     13 | BUILD_SLICE                                              | BUILD_SLICE 
+     14 | BINARY_SUBSCR                                            | BINARY_SUBSCR 
+     15 | PRECALL                                                  | PRECALL 
+     16 | CALL                                                     | CALL 
+     17 | LOAD_CONST 4                                             | LOAD_CONST 4
+     18 | COMPARE_OP ==                                            | COMPARE_OP ==
+     19 | POP_JUMP_FORWARD_IF_FALSE to 138                         | POP_JUMP_FORWARD_IF_FALSE to 138
+     20 | LOAD_FAST startttime                                     | LOAD_FAST startttime
+     21 | LOAD_CONST 8                                             | LOAD_CONST 8
+     22 | LOAD_CONST None                                          | LOAD_CONST None
+     23 | BUILD_SLICE                                              | BUILD_SLICE 
+     24 | BINARY_SUBSCR                                            | BINARY_SUBSCR 
+     25 | JUMP_IF_TRUE_OR_POP to 140                               | JUMP_IF_TRUE_OR_POP to 140
+     26 | LOAD_CONST '0000'                                        | LOAD_CONST '0000'
+     27 | BINARY_OP +                                              | BINARY_OP +
+     28 | LOAD_CONST '%Y%m%d%H%M'                                  | LOAD_CONST '%Y%m%d%H%M'
+     29 | PRECALL                                                  | PRECALL 
+     30 | CALL                                                     | CALL 
+     31 | STORE_FAST source_start                                  | STORE_FAST source_start
+>>   32 | LOAD_GLOBAL datetime                                     | LOAD_FAST endtime
+>>   33 | LOAD_ATTR datetime                                       | LOAD_CONST 8
+>>   34 | LOAD_METHOD strptime                                     | LOAD_CONST None
+>>   35 | LOAD_FAST endtime                                        | BUILD_SLICE 
+>>   36 | LOAD_CONST None                                          | BINARY_SUBSCR 
+>>   37 | LOAD_CONST 8                                             | STORE_FAST source_end
+>>   38 | BUILD_SLICE                                              | LOAD_CONST '1530'
+>>   39 | BINARY_SUBSCR                                            | RETURN_VALUE 
+>>   40 | LOAD_GLOBAL NULL + len                                   | -
+>>   41 | LOAD_FAST endtime                                        | -
+  ... (26 more)
+---- first_diff_index=32
+====================================================================================================
+[11] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/future_position.pyc
+    func=make_trade orig=297 decomp=292 jump=1 true=34
+    first_diff: idx=260 orig=JUMP_FORWARD 1442 -> decomp=LOAD_CONST None
+==== make_trade  orig=306 decomp=301
+      0 | RESUME                                                   | RESUME 
+      1 | LOAD_FAST trade                                          | LOAD_FAST trade
+      2 | LOAD_ATTR amount                                         | LOAD_ATTR amount
+      3 | STORE_FAST trade_amount                                  | STORE_FAST trade_amount
+      4 | LOAD_FAST trade                                          | LOAD_FAST trade
+      5 | LOAD_ATTR asset                                          | LOAD_ATTR asset
+      6 | STORE_FAST asset                                         | STORE_FAST asset
+      7 | LOAD_FAST asset                                          | LOAD_FAST asset
+      8 | LOAD_ATTR contract_multiplier                            | LOAD_ATTR contract_multiplier
+      9 | STORE_FAST contract_multiplier                           | STORE_FAST contract_multiplier
+     10 | LOAD_FAST trade                                          | LOAD_FAST trade
+     11 | LOAD_ATTR trading_datetime                               | LOAD_ATTR trading_datetime
+     12 | STORE_FAST current_date                                  | STORE_FAST current_date
+     13 | LOAD_FAST trade                                          | LOAD_FAST trade
+     14 | LOAD_ATTR entrust_direction                              | LOAD_ATTR entrust_direction
+     15 | LOAD_GLOBAL EntrustDirection                             | LOAD_GLOBAL EntrustDirection
+     16 | LOAD_ATTR BUY                                            | LOAD_ATTR BUY
+     17 | COMPARE_OP ==                                            | COMPARE_OP ==
+     18 | EXTENDED_ARG                                             | EXTENDED_ARG 
+     19 | POP_JUMP_FORWARD_IF_FALSE to 850                         | POP_JUMP_FORWARD_IF_FALSE to 850
+     20 | LOAD_FAST trade                                          | LOAD_FAST trade
+     21 | LOAD_ATTR futures_direction                              | LOAD_ATTR futures_direction
+     22 | LOAD_GLOBAL FuturesDirection                             | LOAD_GLOBAL FuturesDirection
+     23 | LOAD_ATTR OPEN                                           | LOAD_ATTR OPEN
+     24 | COMPARE_OP ==                                            | COMPARE_OP ==
+     25 | POP_JUMP_FORWARD_IF_FALSE to 524                         | POP_JUMP_FORWARD_IF_FALSE to 524
+     26 | LOAD_FAST self                                           | LOAD_FAST self
+     27 | LOAD_ATTR buy_amount                                     | LOAD_ATTR buy_amount
+     28 | LOAD_CONST 0                                             | LOAD_CONST 0
+     29 | COMPARE_OP ==                                            | COMPARE_OP ==
+     30 | POP_JUMP_FORWARD_IF_FALSE to 180                         | POP_JUMP_FORWARD_IF_FALSE to 180
+     31 | LOAD_FAST current_date                                   | LOAD_FAST current_date
+     32 | LOAD_FAST self                                           | LOAD_FAST self
+     33 | STORE_ATTR _long_create_time                             | STORE_ATTR _long_create_time
+     34 | LOAD_FAST self                                           | LOAD_FAST self
+     35 | LOAD_METHOD _set_position_type                           | LOAD_METHOD _set_position_type
+     36 | LOAD_GLOBAL PositionType                                 | LOAD_GLOBAL PositionType
+     37 | LOAD_ATTR RIGHT                                          | LOAD_ATTR RIGHT
+     38 | PRECALL                                                  | PRECALL 
+     39 | CALL                                                     | CALL 
+     40 | POP_TOP                                                  | POP_TOP 
+     41 | LOAD_FAST self                                           | LOAD_FAST self
+     42 | LOAD_ATTR _buy_avg_open_price                            | LOAD_ATTR _buy_avg_open_price
+     43 | LOAD_FAST self                                           | LOAD_FAST self
+     44 | LOAD_ATTR buy_amount                                     | LOAD_ATTR buy_amount
+     45 | BINARY_OP *                                              | BINARY_OP *
+     46 | LOAD_FAST trade_amount                                   | LOAD_FAST trade_amount
+     47 | LOAD_FAST trade                                          | LOAD_FAST trade
+     48 | LOAD_ATTR price                                          | LOAD_ATTR price
+     49 | BINARY_OP *                                              | BINARY_OP *
+     50 | BINARY_OP +                                              | BINARY_OP +
+     51 | LOAD_FAST contract_multiplier                            | LOAD_FAST contract_multiplier
+     52 | BINARY_OP *                                              | BINARY_OP *
+     53 | LOAD_FAST trade                                          | LOAD_FAST trade
+     54 | LOAD_ATTR transaction_cost                               | LOAD_ATTR transaction_cost
+     55 | BINARY_OP +                                              | BINARY_OP +
+     56 | LOAD_FAST self                                           | LOAD_FAST self
+     57 | LOAD_ATTR buy_amount                                     | LOAD_ATTR buy_amount
+     58 | LOAD_FAST trade_amount                                   | LOAD_FAST trade_amount
+     59 | BINARY_OP +                                              | BINARY_OP +
+     60 | LOAD_FAST contract_multiplier                            | LOAD_FAST contract_multiplier
+     61 | BINARY_OP *                                              | BINARY_OP *
+     62 | BINARY_OP /                                              | BINARY_OP /
+     63 | LOAD_FAST self                                           | LOAD_FAST self
+     64 | STORE_ATTR _buy_avg_open_price                           | STORE_ATTR _buy_avg_open_price
+     65 | LOAD_FAST self                                           | LOAD_FAST self
+     66 | COPY                                                     | COPY 
+     67 | LOAD_ATTR _buy_transaction_cost                          | LOAD_ATTR _buy_transaction_cost
+     68 | LOAD_FAST trade                                          | LOAD_FAST trade
+     69 | LOAD_ATTR transaction_cost                               | LOAD_ATTR transaction_cost
+     70 | BINARY_OP +=                                             | BINARY_OP +=
+     71 | SWAP                                                     | SWAP 
+     72 | STORE_ATTR _buy_transaction_cost                         | STORE_ATTR _buy_transaction_cost
+     73 | LOAD_FAST self                                           | LOAD_FAST self
+     74 | LOAD_ATTR _buy_today_holding_list                        | LOAD_ATTR _buy_today_holding_list
+     75 | LOAD_METHOD insert                                       | LOAD_METHOD insert
+     76 | LOAD_CONST 0                                             | LOAD_CONST 0
+     77 | LOAD_FAST trade                                          | LOAD_FAST trade
+     78 | LOAD_ATTR price                                          | LOAD_ATTR price
+     79 | LOAD_FAST trade_amount                                   | LOAD_FAST trade_amount
+     80 | BUILD_TUPLE                                              | BUILD_TUPLE 
+     81 | PRECALL                                                  | PRECALL 
+     82 | CALL                                                     | CALL 
+     83 | POP_TOP                                                  | POP_TOP 
+     84 | LOAD_CONST -1                                            | LOAD_CONST -1
+     85 | LOAD_FAST self                                           | LOAD_FAST self
+     86 | LOAD_METHOD cal_margin                                   | LOAD_METHOD cal_margin
+     87 | LOAD_FAST trade_amount                                   | LOAD_FAST trade_amount
+     88 | LOAD_FAST trade                                          | LOAD_FAST trade
+     89 | LOAD_ATTR price                                          | LOAD_ATTR price
+     90 | PRECALL                                                  | PRECALL 
+     91 | CALL                                                     | CALL 
+     92 | BINARY_OP *                                              | BINARY_OP *
+     93 | RETURN_VALUE                                             | RETURN_VALUE 
+     94 | LOAD_FAST self                                           | LOAD_FAST self
+     95 | LOAD_ATTR sell_amount                                    | LOAD_ATTR sell_amount
+     96 | LOAD_FAST trade_amount                                   | LOAD_FAST trade_amount
+     97 | BINARY_OP -                                              | BINARY_OP -
+     98 | LOAD_CONST 0                                             | LOAD_CONST 0
+     99 | COMPARE_OP !=                                            | COMPARE_OP !=
+    100 | POP_JUMP_FORWARD_IF_FALSE to 666                         | POP_JUMP_FORWARD_IF_FALSE to 666
+    101 | LOAD_FAST self                                           | LOAD_FAST self
+    102 | LOAD_ATTR _sell_avg_open_price                           | LOAD_ATTR _sell_avg_open_price
+    103 | LOAD_FAST self                                           | LOAD_FAST self
+    104 | LOAD_ATTR sell_amount                                    | LOAD_ATTR sell_amount
+    105 | BINARY_OP *                                              | BINARY_OP *
+    106 | LOAD_FAST trade_amount                                   | LOAD_FAST trade_amount
+    107 | LOAD_FAST trade                                          | LOAD_FAST trade
+    108 | LOAD_ATTR price                                          | LOAD_ATTR price
+    109 | BINARY_OP *                                              | BINARY_OP *
+    110 | BINARY_OP -                                              | BINARY_OP -
+    111 | LOAD_FAST contract_multiplier                            | LOAD_FAST contract_multiplier
+    112 | BINARY_OP *                                              | BINARY_OP *
+    113 | LOAD_FAST trade                                          | LOAD_FAST trade
+    114 | LOAD_ATTR transaction_cost                               | LOAD_ATTR transaction_cost
+    115 | BINARY_OP -                                              | BINARY_OP -
+    116 | LOAD_FAST self                                           | LOAD_FAST self
+    117 | LOAD_ATTR sell_amount                                    | LOAD_ATTR sell_amount
+    118 | LOAD_FAST trade_amount                                   | LOAD_FAST trade_amount
+    119 | BINARY_OP -                                              | BINARY_OP -
+    120 | LOAD_FAST contract_multiplier                            | LOAD_FAST contract_multiplier
+    121 | BINARY_OP *                                              | BINARY_OP *
+    122 | BINARY_OP /                                              | BINARY_OP /
+    123 | LOAD_FAST self                                           | LOAD_FAST self
+    124 | STORE_ATTR _sell_avg_open_price                          | STORE_ATTR _sell_avg_open_price
+    125 | JUMP_FORWARD to 694                                      | JUMP_FORWARD to 694
+    126 | LOAD_FAST current_date                                   | LOAD_FAST current_date
+    127 | LOAD_FAST self                                           | LOAD_FAST self
+    128 | STORE_ATTR _short_clean_time                             | STORE_ATTR _short_clean_time
+    129 | LOAD_CONST 0.0                                           | LOAD_CONST 0.0
+    130 | LOAD_FAST self                                           | LOAD_FAST self
+    131 | STORE_ATTR _sell_avg_open_price                          | STORE_ATTR _sell_avg_open_price
+    132 | LOAD_FAST self                                           | LOAD_FAST self
+    133 | LOAD_ATTR margin                                         | LOAD_ATTR margin
+    134 | STORE_FAST old_margin                                    | STORE_FAST old_margin
+    135 | LOAD_FAST self                                           | LOAD_FAST self
+    136 | COPY                                                     | COPY 
+    137 | LOAD_ATTR _sell_transaction_cost                         | LOAD_ATTR _sell_transaction_cost
+    138 | LOAD_FAST trade                                          | LOAD_FAST trade
+    139 | LOAD_ATTR transaction_cost                               | LOAD_ATTR transaction_cost
+    140 | BINARY_OP +=                                             | BINARY_OP +=
+    141 | SWAP                                                     | SWAP 
+    142 | STORE_ATTR _sell_transaction_cost                        | STORE_ATTR _sell_transaction_cost
+    143 | LOAD_FAST self                                           | LOAD_FAST self
+    144 | LOAD_METHOD _close_holding                               | LOAD_METHOD _close_holding
+    145 | LOAD_FAST trade                                          | LOAD_FAST trade
+    146 | PRECALL                                                  | PRECALL 
+    147 | CALL                                                     | CALL 
+    148 | STORE_FAST delta_realized_pnl                            | STORE_FAST delta_realized_pnl
+    149 | LOAD_FAST self                                           | LOAD_FAST self
+    150 | COPY                                                     | COPY 
+    151 | LOAD_ATTR _sell_realized_pnl                             | LOAD_ATTR _sell_realized_pnl
+    152 | LOAD_FAST delta_realized_pnl                             | LOAD_FAST delta_realized_pnl
+    153 | BINARY_OP +=                                             | BINARY_OP +=
+    154 | SWAP                                                     | SWAP 
+    155 | STORE_ATTR _sell_realized_pnl                            | STORE_ATTR _sell_realized_pnl
+    156 | LOAD_FAST old_margin                                     | LOAD_FAST old_margin
+    157 | LOAD_FAST self                                           | LOAD_FAST self
+    158 | LOAD_ATTR margin                                         | LOAD_ATTR margin
+    159 | BINARY_OP -                                              | BINARY_OP -
+    160 | LOAD_FAST delta_realized_pnl                             | LOAD_FAST delta_realized_pnl
+    161 | BINARY_OP +                                              | BINARY_OP +
+    162 | RETURN_VALUE                                             | RETURN_VALUE 
+    163 | LOAD_FAST trade                                          | LOAD_FAST trade
+    164 | LOAD_ATTR futures_direction                              | LOAD_ATTR futures_direction
+    165 | LOAD_GLOBAL FuturesDirection                             | LOAD_GLOBAL FuturesDirection
+    166 | LOAD_ATTR OPEN                                           | LOAD_ATTR OPEN
+    167 | COMPARE_OP ==                                            | COMPARE_OP ==
+    168 | POP_JUMP_FORWARD_IF_FALSE to 1272                        | POP_JUMP_FORWARD_IF_FALSE to 1272
+    169 | LOAD_FAST self                                           | LOAD_FAST self
+    170 | LOAD_ATTR sell_amount                                    | LOAD_ATTR sell_amount
+    171 | LOAD_CONST 0                                             | LOAD_CONST 0
+    172 | COMPARE_OP ==                                            | COMPARE_OP ==
+    173 | POP_JUMP_FORWARD_IF_FALSE to 928                         | POP_JUMP_FORWARD_IF_FALSE to 928
+    174 | LOAD_FAST current_date                                   | LOAD_FAST current_date
+    175 | LOAD_FAST self                                           | LOAD_FAST self
+    176 | STORE_ATTR _short_create_time                            | STORE_ATTR _short_create_time
+    177 | LOAD_FAST self                                           | LOAD_FAST self
+    178 | LOAD_METHOD _set_position_type                           | LOAD_METHOD _set_position_type
+    179 | LOAD_GLOBAL PositionType                                 | LOAD_GLOBAL PositionType
+    180 | LOAD_ATTR VOLUNTARY                                      | LOAD_ATTR VOLUNTARY
+    181 | PRECALL                                                  | PRECALL 
+    182 | CALL                                                     | CALL 
+    183 | POP_TOP                                                  | POP_TOP 
+    184 | LOAD_FAST self                                           | LOAD_FAST self
+    185 | LOAD_ATTR _sell_avg_open_price                           | LOAD_ATTR _sell_avg_open_price
+    186 | LOAD_FAST self                                           | LOAD_FAST self
+    187 | LOAD_ATTR sell_amount                                    | LOAD_ATTR sell_amount
+    188 | BINARY_OP *                                              | BINARY_OP *
+    189 | LOAD_FAST trade_amount                                   | LOAD_FAST trade_amount
+    190 | LOAD_FAST trade                                          | LOAD_FAST trade
+    191 | LOAD_ATTR price                                          | LOAD_ATTR price
+    192 | BINARY_OP *                                              | BINARY_OP *
+    193 | BINARY_OP +                                              | BINARY_OP +
+    194 | LOAD_FAST contract_multiplier                            | LOAD_FAST contract_multiplier
+    195 | BINARY_OP *                                              | BINARY_OP *
+    196 | LOAD_FAST trade                                          | LOAD_FAST trade
+    197 | LOAD_ATTR transaction_cost                               | LOAD_ATTR transaction_cost
+    198 | BINARY_OP -                                              | BINARY_OP -
+    199 | LOAD_FAST self                                           | LOAD_FAST self
+    200 | LOAD_ATTR sell_amount                                    | LOAD_ATTR sell_amount
+    201 | LOAD_FAST trade_amount                                   | LOAD_FAST trade_amount
+    202 | BINARY_OP +                                              | BINARY_OP +
+    203 | LOAD_FAST contract_multiplier                            | LOAD_FAST contract_multiplier
+    204 | BINARY_OP *                                              | BINARY_OP *
+    205 | BINARY_OP /                                              | BINARY_OP /
+    206 | LOAD_FAST self                                           | LOAD_FAST self
+    207 | STORE_ATTR _sell_avg_open_price                          | STORE_ATTR _sell_avg_open_price
+    208 | LOAD_FAST self                                           | LOAD_FAST self
+    209 | COPY                                                     | COPY 
+    210 | LOAD_ATTR _sell_transaction_cost                         | LOAD_ATTR _sell_transaction_cost
+    211 | LOAD_FAST trade                                          | LOAD_FAST trade
+    212 | LOAD_ATTR transaction_cost                               | LOAD_ATTR transaction_cost
+    213 | BINARY_OP +=                                             | BINARY_OP +=
+    214 | SWAP                                                     | SWAP 
+    215 | STORE_ATTR _sell_transaction_cost                        | STORE_ATTR _sell_transaction_cost
+    216 | LOAD_FAST self                                           | LOAD_FAST self
+    217 | LOAD_ATTR _sell_today_holding_list                       | LOAD_ATTR _sell_today_holding_list
+    218 | LOAD_METHOD insert                                       | LOAD_METHOD insert
+    219 | LOAD_CONST 0                                             | LOAD_CONST 0
+    220 | LOAD_FAST trade                                          | LOAD_FAST trade
+    221 | LOAD_ATTR price                                          | LOAD_ATTR price
+    222 | LOAD_FAST trade_amount                                   | LOAD_FAST trade_amount
+    223 | BUILD_TUPLE                                              | BUILD_TUPLE 
+    224 | PRECALL                                                  | PRECALL 
+    225 | CALL                                                     | CALL 
+    226 | POP_TOP                                                  | POP_TOP 
+    227 | LOAD_CONST -1                                            | LOAD_CONST -1
+    228 | LOAD_FAST self                                           | LOAD_FAST self
+    229 | LOAD_METHOD cal_margin                                   | LOAD_METHOD cal_margin
+    230 | LOAD_FAST trade_amount                                   | LOAD_FAST trade_amount
+    231 | LOAD_FAST trade                                          | LOAD_FAST trade
+    232 | LOAD_ATTR price                                          | LOAD_ATTR price
+    233 | PRECALL                                                  | PRECALL 
+    234 | CALL                                                     | CALL 
+    235 | BINARY_OP *                                              | BINARY_OP *
+    236 | RETURN_VALUE                                             | RETURN_VALUE 
+    237 | LOAD_FAST self                                           | LOAD_FAST self
+    238 | LOAD_ATTR buy_amount                                     | LOAD_ATTR buy_amount
+    239 | LOAD_FAST trade_amount                                   | LOAD_FAST trade_amount
+    240 | BINARY_OP -                                              | BINARY_OP -
+    241 | LOAD_CONST 0                                             | LOAD_CONST 0
+    242 | COMPARE_OP !=                                            | COMPARE_OP !=
+>>  243 | POP_JUMP_FORWARD_IF_FALSE to 1414                        | POP_JUMP_FORWARD_IF_FALSE to 1416
+    244 | LOAD_FAST self                                           | LOAD_FAST self
+    245 | LOAD_ATTR _buy_avg_open_price                            | LOAD_ATTR _buy_avg_open_price
+    246 | LOAD_FAST self                                           | LOAD_FAST self
+    247 | LOAD_ATTR buy_amount                                     | LOAD_ATTR buy_amount
+    248 | BINARY_OP *                                              | BINARY_OP *
+    249 | LOAD_FAST trade_amount                                   | LOAD_FAST trade_amount
+    250 | LOAD_FAST trade                                          | LOAD_FAST trade
+    251 | LOAD_ATTR price                                          | LOAD_ATTR price
+    252 | BINARY_OP *                                              | BINARY_OP *
+  ... (54 more)
+---- first_diff_index=243
+====================================================================================================
+[12] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/commission.pyc
+    func=load orig=87 decomp=84 jump=1 true=43
+    first_diff: idx=43 orig=LOAD_CONST None -> decomp=JUMP_FORWARD 302
+==== load  orig=96 decomp=95
+      0 | RESUME                                                   | RESUME 
+      1 | NOP                                                      | NOP 
+      2 | LOAD_CONST 0                                             | LOAD_CONST 0
+      3 | LOAD_CONST ('engine_instance',)                          | LOAD_CONST ('engine_instance',)
+      4 | IMPORT_NAME IQEngine.api.api_base                        | IMPORT_NAME IQEngine.api.api_base
+      5 | IMPORT_FROM engine_instance                              | IMPORT_FROM engine_instance
+      6 | STORE_FAST engine_instance                               | STORE_FAST engine_instance
+      7 | POP_TOP                                                  | POP_TOP 
+      8 | PUSH_NULL                                                | PUSH_NULL 
+      9 | LOAD_FAST engine_instance                                | LOAD_FAST engine_instance
+     10 | PRECALL                                                  | PRECALL 
+     11 | CALL                                                     | CALL 
+     12 | STORE_FAST engine                                        | STORE_FAST engine
+     13 | LOAD_FAST engine                                         | LOAD_FAST engine
+     14 | LOAD_ATTR config                                         | LOAD_ATTR config
+     15 | LOAD_ATTR plugins                                        | LOAD_ATTR plugins
+     16 | LOAD_ATTR plugin_system_finance                          | LOAD_ATTR plugin_system_finance
+     17 | LOAD_ATTR future_info_path                               | LOAD_ATTR future_info_path
+     18 | STORE_FAST file_path                                     | STORE_FAST file_path
+     19 | LOAD_GLOBAL os                                           | LOAD_GLOBAL os
+     20 | LOAD_ATTR path                                           | LOAD_ATTR path
+     21 | LOAD_METHOD exists                                       | LOAD_METHOD exists
+     22 | LOAD_FAST file_path                                      | LOAD_FAST file_path
+     23 | PRECALL                                                  | PRECALL 
+     24 | CALL                                                     | CALL 
+>>   25 | POP_JUMP_FORWARD_IF_FALSE to 308                         | POP_JUMP_FORWARD_IF_FALSE to 306
+     26 | LOAD_GLOBAL NULL + open                                  | LOAD_GLOBAL NULL + open
+     27 | LOAD_FAST file_path                                      | LOAD_FAST file_path
+     28 | LOAD_CONST 'r'                                           | LOAD_CONST 'r'
+     29 | PRECALL                                                  | PRECALL 
+     30 | CALL                                                     | CALL 
+     31 | BEFORE_WITH                                              | BEFORE_WITH 
+     32 | STORE_FAST future_file                                   | STORE_FAST future_file
+     33 | LOAD_FAST future_file                                    | LOAD_FAST future_file
+     34 | LOAD_METHOD read                                         | LOAD_METHOD read
+  ... (62 more)
+---- first_diff_index=25
