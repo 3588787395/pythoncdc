@@ -41,6 +41,36 @@ except ImportError:
 _MAX_COMPARE_DEPTH = 100
 
 
+def ordered_const_items(container):
+    """以确定性顺序展开集合/元组常量的元素。
+
+    CPython 默认启用哈希随机化（PYTHONHASHSEED），set/frozenset 的迭代顺序
+    逐进程变化。反编译器若直接遍历集合常量，产出的集合字面量元素顺序就不可
+    复现：实测 305 个已验证通过的文件中，9 个（3.0%）、共 17 行在 5 个不同
+    seed 下每次都不同。
+
+    本函数统一以 ``(类型名, repr)`` 为排序键展开元素：
+      - 跨进程稳定，使反编译产物可复现；
+      - 对混合类型集合安全——直接 ``sorted()`` 遇到 ``None`` 与 ``str`` 混排
+        （如 ``{'', 'null', 'NULL', None, 'None'}``）会抛 TypeError，故用
+        类型名+repr 复合键，并在异常时逐级降级。
+
+    字节一致性说明：这类集合在原始 pyc 中均为编译期折叠的 frozenset 常量
+    （``BUILD_SET 0`` + ``LOAD_CONST frozenset`` + ``SET_UPDATE 1``），
+    源码的书写顺序在 pyc 内已不可恢复；重编译时同样折叠为 frozenset，
+    集合相等性与元素顺序无关，故排序不影响重编译后的字节码一致性。
+    """
+    items = list(container)
+    try:
+        items.sort(key=lambda v: (type(v).__name__, repr(v)))
+    except Exception:
+        try:
+            items.sort(key=repr)
+        except Exception:
+            pass
+    return items
+
+
 # 优化的节点创建函数
 def create_optimized_ast_node(node_class: type, *args, **kwargs) -> 'ASTNode':
     """创建优化的AST节点（使用对象池）"""

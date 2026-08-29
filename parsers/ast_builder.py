@@ -7534,8 +7534,9 @@ class ASTBuilder:
         # 如果可迭代对象是frozenset常量，提取其元素
         if hasattr(iterable, 'object') and isinstance(iterable.object, frozenset):
             # 从frozenset创建ASTSet
-            from core.ast_nodes import ASTSet, ASTConstant
-            items = [ASTConstant(item) for item in iterable.object]
+            # 集合迭代顺序受 PYTHONHASHSEED 影响，用确定性展开保证产物可复现
+            from core.ast_nodes import ASTSet, ASTConstant, ordered_const_items
+            items = [ASTConstant(item) for item in ordered_const_items(iterable.object)]
             new_set = ASTSet(items)
             self.stack.push(new_set)
         elif hasattr(iterable, '_items'):
@@ -10143,8 +10144,9 @@ class ASTBuilder:
                         self.stack.push(ASTConstant(None))
                     elif isinstance(const_value, frozenset):
                         # [关键修复] 处理frozenset常量，转换为ASTSet
-                        from core.ast_nodes import ASTSet, ASTConstant
-                        items = [ASTConstant(item) for item in const_value]
+                        # 集合迭代顺序受 PYTHONHASHSEED 影响，用确定性展开保证产物可复现
+                        from core.ast_nodes import ASTSet, ASTConstant, ordered_const_items
+                        items = [ASTConstant(item) for item in ordered_const_items(const_value)]
                         node = ASTSet(items)
                         self.stack.push(node)
                     else:

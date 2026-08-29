@@ -769,7 +769,9 @@ class ExpressionReconstructor:
                     elif isinstance(iterable, dict) and iterable.get('type') == 'Constant':
                         const_val = iterable.get('value')
                         if isinstance(const_val, frozenset):
-                            for item in const_val:
+                            # 集合迭代顺序受 PYTHONHASHSEED 影响，用确定性展开保证产物可复现
+                            from core.ast_nodes import ordered_const_items
+                            for item in ordered_const_items(const_val):
                                 elts.append({
                                     'type': 'Constant',
                                     'value': item,
@@ -24467,8 +24469,10 @@ class ASTGeneratorV2:
                             const_val = iterable.get('value')
                             if isinstance(const_val, frozenset):
                                 # 将frozenset的元素添加到集合中
+                                # 集合迭代顺序受 PYTHONHASHSEED 影响，用确定性展开保证产物可复现
+                                from core.ast_nodes import ordered_const_items
                                 elts = set_obj.get('elts', [])
-                                for item in const_val:
+                                for item in ordered_const_items(const_val):
                                     elts.append({
                                         'type': 'Constant',
                                         'value': item,

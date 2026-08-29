@@ -3595,7 +3595,12 @@ class CodeGenerator:
                     elif value is Ellipsis:
                         return '...'
                     elif isinstance(value, frozenset):
-                        return repr(set(value))
+                        # 集合迭代顺序受 PYTHONHASHSEED 影响，按确定性顺序发射
+                        from core.ast_nodes import ordered_const_items
+                        _items = ordered_const_items(value)
+                        if not _items:
+                            return 'set()'
+                        return '{' + ', '.join(repr(v) for v in _items) + '}'
                     else:
                         return str(value)
                 elif node_type == 'Name':
@@ -3898,9 +3903,21 @@ class CodeGenerator:
         elif isinstance(value, bytes):
             return repr(value)
         elif isinstance(value, (list, tuple, dict, set)):
+            if isinstance(value, set):
+                # 集合迭代顺序受 PYTHONHASHSEED 影响，按确定性顺序发射
+                from core.ast_nodes import ordered_const_items
+                _items = ordered_const_items(value)
+                if not _items:
+                    return 'set()'
+                return '{' + ', '.join(repr(v) for v in _items) + '}'
             return repr(value)
         elif isinstance(value, frozenset):
-            return repr(set(value))
+            # 集合迭代顺序受 PYTHONHASHSEED 影响，按确定性顺序发射
+            from core.ast_nodes import ordered_const_items
+            _items = ordered_const_items(value)
+            if not _items:
+                return 'set()'
+            return '{' + ', '.join(repr(v) for v in _items) + '}'
         elif isinstance(value, types.CodeType):
             # 嵌套的code对象（函数）- 递归反编译
             return self._decompile_nested_code(value)

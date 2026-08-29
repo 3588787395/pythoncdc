@@ -56,8 +56,15 @@ def marshal_to_pyc_obj(obj, module: PycModule) -> Optional[PycRef]:
         return Ref(result)
     elif isinstance(obj, frozenset):
         # 处理frozenset类型
+        # frozenset 的迭代顺序受 PYTHONHASHSEED 影响（Python 默认哈希随机化），
+        # 若在此直接遍历，后续所有渲染都会继承这个逐进程变化的顺序，导致反编译
+        # 产物不可复现。在此统一按确定性顺序展开（见 core.ast_nodes.ordered_const_items）。
+        # 安全性：集合字面量在原始 pyc 中已编译期折叠为 frozenset，书写顺序不可恢复；
+        # 重编译同样折叠，集合相等性与顺序无关，故不影响字节码一致性。
+        from core.ast_nodes import ordered_const_items
         result = PycSequence(PycObject.TYPE_FROZENSET)
-        result._values = [marshal_to_pyc_obj(item, module) for item in obj]
+        result._values = [marshal_to_pyc_obj(item, module)
+                          for item in ordered_const_items(obj)]
         return Ref(result)
     elif hasattr(obj, 'co_argcount') and hasattr(obj, 'co_code'):
         pyc_code = PycCode()
