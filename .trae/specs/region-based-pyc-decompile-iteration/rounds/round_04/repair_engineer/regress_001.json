@@ -1,0 +1,997 @@
+{
+  "round": 4,
+  "offset": 65,
+  "elapsed_sec": 287.0,
+  "processed": 17,
+  "remaining": 17,
+  "ok": 0,
+  "partial": 16,
+  "failed": 1,
+  "total_functions": 364,
+  "matched_functions": 308,
+  "files": [
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc",
+      "status": "partial",
+      "rate": 0.8285714285714286,
+      "total_functions": 35,
+      "matched_functions": 29,
+      "mismatches": [
+        {
+          "name": "_fill_month",
+          "orig_count": 73,
+          "decomp_count": 72,
+          "jump_diffs": 0,
+          "true_diffs": 2,
+          "first_diff": {
+            "index": 71,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "RETURN_VALUE",
+            "orig_arg": "self",
+            "decomp_arg": null
+          }
+        },
+        {
+          "name": "_on_publish_after_trading_end",
+          "orig_count": 488,
+          "decomp_count": 495,
+          "jump_diffs": 2,
+          "true_diffs": 152,
+          "first_diff": {
+            "index": 341,
+            "orig_op": "POP_JUMP_FORWARD_IF_FALSE",
+            "decomp_op": "POP_TOP",
+            "orig_arg": 2204,
+            "decomp_arg": null
+          }
+        },
+        {
+          "name": "_on_set_positions",
+          "orig_count": 297,
+          "decomp_count": 296,
+          "jump_diffs": 5,
+          "true_diffs": 32,
+          "first_diff": {
+            "index": 223,
+            "orig_op": "JUMP_BACKWARD",
+            "decomp_op": "JUMP_FORWARD",
+            "orig_arg": 154,
+            "decomp_arg": 1752
+          }
+        },
+        {
+          "name": "_save_testds_to_csv",
+          "orig_count": 71,
+          "decomp_count": 68,
+          "jump_diffs": 7,
+          "true_diffs": 19,
+          "first_diff": {
+            "index": 33,
+            "orig_op": "JUMP_BACKWARD",
+            "decomp_op": "JUMP_FORWARD",
+            "orig_arg": 108,
+            "decomp_arg": 220
+          }
+        },
+        {
+          "name": "get_TradeMode_trades",
+          "orig_count": 1839,
+          "decomp_count": 1752,
+          "jump_diffs": 3,
+          "true_diffs": 1629,
+          "first_diff": {
+            "index": 174,
+            "orig_op": "LOAD_CONST",
+            "decomp_op": "JUMP_FORWARD",
+            "orig_arg": null,
+            "decomp_arg": 1618
+          }
+        },
+        {
+          "name": "get_daily_summary",
+          "orig_count": 622,
+          "decomp_count": 535,
+          "jump_diffs": 0,
+          "true_diffs": 247,
+          "first_diff": {
+            "index": 367,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": "summary",
+            "decomp_arg": "self"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/function.pyc",
+      "status": "partial",
+      "rate": 0.4,
+      "total_functions": 15,
+      "matched_functions": 6,
+      "mismatches": [
+        {
+          "name": "backtest_info_writer",
+          "orig_count": 98,
+          "decomp_count": 99,
+          "jump_diffs": 0,
+          "true_diffs": 95,
+          "first_diff": {
+            "index": 1,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": "FileLock",
+            "decomp_arg": "context"
+          }
+        },
+        {
+          "name": "create_daily_stats",
+          "orig_count": 469,
+          "decomp_count": 467,
+          "jump_diffs": 2,
+          "true_diffs": 350,
+          "first_diff": {
+            "index": 70,
+            "orig_op": "POP_TOP",
+            "decomp_op": "JUMP_BACKWARD",
+            "orig_arg": null,
+            "decomp_arg": 54
+          }
+        },
+        {
+          "name": "create_orders_stats",
+          "orig_count": 295,
+          "decomp_count": 301,
+          "jump_diffs": 2,
+          "true_diffs": 127,
+          "first_diff": {
+            "index": 168,
+            "orig_op": "POP_JUMP_FORWARD_IF_FALSE",
+            "decomp_op": "POP_TOP",
+            "orig_arg": 846,
+            "decomp_arg": null
+          }
+        },
+        {
+          "name": "create_transactions_stats",
+          "orig_count": 275,
+          "decomp_count": 310,
+          "jump_diffs": 3,
+          "true_diffs": 132,
+          "first_diff": {
+            "index": 171,
+            "orig_op": "POP_JUMP_FORWARD_IF_FALSE",
+            "decomp_op": "POP_TOP",
+            "orig_arg": 1302,
+            "decomp_arg": null
+          }
+        },
+        {
+          "name": "csv_writer",
+          "orig_count": 237,
+          "decomp_count": 237,
+          "jump_diffs": 13,
+          "true_diffs": 1,
+          "first_diff": {
+            "index": 4,
+            "orig_op": "LOAD_DEREF",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": "testds_to_json_file_path",
+            "decomp_arg": "testds_to_json_file_path"
+          }
+        },
+        {
+          "name": "get_testds_to_csv_writer",
+          "orig_count": 38,
+          "decomp_count": 30,
+          "jump_diffs": 1,
+          "true_diffs": 25,
+          "first_diff": {
+            "index": 13,
+            "orig_op": "STORE_DEREF",
+            "decomp_op": "JUMP_FORWARD",
+            "orig_arg": "testds_to_json_file_path",
+            "decomp_arg": 158
+          }
+        },
+        {
+          "name": "get_update_backtest_info_writer",
+          "orig_count": 29,
+          "decomp_count": 7,
+          "jump_diffs": 0,
+          "true_diffs": 28,
+          "first_diff": {
+            "index": 1,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "LOAD_CLOSURE",
+            "orig_arg": "SERVER_TYPE",
+            "decomp_arg": "backtest_id"
+          }
+        },
+        {
+          "name": "save_profit_json",
+          "orig_count": 308,
+          "decomp_count": 309,
+          "jump_diffs": 1,
+          "true_diffs": 211,
+          "first_diff": {
+            "index": 95,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": "new_data",
+            "decomp_arg": "isinstance"
+          }
+        },
+        {
+          "name": "save_testds_to_json",
+          "orig_count": 314,
+          "decomp_count": 311,
+          "jump_diffs": 10,
+          "true_diffs": 121,
+          "first_diff": {
+            "index": 188,
+            "orig_op": "POP_EXCEPT",
+            "decomp_op": "JUMP_FORWARD",
+            "orig_arg": null,
+            "decomp_arg": 1984
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/function.pyc",
+      "status": "partial",
+      "rate": 0.9295774647887324,
+      "total_functions": 71,
+      "matched_functions": 66,
+      "mismatches": [
+        {
+          "name": "cancel_order_ex_handle",
+          "orig_count": 223,
+          "decomp_count": 222,
+          "jump_diffs": 1,
+          "true_diffs": 15,
+          "first_diff": {
+            "index": 208,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_CONST",
+            "orig_arg": 1054,
+            "decomp_arg": null
+          }
+        },
+        {
+          "name": "get_entrust_item_info",
+          "orig_count": 535,
+          "decomp_count": 539,
+          "jump_diffs": 5,
+          "true_diffs": 143,
+          "first_diff": {
+            "index": 375,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": "int",
+            "decomp_arg": "float"
+          }
+        },
+        {
+          "name": "order_entrust_info_handle",
+          "orig_count": 220,
+          "decomp_count": 219,
+          "jump_diffs": 8,
+          "true_diffs": 152,
+          "first_diff": {
+            "index": 64,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": 958,
+            "decomp_arg": "stock_code"
+          }
+        },
+        {
+          "name": "read_order_from_csv",
+          "orig_count": 378,
+          "decomp_count": 378,
+          "jump_diffs": 1,
+          "true_diffs": 127,
+          "first_diff": {
+            "index": 222,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": 2620,
+            "decomp_arg": "order_list"
+          }
+        },
+        {
+          "name": "reconnect",
+          "orig_count": 90,
+          "decomp_count": 91,
+          "jump_diffs": 2,
+          "true_diffs": 55,
+          "first_diff": {
+            "index": 35,
+            "orig_op": "POP_JUMP_FORWARD_IF_FALSE",
+            "decomp_op": "POP_TOP",
+            "orig_arg": 308,
+            "decomp_arg": null
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/ptrade_broker.pyc",
+      "status": "partial",
+      "rate": 0.8181818181818182,
+      "total_functions": 11,
+      "matched_functions": 9,
+      "mismatches": [
+        {
+          "name": "create_portfolio",
+          "orig_count": 512,
+          "decomp_count": 507,
+          "jump_diffs": 2,
+          "true_diffs": 480,
+          "first_diff": {
+            "index": 1,
+            "orig_op": "LOAD_CONST",
+            "decomp_op": "LOAD_CONST",
+            "orig_arg": 0,
+            "decomp_arg": [
+              "Portfolio"
+            ]
+          }
+        },
+        {
+          "name": "get_vaild_account",
+          "orig_count": 197,
+          "decomp_count": 199,
+          "jump_diffs": 3,
+          "true_diffs": 37,
+          "first_diff": {
+            "index": 162,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": "datetime",
+            "decomp_arg": "LOGIN_TIMEOUT"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/ptrade_future_broker.pyc",
+      "status": "partial",
+      "rate": 0.8,
+      "total_functions": 10,
+      "matched_functions": 8,
+      "mismatches": [
+        {
+          "name": "create_portfolio",
+          "orig_count": 417,
+          "decomp_count": 380,
+          "jump_diffs": 0,
+          "true_diffs": 404,
+          "first_diff": {
+            "index": 1,
+            "orig_op": "LOAD_CONST",
+            "decomp_op": "LOAD_CONST",
+            "orig_arg": 0,
+            "decomp_arg": [
+              "Portfolio"
+            ]
+          }
+        },
+        {
+          "name": "get_vaild_account",
+          "orig_count": 219,
+          "decomp_count": 221,
+          "jump_diffs": 3,
+          "true_diffs": 37,
+          "first_diff": {
+            "index": 184,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": "datetime",
+            "decomp_arg": "LOGIN_TIMEOUT"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/ptrade_hks_broker.pyc",
+      "status": "partial",
+      "rate": 0.6666666666666666,
+      "total_functions": 9,
+      "matched_functions": 6,
+      "mismatches": [
+        {
+          "name": "create_portfolio",
+          "orig_count": 427,
+          "decomp_count": 419,
+          "jump_diffs": 1,
+          "true_diffs": 409,
+          "first_diff": {
+            "index": 1,
+            "orig_op": "LOAD_CONST",
+            "decomp_op": "LOAD_CONST",
+            "orig_arg": 0,
+            "decomp_arg": [
+              "Portfolio"
+            ]
+          }
+        },
+        {
+          "name": "create_sys_account",
+          "orig_count": 414,
+          "decomp_count": 417,
+          "jump_diffs": 2,
+          "true_diffs": 259,
+          "first_diff": {
+            "index": 151,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": "fund_list_query",
+            "decomp_arg": "position_list_query"
+          }
+        },
+        {
+          "name": "get_vaild_account",
+          "orig_count": 182,
+          "decomp_count": 184,
+          "jump_diffs": 3,
+          "true_diffs": 37,
+          "first_diff": {
+            "index": 147,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": "datetime",
+            "decomp_arg": "LOGIN_TIMEOUT"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/ptrade_option_broker.pyc",
+      "status": "partial",
+      "rate": 0.8,
+      "total_functions": 10,
+      "matched_functions": 8,
+      "mismatches": [
+        {
+          "name": "create_portfolio",
+          "orig_count": 361,
+          "decomp_count": 324,
+          "jump_diffs": 0,
+          "true_diffs": 354,
+          "first_diff": {
+            "index": 1,
+            "orig_op": "LOAD_CONST",
+            "decomp_op": "LOAD_CONST",
+            "orig_arg": 0,
+            "decomp_arg": [
+              "Portfolio"
+            ]
+          }
+        },
+        {
+          "name": "get_vaild_account",
+          "orig_count": 183,
+          "decomp_count": 185,
+          "jump_diffs": 3,
+          "true_diffs": 37,
+          "first_diff": {
+            "index": 148,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": "datetime",
+            "decomp_arg": "LOGIN_TIMEOUT"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/send_message_api.pyc",
+      "status": "partial",
+      "rate": 0.25,
+      "total_functions": 4,
+      "matched_functions": 1,
+      "mismatches": [
+        {
+          "name": "send_email",
+          "orig_count": 298,
+          "decomp_count": 270,
+          "jump_diffs": 1,
+          "true_diffs": 116,
+          "first_diff": {
+            "index": 182,
+            "orig_op": "LOAD_CONST",
+            "decomp_op": "LOAD_CONST",
+            "orig_arg": "<code object _format_addr>",
+            "decomp_arg": null
+          }
+        },
+        {
+          "name": "send_qywx",
+          "orig_count": 363,
+          "decomp_count": 288,
+          "jump_diffs": 1,
+          "true_diffs": 193,
+          "first_diff": {
+            "index": 170,
+            "orig_op": "LOAD_CONST",
+            "decomp_op": "LOAD_CONST",
+            "orig_arg": "/cgi-bin/gettoken",
+            "decomp_arg": "/cgi-bin/message/send?access_token={}"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [
+        "_format_addr"
+      ],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc",
+      "status": "failed",
+      "rate": 0.0,
+      "total_functions": 0,
+      "matched_functions": 0,
+      "mismatches": [],
+      "error": "timeout after 60s"
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/__init__.pyc",
+      "status": "partial",
+      "rate": 0.90625,
+      "total_functions": 32,
+      "matched_functions": 29,
+      "mismatches": [
+        {
+          "name": "__init__",
+          "orig_count": 34,
+          "decomp_count": 27,
+          "jump_diffs": 0,
+          "true_diffs": 27,
+          "first_diff": {
+            "index": 7,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "GET_ITER",
+            "orig_arg": "self",
+            "decomp_arg": null
+          }
+        },
+        {
+          "name": "system_func_with_execution_phase",
+          "orig_count": 26,
+          "decomp_count": 12,
+          "jump_diffs": 0,
+          "true_diffs": 22,
+          "first_diff": {
+            "index": 4,
+            "orig_op": "IMPORT_FROM",
+            "decomp_op": "STORE_FAST",
+            "orig_arg": "core",
+            "decomp_arg": "IQEngine"
+          }
+        },
+        {
+          "name": "wrapper",
+          "orig_count": 62,
+          "decomp_count": 60,
+          "jump_diffs": 0,
+          "true_diffs": 59,
+          "first_diff": {
+            "index": 1,
+            "orig_op": "LOAD_DEREF",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": "exc_ctxt",
+            "decomp_arg": "context"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/cache_storage.pyc",
+      "status": "partial",
+      "rate": 0.9523809523809523,
+      "total_functions": 21,
+      "matched_functions": 20,
+      "mismatches": [
+        {
+          "name": "func_wrapper",
+          "orig_count": 270,
+          "decomp_count": 240,
+          "jump_diffs": 1,
+          "true_diffs": 203,
+          "first_diff": {
+            "index": 56,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "JUMP_FORWARD",
+            "orig_arg": "cache_start",
+            "decomp_arg": 266
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/profiler_func.pyc",
+      "status": "partial",
+      "rate": 0.9333333333333333,
+      "total_functions": 15,
+      "matched_functions": 14,
+      "mismatches": [
+        {
+          "name": "<module>",
+          "orig_count": 142,
+          "decomp_count": 134,
+          "jump_diffs": 0,
+          "true_diffs": 78,
+          "first_diff": {
+            "index": 60,
+            "orig_op": "LOAD_CONST",
+            "decomp_op": "LOAD_CONST",
+            "orig_arg": [
+              "system_log"
+            ],
+            "decomp_arg": null
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/scheduler.pyc",
+      "status": "partial",
+      "rate": 0.7111111111111111,
+      "total_functions": 45,
+      "matched_functions": 32,
+      "mismatches": [
+        {
+          "name": "_fill_month",
+          "orig_count": 85,
+          "decomp_count": 84,
+          "jump_diffs": 0,
+          "true_diffs": 2,
+          "first_diff": {
+            "index": 83,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "RETURN_VALUE",
+            "orig_arg": "self",
+            "decomp_arg": null
+          }
+        },
+        {
+          "name": "_fill_week",
+          "orig_count": 61,
+          "decomp_count": 60,
+          "jump_diffs": 0,
+          "true_diffs": 2,
+          "first_diff": {
+            "index": 59,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "RETURN_VALUE",
+            "orig_arg": "self",
+            "decomp_arg": null
+          }
+        },
+        {
+          "name": "_should_trigger",
+          "orig_count": 54,
+          "decomp_count": 19,
+          "jump_diffs": 0,
+          "true_diffs": 37,
+          "first_diff": {
+            "index": 17,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": "self",
+            "decomp_arg": "valid_time_delta"
+          }
+        },
+        {
+          "name": "_trade_job",
+          "orig_count": 212,
+          "decomp_count": 181,
+          "jump_diffs": 0,
+          "true_diffs": 145,
+          "first_diff": {
+            "index": 62,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": "self",
+            "decomp_arg": "_stage"
+          }
+        },
+        {
+          "name": "func_wrapper",
+          "orig_count": 128,
+          "decomp_count": 127,
+          "jump_diffs": 2,
+          "true_diffs": 103,
+          "first_diff": {
+            "index": 20,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": "ExecutionContext",
+            "decomp_arg": "context"
+          }
+        },
+        {
+          "name": "get_checked_time",
+          "orig_count": 106,
+          "decomp_count": 106,
+          "jump_diffs": 0,
+          "true_diffs": 43,
+          "first_diff": {
+            "index": 18,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "JUMP_FORWARD",
+            "orig_arg": "divmod",
+            "decomp_arg": 352
+          }
+        },
+        {
+          "name": "is_run_interval_time_now",
+          "orig_count": 226,
+          "decomp_count": 201,
+          "jump_diffs": 2,
+          "true_diffs": 170,
+          "first_diff": {
+            "index": 52,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "RERAISE",
+            "orig_arg": 410,
+            "decomp_arg": 0
+          }
+        },
+        {
+          "name": "on_after_trading",
+          "orig_count": 97,
+          "decomp_count": 96,
+          "jump_diffs": 3,
+          "true_diffs": 25,
+          "first_diff": {
+            "index": 70,
+            "orig_op": "JUMP_BACKWARD",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": 196,
+            "decomp_arg": "self"
+          }
+        },
+        {
+          "name": "on_before_trading",
+          "orig_count": 84,
+          "decomp_count": 83,
+          "jump_diffs": 3,
+          "true_diffs": 25,
+          "first_diff": {
+            "index": 57,
+            "orig_op": "JUMP_BACKWARD",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": 82,
+            "decomp_arg": "self"
+          }
+        },
+        {
+          "name": "on_post_after_trading",
+          "orig_count": 90,
+          "decomp_count": 89,
+          "jump_diffs": 3,
+          "true_diffs": 29,
+          "first_diff": {
+            "index": 60,
+            "orig_op": "JUMP_BACKWARD",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": 96,
+            "decomp_arg": "self"
+          }
+        },
+        {
+          "name": "run_daily",
+          "orig_count": 77,
+          "decomp_count": 70,
+          "jump_diffs": 0,
+          "true_diffs": 55,
+          "first_diff": {
+            "index": 21,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "STORE_DEREF",
+            "orig_arg": "int",
+            "decomp_arg": "hour"
+          }
+        },
+        {
+          "name": "run_interval_backtest",
+          "orig_count": 55,
+          "decomp_count": 54,
+          "jump_diffs": 1,
+          "true_diffs": 9,
+          "first_diff": {
+            "index": 46,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": "t",
+            "decomp_arg": "self"
+          }
+        },
+        {
+          "name": "run_interval_trade",
+          "orig_count": 31,
+          "decomp_count": 32,
+          "jump_diffs": 0,
+          "true_diffs": 21,
+          "first_diff": {
+            "index": 3,
+            "orig_op": "STORE_DEREF",
+            "decomp_op": "STORE_FAST",
+            "orig_arg": "execution_phase",
+            "decomp_arg": "execution_phase"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/aes_encrypt.pyc",
+      "status": "partial",
+      "rate": 0.8571428571428571,
+      "total_functions": 7,
+      "matched_functions": 6,
+      "mismatches": [
+        {
+          "name": "code_encrypt_so",
+          "orig_count": 239,
+          "decomp_count": 238,
+          "jump_diffs": 3,
+          "true_diffs": 56,
+          "first_diff": {
+            "index": 182,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_CONST",
+            "orig_arg": 1006,
+            "decomp_arg": null
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/common.pyc",
+      "status": "partial",
+      "rate": 0.8333333333333334,
+      "total_functions": 6,
+      "matched_functions": 5,
+      "mismatches": [
+        {
+          "name": "api_get_from_zeromq",
+          "orig_count": 255,
+          "decomp_count": 257,
+          "jump_diffs": 8,
+          "true_diffs": 59,
+          "first_diff": {
+            "index": 195,
+            "orig_op": "POP_EXCEPT",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": null,
+            "decomp_arg": "message"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/convert.pyc",
+      "status": "partial",
+      "rate": 0.875,
+      "total_functions": 8,
+      "matched_functions": 7,
+      "mismatches": [
+        {
+          "name": "getchnstr",
+          "orig_count": 37,
+          "decomp_count": 38,
+          "jump_diffs": 2,
+          "true_diffs": 3,
+          "first_diff": {
+            "index": 35,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "JUMP_BACKWARD",
+            "orig_arg": "chn_str",
+            "decomp_arg": 10
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/flytools.pyc",
+      "status": "partial",
+      "rate": 0.9538461538461539,
+      "total_functions": 65,
+      "matched_functions": 62,
+      "mismatches": [
+        {
+          "name": "<module>",
+          "orig_count": 387,
+          "decomp_count": 393,
+          "jump_diffs": 0,
+          "true_diffs": 46,
+          "first_diff": {
+            "index": 344,
+            "orig_op": "PUSH_NULL",
+            "decomp_op": "LOAD_NAME",
+            "orig_arg": null,
+            "decomp_arg": "unique"
+          }
+        },
+        {
+          "name": "modify_batcktes_info",
+          "orig_count": 217,
+          "decomp_count": 222,
+          "jump_diffs": 0,
+          "true_diffs": 209,
+          "first_diff": {
+            "index": 8,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "LOAD_CONST",
+            "orig_arg": "user_id",
+            "decomp_arg": "user_id.filename.lock"
+          }
+        },
+        {
+          "name": "verify_user_py_code",
+          "orig_count": 57,
+          "decomp_count": 53,
+          "jump_diffs": 1,
+          "true_diffs": 20,
+          "first_diff": {
+            "index": 32,
+            "orig_op": "SWAP",
+            "decomp_op": "POP_TOP",
+            "orig_arg": 2,
+            "decomp_arg": null
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    }
+  ]
+}

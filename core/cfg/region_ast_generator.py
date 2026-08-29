@@ -7100,6 +7100,15 @@ AST 映射规则:
         _body_end_idx = None
         _cond_break_start_idx = None
         _cond_break_instr = None
+        # 区域归约算法原则 2（每块唯一归属）+ 原则 3（自底向上归约）：
+        # while 自循环 header 的体可含 `yield` 语句（如 `while cond: yield x`）。
+        # 体语句与回边条件重检（recheck）在此形态下交织于同一块：旧的「找最后
+        # STORE 后向前扩展」启发式会在首个 YIELD_VALUE 处截断体、丢弃后续 yield。
+        # 标记后改用栈深度归约定位重检起点（见 BACKWARD 分支）。
+        _has_yield_in_body = any(
+            i.opname == 'YIELD_VALUE'
+            for i in hdr.instructions[:max(0, len(hdr.instructions) - 1)]
+        )
         if _last_i and _last_i.opname in BACKWARD_CONDITIONAL_JUMP_OPS:
             _last_store_idx = -1
             _walrus_store_idx = -1
@@ -7121,6 +7130,32 @@ AST 映射规则:
                 )
                 if _is_pure_walrus_recheck:
                     _body_end_idx = _walrus_store_idx
+            if _body_end_idx is None and _has_yield_in_body:
+                # 区域归约算法原则 2（每块唯一归属）：回边 POP_JUMP_BACKWARD_*
+                # 消费 1 个条件值，重检（recheck）即为产出该值的指令序列。沿 header
+                # 指令自底向上（从回边跳转前一条）做栈模拟：need 初始为 1（跳转
+                # 所需条件值数），对每条指令 need = need - push + pop；need<=0 处即
+                # 重检求值起点，其前所有指令归属循环体。该归约对体含 yield 的交织
+                # 形态稳健——YIELD_VALUE 及其 RESUME/POP_TOP 清理被自然归入体，而
+                # 不误并入重检。镜像 _build_statements_from_instructions 的
+                # YIELD_VALUE 边界处理（YIELD_VALUE 作为语句边界、消费前驱值产生
+                # Yield 节点，RESUME+POP_TOP 作为 yield 协议清理跳过）。
+                _recheck_start = len(hdr.instructions) - 1
+                _need = 1
+                for _si in range(len(hdr.instructions) - 2, -1, -1):
+                    _ib = hdr.instructions[_si]
+                    try:
+                        _eff = _dis.stack_effect(_ib.opcode, _ib.arg)
+                    except Exception:
+                        _eff = 0
+                    _push = _eff if _eff > 0 else 0
+                    _pop = -_eff if _eff < 0 else 0
+                    _need = _need - _push + _pop
+                    if _need <= 0:
+                        _recheck_start = _si
+                        break
+                    _recheck_start = _si
+                _body_end_idx = _recheck_start - 1
             if _body_end_idx is None and _last_store_idx >= 0:
                 _body_end_idx = _last_store_idx
                 for _ext_idx in range(_last_store_idx + 1, len(hdr.instructions) - 1):
@@ -7204,6 +7239,12 @@ AST 映射规则:
         _sl_imp_from = None
         _sl_imp_pairs = []
         _sl_unpack_info = None
+        # 区域归约算法原则 2（每块唯一归属）：YIELD_VALUE 是 yield 表达式语句的
+        # 归约入口（消费前驱值、产生 Yield 节点）。YIELD_VALUE 之后的 RESUME +
+        # POP_TOP 是 yield 协议清理（丢弃 send 值），属 yield 语句内部，不并入后续
+        # 语句。置位 _sl_yield_cleanup 跳过紧随的清理指令。镜像
+        # _build_statements_from_instructions 的 YIELD_VALUE 边界处理。
+        _sl_yield_cleanup = False
         # 区域归约算法原则 2（每块唯一归属）：import 指令序列
         # （IMPORT_NAME + IMPORT_FROM/IMPORT_STAR + STORE_*）唯一归属单一 import
         # 语句。IMPORT_NAME 处一次性前看扫描构建完整节点后，把消费的指令偏移
@@ -7214,6 +7255,13 @@ AST 映射规则:
         for _sli_idx, _sli_instr in enumerate(hdr.instructions):
             if _sli_instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
                 continue
+            if _sl_yield_cleanup:
+                # YIELD_VALUE 之后的 RESUME + POP_TOP 是 yield 协议清理，跳过。
+                if _sli_instr.opname in ('RESUME', 'POP_TOP'):
+                    if _sli_instr.opname == 'POP_TOP':
+                        _sl_yield_cleanup = False
+                    continue
+                _sl_yield_cleanup = False
             if _sli_instr.offset in _sl_skip_offsets:
                 continue
             if _body_end_idx is not None and _sli_idx > _body_end_idx:
@@ -7419,6 +7467,31 @@ AST 映射规则:
                     else:
                         _self_loop_stmts.append(_del_stmts)
                 _self_loop_instrs = []
+                continue
+            # 区域归约算法原则 2（每块唯一归属）+ 原则 3（自底向上归约）：
+            # YIELD_VALUE 是 yield 表达式语句的归约入口。累积的 _self_loop_instrs
+            # （前驱指令，可能含 ASYNC_GEN_WRAP）归约为 yield 的 value 表达式，
+            # YIELD_VALUE 消费该值产生 Yield 节点，包装为 Expr(Yield(...)) 语句。
+            # 后置 RESUME + POP_TOP 为 yield 协议清理（丢弃 send 值），交由
+            # _sl_yield_cleanup 跳过。普遍性：覆盖 `yield x` / `yield` /
+            # `yield (expr)` 等所有 yield 语句形态。镜像
+            # _build_statements_from_instructions 的 YIELD_VALUE 边界处理。
+            if _sli_instr.opname == 'YIELD_VALUE':
+                _yield_value = None
+                if _self_loop_instrs:
+                    _yield_value = self.expr_reconstructor.reconstruct(list(_self_loop_instrs))
+                if _yield_value is None and _self_loop_instrs:
+                    _l0 = _self_loop_instrs[0]
+                    if _l0.opname in ('LOAD_NAME', 'LOAD_FAST', 'LOAD_GLOBAL', 'LOAD_DEREF'):
+                        _yield_value = {'type': 'Name', 'id': _l0.argval, 'ctx': 'Load'}
+                if _yield_value is None:
+                    _yield_value = {'type': 'Constant', 'value': None}
+                _self_loop_stmts.append({
+                    'type': 'Expr',
+                    'value': {'type': 'Yield', 'value': _yield_value},
+                })
+                _self_loop_instrs = []
+                _sl_yield_cleanup = True
                 continue
             if _sli_instr.opname == 'POP_TOP' and _self_loop_instrs:
                 _has_call = any(i.opname in ('CALL', 'CALL_FUNCTION', 'CALL_METHOD', 'CALL_FUNCTION_KW', 'CALL_FUNCTION_EX') for i in _self_loop_instrs)
@@ -8124,10 +8197,21 @@ AST 映射规则:
         _seen_store = False
         _unpack_info = None
         _break_cause = None
+        # [G1 fix / Round 04] yield cleanup 待定标记。YIELD_VALUE 之后的
+        # RESUME + POP_TOP 是 yield 协议清理（丢弃 send 值），POP_TOP 在此处
+        # 不是表达式语句终结符。与 _build_statements_from_instructions 的
+        # yield 边界处理保持一致（归约顺序：自底向上，YIELD_VALUE 消费
+        # 缓冲区中的 value 指令）。
+        _yield_cleanup_pending = False
         for _instr_idx, _instr in enumerate(block.instructions):
             if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
                 continue
             if _instr.opname == 'POP_TOP':
+                # [G1 fix / Round 04] yield cleanup POP_TOP：跳过，不进入
+                # 表达式语句判定（否则缓冲的 yield value 指令被静默丢弃）。
+                if _yield_cleanup_pending:
+                    _yield_cleanup_pending = False
+                    continue
                 if _hdr_instrs:
                     _has_call = any(i.opname in ('CALL', 'CALL_FUNCTION', 'CALL_METHOD',
                                                 'CALL_FUNCTION_KW', 'CALL_FUNCTION_EX')
@@ -8238,6 +8322,27 @@ AST 映射规则:
                     _hdr_instrs = []
                     continue
                 _hdr_instrs.append(_instr)
+                continue
+            # [G1 fix / Round 04] 区域归约算法原则 2（每块唯一归属）：
+            # YIELD_VALUE 是 yield 表达式语句的归约入口（语句边界）。
+            # 字节码模式: <value_instrs> + YIELD_VALUE + RESUME + POP_TOP +
+            # JUMP_BACKWARD（while 循环体内的裸 `yield x`）。
+            # 依「自底向上归约」：缓冲区累积的 value 指令归约为 Yield 的
+            # value，RESUME+POP_TOP 为 yield cleanup（丢弃 send 值）。
+            # 旧实现未把 YIELD_VALUE 视为边界：指令被追加进 _hdr_instrs 后，
+            # RESUME 被噪声过滤、POP_TOP 因缓冲区无 CALL 被跳过、
+            # JUMP_BACKWARD 终止扫描 → 缓冲的 yield value 指令整体静默丢失
+            # （id_gen / probe_g1 P1/P2/P6：生成器退化为普通函数）。
+            if _instr.opname == 'YIELD_VALUE':
+                _yv_val_instrs = [i for i in _hdr_instrs
+                                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                _yv_val = (self.expr_reconstructor.reconstruct(_yv_val_instrs)
+                           if _yv_val_instrs else None)
+                _hdr_stmts.append({'type': 'Expr',
+                                   'value': {'type': 'Yield', 'value': _yv_val}})
+                _hdr_instrs = []
+                _yield_cleanup_pending = True
+                _seen_store = False
                 continue
             _hdr_instrs.append(_instr)
         if _break_cause is not None:
@@ -8774,10 +8879,16 @@ AST 映射规则:
         """从指令序列中提取前置语句"""
         _pre_stmts: List[Dict[str, Any]] = []
         _buf: List[Instruction] = []
+        # [G1 fix / Round 04] yield cleanup 待定标记（镜像
+        # _loop_process_header_instructions 的 yield 边界处理）。
+        _yield_cleanup_pending = False
         for _nbi in instrs:
             if _nbi.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
                 continue
             if _nbi.opname == 'POP_TOP':
+                if _yield_cleanup_pending:
+                    _yield_cleanup_pending = False
+                    continue
                 if _buf:
                     _has_call = any(i.opname in ('CALL', 'CALL_FUNCTION', 'CALL_METHOD',
                                                 'CALL_FUNCTION_KW', 'CALL_FUNCTION_EX') for i in _buf)
@@ -8812,6 +8923,22 @@ AST 映射规则:
                 if _stmt:
                     _pre_stmts.append(_stmt)
                 _buf = []
+                continue
+            # [G1 fix / Round 04] 区域归约算法原则 2（每块唯一归属）：
+            # YIELD_VALUE 是 yield 表达式语句的归约入口（语句边界）。
+            # 回边块前置语句段（如 `while i < n: i += 1; yield i`）中的
+            # 裸 `yield x` 与 header 处理器同构：旧实现指令被追加进 _buf
+            # 后，RESUME 被噪声过滤、POP_TOP 因缓冲区无 CALL 被跳过 →
+            # yield 语句静默丢失（probe_g1 P6）。
+            if _nbi.opname == 'YIELD_VALUE':
+                _yv_val_instrs = [i for i in _buf
+                                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                _yv_val = (self.expr_reconstructor.reconstruct(_yv_val_instrs)
+                           if _yv_val_instrs else None)
+                _pre_stmts.append({'type': 'Expr',
+                                   'value': {'type': 'Yield', 'value': _yv_val}})
+                _buf = []
+                _yield_cleanup_pending = True
                 continue
             _buf.append(_nbi)
         if _buf:
