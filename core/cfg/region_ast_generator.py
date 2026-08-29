@@ -2327,6 +2327,74 @@ class RegionASTGenerator:
             return None
         return value, container, index
 
+    def _detect_walrus_prefix(self, instrs: List[Instruction]):
+        """检测指令序列前缀的 walrus 值操作数 ``value; COPY 1; STORE_* r``。
+
+        区域归约依据（原则 2 每块唯一归属 / 原则 4 入口引用语义）:
+          CPython 3.11 把 ``target = (r := value)`` 编译为
+            ``value; COPY 1; STORE_FAST r; <container/index 加载>; STORE_SUBSCR``
+          （属性赋值同理，末尾 STORE_ATTR）。``COPY 1`` 复制栈顶，``STORE_FAST r`` 把
+          副本赋给 r 且副本仍留栈，供紧随的 STORE_SUBSCR/STORE_ATTR 作 VALUE（TOS2）消费。
+          故含此前缀的完整操作数序列，其 VALUE 应重建为
+          ``NamedExpr(target=Name(r, Store), value=reconstruct(value))``。
+
+        返回 ``(value_instrs, var_name, rest_instrs)``；未命中返回 None。
+        ``value_instrs`` 为 walrus 值表达式指令，``rest_instrs`` 为剔除 walrus 前缀后的
+        剩余操作数（下标：container+index；属性：obj）。
+        """
+        n = len(instrs)
+        for c in range(n - 1):
+            if instrs[c].opname == 'COPY' and getattr(instrs[c], 'arg', None) == 1:
+                _s = instrs[c + 1] if c + 1 < n else None
+                if _s is not None and _s.opname in ('STORE_FAST', 'STORE_NAME',
+                                                    'STORE_GLOBAL', 'STORE_DEREF'):
+                    _value = instrs[:c]
+                    _rest = instrs[c + 2:]
+                    if _value and _rest:
+                        return _value, _s.argval, _rest
+        return None
+
+    def _build_walrus_assign(self, value_instrs, var_name, tail, store_op, store_instr):
+        """重建 walrus-in-value 下标/属性赋值: ``target = (r := value)``。
+
+        区域归约依据（原则 2 每块唯一归属 / 原则 4 入口引用语义）:
+          CPython 3.11 把 ``target = (r := value)`` 编译为
+            ``value_instrs; COPY 1; STORE_FAST r; <container/index 加载>; STORE_SUBSCR``
+          （属性赋值同理，末尾为 ``STORE_ATTR``）。``COPY 1`` 复制栈顶值，``STORE_FAST r``
+          把副本赋给 r 且副本仍留栈，供紧随的 STORE_SUBSCR/STORE_ATTR 作为 VALUE（TOS2）消费。
+          调用方已剥离 ``COPY 1``/``STORE_FAST r``，将 value 表达式指令单独传入
+          ``value_instrs``；``tail`` 为 STORE_SUBSCR/STORE_ATTR 之前的 container/index（或
+          obj）加载指令 + 末尾的 STORE_SUBSCR/STORE_ATTR 操作本身。
+
+        重建策略（避免手写 operand 分组对 CALL/BINARY_SUBSCR 等复杂操作数误判）：
+          将 value 指令重放回栈顶（``value_instrs + tail``），复用既有
+          ``_build_subscript_assign`` / ``_build_attr_assign`` 的栈模拟正确还原
+          container/index/obj 与 value，仅把重建出的 value 包裹为
+          ``NamedExpr(target=Name(r), value=...)``，保证与原始字节码逐指令等价。
+          返回 Assign(target, value=NamedExpr(...))；失败返回 None。
+        """
+        # 剥离 handler 清理前缀 POP_TOP（不属于值表达式，仅 3.11 except 入口遗留）
+        _v = list(value_instrs)
+        while _v and _v[0].opname == 'POP_TOP':
+            _v = _v[1:]
+        if not _v:
+            return None
+        # 完整序列 = value 重放回栈 + container/index/obj 加载 + STORE_*
+        _full = _v + list(tail)
+        if store_op == 'STORE_SUBSCR':
+            _assign = self._build_subscript_assign(_full)
+        else:  # STORE_ATTR
+            _assign = self._build_attr_assign(_full)
+        if not _assign or _assign.get('type') != 'Assign' or 'value' not in _assign:
+            return None
+        _result = dict(_assign)
+        _result['value'] = {
+            'type': 'NamedExpr',
+            'target': {'type': 'Name', 'id': var_name, 'ctx': 'Store'},
+            'value': _assign['value'],
+        }
+        return _result
+
     def _build_effective_stmts(self, block: BasicBlock, effective: List[Instruction]) -> List[Dict[str, Any]]:
         stmts, expr_instrs, seen_for = [], [], set()
         # Skip for-target instructions (STORE_ATTR/STORE_SUBSCR + their
@@ -22419,6 +22487,37 @@ AST 映射规则:
                 has_copy = any(i.opname == 'COPY' and i.arg == 1 for i in stmt_instrs)
                 if has_copy:
                     remaining = block.instructions[block.instructions.index(instr)+1:]
+                    # [G4 walrus] target = (r := value) 下标/属性赋值。
+                    # CPython 3.11 将值表达式以 COPY 1; STORE_FAST r 复制留存，供紧随的
+                    # STORE_SUBSCR/STORE_ATTR 作为 VALUE 消费。若后续指令是 STORE_SUBSCR/
+                    # STORE_ATTR（中间仅 LOAD/CALL 等加载 container/index/obj），则为 walrus
+                    # 赋值，直接重建 NamedExpr，禁止按链式赋值剥离 COPY（否则 VALUE 操作数
+                    # 丢失，见 fly_api/base.pyc::StoreCollection.get_instance）。
+                    _walrus_store = None
+                    _walrus_store_idx = None
+                    for ri_idx, ri in enumerate(remaining):
+                        if ri.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                            continue
+                        if ri.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                            # 遇到另一个普通赋值 store => 不是 walrus（链式 a=b=f() 或别的）
+                            break
+                        if ri.opname in ('STORE_SUBSCR', 'STORE_ATTR'):
+                            _walrus_store = ri.opname
+                            _walrus_store_idx = ri_idx
+                            break
+                        # 其他指令（LOAD/CALL/运算）=> 继续扫描，后面可能才是 STORE_SUBSCR/ATTR
+                    if _walrus_store is not None and _walrus_store_idx is not None:
+                        _val_instrs = [i for i in stmt_instrs
+                                       if not (i.opname == 'COPY' and i.arg == 1)]
+                        _tail = remaining[:_walrus_store_idx + 1]
+                        _wal = self._build_walrus_assign(_val_instrs, instr.argval,
+                                                         _tail, _walrus_store, instr)
+                        if _wal is not None:
+                            stmts.append(_wal)
+                            for _ti in _tail:
+                                skip_offsets.add(_ti.offset)
+                            stmt_instrs = []
+                            continue
                     next_store_idx = None
                     for ri_idx, ri in enumerate(remaining):
                         if ri.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
@@ -22819,7 +22918,7 @@ AST 映射规则:
                                           'targets': [target],
                                           'value': _bsi_unpack_info['value']})
                         _bsi_unpack_info = None
-                    stmt_instrs = []
+                        stmt_instrs = []
                     continue
                 stmt = self._build_store_statement(stmt_instrs + [instr], block=block)
                 if stmt:
@@ -35947,27 +36046,70 @@ AST 映射规则:
           键表达式含函数调用（PRECALL/CALL）时本方法返回 None——调用链
           目标仍由既有逐指令校验路径或后续增强覆盖。
         """
+        # 区域归约：按「栈值操作数」分组。采用基于操作数合并的线性扫描，
+        # 使每个分组恰好对应 STORE 的一个操作数（容器组 + 键组 / 属性对象组）：
+        #   - 值起始指令（LOAD_*/BUILD_*）开启新分组；
+        #   - 中缀延续指令（LOAD_ATTR/LOAD_METHOD/PRECALL/UNARY_* 等）依附当前分组；
+        #   - 二元合并指令（BINARY_SUBSCR/BINARY_OP/COMPARE_OP 等）消费栈顶 2 个
+        #     分组并合并为 1 个（处理嵌套下标 a[b]、a[b][c] 与二元运算 x+y）；
+        #   - 调用合并指令（CALL/CALL_FUNCTION_EX 等）消费 (argc+1) 个分组（可调用
+        #     对象 + 实参）并合并为 1 个（处理下标/属性键中的函数调用 f()、obj.m()）。
+        # 调用 null 前缀 PUSH_NULL 已在 _chain_instrs 派生处剥离，此处不再处理。
         _value_start_ops = (
             'LOAD_CONST', 'LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL',
-            'LOAD_DEREF', 'LOAD_CLOSURE',
-            # 零消费构造器：直接压入一个新栈值
+            'LOAD_DEREF', 'LOAD_CLOSURE', 'LOAD_ASSERTION_ERROR',
+            'LOAD_FROM_DICT_OR_GLOBALS',
             'BUILD_LIST', 'BUILD_SET', 'BUILD_MAP', 'BUILD_STRING',
+            'BUILD_TUPLE',
         )
-        _infix_ops = (
-            'LOAD_ATTR', 'LOAD_METHOD', 'BINARY_OP', 'BINARY_SUBSCR',
-            'BINARY_SLICE', 'CONTAINS_OP',
-            'UNARY_NEGATIVE', 'UNARY_NOT', 'UNARY_INVERT',
-            'BUILD_SLICE', 'BINARY_LSHIFT',
+        _infix_append_ops = (
+            'LOAD_ATTR', 'LOAD_METHOD', 'PRECALL', 'PRECALL_NO_KW',
+            'KW_NAMES', 'UNARY_NEGATIVE', 'UNARY_NOT', 'UNARY_INVERT',
+            'UNARY_POSITIVE', 'GET_ITER', 'GET_YIELD_FROM_ITER',
+            'FORMAT_VALUE',
+        )
+        _binary_combine_ops = (
+            'BINARY_SUBSCR', 'BINARY_SLICE', 'BINARY_OP',
+            'COMPARE_OP', 'CONTAINS_OP', 'IS_OP',
+        )
+        _call_combine_ops = (
+            'CALL', 'CALL_NO_KW', 'CALL_FUNCTION_EX',
+            'CALL_INTRINSIC_1', 'CALL_INTRINSIC_2',
         )
         groups: List[List[Any]] = []
         for instr in instrs:
-            if instr.opname in _value_start_ops:
+            op = instr.opname
+            if op in _value_start_ops:
                 groups.append([instr])
-            elif instr.opname in _infix_ops:
+            elif op in _infix_append_ops:
                 if not groups:
                     return None
                 groups[-1].append(instr)
+            elif op in _binary_combine_ops:
+                if len(groups) < 2:
+                    return None
+                _right = groups.pop()
+                _left = groups.pop()
+                groups.append(_left + _right + [instr])
+            elif op in _call_combine_ops:
+                try:
+                    _argc = int(getattr(instr, 'arg', 0) or 0)
+                except (TypeError, ValueError):
+                    _argc = 0
+                if op == 'CALL_FUNCTION_EX':
+                    _need = 2 + (_argc & 1)
+                else:
+                    _need = _argc + 1
+                if len(groups) < _need:
+                    return None
+                _merged = []
+                for _ in range(_need):
+                    _merged = groups.pop() + _merged
+                _merged.append(instr)
+                groups.append(_merged)
             else:
+                # 未知指令（条件跳转 / STORE / 未列明的栈重排）：保守拒绝，
+                # 交还调用方走既有逐指令校验路径。
                 return None
         return groups
 
@@ -41006,6 +41148,7 @@ AST 映射规则:
                 store_subscr = instr
                 store_idx = i
                 break
+
 
         if store_subscr is None:
             return None
