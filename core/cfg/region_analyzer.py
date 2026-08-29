@@ -7853,6 +7853,109 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
             stream.append((op, getattr(i, 'argval', None)))
         return stream
 
+    @classmethod
+    def _w13_return_kind(cls, block: BasicBlock):
+        """[EXC-1] 提取块（含后继）的最终 RETURN 种类与常量值。
+
+        返回 (kind, value)：
+          - ('const', c)：RETURN_VALUE 前为 LOAD_CONST c，或 RETURN_CONST c；
+          - ('stack', None)：裸 RETURN_VALUE（返回栈顶值，非常量）；
+          - (None, None)：链中无 RETURN。
+        仅沿非框架正常后继遍历，遇 RERAISE/COPY 清理帧即停止（不向前跨异常续体）。
+        """
+        visited = {id(block)}
+        stack = [block]
+        while stack:
+            b = stack.pop()
+            instrs = list(b.instructions)
+            for idx, i in enumerate(instrs):
+                if i.opname == 'RETURN_VALUE':
+                    if idx > 0 and instrs[idx - 1].opname == 'LOAD_CONST':
+                        return ('const', instrs[idx - 1].argval)
+                    return ('stack', None)
+                if i.opname == 'RETURN_CONST':
+                    return ('const', i.argval)
+            for s in b.successors:
+                if id(s) not in visited:
+                    visited.add(id(s))
+                    stack.append(s)
+        return (None, None)
+
+    def _w13_with_associated_handler(self, entry_off: int) -> bool:
+        """[EXC-1] 判断 handler（入口 entry_off）的 try 范围是否包含 with 语句。
+
+        若异常表某条 target == entry_off 的条目其 [try_start, try_end) 内存在
+        BEFORE_WITH/BEFORE_ASYNC_WITH/WITH_EXCEPT_START 块，则该 handler 包裹一个
+        ``with``，需按 EXC-1 判据区分 ``with``+``except:`` 与 ``with``+``finally:``。
+        """
+        for e in self.cfg.exception_table:
+            if e.get('target') != entry_off:
+                continue
+            ts, te = e.get('start', 0), e.get('end', 0)
+            for blk in self.cfg.blocks.values():
+                if ts <= blk.start_offset < te:
+                    if any(i.opname in ('BEFORE_WITH', 'BEFORE_ASYNC_WITH',
+                                       'WITH_EXCEPT_START') for i in blk.instructions):
+                        return True
+        return False
+
+    def _w13_reachable_from_with_handler(self, blk: BasicBlock) -> bool:
+        """[EXC-1] 判断 blk 是否经前驱链可达某个 WITH_EXCEPT_START 块。
+
+        可达即表明 blk 是 ``with`` 自身的异常抑制/清理续体（如 ``return None``
+        抑制分支），而非 try 体的正常出口，不能当作 finally 的正常副本镜像。
+        """
+        visited = {id(blk)}
+        stack = [blk]
+        while stack:
+            b = stack.pop()
+            if any(i.opname == 'WITH_EXCEPT_START' for i in b.instructions):
+                return True
+            for p in b.predecessors:
+                if id(p) not in visited:
+                    visited.add(id(p))
+                    stack.append(p)
+        return False
+
+    def _w13_handler_reaches_except_check(self, handler_block: BasicBlock) -> bool:
+        """[EXC-1] 判定 PUSH_EXC_INFO+WITH_EXCEPT_START handler 是否为包裹 with 的
+        except handler（而非 with 自身清理 handler）。
+
+        判据：沿后继遍历 handler 链，跳过含 PUSH_EXC_INFO 的块（嵌套 with 清理）
+        与 COPY+POP_EXCEPT+RERAISE 清理续体（with 自身的 reraise 尾，其后继是
+        另一个 handler，不可越界），若在可达块中遇到 CHECK_EXC_MATCH/
+        CHECK_EG_MATCH，则为 except handler（``except E:`` 包裹 ``with``）。纯
+        ``with`` 清理 handler 的 CHECK 仅能经清理续体越界到达，故被正确判为 'with'。
+        """
+        visited = {id(handler_block)}
+        worklist = list(handler_block.successors)
+        while worklist:
+            cur = worklist.pop()
+            if id(cur) in visited:
+                continue
+            visited.add(id(cur))
+            instrs = cur.instructions
+            if any(i.opname == 'PUSH_EXC_INFO' for i in instrs):
+                continue
+            if any(i.opname in ('CHECK_EXC_MATCH', 'CHECK_EG_MATCH') for i in instrs):
+                return True
+            if any(i.opname == 'RERAISE' for i in instrs):
+                _is_cleanup = (
+                    (any(i.opname == 'COPY' for i in instrs)
+                     and any(i.opname == 'POP_EXCEPT' for i in instrs))
+                    or (any(i.opname == 'POP_EXCEPT' for i in instrs)
+                        and not any(i.opname == 'PUSH_EXC_INFO' for i in instrs))
+                )
+                if not _is_cleanup:
+                    if any(i.opname in ('CHECK_EXC_MATCH', 'CHECK_EG_MATCH')
+                           for i in instrs):
+                        return True
+                continue
+            for s in cur.successors:
+                if id(s) not in visited:
+                    worklist.append(s)
+        return False
+
     def _is_w13_finally_return_exc_copy(self, handler_block: BasicBlock) -> bool:
         """[W13] 判定 PUSH_EXC_INFO+POP_TOP 帧是否为 finally-return 异常副本。
 
@@ -7913,6 +8016,35 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
         if not exc_stream:
             return False
         entry_off = handler_block.start_offset
+
+        # [EXC-1 fix] with 关联的 bare-except handler（PUSH_EXC_INFO+POP_TOP）与
+        # ``with`` 的 WITH_EXCEPT_START 抑制续体（return None）在异常副本上数据流
+        # 一致，易被误判为 finally-return 副本，导致 ``with`` 体的正常出口 return
+        # 被 finally 吞没。区分判据：仅当 handler 的 try 范围包裹 with 时，若 try
+        # 体正常出口（不经过 WITH_EXCEPT_START handler）存在返回「非 handler 常量」
+        # 的 RETURN，则该 RETURN 会被 finally 吞没，故必为 ``except``。非 with
+        # 关联场景完全沿用原 W13 镜像判据，零回归。
+        if self._w13_with_associated_handler(entry_off):
+            _hkind = self._w13_return_kind(handler_block)
+            if _hkind[0] == 'const':
+                _hc = _hkind[1]
+                for blk in sorted(self.cfg.blocks.values(),
+                                  key=lambda x: x.start_offset):
+                    if blk.start_offset >= entry_off:
+                        break
+                    if self._w13_reachable_from_with_handler(blk):
+                        continue
+                    _blast = blk.get_last_instruction()
+                    if _blast is None or _blast.opname not in self._W13_TERM_OPS:
+                        continue
+                    if any('JUMP' in i.opname for i in blk.instructions):
+                        continue
+                    _bkind = self._w13_return_kind(blk)
+                    if _bkind[0] == 'const' and _bkind[1] != _hc:
+                        return False
+                    if _bkind[0] == 'stack':
+                        return False
+
         for blk in sorted(self.cfg.blocks.values(),
                           key=lambda x: x.start_offset):
             if blk.start_offset >= entry_off:
@@ -8024,6 +8156,13 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
 
         for instr in handler_block.instructions:
             if instr.opname == 'WITH_EXCEPT_START':
+                # PUSH_EXC_INFO 开头的 handler 块内出现 WITH_EXCEPT_START：可能是
+                # ``with`` 自身的清理 handler，也可能是包裹 ``with`` 的 ``except``
+                # handler（先调用外层 __exit__ 再 CHECK_EXC_MATCH）。后者需在 handler
+                # 链中跳过 COPY+POP_EXCEPT+RERAISE 清理续体后仍可达 CHECK_EXC_MATCH/
+                # CHECK_EG_MATCH 才能判定为 except；否则维持 'with'。
+                if self._w13_handler_reaches_except_check(handler_block):
+                    return 'except'
                 return 'with'
             if instr.opname == 'RERAISE':
                 # PUSH_EXC_INFO + ... + POP_EXCEPT + RERAISE 在同一块中
