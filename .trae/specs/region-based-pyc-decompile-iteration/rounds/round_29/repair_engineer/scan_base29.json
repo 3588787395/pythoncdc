@@ -1,0 +1,3228 @@
+{
+ "summary": {
+  "ok": 305,
+  "partial": 97,
+  "failed": 0,
+  "matched_functions": 5424,
+  "total_functions": 5746,
+  "elapsed_sec": 895.4
+ },
+ "results": [
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 2,
+   "matched_functions": 2,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/base_api.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 2,
+   "matched_functions": 2,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/check_strategy.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 2,
+   "matched_functions": 2,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/gtn_api.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 5,
+   "matched_functions": 5,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/klinedata.pyc",
+   "status": "partial",
+   "rate": 0.7777777777777778,
+   "total_functions": 45,
+   "matched_functions": 35,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/wrapper.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 4,
+   "matched_functions": 4,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/arg_checker.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 47,
+   "matched_functions": 47,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/backtest/backtest.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 2,
+   "matched_functions": 2,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/common/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/common/config.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 2,
+   "matched_functions": 2,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/common/main.pyc",
+   "status": "partial",
+   "rate": 0.8787878787878788,
+   "total_functions": 33,
+   "matched_functions": 29,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/const.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 44,
+   "matched_functions": 44,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/api_data.pyc",
+   "status": "partial",
+   "rate": 0.7142857142857143,
+   "total_functions": 14,
+   "matched_functions": 10,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/asset_storage.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 8,
+   "matched_functions": 8,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/base_storage.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 5,
+   "matched_functions": 5,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/basic_data_source.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 8,
+   "matched_functions": 8,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/const.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/exrights_storage.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 8,
+   "matched_functions": 8,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/finance.pyc",
+   "status": "partial",
+   "rate": 0.8333333333333334,
+   "total_functions": 24,
+   "matched_functions": 20,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/history_bar_storage.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 4,
+   "matched_functions": 4,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/local_finance.pyc",
+   "status": "partial",
+   "rate": 0.9473684210526315,
+   "total_functions": 19,
+   "matched_functions": 18,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/pandas.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 2,
+   "matched_functions": 2,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/trading_dates_storage.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 6,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/enumerate.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 18,
+   "matched_functions": 18,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/exception.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 32,
+   "matched_functions": 32,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/generalconf.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 11,
+   "matched_functions": 11,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/graph.pyc",
+   "status": "partial",
+   "rate": 0.967741935483871,
+   "total_functions": 31,
+   "matched_functions": 30,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/i18n.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 5,
+   "matched_functions": 5,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/logger/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 22,
+   "matched_functions": 22,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/logger/handlers.pyc",
+   "status": "partial",
+   "rate": 0.9444444444444444,
+   "total_functions": 18,
+   "matched_functions": 17,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/manager/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/manager/instance.pyc",
+   "status": "partial",
+   "rate": 0.90625,
+   "total_functions": 32,
+   "matched_functions": 29,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/mq_connector.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 9,
+   "matched_functions": 9,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/profiler_func.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 14,
+   "matched_functions": 14,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/common.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 3,
+   "matched_functions": 3,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/const.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/hg_api.pyc",
+   "status": "partial",
+   "rate": 0.8181818181818182,
+   "total_functions": 11,
+   "matched_functions": 9,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/jq_trans_module.pyc",
+   "status": "partial",
+   "rate": 0.9428571428571428,
+   "total_functions": 35,
+   "matched_functions": 33,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/strategy.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 2,
+   "matched_functions": 2,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/wizard_quant_api.pyc",
+   "status": "partial",
+   "rate": 0.9245283018867925,
+   "total_functions": 53,
+   "matched_functions": 49,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/zt_api.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 4,
+   "matched_functions": 4,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/tools.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 6,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/trade_schedule.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 6,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/backtest_info_utils.pyc",
+   "status": "partial",
+   "rate": 0.6,
+   "total_functions": 10,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/cgroup_utils.pyc",
+   "status": "partial",
+   "rate": 0.75,
+   "total_functions": 8,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/common_func.pyc",
+   "status": "partial",
+   "rate": 0.7142857142857143,
+   "total_functions": 21,
+   "matched_functions": 15,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/crypto_utils.pyc",
+   "status": "partial",
+   "rate": 0.7777777777777778,
+   "total_functions": 9,
+   "matched_functions": 7,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/datetime_func.pyc",
+   "status": "partial",
+   "rate": 0.9615384615384616,
+   "total_functions": 26,
+   "matched_functions": 25,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/docker_info_utils.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 7,
+   "matched_functions": 7,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/email_utils.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 4,
+   "matched_functions": 4,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/file_delete.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 4,
+   "matched_functions": 4,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/fileio_utils.pyc",
+   "status": "partial",
+   "rate": 0.7857142857142857,
+   "total_functions": 14,
+   "matched_functions": 11,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/profiler_utils.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/pycompatibility.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 6,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/replace_utils.pyc",
+   "status": "partial",
+   "rate": 0.6666666666666666,
+   "total_functions": 9,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/request_utils.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 4,
+   "matched_functions": 4,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/resource_utils.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 2,
+   "matched_functions": 2,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/semaphore_utils.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/strategy_info_utils.pyc",
+   "status": "partial",
+   "rate": 0.8214285714285714,
+   "total_functions": 28,
+   "matched_functions": 23,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/t2_utils.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 2,
+   "matched_functions": 2,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc",
+   "status": "partial",
+   "rate": 0.6,
+   "total_functions": 40,
+   "matched_functions": 24,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/tradingday_info_utils.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 2,
+   "matched_functions": 2,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/user_info_utils.pyc",
+   "status": "partial",
+   "rate": 0.7777777777777778,
+   "total_functions": 9,
+   "matched_functions": 7,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/wrapper_utils.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 14,
+   "matched_functions": 14,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/utils.pyc",
+   "status": "partial",
+   "rate": 0.8636363636363636,
+   "total_functions": 22,
+   "matched_functions": 19,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/version.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/api/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/api/api_base.pyc",
+   "status": "partial",
+   "rate": 0.92,
+   "total_functions": 25,
+   "matched_functions": 23,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/api/api_extra.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 4,
+   "matched_functions": 4,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/api/api_helper.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 4,
+   "matched_functions": 4,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/api/get_block_stocks.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 2,
+   "matched_functions": 2,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/config/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/config/config.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 4,
+   "matched_functions": 4,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/const.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/core/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/core/asset.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 51,
+   "matched_functions": 51,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/core/base.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 4,
+   "matched_functions": 4,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/core/data_cache.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 20,
+   "matched_functions": 20,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/core/data_manager.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 10,
+   "matched_functions": 10,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/data/Ashare_storage.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 6,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/data/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/data/base_storage.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 5,
+   "matched_functions": 5,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/data/component_stocks_storage.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/data/date_set_storage.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 7,
+   "matched_functions": 7,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/data/default_basic_data.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 14,
+   "matched_functions": 14,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/data/default_history_quote.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 4,
+   "matched_functions": 4,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/data/default_real_quote.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 11,
+   "matched_functions": 11,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/data/exrights_storage.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 8,
+   "matched_functions": 8,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/data/future_info_cn.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/data/market_storage.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 7,
+   "matched_functions": 7,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/data/merger_storage.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 9,
+   "matched_functions": 9,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/data/stock_industry_storage.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 6,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/data/trading_dates_storage.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 6,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/engine/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/engine/engine.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 34,
+   "matched_functions": 34,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/entry.pyc",
+   "status": "partial",
+   "rate": 0.8,
+   "total_functions": 5,
+   "matched_functions": 4,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/enumerate.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 14,
+   "matched_functions": 14,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/fly_enum.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/interface.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 42,
+   "matched_functions": 42,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/manager/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/manager/data_info_manager.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 9,
+   "matched_functions": 9,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/manager/plugin_manager.pyc",
+   "status": "partial",
+   "rate": 0.9,
+   "total_functions": 10,
+   "matched_functions": 9,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/manager/trading_day_manager.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 17,
+   "matched_functions": 17,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/modules/WEBCLIENT/gtn_client.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 11,
+   "matched_functions": 11,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/modules/WEBCLIENT/ibrain_client.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 6,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/modules/WEBCLIENT/web_socket_client.pyc",
+   "status": "partial",
+   "rate": 0.8571428571428571,
+   "total_functions": 7,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/modules/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_history_data_source/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 6,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_history_data_source/data_source_func.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 5,
+   "matched_functions": 5,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_history_data_source/history_bar_storage.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 5,
+   "matched_functions": 5,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_history_data_source/history_data_source.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 18,
+   "matched_functions": 18,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_basicdata/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_basicdata/api_basicdata.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 25,
+   "matched_functions": 25,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_basicdata/basic_data_source.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_client_db/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 6,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_client_db/base_db_table.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 2,
+   "matched_functions": 2,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_client_db/client_db.pyc",
+   "status": "partial",
+   "rate": 0.8888888888888888,
+   "total_functions": 9,
+   "matched_functions": 8,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_client_db/const.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_client_db/dynamic_table.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 16,
+   "matched_functions": 16,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 6,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db/api_db.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 2,
+   "matched_functions": 2,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db/db_utils.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 4,
+   "matched_functions": 4,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db/iqdata_db_base.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 21,
+   "matched_functions": 21,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db/iqdata_db_helper.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 6,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db_tools/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 6,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db_tools/api_db.pyc",
+   "status": "partial",
+   "rate": 0.75,
+   "total_functions": 8,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db_tools/db_base.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 30,
+   "matched_functions": 30,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db_tools/db_utils.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 2,
+   "matched_functions": 2,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/FLYMODULE/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 6,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/api.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 33,
+   "matched_functions": 33,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/basic_data_source.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 41,
+   "matched_functions": 41,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/calexrights_func.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 8,
+   "matched_functions": 8,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/data_source_func.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 24,
+   "matched_functions": 24,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/fly_enum.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 6,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/api.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 11,
+   "matched_functions": 11,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/data_source_func.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 3,
+   "matched_functions": 3,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/enumerate.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 4,
+   "matched_functions": 4,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/history_bar_storage.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 5,
+   "matched_functions": 5,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/history_data_source.pyc",
+   "status": "partial",
+   "rate": 0.8333333333333334,
+   "total_functions": 18,
+   "matched_functions": 15,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/history_quote.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 4,
+   "matched_functions": 4,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_gtn_request/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 6,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_gtn_request/api.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 4,
+   "matched_functions": 4,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_gtn_request/gtn_request.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 6,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_hqsdk_data_source/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 6,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_hqsdk_data_source/hqsdk_data_source.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 15,
+   "matched_functions": 15,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_hqsdk_data_source/hqsdk_data_source_api.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 9,
+   "matched_functions": 9,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_local_finance/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 6,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_local_finance/api.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 2,
+   "matched_functions": 2,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_local_finance/const.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_local_finance/finance_data_source.pyc",
+   "status": "partial",
+   "rate": 0.7777777777777778,
+   "total_functions": 18,
+   "matched_functions": 14,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 6,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/api_realquote.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 13,
+   "matched_functions": 13,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/real_quote.pyc",
+   "status": "partial",
+   "rate": 0.7727272727272727,
+   "total_functions": 44,
+   "matched_functions": 34,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/__init__.pyc",
+   "status": "partial",
+   "rate": 0.9411764705882353,
+   "total_functions": 17,
+   "matched_functions": 16,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/arg_checker.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 39,
+   "matched_functions": 39,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/base_http_client.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 7,
+   "matched_functions": 7,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/calexrights_func.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 8,
+   "matched_functions": 8,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/common_func.pyc",
+   "status": "partial",
+   "rate": 0.7916666666666666,
+   "total_functions": 24,
+   "matched_functions": 19,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/datetime_func.pyc",
+   "status": "partial",
+   "rate": 0.96,
+   "total_functions": 25,
+   "matched_functions": 24,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/exception.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 29,
+   "matched_functions": 29,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/function_dict.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 3,
+   "matched_functions": 3,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/i18n.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 5,
+   "matched_functions": 5,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/logger/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/logger/logger.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 26,
+   "matched_functions": 26,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/mysql_conn.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 6,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/path_func.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 5,
+   "matched_functions": 5,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/profiler_func.pyc",
+   "status": "partial",
+   "rate": 0.9230769230769231,
+   "total_functions": 13,
+   "matched_functions": 12,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/pycompatibility.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 6,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/trade_schedule.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 4,
+   "matched_functions": 4,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/version.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/__main__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 3,
+   "matched_functions": 3,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/account/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/account/base_account.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 12,
+   "matched_functions": 12,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/account/base_position.pyc",
+   "status": "partial",
+   "rate": 0.9444444444444444,
+   "total_functions": 18,
+   "matched_functions": 17,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/account/order.pyc",
+   "status": "partial",
+   "rate": 0.9807692307692307,
+   "total_functions": 52,
+   "matched_functions": 51,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/account/portfolio.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 50,
+   "matched_functions": 50,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/account/trade.pyc",
+   "status": "partial",
+   "rate": 0.9565217391304348,
+   "total_functions": 23,
+   "matched_functions": 22,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/api/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/api/api_base.pyc",
+   "status": "partial",
+   "rate": 0.9375,
+   "total_functions": 48,
+   "matched_functions": 45,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/api/api_extra.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 5,
+   "matched_functions": 5,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/api/fields.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/api/helper.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 4,
+   "matched_functions": 4,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/config/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/config/config.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 11,
+   "matched_functions": 11,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/const.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 38,
+   "matched_functions": 38,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/asset.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 58,
+   "matched_functions": 58,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/bar.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 58,
+   "matched_functions": 58,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/base.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 4,
+   "matched_functions": 4,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/commission.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 10,
+   "matched_functions": 10,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/data_pager.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 9,
+   "matched_functions": 9,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/engine/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/engine/engine.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 67,
+   "matched_functions": 67,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/events/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/events/event.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 10,
+   "matched_functions": 10,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/events/event_type.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 2,
+   "matched_functions": 2,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/execution_context.pyc",
+   "status": "partial",
+   "rate": 0.8823529411764706,
+   "total_functions": 17,
+   "matched_functions": 15,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/executor.pyc",
+   "status": "partial",
+   "rate": 0.9,
+   "total_functions": 10,
+   "matched_functions": 9,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/manager/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/persist_helper.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 9,
+   "matched_functions": 9,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/plugin_manager.pyc",
+   "status": "partial",
+   "rate": 0.8888888888888888,
+   "total_functions": 9,
+   "matched_functions": 8,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/slippage.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 7,
+   "matched_functions": 7,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/strategy/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 19,
+   "matched_functions": 19,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy_context.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 31,
+   "matched_functions": 31,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy_loader.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 9,
+   "matched_functions": 9,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy_universe.pyc",
+   "status": "partial",
+   "rate": 0.9090909090909091,
+   "total_functions": 11,
+   "matched_functions": 10,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/user_variables.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 6,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/asset_mixin.pyc",
+   "status": "partial",
+   "rate": 0.875,
+   "total_functions": 16,
+   "matched_functions": 14,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/data_cache.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 13,
+   "matched_functions": 13,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/data_proxy.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 9,
+   "matched_functions": 9,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/default_info.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/exrights_storage.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 6,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/merger_storage.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 7,
+   "matched_functions": 7,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/trading_dates_mixin.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 14,
+   "matched_functions": 14,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/trading_dates_storage.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 4,
+   "matched_functions": 4,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/interface.pyc",
+   "status": "partial",
+   "rate": 0.8761904761904762,
+   "total_functions": 105,
+   "matched_functions": 92,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/main.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 3,
+   "matched_functions": 3,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_api/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 7,
+   "matched_functions": 7,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_api/base_api.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 6,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_api/empty_api_backtest.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 62,
+   "matched_functions": 62,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_api/empty_api_trade.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 10,
+   "matched_functions": 10,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/__init__.pyc",
+   "status": "partial",
+   "rate": 0.95,
+   "total_functions": 20,
+   "matched_functions": 19,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/const.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 9,
+   "matched_functions": 9,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/base.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 41,
+   "matched_functions": 41,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/history_api.pyc",
+   "status": "partial",
+   "rate": 0.8333333333333334,
+   "total_functions": 18,
+   "matched_functions": 15,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/individual_api_backtest.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 3,
+   "matched_functions": 3,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/individual_api_trade.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 4,
+   "matched_functions": 4,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc",
+   "status": "partial",
+   "rate": 0.8529411764705882,
+   "total_functions": 34,
+   "matched_functions": 29,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api_backtest.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 10,
+   "matched_functions": 10,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api_trade.pyc",
+   "status": "partial",
+   "rate": 0.9583333333333334,
+   "total_functions": 24,
+   "matched_functions": 23,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/other_api.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 12,
+   "matched_functions": 12,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/real_api.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 8,
+   "matched_functions": 8,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/real_api_backtest.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 2,
+   "matched_functions": 2,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/real_api_trade.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 3,
+   "matched_functions": 3,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/scheduler_api.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 13,
+   "matched_functions": 13,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/setting_api.pyc",
+   "status": "partial",
+   "rate": 0.8666666666666667,
+   "total_functions": 15,
+   "matched_functions": 13,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/local_variables/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/local_variables/bar.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 22,
+   "matched_functions": 22,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/local_variables/finance.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 108,
+   "matched_functions": 108,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/quote/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/quote/get_stock_status.pyc",
+   "status": "partial",
+   "rate": 0.875,
+   "total_functions": 8,
+   "matched_functions": 7,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/quote/open_platform.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 19,
+   "matched_functions": 19,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/strategy/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc",
+   "status": "partial",
+   "rate": 0.875,
+   "total_functions": 24,
+   "matched_functions": 21,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data_source/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 7,
+   "matched_functions": 7,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data_source/fly_bar_storage.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 9,
+   "matched_functions": 9,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data_source/fly_data_source.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 70,
+   "matched_functions": 70,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data_source/fly_quotation_func.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 8,
+   "matched_functions": 8,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 6,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/benchmark_account.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 20,
+   "matched_functions": 20,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/future_account.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 30,
+   "matched_functions": 30,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/live_future_account.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 22,
+   "matched_functions": 22,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/live_hks_account.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 21,
+   "matched_functions": 21,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/live_option_account.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 23,
+   "matched_functions": 23,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/option_account.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 31,
+   "matched_functions": 31,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/stock_account.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 25,
+   "matched_functions": 25,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/api/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/api/api_future.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 8,
+   "matched_functions": 8,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/api/api_option.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 4,
+   "matched_functions": 4,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/api/api_stock.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 11,
+   "matched_functions": 11,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/future_position.pyc",
+   "status": "partial",
+   "rate": 0.9861111111111112,
+   "total_functions": 72,
+   "matched_functions": 71,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/live_future_position.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 64,
+   "matched_functions": 64,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/live_hks_position.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 16,
+   "matched_functions": 16,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/live_option_position.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 51,
+   "matched_functions": 51,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/live_stock_position.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 12,
+   "matched_functions": 12,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/option_position.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 60,
+   "matched_functions": 60,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/stock_position.pyc",
+   "status": "partial",
+   "rate": 0.9459459459459459,
+   "total_functions": 37,
+   "matched_functions": 35,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_control/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 13,
+   "matched_functions": 13,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_debug/__init__.pyc",
+   "status": "partial",
+   "rate": 0.8333333333333334,
+   "total_functions": 6,
+   "matched_functions": 5,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 6,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/default_event_source.pyc",
+   "status": "partial",
+   "rate": 0.9285714285714286,
+   "total_functions": 14,
+   "matched_functions": 13,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/factor_event_source.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 5,
+   "matched_functions": 5,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc",
+   "status": "partial",
+   "rate": 0.75,
+   "total_functions": 12,
+   "matched_functions": 9,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 6,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/api.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 5,
+   "matched_functions": 5,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/commission.pyc",
+   "status": "partial",
+   "rate": 0.9444444444444444,
+   "total_functions": 18,
+   "matched_functions": 17,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/slippage.pyc",
+   "status": "partial",
+   "rate": 0.8571428571428571,
+   "total_functions": 14,
+   "matched_functions": 12,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/tax.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 7,
+   "matched_functions": 7,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_history_save/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 10,
+   "matched_functions": 10,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_log/__init__.pyc",
+   "status": "partial",
+   "rate": 0.8,
+   "total_functions": 10,
+   "matched_functions": 8,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_matcher/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 6,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_matcher/matcher.pyc",
+   "status": "partial",
+   "rate": 0.8823529411764706,
+   "total_functions": 17,
+   "matched_functions": 15,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_persist/__init__.pyc",
+   "status": "partial",
+   "rate": 0.9333333333333333,
+   "total_functions": 15,
+   "matched_functions": 14,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_persist/json_persistance.pyc",
+   "status": "partial",
+   "rate": 0.8571428571428571,
+   "total_functions": 7,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_persist/recorder.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 10,
+   "matched_functions": 10,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_progress/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 6,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_progress/system_progress.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 11,
+   "matched_functions": 11,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc",
+   "status": "partial",
+   "rate": 0.8285714285714286,
+   "total_functions": 35,
+   "matched_functions": 29,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/function.pyc",
+   "status": "partial",
+   "rate": 0.4,
+   "total_functions": 15,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/risk_calculation.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 29,
+   "matched_functions": 29,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_control/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 6,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_control/base_validator.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 6,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_control/cash_validator.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 8,
+   "matched_functions": 8,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_control/position_validator.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 5,
+   "matched_functions": 5,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_control/price_validator.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 5,
+   "matched_functions": 5,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_control/time_validator.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 5,
+   "matched_functions": 5,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_simulation/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 6,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_simulation/broker.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 24,
+   "matched_functions": 24,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_simulation/live.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 26,
+   "matched_functions": 26,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 6,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/api.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 57,
+   "matched_functions": 57,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/brokerFactory.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 3,
+   "matched_functions": 3,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/enums.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 10,
+   "matched_functions": 10,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/function.pyc",
+   "status": "partial",
+   "rate": 0.9295774647887324,
+   "total_functions": 71,
+   "matched_functions": 66,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/ptrade_broker.pyc",
+   "status": "partial",
+   "rate": 0.8181818181818182,
+   "total_functions": 11,
+   "matched_functions": 9,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/ptrade_future_broker.pyc",
+   "status": "partial",
+   "rate": 0.8,
+   "total_functions": 10,
+   "matched_functions": 8,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/ptrade_hks_broker.pyc",
+   "status": "partial",
+   "rate": 0.6666666666666666,
+   "total_functions": 9,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/ptrade_option_broker.pyc",
+   "status": "partial",
+   "rate": 0.8,
+   "total_functions": 10,
+   "matched_functions": 8,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/send_message_api.pyc",
+   "status": "partial",
+   "rate": 0.25,
+   "total_functions": 4,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc",
+   "status": "partial",
+   "rate": 0.773109243697479,
+   "total_functions": 119,
+   "matched_functions": 92,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade_account/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 6,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade_account/trade_stock_account.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 13,
+   "matched_functions": 13,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/user_module.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/__init__.pyc",
+   "status": "partial",
+   "rate": 0.90625,
+   "total_functions": 32,
+   "matched_functions": 29,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/arg_checker.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 43,
+   "matched_functions": 43,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/bcolz_help.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 5,
+   "matched_functions": 5,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/cache_storage.pyc",
+   "status": "partial",
+   "rate": 0.9523809523809523,
+   "total_functions": 21,
+   "matched_functions": 20,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/compile_help.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 2,
+   "matched_functions": 2,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/datetime_func.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 17,
+   "matched_functions": 17,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/decorator.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 3,
+   "matched_functions": 3,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/encrypt.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 6,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/exception.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 29,
+   "matched_functions": 29,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/global_variable.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 8,
+   "matched_functions": 8,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/i18n.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 5,
+   "matched_functions": 5,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/logger/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/logger/handlers.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 14,
+   "matched_functions": 14,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/option.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/profiler_func.pyc",
+   "status": "partial",
+   "rate": 0.9333333333333333,
+   "total_functions": 15,
+   "matched_functions": 14,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/pycompatibility.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 6,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/record_store.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 5,
+   "matched_functions": 5,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/report.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 5,
+   "matched_functions": 5,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/scheduler.pyc",
+   "status": "partial",
+   "rate": 0.7111111111111111,
+   "total_functions": 45,
+   "matched_functions": 32,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/trade_schedule.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 9,
+   "matched_functions": 9,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/version.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/aes_encrypt.pyc",
+   "status": "partial",
+   "rate": 0.8571428571428571,
+   "total_functions": 7,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/common.pyc",
+   "status": "partial",
+   "rate": 0.8333333333333334,
+   "total_functions": 6,
+   "matched_functions": 5,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/const.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/convert.pyc",
+   "status": "partial",
+   "rate": 0.875,
+   "total_functions": 8,
+   "matched_functions": 7,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/custom_tools.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 6,
+   "matched_functions": 6,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/enums.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 4,
+   "matched_functions": 4,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/errors.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/fly_exception.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 8,
+   "matched_functions": 8,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/flydefine.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/flyqueue.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 7,
+   "matched_functions": 7,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/flytools.pyc",
+   "status": "partial",
+   "rate": 0.9538461538461539,
+   "total_functions": 65,
+   "matched_functions": 62,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/function.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 4,
+   "matched_functions": 4,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/future_contract_info.pyc",
+   "status": "partial",
+   "rate": 0.9310344827586207,
+   "total_functions": 29,
+   "matched_functions": 27,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/future_param.pyc",
+   "status": "partial",
+   "rate": 0.9375,
+   "total_functions": 16,
+   "matched_functions": 15,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/global_param.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 10,
+   "matched_functions": 10,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/inform_info.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 4,
+   "matched_functions": 4,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/login_time.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 4,
+   "matched_functions": 4,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/market_time.pyc",
+   "status": "partial",
+   "rate": 0.8,
+   "total_functions": 10,
+   "matched_functions": 8,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/multiprocess_syn.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 35,
+   "matched_functions": 35,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/op_station.pyc",
+   "status": "partial",
+   "rate": 0.9090909090909091,
+   "total_functions": 11,
+   "matched_functions": 10,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/trading_schedule.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 4,
+   "matched_functions": 4,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/tradingday_calendar.pyc",
+   "status": "partial",
+   "rate": 0.7142857142857143,
+   "total_functions": 28,
+   "matched_functions": 20,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/user_error.pyc",
+   "status": "partial",
+   "rate": 0.75,
+   "total_functions": 4,
+   "matched_functions": 3,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/data/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quotation.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 143,
+   "matched_functions": 143,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quote.pyc",
+   "status": "partial",
+   "rate": 0.8148148148148148,
+   "total_functions": 81,
+   "matched_functions": 66,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quote_handler.pyc",
+   "status": "partial",
+   "rate": 0.7543859649122807,
+   "total_functions": 57,
+   "matched_functions": 43,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/dockerspawner/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/dockerspawner/dockerspawner.pyc",
+   "status": "partial",
+   "rate": 0.92,
+   "total_functions": 25,
+   "matched_functions": 23,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/dumpload/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/dumpload/load_algo.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 2,
+   "matched_functions": 2,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/dumpload/load_daily.pyc",
+   "status": "partial",
+   "rate": 0.8695652173913043,
+   "total_functions": 23,
+   "matched_functions": 20,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/event/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/event/event.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 4,
+   "matched_functions": 4,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/event/event_engine.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 19,
+   "matched_functions": 19,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/event/event_priority.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/event/event_type.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 5,
+   "matched_functions": 5,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/g.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/generalconf.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 9,
+   "matched_functions": 9,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/logger.pyc",
+   "status": "partial",
+   "rate": 0.9333333333333333,
+   "total_functions": 30,
+   "matched_functions": 28,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/oauthenticator/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/oauthenticator/hsid.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 4,
+   "matched_functions": 4,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/oauthenticator/itn.pyc",
+   "status": "partial",
+   "rate": 0.9285714285714286,
+   "total_functions": 14,
+   "matched_functions": 13,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/oauthenticator/oauth2.pyc",
+   "status": "partial",
+   "rate": 0.9090909090909091,
+   "total_functions": 11,
+   "matched_functions": 10,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/server_version.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/accountFactory.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 3,
+   "matched_functions": 3,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/flyAccount.pyc",
+   "status": "partial",
+   "rate": 0.8260869565217391,
+   "total_functions": 23,
+   "matched_functions": 19,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/pboxAccount_jupyterhub.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 4,
+   "matched_functions": 4,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/ptradeAccount.pyc",
+   "status": "partial",
+   "rate": 0.9854014598540146,
+   "total_functions": 137,
+   "matched_functions": 135,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/ptradeFutureAccount.pyc",
+   "status": "partial",
+   "rate": 0.9210526315789473,
+   "total_functions": 38,
+   "matched_functions": 35,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/ptradeOptionAccount.pyc",
+   "status": "partial",
+   "rate": 0.9473684210526315,
+   "total_functions": 38,
+   "matched_functions": 36,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/request_data_transform.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 2,
+   "matched_functions": 2,
+   "error": null
+  }
+ ]
+}

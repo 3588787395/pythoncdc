@@ -28587,6 +28587,98 @@ AST 映射规则:
             return True
         return False
 
+    def _ternary_nested_in_container_construction(self, cond_block) -> bool:
+        """条件跳转是否嵌套在未闭合的容器构造表达式内部。
+
+        前向模拟条件块内、块末条件跳转之前的值栈，逐格标记栈中元素的来源
+        （栈效应取自 _instruction_stack_effect，与既有 assert 条件前缀切分同属
+        "栈效应判据"族，非形态启发式）。
+
+        判据落在**栈底元素的性质**上，而不只是栈深：
+          - 栈深 1：跳转前只有条件值，是独立的三元求值；
+          - 栈深 > 1 且栈底是 BUILD_MAP/BUILD_LIST/BUILD_SET/BUILD_TUPLE 开启的
+            容器，且其追加指令（MAP_ADD/LIST_APPEND/SET_UPDATE/LIST_EXTEND）
+            尚未把它消费掉：跳转发生在容器字面量的构造过程中，是嵌套在构造
+            内部的取值分支，应归约为容器的内层 IfExp 子节点；
+          - 栈深 > 1 但栈底是其它表达式：那是若干彼此独立的表达式被顺序求值
+            （如先算出某值再算条件），不构成"未闭合的构造"，按既有行为处理。
+
+        模拟不可靠时（栈效应不可得或出现栈下溢）一律返回 False，保持既有行为。
+        """
+        instrs = list(getattr(cond_block, 'instructions', None) or [])
+        if len(instrs) < 2:
+            return False
+        container_openers = ('BUILD_MAP', 'BUILD_LIST', 'BUILD_SET', 'BUILD_TUPLE')
+        container_appenders = ('MAP_ADD', 'LIST_APPEND', 'SET_UPDATE', 'LIST_EXTEND')
+        syms = []
+        for ins in instrs[:-1]:
+            op = ins.opname
+            effect = self._instruction_stack_effect(ins)
+            if effect is None:
+                return False
+            if op in container_openers:
+                # BUILD_MAP n 之类会先弹出 n 组元素再压入容器。
+                if effect < 0:
+                    if len(syms) < -effect:
+                        return False
+                    del syms[effect:]
+                syms.append('CONTAINER')
+            elif op in container_appenders:
+                # 追加指令消费栈顶的值（与键），容器本身留在栈上不动。
+                n = -effect
+                if n <= 0 or len(syms) < n:
+                    return False
+                del syms[-n:]
+            elif effect > 0:
+                syms.extend(['VALUE'] * effect)
+            elif effect < 0:
+                if len(syms) < -effect:
+                    return False
+                del syms[effect:]
+        if len(syms) <= 1:
+            return False
+        return syms[0] == 'CONTAINER'
+
+    def _generate_container_construction_region(self, region) -> Optional[List[Dict[str, Any]]]:
+        """把整个区域按其块的 offset 顺序归约为容器构造表达式的语句。
+
+        容器字面量的构造指令序列（``BUILD_MAP 0`` / ``BUILD_LIST 0`` /
+        ``BUILD_SET 0`` 及其 MAP_ADD / LIST_APPEND / SET_UPDATE 追加指令）
+        可以跨越基本块边界：当某个元素本身是三元表达式时，CPython 会为它
+        生成分支。依「自底向上归约」与「嵌套即抽象节点」，先把区域覆盖的
+        全部指令按原始顺序交表达式重建器归约为一个表达式，区域内的分支由
+        重建器归约为嵌套的 IfExp 子节点（见 ExpressionReconstructor 的
+        三元区域闭合逻辑）。
+
+        归约后本区域的块与偏移全部标记为已生成，避免外层按块重复生成。
+        """
+        blocks = list(getattr(region, 'blocks', None) or [])
+        if not blocks:
+            return None
+        instrs = []
+        for b in blocks:
+            instrs.extend(getattr(b, 'instructions', None) or [])
+        if not instrs:
+            return None
+        instrs.sort(key=lambda i: i.offset)
+
+        node = self.expr_reconstructor.reconstruct(instrs)
+        if not isinstance(node, dict):
+            return None
+
+        if node.get('type') in ('Return', 'Assign', 'Expr', 'AugAssign',
+                                'AnnAssign'):
+            statements = [node]
+        else:
+            statements = [{'type': 'Return', 'value': node}]
+
+        for b in blocks:
+            self.generated_blocks.add(b)
+            for ins in getattr(b, 'instructions', None) or []:
+                self.generated_offsets.add(ins.offset)
+        self._generated_regions.add(id(region))
+        return statements
+
     def _generate_ternary(self, region: TernaryRegion, skip_store_targets: Set[str] = None) -> Optional[List[Dict[str, Any]]]:
         """生成 TernaryRegion 的 AST 语句列表
 
@@ -28665,6 +28757,17 @@ AST 映射规则:
         true_block = region.true_value_block
         false_block = region.false_value_block
         pre_stmts = []
+
+        # [构造区域内的嵌套分支] 三元区域的条件块里若还压着未闭合的容器构造
+        # （``BUILD_MAP 0`` 已开启、尚待 MAP_ADD 填充），则该条件跳转并不分隔
+        # 两条语句级路径，只是嵌套在容器字面量内部的取值分支。此时整个区域
+        # 的块共同构成**一个**容器构造表达式，依「嵌套即抽象节点」应整体归约
+        # 为该表达式（其内部的三元是嵌套 IfExp 子节点），而不是把条件块切出来
+        # 单独归约为顶层 IfExp——那样会切断构造区域，使条件块里的前序键值对
+        # 与 merge 块里的后续键值对各自成块、在边界处丢失。
+        # 判据为栈效应（条件跳转下方是否还有其它栈上元素），非形态启发式。
+        if self._ternary_nested_in_container_construction(cond_block):
+            return self._generate_container_construction_region(region)
 
         # [Phase 3 adv15_ternary_elif_test] 条件上下文三元（merge_context='while_cond'）
         # 的 entry 必然与某个 IfRegion 的 elif_conditions 重叠——这正是"三元作为

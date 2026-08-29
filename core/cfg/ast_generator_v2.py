@@ -37,6 +37,9 @@ class ExpressionReconstructor:
         # (JUMP_IF_FALSE_OR_POP / POP_JUMP_*_IF_FALSE 等)；而括号比较
         # (a==b)==(c==d) 三个 COMPARE_OP 顺序堆叠无跳转，不应合并。
         self._jump_since_last_compare = False
+        # [三元区域] 已开启、尚未闭合的三元表达式区域，结构见
+        # _open_ternary_region；None 表示当前不在三元区域内。
+        self._ternary_region = None
 
     def reset(self):
         """重置状态"""
@@ -46,6 +49,77 @@ class ExpressionReconstructor:
         self.last_instr_was_copy = False
         self.copy_depth = 0
         self._jump_since_last_compare = False
+        self._ternary_region = None
+
+    def _open_ternary_region(self, test_node, else_entry):
+        """开启一个三元表达式区域，记录其条件节点与假分支入口。"""
+        self._ternary_region = {
+            'test': test_node,
+            'else_entry': else_entry,
+            'merge': None,
+        }
+
+    def _track_ternary_region(self, instr: 'Instruction') -> None:
+        """三元表达式区域的边界跟踪（区域归约）。
+
+        CPython 3.11 把三元表达式编译成一个两分支区域::
+
+            <cond>                      POP_JUMP_*_IF_NONE  else_entry
+            <body>                      真分支（值保留在栈上）
+                                        JUMP_FORWARD        merge
+            else_entry: <orelse>        假分支（值保留在栈上）
+            merge:      <consumer>      汇合点，消费整个三元的值
+
+        区域的两条边界都由指令自身显式给出：假分支入口取自 POP_JUMP_*_IF_NONE
+        的跳转目标，汇合点取自真分支末尾 JUMP_FORWARD 的跳转目标。线性扫描时，
+        条件节点停留在表达式栈上等待归约；一旦扫描位置抵达汇合点，区域即闭合，
+        把栈上的 [test, body, orelse] 归约为单个 IfExp，从而恢复后续栈操作
+        （MAP_ADD / BUILD_* / CALL 等）所要求的栈契约。
+
+        判定只使用区域内部的跳转目标，不依赖跨区启发式或固定深度。
+        """
+        region = self._ternary_region
+        if region is None:
+            return
+        offset = getattr(instr, 'offset', None)
+
+        if region['merge'] is None:
+            # 区域已开启但尚未见到真分支的结尾跳转。跨过假分支入口的
+            # JUMP_FORWARD 即为本三元区域的汇合点。
+            if (instr.opname == 'JUMP_FORWARD'
+                    and instr.argval is not None
+                    and offset is not None
+                    and instr.argval > offset
+                    and instr.argval > region['else_entry']):
+                region['merge'] = instr.argval
+            return
+
+        if offset is None or offset < region['merge']:
+            return
+
+        self._close_ternary_region(instr)
+
+    def _close_ternary_region(self, instr: 'Instruction') -> None:
+        """闭合三元区域：把栈上的 [test, body, orelse] 归约为 IfExp。"""
+        region = self._ternary_region
+        self._ternary_region = None
+        if region is None or len(self.stack) < 3:
+            return
+        orelse = self.stack[-1]
+        body = self.stack[-2]
+        test = self.stack[-3]
+        # 条件节点必须仍是本区域开启时压入的那个，才确认这是一个三元区域；
+        # 否则说明分支内出现了其它消费，放弃归约（保持既有行为，不误改）。
+        if test is not region['test']:
+            return
+        del self.stack[-3:]
+        self.stack.append({
+            'type': 'IfExp',
+            'test': test,
+            'body': body,
+            'orelse': orelse,
+            'lineno': instr.starts_line,
+        })
 
     def _flatten_dict_merge_to_kwargs(self, node):
         """[Round8-04] 递归展开（嵌套）DictMerge 节点为 keyword 列表。
@@ -149,6 +223,11 @@ class ExpressionReconstructor:
     def _process_instruction(self, instr: Instruction) -> None:
         """处理单条指令"""
         opname = instr.opname
+
+        # [三元区域] 先把可能已抵达汇合点的三元区域闭合，再处理当前指令，
+        # 否则未归约的条件节点会停留在栈上，破坏 MAP_ADD / BUILD_* 等
+        # 消费端对栈形状的预期。
+        self._track_ternary_region(instr)
 
         # [Round4-10] 检测条件跳转指令。真正的链式比较在两次 COMPARE_OP 之间
         # 必有条件跳转（用于短路求值）；括号比较 (a==b)==(c==d) 没有跳转。
@@ -611,6 +690,10 @@ class ExpressionReconstructor:
                     'lineno': instr.starts_line
                 }
                 self.stack.append(compare_node)
+                # 开启三元表达式区域：假分支入口由本指令的跳转目标给出，
+                # 汇合点由真分支末尾的 JUMP_FORWARD 给出。
+                # 见 _track_ternary_region / _close_ternary_region。
+                self._open_ternary_region(compare_node, instr.argval)
 
         # 函数调用 (Python 3.10及以下版本)
         # [关键修复] 不处理CALL指令，让后面的专门处理CALL的代码处理
