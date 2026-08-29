@@ -4118,6 +4118,12 @@ AST 映射规则:
 
         body_stmts = self._loop_generate_body(region)
 
+        # [Round 28 修复] 合并循环体中「then 共同指向循环回边」的嵌套 if 链为 `or`
+        # 条件（如 convert.pyc::getchnstr），消除内层 else 与循环隐式回边重复产生
+        # 的多余 JUMP_BACKWARD。
+        if self._detect_shared_then_merge_region(region) is not None:
+            body_stmts = self._merge_nested_if_chain_ast(body_stmts)
+
         # for-else 仅在循环显式含 break 时才发射 else 子句。
         # 算法依据：唯一块归属 — 无 break 时，循环自然出口后的顺序语句
         # 归属函数体（父区域顺序子节点），不归属循环 else。仅当存在 break
@@ -9020,14 +9026,19 @@ AST 映射规则:
                               body_blocks_no_header: List[BasicBlock]) -> None:
         in_if_branch = False
         for r in region.iter_descendants((IfRegion,)):
-            if block in r.then_blocks:
+            # [Round 28 修复] 块已被某 If 区域的 then/else 分支拥有（其 continue
+            # 已由该 If 区域发射），循环体不应重复追加，否则循环体以
+            # if/elif/else（else 为 continue）结尾、且 if 的自然 fall-through 与
+            # else 分支指向同一回边块时，会多发一条 continue（如
+            # convert.pyc::getchnstr 末尾多出的 JUMP_BACKWARD）。
+            if block in r.then_blocks or block in (r.else_blocks or []):
                 in_if_branch = True
                 break
         if block == natural_back_edge and not in_if_branch:
             if block not in self.generated_blocks:
                 body_blocks_no_header.append(block)
             return
-        if block not in self.generated_blocks:
+        if block not in self.generated_blocks and not in_if_branch:
             body_blocks_no_header.append(block)
 
     def _loop_handle_back_edge(self, block: BasicBlock, region: LoopRegion,
@@ -14012,6 +14023,108 @@ AST 映射规则:
                 if s is not None and id(s) not in seen:
                     stack.append(s)
         return True
+
+    def _unwrap_leading_not(self, cond):
+        if isinstance(cond, dict) and cond.get('type') == 'UnaryOp' and cond.get('op') == 'Not':
+            return cond.get('operand')
+        return cond
+
+    def _unwrap_leading_not(self, cond):
+        if isinstance(cond, dict) and cond.get('type') == 'UnaryOp' and cond.get('op') in ('Not', 'not'):
+            return cond.get('operand')
+        return cond
+
+    def _detect_shared_then_merge_region(self, loop_region):
+        """[Round 28 修复] 检测循环体首个 if 是否存在「then 直接跳到循环回边
+        (merge_block)」的后置 if，且其 then 块内嵌套一个 child if 也以同一回边块为
+        then 目标。此模式应合并为 `or` 条件。返回该外层 IfRegion，否则 None。
+
+        精确判据（避免误合并正常嵌套 if）：
+          - 外层 IfRegion R 的 entry 在本循环 body 中；
+          - R.merge_block 末指令为 JUMP_BACKWARD（循环回边）；
+          - R.condition_block 末跳转 IF_TRUE 目标 == R.merge_block（then 即 merge）；
+          - 存在 child IfRegion C（entry ∈ R.then_blocks）其 condition IF_TRUE 目标
+            也 == R.merge_block。
+        """
+        try:
+            for r in self.region_analyzer.regions:
+                if not isinstance(r, IfRegion):
+                    continue
+                if r.entry is None or r.entry not in set(loop_region.blocks):
+                    continue
+                mb = getattr(r, 'merge_block', None)
+                if mb is None:
+                    continue
+                _mb_last = mb.get_last_instruction()
+                if _mb_last is None or _mb_last.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT', 'CONTINUE_LOOP'):
+                    continue
+                cb = r.condition_block
+                if cb is None:
+                    continue
+                last = cb.get_last_instruction()
+                if last is None or last.argval is None:
+                    continue
+                if last.opname not in ('POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_TRUE', 'JUMP_IF_TRUE_OR_POP'):
+                    continue
+                true_target = self.cfg.get_block_by_offset(last.argval)
+                if true_target is None or true_target is not mb:
+                    continue
+                _found = False
+                for c in self.region_analyzer.regions:
+                    if c is r or not isinstance(c, IfRegion):
+                        continue
+                    if c.entry is None or c.entry not in set(r.then_blocks):
+                        continue
+                    ccb = c.condition_block
+                    if ccb is None:
+                        continue
+                    clast = ccb.get_last_instruction()
+                    if clast is None or clast.argval is None:
+                        continue
+                    if clast.opname in ('POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_TRUE', 'JUMP_IF_TRUE_OR_POP'):
+                        ct = self.cfg.get_block_by_offset(clast.argval)
+                        if ct is mb:
+                            _found = True
+                            break
+                if _found:
+                    return r
+        except Exception:
+            return None
+        return None
+
+    def _merge_nested_if_chain_ast(self, stmts):
+        """[Round 28 修复] 将循环体首个 if 的「嵌套且 then 共同指向循环回边」的 if 链
+        合并为单一 `or` 条件 if。仅当链中每个 if 的 body 恰为单个嵌套 if（后置反转
+        形态）或末端 body 以 continue 结尾时才合并，避免误合并正常嵌套 and-if。"""
+        if not stmts or not isinstance(stmts[0], dict) or stmts[0].get('type') != 'If':
+            return stmts
+        chain = []
+        cur = stmts[0]
+        while isinstance(cur, dict) and cur.get('type') == 'If':
+            chain.append(cur)
+            body = cur.get('body') or []
+            if len(body) == 1 and isinstance(body[0], dict) and body[0].get('type') == 'If':
+                cur = body[0]
+            else:
+                break
+        if len(chain) < 2:
+            return stmts
+        _last = chain[-1]
+        _last_body = _last.get('body') or []
+        if not (_last_body and _last_body[-1].get('type') == 'Continue'):
+            return stmts
+        tests = []
+        for c in chain:
+            t = c.get('test')
+            body = c.get('body') or []
+            if len(body) == 1 and isinstance(body[0], dict) and body[0].get('type') == 'If':
+                t = self._unwrap_leading_not(t)
+            tests.append(t)
+        merged_test = tests[0]
+        for t in tests[1:]:
+            merged_test = {'type': 'BoolOp', 'op': 'Or', 'values': [merged_test, t]}
+        return [{'type': 'If', 'test': merged_test,
+                 'body': _last_body, 'orelse': _last.get('orelse') or []}]
 
     def _if_generate_normal(self, region: IfRegion) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         cond_block = region.condition_block
