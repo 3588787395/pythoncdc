@@ -1,0 +1,4 @@
+F:/Downloads/pythoncdc-main/site-packages/IQCommon/profiler_func.pyc
+F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy_universe.pyc
+F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db_tools/db_base.pyc
+F:/Downloads/pythoncdc-main/site-packages/IQCommon/arg_checker.pyc

@@ -27826,7 +27826,50 @@ AST 映射规则:
                                         _if_negate_r89 = ('TRUE' in _cond_jump_r89.opname
                                                           or 'NONE' in _cond_jump_r89.opname)
                                         _test_r89 = _cond_expr_r89
-                                        if _if_negate_r89:
+                                        _else_body_r89 = []
+                                        if _cond_jump_r89.opname in NONE_CHECK_OPS:
+                                            # [Round6-G6] NONE_CHECK_OPS (POP_JUMP_IF_NONE /
+                                            # _NOT_NONE) 表达 `x is (not) None` 比较，而非真值
+                                            # 测试。R89 内联 if 提取先前将其退化为裸值取反
+                                            # （`if not x:`）并丢弃 else，导致非字节一致。
+                                            # 这里重建 Compare：then 体为跳转目标当且仅当
+                                            # `NOT_NONE` 跳转命中 then，二者异或得 `is not
+                                            # None`，同或得 `is None`，与原始字节码重编译逐字节
+                                            # 一致。else 仅当 then 不以显式跳转绕开 else（即 else
+                                            # 是独立分支）时才在此生成，避免与父级块语句循环
+                                            # 重复发射（仅 NONE_CHECK 触发，generic 路径保持
+                                            # orelse=[] 以兼容既有行为）。
+                                            _jump_goes_to_then_r89 = (
+                                                _then_blk_r89 is not None
+                                                and self.cfg.get_block_by_offset(
+                                                    _cond_jump_r89.argval) is _then_blk_r89)
+                                            # POP_JUMP_IF_NONE 在 x 为 None 时跳转；
+                                            # POP_JUMP_IF_NOT_NONE 在 x 非 None 时跳转。
+                                            # 测试为 `x is None` 当且仅当（跳转命中 then）且
+                                            # （跳转语义为 "x is None"）同时成立：
+                                            #   POP_JUMP_IF_NONE      -> 测试 is None 等价 _jump_goes_to_then
+                                            #   POP_JUMP_IF_NOT_NONE  -> 测试 is None 等价 not _jump_goes_to_then
+                                            _test_is_none_r89 = (
+                                                _jump_goes_to_then_r89
+                                                if 'NOT_NONE' not in _cond_jump_r89.opname
+                                                else (not _jump_goes_to_then_r89))
+                                            _test_r89 = {
+                                                'type': 'Compare',
+                                                'left': _cond_expr_r89,
+                                                'ops': [{'type': 'Is' if _test_is_none_r89 else 'IsNot'}],
+                                                'comparators': [{'type': 'Constant', 'value': None}],
+                                            }
+                                            if (_else_blk_r89 is not None
+                                                    and _then_blk_r89 is not None):
+                                                _then_falls_into_else = (
+                                                    _else_blk_r89 in getattr(
+                                                        _then_blk_r89, 'successors', ()))
+                                                if not _then_falls_into_else:
+                                                    _else_body_r89 = self._generate_block_statements(
+                                                        _else_blk_r89)
+                                                    self.generated_blocks.add(_else_blk_r89)
+                                                    self.generated_offsets.add(_else_blk_r89.start_offset)
+                                        elif _if_negate_r89:
                                             _test_r89 = _negate_expr(_cond_expr_r89)
                                         if not _then_body_r89:
                                             _then_body_r89 = [{'type': 'Pass'}]
@@ -27834,7 +27877,7 @@ AST 映射规则:
                                             'type': 'If',
                                             'test': _test_r89,
                                             'body': _then_body_r89,
-                                            'orelse': [],
+                                            'orelse': _else_body_r89,
                                         })
                                     else:
                                         if _post_store_clean:
