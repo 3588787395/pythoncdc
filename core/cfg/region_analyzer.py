@@ -6206,7 +6206,21 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
         由 Pattern B 处理）；非 None 常量 return 仅当其全部普通前驱完整位于
         [try_start_min, try_end) 保护范围内（只从 try 体进入，不来自 else
         区）时收归 try_blocks。回归锚点：repro_09_try_except_else_return、
-        repro_05_try_else_finally_return 保持 MATCH。
+         repro_05_try_else_finally_return 保持 MATCH。
+
+        [EXC-2 fix] 条件跳转后继扩展（try_blocks 收集中将 try 体内部
+        if-then/if-else 分支体块并入 try_blocks）现排除「跳过 handler 的
+        提升返回胶水块」：当后继块以无条件 JUMP（JUMP_FORWARD/JUMP_BACKWARD/
+        JUMP_*_NO_INTERRUPT）结尾且其跳转目标偏移 >= handler_start（即越过
+        handler 落入 post-try 续体）时，不再收归 try_blocks。CPython 3.11 在
+        try 含多个条件 return 且末尾另有一个 return 被提升出 try 时，会在
+        try 体末 emit 一条 JUMP_FORWARD 跳过 handler 直达 post-try return；
+        之前该块被并入 try_blocks，使 AST 生成器将 post-try return 内联进
+        try body，在 JUMP_FORWARD/PUSH_EXC_INFO/BUILD_TUPLE/CHECK_EXC_MATCH
+        边界处与原始字节码发散（已验证于 PositionDict.__missing__）。真正
+        的 if/else 分支体块不会越过 handler 跳向 post-try，故该排除仅命中
+        提升返回胶水块。回归锚点：exc_except_tuple_trailing_return、
+        exc_except_tuple_inner_return、finance.pyc（PositionDict.__missing__）。
         """
         if not self.cfg.exception_table:
             return []
@@ -6606,6 +6620,31 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                                 continue
                             if _succ.start_offset >= _handler_offset:
                                 continue
+                            # [EXC-2 fix] Do NOT pull the "skip-handler" hoisted-return
+                            # glue block into try_blocks. In CPython 3.11 the compiler
+                            # hoists a trailing return out of a try/except and emits an
+                            # unconditional JUMP_FORWARD whose target is the post-try
+                            # continuation (offset >= handler_start) as the try body's
+                            # normal exit. Including such a block makes the AST generator
+                            # inline the post-try return inside the try body, which
+                            # diverges from the original bytecode at the
+                            # JUMP_FORWARD/PUSH_EXC_INFO/BUILD_TUPLE/CHECK_EXC_MATCH
+                            # boundary (verified on PositionDict.__missing__).
+                            # Surgical guard: only exclude a *pure glue* block — one whose
+                            # sole instruction is the unconditional jump (no real code
+                            # precedes it). A genuine if/else branch body block carries
+                            # real instructions before its terminating jump, so it is
+                            # never mistaken for hoist glue and keeps its membership.
+                            _succ_instrs = getattr(_succ, 'instructions', None) or []
+                            _succ_last = _succ.get_last_instruction()
+                            if (len(_succ_instrs) == 1 and _succ_last is not None
+                                    and _succ_last.opname in (
+                                        'JUMP_FORWARD', 'JUMP_BACKWARD',
+                                        'JUMP_BACKWARD_NO_INTERRUPT', 'JUMP_NO_INTERRUPT')):
+                                _succ_jump_targets = [s for s in _succ.successors
+                                                      if s not in _succ.exception_successors]
+                                if _succ_jump_targets and _succ_jump_targets[0].start_offset >= _handler_offset:
+                                    continue
                             _expanded_try.append(_succ)
                             _try_block_set.add(_succ)
                             _changed = True
