@@ -1,0 +1,19 @@
+# Source Generated with Decompyle++ (Python version)
+# File: C_nofinally_inner_try.pyc (Python 3.11)
+
+def f(algo, datalist):
+    tmporders = algo.tmporders.get_instance()
+    dict_map = algo._dict_map.get_instance()
+    for order_item in datalist:
+        entrust_no = order_item['entrust_no']
+        if entrust_no in dict_map:
+            order_id = dict_map[entrust_no]
+            try:
+                order_obj = tmporders[order_id]
+            except BaseException:
+                order_obj = algo.create_order_object(order_id, order_item)
+            order_obj.status = int(order_item['status'])
+            tmporders[order_id] = order_obj
+    else:
+        algo.tmporders.set_instance(tmporders)
+        return None

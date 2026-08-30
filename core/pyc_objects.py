@@ -289,6 +289,14 @@ class PycCode(PycObject):
             if isinstance(obj, PycCode):
                 return obj.to_python_code()
             if isinstance(obj, PycSequence):
+                # [Round 32 fix] set/frozenset 常量必须保持原类型：原始 pyc 中
+                # ``{5, 6}`` 字面量被编译器折叠为 ``LOAD_CONST frozenset({5, 6})``，
+                # 若在此误转为 tuple，反编译将输出 ``(5, 6)`` 而非 ``{5, 6}``，
+                # 重编译后字节码变为 BUILD_SET 序列，与原始 co_code 不一致。
+                if obj._type == PycObject.TYPE_FROZENSET:
+                    return frozenset(_resolve_ref(obj.get(i)) for i in range(obj.size()))
+                if obj._type == PycObject.TYPE_SET:
+                    return set(_resolve_ref(obj.get(i)) for i in range(obj.size()))
                 return tuple(_resolve_ref(obj.get(i)) for i in range(obj.size()))
             if hasattr(obj, 'value'):
                 return obj.value

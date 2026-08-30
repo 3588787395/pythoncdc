@@ -15846,6 +15846,112 @@ AST 映射规则:
                 return True
         return False
 
+    def _block_is_pure_back_edge_to_header(self, block) -> bool:
+        """判定块是否为指向当前循环 header 的纯回边块（无有效指令）。
+
+        [Round 32 fix] 区域归约算法原则 2（每块唯一归属）+ 循环自然出口
+        语义：CPython 3.11 的 for 循环体以 JUMP_BACKWARD→header 收尾，
+        即使源码没有显式 continue。异常表边界会把该回边切分为独立块
+        （如 try 体末的 JUMP_BACKWARD、if-false 的迭代块）。本方法判定
+        一个块是否为「纯迭代回边」：其唯一有意义的指令就是
+        JUMP_BACKWARD/JUMP_BACKWARD_NO_INTERRUPT 指向当前循环 header，
+        不含任何用户语句（STORE/CALL/BINARY_OP 等）。这类块的回边由
+        循环结构在重编译时自然再生，不得补发显式 Continue。
+        """
+        if block is None or not self._current_loop:
+            return False
+        hdr = self._current_loop.header_block
+        if hdr is None:
+            return False
+        last = block.get_last_instruction()
+        if last is None or last.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'):
+            return False
+        if last.argval is None:
+            return False
+        tgt = self.cfg.get_block_by_offset(last.argval)
+        if tgt is not hdr:
+            return False
+        _meaningful = [i for i in block.instructions
+                       if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP')
+                       and i.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+                                            'JUMP_FORWARD', 'JUMP_ABSOLUTE')]
+        return not _meaningful
+
+    def _if_false_path_is_loop_iteration(self, region) -> bool:
+        """判定 if 语句是否为循环体最后一条语句（if 无 else 且假出口直通迭代）。
+
+        [Round 32 fix] 区域归约算法原则 4（父引用子入口）+ 循环自然出口
+        语义：当 if 无 else 分支（else_blocks 为空）、且条件入口块的非
+        then 后继（条件假出口）是循环的自然迭代回边块（纯 JUMP_BACKWARD
+        →header）时，if 之后循环体无其它顺序代码——if 是循环体最后一条
+        语句。此时 then 分支末尾因异常表边界切出的独立纯回边块（如
+        t_nested 的 `if item: try-except` 形态，ptradeAccount
+        order_response_order_update 97 指令截断的同类结构）与假出口回边
+        等价，都是循环的隐式迭代，不得发射为显式 Continue。
+        显式 continue（`if c: continue` 或 then 分支中途 continue）形态
+        中假出口指向后续循环体代码块而非纯回边，本方法返回 False。
+        """
+        if not self._current_loop:
+            return False
+        if getattr(region, 'else_blocks', None):
+            return False
+        ent = getattr(region, 'entry', None)
+        if ent is None:
+            return False
+        _region_blocks = set(getattr(region, 'blocks', None) or [])
+        _then_entries = set(getattr(region, 'then_blocks', None) or [])
+        for s in ent.successors:
+            if s in _then_entries or s in _region_blocks:
+                continue
+            # 跳过异常表目标（PUSH_EXC_INFO/WITH_EXCEPT_START 开头的 handler）
+            if any(i.opname in ('PUSH_EXC_INFO', 'WITH_EXCEPT_START')
+                   for i in s.instructions):
+                continue
+            return self._block_is_pure_back_edge_to_header(s)
+        return False
+
+    def _handler_backedge_is_natural_loop_iteration(self, hb, region) -> bool:
+        """判定 except 处理器末尾回边块是否为循环体的隐式迭代回边。
+
+        [Round 32 fix] 区域归约算法原则 2（每块唯一归属）+ 循环自然出口
+        语义：try-except 作为循环体最后一条语句时，except 处理器以
+        POP_EXCEPT+JUMP_BACKWARD→header 收尾（如 t_nested 的
+        `for ...: if item: try: ... except ValueError: x=0`），该回边是
+        循环的隐式迭代，重编译时由循环结构自然再生；按 CONTINUE 角色
+        补发显式 Continue 会改变 try 异常表边界（字节码 +1 指令且
+        JUMP_FORWARD 混入，如 orig 40 vs decomp 41）。
+
+        判据：处理器回边块 hb 之后，循环体（body_blocks）中不存在任何
+        仍待执行的普通语句块——即 start_offset 大于 hb 且不属于当前
+        TryExceptRegion 的循环体块全部是纯回边块。此时 try-except 是
+        循环体最后一条语句；若存在后续普通代码（`except E: bar();
+        continue; baz()` 形态的显式 continue），后续块含用户语句，
+        本方法返回 False，保留显式 Continue。
+        """
+        if not self._current_loop:
+            return False
+        hdr = self._current_loop.header_block
+        if hdr is None:
+            return False
+        last = hb.get_last_instruction()
+        if last is None or last.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'):
+            return False
+        if last.argval is None:
+            return False
+        tgt = self.cfg.get_block_by_offset(last.argval)
+        if tgt is not hdr:
+            return False
+        _body = set(getattr(self._current_loop, 'body_blocks', None) or [])
+        _region_blocks = set(getattr(region, 'blocks', None) or [])
+        for blk in _body:
+            if blk is hdr or blk.start_offset <= hb.start_offset:
+                continue
+            if blk in _region_blocks:
+                continue
+            if not self._block_is_pure_back_edge_to_header(blk):
+                return False
+        return True
+
     def _if_extract_condition_from_instructions(self, region: IfRegion, cond_block: 'BasicBlock', cond_instrs: List) -> Dict[str, Any]:
         # [Round 2 修复] 当 cond_block 属于某个多操作数 BoolOpRegion 时
         # （如 `if x or await g():` 中 await 的 truthy 测试块），条件应
@@ -17448,6 +17554,20 @@ AST 映射规则:
                             _r100_mtgt = self.cfg.get_block_by_offset(_r100_mlast.argval)
                             if _r100_mtgt is _r100_hdr:
                                 _r100_suppress = True
+                        elif (_r100_hdr is not None
+                              and region.merge_block is _r100_hdr
+                              and self._if_false_path_is_loop_iteration(region)):
+                            # [Round 32 fix] 扩展判据：merge_block 即循环 header
+                            # 本身（两分支直接汇聚于迭代点，if 是循环体最后一条
+                            # 语句，如异常表边界切出独立纯回边块的
+                            # `if c: try-except` 形态）。此时 then 分支末尾的
+                            # 独立纯回边块是循环的隐式迭代，与假出口回边等价，
+                            # 补发 Continue 会改变 try 异常表边界（字节码 +1）。
+                            # _if_false_path_is_loop_iteration 进一步要求 if 无
+                            # else 且假出口直通纯回边块，排除
+                            # `if c: foo(); continue; bar()` 形态（假出口是后续
+                            # 代码块）与 `if c: continue` 独占分支（stmts 为空）。
+                            _r100_suppress = True
                     if not _r100_suppress:
                         stmts.append({'type': 'Continue'})
                 self.generated_blocks.add(block)
@@ -20900,7 +21020,19 @@ AST 映射规则:
                     # 被填充为 pass（如 te001 的 `except ValueError: continue` → `pass`）。
                     _hb_role = self.region_analyzer.get_block_role(hb)
                     if _hb_role in (BlockRole.CONTINUE, BlockRole.PURE_CONTINUE):
-                        handler_body.append({'type': 'Continue'})
+                        # [Round 32 fix] 区域归约算法原则 2（每块唯一归属）+
+                        # 循环自然出口语义：try-except 作为循环体最后一条语句
+                        # 时（如 `for x: if c: try: ... except E: ...` 中
+                        # except 处理器以 POP_EXCEPT+JUMP_BACKWARD→header
+                        # 收尾），该回边是循环的隐式迭代，重编译时由循环结构
+                        # 自然再生。补发显式 Continue 会改变 try 异常表边界
+                        # （t_nested：orig 40 指令 vs 补发 41 指令，JUMP_FORWARD
+                        # 混入）。_handler_backedge_is_natural_loop_iteration
+                        # 判定 hb 之后循环体无待执行的普通语句块时才抑制；
+                        # 显式 continue（handler 中途 continue 且其后仍有循环体
+                        # 代码）保留 Continue。
+                        if not self._handler_backedge_is_natural_loop_iteration(hb, region):
+                            handler_body.append({'type': 'Continue'})
                         self.generated_blocks.add(hb)
                         continue
                     if _hb_role in (BlockRole.BREAK, BlockRole.PURE_BREAK):

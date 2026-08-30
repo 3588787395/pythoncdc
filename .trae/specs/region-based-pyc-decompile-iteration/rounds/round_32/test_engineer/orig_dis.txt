@@ -1,0 +1,297 @@
+======================================================================
+FUNC: order_response_order_update qual: PtradeAccount.order_response_order_update n_ins: 111
+1901           0 RESUME                   0
+
+1903           2 NOP
+
+1904           4 LOAD_FAST                0 (algo)
+               6 LOAD_ATTR                0 (tmporders)
+              16 LOAD_ATTR                1 (write_lock)
+              26 LOAD_METHOD              2 (acquire)
+              48 PRECALL                  0
+              52 CALL                     0
+              62 POP_TOP
+
+1905          64 LOAD_FAST                0 (algo)
+              66 LOAD_ATTR                0 (tmporders)
+              76 LOAD_METHOD              3 (get_instance)
+              98 PRECALL                  0
+             102 CALL                     0
+             112 STORE_FAST               2 (tmporders)
+
+1906         114 LOAD_FAST                0 (algo)
+             116 LOAD_ATTR                4 (_dict_map)
+             126 LOAD_METHOD              3 (get_instance)
+             148 PRECALL                  0
+             152 CALL                     0
+             162 STORE_FAST               3 (dict_map)
+
+1907         164 LOAD_FAST                1 (datalist)
+             166 GET_ITER
+         >>  168 FOR_ITER               133 (to 436)
+             170 STORE_FAST               4 (order_item)
+
+1908         172 LOAD_FAST                4 (order_item)
+             174 LOAD_CONST               1 ('entrust_no')
+             176 BINARY_SUBSCR
+             186 STORE_FAST               5 (entrust_no)
+
+1909         188 LOAD_FAST                5 (entrust_no)
+             190 LOAD_FAST                3 (dict_map)
+             192 CONTAINS_OP              0
+             194 POP_JUMP_FORWARD_IF_FALSE   119 (to 434)
+
+1910         196 LOAD_FAST                3 (dict_map)
+             198 LOAD_FAST                5 (entrust_no)
+             200 BINARY_SUBSCR
+             210 STORE_FAST               6 (order_id)
+
+1911         212 NOP
+
+1912         214 LOAD_FAST                2 (tmporders)
+             216 LOAD_FAST                6 (order_id)
+             218 BINARY_SUBSCR
+             228 STORE_FAST               7 (order_obj)
+             230 JUMP_FORWARD            70 (to 372)
+         >>  232 PUSH_EXC_INFO
+
+1913         234 LOAD_GLOBAL             10 (BaseException)
+             246 CHECK_EXC_MATCH
+             248 POP_JUMP_FORWARD_IF_FALSE    57 (to 364)
+             250 POP_TOP
+
+1914         252 LOAD_GLOBAL             13 (NULL + system_log)
+             264 LOAD_ATTR                7 (error)
+             274 LOAD_GLOBAL             17 (NULL + get_traceback_message)
+             286 PRECALL                  0
+             290 CALL                     0
+             300 PRECALL                  1
+             304 CALL                     1
+             314 POP_TOP
+
+1915         316 LOAD_FAST                0 (algo)
+             318 LOAD_METHOD              9 (create_order_object)
+             340 LOAD_FAST                6 (order_id)
+             342 LOAD_FAST                4 (order_item)
+             344 PRECALL                  2
+             348 CALL                     2
+             358 STORE_FAST               7 (order_obj)
+             360 POP_EXCEPT
+             362 JUMP_FORWARD             4 (to 372)
+
+1913     >>  364 RERAISE                  0
+         >>  366 COPY                     3
+             368 POP_EXCEPT
+             370 RERAISE                  1
+
+1916     >>  372 LOAD_GLOBAL             21 (NULL + int)
+             384 LOAD_FAST                4 (order_item)
+             386 LOAD_CONST               2 ('status')
+             388 BINARY_SUBSCR
+             398 PRECALL                  1
+             402 CALL                     1
+             412 LOAD_FAST                7 (order_obj)
+             414 STORE_ATTR              11 (status)
+
+1917         424 LOAD_FAST                7 (order_obj)
+             426 LOAD_FAST                2 (tmporders)
+             428 LOAD_FAST                6 (order_id)
+             430 STORE_SUBSCR
+         >>  434 JUMP_BACKWARD          134 (to 168)
+
+1918     >>  436 LOAD_FAST                0 (algo)
+             438 LOAD_ATTR                0 (tmporders)
+             448 LOAD_METHOD             12 (set_instance)
+             470 LOAD_FAST                2 (tmporders)
+             472 PRECALL                  1
+             476 CALL                     1
+             486 POP_TOP
+
+1920         488 LOAD_FAST                0 (algo)
+             490 LOAD_ATTR                0 (tmporders)
+             500 LOAD_ATTR                1 (write_lock)
+             510 LOAD_METHOD             13 (release)
+             532 PRECALL                  0
+             536 CALL                     0
+             546 POP_TOP
+             548 JUMP_FORWARD            35 (to 620)
+         >>  550 PUSH_EXC_INFO
+             552 LOAD_FAST                0 (algo)
+             554 LOAD_ATTR                0 (tmporders)
+             564 LOAD_ATTR                1 (write_lock)
+             574 LOAD_METHOD             13 (release)
+             596 PRECALL                  0
+             600 CALL                     0
+             610 POP_TOP
+             612 RERAISE                  0
+         >>  614 COPY                     3
+             616 POP_EXCEPT
+             618 RERAISE                  1
+
+1921     >>  620 LOAD_CONST               0 (None)
+             622 RETURN_VALUE
+ExceptionTable:
+  4 to 210 -> 550 [0]
+  214 to 228 -> 232 [1]
+  230 to 230 -> 550 [0]
+  232 to 358 -> 366 [2] lasti
+  360 to 362 -> 550 [0]
+  364 to 364 -> 366 [2] lasti
+  366 to 486 -> 550 [0]
+  550 to 612 -> 614 [1] lasti
+
+======================================================================
+FUNC: trade_response_order_update qual: PtradeAccount.trade_response_order_update n_ins: 127
+1923           0 RESUME                   0
+
+1925           2 NOP
+
+1926           4 LOAD_FAST                0 (algo)
+               6 LOAD_ATTR                0 (tmporders)
+              16 LOAD_ATTR                1 (write_lock)
+              26 LOAD_METHOD              2 (acquire)
+              48 PRECALL                  0
+              52 CALL                     0
+              62 POP_TOP
+
+1927          64 LOAD_FAST                0 (algo)
+              66 LOAD_ATTR                0 (tmporders)
+              76 LOAD_METHOD              3 (get_instance)
+              98 PRECALL                  0
+             102 CALL                     0
+             112 STORE_FAST               2 (tmporders)
+
+1928         114 LOAD_FAST                0 (algo)
+             116 LOAD_ATTR                4 (_dict_map)
+             126 LOAD_METHOD              3 (get_instance)
+             148 PRECALL                  0
+             152 CALL                     0
+             162 STORE_FAST               3 (dict_map)
+
+1929         164 LOAD_FAST                1 (datalist)
+             166 GET_ITER
+         >>  168 FOR_ITER               152 (to 474)
+             170 STORE_FAST               4 (order_item)
+
+1930         172 LOAD_FAST                4 (order_item)
+             174 LOAD_CONST               1 ('entrust_no')
+             176 BINARY_SUBSCR
+             186 STORE_FAST               5 (entrust_no)
+
+1931         188 LOAD_FAST                5 (entrust_no)
+             190 LOAD_FAST                3 (dict_map)
+             192 CONTAINS_OP              0
+             194 POP_JUMP_FORWARD_IF_FALSE   138 (to 472)
+
+1932         196 LOAD_FAST                3 (dict_map)
+             198 LOAD_FAST                5 (entrust_no)
+             200 BINARY_SUBSCR
+             210 STORE_FAST               6 (order_id)
+
+1933         212 LOAD_FAST                6 (order_id)
+             214 LOAD_FAST                2 (tmporders)
+             216 CONTAINS_OP              0
+             218 POP_JUMP_FORWARD_IF_FALSE     9 (to 238)
+
+1934         220 LOAD_FAST                2 (tmporders)
+             222 LOAD_FAST                6 (order_id)
+             224 BINARY_SUBSCR
+             234 STORE_FAST               7 (order_obj)
+             236 JUMP_FORWARD            22 (to 282)
+
+1936     >>  238 LOAD_FAST                0 (algo)
+             240 LOAD_METHOD              5 (create_order_object)
+             262 LOAD_FAST                6 (order_id)
+             264 LOAD_FAST                4 (order_item)
+             266 PRECALL                  2
+             270 CALL                     2
+             280 STORE_FAST               7 (order_obj)
+
+1937     >>  282 LOAD_GLOBAL             13 (NULL + int)
+             294 LOAD_FAST                4 (order_item)
+             296 LOAD_CONST               2 ('status')
+             298 BINARY_SUBSCR
+             308 PRECALL                  1
+             312 CALL                     1
+             322 STORE_FAST               8 (status)
+
+1938         324 LOAD_FAST                8 (status)
+             326 LOAD_CONST               3 (frozenset({5, 6}))
+             328 CONTAINS_OP              0
+             330 POP_JUMP_FORWARD_IF_FALSE    22 (to 376)
+
+1939         332 LOAD_FAST                7 (order_obj)
+             334 LOAD_ATTR                7 (amount)
+             344 LOAD_FAST                4 (order_item)
+             346 LOAD_CONST               4 ('business_amount')
+             348 BINARY_SUBSCR
+             358 BINARY_OP                0 (+)
+             362 LOAD_FAST                7 (order_obj)
+             364 STORE_ATTR               8 (filled)
+             374 JUMP_FORWARD            36 (to 448)
+
+1940     >>  376 LOAD_FAST                8 (status)
+             378 LOAD_CONST               5 (9)
+             380 COMPARE_OP               2 (==)
+             386 POP_JUMP_FORWARD_IF_FALSE     8 (to 404)
+
+1941         388 LOAD_CONST               6 (0)
+             390 LOAD_FAST                7 (order_obj)
+             392 STORE_ATTR               8 (filled)
+             402 JUMP_FORWARD            22 (to 448)
+
+1943     >>  404 LOAD_FAST                7 (order_obj)
+             406 COPY                     1
+             408 LOAD_ATTR                8 (filled)
+             418 LOAD_FAST                4 (order_item)
+             420 LOAD_CONST               4 ('business_amount')
+             422 BINARY_SUBSCR
+             432 BINARY_OP               13 (+=)
+             436 SWAP                     2
+             438 STORE_ATTR               8 (filled)
+
+1944     >>  448 LOAD_FAST                8 (status)
+             450 LOAD_FAST                7 (order_obj)
+             452 STORE_ATTR               9 (status)
+
+1945         462 LOAD_FAST                7 (order_obj)
+             464 LOAD_FAST                2 (tmporders)
+             466 LOAD_FAST                6 (order_id)
+             468 STORE_SUBSCR
+         >>  472 JUMP_BACKWARD          153 (to 168)
+
+1946     >>  474 LOAD_FAST                0 (algo)
+             476 LOAD_ATTR                0 (tmporders)
+             486 LOAD_METHOD             10 (set_instance)
+             508 LOAD_FAST                2 (tmporders)
+             510 PRECALL                  1
+             514 CALL                     1
+             524 POP_TOP
+
+1948         526 LOAD_FAST                0 (algo)
+             528 LOAD_ATTR                0 (tmporders)
+             538 LOAD_ATTR                1 (write_lock)
+             548 LOAD_METHOD             11 (release)
+             570 PRECALL                  0
+             574 CALL                     0
+             584 POP_TOP
+             586 JUMP_FORWARD            35 (to 658)
+         >>  588 PUSH_EXC_INFO
+             590 LOAD_FAST                0 (algo)
+             592 LOAD_ATTR                0 (tmporders)
+             602 LOAD_ATTR                1 (write_lock)
+             612 LOAD_METHOD             11 (release)
+             634 PRECALL                  0
+             638 CALL                     0
+             648 POP_TOP
+             650 RERAISE                  0
+         >>  652 COPY                     3
+             654 POP_EXCEPT
+             656 RERAISE                  1
+
+1949     >>  658 LOAD_CONST               0 (None)
+             660 RETURN_VALUE
+ExceptionTable:
+  4 to 524 -> 588 [0]
+  588 to 650 -> 652 [1] lasti
+

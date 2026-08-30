@@ -815,7 +815,22 @@ class TryExceptRegion(Region):
         # inner 期望为 TryExceptRegion（由调用方_filter_regions保证）
         inner_has_handler = bool(inner.handler_entry_blocks)
         outer_has_finally = self.has_finally and bool(self.finally_blocks)
+        # [Round 32 fix] 配对 vs 嵌套判别（try_offset_start 相等性）：
+        # CPython 3.11 对 `try: A except E: B finally: C` 的 except 与
+        # finally 异常表项共用同一 try_start（保护同一 try 体），分析器
+        # 拆出的 except 区域与外层 finally 区域 try_offset_start 相等——
+        # 这才是本方法要吸收的「split 配对」语义（内层 except 与外层
+        # finally 本属同一条 try-except-finally 语句，合并为一个组合单元）。
+        # 当内层 try_offset_start 严格大于外层（内层 try 嵌套在外层 try
+        # body 中，如循环体内的 try-except），两者是真正的嵌套结构：
+        # 吸收会把内层 except 处理器体并进外层 try body、内层 try body
+        # 整段丢失（ptradeAccount order_response_order_update 形态：
+        # 97 指令截断为 30）。按区域归约算法原则 3（嵌套即抽象节点），
+        # 嵌套必须保持为子区域，由外层 _generate_try_body 经入口引用
+        # 递归生成，绝不吸收。
         if inner_has_handler and outer_has_finally and not self.handler_entry_blocks:
+            if getattr(inner, 'try_offset_start', -1) != self.try_offset_start:
+                return False
             self.handler_entry_blocks = inner.handler_entry_blocks
             self.handler_regions = getattr(inner, 'handler_regions', [])
             self.except_handlers = getattr(inner, 'except_handlers', [])
@@ -4273,6 +4288,143 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
         return False
 
 
+    def _clamp_loop_else_to_enclosing_try(self, else_blocks, header, for_iter_exit):
+        """[Round 32 fix] 循环 else_blocks 不得越过包围 try 结构的边界。
+
+        区域归约算法原则 2（每块唯一归属）+ 循环自然出口语义：
+        try/finally 内的循环，其正常出口续流会经过 finally 的正常路径
+        内联副本（CPython 3.9+ 对每个正常出口内联一份 finally 体）进入
+        try 语句之后的顺序代码（典型：显式 ``return None`` 块）。该续流
+        块是外层 try 语句的延续，不是 for-else 内容：for-else BFS 越过
+        try 边界吸收它会使 LoopRegion 的 offset range 反超
+        TryExceptRegion，_build_region_hierarchy 按优先级
+        （LoopRegion(5) > TryExceptRegion(3)）把外层 try 挂成循环的子
+        区域，层级颠倒导致 try 与循环体生成时整体丢失
+        （ptradeAccount order_response_order_update 形态）。
+
+        自然出口只应收纳「正常流到达循环末尾之后、且仍落在包围 try
+        结构 offset 范围内」的块；范围外的块（try 之后的顺序代码/显式
+        return）归还给外层结构，由其归属区域发射。判据完全基于已识别
+        TryExceptRegion 的 get_offset_range（不含 try 语句之后的块），
+        不依赖具体 opcode 组合。
+
+        仅当 header 与 for_iter_exit 都落在同一 TryExceptRegion 范围内
+        （即循环整体被该 try 包围）时才裁剪；无包围 try 或循环出口在
+        try 之外时不做任何处理——真实的 for-else 体必然位于 try 体内
+        （其块属于 try region 的内容范围），不受影响。
+        """
+        if not else_blocks or for_iter_exit is None:
+            return else_blocks
+        _fie_off = for_iter_exit.start_offset
+        _hdr_off = header.start_offset
+        _best = None
+        for _tr in self._filter_regions(self.regions, TryExceptRegion):
+            _range = _tr.get_offset_range(self)
+            if not _range or _range[0] is None or _range[1] is None:
+                continue
+            _ts, _te = _range
+            if not (_ts <= _hdr_off <= _te and _ts <= _fie_off <= _te):
+                continue
+            if _best is None or (_te - _ts) < (_best[1] - _best[0]):
+                _best = (_ts, _te)
+        if _best is None:
+            return else_blocks
+        _bound = _best[1]
+        _clamped = [b for b in else_blocks if b.start_offset <= _bound]
+        return _clamped if _clamped else None
+
+    def _loop_else_nop_marker(self, for_iter_exit: Optional[BasicBlock],
+                              header: BasicBlock) -> bool:
+        """[Round 32 fix] for-else 的 NOP 判别器（try/finally 上下文）
+
+        字节码事实（nop_marker2.py w1-w8 实证）：
+          - try/finally 上下文中，循环 else 子句（for-else/while-else）在
+            finally normal-path 副本之前【必然】产生一个 NOP（w2/w5/w8）；
+          - 普通后继语句（赋值/调用/if/while/try-except/with）【不】产生
+            （w1/w3/w4/w6/w7）；
+          - 无 finally 时（nop_marker.py h1-h7），for-else 与普通后继语句
+            编译出的字节码完全相同（均无 NOP），无法区分——判别器不适用，
+            返回 None（由既有兄弟结构头/纯跳转判据决定归属）。
+
+        NOP 的位置有两种形态（均覆盖）：
+          (a) 作为独立块的首条指令（w2 块 58 / w8 块 98，位于 else 体
+              之后、finally 副本之前，在异常表 try 范围之外）；
+          (b) 作为 else 体末块的最后一条指令（w5 偏移 128，紧跟 else 体
+              末条 POP_TOP 之后）。
+
+        判别算法：
+          1. 找到包围循环（header 与 for_iter_exit 均在其 offset 范围内）
+             的最内层 has_finally TryExceptRegion；无则返回 None。
+          2. 沿 for_iter_exit 的 normal 后继 BFS（不进入 handler/finally
+             异常路径、不跨过 finally 最大偏移、遇 RETURN/RERAISE 终止）。
+          3. 若某块的首条有效指令或末条有效指令为 NOP → 返回 True（真
+             for-else）；BFS 结束未发现 NOP → 返回 False（普通后继）。
+
+        返回值（三态）：
+          - True  包围 has_finally try 存在且续流含 NOP → 真 for-else
+          - False 包围 has_finally try 存在但续流无 NOP → 普通后继语句
+          - None  无包围 has_finally try → 判别器不适用（无 finally 时
+                  for-else 与普通后继字节码相同，保持既有启发式）
+
+        区域归约算法符合度：
+          - 依「回边证据」原则：无 break 证据时 loop-else 与顺序后继在
+            字节码层面不可区分；本判别器以 finally 上下文独有的 NOP
+            作为区分证据，避免 phantom for-else——try 内循环后的普通
+            语句被误吞为 else（ptradeAccount order_response_order_update
+            与 F_return_after_finally 尾部布局 shape_c 根因：
+            LoopRegion else_blocks 误吞 set_instance 与 finally 副本）。
+        """
+        if for_iter_exit is None:
+            return None
+        _fie_off = for_iter_exit.start_offset
+        _hdr_off = header.start_offset
+        _best = None
+        for _tr in self._filter_regions(self.regions, TryExceptRegion):
+            if not getattr(_tr, 'has_finally', False) or not _tr.finally_blocks:
+                continue
+            _range = _tr.get_offset_range(self)
+            if not _range or _range[0] is None or _range[1] is None:
+                continue
+            _ts, _te = _range
+            if not (_ts <= _hdr_off <= _te and _ts <= _fie_off <= _te):
+                continue
+            if _best is None or (_te - _ts) < (_best[1] - _best[0]):
+                _best = (_ts, _te, _tr)
+        if _best is None:
+            return None
+        _tr = _best[2]
+        _finally_max = max((b.start_offset for b in _tr.finally_blocks), default=0)
+        _handler_offsets = {b.start_offset for b in _tr.finally_blocks}
+        _visited = set()
+        _stack = [for_iter_exit]
+        while _stack:
+            _blk = _stack.pop()
+            if _blk in _visited:
+                continue
+            _visited.add(_blk)
+            if _blk.start_offset > _finally_max:
+                continue
+            _meaningful = [i for i in _blk.instructions
+                           if i.opname not in ('RESUME', 'CACHE', 'EXTENDED_ARG')]
+            if not _meaningful:
+                continue
+            if _meaningful[0].opname == 'NOP' or _meaningful[-1].opname == 'NOP':
+                return True
+            _last = _blk.get_last_instruction()
+            if _last and _last.opname in ('RETURN_VALUE', 'RETURN_CONST', 'RERAISE'):
+                continue
+            for _succ in _blk.successors:
+                if _succ in _blk.exception_successors:
+                    continue
+                if _succ.start_offset in _handler_offsets:
+                    continue
+                if _succ.start_offset > _finally_max:
+                    continue
+                if _succ in _visited:
+                    continue
+                _stack.append(_succ)
+        return False
+
     def _find_loop_else(self, header: BasicBlock, loop_body: Set[BasicBlock], loop_type: RegionType,
                         for_iter_exit: Optional[BasicBlock] = None,
                         condition_block: Optional[BasicBlock] = None) -> Tuple[Optional[List[BasicBlock]], Optional[BasicBlock]]:
@@ -4340,6 +4492,17 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                     continue
                 for succ in block.successors:
                     if succ not in body_set and succ not in break_targets:
+                        # [Round 32 fix] 异常后继排除：循环体内块的异常边
+                        # （如 try-finally 的 handler 入口 550）不是 break
+                        # 目标——break 目标是正常控制流 JUMP_FORWARD 的落点。
+                        # 依「每块唯一归属」：异常处理器块归属 TryExceptRegion，
+                        # 不归属 LoopRegion。旧逻辑把异常后继当作 break 目标，
+                        # 使 try-finally 内循环进入 break_targets 分支（post_else
+                        # BFS），绕过 no-break 分支的 NOP 判别器，phantom
+                        # for-else 仍被吞并（ptradeAccount 块 230/360 异常边
+                        # →550 根因）。
+                        if succ in block.exception_successors:
+                            continue
                         block_last = block.get_last_instruction()
                         if block_last and block_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
                             if succ == for_iter_exit:
@@ -4426,6 +4589,13 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                                   if b not in _with_cleanup_blocks
                                   and (b == for_iter_exit or not self._is_early_return_block(b))
                                   and not self._is_except_handler_block(b)]
+                        # [Round 32 fix] else_blocks 越界裁剪：见
+                        # _clamp_loop_else_to_enclosing_try。try 内循环的
+                        # 正常出口续流经 finally 内联副本进入 try 之后的
+                        # 顺序代码（显式 return None 等），该续流块是外层
+                        # try 的延续而非 for-else 内容，必须归还。
+                        result = self._clamp_loop_else_to_enclosing_try(
+                            result, header, for_iter_exit)
                         if not result:
                             result = None
                     return result, natural_exit
@@ -4453,6 +4623,20 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                     # （compile_help.pyc 偏移 876–916 缺块根因）。归还给兄弟
                     # 结构后由其归属区域经父级顺序位置正常发射。
                     if self._is_post_merge_sibling_head(for_iter_exit):
+                        return None, natural_exit
+                    # [Round 32 fix] for-else NOP 判别器：
+                    # 无 break 证据时，try/finally 上下文下循环 else 必发
+                    # NOP（w2/w5/w8），普通后继语句必不发（w1/w3/w4/w6/w7）。
+                    # 循环位于 try/finally 内且正常退出续流【不含】NOP →
+                    # for_iter_exit 是循环后的普通语句（shape_c 的
+                    # set_instance），不是 for-else → 归还给外层 try 结构，
+                    # 由其按顺序代码发射（ptradeAccount order_response_order_update
+                    # / F_return_after_finally 尾部布局根因）。判别器返回
+                    # None（无包围 has_finally try）时保持既有启发式
+                    # for_iter_exit 即 else（无 finally 时两种形态字节码
+                    # 相同，h1-h7 实证）。
+                    _nop_marker = self._loop_else_nop_marker(for_iter_exit, header)
+                    if _nop_marker is False:
                         return None, natural_exit
                     return [for_iter_exit], natural_exit
                 return None, natural_exit
@@ -6759,6 +6943,29 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                         # finally body 的 normal path。例外：隐式 return None 块
                         # 仍需纳入 all_blocks（编译器会重新添加）。
                         if _succ.start_offset > _finally_max_offset:
+                            # [Round 32 fix] 显式 return 判别器（shape_c）：
+                            # 若当前展开块 _blk 以 JUMP_FORWARD 结尾，则 _succ
+                            # 是它跳过 finally handler 后的目标——try-finally
+                            # 之后的代码。即使 _succ 是 LOAD_CONST None +
+                            # RETURN_VALUE，这也是源码级的【显式】return None
+                            # （shape_c：finally normal copy 末尾 JUMP_FORWARD
+                            # →handler→return 块），而非隐式 return（shape_b：
+                            # finally normal copy fall-through 直达 return，
+                            # 无 JUMP_FORWARD，return 块位于 handler 之前）。
+                            # 显式 return 必须由独立 BASIC 区域发射——重编译时
+                            # 编译器才会重新生成「JUMP_FORWARD 跳过 handler +
+                            # return 在 handler 之后」的布局；若吸收进 all_blocks
+                            # 会被标记 generated 后静默丢失（ptradeAccount
+                            # order_response_order_update / F_return_after_finally
+                            # 块 620 根因：Region(620) 被 TryExceptRegion.blocks
+                            # 包含而过滤为 contained，return None 永不发射）。
+                            # 判别依据：try 范围内 JUMP_FORWARD 越过 finally
+                            # 最大偏移的唯一合法形态就是 handler 跳过跳转；
+                            # 隐式 return 路径不存在 JUMP_FORWARD。
+                            _blk_last = _blk.get_last_instruction()
+                            if (_blk_last is not None
+                                    and _blk_last.opname == 'JUMP_FORWARD'):
+                                continue
                             _succ_meaningful = [i for i in _succ.instructions
                                                 if i.opname not in (
                                                         'RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
@@ -7284,7 +7491,17 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 for _, _, handler_blocks in region_b.except_handlers:
                     if region_a.entry in handler_blocks:
                         region_a.enclosing_try = region_b
-                        if not (getattr(region_b, 'has_finally', False) and not region_b.except_handlers and region_a.except_handlers):
+                        # [Round 32 fix] add_child 守卫同步配对/嵌套判别：
+                        # 只有「split 配对」（内层 except 与外层 finally
+                        # 保护同一 try 体，try_offset_start 相等，将作为组合
+                        # 单元被吸收）才跳过 add_child；真嵌套（try_offset_start
+                        # 不同，如循环体内 try-except 嵌在外层 try-finally
+                        # body 中）必须建立子关系——生成器靠 parent/children
+                        # 构建 AST 树，缺 add_child 时嵌套 try 会退化为 pass。
+                        if not (getattr(region_b, 'has_finally', False)
+                                and not region_b.except_handlers
+                                and region_a.except_handlers
+                                and getattr(region_a, 'try_offset_start', -1) == region_b.try_offset_start):
                             region_b.add_child(region_a)
                         break
                 if getattr(region_a, 'enclosing_try', None) is not None:
@@ -7307,7 +7524,13 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                             break
                     if not b_handler_in_a:
                         region_a.enclosing_try = region_b
-                        if not (getattr(region_b, 'has_finally', False) and not region_b.except_handlers and region_a.except_handlers):
+                        # [Round 32 fix] add_child 守卫同步配对/嵌套判别
+                        # （同 _coalesce 上方第一处）：真嵌套必须建立子关系，
+                        # 否则生成器将嵌套 try 退化为 pass。
+                        if not (getattr(region_b, 'has_finally', False)
+                                and not region_b.except_handlers
+                                and region_a.except_handlers
+                                and getattr(region_a, 'try_offset_start', -1) == region_b.try_offset_start):
                             region_b.add_child(region_a)
                         break
 
