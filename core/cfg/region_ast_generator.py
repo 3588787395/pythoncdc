@@ -29611,7 +29611,46 @@ AST 映射规则:
                     # before a ternary condition). The backward LOAD_* scan below
                     # only works for simple Name targets; Subscript/Attribute
                     # targets need full instruction reconstruction.
+                    # [R36 fix] 双角色 cond_block（W36）：cond_block 同时是另一个
+                    # TernaryRegion 的 merge_block 时（连续属性三元
+                    # `o.x = t1 if c1 else v1` / `o.y = t2 if c2 else v2`，第 1 个
+                    # 三元的 merge 块承载第 2 个三元的条件前导），STORE 前缀归属
+                    # 上游三元（由上游 _try_build_ternary_store_assign 随其
+                    # Assign 发射）。此处若原始重建，栈视角错位会产出幽灵
+                    # `o.x = None` 占位语句。与上方 MAKE_FUNCTION 分支同判据：
+                    # 跳过重建，仅推进 cond_start_idx。
                     if instr.opname in ('STORE_SUBSCR', 'STORE_ATTR'):
+                        # [R36] 上游区域值消费守卫：cond_block 同时是另一个
+                        # TernaryRegion **或 BoolOpRegion** 的 merge_block 时
+                        # （如 trade.pyc：`trade._trading_dt = trading_dt or
+                        # env.trading_dt` 的 BoolOp 值 STORE_ATTR 与后续
+                        # `trade._trade_id = ternary` 的条件前导同块），merge
+                        # 块首部的值消费 STORE 归属上游区域（由上游随其
+                        # Assign 发射）。此处若原始重建，栈视角错位会产出
+                        # 幽灵 `o.x = None` 占位。仅推进 cond_start_idx。
+                        # 收紧：仅当该 STORE 是 cond_block 内【第一条】STORE
+                        # 时才判定为上游值消费（merge 块首部即上游消费者是
+                        # 结构事实）；块内后续 STORE（如 trade.pyc 中
+                        # _price.._tax 五条独立赋值）是本 ternary 的真实
+                        # pre-statement，仍走 R61 重建。
+                        _cond_is_other_ternary_merge_r36 = any(
+                            _or36 is not region
+                            and isinstance(_or36, (TernaryRegion, BoolOpRegion))
+                            and getattr(_or36, 'merge_block', None) is cond_block
+                            for _or36 in self.regions)
+                        if _cond_is_other_ternary_merge_r36:
+                            _detector_r36 = get_opcode_detector()
+                            _first_store_idx_r36 = None
+                            for _si36, _sinstr36 in enumerate(cond_instrs):
+                                if _sinstr36.opname in NOISE_OPS:
+                                    continue
+                                if _detector_r36.is_any_store(_sinstr36):
+                                    _first_store_idx_r36 = _si36
+                                    break
+                            if _first_store_idx_r36 == i:
+                                cond_start_idx = i + 1
+                                i += 1
+                                continue
                         _pred_instrs = list(cond_instrs[cond_start_idx:i + 1])
                         _pred_stmts = self._build_statements_from_instructions(
                             _pred_instrs)
@@ -33253,6 +33292,29 @@ AST 映射规则:
             return None
         # store_idx 之后的指令属于下一个语句，重建为 extra statements
         _after_store_instrs = merge_instrs[_store_idx + 1:]
+        # R36 双角色 merge 块（W36）：STORE 之后可能是下游结构化区域的入口
+        # 前导（如连续属性三元 `o.x = t1 if c1 else v1` / `o.y = t2 if c2 else
+        # v2` 中，第 1 个三元的 merge_block 同时是第 2 个 TernaryRegion 的
+        # entry）。此时这段指令是下游区域归约的开始，不得原始重建为语句
+        # （否则下游三元的条件跳转被压成裸比较表达式，其 IfExp 被拆散），
+        # 应留给顶层生成循环依「父引用子入口」派发下游区域归约。本 region
+        # 的 blocks 不含 merge_block 下游部分，调用方不会误标 generated。
+        # 判据用 R10f3 结构化判据（entry 指针 + region_type != BASIC + 向
+        # 块外延伸 + 未生成），**不排除 block_to_region owner**——下游区域
+        # 恰是该块的 owner（单值映射后写覆盖）是双角色块的常态，排除会令
+        # 守卫失效（_downstream_region_entry 的 owner 排除语义不适用于此）。
+        # 找不到下游结构化区域时保守回退原始重建。
+        if _after_store_instrs:
+            for _r36 in self.regions:
+                if (_r36 is region
+                        or getattr(_r36, 'entry', None) is not region.merge_block
+                        or getattr(_r36, 'region_type', None) == RegionType.BASIC
+                        or not (set(getattr(_r36, 'blocks', ()) or ()) - {region.merge_block})
+                        or id(_r36) in self._generated_regions
+                        or id(_r36) in self._generating_regions):
+                    continue
+                _after_store_instrs = []
+                break
         if _after_store_instrs:
             _after_clean = [i for i in _after_store_instrs
                             if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]

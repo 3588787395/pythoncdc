@@ -1020,14 +1020,48 @@ class BoolOpRegion(Region):
         return None
 
     def can_be_ternary_header(self, block, analyzer) -> bool:
+        """BoolOpRegion 多态判定：block 能否作为 TernaryRegion 的条件头。
+
+        **算法依据（区域归约算法）**
+        两种合法形态：
+          形态 A（entry == block，BoolOp→Ternary 升级）：ternary 条件本身是
+          BoolOp 链（`x if a and b else y`），条件前导从 BoolOp 入口开始，
+          委托 analyzer._is_boolop_ternary_candidate 判定。
+          形态 B（block == merge_block，R36 双角色块）：BoolOp 已完整归约
+          （值消费 STORE 位于 merge 块首部），ternary 的条件前导是 merge 块
+          中 STORE 之后的后继语句。上游区域引用 merge 块完成自身归约，下游
+          TernaryRegion 以同一块为 entry——「每块唯一归属」下这是块级分区
+          共享（pre-STORE 归上游、post-STORE 归下游），不是块抢占。
+        **判据**
+        仅放行 entry / merge_block 两个边界；op_chain 条件块不放行（它们是
+        BoolOp 表达式自身的组成，放行会拆碎条件链）。两种形态均要求该块
+        不是任何 LoopRegion 的 condition_block（循环条件是语句级语义）。
+        **生成端配套**
+        形态 B 由生成端 R35 双角色派发机制（_downstream_region_entry，
+        parent is None 门控）从 merge 块派发下游 TernaryRegion。
+        """
         # boolop占用ternary header块时，仅当boolop入口==block且非循环条件块时，
         # 才可能升级为ternary（委托analyzer._is_boolop_ternary_candidate判定）
-        if self.entry != block:
-            return False
-        if any(r.condition_block == block
-               for r in analyzer._filter_regions(analyzer.regions, LoopRegion)):
-            return False
-        return analyzer._is_boolop_ternary_candidate(self)
+        if self.entry == block:
+            if any(r.condition_block == block
+                   for r in analyzer._filter_regions(analyzer.regions, LoopRegion)):
+                return False
+            return analyzer._is_boolop_ternary_candidate(self)
+        # R36 双角色块（W36）：ternary 的条件前导可能位于本 BoolOp 的
+        # merge_block（值消费 STORE 之后的后继语句前导）。依区域归约算法
+        # 「每块唯一归属」：merge 块的 pre-STORE 部分归本 BoolOp（值消费），
+        # post-STORE 部分是下一条语句——ternary entry 恰为该块时是合法的
+        # 下游结构（与 R35 value_target 双角色同构：下游区域 entry ==
+        # 上游 merge 块）。仅放行 merge_block（消费者边界），不放行
+        # op_chain 条件块（那些是 BoolOp 表达式自身的一部分，放行会拆碎
+        # 条件链）。生成端经 R35 双角色派发机制（_downstream_region_entry，
+        # parent is None 门控）从 merge 块派发下游 TernaryRegion。
+        if self.merge_block is not None and block is self.merge_block:
+            if any(r.condition_block == block
+                   for r in analyzer._filter_regions(analyzer.regions, LoopRegion)):
+                return False
+            return True
+        return False
 
 @dataclass
 class TernaryRegion(Region):
@@ -17105,6 +17139,19 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             LOAD b; POP_JUMP_IF_FALSE -> false;   # condition_chain_blocks
             LOAD x; JUMP_FORWARD -> merge;
             false: LOAD y; merge: STORE result
+          模式 C（R36 / W36）: 条件前导位于前序 BoolOp 的 merge 块 —
+            `<obj>.<attr> = v if cond else w` 紧跟 `x = a or b` 后：
+            BoolOp merge 块 = [值消费 STORE, ..., cond 前导, POP_JUMP_*]。
+            该块是双角色块：pre-STORE 归 BoolOp（值消费），post-STORE 的
+            条件前导归 TernaryRegion。识别端由 BoolOpRegion.can_be_ternary_
+            header 的 merge_block 分支放行（_can_be_ternary_header 的多态
+            路径），_detect_ternary_pattern 的 skip_ternary 守卫对
+            block is existing.merge_block 同步放行。生成端经 R35 双角色
+            派发机制归约。目标形态含 STORE_ATTR / STORE_SUBSCR / STORE_FAST
+            （值目标）；merge 块以 [target loads..., STORE_ATTR] 直接消费
+            三元结果时 merge_context='store'、value_target=None（与
+            STORE_SUBSCR 同构），由 _try_build_ternary_store_assign 重建
+            Attribute 目标。
         condition_chain_blocks 记录 (block, op) 元组列表，用于在 AST 生成阶段
         重建 BoolOp 条件。
         归约过程（保留历史标注： = _detect_ternary_context 前序
@@ -18302,6 +18349,15 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                                     b in candidate_blocks for b, _ in existing.op_chain)
                                 if chain_only_in_candidate:
                                     can_upgrade = True
+                    elif (existing.merge_block is not None
+                            and block is existing.merge_block):
+                        # R36 双角色块（W36）：候选块是 BoolOp 的 merge_block
+                        # （值消费 STORE 之后的后继语句前导）。此时 BoolOp 已
+                        # 完整归约，ternary 是 post-STORE 下游结构而非条件链
+                        # 组成部分，不应否决 ternary 创建。与 can_be_ternary_
+                        # header 的 merge 分支同判据；boolop_op_chain 升级路径
+                        # 仅在 entry==block 时适用，此处无需升级。
+                        can_upgrade = True
                     if not can_upgrade:
                         skip_ternary = True
                         break
@@ -18563,6 +18619,37 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     if instr.opname == 'STORE_SUBSCR':
                         merge_context = 'store'
                         break
+                    # R36（W36）：ternary 结果直接被属性赋值消费
+                    # （`obj.attr = ternary`）。merge 块形态
+                    # [target loads..., STORE_ATTR]。仅当 STORE_ATTR 之前的
+                    # 非噪音指令全部是目标对象装载（LOAD_* / COPY）时才判定
+                    # 为 store 上下文——若存在 CALL/BINARY_OP/BUILD_* 等中间
+                    # 消费指令，说明 ternary 是更外层表达式的子表达式
+                    # （如 `obj.attr = f(a if c else b)` 的 f(...) 实参），
+                    # 保持 merge_context=None（值上下文），交由通用表达式
+                    # 重建路径。判定为 store 时 value_target 保持 None
+                    # （非简单变量目标），由生成端 _try_build_ternary_store_
+                    # assign 重建 Attribute 目标；同时使三元成为语句级三元
+                    # （_is_statement_ternary_entry 守卫拒绝其被虚假外层
+                    # 三元吞并）。依「每块唯一归属」：STORE_ATTR 前的目标
+                    # 装载与 STORE_ATTR 本身归属本 TernaryRegion 的消费者，
+                    # 其后指令属于下一条语句。
+                    _detector_r36 = get_opcode_detector()
+                    if _detector_r36.is_store_attr(instr):
+                        try:
+                            _sa_idx = merge_block.instructions.index(instr)
+                        except ValueError:
+                            _sa_idx = -1
+                        _pre_sa = ([i for i in merge_block.instructions[:_sa_idx]
+                                    if i.opname not in NOISE_OPS]
+                                   if _sa_idx >= 0 else [])
+                        _pre_sa_all_load_or_copy = all(
+                            i.opname.startswith('LOAD_')
+                            or _detector_r36.is_copy(i)
+                            for i in _pre_sa)
+                        if _pre_sa_all_load_or_copy:
+                            merge_context = 'store'
+                            break
                     if instr.opname in ('STORE_FAST', 'STORE_NAME',
                                         'STORE_GLOBAL', 'STORE_DEREF'):
                         # walrus + 三元 + 后续操作模式检测：
