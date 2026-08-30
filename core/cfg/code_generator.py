@@ -1750,6 +1750,32 @@ class CodeGenerator:
                     self._decrease_indent()
                 return
             
+            # [Round 31 修复] orelse.nodes = [If, 兄弟语句...] 且 If 未标记
+            # _is_elif、自身 orelse 有实际内容时，该 If 是 else 中的嵌套
+            # if/else（elif 链在此结束），不是链的延续。整个块应作为 else
+            # 体渲染：嵌套 if/else 在前，兄弟语句（链 merge 折入 final else
+            # 的内容）保序跟在其后。旧逻辑把该 If 误判为 elif，兄弟语句
+            # 顶替成 else 体，If 自身的 orelse 被静默丢弃（make_trade 丢失
+            # 两条赋值的根因）。
+            elif_node = orelse.nodes[0]
+            if (len(orelse.nodes) > 1
+                    and not getattr(elif_node, '_is_elif', False)
+                    and elif_node.orelse and elif_node.orelse.nodes
+                    and any(not self._is_only_return_none([n])
+                            for n in elif_node.orelse.nodes)):
+                filtered_nodes = [n for n in orelse.nodes
+                                  if not self._is_only_return_none([n])]
+                if filtered_nodes:
+                    self._write_line('else:')
+                    self._increase_indent()
+                    _pos_before = self.output.tell()
+                    for n in filtered_nodes:
+                        self._generate_node(n)
+                    if self.output.tell() == _pos_before:
+                        self._write_line('pass')
+                    self._decrease_indent()
+                return
+
             elif_node = orelse.nodes[0]
             # [关键修复] 使用0作为parent_precedence，避免elif条件添加括号
             elif_test_code = self._generate_expression(elif_node.test, 0)
