@@ -22834,7 +22834,20 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                             _w14_bprevs[-1].opname == 'LOAD_CONST' and \
                             _w14_bprevs[-1].argval is None
                     if _w14_none_tail:
-                        continue
+                        # [R37 豁免收紧（W37）] none-tail 共享返回块的豁免
+                        # 前提是它与本分支仍有控制流连接——至少一个前驱仍在
+                        # 当前收集集内（R14b 的两臂汇入共享尾形态：本臂尾块
+                        # 在集内，兄弟臂尾在集外）。若全部前驱均已在此前剪枝
+                        # 迭代中移除，说明该块只是经已剪除路径可达的体外块
+                        # （order_market：amount 链 else 体 932 的唯一前驱
+                        # 888 属 amount 链，因 850 被外部前驱 622 剪除而连锁
+                        # 剪除，932 若仍豁免会被吸入前序未返回分支体，造成
+                        # 「else 体错挂兄弟臂 + 后继链丢 else」双重错位）。
+                        # 此时不再豁免，落入下方外部前驱剪枝。无前驱的孤立
+                        # 块保守保留（any()=False 时落入循环但不触发删除）。
+                        if any(_w14_p in in_set
+                               for _w14_p in _w14_b.predecessors):
+                            continue
                     for _w14_p in _w14_b.predecessors:
                         if _w14_b in _w14_p.exception_successors:
                             continue
@@ -22848,6 +22861,29 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                             in_set.discard(_w14_b)
                             _w14_pruned = True
                             break
+
+        # [R37 可达性收敛（W37）] 剪枝收敛后，仅保留从 entry 出发、沿正常
+        # 控制流边、经【保留块】可达的块。前驱外部性判据是逐块局部判定，
+        # 循环体块因回边内部互连（前驱在集内）可在桥块（如 order_market 的
+        # 850）被剪除后仍整体存活，导致 post-chain 循环整体被吸入前序未返回
+        # 分支体。可达性是「块属于本分支」的全局判定：桥块剪除后，体外组件
+        # （循环/后继链的 else 体）与 entry 断连，一并移除。合法分支体必然
+        # 从 entry 可达，此遍对正常收集无影响。仅无界收集（merge=None）适用。
+        if len(collected) > 1 and not merge:
+            _r37_kept = set(collected)
+            _r37_reachable = {entry}
+            _r37_stack = [entry]
+            while _r37_stack:
+                _r37_b = _r37_stack.pop()
+                _r37_exc = getattr(_r37_b, 'exception_successors', set()) or set()
+                for _r37_s in _r37_b.successors:
+                    if (_r37_s in _r37_kept
+                            and _r37_s not in _r37_reachable
+                            and _r37_s not in _r37_exc):
+                        _r37_reachable.add(_r37_s)
+                        _r37_stack.append(_r37_s)
+            if len(_r37_reachable) < len(collected):
+                collected = [b for b in collected if b in _r37_reachable]
 
         return collected
 
