@@ -28004,12 +28004,77 @@ AST 映射规则:
                     # 区域（R2 的 chain blocks），不可在此提取，否则会重复发射为
                     # 独立 Expr（违反原则 2 每块唯一归属）。
                     _merge_is_other_entry_r10f3 = False
+                    _merge_has_structured_entry_r35 = False
                     for _r10f3_r in self.regions:
                         if (_r10f3_r is not region
                                 and getattr(_r10f3_r, 'entry', None) is region.merge_block):
                             _merge_is_other_entry_r10f3 = True
-                            break
-                    if not _merge_is_other_entry_r10f3:
+                            # [Round 35b] 区分「结构化 entry 认领者」与「BASIC
+                            # 退化容器认领者」：前者（IfRegion/IF_ELIF_CHAIN 等
+                            # region_type != BASIC 的区域）是真实的下游区域，由
+                            # 顶层 containment/派发机制生成完整结构（如 if/elif）；
+                            # 后者是 generate() 顶部为孤儿块建的普通 Region，仅
+                            # 含 merge 块本身、不向外延伸，不构成独立区域。
+                            if _r10f3_r.region_type != RegionType.BASIC:
+                                _merge_has_structured_entry_r35 = True
+                    _downstream_r35 = None
+                    if _merge_is_other_entry_r10f3 and _merge_has_structured_entry_r35:
+                        # [Round 35 fix] 双角色块的 STORE_FAST 变体（F3 只修了
+                        # STORE_ATTR/R78，此处 value_target 分支漏掉）：连续两条
+                        # `x = f(a and b or c)` 赋值时，第 1 条的 merge_block
+                        # （BINARY_OP + CALL + STORE source_start）同时是第 2 条
+                        # BoolOp 的 entry（块内 STORE 之后紧接第 2 条的条件求值）。
+                        # 若只跳过 post-store 而不派发，下游 BoolOpRegion 对
+                        # get_region_for_block 不可见，永不被 generate() 派发，
+                        # 其语句退化为通用块语句（裸表达式 / 错位 return）——
+                        # datetime_func.change_2str_of_time_2_datetime 的
+                        # source_end 计算被吞（strptime 调用丢失、return 变
+                        # `return '1530'`）。与 R78 一致：依原则 4（父引用子
+                        # 入口）派发下游区域。
+                        _downstream_r35 = self._downstream_region_entry(
+                            region.merge_block, region)
+                        # [Round 35c] 仅在「下游结构化区域为顶层（parent is
+                        # None）」时才提前派发：此区域无父区域负责派发，HEAD 会
+                        # 静默丢失其 source_end 与尾部 return（datetime_func 的
+                        # BoolOpRegion(0/140) 场景）。若下游区域有父区域（如
+                        # quotation 中 BoolOpRegion(424) parent=IfRegion(214)，
+                        # 由父 IfRegion 的 boolop_children 机制正常派发），提前
+                        # 派发会把下游 blocks（含 IfRegion 的 entry blk@584/560）
+                        # 标记为 generated，破坏 IfRegion 派发、导致 elif 条件
+                        # 丢失（quotation.pyc 回归 143→142）。此时完全跳过：
+                        # 不派发、不标记 blocks、不提取 post-store，交由父区域
+                        # 处理，保持 HEAD 行为。
+                        if (_downstream_r35 is not None
+                                and getattr(_downstream_r35, 'parent', None) is None):
+                            _ds_ast_r35 = self._generate_region(_downstream_r35)
+                            if _ds_ast_r35:
+                                if isinstance(_ds_ast_r35, list):
+                                    results.extend(_ds_ast_r35)
+                                else:
+                                    results.append(_ds_ast_r35)
+                            for _db_r35 in _downstream_r35.blocks:
+                                self.generated_blocks.add(_db_r35)
+                            self._generated_regions.add(id(_downstream_r35))
+                            return results
+                        # [Round 35b] 结构化 entry 认领者但派发失败（如该区域恰是
+                        # block_to_region owner，_downstream_region_entry 依「r is
+                        # owner」跳过，如 blk@584 被 IfRegion(584) 认领）：结构化
+                        # 区域由顶层 containment 过滤派发完整 if/elif，父区域
+                        # **不得**接管 post-store——否则会消费 merge 块内 STORE
+                        # 之后的 elif 条件指令（POP_JUMP_FORWARD_IF_FALSE），
+                        # 与 IfRegion 派发叠加导致 elif 条件丢失
+                        # （quotation.pyc 回归 143→142）。
+                    if not _merge_is_other_entry_r10f3 or not _merge_has_structured_entry_r35:
+                        # [Round 35b] 无双角色块、或全部认领者均为 BASIC 退化容器
+                        # 区域（generate() 顶部为孤儿块建的普通 Region，仅含 merge
+                        # 块本身、不向外延伸，如 blk@300 同时是 BoolOpRegion.merge
+                        # 与普通 Region.entry，而普通 Region 仅含 300）。此时 STORE
+                        # 之后的指令仍属**父 BoolOp 的尾部语句**（如 `return
+                        # source_start, source_end`：LOAD source_start/LOAD
+                        # source_end/BUILD_TUPLE/RETURN_VALUE），必须走下方 R61
+                        # post-store 路径发射，不得跳过——否则静默丢失（本轮的
+                        # source_end 已由 value_target 分支恢复，但尾部 return
+                        # 仍被吞）。
                         # [R61 fix] When chained targets are detected (COPY +
                         # multiple STOREs), find the LAST store in the chain
                         # so post-store processing handles instructions after
