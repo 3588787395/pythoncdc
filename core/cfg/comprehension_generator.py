@@ -278,17 +278,61 @@ class ComprehensionGenerator:
 
             store_instr = None
             for instr in instrs[wrapper_end:]:
-                if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+                                    'STORE_SUBSCR', 'STORE_ATTR'):
                     store_instr = instr
                     break
 
             if store_instr:
-                all_stmts.append({
-                    'type': 'Assign',
-                    'targets': [{'type': 'Name', 'id': store_instr.argval, 'ctx': 'Store'}],
-                    'value': comp_value,
-                })
                 store_idx = instrs.index(store_instr)
+                if store_instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                    all_stmts.append({
+                        'type': 'Assign',
+                        'targets': [{'type': 'Name', 'id': store_instr.argval, 'ctx': 'Store'}],
+                        'value': comp_value,
+                    })
+                elif store_instr.opname == 'STORE_SUBSCR':
+                    # [R34 fix] 推导式赋值目标是下标（`d[k] = [listcomp]` 编译为
+                    # <listcomp> + LOAD cont + LOAD key + STORE_SUBSCR）。旧实现只
+                    # 认 STORE_FAST 系列，下标目标被跳过 → 退化为裸 Expr(listcomp)
+                    # 且 STORE_SUBSCR 丢失（graph._process_task_queue 的 else 子句
+                    # node_dict[node] = [...listcomp...]）。重建 Subscript 目标：
+                    # 目标窗口 = wrapper_end..store_idx 的 [容器, 键] LOAD 指令。
+                    _tgt_instrs = instrs[wrapper_end:store_idx]
+                    _tgt_cont = None
+                    _tgt_key = None
+                    if len(_tgt_instrs) >= 2:
+                        _tgt_cont = self.expr_reconstructor.reconstruct([_tgt_instrs[-2]])
+                        _tgt_key = self.expr_reconstructor.reconstruct([_tgt_instrs[-1]])
+                    if _tgt_cont is not None and _tgt_key is not None:
+                        all_stmts.append({
+                            'type': 'Assign',
+                            'targets': [{
+                                'type': 'Subscript',
+                                'value': _tgt_cont,
+                                'slice': _tgt_key,
+                                'ctx': 'Store',
+                            }],
+                            'value': comp_value,
+                        })
+                elif store_instr.opname == 'STORE_ATTR':
+                    # [R34 fix] 推导式赋值目标是属性（`self.items = [listcomp]`
+                    # 编译为 <listcomp> + LOAD obj + STORE_ATTR items）。
+                    _tgt_instrs = instrs[wrapper_end:store_idx]
+                    _tgt_obj = None
+                    if _tgt_instrs:
+                        _tgt_obj = self.expr_reconstructor.reconstruct([_tgt_instrs[-1]])
+                    if _tgt_obj is not None:
+                        all_stmts.append({
+                            'type': 'Assign',
+                            'targets': [{
+                                'type': 'Attribute',
+                                'value': _tgt_obj,
+                                'attr': store_instr.argval,
+                                'ctx': 'Store',
+                            }],
+                            'value': comp_value,
+                        })
                 prev_end = store_idx + 1
             else:
                 last_instr = instrs[-1]
@@ -436,7 +480,21 @@ class ComprehensionGenerator:
             _import_is_from = False
 
         for instr in remaining_instrs:
-            if instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP'):
+            if instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                continue
+            # [R34 fix] POP_TOP 是表达式语句终结符（如 `value_list.append(nodes)`
+            # 编译为 <expr_instrs> + POP_TOP）。旧实现直接丢弃 POP_TOP，把
+            # current_instrs 与后续语句指令混合，导致尾部语句（含 STORE_SUBSCR
+            # 赋值）被整体 reconstruct、退化为裸 Name 表达式（graph._process_task_queue
+            # 的 try 块内 append + 2 个下标赋值被吞成 `task_id`）。镜像
+            # _build_statements_from_instructions 的边界处理：POP_TOP 时把累积
+            # 指令重建为 Expr 语句并清空。
+            if instr.opname == 'POP_TOP':
+                if current_instrs:
+                    value_expr = self.expr_reconstructor.reconstruct(current_instrs)
+                    if value_expr is not None:
+                        stmts.append({'type': 'Expr', 'value': value_expr})
+                    current_instrs = []
                 continue
             if instr.opname in ('RETURN_VALUE', 'RETURN_CONST'):
                 _flush_import()
@@ -483,6 +541,45 @@ class ComprehensionGenerator:
                                 'targets': [{'type': 'Name', 'id': store_instr.argval, 'ctx': 'Store'}],
                                 'value': value_expr,
                             })
+                current_instrs = []
+                continue
+            # [R34 fix] 下标/属性赋值（STORE_SUBSCR/STORE_ATTR）不是 STORE_FAST
+            # 系列，旧实现把它们堆积进 current_instrs，与后续指令混合后整体
+            # reconstruct 退化为裸表达式。镜像 _build_statements_from_instructions
+            # 的 L23180/L23186 处理：委托 _build_subscript_assign/_build_attr_assign
+            # 重建 Assign 语句。
+            if instr.opname == 'STORE_SUBSCR':
+                _flush_import()
+                if region_ast_gen is not None:
+                    _ss_stmt = region_ast_gen._build_subscript_assign(current_instrs + [instr])
+                    if _ss_stmt:
+                        stmts.append(_ss_stmt)
+                else:
+                    _ss_val_instrs = current_instrs[:-2]
+                    _ss_cont_instrs = current_instrs[-2:-1]
+                    _ss_idx_instrs = current_instrs[-1:]
+                    _ss_val = self.expr_reconstructor.reconstruct(_ss_val_instrs) if _ss_val_instrs else None
+                    _ss_cont = self.expr_reconstructor.reconstruct(_ss_cont_instrs) if _ss_cont_instrs else None
+                    _ss_idx = self.expr_reconstructor.reconstruct(_ss_idx_instrs) if _ss_idx_instrs else None
+                    if _ss_val is not None and _ss_cont is not None and _ss_idx is not None:
+                        stmts.append({
+                            'type': 'Assign',
+                            'targets': [{
+                                'type': 'Subscript',
+                                'value': _ss_cont,
+                                'slice': _ss_idx,
+                                'ctx': 'Store',
+                            }],
+                            'value': _ss_val,
+                        })
+                current_instrs = []
+                continue
+            if instr.opname == 'STORE_ATTR':
+                _flush_import()
+                if region_ast_gen is not None:
+                    _sa_stmt = region_ast_gen._build_attr_assign(current_instrs + [instr])
+                    if _sa_stmt:
+                        stmts.append(_sa_stmt)
                 current_instrs = []
                 continue
             _flush_import()
