@@ -21833,6 +21833,10 @@ class ASTGeneratorV2:
         if not isinstance(stmt, dict):
             return False
         
+        # [Round 33 修复] NOP 占位常量语句必须保留（对应源码常量语句，重编译产出 NOP）
+        if stmt.get('_nop_placeholder'):
+            return False
+        
         stmt_type = stmt.get('type', '')
         
         # Expr语句（表达式语句）可能是孤立的
@@ -21979,8 +21983,16 @@ class ASTGeneratorV2:
         
         # 如果有多个NOP或没有条件跳转，这是优化残留，不创建if结构
         if nop_count > 1 or not has_conditional_jump:
-            # 过滤掉NOP指令，只处理实际代码
-            filtered_instrs = [instr for instr in non_jump_instrs if instr.opname != 'NOP']
+            # [Round 33 修复] 过滤掉非孤立 NOP，但保留孤立 NOP 语句
+            # 孤立 NOP（源码常量表达式语句的编译产物）需要在
+            # _process_instruction_sequence 中生成占位常量语句，重编译才产出 NOP；
+            # 普通行号标记 NOP（优化残留）仍然丢弃，不影响控制流还原。
+            # 之前这里把 NOP 全部过滤，导致 _process_instruction_sequence 永远
+            # 看不到孤立 NOP，占位语句无法生成，类体重编译缺 NOP。
+            filtered_instrs = [
+                instr for i, instr in enumerate(non_jump_instrs)
+                if instr.opname != 'NOP' or self._is_orphan_nop_statement(non_jump_instrs, i)
+            ]
             return self._process_instruction_sequence(filtered_instrs, shared_stack)
         
         # [关键修复] 处理NOP指令
@@ -22149,7 +22161,67 @@ class ASTGeneratorV2:
             return statements[0]
         
         return statements
-    
+
+    def _is_orphan_nop_statement(self, instructions: List[Instruction], idx: int) -> bool:
+        """判断 NOP 是否是孤立语句（源码中常量表达式语句的编译产物）。
+
+        CPython 3.11 的 compiler_visit_stmt_expr 对 Constant 语句（裸字符串/数字等）
+        直接发射 NOP 且不把常量加载进 co_consts。在类体/模块级 def 序列中，该 NOP
+        表现为：前一条指令是语句边界（STORE_NAME 等），后一条是语句开始（LOAD_CONST
+        <code> / LOAD_NAME property 等）且 NOP 行号 < 后一条行号。
+        函数体内 if True / return 等场景的 NOP 前后不是这种形态，不会被误判；
+        块开头/块尾的 NOP（行号锚点，前后缺失）也不是常量语句，不判定。
+        """
+        if idx >= len(instructions):
+            return False
+        nop = instructions[idx]
+        if nop.opname != 'NOP' or nop.starts_line is None:
+            return False
+        # [Round 33 回归修复] 连续 NOP 不是常量语句：类体/函数体开头的行号
+        # 锚点 NOP 常成对出现（trade_stock_account.TradeStockAccount 类体
+        # NOP+NOP 后跟第一个方法定义即此形态）。常量语句 NOP 是单条孤立 NOP，
+        # 相邻指令不会是 NOP。
+        if (idx > 0 and instructions[idx - 1].opname == 'NOP') \
+                or (idx + 1 < len(instructions) and instructions[idx + 1].opname == 'NOP'):
+            return False
+        # 前一条有效指令（跳过 RESUME/CACHE/NOP）
+        prev = None
+        for j in range(idx - 1, -1, -1):
+            if instructions[j].opname not in ('RESUME', 'CACHE', 'NOP'):
+                prev = instructions[j]
+                break
+        # 后一条有效指令
+        nxt = None
+        for j in range(idx + 1, len(instructions)):
+            if instructions[j].opname not in ('RESUME', 'CACHE', 'NOP'):
+                nxt = instructions[j]
+                break
+        # 语句边界指令（前一条）：前一条缺失时要求 NOP 在语句序列开头
+        boundary_ops = {'STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF',
+                        'STORE_ATTR', 'STORE_SUBSCR', 'DELETE_NAME', 'DELETE_FAST',
+                        'DELETE_GLOBAL', 'DELETE_ATTR', 'DELETE_SUBSCR',
+                        'POP_TOP', 'RETURN_VALUE', 'RETURN_CONST'}
+        # 语句开始指令（后一条）
+        start_ops = {'LOAD_CONST', 'LOAD_NAME', 'LOAD_GLOBAL', 'PUSH_NULL',
+                     'LOAD_ATTR', 'LOAD_CLASSDEREF', 'LOAD_DEREF', 'LOAD_CLOSURE',
+                     'MAKE_CELL', 'BUILD_LIST', 'BUILD_TUPLE', 'BUILD_MAP',
+                     'BUILD_SET', 'LOAD_FAST', 'LOAD_BUILD_CLASS',
+                     'IMPORT_NAME', 'IMPORT_FROM'}
+        if prev is None:
+            # [Round 33 修复] 块开头 NOP 是行号标记（如循环体/函数体首行锚点），
+            # 不是常量语句——常量语句前面必有已完成的语句
+            return False
+        if prev.opname not in boundary_ops:
+            return False
+        if nxt is None:
+            # [Round 33 修复] 块尾 NOP 是行号标记（clean_basic_block 保留的
+            # 行号锚点，如 request=... 语句后、try 块前的 NOP），不是常量语句；
+            # 常量语句 NOP 之后必有后续语句的开始指令。
+            return False
+        if nxt.opname not in start_ops:
+            return False
+        return True
+
     def _process_instruction_sequence(self, instructions: List[Instruction],
                                       shared_stack: Optional[List[Dict[str, Any]]] = None) -> List[Dict[str, Any]]:
         """处理指令序列，返回AST语句列表"""
@@ -22234,8 +22306,19 @@ class ASTGeneratorV2:
                 prev_opname = opname
                 continue
             
-            # [关键修复] NOP指令 - 对应优化后的if True:语句
+            # [Round 33 修复] 孤立 NOP 语句：源码中的常量表达式语句（裸字符串/数字等）
+            # CPython 3.11 compiler_visit_stmt_expr 对 Constant 语句直接发 NOP 且不加载到
+            # co_consts。若反编译输出丢弃该语句，重编译会缺 NOP 导致 co_code 不匹配。
+            # 特征：NOP 前后都是语句边界/语句开始指令（如 def 序列中的 STORE_NAME -> NOP
+            # -> LOAD_CONST <code>），此时渲染为占位常量语句，重编译仍产出 NOP。
             if opname == 'NOP':
+                if self._is_orphan_nop_statement(instructions, idx):
+                    statements.append({
+                        'type': 'Expr',
+                        'value': {'type': 'Constant', 'value': ''},
+                        'lineno': instr.starts_line,
+                        '_nop_placeholder': True,
+                    })
                 nop_count += 1
                 nop_encountered = True
                 continue

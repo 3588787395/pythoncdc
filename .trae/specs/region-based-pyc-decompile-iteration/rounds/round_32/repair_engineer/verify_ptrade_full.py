@@ -52,14 +52,34 @@ def instrs(co):
 
 
 def same_code(o, d):
+    # [Round 33] co_consts 比较：co_consts 中的嵌套 code object 是对象身份比较，
+    # 直接 o.co_consts != d.co_consts 对含嵌套 code object 的 consts 恒不等
+    # （如 PtradeAccount 类体含 135 个方法 code object），导致误报 mismatch。
+    # 改为递归比较：非 code object 按值比较，code object 递归比较各字段。
     if len(o.co_code) != len(d.co_code) or o.co_code != d.co_code:
-        return False
-    if o.co_consts != d.co_consts:
         return False
     if o.co_names != d.co_names:
         return False
     if o.co_varnames != d.co_varnames:
         return False
+    return _same_consts(o.co_consts, d.co_consts)
+
+
+def _same_consts(oc, dc):
+    if len(oc) != len(dc):
+        return False
+    for a, b in zip(oc, dc):
+        if isinstance(a, types.CodeType) or isinstance(b, types.CodeType):
+            if not (isinstance(a, types.CodeType) and isinstance(b, types.CodeType)):
+                return False
+            if (a.co_code != b.co_code or a.co_names != b.co_names
+                    or a.co_varnames != b.co_varnames
+                    or a.co_freevars != b.co_freevars
+                    or a.co_cellvars != b.co_cellvars
+                    or not _same_consts(a.co_consts, b.co_consts)):
+                return False
+        elif a != b:
+            return False
     return True
 
 

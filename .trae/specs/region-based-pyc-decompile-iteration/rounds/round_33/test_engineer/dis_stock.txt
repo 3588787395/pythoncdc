@@ -1,0 +1,572 @@
+=== pyc 反汇编 ===
+1762           0 RESUME                   0
+
+1763           2 BUILD_LIST               0
+               4 STORE_FAST               2 (data_list)
+
+1764           6 LOAD_FAST                1 (list_result)
+               8 GET_ITER
+         >>   10 EXTENDED_ARG             2
+              12 FOR_ITER               690 (to 1394)
+              14 STORE_FAST               3 (item)
+
+1765          16 LOAD_FAST                3 (item)
+              18 LOAD_METHOD              0 (get)
+              40 LOAD_CONST               1 ('entrust_bs')
+              42 PRECALL                  1
+              46 CALL                     1
+              56 STORE_FAST               4 (entrust_bs)
+
+1766          58 NOP
+
+1767          60 LOAD_GLOBAL              3 (NULL + float)
+              72 LOAD_FAST                3 (item)
+              74 LOAD_METHOD              0 (get)
+              96 LOAD_CONST               2 ('entrust_amount')
+              98 LOAD_CONST               3 (0)
+             100 PRECALL                  2
+             104 CALL                     2
+             114 PRECALL                  1
+             118 CALL                     1
+             128 STORE_FAST               5 (entrust_amount)
+             130 JUMP_FORWARD             9 (to 150)
+         >>  132 PUSH_EXC_INFO
+
+1768         134 POP_TOP
+
+1769         136 LOAD_CONST               4 (0.0)
+             138 STORE_FAST               5 (entrust_amount)
+             140 POP_EXCEPT
+             142 JUMP_FORWARD             3 (to 150)
+         >>  144 COPY                     3
+             146 POP_EXCEPT
+             148 RERAISE                  1
+
+1770     >>  150 LOAD_FAST                4 (entrust_bs)
+             152 LOAD_CONST               5 ('1')
+             154 COMPARE_OP               2 (==)
+             160 POP_JUMP_FORWARD_IF_FALSE    16 (to 194)
+
+1771         162 LOAD_GLOBAL              5 (NULL + int)
+             174 LOAD_FAST                5 (entrust_amount)
+             176 PRECALL                  1
+             180 CALL                     1
+             190 STORE_FAST               6 (amount)
+             192 JUMP_FORWARD            25 (to 244)
+
+1772     >>  194 LOAD_FAST                4 (entrust_bs)
+             196 LOAD_CONST               6 ('2')
+             198 COMPARE_OP               2 (==)
+             204 POP_JUMP_FORWARD_IF_FALSE    17 (to 240)
+
+1773         206 LOAD_GLOBAL              5 (NULL + int)
+             218 LOAD_FAST                5 (entrust_amount)
+             220 PRECALL                  1
+             224 CALL                     1
+             234 UNARY_NEGATIVE
+             236 STORE_FAST               6 (amount)
+             238 JUMP_FORWARD             2 (to 244)
+
+1775     >>  240 LOAD_CONST               3 (0)
+             242 STORE_FAST               6 (amount)
+
+1778     >>  244 LOAD_GLOBAL              7 (NULL + del_order_time)
+             256 LOAD_GLOBAL              9 (NULL + str)
+             268 LOAD_FAST                3 (item)
+             270 LOAD_METHOD              0 (get)
+             292 LOAD_CONST               7 ('report_time')
+             294 LOAD_CONST               8 ('')
+             296 PRECALL                  2
+             300 CALL                     2
+             310 PRECALL                  1
+             314 CALL                     1
+             324 PRECALL                  1
+             328 CALL                     1
+             338 STORE_FAST               7 (order_time)
+
+1780         340 LOAD_FAST                3 (item)
+             342 LOAD_METHOD              0 (get)
+             364 LOAD_CONST               9 ('stock_code')
+             366 PRECALL                  1
+             370 CALL                     1
+             380 FORMAT_VALUE             1 (str)
+             382 LOAD_CONST              10 ('.')
+             384 LOAD_GLOBAL             10 (EXCHANGE_TYPES_DICT_REVERT)
+             396 LOAD_FAST                3 (item)
+             398 LOAD_METHOD              0 (get)
+             420 LOAD_CONST              11 ('exchange_type')
+             422 PRECALL                  1
+             426 CALL                     1
+             436 BINARY_SUBSCR
+             446 FORMAT_VALUE             1 (str)
+             448 BUILD_STRING             3
+             450 STORE_FAST               8 (stock_code)
+
+1782         452 LOAD_FAST                3 (item)
+             454 LOAD_METHOD              0 (get)
+             476 LOAD_CONST              12 ('error_info')
+             478 LOAD_CONST               8 ('')
+             480 PRECALL                  2
+             484 CALL                     2
+             494 STORE_FAST               9 (error_info)
+
+1783         496 LOAD_CONST              13 ('客户交易密码错误')
+             498 LOAD_FAST                9 (error_info)
+             500 CONTAINS_OP              0
+             502 POP_JUMP_FORWARD_IF_TRUE    43 (to 590)
+             504 LOAD_GLOBAL             13 (NULL + len)
+             516 LOAD_GLOBAL             15 (NULL + re)
+             528 LOAD_ATTR                8 (findall)
+             538 LOAD_FAST                0 (self)
+             540 LOAD_ATTR                9 (password_re)
+             550 LOAD_FAST                9 (error_info)
+             552 PRECALL                  2
+             556 CALL                     2
+             566 PRECALL                  1
+             570 CALL                     1
+             580 LOAD_CONST               3 (0)
+             582 COMPARE_OP               4 (>)
+             588 POP_JUMP_FORWARD_IF_FALSE    71 (to 732)
+
+1784     >>  590 LOAD_FAST                0 (self)
+             592 LOAD_ATTR               10 (trade_id)
+             602 POP_JUMP_FORWARD_IF_NONE    41 (to 686)
+
+1785         604 LOAD_GLOBAL             23 (NULL + set_trade_stop_status)
+             616 LOAD_FAST                0 (self)
+             618 LOAD_ATTR               10 (trade_id)
+             628 PRECALL                  1
+             632 CALL                     1
+             642 POP_TOP
+
+1786         644 LOAD_GLOBAL             25 (NULL + strategy_log)
+             656 LOAD_ATTR               13 (error)
+             666 LOAD_CONST              14 ('客户交易密码错误，终止交易')
+             668 PRECALL                  1
+             672 CALL                     1
+             682 POP_TOP
+
+1787         684 RAISE_VARARGS            0
+
+1788     >>  686 LOAD_FAST                9 (error_info)
+             688 LOAD_METHOD             14 (replace)
+             710 LOAD_CONST              15 ('错误')
+             712 LOAD_CONST              16 ('错误，交易即将关闭')
+             714 PRECALL                  2
+             718 CALL                     2
+             728 STORE_FAST               9 (error_info)
+             730 JUMP_FORWARD            48 (to 828)
+
+1789     >>  732 LOAD_GLOBAL             13 (NULL + len)
+             744 LOAD_GLOBAL             15 (NULL + re)
+             756 LOAD_ATTR                8 (findall)
+             766 LOAD_FAST                0 (self)
+             768 LOAD_ATTR               15 (token_re)
+             778 LOAD_FAST                9 (error_info)
+             780 PRECALL                  2
+             784 CALL                     2
+             794 PRECALL                  1
+             798 CALL                     1
+             808 LOAD_CONST               3 (0)
+             810 COMPARE_OP               4 (>)
+             816 POP_JUMP_FORWARD_IF_FALSE     5 (to 828)
+
+1790         818 LOAD_FAST                9 (error_info)
+             820 LOAD_CONST              17 ('，交易即将关闭')
+             822 BINARY_OP                0 (+)
+             826 STORE_FAST               9 (error_info)
+
+1792     >>  828 LOAD_FAST                3 (item)
+             830 LOAD_METHOD              0 (get)
+             852 LOAD_CONST              18 ('entrust_no_s')
+             854 LOAD_CONST               8 ('')
+             856 PRECALL                  2
+             860 CALL                     2
+             870 LOAD_CONST               8 ('')
+             872 COMPARE_OP               3 (!=)
+             878 POP_JUMP_FORWARD_IF_FALSE    22 (to 924)
+
+1793         880 LOAD_FAST                3 (item)
+             882 LOAD_METHOD              0 (get)
+             904 LOAD_CONST              18 ('entrust_no_s')
+             906 PRECALL                  1
+             910 CALL                     1
+             920 STORE_FAST              10 (entrust_no_str)
+             922 JUMP_FORWARD            69 (to 1062)
+
+1794     >>  924 LOAD_FAST                3 (item)
+             926 LOAD_METHOD              0 (get)
+             948 LOAD_CONST              19 ('entrust_no')
+             950 LOAD_CONST               8 ('')
+             952 PRECALL                  2
+             956 CALL                     2
+             966 LOAD_CONST               8 ('')
+             968 COMPARE_OP               3 (!=)
+             974 POP_JUMP_FORWARD_IF_FALSE    22 (to 1020)
+
+1795         976 LOAD_FAST                3 (item)
+             978 LOAD_METHOD              0 (get)
+            1000 LOAD_CONST              19 ('entrust_no')
+            1002 PRECALL                  1
+            1006 CALL                     1
+            1016 STORE_FAST              10 (entrust_no_str)
+            1018 JUMP_FORWARD            21 (to 1062)
+
+1797     >> 1020 LOAD_FAST                3 (item)
+            1022 LOAD_METHOD              0 (get)
+            1044 LOAD_CONST              20 ('entrust_no_str')
+            1046 PRECALL                  1
+            1050 CALL                     1
+            1060 STORE_FAST              10 (entrust_no_str)
+
+1801     >> 1062 LOAD_FAST               10 (entrust_no_str)
+
+1802        1064 LOAD_FAST                7 (order_time)
+
+1803        1066 LOAD_FAST                8 (stock_code)
+
+1804        1068 LOAD_FAST                6 (amount)
+
+1805        1070 LOAD_GLOBAL              3 (NULL + float)
+            1082 LOAD_FAST                3 (item)
+            1084 LOAD_METHOD              0 (get)
+            1106 LOAD_CONST              21 ('entrust_price')
+            1108 PRECALL                  1
+            1112 CALL                     1
+            1122 PRECALL                  1
+            1126 CALL                     1
+
+1806        1136 LOAD_FAST                3 (item)
+            1138 LOAD_METHOD              0 (get)
+            1160 LOAD_CONST              22 ('entrust_status')
+            1162 PRECALL                  1
+            1166 CALL                     1
+
+1807        1176 LOAD_FAST                3 (item)
+            1178 LOAD_METHOD              0 (get)
+            1200 LOAD_CONST              23 ('business_amount')
+            1202 LOAD_CONST               3 (0)
+            1204 PRECALL                  2
+            1208 CALL                     2
+
+1808        1218 LOAD_FAST                9 (error_info)
+
+1809        1220 LOAD_FAST                3 (item)
+            1222 LOAD_METHOD              0 (get)
+            1244 LOAD_CONST              24 ('entrust_type')
+            1246 PRECALL                  1
+            1250 CALL                     1
+
+1810        1260 LOAD_FAST                3 (item)
+            1262 LOAD_METHOD              0 (get)
+            1284 LOAD_CONST              25 ('entrust_prop')
+            1286 PRECALL                  1
+            1290 CALL                     1
+
+1812        1300 LOAD_FAST                3 (item)
+            1302 LOAD_METHOD              0 (get)
+            1324 LOAD_CONST              26 ('entrust_reference')
+            1326 LOAD_CONST               8 ('')
+            1328 PRECALL                  2
+            1332 CALL                     2
+
+1798        1342 LOAD_CONST              27 (('entrust_no', 'order_time', 'stock_code', 'amount', 'price', 'status', 'business_amount', 'error_info', 'entrust_type', 'entrust_prop', 'entrust_reference'))
+            1344 BUILD_CONST_KEY_MAP     11
+            1346 STORE_FAST              11 (data_item)
+
+1814        1348 LOAD_FAST                2 (data_list)
+            1350 LOAD_METHOD             16 (append)
+            1372 LOAD_FAST               11 (data_item)
+            1374 PRECALL                  1
+            1378 CALL                     1
+            1388 POP_TOP
+            1390 EXTENDED_ARG             2
+            1392 JUMP_BACKWARD          692 (to 10)
+
+1816     >> 1394 LOAD_FAST                2 (data_list)
+            1396 RETURN_VALUE
+ExceptionTable:
+  60 to 128 -> 132 [1]
+  132 to 138 -> 144 [2] lasti
+
+=== OK 反汇编 ===
+810           0 RESUME                   0
+
+811           2 BUILD_LIST               0
+              4 STORE_FAST               2 (data_list)
+
+812           6 LOAD_FAST                1 (list_result)
+              8 GET_ITER
+        >>   10 EXTENDED_ARG             2
+             12 FOR_ITER               691 (to 1396)
+             14 STORE_FAST               3 (item)
+
+813          16 LOAD_FAST                3 (item)
+             18 LOAD_METHOD              0 (get)
+             40 LOAD_CONST               1 ('entrust_bs')
+             42 PRECALL                  1
+             46 CALL                     1
+             56 STORE_FAST               4 (entrust_bs)
+
+814          58 NOP
+
+815          60 LOAD_GLOBAL              3 (NULL + float)
+             72 LOAD_FAST                3 (item)
+             74 LOAD_METHOD              0 (get)
+             96 LOAD_CONST               2 ('entrust_amount')
+             98 LOAD_CONST               3 (0)
+            100 PRECALL                  2
+            104 CALL                     2
+            114 PRECALL                  1
+            118 CALL                     1
+            128 STORE_FAST               5 (entrust_amount)
+            130 JUMP_FORWARD             9 (to 150)
+        >>  132 PUSH_EXC_INFO
+
+816         134 POP_TOP
+
+817         136 LOAD_CONST               4 (0.0)
+            138 STORE_FAST               5 (entrust_amount)
+            140 POP_EXCEPT
+            142 JUMP_FORWARD             3 (to 150)
+        >>  144 COPY                     3
+            146 POP_EXCEPT
+            148 RERAISE                  1
+
+818     >>  150 LOAD_FAST                4 (entrust_bs)
+            152 LOAD_CONST               5 ('1')
+            154 COMPARE_OP               2 (==)
+            160 POP_JUMP_FORWARD_IF_FALSE    16 (to 194)
+
+819         162 LOAD_GLOBAL              5 (NULL + int)
+            174 LOAD_FAST                5 (entrust_amount)
+            176 PRECALL                  1
+            180 CALL                     1
+            190 STORE_FAST               6 (amount)
+            192 JUMP_FORWARD            25 (to 244)
+
+820     >>  194 LOAD_FAST                4 (entrust_bs)
+            196 LOAD_CONST               6 ('2')
+            198 COMPARE_OP               2 (==)
+            204 POP_JUMP_FORWARD_IF_FALSE    17 (to 240)
+
+821         206 LOAD_GLOBAL              5 (NULL + int)
+            218 LOAD_FAST                5 (entrust_amount)
+            220 PRECALL                  1
+            224 CALL                     1
+            234 UNARY_NEGATIVE
+            236 STORE_FAST               6 (amount)
+            238 JUMP_FORWARD             2 (to 244)
+
+823     >>  240 LOAD_CONST               3 (0)
+            242 STORE_FAST               6 (amount)
+
+824     >>  244 LOAD_GLOBAL              7 (NULL + del_order_time)
+            256 LOAD_GLOBAL              9 (NULL + str)
+            268 LOAD_FAST                3 (item)
+            270 LOAD_METHOD              0 (get)
+            292 LOAD_CONST               7 ('report_time')
+            294 LOAD_CONST               8 ('')
+            296 PRECALL                  2
+            300 CALL                     2
+            310 PRECALL                  1
+            314 CALL                     1
+            324 PRECALL                  1
+            328 CALL                     1
+            338 STORE_FAST               7 (order_time)
+
+825         340 LOAD_FAST                3 (item)
+            342 LOAD_METHOD              0 (get)
+            364 LOAD_CONST               9 ('stock_code')
+            366 PRECALL                  1
+            370 CALL                     1
+            380 FORMAT_VALUE             1 (str)
+            382 LOAD_CONST              10 ('.')
+            384 LOAD_GLOBAL             10 (EXCHANGE_TYPES_DICT_REVERT)
+            396 LOAD_FAST                3 (item)
+            398 LOAD_METHOD              0 (get)
+            420 LOAD_CONST              11 ('exchange_type')
+            422 PRECALL                  1
+            426 CALL                     1
+            436 BINARY_SUBSCR
+            446 FORMAT_VALUE             1 (str)
+            448 BUILD_STRING             3
+            450 STORE_FAST               8 (stock_code)
+
+826         452 LOAD_FAST                3 (item)
+            454 LOAD_METHOD              0 (get)
+            476 LOAD_CONST              12 ('error_info')
+            478 LOAD_CONST               8 ('')
+            480 PRECALL                  2
+            484 CALL                     2
+            494 STORE_FAST               9 (error_info)
+
+827         496 LOAD_CONST              13 ('客户交易密码错误')
+            498 LOAD_FAST                9 (error_info)
+            500 CONTAINS_OP              1
+            502 EXTENDED_ARG             1
+            504 POP_JUMP_FORWARD_IF_FALSE   279 (to 1064)
+
+828         506 LOAD_GLOBAL             13 (NULL + len)
+            518 LOAD_GLOBAL             15 (NULL + re)
+            530 LOAD_ATTR                8 (findall)
+            540 LOAD_FAST                0 (self)
+            542 LOAD_ATTR                9 (password_re)
+            552 LOAD_FAST                9 (error_info)
+            554 PRECALL                  2
+            558 CALL                     2
+            568 PRECALL                  1
+            572 CALL                     1
+            582 LOAD_CONST               3 (0)
+            584 COMPARE_OP               4 (>)
+            590 POP_JUMP_FORWARD_IF_FALSE    71 (to 734)
+
+829         592 LOAD_FAST                0 (self)
+            594 LOAD_ATTR               10 (trade_id)
+            604 POP_JUMP_FORWARD_IF_NONE    41 (to 688)
+
+830         606 LOAD_GLOBAL             23 (NULL + set_trade_stop_status)
+            618 LOAD_FAST                0 (self)
+            620 LOAD_ATTR               10 (trade_id)
+            630 PRECALL                  1
+            634 CALL                     1
+            644 POP_TOP
+
+831         646 LOAD_GLOBAL             25 (NULL + strategy_log)
+            658 LOAD_ATTR               13 (error)
+            668 LOAD_CONST              14 ('客户交易密码错误，终止交易')
+            670 PRECALL                  1
+            674 CALL                     1
+            684 POP_TOP
+
+832         686 RAISE_VARARGS            0
+
+833     >>  688 LOAD_FAST                9 (error_info)
+            690 LOAD_METHOD             14 (replace)
+            712 LOAD_CONST              15 ('错误')
+            714 LOAD_CONST              16 ('错误，交易即将关闭')
+            716 PRECALL                  2
+            720 CALL                     2
+            730 STORE_FAST               9 (error_info)
+            732 JUMP_FORWARD            48 (to 830)
+
+834     >>  734 LOAD_GLOBAL             13 (NULL + len)
+            746 LOAD_GLOBAL             15 (NULL + re)
+            758 LOAD_ATTR                8 (findall)
+            768 LOAD_FAST                0 (self)
+            770 LOAD_ATTR               15 (token_re)
+            780 LOAD_FAST                9 (error_info)
+            782 PRECALL                  2
+            786 CALL                     2
+            796 PRECALL                  1
+            800 CALL                     1
+            810 LOAD_CONST               3 (0)
+            812 COMPARE_OP               4 (>)
+            818 POP_JUMP_FORWARD_IF_FALSE     5 (to 830)
+
+835         820 LOAD_FAST                9 (error_info)
+            822 LOAD_CONST              17 ('，交易即将关闭')
+            824 BINARY_OP                0 (+)
+            828 STORE_FAST               9 (error_info)
+
+836     >>  830 LOAD_FAST                3 (item)
+            832 LOAD_METHOD              0 (get)
+            854 LOAD_CONST              18 ('entrust_no_s')
+            856 LOAD_CONST               8 ('')
+            858 PRECALL                  2
+            862 CALL                     2
+            872 LOAD_CONST               8 ('')
+            874 COMPARE_OP               3 (!=)
+            880 POP_JUMP_FORWARD_IF_FALSE    22 (to 926)
+
+837         882 LOAD_FAST                3 (item)
+            884 LOAD_METHOD              0 (get)
+            906 LOAD_CONST              18 ('entrust_no_s')
+            908 PRECALL                  1
+            912 CALL                     1
+            922 STORE_FAST              10 (entrust_no_str)
+            924 JUMP_FORWARD            69 (to 1064)
+
+838     >>  926 LOAD_FAST                3 (item)
+            928 LOAD_METHOD              0 (get)
+            950 LOAD_CONST              19 ('entrust_no')
+            952 LOAD_CONST               8 ('')
+            954 PRECALL                  2
+            958 CALL                     2
+            968 LOAD_CONST               8 ('')
+            970 COMPARE_OP               3 (!=)
+            976 POP_JUMP_FORWARD_IF_FALSE    22 (to 1022)
+
+839         978 LOAD_FAST                3 (item)
+            980 LOAD_METHOD              0 (get)
+           1002 LOAD_CONST              19 ('entrust_no')
+           1004 PRECALL                  1
+           1008 CALL                     1
+           1018 STORE_FAST              10 (entrust_no_str)
+           1020 JUMP_FORWARD            21 (to 1064)
+
+841     >> 1022 LOAD_FAST                3 (item)
+           1024 LOAD_METHOD              0 (get)
+           1046 LOAD_CONST              20 ('entrust_no_str')
+           1048 PRECALL                  1
+           1052 CALL                     1
+           1062 STORE_FAST              10 (entrust_no_str)
+
+842     >> 1064 LOAD_FAST               10 (entrust_no_str)
+           1066 LOAD_FAST                7 (order_time)
+           1068 LOAD_FAST                8 (stock_code)
+           1070 LOAD_FAST                6 (amount)
+           1072 LOAD_GLOBAL              3 (NULL + float)
+           1084 LOAD_FAST                3 (item)
+           1086 LOAD_METHOD              0 (get)
+           1108 LOAD_CONST              21 ('entrust_price')
+           1110 PRECALL                  1
+           1114 CALL                     1
+           1124 PRECALL                  1
+           1128 CALL                     1
+           1138 LOAD_FAST                3 (item)
+           1140 LOAD_METHOD              0 (get)
+           1162 LOAD_CONST              22 ('entrust_status')
+           1164 PRECALL                  1
+           1168 CALL                     1
+           1178 LOAD_FAST                3 (item)
+           1180 LOAD_METHOD              0 (get)
+           1202 LOAD_CONST              23 ('business_amount')
+           1204 LOAD_CONST               3 (0)
+           1206 PRECALL                  2
+           1210 CALL                     2
+           1220 LOAD_FAST                9 (error_info)
+           1222 LOAD_FAST                3 (item)
+           1224 LOAD_METHOD              0 (get)
+           1246 LOAD_CONST              24 ('entrust_type')
+           1248 PRECALL                  1
+           1252 CALL                     1
+           1262 LOAD_FAST                3 (item)
+           1264 LOAD_METHOD              0 (get)
+           1286 LOAD_CONST              25 ('entrust_prop')
+           1288 PRECALL                  1
+           1292 CALL                     1
+           1302 LOAD_FAST                3 (item)
+           1304 LOAD_METHOD              0 (get)
+           1326 LOAD_CONST              26 ('entrust_reference')
+           1328 LOAD_CONST               8 ('')
+           1330 PRECALL                  2
+           1334 CALL                     2
+           1344 LOAD_CONST              27 (('entrust_no', 'order_time', 'stock_code', 'amount', 'price', 'status', 'business_amount', 'error_info', 'entrust_type', 'entrust_prop', 'entrust_reference'))
+           1346 BUILD_CONST_KEY_MAP     11
+           1348 STORE_FAST              11 (data_item)
+
+843        1350 LOAD_FAST                2 (data_list)
+           1352 LOAD_METHOD             16 (append)
+           1374 LOAD_FAST               11 (data_item)
+           1376 PRECALL                  1
+           1380 CALL                     1
+           1390 POP_TOP
+           1392 EXTENDED_ARG             2
+           1394 JUMP_BACKWARD          693 (to 10)
+
+845     >> 1396 LOAD_FAST                2 (data_list)
+           1398 RETURN_VALUE
+ExceptionTable:
+  60 to 128 -> 132 [1]
+  132 to 138 -> 144 [2] lasti

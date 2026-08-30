@@ -14587,51 +14587,239 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             _main_orig_cond_block = None
             _main_orig_chain_blocks = set()
             if not chain_blocks:
+                # [Round 33 回归修复] or 链中间/末段跳过（倒序遍历竞态）。
+                # 主循环按 start_offset 倒序遍历（L14202-14206），or 链的中间段
+                #（IF_TRUE → then 入口）与末段（IF_FALSE → else/elif/merge，
+                # fallthrough → then 入口）先于链首块被处理：此时 or 链检测
+                #（要求首段 IF_TRUE 才触发）不会命中，and 链检测却会把「末段 B
+                # + then body 首块 C（IF_FALSE 跳同一 else 目标）」拼成 `B and C`，
+                # 创建 entry=末段 cond=then首块 的错误 IfRegion，then body 首块
+                # 的嵌套 if 结构丢失（time_validator.can_cancel_order 的
+                # `if A or B: [if C: return True]` 即此形态：region 层
+                # then=[140,202] 收集正确，但额外产生 entry=78 cond=140 的
+                # `B and C` 区域，AST 端 140 作为普通块生成空，is_listing
+                # 判断整体消失）。
+                # 判据（CFG 拓扑，本地可判定，不依赖链首块已处理）：
+                #   - 末段：以 IF_FALSE 结尾，存在前驱 P（IF_TRUE 结尾条件块）
+                #     其跳转目标 == 当前块 fallthrough（then 入口）——前段短路
+                #     跳 then 入口，末段真时也 fallthrough 进 then 入口；
+                #   - 中段：以 IF_TRUE 结尾，存在前驱 P（IF_TRUE 结尾条件块）
+                #     其跳转目标 == 当前块跳转目标（同一 then 入口）——连续 or
+                #     操作数都短路跳同一 then 入口。
+                # 命中 → 当前块是 or 链成员（非首块），跳过独立处理，由链首块
+                # 的 or 链检测统一归约（chain_blocks 覆盖，每块唯一归属）。
+                # 首块不误伤：首块前驱是普通代码块（非 IF_TRUE 条件块）。
+                # 纯 and 链不误伤：and 链段前驱是 IF_FALSE 结尾（判据要求
+                # 前驱 IF_TRUE）。`if A or B and C:` 的 B 前驱 A 跳转目标为
+                # then 入口（非 B 的 fallthrough 目标），判据不命中。
+                _blk_last_oc = block.get_last_instruction()
+                if (_blk_last_oc is not None
+                        and _blk_last_oc.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)
+                        and _blk_last_oc.argval is not None):
+                    _blk_jt_oc = _blk_last_oc.argval
+                    _blk_ft_oc = None
+                    for _s in block.successors:
+                        if _s.start_offset != _blk_jt_oc:
+                            _blk_ft_oc = _s
+                            break
+                    _is_or_member = False
+                    for _pred in block.predecessors:
+                        _pl_oc = _pred.get_last_instruction()
+                        if (_pl_oc is None
+                                or _pl_oc.opname not in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)
+                                or 'IF_TRUE' not in _pl_oc.opname
+                                or _pl_oc.argval is None):
+                            continue
+                        if 'IF_FALSE' in _blk_last_oc.opname:
+                            # 末段：前驱 IF_TRUE 跳转目标 == 本块 fallthrough
+                            if _blk_ft_oc is not None and _pl_oc.argval == _blk_ft_oc.start_offset:
+                                _is_or_member = True
+                                break
+                        elif 'IF_TRUE' in _blk_last_oc.opname:
+                            # 中段：前驱 IF_TRUE 跳转目标 == 本块跳转目标
+                            if _blk_jt_oc == _pl_oc.argval:
+                                _is_or_member = True
+                                break
+                    if _is_or_member:
+                        # [Round 33 回归修复] 跳过前必须确认链尾存在 IF_FALSE 段
+                        #（真 or 链）。`if not A and not B: X`（and 链带 not）与
+                        # `if A or B: continue`（短路 continue）的字节码同为
+                        #「段块全部 IF_TRUE 跳同一目标」，与 or 链中段形态不可
+                        # 区分；二者无 IF_FALSE 末段，段块不能被跳过，否则
+                        # strategy_context.__repr__ 的 `if not callable(v) and
+                        # not k.startswith('_'):` 中 B 段被吞、and 链被解构成
+                        # 嵌套 if+pass（31/31 → 30/31）。判据：从当前块沿
+                        # fallthrough 走链，只有遇到 IF_FALSE 结尾的链段才是
+                        # 真 or 链（首块处理时 or 链检测会完整归约）；链断或
+                        # 走到非条件块则不是，恢复普通处理。
+                        _or_walk = block
+                        _or_walk_seen = {block.start_offset}
+                        _or_walk_has_false_tail = False
+                        while True:
+                            _or_walk_last = _or_walk.get_last_instruction()
+                            if (_or_walk_last is None
+                                    or _or_walk_last.argval is None
+                                    or _or_walk_last.opname not in
+                                    (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)):
+                                break
+                            if 'IF_FALSE' in _or_walk_last.opname:
+                                _or_walk_has_false_tail = True
+                                break
+                            _or_walk_nxt = None
+                            for _s in _or_walk.successors:
+                                if (_s.start_offset != _or_walk_last.argval
+                                        and _s.start_offset not in _or_walk_seen):
+                                    _or_walk_nxt = _s
+                                    break
+                            if _or_walk_nxt is None:
+                                break
+                            _or_walk_seen.add(_or_walk_nxt.start_offset)
+                            _or_walk = _or_walk_nxt
+                        if _or_walk_has_false_tail:
+                            if os.environ.get('DBG_OR'):
+                                print(f'[DBG_OR] or-chain member skip: block={block.start_offset} '
+                                      f'last={_blk_last_oc.opname} '
+                                      f'pred_ft={_blk_ft_oc.start_offset if _blk_ft_oc else None}')
+                            continue
+                        if os.environ.get('DBG_OR'):
+                            print(f'[DBG_OR] or-member rejected (no false tail in walk): '
+                                  f'block={block.start_offset} last={_blk_last_oc.opname}')
+                # [Round 33 根因] `if A or B:` 的 or 短路链检测。
+                # 与 and 链（首段 IF_FALSE 跳同一 merge）镜像：or 链的首段
+                # 以 POP_JUMP_IF_TRUE 跳 then 入口（短路进入 body），fallthrough
+                # 进入下一条件段；后续中间段同样 IF_TRUE → then 入口；末段以
+                # POP_JUMP_IF_FALSE 跳 else/elif/merge，且其 fallthrough 指向
+                # then 入口。若不识别，首段被当作独立 `if not A:`（IF_TRUE 跳
+                # 出被误读），第二条件段被当作嵌套 if，产生 `if not A:
+                # [if B: ...]` 结构翻转（ptradeAccount.stock_order_response_
+                # transform 的 `'客户交易密码错误' in error_info or
+                # len(...password...) > 0` 即此形态）。
+                # 修复：检测到 or 链后，condition_block 重定向到链末块（真正的
+                # then/else 分支点），chain_blocks 纳入所有链段，重建或短路时
+                # AST 端 _main_ibc 重建 BoolOp(Or, [...])。
                 _main_cond_last = condition_block.get_last_instruction()
                 if (_main_cond_last is not None
                         and _main_cond_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)
-                        and 'IF_FALSE' in _main_cond_last.opname
+                        and 'IF_TRUE' in _main_cond_last.opname
                         and _main_cond_last.argval is not None):
-                    _main_chain = [condition_block]
-                    _main_current = condition_block
-                    _main_merge_offset = _main_cond_last.argval
-                    _main_visited = {condition_block.start_offset}
+                    _then_entry_offset = _main_cond_last.argval
+                    _or_chain = [condition_block]
+                    _or_visited = {condition_block.start_offset}
+                    _or_current = condition_block
+                    # [Round 33 回归修复] or 链必须存在 IF_FALSE 末段。
+                    # `if A or B: continue`（continue 短路）时所有段都是 IF_TRUE
+                    # 跳同一个 continue 目标（无 IF_FALSE 段），不是 or 链——
+                    # 否则误判（strategy_context.__repr__ 的
+                    # `if callable(v) or k.startswith('_'): continue` 即此形态，
+                    # 误判后 condition_block 重定向导致 IF_TRUE/IF_FALSE 翻转）。
+                    _or_has_false_tail = False
                     while True:
-                        _main_ft_next = None
-                        _main_cur_last = _main_current.get_last_instruction()
-                        if _main_cur_last and _main_cur_last.argval is not None:
-                            for _s in _main_current.successors:
-                                if _s.start_offset not in _main_visited and _s.start_offset != _main_cur_last.argval:
-                                    _main_ft_next = _s
-                                    break
-                        if _main_ft_next is None or _main_ft_next.start_offset in _main_visited:
+                        _or_ft = None
+                        _or_cur_last = _or_current.get_last_instruction()
+                        _or_jmp_target = _or_cur_last.argval if (_or_cur_last is not None and _or_cur_last.argval is not None) else None
+                        for _s in _or_current.successors:
+                            if _s.start_offset not in _or_visited and _s.start_offset != _or_jmp_target:
+                                _or_ft = _s
+                                break
+                        if _or_ft is None or _or_ft.start_offset in _or_visited:
                             break
-                        _main_ft_last = _main_ft_next.get_last_instruction()
-                        if _main_ft_last is None or _main_ft_last.opname not in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS):
-                            break
-                        if 'IF_TRUE' in _main_ft_last.opname:
+                        _or_ft_last = _or_ft.get_last_instruction()
+                        if _or_ft_last is None or _or_ft_last.opname not in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS):
                             break
                         if any(i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
                                             'STORE_DEREF', 'STORE_SUBSCR', 'STORE_ATTR')
-                               for i in _main_ft_next.instructions):
+                               for i in _or_ft.instructions):
                             break
-                        if _main_ft_last.argval != _main_merge_offset:
+                        if 'IF_TRUE' in _or_ft_last.opname:
+                            # 中间 or 段：IF_TRUE 必须仍跳 then 入口（短路）
+                            if _or_ft_last.argval != _then_entry_offset:
+                                break
+                            _or_visited.add(_or_ft.start_offset)
+                            _or_chain.append(_or_ft)
+                            _or_current = _or_ft
+                            continue
+                        # 末段：IF_FALSE → else/elif/merge，且 fallthrough 指向
+                        # then 入口（B 真则进入 body）
+                        _or_ft_target = _or_ft_last.argval
+                        if _or_ft_target == _then_entry_offset:
                             break
-                        _main_visited.add(_main_ft_next.start_offset)
-                        _main_chain.append(_main_ft_next)
-                        _main_current = _main_ft_next
-                    if len(_main_chain) >= 2:
-                        _main_inline_boolop_chain = {'blocks': list(_main_chain), 'op': 'and'}
-                        # 重定向 condition_block 到链末块（真正的 then/else 分支点），
-                        # chain_blocks 纳入所有链块（防止 _collect_branch_blocks /
-                        # _check_elif_chain 误吸收）。保存原始 condition_block 供
-                        # 安全回退使用（merge 计算失败时恢复，避免 then-body 含 return
-                        # 时 post-dominator 异常导致的回归）。AST 生成时 _main_ibc
-                        # 通过 id(cond_block)=id(链末块) 取出链信息，重建完整 BoolOp。
+                        _or_ft_fallthrough = None
+                        for _s in _or_ft.successors:
+                            if _s.start_offset != _or_ft_target:
+                                _or_ft_fallthrough = _s
+                                break
+                        if _or_ft_fallthrough is None or _or_ft_fallthrough.start_offset != _then_entry_offset:
+                            break
+                        _or_visited.add(_or_ft.start_offset)
+                        _or_chain.append(_or_ft)
+                        _or_has_false_tail = True
+                        break
+                    if len(_or_chain) >= 2 and _or_has_false_tail:
+                        if os.environ.get('DBG_OR'):
+                            print(f'[DBG_OR] or-chain detected: cond={condition_block.start_offset} '
+                                  f'chain={[b.start_offset for b in _or_chain]} '
+                                  f'then_entry={_then_entry_offset}')
+                        _main_inline_boolop_chain = {'blocks': list(_or_chain), 'op': 'or'}
                         _main_orig_cond_block = condition_block
                         _main_orig_chain_blocks = set(chain_blocks)
-                        condition_block = _main_chain[-1]
-                        chain_blocks = set(_main_chain)
+                        condition_block = _or_chain[-1]
+                        chain_blocks = set(_or_chain)
+                    elif os.environ.get('DBG_OR') and len(_or_chain) >= 2:
+                        print(f'[DBG_OR] or-candidate rejected (no false tail): '
+                              f'chain={[b.start_offset for b in _or_chain]} then_entry={_then_entry_offset}')
+                # [Round 33 回归修复] or 链判定成功后跳过 and 链检测：
+                # or 链重定向后 condition_block 指向链末块（IF_FALSE 结尾），
+                # 若不跳过，and 链检测会把它与其 fallthrough（then body 首块，
+                # 如 `if A or B: [if C: return True]` 中 C 的求值块，IF_FALSE
+                # 跳同一 else 目标）拼成 `B and C`，覆盖 or 链信息（or 链的
+                # A 段丢失、BoolOp 变成 and）——time_validator.can_cancel_order
+                # 修复前产物即 `is_trading_time and is_listing`。
+                if _main_inline_boolop_chain is None:
+                    _main_cond_last = condition_block.get_last_instruction()
+                    if (_main_cond_last is not None
+                            and _main_cond_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)
+                            and 'IF_FALSE' in _main_cond_last.opname
+                            and _main_cond_last.argval is not None):
+                        _main_chain = [condition_block]
+                        _main_current = condition_block
+                        _main_merge_offset = _main_cond_last.argval
+                        _main_visited = {condition_block.start_offset}
+                        while True:
+                            _main_ft_next = None
+                            _main_cur_last = _main_current.get_last_instruction()
+                            if _main_cur_last and _main_cur_last.argval is not None:
+                                for _s in _main_current.successors:
+                                    if _s.start_offset not in _main_visited and _s.start_offset != _main_cur_last.argval:
+                                        _main_ft_next = _s
+                                        break
+                            if _main_ft_next is None or _main_ft_next.start_offset in _main_visited:
+                                break
+                            _main_ft_last = _main_ft_next.get_last_instruction()
+                            if _main_ft_last is None or _main_ft_last.opname not in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS):
+                                break
+                            if 'IF_TRUE' in _main_ft_last.opname:
+                                break
+                            if any(i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
+                                                'STORE_DEREF', 'STORE_SUBSCR', 'STORE_ATTR')
+                                   for i in _main_ft_next.instructions):
+                                break
+                            if _main_ft_last.argval != _main_merge_offset:
+                                break
+                            _main_visited.add(_main_ft_next.start_offset)
+                            _main_chain.append(_main_ft_next)
+                            _main_current = _main_ft_next
+                        if len(_main_chain) >= 2:
+                            _main_inline_boolop_chain = {'blocks': list(_main_chain), 'op': 'and'}
+                            # 重定向 condition_block 到链末块（真正的 then/else 分支点），
+                            # chain_blocks 纳入所有链块（防止 _collect_branch_blocks /
+                            # _check_elif_chain 误吸收）。保存原始 condition_block 供
+                            # 安全回退使用（merge 计算失败时恢复，避免 then-body 含 return
+                            # 时 post-dominator 异常导致的回归）。AST 生成时 _main_ibc
+                            # 通过 id(cond_block)=id(链末块) 取出链信息，重建完整 BoolOp。
+                            _main_orig_cond_block = condition_block
+                            _main_orig_chain_blocks = set(chain_blocks)
+                            condition_block = _main_chain[-1]
+                            chain_blocks = set(_main_chain)
 
             cond_succs = list(condition_block.conditional_successors)
             if len(cond_succs) != 2:
@@ -15097,6 +15285,20 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 merge = self._compute_merge_from_jump_targets(
                     block, then_succ, else_succ)
 
+            # [Round 33 回归修复] or 短路链的 merge 兜底。
+            # or 链重定向后（condition_block=链末块），then body 可能以 return 终止
+            # 或 fallthrough 汇入 else_succ（与 else 共享汇合点），此时 NCPD 与
+            # _compute_merge_from_jump_targets 均失败（merge=None），下方回退逻辑会
+            # 撤销重定向并把 _main_inline_boolop_chain 清空——or 信息丢失，整个
+            # if 结构在 AST 生成时消失（time_validator.can_cancel_order 的
+            # `if A or B: [if C: return True]` 即此形态，修复前 44 条指令只剩 21 条）。
+            # or 链语义下 then body 与 else 汇合于 else_succ 入口（B 假 → else_succ，
+            # then body 的 fallthrough/短路出口也 → else_succ），故 merge=else_succ
+            # 是唯一合法合并点：else_blocks 为空（entry==merge），then 体完整保留，
+            # 且不回退（or 链信息保留，AST 端重建 BoolOp(Or)）。
+            if (merge is None and _main_inline_boolop_chain is not None):
+                merge = else_succ
+
             # 区域归约算法原则 2（每块唯一归属）+ 原则 4（归约顺序）：
             # 当所有 merge 计算均失败（NCPD=None, _compute_merge_from_jump_targets=None）
             # 且 then 是真 sink（RETURN_VALUE/RAISE_VARARGS + 无后继）+ else 有后继且
@@ -15388,6 +15590,12 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 all_condition_blocks.update(_await_pred_blocks)
                 chain_blocks.update(_await_pred_blocks)
 
+            if os.environ.get('DBG_OR') and _main_inline_boolop_chain is not None:
+                print(f'[DBG_OR] region-build: cond={block.start_offset} condition_block={condition_block.start_offset} '
+                      f'then_succ={then_succ.start_offset} else_succ={else_succ.start_offset} merge={merge.start_offset if merge else None} '
+                      f'then=[{",".join(str(b.start_offset) for b in then_blocks)}] '
+                      f'else=[{",".join(str(b.start_offset) for b in else_blocks)}] '
+                      f'chain={[b.start_offset for b in _main_inline_boolop_chain.get("blocks", [])]}')
             region = self._build_elif_region(block, then_blocks, else_blocks, merge, all_condition_blocks, condition_block, boundary_stop=boundary_stop, ternary_regions=ternary_regions, main_inline_boolop_chain=_main_inline_boolop_chain)
             if region is None:
                 region = self._build_basic_if_region(block, then_blocks, else_blocks, merge,
@@ -15400,6 +15608,12 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 region.chained_compare_blocks = list(chained_compare_info.get('extra_chain_blocks', []))
                 region.chained_compare_ops = chained_compare_info.get('compare_ops', [])
             if region is not None:
+                if os.environ.get('DBG_OR') and _main_inline_boolop_chain is not None:
+                    print(f'[DBG_OR] region-built: type={type(region).__name__} '
+                          f'rt={getattr(region, "region_type", None)} '
+                          f'then=[{",".join(str(b.start_offset) for b in getattr(region, "then_blocks", []))}] '
+                          f'else=[{",".join(str(b.start_offset) for b in getattr(region, "else_blocks", []))}] '
+                          f'cond=[{",".join(str(b.start_offset) for b in getattr(region, "condition_blocks", []))}]')
                 if_regions.append(region)
                 if boolop_region is not None:
                     if boolop_region.entry == region.entry and boolop_region.value_target is not None:
@@ -21148,6 +21362,74 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     _sb_has_body = False
             if _sb_has_body:
                 return None
+        # [Round 33 回归修复] or 链成员（末段/中段）不得作为 BoolOp 链首段。
+        # `if A or B: [if C: return True]` 中 B 段（IF_FALSE 跳 else、fallthrough
+        # 指向 then 入口）与 then 体首块 C（IF_FALSE 跳同一 else 目标）会被拼成
+        # 假 and 链 `B and C`——BoolOpRegion 吸收 C，is_listing 判断整体消失
+        # （time_validator.can_cancel_order：region 层 then=[140,202] 正确，AST
+        # 端 140 被 BoolOpRegion 抢占生成空）。or 链末段/中段的 CFG 签名：存在
+        # 前驱 P（IF_TRUE 条件跳转），且
+        #   - 末段：P 跳转目标 == 本块 fallthrough（then 入口）
+        #   - 中段：P 跳转目标 == 本块跳转目标（同一 then 入口）
+        # 仅当沿 fallthrough 走到链尾存在 IF_FALSE 段（真 or 链，由
+        # _identify_conditional_regions 的 or 链检测统一归约到 IfRegion
+        # inline_boolop_chains）才跳过；`if not A and not B: X`（and 链带 not，
+        # 段块全 IF_TRUE 跳同一目标）与 `if A or B: continue`（短路 continue）
+        # 无 IF_FALSE 末段，不跳过（strategy_context.__repr__ 依赖此判据，
+        # 误跳过会退化为嵌套 if+pass，31/31 → 30/31）。
+        _sb_last_li = start_block.get_last_instruction()
+        if (_sb_last_li is not None
+                and _sb_last_li.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)
+                and _sb_last_li.argval is not None):
+            _sb_or_ft = None
+            for _s in start_block.successors:
+                if _s.start_offset != _sb_last_li.argval:
+                    _sb_or_ft = _s
+                    break
+            for _pred in start_block.predecessors:
+                _pl_oc = _pred.get_last_instruction()
+                if (_pl_oc is None
+                        or _pl_oc.opname not in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)
+                        or 'IF_TRUE' not in _pl_oc.opname
+                        or _pl_oc.argval is None):
+                    continue
+                _is_or_candidate = False
+                if 'IF_FALSE' in _sb_last_li.opname:
+                    if _sb_or_ft is not None and _pl_oc.argval == _sb_or_ft.start_offset:
+                        _is_or_candidate = True
+                elif 'IF_TRUE' in _sb_last_li.opname:
+                    if _sb_last_li.argval == _pl_oc.argval:
+                        _is_or_candidate = True
+                if not _is_or_candidate:
+                    continue
+                # walk 链尾确认 IF_FALSE 段（真 or 链）才跳过
+                _sb_walk = start_block
+                _sb_walk_seen = {start_block.start_offset}
+                _sb_walk_has_false_tail = False
+                while True:
+                    _sb_wlast = _sb_walk.get_last_instruction()
+                    if (_sb_wlast is None or _sb_wlast.argval is None
+                            or _sb_wlast.opname not in
+                            (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)):
+                        break
+                    if 'IF_FALSE' in _sb_wlast.opname:
+                        _sb_walk_has_false_tail = True
+                        break
+                    _sb_wnxt = None
+                    for _s in _sb_walk.successors:
+                        if (_s.start_offset != _sb_wlast.argval
+                                and _s.start_offset not in _sb_walk_seen):
+                            _sb_wnxt = _s
+                            break
+                    if _sb_wnxt is None:
+                        break
+                    _sb_walk_seen.add(_sb_wnxt.start_offset)
+                    _sb_walk = _sb_wnxt
+                if _sb_walk_has_false_tail:
+                    if os.environ.get('DBG_OR'):
+                        print(f'[DBG_OR] boolop chain start skipped (or member): '
+                              f'block={start_block.start_offset} last={_sb_last_li.opname}')
+                    return None
         import os as _os
         _dbg = bool(_os.environ.get('R23N21_DEBUG'))
         if _dbg:

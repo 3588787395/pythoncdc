@@ -22061,6 +22061,19 @@ AST 映射规则:
                 # 偏移错位。try 帧标记与异常表汇合锚点由
                 # _is_orphan_boundary_nop 内部判据排除。
                 if (instr.opname == 'NOP' and not stmt_instrs
+                        and self._rag_is_orphan_nop_statement(block.instructions, instr)):
+                    # [Round 33 修复] 常量表达式语句 NOP（源码裸字符串/数字语句）：
+                    # compiler_visit_stmt_expr 对 Constant 语句直接发 NOP 且不进
+                    # co_consts。若丢弃该语句，重编译会缺 NOP 导致 co_code 不匹配
+                    # （PtradeAccount 类体 4 个 NOP 即此）。渲染为占位常量语句
+                    # `""`（重编译仍产出 NOP，不污染 co_consts）。
+                    stmts.append({
+                        'type': 'Expr',
+                        'value': {'type': 'Constant', 'value': ''},
+                        'lineno': instr.starts_line,
+                        '_nop_placeholder': True,
+                    })
+                elif (instr.opname == 'NOP' and not stmt_instrs
                         and self._is_orphan_boundary_nop(instr, block.instructions)):
                     stmts.append({
                         'type': 'While',
@@ -22867,6 +22880,71 @@ AST 映射规则:
 
         return stmts
 
+    def _rag_is_orphan_nop_statement(self, instrs: List[Instruction],
+                                     nop: Instruction) -> bool:
+        """[Round 33] 判断 NOP 是否是孤立语句（源码常量表达式语句的编译产物）。
+
+        CPython 3.11 的 compiler_visit_stmt_expr 对 Constant 语句（裸字符串/
+        数字等）直接发射 NOP 且不把常量加载进 co_consts。在类体/模块级 def
+        序列中，该 NOP 表现为：前一条有效指令是语句边界（STORE_NAME 等），
+        后一条有效指令是语句开始（LOAD_CONST <code> / LOAD_NAME property 等）。
+        若反编译输出丢弃该 NOP，重编译会缺 NOP 导致 co_code 不匹配，因此渲染
+        为占位常量语句 `""`（重编译仍产出 NOP）。
+        块开头/块尾的 NOP（行号锚点，前后缺失）不是常量语句，不判定。
+        """
+        if nop.opname != 'NOP' or nop.starts_line is None:
+            return False
+        idx = None
+        for _i, _ins in enumerate(instrs):
+            if _ins is nop:
+                idx = _i
+                break
+        if idx is None:
+            return False
+        # [Round 33 回归修复] 连续 NOP 不是常量语句：类体/函数体开头的行号
+        # 锚点 NOP 常成对出现（clean_basic_block 保留的行号标记序列），如
+        # trade_stock_account.TradeStockAccount 类体 NOP(line=13)+NOP(line=14)
+        # 后跟第一个方法定义。常量语句 NOP 是单条孤立 NOP（源码一条裸常量
+        # 语句编译为一条 NOP），相邻指令不会是 NOP。
+        if (idx > 0 and instrs[idx - 1].opname == 'NOP') \
+                or (idx + 1 < len(instrs) and instrs[idx + 1].opname == 'NOP'):
+            return False
+        # 前一条有效指令（跳过 RESUME/CACHE/NOP/PUSH_NULL）
+        prev = None
+        for j in range(idx - 1, -1, -1):
+            if instrs[j].opname not in ('RESUME', 'CACHE', 'NOP', 'PUSH_NULL'):
+                prev = instrs[j]
+                break
+        # 后一条有效指令
+        nxt = None
+        for j in range(idx + 1, len(instrs)):
+            if instrs[j].opname not in ('RESUME', 'CACHE', 'NOP', 'PUSH_NULL'):
+                nxt = instrs[j]
+                break
+        # 语句边界指令（前一条）
+        boundary_ops = {'STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF',
+                        'STORE_ATTR', 'STORE_SUBSCR', 'DELETE_NAME', 'DELETE_FAST',
+                        'DELETE_GLOBAL', 'DELETE_ATTR', 'DELETE_SUBSCR',
+                        'POP_TOP', 'RETURN_VALUE', 'RETURN_CONST'}
+        # 语句开始指令（后一条）
+        start_ops = {'LOAD_CONST', 'LOAD_NAME', 'LOAD_GLOBAL', 'PUSH_NULL',
+                     'LOAD_ATTR', 'LOAD_CLASSDEREF', 'LOAD_DEREF', 'LOAD_CLOSURE',
+                     'MAKE_CELL', 'BUILD_LIST', 'BUILD_TUPLE', 'BUILD_MAP',
+                     'BUILD_SET', 'LOAD_FAST', 'LOAD_BUILD_CLASS',
+                     'IMPORT_NAME', 'IMPORT_FROM'}
+        if prev is None:
+            # 块开头的 NOP 是行号标记，不是常量语句
+            return False
+        if prev.opname not in boundary_ops:
+            return False
+        if nxt is None:
+            # 块尾的 NOP 是行号标记（clean_basic_block 保留的行号锚点），
+            # 不是常量语句；常量语句 NOP 之后必有后续语句的开始指令。
+            return False
+        if nxt.opname not in start_ops:
+            return False
+        return True
+
     def _build_statements_from_instructions(self, instrs: List[Instruction],
                                               block: Optional[BasicBlock] = None) -> List[Dict[str, Any]]:
         if not instrs:
@@ -22922,7 +23000,23 @@ AST 映射规则:
         # 的同名逻辑。
         _bsi_unpack_info = None
         for instr in instrs:
-            if instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+            if instr.opname in ('RESUME', 'CACHE'):
+                continue
+            if instr.opname == 'NOP':
+                # [Round 33 修复] 孤立 NOP 语句：源码中的常量表达式语句
+                # （裸字符串/数字等）被 compiler_visit_stmt_expr 编译为 NOP 且
+                # 不进入 co_consts。若丢弃该语句，重编译会缺 NOP 导致 co_code
+                # 不匹配。渲染为占位常量语句（重编译仍产出 NOP），普通行号
+                # 标记 NOP（块首/块尾/函数体内）不判定、照旧丢弃。
+                if self._rag_is_orphan_nop_statement(instrs, instr):
+                    stmts.append({
+                        'type': 'Expr',
+                        'value': {'type': 'Constant', 'value': ''},
+                        'lineno': instr.starts_line,
+                        '_nop_placeholder': True,
+                    })
+                continue
+            if instr.opname == 'PUSH_NULL':
                 continue
             # YIELD_VALUE 之后的 RESUME + POP_TOP 是
             # yield cleanup（丢弃 send 值）。POP_TOP 在此处不是表达式语句
@@ -38930,6 +39024,19 @@ AST 映射规则:
                 #      while False: + 缩进 pass——实测恰好编译为单个孤立
                 #      NOP、无附加跳转，恢复偏移对齐。
                 if (instr.opname == 'NOP' and not stmt_instrs
+                        and self._rag_is_orphan_nop_statement(block.instructions, instr)):
+                    # [Round 33 修复] 常量表达式语句 NOP（源码裸字符串/数字语句）：
+                    # compiler_visit_stmt_expr 对 Constant 语句直接发 NOP 且不进
+                    # co_consts。若丢弃该语句，重编译会缺 NOP 导致 co_code 不匹配
+                    # （PtradeAccount 类体 4 个 NOP 即此）。渲染为占位常量语句
+                    # `""`（重编译仍产出 NOP，不污染 co_consts）。
+                    stmts.append({
+                        'type': 'Expr',
+                        'value': {'type': 'Constant', 'value': ''},
+                        'lineno': instr.starts_line,
+                        '_nop_placeholder': True,
+                    })
+                elif (instr.opname == 'NOP' and not stmt_instrs
                         and self._is_orphan_boundary_nop(instr, block.instructions)):
                     stmts.append({
                         'type': 'While',
