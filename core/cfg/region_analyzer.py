@@ -12613,8 +12613,19 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                 idx + 1 < len(meaningful) and meaningful[idx + 1].opname in ('COMPARE_OP', 'IS_OP') and
                 idx + 2 < len(meaningful) and meaningful[idx + 2].opname in CONDITIONAL_JUMP_OPS):
                 copy_indices = [j for j in range(idx) if meaningful[j].opname == 'COPY']
+                # [Round 30] 语句边界不只名字绑定存储：STORE_ATTR / STORE_SUBSCR
+                # （属性、下标赋值）同样是语句终止指令。原判据漏掉二者时，
+                # `self.x += a + b` 的 COPY（属性增量赋值的副本）与后面**另一条
+                # 语句**的 `LOAD_CONST 0; COMPARE_OP ==; POP_JUMP_IF_FALSE` 之间
+                # 看似无存储，于是 COPY 被误当成 match subject 的副本，整块被
+                # 误判为 match 的 case pattern 块（order.pyc::fill 即此：块 214
+                # 是 `self._transaction_cost += ...` + `self._filled_amount = ...`
+                # + `if self.unfilled_amount == 0:` 三条语句，却生成了
+                # `match self: case _:`，并把前两条语句整体吞掉）。
+                _store_between_ops = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
+                                      'STORE_DEREF', 'STORE_ATTR', 'STORE_SUBSCR')
                 has_store_between = any(
-                    meaningful[k].opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
+                    meaningful[k].opname in _store_between_ops
                     for ci in copy_indices for k in range(ci + 1, idx))
                 if has_store_between:
                     continue

@@ -58,6 +58,32 @@ def _negate_expr(expr: Dict[str, Any]) -> Dict[str, Any]:
         return expr.get('operand', expr)
     return {'type': 'UnaryOp', 'op': 'not', 'operand': expr}
 
+
+def _flip_is_none_compare(expr: Dict[str, Any]) -> Dict[str, Any]:
+    """翻转 `x is None` / `x is not None` 的比较运算符。
+
+    None-check 条件跳转（POP_JUMP_*_IF_NONE / IF_NOT_NONE）的两个极性直接对应
+    两个比较运算符，反向只需翻转运算符：`x is None` 重编译回
+    POP_JUMP_*_IF_NOT_NONE，`x is not None` 回 POP_JUMP_*_IF_NONE。
+    若改用 not() 包裹会多出 UNARY_NOT，重编译退化为
+    `UNARY_NOT + POP_JUMP_IF_FALSE`，与原字节码不一致。
+    仅 None 恒等比较可这样翻转；含其它运算符时回退到 _negate_expr。
+    """
+    if expr.get('type') != 'Compare':
+        return _negate_expr(expr)
+    _flip = {'Is': 'IsNot', 'IsNot': 'Is', 'is': 'is not', 'is not': 'is'}
+    new_ops = []
+    for op in (expr.get('ops') or []):
+        name = op.get('type') if isinstance(op, dict) else op
+        if name not in _flip:
+            return _negate_expr(expr)
+        new_ops.append({'type': _flip[name]} if isinstance(op, dict) else _flip[name])
+    if not new_ops:
+        return _negate_expr(expr)
+    out = dict(expr)
+    out['ops'] = new_ops
+    return out
+
 from .basic_block import BasicBlock, Instruction
 from .cfg_builder import ControlFlowGraph
 from .dominator_analyzer import BACKWARD_JUMP_OPS, FORWARD_JUMP_OPS, PLACEHOLDER_OPS
@@ -27443,12 +27469,21 @@ AST 映射规则:
                 pre_stmts = []
             else:
                 pre_instrs = self.region_analyzer.identify_block_prefix_instructions(first_chain_block)
-                last_store_idx = -1
+                # [Round 30] 切分点从「最后一条 STORE_FAST/NAME/GLOBAL/DEREF」
+                # 放宽为「最后一条语句归约入口」(_is_statement_reduction_entry)。
+                # 原判据漏掉 STORE_ATTR / STORE_SUBSCR：当 BoolOpRegion 的
+                # first_chain_block 同时承载着它前面的属性赋值语句时（它们在
+                # 同一个基本块内——块是极大直线指令序列，且这些赋值后无跳转），
+                # 找不到任何名字绑定存储 → last_store_idx = -1 → 前缀整段被丢弃
+                # （order.pyc::load 的 _calendar_dt / _trading_dt 两条赋值即此）。
+                # 表达式语句（POP_TOP）同样是一条语句的归约入口，一并纳入，
+                # 使 `x = 1; f(); a and b` 的 f() 不再被截断。
+                last_stmt_end_idx = -1
                 for idx, instr in enumerate(pre_instrs):
-                    if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
-                        last_store_idx = idx
-                if last_store_idx >= 0:
-                    filtered_pre_instrs = pre_instrs[:last_store_idx + 1]
+                    if self._is_statement_reduction_entry(instr):
+                        last_stmt_end_idx = idx
+                if last_stmt_end_idx >= 0:
+                    filtered_pre_instrs = pre_instrs[:last_stmt_end_idx + 1]
                     pre_stmts = self._build_prefix_stmt_list(filtered_pre_instrs, first_chain_block) if filtered_pre_instrs else []
                 else:
                     pre_stmts = []
@@ -38547,6 +38582,19 @@ AST 映射规则:
                 for _cjb_ci in block.instructions:
                     if _cjb_ci.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
                         continue
+                    # [Round 30] None-check 终结跳转必须留在条件指令里：
+                    # `x is None` / `x is not None` 编译成
+                    # POP_JUMP_*_IF_NOT_NONE / IF_NONE，极性由**跳转指令本身**
+                    # 携带，表达式重建器正是据此把栈顶值还原成 None 恒等比较
+                    # （见 ast_generator_v2 对这两组 opname 的处理）。把它当普通
+                    # 条件跳转滤掉后，栈顶值只能被当成真值测试，
+                    # `if d['futures_direction'] is None:` 被还原成
+                    # `if d['futures_direction']:`，重编译出
+                    # POP_JUMP_FORWARD_IF_FALSE，字节码不一致。
+                    # 三元路径（filtered_cond）对 NONE_CHECK_OPS 已是同样处理。
+                    if _cjb_ci is _cond_jump_bs and _cjb_ci.opname in NONE_CHECK_OPS:
+                        _cjb_cond_instrs.append(_cjb_ci)
+                        continue
                     if _cjb_ci.opname in CONDITIONAL_JUMP_OPS or _cjb_ci.opname in FORWARD_CONDITIONAL_JUMP_OPS or _cjb_ci.opname in BACKWARD_CONDITIONAL_JUMP_OPS:
                         continue
                     if _cjb_ci.opname in FORWARD_JUMP_OPS or _cjb_ci.opname in BACKWARD_JUMP_OPS:
@@ -38561,7 +38609,29 @@ AST 映射规则:
                 for _cjb_pi, _cjb_pci in enumerate(_cjb_cond_instrs):
                     if _cjb_pci.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
                         _cjb_last_store = _cjb_pi
-                if _cjb_last_store >= 0:
+                # [Round 30] 语句边界 = 最后一条「语句归约入口」，而非仅名字绑定存储。
+                # STORE_ATTR / STORE_SUBSCR（属性、下标赋值）与 POP_TOP（表达式
+                # 语句 f()）同样是语句终止指令，但都不在原判据的集合内，于是以它们
+                # 结尾的前导语句不构成边界，被并入「条件表达式指令」喂给表达式
+                # 重建器后随栈顶值一起丢弃（order.pyc::load 在 BoolOp 汇合块之后的
+                # `self._amount = d['amount']` 与
+                # `self._entrust_direction = self._str_to_enum(...)` 两条赋值即此）。
+                # 依「自底向上归约」统一用 _is_statement_reduction_entry 求边界；
+                # 前导语句交项目唯一的通用语句构建器重建——_build_store_statement
+                # 只能产出 Name 目标，无法表示 Attribute/Subscript 目标。
+                _cjb_last_stmt = -1
+                for _cjb_pi, _cjb_pci in enumerate(_cjb_cond_instrs):
+                    if self._is_statement_reduction_entry(_cjb_pci):
+                        _cjb_last_stmt = _cjb_pi
+                _cjb_head_stmts = []
+                if _cjb_last_stmt > _cjb_last_store:
+                    _cjb_head_stmts = list(
+                        self._build_statements_from_instructions(
+                            _cjb_cond_instrs[:_cjb_last_stmt + 1], block) or [])
+                if _cjb_head_stmts:
+                    _cjb_pre_stmts = _cjb_head_stmts
+                    _cjb_pure_cond = list(_cjb_cond_instrs[_cjb_last_stmt + 1:])
+                elif _cjb_last_store >= 0:
                     _cjb_accum = []
                     for _cjb_pi, _cjb_pci in enumerate(_cjb_cond_instrs):
                         if _cjb_pi <= _cjb_last_store:
@@ -38589,7 +38659,12 @@ AST 映射规则:
                     if _cjb_then_entry.start_offset == _cjb_jump_target:
                         _cjb_negate = True
                 if _cjb_negate:
-                    _cjb_cond_expr = _negate_expr(_cjb_cond_expr)
+                    # None-check 跳转的极性由比较运算符携带，翻转运算符即可；
+                    # not() 包裹会引入 UNARY_NOT 而丢失 None-check 形态。
+                    if _cond_jump_bs.opname in NONE_CHECK_OPS:
+                        _cjb_cond_expr = _flip_is_none_compare(_cjb_cond_expr)
+                    else:
+                        _cjb_cond_expr = _negate_expr(_cjb_cond_expr)
 
                 _cjb_then_blocks = [_cjb_then_entry] if _cjb_then_entry else []
                 _cjb_else_blocks = [_cjb_else_entry] if _cjb_else_entry else []
@@ -40598,6 +40673,25 @@ AST 映射规则:
                     _stmts.append(_stmt)
         return _stmts
 
+    def _is_statement_reduction_entry(self, instr: Instruction) -> bool:
+        """该指令是否是一条语句的归约入口（一条语句最内层的消费指令）。
+
+        依「自底向上归约」：一条语句由其最内层的消费指令归约而成，因此前缀
+        指令序列中的语句边界只能落在归约入口上。三类归约入口：
+
+        - 名字绑定语句 ``x = ...``  -> STORE_FAST / STORE_NAME / STORE_GLOBAL /
+          STORE_DEREF
+        - 属性、下标赋值 ``a.b = ...`` / ``a[k] = ...`` -> STORE_ATTR /
+          STORE_SUBSCR。二者只出现在语句位置（Python 不允许把属性/下标存储
+          写成表达式），故与名字绑定同属语句终止指令。
+        - 表达式语句 ``f()`` -> POP_TOP（丢弃求值结果）
+
+        import 语句的归约入口是 IMPORT_NAME，由 _build_prefix_stmt_list 单独
+        委托给 _build_statements_from_instructions 处理（见那里的 Round 02 F8
+        说明），不在此列。
+        """
+        return (self.detector.is_any_store(instr) or instr.opname == 'POP_TOP')
+
     def _build_prefix_stmt_list(self, pre_instrs: List[Instruction], block: BasicBlock) -> List[Dict[str, Any]]:
         """
         将前缀指令序列转换为AST语句节点列表。
@@ -40635,31 +40729,35 @@ AST 映射规则:
         if not pre_instrs:
             return []
 
-        # [Round 02 F8] import 语句的**归约入口**是 IMPORT_NAME，不是 STORE_*。
-        # CPython 3.11 的 `import ptvsd` 字节码为
-        #   LOAD_CONST <level> + LOAD_CONST <fromlist> + IMPORT_NAME + STORE_*
-        # ——即先压两个**参数常量**，再由 IMPORT_NAME 消费它们产生 module，
-        # 最后 STORE_* 绑定名字。本方法的切分规则是「见到 STORE_* 就把 buf 里
-        # 累积的指令当成一个赋值右值」，这对 import 是错误的结构切分：
-        # IMPORT_NAME 不被表达式重建器识别，buf 里只剩两个 LOAD_CONST，
-        # 于是 `import ptvsd` 被还原成 `ptvsd = None`（fromlist 常量被当成值），
-        # 语义完全丢失（F8）。
-        # 依「自底向上归约」：一条语句的归约入口是它**最内层的消费指令**
-        # （普通赋值是 STORE_*，import 是 IMPORT_NAME），应按归约入口切分。
-        # _build_statements_from_instructions 内置了 IMPORT_NAME/IMPORT_FROM
-        # 状态机（覆盖 import / import-as / from-import / from-import-as /
-        # from-import-multi），是既有的、唯一的 import 归约实现，故在此直接
-        # 委托，避免同一套逻辑出现第二份实现。
-        if any(i.opname in ('IMPORT_NAME', 'IMPORT_FROM') for i in pre_instrs):
-            _import_stmts = self._build_statements_from_instructions(pre_instrs, block)
-            if _import_stmts:
-                return _import_stmts
+        # [Round 30] 统一委托 _build_statements_from_instructions。
+        # 本方法原先自己维护一份「见到 STORE_* 就切一条语句」的切分逻辑，它是
+        # 项目里的**第二份**语句归约实现，且与唯一正确的那份不同步，两处均已
+        # 造成过语句丢失：
+        #   - [Round 02 F8] import：归约入口是 IMPORT_NAME 而非 STORE_*，
+        #     `import ptvsd` 被还原成 `ptvsd = None`；
+        #   - [Round 30] 属性赋值：`self.x = d['k']` 的归约入口 STORE_ATTR 不在
+        #     切分集合内，连续两条属性赋值被折叠成一条，第二条起全部丢失
+        #     （order.pyc::load 的 _calendar_dt / _trading_dt 即此）。
+        # 两份实现的分歧点都是「什么算一条语句的归约入口」，而
+        # _build_statements_from_instructions 正是按归约入口切分的通用实现
+        # （含 IMPORT_NAME/IMPORT_FROM 状态机，也覆盖 STORE_ATTR/STORE_SUBSCR）。
+        # 依「避免同一套逻辑出现第二份实现」，此处直接委托；仅当通用实现对该
+        # 前缀无产出时，才回退到下面的手动切分（保持既有兜底行为）。
+        _delegated = self._build_statements_from_instructions(pre_instrs, block)
+        if _delegated:
+            return list(_delegated)
 
         stmts = []
         buf = []
 
         for instr in pre_instrs:
-            if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF') and buf:
+            # [Round 30] 切分点统一为「语句归约入口」(_is_statement_reduction_entry)：
+            # 原先只认 STORE_FAST/NAME/GLOBAL/DEREF，于是 `self.x = d['k']`
+            # 这类属性赋值在本方法里**不构成语句边界**——连续两条属性赋值会被
+            # 累积进同一个 buf，最终由 _build_statement 折叠成一条语句，第二条
+            # 及其后的内容整体丢失（order.pyc::load 的 _calendar_dt/_trading_dt
+            # 即此）。属性/下标存储与名字绑定一样只出现在语句位置，故并入同一判据。
+            if buf and instr.opname != 'POP_TOP' and self._is_statement_reduction_entry(instr):
                 _stmt = self._build_statement(buf + [instr])
                 if _stmt:
                     stmts.append(_stmt)

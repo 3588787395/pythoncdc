@@ -1,0 +1,3200 @@
+{
+ "summary": {
+  "files": 402,
+  "codes": 6617,
+  "unique": 5746,
+  "shadowed": 871,
+  "files_with_dup": 108
+ },
+ "per_file": [
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/__init__.pyc",
+   "codes": 2,
+   "unique": 2,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/base_api.pyc",
+   "codes": 2,
+   "unique": 2,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/check_strategy.pyc",
+   "codes": 2,
+   "unique": 2,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/gtn_api.pyc",
+   "codes": 5,
+   "unique": 5,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/klinedata.pyc",
+   "codes": 64,
+   "unique": 45,
+   "shadowed": 19,
+   "dups": {
+    "<listcomp>": 12,
+    "<dictcomp>": 9
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/wrapper.pyc",
+   "codes": 4,
+   "unique": 4,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/arg_checker.pyc",
+   "codes": 49,
+   "unique": 47,
+   "shadowed": 2,
+   "dups": {
+    "_engine_get_asset": 2,
+    "_engine_is_valid_asset": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/backtest/backtest.pyc",
+   "codes": 2,
+   "unique": 2,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/common/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/common/config.pyc",
+   "codes": 2,
+   "unique": 2,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/common/main.pyc",
+   "codes": 34,
+   "unique": 33,
+   "shadowed": 1,
+   "dups": {
+    "<dictcomp>": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/const.pyc",
+   "codes": 44,
+   "unique": 44,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/api_data.pyc",
+   "codes": 15,
+   "unique": 14,
+   "shadowed": 1,
+   "dups": {
+    "<lambda>": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/asset_storage.pyc",
+   "codes": 8,
+   "unique": 8,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/base_storage.pyc",
+   "codes": 5,
+   "unique": 5,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/basic_data_source.pyc",
+   "codes": 8,
+   "unique": 8,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/const.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/exrights_storage.pyc",
+   "codes": 8,
+   "unique": 8,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/finance.pyc",
+   "codes": 32,
+   "unique": 24,
+   "shadowed": 8,
+   "dups": {
+    "get_IQE_code": 3,
+    "<lambda>": 7
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/history_bar_storage.pyc",
+   "codes": 4,
+   "unique": 4,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/local_finance.pyc",
+   "codes": 21,
+   "unique": 19,
+   "shadowed": 2,
+   "dups": {
+    "<listcomp>": 2,
+    "<lambda>": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/pandas.pyc",
+   "codes": 2,
+   "unique": 2,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/trading_dates_storage.pyc",
+   "codes": 6,
+   "unique": 6,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/enumerate.pyc",
+   "codes": 21,
+   "unique": 18,
+   "shadowed": 3,
+   "dups": {
+    "__repr__": 2,
+    "<listcomp>": 2,
+    "<dictcomp>": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/exception.pyc",
+   "codes": 34,
+   "unique": 32,
+   "shadowed": 2,
+   "dups": {
+    "__init__": 3
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/generalconf.pyc",
+   "codes": 11,
+   "unique": 11,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/graph.pyc",
+   "codes": 40,
+   "unique": 31,
+   "shadowed": 9,
+   "dups": {
+    "__init__": 2,
+    "create_graph": 2,
+    "<listcomp>": 7,
+    "<dictcomp>": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/i18n.pyc",
+   "codes": 5,
+   "unique": 5,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/logger/__init__.pyc",
+   "codes": 22,
+   "unique": 22,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/logger/handlers.pyc",
+   "codes": 30,
+   "unique": 18,
+   "shadowed": 12,
+   "dups": {
+    "__init__": 3,
+    "start": 2,
+    "_target": 2,
+    "_check_main": 2,
+    "_check_main_base": 2,
+    "_check_main_instance": 2,
+    "shutdown": 3,
+    "join": 3,
+    "emit": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/manager/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/manager/instance.pyc",
+   "codes": 34,
+   "unique": 32,
+   "shadowed": 2,
+   "dups": {
+    "task_id": 2,
+    "datetime": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/mq_connector.pyc",
+   "codes": 13,
+   "unique": 9,
+   "shadowed": 4,
+   "dups": {
+    "connect": 2,
+    "bind": 2,
+    "consume": 2,
+    "publish": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/profiler_func.pyc",
+   "codes": 17,
+   "unique": 14,
+   "shadowed": 3,
+   "dups": {
+    "is_coroutine": 2,
+    "wrapper": 2,
+    "show_func": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/common.pyc",
+   "codes": 3,
+   "unique": 3,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/const.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/hg_api.pyc",
+   "codes": 11,
+   "unique": 11,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/jq_trans_module.pyc",
+   "codes": 65,
+   "unique": 35,
+   "shadowed": 30,
+   "dups": {
+    "replace_args": 23,
+    "<lambda>": 5,
+    "<genexpr>": 5
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/strategy.pyc",
+   "codes": 2,
+   "unique": 2,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/wizard_quant_api.pyc",
+   "codes": 58,
+   "unique": 53,
+   "shadowed": 5,
+   "dups": {
+    "<genexpr>": 4,
+    "<lambda>": 2,
+    "add_to_strategy_info": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/zt_api.pyc",
+   "codes": 4,
+   "unique": 4,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/tools.pyc",
+   "codes": 6,
+   "unique": 6,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/trade_schedule.pyc",
+   "codes": 6,
+   "unique": 6,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/backtest_info_utils.pyc",
+   "codes": 10,
+   "unique": 10,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/cgroup_utils.pyc",
+   "codes": 8,
+   "unique": 8,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/common_func.pyc",
+   "codes": 24,
+   "unique": 21,
+   "shadowed": 3,
+   "dups": {
+    "<listcomp>": 4
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/crypto_utils.pyc",
+   "codes": 9,
+   "unique": 9,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/datetime_func.pyc",
+   "codes": 27,
+   "unique": 26,
+   "shadowed": 1,
+   "dups": {
+    "change_dt_2_int": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/docker_info_utils.pyc",
+   "codes": 7,
+   "unique": 7,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/email_utils.pyc",
+   "codes": 4,
+   "unique": 4,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/file_delete.pyc",
+   "codes": 4,
+   "unique": 4,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/fileio_utils.pyc",
+   "codes": 15,
+   "unique": 14,
+   "shadowed": 1,
+   "dups": {
+    "__init__": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/profiler_utils.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/pycompatibility.pyc",
+   "codes": 6,
+   "unique": 6,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/replace_utils.pyc",
+   "codes": 9,
+   "unique": 9,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/request_utils.pyc",
+   "codes": 4,
+   "unique": 4,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/resource_utils.pyc",
+   "codes": 2,
+   "unique": 2,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/semaphore_utils.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/strategy_info_utils.pyc",
+   "codes": 30,
+   "unique": 28,
+   "shadowed": 2,
+   "dups": {
+    "<listcomp>": 2,
+    "<lambda>": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/t2_utils.pyc",
+   "codes": 2,
+   "unique": 2,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc",
+   "codes": 41,
+   "unique": 40,
+   "shadowed": 1,
+   "dups": {
+    "<listcomp>": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/tradingday_info_utils.pyc",
+   "codes": 2,
+   "unique": 2,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/user_info_utils.pyc",
+   "codes": 9,
+   "unique": 9,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/wrapper_utils.pyc",
+   "codes": 18,
+   "unique": 14,
+   "shadowed": 4,
+   "dups": {
+    "wrapper": 5
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/utils.pyc",
+   "codes": 26,
+   "unique": 22,
+   "shadowed": 4,
+   "dups": {
+    "<dictcomp>": 3,
+    "__init__": 2,
+    "__repr__": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/version.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/api/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/api/api_base.pyc",
+   "codes": 28,
+   "unique": 25,
+   "shadowed": 3,
+   "dups": {
+    "<listcomp>": 4
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/api/api_extra.pyc",
+   "codes": 4,
+   "unique": 4,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/api/api_helper.pyc",
+   "codes": 4,
+   "unique": 4,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/api/get_block_stocks.pyc",
+   "codes": 2,
+   "unique": 2,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/config/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/config/config.pyc",
+   "codes": 4,
+   "unique": 4,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/const.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/core/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/core/asset.pyc",
+   "codes": 62,
+   "unique": 51,
+   "shadowed": 11,
+   "dups": {
+    "__init__": 5,
+    "is_listing": 3,
+    "trading_time": 2,
+    "delisted_date": 2,
+    "_repr_attr_list": 3,
+    "contract_multiplier": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/core/base.pyc",
+   "codes": 4,
+   "unique": 4,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/core/data_cache.pyc",
+   "codes": 20,
+   "unique": 20,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/core/data_manager.pyc",
+   "codes": 11,
+   "unique": 10,
+   "shadowed": 1,
+   "dups": {
+    "__init__": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/data/Ashare_storage.pyc",
+   "codes": 6,
+   "unique": 6,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/data/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/data/base_storage.pyc",
+   "codes": 5,
+   "unique": 5,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/data/component_stocks_storage.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/data/date_set_storage.pyc",
+   "codes": 7,
+   "unique": 7,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/data/default_basic_data.pyc",
+   "codes": 14,
+   "unique": 14,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/data/default_history_quote.pyc",
+   "codes": 4,
+   "unique": 4,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/data/default_real_quote.pyc",
+   "codes": 13,
+   "unique": 11,
+   "shadowed": 2,
+   "dups": {
+    "get_kline_by_count": 2,
+    "get_kline_by_date": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/data/exrights_storage.pyc",
+   "codes": 8,
+   "unique": 8,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/data/future_info_cn.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/data/market_storage.pyc",
+   "codes": 7,
+   "unique": 7,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/data/merger_storage.pyc",
+   "codes": 9,
+   "unique": 9,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/data/stock_industry_storage.pyc",
+   "codes": 6,
+   "unique": 6,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/data/trading_dates_storage.pyc",
+   "codes": 6,
+   "unique": 6,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/engine/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/engine/engine.pyc",
+   "codes": 34,
+   "unique": 34,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/entry.pyc",
+   "codes": 5,
+   "unique": 5,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/enumerate.pyc",
+   "codes": 14,
+   "unique": 14,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/fly_enum.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/interface.pyc",
+   "codes": 45,
+   "unique": 42,
+   "shadowed": 3,
+   "dups": {
+    "get_kline_by_count": 2,
+    "get_kline_by_date": 2,
+    "query": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/manager/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/manager/data_info_manager.pyc",
+   "codes": 10,
+   "unique": 9,
+   "shadowed": 1,
+   "dups": {
+    "<listcomp>": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/manager/plugin_manager.pyc",
+   "codes": 11,
+   "unique": 10,
+   "shadowed": 1,
+   "dups": {
+    "<listcomp>": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/manager/trading_day_manager.pyc",
+   "codes": 20,
+   "unique": 17,
+   "shadowed": 3,
+   "dups": {
+    "<listcomp>": 4
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/modules/WEBCLIENT/gtn_client.pyc",
+   "codes": 11,
+   "unique": 11,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/modules/WEBCLIENT/ibrain_client.pyc",
+   "codes": 6,
+   "unique": 6,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/modules/WEBCLIENT/web_socket_client.pyc",
+   "codes": 10,
+   "unique": 7,
+   "shadowed": 3,
+   "dups": {
+    "<lambda>": 4
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/modules/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_history_data_source/__init__.pyc",
+   "codes": 6,
+   "unique": 6,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_history_data_source/data_source_func.pyc",
+   "codes": 5,
+   "unique": 5,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_history_data_source/history_bar_storage.pyc",
+   "codes": 5,
+   "unique": 5,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_history_data_source/history_data_source.pyc",
+   "codes": 19,
+   "unique": 18,
+   "shadowed": 1,
+   "dups": {
+    "<listcomp>": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_basicdata/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_basicdata/api_basicdata.pyc",
+   "codes": 27,
+   "unique": 25,
+   "shadowed": 2,
+   "dups": {
+    "get_security_info": 2,
+    "get_security_margin": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_basicdata/basic_data_source.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_client_db/__init__.pyc",
+   "codes": 6,
+   "unique": 6,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_client_db/base_db_table.pyc",
+   "codes": 2,
+   "unique": 2,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_client_db/client_db.pyc",
+   "codes": 9,
+   "unique": 9,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_client_db/const.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_client_db/dynamic_table.pyc",
+   "codes": 22,
+   "unique": 16,
+   "shadowed": 6,
+   "dups": {
+    "__init__": 2,
+    "<lambda>": 5,
+    "instance": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db/__init__.pyc",
+   "codes": 6,
+   "unique": 6,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db/api_db.pyc",
+   "codes": 2,
+   "unique": 2,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db/db_utils.pyc",
+   "codes": 4,
+   "unique": 4,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db/iqdata_db_base.pyc",
+   "codes": 27,
+   "unique": 21,
+   "shadowed": 6,
+   "dups": {
+    "run_query": 2,
+    "__load_table_names": 2,
+    "__load_view_names": 2,
+    "__load_table_class": 2,
+    "__load_view_class": 2,
+    "__init__": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db/iqdata_db_helper.pyc",
+   "codes": 6,
+   "unique": 6,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db_tools/__init__.pyc",
+   "codes": 6,
+   "unique": 6,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db_tools/api_db.pyc",
+   "codes": 8,
+   "unique": 8,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db_tools/db_base.pyc",
+   "codes": 34,
+   "unique": 30,
+   "shadowed": 4,
+   "dups": {
+    "__init__": 2,
+    "_get_session_maker": 2,
+    "<listcomp>": 3
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db_tools/db_utils.pyc",
+   "codes": 2,
+   "unique": 2,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/FLYMODULE/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/__init__.pyc",
+   "codes": 6,
+   "unique": 6,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/api.pyc",
+   "codes": 33,
+   "unique": 33,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/basic_data_source.pyc",
+   "codes": 43,
+   "unique": 41,
+   "shadowed": 2,
+   "dups": {
+    "<listcomp>": 3
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/calexrights_func.pyc",
+   "codes": 8,
+   "unique": 8,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/data_source_func.pyc",
+   "codes": 24,
+   "unique": 24,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/fly_enum.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/__init__.pyc",
+   "codes": 6,
+   "unique": 6,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/api.pyc",
+   "codes": 11,
+   "unique": 11,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/data_source_func.pyc",
+   "codes": 3,
+   "unique": 3,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/enumerate.pyc",
+   "codes": 5,
+   "unique": 4,
+   "shadowed": 1,
+   "dups": {
+    "<dictcomp>": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/history_bar_storage.pyc",
+   "codes": 5,
+   "unique": 5,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/history_data_source.pyc",
+   "codes": 26,
+   "unique": 18,
+   "shadowed": 8,
+   "dups": {
+    "<listcomp>": 8,
+    "<dictcomp>": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/history_quote.pyc",
+   "codes": 4,
+   "unique": 4,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_gtn_request/__init__.pyc",
+   "codes": 6,
+   "unique": 6,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_gtn_request/api.pyc",
+   "codes": 4,
+   "unique": 4,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_gtn_request/gtn_request.pyc",
+   "codes": 6,
+   "unique": 6,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_hqsdk_data_source/__init__.pyc",
+   "codes": 6,
+   "unique": 6,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_hqsdk_data_source/hqsdk_data_source.pyc",
+   "codes": 16,
+   "unique": 15,
+   "shadowed": 1,
+   "dups": {
+    "<lambda>": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_hqsdk_data_source/hqsdk_data_source_api.pyc",
+   "codes": 9,
+   "unique": 9,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_local_finance/__init__.pyc",
+   "codes": 6,
+   "unique": 6,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_local_finance/api.pyc",
+   "codes": 2,
+   "unique": 2,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_local_finance/const.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_local_finance/finance_data_source.pyc",
+   "codes": 19,
+   "unique": 18,
+   "shadowed": 1,
+   "dups": {
+    "<listcomp>": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/__init__.pyc",
+   "codes": 6,
+   "unique": 6,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/api_realquote.pyc",
+   "codes": 13,
+   "unique": 13,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/real_quote.pyc",
+   "codes": 45,
+   "unique": 44,
+   "shadowed": 1,
+   "dups": {
+    "<listcomp>": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/__init__.pyc",
+   "codes": 17,
+   "unique": 17,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/arg_checker.pyc",
+   "codes": 39,
+   "unique": 39,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/base_http_client.pyc",
+   "codes": 8,
+   "unique": 7,
+   "shadowed": 1,
+   "dups": {
+    "request": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/calexrights_func.pyc",
+   "codes": 8,
+   "unique": 8,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/common_func.pyc",
+   "codes": 29,
+   "unique": 24,
+   "shadowed": 5,
+   "dups": {
+    "<listcomp>": 6
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/datetime_func.pyc",
+   "codes": 25,
+   "unique": 25,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/exception.pyc",
+   "codes": 31,
+   "unique": 29,
+   "shadowed": 2,
+   "dups": {
+    "__init__": 3
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/function_dict.pyc",
+   "codes": 3,
+   "unique": 3,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/i18n.pyc",
+   "codes": 5,
+   "unique": 5,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/logger/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/logger/logger.pyc",
+   "codes": 28,
+   "unique": 26,
+   "shadowed": 2,
+   "dups": {
+    "__init__": 3
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/mysql_conn.pyc",
+   "codes": 6,
+   "unique": 6,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/path_func.pyc",
+   "codes": 5,
+   "unique": 5,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/profiler_func.pyc",
+   "codes": 15,
+   "unique": 13,
+   "shadowed": 2,
+   "dups": {
+    "is_coroutine": 2,
+    "wrapper": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/pycompatibility.pyc",
+   "codes": 6,
+   "unique": 6,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/trade_schedule.pyc",
+   "codes": 4,
+   "unique": 4,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/version.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/__main__.pyc",
+   "codes": 3,
+   "unique": 3,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/account/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/account/base_account.pyc",
+   "codes": 12,
+   "unique": 12,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/account/base_position.pyc",
+   "codes": 19,
+   "unique": 18,
+   "shadowed": 1,
+   "dups": {
+    "__init__": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/account/order.pyc",
+   "codes": 68,
+   "unique": 52,
+   "shadowed": 16,
+   "dups": {
+    "__init__": 3,
+    "save": 4,
+    "load": 4,
+    "gear": 2,
+    "type": 4,
+    "get_price": 3,
+    "__repr__": 3
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/account/portfolio.pyc",
+   "codes": 58,
+   "unique": 50,
+   "shadowed": 8,
+   "dups": {
+    "__init__": 2,
+    "<genexpr>": 7,
+    "<listcomp>": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/account/trade.pyc",
+   "codes": 23,
+   "unique": 23,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/api/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/api/api_base.pyc",
+   "codes": 49,
+   "unique": 48,
+   "shadowed": 1,
+   "dups": {
+    "<dictcomp>": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/api/api_extra.pyc",
+   "codes": 5,
+   "unique": 5,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/api/fields.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/api/helper.pyc",
+   "codes": 4,
+   "unique": 4,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/config/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/config/config.pyc",
+   "codes": 11,
+   "unique": 11,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/const.pyc",
+   "codes": 38,
+   "unique": 38,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/asset.pyc",
+   "codes": 77,
+   "unique": 58,
+   "shadowed": 19,
+   "dups": {
+    "__init__": 5,
+    "is_listing": 4,
+    "trading_time": 2,
+    "delisted_date": 2,
+    "_repr_attr_list": 3,
+    "HKSAsset": 2,
+    "trading_time_tuple": 7,
+    "contract_multiplier": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/bar.pyc",
+   "codes": 85,
+   "unique": 58,
+   "shadowed": 27,
+   "dups": {
+    "__init__": 3,
+    "symbol": 2,
+    "name": 2,
+    "open": 2,
+    "close": 2,
+    "low": 2,
+    "high": 2,
+    "volume": 2,
+    "limit_up": 2,
+    "limit_down": 2,
+    "prev_close": 2,
+    "last": 2,
+    "total_turnover": 2,
+    "prev_settlement": 2,
+    "open_interest": 2,
+    "datetime": 2,
+    "asset": 2,
+    "isnan": 2,
+    "__repr__": 3,
+    "<genexpr>": 5,
+    "__getitem__": 3
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/base.pyc",
+   "codes": 4,
+   "unique": 4,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/commission.pyc",
+   "codes": 10,
+   "unique": 10,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/data_pager.pyc",
+   "codes": 9,
+   "unique": 9,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/engine/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/engine/engine.pyc",
+   "codes": 68,
+   "unique": 67,
+   "shadowed": 1,
+   "dups": {
+    "trading_dt": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/events/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/events/event.pyc",
+   "codes": 11,
+   "unique": 10,
+   "shadowed": 1,
+   "dups": {
+    "__init__": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/events/event_type.pyc",
+   "codes": 2,
+   "unique": 2,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/execution_context.pyc",
+   "codes": 18,
+   "unique": 17,
+   "shadowed": 1,
+   "dups": {
+    "__init__": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/executor.pyc",
+   "codes": 10,
+   "unique": 10,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/manager/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/persist_helper.pyc",
+   "codes": 9,
+   "unique": 9,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/plugin_manager.pyc",
+   "codes": 10,
+   "unique": 9,
+   "shadowed": 1,
+   "dups": {
+    "<listcomp>": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/slippage.pyc",
+   "codes": 7,
+   "unique": 7,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/strategy/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy.pyc",
+   "codes": 20,
+   "unique": 19,
+   "shadowed": 1,
+   "dups": {
+    "__init__": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy_context.pyc",
+   "codes": 31,
+   "unique": 31,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy_loader.pyc",
+   "codes": 15,
+   "unique": 9,
+   "shadowed": 6,
+   "dups": {
+    "__init__": 4,
+    "load": 4
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy_universe.pyc",
+   "codes": 11,
+   "unique": 11,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/user_variables.pyc",
+   "codes": 6,
+   "unique": 6,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/asset_mixin.pyc",
+   "codes": 21,
+   "unique": 16,
+   "shadowed": 5,
+   "dups": {
+    "<listcomp>": 5,
+    "<genexpr>": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/data_cache.pyc",
+   "codes": 13,
+   "unique": 13,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/data_proxy.pyc",
+   "codes": 9,
+   "unique": 9,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/default_info.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/exrights_storage.pyc",
+   "codes": 6,
+   "unique": 6,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/merger_storage.pyc",
+   "codes": 7,
+   "unique": 7,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/trading_dates_mixin.pyc",
+   "codes": 14,
+   "unique": 14,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/trading_dates_storage.pyc",
+   "codes": 4,
+   "unique": 4,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/interface.pyc",
+   "codes": 120,
+   "unique": 105,
+   "shadowed": 15,
+   "dups": {
+    "store": 2,
+    "load": 3,
+    "<genexpr>": 2,
+    "cancel_order": 3,
+    "type": 3,
+    "market_value": 2,
+    "transaction_cost": 2,
+    "get_price": 2,
+    "scheme_order": 2,
+    "scheme_control": 2,
+    "get_scheme_status": 2,
+    "get_schemedetail_status": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/main.pyc",
+   "codes": 3,
+   "unique": 3,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_api/__init__.pyc",
+   "codes": 7,
+   "unique": 7,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_api/base_api.pyc",
+   "codes": 6,
+   "unique": 6,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_api/empty_api_backtest.pyc",
+   "codes": 62,
+   "unique": 62,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_api/empty_api_trade.pyc",
+   "codes": 10,
+   "unique": 10,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/__init__.pyc",
+   "codes": 21,
+   "unique": 20,
+   "shadowed": 1,
+   "dups": {
+    "<lambda>": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/const.pyc",
+   "codes": 9,
+   "unique": 9,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/base.pyc",
+   "codes": 63,
+   "unique": 41,
+   "shadowed": 22,
+   "dups": {
+    "symbol": 2,
+    "__init__": 7,
+    "commit": 2,
+    "save": 5,
+    "load": 5,
+    "<listcomp>": 4,
+    "store": 2,
+    "create_order": 2,
+    "<dictcomp>": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/history_api.pyc",
+   "codes": 19,
+   "unique": 18,
+   "shadowed": 1,
+   "dups": {
+    "<genexpr>": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/individual_api_backtest.pyc",
+   "codes": 3,
+   "unique": 3,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/individual_api_trade.pyc",
+   "codes": 4,
+   "unique": 4,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc",
+   "codes": 37,
+   "unique": 34,
+   "shadowed": 3,
+   "dups": {
+    "<listcomp>": 2,
+    "<dictcomp>": 3
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api_backtest.pyc",
+   "codes": 10,
+   "unique": 10,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api_trade.pyc",
+   "codes": 24,
+   "unique": 24,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/other_api.pyc",
+   "codes": 12,
+   "unique": 12,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/real_api.pyc",
+   "codes": 8,
+   "unique": 8,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/real_api_backtest.pyc",
+   "codes": 2,
+   "unique": 2,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/real_api_trade.pyc",
+   "codes": 3,
+   "unique": 3,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/scheduler_api.pyc",
+   "codes": 15,
+   "unique": 13,
+   "shadowed": 2,
+   "dups": {
+    "<listcomp>": 3
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/setting_api.pyc",
+   "codes": 16,
+   "unique": 15,
+   "shadowed": 1,
+   "dups": {
+    "<listcomp>": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/local_variables/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/local_variables/bar.pyc",
+   "codes": 22,
+   "unique": 22,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/local_variables/finance.pyc",
+   "codes": 132,
+   "unique": 108,
+   "shadowed": 24,
+   "dups": {
+    "__init__": 9,
+    "volume_limit": 2,
+    "price_impact": 2,
+    "tax": 2,
+    "cost": 2,
+    "min_trade_cost": 2,
+    "<listcomp>": 3,
+    "capital_base": 2,
+    "__getattr__": 4,
+    "amount": 2,
+    "margin": 2,
+    "<genexpr>": 3,
+    "<dictcomp>": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/quote/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/quote/get_stock_status.pyc",
+   "codes": 8,
+   "unique": 8,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/quote/open_platform.pyc",
+   "codes": 19,
+   "unique": 19,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/strategy/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc",
+   "codes": 27,
+   "unique": 24,
+   "shadowed": 3,
+   "dups": {
+    "__init__": 2,
+    "<genexpr>": 3
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data_source/__init__.pyc",
+   "codes": 7,
+   "unique": 7,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data_source/fly_bar_storage.pyc",
+   "codes": 9,
+   "unique": 9,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data_source/fly_data_source.pyc",
+   "codes": 72,
+   "unique": 70,
+   "shadowed": 2,
+   "dups": {
+    "__init__": 2,
+    "__getattr__": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data_source/fly_quotation_func.pyc",
+   "codes": 8,
+   "unique": 8,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/__init__.pyc",
+   "codes": 6,
+   "unique": 6,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/benchmark_account.pyc",
+   "codes": 20,
+   "unique": 20,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/future_account.pyc",
+   "codes": 35,
+   "unique": 30,
+   "shadowed": 5,
+   "dups": {
+    "<genexpr>": 6
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/live_future_account.pyc",
+   "codes": 26,
+   "unique": 22,
+   "shadowed": 4,
+   "dups": {
+    "<genexpr>": 5
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/live_hks_account.pyc",
+   "codes": 23,
+   "unique": 21,
+   "shadowed": 2,
+   "dups": {
+    "<genexpr>": 3
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/live_option_account.pyc",
+   "codes": 26,
+   "unique": 23,
+   "shadowed": 3,
+   "dups": {
+    "<genexpr>": 4
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/option_account.pyc",
+   "codes": 35,
+   "unique": 31,
+   "shadowed": 4,
+   "dups": {
+    "<genexpr>": 5
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/stock_account.pyc",
+   "codes": 25,
+   "unique": 25,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/api/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/api/api_future.pyc",
+   "codes": 8,
+   "unique": 8,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/api/api_option.pyc",
+   "codes": 4,
+   "unique": 4,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/api/api_stock.pyc",
+   "codes": 11,
+   "unique": 11,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/future_position.pyc",
+   "codes": 83,
+   "unique": 72,
+   "shadowed": 11,
+   "dups": {
+    "<genexpr>": 12
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/live_future_position.pyc",
+   "codes": 75,
+   "unique": 64,
+   "shadowed": 11,
+   "dups": {
+    "<genexpr>": 12
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/live_hks_position.pyc",
+   "codes": 16,
+   "unique": 16,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/live_option_position.pyc",
+   "codes": 53,
+   "unique": 51,
+   "shadowed": 2,
+   "dups": {
+    "<genexpr>": 3
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/live_stock_position.pyc",
+   "codes": 12,
+   "unique": 12,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/option_position.pyc",
+   "codes": 67,
+   "unique": 60,
+   "shadowed": 7,
+   "dups": {
+    "<genexpr>": 8
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/stock_position.pyc",
+   "codes": 37,
+   "unique": 37,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_control/__init__.pyc",
+   "codes": 13,
+   "unique": 13,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_debug/__init__.pyc",
+   "codes": 6,
+   "unique": 6,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/__init__.pyc",
+   "codes": 6,
+   "unique": 6,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/default_event_source.pyc",
+   "codes": 14,
+   "unique": 14,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/factor_event_source.pyc",
+   "codes": 5,
+   "unique": 5,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc",
+   "codes": 13,
+   "unique": 12,
+   "shadowed": 1,
+   "dups": {
+    "check_handle_date": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/__init__.pyc",
+   "codes": 6,
+   "unique": 6,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/api.pyc",
+   "codes": 5,
+   "unique": 5,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/commission.pyc",
+   "codes": 25,
+   "unique": 18,
+   "shadowed": 7,
+   "dups": {
+    "__init__": 3,
+    "set_commission": 2,
+    "calculate_commission": 3,
+    "_repr_attr_list": 3
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/slippage.pyc",
+   "codes": 19,
+   "unique": 14,
+   "shadowed": 5,
+   "dups": {
+    "__init__": 2,
+    "set_slippage": 2,
+    "calculate_trade_price": 2,
+    "slip": 2,
+    "_repr_attr_list": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/tax.pyc",
+   "codes": 7,
+   "unique": 7,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_history_save/__init__.pyc",
+   "codes": 10,
+   "unique": 10,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_log/__init__.pyc",
+   "codes": 10,
+   "unique": 10,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_matcher/__init__.pyc",
+   "codes": 6,
+   "unique": 6,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_matcher/matcher.pyc",
+   "codes": 17,
+   "unique": 17,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_persist/__init__.pyc",
+   "codes": 15,
+   "unique": 15,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_persist/json_persistance.pyc",
+   "codes": 7,
+   "unique": 7,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_persist/recorder.pyc",
+   "codes": 11,
+   "unique": 10,
+   "shadowed": 1,
+   "dups": {
+    "<dictcomp>": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_progress/__init__.pyc",
+   "codes": 6,
+   "unique": 6,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_progress/system_progress.pyc",
+   "codes": 11,
+   "unique": 11,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc",
+   "codes": 43,
+   "unique": 35,
+   "shadowed": 8,
+   "dups": {
+    "<lambda>": 9
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/function.pyc",
+   "codes": 15,
+   "unique": 15,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/risk_calculation.pyc",
+   "codes": 29,
+   "unique": 29,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_control/__init__.pyc",
+   "codes": 6,
+   "unique": 6,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_control/base_validator.pyc",
+   "codes": 6,
+   "unique": 6,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_control/cash_validator.pyc",
+   "codes": 8,
+   "unique": 8,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_control/position_validator.pyc",
+   "codes": 5,
+   "unique": 5,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_control/price_validator.pyc",
+   "codes": 5,
+   "unique": 5,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_control/time_validator.pyc",
+   "codes": 5,
+   "unique": 5,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_simulation/__init__.pyc",
+   "codes": 6,
+   "unique": 6,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_simulation/broker.pyc",
+   "codes": 38,
+   "unique": 24,
+   "shadowed": 14,
+   "dups": {
+    "<listcomp>": 15
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_simulation/live.pyc",
+   "codes": 32,
+   "unique": 26,
+   "shadowed": 6,
+   "dups": {
+    "<listcomp>": 7
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/__init__.pyc",
+   "codes": 6,
+   "unique": 6,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/api.pyc",
+   "codes": 57,
+   "unique": 57,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/brokerFactory.pyc",
+   "codes": 3,
+   "unique": 3,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/enums.pyc",
+   "codes": 44,
+   "unique": 10,
+   "shadowed": 34,
+   "dups": {
+    "<lambda>": 35
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/function.pyc",
+   "codes": 71,
+   "unique": 71,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/ptrade_broker.pyc",
+   "codes": 11,
+   "unique": 11,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/ptrade_future_broker.pyc",
+   "codes": 10,
+   "unique": 10,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/ptrade_hks_broker.pyc",
+   "codes": 9,
+   "unique": 9,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/ptrade_option_broker.pyc",
+   "codes": 10,
+   "unique": 10,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/send_message_api.pyc",
+   "codes": 4,
+   "unique": 4,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc",
+   "codes": 128,
+   "unique": 119,
+   "shadowed": 9,
+   "dups": {
+    "<listcomp>": 10
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade_account/__init__.pyc",
+   "codes": 6,
+   "unique": 6,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade_account/trade_stock_account.pyc",
+   "codes": 13,
+   "unique": 13,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/user_module.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/__init__.pyc",
+   "codes": 33,
+   "unique": 32,
+   "shadowed": 1,
+   "dups": {
+    "wrapper": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/arg_checker.pyc",
+   "codes": 43,
+   "unique": 43,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/bcolz_help.pyc",
+   "codes": 5,
+   "unique": 5,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/cache_storage.pyc",
+   "codes": 23,
+   "unique": 21,
+   "shadowed": 2,
+   "dups": {
+    "<listcomp>": 3
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/compile_help.pyc",
+   "codes": 2,
+   "unique": 2,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/datetime_func.pyc",
+   "codes": 17,
+   "unique": 17,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/decorator.pyc",
+   "codes": 3,
+   "unique": 3,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/encrypt.pyc",
+   "codes": 9,
+   "unique": 6,
+   "shadowed": 3,
+   "dups": {
+    "__init__": 2,
+    "encrypt": 2,
+    "decrypt": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/exception.pyc",
+   "codes": 31,
+   "unique": 29,
+   "shadowed": 2,
+   "dups": {
+    "__init__": 3
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/global_variable.pyc",
+   "codes": 8,
+   "unique": 8,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/i18n.pyc",
+   "codes": 5,
+   "unique": 5,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/logger/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/logger/handlers.pyc",
+   "codes": 17,
+   "unique": 14,
+   "shadowed": 3,
+   "dups": {
+    "__init__": 2,
+    "shutdown": 2,
+    "join": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/option.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/profiler_func.pyc",
+   "codes": 18,
+   "unique": 15,
+   "shadowed": 3,
+   "dups": {
+    "is_coroutine": 2,
+    "wrapper": 2,
+    "show_func": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/pycompatibility.pyc",
+   "codes": 6,
+   "unique": 6,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/record_store.pyc",
+   "codes": 5,
+   "unique": 5,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/report.pyc",
+   "codes": 5,
+   "unique": 5,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/scheduler.pyc",
+   "codes": 52,
+   "unique": 45,
+   "shadowed": 7,
+   "dups": {
+    "run_daily": 2,
+    "run_weekly": 2,
+    "run_monthly": 2,
+    "<lambda>": 3,
+    "func_wrapper": 2,
+    "<listcomp>": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/trade_schedule.pyc",
+   "codes": 9,
+   "unique": 9,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/version.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/aes_encrypt.pyc",
+   "codes": 7,
+   "unique": 7,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/common.pyc",
+   "codes": 6,
+   "unique": 6,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/const.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/convert.pyc",
+   "codes": 8,
+   "unique": 8,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/custom_tools.pyc",
+   "codes": 6,
+   "unique": 6,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/enums.pyc",
+   "codes": 4,
+   "unique": 4,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/errors.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/fly_exception.pyc",
+   "codes": 9,
+   "unique": 8,
+   "shadowed": 1,
+   "dups": {
+    "__init__": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/flydefine.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/flyqueue.pyc",
+   "codes": 7,
+   "unique": 7,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/flytools.pyc",
+   "codes": 66,
+   "unique": 65,
+   "shadowed": 1,
+   "dups": {
+    "__init__": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/function.pyc",
+   "codes": 4,
+   "unique": 4,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/future_contract_info.pyc",
+   "codes": 29,
+   "unique": 29,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/future_param.pyc",
+   "codes": 16,
+   "unique": 16,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/global_param.pyc",
+   "codes": 10,
+   "unique": 10,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/inform_info.pyc",
+   "codes": 4,
+   "unique": 4,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/login_time.pyc",
+   "codes": 4,
+   "unique": 4,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/market_time.pyc",
+   "codes": 10,
+   "unique": 10,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/multiprocess_syn.pyc",
+   "codes": 35,
+   "unique": 35,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/op_station.pyc",
+   "codes": 21,
+   "unique": 11,
+   "shadowed": 10,
+   "dups": {
+    "<lambda>": 11
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/trading_schedule.pyc",
+   "codes": 4,
+   "unique": 4,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/tradingday_calendar.pyc",
+   "codes": 31,
+   "unique": 28,
+   "shadowed": 3,
+   "dups": {
+    "<dictcomp>": 3,
+    "<lambda>": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/user_error.pyc",
+   "codes": 4,
+   "unique": 4,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/data/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quotation.pyc",
+   "codes": 153,
+   "unique": 143,
+   "shadowed": 10,
+   "dups": {
+    "<lambda>": 8,
+    "<listcomp>": 4
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quote.pyc",
+   "codes": 92,
+   "unique": 81,
+   "shadowed": 11,
+   "dups": {
+    "items": 2,
+    "__setitem__": 2,
+    "__getitem__": 2,
+    "get": 2,
+    "get_stocks": 2,
+    "__init__": 2,
+    "<lambda>": 3,
+    "<listcomp>": 4
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quote_handler.pyc",
+   "codes": 79,
+   "unique": 57,
+   "shadowed": 22,
+   "dups": {
+    "<listcomp>": 17,
+    "<dictcomp>": 3,
+    "get_code": 2,
+    "<lambda>": 3,
+    "__init__": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/dockerspawner/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/dockerspawner/dockerspawner.pyc",
+   "codes": 26,
+   "unique": 25,
+   "shadowed": 1,
+   "dups": {
+    "<dictcomp>": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/dumpload/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/dumpload/load_algo.pyc",
+   "codes": 2,
+   "unique": 2,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/dumpload/load_daily.pyc",
+   "codes": 27,
+   "unique": 23,
+   "shadowed": 4,
+   "dups": {
+    "<listcomp>": 5
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/event/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/event/event.pyc",
+   "codes": 4,
+   "unique": 4,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/event/event_engine.pyc",
+   "codes": 19,
+   "unique": 19,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/event/event_priority.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/event/event_type.pyc",
+   "codes": 5,
+   "unique": 5,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/g.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/generalconf.pyc",
+   "codes": 9,
+   "unique": 9,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/logger.pyc",
+   "codes": 64,
+   "unique": 30,
+   "shadowed": 34,
+   "dups": {
+    "__init__": 8,
+    "utc2local": 2,
+    "_send": 2,
+    "info": 6,
+    "warning": 6,
+    "error": 6,
+    "debug": 6,
+    "critical": 6
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/oauthenticator/__init__.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/oauthenticator/hsid.pyc",
+   "codes": 4,
+   "unique": 4,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/oauthenticator/itn.pyc",
+   "codes": 14,
+   "unique": 14,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/oauthenticator/oauth2.pyc",
+   "codes": 12,
+   "unique": 11,
+   "shadowed": 1,
+   "dups": {
+    "post": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/server_version.pyc",
+   "codes": 1,
+   "unique": 1,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/accountFactory.pyc",
+   "codes": 3,
+   "unique": 3,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/flyAccount.pyc",
+   "codes": 24,
+   "unique": 23,
+   "shadowed": 1,
+   "dups": {
+    "connect_flag": 2
+   }
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/pboxAccount_jupyterhub.pyc",
+   "codes": 4,
+   "unique": 4,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/ptradeAccount.pyc",
+   "codes": 137,
+   "unique": 137,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/ptradeFutureAccount.pyc",
+   "codes": 38,
+   "unique": 38,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/ptradeOptionAccount.pyc",
+   "codes": 38,
+   "unique": 38,
+   "shadowed": 0,
+   "dups": {}
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/request_data_transform.pyc",
+   "codes": 265,
+   "unique": 2,
+   "shadowed": 263,
+   "dups": {
+    "<lambda>": 264
+   }
+  }
+ ]
+}
