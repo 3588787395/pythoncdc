@@ -4675,7 +4675,19 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                     return [for_iter_exit], natural_exit
                 return None, natural_exit
 
-        loop_successors = [s for s in header.successors if s not in body_set and s != header]
+        # [W43 修复] 区域归约算法原则 2（每块唯一归属）：WHILE 分支的
+        # loop_successors 收集不得纳入异常后继——异常边（try 的 handler
+        # 入口，如 PUSH_EXC_INFO 块）不是循环正常出口的合法来源，异常
+        # 处理器块归属 TryExceptRegion。旧逻辑对 FOR 分支已在 Round 32
+        # 排除异常后继（见上方 break_targets 收集），但 WHILE 分支的
+        # header/body 后继收集遗漏该排除，导致 try 内 while 循环的
+        # loop_successors 混入异常处理器块 → natural_exit 后必经求解
+        # 失败（None）→ 误入 R4-08 BFS 扩展分支，从出口一路吸收到函数
+        # 末尾（backtest_download_result 循环后 141 条语句丢失根因）。
+        # 与 FOR 分支 Round 32 修复保持对称。
+        loop_successors = [s for s in header.successors
+                           if s not in body_set and s != header
+                           and s not in header.exception_successors]
         if condition_block:
             loop_successors = [s for s in loop_successors if s != condition_block]
         loop_successors = [s for s in loop_successors if not any(i.opname == 'RAISE_VARARGS' for i in s.instructions)]
@@ -4686,6 +4698,11 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
             for succ in block.successors:
                 if succ not in body_set and succ != header and succ not in loop_successors:
                     if condition_block and succ == condition_block:
+                        continue
+                    # [W43 修复] 异常后继排除（原则 2：每块唯一归属）：
+                    # 异常边不是循环正常出口，处理器块归属 TryExceptRegion，
+                    # 不得混入 loop_successors 污染 natural_exit 求解。
+                    if succ in block.exception_successors:
                         continue
                     block_last = block.get_last_instruction()
                     if block_last and detector.is_conditional_jump(block_last):
@@ -13704,6 +13721,26 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             return True
         if not loop_regions:
             return False
+        # [W43 修复] 区域归约算法原则 2（每块唯一归属）：循环 header /
+        # condition 块是循环结构块，不得作为独立 IfRegion 的条件块。当函数
+        # 位于 try 内时，block_to_region 的登记顺序（TryExceptRegion 晚于
+        # LoopRegion 注册并覆盖映射）会使 header 块的 block_region 指向
+        # TryExceptRegion 而非 LoopRegion，下方 isinstance 守卫失效 →
+        # header 块尾部的回边条件重检（如 `while a and b:` 在回边处复制的
+        # `a → POP_JUMP_FORWARD_IF_FALSE <出口>`）被误建为循环体内嵌套
+        # IfRegion（生成伪 `if a: <b 重检>; continue`，repro_05/08 与
+        # backtest_download_result 根因）。修复：block_region 不指向
+        # LoopRegion 时，按结构归属（blocks 成员 + header/condition 身份）
+        # 在 loop_regions 中回退查找该块所属的 LoopRegion，恢复守卫判定。
+        # 该回退是结构性的（基于区域成员关系），不改变 block_to_region
+        # 映射本身（原则 4：父区域引用子区域入口，登记顺序不改变结构身份）。
+        if not isinstance(block_region, LoopRegion):
+            for _lr in loop_regions:
+                if (block in (_lr.blocks or [])
+                        and block in (getattr(_lr, 'header_block', None),
+                                      getattr(_lr, 'condition_block', None))):
+                    block_region = _lr
+                    break
         if isinstance(block_region, LoopRegion):
             if block == block_region.condition_block:
                 return True
@@ -13740,6 +13777,22 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     _ft_succ = next((s for s in cond_succs if s != _jump_target), None)
                     _jt_role = self.block_roles.get(_jump_target.start_offset) if _jump_target else None
                     _ft_last = _ft_succ.get_last_instruction() if _ft_succ else None
+                    # [W43 修复] 区域归约算法原则 2（每块唯一归属）：
+                    # 回边条件重检链判据——header 块尾部的条件跳转若以
+                    #循环出口为假出口、且 fall-through 块以 BACKWARD 条件
+                    # 跳转回 header/condition（回边重检链末段），则 header 尾
+                    # 条件是回边重检链首段（CPython 对 `while a and b:`
+                    # 在回边处复制整个条件），属于循环结构，不是独立 if。
+                    # 旧判据（13798）要求 _jt_role 为 BREAK，而 B 组形态的
+                    # 假出口是循环自然出口块（无 break 语句），role 非
+                    # BREAK → 守卫漏判 → 生成伪 `if a: <b 重检>; continue`
+                    # （repro_05/08 与 backtest_download_result）。
+                    if (_ft_last and _ft_last.opname in BACKWARD_CONDITIONAL_JUMP_OPS
+                            and _ft_last.argval is not None):
+                        _bwd_target = self.cfg.get_block_by_offset(_ft_last.argval)
+                        if _bwd_target in (block_region.header_block,
+                                           block_region.condition_block):
+                            return True
                     if _has_store_before_cond:
                         _jump_exits_loop = _jump_target and _jump_target not in block_region.blocks
                         _ft_in_loop = _ft_succ and _ft_succ in block_region.blocks
@@ -13812,6 +13865,19 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             # 后跟 `left_amount > 0; POP_JUMP_FORWARD_IF_FALSE <loop_exit>`。
             # block_roles 在此阶段尚未填充，必须用 LoopRegion 结构信息判断。
             if last_instr and last_instr.opname in FORWARD_CONDITIONAL_JUMP_OPS:
+                # [W43 修复] 结构归属回退（原则 2：每块唯一归属）：块
+                # block_to_region 登记可能被晚注册的 TryExceptRegion 覆盖
+                # （try 内 while 循环的回边重检首段块），R65 结构判定需要
+                # LoopRegion 的 header/condition/else_blocks 信息。按结构
+                # 成员关系（blocks 包含该块）回退查找所属 LoopRegion
+                # （嵌套时取最内层），恢复回边条件重检判据。
+                _lr_eff = block_region if isinstance(block_region, LoopRegion) else None
+                if _lr_eff is None:
+                    _lr_cands = [_lr for _lr in loop_regions
+                                 if block in (_lr.blocks or [])]
+                    if _lr_cands:
+                        _lr_eff = min(_lr_cands,
+                                      key=lambda _lr: len(_lr.blocks or []))
                 _be_cond_succs = list(block.conditional_successors)
                 if len(_be_cond_succs) == 2:
                     _be_jump_target = self.cfg.get_block_by_offset(last_instr.argval) if last_instr.argval is not None else None
@@ -13830,24 +13896,28 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                                 and _be_jt_role in _be_loop_exit_roles):
                             return True
                         # block_roles 未填充时，用 LoopRegion 结构信息
-                        _be_jt_is_loop_exit = (
-                            _be_jump_target in block_region.else_blocks or
-                            _be_jump_target not in block_region.blocks or
-                            (hasattr(block_region, 'exit_block') and
-                             block_region.exit_block is not None and
-                             _be_jump_target is block_region.exit_block)
-                        )
-                        _be_ft_is_back_edge = (
-                            _be_ft_last is not None and
-                            _be_ft_last.opname in BACKWARD_CONDITIONAL_JUMP_OPS and
-                            _be_ft_last.argval is not None and
-                            (block_region.header_block is not None and
-                             _be_ft_last.argval == block_region.header_block.start_offset or
-                             (block_region.condition_block is not None and
-                              _be_ft_last.argval == block_region.condition_block.start_offset))
-                        )
-                        if _be_jt_is_loop_exit and _be_ft_is_back_edge:
-                            return True
+                        # [W43 修复] 使用 _lr_eff（结构回退后的 LoopRegion）
+                        # 而非 block_region（可能为 TryExceptRegion，无循环
+                        # 结构语义）。
+                        if _lr_eff is not None:
+                            _be_jt_is_loop_exit = (
+                                _be_jump_target in _lr_eff.else_blocks or
+                                _be_jump_target not in _lr_eff.blocks or
+                                (hasattr(_lr_eff, 'exit_block') and
+                                 _lr_eff.exit_block is not None and
+                                 _be_jump_target is _lr_eff.exit_block)
+                            )
+                            _be_ft_is_back_edge = (
+                                _be_ft_last is not None and
+                                _be_ft_last.opname in BACKWARD_CONDITIONAL_JUMP_OPS and
+                                _be_ft_last.argval is not None and
+                                (_lr_eff.header_block is not None and
+                                 _be_ft_last.argval == _lr_eff.header_block.start_offset or
+                                 (_lr_eff.condition_block is not None and
+                                  _be_ft_last.argval == _lr_eff.condition_block.start_offset))
+                            )
+                            if _be_jt_is_loop_exit and _be_ft_is_back_edge:
+                                return True
         elif block_region is None:
             for _lr in loop_regions:
                 if block == _lr.condition_block:
@@ -15523,6 +15593,23 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 then_blocks = [b for b in then_blocks if b in _keep_set or b == then_succ]
                 else_blocks = [b for b in else_blocks if b in _keep_set or b == else_succ]
 
+            # [W43 修复] 结构归属回退（原则 2：每块唯一归属）：当函数位于
+            # try 内时，block_to_region 的登记顺序（TryExceptRegion 晚于
+            # LoopRegion 注册并覆盖映射）会使 if 条件块的 block_region 指向
+            # TryExceptRegion，下方 isinstance(block_region, LoopRegion)
+            # 守卫失效 → 循环回边条件重检块（POP_JUMP_BACKWARD_IF_* 跳回
+            # header/condition 的块）无法从 if 的 then 分支剔除，被误建为
+            # 循环体内嵌套 IfRegion（伪 `if len(df) > 1: <重检>; continue`，
+            # repro_05/08 与 backtest_download_result 根因）。按结构成员
+            # 关系（blocks 包含该块）回退查找所属 LoopRegion（嵌套时取
+            # 最内层，保证回边块信息取自直接包围循环），恢复过滤判定。
+            # 该回退基于区域成员关系，不改变 block_to_region 映射（原则 4）。
+            if not isinstance(block_region, LoopRegion):
+                _lr_candidates = [_lr for _lr in loop_regions
+                                  if block in (_lr.blocks or [])]
+                if _lr_candidates:
+                    block_region = min(_lr_candidates,
+                                       key=lambda _lr: len(_lr.blocks or []))
             if isinstance(block_region, LoopRegion):
                 # 区域归约算法原则 2（每块唯一归属）+ 原则 4
                 #（归约顺序）：当 if 条件块在 LoopRegion 的 else_blocks 中
@@ -16567,6 +16654,59 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                                                     for p in inner_else_succ.predecessors)
                         if _ie_has_external_pred:
                             inner_merge = inner_else_succ
+            # === 反编译逻辑：inner_merge 兜底继承外层链合并点（W46） ===
+            #
+            # 区域归约算法原则 2（每块唯一归属）+ 原则 4（父区域引用子区域
+            # 入口）：外层 if/elif 链的 merge_ 是全部臂的最小公共支配后继，
+            # 归属链外的父序列文本位置。因此任一臂的块收集都不得越过 merge_，
+            # 否则 merge_ 及其后继（父序列的兄弟语句/兄弟区域）被吸入某一臂，
+            # 违反「每块在任何层级只属于一个区域」。
+            #
+            # 触发场景（add_end_flag）：
+            #     if isinstance(x, str):        # block 6，then=48
+            #         x = [x]                   # block 48  → JUMP_FORWARD 210
+            #     elif isinstance(x, list):     # block 56（elif 条件），then=98
+            #         pass                      # block 98  → JUMP_FORWARD 210（空体）
+            #     else:
+            #         log.error(...)            # block 100
+            #         return False              # block 206（终态，不经 210）
+            #     for i in x:                   # block 210/214 ← 链外 merge 后继
+            #         ...
+            #
+            # NCPD(98, 100) = None：else 臂以 return 终止，两臂无公共后必经
+            # 节点。随后的 sink 分析三条判据均不成立——98 与 100 自身都不含
+            # RETURN_VALUE/RAISE_VARARGS，且 immediate_post_dominator 非
+            # None（分别为 210 与 206），故 _it_sink/_ie_sink 皆为 False，
+            # inner_merge 保持 None。此时 _collect_branch_blocks(98, None, …)
+            # 无收集上界，沿 98 → 210 → 214 → … 一路吞下整个 for 循环
+            # （214..1746），使 elif_bodies[0] 越界，进而污染
+            # IF_ELIF_CHAIN.all_blocks；block_to_region 重建后
+            # LoopRegion(entry=214) 被判为 IfRegion(entry=6) 的【子区域】而非
+            # 父序列的【兄弟】。AST 生成结果：for 循环被塞进
+            # `elif isinstance(x, list):` 臂内（并因 else_blocks 残留而生成
+            # for-else），同时 else 臂 log.error + return False 整体丢失
+            # ——指令数相同（299/299）但顺序全错，248 处 diff。
+            #
+            # 修复判据（保守，仅收紧边界不改结构）：
+            #   1. sink 分析后 inner_merge 仍为 None（无其他信息可用）；
+            #   2. 外层 merge_ 已知，且不等于 then/else 臂入口或 elif 条件块
+            #      （避免与既有 inner_else_succ == merge_ 分支重叠、
+            #       避免退化为零长度边界）；
+            #   3. merge_ 落在 then 臂的正常控制流下游（BFS 可达，排除 else
+            #      臂入口与 elif 条件块，不跟随回边）——确认 merge_ 确为本臂
+            #      的汇聚点而非无关块。
+            # 满足则令 inner_merge = merge_，把收集边界从「无界」收紧到
+            # 「链合并点」。这不改变臂内任何结构，仅保证 merge_ 及其后继留在
+            # 父序列（LoopRegion 成为 IfRegion 的兄弟，for 循环回到 elif 链
+            # 之后的平级位置）。
+            if (inner_merge is None
+                    and merge_ is not None
+                    and merge_ is not inner_then_succ
+                    and merge_ is not inner_else_succ
+                    and merge_ is not first_else):
+                if self._is_reachable_bfs(inner_then_succ, merge_,
+                                          {inner_else_succ, first_else}):
+                    inner_merge = merge_
             # 区域归约算法原则 2（每块唯一归属）+ 原则 4（归约顺序）：
             # 当 elif body 的入口块（inner_then_succ）是条件块，且其 FALSE 跳转
             # 目标等于 inner_else_succ 时，inner_else_succ 是 elif 链的合并点
@@ -17991,10 +18131,28 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
 
             # 区域归约算法：防止LoopRegion的condition_block/header_block被误识别为ternary值块
             # 当if-else的某个分支入口是while循环的条件块时，不应识别为三元表达式
+            # [W48 回边块守卫] 值块不得是循环回边块（JUMP_BACKWARD）。
+            # 循环体尾部 `if cond: <body>` 的字节码形态：
+            #   cond_block: ...; POP_JUMP_FORWARD_IF_FALSE → back_edge   (false→回边)
+            #   body: ...自然抵达 back_edge
+            # false_value_block == back_edge_block 是【条件假即继续循环】的
+            # statement 级 if，不是值三元（三元 false 值块须以 JUMP_FORWARD 或
+            # fall-through 把值送入 merge 供 STORE/消费；回边块无值流）。
+            # 原守卫仅覆盖 condition_block/header_block，遗漏 back_edge_block，
+            # 导致 add_end_flag 的 `if end_sentence_count != 2: with open(...)`
+            # 被误归约为 TernaryRegion（false 值块=1598 回边块），循环尾部
+            # 生成 `if not cond: continue`（极性反转+多余 JUMP_BACKWARD，299→300）。
             for _lr in (loop_regions or []):
                 if true_block == _lr.condition_block or true_block == _lr.header_block:
                     return None
                 if false_block == _lr.condition_block or false_block == _lr.header_block:
+                    return None
+                _w48_be = getattr(_lr, 'back_edge_block', None)
+                _w48_bes = getattr(_lr, 'back_edge_blocks', None) or set()
+                if (_w48_be is not None
+                        and (true_block == _w48_be or false_block == _w48_be)):
+                    return None
+                if (true_block in _w48_bes or false_block in _w48_bes):
                     return None
 
             # [Round7-06] MatchRegion 优先级高于 TernaryRegion：当 if 体（true_block）
@@ -18652,6 +18810,32 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                             break
                     if instr.opname in ('STORE_FAST', 'STORE_NAME',
                                         'STORE_GLOBAL', 'STORE_DEREF'):
+                        # [R40 W45c 修复] 语句边界守卫（原则 2：每块唯一
+                        # 归属）：merge 块中该 STORE_* 之前若已有 POP_TOP
+                        # （表达式语句终结符），说明 ternary 结果已被更早的
+                        # 消费语句（如 `sheet.write(row, 3, '买' if c else '卖')`
+                        # 的 CALL + POP_TOP）消费，该 STORE_* 属于后续独立
+                        # 语句（如 `row += 1` 的 STORE_FAST row），不是
+                        # ternary 的值目标。误设 value_target 会使生成端走
+                        # Assign 路径，丢弃三元消费语句及 merge 块后续全部
+                        # 语句（creat_sheet2 stock 分支 orig 651 → decomp 505）。
+                        # 判据为栈纪律（语句终结符），与 _build_statements_
+                        # from_instructions 的 POP_TOP 边界语义一致；walrus
+                        # 形态（COPY 1 紧邻 STORE_*，STORE 前无 POP_TOP）
+                        # 不受影响。
+                        _store_cur_idx = None
+                        for _msi_idx, _msi in enumerate(
+                                merge_block.instructions):
+                            if _msi is instr:
+                                _store_cur_idx = _msi_idx
+                                break
+                        _pre_store_boundary = (
+                            [i for i in merge_block.instructions[:_store_cur_idx]
+                             if i.opname not in NOISE_OPS]
+                            if _store_cur_idx is not None else [])
+                        if any(i.opname == 'POP_TOP'
+                               for i in _pre_store_boundary):
+                            break
                         # walrus + 三元 + 后续操作模式检测：
                         # 字节码布局 `COPY 1, STORE_*, <wrapping_ops>..., <cond_jump>`
                         # 表示 walrus 副本绑定名称后，原始三元结果仍在栈上继续参与
@@ -19539,10 +19723,20 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             # 区域归约算法：防止LoopRegion的condition_block被误识别为ternary值块
             # 当if-else的某个分支是while循环时，循环条件块的条件跳转被剥离后
             # 剩余的LOAD/CALL会通过_is_single_expression_block检测，导致误判。
+            # [W48 回边块守卫] 分支入口不得是循环回边块（JUMP_BACKWARD）——
+            # `if cond: body` 位于循环体尾部时 false 分支即回边块，是 statement
+            # 级 if，非值三元。与 _detect_ternary_pattern 中 W48 守卫保持一致。
             for _lr in (loop_regions or []):
                 if then_succ == _lr.condition_block or else_succ == _lr.condition_block:
                     return None
                 if then_succ == _lr.header_block or else_succ == _lr.header_block:
+                    return None
+                _w48_be = getattr(_lr, 'back_edge_block', None)
+                _w48_bes = getattr(_lr, 'back_edge_blocks', None) or set()
+                if (_w48_be is not None
+                        and (then_succ == _w48_be or else_succ == _w48_be)):
+                    return None
+                if (then_succ in _w48_bes or else_succ in _w48_bes):
                     return None
             if not (self._is_single_expression_block(then_succ) and
                     self._is_single_expression_block(else_succ)):

@@ -5126,8 +5126,11 @@ AST 映射规则:
                                     if not (_tgt is _cond_exit
                                             or self._is_equivalent_exit_block(_tgt, _cond_exit)):
                                         continue
-                                    _p_ft = next((s for s in _p.successors
-                                                  if s.start_offset != _p_last.argval), None)
+                                    # [W44 修复] fall-through 排除异常边
+                                    # （原则 2：异常处理器块归属
+                                    # TryExceptRegion，不属正常控制流链）。
+                                    _p_ft = self._fallthrough_successor_excluding(
+                                        _p, _p_last.argval)
                                     # fallthrough 必须直达回边块、已吸收链块或
                                     # 循环体（闩锁链的连接性判据）
                                     if not (_p_ft is _be
@@ -6512,11 +6515,10 @@ AST 映射规则:
                         _be_block = region.back_edge_block
                         if _be_block is not None:
                             _chain_visited = {header.start_offset}
-                            _chain_cur = None
-                            for _succ_ft in header.successors:
-                                if _succ_ft.start_offset != _hdr_last_i.argval:
-                                    _chain_cur = _succ_ft
-                                    break
+                            # [W44 修复] fall-through 排除异常边（原则 2：
+                            # 异常处理器块归属 TryExceptRegion，不属正常控制流）。
+                            _chain_cur = self._fallthrough_successor_excluding(
+                                header, _hdr_last_i.argval)
                             _chain_is_recheck = False
                             _chain_limit = 0
                             while (_chain_cur is not None
@@ -6610,11 +6612,11 @@ AST 映射规则:
                                     for cb, _ in boolop_for_while.op_chain))
                             _be_r08 = region.back_edge_block
                             if _polarity_ok_r08 and _be_r08 is not None:
-                                _chain_cur_r08 = None
-                                for _s_r08 in header.successors:
-                                    if _s_r08.start_offset != _hdr_last_r08.argval:
-                                        _chain_cur_r08 = _s_r08
-                                        break
+                                # [W44 修复] fall-through 排除异常边（原则 2：
+                                # 异常处理器块归属 TryExceptRegion，不属正常
+                                # 控制流链）。
+                                _chain_cur_r08 = self._fallthrough_successor_excluding(
+                                    header, _hdr_last_r08.argval)
                                 _chain_visited_r08 = {header.start_offset}
                                 _chain_is_recheck_r08 = False
                                 _chain_limit_r08 = 0
@@ -6644,10 +6646,26 @@ AST 映射规则:
                                             break
                                     _chain_cur_r08 = _next_ft_r08
                                 if _chain_is_recheck_r08:
+                                    # [W43b 修复] 区域归约算法原则 2（每块唯一
+                                    # 归属）：底部闩锁重检链块（header 尾部重检段
+                                    # + 回边块）归**条件**归约，不属循环体语句。
+                                    # 旧实现只标记 header 已生成，链上其余块（本例
+                                    # 回边块 626：``list(df[-1:].index)[0] ==
+                                    # END_TIMESTAMP`` + POP_JUMP_BACKWARD_IF_TRUE）
+                                    # 未被标记 → 循环体生成后续按普通块渲染其指令
+                                    # → 产出伪表达式语句（``df[-1:].index`` 裸
+                                    # 表达式 + POP_TOP 残留）。依「回边重检归条件」
+                                    # 标记整条链块已生成，与 _header_if_region
+                                    # 分支（标记 IfRegion.blocks）语义一致。
                                     _self_loop_stmts = self._loop_extract_self_loop_stmts(header)
                                     body_stmts.extend(_self_loop_stmts)
                                     self.generated_blocks.add(header)
                                     self.generated_offsets.add(header.start_offset)
+                                    for _lb_r08 in _chain_visited_r08:
+                                        _lb_blk_r08 = self.cfg.get_block_by_offset(_lb_r08)
+                                        if _lb_blk_r08 is not None and _lb_blk_r08 is not header:
+                                            self.generated_blocks.add(_lb_blk_r08)
+                                            self.generated_offsets.add(_lb_blk_r08.start_offset)
                                     return
                 _is_for_iter_setup = False
                 for _cr in region.iter_descendants((LoopRegion,)):
@@ -7081,6 +7099,35 @@ AST 映射规则:
                     if _aw_stmt:
                         _aw_stmts.append(_aw_stmt)
         return _aw_stmts if _aw_stmts else None
+
+    def _fallthrough_successor_excluding(self, block: Optional['BasicBlock'],
+                                         exclude_offset: Optional[int]) -> Optional['BasicBlock']:
+        """取条件跳转块在正常控制流下的 fall-through 后继（排除跳转目标与异常边）。
+
+        [W44 修复] 区域归约算法原则 2（每块唯一归属）：位于 try 内的块，其
+        ``successors`` 除正常后继外还含异常边（handler 入口，如 PUSH_EXC_INFO 块，
+        由 CFG 的异常边建模引入）。异常边不是条件跳转的 fall-through——异常
+        处理器块唯一归属 TryExceptRegion，不参与正常控制流链遍历。
+        旧判据「取首个偏移不等于条件跳转目标的后继」在 try 内会选中异常处理器
+        块：backtest_download_result 中循环 header 块 568 的 successors =
+        [712(循环出口), 1712(异常处理器), 626(回边块)]，跳转目标 712 被排除后
+        首个后继是 1712 → 回边重检链遍历自 handler 起算 →
+        ``_chain_is_recheck`` 恒 False → CPython 在回边处复制的条件重检被
+        渲染成循环体内伪 if-break（`if len(df) > 1: break`，极性亦反，多出
+        7 条指令）。
+        判据（结构性）：先剔除异常后继，再剔除条件跳转目标，余者即 fall-through
+        ——条件跳转块的正常后继除跳转目标外唯一，此判据与具体字节码形态无关。
+        """
+        if block is None:
+            return None
+        exc = set(getattr(block, 'exception_successors', ()) or ())
+        for succ in block.successors:
+            if succ in exc:
+                continue
+            if exclude_offset is not None and succ.start_offset == exclude_offset:
+                continue
+            return succ
+        return None
 
     def _loop_extract_self_loop_stmts(self, hdr: BasicBlock) -> List[Dict[str, Any]]:
         """从self-loop header中提取普通语句（排除条件重检部分，处理条件break）"""
@@ -7676,26 +7723,28 @@ AST 映射规则:
         if _cond_break_start_idx is not None and _cond_break_instr is not None:
             _is_compound_loop_cond = False
             if self._current_loop and _cond_break_instr.argval is not None:
-                for _succ_ft in hdr.successors:
-                    if _succ_ft.start_offset != _cond_break_instr.argval:
-                        _ft_role_tmp = self.region_analyzer.get_block_role(_succ_ft)
-                        # [Phase 4 回归修复] back_edge_block 可能被标注为
-                        # LOOP_BACK_EDGE 或 CONTINUE/PURE_CONTINUE（取决于
-                        # _annotate_all_roles 的路径）。CPython 3.11 在
-                        # `while a and b:` 的 back-edge 处复制复合条件，
-                        # header 块含 POP_JUMP_FORWARD_IF_FALSE（跳向 BREAK）
-                        # + fallthrough 是 back-edge 块（含
-                        # POP_JUMP_BACKWARD_IF_TRUE 跳回 body）。这是复合
-                        # 循环条件的 back-edge 重检，不是 if-break。三种角色
-                        # 都要接受，否则 back-edge 块标为 CONTINUE 时会漏检，
-                        # 生成多余的 `if cond: pass else: break`。
-                        if _ft_role_tmp in (BlockRole.LOOP_BACK_EDGE,
-                                            BlockRole.CONTINUE,
-                                            BlockRole.PURE_CONTINUE):
-                            _ft_last_i = _succ_ft.get_last_instruction()
-                            if _ft_last_i and _ft_last_i.opname in BACKWARD_CONDITIONAL_JUMP_OPS:
-                                _is_compound_loop_cond = True
-                            break
+                # [W44 修复] fall-through 排除异常边（原则 2：异常处理器块
+                # 归属 TryExceptRegion，不属正常控制流）。
+                _succ_ft = self._fallthrough_successor_excluding(
+                    hdr, _cond_break_instr.argval)
+                if _succ_ft is not None:
+                    _ft_role_tmp = self.region_analyzer.get_block_role(_succ_ft)
+                    # [Phase 4 回归修复] back_edge_block 可能被标注为
+                    # LOOP_BACK_EDGE 或 CONTINUE/PURE_CONTINUE（取决于
+                    # _annotate_all_roles 的路径）。CPython 3.11 在
+                    # `while a and b:` 的 back-edge 处复制复合条件，
+                    # header 块含 POP_JUMP_FORWARD_IF_FALSE（跳向 BREAK）
+                    # + fallthrough 是 back-edge 块（含
+                    # POP_JUMP_BACKWARD_IF_TRUE 跳回 body）。这是复合
+                    # 循环条件的 back-edge 重检，不是 if-break。三种角色
+                    # 都要接受，否则 back-edge 块标为 CONTINUE 时会漏检，
+                    # 生成多余的 `if cond: pass else: break`。
+                    if _ft_role_tmp in (BlockRole.LOOP_BACK_EDGE,
+                                        BlockRole.CONTINUE,
+                                        BlockRole.PURE_CONTINUE):
+                        _ft_last_i = _succ_ft.get_last_instruction()
+                        if _ft_last_i and _ft_last_i.opname in BACKWARD_CONDITIONAL_JUMP_OPS:
+                            _is_compound_loop_cond = True
                 # 区域归约算法原则 2（每块唯一归属）：CPython 3.11+
                 # 在回边处复制整个 while 条件求值。对多操作数 ``and`` 链（如
                 # ``a and b and c``），回边重检拆成多个块：前 N-1 个操作数块以
@@ -7711,11 +7760,9 @@ AST 映射规则:
                     _be_block = getattr(self._current_loop, 'back_edge_block', None)
                     if _be_block is not None:
                         _chain_visited = {hdr.start_offset}
-                        _chain_cur = None
-                        for _succ_ft in hdr.successors:
-                            if _succ_ft.start_offset != _cond_break_instr.argval:
-                                _chain_cur = _succ_ft
-                                break
+                        # [W44 修复] fall-through 排除异常边（原则 2）。
+                        _chain_cur = self._fallthrough_successor_excluding(
+                            hdr, _cond_break_instr.argval)
                         _chain_limit = 0
                         while (_chain_cur is not None
                                and _chain_cur.start_offset not in _chain_visited
@@ -9830,7 +9877,32 @@ AST 映射规则:
                 self.generated_offsets.add(_b.start_offset)
         if _combined_cond is None:
             _combined_cond = self._build_while_combined_condition(region, _matching_loop)
-        _body_stmts = self._loop_generate_body(_matching_loop)
+        # [W43b 修复] 区域归约算法原则 2（每块唯一归属）：循环体生成必须携带
+        # 条件 BoolOp 上下文。CPython 3.11 在回边处复制 while 条件求值：多操作数
+        # and 条件的重检链末段与循环体末语句合并进同一基本块（本例 header 块
+        # 568 = ``df = df[:-1]`` + ``len(df) > 1`` 重检 + 假出口跳转）。
+        # _loop_generate_body → _loop_dispatch_block → _loop_handle_header 的
+        # 「融合闩锁重检尾抑制」判据要求 boolop_for_while 非 None（重检归条件，
+        # 循环体语句归循环体，二者不互相吞并）。恢复路径已知本循环的条件 BoolOp
+        # 区域（上一步 _combined_cond 即由此构建），但调用循环体生成器时未传入 →
+        # 上下文丢失 → 重检尾被渲染为循环体内伪 if-break（`if len(df) > 1: break`，
+        # 极性亦反），多出 7 条指令且语义改变。此处按结构关系传入同一 BoolOp
+        # 区域，使重检尾归条件归约（与 _loop_generate_while 路径一致）。
+        # [W45 修复] 区域归约算法原则 4（归约顺序/上下文）：循环体语句生成
+        # 需要「当前循环」上下文（self._current_loop）。_loop_extract_self_loop_stmts
+        # 依赖该上下文区分「回边条件重检」与「循环体内 if-break」——二者字节码
+        # 形态相同（块尾 FORWARD 条件跳转），只能靠回边链判据区分。恢复路径
+        # （IfRegion 被识别为 while）不经 _generate_loop，未设置该上下文 →
+        # 复合循环条件判定（_is_compound_loop_cond）整体跳过 → CPython 在回边
+        # 复制的条件重检被渲染成循环体内伪 `if len(df) > 1: break`（极性亦反）。
+        # 此处按结构身份设置上下文（本路径生成的正是 _matching_loop 的循环体），
+        # 生成完毕恢复原值（嵌套安全）。
+        _saved_loop_ctx = self._current_loop
+        self._current_loop = _matching_loop
+        try:
+            _body_stmts = self._loop_generate_body(_matching_loop, _boolop_child)
+        finally:
+            self._current_loop = _saved_loop_ctx
         _cleaned_body = []
         for _stmt in _body_stmts:
             if isinstance(_stmt, dict) and _stmt.get('type') == 'If':
@@ -18405,6 +18477,57 @@ AST 映射规则:
                     break
         if jump_target is None and fall_through is None:
             return None
+        # === 反编译逻辑：结构化 if 与 if-continue 的判别（W47） ===
+        #
+        # 区域归约算法原则 1（自底向上归约）+ 原则 2（每块唯一归属）：
+        # 若 block 已在识别阶段归约为 IfRegion 的条件块，且该 IfRegion 的
+        # merge_block 恰为本循环的 back_edge_block，则「跳向回边块」的语义是
+        # 【跳过 then 体、直达循环末尾】，即结构化 `if cond: body`；不是
+        # `if not cond: continue`。此处必须让位给 IfRegion 的正常生成路径，
+        # 否则同一个块被 continue 启发式二次归约（违反每块唯一归属）。
+        #
+        # 两种形态的字节码判别（CPython 3.11）：
+        #   (a) 结构化 if 位于循环体末尾：
+        #           for i in it:
+        #               ...
+        #               if cond:          # POP_JUMP_FORWARD_IF_FALSE → back_edge
+        #                   body_stmts    # fall-through，走完自然抵达 back_edge
+        #       条件跳转目标 == back_edge_block == IfRegion.merge_block，
+        #       fall-through 侧含实际语句。总指令数 = 1 条条件跳转。
+        #   (b) if-continue：
+        #           for i in it:
+        #               if cond:          # POP_JUMP_FORWARD_IF_FALSE → merge
+        #                   continue      # fall-through 仅 JUMP_BACKWARD
+        #               rest_stmts        # merge（普通块，非 back_edge_block）
+        #       条件跳转目标是 merge（普通块），fall-through 仅含跳转指令。
+        #
+        # 误判后果（add_end_flag，block 932 → jump 1598=back_edge）：
+        # 走 continue+normal 四组合映射生成 `if not cond: continue` +
+        # 平铺 then 体，重编译得 POP_JUMP_FORWARD_IF_TRUE + 额外
+        # JUMP_BACKWARD，比原始多 1 条指令（299 → 300），且条件极性反转，
+        # 自该处起 101 处 diff。
+        #
+        # 判据（三条同时满足才让位，保守）：
+        #   1. jump_target 就是本循环的 back_edge_block；
+        #   2. 存在 IfRegion 以 block 为 condition_block，且其 merge_block
+        #      正是该 back_edge_block（识别阶段已确认结构化 if）；
+        #   3. fall-through 侧含实际语句（排除纯 continue 块，即形态 (b)）。
+        _w47_be = getattr(loop, 'back_edge_block', None)
+        if (_w47_be is not None and jump_target is _w47_be
+                and fall_through is not None):
+            _w47_ft_meaningful = [
+                i for i in fall_through.instructions
+                if i.opname not in NOISE_OPS
+                and i.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+                                     'JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                and i.opname not in CONDITIONAL_JUMP_OPS
+                and i.opname not in SHORT_CIRCUIT_JUMP_OPS]
+            if _w47_ft_meaningful:
+                for _w47_r in self.regions:
+                    if (isinstance(_w47_r, IfRegion)
+                            and getattr(_w47_r, 'condition_block', None) is block
+                            and getattr(_w47_r, 'merge_block', None) is jump_target):
+                        return None
 
         def _is_continue_like(b):
             if b is None:
@@ -29733,6 +29856,18 @@ AST 映射规则:
 
             cond_expr = self.expr_reconstructor.reconstruct(filtered_cond)
 
+            # [R40 W45 修复] 记录前导语句切分后的 cond 扫描起点 offset。
+            # pre_stmts 扫描（POP_TOP/STORE 分支）把 cond block 前导的完整语句
+            # （如 repro_09 中三元条件前的 write0/1/2 三条语句）切到 pre_stmts，
+            # cond_start_idx 指向「三元条件栈上前导表达式」的起点（如 write3 的
+            # LOAD_FAST sheet）。_compute_ternary_cond_preload_exprs 须从该起点
+            # 扫描 preload，否则会因前导语句中的 STORE_* 误判整个前缀为
+            # pre-statement 而返回空列表，merge 块消费重建缺 preload 参数。
+            # 依「每块唯一归属」：前导语句归父序列 pre_stmts，栈上前导表达式
+            # 归 TernaryRegion 父消费表达式。
+            if cond_start_idx < len(cond_instrs):
+                region._ternary_cond_start_offset = cond_instrs[cond_start_idx].offset
+
         # 仅当 _nested_* 未预构建时，从 innermost true/false block 重建。
         if true_expr is None:
             true_expr = self._build_ternary_value_expr(true_block)
@@ -29951,6 +30086,19 @@ AST 映射规则:
                         results.append({'type': 'Return', 'value': _merge_consumer_expr})
                     else:
                         results.append({'type': 'Expr', 'value': _merge_consumer_expr})
+                    # [R40 W45b 修复] 区域归约算法原则 2（每块唯一归属）：
+                    # _try_build_ternary_merge_consumer_expr 已把 merge 块中
+                    # 「三元消费语句之后」的后续独立语句切到
+                    # post_consumer_extra_stmts（如 repro_09/10 与 creat_sheet2
+                    # 中三元内嵌 write 实参的 merge 块，其后还有 3-5 条
+                    # write + row += 1 + 回边）。此处必须一并发射，否则这些
+                    # 语句随 merge 块被标记 generated 后静默丢失（orig 93 →
+                    # decomp 58）。与 _consumer_stmt / chained container 两个
+                    # 分支的既有处理保持一致。
+                    _post_extra = getattr(
+                        region, 'post_consumer_extra_stmts', None)
+                    if _post_extra:
+                        results.extend(_post_extra)
                     for block in region.blocks:
                         self.generated_blocks.add(block)
                     return results
@@ -31607,7 +31755,27 @@ AST 映射规则:
                             # loop back edge 条件重检。后者不应被 ternary 发射为独立语句。
                             # 用 _loop_find_cond_start_idx 找到条件重检起点，只发射起点之前
                             # 的指令作为 extra statements（若有），跳过条件重检部分。
-                            _be_cond_start = self._loop_find_cond_start_idx(region.merge_block)
+                            _be_last = region.merge_block.get_last_instruction()
+                            if (_be_last is not None
+                                    and _be_last.opname == 'JUMP_BACKWARD'):
+                                # [R40 W45 修复] 无条件回边（for 循环尾，
+                                # repro_11 形态：merge 块 = STORE_side +
+                                # write3/4/5 + JUMP_BACKWARD）：没有条件重检段，
+                                # 回边指令本身即语句边界。旧逻辑把
+                                # _loop_find_cond_start_idx 作用于无条件回边块，
+                                # 其 LOAD_* 回溯会把 write5 中间的 LOAD_FAST t
+                                # 误判为条件重检起点，截断 write5 的 float(t[4])
+                                # 参数链（输出裸 `float` 残留）。修复：条件重检
+                                # 起点 = 末尾 JUMP_BACKWARD 的索引，STORE_* 之后、
+                                # 回边之前的全部指令都是后续独立语句。
+                                _be_cond_start = None
+                                for _bi_idx, _bi in enumerate(
+                                        region.merge_block.instructions):
+                                    if _bi is _be_last:
+                                        _be_cond_start = _bi_idx
+                                        break
+                            else:
+                                _be_cond_start = self._loop_find_cond_start_idx(region.merge_block)
                             if _be_cond_start is not None and _be_cond_start > 0:
                                 _be_merge_all = [i for i in region.merge_block.instructions
                                                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
@@ -31618,9 +31786,19 @@ AST 映射规则:
                                         _be_first_store = _bsi
                                         break
                                 if _be_first_store is not None:
-                                    _be_extra = _be_merge_all[_be_first_store + 1:_be_cond_start]
+                                    # 无条件回边时 _be_cond_start 基于原始指令索引
+                                    # （含 EXTENDED_ARG），需换算到去噪列表索引。
+                                    _be_cond_instr = region.merge_block.instructions[_be_cond_start]
+                                    _be_cond_instr_clean = None
+                                    for _bsi2, _bsinstr2 in enumerate(_be_merge_all):
+                                        if _bsinstr2 is _be_cond_instr:
+                                            _be_cond_instr_clean = _bsi2
+                                            break
+                                    if _be_cond_instr_clean is None:
+                                        _be_cond_instr_clean = len(_be_merge_all)
+                                    _be_extra = _be_merge_all[_be_first_store + 1:_be_cond_instr_clean]
                                     _be_extra = [i for i in _be_extra
-                                                 if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                                                 if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'EXTENDED_ARG')]
                                     if _be_extra:
                                         _be_extra_stmts = self._build_statements_from_instructions(list(_be_extra))
                                         while _be_extra_stmts and isinstance(_be_extra_stmts[-1], dict):
@@ -32463,6 +32641,20 @@ AST 映射规则:
             return []
         cond_instrs = [i for i in cond_block.instructions
                        if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+        # [R40 W45 修复] 前导语句切分后的扫描起点。
+        # _generate_ternary 的 pre_stmts 扫描可能已把 cond block 前导的完整
+        # 语句（POP_TOP/STORE 终结）切出（见 _ternary_cond_start_offset 注释）。
+        # 此时 preload 只能从切分起点之后扫描，否则前导语句中的 STORE_* 会
+        # 触发下方 STORE 检查误判整个前缀为 pre-statement，返回空列表。
+        # 依「每块唯一归属」：切分后的剩余指令（栈上前导表达式 + 条件）归属
+        # TernaryRegion；前导语句归父序列。判据为 offset（字节码偏移唯一），
+        # 不受噪声过滤差异影响。
+        _scan_start_offset = getattr(region, '_ternary_cond_start_offset', None)
+        if _scan_start_offset is not None:
+            for _k, _i in enumerate(cond_instrs):
+                if _i.offset == _scan_start_offset:
+                    cond_instrs = cond_instrs[_k:]
+                    break
         cond_last = cond_block.get_last_instruction()
         # Walk backwards from the conditional jump, tracking the required
         # stack depth, to find where the condition expression itself begins.
@@ -32485,6 +32677,15 @@ AST 映射规则:
             elif _ci.opname.startswith('LOAD_') or _ci.opname == 'COPY':
                 _push = 1
             elif _ci.opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP'):
+                _push = 1
+                _pop = 2
+            elif _ci.opname == 'BINARY_SUBSCR':
+                # [R40 W45 修复] 下标访问净效应 (push 1, pop 2)。
+                # cond 测试含下标链（t[3] > 0）时，缺此条目会让 backward
+                # needed 扫描少算 1，条件起点回溯到 LOAD_FAST t（条件左操作数）
+                # 之前，把条件左操作数误并入 preload（repro_09 preload 多出
+                # Name(t)），merge 块消费重建的 Call 参数错位（func=i）。
+                # 与 _generate_ternary 的 R102 修复（cond_val_start 扫描）同表。
                 _push = 1
                 _pop = 2
             elif _ci.opname == 'BINARY_OP':
@@ -34538,6 +34739,51 @@ AST 映射规则:
         if not merge_all:
             return None
 
+        # [R40 W45 修复] 语句切分：merge 块可能承载「三元消费语句」+ 多条
+        # 后续独立语句 + 循环回边（如 creat_sheet2 中三元内嵌 write 实参，
+        # merge 块含 CALL write 收尾 + 后续 4 条 write + row += 1 +
+        # JUMP_BACKWARD；repro_09/10 同构）。依「每块唯一归属」：三元消费
+        # 语句（到第一个语句终结符 POP_TOP/RETURN）归属 TernaryRegion 父
+        # 表达式；消费语句之后的指令归属父序列（独立语句），由调用方经
+        # post_consumer_extra_stmts 发射。判据为栈纪律（语句终结符），非
+        # 形态启发式。
+        _stmt_end_idx = None
+        for _mi_idx, _mi in enumerate(merge_all):
+            if _mi.opname in ('POP_TOP', 'RETURN_VALUE', 'RETURN_CONST'):
+                _stmt_end_idx = _mi_idx
+                break
+        if _stmt_end_idx is not None and _stmt_end_idx + 1 < len(merge_all):
+            _rest_instrs = merge_all[_stmt_end_idx + 1:]
+            merge_all = merge_all[:_stmt_end_idx + 1]
+            _rest_clean = [i for i in _rest_instrs
+                           if i.opname not in ('RESUME', 'NOP', 'CACHE',
+                                               'PUSH_NULL', 'EXTENDED_ARG')]
+            # 剥离尾部回边（JUMP_BACKWARD 等，属循环控制流，非语句内容）
+            while (_rest_clean and _rest_clean[-1].opname in
+                   ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')):
+                _rest_clean = _rest_clean[:-1]
+            # 剥离尾部隐式 return None（由外层函数补齐）
+            while _rest_clean and _rest_clean[-1].opname in (
+                    'RETURN_VALUE', 'RETURN_CONST'):
+                _rest_clean = _rest_clean[:-1]
+                if (_rest_clean and _rest_clean[-1].opname == 'LOAD_CONST'
+                        and _rest_clean[-1].argval is None):
+                    _rest_clean = _rest_clean[:-1]
+            if _rest_clean:
+                _rest_stmts = self._build_statements_from_instructions(
+                    list(_rest_clean))
+                while _rest_stmts and isinstance(_rest_stmts[-1], dict):
+                    _rl = _rest_stmts[-1]
+                    if (_rl.get('type') == 'Return'
+                            and isinstance(_rl.get('value'), dict)
+                            and _rl['value'].get('type') == 'Constant'
+                            and _rl['value'].get('value') is None):
+                        _rest_stmts = _rest_stmts[:-1]
+                        continue
+                    break
+                if _rest_stmts:
+                    region.post_consumer_extra_stmts = _rest_stmts
+
         # assert statement's failure path puts
         # LOAD_ASSERTION_ERROR + RAISE_VARARGS in merge_block. The assert
         # infrastructure has its own handler; reconstruct would treat the
@@ -34694,13 +34940,33 @@ AST 映射规则:
             or _has_ternary_as_callable
             or _has_binop_consumer
         )
-        if not _should_reconstruct:
-            return None
-
         # Use expr_reconstructor to rebuild the full expression.
         # initial_stack = preload_exprs + [ternary_expr] — the stack state
         # just before merge_block instructions start executing.
         initial_stack = list(preload_exprs) + [ternary_expr]
+        if not _should_reconstruct:
+            # [R40 W45 修复] 语句级 fci 调用消费：ternary 作为方法/函数调用
+            # 实参的表达式语句（`sheet.write(i, 3, '买' if c else '卖')`），
+            # merge 块消费部分为 [PRECALL N, CALL N, POP_TOP]，func_call_info
+            # 已记录 callable。旧逻辑在 _has_call_chain（merge 块含多条语句
+            # 的多个 CALL）误判下把整块 reconstruct 成畸形调用链；切分后消费
+            # 部分只剩单 CALL，此处用 preload + ternary 重建 Call 表达式。
+            # 依「父引用子入口」：父 Call 通过 merge_block 的 PRECALL+CALL
+            # 引用 ternary 子节点 + preload 中的兄弟参数（含 LOAD_METHOD 合并
+            # 的 receiver，_split_preload_into_siblings 已产出 Attribute）。
+            # 依「每块唯一归属」：消费指令归属 TernaryRegion 父表达式（Call），
+            # 消费后的后续语句已切到 post_consumer_extra_stmts 归父序列。
+            if (region.func_call_info
+                    and any(i.opname == 'CALL' for i in merge_all)):
+                _fci_instrs = list(merge_all)
+                if _fci_instrs and _fci_instrs[-1].opname == 'POP_TOP':
+                    _fci_instrs = _fci_instrs[:-1]
+                _fci_expr = self.expr_reconstructor.reconstruct(
+                    _fci_instrs, initial_stack=initial_stack)
+                if _fci_expr is not None:
+                    return _fci_expr
+            return None
+
         full_expr = self.expr_reconstructor.reconstruct(
             merge_all, initial_stack=initial_stack)
         # Wrap in Await if GET_AWAITABLE was stripped.
