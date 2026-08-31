@@ -5378,7 +5378,6 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                                 if _r101_break_fused:
                                     break_blocks_set.add(s)
                                     continue
-                                # 含有效用户代码，不是纯 break 目标，跳过
                                 continue
                             break_blocks_set.add(s)
                 elif s == natural_exit and ne_is_terminator:
@@ -13758,7 +13757,17 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                             else_last and else_last.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
                         )
                         if not is_if_break_pattern:
-                            return True
+                            _then_jumps_out = False
+                            if then_last and then_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE') and then_last.argval is not None:
+                                _then_jt = self.cfg.get_block_by_offset(then_last.argval)
+                                if _then_jt is not None and _then_jt not in block_region.blocks:
+                                    _then_jumps_out = True
+                            is_if_break_else_continue = (
+                                else_last and else_last.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                                and _then_jumps_out
+                            )
+                            if not is_if_break_else_continue:
+                                return True
                     else:
                         return True
                 cond_succs = list(block.conditional_successors)

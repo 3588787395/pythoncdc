@@ -6798,6 +6798,45 @@ AST 映射规则:
                          else_role in (BlockRole.BREAK, BlockRole.PURE_BREAK))
                     )
                 if is_if_break_pattern and region.is_while_true:
+                    _break_or_return_block = None
+                    for _succ_br in block.successors:
+                        _sr = self.region_analyzer.get_block_role(_succ_br)
+                        if _sr in (BlockRole.BREAK, BlockRole.PURE_BREAK, BlockRole.RETURN, BlockRole.RETURN_NONE):
+                            _break_or_return_block = _succ_br
+                            break
+                        if _sr == BlockRole.LOOP_BODY:
+                            if any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in _succ_br.instructions):
+                                _break_or_return_block = _succ_br
+                                break
+                    _break_has_meaningful_body = False
+                    if _break_or_return_block:
+                        _br_meaningful = [i for i in _break_or_return_block.instructions
+                                          if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP')
+                                          and i.opname not in ('JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                                                               'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                                          and i.opname not in ('RETURN_VALUE', 'RETURN_CONST')
+                                          and not (i.opname == 'LOAD_CONST' and i.argval is None)]
+                        if len(_br_meaningful) > 1:
+                            _break_has_meaningful_body = True
+                    if _break_has_meaningful_body and _header_if_region is not None:
+                        _if_id_p41 = id(_header_if_region)
+                        if _if_id_p41 not in self._generated_regions and _if_id_p41 not in self._generating_regions:
+                            _if_ast_p41 = self._generate_if(_header_if_region)
+                            if _if_ast_p41:
+                                if isinstance(_if_ast_p41, list):
+                                    body_stmts.extend(_if_ast_p41)
+                                else:
+                                    body_stmts.append(_if_ast_p41)
+                            for _b in _header_if_region.blocks:
+                                self.generated_blocks.add(_b)
+                            self._generated_regions.add(_if_id_p41)
+                        for _s in block.successors:
+                            _s_role = self.region_analyzer.get_block_role(_s)
+                            if _s_role in (BlockRole.BREAK, BlockRole.PURE_BREAK, BlockRole.RETURN, BlockRole.RETURN_NONE):
+                                self.generated_blocks.add(_s)
+                        self.generated_blocks.add(block)
+                        self.generated_offsets.add(block.start_offset)
+                        return
                     instrs = [i for i in block.instructions
                              if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
                     jump_instr = None
@@ -6835,10 +6874,6 @@ AST 映射规则:
                                 if test_expr and test_expr.get('type') == 'Expr':
                                     test_expr = test_expr.get('value')
                             if test_expr:
-                                # Phase 41修复: 循环内if+return值保持为return而非break
-                                # 当循环中"if cond: return <value>"被误识别为"if cond: break"时，
-                                # 字节码会多出else: return None且丢失返回值。
-                                # 检测then_succ是否包含RETURN_VALUE/RETURN_CONST且有实际返回值。
                                 _break_or_return_block = None
                                 for _succ_br in block.successors:
                                     _sr = self.region_analyzer.get_block_role(_succ_br)
@@ -6856,7 +6891,12 @@ AST 映射规则:
                                                    if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP')
                                                    and i.opname not in ('RETURN_VALUE', 'RETURN_CONST')]
                                     if _br_instrs and _br_instrs[0].opname in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF'):
-                                        if not _is_module:
+                                        _has_meaningful_body = any(
+                                            i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+                                                        'STORE_ATTR', 'STORE_SUBSCR', 'CALL')
+                                            for i in _br_instrs[1:]
+                                        )
+                                        if not _has_meaningful_body and not _is_module:
                                             _return_val = {'type': 'Name', 'id': _br_instrs[0].argval, 'ctx': 'Load'}
                                     elif _br_instrs and _br_instrs[0].opname == 'LOAD_CONST' and _br_instrs[0].argval is not None:
                                         if not _is_module:
@@ -14399,7 +14439,34 @@ AST 映射规则:
             then_stmts = self._if_generate_then_branch(region)
             for b in _elif_exclude:
                 self.generated_blocks.discard(b)
+            if (not region.else_blocks
+                    and getattr(region, 'merge_block', None) is not None
+                    and self._current_loop is not None):
+                _mb_last = region.merge_block.get_last_instruction()
+                if (_mb_last is not None
+                        and _mb_last.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                        and _mb_last.argval is not None):
+                    _mb_target = self.cfg.get_block_by_offset(_mb_last.argval)
+                    _loop_hdr = getattr(self._current_loop, 'header_block', None)
+                    _loop_cond = getattr(self._current_loop, 'condition_block', None)
+                    if _mb_target is not None and _mb_target in (_loop_hdr, _loop_cond):
+                        _mb_meaningful = [i for i in region.merge_block.instructions
+                                          if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP')
+                                          and i.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+                                                               'JUMP_FORWARD', 'JUMP_ABSOLUTE')]
+                        if not _mb_meaningful:
+                            region.else_blocks = [region.merge_block]
+                            region.merge_block = None
             else_stmts = self._if_generate_else_branch(region)
+            if (else_stmts
+                    and len(else_stmts) == 1
+                    and isinstance(else_stmts[0], dict)
+                    and else_stmts[0].get('type') == 'Continue'
+                    and self._current_loop is not None):
+                else_stmts = []
+                for b in (region.else_blocks or []):
+                    self.generated_blocks.discard(b)
+                    self.generated_offsets.discard(b.start_offset)
             if _inner_ir_with_else is not None and not else_stmts:
                 for b in _inner_ir_with_else.else_blocks:
                     self.generated_blocks.discard(b)
@@ -17561,20 +17628,6 @@ AST 映射规则:
                 self.generated_blocks.add(block)
                 self.generated_offsets.add(block.start_offset)
                 continue
-            if role == BlockRole.IF_THEN and self._current_loop:
-                _ift_last = block.get_last_instruction()
-                if _ift_last and _ift_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
-                    _ift_target = self.cfg.get_block_by_offset(_ift_last.argval) if _ift_last.argval is not None else None
-                    if _ift_target and _ift_target not in getattr(self._current_loop, 'body_blocks', []):
-                        if _ift_target != getattr(self._current_loop, 'header_block', None):
-                            _ift_meaningful = [i for i in block.instructions
-                                               if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP')
-                                               and i.opname not in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')]
-                            if not _ift_meaningful:
-                                stmts.append({'type': 'Break'})
-                                self.generated_blocks.add(block)
-                                self.generated_offsets.add(block.start_offset)
-                                continue
             if role in (BlockRole.CONTINUE, BlockRole.PURE_CONTINUE):
                 _meaningful_instrs = [
                     i for i in block.instructions
