@@ -37331,6 +37331,62 @@ AST 映射规则:
                                 return _w23_prefix_stmts
                         break
 
+        # [W24 fix] With-block return via successor SWAP+__exit__+RETURN:
+        # CPython 3.11 compiles `return <expr>` inside a with block as:
+        #   current_block: <expr_instrs> + CALL  (no RETURN_VALUE)
+        #   successor_block: SWAP n + LOAD_CONST None*3 + PRECALL + CALL + POP_TOP + RETURN_VALUE
+        # The successor is the with __exit__ cleanup + return. Without this
+        # detection, the expr is emitted as Expr statement (losing `return`),
+        # and the successor is swallowed by with-exit-cleanup handling.
+        # Fix: detect the pattern, reconstruct return value from current block
+        # instructions, mark both blocks as generated, emit Return node.
+        _w24_last = block.get_last_instruction()
+        if (_w24_last is not None
+                and _w24_last.opname == 'CALL'
+                and len(block.instructions) >= 2):
+            for _w24_succ in block.successors:
+                _w24_succ_m = [i for i in _w24_succ.instructions
+                               if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                if (len(_w24_succ_m) >= 5
+                        and _w24_succ_m[0].opname == 'SWAP'
+                        and _w24_succ_m[-1].opname == 'RETURN_VALUE'
+                        and _w24_succ_m[-2].opname == 'POP_TOP'):
+                    _w24_has_exit_call = False
+                    for _w24_si in range(len(_w24_succ_m)):
+                        if _w24_succ_m[_w24_si].opname == 'CALL' and _w24_si > 0:
+                            _w24_has_exit_call = True
+                            break
+                    if _w24_has_exit_call:
+                        _w24_val_instrs = [i for i in block.instructions
+                                           if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                        _w24_last_store = -1
+                        for _w24_vi, _w24_vinstr in enumerate(_w24_val_instrs):
+                            if _w24_vinstr.opname.startswith('STORE_'):
+                                _w24_last_store = _w24_vi
+                        if _w24_last_store >= 0:
+                            _w24_pre = _w24_val_instrs[:_w24_last_store + 1]
+                            _w24_ret = _w24_val_instrs[_w24_last_store + 1:]
+                        else:
+                            _w24_pre = []
+                            _w24_ret = _w24_val_instrs
+                        _w24_stmts = []
+                        if _w24_pre:
+                            _w24_pre_stmts = self._build_statements_from_instructions(_w24_pre, block)
+                            if _w24_pre_stmts:
+                                _w24_stmts.extend(_w24_pre_stmts)
+                        _w24_ret_val = self.expr_reconstructor.reconstruct(_w24_ret) if _w24_ret else None
+                        if _w24_ret_val is not None:
+                            _w24_stmts.append({
+                                'type': 'Return',
+                                '_explicit_return': True,
+                                'value': _w24_ret_val,
+                            })
+                            self.generated_blocks.add(block)
+                            self.generated_offsets.add(block.start_offset)
+                            self.generated_blocks.add(_w24_succ)
+                            self.generated_offsets.add(_w24_succ.start_offset)
+                            return _w24_stmts
+
         import os as _os_dbg
         if _os_dbg.environ.get('R23N6_DEBUG2'):
             _has_bt2 = any(i.opname == 'BUILD_TUPLE' and i.arg == 2 for i in block.instructions)
