@@ -38028,9 +38028,30 @@ AST 映射规则:
                                     _remaining_instrs = _chain_instrs[_last_store_idx + 1:]
                                     if _remaining_instrs:
                                         _has_return = any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in _remaining_instrs)
+                                        _rem_clean = [i for i in _remaining_instrs
+                                                      if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
+                                                                          'POP_EXCEPT', 'PUSH_EXC_INFO')]
+                                        while _rem_clean and _rem_clean[-1].opname in (
+                                                'JUMP_FORWARD', 'JUMP_BACKWARD',
+                                                'JUMP_BACKWARD_NO_INTERRUPT', 'JUMP_ABSOLUTE'):
+                                            _rem_clean.pop()
+                                        _has_inner_jump = any(i.opname.startswith('JUMP')
+                                                              or i.opname.startswith('POP_JUMP')
+                                                              or i.opname == 'FOR_ITER'
+                                                              for i in _rem_clean)
+                                        _ret_cut = len(_rem_clean)
+                                        for _ii, _instr in enumerate(_rem_clean):
+                                            if _instr.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                                                _ret_cut = _ii
+                                                break
+                                        _pre_ret = _rem_clean[:_ret_cut]
+                                        if _pre_ret and not _has_inner_jump:
+                                            _sibling_stmts = self._build_statements_from_instructions(_pre_ret)
+                                            if _sibling_stmts:
+                                                _chain_stmts.extend(_sibling_stmts)
                                         if _has_return:
                                             _rv_instrs = []
-                                            for _instr in _remaining_instrs:
+                                            for _instr in _rem_clean:
                                                 if _instr.opname in ('RETURN_VALUE', 'RETURN_CONST'):
                                                     break
                                                 if _instr.opname not in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL',
@@ -38252,7 +38273,6 @@ AST 映射规则:
                                 _last_store_idx_m = _mixed_store_indices[_last_si_m][0]
                                 _remaining_m = _chain_instrs[_last_store_idx_m + 1:]
                                 if _remaining_m:
-                                    # 以首个 RETURN 为界拆分：链后兄弟语句体 + 返回值
                                     _cut_m = len(_remaining_m)
                                     for _ii, _instr in enumerate(_remaining_m):
                                         if _instr.opname in ('RETURN_VALUE', 'RETURN_CONST'):
@@ -38264,24 +38284,25 @@ AST 映射规则:
                                                      if i.opname not in ('RESUME', 'NOP', 'CACHE',
                                                                          'COPY', 'SWAP', 'PUSH_NULL',
                                                                          'POP_EXCEPT', 'PUSH_EXC_INFO')]
-                                    _has_jump_m = any(i.opname.startswith('JUMP')
-                                                      or i.opname.startswith('POP_JUMP')
-                                                      or i.opname == 'FOR_ITER'
-                                                      for i in _body_clean_m)
-                                    _last_store_pos_m = -1
-                                    for _ii, _instr in enumerate(_body_clean_m):
-                                        if (_instr.opname.startswith('STORE_')
-                                                or _instr.opname in ('STORE_SUBSCR', 'STORE_ATTR')):
-                                            _last_store_pos_m = _ii
-                                    if _body_clean_m and not _has_jump_m:
-                                        # 链后兄弟语句（无跳转直线段）通用重建
+                                    while _body_clean_m and _body_clean_m[-1].opname in (
+                                            'JUMP_FORWARD', 'JUMP_BACKWARD',
+                                            'JUMP_BACKWARD_NO_INTERRUPT', 'JUMP_ABSOLUTE'):
+                                        _body_clean_m.pop()
+                                    _has_inner_jump_m = any(i.opname.startswith('JUMP')
+                                                            or i.opname.startswith('POP_JUMP')
+                                                            or i.opname == 'FOR_ITER'
+                                                            for i in _body_clean_m)
+                                    if _body_clean_m and not _has_inner_jump_m:
                                         _tail_stmts_m = self._build_statements_from_instructions(
-                                            _body_clean_m[:_last_store_pos_m + 1])
+                                            _body_clean_m)
                                         if _tail_stmts_m:
                                             _mixed_chain_stmts.extend(_tail_stmts_m)
                                     if _has_ret_m:
-                                        # 返回值：最后一个 STORE 之后的装载序列
-                                        _rv_instrs_m = _body_clean_m[_last_store_pos_m + 1:]
+                                        _rv_instrs_m = [i for i in _remaining_m[_cut_m + 1:]
+                                                        if i.opname not in ('RESUME', 'NOP', 'CACHE',
+                                                                            'POP_TOP', 'PUSH_NULL',
+                                                                            'COPY', 'SWAP',
+                                                                            'POP_EXCEPT', 'PUSH_EXC_INFO')]
                                         _return_value_m = self.expr_reconstructor.reconstruct(_rv_instrs_m) if _rv_instrs_m else None
                                         _mixed_chain_stmts.append({
                                             'type': 'Return',
