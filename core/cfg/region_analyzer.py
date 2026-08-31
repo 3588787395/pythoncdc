@@ -19396,6 +19396,36 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
 
         def _create_ternary_region_from_pattern(pattern):
             block = pattern['block']
+            _detector_r39 = get_opcode_detector()
+            # [R39 值块纯度守卫（W40）] 三元值块是表达式块：true/false 值块
+            # 含非 walrus 的 STORE_* 语句指令时拒绝创建。某些放松路径
+            # （如 has_jump_forward_skip / 嵌套三元接纳）会绕过
+            # _is_ternary_block 的单表达式校验——get_history 中
+            # `if A and not include or C:` 的菱形（值块 = [get_previous(...)
+            # 调用 + STORE query_date + STORE include + JUMP_FORWARD]）
+            # 被误识别为嵌套三元链（152/194/198），值块中的赋值语句与
+            # else 体语句全部丢失。walrus 值块（COPY 1 + STORE_* 对，原值
+            # 留栈）是合法值块形态，豁免。触发即 return None，交由
+            # IfRegion 按语句级结构归约（区域归约算法「一次正确」：
+            # 表达式级区域不得吞并语句级块）。
+            for _vb40 in (pattern.get('true_block'), pattern.get('false_block')):
+                if _vb40 is None:
+                    continue
+                _vb40_eff = [i for i in _vb40.instructions
+                             if i.opname not in NOISE_OPS]
+                while (_vb40_eff
+                        and _detector_r39.is_unconditional_jump(
+                            _vb40_eff[-1])):
+                    _vb40_eff.pop()
+                for _vi40, _vinstr40 in enumerate(_vb40_eff):
+                    if _detector_r39.is_any_store(_vinstr40):
+                        _prev40 = (_vb40_eff[_vi40 - 1]
+                                   if _vi40 > 0 else None)
+                        if (_prev40 is not None
+                                and _detector_r39.is_copy(_prev40)
+                                and _prev40.arg == 1):
+                            continue
+                        return None
             region = TernaryRegion(
                 region_type=RegionType.TERNARY,
                 entry=block,
