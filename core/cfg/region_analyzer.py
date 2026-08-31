@@ -21208,6 +21208,25 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                         # _tv_ft is a JUMP_FORWARD intermediate block.
                         if _tv_ft not in self.block_to_region:
                             region_blocks.add(_tv_ft)
+        # [R38 操作数纯度校验（W38）] 链操作数是表达式级块：除 entry 外，
+        # 任何 op_chain 操作数含 STORE_* 语句指令即拒绝创建。entry 的
+        # 前置语句前缀（条件起始之前的赋值/调用）经 _cond_start_offset
+        # 栈回溯豁免，是「前序语句 + 条件」的合法形态；而非 entry 操作数
+        # 含 STORE 意味着链跨越了语句边界——如 assure_asset 中
+        #   asset_code = endswith_transe_2to4(...); asset_obj = BaseAsset();
+        #   asset_obj._symbol = ...; ... if need_asset_result and asset_obj: ...
+        # 的多语句块被吸收为 'and' 操作数，整个 if 体（语句 + raise）被
+        # 折叠成单条 and/or return 表达式，语句全丢、raise 消失。
+        # walk 循环对非首块已有 STORE break，但最终链可能经其它组装路径
+        # 合并绕过；此处是创建前的全局不变量门（区域归约算法「一次正确」：
+        # 表达式级区域不得吞并语句级块），触发时 return None 交由
+        # IfRegion 按语句级结构归约。
+        _detector_r38 = get_opcode_detector()
+        for _pcb, _pop38 in chain:
+            if _pcb is start_block:
+                continue
+            if any(_detector_r38.is_any_store(i) for i in _pcb.instructions):
+                return None
         region = BoolOpRegion(
             region_type=RegionType.BOOL_OP,
             entry=start_block,

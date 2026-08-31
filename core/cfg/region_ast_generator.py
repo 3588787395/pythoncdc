@@ -99,6 +99,14 @@ from .ast_generator_v2 import ExpressionReconstructor
 from .comprehension_generator import ComprehensionGenerator
 from .opcode_feature_detector import get_opcode_detector
 
+# [R38] 三元条件负极性跳转集合：CPython 把三元/条件中的 `not <expr>` 折叠进
+# 条件跳转极性（IF_TRUE 直接跳 else 值路径），不发射 UNARY_NOT。反编译侧据
+# 条件块末指令是否属于本集合还原源码形态的 `not <expr>`（见
+# _generate_ternary 的 R38 负极性还原）。与 _TRUE_JUMP_OPS_R20N1 同判据。
+_TRUE_POLARITY_COND_JUMP_OPS = frozenset({
+    'POP_JUMP_IF_TRUE', 'POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_BACKWARD_IF_TRUE',
+})
+
 
 class _IfRegionProxy:
     """[Phase 7 根因 A] IfRegion-like 代理，供 while 条件路径复用 if 条件路径的
@@ -29789,6 +29797,30 @@ AST 映射规则:
                 false_expr = _shared_orelse
                 _folded_inner_ternaries = True
 
+        # [R38 负极性还原（W39）] 三元条件的源码为 `not <expr>` 时，CPython
+        # 将 not 折叠进条件跳转极性（POP_JUMP_FORWARD_IF_TRUE / POP_JUMP_IF_
+        # TRUE 直接跳 else 值路径），不发射 UNARY_NOT。反编译侧必须还原
+        # `not <expr>`（UnaryOp Not），否则输出的 `X if C else Y` 重编译为
+        # POP_JUMP_FORWARD_IF_FALSE，与原字节码逐指令极性不一致
+        # （base_position.last_price：`X if not np.isnan(...) else Y`）。
+        # 判据（结构性）：无 BoolOp 条件链（chain_blocks<=1，and/or 链的
+        # 极性由链首块承载，不适用）、无 chained compare、条件块末指令为
+        # IF_TRUE 族。语义不变（Jump 目标即 else 值路径），仅恢复源码形态
+        # 使重编译逐指令一致。
+        _r38_cond_last = (cond_block.get_last_instruction()
+                          if cond_block is not None else None)
+        if (cond_expr is not None
+                and _r38_cond_last is not None
+                and _r38_cond_last.opname in _TRUE_POLARITY_COND_JUMP_OPS
+                and not (region.condition_chain_blocks
+                         and len(region.condition_chain_blocks) > 1)
+                and not getattr(region, 'chained_compare_ops', None)):
+            cond_expr = {
+                'type': 'UnaryOp',
+                'op': 'not',
+                'operand': cond_expr,
+            }
+
         if cond_expr and true_expr and false_expr:
             ternary_expr = {
                 'type': 'IfExp',
@@ -30627,17 +30659,38 @@ AST 映射规则:
                     # 当条件块包含PUSH_NULL+LOAD func前缀且merge块有PRECALL/CALL时，
                     # 需要将ternary包装为Call表达式
                     func_call_info = region.func_call_info
+                    # [R38 位置校验（W39）] 仅当 CALL 位于值消费 STORE 之前
+                    # （`result = func(ternary)`：PUSH_NULL f + <ternary> +
+                    # CALL + STORE，CALL 在 before_store 段内）时才包装。
+                    # CALL 在 STORE 之后（如 `last_price = <ternary>` 后随
+                    # `if np.isnan(last_price):`——cond 块首部的 LOAD_GLOBAL np
+                    # 是后随语句条件的函数装载，被 _detect_ternary_context
+                    # 误记为 func_call_info）时，CALL 操作的是已存变量而非
+                    # 三元结果，包装会凭空造出 `last_price = np(<ternary>)`，
+                    # 丢掉 LOAD_ATTR 并引入多余调用指令。
+                    has_call = any(
+                        i.opname in ('PRECALL', 'CALL') for i in merge_all)
+                    _call_before_store = (
+                        store_idx is not None
+                        and store_idx > 0
+                        and any(self.detector.is_call(i)
+                                or self.detector.is_precall(i)
+                                for i in merge_all[:store_idx]))
                     if func_call_info and not preload_exprs:
                         # 检查merge块是否有CALL指令
-                        has_call = any(i.opname in ('PRECALL', 'CALL') for i in merge_all)
                         if has_call:
-                            call_expr = {
-                                'type': 'Call',
-                                'func': func_call_info['func'],
-                                'args': func_call_info.get('args', []) + [ternary_expr],
-                                'keywords': [],
-                            }
-                            ternary_expr = call_expr
+                            if not _call_before_store:
+                                # CALL 全部位于 STORE 之后：func_call_info
+                                # 是后随语句的陈旧上下文，不包装。
+                                pass
+                            else:
+                                call_expr = {
+                                    'type': 'Call',
+                                    'func': func_call_info['func'],
+                                    'args': func_call_info.get('args', []) + [ternary_expr],
+                                    'keywords': [],
+                                }
+                                ternary_expr = call_expr
                     initial_stack = list(preload_exprs) + [ternary_expr]
                     if store_idx is not None and (store_idx > 0 or preload_exprs):
                         before_store = merge_all[:store_idx]
@@ -32111,6 +32164,24 @@ AST 映射规则:
         _last_consume = consuming[-1]
 
         test_expr = None
+
+        # [R38 守卫（W39）] consuming 以本三元的值消费 STORE 开头：merge 块
+        # 首部的 STORE_*（目标 == value_target，或 STORE_SUBSCR/STORE_ATTR）
+        # 已消费三元结果存入变量，其后的 POP_JUMP 条件（如
+        # `if np.isnan(last_price): raise ...`）读取的是该变量而非栈上值。
+        # 此时三元不是 if 条件的操作数——若仍按模式 3 匹配，会把值赋值
+        # 整体丢失、并把 IfExp 替换进后随条件的操作数位置（输出
+        # `if np(<ternary>): pass`）。依「每块唯一归属」：merge 块的
+        # pre-STORE 是本三元的值消费（由 merge_context='store' +
+        # value_target 路径发射 `var = <ternary>`），post-STORE 条件归
+        # 后随 IfRegion 归约。返回 None 走正确路径。
+        if (consuming
+                and self.detector.is_any_store(consuming[0])
+                and (self.detector.is_store_subscr(consuming[0])
+                     or self.detector.is_store_attr(consuming[0])
+                     or (getattr(region, 'value_target', None) is not None
+                         and consuming[0].argval == region.value_target))):
+            return None
 
         # 模式 1: walrus (COPY + STORE_NAME)
         # consuming 必须以 STORE_* 结尾
