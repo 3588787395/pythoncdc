@@ -29808,7 +29808,14 @@ AST 映射规则:
                                 'targets': [{'type': 'Name', 'id': instr.argval, 'ctx': 'Store'}],
                                 'value': val_expr,
                             })
-                        cond_start_idx = i + 1
+                            cond_start_idx = i + 1
+                        else:
+                            _pred_instrs = list(cond_instrs[cond_start_idx:i + 1])
+                            _pred_stmts = self._build_statements_from_instructions(
+                                _pred_instrs)
+                            if _pred_stmts:
+                                pre_stmts.extend(_pred_stmts)
+                            cond_start_idx = i + 1
                     else:
                         # 区域归约算法原则 2（每块唯一归属）：
                         # 当 STORE_* 前驱含非 LOAD_ 指令（如 UNPACK_SEQUENCE、
