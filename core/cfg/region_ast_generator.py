@@ -23385,12 +23385,56 @@ AST 映射规则:
                 stmt_instrs = []
                 continue
             if instr.opname == 'STORE_SUBSCR':
+                if _bsi_unpack_info is not None:
+                    _sub_instrs = [i for i in stmt_instrs
+                                   if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                    if len(_sub_instrs) >= 2:
+                        _key_expr = self.expr_reconstructor.reconstruct([_sub_instrs[-1]])
+                        _obj_expr = self.expr_reconstructor.reconstruct(_sub_instrs[:-1])
+                        _target = {'type': 'Subscript',
+                                   'value': _obj_expr,
+                                   'slice': _key_expr,
+                                   'ctx': 'Store'}
+                        _bsi_unpack_info['targets'].append(_target)
+                        if len(_bsi_unpack_info['targets']) == _bsi_unpack_info['count']:
+                            target = {'type': 'Tuple',
+                                      'elts': _bsi_unpack_info['targets'],
+                                      'ctx': 'Store'}
+                            if _bsi_unpack_info['value']:
+                                stmts.append({'type': 'Assign',
+                                              'targets': [target],
+                                              'value': _bsi_unpack_info['value']})
+                            _bsi_unpack_info = None
+                        stmt_instrs = []
+                        continue
                 stmt = self._build_subscript_assign(stmt_instrs + [instr])
                 if stmt:
                     stmts.append(stmt)
                 stmt_instrs = []
                 continue
             if instr.opname == 'STORE_ATTR':
+                if _bsi_unpack_info is not None:
+                    _sa_instrs = [i for i in stmt_instrs
+                                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                    if _sa_instrs:
+                        _attr_name = instr.argval
+                        _obj_expr = self.expr_reconstructor.reconstruct(_sa_instrs)
+                        _target = {'type': 'Attribute',
+                                   'value': _obj_expr,
+                                   'attr': _attr_name,
+                                   'ctx': 'Store'}
+                        _bsi_unpack_info['targets'].append(_target)
+                        if len(_bsi_unpack_info['targets']) == _bsi_unpack_info['count']:
+                            target = {'type': 'Tuple',
+                                      'elts': _bsi_unpack_info['targets'],
+                                      'ctx': 'Store'}
+                            if _bsi_unpack_info['value']:
+                                stmts.append({'type': 'Assign',
+                                              'targets': [target],
+                                              'value': _bsi_unpack_info['value']})
+                            _bsi_unpack_info = None
+                        stmt_instrs = []
+                        continue
                 stmt = self._build_attr_assign(stmt_instrs + [instr])
                 if stmt:
                     stmts.append(stmt)
