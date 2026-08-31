@@ -8890,7 +8890,19 @@ AST 映射规则:
                         self.generated_blocks.add(_then_succ)
                         self.generated_offsets.add(_then_succ.start_offset)
                 else:
-                    _then_stmts = self._generate_block_statements(_then_succ)
+                    _then_entry_region = self.region_analyzer.get_entry_region_for_block(_then_succ)
+                    if _then_entry_region is not None and _then_entry_region.entry is _then_succ and _then_succ not in self.generated_blocks:
+                        _then_region_id = id(_then_entry_region)
+                        if _then_region_id not in self._generated_regions and _then_region_id not in self._generating_regions:
+                            _then_ast = self._generate_region(_then_entry_region)
+                            _then_stmts = _then_ast if isinstance(_then_ast, list) else [_then_ast] if _then_ast else []
+                            for _b in _then_entry_region.blocks:
+                                self.generated_blocks.add(_b)
+                            self._generated_regions.add(_then_region_id)
+                        else:
+                            _then_stmts = self._generate_block_statements(_then_succ)
+                    else:
+                        _then_stmts = self._generate_block_statements(_then_succ)
                     if not _then_stmts:
                         _then_stmts = [{'type': 'Pass'}]
                 # [R02 fix] 同 then 分支：CONTINUE 角色但含有效语句时保留语句
@@ -8906,7 +8918,19 @@ AST 映射规则:
                         self.generated_blocks.add(_else_succ)
                         self.generated_offsets.add(_else_succ.start_offset)
                 else:
-                    _else_stmts = self._generate_block_statements(_else_succ)
+                    _else_entry_region = self.region_analyzer.get_entry_region_for_block(_else_succ)
+                    if _else_entry_region is not None and _else_entry_region.entry is _else_succ and _else_succ not in self.generated_blocks:
+                        _else_region_id = id(_else_entry_region)
+                        if _else_region_id not in self._generated_regions and _else_region_id not in self._generating_regions:
+                            _else_ast = self._generate_region(_else_entry_region)
+                            _else_stmts = _else_ast if isinstance(_else_ast, list) else [_else_ast] if _else_ast else []
+                            for _b in _else_entry_region.blocks:
+                                self.generated_blocks.add(_b)
+                            self._generated_regions.add(_else_region_id)
+                        else:
+                            _else_stmts = self._generate_block_statements(_else_succ)
+                    else:
+                        _else_stmts = self._generate_block_statements(_else_succ)
                     if not _else_stmts:
                         _else_stmts = [{'type': 'Pass'}]
                 self.generated_blocks.add(_then_succ)
@@ -12411,13 +12435,12 @@ AST 映射规则:
         # 收集，避免把赋值表达式误当作 if 条件（如把 `len(b[8:]) == 4 and
         # b[8:] or '1530'` 当作 `if len(z) > 0:` 的条件）。
         _cond_iter_source = _iter_instrs
-        if boolop_merge_target is not None:
-            _last_store_in_iter = -1
-            for _i, _instr in enumerate(_iter_instrs):
-                if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
-                    _last_store_in_iter = _i
-            if _last_store_in_iter >= 0:
-                _cond_iter_source = _iter_instrs[_last_store_in_iter + 1:]
+        _last_store_in_iter = -1
+        for _i, _instr in enumerate(_iter_instrs):
+            if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                _last_store_in_iter = _i
+        if _last_store_in_iter >= 0:
+            _cond_iter_source = _iter_instrs[_last_store_in_iter + 1:]
         cond_instrs = []
         prev_was_copy = False
         for instr in _cond_iter_source:
