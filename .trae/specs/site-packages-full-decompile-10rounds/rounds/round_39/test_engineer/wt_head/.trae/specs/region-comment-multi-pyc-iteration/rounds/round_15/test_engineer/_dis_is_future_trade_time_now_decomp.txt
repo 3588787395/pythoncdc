@@ -1,0 +1,65 @@
+=== DECOMP is_future_trade_time_now ===
+ 38           0 RESUME                   0
+
+ 39           2 LOAD_FAST                0 (now)
+              4 POP_JUMP_FORWARD_IF_NOT_NONE    48 (to 102)
+
+ 40           6 LOAD_GLOBAL              0 (datetime)
+             18 LOAD_ATTR                0 (datetime)
+             28 LOAD_METHOD              1 (now)
+             50 PRECALL                  0
+             54 CALL                     0
+             64 LOAD_METHOD              2 (time)
+             86 PRECALL                  0
+             90 CALL                     0
+            100 STORE_FAST               0 (now)
+
+ 41     >>  102 LOAD_GLOBAL              6 (FUTURE_AM_OPEN)
+            114 LOAD_FAST                0 (now)
+            116 SWAP                     2
+            118 COPY                     2
+            120 COMPARE_OP               0 (<)
+            126 POP_JUMP_FORWARD_IF_FALSE    11 (to 150)
+            128 LOAD_GLOBAL              8 (FUTURE_AM_CLOSE)
+            140 COMPARE_OP               0 (<)
+            146 POP_JUMP_FORWARD_IF_FALSE     4 (to 156)
+            148 JUMP_FORWARD             2 (to 154)
+        >>  150 POP_TOP
+            152 JUMP_FORWARD             1 (to 156)
+
+ 42     >>  154 NOP
+
+ 43     >>  156 LOAD_GLOBAL             10 (FUTURE_PM_OPEN)
+            168 LOAD_FAST                0 (now)
+            170 SWAP                     2
+            172 COPY                     2
+            174 COMPARE_OP               0 (<)
+            180 POP_JUMP_FORWARD_IF_FALSE    11 (to 204)
+            182 LOAD_GLOBAL             12 (FUTURE_PM_CLOSE)
+            194 COMPARE_OP               0 (<)
+            200 POP_JUMP_FORWARD_IF_TRUE    36 (to 274)
+            202 JUMP_FORWARD             1 (to 206)
+        >>  204 POP_TOP
+        >>  206 LOAD_GLOBAL             10 (FUTURE_PM_OPEN)
+            218 LOAD_FAST                0 (now)
+            220 SWAP                     2
+            222 COPY                     2
+            224 COMPARE_OP               0 (<)
+            230 POP_JUMP_FORWARD_IF_FALSE    11 (to 254)
+            232 LOAD_GLOBAL             12 (FUTURE_PM_CLOSE)
+            244 COMPARE_OP               0 (<)
+            250 POP_JUMP_FORWARD_IF_FALSE    13 (to 278)
+            252 JUMP_FORWARD             3 (to 260)
+        >>  254 POP_TOP
+            256 LOAD_CONST               0 (None)
+            258 RETURN_VALUE
+        >>  260 LOAD_GLOBAL             12 (FUTURE_PM_CLOSE)
+            272 POP_JUMP_FORWARD_IF_FALSE     4 (to 282)
+
+ 44     >>  274 LOAD_CONST               0 (None)
+            276 RETURN_VALUE
+
+ 43     >>  278 LOAD_CONST               0 (None)
+            280 RETURN_VALUE
+        >>  282 LOAD_CONST               0 (None)
+            284 RETURN_VALUE

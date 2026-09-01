@@ -1,0 +1,9 @@
+﻿# Source Generated with Decompyle++ (Python version)
+# File: _repro_r41_01.pyc (Python 3.11)
+
+def test(d, k1, k2, v, lst):
+    if v < 10:
+        a = d[k1] = v + 1
+    else:
+        a = 0
+    return a

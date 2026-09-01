@@ -1,0 +1,1112 @@
+{
+  "round": 4,
+  "offset": 82,
+  "elapsed_sec": 54.4,
+  "processed": 17,
+  "remaining": 0,
+  "ok": 0,
+  "partial": 17,
+  "failed": 0,
+  "total_functions": 575,
+  "matched_functions": 511,
+  "files": [
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/future_contract_info.pyc",
+      "status": "partial",
+      "rate": 0.9310344827586207,
+      "total_functions": 29,
+      "matched_functions": 27,
+      "mismatches": [
+        {
+          "name": "__refresh_future_info",
+          "orig_count": 76,
+          "decomp_count": 71,
+          "jump_diffs": 0,
+          "true_diffs": 30,
+          "first_diff": {
+            "index": 46,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": "pickle",
+            "decomp_arg": "self"
+          }
+        },
+        {
+          "name": "check_user",
+          "orig_count": 149,
+          "decomp_count": 119,
+          "jump_diffs": 4,
+          "true_diffs": 85,
+          "first_diff": {
+            "index": 62,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": "username",
+            "decomp_arg": "mission_query"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/future_param.pyc",
+      "status": "partial",
+      "rate": 0.9375,
+      "total_functions": 16,
+      "matched_functions": 15,
+      "mismatches": [
+        {
+          "name": "get_future_param",
+          "orig_count": 181,
+          "decomp_count": 184,
+          "jump_diffs": 2,
+          "true_diffs": 133,
+          "first_diff": {
+            "index": 49,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "POP_TOP",
+            "orig_arg": 314,
+            "decomp_arg": null
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/market_time.pyc",
+      "status": "partial",
+      "rate": 0.8,
+      "total_functions": 10,
+      "matched_functions": 8,
+      "mismatches": [
+        {
+          "name": "is_open",
+          "orig_count": 67,
+          "decomp_count": 68,
+          "jump_diffs": 5,
+          "true_diffs": 6,
+          "first_diff": {
+            "index": 62,
+            "orig_op": "RETURN_VALUE",
+            "decomp_op": "POP_TOP",
+            "orig_arg": null,
+            "decomp_arg": null
+          }
+        },
+        {
+          "name": "trade_is_open",
+          "orig_count": 97,
+          "decomp_count": 99,
+          "jump_diffs": 2,
+          "true_diffs": 4,
+          "first_diff": {
+            "index": 94,
+            "orig_op": "RETURN_VALUE",
+            "decomp_op": "POP_TOP",
+            "orig_arg": null,
+            "decomp_arg": null
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/op_station.pyc",
+      "status": "partial",
+      "rate": 0.9090909090909091,
+      "total_functions": 11,
+      "matched_functions": 10,
+      "mismatches": [
+        {
+          "name": "__new__",
+          "orig_count": 87,
+          "decomp_count": 67,
+          "jump_diffs": 2,
+          "true_diffs": 43,
+          "first_diff": {
+            "index": 43,
+            "orig_op": "LOAD_CONST",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": null,
+            "decomp_arg": "cls"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/tradingday_calendar.pyc",
+      "status": "partial",
+      "rate": 0.7142857142857143,
+      "total_functions": 28,
+      "matched_functions": 20,
+      "mismatches": [
+        {
+          "name": "get_open_and_closes",
+          "orig_count": 33,
+          "decomp_count": 26,
+          "jump_diffs": 0,
+          "true_diffs": 16,
+          "first_diff": {
+            "index": 17,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": "zip",
+            "decomp_arg": "open_and_closes"
+          }
+        },
+        {
+          "name": "get_open_and_closes_IFfuture",
+          "orig_count": 33,
+          "decomp_count": 26,
+          "jump_diffs": 0,
+          "true_diffs": 16,
+          "first_diff": {
+            "index": 17,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": "zip",
+            "decomp_arg": "open_and_closes_IFfuture"
+          }
+        },
+        {
+          "name": "get_open_and_closes_OFfuture",
+          "orig_count": 33,
+          "decomp_count": 26,
+          "jump_diffs": 0,
+          "true_diffs": 16,
+          "first_diff": {
+            "index": 17,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": "zip",
+            "decomp_arg": "open_and_closes_OFfuture"
+          }
+        },
+        {
+          "name": "get_open_and_closes_SFfuture",
+          "orig_count": 33,
+          "decomp_count": 26,
+          "jump_diffs": 0,
+          "true_diffs": 16,
+          "first_diff": {
+            "index": 17,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": "zip",
+            "decomp_arg": "open_and_closes_SFfuture"
+          }
+        },
+        {
+          "name": "get_open_and_closes_TFfuture",
+          "orig_count": 33,
+          "decomp_count": 26,
+          "jump_diffs": 0,
+          "true_diffs": 16,
+          "first_diff": {
+            "index": 17,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": "zip",
+            "decomp_arg": "open_and_closes_TFfuture"
+          }
+        },
+        {
+          "name": "get_start_day",
+          "orig_count": 212,
+          "decomp_count": 212,
+          "jump_diffs": 19,
+          "true_diffs": 1,
+          "first_diff": {
+            "index": 25,
+            "orig_op": "POP_JUMP_FORWARD_IF_TRUE",
+            "decomp_op": "POP_JUMP_FORWARD_IF_FALSE",
+            "orig_arg": 162,
+            "decomp_arg": 162
+          }
+        },
+        {
+          "name": "get_trading_day_date",
+          "orig_count": 139,
+          "decomp_count": 80,
+          "jump_diffs": 2,
+          "true_diffs": 65,
+          "first_diff": {
+            "index": 74,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "LOAD_CONST",
+            "orig_arg": "today",
+            "decomp_arg": null
+          }
+        },
+        {
+          "name": "reload_data",
+          "orig_count": 211,
+          "decomp_count": 179,
+          "jump_diffs": 1,
+          "true_diffs": 101,
+          "first_diff": {
+            "index": 110,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": "start",
+            "decomp_arg": "dumpobj"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/user_error.pyc",
+      "status": "partial",
+      "rate": 0.75,
+      "total_functions": 4,
+      "matched_functions": 3,
+      "mismatches": [
+        {
+          "name": "<module>",
+          "orig_count": 47,
+          "decomp_count": 48,
+          "jump_diffs": 0,
+          "true_diffs": 1,
+          "first_diff": {
+            "index": 47,
+            "type": "extra_in_decomp",
+            "decomp_op": "RETURN_VALUE",
+            "decomp_arg": null
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quote.pyc",
+      "status": "partial",
+      "rate": 0.8148148148148148,
+      "total_functions": 81,
+      "matched_functions": 66,
+      "mismatches": [
+        {
+          "name": "api_get_from_multi_zeromq",
+          "orig_count": 576,
+          "decomp_count": 293,
+          "jump_diffs": 3,
+          "true_diffs": 337,
+          "first_diff": {
+            "index": 239,
+            "orig_op": "POP_EXCEPT",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": null,
+            "decomp_arg": "self"
+          }
+        },
+        {
+          "name": "api_get_from_zeromq",
+          "orig_count": 338,
+          "decomp_count": 340,
+          "jump_diffs": 3,
+          "true_diffs": 106,
+          "first_diff": {
+            "index": 232,
+            "orig_op": "POP_EXCEPT",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": null,
+            "decomp_arg": "message"
+          }
+        },
+        {
+          "name": "build_current_period_df",
+          "orig_count": 115,
+          "decomp_count": 108,
+          "jump_diffs": 5,
+          "true_diffs": 12,
+          "first_diff": {
+            "index": 103,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "POP_TOP",
+            "orig_arg": "tempdict",
+            "decomp_arg": null
+          }
+        },
+        {
+          "name": "check_frequency",
+          "orig_count": 121,
+          "decomp_count": 122,
+          "jump_diffs": 1,
+          "true_diffs": 22,
+          "first_diff": {
+            "index": 100,
+            "orig_op": "LOAD_CONST",
+            "decomp_op": "JUMP_FORWARD",
+            "orig_arg": null,
+            "decomp_arg": 558
+          }
+        },
+        {
+          "name": "check_limit",
+          "orig_count": 331,
+          "decomp_count": 281,
+          "jump_diffs": 6,
+          "true_diffs": 291,
+          "first_diff": {
+            "index": 37,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": 286,
+            "decomp_arg": "time"
+          }
+        },
+        {
+          "name": "get_individual_data",
+          "orig_count": 312,
+          "decomp_count": 279,
+          "jump_diffs": 1,
+          "true_diffs": 306,
+          "first_diff": {
+            "index": 3,
+            "orig_op": "LOAD_CONST",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": 0,
+            "decomp_arg": "int"
+          }
+        },
+        {
+          "name": "get_price",
+          "orig_count": 230,
+          "decomp_count": 187,
+          "jump_diffs": 0,
+          "true_diffs": 228,
+          "first_diff": {
+            "index": 1,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "LOAD_CONST",
+            "orig_arg": "self",
+            "decomp_arg": "self调用函数get_price，参数为：stocks=securityNone"
+          }
+        },
+        {
+          "name": "get_real_from_zeromq",
+          "orig_count": 703,
+          "decomp_count": 668,
+          "jump_diffs": 0,
+          "true_diffs": 650,
+          "first_diff": {
+            "index": 33,
+            "orig_op": "LOAD_ATTR",
+            "decomp_op": "LOAD_METHOD",
+            "orig_arg": "log",
+            "decomp_arg": "api_get_from_multi_zeromq"
+          }
+        },
+        {
+          "name": "get_remote_address",
+          "orig_count": 30,
+          "decomp_count": 30,
+          "jump_diffs": 1,
+          "true_diffs": 16,
+          "first_diff": {
+            "index": 13,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": 88,
+            "decomp_arg": "self"
+          }
+        },
+        {
+          "name": "initImagedata",
+          "orig_count": 243,
+          "decomp_count": 224,
+          "jump_diffs": 0,
+          "true_diffs": 203,
+          "first_diff": {
+            "index": 35,
+            "orig_op": "LOAD_ATTR",
+            "decomp_op": "LOAD_METHOD",
+            "orig_arg": "log",
+            "decomp_arg": "api_get_from_multi_zeromq"
+          }
+        },
+        {
+          "name": "load_bars_from_hundsun",
+          "orig_count": 477,
+          "decomp_count": 445,
+          "jump_diffs": 1,
+          "true_diffs": 466,
+          "first_diff": {
+            "index": 1,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "LOAD_CONST",
+            "orig_arg": "self",
+            "decomp_arg": "self调用函数load_bars_from_hundsun，参数为：stocks=stocksNone"
+          }
+        },
+        {
+          "name": "load_get_price",
+          "orig_count": 171,
+          "decomp_count": 135,
+          "jump_diffs": 0,
+          "true_diffs": 166,
+          "first_diff": {
+            "index": 1,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "LOAD_CONST",
+            "orig_arg": "self",
+            "decomp_arg": "self调用函数load_get_price，参数为：stocks=stocksNone"
+          }
+        },
+        {
+          "name": "one_prod_to_dataframe",
+          "orig_count": 484,
+          "decomp_count": 484,
+          "jump_diffs": 18,
+          "true_diffs": 30,
+          "first_diff": {
+            "index": 396,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": 1706,
+            "decomp_arg": "int"
+          }
+        },
+        {
+          "name": "run_individual_transform",
+          "orig_count": 362,
+          "decomp_count": 311,
+          "jump_diffs": 2,
+          "true_diffs": 264,
+          "first_diff": {
+            "index": 93,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "JUMP_FORWARD",
+            "orig_arg": "socket",
+            "decomp_arg": 940
+          }
+        },
+        {
+          "name": "run_tick_socket",
+          "orig_count": 308,
+          "decomp_count": 308,
+          "jump_diffs": 1,
+          "true_diffs": 183,
+          "first_diff": {
+            "index": 18,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": 684,
+            "decomp_arg": "self"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quote_handler.pyc",
+      "status": "partial",
+      "rate": 0.7543859649122807,
+      "total_functions": 57,
+      "matched_functions": 43,
+      "mismatches": [
+        {
+          "name": "<dictcomp>",
+          "orig_count": 38,
+          "decomp_count": 24,
+          "jump_diffs": 2,
+          "true_diffs": 18,
+          "first_diff": {
+            "index": 20,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "LOAD_CONST",
+            "orig_arg": "stock",
+            "decomp_arg": false
+          }
+        },
+        {
+          "name": "<listcomp>",
+          "orig_count": 24,
+          "decomp_count": 23,
+          "jump_diffs": 1,
+          "true_diffs": 5,
+          "first_diff": {
+            "index": 18,
+            "orig_op": "KW_NAMES",
+            "decomp_op": "CALL",
+            "orig_arg": "<unknown>",
+            "decomp_arg": 1
+          }
+        },
+        {
+          "name": "calcul_startdate",
+          "orig_count": 85,
+          "decomp_count": 82,
+          "jump_diffs": 0,
+          "true_diffs": 38,
+          "first_diff": {
+            "index": 47,
+            "orig_op": "LOAD_CONST",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": null,
+            "decomp_arg": "row"
+          }
+        },
+        {
+          "name": "get_Ashares_local",
+          "orig_count": 75,
+          "decomp_count": 77,
+          "jump_diffs": 0,
+          "true_diffs": 24,
+          "first_diff": {
+            "index": 53,
+            "orig_op": "RETURN_VALUE",
+            "decomp_op": "POP_TOP",
+            "orig_arg": null,
+            "decomp_arg": null
+          }
+        },
+        {
+          "name": "get_exrights_local",
+          "orig_count": 224,
+          "decomp_count": 229,
+          "jump_diffs": 1,
+          "true_diffs": 115,
+          "first_diff": {
+            "index": 113,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": "islice",
+            "decomp_arg": "csv"
+          }
+        },
+        {
+          "name": "get_holiday_local",
+          "orig_count": 103,
+          "decomp_count": 108,
+          "jump_diffs": 2,
+          "true_diffs": 85,
+          "first_diff": {
+            "index": 22,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": "csvr",
+            "decomp_arg": "csv"
+          }
+        },
+        {
+          "name": "get_index",
+          "orig_count": 76,
+          "decomp_count": 48,
+          "jump_diffs": 0,
+          "true_diffs": 74,
+          "first_diff": {
+            "index": 1,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": "len",
+            "decomp_arg": "end"
+          }
+        },
+        {
+          "name": "get_index_stocks_local",
+          "orig_count": 151,
+          "decomp_count": 55,
+          "jump_diffs": 5,
+          "true_diffs": 98,
+          "first_diff": {
+            "index": 53,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "LOAD_CONST",
+            "orig_arg": "prod_code",
+            "decomp_arg": null
+          }
+        },
+        {
+          "name": "get_industry_stocks_local",
+          "orig_count": 89,
+          "decomp_count": 88,
+          "jump_diffs": 1,
+          "true_diffs": 3,
+          "first_diff": {
+            "index": 86,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": 414,
+            "decomp_arg": "returnData"
+          }
+        },
+        {
+          "name": "get_kline_binary",
+          "orig_count": 129,
+          "decomp_count": 128,
+          "jump_diffs": 2,
+          "true_diffs": 48,
+          "first_diff": {
+            "index": 81,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": 426,
+            "decomp_arg": "pandas"
+          }
+        },
+        {
+          "name": "get_kline_local",
+          "orig_count": 760,
+          "decomp_count": 685,
+          "jump_diffs": 5,
+          "true_diffs": 601,
+          "first_diff": {
+            "index": 140,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_CONST",
+            "orig_arg": 2784,
+            "decomp_arg": null
+          }
+        },
+        {
+          "name": "get_merger_data_local",
+          "orig_count": 20,
+          "decomp_count": 13,
+          "jump_diffs": 0,
+          "true_diffs": 8,
+          "first_diff": {
+            "index": 12,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "RETURN_VALUE",
+            "orig_arg": "df",
+            "decomp_arg": null
+          }
+        },
+        {
+          "name": "get_stock_blocks",
+          "orig_count": 87,
+          "decomp_count": 21,
+          "jump_diffs": 0,
+          "true_diffs": 68,
+          "first_diff": {
+            "index": 19,
+            "orig_op": "UNPACK_SEQUENCE",
+            "decomp_op": "STORE_FAST",
+            "orig_arg": 2,
+            "decomp_arg": "market"
+          }
+        },
+        {
+          "name": "is_delisting_stock_local",
+          "orig_count": 95,
+          "decomp_count": 94,
+          "jump_diffs": 1,
+          "true_diffs": 33,
+          "first_diff": {
+            "index": 62,
+            "orig_op": "STORE_DEREF",
+            "decomp_op": "STORE_FAST",
+            "orig_arg": "ashares_list_local",
+            "decomp_arg": "ashares_list_local"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/fly/dockerspawner/dockerspawner.pyc",
+      "status": "partial",
+      "rate": 0.92,
+      "total_functions": 25,
+      "matched_functions": 23,
+      "mismatches": [
+        {
+          "name": "<dictcomp>",
+          "orig_count": 21,
+          "decomp_count": 20,
+          "jump_diffs": 1,
+          "true_diffs": 9,
+          "first_diff": {
+            "index": 12,
+            "orig_op": "KW_NAMES",
+            "decomp_op": "CALL",
+            "orig_arg": "<unknown>",
+            "decomp_arg": 1
+          }
+        },
+        {
+          "name": "start",
+          "orig_count": 205,
+          "decomp_count": 225,
+          "jump_diffs": 0,
+          "true_diffs": 35,
+          "first_diff": {
+            "index": 190,
+            "orig_op": "UNPACK_SEQUENCE",
+            "decomp_op": "POP_TOP",
+            "orig_arg": 2,
+            "decomp_arg": null
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/fly/dumpload/load_daily.pyc",
+      "status": "partial",
+      "rate": 0.8695652173913043,
+      "total_functions": 23,
+      "matched_functions": 20,
+      "mismatches": [
+        {
+          "name": "<module>",
+          "orig_count": 911,
+          "decomp_count": 910,
+          "jump_diffs": 11,
+          "true_diffs": 540,
+          "first_diff": {
+            "index": 314,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "PUSH_NULL",
+            "orig_arg": 1116,
+            "decomp_arg": null
+          }
+        },
+        {
+          "name": "api_get_from_zeromq",
+          "orig_count": 175,
+          "decomp_count": 177,
+          "jump_diffs": 8,
+          "true_diffs": 38,
+          "first_diff": {
+            "index": 137,
+            "orig_op": "POP_EXCEPT",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": null,
+            "decomp_arg": "message"
+          }
+        },
+        {
+          "name": "get_Ashares",
+          "orig_count": 131,
+          "decomp_count": 130,
+          "jump_diffs": 1,
+          "true_diffs": 3,
+          "first_diff": {
+            "index": 128,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": 678,
+            "decomp_arg": "real_return"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/fly/logger.pyc",
+      "status": "partial",
+      "rate": 0.9333333333333333,
+      "total_functions": 30,
+      "matched_functions": 28,
+      "mismatches": [
+        {
+          "name": "logging_process",
+          "orig_count": 99,
+          "decomp_count": 90,
+          "jump_diffs": 1,
+          "true_diffs": 68,
+          "first_diff": {
+            "index": 31,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": "write_queue",
+            "decomp_arg": "self"
+          }
+        },
+        {
+          "name": "write_logging_thread",
+          "orig_count": 113,
+          "decomp_count": 110,
+          "jump_diffs": 1,
+          "true_diffs": 102,
+          "first_diff": {
+            "index": 9,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "JUMP_FORWARD",
+            "orig_arg": "q",
+            "decomp_arg": 56
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/fly/oauthenticator/itn.pyc",
+      "status": "partial",
+      "rate": 0.9285714285714286,
+      "total_functions": 14,
+      "matched_functions": 13,
+      "mismatches": [
+        {
+          "name": "authenticate",
+          "orig_count": 227,
+          "decomp_count": 97,
+          "jump_diffs": 1,
+          "true_diffs": 130,
+          "first_diff": {
+            "index": 97,
+            "type": "missing_in_decomp",
+            "orig_op": "LOAD_FAST",
+            "orig_arg": "pwd"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/fly/oauthenticator/oauth2.pyc",
+      "status": "partial",
+      "rate": 0.9090909090909091,
+      "total_functions": 11,
+      "matched_functions": 10,
+      "mismatches": [
+        {
+          "name": "post",
+          "orig_count": 188,
+          "decomp_count": 64,
+          "jump_diffs": 0,
+          "true_diffs": 154,
+          "first_diff": {
+            "index": 20,
+            "orig_op": "POP_JUMP_FORWARD_IF_NOT_NONE",
+            "decomp_op": "POP_JUMP_FORWARD_IF_TRUE",
+            "orig_arg": 990,
+            "decomp_arg": 206
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/flyAccount.pyc",
+      "status": "partial",
+      "rate": 0.8260869565217391,
+      "total_functions": 23,
+      "matched_functions": 19,
+      "mismatches": [
+        {
+          "name": "_do_request",
+          "orig_count": 436,
+          "decomp_count": 418,
+          "jump_diffs": 3,
+          "true_diffs": 377,
+          "first_diff": {
+            "index": 54,
+            "orig_op": "RETURN_VALUE",
+            "decomp_op": "POP_TOP",
+            "orig_arg": null,
+            "decomp_arg": null
+          }
+        },
+        {
+          "name": "error_print",
+          "orig_count": 160,
+          "decomp_count": 161,
+          "jump_diffs": 2,
+          "true_diffs": 111,
+          "first_diff": {
+            "index": 47,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "JUMP_BACKWARD",
+            "orig_arg": "os",
+            "decomp_arg": 42
+          }
+        },
+        {
+          "name": "error_print_business",
+          "orig_count": 153,
+          "decomp_count": 154,
+          "jump_diffs": 2,
+          "true_diffs": 104,
+          "first_diff": {
+            "index": 47,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "JUMP_BACKWARD",
+            "orig_arg": "os",
+            "decomp_arg": 42
+          }
+        },
+        {
+          "name": "init_connection",
+          "orig_count": 42,
+          "decomp_count": 41,
+          "jump_diffs": 0,
+          "true_diffs": 25,
+          "first_diff": {
+            "index": 16,
+            "orig_op": "POP_JUMP_FORWARD_IF_FALSE",
+            "decomp_op": "POP_JUMP_FORWARD_IF_TRUE",
+            "orig_arg": 172,
+            "decomp_arg": 102
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/ptradeAccount.pyc",
+      "status": "partial",
+      "rate": 0.9854014598540146,
+      "total_functions": 137,
+      "matched_functions": 135,
+      "mismatches": [
+        {
+          "name": "order_response_order_update",
+          "orig_count": 97,
+          "decomp_count": 30,
+          "jump_diffs": 1,
+          "true_diffs": 76,
+          "first_diff": {
+            "index": 21,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "JUMP_BACKWARD",
+            "orig_arg": "order_item",
+            "decomp_arg": 166
+          }
+        },
+        {
+          "name": "trade_response_order_update",
+          "orig_count": 116,
+          "decomp_count": 30,
+          "jump_diffs": 1,
+          "true_diffs": 95,
+          "first_diff": {
+            "index": 21,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "JUMP_BACKWARD",
+            "orig_arg": "order_item",
+            "decomp_arg": 166
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/ptradeFutureAccount.pyc",
+      "status": "partial",
+      "rate": 0.9210526315789473,
+      "total_functions": 38,
+      "matched_functions": 35,
+      "mismatches": [
+        {
+          "name": "future_order_response_transform",
+          "orig_count": 241,
+          "decomp_count": 239,
+          "jump_diffs": 7,
+          "true_diffs": 6,
+          "first_diff": {
+            "index": 235,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "POP_TOP",
+            "orig_arg": "data_item",
+            "decomp_arg": null
+          }
+        },
+        {
+          "name": "future_trade_response_transform",
+          "orig_count": 242,
+          "decomp_count": 240,
+          "jump_diffs": 1,
+          "true_diffs": 6,
+          "first_diff": {
+            "index": 236,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "POP_TOP",
+            "orig_arg": "data_item",
+            "decomp_arg": null
+          }
+        },
+        {
+          "name": "login_account",
+          "orig_count": 687,
+          "decomp_count": 689,
+          "jump_diffs": 2,
+          "true_diffs": 609,
+          "first_diff": {
+            "index": 71,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": "kwargs",
+            "decomp_arg": "json"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/ptradeOptionAccount.pyc",
+      "status": "partial",
+      "rate": 0.9473684210526315,
+      "total_functions": 38,
+      "matched_functions": 36,
+      "mismatches": [
+        {
+          "name": "stock_order_response_transform",
+          "orig_count": 180,
+          "decomp_count": 178,
+          "jump_diffs": 7,
+          "true_diffs": 6,
+          "first_diff": {
+            "index": 174,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "POP_TOP",
+            "orig_arg": "data_item",
+            "decomp_arg": null
+          }
+        },
+        {
+          "name": "stock_trade_response_transform",
+          "orig_count": 165,
+          "decomp_count": 163,
+          "jump_diffs": 1,
+          "true_diffs": 6,
+          "first_diff": {
+            "index": 159,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "POP_TOP",
+            "orig_arg": "data_item",
+            "decomp_arg": null
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    }
+  ]
+}

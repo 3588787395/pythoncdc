@@ -1,0 +1,24 @@
+# pyc 反编译基线成功率
+# 生成时间: 2026-07-30 20:53:52
+# 项目: region-comment-multi-pyc-iteration
+
+## 首个 pyc 基线
+- pyc_path: F:/Downloads/pythoncdc-main/site-packages/IQCommon/__init__.pyc
+- size: 1630
+- function_count: 2
+- decompile_success: true
+- bytecode_match_rate: 0.0
+- matched_functions: 0
+- total_functions: 2
+- ok_py_generated: true
+- error: 
+
+## 累计统计（初始）
+- total_pyc_in_index: 402
+- verified_pyc: 1
+- ok_pyc: 1
+- cumulative_match_rate: 0.0
+
+## 备注
+- 此为迭代起始基线，后续每轮修复后成功率应单调递增
+- 禁止修改生成的 OK.py 文件

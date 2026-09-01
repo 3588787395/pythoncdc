@@ -1,0 +1,8 @@
+# Source Generated with Decompyle++ (Python version)
+# File: repro_10_ctrl_no_try_if_else_return.pyc (Python 3.11)
+
+def f(x, a, b, c):
+    if x == 1:
+        return a
+    else:
+        return b

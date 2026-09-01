@@ -1,0 +1,399 @@
+{
+  "round": 1,
+  "timestamp": "2026-08-19",
+  "baseline_success_rate": 87.5,
+  "current_success_rate": 36.36363636363637,
+  "total_functions": 22,
+  "matched_functions": 8,
+  "mismatched_count": 9,
+  "mismatches": [
+    {
+      "function": "DataProcessor",
+      "diffs": [
+        {
+          "offset": 20,
+          "original": "LOAD_CONST <code object __init__ at 0x000001D483435110, file \"d:\\Desktop\\ptrade相关\\control_flow_tests\\decompiler_test_comprehensive.py\", line 12>",
+          "decompiled": "LOAD_CONST <code object __init__ at 0x000001D483884F30, file \"decompiler_test_comprehensive_decompiled_round01.py\", line 9>"
+        },
+        {
+          "offset": 48,
+          "original": "LOAD_CONST <code object validate_data at 0x000001D482FC4670, file \"d:\\Desktop\\ptrade相关\\control_flow_tests\\decompiler_test_comprehensive.py\", line 17>",
+          "decompiled": "LOAD_CONST <code object validate_data at 0x000001D483685910, file \"decompiler_test_comprehensive_decompiled_round01.py\", line 13>"
+        },
+        {
+          "offset": 88,
+          "original": "LOAD_CONST <code object process_with_loops at 0x000001D482FDB490, file \"d:\\Desktop\\ptrade相关\\control_flow_tests\\decompiler_test_comprehensive.py\", line 52>",
+          "decompiled": "LOAD_CONST <code object process_with_loops at 0x000001D483687E50, file \"decompiler_test_comprehensive_decompiled_round01.py\", line 45>"
+        },
+        {
+          "offset": 108,
+          "original": "LOAD_CONST <code object nested_function_example at 0x000001D483830C30, file \"d:\\Desktop\\ptrade相关\\control_flow_tests\\decompiler_test_comprehensive.py\", line 85>",
+          "decompiled": "LOAD_CONST <code object nested_function_example at 0x000001D483830E30, file \"decompiler_test_comprehensive_decompiled_round01.py\", line 72>"
+        },
+        {
+          "offset": 168,
+          "original": "LOAD_CONST <code object exception_handling_complex at 0x000001D48364D9D0, file \"d:\\Desktop\\ptrade相关\\control_flow_tests\\decompiler_test_comprehensive.py\", line 123>",
+          "decompiled": "LOAD_CONST <code object exception_handling_complex at 0x000001D4836644D0, file \"decompiler_test_comprehensive_decompiled_round01.py\", line 105>"
+        },
+        {
+          "offset": 184,
+          "original": "LOAD_CONST <code object context_manager_test at 0x000001D483656430, file \"d:\\Desktop\\ptrade相关\\control_flow_tests\\decompiler_test_comprehensive.py\", line 164>",
+          "decompiled": "LOAD_CONST <code object context_manager_test at 0x000001D483664B30, file \"decompiler_test_comprehensive_decompiled_round01.py\", line 136>"
+        },
+        {
+          "offset": 204,
+          "original": "LOAD_CONST <code object generator_function at 0x000001D4838B4210, file \"d:\\Desktop\\ptrade相关\\control_flow_tests\\decompiler_test_comprehensive.py\", line 196>",
+          "decompiled": "LOAD_CONST <code object generator_function at 0x000001D4838B4030, file \"decompiler_test_comprehensive_decompiled_round01.py\", line 158>"
+        },
+        {
+          "offset": 232,
+          "original": "LOAD_CONST <code object class_method_complex at 0x000001D483656760, file \"d:\\Desktop\\ptrade相关\\control_flow_tests\\decompiler_test_comprehensive.py\", line 226>",
+          "decompiled": "LOAD_CONST <code object class_method_complex at 0x000001D4836C54D0, file \"decompiler_test_comprehensive_decompiled_round01.py\", line 184>"
+        },
+        {
+          "offset": 288,
+          "original": "LOAD_CONST <code object lambda_and_comprehension at 0x000001D48322FCB0, file \"d:\\Desktop\\ptrade相关\\control_flow_tests\\decompiler_test_comprehensive.py\", line 273>",
+          "decompiled": "LOAD_CONST <code object lambda_and_comprehension at 0x000001D48322FE10, file \"decompiler_test_comprehensive_decompiled_round01.py\", line 221>"
+        },
+        {
+          "offset": 310,
+          "original": "LOAD_CONST <code object recursive_function at 0x000001D48317B630, file \"d:\\Desktop\\ptrade相关\\control_flow_tests\\decompiler_test_comprehensive.py\", line 299>",
+          "decompiled": "LOAD_CONST <code object recursive_function at 0x000001D483831630, file \"decompiler_test_comprehensive_decompiled_round01.py\", line 228>"
+        },
+        {
+          "offset": 342,
+          "original": "LOAD_CONST <code object final_integration_test at 0x000001D483689E60, file \"d:\\Desktop\\ptrade相关\\control_flow_tests\\decompiler_test_comprehensive.py\", line 323>",
+          "decompiled": "LOAD_CONST <code object final_integration_test at 0x000001D4836C42B0, file \"decompiler_test_comprehensive_decompiled_round01.py\", line 245>"
+        }
+      ],
+      "total_diffs": 11,
+      "orig_count": 132,
+      "decomp_count": 132
+    },
+    {
+      "function": "validate_data",
+      "diffs": [
+        {
+          "offset": 72,
+          "original": "EXTENDED_ARG 1",
+          "decompiled": "FOR_ITER 484"
+        },
+        {
+          "offset": 74,
+          "original": "FOR_ITER 606",
+          "decompiled": "UNPACK_SEQUENCE 2"
+        },
+        {
+          "offset": 76,
+          "original": "UNPACK_SEQUENCE 2",
+          "decompiled": "STORE_FAST i"
+        },
+        {
+          "offset": 80,
+          "original": "STORE_FAST i",
+          "decompiled": "STORE_FAST item"
+        },
+        {
+          "offset": 82,
+          "original": "STORE_FAST item",
+          "decompiled": "LOAD_GLOBAL isinstance"
+        },
+        {
+          "offset": 84,
+          "original": "LOAD_GLOBAL isinstance",
+          "decompiled": "LOAD_FAST item"
+        },
+        {
+          "offset": 96,
+          "original": "LOAD_FAST item",
+          "decompiled": "LOAD_GLOBAL int"
+        },
+        {
+          "offset": 98,
+          "original": "LOAD_GLOBAL int",
+          "decompiled": "PRECALL 2"
+        },
+        {
+          "offset": 110,
+          "original": "PRECALL 2",
+          "decompiled": "CALL 2"
+        },
+        {
+          "offset": 114,
+          "original": "CALL 2",
+          "decompiled": "POP_JUMP_FORWARD_IF_FALSE 282"
+        },
+        {
+          "offset": 124,
+          "original": "POP_JUMP_FORWARD_IF_FALSE 286",
+          "decompiled": "LOAD_FAST item"
+        },
+        {
+          "offset": 126,
+          "original": "LOAD_FAST item",
+          "decompiled": "LOAD_CONST"
+        },
+        {
+          "offset": 128,
+          "original": "LOAD_CONST",
+          "decompiled": "COMPARE_OP <"
+        },
+        {
+          "offset": 130,
+          "original": "COMPARE_OP <",
+          "decompiled": "POP_JUMP_FORWARD_IF_FALSE 180"
+        },
+        {
+          "offset": 136,
+          "original": "POP_JUMP_FORWARD_IF_FALSE 182",
+          "decompiled": "LOAD_GLOBAL print"
+        },
+        {
+          "offset": 138,
+          "original": "LOAD_GLOBAL print",
+          "decompiled": "LOAD_CONST 第"
+        },
+        {
+          "offset": 150,
+          "original": "LOAD_CONST 第",
+          "decompiled": "LOAD_FAST i"
+        },
+        {
+          "offset": 152,
+          "original": "LOAD_FAST i",
+          "decompiled": "FORMAT_VALUE (None, False)"
+        },
+        {
+          "offset": 154,
+          "original": "FORMAT_VALUE (None, False)",
+          "decompiled": "LOAD_CONST 项为负数:"
+        },
+        {
+          "offset": 156,
+          "original": "LOAD_CONST 项为负数:",
+          "decompiled": "LOAD_FAST item"
+        }
+      ],
+      "total_diffs": 155,
+      "orig_count": 173,
+      "decomp_count": 145
+    },
+    {
+      "function": "nested_function_example",
+      "diffs": [
+        {
+          "offset": 46,
+          "original": "LOAD_CONST <code object inner_calc at 0x000001D483868ED0, file \"d:\\Desktop\\ptrade相关\\control_flow_tests\\decompiler_test_comprehensive.py\", line 88>",
+          "decompiled": "LOAD_CONST <code object inner_calc at 0x000001D483869070, file \"decompiler_test_comprehensive_decompiled_round01.py\", line 73>"
+        }
+      ],
+      "total_diffs": 1,
+      "orig_count": 82,
+      "decomp_count": 82
+    },
+    {
+      "function": "exception_handling_complex",
+      "diffs": [
+        {
+          "offset": 20,
+          "original": "FOR_ITER 852",
+          "decompiled": "FOR_ITER 756"
+        },
+        {
+          "offset": 26,
+          "original": "LOAD_GLOBAL isinstance",
+          "decompiled": "NOP"
+        },
+        {
+          "offset": 38,
+          "original": "LOAD_FAST item",
+          "decompiled": "LOAD_GLOBAL int"
+        },
+        {
+          "offset": 40,
+          "original": "LOAD_GLOBAL str",
+          "decompiled": "LOAD_FAST item"
+        },
+        {
+          "offset": 52,
+          "original": "PRECALL 2",
+          "decompiled": "PRECALL 1"
+        },
+        {
+          "offset": 56,
+          "original": "CALL 2",
+          "decompiled": "CALL 1"
+        },
+        {
+          "offset": 66,
+          "original": "POP_JUMP_FORWARD_IF_FALSE 284",
+          "decompiled": "STORE_FAST converted"
+        },
+        {
+          "offset": 68,
+          "original": "NOP",
+          "decompiled": "LOAD_FAST result"
+        },
+        {
+          "offset": 70,
+          "original": "LOAD_GLOBAL int",
+          "decompiled": "LOAD_CONST valid_data"
+        },
+        {
+          "offset": 82,
+          "original": "LOAD_FAST item",
+          "decompiled": "BINARY_SUBSCR"
+        },
+        {
+          "offset": 84,
+          "original": "PRECALL 1",
+          "decompiled": "LOAD_METHOD append"
+        },
+        {
+          "offset": 88,
+          "original": "CALL 1",
+          "decompiled": "LOAD_FAST converted"
+        },
+        {
+          "offset": 98,
+          "original": "STORE_FAST converted",
+          "decompiled": "PRECALL 1"
+        },
+        {
+          "offset": 100,
+          "original": "LOAD_FAST result",
+          "decompiled": "CALL 1"
+        },
+        {
+          "offset": 102,
+          "original": "LOAD_CONST valid_data",
+          "decompiled": "POP_TOP"
+        },
+        {
+          "offset": 104,
+          "original": "BINARY_SUBSCR",
+          "decompiled": "JUMP_FORWARD 206"
+        },
+        {
+          "offset": 114,
+          "original": "LOAD_METHOD append",
+          "decompiled": "PUSH_EXC_INFO"
+        },
+        {
+          "offset": 136,
+          "original": "LOAD_FAST converted",
+          "decompiled": "LOAD_GLOBAL ValueError"
+        },
+        {
+          "offset": 138,
+          "original": "PRECALL 1",
+          "decompiled": "CHECK_EXC_MATCH"
+        },
+        {
+          "offset": 142,
+          "original": "CALL 1",
+          "decompiled": "POP_JUMP_FORWARD_IF_FALSE 198"
+        }
+      ],
+      "total_diffs": 183,
+      "orig_count": 203,
+      "decomp_count": 181
+    },
+    {
+      "function": "generator_function",
+      "diffs": [
+        {
+          "offset": 12,
+          "original": "LOAD_CONST <code object number_generator at 0x000001D48383C2B0, file \"d:\\Desktop\\ptrade相关\\control_flow_tests\\decompiler_test_comprehensive.py\", line 199>",
+          "decompiled": "LOAD_CONST <code object number_generator at 0x000001D48320F370, file \"decompiler_test_comprehensive_decompiled_round01.py\", line 159>"
+        }
+      ],
+      "total_diffs": 1,
+      "orig_count": 73,
+      "decomp_count": 73
+    },
+    {
+      "function": "class_method_complex",
+      "diffs": [
+        {
+          "offset": 6,
+          "original": "LOAD_CONST <code object InternalCalculator at 0x000001D483884300, file \"d:\\Desktop\\ptrade相关\\control_flow_tests\\decompiler_test_comprehensive.py\", line 229>",
+          "decompiled": "LOAD_CONST <code object InternalCalculator at 0x000001D483885020, file \"decompiler_test_comprehensive_decompiled_round01.py\", line 185>"
+        }
+      ],
+      "total_diffs": 1,
+      "orig_count": 95,
+      "decomp_count": 95
+    },
+    {
+      "function": "InternalCalculator",
+      "diffs": [
+        {
+          "offset": 20,
+          "original": "LOAD_CONST <code object __init__ at 0x000001D4838142D0, file \"d:\\Desktop\\ptrade相关\\control_flow_tests\\decompiler_test_comprehensive.py\", line 231>",
+          "decompiled": "LOAD_CONST <code object __init__ at 0x000001D483814B90, file \"decompiler_test_comprehensive_decompiled_round01.py\", line 187>"
+        },
+        {
+          "offset": 36,
+          "original": "LOAD_CONST <code object calculate at 0x000001D4838A81C0, file \"d:\\Desktop\\ptrade相关\\control_flow_tests\\decompiler_test_comprehensive.py\", line 235>",
+          "decompiled": "LOAD_CONST <code object calculate at 0x000001D4838A8E40, file \"decompiler_test_comprehensive_decompiled_round01.py\", line 190>"
+        }
+      ],
+      "total_diffs": 2,
+      "orig_count": 23,
+      "decomp_count": 23
+    },
+    {
+      "function": "lambda_and_comprehension",
+      "diffs": [
+        {
+          "offset": 6,
+          "original": "LOAD_CONST <code object <lambda> at 0x000001D483814570, file \"d:\\Desktop\\ptrade相关\\control_flow_tests\\decompiler_test_comprehensive.py\", line 277>",
+          "decompiled": "LOAD_CONST <code object <lambda> at 0x000001D483816CD0, file \"decompiler_test_comprehensive_decompiled_round01.py\", line 222>"
+        },
+        {
+          "offset": 12,
+          "original": "LOAD_CONST <code object <lambda> at 0x000001D483884D50, file \"d:\\Desktop\\ptrade相关\\control_flow_tests\\decompiler_test_comprehensive.py\", line 278>",
+          "decompiled": "LOAD_CONST <code object <lambda> at 0x000001D483885110, file \"decompiler_test_comprehensive_decompiled_round01.py\", line 223>"
+        },
+        {
+          "offset": 24,
+          "original": "LOAD_CONST <code object <listcomp> at 0x000001D483870430, file \"d:\\Desktop\\ptrade相关\\control_flow_tests\\decompiler_test_comprehensive.py\", line 281>",
+          "decompiled": "LOAD_CONST <code object <listcomp> at 0x000001D48347EA30, file \"decompiler_test_comprehensive_decompiled_round01.py\", line 224>"
+        },
+        {
+          "offset": 48,
+          "original": "LOAD_CONST <code object <dictcomp> at 0x000001D483884E40, file \"d:\\Desktop\\ptrade相关\\control_flow_tests\\decompiler_test_comprehensive.py\", line 284>",
+          "decompiled": "LOAD_CONST <code object <dictcomp> at 0x000001D483885200, file \"decompiler_test_comprehensive_decompiled_round01.py\", line 225>"
+        },
+        {
+          "offset": 98,
+          "original": "LOAD_CONST <code object <setcomp> at 0x000001D483472C10, file \"d:\\Desktop\\ptrade相关\\control_flow_tests\\decompiler_test_comprehensive.py\", line 291>",
+          "decompiled": "LOAD_CONST <code object <setcomp> at 0x000001D4838D4920, file \"decompiler_test_comprehensive_decompiled_round01.py\", line 226>"
+        }
+      ],
+      "total_diffs": 5,
+      "orig_count": 45,
+      "decomp_count": 45
+    },
+    {
+      "function": "main",
+      "diffs": [
+        {
+          "offset": 234,
+          "original": "LOAD_CONST <code object <listcomp> at 0x000001D483870830, file \"d:\\Desktop\\ptrade相关\\control_flow_tests\\decompiler_test_comprehensive.py\", line 395>",
+          "decompiled": "LOAD_CONST <code object <listcomp> at 0x000001D483423230, file \"decompiler_test_comprehensive_decompiled_round01.py\", line 283>"
+        },
+        {
+          "offset": 614,
+          "original": "LOAD_CONST <code object <listcomp> at 0x000001D483870C30, file \"d:\\Desktop\\ptrade相关\\control_flow_tests\\decompiler_test_comprehensive.py\", line 410>",
+          "decompiled": "LOAD_CONST <code object <listcomp> at 0x000001D483870D30, file \"decompiler_test_comprehensive_decompiled_round01.py\", line 292>"
+        }
+      ],
+      "total_diffs": 2,
+      "orig_count": 187,
+      "decomp_count": 187
+    }
+  ],
+  "syntax_error": null
+}

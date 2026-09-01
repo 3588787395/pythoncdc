@@ -1,0 +1,38 @@
+﻿==============================================================================
+verifying 12 minimal repros
+==============================================================================
+  repro_01_deco_call_on_method.py
+    match=False [fn=C] (orig=16 decomp=13 true_diffs=11 jump_diffs=0)  [DEFECT-REPRO]
+    first_diff: {'index': 5, 'orig_op': 'PUSH_NULL', 'decomp_op': 'LOAD_NAME', 'orig_arg': None, 'decomp_arg': 'deco'}
+  repro_02_deco_call_on_toplevel_func.py
+    match=False [fn=<module>] (orig=15 decomp=12 true_diffs=11 jump_diffs=0)  [DEFECT-REPRO]
+    first_diff: {'index': 4, 'orig_op': 'PUSH_NULL', 'decomp_op': 'LOAD_NAME', 'orig_arg': None, 'decomp_arg': 'deco'}
+  repro_03_ctrl_deco_no_parens_method.py
+    match=True (fns=4)  [NO-DEFECT]
+  repro_04_deco_call_with_arg_method.py
+    match=True (fns=5)  [NO-DEFECT]
+  repro_05_deco_call_classmethod_chain.py
+    match=False [fn=BaseStorage] (orig=33 decomp=30 true_diffs=27 jump_diffs=0)  [DEFECT-REPRO]
+    first_diff: {'index': 6, 'orig_op': 'PUSH_NULL', 'decomp_op': 'LOAD_NAME', 'orig_arg': None, 'decomp_arg': 'deco'}
+  repro_06_deco_call_multi_args.py
+    match=True (fns=5)  [NO-DEFECT]
+  repro_07_deco_call_kwarg.py
+    match=True (fns=5)  [NO-DEFECT]
+  repro_08_attr_deco_call.py
+    match=False [fn=C] (orig=16 decomp=14 true_diffs=10 jump_diffs=0)  [DEFECT-REPRO]
+    first_diff: {'index': 6, 'orig_op': 'LOAD_METHOD', 'decomp_op': 'LOAD_ATTR', 'orig_arg': 'deco', 'decomp_arg': 'deco'}
+  repro_09_deco_call_on_new_classcell.py
+    match=False [fn=C] (orig=21 decomp=18 true_diffs=15 jump_diffs=0)  [DEFECT-REPRO]
+    first_diff: {'index': 6, 'orig_op': 'PUSH_NULL', 'decomp_op': 'LOAD_NAME', 'orig_arg': None, 'decomp_arg': 'deco'}
+  repro_10_stacked_deco_call.py
+    match=False [fn=C] (orig=19 decomp=16 true_diffs=14 jump_diffs=0)  [DEFECT-REPRO]
+    first_diff: {'index': 5, 'orig_op': 'PUSH_NULL', 'decomp_op': 'LOAD_NAME', 'orig_arg': None, 'decomp_arg': 'deco1'}
+  repro_11_two_deco_call_stacked.py
+    match=False [fn=C] (orig=22 decomp=20 true_diffs=12 jump_diffs=0)  [DEFECT-REPRO]
+    first_diff: {'index': 6, 'orig_op': 'LOAD_NAME', 'decomp_op': 'LOAD_NAME', 'orig_arg': 'deco1', 'decomp_arg': 'deco2'}
+  repro_12_ctrl_classmethod_no_parens.py
+    match=True (fns=4)  [NO-DEFECT]
+==============================================================================
+summary: 12 repros, DEFECT-REPRO=7, NO-DEFECT=5
+==============================================================================
+VERIFY_RESULT [{"name": "repro_01_deco_call_on_method.py", "verdict": "DEFECT-REPRO", "match": false, "mismatch_fn": "C", "true_diffs": 11, "jump_diffs": 0, "first_diff": {"index": 5, "orig_op": "PUSH_NULL", "decomp_op": "LOAD_NAME", "orig_arg": null, "decomp_arg": "deco"}, "error": null}, {"name": "repro_02_deco_call_on_toplevel_func.py", "verdict": "DEFECT-REPRO", "match": false, "mismatch_fn": "<module>", "true_diffs": 11, "jump_diffs": 0, "first_diff": {"index": 4, "orig_op": "PUSH_NULL", "decomp_op": "LOAD_NAME", "orig_arg": null, "decomp_arg": "deco"}, "error": null}, {"name": "repro_03_ctrl_deco_no_parens_method.py", "verdict": "NO-DEFECT", "match": true, "mismatch_fn": null, "true_diffs": 0, "jump_diffs": 0, "first_diff": null, "error": null}, {"name": "repro_04_deco_call_with_arg_method.py", "verdict": "NO-DEFECT", "match": true, "mismatch_fn": null, "true_diffs": 0, "jump_diffs": 0, "first_diff": null, "error": null}, {"name": "repro_05_deco_call_classmethod_chain.py", "verdict": "DEFECT-REPRO", "match": false, "mismatch_fn": "BaseStorage", "true_diffs": 27, "jump_diffs": 0, "first_diff": {"index": 6, "orig_op": "PUSH_NULL", "decomp_op": "LOAD_NAME", "orig_arg": null, "decomp_arg": "deco"}, "error": null}, {"name": "repro_06_deco_call_multi_args.py", "verdict": "NO-DEFECT", "match": true, "mismatch_fn": null, "true_diffs": 0, "jump_diffs": 0, "first_diff": null, "error": null}, {"name": "repro_07_deco_call_kwarg.py", "verdict": "NO-DEFECT", "match": true, "mismatch_fn": null, "true_diffs": 0, "jump_diffs": 0, "first_diff": null, "error": null}, {"name": "repro_08_attr_deco_call.py", "verdict": "DEFECT-REPRO", "match": false, "mismatch_fn": "C", "true_diffs": 10, "jump_diffs": 0, "first_diff": {"index": 6, "orig_op": "LOAD_METHOD", "decomp_op": "LOAD_ATTR", "orig_arg": "deco", "decomp_arg": "deco"}, "error": null}, {"name": "repro_09_deco_call_on_new_classcell.py", "verdict": "DEFECT-REPRO", "match": false, "mismatch_fn": "C", "true_diffs": 15, "jump_diffs": 0, "first_diff": {"index": 6, "orig_op": "PUSH_NULL", "decomp_op": "LOAD_NAME", "orig_arg": null, "decomp_arg": "deco"}, "error": null}, {"name": "repro_10_stacked_deco_call.py", "verdict": "DEFECT-REPRO", "match": false, "mismatch_fn": "C", "true_diffs": 14, "jump_diffs": 0, "first_diff": {"index": 5, "orig_op": "PUSH_NULL", "decomp_op": "LOAD_NAME", "orig_arg": null, "decomp_arg": "deco1"}, "error": null}, {"name": "repro_11_two_deco_call_stacked.py", "verdict": "DEFECT-REPRO", "match": false, "mismatch_fn": "C", "true_diffs": 12, "jump_diffs": 0, "first_diff": {"index": 6, "orig_op": "LOAD_NAME", "decomp_op": "LOAD_NAME", "orig_arg": "deco1", "decomp_arg": "deco2"}, "error": null}, {"name": "repro_12_ctrl_classmethod_no_parens.py", "verdict": "NO-DEFECT", "match": true, "mismatch_fn": null, "true_diffs": 0, "jump_diffs": 0, "first_diff": null, "error": null}]

@@ -1,0 +1,196 @@
+# side-by-side get_kline_by_date_one (orig=193 decomp=182)
+#  IDX | ORIG                                                         | DECOMP                                                      
+----------------------------------------------------------------------------------------------------------------------------------
+     0 |    0 RESUME                                                  |    0 RESUME                                                 
+     1 |    2 LOAD_FAST asset                                         |    2 LOAD_FAST asset                                        
+     2 |    4 POP_JUMP_FORWARD_IF_NOT_NONE to 54                      |    4 POP_JUMP_FORWARD_IF_NOT_NONE to 54                     
+     3 |    6 LOAD_FAST fields                                        |    6 LOAD_FAST fields                                       
+     4 |    8 POP_JUMP_FORWARD_IF_NOT_NONE to 24                      |    8 POP_JUMP_FORWARD_IF_NOT_NONE to 24                     
+     5 |   10 LOAD_GLOBAL EMPTY_BAR_NP_ARRAY                          |   10 LOAD_GLOBAL EMPTY_BAR_NP_ARRAY                         
+     6 |   22 JUMP_FORWARD to 48                                      |   22 JUMP_FORWARD to 48                                     
+     7 |   24 LOAD_GLOBAL EMPTY_BAR_NP_ARRAY                          |   24 LOAD_GLOBAL EMPTY_BAR_NP_ARRAY                         
+     8 |   36 LOAD_FAST fields                                        |   36 LOAD_FAST fields                                       
+     9 |   38 BINARY_SUBSCR                                           |   38 BINARY_SUBSCR                                          
+    10 |   48 STORE_FAST history_data                                 |   48 STORE_FAST history_data                                
+    11 |   50 LOAD_FAST history_data                                  |   50 LOAD_FAST history_data                                 
+    12 |   52 RETURN_VALUE                                            |   52 RETURN_VALUE                                           
+    13 |   54 NOP                                                     |   54 NOP                                                    
+    14 |   56 LOAD_GLOBAL NULL + _all_bars_of_cache                   |   56 LOAD_GLOBAL NULL + _all_bars_of_cache                  
+    15 |   68 LOAD_FAST symbol                                        |   68 LOAD_FAST symbol                                       
+    16 |   70 LOAD_FAST start_date                                    |   70 LOAD_FAST start_date                                   
+    17 |   72 LOAD_FAST end_date                                      |   72 LOAD_FAST end_date                                     
+    18 |   74 LOAD_FAST frequency                                     |   74 LOAD_FAST frequency                                    
+    19 |   76 LOAD_FAST asset                                         |   76 LOAD_FAST asset                                        
+    20 |   78 PRECALL                                                 |   78 PRECALL                                                
+    21 |   82 CALL                                                    |   82 CALL                                                   
+    22 |   92 STORE_FAST data_ndarr                                   |   92 STORE_FAST data_ndarr                                  
+    23 |   94 LOAD_FAST data_ndarr                                    |   94 LOAD_FAST data_ndarr                                   
+    24 |   96 LOAD_METHOD copy                                        |   96 LOAD_METHOD copy                                       
+    25 |  118 PRECALL                                                 |  118 PRECALL                                                
+    26 |  122 CALL                                                    |  122 CALL                                                   
+    27 |  132 STORE_FAST bars_ndarr                                   |  132 STORE_FAST bars_ndarr                                  
+    28 |  134 LOAD_GLOBAL NULL + len                                  |  134 LOAD_GLOBAL NULL + len                                 
+    29 |  146 LOAD_FAST bars_ndarr                                    |  146 LOAD_FAST bars_ndarr                                   
+    30 |  148 PRECALL                                                 |  148 PRECALL                                                
+    31 |  152 CALL                                                    |  152 CALL                                                   
+    32 |  162 LOAD_CONST 0                                            |  162 LOAD_CONST 0                                           
+    33 |  164 COMPARE_OP ==                                           |  164 COMPARE_OP ==                                          
+    34 |  170 POP_JUMP_FORWARD_IF_FALSE to 220                        |  170 POP_JUMP_FORWARD_IF_FALSE to 220                       
+    35 |  172 LOAD_FAST fields                                        |  172 LOAD_FAST fields                                       
+    36 |  174 POP_JUMP_FORWARD_IF_NOT_NONE to 190                     |  174 POP_JUMP_FORWARD_IF_NOT_NONE to 190                    
+    37 |  176 LOAD_GLOBAL EMPTY_BAR_NP_ARRAY                          |  176 LOAD_GLOBAL EMPTY_BAR_NP_ARRAY                         
+    38 |  188 JUMP_FORWARD to 214                                     |  188 JUMP_FORWARD to 214                                    
+    39 |  190 LOAD_GLOBAL EMPTY_BAR_NP_ARRAY                          |  190 LOAD_GLOBAL EMPTY_BAR_NP_ARRAY                         
+    40 |  202 LOAD_FAST fields                                        |  202 LOAD_FAST fields                                       
+    41 |  204 BINARY_SUBSCR                                           |  204 BINARY_SUBSCR                                          
+    42 |  214 STORE_FAST history_data                                 |  214 STORE_FAST history_data                                
+    43 |  216 LOAD_FAST history_data                                  |  216 LOAD_FAST history_data                                 
+    44 |  218 RETURN_VALUE                                            |  218 RETURN_VALUE                                           
+    45 |  220 LOAD_FAST bars_ndarr                                    |  220 LOAD_FAST bars_ndarr                                   
+    46 |  222 LOAD_GLOBAL BarDataEnum                                 |  222 LOAD_GLOBAL BarDataEnum                                
+    47 |  234 LOAD_ATTR DATETIME                                      |  234 LOAD_ATTR DATETIME                                     
+    48 |  244 LOAD_ATTR value                                         |  244 LOAD_ATTR value                                        
+    49 |  254 BINARY_SUBSCR                                           |  254 BINARY_SUBSCR                                          
+    50 |  264 STORE_FAST bars_ndarr_datetime                          |  264 STORE_FAST bars_ndarr_datetime                         
+    51 |  266 LOAD_GLOBAL NULL + convert_int14_to_int                 |  266 LOAD_GLOBAL NULL + convert_int14_to_int                
+    52 |  278 LOAD_FAST start_date                                    |  278 LOAD_FAST start_date                                   
+    53 |  280 LOAD_FAST frequency                                     |  280 LOAD_FAST frequency                                    
+    54 |  282 PRECALL                                                 |  282 PRECALL                                                
+    55 |  286 CALL                                                    |  286 CALL                                                   
+    56 |  296 STORE_FAST start_time                                   |  296 STORE_FAST start_time                                  
+    57 |  298 LOAD_GLOBAL NULL + convert_int14_to_int                 |  298 LOAD_GLOBAL NULL + convert_int14_to_int                
+    58 |  310 LOAD_FAST end_date                                      |  310 LOAD_FAST end_date                                     
+    59 |  312 LOAD_FAST frequency                                     |  312 LOAD_FAST frequency                                    
+    60 |  314 PRECALL                                                 |  314 PRECALL                                                
+    61 |  318 CALL                                                    |  318 CALL                                                   
+    62 |  328 STORE_FAST end_time                                     |  328 STORE_FAST end_time                                    
+    63 |  330 LOAD_FAST bars_ndarr_datetime                           |  330 LOAD_FAST bars_ndarr_datetime                          
+    64 |  332 LOAD_METHOD searchsorted                                |  332 LOAD_METHOD searchsorted                               
+    65 |  354 LOAD_FAST start_time                                    |  354 LOAD_FAST start_time                                   
+    66 |  356 PRECALL                                                 |  356 PRECALL                                                
+    67 |  360 CALL                                                    |  360 CALL                                                   
+    68 |  370 STORE_FAST left                                         |  370 STORE_FAST left                                        
+    69 |  372 LOAD_FAST bars_ndarr_datetime                           |  372 LOAD_FAST bars_ndarr_datetime                          
+    70 |  374 LOAD_METHOD searchsorted                                |  374 LOAD_METHOD searchsorted                               
+    71 |  396 LOAD_FAST end_time                                      |  396 LOAD_FAST end_time                                     
+    72 |  398 LOAD_CONST 'right'                                      |  398 LOAD_CONST 'right'                                     
+    73 |  400 KW_NAMES                                                |  400 KW_NAMES                                               
+    74 |  402 PRECALL                                                 |  402 PRECALL                                                
+    75 |  406 CALL                                                    |  406 CALL                                                   
+    76 |  416 STORE_FAST right                                        |  416 STORE_FAST right                                       
+    77 |  418 LOAD_FAST bars_ndarr                                    |  418 LOAD_FAST bars_ndarr                                   
+    78 |  420 LOAD_FAST left                                          |  420 LOAD_FAST left                                         
+    79 |  422 LOAD_FAST right                                         |  422 LOAD_FAST right                                        
+    80 |  424 BUILD_SLICE                                             |  424 BUILD_SLICE                                            
+    81 |  426 BINARY_SUBSCR                                           |  426 BINARY_SUBSCR                                          
+    82 |  436 STORE_FAST bars_ndarr                                   |  436 STORE_FAST bars_ndarr                                  
+    83 |  438 LOAD_GLOBAL NULL + len                                  |  438 LOAD_GLOBAL NULL + len                                 
+    84 |  450 LOAD_FAST bars_ndarr                                    |  450 LOAD_FAST bars_ndarr                                   
+    85 |  452 PRECALL                                                 |  452 PRECALL                                                
+    86 |  456 CALL                                                    |  456 CALL                                                   
+    87 |  466 LOAD_CONST 0                                            |  466 LOAD_CONST 0                                           
+    88 |  468 COMPARE_OP ==                                           |  468 COMPARE_OP ==                                          
+    89 |  474 POP_JUMP_FORWARD_IF_FALSE to 524                        |  474 POP_JUMP_FORWARD_IF_FALSE to 524                       
+    90 |  476 LOAD_FAST fields                                        |  476 LOAD_FAST fields                                       
+    91 |  478 POP_JUMP_FORWARD_IF_NOT_NONE to 494                     |  478 POP_JUMP_FORWARD_IF_NOT_NONE to 494                    
+    92 |  480 LOAD_GLOBAL EMPTY_BAR_NP_ARRAY                          |  480 LOAD_GLOBAL EMPTY_BAR_NP_ARRAY                         
+    93 |  492 JUMP_FORWARD to 518                                     |  492 JUMP_FORWARD to 518                                    
+    94 |  494 LOAD_GLOBAL EMPTY_BAR_NP_ARRAY                          |  494 LOAD_GLOBAL EMPTY_BAR_NP_ARRAY                         
+    95 |  506 LOAD_FAST fields                                        |  506 LOAD_FAST fields                                       
+    96 |  508 BINARY_SUBSCR                                           |  508 BINARY_SUBSCR                                          
+    97 |  518 STORE_FAST history_data                                 |  518 STORE_FAST history_data                                
+    98 |  520 LOAD_FAST history_data                                  |  520 LOAD_FAST history_data                                 
+    99 |  522 RETURN_VALUE                                            |  522 RETURN_VALUE                                           
+   100 |  524 LOAD_FAST need_exrights                                 |  524 LOAD_FAST need_exrights                                
+   101 |  526 LOAD_CONST 0                                            |  526 LOAD_CONST 0                                           
+   102 |  528 COMPARE_OP ==                                           |  528 COMPARE_OP ==                                          
+   103 |  534 POP_JUMP_FORWARD_IF_TRUE to 618                         |  534 POP_JUMP_FORWARD_IF_TRUE to 618                        
+   104 |  536 LOAD_FAST asset                                         |  536 LOAD_FAST asset                                        
+   105 |  538 LOAD_METHOD get                                         |  538 LOAD_METHOD get                                        
+   106 |  560 LOAD_CONST 'type'                                       |  560 LOAD_CONST 'type'                                      
+   107 |  562 LOAD_CONST ''                                           |  562 LOAD_CONST ''                                          
+   108 |  564 PRECALL                                                 |  564 PRECALL                                                
+   109 |  568 CALL                                                    |  568 CALL                                                   
+   110 |  578 LOAD_GLOBAL AssetType                                   |  578 LOAD_GLOBAL AssetType                                  
+   111 |  590 LOAD_ATTR FUTURE                                        |  590 LOAD_ATTR FUTURE                                       
+   112 |  600 LOAD_ATTR value                                         |  600 LOAD_ATTR value                                        
+   113 |  610 COMPARE_OP ==                                           |  610 COMPARE_OP ==                                          
+   114 |  616 POP_JUMP_FORWARD_IF_FALSE to 646                        |  616 POP_JUMP_FORWARD_IF_FALSE to 646                       
+   115 |  618 LOAD_FAST fields                                        |  618 LOAD_FAST fields                                       
+   116 |  620 POP_JUMP_FORWARD_IF_NOT_NONE to 626                     |  620 POP_JUMP_FORWARD_IF_NOT_NONE to 626                    
+   117 |  622 LOAD_FAST bars_ndarr                                    |  622 LOAD_FAST bars_ndarr                                   
+   118 |  624 JUMP_FORWARD to 640                                     |  624 JUMP_FORWARD to 640                                    
+   119 |  626 LOAD_FAST bars_ndarr                                    |  626 LOAD_FAST bars_ndarr                                   
+   120 |  628 LOAD_FAST fields                                        |  628 LOAD_FAST fields                                       
+   121 |  630 BINARY_SUBSCR                                           |  630 BINARY_SUBSCR                                          
+   122 |  640 STORE_FAST history_data                                 |  640 STORE_FAST history_data                                
+   123 |  642 LOAD_FAST history_data                                  |  642 LOAD_FAST history_data                                 
+   124 |  644 RETURN_VALUE                                            |  644 RETURN_VALUE                                           
+   125 |  646 LOAD_FAST need_exrights                                 |  646 LOAD_FAST need_exrights                                
+   126 |  648 LOAD_CONST 1                                            |  648 LOAD_CONST 1                                           
+   127 |  650 COMPARE_OP ==                                           |  650 COMPARE_OP ==                                          
+   128 |  656 POP_JUMP_FORWARD_IF_FALSE to 780                        |  656 POP_JUMP_FORWARD_IF_FALSE to 780                       
+*  129 |  658 LOAD_CONST <code object <dictcomp> at 0x0000023E5F3BFA30, file "./fly_docker_py311/IQCommon/api/klinedata.py", line 895> |  658 LOAD_CONST <code object <dictcomp> at 0x0000023E5F438D30, file "F:\Downloads\pythoncdc-main\site-packages\IQCommon\api\klinedataOK.py", line 424>
+   130 |  660 MAKE_FUNCTION                                           |  660 MAKE_FUNCTION                                          
+   131 |  662 LOAD_FAST dividends                                     |  662 LOAD_FAST dividends                                    
+   132 |  664 LOAD_METHOD items                                       |  664 LOAD_METHOD items                                      
+   133 |  686 PRECALL                                                 |  686 PRECALL                                                
+   134 |  690 CALL                                                    |  690 CALL                                                   
+   135 |  700 GET_ITER                                                |  700 GET_ITER                                               
+   136 |  702 PRECALL                                                 |  702 PRECALL                                                
+   137 |  706 CALL                                                    |  706 CALL                                                   
+   138 |  716 STORE_FAST dividend_dict                                |  716 STORE_FAST dividend_dict                               
+   139 |  718 LOAD_GLOBAL NULL + get_exrights_data                    |  718 LOAD_GLOBAL NULL + get_exrights_data                   
+   140 |  730 LOAD_FAST bars_ndarr                                    |  730 LOAD_FAST bars_ndarr                                   
+   141 |  732 LOAD_FAST symbol                                        |  732 LOAD_FAST symbol                                       
+   142 |  734 LOAD_FAST frequency                                     |  734 LOAD_FAST frequency                                    
+   143 |  736 LOAD_FAST fq                                            |  736 LOAD_FAST fq                                           
+   144 |  738 LOAD_FAST dividend_dict                                 |  738 LOAD_FAST dividend_dict                                
+   145 |  740 PRECALL                                                 |  740 PRECALL                                                
+   146 |  744 CALL                                                    |  744 CALL                                                   
+   147 |  754 STORE_FAST exrights_bars_ndarr                          |  754 STORE_FAST exrights_bars_ndarr                         
+   148 |  756 LOAD_FAST fields                                        |  756 LOAD_FAST fields                                       
+   149 |  758 POP_JUMP_FORWARD_IF_NOT_NONE to 764                     |  758 POP_JUMP_FORWARD_IF_NOT_NONE to 764                    
+   150 |  760 LOAD_FAST exrights_bars_ndarr                           |  760 LOAD_FAST exrights_bars_ndarr                          
+   151 |  762 JUMP_FORWARD to 778                                     |  762 JUMP_FORWARD to 778                                    
+   152 |  764 LOAD_FAST exrights_bars_ndarr                           |  764 LOAD_FAST exrights_bars_ndarr                          
+   153 |  766 LOAD_FAST fields                                        |  766 LOAD_FAST fields                                       
+   154 |  768 BINARY_SUBSCR                                           |  768 BINARY_SUBSCR                                          
+   155 |  778 STORE_FAST history_data                                 |  778 STORE_FAST history_data                                
+*  156 |  780 JUMP_FORWARD to 936                                     |  780 JUMP_FORWARD to 886                                    
+   157 |  782 PUSH_EXC_INFO                                           |  782 PUSH_EXC_INFO                                          
+   158 |  784 LOAD_GLOBAL BaseException                               |  784 LOAD_GLOBAL BaseException                              
+   159 |  796 CHECK_EXC_MATCH                                         |  796 CHECK_EXC_MATCH                                        
+*  160 |  798 POP_JUMP_FORWARD_IF_FALSE to 928                        |  798 POP_JUMP_FORWARD_IF_FALSE to 878                       
+   161 |  800 POP_TOP                                                 |  800 POP_TOP                                                
+   162 |  802 LOAD_GLOBAL NULL + get_traceback_message                |  802 LOAD_GLOBAL NULL + get_traceback_message               
+   163 |  814 PRECALL                                                 |  814 PRECALL                                                
+   164 |  818 CALL                                                    |  818 CALL                                                   
+   165 |  828 STORE_FAST error_info                                   |  828 STORE_FAST error_info                                  
+*  166 |  830 LOAD_GLOBAL NULL + system_log                           |  830 LOAD_FAST fields                                       
+*  167 |  842 LOAD_ATTR error                                         |  832 POP_JUMP_FORWARD_IF_NOT_NONE to 848                    
+*  168 |  852 LOAD_FAST symbol                                        |  834 LOAD_GLOBAL EMPTY_BAR_NP_ARRAY                         
+*  169 |  854 FORMAT_VALUE str                                        |  846 JUMP_FORWARD to 872                                    
+*  170 |  856 LOAD_CONST ' 获取数据异常: '                                  |  848 LOAD_GLOBAL EMPTY_BAR_NP_ARRAY                         
+*  171 |  858 LOAD_FAST error_info                                    |  860 LOAD_FAST fields                                       
+*  172 |  860 FORMAT_VALUE str                                        |  862 BINARY_SUBSCR                                          
+*  173 |  862 BUILD_STRING                                            |  872 STORE_FAST history_data                                
+*  174 |  864 PRECALL                                                 |  874 POP_EXCEPT                                             
+*  175 |  868 CALL                                                    |  876 JUMP_FORWARD to 886                                    
+*  176 |  878 POP_TOP                                                 |  878 RERAISE                                                
+*  177 |  880 LOAD_FAST fields                                        |  880 COPY                                                   
+*  178 |  882 POP_JUMP_FORWARD_IF_NOT_NONE to 898                     |  882 POP_EXCEPT                                             
+*  179 |  884 LOAD_GLOBAL EMPTY_BAR_NP_ARRAY                          |  884 RERAISE                                                
+*  180 |  896 JUMP_FORWARD to 922                                     |  886 LOAD_FAST history_data                                 
+*  181 |  898 LOAD_GLOBAL EMPTY_BAR_NP_ARRAY                          |  888 RETURN_VALUE                                           
+*  182 |  910 LOAD_FAST fields                                        | <none>                                                      
+*  183 |  912 BINARY_SUBSCR                                           | <none>                                                      
+*  184 |  922 STORE_FAST history_data                                 | <none>                                                      
+*  185 |  924 POP_EXCEPT                                              | <none>                                                      
+*  186 |  926 JUMP_FORWARD to 936                                     | <none>                                                      
+*  187 |  928 RERAISE                                                 | <none>                                                      
+*  188 |  930 COPY                                                    | <none>                                                      
+*  189 |  932 POP_EXCEPT                                              | <none>                                                      
+*  190 |  934 RERAISE                                                 | <none>                                                      
+*  191 |  936 LOAD_FAST history_data                                  | <none>                                                      
+*  192 |  938 RETURN_VALUE                                            | <none>                                                      

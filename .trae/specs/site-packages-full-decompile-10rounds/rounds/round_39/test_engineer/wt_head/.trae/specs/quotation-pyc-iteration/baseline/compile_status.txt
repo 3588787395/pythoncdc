@@ -1,0 +1,2 @@
+SYNTAX_ERR line=2579: expected default value expression
+  text: "                                DataFrame_temp = pandas.DataFrame(index=security, columns=column).drop('secu_code', axis=1)\n"

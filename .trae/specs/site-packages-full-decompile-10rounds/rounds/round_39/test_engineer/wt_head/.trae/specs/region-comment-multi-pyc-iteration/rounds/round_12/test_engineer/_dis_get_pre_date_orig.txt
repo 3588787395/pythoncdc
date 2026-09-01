@@ -1,0 +1,226 @@
+# ORIG dis.dis(get_pre_date)
+909           0 RESUME                   0
+
+925           2 LOAD_FAST                3 (trading_time)
+              4 POP_JUMP_FORWARD_IF_FALSE   173 (to 352)
+
+926           6 LOAD_GLOBAL              1 (NULL + isinstance)
+             18 LOAD_FAST                1 (cur_date)
+             20 LOAD_GLOBAL              2 (datetime)
+             32 LOAD_ATTR                1 (datetime)
+             42 PRECALL                  2
+             46 CALL                     2
+             56 POP_JUMP_FORWARD_IF_FALSE   146 (to 350)
+
+927          58 LOAD_GLOBAL              5 (NULL + int)
+             70 LOAD_GLOBAL              2 (datetime)
+             82 LOAD_ATTR                1 (datetime)
+             92 LOAD_METHOD              3 (strftime)
+            114 LOAD_FAST                1 (cur_date)
+            116 LOAD_CONST               1 ('%Y%m%d')
+            118 PRECALL                  2
+            122 CALL                     2
+            132 PRECALL                  1
+            136 CALL                     1
+            146 LOAD_CONST               2 (10000)
+            148 BINARY_OP                5 (*)
+            152 LOAD_CONST               3 (800)
+            154 BINARY_OP                0 (+)
+            158 STORE_FAST               4 (min_datetime)
+
+928         160 LOAD_GLOBAL              9 (NULL + get_kline_time_by_asset)
+            172 LOAD_FAST                2 (frequency)
+            174 LOAD_FAST                4 (min_datetime)
+            176 LOAD_FAST                3 (trading_time)
+            178 PRECALL                  3
+            182 CALL                     3
+            192 UNPACK_SEQUENCE          2
+            196 STORE_FAST               5 (_df_nan_data)
+            198 STORE_FAST               6 (_)
+
+929         200 LOAD_GLOBAL             11 (NULL + len)
+            212 LOAD_FAST                5 (_df_nan_data)
+            214 LOAD_FAST                5 (_df_nan_data)
+            216 LOAD_CONST               4 ('datetime')
+            218 BINARY_SUBSCR
+            228 LOAD_FAST                4 (min_datetime)
+            230 COMPARE_OP               4 (>)
+            236 BINARY_SUBSCR
+            246 PRECALL                  1
+            250 CALL                     1
+            260 STORE_FAST               7 (length)
+
+930         262 LOAD_FAST                2 (frequency)
+            264 LOAD_CONST               5 (-1)
+            266 BINARY_SUBSCR
+            276 LOAD_CONST               6 ('m')
+            278 COMPARE_OP               2 (==)
+            284 POP_JUMP_FORWARD_IF_FALSE    30 (to 346)
+
+931         286 LOAD_CONST               7 (1)
+            288 LOAD_FAST                7 (length)
+            290 BINARY_OP               11 (/)
+            294 LOAD_GLOBAL              5 (NULL + int)
+            306 LOAD_FAST                2 (frequency)
+            308 LOAD_CONST               8 (None)
+            310 LOAD_CONST               5 (-1)
+            312 BUILD_SLICE              2
+            314 BINARY_SUBSCR
+            324 PRECALL                  1
+            328 CALL                     1
+            338 BINARY_OP                5 (*)
+            342 STORE_FAST               8 (multi)
+            344 JUMP_FORWARD           197 (to 740)
+
+933     >>  346 LOAD_CONST               7 (1)
+            348 STORE_FAST               8 (multi)
+        >>  350 JUMP_FORWARD           194 (to 740)
+
+935     >>  352 LOAD_FAST                2 (frequency)
+            354 LOAD_GLOBAL             12 (Frequency)
+            366 LOAD_ATTR                7 (DAILY)
+            376 LOAD_ATTR                8 (value)
+            386 COMPARE_OP               2 (==)
+            392 POP_JUMP_FORWARD_IF_FALSE     3 (to 400)
+
+936         394 LOAD_CONST               7 (1)
+            396 STORE_FAST               8 (multi)
+            398 JUMP_FORWARD           170 (to 740)
+
+938     >>  400 LOAD_FAST                2 (frequency)
+            402 LOAD_GLOBAL             12 (Frequency)
+            414 LOAD_ATTR                9 (MINUTE)
+            424 LOAD_ATTR                8 (value)
+            434 COMPARE_OP               2 (==)
+            440 POP_JUMP_FORWARD_IF_FALSE     3 (to 448)
+
+939         442 LOAD_CONST               9 (0.004166666666666667)
+            444 STORE_FAST               8 (multi)
+            446 JUMP_FORWARD           146 (to 740)
+
+941     >>  448 LOAD_FAST                2 (frequency)
+            450 LOAD_GLOBAL             12 (Frequency)
+            462 LOAD_ATTR               10 (TICK)
+            472 LOAD_ATTR                8 (value)
+            482 COMPARE_OP               2 (==)
+            488 POP_JUMP_FORWARD_IF_FALSE     3 (to 496)
+
+942         490 LOAD_CONST              10 (0.00020833333333333332)
+            492 STORE_FAST               8 (multi)
+            494 JUMP_FORWARD           122 (to 740)
+
+944     >>  496 LOAD_FAST                2 (frequency)
+            498 LOAD_GLOBAL             12 (Frequency)
+            510 LOAD_ATTR               11 (MINUTE5)
+            520 LOAD_ATTR                8 (value)
+            530 COMPARE_OP               2 (==)
+            536 POP_JUMP_FORWARD_IF_FALSE     3 (to 544)
+
+945         538 LOAD_CONST              11 (0.020833333333333332)
+            540 STORE_FAST               8 (multi)
+            542 JUMP_FORWARD            98 (to 740)
+
+947     >>  544 LOAD_FAST                2 (frequency)
+            546 LOAD_GLOBAL             12 (Frequency)
+            558 LOAD_ATTR               12 (MINUTE15)
+            568 LOAD_ATTR                8 (value)
+            578 COMPARE_OP               2 (==)
+            584 POP_JUMP_FORWARD_IF_FALSE     3 (to 592)
+
+948         586 LOAD_CONST              12 (0.0625)
+            588 STORE_FAST               8 (multi)
+            590 JUMP_FORWARD            74 (to 740)
+
+950     >>  592 LOAD_FAST                2 (frequency)
+            594 LOAD_GLOBAL             12 (Frequency)
+            606 LOAD_ATTR               13 (MINUTE30)
+            616 LOAD_ATTR                8 (value)
+            626 COMPARE_OP               2 (==)
+            632 POP_JUMP_FORWARD_IF_FALSE     3 (to 640)
+
+951         634 LOAD_CONST              13 (0.125)
+            636 STORE_FAST               8 (multi)
+            638 JUMP_FORWARD            50 (to 740)
+
+953     >>  640 LOAD_FAST                2 (frequency)
+            642 LOAD_GLOBAL             12 (Frequency)
+            654 LOAD_ATTR               14 (MINUTE60)
+            664 LOAD_ATTR                8 (value)
+            674 COMPARE_OP               2 (==)
+            680 POP_JUMP_FORWARD_IF_FALSE     3 (to 688)
+
+954         682 LOAD_CONST              14 (0.25)
+            684 STORE_FAST               8 (multi)
+            686 JUMP_FORWARD            26 (to 740)
+
+955     >>  688 LOAD_FAST                2 (frequency)
+            690 LOAD_GLOBAL             12 (Frequency)
+            702 LOAD_ATTR               15 (MINUTE120)
+            712 LOAD_ATTR                8 (value)
+            722 COMPARE_OP               2 (==)
+            728 POP_JUMP_FORWARD_IF_FALSE     3 (to 736)
+
+956         730 LOAD_CONST              15 (0.5)
+            732 STORE_FAST               8 (multi)
+            734 JUMP_FORWARD             2 (to 740)
+
+958     >>  736 LOAD_CONST               7 (1)
+            738 STORE_FAST               8 (multi)
+
+960     >>  740 LOAD_GLOBAL             33 (NULL + ceil)
+            752 LOAD_FAST                0 (bar_count)
+            754 LOAD_FAST                8 (multi)
+            756 BINARY_OP                5 (*)
+            760 PRECALL                  1
+            764 CALL                     1
+            774 LOAD_CONST               7 (1)
+            776 BINARY_OP                0 (+)
+            780 STORE_FAST               9 (pre_date_count)
+
+961         782 LOAD_FAST                9 (pre_date_count)
+            784 LOAD_CONST              16 (0)
+            786 COMPARE_OP               4 (>)
+            792 POP_JUMP_FORWARD_IF_FALSE   101 (to 996)
+
+962         794 LOAD_CONST              16 (0)
+            796 LOAD_CONST              17 (('get_trade_days',))
+            798 IMPORT_NAME             17 (fly.common.tradingday_calendar)
+            800 IMPORT_FROM             18 (get_trade_days)
+            802 STORE_FAST              10 (get_trade_days)
+            804 POP_TOP
+
+963         806 PUSH_NULL
+            808 LOAD_FAST               10 (get_trade_days)
+            810 LOAD_GLOBAL              2 (datetime)
+            822 LOAD_ATTR                1 (datetime)
+            832 LOAD_METHOD              3 (strftime)
+            854 LOAD_FAST                1 (cur_date)
+            856 LOAD_CONST               1 ('%Y%m%d')
+            858 PRECALL                  2
+            862 CALL                     2
+            872 LOAD_FAST                9 (pre_date_count)
+            874 KW_NAMES                18
+            876 PRECALL                  2
+            880 CALL                     2
+            890 STORE_FAST              11 (trade_days)
+
+964         892 LOAD_GLOBAL              2 (datetime)
+            904 LOAD_ATTR                1 (datetime)
+            914 LOAD_METHOD             19 (strptime)
+            936 LOAD_GLOBAL             41 (NULL + str)
+            948 LOAD_FAST               11 (trade_days)
+            950 LOAD_CONST              16 (0)
+            952 BINARY_SUBSCR
+            962 PRECALL                  1
+            966 CALL                     1
+            976 LOAD_CONST              19 ('%Y-%m-%d')
+            978 PRECALL                  2
+            982 CALL                     2
+            992 STORE_FAST              12 (pre_date)
+            994 JUMP_FORWARD             2 (to 1000)
+
+966     >>  996 LOAD_FAST                1 (cur_date)
+            998 STORE_FAST              12 (pre_date)
+
+967     >> 1000 LOAD_FAST               12 (pre_date)
+           1002 RETURN_VALUE

@@ -1,0 +1,485 @@
+# ORIG dis.dis(kline_datetime_list)
+1206           0 RESUME                   0
+
+1207           2 LOAD_GLOBAL              1 (NULL + int)
+              14 LOAD_GLOBAL              3 (NULL + time)
+              26 LOAD_ATTR                2 (strftime)
+              36 LOAD_CONST               1 ('%Y%m%d')
+              38 PRECALL                  1
+              42 CALL                     1
+              52 PRECALL                  1
+              56 CALL                     1
+              66 STORE_FAST               5 (now_date)
+
+1208          68 LOAD_FAST                5 (now_date)
+              70 LOAD_CONST               2 (10000)
+              72 BINARY_OP                5 (*)
+              76 LOAD_CONST               3 (930)
+              78 BINARY_OP                0 (+)
+              82 STORE_FAST               6 (am_open_datetime)
+
+1209          84 LOAD_FAST                5 (now_date)
+              86 LOAD_CONST               2 (10000)
+              88 BINARY_OP                5 (*)
+              92 LOAD_CONST               4 (1130)
+              94 BINARY_OP                0 (+)
+              98 STORE_FAST               7 (am_close_datetime)
+
+1210         100 LOAD_FAST                5 (now_date)
+             102 LOAD_CONST               2 (10000)
+             104 BINARY_OP                5 (*)
+             108 LOAD_CONST               5 (1300)
+             110 BINARY_OP                0 (+)
+             114 STORE_FAST               8 (pm_open_datetime)
+
+1211         116 LOAD_FAST                5 (now_date)
+             118 LOAD_CONST               2 (10000)
+             120 BINARY_OP                5 (*)
+             124 LOAD_CONST               6 (1500)
+             126 BINARY_OP                0 (+)
+             130 STORE_FAST               9 (pm_close_datetime)
+
+1213         132 LOAD_FAST                4 (bussiness_type)
+             134 LOAD_CONST               7 ('HKS')
+             136 COMPARE_OP               2 (==)
+             142 POP_JUMP_FORWARD_IF_FALSE    16 (to 176)
+
+1214         144 LOAD_FAST                5 (now_date)
+             146 LOAD_CONST               2 (10000)
+             148 BINARY_OP                5 (*)
+             152 LOAD_CONST               8 (1200)
+             154 BINARY_OP                0 (+)
+             158 STORE_FAST               7 (am_close_datetime)
+
+1215         160 LOAD_FAST                5 (now_date)
+             162 LOAD_CONST               2 (10000)
+             164 BINARY_OP                5 (*)
+             168 LOAD_CONST               9 (1600)
+             170 BINARY_OP                0 (+)
+             174 STORE_FAST               9 (pm_close_datetime)
+
+1216     >>  176 LOAD_CONST              10 (-1)
+             178 STORE_FAST              10 (max_len_real_data)
+
+1217         180 LOAD_CONST               0 (None)
+             182 STORE_FAST              11 (df_nan_data)
+
+1218         184 LOAD_FAST                2 (frequency)
+             186 LOAD_METHOD              3 (find)
+             208 LOAD_GLOBAL              8 (Frequency)
+             220 LOAD_ATTR                5 (DAILY)
+             230 LOAD_ATTR                6 (value)
+             240 PRECALL                  1
+             244 CALL                     1
+             254 LOAD_CONST              10 (-1)
+             256 COMPARE_OP               4 (>)
+             262 POP_JUMP_FORWARD_IF_FALSE    19 (to 302)
+
+1220         264 LOAD_GLOBAL             15 (NULL + get_kline_time_by_frequency_array)
+             276 LOAD_FAST                2 (frequency)
+             278 LOAD_FAST                1 (query_date)
+             280 LOAD_FAST                4 (bussiness_type)
+             282 PRECALL                  3
+             286 CALL                     3
+             296 STORE_FAST              11 (df_nan_data)
+             298 EXTENDED_ARG             2
+             300 JUMP_FORWARD           701 (to 1704)
+
+1221     >>  302 LOAD_FAST                2 (frequency)
+             304 LOAD_CONST              10 (-1)
+             306 BINARY_SUBSCR
+             316 LOAD_GLOBAL              8 (Frequency)
+             328 LOAD_ATTR                8 (MINUTE)
+             338 LOAD_ATTR                6 (value)
+             348 LOAD_CONST              10 (-1)
+             350 BINARY_SUBSCR
+             360 COMPARE_OP               2 (==)
+             366 EXTENDED_ARG             2
+             368 POP_JUMP_FORWARD_IF_FALSE   667 (to 1704)
+
+1223         370 LOAD_FAST                8 (pm_open_datetime)
+             372 LOAD_FAST                1 (query_date)
+             374 SWAP                     2
+             376 COPY                     2
+             378 COMPARE_OP               4 (>)
+             384 POP_JUMP_FORWARD_IF_FALSE     6 (to 398)
+             386 LOAD_FAST                7 (am_close_datetime)
+             388 COMPARE_OP               4 (>)
+             394 POP_JUMP_FORWARD_IF_FALSE     6 (to 408)
+             396 JUMP_FORWARD             2 (to 402)
+         >>  398 POP_TOP
+             400 JUMP_FORWARD             3 (to 408)
+
+1224     >>  402 LOAD_FAST                7 (am_close_datetime)
+             404 STORE_FAST              12 (_end_time)
+             406 JUMP_FORWARD            11 (to 430)
+
+1226     >>  408 LOAD_FAST                1 (query_date)
+             410 LOAD_FAST                9 (pm_close_datetime)
+             412 COMPARE_OP               4 (>)
+             418 POP_JUMP_FORWARD_IF_FALSE     3 (to 426)
+
+1227         420 LOAD_FAST                9 (pm_close_datetime)
+             422 STORE_FAST              12 (_end_time)
+             424 JUMP_FORWARD             2 (to 430)
+
+1229     >>  426 LOAD_FAST                1 (query_date)
+             428 STORE_FAST              12 (_end_time)
+
+1231     >>  430 LOAD_GLOBAL              1 (NULL + int)
+             442 LOAD_GLOBAL             19 (NULL + convert_int_to_datetime)
+             454 LOAD_FAST               12 (_end_time)
+             456 PRECALL                  1
+             460 CALL                     1
+             470 LOAD_GLOBAL             19 (NULL + convert_int_to_datetime)
+             482 LOAD_FAST                6 (am_open_datetime)
+             484 PRECALL                  1
+             488 CALL                     1
+             498 BINARY_OP               10 (-)
+             502 LOAD_ATTR               10 (seconds)
+             512 LOAD_CONST              11 (60)
+             514 BINARY_OP               11 (/)
+             518 PRECALL                  1
+             522 CALL                     1
+             532 STORE_FAST              13 (time_count)
+
+1233         534 LOAD_FAST                1 (query_date)
+             536 LOAD_FAST                8 (pm_open_datetime)
+             538 COMPARE_OP               5 (>=)
+             544 POP_JUMP_FORWARD_IF_FALSE     5 (to 556)
+
+1234         546 LOAD_FAST               13 (time_count)
+             548 LOAD_CONST              12 (90)
+             550 BINARY_OP               23 (-=)
+             554 STORE_FAST              13 (time_count)
+
+1236     >>  556 LOAD_FAST                3 (include)
+             558 POP_JUMP_FORWARD_IF_TRUE    53 (to 666)
+             560 LOAD_FAST                2 (frequency)
+             562 LOAD_GLOBAL              8 (Frequency)
+             574 LOAD_ATTR                8 (MINUTE)
+             584 LOAD_ATTR                6 (value)
+             594 COMPARE_OP               2 (==)
+             600 POP_JUMP_FORWARD_IF_FALSE    32 (to 666)
+
+1237         602 LOAD_FAST                1 (query_date)
+             604 LOAD_FAST                6 (am_open_datetime)
+             606 LOAD_FAST                8 (pm_open_datetime)
+             608 BUILD_TUPLE              2
+             610 CONTAINS_OP              1
+             612 POP_JUMP_FORWARD_IF_FALSE    26 (to 666)
+
+1238         614 LOAD_FAST                8 (pm_open_datetime)
+             616 LOAD_FAST                1 (query_date)
+             618 SWAP                     2
+             620 COPY                     2
+             622 COMPARE_OP               4 (>)
+             628 POP_JUMP_FORWARD_IF_FALSE     6 (to 642)
+             630 LOAD_FAST                7 (am_close_datetime)
+             632 COMPARE_OP               4 (>)
+             638 POP_JUMP_FORWARD_IF_TRUE    13 (to 666)
+             640 JUMP_FORWARD             1 (to 644)
+         >>  642 POP_TOP
+         >>  644 LOAD_FAST                1 (query_date)
+             646 LOAD_FAST                9 (pm_close_datetime)
+             648 COMPARE_OP               4 (>)
+             654 POP_JUMP_FORWARD_IF_TRUE     5 (to 666)
+
+1239         656 LOAD_FAST               13 (time_count)
+             658 LOAD_CONST              13 (1)
+             660 BINARY_OP               23 (-=)
+             664 STORE_FAST              13 (time_count)
+
+1241     >>  666 LOAD_FAST                6 (am_open_datetime)
+             668 STORE_FAST              14 (min_datetime)
+
+1242         670 LOAD_FAST                2 (frequency)
+             672 LOAD_GLOBAL              8 (Frequency)
+             684 LOAD_ATTR                8 (MINUTE)
+             694 LOAD_ATTR                6 (value)
+             704 COMPARE_OP               2 (==)
+             710 POP_JUMP_FORWARD_IF_FALSE   251 (to 1214)
+
+1243         712 LOAD_FAST               13 (time_count)
+             714 STORE_FAST              10 (max_len_real_data)
+
+1244         716 LOAD_FAST               10 (max_len_real_data)
+             718 STORE_FAST              15 (min_count)
+
+1247         720 LOAD_FAST               10 (max_len_real_data)
+             722 LOAD_FAST                0 (count)
+             724 COMPARE_OP               4 (>)
+             730 POP_JUMP_FORWARD_IF_FALSE   151 (to 1034)
+
+1248         732 LOAD_FAST                0 (count)
+             734 STORE_FAST              15 (min_count)
+
+1249         736 LOAD_FAST                1 (query_date)
+             738 STORE_FAST              16 (tmp_end_datetime)
+
+1251         740 LOAD_FAST               16 (tmp_end_datetime)
+             742 LOAD_FAST                9 (pm_close_datetime)
+             744 COMPARE_OP               4 (>)
+             750 POP_JUMP_FORWARD_IF_FALSE     2 (to 756)
+
+1252         752 LOAD_FAST                9 (pm_close_datetime)
+             754 STORE_FAST              16 (tmp_end_datetime)
+
+1254     >>  756 LOAD_FAST                7 (am_close_datetime)
+             758 LOAD_FAST               16 (tmp_end_datetime)
+             760 SWAP                     2
+             762 COPY                     2
+             764 COMPARE_OP               0 (<)
+             770 POP_JUMP_FORWARD_IF_FALSE     6 (to 784)
+             772 LOAD_FAST                8 (pm_open_datetime)
+             774 COMPARE_OP               1 (<=)
+             780 POP_JUMP_FORWARD_IF_FALSE    12 (to 806)
+             782 JUMP_FORWARD             2 (to 788)
+         >>  784 POP_TOP
+             786 JUMP_FORWARD             9 (to 806)
+
+1255     >>  788 LOAD_FAST                7 (am_close_datetime)
+             790 STORE_FAST              16 (tmp_end_datetime)
+
+1256         792 LOAD_FAST                3 (include)
+             794 POP_JUMP_FORWARD_IF_TRUE     5 (to 806)
+
+1257         796 LOAD_FAST               15 (min_count)
+             798 LOAD_CONST              13 (1)
+             800 BINARY_OP               23 (-=)
+             804 STORE_FAST              15 (min_count)
+
+1258     >>  806 LOAD_GLOBAL             23 (NULL + change_dt_2_int)
+
+1259         818 LOAD_GLOBAL             19 (NULL + convert_int_to_datetime)
+             830 LOAD_FAST               16 (tmp_end_datetime)
+             832 PRECALL                  1
+             836 CALL                     1
+             846 LOAD_GLOBAL             25 (NULL + datetime)
+             858 LOAD_ATTR               13 (timedelta)
+             868 LOAD_FAST               15 (min_count)
+             870 KW_NAMES                14
+             872 PRECALL                  1
+             876 CALL                     1
+             886 BINARY_OP               10 (-)
+             890 LOAD_FAST                2 (frequency)
+
+1258         892 PRECALL                  2
+             896 CALL                     2
+             906 STORE_FAST              14 (min_datetime)
+
+1261         908 LOAD_FAST               16 (tmp_end_datetime)
+             910 LOAD_FAST                8 (pm_open_datetime)
+             912 COMPARE_OP               5 (>=)
+             918 POP_JUMP_FORWARD_IF_FALSE    57 (to 1034)
+             920 LOAD_FAST               14 (min_datetime)
+             922 LOAD_FAST                8 (pm_open_datetime)
+             924 COMPARE_OP               1 (<=)
+             930 POP_JUMP_FORWARD_IF_FALSE    51 (to 1034)
+
+1262         932 LOAD_GLOBAL             23 (NULL + change_dt_2_int)
+
+1263         944 LOAD_GLOBAL             19 (NULL + convert_int_to_datetime)
+             956 LOAD_FAST               14 (min_datetime)
+             958 PRECALL                  1
+             962 CALL                     1
+             972 LOAD_GLOBAL             25 (NULL + datetime)
+             984 LOAD_ATTR               13 (timedelta)
+             994 LOAD_CONST              12 (90)
+             996 KW_NAMES                14
+             998 PRECALL                  1
+            1002 CALL                     1
+            1012 BINARY_OP               10 (-)
+            1016 LOAD_FAST                2 (frequency)
+
+1262        1018 PRECALL                  2
+            1022 CALL                     2
+            1032 STORE_FAST              14 (min_datetime)
+
+1264     >> 1034 LOAD_GLOBAL             15 (NULL + get_kline_time_by_frequency_array)
+            1046 LOAD_FAST                2 (frequency)
+            1048 LOAD_FAST                1 (query_date)
+            1050 LOAD_FAST                4 (bussiness_type)
+            1052 PRECALL                  3
+            1056 CALL                     3
+            1066 STORE_FAST              17 (_df_nan_data)
+
+1265        1068 LOAD_FAST                3 (include)
+            1070 POP_JUMP_FORWARD_IF_TRUE    39 (to 1150)
+            1072 LOAD_FAST                1 (query_date)
+            1074 LOAD_FAST                9 (pm_close_datetime)
+            1076 COMPARE_OP               1 (<=)
+            1082 POP_JUMP_FORWARD_IF_FALSE    33 (to 1150)
+
+1266        1084 LOAD_FAST               17 (_df_nan_data)
+            1086 LOAD_FAST               17 (_df_nan_data)
+            1088 LOAD_CONST              15 ('datetime')
+            1090 BINARY_SUBSCR
+            1100 LOAD_FAST               14 (min_datetime)
+            1102 COMPARE_OP               5 (>=)
+            1108 LOAD_FAST               17 (_df_nan_data)
+            1110 LOAD_CONST              15 ('datetime')
+            1112 BINARY_SUBSCR
+
+1267        1122 LOAD_FAST                1 (query_date)
+
+1266        1124 COMPARE_OP               0 (<)
+            1130 BINARY_OP                1 (&)
+            1134 BINARY_SUBSCR
+            1144 STORE_FAST              11 (df_nan_data)
+            1146 EXTENDED_ARG             1
+            1148 JUMP_FORWARD           277 (to 1704)
+
+1269     >> 1150 LOAD_FAST               17 (_df_nan_data)
+            1152 LOAD_FAST               17 (_df_nan_data)
+            1154 LOAD_CONST              15 ('datetime')
+            1156 BINARY_SUBSCR
+            1166 LOAD_FAST               14 (min_datetime)
+            1168 COMPARE_OP               4 (>)
+            1174 LOAD_FAST               17 (_df_nan_data)
+            1176 LOAD_CONST              15 ('datetime')
+            1178 BINARY_SUBSCR
+
+1270        1188 LOAD_FAST                1 (query_date)
+
+1269        1190 COMPARE_OP               1 (<=)
+            1196 BINARY_OP                1 (&)
+            1200 BINARY_SUBSCR
+            1210 STORE_FAST              11 (df_nan_data)
+            1212 JUMP_FORWARD           245 (to 1704)
+
+1271     >> 1214 LOAD_GLOBAL             28 (FREQUENCY_TO_COUNT)
+            1226 LOAD_FAST                2 (frequency)
+            1228 BINARY_SUBSCR
+            1238 LOAD_CONST              16 (5)
+            1240 COMPARE_OP               5 (>=)
+            1246 POP_JUMP_FORWARD_IF_FALSE   228 (to 1704)
+
+1272        1248 LOAD_GLOBAL             31 (NULL + ceil)
+            1260 LOAD_FAST               13 (time_count)
+            1262 LOAD_GLOBAL             28 (FREQUENCY_TO_COUNT)
+            1274 LOAD_FAST                2 (frequency)
+            1276 BINARY_SUBSCR
+            1286 BINARY_OP               11 (/)
+            1290 PRECALL                  1
+            1294 CALL                     1
+            1304 STORE_FAST              10 (max_len_real_data)
+
+1273        1306 LOAD_FAST                3 (include)
+            1308 POP_JUMP_FORWARD_IF_TRUE    32 (to 1374)
+            1310 LOAD_FAST                1 (query_date)
+            1312 LOAD_FAST                8 (pm_open_datetime)
+            1314 COMPARE_OP               3 (!=)
+            1320 POP_JUMP_FORWARD_IF_FALSE    26 (to 1374)
+
+1274        1322 LOAD_FAST                8 (pm_open_datetime)
+            1324 LOAD_FAST                1 (query_date)
+            1326 SWAP                     2
+            1328 COPY                     2
+            1330 COMPARE_OP               4 (>)
+            1336 POP_JUMP_FORWARD_IF_FALSE     6 (to 1350)
+            1338 LOAD_FAST                7 (am_close_datetime)
+            1340 COMPARE_OP               4 (>)
+            1346 POP_JUMP_FORWARD_IF_TRUE    13 (to 1374)
+            1348 JUMP_FORWARD             1 (to 1352)
+         >> 1350 POP_TOP
+         >> 1352 LOAD_FAST                1 (query_date)
+            1354 LOAD_FAST                8 (pm_open_datetime)
+            1356 COMPARE_OP               4 (>)
+            1362 POP_JUMP_FORWARD_IF_TRUE     5 (to 1374)
+
+1275        1364 LOAD_FAST               10 (max_len_real_data)
+            1366 LOAD_CONST              13 (1)
+            1368 BINARY_OP               23 (-=)
+            1372 STORE_FAST              10 (max_len_real_data)
+
+1276     >> 1374 LOAD_FAST               10 (max_len_real_data)
+            1376 LOAD_FAST                0 (count)
+            1378 COMPARE_OP               4 (>)
+            1384 POP_JUMP_FORWARD_IF_FALSE     2 (to 1390)
+            1386 LOAD_FAST                0 (count)
+            1388 JUMP_FORWARD             1 (to 1392)
+         >> 1390 LOAD_FAST               10 (max_len_real_data)
+         >> 1392 STORE_FAST              10 (max_len_real_data)
+
+1277        1394 LOAD_FAST               10 (max_len_real_data)
+            1396 LOAD_CONST              17 (0)
+            1398 COMPARE_OP               0 (<)
+            1404 POP_JUMP_FORWARD_IF_FALSE     2 (to 1410)
+            1406 LOAD_CONST              17 (0)
+            1408 JUMP_FORWARD             1 (to 1412)
+         >> 1410 LOAD_FAST               10 (max_len_real_data)
+         >> 1412 STORE_FAST              10 (max_len_real_data)
+
+1278        1414 LOAD_GLOBAL             23 (NULL + change_dt_2_int)
+            1426 LOAD_GLOBAL             19 (NULL + convert_int_to_datetime)
+            1438 LOAD_FAST                1 (query_date)
+            1440 PRECALL                  1
+            1444 CALL                     1
+
+1279        1454 LOAD_GLOBAL             25 (NULL + datetime)
+            1466 LOAD_ATTR               13 (timedelta)
+            1476 LOAD_GLOBAL              1 (NULL + int)
+            1488 LOAD_FAST                2 (frequency)
+            1490 LOAD_CONST               0 (None)
+            1492 LOAD_CONST              10 (-1)
+            1494 BUILD_SLICE              2
+            1496 BINARY_SUBSCR
+            1506 PRECALL                  1
+            1510 CALL                     1
+            1520 KW_NAMES                14
+            1522 PRECALL                  1
+            1526 CALL                     1
+
+1278        1536 BINARY_OP                0 (+)
+
+1279        1540 LOAD_FAST                2 (frequency)
+
+1278        1542 PRECALL                  2
+            1546 CALL                     2
+            1556 STORE_FAST              18 (max_datetime)
+
+1280        1558 LOAD_GLOBAL             15 (NULL + get_kline_time_by_frequency_array)
+            1570 LOAD_FAST                2 (frequency)
+            1572 LOAD_FAST                1 (query_date)
+            1574 LOAD_FAST                4 (bussiness_type)
+            1576 PRECALL                  3
+            1580 CALL                     3
+            1590 STORE_FAST              17 (_df_nan_data)
+
+1281        1592 LOAD_FAST                3 (include)
+            1594 POP_JUMP_FORWARD_IF_TRUE    25 (to 1646)
+            1596 LOAD_FAST                1 (query_date)
+            1598 LOAD_FAST                9 (pm_close_datetime)
+            1600 COMPARE_OP               1 (<=)
+            1606 POP_JUMP_FORWARD_IF_FALSE    19 (to 1646)
+
+1282        1608 LOAD_FAST               17 (_df_nan_data)
+            1610 LOAD_FAST               17 (_df_nan_data)
+            1612 LOAD_CONST              15 ('datetime')
+            1614 BINARY_SUBSCR
+            1624 LOAD_FAST                1 (query_date)
+            1626 COMPARE_OP               0 (<)
+            1632 BINARY_SUBSCR
+            1642 STORE_FAST              11 (df_nan_data)
+            1644 JUMP_FORWARD            18 (to 1682)
+
+1284     >> 1646 LOAD_FAST               17 (_df_nan_data)
+            1648 LOAD_FAST               17 (_df_nan_data)
+            1650 LOAD_CONST              15 ('datetime')
+            1652 BINARY_SUBSCR
+            1662 LOAD_FAST               18 (max_datetime)
+            1664 COMPARE_OP               0 (<)
+            1670 BINARY_SUBSCR
+            1680 STORE_FAST              11 (df_nan_data)
+
+1285     >> 1682 LOAD_FAST               11 (df_nan_data)
+            1684 LOAD_FAST               10 (max_len_real_data)
+            1686 UNARY_NEGATIVE
+            1688 LOAD_CONST               0 (None)
+            1690 BUILD_SLICE              2
+            1692 BINARY_SUBSCR
+            1702 STORE_FAST              11 (df_nan_data)
+
+1286     >> 1704 LOAD_FAST               11 (df_nan_data)
+            1706 RETURN_VALUE

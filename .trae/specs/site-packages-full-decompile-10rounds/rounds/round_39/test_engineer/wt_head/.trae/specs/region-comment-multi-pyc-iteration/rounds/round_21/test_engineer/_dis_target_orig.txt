@@ -1,0 +1,204 @@
+offset opname argval argrepr
+    0 RESUME                         0                              
+    2 LOAD_GLOBAL                    sys                            sys
+   14 LOAD_ATTR                      version_info                   version_info
+   24 LOAD_CONST                     0                              0
+   26 BINARY_SUBSCR                  None                           
+   36 LOAD_CONST                     3                              3
+   38 COMPARE_OP                     ==                             ==
+   44 POP_JUMP_FORWARD_IF_FALSE      412                            to 412
+   46 LOAD_GLOBAL                    sys                            sys
+   58 LOAD_ATTR                      version_info                   version_info
+   68 LOAD_CONST                     1                              1
+   70 BINARY_SUBSCR                  None                           
+   80 LOAD_CONST                     5                              5
+   82 COMPARE_OP                     ==                             ==
+   88 POP_JUMP_FORWARD_IF_FALSE      412                            to 412
+   90 LOAD_FAST                      self                           self
+   92 LOAD_ATTR                      running                        running
+  102 POP_JUMP_FORWARD_IF_FALSE      408                            to 408
+  104 NOP                            None                           
+  106 LOAD_FAST                      self                           self
+  108 LOAD_ATTR                      wrapper_handler                wrapper_handler
+  118 LOAD_ATTR                      queue                          queue
+  128 LOAD_METHOD                    get                            get
+  150 LOAD_FAST                      self                           self
+  152 LOAD_ATTR                      timeout                        timeout
+  162 KW_NAMES                       <unknown>                      
+  164 PRECALL                        1                              
+  168 CALL                           1                              
+  178 STORE_FAST                     record                         record
+  180 LOAD_FAST                      record                         record
+  182 LOAD_FAST                      self                           self
+  184 LOAD_ATTR                      _sentinel                      _sentinel
+  194 IS_OP                          0                              
+  196 POP_JUMP_FORWARD_IF_FALSE      212                            to 212
+  198 LOAD_CONST                     False                          False
+  200 LOAD_FAST                      self                           self
+  202 STORE_ATTR                     running                        running
+  212 LOAD_FAST                      self                           self
+  214 LOAD_ATTR                      wrapper_handler                wrapper_handler
+  224 LOAD_ATTR                      handler                        handler
+  234 LOAD_METHOD                    handle                         handle
+  256 LOAD_FAST                      record                         record
+  258 PRECALL                        1                              
+  262 CALL                           1                              
+  272 POP_TOP                        None                           
+  274 JUMP_FORWARD                   390                            to 390
+  276 PUSH_EXC_INFO                  None                           
+  278 LOAD_GLOBAL                    QueueEmptyException            QueueEmptyException
+  290 CHECK_EXC_MATCH                None                           
+  292 POP_JUMP_FORWARD_IF_FALSE      382                            to 382
+  294 POP_TOP                        None                           
+  296 LOAD_FAST                      self                           self
+  298 LOAD_ATTR                      waiting_to_end                 waiting_to_end
+  308 POP_JUMP_FORWARD_IF_FALSE      324                            to 324
+  310 LOAD_CONST                     False                          False
+  312 LOAD_FAST                      self                           self
+  314 STORE_ATTR                     running                        running
+  324 LOAD_FAST                      self                           self
+  326 LOAD_METHOD                    _check_main                    _check_main
+  348 PRECALL                        0                              
+  352 CALL                           0                              
+  362 POP_JUMP_FORWARD_IF_FALSE      378                            to 378
+  364 LOAD_CONST                     False                          False
+  366 LOAD_FAST                      self                           self
+  368 STORE_ATTR                     running                        running
+  378 POP_EXCEPT                     None                           
+  380 JUMP_FORWARD                   390                            to 390
+  382 RERAISE                        0                              
+  384 COPY                           3                              
+  386 POP_EXCEPT                     None                           
+  388 RERAISE                        1                              
+  390 LOAD_FAST                      self                           self
+  392 LOAD_ATTR                      running                        running
+  402 POP_JUMP_BACKWARD_IF_TRUE      104                            to 104
+  404 LOAD_CONST                     None                           None
+  406 RETURN_VALUE                   None                           
+  408 LOAD_CONST                     None                           None
+  410 RETURN_VALUE                   None                           
+  412 LOAD_GLOBAL                    sys                            sys
+  424 LOAD_ATTR                      version_info                   version_info
+  434 LOAD_CONST                     0                              0
+  436 BINARY_SUBSCR                  None                           
+  446 LOAD_CONST                     3                              3
+  448 COMPARE_OP                     ==                             ==
+  454 EXTENDED_ARG                   1                              
+  456 POP_JUMP_FORWARD_IF_FALSE      1012                           to 1012
+  458 LOAD_GLOBAL                    sys                            sys
+  470 LOAD_ATTR                      version_info                   version_info
+  480 LOAD_CONST                     1                              1
+  482 BINARY_SUBSCR                  None                           
+  492 LOAD_CONST                     11                             11
+  494 COMPARE_OP                     ==                             ==
+  500 EXTENDED_ARG                   1                              
+  502 POP_JUMP_FORWARD_IF_FALSE      1016                           to 1016
+  504 LOAD_FAST                      self                           self
+  506 LOAD_ATTR                      running                        running
+  516 POP_JUMP_FORWARD_IF_FALSE      1020                           to 1020
+  518 NOP                            None                           
+  520 LOAD_FAST                      self                           self
+  522 LOAD_ATTR                      wrapper_handler                wrapper_handler
+  532 LOAD_ATTR                      queue                          queue
+  542 LOAD_METHOD                    get                            get
+  564 LOAD_FAST                      self                           self
+  566 LOAD_ATTR                      timeout                        timeout
+  576 KW_NAMES                       <unknown>                      
+  578 PRECALL                        1                              
+  582 CALL                           1                              
+  592 STORE_FAST                     item                           item
+  594 LOAD_FAST                      item                           item
+  596 LOAD_CONST                     0                              0
+  598 BINARY_SUBSCR                  None                           
+  608 LOAD_FAST                      item                           item
+  610 LOAD_CONST                     1                              1
+  612 LOAD_CONST                     None                           None
+  614 BUILD_SLICE                    2                              
+  616 BINARY_SUBSCR                  None                           
+  626 STORE_FAST                     data                           data
+  628 STORE_FAST                     command                        command
+  630 LOAD_FAST                      command                        command
+  632 LOAD_FAST                      self                           self
+  634 LOAD_ATTR                      Command                        Command
+  644 LOAD_ATTR                      stop                           stop
+  654 IS_OP                          0                              
+  656 POP_JUMP_FORWARD_IF_FALSE      676                            to 676
+  658 LOAD_CONST                     False                          False
+  660 LOAD_FAST                      self                           self
+  662 STORE_ATTR                     running                        running
+  672 LOAD_CONST                     None                           None
+  674 RETURN_VALUE                   None                           
+  676 LOAD_FAST                      command                        command
+  678 LOAD_FAST                      self                           self
+  680 LOAD_ATTR                      Command                        Command
+  690 LOAD_ATTR                      emit                           emit
+  700 IS_OP                          0                              
+  702 POP_JUMP_FORWARD_IF_FALSE      776                            to 776
+  704 LOAD_FAST                      data                           data
+  706 UNPACK_SEQUENCE                1                              
+  710 STORE_FAST                     record                         record
+  712 LOAD_FAST                      self                           self
+  714 LOAD_ATTR                      wrapper_handler                wrapper_handler
+  724 LOAD_ATTR                      handler                        handler
+  734 LOAD_METHOD                    emit                           emit
+  756 LOAD_FAST                      record                         record
+  758 PRECALL                        1                              
+  762 CALL                           1                              
+  772 POP_TOP                        None                           
+  774 JUMP_FORWARD                   994                            to 994
+  776 LOAD_FAST                      command                        command
+  778 LOAD_FAST                      self                           self
+  780 LOAD_ATTR                      Command                        Command
+  790 LOAD_ATTR                      emit_batch                     emit_batch
+  800 IS_OP                          0                              
+  802 POP_JUMP_FORWARD_IF_FALSE      878                            to 878
+  804 LOAD_FAST                      data                           data
+  806 UNPACK_SEQUENCE                2                              
+  810 STORE_FAST                     record                         record
+  812 STORE_FAST                     reason                         reason
+  814 LOAD_FAST                      self                           self
+  816 LOAD_ATTR                      wrapper_handler                wrapper_handler
+  826 LOAD_ATTR                      handler                        handler
+  836 LOAD_METHOD                    emit_batch                     emit_batch
+  858 LOAD_FAST                      record                         record
+  860 LOAD_FAST                      reason                         reason
+  862 PRECALL                        2                              
+  866 CALL                           2                              
+  876 POP_TOP                        None                           
+  878 JUMP_FORWARD                   994                            to 994
+  880 PUSH_EXC_INFO                  None                           
+  882 LOAD_GLOBAL                    QueueEmptyException            QueueEmptyException
+  894 CHECK_EXC_MATCH                None                           
+  896 POP_JUMP_FORWARD_IF_FALSE      986                            to 986
+  898 POP_TOP                        None                           
+  900 LOAD_FAST                      self                           self
+  902 LOAD_ATTR                      waiting_to_end                 waiting_to_end
+  912 POP_JUMP_FORWARD_IF_FALSE      928                            to 928
+  914 LOAD_CONST                     False                          False
+  916 LOAD_FAST                      self                           self
+  918 STORE_ATTR                     running                        running
+  928 LOAD_FAST                      self                           self
+  930 LOAD_METHOD                    _check_main                    _check_main
+  952 PRECALL                        0                              
+  956 CALL                           0                              
+  966 POP_JUMP_FORWARD_IF_FALSE      982                            to 982
+  968 LOAD_CONST                     False                          False
+  970 LOAD_FAST                      self                           self
+  972 STORE_ATTR                     running                        running
+  982 POP_EXCEPT                     None                           
+  984 JUMP_FORWARD                   994                            to 994
+  986 RERAISE                        0                              
+  988 COPY                           3                              
+  990 POP_EXCEPT                     None                           
+  992 RERAISE                        1                              
+  994 LOAD_FAST                      self                           self
+  996 LOAD_ATTR                      running                        running
+ 1006 POP_JUMP_BACKWARD_IF_TRUE      518                            to 518
+ 1008 LOAD_CONST                     None                           None
+ 1010 RETURN_VALUE                   None                           
+ 1012 LOAD_CONST                     None                           None
+ 1014 RETURN_VALUE                   None                           
+ 1016 LOAD_CONST                     None                           None
+ 1018 RETURN_VALUE                   None                           
+ 1020 LOAD_CONST                     None                           None
+ 1022 RETURN_VALUE                   None                           

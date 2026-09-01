@@ -1,0 +1,110 @@
+   0 RESUME                       
+   2 NOP                          
+   4 LOAD_FAST                    algo
+   6 LOAD_ATTR                    tmporders
+  16 LOAD_ATTR                    write_lock
+  26 LOAD_METHOD                  acquire
+  48 PRECALL                      
+  52 CALL                         
+  62 POP_TOP                      
+  64 LOAD_FAST                    algo
+  66 LOAD_ATTR                    tmporders
+  76 LOAD_METHOD                  get_instance
+  98 PRECALL                      
+ 102 CALL                         
+ 112 STORE_FAST                   tmporders
+ 114 LOAD_FAST                    algo
+ 116 LOAD_ATTR                    _dict_map
+ 126 LOAD_METHOD                  get_instance
+ 148 PRECALL                      
+ 152 CALL                         
+ 162 STORE_FAST                   dict_map
+ 164 LOAD_FAST                    datalist
+ 166 GET_ITER                     
+ 168 FOR_ITER                     to 448
+ 170 STORE_FAST                   order_item
+ 172 LOAD_FAST                    order_item
+ 174 LOAD_CONST                   'entrust_no'
+ 176 BINARY_SUBSCR                
+ 186 STORE_FAST                   entrust_no
+ 188 LOAD_FAST                    entrust_no
+ 190 LOAD_FAST                    dict_map
+ 192 CONTAINS_OP                  
+ 194 POP_JUMP_FORWARD_IF_FALSE    to 446
+ 196 LOAD_FAST                    dict_map
+ 198 LOAD_FAST                    entrust_no
+ 200 BINARY_SUBSCR                
+ 210 STORE_FAST                   order_id
+ 212 NOP                          
+ 214 LOAD_FAST                    tmporders
+ 216 LOAD_FAST                    order_id
+ 218 BINARY_SUBSCR                
+ 228 STORE_FAST                   order_obj
+ 230 JUMP_FORWARD                 to 384
+ 232 PUSH_EXC_INFO                
+ 234 LOAD_GLOBAL                  BaseException
+ 246 CHECK_EXC_MATCH              
+ 248 POP_JUMP_FORWARD_IF_FALSE    to 376
+ 250 POP_TOP                      
+ 252 LOAD_GLOBAL                  system_log
+ 264 LOAD_METHOD                  error
+ 286 LOAD_GLOBAL                  NULL + get_traceback_message
+ 298 PRECALL                      
+ 302 CALL                         
+ 312 PRECALL                      
+ 316 CALL                         
+ 326 POP_TOP                      
+ 328 LOAD_FAST                    algo
+ 330 LOAD_METHOD                  create_order_object
+ 352 LOAD_FAST                    order_id
+ 354 LOAD_FAST                    order_item
+ 356 PRECALL                      
+ 360 CALL                         
+ 370 STORE_FAST                   order_obj
+ 372 POP_EXCEPT                   
+ 374 JUMP_FORWARD                 to 384
+ 376 RERAISE                      
+ 378 COPY                         
+ 380 POP_EXCEPT                   
+ 382 RERAISE                      
+ 384 LOAD_GLOBAL                  NULL + int
+ 396 LOAD_FAST                    order_item
+ 398 LOAD_CONST                   'status'
+ 400 BINARY_SUBSCR                
+ 410 PRECALL                      
+ 414 CALL                         
+ 424 LOAD_FAST                    order_obj
+ 426 STORE_ATTR                   status
+ 436 LOAD_FAST                    order_obj
+ 438 LOAD_FAST                    tmporders
+ 440 LOAD_FAST                    order_id
+ 442 STORE_SUBSCR                 
+ 446 JUMP_BACKWARD                to 168
+ 448 LOAD_FAST                    algo
+ 450 LOAD_ATTR                    tmporders
+ 460 LOAD_METHOD                  set_instance
+ 482 LOAD_FAST                    tmporders
+ 484 PRECALL                      
+ 488 CALL                         
+ 498 POP_TOP                      
+ 500 LOAD_FAST                    algo
+ 502 LOAD_ATTR                    tmporders
+ 512 LOAD_ATTR                    write_lock
+ 522 LOAD_METHOD                  release
+ 544 PRECALL                      
+ 548 CALL                         
+ 558 POP_TOP                      
+ 560 LOAD_CONST                   None
+ 562 RETURN_VALUE                 
+ 564 PUSH_EXC_INFO                
+ 566 LOAD_FAST                    algo
+ 568 LOAD_ATTR                    tmporders
+ 578 LOAD_ATTR                    write_lock
+ 588 LOAD_METHOD                  release
+ 610 PRECALL                      
+ 614 CALL                         
+ 624 POP_TOP                      
+ 626 RERAISE                      
+ 628 COPY                         
+ 630 POP_EXCEPT                   
+ 632 RERAISE                      

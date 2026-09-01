@@ -1,0 +1,22 @@
+# ORIG dis.dis(_all_bars_of_range)
+ 970           0 RESUME                   0
+
+ 994           2 LOAD_GLOBAL              1 (NULL + change_symbol_suffix_reverse)
+              14 LOAD_FAST                0 (symbol)
+              16 PRECALL                  1
+              20 CALL                     1
+              30 STORE_FAST               0 (symbol)
+
+ 995          32 LOAD_GLOBAL              3 (NULL + get_kline_binary)
+              44 LOAD_FAST                0 (symbol)
+              46 LOAD_FAST                3 (frequency)
+              48 LOAD_FAST                1 (start_time)
+              50 LOAD_FAST                2 (end_time)
+              52 PRECALL                  4
+              56 CALL                     4
+              66 STORE_FAST               4 (data_array)
+
+ 996          68 NOP
+
+1001          70 LOAD_FAST                4 (data_array)
+              72 RETURN_VALUE

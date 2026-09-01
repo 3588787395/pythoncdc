@@ -1,0 +1,214 @@
+﻿[BATCH] index=F:\Downloads\pythoncdc-main\pyc_index.json, max_count=None, round=1
+[BATCH] index=F:\Downloads\pythoncdc-main\pyc_index.json
+[BATCH] total=402, pending=75, round=1
+----------------------------------------------------------------------
+[1/75] F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/klinedata.pyc
+    PARTIAL: 45 funcs, 37 matched, rate=82.22%
+[2/75] F:/Downloads/pythoncdc-main/site-packages/IQCommon/common/main.pyc
+    PARTIAL: 33 funcs, 29 matched, rate=87.88%
+[3/75] F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/api_data.pyc
+    PARTIAL: 14 funcs, 13 matched, rate=92.86%
+[4/75] F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/finance.pyc
+    PARTIAL: 24 funcs, 21 matched, rate=87.50%
+[5/75] F:/Downloads/pythoncdc-main/site-packages/IQCommon/logger/handlers.pyc
+    PARTIAL: 18 funcs, 17 matched, rate=94.44%
+[6/75] F:/Downloads/pythoncdc-main/site-packages/IQCommon/manager/instance.pyc
+    PARTIAL: 32 funcs, 29 matched, rate=90.62%
+[7/75] F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/hg_api.pyc
+    PARTIAL: 11 funcs, 9 matched, rate=81.82%
+[8/75] F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/jq_trans_module.pyc
+    PARTIAL: 35 funcs, 33 matched, rate=94.29%
+[9/75] F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/wizard_quant_api.pyc
+    PARTIAL: 53 funcs, 49 matched, rate=92.45%
+[10/75] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/cgroup_utils.pyc
+    PARTIAL: 8 funcs, 6 matched, rate=75.00%
+[11/75] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/common_func.pyc
+    PARTIAL: 21 funcs, 18 matched, rate=85.71%
+[12/75] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/crypto_utils.pyc
+    PARTIAL: 9 funcs, 7 matched, rate=77.78%
+[13/75] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/fileio_utils.pyc
+    PARTIAL: 14 funcs, 12 matched, rate=85.71%
+[14/75] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/replace_utils.pyc
+    PARTIAL: 9 funcs, 6 matched, rate=66.67%
+[15/75] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/strategy_info_utils.pyc
+    PARTIAL: 28 funcs, 24 matched, rate=85.71%
+[16/75] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc
+    PARTIAL: 40 funcs, 26 matched, rate=65.00%
+[17/75] F:/Downloads/pythoncdc-main/site-packages/IQCommon/utils.pyc
+    PARTIAL: 22 funcs, 19 matched, rate=86.36%
+[18/75] F:/Downloads/pythoncdc-main/site-packages/IQData/api/api_base.pyc
+    PARTIAL: 25 funcs, 23 matched, rate=92.00%
+[19/75] F:/Downloads/pythoncdc-main/site-packages/IQData/entry.pyc
+    PARTIAL: 5 funcs, 4 matched, rate=80.00%
+[20/75] F:/Downloads/pythoncdc-main/site-packages/IQData/modules/WEBCLIENT/web_socket_client.pyc
+    PARTIAL: 7 funcs, 6 matched, rate=85.71%
+[21/75] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_client_db/client_db.pyc
+    PARTIAL: 9 funcs, 8 matched, rate=88.89%
+[22/75] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db_tools/api_db.pyc
+    PARTIAL: 8 funcs, 6 matched, rate=75.00%
+[23/75] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/history_data_source.pyc
+    PARTIAL: 18 funcs, 16 matched, rate=88.89%
+[24/75] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_local_finance/finance_data_source.pyc
+    PARTIAL: 18 funcs, 14 matched, rate=77.78%
+[25/75] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/real_quote.pyc
+    PARTIAL: 44 funcs, 34 matched, rate=77.27%
+[26/75] F:/Downloads/pythoncdc-main/site-packages/IQData/utils/__init__.pyc
+    PARTIAL: 17 funcs, 16 matched, rate=94.12%
+[27/75] F:/Downloads/pythoncdc-main/site-packages/IQData/utils/common_func.pyc
+    PARTIAL: 24 funcs, 20 matched, rate=83.33%
+[28/75] F:/Downloads/pythoncdc-main/site-packages/IQData/utils/profiler_func.pyc
+    PARTIAL: 13 funcs, 12 matched, rate=92.31%
+[29/75] F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/execution_context.pyc
+    PARTIAL: 17 funcs, 15 matched, rate=88.24%
+[30/75] F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/executor.pyc
+    PARTIAL: 10 funcs, 9 matched, rate=90.00%
+[31/75] F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy_universe.pyc
+    PARTIAL: 11 funcs, 10 matched, rate=90.91%
+[32/75] F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/asset_mixin.pyc
+    PARTIAL: 16 funcs, 14 matched, rate=87.50%
+[33/75] F:/Downloads/pythoncdc-main/site-packages/IQEngine/interface.pyc
+    PARTIAL: 105 funcs, 92 matched, rate=87.62%
+[34/75] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/history_api.pyc
+    PARTIAL: 18 funcs, 16 matched, rate=88.89%
+[35/75] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc
+    PARTIAL: 34 funcs, 30 matched, rate=88.24%
+[36/75] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/setting_api.pyc
+    PARTIAL: 15 funcs, 14 matched, rate=93.33%
+[37/75] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/quote/get_stock_status.pyc
+    PARTIAL: 8 funcs, 7 matched, rate=87.50%
+[38/75] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc
+    PARTIAL: 24 funcs, 21 matched, rate=87.50%
+[39/75] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/stock_position.pyc
+    PARTIAL: 37 funcs, 36 matched, rate=97.30%
+[40/75] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_debug/__init__.pyc
+    PARTIAL: 6 funcs, 5 matched, rate=83.33%
+[41/75] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/default_event_source.pyc
+    PARTIAL: 14 funcs, 13 matched, rate=92.86%
+[42/75] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc
+    PARTIAL: 12 funcs, 9 matched, rate=75.00%
+[43/75] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/commission.pyc
+    PARTIAL: 18 funcs, 17 matched, rate=94.44%
+[44/75] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/slippage.pyc
+    PARTIAL: 14 funcs, 12 matched, rate=85.71%
+[45/75] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_log/__init__.pyc
+    PARTIAL: 10 funcs, 8 matched, rate=80.00%
+[46/75] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_matcher/matcher.pyc
+    PARTIAL: 17 funcs, 16 matched, rate=94.12%
+[47/75] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_persist/__init__.pyc
+    PARTIAL: 15 funcs, 14 matched, rate=93.33%
+[48/75] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_persist/json_persistance.pyc
+    PARTIAL: 7 funcs, 6 matched, rate=85.71%
+[49/75] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc
+    PARTIAL: 35 funcs, 30 matched, rate=85.71%
+[50/75] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/function.pyc
+    PARTIAL: 15 funcs, 10 matched, rate=66.67%
+[51/75] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/function.pyc
+    PARTIAL: 71 funcs, 66 matched, rate=92.96%
+[52/75] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/ptrade_broker.pyc
+    PARTIAL: 11 funcs, 9 matched, rate=81.82%
+[53/75] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/ptrade_future_broker.pyc
+    PARTIAL: 10 funcs, 8 matched, rate=80.00%
+[54/75] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/ptrade_hks_broker.pyc
+    PARTIAL: 9 funcs, 7 matched, rate=77.78%
+[55/75] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/ptrade_option_broker.pyc
+    PARTIAL: 10 funcs, 8 matched, rate=80.00%
+[56/75] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc
+    PARTIAL: 119 funcs, 94 matched, rate=78.99%
+[57/75] F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/__init__.pyc
+    PARTIAL: 32 funcs, 29 matched, rate=90.62%
+[58/75] F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/profiler_func.pyc
+    PARTIAL: 15 funcs, 14 matched, rate=93.33%
+[59/75] F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/scheduler.pyc
+    PARTIAL: 45 funcs, 35 matched, rate=77.78%
+[60/75] F:/Downloads/pythoncdc-main/site-packages/fly/common/aes_encrypt.pyc
+    PARTIAL: 7 funcs, 6 matched, rate=85.71%
+[61/75] F:/Downloads/pythoncdc-main/site-packages/fly/common/common.pyc
+    PARTIAL: 6 funcs, 5 matched, rate=83.33%
+[62/75] F:/Downloads/pythoncdc-main/site-packages/fly/common/flytools.pyc
+    PARTIAL: 65 funcs, 63 matched, rate=96.92%
+[63/75] F:/Downloads/pythoncdc-main/site-packages/fly/common/future_contract_info.pyc
+    PARTIAL: 29 funcs, 26 matched, rate=89.66%
+[64/75] F:/Downloads/pythoncdc-main/site-packages/fly/common/future_param.pyc
+    PARTIAL: 16 funcs, 15 matched, rate=93.75%
+[65/75] F:/Downloads/pythoncdc-main/site-packages/fly/common/market_time.pyc
+    PARTIAL: 10 funcs, 8 matched, rate=80.00%
+[66/75] F:/Downloads/pythoncdc-main/site-packages/fly/common/tradingday_calendar.pyc
+    PARTIAL: 28 funcs, 20 matched, rate=71.43%
+[67/75] F:/Downloads/pythoncdc-main/site-packages/fly/common/user_error.pyc
+    PARTIAL: 4 funcs, 3 matched, rate=75.00%
+[68/75] F:/Downloads/pythoncdc-main/site-packages/fly/data/quote.pyc
+    PARTIAL: 81 funcs, 64 matched, rate=79.01%
+[69/75] F:/Downloads/pythoncdc-main/site-packages/fly/data/quote_handler.pyc
+    PARTIAL: 57 funcs, 44 matched, rate=77.19%
+[70/75] F:/Downloads/pythoncdc-main/site-packages/fly/dockerspawner/dockerspawner.pyc
+    PARTIAL: 25 funcs, 23 matched, rate=92.00%
+[71/75] F:/Downloads/pythoncdc-main/site-packages/fly/dumpload/load_daily.pyc
+python : <decompiled>:197: SyntaxWarning: "is" with a literal. Did you mean "=="?
+所在位置 行:1 字符: 1
++ python scripts/pyc_batch_verify.py batch 2>&1 | Out-File -Encoding ut ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (<decompiled>:19... you mean "=="?:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+<decompiled>:197: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:197: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:197: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:197: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:387: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:387: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:387: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:387: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:387: SyntaxWarning: "is" with a literal. Did you mean "=="?
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:200: SyntaxWarning: "is" with a literal. Did you
+ mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:200: SyntaxWarning: "is" with a literal. Did you
+ mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:200: SyntaxWarning: "is" with a literal. Did you
+ mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:200: SyntaxWarning: "is" with a literal. Did you
+ mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:200: SyntaxWarning: "is" with a literal. Did you
+ mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:390: SyntaxWarning: "is" with a literal. Did you
+ mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:390: SyntaxWarning: "is" with a literal. Did you
+ mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:390: SyntaxWarning: "is" with a literal. Did you
+ mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:390: SyntaxWarning: "is" with a literal. Did you
+ mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:390: SyntaxWarning: "is" with a literal. Did you
+ mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+    PARTIAL: 23 funcs, 20 matched, rate=86.96%
+[72/75] F:/Downloads/pythoncdc-main/site-packages/fly/logger.pyc
+    PARTIAL: 30 funcs, 28 matched, rate=93.33%
+[73/75] F:/Downloads/pythoncdc-main/site-packages/fly/oauthenticator/itn.pyc
+    PARTIAL: 14 funcs, 13 matched, rate=92.86%
+[74/75] F:/Downloads/pythoncdc-main/site-packages/fly/oauthenticator/oauth2.pyc
+    PARTIAL: 11 funcs, 10 matched, rate=90.91%
+[75/75] F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/flyAccount.pyc
+    PARTIAL: 23 funcs, 21 matched, rate=91.30%
+----------------------------------------------------------------------
+[BATCH] index written back: F:\Downloads\pythoncdc-main\pyc_index.json
+
+======================================================================
+绱缁熻:
+  total_pyc:             402
+  verified_pyc:          402
+  ok_pyc:                327
+  partial_pyc:           75
+  failed_pyc:            0
+  total_functions:       5149
+  matched_functions:     4907
+  cumulative_match_rate: 95.30%
+======================================================================

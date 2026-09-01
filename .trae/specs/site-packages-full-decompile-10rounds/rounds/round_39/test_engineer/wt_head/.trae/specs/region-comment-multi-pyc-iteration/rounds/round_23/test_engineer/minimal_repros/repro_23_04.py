@@ -1,0 +1,11 @@
+def while_continue_post(data, n):
+    j = 0
+    result = []
+    while j < n:
+        if data[j] < 0:
+            j += 1
+            continue
+        result.append(data[j])
+        j += 1
+    count = len(result)
+    return count

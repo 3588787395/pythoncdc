@@ -1,0 +1,47 @@
+﻿==============================================================================
+verifying 15 minimal repros
+==============================================================================
+  repro_01_pattern_a_or_cond_try_elif_collapse.py
+    match=False [fn=f] (orig=32 decomp=15 true_diffs=29 jump_diffs=2)  [DEFECT-REPRO]
+    first_diff: {'index': 1, 'orig_op': 'NOP', 'decomp_op': 'LOAD_FAST', 'orig_arg': None, 'decomp_arg': 'x'}
+  repro_02_pattern_a_and_cond_try_collapse.py
+    match=False [fn=f] (orig=24 decomp=9 true_diffs=22 jump_diffs=1)  [DEFECT-REPRO]
+    first_diff: {'index': 1, 'orig_op': 'NOP', 'decomp_op': 'LOAD_FAST', 'orig_arg': None, 'decomp_arg': 'x'}
+  repro_03_pattern_a_boolop_cond_mangling.py
+    match=True (fns=2)  [NO-DEFECT]
+  repro_04_pattern_a_popjump_none_to_extended_arg.py
+    match=False [fn=f] (orig=42 decomp=25 true_diffs=35 jump_diffs=6)  [DEFECT-REPRO]
+    first_diff: {'index': 1, 'orig_op': 'NOP', 'decomp_op': 'LOAD_FAST', 'orig_arg': None, 'decomp_arg': 'x'}
+  repro_05_pattern_a_major_region_loss.py
+    match=False [fn=f] (orig=56 decomp=45 true_diffs=22 jump_diffs=8)  [DEFECT-REPRO]
+    first_diff: {'index': 30, 'orig_op': 'LOAD_FAST', 'decomp_op': 'LOAD_CONST', 'orig_arg': 'd', 'decomp_arg': None}
+  repro_06_pattern_d_dictcomp_keyval_swap.py
+    match=True (fns=3)  [NO-DEFECT]
+  repro_07_pattern_c_return_value_lost.py
+    match=False [fn=f] (orig=55 decomp=59 true_diffs=32 jump_diffs=11)  [DEFECT-REPRO]
+    first_diff: {'index': 5, 'orig_op': 'POP_JUMP_FORWARD_IF_NOT_NONE', 'decomp_op': 'POP_JUMP_FORWARD_IF_NOT_NONE', 'orig_arg': 60, 'decomp_arg': 64}
+  repro_08_pattern_c_tuple_unpack_collapse.py
+    match=False [fn=f] (orig=19 decomp=21 true_diffs=3 jump_diffs=0)  [DEFECT-REPRO]
+    first_diff: {'index': 10, 'orig_op': 'POP_JUMP_FORWARD_IF_NONE', 'decomp_op': 'POP_JUMP_FORWARD_IF_NONE', 'orig_arg': 48, 'decomp_arg': 62}
+  repro_09_pattern_c_swap_to_pop.py
+    match=False [fn=f] (orig=13 decomp=11 true_diffs=8 jump_diffs=1)  [DEFECT-REPRO]
+    first_diff: {'index': 5, 'orig_op': 'LOAD_FAST', 'decomp_op': 'LOAD_FAST', 'orig_arg': 'b', 'decomp_arg': 'a'}
+  repro_10_pattern_c_chained_compare_collapse.py
+    match=False [fn=f] (orig=45 decomp=31 true_diffs=16 jump_diffs=0)  [DEFECT-REPRO]
+    first_diff: {'index': 29, 'orig_op': 'LOAD_FAST', 'decomp_op': 'LOAD_FAST', 'orig_arg': 'a', 'decomp_arg': 'd'}
+  repro_11_pattern_b_loadfast_to_loadglobal.py
+    match=False [fn=f] (orig=35 decomp=29 true_diffs=13 jump_diffs=5)  [DEFECT-REPRO]
+    first_diff: {'index': 20, 'orig_op': 'LOAD_METHOD', 'decomp_op': 'LOAD_FAST', 'orig_arg': 'append', 'decomp_arg': 'out'}
+  repro_12_pattern_e_jump_target_renumber.py
+    match=False [fn=f] (orig=13 decomp=11 true_diffs=4 jump_diffs=0)  [DEFECT-REPRO]
+    first_diff: {'index': 2, 'orig_op': 'POP_JUMP_FORWARD_IF_NONE', 'decomp_op': 'POP_JUMP_FORWARD_IF_NONE', 'orig_arg': 22, 'decomp_arg': 18}
+  repro_13_ctrl_simple_if_in_try.py
+    match=True (fns=2)  [NO-DEFECT]
+  repro_14_ctrl_elif_in_try_simple_cond.py
+    match=True (fns=2)  [NO-DEFECT]
+  repro_15_ctrl_compound_or_no_try.py
+    match=True (fns=2)  [NO-DEFECT]
+==============================================================================
+summary: 15 repros, DEFECT-REPRO=10, NO-DEFECT=5
+==============================================================================
+VERIFY_RESULT [{"name": "repro_01_pattern_a_or_cond_try_elif_collapse.py", "verdict": "DEFECT-REPRO", "match": false, "mismatch_fn": "f", "true_diffs": 29, "jump_diffs": 2, "first_diff": {"index": 1, "orig_op": "NOP", "decomp_op": "LOAD_FAST", "orig_arg": null, "decomp_arg": "x"}, "error": null}, {"name": "repro_02_pattern_a_and_cond_try_collapse.py", "verdict": "DEFECT-REPRO", "match": false, "mismatch_fn": "f", "true_diffs": 22, "jump_diffs": 1, "first_diff": {"index": 1, "orig_op": "NOP", "decomp_op": "LOAD_FAST", "orig_arg": null, "decomp_arg": "x"}, "error": null}, {"name": "repro_03_pattern_a_boolop_cond_mangling.py", "verdict": "NO-DEFECT", "match": true, "mismatch_fn": null, "true_diffs": 0, "jump_diffs": 0, "first_diff": null, "error": null}, {"name": "repro_04_pattern_a_popjump_none_to_extended_arg.py", "verdict": "DEFECT-REPRO", "match": false, "mismatch_fn": "f", "true_diffs": 35, "jump_diffs": 6, "first_diff": {"index": 1, "orig_op": "NOP", "decomp_op": "LOAD_FAST", "orig_arg": null, "decomp_arg": "x"}, "error": null}, {"name": "repro_05_pattern_a_major_region_loss.py", "verdict": "DEFECT-REPRO", "match": false, "mismatch_fn": "f", "true_diffs": 22, "jump_diffs": 8, "first_diff": {"index": 30, "orig_op": "LOAD_FAST", "decomp_op": "LOAD_CONST", "orig_arg": "d", "decomp_arg": null}, "error": null}, {"name": "repro_06_pattern_d_dictcomp_keyval_swap.py", "verdict": "NO-DEFECT", "match": true, "mismatch_fn": null, "true_diffs": 0, "jump_diffs": 0, "first_diff": null, "error": null}, {"name": "repro_07_pattern_c_return_value_lost.py", "verdict": "DEFECT-REPRO", "match": false, "mismatch_fn": "f", "true_diffs": 32, "jump_diffs": 11, "first_diff": {"index": 5, "orig_op": "POP_JUMP_FORWARD_IF_NOT_NONE", "decomp_op": "POP_JUMP_FORWARD_IF_NOT_NONE", "orig_arg": 60, "decomp_arg": 64}, "error": null}, {"name": "repro_08_pattern_c_tuple_unpack_collapse.py", "verdict": "DEFECT-REPRO", "match": false, "mismatch_fn": "f", "true_diffs": 3, "jump_diffs": 0, "first_diff": {"index": 10, "orig_op": "POP_JUMP_FORWARD_IF_NONE", "decomp_op": "POP_JUMP_FORWARD_IF_NONE", "orig_arg": 48, "decomp_arg": 62}, "error": null}, {"name": "repro_09_pattern_c_swap_to_pop.py", "verdict": "DEFECT-REPRO", "match": false, "mismatch_fn": "f", "true_diffs": 8, "jump_diffs": 1, "first_diff": {"index": 5, "orig_op": "LOAD_FAST", "decomp_op": "LOAD_FAST", "orig_arg": "b", "decomp_arg": "a"}, "error": null}, {"name": "repro_10_pattern_c_chained_compare_collapse.py", "verdict": "DEFECT-REPRO", "match": false, "mismatch_fn": "f", "true_diffs": 16, "jump_diffs": 0, "first_diff": {"index": 29, "orig_op": "LOAD_FAST", "decomp_op": "LOAD_FAST", "orig_arg": "a", "decomp_arg": "d"}, "error": null}, {"name": "repro_11_pattern_b_loadfast_to_loadglobal.py", "verdict": "DEFECT-REPRO", "match": false, "mismatch_fn": "f", "true_diffs": 13, "jump_diffs": 5, "first_diff": {"index": 20, "orig_op": "LOAD_METHOD", "decomp_op": "LOAD_FAST", "orig_arg": "append", "decomp_arg": "out"}, "error": null}, {"name": "repro_12_pattern_e_jump_target_renumber.py", "verdict": "DEFECT-REPRO", "match": false, "mismatch_fn": "f", "true_diffs": 4, "jump_diffs": 0, "first_diff": {"index": 2, "orig_op": "POP_JUMP_FORWARD_IF_NONE", "decomp_op": "POP_JUMP_FORWARD_IF_NONE", "orig_arg": 22, "decomp_arg": 18}, "error": null}, {"name": "repro_13_ctrl_simple_if_in_try.py", "verdict": "NO-DEFECT", "match": true, "mismatch_fn": null, "true_diffs": 0, "jump_diffs": 0, "first_diff": null, "error": null}, {"name": "repro_14_ctrl_elif_in_try_simple_cond.py", "verdict": "NO-DEFECT", "match": true, "mismatch_fn": null, "true_diffs": 0, "jump_diffs": 0, "first_diff": null, "error": null}, {"name": "repro_15_ctrl_compound_or_no_try.py", "verdict": "NO-DEFECT", "match": true, "mismatch_fn": null, "true_diffs": 0, "jump_diffs": 0, "first_diff": null, "error": null}]

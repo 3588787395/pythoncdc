@@ -1,0 +1,20 @@
+复现实例验证结果 - Round 61
+总计: 12
+NO-DEFECT: 0
+DEFECT-REPRO: 0
+ERROR: 0
+UNKNOWN: 12
+
+详细结果:
+ 1. repro_01_param_unpack_try.py                  | UNKNOWN         | compile=True
+ 2. repro_02_multi_param_nested.py                | UNKNOWN         | compile=True
+ 3. repro_03_fields_assign_try.py                 | UNKNOWN         | compile=True
+ 4. repro_04_attr_access_cond.py                  | UNKNOWN         | compile=True
+ 5. repro_05_complex_control_try.py               | UNKNOWN         | compile=True
+ 6. repro_06_ctrl_simple_unpack.py                | UNKNOWN         | compile=True
+ 7. repro_07_ctrl_simple_try.py                   | UNKNOWN         | compile=True
+ 8. repro_08_unpack_try_attr.py                   | UNKNOWN         | compile=True
+ 9. repro_09_loop_try.py                          | UNKNOWN         | compile=True
+10. repro_10_list_build_try.py                    | UNKNOWN         | compile=True
+11. repro_11_nested_try_unpack.py                 | UNKNOWN         | compile=True
+12. repro_12_ctrl_normal.py                       | UNKNOWN         | compile=True

@@ -1,0 +1,38 @@
+# Source Generated with Decompyle++ (Python version)
+# File: repro_09_01_d3_chained_compare_after_call_in_except.pyc (Python 3.11)
+
+__doc__ = """Repro 09-01: D3 (P1) chained compare lost after a call in except handler.
+
+This is the minimal reproduction of the quotation.pyc::api_get_financial
+line 159 defect (`if 499:` instead of `if 400 <= e2.code <= 499:`).
+
+R8 established that D3 is context-sensitive: the chained compare
+survives in isolation (repro_08_01/07/11 are NOT-REPRO) but is lost
+when preceded by a `system_log.error(get_traceback_message())` call
+in the same except handler. This repro isolates that compound pattern:
+a call followed by `if 400 <= e.code <= 499:`.
+
+CPython 3.11 emits the chained compare as:
+    LOAD_CONST 400 / LOAD_FAST e / LOAD_ATTR code / SWAP / COPY /
+    COMPARE_OP '<=' / POP_JUMP_FORWARD_IF_FALSE /
+    LOAD_CONST 499 / COMPARE_OP '<=' / POP_JUMP_FORWARD_IF_FALSE
+After the preceding call, _identify_conditional_regions fails to
+recognize the IfRegion, and _generate_condition_expr consumes only
+the trailing COMPARE_OP operand, emitting `if 499:`.
+
+Expected defect: `if 499:` (or similar partial compare) instead of
+`if 400 <= e.code <= 499:`.
+"""
+def api_get_financial(url, request_times=0):
+    try:
+        response = do_request(url)
+        return_data = response.json()
+    except HTTPError as e2:
+        system_log.error(get_traceback_message())
+        if 400 <= e2.code <= 499:
+            error_no = e2.code
+            return ({'error_no': error_no, 'error_info': ''}, {})
+        else:
+            error_no = -1
+            return ({'error_no': error_no, 'error_info': ''}, {})
+    return ({'error_no': 0, 'error_info': ''}, return_data)

@@ -1,0 +1,40 @@
+=== ORIG is_future_trade_time_now ===
+107           0 RESUME                   0
+
+108           2 LOAD_FAST                0 (now)
+              4 POP_JUMP_FORWARD_IF_NOT_NONE    48 (to 102)
+
+109           6 LOAD_GLOBAL              0 (datetime)
+             18 LOAD_ATTR                0 (datetime)
+             28 LOAD_METHOD              1 (now)
+             50 PRECALL                  0
+             54 CALL                     0
+             64 LOAD_METHOD              2 (time)
+             86 PRECALL                  0
+             90 CALL                     0
+            100 STORE_FAST               0 (now)
+
+110     >>  102 LOAD_GLOBAL              6 (FUTURE_AM_OPEN)
+            114 LOAD_FAST                0 (now)
+            116 SWAP                     2
+            118 COPY                     2
+            120 COMPARE_OP               0 (<)
+            126 JUMP_IF_FALSE_OR_POP    10 (to 148)
+            128 LOAD_GLOBAL              8 (FUTURE_AM_CLOSE)
+            140 COMPARE_OP               0 (<)
+            146 JUMP_FORWARD             2 (to 152)
+        >>  148 SWAP                     2
+            150 POP_TOP
+        >>  152 JUMP_IF_TRUE_OR_POP     25 (to 204)
+            154 LOAD_GLOBAL             10 (FUTURE_PM_OPEN)
+            166 LOAD_FAST                0 (now)
+            168 SWAP                     2
+            170 COPY                     2
+            172 COMPARE_OP               0 (<)
+            178 JUMP_IF_FALSE_OR_POP    10 (to 200)
+            180 LOAD_GLOBAL             12 (FUTURE_PM_CLOSE)
+            192 COMPARE_OP               0 (<)
+            198 JUMP_FORWARD             2 (to 204)
+        >>  200 SWAP                     2
+            202 POP_TOP
+        >>  204 RETURN_VALUE

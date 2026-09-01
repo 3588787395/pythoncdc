@@ -1,0 +1,267 @@
+# DECOMP dis.dis(get_kline_by_date_one)
+389           0 RESUME                   0
+
+390           2 LOAD_FAST                6 (asset)
+              4 POP_JUMP_FORWARD_IF_NOT_NONE    24 (to 54)
+
+391           6 LOAD_FAST                4 (fields)
+              8 POP_JUMP_FORWARD_IF_NOT_NONE     7 (to 24)
+             10 LOAD_GLOBAL              0 (EMPTY_BAR_NP_ARRAY)
+             22 JUMP_FORWARD            12 (to 48)
+        >>   24 LOAD_GLOBAL              0 (EMPTY_BAR_NP_ARRAY)
+             36 LOAD_FAST                4 (fields)
+             38 BINARY_SUBSCR
+        >>   48 STORE_FAST               9 (history_data)
+
+392          50 LOAD_FAST                9 (history_data)
+             52 RETURN_VALUE
+
+394     >>   54 NOP
+
+395          56 LOAD_GLOBAL              3 (NULL + _all_bars_of_cache)
+             68 LOAD_FAST                0 (symbol)
+             70 LOAD_FAST                1 (start_date)
+             72 LOAD_FAST                2 (end_date)
+             74 LOAD_FAST                3 (frequency)
+             76 LOAD_FAST                6 (asset)
+             78 PRECALL                  5
+             82 CALL                     5
+             92 STORE_FAST              10 (data_ndarr)
+
+396          94 LOAD_FAST               10 (data_ndarr)
+             96 LOAD_METHOD              2 (copy)
+            118 PRECALL                  0
+            122 CALL                     0
+            132 STORE_FAST              11 (bars_ndarr)
+
+397         134 LOAD_GLOBAL              7 (NULL + len)
+            146 LOAD_FAST               11 (bars_ndarr)
+            148 PRECALL                  1
+            152 CALL                     1
+            162 LOAD_CONST               1 (0)
+            164 COMPARE_OP               2 (==)
+            170 POP_JUMP_FORWARD_IF_FALSE    26 (to 224)
+
+398         172 LOAD_FAST                4 (fields)
+            174 POP_JUMP_FORWARD_IF_NOT_NONE     7 (to 190)
+            176 LOAD_GLOBAL              0 (EMPTY_BAR_NP_ARRAY)
+            188 JUMP_FORWARD            12 (to 214)
+        >>  190 LOAD_GLOBAL              0 (EMPTY_BAR_NP_ARRAY)
+            202 LOAD_FAST                4 (fields)
+            204 BINARY_SUBSCR
+        >>  214 STORE_FAST               9 (history_data)
+
+399         216 LOAD_FAST                9 (history_data)
+            218 POP_TOP
+
+400         220 LOAD_CONST               0 (None)
+            222 RETURN_VALUE
+
+402     >>  224 LOAD_FAST               11 (bars_ndarr)
+            226 LOAD_GLOBAL              8 (BarDataEnum)
+            238 LOAD_ATTR                5 (DATETIME)
+            248 LOAD_ATTR                6 (value)
+            258 BINARY_SUBSCR
+            268 STORE_FAST              12 (bars_ndarr_datetime)
+
+403         270 LOAD_GLOBAL             15 (NULL + convert_int14_to_int)
+            282 LOAD_FAST                1 (start_date)
+            284 LOAD_FAST                3 (frequency)
+            286 PRECALL                  2
+            290 CALL                     2
+            300 STORE_FAST              13 (start_time)
+
+404         302 LOAD_GLOBAL             15 (NULL + convert_int14_to_int)
+            314 LOAD_FAST                2 (end_date)
+            316 LOAD_FAST                3 (frequency)
+            318 PRECALL                  2
+            322 CALL                     2
+            332 STORE_FAST              14 (end_time)
+
+405         334 LOAD_FAST               12 (bars_ndarr_datetime)
+            336 LOAD_METHOD              8 (searchsorted)
+            358 LOAD_FAST               13 (start_time)
+            360 PRECALL                  1
+            364 CALL                     1
+            374 STORE_FAST              15 (left)
+
+406         376 LOAD_FAST               12 (bars_ndarr_datetime)
+            378 LOAD_METHOD              8 (searchsorted)
+            400 LOAD_FAST               14 (end_time)
+            402 LOAD_CONST               2 ('right')
+            404 KW_NAMES                 3
+            406 PRECALL                  2
+            410 CALL                     2
+            420 STORE_FAST              16 (right)
+
+407         422 LOAD_FAST               11 (bars_ndarr)
+            424 LOAD_FAST               15 (left)
+            426 LOAD_FAST               16 (right)
+            428 BUILD_SLICE              2
+            430 BINARY_SUBSCR
+            440 STORE_FAST              11 (bars_ndarr)
+
+408         442 LOAD_GLOBAL              7 (NULL + len)
+            454 LOAD_FAST               11 (bars_ndarr)
+            456 PRECALL                  1
+            460 CALL                     1
+            470 LOAD_CONST               1 (0)
+            472 COMPARE_OP               2 (==)
+            478 POP_JUMP_FORWARD_IF_FALSE    26 (to 532)
+
+409         480 LOAD_FAST                4 (fields)
+            482 POP_JUMP_FORWARD_IF_NOT_NONE     7 (to 498)
+            484 LOAD_GLOBAL              0 (EMPTY_BAR_NP_ARRAY)
+            496 JUMP_FORWARD            12 (to 522)
+        >>  498 LOAD_GLOBAL              0 (EMPTY_BAR_NP_ARRAY)
+            510 LOAD_FAST                4 (fields)
+            512 BINARY_SUBSCR
+        >>  522 STORE_FAST               9 (history_data)
+
+410         524 LOAD_FAST                9 (history_data)
+            526 POP_TOP
+
+411         528 LOAD_CONST               0 (None)
+            530 RETURN_VALUE
+
+412     >>  532 LOAD_FAST                7 (need_exrights)
+            534 LOAD_CONST               1 (0)
+            536 COMPARE_OP               2 (==)
+            542 POP_JUMP_FORWARD_IF_TRUE    41 (to 626)
+            544 LOAD_FAST                6 (asset)
+            546 LOAD_METHOD              9 (get)
+            568 LOAD_CONST               4 ('type')
+            570 LOAD_CONST               5 ('')
+            572 PRECALL                  2
+            576 CALL                     2
+            586 LOAD_GLOBAL             20 (AssetType)
+            598 LOAD_ATTR               11 (FUTURE)
+            608 LOAD_ATTR                6 (value)
+            618 COMPARE_OP               2 (==)
+            624 POP_JUMP_FORWARD_IF_FALSE    16 (to 658)
+
+413     >>  626 LOAD_FAST                4 (fields)
+            628 POP_JUMP_FORWARD_IF_NOT_NONE     2 (to 634)
+            630 LOAD_FAST               11 (bars_ndarr)
+            632 JUMP_FORWARD             7 (to 648)
+        >>  634 LOAD_FAST               11 (bars_ndarr)
+            636 LOAD_FAST                4 (fields)
+            638 BINARY_SUBSCR
+        >>  648 STORE_FAST               9 (history_data)
+
+414         650 LOAD_FAST                9 (history_data)
+            652 POP_TOP
+
+415         654 LOAD_CONST               0 (None)
+            656 RETURN_VALUE
+
+416     >>  658 LOAD_FAST                7 (need_exrights)
+            660 LOAD_CONST               6 (1)
+            662 COMPARE_OP               2 (==)
+            668 POP_JUMP_FORWARD_IF_FALSE    61 (to 792)
+
+417         670 LOAD_CONST               7 (<code object <dictcomp> at 0x000001A8D6A9C930, file "F:\Downloads\pythoncdc-main\site-packages\IQCommon\api\klinedataOK.py", line 417>)
+            672 MAKE_FUNCTION            0
+            674 LOAD_FAST                8 (dividends)
+            676 LOAD_METHOD             12 (items)
+            698 PRECALL                  0
+            702 CALL                     0
+            712 GET_ITER
+            714 PRECALL                  0
+            718 CALL                     0
+            728 STORE_FAST              17 (dividend_dict)
+
+418         730 LOAD_GLOBAL             27 (NULL + get_exrights_data)
+            742 LOAD_FAST               11 (bars_ndarr)
+            744 LOAD_FAST                0 (symbol)
+            746 LOAD_FAST                3 (frequency)
+            748 LOAD_FAST                5 (fq)
+            750 LOAD_FAST               17 (dividend_dict)
+            752 PRECALL                  5
+            756 CALL                     5
+            766 STORE_FAST              18 (exrights_bars_ndarr)
+
+419         768 LOAD_FAST                4 (fields)
+            770 POP_JUMP_FORWARD_IF_NOT_NONE     2 (to 776)
+            772 LOAD_FAST               18 (exrights_bars_ndarr)
+            774 JUMP_FORWARD             7 (to 790)
+        >>  776 LOAD_FAST               18 (exrights_bars_ndarr)
+            778 LOAD_FAST                4 (fields)
+            780 BINARY_SUBSCR
+        >>  790 STORE_FAST               9 (history_data)
+        >>  792 JUMP_FORWARD            52 (to 898)
+        >>  794 PUSH_EXC_INFO
+
+420         796 LOAD_GLOBAL             28 (BaseException)
+            808 CHECK_EXC_MATCH
+            810 POP_JUMP_FORWARD_IF_FALSE    39 (to 890)
+            812 POP_TOP
+
+421         814 LOAD_GLOBAL             31 (NULL + get_traceback_message)
+            826 PRECALL                  0
+            830 CALL                     0
+            840 STORE_FAST              19 (error_info)
+
+422         842 LOAD_FAST                4 (fields)
+            844 POP_JUMP_FORWARD_IF_NOT_NONE     7 (to 860)
+            846 LOAD_GLOBAL              0 (EMPTY_BAR_NP_ARRAY)
+            858 JUMP_FORWARD            12 (to 884)
+        >>  860 LOAD_GLOBAL              0 (EMPTY_BAR_NP_ARRAY)
+            872 LOAD_FAST                4 (fields)
+            874 BINARY_SUBSCR
+        >>  884 STORE_FAST               9 (history_data)
+            886 POP_EXCEPT
+            888 JUMP_FORWARD             4 (to 898)
+
+420     >>  890 RERAISE                  0
+        >>  892 COPY                     3
+            894 POP_EXCEPT
+            896 RERAISE                  1
+
+423     >>  898 LOAD_FAST                9 (history_data)
+            900 RETURN_VALUE
+ExceptionTable:
+  56 to 218 -> 794 [0]
+  224 to 526 -> 794 [0]
+  532 to 652 -> 794 [0]
+  658 to 790 -> 794 [0]
+  794 to 884 -> 892 [1] lasti
+  890 to 890 -> 892 [1] lasti
+
+Disassembly of <code object <dictcomp> at 0x000001A8D6A9C930, file "F:\Downloads\pythoncdc-main\site-packages\IQCommon\api\klinedataOK.py", line 417>:
+              0 MAKE_CELL                2 (item)
+
+417           2 RESUME                   0
+              4 BUILD_MAP                0
+              6 LOAD_FAST                0 (.0)
+        >>    8 FOR_ITER                25 (to 60)
+             10 UNPACK_SEQUENCE          2
+             14 STORE_FAST               1 (key)
+             16 STORE_DEREF              2 (item)
+             18 LOAD_FAST                1 (key)
+             20 LOAD_CLOSURE             2 (item)
+             22 BUILD_TUPLE              1
+             24 LOAD_CONST               0 (<code object <listcomp> at 0x000001A8D6AB42D0, file "F:\Downloads\pythoncdc-main\site-packages\IQCommon\api\klinedataOK.py", line 417>)
+             26 MAKE_FUNCTION            8 (closure)
+             28 LOAD_GLOBAL              0 (DIVIDEND_COLUMNS)
+             40 GET_ITER
+             42 PRECALL                  0
+             46 CALL                     0
+             56 MAP_ADD                  2
+             58 JUMP_BACKWARD           26 (to 8)
+        >>   60 RETURN_VALUE
+
+Disassembly of <code object <listcomp> at 0x000001A8D6AB42D0, file "F:\Downloads\pythoncdc-main\site-packages\IQCommon\api\klinedataOK.py", line 417>:
+              0 COPY_FREE_VARS           1
+
+417           2 RESUME                   0
+              4 BUILD_LIST               0
+              6 LOAD_FAST                0 (.0)
+        >>    8 FOR_ITER                10 (to 30)
+             10 STORE_FAST               1 (c)
+             12 LOAD_DEREF               2 (item)
+             14 LOAD_FAST                1 (c)
+             16 BINARY_SUBSCR
+             26 LIST_APPEND              2
+             28 JUMP_BACKWARD           11 (to 8)
+        >>   30 RETURN_VALUE

@@ -1,0 +1,524 @@
+# DECOMP dis.dis(get_history_date_and_count_ifalse)
+1196           0 RESUME                   0
+
+1197           2 LOAD_FAST                2 (frequency)
+               4 LOAD_CONST               1 ('1w')
+               6 COMPARE_OP               2 (==)
+              12 POP_JUMP_FORWARD_IF_FALSE   195 (to 404)
+
+1198          14 LOAD_FAST                0 (query_date)
+              16 LOAD_METHOD              0 (isocalendar)
+              38 PRECALL                  0
+              42 CALL                     0
+              52 STORE_FAST               3 (a)
+
+1199          54 LOAD_GLOBAL              2 (datetime)
+              66 LOAD_ATTR                1 (datetime)
+              76 LOAD_METHOD              2 (strftime)
+              98 LOAD_FAST                0 (query_date)
+             100 LOAD_GLOBAL              3 (NULL + datetime)
+             112 LOAD_ATTR                3 (timedelta)
+             122 LOAD_CONST               2 (7)
+             124 LOAD_FAST                1 (count)
+             126 BINARY_OP                5 (*)
+             130 LOAD_FAST                3 (a)
+             132 LOAD_CONST               3 (2)
+             134 BINARY_SUBSCR
+             144 BINARY_OP                0 (+)
+             148 LOAD_CONST               4 (1)
+             150 BINARY_OP               10 (-)
+             154 PRECALL                  1
+             158 CALL                     1
+             168 BINARY_OP               10 (-)
+             172 LOAD_CONST               5 ('%Y%m%d')
+             174 PRECALL                  2
+             178 CALL                     2
+             188 STORE_FAST               4 (start_date)
+
+1200         190 LOAD_GLOBAL              2 (datetime)
+             202 LOAD_ATTR                1 (datetime)
+             212 LOAD_METHOD              2 (strftime)
+             234 LOAD_FAST                0 (query_date)
+             236 LOAD_GLOBAL              3 (NULL + datetime)
+             248 LOAD_ATTR                3 (timedelta)
+             258 LOAD_CONST               2 (7)
+             260 LOAD_FAST                3 (a)
+             262 LOAD_CONST               3 (2)
+             264 BINARY_SUBSCR
+             274 BINARY_OP                0 (+)
+             278 LOAD_CONST               6 (5)
+             280 BINARY_OP               10 (-)
+             284 PRECALL                  1
+             288 CALL                     1
+             298 BINARY_OP               10 (-)
+             302 LOAD_CONST               5 ('%Y%m%d')
+             304 PRECALL                  2
+             308 CALL                     2
+             318 STORE_FAST               5 (end_date)
+
+1201         320 LOAD_FAST                0 (query_date)
+             322 LOAD_GLOBAL              3 (NULL + datetime)
+             334 LOAD_ATTR                3 (timedelta)
+             344 LOAD_FAST                3 (a)
+             346 LOAD_CONST               3 (2)
+             348 BINARY_SUBSCR
+             358 LOAD_CONST               4 (1)
+             360 BINARY_OP               10 (-)
+             364 PRECALL                  1
+             368 CALL                     1
+             378 BINARY_OP               10 (-)
+             382 STORE_FAST               0 (query_date)
+
+1202         384 LOAD_CONST               4 (1)
+             386 LOAD_FAST                1 (count)
+             388 BINARY_OP                0 (+)
+             392 LOAD_CONST               6 (5)
+             394 BINARY_OP                5 (*)
+             398 STORE_FAST               6 (count_daily)
+             400 EXTENDED_ARG             3
+             402 JUMP_FORWARD           939 (to 2282)
+
+1203     >>  404 LOAD_FAST                2 (frequency)
+             406 LOAD_CONST               7 ('mo')
+             408 COMPARE_OP               2 (==)
+             414 EXTENDED_ARG             1
+             416 POP_JUMP_FORWARD_IF_FALSE   273 (to 964)
+
+1204         418 LOAD_FAST                0 (query_date)
+             420 LOAD_ATTR                4 (year)
+             430 STORE_FAST               7 (year)
+
+1205         432 LOAD_FAST                0 (query_date)
+             434 LOAD_ATTR                5 (month)
+             444 STORE_FAST               8 (month)
+
+1206         446 LOAD_GLOBAL              2 (datetime)
+             458 LOAD_ATTR                1 (datetime)
+             468 LOAD_METHOD              2 (strftime)
+             490 LOAD_FAST                0 (query_date)
+             492 LOAD_CONST               5 ('%Y%m%d')
+             494 PRECALL                  2
+             498 CALL                     2
+             508 STORE_FAST               0 (query_date)
+
+1207         510 LOAD_FAST                0 (query_date)
+             512 LOAD_CONST               0 (None)
+             514 LOAD_CONST               8 (6)
+             516 BUILD_SLICE              2
+             518 BINARY_SUBSCR
+             528 LOAD_CONST               9 ('01')
+             530 BINARY_OP                0 (+)
+             534 STORE_FAST               0 (query_date)
+
+1208         536 LOAD_FAST                0 (query_date)
+             538 LOAD_GLOBAL              3 (NULL + datetime)
+             550 LOAD_ATTR                3 (timedelta)
+             560 LOAD_CONST               4 (1)
+             562 PRECALL                  1
+             566 CALL                     1
+             576 BINARY_OP               10 (-)
+             580 STORE_FAST               5 (end_date)
+
+1209         582 LOAD_GLOBAL              2 (datetime)
+             594 LOAD_ATTR                1 (datetime)
+             604 LOAD_METHOD              2 (strftime)
+             626 LOAD_FAST                5 (end_date)
+             628 LOAD_CONST               5 ('%Y%m%d')
+             630 PRECALL                  2
+             634 CALL                     2
+             644 STORE_FAST               5 (end_date)
+
+1210         646 LOAD_FAST                1 (count)
+             648 LOAD_CONST              10 (0)
+             650 COMPARE_OP               4 (>)
+             656 POP_JUMP_FORWARD_IF_FALSE    35 (to 728)
+
+1211     >>  658 LOAD_FAST                8 (month)
+             660 LOAD_FAST                1 (count)
+             662 BINARY_OP               10 (-)
+             666 LOAD_CONST              10 (0)
+             668 COMPARE_OP               1 (<=)
+             674 POP_JUMP_FORWARD_IF_FALSE    13 (to 702)
+
+1212         676 LOAD_FAST                7 (year)
+             678 LOAD_CONST               4 (1)
+             680 BINARY_OP               23 (-=)
+             684 STORE_FAST               7 (year)
+
+1213         686 LOAD_FAST                1 (count)
+             688 LOAD_FAST                8 (month)
+             690 BINARY_OP               23 (-=)
+             694 STORE_FAST               1 (count)
+
+1214         696 LOAD_CONST              11 (12)
+             698 STORE_FAST               8 (month)
+             700 JUMP_FORWARD             7 (to 716)
+
+1216     >>  702 LOAD_FAST                8 (month)
+             704 LOAD_FAST                1 (count)
+             706 BINARY_OP               10 (-)
+             710 STORE_FAST               8 (month)
+
+1217         712 LOAD_CONST              10 (0)
+             714 STORE_FAST               1 (count)
+
+1210     >>  716 LOAD_FAST                1 (count)
+             718 LOAD_CONST              10 (0)
+             720 COMPARE_OP               4 (>)
+             726 POP_JUMP_BACKWARD_IF_TRUE    35 (to 658)
+
+1218     >>  728 LOAD_FAST                8 (month)
+             730 LOAD_CONST              12 ((10, 11, 12))
+             732 CONTAINS_OP              0
+             734 POP_JUMP_FORWARD_IF_FALSE    35 (to 806)
+
+1219         736 LOAD_GLOBAL             13 (NULL + str)
+             748 LOAD_FAST                7 (year)
+             750 PRECALL                  1
+             754 CALL                     1
+             764 LOAD_GLOBAL             13 (NULL + str)
+             776 LOAD_FAST                8 (month)
+             778 PRECALL                  1
+             782 CALL                     1
+             792 BINARY_OP                0 (+)
+             796 LOAD_CONST               9 ('01')
+             798 BINARY_OP                0 (+)
+             802 STORE_FAST               4 (start_date)
+             804 JUMP_FORWARD            37 (to 880)
+
+1221     >>  806 LOAD_GLOBAL             13 (NULL + str)
+             818 LOAD_FAST                7 (year)
+             820 PRECALL                  1
+             824 CALL                     1
+             834 LOAD_CONST              13 ('0')
+             836 BINARY_OP                0 (+)
+             840 LOAD_GLOBAL             13 (NULL + str)
+             852 LOAD_FAST                8 (month)
+             854 PRECALL                  1
+             858 CALL                     1
+             868 BINARY_OP                0 (+)
+             872 LOAD_CONST               9 ('01')
+             874 BINARY_OP                0 (+)
+             878 STORE_FAST               4 (start_date)
+
+1222     >>  880 LOAD_GLOBAL             15 (NULL + len)
+             892 LOAD_GLOBAL             16 (trading_dates)
+             904 LOAD_METHOD              9 (get_trading_calendar)
+             926 LOAD_FAST                4 (start_date)
+             928 LOAD_FAST                5 (end_date)
+             930 PRECALL                  2
+             934 CALL                     2
+             944 PRECALL                  1
+             948 CALL                     1
+             958 STORE_FAST               6 (count_daily)
+             960 EXTENDED_ARG             2
+             962 JUMP_FORWARD           659 (to 2282)
+
+1223     >>  964 LOAD_FAST                2 (frequency)
+             966 LOAD_CONST              14 ('1y')
+             968 COMPARE_OP               2 (==)
+             974 POP_JUMP_FORWARD_IF_FALSE   229 (to 1434)
+
+1224         976 LOAD_GLOBAL              2 (datetime)
+             988 LOAD_ATTR                1 (datetime)
+             998 LOAD_METHOD              2 (strftime)
+            1020 LOAD_FAST                0 (query_date)
+            1022 LOAD_CONST               5 ('%Y%m%d')
+            1024 PRECALL                  2
+            1028 CALL                     2
+            1038 STORE_FAST               0 (query_date)
+
+1225        1040 LOAD_GLOBAL             13 (NULL + str)
+            1052 LOAD_GLOBAL             21 (NULL + int)
+            1064 LOAD_FAST                0 (query_date)
+            1066 LOAD_CONST              10 (0)
+            1068 LOAD_CONST              15 (4)
+            1070 BUILD_SLICE              2
+            1072 BINARY_SUBSCR
+            1082 PRECALL                  1
+            1086 CALL                     1
+            1096 LOAD_FAST                1 (count)
+            1098 BINARY_OP               10 (-)
+            1102 PRECALL                  1
+            1106 CALL                     1
+            1116 LOAD_CONST              16 ('0101')
+            1118 BINARY_OP                0 (+)
+            1122 STORE_FAST               4 (start_date)
+
+1226        1124 LOAD_GLOBAL             13 (NULL + str)
+            1136 LOAD_GLOBAL             21 (NULL + int)
+            1148 LOAD_FAST                0 (query_date)
+            1150 LOAD_CONST              10 (0)
+            1152 LOAD_CONST              15 (4)
+            1154 BUILD_SLICE              2
+            1156 BINARY_SUBSCR
+            1166 PRECALL                  1
+            1170 CALL                     1
+            1180 LOAD_CONST               4 (1)
+            1182 BINARY_OP               10 (-)
+            1186 PRECALL                  1
+            1190 CALL                     1
+            1200 LOAD_CONST              17 ('1231')
+            1202 BINARY_OP                0 (+)
+            1206 STORE_FAST               5 (end_date)
+
+1227        1208 LOAD_GLOBAL             13 (NULL + str)
+            1220 LOAD_GLOBAL             21 (NULL + int)
+            1232 LOAD_FAST                0 (query_date)
+            1234 LOAD_CONST              10 (0)
+            1236 LOAD_CONST              15 (4)
+            1238 BUILD_SLICE              2
+            1240 BINARY_SUBSCR
+            1250 PRECALL                  1
+            1254 CALL                     1
+            1264 PRECALL                  1
+            1268 CALL                     1
+            1278 LOAD_CONST              16 ('0101')
+            1280 BINARY_OP                0 (+)
+            1284 STORE_FAST               0 (query_date)
+
+1228        1286 LOAD_GLOBAL              2 (datetime)
+            1298 LOAD_ATTR                1 (datetime)
+            1308 LOAD_METHOD             11 (strptime)
+            1330 LOAD_FAST                0 (query_date)
+            1332 LOAD_CONST               5 ('%Y%m%d')
+            1334 PRECALL                  2
+            1338 CALL                     2
+            1348 STORE_FAST               0 (query_date)
+
+1229        1350 LOAD_GLOBAL             15 (NULL + len)
+            1362 LOAD_GLOBAL             16 (trading_dates)
+            1374 LOAD_METHOD              9 (get_trading_calendar)
+            1396 LOAD_FAST                4 (start_date)
+            1398 LOAD_FAST                5 (end_date)
+            1400 PRECALL                  2
+            1404 CALL                     2
+            1414 PRECALL                  1
+            1418 CALL                     1
+            1428 STORE_FAST               6 (count_daily)
+            1430 EXTENDED_ARG             1
+            1432 JUMP_FORWARD           424 (to 2282)
+
+1230     >> 1434 LOAD_FAST                2 (frequency)
+            1436 LOAD_CONST              18 ('1q')
+            1438 COMPARE_OP               2 (==)
+            1444 EXTENDED_ARG             1
+            1446 POP_JUMP_FORWARD_IF_FALSE   417 (to 2282)
+
+1231        1448 LOAD_FAST                0 (query_date)
+            1450 LOAD_ATTR                4 (year)
+            1460 STORE_FAST               7 (year)
+
+1232        1462 LOAD_FAST                0 (query_date)
+            1464 LOAD_ATTR                5 (month)
+            1474 STORE_FAST               8 (month)
+
+1233        1476 LOAD_FAST                8 (month)
+            1478 LOAD_CONST               4 (1)
+            1480 BINARY_OP               10 (-)
+            1484 LOAD_CONST              19 (3)
+            1486 BINARY_OP                2 (//)
+            1490 STORE_FAST               9 (end_quater)
+
+1234        1492 LOAD_FAST                9 (end_quater)
+            1494 LOAD_CONST              10 (0)
+            1496 COMPARE_OP               2 (==)
+            1502 POP_JUMP_FORWARD_IF_FALSE    40 (to 1584)
+
+1235        1504 LOAD_GLOBAL             13 (NULL + str)
+            1516 LOAD_FAST                7 (year)
+            1518 LOAD_CONST               4 (1)
+            1520 BINARY_OP               10 (-)
+            1524 PRECALL                  1
+            1528 CALL                     1
+            1538 LOAD_CONST              17 ('1231')
+            1540 BINARY_OP                0 (+)
+            1544 STORE_FAST               5 (end_date)
+
+1236        1546 LOAD_GLOBAL             13 (NULL + str)
+            1558 LOAD_FAST                7 (year)
+            1560 PRECALL                  1
+            1564 CALL                     1
+            1574 LOAD_CONST              16 ('0101')
+            1576 BINARY_OP                0 (+)
+            1580 STORE_FAST               0 (query_date)
+            1582 JUMP_FORWARD           128 (to 1840)
+
+1237     >> 1584 LOAD_FAST                9 (end_quater)
+            1586 LOAD_CONST               4 (1)
+            1588 COMPARE_OP               2 (==)
+            1594 POP_JUMP_FORWARD_IF_FALSE    37 (to 1670)
+
+1238        1596 LOAD_GLOBAL             13 (NULL + str)
+            1608 LOAD_FAST                7 (year)
+            1610 PRECALL                  1
+            1614 CALL                     1
+            1624 LOAD_CONST              20 ('0331')
+            1626 BINARY_OP                0 (+)
+            1630 STORE_FAST               5 (end_date)
+
+1239        1632 LOAD_GLOBAL             13 (NULL + str)
+            1644 LOAD_FAST                7 (year)
+            1646 PRECALL                  1
+            1650 CALL                     1
+            1660 LOAD_CONST              21 ('0401')
+            1662 BINARY_OP                0 (+)
+            1666 STORE_FAST               0 (query_date)
+            1668 JUMP_FORWARD            85 (to 1840)
+
+1240     >> 1670 LOAD_FAST                9 (end_quater)
+            1672 LOAD_CONST               3 (2)
+            1674 COMPARE_OP               2 (==)
+            1680 POP_JUMP_FORWARD_IF_FALSE    37 (to 1756)
+
+1241        1682 LOAD_GLOBAL             13 (NULL + str)
+            1694 LOAD_FAST                7 (year)
+            1696 PRECALL                  1
+            1700 CALL                     1
+            1710 LOAD_CONST              22 ('0630')
+            1712 BINARY_OP                0 (+)
+            1716 STORE_FAST               5 (end_date)
+
+1242        1718 LOAD_GLOBAL             13 (NULL + str)
+            1730 LOAD_FAST                7 (year)
+            1732 PRECALL                  1
+            1736 CALL                     1
+            1746 LOAD_CONST              23 ('0701')
+            1748 BINARY_OP                0 (+)
+            1752 STORE_FAST               0 (query_date)
+            1754 JUMP_FORWARD            42 (to 1840)
+
+1243     >> 1756 LOAD_FAST                9 (end_quater)
+            1758 LOAD_CONST              19 (3)
+            1760 COMPARE_OP               2 (==)
+            1766 POP_JUMP_FORWARD_IF_FALSE    36 (to 1840)
+
+1244        1768 LOAD_GLOBAL             13 (NULL + str)
+            1780 LOAD_FAST                7 (year)
+            1782 PRECALL                  1
+            1786 CALL                     1
+            1796 LOAD_CONST              24 ('0930')
+            1798 BINARY_OP                0 (+)
+            1802 STORE_FAST               5 (end_date)
+
+1245        1804 LOAD_GLOBAL             13 (NULL + str)
+            1816 LOAD_FAST                7 (year)
+            1818 PRECALL                  1
+            1822 CALL                     1
+            1832 LOAD_CONST              25 ('1001')
+            1834 BINARY_OP                0 (+)
+            1838 STORE_FAST               0 (query_date)
+
+1246     >> 1840 LOAD_GLOBAL             21 (NULL + int)
+            1852 LOAD_FAST                0 (query_date)
+            1854 LOAD_CONST              15 (4)
+            1856 LOAD_CONST               8 (6)
+            1858 BUILD_SLICE              2
+            1860 BINARY_SUBSCR
+            1870 PRECALL                  1
+            1874 CALL                     1
+            1884 STORE_FAST               8 (month)
+
+1247        1886 LOAD_FAST                1 (count)
+            1888 LOAD_CONST              10 (0)
+            1890 COMPARE_OP               4 (>)
+            1896 POP_JUMP_FORWARD_IF_FALSE    44 (to 1986)
+
+1248     >> 1898 LOAD_FAST                8 (month)
+            1900 LOAD_CONST              19 (3)
+            1902 BINARY_OP                2 (//)
+            1906 LOAD_FAST                1 (count)
+            1908 BINARY_OP               10 (-)
+            1912 LOAD_CONST              10 (0)
+            1914 COMPARE_OP               0 (<)
+            1920 POP_JUMP_FORWARD_IF_FALSE    16 (to 1954)
+
+1249        1922 LOAD_FAST                7 (year)
+            1924 LOAD_CONST               4 (1)
+            1926 BINARY_OP               23 (-=)
+            1930 STORE_FAST               7 (year)
+
+1250        1932 LOAD_FAST                1 (count)
+            1934 LOAD_FAST                8 (month)
+            1936 LOAD_CONST              19 (3)
+            1938 BINARY_OP                2 (//)
+            1942 BINARY_OP               23 (-=)
+            1946 STORE_FAST               1 (count)
+
+1251        1948 LOAD_CONST              26 (13)
+            1950 STORE_FAST               8 (month)
+            1952 JUMP_FORWARD            10 (to 1974)
+
+1253     >> 1954 LOAD_FAST                8 (month)
+            1956 LOAD_FAST                1 (count)
+            1958 LOAD_CONST              19 (3)
+            1960 BINARY_OP                5 (*)
+            1964 BINARY_OP               10 (-)
+            1968 STORE_FAST               8 (month)
+
+1254        1970 LOAD_CONST              10 (0)
+            1972 STORE_FAST               1 (count)
+
+1247     >> 1974 LOAD_FAST                1 (count)
+            1976 LOAD_CONST              10 (0)
+            1978 COMPARE_OP               4 (>)
+            1984 POP_JUMP_BACKWARD_IF_TRUE    44 (to 1898)
+
+1255     >> 1986 LOAD_FAST                8 (month)
+            1988 LOAD_CONST              12 ((10, 11, 12))
+            1990 CONTAINS_OP              0
+            1992 POP_JUMP_FORWARD_IF_FALSE    35 (to 2064)
+
+1256        1994 LOAD_GLOBAL             13 (NULL + str)
+            2006 LOAD_FAST                7 (year)
+            2008 PRECALL                  1
+            2012 CALL                     1
+            2022 LOAD_GLOBAL             13 (NULL + str)
+            2034 LOAD_FAST                8 (month)
+            2036 PRECALL                  1
+            2040 CALL                     1
+            2050 BINARY_OP                0 (+)
+            2054 LOAD_CONST               9 ('01')
+            2056 BINARY_OP                0 (+)
+            2060 STORE_FAST               4 (start_date)
+            2062 JUMP_FORWARD            37 (to 2138)
+
+1258     >> 2064 LOAD_GLOBAL             13 (NULL + str)
+            2076 LOAD_FAST                7 (year)
+            2078 PRECALL                  1
+            2082 CALL                     1
+            2092 LOAD_CONST              13 ('0')
+            2094 BINARY_OP                0 (+)
+            2098 LOAD_GLOBAL             13 (NULL + str)
+            2110 LOAD_FAST                8 (month)
+            2112 PRECALL                  1
+            2116 CALL                     1
+            2126 BINARY_OP                0 (+)
+            2130 LOAD_CONST               9 ('01')
+            2132 BINARY_OP                0 (+)
+            2136 STORE_FAST               4 (start_date)
+
+1259     >> 2138 LOAD_GLOBAL              2 (datetime)
+            2150 LOAD_ATTR                1 (datetime)
+            2160 LOAD_METHOD             11 (strptime)
+            2182 LOAD_FAST                0 (query_date)
+            2184 LOAD_CONST               5 ('%Y%m%d')
+            2186 PRECALL                  2
+            2190 CALL                     2
+            2200 STORE_FAST               0 (query_date)
+
+1260        2202 LOAD_GLOBAL             15 (NULL + len)
+            2214 LOAD_GLOBAL             16 (trading_dates)
+            2226 LOAD_METHOD              9 (get_trading_calendar)
+            2248 LOAD_FAST                4 (start_date)
+            2250 LOAD_FAST                5 (end_date)
+            2252 PRECALL                  2
+            2256 CALL                     2
+            2266 PRECALL                  1
+            2270 CALL                     1
+            2280 STORE_FAST               6 (count_daily)
+
+1261     >> 2282 LOAD_FAST                0 (query_date)
+            2284 LOAD_FAST                6 (count_daily)
+            2286 BUILD_TUPLE              2
+            2288 RETURN_VALUE

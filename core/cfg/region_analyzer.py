@@ -10922,7 +10922,8 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                 # 不一致）。依「每块唯一归属」+ 表达式完整性：KW_NAMES 是上下文
                 # 表达式的组成部分，必须随 CALL 一起收集。
                 if instr.opname in ('LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_ATTR', 'LOAD_FAST',
-                                   'LOAD_CONST', 'LOAD_METHOD', 'CALL', 'PRECALL',
+                                   'LOAD_CONST', 'LOAD_METHOD', 'LOAD_DEREF', 'LOAD_CLOSURE',
+                                   'CALL', 'PRECALL',
                                    'PUSH_NULL', 'SWAP', 'COPY', 'BINARY_SUBSCR',
                                    'BINARY_OP', 'BUILD_TUPLE', 'BUILD_LIST', 'BUILD_MAP',
                                    'BUILD_SET', 'BUILD_STRING', 'BUILD_SLICE',

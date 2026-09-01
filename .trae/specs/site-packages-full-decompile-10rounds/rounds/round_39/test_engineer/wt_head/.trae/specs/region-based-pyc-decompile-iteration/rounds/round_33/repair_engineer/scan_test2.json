@@ -1,0 +1,52 @@
+{
+ "summary": {
+  "ok": 4,
+  "partial": 1,
+  "failed": 0,
+  "matched_functions": 94,
+  "total_functions": 103,
+  "elapsed_sec": 31.2
+ },
+ "results": [
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/check_strategy.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 2,
+   "matched_functions": 2,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/gtn_api.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 5,
+   "matched_functions": 5,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/klinedata.pyc",
+   "status": "partial",
+   "rate": 0.8,
+   "total_functions": 45,
+   "matched_functions": 36,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/wrapper.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 4,
+   "matched_functions": 4,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/arg_checker.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 47,
+   "matched_functions": 47,
+   "error": null
+  }
+ ]
+}

@@ -1,0 +1,171 @@
+# Source Generated with Decompyle++ (Python version)
+# File: cache_storage.pyc (Python 3.11)
+
+import datetime
+import inspect
+from functools import wraps
+from IQCommon import pandas as pd
+from IQEngine import utils
+from IQEngine.utils.datetime_func import to_timestamp
+from IQCommon.exception import get_traceback_message
+from IQCommon.logger import system_log
+TIMEDELTA = datetime.timedelta(days=365)
+def to_hashable_args(value):
+    """
+    将变量变为可哈希化的
+    :param value:
+    :return:
+    """
+    if value.__hash__:
+        return value
+    elif isinstance(value, dict):
+        return tuple(sorted(value.items()))
+    elif isinstance(value, list):
+        return tuple(value)
+class Cache(object):
+    __doc__ = """
+    缓存组件
+    """
+    def __init__(self):
+        self._miss = 0
+        self._hit = 0
+        self._cache = {}
+    @property
+    def cache(self):
+        return self._cache
+    def clear(self):
+        """
+        清空缓存
+        :return: None
+        """
+        self._cache.clear()
+        self._hit = 0
+        self._miss = 0
+    @property
+    def miss(self):
+        return self._miss
+    def add_miss(self):
+        """
+        加一次未中靶
+        :return:
+        """
+        self._miss += 1
+    @property
+    def hit(self):
+        return self._hit
+    def add_hit(self):
+        """
+        加一次中靶
+        :return:
+        """
+        self._hit += 1
+    @property
+    def status(self):
+        """
+        状态展示
+        :return: dict
+        """
+        return {'miss': self._miss, 'hit': self._hit}
+    @property
+    def keys(self):
+        """
+        缓存key信息
+        :return:
+        """
+        return [(i, v[0], v[1]) for i, v in self.cache.items()]
+    def __getitem__(self, item):
+        return self._cache[item]
+    def __setitem__(self, key, value):
+        self._cache[key] = value
+""""""
+def apply_cache(range_start_args, range_end_args, on_off_limit_start, on_off_limit_end, sort_key=None):
+    """
+    获取缓存装饰器
+    :param range_start_args: 时间变量"开始"的变量名
+    :type range_start_args: str
+    :param range_end_args: 时间变量“结束”的变量名
+    :type range_end_args: str
+    :param on_off_limit_start: 时间变量"开始"缓存扩展范围时候的变化函数
+    :type on_off_limit_start: function
+    :param on_off_limit_end: 时间变量"结束"缓存扩展范围时候的变化函数
+    :type on_off_limit_end: function
+    :param sort_key: 排序字段， 如果为None则不排序
+    :type sort_key: str / None
+    :return:
+    """
+    def decorator(func):
+        """
+        装饰器
+        :param func:
+        :return:
+        """
+        base_func = utils.get_original_function(func)
+        argument_list = [name for name in sorted(inspect.signature(base_func).parameters) if name != range_start_args and name != range_end_args]
+        cache = Cache()
+        @wraps(func)
+        def func_wrapper(*args, **kwargs):
+            call_args = inspect.getcallargs(base_func, *(args), **(kwargs))
+            static_args = tuple([to_hashable_args(call_args[name]) for name in argument_list])
+            start = to_timestamp(call_args[range_start_args])
+            end = to_timestamp(call_args[range_end_args])
+            try:
+                cache_start, cache_end, data = cache[static_args]
+            except KeyError:
+                system_log.error(get_traceback_message())
+                start_ = on_off_limit_start(start)
+                end_ = on_off_limit_end(end)
+                call_args[range_start_args] = start_
+                call_args[range_end_args] = end_
+                data = func(**(call_args))
+                data.sort_values([sort_key], inplace=True)
+                cache[static_args] = (start_, end_, data)
+                cache.add_miss()
+            else:
+                concat_list = []
+                if start < cache_start:
+                    start_ = call_args[range_start_args] = on_off_limit_start(start)
+                else:
+                    start_ = cache_start
+                concat_list.append(data)
+                if end > cache_end:
+                    end_ = call_args[range_end_args] = on_off_limit_end(end)
+                else:
+                    end_ = cache_end
+                if len(concat_list) != 1:
+                    data = pd.concat(concat_list)
+                    data.sort_values([sort_key], inplace=True)
+                    cache[static_args] = (start_, end_, data)
+                    cache.add_miss()
+                else:
+                    cache.add_hit()
+            s = data[sort_key].searchsorted(start)
+            e = data[sort_key].searchsorted(end, side='right')
+            try:
+                return data.iloc[s:e].reset_index(drop=True)
+                return None
+            except TypeError:
+                system_log.error(get_traceback_message())
+                s = s[0]
+                e = e[0]
+                return data.iloc[s:e].reset_index(drop=True)
+        func_wrapper.clear = cache.clear
+        func_wrapper.cache = cache
+        func_wrapper.status = cache.status
+        func_wrapper.get_info = lambda : '<cache_wrapper({}):{}({})>'.format(base_func.__name__, cache.status, cache.keys)
+        return func_wrapper
+    return decorator
+def get_next_year_date(t):
+    """
+    往后推一年
+    :param t: 时间
+    :type t: datetime.datetime
+    :return:
+    """
+    return t + TIMEDELTA
+def get_pre_year_date(t):
+    """
+    往后前一年
+    :param t: 时间
+    :type t: datetime.datetime
+    """
+    return t - TIMEDELTA

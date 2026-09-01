@@ -1,0 +1,31 @@
+"""Repro 08-06: TRY region regression — real `return None` over-suppressed by R7 D9.
+
+R7 introduced a D9 fix to suppress spurious `return None` after a
+restored real return in an except handler. The over-suppression also
+swallowed genuine `return None` (or `return -1`) literals in some
+try-body / except-body return patterns, regressing te049 (return -1 →
+return None) and te12/te32 (try body return 1 → pass).
+
+Specifically for te049:
+    def f():
+        try:
+            x = 1
+            return x
+        except:
+            return -1
+Decompiles to:
+    def f():
+        try:
+            x = 1
+            return x
+        except:
+            return None   # <- literal -1 changed to None
+"""
+
+
+def f():
+    try:
+        x = 1
+        return x
+    except:
+        return -1

@@ -1,0 +1,13 @@
+# Source Generated with Decompyle++ (Python version)
+# File: repro_13_try_if_ternary_assign_return.pyc (Python 3.11)
+
+def f(x, a, b, c, d, e):
+    try:
+        if x == 1:
+            a = b if c is None else d
+            return a
+        else:
+            a = e
+    except BaseException:
+        return c
+    return a

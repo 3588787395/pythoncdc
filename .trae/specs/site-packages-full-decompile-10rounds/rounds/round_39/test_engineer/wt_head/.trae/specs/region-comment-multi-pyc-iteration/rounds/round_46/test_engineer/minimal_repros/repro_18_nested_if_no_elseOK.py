@@ -1,0 +1,14 @@
+# Source Generated with Decompyle++ (Python version)
+# File: repro_18_nested_if_no_else.pyc (Python 3.11)
+
+class Foo:
+    def func(self, x):
+        if x.dir == 1:
+            if x.sub == 0:
+                self.a = 1
+                return -1
+            else:
+                self.a = 2
+        else:
+            self.a = 3
+            return 4

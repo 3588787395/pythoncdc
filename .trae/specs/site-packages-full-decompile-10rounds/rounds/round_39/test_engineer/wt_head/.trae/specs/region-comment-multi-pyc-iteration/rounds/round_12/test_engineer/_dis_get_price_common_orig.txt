@@ -1,0 +1,728 @@
+# ORIG dis.dis(get_price_common)
+1720           0 RESUME                   0
+
+1769           2 LOAD_GLOBAL              1 (NULL + isinstance)
+              14 LOAD_FAST                0 (symbols)
+              16 LOAD_GLOBAL              2 (six)
+              28 LOAD_ATTR                2 (string_types)
+              38 PRECALL                  2
+              42 CALL                     2
+              52 POP_JUMP_FORWARD_IF_FALSE     6 (to 66)
+
+1770          54 LOAD_FAST                0 (symbols)
+              56 BUILD_LIST               1
+              58 STORE_FAST               0 (symbols)
+
+1771          60 LOAD_CONST               1 (True)
+              62 STORE_FAST               7 (is_string)
+              64 JUMP_FORWARD            21 (to 108)
+
+1772     >>   66 LOAD_GLOBAL              7 (NULL + len)
+              78 LOAD_FAST                0 (symbols)
+              80 PRECALL                  1
+              84 CALL                     1
+              94 LOAD_CONST               2 (1)
+              96 COMPARE_OP               4 (>)
+             102 POP_JUMP_FORWARD_IF_FALSE     2 (to 108)
+
+1773         104 LOAD_CONST               3 (False)
+             106 STORE_FAST               7 (is_string)
+
+1774     >>  108 LOAD_FAST                3 (frequency)
+             110 LOAD_GLOBAL              8 (OVER_WEEK_FREQUENCY)
+             122 CONTAINS_OP              0
+             124 POP_JUMP_FORWARD_IF_FALSE    77 (to 280)
+
+1775         126 LOAD_FAST                1 (start_date)
+             128 POP_JUMP_FORWARD_IF_NONE    22 (to 174)
+
+1776         130 LOAD_GLOBAL             11 (NULL + strategy_log)
+             142 LOAD_ATTR                6 (error)
+             152 LOAD_CONST               5 ('周线、月线、年线、季线不支持输入start_date进行查询')
+             154 PRECALL                  1
+             158 CALL                     1
+             168 POP_TOP
+
+1777         170 LOAD_CONST               4 (None)
+             172 RETURN_VALUE
+
+1778     >>  174 LOAD_FAST                6 (count)
+             176 POP_JUMP_FORWARD_IF_NOT_NONE    22 (to 222)
+
+1779         178 LOAD_GLOBAL             11 (NULL + strategy_log)
+             190 LOAD_ATTR                6 (error)
+             200 LOAD_CONST               6 ('周线、月线、年线、季线请输入count进行查询，count不能为None')
+             202 PRECALL                  1
+             206 CALL                     1
+             216 POP_TOP
+
+1780         218 LOAD_CONST               4 (None)
+             220 RETURN_VALUE
+
+1781     >>  222 LOAD_FAST                6 (count)
+             224 LOAD_CONST               7 (0)
+             226 COMPARE_OP               1 (<=)
+             232 POP_JUMP_FORWARD_IF_FALSE    22 (to 278)
+
+1782         234 LOAD_GLOBAL             11 (NULL + strategy_log)
+             246 LOAD_ATTR                6 (error)
+             256 LOAD_CONST               8 ('count不能小于0')
+             258 PRECALL                  1
+             262 CALL                     1
+             272 POP_TOP
+
+1783         274 LOAD_CONST               4 (None)
+             276 RETURN_VALUE
+
+1781     >>  278 JUMP_FORWARD            79 (to 438)
+
+1786     >>  280 LOAD_FAST                1 (start_date)
+             282 POP_JUMP_FORWARD_IF_NOT_NONE    53 (to 390)
+
+1787         284 LOAD_FAST                6 (count)
+             286 POP_JUMP_FORWARD_IF_NOT_NONE    22 (to 332)
+
+1788         288 LOAD_GLOBAL             11 (NULL + strategy_log)
+             300 LOAD_ATTR                6 (error)
+             310 LOAD_CONST               9 ('start_date, count不能全部为None')
+             312 PRECALL                  1
+             316 CALL                     1
+             326 POP_TOP
+
+1789         328 LOAD_CONST               4 (None)
+             330 RETURN_VALUE
+
+1790     >>  332 LOAD_FAST                6 (count)
+             334 LOAD_CONST               7 (0)
+             336 COMPARE_OP               1 (<=)
+             342 POP_JUMP_FORWARD_IF_FALSE    22 (to 388)
+
+1791         344 LOAD_GLOBAL             11 (NULL + strategy_log)
+             356 LOAD_ATTR                6 (error)
+             366 LOAD_CONST              10 ('count不能小于等于0')
+             368 PRECALL                  1
+             372 CALL                     1
+             382 POP_TOP
+
+1792         384 LOAD_CONST               4 (None)
+             386 RETURN_VALUE
+
+1790     >>  388 JUMP_FORWARD            24 (to 438)
+
+1794     >>  390 LOAD_FAST                6 (count)
+             392 POP_JUMP_FORWARD_IF_NONE    22 (to 438)
+
+1795         394 LOAD_GLOBAL             11 (NULL + strategy_log)
+             406 LOAD_ATTR                6 (error)
+             416 LOAD_CONST              11 ('start_date, count只能支持一个有效参数')
+             418 PRECALL                  1
+             422 CALL                     1
+             432 POP_TOP
+
+1796         434 LOAD_CONST               4 (None)
+             436 RETURN_VALUE
+
+1797     >>  438 LOAD_GLOBAL             14 (trading_dates)
+             450 POP_JUMP_FORWARD_IF_NOT_NONE    14 (to 480)
+
+1799         452 LOAD_GLOBAL             17 (NULL + initialize_trading_dates)
+             464 PRECALL                  0
+             468 CALL                     0
+             478 POP_TOP
+
+1800     >>  480 LOAD_GLOBAL             18 (basic_data)
+             492 POP_JUMP_FORWARD_IF_NOT_NONE    14 (to 522)
+
+1802         494 LOAD_GLOBAL             21 (NULL + initialize_data_source)
+             506 PRECALL                  0
+             510 CALL                     0
+             520 POP_TOP
+
+1803     >>  522 LOAD_GLOBAL             18 (basic_data)
+             534 LOAD_METHOD             11 (get_security_info)
+             556 LOAD_FAST                0 (symbols)
+             558 PRECALL                  1
+             562 CALL                     1
+             572 STORE_FAST              10 (asset)
+
+1804         574 LOAD_CONST               4 (None)
+             576 STORE_FAST              11 (tmp_dividends)
+
+1805         578 LOAD_GLOBAL              1 (NULL + isinstance)
+             590 LOAD_FAST                0 (symbols)
+             592 LOAD_GLOBAL              2 (six)
+             604 LOAD_ATTR                2 (string_types)
+             614 PRECALL                  2
+             618 CALL                     2
+             628 POP_JUMP_FORWARD_IF_FALSE     3 (to 636)
+
+1806         630 LOAD_FAST                0 (symbols)
+             632 BUILD_LIST               1
+             634 STORE_FAST               0 (symbols)
+
+1807     >>  636 LOAD_FAST                5 (fq)
+             638 POP_JUMP_FORWARD_IF_NONE   129 (to 898)
+
+1808         640 LOAD_FAST                5 (fq)
+             642 LOAD_CONST              12 (('post', 'pre', 'price_dypre'))
+             644 CONTAINS_OP              1
+             646 POP_JUMP_FORWARD_IF_FALSE    22 (to 692)
+
+1809         648 LOAD_GLOBAL             11 (NULL + strategy_log)
+             660 LOAD_ATTR                6 (error)
+             670 LOAD_CONST              13 ('get_price仅支持fq为post、pre和dypre，请重新入参')
+             672 PRECALL                  1
+             676 CALL                     1
+             686 POP_TOP
+
+1810         688 LOAD_CONST               4 (None)
+             690 RETURN_VALUE
+
+1811     >>  692 LOAD_FAST                5 (fq)
+             694 LOAD_CONST              14 ('price_dypre')
+             696 COMPARE_OP               2 (==)
+             702 POP_JUMP_FORWARD_IF_FALSE     2 (to 708)
+
+1813         704 LOAD_FAST                9 (backtest_date)
+             706 STORE_GLOBAL            12 (all_backtest_date)
+
+1814     >>  708 BUILD_LIST               0
+             710 STORE_FAST              12 (symbols_new_list)
+
+1815         712 LOAD_FAST                0 (symbols)
+             714 GET_ITER
+         >>  716 FOR_ITER                63 (to 844)
+             718 STORE_FAST              13 (symbol)
+
+1816         720 LOAD_FAST               12 (symbols_new_list)
+             722 LOAD_METHOD             13 (append)
+             744 LOAD_FAST               13 (symbol)
+             746 LOAD_METHOD             14 (replace)
+             768 LOAD_CONST              15 ('SS')
+             770 LOAD_CONST              16 ('XSHG')
+             772 PRECALL                  2
+             776 CALL                     2
+             786 LOAD_METHOD             14 (replace)
+             808 LOAD_CONST              17 ('SZ')
+             810 LOAD_CONST              18 ('XSHE')
+             812 PRECALL                  2
+             816 CALL                     2
+             826 PRECALL                  1
+             830 CALL                     1
+             840 POP_TOP
+             842 JUMP_BACKWARD           64 (to 716)
+
+1817     >>  844 LOAD_GLOBAL             18 (basic_data)
+             856 LOAD_METHOD             15 (get_dividend)
+             878 LOAD_FAST               12 (symbols_new_list)
+             880 LOAD_CONST               4 (None)
+             882 PRECALL                  2
+             886 CALL                     2
+             896 STORE_FAST              11 (tmp_dividends)
+
+1818     >>  898 LOAD_FAST                3 (frequency)
+             900 LOAD_GLOBAL             32 (Minute_Frequency)
+             912 CONTAINS_OP              0
+             914 POP_JUMP_FORWARD_IF_FALSE   124 (to 1164)
+
+1819         916 NOP
+
+1820         918 LOAD_GLOBAL             35 (NULL + str)
+             930 LOAD_FAST                2 (end_date)
+             932 PRECALL                  1
+             936 CALL                     1
+             946 STORE_FAST              14 (tmp_end_date)
+
+1822         948 LOAD_GLOBAL              7 (NULL + len)
+             960 LOAD_FAST               14 (tmp_end_date)
+             962 PRECALL                  1
+             966 CALL                     1
+             976 LOAD_CONST              19 (8)
+             978 COMPARE_OP               2 (==)
+             984 POP_JUMP_FORWARD_IF_FALSE     5 (to 996)
+
+1823         986 LOAD_FAST               14 (tmp_end_date)
+             988 LOAD_CONST              20 ('235959')
+             990 BINARY_OP                0 (+)
+             994 STORE_FAST               2 (end_date)
+         >>  996 JUMP_FORWARD            54 (to 1106)
+         >>  998 PUSH_EXC_INFO
+
+1824        1000 LOAD_GLOBAL             36 (BaseException)
+            1012 CHECK_EXC_MATCH
+            1014 POP_JUMP_FORWARD_IF_FALSE    41 (to 1098)
+            1016 POP_TOP
+
+1825        1018 LOAD_GLOBAL             39 (NULL + get_traceback_message)
+            1030 PRECALL                  0
+            1034 CALL                     0
+            1044 STORE_FAST              15 (error_info)
+
+1826        1046 LOAD_GLOBAL             41 (NULL + system_log)
+            1058 LOAD_ATTR                6 (error)
+            1068 LOAD_CONST              21 ('end_date处理异常异常: %s')
+            1070 LOAD_FAST               15 (error_info)
+            1072 BINARY_OP                6 (%)
+            1076 PRECALL                  1
+            1080 CALL                     1
+            1090 POP_TOP
+
+1827        1092 POP_EXCEPT
+            1094 LOAD_CONST               4 (None)
+            1096 RETURN_VALUE
+
+1824     >> 1098 RERAISE                  0
+         >> 1100 COPY                     3
+            1102 POP_EXCEPT
+            1104 RERAISE                  1
+
+1828     >> 1106 LOAD_GLOBAL             43 (NULL + convert_dt_to_int)
+            1118 LOAD_GLOBAL             45 (NULL + to_timestamp)
+            1130 LOAD_FAST                2 (end_date)
+            1132 PRECALL                  1
+            1136 CALL                     1
+            1146 PRECALL                  1
+            1150 CALL                     1
+            1160 STORE_FAST               2 (end_date)
+            1162 JUMP_FORWARD            28 (to 1220)
+
+1830     >> 1164 LOAD_GLOBAL             43 (NULL + convert_dt_to_int)
+            1176 LOAD_GLOBAL             45 (NULL + to_timestamp)
+            1188 LOAD_FAST                2 (end_date)
+            1190 PRECALL                  1
+            1194 CALL                     1
+            1204 PRECALL                  1
+            1208 CALL                     1
+            1218 STORE_FAST               2 (end_date)
+
+1832     >> 1220 LOAD_FAST                8 (is_dict)
+            1222 POP_JUMP_FORWARD_IF_TRUE    80 (to 1384)
+
+1833        1224 LOAD_FAST                4 (fields)
+            1226 POP_JUMP_FORWARD_IF_NOT_NONE    46 (to 1320)
+
+1834        1228 LOAD_FAST                3 (frequency)
+            1230 LOAD_CONST              22 ('1d')
+            1232 COMPARE_OP               2 (==)
+            1238 POP_JUMP_FORWARD_IF_FALSE    20 (to 1280)
+
+1835        1240 LOAD_GLOBAL             47 (NULL + VALID_HISTORY_DAY_FIELDS)
+            1252 LOAD_ATTR               24 (copy)
+            1262 PRECALL                  0
+            1266 CALL                     0
+            1276 STORE_FAST              16 (field_ori)
+            1278 JUMP_FORWARD            52 (to 1384)
+
+1837     >> 1280 LOAD_GLOBAL             51 (NULL + VALID_HISTORY_FIELDS)
+            1292 LOAD_ATTR               24 (copy)
+            1302 PRECALL                  0
+            1306 CALL                     0
+            1316 STORE_FAST              16 (field_ori)
+            1318 JUMP_FORWARD            32 (to 1384)
+
+1838     >> 1320 LOAD_GLOBAL              1 (NULL + isinstance)
+            1332 LOAD_FAST                4 (fields)
+            1334 LOAD_GLOBAL              2 (six)
+            1346 LOAD_ATTR                2 (string_types)
+            1356 PRECALL                  2
+            1360 CALL                     2
+            1370 POP_JUMP_FORWARD_IF_FALSE     4 (to 1380)
+
+1839        1372 LOAD_FAST                4 (fields)
+            1374 BUILD_LIST               1
+            1376 STORE_FAST              16 (field_ori)
+            1378 JUMP_FORWARD             2 (to 1384)
+
+1841     >> 1380 LOAD_FAST                4 (fields)
+            1382 STORE_FAST              16 (field_ori)
+
+1843     >> 1384 LOAD_FAST                4 (fields)
+            1386 POP_JUMP_FORWARD_IF_NOT_NONE    51 (to 1490)
+
+1844        1388 LOAD_GLOBAL             51 (NULL + VALID_HISTORY_FIELDS)
+            1400 LOAD_ATTR               24 (copy)
+            1410 PRECALL                  0
+            1414 CALL                     0
+            1424 STORE_FAST              17 (no_datetime_field)
+
+1845        1426 LOAD_FAST                3 (frequency)
+            1428 LOAD_CONST              22 ('1d')
+            1430 COMPARE_OP               2 (==)
+            1436 POP_JUMP_FORWARD_IF_FALSE    19 (to 1476)
+
+1846        1438 LOAD_GLOBAL             47 (NULL + VALID_HISTORY_DAY_FIELDS)
+            1450 LOAD_ATTR               24 (copy)
+            1460 PRECALL                  0
+            1464 CALL                     0
+            1474 STORE_FAST              17 (no_datetime_field)
+
+1847     >> 1476 LOAD_CONST              23 ('datetime')
+            1478 BUILD_LIST               1
+            1480 LOAD_FAST               17 (no_datetime_field)
+            1482 BINARY_OP                0 (+)
+            1486 STORE_FAST               4 (fields)
+            1488 JUMP_FORWARD           154 (to 1798)
+
+1849     >> 1490 LOAD_GLOBAL              1 (NULL + isinstance)
+            1502 LOAD_FAST                4 (fields)
+            1504 LOAD_GLOBAL             52 (list)
+            1516 PRECALL                  2
+            1520 CALL                     2
+            1530 POP_JUMP_FORWARD_IF_FALSE    57 (to 1646)
+
+1850        1532 LOAD_FAST                3 (frequency)
+            1534 LOAD_CONST              22 ('1d')
+            1536 COMPARE_OP               3 (!=)
+            1542 POP_JUMP_FORWARD_IF_FALSE    40 (to 1624)
+
+1851        1544 LOAD_FAST                4 (fields)
+            1546 GET_ITER
+         >> 1548 FOR_ITER                37 (to 1624)
+            1550 STORE_FAST              18 (_field)
+
+1852        1552 LOAD_FAST               18 (_field)
+            1554 LOAD_GLOBAL             54 (DAILY_SUPPORT_FIELDS)
+            1566 CONTAINS_OP              0
+            1568 POP_JUMP_FORWARD_IF_FALSE    26 (to 1622)
+
+1853        1570 LOAD_GLOBAL             11 (NULL + strategy_log)
+            1582 LOAD_ATTR                6 (error)
+            1592 LOAD_CONST              24 ('当前频率不支持field指定字段:%s')
+            1594 LOAD_FAST               18 (_field)
+            1596 BINARY_OP                6 (%)
+            1600 PRECALL                  1
+            1604 CALL                     1
+            1614 POP_TOP
+
+1854        1616 POP_TOP
+            1618 LOAD_CONST               4 (None)
+            1620 RETURN_VALUE
+
+1852     >> 1622 JUMP_BACKWARD           38 (to 1548)
+
+1855     >> 1624 LOAD_CONST              23 ('datetime')
+            1626 LOAD_FAST                4 (fields)
+            1628 CONTAINS_OP              1
+            1630 POP_JUMP_FORWARD_IF_FALSE     6 (to 1644)
+
+1856        1632 LOAD_CONST              23 ('datetime')
+            1634 BUILD_LIST               1
+            1636 LOAD_FAST                4 (fields)
+            1638 BINARY_OP                0 (+)
+            1642 STORE_FAST               4 (fields)
+         >> 1644 JUMP_FORWARD            76 (to 1798)
+
+1857     >> 1646 LOAD_GLOBAL              1 (NULL + isinstance)
+            1658 LOAD_FAST                4 (fields)
+            1660 LOAD_GLOBAL              2 (six)
+            1672 LOAD_ATTR                2 (string_types)
+            1682 PRECALL                  2
+            1686 CALL                     2
+            1696 POP_JUMP_FORWARD_IF_FALSE    50 (to 1798)
+
+1858        1698 LOAD_FAST                3 (frequency)
+            1700 LOAD_CONST              22 ('1d')
+            1702 COMPARE_OP               3 (!=)
+            1708 POP_JUMP_FORWARD_IF_FALSE    34 (to 1778)
+            1710 LOAD_FAST                4 (fields)
+            1712 LOAD_GLOBAL             54 (DAILY_SUPPORT_FIELDS)
+            1724 CONTAINS_OP              0
+            1726 POP_JUMP_FORWARD_IF_FALSE    25 (to 1778)
+
+1859        1728 LOAD_GLOBAL             11 (NULL + strategy_log)
+            1740 LOAD_ATTR                6 (error)
+            1750 LOAD_CONST              24 ('当前频率不支持field指定字段:%s')
+            1752 LOAD_FAST                4 (fields)
+            1754 BINARY_OP                6 (%)
+            1758 PRECALL                  1
+            1762 CALL                     1
+            1772 POP_TOP
+
+1860        1774 LOAD_CONST               4 (None)
+            1776 RETURN_VALUE
+
+1861     >> 1778 LOAD_CONST              23 ('datetime')
+            1780 LOAD_FAST                4 (fields)
+            1782 COMPARE_OP               3 (!=)
+            1788 POP_JUMP_FORWARD_IF_FALSE     4 (to 1798)
+
+1862        1790 LOAD_CONST              23 ('datetime')
+            1792 LOAD_FAST                4 (fields)
+            1794 BUILD_LIST               2
+            1796 STORE_FAST               4 (fields)
+
+1863     >> 1798 LOAD_FAST                3 (frequency)
+            1800 LOAD_GLOBAL              8 (OVER_WEEK_FREQUENCY)
+            1812 CONTAINS_OP              0
+            1814 POP_JUMP_FORWARD_IF_FALSE    26 (to 1868)
+
+1864        1816 LOAD_FAST                4 (fields)
+            1818 STORE_FAST              19 (fields_complex)
+
+1865        1820 LOAD_GLOBAL             57 (NULL + get_stk_data)
+            1832 LOAD_FAST                1 (start_date)
+            1834 LOAD_FAST                2 (end_date)
+            1836 LOAD_FAST                6 (count)
+            1838 LOAD_FAST                0 (symbols)
+            1840 LOAD_FAST               19 (fields_complex)
+            1842 LOAD_FAST                3 (frequency)
+            1844 LOAD_FAST                5 (fq)
+            1846 LOAD_FAST               10 (asset)
+
+1866        1848 LOAD_FAST               11 (tmp_dividends)
+
+1865        1850 PRECALL                  9
+            1854 CALL                     9
+            1864 STORE_FAST              20 (his_data_dict)
+            1866 JUMP_FORWARD           143 (to 2154)
+
+1868     >> 1868 LOAD_FAST                1 (start_date)
+            1870 POP_JUMP_FORWARD_IF_NOT_NONE    59 (to 1990)
+
+1869        1872 LOAD_FAST                3 (frequency)
+            1874 LOAD_GLOBAL             58 (Multi_Minute_Frequency)
+            1886 CONTAINS_OP              0
+            1888 POP_JUMP_FORWARD_IF_FALSE    25 (to 1940)
+
+1870        1890 LOAD_GLOBAL             61 (NULL + get_multiminute_his_data)
+            1902 LOAD_FAST                0 (symbols)
+            1904 LOAD_FAST                6 (count)
+            1906 LOAD_FAST                2 (end_date)
+            1908 LOAD_FAST                3 (frequency)
+            1910 LOAD_FAST                4 (fields)
+            1912 LOAD_FAST                5 (fq)
+
+1871        1914 LOAD_CONST               1 (True)
+            1916 LOAD_FAST               10 (asset)
+            1918 LOAD_FAST               11 (tmp_dividends)
+
+1870        1920 KW_NAMES                25
+            1922 PRECALL                  9
+            1926 CALL                     9
+            1936 STORE_FAST              20 (his_data_dict)
+            1938 JUMP_FORWARD           107 (to 2154)
+
+1873     >> 1940 LOAD_GLOBAL             63 (NULL + get_kline_by_count_new)
+            1952 LOAD_FAST                0 (symbols)
+            1954 LOAD_FAST                6 (count)
+            1956 LOAD_FAST                2 (end_date)
+            1958 LOAD_FAST                3 (frequency)
+            1960 LOAD_FAST                4 (fields)
+            1962 LOAD_FAST                5 (fq)
+            1964 LOAD_CONST               1 (True)
+
+1874        1966 LOAD_FAST               10 (asset)
+            1968 LOAD_FAST               11 (tmp_dividends)
+
+1873        1970 KW_NAMES                25
+            1972 PRECALL                  9
+            1976 CALL                     9
+            1986 STORE_FAST              20 (his_data_dict)
+            1988 JUMP_FORWARD            82 (to 2154)
+
+1878     >> 1990 LOAD_GLOBAL             43 (NULL + convert_dt_to_int)
+            2002 LOAD_GLOBAL             45 (NULL + to_timestamp)
+            2014 LOAD_FAST                1 (start_date)
+            2016 PRECALL                  1
+            2020 CALL                     1
+            2030 PRECALL                  1
+            2034 CALL                     1
+            2044 STORE_FAST               1 (start_date)
+
+1879        2046 LOAD_FAST                3 (frequency)
+            2048 LOAD_GLOBAL             58 (Multi_Minute_Frequency)
+            2060 CONTAINS_OP              0
+            2062 POP_JUMP_FORWARD_IF_FALSE    23 (to 2110)
+
+1880        2064 LOAD_GLOBAL             65 (NULL + get_multiminute_his_data_by_date)
+            2076 LOAD_FAST                0 (symbols)
+            2078 LOAD_FAST                1 (start_date)
+            2080 LOAD_FAST                2 (end_date)
+            2082 LOAD_FAST                3 (frequency)
+            2084 LOAD_FAST                4 (fields)
+            2086 LOAD_FAST                5 (fq)
+
+1881        2088 LOAD_FAST               10 (asset)
+            2090 LOAD_FAST               11 (tmp_dividends)
+
+1880        2092 PRECALL                  8
+            2096 CALL                     8
+            2106 STORE_FAST              20 (his_data_dict)
+            2108 JUMP_FORWARD            22 (to 2154)
+
+1883     >> 2110 LOAD_GLOBAL             67 (NULL + get_kline_by_date_new)
+            2122 LOAD_FAST                0 (symbols)
+            2124 LOAD_FAST                1 (start_date)
+            2126 LOAD_FAST                2 (end_date)
+            2128 LOAD_FAST                3 (frequency)
+            2130 LOAD_FAST                4 (fields)
+            2132 LOAD_FAST                5 (fq)
+            2134 LOAD_FAST               10 (asset)
+
+1884        2136 LOAD_FAST               11 (tmp_dividends)
+
+1883        2138 PRECALL                  8
+            2142 CALL                     8
+            2152 STORE_FAST              20 (his_data_dict)
+
+1885     >> 2154 LOAD_FAST                8 (is_dict)
+            2156 EXTENDED_ARG             1
+            2158 POP_JUMP_FORWARD_IF_TRUE   370 (to 2900)
+
+1886        2160 LOAD_GLOBAL             69 (NULL + get_python_version)
+            2172 PRECALL                  0
+            2176 CALL                     0
+            2186 STORE_FAST              21 (python_version)
+
+1887        2188 LOAD_FAST               21 (python_version)
+            2190 LOAD_CONST              26 ('3.11')
+            2192 COMPARE_OP               2 (==)
+            2198 EXTENDED_ARG             1
+            2200 POP_JUMP_FORWARD_IF_FALSE   301 (to 2804)
+
+1888        2202 LOAD_FAST                7 (is_string)
+            2204 EXTENDED_ARG             1
+            2206 POP_JUMP_FORWARD_IF_TRUE   280 (to 2768)
+
+1889        2208 LOAD_GLOBAL             70 (benchmark_code)
+            2220 LOAD_FAST               20 (his_data_dict)
+            2222 LOAD_METHOD             36 (keys)
+            2244 PRECALL                  0
+            2248 CALL                     0
+            2258 CONTAINS_OP              0
+            2260 POP_JUMP_FORWARD_IF_FALSE    38 (to 2338)
+
+1890        2262 LOAD_FAST               20 (his_data_dict)
+            2264 LOAD_GLOBAL             70 (benchmark_code)
+            2276 BINARY_SUBSCR
+            2286 LOAD_CONST              23 ('datetime')
+            2288 BINARY_SUBSCR
+            2298 STORE_FAST              22 (index_t)
+
+1891        2300 LOAD_FAST               20 (his_data_dict)
+            2302 LOAD_GLOBAL             70 (benchmark_code)
+            2314 BINARY_SUBSCR
+            2324 LOAD_ATTR               37 (dtype)
+            2334 STORE_FAST              23 (bench_type)
+            2336 JUMP_FORWARD           195 (to 2728)
+
+1892     >> 2338 LOAD_GLOBAL             70 (benchmark_code)
+            2350 LOAD_METHOD             14 (replace)
+            2372 LOAD_CONST              15 ('SS')
+            2374 LOAD_CONST              16 ('XSHG')
+            2376 PRECALL                  2
+            2380 CALL                     2
+            2390 LOAD_FAST               20 (his_data_dict)
+            2392 LOAD_METHOD             36 (keys)
+            2414 PRECALL                  0
+            2418 CALL                     0
+            2428 CONTAINS_OP              0
+            2430 POP_JUMP_FORWARD_IF_FALSE    84 (to 2600)
+
+1893        2432 LOAD_FAST               20 (his_data_dict)
+            2434 LOAD_GLOBAL             70 (benchmark_code)
+            2446 LOAD_METHOD             14 (replace)
+            2468 LOAD_CONST              15 ('SS')
+            2470 LOAD_CONST              16 ('XSHG')
+            2472 PRECALL                  2
+            2476 CALL                     2
+            2486 BINARY_SUBSCR
+            2496 LOAD_CONST              23 ('datetime')
+            2498 BINARY_SUBSCR
+            2508 STORE_FAST              22 (index_t)
+
+1894        2510 LOAD_FAST               20 (his_data_dict)
+            2512 LOAD_GLOBAL             70 (benchmark_code)
+            2524 LOAD_METHOD             14 (replace)
+            2546 LOAD_CONST              15 ('SS')
+            2548 LOAD_CONST              16 ('XSHG')
+            2550 PRECALL                  2
+            2554 CALL                     2
+            2564 BINARY_SUBSCR
+            2574 LOAD_CONST              23 ('datetime')
+            2576 BINARY_SUBSCR
+            2586 LOAD_ATTR               37 (dtype)
+            2596 STORE_FAST              23 (bench_type)
+            2598 JUMP_FORWARD            64 (to 2728)
+
+1896     >> 2600 LOAD_GLOBAL             77 (NULL + get_price_common)
+            2612 LOAD_GLOBAL             70 (benchmark_code)
+            2624 LOAD_FAST                1 (start_date)
+            2626 LOAD_FAST                2 (end_date)
+
+1897        2628 LOAD_FAST                3 (frequency)
+            2630 LOAD_FAST                4 (fields)
+            2632 LOAD_FAST                6 (count)
+            2634 LOAD_CONST               1 (True)
+
+1896        2636 KW_NAMES                27
+            2638 PRECALL                  7
+            2642 CALL                     7
+            2652 STORE_FAST              24 (benchmark_dict)
+
+1898        2654 LOAD_FAST               24 (benchmark_dict)
+            2656 LOAD_GLOBAL             70 (benchmark_code)
+            2668 BINARY_SUBSCR
+            2678 LOAD_CONST              23 ('datetime')
+            2680 BINARY_SUBSCR
+            2690 STORE_FAST              22 (index_t)
+
+1899        2692 LOAD_FAST               24 (benchmark_dict)
+            2694 LOAD_GLOBAL             70 (benchmark_code)
+            2706 BINARY_SUBSCR
+            2716 LOAD_ATTR               37 (dtype)
+            2726 STORE_FAST              23 (bench_type)
+
+1900     >> 2728 LOAD_GLOBAL             79 (NULL + np_tp_pd)
+            2740 LOAD_FAST               20 (his_data_dict)
+            2742 LOAD_FAST               16 (field_ori)
+            2744 LOAD_FAST                7 (is_string)
+            2746 LOAD_FAST               22 (index_t)
+            2748 LOAD_FAST               23 (bench_type)
+            2750 PRECALL                  5
+            2754 CALL                     5
+            2764 STORE_FAST              25 (pd_array)
+            2766 JUMP_FORWARD            64 (to 2896)
+
+1902     >> 2768 LOAD_GLOBAL             79 (NULL + np_tp_pd)
+            2780 LOAD_FAST               20 (his_data_dict)
+            2782 LOAD_FAST               16 (field_ori)
+            2784 LOAD_FAST                7 (is_string)
+            2786 PRECALL                  3
+            2790 CALL                     3
+            2800 STORE_FAST              25 (pd_array)
+            2802 JUMP_FORWARD            46 (to 2896)
+
+1903     >> 2804 LOAD_FAST               21 (python_version)
+            2806 LOAD_CONST              28 ('3.5')
+            2808 COMPARE_OP               2 (==)
+            2814 POP_JUMP_FORWARD_IF_FALSE    18 (to 2852)
+
+1904        2816 LOAD_GLOBAL             81 (NULL + to_pd_result)
+            2828 LOAD_FAST               20 (his_data_dict)
+            2830 LOAD_FAST               16 (field_ori)
+            2832 LOAD_FAST                7 (is_string)
+            2834 PRECALL                  3
+            2838 CALL                     3
+            2848 STORE_FAST              25 (pd_array)
+            2850 JUMP_FORWARD            22 (to 2896)
+
+1906     >> 2852 LOAD_GLOBAL             41 (NULL + system_log)
+            2864 LOAD_ATTR                6 (error)
+            2874 LOAD_CONST              29 ('获取python版本异常，返回dict类型')
+            2876 PRECALL                  1
+            2880 CALL                     1
+            2890 POP_TOP
+
+1907        2892 LOAD_FAST               20 (his_data_dict)
+            2894 RETURN_VALUE
+
+1908     >> 2896 LOAD_FAST               25 (pd_array)
+            2898 RETURN_VALUE
+
+1909     >> 2900 LOAD_FAST               20 (his_data_dict)
+            2902 RETURN_VALUE
+ExceptionTable:
+  918 to 994 -> 998 [0]
+  998 to 1090 -> 1100 [1] lasti
+  1098 to 1098 -> 1100 [1] lasti

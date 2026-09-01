@@ -1,0 +1,24 @@
+# Source Generated with Decompyle++ (Python version)
+# File: repro_09_08_d7_ifexp_in_call_arg_vs_statement.pyc (Python 3.11)
+
+__doc__ = """Repro 09-08: D7 variant — IfExp in Call argument position.
+
+The D7 root cause is that _generate_if / IfExp reconstruction
+compresses if/elif chains into nested ternary. When the if/elif chain
+appears as a Call argument, the IfExp is preserved (correct), but
+when it appears as a statement-level if/elif, it is incorrectly
+compressed. This repro tests the boundary: a Call whose argument is
+an if/elif/else expression (correct IfExp) vs a statement-level
+if/elif/else assignment (D7 defect).
+
+Expected defect: the statement-level if/elif/else is compressed to a
+bare Expr of nested ternary of `==`; the Call-arg IfExp is preserved.
+"""
+def classify(x):
+    if x == 1:
+        y = 'a'
+    elif x == 2:
+        y = 'b'
+    else:
+        y = 'c'
+    return y

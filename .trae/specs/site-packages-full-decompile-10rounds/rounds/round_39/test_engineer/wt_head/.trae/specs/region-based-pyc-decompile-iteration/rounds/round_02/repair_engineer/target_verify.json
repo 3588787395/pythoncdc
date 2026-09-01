@@ -1,0 +1,154 @@
+{
+  "round": 2,
+  "offset": 0,
+  "elapsed_sec": 5.8,
+  "processed": 6,
+  "remaining": 0,
+  "ok": 1,
+  "partial": 5,
+  "failed": 0,
+  "total_functions": 117,
+  "matched_functions": 112,
+  "files": [
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/account/order.pyc",
+      "status": "partial",
+      "rate": 0.9807692307692307,
+      "total_functions": 52,
+      "matched_functions": 51,
+      "mismatches": [
+        {
+          "name": "fill",
+          "orig_count": 69,
+          "decomp_count": 54,
+          "jump_diffs": 0,
+          "true_diffs": 22,
+          "first_diff": {
+            "index": 47,
+            "orig_op": "COPY",
+            "decomp_op": "POP_TOP",
+            "orig_arg": 1,
+            "decomp_arg": null
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/account/trade.pyc",
+      "status": "partial",
+      "rate": 0.9565217391304348,
+      "total_functions": 23,
+      "matched_functions": 22,
+      "mismatches": [
+        {
+          "name": "create_trade",
+          "orig_count": 68,
+          "decomp_count": 29,
+          "jump_diffs": 0,
+          "true_diffs": 46,
+          "first_diff": {
+            "index": 21,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": "price",
+            "decomp_arg": "trade_id"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/data_proxy.pyc",
+      "status": "partial",
+      "rate": 0.8888888888888888,
+      "total_functions": 9,
+      "matched_functions": 8,
+      "mismatches": [
+        {
+          "name": "DataProxy",
+          "orig_count": 37,
+          "decomp_count": 33,
+          "jump_diffs": 0,
+          "true_diffs": 32,
+          "first_diff": {
+            "index": 5,
+            "orig_op": "LOAD_NAME",
+            "decomp_op": "LOAD_CONST",
+            "orig_arg": "TickBar",
+            "decomp_arg": "<code object __init__>"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/api/api_stock.pyc",
+      "status": "ok",
+      "rate": 1.0,
+      "total_functions": 11,
+      "matched_functions": 11,
+      "mismatches": [],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/commission.pyc",
+      "status": "partial",
+      "rate": 0.9444444444444444,
+      "total_functions": 18,
+      "matched_functions": 17,
+      "mismatches": [
+        {
+          "name": "load",
+          "orig_count": 87,
+          "decomp_count": 84,
+          "jump_diffs": 1,
+          "true_diffs": 43,
+          "first_diff": {
+            "index": 43,
+            "orig_op": "LOAD_CONST",
+            "decomp_op": "JUMP_FORWARD",
+            "orig_arg": null,
+            "decomp_arg": 302
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/user_error.pyc",
+      "status": "partial",
+      "rate": 0.75,
+      "total_functions": 4,
+      "matched_functions": 3,
+      "mismatches": [
+        {
+          "name": "<module>",
+          "orig_count": 47,
+          "decomp_count": 48,
+          "jump_diffs": 0,
+          "true_diffs": 1,
+          "first_diff": {
+            "index": 47,
+            "type": "extra_in_decomp",
+            "decomp_op": "RETURN_VALUE",
+            "decomp_arg": null
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    }
+  ]
+}

@@ -1,0 +1,32 @@
+﻿[SINGLE] F:\Downloads\pythoncdc-main\site-packages\IQCommon\api\klinedata.pyc
+  OK.py: F:\Downloads\pythoncdc-main\site-packages\IQCommon\api\klinedataOK.py
+  source: 88497 chars
+
+字节码 diff 报告:
+  decompile_status:   partial
+  total_functions:   45
+  matched_functions: 24
+  match_rate:        53.33%
+  missing_in_decomp: []
+  extra_in_decomp:   []
+  mismatches (21):
+    - <module>: orig=545 decomp=541 jump_diffs=0 true_diffs=189
+      first_diff: {'index': 344, 'orig_op': 'NOP', 'decomp_op': 'LOAD_CONST', 'orig_arg': None, 'decomp_arg': (None, None, False, None, None, None)}
+    - _all_bars_of_cache: orig=250 decomp=253 jump_diffs=39 true_diffs=187
+      first_diff: {'index': 29, 'orig_op': 'LOAD_CONST', 'decomp_op': 'LOAD_FAST', 'orig_arg': '20050101', 'decomp_arg': 'start_date'}
+    - _all_bars_of_range: orig=17 decomp=16 jump_diffs=0 true_diffs=3
+      first_diff: {'index': 14, 'orig_op': 'NOP', 'decomp_op': 'LOAD_FAST', 'orig_arg': None, 'decomp_arg': 'data_array'}
+    - get_all_real_daily_kline: orig=216 decomp=214 jump_diffs=28 true_diffs=137
+      first_diff: {'index': 51, 'orig_op': 'LOAD_GLOBAL', 'decomp_op': 'LOAD_FAST', 'orig_arg': 'len', 'decomp_arg': 'list_data'}
+    - get_all_real_minute_kline: orig=305 decomp=306 jump_diffs=37 true_diffs=191
+      first_diff: {'index': 82, 'orig_op': 'LOAD_GLOBAL', 'decomp_op': 'LOAD_GLOBAL', 'orig_arg': 'range', 'decomp_arg': 'system_log'}
+    - get_history_common: orig=536 decomp=543 jump_diffs=62 true_diffs=367
+      first_diff: {'index': 111, 'orig_op': 'POP_JUMP_FORWARD_IF_NOT_NONE', 'decomp_op': 'EXTENDED_ARG', 'orig_arg': 760, 'decomp_arg': 3}
+    - get_history_date_and_count_ifalse: orig=468 decomp=460 jump_diffs=47 true_diffs=313
+      first_diff: {'index': 99, 'orig_op': 'LOAD_GLOBAL', 'decomp_op': 'LOAD_FAST', 'orig_arg': 'datetime', 'decomp_arg': 'query_date'}
+    - get_history_new: orig=352 decomp=262 jump_diffs=9 true_diffs=132
+      first_diff: {'index': 65, 'orig_op': 'EXTENDED_ARG', 'decomp_op': 'EXTENDED_ARG', 'orig_arg': 2, 'decomp_arg': 1}
+    - get_kline_by_count: orig=478 decomp=478 jump_diffs=80 true_diffs=392
+      first_diff: {'index': 2, 'orig_op': 'POP_JUMP_FORWARD_IF_NONE', 'decomp_op': 'EXTENDED_ARG', 'orig_arg': 18, 'decomp_arg': 4}
+    - get_kline_by_count_new: orig=650 decomp=640 jump_diffs=125 true_diffs=507
+      first_diff: {'index': 14, 'orig_op': 'UNPACK_SEQUENCE', 'decomp_op': 'STORE_FAST', 'orig_arg': 2, 'decomp_arg': 'start_000300'}

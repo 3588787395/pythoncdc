@@ -1,0 +1,12 @@
+# Source Generated with Decompyle++ (Python version)
+# File: repro_11_ctrl_try_if_no_return.pyc (Python 3.11)
+
+def f(x, a, b, c):
+    try:
+        if x == 1:
+            a = b
+        else:
+            a = c
+    except BaseException:
+        pass
+    return a

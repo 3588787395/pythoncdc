@@ -1,0 +1,376 @@
+585           0 RESUME                   0
+
+603           2 LOAD_FAST                1 (trade)
+              4 LOAD_ATTR                0 (amount)
+             14 STORE_FAST               2 (trade_amount)
+
+604          16 LOAD_FAST                1 (trade)
+             18 LOAD_ATTR                1 (asset)
+             28 STORE_FAST               3 (asset)
+
+605          30 LOAD_FAST                3 (asset)
+             32 LOAD_ATTR                2 (contract_multiplier)
+             42 STORE_FAST               4 (contract_multiplier)
+
+609          44 LOAD_FAST                1 (trade)
+             46 LOAD_ATTR                3 (trading_datetime)
+             56 STORE_FAST               5 (current_date)
+
+610          58 LOAD_FAST                1 (trade)
+             60 LOAD_ATTR                4 (entrust_direction)
+             70 LOAD_GLOBAL             10 (EntrustDirection)
+             82 LOAD_ATTR                6 (BUY)
+             92 COMPARE_OP               2 (==)
+             98 EXTENDED_ARG             1
+            100 POP_JUMP_FORWARD_IF_FALSE   374 (to 850)
+
+612         102 LOAD_FAST                1 (trade)
+            104 LOAD_ATTR                7 (futures_direction)
+            114 LOAD_GLOBAL             16 (FuturesDirection)
+            126 LOAD_ATTR                9 (OPEN)
+            136 COMPARE_OP               2 (==)
+            142 POP_JUMP_FORWARD_IF_FALSE   190 (to 524)
+
+614         144 LOAD_FAST                0 (self)
+            146 LOAD_ATTR               10 (buy_amount)
+            156 LOAD_CONST               1 (0)
+            158 COMPARE_OP               2 (==)
+            164 POP_JUMP_FORWARD_IF_FALSE     7 (to 180)
+
+615         166 LOAD_FAST                5 (current_date)
+            168 LOAD_FAST                0 (self)
+            170 STORE_ATTR              11 (_long_create_time)
+
+616     >>  180 LOAD_FAST                0 (self)
+            182 LOAD_METHOD             12 (_set_position_type)
+            204 LOAD_GLOBAL             26 (PositionType)
+            216 LOAD_ATTR               14 (RIGHT)
+            226 PRECALL                  1
+            230 CALL                     1
+            240 POP_TOP
+
+618         242 LOAD_FAST                0 (self)
+            244 LOAD_ATTR               15 (_buy_avg_open_price)
+            254 LOAD_FAST                0 (self)
+            256 LOAD_ATTR               10 (buy_amount)
+            266 BINARY_OP                5 (*)
+            270 LOAD_FAST                2 (trade_amount)
+            272 LOAD_FAST                1 (trade)
+            274 LOAD_ATTR               16 (price)
+            284 BINARY_OP                5 (*)
+            288 BINARY_OP                0 (+)
+            292 LOAD_FAST                4 (contract_multiplier)
+
+617         294 BINARY_OP                5 (*)
+
+619         298 LOAD_FAST                1 (trade)
+            300 LOAD_ATTR               17 (transaction_cost)
+
+617         310 BINARY_OP                0 (+)
+
+620         314 LOAD_FAST                0 (self)
+            316 LOAD_ATTR               10 (buy_amount)
+            326 LOAD_FAST                2 (trade_amount)
+            328 BINARY_OP                0 (+)
+            332 LOAD_FAST                4 (contract_multiplier)
+
+619         334 BINARY_OP                5 (*)
+
+617         338 BINARY_OP               11 (/)
+            342 LOAD_FAST                0 (self)
+            344 STORE_ATTR              15 (_buy_avg_open_price)
+
+621         354 LOAD_FAST                0 (self)
+            356 COPY                     1
+            358 LOAD_ATTR               18 (_buy_transaction_cost)
+            368 LOAD_FAST                1 (trade)
+            370 LOAD_ATTR               17 (transaction_cost)
+            380 BINARY_OP               13 (+=)
+            384 SWAP                     2
+            386 STORE_ATTR              18 (_buy_transaction_cost)
+
+622         396 LOAD_FAST                0 (self)
+            398 LOAD_ATTR               19 (_buy_today_holding_list)
+            408 LOAD_METHOD             20 (insert)
+            430 LOAD_CONST               1 (0)
+
+623         432 LOAD_FAST                1 (trade)
+            434 LOAD_ATTR               16 (price)
+            444 LOAD_FAST                2 (trade_amount)
+            446 BUILD_TUPLE              2
+
+622         448 PRECALL                  2
+            452 CALL                     2
+            462 POP_TOP
+
+625         464 LOAD_CONST               2 (-1)
+            466 LOAD_FAST                0 (self)
+            468 LOAD_METHOD             21 (cal_margin)
+            490 LOAD_FAST                2 (trade_amount)
+            492 LOAD_FAST                1 (trade)
+            494 LOAD_ATTR               16 (price)
+            504 PRECALL                  2
+            508 CALL                     2
+            518 BINARY_OP                5 (*)
+            522 RETURN_VALUE
+
+628     >>  524 LOAD_FAST                0 (self)
+            526 LOAD_ATTR               22 (sell_amount)
+            536 LOAD_FAST                2 (trade_amount)
+            538 BINARY_OP               10 (-)
+            542 LOAD_CONST               1 (0)
+            544 COMPARE_OP               3 (!=)
+            550 POP_JUMP_FORWARD_IF_FALSE    57 (to 666)
+
+630         552 LOAD_FAST                0 (self)
+            554 LOAD_ATTR               23 (_sell_avg_open_price)
+            564 LOAD_FAST                0 (self)
+            566 LOAD_ATTR               22 (sell_amount)
+            576 BINARY_OP                5 (*)
+
+631         580 LOAD_FAST                2 (trade_amount)
+            582 LOAD_FAST                1 (trade)
+            584 LOAD_ATTR               16 (price)
+            594 BINARY_OP                5 (*)
+
+630         598 BINARY_OP               10 (-)
+
+631         602 LOAD_FAST                4 (contract_multiplier)
+
+629         604 BINARY_OP                5 (*)
+
+632         608 LOAD_FAST                1 (trade)
+            610 LOAD_ATTR               17 (transaction_cost)
+
+629         620 BINARY_OP               10 (-)
+
+633         624 LOAD_FAST                0 (self)
+            626 LOAD_ATTR               22 (sell_amount)
+            636 LOAD_FAST                2 (trade_amount)
+            638 BINARY_OP               10 (-)
+            642 LOAD_FAST                4 (contract_multiplier)
+
+632         644 BINARY_OP                5 (*)
+
+629         648 BINARY_OP               11 (/)
+            652 LOAD_FAST                0 (self)
+            654 STORE_ATTR              23 (_sell_avg_open_price)
+            664 JUMP_FORWARD            14 (to 694)
+
+636     >>  666 LOAD_FAST                5 (current_date)
+            668 LOAD_FAST                0 (self)
+            670 STORE_ATTR              24 (_short_clean_time)
+
+637         680 LOAD_CONST               3 (0.0)
+            682 LOAD_FAST                0 (self)
+            684 STORE_ATTR              23 (_sell_avg_open_price)
+
+638     >>  694 LOAD_FAST                0 (self)
+            696 LOAD_ATTR               25 (margin)
+            706 STORE_FAST               6 (old_margin)
+
+639         708 LOAD_FAST                0 (self)
+            710 COPY                     1
+            712 LOAD_ATTR               26 (_sell_transaction_cost)
+            722 LOAD_FAST                1 (trade)
+            724 LOAD_ATTR               17 (transaction_cost)
+            734 BINARY_OP               13 (+=)
+            738 SWAP                     2
+            740 STORE_ATTR              26 (_sell_transaction_cost)
+
+640         750 LOAD_FAST                0 (self)
+            752 LOAD_METHOD             27 (_close_holding)
+            774 LOAD_FAST                1 (trade)
+            776 PRECALL                  1
+            780 CALL                     1
+            790 STORE_FAST               7 (delta_realized_pnl)
+
+641         792 LOAD_FAST                0 (self)
+            794 COPY                     1
+            796 LOAD_ATTR               28 (_sell_realized_pnl)
+            806 LOAD_FAST                7 (delta_realized_pnl)
+            808 BINARY_OP               13 (+=)
+            812 SWAP                     2
+            814 STORE_ATTR              28 (_sell_realized_pnl)
+
+642         824 LOAD_FAST                6 (old_margin)
+            826 LOAD_FAST                0 (self)
+            828 LOAD_ATTR               25 (margin)
+            838 BINARY_OP               10 (-)
+            842 LOAD_FAST                7 (delta_realized_pnl)
+            844 BINARY_OP                0 (+)
+            848 RETURN_VALUE
+
+645     >>  850 LOAD_FAST                1 (trade)
+            852 LOAD_ATTR                7 (futures_direction)
+            862 LOAD_GLOBAL             16 (FuturesDirection)
+            874 LOAD_ATTR                9 (OPEN)
+            884 COMPARE_OP               2 (==)
+            890 POP_JUMP_FORWARD_IF_FALSE   190 (to 1272)
+
+647         892 LOAD_FAST                0 (self)
+            894 LOAD_ATTR               22 (sell_amount)
+            904 LOAD_CONST               1 (0)
+            906 COMPARE_OP               2 (==)
+            912 POP_JUMP_FORWARD_IF_FALSE     7 (to 928)
+
+648         914 LOAD_FAST                5 (current_date)
+            916 LOAD_FAST                0 (self)
+            918 STORE_ATTR              29 (_short_create_time)
+
+649     >>  928 LOAD_FAST                0 (self)
+            930 LOAD_METHOD             12 (_set_position_type)
+            952 LOAD_GLOBAL             26 (PositionType)
+            964 LOAD_ATTR               30 (VOLUNTARY)
+            974 PRECALL                  1
+            978 CALL                     1
+            988 POP_TOP
+
+652         990 LOAD_FAST                0 (self)
+            992 LOAD_ATTR               23 (_sell_avg_open_price)
+           1002 LOAD_FAST                0 (self)
+           1004 LOAD_ATTR               22 (sell_amount)
+           1014 BINARY_OP                5 (*)
+           1018 LOAD_FAST                2 (trade_amount)
+           1020 LOAD_FAST                1 (trade)
+           1022 LOAD_ATTR               16 (price)
+           1032 BINARY_OP                5 (*)
+           1036 BINARY_OP                0 (+)
+           1040 LOAD_FAST                4 (contract_multiplier)
+
+651        1042 BINARY_OP                5 (*)
+
+653        1046 LOAD_FAST                1 (trade)
+           1048 LOAD_ATTR               17 (transaction_cost)
+
+651        1058 BINARY_OP               10 (-)
+
+654        1062 LOAD_FAST                0 (self)
+           1064 LOAD_ATTR               22 (sell_amount)
+           1074 LOAD_FAST                2 (trade_amount)
+           1076 BINARY_OP                0 (+)
+           1080 LOAD_FAST                4 (contract_multiplier)
+
+653        1082 BINARY_OP                5 (*)
+
+651        1086 BINARY_OP               11 (/)
+           1090 LOAD_FAST                0 (self)
+           1092 STORE_ATTR              23 (_sell_avg_open_price)
+
+655        1102 LOAD_FAST                0 (self)
+           1104 COPY                     1
+           1106 LOAD_ATTR               26 (_sell_transaction_cost)
+           1116 LOAD_FAST                1 (trade)
+           1118 LOAD_ATTR               17 (transaction_cost)
+           1128 BINARY_OP               13 (+=)
+           1132 SWAP                     2
+           1134 STORE_ATTR              26 (_sell_transaction_cost)
+
+656        1144 LOAD_FAST                0 (self)
+           1146 LOAD_ATTR               31 (_sell_today_holding_list)
+           1156 LOAD_METHOD             20 (insert)
+           1178 LOAD_CONST               1 (0)
+
+657        1180 LOAD_FAST                1 (trade)
+           1182 LOAD_ATTR               16 (price)
+           1192 LOAD_FAST                2 (trade_amount)
+
+656        1194 BUILD_TUPLE              2
+           1196 PRECALL                  2
+           1200 CALL                     2
+           1210 POP_TOP
+
+658        1212 LOAD_CONST               2 (-1)
+           1214 LOAD_FAST                0 (self)
+           1216 LOAD_METHOD             21 (cal_margin)
+           1238 LOAD_FAST                2 (trade_amount)
+           1240 LOAD_FAST                1 (trade)
+           1242 LOAD_ATTR               16 (price)
+           1252 PRECALL                  2
+           1256 CALL                     2
+           1266 BINARY_OP                5 (*)
+           1270 RETURN_VALUE
+
+661     >> 1272 LOAD_FAST                0 (self)
+           1274 LOAD_ATTR               10 (buy_amount)
+           1284 LOAD_FAST                2 (trade_amount)
+           1286 BINARY_OP               10 (-)
+           1290 LOAD_CONST               1 (0)
+           1292 COMPARE_OP               3 (!=)
+           1298 POP_JUMP_FORWARD_IF_FALSE    57 (to 1414)
+
+663        1300 LOAD_FAST                0 (self)
+           1302 LOAD_ATTR               15 (_buy_avg_open_price)
+           1312 LOAD_FAST                0 (self)
+           1314 LOAD_ATTR               10 (buy_amount)
+           1324 BINARY_OP                5 (*)
+           1328 LOAD_FAST                2 (trade_amount)
+           1330 LOAD_FAST                1 (trade)
+           1332 LOAD_ATTR               16 (price)
+           1342 BINARY_OP                5 (*)
+           1346 BINARY_OP               10 (-)
+           1350 LOAD_FAST                4 (contract_multiplier)
+
+662        1352 BINARY_OP                5 (*)
+
+664        1356 LOAD_FAST                1 (trade)
+           1358 LOAD_ATTR               17 (transaction_cost)
+
+662        1368 BINARY_OP                0 (+)
+
+665        1372 LOAD_FAST                0 (self)
+           1374 LOAD_ATTR               10 (buy_amount)
+           1384 LOAD_FAST                2 (trade_amount)
+           1386 BINARY_OP               10 (-)
+           1390 LOAD_FAST                4 (contract_multiplier)
+
+664        1392 BINARY_OP                5 (*)
+
+662        1396 BINARY_OP               11 (/)
+           1400 LOAD_FAST                0 (self)
+           1402 STORE_ATTR              15 (_buy_avg_open_price)
+           1412 JUMP_FORWARD            14 (to 1442)
+
+668     >> 1414 LOAD_FAST                5 (current_date)
+           1416 LOAD_FAST                0 (self)
+           1418 STORE_ATTR              32 (_long_clean_time)
+
+669        1428 LOAD_CONST               3 (0.0)
+           1430 LOAD_FAST                0 (self)
+           1432 STORE_ATTR              15 (_buy_avg_open_price)
+
+670     >> 1442 LOAD_FAST                0 (self)
+           1444 LOAD_ATTR               25 (margin)
+           1454 STORE_FAST               6 (old_margin)
+
+671        1456 LOAD_FAST                0 (self)
+           1458 COPY                     1
+           1460 LOAD_ATTR               18 (_buy_transaction_cost)
+           1470 LOAD_FAST                1 (trade)
+           1472 LOAD_ATTR               17 (transaction_cost)
+           1482 BINARY_OP               13 (+=)
+           1486 SWAP                     2
+           1488 STORE_ATTR              18 (_buy_transaction_cost)
+
+672        1498 LOAD_FAST                0 (self)
+           1500 LOAD_METHOD             27 (_close_holding)
+           1522 LOAD_FAST                1 (trade)
+           1524 PRECALL                  1
+           1528 CALL                     1
+           1538 STORE_FAST               7 (delta_realized_pnl)
+
+673        1540 LOAD_FAST                0 (self)
+           1542 COPY                     1
+           1544 LOAD_ATTR               33 (_buy_realized_pnl)
+           1554 LOAD_FAST                7 (delta_realized_pnl)
+           1556 BINARY_OP               13 (+=)
+           1560 SWAP                     2
+           1562 STORE_ATTR              33 (_buy_realized_pnl)
+
+674        1572 LOAD_FAST                6 (old_margin)
+           1574 LOAD_FAST                0 (self)
+           1576 LOAD_ATTR               25 (margin)
+           1586 BINARY_OP               10 (-)
+           1590 LOAD_FAST                7 (delta_realized_pnl)
+           1592 BINARY_OP                0 (+)
+           1596 RETURN_VALUE

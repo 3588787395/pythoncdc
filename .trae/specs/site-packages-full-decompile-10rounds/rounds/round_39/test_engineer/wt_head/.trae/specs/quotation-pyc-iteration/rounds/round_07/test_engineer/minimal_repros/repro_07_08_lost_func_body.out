@@ -1,0 +1,23 @@
+# Source Generated with Decompyle++ (Python version)
+# File: repro_07_08_lost_func_body.pyc (Python 3.11)
+
+__doc__ = """Repro 07-08: D8 (P2) lost function body in `date_convert`.
+
+The whole function body of `date_convert` is compressed to a single
+bare `int(...)` Expr that references an undefined `month_temp`
+(quotation.pyc line 2168-2169). Mirrors the IfExp nesting defect
+where the if/elif/else logic is reduced to a stray Expr.
+
+Expected defect:
+    def date_convert(date, report_types):
+        int(month_temp == 1 if report_types is None else month_temp <= report_types)
+"""
+def date_convert(date, report_types):
+    month_temp = int(date[5:7])
+    if report_types is None:
+        month_end = month_temp
+    elif month_temp <= report_types:
+        month_end = month_temp
+    else:
+        month_end = report_types
+    return month_end

@@ -1,0 +1,3144 @@
+{
+  "round": 4,
+  "offset": 0,
+  "elapsed_sec": 291.5,
+  "processed": 65,
+  "remaining": 34,
+  "ok": 0,
+  "partial": 64,
+  "failed": 1,
+  "total_functions": 1524,
+  "matched_functions": 1347,
+  "files": [
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/klinedata.pyc",
+      "status": "partial",
+      "rate": 0.7777777777777778,
+      "total_functions": 45,
+      "matched_functions": 35,
+      "mismatches": [
+        {
+          "name": "get_all_real_daily_kline",
+          "orig_count": 188,
+          "decomp_count": 187,
+          "jump_diffs": 3,
+          "true_diffs": 26,
+          "first_diff": {
+            "index": 162,
+            "orig_op": "JUMP_BACKWARD",
+            "decomp_op": "PUSH_EXC_INFO",
+            "orig_arg": 86,
+            "decomp_arg": null
+          }
+        },
+        {
+          "name": "get_history_common",
+          "orig_count": 481,
+          "decomp_count": 488,
+          "jump_diffs": 9,
+          "true_diffs": 324,
+          "first_diff": {
+            "index": 156,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "BUILD_LIST",
+            "orig_arg": "fields",
+            "decomp_arg": 1
+          }
+        },
+        {
+          "name": "get_history_date_and_count_ifalse",
+          "orig_count": 421,
+          "decomp_count": 414,
+          "jump_diffs": 2,
+          "true_diffs": 322,
+          "first_diff": {
+            "index": 90,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": "datetime",
+            "decomp_arg": "query_date"
+          }
+        },
+        {
+          "name": "get_history_new",
+          "orig_count": 322,
+          "decomp_count": 320,
+          "jump_diffs": 3,
+          "true_diffs": 37,
+          "first_diff": {
+            "index": 285,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": 1678,
+            "decomp_arg": "kline_data_dict"
+          }
+        },
+        {
+          "name": "get_kline_by_date_ndarray",
+          "orig_count": 210,
+          "decomp_count": 187,
+          "jump_diffs": 1,
+          "true_diffs": 106,
+          "first_diff": {
+            "index": 101,
+            "orig_op": "LOAD_METHOD",
+            "decomp_op": "UNARY_NOT",
+            "orig_arg": "get",
+            "decomp_arg": null
+          }
+        },
+        {
+          "name": "get_multiminute_his_data",
+          "orig_count": 479,
+          "decomp_count": 467,
+          "jump_diffs": 10,
+          "true_diffs": 134,
+          "first_diff": {
+            "index": 344,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": 1948,
+            "decomp_arg": "len"
+          }
+        },
+        {
+          "name": "get_multiminute_his_data_by_date",
+          "orig_count": 544,
+          "decomp_count": 545,
+          "jump_diffs": 9,
+          "true_diffs": 3,
+          "first_diff": {
+            "index": 542,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "JUMP_BACKWARD",
+            "orig_arg": "his_data_dict",
+            "decomp_arg": 1794
+          }
+        },
+        {
+          "name": "get_price_common",
+          "orig_count": 537,
+          "decomp_count": 264,
+          "jump_diffs": 15,
+          "true_diffs": 423,
+          "first_diff": {
+            "index": 77,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": 438,
+            "decomp_arg": "strategy_log"
+          }
+        },
+        {
+          "name": "kline_datetime_list",
+          "orig_count": 389,
+          "decomp_count": 389,
+          "jump_diffs": 8,
+          "true_diffs": 228,
+          "first_diff": {
+            "index": 150,
+            "orig_op": "POP_JUMP_FORWARD_IF_TRUE",
+            "decomp_op": "POP_JUMP_FORWARD_IF_FALSE",
+            "orig_arg": 666,
+            "decomp_arg": 1704
+          }
+        },
+        {
+          "name": "to_pd_result",
+          "orig_count": 185,
+          "decomp_count": 163,
+          "jump_diffs": 2,
+          "true_diffs": 123,
+          "first_diff": {
+            "index": 61,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": 648,
+            "decomp_arg": "nd_array_or_dict"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/common/main.pyc",
+      "status": "partial",
+      "rate": 0.8787878787878788,
+      "total_functions": 33,
+      "matched_functions": 29,
+      "mismatches": [
+        {
+          "name": "api_get_from_zeromq",
+          "orig_count": 213,
+          "decomp_count": 215,
+          "jump_diffs": 8,
+          "true_diffs": 61,
+          "first_diff": {
+            "index": 151,
+            "orig_op": "POP_EXCEPT",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": null,
+            "decomp_arg": "message"
+          }
+        },
+        {
+          "name": "check_stock",
+          "orig_count": 46,
+          "decomp_count": 46,
+          "jump_diffs": 1,
+          "true_diffs": 18,
+          "first_diff": {
+            "index": 28,
+            "orig_op": "POP_JUMP_FORWARD_IF_TRUE",
+            "decomp_op": "POP_JUMP_FORWARD_IF_FALSE",
+            "orig_arg": 178,
+            "decomp_arg": 240
+          }
+        },
+        {
+          "name": "get_same_shard_server_ip_info",
+          "orig_count": 192,
+          "decomp_count": 187,
+          "jump_diffs": 1,
+          "true_diffs": 45,
+          "first_diff": {
+            "index": 146,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "LOAD_CONST",
+            "orig_arg": "user_log",
+            "decomp_arg": 0
+          }
+        },
+        {
+          "name": "user_list_get",
+          "orig_count": 374,
+          "decomp_count": 368,
+          "jump_diffs": 0,
+          "true_diffs": 28,
+          "first_diff": {
+            "index": 346,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "JUMP_FORWARD",
+            "orig_arg": "list",
+            "decomp_arg": 2654
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/api_data.pyc",
+      "status": "partial",
+      "rate": 0.7142857142857143,
+      "total_functions": 14,
+      "matched_functions": 10,
+      "mismatches": [
+        {
+          "name": "check_limit_common",
+          "orig_count": 281,
+          "decomp_count": 282,
+          "jump_diffs": 7,
+          "true_diffs": 183,
+          "first_diff": {
+            "index": 90,
+            "orig_op": "BUILD_MAP",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": 0,
+            "decomp_arg": "security"
+          }
+        },
+        {
+          "name": "get_dominant_contract_common",
+          "orig_count": 113,
+          "decomp_count": 71,
+          "jump_diffs": 3,
+          "true_diffs": 81,
+          "first_diff": {
+            "index": 31,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": 304,
+            "decomp_arg": "date"
+          }
+        },
+        {
+          "name": "get_reits_list_common",
+          "orig_count": 144,
+          "decomp_count": 143,
+          "jump_diffs": 1,
+          "true_diffs": 106,
+          "first_diff": {
+            "index": 35,
+            "orig_op": "BUILD_LIST",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": 0,
+            "decomp_arg": "result"
+          }
+        },
+        {
+          "name": "get_trend_data_common",
+          "orig_count": 262,
+          "decomp_count": 262,
+          "jump_diffs": 2,
+          "true_diffs": 197,
+          "first_diff": {
+            "index": 61,
+            "orig_op": "LOAD_CONST",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": 0,
+            "decomp_arg": "os"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/finance.pyc",
+      "status": "partial",
+      "rate": 0.8333333333333334,
+      "total_functions": 24,
+      "matched_functions": 20,
+      "mismatches": [
+        {
+          "name": "financial_statements",
+          "orig_count": 113,
+          "decomp_count": 106,
+          "jump_diffs": 1,
+          "true_diffs": 36,
+          "first_diff": {
+            "index": 77,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "LOAD_CONST",
+            "orig_arg": "pandas",
+            "decomp_arg": null
+          }
+        },
+        {
+          "name": "func_get_fundamentals_daily_data",
+          "orig_count": 190,
+          "decomp_count": 191,
+          "jump_diffs": 2,
+          "true_diffs": 12,
+          "first_diff": {
+            "index": 152,
+            "orig_op": "JUMP_BACKWARD",
+            "decomp_op": "JUMP_FORWARD",
+            "orig_arg": 176,
+            "decomp_arg": 1104
+          }
+        },
+        {
+          "name": "get_fields",
+          "orig_count": 159,
+          "decomp_count": 151,
+          "jump_diffs": 15,
+          "true_diffs": 47,
+          "first_diff": {
+            "index": 111,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "LOAD_CONST",
+            "orig_arg": "list",
+            "decomp_arg": null
+          }
+        },
+        {
+          "name": "get_finance_open_api_data",
+          "orig_count": 345,
+          "decomp_count": 347,
+          "jump_diffs": 2,
+          "true_diffs": 320,
+          "first_diff": {
+            "index": 27,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": "start_year",
+            "decomp_arg": "str"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/local_finance.pyc",
+      "status": "partial",
+      "rate": 0.9473684210526315,
+      "total_functions": 19,
+      "matched_functions": 18,
+      "mismatches": [
+        {
+          "name": "<lambda>",
+          "orig_count": 19,
+          "decomp_count": 19,
+          "jump_diffs": 0,
+          "true_diffs": 1,
+          "first_diff": {
+            "index": 6,
+            "orig_op": "POP_JUMP_FORWARD_IF_TRUE",
+            "decomp_op": "POP_JUMP_FORWARD_IF_FALSE",
+            "orig_arg": 112,
+            "decomp_arg": 112
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/graph.pyc",
+      "status": "partial",
+      "rate": 0.967741935483871,
+      "total_functions": 31,
+      "matched_functions": 30,
+      "mismatches": [
+        {
+          "name": "_process_task_queue",
+          "orig_count": 378,
+          "decomp_count": 354,
+          "jump_diffs": 1,
+          "true_diffs": 304,
+          "first_diff": {
+            "index": 69,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": "value_list",
+            "decomp_arg": "task_id"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/logger/handlers.pyc",
+      "status": "partial",
+      "rate": 0.9444444444444444,
+      "total_functions": 18,
+      "matched_functions": 17,
+      "mismatches": [
+        {
+          "name": "_target",
+          "orig_count": 108,
+          "decomp_count": 98,
+          "jump_diffs": 2,
+          "true_diffs": 91,
+          "first_diff": {
+            "index": 17,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": 252,
+            "decomp_arg": "stream"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/manager/instance.pyc",
+      "status": "partial",
+      "rate": 0.90625,
+      "total_functions": 32,
+      "matched_functions": 29,
+      "mismatches": [
+        {
+          "name": "_get_manage_info",
+          "orig_count": 26,
+          "decomp_count": 23,
+          "jump_diffs": 2,
+          "true_diffs": 7,
+          "first_diff": {
+            "index": 19,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "RERAISE",
+            "orig_arg": 140,
+            "decomp_arg": 0
+          }
+        },
+        {
+          "name": "_init_config",
+          "orig_count": 87,
+          "decomp_count": 86,
+          "jump_diffs": 1,
+          "true_diffs": 44,
+          "first_diff": {
+            "index": 43,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_CONST",
+            "orig_arg": 196,
+            "decomp_arg": null
+          }
+        },
+        {
+          "name": "run",
+          "orig_count": 97,
+          "decomp_count": 100,
+          "jump_diffs": 1,
+          "true_diffs": 32,
+          "first_diff": {
+            "index": 68,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": 556,
+            "decomp_arg": "IQEStatus"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/hg_api.pyc",
+      "status": "partial",
+      "rate": 0.8181818181818182,
+      "total_functions": 11,
+      "matched_functions": 9,
+      "mismatches": [
+        {
+          "name": "entrust_risk_info_get",
+          "orig_count": 136,
+          "decomp_count": 136,
+          "jump_diffs": 2,
+          "true_diffs": 38,
+          "first_diff": {
+            "index": 73,
+            "orig_op": "LOAD_CONST",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": null,
+            "decomp_arg": "open"
+          }
+        },
+        {
+          "name": "factor_info_get_strategy",
+          "orig_count": 152,
+          "decomp_count": 144,
+          "jump_diffs": 1,
+          "true_diffs": 97,
+          "first_diff": {
+            "index": 55,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": "df",
+            "decomp_arg": "os"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/jq_trans_module.pyc",
+      "status": "partial",
+      "rate": 0.9428571428571428,
+      "total_functions": 35,
+      "matched_functions": 33,
+      "mismatches": [
+        {
+          "name": "func_attribute_history_convert_code",
+          "orig_count": 66,
+          "decomp_count": 59,
+          "jump_diffs": 0,
+          "true_diffs": 25,
+          "first_diff": {
+            "index": 2,
+            "orig_op": "STORE_DEREF",
+            "decomp_op": "STORE_FAST",
+            "orig_arg": "func",
+            "decomp_arg": "func"
+          }
+        },
+        {
+          "name": "func_get_bars_convert_code",
+          "orig_count": 24,
+          "decomp_count": 21,
+          "jump_diffs": 0,
+          "true_diffs": 17,
+          "first_diff": {
+            "index": 2,
+            "orig_op": "STORE_DEREF",
+            "decomp_op": "STORE_FAST",
+            "orig_arg": "func",
+            "decomp_arg": "func"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/wizard_quant_api.pyc",
+      "status": "partial",
+      "rate": 0.9245283018867925,
+      "total_functions": 53,
+      "matched_functions": 49,
+      "mismatches": [
+        {
+          "name": "calculate_di",
+          "orig_count": 75,
+          "decomp_count": 73,
+          "jump_diffs": 0,
+          "true_diffs": 45,
+          "first_diff": {
+            "index": 29,
+            "orig_op": "LOAD_CLOSURE",
+            "decomp_op": "BUILD_TUPLE",
+            "orig_arg": "low",
+            "decomp_arg": 1
+          }
+        },
+        {
+          "name": "get_strategy_finance_factor_info",
+          "orig_count": 28,
+          "decomp_count": 18,
+          "jump_diffs": 0,
+          "true_diffs": 18,
+          "first_diff": {
+            "index": 10,
+            "orig_op": "PUSH_NULL",
+            "decomp_op": "LOAD_CONST",
+            "orig_arg": null,
+            "decomp_arg": "<code object <dictcomp>>"
+          }
+        },
+        {
+          "name": "params_analysis",
+          "orig_count": 134,
+          "decomp_count": 127,
+          "jump_diffs": 1,
+          "true_diffs": 117,
+          "first_diff": {
+            "index": 15,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_CONST",
+            "orig_arg": 48,
+            "decomp_arg": null
+          }
+        },
+        {
+          "name": "wizard_quant_check_limit",
+          "orig_count": 91,
+          "decomp_count": 92,
+          "jump_diffs": 1,
+          "true_diffs": 11,
+          "first_diff": {
+            "index": 80,
+            "orig_op": "JUMP_BACKWARD",
+            "decomp_op": "JUMP_FORWARD",
+            "orig_arg": 92,
+            "decomp_arg": 344
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/backtest_info_utils.pyc",
+      "status": "partial",
+      "rate": 0.6,
+      "total_functions": 10,
+      "matched_functions": 6,
+      "mismatches": [
+        {
+          "name": "<listcomp>",
+          "orig_count": 13,
+          "decomp_count": 13,
+          "jump_diffs": 3,
+          "true_diffs": 1,
+          "first_diff": {
+            "index": 6,
+            "orig_op": "LOAD_DEREF",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": "end_sentence",
+            "decomp_arg": "end_sentence"
+          }
+        },
+        {
+          "name": "add_end_flag",
+          "orig_count": 299,
+          "decomp_count": 145,
+          "jump_diffs": 2,
+          "true_diffs": 279,
+          "first_diff": {
+            "index": 15,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": 210,
+            "decomp_arg": "backtest_id_list"
+          }
+        },
+        {
+          "name": "backtest_download_result",
+          "orig_count": 301,
+          "decomp_count": 160,
+          "jump_diffs": 5,
+          "true_diffs": 200,
+          "first_diff": {
+            "index": 100,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "JUMP_FORWARD",
+            "orig_arg": "list",
+            "decomp_arg": 766
+          }
+        },
+        {
+          "name": "creat_sheet2",
+          "orig_count": 651,
+          "decomp_count": 505,
+          "jump_diffs": 4,
+          "true_diffs": 343,
+          "first_diff": {
+            "index": 307,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": "sheet",
+            "decomp_arg": "row"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/cgroup_utils.pyc",
+      "status": "partial",
+      "rate": 0.75,
+      "total_functions": 8,
+      "matched_functions": 6,
+      "mismatches": [
+        {
+          "name": "check_and_add_process_to_cgroup",
+          "orig_count": 100,
+          "decomp_count": 98,
+          "jump_diffs": 1,
+          "true_diffs": 58,
+          "first_diff": {
+            "index": 42,
+            "orig_op": "LOAD_CONST",
+            "decomp_op": "POP_TOP",
+            "orig_arg": true,
+            "decomp_arg": null
+          }
+        },
+        {
+          "name": "set_cgroup_config",
+          "orig_count": 541,
+          "decomp_count": 542,
+          "jump_diffs": 1,
+          "true_diffs": 29,
+          "first_diff": {
+            "index": 512,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_CONST",
+            "orig_arg": 4446,
+            "decomp_arg": null
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/common_func.pyc",
+      "status": "partial",
+      "rate": 0.7142857142857143,
+      "total_functions": 21,
+      "matched_functions": 15,
+      "mismatches": [
+        {
+          "name": "fill_kline_data",
+          "orig_count": 60,
+          "decomp_count": 61,
+          "jump_diffs": 4,
+          "true_diffs": 3,
+          "first_diff": {
+            "index": 58,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "JUMP_BACKWARD",
+            "orig_arg": "nan_data",
+            "decomp_arg": 138
+          }
+        },
+        {
+          "name": "fill_kline_data_by_pre",
+          "orig_count": 82,
+          "decomp_count": 83,
+          "jump_diffs": 4,
+          "true_diffs": 11,
+          "first_diff": {
+            "index": 72,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "JUMP_BACKWARD",
+            "orig_arg": "start_pos",
+            "decomp_arg": 234
+          }
+        },
+        {
+          "name": "get_date_of_range_to_kwargs",
+          "orig_count": 166,
+          "decomp_count": 166,
+          "jump_diffs": 5,
+          "true_diffs": 36,
+          "first_diff": {
+            "index": 124,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": 1180,
+            "decomp_arg": "asset"
+          }
+        },
+        {
+          "name": "get_kline_time_by_frequency_array",
+          "orig_count": 231,
+          "decomp_count": 228,
+          "jump_diffs": 0,
+          "true_diffs": 45,
+          "first_diff": {
+            "index": 185,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": "freq_k_minute",
+            "decomp_arg": "np"
+          }
+        },
+        {
+          "name": "get_kline_time_by_section",
+          "orig_count": 210,
+          "decomp_count": 219,
+          "jump_diffs": 1,
+          "true_diffs": 83,
+          "first_diff": {
+            "index": 131,
+            "orig_op": "POP_JUMP_FORWARD_IF_FALSE",
+            "decomp_op": "POP_TOP",
+            "orig_arg": 618,
+            "decomp_arg": null
+          }
+        },
+        {
+          "name": "to_pd_result",
+          "orig_count": 185,
+          "decomp_count": 163,
+          "jump_diffs": 2,
+          "true_diffs": 123,
+          "first_diff": {
+            "index": 61,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": 648,
+            "decomp_arg": "nd_array_or_dict"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/crypto_utils.pyc",
+      "status": "partial",
+      "rate": 0.7777777777777778,
+      "total_functions": 9,
+      "matched_functions": 7,
+      "mismatches": [
+        {
+          "name": "aes_decrypt",
+          "orig_count": 63,
+          "decomp_count": 62,
+          "jump_diffs": 2,
+          "true_diffs": 31,
+          "first_diff": {
+            "index": 31,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": 396,
+            "decomp_arg": "AES"
+          }
+        },
+        {
+          "name": "aes_encrypt",
+          "orig_count": 84,
+          "decomp_count": 83,
+          "jump_diffs": 2,
+          "true_diffs": 53,
+          "first_diff": {
+            "index": 31,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": 396,
+            "decomp_arg": "AES"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/datetime_func.pyc",
+      "status": "partial",
+      "rate": 0.9615384615384616,
+      "total_functions": 26,
+      "matched_functions": 25,
+      "mismatches": [
+        {
+          "name": "change_2str_of_time_2_datetime",
+          "orig_count": 63,
+          "decomp_count": 38,
+          "jump_diffs": 0,
+          "true_diffs": 33,
+          "first_diff": {
+            "index": 30,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": "datetime",
+            "decomp_arg": "endtime"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/fileio_utils.pyc",
+      "status": "partial",
+      "rate": 0.7857142857142857,
+      "total_functions": 14,
+      "matched_functions": 11,
+      "mismatches": [
+        {
+          "name": "__init__",
+          "orig_count": 54,
+          "decomp_count": 53,
+          "jump_diffs": 0,
+          "true_diffs": 46,
+          "first_diff": {
+            "index": 4,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "LOAD_CONST",
+            "orig_arg": "os",
+            "decomp_arg": null
+          }
+        },
+        {
+          "name": "read",
+          "orig_count": 504,
+          "decomp_count": 259,
+          "jump_diffs": 1,
+          "true_diffs": 341,
+          "first_diff": {
+            "index": 158,
+            "orig_op": "SWAP",
+            "decomp_op": "JUMP_FORWARD",
+            "orig_arg": 2,
+            "decomp_arg": 904
+          }
+        },
+        {
+          "name": "write",
+          "orig_count": 637,
+          "decomp_count": 637,
+          "jump_diffs": 4,
+          "true_diffs": 519,
+          "first_diff": {
+            "index": 42,
+            "orig_op": "LOAD_CONST",
+            "decomp_op": "JUMP_FORWARD",
+            "orig_arg": null,
+            "decomp_arg": 778
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/replace_utils.pyc",
+      "status": "partial",
+      "rate": 0.6666666666666666,
+      "total_functions": 9,
+      "matched_functions": 6,
+      "mismatches": [
+        {
+          "name": "decrypt_database_url",
+          "orig_count": 295,
+          "decomp_count": 245,
+          "jump_diffs": 1,
+          "true_diffs": 233,
+          "first_diff": {
+            "index": 52,
+            "orig_op": "PUSH_NULL",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": null,
+            "decomp_arg": "decrypted_url"
+          }
+        },
+        {
+          "name": "jupyterhub_prepare",
+          "orig_count": 17,
+          "decomp_count": 15,
+          "jump_diffs": 0,
+          "true_diffs": 12,
+          "first_diff": {
+            "index": 3,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": "log_prepare_info",
+            "decomp_arg": "jupyterhub_original_prepare"
+          }
+        },
+        {
+          "name": "new_session_factory",
+          "orig_count": 442,
+          "decomp_count": 438,
+          "jump_diffs": 2,
+          "true_diffs": 282,
+          "first_diff": {
+            "index": 150,
+            "orig_op": "LOAD_ATTR",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": "info",
+            "decomp_arg": "db_file"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/strategy_info_utils.pyc",
+      "status": "partial",
+      "rate": 0.8214285714285714,
+      "total_functions": 28,
+      "matched_functions": 23,
+      "mismatches": [
+        {
+          "name": "add_strategy_default",
+          "orig_count": 377,
+          "decomp_count": 375,
+          "jump_diffs": 5,
+          "true_diffs": 290,
+          "first_diff": {
+            "index": 86,
+            "orig_op": "LOAD_CONST",
+            "decomp_op": "LOAD_CONST",
+            "orig_arg": "\ndef initialize(context):\n    # 初始期现套利策略\n    # 设置我们要操作的股票池，这里我们只操作一支股票和一只期货，对标沪深300指数\n    # 沪深300ETF\n    g.stock = '510300.SS'\n    # 沪深300期货合约\n    g.future = 'IF1812.CCFX' \n    # 沪深300指数\n    g.benchMark = '000300.SS'  \n    g.security = []\n    g.security.append(g.stock)\n    g.security.append(g.future)\n    g.security.append(g.benchMark)\n    # 期现套利的基差\n    g.basis = 50  \n    set_universe(g.security)\n\n# 期现套利策略\ndef handle_data(context, data):\n    # 获取沪深300指数\n    index = data[g.benchMark]['price']\n\n    # 获取510300和IF1812买卖档价格和数量\n    gear_stock = get_gear_price(g.stock)\n    gear_future = get_gear_price(g.future)\n\n    # IF期货卖1价 - 沪深300指数 判断是否符合期现套利的基差\n    # 如果符合套利基差，则开一手期货空单，同时买入相应价值的沪深300ETF\n    if gear_future and ((gear_future['offer_grp'][1][0] - index) > g.basis):\n        sell_open(g.future, 1)\n        # 期货合约，每一点指数的价值是300，计算期货合约总价值\n        futureValue = gear_future['offer_grp'][1][0] * 300\n        order_value(g.stock, futureValue)",
+            "decomp_arg": "10000000"
+          }
+        },
+        {
+          "name": "check_python_code",
+          "orig_count": 144,
+          "decomp_count": 143,
+          "jump_diffs": 3,
+          "true_diffs": 65,
+          "first_diff": {
+            "index": 78,
+            "orig_op": "JUMP_BACKWARD",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": 84,
+            "decomp_arg": "isinstance"
+          }
+        },
+        {
+          "name": "get_backtest_list",
+          "orig_count": 362,
+          "decomp_count": 332,
+          "jump_diffs": 0,
+          "true_diffs": 228,
+          "first_diff": {
+            "index": 124,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": "new_csv_rows",
+            "decomp_arg": "len"
+          }
+        },
+        {
+          "name": "get_strategy_code_info",
+          "orig_count": 402,
+          "decomp_count": 402,
+          "jump_diffs": 3,
+          "true_diffs": 225,
+          "first_diff": {
+            "index": 144,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": 1052,
+            "decomp_arg": "isinstance"
+          }
+        },
+        {
+          "name": "get_strategy_list",
+          "orig_count": 209,
+          "decomp_count": 210,
+          "jump_diffs": 5,
+          "true_diffs": 3,
+          "first_diff": {
+            "index": 207,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "JUMP_BACKWARD",
+            "orig_arg": "strategy_list",
+            "decomp_arg": 650
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc",
+      "status": "partial",
+      "rate": 0.6,
+      "total_functions": 40,
+      "matched_functions": 24,
+      "mismatches": [
+        {
+          "name": "add_trade",
+          "orig_count": 129,
+          "decomp_count": 56,
+          "jump_diffs": 0,
+          "true_diffs": 102,
+          "first_diff": {
+            "index": 26,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": "datetime",
+            "decomp_arg": "TradeOperationLogger"
+          }
+        },
+        {
+          "name": "add_user_info",
+          "orig_count": 134,
+          "decomp_count": 133,
+          "jump_diffs": 0,
+          "true_diffs": 32,
+          "first_diff": {
+            "index": 101,
+            "orig_op": "LOAD_CONST",
+            "decomp_op": "JUMP_FORWARD",
+            "orig_arg": "success",
+            "decomp_arg": 586
+          }
+        },
+        {
+          "name": "check_and_update_trade",
+          "orig_count": 218,
+          "decomp_count": 228,
+          "jump_diffs": 3,
+          "true_diffs": 186,
+          "first_diff": {
+            "index": 36,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": "csv_reader",
+            "decomp_arg": "FileIO"
+          }
+        },
+        {
+          "name": "create_user_code_iqe",
+          "orig_count": 836,
+          "decomp_count": 835,
+          "jump_diffs": 3,
+          "true_diffs": 278,
+          "first_diff": {
+            "index": 528,
+            "orig_op": "POP_JUMP_FORWARD_IF_NONE",
+            "decomp_op": "POP_JUMP_FORWARD_IF_TRUE",
+            "orig_arg": 2766,
+            "decomp_arg": 2772
+          }
+        },
+        {
+          "name": "get_last_stat",
+          "orig_count": 664,
+          "decomp_count": 526,
+          "jump_diffs": 1,
+          "true_diffs": 182,
+          "first_diff": {
+            "index": 480,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": "result_data",
+            "decomp_arg": "item"
+          }
+        },
+        {
+          "name": "get_trade_list",
+          "orig_count": 339,
+          "decomp_count": 339,
+          "jump_diffs": 14,
+          "true_diffs": 228,
+          "first_diff": {
+            "index": 74,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": 594,
+            "decomp_arg": "os"
+          }
+        },
+        {
+          "name": "get_trade_status",
+          "orig_count": 155,
+          "decomp_count": 159,
+          "jump_diffs": 5,
+          "true_diffs": 22,
+          "first_diff": {
+            "index": 137,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": 890,
+            "decomp_arg": "return_trade_info"
+          }
+        },
+        {
+          "name": "get_trade_unit_info",
+          "orig_count": 237,
+          "decomp_count": 212,
+          "jump_diffs": 9,
+          "true_diffs": 33,
+          "first_diff": {
+            "index": 191,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": 1296,
+            "decomp_arg": "fp"
+          }
+        },
+        {
+          "name": "get_user_info",
+          "orig_count": 94,
+          "decomp_count": 58,
+          "jump_diffs": 3,
+          "true_diffs": 52,
+          "first_diff": {
+            "index": 40,
+            "orig_op": "SWAP",
+            "decomp_op": "POP_TOP",
+            "orig_arg": 2,
+            "decomp_arg": null
+          }
+        },
+        {
+          "name": "kill_trade_process",
+          "orig_count": 577,
+          "decomp_count": 576,
+          "jump_diffs": 3,
+          "true_diffs": 440,
+          "first_diff": {
+            "index": 118,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_CONST",
+            "orig_arg": 2626,
+            "decomp_arg": null
+          }
+        },
+        {
+          "name": "query_strategy_id",
+          "orig_count": 101,
+          "decomp_count": 98,
+          "jump_diffs": 2,
+          "true_diffs": 7,
+          "first_diff": {
+            "index": 94,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "RERAISE",
+            "orig_arg": 648,
+            "decomp_arg": 0
+          }
+        },
+        {
+          "name": "query_trade_strategy_info",
+          "orig_count": 107,
+          "decomp_count": 104,
+          "jump_diffs": 7,
+          "true_diffs": 10,
+          "first_diff": {
+            "index": 81,
+            "orig_op": "LOAD_CONST",
+            "decomp_op": "JUMP_FORWARD",
+            "orig_arg": true,
+            "decomp_arg": 476
+          }
+        },
+        {
+          "name": "set_trade_status",
+          "orig_count": 160,
+          "decomp_count": 162,
+          "jump_diffs": 7,
+          "true_diffs": 12,
+          "first_diff": {
+            "index": 150,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": 868,
+            "decomp_arg": "exchange_flag"
+          }
+        },
+        {
+          "name": "trade_operation",
+          "orig_count": 304,
+          "decomp_count": 286,
+          "jump_diffs": 3,
+          "true_diffs": 100,
+          "first_diff": {
+            "index": 198,
+            "orig_op": "BEFORE_WITH",
+            "decomp_op": "POP_TOP",
+            "orig_arg": null,
+            "decomp_arg": null
+          }
+        },
+        {
+          "name": "trade_status_check_hg",
+          "orig_count": 217,
+          "decomp_count": 287,
+          "jump_diffs": 3,
+          "true_diffs": 210,
+          "first_diff": {
+            "index": 75,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": 506,
+            "decomp_arg": "df"
+          }
+        },
+        {
+          "name": "verify_user_py_code",
+          "orig_count": 57,
+          "decomp_count": 53,
+          "jump_diffs": 1,
+          "true_diffs": 20,
+          "first_diff": {
+            "index": 32,
+            "orig_op": "SWAP",
+            "decomp_op": "POP_TOP",
+            "orig_arg": 2,
+            "decomp_arg": null
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/user_info_utils.pyc",
+      "status": "partial",
+      "rate": 0.7777777777777778,
+      "total_functions": 9,
+      "matched_functions": 7,
+      "mismatches": [
+        {
+          "name": "remove_lock_files",
+          "orig_count": 96,
+          "decomp_count": 95,
+          "jump_diffs": 7,
+          "true_diffs": 3,
+          "first_diff": {
+            "index": 68,
+            "orig_op": "JUMP_BACKWARD",
+            "decomp_op": "JUMP_FORWARD",
+            "orig_arg": 420,
+            "decomp_arg": 712
+          }
+        },
+        {
+          "name": "save_user_info",
+          "orig_count": 147,
+          "decomp_count": 146,
+          "jump_diffs": 1,
+          "true_diffs": 102,
+          "first_diff": {
+            "index": 39,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "JUMP_BACKWARD",
+            "orig_arg": "os",
+            "decomp_arg": 80
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/utils.pyc",
+      "status": "partial",
+      "rate": 0.8181818181818182,
+      "total_functions": 22,
+      "matched_functions": 18,
+      "mismatches": [
+        {
+          "name": "load_ini",
+          "orig_count": 18,
+          "decomp_count": 13,
+          "jump_diffs": 0,
+          "true_diffs": 13,
+          "first_diff": {
+            "index": 5,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "LOAD_CONST",
+            "orig_arg": "config",
+            "decomp_arg": "<code object <dictcomp>>"
+          }
+        },
+        {
+          "name": "load_yaml",
+          "orig_count": 55,
+          "decomp_count": 55,
+          "jump_diffs": 0,
+          "true_diffs": 32,
+          "first_diff": {
+            "index": 22,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "POP_TOP",
+            "orig_arg": "loader",
+            "decomp_arg": null
+          }
+        },
+        {
+          "name": "parse_db_url",
+          "orig_count": 123,
+          "decomp_count": 122,
+          "jump_diffs": 0,
+          "true_diffs": 102,
+          "first_diff": {
+            "index": 19,
+            "orig_op": "POP_JUMP_FORWARD_IF_NOT_NONE",
+            "decomp_op": "POP_JUMP_FORWARD_IF_TRUE",
+            "orig_arg": 152,
+            "decomp_arg": 150
+          }
+        },
+        {
+          "name": "read_config",
+          "orig_count": 84,
+          "decomp_count": 83,
+          "jump_diffs": 1,
+          "true_diffs": 49,
+          "first_diff": {
+            "index": 30,
+            "orig_op": "SWAP",
+            "decomp_op": "POP_TOP",
+            "orig_arg": 2,
+            "decomp_arg": null
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/api/api_base.pyc",
+      "status": "partial",
+      "rate": 0.92,
+      "total_functions": 25,
+      "matched_functions": 23,
+      "mismatches": [
+        {
+          "name": "get_future_history_df",
+          "orig_count": 973,
+          "decomp_count": 957,
+          "jump_diffs": 3,
+          "true_diffs": 229,
+          "first_diff": {
+            "index": 742,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": "len",
+            "decomp_arg": "engine_obj"
+          }
+        },
+        {
+          "name": "get_history_df",
+          "orig_count": 1742,
+          "decomp_count": 1741,
+          "jump_diffs": 10,
+          "true_diffs": 1528,
+          "first_diff": {
+            "index": 192,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": "engine_obj",
+            "decomp_arg": "now_date"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/entry.pyc",
+      "status": "partial",
+      "rate": 0.8,
+      "total_functions": 5,
+      "matched_functions": 4,
+      "mismatches": [
+        {
+          "name": "get_instance",
+          "orig_count": 149,
+          "decomp_count": 142,
+          "jump_diffs": 0,
+          "true_diffs": 59,
+          "first_diff": {
+            "index": 90,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "LOAD_CONST",
+            "orig_arg": "system_log",
+            "decomp_arg": null
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/manager/plugin_manager.pyc",
+      "status": "partial",
+      "rate": 0.9,
+      "total_functions": 10,
+      "matched_functions": 9,
+      "mismatches": [
+        {
+          "name": "set_engine",
+          "orig_count": 184,
+          "decomp_count": 184,
+          "jump_diffs": 4,
+          "true_diffs": 91,
+          "first_diff": {
+            "index": 75,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": 790,
+            "decomp_arg": "plugin_config"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/modules/WEBCLIENT/web_socket_client.pyc",
+      "status": "partial",
+      "rate": 0.8571428571428571,
+      "total_functions": 7,
+      "matched_functions": 6,
+      "mismatches": [
+        {
+          "name": "__init__",
+          "orig_count": 71,
+          "decomp_count": 41,
+          "jump_diffs": 0,
+          "true_diffs": 69,
+          "first_diff": {
+            "index": 1,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": "websocket",
+            "decomp_arg": "on_open"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_client_db/client_db.pyc",
+      "status": "partial",
+      "rate": 0.8888888888888888,
+      "total_functions": 9,
+      "matched_functions": 8,
+      "mismatches": [
+        {
+          "name": "request_mysql_server",
+          "orig_count": 88,
+          "decomp_count": 53,
+          "jump_diffs": 0,
+          "true_diffs": 87,
+          "first_diff": {
+            "index": 1,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": "os",
+            "decomp_arg": "context"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db_tools/api_db.pyc",
+      "status": "partial",
+      "rate": 0.75,
+      "total_functions": 8,
+      "matched_functions": 6,
+      "mismatches": [
+        {
+          "name": "get_db",
+          "orig_count": 87,
+          "decomp_count": 87,
+          "jump_diffs": 0,
+          "true_diffs": 38,
+          "first_diff": {
+            "index": 49,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_CONST",
+            "orig_arg": 472,
+            "decomp_arg": null
+          }
+        },
+        {
+          "name": "to_hive_database",
+          "orig_count": 149,
+          "decomp_count": 148,
+          "jump_diffs": 3,
+          "true_diffs": 51,
+          "first_diff": {
+            "index": 97,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": 564,
+            "decomp_arg": "data"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db_tools/db_base.pyc",
+      "status": "partial",
+      "rate": 0.9666666666666667,
+      "total_functions": 30,
+      "matched_functions": 29,
+      "mismatches": [
+        {
+          "name": "_get_session_maker",
+          "orig_count": 160,
+          "decomp_count": 159,
+          "jump_diffs": 1,
+          "true_diffs": 126,
+          "first_diff": {
+            "index": 32,
+            "orig_op": "POP_JUMP_FORWARD_IF_NOT_NONE",
+            "decomp_op": "POP_JUMP_FORWARD_IF_TRUE",
+            "orig_arg": 240,
+            "decomp_arg": 238
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/history_data_source.pyc",
+      "status": "partial",
+      "rate": 0.8333333333333334,
+      "total_functions": 18,
+      "matched_functions": 15,
+      "mismatches": [
+        {
+          "name": "<listcomp>",
+          "orig_count": 11,
+          "decomp_count": 11,
+          "jump_diffs": 2,
+          "true_diffs": 4,
+          "first_diff": {
+            "index": 4,
+            "orig_op": "STORE_FAST",
+            "decomp_op": "STORE_FAST",
+            "orig_arg": "_d",
+            "decomp_arg": "c"
+          }
+        },
+        {
+          "name": "get_kline_by_count",
+          "orig_count": 854,
+          "decomp_count": 844,
+          "jump_diffs": 1,
+          "true_diffs": 821,
+          "first_diff": {
+            "index": 19,
+            "orig_op": "POP_JUMP_FORWARD_IF_FALSE",
+            "decomp_op": "POP_JUMP_FORWARD_IF_TRUE",
+            "orig_arg": 172,
+            "decomp_arg": 132
+          }
+        },
+        {
+          "name": "get_price",
+          "orig_count": 550,
+          "decomp_count": 547,
+          "jump_diffs": 3,
+          "true_diffs": 481,
+          "first_diff": {
+            "index": 62,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": "fields",
+            "decomp_arg": "fq"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_local_finance/finance_data_source.pyc",
+      "status": "partial",
+      "rate": 0.7777777777777778,
+      "total_functions": 18,
+      "matched_functions": 14,
+      "mismatches": [
+        {
+          "name": "financial_statements_sql_get",
+          "orig_count": 370,
+          "decomp_count": 353,
+          "jump_diffs": 1,
+          "true_diffs": 75,
+          "first_diff": {
+            "index": 294,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": "sql_code",
+            "decomp_arg": "start_year"
+          }
+        },
+        {
+          "name": "get_financial_date_mode",
+          "orig_count": 204,
+          "decomp_count": 205,
+          "jump_diffs": 3,
+          "true_diffs": 7,
+          "first_diff": {
+            "index": 198,
+            "orig_op": "LOAD_CONST",
+            "decomp_op": "JUMP_BACKWARD",
+            "orig_arg": "secu_code",
+            "decomp_arg": 708
+          }
+        },
+        {
+          "name": "get_financial_year_mode",
+          "orig_count": 188,
+          "decomp_count": 189,
+          "jump_diffs": 3,
+          "true_diffs": 18,
+          "first_diff": {
+            "index": 171,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "JUMP_BACKWARD",
+            "orig_arg": "financial_data",
+            "decomp_arg": 502
+          }
+        },
+        {
+          "name": "growth_factors_sql_get",
+          "orig_count": 488,
+          "decomp_count": 475,
+          "jump_diffs": 0,
+          "true_diffs": 128,
+          "first_diff": {
+            "index": 359,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": "security",
+            "decomp_arg": "sql_code"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/real_quote.pyc",
+      "status": "partial",
+      "rate": 0.7727272727272727,
+      "total_functions": 44,
+      "matched_functions": 34,
+      "mismatches": [
+        {
+          "name": "api_get_from_zeromq",
+          "orig_count": 312,
+          "decomp_count": 320,
+          "jump_diffs": 2,
+          "true_diffs": 96,
+          "first_diff": {
+            "index": 221,
+            "orig_op": "POP_EXCEPT",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": null,
+            "decomp_arg": "message"
+          }
+        },
+        {
+          "name": "check_limit",
+          "orig_count": 319,
+          "decomp_count": 289,
+          "jump_diffs": 5,
+          "true_diffs": 280,
+          "first_diff": {
+            "index": 37,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": 322,
+            "decomp_arg": "time"
+          }
+        },
+        {
+          "name": "get_cache_l2_data",
+          "orig_count": 337,
+          "decomp_count": 337,
+          "jump_diffs": 1,
+          "true_diffs": 302,
+          "first_diff": {
+            "index": 1,
+            "orig_op": "LOAD_CONST",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": 0,
+            "decomp_arg": "int"
+          }
+        },
+        {
+          "name": "get_cache_l2_data_by_one",
+          "orig_count": 321,
+          "decomp_count": 321,
+          "jump_diffs": 1,
+          "true_diffs": 286,
+          "first_diff": {
+            "index": 1,
+            "orig_op": "LOAD_CONST",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": 0,
+            "decomp_arg": "int"
+          }
+        },
+        {
+          "name": "get_real_L2_data",
+          "orig_count": 359,
+          "decomp_count": 346,
+          "jump_diffs": 2,
+          "true_diffs": 349,
+          "first_diff": {
+            "index": 3,
+            "orig_op": "LOAD_CONST",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": 0,
+            "decomp_arg": "int"
+          }
+        },
+        {
+          "name": "get_real_minute_kline",
+          "orig_count": 253,
+          "decomp_count": 254,
+          "jump_diffs": 3,
+          "true_diffs": 197,
+          "first_diff": {
+            "index": 56,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": 570,
+            "decomp_arg": "fq"
+          }
+        },
+        {
+          "name": "get_tick_direction",
+          "orig_count": 259,
+          "decomp_count": 254,
+          "jump_diffs": 1,
+          "true_diffs": 190,
+          "first_diff": {
+            "index": 67,
+            "orig_op": "UNPACK_SEQUENCE",
+            "decomp_op": "STORE_FAST",
+            "orig_arg": 2,
+            "decomp_arg": "redata"
+          }
+        },
+        {
+          "name": "get_underlying_code",
+          "orig_count": 168,
+          "decomp_count": 166,
+          "jump_diffs": 1,
+          "true_diffs": 117,
+          "first_diff": {
+            "index": 48,
+            "orig_op": "UNPACK_SEQUENCE",
+            "decomp_op": "STORE_FAST",
+            "orig_arg": 2,
+            "decomp_arg": "redata"
+          }
+        },
+        {
+          "name": "one_prod_to_dataframe",
+          "orig_count": 432,
+          "decomp_count": 432,
+          "jump_diffs": 18,
+          "true_diffs": 30,
+          "first_diff": {
+            "index": 344,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": 1352,
+            "decomp_arg": "int"
+          }
+        },
+        {
+          "name": "one_prod_to_ndarray",
+          "orig_count": 605,
+          "decomp_count": 646,
+          "jump_diffs": 5,
+          "true_diffs": 463,
+          "first_diff": {
+            "index": 136,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": 1530,
+            "decomp_arg": "data_dict"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/__init__.pyc",
+      "status": "partial",
+      "rate": 0.9411764705882353,
+      "total_functions": 17,
+      "matched_functions": 16,
+      "mismatches": [
+        {
+          "name": "__init__",
+          "orig_count": 34,
+          "decomp_count": 27,
+          "jump_diffs": 0,
+          "true_diffs": 27,
+          "first_diff": {
+            "index": 7,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "GET_ITER",
+            "orig_arg": "self",
+            "decomp_arg": null
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/common_func.pyc",
+      "status": "partial",
+      "rate": 0.7916666666666666,
+      "total_functions": 24,
+      "matched_functions": 19,
+      "mismatches": [
+        {
+          "name": "fill_kline_data_by_pre",
+          "orig_count": 82,
+          "decomp_count": 83,
+          "jump_diffs": 4,
+          "true_diffs": 11,
+          "first_diff": {
+            "index": 72,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "JUMP_BACKWARD",
+            "orig_arg": "start_pos",
+            "decomp_arg": 234
+          }
+        },
+        {
+          "name": "get_date_of_range_to_kwargs",
+          "orig_count": 161,
+          "decomp_count": 161,
+          "jump_diffs": 5,
+          "true_diffs": 31,
+          "first_diff": {
+            "index": 129,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": 1070,
+            "decomp_arg": "asset"
+          }
+        },
+        {
+          "name": "get_date_of_range_to_kwargs_",
+          "orig_count": 105,
+          "decomp_count": 104,
+          "jump_diffs": 1,
+          "true_diffs": 53,
+          "first_diff": {
+            "index": 51,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": 666,
+            "decomp_arg": "asset"
+          }
+        },
+        {
+          "name": "get_kline_time_by_section",
+          "orig_count": 210,
+          "decomp_count": 219,
+          "jump_diffs": 1,
+          "true_diffs": 83,
+          "first_diff": {
+            "index": 131,
+            "orig_op": "POP_JUMP_FORWARD_IF_FALSE",
+            "decomp_op": "POP_TOP",
+            "orig_arg": 618,
+            "decomp_arg": null
+          }
+        },
+        {
+          "name": "handle_exrights",
+          "orig_count": 276,
+          "decomp_count": 276,
+          "jump_diffs": 0,
+          "true_diffs": 2,
+          "first_diff": {
+            "index": 5,
+            "orig_op": "CONTAINS_OP",
+            "decomp_op": "CONTAINS_OP",
+            "orig_arg": 1,
+            "decomp_arg": 0
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/datetime_func.pyc",
+      "status": "partial",
+      "rate": 0.96,
+      "total_functions": 25,
+      "matched_functions": 24,
+      "mismatches": [
+        {
+          "name": "change_2str_of_time_2_datetime",
+          "orig_count": 63,
+          "decomp_count": 38,
+          "jump_diffs": 0,
+          "true_diffs": 33,
+          "first_diff": {
+            "index": 30,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": "datetime",
+            "decomp_arg": "endtime"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/profiler_func.pyc",
+      "status": "partial",
+      "rate": 0.9230769230769231,
+      "total_functions": 13,
+      "matched_functions": 12,
+      "mismatches": [
+        {
+          "name": "<module>",
+          "orig_count": 116,
+          "decomp_count": 107,
+          "jump_diffs": 0,
+          "true_diffs": 70,
+          "first_diff": {
+            "index": 42,
+            "orig_op": "LOAD_CONST",
+            "decomp_op": "LOAD_CONST",
+            "orig_arg": [
+              "LineProfiler"
+            ],
+            "decomp_arg": null
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/account/base_position.pyc",
+      "status": "partial",
+      "rate": 0.9444444444444444,
+      "total_functions": 18,
+      "matched_functions": 17,
+      "mismatches": [
+        {
+          "name": "last_price",
+          "orig_count": 33,
+          "decomp_count": 24,
+          "jump_diffs": 0,
+          "true_diffs": 31,
+          "first_diff": {
+            "index": 2,
+            "orig_op": "LOAD_ATTR",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": "isnan",
+            "decomp_arg": "np"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/account/order.pyc",
+      "status": "failed",
+      "rate": 0.0,
+      "total_functions": 0,
+      "matched_functions": 0,
+      "mismatches": [],
+      "error": "RuntimeError: Failed to decompile F:/Downloads/pythoncdc-main/site-packages/IQEngine/account/order.pyc"
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/account/trade.pyc",
+      "status": "partial",
+      "rate": 0.9565217391304348,
+      "total_functions": 23,
+      "matched_functions": 22,
+      "mismatches": [
+        {
+          "name": "create_trade",
+          "orig_count": 68,
+          "decomp_count": 29,
+          "jump_diffs": 0,
+          "true_diffs": 46,
+          "first_diff": {
+            "index": 21,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": "price",
+            "decomp_arg": "trade_id"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/api/api_base.pyc",
+      "status": "partial",
+      "rate": 0.9375,
+      "total_functions": 48,
+      "matched_functions": 45,
+      "mismatches": [
+        {
+          "name": "assure_asset",
+          "orig_count": 112,
+          "decomp_count": 78,
+          "jump_diffs": 1,
+          "true_diffs": 100,
+          "first_diff": {
+            "index": 12,
+            "orig_op": "POP_JUMP_FORWARD_IF_NOT_NONE",
+            "decomp_op": "LOAD_CONST",
+            "orig_arg": 502,
+            "decomp_arg": null
+          }
+        },
+        {
+          "name": "get_history",
+          "orig_count": 111,
+          "decomp_count": 81,
+          "jump_diffs": 1,
+          "true_diffs": 83,
+          "first_diff": {
+            "index": 28,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": "sys_frequency",
+            "decomp_arg": "datetime_func"
+          }
+        },
+        {
+          "name": "set_universe",
+          "orig_count": 21,
+          "decomp_count": 17,
+          "jump_diffs": 0,
+          "true_diffs": 5,
+          "first_diff": {
+            "index": 16,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "RETURN_VALUE",
+            "orig_arg": "current_universe",
+            "decomp_arg": null
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/execution_context.pyc",
+      "status": "partial",
+      "rate": 0.8823529411764706,
+      "total_functions": 17,
+      "matched_functions": 15,
+      "mismatches": [
+        {
+          "name": "__exit__",
+          "orig_count": 66,
+          "decomp_count": 68,
+          "jump_diffs": 2,
+          "true_diffs": 39,
+          "first_diff": {
+            "index": 29,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": "isinstance",
+            "decomp_arg": "exc_val"
+          }
+        },
+        {
+          "name": "_pop",
+          "orig_count": 67,
+          "decomp_count": 66,
+          "jump_diffs": 2,
+          "true_diffs": 40,
+          "first_diff": {
+            "index": 26,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": 522,
+            "decomp_arg": "self"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/executor.pyc",
+      "status": "partial",
+      "rate": 0.9,
+      "total_functions": 10,
+      "matched_functions": 9,
+      "mismatches": [
+        {
+          "name": "check_before_trading",
+          "orig_count": 243,
+          "decomp_count": 237,
+          "jump_diffs": 3,
+          "true_diffs": 215,
+          "first_diff": {
+            "index": 24,
+            "orig_op": "LOAD_CONST",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": false,
+            "decomp_arg": "self"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/plugin_manager.pyc",
+      "status": "partial",
+      "rate": 0.8888888888888888,
+      "total_functions": 9,
+      "matched_functions": 8,
+      "mismatches": [
+        {
+          "name": "set_engine",
+          "orig_count": 194,
+          "decomp_count": 194,
+          "jump_diffs": 4,
+          "true_diffs": 100,
+          "first_diff": {
+            "index": 75,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": 832,
+            "decomp_arg": "plugin_config"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/asset_mixin.pyc",
+      "status": "partial",
+      "rate": 0.875,
+      "total_functions": 16,
+      "matched_functions": 14,
+      "mismatches": [
+        {
+          "name": "get_assets",
+          "orig_count": 89,
+          "decomp_count": 83,
+          "jump_diffs": 1,
+          "true_diffs": 20,
+          "first_diff": {
+            "index": 69,
+            "orig_op": "LOAD_CLOSURE",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": "self",
+            "decomp_arg": "asset_or_symbols"
+          }
+        },
+        {
+          "name": "get_future_contracts",
+          "orig_count": 35,
+          "decomp_count": 33,
+          "jump_diffs": 1,
+          "true_diffs": 11,
+          "first_diff": {
+            "index": 1,
+            "orig_op": "LOAD_DEREF",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": "date",
+            "decomp_arg": "date"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/interface.pyc",
+      "status": "partial",
+      "rate": 0.8761904761904762,
+      "total_functions": 105,
+      "matched_functions": 92,
+      "mismatches": [
+        {
+          "name": "AbstractAccount",
+          "orig_count": 89,
+          "decomp_count": 96,
+          "jump_diffs": 0,
+          "true_diffs": 61,
+          "first_diff": {
+            "index": 32,
+            "orig_op": "LOAD_NAME",
+            "decomp_op": "PUSH_NULL",
+            "orig_arg": "property",
+            "decomp_arg": null
+          }
+        },
+        {
+          "name": "AbstractPosition",
+          "orig_count": 46,
+          "decomp_count": 50,
+          "jump_diffs": 0,
+          "true_diffs": 40,
+          "first_diff": {
+            "index": 7,
+            "orig_op": "LOAD_NAME",
+            "decomp_op": "PUSH_NULL",
+            "orig_arg": "property",
+            "decomp_arg": null
+          }
+        },
+        {
+          "name": "AbstractSubscribeCallback",
+          "orig_count": 32,
+          "decomp_count": 35,
+          "jump_diffs": 0,
+          "true_diffs": 25,
+          "first_diff": {
+            "index": 7,
+            "orig_op": "LOAD_NAME",
+            "decomp_op": "PUSH_NULL",
+            "orig_arg": "staticmethod",
+            "decomp_arg": null
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [
+        "cash",
+        "frozen_cash",
+        "market_value",
+        "on_receive_order",
+        "on_receive_snapshot",
+        "on_receive_transaction",
+        "positions",
+        "symbol",
+        "total_value",
+        "transaction_cost"
+      ],
+      "extra_in_decomp": [
+        "<lambda>"
+      ]
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/__init__.pyc",
+      "status": "partial",
+      "rate": 0.95,
+      "total_functions": 20,
+      "matched_functions": 19,
+      "mismatches": [
+        {
+          "name": "_on_before_trading_start_trading_thread",
+          "orig_count": 62,
+          "decomp_count": 62,
+          "jump_diffs": 2,
+          "true_diffs": 19,
+          "first_diff": {
+            "index": 43,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "JUMP_FORWARD",
+            "orig_arg": "order",
+            "decomp_arg": 364
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/base.pyc",
+      "status": "partial",
+      "rate": 0.975609756097561,
+      "total_functions": 41,
+      "matched_functions": 40,
+      "mismatches": [
+        {
+          "name": "get_instance",
+          "orig_count": 29,
+          "decomp_count": 29,
+          "jump_diffs": 1,
+          "true_diffs": 1,
+          "first_diff": {
+            "index": 19,
+            "orig_op": "LOAD_ATTR",
+            "decomp_op": "LOAD_CONST",
+            "orig_arg": "__name__",
+            "decomp_arg": null
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/history_api.pyc",
+      "status": "partial",
+      "rate": 0.8333333333333334,
+      "total_functions": 18,
+      "matched_functions": 15,
+      "mismatches": [
+        {
+          "name": "get_history_date_and_count_ifalse",
+          "orig_count": 430,
+          "decomp_count": 423,
+          "jump_diffs": 2,
+          "true_diffs": 333,
+          "first_diff": {
+            "index": 90,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": "datetime",
+            "decomp_arg": "query_date"
+          }
+        },
+        {
+          "name": "stk_history_day_complex",
+          "orig_count": 162,
+          "decomp_count": 156,
+          "jump_diffs": 1,
+          "true_diffs": 147,
+          "first_diff": {
+            "index": 12,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": "isinstance",
+            "decomp_arg": "field_ori"
+          }
+        },
+        {
+          "name": "to_pd_result",
+          "orig_count": 185,
+          "decomp_count": 163,
+          "jump_diffs": 2,
+          "true_diffs": 123,
+          "first_diff": {
+            "index": 61,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": 648,
+            "decomp_arg": "nd_array_or_dict"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc",
+      "status": "partial",
+      "rate": 0.8529411764705882,
+      "total_functions": 34,
+      "matched_functions": 29,
+      "mismatches": [
+        {
+          "name": "base_order",
+          "orig_count": 179,
+          "decomp_count": 178,
+          "jump_diffs": 1,
+          "true_diffs": 47,
+          "first_diff": {
+            "index": 132,
+            "orig_op": "LOAD_CONST",
+            "decomp_op": "JUMP_FORWARD",
+            "orig_arg": null,
+            "decomp_arg": 934
+          }
+        },
+        {
+          "name": "buy_close",
+          "orig_count": 122,
+          "decomp_count": 114,
+          "jump_diffs": 2,
+          "true_diffs": 56,
+          "first_diff": {
+            "index": 62,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": 658,
+            "decomp_arg": "current_amount"
+          }
+        },
+        {
+          "name": "future_order",
+          "orig_count": 101,
+          "decomp_count": 93,
+          "jump_diffs": 2,
+          "true_diffs": 38,
+          "first_diff": {
+            "index": 62,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": "strategy_log",
+            "decomp_arg": "order_"
+          }
+        },
+        {
+          "name": "option_order",
+          "orig_count": 83,
+          "decomp_count": 74,
+          "jump_diffs": 1,
+          "true_diffs": 50,
+          "first_diff": {
+            "index": 33,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": "strategy_log",
+            "decomp_arg": "order_"
+          }
+        },
+        {
+          "name": "sell_close",
+          "orig_count": 122,
+          "decomp_count": 114,
+          "jump_diffs": 2,
+          "true_diffs": 56,
+          "first_diff": {
+            "index": 62,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": 658,
+            "decomp_arg": "current_amount"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api_trade.pyc",
+      "status": "partial",
+      "rate": 0.9583333333333334,
+      "total_functions": 24,
+      "matched_functions": 23,
+      "mismatches": [
+        {
+          "name": "order_market",
+          "orig_count": 215,
+          "decomp_count": 215,
+          "jump_diffs": 4,
+          "true_diffs": 53,
+          "first_diff": {
+            "index": 161,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": 850,
+            "decomp_arg": "strategy_log"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/setting_api.pyc",
+      "status": "partial",
+      "rate": 0.8666666666666667,
+      "total_functions": 15,
+      "matched_functions": 13,
+      "mismatches": [
+        {
+          "name": "set_slippage",
+          "orig_count": 61,
+          "decomp_count": 50,
+          "jump_diffs": 0,
+          "true_diffs": 36,
+          "first_diff": {
+            "index": 25,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": "Engine",
+            "decomp_arg": "slippage"
+          }
+        },
+        {
+          "name": "set_yesterday_position",
+          "orig_count": 13,
+          "decomp_count": 8,
+          "jump_diffs": 0,
+          "true_diffs": 6,
+          "first_diff": {
+            "index": 7,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "RETURN_VALUE",
+            "orig_arg": "engine_instance",
+            "decomp_arg": null
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/local_variables/finance.pyc",
+      "status": "partial",
+      "rate": 0.9907407407407407,
+      "total_functions": 108,
+      "matched_functions": 107,
+      "mismatches": [
+        {
+          "name": "__missing__",
+          "orig_count": 62,
+          "decomp_count": 61,
+          "jump_diffs": 0,
+          "true_diffs": 27,
+          "first_diff": {
+            "index": 35,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": 296,
+            "decomp_arg": "Position"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/quote/get_stock_status.pyc",
+      "status": "partial",
+      "rate": 0.875,
+      "total_functions": 8,
+      "matched_functions": 7,
+      "mismatches": [
+        {
+          "name": "get_stock_status",
+          "orig_count": 177,
+          "decomp_count": 42,
+          "jump_diffs": 1,
+          "true_diffs": 146,
+          "first_diff": {
+            "index": 31,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": 486,
+            "decomp_arg": "strategy_log"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc",
+      "status": "partial",
+      "rate": 0.875,
+      "total_functions": 24,
+      "matched_functions": 21,
+      "mismatches": [
+        {
+          "name": "is_future_tradetime_now",
+          "orig_count": 28,
+          "decomp_count": 20,
+          "jump_diffs": 1,
+          "true_diffs": 14,
+          "first_diff": {
+            "index": 14,
+            "orig_op": "SWAP",
+            "decomp_op": "COMPARE_OP",
+            "orig_arg": 2,
+            "decomp_arg": "<="
+          }
+        },
+        {
+          "name": "is_stock_tradetime_now",
+          "orig_count": 28,
+          "decomp_count": 20,
+          "jump_diffs": 1,
+          "true_diffs": 14,
+          "first_diff": {
+            "index": 14,
+            "orig_op": "SWAP",
+            "decomp_op": "COMPARE_OP",
+            "orig_arg": 2,
+            "decomp_arg": "<="
+          }
+        },
+        {
+          "name": "tick_worker_thread",
+          "orig_count": 268,
+          "decomp_count": 3,
+          "jump_diffs": 0,
+          "true_diffs": 267,
+          "first_diff": {
+            "index": 1,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "LOAD_CONST",
+            "orig_arg": "self",
+            "decomp_arg": null
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/future_position.pyc",
+      "status": "partial",
+      "rate": 0.9861111111111112,
+      "total_functions": 72,
+      "matched_functions": 71,
+      "mismatches": [
+        {
+          "name": "make_trade",
+          "orig_count": 297,
+          "decomp_count": 292,
+          "jump_diffs": 1,
+          "true_diffs": 34,
+          "first_diff": {
+            "index": 260,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_CONST",
+            "orig_arg": 1442,
+            "decomp_arg": null
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/stock_position.pyc",
+      "status": "partial",
+      "rate": 0.9459459459459459,
+      "total_functions": 37,
+      "matched_functions": 35,
+      "mismatches": [
+        {
+          "name": "make_trade",
+          "orig_count": 164,
+          "decomp_count": 162,
+          "jump_diffs": 3,
+          "true_diffs": 54,
+          "first_diff": {
+            "index": 107,
+            "orig_op": "LOAD_CONST",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": null,
+            "decomp_arg": "self"
+          }
+        },
+        {
+          "name": "value_percent",
+          "orig_count": 33,
+          "decomp_count": 26,
+          "jump_diffs": 0,
+          "true_diffs": 18,
+          "first_diff": {
+            "index": 15,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": "accounts",
+            "decomp_arg": "total_value"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_debug/__init__.pyc",
+      "status": "partial",
+      "rate": 0.8333333333333334,
+      "total_functions": 6,
+      "matched_functions": 5,
+      "mismatches": [
+        {
+          "name": "setup",
+          "orig_count": 115,
+          "decomp_count": 94,
+          "jump_diffs": 1,
+          "true_diffs": 33,
+          "first_diff": {
+            "index": 82,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": "strategy_log",
+            "decomp_arg": "config"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/default_event_source.pyc",
+      "status": "partial",
+      "rate": 0.9285714285714286,
+      "total_functions": 14,
+      "matched_functions": 13,
+      "mismatches": [
+        {
+          "name": "events",
+          "orig_count": 510,
+          "decomp_count": 501,
+          "jump_diffs": 2,
+          "true_diffs": 156,
+          "first_diff": {
+            "index": 352,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": "day",
+            "decomp_arg": "self"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc",
+      "status": "partial",
+      "rate": 0.75,
+      "total_functions": 12,
+      "matched_functions": 9,
+      "mismatches": [
+        {
+          "name": "clock_worker",
+          "orig_count": 1275,
+          "decomp_count": 971,
+          "jump_diffs": 3,
+          "true_diffs": 602,
+          "first_diff": {
+            "index": 666,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": "datetime",
+            "decomp_arg": "dt"
+          }
+        },
+        {
+          "name": "events",
+          "orig_count": 113,
+          "decomp_count": 113,
+          "jump_diffs": 9,
+          "true_diffs": 5,
+          "first_diff": {
+            "index": 108,
+            "orig_op": "UNPACK_SEQUENCE",
+            "decomp_op": "STORE_FAST",
+            "orig_arg": 2,
+            "decomp_arg": "dt"
+          }
+        },
+        {
+          "name": "get_one_event",
+          "orig_count": 19,
+          "decomp_count": 20,
+          "jump_diffs": 0,
+          "true_diffs": 2,
+          "first_diff": {
+            "index": 14,
+            "orig_op": "JUMP_BACKWARD",
+            "decomp_op": "JUMP_FORWARD",
+            "orig_arg": 2,
+            "decomp_arg": 92
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/commission.pyc",
+      "status": "partial",
+      "rate": 0.9444444444444444,
+      "total_functions": 18,
+      "matched_functions": 17,
+      "mismatches": [
+        {
+          "name": "load",
+          "orig_count": 87,
+          "decomp_count": 84,
+          "jump_diffs": 1,
+          "true_diffs": 43,
+          "first_diff": {
+            "index": 43,
+            "orig_op": "LOAD_CONST",
+            "decomp_op": "JUMP_FORWARD",
+            "orig_arg": null,
+            "decomp_arg": 302
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/slippage.pyc",
+      "status": "partial",
+      "rate": 0.8571428571428571,
+      "total_functions": 14,
+      "matched_functions": 12,
+      "mismatches": [
+        {
+          "name": "check_and_return",
+          "orig_count": 39,
+          "decomp_count": 29,
+          "jump_diffs": 1,
+          "true_diffs": 26,
+          "first_diff": {
+            "index": 13,
+            "orig_op": "BINARY_SUBSCR",
+            "decomp_op": "SWAP",
+            "orig_arg": null,
+            "decomp_arg": 2
+          }
+        },
+        {
+          "name": "load",
+          "orig_count": 87,
+          "decomp_count": 84,
+          "jump_diffs": 1,
+          "true_diffs": 43,
+          "first_diff": {
+            "index": 43,
+            "orig_op": "LOAD_CONST",
+            "decomp_op": "JUMP_FORWARD",
+            "orig_arg": null,
+            "decomp_arg": 302
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_log/__init__.pyc",
+      "status": "partial",
+      "rate": 0.8,
+      "total_functions": 10,
+      "matched_functions": 8,
+      "mismatches": [
+        {
+          "name": "setup",
+          "orig_count": 320,
+          "decomp_count": 253,
+          "jump_diffs": 1,
+          "true_diffs": 293,
+          "first_diff": {
+            "index": 25,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": "os",
+            "decomp_arg": "LOG_SWITCH"
+          }
+        },
+        {
+          "name": "trade_logs_control",
+          "orig_count": 189,
+          "decomp_count": 184,
+          "jump_diffs": 1,
+          "true_diffs": 146,
+          "first_diff": {
+            "index": 42,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "JUMP_FORWARD",
+            "orig_arg": "os",
+            "decomp_arg": 298
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_matcher/matcher.pyc",
+      "status": "partial",
+      "rate": 0.8823529411764706,
+      "total_functions": 17,
+      "matched_functions": 15,
+      "mismatches": [
+        {
+          "name": "_init_matcher",
+          "orig_count": 44,
+          "decomp_count": 40,
+          "jump_diffs": 0,
+          "true_diffs": 38,
+          "first_diff": {
+            "index": 1,
+            "orig_op": "LOAD_GLOBAL",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": "defaultdict",
+            "decomp_arg": "self"
+          }
+        },
+        {
+          "name": "match",
+          "orig_count": 713,
+          "decomp_count": 520,
+          "jump_diffs": 10,
+          "true_diffs": 538,
+          "first_diff": {
+            "index": 165,
+            "orig_op": "LOAD_FAST",
+            "decomp_op": "LOAD_FAST",
+            "orig_arg": "order",
+            "decomp_arg": "self"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_persist/__init__.pyc",
+      "status": "partial",
+      "rate": 0.9333333333333333,
+      "total_functions": 15,
+      "matched_functions": 14,
+      "mismatches": [
+        {
+          "name": "setup",
+          "orig_count": 161,
+          "decomp_count": 163,
+          "jump_diffs": 4,
+          "true_diffs": 79,
+          "first_diff": {
+            "index": 79,
+            "orig_op": "JUMP_FORWARD",
+            "decomp_op": "LOAD_GLOBAL",
+            "orig_arg": 630,
+            "decomp_arg": "os"
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    },
+    {
+      "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_persist/json_persistance.pyc",
+      "status": "partial",
+      "rate": 0.8571428571428571,
+      "total_functions": 7,
+      "matched_functions": 6,
+      "mismatches": [
+        {
+          "name": "persist",
+          "orig_count": 78,
+          "decomp_count": 77,
+          "jump_diffs": 1,
+          "true_diffs": 46,
+          "first_diff": {
+            "index": 31,
+            "orig_op": "LOAD_CONST",
+            "decomp_op": "JUMP_FORWARD",
+            "orig_arg": null,
+            "decomp_arg": 188
+          }
+        }
+      ],
+      "error": null,
+      "missing_in_decomp": [],
+      "extra_in_decomp": []
+    }
+  ]
+}

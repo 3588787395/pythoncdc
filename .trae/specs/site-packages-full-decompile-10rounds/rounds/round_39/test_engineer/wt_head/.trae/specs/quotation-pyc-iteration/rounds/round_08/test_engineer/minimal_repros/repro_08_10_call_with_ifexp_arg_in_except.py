@@ -1,0 +1,22 @@
+"""Repro 08-10: D10 variant — call arg with IfExp in except handler.
+
+In the D10 malformed-call pattern, a `system_log.error(...)` call's
+argument is replaced by an IfExp derived from the surrounding
+if/elif conditions. This variant isolates the IfExp-as-arg pattern:
+an except handler calls `log(...)` after an if/elif chain.
+
+Expected defect: the call site emits `log(<IfExp of conditions>)`
+instead of preserving the if/elif structure and the original argument.
+"""
+
+
+def handler(e):
+    try:
+        do_work()
+    except HTTPError as e2:
+        log.error(trace())
+        if e2.code == 401:
+            return retry()
+        elif e2.code == 599:
+            return retry()
+        return fallback()

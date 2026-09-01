@@ -1,0 +1,22 @@
+# Source Generated with Decompyle++ (Python version)
+# File: repro_08_09_nested_if_elif_else_with_return.pyc (Python 3.11)
+
+__doc__ = """Repro 08-09: D8 variant — nested if/elif/else + return in branches.
+
+A function body where the if/elif/else branches each return a value
+computed from locals. The decompiler may collapse the entire body
+into a single bare Expr (D8 pattern).
+
+Expected defect: the function body is collapsed into a single
+`int(...)` or similar bare Expr wrapping an IfExp; the local
+assignments and return statements are lost.
+"""
+def date_convert(date, report_types):
+    if report_types == None and date[5:7] == '01':
+        return date[:4] + '-12-31'
+    else:
+        return date[:4] + '-03-31'
+    if int(date[5:7]) <= report_types:
+        return date[:4] + '-12-31'
+    else:
+        return date[:4] + '-03-31'

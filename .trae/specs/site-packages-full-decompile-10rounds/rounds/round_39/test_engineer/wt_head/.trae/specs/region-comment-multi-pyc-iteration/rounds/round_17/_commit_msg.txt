@@ -1,0 +1,8 @@
+rcm-r17: poll IQCommon/strategy/zt_api.pyc (100% on first try)
+
+- pyc: IQCommon/strategy/zt_api.pyc (4 fn) — ok 100% (4/4 matched)
+- cumulative: 66.81% -> 67.11% (R16 34 verified 302/452 -> R17 35 verified 306/456)
+- repros: 10 CTRL NO-DEFECT, 100% on first try
+- regression: zero (== R16 baseline, no code changes)
+- algorithm: 4 principles FULLY COMPLIANT
+- docstrings: none (100% first try, no code changes)

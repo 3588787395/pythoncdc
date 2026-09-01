@@ -1,0 +1,52 @@
+"""Repro 09-12: D3 + D10 compound defect (quotation.pyc::api_get_financial actual path).
+
+This is the closest minimal reproduction of the quotation.pyc::
+api_get_financial except handler (lines 157-164), which exhibits the
+compound D3 + D6 + D10 defect:
+    except HTTPError as e2:
+        system_log.error(get_traceback_message())       # D10 merges here
+        if e2.code == 401:
+            if request_times <= 2:
+                ...                                     # retry
+        elif e2.code == 599:
+            ...                                         # retry
+        elif 400 <= e2.code <= 499:                     # D3 chained compare
+            return ({'error_no': e2.code, 'error_info': ''}, {})  # D6 body lost
+        else:
+            error_no = -1
+            return ({'error_no': error_no, 'error_info': ''}, {})
+
+R8 fix_report §0 noted that D3 + D6 + D10 form a compound defect:
+D10 merges the call + if/elif conditions; D3 loses the chained
+compare on the elif branch; D6 loses the return body. This repro
+isolates the compound pattern in a single except handler.
+
+Expected defect:
+    system_log(<IfExp of conditions>)     # D10
+    if 499:                                # D3
+        pass                                # D6
+    else:
+        ...
+"""
+
+
+def api_get_financial(url, request_times=0):
+    try:
+        response = do_request(url)
+        return_data = response.json()
+    except HTTPError as e2:
+        system_log.error(get_traceback_message())
+        if e2.code == 401:
+            if request_times <= 2:
+                time.sleep(10)
+                request_times += 1
+                return api_get_financial(url, request_times)
+        elif e2.code == 599:
+            return api_get_financial(url)
+        elif 400 <= e2.code <= 499:
+            return ({'error_no': e2.code, 'error_info': ''}, {})
+        else:
+            error_no = -1
+            error_info = 'server error: %d' % e2.code
+            return ({'error_no': error_no, 'error_info': error_info}, {})
+    return ({'error_no': 0, 'error_info': ''}, return_data)

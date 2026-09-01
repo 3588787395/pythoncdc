@@ -1,0 +1,57 @@
+=== DECOMP get_trading_schedule ===
+ 21           0 RESUME                   0
+
+ 23           2 LOAD_GLOBAL              1 (NULL + set)
+             14 PRECALL                  0
+             18 CALL                     0
+             28 STORE_FAST               2 (time_set)
+
+ 24          30 LOAD_GLOBAL              3 (NULL + int)
+             42 LOAD_FAST                1 (is_backtest)
+             44 PRECALL                  1
+             48 CALL                     1
+             58 STORE_FAST               3 (start_time_delta)
+
+ 25          60 LOAD_FAST                0 (trading_time)
+             62 GET_ITER
+        >>   64 FOR_ITER                72 (to 210)
+             66 UNPACK_SEQUENCE          2
+             70 STORE_FAST               4 (s)
+             72 STORE_FAST               5 (e)
+
+ 26          74 LOAD_FAST                4 (s)
+             76 LOAD_CONST               1 (1200)
+             78 COMPARE_OP               4 (>)
+             84 POP_JUMP_FORWARD_IF_FALSE     1 (to 88)
+
+ 27          86 JUMP_BACKWARD           12 (to 64)
+
+ 28     >>   88 LOAD_GLOBAL              5 (NULL + range)
+            100 LOAD_FAST                4 (s)
+            102 LOAD_FAST                3 (start_time_delta)
+            104 BINARY_OP                0 (+)
+            108 LOAD_FAST                5 (e)
+            110 LOAD_CONST               2 (1)
+            112 BINARY_OP                0 (+)
+            116 PRECALL                  2
+            120 CALL                     2
+            130 GET_ITER
+        >>  132 FOR_ITER                37 (to 208)
+            134 STORE_FAST               6 (i)
+
+ 29         136 LOAD_FAST                2 (time_set)
+            138 LOAD_METHOD              3 (add)
+            160 LOAD_GLOBAL              9 (NULL + divmod)
+            172 LOAD_FAST                6 (i)
+            174 LOAD_CONST               3 (60)
+            176 PRECALL                  2
+            180 CALL                     2
+            190 PRECALL                  1
+            194 CALL                     1
+            204 POP_TOP
+            206 JUMP_BACKWARD           38 (to 132)
+
+ 28     >>  208 JUMP_BACKWARD           73 (to 64)
+
+ 30     >>  210 LOAD_FAST                2 (time_set)
+            212 RETURN_VALUE

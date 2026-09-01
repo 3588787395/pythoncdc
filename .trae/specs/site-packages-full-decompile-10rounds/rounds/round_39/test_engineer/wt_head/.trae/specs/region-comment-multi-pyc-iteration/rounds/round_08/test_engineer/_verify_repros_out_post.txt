@@ -1,0 +1,41 @@
+﻿==============================================================================
+verifying 14 minimal repros
+==============================================================================
+  repro_01_nested_try_in_for.py
+    match=True (fns=2)  [NO-DEFECT]
+  repro_02_nested_try_in_while.py
+    match=False [fn=f] (orig=61 decomp=64 true_diffs=35 jump_diffs=10)  [DEFECT-REPRO]
+    first_diff: {'index': 21, 'orig_op': 'PUSH_EXC_INFO', 'decomp_op': 'RETURN_VALUE', 'orig_arg': None, 'decomp_arg': None}
+  repro_03_nested_try_except_finally_in_for.py
+    match=False [fn=f] (orig=60 decomp=28 true_diffs=49 jump_diffs=5)  [DEFECT-REPRO]
+    first_diff: {'index': 3, 'orig_op': 'NOP', 'decomp_op': 'LOAD_FAST', 'orig_arg': None, 'decomp_arg': 'items'}
+  repro_04_nested_try_in_for_continue.py
+    match=True (fns=2)  [NO-DEFECT]
+  repro_05_nested_try_in_for_break.py
+    match=False [fn=f] (orig=51 decomp=29 true_diffs=33 jump_diffs=5)  [DEFECT-REPRO]
+    first_diff: {'index': 14, 'orig_op': 'NOP', 'decomp_op': 'POP_TOP', 'orig_arg': None, 'decomp_arg': None}
+  repro_06_nested_try_in_for_return_in_except.py
+    match=False [fn=f] (orig=42 decomp=40 true_diffs=21 jump_diffs=5)  [DEFECT-REPRO]
+    first_diff: {'index': 19, 'orig_op': 'LOAD_CONST', 'decomp_op': 'RERAISE', 'orig_arg': -1, 'decomp_arg': 0}
+  repro_07_nested_try_in_for_return_in_try.py
+    match=False [fn=f] (orig=46 decomp=46 true_diffs=6 jump_diffs=3)  [DEFECT-REPRO]
+    first_diff: {'index': 12, 'orig_op': 'LOAD_CONST', 'decomp_op': 'LOAD_CONST', 'orig_arg': 0, 'decomp_arg': 1}
+  repro_08_nested_try_in_for_assign_in_except.py
+    match=True (fns=2)  [NO-DEFECT]
+  repro_09_deeply_nested_try_in_try_in_for.py
+    match=True (fns=2)  [NO-DEFECT]
+  repro_10_nested_try_in_for_with_else.py
+    match=True (fns=2)  [NO-DEFECT]
+  repro_11_mirror_create_full_graph.py
+    match=False [fn=f] (orig=95 decomp=103 true_diffs=76 jump_diffs=14)  [DEFECT-REPRO]
+    first_diff: {'index': 10, 'orig_op': 'NOP', 'decomp_op': 'LOAD_FAST', 'orig_arg': None, 'decomp_arg': 'node_list'}
+  repro_12_ctrl_try_no_loop.py
+    match=True (fns=2)  [NO-DEFECT]
+  repro_13_ctrl_loop_try_no_outer.py
+    match=True (fns=2)  [NO-DEFECT]
+  repro_14_nested_try_in_for_postloop_assign.py
+    match=True (fns=2)  [NO-DEFECT]
+==============================================================================
+summary: 14 repros, DEFECT-REPRO=6, NO-DEFECT=8
+==============================================================================
+VERIFY_RESULT [{"name": "repro_01_nested_try_in_for.py", "verdict": "NO-DEFECT", "match": true, "mismatch_fn": null, "true_diffs": 0, "jump_diffs": 0, "first_diff": null, "error": null}, {"name": "repro_02_nested_try_in_while.py", "verdict": "DEFECT-REPRO", "match": false, "mismatch_fn": "f", "true_diffs": 35, "jump_diffs": 10, "first_diff": {"index": 21, "orig_op": "PUSH_EXC_INFO", "decomp_op": "RETURN_VALUE", "orig_arg": null, "decomp_arg": null}, "error": null}, {"name": "repro_03_nested_try_except_finally_in_for.py", "verdict": "DEFECT-REPRO", "match": false, "mismatch_fn": "f", "true_diffs": 49, "jump_diffs": 5, "first_diff": {"index": 3, "orig_op": "NOP", "decomp_op": "LOAD_FAST", "orig_arg": null, "decomp_arg": "items"}, "error": null}, {"name": "repro_04_nested_try_in_for_continue.py", "verdict": "NO-DEFECT", "match": true, "mismatch_fn": null, "true_diffs": 0, "jump_diffs": 0, "first_diff": null, "error": null}, {"name": "repro_05_nested_try_in_for_break.py", "verdict": "DEFECT-REPRO", "match": false, "mismatch_fn": "f", "true_diffs": 33, "jump_diffs": 5, "first_diff": {"index": 14, "orig_op": "NOP", "decomp_op": "POP_TOP", "orig_arg": null, "decomp_arg": null}, "error": null}, {"name": "repro_06_nested_try_in_for_return_in_except.py", "verdict": "DEFECT-REPRO", "match": false, "mismatch_fn": "f", "true_diffs": 21, "jump_diffs": 5, "first_diff": {"index": 19, "orig_op": "LOAD_CONST", "decomp_op": "RERAISE", "orig_arg": -1, "decomp_arg": 0}, "error": null}, {"name": "repro_07_nested_try_in_for_return_in_try.py", "verdict": "DEFECT-REPRO", "match": false, "mismatch_fn": "f", "true_diffs": 6, "jump_diffs": 3, "first_diff": {"index": 12, "orig_op": "LOAD_CONST", "decomp_op": "LOAD_CONST", "orig_arg": 0, "decomp_arg": 1}, "error": null}, {"name": "repro_08_nested_try_in_for_assign_in_except.py", "verdict": "NO-DEFECT", "match": true, "mismatch_fn": null, "true_diffs": 0, "jump_diffs": 0, "first_diff": null, "error": null}, {"name": "repro_09_deeply_nested_try_in_try_in_for.py", "verdict": "NO-DEFECT", "match": true, "mismatch_fn": null, "true_diffs": 0, "jump_diffs": 0, "first_diff": null, "error": null}, {"name": "repro_10_nested_try_in_for_with_else.py", "verdict": "NO-DEFECT", "match": true, "mismatch_fn": null, "true_diffs": 0, "jump_diffs": 0, "first_diff": null, "error": null}, {"name": "repro_11_mirror_create_full_graph.py", "verdict": "DEFECT-REPRO", "match": false, "mismatch_fn": "f", "true_diffs": 76, "jump_diffs": 14, "first_diff": {"index": 10, "orig_op": "NOP", "decomp_op": "LOAD_FAST", "orig_arg": null, "decomp_arg": "node_list"}, "error": null}, {"name": "repro_12_ctrl_try_no_loop.py", "verdict": "NO-DEFECT", "match": true, "mismatch_fn": null, "true_diffs": 0, "jump_diffs": 0, "first_diff": null, "error": null}, {"name": "repro_13_ctrl_loop_try_no_outer.py", "verdict": "NO-DEFECT", "match": true, "mismatch_fn": null, "true_diffs": 0, "jump_diffs": 0, "first_diff": null, "error": null}, {"name": "repro_14_nested_try_in_for_postloop_assign.py", "verdict": "NO-DEFECT", "match": true, "mismatch_fn": null, "true_diffs": 0, "jump_diffs": 0, "first_diff": null, "error": null}]

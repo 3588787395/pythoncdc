@@ -1,0 +1,1076 @@
+total=45 matched=21 mismatches=24
+
+PATTERN COUNTS:
+  R_NOP_PADDING                  4
+  ARG_MISMATCH                   4
+  E_JUMP_RENUMBER                4
+  B1_GLOBAL_TO_FAST              3
+  R_NOP_MISSING                  2
+  OTHER                          2
+  B2_FAST_TO_GLOBAL              2
+  C_SWAP_POP                     2
+  C2_UNPACK                      1
+
+================================================================================
+
+=== <module> (sub=R_NOP_MISSING, td=189, jd=0) ===
+  [0] idx=344 orig=NOP(None) decomp=LOAD_CONST((None, None, False, None, None, None)) type=
+  [1] idx=345 orig=NOP(None) decomp=LOAD_CONST('<code object get_kline_by_count_new>') type=
+  [2] idx=346 orig=LOAD_CONST((None, None, False, None, None, None)) decomp=MAKE_FUNCTION(1) type=
+  [3] idx=347 orig=LOAD_CONST('<code object get_kline_by_count_new>') decomp=STORE_NAME('get_kline_by_count_new') type=
+  [4] idx=348 orig=MAKE_FUNCTION(1) decomp=LOAD_CONST((None, None, False, None, None, 0, None, None, None)) type=
+  [5] idx=349 orig=STORE_NAME('get_kline_by_count_new') decomp=LOAD_CONST('<code object get_kline_by_count>') type=
+  [6] idx=350 orig=NOP(None) decomp=MAKE_FUNCTION(1) type=
+  [7] idx=351 orig=NOP(None) decomp=STORE_NAME('get_kline_by_count') type=
+  [8] idx=352 orig=LOAD_CONST((None, None, False, None, None, 0, None, None, None)) decomp=LOAD_NAME('Frequency') type=
+  [9] idx=353 orig=LOAD_CONST('<code object get_kline_by_count>') decomp=LOAD_ATTR('DAILY') type=
+  [10] idx=354 orig=MAKE_FUNCTION(1) decomp=LOAD_ATTR('value') type=
+  [11] idx=355 orig=STORE_NAME('get_kline_by_count') decomp=LOAD_CONST(None) type=
+  [12] idx=356 orig=LOAD_NAME('Frequency') decomp=LOAD_CONST(None) type=
+  [13] idx=357 orig=LOAD_ATTR('DAILY') decomp=LOAD_CONST(None) type=
+  [14] idx=358 orig=LOAD_ATTR('value') decomp=LOAD_CONST(None) type=
+  [15] idx=359 orig=LOAD_CONST(None) decomp=BUILD_TUPLE(5) type=
+  [16] idx=360 orig=LOAD_CONST(None) decomp=LOAD_CONST('<code object get_kline_by_date_new>') type=
+  [17] idx=361 orig=LOAD_CONST(None) decomp=MAKE_FUNCTION(1) type=
+  [18] idx=362 orig=LOAD_CONST(None) decomp=STORE_NAME('get_kline_by_date_new') type=
+  [19] idx=363 orig=BUILD_TUPLE(5) decomp=LOAD_NAME('Frequency') type=
+  [20] idx=364 orig=LOAD_CONST('<code object get_kline_by_date_new>') decomp=LOAD_ATTR('DAILY') type=
+  [21] idx=365 orig=MAKE_FUNCTION(1) decomp=LOAD_ATTR('value') type=
+  [22] idx=366 orig=STORE_NAME('get_kline_by_date_new') decomp=LOAD_CONST(None) type=
+  [23] idx=367 orig=LOAD_NAME('Frequency') decomp=LOAD_CONST(None) type=
+  [24] idx=368 orig=LOAD_ATTR('DAILY') decomp=LOAD_CONST(None) type=
+  [25] idx=369 orig=LOAD_ATTR('value') decomp=LOAD_CONST(0) type=
+  [26] idx=371 orig=LOAD_CONST(None) decomp=BUILD_TUPLE(6) type=
+  [27] idx=372 orig=LOAD_CONST(None) decomp=LOAD_CONST('<code object get_kline_by_date_one>') type=
+  [28] idx=373 orig=LOAD_CONST(0) decomp=MAKE_FUNCTION(1) type=
+  [29] idx=374 orig=LOAD_CONST(None) decomp=STORE_NAME('get_kline_by_date_one') type=
+  --- first 15 jump_diffs ---
+
+=== _all_bars_of_cache (sub=OTHER, td=187, jd=39) ===
+  [0] idx=29 orig=LOAD_CONST('20050101') decomp=LOAD_FAST('start_date') type=
+  [1] idx=30 orig=COMPARE_OP('<') decomp=LOAD_CONST('20050101') type=
+  [2] idx=33 orig=LOAD_CONST('20050101') decomp=LOAD_FAST('end_date') type=
+  [3] idx=34 orig=COMPARE_OP('<') decomp=LOAD_CONST('20050101') type=
+  [4] idx=37 orig=LOAD_ATTR('array') decomp=LOAD_GLOBAL('np') type=
+  [5] idx=38 orig=BUILD_LIST(0) decomp=LOAD_ATTR('array') type=
+  [6] idx=39 orig=LOAD_GLOBAL('LIST_DTYPE') decomp=BUILD_LIST(0) type=
+  [7] idx=40 orig=KW_NAMES(<unknown>) decomp=LOAD_GLOBAL('LIST_DTYPE') type=
+  [8] idx=41 orig=PRECALL(2) decomp=KW_NAMES(<unknown>) type=
+  [9] idx=42 orig=CALL(2) decomp=PRECALL(2) type=
+  [10] idx=43 orig=RETURN_VALUE(None) decomp=CALL(2) type=
+  [11] idx=44 orig=LOAD_FAST('start_date') decomp=RETURN_VALUE(None) type=
+  [12] idx=45 orig=LOAD_CONST('20050101') decomp=LOAD_FAST('start_date') type=
+  [13] idx=46 orig=SWAP(2) decomp=LOAD_CONST('20050101') type=
+  [14] idx=47 orig=COPY(2) decomp=SWAP(2) type=
+  [15] idx=48 orig=COMPARE_OP('<') decomp=COPY(2) type=
+  [16] idx=51 orig=COMPARE_OP('<=') decomp=LOAD_FAST('end_date') type=
+  [17] idx=57 orig=STORE_FAST('start_date') decomp=LOAD_CONST('20050101') type=
+  [18] idx=58 orig=LOAD_GLOBAL('history_cache') decomp=STORE_FAST('start_date') type=
+  [19] idx=59 orig=LOAD_CONST(1) decomp=LOAD_GLOBAL('history_cache') type=
+  [20] idx=60 orig=COMPARE_OP('==') decomp=LOAD_CONST(1) type=
+  [21] idx=63 orig=LOAD_FAST('symbol') decomp=LOAD_GLOBAL('get_cache') type=
+  [22] idx=64 orig=LOAD_FAST('frequency') decomp=LOAD_FAST('symbol') type=
+  [23] idx=65 orig=LOAD_FAST('start_date') decomp=LOAD_FAST('frequency') type=
+  [24] idx=66 orig=LOAD_FAST('end_date') decomp=LOAD_FAST('start_date') type=
+  [25] idx=67 orig=PRECALL(4) decomp=LOAD_FAST('end_date') type=
+  [26] idx=68 orig=CALL(4) decomp=PRECALL(4) type=
+  [27] idx=69 orig=UNPACK_SEQUENCE(2) decomp=CALL(4) type=
+  [28] idx=70 orig=STORE_FAST('error_no') decomp=UNPACK_SEQUENCE(2) type=
+  [29] idx=71 orig=STORE_FAST('data') decomp=STORE_FAST('error_no') type=
+  --- first 15 jump_diffs ---
+  [j0] idx=27 orig=POP_JUMP_FORWARD_IF_TRUE(160) decomp=EXTENDED_ARG(1)
+  [j1] idx=28 orig=LOAD_FAST('start_date') decomp=POP_JUMP_FORWARD_IF_TRUE(1110)
+  [j2] idx=31 orig=POP_JUMP_FORWARD_IF_FALSE(214) decomp=COMPARE_OP('<')
+  [j3] idx=32 orig=LOAD_FAST('end_date') decomp=POP_JUMP_FORWARD_IF_FALSE(216)
+  [j4] idx=35 orig=POP_JUMP_FORWARD_IF_FALSE(214) decomp=COMPARE_OP('<')
+  [j5] idx=36 orig=LOAD_GLOBAL('np') decomp=POP_JUMP_FORWARD_IF_FALSE(216)
+  [j6] idx=49 orig=POP_JUMP_FORWARD_IF_FALSE(242) decomp=COMPARE_OP('<')
+  [j7] idx=50 orig=LOAD_FAST('end_date') decomp=POP_JUMP_FORWARD_IF_FALSE(244)
+  [j8] idx=52 orig=POP_JUMP_FORWARD_IF_FALSE(250) decomp=COMPARE_OP('<=')
+  [j9] idx=53 orig=JUMP_FORWARD(246) decomp=POP_JUMP_FORWARD_IF_FALSE(252)
+  [j10] idx=54 orig=POP_TOP(None) decomp=JUMP_FORWARD(248)
+  [j11] idx=55 orig=JUMP_FORWARD(250) decomp=POP_TOP(None)
+  [j12] idx=56 orig=LOAD_CONST('20050101') decomp=JUMP_FORWARD(252)
+  [j13] idx=61 orig=POP_JUMP_FORWARD_IF_FALSE(496) decomp=COMPARE_OP('==')
+  [j14] idx=62 orig=LOAD_GLOBAL('get_cache') decomp=POP_JUMP_FORWARD_IF_FALSE(498)
+
+=== _all_bars_of_range (sub=R_NOP_MISSING, td=3, jd=0) ===
+  [0] idx=14 orig=NOP(None) decomp=LOAD_FAST('data_array') type=
+  [1] idx=15 orig=LOAD_FAST('data_array') decomp=RETURN_VALUE(None) type=
+  [2] idx=16 orig=RETURN_VALUE(None) decomp=None(None) type=missing_in_decomp
+  --- first 15 jump_diffs ---
+
+=== get_all_real_daily_kline (sub=R_NOP_PADDING, td=164, jd=30) ===
+  [0] idx=20 orig=LOAD_GLOBAL('copy') decomp=NOP(None) type=
+  [1] idx=21 orig=LOAD_ATTR('deepcopy') decomp=LOAD_FAST('symbol') type=
+  [2] idx=22 orig=LOAD_FAST('df_nan_data') decomp=LOAD_METHOD('replace') type=
+  [3] idx=23 orig=PRECALL(1) decomp=LOAD_CONST('SS') type=
+  [4] idx=24 orig=CALL(1) decomp=LOAD_CONST('XSHG') type=
+  [5] idx=25 orig=STORE_FAST('kline_ndarray') decomp=PRECALL(2) type=
+  [6] idx=26 orig=BUILD_LIST(0) decomp=CALL(2) type=
+  [7] idx=27 orig=STORE_FAST('list_data') decomp=LOAD_METHOD('replace') type=
+  [8] idx=28 orig=LOAD_FAST('symbol') decomp=LOAD_CONST('SZ') type=
+  [9] idx=29 orig=LOAD_METHOD('replace') decomp=LOAD_CONST('XSHE') type=
+  [10] idx=30 orig=LOAD_CONST('XSHG') decomp=PRECALL(2) type=
+  [11] idx=31 orig=LOAD_CONST('SS') decomp=CALL(2) type=
+  [12] idx=32 orig=PRECALL(2) decomp=LOAD_FAST('dividends_stock') type=
+  [13] idx=33 orig=CALL(2) decomp=CONTAINS_OP(0) type=
+  [14] idx=35 orig=LOAD_CONST('XSHE') decomp=LOAD_FAST('tmp_dividends') type=
+  [15] idx=36 orig=LOAD_CONST('SZ') decomp=LOAD_FAST('symbol') type=
+  [16] idx=37 orig=PRECALL(2) decomp=LOAD_METHOD('replace') type=
+  [17] idx=38 orig=CALL(2) decomp=LOAD_CONST('SS') type=
+  [18] idx=39 orig=STORE_FAST('symbol_name') decomp=LOAD_CONST('XSHG') type=
+  [19] idx=40 orig=LOAD_GLOBAL('get_real_daily_data') decomp=PRECALL(2) type=
+  [20] idx=41 orig=LOAD_FAST('symbol_name') decomp=CALL(2) type=
+  [21] idx=42 orig=LOAD_FAST('list_data') decomp=LOAD_METHOD('replace') type=
+  [22] idx=43 orig=PRECALL(2) decomp=LOAD_CONST('SZ') type=
+  [23] idx=44 orig=CALL(2) decomp=LOAD_CONST('XSHE') type=
+  [24] idx=45 orig=STORE_FAST('flag') decomp=PRECALL(2) type=
+  [25] idx=46 orig=LOAD_FAST('flag') decomp=CALL(2) type=
+  [26] idx=47 orig=LOAD_CONST(0) decomp=BINARY_SUBSCR(None) type=
+  [27] idx=48 orig=COMPARE_OP('==') decomp=STORE_FAST('dividends') type=
+  [28] idx=49 orig=EXTENDED_ARG(1) decomp=LOAD_CONST('<code object <dictcomp>>') type=
+  [29] idx=51 orig=LOAD_GLOBAL('len') decomp=LOAD_FAST('dividends') type=
+  --- first 15 jump_diffs ---
+  [j0] idx=17 orig=FOR_ITER(1044) decomp=FOR_ITER(1042)
+  [j1] idx=34 orig=LOAD_METHOD('replace') decomp=POP_JUMP_FORWARD_IF_FALSE(374)
+  [j2] idx=50 orig=POP_JUMP_FORWARD_IF_FALSE(856) decomp=MAKE_FUNCTION(0)
+  [j3] idx=57 orig=POP_JUMP_FORWARD_IF_FALSE(346) decomp=CALL(0)
+  [j4] idx=66 orig=JUMP_FORWARD(344) decomp=JUMP_FORWARD(516)
+  [j5] idx=70 orig=STORE_SUBSCR(None) decomp=POP_JUMP_FORWARD_IF_FALSE(508)
+  [j6] idx=71 orig=JUMP_BACKWARD(86) decomp=POP_TOP(None)
+  [j7] idx=82 orig=POP_JUMP_FORWARD_IF_FALSE(816) decomp=PRECALL(2)
+  [j8] idx=88 orig=PRECALL(2) decomp=JUMP_FORWARD(516)
+  [j9] idx=97 orig=POP_JUMP_FORWARD_IF_FALSE(674) decomp=CALL(1)
+  [j10] idx=122 orig=LOAD_GLOBAL('get_post_data') decomp=POP_JUMP_FORWARD_IF_FALSE(858)
+  [j11] idx=129 orig=JUMP_FORWARD(816) decomp=POP_JUMP_FORWARD_IF_FALSE(768)
+  [j12] idx=133 orig=POP_JUMP_FORWARD_IF_FALSE(808) decomp=LOAD_FAST('fields')
+  [j13] idx=138 orig=STORE_FAST('error_info') decomp=JUMP_FORWARD(764)
+  [j14] idx=144 orig=LOAD_FAST('error_info') decomp=JUMP_BACKWARD(86)
+
+=== get_all_real_minute_kline (sub=R_NOP_PADDING, td=232, jd=39) ===
+  [0] idx=32 orig=LOAD_GLOBAL('copy') decomp=NOP(None) type=
+  [1] idx=33 orig=LOAD_ATTR('deepcopy') decomp=LOAD_GLOBAL('range') type=
+  [2] idx=34 orig=LOAD_FAST('df_nan_data') decomp=LOAD_FAST('df_date_list_len') type=
+  [3] idx=37 orig=STORE_FAST('kline_ndarray') decomp=GET_ITER(None) type=
+  [4] idx=39 orig=STORE_FAST('list_data') decomp=STORE_FAST('i') type=
+  [5] idx=40 orig=LOAD_FAST('symbol') decomp=LOAD_FAST('df_date_list') type=
+  [6] idx=41 orig=LOAD_METHOD('replace') decomp=LOAD_FAST('i') type=
+  [7] idx=42 orig=LOAD_CONST('XSHG') decomp=BINARY_SUBSCR(None) type=
+  [8] idx=43 orig=LOAD_CONST('SS') decomp=LOAD_FAST('list_data_date') type=
+  [9] idx=44 orig=PRECALL(2) decomp=CONTAINS_OP(0) type=
+  [10] idx=46 orig=LOAD_METHOD('replace') decomp=LOAD_FAST('list_data_date') type=
+  [11] idx=47 orig=LOAD_CONST('XSHE') decomp=LOAD_METHOD('index') type=
+  [12] idx=48 orig=LOAD_CONST('SZ') decomp=LOAD_FAST('df_date_list') type=
+  [13] idx=49 orig=PRECALL(2) decomp=LOAD_FAST('i') type=
+  [14] idx=50 orig=CALL(2) decomp=BINARY_SUBSCR(None) type=
+  [15] idx=51 orig=STORE_FAST('symbol_name') decomp=PRECALL(1) type=
+  [16] idx=52 orig=LOAD_GLOBAL('get_real_minute_data') decomp=CALL(1) type=
+  [17] idx=53 orig=LOAD_FAST('symbol_name') decomp=STORE_FAST('datetime_index') type=
+  [18] idx=54 orig=LOAD_FAST('list_data') decomp=LOAD_GLOBAL('tuple') type=
+  [19] idx=55 orig=LOAD_FAST('frequency_int') decomp=LOAD_FAST('list_data') type=
+  [20] idx=56 orig=PRECALL(3) decomp=LOAD_FAST('datetime_index') type=
+  [21] idx=57 orig=CALL(3) decomp=BINARY_SUBSCR(None) type=
+  [22] idx=58 orig=STORE_FAST('flag') decomp=PRECALL(1) type=
+  [23] idx=59 orig=LOAD_CONST(0) decomp=CALL(1) type=
+  [24] idx=60 orig=STORE_FAST('match_count') decomp=LOAD_FAST('kline_ndarray') type=
+  [25] idx=61 orig=LOAD_FAST('flag') decomp=LOAD_FAST('i') type=
+  [26] idx=62 orig=LOAD_CONST(0) decomp=STORE_SUBSCR(None) type=
+  [27] idx=63 orig=COMPARE_OP('==') decomp=LOAD_FAST('match_count') type=
+  [28] idx=65 orig=LOAD_GLOBAL('len') decomp=BINARY_OP(13) type=
+  [29] idx=66 orig=LOAD_FAST('list_data') decomp=STORE_FAST('match_count') type=
+  --- first 15 jump_diffs ---
+  [j0] idx=29 orig=FOR_ITER(1530) decomp=FOR_ITER(1532)
+  [j1] idx=38 orig=BUILD_LIST(0) decomp=FOR_ITER(346)
+  [j2] idx=45 orig=CALL(2) decomp=POP_JUMP_FORWARD_IF_FALSE(344)
+  [j3] idx=64 orig=POP_JUMP_FORWARD_IF_FALSE(830) decomp=LOAD_CONST(1)
+  [j4] idx=67 orig=PRECALL(1) decomp=JUMP_BACKWARD(208)
+  [j5] idx=68 orig=CALL(1) decomp=JUMP_FORWARD(458)
+  [j6] idx=71 orig=POP_JUMP_FORWARD_IF_FALSE(830) decomp=CHECK_EXC_MATCH(None)
+  [j7] idx=72 orig=LOAD_GLOBAL('list') decomp=POP_JUMP_FORWARD_IF_FALSE(450)
+  [j8] idx=87 orig=FOR_ITER(618) decomp=CALL(1)
+  [j9] idx=90 orig=LOAD_FAST('i') decomp=JUMP_FORWARD(458)
+  [j10] idx=94 orig=POP_JUMP_FORWARD_IF_FALSE(616) decomp=RERAISE(1)
+  [j11] idx=109 orig=LOAD_FAST('kline_ndarray') decomp=POP_JUMP_FORWARD_IF_FALSE(738)
+  [j12] idx=116 orig=JUMP_BACKWARD(480) decomp=CALL(2)
+  [j13] idx=117 orig=JUMP_FORWARD(730) decomp=LOAD_METHOD('replace')
+  [j14] idx=121 orig=POP_JUMP_FORWARD_IF_FALSE(722) decomp=CALL(2)
+
+=== get_date_and_count (sub=ARG_MISMATCH, td=494, jd=86) ===
+  [0] idx=165 orig=EXTENDED_ARG(1) decomp=EXTENDED_ARG(5) type=
+  [1] idx=202 orig=LOAD_ATTR('datetime') decomp=LOAD_GLOBAL('datetime') type=
+  [2] idx=203 orig=LOAD_METHOD('strptime') decomp=LOAD_ATTR('datetime') type=
+  [3] idx=204 orig=LOAD_FAST('this_month_start_date') decomp=LOAD_METHOD('strptime') type=
+  [4] idx=205 orig=LOAD_CONST('%Y%m%d') decomp=LOAD_FAST('this_month_start_date') type=
+  [5] idx=206 orig=PRECALL(2) decomp=LOAD_CONST('%Y%m%d') type=
+  [6] idx=207 orig=CALL(2) decomp=PRECALL(2) type=
+  [7] idx=208 orig=LOAD_GLOBAL('datetime') decomp=CALL(2) type=
+  [8] idx=209 orig=LOAD_ATTR('timedelta') decomp=LOAD_GLOBAL('datetime') type=
+  [9] idx=210 orig=LOAD_CONST(1) decomp=LOAD_ATTR('timedelta') type=
+  [10] idx=211 orig=PRECALL(1) decomp=LOAD_CONST(1) type=
+  [11] idx=212 orig=CALL(1) decomp=PRECALL(1) type=
+  [12] idx=213 orig=BINARY_OP(10) decomp=CALL(1) type=
+  [13] idx=214 orig=STORE_FAST('query_date') decomp=BINARY_OP(10) type=
+  [14] idx=215 orig=LOAD_GLOBAL('datetime') decomp=STORE_FAST('query_date') type=
+  [15] idx=216 orig=LOAD_ATTR('datetime') decomp=LOAD_GLOBAL('datetime') type=
+  [16] idx=217 orig=LOAD_METHOD('strftime') decomp=LOAD_ATTR('datetime') type=
+  [17] idx=218 orig=LOAD_FAST('query_date') decomp=LOAD_METHOD('strftime') type=
+  [18] idx=219 orig=LOAD_CONST('%Y%m%d') decomp=LOAD_FAST('query_date') type=
+  [19] idx=220 orig=PRECALL(2) decomp=LOAD_CONST('%Y%m%d') type=
+  [20] idx=221 orig=CALL(2) decomp=PRECALL(2) type=
+  [21] idx=222 orig=STORE_FAST('query_date') decomp=CALL(2) type=
+  [22] idx=223 orig=LOAD_FAST('count') decomp=STORE_FAST('query_date') type=
+  [23] idx=224 orig=LOAD_CONST(0) decomp=LOAD_FAST('count') type=
+  [24] idx=225 orig=COMPARE_OP('>') decomp=LOAD_CONST(0) type=
+  [25] idx=228 orig=LOAD_FAST('count') decomp=LOAD_FAST('month') type=
+  [26] idx=229 orig=BINARY_OP(10) decomp=LOAD_FAST('count') type=
+  [27] idx=230 orig=LOAD_CONST(0) decomp=BINARY_OP(10) type=
+  [28] idx=231 orig=COMPARE_OP('<=') decomp=LOAD_CONST(0) type=
+  [29] idx=234 orig=LOAD_CONST(1) decomp=LOAD_FAST('year') type=
+  --- first 15 jump_diffs ---
+  [j0] idx=166 orig=POP_JUMP_FORWARD_IF_FALSE(1954) decomp=POP_JUMP_FORWARD_IF_FALSE(3944)
+  [j1] idx=200 orig=POP_JUMP_FORWARD_IF_FALSE(1612) decomp=EXTENDED_ARG(4)
+  [j2] idx=201 orig=LOAD_GLOBAL('datetime') decomp=POP_JUMP_FORWARD_IF_FALSE(3602)
+  [j3] idx=226 orig=POP_JUMP_FORWARD_IF_FALSE(1458) decomp=COMPARE_OP('>')
+  [j4] idx=227 orig=LOAD_FAST('month') decomp=POP_JUMP_FORWARD_IF_FALSE(1460)
+  [j5] idx=232 orig=POP_JUMP_FORWARD_IF_FALSE(1432) decomp=COMPARE_OP('<=')
+  [j6] idx=233 orig=LOAD_FAST('year') decomp=POP_JUMP_FORWARD_IF_FALSE(1434)
+  [j7] idx=243 orig=JUMP_FORWARD(1446) decomp=STORE_FAST('month')
+  [j8] idx=244 orig=LOAD_FAST('month') decomp=JUMP_FORWARD(1448)
+  [j9] idx=253 orig=POP_JUMP_BACKWARD_IF_TRUE(1388) decomp=COMPARE_OP('>')
+  [j10] idx=254 orig=LOAD_FAST('month') decomp=POP_JUMP_BACKWARD_IF_TRUE(1390)
+  [j11] idx=257 orig=POP_JUMP_FORWARD_IF_FALSE(1536) decomp=CONTAINS_OP(0)
+  [j12] idx=258 orig=LOAD_GLOBAL('str') decomp=POP_JUMP_FORWARD_IF_FALSE(1538)
+  [j13] idx=270 orig=JUMP_FORWARD(1874) decomp=STORE_FAST('start_date')
+  [j14] idx=271 orig=LOAD_GLOBAL('str') decomp=JUMP_FORWARD(1612)
+
+=== get_history_common (sub=E_JUMP_RENUMBER, td=365, jd=61) ===
+  [0] idx=111 orig=POP_JUMP_FORWARD_IF_NOT_NONE(760) decomp=EXTENDED_ARG(3) type=
+  [1] idx=112 orig=LOAD_GLOBAL('VALID_HISTORY_FIELDS') decomp=POP_JUMP_FORWARD_IF_NOT_NONE(2410) type=
+  [2] idx=113 orig=LOAD_ATTR('copy') decomp=LOAD_GLOBAL('VALID_HISTORY_FIELDS') type=
+  [3] idx=114 orig=PRECALL(0) decomp=LOAD_ATTR('copy') type=
+  [4] idx=115 orig=CALL(0) decomp=PRECALL(0) type=
+  [5] idx=116 orig=STORE_FAST('no_datetime_field') decomp=CALL(0) type=
+  [6] idx=117 orig=LOAD_FAST('frequency') decomp=STORE_FAST('no_datetime_field') type=
+  [7] idx=118 orig=LOAD_CONST('1d') decomp=LOAD_FAST('frequency') type=
+  [8] idx=119 orig=COMPARE_OP('==') decomp=LOAD_CONST('1d') type=
+  [9] idx=122 orig=LOAD_ATTR('copy') decomp=LOAD_GLOBAL('VALID_HISTORY_DAY_FIELDS') type=
+  [10] idx=123 orig=PRECALL(0) decomp=LOAD_ATTR('copy') type=
+  [11] idx=124 orig=CALL(0) decomp=PRECALL(0) type=
+  [12] idx=125 orig=STORE_FAST('no_datetime_field') decomp=CALL(0) type=
+  [13] idx=130 orig=LOAD_ATTR('copy') decomp=LOAD_GLOBAL('VALID_BAR_MINUTE_FIELDS') type=
+  [14] idx=131 orig=PRECALL(0) decomp=LOAD_ATTR('copy') type=
+  [15] idx=132 orig=CALL(0) decomp=PRECALL(0) type=
+  [16] idx=133 orig=STORE_FAST('no_datetime_field') decomp=CALL(0) type=
+  [17] idx=134 orig=LOAD_CONST('datetime') decomp=STORE_FAST('no_datetime_field') type=
+  [18] idx=135 orig=BUILD_LIST(1) decomp=LOAD_CONST('datetime') type=
+  [19] idx=136 orig=LOAD_FAST('no_datetime_field') decomp=BUILD_LIST(1) type=
+  [20] idx=137 orig=BINARY_OP(0) decomp=LOAD_FAST('no_datetime_field') type=
+  [21] idx=138 orig=STORE_FAST('fields') decomp=BINARY_OP(0) type=
+  [22] idx=140 orig=LOAD_GLOBAL('isinstance') decomp=LOAD_FAST('fields') type=
+  [23] idx=141 orig=LOAD_FAST('fields') decomp=STORE_FAST('field_complex') type=
+  [24] idx=142 orig=LOAD_GLOBAL('list') decomp=LOAD_FAST('frequency') type=
+  [25] idx=143 orig=PRECALL(2) decomp=LOAD_GLOBAL('OVER_WEEK_FREQUENCY') type=
+  [26] idx=144 orig=CALL(2) decomp=CONTAINS_OP(0) type=
+  [27] idx=146 orig=LOAD_FAST('frequency') decomp=LOAD_GLOBAL('isinstance') type=
+  [28] idx=147 orig=LOAD_CONST('1d') decomp=LOAD_FAST('query_date') type=
+  [29] idx=148 orig=COMPARE_OP('!=') decomp=LOAD_GLOBAL('int') type=
+  --- first 15 jump_diffs ---
+  [j0] idx=120 orig=POP_JUMP_FORWARD_IF_FALSE(704) decomp=COMPARE_OP('==')
+  [j1] idx=121 orig=LOAD_GLOBAL('VALID_HISTORY_DAY_FIELDS') decomp=POP_JUMP_FORWARD_IF_FALSE(706)
+  [j2] idx=126 orig=JUMP_FORWARD(746) decomp=STORE_FAST('no_datetime_field')
+  [j3] idx=127 orig=LOAD_FAST('is_bar') decomp=JUMP_FORWARD(748)
+  [j4] idx=128 orig=POP_JUMP_FORWARD_IF_FALSE(746) decomp=LOAD_FAST('is_bar')
+  [j5] idx=129 orig=LOAD_GLOBAL('VALID_BAR_MINUTE_FIELDS') decomp=POP_JUMP_FORWARD_IF_FALSE(748)
+  [j6] idx=139 orig=JUMP_FORWARD(1118) decomp=STORE_FAST('fields')
+  [j7] idx=145 orig=POP_JUMP_FORWARD_IF_FALSE(942) decomp=POP_JUMP_FORWARD_IF_FALSE(932)
+  [j8] idx=149 orig=POP_JUMP_FORWARD_IF_FALSE(920) decomp=PRECALL(2)
+  [j9] idx=151 orig=GET_ITER(None) decomp=POP_JUMP_FORWARD_IF_FALSE(932)
+  [j10] idx=152 orig=FOR_ITER(920) decomp=LOAD_GLOBAL('datetime')
+  [j11] idx=157 orig=POP_JUMP_FORWARD_IF_FALSE(918) decomp=PRECALL(1)
+  [j12] idx=167 orig=PRECALL(0) decomp=JUMP_FORWARD(984)
+  [j13] idx=172 orig=JUMP_BACKWARD(818) decomp=LOAD_FAST('frequency')
+  [j14] idx=176 orig=POP_JUMP_FORWARD_IF_FALSE(940) decomp=LOAD_FAST('include')
+
+=== get_history_date_and_count_ifalse (sub=B1_GLOBAL_TO_FAST, td=313, jd=47) ===
+  [0] idx=99 orig=LOAD_GLOBAL('datetime') decomp=LOAD_FAST('query_date') type=
+  [1] idx=100 orig=LOAD_ATTR('datetime') decomp=LOAD_GLOBAL('datetime') type=
+  [2] idx=101 orig=LOAD_METHOD('strptime') decomp=LOAD_ATTR('timedelta') type=
+  [3] idx=102 orig=LOAD_FAST('query_date') decomp=LOAD_CONST(1) type=
+  [4] idx=103 orig=LOAD_CONST('%Y%m%d') decomp=PRECALL(1) type=
+  [5] idx=104 orig=PRECALL(2) decomp=CALL(1) type=
+  [6] idx=105 orig=CALL(2) decomp=BINARY_OP(10) type=
+  [7] idx=106 orig=STORE_FAST('query_date') decomp=STORE_FAST('end_date') type=
+  [8] idx=107 orig=LOAD_FAST('query_date') decomp=LOAD_GLOBAL('datetime') type=
+  [9] idx=108 orig=LOAD_GLOBAL('datetime') decomp=LOAD_ATTR('datetime') type=
+  [10] idx=109 orig=LOAD_ATTR('timedelta') decomp=LOAD_METHOD('strftime') type=
+  [11] idx=110 orig=LOAD_CONST(1) decomp=LOAD_FAST('end_date') type=
+  [12] idx=111 orig=PRECALL(1) decomp=LOAD_CONST('%Y%m%d') type=
+  [13] idx=112 orig=CALL(1) decomp=PRECALL(2) type=
+  [14] idx=113 orig=BINARY_OP(10) decomp=CALL(2) type=
+  [15] idx=115 orig=LOAD_GLOBAL('datetime') decomp=LOAD_FAST('count') type=
+  [16] idx=116 orig=LOAD_ATTR('datetime') decomp=LOAD_CONST(0) type=
+  [17] idx=117 orig=LOAD_METHOD('strftime') decomp=COMPARE_OP('>') type=
+  [18] idx=119 orig=LOAD_CONST('%Y%m%d') decomp=LOAD_FAST('month') type=
+  [19] idx=120 orig=PRECALL(2) decomp=LOAD_FAST('count') type=
+  [20] idx=121 orig=CALL(2) decomp=BINARY_OP(10) type=
+  [21] idx=122 orig=STORE_FAST('end_date') decomp=LOAD_CONST(0) type=
+  [22] idx=123 orig=LOAD_FAST('count') decomp=COMPARE_OP('<=') type=
+  [23] idx=125 orig=COMPARE_OP('>') decomp=LOAD_FAST('year') type=
+  [24] idx=127 orig=LOAD_FAST('month') decomp=BINARY_OP(23) type=
+  [25] idx=128 orig=LOAD_FAST('count') decomp=STORE_FAST('year') type=
+  [26] idx=129 orig=BINARY_OP(10) decomp=LOAD_FAST('count') type=
+  [27] idx=130 orig=LOAD_CONST(0) decomp=LOAD_FAST('month') type=
+  [28] idx=131 orig=COMPARE_OP('<=') decomp=BINARY_OP(23) type=
+  [29] idx=133 orig=LOAD_FAST('year') decomp=LOAD_CONST(12) type=
+  --- first 15 jump_diffs ---
+  [j0] idx=71 orig=JUMP_FORWARD(2346) decomp=JUMP_FORWARD(2282)
+  [j1] idx=76 orig=POP_JUMP_FORWARD_IF_FALSE(1028) decomp=POP_JUMP_FORWARD_IF_FALSE(964)
+  [j2] idx=118 orig=LOAD_FAST('end_date') decomp=POP_JUMP_FORWARD_IF_FALSE(728)
+  [j3] idx=124 orig=LOAD_CONST(0) decomp=POP_JUMP_FORWARD_IF_FALSE(702)
+  [j4] idx=126 orig=POP_JUMP_FORWARD_IF_FALSE(792) decomp=LOAD_CONST(1)
+  [j5] idx=132 orig=POP_JUMP_FORWARD_IF_FALSE(766) decomp=STORE_FAST('count')
+  [j6] idx=135 orig=BINARY_OP(23) decomp=JUMP_FORWARD(716)
+  [j7] idx=143 orig=JUMP_FORWARD(780) decomp=LOAD_CONST(0)
+  [j8] idx=145 orig=LOAD_FAST('count') decomp=POP_JUMP_BACKWARD_IF_TRUE(658)
+  [j9] idx=149 orig=STORE_FAST('count') decomp=POP_JUMP_FORWARD_IF_FALSE(806)
+  [j10] idx=153 orig=POP_JUMP_BACKWARD_IF_TRUE(722) decomp=CALL(1)
+  [j11] idx=157 orig=POP_JUMP_FORWARD_IF_FALSE(870) decomp=CALL(1)
+  [j12] idx=162 orig=LOAD_GLOBAL('str') decomp=JUMP_FORWARD(880)
+  [j13] idx=170 orig=JUMP_FORWARD(944) decomp=LOAD_FAST('month')
+  [j14] idx=188 orig=LOAD_FAST('start_date') decomp=JUMP_FORWARD(2282)
+
+=== get_history_date_and_count_itrue (sub=E_JUMP_RENUMBER, td=235, jd=41) ===
+  [0] idx=193 orig=EXTENDED_ARG(2) decomp=LOAD_GLOBAL('len') type=
+  [1] idx=195 orig=LOAD_FAST('frequency') decomp=LOAD_METHOD('get_trading_calendar') type=
+  [2] idx=196 orig=LOAD_CONST('1y') decomp=LOAD_FAST('start_date') type=
+  [3] idx=197 orig=COMPARE_OP('==') decomp=LOAD_GLOBAL('datetime') type=
+  [4] idx=199 orig=LOAD_GLOBAL('datetime') decomp=LOAD_METHOD('strftime') type=
+  [5] idx=200 orig=LOAD_ATTR('datetime') decomp=LOAD_FAST('query_date') type=
+  [6] idx=201 orig=LOAD_METHOD('strftime') decomp=LOAD_CONST('%Y%m%d') type=
+  [7] idx=202 orig=LOAD_FAST('query_date') decomp=PRECALL(2) type=
+  [8] idx=203 orig=LOAD_CONST('%Y%m%d') decomp=CALL(2) type=
+  [9] idx=206 orig=STORE_FAST('query_date') decomp=PRECALL(1) type=
+  [10] idx=207 orig=LOAD_FAST('query_date') decomp=CALL(1) type=
+  [11] idx=208 orig=LOAD_CONST(None) decomp=STORE_FAST('count_daily') type=
+  [12] idx=209 orig=LOAD_CONST(4) decomp=EXTENDED_ARG(2) type=
+  [13] idx=211 orig=BINARY_SUBSCR(None) decomp=LOAD_FAST('frequency') type=
+  [14] idx=212 orig=LOAD_CONST('0101') decomp=LOAD_CONST('1y') type=
+  [15] idx=213 orig=BINARY_OP(0) decomp=COMPARE_OP('==') type=
+  [16] idx=215 orig=LOAD_FAST('count') decomp=LOAD_GLOBAL('datetime') type=
+  [17] idx=216 orig=LOAD_CONST(1) decomp=LOAD_ATTR('datetime') type=
+  [18] idx=217 orig=COMPARE_OP('==') decomp=LOAD_METHOD('strftime') type=
+  [19] idx=219 orig=LOAD_FAST('this_year_start_date') decomp=LOAD_CONST('%Y%m%d') type=
+  [20] idx=220 orig=STORE_FAST('start_date') decomp=PRECALL(2) type=
+  [21] idx=222 orig=LOAD_FAST('count') decomp=STORE_FAST('query_date') type=
+  [22] idx=223 orig=LOAD_CONST(1) decomp=LOAD_FAST('query_date') type=
+  [23] idx=224 orig=BINARY_OP(23) decomp=LOAD_CONST(None) type=
+  [24] idx=225 orig=STORE_FAST('count') decomp=LOAD_CONST(4) type=
+  [25] idx=226 orig=LOAD_GLOBAL('str') decomp=BUILD_SLICE(2) type=
+  [26] idx=227 orig=LOAD_GLOBAL('int') decomp=BINARY_SUBSCR(None) type=
+  [27] idx=228 orig=LOAD_FAST('query_date') decomp=LOAD_CONST('0101') type=
+  [28] idx=229 orig=LOAD_CONST(0) decomp=BINARY_OP(0) type=
+  [29] idx=230 orig=LOAD_CONST(4) decomp=STORE_FAST('this_year_start_date') type=
+  --- first 15 jump_diffs ---
+  [j0] idx=68 orig=JUMP_FORWARD(2108) decomp=JUMP_FORWARD(2388)
+  [j1] idx=73 orig=POP_JUMP_FORWARD_IF_FALSE(964) decomp=POP_JUMP_FORWARD_IF_FALSE(1104)
+  [j2] idx=110 orig=JUMP_FORWARD(820) decomp=JUMP_FORWARD(960)
+  [j3] idx=194 orig=JUMP_FORWARD(2108) decomp=LOAD_GLOBAL('trading_dates')
+  [j4] idx=198 orig=POP_JUMP_FORWARD_IF_FALSE(1386) decomp=LOAD_ATTR('datetime')
+  [j5] idx=210 orig=BUILD_SLICE(2) decomp=JUMP_FORWARD(2388)
+  [j6] idx=214 orig=STORE_FAST('this_year_start_date') decomp=POP_JUMP_FORWARD_IF_FALSE(1526)
+  [j7] idx=218 orig=POP_JUMP_FORWARD_IF_FALSE(1084) decomp=LOAD_FAST('query_date')
+  [j8] idx=221 orig=JUMP_FORWARD(1178) decomp=CALL(2)
+  [j9] idx=234 orig=CALL(1) decomp=POP_JUMP_FORWARD_IF_FALSE(1224)
+  [j10] idx=237 orig=PRECALL(1) decomp=JUMP_FORWARD(1318)
+  [j11] idx=267 orig=JUMP_FORWARD(2108) decomp=LOAD_GLOBAL('trading_dates')
+  [j12] idx=272 orig=POP_JUMP_FORWARD_IF_FALSE(2108) decomp=LOAD_METHOD('strftime')
+  [j13] idx=283 orig=BINARY_OP(2) decomp=JUMP_FORWARD(2388)
+  [j14] idx=288 orig=POP_JUMP_FORWARD_IF_FALSE(1494) decomp=POP_JUMP_FORWARD_IF_FALSE(2388)
+
+=== get_history_new (sub=B2_FAST_TO_GLOBAL, td=101, jd=24) ===
+  [0] idx=218 orig=LOAD_FAST('real_data_len') decomp=LOAD_GLOBAL('len') type=
+  [1] idx=219 orig=LOAD_FAST('count') decomp=LOAD_FAST('df_nan_data') type=
+  [2] idx=220 orig=COMPARE_OP('<') decomp=PRECALL(1) type=
+  [3] idx=222 orig=LOAD_FAST('count') decomp=STORE_FAST('real_data_len') type=
+  [4] idx=223 orig=LOAD_FAST('real_data_len') decomp=LOAD_FAST('count') type=
+  [5] idx=224 orig=BINARY_OP(10) decomp=LOAD_FAST('real_data_len') type=
+  [6] idx=225 orig=STORE_FAST('his_count') decomp=BINARY_OP(10) type=
+  [7] idx=226 orig=LOAD_FAST('frequency') decomp=STORE_FAST('his_count') type=
+  [8] idx=227 orig=LOAD_METHOD('find') decomp=LOAD_FAST('frequency') type=
+  [9] idx=228 orig=LOAD_GLOBAL('Frequency') decomp=LOAD_METHOD('find') type=
+  [10] idx=229 orig=LOAD_ATTR('DAILY') decomp=LOAD_GLOBAL('Frequency') type=
+  [11] idx=230 orig=LOAD_ATTR('value') decomp=LOAD_ATTR('DAILY') type=
+  [12] idx=231 orig=PRECALL(1) decomp=LOAD_ATTR('value') type=
+  [13] idx=232 orig=CALL(1) decomp=PRECALL(1) type=
+  [14] idx=233 orig=LOAD_CONST(-1) decomp=CALL(1) type=
+  [15] idx=234 orig=COMPARE_OP('>') decomp=LOAD_CONST(-1) type=
+  [16] idx=237 orig=LOAD_CONST(1000000) decomp=LOAD_FAST('now_date') type=
+  [17] idx=238 orig=BINARY_OP(5) decomp=LOAD_CONST(1000000) type=
+  [18] idx=239 orig=LOAD_CONST(83000) decomp=BINARY_OP(5) type=
+  [19] idx=240 orig=BINARY_OP(0) decomp=LOAD_CONST(83000) type=
+  [20] idx=241 orig=STORE_FAST('min_datetime') decomp=BINARY_OP(0) type=
+  [21] idx=244 orig=LOAD_CONST(1000000) decomp=LOAD_FAST('now_date') type=
+  [22] idx=245 orig=BINARY_OP(5) decomp=LOAD_CONST(1000000) type=
+  [23] idx=246 orig=LOAD_CONST(93000) decomp=BINARY_OP(5) type=
+  [24] idx=247 orig=BINARY_OP(0) decomp=LOAD_CONST(93000) type=
+  [25] idx=248 orig=STORE_FAST('min_datetime') decomp=BINARY_OP(0) type=
+  [26] idx=249 orig=LOAD_GLOBAL('get_kline_by_count_new') decomp=STORE_FAST('min_datetime') type=
+  [27] idx=250 orig=LOAD_FAST('symbols') decomp=LOAD_GLOBAL('get_kline_by_count_new') type=
+  [28] idx=251 orig=LOAD_FAST('his_count') decomp=LOAD_FAST('symbols') type=
+  [29] idx=252 orig=LOAD_FAST('min_datetime') decomp=LOAD_FAST('his_count') type=
+  --- first 15 jump_diffs ---
+  [j0] idx=66 orig=POP_JUMP_FORWARD_IF_FALSE(1556) decomp=POP_JUMP_FORWARD_IF_FALSE(1570)
+  [j1] idx=71 orig=POP_JUMP_FORWARD_IF_FALSE(1556) decomp=POP_JUMP_FORWARD_IF_FALSE(1570)
+  [j2] idx=139 orig=POP_JUMP_FORWARD_IF_FALSE(1098) decomp=POP_JUMP_FORWARD_IF_FALSE(1128)
+  [j3] idx=145 orig=POP_JUMP_FORWARD_IF_FALSE(1098) decomp=POP_JUMP_FORWARD_IF_FALSE(1128)
+  [j4] idx=152 orig=POP_JUMP_FORWARD_IF_FALSE(1098) decomp=POP_JUMP_FORWARD_IF_FALSE(1128)
+  [j5] idx=221 orig=POP_JUMP_FORWARD_IF_FALSE(1550) decomp=CALL(1)
+  [j6] idx=235 orig=POP_JUMP_FORWARD_IF_FALSE(1248) decomp=COMPARE_OP('>')
+  [j7] idx=236 orig=LOAD_FAST('now_date') decomp=POP_JUMP_FORWARD_IF_FALSE(1266)
+  [j8] idx=242 orig=JUMP_FORWARD(1264) decomp=STORE_FAST('min_datetime')
+  [j9] idx=243 orig=LOAD_FAST('now_date') decomp=JUMP_FORWARD(1282)
+  [j10] idx=269 orig=POP_JUMP_FORWARD_IF_FALSE(1354) decomp=COMPARE_OP('==')
+  [j11] idx=270 orig=LOAD_FAST('real_data_dict') decomp=POP_JUMP_FORWARD_IF_FALSE(1372)
+  [j12] idx=277 orig=FOR_ITER(1548) decomp=GET_ITER(None)
+  [j13] idx=278 orig=STORE_FAST('stock') decomp=FOR_ITER(1566)
+  [j14] idx=287 orig=POP_JUMP_FORWARD_IF_FALSE(1472) decomp=COMPARE_OP('==')
+
+=== get_kline_by_count (sub=E_JUMP_RENUMBER, td=395, jd=81) ===
+  [0] idx=2 orig=POP_JUMP_FORWARD_IF_NONE(18) decomp=EXTENDED_ARG(4) type=
+  [1] idx=3 orig=LOAD_FAST('count') decomp=POP_JUMP_FORWARD_IF_NONE(2422) type=
+  [2] idx=4 orig=LOAD_CONST(0) decomp=LOAD_FAST('count') type=
+  [3] idx=5 orig=COMPARE_OP('==') decomp=LOAD_CONST(0) type=
+  [4] idx=8 orig=POP_JUMP_FORWARD_IF_NOT_NONE(36) decomp=LOAD_FAST('fields') type=
+  [5] idx=9 orig=LOAD_GLOBAL('EMPTY_BAR_NP_ARRAY') decomp=POP_JUMP_FORWARD_IF_NOT_NONE(38) type=
+  [6] idx=12 orig=LOAD_FAST('fields') decomp=LOAD_GLOBAL('EMPTY_BAR_NP_ARRAY') type=
+  [7] idx=13 orig=BINARY_SUBSCR(None) decomp=LOAD_FAST('fields') type=
+  [8] idx=14 orig=STORE_FAST('history_data') decomp=BINARY_SUBSCR(None) type=
+  [9] idx=15 orig=LOAD_FAST('history_data') decomp=STORE_FAST('history_data') type=
+  [10] idx=16 orig=RETURN_VALUE(None) decomp=LOAD_FAST('history_data') type=
+  [11] idx=17 orig=LOAD_GLOBAL('convert_int_to_date') decomp=RETURN_VALUE(None) type=
+  [12] idx=18 orig=LOAD_FAST('query_date') decomp=LOAD_GLOBAL('convert_int_to_date') type=
+  [13] idx=19 orig=PRECALL(1) decomp=LOAD_FAST('query_date') type=
+  [14] idx=20 orig=CALL(1) decomp=PRECALL(1) type=
+  [15] idx=21 orig=STORE_FAST('cur_date') decomp=CALL(1) type=
+  [16] idx=22 orig=LOAD_GLOBAL('convert_int14_to_int') decomp=STORE_FAST('cur_date') type=
+  [17] idx=23 orig=LOAD_GLOBAL('copy') decomp=LOAD_GLOBAL('convert_int14_to_int') type=
+  [18] idx=24 orig=LOAD_ATTR('deepcopy') decomp=LOAD_GLOBAL('copy') type=
+  [19] idx=25 orig=LOAD_FAST('query_date') decomp=LOAD_ATTR('deepcopy') type=
+  [20] idx=26 orig=PRECALL(1) decomp=LOAD_FAST('query_date') type=
+  [21] idx=27 orig=CALL(1) decomp=PRECALL(1) type=
+  [22] idx=28 orig=LOAD_FAST('frequency') decomp=CALL(1) type=
+  [23] idx=29 orig=PRECALL(2) decomp=LOAD_FAST('frequency') type=
+  [24] idx=30 orig=CALL(2) decomp=PRECALL(2) type=
+  [25] idx=31 orig=STORE_FAST('query_date_frequency') decomp=CALL(2) type=
+  [26] idx=32 orig=LOAD_GLOBAL('int') decomp=STORE_FAST('query_date_frequency') type=
+  [27] idx=33 orig=LOAD_FAST('query_date') decomp=LOAD_GLOBAL('int') type=
+  [28] idx=34 orig=LOAD_CONST(1000000) decomp=LOAD_FAST('query_date') type=
+  [29] idx=35 orig=BINARY_OP(11) decomp=LOAD_CONST(1000000) type=
+  --- first 15 jump_diffs ---
+  [j0] idx=6 orig=POP_JUMP_FORWARD_IF_FALSE(66) decomp=COMPARE_OP('==')
+  [j1] idx=7 orig=LOAD_FAST('fields') decomp=POP_JUMP_FORWARD_IF_FALSE(68)
+  [j2] idx=10 orig=JUMP_FORWARD(60) decomp=LOAD_GLOBAL('EMPTY_BAR_NP_ARRAY')
+  [j3] idx=11 orig=LOAD_GLOBAL('EMPTY_BAR_NP_ARRAY') decomp=JUMP_FORWARD(62)
+  [j4] idx=47 orig=POP_JUMP_FORWARD_IF_FALSE(302) decomp=COMPARE_OP('==')
+  [j5] idx=48 orig=LOAD_GLOBAL('get_pre_date') decomp=POP_JUMP_FORWARD_IF_FALSE(304)
+  [j6] idx=58 orig=JUMP_FORWARD(336) decomp=STORE_FAST('pre_date')
+  [j7] idx=59 orig=LOAD_GLOBAL('get_pre_date') decomp=JUMP_FORWARD(338)
+  [j8] idx=96 orig=POP_JUMP_FORWARD_IF_FALSE(702) decomp=COMPARE_OP('==')
+  [j9] idx=97 orig=LOAD_GLOBAL('datetime') decomp=POP_JUMP_FORWARD_IF_FALSE(704)
+  [j10] idx=135 orig=POP_JUMP_FORWARD_IF_FALSE(868) decomp=COMPARE_OP('==')
+  [j11] idx=136 orig=LOAD_FAST('fields') decomp=POP_JUMP_FORWARD_IF_FALSE(870)
+  [j12] idx=139 orig=JUMP_FORWARD(862) decomp=LOAD_GLOBAL('EMPTY_BAR_NP_ARRAY')
+  [j13] idx=140 orig=LOAD_GLOBAL('EMPTY_BAR_NP_ARRAY') decomp=JUMP_FORWARD(864)
+  [j14] idx=173 orig=POP_JUMP_FORWARD_IF_FALSE(1044) decomp=COMPARE_OP('<')
+
+=== get_kline_by_count_new (sub=C2_UNPACK, td=509, jd=124) ===
+  [0] idx=14 orig=UNPACK_SEQUENCE(2) decomp=STORE_FAST('start_000300') type=
+  [1] idx=15 orig=STORE_FAST('start_000300') decomp=LOAD_FAST('start_000300') type=
+  [2] idx=16 orig=STORE_FAST('end_000300') decomp=POP_JUMP_FORWARD_IF_NONE(88) type=
+  [3] idx=17 orig=LOAD_FAST('start_000300') decomp=LOAD_GLOBAL('end_000300') type=
+  [4] idx=18 orig=POP_JUMP_FORWARD_IF_NONE(84) decomp=POP_JUMP_FORWARD_IF_NOT_NONE(152) type=
+  [5] idx=19 orig=LOAD_FAST('end_000300') decomp=LOAD_FAST('symbols') type=
+  [6] idx=20 orig=POP_JUMP_FORWARD_IF_NOT_NONE(148) decomp=GET_ITER(None) type=
+  [7] idx=22 orig=GET_ITER(None) decomp=STORE_FAST('symbol') type=
+  [8] idx=24 orig=STORE_FAST('symbol') decomp=POP_JUMP_FORWARD_IF_NOT_NONE(114) type=
+  [9] idx=25 orig=LOAD_FAST('fields') decomp=LOAD_GLOBAL('EMPTY_BAR_NP_ARRAY') type=
+  [10] idx=29 orig=LOAD_GLOBAL('EMPTY_BAR_NP_ARRAY') decomp=BINARY_SUBSCR(None) type=
+  [11] idx=30 orig=LOAD_FAST('fields') decomp=LOAD_FAST('history_data_dict') type=
+  [12] idx=31 orig=BINARY_SUBSCR(None) decomp=LOAD_FAST('symbol') type=
+  [13] idx=32 orig=LOAD_FAST('history_data_dict') decomp=STORE_SUBSCR(None) type=
+  [14] idx=34 orig=STORE_SUBSCR(None) decomp=LOAD_FAST('history_data_dict') type=
+  [15] idx=36 orig=LOAD_FAST('history_data_dict') decomp=LOAD_FAST('asset') type=
+  [16] idx=37 orig=RETURN_VALUE(None) decomp=POP_JUMP_FORWARD_IF_NONE(206) type=
+  [17] idx=38 orig=LOAD_FAST('asset') decomp=LOAD_GLOBAL('len') type=
+  [18] idx=39 orig=POP_JUMP_FORWARD_IF_NONE(202) decomp=LOAD_FAST('asset') type=
+  [19] idx=40 orig=LOAD_GLOBAL('len') decomp=PRECALL(1) type=
+  [20] idx=41 orig=LOAD_FAST('asset') decomp=CALL(1) type=
+  [21] idx=42 orig=PRECALL(1) decomp=LOAD_CONST(1) type=
+  [22] idx=43 orig=CALL(1) decomp=COMPARE_OP('<') type=
+  [23] idx=45 orig=COMPARE_OP('<') decomp=LOAD_FAST('count') type=
+  [24] idx=47 orig=LOAD_FAST('count') decomp=COMPARE_OP('==') type=
+  [25] idx=49 orig=COMPARE_OP('==') decomp=LOAD_FAST('symbols') type=
+  [26] idx=52 orig=GET_ITER(None) decomp=STORE_FAST('symbol') type=
+  [27] idx=54 orig=STORE_FAST('symbol') decomp=POP_JUMP_FORWARD_IF_NOT_NONE(232) type=
+  [28] idx=55 orig=LOAD_FAST('fields') decomp=LOAD_GLOBAL('EMPTY_BAR_NP_ARRAY') type=
+  [29] idx=59 orig=LOAD_GLOBAL('EMPTY_BAR_NP_ARRAY') decomp=BINARY_SUBSCR(None) type=
+  --- first 15 jump_diffs ---
+  [j0] idx=21 orig=LOAD_FAST('symbols') decomp=FOR_ITER(148)
+  [j1] idx=23 orig=FOR_ITER(144) decomp=LOAD_FAST('fields')
+  [j2] idx=26 orig=POP_JUMP_FORWARD_IF_NOT_NONE(110) decomp=JUMP_FORWARD(138)
+  [j3] idx=28 orig=JUMP_FORWARD(134) decomp=LOAD_FAST('fields')
+  [j4] idx=33 orig=LOAD_FAST('symbol') decomp=JUMP_BACKWARD(92)
+  [j5] idx=35 orig=JUMP_BACKWARD(88) decomp=RETURN_VALUE(None)
+  [j6] idx=44 orig=LOAD_CONST(1) decomp=POP_JUMP_FORWARD_IF_TRUE(206)
+  [j7] idx=46 orig=POP_JUMP_FORWARD_IF_TRUE(202) decomp=LOAD_CONST(0)
+  [j8] idx=48 orig=LOAD_CONST(0) decomp=POP_JUMP_FORWARD_IF_FALSE(270)
+  [j9] idx=50 orig=POP_JUMP_FORWARD_IF_FALSE(266) decomp=GET_ITER(None)
+  [j10] idx=51 orig=LOAD_FAST('symbols') decomp=FOR_ITER(266)
+  [j11] idx=53 orig=FOR_ITER(262) decomp=LOAD_FAST('fields')
+  [j12] idx=56 orig=POP_JUMP_FORWARD_IF_NOT_NONE(228) decomp=JUMP_FORWARD(256)
+  [j13] idx=58 orig=JUMP_FORWARD(252) decomp=LOAD_FAST('fields')
+  [j14] idx=63 orig=LOAD_FAST('symbol') decomp=JUMP_BACKWARD(210)
+
+=== get_kline_by_date_ndarray (sub=R_NOP_PADDING, td=162, jd=25) ===
+  [0] idx=52 orig=LOAD_GLOBAL('time') decomp=NOP(None) type=
+  [1] idx=53 orig=LOAD_ATTR('sleep') decomp=LOAD_GLOBAL('time') type=
+  [2] idx=54 orig=LOAD_CONST(1) decomp=LOAD_ATTR('sleep') type=
+  [3] idx=55 orig=PRECALL(1) decomp=LOAD_CONST(1) type=
+  [4] idx=56 orig=CALL(1) decomp=PRECALL(1) type=
+  [5] idx=57 orig=POP_TOP(None) decomp=CALL(1) type=
+  [6] idx=58 orig=LOAD_FAST('flag') decomp=POP_TOP(None) type=
+  [7] idx=59 orig=LOAD_CONST(1) decomp=LOAD_FAST('flag') type=
+  [8] idx=60 orig=COMPARE_OP('==') decomp=LOAD_CONST(1) type=
+  [9] idx=63 orig=LOAD_ATTR('debug') decomp=LOAD_GLOBAL('system_log') type=
+  [10] idx=64 orig=LOAD_CONST('获取K线数据异常，现在进行第{}次重试') decomp=LOAD_ATTR('debug') type=
+  [11] idx=65 orig=LOAD_METHOD('format') decomp=LOAD_CONST('获取K线数据异常，现在进行第{}次重试') type=
+  [12] idx=66 orig=LOAD_GLOBAL('str') decomp=LOAD_METHOD('format') type=
+  [13] idx=67 orig=LOAD_FAST('count') decomp=LOAD_GLOBAL('str') type=
+  [14] idx=68 orig=LOAD_CONST(1) decomp=LOAD_FAST('count') type=
+  [15] idx=69 orig=BINARY_OP(0) decomp=LOAD_CONST(1) type=
+  [16] idx=70 orig=PRECALL(1) decomp=BINARY_OP(0) type=
+  [17] idx=71 orig=CALL(1) decomp=PRECALL(1) type=
+  [18] idx=72 orig=PRECALL(1) decomp=CALL(1) type=
+  [19] idx=73 orig=CALL(1) decomp=PRECALL(1) type=
+  [20] idx=74 orig=PRECALL(1) decomp=CALL(1) type=
+  [21] idx=75 orig=CALL(1) decomp=PRECALL(1) type=
+  [22] idx=76 orig=POP_TOP(None) decomp=CALL(1) type=
+  [23] idx=79 orig=LOAD_CONST(-1) decomp=LOAD_FAST('flag') type=
+  [24] idx=80 orig=COMPARE_OP('==') decomp=LOAD_CONST(-1) type=
+  [25] idx=83 orig=LOAD_ATTR('debug') decomp=LOAD_GLOBAL('system_log') type=
+  [26] idx=84 orig=LOAD_CONST('获取K线数据返回为空，现在进行第{}次重试') decomp=LOAD_ATTR('debug') type=
+  [27] idx=85 orig=LOAD_METHOD('format') decomp=LOAD_CONST('获取K线数据返回为空，现在进行第{}次重试') type=
+  [28] idx=86 orig=LOAD_GLOBAL('str') decomp=LOAD_METHOD('format') type=
+  [29] idx=87 orig=LOAD_FAST('count') decomp=LOAD_GLOBAL('str') type=
+  --- first 15 jump_diffs ---
+  [j0] idx=47 orig=POP_JUMP_FORWARD_IF_TRUE(656) decomp=POP_JUMP_FORWARD_IF_TRUE(308)
+  [j1] idx=51 orig=POP_JUMP_FORWARD_IF_FALSE(656) decomp=POP_JUMP_FORWARD_IF_FALSE(310)
+  [j2] idx=61 orig=POP_JUMP_FORWARD_IF_FALSE(472) decomp=COMPARE_OP('==')
+  [j3] idx=62 orig=LOAD_GLOBAL('system_log') decomp=POP_JUMP_FORWARD_IF_FALSE(474)
+  [j4] idx=77 orig=JUMP_FORWARD(594) decomp=POP_TOP(None)
+  [j5] idx=78 orig=LOAD_FAST('flag') decomp=JUMP_FORWARD(596)
+  [j6] idx=81 orig=POP_JUMP_FORWARD_IF_FALSE(594) decomp=COMPARE_OP('==')
+  [j7] idx=82 orig=LOAD_GLOBAL('system_log') decomp=POP_JUMP_FORWARD_IF_FALSE(596)
+  [j8] idx=99 orig=PRECALL(1) decomp=POP_JUMP_FORWARD_IF_FALSE(832)
+  [j9] idx=101 orig=UNPACK_SEQUENCE(2) decomp=JUMP_IF_TRUE_OR_POP(614)
+  [j10] idx=106 orig=BINARY_OP(13) decomp=FOR_ITER(828)
+  [j11] idx=109 orig=POP_JUMP_FORWARD_IF_TRUE(656) decomp=LOAD_FAST('i')
+  [j12] idx=113 orig=POP_JUMP_BACKWARD_IF_TRUE(308) decomp=POP_JUMP_FORWARD_IF_FALSE(826)
+  [j13] idx=115 orig=POP_JUMP_FORWARD_IF_FALSE(1084) decomp=LOAD_METHOD('index')
+  [j14] idx=138 orig=LOAD_GLOBAL('list') decomp=JUMP_BACKWARD(616)
+
+=== get_kline_by_date_new (sub=ARG_MISMATCH, td=29, jd=7) ===
+  [0] idx=38 orig=POP_JUMP_FORWARD_IF_NONE(386) decomp=POP_JUMP_FORWARD_IF_NONE(216) type=
+  [1] idx=40 orig=POP_JUMP_FORWARD_IF_NONE(386) decomp=POP_JUMP_FORWARD_IF_NONE(216) type=
+  [2] idx=302 orig=LOAD_GLOBAL('system_log') decomp=LOAD_FAST('fields') type=
+  [3] idx=303 orig=LOAD_ATTR('error') decomp=POP_JUMP_FORWARD_IF_NOT_NONE(1474) type=
+  [4] idx=304 orig=LOAD_FAST('symbol') decomp=LOAD_GLOBAL('EMPTY_BAR_NP_ARRAY') type=
+  [5] idx=306 orig=LOAD_CONST(' 获取数据异常: ') decomp=LOAD_GLOBAL('EMPTY_BAR_NP_ARRAY') type=
+  [6] idx=307 orig=LOAD_FAST('error_info') decomp=LOAD_FAST('fields') type=
+  [7] idx=308 orig=FORMAT_VALUE((<class 'str'>, False)) decomp=BINARY_SUBSCR(None) type=
+  [8] idx=309 orig=BUILD_STRING(3) decomp=LOAD_FAST('history_data_dict') type=
+  [9] idx=310 orig=PRECALL(1) decomp=LOAD_FAST('symbol') type=
+  [10] idx=311 orig=CALL(1) decomp=STORE_SUBSCR(None) type=
+  [11] idx=312 orig=POP_TOP(None) decomp=POP_EXCEPT(None) type=
+  [12] idx=313 orig=LOAD_FAST('fields') decomp=EXTENDED_ARG(2) type=
+  [13] idx=315 orig=LOAD_GLOBAL('EMPTY_BAR_NP_ARRAY') decomp=RERAISE(0) type=
+  [14] idx=317 orig=LOAD_GLOBAL('EMPTY_BAR_NP_ARRAY') decomp=POP_EXCEPT(None) type=
+  [15] idx=318 orig=LOAD_FAST('fields') decomp=RERAISE(1) type=
+  [16] idx=319 orig=BINARY_SUBSCR(None) decomp=LOAD_FAST('history_data_dict') type=
+  [17] idx=320 orig=LOAD_FAST('history_data_dict') decomp=RETURN_VALUE(None) type=
+  [18] idx=321 orig=LOAD_FAST('symbol') decomp=None(None) type=missing_in_decomp
+  [19] idx=322 orig=STORE_SUBSCR(None) decomp=None(None) type=missing_in_decomp
+  [20] idx=323 orig=POP_EXCEPT(None) decomp=None(None) type=missing_in_decomp
+  [21] idx=324 orig=EXTENDED_ARG(2) decomp=None(None) type=missing_in_decomp
+  [22] idx=325 orig=JUMP_BACKWARD(454) decomp=None(None) type=missing_in_decomp
+  [23] idx=326 orig=RERAISE(0) decomp=None(None) type=missing_in_decomp
+  [24] idx=327 orig=COPY(3) decomp=None(None) type=missing_in_decomp
+  [25] idx=328 orig=POP_EXCEPT(None) decomp=None(None) type=missing_in_decomp
+  [26] idx=329 orig=RERAISE(1) decomp=None(None) type=missing_in_decomp
+  [27] idx=330 orig=LOAD_FAST('history_data_dict') decomp=None(None) type=missing_in_decomp
+  [28] idx=331 orig=RETURN_VALUE(None) decomp=None(None) type=missing_in_decomp
+  --- first 15 jump_diffs ---
+  [j0] idx=50 orig=POP_JUMP_FORWARD_IF_TRUE(386) decomp=POP_JUMP_FORWARD_IF_TRUE(258)
+  [j1] idx=56 orig=POP_JUMP_FORWARD_IF_FALSE(392) decomp=POP_JUMP_FORWARD_IF_FALSE(450)
+  [j2] idx=89 orig=FOR_ITER(1570) decomp=FOR_ITER(1520)
+  [j3] idx=296 orig=POP_JUMP_FORWARD_IF_FALSE(1562) decomp=POP_JUMP_FORWARD_IF_FALSE(1512)
+  [j4] idx=305 orig=FORMAT_VALUE((<class 'str'>, False)) decomp=JUMP_FORWARD(1498)
+  [j5] idx=314 orig=POP_JUMP_FORWARD_IF_NOT_NONE(1524) decomp=JUMP_BACKWARD(454)
+  [j6] idx=316 orig=JUMP_FORWARD(1548) decomp=COPY(3)
+
+=== get_kline_by_date_one (sub=B1_GLOBAL_TO_FAST, td=24, jd=5) ===
+  [0] idx=166 orig=LOAD_GLOBAL('system_log') decomp=LOAD_FAST('fields') type=
+  [1] idx=167 orig=LOAD_ATTR('error') decomp=POP_JUMP_FORWARD_IF_NOT_NONE(848) type=
+  [2] idx=168 orig=LOAD_FAST('symbol') decomp=LOAD_GLOBAL('EMPTY_BAR_NP_ARRAY') type=
+  [3] idx=170 orig=LOAD_CONST(' 获取数据异常: ') decomp=LOAD_GLOBAL('EMPTY_BAR_NP_ARRAY') type=
+  [4] idx=171 orig=LOAD_FAST('error_info') decomp=LOAD_FAST('fields') type=
+  [5] idx=172 orig=FORMAT_VALUE((<class 'str'>, False)) decomp=BINARY_SUBSCR(None) type=
+  [6] idx=173 orig=BUILD_STRING(3) decomp=STORE_FAST('history_data') type=
+  [7] idx=174 orig=PRECALL(1) decomp=POP_EXCEPT(None) type=
+  [8] idx=176 orig=POP_TOP(None) decomp=RERAISE(0) type=
+  [9] idx=177 orig=LOAD_FAST('fields') decomp=COPY(3) type=
+  [10] idx=178 orig=POP_JUMP_FORWARD_IF_NOT_NONE(898) decomp=POP_EXCEPT(None) type=
+  [11] idx=179 orig=LOAD_GLOBAL('EMPTY_BAR_NP_ARRAY') decomp=RERAISE(1) type=
+  [12] idx=181 orig=LOAD_GLOBAL('EMPTY_BAR_NP_ARRAY') decomp=RETURN_VALUE(None) type=
+  [13] idx=182 orig=LOAD_FAST('fields') decomp=None(None) type=missing_in_decomp
+  [14] idx=183 orig=BINARY_SUBSCR(None) decomp=None(None) type=missing_in_decomp
+  [15] idx=184 orig=STORE_FAST('history_data') decomp=None(None) type=missing_in_decomp
+  [16] idx=185 orig=POP_EXCEPT(None) decomp=None(None) type=missing_in_decomp
+  [17] idx=186 orig=JUMP_FORWARD(936) decomp=None(None) type=missing_in_decomp
+  [18] idx=187 orig=RERAISE(0) decomp=None(None) type=missing_in_decomp
+  [19] idx=188 orig=COPY(3) decomp=None(None) type=missing_in_decomp
+  [20] idx=189 orig=POP_EXCEPT(None) decomp=None(None) type=missing_in_decomp
+  [21] idx=190 orig=RERAISE(1) decomp=None(None) type=missing_in_decomp
+  [22] idx=191 orig=LOAD_FAST('history_data') decomp=None(None) type=missing_in_decomp
+  [23] idx=192 orig=RETURN_VALUE(None) decomp=None(None) type=missing_in_decomp
+  --- first 15 jump_diffs ---
+  [j0] idx=156 orig=JUMP_FORWARD(936) decomp=JUMP_FORWARD(886)
+  [j1] idx=160 orig=POP_JUMP_FORWARD_IF_FALSE(928) decomp=POP_JUMP_FORWARD_IF_FALSE(878)
+  [j2] idx=169 orig=FORMAT_VALUE((<class 'str'>, False)) decomp=JUMP_FORWARD(872)
+  [j3] idx=175 orig=CALL(1) decomp=JUMP_FORWARD(886)
+  [j4] idx=180 orig=JUMP_FORWARD(922) decomp=LOAD_FAST('history_data')
+
+=== get_multiminute_his_data (sub=ARG_MISMATCH, td=248, jd=30) ===
+  [0] idx=18 orig=EXTENDED_ARG(5) decomp=EXTENDED_ARG(3) type=
+  [1] idx=23 orig=EXTENDED_ARG(5) decomp=EXTENDED_ARG(3) type=
+  [2] idx=160 orig=EXTENDED_ARG(3) decomp=LOAD_CONST(None) type=
+  [3] idx=202 orig=POP_JUMP_FORWARD_IF_NONE(1314) decomp=POP_JUMP_FORWARD_IF_NONE(1144) type=
+  [4] idx=204 orig=POP_JUMP_FORWARD_IF_NONE(1314) decomp=POP_JUMP_FORWARD_IF_NONE(1144) type=
+  [5] idx=265 orig=POP_JUMP_FORWARD_IF_NONE(1436) decomp=EXTENDED_ARG(1) type=
+  [6] idx=266 orig=LOAD_FAST('end_000300') decomp=POP_JUMP_FORWARD_IF_NONE(2112) type=
+  [7] idx=267 orig=POP_JUMP_FORWARD_IF_NOT_NONE(1464) decomp=LOAD_FAST('end_000300') type=
+  [8] idx=268 orig=LOAD_GLOBAL('OrderedDict') decomp=POP_JUMP_FORWARD_IF_NOT_NONE(1466) type=
+  [9] idx=269 orig=PRECALL(0) decomp=LOAD_GLOBAL('OrderedDict') type=
+  [10] idx=270 orig=CALL(0) decomp=PRECALL(0) type=
+  [11] idx=271 orig=RETURN_VALUE(None) decomp=CALL(0) type=
+  [12] idx=272 orig=LOAD_FAST('symbols') decomp=RETURN_VALUE(None) type=
+  [13] idx=273 orig=GET_ITER(None) decomp=LOAD_FAST('symbols') type=
+  [14] idx=274 orig=EXTENDED_ARG(2) decomp=GET_ITER(None) type=
+  [15] idx=277 orig=LOAD_FAST('asset') decomp=STORE_FAST('symbol') type=
+  [16] idx=278 orig=LOAD_FAST('symbol') decomp=LOAD_FAST('asset') type=
+  [17] idx=279 orig=BINARY_SUBSCR(None) decomp=LOAD_FAST('symbol') type=
+  [18] idx=280 orig=STORE_FAST('asset_one') decomp=BINARY_SUBSCR(None) type=
+  [19] idx=281 orig=LOAD_FAST('symbol') decomp=STORE_FAST('asset_one') type=
+  [20] idx=282 orig=LOAD_METHOD('replace') decomp=LOAD_FAST('symbol') type=
+  [21] idx=283 orig=LOAD_CONST('SS') decomp=LOAD_METHOD('replace') type=
+  [22] idx=284 orig=LOAD_CONST('XSHG') decomp=LOAD_CONST('SS') type=
+  [23] idx=285 orig=PRECALL(2) decomp=LOAD_CONST('XSHG') type=
+  [24] idx=286 orig=CALL(2) decomp=PRECALL(2) type=
+  [25] idx=287 orig=LOAD_METHOD('replace') decomp=CALL(2) type=
+  [26] idx=288 orig=LOAD_CONST('SZ') decomp=LOAD_METHOD('replace') type=
+  [27] idx=289 orig=LOAD_CONST('XSHE') decomp=LOAD_CONST('SZ') type=
+  [28] idx=290 orig=PRECALL(2) decomp=LOAD_CONST('XSHE') type=
+  [29] idx=291 orig=CALL(2) decomp=PRECALL(2) type=
+  --- first 15 jump_diffs ---
+  [j0] idx=19 orig=POP_JUMP_FORWARD_IF_FALSE(2710) decomp=POP_JUMP_FORWARD_IF_FALSE(2104)
+  [j1] idx=24 orig=POP_JUMP_FORWARD_IF_FALSE(2710) decomp=POP_JUMP_FORWARD_IF_FALSE(2108)
+  [j2] idx=161 orig=JUMP_FORWARD(2758) decomp=RETURN_VALUE(None)
+  [j3] idx=214 orig=POP_JUMP_FORWARD_IF_TRUE(1314) decomp=POP_JUMP_FORWARD_IF_TRUE(1186)
+  [j4] idx=220 orig=POP_JUMP_FORWARD_IF_FALSE(1320) decomp=POP_JUMP_FORWARD_IF_FALSE(1382)
+  [j5] idx=275 orig=FOR_ITER(2708) decomp=EXTENDED_ARG(1)
+  [j6] idx=276 orig=STORE_FAST('symbol') decomp=FOR_ITER(2100)
+  [j7] idx=300 orig=POP_JUMP_FORWARD_IF_FALSE(1632) decomp=COMPARE_OP('==')
+  [j8] idx=301 orig=LOAD_FAST('stock') decomp=POP_JUMP_FORWARD_IF_FALSE(1634)
+  [j9] idx=304 orig=POP_JUMP_FORWARD_IF_FALSE(1612) decomp=CONTAINS_OP(1)
+  [j10] idx=305 orig=LOAD_CONST(0) decomp=POP_JUMP_FORWARD_IF_FALSE(1614)
+  [j11] idx=309 orig=JUMP_FORWARD(1632) decomp=STORE_FAST('dividends')
+  [j12] idx=310 orig=LOAD_FAST('need_exrights') decomp=JUMP_FORWARD(1634)
+  [j13] idx=339 orig=POP_JUMP_FORWARD_IF_FALSE(1748) decomp=COMPARE_OP('==')
+  [j14] idx=340 orig=LOAD_FAST('his_data_fix') decomp=POP_JUMP_FORWARD_IF_FALSE(1750)
+
+=== get_multiminute_his_data_by_date (sub=B2_FAST_TO_GLOBAL, td=492, jd=62) ===
+  [0] idx=48 orig=LOAD_FAST('_1m_df_nan_data') decomp=LOAD_GLOBAL('get_kline_time_by_asset') type=
+  [1] idx=49 orig=LOAD_FAST('_1m_df_nan_data') decomp=LOAD_FAST('frequency') type=
+  [2] idx=50 orig=LOAD_CONST('datetime') decomp=LOAD_FAST('_end_time') type=
+  [3] idx=51 orig=BINARY_SUBSCR(None) decomp=LOAD_FAST('asset') type=
+  [4] idx=52 orig=LOAD_FAST('min_datetime') decomp=LOAD_CONST('trading_time') type=
+  [5] idx=53 orig=COMPARE_OP('>') decomp=BINARY_SUBSCR(None) type=
+  [6] idx=54 orig=BINARY_SUBSCR(None) decomp=PRECALL(3) type=
+  [7] idx=55 orig=STORE_FAST('_1m_df_nan_data') decomp=CALL(3) type=
+  [8] idx=56 orig=LOAD_GLOBAL('get_kline_time_by_asset') decomp=UNPACK_SEQUENCE(2) type=
+  [9] idx=57 orig=LOAD_FAST('frequency') decomp=STORE_FAST('_df_nan_data') type=
+  [10] idx=58 orig=LOAD_FAST('_end_time') decomp=STORE_FAST('_') type=
+  [11] idx=59 orig=LOAD_FAST('asset') decomp=LOAD_FAST('_1m_df_nan_data') type=
+  [12] idx=60 orig=LOAD_CONST('trading_time') decomp=LOAD_CONST('datetime') type=
+  [13] idx=62 orig=PRECALL(3) decomp=LOAD_METHOD('tolist') type=
+  [14] idx=63 orig=CALL(3) decomp=PRECALL(0) type=
+  [15] idx=64 orig=UNPACK_SEQUENCE(2) decomp=CALL(0) type=
+  [16] idx=65 orig=STORE_FAST('_df_nan_data') decomp=STORE_FAST('datetime_1m_list') type=
+  [17] idx=66 orig=STORE_FAST('_') decomp=LOAD_FAST('_end_time') type=
+  [18] idx=67 orig=LOAD_FAST('_1m_df_nan_data') decomp=LOAD_FAST('datetime_1m_list') type=
+  [19] idx=68 orig=LOAD_CONST('datetime') decomp=CONTAINS_OP(0) type=
+  [20] idx=70 orig=LOAD_METHOD('tolist') decomp=LOAD_FAST('_end_time') type=
+  [21] idx=71 orig=PRECALL(0) decomp=LOAD_FAST('_df_nan_data') type=
+  [22] idx=72 orig=CALL(0) decomp=LOAD_CONST('datetime') type=
+  [23] idx=73 orig=STORE_FAST('datetime_1m_list') decomp=BINARY_SUBSCR(None) type=
+  [24] idx=74 orig=LOAD_FAST('_end_time') decomp=LOAD_METHOD('tolist') type=
+  [25] idx=75 orig=LOAD_FAST('datetime_1m_list') decomp=PRECALL(0) type=
+  [26] idx=76 orig=CONTAINS_OP(0) decomp=CALL(0) type=
+  [27] idx=82 orig=LOAD_METHOD('tolist') decomp=STORE_FAST('index') type=
+  [28] idx=83 orig=PRECALL(0) decomp=LOAD_FAST('index') type=
+  [29] idx=84 orig=CALL(0) decomp=LOAD_METHOD('tolist') type=
+  --- first 15 jump_diffs ---
+  [j0] idx=20 orig=POP_JUMP_FORWARD_IF_FALSE(806) decomp=POP_JUMP_FORWARD_IF_FALSE(770)
+  [j1] idx=69 orig=BINARY_SUBSCR(None) decomp=POP_JUMP_FORWARD_IF_FALSE(766)
+  [j2] idx=77 orig=POP_JUMP_FORWARD_IF_FALSE(802) decomp=CONTAINS_OP(1)
+  [j3] idx=78 orig=LOAD_FAST('_end_time') decomp=POP_JUMP_FORWARD_IF_FALSE(766)
+  [j4] idx=86 orig=POP_JUMP_FORWARD_IF_FALSE(802) decomp=CALL(0)
+  [j5] idx=134 orig=BINARY_OP(1) decomp=JUMP_FORWARD(1376)
+  [j6] idx=142 orig=JUMP_FORWARD(1412) decomp=LOAD_CONST(93000)
+  [j7] idx=170 orig=STORE_FAST('pm_close_market_datetime') decomp=POP_JUMP_FORWARD_IF_FALSE(1028)
+  [j8] idx=176 orig=LOAD_FAST('min_datetime') decomp=POP_JUMP_FORWARD_IF_FALSE(892)
+  [j9] idx=178 orig=POP_JUMP_FORWARD_IF_FALSE(1064) decomp=COMPARE_OP('>')
+  [j10] idx=179 orig=LOAD_FAST('pm_open_market_datetime') decomp=POP_JUMP_FORWARD_IF_FALSE(902)
+  [j11] idx=180 orig=LOAD_FAST('end_date') decomp=JUMP_FORWARD(896)
+  [j12] idx=182 orig=COPY(2) decomp=JUMP_FORWARD(902)
+  [j13] idx=184 orig=POP_JUMP_FORWARD_IF_FALSE(928) decomp=STORE_FAST('_end_time')
+  [j14] idx=185 orig=LOAD_FAST('am_close_market_datetime') decomp=JUMP_FORWARD(924)
+
+=== get_pre_date (sub=B1_GLOBAL_TO_FAST, td=117, jd=43) ===
+  [0] idx=34 orig=LOAD_GLOBAL('len') decomp=LOAD_FAST('frequency') type=
+  [1] idx=35 orig=LOAD_FAST('_df_nan_data') decomp=LOAD_CONST(-1) type=
+  [2] idx=36 orig=LOAD_FAST('_df_nan_data') decomp=BINARY_SUBSCR(None) type=
+  [3] idx=37 orig=LOAD_CONST('datetime') decomp=LOAD_CONST('m') type=
+  [4] idx=38 orig=BINARY_SUBSCR(None) decomp=COMPARE_OP('==') type=
+  [5] idx=40 orig=COMPARE_OP('>') decomp=LOAD_CONST(1) type=
+  [6] idx=41 orig=BINARY_SUBSCR(None) decomp=LOAD_GLOBAL('length') type=
+  [7] idx=42 orig=PRECALL(1) decomp=BINARY_OP(11) type=
+  [8] idx=43 orig=CALL(1) decomp=LOAD_GLOBAL('int') type=
+  [9] idx=44 orig=STORE_FAST('length') decomp=LOAD_FAST('frequency') type=
+  [10] idx=45 orig=LOAD_FAST('frequency') decomp=LOAD_CONST(None) type=
+  [11] idx=47 orig=BINARY_SUBSCR(None) decomp=BUILD_SLICE(2) type=
+  [12] idx=48 orig=LOAD_CONST('m') decomp=BINARY_SUBSCR(None) type=
+  [13] idx=49 orig=COMPARE_OP('==') decomp=PRECALL(1) type=
+  [14] idx=51 orig=LOAD_CONST(1) decomp=BINARY_OP(5) type=
+  [15] idx=52 orig=LOAD_FAST('length') decomp=STORE_FAST('multi') type=
+  [16] idx=54 orig=LOAD_GLOBAL('int') decomp=LOAD_CONST(1) type=
+  [17] idx=55 orig=LOAD_FAST('frequency') decomp=STORE_FAST('multi') type=
+  [18] idx=57 orig=LOAD_CONST(-1) decomp=LOAD_FAST('frequency') type=
+  [19] idx=58 orig=BUILD_SLICE(2) decomp=LOAD_GLOBAL('Frequency') type=
+  [20] idx=59 orig=BINARY_SUBSCR(None) decomp=LOAD_ATTR('DAILY') type=
+  [21] idx=60 orig=PRECALL(1) decomp=LOAD_ATTR('value') type=
+  [22] idx=61 orig=CALL(1) decomp=COMPARE_OP('==') type=
+  [23] idx=63 orig=STORE_FAST('multi') decomp=LOAD_CONST(1) type=
+  [24] idx=66 orig=STORE_FAST('multi') decomp=LOAD_FAST('frequency') type=
+  [25] idx=68 orig=LOAD_FAST('frequency') decomp=LOAD_ATTR('MINUTE') type=
+  [26] idx=69 orig=LOAD_GLOBAL('Frequency') decomp=LOAD_ATTR('value') type=
+  [27] idx=70 orig=LOAD_ATTR('DAILY') decomp=COMPARE_OP('==') type=
+  [28] idx=72 orig=COMPARE_OP('==') decomp=LOAD_CONST(0.004166666666666667) type=
+  [29] idx=75 orig=STORE_FAST('multi') decomp=LOAD_FAST('frequency') type=
+  --- first 15 jump_diffs ---
+  [j0] idx=2 orig=POP_JUMP_FORWARD_IF_FALSE(352) decomp=POP_JUMP_FORWARD_IF_FALSE(300)
+  [j1] idx=9 orig=POP_JUMP_FORWARD_IF_FALSE(350) decomp=POP_JUMP_FORWARD_IF_FALSE(298)
+  [j2] idx=39 orig=LOAD_FAST('min_datetime') decomp=POP_JUMP_FORWARD_IF_FALSE(294)
+  [j3] idx=50 orig=POP_JUMP_FORWARD_IF_FALSE(346) decomp=CALL(1)
+  [j4] idx=53 orig=BINARY_OP(11) decomp=JUMP_FORWARD(688)
+  [j5] idx=56 orig=LOAD_CONST(None) decomp=JUMP_FORWARD(688)
+  [j6] idx=62 orig=BINARY_OP(5) decomp=POP_JUMP_FORWARD_IF_FALSE(348)
+  [j7] idx=64 orig=JUMP_FORWARD(740) decomp=STORE_FAST('multi')
+  [j8] idx=65 orig=LOAD_CONST(1) decomp=JUMP_FORWARD(688)
+  [j9] idx=67 orig=JUMP_FORWARD(740) decomp=LOAD_GLOBAL('Frequency')
+  [j10] idx=71 orig=LOAD_ATTR('value') decomp=POP_JUMP_FORWARD_IF_FALSE(396)
+  [j11] idx=73 orig=POP_JUMP_FORWARD_IF_FALSE(400) decomp=STORE_FAST('multi')
+  [j12] idx=74 orig=LOAD_CONST(1) decomp=JUMP_FORWARD(688)
+  [j13] idx=76 orig=JUMP_FORWARD(740) decomp=LOAD_GLOBAL('Frequency')
+  [j14] idx=80 orig=LOAD_ATTR('value') decomp=POP_JUMP_FORWARD_IF_FALSE(444)
+
+=== get_price_common (sub=OTHER, td=471, jd=95) ===
+  [0] idx=28 orig=POP_JUMP_FORWARD_IF_NONE(174) decomp=LOAD_FAST('start_date') type=
+  [1] idx=29 orig=LOAD_GLOBAL('strategy_log') decomp=POP_JUMP_FORWARD_IF_NONE(176) type=
+  [2] idx=30 orig=LOAD_ATTR('error') decomp=LOAD_GLOBAL('strategy_log') type=
+  [3] idx=31 orig=LOAD_CONST('周线、月线、年线、季线不支持输入start_date进行查询') decomp=LOAD_ATTR('error') type=
+  [4] idx=32 orig=PRECALL(1) decomp=LOAD_CONST('周线、月线、年线、季线不支持输入start_date进行查询') type=
+  [5] idx=33 orig=CALL(1) decomp=PRECALL(1) type=
+  [6] idx=34 orig=POP_TOP(None) decomp=CALL(1) type=
+  [7] idx=35 orig=LOAD_CONST(None) decomp=POP_TOP(None) type=
+  [8] idx=36 orig=RETURN_VALUE(None) decomp=LOAD_CONST(None) type=
+  [9] idx=37 orig=LOAD_FAST('count') decomp=RETURN_VALUE(None) type=
+  [10] idx=38 orig=POP_JUMP_FORWARD_IF_NOT_NONE(222) decomp=LOAD_FAST('count') type=
+  [11] idx=39 orig=LOAD_GLOBAL('strategy_log') decomp=POP_JUMP_FORWARD_IF_NOT_NONE(224) type=
+  [12] idx=40 orig=LOAD_ATTR('error') decomp=LOAD_GLOBAL('strategy_log') type=
+  [13] idx=41 orig=LOAD_CONST('周线、月线、年线、季线请输入count进行查询，count不能为None') decomp=LOAD_ATTR('error') type=
+  [14] idx=42 orig=PRECALL(1) decomp=LOAD_CONST('周线、月线、年线、季线请输入count进行查询，count不能为None') type=
+  [15] idx=43 orig=CALL(1) decomp=PRECALL(1) type=
+  [16] idx=44 orig=POP_TOP(None) decomp=CALL(1) type=
+  [17] idx=45 orig=LOAD_CONST(None) decomp=POP_TOP(None) type=
+  [18] idx=46 orig=RETURN_VALUE(None) decomp=LOAD_CONST(None) type=
+  [19] idx=47 orig=LOAD_FAST('count') decomp=RETURN_VALUE(None) type=
+  [20] idx=48 orig=LOAD_CONST(0) decomp=LOAD_FAST('count') type=
+  [21] idx=49 orig=COMPARE_OP('<=') decomp=LOAD_CONST(0) type=
+  [22] idx=52 orig=LOAD_ATTR('error') decomp=LOAD_GLOBAL('strategy_log') type=
+  [23] idx=53 orig=LOAD_CONST('count不能小于0') decomp=LOAD_ATTR('error') type=
+  [24] idx=54 orig=PRECALL(1) decomp=LOAD_CONST('count不能小于0') type=
+  [25] idx=55 orig=CALL(1) decomp=PRECALL(1) type=
+  [26] idx=56 orig=POP_TOP(None) decomp=CALL(1) type=
+  [27] idx=57 orig=LOAD_CONST(None) decomp=POP_TOP(None) type=
+  [28] idx=58 orig=RETURN_VALUE(None) decomp=LOAD_CONST(None) type=
+  [29] idx=60 orig=LOAD_FAST('start_date') decomp=LOAD_GLOBAL('initialize_trading_dates') type=
+  --- first 15 jump_diffs ---
+  [j0] idx=26 orig=POP_JUMP_FORWARD_IF_FALSE(280) decomp=EXTENDED_ARG(5)
+  [j1] idx=27 orig=LOAD_FAST('start_date') decomp=POP_JUMP_FORWARD_IF_FALSE(2744)
+  [j2] idx=50 orig=POP_JUMP_FORWARD_IF_FALSE(278) decomp=COMPARE_OP('<=')
+  [j3] idx=51 orig=LOAD_GLOBAL('strategy_log') decomp=POP_JUMP_FORWARD_IF_FALSE(280)
+  [j4] idx=59 orig=JUMP_FORWARD(438) decomp=RETURN_VALUE(None)
+  [j5] idx=75 orig=POP_JUMP_FORWARD_IF_FALSE(388) decomp=STORE_FAST('asset')
+  [j6] idx=84 orig=JUMP_FORWARD(438) decomp=POP_JUMP_FORWARD_IF_FALSE(464)
+  [j7] idx=93 orig=LOAD_CONST(None) decomp=POP_JUMP_FORWARD_IF_FALSE(520)
+  [j8] idx=105 orig=CALL(0) decomp=POP_JUMP_FORWARD_IF_FALSE(536)
+  [j9] idx=112 orig=STORE_FAST('asset') decomp=FOR_ITER(672)
+  [j10] idx=121 orig=POP_JUMP_FORWARD_IF_FALSE(636) decomp=CALL(2)
+  [j11] idx=130 orig=POP_JUMP_FORWARD_IF_FALSE(692) decomp=JUMP_BACKWARD(544)
+  [j12] idx=141 orig=COMPARE_OP('==') decomp=POP_JUMP_FORWARD_IF_FALSE(992)
+  [j13] idx=142 orig=POP_JUMP_FORWARD_IF_FALSE(708) decomp=NOP(None)
+  [j14] idx=149 orig=FOR_ITER(844) decomp=LOAD_FAST('tmp_end_date')
+
+=== klineCacheData_to_dict (sub=R_NOP_PADDING, td=153, jd=32) ===
+  [0] idx=32 orig=LOAD_GLOBAL('copy') decomp=NOP(None) type=
+  [1] idx=33 orig=LOAD_ATTR('deepcopy') decomp=LOAD_FAST('list_data_date') type=
+  [2] idx=34 orig=LOAD_FAST('df_nan_data') decomp=LOAD_METHOD('index') type=
+  [3] idx=35 orig=PRECALL(1) decomp=LOAD_FAST('df_date_list') type=
+  [4] idx=36 orig=CALL(1) decomp=LOAD_FAST('i') type=
+  [5] idx=37 orig=STORE_FAST('kline_ndarray') decomp=BINARY_SUBSCR(None) type=
+  [6] idx=38 orig=LOAD_FAST('dict_data') decomp=PRECALL(1) type=
+  [7] idx=39 orig=LOAD_FAST('symbol') decomp=CALL(1) type=
+  [8] idx=40 orig=BINARY_SUBSCR(None) decomp=STORE_FAST('datetime_index') type=
+  [9] idx=41 orig=STORE_FAST('list_data') decomp=LOAD_GLOBAL('tuple') type=
+  [10] idx=42 orig=LOAD_GLOBAL('len') decomp=LOAD_FAST('list_data') type=
+  [11] idx=43 orig=LOAD_FAST('list_data') decomp=LOAD_FAST('datetime_index') type=
+  [12] idx=44 orig=PRECALL(1) decomp=BINARY_SUBSCR(None) type=
+  [13] idx=45 orig=CALL(1) decomp=PRECALL(1) type=
+  [14] idx=46 orig=LOAD_CONST(0) decomp=CALL(1) type=
+  [15] idx=47 orig=COMPARE_OP('==') decomp=LOAD_FAST('kline_ndarray') type=
+  [16] idx=49 orig=LOAD_FAST('kline_ndarray') decomp=STORE_SUBSCR(None) type=
+  [17] idx=51 orig=LOAD_FAST('symbol') decomp=PUSH_EXC_INFO(None) type=
+  [18] idx=52 orig=STORE_SUBSCR(None) decomp=LOAD_GLOBAL('BaseException') type=
+  [19] idx=55 orig=LOAD_GLOBAL('zip') decomp=POP_TOP(None) type=
+  [20] idx=56 orig=LOAD_FAST('list_data') decomp=POP_EXCEPT(None) type=
+  [21] idx=58 orig=PRECALL(1) decomp=RERAISE(0) type=
+  [22] idx=59 orig=CALL(1) decomp=COPY(3) type=
+  [23] idx=60 orig=LOAD_CONST(0) decomp=POP_EXCEPT(None) type=
+  [24] idx=61 orig=BINARY_SUBSCR(None) decomp=RERAISE(1) type=
+  [25] idx=62 orig=STORE_FAST('list_data_date') decomp=NOP(None) type=
+  [26] idx=63 orig=LOAD_GLOBAL('range') decomp=LOAD_FAST('symbol') type=
+  [27] idx=64 orig=LOAD_FAST('df_date_list_len') decomp=LOAD_METHOD('replace') type=
+  [28] idx=65 orig=PRECALL(1) decomp=LOAD_CONST('SS') type=
+  [29] idx=66 orig=CALL(1) decomp=LOAD_CONST('XSHG') type=
+  --- first 15 jump_diffs ---
+  [j0] idx=29 orig=FOR_ITER(1108) decomp=FOR_ITER(1102)
+  [j1] idx=48 orig=POP_JUMP_FORWARD_IF_FALSE(282) decomp=LOAD_FAST('i')
+  [j2] idx=50 orig=LOAD_FAST('data_dict') decomp=JUMP_FORWARD(314)
+  [j3] idx=53 orig=JUMP_BACKWARD(168) decomp=CHECK_EXC_MATCH(None)
+  [j4] idx=54 orig=LOAD_GLOBAL('list') decomp=POP_JUMP_FORWARD_IF_FALSE(306)
+  [j5] idx=57 orig=CALL_FUNCTION_EX(0) decomp=JUMP_BACKWARD(168)
+  [j6] idx=68 orig=FOR_ITER(510) decomp=CALL(2)
+  [j7] idx=76 orig=PRECALL(1) decomp=POP_JUMP_FORWARD_IF_FALSE(594)
+  [j8] idx=88 orig=JUMP_BACKWARD(368) decomp=CALL(2)
+  [j9] idx=92 orig=POP_JUMP_FORWARD_IF_FALSE(502) decomp=MAKE_FUNCTION(0)
+  [j10] idx=95 orig=JUMP_BACKWARD(368) decomp=PRECALL(0)
+  [j11] idx=103 orig=POP_JUMP_FORWARD_IF_FALSE(952) decomp=LOAD_FAST('symbol')
+  [j12] idx=107 orig=POP_JUMP_FORWARD_IF_FALSE(952) decomp=STORE_FAST('kline_ndarray')
+  [j13] idx=108 orig=NOP(None) decomp=JUMP_FORWARD(736)
+  [j14] idx=112 orig=LOAD_CONST('XSHG') decomp=POP_JUMP_FORWARD_IF_FALSE(728)
+
+=== kline_datetime_list (sub=C_SWAP_POP, td=208, jd=59) ===
+  [0] idx=148 orig=SWAP(2) decomp=COMPARE_OP('>') type=
+  [1] idx=150 orig=COMPARE_OP('>') decomp=LOAD_FAST('am_close_datetime') type=
+  [2] idx=152 orig=LOAD_FAST('am_close_datetime') decomp=LOAD_FAST('query_date') type=
+  [3] idx=153 orig=COMPARE_OP('>') decomp=LOAD_FAST('pm_close_datetime') type=
+  [4] idx=156 orig=POP_TOP(None) decomp=LOAD_FAST('time_count') type=
+  [5] idx=157 orig=LOAD_FAST('query_date') decomp=LOAD_CONST(1) type=
+  [6] idx=158 orig=LOAD_FAST('pm_close_datetime') decomp=BINARY_OP(23) type=
+  [7] idx=159 orig=COMPARE_OP('>') decomp=STORE_FAST('time_count') type=
+  [8] idx=161 orig=LOAD_FAST('time_count') decomp=STORE_FAST('max_len_real_data') type=
+  [9] idx=162 orig=LOAD_CONST(1) decomp=LOAD_FAST('max_len_real_data') type=
+  [10] idx=163 orig=BINARY_OP(23) decomp=STORE_FAST('min_count') type=
+  [11] idx=164 orig=STORE_FAST('time_count') decomp=LOAD_FAST('max_len_real_data') type=
+  [12] idx=165 orig=LOAD_FAST('am_open_datetime') decomp=LOAD_FAST('count') type=
+  [13] idx=166 orig=STORE_FAST('min_datetime') decomp=COMPARE_OP('>') type=
+  [14] idx=168 orig=LOAD_GLOBAL('Frequency') decomp=LOAD_FAST('count') type=
+  [15] idx=169 orig=LOAD_ATTR('MINUTE') decomp=STORE_FAST('min_count') type=
+  [16] idx=170 orig=LOAD_ATTR('value') decomp=LOAD_FAST('query_date') type=
+  [17] idx=171 orig=COMPARE_OP('==') decomp=STORE_FAST('tmp_end_datetime') type=
+  [18] idx=173 orig=LOAD_FAST('time_count') decomp=LOAD_FAST('pm_close_datetime') type=
+  [19] idx=174 orig=STORE_FAST('max_len_real_data') decomp=COMPARE_OP('>') type=
+  [20] idx=176 orig=STORE_FAST('min_count') decomp=LOAD_FAST('pm_close_datetime') type=
+  [21] idx=177 orig=LOAD_FAST('max_len_real_data') decomp=STORE_FAST('tmp_end_datetime') type=
+  [22] idx=178 orig=LOAD_FAST('count') decomp=LOAD_FAST('am_close_datetime') type=
+  [23] idx=179 orig=COMPARE_OP('>') decomp=LOAD_FAST('tmp_end_datetime') type=
+  [24] idx=181 orig=LOAD_FAST('count') decomp=COPY(2) type=
+  [25] idx=182 orig=STORE_FAST('min_count') decomp=COMPARE_OP('<') type=
+  [26] idx=184 orig=STORE_FAST('tmp_end_datetime') decomp=LOAD_FAST('pm_open_datetime') type=
+  [27] idx=185 orig=LOAD_FAST('tmp_end_datetime') decomp=COMPARE_OP('<=') type=
+  [28] idx=190 orig=STORE_FAST('tmp_end_datetime') decomp=NOP(None) type=
+  [29] idx=192 orig=LOAD_FAST('tmp_end_datetime') decomp=STORE_FAST('tmp_end_datetime') type=
+  --- first 15 jump_diffs ---
+  [j0] idx=72 orig=JUMP_FORWARD(1704) decomp=JUMP_FORWARD(1616)
+  [j1] idx=83 orig=POP_JUMP_FORWARD_IF_FALSE(1704) decomp=POP_JUMP_FORWARD_IF_FALSE(1616)
+  [j2] idx=133 orig=POP_JUMP_FORWARD_IF_TRUE(666) decomp=POP_JUMP_FORWARD_IF_TRUE(626)
+  [j3] idx=139 orig=POP_JUMP_FORWARD_IF_FALSE(666) decomp=POP_JUMP_FORWARD_IF_FALSE(652)
+  [j4] idx=145 orig=POP_JUMP_FORWARD_IF_FALSE(666) decomp=POP_JUMP_FORWARD_IF_FALSE(652)
+  [j5] idx=149 orig=COPY(2) decomp=POP_JUMP_FORWARD_IF_FALSE(652)
+  [j6] idx=151 orig=POP_JUMP_FORWARD_IF_FALSE(642) decomp=POP_JUMP_FORWARD_IF_FALSE(652)
+  [j7] idx=154 orig=POP_JUMP_FORWARD_IF_TRUE(666) decomp=COMPARE_OP('>')
+  [j8] idx=155 orig=JUMP_FORWARD(644) decomp=POP_JUMP_FORWARD_IF_TRUE(652)
+  [j9] idx=160 orig=POP_JUMP_FORWARD_IF_TRUE(666) decomp=LOAD_FAST('time_count')
+  [j10] idx=167 orig=LOAD_FAST('frequency') decomp=POP_JUMP_FORWARD_IF_FALSE(976)
+  [j11] idx=172 orig=POP_JUMP_FORWARD_IF_FALSE(1214) decomp=LOAD_FAST('tmp_end_datetime')
+  [j12] idx=175 orig=LOAD_FAST('max_len_real_data') decomp=POP_JUMP_FORWARD_IF_FALSE(696)
+  [j13] idx=180 orig=POP_JUMP_FORWARD_IF_FALSE(1034) decomp=SWAP(2)
+  [j14] idx=183 orig=LOAD_FAST('query_date') decomp=POP_JUMP_FORWARD_IF_FALSE(724)
+
+=== np_tp_pd (sub=C_SWAP_POP, td=111, jd=24) ===
+  [0] idx=56 orig=SWAP(2) decomp=POP_TOP(None) type=
+  [1] idx=58 orig=RETURN_VALUE(None) decomp=LOAD_CONST(None) type=
+  [2] idx=59 orig=LOAD_CONST(None) decomp=RETURN_VALUE(None) type=
+  [3] idx=60 orig=RETURN_VALUE(None) decomp=LOAD_CONST(None) type=
+  [4] idx=61 orig=LOAD_CONST(()) decomp=RETURN_VALUE(None) type=
+  [5] idx=62 orig=STORE_FAST('bench_tuple') decomp=LOAD_CONST(()) type=
+  [6] idx=63 orig=LOAD_GLOBAL('range') decomp=STORE_FAST('bench_tuple') type=
+  [7] idx=64 orig=LOAD_GLOBAL('len') decomp=LOAD_GLOBAL('range') type=
+  [8] idx=65 orig=LOAD_FAST('bench_type') decomp=LOAD_GLOBAL('len') type=
+  [9] idx=66 orig=PRECALL(1) decomp=LOAD_FAST('bench_type') type=
+  [10] idx=67 orig=CALL(1) decomp=PRECALL(1) type=
+  [11] idx=68 orig=PRECALL(1) decomp=CALL(1) type=
+  [12] idx=69 orig=CALL(1) decomp=PRECALL(1) type=
+  [13] idx=70 orig=GET_ITER(None) decomp=CALL(1) type=
+  [14] idx=73 orig=LOAD_FAST('d_count') decomp=STORE_FAST('d_count') type=
+  [15] idx=74 orig=LOAD_CONST(0) decomp=LOAD_FAST('d_count') type=
+  [16] idx=75 orig=COMPARE_OP('==') decomp=LOAD_CONST(0) type=
+  [17] idx=79 orig=LOAD_FAST('d_count') decomp=LOAD_FAST('bench_type') type=
+  [18] idx=80 orig=BINARY_SUBSCR(None) decomp=LOAD_FAST('d_count') type=
+  [19] idx=81 orig=LOAD_GLOBAL('np') decomp=BINARY_SUBSCR(None) type=
+  [20] idx=82 orig=LOAD_ATTR('int64') decomp=LOAD_GLOBAL('np') type=
+  [21] idx=83 orig=COMPARE_OP('==') decomp=LOAD_ATTR('int64') type=
+  [22] idx=86 orig=LOAD_CONST((0,)) decomp=LOAD_FAST('bench_tuple') type=
+  [23] idx=87 orig=BINARY_OP(13) decomp=LOAD_CONST((0,)) type=
+  [24] idx=88 orig=STORE_FAST('bench_tuple') decomp=BINARY_OP(13) type=
+  [25] idx=91 orig=LOAD_GLOBAL('np') decomp=LOAD_FAST('bench_tuple') type=
+  [26] idx=92 orig=LOAD_ATTR('nan') decomp=LOAD_GLOBAL('np') type=
+  [27] idx=93 orig=BUILD_TUPLE(1) decomp=LOAD_ATTR('nan') type=
+  [28] idx=94 orig=BINARY_OP(13) decomp=BUILD_TUPLE(1) type=
+  [29] idx=95 orig=STORE_FAST('bench_tuple') decomp=BINARY_OP(13) type=
+  --- first 15 jump_diffs ---
+  [j0] idx=24 orig=POP_JUMP_FORWARD_IF_FALSE(340) decomp=POP_JUMP_FORWARD_IF_FALSE(342)
+  [j1] idx=30 orig=FOR_ITER(336) decomp=FOR_ITER(338)
+  [j2] idx=71 orig=FOR_ITER(508) decomp=GET_ITER(None)
+  [j3] idx=72 orig=STORE_FAST('d_count') decomp=FOR_ITER(510)
+  [j4] idx=76 orig=POP_JUMP_FORWARD_IF_FALSE(418) decomp=COMPARE_OP('==')
+  [j5] idx=77 orig=JUMP_BACKWARD(400) decomp=POP_JUMP_FORWARD_IF_FALSE(420)
+  [j6] idx=78 orig=LOAD_FAST('bench_type') decomp=JUMP_BACKWARD(402)
+  [j7] idx=84 orig=POP_JUMP_FORWARD_IF_FALSE(474) decomp=COMPARE_OP('==')
+  [j8] idx=85 orig=LOAD_FAST('bench_tuple') decomp=POP_JUMP_FORWARD_IF_FALSE(476)
+  [j9] idx=89 orig=JUMP_BACKWARD(400) decomp=STORE_FAST('bench_tuple')
+  [j10] idx=90 orig=LOAD_FAST('bench_tuple') decomp=JUMP_BACKWARD(402)
+  [j11] idx=96 orig=JUMP_BACKWARD(400) decomp=STORE_FAST('bench_tuple')
+  [j12] idx=97 orig=LOAD_GLOBAL('len') decomp=JUMP_BACKWARD(402)
+  [j13] idx=108 orig=FOR_ITER(566) decomp=GET_ITER(None)
+  [j14] idx=109 orig=STORE_FAST('field') decomp=FOR_ITER(568)
+
+=== stk_resample_days_orderddict (sub=ARG_MISMATCH, td=150, jd=7) ===
+  [0] idx=31 orig=EXTENDED_ARG(2) decomp=EXTENDED_ARG(1) type=
+  [1] idx=139 orig=LOAD_CONST(0) decomp=LOAD_GLOBAL('result') type=
+  [2] idx=140 orig=STORE_FAST('i') decomp=LOAD_METHOD('set_index') type=
+  [3] idx=141 orig=LOAD_GLOBAL('pd') decomp=LOAD_CONST('datetime') type=
+  [4] idx=142 orig=LOAD_ATTR('DataFrame') decomp=LOAD_CONST(True) type=
+  [5] idx=143 orig=BUILD_LIST(0) decomp=KW_NAMES(<unknown>) type=
+  [6] idx=144 orig=LOAD_CONST(('datetime', 'open', 'high', 'low', 'close', 'volume', 'money', 'price')) decomp=PRECALL(2) type=
+  [7] idx=145 orig=LIST_EXTEND(1) decomp=CALL(2) type=
+  [8] idx=146 orig=KW_NAMES(<unknown>) decomp=POP_TOP(None) type=
+  [9] idx=147 orig=PRECALL(1) decomp=LOAD_GLOBAL('np') type=
+  [10] idx=148 orig=CALL(1) decomp=LOAD_ATTR('array') type=
+  [11] idx=149 orig=STORE_FAST('result') decomp=LOAD_GLOBAL('result') type=
+  [12] idx=150 orig=LOAD_FAST('datas_list') decomp=LOAD_METHOD('to_records') type=
+  [13] idx=151 orig=LOAD_FAST('count') decomp=PRECALL(0) type=
+  [14] idx=152 orig=UNARY_NEGATIVE(None) decomp=CALL(0) type=
+  [15] idx=153 orig=LOAD_CONST(None) decomp=LOAD_FAST('data') type=
+  [16] idx=154 orig=BUILD_SLICE(2) decomp=LOAD_ATTR('dtype') type=
+  [17] idx=155 orig=BINARY_SUBSCR(None) decomp=KW_NAMES(<unknown>) type=
+  [18] idx=156 orig=GET_ITER(None) decomp=PRECALL(2) type=
+  [19] idx=157 orig=EXTENDED_ARG(1) decomp=CALL(2) type=
+  [20] idx=159 orig=STORE_FAST('datas') decomp=LOAD_FAST('field_ori') type=
+  [21] idx=160 orig=LOAD_FAST('datas') decomp=POP_JUMP_FORWARD_IF_NOT_NONE(880) type=
+  [22] idx=163 orig=LOAD_FAST('data') decomp=LOAD_FAST('security') type=
+  [23] idx=164 orig=LOAD_CONST('datetime') decomp=STORE_SUBSCR(None) type=
+  [24] idx=165 orig=BINARY_SUBSCR(None) decomp=EXTENDED_ARG(1) type=
+  [25] idx=167 orig=LOAD_CONST(-1) decomp=LOAD_GLOBAL('isinstance') type=
+  [26] idx=168 orig=BINARY_SUBSCR(None) decomp=LOAD_FAST('field_ori') type=
+  [27] idx=169 orig=BINARY_SUBSCR(None) decomp=LOAD_GLOBAL('list') type=
+  [28] idx=170 orig=LOAD_FAST('data') decomp=PRECALL(2) type=
+  [29] idx=171 orig=LOAD_CONST('open') decomp=CALL(2) type=
+  --- first 15 jump_diffs ---
+  [j0] idx=32 orig=FOR_ITER(1516) decomp=FOR_ITER(948)
+  [j1] idx=158 orig=FOR_ITER(1294) decomp=STORE_FAST('np_array')
+  [j2] idx=161 orig=POP_JUMP_FORWARD_IF_TRUE(790) decomp=LOAD_FAST('np_array')
+  [j3] idx=162 orig=JUMP_BACKWARD(778) decomp=LOAD_FAST('np_dict')
+  [j4] idx=166 orig=LOAD_FAST('datas') decomp=JUMP_BACKWARD(174)
+  [j5] idx=172 orig=BINARY_SUBSCR(None) decomp=POP_JUMP_FORWARD_IF_FALSE(944)
+  [j6] idx=180 orig=LOAD_FAST('datas') decomp=JUMP_BACKWARD(174)
+
+=== to_pd_result (sub=E_JUMP_RENUMBER, td=161, jd=21) ===
+  [0] idx=35 orig=POP_JUMP_FORWARD_IF_NOT_NONE(648) decomp=EXTENDED_ARG(1) type=
+  [1] idx=36 orig=LOAD_FAST('is_string') decomp=POP_JUMP_FORWARD_IF_NOT_NONE(1234) type=
+  [2] idx=38 orig=LOAD_FAST('nd_array_or_dict') decomp=EXTENDED_ARG(1) type=
+  [3] idx=40 orig=PRECALL(0) decomp=LOAD_FAST('nd_array_or_dict') type=
+  [4] idx=41 orig=CALL(0) decomp=LOAD_METHOD('items') type=
+  [5] idx=42 orig=GET_ITER(None) decomp=PRECALL(0) type=
+  [6] idx=44 orig=UNPACK_SEQUENCE(2) decomp=GET_ITER(None) type=
+  [7] idx=46 orig=STORE_FAST('nd_array') decomp=UNPACK_SEQUENCE(2) type=
+  [8] idx=47 orig=LOAD_GLOBAL('tuple') decomp=STORE_FAST('security') type=
+  [9] idx=48 orig=LOAD_FAST('nd_array') decomp=STORE_FAST('nd_array') type=
+  [10] idx=49 orig=LOAD_CONST('datetime') decomp=LOAD_GLOBAL('tuple') type=
+  [11] idx=50 orig=BINARY_SUBSCR(None) decomp=LOAD_FAST('nd_array') type=
+  [12] idx=51 orig=PRECALL(1) decomp=LOAD_CONST('datetime') type=
+  [13] idx=52 orig=CALL(1) decomp=BINARY_SUBSCR(None) type=
+  [14] idx=53 orig=STORE_FAST('t') decomp=PRECALL(1) type=
+  [15] idx=54 orig=LOAD_GLOBAL('pd') decomp=CALL(1) type=
+  [16] idx=55 orig=LOAD_ATTR('DataFrame') decomp=STORE_FAST('t') type=
+  [17] idx=56 orig=LOAD_GLOBAL('SymbolDF') decomp=LOAD_GLOBAL('pd') type=
+  [18] idx=57 orig=LOAD_FAST('nd_array') decomp=LOAD_ATTR('DataFrame') type=
+  [19] idx=58 orig=LOAD_GLOBAL('nd_array_to_datetime_index') decomp=LOAD_GLOBAL('SymbolDF') type=
+  [20] idx=59 orig=LOAD_FAST('t') decomp=LOAD_FAST('nd_array') type=
+  [21] idx=60 orig=PRECALL(1) decomp=LOAD_GLOBAL('nd_array_to_datetime_index') type=
+  [22] idx=61 orig=CALL(1) decomp=LOAD_FAST('t') type=
+  [23] idx=62 orig=KW_NAMES(<unknown>) decomp=PRECALL(1) type=
+  [24] idx=63 orig=PRECALL(2) decomp=CALL(1) type=
+  [25] idx=64 orig=CALL(2) decomp=KW_NAMES(<unknown>) type=
+  [26] idx=65 orig=PRECALL(1) decomp=PRECALL(2) type=
+  [27] idx=66 orig=CALL(1) decomp=CALL(2) type=
+  [28] idx=67 orig=SWAP(2) decomp=PRECALL(1) type=
+  [29] idx=68 orig=POP_TOP(None) decomp=CALL(1) type=
+  --- first 15 jump_diffs ---
+  [j0] idx=37 orig=POP_JUMP_FORWARD_IF_FALSE(408) decomp=LOAD_FAST('is_string')
+  [j1] idx=39 orig=LOAD_METHOD('items') decomp=POP_JUMP_FORWARD_IF_FALSE(994)
+  [j2] idx=43 orig=FOR_ITER(406) decomp=CALL(0)
+  [j3] idx=45 orig=STORE_FAST('security') decomp=FOR_ITER(412)
+  [j4] idx=70 orig=JUMP_FORWARD(648) decomp=POP_TOP(None)
+  [j5] idx=76 orig=FOR_ITER(568) decomp=PRECALL(2)
+  [j6] idx=79 orig=STORE_FAST('nd_array') decomp=POP_JUMP_FORWARD_IF_FALSE(990)
+  [j7] idx=81 orig=LOAD_FAST('nd_array') decomp=POP_JUMP_FORWARD_IF_FALSE(668)
+  [j8] idx=87 orig=LOAD_GLOBAL('SymbolDF') decomp=FOR_ITER(666)
+  [j9] idx=99 orig=JUMP_BACKWARD(448) decomp=LOAD_ATTR('DataFrame')
+  [j10] idx=117 orig=POP_JUMP_FORWARD_IF_FALSE(1226) decomp=JUMP_FORWARD(990)
+  [j11] idx=119 orig=POP_JUMP_FORWARD_IF_FALSE(904) decomp=LOAD_METHOD('items')
+  [j12] idx=123 orig=CALL(0) decomp=FOR_ITER(840)
+  [j13] idx=125 orig=FOR_ITER(900) decomp=STORE_FAST('security')
+  [j14] idx=148 orig=CALL(2) decomp=JUMP_BACKWARD(708)

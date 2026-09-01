@@ -1,0 +1,1 @@
+﻿      first_diff: {'index': 218, 'orig_op': 'LOAD_FAST', 'decomp_op': 'LOAD_GLOBAL', 'orig_arg': 'real_data_len', 'decomp_arg': 'len'}

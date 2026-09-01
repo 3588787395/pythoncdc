@@ -1,0 +1,29 @@
+# Source Generated with Decompyle++ (Python version)
+# File: repro_08_03_malformed_ternary_chain.pyc (Python 3.11)
+
+__doc__ = """Repro 08-03: D7 (P2) malformed ternary chain (if/elif compressed).
+
+In `build_future_fill_time` (quotation.pyc line 351) the source is:
+    if typet == 2:
+        if suffix == 'T.CCFX':
+            market_time = {...}
+        elif suffix in ('XZCE', ...):
+            ...
+        else:
+            ...
+    elif typet == 3:
+        ...
+    elif typet == 4:
+        ...
+    elif typet == 13:
+        ...
+The decompiler collapses this into a single nested ternary:
+    suffix == 'T.CCFX' if typet == 2 else suffix == 'T.CCFX' if typet == 3 else
+    suffix == 'T.CCFX' if typet == 4 else typet == 13
+The `=` assignments become `==` comparisons, and the if/elif becomes
+a bare Expr.
+
+Expected defect: a single bare Expr of nested ternary of `==`.
+"""
+def build_market(typet, suffix):
+    suffix == 'T.CCFX' if typet == 2 else suffix == 'T.CCFX' if typet == 3 else typet == 4

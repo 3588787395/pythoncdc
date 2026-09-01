@@ -1,0 +1,393 @@
+FunctionDef
+  [body][0]
+    If
+      [test]
+        BoolOp
+          [values][0]
+            Compare
+              [left]
+                Name
+              [comparators][0]
+                Constant value=None
+          [values][1]
+            Compare
+              [left]
+                Name
+              [comparators][0]
+                Constant value=None
+          [values][2]
+            Compare
+              [left]
+                Name
+              [comparators][0]
+                Constant value=None
+          [values][3]
+            Compare
+              [left]
+                Name
+              [comparators][0]
+                Constant value=None
+          [values][4]
+            Compare
+              [left]
+                Name
+              [comparators][0]
+                Constant value=None
+          [values][5]
+            Compare
+              [left]
+                Name
+              [comparators][0]
+                Constant value=None
+      [body][0]
+        Return
+      [orelse][0]
+        Assign target=strategy
+          [targets][0]
+            Name
+      [orelse][1]
+        Assign target=content
+          [targets][0]
+            Name
+      [orelse][2]
+        Assign target=user_variables
+          [targets][0]
+            Name
+      [orelse][3]
+        Assign target=benchmark
+          [targets][0]
+            Name
+      [orelse][4]
+        Assign target=volume_limit
+          [targets][0]
+            Name
+      [orelse][5]
+        Assign target=business_type
+          [targets][0]
+            Name
+      [orelse][6]
+        Assign target=price_impact
+          [targets][0]
+            Name
+      [orelse][7]
+        Assign target=backtest_name
+          [targets][0]
+            Name
+      [orelse][8]
+        If
+          [test]
+            Compare
+              [left]
+                Call
+                  [func]
+                    Name
+              [comparators][0]
+                Constant value=False
+          [body][0]
+            Return
+          [orelse][0]
+            Assign target=mem_value
+              [targets][0]
+                Name
+          [orelse][1]
+            If
+              [test]
+                Compare
+                  [left]
+                    Subscript
+                      [slice]
+                        Constant value='error_no'
+                  [comparators][0]
+                    Constant value=0
+              [body][0]
+                Return
+          [orelse][2]
+            Try
+              [body][0]
+                Assign target=recode
+                  [targets][0]
+                    Name
+              [body][1]
+                If
+                  [test]
+                    Compare
+                      [left]
+                        Subscript
+                          [slice]
+                            Constant value='error_no'
+                      [comparators][0]
+                        Constant value=0
+                  [body][0]
+                    Assign target=err_msg
+                      [targets][0]
+                        Name
+                  [body][1]
+                    Expr
+                  [body][2]
+                    Return
+              [handlers][0]
+                ExceptHandler
+                  [body][0]
+                    Return
+                  [exc_type]
+                    Name
+              [handlers][1]
+                ExceptHandler
+                  [body][0]
+                    Return
+                  [exc_type]
+                    Name
+          [orelse][3]
+            Assign target=strategy_dir
+              [targets][0]
+                Name
+          [orelse][4]
+            Assign target=strategy_file
+              [targets][0]
+                Name
+          [orelse][5]
+            Assign target=strategy_file_path
+              [targets][0]
+                Name
+          [orelse][6]
+            Assign target=backtest_id
+              [targets][0]
+                Name
+          [orelse][7]
+            Assign target=backtest_id_path
+              [targets][0]
+                Name
+          [orelse][8]
+            Assign target=strategy_path
+              [targets][0]
+                Name
+          [orelse][9]
+            Assign target=accounts
+              [targets][0]
+                Name
+          [orelse][10]
+            If
+              [test]
+                Compare
+                  [left]
+                    Name
+                  [comparators][0]
+                    Constant value='rzrq'
+              [body][0]
+                Assign target=business_type
+                  [targets][0]
+                    Name
+          [orelse][11]
+            Assign target=Subscript
+              [targets][0]
+                Subscript
+                  [slice]
+                    Name
+          [orelse][12]
+            If
+              [test]
+                Compare
+                  [left]
+                    Name
+                  [comparators][0]
+                    Constant value='minute'
+              [body][0]
+                Assign target=iqe_frequency
+                  [targets][0]
+                    Name
+              [orelse][0]
+                If
+                  [test]
+                    Compare
+                      [left]
+                        Name
+                      [comparators][0]
+                        Constant value='daily'
+                  [body][0]
+                    Assign target=iqe_frequency
+                      [targets][0]
+                        Name
+                  [orelse][0]
+                    If
+                      [test]
+                        Compare
+                          [left]
+                            Name
+                          [comparators][0]
+                            Constant value='tick'
+                      [body][0]
+                        Assign target=iqe_frequency
+                          [targets][0]
+                            Name
+                      [orelse][0]
+                        Return
+          [orelse][13]
+            Assign target=enable_profiler
+              [targets][0]
+                Name
+          [orelse][14]
+            Assign target=enable_debug
+              [targets][0]
+                Name
+          [orelse][15]
+            Assign target=backtest_type
+              [targets][0]
+                Name
+          [orelse][16]
+            Assign target=iqe_strategy
+              [targets][0]
+                Name
+          [orelse][17]
+            Assign target=iqe_general
+              [targets][0]
+                Name
+          [orelse][18]
+            Assign target=backtest_path
+              [targets][0]
+                Name
+          [orelse][19]
+            Assign target=so_error_path
+              [targets][0]
+                Name
+          [orelse][20]
+            Assign target=user_code
+              [targets][0]
+                Name
+          [orelse][21]
+            Assign target=dir_path
+              [targets][0]
+                Name
+          [orelse][22]
+            If
+              [test]
+                UnaryOp
+                  [operand]
+                    Call
+                      [func]
+                        Attribute
+              [body][0]
+                Expr
+              [body][1]
+                Expr
+          [orelse][23]
+            Assign target=user_strategy_path
+              [targets][0]
+                Name
+          [orelse][24]
+            With
+              [items][0]
+                ?
+                  [context_expr]
+                    Call
+                      [func]
+                        Name
+                  [optional_vars]
+                    Name
+              [body][0]
+                Expr
+              [body][1]
+                Expr
+          [orelse][25]
+            Assign target=error
+              [targets][0]
+                Name
+          [orelse][26]
+            If
+              [test]
+                Compare
+                  [left]
+                    Name
+                  [comparators][0]
+                    Constant value=None
+              [body][0]
+                If
+                  [test]
+                    Call
+                      [func]
+                        Name
+                  [body][0]
+                    Return
+                  [orelse][0]
+                    If
+                      [test]
+                        Call
+                          [func]
+                            Name
+                      [body][0]
+                        Return
+              [body][1]
+                Return
+              [orelse][0]
+                Assign target=user_code_path
+                  [targets][0]
+                    Name
+              [orelse][1]
+                With
+                  [items][0]
+                    ?
+                      [context_expr]
+                        Call
+                          [func]
+                            Name
+                      [optional_vars]
+                        Name
+                  [body][0]
+                    Expr
+                  [body][1]
+                    Expr
+              [orelse][2]
+                Assign target=strategy_path
+                  [targets][0]
+                    Name
+              [orelse][3]
+                Assign target=backtest_path
+                  [targets][0]
+                    Name
+              [orelse][4]
+                Try
+                  [body][0]
+                    Expr
+                  [handlers][0]
+                    ExceptHandler
+                      [body][0]
+                        Return
+                      [exc_type]
+                        Name
+              [orelse][5]
+                Assign target=time
+                  [targets][0]
+                    Name
+              [orelse][6]
+                Assign target=total_days
+                  [targets][0]
+                    Name
+              [orelse][7]
+                Assign target=algorithm_period_return
+                  [targets][0]
+                    Name
+              [orelse][8]
+                Assign target=max_drawdown
+                  [targets][0]
+                    Name
+              [orelse][9]
+                Assign target=current_days
+                  [targets][0]
+                    Name
+              [orelse][10]
+                Assign target=info
+                  [targets][0]
+                    Name
+              [orelse][11]
+                If
+                  [test]
+                    UnaryOp
+                      [operand]
+                        Name
+                  [body][0]
+                    Return
+                  [orelse][0]
+                    Assign target=cell_code
+                      [targets][0]
+                        Name
+                  [orelse][1]
+                    Return

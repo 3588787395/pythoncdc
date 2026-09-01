@@ -1,0 +1,36 @@
+{
+ "summary": {
+  "ok": 3,
+  "partial": 0,
+  "failed": 0,
+  "matched_functions": 5,
+  "total_functions": 5,
+  "elapsed_sec": 15.5
+ },
+ "results": [
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 2,
+   "matched_functions": 2,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/__init__.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 1,
+   "matched_functions": 1,
+   "error": null
+  },
+  {
+   "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/base_api.pyc",
+   "status": "ok",
+   "rate": 1.0,
+   "total_functions": 2,
+   "matched_functions": 2,
+   "error": null
+  }
+ ]
+}
