@@ -30263,7 +30263,8 @@ AST 映射规则:
                     _post_extra = getattr(
                         region, 'post_consumer_extra_stmts', None)
                     if _post_extra:
-                        results.extend(_post_extra)
+                        self._emit_post_extra_with_if_upgrade(
+                            results, _post_extra, region)
                     for block in region.blocks:
                         self.generated_blocks.add(block)
                     return results
@@ -30274,7 +30275,8 @@ AST 映射规则:
                     _post_extra = getattr(
                         region, 'post_consumer_extra_stmts', None)
                     if _post_extra:
-                        results.extend(_post_extra)
+                        self._emit_post_extra_with_if_upgrade(
+                            results, _post_extra, region)
                     for block in region.blocks:
                         self.generated_blocks.add(block)
                     return results
@@ -33096,6 +33098,106 @@ AST 映射规则:
         if not _has_precall_or_call:
             return []
         return _args
+
+    def _emit_post_extra_with_if_upgrade(self, results: List[Dict[str, Any]],
+                                          post_extra: List[Dict[str, Any]],
+                                          region: 'TernaryRegion'):
+        if region.merge_block is None:
+            results.extend(post_extra)
+            return
+        _merge_last = region.merge_block.get_last_instruction()
+        if not (_merge_last and _merge_last.opname in (
+                'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_FORWARD_IF_TRUE',
+                'POP_JUMP_BACKWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_TRUE',
+                'POP_JUMP_IF_FALSE', 'POP_JUMP_IF_TRUE')):
+            results.extend(post_extra)
+            return
+        if not post_extra:
+            results.extend(post_extra)
+            return
+        _last = post_extra[-1]
+        if not (_last.get('type') == 'Expr'
+                and isinstance(_last.get('value'), dict)
+                and _last.get('value', {}).get('type') in (
+                    'Attribute', 'Subscript', 'Call', 'Name', 'BinOp',
+                    'UnaryOp', 'Compare')):
+            results.extend(post_extra)
+            return
+        _cond_expr = _last['value']
+        _if_jump_is_true = 'IF_TRUE' in _merge_last.opname
+        _fallthrough = None
+        _jump_target = None
+        for _succ in region.merge_block.successors:
+            if _succ.start_offset == _merge_last.offset + 2:
+                _fallthrough = _succ
+            else:
+                _jump_target = _succ
+        if _fallthrough is None or _jump_target is None:
+            results.extend(post_extra)
+            return
+        _if_body_entry = _jump_target if _if_jump_is_true else _fallthrough
+        _continuation = _fallthrough if _if_jump_is_true else _jump_target
+        _body_stmts = []
+        _if_body_regions = []
+        for _r in self.regions:
+            if _r is region:
+                continue
+            _r_entry = getattr(_r, 'entry', None)
+            if _r_entry is None:
+                continue
+            _r_entry_off = _r_entry.start_offset
+            if _r_entry_off < _if_body_entry.start_offset:
+                continue
+            if _r_entry_off >= _continuation.start_offset:
+                continue
+            _if_body_regions.append(_r)
+        _if_body_regions.sort(key=lambda _r: _r.entry.start_offset)
+        for _r in _if_body_regions:
+            _r_result = self._generate_region(_r)
+            if _r_result is not None:
+                if isinstance(_r_result, list):
+                    _body_stmts.extend(_r_result)
+                else:
+                    _body_stmts.append(_r_result)
+            for _b in _r.blocks:
+                self.generated_blocks.add(_b)
+        _uncovered = []
+        _covered = set()
+        for _r in _if_body_regions:
+            for _b in _r.blocks:
+                _covered.add(_b.start_offset)
+        _cur = _if_body_entry
+        _visited = set()
+        while _cur and _cur.start_offset not in _visited and _cur.start_offset < _continuation.start_offset:
+            _visited.add(_cur.start_offset)
+            if _cur.start_offset not in _covered and _cur not in self.generated_blocks:
+                _uncovered.append(_cur)
+            _cur_last = _cur.get_last_instruction()
+            if _cur_last and _cur_last.opname in ('RETURN_VALUE', 'RETURN_CONST', 'RAISE_VARARGS'):
+                break
+            _next = None
+            for _succ in _cur.successors:
+                if _succ.start_offset >= _continuation.start_offset:
+                    continue
+                if _succ.start_offset not in _visited:
+                    _next = _succ
+                    break
+            if _next is None:
+                break
+            _cur = _next
+        for _b in _uncovered:
+            _b_stmts = self._generate_block_statements(_b)
+            if _b_stmts:
+                _body_stmts.extend(_b_stmts)
+            self.generated_blocks.add(_b)
+        _if_node = {
+            'type': 'If',
+            'test': _cond_expr,
+            'body': _body_stmts if _body_stmts else [{'type': 'Pass'}],
+            'orelse': None,
+        }
+        results.extend(post_extra[:-1])
+        results.append(_if_node)
 
     def _build_ternary_no_target_consumer_stmt(self, region: TernaryRegion,
                                                 ternary_expr: Dict[str, Any]) -> Optional[Dict[str, Any]]:
