@@ -17,7 +17,7 @@ def _extract_code_objects(code, prefix=''):
     return result
 
 for entry in json.load(open('pyc_index.json', 'r', encoding='utf-8')):
-    if 'IQEngine/utils/__init__' not in entry.get('path', ''):
+    if 'fly/data/quote.pyc' not in entry.get('path', ''):
         continue
     pyc_path = entry['path']
     ok_py_path = pyc_path[:-4] + 'OK.py'
@@ -29,30 +29,27 @@ for entry in json.load(open('pyc_index.json', 'r', encoding='utf-8')):
     orig_map = _extract_code_objects(orig_code)
     decomp_map = _extract_code_objects(decomp_code)
     for name in sorted(set(orig_map.keys()) & set(decomp_map.keys())):
+        if 'check_index_code' not in name:
+            continue
         details = compare_bytecode(orig_map[name], decomp_map[name])
         if details.get('match'):
             continue
         td = details.get('true_diffs', [])
-        if len(td) > 10:
-            continue
-        print("Function: %s, %d true_diffs" % (name.split('.')[-1], len(td)))
+        print('%s: %d true_diffs' % (name.split('.')[-1], len(td)))
         for t in td:
             idx = t['index']
-            print("  idx=%d: orig=%s(%s) decomp=%s(%s)" % (
-                idx, t.get('orig_op',''), t.get('orig_arg',''),
-                t.get('decomp_op',''), t.get('decomp_arg','')))
+            print('  idx=%d: orig=%s(%s) decomp=%s(%s)' % (idx, t.get('orig_op',''), t.get('orig_arg',''), t.get('decomp_op',''), t.get('decomp_arg','')))
         
         orig_instrs = list(_filter_noise_instrs(get_bytecode_instructions(orig_map[name])))
         decomp_instrs = list(_filter_noise_instrs(get_bytecode_instructions(decomp_map[name])))
         for t in td:
             idx = t['index']
-            print("  Orig[%d-%d]:" % (max(0,idx-3), min(len(orig_instrs),idx+3)))
+            print('  Context orig[%d-%d]:' % (max(0,idx-3), min(len(orig_instrs),idx+3)))
             for i in range(max(0,idx-3), min(len(orig_instrs),idx+3)):
-                marker = ">>>" if i == idx else "   "
-                print("    %s %3d %s %s" % (marker, i, orig_instrs[i].opname, orig_instrs[i].argval))
-            print("  Decomp[%d-%d]:" % (max(0,idx-3), min(len(decomp_instrs),idx+3)))
+                marker = '>>>' if i == idx else '   '
+                print('    %s %3d %s %s' % (marker, i, orig_instrs[i].opname, orig_instrs[i].argval))
+            print('  Context decomp[%d-%d]:' % (max(0,idx-3), min(len(decomp_instrs),idx+3)))
             for i in range(max(0,idx-3), min(len(decomp_instrs),idx+3)):
-                marker = ">>>" if i == idx else "   "
-                print("    %s %3d %s %s" % (marker, i, decomp_instrs[i].opname, decomp_instrs[i].argval))
-            print()
+                marker = '>>>' if i == idx else '   '
+                print('    %s %3d %s %s' % (marker, i, decomp_instrs[i].opname, decomp_instrs[i].argval))
     break

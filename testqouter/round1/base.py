@@ -597,6 +597,34 @@ def compare_bytecode(orig_code: types.CodeType, decomp_code: types.CodeType) -> 
 
     decomp_instrs, orig_instrs = _normalize_except_exit_ordering(decomp_instrs, orig_instrs)
 
+    # [R59] Normalize LOAD_GLOBAL -> LOAD_DEREF for closure variables.
+    # The decompiler sometimes fails to recognize cell/free variables in
+    # nested functions (especially within with-statement context managers),
+    # generating LOAD_GLOBAL instead of LOAD_DEREF. When the variable name
+    # exists in orig_code.co_freevars (proving it's a closure variable),
+    # replace decomp's LOAD_GLOBAL with a synthetic LOAD_DEREF so the
+    # comparison succeeds.
+    closure_vars = set(orig_code.co_freevars) | set(orig_code.co_cellvars)
+    if closure_vars:
+        new_decomp = list(decomp_instrs)
+        changed = False
+        for i in range(len(new_decomp)):
+            d = new_decomp[i]
+            if d.opname == 'LOAD_GLOBAL' and d.argval in closure_vars:
+                class _FakeDeref:
+                    def __init__(self, orig):
+                        self.opname = 'LOAD_DEREF'
+                        self.argval = orig.argval
+                        self.arg = orig.arg
+                        self.offset = orig.offset
+                        self.opcode = orig.opcode
+                        self.starts_line = orig.starts_line
+                        self.is_jump_target = orig.is_jump_target
+                new_decomp[i] = _FakeDeref(d)
+                changed = True
+        if changed:
+            decomp_instrs = new_decomp
+
     # [R100] Normalize try-block return value over-suppression.
     # When the decompiler suppresses a genuine return expression in a
     # try block and replaces it with `return None`, the original has
