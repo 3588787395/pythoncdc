@@ -9139,24 +9139,9 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                             break
                     if _found_next_handler:
                         continue
-                    # 过渡块未找到下一个 CHECK_OP handler。区分两种情况：
-                    # (a) except* 链末尾的清理过渡块（不是 handler，丢弃）：
-                    #     _collect_body 只返回过渡块自身（len == 1），因为
-                    #     后继全是 CHECK_OP/PREP_RERAISE_STAR/RERAISE 块被
-                    #     边界检查跳过。
-                    # (b) bare except 入口块（仅含 POP_TOP，真实 body 在后继
-                    #     块中）：_collect_body 返回入口 + 后继 body 块
-                    #     （len > 1），因为后继是 POP_EXCEPT/LOAD_CONST/
-                    #     STORE_NAME/RAISE_VARARGS 等真实指令块。
-                    # 用 len(body) > 1 区分：bare except 必有后继 body 块。
-                # [Phase 3 回归修复] bare except（无 CHECK_OP 但有真实 body）
-                # 是 except 链的终结 handler。恢复 e532253 之前的行为：将其
-                # 作为最后一个 handler 纳入链。此前 e532253 移除此分支导致
-                # te010/021/052/061/093 等 bare except 被丢弃。
-                # 判别护栏：
-                # - 非过渡块（入口含真实指令）：body 非空即纳入。
-                # - 过渡块（入口仅 POP_TOP/JUMP）：body 块数 > 1 才纳入
-                #   （except* 清理过渡块 body 仅 1 块，不纳入）。
+                    _is_real_handler = (not _is_transition) or (len(body) > 1)
+                else:
+                    _is_real_handler = bool(body)
                 if _is_real_handler:
                     chain_handlers.append((exc_type, exc_name, body))
                     chain_entries.append(next_block)
