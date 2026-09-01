@@ -19556,6 +19556,19 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             if _consumer_extra_blocks:
                 all_blocks.update(_consumer_extra_blocks)
 
+            # [R47 消费点守卫] 三元表达式必须有值消费点（merge_block 或
+            # value_target 或 has_jump_forward_skip），否则三元值无处可去。
+            # 典型场景：try-except 内的 f-string inline if-else，异常边使
+            # find_nearest_common_post_dominator 返回 None，且 merge_block
+            # 为 None、value_target 为 None、has_jump_forward_skip 为 False。
+            # 这种 TernaryRegion 不完整，三元值无法被后续指令消费，交由
+            # IfRegion 按语句级结构归约。依区域归约算法「一次正确」原则：
+            # 不完整的表达式级区域不应创建。
+            if (merge_block is None
+                    and value_target is None
+                    and not has_jump_forward_skip):
+                return None
+
             container_type, func_call_info, dict_key_info, dict_const_keys = _detect_ternary_context(block, merge_block)
             return {
                 'block': block,
