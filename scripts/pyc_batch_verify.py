@@ -449,6 +449,8 @@ def batch_verify(index_path: str = None, max_count: int = None, round_num: int =
         entry['bytecode_match_rate'] = rate
         entry['decompile_status'] = status
         entry['last_tested_round'] = round_num
+        entry['function_count'] = diff['total_functions']
+        entry['matched_functions'] = diff['matched_functions']
         entry.pop('error', None)  # 清除之前可能的失败记录
         print(f'    {status.upper()}: {diff["total_functions"]} funcs, '
               f'{diff["matched_functions"]} matched, rate={rate:.2%}')

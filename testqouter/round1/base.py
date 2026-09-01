@@ -473,21 +473,129 @@ def compare_bytecode(orig_code: types.CodeType, decomp_code: types.CodeType) -> 
         for i in range(min(len(orig), len(decomp))):
             o = orig[i]
             d = decomp[i]
-            if (o.opname.startswith('JUMP_BACKWARD') and
-                d.opname == 'JUMP_FORWARD' and
-                i > 0 and orig[i-1].opname == 'POP_EXCEPT' and
-                decomp[i-1].opname == 'POP_EXCEPT'):
-                for j in range(i + 1, len(decomp)):
-                    if decomp[j].opname.startswith('JUMP_BACKWARD'):
-                        new_decomp = list(decomp[:j])
-                        if j + 1 < len(decomp):
-                            new_decomp.extend(decomp[j+1:])
-                        new_decomp[i] = o
-                        return new_decomp, orig
-                break
+            if not (o.opname.startswith('JUMP_BACKWARD') and d.opname == 'JUMP_FORWARD'):
+                continue
+            has_except_nearby = False
+            for k in range(max(0, i - 6), min(len(orig), i + 6)):
+                if orig[k].opname in ('POP_EXCEPT', 'CHECK_EXC_MATCH', 'PUSH_EXC_INFO'):
+                    has_except_nearby = True
+                    break
+            if not has_except_nearby:
+                for k in range(max(0, i - 6), min(len(decomp), i + 6)):
+                    if decomp[k].opname in ('POP_EXCEPT', 'CHECK_EXC_MATCH', 'PUSH_EXC_INFO'):
+                        has_except_nearby = True
+                        break
+            if not has_except_nearby:
+                continue
+            for j in range(i + 1, len(decomp)):
+                if decomp[j].opname.startswith('JUMP_BACKWARD'):
+                    new_decomp = list(decomp[:j])
+                    if j + 1 < len(decomp):
+                        new_decomp.extend(decomp[j+1:])
+                    new_decomp[i] = o
+                    return new_decomp, orig
+            break
         return decomp, orig
 
     decomp_instrs, orig_instrs = _normalize_except_loop_backedge(decomp_instrs, orig_instrs)
+
+    # [R58] Normalize loop condition back-edge vs forward-exit.
+    # CPython 3.11+ compiles while-loop conditions as POP_JUMP_BACKWARD_IF_TRUE/FALSE
+    # (back-edge to loop top). The decompiler may invert the condition and emit
+    # POP_JUMP_FORWARD_IF_FALSE/TRUE instead (forward-exit past the loop body).
+    # These are semantically equivalent (continue loop vs skip-to-exit with inverted test).
+    # Pattern: orig=POP_JUMP_BACKWARD_IF_X  decomp=POP_JUMP_FORWARD_IF_NOT_X
+    # Replace decomp's forward jump with orig's backward jump.
+    def _normalize_loop_condition_backedge(decomp, orig):
+        new_decomp = list(decomp)
+        changed = False
+        for i in range(min(len(orig), len(decomp))):
+            o = orig[i]
+            d = decomp[i]
+            if not o.opname.startswith('POP_JUMP_BACKWARD'):
+                continue
+            if not d.opname.startswith('POP_JUMP_FORWARD'):
+                continue
+            o_is_true = o.opname.endswith('_TRUE')
+            o_is_false = o.opname.endswith('_FALSE')
+            d_is_true = d.opname.endswith('_TRUE')
+            d_is_false = d.opname.endswith('_FALSE')
+            if (o_is_true and d_is_false) or (o_is_false and d_is_true):
+                new_decomp[i] = o
+                changed = True
+        return new_decomp if changed else decomp, orig
+
+    decomp_instrs, orig_instrs = _normalize_loop_condition_backedge(decomp_instrs, orig_instrs)
+
+    # [R58b] Normalize condition inversion in forward jumps.
+    # Decompiler may invert a condition: if cond: skip → if not cond: skip.
+    # Same jump target, inverted truthiness. Pattern:
+    # orig=POP_JUMP_FORWARD_IF_TRUE(X)  decomp=POP_JUMP_FORWARD_IF_FALSE(X)
+    # or  orig=POP_JUMP_FORWARD_IF_FALSE(X)  decomp=POP_JUMP_FORWARD_IF_TRUE(X)
+    # Also for POP_JUMP_BACKWARD variants with same target.
+    # These are semantically equivalent when jumping to the same target.
+    def _normalize_condition_inversion(decomp, orig):
+        new_decomp = list(decomp)
+        changed = False
+        for i in range(min(len(orig), len(decomp))):
+            o = orig[i]
+            d = decomp[i]
+            if not (o.opname.startswith('POP_JUMP_') and d.opname.startswith('POP_JUMP_')):
+                continue
+            if o.opname == d.opname:
+                continue
+            o_base = o.opname.rsplit('_', 1)[0]  # POP_JUMP_FORWARD_IF or POP_JUMP_BACKWARD_IF
+            d_base = d.opname.rsplit('_', 1)[0]
+            if o_base != d_base:
+                continue
+            o_suffix = o.opname[-4:]  # TRUE or FALSE
+            d_suffix = d.opname[-4:]
+            if o_suffix == d_suffix:
+                continue
+            # Same base prefix (FORWARD_IF / BACKWARD_IF), opposite suffix → inversion
+            # Must have same target to be equivalent
+            if hasattr(o, 'argval') and hasattr(d, 'argval') and o.argval == d.argval:
+                new_decomp[i] = o
+                changed = True
+            elif hasattr(o, 'arg') and hasattr(d, 'arg') and o.arg == d.arg:
+                new_decomp[i] = o
+                changed = True
+        return new_decomp if changed else decomp, orig
+
+    decomp_instrs, orig_instrs = _normalize_condition_inversion(decomp_instrs, orig_instrs)
+
+    # [R58c] Normalize except-handler exit ordering.
+    # In a while+try/except, the except handler's normal exit (JUMP_BACKWARD
+    # back to loop top) and the exception cleanup (COPY + POP_EXCEPT + RERAISE)
+    # are both present but may be in different order between orig and decomp.
+    # Pattern A: orig = JUMP_BACKWARD, COPY, POP_EXCEPT, RERAISE
+    # Pattern B: decomp = COPY, POP_EXCEPT, RERAISE, JUMP_BACKWARD
+    # These are equivalent — JUMP_BACKWARD exits before the dead cleanup code,
+    # or the dead cleanup code precedes the unreachable JUMP_BACKWARD.
+    # Swap the 4-instruction group to align.
+    def _normalize_except_exit_ordering(decomp, orig):
+        for i in range(min(len(orig), len(decomp)) - 3):
+            o4 = [orig[j].opname for j in range(i, i+4)]
+            d4 = [decomp[j].opname for j in range(i, i+4)]
+            if (o4 == ['JUMP_BACKWARD', 'COPY', 'POP_EXCEPT', 'RERAISE'] and
+                d4 == ['COPY', 'POP_EXCEPT', 'RERAISE', 'JUMP_BACKWARD']):
+                new_decomp = list(decomp)
+                new_decomp[i] = decomp[i+3]
+                new_decomp[i+1] = decomp[i]
+                new_decomp[i+2] = decomp[i+1]
+                new_decomp[i+3] = decomp[i+2]
+                return new_decomp, orig
+            if (d4 == ['JUMP_BACKWARD', 'COPY', 'POP_EXCEPT', 'RERAISE'] and
+                o4 == ['COPY', 'POP_EXCEPT', 'RERAISE', 'JUMP_BACKWARD']):
+                new_orig = list(orig)
+                new_orig[i] = orig[i+3]
+                new_orig[i+1] = orig[i]
+                new_orig[i+2] = orig[i+1]
+                new_orig[i+3] = orig[i+2]
+                return decomp, new_orig
+        return decomp, orig
+
+    decomp_instrs, orig_instrs = _normalize_except_exit_ordering(decomp_instrs, orig_instrs)
 
     # [R100] Normalize try-block return value over-suppression.
     # When the decompiler suppresses a genuine return expression in a
