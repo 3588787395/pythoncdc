@@ -13732,6 +13732,44 @@ AST 映射规则:
                        elif_body_stmts[-1]['value'].get('type') == 'Constant' and
                        elif_body_stmts[-1]['value'].get('value') is None):
                     elif_body_stmts.pop()
+            if (elif_body_stmts
+                    and not any(s.get('type') in ('Break', 'Continue', 'Return', 'Raise')
+                                for s in elif_body_stmts[-2:])
+                    and self._current_loop is not None
+                    and region.elif_final_else):
+                _eb_last_block = region.elif_bodies[0][-1]
+                for _eb_succ in _eb_last_block.successors:
+                    _eb_succ_role = self.region_analyzer.get_block_role(_eb_succ)
+                    if _eb_succ_role == BlockRole.PURE_CONTINUE:
+                        if _eb_succ in region.blocks:
+                            continue
+                        if _eb_succ in self.generated_blocks:
+                            continue
+                        _eb_jb = _eb_succ.get_last_instruction()
+                        if (_eb_jb is None
+                                or _eb_jb.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                                or _eb_jb.argval is None):
+                            continue
+                        _jb_target = self.cfg.get_block_by_offset(_eb_jb.argval)
+                        _loop_hdr = getattr(self._current_loop, 'header_block', None)
+                        if _jb_target is not _loop_hdr:
+                            continue
+                        if self._block_is_structural_for_iter_exit(_eb_succ):
+                            continue
+                        _r100_mlast = (region.merge_block.get_last_instruction()
+                                      if getattr(region, 'merge_block', None) else None)
+                        _r100_suppress = False
+                        if (_r100_mlast is not None
+                                and _r100_mlast.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                                and _r100_mlast.argval is not None):
+                            _r100_mtgt = self.cfg.get_block_by_offset(_r100_mlast.argval)
+                            if _r100_mtgt is _loop_hdr:
+                                _r100_suppress = True
+                        if not _r100_suppress:
+                            elif_body_stmts.append({'type': 'Continue'})
+                        self.generated_blocks.add(_eb_succ)
+                        self.generated_offsets.add(_eb_succ.start_offset)
+                        break
         nested_elif_stmts = None
         if len(region.elif_conditions) > 1:
             remaining_elifs = region.elif_conditions[2:]
