@@ -130,11 +130,13 @@ def _filter_noise_instrs(instrs):
                                               'STORE_GLOBAL', 'STORE_DEREF')):
             continue
         # Skip LOAD_CONST None when immediately preceded by STORE_*
+        # BUT NOT when followed by RETURN_VALUE (module/function return None)
         if (instr.opname == 'LOAD_CONST' and instr.argval is None
                 and i > 0
                 and filtered
                 and filtered[-1].opname in ('STORE_FAST', 'STORE_NAME',
-                                             'STORE_GLOBAL', 'STORE_DEREF')):
+                                             'STORE_GLOBAL', 'STORE_DEREF')
+                and (i + 1 >= len(instrs) or instrs[i + 1].opname != 'RETURN_VALUE')):
             continue
         # [R95] Normalize SWAP(2)+POP_TOP+RETURN_VALUE pattern.
         # CPython optimizes `expr_stmt; return None` in for-loop bodies to
