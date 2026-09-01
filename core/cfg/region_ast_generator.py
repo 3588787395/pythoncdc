@@ -28521,7 +28521,7 @@ AST 映射规则:
                 if region.merge_block:
                     _merge_non_noise = [i for i in region.merge_block.instructions
                                        if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                    if _merge_non_noise and all(i.opname in ('RETURN_VALUE', 'RETURN_CONST', 'LOAD_CONST', 'LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF')
+                    if _merge_non_noise and all(i.opname in ('RETURN_VALUE', 'RETURN_CONST', 'LOAD_CONST', 'LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF', 'UNARY_NOT')
                                                 for i in _merge_non_noise):
                         _last_merge = region.merge_block.get_last_instruction()
                         if _last_merge and _last_merge.opname in ('RETURN_VALUE', 'RETURN_CONST'):
