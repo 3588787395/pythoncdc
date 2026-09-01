@@ -117,11 +117,29 @@ def _filter_noise_instrs(instrs):
     # while decompiled has CALL→STORE_FAST x→LOAD_CONST None→...
     # Filtering both COPY and the trailing LOAD_CONST None aligns the
     # instruction sequences.
+    # [R52] Pre-compute next-real-offset for each instruction index.
+    # Used to detect no-op JUMP_FORWARD (jumps to the very next real
+    # instruction). CPython emits these at the end of for-else blocks
+    # and other constructs where the fall-through already reaches the
+    # target.
+    _next_real_offset = {}
+    _nro = None
+    for _i in range(len(instrs) - 1, -1, -1):
+        _next_real_offset[_i] = _nro
+        if instrs[_i].opname not in _NOISE_OPS:
+            _nro = instrs[_i].offset
+
     filtered = []
     _r95_skip_next = False
     for i, instr in enumerate(instrs):
         if _r95_skip_next:
             _r95_skip_next = False
+            continue
+        # [R52] Skip no-op JUMP_FORWARD — jumps to the very next real
+        # instruction, which is equivalent to falling through.
+        if (instr.opname == 'JUMP_FORWARD'
+                and _next_real_offset.get(i) is not None
+                and instr.argval == _next_real_offset[i]):
             continue
         # Skip COPY when immediately followed by STORE_*
         if (instr.opname == 'COPY'
