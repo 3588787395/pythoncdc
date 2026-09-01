@@ -10296,6 +10296,7 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 continue
             has_user_code = any(
                 instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+                                 'STORE_ATTR', 'STORE_SUBSCR',
                                  'BINARY_OP', 'UNARY_OP', 'COMPARE_OP', 'IS_OP', 'CONTAINS_OP',
                                  'BUILD_TUPLE', 'BUILD_LIST', 'BUILD_MAP', 'BUILD_SET',
                                  'IMPORT_NAME', 'IMPORT_FROM', 'LOAD_BUILD_CLASS',
@@ -10423,28 +10424,55 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 if any(i.offset == body_end for i in blk.instructions):
                     normal_exit = blk
                     break
-        if normal_exit is None or normal_exit in owned:
-            return None, False
-        last = normal_exit.get_last_instruction()
-        if last is None:
-            return None, False
-        target = None
-        via_jump = False
-        if last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
-            if last.argval is not None:
-                target = self.cfg.get_block_by_offset(last.argval)
-                via_jump = True
-        elif last.opname in ('RETURN_VALUE', 'RETURN_CONST', 'RERAISE'):
-            # 自然出口块直接终结函数：with 之后无续接块。
-            return None, False
-        else:
-            # fall-through：后继必须唯一（线性出口，无分支）
-            succs = [s for s in normal_exit.successors if s is not normal_exit]
-            if len(succs) == 1:
-                target = succs[0]
-        if target is None or target in owned:
-            return None, False
-        return target, via_jump
+        if normal_exit is not None and normal_exit not in owned:
+            if any(i.opname in ('WITH_EXCEPT_START', 'PUSH_EXC_INFO') for i in normal_exit.instructions):
+                normal_exit = None
+        if normal_exit is not None and normal_exit not in owned:
+            last = normal_exit.get_last_instruction()
+            if last is not None and last.opname not in ('RERAISE',):
+                target = None
+                via_jump = False
+                if last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+                    if last.argval is not None:
+                        target = self.cfg.get_block_by_offset(last.argval)
+                        via_jump = True
+                elif last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                    return None, False
+                else:
+                    succs = [s for s in normal_exit.successors if s is not normal_exit]
+                    if len(succs) == 1:
+                        target = succs[0]
+                if target is not None and target not in owned:
+                    return target, via_jump
+        # Fallback: scan with_body for the normal-exit __exit__ call.
+        # When the __exit__ call is embedded inside the body (e.g. after a for/else),
+        # body_end points to the exception handler (PUSH_EXCEPT_START), not the
+        # normal-exit. The normal-exit is a body block that ends with JUMP_FORWARD
+        # jumping past all exception/cleanup blocks to post-with code.
+        # The normal-exit block is typically the last body block by offset that
+        # ends with JUMP_FORWARD jumping past body_end. It's the __exit__ call
+        # that jumps over the inline exception handler to the post-with code.
+        best_exit = None
+        best_via_jump = False
+        for blk in with_body:
+            last = blk.get_last_instruction()
+            if last is None:
+                continue
+            if last.opname not in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+                continue
+            if last.argval is None:
+                continue
+            target = self.cfg.get_block_by_offset(last.argval)
+            if target is None or target in owned:
+                continue
+            if target.start_offset <= body_end:
+                continue
+            if best_exit is None or blk.start_offset > best_exit.start_offset:
+                best_exit = target
+                best_via_jump = True
+        if best_exit is not None:
+            return best_exit, best_via_jump
+        return None, False
 
     def _build_single_with_region(self, block, has_async, depth, depth_map):
         """构建单个with语句的区域对象。

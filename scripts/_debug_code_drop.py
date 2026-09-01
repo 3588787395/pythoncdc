@@ -1,7 +1,6 @@
 import sys, json, marshal, types, dis, os, py_compile, importlib.util
 sys.path.insert(0, '.')
 from testqouter.round1.base import compare_bytecode, _filter_noise_instrs, get_bytecode_instructions
-from collections import Counter
 
 def _load_pyc_code(path):
     with open(path, 'rb') as f:
@@ -17,12 +16,10 @@ def _extract_code_objects(code, prefix=''):
             result.update(_extract_code_objects(const, prefix + code.co_name + '.'))
     return result
 
-# Check how many JUMP_FORWARD -> LOAD_CONST(None) cases now remain after R55 fix
 with open('pyc_index.json', 'r', encoding='utf-8') as f:
     index = json.load(f)
 
-jf_lc_remaining = 0
-jf_lc_details = []
+lf_lc_cases = []
 
 for entry in index:
     if entry.get('decompile_status') != 'partial':
@@ -61,22 +58,16 @@ for entry in index:
             continue
         
         td = true_diffs[0]
-        if td.get('orig_op') == 'JUMP_FORWARD' and td.get('decomp_op') == 'LOAD_CONST':
-            jf_lc_remaining += 1
-            idx = td['index']
-            orig_filtered = _filter_noise_instrs(get_bytecode_instructions(orig_map[name]))
-            decomp_filtered = _filter_noise_instrs(get_bytecode_instructions(decomp_map[name]))
-            if len(jf_lc_details) < 5:
-                jf_lc_details.append({
-                    'func': name,
-                    'file': pyc_path.split('site-packages')[-1],
-                    'idx': idx,
-                    'decomp_arg': td.get('decomp_arg'),
-                    'true_diffs': len(true_diffs),
-                    'orig_after': orig_filtered[idx+1].opname if idx+1 < len(orig_filtered) else '?',
-                    'decomp_after': decomp_filtered[idx+2].opname if idx+2 < len(decomp_filtered) else '?',
-                })
+        if td.get('orig_op') == 'LOAD_FAST' and td.get('decomp_op') == 'LOAD_CONST':
+            lf_lc_cases.append({
+                'func': name,
+                'file': pyc_path.split('site-packages')[-1],
+                'true_diffs': len(true_diffs),
+                'orig_arg': td.get('orig_arg'),
+                'decomp_arg': td.get('decomp_arg'),
+            })
 
-print(f"Remaining JUMP_FORWARD -> LOAD_CONST cases: {jf_lc_remaining}")
-for d in jf_lc_details:
-    print(f"  {d}")
+lf_lc_cases.sort(key=lambda x: x['true_diffs'])
+print(f"LOAD_FAST -> LOAD_CONST cases: {len(lf_lc_cases)}")
+for c in lf_lc_cases:
+    print(f"  {c['true_diffs']} diffs: {c['func']} in {c['file']}, orig={c['orig_arg']}, decomp={c['decomp_arg']}")
