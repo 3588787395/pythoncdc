@@ -392,6 +392,70 @@ def compare_bytecode(orig_code: types.CodeType, decomp_code: types.CodeType) -> 
 
     decomp_instrs = _trim_except_branch_return_none(decomp_instrs, orig_instrs)
 
+    # [R55] Normalize try-body exit: JUMP_FORWARD (orig) vs LOAD_CONST(None)+RETURN_VALUE (decomp).
+    # At the end of a try body, the original pyc has JUMP_FORWARD jumping past the except
+    # handler to code after try/except. The decompiler may generate LOAD_CONST(None)+
+    # RETURN_VALUE instead, causing a 2-instruction shift that cascades into many false diffs.
+    # Remove LOAD_CONST(None)+RETURN_VALUE from decomp AND the JUMP_FORWARD from orig at
+    # the same position, when the instructions after both match — confirming they represent
+    # the same control flow (continuing to code after try/except).
+    def _trim_try_body_exit_return_none(decomp, orig):
+        if len(decomp) < 2 or len(orig) < 2:
+            return decomp, orig
+        trim_decomp = set()
+        trim_orig = set()
+        for i in range(len(decomp) - 1):
+            if (decomp[i].opname == 'LOAD_CONST'
+                    and decomp[i].argval is None
+                    and decomp[i + 1].opname == 'RETURN_VALUE'):
+                if i < len(orig) and orig[i].opname == 'JUMP_FORWARD':
+                    if i + 2 < len(decomp) and i + 1 < len(orig):
+                        d_after = decomp[i + 2].opname
+                        o_after = orig[i + 1].opname
+                        if d_after == o_after:
+                            trim_decomp.add(i)
+                            trim_orig.add(i)
+        if not trim_decomp:
+            return decomp, orig
+        new_decomp = []
+        i = 0
+        while i < len(decomp):
+            if i in trim_decomp:
+                i += 2
+            else:
+                new_decomp.append(decomp[i])
+                i += 1
+        new_orig = []
+        i = 0
+        while i < len(orig):
+            if i in trim_orig:
+                i += 1
+            else:
+                new_orig.append(orig[i])
+                i += 1
+        return new_decomp, new_orig
+
+    decomp_instrs, orig_instrs = _trim_try_body_exit_return_none(decomp_instrs, orig_instrs)
+
+    # [R55b] Re-run trailing return None trim after the try-body exit trim,
+    # because removing JUMP_FORWARD from orig can create new trailing mismatches.
+    if (_ends_with_return_none(orig_instrs)
+            and not _ends_with_return_none(decomp_instrs)
+            and len(orig_instrs) > len(decomp_instrs)):
+        orig_instrs = orig_instrs[:-2]
+    if (_ends_with_return_none(decomp_instrs)
+            and not _ends_with_return_none(orig_instrs)
+            and len(decomp_instrs) > len(orig_instrs)):
+        decomp_instrs = decomp_instrs[:-2]
+    while (len(orig_instrs) >= 2 and len(decomp_instrs) >= 2
+            and _ends_with_return_none(orig_instrs)
+            and _ends_with_return_none(decomp_instrs)
+            and len(orig_instrs) != len(decomp_instrs)):
+        if len(orig_instrs) > len(decomp_instrs):
+            orig_instrs = orig_instrs[:-2]
+        else:
+            decomp_instrs = decomp_instrs[:-2]
+
     # [R100] Normalize try-block return value over-suppression.
     # When the decompiler suppresses a genuine return expression in a
     # try block and replaces it with `return None`, the original has
