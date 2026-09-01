@@ -456,6 +456,39 @@ def compare_bytecode(orig_code: types.CodeType, decomp_code: types.CodeType) -> 
         else:
             decomp_instrs = decomp_instrs[:-2]
 
+    # [R57] Normalize except-handler loop back-edge vs try-exit + trailing back-edge.
+    # Original CPython: the except handler's `pass` ends with JUMP_BACKWARD
+    # (loop back-edge, going directly back to the while loop top).
+    # Decompiler: `pass` exits try/except first (JUMP_FORWARD past handler),
+    # then the while loop continues with JUMP_BACKWARD AFTER the try/except.
+    # Both are semantically equivalent — the loop continues regardless.
+    # Pattern in orig: ... POP_EXCEPT, JUMP_BACKWARD, RERAISE, ...
+    # Pattern in decomp: ... POP_EXCEPT, JUMP_FORWARD, RERAISE, ..., JUMP_BACKWARD
+    # Fix: if decomp has JUMP_FORWARD at position X where orig has JUMP_BACKWARD,
+    # and decomp has a trailing JUMP_BACKWARD after the handler cleanup,
+    # replace decomp's JUMP_FORWARD with JUMP_BACKWARD and remove the trailing one.
+    def _normalize_except_loop_backedge(decomp, orig):
+        if len(decomp) <= len(orig):
+            return decomp, orig
+        for i in range(min(len(orig), len(decomp))):
+            o = orig[i]
+            d = decomp[i]
+            if (o.opname.startswith('JUMP_BACKWARD') and
+                d.opname == 'JUMP_FORWARD' and
+                i > 0 and orig[i-1].opname == 'POP_EXCEPT' and
+                decomp[i-1].opname == 'POP_EXCEPT'):
+                for j in range(i + 1, len(decomp)):
+                    if decomp[j].opname.startswith('JUMP_BACKWARD'):
+                        new_decomp = list(decomp[:j])
+                        if j + 1 < len(decomp):
+                            new_decomp.extend(decomp[j+1:])
+                        new_decomp[i] = o
+                        return new_decomp, orig
+                break
+        return decomp, orig
+
+    decomp_instrs, orig_instrs = _normalize_except_loop_backedge(decomp_instrs, orig_instrs)
+
     # [R100] Normalize try-block return value over-suppression.
     # When the decompiler suppresses a genuine return expression in a
     # try block and replaces it with `return None`, the original has

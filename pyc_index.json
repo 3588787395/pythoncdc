@@ -3029,7 +3029,7 @@
     "size": 25996,
     "function_count": 11,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.75,
+    "bytecode_match_rate": 0.8333333333333334,
     "ok_py_generated": true,
     "last_tested_round": 1,
     "matched_functions": 9,
