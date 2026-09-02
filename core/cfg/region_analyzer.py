@@ -5986,21 +5986,30 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
         return None
 
     def _has_body_code_before_before_with(self, block: BasicBlock) -> bool:
-        store_idx = None
         bw_idx = None
+        as_target_end = None
         for i, instr in enumerate(block.instructions):
             if instr.opname in ('BEFORE_WITH', 'BEFORE_ASYNC_WITH'):
                 bw_idx = i
                 break
-            if store_idx is None and instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
-                store_idx = i
-        if store_idx is None or bw_idx is None:
+            if as_target_end is None and instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF', 'POP_TOP'):
+                as_target_end = i
+        if bw_idx is None:
             return False
+        if as_target_end is None:
+            return False
+        if as_target_end > 0:
+            for i in range(as_target_end):
+                instr = block.instructions[i]
+                if instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP'):
+                    continue
+                if instr.opname not in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                    return True
         context_expr_ops = {'LOAD_GLOBAL', 'LOAD_FAST', 'LOAD_NAME', 'LOAD_CONST',
                             'LOAD_ATTR', 'LOAD_METHOD', 'PRECALL', 'CALL',
                             'CALL_FUNCTION', 'CALL_METHOD', 'PUSH_NULL'}
         noise_ops = {'RESUME', 'NOP', 'CACHE', 'PUSH_NULL'}
-        for i in range(store_idx + 1, bw_idx):
+        for i in range(as_target_end + 1, bw_idx):
             instr = block.instructions[i]
             if instr.opname in noise_ops:
                 continue
@@ -6008,6 +6017,32 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 continue
             return True
         return False
+
+    def _succ_starts_with_as_target_of_current(self, current: BasicBlock, succ: BasicBlock) -> bool:
+        found_bw = False
+        bw_as_in_same_block = False
+        for instr in current.instructions:
+            if instr.opname in ('BEFORE_WITH', 'BEFORE_ASYNC_WITH'):
+                found_bw = True
+                continue
+            if found_bw and not bw_as_in_same_block:
+                if instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF', 'POP_TOP'):
+                    bw_as_in_same_block = True
+                else:
+                    break
+        if not found_bw:
+            return False
+        if bw_as_in_same_block:
+            return False
+        first_meaningful = None
+        for instr in succ.instructions:
+            if instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                continue
+            first_meaningful = instr
+            break
+        if first_meaningful is None:
+            return False
+        return first_meaningful.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF', 'POP_TOP')
 
     def _is_with_exit_cleanup(self, block: BasicBlock) -> bool:
         WITH_EXIT_INDICATOR_OPS = {
@@ -10022,6 +10057,8 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
             if not (ce and se and ce.get('end') is not None and se.get('start') is not None):
                 continue
             if ce.get('end') <= se.get('start') and not self._has_body_code_before_before_with(succ):
+                if self._has_body_code_before_before_with(current) and self._succ_starts_with_as_target_of_current(current, succ):
+                    continue
                 if not self._has_intermediate_body_path(current, succ):
                     return succ
         return None
@@ -10569,9 +10606,23 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
         for b in all_blocks:
             if b not in self.block_to_region:
                 self.block_to_region[b] = region
-        if existing is not None and isinstance(existing, (TryExceptRegion, LoopRegion, WithRegion)):
-            region.parent = existing
-            existing.add_child(region)
+        parent_region = existing
+        if parent_region is not None and not isinstance(parent_region, (TryExceptRegion, LoopRegion, WithRegion)):
+            parent_region = None
+        if parent_region is not None:
+            for prev_region in self.regions:
+                if prev_region is region:
+                    continue
+                if not isinstance(prev_region, WithRegion):
+                    continue
+                if block.start_offset >= prev_region.body_offset_start and block.start_offset < prev_region.body_offset_end:
+                    if parent_region is None or (isinstance(parent_region, WithRegion) and prev_region.body_offset_start >= parent_region.body_offset_start and prev_region.body_offset_end <= parent_region.body_offset_end):
+                        parent_region = prev_region
+                    elif not isinstance(parent_region, WithRegion):
+                        parent_region = prev_region
+        if parent_region is not None:
+            region.parent = parent_region
+            parent_region.add_child(region)
         for cleanup_block in exception_blocks + cleanup_blocks:
             offset = cleanup_block.start_offset
             if self.block_roles.get(offset) == BlockRole.NORMAL:
@@ -10878,23 +10929,29 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
             region.items = items
             return
         instructions = []
-        # 并行数组：每条指令所属块是否为入口块、该块是否含 body 代码
         instr_is_from_entry = []
         instr_blk_has_body_before_bw = []
+        instr_blk_starts_with_prev_as_target = []
         for blk_idx, entry_block in enumerate(entry_blocks):
             is_entry = (blk_idx == 0)
             has_body_before_bw = self._has_body_code_before_before_with(entry_block)
+            starts_with_prev_as = False
+            if blk_idx > 0:
+                prev_block = entry_blocks[blk_idx - 1]
+                if self._has_body_code_before_before_with(prev_block):
+                    starts_with_prev_as = self._succ_starts_with_as_target_of_current(prev_block, entry_block)
             for instr in entry_block.instructions:
                 instructions.append(instr)
                 instr_is_from_entry.append(is_entry)
                 instr_blk_has_body_before_bw.append(has_body_before_bw)
+                instr_blk_starts_with_prev_as_target.append(starts_with_prev_as)
 
-        # 收集所有 BEFORE_WITH 指令的位置，跳过属于嵌套 with 的 BEFORE_WITH
-        # 非入口块 + 含 body 代码 → 该 BEFORE_WITH 属于嵌套 with，跳过
         bw_positions = []
         for i, instr in enumerate(instructions):
             if instr.opname in ('BEFORE_WITH', 'BEFORE_ASYNC_WITH'):
                 if (not instr_is_from_entry[i]) and instr_blk_has_body_before_bw[i]:
+                    continue
+                if (not instr_is_from_entry[i]) and instr_blk_starts_with_prev_as_target[i]:
                     continue
                 bw_positions.append(i)
 
@@ -10955,6 +11012,7 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                                    'PUSH_NULL', 'SWAP', 'COPY', 'BINARY_SUBSCR',
                                    'BINARY_OP', 'BUILD_TUPLE', 'BUILD_LIST', 'BUILD_MAP',
                                    'BUILD_SET', 'BUILD_STRING', 'BUILD_SLICE',
+                                   'FORMAT_VALUE',
                                    'UNPACK_SEQUENCE', 'IS_OP', 'CONTAINS_OP',
                                    'KW_NAMES'):
                     ctx_expr.append(instr)

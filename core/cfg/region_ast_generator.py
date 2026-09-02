@@ -2614,11 +2614,22 @@ class RegionASTGenerator:
             if isinstance(_call_kw, list):
                 keywords = [kw for kw in _call_kw if isinstance(kw, dict)]
 
-            if not decorator_list:
+            if not decorator_list and class_code_obj is not None:
                 for block in self.cfg.blocks.values():
                     instructions = block.instructions
                     for i, instr in enumerate(instructions):
                         if instr.opname == 'LOAD_BUILD_CLASS':
+                            matched_class = False
+                            for j in range(i + 1, len(instructions)):
+                                ni = instructions[j]
+                                if ni.opname == 'LOAD_CONST' and hasattr(ni.argval, 'co_code'):
+                                    if ni.argval is class_code_obj or ni.argval.co_name == name:
+                                        matched_class = True
+                                    break
+                                if ni.opname in ('MAKE_FUNCTION', 'PRECALL', 'CALL', 'STORE_NAME', 'STORE_FAST'):
+                                    break
+                            if not matched_class:
+                                continue
                             dec_idx = i - 1
                             while dec_idx >= 0:
                                 di = instructions[dec_idx]
@@ -24035,6 +24046,22 @@ AST 映射规则:
                         else:
                             self.generated_blocks.add(block)
                             continue
+                    if isinstance(_block_in_descendant, WithRegion) and id(_block_in_descendant) not in self._generated_regions:
+                        _desc_parent = _block_in_descendant
+                        while _desc_parent is not None and _desc_parent is not region and _desc_parent.parent is not region:
+                            _desc_parent = _desc_parent.parent
+                        if _desc_parent is not None and isinstance(_desc_parent, WithRegion) and id(_desc_parent) not in self._generated_regions and _desc_parent.parent is region:
+                            _child_gen = self._generate_region(_desc_parent)
+                            if _child_gen:
+                                if isinstance(_child_gen, list):
+                                    body_stmts.extend(_child_gen)
+                                else:
+                                    body_stmts.append(_child_gen)
+                            for _cb in _desc_parent.blocks:
+                                self.generated_blocks.add(_cb)
+                            self._generated_regions.add(id(_desc_parent))
+                        self.generated_blocks.add(block)
+                        continue
                     if isinstance(_block_in_descendant, LoopRegion):
                         if isinstance(region, WithRegion) and region.is_async and _block_in_descendant.entry and all(i.opname in ('SEND', 'YIELD_VALUE', 'RESUME', 'JUMP_BACKWARD_NO_INTERRUPT', 'NOP') for i in _block_in_descendant.entry.instructions) and self.region_analyzer.get_block_role(block) == BlockRole.LOOP_ELSE:
                             pass

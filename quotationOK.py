@@ -3073,7 +3073,6 @@ def multi_prod_to_dataframe(data):
             for item in v:
                 df[fields[i]].append(item)
                 i = i + 1
-        continue
     else:
         return pandas.DataFrame(df, columns=fields, index=index)
 def market_list_to_dataframe(data):
