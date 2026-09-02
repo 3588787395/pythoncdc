@@ -7891,7 +7891,7 @@ AST 映射规则:
                         if _jt_block and self._block_is_continue_target(_jt_block):
                             _jump_to_continue = True
                         for _succ in hdr.successors:
-                            if _succ.start_offset != _jt_offset:
+                            if _succ.start_offset != _jt_offset and not getattr(_succ, 'is_exception_handler', False):
                                 _fall_through_block = _succ
                                 if self._block_is_continue_target(_succ):
                                     _if_body_type = 'Continue'
@@ -7904,7 +7904,7 @@ AST 映射规则:
                             _if_body_type = 'Continue'
                         if not _jump_to_continue:
                             for _succ in hdr.successors:
-                                if _succ.start_offset != _cb_last.argval:
+                                if _succ.start_offset != _cb_last.argval and not getattr(_succ, 'is_exception_handler', False):
                                     _fall_through_block = _succ
                                     if self._block_is_continue_target(_succ):
                                         _ft_is_continue = True
@@ -8072,11 +8072,23 @@ AST 映射规则:
                             _then_stmts2 = self._generate_block_statements(_fall_through_block)
                             if _fall_through_block not in self.generated_blocks:
                                 self.generated_blocks.add(_fall_through_block)
+                            _orelse_stmts = [{'type': 'Break'}]
+                            if _cb_last.argval is not None:
+                                _jt_block_r = self.cfg.get_block_by_offset(_cb_last.argval)
+                                if _jt_block_r:
+                                    _jt_role_r = self.region_analyzer.get_block_role(_jt_block_r)
+                                    if _jt_role_r in (BlockRole.BREAK, BlockRole.PURE_BREAK):
+                                        _jt_stmts_r = self._generate_block_statements(_jt_block_r)
+                                        _jt_user_stmts = [s for s in _jt_stmts_r if s.get('type') not in ('Break', 'Continue')]
+                                        if _jt_user_stmts:
+                                            _orelse_stmts = _jt_user_stmts + [{'type': 'Break'}]
+                                        if _jt_block_r not in self.generated_blocks:
+                                            self.generated_blocks.add(_jt_block_r)
                             _self_loop_stmts.append({
                                 'type': 'If',
                                 'test': _cb_cond,
                                 'body': _then_stmts2 if _then_stmts2 else [{'type': 'Pass'}],
-                                'orelse': [{'type': 'Break'}],
+                                'orelse': _orelse_stmts,
                             })
                         else:
                             _ft_last_i2 = _fall_through_block.get_last_instruction() if _fall_through_block else None
@@ -8734,13 +8746,55 @@ AST 映射规则:
                     if not _is_jump_to_continue and _fall_through:
                         _is_jump_to_continue = self._block_is_continue_target(_fall_through)
                     if _is_jump_to_break and not _is_if_false:
-                        _negate = True
-                        _cond_expr = _negate_expr(_expr) if _negate else _expr
-                        _hdr_stmts.append({'type': 'If', 'test': _cond_expr, 'body': [{'type': 'Break'}]})
+                        _break_has_pre = any(
+                            i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP',
+                                             'JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                                             'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+                                             'RETURN_VALUE', 'RETURN_CONST')
+                            and not (i.opname == 'LOAD_CONST' and i.argval is None)
+                            for i in _jump_block.instructions)
+                        if _break_has_pre or (_fall_through and self.region_analyzer.get_block_role(_fall_through) in (BlockRole.CONTINUE, BlockRole.PURE_CONTINUE)):
+                            _then_stmts_br = self._generate_block_statements(_fall_through) if _fall_through else []
+                            _else_pre_br = self._generate_block_statements(_jump_block)
+                            _else_stmts_br = (_else_pre_br or []) + [{'type': 'Break'}]
+                            self.generated_blocks.add(_jump_block)
+                            self.generated_offsets.add(_jump_block.start_offset)
+                            if _fall_through:
+                                self.generated_blocks.add(_fall_through)
+                                self.generated_offsets.add(_fall_through.start_offset)
+                            _hdr_stmts.append({'type': 'If', 'test': _expr,
+                                               'body': _then_stmts_br if _then_stmts_br else [{'type': 'Pass'}],
+                                               'orelse': _else_stmts_br})
+                        else:
+                            _negate = True
+                            _cond_expr = _negate_expr(_expr) if _negate else _expr
+                            _hdr_stmts.append({'type': 'If', 'test': _cond_expr, 'body': [{'type': 'Break'}]})
                     elif _is_jump_to_break and _is_if_false:
-                        _negate = False
-                        _cond_expr = _negate_expr(_expr) if _negate else _expr
-                        _hdr_stmts.append({'type': 'If', 'test': _cond_expr, 'body': [{'type': 'Break'}]})
+                        _break_has_pre = any(
+                            i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP',
+                                             'JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                                             'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+                                             'RETURN_VALUE', 'RETURN_CONST')
+                            and not (i.opname == 'LOAD_CONST' and i.argval is None)
+                            for i in _jump_block.instructions)
+                        if _break_has_pre or (_fall_through and self.region_analyzer.get_block_role(_fall_through) in (BlockRole.CONTINUE, BlockRole.PURE_CONTINUE)):
+                            _then_stmts_br2 = self._generate_block_statements(_fall_through) if _fall_through else []
+                            _else_pre_br2 = self._generate_block_statements(_jump_block)
+                            _else_stmts_br2 = (_else_pre_br2 or []) + [{'type': 'Break'}]
+                            self.generated_blocks.add(_jump_block)
+                            self.generated_offsets.add(_jump_block.start_offset)
+                            if _fall_through:
+                                self.generated_blocks.add(_fall_through)
+                                self.generated_offsets.add(_fall_through.start_offset)
+                            _negate_br2 = True
+                            _cond_expr_br2 = _negate_expr(_expr) if _negate_br2 else _expr
+                            _hdr_stmts.append({'type': 'If', 'test': _cond_expr_br2,
+                                               'body': _then_stmts_br2 if _then_stmts_br2 else [{'type': 'Pass'}],
+                                               'orelse': _else_stmts_br2})
+                        else:
+                            _negate = False
+                            _cond_expr = _negate_expr(_expr) if _negate else _expr
+                            _hdr_stmts.append({'type': 'If', 'test': _cond_expr, 'body': [{'type': 'Break'}]})
                     elif _is_jump_to_continue:
                         if _is_if_false:
                             _then_succ = _fall_through
@@ -18595,12 +18649,24 @@ AST 映射规则:
             body_stmts = ret_stmts if ret_stmts else [{'type': 'Return', 'value': {'type': 'Constant', 'value': None}}]
             self.generated_blocks.add(exit_succ)
         elif exit_role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
-            # [Phase 7 方案 A] BREAK 角色块是循环 break 退出目标（CPython
-            # 将 break 优化为跳到循环外块，该块常为 LOAD_CONST None + RETURN_VALUE
-            # 即模块隐式 return None）。block_role 语义已确定为 break 退出，
-            # 不因含 RETURN_VALUE 而误生成 return。判据基于 block_role 语义。
-            body_stmts = [{'type': 'Break'}]
+            _break_user_stmts = self._generate_block_statements(exit_succ)
+            _break_user_stmts = [s for s in _break_user_stmts if s.get('type') not in ('Break', 'Continue')]
+            if _break_user_stmts:
+                body_stmts = _break_user_stmts + [{'type': 'Break'}]
+            else:
+                body_stmts = [{'type': 'Break'}]
             self.generated_blocks.add(exit_succ)
+            if fall_through and self._block_is_continue_target(fall_through) and exit_succ == jump_target:
+                _ft_stmts = self._generate_block_statements(fall_through)
+                _ft_user = [s for s in _ft_stmts if s.get('type') != 'Continue']
+                if _ft_user:
+                    _orelse_stmts = _ft_user + [{'type': 'Continue'}]
+                    if_stmt = {'type': 'If', 'test': cond_expr, 'body': body_stmts, 'orelse': _orelse_stmts}
+                    self.generated_blocks.add(fall_through)
+                    self.generated_blocks.add(block)
+                    self.generated_offsets.add(block.start_offset)
+                    result = pre_stmts + [if_stmt] if pre_stmts else [if_stmt]
+                    return result
         else:
             _exit_has_return = any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in exit_succ.instructions)
             _ret_val = None
@@ -19016,10 +19082,12 @@ AST 映射规则:
                 if _else_block and _else_block not in self.generated_blocks:
                     _else_role = self.region_analyzer.get_block_role(_else_block)
                     if _else_role in (BlockRole.CONTINUE, BlockRole.PURE_CONTINUE):
-                        _else_stmts = [{'type': 'Continue'}]
+                        _else_pre = self._generate_block_statements(_else_block)
+                        _else_stmts = (_else_pre or []) + [{'type': 'Continue'}]
                         self.generated_blocks.add(_else_block)
                     elif _else_role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
-                        _else_stmts = [{'type': 'Break'}]
+                        _else_pre = self._generate_block_statements(_else_block)
+                        _else_stmts = (_else_pre or []) + [{'type': 'Break'}]
                         self.generated_blocks.add(_else_block)
                     else:
                         _else_nested = self.region_analyzer.get_entry_region_for_block(_else_block)
@@ -19166,7 +19234,12 @@ AST 映射规则:
                 _bn_then_role = self.region_analyzer.get_block_role(_bn_then_block)
                 _bn_then_is_break = (_bn_then_block == break_succ[0])
                 if _bn_then_is_break:
-                    _bn_then_stmts = [{'type': 'Break'}]
+                    _bn_then_pre = self._generate_block_statements(_bn_then_block)
+                    _bn_then_pre_user = [s for s in _bn_then_pre if s.get('type') not in ('Break', 'Continue')]
+                    if _bn_then_pre_user:
+                        _bn_then_stmts = _bn_then_pre_user + [{'type': 'Break'}]
+                    else:
+                        _bn_then_stmts = [{'type': 'Break'}]
                     if _bn_then_block not in self.generated_blocks:
                         self.generated_blocks.add(_bn_then_block)
                 elif _bn_then_role in (BlockRole.RETURN, BlockRole.RETURN_NONE):
@@ -19193,7 +19266,12 @@ AST 映射规则:
                 _bn_else_is_break = (_bn_else_block == break_succ[0])
                 _bn_else_meaningful_skipped = False
                 if _bn_else_is_break:
-                    _bn_else_stmts = [{'type': 'Break'}]
+                    _bn_else_pre = self._generate_block_statements(_bn_else_block)
+                    _bn_else_pre_user = [s for s in _bn_else_pre if s.get('type') not in ('Break', 'Continue')]
+                    if _bn_else_pre_user:
+                        _bn_else_stmts = _bn_else_pre_user + [{'type': 'Break'}]
+                    else:
+                        _bn_else_stmts = [{'type': 'Break'}]
                     if _bn_else_block not in self.generated_blocks:
                         self.generated_blocks.add(_bn_else_block)
                 elif _bn_else_role in (BlockRole.RETURN, BlockRole.RETURN_NONE):
@@ -19346,7 +19424,12 @@ AST 映射规则:
                 # 不因含 RETURN_VALUE 而误生成 return，block_role 语义优先。
                 _target_blk_role = self.region_analyzer.get_block_role(_target_blk)
                 if _target_blk_role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
-                    _body_stmts = [{'type': body_type}]
+                    _break_pre_stmts = self._generate_block_statements(_target_blk)
+                    _break_pre_user = [s for s in _break_pre_stmts if s.get('type') not in ('Break', 'Continue')]
+                    if _break_pre_user:
+                        _body_stmts = _break_pre_user + [{'type': body_type}]
+                    else:
+                        _body_stmts = [{'type': body_type}]
                 else:
                     _blk_has_ret = any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in _target_blk.instructions)
                     _ret_val = None
@@ -19384,11 +19467,21 @@ AST 映射规则:
         # 为 PURE_CONTINUE/LOOP_BACK_EDGE（无 meaningful 指令），直接输出 Continue。
         if _emit_continue_after_if and continue_succ:
             _cont_blk = continue_succ[0]
-            if _cont_blk not in self.generated_blocks:
-                self.generated_blocks.add(_cont_blk)
-                self.generated_offsets.add(_cont_blk.start_offset)
-            result = (pre_stmts + [if_stmt, {'type': 'Continue'}]
-                      if pre_stmts else [if_stmt, {'type': 'Continue'}])
+            _cont_pre_stmts = self._generate_block_statements(_cont_blk)
+            _cont_pre_user = [s for s in _cont_pre_stmts if s.get('type') != 'Continue']
+            if _cont_pre_user:
+                _orelse_stmts = _cont_pre_user + [{'type': 'Continue'}]
+                if_stmt['orelse'] = _orelse_stmts
+                if _cont_blk not in self.generated_blocks:
+                    self.generated_blocks.add(_cont_blk)
+                    self.generated_offsets.add(_cont_blk.start_offset)
+                result = pre_stmts + [if_stmt] if pre_stmts else [if_stmt]
+            else:
+                if _cont_blk not in self.generated_blocks:
+                    self.generated_blocks.add(_cont_blk)
+                    self.generated_offsets.add(_cont_blk.start_offset)
+                result = (pre_stmts + [if_stmt, {'type': 'Continue'}]
+                          if pre_stmts else [if_stmt, {'type': 'Continue'}])
         else:
             result = pre_stmts + [if_stmt] if pre_stmts else [if_stmt]
         return result
@@ -38178,6 +38271,40 @@ AST 映射规则:
                 if len(user_instrs) == 1 and user_instrs[0].opname == 'RETURN_CONST':
                     self.generated_blocks.add(block)
                     return [{'type': 'Break'}]
+            _break_meaningful = [i for i in block.instructions
+                                 if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP')
+                                 and i.opname not in ('JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                                                      'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                                 and i.opname not in ('RETURN_VALUE', 'RETURN_CONST')
+                                 and not (i.opname == 'LOAD_CONST' and i.argval is None)]
+            if _break_meaningful:
+                _break_user_stmts = []
+                _effective = [i for i in block.instructions
+                              if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
+                                                  'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
+                                                  'JUMP_FORWARD', 'JUMP_ABSOLUTE')]
+                if _effective:
+                    _expr_instrs = []
+                    for _instr in _effective:
+                        if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                            continue
+                        if _instr.opname == 'POP_TOP':
+                            if _expr_instrs:
+                                _expr = self.expr_reconstructor.reconstruct(_expr_instrs)
+                                if _expr:
+                                    _break_user_stmts.append({'type': 'Expr', 'value': _expr})
+                                _expr_instrs = []
+                            continue
+                        if _instr.opname.startswith('STORE') and _expr_instrs:
+                            _stmt = self._build_statement(_expr_instrs + [_instr])
+                            if _stmt:
+                                _break_user_stmts.append(_stmt)
+                            _expr_instrs = []
+                            continue
+                        _expr_instrs.append(_instr)
+                self.generated_blocks.add(block)
+                self.generated_offsets.add(block.start_offset)
+                return _break_user_stmts if _break_user_stmts else []
 
         if block_role == BlockRole.LOOP_BACK_EDGE:
             # [R66 fix] Use ALL meaningful instructions, not just effective_instructions.
