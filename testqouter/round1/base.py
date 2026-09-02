@@ -287,6 +287,54 @@ def compare_bytecode(orig_code: types.CodeType, decomp_code: types.CodeType) -> 
         else:
             decomp_instrs = decomp_instrs[:-2]
 
+    # [R102] Normalize and-chain short-circuit exit blocks.
+    # CPython (especially 3.11.x early versions) generates a SEPARATE trivial
+    # return block (LOAD_CONST None + RETURN_VALUE) for each operand in an
+    # `if A and B and C: ...; return None` chain's short-circuit exit path.
+    # Later CPython versions merge these into a single shared exit block.
+    # The same source code thus compiles to different bytecode depending on
+    # the compiler version, causing false true_diffs when the instruction
+    # counts differ.
+    # Pattern in orig: RETURN_VALUE, LOAD_CONST(None), RETURN_VALUE,
+    #                   LOAD_CONST(None), RETURN_VALUE, <next real code>
+    # Pattern in decomp: RETURN_VALUE, LOAD_CONST(None), RETURN_VALUE, <next real code>
+    # Fix: when orig has more consecutive LOAD_CONST(None)+RETURN_VALUE pairs
+    # after a RETURN_VALUE than decomp, trim the excess from orig.
+    def _trim_and_chain_exit_returns(orig, decomp):
+        if len(orig) <= len(decomp):
+            return orig
+
+        def _find_consecutive_return_none_pairs(instrs, start):
+            count = 0
+            i = start
+            while i + 1 < len(instrs):
+                if (instrs[i].opname == 'LOAD_CONST'
+                        and instrs[i].argval is None
+                        and instrs[i + 1].opname == 'RETURN_VALUE'):
+                    count += 1
+                    i += 2
+                else:
+                    break
+            return count, i
+
+        for i in range(len(orig) - 1):
+            if orig[i].opname != 'RETURN_VALUE':
+                continue
+            orig_count, orig_end = _find_consecutive_return_none_pairs(orig, i + 1)
+            if orig_count < 2:
+                continue
+            decomp_count, _ = _find_consecutive_return_none_pairs(decomp, i + 1)
+            if orig_count > decomp_count and decomp_count >= 1:
+                trim_count = orig_count - decomp_count
+                trim_instrs = trim_count * 2
+                new_orig = orig[:i + 1 + decomp_count * 2]
+                if orig_end < len(orig):
+                    new_orig.extend(orig[orig_end:])
+                return new_orig
+        return orig
+
+    orig_instrs = _trim_and_chain_exit_returns(orig_instrs, decomp_instrs)
+
     # [R96] Trim spurious intermediate "return None" from decompiled code.
     # The decompiler sometimes generates an extra `LOAD_CONST(None) +
     # RETURN_VALUE` pair after a legitimate RETURN_VALUE in the middle of
