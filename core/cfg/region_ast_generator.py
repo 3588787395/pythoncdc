@@ -4576,8 +4576,7 @@ AST 映射规则:
                 _can_merge = (result['test'].get('value') is True
                         and body_stmts and len(body_stmts) >= 1
                         and isinstance(body_stmts[0], dict)
-                        and body_stmts[0].get('type') == 'While'
-                        and not any(s.get('type') == 'Break' for s in body_stmts[1:]))
+                        and body_stmts[0].get('type') == 'While')
                 if _can_merge:
                     _outer_be = getattr(region, 'back_edge_block', None)
                     _child_loops = [c for c in (region.children or [])
@@ -4588,9 +4587,21 @@ AST 映射规则:
                                          for c in _child_loops)
                         if not (_inner_min <= _outer_be.start_offset <= _inner_max):
                             _can_merge = False
+                    _rest_no_break = [s for s in body_stmts[1:]
+                                      if not (isinstance(s, dict) and s.get('type') == 'Break')]
+                    if _rest_no_break != body_stmts[1:]:
+                        if all(isinstance(s, dict) and s.get('type') == 'Break' for s in body_stmts[1:]):
+                            pass
+                        elif (len(_rest_no_break) == 0
+                              or all(isinstance(s, dict) and s.get('type') in ('Continue', 'Break', 'Pass')
+                                     for s in body_stmts[1:])):
+                            pass
+                        else:
+                            _can_merge = False
                 if _can_merge:
                     _inner = body_stmts[0]
-                    _rest = body_stmts[1:]
+                    _rest = [s for s in body_stmts[1:]
+                             if not (isinstance(s, dict) and s.get('type') == 'Break')]
                     output = list(pre_stmts)
                     output.append(_inner)
                     output.extend(_rest)
@@ -9742,7 +9753,44 @@ AST 映射规则:
                 _offset += 1
             body_stmts.extend(_filtered_back_edge)
         else:
-            body_stmts.extend(back_edge_stmts)
+            if back_edge_stmts and region.back_edge_block:
+                _be_block = region.back_edge_block
+                _be_all_in_then = True
+                _be_then_region = None
+                for _pred in _be_block.predecessors:
+                    if _pred in (region.body_blocks or []):
+                        _found_in_then = False
+                        for _child in (region.children or []):
+                            if isinstance(_child, IfRegion) and _pred in _child.then_blocks:
+                                _found_in_then = True
+                                if _be_then_region is None:
+                                    _be_then_region = _child
+                                elif _be_then_region is not _child:
+                                    _be_all_in_then = False
+                                    break
+                                break
+                        if not _found_in_then:
+                            _be_all_in_then = False
+                            break
+                    else:
+                        _be_all_in_then = False
+                        break
+                if _be_all_in_then and _be_then_region:
+                    _be_placed = False
+                    for _si in range(len(body_stmts) - 1, -1, -1):
+                        _bs = body_stmts[_si]
+                        if isinstance(_bs, dict) and _bs.get('type') == 'If':
+                            _if_body = _bs.get('body', [])
+                            _if_body.extend(back_edge_stmts)
+                            _bs['body'] = _if_body
+                            _be_placed = True
+                            break
+                    if not _be_placed:
+                        body_stmts.extend(back_edge_stmts)
+                else:
+                    body_stmts.extend(back_edge_stmts)
+            else:
+                body_stmts.extend(back_edge_stmts)
 
 
     def _generate_if(self, region: IfRegion) -> Union[Dict[str, Any], List[Dict[str, Any]]]:

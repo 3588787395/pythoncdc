@@ -3870,22 +3870,12 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                         # 外层包装，移除会丢失无限循环语义，导致末尾产生虚假
                         # return None。
                         _diff_a = body_a_set - body_b_set
-                        _structural_overhead_a = {b for b in _diff_a
-                                                  if b is cond_b
-                                                  or self._is_trivial_return_block(b)
-                                                  or self._check_block_has_trailing_return_none(b)}
-                        _meaningful_diff_a = _diff_a - _structural_overhead_a
-                        if body_a_set and body_b_set and not _meaningful_diff_a:
+                        if body_a_set and body_b_set and len(_diff_a) <= 2:
                             removal_set.add(id(lr_a))
                             continue
                     if lr_b.is_while_true and cond_a and cond_a == lr_b.header_block:
                         _diff_b = body_b_set - body_a_set
-                        _structural_overhead_b = {b for b in _diff_b
-                                                  if b is cond_a
-                                                  or self._is_trivial_return_block(b)
-                                                  or self._check_block_has_trailing_return_none(b)}
-                        _meaningful_diff_b = _diff_b - _structural_overhead_b
-                        if body_a_set and body_b_set and not _meaningful_diff_b:
+                        if body_a_set and body_b_set and len(_diff_b) <= 2:
                             removal_set.add(id(lr_b))
                             continue
             if removal_set:
@@ -15504,14 +15494,7 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 #       ...
                 #   elif D: ...
                 # 原逻辑设 merge=408，else_blocks=[]，IF_ELIF_CHAIN 无法创建。
-                _33_else_last = else_succ.get_last_instruction()
-                _33_else_is_cond = (
-                    len(else_succ.conditional_successors) == 2
-                    and _33_else_last is not None
-                    and _33_else_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)
-                )
-                if not _33_else_is_cond:
-                    merge = else_succ
+                merge = else_succ
 
             # 区域归约算法原则 2（每块唯一归属）+ 原则 4（归约顺序）：
             # 当所有 merge 计算均失败（NCPD=None, _compute_merge_from_jump_targets=None）
@@ -15590,6 +15573,7 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     and _main_orig_cond_block is not None):
                 condition_block = _main_orig_cond_block
                 chain_blocks = _main_orig_chain_blocks
+                _main_inline_boolop_chain = None
                 cond_succs = list(condition_block.conditional_successors)
                 if len(cond_succs) == 2:
                     then_succ, else_succ = sorted(cond_succs, key=lambda s: s.start_offset)
@@ -15691,32 +15675,7 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     # 此三种场景下保持原 merge（None），让 _check_elif_chain 正确
                     # 识别 elif 链。若设 merge=else_succ，else_blocks 为空
                     #（entry==merge），IF_ELIF_CHAIN 无法创建。
-                    _w14_else_is_elif = False
-                    if not _w14_all_true_jump and _7_jumpers:
-                        _w14_es_last = else_succ.get_last_instruction()
-                        _w14_es_cond = (
-                            len(else_succ.conditional_successors) == 2
-                            and _w14_es_last is not None
-                            and _w14_es_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)
-                        )
-                        if _w14_es_cond:
-                            _w14_all_chain = all(p in chain_blocks for p in _7_jumpers)
-                            if _w14_all_chain:
-                                _w14_else_is_elif = True
-                            else:
-                                _w14_all_pure_cond = all(
-                                    _w14_pure_cond_pred(p)
-                                    for p in _7_jumpers)
-                                if _w14_all_pure_cond:
-                                    _w14_else_is_elif = True
-                                else:
-                                    _w14_ts_last = then_succ.get_last_instruction()
-                                    if (_w14_ts_last is not None
-                                            and _w14_ts_last.opname in FORWARD_CONDITIONAL_JUMP_OPS
-                                            and _w14_ts_last.argval == else_succ.start_offset
-                                            and 'FALSE' in _w14_ts_last.opname):
-                                        _w14_else_is_elif = True
-                    if not _w14_all_true_jump and not _w14_else_is_elif:
+                    if not _w14_all_true_jump:
                         merge = else_succ
             else_blocks = self._collect_branch_blocks(else_succ, merge, else_stop)
             # 区域归约算法：try/with handler 块过滤
