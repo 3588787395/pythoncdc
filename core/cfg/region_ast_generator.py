@@ -10923,14 +10923,37 @@ AST 映射规则:
         # 导致字节码不一致（jump_target_diff: 跳转目标偏移因缺少 LOAD_CONST +
         # RETURN_VALUE 而提前 2~4 字节）。
         _then_has_explicit_return = False
+        _then_loop_exit_blocks = set()
+        for _lr in self.region_analyzer._filter_regions(self.regions, __import__('core.cfg.region_analyzer', fromlist=['LoopRegion']).LoopRegion):
+            _lr_else = set(getattr(_lr, 'else_blocks', []) or [])
+            _lr_body = set(getattr(_lr, 'body_blocks', []) or [])
+            _lr_cond = {_lr.condition_block} if getattr(_lr, 'condition_block', None) else set()
+            _lr_header = {_lr.header_block} if getattr(_lr, 'header_block', None) else set()
+            _lr_exits = set(_lr.blocks) - _lr_body - _lr_cond - _lr_header
+            if _lr_exits & set(region.then_blocks or []):
+                _then_loop_exit_blocks.update(_lr_exits)
         for _tb in (region.then_blocks or []):
             _tb_last = _tb.get_last_instruction()
             if _tb_last and _tb_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                if _tb in _then_loop_exit_blocks:
+                    if self.region_analyzer._check_block_has_trailing_return_none(_tb):
+                        continue
                 _then_has_explicit_return = True
                 break
         if (elif_part and then_stmts and len(then_stmts) > 1
                 and not _then_has_explicit_return):
             while then_stmts and _is_implicit_return_none(then_stmts[-1]):
+                then_stmts.pop()
+        if (elif_part and then_stmts and len(then_stmts) >= 2
+                and not _then_has_explicit_return):
+            _last = then_stmts[-1]
+            _has_while = any(isinstance(s, dict) and s.get('type') == 'While' for s in then_stmts[:-1])
+            if (_has_while
+                    and isinstance(_last, dict)
+                    and _last.get('type') == 'Return'
+                    and isinstance(_last.get('value'), dict)
+                    and _last['value'].get('type') == 'Constant'
+                    and _last['value'].get('value') is None):
                 then_stmts.pop()
 
         trailing_return = None
@@ -13735,7 +13758,8 @@ AST 映射规则:
             # 仅当 elif body 非显式 return（末尾块以 JUMP_FORWARD 结尾，
             # 即 fallthrough）时才弹出隐式 return None。except handler 内的显式
             # return None 生成真实字节码（POP_EXCEPT+cleanup+RETURN_VALUE），必须保留。
-            if not self._r23n16_blocks_have_explicit_return(region.elif_bodies[0]):
+            _elif_body_has_explicit_return = self._r23n16_blocks_have_explicit_return(region.elif_bodies[0])
+            if not _elif_body_has_explicit_return:
                 while (elif_body_stmts and
                        isinstance(elif_body_stmts[-1], dict) and
                        elif_body_stmts[-1].get('type') == 'Return' and
@@ -13743,6 +13767,28 @@ AST 映射规则:
                        elif_body_stmts[-1]['value'].get('type') == 'Constant' and
                        elif_body_stmts[-1]['value'].get('value') is None):
                     elif_body_stmts.pop()
+            if (_elif_body_has_explicit_return and elif_body_stmts
+                    and len(elif_body_stmts) >= 2):
+                _last_eb = elif_body_stmts[-1]
+                _eb_has_while = any(isinstance(s, dict) and s.get('type') == 'While' for s in elif_body_stmts[:-1])
+                if (_eb_has_while
+                        and isinstance(_last_eb, dict)
+                        and _last_eb.get('type') == 'Return'
+                        and isinstance(_last_eb.get('value'), dict)
+                        and _last_eb['value'].get('type') == 'Constant'
+                        and _last_eb['value'].get('value') is None):
+                    _elif_loop_exit_blocks = set()
+                    _elif_body_set = set(region.elif_bodies[0])
+                    for _lr in self.region_analyzer._filter_regions(self.regions, __import__('core.cfg.region_analyzer', fromlist=['LoopRegion']).LoopRegion):
+                        _lr_body = set(getattr(_lr, 'body_blocks', []) or [])
+                        _lr_cond = {_lr.condition_block} if getattr(_lr, 'condition_block', None) else set()
+                        _lr_header = {_lr.header_block} if getattr(_lr, 'header_block', None) else set()
+                        _lr_exits = set(_lr.blocks) - _lr_body - _lr_cond - _lr_header
+                        if _lr_exits & _elif_body_set:
+                            _elif_loop_exit_blocks.update(_lr_exits)
+                    _eb_last_block = region.elif_bodies[0][-1]
+                    if _eb_last_block in _elif_loop_exit_blocks and self.region_analyzer._check_block_has_trailing_return_none(_eb_last_block):
+                        elif_body_stmts.pop()
             if (elif_body_stmts
                     and not any(s.get('type') in ('Break', 'Continue', 'Return', 'Raise')
                                 for s in elif_body_stmts[-2:])
@@ -13997,6 +14043,16 @@ AST 映射规则:
                                    final_else_stmts[-1]['value'].get('type') == 'Constant' and
                                    final_else_stmts[-1]['value'].get('value') is None):
                                 final_else_stmts.pop()
+                        if (final_else_stmts
+                                and len(final_else_stmts) == 1
+                                and isinstance(final_else_stmts[0], dict)
+                                and final_else_stmts[0].get('type') == 'Return'
+                                and isinstance(final_else_stmts[0].get('value'), dict)
+                                and final_else_stmts[0]['value'].get('type') == 'Constant'
+                                and final_else_stmts[0]['value'].get('value') is None
+                                and elif_body_stmts
+                                and any(isinstance(s, dict) and s.get('type') == 'While' for s in elif_body_stmts)):
+                            final_else_stmts = []
                         if final_else_stmts:
                             nested_elif_stmts[0]['orelse'] = final_else_stmts
                         final_else_stmts = None
@@ -14024,6 +14080,16 @@ AST 映射规则:
                        final_else_stmts[-1]['value'].get('type') == 'Constant' and
                        final_else_stmts[-1]['value'].get('value') is None):
                     final_else_stmts.pop()
+            if (final_else_stmts
+                    and len(final_else_stmts) == 1
+                    and isinstance(final_else_stmts[0], dict)
+                    and final_else_stmts[0].get('type') == 'Return'
+                    and isinstance(final_else_stmts[0].get('value'), dict)
+                    and final_else_stmts[0]['value'].get('type') == 'Constant'
+                    and final_else_stmts[0]['value'].get('value') is None
+                    and elif_body_stmts
+                    and any(isinstance(s, dict) and s.get('type') == 'While' for s in elif_body_stmts)):
+                final_else_stmts = []
         elif_orelse = nested_elif_stmts if nested_elif_stmts else (final_else_stmts if final_else_stmts else [])
         # [R01 fix] final_else_stmts 仅在 region.elif_final_else 非空时赋值。
         # 当 nested_elif_stmts=[] 且 region.elif_final_else=[] 时，原代码

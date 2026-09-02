@@ -3870,12 +3870,22 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                         # 外层包装，移除会丢失无限循环语义，导致末尾产生虚假
                         # return None。
                         _diff_a = body_a_set - body_b_set
-                        if body_a_set and body_b_set and len(_diff_a) <= 2:
+                        _structural_overhead_a = {b for b in _diff_a
+                                                  if b is cond_b
+                                                  or self._is_trivial_return_block(b)
+                                                  or self._check_block_has_trailing_return_none(b)}
+                        _meaningful_diff_a = _diff_a - _structural_overhead_a
+                        if body_a_set and body_b_set and not _meaningful_diff_a:
                             removal_set.add(id(lr_a))
                             continue
                     if lr_b.is_while_true and cond_a and cond_a == lr_b.header_block:
                         _diff_b = body_b_set - body_a_set
-                        if body_a_set and body_b_set and len(_diff_b) <= 2:
+                        _structural_overhead_b = {b for b in _diff_b
+                                                  if b is cond_a
+                                                  or self._is_trivial_return_block(b)
+                                                  or self._check_block_has_trailing_return_none(b)}
+                        _meaningful_diff_b = _diff_b - _structural_overhead_b
+                        if body_a_set and body_b_set and not _meaningful_diff_b:
                             removal_set.add(id(lr_b))
                             continue
             if removal_set:
@@ -15482,7 +15492,26 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             # 是唯一合法合并点：else_blocks 为空（entry==merge），then 体完整保留，
             # 且不回退（or 链信息保留，AST 端重建 BoolOp(Or)）。
             if (merge is None and _main_inline_boolop_chain is not None):
-                merge = else_succ
+                # [R35 fix] else_succ 是条件块（潜在 elif 条件）时跳过，交给 elif 链检测。
+                # 当 and/or 短路链的 then body 以 return/sink 终止，NCPD=None 且
+                # _compute_merge_from_jump_targets=None，此兜底会设 merge=else_succ。
+                # 若 else_succ 是 elif 条件块，merge=else_succ 使 else_blocks 为空
+                #（entry==merge），阻止 IF_ELIF_CHAIN 创建，elif 被独立识别为 IF_THEN。
+                # 典型场景（handlers._target）：
+                #   if A and B:       # and 链，then body 含 while+return None (sink)
+                #       ...
+                #   elif C:           # else_succ=408 是 elif 条件块
+                #       ...
+                #   elif D: ...
+                # 原逻辑设 merge=408，else_blocks=[]，IF_ELIF_CHAIN 无法创建。
+                _33_else_last = else_succ.get_last_instruction()
+                _33_else_is_cond = (
+                    len(else_succ.conditional_successors) == 2
+                    and _33_else_last is not None
+                    and _33_else_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)
+                )
+                if not _33_else_is_cond:
+                    merge = else_succ
 
             # 区域归约算法原则 2（每块唯一归属）+ 原则 4（归约顺序）：
             # 当所有 merge 计算均失败（NCPD=None, _compute_merge_from_jump_targets=None）
@@ -15539,18 +15568,28 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                         merge = else_succ
 
             # 区域归约算法原则 1（自底向上归约）+ 原则 2
-            #（每块唯一归属）：当主条件 'and' 链检测重定向了 condition_block，
-            # 但所有 merge 计算均失败（merge=None，典型场景：then-body 含 return
-            # 导致重定向后 then_succ 的 post-dominator 为 None），撤销重定向，
-            # 恢复原始 condition_block 重新计算 merge。依原则 4：不重定向时
-            # condition_block=首块，then_succ=次条件块（无 return，post-dominator
-            # 正确），merge 可正确计算。_main_inline_boolop_chain 清空，该 if
-            # 保持 R25 行为（主条件取首块，次块作为嵌套 IfRegion），不引入回归。
+            #（每块唯一归属）+ 原则 4（入口引用语义）：当主条件 'and' 链检测
+            # 重定向了 condition_block，但所有 merge 计算均失败（merge=None），
+            # 撤销重定向恢复原始 condition_block 重新计算 merge。依原则 4：
+            # 不重定向时 condition_block=首块，then_succ=次条件块（无 return，
+            # post-dominator 正确），merge 可正确计算。
+            # [修复] 不再清空 _main_inline_boolop_chain：and 链信息保留并传入
+            # _build_elif_region / _build_basic_if_region，存入
+            # IfRegion.inline_boolop_chains（key=id(condition_block)=id(首块)）。
+            # AST 生成端通过 _main_ibc 查找路径重建 BoolOp(And, [A, B]) 条件，
+            # 避免 `if A and B:` 被拆为嵌套 `if A: if B:`。
+            # 典型场景（handlers._target）：
+            #   if sys.version_info[0]==3 and sys.version_info[1]==5:
+            #       while self.running: ...
+            #   elif sys.version_info[0]==3 and sys.version_info[1]==11:
+            #       while self.running: ...
+            # and 链 [block0, block46] 重定向后 then_succ=block90(while 条件)，
+            # merge 计算失败（while 循环出口为 sink），回退后 condition_block=0，
+            # _main_inline_boolop_chain 保留，AST 端重建 `A and B`。
             if (merge is None and _main_inline_boolop_chain is not None
                     and _main_orig_cond_block is not None):
                 condition_block = _main_orig_cond_block
                 chain_blocks = _main_orig_chain_blocks
-                _main_inline_boolop_chain = None
                 cond_succs = list(condition_block.conditional_successors)
                 if len(cond_succs) == 2:
                     then_succ, else_succ = sorted(cond_succs, key=lambda s: s.start_offset)
@@ -15636,7 +15675,48 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                         and p.get_last_instruction() is not None
                         and 'TRUE' in p.get_last_instruction().opname
                         for p in _7_jumpers) and bool(_7_jumpers)
-                    if not _w14_all_true_jump:
+                    # [R35 fix] elif 链延续判据扩展：
+                    # 1) 当 else_succ 本身是条件块（2 个条件后继 + 末尾为
+                    # FORWARD_CONDITIONAL_JUMP，即潜在 elif 条件），且所有 then
+                    # 侧前驱都属于 chain_blocks（复合条件的 and 短路链操作数块）
+                    # 时，else_succ 是 elif 链的延续（如 `if A and B: ... elif C:`
+                    # 中 B 的 FALSE 短路出口指向 elif 条件块 C），不是独立 if 边界。
+                    # 2) 或者，所有 then 侧前驱都是纯条件测试块跳向 else_succ
+                    #（_w14_pure_cond_pred 为 True），且 else_succ 是 elif 候选。
+                    # 3) 或者，then_succ（then 分支首块）本身是条件块且其
+                    # FALSE 族跳转目标为 else_succ，同时 else_succ 是 elif 候选。
+                    # 这是 `if A and B: ... elif C:` 模式在 boolop 回滚后的形态：
+                    # 回滚将 then_succ 改为 and 链次条件块 B，B 的 FALSE 短路出口
+                    # 指向 elif 条件 C，chain_blocks 被清空导致 (1) 无法匹配。
+                    # 此三种场景下保持原 merge（None），让 _check_elif_chain 正确
+                    # 识别 elif 链。若设 merge=else_succ，else_blocks 为空
+                    #（entry==merge），IF_ELIF_CHAIN 无法创建。
+                    _w14_else_is_elif = False
+                    if not _w14_all_true_jump and _7_jumpers:
+                        _w14_es_last = else_succ.get_last_instruction()
+                        _w14_es_cond = (
+                            len(else_succ.conditional_successors) == 2
+                            and _w14_es_last is not None
+                            and _w14_es_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)
+                        )
+                        if _w14_es_cond:
+                            _w14_all_chain = all(p in chain_blocks for p in _7_jumpers)
+                            if _w14_all_chain:
+                                _w14_else_is_elif = True
+                            else:
+                                _w14_all_pure_cond = all(
+                                    _w14_pure_cond_pred(p)
+                                    for p in _7_jumpers)
+                                if _w14_all_pure_cond:
+                                    _w14_else_is_elif = True
+                                else:
+                                    _w14_ts_last = then_succ.get_last_instruction()
+                                    if (_w14_ts_last is not None
+                                            and _w14_ts_last.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                                            and _w14_ts_last.argval == else_succ.start_offset
+                                            and 'FALSE' in _w14_ts_last.opname):
+                                        _w14_else_is_elif = True
+                    if not _w14_all_true_jump and not _w14_else_is_elif:
                         merge = else_succ
             else_blocks = self._collect_branch_blocks(else_succ, merge, else_stop)
             # 区域归约算法：try/with handler 块过滤
@@ -16601,6 +16681,23 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                                         'STORE_DEREF', 'STORE_SUBSCR', 'STORE_ATTR')
                            for i in _ft_next.instructions):
                         break
+                    # [修复] while 循环条件不应被包含在 elif 的 and 链中。
+                    # CPython 编译 `elif A and B: while E: ...` 时，E 的
+                    # POP_JUMP_IF_FALSE 跳转目标是 while 循环出口（非 elif/else
+                    # 分支点），与 A/B 的跳转目标不同。但当所有跳转目标都是
+                    # 隐式 return None 块时，_is_implicit_return_block 等价
+                    # 判据会错误地将 E 也纳入 and 链，产生
+                    # `elif A and B and E:` 而非 `elif A and B: while E:`。
+                    # 判据：_ft_next 是某 LoopRegion 的 condition_block 或
+                    # header_block 时，_ft_next 是循环条件/循环头，不是 elif
+                    # 条件的操作数，应中断链扩展。
+                    _ft_is_loop_cond = False
+                    for _lr in self._filter_regions(self.regions, LoopRegion):
+                        if _ft_next == _lr.condition_block or _ft_next == _lr.header_block:
+                            _ft_is_loop_cond = True
+                            break
+                    if _ft_is_loop_cond:
+                        break
                     if _ft_last.argval != _inline_merge_offset:
                         if not (_merge_is_implicit_return and _ft_last.argval is not None and _is_implicit_return_block(self.cfg.get_block_by_offset(_ft_last.argval))):
                             break
@@ -17073,6 +17170,9 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             _chain_merge_candidates -= set(elif_info.get("final_else", []))
             _chain_merge_candidates.discard(block)
             _chain_merge_candidates.discard(then_blocks[0])
+            for _lr in self._filter_regions(self.regions, LoopRegion):
+                _chain_merge_candidates.discard(_lr.condition_block)
+                _chain_merge_candidates.discard(_lr.header_block)
             if _chain_merge_candidates:
                 _chain_merge = min(_chain_merge_candidates, key=lambda b: b.start_offset)
                 merge = _chain_merge
