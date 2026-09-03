@@ -9306,6 +9306,7 @@ AST 映射规则:
         """从指令序列中提取前置语句"""
         _pre_stmts: List[Dict[str, Any]] = []
         _buf: List[Instruction] = []
+        _nbi_unpack_info = None
         # [G1 fix / Round 04] yield cleanup 待定标记（镜像
         # _loop_process_header_instructions 的 yield 边界处理）。
         _yield_cleanup_pending = False
@@ -9325,7 +9326,50 @@ AST 映射规则:
                             _pre_stmts.append(_nbe_stmt)
                         _buf = []
                 continue
+            if _nbi.opname == 'UNPACK_SEQUENCE':
+                _val_instrs = [i for i in _buf
+                               if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                _val = self.expr_reconstructor.reconstruct(_val_instrs) if _val_instrs else None
+                _nbi_unpack_info = {'value': _val, 'targets': [], 'count': _nbi.arg}
+                _buf = []
+                continue
+            if _nbi.opname == 'UNPACK_EX':
+                _val_instrs = [i for i in _buf
+                               if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                _val = self.expr_reconstructor.reconstruct(_val_instrs) if _val_instrs else None
+                _nbi_arg = _nbi.argval
+                _before = _nbi_arg & 0xFF
+                _after = (_nbi_arg >> 8) & 0xFF
+                _nbi_unpack_info = {'value': _val, 'targets': [], 'count': _before + 1 + _after, 'is_starred': True, 'starred_idx': _before}
+                _buf = []
+                continue
             if _nbi.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                if _nbi_unpack_info is not None:
+                    _is_starred = _nbi_unpack_info.get('is_starred', False)
+                    _starred_idx = _nbi_unpack_info.get('starred_idx', -1)
+                    _current_target_idx = len(_nbi_unpack_info['targets'])
+                    if _is_starred and _current_target_idx == _starred_idx:
+                        _nbi_unpack_info['targets'].append({
+                            'type': 'Starred',
+                            'value': {'type': 'Name', 'id': _nbi.argval if _nbi.argval else f'var_{_nbi.arg}', 'ctx': 'Store'},
+                        })
+                    else:
+                        _nbi_unpack_info['targets'].append({
+                            'type': 'Name',
+                            'id': _nbi.argval if _nbi.argval else f'var_{_nbi.arg}',
+                            'ctx': 'Store',
+                        })
+                    if len(_nbi_unpack_info['targets']) == _nbi_unpack_info['count']:
+                        _target = {
+                            'type': 'Tuple',
+                            'elts': _nbi_unpack_info['targets'],
+                            'ctx': 'Store',
+                        }
+                        if _nbi_unpack_info['value']:
+                            _pre_stmts.append({'type': 'Assign', 'targets': [_target], 'value': _nbi_unpack_info['value']})
+                        _nbi_unpack_info = None
+                    _buf = []
+                    continue
                 _buf.append(_nbi)
                 _stmt = self._build_store_statement(_buf, block=block)
                 if _stmt:
