@@ -113,6 +113,17 @@ class ComprehensionGenerator:
 
         for comp_idx, comp_code in comp_indices:
             pre_comp_instrs = instrs[prev_end:comp_idx - 1]
+            _closure_setup_ops = frozenset({'MAKE_CELL', 'LOAD_CLOSURE', 'COPY_FREE_VARS'})
+            _filtered = []
+            _all_prior_are_closure = True
+            for _pi in pre_comp_instrs:
+                if _pi.opname in _closure_setup_ops:
+                    continue
+                if _pi.opname == 'BUILD_TUPLE' and _all_prior_are_closure:
+                    continue
+                _all_prior_are_closure = False
+                _filtered.append(_pi)
+            pre_comp_instrs = _filtered
             # 区域归约算法原则 3（嵌套即抽象节点）：当 comprehension 是
             # 更大表达式的子节点时（如 `return (sum(items), len(items), [listcomp])`），
             # pre_comp_instrs 会包含未被 STORE/POP_TOP/IMPORT 消费的值生产指令
@@ -268,12 +279,25 @@ class ComprehensionGenerator:
             # expr_reconstructor.reconstruct 路径处理整个块。
             if wrapper_end < len(instrs):
                 _post_wrapper = instrs[wrapper_end:]
+                _closure_setup = frozenset({'MAKE_CELL', 'LOAD_CLOSURE', 'COPY_FREE_VARS'})
+                _pw_filtered = []
+                _in_closure_seq = False
+                for _pw in _post_wrapper:
+                    if _pw.opname in _closure_setup:
+                        _in_closure_seq = True
+                        continue
+                    if (_pw.opname == 'BUILD_TUPLE' and _in_closure_seq
+                            and _pw.arg is not None and _pw.arg <= 2):
+                        _in_closure_seq = False
+                        continue
+                    _in_closure_seq = False
+                    _pw_filtered.append(_pw)
                 _expr_building_ops = frozenset({
                     'BUILD_TUPLE', 'BUILD_LIST', 'BUILD_SET', 'BUILD_MAP',
                     'BUILD_CONST_KEY_MAP', 'BINARY_OP', 'BINARY_SUBSCR',
                     'BUILD_SLICE', 'FORMAT_VALUE', 'BUILD_STRING',
                 })
-                if any(i.opname in _expr_building_ops for i in _post_wrapper):
+                if any(i.opname in _expr_building_ops for i in _pw_filtered):
                     return None
 
             store_instr = None
@@ -599,6 +623,15 @@ class ComprehensionGenerator:
             nested_cfg = builder.build(code_obj)
         except Exception:
             return None
+
+        _orig_cfg = self.expr_reconstructor.cfg
+        self.expr_reconstructor.cfg = nested_cfg
+        try:
+            return self._parse_comprehension_inner_impl(code_obj, iter_expr, nested_cfg)
+        finally:
+            self.expr_reconstructor.cfg = _orig_cfg
+
+    def _parse_comprehension_inner_impl(self, code_obj, iter_expr, nested_cfg):
 
         all_instrs = []
         for b in nested_cfg.get_blocks_in_order():
