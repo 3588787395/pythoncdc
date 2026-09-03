@@ -32448,9 +32448,14 @@ AST 映射规则:
                                 region.merge_block, 'exception_successors', set())
                             _succs = [s for s in region.merge_block.successors
                                                  if s not in _succs]
+                            _succ_is_if_merge = any(
+                                isinstance(r, IfRegion) and getattr(r, 'merge_block', None) is _succs[0]
+                                for r in self.regions
+                            ) if len(_succs) == 1 else False
                             if (len(_succs) == 1
                                     and not any(i.opname == 'POP_TOP'
-                                                for i in _non_noise_remaining)):
+                                                for i in _non_noise_remaining)
+                                    and not _succ_is_if_merge):
                                 _eff = [
                                     i for i in _succs[0].instructions
                                     if i.opname not in NOISE_OPS]
