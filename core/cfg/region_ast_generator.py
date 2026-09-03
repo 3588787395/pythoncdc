@@ -3925,6 +3925,24 @@ AST 映射规则:
                 if isinstance(_fis_owner_b, BoolOpRegion):
                     _boolop_for_iter = _fis_owner_b
             if _boolop_for_iter is not None:
+                _boolop_is_if_condition = False
+                _bp = _boolop_for_iter.parent
+                while _bp is not None:
+                    if isinstance(_bp, IfRegion):
+                        _boolop_is_if_condition = True
+                        break
+                    _bp = getattr(_bp, 'parent', None)
+                if _boolop_is_if_condition:
+                    _bp2 = _boolop_for_iter.parent
+                    _inside_current_loop = False
+                    while _bp2 is not None:
+                        if _bp2 is region:
+                            _inside_current_loop = True
+                            break
+                        _bp2 = getattr(_bp2, 'parent', None)
+                    if not _inside_current_loop:
+                        _boolop_for_iter = None
+            if _boolop_for_iter is not None:
                 # _generate_boolop 的 iter-context 分支可能已写入 condition_expr
                 # 并标记块已生成；优先复用，否则现场重建。
                 _boolop_expr = getattr(_boolop_for_iter, 'condition_expr', None)
@@ -3989,16 +4007,19 @@ AST 映射规则:
                 # `x = {}`）。判据为纯结构特征（merge_block 与 setup 块同址 +
                 # 非迭代上下文 + 目标名一致），不依赖生成时序状态。
                 _r102_tern_merge_targets = set()
+                _r102_tern_store_attr = False
                 if for_iter_setup is not None:
                     for _tr in self.region_analyzer.regions:
                         if (isinstance(_tr, TernaryRegion)
                                 and _tr.merge_block is not None
                                 and (_tr.merge_block is for_iter_setup
                                      or _tr.merge_block.start_offset == for_iter_setup.start_offset)
-                                and getattr(_tr, 'merge_context', None) != 'iter'
-                                and getattr(_tr, 'value_target', None)):
-                            _r102_tern_merge_targets.add(_tr.value_target)
-                if _fis_pre_stmts and _r102_tern_merge_targets:
+                                and getattr(_tr, 'merge_context', None) != 'iter'):
+                            if getattr(_tr, 'value_target', None):
+                                _r102_tern_merge_targets.add(_tr.value_target)
+                            elif getattr(_tr, 'merge_context', None) == 'store':
+                                _r102_tern_store_attr = True
+                if _fis_pre_stmts and (_r102_tern_merge_targets or _r102_tern_store_attr):
                     _filtered_pre = []
                     for _ps in _fis_pre_stmts:
                         _ps_tgts = _ps.get('targets') if isinstance(_ps, dict) else None
@@ -4006,6 +4027,11 @@ AST 映射规则:
                                 and isinstance(_ps_tgts[0], dict)
                                 and _ps_tgts[0].get('type') == 'Name'
                                 and _ps_tgts[0].get('id') in _r102_tern_merge_targets):
+                            continue
+                        if (_r102_tern_store_attr
+                                and _ps_tgts and len(_ps_tgts) == 1
+                                and isinstance(_ps_tgts[0], dict)
+                                and _ps_tgts[0].get('type') == 'Attribute'):
                             continue
                         _filtered_pre.append(_ps)
                     _fis_pre_stmts = _filtered_pre
@@ -32040,12 +32066,12 @@ AST 映射规则:
                     _first_store_idx = None
                     for _si, _sinstr in enumerate(merge_all):
                         if _sinstr.opname in ('STORE_FAST', 'STORE_NAME',
-                                              'STORE_GLOBAL', 'STORE_DEREF'):
+                                              'STORE_GLOBAL', 'STORE_DEREF',
+                                              'STORE_ATTR', 'STORE_SUBSCR'):
                             _first_store_idx = _si
                             break
                     if _first_store_idx is not None:
                         _remaining = merge_all[_first_store_idx + 1:]
-                        # 检测后续是否仅有 trailing implicit return None 模式
                         _non_noise_remaining = [i for i in _remaining
                                                 if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
                         # 当 merge_block 与下一个 TernaryRegion 共享
@@ -32436,10 +32462,6 @@ AST 映射规则:
                         region, ternary_expr)
                     if _store_assign is not None:
                         results.append(_store_assign)
-                        # [Phase 7 根因1 通用修复] _try_build_ternary_store_assign
-                        # 可能在 region.post_consumer_extra_stmts 上存放 STORE_* 之后的
-                        # 后续语句（如 `self.x = ternary \n return self` 的 return self），
-                        # 属于父 FunctionDef body 的独立语句。追加到 results。
                         _post_extra = getattr(
                             region, 'post_consumer_extra_stmts', None)
                         if _post_extra:
@@ -34088,6 +34110,13 @@ AST 映射规则:
                     continue
                 _after_store_instrs = []
                 break
+        if _after_store_instrs:
+            for _lr in self.regions:
+                if isinstance(_lr, LoopRegion):
+                    _fis = _lr.metadata.get('for_iter_setup')
+                    if _fis and _fis is region.merge_block:
+                        _after_store_instrs = []
+                        break
         if _after_store_instrs:
             _after_clean = [i for i in _after_store_instrs
                             if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
