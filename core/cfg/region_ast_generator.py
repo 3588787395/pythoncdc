@@ -9262,7 +9262,13 @@ AST 映射规则:
                     _extended_ops = ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF',
                                    'LOAD_CONST', 'COPY', 'SWAP', 'TO_BOOL',
                                    'CALL', 'PRECALL', 'LOAD_METHOD',
-                                   'BINARY_SUBSCR', 'GET_ITER', 'PUSH_NULL')
+                                   'BINARY_SUBSCR', 'GET_ITER', 'PUSH_NULL',
+                                   'LOAD_ATTR', 'BINARY_OP', 'KW_NAMES',
+                                   'FORMAT_VALUE', 'BUILD_STRING',
+                                   'BUILD_TUPLE', 'BUILD_LIST', 'BUILD_MAP',
+                                   'BUILD_SET', 'BUILD_CONST_KEY_MAP',
+                                   'UNARY_OP', 'UNPACK_SEQUENCE', 'UNPACK_EX',
+                                   'BINARY_SLICE')
                     for _nbci2 in range(_nbci - 1, -1, -1):
                         if block.instructions[_nbci2].opname not in _extended_ops:
                             break
@@ -9285,7 +9291,13 @@ AST 映射规则:
                                                 'LOAD_CONST', 'COPY', 'SWAP', 'TO_BOOL',
                                                 'CALL', 'PRECALL', 'LOAD_METHOD',
                                                 'BINARY_SUBSCR', 'GET_ITER', 'PUSH_NULL',
-                                                'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
+                                                'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+                                                'LOAD_ATTR', 'BINARY_OP', 'KW_NAMES',
+                                                'FORMAT_VALUE', 'BUILD_STRING',
+                                                'BUILD_TUPLE', 'BUILD_LIST', 'BUILD_MAP',
+                                                'BUILD_SET', 'BUILD_CONST_KEY_MAP',
+                                                'UNARY_OP', 'UNPACK_SEQUENCE', 'UNPACK_EX',
+                                                'BINARY_SLICE')
                 else:
                     _none_check_extended_ops = ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF',
                                                 'LOAD_CONST', 'COPY')
