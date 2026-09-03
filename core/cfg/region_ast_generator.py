@@ -4563,9 +4563,8 @@ AST 映射规则:
                                         if _s not in self.generated_blocks:
                                             self.generated_blocks.add(_s)
                                             self.generated_offsets.add(_s.start_offset)
-                # Clear pre_stmts extracted from the ternary's condition_block
                 if _ternary_for_while.condition_block is cond_block:
-                    pre_stmts = []
+                    pass
                 # [Phase 7 根因 A] 标记回边重检三元为已生成。
                 # CPython 在回边处复制 while 条件求值。对 non-fused compare-ternary
                 # （merge==cond_block），回边重检三元是独立 TernaryRegion（entry==loop
@@ -4679,6 +4678,7 @@ AST 映射规则:
             pre_stmts: List[Dict[str, Any]] = []
             _eps_instrs: List[Instruction] = []
             _eps_unpack_info = None
+            _eps_import_skip_remaining = 0
             _cond_was_generated = cond_block in self.generated_blocks
             _cond_is_ancestor_header = False
             _parent = region.parent
@@ -4862,9 +4862,121 @@ AST 映射规则:
                         _eps_instrs = []
                         continue
 
-                    _eps_instrs.append(_instr)
-
-            if _cond_is_ancestor_header:
+                    if _instr.opname == 'IMPORT_NAME':
+                        _eps_all_lc = all(i.opname == 'LOAD_CONST'
+                                         for i in _eps_instrs
+                                         if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'))
+                        if not _eps_all_lc and _eps_instrs:
+                            _stmt = self._build_statement(_eps_instrs)
+                            if _stmt:
+                                pre_stmts.append(_stmt)
+                            _eps_instrs = []
+                        _eps_has_from = False
+                        _eps_imp_idx = cond_block.instructions.index(_instr)
+                        for _eps_s in range(_eps_imp_idx + 1, min(_eps_imp_idx + 5, len(cond_block.instructions))):
+                            if cond_block.instructions[_eps_s].opname == 'IMPORT_FROM':
+                                _eps_has_from = True
+                                break
+                            if cond_block.instructions[_eps_s].opname not in ('LOAD_CONST', 'PUSH_NULL', 'POP_TOP'):
+                                break
+                        _eps_fln = False
+                        for _eps_fi in range(_eps_imp_idx - 1, max(_eps_imp_idx - 4, -1), -1):
+                            _eps_prev = cond_block.instructions[_eps_fi]
+                            if _eps_prev.opname == 'LOAD_CONST':
+                                if _eps_prev.argval is None:
+                                    _eps_fln = True
+                                break
+                            elif _eps_prev.opname in ('PUSH_NULL',):
+                                continue
+                            else:
+                                break
+                        if _eps_has_from and not _eps_fln:
+                            _eps_fn_pairs = []
+                            _eps_si = _eps_imp_idx + 1
+                            _eps_skip_count = 0
+                            while _eps_si < len(cond_block.instructions):
+                                _eps_c = cond_block.instructions[_eps_si]
+                                if _eps_c.opname == 'IMPORT_FROM':
+                                    _in_name = _eps_c.argval or ''
+                                    _eps_n = cond_block.instructions[_eps_si + 1] if _eps_si + 1 < len(cond_block.instructions) else None
+                                    _sn_name = None
+                                    if _eps_n and _eps_n.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF'):
+                                        _sn_name = _eps_n.argval
+                                        _eps_si += 2
+                                        _eps_skip_count += 2
+                                    else:
+                                        _sn_name = _in_name
+                                        _eps_si += 1
+                                        _eps_skip_count += 1
+                                    _eps_fn_pairs.append((_in_name, _sn_name))
+                                    continue
+                                elif _eps_c.opname == 'POP_TOP':
+                                    _eps_si += 1
+                                    _eps_skip_count += 1
+                                    continue
+                                elif _eps_c.opname in ('LOAD_CONST', 'PUSH_NULL', 'SWAP'):
+                                    _eps_si += 1
+                                    continue
+                                else:
+                                    break
+                            if _eps_fn_pairs:
+                                _eps_nl = []
+                                for _ipd, _std in _eps_fn_pairs:
+                                    if _ipd != _std:
+                                        _eps_nl.append({'name': _ipd, 'asname': _std})
+                                    else:
+                                        _eps_nl.append({'name': _ipd, 'asname': None})
+                                pre_stmts.append({'type': 'ImportFrom',
+                                                  'module': _instr.argval or '',
+                                                  'names': _eps_nl})
+                                _eps_instrs = []
+                                _eps_import_skip_remaining = _eps_skip_count
+                            else:
+                                _eps_instrs.append(_instr)
+                        else:
+                            _eps_instrs.append(_instr)
+                        continue
+                    if _instr.opname == 'IMPORT_FROM':
+                        if _eps_instrs and any(i.opname == 'IMPORT_NAME' for i in _eps_instrs):
+                            _eps_instrs.append(_instr)
+                            continue
+                        continue
+                    if _instr.opname in ('SWAP', 'POP_TOP') and _eps_instrs and any(i.opname == 'IMPORT_NAME' for i in _eps_instrs):
+                        _eps_import_name_instr = None
+                        for i in _eps_instrs:
+                            if i.opname == 'IMPORT_NAME':
+                                _eps_import_name_instr = i
+                                break
+                        if _eps_import_name_instr and _eps_fln:
+                            continue
+                        if _instr.opname == 'POP_TOP':
+                            if _eps_instrs:
+                                _stmt = self._build_statement(_eps_instrs)
+                                if _stmt:
+                                    pre_stmts.append(_stmt)
+                                _eps_instrs = []
+                            continue
+                        continue
+                    if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                        if _eps_instrs and any(i.opname == 'IMPORT_NAME' for i in _eps_instrs):
+                            _eps_import_name_instr = None
+                            for i in _eps_instrs:
+                                if i.opname == 'IMPORT_NAME':
+                                    _eps_import_name_instr = i
+                                    break
+                            if _eps_import_name_instr and _eps_fln:
+                                _module = _eps_import_name_instr.argval or ''
+                                _alias = _instr.argval if _instr.argval != _module else None
+                                pre_stmts.append({'type': 'Import',
+                                                  'names': [{'name': _module, 'asname': _alias}]})
+                                _eps_instrs = []
+                                continue
+                            elif _eps_import_name_instr and not _eps_fln:
+                                _eps_instrs = []
+                                continue
+                        _eps_instrs.append(_instr)
+                    else:
+                        _eps_instrs.append(_instr)
                 self.generated_blocks.add(cond_block)
                 self.generated_offsets.add(cond_block.start_offset)
             else:
@@ -23523,6 +23635,21 @@ AST 映射规则:
             if instr.opname in ('POP_EXCEPT', 'PUSH_EXC_INFO', 'RERAISE',
                                 'WITH_EXCEPT_START', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH'):
                 continue
+            # [R67] Flush pending from-import when a non-import instruction
+            # is encountered. After IMPORT_FROM + STORE_* (which appends to
+            # _imp_pairs but does NOT finalize), the next non-IMPORT_FROM
+            # instruction must flush the ImportFrom statement. Without this,
+            # the next unrelated STORE_* gets consumed as import-as alias.
+            if _imp_name_instr is not None and _imp_from_pending is None and _imp_pairs:
+                if instr.opname not in ('IMPORT_FROM', 'IMPORT_NAME'):
+                    _module = _imp_name_instr.argval or ''
+                    _names = [{'name': _n, 'asname': _a}
+                              for _n, _a in _imp_pairs]
+                    stmts.append({'type': 'ImportFrom',
+                                  'module': _module, 'names': _names})
+                    _imp_name_instr = None
+                    _imp_pairs = []
+                    _imp_fromlist_is_none = False
             # IMPORT_NAME 启动 import 序列。先 flush 已累积的
             # stmt_instrs（前一条语句），再进入 import 状态机。
             if instr.opname == 'IMPORT_NAME':
@@ -23621,21 +23748,27 @@ AST 映射规则:
                                 _imp_pairs.append((_imp_n, None))
                             _imp_from_pending = None
                     else:
-                        # import module [as alias] — 终结 import 序列
-                        _module = _imp_name_instr.argval or ''
-                        _sto_n = instr.argval
-                        if _module != _sto_n:
-                            stmts.append({'type': 'Import',
-                                          'names': [{'name': _module, 'asname': _sto_n}]})
+                        if _imp_pairs:
+                            _module = _imp_name_instr.argval or ''
+                            _names = [{'name': _n, 'asname': _a}
+                                      for _n, _a in _imp_pairs]
+                            stmts.append({'type': 'ImportFrom',
+                                          'module': _module, 'names': _names})
+                            _imp_name_instr = None
+                            _imp_from_pending = None
+                            _imp_pairs = []
+                            _imp_fromlist_is_none = False
                         else:
-                            stmts.append({'type': 'Import',
-                                          'names': [{'name': _module, 'asname': None}]})
-                        _imp_name_instr = None
-                        _imp_pairs = []
-                    # 对于 from-import，等下一个 IMPORT_FROM 或非 import 指令时
-                    # 再 flush（可能有多个 name）。此处不 flush。
-                    # 但若已无 pending 且 pairs 非空，且下一条不是 IMPORT_FROM，
-                    # 则需在下次循环由非 import 指令触发 flush。
+                            _module = _imp_name_instr.argval or ''
+                            _sto_n = instr.argval
+                            if _module != _sto_n:
+                                stmts.append({'type': 'Import',
+                                              'names': [{'name': _module, 'asname': _sto_n}]})
+                            else:
+                                stmts.append({'type': 'Import',
+                                              'names': [{'name': _module, 'asname': None}]})
+                            _imp_name_instr = None
+                            _imp_pairs = []
                     continue
                 # UNPACK_SEQUENCE 状态机：收集 N 个 STORE_* 目标，
                 # 全部到齐后生成 Assign(Tuple(targets), value)。
