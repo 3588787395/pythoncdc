@@ -15014,6 +15014,38 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             # 跳过前），供 _else_has_external_pred 排除集使用：清理跳板是当前 if
             # 自己的 else 入口（POP_TOP+JUMP→else_body），非外层结构前驱。
             _else_succ_original = else_succ
+            # [R69 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（入口引用语义）：
+            # 当 BoolOpRegion 或 inline_boolop_chain 以 'and' 重定向 condition_block
+            # 到链末块后，then_succ/else_succ 从链末块计算。但 'and' 链中前段各块
+            # 的 FALSE/NONE 跳转目标指向真正的 else 分支（如 `if A is not None and
+            # B is not None:` 中 A/B 的 NONE 出口都指向 else body），而非链末块
+            # 的 FALSE fallthrough（实际是 then body 的下一语句）。原实现使用链末块
+            # 的 else_succ 作为 else 分支入口，导致：1) 真正的 else body 成为孤儿，
+            # 不属于任何 IfRegion；2) then body 末尾的 JUMP_FORWARD 被丢失；3) 反编译
+            # 输出 then+else 两段赋值连续出现，if/else 结构被扁平化。
+            # 修正：当 'and' 链前段块（除末块外）共享同一 FALSE/NONE 跳转目标，
+            # 且该共享目标不在 chain_blocks 中时，该共享目标是真正的 else 分支入口，
+            # 当前 else_succ 属于 then body。重设 else_succ 为共享目标。
+            _r69_chain_blocks = chain_blocks
+            if len(_r69_chain_blocks) >= 2 and condition_block in _r69_chain_blocks:
+                _r69_chain_list = sorted(_r69_chain_blocks, key=lambda b: b.start_offset)
+                if _r69_chain_list[-1] is condition_block:
+                    _r69_early_targets = set()
+                    for _cb in _r69_chain_list[:-1]:
+                        _cb_last = _cb.get_last_instruction()
+                        if _cb_last is None or _cb_last.argval is None:
+                            continue
+                        if _cb_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS):
+                            _ft = self.cfg.get_block_by_offset(_cb_last.argval)
+                            if _ft is not None:
+                                _r69_early_targets.add(_ft)
+                    if len(_r69_early_targets) == 1:
+                        _shared_target = next(iter(_r69_early_targets))
+                        if (_shared_target is not else_succ
+                                and _shared_target is not then_succ
+                                and _shared_target not in _r69_chain_blocks):
+                            else_succ = _shared_target
+                            _else_succ_original = else_succ
 
             chained_compare_info = self._detect_chained_compare_pattern(condition_block)
             if chained_compare_info:
