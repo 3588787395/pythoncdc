@@ -15027,8 +15027,26 @@ AST 映射规则:
             if len(_merge_conds) > 1:
                 _merge_op = _fold_op_mode
                 if _merge_op == 'or':
-                    _merge_conds[0] = _negate_expr(_merge_conds[0])
-                condition = {'type': 'BoolOp', 'op': _merge_op, 'values': _merge_conds}
+                    _all_negated = all(
+                        isinstance(c, dict) and c.get('type') == 'UnaryOp' and c.get('op') == 'not'
+                        for c in _merge_conds)
+                    if _all_negated:
+                        _merge_conds = [c.get('operand', c) for c in _merge_conds]
+                        condition = _negate_expr({'type': 'BoolOp', 'op': 'or', 'values': _merge_conds})
+                    else:
+                        _merge_conds[0] = _negate_expr(_merge_conds[0])
+                        condition = {'type': 'BoolOp', 'op': _merge_op, 'values': _merge_conds}
+                elif _merge_op == 'and':
+                    _all_negated = all(
+                        isinstance(c, dict) and c.get('type') == 'UnaryOp' and c.get('op') == 'not'
+                        for c in _merge_conds)
+                    if _all_negated:
+                        _merge_conds = [c.get('operand', c) for c in _merge_conds]
+                        condition = _negate_expr({'type': 'BoolOp', 'op': 'or', 'values': _merge_conds})
+                    else:
+                        condition = {'type': 'BoolOp', 'op': _merge_op, 'values': _merge_conds}
+                else:
+                    condition = {'type': 'BoolOp', 'op': _merge_op, 'values': _merge_conds}
                 then_stmts = _remaining
             else:
                 inner_cond = then_stmts[0].get('test')
@@ -15042,8 +15060,29 @@ AST 映射规则:
                     inner_ir_with_else = _find_nested_ifregion_with_else(region)
                     if inner_ir_with_else is None:
                         _merge_op = _fold_op_mode
-                        _outer_cond = _negate_expr(condition) if _merge_op == 'or' else condition
-                        condition = {'type': 'BoolOp', 'op': _merge_op, 'values': [_outer_cond, inner_cond]}
+                        if _merge_op == 'or':
+                            _both_negated = (
+                                isinstance(condition, dict) and condition.get('type') == 'UnaryOp' and condition.get('op') == 'not'
+                                and isinstance(inner_cond, dict) and inner_cond.get('type') == 'UnaryOp' and inner_cond.get('op') == 'not')
+                            if _both_negated:
+                                _outer_stripped = condition.get('operand', condition)
+                                _inner_stripped = inner_cond.get('operand', inner_cond)
+                                condition = _negate_expr({'type': 'BoolOp', 'op': 'or', 'values': [_outer_stripped, _inner_stripped]})
+                            else:
+                                _outer_cond = _negate_expr(condition)
+                                condition = {'type': 'BoolOp', 'op': _merge_op, 'values': [_outer_cond, inner_cond]}
+                        elif _merge_op == 'and':
+                            _both_negated = (
+                                isinstance(condition, dict) and condition.get('type') == 'UnaryOp' and condition.get('op') == 'not'
+                                and isinstance(inner_cond, dict) and inner_cond.get('type') == 'UnaryOp' and inner_cond.get('op') == 'not')
+                            if _both_negated:
+                                _outer_stripped = condition.get('operand', condition)
+                                _inner_stripped = inner_cond.get('operand', inner_cond)
+                                condition = _negate_expr({'type': 'BoolOp', 'op': 'or', 'values': [_outer_stripped, _inner_stripped]})
+                            else:
+                                condition = {'type': 'BoolOp', 'op': _merge_op, 'values': [condition, inner_cond]}
+                        else:
+                            condition = {'type': 'BoolOp', 'op': _merge_op, 'values': [condition, inner_cond]}
                         then_stmts = inner_body
         elif (then_stmts and isinstance(then_stmts[0], dict)
                 and then_stmts[0].get('type') == 'If'
