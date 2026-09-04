@@ -5136,8 +5136,11 @@ AST 映射规则:
                                        if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
                         last_i = chain_block.get_last_instruction()
                         # Split instructions at STORE boundaries to separate assignments from condition
+                        # UNPACK_SEQUENCE N + N×STORE_* must stay in same segment
+                        # to produce (t1, t2, ..., tN) = value_expr.
                         segments = []
                         current_segment = []
+                        _unpack_remaining = 0
                         for i in chain_instrs:
                             if i == last_i:
                                 break
@@ -5147,16 +5150,30 @@ AST 映射规则:
                                                 'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_FORWARD_IF_NOT_NONE',
                                                 'POP_JUMP_BACKWARD_IF_NONE', 'POP_JUMP_BACKWARD_IF_NOT_NONE'):
                                 current_segment.append(i)
+                                if i.opname in ('UNPACK_SEQUENCE', 'UNPACK_EX'):
+                                    _unpack_remaining = i.arg if i.opname == 'UNPACK_SEQUENCE' else (i.argval & 0xFF) + 1 + ((i.argval >> 8) & 0xFF)
                                 if i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF', 'STORE_SUBSCR', 'STORE_ATTR'):
-                                    segments.append(current_segment)
-                                    current_segment = []
+                                    if _unpack_remaining > 0:
+                                        _unpack_remaining -= 1
+                                        if _unpack_remaining == 0:
+                                            segments.append(current_segment)
+                                            current_segment = []
+                                    else:
+                                        segments.append(current_segment)
+                                        current_segment = []
                         if current_segment:
                             segments.append(current_segment)
                         for segment in segments:
                             if segment:
-                                pre_expr = self.expr_reconstructor.reconstruct(segment)
-                                if pre_expr and isinstance(pre_expr, dict) and pre_expr.get('type') == 'Assign':
-                                    pre_stmts.append(pre_expr)
+                                _has_unpack = any(i.opname in ('UNPACK_SEQUENCE', 'UNPACK_EX') for i in segment)
+                                if _has_unpack:
+                                    pre_expr = self._build_unpack_assign_from_segment(segment)
+                                    if pre_expr:
+                                        pre_stmts.append(pre_expr)
+                                else:
+                                    pre_expr = self.expr_reconstructor.reconstruct(segment)
+                                    if pre_expr and isinstance(pre_expr, dict) and pre_expr.get('type') == 'Assign':
+                                        pre_stmts.append(pre_expr)
                 boolop_cond_var_names = set()
                 for chain_block, _ in boolop_for_while.op_chain:
                     for i in chain_block.instructions:
@@ -42362,6 +42379,43 @@ AST 映射规则:
         说明），不在此列。
         """
         return (self.detector.is_any_store(instr) or instr.opname == 'POP_TOP')
+
+    def _build_unpack_assign_from_segment(self, segment: List[Instruction]) -> Optional[Dict[str, Any]]:
+        """Build Assign(Tuple(targets), value) from a segment containing UNPACK_SEQUENCE + N×STORE_*."""
+        _unpack_idx = None
+        _unpack_count = 0
+        for idx, instr in enumerate(segment):
+            if instr.opname in ('UNPACK_SEQUENCE', 'UNPACK_EX'):
+                _unpack_idx = idx
+                if instr.opname == 'UNPACK_SEQUENCE':
+                    _unpack_count = instr.arg
+                else:
+                    arg = instr.argval
+                    before, after = arg & 0xFF, (arg >> 8) & 0xFF
+                    _unpack_count = before + 1 + after
+                break
+        if _unpack_idx is None:
+            return None
+        val_instrs = [i for i in segment[:_unpack_idx]
+                      if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+        val = self.expr_reconstructor.reconstruct(val_instrs) if val_instrs else None
+        if val is None:
+            return None
+        targets = []
+        store_idx = _unpack_idx + 1
+        for t_i in range(_unpack_count):
+            if store_idx + t_i < len(segment):
+                s_instr = segment[store_idx + t_i]
+                if s_instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                    targets.append({'type': 'Name', 'id': s_instr.argval, 'ctx': 'Store'})
+                elif s_instr.opname == 'STORE_ATTR':
+                    targets.append({'type': 'Attribute', 'attr': s_instr.argval, 'ctx': 'Store'})
+                elif s_instr.opname == 'STORE_SUBSCR':
+                    targets.append({'type': 'Subscript', 'ctx': 'Store'})
+        if len(targets) != _unpack_count:
+            return None
+        target = {'type': 'Tuple', 'elts': targets, 'ctx': 'Store'}
+        return {'type': 'Assign', 'targets': [target], 'value': val}
 
     def _build_prefix_stmt_list(self, pre_instrs: List[Instruction], block: BasicBlock) -> List[Dict[str, Any]]:
         """
