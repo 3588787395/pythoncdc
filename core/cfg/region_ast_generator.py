@@ -10956,13 +10956,15 @@ AST 映射规则:
             _main_parts = []
             for _cb in _chain_blocks:
                 # [R01 fix] NONE_CHECK_OPS 不能过滤：它们表达 `x is (not) None`
-                # 比较（如 `if A and x is not None:`）。expr_reconstructor 已按
-                # if 语义处理（IF_NOT_NONE→is None, IF_NONE→is not None），
-                # 保留后重建出 Compare 节点，重编译与原始 IF_NONE 字节码一致。
+                # [R75 fix] or 链 NONE_CHECK 块跳转到 then，需翻转落空条件为跳转条件
                 _cb_instrs = [i for i in _cb.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL') and (i.opname not in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS | BACKWARD_JUMP_OPS) or i.opname in NONE_CHECK_OPS) and i.opname not in ('JUMP_FORWARD', 'JUMP_BACKWARD')]
                 if _cb_instrs:
                     _part = self.expr_reconstructor.reconstruct(_cb_instrs)
                     if _part:
+                        if _chain_op == 'or':
+                            _cb_last = _cb.instructions[-1] if _cb.instructions else None
+                            if _cb_last and _cb_last.opname in NONE_CHECK_OPS:
+                                _part = _flip_is_none_compare(_part)
                         _main_parts.append(_part)
             if len(_main_parts) >= 2:
                 condition = {'type': 'BoolOp', 'op': _chain_op, 'values': _main_parts}
@@ -13980,13 +13982,15 @@ AST 映射规则:
                 _elif_parts = []
                 for _cb in _chain_blocks:
                     # [R01 fix] NONE_CHECK_OPS 不能过滤：它们表达 `x is (not) None`
-                    # 比较（如 `if A and x is not None:`）。expr_reconstructor 已按
-                    # if 语义处理（IF_NOT_NONE→is None, IF_NONE→is not None），
-                    # 保留后重建出 Compare 节点，重编译与原始 IF_NONE 字节码一致。
+                    # [R75 fix] or 链 NONE_CHECK 块跳转到 then，需翻转落空条件为跳转条件
                     _cb_instrs = [i for i in _cb.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL') and (i.opname not in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS | BACKWARD_JUMP_OPS) or i.opname in NONE_CHECK_OPS) and i.opname not in ('JUMP_FORWARD', 'JUMP_BACKWARD')]
                     if _cb_instrs:
                         _part = self.expr_reconstructor.reconstruct(_cb_instrs)
                         if _part:
+                            if _chain_op == 'or':
+                                _cb_last = _cb.instructions[-1] if _cb.instructions else None
+                                if _cb_last and _cb_last.opname in NONE_CHECK_OPS:
+                                    _part = _flip_is_none_compare(_part)
                             _elif_parts.append(_part)
                 if len(_elif_parts) >= 2:
                     elif_condition = {'type': 'BoolOp', 'op': _chain_op, 'values': _elif_parts}
@@ -14304,13 +14308,15 @@ AST 映射规则:
                         _elif_parts = []
                         for _cb in _chain_blocks:
                             # [R01 fix] NONE_CHECK_OPS 不能过滤：它们表达 `x is (not) None`
-                            # 比较（如 `if A and x is not None:`）。expr_reconstructor 已按
-                            # if 语义处理（IF_NOT_NONE→is None, IF_NONE→is not None），
-                            # 保留后重建出 Compare 节点，重编译与原始 IF_NONE 字节码一致。
+                            # [R75 fix] or 链 NONE_CHECK 块跳转到 then，需翻转落空条件为跳转条件
                             _cb_instrs = [i for i in _cb.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL') and (i.opname not in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS | BACKWARD_JUMP_OPS) or i.opname in NONE_CHECK_OPS) and i.opname not in ('JUMP_FORWARD', 'JUMP_BACKWARD')]
                             if _cb_instrs:
                                 _part = self.expr_reconstructor.reconstruct(_cb_instrs)
                                 if _part:
+                                    if _chain_op == 'or':
+                                        _cb_last = _cb.instructions[-1] if _cb.instructions else None
+                                        if _cb_last and _cb_last.opname in NONE_CHECK_OPS:
+                                            _part = _flip_is_none_compare(_part)
                                     _elif_parts.append(_part)
                         if len(_elif_parts) >= 2:
                             _last_elif_condition = {'type': 'BoolOp', 'op': _chain_op, 'values': _elif_parts}
@@ -14712,13 +14718,16 @@ AST 映射规则:
             _main_parts = []
             for _cb in _chain_blocks:
                 # [R01 fix] NONE_CHECK_OPS 不能过滤：它们表达 `x is (not) None`
-                # 比较（如 `if A and x is not None:`）。expr_reconstructor 已按
-                # if 语义处理（IF_NOT_NONE→is None, IF_NONE→is not None），
-                # 保留后重建出 Compare 节点，重编译与原始 IF_NONE 字节码一致。
+                # [R75 fix] or 链 NONE_CHECK 块跳转到 then，需翻转 expr_reconstructor
+                # 的落空条件为跳转条件：IF_NONE → is None, IF_NOT_NONE → is not None
                 _cb_instrs = [i for i in _cb.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL') and (i.opname not in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS | BACKWARD_JUMP_OPS) or i.opname in NONE_CHECK_OPS) and i.opname not in ('JUMP_FORWARD', 'JUMP_BACKWARD')]
                 if _cb_instrs:
                     _part = self.expr_reconstructor.reconstruct(_cb_instrs)
                     if _part:
+                        if _chain_op == 'or':
+                            _cb_last = _cb.instructions[-1] if _cb.instructions else None
+                            if _cb_last and _cb_last.opname in NONE_CHECK_OPS:
+                                _part = _flip_is_none_compare(_part)
                         _main_parts.append(_part)
             if len(_main_parts) >= 2:
                 condition = {'type': 'BoolOp', 'op': _chain_op, 'values': _main_parts}
@@ -15034,7 +15043,7 @@ AST 映射规则:
                         _merge_conds = [c.get('operand', c) for c in _merge_conds]
                         condition = _negate_expr({'type': 'BoolOp', 'op': 'or', 'values': _merge_conds})
                     else:
-                        _merge_conds[0] = _negate_expr(_merge_conds[0])
+                        _merge_conds[0] = _flip_is_none_compare(_merge_conds[0])
                         condition = {'type': 'BoolOp', 'op': _merge_op, 'values': _merge_conds}
                 elif _merge_op == 'and':
                     _all_negated = all(
@@ -15069,7 +15078,7 @@ AST 映射规则:
                                 _inner_stripped = inner_cond.get('operand', inner_cond)
                                 condition = _negate_expr({'type': 'BoolOp', 'op': 'or', 'values': [_outer_stripped, _inner_stripped]})
                             else:
-                                _outer_cond = _negate_expr(condition)
+                                _outer_cond = _flip_is_none_compare(condition)
                                 condition = {'type': 'BoolOp', 'op': _merge_op, 'values': [_outer_cond, inner_cond]}
                         elif _merge_op == 'and':
                             _both_negated = (
@@ -18862,20 +18871,21 @@ AST 映射规则:
             _is_not_none_jump = 'NOT_NONE' in last_instr.opname
             if _is_not_none_jump:
                 expr = {'type': 'Compare', 'left': expr,
-                       'ops': [{'type': 'Is'}],
+                       'ops': [{'type': 'IsNot'}],
                        'comparators': [{'type': 'Constant', 'value': None}]}
             else:
                 expr = {'type': 'Compare', 'left': expr,
-                       'ops': [{'type': 'IsNot'}],
+                       'ops': [{'type': 'Is'}],
                        'comparators': [{'type': 'Constant', 'value': None}]}
         if last_instr.opname in NONE_CHECK_OPS:
-            is_if_false = True
+            is_if_false = False
         else:
             is_if_false = 'IF_FALSE' in last_instr.opname
+        _negate_fn = _flip_is_none_compare if last_instr.opname in NONE_CHECK_OPS else _negate_expr
         if exit_succ == jump_target:
-            cond_expr = _negate_expr(expr) if is_if_false else expr
+            cond_expr = _negate_fn(expr) if is_if_false else expr
         else:
-            cond_expr = expr if is_if_false else _negate_expr(expr)
+            cond_expr = expr if is_if_false else _negate_fn(expr)
         exit_role = self.region_analyzer.get_block_role(exit_succ)
         if exit_role in (BlockRole.RETURN, BlockRole.RETURN_NONE) and exit_succ in loop_body_set:
             ret_stmts = self._generate_block_statements(exit_succ)
@@ -19250,15 +19260,15 @@ AST 映射规则:
                     _is_not_none_jump = 'NOT_NONE' in last_instr.opname
                     if _is_not_none_jump:
                         expr = {'type': 'Compare', 'left': expr,
-                               'ops': [{'type': 'Is'}],
+                               'ops': [{'type': 'IsNot'}],
                                'comparators': [{'type': 'Constant', 'value': None}]}
                     else:
                         expr = {'type': 'Compare', 'left': expr,
-                               'ops': [{'type': 'IsNot'}],
+                               'ops': [{'type': 'Is'}],
                                'comparators': [{'type': 'Constant', 'value': None}]}
                 is_if_false = 'IF_FALSE' in last_instr.opname
                 if last_instr.opname in NONE_CHECK_OPS:
-                    is_if_false = True  # NONE_CHECK_OPS跳转条件与if条件相反
+                    is_if_false = False
                 cond_expr = expr
                 # Phase 45: IF_TRUE/IF_FALSE四组合then/else映射（字节码等价）
                 # 核心原则: then=条件True路径, else=条件False路径, 条件不取反
@@ -19438,15 +19448,15 @@ AST 映射规则:
                     _is_not_none_jump = 'NOT_NONE' in last_instr.opname
                     if _is_not_none_jump:
                         _bn_expr = {'type': 'Compare', 'left': _bn_expr,
-                                   'ops': [{'type': 'Is'}],
+                                   'ops': [{'type': 'IsNot'}],
                                    'comparators': [{'type': 'Constant', 'value': None}]}
                     else:
                         _bn_expr = {'type': 'Compare', 'left': _bn_expr,
-                                   'ops': [{'type': 'IsNot'}],
+                                   'ops': [{'type': 'Is'}],
                                    'comparators': [{'type': 'Constant', 'value': None}]}
                 _bn_is_if_false = 'IF_FALSE' in last_instr.opname
                 if last_instr.opname in NONE_CHECK_OPS:
-                    _bn_is_if_false = True
+                    _bn_is_if_false = False
                 _bn_norm_is_jump = normal_succ[1]
                 # Phase 45: 四组合then/else映射（与continue+normal分支一致）
                 # then=条件True路径, else=条件False路径, 条件不取反
