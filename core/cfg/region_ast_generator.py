@@ -39934,6 +39934,48 @@ AST 映射规则:
                         _ua_stmt_instrs = []
                         continue
                     if _instr.opname == 'STORE_SUBSCR':
+                        if _ua_unpack_stack:
+                            _w19_win = []
+                            while _ua_stmt_instrs and _ua_stmt_instrs[-1].opname in (
+                                    'LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF',
+                                    'LOAD_ATTR', 'LOAD_CONST', 'BINARY_SUBSCR', 'BINARY_OP'):
+                                _w19_win.insert(0, _ua_stmt_instrs.pop())
+                            _w19_obj = None
+                            if len(_w19_win) >= 2:
+                                self.expr_reconstructor.reset()
+                                for _win_i in _w19_win:
+                                    self.expr_reconstructor._process_instruction(_win_i)
+                                _w19_stack = [s for s in self.expr_reconstructor.stack
+                                              if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+                                if len(_w19_stack) >= 2:
+                                    _w19_obj = {'type': 'Subscript',
+                                                'value': _w19_stack[-2],
+                                                'slice': _w19_stack[-1],
+                                                'ctx': 'Store'}
+                            if _w19_obj is not None:
+                                _top_w19 = _ua_unpack_stack[-1]
+                                _top_w19['targets'].append(_w19_obj)
+                                while (_ua_unpack_stack
+                                       and len(_ua_unpack_stack[-1]['targets']) == _ua_unpack_stack[-1]['count']):
+                                    _completed_w19 = _ua_unpack_stack.pop()
+                                    _completed_tgt_w19 = {
+                                        'type': 'Tuple',
+                                        'elts': _completed_w19['targets'],
+                                        'ctx': 'Store',
+                                    }
+                                    if not _ua_unpack_stack:
+                                        if _completed_w19['value'] is not None:
+                                            _ua_stmts.append({
+                                                'type': 'Assign',
+                                                'targets': [_completed_tgt_w19],
+                                                'value': _completed_w19['value'],
+                                            })
+                                        break
+                                    else:
+                                        _ua_unpack_stack[-1]['targets'].append(_completed_tgt_w19)
+                                _ua_stmt_instrs = []
+                                continue
+                            _ua_stmt_instrs.extend(_w19_win)
                         _ua_stmt_instrs.append(_instr)
                         _ua_stmt = self._build_subscript_assign(_ua_stmt_instrs)
                         if _ua_stmt:
@@ -39941,6 +39983,48 @@ AST 映射规则:
                         _ua_stmt_instrs = []
                         continue
                     if _instr.opname == 'STORE_ATTR':
+                        if _ua_unpack_stack:
+                            _w19a_win = []
+                            while _ua_stmt_instrs and _ua_stmt_instrs[-1].opname in (
+                                    'LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF',
+                                    'LOAD_ATTR', 'LOAD_CONST', 'BINARY_SUBSCR', 'BINARY_OP'):
+                                _w19a_win.insert(0, _ua_stmt_instrs.pop())
+                            _w19a_obj = None
+                            if len(_w19a_win) >= 1:
+                                self.expr_reconstructor.reset()
+                                for _win_i in _w19a_win:
+                                    self.expr_reconstructor._process_instruction(_win_i)
+                                _w19a_stack = [s for s in self.expr_reconstructor.stack
+                                              if not (isinstance(s, dict) and s.get('type') == 'PUSH_NULL')]
+                                if _w19a_stack:
+                                    _w19a_obj = {'type': 'Attribute',
+                                                 'value': _w19a_stack[-1],
+                                                 'attr': _instr.argval,
+                                                 'ctx': 'Store'}
+                            if _w19a_obj is not None:
+                                _top_w19a = _ua_unpack_stack[-1]
+                                _top_w19a['targets'].append(_w19a_obj)
+                                while (_ua_unpack_stack
+                                       and len(_ua_unpack_stack[-1]['targets']) == _ua_unpack_stack[-1]['count']):
+                                    _completed_w19a = _ua_unpack_stack.pop()
+                                    _completed_tgt_w19a = {
+                                        'type': 'Tuple',
+                                        'elts': _completed_w19a['targets'],
+                                        'ctx': 'Store',
+                                    }
+                                    if not _ua_unpack_stack:
+                                        if _completed_w19a['value'] is not None:
+                                            _ua_stmts.append({
+                                                'type': 'Assign',
+                                                'targets': [_completed_tgt_w19a],
+                                                'value': _completed_w19a['value'],
+                                            })
+                                        break
+                                    else:
+                                        _ua_unpack_stack[-1]['targets'].append(_completed_tgt_w19a)
+                                _ua_stmt_instrs = []
+                                continue
+                            _ua_stmt_instrs.extend(_w19a_win)
                         _ua_stmt_instrs.append(_instr)
                         _ua_stmt = self._build_attr_assign(_ua_stmt_instrs)
                         if _ua_stmt:
