@@ -13999,7 +13999,15 @@ AST 映射规则:
                             _elif_if_true = 'IF_TRUE' in _elif_last.opname
                         _elif_then_offsets = set()
                         if region.elif_bodies and len(region.elif_bodies) > 0:
-                            _elif_then_offsets = {b.start_offset for b in region.elif_bodies[0]}
+                            # [R86 fix] Exclude continue-exit blocks from then_offsets
+                            for _eb in region.elif_bodies[0]:
+                                _eb_meaningful = [i for i in _eb.instructions
+                                                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                                _is_continue_exit = (_eb_meaningful
+                                                     and all(i.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                                                             for i in _eb_meaningful))
+                                if not _is_continue_exit:
+                                    _elif_then_offsets.add(_eb.start_offset)
                         _elif_negate = (_elif_last.argval in _elif_then_offsets) != _elif_if_true
                     if _elif_negate:
                         # 区域归约算法「一次正确」原则：elif 条件路径
@@ -14129,7 +14137,20 @@ AST 映射规则:
                     elif_jump_target = elif_last.argval
                     elif_then_offsets = set()
                     if region.elif_bodies and len(region.elif_bodies) > 0:
-                        elif_then_offsets = {b.start_offset for b in region.elif_bodies[0]}
+                        # [R86 fix] Exclude continue-exit blocks (JUMP_BACKWARD to
+                        # loop header) from then_offsets. When the jump target is a
+                        # continue block at the end of the elif body, jumping there
+                        # means "skip the body, continue the loop" — effectively the
+                        # else path, not the then path. Including it would cause
+                        # incorrect negation of the elif condition.
+                        for _eb in region.elif_bodies[0]:
+                            _eb_meaningful = [i for i in _eb.instructions
+                                              if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                            _is_continue_exit = (_eb_meaningful
+                                                 and all(i.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                                                         for i in _eb_meaningful))
+                            if not _is_continue_exit:
+                                elif_then_offsets.add(_eb.start_offset)
                     elif_jumps_to_then = elif_jump_target in elif_then_offsets
                     elif_negate = elif_jumps_to_then != elif_if_true
                 elif_condition = _negate_expr(expr2) if elif_negate else expr2
@@ -14359,7 +14380,15 @@ AST 映射规则:
                                 _last_elif_if_true = 'IF_TRUE' in _last_elif_last.opname
                             _last_elif_then_offsets = set()
                             if len(region.elif_bodies) > 1:
-                                _last_elif_then_offsets = {b.start_offset for b in region.elif_bodies[1]}
+                                # [R86 fix] Exclude continue-exit blocks from then_offsets
+                                for _eb in region.elif_bodies[1]:
+                                    _eb_meaningful = [i for i in _eb.instructions
+                                                      if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                                    _is_continue_exit = (_eb_meaningful
+                                                         and all(i.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                                                                 for i in _eb_meaningful))
+                                    if not _is_continue_exit:
+                                        _last_elif_then_offsets.add(_eb.start_offset)
                             _last_elif_negate = (_last_elif_last.argval in _last_elif_then_offsets) != _last_elif_if_true
                         _last_elif_condition = _negate_expr(_last_elif_boolop_expr) if _last_elif_negate else _last_elif_boolop_expr
                         for _b in _last_elif_boolop.blocks:
@@ -14522,7 +14551,15 @@ AST 映射规则:
                         if_true = 'IF_TRUE' in last.opname
                     then_offsets = set()
                     if region and region.elif_bodies and len(region.elif_bodies) > 0:
-                        then_offsets = {b.start_offset for b in region.elif_bodies[0]}
+                        # [R86 fix] Exclude continue-exit blocks from then_offsets
+                        for _eb in region.elif_bodies[0]:
+                            _eb_meaningful = [i for i in _eb.instructions
+                                              if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                            _is_continue_exit = (_eb_meaningful
+                                                 and all(i.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                                                         for i in _eb_meaningful))
+                            if not _is_continue_exit:
+                                then_offsets.add(_eb.start_offset)
                     negate = (last.argval in then_offsets) != if_true
                 return _negate_expr(expr) if negate else expr
         return {'type': 'Constant', 'value': True}
@@ -16273,8 +16310,18 @@ AST 映射规则:
         stack.append(ternary_expr)
 
         # 阶段 3: 处理 cond_block 中的指令
-        then_offsets = ({b.start_offset for b in region.then_blocks}
-                        if getattr(region, 'then_blocks', None) else set())
+        _then_offsets_raw = set()
+        if getattr(region, 'then_blocks', None):
+            # [R86 fix] Exclude continue-exit blocks from then_offsets
+            for _tb in region.then_blocks:
+                _tb_meaningful = [i for i in _tb.instructions
+                                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                _is_continue_exit = (_tb_meaningful
+                                     and all(i.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                                             for i in _tb_meaningful))
+                if not _is_continue_exit:
+                    _then_offsets_raw.add(_tb.start_offset)
+        then_offsets = _then_offsets_raw
 
         # 链式比较支持：当 IfRegion 含 chained_compare_blocks
         # （如 `0 < (ternary).x < 10`），不在首个条件跳转处返回，而是
@@ -16848,7 +16895,16 @@ AST 映射规则:
                             _c1_if_true = 'IF_TRUE' in _c1_merge_last.opname
                         _c1_jt = _c1_merge_last.argval
                         if _c1_jt is not None:
-                            _c1_then_offsets = {b.start_offset for b in region.then_blocks}
+                            _c1_then_offsets = set()
+                            # [R86 fix] Exclude continue-exit blocks from then_offsets
+                            for _tb in region.then_blocks:
+                                _tb_meaningful = [i for i in _tb.instructions
+                                                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                                _is_continue_exit = (_tb_meaningful
+                                                     and all(i.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                                                             for i in _tb_meaningful))
+                                if not _is_continue_exit:
+                                    _c1_then_offsets.add(_tb.start_offset)
                             _c1_jumps_to_then = _c1_jt in _c1_then_offsets
                             _c1_negate = _c1_jumps_to_then != _c1_if_true
                     return (_negate_expr(_c1_nested_ternary)
@@ -16991,7 +17047,16 @@ AST 映射规则:
                                     _if_true_c1 = 'IF_TRUE' in _merge_last_c1.opname
                                 _jump_target_c1 = _merge_last_c1.argval
                                 if _jump_target_c1 is not None:
-                                    _then_offsets_c1 = {b.start_offset for b in region.then_blocks}
+                                    _then_offsets_c1 = set()
+                                    # [R86 fix] Exclude continue-exit blocks from then_offsets
+                                    for _tb in region.then_blocks:
+                                        _tb_meaningful = [i for i in _tb.instructions
+                                                          if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                                        _is_continue_exit = (_tb_meaningful
+                                                             and all(i.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                                                                     for i in _tb_meaningful))
+                                        if not _is_continue_exit:
+                                            _then_offsets_c1.add(_tb.start_offset)
                                     _jumps_to_then_c1 = _jump_target_c1 in _then_offsets_c1
                                     _negate_c1 = _jumps_to_then_c1 != _if_true_c1
                             return _negate_expr(_c1_boolop_expr) if _negate_c1 else _c1_boolop_expr
@@ -17015,7 +17080,16 @@ AST 映射规则:
                                 _if_true_c1 = 'IF_TRUE' in _merge_last_c1.opname
                             _jump_target_c1 = _merge_last_c1.argval
                             if _jump_target_c1 is not None:
-                                _then_offsets_c1 = {b.start_offset for b in region.then_blocks}
+                                _then_offsets_c1 = set()
+                                # [R86 fix] Exclude continue-exit blocks from then_offsets
+                                for _tb in region.then_blocks:
+                                    _tb_meaningful = [i for i in _tb.instructions
+                                                      if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                                    _is_continue_exit = (_tb_meaningful
+                                                         and all(i.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                                                                 for i in _tb_meaningful))
+                                    if not _is_continue_exit:
+                                        _then_offsets_c1.add(_tb.start_offset)
                                 _jumps_to_then_c1 = _jump_target_c1 in _then_offsets_c1
                                 _negate_c1 = _jumps_to_then_c1 != _if_true_c1
                         _boolop_expr_c1 = {
@@ -20008,6 +20082,13 @@ AST 映射规则:
             # 语句顺序（如 processed_count 应在第二个 try 之后）。
             _ntr_try_start_in_try_blocks = any(
                 b.start_offset == ntr.try_offset_start for b in region.try_blocks)
+            # [R86 fix] 当嵌套 try 的 entry 和 try_offset_start 都不在
+            # try_blocks 中时（内层 try 唯一归属其块），检查是否有
+            # try_blocks 的偏移量小于嵌套 try 的起始偏移。如果有，
+            # 则不应预生成（否则会排在那些 try_blocks 前面），而应在
+            # try_blocks 遍历到合适位置时或遍历后生成。
+            _ntr_has_preceding_try_blocks = any(
+                b.start_offset < ntr.try_offset_start for b in region.try_blocks)
             # Check if this nested try should be deferred until after an IfRegion
             _defer_for_if = False
             for _ir in self.region_analyzer.regions:
@@ -20021,6 +20102,11 @@ AST 映射规则:
             # 当 entry 不在 try_blocks 中但 try_offset_start 在 try_blocks 中时，
             # 延迟到 try_blocks 遍历时生成。
             if not _ntr_entry_in_try_blocks and _ntr_try_start_in_try_blocks:
+                _pre_generate = False
+            # [R86 fix] 当 entry 和 try_offset_start 都不在 try_blocks 中，
+            # 但有 try_blocks 的偏移量小于嵌套 try 的起始偏移时，延迟生成，
+            # 避免嵌套 try 被排在实际应在前面的 try_blocks 语句之前。
+            if not _ntr_entry_in_try_blocks and not _ntr_try_start_in_try_blocks and _ntr_has_preceding_try_blocks:
                 _pre_generate = False
             if _pre_generate and not _defer_for_if:
                 if id(ntr) not in self._generated_regions and id(ntr) not in self._generating_regions:
