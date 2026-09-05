@@ -10551,6 +10551,16 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                     succs = [s for s in normal_exit.successors if s is not normal_exit]
                     if len(succs) == 1:
                         target = succs[0]
+                # [R84 修复] with 体内的 return：normal_exit（__exit__ 调用块）
+                # 的后继若是以 RETURN_VALUE/RETURN_CONST 终结的块，那是 with
+                # 体内的 return 语句（return None），不是 with 的出口块。
+                # with 出口块是 with 之后的第一条语句，只有控制流越过 with
+                # 全部代码（含清理）继续向下时才存在；return 直接终结函数，
+                # 不存在后续出口。
+                if target is not None and target not in owned:
+                    tgt_last = target.get_last_instruction()
+                    if tgt_last and tgt_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                        target = None
                 if target is not None and target not in owned:
                     return target, via_jump
         # Fallback: scan with_body for the normal-exit __exit__ call.
@@ -10640,6 +10650,42 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
         body_start, body_end = self._get_with_body_range(last_with)
         with_body = self._collect_with_body_blocks(last_with, body_start, body_end)
         exception_blocks, cleanup_blocks = self._collect_with_cleanup_blocks(with_entry_blocks, with_body, body_start, body_end)
+        # [R84 修复] with 体内的 return：当 with body 的最后一个块以正常退出
+        # （非异常）路径到达 __exit__ 调用块，而 __exit__ 之后紧接 return 块
+        # （LOAD_CONST None; RETURN_VALUE），说明 with 体内有 return 语句。
+        # 此 __exit__ 调用块和 return 块属于 WithRegion（return 在 with 上下文
+        # 管理器内执行 __exit__ 后返回），不应落入外层 IfRegion。
+        # 结构性判据：起始偏移 == body_end 的块是 normal-exit __exit__ 调用块，
+        # 其前驱包含 with_body 块；若其后继是 return 块（RETURN_VALUE 终结），
+        # 则两条路径（__exit__ 调用 + return）均归 WithRegion。
+        owned = set(with_entry_blocks) | set(with_body) | set(exception_blocks) | set(cleanup_blocks)
+        if body_end is not None:
+            _ne_block = None
+            for blk in self.cfg.get_blocks_in_order():
+                if blk.start_offset == body_end:
+                    _ne_block = blk
+                    break
+                if any(i.offset == body_end for i in blk.instructions):
+                    _ne_block = blk
+                    break
+            if _ne_block is not None and _ne_block not in owned:
+                _ne_last = _ne_block.get_last_instruction()
+                if _ne_last is not None and _ne_last.opname == 'POP_TOP':
+                    for _ne_succ in _ne_block.successors:
+                        if _ne_succ in owned:
+                            continue
+                        _ns_last = _ne_succ.get_last_instruction()
+                        if _ns_last and _ns_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                            _ne_body_pred = False
+                            for pred in _ne_block.predecessors:
+                                if pred in with_body or pred in with_entry_blocks:
+                                    _ne_body_pred = True
+                                    break
+                            if _ne_body_pred:
+                                cleanup_blocks.append(_ne_block)
+                                owned.add(_ne_block)
+                                with_body.append(_ne_succ)
+                                owned.add(_ne_succ)
         # [Round 02 F5] 剔除 with 的出口块：WithRegion 是单入口（BEFORE_WITH）
         # 单出口（with 之后的第一块）区域。cleanup_blocks 的启发式扫描
         # （_collect_normal_exit_cleanup）以「块内无用户代码」为判据，会把恰好
