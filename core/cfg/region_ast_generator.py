@@ -3727,6 +3727,8 @@ AST 映射规则:
                                 break
             _extra_stmts = []
             for block in _pre_blocks:
+                if block in self.generated_blocks:
+                    continue
                 _has_gyfi = any(i.opname == 'GET_YIELD_FROM_ITER' for i in block.instructions)
                 if _has_gyfi:
                     _has_yield = any(i.opname == 'YIELD_VALUE' for i in block.instructions)
@@ -3759,6 +3761,7 @@ AST 映射规则:
                         continue
                     self.generated_blocks.add(block)
             _post_yf_stmts = []
+            _yf_unpack_exit_blocks = set()
             if region.else_blocks:
                 for _eb in region.else_blocks:
                     _eb_role = self.region_analyzer.get_block_role(_eb)
@@ -3766,6 +3769,14 @@ AST 映射规则:
                         continue
                     _eb_has_yf_setup = any(i.opname == 'GET_YIELD_FROM_ITER' for i in _eb.instructions)
                     if _eb_has_yf_setup:
+                        continue
+                    _eb_has_unpack_store = False
+                    for _ui, _uinstr in enumerate(_eb.instructions):
+                        if _uinstr.opname in ('UNPACK_SEQUENCE', 'UNPACK_EX'):
+                            _eb_has_unpack_store = True
+                            break
+                    if _eb_has_unpack_store:
+                        _yf_unpack_exit_blocks.add(id(_eb))
                         continue
                     _eb_stmts = self._generate_block_statements(_eb)
                     if _eb_stmts:
@@ -3775,20 +3786,67 @@ AST 映射规则:
                 self.generated_offsets.add(block.start_offset)
             if _yf_expr:
                 # [Round6-07] yield from 作赋值右值：`x = yield from g()`
+                # [Round8-01] 解包赋值：`a, b = yield from g()`
                 # 字节码在 yield-from 循环退出块（region.blocks 内）含
-                # STORE_* 指令作为赋值目标。检测 STORE_* 并生成
-                # Assign(targets=[store], value=YieldFrom)；否则保持
-                # Expr(YieldFrom)（独立语句，返回值被 POP_TOP 丢弃）。
+                # UNPACK_SEQUENCE N + N×STORE_* 或单个 STORE_* 指令作为赋值目标。
+                # 依「自底向上归约」：UNPACK_SEQUENCE 消费 yield-from 结果，产生
+                # N 个值绑定到 STORE_* 目标，整体归属单一 Assign 语句。
                 _yf_store_target = None
+                _yf_unpack_targets = None
+                _yf_unpack_block = None
+                _yf_unpack_end_idx = None
                 _yf_store_ops = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
                 for _blk in region.blocks:
-                    for _instr in _blk.instructions:
-                        if _instr.opname in _yf_store_ops:
+                    for _ii, _instr in enumerate(_blk.instructions):
+                        if _instr.opname in ('UNPACK_SEQUENCE', 'UNPACK_EX') and not _yf_unpack_targets:
+                            _unpack_n = _instr.arg if _instr.opname == 'UNPACK_SEQUENCE' else ((_instr.argval & 0xFF) + 1 + ((_instr.argval >> 8) & 0xFF))
+                            _unpack_targets = []
+                            _si = _ii + 1
+                            while _si < len(_blk.instructions) and len(_unpack_targets) < _unpack_n:
+                                _si_instr = _blk.instructions[_si]
+                                if _si_instr.opname in _yf_store_ops:
+                                    _t_name = _si_instr.argval if _si_instr.argval else f'var_{_si_instr.arg}'
+                                    _unpack_targets.append({'type': 'Name', 'id': _t_name, 'ctx': 'Store'})
+                                elif _si_instr.opname == 'STORE_ATTR':
+                                    _t_attr_val = self.expr_reconstructor.reconstruct(_blk.instructions[_si - 1:_si])
+                                    if _t_attr_val:
+                                        _unpack_targets.append(_t_attr_val)
+                                    else:
+                                        break
+                                else:
+                                    break
+                                _si += 1
+                            if len(_unpack_targets) == _unpack_n:
+                                _yf_unpack_targets = _unpack_targets
+                                _yf_unpack_block = _blk
+                                _yf_unpack_end_idx = _si
+                            break
+                        elif _instr.opname in _yf_store_ops and not _yf_unpack_targets:
                             _yf_store_target = _instr
                             break
-                    if _yf_store_target:
+                    if _yf_unpack_targets or _yf_store_target:
                         break
-                if _yf_store_target is not None:
+                if _yf_unpack_targets is not None:
+                    _result = {
+                        'type': 'Assign',
+                        'targets': [{
+                            'type': 'Tuple',
+                            'elts': _yf_unpack_targets,
+                            'ctx': 'Store',
+                        }],
+                        'value': {'type': 'YieldFrom', 'value': _yf_expr},
+                    }
+                    _yf_consumed_offsets = set()
+                    for _ci in range(_yf_unpack_end_idx):
+                        _yf_consumed_offsets.add(_yf_unpack_block.instructions[_ci].offset)
+                    if _yf_unpack_end_idx < len(_yf_unpack_block.instructions):
+                        _remaining_instrs = _yf_unpack_block.instructions[_yf_unpack_end_idx:]
+                        _remaining_stmts = self._build_statements_from_instructions(_remaining_instrs, _yf_unpack_block)
+                        if _remaining_stmts:
+                            _post_yf_stmts = _remaining_stmts + _post_yf_stmts
+                    for _off in _yf_consumed_offsets:
+                        self.generated_offsets.add(_off)
+                elif _yf_store_target is not None:
                     _tgt_name = _yf_store_target.argval if _yf_store_target.argval else f'var_{_yf_store_target.arg}'
                     _result = {
                         'type': 'Assign',
@@ -41244,6 +41302,24 @@ AST 映射规则:
                 continue
 
             if instr.opname == 'GET_YIELD_FROM_ITER' and stmt_instrs:
+                # [Round8-01] If this block is a predecessor of a yield-from
+                # LoopRegion, the yield-from expression is handled by the
+                # LoopRegion's _generate_loop path (which produces the complete
+                # Assign/Expr(YieldFrom) statement). Skip generating an
+                # independent Expr(YieldFrom) here to avoid duplication.
+                # 依「每块唯一归属」: yield-from setup + loop blocks belong
+                # to the yield-from LoopRegion.
+                _is_yf_loop_pred = False
+                for _yflr in self.region_analyzer.regions:
+                    if (isinstance(_yflr, LoopRegion)
+                            and _yflr.metadata.get('is_yield_from_loop')
+                            and _yflr.header_block is not None
+                            and block in _yflr.header_block.predecessors):
+                        _is_yf_loop_pred = True
+                        break
+                if _is_yf_loop_pred:
+                    stmt_instrs = []
+                    continue
                 # [yield from 修复] 使用增强的 yield from 检测和重建
                 # 检查后续指令是否包含 YIELD_VALUE，确认是 yield from 模式
                 _remaining_in_block = block.instructions[block.instructions.index(instr)+1:]
