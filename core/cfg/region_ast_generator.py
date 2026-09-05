@@ -11038,8 +11038,11 @@ AST 映射规则:
                     if _part:
                         if _chain_op == 'or':
                             _cb_last = _cb.instructions[-1] if _cb.instructions else None
-                            if _cb_last and _cb_last.opname in NONE_CHECK_OPS:
-                                _part = _flip_is_none_compare(_part)
+                            if _cb_last and _cb_last.opname in NONE_CHECK_OPS and _cb_last.argval is not None:
+                                _jt_block = self.region_analyzer.cfg.get_block_by_offset(_cb_last.argval)
+                                _is_then_target = _jt_block in region.then_blocks if _jt_block and region.then_blocks else False
+                                if _is_then_target:
+                                    _part = _flip_is_none_compare(_part)
                         _main_parts.append(_part)
             if len(_main_parts) >= 2:
                 condition = {'type': 'BoolOp', 'op': _chain_op, 'values': _main_parts}
@@ -14064,8 +14067,12 @@ AST 映射规则:
                         if _part:
                             if _chain_op == 'or':
                                 _cb_last = _cb.instructions[-1] if _cb.instructions else None
-                                if _cb_last and _cb_last.opname in NONE_CHECK_OPS:
-                                    _part = _flip_is_none_compare(_part)
+                                if _cb_last and _cb_last.opname in NONE_CHECK_OPS and _cb_last.argval is not None:
+                                    _jt_block = self.region_analyzer.cfg.get_block_by_offset(_cb_last.argval)
+                                    _elif_then_blocks = region.elif_bodies[0] if (getattr(region, 'elif_bodies', None) and len(region.elif_bodies) > 0) else []
+                                    _is_then_target = _jt_block in _elif_then_blocks if _jt_block and _elif_then_blocks else False
+                                    if _is_then_target:
+                                        _part = _flip_is_none_compare(_part)
                             _elif_parts.append(_part)
                 if len(_elif_parts) >= 2:
                     elif_condition = {'type': 'BoolOp', 'op': _chain_op, 'values': _elif_parts}
@@ -14801,8 +14808,11 @@ AST 映射规则:
                     if _part:
                         if _chain_op == 'or':
                             _cb_last = _cb.instructions[-1] if _cb.instructions else None
-                            if _cb_last and _cb_last.opname in NONE_CHECK_OPS:
-                                _part = _flip_is_none_compare(_part)
+                            if _cb_last and _cb_last.opname in NONE_CHECK_OPS and _cb_last.argval is not None:
+                                _jt_block = self.region_analyzer.cfg.get_block_by_offset(_cb_last.argval)
+                                _is_then_target = _jt_block in region.then_blocks if _jt_block and region.then_blocks else False
+                                if _is_then_target:
+                                    _part = _flip_is_none_compare(_part)
                         _main_parts.append(_part)
             if len(_main_parts) >= 2:
                 condition = {'type': 'BoolOp', 'op': _chain_op, 'values': _main_parts}
