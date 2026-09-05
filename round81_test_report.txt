@@ -1,0 +1,816 @@
+================================================================================
+ROUND81 TEST REPORT: Bytecode Comparison for __init__.pyc
+================================================================================
+
+PYC File: F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/__init__.pyc
+Python Version: 3.11.7 (tags/v3.11.7:fa7a6f2, Dec  4 2023, 19:24:49) [MSC v.1937 64 bit (AMD64)]
+Decompiled source length: 9713 chars
+
+
+================================================================================
+SECTION 1: Summary
+================================================================================
+
+Total code objects (functions): 33
+Matched (semantically equivalent): 32
+Mismatched: 1
+
+Mismatched functions:
+  - system_func_with_execution_phase: true_diffs=22, jump_diffs=0
+
+Match rate: 32/33 = 97.0%
+
+================================================================================
+SECTION 2: Detailed Bytecode Diff
+================================================================================
+
+--- system_func_with_execution_phase ---
+  orig_instr_count: 26
+  decomp_instr_count: 13
+  true_diffs: 22
+  jump_diffs: 0
+
+  Original bytecode (filtered, 26 instrs):
+       8 RESUME                                   
+      10 LOAD_CONST                               0
+      12 LOAD_CONST                               None
+      14 IMPORT_NAME                              IQEngine.core.execution_context
+      16 IMPORT_FROM                              core
+      18 SWAP                                     
+      20 POP_TOP                                  
+      22 IMPORT_FROM                              execution_context
+      24 STORE_DEREF                              exc_ctxt
+      26 POP_TOP                                  
+      28 LOAD_CONST                               0
+      30 LOAD_CONST                               ('ExcType',)
+      32 IMPORT_NAME                              IQEngine.const
+      34 IMPORT_FROM                              ExcType
+      36 STORE_DEREF                              ExcType
+      38 POP_TOP                                  
+      40 LOAD_CLOSURE                             ExcType
+      42 LOAD_CLOSURE                             exc_ctxt
+      44 LOAD_CLOSURE                             execution_phase
+      46 LOAD_CLOSURE                             func
+      48 BUILD_TUPLE                              
+      50 LOAD_CONST                               <code object wrapper at 0x00000189A48E63F0, file "./fly_docker_py311/IQEngine/utils/__init__.py", line 372>
+      52 MAKE_FUNCTION                            closure
+      54 STORE_FAST                               wrapper
+      56 LOAD_FAST                                wrapper
+      58 RETURN_VALUE                             
+
+  Recompiled bytecode (filtered, 13 instrs):
+       4 RESUME                                   
+       6 LOAD_CONST                               0
+       8 LOAD_CONST                               None
+      10 IMPORT_NAME                              IQEngine.core.execution_context
+      12 STORE_FAST                               IQEngine
+      14 LOAD_CLOSURE                             execution_phase
+      16 LOAD_CLOSURE                             func
+      18 BUILD_TUPLE                              
+      20 LOAD_CONST                               <code object wrapper at 0x00000189A3F39A70, file "<decompiled>", line 261>
+      22 MAKE_FUNCTION                            closure
+      24 STORE_FAST                               wrapper
+      26 LOAD_FAST                                wrapper
+      28 RETURN_VALUE                             
+
+  True diffs:
+    idx=4: orig=IMPORT_FROM(core) vs decomp=STORE_FAST(IQEngine)
+    idx=5: orig=SWAP(2) vs decomp=LOAD_CLOSURE(execution_phase)
+    idx=6: orig=POP_TOP(None) vs decomp=LOAD_CLOSURE(func)
+    idx=7: orig=IMPORT_FROM(execution_context) vs decomp=BUILD_TUPLE(2)
+    idx=8: orig=STORE_DEREF(exc_ctxt) vs decomp=LOAD_CONST(<code object wrapper>)
+    idx=9: orig=POP_TOP(None) vs decomp=MAKE_FUNCTION(8)
+    idx=10: orig=LOAD_CONST(0) vs decomp=STORE_FAST(wrapper)
+    idx=11: orig=LOAD_CONST(('ExcType',)) vs decomp=LOAD_FAST(wrapper)
+    idx=12: orig=IMPORT_NAME(IQEngine.const) vs decomp=RETURN_VALUE(None)
+    idx=13: MISSING in decomp: orig had IMPORT_FROM(ExcType)
+    idx=14: MISSING in decomp: orig had STORE_DEREF(ExcType)
+    idx=15: MISSING in decomp: orig had POP_TOP(None)
+    idx=16: MISSING in decomp: orig had LOAD_CLOSURE(ExcType)
+    idx=17: MISSING in decomp: orig had LOAD_CLOSURE(exc_ctxt)
+    idx=18: MISSING in decomp: orig had LOAD_CLOSURE(execution_phase)
+    idx=19: MISSING in decomp: orig had LOAD_CLOSURE(func)
+    idx=20: MISSING in decomp: orig had BUILD_TUPLE(4)
+    idx=21: MISSING in decomp: orig had LOAD_CONST(<code object wrapper>)
+    idx=22: MISSING in decomp: orig had MAKE_FUNCTION(8)
+    idx=23: MISSING in decomp: orig had STORE_FAST(wrapper)
+    idx=24: MISSING in decomp: orig had LOAD_FAST(wrapper)
+    idx=25: MISSING in decomp: orig had RETURN_VALUE(None)
+
+================================================================================
+SECTION 3: Raw Bytecode (Unfiltered) for Mismatched Functions
+================================================================================
+
+--- system_func_with_execution_phase ---
+Original (raw, 30 instrs):
+     0 MAKE_CELL                                execution_phase
+     2 MAKE_CELL                                func
+     4 MAKE_CELL                                ExcType
+     6 MAKE_CELL                                exc_ctxt
+     8 RESUME                                   
+    10 LOAD_CONST                               0
+    12 LOAD_CONST                               None
+    14 IMPORT_NAME                              IQEngine.core.execution_context
+    16 IMPORT_FROM                              core
+    18 SWAP                                     
+    20 POP_TOP                                  
+    22 IMPORT_FROM                              execution_context
+    24 STORE_DEREF                              exc_ctxt
+    26 POP_TOP                                  
+    28 LOAD_CONST                               0
+    30 LOAD_CONST                               ('ExcType',)
+    32 IMPORT_NAME                              IQEngine.const
+    34 IMPORT_FROM                              ExcType
+    36 STORE_DEREF                              ExcType
+    38 POP_TOP                                  
+    40 LOAD_CLOSURE                             ExcType
+    42 LOAD_CLOSURE                             exc_ctxt
+    44 LOAD_CLOSURE                             execution_phase
+    46 LOAD_CLOSURE                             func
+    48 BUILD_TUPLE                              
+    50 LOAD_CONST                               <code object wrapper at 0x00000189A48E63F0, file "./fly_docker_py311/IQEngine/utils/__init__.py", line 372>
+    52 MAKE_FUNCTION                            closure
+    54 STORE_FAST                               wrapper
+    56 LOAD_FAST                                wrapper
+    58 RETURN_VALUE                             
+Recompiled (raw, 15 instrs):
+     0 MAKE_CELL                                execution_phase
+     2 MAKE_CELL                                func
+     4 RESUME                                   
+     6 LOAD_CONST                               0
+     8 LOAD_CONST                               None
+    10 IMPORT_NAME                              IQEngine.core.execution_context
+    12 STORE_FAST                               IQEngine
+    14 LOAD_CLOSURE                             execution_phase
+    16 LOAD_CLOSURE                             func
+    18 BUILD_TUPLE                              
+    20 LOAD_CONST                               <code object wrapper at 0x00000189A3F39A70, file "<decompiled>", line 261>
+    22 MAKE_FUNCTION                            closure
+    24 STORE_FAST                               wrapper
+    26 LOAD_FAST                                wrapper
+    28 RETURN_VALUE                             
+
+Code object comparison:
+  orig  co_cellvars: ('execution_phase', 'func', 'ExcType', 'exc_ctxt')
+  recomp co_cellvars: ('execution_phase', 'func')
+  orig  co_freevars: ()
+  recomp co_freevars: ()
+  orig  co_varnames: ('execution_phase', 'func', 'wrapper')
+  recomp co_varnames: ('execution_phase', 'func', 'IQEngine', 'wrapper')
+  orig  co_names: ('IQEngine.core.execution_context', 'core', 'execution_context', 'IQEngine.const', 'ExcType')
+  recomp co_names: ('IQEngine.core.execution_context',)
+  orig  co_consts (non-code): ['\n    :param execution_phase: ExecutionPhase.ON_HANDLE_DATA/ ExecutionPhase.ON_HANDLE_TICK\n    :param func: function\n    :return:\n    ', 0, None, ('ExcType',)]
+  recomp co_consts (non-code): ['\n    :param execution_phase: ExecutionPhase.ON_HANDLE_DATA/ ExecutionPhase.ON_HANDLE_TICK\n    :param func: function\n    :return:\n    ', 0, None]
+
+================================================================================
+SECTION 4: Root Cause Analysis
+================================================================================
+
+Mismatch function: system_func_with_execution_phase
+
+Original source (inferred from bytecode):
+  def system_func_with_execution_phase(execution_phase, func):
+      from IQEngine.core import execution_context as exc_ctxt
+      from IQEngine.const import ExcType
+      def wrapper(*args, **kwargs):
+          with exc_ctxt.ExecutionContext(execution_phase):
+              with ModifyExceptionFromType(ExcType.SYSTEM_EXC):
+                  return func(*(args), **(kwargs))
+      return wrapper
+
+Decompiled output (INCORRECT):
+  def system_func_with_execution_phase(execution_phase, func):
+      import IQEngine.core.execution_context
+      def wrapper(*args, **kwargs):
+          with exc_ctxt.ExecutionContext(execution_phase):
+              with ModifyExceptionFromType(ExcType.SYSTEM_EXC):
+                  return func(*(args), **(kwargs))
+      return wrapper
+
+Root cause: The decompiler (pycdc) incorrectly decompiled two import
+statements that use "from X import Y" syntax and store the imported
+names as closure variables (STORE_DEREF instead of STORE_FAST):
+
+1. "from IQEngine.core import execution_context as exc_ctxt" was
+   decompiled as "import IQEngine.core.execution_context". The
+   original bytecode uses IMPORT_FROM+SWAP+POP_TOP+IMPORT_FROM+
+   STORE_DEREF to extract "execution_context" and store it as
+   "exc_ctxt" (a cell variable for the nested wrapper function).
+   The decompiler lost the IMPORT_FROM and STORE_DEREF, instead
+   generating a bare "import X.Y" which stores only the top-level
+   package name as a local variable (STORE_FAST IQEngine).
+
+2. "from IQEngine.const import ExcType" was completely lost in the
+   decompiled output. The original bytecode has LOAD_CONST+
+   IMPORT_NAME+IMPORT_FROM+STORE_DEREF+POP_TOP for this import,
+   but none of these instructions appear in the recompiled code.
+
+3. Because the two import-from statements were not properly
+   decompiled, the closure variables (exc_ctxt, ExcType) that
+   should be captured by the nested wrapper function are missing
+   from the outer function. This causes the MAKE_FUNCTION closure
+   tuple to be wrong: original has 4 closures (ExcType, exc_ctxt,
+   execution_phase, func) but recompiled has only 2 (execution_phase,
+   func). The wrapper function itself then references undefined
+   names (exc_ctxt, ExcType) at runtime.
+
+This is a known pycdc limitation: it fails to properly decompile
+"from X import Y" statements when the imported name is stored as
+a cell/free variable (STORE_DEREF) rather than a local variable
+(STORE_FAST/STORE_NAME). This typically occurs when the imported
+name is referenced by a nested function (closure).
+
+================================================================================
+SECTION 5: Minimal Reproduction Examples
+================================================================================
+
+Each example is a minimal .py source code that, when compiled to .pyc
+with CPython 3.11, then decompiled with pycdc and recompiled, will
+produce a bytecode difference of the same category as the mismatch.
+
+Minimal Reproduction #1: from-import with closure variable (simple)
+  Description: Import a name with "from X import Y" and use it in a nested function. pycdc may decompile as "import X.Y" or lose the import entirely, causing STORE_DEREF to become STORE_FAST or be omitted.
+  Python source code:
+    import os
+    
+    def outer():
+        from os.path import join
+        def inner(x):
+            return join("a", x)
+        return inner
+
+Minimal Reproduction #2: from-import as alias with closure variable
+  Description: Import with alias "from X import Y as Z" where Z is a closure variable. pycdc may lose the alias, generating bare import or wrong variable name.
+  Python source code:
+    import os
+    
+    def outer():
+        from os.path import join as pjoin
+        def inner(x):
+            return pjoin("a", x)
+        return inner
+
+Minimal Reproduction #3: Multiple from-imports with closure variables
+  Description: Multiple "from X import Y" statements where all imported names are closure variables. pycdc may lose some or all imports.
+  Python source code:
+    import os
+    
+    def outer():
+        from os.path import join
+        from os.path import exists
+        def inner(x):
+            if exists(x):
+                return join("a", x)
+        return inner
+
+Minimal Reproduction #4: from-import with nested function using imported name in with-statement
+  Description: The imported name is used as a context manager in the nested function. This matches the actual pattern in the mismatched code.
+  Python source code:
+    import contextlib
+    
+    def outer(phase):
+        from contextlib import suppress as ctx
+        def inner():
+            with ctx(ValueError):
+                return 42
+        return inner
+
+Minimal Reproduction #5: from X.Y import Z with closure variable
+  Description: Multi-level package import "from X.Y import Z" where Z becomes a closure variable. This is the exact pattern in the mismatched code (from IQEngine.core import execution_context).
+  Python source code:
+    import os
+    
+    def outer():
+        from os.path import basename
+        def inner(x):
+            return basename(x)
+        return inner
+
+Minimal Reproduction #6: from-import closure with two nested functions
+  Description: Imported name is referenced by two different nested functions, making it a cell variable with multiple consumers.
+  Python source code:
+    import os
+    
+    def outer():
+        from os.path import join
+        def inner1(x):
+            return join("a", x)
+        def inner2(x):
+            return join("b", x)
+        return inner1, inner2
+
+Minimal Reproduction #7: from-import with class attribute reference in closure
+  Description: Import an enum/class and access its attribute in the nested function. Matches the ExcType.SYSTEM_EXC pattern.
+  Python source code:
+    from enum import Enum
+    
+    class MyEnum(Enum):
+        A = 1
+        B = 2
+    
+    def outer(func):
+        from enum import Enum as E
+        def inner(*args):
+            if E.A:
+                return func(*args)
+        return inner
+
+Minimal Reproduction #8: from-import closure + parameter closure combined
+  Description: Both the imported name and the outer function parameter are closure variables. This matches the actual pattern where both exc_ctxt and execution_phase are closures.
+  Python source code:
+    import os
+    
+    def outer(phase):
+        from os.path import join
+        def inner(x):
+            return join(phase, x)
+        return inner
+
+Minimal Reproduction #9: from-import with star-style module path and closure
+  Description: A deeply nested module path "from A.B.C import D" where D becomes a closure variable.
+  Python source code:
+    import collections
+    
+    def outer():
+        from collections.abc import Mapping
+        def inner(x):
+            return isinstance(x, Mapping)
+        return inner
+
+Minimal Reproduction #10: from-import where name is used both locally and in closure
+  Description: The imported name is used both in the outer function body and in the nested function, making it both a local and a cell variable.
+  Python source code:
+    import os
+    
+    def outer():
+        from os.path import exists
+        _ = exists(".")
+        def inner(x):
+            return exists(x)
+        return inner
+
+Minimal Reproduction #11: from-import with decorator-like pattern (matches actual code)
+  Description: Closest pattern to the actual mismatched code: a decorator-like function that imports modules and creates a closure over both imported names and function parameters.
+  Python source code:
+    def system_func_with_execution_phase(execution_phase, func):
+        from contextlib import suppress as exc_ctxt
+        from enum import Enum as ExcType
+        def wrapper(*args, **kwargs):
+            with exc_ctxt(ValueError):
+                return func(*args, **kwargs)
+        return wrapper
+
+Minimal Reproduction #12: from-import inside function vs module-level (control)
+  Description: Control case: the same import pattern at module level does NOT produce STORE_DEREF (uses STORE_NAME instead). The difference only manifests when the import is inside a function with a closure.
+  Python source code:
+    from os.path import join
+    
+    def inner(x):
+        return join("a", x)
+
+================================================================================
+SECTION 6: Verification of Minimal Reproduction Examples
+================================================================================
+
+For each minimal reproduction example, compile to .pyc, decompile,
+recompile, and compare bytecodes to verify the difference is real.
+
+Repro #1: MISMATCH CONFIRMED - outer:true_diffs=13, outer.inner:true_diffs=6
+  Decompiled source:
+    # Source Generated with Decompyle++ (Python version)
+    # File: round81_repro_1.pyc (Python 3.11)
+    
+    import os
+    def outer():
+        def inner(x):
+            return join('a', x)
+        return inner
+    
+Repro #2: MISMATCH CONFIRMED - outer:true_diffs=13, outer.inner:true_diffs=6
+  Decompiled source:
+    # Source Generated with Decompyle++ (Python version)
+    # File: round81_repro_2.pyc (Python 3.11)
+    
+    import os
+    def outer():
+        def inner(x):
+            return pjoin('a', x)
+        return inner
+    
+Repro #3: MISMATCH CONFIRMED - outer:true_diffs=20, outer.inner:true_diffs=10
+  Decompiled source:
+    # Source Generated with Decompyle++ (Python version)
+    # File: round81_repro_3.pyc (Python 3.11)
+    
+    import os
+    def outer():
+        def inner(x):
+            if exists(x):
+                return join('a', x)
+        return inner
+    
+Repro #4: MISMATCH CONFIRMED - outer:true_diffs=13, outer.inner:true_diffs=21
+  Decompiled source:
+    # Source Generated with Decompyle++ (Python version)
+    # File: round81_repro_4.pyc (Python 3.11)
+    
+    import contextlib
+    def outer(phase):
+        def inner():
+            with ctx(ValueError):
+                return 42
+        return inner
+    
+Repro #5: MISMATCH CONFIRMED - outer:true_diffs=13, outer.inner:true_diffs=5
+  Decompiled source:
+    # Source Generated with Decompyle++ (Python version)
+    # File: round81_repro_5.pyc (Python 3.11)
+    
+    import os
+    def outer():
+        def inner(x):
+            return basename(x)
+        return inner
+    
+Repro #6: MISMATCH CONFIRMED - outer:true_diffs=20, outer.inner1:true_diffs=6, outer.inner2:true_diffs=6
+  Decompiled source:
+    # Source Generated with Decompyle++ (Python version)
+    # File: round81_repro_6.pyc (Python 3.11)
+    
+    import os
+    def outer():
+        def inner1(x):
+            return join('a', x)
+        def inner2(x):
+            return join('b', x)
+        return (inner1, inner2)
+    
+Repro #7: MISMATCH CONFIRMED - outer:true_diffs=14
+  Decompiled source:
+    # Source Generated with Decompyle++ (Python version)
+    # File: round81_repro_7.pyc (Python 3.11)
+    
+    from enum import Enum
+    class MyEnum(Enum):
+        A = 1
+        B = 2
+    def outer(func):
+        def inner(*args):
+            if E.A:
+                return func(*(args))
+        return inner
+    
+Repro #8: MISMATCH CONFIRMED - outer:true_diffs=14, outer.inner:true_diffs=6
+  Decompiled source:
+    # Source Generated with Decompyle++ (Python version)
+    # File: round81_repro_8.pyc (Python 3.11)
+    
+    import os
+    def outer(phase):
+        def inner(x):
+            return join(phase, x)
+        return inner
+    
+Repro #9: MISMATCH CONFIRMED - outer:true_diffs=13
+  Decompiled source:
+    # Source Generated with Decompyle++ (Python version)
+    # File: round81_repro_9.pyc (Python 3.11)
+    
+    import collections
+    def outer():
+        def inner(x):
+            return isinstance(x, Mapping)
+        return inner
+    
+Repro #10: MISMATCH CONFIRMED - outer:true_diffs=18, outer.inner:true_diffs=5
+  Decompiled source:
+    # Source Generated with Decompyle++ (Python version)
+    # File: round81_repro_10.pyc (Python 3.11)
+    
+    import os
+    def outer():
+        _ = exists('.')
+        def inner(x):
+            return exists(x)
+        return inner
+    
+Repro #11: MISMATCH CONFIRMED - system_func_with_execution_phase:true_diffs=18, system_func_with_execution_phase.wrapper:true_diffs=28
+  Decompiled source:
+    # Source Generated with Decompyle++ (Python version)
+    # File: round81_repro_11.pyc (Python 3.11)
+    
+    def system_func_with_execution_phase(execution_phase, func):
+        from enum import Enum as ExcType
+        def wrapper(*args, **kwargs):
+            with exc_ctxt(ValueError):
+                return func(*(args), **(kwargs))
+        return wrapper
+    
+Repro #12: MATCH (no difference detected)
+  Decompiled source:
+    # Source Generated with Decompyle++ (Python version)
+    # File: round81_repro_12.pyc (Python 3.11)
+    
+    from os.path import join
+    def inner(x):
+        return join('a', x)
+    
+
+Verification summary: 11/12 examples confirmed as producing bytecode differences
+
+================================================================================
+SECTION 7: Full Decompiled Source
+================================================================================
+
+# Source Generated with Decompyle++ (Python version)
+# File: __init__.pyc (Python 3.11)
+
+import collections
+import pprint
+import six
+import datetime
+import traceback
+from contextlib import contextmanager
+from decimal import getcontext, ROUND_FLOOR
+import numpy as np
+from IQCommon import pandas as pd
+from importlib import import_module
+from IQCommon.logger import system_log, user_log, user_print, strategy_log
+from IQEngine.utils.i18n import get_local_text as _
+from IQEngine.const import AssetType, SYSTEM_PROFILE, AccountType
+from IQEngine.utils.exception import CustomException, parse_exception, parse_system_exception, ModifyExceptionFromType
+from IQEngine.utils.global_variable import g, clear_g
+from IQEngine.utils import option
+from IQCommon.exception import get_traceback_message
+ASSET_TYPE_IN_STOCK_ACCOUNT = [AssetType.STOCK.value, AssetType.INDEX.value, AssetType.ETF.value, AssetType.LOF.value, AssetType.REITS.value]
+ASSET_TYPE_IN_FUTURE_ACCOUNT = [AssetType.FUTURE.value]
+def full_update(src_dict, drt_dict):
+    """
+    完全字典更新，支持所有类字典类型
+    :param src_dict: collections.abc.Mapping 源字典
+    :param drt_dict: collections.abc.Mapping 目标字典
+    :return: None
+    """
+    for key, value in src_dict.items():
+        if key in drt_dict and isinstance(drt_dict[key], collections.abc.Mapping) and isinstance(value, collections.abc.Mapping):
+            full_update(value, drt_dict[key])
+            continue
+        drt_dict[key] = value
+        continue
+def get_original_function(func):
+    """
+    获取装饰器所装饰函数的原函数
+    :param func: function 装饰器所装饰函数
+    :return: function 原函数
+    """
+    func_wrapped = getattr(func, '__wrapped__', None)
+    while func_wrapped:
+        func = func_wrapped
+        func_wrapped = getattr(func, '__wrapped__', None)
+    return func
+def import_plugin(plugin_name):
+    """
+    封装导入函数
+    :param plugin_name: str
+    :return: model 导入的对象
+    """
+    try:
+        return import_module(plugin_name)
+        return None
+    except Exception as e:
+        system_log.error('******************************')
+        system_log.error('Mod Import Error: {}, error: {}', plugin_name, e)
+        system_log.error('******************************')
+        raise e
+@contextmanager
+def user_log_control(disabled=True):
+    if disabled:
+        user_log.disable()
+    try:
+        yield None
+    finally:
+        if disabled:
+            user_log.enable()
+class DictObject(object):
+    def __init__(self, d=None):
+        self.__dict__ = d if d is not None else dict()
+        for k, v in list(six.iteritems(self.__dict__)):
+            if isinstance(v, dict):
+                self.__dict__[k] = DictObject(v)
+    def save(self):
+        """
+        持久化信息保存
+        :return: 需要持久化的内容
+        :rtype: dict
+        """
+        if self.__dict__.get('user') is not None:
+            try:
+                server_restart_not_do_before = self.__dict__['user'].server_restart_not_do_before
+            except:
+                return dict()
+            if server_restart_not_do_before is not None:
+                return {'server_restart_do_before_type': server_restart_not_do_before}
+            else:
+                return dict()
+        else:
+            return dict()
+    def load(self, state):
+        """
+        持久化信息恢复
+        :param state: 持久化信息
+        :type state: dict
+        """
+        if 'server_restart_do_before_type' in state:
+            if 'user' in self.__dict__:
+                self.__dict__['user'].server_restart_not_do_before = state['server_restart_do_before_type']
+                return None
+            else:
+                self.__dict__['user'] = DictObject(dict())
+                self.__dict__['user'].server_restart_not_do_before = state['server_restart_do_before_type']
+    def __repr__(self):
+        return pprint.pformat(self.__dict__)
+    def __iter__(self):
+        return self.__dict__.__iter__()
+    def update(self, other):
+        self._update(self, other)
+    def items(self):
+        return six.iteritems(self.__dict__)
+    iteritems = items
+    def keys(self):
+        return self.__dict__.keys()
+    @classmethod
+    def _update(cls, target, src):
+        if isinstance(src, DictObject):
+            src = src.__dict__
+        if isinstance(target, DictObject):
+            target = target.__dict__
+        for k, v in six.iteritems(src):
+            if isinstance(v, collections.abc.Mapping):
+                r = cls._update(target.get(k, {}), v)
+                target[k] = r
+                continue
+            target[k] = src[k]
+            continue
+        else:
+            return target
+    def convert_to_dict(self):
+        result_dict = {}
+        for k, v in list(six.iteritems(self.__dict__)):
+            if isinstance(v, DictObject):
+                v = v.convert_to_dict()
+            result_dict[k] = v
+        else:
+            return result_dict
+    def get(self, key, default=None):
+        """
+
+        :param key:
+        :param default:
+        :return:
+        """
+        try:
+            return self.__dict__[key]
+            return None
+        except KeyError:
+            return default
+        except AttributeError:
+            return default
+        except Exception:
+            system_log.error(get_traceback_message())
+            return None
+def value_parse(value):
+    if value in ('True', 'true'):
+        return True
+    elif value in ('False', 'false'):
+        return False
+    elif value.isdigit():
+        return int(value)
+    try:
+        return float(value)
+        return None
+    except ValueError:
+        system_log.error(get_traceback_message())
+    return value
+def get_account_type(symbol):
+    from IQEngine.core.engine import Engine
+    asset = Engine.instance().get_asset(symbol)
+    if asset.type in ASSET_TYPE_IN_STOCK_ACCOUNT:
+        return AccountType.STOCK.value
+    elif asset.type == AssetType.FUTURE.value:
+        return AccountType.FUTURE.value
+    elif asset.type == AssetType.OPTION.value:
+        return AccountType.OPTION.value
+    elif asset.type == AssetType.HKS.value:
+        return AccountType.HKS.value
+    else:
+        raise NotImplementedError
+def merge_dicts(*dict_args):
+    result = {}
+    for d in dict_args:
+        result.update(d)
+    else:
+        return result
+def id_gen(start=1):
+    i = start
+    while True:
+        yield i
+        i += 1
+def check_price(price):
+    return price is not None and not np.isnan(price) and price > 0
+@contextmanager
+def decimal_rounding_floor():
+    original_rounding_option = getcontext().rounding
+    getcontext().rounding = ROUND_FLOOR
+    yield None
+    getcontext().rounding = original_rounding_option
+def is_run_from_ipython():
+    try:
+        from IPython import get_ipython
+        if get_ipython():
+            return True
+        else:
+            return False
+    except NameError:
+        system_log.error(get_traceback_message())
+        return False
+def get_multi_data(df_list):
+    """
+    将多个DataFrame对象整合成一个对象
+    :param df_list: list[pd.DataFrame]
+    :return: pd.MultiIndex
+    """
+    return pd.concat(df_list, axis=1)
+def create_portfolio(engine):
+    from IQEngine.account import Positions, Portfolio
+    accounts = {}
+    config = engine.config
+    start_date = datetime.datetime.combine(config.strategy.start_date, datetime.time.min)
+    units = 0
+    for account_type, starting_cash in six.iteritems(config.strategy.accounts):
+        if starting_cash == 0:
+            error_message = _('{} 账户初始资金为0请设置').format(account_type)
+            strategy_log.error(error_message)
+            raise RuntimeError(error_message)
+        account_model = engine.get_account_model(account_type)
+        position_model = engine.get_position_model(account_type)
+        positions = Positions(position_model)
+        account = account_model(starting_cash, positions)
+        units += account.total_value
+        accounts[account_type] = account
+    else:
+        return Portfolio(config.strategy.start_date, 1, units, accounts)
+def get_traceback_message():
+    """
+    用于获取异常信息字符串
+    :return:str
+    """
+    return traceback.format_exc()
+def add_profile(func):
+    if SYSTEM_PROFILE:
+        def wrapper(*arg, **kwargs):
+            from IQEngine.core.engine import Engine
+            engine = Engine.instance()
+            engine.enable_profiler()
+            return engine.profile_deco(func)(*(arg), **(kwargs))
+        return wrapper
+    else:
+        return func
+def system_func_with_execution_phase(execution_phase, func):
+    """
+    :param execution_phase: ExecutionPhase.ON_HANDLE_DATA/ ExecutionPhase.ON_HANDLE_TICK
+    :param func: function
+    :return:
+    """
+    import IQEngine.core.execution_context
+    def wrapper(*args, **kwargs):
+        with exc_ctxt.ExecutionContext(execution_phase):
+            with ModifyExceptionFromType(ExcType.SYSTEM_EXC):
+                return func(*(args), **(kwargs))
+    return wrapper
+def extend_to_enum(enum, extend_dict):
+    """
+    扩展枚举类项目
+    :params enum: Enum 枚举类型
+    :params extend_dict: dict 追加的项目和值的字典
+    :return: None
+    """
+    if extend_dict.keys() & enum._member_map_.keys() or extend_dict.values() & enum._value2member_map_.keys():
+        raise ValueError('extend_dict:{} is invalid'.format(extend_dict))
+    for key, val in extend_dict.items():
+        v = object.__new__(enum)
+        v.__objclass__ = enum
+        v._name_ = key
+        v._value_ = val
+        enum._member_map_[key] = v
+        enum._member_names_.append(key)
+        enum._value2member_map_[val] = v
+def enum_clear(enum, extend_dict):
+    """
+    扩展枚举类项目
+    :params enum: Enum 枚举类型
+    :return: None
+    """
+    for key, val in extend_dict.items():
+        del (enum._member_map_[key])
+        enum._member_names_.remove(key)
+        del (enum._value2member_map_[val])

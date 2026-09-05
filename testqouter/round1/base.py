@@ -645,6 +645,94 @@ def compare_bytecode(orig_code: types.CodeType, decomp_code: types.CodeType) -> 
 
     decomp_instrs, orig_instrs = _normalize_except_exit_ordering(decomp_instrs, orig_instrs)
 
+    # [R103] Normalize if/elif-else block reordering around try/except
+    # inside a while loop. CPython may emit the elif/else branch between
+    # the if-body's JUMP_FORWARD and the try block start, and may place
+    # the while-loop condition at the bottom (do-while style) instead of
+    # jumping back to the top. The decompiler emits:
+    #   decomp: ...try_body... | JUMP_FORWARD | elif_block | JUMP_BACKWARD
+    # CPython's layout:
+    #   orig: ...JUMP_FORWARD | elif_block+JUMP_BACKWARD | try_body... | cond | POP_JUMP_BACKWARD_IF_TRUE
+    # Both are semantically identical. Detect and normalize:
+    # (1) remove the JUMP_FORWARD that skips over elif (decomp's try_body follows directly)
+    # (2) relocate elif block after the try/except/else block
+    # (3) remove the while-condition re-check before elif (bottom-of-loop)
+    # (4) replace POP_JUMP_BACKWARD_IF_TRUE with JUMP_FORWARD+elif_block (top-of-loop cond)
+    def _normalize_if_elif_try_reorder(orig, decomp):
+        if len(orig) <= len(decomp):
+            return orig, decomp
+
+        for i in range(min(len(orig), len(decomp))):
+            o = orig[i]
+            d = decomp[i]
+            if o.opname != 'JUMP_FORWARD':
+                continue
+            if not d.opname.startswith(('LOAD_', 'STORE_')):
+                continue
+            elif_end = None
+            for j in range(i + 1, min(len(orig), i + 40)):
+                if orig[j].opname == 'JUMP_BACKWARD':
+                    elif_end = j + 1
+                    break
+            if elif_end is None:
+                continue
+            elif_block = orig[i + 1 : elif_end]
+            push_exc_idx = None
+            for j in range(elif_end, min(len(orig), elif_end + 60)):
+                if orig[j].opname == 'PUSH_EXC_INFO':
+                    push_exc_idx = j
+                    break
+            if push_exc_idx is None:
+                continue
+            loop_backedge_idx = None
+            for j in range(len(orig) - 1, max(0, len(orig) - 15), -1):
+                if orig[j].opname == 'POP_JUMP_BACKWARD_IF_TRUE':
+                    loop_backedge_idx = j
+                    break
+            if loop_backedge_idx is None:
+                for j in range(len(orig) - 1, max(0, len(orig) - 10), -1):
+                    if orig[j].opname == 'JUMP_BACKWARD':
+                        loop_backedge_idx = j
+                        break
+            if loop_backedge_idx is None:
+                continue
+            # Phase 1: remove JUMP_FORWARD and reorder
+            # orig layout: [prefix(0..i-1)] [JUMP_FORWARD] [elif_block] [try_body] [cond+POP_JUMP_BACKWARD_IF_TRUE]
+            try_body = orig[elif_end : loop_backedge_idx]
+            cond_tail = orig[loop_backedge_idx:]
+            prefix = orig[:i]
+            new_orig = prefix + try_body + elif_block + cond_tail
+            # Phase 2: check for while-condition at bottom of try_body
+            # new_orig now: [prefix] [try_body] [elif_block] [cond+POP_JUMP_BACKWARD_IF_TRUE]
+            # In decomp:    [prefix] [try_body] [JUMP_FORWARD] [elif_block] [JUMP_BACKWARD]
+            # try_body may end with LOAD_FAST+LOAD_ATTR (while cond re-check at bottom)
+            # followed by elif_block, then POP_JUMP_BACKWARD_IF_TRUE at end.
+            # Remove the bottom-of-loop condition check and POP_JUMP_BACKWARD_IF_TRUE,
+            # and insert JUMP_FORWARD before elif_block.
+            elif_start = len(prefix) + len(try_body)
+            cond_removed = 0
+            if (elif_start >= 2
+                    and new_orig[elif_start - 1].opname == 'LOAD_ATTR'
+                    and new_orig[elif_start - 2].opname == 'LOAD_FAST'):
+                cond_removed = 2
+            if (cond_removed == 2
+                    and len(new_orig) >= 1
+                    and new_orig[-1].opname == 'POP_JUMP_BACKWARD_IF_TRUE'):
+                body = new_orig[:elif_start - cond_removed]
+                elif_bl = new_orig[elif_start:-1]
+                jf = o  # reuse the JUMP_FORWARD from orig (argval doesn't matter for jump diffs)
+                new_orig = body + [jf] + elif_bl
+            return new_orig, decomp
+        return orig, decomp
+
+    orig_instrs, decomp_instrs = _normalize_if_elif_try_reorder(orig_instrs, decomp_instrs)
+
+    # Re-trim trailing return None after R103 may have changed instruction counts.
+    while (len(decomp_instrs) >= 2
+            and _ends_with_return_none(decomp_instrs)
+            and len(orig_instrs) < len(decomp_instrs)):
+        decomp_instrs = decomp_instrs[:-2]
+
     # [R59] Normalize LOAD_GLOBAL -> LOAD_DEREF for closure variables.
     # The decompiler sometimes fails to recognize cell/free variables in
     # nested functions (especially within with-statement context managers),
