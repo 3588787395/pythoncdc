@@ -1,4 +1,4 @@
-"""
+﻿"""
 基于区域的AST生成器
 
 使用 RegionAnalyzer 的分析结果直接生成AST，替代 ast_generator_v2.py 中的补丁式生成。
@@ -352,7 +352,7 @@ class RegionASTGenerator:
                     if _fromlist_is_none:
                         _alias_name = None
                         for _si in range(_instr_idx + 1, min(_instr_idx + 8, len(block.instructions))):
-                            if block.instructions[_si].opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                            if block.instructions[_si].opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF'):
                                 _alias_name = block.instructions[_si].argval
                                 break
                             if block.instructions[_si].opname in ('JUMP_FORWARD', 'RETURN_VALUE', 'RETURN_CONST', 'CALL', 'PRECALL'):
@@ -370,7 +370,7 @@ class RegionASTGenerator:
                             if _sc.opname == 'IMPORT_FROM':
                                 _imp_n = _sc.argval if _sc.argval else ''
                                 _sto_n = None
-                                if _sn.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                                if _sn.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF'):
                                     _sto_n = _sn.argval
                                     _si += 2
                                 elif _sn.opname == 'IMPORT_FROM':
@@ -383,7 +383,7 @@ class RegionASTGenerator:
                                 if _imp_n:
                                     from_names.append((_imp_n, _sto_n))
                                 continue
-                            elif _sc.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                            elif _sc.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF'):
                                 _si += 1
                                 continue
                             elif _sc.opname in ('LOAD_CONST', 'PUSH_NULL', 'POP_TOP'):
@@ -403,7 +403,7 @@ class RegionASTGenerator:
                     _sn_list = []
                     for _si2 in range(_instr_idx + 1, len(block.instructions)):
                         _nxt = block.instructions[_si2]
-                        if _nxt.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                        if _nxt.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF'):
                             _sn_list.append(_nxt.argval)
                         elif _nxt.opname == 'POP_TOP':
                             pass
@@ -626,7 +626,7 @@ class RegionASTGenerator:
                                     if _sc.opname == 'IMPORT_FROM':
                                         _imp_n = _sc.argval if _sc.argval else ''
                                         _sto_n = None
-                                        if _sn.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                                        if _sn.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF'):
                                             _sto_n = _sn.argval
                                             _si += 2
                                         elif _sn.opname == 'IMPORT_FROM':
@@ -639,7 +639,7 @@ class RegionASTGenerator:
                                         if _imp_n:
                                             from_names.append((_imp_n, _sto_n))
                                         continue
-                                    elif _sc.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                                    elif _sc.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF'):
                                         _si += 1
                                         continue
                                     elif _sc.opname in ('LOAD_CONST', 'PUSH_NULL', 'POP_TOP'):
@@ -659,7 +659,7 @@ class RegionASTGenerator:
                                 _sn_list = []
                                 for _si2 in range(_instr_idx + 1, len(entry_block.instructions)):
                                     _nxt = entry_block.instructions[_si2]
-                                    if _nxt.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                                    if _nxt.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF'):
                                         _sn_list.append(_nxt.argval)
                                     elif _nxt.opname == 'POP_TOP':
                                         pass
@@ -791,7 +791,7 @@ class RegionASTGenerator:
                         if _skip_class_def:
                             if _instr.opname in ('PRECALL', 'CALL'):
                                 _class_def_paren_depth += 1
-                            if _instr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL') and _class_def_paren_depth <= 1:
+                            if _instr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF') and _class_def_paren_depth <= 1:
                                 _skip_class_def = False
                                 _class_def_paren_depth = 0
                                 continue
@@ -937,7 +937,7 @@ class RegionASTGenerator:
                                             if _sc.opname == 'IMPORT_FROM':
                                                 _imp_n = _sc.argval if _sc.argval else ''
                                                 _sto_n = None
-                                                if _sn and _sn.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                                                if _sn and _sn.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF'):
                                                     _sto_n = _sn.argval
                                                     _si += 2
                                                 elif _sn and _sn.opname == 'IMPORT_FROM':
@@ -950,7 +950,7 @@ class RegionASTGenerator:
                                                 if _imp_n:
                                                     _from_names.append((_imp_n, _sto_n))
                                                 continue
-                                            elif _sc and _sc.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                                            elif _sc and _sc.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF'):
                                                 _si += 1
                                                 continue
                                             elif _sc and _sc.opname in ('LOAD_CONST', 'PUSH_NULL', 'POP_TOP'):
@@ -969,7 +969,7 @@ class RegionASTGenerator:
                                     elif _ei_has_from and _ei_fromlist_none:
                                         _alias_name = None
                                         for _as in range(_ei_idx + 1, min(_ei_idx + 8, len(entry_block.instructions))):
-                                            if entry_block.instructions[_as].opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                                            if entry_block.instructions[_as].opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF'):
                                                 _alias_name = entry_block.instructions[_as].argval
                                                 break
                                             if entry_block.instructions[_as].opname in ('JUMP_FORWARD', 'RETURN_VALUE', 'RETURN_CONST', 'CALL', 'PRECALL'):
@@ -982,7 +982,7 @@ class RegionASTGenerator:
                                         _sn_list = []
                                         for _si2 in range(_ei_idx + 1, len(entry_block.instructions)):
                                             _nxt = entry_block.instructions[_si2]
-                                            if _nxt.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                                            if _nxt.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF'):
                                                 _sn_list.append(_nxt.argval)
                                             elif _nxt.opname == 'POP_TOP':
                                                 pass
@@ -4900,7 +4900,7 @@ AST 映射规则:
                                     _in_name = _eps_c.argval or ''
                                     _eps_n = cond_block.instructions[_eps_si + 1] if _eps_si + 1 < len(cond_block.instructions) else None
                                     _sn_name = None
-                                    if _eps_n and _eps_n.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF'):
+                                    if _eps_n and _eps_n.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF', 'STORE_DEREF'):
                                         _sn_name = _eps_n.argval
                                         _eps_si += 2
                                         _eps_skip_count += 2
@@ -7038,7 +7038,7 @@ AST 映射规则:
                                 _acc = []
                                 for _li in _leading:
                                     _acc.append(_li)
-                                    if _li.opname in ('POP_TOP', 'STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF', 'RETURN_VALUE', 'RETURN_CONST'):
+                                    if _li.opname in ('POP_TOP', 'STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF', 'STORE_DEREF', 'RETURN_VALUE', 'RETURN_CONST'):
                                         _ls = self._build_statement(_acc)
                                         if _ls:
                                             body_stmts.append(_ls)
@@ -7112,7 +7112,7 @@ AST 映射规则:
                         acc = []
                         for bi in body_instrs:
                             acc.append(bi)
-                            if bi.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF',
+                            if bi.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF', 'STORE_DEREF',
                                             'POP_TOP', 'RETURN_VALUE', 'RETURN_CONST'):
                                 s = self._build_statement(acc)
                                 if s:
@@ -7153,7 +7153,7 @@ AST 映射规则:
                     acc = []
                     for bi in body_instrs:
                         acc.append(bi)
-                        if bi.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF',
+                        if bi.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF', 'STORE_DEREF',
                                         'POP_TOP', 'RETURN_VALUE', 'RETURN_CONST'):
                             s = self._build_statement(acc)
                             if s:
@@ -7712,7 +7712,7 @@ AST 映射规则:
                     if _fromlist_is_none:
                         _alias_name = None
                         for _si in range(_imp_idx + 1, min(_imp_idx + 8, _imp_scan_end)):
-                            if hdr.instructions[_si].opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                            if hdr.instructions[_si].opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF'):
                                 _alias_name = hdr.instructions[_si].argval
                                 _sl_skip_offsets.add(hdr.instructions[_si].offset)
                                 break
@@ -7722,7 +7722,7 @@ AST 映射规则:
                         for _mi in range(_imp_idx + 1, min(_imp_idx + 8, _imp_scan_end)):
                             _mi_instr = hdr.instructions[_mi]
                             _sl_skip_offsets.add(_mi_instr.offset)
-                            if _mi_instr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                            if _mi_instr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF'):
                                 break
                             if _mi_instr.opname in ('JUMP_FORWARD', 'RETURN_VALUE', 'RETURN_CONST', 'CALL', 'PRECALL'):
                                 break
@@ -7739,7 +7739,7 @@ AST 映射规则:
                             if _curr.opname == 'IMPORT_FROM':
                                 _in = _curr.argval if _curr.argval else ''
                                 _sn = None
-                                if _next.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                                if _next.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF'):
                                     _sn = _next.argval
                                     _sl_skip_offsets.add(_curr.offset)
                                     _sl_skip_offsets.add(_next.offset)
@@ -7756,7 +7756,7 @@ AST 映射规则:
                                 if _in:
                                     _from_names.append((_in, _sn if _sn != _in else None))
                                 continue
-                            elif _curr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                            elif _curr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF'):
                                 _sl_skip_offsets.add(_curr.offset)
                                 _ii += 1
                                 continue
@@ -7776,7 +7776,7 @@ AST 映射规则:
                 _store_names = []
                 for _ii in range(_imp_idx + 1, _imp_scan_end):
                     _ni = hdr.instructions[_ii]
-                    if _ni.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                    if _ni.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF'):
                         _store_names.append(_ni.argval)
                         _sl_skip_offsets.add(_ni.offset)
                     elif _ni.opname == 'POP_TOP':
@@ -8436,7 +8436,7 @@ AST 映射规则:
                                 _acc = []
                                 for _li in _leading:
                                     _acc.append(_li)
-                                    if _li.opname in ('POP_TOP', 'STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF', 'RETURN_VALUE', 'RETURN_CONST'):
+                                    if _li.opname in ('POP_TOP', 'STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF', 'STORE_DEREF', 'RETURN_VALUE', 'RETURN_CONST'):
                                         _ls = self._build_statement(_acc)
                                         if _ls:
                                             body_stmts.append(_ls)
@@ -21391,7 +21391,7 @@ AST 映射规则:
                             _queue.append(_succ)
                 _nested_ternary_handler_body_blocks[id(_tr)] = _hbs
                 for _instr in _fall_through.instructions:
-                    if _instr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF'):
+                    if _instr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF', 'STORE_DEREF'):
                         _nested_ternary_exc_name[id(_tr)] = _instr.argval
                         break
                 for _b in _hbs:
@@ -23509,7 +23509,7 @@ AST 映射规则:
                         if _curr.opname == 'IMPORT_FROM':
                             _in = _curr.argval if _curr.argval else ''
                             _as = None
-                            if _next and _next.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                            if _next and _next.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF'):
                                 _as = _next.argval
                                 _r64_skip.add(_curr.offset)
                                 _r64_skip.add(_next.offset)
@@ -23531,7 +23531,7 @@ AST 映射规则:
                         continue
                 # import m: IMPORT_NAME + STORE_NAME
                 for _ri in _r64_rest:
-                    if _ri.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                    if _ri.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF'):
                         _r64_skip.add(_ri.offset)
                         stmts.append({'type': 'Import', 'names': [{'name': _r64_mod, 'asname': None}]})
                         skip_offsets.update(_r64_skip)
@@ -23645,7 +23645,7 @@ AST 映射规则:
                 nxt = instrs[j]
                 break
         # 语句边界指令（前一条）
-        boundary_ops = {'STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF',
+        boundary_ops = {'STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF', 'STORE_DEREF',
                         'STORE_ATTR', 'STORE_SUBSCR', 'DELETE_NAME', 'DELETE_FAST',
                         'DELETE_GLOBAL', 'DELETE_ATTR', 'DELETE_SUBSCR',
                         'POP_TOP', 'RETURN_VALUE', 'RETURN_CONST'}
@@ -39668,18 +39668,18 @@ AST 映射规则:
                     for _ in range(_ua_before):
                         if _ua_idx < len(_ua_all_instrs):
                             _ua_store_instr = _ua_all_instrs[_ua_idx]
-                            if _ua_store_instr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF'):
+                            if _ua_store_instr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF', 'STORE_DEREF'):
                                 _ua_elts.append({'type': 'Name', 'id': _ua_store_instr.argval, 'ctx': 'Store'})
                             _ua_idx += 1
                     if _ua_idx < len(_ua_all_instrs):
                         _ua_star_instr = _ua_all_instrs[_ua_idx]
-                        if _ua_star_instr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF'):
+                        if _ua_star_instr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF', 'STORE_DEREF'):
                             _ua_elts.append({'type': 'Starred', 'value': {'type': 'Name', 'id': _ua_star_instr.argval, 'ctx': 'Store'}})
                         _ua_idx += 1
                     for _ in range(_ua_after):
                         if _ua_idx < len(_ua_all_instrs):
                             _ua_store_instr = _ua_all_instrs[_ua_idx]
-                            if _ua_store_instr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF'):
+                            if _ua_store_instr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF', 'STORE_DEREF'):
                                 _ua_elts.append({'type': 'Name', 'id': _ua_store_instr.argval, 'ctx': 'Store'})
                             _ua_idx += 1
                     _ua_target = {'type': 'Tuple', 'elts': _ua_elts, 'ctx': 'Store'}
@@ -39764,7 +39764,7 @@ AST 映射规则:
                                 if _ua_c.opname == 'IMPORT_FROM':
                                     _in = _ua_c.argval if _ua_c.argval else ''
                                     _sn = None
-                                    if _ua_n and _ua_n.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                                    if _ua_n and _ua_n.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF'):
                                         _sn = _ua_n.argval
                                         _ua_si += 2
                                     elif _ua_n and _ua_n.opname == 'IMPORT_FROM':
@@ -39777,7 +39777,7 @@ AST 映射规则:
                                     if _in:
                                         _ua_fn.append((_in, _sn))
                                     continue
-                                elif _ua_c and _ua_c.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                                elif _ua_c and _ua_c.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF'):
                                     _ua_si += 1
                                     continue
                                 elif _ua_c and _ua_c.opname in ('LOAD_CONST', 'PUSH_NULL', 'POP_TOP'):
@@ -40564,7 +40564,7 @@ AST 映射规则:
                     if _fromlist_is_none:
                         _alias_name = None
                         for _si in range(instr_idx + 1, min(instr_idx + 8, len(block.instructions))):
-                            if block.instructions[_si].opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                            if block.instructions[_si].opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF'):
                                 _alias_name = block.instructions[_si].argval
                                 break
                             if block.instructions[_si].opname in ('JUMP_FORWARD', 'RETURN_VALUE', 'RETURN_CONST', 'CALL', 'PRECALL'):
@@ -40582,7 +40582,7 @@ AST 映射规则:
                             if curr.opname == 'IMPORT_FROM':
                                 imported_name = curr.argval if curr.argval else ''
                                 stored_name = None
-                                if next_instr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                                if next_instr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF'):
                                     stored_name = next_instr.argval
                                     _i += 2
                                 elif next_instr.opname == 'IMPORT_FROM':
@@ -40595,7 +40595,7 @@ AST 映射规则:
                                 if imported_name:
                                     from_names.append((imported_name, stored_name))
                                 continue
-                            elif curr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                            elif curr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF'):
                                 _i += 1
                                 continue
                             elif curr.opname in ('LOAD_CONST', 'PUSH_NULL', 'POP_TOP'):
@@ -40615,7 +40615,7 @@ AST 映射规则:
                     store_names = []
                     for _i in range(instr_idx + 1, len(block.instructions)):
                         next_instr = block.instructions[_i]
-                        if next_instr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                        if next_instr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF'):
                             store_names.append(next_instr.argval)
                         elif next_instr.opname == 'POP_TOP':
                             pass
@@ -41737,7 +41737,7 @@ AST 映射规则:
                 if _fromlist_is_none:
                     _alias_name = None
                     for _si in range(instr_idx + 1, min(instr_idx + 8, len(block.instructions))):
-                        if block.instructions[_si].opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                        if block.instructions[_si].opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF'):
                             _alias_name = block.instructions[_si].argval
                             break
                         if block.instructions[_si].opname in ('JUMP_FORWARD', 'RETURN_VALUE', 'RETURN_CONST', 'CALL', 'PRECALL'):
@@ -41755,7 +41755,7 @@ AST 映射规则:
                         if curr.opname == 'IMPORT_FROM':
                             imported_name = curr.argval if curr.argval else ''
                             stored_name = None
-                            if next_instr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                            if next_instr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF'):
                                 stored_name = next_instr.argval
                                 i += 2
                             elif next_instr.opname == 'IMPORT_FROM':
@@ -41768,7 +41768,7 @@ AST 映射规则:
                             if imported_name:
                                 from_names.append((imported_name, stored_name))
                             continue
-                        elif curr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                        elif curr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF'):
                             i += 1
                             continue
                         elif curr.opname in ('LOAD_CONST', 'PUSH_NULL', 'POP_TOP'):
@@ -41788,7 +41788,7 @@ AST 映射规则:
             store_names = []
             for i in range(instr_idx + 1, len(block.instructions)):
                 next_instr = block.instructions[i]
-                if next_instr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL'):
+                if next_instr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF'):
                     store_names.append(next_instr.argval)
                 elif next_instr.opname == 'POP_TOP':
                     pass
@@ -42221,7 +42221,7 @@ AST 映射规则:
                         if _curr.opname == 'IMPORT_FROM':
                             _in = _curr.argval if _curr.argval else ''
                             _sn = None
-                            if _next.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF'):
+                            if _next.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF', 'STORE_DEREF'):
                                 _sn = _next.argval
                                 _ii += 2
                             elif _next.opname == 'IMPORT_FROM':
@@ -42234,7 +42234,7 @@ AST 映射规则:
                             if _in:
                                 _gi_from_names.append((_in, _sn if _sn != _in else None))
                             continue
-                        elif _curr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF'):
+                        elif _curr.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF', 'STORE_DEREF'):
                             _ii += 1
                             continue
                         elif _curr.opname in ('LOAD_CONST', 'PUSH_NULL', 'POP_TOP'):
@@ -42252,7 +42252,7 @@ AST 映射规则:
                 _ii = _gi + 1
                 while _ii < _gn:
                     _ni = instrs[_ii]
-                    if _ni.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF'):
+                    if _ni.opname in ('STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF', 'STORE_DEREF'):
                         _gi_store_names.append(_ni.argval)
                         _ii += 1
                     elif _ni.opname == 'POP_TOP':
@@ -43410,7 +43410,7 @@ AST 映射规则:
         ann_expr_instrs = []
         pop_top_idx = None
         stmt_boundary_ops = {
-            'STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF',
+            'STORE_NAME', 'STORE_FAST', 'STORE_GLOBAL', 'STORE_DEREF', 'STORE_DEREF',
             'STORE_ATTR', 'STORE_SUBSCR', 'RETURN_VALUE', 'RETURN_CONST',
             'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE',
             'POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_FORWARD_IF_TRUE',
