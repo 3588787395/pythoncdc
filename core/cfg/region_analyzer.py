@@ -1896,6 +1896,67 @@ class RegionAnalyzer:
         _then_is_sink = not then_succ.successors
         _else_is_sink = not else_succ.successors
 
+        # [R83 修复] 循环 continue 退出分支：当 else 分支的所有前向路径均以
+        # JUMP_BACKWARD（循环 continue）终结时，该分支永远不会到达 if 结构
+        # 的 merge 点，等效于 sink。merge 应取 then 分支的 JUMP_FORWARD 目标。
+        # 典型场景（TWHThreadRotatingFileHandler._target）：
+        #   while self.running:
+        #       if self._stream_buffer.tell():
+        #           stream = ...; JUMP_FORWARD → try_block
+        #       elif ...:
+        #           ...; JUMP_BACKWARD → loop_header (continue 退出)
+        #       try: ...  # merge = try_block
+        # 安全判据：header 在循环体内，then_succ 直接以 JUMP_FORWARD 结尾，
+        # 且目标在 else_succ 之后。
+        def _branch_exits_via_loop_continue(branch_entry, max_depth=15):
+            visited = set()
+            worklist = [(branch_entry, 0)]
+            all_exit = True
+            _exit_ops = frozenset({
+                'RETURN_VALUE', 'RETURN_CONST', 'RAISE_VARARGS', 'RERAISE',
+                'JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                *BACKWARD_JUMP_OPS, *FORWARD_CONDITIONAL_JUMP_OPS,
+                'PUSH_EXC_INFO', 'POP_EXCEPT',
+            })
+            while worklist:
+                blk, depth = worklist.pop(0)
+                if blk in visited or depth > max_depth:
+                    continue
+                visited.add(blk)
+                _bli = blk.get_last_instruction()
+                if _bli is None:
+                    continue
+                if _bli.opname in ('RETURN_VALUE', 'RETURN_CONST', 'RAISE_VARARGS', 'RERAISE'):
+                    continue
+                if _bli.opname in BACKWARD_JUMP_OPS:
+                    continue
+                if _bli.opname in ('PUSH_EXC_INFO',):
+                    continue
+                if _bli.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+                    _tgt = self.cfg.get_block_by_offset(_bli.argval) if _bli.argval is not None else None
+                    if _tgt is not None and _tgt not in _exclude and _tgt not in visited:
+                        worklist.append((_tgt, depth + 1))
+                    continue
+                if _bli.opname in FORWARD_CONDITIONAL_JUMP_OPS:
+                    for s in blk.successors:
+                        if s not in _exclude and s not in visited:
+                            worklist.append((s, depth + 1))
+                    continue
+                if _bli.opname in ('POP_EXCEPT',):
+                    for s in blk.successors:
+                        if s not in _exclude and s not in visited:
+                            worklist.append((s, depth + 1))
+                    continue
+                if _bli.opname not in _exit_ops:
+                    for s in blk.successors:
+                        if s not in _exclude and s not in visited:
+                            worklist.append((s, depth + 1))
+                    continue
+                all_exit = False
+            return all_exit
+
+        _else_exits_via_continue = _branch_exits_via_loop_continue(else_succ)
+
         def _resolve_sink_side_merge(branch_succ, sink_succ):
             """[Round 08 修复] 纯 sink 分支场景下，从另一分支后继链解析 merge。
 
@@ -1963,6 +2024,17 @@ class RegionAnalyzer:
             _via_chain = _resolve_sink_side_merge(else_succ, then_succ)
             if _via_chain is not None and _via_chain not in _exclude:
                 return _via_chain
+
+        # [R83 修复] 循环 continue 退出：等效于 sink，merge 取 then 分支的
+        # JUMP_FORWARD 目标（无需可达性验证，因为 continue 分支永不到达 merge）
+        # 安全判据：header 在循环体内，then_succ 直接以 JUMP_FORWARD 结尾，
+        # 且目标在 else_succ 之后（经典「跳过 else 分支」布局）。
+        if _else_exits_via_continue and self._find_enclosing_loop(header) is not None:
+            _then_exit = self._get_jump_forward_target(then_succ)
+            if (_then_exit is not None
+                    and _then_exit not in _exclude
+                    and _then_exit.start_offset > else_succ.start_offset):
+                return _then_exit
 
         # 1. 检查 then_succ 的 JUMP_FORWARD 目标
         _then_exit = self._get_jump_forward_target(then_succ)
@@ -17040,6 +17112,23 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     return None
 
             bodies.append(inner_then_blocks)
+
+            # [R83 修复] 区域归约算法原则 2（每块唯一归属）：
+            # 当内层 if 的 merge 块以 JUMP_BACKWARD（非条件后向跳转，即循环
+            # continue）终结、且外层 elif 所在的 if 结构有已知的 merge（merge_），
+            # 该 merge 块是内层 if 两条分支的共享尾随代码（如 time.sleep();
+            # continue），在外层 elif 的语义中属于 elif 体。
+            # 安全判据：inner_merge 必须以无条件 JUMP_BACKWARD（非
+            # POP_JUMP_BACKWARD_IF_*）结尾，且 outer merge_ 非 None。
+            if (inner_merge is not None
+                    and merge_ is not None
+                    and inner_merge is not merge_
+                    and inner_merge not in inner_then_blocks):
+                _im_last = inner_merge.get_last_instruction()
+                if (_im_last is not None
+                        and _im_last.opname == 'JUMP_BACKWARD'
+                        and _im_last not in BACKWARD_CONDITIONAL_JUMP_OPS):
+                    bodies[-1] = inner_then_blocks + [inner_merge]
 
             deeper_elif = _check_elif_chain(first_else, inner_else_blocks, merge_)
             if deeper_elif:
