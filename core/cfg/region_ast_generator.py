@@ -14184,6 +14184,33 @@ AST 映射规则:
         if region.elif_bodies:
             elif_body_stmts = self._process_if_blocks(region.elif_bodies[0], region, branch='elif')
             elif_body_stmts = [s for s in elif_body_stmts if not (s.get('type') == 'Expr' and isinstance(s.get('value'), dict) and s['value'].get('type') == 'Constant')]
+            # [RC3-continue fix] elif body 全部为 PURE_CONTINUE 块（已被
+            # LoopRegion 提前标记为 generated）时，_process_if_blocks 返回
+            # 空 → elif body 退化为 pass → 重编译生成 JUMP_FORWARD 而非
+            # JUMP_BACKWARD。修复：与 _if_generate_then_branch 中的同类
+            # 修复一致，检测 elif body 块全部 JUMP_BACKWARD 指向循环 header
+            # 时，将 elif body 设为 Continue。
+            if not elif_body_stmts and self._current_loop is not None:
+                _cur_loop_hdr = getattr(self._current_loop, 'header_block', None)
+                if _cur_loop_hdr is not None:
+                    _all_pure_continue_elif = True
+                    for _eb in region.elif_bodies[0]:
+                        _eb_last = _eb.get_last_instruction()
+                        if _eb_last is None or _eb_last.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'):
+                            _all_pure_continue_elif = False
+                            break
+                        if _eb_last.argval is None:
+                            _all_pure_continue_elif = False
+                            break
+                        _eb_tgt = self.cfg.get_block_by_offset(_eb_last.argval)
+                        if _eb_tgt is not _cur_loop_hdr:
+                            _all_pure_continue_elif = False
+                            break
+                    if _all_pure_continue_elif:
+                        elif_body_stmts = [{'type': 'Continue'}]
+                        for _eb in region.elif_bodies[0]:
+                            self.generated_blocks.add(_eb)
+                        self.generated_offsets.update(_eb.start_offset for _eb in region.elif_bodies[0])
             # 仅当 elif body 非显式 return（末尾块以 JUMP_FORWARD 结尾，
             # 即 fallthrough）时才弹出隐式 return None。except handler 内的显式
             # return None 生成真实字节码（POP_EXCEPT+cleanup+RETURN_VALUE），必须保留。
