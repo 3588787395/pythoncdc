@@ -14002,7 +14002,7 @@ AST 映射规则:
                             # [R86 fix] Exclude continue-exit blocks from then_offsets
                             for _eb in region.elif_bodies[0]:
                                 _eb_meaningful = [i for i in _eb.instructions
-                                                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                                                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG', 'PUSH_NULL')]
                                 _is_continue_exit = (_eb_meaningful
                                                      and all(i.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
                                                              for i in _eb_meaningful))
@@ -14145,7 +14145,7 @@ AST 映射规则:
                         # incorrect negation of the elif condition.
                         for _eb in region.elif_bodies[0]:
                             _eb_meaningful = [i for i in _eb.instructions
-                                              if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                                              if i.opname not in ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG', 'PUSH_NULL')]
                             _is_continue_exit = (_eb_meaningful
                                                  and all(i.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
                                                          for i in _eb_meaningful))
@@ -14383,7 +14383,7 @@ AST 映射规则:
                                 # [R86 fix] Exclude continue-exit blocks from then_offsets
                                 for _eb in region.elif_bodies[1]:
                                     _eb_meaningful = [i for i in _eb.instructions
-                                                      if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                                                      if i.opname not in ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG', 'PUSH_NULL')]
                                     _is_continue_exit = (_eb_meaningful
                                                          and all(i.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
                                                                  for i in _eb_meaningful))
@@ -14554,7 +14554,7 @@ AST 映射规则:
                         # [R86 fix] Exclude continue-exit blocks from then_offsets
                         for _eb in region.elif_bodies[0]:
                             _eb_meaningful = [i for i in _eb.instructions
-                                              if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                                              if i.opname not in ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG', 'PUSH_NULL')]
                             _is_continue_exit = (_eb_meaningful
                                                  and all(i.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
                                                          for i in _eb_meaningful))
@@ -16315,7 +16315,7 @@ AST 映射规则:
             # [R86 fix] Exclude continue-exit blocks from then_offsets
             for _tb in region.then_blocks:
                 _tb_meaningful = [i for i in _tb.instructions
-                                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG', 'PUSH_NULL')]
                 _is_continue_exit = (_tb_meaningful
                                      and all(i.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
                                              for i in _tb_meaningful))
@@ -16899,7 +16899,7 @@ AST 映射规则:
                             # [R86 fix] Exclude continue-exit blocks from then_offsets
                             for _tb in region.then_blocks:
                                 _tb_meaningful = [i for i in _tb.instructions
-                                                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                                                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG', 'PUSH_NULL')]
                                 _is_continue_exit = (_tb_meaningful
                                                      and all(i.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
                                                              for i in _tb_meaningful))
@@ -17051,7 +17051,7 @@ AST 映射规则:
                                     # [R86 fix] Exclude continue-exit blocks from then_offsets
                                     for _tb in region.then_blocks:
                                         _tb_meaningful = [i for i in _tb.instructions
-                                                          if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                                                          if i.opname not in ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG', 'PUSH_NULL')]
                                         _is_continue_exit = (_tb_meaningful
                                                              and all(i.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
                                                                      for i in _tb_meaningful))
@@ -17084,7 +17084,7 @@ AST 映射规则:
                                 # [R86 fix] Exclude continue-exit blocks from then_offsets
                                 for _tb in region.then_blocks:
                                     _tb_meaningful = [i for i in _tb.instructions
-                                                      if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                                                      if i.opname not in ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG', 'PUSH_NULL')]
                                     _is_continue_exit = (_tb_meaningful
                                                          and all(i.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
                                                                  for i in _tb_meaningful))
