@@ -13360,6 +13360,32 @@ AST 映射规则:
                 for r in self.region_analyzer.regions
             )
             if _in_loop and region.condition_block:
+                # [RC3-continue fix] then 分支仅含 PURE_CONTINUE 块（被
+                # LoopRegion 提前标记为 generated）时，应生成 Continue
+                # 而非 Pass。判据：then_blocks 中每个块的出口都是
+                # JUMP_BACKWARD/JUMP_BACKWARD_NO_INTERRUPT 指向当前循环
+                # header（源码级 if-cond: continue）。
+                _all_pure_continue = True
+                _cur_loop_hdr = getattr(self._current_loop, 'header_block', None) if self._current_loop else None
+                if _cur_loop_hdr is not None:
+                    for tb in region.then_blocks:
+                        _tb_last = tb.get_last_instruction()
+                        if _tb_last is None or _tb_last.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'):
+                            _all_pure_continue = False
+                            break
+                        if _tb_last.argval is None:
+                            _all_pure_continue = False
+                            break
+                        _tb_tgt = self.cfg.get_block_by_offset(_tb_last.argval)
+                        if _tb_tgt is not _cur_loop_hdr:
+                            _all_pure_continue = False
+                            break
+                    if _all_pure_continue:
+                        then_stmts = [{'type': 'Continue'}]
+                        for b in region.then_blocks:
+                            self.generated_blocks.add(b)
+                        self.generated_offsets.update(b.start_offset for b in region.then_blocks)
+                        return then_stmts
                 _false_succ = None
                 for s in region.condition_block.successors:
                     if s in (region.else_blocks or []):
@@ -16567,6 +16593,12 @@ AST 映射规则:
             循环内链式比较的两条出口（false 清理路径与 true 路径）常共用
             同一回边连接块；误把它计入 then 入口会使条件被取反为
             `not (...)`，重编译后 POP_JUMP 方向翻转、字节码整体偏移。
+          - [RC1 fix] try/except 内 IfRegion 的 then_blocks 可能包含
+            实际属于 else 的块（异常表边界导致块归属错位），或排除纯
+            连接块后为空。此时使用条件块的 fall-through 后继作为 then
+            入口——条件跳转的 fall-through 是 then 体在顺序执行时的
+            自然入口，不受异常表切分影响。同时排除子 IfRegion 的
+            else_blocks 入口（它们在父 then_blocks 中是误入的 else 块）。
         """
         offsets = set()
         for b in (getattr(region, 'then_blocks', None) or []):
@@ -16578,6 +16610,25 @@ AST 映射规则:
                     'JUMP_FORWARD', 'JUMP_ABSOLUTE')):
                 continue
             offsets.add(b.start_offset)
+        _child_else_entries = set()
+        for _child in (getattr(region, 'children', None) or []):
+            if isinstance(_child, IfRegion):
+                for _eb in (getattr(_child, 'else_blocks', None) or []):
+                    _child_else_entries.add(_eb.start_offset)
+        offsets -= _child_else_entries
+        if not offsets:
+            cond_block = getattr(region, 'condition_block', None)
+            if cond_block is None:
+                cond_block = region.entry
+            if cond_block is not None:
+                last = cond_block.get_last_instruction()
+                if (last is not None
+                        and last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | BACKWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)
+                        and last.argval is not None):
+                    for s in cond_block.successors:
+                        if s.start_offset != last.argval:
+                            offsets.add(s.start_offset)
+                            break
         return offsets
 
     def _block_is_structural_for_iter_exit(self, block) -> bool:
@@ -16637,6 +16688,68 @@ AST 映射规则:
                        and i.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
                                             'JUMP_FORWARD', 'JUMP_ABSOLUTE')]
         return not _meaningful
+
+    def _block_is_child_loop_natural_backedge(self, block) -> bool:
+        """判定块的 JUMP_BACKWARD 是否为循环的自然迭代回边（不应发射 Continue）。
+
+        [RC3 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3
+        （嵌套即抽象节点）+ 原则 4（父引用子入口）：两种模式：
+
+        1. 嵌套子循环回边：块末尾 JUMP_BACKWARD 指向当前循环的某个子
+           LoopRegion 的 header（而非当前循环 header）。该回边由子 for
+           循环语句重编译时自然再生，补发 Continue 会叠加多余
+           JUMP_BACKWARD。
+
+        2. 当前循环自身的自然迭代回边：块末尾 JUMP_BACKWARD 指向当前
+           循环 header，且该块所属 IfRegion 的 merge_block 即循环 header
+           （if/elif 是循环体最后一条语句，所有分支均以迭代回边收尾）。
+           CPython 对 if/elif 每个分支末尾都生成 JUMP_BACKWARD→header，
+           即使源码无显式 continue——这是结构性的，for 语句重编译时自然
+           再生。若误当显式 Continue 发射，elif 假出口路径在重编译后会
+           叠加多余的 JUMP_BACKWARD（orig 690 → recomp 692 字节，
+           jq_trans_module.trans_code 内层 for 的 if x=='('…elif x==')'…）。
+        """
+        if block is None or self._current_loop is None:
+            return False
+        last = block.get_last_instruction()
+        if last is None or last.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'):
+            return False
+        if last.argval is None:
+            return False
+        tgt = self.cfg.get_block_by_offset(last.argval)
+        if tgt is None:
+            return False
+        cur_hdr = self._current_loop.header_block
+        # Mode 1: targets child loop header
+        if tgt is not cur_hdr:
+            for child in (self._current_loop.children or []):
+                if isinstance(child, LoopRegion) and child.header_block is tgt:
+                    return True
+            return False
+        # Mode 2: targets current loop header; check if block's enclosing
+        # IfRegion has merge_block == loop header (if/elif is last stmt).
+        # 但如果 block 是某个 IfRegion 的 merge_block，则其 JUMP_BACKWARD
+        # 不是外层 IfRegion 的自然回边——该 block 是内层 if 结束后的
+        # 汇合点，JUMP_BACKWARD 是该汇合点之后的代码行为（可能是显式
+        # continue），不属于外层 IfRegion 的自然迭代回边。
+        if cur_hdr is None:
+            return False
+        enclosing = self.region_analyzer._find_enclosing_region(
+            block, (IfRegion,))
+        if enclosing is None:
+            return False
+        merge = getattr(enclosing, 'merge_block', None)
+        if merge is not None and merge is cur_hdr:
+            # [RC3 regression fix] block 是某 IfRegion 的 merge 时，
+            # 跳过抑制：block 承接内层 if/else 汇合，从该点出发的
+            # JUMP_BACKWARD 是该汇合点之后的代码行为（可能是显式
+            # continue），不属于外层 IfRegion 的自然迭代回边。
+            for r in (self.region_analyzer.regions or []):
+                if isinstance(r, IfRegion) and r is not enclosing:
+                    if getattr(r, 'merge_block', None) is block:
+                        return False
+            return True
+        return False
 
     def _if_false_path_is_loop_iteration(self, region) -> bool:
         """判定 if 语句是否为循环体最后一条语句（if 无 else 且假出口直通迭代）。
@@ -18331,17 +18444,41 @@ AST 映射规则:
                         elif (_r100_hdr is not None
                               and region.merge_block is _r100_hdr
                               and self._if_false_path_is_loop_iteration(region)):
-                            # [Round 32 fix] 扩展判据：merge_block 即循环 header
-                            # 本身（两分支直接汇聚于迭代点，if 是循环体最后一条
-                            # 语句，如异常表边界切出独立纯回边块的
-                            # `if c: try-except` 形态）。此时 then 分支末尾的
-                            # 独立纯回边块是循环的隐式迭代，与假出口回边等价，
-                            # 补发 Continue 会改变 try 异常表边界（字节码 +1）。
-                            # _if_false_path_is_loop_iteration 进一步要求 if 无
-                            # else 且假出口直通纯回边块，排除
-                            # `if c: foo(); continue; bar()` 形态（假出口是后续
-                            # 代码块）与 `if c: continue` 独占分支（stmts 为空）。
                             _r100_suppress = True
+                    # [RC3 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3
+                    # （嵌套即抽象节点）+ 原则 4（父引用子入口）：循环体内
+                    # JUMP_BACKWARD 回边可能由循环语句重编译自然再生，不应
+                    # 补发显式 Continue。两种模式：
+                    # 模式 A（子循环回边）：JUMP_BACKWARD 目标是当前循环的
+                    # 子 LoopRegion header → 子 for 循环结构保证回边再生。
+                    # 模式 B（当前循环自然迭代）：JUMP_BACKWARD 目标是当前
+                    # 循环 header，且所在 IfRegion 的 merge_block 即循环
+                    # header → if/elif 是循环体最后语句，所有分支以迭代
+                    # 回边收尾，CPython 即使无显式 continue 也生成此回边，
+                    # for 语句重编译自然再生。
+                    if not _r100_suppress and self._current_loop is not None:
+                        _rc3_last = block.get_last_instruction()
+                        if (_rc3_last is not None
+                                and _rc3_last.opname in ('JUMP_BACKWARD',
+                                                         'JUMP_BACKWARD_NO_INTERRUPT')
+                                and _rc3_last.argval is not None):
+                            _rc3_tgt = self.cfg.get_block_by_offset(_rc3_last.argval)
+                            _cur_hdr = self._current_loop.header_block
+                            if _rc3_tgt is not None and _rc3_tgt is not _cur_hdr:
+                                # Mode A: child loop header
+                                for _rc3_child in (self._current_loop.children or []):
+                                    if (isinstance(_rc3_child, LoopRegion)
+                                            and _rc3_child.header_block is _rc3_tgt):
+                                        _r100_suppress = True
+                                        break
+                            elif _rc3_tgt is _cur_hdr and _cur_hdr is not None:
+                                # Mode B: current loop header + IfRegion merge == header
+                                _rc3_enclosing = self.region_analyzer._find_enclosing_region(
+                                    block, (IfRegion,))
+                                if _rc3_enclosing is not None:
+                                    _rc3_merge = getattr(_rc3_enclosing, 'merge_block', None)
+                                    if _rc3_merge is not None and _rc3_merge is _cur_hdr:
+                                        _r100_suppress = True
                     if not _r100_suppress:
                         stmts.append({'type': 'Continue'})
                 self.generated_blocks.add(block)
@@ -23180,6 +23317,23 @@ AST 映射规则:
                 if (not _is_except_return_swap and len(remaining_nospace) >= 2
                         and remaining_nospace[0].opname == 'POP_TOP'
                         and remaining_nospace[1].opname in ('RETURN_VALUE',
+                                                            'RETURN_CONST')
+                        and stmt_instrs):
+                    _is_except_return_swap = True
+                    skip_initial_pop = True
+                # [RC2 fix] 双重 SWAP+POP_TOP 栈清理模式：except handler 中
+                # SWAP(2)+POP_TOP+SWAP(2)+POP_TOP+RETURN_VALUE 用于保留
+                # 返回值。第一个 SWAP 交换返回值与异常信息，POP_TOP 弃异常
+                # 信息；第二个 SWAP 再交换回来，POP_TOP 弃另一栈项，
+                # RETURN_VALUE 返回保留的值。当 SWAP 前有 stmt_instrs（含
+                # LOAD_FAST 返回值）且后续模式为 POP_TOP+SWAP+POP_TOP+
+                # RETURN_VALUE 时，所有 SWAP/POP_TOP 都是栈操纵，归
+                # RETURN 重建，不应被当裸 Expr 或降级为 return None。
+                if (not _is_except_return_swap and len(remaining_nospace) >= 4
+                        and remaining_nospace[0].opname == 'POP_TOP'
+                        and remaining_nospace[1].opname == 'SWAP'
+                        and remaining_nospace[2].opname == 'POP_TOP'
+                        and remaining_nospace[3].opname in ('RETURN_VALUE',
                                                             'RETURN_CONST')
                         and stmt_instrs):
                     _is_except_return_swap = True
@@ -38671,7 +38825,8 @@ AST 映射规则:
                 stmts = _eff_stmts
                 if stmts:
                     self.generated_blocks.add(block)
-                    stmts.append({'type': 'Continue'})
+                    if not self._block_is_child_loop_natural_backedge(block):
+                        stmts.append({'type': 'Continue'})
                     return stmts
             meaningful = [i for i in block.instructions
                          if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
@@ -38687,10 +38842,13 @@ AST 映射规则:
                         stmts.append(result)
                     break
                 self.generated_blocks.add(block)
-                stmts.append({'type': 'Continue'})
+                if not self._block_is_child_loop_natural_backedge(block):
+                    stmts.append({'type': 'Continue'})
                 return stmts
             self.generated_blocks.add(block)
-            return [{'type': 'Continue'}]
+            if not self._block_is_child_loop_natural_backedge(block):
+                return [{'type': 'Continue'}]
+            return []
 
         if block_role in (BlockRole.BREAK, BlockRole.PURE_BREAK):
             if block_role == BlockRole.PURE_BREAK:
@@ -39870,6 +40028,7 @@ AST 映射规则:
                 _ua_pending_import = None
                 _ua_import_skip = False
                 _ua_skip_stores = 0
+                _ua_skip_pops = 0
                 _ua_store_ops = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF')
                 for _instr in block.instructions:
                     if _ua_skip_stores > 0:
@@ -40294,12 +40453,45 @@ AST 映射规则:
                                         'WITH_EXCEPT_START', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH'):
                         continue
                     if _instr.opname == 'POP_TOP':
+                        if _ua_skip_pops > 0:
+                            _ua_skip_pops -= 1
+                            continue
                         if _ua_stmt_instrs:
                             _ua_stmt = self._build_statement(_ua_stmt_instrs)
                             if _ua_stmt:
                                 _ua_stmts.append(_ua_stmt)
                             _ua_stmt_instrs = []
                         continue
+                    if _instr.opname == 'SWAP':
+                        # [RC2 fix] except handler return sequence: SWAP+POP_TOP+
+                        # SWAP+POP_TOP+RETURN_VALUE or SWAP+POP_TOP+RETURN_VALUE.
+                        # SWAP exchanges the return value with exception info on
+                        # the stack; POP_TOP discards the exception. Both are
+                        # stack cleanup, not user statements. When this pattern
+                        # is detected, skip the SWAP and mark the following
+                        # POP_TOPs to be skipped (via _ua_skip_pops), preserving
+                        # the accumulated expression in _ua_stmt_instrs for
+                        # RETURN_VALUE to reconstruct as Return(expr).
+                        _swap_idx = block.instructions.index(_instr)
+                        _swap_remaining = [i for i in block.instructions[_swap_idx + 1:]
+                                           if i.opname not in ('RESUME', 'NOP', 'CACHE',
+                                                                'PUSH_NULL', 'EXTENDED_ARG')]
+                        # Pattern: POP_TOP + SWAP + POP_TOP + RETURN_VALUE
+                        if (len(_swap_remaining) >= 4
+                                and _swap_remaining[0].opname == 'POP_TOP'
+                                and _swap_remaining[1].opname == 'SWAP'
+                                and _swap_remaining[2].opname == 'POP_TOP'
+                                and _swap_remaining[3].opname in ('RETURN_VALUE',
+                                                                  'RETURN_CONST')):
+                            _ua_skip_pops = 2
+                            continue
+                        # Pattern: POP_TOP + RETURN_VALUE
+                        if (len(_swap_remaining) >= 2
+                                and _swap_remaining[0].opname == 'POP_TOP'
+                                and _swap_remaining[1].opname in ('RETURN_VALUE',
+                                                                  'RETURN_CONST')):
+                            _ua_skip_pops = 1
+                            continue
                     _ua_stmt_instrs.append(_instr)
                 if _ua_stmt_instrs:
                     _ua_stmt = self._build_subscript_assign(_ua_stmt_instrs) or self._build_attr_assign(_ua_stmt_instrs) or self._build_statement(_ua_stmt_instrs)
@@ -41354,6 +41546,8 @@ AST 映射规则:
                 # 当POP_TOP后面紧跟RETURN_VALUE/RETURN_CONST时，跳过POP_TOP处理
                 # CPython为for循环中的return n生成: LOAD_FAST n, SWAP, POP_TOP, RETURN_VALUE
                 # 其中POP_TOP弹出的是迭代器而非返回值，不应消费stmt_instrs中的表达式
+                # [RC2 fix] 扩展检测：POP_TOP 后跟 SWAP+POP_TOP+RETURN_VALUE
+                # 的双 SWAP 模式（except handler 的 return 序列），同样跳过
                 _pt_instr_idx = block.instructions.index(instr)
                 _pt_remaining = block.instructions[_pt_instr_idx + 1:]
                 _pt_next_meaningful = None
@@ -41362,6 +41556,16 @@ AST 映射规则:
                         _pt_next_meaningful = _pt_ri
                         break
                 if _pt_next_meaningful and _pt_next_meaningful.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                    continue
+                # [RC2 fix] POP_TOP + SWAP + POP_TOP + RETURN_VALUE: double SWAP
+                # return pattern in except handler
+                _pt_meaningful_all = [_pt_ri for _pt_ri in _pt_remaining
+                                      if _pt_ri.opname not in ('RESUME', 'NOP', 'CACHE',
+                                                                'PUSH_NULL', 'EXTENDED_ARG')]
+                if (len(_pt_meaningful_all) >= 3
+                        and _pt_meaningful_all[0].opname == 'SWAP'
+                        and _pt_meaningful_all[1].opname == 'POP_TOP'
+                        and _pt_meaningful_all[2].opname in ('RETURN_VALUE', 'RETURN_CONST')):
                     continue
 
                 pop_expr = self.expr_reconstructor.reconstruct(stmt_instrs)
@@ -41440,6 +41644,31 @@ AST 映射规则:
                         stmts.append({'type': 'Expr', 'value': {'type': 'YieldFrom', 'value': iter_expr}})
                 stmt_instrs = []
                 continue
+
+            # [RC2 fix] SWAP in except handler return sequence: skip SWAP when
+            # the remaining instructions after SWAP match POP_TOP+RETURN_VALUE
+            # or POP_TOP+SWAP+POP_TOP+RETURN_VALUE. SWAPs are stack cleanup
+            # for the exception return path, not user expressions.
+            if instr.opname == 'SWAP' and stmt_instrs:
+                _rc2_swap_idx = block.instructions.index(instr)
+                _rc2_swap_rem = [i for i in block.instructions[_rc2_swap_idx + 1:]
+                                 if i.opname not in ('RESUME', 'NOP', 'CACHE',
+                                                      'PUSH_NULL', 'EXTENDED_ARG')]
+                _rc2_skip_swap = False
+                # SWAP + POP_TOP + RETURN_VALUE
+                if (len(_rc2_swap_rem) >= 2
+                        and _rc2_swap_rem[0].opname == 'POP_TOP'
+                        and _rc2_swap_rem[1].opname in ('RETURN_VALUE', 'RETURN_CONST')):
+                    _rc2_skip_swap = True
+                # SWAP + POP_TOP + SWAP + POP_TOP + RETURN_VALUE
+                elif (len(_rc2_swap_rem) >= 4
+                      and _rc2_swap_rem[0].opname == 'POP_TOP'
+                      and _rc2_swap_rem[1].opname == 'SWAP'
+                      and _rc2_swap_rem[2].opname == 'POP_TOP'
+                      and _rc2_swap_rem[3].opname in ('RETURN_VALUE', 'RETURN_CONST')):
+                    _rc2_skip_swap = True
+                if _rc2_skip_swap:
+                    continue
 
             stmt_instrs.append(instr)
 
@@ -44163,6 +44392,21 @@ AST 映射规则:
                     if (_maybe_swap.opname == 'SWAP' and
                         _maybe_pop.opname == 'POP_TOP'):
                         has_swap_pattern = True
+                # [RC2 fix] Double SWAP+POP_TOP pattern in except handler:
+                # SWAP(2)+POP_TOP+SWAP(2)+POP_TOP+RETURN_VALUE preserves a
+                # local variable for return. Both SWAPs are stack cleanup,
+                # not part of the return value expression. With only the
+                # single-SWAP detection above, has_swap_pattern=True causes
+                # SWAPs to be kept in value_instrs, but the expr_reconstructor
+                # cannot handle double SWAP, producing return None instead of
+                # return <var>. Detect the double pattern and skip all SWAPs.
+                _double_swap_return = False
+                if (return_idx is not None and return_idx >= 5
+                        and instrs[return_idx - 1].opname == 'POP_TOP'
+                        and instrs[return_idx - 2].opname == 'SWAP'
+                        and instrs[return_idx - 3].opname == 'POP_TOP'
+                        and instrs[return_idx - 4].opname == 'SWAP'):
+                    _double_swap_return = True
 
                 value_instrs = []
                 for instr in block.instructions:
@@ -44172,7 +44416,7 @@ AST 映射规则:
                                 'COPY', 'POP_EXCEPT', 'PUSH_EXC_INFO',
                                 'PRECALL')
                     # [R35] Do NOT skip CALL - needed for comprehension reconstruction
-                    if not has_swap_pattern:
+                    if not has_swap_pattern or _double_swap_return:
                         skip_ops = skip_ops + ('SWAP',)
                     if instr.opname in skip_ops:
                         continue

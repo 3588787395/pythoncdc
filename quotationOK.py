@@ -856,7 +856,6 @@ def get_exrights_data(stocks, start):
             tmpExrightsData[sec] = series[series[:index].index[-1]:]
             continue
         tmpExrightsData[sec] = series
-        continue
     else:
         return tmpExrightsData
 def load_get_exrights(stocks):
@@ -3581,10 +3580,8 @@ def get_option_info():
                         continue
                     elif isinstance(value, dict):
                         dict1.update(value)
-                        continue
                     else:
                         dict1[key] = value
-                        continue
                 data_out.append(copy.deepcopy(dict1))
             else:
                 return data_out
