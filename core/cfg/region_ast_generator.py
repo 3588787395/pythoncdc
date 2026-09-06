@@ -13429,6 +13429,31 @@ AST 映射规则:
                     self.generated_offsets.update(b.start_offset for b in region.then_blocks)
                     return then_stmts
             then_stmts = [{'type': 'Pass'}]
+        # [RC3-continue fix] then 分支含用户语句但缺 Continue：当
+        # then_blocks 全部 JUMP_BACKWARD→当前循环 header、且 IfRegion
+        # 含 elif（if/elif 非循环体末语句）时，_generate_block_statements
+        # 中 _block_is_child_loop_natural_backedge 误判为自然回边而抑制
+        # Continue。此处补发。
+        if (then_stmts
+                and self._current_loop is not None
+                and not then_stmts[-1].get('type') in ('Break', 'Continue', 'Return', 'Raise')
+                and getattr(region, 'elif_conditions', None)):
+            _cur_hdr = self._current_loop.header_block
+            if _cur_hdr is not None:
+                _all_then_jb_to_hdr = True
+                for tb in region.then_blocks:
+                    _tb_last = tb.get_last_instruction()
+                    if (_tb_last is None
+                            or _tb_last.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                            or _tb_last.argval is None):
+                        _all_then_jb_to_hdr = False
+                        break
+                    _tb_tgt = self.cfg.get_block_by_offset(_tb_last.argval)
+                    if _tb_tgt is not _cur_hdr:
+                        _all_then_jb_to_hdr = False
+                        break
+                if _all_then_jb_to_hdr:
+                    then_stmts.append({'type': 'Continue'})
         return then_stmts
 
     def _if_generate_else_branch(self, region: IfRegion) -> Optional[List[Dict[str, Any]]]:
