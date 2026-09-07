@@ -16811,6 +16811,12 @@ AST 映射规则:
                 _block_role = self.region_analyzer.get_block_role(block)
                 if _block_role == BlockRole.CONTINUE:
                     return False
+            if _enc_else and block in _enc_else:
+                _block_role = self.region_analyzer.get_block_role(block)
+                if _block_role in (BlockRole.CONTINUE, BlockRole.PURE_CONTINUE):
+                    for tr in (self.region_analyzer.regions or []):
+                        if isinstance(tr, TryExceptRegion) and block in tr.try_blocks:
+                            return False
             return True
         return False
 
@@ -18545,6 +18551,21 @@ AST 映射规则:
                                         and getattr(region, 'else_blocks', None)
                                         and block in (region.then_blocks or [])):
                                     pass
+                                elif (isinstance(region, IfRegion)
+                                      and getattr(region, 'else_blocks', None)
+                                      and block in (region.else_blocks or [])):
+                                    _in_try = False
+                                    for _tr in (self.region_analyzer.regions or []):
+                                        if isinstance(_tr, TryExceptRegion) and block in _tr.try_blocks:
+                                            _in_try = True
+                                            break
+                                    if not _in_try:
+                                        _rc3_enclosing = self.region_analyzer._find_enclosing_region(
+                                            block, (IfRegion,))
+                                        if _rc3_enclosing is not None:
+                                            _rc3_merge = getattr(_rc3_enclosing, 'merge_block', None)
+                                            if _rc3_merge is not None and _rc3_merge is _cur_hdr:
+                                                _r100_suppress = True
                                 else:
                                     _rc3_enclosing = self.region_analyzer._find_enclosing_region(
                                         block, (IfRegion,))
@@ -38784,6 +38805,13 @@ AST 映射规则:
                         _is_natural_be_gbs = True
                     elif len(_gbs_succs) == 1 and self._current_loop.condition_block and _gbs_succs[0] == self._current_loop.condition_block:
                         _is_natural_be_gbs = True
+                if _is_natural_be_gbs:
+                    _enc_if = self.region_analyzer._find_enclosing_region(block, (IfRegion,))
+                    if _enc_if is not None and block in (_enc_if.else_blocks or []):
+                        for _tr in (self.region_analyzer.regions or []):
+                            if isinstance(_tr, TryExceptRegion) and block in _tr.try_blocks:
+                                _is_natural_be_gbs = False
+                                break
             if not _is_natural_be_gbs:
                 return [{'type': 'Continue'}]
             return []

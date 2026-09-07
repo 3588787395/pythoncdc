@@ -150,10 +150,10 @@
     "size": 19180,
     "function_count": 14,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.8571428571428571,
+    "bytecode_match_rate": 0.9285714285714286,
     "ok_py_generated": true,
     "last_tested_round": 1,
-    "matched_functions": 12,
+    "matched_functions": 13,
     "total_functions": 14,
     "mismatch_count": 4,
     "match_rate": 0.7143
