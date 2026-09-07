@@ -18525,12 +18525,22 @@ AST 映射规则:
                                         break
                             elif _rc3_tgt is _cur_hdr and _cur_hdr is not None:
                                 # Mode B: current loop header + IfRegion merge == header
-                                _rc3_enclosing = self.region_analyzer._find_enclosing_region(
-                                    block, (IfRegion,))
-                                if _rc3_enclosing is not None:
-                                    _rc3_merge = getattr(_rc3_enclosing, 'merge_block', None)
-                                    if _rc3_merge is not None and _rc3_merge is _cur_hdr:
-                                        _r100_suppress = True
+                                # [Round 04 fix] 当块所在 IfRegion 有 else_blocks
+                                # 且块在 then_blocks 中时，then 末尾的 continue
+                                # 是显式跳过 else 分支，不是自然回边。
+                                # _find_enclosing_region 找外层 IfRegion 会误判；
+                                # 改用 region 参数（当前 IfRegion）判断。
+                                if (isinstance(region, IfRegion)
+                                        and getattr(region, 'else_blocks', None)
+                                        and block in (region.then_blocks or [])):
+                                    pass
+                                else:
+                                    _rc3_enclosing = self.region_analyzer._find_enclosing_region(
+                                        block, (IfRegion,))
+                                    if _rc3_enclosing is not None:
+                                        _rc3_merge = getattr(_rc3_enclosing, 'merge_block', None)
+                                        if _rc3_merge is not None and _rc3_merge is _cur_hdr:
+                                            _r100_suppress = True
                     if not _r100_suppress:
                         stmts.append({'type': 'Continue'})
                 self.generated_blocks.add(block)
