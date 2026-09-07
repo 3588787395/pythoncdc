@@ -213,10 +213,10 @@
     "size": 44652,
     "function_count": 24,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.875,
+    "bytecode_match_rate": 0.9166666666666666,
     "ok_py_generated": true,
     "last_tested_round": 1,
-    "matched_functions": 21,
+    "matched_functions": 22,
     "total_functions": 24,
     "mismatch_count": 4,
     "match_rate": 0.8333

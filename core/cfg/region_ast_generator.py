@@ -16815,8 +16815,11 @@ AST 映射规则:
                 _block_role = self.region_analyzer.get_block_role(block)
                 if _block_role in (BlockRole.CONTINUE, BlockRole.PURE_CONTINUE):
                     for tr in (self.region_analyzer.regions or []):
-                        if isinstance(tr, TryExceptRegion) and block in tr.try_blocks:
-                            return False
+                        if isinstance(tr, TryExceptRegion):
+                            if block in tr.try_blocks:
+                                return False
+                            if tr.try_offset_start <= block.start_offset <= tr.try_offset_end:
+                                return False
             return True
         return False
 
@@ -18556,9 +18559,14 @@ AST 映射规则:
                                       and block in (region.else_blocks or [])):
                                     _in_try = False
                                     for _tr in (self.region_analyzer.regions or []):
-                                        if isinstance(_tr, TryExceptRegion) and block in _tr.try_blocks:
-                                            _in_try = True
-                                            break
+                                        if isinstance(_tr, TryExceptRegion):
+                                            if block in _tr.try_blocks:
+                                                _in_try = True
+                                                break
+                                            if (_tr.try_offset_start <= block.start_offset
+                                                    <= _tr.try_offset_end):
+                                                _in_try = True
+                                                break
                                     if not _in_try:
                                         _rc3_enclosing = self.region_analyzer._find_enclosing_region(
                                             block, (IfRegion,))
@@ -38809,9 +38817,13 @@ AST 映射规则:
                     _enc_if = self.region_analyzer._find_enclosing_region(block, (IfRegion,))
                     if _enc_if is not None and block in (_enc_if.else_blocks or []):
                         for _tr in (self.region_analyzer.regions or []):
-                            if isinstance(_tr, TryExceptRegion) and block in _tr.try_blocks:
-                                _is_natural_be_gbs = False
-                                break
+                            if isinstance(_tr, TryExceptRegion):
+                                if block in _tr.try_blocks:
+                                    _is_natural_be_gbs = False
+                                    break
+                                if _tr.try_offset_start <= block.start_offset <= _tr.try_offset_end:
+                                    _is_natural_be_gbs = False
+                                    break
             if not _is_natural_be_gbs:
                 return [{'type': 'Continue'}]
             return []
