@@ -20830,6 +20830,35 @@ AST 映射规则:
                 body_stmts.extend(stmts)
                 self.generated_blocks.add(block)
 
+        if body_stmts and len(body_stmts) >= 2:
+            _r12_last = body_stmts[-1]
+            _r12_prev = body_stmts[-2]
+            if (isinstance(_r12_last, dict) and _r12_last.get('type') == 'Return'
+                    and isinstance(_r12_last.get('value'), dict)
+                    and _r12_last['value'].get('type') == 'Constant'
+                    and _r12_last['value'].get('value') is None
+                    and isinstance(_r12_prev, dict) and _r12_prev.get('type') == 'Expr'):
+                _r12_expr_val = _r12_prev.get('value')
+                _r12_is_comp = (isinstance(_r12_expr_val, dict)
+                                and _r12_expr_val.get('type') in ('DictComp', 'ListComp', 'SetComp', 'GeneratorExp'))
+                if _r12_is_comp:
+                    _r12_has_pop_top = False
+                    for _r12_blk in region.try_blocks:
+                        _r12_non_noise = [i for i in _r12_blk.instructions
+                                          if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                        if _r12_non_noise:
+                            _r12_li = len(_r12_non_noise) - 1
+                            while _r12_li >= 0 and _r12_non_noise[_r12_li].opname in (
+                                'JUMP_FORWARD', 'JUMP_ABSOLUTE', 'JUMP_BACKWARD',
+                                'JUMP_BACKWARD_NO_INTERRUPT'):
+                                _r12_li -= 1
+                            if _r12_li >= 0 and _r12_non_noise[_r12_li].opname == 'POP_TOP':
+                                _r12_has_pop_top = True
+                                break
+                    if not _r12_has_pop_top:
+                        body_stmts[-2] = {'type': 'Return', 'value': _r12_expr_val}
+                        body_stmts.pop()
+
         for ntr in nested_try_regions:
             # 跳过嵌套在handler body中的region（由handler body生成代码处理）
             _hbb = set()
