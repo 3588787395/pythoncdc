@@ -18433,7 +18433,7 @@ AST 映射规则:
                     continue
                 _meaningful_instrs = [
                     i for i in block.instructions
-                    if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP')
+                    if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP', 'EXTENDED_ARG')
                     and i.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
                                         'JUMP_FORWARD', 'JUMP_ABSOLUTE')
                     and i.opname not in ('POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_FORWARD_IF_FALSE',
@@ -18457,7 +18457,7 @@ AST 映射规则:
             if role in (BlockRole.CONTINUE, BlockRole.PURE_CONTINUE):
                 _meaningful_instrs = [
                     i for i in block.instructions
-                    if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP')
+                    if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP', 'EXTENDED_ARG')
                     and i.opname not in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT',
                                         'JUMP_FORWARD', 'JUMP_ABSOLUTE')
                     and i.opname not in ('POP_JUMP_FORWARD_IF_TRUE', 'POP_JUMP_FORWARD_IF_FALSE',
@@ -18575,12 +18575,23 @@ AST 映射规则:
                                             if _rc3_merge is not None and _rc3_merge is _cur_hdr:
                                                 _r100_suppress = True
                                 else:
-                                    _rc3_enclosing = self.region_analyzer._find_enclosing_region(
-                                        block, (IfRegion,))
-                                    if _rc3_enclosing is not None:
-                                        _rc3_merge = getattr(_rc3_enclosing, 'merge_block', None)
-                                        if _rc3_merge is not None and _rc3_merge is _cur_hdr:
-                                            _r100_suppress = True
+                                    _in_try_r11 = False
+                                    for _tr_r11 in (self.region_analyzer.regions or []):
+                                        if isinstance(_tr_r11, TryExceptRegion):
+                                            if block in _tr_r11.try_blocks:
+                                                _in_try_r11 = True
+                                                break
+                                            if (_tr_r11.try_offset_start <= block.start_offset
+                                                    <= _tr_r11.try_offset_end):
+                                                _in_try_r11 = True
+                                                break
+                                    if not _in_try_r11:
+                                        _rc3_enclosing = self.region_analyzer._find_enclosing_region(
+                                            block, (IfRegion,))
+                                        if _rc3_enclosing is not None:
+                                            _rc3_merge = getattr(_rc3_enclosing, 'merge_block', None)
+                                            if _rc3_merge is not None and _rc3_merge is _cur_hdr:
+                                                _r100_suppress = True
                     if not _r100_suppress:
                         stmts.append({'type': 'Continue'})
                 self.generated_blocks.add(block)
