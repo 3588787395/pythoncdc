@@ -342,46 +342,6 @@ def bytecode_diff(pyc_path: str, ok_py_path: str) -> dict:
 
 
 # ════════════════════════════════════════════════════════════════════
-# 2b. 文本对比（忽略编译器版本差异）
-# ════════════════════════════════════════════════════════════════════
-
-def text_verify(pyc_path: str, ok_py_path: str = None) -> dict:
-    """比对反编译输出与 OK.py 的文本内容。
-
-    比 bytecode_diff 更可靠：当原始 pyc 由不同 CPython 补丁版本编译时，
-    字节码可能不同但源码语义等价。文本对比直接检验反编译器的核心目标：
-    还原出与原始源码一致的文本。
-
-    返回 dict:
-      {text_match: bool, decompile_ok: bool, source_len: int, ok_source_len: int}
-    """
-    decompile_fn, _, _ = _import_decompiler()
-
-    source, err, _tb = _decompile_with_timeout(decompile_fn, pyc_path)
-    if source is None:
-        return {'text_match': False, 'decompile_ok': False,
-                'source_len': 0, 'ok_source_len': 0, 'error': err}
-
-    if ok_py_path is None:
-        pyc = Path(pyc_path)
-        ok_py_path = str(pyc.with_suffix('')) + 'OK.py'
-
-    try:
-        ok_src = open(ok_py_path, 'r', encoding='utf-8').read()
-    except OSError as e:
-        return {'text_match': False, 'decompile_ok': True,
-                'source_len': len(source), 'ok_source_len': 0,
-                'error': f'ok_py_not_found: {e}'}
-
-    return {
-        'text_match': source == ok_src,
-        'decompile_ok': True,
-        'source_len': len(source),
-        'ok_source_len': len(ok_src),
-    }
-
-
-# ════════════════════════════════════════════════════════════════════
 # 3. 批量模式
 # ════════════════════════════════════════════════════════════════════
 
@@ -484,13 +444,14 @@ def batch_verify(index_path: str = None, max_count: int = None, round_num: int =
             continue
 
         # 步骤 3: 更新条目（pipeline 成功完成：decompile + py_compile 均成功）
+        rate = diff['match_rate']
         status = _classify_decompile_status(rate, ok_py_generated=True, py_compile_ok=True)
         entry['bytecode_match_rate'] = rate
         entry['decompile_status'] = status
         entry['last_tested_round'] = round_num
         entry['function_count'] = diff['total_functions']
         entry['matched_functions'] = diff['matched_functions']
-        entry.pop('error', None)
+        entry.pop('error', None)  # 清除之前可能的失败记录
         print(f'    {status.upper()}: {diff["total_functions"]} funcs, '
               f'{diff["matched_functions"]} matched, rate={rate:.2%}')
 
@@ -686,94 +647,6 @@ def _cmd_stats(index_path: str) -> int:
     return 0
 
 
-def _cmd_text_verify(pyc_path: str, ok_py_path: str = None) -> int:
-    """text-verify 子命令：文本对比反编译输出与 OK.py。"""
-    pyc_path = str(Path(pyc_path).resolve())
-    print(f'[TEXT-VERIFY] {pyc_path}')
-
-    result = text_verify(pyc_path, ok_py_path)
-
-    if not result.get('decompile_ok'):
-        print(f'  DECOMPILE FAILED: {result.get("error", "unknown")}')
-        return 1
-
-    if result.get('error'):
-        print(f'  ERROR: {result["error"]}')
-        return 1
-
-    match = result['text_match']
-    print(f'  text_match:    {match}')
-    print(f'  source_len:    {result["source_len"]}')
-    print(f'  ok_source_len: {result["ok_source_len"]}')
-
-    if match:
-        _update_index_entry(pyc_path, {
-            'decompile_status': 'ok',
-            'text_match_verified': True,
-        }, clear_keys=['error'])
-
-    return 0 if match else 1
-
-
-def _cmd_text_verify_batch(index_path: str = None) -> int:
-    """text-verify-batch 子命令：批量文本对比，将 partial 升级为 ok。"""
-    if index_path is None:
-        index_path = DEFAULT_INDEX_PATH
-    index_path = str(index_path)
-    index_file = Path(index_path)
-
-    if not index_file.exists():
-        raise FileNotFoundError(f'pyc_index.json not found: {index_path}')
-
-    with open(index_file, 'r', encoding='utf-8') as f:
-        entries = json.load(f)
-
-    pending = [e for e in entries
-               if e.get('decompile_status') in ('partial', 'ok')
-               and not e.get('text_match_verified')]
-
-    print(f'[TEXT-VERIFY-BATCH] index={index_path}')
-    print(f'[TEXT-VERIFY-BATCH] total={len(entries)}, pending_text_verify={len(pending)}')
-    print('-' * 70)
-
-    upgraded = 0
-    still_partial = 0
-
-    for idx, entry in enumerate(pending, start=1):
-        pyc_path = entry.get('path', '')
-        if not pyc_path or not os.path.exists(pyc_path):
-            continue
-
-        print(f'[{idx}/{len(pending)}] {os.path.basename(pyc_path)}', end=' ')
-
-        result = text_verify(pyc_path)
-
-        if result.get('text_match'):
-            entry['decompile_status'] = 'ok'
-            entry['text_match_verified'] = True
-            entry.pop('error', None)
-            upgraded += 1
-            print('-> OK (text match)')
-        else:
-            still_partial += 1
-            if result.get('decompile_ok'):
-                print('-> PARTIAL (text differs)')
-            else:
-                print('-> FAILED (decompile error)')
-
-        _cleanup_after_pyc()
-
-    with open(index_file, 'w', encoding='utf-8') as f:
-        json.dump(entries, f, ensure_ascii=False, indent=2)
-
-    print('-' * 70)
-    print(f'[TEXT-VERIFY-BATCH] upgraded_to_ok={upgraded}, still_partial={still_partial}')
-
-    stats = cumulative_stats(index_path)
-    _print_stats(stats)
-    return 0
-
-
 # ════════════════════════════════════════════════════════════════════
 # 主入口
 # ════════════════════════════════════════════════════════════════════
@@ -813,18 +686,6 @@ def main():
     p_stats.add_argument('--index', default=None,
                           help=f'pyc_index.json 路径（默认: {DEFAULT_INDEX_PATH}）')
 
-    # text-verify 子命令
-    p_tv = sub.add_parser('text-verify', help='文本对比：反编译输出 vs OK.py（忽略编译器版本差异）')
-    p_tv.add_argument('pyc_path', help='pyc 文件路径')
-    p_tv.add_argument('--ok-py', default=None,
-                       help='OK.py 路径（默认: <name>OK.py，与 pyc 同目录）')
-
-    # text-verify-batch 子命令
-    p_tvb = sub.add_parser('text-verify-batch',
-                            help='批量文本对比：所有 partial 条目升级为 ok（如文本一致）')
-    p_tvb.add_argument('--index', default=None,
-                        help=f'pyc_index.json 路径（默认: {DEFAULT_INDEX_PATH}）')
-
     args = parser.parse_args()
 
     if args.command == 'single':
@@ -833,10 +694,6 @@ def main():
         return _cmd_batch(args.index, args.max_count, args.round)
     elif args.command == 'stats':
         return _cmd_stats(args.index)
-    elif args.command == 'text-verify':
-        return _cmd_text_verify(args.pyc_path, args.ok_py)
-    elif args.command == 'text-verify-batch':
-        return _cmd_text_verify_batch(args.index)
 
     parser.print_help()
     return 0
