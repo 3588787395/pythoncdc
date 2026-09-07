@@ -20261,6 +20261,22 @@ AST 映射规则:
                 # [Round 05 fix] nested try whose entry is in else_blocks
                 # belongs to the else clause, not the try body.
                 is_entry_in_else = bool(getattr(region, 'else_blocks', None) and r.entry in set(region.else_blocks))
+                # [R09 fix] try-else pattern: when the inner try's entry is
+                # between the outer try's try_offset_end and the first handler
+                # offset, the inner try belongs to the else clause. CPython
+                # compiles try-else as two adjacent exception table entries
+                # (outer try_end == inner try_start) with same depth; the
+                # inner try runs only when no exception occurred (else semantics).
+                if not is_entry_in_else and getattr(region, 'has_else', False):
+                    _first_handler_off = None
+                    for _heb in (region.handler_entry_blocks or []):
+                        if _first_handler_off is None or _heb.start_offset < _first_handler_off:
+                            _first_handler_off = _heb.start_offset
+                    if (_first_handler_off is not None
+                            and getattr(r, 'try_offset_start', None) is not None
+                            and r.try_offset_start >= (region.try_offset_end or 0)
+                            and r.try_offset_start < _first_handler_off):
+                        is_entry_in_else = True
                 is_child_in_try = is_child and not is_entry_in_handler and not is_entry_in_else
                 # [W11 fix] 内层 try 完全包含于外层 try 保护跨度（span containment）：
                 # CPython 3.11 嵌套 try（try-in-try，内层无 handler 或为
@@ -22394,6 +22410,23 @@ AST 映射规则:
             orelse_stmts = None
             if region.else_blocks and region.has_else:
                 _filtered_else = list(region.else_blocks)
+                # [R09 fix] try-else pattern: nested TryExceptRegion whose entry
+                # is between try_offset_end and first handler belongs to the else
+                # clause. Add its entry block to _filtered_else so it gets
+                # generated in the else clause.
+                _r09_first_handler_off = None
+                for _r09_heb in (region.handler_entry_blocks or []):
+                    if _r09_first_handler_off is None or _r09_heb.start_offset < _r09_first_handler_off:
+                        _r09_first_handler_off = _r09_heb.start_offset
+                if _r09_first_handler_off is not None:
+                    for _r09_r in self.region_analyzer.regions:
+                        if (isinstance(_r09_r, TryExceptRegion) and _r09_r is not region
+                                and getattr(_r09_r, 'parent', None) is region
+                                and getattr(_r09_r, 'try_offset_start', None) is not None
+                                and _r09_r.try_offset_start >= (region.try_offset_end or 0)
+                                and _r09_r.try_offset_start < _r09_first_handler_off
+                                and _r09_r.entry not in _filtered_else):
+                            _filtered_else.append(_r09_r.entry)
                 _parent_is_loop = isinstance(region.parent, LoopRegion) or any(
                     isinstance(r, LoopRegion) and any(b in r.body_blocks for b in region.try_blocks)
                     for r in self.region_analyzer.regions
