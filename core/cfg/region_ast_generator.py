@@ -16800,6 +16800,17 @@ AST 映射规则:
                 if isinstance(r, IfRegion) and r is not enclosing:
                     if getattr(r, 'merge_block', None) is block:
                         return False
+            # [Round 06 fix] enclosing IfRegion 的 merge == loop header
+            # 时，then 分支含 CONTINUE 角色块（有用户代码+JUMP_BACKWARD）
+            # 且有 else_blocks 时，then 末尾 continue 是显式跳过 else
+            # 分支，不是自然回边。PURE_CONTINUE 块由 _process_if_blocks
+            # 的 RC3 Mode B 逻辑处理。
+            _enc_then = set(getattr(enclosing, 'then_blocks', None) or [])
+            _enc_else = set(getattr(enclosing, 'else_blocks', None) or [])
+            if _enc_else and block in _enc_then:
+                _block_role = self.region_analyzer.get_block_role(block)
+                if _block_role == BlockRole.CONTINUE:
+                    return False
             return True
         return False
 
