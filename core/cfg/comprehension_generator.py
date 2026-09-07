@@ -1137,24 +1137,59 @@ class ComprehensionGenerator:
                 # 三元条件不应被提取为过滤条件，而应作为元素表达式的一部分
                 if hasattr(instr, 'argval') and instr.argval is not None:
                     if instr.argval < append_offset and 'BACKWARD' not in instr.opname:
-                        # FORWARD ternary cond 跳转 — break
-                        # 出循环让已收集的 filter segments 被处理，而非 return
-                        # 丢弃 filters。elt_start_idx 保持为 current_start
-                        # （最后一个 filter 之后，ternary cond 之前），由
-                        # parse_comprehension_inner 决定是否使用 ternary_info
-                        # 作为 elt（若使用则 elt_start_idx 不被使用）。
-                        break
+                        # [R10] OR-filter pattern: if there's a BACKWARD conditional
+                        # jump between this FORWARD jump and its target, this FORWARD
+                        # jump is part of an OR filter (e.g. `if cond1 or cond2`),
+                        # not a ternary. Collect it as a filter segment instead of
+                        # breaking for ternary detection.
+                        has_backward_after = False
+                        for inner_idx in range(idx + 1, append_idx):
+                            inner_instr = all_instrs[inner_idx]
+                            if inner_instr.offset >= instr.argval:
+                                break
+                            if inner_instr.opname in CONDITIONAL_JUMP_OPS and 'BACKWARD' in inner_instr.opname:
+                                has_backward_after = True
+                                break
+                        if not has_backward_after:
+                            # FORWARD ternary cond 跳转 — break
+                            # 出循环让已收集的 filter segments 被处理，而非 return
+                            # 丢弃 filters。elt_start_idx 保持为 current_start
+                            # （最后一个 filter 之后，ternary cond 之前），由
+                            # parse_comprehension_inner 决定是否使用 ternary_info
+                            # 作为 elt（若使用则 elt_start_idx 不被使用）。
+                            break
                 segments.append((current_start, idx, instr))
                 current_start = idx + 1
 
         if segments:
+            # [R10] Detect OR-filter pattern: FORWARD IF_TRUE segment followed by
+            # BACKWARD IF_FALSE segment means `if cond1 or cond2` filter.
+            # CPython compiles `if cond1 or cond2` as:
+            #   cond1 → POP_JUMP_FORWARD_IF_TRUE body (skip to body if cond1 true)
+            #   cond2 → POP_JUMP_BACKWARD_IF_FALSE loop (skip iteration if cond2 false)
+            # For OR filters, do NOT invert IF_TRUE conditions, combine with 'or'.
+            is_or_pattern = False
+            if len(segments) >= 2:
+                has_forward_if_true = False
+                has_backward_if_false = False
+                for _, _, jump_instr in segments:
+                    if 'FORWARD' in jump_instr.opname and 'IF_TRUE' in jump_instr.opname:
+                        has_forward_if_true = True
+                    if 'BACKWARD' in jump_instr.opname and 'IF_FALSE' in jump_instr.opname:
+                        has_backward_if_false = True
+                if has_forward_if_true and has_backward_if_false:
+                    is_or_pattern = True
+
             for seg_start, seg_end, jump_instr in segments:
                 cond_instrs = all_instrs[seg_start:seg_end]
                 if cond_instrs:
                     cond_expr = self.expr_reconstructor.reconstruct(cond_instrs)
                     if cond_expr:
                         if 'IF_TRUE' in jump_instr.opname:
-                            cond_expr = {'type': 'UnaryOp', 'op': 'not', 'operand': cond_expr}
+                            if is_or_pattern and 'FORWARD' in jump_instr.opname:
+                                pass
+                            else:
+                                cond_expr = {'type': 'UnaryOp', 'op': 'not', 'operand': cond_expr}
                         ifs.append(cond_expr)
             elt_start_idx = current_start
 
@@ -1162,8 +1197,21 @@ class ComprehensionGenerator:
         # In Python bytecode, `if a and b` and `if a if b` produce identical bytecode,
         # so we combine multiple conditions into a single BoolOp to match the more common
         # source form and produce correct BoolOp AST nodes.
+        # [R10] OR-filter pattern uses 'or' instead.
         if len(ifs) > 1:
-            ifs = [{'type': 'BoolOp', 'op': 'and', 'values': ifs}]
+            is_or_pattern = False
+            if segments:
+                has_forward_if_true = False
+                has_backward_if_false = False
+                for _, _, jump_instr in segments:
+                    if 'FORWARD' in jump_instr.opname and 'IF_TRUE' in jump_instr.opname:
+                        has_forward_if_true = True
+                    if 'BACKWARD' in jump_instr.opname and 'IF_FALSE' in jump_instr.opname:
+                        has_backward_if_false = True
+                if has_forward_if_true and has_backward_if_false:
+                    is_or_pattern = True
+            op = 'or' if is_or_pattern else 'and'
+            ifs = [{'type': 'BoolOp', 'op': op, 'values': ifs}]
 
         return ifs, elt_start_idx
 
@@ -1304,6 +1352,23 @@ class ComprehensionGenerator:
                 # 检查跳转目标是否在LIST_APPEND之前（三元模式）
                 if hasattr(instr, 'argval') and instr.argval is not None:
                     if instr.argval < append_offset:
+                        # [R10] OR-filter pattern: FORWARD jump to body with BACKWARD
+                        # jump after it means this is `if cond1 or cond2` filter,
+                        # not ternary. CPython compiles OR in comprehension if-filter
+                        # as POP_JUMP_FORWARD_IF_TRUE (skip to body if cond1 true)
+                        # followed by POP_JUMP_BACKWARD_IF_FALSE (skip iteration if
+                        # cond2 false). Check for BACKWARD jump between here and
+                        # the forward jump target.
+                        has_backward_after = False
+                        for inner_idx in range(idx + 1, append_idx):
+                            inner_instr = all_instrs[inner_idx]
+                            if inner_instr.offset >= instr.argval:
+                                break
+                            if inner_instr.opname in CONDITIONAL_JUMP_OPS and 'BACKWARD' in inner_instr.opname:
+                                has_backward_after = True
+                                break
+                        if has_backward_after:
+                            return None
                         cond_jump_idx = idx
                         break
                 # 跳转目标在LIST_APPEND之后 → 过滤器模式，不是三元
