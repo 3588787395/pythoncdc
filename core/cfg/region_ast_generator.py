@@ -7323,7 +7323,18 @@ AST 映射规则:
         _aw_stmt_instrs: List[Instruction] = []
         _aw_after_awaitable = False
         for _instr in block.instructions:
-            if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP'):
+            if _instr.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                continue
+            if _instr.opname == 'POP_TOP':
+                if _aw_after_awaitable:
+                    continue
+                if _aw_stmt_instrs:
+                    _has_call = any(_i.opname in ('CALL', 'CALL_FUNCTION', 'CALL_METHOD', 'CALL_FUNCTION_KW', 'CALL_FUNCTION_EX') for _i in _aw_stmt_instrs)
+                    if _has_call:
+                        _pop_expr = self.expr_reconstructor.reconstruct(list(_aw_stmt_instrs))
+                        if _pop_expr:
+                            _aw_stmts.append({'type': 'Expr', 'value': _pop_expr})
+                        _aw_stmt_instrs = []
                 continue
             if _instr.opname == 'GET_AWAITABLE':
                 _aw_stmt_instrs.append(_instr)
