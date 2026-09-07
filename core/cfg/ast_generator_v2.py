@@ -346,6 +346,65 @@ class ExpressionReconstructor:
             # 对于非栈操作的情况，也要重置标志
             self.last_instr_was_copy = False
             return
+
+        if opname == 'STORE_SUBSCR':
+            if len(self.stack) >= 3:
+                _ss_index = self.stack.pop()
+                _ss_container = self.stack.pop()
+                _ss_value = self.stack.pop()
+                if (isinstance(_ss_container, dict)
+                        and _ss_container.get('type') == 'Name'
+                        and _ss_container.get('id') == '__annotations__'
+                        and isinstance(_ss_index, dict)
+                        and _ss_index.get('type') == 'Constant'):
+                    self.stack.append({
+                        'type': 'AnnAssign',
+                        'target': {
+                            'type': 'Name',
+                            'id': _ss_index.get('value'),
+                            'ctx': 'Store',
+                            'lineno': instr.starts_line
+                        },
+                        'annotation': _ss_value,
+                        'value': None,
+                        'simple': 1,
+                        'lineno': instr.starts_line
+                    })
+                else:
+                    self.stack.append({
+                        'type': 'Assign',
+                        'targets': [{
+                            'type': 'Subscript',
+                            'value': _ss_container,
+                            'slice': _ss_index,
+                            'ctx': 'Store',
+                            'lineno': instr.starts_line
+                        }],
+                        'value': _ss_value,
+                        'lineno': instr.starts_line
+                    })
+            self.last_instr_was_copy = False
+            return
+
+        if opname == 'STORE_ATTR':
+            if len(self.stack) >= 2:
+                _sa_attr_name = instr.argval
+                _sa_obj = self.stack.pop()
+                _sa_value = self.stack.pop()
+                self.stack.append({
+                    'type': 'Assign',
+                    'targets': [{
+                        'type': 'Attribute',
+                        'value': _sa_obj,
+                        'attr': _sa_attr_name,
+                        'ctx': 'Store',
+                        'lineno': instr.starts_line
+                    }],
+                    'value': _sa_value,
+                    'lineno': instr.starts_line
+                })
+            self.last_instr_was_copy = False
+            return
         
         # [海象运算符] 其他指令重置 COPY 标志
         self.last_instr_was_copy = False
