@@ -1893,8 +1893,27 @@ class RegionAnalyzer:
         _exclude = {header, then_succ, else_succ}
 
         # 纯 sink 分支：merge 是另一分支的 JUMP_FORWARD 目标
-        _then_is_sink = not then_succ.successors
-        _else_is_sink = not else_succ.successors
+        # [R115 fix] 仅考虑正常控制流后继（排除 exception_successors）：
+        # try 体内 raise 语句有 exception successor 指向 handler，不属于正常
+        # 控制流。若仅因异常边使 successors 非空就判为非 sink，则 merge 计算失败，
+        # _collect_branch_blocks 越过真实合并点把后续代码吸入 then_blocks。
+        # 典型场景：except handler 内 if-else，else 分支 raise ex，then 分支
+        # JUMP_FORWARD → merge，因 else_succ 有异常边指向 handler 而被判为非 sink，
+        # merge=None，data_to_sql() 被误吸入 then 分支。
+        def _normal_successors(block):
+            _exc = getattr(block, 'exception_successors', set()) or set()
+            return [s for s in block.successors if s not in _exc]
+
+        def _is_normal_flow_sink(block):
+            if not _normal_successors(block):
+                return True
+            _last = block.get_last_instruction()
+            if _last and _last.opname in ('RETURN_VALUE', 'RETURN_CONST', 'RAISE_VARARGS', 'RERAISE'):
+                return True
+            return False
+
+        _then_is_sink = _is_normal_flow_sink(then_succ)
+        _else_is_sink = _is_normal_flow_sink(else_succ)
 
         # [R83 修复] 循环 continue 退出分支：当 else 分支的所有前向路径均以
         # JUMP_BACKWARD（循环 continue）终结时，该分支永远不会到达 if 结构
@@ -1995,6 +2014,18 @@ class RegionAnalyzer:
                         _owner_target = self.block_to_region.get(tgt)
                         if (_owner_bridge is None or _owner_target is None
                                 or _owner_bridge is not _owner_target):
+                            return tgt
+                        # [R115 fix] 当 bridge 和 target 属于同一区域（如同一
+                        # TryExceptRegion 的 handler 块），但 sink 分支以
+                        # RAISE_VARARGS 终态（无正常后继），且 JUMP_FORWARD
+                        # 跳过 sink 到达 target，target 是 if-else 的真实
+                        # merge 点。典型场景：except handler 内 if-else，
+                        # else 分支 raise ex，then 分支 JUMP_FORWARD → merge，
+                        # bridge 和 target 都在同一 try handler 中。
+                        _sink_last = sink_succ.get_last_instruction()
+                        if (_sink_last is not None
+                                and _sink_last.opname in ('RAISE_VARARGS', 'RERAISE')
+                                and not _normal_successors(sink_succ)):
                             return tgt
                 if depth >= 3:
                     continue
@@ -23543,7 +23574,14 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
 
     def _w14_pred_is_child_structural_exit(self, pred_block, in_set) -> bool:
         """[R14b] 判定收集集外前驱是否为结构子区域（try/with/loop/match）
-        成员块，且该子区域与当前分支收集集有交集。结构性判定，非实例特征。"""
+        成员块，且该子区域与当前分支收集集有交集。结构性判定，非实例特征。
+
+        [W38 fix] TryExceptRegion 分支隔离：当 pred_block 属于 try-except 的
+        else/try 正常路径，而 in_set 中的块属于 except handler body 时，
+        两者属于 try-except 的不同语义分支（正常路径 vs 异常处理路径），
+        不应视为"子结构出口"关系——它们的汇合块是 post-try 公共代码，
+        应被 W14-C 外部性剪枝从当前分支中移除，而非豁免保留。
+        """
         if not in_set:
             return False
         for region in self.regions:
@@ -23556,6 +23594,16 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             ent = getattr(region, 'entry', None)
             if (ent is not None and ent in in_set) \
                     or any(b in in_set for b in rblocks):
+                if isinstance(region, TryExceptRegion):
+                    _pred_in_normal = (pred_block in region.try_blocks
+                                       or pred_block in region.else_blocks)
+                    _in_set_in_handler = False
+                    for _, _, hblocks in region.except_handlers:
+                        if any(b in hblocks for b in in_set):
+                            _in_set_in_handler = True
+                            break
+                    if _pred_in_normal and _in_set_in_handler:
+                        continue
                 return True
         return False
 

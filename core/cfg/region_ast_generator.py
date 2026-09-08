@@ -4386,12 +4386,14 @@ AST 映射规则:
         #   while 的 else_blocks=None），此处仅保留 for 循环 else 处理。
         _has_break = getattr(region, 'has_break', False)
         _is_while = region.region_type == RegionType.WHILE_LOOP
-        if _has_break or not _is_while:
-            # for 循环：始终保留 else_stmts 为 orelse
-            # while+break：else_stmts 作为 orelse（break 跳过 else 是核心语义）
+        if _has_break:
+            # while+break / for+break：else_stmts 作为 orelse（break 跳过 else 是核心语义）
             _sequential_after_loop = []
         else:
-            # while 无 break：else_stmts 转为顺序语句（while 后的代码不是 else 子句）
+            # 无 break 时，else_stmts 转为顺序语句（for 和 while 均适用）。
+            # for 循环无 break 时 else 子句总是执行，与循环后顺序代码语义等价、
+            # 字节码相同，应取更简形式（不生成 orelse）以匹配编译器输出。
+            # while 无 break 时，后续代码不是 else 子句。
             _sequential_after_loop = else_stmts
             else_stmts = []
 
@@ -20748,7 +20750,24 @@ AST 映射规则:
                 _meaningful_instrs[1].opname in ('RETURN_VALUE', 'RETURN_CONST')
             )
             if _is_trivial_return:
-                if self._loop_depth > 0:
+                _is_cond_jump_target = False
+                _cond_jump_opnames = ('POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_FORWARD_IF_TRUE',
+                                      'POP_JUMP_BACKWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_TRUE',
+                                      'JUMP_IF_FALSE_OR_POP', 'JUMP_IF_TRUE_OR_POP',
+                                      'POP_JUMP_IF_FALSE', 'POP_JUMP_IF_TRUE')
+                for _pred in block.predecessors:
+                    _pred_last = _pred.get_last_instruction()
+                    if (_pred_last is not None
+                            and _pred_last.opname in _cond_jump_opnames
+                            and _pred_last.argval == block.start_offset
+                            and _pred in set(region.try_blocks)):
+                        _is_cond_jump_target = True
+                        break
+                if _is_cond_jump_target:
+                    body_stmts.append({'type': 'Return',
+                                       'value': {'type': 'Constant', 'value': None},
+                                       '_explicit_return': True})
+                elif self._loop_depth > 0:
                     body_stmts.append({'type': 'Break'})
                 self.generated_blocks.add(block)
                 continue
@@ -22034,6 +22053,46 @@ AST 映射规则:
                                 continue
                             _post_try_seen_r19n2.add(_succ)
                             _post_try_blocks_r19n2.append(_succ)
+            for _et, _en, _hbs in region.except_handlers:
+                if not _hbs:
+                    continue
+                _last_hb = _hbs[-1]
+                _lh_last = _last_hb.get_last_instruction()
+                if (_lh_last is not None
+                        and _lh_last.opname == 'JUMP_FORWARD'
+                        and _lh_last.argval is not None):
+                    _jh_succ = self.cfg.get_block_by_offset(_lh_last.argval)
+                    if (_jh_succ is not None
+                            and _jh_succ not in _region_block_set_r19n2
+                            and _jh_succ not in _post_try_seen_r19n2
+                            and _jh_succ not in _handler_entry_blocks):
+                        if _jh_succ in _all_if_merge_blocks_r19n2:
+                            continue
+                        _jh_owner = self.region_analyzer.block_to_region.get(_jh_succ)
+                        if _jh_owner is not None and _jh_owner is not region:
+                            _is_ancestor_owner = False
+                            _anc = getattr(region, 'parent', None)
+                            while _anc is not None:
+                                if _anc is _jh_owner:
+                                    _is_ancestor_owner = True
+                                    break
+                                _anc = getattr(_anc, 'parent', None)
+                            _is_descendant_owner = False
+                            for _child in getattr(region, 'children', []) or []:
+                                _queue = [_child]
+                                while _queue:
+                                    _desc = _queue.pop(0)
+                                    if _desc is _jh_owner:
+                                        _is_descendant_owner = True
+                                        break
+                                    for _dc in getattr(_desc, 'children', []) or []:
+                                        _queue.append(_dc)
+                                if _is_descendant_owner:
+                                    break
+                            if not _is_ancestor_owner and not _is_descendant_owner:
+                                continue
+                        _post_try_seen_r19n2.add(_jh_succ)
+                        _post_try_blocks_r19n2.append(_jh_succ)
             # 标记 post-try 块为 generated，使 IfRegion 跳过它们
             _post_try_pre_generated_r19n2 = set()
             for _ptb in _post_try_blocks_r19n2:
@@ -41887,6 +41946,25 @@ AST 映射规则:
                       and _rc2_swap_rem[2].opname == 'POP_TOP'
                       and _rc2_swap_rem[3].opname in ('RETURN_VALUE', 'RETURN_CONST')):
                     _rc2_skip_swap = True
+                # [RC3 fix] SWAP(2) + POP_TOP with deferred RETURN_VALUE in
+                # for-loop context: CPython 3.11 compiles `return <value>`
+                # inside a for loop as LOAD value; SWAP 2; POP_TOP (swap
+                # return value with iterator, pop iterator), then cleanup
+                # code, then RETURN_VALUE. The return value stays on stack
+                # while cleanup runs. When SWAP+POP_TOP is not immediately
+                # followed by RETURN_VALUE (cleanup code intervenes), detect
+                # the deferred-return pattern: skip SWAP, mark POP_TOP as
+                # skip_initial_pop, and let RETURN_VALUE reconstruct from
+                # stmt_instrs (the preserved return value expression).
+                if (not _rc2_skip_swap
+                        and self._loop_depth > 0
+                        and instr.arg == SWAP_TOP_TWO
+                        and len(_rc2_swap_rem) >= 2
+                        and _rc2_swap_rem[0].opname == 'POP_TOP'
+                        and any(ri.opname in ('RETURN_VALUE', 'RETURN_CONST')
+                                for ri in _rc2_swap_rem[1:])):
+                    _rc2_skip_swap = True
+                    skip_initial_pop = True
                 if _rc2_skip_swap:
                     continue
 
