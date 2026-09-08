@@ -5279,16 +5279,31 @@ AST 映射规则:
                         store_instrs = non_jmp_instrs[:last_store_idx + 1]
                         _store_segs = []
                         _cur_seg = []
+                        _unpack_remaining = 0
                         for _si in store_instrs:
                             _cur_seg.append(_si)
+                            if _si.opname in ('UNPACK_SEQUENCE', 'UNPACK_EX'):
+                                _unpack_remaining = _si.arg if _si.opname == 'UNPACK_SEQUENCE' else ((_si.argval & 0xFF) + 1 + ((_si.argval >> 8) & 0xFF))
                             if _si.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF', 'STORE_SUBSCR', 'STORE_ATTR'):
-                                _store_segs.append(_cur_seg)
-                                _cur_seg = []
+                                if _unpack_remaining > 0:
+                                    _unpack_remaining -= 1
+                                    if _unpack_remaining == 0:
+                                        _store_segs.append(_cur_seg)
+                                        _cur_seg = []
+                                else:
+                                    _store_segs.append(_cur_seg)
+                                    _cur_seg = []
                         if _cur_seg:
                             _store_segs.append(_cur_seg)
                         for _seg in _store_segs:
                             if not _seg:
                                 continue
+                            _has_unpack = any(i.opname in ('UNPACK_SEQUENCE', 'UNPACK_EX') for i in _seg)
+                            if _has_unpack:
+                                _unpack_stmt = self._build_unpack_assign_from_segment(_seg)
+                                if _unpack_stmt:
+                                    recheck_store_stmts.append(_unpack_stmt)
+                                    continue
                             _store_stmt = self._build_store_statement(_seg, block=b)
                             if _store_stmt:
                                 _store_stmt.pop('_decorator_block', None)
