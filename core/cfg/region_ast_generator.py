@@ -9143,10 +9143,11 @@ AST 映射规则:
                 else:
                     _then_succ = _jump_block
                     _else_succ = _fall_through
-                _then_is_continue = self._block_is_continue_target(_then_succ)
-                _else_is_continue = self._block_is_continue_target(_else_succ)
-                _then_is_pure_cont = self._block_is_pure_continue(_then_succ)
-                _else_is_pure_cont = self._block_is_pure_continue(_else_succ)
+                _loop_else_set = set(self._current_loop.else_blocks) if (self._current_loop and self._current_loop.else_blocks) else set()
+                _then_is_continue = self._block_is_continue_target(_then_succ) and _then_succ not in _loop_else_set
+                _else_is_continue = self._block_is_continue_target(_else_succ) and _else_succ not in _loop_else_set
+                _then_is_pure_cont = self._block_is_pure_continue(_then_succ) and _then_succ not in _loop_else_set
+                _else_is_pure_cont = self._block_is_pure_continue(_else_succ) and _else_succ not in _loop_else_set
                 # 区域归约算法原则 4（父引用子入口）+ 原则 2
                 # （每块唯一归属）：当 then 是纯 continue（无 body 语句）而
                 # else 含 body 语句时，源码结构是 `if cond: continue; <body>`
@@ -9174,6 +9175,24 @@ AST 映射规则:
                                        'body': _then_stmts_full,
                                        'orelse': [{'type': 'Continue'}]})
                     return
+                if _else_is_continue and not _then_is_continue:
+                    _then_is_trivial = True
+                    _then_nontrivial = [i for i in _then_succ.instructions
+                                        if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                    if _then_nontrivial:
+                        _then_is_trivial = False
+                    if _then_is_trivial:
+                        _else_stmts_cont = self._generate_block_statements(_else_succ)
+                        if not any(s.get('type') == 'Continue' for s in _else_stmts_cont):
+                            _else_stmts_cont.append({'type': 'Continue'})
+                        self.generated_blocks.add(_then_succ)
+                        self.generated_offsets.add(_then_succ.start_offset)
+                        self.generated_blocks.add(_else_succ)
+                        self.generated_offsets.add(_else_succ.start_offset)
+                        _negated_expr = _negate_expr(_expr)
+                        _hdr_stmts.append({'type': 'If', 'test': _negated_expr,
+                                           'body': _else_stmts_cont})
+                        return
                 # [R02 fix] 分支块角色为 CONTINUE 但含有效语句时（如
                 # `if cond: tb = tb.tb_next; continue`），不能直接用 [Continue]
                 # 替换整个分支体——必须先重建块内语句再追加 Continue，
@@ -31598,6 +31617,21 @@ AST 映射规则:
                     'conversion': 0,
                     'format_spec': None,
                 })
+                if region.merge_block:
+                    _mb_instrs = [i for i in region.merge_block.instructions
+                                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                    _after_fv = False
+                    for _mi in _mb_instrs:
+                        if _mi.opname == 'FORMAT_VALUE':
+                            _after_fv = True
+                            continue
+                        if _after_fv:
+                            if _mi.opname == 'LOAD_CONST':
+                                fstring_parts.append({
+                                    'type': 'Constant', 'value': _mi.argval,
+                                })
+                            elif _mi.opname == 'BUILD_STRING':
+                                break
                 joined_str = {
                     'type': 'JoinedStr',
                     'values': fstring_parts,
@@ -36789,6 +36823,24 @@ AST 映射规则:
                                 _fstring_parts.append({
                                     'type': 'Constant', 'value': _pi.argval,
                                 })
+            if ternary_chain and merge_ctx == 'fstring':
+                _last_tr = ternary_chain[-1]
+                _last_merge = _last_tr.merge_block
+                if _last_merge is not None:
+                    _lm_instrs = [i for i in _last_merge.instructions
+                                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                    _after_fv = False
+                    for _li in _lm_instrs:
+                        if _li.opname == 'FORMAT_VALUE':
+                            _after_fv = True
+                            continue
+                        if _after_fv:
+                            if _li.opname == 'LOAD_CONST':
+                                _fstring_parts.append({
+                                    'type': 'Constant', 'value': _li.argval,
+                                })
+                            elif _li.opname == 'BUILD_STRING':
+                                break
             _joined_str = {
                 'type': 'JoinedStr',
                 'values': _fstring_parts,

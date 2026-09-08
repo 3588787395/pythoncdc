@@ -3536,8 +3536,62 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                             break
             else_blocks, natural_exit = self._find_loop_else(header, body, loop_type, for_iter_exit, condition_block=condition_block)
             else_blocks = else_blocks or []
+            if condition_block == header and not else_blocks:
+                _hdr_last = header.get_last_instruction()
+                if (_hdr_last and _hdr_last.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                        and _hdr_last.argval is not None):
+                    _hdr_jump_target = self.cfg.get_block_by_offset(_hdr_last.argval)
+                    if _hdr_jump_target and _hdr_jump_target in body:
+                        _jt_last = _hdr_jump_target.get_last_instruction()
+                        if (_jt_last and _jt_last.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                                and _jt_last.argval is not None
+                                and self.cfg.get_block_by_offset(_jt_last.argval) == header):
+                            _else_backedge_blocks = [_hdr_jump_target]
+                            _else_backedge_visited = {_hdr_jump_target}
+                            _else_backedge_queue = [_hdr_jump_target]
+                            while _else_backedge_queue:
+                                _eb_cur = _else_backedge_queue.pop()
+                                for _eb_pred in _eb_cur.predecessors:
+                                    if _eb_pred in _else_backedge_visited or _eb_pred == header:
+                                        continue
+                                    _eb_pred_last = _eb_pred.get_last_instruction()
+                                    if (_eb_pred_last
+                                            and _eb_pred_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                                            and _eb_pred_last.argval is not None
+                                            and self.cfg.get_block_by_offset(_eb_pred_last.argval) == _hdr_jump_target):
+                                        if all(p in body or p == header for p in _eb_pred.predecessors):
+                                            _else_backedge_blocks.append(_eb_pred)
+                                            _else_backedge_visited.add(_eb_pred)
+                                            _else_backedge_queue.append(_eb_pred)
+                            _else_backedge_set = set(_else_backedge_blocks)
+                            body = body - _else_backedge_set
+                            for _ph in header.predecessors:
+                                if (_ph in body and _ph.start_offset < header.start_offset
+                                        and all(i.opname in NOISE_OPS for i in _ph.instructions)
+                                        and len(_ph.successors) == 1 and header in _ph.successors):
+                                    body.discard(_ph)
+                            else_blocks = sorted(_else_backedge_blocks, key=lambda b: b.start_offset)
+                            natural_exit = _hdr_jump_target
             self._current_loop_blocks = body
             back_edges_for_header = [src for src, tgt in self.loop_analyzer.back_edges if tgt == header]
+            _else_blocks_set = set(else_blocks) if else_blocks else set()
+            if condition_block == header:
+                _ph_set = set()
+                for _ph in header.predecessors:
+                    if (_ph.start_offset < header.start_offset
+                            and all(i.opname in NOISE_OPS for i in _ph.instructions)
+                            and len(_ph.successors) == 1 and header in _ph.successors):
+                        _ph_set.add(_ph)
+                if _ph_set:
+                    _filtered_be = []
+                    for _be_src in back_edges_for_header:
+                        _be_last = _be_src.get_last_instruction()
+                        if _be_last and _be_last.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'):
+                            _be_target = self.cfg.get_block_by_offset(_be_last.argval) if _be_last.argval is not None else None
+                            if _be_target in _ph_set:
+                                continue
+                        _filtered_be.append(_be_src)
+                    back_edges_for_header = _filtered_be
             if back_edges_for_header:
                 # 区域归约算法原则 1（自底向上归约）+ 原则 2
                 # （每块唯一归属）：循环的自然回边是正常控制流（循环体正常
@@ -4113,7 +4167,14 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
             parent_body = set()
             for pl in parent_loops:
                 parent_body.update(pl.body_blocks)
-            spurious = [eb for eb in lr.else_blocks if eb in parent_body]
+            _cond_exit_targets = set()
+            if lr.has_break and lr.condition_block and lr.condition_block != lr.header_block:
+                _cond_last = lr.condition_block.get_last_instruction()
+                if _cond_last and _cond_last.opname in FORWARD_CONDITIONAL_JUMP_OPS and _cond_last.argval is not None:
+                    _cond_exit = self.cfg.get_block_by_offset(_cond_last.argval)
+                    if _cond_exit and not self._check_block_has_trailing_return_none(_cond_exit):
+                        _cond_exit_targets.add(_cond_exit)
+            spurious = [eb for eb in lr.else_blocks if eb in parent_body and eb not in _cond_exit_targets]
             if not spurious:
                 continue
             for eb in spurious:
@@ -4369,6 +4430,14 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                         return False
                 return True
             if jump_target is not None and jump_target in body:
+                if cond_jump_instr.opname in FORWARD_CONDITIONAL_JUMP_OPS:
+                    _jt_last = jump_target.get_last_instruction()
+                    if _jt_last and _jt_last.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'):
+                        _jt_target = self.cfg.get_block_by_offset(_jt_last.argval) if _jt_last.argval is not None else None
+                        if _jt_target == header:
+                            _body_preds_of_jt = [p for p in jump_target.predecessors if p in body and p is not header]
+                            if _body_preds_of_jt:
+                                return False
                 return True
         
         if has_store_before_jump:
@@ -5257,6 +5326,8 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
         break_blocks_set = set()
         continue_map = {}
         body_set = set(loop_body) if not isinstance(loop_body, set) else loop_body
+        _else_set = set(else_blocks) if else_blocks else set()
+        _else_only_set = _else_set - body_set
 
         if natural_exit is not None:
             ne_meaningful = [i for i in natural_exit.instructions
@@ -5280,6 +5351,8 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 if s == condition_block and condition_block is not None and condition_block not in body_set:
                     continue
                 if s not in body_set and s != natural_exit:
+                    if s in _else_only_set:
+                        continue
                     if any(i.opname in ('RAISE_VARARGS', 'RERAISE') for i in s.instructions):
                         continue
                     # 区域归约算法 — break 检测精确化：
@@ -5370,7 +5443,16 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                             if _s_last and _s_last.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'):
                                 _s_target = self.cfg.get_block_by_offset(_s_last.argval) if _s_last.argval is not None else None
                                 if _s_target == header or _s_target in header.predecessors:
-                                    continue_map[s] = 'CONTINUE'
+                                    if (condition_block == header
+                                            and _s_target is not None
+                                            and _s_target != header
+                                            and _s_target in header.predecessors
+                                            and _s_target.start_offset < header.start_offset
+                                            and len(_s_target.successors) == 1
+                                            and header in _s_target.successors):
+                                        break_blocks_set.add(s)
+                                    else:
+                                        continue_map[s] = 'CONTINUE'
                                     continue
                             # [R8 fix] 区域归约算法原则 2（每块唯一归属）：
                             # 含有效用户代码（CALL/STORE/BUILD等副作用指令）的
@@ -5477,6 +5559,15 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                             and len(target.successors) == 1 and list(target.successors)[0] == header):
                         is_jump_to_header = True
             if not is_jump_to_header:
+                continue
+            if (condition_block == header
+                    and target is not None
+                    and target in header.predecessors
+                    and target.start_offset < header.start_offset
+                    and len(target.successors) == 1
+                    and header in target.successors
+                    and all(i.opname in NOISE_OPS for i in target.instructions)):
+                break_blocks_set.add(target)
                 continue
             _blk_meaningful = [i for i in block.instructions
                                if i.opname not in NOISE_OPS

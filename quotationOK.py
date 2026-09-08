@@ -659,7 +659,6 @@ def get_str_data(rdata, count, typet):
                         data_is_nan = 1
                 else:
                     not_nan_icount = j
-                    break
             data.loc[i] = {'open': stock_df.ix[datas[not_nan_icount]]['open'], 'close': stock_df.ix[datas[-1]]['close'], 'high': stock_df.ix[datas]['high'].max(), 'low': stock_df.ix[datas]['low'].min(), 'volume': numpy.nan if data_is_nan == 1 else stock_df.ix[datas[0]:datas[-1] + 1]['volume'].sum(), 'price': stock_df.ix[datas[-1]]['price'], 'money': numpy.nan if data_is_nan == 1 else stock_df.ix[datas[0]:datas[-1] + 1]['money'].sum()}
             time_index.append(datetime_index[datas[-1]])
             i += 1
@@ -816,7 +815,6 @@ def change_his_to_backward(security, data, exrights_data, start, end, typet):
                 preday = datetime.strftime(pret, '%Y-%m-%d %H:%M:%S')
                 tmpdata = data[:preday].copy()
             elif data[predataindex:curdataindex].empty:
-                break
                 break
             elif curdataindex in data.index:
                 curdatetime = datetime.strptime(curdataindex, '%Y-%m-%d %H:%M:%S')
@@ -1171,6 +1169,7 @@ def valuation_new(security, date=None, fields=None):
                         return code
                     returnDf['secu_code'] = returnDf.apply(lambda x: get_IQE_code(x['secu_code']), axis=1)
                     return ({'error_no': 0, 'error_info': ''}, returnDf)
+                return None
             else:
                 return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
         except BaseException as x:
@@ -1227,6 +1226,7 @@ def valuation(security, date=None, fields=None):
                 else:
                     returnDf = pandas.DataFrame(data_out)
                     return ({'error_no': 0, 'error_info': ''}, returnDf)
+                return None
             else:
                 return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
         except BaseException as x:
@@ -1290,28 +1290,29 @@ def balance_statement(security, report_types=None, start_year=None, end_year=Non
             page_no += 1
             params['page_no'] = str(page_no)
             return_data['data'].extend(resp_data['data'])
-    data = return_data['data']
-    try:
-        if data:
-            dict1 = {}
-            data_out = []
-            for i in data:
-                for key, value in i.items():
-                    if isinstance(value, dict):
-                        dict1.update(value)
+    else:
+        data = return_data['data']
+        try:
+            if data:
+                dict1 = {}
+                data_out = []
+                for i in data:
+                    for key, value in i.items():
+                        if isinstance(value, dict):
+                            dict1.update(value)
+                            continue
+                        dict1[key] = value
                         continue
-                    dict1[key] = value
-                    continue
-                data_out.append(copy.deepcopy(dict1))
+                    data_out.append(copy.deepcopy(dict1))
+                else:
+                    returnDf = pandas.DataFrame(data_out)
+                    return ({'error_no': 0, 'error_info': ''}, returnDf)
+                return None
             else:
-                returnDf = pandas.DataFrame(data_out)
-                return ({'error_no': 0, 'error_info': ''}, returnDf)
-            return None
-        else:
-            return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
-    except BaseException as x:
-        system_log.error(get_traceback_message())
-        raise x
+                return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
+        except BaseException as x:
+            system_log.error(get_traceback_message())
+            raise x
 @lru_cache(None)
 def income_statement(security, report_types=None, start_year=None, end_year=None, fields=None, merge_type=None):
     return_data = {}
@@ -1371,28 +1372,29 @@ def income_statement(security, report_types=None, start_year=None, end_year=None
             page_no += 1
             params['page_no'] = str(page_no)
             return_data['data'].extend(resp_data['data'])
-    data = return_data['data']
-    try:
-        if data:
-            dict1 = {}
-            data_out = []
-            for i in data:
-                for key, value in i.items():
-                    if isinstance(value, dict):
-                        dict1.update(value)
+    else:
+        data = return_data['data']
+        try:
+            if data:
+                dict1 = {}
+                data_out = []
+                for i in data:
+                    for key, value in i.items():
+                        if isinstance(value, dict):
+                            dict1.update(value)
+                            continue
+                        dict1[key] = value
                         continue
-                    dict1[key] = value
-                    continue
-                data_out.append(copy.deepcopy(dict1))
+                    data_out.append(copy.deepcopy(dict1))
+                else:
+                    returnDf = pandas.DataFrame(data_out)
+                    return ({'error_no': 0, 'error_info': ''}, returnDf)
+                return None
             else:
-                returnDf = pandas.DataFrame(data_out)
-                return ({'error_no': 0, 'error_info': ''}, returnDf)
-            return None
-        else:
-            return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
-    except BaseException as x:
-        system_log.error(get_traceback_message())
-        raise x
+                return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
+        except BaseException as x:
+            system_log.error(get_traceback_message())
+            raise x
 @lru_cache(None)
 def cashflow_statement(security, report_types=None, start_year=None, end_year=None, fields=None, merge_type=None):
     return_data = {}
@@ -1452,28 +1454,29 @@ def cashflow_statement(security, report_types=None, start_year=None, end_year=No
             page_no += 1
             params['page_no'] = str(page_no)
             return_data['data'].extend(resp_data['data'])
-    data = return_data['data']
-    try:
-        if data:
-            dict1 = {}
-            data_out = []
-            for i in data:
-                for key, value in i.items():
-                    if isinstance(value, dict):
-                        dict1.update(value)
+    else:
+        data = return_data['data']
+        try:
+            if data:
+                dict1 = {}
+                data_out = []
+                for i in data:
+                    for key, value in i.items():
+                        if isinstance(value, dict):
+                            dict1.update(value)
+                            continue
+                        dict1[key] = value
                         continue
-                    dict1[key] = value
-                    continue
-                data_out.append(copy.deepcopy(dict1))
+                    data_out.append(copy.deepcopy(dict1))
+                else:
+                    returnDf = pandas.DataFrame(data_out)
+                    return ({'error_no': 0, 'error_info': ''}, returnDf)
+                return None
             else:
-                returnDf = pandas.DataFrame(data_out)
-                return ({'error_no': 0, 'error_info': ''}, returnDf)
-            return None
-        else:
-            return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
-    except BaseException as x:
-        system_log.error(get_traceback_message())
-        raise x
+                return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
+        except BaseException as x:
+            system_log.error(get_traceback_message())
+            raise x
 @lru_cache(None)
 def growth_ability(security, report_types=None, start_year=None, end_year=None, fields=None):
     return_data = {}
@@ -1529,21 +1532,22 @@ def growth_ability(security, report_types=None, start_year=None, end_year=None, 
             page_no += 1
             params['page_no'] = str(page_no)
             return_data['data'].extend(resp_data['data'])
-    data = return_data['data']
-    try:
-        if data:
-            data_out = []
-            for i in data:
-                data_out.append(i)
+    else:
+        data = return_data['data']
+        try:
+            if data:
+                data_out = []
+                for i in data:
+                    data_out.append(i)
+                else:
+                    returnDf = pandas.DataFrame(data_out)
+                    return ({'error_no': 0, 'error_info': ''}, returnDf)
+                return None
             else:
-                returnDf = pandas.DataFrame(data_out)
-                return ({'error_no': 0, 'error_info': ''}, returnDf)
-            return None
-        else:
-            return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
-    except BaseException as x:
-        system_log.error(get_traceback_message())
-        raise x
+                return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
+        except BaseException as x:
+            system_log.error(get_traceback_message())
+            raise x
 @lru_cache(None)
 def profit_ability(security, report_types=None, start_year=None, end_year=None, fields=None):
     return_data = {}
@@ -1599,21 +1603,22 @@ def profit_ability(security, report_types=None, start_year=None, end_year=None, 
             page_no += 1
             params['page_no'] = str(page_no)
             return_data['data'].extend(resp_data['data'])
-    data = return_data['data']
-    try:
-        if data:
-            data_out = []
-            for i in data:
-                data_out.append(i)
+    else:
+        data = return_data['data']
+        try:
+            if data:
+                data_out = []
+                for i in data:
+                    data_out.append(i)
+                else:
+                    returnDf = pandas.DataFrame(data_out)
+                    return ({'error_no': 0, 'error_info': ''}, returnDf)
+                return None
             else:
-                returnDf = pandas.DataFrame(data_out)
-                return ({'error_no': 0, 'error_info': ''}, returnDf)
-            return None
-        else:
-            return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
-    except BaseException as x:
-        system_log.error(get_traceback_message())
-        raise x
+                return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
+        except BaseException as x:
+            system_log.error(get_traceback_message())
+            raise x
 @lru_cache(None)
 def eps(security, report_types=None, start_year=None, end_year=None, fields=None):
     return_data = {}
@@ -1669,21 +1674,22 @@ def eps(security, report_types=None, start_year=None, end_year=None, fields=None
             page_no += 1
             params['page_no'] = str(page_no)
             return_data['data'].extend(resp_data['data'])
-    data = return_data['data']
-    try:
-        if data:
-            data_out = []
-            for i in data:
-                data_out.append(i)
+    else:
+        data = return_data['data']
+        try:
+            if data:
+                data_out = []
+                for i in data:
+                    data_out.append(i)
+                else:
+                    returnDf = pandas.DataFrame(data_out)
+                    return ({'error_no': 0, 'error_info': ''}, returnDf)
+                return None
             else:
-                returnDf = pandas.DataFrame(data_out)
-                return ({'error_no': 0, 'error_info': ''}, returnDf)
-            return None
-        else:
-            return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
-    except BaseException as x:
-        system_log.error(get_traceback_message())
-        raise x
+                return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
+        except BaseException as x:
+            system_log.error(get_traceback_message())
+            raise x
 @lru_cache(None)
 def cash_collection_ability(security, report_types=None, start_year=None, end_year=None, fields=None):
     return_data = {}
@@ -1739,21 +1745,22 @@ def cash_collection_ability(security, report_types=None, start_year=None, end_ye
             page_no += 1
             params['page_no'] = str(page_no)
             return_data['data'].extend(resp_data['data'])
-    data = return_data['data']
-    try:
-        if data:
-            data_out = []
-            for i in data:
-                data_out.append(i)
+    else:
+        data = return_data['data']
+        try:
+            if data:
+                data_out = []
+                for i in data:
+                    data_out.append(i)
+                else:
+                    returnDf = pandas.DataFrame(data_out)
+                    return ({'error_no': 0, 'error_info': ''}, returnDf)
+                return None
             else:
-                returnDf = pandas.DataFrame(data_out)
-                return ({'error_no': 0, 'error_info': ''}, returnDf)
-            return None
-        else:
-            return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
-    except BaseException as x:
-        system_log.error(get_traceback_message())
-        raise x
+                return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
+        except BaseException as x:
+            system_log.error(get_traceback_message())
+            raise x
 @lru_cache(None)
 def operating_ability(security, report_types=None, start_year=None, end_year=None, fields=None):
     return_data = {}
@@ -1809,21 +1816,22 @@ def operating_ability(security, report_types=None, start_year=None, end_year=Non
             page_no += 1
             params['page_no'] = str(page_no)
             return_data['data'].extend(resp_data['data'])
-    data = return_data['data']
-    try:
-        if data:
-            data_out = []
-            for i in data:
-                data_out.append(i)
+    else:
+        data = return_data['data']
+        try:
+            if data:
+                data_out = []
+                for i in data:
+                    data_out.append(i)
+                else:
+                    returnDf = pandas.DataFrame(data_out)
+                    return ({'error_no': 0, 'error_info': ''}, returnDf)
+                return None
             else:
-                returnDf = pandas.DataFrame(data_out)
-                return ({'error_no': 0, 'error_info': ''}, returnDf)
-            return None
-        else:
-            return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
-    except BaseException as x:
-        system_log.error(get_traceback_message())
-        raise x
+                return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
+        except BaseException as x:
+            system_log.error(get_traceback_message())
+            raise x
 @lru_cache(None)
 def debt_paying_ability(security, report_types=None, start_year=None, end_year=None, fields=None):
     return_data = {}
@@ -1879,21 +1887,22 @@ def debt_paying_ability(security, report_types=None, start_year=None, end_year=N
             page_no += 1
             params['page_no'] = str(page_no)
             return_data['data'].extend(resp_data['data'])
-    data = return_data['data']
-    try:
-        if data:
-            data_out = []
-            for i in data:
-                data_out.append(i)
+    else:
+        data = return_data['data']
+        try:
+            if data:
+                data_out = []
+                for i in data:
+                    data_out.append(i)
+                else:
+                    returnDf = pandas.DataFrame(data_out)
+                    return ({'error_no': 0, 'error_info': ''}, returnDf)
+                return None
             else:
-                returnDf = pandas.DataFrame(data_out)
-                return ({'error_no': 0, 'error_info': ''}, returnDf)
-            return None
-        else:
-            return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
-    except BaseException as x:
-        system_log.error(get_traceback_message())
-        raise x
+                return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
+        except BaseException as x:
+            system_log.error(get_traceback_message())
+            raise x
 @lru_cache(None)
 def share_change(security, start_year=None, end_year=None, fields=None):
     return_data = {}
@@ -1937,21 +1946,22 @@ def share_change(security, start_year=None, end_year=None, fields=None):
             page_no += 1
             params['page_no'] = str(page_no)
             return_data['data'].extend(resp_data['data'])
-    data = return_data['data']
-    try:
-        if data:
-            data_out = []
-            for i in data:
-                data_out.append(i)
+    else:
+        data = return_data['data']
+        try:
+            if data:
+                data_out = []
+                for i in data:
+                    data_out.append(i)
+                else:
+                    returnDf = pandas.DataFrame(data_out)
+                    return ({'error_no': 0, 'error_info': ''}, returnDf)
+                return None
             else:
-                returnDf = pandas.DataFrame(data_out)
-                return ({'error_no': 0, 'error_info': ''}, returnDf)
-            return None
-        else:
-            return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
-    except BaseException as x:
-        system_log.error(get_traceback_message())
-        raise x
+                return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
+        except BaseException as x:
+            system_log.error(get_traceback_message())
+            raise x
 def get_balance_statement(security, date=None, report_types=None, start_year=None, end_year=None, fields=None, date_type=None, merge_type=None):
     re_empty_data = pandas.DataFrame()
     re_data = pandas.DataFrame()
@@ -3582,6 +3592,7 @@ def get_option_info():
                         dict1.update(value)
                     else:
                         dict1[key] = value
+                        continue
                 data_out.append(copy.deepcopy(dict1))
             else:
                 return data_out
@@ -3653,8 +3664,9 @@ def get_cb_calender_info():
         except BaseException as x:
             system_log.error(get_traceback_message())
             df_info.append(pandas.DataFrame())
-    df_all = pandas.concat(df_info)
-    return df_all
+    else:
+        df_all = pandas.concat(df_info)
+        return df_all
 def get_cb_time_info():
     return_data = {}
     return_data['data'] = []
