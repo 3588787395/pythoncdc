@@ -13185,6 +13185,9 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                         pred_last = pred.get_last_instruction()
                         if pred_last and pred_last.opname == 'FOR_ITER':
                             return False
+                    has_match_pred = any(self._has_match_op(pred) for pred in block.predecessors)
+                    if not has_match_pred:
+                        return False
                 return True
         meaningful = [i for i in block.instructions if i.opname not in NOISE_OPS]
         has_copy = any(i.opname == 'COPY' for i in meaningful)
