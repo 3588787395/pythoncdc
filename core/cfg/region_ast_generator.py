@@ -12836,6 +12836,26 @@ AST 映射规则:
                 pre_instrs = []
                 continue
             if instr.opname == 'STORE_ATTR':
+                if pre_unpack_info is not None:
+                    pre_instrs.append(instr)
+                    attr_target = {
+                        'type': 'Attribute',
+                        'value': {'type': 'Name', 'id': instr.argval if instr.argval else f'var_{instr.arg}', 'ctx': 'Load'},
+                        'attr': instr.argval if instr.argval else f'var_{instr.arg}',
+                        'ctx': 'Store',
+                    }
+                    if len(pre_instrs) >= 2 and pre_instrs[-2].opname == 'LOAD_FAST':
+                        attr_target['value'] = {'type': 'Name', 'id': pre_instrs[-2].argval, 'ctx': 'Load', 'lineno': pre_instrs[-2].starts_line}
+                        attr_target['attr'] = instr.argval
+                    pre_unpack_info['targets'].append(attr_target)
+                    if len(pre_unpack_info['targets']) == pre_unpack_info['count']:
+                        target = {'type': 'Tuple', 'elts': pre_unpack_info['targets'], 'ctx': 'Store'}
+                        if pre_unpack_info['value']:
+                            pre_stmts.append({'type': 'Assign', 'targets': [target], 'value': pre_unpack_info['value']})
+                        pre_unpack_info = None
+                    pre_instrs = []
+                    pre_seen_store = True
+                    continue
                 pre_instrs.append(instr)
                 stmt = self._build_attr_assign(pre_instrs)
                 if stmt:
@@ -14658,13 +14678,22 @@ AST 映射规则:
         # 当 nested_elif_stmts=[] 且 region.elif_final_else=[] 时，原代码
         # 访问未初始化的 final_else_stmts 导致 UnboundLocalError，进而
         # 使整个函数体退化为 pass。修复：在函数入口初始化 final_else_stmts=[]。
+        _elif_trailing_continue = False
+        if (elif_body_stmts
+                and isinstance(elif_body_stmts[-1], dict)
+                and elif_body_stmts[-1].get('type') == 'Continue'
+                and not elif_orelse
+                and self._current_loop is not None):
+            _elif_trailing_continue = True
+            elif_body_stmts.pop()
         _elif_if_stmt = {'type': 'If', '_is_elif': True, 'test': elif_condition if elif_condition else {'type': 'Constant', 'value': True}, 'body': elif_body_stmts if elif_body_stmts else [{'type': 'Pass'}], 'orelse': elif_orelse}
         # 前置 elif 条件块中的赋值语句（如 `fields = re_fields`）。
         # 这些语句在语义上属于 elif 之前的外层函数体序列，但物理上位于
         # elif_cond_block 中，因此前置到返回列表。
-        if _elif_pre_stmts:
-            return list(_elif_pre_stmts) + [_elif_if_stmt]
-        return [_elif_if_stmt]
+        _elif_result = list(_elif_pre_stmts) + [_elif_if_stmt] if _elif_pre_stmts else [_elif_if_stmt]
+        if _elif_trailing_continue:
+            _elif_result.append({'type': 'Continue'})
+        return _elif_result
 
     def _extract_condition_for_elif_block(self, cond_block, region: IfRegion = None):
         cond_instrs = []
@@ -41359,6 +41388,16 @@ AST 映射规则:
                 _cjb_append_continue(_cjb_then_stmts, _cjb_then_entry)
                 _cjb_append_continue(_cjb_else_stmts, _cjb_else_entry)
 
+                _cjb_hoisted_continue = False
+                if (_cjb_then_stmts and _cjb_else_stmts
+                        and isinstance(_cjb_then_stmts[-1], dict)
+                        and _cjb_then_stmts[-1].get('type') == 'Continue'
+                        and isinstance(_cjb_else_stmts[-1], dict)
+                        and _cjb_else_stmts[-1].get('type') == 'Continue'):
+                    _cjb_then_stmts.pop()
+                    _cjb_else_stmts.pop()
+                    _cjb_hoisted_continue = True
+
                 if not _cjb_then_stmts:
                     _cjb_then_stmts = [{'type': 'Pass'}]
 
@@ -41371,6 +41410,8 @@ AST 映射规则:
                 if _cjb_pre_stmts:
                     stmts.extend(_cjb_pre_stmts)
                 stmts.append(_cjb_if_node)
+                if _cjb_hoisted_continue:
+                    stmts.append({'type': 'Continue'})
                 self.generated_blocks.add(block)
                 return stmts
 
