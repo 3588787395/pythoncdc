@@ -4920,6 +4920,27 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                     _08_visited = set()
                     _08_stack = list(non_return_successors)
                     _08_foreign_owned = False
+                    # [W28 fix] Compute break targets early for the first BFS too.
+                    # Without this, the first BFS doesn't know where while-else ends
+                    # and over-collects blocks past the while-else boundary.
+                    _08_break_targets = set()
+                    for _b in body_set:
+                        _b_last = _b.get_last_instruction()
+                        if _b_last and _b_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+                            _b_target = self.cfg.get_block_by_offset(_b_last.argval) if _b_last.argval is not None else None
+                            if _b_target and _b_target not in body_set and _b_target != header:
+                                _08_break_targets.add(_b_target)
+                    for _b in body_set:
+                        for _b_succ in _b.successors:
+                            if _b_succ in body_set or _b_succ == header:
+                                continue
+                            if _b_succ in _b.exception_successors:
+                                continue
+                            _b_succ_last = _b_succ.get_last_instruction()
+                            if _b_succ_last and _b_succ_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+                                _succ_target = self.cfg.get_block_by_offset(_b_succ_last.argval) if _b_succ_last.argval is not None else None
+                                if _succ_target and _succ_target not in body_set and _succ_target != header:
+                                    _08_break_targets.add(_succ_target)
                     while _08_stack:
                         _08_cur = _08_stack.pop()
                         if _08_cur in _08_visited or _08_cur in body_set:
@@ -4977,6 +4998,14 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                             continue
                         if self._is_outer_try_except_else_block(_08_cur, body_set):
                             continue
+                        # [W28 fix] 区域归约算法原则 2（每块唯一归属）：
+                        # break 目标是 while-else 之后的第一个块，不属于 else 子句。
+                        # 第一个 BFS 也必须排除 break 目标，否则 else_blocks 会
+                        # 吸收 break 后的所有顺序代码（与第二个 BFS 的 Round 04
+                        # 修复逻辑一致）。
+                        if _08_cur in _08_break_targets:
+                            _08_visited.add(_08_cur)
+                            continue
                         _08_visited.add(_08_cur)
                         _08_else_blocks.append(_08_cur)
                         if self._check_block_has_trailing_return_none(_08_cur):
@@ -4986,9 +5015,20 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                             continue
                         if _08_cur_last and _08_cur_last.opname in BACKWARD_JUMP_OPS:
                             continue
+                        # [W28 fix] POP_EXCEPT + JUMP_FORWARD/BACKWARD 结尾的块
+                        # 是 except handler 的退出路径，不属于 while-else 子句。
+                        _08_has_pop_except = any(i.opname == 'POP_EXCEPT' for i in _08_cur.instructions)
+                        if _08_has_pop_except and _08_cur_last and (
+                                _08_cur_last.opname == 'JUMP_FORWARD'
+                                or _08_cur_last.opname in BACKWARD_JUMP_OPS):
+                            continue
                         for _08_succ in _08_cur.successors:
                             if _08_succ not in _08_visited and _08_succ not in body_set:
                                 if not self._is_outer_try_except_else_block(_08_succ, body_set):
+                                    # [W28 fix] 不将 break 目标推入 BFS 栈
+                                    if _08_succ in _08_break_targets:
+                                        _08_visited.add(_08_succ)
+                                        continue
                                     _08_stack.append(_08_succ)
                     if _08_foreign_owned:
                         return None, natural_exit
@@ -5040,6 +5080,24 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                                     if _b_pred_last and _b_pred_last.opname in FORWARD_CONDITIONAL_JUMP_OPS:
                                         _break_targets.add(_b)
                                         break
+            # [W28 fix] Transitive break targets: body_set 内的块的后继块
+            # 可能不在 body_set 中（如 try body 内的 JUMP_FORWARD 出口块），
+            # 但该后继块本身跳到循环外——其目标才是真正的 break 目标。
+            # 例：block 678 (try body) → block 718 (JUMP_FORWARD) → block 874
+            # (while-else entry = break target)。旧逻辑只检查 body_set 内的块
+            # 的跳转目标，漏掉这种两跳 break 路径，导致 _break_targets 为空、
+            # BFS 扩展将 while-else 之后的代码吞入 else_blocks。
+            for _b in body_set:
+                for _b_succ in _b.successors:
+                    if _b_succ in body_set or _b_succ == header:
+                        continue
+                    if _b_succ in _b.exception_successors:
+                        continue
+                    _b_succ_last = _b_succ.get_last_instruction()
+                    if _b_succ_last and _b_succ_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+                        _succ_target = self.cfg.get_block_by_offset(_b_succ_last.argval) if _b_succ_last.argval is not None else None
+                        if _succ_target and _succ_target not in body_set and _succ_target != header:
+                            _break_targets.add(_succ_target)
         else:
             _break_targets = set()
             _cond_exit_set = set()
@@ -5076,6 +5134,17 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 if _08_cur_last and _08_cur_last.opname in ('RETURN_VALUE', 'RETURN_CONST', 'RERAISE'):
                     continue
                 if _08_cur_last and _08_cur_last.opname in BACKWARD_JUMP_OPS:
+                    continue
+                # [W28 fix] 区域归约算法原则 2（每块唯一归属）：
+                # POP_EXCEPT + JUMP_FORWARD 结尾的块是 except handler 的正常
+                # 退出路径，其 JUMP_FORWARD 目标是 try-except 之后的代码，
+                # 不属于 while-else 子句。BFS 跟踪此后继会将 try-except 之后
+                # 的代码吞入 while-else，导致 AST 生成器将这些代码放在
+                # while-else 内而非 try-except 之后，字节码与原始不匹配。
+                _08_has_pop_except = any(i.opname == 'POP_EXCEPT' for i in _08_cur.instructions)
+                if _08_has_pop_except and _08_cur_last and (
+                        _08_cur_last.opname == 'JUMP_FORWARD'
+                        or _08_cur_last.opname in BACKWARD_JUMP_OPS):
                     continue
                 for _08_succ in _08_cur.successors:
                     if _08_succ not in _08_ext_visited:
@@ -16864,6 +16933,63 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 if isinstance(_fe_br, LoopRegion):
                     if _fe_target == _fe_br.header_block or _fe_target == _fe_br.condition_block:
                         return None
+            # [R37 fix] Nested if inside else body misidentified as elif:
+            # When an IfRegion is inside a loop and its merge_block is the loop
+            # header (both branches end with continue), the else body may contain
+            # a nested if that also ends with continue. This nested if should NOT
+            # be treated as an elif condition — it's a regular else body with a
+            # nested conditional. Pattern:
+            #   if cond_a:
+            #       ...
+            #   else:
+            #       if cond_b:    # misidentified as elif cond_b
+            #           ...
+            #       else:
+            #           ...
+            #       continue
+            # Detect: the outer IfRegion's merge is the loop header, and the
+            # first_else's conditional successors both eventually reach the loop
+            # header (continue), indicating it's a complete nested if inside the
+            # else body rather than an elif chain element.
+            if (merge_ is not None
+                    and _fe_last is not None
+                    and _fe_last.opname in FORWARD_CONDITIONAL_JUMP_OPS):
+                _enclosing_loop = None
+                for _lr in self._filter_regions(self.regions or [], LoopRegion):
+                    if first_else in _lr.blocks:
+                        _enclosing_loop = _lr
+                        break
+                if _enclosing_loop is not None:
+                    _loop_header = getattr(_enclosing_loop, 'header_block', None)
+                    if _loop_header is not None and merge_ == _loop_header:
+                        _fe_cond_succs = first_else.conditional_successors
+                        if len(_fe_cond_succs) == 2:
+                            _fe_then_succ, _fe_else_succ = list(_fe_cond_succs)
+                            _both_reach_header = True
+                            for _fe_succ in (_fe_then_succ, _fe_else_succ):
+                                _reach_hdr = False
+                                _visited = set()
+                                _stack = [_fe_succ]
+                                while _stack:
+                                    _cur = _stack.pop()
+                                    if _cur in _visited:
+                                        continue
+                                    _visited.add(_cur)
+                                    if _cur == _loop_header:
+                                        _reach_hdr = True
+                                        break
+                                    if _cur.get_last_instruction():
+                                        _cur_last = _cur.get_last_instruction()
+                                        if _cur_last.opname in ('RETURN_VALUE', 'RETURN_CONST', 'RAISE_VARARGS', 'RERAISE'):
+                                            continue
+                                    for _nxt in _cur.successors:
+                                        if _nxt not in _visited:
+                                            _stack.append(_nxt)
+                                if not _reach_hdr:
+                                    _both_reach_header = False
+                                    break
+                            if _both_reach_header:
+                                return None
             # [R36 fix] Short-circuit jumps (JUMP_IF_FALSE_OR_POP, JUMP_IF_TRUE_OR_POP)
             # are value-expression operators (chained comparisons, BoolOp), not control
             # flow conditions. If the first else block ends with a short-circuit jump,

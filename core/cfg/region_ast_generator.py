@@ -17700,6 +17700,40 @@ AST 映射规则:
                         then_start_offsets2 = self._then_entry_offsets_excluding_connectors(region)
                         jumps_to_then2 = jump_target2 in then_start_offsets2
                         negate = jumps_to_then2 != if_true2
+                # [BoolOp or pattern] When cond_block ends with POP_JUMP_IF_TRUE
+                # (or/success short-circuit) jumping to merge_block, and
+                # then_blocks has exactly one block ending with POP_JUMP_IF_FALSE,
+                # and else_blocks is empty, this is `A or B` not `if not A: B`.
+                # CPython compiles `if A or B: <then>` as:
+                #   A; POP_JUMP_IF_TRUE → merge; B; POP_JUMP_IF_FALSE → after_then
+                #   merge: <then body>
+                # The region analyzer creates IfRegion(cond=A, then=[B_block],
+                # merge=<then body>, else=[]). Without this detection, the
+                # condition is negated to `not A` and B_block becomes the then
+                # body, producing `if not A: if not B: continue; <then>` instead
+                # of `if A or B: <then>`.
+                if (negate and if_true2 and not region.else_blocks
+                        and len(region.then_blocks) == 1):
+                    _or_tb = region.then_blocks[0]
+                    _or_tb_last = _or_tb.get_last_instruction()
+                    if (_or_tb_last is not None
+                            and _or_tb_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | BACKWARD_CONDITIONAL_JUMP_OPS)
+                            and _or_tb_last.opname not in NONE_CHECK_OPS
+                            and 'IF_FALSE' in _or_tb_last.opname):
+                        _or_rhs_instrs = [i for i in _or_tb.instructions
+                                          if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')
+                                          and i is not _or_tb_last]
+                        _or_rhs_expr = self.expr_reconstructor.reconstruct(_or_rhs_instrs) if _or_rhs_instrs else None
+                        if _or_rhs_expr is not None:
+                            _merge_blk = getattr(region, 'merge_block', None)
+                            _or_then_target = self.cfg.get_block_by_offset(last2.argval) if last2.argval is not None else None
+                            self._or_then_block = _or_then_target
+                            _or_else_candidate = self.cfg.get_block_by_offset(_or_tb_last.argval) if _or_tb_last.argval is not None else None
+                            self._or_else_block = _or_else_candidate
+                            self._or_rhs_block = _or_tb
+                            self.generated_blocks.add(_or_tb)
+                            negate = False
+                            expr = {'type': 'BoolOp', 'op': 'or', 'values': [expr, _or_rhs_expr]}
                 expr = self._convert_lambda_function_objects(expr)
                 return _negate_expr(expr) if negate else expr
         return {'type': 'Constant', 'value': True}
