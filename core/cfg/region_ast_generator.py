@@ -29242,9 +29242,6 @@ AST 映射规则:
                 self.generated_blocks.add(block)
             if region.merge_block:
                 self.generated_blocks.add(region.merge_block)
-            # [R67] BoolOp with STORE_ATTR target (e.g. `obj.attr = a or b`).
-            # When value_target is None but merge_block contains STORE_ATTR,
-            # the BoolOp expression is the rhs of an attribute assignment.
             if (not region.value_target
                     and not getattr(region, 'is_augassign', False)
                     and region.merge_block is not None):
@@ -29255,6 +29252,71 @@ AST 映射规则:
                     if _mi_r67.opname == 'STORE_ATTR':
                         _sa_r67 = _ii_r67
                         break
+                # [Round 02] BoolOp with expression-statement continuation:
+                # When merge_block has POP_TOP before STORE_ATTR, the BoolOp
+                # result is consumed by a CALL (expression statement like
+                # `ptvsd.wait_for_attach(timeout=config.timeout or 10)`),
+                # not by the STORE_ATTR. The STORE_ATTR is a subsequent
+                # independent statement. Detect POP_TOP before STORE_ATTR
+                # and emit the expression statement instead.
+                _pop_top_before_sa_r02 = False
+                _pop_top_idx_r02 = None
+                if _sa_r67 is not None and _sa_r67 > 0:
+                    for _ii_r02, _mi_r02 in enumerate(_mb_r67[:_sa_r67]):
+                        if _mi_r02.opname == 'POP_TOP':
+                            _pop_top_before_sa_r02 = True
+                            _pop_top_idx_r02 = _ii_r02
+                            break
+                if _pop_top_before_sa_r02 and _pop_top_idx_r02 is not None and _pop_top_idx_r02 > 0:
+                    _pre_pop_r02 = _mb_r67[:_pop_top_idx_r02]
+                    _init_stack_r02 = [boolop_expr]
+                    if op_chain:
+                        _fcb_r02 = op_chain[0][0]
+                        _pinstrs_r02 = self.region_analyzer.identify_block_prefix_instructions(_fcb_r02)
+                        _STORE_CHK_R02 = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
+                                          'STORE_DEREF', 'STORE_ATTR', 'STORE_SUBSCR')
+                        if _pinstrs_r02:
+                            _last_store_idx_r02 = -1
+                            for _pi_r02, _pinstr_r02 in enumerate(_pinstrs_r02):
+                                if _pinstr_r02.opname in _STORE_CHK_R02:
+                                    _last_store_idx_r02 = _pi_r02
+                            _true_prefix_r02 = _pinstrs_r02[_last_store_idx_r02 + 1:] if _last_store_idx_r02 >= 0 else _pinstrs_r02
+                            if _true_prefix_r02:
+                                try:
+                                    self.expr_reconstructor.reconstruct(_true_prefix_r02)
+                                    _res_r02 = [s for s in self.expr_reconstructor.stack
+                                               if s.get('type') != 'PUSH_NULL']
+                                    if _res_r02:
+                                        _res_r02[-1] = boolop_expr
+                                        _init_stack_r02 = _res_r02
+                                except Exception:
+                                    pass
+                    try:
+                        _spliced_r02 = self.expr_reconstructor.reconstruct(
+                            _pre_pop_r02, initial_stack=_init_stack_r02)
+                        if _spliced_r02 is not None:
+                            results.append({'type': 'Expr', 'value': _spliced_r02})
+                            self._generated_regions.add(id(region))
+                            _orig_instrs_r02 = region.merge_block.instructions
+                            _pop_instr_r02 = _mb_r67[_pop_top_idx_r02]
+                            _pop_store_idx_r02 = _orig_instrs_r02.index(_pop_instr_r02)
+                            _remaining_r02 = _orig_instrs_r02[_pop_store_idx_r02 + 1:]
+                            if _remaining_r02:
+                                region.merge_block.instructions = _remaining_r02
+                                self.generated_blocks.discard(region.merge_block)
+                                if hasattr(region.merge_block, 'start_offset') and region.merge_block.start_offset in self.generated_offsets:
+                                    self.generated_offsets.discard(region.merge_block.start_offset)
+                                _remaining_stmts_r02 = self._generate_block_statements(region.merge_block)
+                                if _remaining_stmts_r02:
+                                    results.extend(_remaining_stmts_r02)
+                                region.merge_block.instructions = _orig_instrs_r02
+                                self.generated_blocks.add(region.merge_block)
+                            return results
+                    except Exception:
+                        pass
+                # [R67] BoolOp with STORE_ATTR target (e.g. `obj.attr = a or b`).
+                # When value_target is None but merge_block contains STORE_ATTR,
+                # the BoolOp expression is the rhs of an attribute assignment.
                 if _sa_r67 is not None and _sa_r67 > 0:
                     _obj_r67 = self.expr_reconstructor.reconstruct(_mb_r67[:_sa_r67])
                     _attr_r67 = _mb_r67[_sa_r67].argval
@@ -30798,6 +30860,18 @@ AST 映射规则:
                                        if id(i) not in _trapped_ids]
             last_cond_instr = cond_block.get_last_instruction()
 
+            # [Round2 fix] func_call_skip: skip the full method call chain prefix
+            # in the ternary condition_block. CPython emits method calls like
+            # `app_log.info(format(len(x) if x else 0))` as:
+            #   PUSH_NULL + LOAD_FAST app_log + LOAD_ATTR info
+            #   + LOAD_CONST '...' + LOAD_METHOD format
+            #   + <ternary condition> + POP_JUMP_IF_FALSE
+            # The PUSH_NULL + LOAD_FAST + LOAD_ATTR + LOAD_CONST + LOAD_METHOD
+            # prefix is the preload of the outer call, not part of the ternary
+            # condition. Without extending the skip past LOAD_ATTR and its
+            # subsequent argument preloading (LOAD_CONST + LOAD_METHOD), the
+            # condition reconstruction starts at LOAD_ATTR with no object on
+            # stack, producing `app_log(expr)` instead of `app_log.info(...)`.
             func_call_skip = 0
             push_null_idx = None
             for idx, i in enumerate(cond_instrs_raw):
@@ -30812,6 +30886,46 @@ AST 映射规则:
                         obj_i = cond_instrs_raw[push_null_idx - 1]
                         if obj_i.opname.startswith('LOAD_'):
                             func_call_skip = push_null_idx + 2
+                    # Extend skip past LOAD_ATTR method chain after PUSH_NULL+LOAD_*:
+                    # PUSH_NULL + LOAD_FAST obj + LOAD_ATTR method leaves [null, bound_method]
+                    # on the stack. Any subsequent LOAD_CONST + LOAD_METHOD that loads
+                    # the next method's receiver string and method is still preload.
+                    _skip_pos = func_call_skip
+                    while _skip_pos < len(cond_instrs_raw):
+                        _si = cond_instrs_raw[_skip_pos]
+                        if _si is last_cond_instr:
+                            break
+                        # LOAD_ATTR after the callable extends the method chain
+                        if _si.opname == 'LOAD_ATTR':
+                            _skip_pos += 1
+                            continue
+                        # LOAD_CONST + LOAD_METHOD: argument preloading for inner call
+                        if _si.opname == 'LOAD_CONST' and _skip_pos + 1 < len(cond_instrs_raw):
+                            _sn = cond_instrs_raw[_skip_pos + 1]
+                            if _sn.opname == 'LOAD_METHOD':
+                                _skip_pos += 2
+                                continue
+                        # LOAD_CONST alone could be a simple argument preload
+                        if _si.opname == 'LOAD_CONST':
+                            _skip_pos += 1
+                            continue
+                        # LOAD_METHOD standalone: chained method call preload
+                        if _si.opname == 'LOAD_METHOD':
+                            _skip_pos += 1
+                            continue
+                        break
+                    # Only extend if we actually found more preload instructions
+                    # and there are meaningful instructions after (the real condition)
+                    if _skip_pos > func_call_skip:
+                        _has_cond_after = False
+                        for _fk in range(_skip_pos, len(cond_instrs_raw)):
+                            if cond_instrs_raw[_fk] is last_cond_instr:
+                                break
+                            if cond_instrs_raw[_fk].opname not in ('PRECALL', 'CALL', 'NOP', 'CACHE'):
+                                _has_cond_after = True
+                                break
+                        if _has_cond_after:
+                            func_call_skip = _skip_pos
 
             # CPython 3.11+ LOAD_GLOBAL with arg & 1 == 1
             # pushes an implicit NULL before the value (function call
@@ -31240,8 +31354,16 @@ AST 映射规则:
             # pre-statement 而返回空列表，merge 块消费重建缺 preload 参数。
             # 依「每块唯一归属」：前导语句归父序列 pre_stmts，栈上前导表达式
             # 归 TernaryRegion 父消费表达式。
+            # [Round2 fix] When func_call_skip > 0, cond_instrs already
+            # excludes the preload prefix. Setting _ternary_cond_start_offset
+            # from cond_instrs would trim the preload from
+            # _compute_ternary_cond_preload_exprs, causing it to return
+            # empty preload_exprs. Use the raw (un-skipped) offset instead.
             if cond_start_idx < len(cond_instrs):
-                region._ternary_cond_start_offset = cond_instrs[cond_start_idx].offset
+                if func_call_skip > 0 and cond_start_idx == 0:
+                    pass
+                else:
+                    region._ternary_cond_start_offset = cond_instrs[cond_start_idx].offset
 
         # 仅当 _nested_* 未预构建时，从 innermost true/false block 重建。
         if true_expr is None:

@@ -18364,8 +18364,39 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     func_i = instrs[push_null_idx + 1] if instrs[push_null_idx].opname == 'PUSH_NULL' else instrs[push_null_idx]
                     if func_i.opname in ('LOAD_NAME', 'LOAD_GLOBAL',
                                          'LOAD_FAST', 'LOAD_DEREF'):
+                        # [Round2 fix] Extend func_call_info past LOAD_ATTR method chain.
+                        # CPython emits `app_log.error(format(ternary))` as
+                        # PUSH_NULL + LOAD_FAST app_log + LOAD_ATTR error + ...
+                        # Without this, func_call_info only captures `app_log`
+                        # (missing .error), causing _generate_ternary to generate
+                        # `app_log(ternary)` instead of `app_log.error(format(ternary))`.
+                        _func_expr = {'type': 'Name', 'id': func_i.argval, 'ctx': 'Load'}
+                        _obj_chain_idx = push_null_idx + 2
+                        while _obj_chain_idx < len(instrs):
+                            _chain_i = instrs[_obj_chain_idx]
+                            # LOAD_ATTR after the base object extends the method chain
+                            if _chain_i.opname == 'LOAD_ATTR':
+                                _func_expr = {
+                                    'type': 'Attribute',
+                                    'value': _func_expr,
+                                    'attr': _chain_i.argval,
+                                    'ctx': 'Load',
+                                }
+                                _obj_chain_idx += 1
+                                continue
+                            # Stop at instruction types that indicate the method
+                            # chain prefix has ended (argument loading, condition test)
+                            if _chain_i.opname in ('LOAD_CONST', 'LOAD_METHOD',
+                                                   'LOAD_FAST', 'LOAD_NAME',
+                                                   'LOAD_GLOBAL', 'LOAD_DEREF',
+                                                   'PRECALL', 'CALL',
+                                                   'IMPORT_NAME', 'IMPORT_FROM'):
+                                break
+                            if _chain_i.opname in FORWARD_CONDITIONAL_JUMP_OPS:
+                                break
+                            break
                         return 'call', {
-                            'func': {'type': 'Name', 'id': func_i.argval, 'ctx': 'Load'},
+                            'func': _func_expr,
                         }, None, None
                     elif func_i.opname == 'LOAD_ATTR':
                         obj_i = instrs[push_null_idx - 1] if push_null_idx > 0 else None
