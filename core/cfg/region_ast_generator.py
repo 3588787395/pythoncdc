@@ -15490,8 +15490,6 @@ AST 映射规则:
                     break
             _should_emit = False
             if not _mb_in_nested_structural:
-                # 检查 R15-N5 触发条件：merge_block 是嵌套 LoopRegion 的 for_iter_exit
-                # 同时检查 then_blocks 和 else_blocks
                 _then_block_set = set(region.then_blocks)
                 _else_block_set = set(region.else_blocks or [])
                 for _lr in self.region_analyzer.regions:
@@ -15505,6 +15503,37 @@ AST 映射规则:
                                                    or _lr.entry in _else_block_set):
                         _should_emit = True
                         break
+                if not _should_emit:
+                    for _tr in self.region_analyzer.regions:
+                        if not isinstance(_tr, TryExceptRegion):
+                            continue
+                        if _tr is region:
+                            continue
+                        _tr_entry = getattr(_tr, 'entry', None)
+                        if _tr_entry is None or _tr_entry not in _then_block_set:
+                            continue
+                        if region.else_blocks:
+                            continue
+                        _try_has_return = False
+                        _try_body = getattr(_tr, 'try_blocks', [])
+                        if _try_body:
+                            _tbl = _try_body[-1].get_last_instruction()
+                            if _tbl and _tbl.opname == 'RETURN_VALUE':
+                                _try_has_return = True
+                        if not _try_has_return:
+                            continue
+                        _handler_jumps_to_merge = False
+                        for _, _, _hblocks in (_tr.except_handlers or []):
+                            if _hblocks:
+                                _hlast = _hblocks[-1].get_last_instruction()
+                                if _hlast and _hlast.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE') and _hlast.argval is not None:
+                                    _hjmp_target = self.cfg.get_block_by_offset(_hlast.argval)
+                                    if _hjmp_target is region.merge_block:
+                                        _handler_jumps_to_merge = True
+                                        break
+                        if _handler_jumps_to_merge:
+                            _should_emit = True
+                            break
             if _should_emit:
                 # [W23 修复·共享尾跨层唯一归属] 当嵌套内层 IfRegion 与外层
                 # IfRegion 的 merge_block 为同一块（check_limit：is_trade 臂、
@@ -15558,6 +15587,9 @@ AST 映射规则:
                     self.generated_offsets.add(region.merge_block.start_offset)
                 else:
                     _post_if_stmts = self._generate_block_statements(region.merge_block)
+                for _pis in (_post_if_stmts if isinstance(_post_if_stmts, list) else []):
+                    if isinstance(_pis, dict) and _pis.get('type') == 'Return':
+                        _pis['_explicit_return'] = True
                 if _post_if_stmts:
                     if isinstance(if_result, list):
                         if_result = if_result + _post_if_stmts

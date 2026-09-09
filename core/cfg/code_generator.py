@@ -2310,6 +2310,35 @@ class CodeGenerator:
                         # LOAD_CONST None + RETURN_VALUE 指令序列）。
                         _is_after_try = (isinstance(_second_last, ASTTry)
                                          or (isinstance(_second_last, dict) and _second_last.get('type') == 'Try'))
+                        _is_after_if_try_return = False
+                        if isinstance(_second_last, ASTIf):
+                            _if_body = getattr(_second_last, '_body', None)
+                            if _if_body:
+                                _body_nodes = getattr(_if_body, 'nodes', [_if_body]) if hasattr(_if_body, 'nodes') else [_if_body]
+                                for _bs in _body_nodes:
+                                    if isinstance(_bs, ASTTry):
+                                        _try_body = getattr(_bs, '_body', None)
+                                        if _try_body:
+                                            _try_nodes = getattr(_try_body, 'nodes', [_try_body]) if hasattr(_try_body, 'nodes') else [_try_body]
+                                            for _ts in _try_nodes:
+                                                if isinstance(_ts, ASTReturn):
+                                                    _is_after_if_try_return = True
+                                                    break
+                                        if _is_after_if_try_return:
+                                            break
+                        elif isinstance(_second_last, dict) and _second_last.get('type') == 'If':
+                            _if_body = _second_last.get('body', [])
+                            if isinstance(_if_body, list):
+                                for _bs in _if_body:
+                                    if isinstance(_bs, dict) and _bs.get('type') == 'Try':
+                                        _try_body = _bs.get('body', [])
+                                        if isinstance(_try_body, list):
+                                            for _ts in _try_body:
+                                                if isinstance(_ts, dict) and _ts.get('type') == 'Return':
+                                                    _is_after_if_try_return = True
+                                                    break
+                                        if _is_after_if_try_return:
+                                            break
                         if _is_pass:
                             pass
                         elif _is_after_try:
