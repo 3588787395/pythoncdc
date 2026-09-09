@@ -2856,10 +2856,35 @@ class RegionASTGenerator:
             # 其余 ternary 块（cond/true/false）归属 TernaryRegion。
             # 普遍性: 覆盖 `with a as x, f(ternary) as y` / `with a, ternary:`
             # 等所有 ternary merge_block 作为嵌套 WithRegion entry 的形态。
+            # [P0 fix] 但当 ternary 的 STORE_* 结果与 with 上下文表达式共存
+            # 于同一 merge_block 时（如 `mode = w if flag else a` 的 STORE_FAST
+            # mode 之后紧接 LOAD_GLOBAL FileLock … BEFORE_WITH），ternary
+            # 是独立的赋值语句而非 with 上下文，不应跳过。判据：merge_block
+            # 在 STORE_* 之后仍有实质性指令（LOAD/CALL 等直至 BEFORE_WITH）。
+            # 此时 ternary 正常生成，WithRegion 由 _generate_try_body 的
+            # Ternary-With overlap fix 在 ternary 生成后补充生成。
             if not should_skip and region.merge_block is not None:
                 for r in self.regions:
                     if (r is not region and isinstance(r, WithRegion)
                             and r.entry is region.merge_block):
+                        _mb_has_post_store_with_ctx = False
+                        _mb_instrs = [i for i in region.merge_block.instructions
+                                      if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                        _store_idx = None
+                        for _si, _mi in enumerate(_mb_instrs):
+                            if _mi.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF', 'STORE_SUBSCR', 'STORE_ATTR'):
+                                _store_idx = _si
+                        if _store_idx is not None:
+                            _post_store_instrs = _mb_instrs[_store_idx + 1:]
+                            _has_meaningful = any(
+                                i.opname in ('LOAD_GLOBAL', 'LOAD_FAST', 'LOAD_NAME', 'LOAD_ATTR',
+                                             'LOAD_METHOD', 'PRECALL', 'CALL', 'BEFORE_WITH',
+                                             'BEFORE_ASYNC_WITH', 'IMPORT_NAME')
+                                for i in _post_store_instrs)
+                            if _has_meaningful:
+                                _mb_has_post_store_with_ctx = True
+                        if _mb_has_post_store_with_ctx:
+                            break
                         should_skip = True
                         for _b in region.blocks:
                             if _b is region.merge_block:
@@ -17535,11 +17560,25 @@ AST 映射规则:
                         if _or_rhs_block is None and _next.get_last_instruction() and _next.get_last_instruction().opname in (FORWARD_CONDITIONAL_JUMP_OPS | BACKWARD_CONDITIONAL_JUMP_OPS):
                             _or_rhs_block = _next
                 if _or_rhs_block is not None:
-                    _rhs_last = _or_rhs_block.get_last_instruction()
-                    if _rhs_last and _rhs_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | BACKWARD_CONDITIONAL_JUMP_OPS) and _rhs_last.argval is not None:
-                        _or_else_candidate = self.cfg.get_block_by_offset(_rhs_last.argval)
-                        if _or_else_candidate:
-                            _or_else_block = _or_else_candidate
+                    _rhs_ir_else = None
+                    for _rhs_ir in self.region_analyzer.regions:
+                        if (isinstance(_rhs_ir, IfRegion)
+                                and _rhs_ir.entry is _or_rhs_block
+                                and getattr(_rhs_ir, 'chained_compare_ops', None)
+                                and len(_rhs_ir.chained_compare_ops) >= 2
+                                and getattr(_rhs_ir, 'chained_compare_blocks', None)):
+                            _rhs_cc_last = _rhs_ir.chained_compare_blocks[-1].get_last_instruction()
+                            if _rhs_cc_last and _rhs_cc_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | BACKWARD_CONDITIONAL_JUMP_OPS) and _rhs_cc_last.argval is not None:
+                                _rhs_ir_else = self.cfg.get_block_by_offset(_rhs_cc_last.argval)
+                            break
+                    if _rhs_ir_else is not None:
+                        _or_else_block = _rhs_ir_else
+                    else:
+                        _rhs_last = _or_rhs_block.get_last_instruction()
+                        if _rhs_last and _rhs_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | BACKWARD_CONDITIONAL_JUMP_OPS) and _rhs_last.argval is not None:
+                            _or_else_candidate = self.cfg.get_block_by_offset(_rhs_last.argval)
+                            if _or_else_candidate:
+                                _or_else_block = _or_else_candidate
                 # [Cluster 4] Negate-decision fallback: when there is no
                 # `or` rhs block (plain chained compare, or `not <chain>`),
                 # the branch-deciding jump is the LAST chain block's
@@ -17553,13 +17592,29 @@ AST 映射规则:
                         and last_cc.opname in (FORWARD_CONDITIONAL_JUMP_OPS | BACKWARD_CONDITIONAL_JUMP_OPS))
                     else cond_block.get_last_instruction())
                 if _or_rhs_block is not None:
-                    _rhs_instrs = [i for i in _or_rhs_block.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                    _rhs_last = _or_rhs_block.get_last_instruction()
-                    if _rhs_last and _rhs_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | BACKWARD_CONDITIONAL_JUMP_OPS):
-                        _rhs_pure = [i for i in _rhs_instrs if i != _rhs_last]
+                    _rhs_chained_compare = None
+                    for _rhs_ir in self.region_analyzer.regions:
+                        if (isinstance(_rhs_ir, IfRegion)
+                                and _rhs_ir.entry is _or_rhs_block
+                                and getattr(_rhs_ir, 'chained_compare_ops', None)
+                                and len(_rhs_ir.chained_compare_ops) >= 2
+                                and getattr(_rhs_ir, 'chained_compare_blocks', None)):
+                            _rhs_chained_compare = self._build_chained_compare_from_region_data(_rhs_ir)
+                            if _rhs_chained_compare is not None:
+                                for _rhs_cb in _rhs_ir.chained_compare_blocks:
+                                    self.generated_blocks.add(_rhs_cb)
+                                self.generated_blocks.add(_or_rhs_block)
+                                break
+                    if _rhs_chained_compare is not None:
+                        _rhs_expr = _rhs_chained_compare
                     else:
-                        _rhs_pure = _rhs_instrs
-                    _rhs_expr = self.expr_reconstructor.reconstruct(_rhs_pure) if _rhs_pure else None
+                        _rhs_instrs = [i for i in _or_rhs_block.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                        _rhs_last = _or_rhs_block.get_last_instruction()
+                        if _rhs_last and _rhs_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | BACKWARD_CONDITIONAL_JUMP_OPS):
+                            _rhs_pure = [i for i in _rhs_instrs if i != _rhs_last]
+                        else:
+                            _rhs_pure = _rhs_instrs
+                        _rhs_expr = self.expr_reconstructor.reconstruct(_rhs_pure) if _rhs_pure else None
                     if _rhs_expr:
                         self.generated_blocks.add(_or_rhs_block)
                         compare_expr = {'type': 'BoolOp', 'op': 'or', 'values': [compare_expr, _rhs_expr]}
@@ -20730,6 +20785,35 @@ AST 映射规则:
                             body_stmts.append(nested_ast)
                     for b in nr.blocks:
                         self.generated_blocks.add(b)
+                    # [P0/Ternary-With overlap fix] TernaryRegion 的 merge_block
+                    # 可能同时是 WithRegion 的 entry（如 `mode = w if flag else a`
+                    # 赋值与 `with FileLock(...):` 共享同一基本块，STORE_FAST mode
+                    # 在 offset 420、LOAD_GLOBAL FileLock 在 422）。TernaryRegion
+                    # 生成后标记了 merge_block 为 generated，WithRegion 的入口被
+                    # 消费导致 with 语句整体丢失。修复：检测 TernaryRegion 的
+                    # merge_block 是否也是某个 WithRegion 的 entry，若是则解除
+                    # WithRegion 入口及 body 块的 generated 标记，并立即生成
+                    # WithRegion 作为后续语句追加到 try body。
+                    if isinstance(nr, TernaryRegion) and nr.merge_block is not None:
+                        _overlap_with_region = None
+                        for _owr in self.region_analyzer.regions:
+                            if (isinstance(_owr, WithRegion)
+                                    and _owr.entry is nr.merge_block
+                                    and id(_owr) not in self._generated_regions
+                                    and id(_owr) not in self._generating_regions):
+                                _overlap_with_region = _owr
+                                break
+                        if _overlap_with_region is not None:
+                            for _owb in _overlap_with_region.blocks:
+                                self.generated_blocks.discard(_owb)
+                            _owr_ast = self._generate_region(_overlap_with_region)
+                            if _owr_ast:
+                                if isinstance(_owr_ast, list):
+                                    body_stmts.extend(_owr_ast)
+                                else:
+                                    body_stmts.append(_owr_ast)
+                            for _owb in _overlap_with_region.blocks:
+                                self.generated_blocks.add(_owb)
                     is_nested_region_entry = True
                     break
             if not is_nested_region_entry:
@@ -22555,7 +22639,22 @@ AST 映射规则:
             _outer_finally = None
 
             orelse_stmts = None
-            if region.else_blocks and region.has_else:
+            # [TRY_EXCEPT_ELSE_MISORDER fix] CPython try/except/else semantics:
+            # the else clause runs ONLY when the try block completes normally
+            # (no exception AND no return/break/continue). If the try body
+            # ends with a Return/Break/Continue statement, there is no else
+            # clause. The region analyzer should have already caught this via
+            # _try_body_terminates_abnormally, but as a safety net we also
+            # check the generated body_stmts. This prevents `else: return x`
+            # when the return was originally in the try body.
+            _try_body_terminates_abnormally = False
+            if body_stmts:
+                _last_stmt = body_stmts[-1]
+                if isinstance(_last_stmt, dict):
+                    _last_type = _last_stmt.get('type')
+                    if _last_type in ('Return', 'Break', 'Continue', 'Raise'):
+                        _try_body_terminates_abnormally = True
+            if region.else_blocks and region.has_else and not _try_body_terminates_abnormally:
                 _filtered_else = list(region.else_blocks)
                 # [R09 fix] try-else pattern: nested TryExceptRegion whose entry
                 # is between try_offset_end and first handler belongs to the else
@@ -29492,7 +29591,11 @@ AST 映射规则:
                         if _first_store_idx >= 0:
                             _post_store_clean = []
                             _cond_jump_r89 = None
+                            _before_with_idx = None
                             for _pi in _merge_instrs[_first_store_idx + 1:]:
+                                if _pi.opname in ('BEFORE_WITH', 'BEFORE_ASYNC_WITH'):
+                                    _before_with_idx = len(_post_store_clean)
+                                    break
                                 if _pi.opname in ('JUMP_FORWARD', 'JUMP_BACKWARD',
                                                   'JUMP_ABSOLUTE', 'JUMP_BACKWARD_NO_INTERRUPT'):
                                     break
@@ -29500,6 +29603,8 @@ AST 映射规则:
                                     _cond_jump_r89 = _pi
                                     break
                                 _post_store_clean.append(_pi)
+                            if _before_with_idx is not None:
+                                _post_store_clean = []
                             # [R89] Region reduction principle 2 (unique ownership):
                             # merge_block post-store instructions may contain an if
                             # condition (e.g. `if 'name' in my_dict: value = ...`).
@@ -32989,6 +33094,14 @@ AST 映射规则:
                                         and _r.metadata.get('for_iter_setup') is region.merge_block):
                                     _shared_with_loop_for_iter_setup = True
                                     break
+                        _shared_with_with_region_entry = False
+                        if _non_noise_remaining and region.merge_block is not None:
+                            for _r in self.regions:
+                                if (isinstance(_r, WithRegion)
+                                        and _r is not region
+                                        and _r.entry is region.merge_block):
+                                    _shared_with_with_region_entry = True
+                                    break
                         _is_trivial_ret = False
                         if len(_non_noise_remaining) <= 2:
                             _no_pop = [i for i in _non_noise_remaining
@@ -33016,6 +33129,14 @@ AST 映射规则:
                             # merge_block 同时是嵌套 IfRegion 的
                             # entry/condition_block；STORE_* 之后的指令属于嵌套
                             # IfRegion 的条件，不发射为独立语句。
+                            pass
+                        elif _shared_with_with_region_entry:
+                            # merge_block 同时是 WithRegion 的 entry；STORE_* 之后的
+                            # 指令（with context expression + BEFORE_WITH）属于
+                            # WithRegion，不应被 ternary 发射为独立 Expr 语句。
+                            # 典型场景: `mode = 'w' if flag else 'a'; with FileLock(f): ...`
+                            # 编译器将 STORE_FAST mode 与 LOAD_GLOBAL FileLock + ...
+                            # + BEFORE_WITH 合并到同一基本块。
                             pass
                         elif _shared_with_loop_for_iter_setup:
                             # 区域归约算法原则 2（每块唯一归属）
@@ -38940,6 +39061,36 @@ AST 映射规则:
                         self.generated_blocks.add(block)
                         self.generated_offsets.add(block.start_offset)
                         return [{'type': 'Break'}]
+
+
+
+        # for-loop iterator cleanup + return: when a block inside a
+        # for-loop has only POP_TOP (iterator cleanup) and its
+        # successor is a return block with a non-None value, the
+        # POP_TOP is compiler-generated cleanup before a return
+        # statement inside the loop. Generate the return statement.
+        # Pattern: block=[POP_TOP] -> succ=[LOAD_CONST val, RETURN_VALUE]
+        # where val is not None.
+        if self._loop_depth > 0:
+            _m_for_ret = [i for i in block.instructions
+                          if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+            _m_no_pop_for_ret = [i for i in _m_for_ret if i.opname != 'POP_TOP']
+            if not _m_no_pop_for_ret and any(i.opname == 'POP_TOP' for i in _m_for_ret):
+                for _ret_succ in block.successors:
+                    if any(i.opname in ('RETURN_VALUE', 'RETURN_CONST')
+                           for i in _ret_succ.instructions):
+                        _ret_stmts = self._generate_block_statements(_ret_succ)
+                        if _ret_stmts and len(_ret_stmts) == 1 and isinstance(_ret_stmts[0], dict):
+                            if _ret_stmts[0].get('type') == 'Return':
+                                _rv = _ret_stmts[0].get('value')
+                                if _rv and not (isinstance(_rv, dict)
+                                                and _rv.get('type') == 'Constant'
+                                                and _rv.get('value') is None):
+                                    self.generated_blocks.add(block)
+                                    self.generated_blocks.add(_ret_succ)
+                                    self.generated_offsets.add(block.start_offset)
+                                    self.generated_offsets.add(_ret_succ.start_offset)
+                                    return _ret_stmts
 
         # 移除自赋值 peephole（LOAD_FAST x + STORE_FAST x → Pass）。
         # 该模式匹配属于跨层启发式规则，违反区域归约算法原则 4（入口引用语义）

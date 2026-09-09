@@ -5565,6 +5565,28 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                                     continue
                                 continue
                             break_blocks_set.add(s)
+                            _s_only_pop = (not _s_meaningful
+                                           and any(i.opname == 'POP_TOP' for i in s.instructions
+                                                   if i.opname not in NOISE_OPS))
+                            if _s_only_pop:
+                                for _ss in s.successors:
+                                    if any(i.opname in ('RETURN_VALUE', 'RETURN_CONST')
+                                           for i in _ss.instructions):
+                                        _ret_val_instrs = [i for i in _ss.instructions
+                                                           if i.opname not in NOISE_OPS
+                                                           and i.opname not in ('RETURN_VALUE', 'RETURN_CONST')]
+                                        _is_non_none_return = False
+                                        if _ret_val_instrs:
+                                            _last_rvi = _ret_val_instrs[-1]
+                                            if _last_rvi.opname == 'LOAD_CONST' and _last_rvi.argval is not None:
+                                                _is_non_none_return = True
+                                            elif _last_rvi.opname in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF', 'LOAD_ATTR'):
+                                                _is_non_none_return = True
+                                            elif _last_rvi.opname == 'RETURN_CONST' and _last_rvi.argval is not None:
+                                                _is_non_none_return = True
+                                        if _is_non_none_return:
+                                            break_blocks_set.discard(s)
+                                            break
                 elif s == natural_exit and ne_is_terminator:
                     if last and last.opname in FORWARD_CONDITIONAL_JUMP_OPS:
                         if last.argval is not None and self.cfg.get_block_by_offset(last.argval) in body_set:
@@ -9422,8 +9444,70 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                         return True
         return False
 
+    def _try_body_terminates_abnormally(self, try_region) -> bool:
+        """[TRY_EXCEPT_ELSE_MISORDER fix] Check if the try body terminates abnormally.
+
+        CPython try/except/else semantics: the else clause runs ONLY when the try
+        block completes normally (no exception AND no return/break/continue). If the
+        try body ends with a return, break, or continue, there is no else clause --
+        any code between the try body and the first handler is still part of the try
+        body or is dead code, NOT else code.
+
+        Algorithm: examine try body blocks for terminal instructions that indicate
+        abnormal termination. A try body block that ends with RETURN_VALUE or
+        RETURN_CONST (return), JUMP_BACKWARD (continue/break to loop), or
+        JUMP_FORWARD to a loop header (break) indicates abnormal termination.
+        RERAISE/PUSH_EXC_INFO/POP_EXCEPT blocks are exception framework code,
+        not user code, and are excluded from this check.
+
+        This is a structural control-flow判据: CPython's compiler emits JUMP_FORWARD
+        past the else/handlers ONLY when the try body falls through normally. When
+        the try body has a return, the RETURN instruction replaces the JUMP_FORWARD,
+        and no else clause exists in the source.
+        """
+        try_blocks = getattr(try_region, 'try_blocks', [])
+        if not try_blocks:
+            return False
+        _exception_framework_ops = frozenset({
+            'RERAISE', 'PUSH_EXC_INFO', 'POP_EXCEPT', 'CHECK_EXC_MATCH',
+            'CHECK_EG_MATCH', 'WITH_EXCEPT_START',
+        })
+        for block in try_blocks:
+            non_noise = [i for i in block.instructions
+                         if i.opname not in NOISE_OPS]
+            if not non_noise:
+                continue
+            if any(i.opname in _exception_framework_ops for i in non_noise):
+                continue
+            last = non_noise[-1]
+            if last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                return True
+            if last.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'):
+                return True
+            if last.opname == 'JUMP_FORWARD':
+                target_block = self.cfg.get_block_by_offset(last.argval)
+                if target_block:
+                    for lr in self._filter_regions(self.regions, LoopRegion):
+                        if lr.header_block is target_block:
+                            return True
+            if last.opname in BACKWARD_JUMP_OPS:
+                return True
+        return False
+
     def _find_try_else_blocks(self, try_region) -> List[BasicBlock]:
         if not hasattr(try_region, 'except_handlers') or not try_region.except_handlers:
+            return []
+
+        # [TRY_EXCEPT_ELSE_MISORDER fix] CPython try/except/else semantics:
+        # the else clause runs ONLY when the try block completes normally
+        # (no exception AND no return/break/continue). If the try body
+        # terminates abnormally (return/break/continue), there is no else
+        # clause. Any code between the try body end and the first handler
+        # is still part of the try body or is dead code, NOT else code.
+        # Incorrectly classifying it as else causes the AST generator to
+        # move try body code (e.g., `return engine`) into the else clause,
+        # producing `else: return engine` instead of keeping it in try.
+        if self._try_body_terminates_abnormally(try_region):
             return []
 
         try_end_offset = try_region.try_offset_end
@@ -11604,6 +11688,29 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                     continue
             subject_block = block
             if self._is_case_pattern_block(block):
+                # [Round 01 P0 fix] match-case 假阳性防护：
+                # 块仅含单一 POP_TOP 后跟 RETURN_VALUE/RETURN_CONST 时，
+                # 是 if 分支内的表达式语句+return（如 `return fp.close()`），
+                # 不是 match 的 case pattern 块。match-case 的 case pattern 块
+                # 必须以条件跳转（POP_JUMP_IF_NONE/FALSE）结尾——它是模式
+                # 匹配的短路分支点，不是值消费（POP_TOP）。此检查在
+                # _mr_collect_case_body 之前执行，防止整个 if 分支被误归约为
+                # match-case 区域（repro_01: `return fp.close()` 被误判为
+                # `match item: case _: return fp.close()`）。
+                _block_eff = [i for i in block.instructions if i.opname not in NOISE_OPS]
+                if _block_eff:
+                    _last_eff = _block_eff[-1]
+                    if _last_eff.opname not in CONDITIONAL_JUMP_OPS:
+                        # 块不以条件跳转结尾——不是 case pattern
+                        continue
+                    # 单值消费 + return 块（POP_TOP + RETURN_VALUE）也不是 case pattern
+                    _has_only_pop_and_return = False
+                    if _last_eff.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                        _rest = [i for i in _block_eff[:-1] if i.opname not in ('POP_TOP',)]
+                        if len(_rest) <= 2:
+                            _has_only_pop_and_return = True
+                    if _has_only_pop_and_return:
+                        continue
                 for pred in sorted(block.predecessors, key=lambda p: p.start_offset):
                     last = pred.get_last_instruction()
                     if last and last.opname in CONDITIONAL_JUMP_OPS:
@@ -12468,6 +12575,19 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
         has_loop_header = any(i.opname in loop_header_ops for i in rest[:3]) if len(rest) >= 3 else False
         if has_loop_header:
             return False
+        # [Round 01 P0 fix] match-case 假阳性防护：结构性判据——
+        # 真正的 match-case 是函数/模块级的顶层结构，subject 块的**直接前驱**
+        # 要么是函数入口（RESUME），要么是前一条语句的出口。若块的前驱含
+        # 条件跳转（POP_JUMP_IF_*），说明本块是 if/elif/else 分支的 fall-through
+        # 目标，不是 match subject 块。match-case 的 subject 加载不会被
+        # 条件跳转的前驱"选择"——match 必须执行，不存在"条件性地进入 match"。
+        # 此判据排除了 `if cond: value_expr; more_code` 中 value_expr 的
+        # POP_TOP 被误判为通配符 case 的 subject 丢弃（repro_01 的
+        # `item; if fp is not None:` 被误判为 `match item: case _:`）。
+        for pred in block.predecessors:
+            pred_last = pred.get_last_instruction()
+            if pred_last and pred_last.opname in CONDITIONAL_JUMP_OPS:
+                return False
         return True
 
     def _is_none_match_block(self, block):
@@ -21530,6 +21650,18 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
         overall condition is true) and reclassifies each NONE_CHECK_OP block:
         - jump target == then body → 'or' (jump to then on success)
         - jump target != then body → 'and' (jump to merge/else on failure)
+
+        [W15 fix] IF_NONE 语义是「值为 None 时跳转」。在 and 链中，IF_NONE
+        跳转到链中后续条件块（非 then body）表示短路失败（值不满足条件），
+        应分类为 'and'。当 IF_NONE 的跳转目标与 then_body 相同时，需进一步
+        区分：如果该跳转目标同时也是其他链成员的跳转目标（所有失败路径汇
+        聚），则这是 and 链的 exit 汇合点，应分类为 'and'；否则才是 or 链
+        的 then body 入口。
+
+        判据：IF_NONE 的跳转目标被 ≥2 个链成员共享 → and 链 exit 汇合。
+        依据：and 链所有操作数失败时跳转到同一 exit；or 链操作数成功时跳
+        转到同一 then body，但 IF_NONE 表示值为 None（falsy），不可能是
+        or 的成功跳转。
         """
         if not chain or len(chain) < 2:
             return chain
@@ -21551,6 +21683,15 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
         then_body = next((s for s in last_succs if s.start_offset != last_ci.argval), None)
         if then_body is None:
             return chain
+        chain_blocks_set = set(b for b, _ in chain)
+        jt_shared_count = {}
+        for block, _ in chain:
+            ci = block.get_last_instruction()
+            if ci and ci.argval is not None:
+                jt_block = self.cfg.get_block_by_offset(ci.argval)
+                if jt_block is not None:
+                    jt_id = id(jt_block)
+                    jt_shared_count[jt_id] = jt_shared_count.get(jt_id, 0) + 1
         fixed_chain = []
         for block, op_type in chain:
             ci = block.get_last_instruction()
@@ -21558,7 +21699,11 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 jt = self.cfg.get_block_by_offset(ci.argval)
                 if jt is not None:
                     if jt == then_body:
-                        op_type = 'or'
+                        jt_id = id(jt)
+                        if jt_shared_count.get(jt_id, 0) >= 2:
+                            op_type = 'and'
+                        else:
+                            op_type = 'or'
                     else:
                         op_type = 'and'
             fixed_chain.append((block, op_type))
