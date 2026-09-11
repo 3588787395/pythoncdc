@@ -25017,7 +25017,7 @@ AST 映射规则:
         _fallback = {'type': 'Call', 'func': {'type': 'Name', 'id': 'context'},
                      'args': [], 'keywords': []}
         if with_region.entry is None:
-            return _fallback
+            return _fallback, []
         _nested_ternary = None
         for _r in self.regions:
             if (isinstance(_r, TernaryRegion) and _r is not with_region
@@ -25025,18 +25025,19 @@ AST 映射规则:
                 _nested_ternary = _r
                 break
         if _nested_ternary is None:
-            return _fallback
+            return _fallback, []
         # 防止递归：标记正在生成
         if id(_nested_ternary) in self._generating_regions:
-            return _fallback
+            return _fallback, []
         self._generating_regions.add(id(_nested_ternary))
         try:
             _t_stmts = self._generate_ternary(_nested_ternary)
         finally:
             self._generating_regions.discard(id(_nested_ternary))
-        if not _t_stmts or len(_t_stmts) != 1:
-            return _fallback
-        _t_node = _t_stmts[0]
+        if not _t_stmts:
+            return _fallback, []
+        _prefix_stmts = _t_stmts[:-1] if len(_t_stmts) > 1 else []
+        _t_node = _t_stmts[-1]
         _t_expr = None
         # 父 WithRegion 通过 entry block 反向引用嵌套
         # TernaryRegion 的归约出口。merge_block 重建出的表达式即为 context_expr。
@@ -25066,12 +25067,12 @@ AST 映射规则:
             if isinstance(_t_value, dict) and _t_value.get('type'):
                 _t_expr = _t_value
         if _t_expr is None:
-            return _fallback
+            return _fallback, []
         # 标记 ternary region 的所有块为 generated，避免独立处理造成双重输出
         for _b in _nested_ternary.blocks:
             self.generated_blocks.add(_b)
         self._generated_regions.add(id(_nested_ternary))
-        return _t_expr
+        return _t_expr, _prefix_stmts
 
     def _generate_with(self, region: WithRegion) -> Dict[str, Any]:
         """_generate_with — WithRegion → ast.With 映射
@@ -26326,9 +26327,13 @@ AST 映射规则:
                             # 父 WithRegion 通过 entry block 反向引用嵌套
                             # TernaryRegion 的归约结果作为 context_expr。
                             # 依「父引用子入口」：WithRegion.entry == TernaryRegion.merge_block。
-                            context_expr = self._resolve_nested_ternary_context_expr(region)
+                            context_expr, _tern_prefix = self._resolve_nested_ternary_context_expr(region)
+                            if _tern_prefix:
+                                pre_stmts.extend(_tern_prefix)
                     else:
-                        context_expr = self._resolve_nested_ternary_context_expr(region)
+                        context_expr, _tern_prefix = self._resolve_nested_ternary_context_expr(region)
+                        if _tern_prefix:
+                            pre_stmts.extend(_tern_prefix)
 
                     item = {
                         'context_expr': context_expr,
