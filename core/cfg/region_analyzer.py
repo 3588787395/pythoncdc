@@ -3820,9 +3820,31 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                     if _cc_blk not in body:
                         region_blocks.add(_cc_blk)
             verified_break_blocks = set()
+            # [R102 fix] 子区域 break 块的前驱不在 body 中（在 IfRegion 内部），
+            # 但从 body 块可达。构建可达集合用于验证。
+            _r102_reachable = set(body)
+            _r102_worklist = list(body)
+            while _r102_worklist:
+                _rb = _r102_worklist.pop()
+                for _rs in _rb.successors:
+                    if _rs in _r102_reachable or _rs == header:
+                        continue
+                    if _rs == natural_exit:
+                        continue
+                    if for_iter_exit and _rs == for_iter_exit:
+                        continue
+                    _rl = _rb.get_last_instruction()
+                    if _rl and _rl.opname in BACKWARD_JUMP_OPS and _rs.start_offset == _rl.argval:
+                        continue
+                    if _rs in _rb.exception_successors:
+                        continue
+                    if _rs.start_offset >= (for_iter_exit.start_offset if for_iter_exit else 999999):
+                        continue
+                    _r102_reachable.add(_rs)
+                    _r102_worklist.append(_rs)
             if break_blocks:
                 for break_block in break_blocks:
-                    if any(pred in body for pred in break_block.predecessors):
+                    if any(pred in _r102_reachable for pred in break_block.predecessors):
                         verified_break_blocks.add(break_block)
                         if break_block in body:
                             region_blocks.add(break_block)
@@ -5769,6 +5791,64 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                                 if pred_last and pred_last.opname in FORWARD_CONDITIONAL_JUMP_OPS:
                                     break_blocks_set.add(block)
                                     break
+
+        # [R102 fix] 子区域内部 break 检测：body_set 仅含直接成员块（header、
+        # body_blocks 入口块、back_edge 块）。子区域（IfRegion 等）内部块不在
+        # body_set 中，但其末尾 JUMP_FORWARD 到循环外是 break 证据。从 body_set
+        # 块的后继出发，沿前向边做有界 DFS，检测子区域块是否有到循环外的跳转。
+        # 典型：create_daily_stats 的 `for account in ...: if account in ...:
+        # ...; break; else: daily_dts = None`。Block 56 (body) → 66 (IfRegion
+        # 条件) → 70/140 (then/else) → 196 (merge, JUMP_FORWARD → 404 循环外)。
+        # 196 不在 body_set 中，但其 JUMP_FORWARD 是 break 证据。
+        # 边界：DFS 深度限制 10，仅沿前向边，跳过回边目标、for_iter_exit、
+        # 异常边，避免误扩到循环外块（change_his_to_backward 回归根因）。
+        _r102_visited = set()
+        for b in loop_body:
+            for succ in b.successors:
+                if succ in body_set or succ in _r102_visited:
+                    continue
+                if succ == header or succ == natural_exit:
+                    continue
+                if for_iter_exit and succ == for_iter_exit:
+                    continue
+                _b_last = b.get_last_instruction()
+                if _b_last and _b_last.opname in BACKWARD_JUMP_OPS and succ.start_offset == _b_last.argval:
+                    continue
+                if succ in b.exception_successors:
+                    continue
+                _r102_stack = [(succ, 0)]
+                while _r102_stack:
+                    _cur, _depth = _r102_stack.pop()
+                    if _cur in _r102_visited or _depth > 10:
+                        continue
+                    _r102_visited.add(_cur)
+                    _cur_last = _cur.get_last_instruction()
+                    if _cur_last and _cur_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE') and _cur_last.argval is not None:
+                        _cur_jt = self.cfg.get_block_by_offset(_cur_last.argval)
+                        if _cur_jt is not None and _cur_jt not in body_set and _cur_jt != natural_exit:
+                            _is_except_block = any(i.opname in ('POP_EXCEPT', 'PUSH_EXC_INFO', 'RERAISE') for i in _cur.instructions)
+                            if not _is_except_block:
+                                if for_iter_exit and _cur_jt == for_iter_exit:
+                                    break_blocks_set.add(_cur)
+                                elif for_iter_exit and _cur_jt.start_offset >= for_iter_exit.start_offset:
+                                    break_blocks_set.add(_cur)
+                                elif not for_iter_exit:
+                                    break_blocks_set.add(_cur)
+                    for _ns in _cur.successors:
+                        if _ns in body_set or _ns in _r102_visited:
+                            continue
+                        if _ns == header or _ns == natural_exit:
+                            continue
+                        if for_iter_exit and _ns == for_iter_exit:
+                            continue
+                        _cl = _cur.get_last_instruction()
+                        if _cl and _cl.opname in BACKWARD_JUMP_OPS and _ns.start_offset == _cl.argval:
+                            continue
+                        if _ns in _cur.exception_successors:
+                            continue
+                        if any(i.opname in ('POP_EXCEPT', 'PUSH_EXC_INFO', 'RERAISE') for i in _ns.instructions):
+                            continue
+                        _r102_stack.append((_ns, _depth + 1))
 
         return break_blocks_set, continue_map
 
