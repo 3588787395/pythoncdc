@@ -1599,13 +1599,25 @@ class CodeGenerator:
         # 这里只处理简单的复合条件模式（如 x > 0 and y > 0）
         # 复杂的复合条件（如 (x > 0 and y > 0) or (x < 0 and y < 0)）应该在结构化分析阶段处理
         
-        # 检查当前if的body是否为空或只包含pass/return
+        def _is_empty_body(nodes):
+            if not nodes:
+                return True
+            for n in nodes:
+                if isinstance(n, ASTPass):
+                    continue
+                if isinstance(n, ASTReturn):
+                    if n.value is None:
+                        continue
+                    if isinstance(n.value, ASTConstant) and n.value.value is None:
+                        continue
+                    return False
+                if isinstance(n, ASTExpr) and isinstance(n.value, ASTConstant) and n.value.value is None:
+                    continue
+                return False
+            return True
+
         body_nodes = node.body.nodes if node.body else []
-        if body_nodes and not all(
-            isinstance(n, (ASTPass, ASTReturn)) or
-            (isinstance(n, ASTExpr) and isinstance(n.value, ASTConstant) and n.value.value is None)
-            for n in body_nodes
-        ):
+        if not _is_empty_body(body_nodes):
             return None
         
         # 检查orelse是否只包含一个if节点
@@ -1618,12 +1630,7 @@ class CodeGenerator:
         # [关键修复] 检查下一个if的body是否为空
         # 如果body不为空，这可能是elif链，不是复合条件
         next_body = next_if.body.nodes if next_if.body else []
-        if next_body and not all(
-            isinstance(n, (ASTPass, ASTReturn)) or
-            (isinstance(n, ASTExpr) and isinstance(n.value, ASTConstant) and n.value.value is None)
-            for n in next_body
-        ):
-            # 下一个if有实际内容，这是elif链，不是复合条件
+        if not _is_empty_body(next_body):
             return None
         
         # [关键修复] 检查是否有更深层的if链
@@ -1632,12 +1639,7 @@ class CodeGenerator:
         if len(next_orelse) == 1 and isinstance(next_orelse[0], ASTIf):
             deeper_if = next_orelse[0]
             deeper_body = deeper_if.body.nodes if deeper_if.body else []
-            if deeper_body and not all(
-                isinstance(n, (ASTPass, ASTReturn)) or
-                (isinstance(n, ASTExpr) and isinstance(n.value, ASTConstant) and n.value.value is None)
-                for n in deeper_body
-            ):
-                # 更深层的if有实际内容，这是elif链，不是复合条件
+            if not _is_empty_body(deeper_body):
                 return None
         
         # 递归检测复合条件链
@@ -1645,14 +1647,8 @@ class CodeGenerator:
         current = next_if
         
         while current:
-            # 检查当前if的body是否为空或只包含pass/return
             current_body = current.body.nodes if current.body else []
-            if current_body and not all(
-                isinstance(n, (ASTPass, ASTReturn)) or
-                (isinstance(n, ASTExpr) and isinstance(n.value, ASTConstant) and n.value.value is None)
-                for n in current_body
-            ):
-                # 这是最后一个有实际内容的条件，结束链
+            if not _is_empty_body(current_body):
                 conditions.append(current.test)
                 break
             

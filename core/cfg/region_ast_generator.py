@@ -11118,6 +11118,8 @@ AST 映射规则:
                         _main_parts.append(_part)
             if len(_main_parts) >= 2:
                 condition = {'type': 'BoolOp', 'op': _chain_op, 'values': _main_parts}
+                if _main_ibc.get('negate'):
+                    condition = {'type': 'UnaryOp', 'op': 'not', 'operand': condition}
                 for _cb in _chain_blocks[1:]:
                     self.generated_blocks.add(_cb)
         if hasattr(region, 'elif_conditions') and region.elif_conditions:
@@ -11624,6 +11626,11 @@ AST 映射规则:
         _attr_compare = self._try_build_attr_middle_chained_compare(region)
         if _attr_compare is not None:
             return _attr_compare
+        _complex_compare = self._try_build_complex_operand_chained_compare_from_blocks(
+            region.condition_block, region.chain_blocks if hasattr(region, 'chain_blocks') else [],
+            region.chained_compare_ops)
+        if _complex_compare is not None:
+            return _complex_compare
         if not region.chained_left_instr:
             return None
         left_ast = self.expr_reconstructor._load_instr_to_ast(region.chained_left_instr)
@@ -15032,6 +15039,8 @@ AST 映射规则:
                         _main_parts.append(_part)
             if len(_main_parts) >= 2:
                 condition = {'type': 'BoolOp', 'op': _chain_op, 'values': _main_parts}
+                if _main_ibc.get('negate'):
+                    condition = {'type': 'UnaryOp', 'op': 'not', 'operand': condition}
                 for _cb in _chain_blocks[1:]:
                     self.generated_blocks.add(_cb)
         self.generated_blocks.add(cond_block)

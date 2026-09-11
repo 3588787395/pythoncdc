@@ -11609,11 +11609,20 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
                 jt = self.cfg.get_block_by_offset(last.argval)
                 if jt:
                     has_nop_prefix = False
+                    nop_offset = None
                     for instr in jt.instructions:
                         if instr.opname == 'NOP':
                             has_nop_prefix = True
+                            nop_offset = instr.offset
                         elif instr.opname not in NOISE_OPS:
                             break
+                    if has_nop_prefix and nop_offset is not None:
+                        if getattr(self.cfg, 'exception_table', None):
+                            for entry in self.cfg.exception_table:
+                                entry_start = entry.get('start', -1) if isinstance(entry, dict) else entry[0]
+                                if entry_start == nop_offset + 2:
+                                    has_nop_prefix = False
+                                    break
                     if has_nop_prefix:
                         return True
                 has_none_check = last.opname in ('POP_JUMP_FORWARD_IF_NOT_NONE', 'POP_JUMP_IF_NOT_NONE',
@@ -12750,11 +12759,20 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
             jt = self.cfg.get_block_by_offset(last_instr.argval)
             if jt is not None:
                 has_nop_prefix = False
+                nop_offset = None
                 for instr in jt.instructions:
                     if instr.opname == 'NOP':
                         has_nop_prefix = True
+                        nop_offset = instr.offset
                     elif instr.opname not in NOISE_OPS:
                         break
+                if has_nop_prefix and nop_offset is not None:
+                    if getattr(self.cfg, 'exception_table', None):
+                        for entry in self.cfg.exception_table:
+                            entry_start = entry.get('start', -1) if isinstance(entry, dict) else entry[0]
+                            if entry_start == nop_offset + 2:
+                                has_nop_prefix = False
+                                break
                 if not has_nop_prefix:
                     return False
         return True
@@ -15371,6 +15389,11 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                         _or_chain.append(_or_ft)
                         _or_has_false_tail = True
                         break
+                    _or_all_if_true = (len(_or_chain) >= 2
+                                       and all(b.get_last_instruction() is not None
+                                               and 'IF_TRUE' in b.get_last_instruction().opname
+                                               and b.get_last_instruction().argval == _then_entry_offset
+                                               for b in _or_chain))
                     if len(_or_chain) >= 2 and _or_has_false_tail:
                         if os.environ.get('DBG_OR'):
                             print(f'[DBG_OR] or-chain detected: cond={condition_block.start_offset} '
@@ -15380,6 +15403,15 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                         _main_orig_cond_block = condition_block
                         _main_orig_chain_blocks = set(chain_blocks)
                         condition_block = _or_chain[-1]
+                        chain_blocks = set(_or_chain)
+                    elif len(_or_chain) >= 2 and _or_all_if_true:
+                        if os.environ.get('DBG_OR'):
+                            print(f'[DBG_OR] negated or-chain detected: cond={condition_block.start_offset} '
+                                  f'chain={[b.start_offset for b in _or_chain]} '
+                                  f'then_entry={_then_entry_offset}')
+                        _main_inline_boolop_chain = {'blocks': list(_or_chain), 'op': 'or', 'negate': True}
+                        _main_orig_cond_block = condition_block
+                        _main_orig_chain_blocks = set(chain_blocks)
                         chain_blocks = set(_or_chain)
                     elif os.environ.get('DBG_OR') and len(_or_chain) >= 2:
                         print(f'[DBG_OR] or-candidate rejected (no false tail): '
@@ -18456,11 +18488,16 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 instrs = [i for i in cond_block.instructions
                          if i.opname not in ('RESUME', 'NOP', 'CACHE')]
                 push_null_idx = None
+                _last_store_idx = -1
                 for idx, i in enumerate(instrs):
+                    if i.opname.startswith('STORE_') or i.opname == 'POP_TOP':
+                        _last_store_idx = idx
+                for idx, i in enumerate(instrs):
+                    if idx <= _last_store_idx:
+                        continue
                     if i.opname == 'PUSH_NULL':
                         push_null_idx = idx
                         break
-                    # Python 3.11+: LOAD_GLOBAL with arg & 1 == 1 implicitly pushes NULL
                     if i.opname == 'LOAD_GLOBAL' and i.arg is not None and (i.arg & 1):
                         push_null_idx = idx
                         break
