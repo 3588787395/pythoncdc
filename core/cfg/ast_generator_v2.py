@@ -1401,14 +1401,15 @@ class ExpressionReconstructor:
                                 'kwargs': kwargs,
                                 'lineno': instr.starts_line
                             })
-                        elif self.stack and self.stack[-1].get('type') == 'Name':
+                        elif self.stack and self.stack[-1].get('type') in ('Name', 'Attribute'):
                             decorator_obj = self.stack.pop()
                             self.stack.append({
                                 'type': 'Call',
                                 'func': decorator_obj,
                                 'args': [func],
                                 'kwargs': kwargs,
-                                'lineno': instr.starts_line
+                                'lineno': instr.starts_line,
+                                'is_decorator': True
                             })
                         elif self.stack and self.stack[-1].get('type') == 'FunctionObject':
                             # lambda 装饰器: @lambda f: ... def g(): ...
