@@ -32237,6 +32237,15 @@ AST 映射规则:
                                     # else: previous is BUILD_*/FORMAT_VALUE;
                                     # LOAD_ATTR/LOAD_METHOD consumes something
                                     # not in preload; skip.
+                            elif _ki.opname in ('UNARY_NEGATIVE', 'UNARY_NOT',
+                                                'UNARY_POSITIVE', 'UNARY_INVERT'):
+                                if _preload_instrs:
+                                    _last = _preload_instrs[-1]
+                                    if isinstance(_last, list):
+                                        _last.append(_ki)
+                                    elif (_last.opname.startswith('LOAD_')
+                                          or _last.opname == 'COPY'):
+                                        _preload_instrs[-1] = [_last, _ki]
                             elif _ki.opname.startswith('LOAD_') or _ki.opname == 'COPY':
                                 _preload_instrs.append(_ki)
                             elif _ki.opname in ('STORE_FAST', 'STORE_NAME',
@@ -32410,6 +32419,21 @@ AST 映射规则:
                                         'value': _val,
                                         'conversion': conversion,
                                         'format_spec': format_spec,
+                                    })
+                            elif pi.opname in ('UNARY_NEGATIVE', 'UNARY_NOT',
+                                                'UNARY_POSITIVE', 'UNARY_INVERT'):
+                                if _preload_stack:
+                                    _val = _preload_stack.pop()
+                                    _op_map = {
+                                        'UNARY_NEGATIVE': 'USub',
+                                        'UNARY_NOT': 'Not',
+                                        'UNARY_POSITIVE': 'UAdd',
+                                        'UNARY_INVERT': 'Invert',
+                                    }
+                                    _preload_stack.append({
+                                        'type': 'UnaryOp',
+                                        'op': _op_map.get(pi.opname, 'Not'),
+                                        'operand': _val,
                                     })
                             elif pi.opname == 'COPY' and pi.arg == 1 and _preload_stack:
                                 _preload_stack.append(_preload_stack[-1])
