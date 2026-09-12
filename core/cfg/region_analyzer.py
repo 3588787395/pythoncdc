@@ -19749,6 +19749,17 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     # （if/while 条件上下文），就设 merge_context='compare'，
                     # 由 _build_ternary_wrapped_expr 走栈模拟重建完整条件。
                     elif instr.opname in ('LOAD_ATTR', 'LOAD_METHOD'):
+                        # R36 guard: when merge_block also contains STORE_ATTR,
+                        # the LOAD_ATTR is part of the assignment target
+                        # (e.g. `self.ws.on_open = ternary`), not a comparison
+                        # wrapper (e.g. `if (ternary).x: pass`). Skip the
+                        # compare detection to let the STORE_ATTR handler at
+                        # line 19630 correctly set merge_context='store'.
+                        _has_store_attr_in_merge = any(
+                            _detector_r36.is_store_attr(_i)
+                            for _i in merge_block.instructions)
+                        if _has_store_attr_in_merge:
+                            continue
                         # Use _mb_prefix (instructions before
                         # first STORE_*) to avoid false compare detection
                         # from subsequent statement's cond_jump.
