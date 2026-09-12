@@ -7312,11 +7312,14 @@ AST 映射规则:
                 _nested_region_generated = False
                 _try_region = None
                 for _ntr in self.region_analyzer.regions:
-                    if isinstance(_ntr, TryExceptRegion) and _ntr.entry == block and id(_ntr) not in self._generated_regions:
+                    if isinstance(_ntr, TryExceptRegion) and _ntr.entry == block and id(_ntr) not in self._generated_regions and id(_ntr) not in self._generating_regions:
                         _try_region = _ntr
                         break
                 if _try_region:
+                    _ntr_id = id(_try_region)
+                    self._generating_regions.add(_ntr_id)
                     _try_ast = self._generate_region(_try_region)
+                    self._generating_regions.discard(_ntr_id)
                     if _try_ast:
                         body_stmts.append(_try_ast)
                     for b in _try_region.blocks:
