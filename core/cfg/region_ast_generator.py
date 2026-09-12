@@ -11626,8 +11626,9 @@ AST 映射规则:
         _attr_compare = self._try_build_attr_middle_chained_compare(region)
         if _attr_compare is not None:
             return _attr_compare
+        _cc_chain_blocks = getattr(region, 'chain_blocks', None) or getattr(region, 'chained_compare_blocks', None) or []
         _complex_compare = self._try_build_complex_operand_chained_compare_from_blocks(
-            region.condition_block, region.chain_blocks if hasattr(region, 'chain_blocks') else [],
+            region.condition_block, _cc_chain_blocks,
             region.chained_compare_ops)
         if _complex_compare is not None:
             return _complex_compare
@@ -12363,6 +12364,18 @@ AST 映射规则:
             return None
         cond_instrs = [i for i in cond_block.instructions
                        if i.opname not in ('RESUME', 'NOP', 'CACHE')]
+        if not cond_instrs:
+            return None
+        # [R106] Skip leading STORE_* instructions that are loop variable
+        # assignments (from FOR_ITER). These consume a stack slot that
+        # belongs to the loop iterator, not the condition expression.
+        # Without this, reverse stack tracking produces wrong left/middle
+        # split (e.g., `numbers[i] <= value < numbers[i+1]` becomes
+        # `numbers <= i < 1` because STORE_FAST i shifts the boundary).
+        while (cond_instrs
+               and cond_instrs[0].opname in ('STORE_FAST', 'STORE_NAME',
+                                              'STORE_GLOBAL', 'STORE_DEREF')):
+            cond_instrs = cond_instrs[1:]
         if not cond_instrs:
             return None
         # 触发条件：任一相关块含复合操作数标记指令（纯 LOAD 操作数不在此处理，
