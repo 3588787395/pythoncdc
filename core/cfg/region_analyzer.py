@@ -18025,6 +18025,11 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 break
             has_back_edge = any(s.start_offset <= ft_candidate.start_offset for s in ft_candidate.successors)
             if has_back_edge:
+                extra_chain_blocks.append(ft_candidate)
+                visited.add(ft_candidate)
+                for i in ft_candidate.instructions:
+                    if i.opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP'):
+                        compare_ops.append(self._chain_compare_op_str(i))
                 break
             extra_chain_blocks.append(ft_candidate)
             visited.add(ft_candidate)

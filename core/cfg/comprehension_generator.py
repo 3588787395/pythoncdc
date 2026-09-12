@@ -1162,6 +1162,68 @@ class ComprehensionGenerator:
                 current_start = idx + 1
 
         if segments:
+            # [Round09] Detect chained comparison filter: when segment 0 contains
+            # COPY(arg=2)+COMPARE_OP/IS_OP/CONTAINS_OP and subsequent segments
+            # also contain COMPARE_OP/IS_OP/CONTAINS_OP, these form a chained
+            # comparison like `a <= b <= c`. Merge them into a single Compare node
+            # instead of BoolOp(and, a<=b, c).
+            _cc_chain_end = -1
+            for _cc_si in range(len(segments)):
+                _cc_seg_s, _cc_seg_e, _cc_jmp = segments[_cc_si]
+                _cc_instrs = all_instrs[_cc_seg_s:_cc_seg_e]
+                _cc_has_copy_compare = any(
+                    _cc_instrs[ci].opname == 'COPY' and _cc_instrs[ci].arg == 2
+                    and _cc_instrs[ci + 1].opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP')
+                    for ci in range(len(_cc_instrs) - 1))
+                if _cc_has_copy_compare:
+                    _cc_chain_end = _cc_si
+                    for _cc_next in range(_cc_si + 1, len(segments)):
+                        _cc_ns, _cc_ne, _cc_njmp = segments[_cc_next]
+                        _cc_ninstrs = all_instrs[_cc_ns:_cc_ne]
+                        _cc_has_cmp = any(
+                            i.opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP')
+                            for i in _cc_ninstrs)
+                        if _cc_has_cmp:
+                            _cc_chain_end = _cc_next
+                        else:
+                            break
+                    break
+            if _cc_chain_end > 0:
+                _cc_first_seg_s, _cc_first_seg_e, _cc_first_jmp = segments[0]
+                _cc_first_instrs = all_instrs[_cc_first_seg_s:_cc_first_seg_e]
+                _cc_first_expr = self.expr_reconstructor.reconstruct(_cc_first_instrs)
+                if _cc_first_expr and _cc_first_expr.get('type') == 'Compare' and len(_cc_first_expr.get('ops', [])) == 1:
+                    _cc_ops = list(_cc_first_expr.get('ops', []))
+                    _cc_left = _cc_first_expr.get('left')
+                    _cc_comps = list(_cc_first_expr.get('comparators', []))
+                    for _cc_next in range(1, _cc_chain_end + 1):
+                        _cc_ns, _cc_ne, _cc_njmp = segments[_cc_next]
+                        _cc_ninstrs = all_instrs[_cc_ns:_cc_ne]
+                        _cc_ninstrs_no_jmp = [i for i in _cc_ninstrs if i.opname not in CONDITIONAL_JUMP_OPS]
+                        _cc_has_cmp = any(i.opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP') for i in _cc_ninstrs_no_jmp)
+                        if _cc_has_cmp:
+                            _cc_cmp_instr = None
+                            for i in _cc_ninstrs_no_jmp:
+                                if i.opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP'):
+                                    _cc_cmp_instr = i
+                                    break
+                            _cc_op_str = (_cc_cmp_instr.argval if _cc_cmp_instr.opname == 'COMPARE_OP'
+                                          else ('is' if _cc_cmp_instr.arg == 0 else 'is not')
+                                          if _cc_cmp_instr.opname == 'IS_OP'
+                                          else ('in' if _cc_cmp_instr.arg == 0 else 'not in'))
+                            _cc_ops.append(_cc_op_str)
+                            _cc_cmp_idx = _cc_ninstrs_no_jmp.index(_cc_cmp_instr)
+                            _cc_before_cmp = _cc_ninstrs_no_jmp[:_cc_cmp_idx]
+                            _cc_comp_expr = self.expr_reconstructor.reconstruct(_cc_before_cmp) if _cc_before_cmp else None
+                            if _cc_comp_expr:
+                                _cc_comps.append(_cc_comp_expr)
+                    if len(_cc_ops) >= 2 and len(_cc_comps) == len(_cc_ops) and _cc_left:
+                        _cc_compare = {'type': 'Compare', 'left': _cc_left,
+                                       'ops': _cc_ops, 'comparators': _cc_comps}
+                        ifs = [_cc_compare]
+                        elt_start_idx = segments[_cc_chain_end][1] + 1
+                        return ifs, elt_start_idx
+
             # [R10] Detect OR-filter pattern: FORWARD IF_TRUE segment followed by
             # BACKWARD IF_FALSE segment means `if cond1 or cond2` filter.
             # CPython compiles `if cond1 or cond2` as:
