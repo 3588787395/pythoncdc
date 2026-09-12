@@ -4866,6 +4866,11 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                     _nop_marker = self._loop_else_nop_marker(for_iter_exit, header)
                     if _nop_marker is False:
                         return None, natural_exit
+                    _r03_none_count = sum(1 for i in for_iter_exit.instructions
+                                          if i.opname == 'LOAD_CONST' and i.argval is None)
+                    _r03_has_precall = any(i.opname == 'PRECALL' for i in for_iter_exit.instructions)
+                    if _r03_none_count >= 3 and _r03_has_precall:
+                        return None, natural_exit
                     return [for_iter_exit], natural_exit
                 return None, natural_exit
 
@@ -11025,22 +11030,26 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                     break
             if _ne_block is not None and _ne_block not in owned:
                 _ne_last = _ne_block.get_last_instruction()
-                if _ne_last is not None and _ne_last.opname == 'POP_TOP':
-                    for _ne_succ in _ne_block.successors:
-                        if _ne_succ in owned:
-                            continue
-                        _ns_last = _ne_succ.get_last_instruction()
-                        if _ns_last and _ns_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
-                            _ne_body_pred = False
-                            for pred in _ne_block.predecessors:
-                                if pred in with_body or pred in with_entry_blocks:
-                                    _ne_body_pred = True
-                                    break
-                            if _ne_body_pred:
+                _ne_body_pred = any(pred in with_body or pred in with_entry_blocks for pred in _ne_block.predecessors)
+                if _ne_body_pred:
+                    if _ne_last is not None and _ne_last.opname == 'POP_TOP':
+                        for _ne_succ in _ne_block.successors:
+                            if _ne_succ in owned:
+                                continue
+                            _ns_last = _ne_succ.get_last_instruction()
+                            if _ns_last and _ns_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
                                 cleanup_blocks.append(_ne_block)
                                 owned.add(_ne_block)
                                 with_body.append(_ne_succ)
                                 owned.add(_ne_succ)
+                    elif _ne_last is not None and _ne_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+                        _ne_has_exit_call = any(
+                            (i.opname == 'LOAD_CONST' and i.argval is None)
+                            for i in _ne_block.instructions)
+                        _ne_has_precall = any(i.opname == 'PRECALL' for i in _ne_block.instructions)
+                        if _ne_has_exit_call and _ne_has_precall:
+                            cleanup_blocks.append(_ne_block)
+                            owned.add(_ne_block)
         # [Round 02 F5] 剔除 with 的出口块：WithRegion 是单入口（BEFORE_WITH）
         # 单出口（with 之后的第一块）区域。cleanup_blocks 的启发式扫描
         # （_collect_normal_exit_cleanup）以「块内无用户代码」为判据，会把恰好
