@@ -9626,6 +9626,9 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
             'RERAISE', 'PUSH_EXC_INFO', 'POP_EXCEPT', 'CHECK_EXC_MATCH',
             'CHECK_EG_MATCH', 'WITH_EXCEPT_START',
         })
+        _loop_region_blocks = set()
+        for _lr in self._filter_regions(self.regions, LoopRegion):
+            _loop_region_blocks.update(_lr.blocks)
         for block in try_blocks:
             non_noise = [i for i in block.instructions
                          if i.opname not in NOISE_OPS]
@@ -9633,7 +9636,23 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 continue
             if any(i.opname in _exception_framework_ops for i in non_noise):
                 continue
+            if block in _loop_region_blocks:
+                continue
+            # [R119b fix] JUMP_BACKWARD 回边指向循环头是循环 continue，
+            # 不是 try 体异常终止。判据：JUMP_BACKWARD 目标块含
+            # FOR_ITER（for 循环头）或 POP_JUMP_FORWARD_IF_FALSE（while
+            # 循环条件），说明该块是循环的 back-edge，不是 try 出口。
             last = non_noise[-1]
+            if last.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'):
+                _jb_target = self.cfg.get_block_by_offset(last.argval)
+                if _jb_target:
+                    _jb_target_instrs = [i for i in _jb_target.instructions if i.opname not in NOISE_OPS]
+                    if any(i.opname in ('FOR_ITER',) for i in _jb_target_instrs):
+                        continue
+                    if any(i.opname in FORWARD_CONDITIONAL_JUMP_OPS for i in _jb_target_instrs):
+                        _target_preds = _jb_target.predecessors
+                        if len(_target_preds) >= 2:
+                            continue
             if last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
                 return True
             if last.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'):
@@ -9940,7 +9959,11 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                                 continue
                             _owner = self.block_to_region.get(block)
                             if _owner is not None and _owner is not try_region:
-                                continue
+                                if isinstance(_owner, (TryExceptRegion, WithRegion)):
+                                    continue
+                                _owner_enc = getattr(_owner, 'parent', None)
+                                if isinstance(_owner_enc, TryExceptRegion) and _owner_enc is not try_region:
+                                    continue
                             else_blocks.append(block)
                     return else_blocks
                 inner_else = self._find_inner_else_blocks(try_region, try_end_offset,
@@ -9956,16 +9979,82 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 block not in all_handler_blocks and
                 block not in try_region.blocks and
                 not self._is_pass_or_return_none_block(block)):
-                # [R91] 区域归约算法原则 2（每块唯一归属）+ 原则 3
-                # （嵌套即抽象节点）：else 块收集不得吞并已被嵌套
-                # TryExceptRegion 拥有的块。否则外层 try-finally 的
-                # else_blocks 会吸收内层 try-except 的所有块（try body +
-                # handler body + cleanup），导致内层 try 在 else 中被
-                # 重复生成、块归属混乱、字节码不匹配。
                 _owner = self.block_to_region.get(block)
                 if _owner is not None and _owner is not try_region:
-                    continue
+                    if isinstance(_owner, (TryExceptRegion, WithRegion)):
+                        continue
+                    _owner_enc = getattr(_owner, 'parent', None)
+                    if isinstance(_owner_enc, TryExceptRegion) and _owner_enc is not try_region:
+                        continue
                 else_blocks.append(block)
+
+        # [R118 fix] CPython 3.11 将 try/except/else 的 else 体放在
+        # [try_offset_end, first_handler_entry) 区间。当 merge_point 路径
+        # 未找到 else 块时（handler 后与 merge 之间无块），检查此区间。
+        # 典型场景：try 体含 with 语句，else 体是 with 退出后的代码（如
+        # `if os.path.exists`），放在 with cleanup 之后、except handler 之前。
+        # 若不识别为 else，反编译将 else 代码放到 try/except 外部，重编译
+        # 后 try 体末尾增加 JUMP_FORWARD 跳过 handler，字节码布局不同。
+        if not else_blocks:
+            handler_entry_offsets = []
+            for heb in try_region.handler_entry_blocks:
+                if heb.start_offset >= try_end_offset:
+                    handler_entry_offsets.append(heb.start_offset)
+            first_handler_entry = min(handler_entry_offsets) if handler_entry_offsets else None
+            if first_handler_entry is not None and first_handler_entry > try_end_offset:
+                for block in self.cfg.get_blocks_in_order():
+                    if (block.start_offset >= try_end_offset and
+                        block.start_offset < first_handler_entry and
+                        block not in all_handler_blocks and
+                        block not in try_region.blocks and
+                        not self._is_pass_or_return_none_block(block)):
+                        _block_last = block.get_last_instruction()
+                        if (_block_last is not None and
+                                _block_last.opname in BACKWARD_JUMP_OPS):
+                            continue
+                        _owner = self.block_to_region.get(block)
+                        if _owner is not None and _owner is not try_region:
+                            if isinstance(_owner, (TryExceptRegion, WithRegion)):
+                                continue
+                            _owner_enc = getattr(_owner, 'parent', None)
+                            if isinstance(_owner_enc, TryExceptRegion) and _owner_enc is not try_region:
+                                continue
+                        # [R118] 验证：该块的 JUMP_FORWARD 目标与 handler 的
+                        # JUMP_FORWARD 目标汇合于同一 merge point，符合 try-else
+                        # 语义（else 仅在 try 正常完成时执行，handler 异常时执行，
+                        # 两者在 merge point 汇合）。
+                        _block_non_noise = [i for i in block.instructions if i.opname not in NOISE_OPS]
+                        _block_exits_normally = False
+                        if _block_non_noise:
+                            _last_real = _block_non_noise[-1]
+                            if _last_real.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+                                _jf_target = _last_real.argval
+                                if _jf_target is not None:
+                                    _jf_target_block = self.cfg.get_block_by_offset(_jf_target)
+                                    if _jf_target_block is not None:
+                                        # handler 也以 JUMP_FORWARD 终止到同一 merge？
+                                        for _, _, _hblocks in try_region.except_handlers:
+                                            for _hb in _hblocks:
+                                                _hb_last = _hb.get_last_instruction()
+                                                if _hb_last and _hb_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+                                                    if _hb_last.argval == _jf_target:
+                                                        _block_exits_normally = True
+                                                        break
+                                                if _block_exits_normally:
+                                                    break
+                                            if _block_exits_normally:
+                                                break
+                        # 允许 IfRegion 块（不以 JUMP_FORWARD 结尾但内部分支汇合到 merge）
+                        if not _block_exits_normally:
+                            # 检查块的所有出口是否到达 merge_point 或其前驱
+                            _all_succ_to_merge = True
+                            for _succ in block.successors:
+                                if _succ in all_handler_blocks:
+                                    _all_succ_to_merge = False
+                                    break
+                            if not _all_succ_to_merge:
+                                continue
+                        else_blocks.append(block)
 
         if not else_blocks:
             inner_else = self._find_inner_else_blocks(try_region, try_end_offset,
@@ -16585,8 +16674,29 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     # （无后继）。此时 else 是结构化的显式 return 分支。
                     _then_jumps_over_else = False
                     if then_blocks and merge is not None:
-                        _tl = then_blocks[-1].get_last_instruction()
-                        if _tl and _tl.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+                        # [R116b fix] 搜索 then_blocks 中是否有任何块以
+                        # JUMP_FORWARD/JUMP_ABSOLUTE → merge 结尾，而不仅检查
+                        # then_blocks[-1]。当 then 分支包含循环（break/continue
+                        # 块排在 then_blocks 末尾），真正的 then 终点（JUMP_FORWARD
+                        # → merge）不在 then_blocks[-1]，导致 R115/R116 无法触发，
+                        # else: pass shim 块被误清除。
+                        _tl = None
+                        for _tb in then_blocks:
+                            _tb_last = _tb.get_last_instruction()
+                            if _tb_last and _tb_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+                                _tb_target = (self.cfg.get_block_by_offset(_tb_last.argval)
+                                              if _tb_last.argval is not None else None)
+                                if _tb_target is merge:
+                                    _tl = _tb_last
+                                    break
+                        if _tl is None:
+                            _tl = then_blocks[-1].get_last_instruction()
+                            if _tl and _tl.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+                                _tl_target = (self.cfg.get_block_by_offset(_tl.argval)
+                                              if _tl.argval is not None else None)
+                                if _tl_target is not merge:
+                                    _tl = None
+                        if _tl is not None:
                             _tl_target = (self.cfg.get_block_by_offset(_tl.argval)
                                           if _tl.argval is not None else None)
                             if _tl_target is merge:
@@ -16603,8 +16713,24 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                                 # JUMP_FORWARD + NOP，导致字节码偏移错位。
                                 # 判据：then 末尾 JUMP_FORWARD 跳到 merge，且
                                 # else 仅含 NOP-only 块（条件跳转目标）。
+                                # [R116 fix] 扩展：else 仅含 JUMP_FORWARD(→merge)
+                                # -only 块也是 else: pass 模式。CPython 为嵌套在
+                                # 外层 if-else 中的内层 if (无 else 体) 生成独立
+                                # shim 块：内层 if false branch → shim(JUMP_FORWARD
+                                # → merge)，与 then 末尾 JUMP_FORWARD 同目标。
+                                # 不保留 else 块会导致重编译缺少 shim，字节码
+                                # 偏移错位。
                                 elif all(
                                     all(i.opname in NOISE_OPS for i in b.instructions)
+                                    for b in else_blocks):
+                                    _then_jumps_over_else = True
+                                elif all(
+                                    (all(i.opname in NOISE_OPS for i in b.instructions)
+                                     or (len([i for i in b.instructions if i.opname not in NOISE_OPS]) == 1
+                                         and b.get_last_instruction() is not None
+                                         and b.get_last_instruction().opname == 'JUMP_FORWARD'
+                                         and b.get_last_instruction().argval is not None
+                                         and self.cfg.get_block_by_offset(b.get_last_instruction().argval) is merge))
                                     for b in else_blocks):
                                     _then_jumps_over_else = True
                     if not _then_jumps_over_else:

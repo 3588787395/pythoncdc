@@ -13625,18 +13625,28 @@ AST 映射规则:
             _all_nop_else = all(
                 all(i.opname in NOISE_OPS for i in b.instructions)
                 for b in region.else_blocks)
-            if _all_nop_else and region.then_blocks:
-                _then_last = region.then_blocks[-1].get_last_instruction()
-                _merge_blk = getattr(region, 'merge_block', None)
-                if (_then_last is not None
-                        and _then_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
-                        and _merge_blk is not None):
-                    _then_target = (self.cfg.get_block_by_offset(_then_last.argval)
-                                    if _then_last.argval is not None else None)
-                    if _then_target is _merge_blk:
-                        for b in region.else_blocks:
-                            self.generated_blocks.add(b)
-                        return [{'type': 'Pass'}]
+            _all_jf_shim_else = all(
+                (all(i.opname in NOISE_OPS for i in b.instructions)
+                 or (len([i for i in b.instructions if i.opname not in NOISE_OPS]) == 1
+                     and b.get_last_instruction() is not None
+                     and b.get_last_instruction().opname == 'JUMP_FORWARD'
+                     and b.get_last_instruction().argval is not None
+                     and self.cfg.get_block_by_offset(b.get_last_instruction().argval) is getattr(region, 'merge_block', None)))
+                for b in region.else_blocks)
+            if (_all_nop_else or _all_jf_shim_else) and region.then_blocks:
+                _then_jf_to_merge = False
+                for _tb in region.then_blocks:
+                    _tb_last = _tb.get_last_instruction()
+                    if _tb_last and _tb_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+                        _tb_target = (self.cfg.get_block_by_offset(_tb_last.argval)
+                                      if _tb_last.argval is not None else None)
+                        if _tb_target is getattr(region, 'merge_block', None):
+                            _then_jf_to_merge = True
+                            break
+                if _then_jf_to_merge:
+                    for b in region.else_blocks:
+                        self.generated_blocks.add(b)
+                    return [{'type': 'Pass'}]
             else_stmts = []
             # file assignment lost before try: interleave
             # sub-regions (Try/With/Loop) and sequential blocks by offset
