@@ -15070,6 +15070,7 @@ AST 映射规则:
                 for b in region.elif_final_else:
                     _elif_exclude.add(b)
         _has_or_ext = self._or_then_block is not None and self._or_else_block is not None
+        _then_terminal_overflow = []
         def _is_pass_like(stmts):
             if not stmts:
                 return True
@@ -15190,6 +15191,15 @@ AST 映射规则:
             for b in _elif_exclude:
                 self.generated_blocks.add(b)
             then_stmts = self._if_generate_then_branch(region)
+            if then_stmts:
+                _terminal_idx = None
+                for _ti, _ts in enumerate(then_stmts):
+                    if isinstance(_ts, dict) and _ts.get('type') in ('Continue', 'Break', 'Return', 'Raise'):
+                        _terminal_idx = _ti
+                        break
+                if _terminal_idx is not None and _terminal_idx < len(then_stmts) - 1:
+                    _then_terminal_overflow = then_stmts[_terminal_idx + 1:]
+                    then_stmts = then_stmts[:_terminal_idx + 1]
             for b in _elif_exclude:
                 self.generated_blocks.discard(b)
             if (not region.else_blocks
@@ -15663,6 +15673,11 @@ AST 映射规则:
                 if_result = if_result + _5_post_extra
             else:
                 if_result = [if_result] + _5_post_extra
+        if _then_terminal_overflow:
+            if isinstance(if_result, list):
+                if_result = if_result + _then_terminal_overflow
+            else:
+                if_result = [if_result] + _then_terminal_overflow
         return if_result
 
     def _try_build_await_condition(self, region: IfRegion, cond_block: 'BasicBlock') -> Optional[Dict[str, Any]]:
