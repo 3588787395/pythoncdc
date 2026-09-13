@@ -13633,7 +13633,28 @@ AST 映射规则:
                      and b.get_last_instruction().argval is not None
                      and self.cfg.get_block_by_offset(b.get_last_instruction().argval) is getattr(region, 'merge_block', None)))
                 for b in region.else_blocks)
-            if (_all_nop_else or _all_jf_shim_else) and region.then_blocks:
+            _parent_loop = None
+            _p = getattr(region, 'parent', None)
+            while _p is not None:
+                if isinstance(_p, LoopRegion):
+                    _parent_loop = _p
+                    break
+                _p = getattr(_p, 'parent', None)
+            _loop_block_offsets = set()
+            if _parent_loop is not None and hasattr(_parent_loop, 'blocks'):
+                for _lb in _parent_loop.blocks:
+                    if hasattr(_lb, 'start_offset'):
+                        _loop_block_offsets.add(_lb.start_offset)
+            _else_jf_exits_loop = False
+            if _parent_loop is not None:
+                for _eb in region.else_blocks:
+                    _eb_last = _eb.get_last_instruction()
+                    if (_eb_last and _eb_last.opname == 'JUMP_FORWARD'
+                            and _eb_last.argval is not None
+                            and _eb_last.argval not in _loop_block_offsets):
+                        _else_jf_exits_loop = True
+                        break
+            if (_all_nop_else or _all_jf_shim_else) and region.then_blocks and not _else_jf_exits_loop:
                 _then_jf_to_merge = False
                 for _tb in region.then_blocks:
                     _tb_last = _tb.get_last_instruction()

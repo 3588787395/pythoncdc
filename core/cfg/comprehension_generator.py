@@ -108,10 +108,113 @@ class ComprehensionGenerator:
                     if _i.opname not in SKIP_OPS:
                         instrs.append(_i)
 
+        _chained_pairs = []
+        if len(comp_indices) >= 2:
+            for _cci in range(len(comp_indices) - 1):
+                _ci1, _cc1 = comp_indices[_cci]
+                _ci2, _cc2 = comp_indices[_cci + 1]
+                _first_call_end = None
+                for _fci in range(_ci1 + 1, len(instrs)):
+                    if instrs[_fci].opname == 'GET_ITER':
+                        for _fci2 in range(_fci + 1, min(_fci + 4, len(instrs))):
+                            if instrs[_fci2].opname == 'CALL':
+                                _first_call_end = _fci2 + 1
+                                break
+                        break
+                if _first_call_end is None:
+                    continue
+                _after_first = instrs[_first_call_end:_ci2]
+                _after_meaningful = [i for i in _after_first if i.opname not in SKIP_OPS]
+                _closure_setup_ops2 = frozenset({'MAKE_CELL', 'LOAD_CLOSURE', 'COPY_FREE_VARS'})
+                _all_closure = all(i.opname in _closure_setup_ops2 or (i.opname == 'BUILD_TUPLE') or (i.opname == 'LOAD_CONST' and hasattr(i.argval, 'co_name')) for i in _after_meaningful)
+                if not _all_closure:
+                    continue
+                _found_getiter = False
+                for _ai in instrs[_first_call_end:]:
+                    if _ai.opname == 'GET_ITER':
+                        _found_getiter = True
+                        break
+                    if _ai.opname in ('STORE_FAST', 'STORE_NAME', 'POP_TOP'):
+                        break
+                if _found_getiter:
+                    _chained_pairs.append(_cci)
+
         all_stmts = []
         prev_end = 0
+        _skip_next = False
 
-        for comp_idx, comp_code in comp_indices:
+        for _comp_loop_idx, (comp_idx, comp_code) in enumerate(comp_indices):
+            if _skip_next:
+                _skip_next = False
+                continue
+            if _comp_loop_idx in _chained_pairs:
+                _ci1, _cc1 = comp_indices[_comp_loop_idx]
+                _ci2, _cc2 = comp_indices[_comp_loop_idx + 1]
+                _inner_get_iter = None
+                for _igi in range(_ci1 + 1, len(instrs)):
+                    if instrs[_igi].opname == 'GET_ITER':
+                        _inner_get_iter = _igi
+                        break
+                _inner_iter_instrs_raw = instrs[_ci1 + 1:_inner_get_iter] if _inner_get_iter else []
+                _cso = frozenset({'MAKE_CELL', 'LOAD_CLOSURE', 'COPY_FREE_VARS'})
+                _real_iter_instrs = []
+                _in_cl = False
+                for _iii in _inner_iter_instrs_raw:
+                    if _iii.opname in _cso:
+                        _in_cl = True
+                        continue
+                    if _iii.opname == 'BUILD_TUPLE' and _in_cl:
+                        _in_cl = False
+                        continue
+                    _in_cl = False
+                    if _iii.opname == 'LOAD_CONST' and hasattr(_iii.argval, 'co_name'):
+                        continue
+                    _real_iter_instrs.append(_iii)
+                _inner_iter_expr = self.expr_reconstructor.reconstruct(_real_iter_instrs) if _real_iter_instrs else {'type': 'Name', 'id': '<iterator>'}
+                _inner_comp_ast = self.parse_comprehension_inner(_cc1, _inner_iter_expr)
+                _outer_get_iter = None
+                for _ogi in range(_ci2 + 1, len(instrs)):
+                    if instrs[_ogi].opname == 'GET_ITER':
+                        _outer_get_iter = _ogi
+                        break
+                if _inner_comp_ast is not None and _outer_get_iter is not None:
+                    _outer_comp_ast = self.parse_comprehension_inner(_cc2, _inner_comp_ast)
+                    if _outer_comp_ast is not None:
+                        _outer_call_end = _outer_get_iter + 1
+                        for _oci in range(_outer_get_iter + 1, len(instrs)):
+                            if instrs[_oci].opname in ('PRECALL', 'CALL'):
+                                _outer_call_end = _oci + 1
+                                if instrs[_oci].opname == 'CALL':
+                                    break
+                        _ow_post = instrs[_outer_call_end:]
+                        _ow_meaningful = [i for i in _ow_post if i.opname not in SKIP_OPS]
+                        _ow_closure = frozenset({'LOAD_CLOSURE', 'COPY_FREE_VARS', 'MAKE_CELL'})
+                        _ow_clean = [i for i in _ow_meaningful if i.opname not in _ow_closure and not (i.opname == 'BUILD_TUPLE' and any(j.opname in _ow_closure for j in _ow_meaningful[:_ow_meaningful.index(i)]))]
+                        _expr_build = frozenset({'BUILD_TUPLE', 'BUILD_LIST', 'BUILD_SET', 'BUILD_MAP', 'BINARY_OP', 'BINARY_SUBSCR'})
+                        if any(i.opname in _expr_build for i in _ow_clean):
+                            return None
+                        _store_instr = None
+                        for _si in _ow_post:
+                            if _si.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF', 'STORE_SUBSCR', 'STORE_ATTR'):
+                                _store_instr = _si
+                                break
+                        if _store_instr:
+                            if _store_instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                                all_stmts.append({'type': 'Assign', 'targets': [{'type': 'Name', 'id': _store_instr.argval, 'ctx': 'Store'}], 'value': _outer_comp_ast})
+                            prev_end = instrs.index(_store_instr) + 1
+                        else:
+                            _last_i = instrs[-1]
+                            if _last_i.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                                all_stmts.append({'type': 'Return', 'value': _outer_comp_ast})
+                            else:
+                                all_stmts.append({'type': 'Expr', 'value': _outer_comp_ast})
+                            prev_end = len(instrs)
+                    else:
+                        prev_end = len(instrs)
+                else:
+                    prev_end = len(instrs)
+                _skip_next = True
+                continue
             pre_comp_instrs = instrs[prev_end:comp_idx - 1]
             _closure_setup_ops = frozenset({'MAKE_CELL', 'LOAD_CLOSURE', 'COPY_FREE_VARS'})
             _filtered = []
