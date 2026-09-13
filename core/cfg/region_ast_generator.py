@@ -7736,6 +7736,25 @@ AST 映射规则:
                                                      'LOAD_ATTR', 'BUILD_TUPLE', 'BUILD_LIST',
                                                      'BUILD_MAP', 'FORMAT_VALUE'):
                         break
+                _poptop_count_after = sum(1 for i in hdr.instructions[_last_store_idx + 1:]
+                                          if i.opname == 'POP_TOP')
+                if _poptop_count_after > 1:
+                    _recheck_start_sr = len(hdr.instructions) - 1
+                    _need_sr = 1
+                    for _si in range(len(hdr.instructions) - 2, -1, -1):
+                        _ib = hdr.instructions[_si]
+                        try:
+                            _eff = _dis.stack_effect(_ib.opcode, _ib.arg)
+                        except Exception:
+                            _eff = 0
+                        _push = _eff if _eff > 0 else 0
+                        _pop = -_eff if _eff < 0 else 0
+                        _need_sr = _need_sr - _push + _pop
+                        if _need_sr <= 0:
+                            _recheck_start_sr = _si
+                            break
+                        _recheck_start_sr = _si
+                    _body_end_idx = _recheck_start_sr - 1
             if _body_end_idx is None:
                 stack_depth = 0
                 for _sli in range(len(hdr.instructions) - 1, -1, -1):
@@ -9514,7 +9533,7 @@ AST 映射规则:
                         _nbe_cond_start_idx = _nbci2
                 else:
                     for _nbci2 in range(_nbci - 1, -1, -1):
-                        if block.instructions[_nbci2].opname not in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF', 'LOAD_CONST', 'COPY'):
+                        if block.instructions[_nbci2].opname not in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF', 'LOAD_CONST', 'COPY', 'LOAD_ATTR'):
                             break
                         _nbe_cond_start_idx = _nbci2
                 if _nbe_cond_start_idx is None:
