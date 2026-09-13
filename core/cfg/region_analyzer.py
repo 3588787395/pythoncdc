@@ -4889,7 +4889,7 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                            and s not in header.exception_successors]
         if condition_block:
             loop_successors = [s for s in loop_successors if s != condition_block]
-        loop_successors = [s for s in loop_successors if not any(i.opname == 'RAISE_VARARGS' for i in s.instructions)]
+        loop_successors = [s for s in loop_successors if not any(i.opname in ('RAISE_VARARGS', 'RERAISE') for i in s.instructions)]
         detector = get_opcode_detector()
         for block in body_set:
             if block == header:
@@ -4905,7 +4905,7 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                         continue
                     block_last = block.get_last_instruction()
                     if block_last and detector.is_conditional_jump(block_last):
-                        if any(i.opname == 'RAISE_VARARGS' for i in succ.instructions):
+                        if any(i.opname in ('RAISE_VARARGS', 'RERAISE') for i in succ.instructions):
                             continue
                         loop_successors.append(succ)
         cond_exit_targets = []

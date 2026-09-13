@@ -22352,10 +22352,10 @@ AST 映射规则:
                             _succ_owner_pt = self.region_analyzer.block_to_region.get(_succ)
                             if _succ_owner_pt is not None and _succ_owner_pt is not region:
                                 continue
+                            if _succ in self.generated_blocks:
+                                continue
                             _post_try_seen_r19n2.add(_succ)
                             _post_try_blocks_r19n2.append(_succ)
-            # 如果没有 else_blocks，从 try_blocks 的正常出口查找
-            if not _post_try_blocks_r19n2:
                 for _tb in region.try_blocks:
                     # 区域归约算法原则 2（每块唯一归属）：
                     # try_blocks 中角色为 BREAK/PURE_BREAK 的块是循环内的
@@ -22394,9 +22394,10 @@ AST 映射规则:
                             _succ_owner_pt = self.region_analyzer.block_to_region.get(_succ)
                             if _succ_owner_pt is not None and _succ_owner_pt is not region:
                                 continue
+                            if _succ in self.generated_blocks:
+                                continue
                             _post_try_seen_r19n2.add(_succ)
                             _post_try_blocks_r19n2.append(_succ)
-            # [R08 fix] Also check finally_copy_blocks successors for post-try blocks.
             # When has_finally=True, CPython creates finally normal-path copies
             # (in finally_copy_blocks) that end with JUMP_FORWARD to post-try code
             # (e.g., `return None` after try-except-else-finally). These post-try
@@ -22448,6 +22449,8 @@ AST 映射规则:
                             _succ_owner_pt = self.region_analyzer.block_to_region.get(_succ)
                             if _succ_owner_pt is not None and _succ_owner_pt is not region:
                                 continue
+                            if _succ in self.generated_blocks:
+                                continue
                             _post_try_seen_r19n2.add(_succ)
                             _post_try_blocks_r19n2.append(_succ)
             for _et, _en, _hbs in region.except_handlers:
@@ -22487,6 +22490,8 @@ AST 映射规则:
                                 if _is_descendant_owner:
                                     break
                             if not _is_ancestor_owner and not _is_descendant_owner:
+                                continue
+                            if _is_ancestor_owner:
                                 continue
                         _post_try_seen_r19n2.add(_jh_succ)
                         _post_try_blocks_r19n2.append(_jh_succ)
