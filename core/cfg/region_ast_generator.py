@@ -4412,8 +4412,47 @@ AST 映射规则:
         _has_break = getattr(region, 'has_break', False)
         _is_while = region.region_type == RegionType.WHILE_LOOP
         if _has_break:
-            # while+break / for+break：else_stmts 作为 orelse（break 跳过 else 是核心语义）
             _sequential_after_loop = []
+            _body_set = set(region.body_blocks) | {region.header_block}
+            _break_to_return_map = {}
+            for _bb in region.break_blocks:
+                for _bsucc in _bb.successors:
+                    if _bsucc not in _body_set and _bsucc not in region.else_blocks and _bsucc not in self.generated_blocks:
+                        _succ_role = self.region_analyzer.get_block_role(_bsucc)
+                        if _succ_role in (BlockRole.RETURN, BlockRole.RETURN_NONE):
+                            _ret_ast = self._generate_return_ast(_bsucc)
+                            _break_to_return_map[_bb.start_offset] = _ret_ast if _ret_ast else {'type': 'Return', 'value': {'type': 'Constant', 'value': None}}
+                            self.generated_blocks.add(_bsucc)
+                            self.generated_offsets.add(_bsucc.start_offset)
+            if _break_to_return_map:
+                def _fold_break_to_return(stmts):
+                    result = []
+                    for s in stmts:
+                        if isinstance(s, dict) and s.get('type') == 'If':
+                            _body = s.get('body', [])
+                            _orelse = s.get('orelse', [])
+                            if (len(_body) == 1 and isinstance(_body[0], dict) and _body[0].get('type') == 'Break'):
+                                for _bk_off, _ret in _break_to_return_map.items():
+                                    s = dict(s)
+                                    s['body'] = [_ret]
+                                    break
+                            elif (len(_orelse) == 1 and isinstance(_orelse[0], dict) and _orelse[0].get('type') == 'Break'):
+                                for _bk_off, _ret in _break_to_return_map.items():
+                                    s = dict(s)
+                                    s['orelse'] = [_ret]
+                                    break
+                            else:
+                                _folded_body = _fold_break_to_return(_body)
+                                _folded_orelse = _fold_break_to_return(_orelse)
+                                s = dict(s, body=_folded_body, orelse=_folded_orelse) if _folded_orelse else dict(s, body=_folded_body)
+                        result.append(s)
+                    return result
+                body_stmts = _fold_break_to_return(body_stmts)
+                for _bk_off in _break_to_return_map:
+                    _bk_block = self.cfg.get_block_by_offset(_bk_off)
+                    if _bk_block and _bk_block not in self.generated_blocks:
+                        self.generated_blocks.add(_bk_block)
+                        self.generated_offsets.add(_bk_block.start_offset)
         else:
             # 无 break 时，else_stmts 转为顺序语句（for 和 while 均适用）。
             # for 循环无 break 时 else 子句总是执行，与循环后顺序代码语义等价、
@@ -5784,6 +5823,46 @@ AST 映射规则:
         _has_break = getattr(region, 'has_break', False)
         if _has_break:
             _sequential_after_loop = []
+            _body_set_w = set(region.body_blocks) | {region.header_block}
+            _break_to_return_map_w = {}
+            for _bb in region.break_blocks:
+                for _bsucc in _bb.successors:
+                    if _bsucc not in _body_set_w and _bsucc not in region.else_blocks and _bsucc not in self.generated_blocks:
+                        _succ_role = self.region_analyzer.get_block_role(_bsucc)
+                        if _succ_role in (BlockRole.RETURN, BlockRole.RETURN_NONE):
+                            _ret_ast = self._generate_return_ast(_bsucc)
+                            _break_to_return_map_w[_bb.start_offset] = _ret_ast if _ret_ast else {'type': 'Return', 'value': {'type': 'Constant', 'value': None}}
+                            self.generated_blocks.add(_bsucc)
+                            self.generated_offsets.add(_bsucc.start_offset)
+            if _break_to_return_map_w:
+                def _fold_break_to_return_w(stmts):
+                    result = []
+                    for s in stmts:
+                        if isinstance(s, dict) and s.get('type') == 'If':
+                            _body = s.get('body', [])
+                            _orelse = s.get('orelse', [])
+                            if (len(_body) == 1 and isinstance(_body[0], dict) and _body[0].get('type') == 'Break'):
+                                for _bk_off, _ret in _break_to_return_map_w.items():
+                                    s = dict(s)
+                                    s['body'] = [_ret]
+                                    break
+                            elif (len(_orelse) == 1 and isinstance(_orelse[0], dict) and _orelse[0].get('type') == 'Break'):
+                                for _bk_off, _ret in _break_to_return_map_w.items():
+                                    s = dict(s)
+                                    s['orelse'] = [_ret]
+                                    break
+                            else:
+                                _folded_body = _fold_break_to_return_w(_body)
+                                _folded_orelse = _fold_break_to_return_w(_orelse)
+                                s = dict(s, body=_folded_body, orelse=_folded_orelse) if _folded_orelse else dict(s, body=_folded_body)
+                        result.append(s)
+                    return result
+                body_stmts = _fold_break_to_return_w(body_stmts)
+                for _bk_off in _break_to_return_map_w:
+                    _bk_block = self.cfg.get_block_by_offset(_bk_off)
+                    if _bk_block and _bk_block not in self.generated_blocks:
+                        self.generated_blocks.add(_bk_block)
+                        self.generated_offsets.add(_bk_block.start_offset)
         else:
             _sequential_after_loop = else_stmts
             else_stmts = []
