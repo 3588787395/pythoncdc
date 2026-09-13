@@ -5681,8 +5681,11 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                                             elif _last_rvi.opname == 'RETURN_CONST' and _last_rvi.argval is not None:
                                                 _is_non_none_return = True
                                         if _is_non_none_return:
-                                            break_blocks_set.discard(s)
-                                            break
+                                            if for_iter_exit is not None and _ss is for_iter_exit:
+                                                pass
+                                            else:
+                                                break_blocks_set.discard(s)
+                                                break
                 elif s == natural_exit and ne_is_terminator:
                     if last and last.opname in FORWARD_CONDITIONAL_JUMP_OPS:
                         if last.argval is not None and self.cfg.get_block_by_offset(last.argval) in body_set:
@@ -5830,7 +5833,7 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                     _cur_last = _cur.get_last_instruction()
                     if _cur_last and _cur_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE') and _cur_last.argval is not None:
                         _cur_jt = self.cfg.get_block_by_offset(_cur_last.argval)
-                        if _cur_jt is not None and _cur_jt not in body_set and _cur_jt != natural_exit:
+                        if _cur_jt is not None and _cur_jt not in body_set and (_cur_jt != natural_exit or (for_iter_exit and _cur_jt == for_iter_exit)):
                             _is_except_block = any(i.opname in ('POP_EXCEPT', 'PUSH_EXC_INFO', 'RERAISE') for i in _cur.instructions)
                             if not _is_except_block:
                                 if for_iter_exit and _cur_jt == for_iter_exit:

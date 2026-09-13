@@ -93,7 +93,7 @@ from .region_analyzer import (
     BoolOpRegion, TernaryRegion,
     CONDITIONAL_JUMP_OPS, SHORT_CIRCUIT_JUMP_OPS, NONE_CHECK_OPS,
     FORWARD_CONDITIONAL_JUMP_OPS, BACKWARD_CONDITIONAL_JUMP_OPS,
-    NOISE_OPS,
+    NOISE_OPS, PURE_JUMP_OPS,
 )
 from .ast_generator_v2 import ExpressionReconstructor
 from .comprehension_generator import ComprehensionGenerator
@@ -4420,6 +4420,11 @@ AST 映射规则:
                     if _bsucc not in _body_set and _bsucc not in region.else_blocks and _bsucc not in self.generated_blocks:
                         _succ_role = self.region_analyzer.get_block_role(_bsucc)
                         if _succ_role in (BlockRole.RETURN, BlockRole.RETURN_NONE):
+                            _bb_instrs = [i for i in _bb.instructions if i.opname not in NOISE_OPS]
+                            _bb_has_pop_top = any(i.opname == 'POP_TOP' for i in _bb_instrs)
+                            _bb_non_trivial = [i for i in _bb_instrs if i.opname not in ('POP_TOP', 'EXTENDED_ARG') and i.opname not in PURE_JUMP_OPS]
+                            if _bb_has_pop_top and not _bb_non_trivial:
+                                continue
                             _ret_ast = self._generate_return_ast(_bsucc)
                             _break_to_return_map[_bb.start_offset] = _ret_ast if _ret_ast else {'type': 'Return', 'value': {'type': 'Constant', 'value': None}}
                             self.generated_blocks.add(_bsucc)
@@ -5830,6 +5835,11 @@ AST 映射规则:
                     if _bsucc not in _body_set_w and _bsucc not in region.else_blocks and _bsucc not in self.generated_blocks:
                         _succ_role = self.region_analyzer.get_block_role(_bsucc)
                         if _succ_role in (BlockRole.RETURN, BlockRole.RETURN_NONE):
+                            _bb_instrs = [i for i in _bb.instructions if i.opname not in NOISE_OPS]
+                            _bb_has_pop_top = any(i.opname == 'POP_TOP' for i in _bb_instrs)
+                            _bb_non_trivial = [i for i in _bb_instrs if i.opname not in ('POP_TOP', 'EXTENDED_ARG') and i.opname not in PURE_JUMP_OPS]
+                            if _bb_has_pop_top and not _bb_non_trivial:
+                                continue
                             _ret_ast = self._generate_return_ast(_bsucc)
                             _break_to_return_map_w[_bb.start_offset] = _ret_ast if _ret_ast else {'type': 'Return', 'value': {'type': 'Constant', 'value': None}}
                             self.generated_blocks.add(_bsucc)
