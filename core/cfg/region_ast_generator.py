@@ -3040,6 +3040,26 @@ AST 映射规则:
             )
             if chained_cond is not None:
                 chained_cond = self._invert_assert_none_check_direction(chained_cond)
+                if getattr(region, 'boolop_chain_blocks', None) \
+                        and getattr(region, 'boolop_chain_ops', None):
+                    boolop_cond = self._build_assert_boolop_condition(
+                        cond_block,
+                        list(region.boolop_chain_blocks),
+                        list(region.boolop_chain_ops),
+                        _first_operand_override=chained_cond,
+                    )
+                    if boolop_cond is not None:
+                        boolop_cond = self._invert_assert_none_check_direction(boolop_cond)
+                        for block in region.blocks:
+                            self.generated_blocks.add(block)
+                        result = {
+                            'type': 'Assert',
+                            'test': boolop_cond,
+                        }
+                        message = self._build_assert_message(region)
+                        if message is not None:
+                            result['msg'] = message
+                        return result
                 for block in region.blocks:
                     self.generated_blocks.add(block)
                 result = {
@@ -3363,7 +3383,8 @@ AST 映射规则:
             'comparators': comparators,
         }
 
-    def _build_assert_boolop_condition(self, cond_block, chain_blocks, chain_ops):
+    def _build_assert_boolop_condition(self, cond_block, chain_blocks, chain_ops,
+                                       _first_operand_override=None):
         """ 重建 assert BoolOp 条件 AST。
 
         输入契约:
@@ -3397,39 +3418,42 @@ AST 映射规则:
         for block, op in zip(all_blocks, all_ops):
             if block is None:
                 continue
-            instrs = [i for i in block.instructions
-                     if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-            last_instr = block.get_last_instruction()
-            if last_instr and last_instr.opname in STRIP_JUMP_OPS:
-                pure_instrs = [i for i in instrs if i != last_instr]
+            if block is cond_block and _first_operand_override is not None:
+                sub_expr = _first_operand_override
             else:
-                clean_instrs = []
-                for i in instrs:
-                    if i.opname in ('POP_TOP', 'RETURN_VALUE', 'RETURN_CONST',
-                                   'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'):
-                        break
-                    clean_instrs.append(i)
-                pure_instrs = clean_instrs if clean_instrs else list(instrs[:1]) if instrs else []
-            if not pure_instrs:
-                continue
-            sub_expr = self.expr_reconstructor.reconstruct(pure_instrs)
-            if sub_expr is None:
-                continue
-            # None 检查方向修正（assert 上下文）：和 BoolOpRegion 一致，
-            # 把 NONE_CHECK 转换为 Compare，方向按 op 修正，
-            # 外层 _invert_assert_none_check_direction 会再次处理（递归进入 values）。
-            if last_instr and last_instr.opname in NONE_CHECK_OPS:
-                _is_not_none_op = 'NOT_NONE' in last_instr.opname
-                if op == 'and':
-                    _cmp_op = 'IsNot' if not _is_not_none_op else 'Is'
+                instrs = [i for i in block.instructions
+                         if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                last_instr = block.get_last_instruction()
+                if last_instr and last_instr.opname in STRIP_JUMP_OPS:
+                    pure_instrs = [i for i in instrs if i != last_instr]
                 else:
-                    _cmp_op = 'IsNot' if _is_not_none_op else 'Is'
-                sub_expr = {
-                    'type': 'Compare',
-                    'left': sub_expr,
-                    'ops': [{'type': _cmp_op}],
-                    'comparators': [{'type': 'Constant', 'value': None}]
-                }
+                    clean_instrs = []
+                    for i in instrs:
+                        if i.opname in ('POP_TOP', 'RETURN_VALUE', 'RETURN_CONST',
+                                       'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'):
+                            break
+                        clean_instrs.append(i)
+                    pure_instrs = clean_instrs if clean_instrs else list(instrs[:1]) if instrs else []
+                if not pure_instrs:
+                    continue
+                sub_expr = self.expr_reconstructor.reconstruct(pure_instrs)
+                if sub_expr is None:
+                    continue
+                # None 检查方向修正（assert 上下文）：和 BoolOpRegion 一致，
+                # 把 NONE_CHECK 转换为 Compare，方向按 op 修正，
+                # 外层 _invert_assert_none_check_direction 会再次处理（递归进入 values）。
+                if last_instr and last_instr.opname in NONE_CHECK_OPS:
+                    _is_not_none_op = 'NOT_NONE' in last_instr.opname
+                    if op == 'and':
+                        _cmp_op = 'IsNot' if not _is_not_none_op else 'Is'
+                    else:
+                        _cmp_op = 'IsNot' if _is_not_none_op else 'Is'
+                    sub_expr = {
+                        'type': 'Compare',
+                        'left': sub_expr,
+                        'ops': [{'type': _cmp_op}],
+                        'comparators': [{'type': 'Constant', 'value': None}]
+                    }
             if current_group_op is None:
                 current_group_op = op
                 current_group_values = [sub_expr]

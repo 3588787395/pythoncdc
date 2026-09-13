@@ -13897,34 +13897,39 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 if succ != block
             )
             if not is_assert:
-                continue
-
-            message_block = None
-            for succ in sorted(block.successors, key=lambda s: s.start_offset):
-                if succ == block:
+                cc_test = self._detect_chained_compare_pattern(block)
+                if cc_test and len(cc_test.get('compare_ops', [])) >= 2:
+                    for succ in block.conditional_successors:
+                        if succ == block:
+                            continue
+                        cur = succ
+                        seen = {block}
+                        for _ in range(8):
+                            if cur in seen:
+                                break
+                            seen.add(cur)
+                            for instr in cur.instructions:
+                                if instr.opname == 'LOAD_ASSERTION_ERROR':
+                                    is_assert = True
+                                    break
+                            if is_assert:
+                                break
+                            cl = cur.get_last_instruction()
+                            if cl and cl.opname in ('RAISE_VARARGS', 'RETURN_VALUE',
+                                                    'RETURN_CONST', 'RERAISE'):
+                                break
+                            if cl and cl.opname in FORWARD_CONDITIONAL_JUMP_OPS and 'TRUE' in cl.opname:
+                                ft = [s for s in cur.conditional_successors
+                                      if s.start_offset != cl.argval]
+                                if len(ft) == 1:
+                                    cur = ft[0]
+                                    continue
+                            elif len(cur.successors) == 1:
+                                cur = list(cur.successors)[0]
+                                continue
+                            break
+                if not is_assert:
                     continue
-                # Find the LOAD_ASSERTION_ERROR block (start of
-                # failure path). For simple cases (`assert x, "msg"`) this
-                # block also contains RAISE_VARARGS, so it's the same block
-                # the legacy `_reach_raise_varargs_block` would return.
-                # For ternary/complex message cases (`assert x, (a if c else
-                # b)`), the LOAD_ASSERTION_ERROR block is the TernaryRegion
-                # entry; the legacy walk gives up because of the ternary's
-                # 2 conditional successors. Finding the LOAD_ASSERTION_ERROR
-                # block directly lets the parent AssertRegion reference the
-                # TernaryRegion entry via `message_block` (principle 4:
-                # parent references child entry).
-                mb = self._find_assertion_error_block(succ)
-                if mb is not None:
-                    message_block = mb
-                    break
-                # Fallback: walk fall-through chain for cases where
-                # LOAD_ASSERTION_ERROR is in a later block (legacy behavior
-                # preserved for any edge cases not covered by the new helper).
-                mb = self._reach_raise_varargs_block(succ)
-                if mb is not None:
-                    message_block = mb
-                    break
 
             # [Round4-12] 检测 condition_block 是否是链式比较 header
             # （COPY(arg=2)+COMPARE_OP 对 + 后续 fall-through COMPARE_OP 块）。
@@ -13937,6 +13942,55 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 chained_compare_blocks = list(cc_info.get('extra_chain_blocks', []))
                 chained_compare_ops = list(cc_info.get('compare_ops', []))
 
+            message_block = None
+            for succ in sorted(block.successors, key=lambda s: s.start_offset):
+                if succ == block:
+                    continue
+                mb = self._find_assertion_error_block(succ)
+                if mb is not None:
+                    message_block = mb
+                    break
+                mb = self._reach_raise_varargs_block(succ)
+                if mb is not None:
+                    message_block = mb
+                    break
+            if message_block is None and chained_compare_blocks:
+                chain_end = None
+                for cb in chained_compare_blocks:
+                    cl = cb.get_last_instruction()
+                    if cl and cl.opname in FORWARD_CONDITIONAL_JUMP_OPS and 'TRUE' in cl.opname:
+                        chain_end = cb
+                        break
+                if chain_end is not None:
+                    cl = chain_end.get_last_instruction()
+                    ft = [s for s in chain_end.conditional_successors
+                          if s.start_offset != cl.argval]
+                    if len(ft) == 1:
+                        cur = ft[0]
+                        seen = {block, chain_end}
+                        for _ in range(8):
+                            if cur in seen:
+                                break
+                            seen.add(cur)
+                            for instr in cur.instructions:
+                                if instr.opname == 'LOAD_ASSERTION_ERROR':
+                                    message_block = cur
+                                    break
+                            if message_block is not None:
+                                break
+                            cl2 = cur.get_last_instruction()
+                            if cl2 and cl2.opname in FORWARD_CONDITIONAL_JUMP_OPS and 'TRUE' in cl2.opname:
+                                ft2 = [s for s in cur.conditional_successors
+                                       if s.start_offset != cl2.argval]
+                                if len(ft2) == 1:
+                                    cur = ft2[0]
+                                    continue
+                            elif cl2 and cl2.opname in ('POP_TOP', 'JUMP_FORWARD', 'NOP'):
+                                if len(cur.successors) == 1:
+                                    cur = list(cur.successors)[0]
+                                    continue
+                            break
+
             # 检测 condition_block 是否是 BoolOp 条件首段
             # （`assert a > 0 and b > 0, "msg"`）。首段以 POP_JUMP_IF_FALSE 跳到
             # message_block（"and" 失败快跳），其 fall-through 后继为下一段条件块；
@@ -13945,11 +13999,14 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             # 多块各含一个 COMPARE_OP，块间用 POP_JUMP_IF_FALSE/TRUE 串联。
             boolop_chain_blocks: List[BasicBlock] = []
             boolop_chain_ops: List[str] = []
+            bc_passthrough: List[BasicBlock] = []
             if message_block is not None:
-                bc_info = self._detect_assert_boolop_chain(block, message_block)
+                bc_info = self._detect_assert_boolop_chain(block, message_block,
+                                                           chained_compare_blocks)
                 if bc_info:
                     boolop_chain_blocks = list(bc_info.get('chain_blocks', []))
                     boolop_chain_ops = list(bc_info.get('chain_ops', []))
+                    bc_passthrough = list(bc_info.get('passthrough_blocks', []))
                     # Backward walk for `assert not (or-chain), msg`
                     # may return new_condition_block — the FIRST or-chain block
                     # (earlier in CFG order than `block`). The AssertRegion
@@ -13964,7 +14021,8 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 region_type=RegionType.ASSERT,
                 entry=block,
                 blocks=({block} | ({message_block} if message_block else set())
-                        | set(chained_compare_blocks) | set(boolop_chain_blocks)),
+                        | set(chained_compare_blocks) | set(boolop_chain_blocks)
+                        | set(bc_passthrough)),
                 condition_block=block,
                 message_block=message_block,
                 chained_compare_blocks=chained_compare_blocks,
@@ -13992,11 +14050,15 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             for cb in boolop_chain_blocks:
                 if cb not in self.block_to_region:
                     self.block_to_region[cb] = region
+            for pb in bc_passthrough:
+                if pb not in self.block_to_region:
+                    self.block_to_region[pb] = region
 
         return regions
 
     def _detect_assert_boolop_chain(self, condition_block: BasicBlock,
-                                    message_block: BasicBlock) -> Optional[Dict]:
+                                    message_block: BasicBlock,
+                                    chained_compare_blocks: List[BasicBlock] = None) -> Optional[Dict]:
         """ 检测 assert 条件为 BoolOp 的多段条件链。
 
         输入: condition_block（首段，已被识别为 AssertRegion.condition_block），
@@ -14029,10 +14091,24 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
         first_op = 'and'
         if 'TRUE' in cond_last.opname or 'NOT_NONE' in cond_last.opname:
             first_op = 'or'
+        # When condition_block is a chained compare header (IF_FALSE for chain
+        # continuation), the actual BoolOp op is determined by the last chained
+        # compare block's jump direction (e.g., IF_TRUE = or-chain skip).
+        current = condition_block
+        if first_op == 'and' and chained_compare_blocks:
+            last_cc = chained_compare_blocks[-1]
+            lcl = last_cc.get_last_instruction()
+            if lcl and lcl.opname in FORWARD_CONDITIONAL_JUMP_OPS:
+                if 'TRUE' in lcl.opname or 'NOT_NONE' in lcl.opname:
+                    first_op = 'or'
+                    current = last_cc
         chain_blocks: List[BasicBlock] = []
         chain_ops: List[str] = []
+        all_passthrough: List[BasicBlock] = []
         visited = {condition_block, message_block}
-        current = condition_block
+        if chained_compare_blocks:
+            for cb in chained_compare_blocks:
+                visited.add(cb)
         while True:
             last = current.get_last_instruction()
             if not last or last.opname not in FORWARD_CONDITIONAL_JUMP_OPS:
@@ -14044,10 +14120,27 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             if len(ft_candidates) != 1:
                 break
             next_block = ft_candidates[0]
-            # next_block 必须是条件块（末尾为 FORWARD_CONDITIONAL_JUMP_OPS）
-            next_last = next_block.get_last_instruction()
-            if not next_last or next_last.opname not in FORWARD_CONDITIONAL_JUMP_OPS:
+            bc_passthrough: List[BasicBlock] = []
+            while True:
+                next_last = next_block.get_last_instruction()
+                if next_last and next_last.opname in FORWARD_CONDITIONAL_JUMP_OPS:
+                    break
+                if (next_last is None
+                        or next_last.opname not in ('POP_TOP', 'JUMP_FORWARD', 'NOP', 'JUMP_BACKWARD')):
+                    next_block = None
+                    break
+                if len(next_block.successors) != 1:
+                    next_block = None
+                    break
+                bc_passthrough.append(next_block)
+                visited.add(next_block)
+                next_block = list(next_block.successors)[0]
+                if next_block in visited:
+                    next_block = None
+                    break
+            if next_block is None:
                 break
+            all_passthrough.extend(bc_passthrough)
             if len(next_block.conditional_successors) != 2:
                 break
             # next_block 必须能到达 message_block：
@@ -14149,6 +14242,7 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             'chain_blocks': chain_blocks,
             'chain_ops': chain_ops,
             'first_op': first_op,
+            'passthrough_blocks': all_passthrough,
         }
 
     def _reach_assertion_error_block(self, block: BasicBlock) -> bool:
