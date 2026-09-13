@@ -465,9 +465,29 @@ class ComprehensionGenerator:
                 last_instr = instrs[-1]
                 if last_instr.opname in ('RETURN_VALUE', 'RETURN_CONST'):
                     all_stmts.append({'type': 'Return', 'value': comp_value})
+                elif (region_ast_gen is not None and block.successors):
+                    _ret_succ = None
+                    _last_off = last_instr.offset if hasattr(last_instr, 'offset') else 0
+                    _fall_through_off = _last_off + 2
+                    for _s in block.successors:
+                        if _s.start_offset != _fall_through_off:
+                            continue
+                        _s_skip = [i for i in _s.instructions if i.opname not in SKIP_OPS]
+                        if (len(_s_skip) == 1
+                                and _s_skip[0].opname in ('RETURN_VALUE', 'RETURN_CONST')):
+                            _ret_succ = _s
+                            break
+                    if _ret_succ is not None:
+                        all_stmts.append({'type': 'Return', 'value': comp_value})
+                        region_ast_gen.generated_blocks.add(_ret_succ)
+                        region_ast_gen.generated_offsets.add(_ret_succ.start_offset)
+                        prev_end = len(instrs)
+                    else:
+                        all_stmts.append({'type': 'Expr', 'value': comp_value})
+                        prev_end = len(instrs)
                 else:
                     all_stmts.append({'type': 'Expr', 'value': comp_value})
-                prev_end = len(instrs)
+                    prev_end = len(instrs)
 
         remaining_instrs = instrs[prev_end:]
         if remaining_instrs:
