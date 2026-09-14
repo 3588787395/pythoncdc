@@ -1,0 +1,332 @@
+import datetime
+import hashlib
+import os
+import re
+import time
+from abc import ABCMeta, abstractmethod
+from fly.common.enums import TRADE_DELETE, TRADE_STOP
+from fly.common.errors import PYT2SDK_ERROR_BASE, SUCCESS, T2SDK_CONN_ERROR, T2SDK_REQUEST_ERROR, T2SDK_RTNPACK_EMPTY
+from IQCommon.common import IS_ENCODE, TRADE_DIR_PATH
+from IQCommon.const import SIM_TRADING_LIST_FILE
+from IQCommon.exception import get_traceback_message
+from IQCommon.logger import strategy_log, system_log
+from IQCommon.util.trade_info_utils import get_trade_status, set_trade_stop_status
+class TradeAccount(object):
+    __doc__ = ' Fly对应交易账号抽象类 '
+    __metaclass__ = ABCMeta
+    if os.path.exists('/root/anaconda3/lib/python3.5/site-packages/IQCommon/data/NetEngine.so'):
+        client_md5 = hashlib.md5(open('/root/anaconda3/lib/python3.5/site-packages/IQCommon/data/NetEngine.so', 'rb').read()).hexdigest()
+    elif os.path.exists('/home/fly/anaconda3/lib/python3.5/site-packages/IQCommon/data/NetEngine.so'):
+        client_md5 = hashlib.md5(open('/home/fly/anaconda3/lib/python3.5/site-packages/IQCommon/data/NetEngine.so', 'rb').read()).hexdigest()
+    elif os.path.exists('/usr/local/python3.5/lib/python3.5/site-packages/IQCommon/data/NetEngine.so'):
+        client_md5 = hashlib.md5(open('/usr/local/python3.5/lib/python3.5/site-packages/IQCommon/data/NetEngine.so', 'rb').read()).hexdigest()
+    else:
+        client_md5 = ''
+    def __init__(self, *args, **kwargs):
+        """ ================ Class Variable ================ """
+        self.init_date = kwargs.get('init_date', 0)
+        self.branch_no = kwargs.get('branch_no', 0)
+        self.operator_no = kwargs.get('operator_no', '')
+        self.password = kwargs.get('password', '')
+        self.t2config_path = ''
+        self.trade_id = kwargs.get('trade_id', None)
+        self.password_re = re.compile('客户交易密码\\[.*?\\]错误')
+        self.token_re = re.compile('资金账号\\[.*?\\]的令牌\\[.*?\\]错误')
+        self.handle_id = 0
+        self.func_order = ''
+        self.func_trade = ''
+        self.func_strategy_signal = ''
+        self._TradeAccount__create_date = kwargs.get('create_date', '0')
+        assert self._TradeAccount__create_date == hashlib.md5(str('PBOXQT1.0V%s' % datetime.datetime.now().strftime('%Y%m%d')).encode('utf-8')).hexdigest()
+        self.agw_account = ''
+        self.agw_password = ''
+    def init_connection(self):
+        i = 0
+        while True:
+            error_no, error_info = self.connector_manager.CreateConnector(1, self.t2sdk_ini_path)
+            if not error_no != SUCCESS:
+                break
+            if i < 3:
+                time.sleep(1)
+                i += 1
+            else:
+                error_info = 'init_connection创建连接超时,请稍后再试'
+                break
+        return {'error_no': error_no, 'error_info': error_info}
+    def close_connection(self):
+        error_no = self.connector_manager.DestroyConnect()
+        return {'error_no': error_no, 'error_info': ''}
+    """"""
+    def register_async_manager(self):
+        self.connector_manager.RegisterAsyncCallBack(self._async_callback_manager)
+    def _register_async_callback(self, request, functionid, func, is_dict=False, order=None):
+        self.handle_id += 1
+        self._handle_dict[self.handle_id] = (func, is_dict, request, order)
+        error_no, error_info, handle = self.connector_manager.AsyncSend(request, functionid, self.handle_id, 'PBOXQT1.0V%s' % datetime.datetime.now().strftime('%Y%m%d'))
+        if error_no == SUCCESS:
+            return {'error_no': error_no, 'error_info': error_info, 'order': order}
+        else:
+            return {'error_no': error_no, 'error_info': error_info}
+    def _async_callback_manager(self, handle, functionid, response, issue_type=None):
+        if issue_type is not None:
+            if issue_type in self._issue_type_dict.keys():
+                func = self._issue_type_dict[issue_type]
+                func(None, None, None, response)
+                return None
+            return None
+        else:
+            _handle_tuple = self._handle_dict.pop(handle)
+            if len(_handle_tuple) == 4:
+                func, is_dict, request, order = (_handle_tuple[0], _handle_tuple[1], _handle_tuple[2], _handle_tuple[3])
+            elif len(_handle_tuple) == 3:
+                func, is_dict, request, order = (_handle_tuple[0], _handle_tuple[1], _handle_tuple[2], None)
+            else:
+                func = is_dict = request = order = None
+            error_dict = {'error_no': SUCCESS, 'error_info': ''}
+            if response == [{}]:
+                if is_dict:
+                    error_dict, response = ({'error_no': T2SDK_RTNPACK_EMPTY, 'error_info': '调用后端服务接口【%d】 返回异常' % functionid}, {})
+                else:
+                    response = []
+            else:
+                if 'return_code' in response[0]:
+                    return_code = int(response[0].get('return_code', -1))
+                    if return_code == SUCCESS:
+                        return_code = int(response[0].get('error_no', 0))
+                    error_info = response[0].get('error_info', '')
+                    if response[0].get('sz_msg', '') != '':
+                        error_info = response[0].get('sz_msg', '')
+                    error_dict = {'error_no': return_code, 'error_info': error_info}
+                    if return_code != 0 and self.trade_id:
+                        self.error_print_business(response, request, functionid)
+                if is_dict:
+                    response = response[0]
+            if func is not None:
+                func(error_dict, response, order)
+                return None
+    def _do_request(self, functionid, request, is_async=False, func=None, is_dict=False, reconnect=True, order=None, in_docker=None):
+        """
+        :param functionid: str 请求的功能号
+        :param request: dict 请求参数
+        :param is_async: bool 同异步标识
+        :param func: function 异步请求回调函数
+        :param is_dict: bool t2应答包类型，dict或list
+        :return:error, response
+            error dict 包含error_no错误码, error_info错误信息
+            response dict/list 根据传入的t2应答包类型参数返回dict或list
+        :remark is_dict 此参数只针对于单结果返回包的解析，不支持T2结果集的数据格式的解析
+        """
+        try:
+            if 'isEncode' not in request:
+                request['isEncode'] = IS_ENCODE
+            if is_async:
+                if func:
+                    error_dict = self._register_async_callback(request, functionid, func, is_dict, order=order)
+                    if error_dict.get('error_no') != 0 and self.trade_id:
+                        self.error_print(error_dict.get('error_no'), error_dict.get('error_info'), request, functionid)
+                    (error_dict, {} if is_dict else [])
+                    return None
+                else:
+                    ({'error_no': '异步发送失败，请先绑定通知函数'}, {} if is_dict else [])
+            else:
+                response = []
+                if functionid == 362100:
+                    return_code, error_info = self.connector_manager.LoginSendRcv(request, functionid, response, func, in_docker, 'PBOXQT1.0V%s' % datetime.datetime.now().strftime('%Y%m%d'))
+                else:
+                    return_code, error_info = self.connector_manager.SendRcv(request, functionid, response, 'PBOXQT1.0V%s' % datetime.datetime.now().strftime('%Y%m%d'))
+                if return_code != SUCCESS:
+                    if error_info == '':
+                        error_info = response[0].get('error_info', '')
+                    if self.trade_id:
+                        self.error_print(return_code, error_info, request, functionid)
+                if return_code == SUCCESS:
+                    if is_dict:
+                        if response == [{}]:
+                            return ({'error_no': T2SDK_RTNPACK_EMPTY, 'error_info': '调用后端服务接口【%d】 返回异常' % functionid}, {})
+                        elif type(response) == list:
+                            error_no = int(response[0].get('error_no', 0))
+                            if error_no != 0:
+                                return_code = error_no
+                                error_info = response[0].get('error_info', '')
+                        else:
+                            error_no = int(response.get('error_no', 0))
+                            if error_no != 0:
+                                return_code = error_no
+                                error_info = response.get('error_info', '')
+                    elif response == [{}]:
+                        return ({'error_no': return_code, 'error_info': error_info}, [])
+                elif return_code <= PYT2SDK_ERROR_BASE:
+                    error_info = 'T2SDK %s::SendRev Error:%d, %s' % (functionid, return_code, error_info)
+                    ({'error_no': error_info}, {} if is_dict else [])
+                    return None
+                elif 'Session已失效' in error_info or len(re.findall(self.token_re, error_info)) > 0 and reconnect and 'Session已失效' in error_info:
+                    if reconnect:
+                        if 'Session已失效' in error_info:
+                            system_log.info('后端服务 Session失效，重新登录')
+                        elif len(re.findall(self.token_re, error_info)) > 0:
+                            system_log.info('后端服务 令牌错误，重新登录')
+                        error, request = self.reconnect(request)
+                        if error['error_no'] == SUCCESS:
+                            return self._do_request(functionid, request, is_async, func, is_dict, True)
+                        return None
+                    else:
+                        return None
+                elif '客户交易密码错误' in error_info or len(re.findall(self.password_re, error_info)) > 0:
+                    if self.trade_id:
+                        set_trade_stop_status(self.trade_id)
+                        strategy_log.error('客户交易密码错误，终止交易')
+                        raise
+                    ({'error_no': error_info}, {} if is_dict else response)
+                    return None
+                else:
+                    ({'error_no': error_info}, {} if is_dict else [])
+        except BaseException as e:
+            system_log.error(get_traceback_message())
+            error_no = T2SDK_REQUEST_ERROR
+            error_info = 't2请求处理异常，异常信息：%s' % e
+            result = {} if is_dict else []
+            ({'error_no': error_no, 'error_info': error_info}, result)
+            return None
+    @staticmethod
+    def _get_async_func(kwargs):
+        is_async = kwargs.pop('is_async', False)
+        func = kwargs.pop('func', False)
+        return (is_async, func)
+    def _get_request_data(self, kwargs, *args):
+        request = {}
+        for key in args:
+            if key in self.transform_dict:
+                request[key] = self.transform_dict[key](self, kwargs)
+                continue
+            elif key in kwargs:
+                request[key] = str(kwargs[key])
+        request['client_md5'] = self.client_md5
+        request['client_ip'] = self.client_ip
+        return request
+    def _future_get_request_data(self, kwargs, *args):
+        request = {}
+        for key in args:
+            if key in self.future_transform_dict:
+                request[key] = self.future_transform_dict[key](self, kwargs)
+                continue
+            elif key in kwargs:
+                request[key] = str(kwargs[key])
+        return request
+    def register_async_callback(self, title, func):
+        CALLBACK_TOPIC_SET = {'FUTURE_ORDER_RESPONSE', 'FUTURE_TRADE_RESPONSE', 'STOCK_ORDER_RESPONSE', 'STOCK_TRADE_RESPONSE', 'STRATEGY_SIGNAL_RESPONSE'}
+        subscribe_file_path = os.path.join(TRADE_DIR_PATH, 'result', self.trade_id, 'trade_norm')
+        if title in CALLBACK_TOPIC_SET:
+            func = self._call_back_fun_result_format(title, func)
+            if title == 'FUTURE_ORDER_RESPONSE' or title == 'FUTURE_TRADE_RESPONSE':
+                function_id, dict_fields = self.get_subcribe_param(title)
+                self._issue_type_dict[dict_fields['issue_type']] = func
+                self.connector_manager.FutuSubscribeAutoPushData(dict_fields, function_id, subscribe_file_path)
+                return None
+            else:
+                topic, dictSubinfo, dictFilter, dictFiled = self.get_subcribe_param(title)
+                if topic:
+                    self.connector_manager.SubscribeAutoPushData(dictSubinfo, dictFilter, dictFiled, func, subscribe_file_path)
+                    return None
+    def _call_back_fun_result_format(self, title, func):
+        if title == 'FUTURE_ORDER_RESPONSE' or title == 'STOCK_ORDER_RESPONSE':
+            self.func_order = func
+        elif title == 'FUTURE_TRADE_RESPONSE' or title == 'STOCK_TRADE_RESPONSE':
+            self.func_trade = func
+        elif title == 'STRATEGY_SIGNAL_RESPONSE':
+            self.func_strategy_signal = func
+        def result_format_warpper(str_operator, strTradeUnit, strTopicName, list_result):
+            try:
+                if title == 'FUTURE_ORDER_RESPONSE' or title == 'FUTURE_TRADE_RESPONSE':
+                    if list_result[0]['LY'] == 'B':
+                        titles = 'FUTURE_TRADE_RESPONSE'
+                        trans_func = getattr(self, titles.lower() + '_transform')
+                        func = self.func_trade
+                    else:
+                        titles = 'FUTURE_ORDER_RESPONSE'
+                        trans_func = getattr(self, titles.lower() + '_transform')
+                        func = self.func_order
+                elif title == 'STOCK_ORDER_RESPONSE':
+                    func = self.func_order
+                    trans_func = getattr(self, title.lower() + '_transform')
+                elif title == 'STOCK_TRADE_RESPONSE':
+                    func = self.func_trade
+                    trans_func = getattr(self, title.lower() + '_transform')
+                elif title == 'STRATEGY_SIGNAL_RESPONSE':
+                    func = self.func_strategy_signal
+                    trans_func = getattr(self, title.lower() + '_transform')
+                listResult = trans_func(list_result)
+                result = func(listResult)
+            except BaseException:
+                system_log.error(get_traceback_message())
+                result = None
+            return result
+        return result_format_warpper
+    @abstractmethod
+    def reconnect(self, request):
+        return request
+    @property
+    def connect_flag(self):
+        return self.connector_manager.IsConnected()
+    @connect_flag.setter
+    def connect_flag(self, value):
+        return None
+    @staticmethod
+    def stock_order_response_transform(result_list):
+        return result_list
+    @staticmethod
+    def stock_trade_response_transform(result_list):
+        return result_list
+    @staticmethod
+    def future_order_response_transform(result_list):
+        return result_list
+    @staticmethod
+    def future_trade_response_transform(result_list):
+        return result_list
+    @staticmethod
+    def error_print(error_no, error_info, request, functionid):
+        parameter = 'functionid: %s ' % str(functionid)
+        for j in request:
+            if j == 'password_type' or j == 'password':
+                continue
+            parameter += ', ' + str(j) + ': ' + str(request[j]) + ' type: %s ' % str(type(request[j]))
+        try:
+            error_log_path = os.path.join(TRADE_DIR_PATH, 'error_log')
+            if not os.path.exists(error_log_path):
+                os.makedirs(error_log_path)
+            with open(os.path.join(error_log_path, 'error-' + datetime.datetime.now().strftime('%Y-%m-%d') + '.log'), 'a') as file:
+                file.write(datetime.datetime.now().strftime('%Y-%m-%d, %H:%M:%S') + """
+""")
+                file.write("""error_no: %s 
+""" % error_no)
+                file.write("""error_info: %s 
+""" % error_info)
+                file.write("""kwargs: %s 
+
+""" % parameter)
+                return None
+        except BaseException:
+            system_log.error('写入文件出错，原因：%s' % get_traceback_message())
+            return None
+    @staticmethod
+    def error_print_business(response, request, functionid):
+        parameter = 'functionid: %s ' % str(functionid)
+        for j in request:
+            if j == 'password_type' or j == 'password':
+                continue
+            parameter += ', ' + str(j) + ': ' + str(request[j]) + ' type: %s ' % str(type(request[j]))
+        try:
+            error_log_path = os.path.join(TRADE_DIR_PATH, 'error_log')
+            if not os.path.exists(error_log_path):
+                os.makedirs(error_log_path)
+            with open(os.path.join(error_log_path, 'error-' + datetime.datetime.now().strftime('%Y-%m-%d') + '.log'), 'a') as file:
+                file.write(datetime.datetime.now().strftime('%Y-%m-%d, %H:%M:%S') + """
+""")
+                file.write("""response: %s 
+""" % response)
+                file.write("""kwargs: %s 
+
+""" % parameter)
+                return None
+        except BaseException:
+            system_log.error('写入文件出错，原因：%s' % get_traceback_message())
+            return None

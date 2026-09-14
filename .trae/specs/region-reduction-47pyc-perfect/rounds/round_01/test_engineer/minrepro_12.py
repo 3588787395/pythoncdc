@@ -1,0 +1,9 @@
+def elif_chain_with_or(x, y):
+    if x == 1:
+        return 'a'
+    elif x == 2 or y == 3:
+        return 'b'
+    elif x == 3 and y == 4:
+        return 'c'
+    else:
+        return 'd'

@@ -1,0 +1,15 @@
+- [ ] 基线统计已记录（348 ok, 54 partial, 96.7% 函数匹配率）
+- [ ] 54 个 partial pyc 按匹配率排序的优先级队列已建立
+- [ ] Round 1: trade_info_utils.pyc 已反编译并验证字节码一致性
+- [ ] Round 1: 不一致函数已归类为失败模式
+- [ ] Round 1: 10+ 最小复现实例已创建
+- [ ] Round 1: 修复工程师已根据分析结果修复代码
+- [ ] Round 1: 反编译逻辑注释已写入方法中
+- [ ] Round 1: 最小复现实例全部通过
+- [ ] Round 1: quotation.pyc 验证仍然 ok
+- [ ] Round 1: 批量回归验证通过（pyc_batch_verify.py batch）
+- [ ] Round 1: 至少 1 个 pyc 从 partial 变为 ok
+- [ ] Round 1: 已提交并 push 到远程
+- [ ] Round 2: 重复以上检查点
+- [ ] Round 3-10: 每轮重复以上检查点
+- [ ] 所有 54 个 partial pyc 变为 ok（最终目标）

@@ -1,0 +1,19 @@
+- [x] 确认正确解释器：pyc magic 3495 → 必须用 `D:/Python/python.exe` (3.11.7)，用 3.13 会 100% 反编译失败
+- [ ] 基线已用正确解释器全量复测（baseline_index.json）
+- [ ] Round 01: ≥1 个 pyc 由 partial 升级为 ok，且已提交 push
+- [ ] Round 02: ≥1 个 pyc 升级为 ok，且已提交 push
+- [ ] Round 03: ≥1 个 pyc 升级为 ok，且已提交 push
+- [ ] Round 04: ≥1 个 pyc 升级为 ok，且已提交 push
+- [ ] Round 05: ≥1 个 pyc 升级为 ok，且已提交 push
+- [ ] Round 06: ≥1 个 pyc 升级为 ok，且已提交 push
+- [ ] Round 07: ≥1 个 pyc 升级为 ok，且已提交 push
+- [ ] Round 08: ≥1 个 pyc 升级为 ok，且已提交 push
+- [ ] Round 09: ≥1 个 pyc 升级为 ok，且已提交 push
+- [ ] Round 10: ≥1 个 pyc 升级为 ok，且已提交 push
+- [ ] 每轮：先修到完全 OK → 再 quotation.pyc 验证 → 再 pyc_batch_verify.py 批量回归
+- [ ] 每轮：不引入回归（已 ok 的 pyc 保持 ok）
+- [ ] 每轮：所有命令执行不超过 300 秒
+- [ ] 每轮：禁止修改反编译生成的 *OK.py 文件
+- [ ] 每轮：新增/修改的识别方法注释中写明反编译逻辑（区域类型/判据/归约/AST 映射）
+- [ ] 每轮：rounds/round_NN/ 独立目录，含复现实例 + diff 报告 + 修复说明
+- [ ] 每轮：git commit + push 到远程 origin

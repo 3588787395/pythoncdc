@@ -5880,7 +5880,96 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                     stack.append(pred)
 
         detector = get_opcode_detector()
-        if len(body) == 1 and header in body:
+        if is_for_loop:
+            for_iter_instr = next((i for i in header.instructions if i.opname == 'FOR_ITER'), None)
+            if for_iter_instr:
+                fall_through_offset = for_iter_instr.offset + 2
+                fall_through = self.cfg.get_block_by_offset(fall_through_offset)
+                exit_offset = for_iter_instr.argval
+                exit_block = self.cfg.get_block_by_offset(exit_offset) if exit_offset else None
+                _fwd_candidates = set()
+                _exit_reachable = set()
+                if exit_block:
+                    _er_visited = {exit_block}
+                    _er_queue = [exit_block]
+                    while _er_queue:
+                        _er_cur = _er_queue.pop(0)
+                        _exit_reachable.add(_er_cur)
+                        for _er_succ in _er_cur.successors:
+                            if _er_succ in _er_visited:
+                                continue
+                            _er_visited.add(_er_succ)
+                            _er_queue.append(_er_succ)
+                if fall_through:
+                    _fwd_visited = {fall_through}
+                    _fwd_queue = [fall_through]
+                    while _fwd_queue:
+                        current = _fwd_queue.pop(0)
+                        _fwd_candidates.add(current)
+                        for succ in current.successors:
+                            if succ == header or succ == exit_block:
+                                continue
+                            if succ in current.exception_successors:
+                                continue
+                            if succ in _fwd_visited:
+                                continue
+                            _fwd_visited.add(succ)
+                            _fwd_queue.append(succ)
+                _break_targets = set()
+                for _bb in body | _fwd_candidates:
+                    if _bb is header:
+                        continue
+                    for _bb_instr in _bb.instructions:
+                        if _bb_instr.opname in ('JUMP_FORWARD',) and _bb_instr.argval is not None:
+                            _bt = self.cfg.get_block_by_offset(_bb_instr.argval)
+                            if _bt and _bt is not header and _bt is not exit_block and _bt not in body:
+                                _break_targets.add(_bt)
+                _fwd_candidates -= _break_targets
+                _can_reach_back = set()
+                for _be_src in back_edge_sources:
+                    if _be_src == header:
+                        continue
+                    _be_visited = {_be_src}
+                    _be_queue = [_be_src]
+                    while _be_queue:
+                        _be_cur = _be_queue.pop(0)
+                        _can_reach_back.add(_be_cur)
+                        for _be_pred in _be_cur.predecessors:
+                            if _be_pred in _be_visited or _be_pred == header or _be_pred in body:
+                                continue
+                            if _be_pred in _fwd_candidates:
+                                _be_visited.add(_be_pred)
+                                _be_queue.append(_be_pred)
+                _has_return = set()
+                for _cand in _fwd_candidates:
+                    if any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in _cand.instructions):
+                        _has_return.add(_cand)
+                    for _cand_succ in _cand.successors:
+                        if _cand_succ in _fwd_candidates:
+                            continue
+                        if _cand_succ == header or _cand_succ == exit_block:
+                            continue
+                        if any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in _cand_succ.instructions):
+                            _has_return.add(_cand)
+                _return_reachable = set()
+                for _ret_blk in _has_return:
+                    _rr_visited = {_ret_blk}
+                    _rr_queue = [_ret_blk]
+                    while _rr_queue:
+                        _rr_cur = _rr_queue.pop(0)
+                        _return_reachable.add(_rr_cur)
+                        for _rr_pred in _rr_cur.predecessors:
+                            if _rr_pred in _rr_visited or _rr_pred == header or _rr_pred in body:
+                                continue
+                            if _rr_pred in _fwd_candidates:
+                                _rr_visited.add(_rr_pred)
+                                _rr_queue.append(_rr_pred)
+                for _cand in _fwd_candidates:
+                    if _cand in body:
+                        continue
+                    if _cand in _can_reach_back or _cand in _return_reachable or _cand is fall_through:
+                        body.add(_cand)
+        elif len(body) == 1 and header in body:
             last_hdr = header.get_last_instruction()
             has_back_edge_condition = (
                 last_hdr and last_hdr.opname in BACKWARD_CONDITIONAL_JUMP_OPS

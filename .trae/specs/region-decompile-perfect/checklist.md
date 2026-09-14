@@ -1,0 +1,13 @@
+- [ ] for/while-else 结构正确识别和生成（96个函数）
+- [ ] try-except-finally 块边界正确（76个函数）
+- [ ] SWAP 指令处理正确（32个函数）
+- [ ] 条件跳转方向正确（is None / is not None）
+- [ ] 类默认值元组匹配
+- [ ] UNPACK_SEQUENCE 不遗漏
+- [ ] quotation.pyc 反编译字节码完全匹配
+- [ ] 所有 pyc 文件 decompile_status 为 ok
+- [ ] 累计匹配率 100%
+- [ ] 反编译生成的 OK.py 文件未被手动修改
+- [ ] 使用 scripts/pyc_batch_verify.py 验证
+- [ ] 所有命令不超过 300 秒
+- [ ] 每轮提交并 push

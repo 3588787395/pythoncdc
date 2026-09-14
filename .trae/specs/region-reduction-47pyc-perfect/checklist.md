@@ -1,0 +1,17 @@
+- [ ] 迭代基础设施就绪：rounds目录创建完成，baseline状态确认
+- [ ] Round 01: 至少1个pyc从partial升级为ok，代码提交push
+- [ ] Round 02: 至少1个pyc从partial升级为ok，代码提交push
+- [ ] Round 03: 至少1个pyc从partial升级为ok，代码提交push
+- [ ] Round 04: 至少1个pyc从partial升级为ok，代码提交push
+- [ ] Round 05: 至少1个pyc从partial升级为ok，代码提交push
+- [ ] Round 06: 至少1个pyc从partial升级为ok，代码提交push
+- [ ] Round 07: 至少1个pyc从partial升级为ok，代码提交push
+- [ ] Round 08: 至少1个pyc从partial升级为ok，代码提交push
+- [ ] Round 09: 至少1个pyc从partial升级为ok，代码提交push
+- [ ] Round 10: 至少1个pyc从partial升级为ok，代码提交push
+- [ ] 每轮验证quotation.pyc反编译成功后才进行批量回归
+- [ ] 每轮使用scripts/pyc_batch_verify.py验证
+- [ ] 每轮不引入回归（已ok的pyc保持ok）
+- [ ] 所有命令执行不超过300秒
+- [ ] 禁止修改反编译生成的文件
+- [ ] 反编译逻辑写入识别方法的注释中

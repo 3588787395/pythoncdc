@@ -1,0 +1,56 @@
+﻿def decrypt_database_url(url):
+    """
+    瑙ｅ瘑鏁版嵁搴撹繛鎺ュ瓧绗︿覆锛堟敮鎸佹暣涓猆RL鍔犲瘑鎴栦粎瀵嗙爜鍔犲瘑锛?
+    
+    :param url: 鏁版嵁搴撹繛鎺RL
+                - 鏁翠釜URL鍔犲瘑锛氬姞瀵嗗悗鐨勫崄鍏繘鍒跺瓧绗︿覆
+                - 鏄庢枃URL鏍煎紡锛堝瘑鐮佸彲鑳藉姞瀵嗭級锛歱ostgresql://user:password@host:port/dbname
+    :return: 瑙ｅ瘑鍚庣殑URL瀛楃涓?
+    
+    璇存槑锛?
+    - 鏁翠釜URL浣跨敤SM4鍥藉瘑绠楁硶鍔犲瘑
+    - 濡傛灉URL鏄槑鏂囨牸寮忥紝浼氬皾璇曡В瀵嗗瘑鐮侀儴鍒?
+    - 濡傛灉URL宸茬粡鏄槑鏂囨垨瑙ｅ瘑澶辫触锛岃繑鍥炲師URL
+    - 鑷姩璇嗗埆鍔犲瘑URL锛堜笉鍖呭惈://鍗忚鏍囪瘑锛?
+    """
+    from tornado.log import app_log
+    if '://' in url:
+        app_log.info('妫€娴嬪埌鏄庢枃鏁版嵁搴揢RL鏍煎紡: {}://***'.format(url.split('://')[0]))
+        return _decrypt_url_password(url, app_log)
+    else:
+        try:
+            app_log.info('妫€娴嬪埌鍔犲瘑鏁版嵁搴揢RL锛岄暱搴? {}, 鍓?0瀛楃: {}...'.format(len(url), url[:20]))
+            try:
+                decrypted_url = sm4_decrypt(url, external_flag=False)
+                if decrypted_url:
+                    if '://' not in decrypted_url:
+                        app_log.error('鉂?瑙ｅ瘑鍚庣殑URL鏍煎紡涓嶆纭? {}'.format(decrypted_url[:50] if decrypted_url else 'None'))
+                        app_log.error('鍘熷鍔犲瘑URL闀垮害: {}, 鍐呭: {}...'.format(len(url), url[:30]))
+                        app_log.info('瑙ｅ瘑澶辫触锛屼娇鐢ㄥ師濮婾RL杩炴帴鏁版嵁搴?)
+                        url
+                        return None
+                    else:
+                        protocol = decrypted_url.split('://')[0]
+                        if '@' in decrypted_url:
+                            parts = decrypted_url.split('@')
+                            host_part = parts[1] if len(parts) > 1 else '***'
+                            app_log.info('鉁?鏁版嵁搴揢RL瑙ｅ瘑瀹屾垚: {}://***@{}'.format(protocol, host_part))
+                        else:
+                            app_log.info('鉁?鏁版嵁搴揢RL瑙ｅ瘑瀹屾垚: {}://***'.format(protocol))
+                        return decrypted_url
+            except Exception as decrypt_error:
+                app_log.error('鉂?URL瑙ｅ瘑寮傚父: {}'.format(str(decrypt_error)))
+                app_log.error('寮傚父绫诲瀷: {}'.format(type(decrypt_error).__name__))
+                import traceback
+                app_log.error('鍫嗘爤淇℃伅: {}'.format(traceback.format_exc()))
+                app_log.info('浣跨敤鍘熷URL杩炴帴鏁版嵁搴?)
+                return url
+        except ImportError as import_error:
+            app_log.warning('鏃犳硶瀵煎叆sm4_decrypt: {}'.format(import_error))
+            app_log.info('浣跨敤鍘熷URL杩炴帴鏁版嵁搴?)
+            return url
+        except Exception as e:
+            app_log.error('瑙ｆ瀽鏁版嵁搴揢RL鏃跺彂鐢熼敊璇? {}'.format(str(e)))
+            app_log.info('浣跨敤鍘熷URL杩炴帴鏁版嵁搴?)
+            return url
+""""""

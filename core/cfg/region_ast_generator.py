@@ -39267,10 +39267,42 @@ AST 映射规则:
                                 if _w23_store_idx is not None:
                                     _w23_pre_instrs = _w23_val_instrs[:_w23_store_idx + 1]
                                     _w23_ret_instrs = _w23_val_instrs[_w23_store_idx + 1:]
+                                    _w23_mid_stmts = []
+                                    _w23_expr_pop_ends = []
+                                    _ep_start = None
+                                    _ep_has_call = False
+                                    for _ri, _instr in enumerate(_w23_ret_instrs):
+                                        if _ep_start is None:
+                                            if _instr.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP'):
+                                                _ep_start = _ri
+                                                _ep_has_call = False
+                                        else:
+                                            if _instr.opname in ('CALL', 'CALL_FUNCTION', 'CALL_METHOD', 'CALL_FUNCTION_KW', 'CALL_FUNCTION_EX'):
+                                                _ep_has_call = True
+                                            if _instr.opname == 'POP_TOP' and _ep_has_call:
+                                                _w23_expr_pop_ends.append(_ri)
+                                                _ep_start = None
+                                                _ep_has_call = False
+                                            elif _instr.opname == 'POP_TOP' and not _ep_has_call:
+                                                _ep_start = None
+                                                _ep_has_call = False
+                                    if _w23_expr_pop_ends:
+                                        _last_pop_end = _w23_expr_pop_ends[-1]
+                                        _after_pops = _w23_ret_instrs[_last_pop_end + 1:]
+                                        _has_ret_val = any(
+                                            i.opname.startswith('LOAD_') or i.opname.startswith('BUILD_')
+                                            for i in _after_pops)
+                                        if _has_ret_val:
+                                            _mid_instrs = _w23_ret_instrs[:_last_pop_end + 1]
+                                            _w23_mid_stmts = self._build_statements_from_instructions(
+                                                _mid_instrs, block)
+                                            _w23_ret_instrs = _after_pops
                                     _w23_pre_stmts = self._build_statements_from_instructions(
                                         _w23_pre_instrs, block)
                                     if _w23_pre_stmts:
                                         _w23_prefix_stmts.extend(_w23_pre_stmts)
+                                    if _w23_mid_stmts:
+                                        _w23_prefix_stmts.extend(_w23_mid_stmts)
                                     _w23_val = self.expr_reconstructor.reconstruct(
                                         _w23_ret_instrs) if _w23_ret_instrs else None
                                     if _w23_val is None:

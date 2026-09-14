@@ -1,0 +1,516 @@
+﻿diff --git a/core/cfg/region_ast_generator.py b/core/cfg/region_ast_generator.py
+index f58da1c7..bf15e41e 100644
+--- a/core/cfg/region_ast_generator.py
++++ b/core/cfg/region_ast_generator.py
+@@ -2856,10 +2856,35 @@ class RegionASTGenerator:
+             # 鍏朵綑 ternary 鍧楋紙cond/true/false锛夊綊灞?TernaryRegion銆?             # 鏅亶鎬? 瑕嗙洊 `with a as x, f(ternary) as y` / `with a, ternary:`
+             # 绛夋墍鏈?ternary merge_block 浣滀负宓屽 WithRegion entry 鐨勫舰鎬併€?+            # [P0 fix] 浣嗗綋 ternary 鐨?STORE_* 缁撴灉涓?with 涓婁笅鏂囪〃杈惧紡鍏卞瓨
++            # 浜庡悓涓€ merge_block 鏃讹紙濡?`mode = w if flag else a` 鐨?STORE_FAST
++            # mode 涔嬪悗绱ф帴 LOAD_GLOBAL FileLock 鈥?BEFORE_WITH锛夛紝ternary
++            # 鏄嫭绔嬬殑璧嬪€艰鍙ヨ€岄潪 with 涓婁笅鏂囷紝涓嶅簲璺宠繃銆傚垽鎹細merge_block
++            # 鍦?STORE_* 涔嬪悗浠嶆湁瀹炶川鎬ф寚浠わ紙LOAD/CALL 绛夌洿鑷?BEFORE_WITH锛夈€?+            # 姝ゆ椂 ternary 姝ｅ父鐢熸垚锛學ithRegion 鐢?_generate_try_body 鐨?+            # Ternary-With overlap fix 鍦?ternary 鐢熸垚鍚庤ˉ鍏呯敓鎴愩€?             if not should_skip and region.merge_block is not None:
+                 for r in self.regions:
+                     if (r is not region and isinstance(r, WithRegion)
+                             and r.entry is region.merge_block):
++                        _mb_has_post_store_with_ctx = False
++                        _mb_instrs = [i for i in region.merge_block.instructions
++                                      if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
++                        _store_idx = None
++                        for _si, _mi in enumerate(_mb_instrs):
++                            if _mi.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF', 'STORE_SUBSCR', 'STORE_ATTR'):
++                                _store_idx = _si
++                        if _store_idx is not None:
++                            _post_store_instrs = _mb_instrs[_store_idx + 1:]
++                            _has_meaningful = any(
++                                i.opname in ('LOAD_GLOBAL', 'LOAD_FAST', 'LOAD_NAME', 'LOAD_ATTR',
++                                             'LOAD_METHOD', 'PRECALL', 'CALL', 'BEFORE_WITH',
++                                             'BEFORE_ASYNC_WITH', 'IMPORT_NAME')
++                                for i in _post_store_instrs)
++                            if _has_meaningful:
++                                _mb_has_post_store_with_ctx = True
++                        if _mb_has_post_store_with_ctx:
++                            break
+                         should_skip = True
+                         for _b in region.blocks:
+                             if _b is region.merge_block:
+@@ -12811,6 +12836,26 @@ AST 鏄犲皠瑙勫垯:
+                 pre_instrs = []
+                 continue
+             if instr.opname == 'STORE_ATTR':
++                if pre_unpack_info is not None:
++                    pre_instrs.append(instr)
++                    attr_target = {
++                        'type': 'Attribute',
++                        'value': {'type': 'Name', 'id': instr.argval if instr.argval else f'var_{instr.arg}', 'ctx': 'Load'},
++                        'attr': instr.argval if instr.argval else f'var_{instr.arg}',
++                        'ctx': 'Store',
++                    }
++                    if len(pre_instrs) >= 2 and pre_instrs[-2].opname == 'LOAD_FAST':
++                        attr_target['value'] = {'type': 'Name', 'id': pre_instrs[-2].argval, 'ctx': 'Load', 'lineno': pre_instrs[-2].starts_line}
++                        attr_target['attr'] = instr.argval
++                    pre_unpack_info['targets'].append(attr_target)
++                    if len(pre_unpack_info['targets']) == pre_unpack_info['count']:
++                        target = {'type': 'Tuple', 'elts': pre_unpack_info['targets'], 'ctx': 'Store'}
++                        if pre_unpack_info['value']:
++                            pre_stmts.append({'type': 'Assign', 'targets': [target], 'value': pre_unpack_info['value']})
++                        pre_unpack_info = None
++                    pre_instrs = []
++                    pre_seen_store = True
++                    continue
+                 pre_instrs.append(instr)
+                 stmt = self._build_attr_assign(pre_instrs)
+                 if stmt:
+@@ -14633,13 +14678,22 @@ AST 鏄犲皠瑙勫垯:
+         # 褰?nested_elif_stmts=[] 涓?region.elif_final_else=[] 鏃讹紝鍘熶唬鐮?         # 璁块棶鏈垵濮嬪寲鐨?final_else_stmts 瀵艰嚧 UnboundLocalError锛岃繘鑰?         # 浣挎暣涓嚱鏁颁綋閫€鍖栦负 pass銆備慨澶嶏細鍦ㄥ嚱鏁板叆鍙ｅ垵濮嬪寲 final_else_stmts=[]銆?+        _elif_trailing_continue = False
++        if (elif_body_stmts
++                and isinstance(elif_body_stmts[-1], dict)
++                and elif_body_stmts[-1].get('type') == 'Continue'
++                and not elif_orelse
++                and self._current_loop is not None):
++            _elif_trailing_continue = True
++            elif_body_stmts.pop()
+         _elif_if_stmt = {'type': 'If', '_is_elif': True, 'test': elif_condition if elif_condition else {'type': 'Constant', 'value': True}, 'body': elif_body_stmts if elif_body_stmts else [{'type': 'Pass'}], 'orelse': elif_orelse}
+         # 鍓嶇疆 elif 鏉′欢鍧椾腑鐨勮祴鍊艰鍙ワ紙濡?`fields = re_fields`锛夈€?         # 杩欎簺璇彞鍦ㄨ涔変笂灞炰簬 elif 涔嬪墠鐨勫灞傚嚱鏁颁綋搴忓垪锛屼絾鐗╃悊涓婁綅浜?         # elif_cond_block 涓紝鍥犳鍓嶇疆鍒拌繑鍥炲垪琛ㄣ€?-        if _elif_pre_stmts:
+-            return list(_elif_pre_stmts) + [_elif_if_stmt]
+-        return [_elif_if_stmt]
++        _elif_result = list(_elif_pre_stmts) + [_elif_if_stmt] if _elif_pre_stmts else [_elif_if_stmt]
++        if _elif_trailing_continue:
++            _elif_result.append({'type': 'Continue'})
++        return _elif_result
+ 
+     def _extract_condition_for_elif_block(self, cond_block, region: IfRegion = None):
+         cond_instrs = []
+@@ -17535,11 +17589,25 @@ AST 鏄犲皠瑙勫垯:
+                         if _or_rhs_block is None and _next.get_last_instruction() and _next.get_last_instruction().opname in (FORWARD_CONDITIONAL_JUMP_OPS | BACKWARD_CONDITIONAL_JUMP_OPS):
+                             _or_rhs_block = _next
+                 if _or_rhs_block is not None:
+-                    _rhs_last = _or_rhs_block.get_last_instruction()
+-                    if _rhs_last and _rhs_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | BACKWARD_CONDITIONAL_JUMP_OPS) and _rhs_last.argval is not None:
+-                        _or_else_candidate = self.cfg.get_block_by_offset(_rhs_last.argval)
+-                        if _or_else_candidate:
+-                            _or_else_block = _or_else_candidate
++                    _rhs_ir_else = None
++                    for _rhs_ir in self.region_analyzer.regions:
++                        if (isinstance(_rhs_ir, IfRegion)
++                                and _rhs_ir.entry is _or_rhs_block
++                                and getattr(_rhs_ir, 'chained_compare_ops', None)
++                                and len(_rhs_ir.chained_compare_ops) >= 2
++                                and getattr(_rhs_ir, 'chained_compare_blocks', None)):
++                            _rhs_cc_last = _rhs_ir.chained_compare_blocks[-1].get_last_instruction()
++                            if _rhs_cc_last and _rhs_cc_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | BACKWARD_CONDITIONAL_JUMP_OPS) and _rhs_cc_last.argval is not None:
++                                _rhs_ir_else = self.cfg.get_block_by_offset(_rhs_cc_last.argval)
++                            break
++                    if _rhs_ir_else is not None:
++                        _or_else_block = _rhs_ir_else
++                    else:
++                        _rhs_last = _or_rhs_block.get_last_instruction()
++                        if _rhs_last and _rhs_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | BACKWARD_CONDITIONAL_JUMP_OPS) and _rhs_last.argval is not None:
++                            _or_else_candidate = self.cfg.get_block_by_offset(_rhs_last.argval)
++                            if _or_else_candidate:
++                                _or_else_block = _or_else_candidate
+                 # [Cluster 4] Negate-decision fallback: when there is no
+                 # `or` rhs block (plain chained compare, or `not <chain>`),
+                 # the branch-deciding jump is the LAST chain block's
+@@ -17553,13 +17621,29 @@ AST 鏄犲皠瑙勫垯:
+                         and last_cc.opname in (FORWARD_CONDITIONAL_JUMP_OPS | BACKWARD_CONDITIONAL_JUMP_OPS))
+                     else cond_block.get_last_instruction())
+                 if _or_rhs_block is not None:
+-                    _rhs_instrs = [i for i in _or_rhs_block.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+-                    _rhs_last = _or_rhs_block.get_last_instruction()
+-                    if _rhs_last and _rhs_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | BACKWARD_CONDITIONAL_JUMP_OPS):
+-                        _rhs_pure = [i for i in _rhs_instrs if i != _rhs_last]
++                    _rhs_chained_compare = None
++                    for _rhs_ir in self.region_analyzer.regions:
++                        if (isinstance(_rhs_ir, IfRegion)
++                                and _rhs_ir.entry is _or_rhs_block
++                                and getattr(_rhs_ir, 'chained_compare_ops', None)
++                                and len(_rhs_ir.chained_compare_ops) >= 2
++                                and getattr(_rhs_ir, 'chained_compare_blocks', None)):
++                            _rhs_chained_compare = self._build_chained_compare_from_region_data(_rhs_ir)
++                            if _rhs_chained_compare is not None:
++                                for _rhs_cb in _rhs_ir.chained_compare_blocks:
++                                    self.generated_blocks.add(_rhs_cb)
++                                self.generated_blocks.add(_or_rhs_block)
++                                break
++                    if _rhs_chained_compare is not None:
++                        _rhs_expr = _rhs_chained_compare
+                     else:
+-                        _rhs_pure = _rhs_instrs
+-                    _rhs_expr = self.expr_reconstructor.reconstruct(_rhs_pure) if _rhs_pure else None
++                        _rhs_instrs = [i for i in _or_rhs_block.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
++                        _rhs_last = _or_rhs_block.get_last_instruction()
++                        if _rhs_last and _rhs_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | BACKWARD_CONDITIONAL_JUMP_OPS):
++                            _rhs_pure = [i for i in _rhs_instrs if i != _rhs_last]
++                        else:
++                            _rhs_pure = _rhs_instrs
++                        _rhs_expr = self.expr_reconstructor.reconstruct(_rhs_pure) if _rhs_pure else None
+                     if _rhs_expr:
+                         self.generated_blocks.add(_or_rhs_block)
+                         compare_expr = {'type': 'BoolOp', 'op': 'or', 'values': [compare_expr, _rhs_expr]}
+@@ -17616,6 +17700,40 @@ AST 鏄犲皠瑙勫垯:
+                         then_start_offsets2 = self._then_entry_offsets_excluding_connectors(region)
+                         jumps_to_then2 = jump_target2 in then_start_offsets2
+                         negate = jumps_to_then2 != if_true2
++                # [BoolOp or pattern] When cond_block ends with POP_JUMP_IF_TRUE
++                # (or/success short-circuit) jumping to merge_block, and
++                # then_blocks has exactly one block ending with POP_JUMP_IF_FALSE,
++                # and else_blocks is empty, this is `A or B` not `if not A: B`.
++                # CPython compiles `if A or B: <then>` as:
++                #   A; POP_JUMP_IF_TRUE 鈫?merge; B; POP_JUMP_IF_FALSE 鈫?after_then
++                #   merge: <then body>
++                # The region analyzer creates IfRegion(cond=A, then=[B_block],
++                # merge=<then body>, else=[]). Without this detection, the
++                # condition is negated to `not A` and B_block becomes the then
++                # body, producing `if not A: if not B: continue; <then>` instead
++                # of `if A or B: <then>`.
++                if (negate and if_true2 and not region.else_blocks
++                        and len(region.then_blocks) == 1):
++                    _or_tb = region.then_blocks[0]
++                    _or_tb_last = _or_tb.get_last_instruction()
++                    if (_or_tb_last is not None
++                            and _or_tb_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | BACKWARD_CONDITIONAL_JUMP_OPS)
++                            and _or_tb_last.opname not in NONE_CHECK_OPS
++                            and 'IF_FALSE' in _or_tb_last.opname):
++                        _or_rhs_instrs = [i for i in _or_tb.instructions
++                                          if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')
++                                          and i is not _or_tb_last]
++                        _or_rhs_expr = self.expr_reconstructor.reconstruct(_or_rhs_instrs) if _or_rhs_instrs else None
++                        if _or_rhs_expr is not None:
++                            _merge_blk = getattr(region, 'merge_block', None)
++                            _or_then_target = self.cfg.get_block_by_offset(last2.argval) if last2.argval is not None else None
++                            self._or_then_block = _or_then_target
++                            _or_else_candidate = self.cfg.get_block_by_offset(_or_tb_last.argval) if _or_tb_last.argval is not None else None
++                            self._or_else_block = _or_else_candidate
++                            self._or_rhs_block = _or_tb
++                            self.generated_blocks.add(_or_tb)
++                            negate = False
++                            expr = {'type': 'BoolOp', 'op': 'or', 'values': [expr, _or_rhs_expr]}
+                 expr = self._convert_lambda_function_objects(expr)
+                 return _negate_expr(expr) if negate else expr
+         return {'type': 'Constant', 'value': True}
+@@ -20730,6 +20848,35 @@ AST 鏄犲皠瑙勫垯:
+                             body_stmts.append(nested_ast)
+                     for b in nr.blocks:
+                         self.generated_blocks.add(b)
++                    # [P0/Ternary-With overlap fix] TernaryRegion 鐨?merge_block
++                    # 鍙兘鍚屾椂鏄?WithRegion 鐨?entry锛堝 `mode = w if flag else a`
++                    # 璧嬪€间笌 `with FileLock(...):` 鍏变韩鍚屼竴鍩烘湰鍧楋紝STORE_FAST mode
++                    # 鍦?offset 420銆丩OAD_GLOBAL FileLock 鍦?422锛夈€俆ernaryRegion
++                    # 鐢熸垚鍚庢爣璁颁簡 merge_block 涓?generated锛學ithRegion 鐨勫叆鍙ｈ
++                    # 娑堣垂瀵艰嚧 with 璇彞鏁翠綋涓㈠け銆備慨澶嶏細妫€娴?TernaryRegion 鐨?+                    # merge_block 鏄惁涔熸槸鏌愪釜 WithRegion 鐨?entry锛岃嫢鏄垯瑙ｉ櫎
++                    # WithRegion 鍏ュ彛鍙?body 鍧楃殑 generated 鏍囪锛屽苟绔嬪嵆鐢熸垚
++                    # WithRegion 浣滀负鍚庣画璇彞杩藉姞鍒?try body銆?+                    if isinstance(nr, TernaryRegion) and nr.merge_block is not None:
++                        _overlap_with_region = None
++                        for _owr in self.region_analyzer.regions:
++                            if (isinstance(_owr, WithRegion)
++                                    and _owr.entry is nr.merge_block
++                                    and id(_owr) not in self._generated_regions
++                                    and id(_owr) not in self._generating_regions):
++                                _overlap_with_region = _owr
++                                break
++                        if _overlap_with_region is not None:
++                            for _owb in _overlap_with_region.blocks:
++                                self.generated_blocks.discard(_owb)
++                            _owr_ast = self._generate_region(_overlap_with_region)
++                            if _owr_ast:
++                                if isinstance(_owr_ast, list):
++                                    body_stmts.extend(_owr_ast)
++                                else:
++                                    body_stmts.append(_owr_ast)
++                            for _owb in _overlap_with_region.blocks:
++                                self.generated_blocks.add(_owb)
+                     is_nested_region_entry = True
+                     break
+             if not is_nested_region_entry:
+@@ -22555,7 +22702,22 @@ AST 鏄犲皠瑙勫垯:
+             _outer_finally = None
+ 
+             orelse_stmts = None
+-            if region.else_blocks and region.has_else:
++            # [TRY_EXCEPT_ELSE_MISORDER fix] CPython try/except/else semantics:
++            # the else clause runs ONLY when the try block completes normally
++            # (no exception AND no return/break/continue). If the try body
++            # ends with a Return/Break/Continue statement, there is no else
++            # clause. The region analyzer should have already caught this via
++            # _try_body_terminates_abnormally, but as a safety net we also
++            # check the generated body_stmts. This prevents `else: return x`
++            # when the return was originally in the try body.
++            _try_body_terminates_abnormally = False
++            if body_stmts:
++                _last_stmt = body_stmts[-1]
++                if isinstance(_last_stmt, dict):
++                    _last_type = _last_stmt.get('type')
++                    if _last_type in ('Return', 'Break', 'Continue', 'Raise'):
++                        _try_body_terminates_abnormally = True
++            if region.else_blocks and region.has_else and not _try_body_terminates_abnormally:
+                 _filtered_else = list(region.else_blocks)
+                 # [R09 fix] try-else pattern: nested TryExceptRegion whose entry
+                 # is between try_offset_end and first handler belongs to the else
+@@ -29143,9 +29305,6 @@ AST 鏄犲皠瑙勫垯:
+                 self.generated_blocks.add(block)
+             if region.merge_block:
+                 self.generated_blocks.add(region.merge_block)
+-            # [R67] BoolOp with STORE_ATTR target (e.g. `obj.attr = a or b`).
+-            # When value_target is None but merge_block contains STORE_ATTR,
+-            # the BoolOp expression is the rhs of an attribute assignment.
+             if (not region.value_target
+                     and not getattr(region, 'is_augassign', False)
+                     and region.merge_block is not None):
+@@ -29156,6 +29315,71 @@ AST 鏄犲皠瑙勫垯:
+                     if _mi_r67.opname == 'STORE_ATTR':
+                         _sa_r67 = _ii_r67
+                         break
++                # [Round 02] BoolOp with expression-statement continuation:
++                # When merge_block has POP_TOP before STORE_ATTR, the BoolOp
++                # result is consumed by a CALL (expression statement like
++                # `ptvsd.wait_for_attach(timeout=config.timeout or 10)`),
++                # not by the STORE_ATTR. The STORE_ATTR is a subsequent
++                # independent statement. Detect POP_TOP before STORE_ATTR
++                # and emit the expression statement instead.
++                _pop_top_before_sa_r02 = False
++                _pop_top_idx_r02 = None
++                if _sa_r67 is not None and _sa_r67 > 0:
++                    for _ii_r02, _mi_r02 in enumerate(_mb_r67[:_sa_r67]):
++                        if _mi_r02.opname == 'POP_TOP':
++                            _pop_top_before_sa_r02 = True
++                            _pop_top_idx_r02 = _ii_r02
++                            break
++                if _pop_top_before_sa_r02 and _pop_top_idx_r02 is not None and _pop_top_idx_r02 > 0:
++                    _pre_pop_r02 = _mb_r67[:_pop_top_idx_r02]
++                    _init_stack_r02 = [boolop_expr]
++                    if op_chain:
++                        _fcb_r02 = op_chain[0][0]
++                        _pinstrs_r02 = self.region_analyzer.identify_block_prefix_instructions(_fcb_r02)
++                        _STORE_CHK_R02 = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
++                                          'STORE_DEREF', 'STORE_ATTR', 'STORE_SUBSCR')
++                        if _pinstrs_r02:
++                            _last_store_idx_r02 = -1
++                            for _pi_r02, _pinstr_r02 in enumerate(_pinstrs_r02):
++                                if _pinstr_r02.opname in _STORE_CHK_R02:
++                                    _last_store_idx_r02 = _pi_r02
++                            _true_prefix_r02 = _pinstrs_r02[_last_store_idx_r02 + 1:] if _last_store_idx_r02 >= 0 else _pinstrs_r02
++                            if _true_prefix_r02:
++                                try:
++                                    self.expr_reconstructor.reconstruct(_true_prefix_r02)
++                                    _res_r02 = [s for s in self.expr_reconstructor.stack
++                                               if s.get('type') != 'PUSH_NULL']
++                                    if _res_r02:
++                                        _res_r02[-1] = boolop_expr
++                                        _init_stack_r02 = _res_r02
++                                except Exception:
++                                    pass
++                    try:
++                        _spliced_r02 = self.expr_reconstructor.reconstruct(
++                            _pre_pop_r02, initial_stack=_init_stack_r02)
++                        if _spliced_r02 is not None:
++                            results.append({'type': 'Expr', 'value': _spliced_r02})
++                            self._generated_regions.add(id(region))
++                            _orig_instrs_r02 = region.merge_block.instructions
++                            _pop_instr_r02 = _mb_r67[_pop_top_idx_r02]
++                            _pop_store_idx_r02 = _orig_instrs_r02.index(_pop_instr_r02)
++                            _remaining_r02 = _orig_instrs_r02[_pop_store_idx_r02 + 1:]
++                            if _remaining_r02:
++                                region.merge_block.instructions = _remaining_r02
++                                self.generated_blocks.discard(region.merge_block)
++                                if hasattr(region.merge_block, 'start_offset') and region.merge_block.start_offset in self.generated_offsets:
++                                    self.generated_offsets.discard(region.merge_block.start_offset)
++                                _remaining_stmts_r02 = self._generate_block_statements(region.merge_block)
++                                if _remaining_stmts_r02:
++                                    results.extend(_remaining_stmts_r02)
++                                region.merge_block.instructions = _orig_instrs_r02
++                                self.generated_blocks.add(region.merge_block)
++                            return results
++                    except Exception:
++                        pass
++                # [R67] BoolOp with STORE_ATTR target (e.g. `obj.attr = a or b`).
++                # When value_target is None but merge_block contains STORE_ATTR,
++                # the BoolOp expression is the rhs of an attribute assignment.
+                 if _sa_r67 is not None and _sa_r67 > 0:
+                     _obj_r67 = self.expr_reconstructor.reconstruct(_mb_r67[:_sa_r67])
+                     _attr_r67 = _mb_r67[_sa_r67].argval
+@@ -29492,7 +29716,11 @@ AST 鏄犲皠瑙勫垯:
+                         if _first_store_idx >= 0:
+                             _post_store_clean = []
+                             _cond_jump_r89 = None
++                            _before_with_idx = None
+                             for _pi in _merge_instrs[_first_store_idx + 1:]:
++                                if _pi.opname in ('BEFORE_WITH', 'BEFORE_ASYNC_WITH'):
++                                    _before_with_idx = len(_post_store_clean)
++                                    break
+                                 if _pi.opname in ('JUMP_FORWARD', 'JUMP_BACKWARD',
+                                                   'JUMP_ABSOLUTE', 'JUMP_BACKWARD_NO_INTERRUPT'):
+                                     break
+@@ -29500,6 +29728,8 @@ AST 鏄犲皠瑙勫垯:
+                                     _cond_jump_r89 = _pi
+                                     break
+                                 _post_store_clean.append(_pi)
++                            if _before_with_idx is not None:
++                                _post_store_clean = []
+                             # [R89] Region reduction principle 2 (unique ownership):
+                             # merge_block post-store instructions may contain an if
+                             # condition (e.g. `if 'name' in my_dict: value = ...`).
+@@ -30693,6 +30923,18 @@ AST 鏄犲皠瑙勫垯:
+                                        if id(i) not in _trapped_ids]
+             last_cond_instr = cond_block.get_last_instruction()
+ 
++            # [Round2 fix] func_call_skip: skip the full method call chain prefix
++            # in the ternary condition_block. CPython emits method calls like
++            # `app_log.info(format(len(x) if x else 0))` as:
++            #   PUSH_NULL + LOAD_FAST app_log + LOAD_ATTR info
++            #   + LOAD_CONST '...' + LOAD_METHOD format
++            #   + <ternary condition> + POP_JUMP_IF_FALSE
++            # The PUSH_NULL + LOAD_FAST + LOAD_ATTR + LOAD_CONST + LOAD_METHOD
++            # prefix is the preload of the outer call, not part of the ternary
++            # condition. Without extending the skip past LOAD_ATTR and its
++            # subsequent argument preloading (LOAD_CONST + LOAD_METHOD), the
++            # condition reconstruction starts at LOAD_ATTR with no object on
++            # stack, producing `app_log(expr)` instead of `app_log.info(...)`.
+             func_call_skip = 0
+             push_null_idx = None
+             for idx, i in enumerate(cond_instrs_raw):
+@@ -30707,6 +30949,46 @@ AST 鏄犲皠瑙勫垯:
+                         obj_i = cond_instrs_raw[push_null_idx - 1]
+                         if obj_i.opname.startswith('LOAD_'):
+                             func_call_skip = push_null_idx + 2
++                    # Extend skip past LOAD_ATTR method chain after PUSH_NULL+LOAD_*:
++                    # PUSH_NULL + LOAD_FAST obj + LOAD_ATTR method leaves [null, bound_method]
++                    # on the stack. Any subsequent LOAD_CONST + LOAD_METHOD that loads
++                    # the next method's receiver string and method is still preload.
++                    _skip_pos = func_call_skip
++                    while _skip_pos < len(cond_instrs_raw):
++                        _si = cond_instrs_raw[_skip_pos]
++                        if _si is last_cond_instr:
++                            break
++                        # LOAD_ATTR after the callable extends the method chain
++                        if _si.opname == 'LOAD_ATTR':
++                            _skip_pos += 1
++                            continue
++                        # LOAD_CONST + LOAD_METHOD: argument preloading for inner call
++                        if _si.opname == 'LOAD_CONST' and _skip_pos + 1 < len(cond_instrs_raw):
++                            _sn = cond_instrs_raw[_skip_pos + 1]
++                            if _sn.opname == 'LOAD_METHOD':
++                                _skip_pos += 2
++                                continue
++                        # LOAD_CONST alone could be a simple argument preload
++                        if _si.opname == 'LOAD_CONST':
++                            _skip_pos += 1
++                            continue
++                        # LOAD_METHOD standalone: chained method call preload
++                        if _si.opname == 'LOAD_METHOD':
++                            _skip_pos += 1
++                            continue
++                        break
++                    # Only extend if we actually found more preload instructions
++                    # and there are meaningful instructions after (the real condition)
++                    if _skip_pos > func_call_skip:
++                        _has_cond_after = False
++                        for _fk in range(_skip_pos, len(cond_instrs_raw)):
++                            if cond_instrs_raw[_fk] is last_cond_instr:
++                                break
++                            if cond_instrs_raw[_fk].opname not in ('PRECALL', 'CALL', 'NOP', 'CACHE'):
++                                _has_cond_after = True
++                                break
++                        if _has_cond_after:
++                            func_call_skip = _skip_pos
+ 
+             # CPython 3.11+ LOAD_GLOBAL with arg & 1 == 1
+             # pushes an implicit NULL before the value (function call
+@@ -31135,8 +31417,16 @@ AST 鏄犲皠瑙勫垯:
+             # pre-statement 鑰岃繑鍥炵┖鍒楄〃锛宮erge 鍧楁秷璐归噸寤虹己 preload 鍙傛暟銆?             # 渚濄€屾瘡鍧楀敮涓€褰掑睘銆嶏細鍓嶅璇彞褰掔埗搴忓垪 pre_stmts锛屾爤涓婂墠瀵艰〃杈惧紡
+             # 褰?TernaryRegion 鐖舵秷璐硅〃杈惧紡銆?+            # [Round2 fix] When func_call_skip > 0, cond_instrs already
++            # excludes the preload prefix. Setting _ternary_cond_start_offset
++            # from cond_instrs would trim the preload from
++            # _compute_ternary_cond_preload_exprs, causing it to return
++            # empty preload_exprs. Use the raw (un-skipped) offset instead.
+             if cond_start_idx < len(cond_instrs):
+-                region._ternary_cond_start_offset = cond_instrs[cond_start_idx].offset
++                if func_call_skip > 0 and cond_start_idx == 0:
++                    pass
++                else:
++                    region._ternary_cond_start_offset = cond_instrs[cond_start_idx].offset
+ 
+         # 浠呭綋 _nested_* 鏈鏋勫缓鏃讹紝浠?innermost true/false block 閲嶅缓銆?         if true_expr is None:
+@@ -32989,6 +33279,14 @@ AST 鏄犲皠瑙勫垯:
+                                         and _r.metadata.get('for_iter_setup') is region.merge_block):
+                                     _shared_with_loop_for_iter_setup = True
+                                     break
++                        _shared_with_with_region_entry = False
++                        if _non_noise_remaining and region.merge_block is not None:
++                            for _r in self.regions:
++                                if (isinstance(_r, WithRegion)
++                                        and _r is not region
++                                        and _r.entry is region.merge_block):
++                                    _shared_with_with_region_entry = True
++                                    break
+                         _is_trivial_ret = False
+                         if len(_non_noise_remaining) <= 2:
+                             _no_pop = [i for i in _non_noise_remaining
+@@ -33017,6 +33315,14 @@ AST 鏄犲皠瑙勫垯:
+                             # entry/condition_block锛汼TORE_* 涔嬪悗鐨勬寚浠ゅ睘浜庡祵濂?                             # IfRegion 鐨勬潯浠讹紝涓嶅彂灏勪负鐙珛璇彞銆?                             pass
++                        elif _shared_with_with_region_entry:
++                            # merge_block 鍚屾椂鏄?WithRegion 鐨?entry锛汼TORE_* 涔嬪悗鐨?+                            # 鎸囦护锛坵ith context expression + BEFORE_WITH锛夊睘浜?+                            # WithRegion锛屼笉搴旇 ternary 鍙戝皠涓虹嫭绔?Expr 璇彞銆?+                            # 鍏稿瀷鍦烘櫙: `mode = 'w' if flag else 'a'; with FileLock(f): ...`
++                            # 缂栬瘧鍣ㄥ皢 STORE_FAST mode 涓?LOAD_GLOBAL FileLock + ...
++                            # + BEFORE_WITH 鍚堝苟鍒板悓涓€鍩烘湰鍧椼€?+                            pass
+                         elif _shared_with_loop_for_iter_setup:
+                             # 鍖哄煙褰掔害绠楁硶鍘熷垯 2锛堟瘡鍧楀敮涓€褰掑睘锛?                             # + 鍘熷垯 4锛堢埗寮曠敤瀛愬叆鍙ｏ級锛氬綋 ternary 鐨?merge_block
+@@ -38941,6 +39247,36 @@ AST 鏄犲皠瑙勫垯:
+                         self.generated_offsets.add(block.start_offset)
+                         return [{'type': 'Break'}]
+ 
++
++
++        # for-loop iterator cleanup + return: when a block inside a
++        # for-loop has only POP_TOP (iterator cleanup) and its
++        # successor is a return block with a non-None value, the
++        # POP_TOP is compiler-generated cleanup before a return
++        # statement inside the loop. Generate the return statement.
++        # Pattern: block=[POP_TOP] -> succ=[LOAD_CONST val, RETURN_VALUE]
++        # where val is not None.
++        if self._loop_depth > 0:
++            _m_for_ret = [i for i in block.instructions
++                          if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
++            _m_no_pop_for_ret = [i for i in _m_for_ret if i.opname != 'POP_TOP']
++            if not _m_no_pop_for_ret and any(i.opname == 'POP_TOP' for i in _m_for_ret):
++                for _ret_succ in block.successors:
++                    if any(i.opname in ('RETURN_VALUE', 'RETURN_CONST')
++                           for i in _ret_succ.instructions):
++                        _ret_stmts = self._generate_block_statements(_ret_succ)
++                        if _ret_stmts and len(_ret_stmts) == 1 and isinstance(_ret_stmts[0], dict):
++                            if _ret_stmts[0].get('type') == 'Return':
++                                _rv = _ret_stmts[0].get('value')
++                                if _rv and not (isinstance(_rv, dict)
++                                                and _rv.get('type') == 'Constant'
++                                                and _rv.get('value') is None):
++                                    self.generated_blocks.add(block)
++                                    self.generated_blocks.add(_ret_succ)
++                                    self.generated_offsets.add(block.start_offset)
++                                    self.generated_offsets.add(_ret_succ.start_offset)
++                                    return _ret_stmts
++
+         # 绉婚櫎鑷祴鍊?peephole锛圠OAD_FAST x + STORE_FAST x 鈫?Pass锛夈€?         # 璇ユā寮忓尮閰嶅睘浜庤法灞傚惎鍙戝紡瑙勫垯锛岃繚鍙嶅尯鍩熷綊绾︾畻娉曞師鍒?4锛堝叆鍙ｅ紩鐢ㄨ涔夛級
+         # 鍙娿€岀姝㈢敤妯″紡鍖归厤鏇夸唬绠楁硶銆嶃€屽悗澶勭悊淇锛堜竴娆℃纭師鍒欙級銆嶃€?@@ -41086,6 +41422,16 @@ AST 鏄犲皠瑙勫垯:
+                 _cjb_append_continue(_cjb_then_stmts, _cjb_then_entry)
+                 _cjb_append_continue(_cjb_else_stmts, _cjb_else_entry)
+ 
++                _cjb_hoisted_continue = False
++                if (_cjb_then_stmts and _cjb_else_stmts
++                        and isinstance(_cjb_then_stmts[-1], dict)
++                        and _cjb_then_stmts[-1].get('type') == 'Continue'
++                        and isinstance(_cjb_else_stmts[-1], dict)
++                        and _cjb_else_stmts[-1].get('type') == 'Continue'):
++                    _cjb_then_stmts.pop()
++                    _cjb_else_stmts.pop()
++                    _cjb_hoisted_continue = True
++
+                 if not _cjb_then_stmts:
+                     _cjb_then_stmts = [{'type': 'Pass'}]
+ 
+@@ -41098,6 +41444,8 @@ AST 鏄犲皠瑙勫垯:
+                 if _cjb_pre_stmts:
+                     stmts.extend(_cjb_pre_stmts)
+                 stmts.append(_cjb_if_node)
++                if _cjb_hoisted_continue:
++                    stmts.append({'type': 'Continue'})
+                 self.generated_blocks.add(block)
+                 return stmts
+ 
