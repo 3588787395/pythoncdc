@@ -1,0 +1,19 @@
+- [ ] pyc_index.json 中 43 个非 ok 条目已按 match_rate 升序排列形成待修复队列
+- [ ] history_api.pyc 反编译验证执行完成，mismatches 详情已收集
+- [ ] history_api.pyc 的最小复现实例（10+个）已创建
+- [ ] history_api.pyc 修复后 bytecode_match_rate 达到 1.0
+- [ ] klinedata.pyc 修复后 bytecode_match_rate 达到 1.0
+- [ ] finance.pyc 修复后 bytecode_match_rate 达到 1.0
+- [ ] replace_utils.pyc 修复后 bytecode_match_rate 达到 1.0
+- [ ] function.pyc 修复后 bytecode_match_rate 达到 1.0
+- [ ] trade_info_utils.pyc 修复后 bytecode_match_rate 达到 1.0
+- [ ] quote.pyc 修复后 bytecode_match_rate 达到 1.0
+- [ ] real_quote.pyc 修复后 bytecode_match_rate 达到 1.0
+- [ ] finance_data_source.pyc 修复后 bytecode_match_rate 达到 1.0
+- [ ] trade_live_broker.pyc 修复后 bytecode_match_rate 达到 1.0
+- [ ] 每轮修复后批量回归验证已 ok 的 pyc 无回归
+- [ ] 每轮迭代已提交并 push 到远程
+- [ ] 区域识别方法注释中已记录反编译逻辑推导过程
+- [ ] 所有修复符合区域归约算法原则（从内到外、单层归属、归约抽象、禁止跨区域启发式）
+- [ ] 所有 43 个 pyc 文件 decompile_status 变为 'ok'，bytecode_match_rate = 1.0
+- [ ] 最终 pyc_index.json 中 verified_pyc = 402, ok_pyc = 402, cumulative_match_rate = 100%

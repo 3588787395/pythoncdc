@@ -1756,6 +1756,27 @@ class RegionAnalyzer:
 
         self.regions = all_regions
 
+        for _r in self._filter_regions(self.regions, IfRegion):
+            if _r.region_type.name == 'IF_ELIF_CHAIN' and hasattr(_r, '_shared_block_info'):
+                _sbi = _r._shared_block_info
+                _sb = _sbi.get('shared_block')
+                _its = _sbi.get('inner_then_succ')
+                _nm = _sbi.get('new_merge')
+                if _sb is not None and _its is not None:
+                    for _cr in self.regions:
+                        if isinstance(_cr, IfRegion) and _cr.region_type.name != 'IF_ELIF_CHAIN':
+                            if _cr.merge_block is _sb and _cr.entry is not None:
+                                _cr_then_jumps_to_sb = False
+                                for _tb in (_cr.then_blocks or []):
+                                    if _sb in _tb.successors:
+                                        _cr_then_jumps_to_sb = True
+                                        break
+                                if _cr_then_jumps_to_sb:
+                                    _cr.then_blocks.append(_sb)
+                                    _cr.blocks.add(_sb)
+                                    _cr.merge_block = _nm
+                                    _cr._shared_merge_block = _sb
+
         #print(f"[DEBUG analyze] ({self.cfg.name}) FINAL self.regions count: {len(self.regions)}")
         for r in self.regions:
             #print(f"  region: {type(r).__name__}, blocks={[b.start_offset for b in r.blocks]}, region_type={r.region_type}")
@@ -12912,17 +12933,6 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
         no_copy = not any(i.opname == 'COPY' for i in instrs)
         if not no_copy:
             return False
-        rest = instrs[_start + 2:]
-        if not rest:
-            return True
-        for pred in block.predecessors:
-            pred_last = pred.get_last_instruction()
-            if pred_last and pred_last.opname in SHORT_CIRCUIT_JUMP_OPS:
-                return False
-        loop_header_ops = frozenset({'GET_ITER', 'FOR_ITER', 'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'})
-        has_loop_header = any(i.opname in loop_header_ops for i in rest[:3]) if len(rest) >= 3 else False
-        if has_loop_header:
-            return False
         # [Round 01 P0 fix] match-case 假阳性防护：结构性判据——
         # 真正的 match-case 是函数/模块级的顶层结构，subject 块的**直接前驱**
         # 要么是函数入口（RESUME），要么是前一条语句的出口。若块的前驱含
@@ -12932,10 +12942,24 @@ exit_via_jump 两个字段**引用**出口块，不改变其归属（原则 2）
         # 此判据排除了 `if cond: value_expr; more_code` 中 value_expr 的
         # POP_TOP 被误判为通配符 case 的 subject 丢弃（repro_01 的
         # `item; if fp is not None:` 被误判为 `match item: case _:`）。
+        # 前驱条件跳转检查必须在 rest 判空之前执行：当块仅含 LOAD_* + POP_TOP
+        # （rest 为空）时，若前驱以条件跳转结尾，说明本块是 if 分支的 fall-through
+        # 目标（如 `if len(x) == 0: nd_array_or_dict`），不是 match subject。
         for pred in block.predecessors:
             pred_last = pred.get_last_instruction()
             if pred_last and pred_last.opname in CONDITIONAL_JUMP_OPS:
                 return False
+        for pred in block.predecessors:
+            pred_last = pred.get_last_instruction()
+            if pred_last and pred_last.opname in SHORT_CIRCUIT_JUMP_OPS:
+                return False
+        rest = instrs[_start + 2:]
+        if not rest:
+            return True
+        loop_header_ops = frozenset({'GET_ITER', 'FOR_ITER', 'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'})
+        has_loop_header = any(i.opname in loop_header_ops for i in rest[:3]) if len(rest) >= 3 else False
+        if has_loop_header:
+            return False
         return True
 
     def _is_none_match_block(self, block):
@@ -17329,6 +17353,30 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                         _fe_last = _first_else.get_last_instruction()
                         if _fe_last and _fe_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS):
                             _then_has_ctrl_exit = False
+                        # 反编译逻辑推导（elif降级修复·模式1）：
+                        # elif链中含return/raise的分支，其return已提供"退出"语义，
+                        # 后续条件块仍属于同一个if-elif链。判定elif的关键不是前一个
+                        # 分支是否有JUMP_FORWARD，而是：后一个条件块的POP_JUMP_FORWARD_
+                        # IF_FALSE目标是否与前一个条件块相同（即指向同一个merge点）。
+                        #
+                        # 字节码模式：
+                        #   if A: return X          # then body → RETURN_VALUE（无JUMP_FORWARD）
+                        #   elif B: return Y         # else_succ 的 POP_JUMP_IF_FALSE → func_end
+                        #   elif C: return Z         # 同理 POP_JUMP_IF_FALSE → func_end
+                        #   return None              # func_end（共享return，所有条件块汇聚点）
+                        #
+                        # 判据：当前if条件块（header_）的POP_JUMP_IF_FALSE目标与else分支
+                        # 首块（_first_else）的POP_JUMP_IF_FALSE目标相同（指向同一个块），
+                        # 表明它们属于同一个if-elif链（共享同一个merge点）。
+                        # 此时_then_has_ctrl_exit应重置为False，允许elif链识别继续。
+                        elif _fe_last and _fe_last.opname in FORWARD_CONDITIONAL_JUMP_OPS:
+                            _header_last = header_.get_last_instruction()
+                            if (_header_last is not None
+                                    and _header_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)
+                                    and _header_last.argval is not None
+                                    and _fe_last.argval is not None
+                                    and _header_last.argval == _fe_last.argval):
+                                _then_has_ctrl_exit = False
                 if _then_has_ctrl_exit:
                     return None
             first_else = else_blocks_[0]
@@ -17658,6 +17706,24 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 return None
             inner_then_succ, inner_else_succ = sorted(inner_cond_succs, key=lambda s: s.start_offset)
             inner_merge = self._find_nearest_common_post_dominator(inner_then_succ, inner_else_succ)
+            # [W52 fix] No-else elif chain detection:
+            # When the elif condition's FALSE branch goes directly to the outer
+            # merge point (inner_else_succ == merge_), there is NO else block.
+            # The code at the merge point should be placed AFTER the if-elif
+            # chain, not as an else block. In the original bytecode, the elif
+            # body falls through to the merge point without a JUMP_FORWARD
+            # (skipping else), and the elif condition's POP_JUMP_IF_FALSE
+            # targets the same block as the then-block's JUMP_FORWARD.
+            # Example (get_price):
+            #   if security is None: ...    → JUMP_FORWARD 184
+            #   elif isinstance(security, six.string_types): ...
+            #       → POP_JUMP_IF_FALSE 184  (same target as JUMP_FORWARD)
+            #   # code at 184 is post-if, NOT else body
+            # Without this fix, the decompiler puts the merge point's code
+            # into else:, producing bytecode with extra RETURN_VALUE/
+            # JUMP_FORWARD that differs from the original.
+            if merge_ is not None and inner_else_succ is merge_ and inner_merge is not inner_else_succ:
+                inner_merge = merge_
             # 区域归约算法原则 1（自底向上归约）+ 原则 2（每块唯一
             # 归属）+ No More Gotos §4.2/§3：镜像外层 IfRegion 的循环感知 merge
             # 修正。当内层 elif 嵌套于循环内、且其某分支以 break/continue 退出
@@ -17887,6 +17953,43 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 _7_then_set = set(inner_then_blocks)
                 if any(p in _7_then_set for p in inner_else_succ.predecessors):
                     inner_merge = inner_else_succ
+            # 区域归约算法原则 2（每块唯一归属）+ 原则 4（入口引用语义）：
+            # CPython 优化器将相同分支体合并为共享块（shared block）。当
+            # inner_else_succ 同时满足：
+            #   ① 有来自 elif 条件链的前驱（or-chain / BoolOpRegion 块跳转到
+            #     inner_else_succ 以跳过 elif 体——这是 elif 的 else 语义）
+            #   ② 有来自 inner_then_blocks 的前驱（内层 if 的 TRUE/FALSE 路径
+            #     到达 inner_else_succ——这是内层 if 的分支体）
+            # 则 inner_else_succ 是共享块，应在 AST 中重复出现在两个上下文：
+            #   - 内层 if 的 then 体（替代 pass）
+            #   - elif 链的 final_else（else 体）
+            # 判据补充：inner_else_succ 含实质代码（非纯 JUMP 到 merge_），
+            # 否则共享块仅为跳转连接器（如 pass + continue），不产生可见代码。
+            _shared_block = None
+            if inner_then_blocks and inner_else_succ is not None:
+                _7_then_set = set(inner_then_blocks)
+                _cond_chain_blocks = {first_else}
+                if isinstance(inner_br, BoolOpRegion) and inner_br.entry == first_else:
+                    _cond_chain_blocks.update(b for b, _op in inner_br.op_chain)
+                elif inline_boolop_chain is not None:
+                    _cond_chain_blocks.update(inline_boolop_chain.get('blocks', []))
+                _sb_from_cond = any(p in _cond_chain_blocks for p in inner_else_succ.predecessors)
+                _sb_from_body = any(p in _7_then_set for p in inner_else_succ.predecessors)
+                if _sb_from_cond and _sb_from_body:
+                    _ies_meaningful = [i for i in inner_else_succ.instructions
+                                       if i.opname not in NOISE_OPS
+                                       and i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
+                                                            'JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                                                            'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')]
+                    if _ies_meaningful:
+                        _shared_block = inner_else_succ
+            if _shared_block is not None:
+                _sb_succs = list(_shared_block.successors)
+                _sb_new_merge = None
+                if merge_ is not None and merge_ in _sb_succs:
+                    _sb_new_merge = merge_
+                elif len(_sb_succs) == 1:
+                    _sb_new_merge = _sb_succs[0]
             # 区域归约算法原则 2（每块唯一归属）+ 原则 3
             #（嵌套即抽象节点）+ No More Gotos §3（If 区域归约）：
             # 当外层 if 的 else 体以嵌套 if/elif/else 开头、且该嵌套 if 两路
@@ -17985,6 +18088,9 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 conditions.extend(deeper_elif['conditions'])
                 bodies.extend(deeper_elif['bodies'])
                 final_else = deeper_elif.get('final_else', [])
+                if deeper_elif.get('shared_block_info') and _shared_block is None:
+                    _shared_block = deeper_elif['shared_block_info'].get('shared_block')
+                    _sb_new_merge = deeper_elif['shared_block_info'].get('new_merge')
             elif inner_else_blocks:
                 # 区域归约算法原则 2（每块唯一归属）：回边重检块
                 #（CPython 在回边处复制 while 条件求值，如
@@ -18022,6 +18128,30 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                                 final_else = [else_succ]
 
             result = {'conditions': conditions, 'bodies': bodies, 'final_else': final_else}
+
+            if _shared_block is not None:
+                _sb_then_falls_through = False
+                if inner_then_blocks:
+                    _sb_then_last = inner_then_blocks[-1]
+                    if _shared_block in _sb_then_last.successors:
+                        _sb_tl_last = _sb_then_last.get_last_instruction()
+                        if _sb_tl_last is None or _sb_tl_last.opname not in (
+                            'JUMP_FORWARD', 'JUMP_ABSOLUTE',
+                            'RETURN_VALUE', 'RETURN_CONST',
+                            'RAISE_VARARGS', 'RERAISE',
+                            'JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT'):
+                            _sb_first_cond = _shared_block.get_last_instruction()
+                            if _sb_first_cond and _sb_first_cond.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS):
+                                _sb_then_falls_through = True
+                if _sb_then_falls_through:
+                    return None
+                if merge_ is None or _shared_block != merge_:
+                    result['final_else'] = [_shared_block]
+                result['shared_block_info'] = {
+                    'shared_block': _shared_block,
+                    'inner_then_succ': inner_then_succ,
+                    'new_merge': _sb_new_merge,
+                }
 
             if inline_boolop_chain:
                 result['inline_boolop_chains'] = {id(first_else): inline_boolop_chain}
@@ -18180,6 +18310,8 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             elif_final_else=elif_info.get("final_else", []),
             inline_boolop_chains=_merged_inline_chains,
         )
+        if elif_info.get("shared_block_info"):
+            region._shared_block_info = elif_info["shared_block_info"]
         if then_blocks and self._check_block_has_trailing_return_none(then_blocks[-1]):
             region.mark_trailing_return_none()
         if else_blocks and self._check_block_has_trailing_return_none(else_blocks[-1]):

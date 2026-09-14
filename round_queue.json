@@ -1,0 +1,303 @@
+[
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/history_api.pyc",
+    "bytecode_match_rate": 0.5555555555555556,
+    "function_count": 18,
+    "matched_functions": 10,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/klinedata.pyc",
+    "bytecode_match_rate": 0.6,
+    "function_count": 45,
+    "matched_functions": 27,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/finance.pyc",
+    "bytecode_match_rate": 0.6666666666666666,
+    "function_count": 24,
+    "matched_functions": 16,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/replace_utils.pyc",
+    "bytecode_match_rate": 0.6666666666666666,
+    "function_count": 9,
+    "matched_functions": 6,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/function.pyc",
+    "bytecode_match_rate": 0.6666666666666666,
+    "function_count": 15,
+    "matched_functions": 10,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc",
+    "bytecode_match_rate": 0.7,
+    "function_count": 40,
+    "matched_functions": 28,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quote.pyc",
+    "bytecode_match_rate": 0.7160493827160493,
+    "function_count": 81,
+    "matched_functions": 58,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/real_quote.pyc",
+    "bytecode_match_rate": 0.7272727272727273,
+    "function_count": 44,
+    "matched_functions": 32,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_local_finance/finance_data_source.pyc",
+    "bytecode_match_rate": 0.7777777777777778,
+    "function_count": 18,
+    "matched_functions": 14,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc",
+    "bytecode_match_rate": 0.7815126050420168,
+    "function_count": 119,
+    "matched_functions": 93,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quote_handler.pyc",
+    "bytecode_match_rate": 0.7894736842105263,
+    "function_count": 57,
+    "matched_functions": 45,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc",
+    "bytecode_match_rate": 0.7941176470588235,
+    "function_count": 34,
+    "matched_functions": 27,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_log/__init__.pyc",
+    "bytecode_match_rate": 0.8,
+    "function_count": 10,
+    "matched_functions": 8,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/strategy_info_utils.pyc",
+    "bytecode_match_rate": 0.8214285714285714,
+    "function_count": 28,
+    "matched_functions": 23,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/fly/dumpload/load_daily.pyc",
+    "bytecode_match_rate": 0.8260869565217391,
+    "function_count": 23,
+    "matched_functions": 19,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/flyAccount.pyc",
+    "bytecode_match_rate": 0.8260869565217391,
+    "function_count": 23,
+    "matched_functions": 19,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/wizard_quant_api.pyc",
+    "bytecode_match_rate": 0.8301886792452831,
+    "function_count": 53,
+    "matched_functions": 44,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/history_data_source.pyc",
+    "bytecode_match_rate": 0.8333333333333334,
+    "function_count": 18,
+    "matched_functions": 15,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/common_func.pyc",
+    "bytecode_match_rate": 0.8571428571428571,
+    "function_count": 21,
+    "matched_functions": 18,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/fileio_utils.pyc",
+    "bytecode_match_rate": 0.8571428571428571,
+    "function_count": 14,
+    "matched_functions": 12,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/slippage.pyc",
+    "bytecode_match_rate": 0.8571428571428571,
+    "function_count": 14,
+    "matched_functions": 12,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc",
+    "bytecode_match_rate": 0.8571428571428571,
+    "function_count": 35,
+    "matched_functions": 30,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/tradingday_calendar.pyc",
+    "bytecode_match_rate": 0.8571428571428571,
+    "function_count": 28,
+    "matched_functions": 24,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/future_param.pyc",
+    "bytecode_match_rate": 0.875,
+    "function_count": 16,
+    "matched_functions": 14,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/api/api_base.pyc",
+    "bytecode_match_rate": 0.88,
+    "function_count": 25,
+    "matched_functions": 22,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/execution_context.pyc",
+    "bytecode_match_rate": 0.8823529411764706,
+    "function_count": 17,
+    "matched_functions": 15,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_matcher/matcher.pyc",
+    "bytecode_match_rate": 0.8823529411764706,
+    "function_count": 17,
+    "matched_functions": 15,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/scheduler.pyc",
+    "bytecode_match_rate": 0.8888888888888888,
+    "function_count": 45,
+    "matched_functions": 40,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/utils.pyc",
+    "bytecode_match_rate": 0.9090909090909091,
+    "function_count": 22,
+    "matched_functions": 20,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/fly/oauthenticator/oauth2.pyc",
+    "bytecode_match_rate": 0.9090909090909091,
+    "function_count": 11,
+    "matched_functions": 10,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/common_func.pyc",
+    "bytecode_match_rate": 0.9166666666666666,
+    "function_count": 24,
+    "matched_functions": 22,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc",
+    "bytecode_match_rate": 0.9166666666666666,
+    "function_count": 12,
+    "matched_functions": 11,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/api_data.pyc",
+    "bytecode_match_rate": 0.9285714285714286,
+    "function_count": 14,
+    "matched_functions": 13,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/default_event_source.pyc",
+    "bytecode_match_rate": 0.9285714285714286,
+    "function_count": 14,
+    "matched_functions": 13,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/fly/oauthenticator/itn.pyc",
+    "bytecode_match_rate": 0.9285714285714286,
+    "function_count": 14,
+    "matched_functions": 13,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/function.pyc",
+    "bytecode_match_rate": 0.9295774647887324,
+    "function_count": 71,
+    "matched_functions": 66,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/future_contract_info.pyc",
+    "bytecode_match_rate": 0.9310344827586207,
+    "function_count": 29,
+    "matched_functions": 27,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_persist/__init__.pyc",
+    "bytecode_match_rate": 0.9333333333333333,
+    "function_count": 15,
+    "matched_functions": 14,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/fly/logger.pyc",
+    "bytecode_match_rate": 0.9333333333333333,
+    "function_count": 30,
+    "matched_functions": 28,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/asset_mixin.pyc",
+    "bytecode_match_rate": 0.9375,
+    "function_count": 16,
+    "matched_functions": 15,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/common/main.pyc",
+    "bytecode_match_rate": 0.9393939393939394,
+    "function_count": 33,
+    "matched_functions": 31,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc",
+    "bytecode_match_rate": 0.9583333333333334,
+    "function_count": 24,
+    "matched_functions": 23,
+    "decompile_status": "partial"
+  },
+  {
+    "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/manager/instance.pyc",
+    "bytecode_match_rate": 0.96875,
+    "function_count": 32,
+    "matched_functions": 31,
+    "decompile_status": "partial"
+  }
+]

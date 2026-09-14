@@ -36,13 +36,13 @@
 
 ## Round 01: IQCommon/common/main.pyc (0.970, 32/33 matched)
 
-- [ ] T1.1 测试工程师反编译 main.pyc，输出详细 diff
-- [ ] T1.2 测试工程师提取 >=10 个最小复现实例
-- [ ] T1.3 修复工程师分析根因
-- [ ] T1.4 修复工程师实施修复 + 更新 docstring
-- [ ] T1.5 回归测试：10+ 复现实例通过 + main.pyc 100% + quotation.pyc 无退化
-- [ ] T1.6 生成 mainOK.py + 更新 pyc_index.json
-- [ ] T1.7 commit + push `rr43-r01:`
+- [x] T1.1 测试工程师反编译 main.pyc，输出详细 diff
+- [x] T1.2 测试工程师提取 >=10 个最小复现实例
+- [x] T1.3 修复工程师分析根因
+- [x] T1.4 修复工程师实施修复 + 更新 docstring
+- [x] T1.5 回归测试：10+ 复现实例通过 + main.pyc 100% + quotation.pyc 无退化
+- [x] T1.6 生成 mainOK.py + 更新 pyc_index.json
+- [x] T1.7 commit + push `rr43-r01:`
 
 ## Round 02: IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc (0.958, 23/24)
 

@@ -5183,9 +5183,9 @@ AST 映射规则:
         seen = set()
         unique_pre = []
         for s in pre_stmts:
-            key = (s.get('type'), tuple(sorted((k, str(v)[:80]) for k, v in s.items() if k != 'lineno')))
-            if key not in seen:
-                seen.add(key)
+            _s_id = id(s)
+            if _s_id not in seen:
+                seen.add(_s_id)
                 unique_pre.append(s)
         pre_stmts = unique_pre
 
@@ -7150,8 +7150,8 @@ AST 映射规则:
                 self.generated_blocks.add(header)
                 self.generated_offsets.add(header.start_offset)
                 return
-        if (region.region_type == RegionType.WHILE_LOOP and
-            region.condition_block is None and
+        if (region.region_type == RegionType.WHILE_LOOP
+            and region.condition_block is None and
             header.instructions and
             header.instructions[0].opname in PLACEHOLDER_OPS and
             any(i.opname not in PLACEHOLDER_OPS for i in header.instructions)):
@@ -8309,6 +8309,9 @@ AST 映射规则:
                                     _fall_through_block = _succ
                                     if self._block_is_continue_target(_succ):
                                         _ft_is_continue = True
+                                        _jt_role_ft = self.region_analyzer.get_block_role(_jt_block) if _jt_block else None
+                                        if _jt_role_ft not in (BlockRole.BREAK, BlockRole.PURE_BREAK, BlockRole.RETURN, BlockRole.RETURN_NONE):
+                                            _if_body_type = 'Continue'
                                     break
                     if _ft_is_continue and _fall_through_block is not None and _cb_last.argval is not None:
                         _jt_block2 = self.cfg.get_block_by_offset(_cb_last.argval)
@@ -8740,6 +8743,56 @@ AST 映射规则:
                                 self.generated_blocks.add(block)
                                 for b in then_succ.blocks if hasattr(then_succ, 'blocks') else [then_succ]:
                                     self.generated_blocks.add(b)
+                                return
+            if len(cond_succs) == 2 and nested_if is None:
+                _last_i_hnc = block.get_last_instruction()
+                if _last_i_hnc and _last_i_hnc.opname in FORWARD_CONDITIONAL_JUMP_OPS and _last_i_hnc.argval is not None:
+                    _jt_hnc = self.cfg.get_block_by_offset(_last_i_hnc.argval)
+                    _ft_hnc = next((s for s in cond_succs if s != _jt_hnc), None)
+                    _is_if_true_hnc = 'IF_TRUE' in _last_i_hnc.opname
+                    if _ft_hnc is not None and _jt_hnc is not None:
+                        _ft_is_cont_hnc = self._block_is_continue_target(_ft_hnc)
+                        _jt_is_cont_hnc = self._block_is_continue_target(_jt_hnc)
+                        _jt_role_hnc = self.region_analyzer.get_block_role(_jt_hnc)
+                        _ft_role_hnc = self.region_analyzer.get_block_role(_ft_hnc)
+                        _cond_instrs_hnc = [i for i in block.instructions
+                                            if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')
+                                            and i != _last_i_hnc]
+                        if _cond_instrs_hnc:
+                            _cond_expr_hnc = self.expr_reconstructor.reconstruct(_cond_instrs_hnc)
+                        else:
+                            _cond_expr_hnc = None
+                        if _cond_expr_hnc is not None:
+                            if _is_if_true_hnc and _ft_is_cont_hnc and not _jt_is_cont_hnc:
+                                _negate_hnc = True
+                                _test_hnc = _negate_expr(_cond_expr_hnc) if _negate_hnc else _cond_expr_hnc
+                                _cont_stmts_hnc = self._generate_block_statements(_ft_hnc)
+                                if _cont_stmts_hnc:
+                                    _has_real_hnc = any(s.get('type') not in ('Continue', 'Pass') for s in _cont_stmts_hnc)
+                                    if _has_real_hnc and not any(s.get('type') == 'Continue' for s in _cont_stmts_hnc):
+                                        _cont_stmts_hnc.append({'type': 'Continue'})
+                                else:
+                                    _cont_stmts_hnc = [{'type': 'Continue'}]
+                                self.generated_blocks.add(_ft_hnc)
+                                self.generated_offsets.add(_ft_hnc.start_offset)
+                                body_stmts.append({
+                                    'type': 'If',
+                                    'test': _test_hnc,
+                                    'body': _cont_stmts_hnc,
+                                    'orelse': [],
+                                })
+                                self.generated_blocks.add(block)
+                                return
+                            elif not _is_if_true_hnc and _jt_is_cont_hnc and not _ft_is_cont_hnc:
+                                body_stmts.append({
+                                    'type': 'If',
+                                    'test': _cond_expr_hnc,
+                                    'body': [{'type': 'Continue'}],
+                                    'orelse': [],
+                                })
+                                self.generated_blocks.add(_jt_hnc)
+                                self.generated_offsets.add(_jt_hnc.start_offset)
+                                self.generated_blocks.add(block)
                                 return
         _block_stmts = self._generate_block_statements(block)
         _filtered: List[Dict[str, Any]] = []
@@ -9196,23 +9249,57 @@ AST 映射规则:
                             _negate = False
                             _cond_expr = _negate_expr(_expr) if _negate else _expr
                             _hdr_stmts.append({'type': 'If', 'test': _cond_expr, 'body': [{'type': 'Break'}]})
-                    elif _is_jump_to_continue:
-                        if _is_if_false:
+                    if _is_jump_to_continue:
+                        if _jumps_inside and not _is_if_false:
+                            _ft_is_pure_cont = self._block_is_pure_continue(_fall_through) if _fall_through else False
+                            if _ft_is_pure_cont:
+                                _hdr_stmts.append({'type': 'If', 'test': _negate_expr(_expr),
+                                                   'body': [{'type': 'Continue'}]})
+                            else:
+                                _ft_stmts = self._generate_block_statements(_fall_through) if _fall_through else []
+                                _hdr_stmts.append({'type': 'If', 'test': _negate_expr(_expr),
+                                                   'body': _ft_stmts})
+                            if _fall_through:
+                                self.generated_blocks.add(_fall_through)
+                                self.generated_offsets.add(_fall_through.start_offset)
+                        elif _jumps_inside and _is_if_false:
+                            _ft_is_pure_cont = self._block_is_pure_continue(_fall_through) if _fall_through else False
+                            if _ft_is_pure_cont:
+                                _hdr_stmts.append({'type': 'If', 'test': _expr,
+                                                   'body': [{'type': 'Continue'}]})
+                            else:
+                                _ft_stmts = self._generate_block_statements(_fall_through) if _fall_through else []
+                                _hdr_stmts.append({'type': 'If', 'test': _expr,
+                                                   'body': _ft_stmts})
+                            if _fall_through:
+                                self.generated_blocks.add(_fall_through)
+                                self.generated_offsets.add(_fall_through.start_offset)
+                        elif _is_if_false:
                             _then_succ = _fall_through
                             _else_succ = _jump_block
+                            _then_stmts_full = self._generate_block_statements(_then_succ) if _then_succ else []
+                            if not _then_stmts_full:
+                                _then_stmts_full = [{'type': 'Pass'}]
+                            self.generated_blocks.add(_then_succ)
+                            self.generated_offsets.add(_then_succ.start_offset)
+                            self.generated_blocks.add(_else_succ)
+                            self.generated_offsets.add(_else_succ.start_offset)
+                            _hdr_stmts.append({'type': 'If', 'test': _expr,
+                                               'body': _then_stmts_full,
+                                               'orelse': [{'type': 'Continue'}]})
                         else:
                             _then_succ = _jump_block
                             _else_succ = _fall_through
-                        _then_stmts_full = self._generate_block_statements(_then_succ) if _then_succ else []
-                        if not _then_stmts_full:
-                            _then_stmts_full = [{'type': 'Pass'}]
-                        self.generated_blocks.add(_then_succ)
-                        self.generated_offsets.add(_then_succ.start_offset)
-                        self.generated_blocks.add(_else_succ)
-                        self.generated_offsets.add(_else_succ.start_offset)
-                        _hdr_stmts.append({'type': 'If', 'test': _expr,
-                                           'body': _then_stmts_full,
-                                           'orelse': [{'type': 'Continue'}]})
+                            _then_stmts_full = self._generate_block_statements(_then_succ) if _then_succ else []
+                            if not _then_stmts_full:
+                                _then_stmts_full = [{'type': 'Pass'}]
+                            self.generated_blocks.add(_then_succ)
+                            self.generated_offsets.add(_then_succ.start_offset)
+                            self.generated_blocks.add(_else_succ)
+                            self.generated_offsets.add(_else_succ.start_offset)
+                            _hdr_stmts.append({'type': 'If', 'test': _expr,
+                                               'body': _then_stmts_full,
+                                               'orelse': [{'type': 'Continue'}]})
                     elif _jumps_inside:
                         _negate = not _is_if_false
                         _cond_expr = _negate_expr(_expr) if _negate else _expr
@@ -9370,6 +9457,19 @@ AST 映射规则:
                         _hdr_stmts.append({'type': 'If', 'test': _negated_expr,
                                            'body': _else_stmts_cont})
                         return
+                    _else_stmts_cont2 = self._generate_block_statements(_else_succ)
+                    _has_real_else2 = any(not (s.get('type') == 'Continue') for s in _else_stmts_cont2)
+                    if not _else_stmts_cont2 or not _has_real_else2:
+                        _else_stmts_cont2 = [{'type': 'Continue'}]
+                    else:
+                        if not any(s.get('type') == 'Continue' for s in _else_stmts_cont2):
+                            _else_stmts_cont2.append({'type': 'Continue'})
+                    self.generated_blocks.add(_else_succ)
+                    self.generated_offsets.add(_else_succ.start_offset)
+                    _negated_expr2 = _negate_expr(_expr)
+                    _hdr_stmts.append({'type': 'If', 'test': _negated_expr2,
+                                       'body': _else_stmts_cont2})
+                    return
                 # [R02 fix] 分支块角色为 CONTINUE 但含有效语句时（如
                 # `if cond: tb = tb.tb_next; continue`），不能直接用 [Continue]
                 # 替换整个分支体——必须先重建块内语句再追加 Continue，
@@ -11543,7 +11643,13 @@ AST 映射规则:
 
         trailing_return = None
         if not self._current_loop and isinstance(elif_part, list) and len(elif_part) > 0:
-            last_elif = elif_part[-1]
+            last_elif = None
+            for _ep_item in reversed(elif_part):
+                if isinstance(_ep_item, dict) and _ep_item.get('type') == 'If':
+                    last_elif = _ep_item
+                    break
+            if last_elif is None:
+                last_elif = elif_part[-1]
             if isinstance(last_elif, dict) and last_elif.get('type') == 'If':
                 orelse = last_elif.get('orelse', [])
                 if isinstance(orelse, list) and len(orelse) == 1 and isinstance(orelse[0], dict) and orelse[0].get('type') == 'Return':
@@ -11598,7 +11704,16 @@ AST 映射规则:
                             _mb_meaningful = [i for i in _merge_block.instructions
                                               if i.opname not in ('RESUME', 'NOP', 'CACHE')]
                             if not self._is_implicit_return_block(_mb_meaningful):
-                                _can_lift_else_return = False
+                                _elif_final_else = getattr(region, 'elif_final_else', None)
+                                _is_shared_return_pattern = False
+                                if _elif_final_else and _merge_block is _elif_final_else[-1]:
+                                    _mb_last = _merge_block.get_last_instruction()
+                                    if _mb_last and _mb_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                                        _is_shared_return_pattern = True
+                                if _is_shared_return_pattern:
+                                    _can_lift_else_return = True
+                                else:
+                                    _can_lift_else_return = False
                         else:
                             # 区域归约算法·字节码一致性约束（W17-B 修复）：
                             # 「else-return 提升为链后尾随语句」是字节码等价变换，
@@ -11621,6 +11736,14 @@ AST 映射规则:
                         trailing_return = orelse[-1]
                         last_elif['orelse'] = orelse[:-1]
 
+        _elif_part_trailing = []
+        if isinstance(elif_part, list) and len(elif_part) > 1:
+            _ep_if_count = sum(1 for _ep in elif_part if isinstance(_ep, dict) and _ep.get('type') == 'If')
+            _ep_non_if = [_ep for _ep in elif_part if not (isinstance(_ep, dict) and _ep.get('type') == 'If')]
+            if _ep_if_count >= 1 and _ep_non_if:
+                _elif_part_trailing = _ep_non_if
+                elif_part = [_ep for _ep in elif_part if isinstance(_ep, dict) and _ep.get('type') == 'If']
+
         result = {'type': 'If', 'test': condition, 'body': then_stmts if then_stmts else [{'type': 'Pass'}], 'orelse': elif_part if isinstance(elif_part, list) else ([elif_part] if elif_part else [])}
         if pre_stmts:
             result = pre_stmts + [result]
@@ -11629,6 +11752,11 @@ AST 映射规则:
                 result.append(trailing_return)
             else:
                 result = [result, trailing_return]
+        if _elif_part_trailing:
+            if isinstance(result, list):
+                result.extend(_elif_part_trailing)
+            else:
+                result = [result] + _elif_part_trailing
         # 区域归约算法原则 4（父引用子入口）+ 原则 2（每块唯一归属）：
         # 镜像 _if_generate_normal 末尾的 R18-N5 修复。IF_ELIF_CHAIN 类型的
         # IfRegion 同样可能存在 merge_block 是嵌套 LoopRegion 的 for_iter_exit
@@ -14241,7 +14369,7 @@ AST 映射规则:
                 _last_cc = _last_cc_block.get_last_instruction()
                 if _last_cc and 'IF_TRUE' in _last_cc.opname and _last_cc.argval is not None:
                     # or 模式: 链式比较为真时跳转到 then body
-                    _or_ft = [s for s in _last_cc_block.successors if s.start_offset != _last_cc.argval]
+                    _or_ft = [s for s in _last_cc_block.successors if s.start_offset != _last_cc.argval and not any(i.opname in ('PUSH_EXC_INFO', 'WITH_EXCEPT_START') for i in s.instructions)]
                     if _or_ft:
                         _next = _or_ft[0]
                         # 跟随 JUMP_FORWARD 找到 or 右操作数块
@@ -14587,6 +14715,7 @@ AST 映射规则:
                         self.generated_offsets.add(_eb_succ.start_offset)
                         break
         nested_elif_stmts = None
+        _nested_trailing_stmts = []
         if len(region.elif_conditions) > 1:
             remaining_elifs = region.elif_conditions[2:]
             if remaining_elifs:
@@ -14629,15 +14758,29 @@ AST 映射规则:
                     elif_conditions=remaining_elifs, elif_bodies=region.elif_bodies[2:],
                     elif_final_else=region.elif_final_else, chained_compare_blocks=nested_chained,
                     inline_boolop_chains=_nested_inline_chains,
+                    merge_block=getattr(region, 'merge_block', None),
                 )
                 nested_ast = self._generate_region(nested_elif)
+                _nested_trailing_stmts = []
                 if nested_ast:
                     if isinstance(nested_ast, dict) and nested_ast.get('type') == 'If':
                         nested_ast['_is_elif'] = True
                     elif isinstance(nested_ast, list):
+                        _if_nodes = []
+                        _trailing = []
                         for item in nested_ast:
                             if isinstance(item, dict) and item.get('type') == 'If':
                                 item['_is_elif'] = True
+                                _if_nodes.append(item)
+                            else:
+                                _trailing.append(item)
+                        if _if_nodes and _trailing:
+                            nested_ast = _if_nodes[0] if len(_if_nodes) == 1 else _if_nodes
+                            _nested_trailing_stmts = _trailing
+                        else:
+                            for item in nested_ast:
+                                if isinstance(item, dict) and item.get('type') == 'If':
+                                    item['_is_elif'] = True
                     nested_elif_stmts = [nested_ast]
             else:
                 _last_elif_cond_block = region.elif_conditions[1]
@@ -14803,7 +14946,15 @@ AST 映射规则:
                             self.generated_blocks.add(_fe_b)
                         nested_elif_stmts[0]['orelse'] = [{'type': 'Continue'}]
                     else:
+                        _sb_unmark = set()
+                        if hasattr(region, '_shared_block_info'):
+                            _sb = region._shared_block_info.get('shared_block')
+                            if _sb and _sb in region.elif_final_else and _sb in self.generated_blocks:
+                                self.generated_blocks.discard(_sb)
+                                _sb_unmark.add(_sb)
                         final_else_stmts = self._process_if_blocks(region.elif_final_else, region, branch='else')
+                        for _sb_b in _sb_unmark:
+                            self.generated_blocks.add(_sb_b)
                         if not self._r23n16_blocks_have_explicit_return(region.elif_final_else):
                             while (final_else_stmts and
                                    isinstance(final_else_stmts[-1], dict) and
@@ -14840,7 +14991,15 @@ AST 映射规则:
                     self.generated_blocks.add(_fe_b)
                 final_else_stmts = [{'type': 'Continue'}]
             else:
+                _sb_unmark2 = set()
+                if hasattr(region, '_shared_block_info'):
+                    _sb2 = region._shared_block_info.get('shared_block')
+                    if _sb2 and _sb2 in region.elif_final_else and _sb2 in self.generated_blocks:
+                        self.generated_blocks.discard(_sb2)
+                        _sb_unmark2.add(_sb2)
                 final_else_stmts = self._process_if_blocks(region.elif_final_else, region, branch='else')
+                for _sb_b2 in _sb_unmark2:
+                    self.generated_blocks.add(_sb_b2)
             if not self._r23n16_blocks_have_explicit_return(region.elif_final_else):
                 while (final_else_stmts and
                        isinstance(final_else_stmts[-1], dict) and
@@ -14879,6 +15038,8 @@ AST 映射规则:
         _elif_result = list(_elif_pre_stmts) + [_elif_if_stmt] if _elif_pre_stmts else [_elif_if_stmt]
         if _elif_trailing_continue:
             _elif_result.append({'type': 'Continue'})
+        if _nested_trailing_stmts:
+            _elif_result.extend(_nested_trailing_stmts)
         return _elif_result
 
     def _extract_condition_for_elif_block(self, cond_block, region: IfRegion = None):
@@ -17781,7 +17942,7 @@ AST 映射规则:
                 _or_else_block = None
                 if last_cc and 'IF_TRUE' in last_cc.opname and last_cc.argval is not None:
                     _or_jt = self.cfg.get_block_by_offset(last_cc.argval)
-                    _or_ft = [s for s in last_cc_block.successors if s.start_offset != last_cc.argval]
+                    _or_ft = [s for s in last_cc_block.successors if s.start_offset != last_cc.argval and not any(i.opname in ('PUSH_EXC_INFO', 'WITH_EXCEPT_START') for i in s.instructions)]
                     if _or_jt and _or_ft and not self.region_analyzer._is_trivial_block(_or_jt):
                         _or_then_block = _or_jt
                         _next = _or_ft[0]

@@ -5,14 +5,14 @@
 
 ## Round 01 — IQCommon/common/main.pyc
 
-- [ ] C01.1 IQCommon/common/main.pyc 反编译成功，字节码完全匹配
-- [ ] C01.2 同目录生成 mainOK.py 文件
-- [ ] C01.3 pyc_index.json 中该文件状态更新为 "ok"
-- [ ] C01.4 10+ 最小复现实例全部通过
-- [ ] C01.5 既有测试矩阵无退化
-- [ ] C01.6 已 commit + push `rr43-r01:`
-- [ ] C01.7 无反模式新增
-- [ ] C01.8 quotation.pyc 回归验证通过
+- [x] C01.1 IQCommon/common/main.pyc 反编译成功，字节码完全匹配
+- [x] C01.2 同目录生成 mainOK.py 文件
+- [x] C01.3 pyc_index.json 中该文件状态更新为 "ok"
+- [x] C01.4 10+ 最小复现实例全部通过
+- [x] C01.5 既有测试矩阵无退化
+- [x] C01.6 已 commit + push `rr43-r01:`
+- [x] C01.7 无反模式新增
+- [x] C01.8 quotation.pyc 回归验证通过
 
 ## Round 02 — IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc
 
