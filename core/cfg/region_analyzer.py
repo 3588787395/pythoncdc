@@ -18242,7 +18242,20 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     if _body and _body[-1].successors:
                         if set(_body[-1].successors) & _fe_set:
                             _body_succs_to_fe += 1
-                if _body_succs_to_fe >= 2:
+                # 区域归约算法·elif body fallthrough 到 final_else 识别：
+                # 当 elif body 末尾 fallthrough（非RETURN_VALUE/JUMP_FORWARD）
+                # 到 final_else 块时，final_else 实际上是所有分支的汇合点
+                # （merge），不是 else 分支。因为 CPython 编译 elif body
+                # fallthrough 到 else 代码时，不生成 JUMP_FORWARD，说明
+                # 这些代码是 if/elif 之后的公共代码（不是 else 专属）。
+                # 典型场景（stk_history_day_complex）：
+                #   if len(x)==0: return x           # then: RETURN_VALUE
+                #   elif isinstance(x, str): x=[x]   # elif body: fallthrough→130
+                #   else: new_dtype=...               # block 130
+                # elif body(124) fallthrough→130，130不是else而是merge。
+                # 原 >=2 条件只覆盖 check_datetime_common 模式（4个elif
+                # body都JUMP_FORWARD→1190），但 >=1 就足以覆盖fallthrough模式。
+                if _body_succs_to_fe >= 1:
                     _chain_merge_candidates |= _fe_set
                     elif_info["final_else"] = [
                         b for b in elif_info.get("final_else", [])
