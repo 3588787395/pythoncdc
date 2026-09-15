@@ -18423,6 +18423,16 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             ft_last = current_ft.get_last_instruction()
             if not ft_last or not any(i.opname == "COMPARE_OP" for i in current_ft.instructions):
                 break
+            _has_store_before_cmp = False
+            for _fi in current_ft.instructions:
+                if _fi.opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP'):
+                    break
+                if _fi.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
+                                  'STORE_DEREF', 'STORE_ATTR', 'STORE_SUBSCR'):
+                    _has_store_before_cmp = True
+                    break
+            if _has_store_before_cmp:
+                break
             all_compare_blocks.append(current_ft)
             if op_idx < len(compare_ops) - 1:
                 ft_succs = sorted(current_ft.successors, key=lambda s: s.start_offset)
@@ -18461,13 +18471,33 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
         if not then_blocks or not else_blocks:
             return None
         all_blocks = {header, ft_succ, real_then, real_else} | set(all_compare_blocks) | chain_blocks
+        # [R50] Value-context chained compare: when merge_block starts with
+        # STORE_FAST/STORE_NAME/STORE_GLOBAL/STORE_DEREF, the STORE is the
+        # result assignment (e.g., `is_trigger_time = a < b <= c`). The
+        # merge_block contains both the STORE and subsequent unrelated code.
+        # Including it in all_blocks would claim the entire block, preventing
+        # the parent region from processing the code after the STORE.
+        # Like the negated case, leave merge_block unclaimed so the parent
+        # can process the STORE + subsequent code as sequential statements.
+        _merge_starts_with_store = False
+        if merge_block is not None and merge_block.instructions:
+            _first = merge_block.instructions[0]
+            if _first.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+                _merge_starts_with_store = True
         # When negated, merge_block is the post-if continuation
         # (e.g., return percent). Do NOT add it to all_blocks — it must
         # remain unclaimed so the parent sequence/region generates it as a
         # post-if statement. When not negated, merge_block IS the body
-        # entry (fallthrough) and should be in all_blocks.
-        if merge_block is not None and not _negated:
+        # entry (fallthrough) and should be in all_blocks — UNLESS the
+        # merge_block starts with a STORE (value-context chained compare),
+        # in which case it should also remain unclaimed.
+        if merge_block is not None and not _negated and not _merge_starts_with_store:
             all_blocks.add(merge_block)
+        # [R50] For value-context chained compare, remove real_then (= merge_block)
+        # from all_blocks so it remains unclaimed. The STORE + subsequent code
+        # belongs to the parent region's else-branch sequence.
+        if _merge_starts_with_store and not _negated and merge_block in all_blocks:
+            all_blocks.discard(merge_block)
         # When negated (if not a < b < c: body), the fallthrough
         # (real_then) is the if-body entry (e.g., raise block). The fallthrough
         # may be a pure JUMP_FORWARD connector — follow it to find the actual
@@ -18556,6 +18586,16 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 break
             if not any(i.opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP')
                        for i in ft_candidate.instructions):
+                break
+            _has_store_before_cmp = False
+            for _fi in ft_candidate.instructions:
+                if _fi.opname in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP'):
+                    break
+                if _fi.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
+                                  'STORE_DEREF', 'STORE_ATTR', 'STORE_SUBSCR'):
+                    _has_store_before_cmp = True
+                    break
+            if _has_store_before_cmp:
                 break
             has_back_edge = any(s.start_offset <= ft_candidate.start_offset for s in ft_candidate.successors)
             if has_back_edge:

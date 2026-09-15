@@ -3676,10 +3676,10 @@
     "size": 41237,
     "function_count": 45,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.8888888888888888,
+    "bytecode_match_rate": 0.9111111111111111,
     "ok_py_generated": true,
     "last_tested_round": 1,
-    "matched_functions": 40,
+    "matched_functions": 41,
     "total_functions": 45,
     "mismatch_count": 13,
     "match_rate": 0.7111
