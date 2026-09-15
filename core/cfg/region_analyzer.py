@@ -15875,6 +15875,12 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                             condition_block = _main_chain[-1]
                             chain_blocks = set(_main_chain)
 
+            if _main_inline_boolop_chain is None and chain_blocks:
+                if isinstance(block_region, BoolOpRegion) and block_region.entry == block:
+                    _op_chain_ops = set(op for _, op in block_region.op_chain)
+                    if _op_chain_ops == {'and'} and len(block_region.op_chain) >= 2:
+                        _main_inline_boolop_chain = {'blocks': [b for b, _ in block_region.op_chain], 'op': 'and'}
+
             cond_succs = list(condition_block.conditional_successors)
             if len(cond_succs) != 2:
                 continue

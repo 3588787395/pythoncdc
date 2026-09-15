@@ -33706,7 +33706,10 @@ AST 映射规则:
                                     if (isinstance(_r, IfRegion)
                                             and _r is not region
                                             and _r.entry is region.merge_block
-                                            and _r.condition_block is region.merge_block):
+                                            and (_r.condition_block is region.merge_block
+                                                 or any(isinstance(_ch, dict) and _ch.get('blocks')
+                                                        and _ch['blocks'][0] is region.merge_block
+                                                        for _ch in (getattr(_r, 'inline_boolop_chains', None) or {}).values()))):
                                         _shared_with_nested_if_cond = True
                                         break
                         # 检测 merge_block 是否同时是某 LoopRegion
