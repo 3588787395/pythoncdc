@@ -4350,7 +4350,8 @@ AST 映射规则:
             _ancestor_if_merge_blocks = set()
             for _r in self.regions:
                 if (isinstance(_r, IfRegion) and _r is not region
-                        and id(_r) in self._generating_regions
+                        and (id(_r) in self._generating_regions
+                             or id(_r) in self._generated_regions)
                         and getattr(_r, 'merge_block', None) is not None):
                     if _r.merge_block in _filtered_else_blocks:
                         _ancestor_if_merge_blocks.add(_r.merge_block)
@@ -11802,6 +11803,7 @@ AST 映射规则:
                     _mb_in_nested_structural = True
                     break
             _should_emit_elif = False
+            _mb_is_ancestor_if_merge = False
             if not _mb_in_nested_structural:
                 _then_block_set = set(region.then_blocks)
                 _else_block_set = set(region.else_blocks or [])
@@ -11816,7 +11818,17 @@ AST 映射规则:
                                                    or _lr.entry in _else_block_set):
                         _should_emit_elif = True
                         break
-            if _should_emit_elif:
+                for _ar in self.regions:
+                    if (isinstance(_ar, IfRegion) and _ar is not region
+                            and (id(_ar) in self._generating_regions
+                                 or id(_ar) in self._generated_regions)
+                            and getattr(_ar, 'merge_block', None) is region.merge_block
+                            and _ar.entry is not None
+                            and (_ar.entry not in _then_block_set
+                                 and _ar.entry not in _else_block_set)):
+                        _mb_is_ancestor_if_merge = True
+                        break
+            if _should_emit_elif and not _mb_is_ancestor_if_merge:
                 self.generated_blocks.discard(region.merge_block)
                 self.generated_offsets.discard(region.merge_block.start_offset)
                 _post_if_stmts_elif = self._generate_block_statements(region.merge_block)
