@@ -5,14 +5,14 @@
   - [ ] SubTask 1.2: 按 bytecode_match_rate 升序排列，形成优先级队列
   - [ ] SubTask 1.3: 输出队列摘要（43 个文件，最低 rate 到最高 rate）
 
-- [ ] Task 2: 第1轮迭代 - 修复 history_api.pyc (rate=0.5556, 最低)
-  - [ ] SubTask 2.1: 测试工程师对 history_api.pyc 执行 pyc_batch_verify.py single，收集 mismatches 详情
-  - [ ] SubTask 2.2: 测试工程师分析每个 mismatch 函数的 first_diff，归类模式
-  - [ ] SubTask 2.3: 测试工程师创建最小复现实例（10+个可复现问题的 .py 文件）
-  - [ ] SubTask 2.4: 修复工程师根据分析修改 region_analyzer.py / region_ast_generator.py
-  - [ ] SubTask 2.5: 验证 history_api.pyc 的 bytecode_match_rate 达到 1.0
-  - [ ] SubTask 2.6: 批量回归验证已 ok 的 pyc
-  - [ ] SubTask 2.7: 提交并 push
+- [x] Task 2: 第1轮迭代 - 修复 history_api.pyc (rate=0.5556 → 1.0) ✅
+  - [x] SubTask 2.1: 测试工程师收集 mismatches 详情 - 8个不匹配函数
+  - [x] SubTask 2.2: 归类8种不一致模式（elif降级、共享return拆分等）
+  - [x] SubTask 2.3: 创建12个最小复现实例
+  - [x] SubTask 2.4: 修复elif降级(共享merge点检测)+共享return+match误识别+循环dedup
+  - [x] SubTask 2.5: history_api.pyc bytecode_match_rate = 1.0
+  - [x] SubTask 2.6: 批量回归验证 360/402 ok
+  - [x] SubTask 2.7: 已提交并 push (commit 1e8806f2)
 
 - [ ] Task 3: 第2轮迭代 - 修复 klinedata.pyc (rate=0.6)
   - [ ] SubTask 3.1: 测试工程师分析 klinedata.pyc mismatches
