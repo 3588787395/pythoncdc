@@ -9690,6 +9690,27 @@ AST 映射规则:
                 if _nbe_cond_start_idx is None:
                     _nbe_cond_start_idx = _nbci
                 return _nbe_cond_start_idx
+        _nbe_last = block.get_last_instruction()
+        if (_has_call
+                and _nbe_last
+                and _nbe_last.opname in CONDITIONAL_JUMP_OPS
+                and _nbe_last.opname not in NONE_CHECK_OPS):
+            _call_truthy_ops = ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF',
+                                'LOAD_CONST', 'COPY', 'SWAP', 'TO_BOOL',
+                                'CALL', 'PRECALL', 'LOAD_METHOD',
+                                'BINARY_SUBSCR', 'GET_ITER', 'PUSH_NULL',
+                                'LOAD_ATTR', 'BINARY_OP', 'KW_NAMES',
+                                'FORMAT_VALUE', 'BUILD_STRING',
+                                'BUILD_TUPLE', 'BUILD_LIST', 'BUILD_MAP',
+                                'BUILD_SET', 'BUILD_CONST_KEY_MAP',
+                                'UNARY_OP', 'UNPACK_SEQUENCE', 'UNPACK_EX',
+                                'BINARY_SLICE')
+            for _nbci2 in range(len(block.instructions) - 2, -1, -1):
+                if block.instructions[_nbci2].opname not in _call_truthy_ops:
+                    break
+                _nbe_cond_start_idx = _nbci2
+            if _nbe_cond_start_idx is not None:
+                return _nbe_cond_start_idx
         for _nbci in range(len(block.instructions) - 2, -1, -1):
             _nbc_instr = block.instructions[_nbci]
             if _nbc_instr.opname in ('LOAD_FAST', 'LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_DEREF'):
