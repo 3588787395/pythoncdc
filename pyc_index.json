@@ -625,7 +625,7 @@
     "size": 20773,
     "function_count": 9,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.7777777777777778,
+    "bytecode_match_rate": 0.8888888888888888,
     "ok_py_generated": true,
     "last_tested_round": 1,
     "matched_functions": 7,

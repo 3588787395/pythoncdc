@@ -1772,10 +1772,27 @@ class RegionAnalyzer:
                                         _cr_then_jumps_to_sb = True
                                         break
                                 if _cr_then_jumps_to_sb:
-                                    _cr.then_blocks.append(_sb)
-                                    _cr.blocks.add(_sb)
-                                    _cr.merge_block = _nm
-                                    _cr._shared_merge_block = _sb
+                                    # 区域归约算法·shared_block 后处理修复：
+                                    # 当 new_merge 为 None 时，shared_block (1072)
+                                    # 本身就是内部 IfRegion 的正确 merge 点（then
+                                    # body fallthrough → shared_block + 条件跳转
+                                    # → shared_block）。不应将 shared_block 追加
+                                    # 到 then_blocks 并清空 merge——否则 merge=None
+                                    # 且 then_blocks 包含 merge 块，AST 生成错误。
+                                    # 典型场景（log_request: IfRegion entry=974）：
+                                    # block 974 POP_JUMP_FORWARD_IF_FALSE→1072，
+                                    # then body 1030 fallthrough→1072。1072 是
+                                    # shared_block 也是正确 merge。原代码将 1072
+                                    # 追加到 then_blocks 并设 merge=None，导致
+                                    # `if not location:` 条件取反 + post-if 代码
+                                    # 被误收入 if body。
+                                    if _nm is not None:
+                                        _cr.then_blocks.append(_sb)
+                                        _cr.blocks.add(_sb)
+                                        _cr.merge_block = _nm
+                                        _cr._shared_merge_block = _sb
+                                    # else: new_merge=None → shared_block is
+                                    # already the correct merge, no action needed
 
         #print(f"[DEBUG analyze] ({self.cfg.name}) FINAL self.regions count: {len(self.regions)}")
         for r in self.regions:
@@ -17133,6 +17150,44 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                                 _break_target_blocks.add(_lb_target)
                     then_blocks = [b for b in then_blocks if b not in _break_target_blocks]
                     else_blocks = [b for b in else_blocks if b in _loop_body_only or self._block_exits_loop(b, _loop_region)]
+        # 区域归约算法·IF_THEN merge 候选识别：
+        # 当 merge=None 且 else_blocks 为空时，then_blocks 可能包含了实际的
+        # merge 点（所有 then 分支的共同后继）。典型场景（log_request 中
+        # IfRegion entry=974）：block 974 以 POP_JUMP_FORWARD_IF_FALSE→1072
+        # 结尾，then_succ=1030 fallthrough→1072，else_succ=1072。1072 是
+        # then body 1030 和条件跳转的共同后继（merge），不是 then body 的一部分。
+        # 但因 else_blocks 为空（1072 未被归入 else），1072 被误收入 then_blocks。
+        # 修复：检查 then_blocks 中是否存在块是 2+ 个 then 块/条件块出口的
+        # 共同后继，若有则设为 merge 并从 then_blocks 移除。
+        if merge is None and not else_blocks and then_blocks and len(then_blocks) >= 2:
+            _tb_exit_succs = []
+            for _tb in then_blocks[:-1]:
+                _tb_last = _tb.get_last_instruction()
+                if _tb_last and _tb_last.opname not in ('RETURN_VALUE', 'RETURN_CONST', 'RAISE_VARARGS', 'RERAISE'):
+                    if _tb.successors:
+                        _tb_exit_succs.append(set(_tb.successors))
+            # Also add condition block's exit successors
+            if condition_block is not None and condition_block.successors:
+                _cond_exit = set(condition_block.successors) - {then_blocks[0]}
+                if _cond_exit:
+                    _tb_exit_succs.append(_cond_exit)
+            if len(_tb_exit_succs) >= 2:
+                _common_succs = set.intersection(*_tb_exit_succs)
+                _common_succs -= all_condition_blocks
+                if _common_succs:
+                    _merge_candidate = min(_common_succs, key=lambda b: b.start_offset)
+                    # Verify: the candidate is also in then_blocks (was mis-collected)
+                    if _merge_candidate in then_blocks:
+                        merge = _merge_candidate
+                        then_blocks = [b for b in then_blocks if b is not merge]
+            elif len(_tb_exit_succs) == 1:
+                # Single exit: check if then_blocks[-1] is that exit target
+                _single_succs = _tb_exit_succs[0]
+                _overlap = _single_succs & set(then_blocks)
+                if _overlap:
+                    _merge_candidate = min(_overlap, key=lambda b: b.start_offset)
+                    merge = _merge_candidate
+                    then_blocks = [b for b in then_blocks if b is not merge]
         region_type = RegionType.IF_THEN_ELSE if else_blocks else RegionType.IF_THEN
         all_blocks = all_condition_blocks | set(then_blocks) | set(else_blocks)
         # 主条件的 inline_boolop_chain 也存入 IF_THEN /
