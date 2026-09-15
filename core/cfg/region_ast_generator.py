@@ -15233,6 +15233,18 @@ AST 映射规则:
                 if _ti.opname.startswith(('JUMP', 'POP_JUMP')):
                     continue
                 return False
+        # 区域归约算法原则 3（嵌套即抽象节点）+ 原则 2（每块唯一归属）：
+        # 当本 IfRegion 的 merge_block 同时是祖先 IfRegion 的 merge_block 时，
+        # 它是共享汇合点（then 和 else 在祖先层级都到达此块），不是真臂专属。
+        # 典型模式：外层 if/else 中内层 if 的 then 块 JUMP_FORWARD→共享 return，
+        # else 块 raise（无后继），假出口不可达 merge，但祖先 else fallthrough 可达。
+        # 不加此检查，return self 被误归入内层 then 体，外层 else 路径丢失 return，
+        # 字节码多出重复 LOAD_FAST+RETURN_VALUE。
+        _ancestor = getattr(region, 'parent', None)
+        while _ancestor is not None:
+            if isinstance(_ancestor, IfRegion) and getattr(_ancestor, 'merge_block', None) is mb:
+                return False
+            _ancestor = getattr(_ancestor, 'parent', None)
         # 收集条件链的条件跳转假出口目标
         false_targets = []
         chain = [region.condition_block] + list(getattr(region, 'chained_compare_blocks', None) or [])
