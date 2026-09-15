@@ -18227,6 +18227,28 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             elif len(_non_empty_exits) == 1:
                 _chain_merge_candidates = set(_non_empty_exits[0])
             _chain_merge_candidates -= set(elif_info.get("conditions", []))
+            # 区域归约算法·共享后续代码识别：
+            # 当 final_else 块同时是 2+ 个 elif body 末尾的共同后继时，
+            # 它是所有分支 JUMP_FORWARD 汇入的共享代码（merge 点），
+            # 不是 else 分支。将其从 final_else 移到 merge 候选。
+            # 典型场景（check_datetime_common）：4个elif body末尾
+            # JUMP_FORWARD→1190，1190同时被识别为final_else，
+            # 但1190是共享后续代码（int(c_date[:4])<1990检查），
+            # 不是任何elif的else分支。
+            _fe_set = set(elif_info.get("final_else", []))
+            if _fe_set:
+                _body_succs_to_fe = 0
+                for _body in elif_info.get("bodies", []):
+                    if _body and _body[-1].successors:
+                        if set(_body[-1].successors) & _fe_set:
+                            _body_succs_to_fe += 1
+                if _body_succs_to_fe >= 2:
+                    _chain_merge_candidates |= _fe_set
+                    elif_info["final_else"] = [
+                        b for b in elif_info.get("final_else", [])
+                        if b not in _fe_set
+                    ]
+                    else_blocks = [b for b in else_blocks if b not in _fe_set]
             _chain_merge_candidates -= set(elif_info.get("final_else", []))
             _chain_merge_candidates.discard(block)
             _chain_merge_candidates.discard(then_blocks[0])
