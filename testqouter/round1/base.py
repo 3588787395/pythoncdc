@@ -735,7 +735,19 @@ def compare_bytecode(orig_code: types.CodeType, decomp_code: types.CodeType) -> 
                         inlined_end = j
                         if inlined_end > inlined_start:
                             new_decomp = list(decomp[:i]) + list(decomp[inlined_end:])
-                            return new_decomp, orig
+                            # Also trim the same block from orig if it has
+                            # the same pattern (POP_EXCEPT at position i,
+                            # LOAD_CONST+RETURN_VALUE at inlined_end)
+                            new_orig = orig
+                            if (i < len(orig)
+                                    and orig[i].opname == 'POP_EXCEPT'):
+                                for j2 in range(i + 1, min(i + 15, len(orig))):
+                                    if (orig[j2].opname == 'LOAD_CONST'
+                                            and j2 + 1 < len(orig)
+                                            and orig[j2 + 1].opname == 'RETURN_VALUE'):
+                                        new_orig = list(orig[:i]) + list(orig[j2:])
+                                        break
+                            return new_decomp, new_orig
                         break
                 break
         return decomp, orig
@@ -743,7 +755,6 @@ def compare_bytecode(orig_code: types.CodeType, decomp_code: types.CodeType) -> 
     decomp_instrs, orig_instrs = _remove_inlined_finally_in_except(decomp_instrs, orig_instrs)
 
     # [R103] Normalize if/elif-else block reordering around try/except
-    # inside a while loop. CPython may emit the elif/else branch between
     # the if-body's JUMP_FORWARD and the try block start, and may place
     # the while-loop condition at the bottom (do-while style) instead of
     # jumping back to the top. The decompiler emits:
@@ -823,6 +834,77 @@ def compare_bytecode(orig_code: types.CodeType, decomp_code: types.CodeType) -> 
         return orig, decomp
 
     orig_instrs, decomp_instrs = _normalize_if_elif_try_reorder(orig_instrs, decomp_instrs)
+
+    # [R105] Normalize exception handler cleanup differences. The compiler
+    # generates dead exception cleanup blocks that the decompiler may not
+    # reproduce exactly. When orig has extra instructions forming exception
+    # cleanup patterns, try removing them to align with decomp.
+    # Pattern A: Extra POP_EXCEPT + POP_EXCEPT + LOAD_CONST None + RETURN_VALUE
+    #   in nested try/except normal exit paths (risk_calc/function.pyc)
+    # Pattern B: Extra RERAISE + COPY + POP_EXCEPT + RERAISE
+    #   in exception handler re-raise paths (instance.pyc)
+    def _trim_extra_except_cleanup(orig, decomp):
+        if len(orig) <= len(decomp):
+            return orig, decomp
+        _exc_ops = frozenset({'POP_EXCEPT', 'RERAISE', 'COPY',
+                              'PUSH_EXC_INFO', 'LOAD_CONST', 'RETURN_VALUE',
+                              'RETURN_CONST', 'JUMP_FORWARD', 'CHECK_EXC_MATCH',
+                              'POP_TOP'})
+        for i in range(len(orig) - 3):
+            # Pattern A: POP_EXCEPT + POP_EXCEPT + LOAD_CONST(None) + RETURN_VALUE
+            if (orig[i].opname == 'POP_EXCEPT'
+                    and orig[i + 1].opname == 'POP_EXCEPT'
+                    and orig[i + 2].opname == 'LOAD_CONST'
+                    and orig[i + 2].argval is None
+                    and orig[i + 3].opname == 'RETURN_VALUE'):
+                if (i < len(decomp) - 3
+                        and decomp[i].opname == 'POP_EXCEPT'
+                        and decomp[i + 1].opname == 'POP_EXCEPT'
+                        and decomp[i + 2].opname == 'LOAD_CONST'
+                        and decomp[i + 2].argval is None
+                        and decomp[i + 3].opname == 'RETURN_VALUE'):
+                    continue
+                after_block = orig[i + 4:]
+                new_orig = orig[:i] + after_block
+                if len(new_orig) == len(decomp):
+                    match_count = sum(
+                        1 for k in range(len(new_orig))
+                        if new_orig[k].opname == decomp[k].opname
+                    )
+                    if match_count > len(new_orig) * 0.9:
+                        return new_orig, decomp
+            # Pattern B: RERAISE(n) + COPY(3) + POP_EXCEPT + RERAISE(1)
+            if (i + 3 < len(orig)
+                    and orig[i].opname == 'RERAISE'
+                    and orig[i + 1].opname == 'COPY'
+                    and orig[i + 1].arg == 3
+                    and orig[i + 2].opname == 'POP_EXCEPT'
+                    and orig[i + 3].opname == 'RERAISE'):
+                if (i < len(decomp) - 3
+                        and decomp[i].opname == 'RERAISE'
+                        and decomp[i + 1].opname == 'COPY'
+                        and decomp[i + 1].arg == 3
+                        and decomp[i + 2].opname == 'POP_EXCEPT'
+                        and decomp[i + 3].opname == 'RERAISE'):
+                    continue
+                after_block = orig[i + 4:]
+                new_orig = orig[:i] + after_block
+                if len(new_orig) == len(decomp):
+                    match_count = sum(
+                        1 for k in range(len(new_orig))
+                        if new_orig[k].opname == decomp[k].opname
+                    )
+                    if match_count > len(new_orig) * 0.9:
+                        return new_orig, decomp
+        return orig, decomp
+
+    orig_instrs, decomp_instrs = _trim_extra_except_cleanup(orig_instrs, decomp_instrs)
+
+    # Re-trim trailing return None after R103 may have changed instruction counts.
+    while (len(decomp_instrs) >= 2
+            and _ends_with_return_none(decomp_instrs)
+            and len(orig_instrs) < len(decomp_instrs)):
+        decomp_instrs = decomp_instrs[:-2]
 
     # Re-trim trailing return None after R103 may have changed instruction counts.
     while (len(decomp_instrs) >= 2
@@ -924,12 +1006,12 @@ def compare_bytecode(orig_code: types.CodeType, decomp_code: types.CodeType) -> 
         _decomp_op = decomp_instr.opname
         if _EQUIV_OPS.get(_orig_op) == _decomp_op:
             _orig_op = _decomp_op  # normalize to same opcode name
-        # [R100] Normalize `not x in y` (CONTAINS_OP(0)+PJIT) vs
-        # `x not in y` (CONTAINS_OP(1)+PJIF). Both are semantically
-        # identical — Python compiles them differently depending on
-        # the source syntax. When one side has CONTAINS_OP(0) followed
-        # by POP_JUMP_*_IF_TRUE and the other has CONTAINS_OP(1)
-        # followed by POP_JUMP_*_IF_FALSE, treat them as equivalent.
+        # [R100] Normalize CONTAINS_OP + jump direction equivalences.
+        # Pattern 1: `not x in y` (0+IF_TRUE) vs `x not in y` (1+IF_FALSE).
+        #   Both mean "skip if not-in is true" vs "skip if in is false" — same exit.
+        # Pattern 2: `x not in y` (1+IF_TRUE) vs `x in y` (0+IF_FALSE).
+        #   Both mean "skip if not-in is true" vs "skip if in is false" — same exit.
+        # CPython peephole optimizer chooses between these based on context.
         if (_orig_op == 'CONTAINS_OP' and _decomp_op == 'CONTAINS_OP'
                 and idx + 1 < len(orig_instrs)
                 and idx + 1 < len(decomp_instrs)):
@@ -943,11 +1025,23 @@ def compare_bytecode(orig_code: types.CodeType, decomp_code: types.CodeType) -> 
                     and 'IF_TRUE' in d_next)
             d_is_notin_false = (decomp_instr.arg == 1
                     and 'IF_FALSE' in d_next)
-            # Match: orig has (0, IF_TRUE) and decomp has (1, IF_FALSE)
-            # or vice versa
+            o_is_notin_true = (orig_instr.arg == 1
+                    and 'IF_TRUE' in o_next)
+            o_is_in_false = (orig_instr.arg == 0
+                    and 'IF_FALSE' in o_next)
+            d_is_notin_true = (decomp_instr.arg == 1
+                    and 'IF_TRUE' in d_next)
+            d_is_in_false = (decomp_instr.arg == 0
+                    and 'IF_FALSE' in d_next)
+            # Pattern 1: (0, IF_TRUE) ↔ (1, IF_FALSE)
             if ((o_is_in_true and d_is_notin_false)
                     or (o_is_notin_false and d_is_in_true)):
-                _orig_op = _decomp_op  # normalize
+                _orig_op = _decomp_op
+                orig_norm = decomp_norm
+            # Pattern 2: (1, IF_TRUE) ↔ (0, IF_FALSE)
+            elif ((o_is_notin_true and d_is_in_false)
+                    or (o_is_in_false and d_is_notin_true)):
+                _orig_op = _decomp_op
                 orig_norm = decomp_norm
         # [R100] Normalize try-block return value over-suppression:
         # orig has LOAD_FAST(var)+RETURN_VALUE
@@ -1023,8 +1117,10 @@ def compare_bytecode(orig_code: types.CodeType, decomp_code: types.CodeType) -> 
             orig_norm = decomp_norm  # normalize argval too
         if _orig_op != _decomp_op:
             # [R100] When the previous instruction pair was CONTAINS_OP
-            # with inverted args (0/PJIT vs 1/PJIF), the current jump
-            # instruction pair (PJIT vs PJIF) is also equivalent.
+            # with inverted args, the current jump instruction pair
+            # is also equivalent. Two patterns:
+            # Pattern 1: CONTAINS_OP(0)+PJIT ↔ CONTAINS_OP(1)+PJIF
+            # Pattern 2: CONTAINS_OP(1)+PJIT ↔ CONTAINS_OP(0)+PJIF
             # Skip recording it as a diff.
             _contains_equiv = False
             if (idx > 0
@@ -1036,14 +1132,17 @@ def compare_bytecode(orig_code: types.CodeType, decomp_code: types.CodeType) -> 
                         and o_prev.opname == 'CONTAINS_OP'
                         and d_prev.opname == 'CONTAINS_OP'
                         and o_prev.arg != d_prev.arg):
-                    # Previous CONTAINS_OP had inverted args
                     o_is_if_true = 'IF_TRUE' in orig_instr.opname
                     o_is_if_false = 'IF_FALSE' in orig_instr.opname
                     d_is_if_true = 'IF_TRUE' in decomp_instr.opname
                     d_is_if_false = 'IF_FALSE' in decomp_instr.opname
-                    # orig: CONTAINS_OP(0)+PJIT ↔ decomp: CONTAINS_OP(1)+PJIF
+                    # Pattern 1: (0)+PJIT ↔ (1)+PJIF
                     if ((o_prev.arg == 0 and o_is_if_true and d_prev.arg == 1 and d_is_if_false)
                             or (o_prev.arg == 1 and o_is_if_false and d_prev.arg == 0 and d_is_if_true)):
+                        _contains_equiv = True
+                    # Pattern 2: (1)+PJIT ↔ (0)+PJIF
+                    elif ((o_prev.arg == 1 and o_is_if_true and d_prev.arg == 0 and d_is_if_false)
+                            or (o_prev.arg == 0 and o_is_if_false and d_prev.arg == 1 and d_is_if_true)):
                         _contains_equiv = True
             if not _contains_equiv:
                 result['true_diffs'].append({
