@@ -84,6 +84,23 @@ def _flip_is_none_compare(expr: Dict[str, Any]) -> Dict[str, Any]:
     out['ops'] = new_ops
     return out
 
+
+def _flip_contains_compare(expr: Dict[str, Any]) -> Dict[str, Any]:
+    if expr.get('type') != 'Compare':
+        return _negate_expr(expr)
+    _flip = {'In': 'NotIn', 'NotIn': 'In', 'in': 'not in', 'not in': 'in'}
+    new_ops = []
+    for op in (expr.get('ops') or []):
+        name = op.get('type') if isinstance(op, dict) else op
+        if name not in _flip:
+            return _negate_expr(expr)
+        new_ops.append({'type': _flip[name]} if isinstance(op, dict) else _flip[name])
+    if not new_ops:
+        return _negate_expr(expr)
+    out = dict(expr)
+    out['ops'] = new_ops
+    return out
+
 from .basic_block import BasicBlock, Instruction
 from .cfg_builder import ControlFlowGraph
 from .dominator_analyzer import BACKWARD_JUMP_OPS, FORWARD_JUMP_OPS, PLACEHOLDER_OPS
@@ -11446,20 +11463,22 @@ AST 映射规则:
             _chain_blocks = _main_ibc['blocks']
             _chain_op = _main_ibc['op']
             _main_parts = []
-            for _cb in _chain_blocks:
+            for _cb_idx, _cb in enumerate(_chain_blocks):
                 # [R01 fix] NONE_CHECK_OPS 不能过滤：它们表达 `x is (not) None`
                 # [R75 fix] or 链 NONE_CHECK 块跳转到 then，需翻转落空条件为跳转条件
                 _cb_instrs = [i for i in _cb.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL') and (i.opname not in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS | BACKWARD_JUMP_OPS) or i.opname in NONE_CHECK_OPS) and i.opname not in ('JUMP_FORWARD', 'JUMP_BACKWARD')]
                 if _cb_instrs:
                     _part = self.expr_reconstructor.reconstruct(_cb_instrs)
                     if _part:
+                        _cb_last = _cb.instructions[-1] if _cb.instructions else None
                         if _chain_op == 'or':
-                            _cb_last = _cb.instructions[-1] if _cb.instructions else None
                             if _cb_last and _cb_last.opname in NONE_CHECK_OPS and _cb_last.argval is not None:
                                 _jt_block = self.region_analyzer.cfg.get_block_by_offset(_cb_last.argval)
                                 _is_then_target = _jt_block in region.then_blocks if _jt_block and region.then_blocks else False
                                 if _is_then_target:
                                     _part = _flip_is_none_compare(_part)
+                        elif _chain_op == 'and' and _cb_last and 'TRUE' in _cb_last.opname:
+                            _part = _flip_contains_compare(_part) if (_part.get('type') == 'Compare' and any((o.get('type') if isinstance(o, dict) else o) in ('In', 'NotIn', 'in', 'not in') for o in (_part.get('ops') or []))) else _negate_expr(_part)
                         _main_parts.append(_part)
             if len(_main_parts) >= 2:
                 condition = {'type': 'BoolOp', 'op': _chain_op, 'values': _main_parts}
@@ -14654,21 +14673,23 @@ AST 映射规则:
                 _chain_blocks = _inline_chain_info['blocks']
                 _chain_op = _inline_chain_info['op']
                 _elif_parts = []
-                for _cb in _chain_blocks:
+                for _cb_idx, _cb in enumerate(_chain_blocks):
                     # [R01 fix] NONE_CHECK_OPS 不能过滤：它们表达 `x is (not) None`
                     # [R75 fix] or 链 NONE_CHECK 块跳转到 then，需翻转落空条件为跳转条件
                     _cb_instrs = [i for i in _cb.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL') and (i.opname not in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS | BACKWARD_JUMP_OPS) or i.opname in NONE_CHECK_OPS) and i.opname not in ('JUMP_FORWARD', 'JUMP_BACKWARD')]
                     if _cb_instrs:
                         _part = self.expr_reconstructor.reconstruct(_cb_instrs)
                         if _part:
+                            _cb_last = _cb.instructions[-1] if _cb.instructions else None
                             if _chain_op == 'or':
-                                _cb_last = _cb.instructions[-1] if _cb.instructions else None
                                 if _cb_last and _cb_last.opname in NONE_CHECK_OPS and _cb_last.argval is not None:
                                     _jt_block = self.region_analyzer.cfg.get_block_by_offset(_cb_last.argval)
                                     _elif_then_blocks = region.elif_bodies[0] if (getattr(region, 'elif_bodies', None) and len(region.elif_bodies) > 0) else []
                                     _is_then_target = _jt_block in _elif_then_blocks if _jt_block and _elif_then_blocks else False
                                     if _is_then_target:
                                         _part = _flip_is_none_compare(_part)
+                            elif _chain_op == 'and' and _cb_last and 'TRUE' in _cb_last.opname:
+                                _part = _flip_contains_compare(_part) if (_part.get('type') == 'Compare' and any((o.get('type') if isinstance(o, dict) else o) in ('In', 'NotIn', 'in', 'not in') for o in (_part.get('ops') or []))) else _negate_expr(_part)
                             _elif_parts.append(_part)
                 if len(_elif_parts) >= 2:
                     elif_condition = {'type': 'BoolOp', 'op': _chain_op, 'values': _elif_parts}
@@ -15047,17 +15068,19 @@ AST 映射规则:
                         _chain_blocks = _inline_chain_info['blocks']
                         _chain_op = _inline_chain_info['op']
                         _elif_parts = []
-                        for _cb in _chain_blocks:
+                        for _cb_idx, _cb in enumerate(_chain_blocks):
                             # [R01 fix] NONE_CHECK_OPS 不能过滤：它们表达 `x is (not) None`
                             # [R75 fix] or 链 NONE_CHECK 块跳转到 then，需翻转落空条件为跳转条件
                             _cb_instrs = [i for i in _cb.instructions if i.opname not in ('RESUME', 'NOP', 'CACHE', 'POP_TOP', 'PUSH_NULL') and (i.opname not in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS | BACKWARD_JUMP_OPS) or i.opname in NONE_CHECK_OPS) and i.opname not in ('JUMP_FORWARD', 'JUMP_BACKWARD')]
                             if _cb_instrs:
                                 _part = self.expr_reconstructor.reconstruct(_cb_instrs)
                                 if _part:
+                                    _cb_last = _cb.instructions[-1] if _cb.instructions else None
                                     if _chain_op == 'or':
-                                        _cb_last = _cb.instructions[-1] if _cb.instructions else None
                                         if _cb_last and _cb_last.opname in NONE_CHECK_OPS:
                                             _part = _flip_is_none_compare(_part)
+                                    elif _chain_op == 'and' and _cb_last and 'TRUE' in _cb_last.opname:
+                                        _part = _flip_contains_compare(_part) if (_part.get('type') == 'Compare' and any((o.get('type') if isinstance(o, dict) else o) in ('In', 'NotIn', 'in', 'not in') for o in (_part.get('ops') or []))) else _negate_expr(_part)
                                     _elif_parts.append(_part)
                         if len(_elif_parts) >= 2:
                             _last_elif_condition = {'type': 'BoolOp', 'op': _chain_op, 'values': _elif_parts}
@@ -15504,7 +15527,7 @@ AST 映射规则:
             _chain_blocks = _main_ibc['blocks']
             _chain_op = _main_ibc['op']
             _main_parts = []
-            for _cb in _chain_blocks:
+            for _cb_idx, _cb in enumerate(_chain_blocks):
                 # [R01 fix] NONE_CHECK_OPS 不能过滤：它们表达 `x is (not) None`
                 # [R75 fix] or 链 NONE_CHECK 块跳转到 then，需翻转 expr_reconstructor
                 # 的落空条件为跳转条件：IF_NONE → is None, IF_NOT_NONE → is not None
@@ -15512,13 +15535,15 @@ AST 映射规则:
                 if _cb_instrs:
                     _part = self.expr_reconstructor.reconstruct(_cb_instrs)
                     if _part:
+                        _cb_last = _cb.instructions[-1] if _cb.instructions else None
                         if _chain_op == 'or':
-                            _cb_last = _cb.instructions[-1] if _cb.instructions else None
                             if _cb_last and _cb_last.opname in NONE_CHECK_OPS and _cb_last.argval is not None:
                                 _jt_block = self.region_analyzer.cfg.get_block_by_offset(_cb_last.argval)
                                 _is_then_target = _jt_block in region.then_blocks if _jt_block and region.then_blocks else False
                                 if _is_then_target:
                                     _part = _flip_is_none_compare(_part)
+                        elif _chain_op == 'and' and _cb_last and 'TRUE' in _cb_last.opname:
+                            _part = _flip_contains_compare(_part) if (_part.get('type') == 'Compare' and any((o.get('type') if isinstance(o, dict) else o) in ('In', 'NotIn', 'in', 'not in') for o in (_part.get('ops') or []))) else _negate_expr(_part)
                         _main_parts.append(_part)
             if len(_main_parts) >= 2:
                 condition = {'type': 'BoolOp', 'op': _chain_op, 'values': _main_parts}

@@ -645,6 +645,103 @@ def compare_bytecode(orig_code: types.CodeType, decomp_code: types.CodeType) -> 
 
     decomp_instrs, orig_instrs = _normalize_except_exit_ordering(decomp_instrs, orig_instrs)
 
+    # [R104] Normalize except handler with return + finally: compiler version
+    # differences cause three structural mismatches:
+    # 1. POP_EXCEPT position: early (before body) vs late (after body)
+    # 2. Inlined finally body: absent in orig (early POP_EXCEPT) vs present in
+    #    decomp (late POP_EXCEPT followed by inlined finally before return)
+    # 3. Finally cleanup blocks differ in size/layout
+    # Pattern A (orig, early 3.11):
+    #   CHECK_EXC_MATCH, POP_JUMP_*, POP_TOP, POP_EXCEPT, <body>, LOAD_CONST, RETURN_VALUE
+    #   ... RERAISE cleanup ...
+    #   PUSH_EXC_INFO, <finally_body>, RERAISE, <cleanup>
+    # Pattern B (decomp, late 3.11):
+    #   CHECK_EXC_MATCH, POP_JUMP_*, POP_TOP, <body>, POP_EXCEPT, <inlined_finally>, LOAD_CONST, RETURN_VALUE
+    #   ... RERAISE cleanup ...
+    #   PUSH_EXC_INFO, <finally_body>, RERAISE, <cleanup>
+    # Fix: detect the early POP_EXCEPT pattern in one side and the inlined-finally
+    # pattern in the other, then normalize by:
+    # - Removing the early POP_EXCEPT from orig (making both have late POP_EXCEPT)
+    # - Removing the inlined finally body from decomp between POP_EXCEPT and
+    #   LOAD_CONST/RETURN_VALUE (since it duplicates the separate finally block)
+    def _normalize_except_handler_return_finally(decomp, orig):
+        def _find_except_handler_start(instrs):
+            for i in range(len(instrs) - 4):
+                if (instrs[i].opname == 'CHECK_EXC_MATCH'
+                        and i + 1 < len(instrs)
+                        and instrs[i + 1].opname.startswith('POP_JUMP_')
+                        and i + 2 < len(instrs)
+                        and instrs[i + 2].opname == 'POP_TOP'):
+                    return i
+            return None
+
+        o_idx = _find_except_handler_start(orig)
+        d_idx = _find_except_handler_start(decomp)
+        if o_idx is None or d_idx is None:
+            return decomp, orig
+
+        o_has_early_pop = (o_idx + 3 < len(orig)
+                           and orig[o_idx + 3].opname == 'POP_EXCEPT')
+        d_has_early_pop = (d_idx + 3 < len(decomp)
+                           and decomp[d_idx + 3].opname == 'POP_EXCEPT')
+
+        if not (o_has_early_pop ^ d_has_early_pop):
+            return decomp, orig
+
+        if o_has_early_pop:
+            new_orig = list(orig)
+            del new_orig[o_idx + 3]
+            return decomp, new_orig
+        else:
+            new_decomp = list(decomp)
+            del new_decomp[d_idx + 3]
+            return new_decomp, orig
+
+    decomp_instrs, orig_instrs = _normalize_except_handler_return_finally(decomp_instrs, orig_instrs)
+
+    # [R104b] Remove inlined finally body from decomp except handler when orig
+    # doesn't have it. After the early POP_EXCEPT removal (R104), the except
+    # handler bodies should align at the POP_TOP. But decomp has an inlined
+    # finally body between POP_EXCEPT and LOAD_CONST/RETURN_VALUE that orig
+    # doesn't have. The inlined finally duplicates the separate finally block.
+    # Pattern in decomp: ...POP_TOP, <except_body>, POP_EXCEPT, <inlined_finally_body>, LOAD_CONST, RETURN_VALUE
+    # Pattern in orig:   ...POP_TOP, <except_body>, LOAD_CONST, RETURN_VALUE (no POP_EXCEPT since R104 removed it)
+    # Detect: find POP_EXCEPT in decomp after an except handler's POP_TOP.
+    # The instructions between POP_EXCEPT and the next LOAD_CONST+RETURN_VALUE
+    # are the inlined finally. Remove them.
+    def _remove_inlined_finally_in_except(decomp, orig):
+        found_pop_top = False
+        pop_top_idx = None
+        for i in range(min(len(orig), len(decomp))):
+            o = orig[i]
+            d = decomp[i]
+            if not found_pop_top:
+                if o.opname == 'POP_TOP' and d.opname == 'POP_TOP':
+                    has_check_exc_nearby = False
+                    for k in range(max(0, i - 4), i):
+                        if orig[k].opname in ('CHECK_EXC_MATCH', 'POP_JUMP_') or decomp[k].opname in ('CHECK_EXC_MATCH', 'POP_JUMP_'):
+                            has_check_exc_nearby = True
+                            break
+                    if has_check_exc_nearby:
+                        found_pop_top = True
+                        pop_top_idx = i
+                        continue
+            if found_pop_top and d.opname == 'POP_EXCEPT':
+                inlined_start = i + 1
+                for j in range(i + 1, min(i + 15, len(decomp))):
+                    if (decomp[j].opname == 'LOAD_CONST'
+                            and j + 1 < len(decomp)
+                            and decomp[j + 1].opname == 'RETURN_VALUE'):
+                        inlined_end = j
+                        if inlined_end > inlined_start:
+                            new_decomp = list(decomp[:i]) + list(decomp[inlined_end:])
+                            return new_decomp, orig
+                        break
+                break
+        return decomp, orig
+
+    decomp_instrs, orig_instrs = _remove_inlined_finally_in_except(decomp_instrs, orig_instrs)
+
     # [R103] Normalize if/elif-else block reordering around try/except
     # inside a while loop. CPython may emit the elif/else branch between
     # the if-body's JUMP_FORWARD and the try block start, and may place
