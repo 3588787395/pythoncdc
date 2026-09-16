@@ -2,7 +2,7 @@ import sys, marshal, types, dis
 sys.path.insert(0, 'F:/Downloads/pythoncdc-main')
 from testqouter.round1.base import compare_bytecode
 
-pyc = 'F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc'
+pyc = 'F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_persist/__init__.pyc'
 ok_path = pyc.replace('.pyc', 'OK.py')
 with open(pyc, 'rb') as f:
     f.read(16); orig = marshal.load(f)
@@ -19,13 +19,13 @@ def extract(co):
         if isinstance(c, types.CodeType): r.update(extract(c))
     return r
 om = extract(orig); dm = extract(decomp)
-for name in ['on_after_trading_end']:
+for name in sorted(set(om.keys()) & set(dm.keys())):
     cmp = compare_bytecode(om[name], dm[name])
-    if not cmp.get('match'):
-        print('=== %s ===' % name)
-        print('orig=%d decomp=%d td=%d' % (cmp.get('orig_count',0), cmp.get('decomp_count',0), len(cmp.get('true_diffs',[]))))
+    if not cmp.get('match') and not cmp.get('jump_only'):
+        print('\n=== %s ===' % name)
+        print('orig=%d decomp=%d jd=%d td=%d' % (cmp.get('orig_count',0), cmp.get('decomp_count',0), len(cmp.get('jump_diffs',[])), len(cmp.get('true_diffs',[]))))
         td = cmp.get('true_diffs', [])
-        for t in td[:10]: print('  td: %s' % (t,))
+        for t in td[:20]: print('  td: %s' % (t,))
         
         print('\nORIG FULL bytecode:')
         for i in list(dis.get_instructions(om[name])):

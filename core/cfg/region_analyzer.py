@@ -9948,6 +9948,25 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
         if hasattr(try_region, 'finally_blocks') and try_region.finally_blocks:
             all_handler_blocks.update(try_region.finally_blocks)
 
+        handler_normal_exit_blocks = []
+        for _, _, hblocks in try_region.except_handlers:
+            for hb in hblocks:
+                hb_last = hb.get_last_instruction()
+                if hb_last and hb_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+                    _jf_target_off = hb_last.argval
+                    _jf_target_blk = self.cfg.get_block_by_offset(_jf_target_off)
+                    if _jf_target_blk and _jf_target_blk not in handler_normal_exit_blocks:
+                        handler_normal_exit_blocks.append(_jf_target_blk)
+                elif hb_last and hb_last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                    pass
+                else:
+                    for _succ in hb.successors:
+                        if _succ in hb.exception_successors:
+                            continue
+                        if _succ not in handler_blocks_set and _succ not in handler_normal_exit_blocks:
+                            if not all(i.opname in RERAISE_ONLY_OPS for i in _succ.instructions if i.opname not in NOISE_OPS):
+                                handler_normal_exit_blocks.append(_succ)
+
         handler_end_offsets = []
         for _, _, hblocks in try_region.except_handlers:
             if hblocks:
@@ -10002,6 +10021,7 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 any(i.opname == 'JUMP_BACKWARD' for i in try_end_block.instructions)
             )
             alternative_merges = []
+            _handler_reach_sources = handler_normal_exit_blocks if handler_normal_exit_blocks else handler_end_blocks
             for block in self.cfg.get_blocks_in_order():
                 if (block.start_offset > precise_handler_end and
                     block not in handler_blocks_set and
@@ -10013,7 +10033,7 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                     )
                     from_handler = any(
                         self._is_reachable_from(hb, block, set())
-                        for hb in handler_end_blocks
+                        for hb in _handler_reach_sources
                     )
                     if from_try and from_handler:
                         alternative_merges.append(block)

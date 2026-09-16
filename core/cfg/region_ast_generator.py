@@ -30367,10 +30367,21 @@ AST 映射规则:
                                             _then_blk_r89 = self.cfg.get_block_by_offset(_fall_through_r89)
                                             _else_blk_r89 = self.cfg.get_block_by_offset(_jump_tgt_r89)
                                         _then_body_r89 = []
+                                        _then_blk_is_ifregion_entry = False
                                         if _then_blk_r89:
-                                            _then_body_r89 = self._generate_block_statements(_then_blk_r89)
-                                            self.generated_blocks.add(_then_blk_r89)
-                                            self.generated_offsets.add(_then_blk_r89.start_offset)
+                                            for _ir_r89 in self.region_analyzer.regions:
+                                                if (isinstance(_ir_r89, IfRegion)
+                                                        and _ir_r89.entry is _then_blk_r89
+                                                        and _ir_r89.then_blocks
+                                                        and _ir_r89 is not region):
+                                                    _then_blk_is_ifregion_entry = True
+                                                    break
+                                            if _then_blk_is_ifregion_entry:
+                                                _then_body_r89 = []
+                                            else:
+                                                _then_body_r89 = self._generate_block_statements(_then_blk_r89)
+                                                self.generated_blocks.add(_then_blk_r89)
+                                                self.generated_offsets.add(_then_blk_r89.start_offset)
                                         _if_negate_r89 = ('TRUE' in _cond_jump_r89.opname
                                                           or 'NONE' in _cond_jump_r89.opname)
                                         _test_r89 = _cond_expr_r89
@@ -30419,14 +30430,46 @@ AST 映射规则:
                                                     self.generated_offsets.add(_else_blk_r89.start_offset)
                                         elif _if_negate_r89:
                                             _test_r89 = _negate_expr(_cond_expr_r89)
-                                        if not _then_body_r89:
-                                            _then_body_r89 = [{'type': 'Pass'}]
-                                        results.append({
-                                            'type': 'If',
-                                            'test': _test_r89,
-                                            'body': _then_body_r89,
-                                            'orelse': _else_body_r89,
-                                        })
+                                        if _then_blk_is_ifregion_entry:
+                                            _then_ifregion = None
+                                            for _ir_r89 in self.region_analyzer.regions:
+                                                if (isinstance(_ir_r89, IfRegion)
+                                                        and _ir_r89.entry is _then_blk_r89
+                                                        and _ir_r89 is not region):
+                                                    _then_ifregion = _ir_r89
+                                                    break
+                                            if _then_ifregion is not None:
+                                                _ifregion_ast = self._generate_region(_then_ifregion)
+                                                if _ifregion_ast:
+                                                    if isinstance(_ifregion_ast, list):
+                                                        _then_body_r89 = _ifregion_ast
+                                                    else:
+                                                        _then_body_r89 = [_ifregion_ast]
+                                                for _nb in _then_ifregion.blocks:
+                                                    self.generated_blocks.add(_nb)
+                                                    self.generated_offsets.add(_nb.start_offset)
+                                                self._generated_regions.add(id(_then_ifregion))
+                                            if _else_blk_r89 and _else_blk_r89 not in self.generated_blocks:
+                                                _else_body_r89 = self._generate_block_statements(_else_blk_r89)
+                                                self.generated_blocks.add(_else_blk_r89)
+                                                self.generated_offsets.add(_else_blk_r89.start_offset)
+                                            if not _then_body_r89:
+                                                _then_body_r89 = [{'type': 'Pass'}]
+                                            results.append({
+                                                'type': 'If',
+                                                'test': _test_r89,
+                                                'body': _then_body_r89,
+                                                'orelse': _else_body_r89,
+                                            })
+                                        else:
+                                            if not _then_body_r89:
+                                                _then_body_r89 = [{'type': 'Pass'}]
+                                            results.append({
+                                                'type': 'If',
+                                                'test': _test_r89,
+                                                'body': _then_body_r89,
+                                                'orelse': _else_body_r89,
+                                            })
                                     else:
                                         if _post_store_clean:
                                             _stmts = self._generate_stmts_from_instrs(
