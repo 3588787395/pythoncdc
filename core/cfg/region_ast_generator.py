@@ -1446,6 +1446,19 @@ class RegionASTGenerator:
                 if not _all_cleanup:
                     break
             if _all_cleanup:
+                _has_meaningful_return = False
+                for _cl_b in _cl_region.blocks:
+                    _instrs = _cl_b.instructions
+                    for _ii in range(len(_instrs) - 1):
+                        if (_instrs[_ii].opname == 'LOAD_CONST'
+                                and _instrs[_ii].argval is not None
+                                and _instrs[_ii + 1].opname == 'RETURN_VALUE'):
+                            _has_meaningful_return = True
+                            break
+                    if _has_meaningful_return:
+                        break
+                if _has_meaningful_return:
+                    continue
                 for _cl_b in _cl_region.blocks:
                     self.generated_blocks.add(_cl_b)
                     self.generated_offsets.add(_cl_b.start_offset)

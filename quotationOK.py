@@ -672,7 +672,7 @@ def _is_same_type_date(day1, day2, typet):
         a = day1.isocalendar()
         b = day2.isocalendar()
         if a[0] == b[0] and a[1] == b[1]:
-            pass
+            return True
         return False
     elif typet == 8:
         if day1.year == day2.year and day1.month == day2.month:
