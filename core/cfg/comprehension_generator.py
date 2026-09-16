@@ -71,7 +71,7 @@ class ComprehensionGenerator:
                     code_val = instrs[idx - 1].argval
                     if hasattr(code_val, 'co_name') and code_val.co_name in (
                             '<listcomp>', '<dictcomp>', '<setcomp>', '<genexpr>'):
-                        comp_indices.append((idx, code_val))
+                        comp_indices.append((idx, code_val, instr.arg))
 
         if not comp_indices:
             return None
@@ -81,7 +81,7 @@ class ComprehensionGenerator:
         # 基本块。先把后续 fallthrough 块的指令合并进来，并把它们标记为已生成，
         # 避免被外层 _generate_block_statements 当作独立语句重复处理。
         _has_async_comp = False
-        for _ci, _cc in comp_indices:
+        for _ci, _cc, _ in comp_indices:
             for _idx in range(_ci + 1, len(instrs)):
                 if instrs[_idx].opname == 'GET_AITER':
                     _has_async_comp = True
@@ -111,8 +111,8 @@ class ComprehensionGenerator:
         _chained_pairs = []
         if len(comp_indices) >= 2:
             for _cci in range(len(comp_indices) - 1):
-                _ci1, _cc1 = comp_indices[_cci]
-                _ci2, _cc2 = comp_indices[_cci + 1]
+                _ci1, _cc1, _cf1 = comp_indices[_cci]
+                _ci2, _cc2, _cf2 = comp_indices[_cci + 1]
                 _first_call_end = None
                 for _fci in range(_ci1 + 1, len(instrs)):
                     if instrs[_fci].opname == 'GET_ITER':
@@ -137,19 +137,23 @@ class ComprehensionGenerator:
                     if _ai.opname in ('STORE_FAST', 'STORE_NAME', 'POP_TOP'):
                         break
                 if _found_getiter:
+                    _has_closure_flag2 = bool(_cf2 & 0x08)
+                    _no_closure_flag1 = not bool(_cf1 & 0x08)
+                    if _no_closure_flag1 and _has_closure_flag2:
+                        continue
                     _chained_pairs.append(_cci)
 
         all_stmts = []
         prev_end = 0
         _skip_next = False
 
-        for _comp_loop_idx, (comp_idx, comp_code) in enumerate(comp_indices):
+        for _comp_loop_idx, (comp_idx, comp_code, _) in enumerate(comp_indices):
             if _skip_next:
                 _skip_next = False
                 continue
             if _comp_loop_idx in _chained_pairs:
-                _ci1, _cc1 = comp_indices[_comp_loop_idx]
-                _ci2, _cc2 = comp_indices[_comp_loop_idx + 1]
+                _ci1, _cc1, _ = comp_indices[_comp_loop_idx]
+                _ci2, _cc2, _ = comp_indices[_comp_loop_idx + 1]
                 _inner_get_iter = None
                 for _igi in range(_ci1 + 1, len(instrs)):
                     if instrs[_igi].opname == 'GET_ITER':
