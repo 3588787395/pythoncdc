@@ -1,4 +1,4 @@
-# Source Generated with Decompyle++ (Python version)
+﻿# Source Generated with Decompyle++ (Python version)
 # File: finance_data_source.pyc (Python 3.11)
 
 import numpy
@@ -48,7 +48,7 @@ class FinanceDataSource(AbstractFinanceData):
     @staticmethod
     def change_date_type(date):
         """
-        日期格式转换
+        鏃ユ湡鏍煎紡杞崲
         """
         date_tmp = str(date)
         date = f'{date_tmp[:4]!s}-{date_tmp[4:6]!s}-{date_tmp[-2:]!s}'
@@ -56,12 +56,12 @@ class FinanceDataSource(AbstractFinanceData):
     @staticmethod
     def convert_to_list(item):
         """
-        将输入数据转换为list格式
+        灏嗚緭鍏ユ暟鎹浆鎹负list鏍煎紡
         """
         if item == '' or item == []:
-            return ({'error_no': -1, 'error_info': '查询数据报错，错误原因：fields输入格式有误'}, [])
+            return ({'error_no': -1, 'error_info': '鏌ヨ鏁版嵁鎶ラ敊锛岄敊璇師鍥狅細fields杈撳叆鏍煎紡鏈夎'}, [])
         elif item and not isinstance(item, str) and not isinstance(item, list):
-            return ({'error_no': -1, 'error_info': '查询数据报错，错误原因：fields输入格式有误'}, [])
+            return ({'error_no': -1, 'error_info': '鏌ヨ鏁版嵁鎶ラ敊锛岄敊璇師鍥狅細fields杈撳叆鏍煎紡鏈夎'}, [])
         elif isinstance(item, str):
             item = item.strip().split(',')
             return ({'error_no': 0, 'error_info': ''}, item)
@@ -70,7 +70,7 @@ class FinanceDataSource(AbstractFinanceData):
     @staticmethod
     def get_year_params(start_year, end_year, report_types):
         """
-        根据开始年份、截止年份及季度数据获取查询入参的开始年份、截止年份
+        鏍规嵁寮€濮嬪勾浠姐€佹埅姝㈠勾浠藉強瀛ｅ害鏁版嵁鑾峰彇鏌ヨ鍏ュ弬鐨勫紑濮嬪勾浠姐€佹埅姝㈠勾浠?
         """
         if report_types == '1':
             start_year = start_year + '-01-01'
@@ -91,7 +91,7 @@ class FinanceDataSource(AbstractFinanceData):
     @staticmethod
     def date_to_quarter(date, report_types):
         """
-        计算date对应前一季度的开始年份、结束年份及具体的季度
+        璁＄畻date瀵瑰簲鍓嶄竴瀛ｅ害鐨勫紑濮嬪勾浠姐€佺粨鏉熷勾浠藉強鍏蜂綋鐨勫搴?
         """
         year = int(date[:4])
         quarter = pandas.Period(date, 'Q-DEC').quarter
@@ -109,7 +109,7 @@ class FinanceDataSource(AbstractFinanceData):
         return (str(year), str(year), str(quarter))
     def get_open_api_data(self, security, table, date=None, start_year=None, end_year=None, report_types=None, fields=None, date_type=None, merge_type=None):
         """
-        获取开放平台数据接口，API对接
+        鑾峰彇寮€鏀惧钩鍙版暟鎹帴鍙ｏ紝API瀵规帴
         """
         security = [security.split('.')[0] for security in eval(security)]
         if fields is not None:
@@ -121,7 +121,7 @@ class FinanceDataSource(AbstractFinanceData):
                 merge_type = 1
         if not security:
             api_data = pandas.DataFrame(columns=fields)
-            system_log.info('输入股票代码为空！')
+            system_log.info('杈撳叆鑲＄エ浠ｇ爜涓虹┖锛?)
             error_no = 0
             error_message = ''
             return ({'error_no': error_no, 'error_info': error_message}, api_data)
@@ -152,7 +152,7 @@ class FinanceDataSource(AbstractFinanceData):
                 error_message = StringIO()
                 traceback.print_exc(file=error_message)
                 error_message = str(error_message.getvalue())
-                system_log.error('查询数据报错，错误信息：%s' % error_message)
+                system_log.error('鏌ヨ鏁版嵁鎶ラ敊锛岄敊璇俊鎭細%s' % error_message)
                 api_data = EMPTY_DF
             return ({'error_no': error_no, 'error_info': error_message}, api_data)
     @staticmethod
@@ -186,7 +186,7 @@ class FinanceDataSource(AbstractFinanceData):
                     code = field.replace('_', '')
                 sql_code += ', %s' % code
                 fields_list.append(field)
-        sql_code += f'\n        FROM DZ_DIndicesForValuation A LEFT JOIN SecuMain B ON A.InnerCode = B.InnerCode AND B.SecuMarket IN \n        (\'83\', \'90\') AND B.SecuCategory IN (\'1\') LEFT JOIN (select q.companycode, TotalShares, AFloats, NonResiSharesJY, \n        BsharesTotal, NonResiBShares, Hshares, enddate, ROW_NUMBER() over(PARTITION BY q.CompanyCode ORDER BY q.EndDate \n        desc) as row_index from DZ_ShareStru q join SecuMain b on B.CompanyCode = q.CompanyCode AND SecuMarket IN \n        (\'83\', \'90\') AND SecuCategory IN (\'1\') where EndDate <= to_date(\'{date!s}\', \'yyyy-mm-dd\')) C on B.CompanyCode = \n        C.CompanyCode and C.row_index = 1 LEFT JOIN (select q.CompanyCode, NPFromParentCompanyOwners, EndDate, \n        ROW_NUMBER() over(PARTITION BY q.CompanyCode ORDER BY q.EndDate desc) as row_index from DZ_MainDataNew q join \n        SecuMain b on B.CompanyCode = q.CompanyCode AND SecuMarket IN (\'83\', \'90\') AND SecuCategory IN (\'1\') where \n        EndDate <= to_date(\'{date!s}\', \'yyyy-mm-dd\') and q.mark = \'1\') E ON E.CompanyCode = B.CompanyCode and E.row_index = 1 \n        LEFT JOIN (select q.CompanyCode, NetAssetAfterAdjust， EndDate, ROW_NUMBER() over(PARTITION BY q.CompanyCode \n        ORDER BY q.AdjustDate desc) as row_index from DZ_NewestFinaIndex q join SecuMain b on B.CompanyCode = \n        q.CompanyCode AND SecuMarket IN (\'83\', \'90\') AND SecuCategory IN (\'1\') where AdjustDate <= to_date(\'{date!s}\', \n        \'yyyy-mm-dd\')) F ON F.CompanyCode = B.CompanyCode and F.row_index = 1 LEFT JOIN DZ_DailyQuote G ON G.InnerCode = \n        A.InnerCode AND G.TradingDay = A.TradingDay LEFT JOIN (select q.CompanyCode, NPFromParentCompanyOwners, EndDate, \n        ROW_NUMBER() over(PARTITION BY q.CompanyCode ORDER BY q.EndDate desc) as row_index from DZ_MainDataNew q join \n        SecuMain b on B.CompanyCode = q.CompanyCode AND SecuMarket IN (\'83\', \'90\') AND SecuCategory IN (\'1\') where \n        EndDate <= to_date(\'{date!s}\', \'yyyy-mm-dd\') AND to_char(EndDate, \'mm-dd\') = \'12-31\') H ON H.CompanyCode = \n        B.CompanyCode and H.row_index = 1 WHERE B.SecuCode in ('
+        sql_code += f'\n        FROM DZ_DIndicesForValuation A LEFT JOIN SecuMain B ON A.InnerCode = B.InnerCode AND B.SecuMarket IN \n        (\'83\', \'90\') AND B.SecuCategory IN (\'1\') LEFT JOIN (select q.companycode, TotalShares, AFloats, NonResiSharesJY, \n        BsharesTotal, NonResiBShares, Hshares, enddate, ROW_NUMBER() over(PARTITION BY q.CompanyCode ORDER BY q.EndDate \n        desc) as row_index from DZ_ShareStru q join SecuMain b on B.CompanyCode = q.CompanyCode AND SecuMarket IN \n        (\'83\', \'90\') AND SecuCategory IN (\'1\') where EndDate <= to_date(\'{date!s}\', \'yyyy-mm-dd\')) C on B.CompanyCode = \n        C.CompanyCode and C.row_index = 1 LEFT JOIN (select q.CompanyCode, NPFromParentCompanyOwners, EndDate, \n        ROW_NUMBER() over(PARTITION BY q.CompanyCode ORDER BY q.EndDate desc) as row_index from DZ_MainDataNew q join \n        SecuMain b on B.CompanyCode = q.CompanyCode AND SecuMarket IN (\'83\', \'90\') AND SecuCategory IN (\'1\') where \n        EndDate <= to_date(\'{date!s}\', \'yyyy-mm-dd\') and q.mark = \'1\') E ON E.CompanyCode = B.CompanyCode and E.row_index = 1 \n        LEFT JOIN (select q.CompanyCode, NetAssetAfterAdjust锛?EndDate, ROW_NUMBER() over(PARTITION BY q.CompanyCode \n        ORDER BY q.AdjustDate desc) as row_index from DZ_NewestFinaIndex q join SecuMain b on B.CompanyCode = \n        q.CompanyCode AND SecuMarket IN (\'83\', \'90\') AND SecuCategory IN (\'1\') where AdjustDate <= to_date(\'{date!s}\', \n        \'yyyy-mm-dd\')) F ON F.CompanyCode = B.CompanyCode and F.row_index = 1 LEFT JOIN DZ_DailyQuote G ON G.InnerCode = \n        A.InnerCode AND G.TradingDay = A.TradingDay LEFT JOIN (select q.CompanyCode, NPFromParentCompanyOwners, EndDate, \n        ROW_NUMBER() over(PARTITION BY q.CompanyCode ORDER BY q.EndDate desc) as row_index from DZ_MainDataNew q join \n        SecuMain b on B.CompanyCode = q.CompanyCode AND SecuMarket IN (\'83\', \'90\') AND SecuCategory IN (\'1\') where \n        EndDate <= to_date(\'{date!s}\', \'yyyy-mm-dd\') AND to_char(EndDate, \'mm-dd\') = \'12-31\') H ON H.CompanyCode = \n        B.CompanyCode and H.row_index = 1 WHERE B.SecuCode in ('
         for stock in security:
             if stock != security[-1]:
                 sql_code += "'%s', " % stock
@@ -379,6 +379,16 @@ class FinanceDataSource(AbstractFinanceData):
                 AvgNPYOYPastFiveYear, OperCashPSGrowRate, NAORYOY, NetAssetGrowRate, TotalAssetGrowRate, 
                 SustainableGrowRate, NetProfitGrowRate  """
                 fields_list = const.TABLE_FIELDS['growth_ability']
+                sql_code += """ from (select A.*, B.SecuCode, SecuAbbr, SecuMarket, C.InfoPublDate, ROW_NUMBER() over(PARTITION 
+        BY C.CompanyCode, C.EndDate ORDER BY C.IfAdjusted desc, C.IfMerged, C.InfoPublDate) as row_index from 
+        LC_MainIndexNew A join SecuMain B on A.CompanyCode = B.CompanyCode left join LC_IncomeStatementAll C ON 
+        C.CompanyCode = A.CompanyCode where B.SecuCategory IN ('1', '2') AND B.ListedSector IN ('1', '2', '6') and 
+        B.SecuCode in ("""
+                for stock in security:
+                    if stock != security[-1]:
+                        sql_code += "'%s', " % stock
+                        continue
+                    sql_code += "'%s') " % stock
             else:
                 fields_list = const.DEFAULT_FIELDS['growth_ability'].copy()
                 sql_code = """select case when SecuMarket= '83' then secucode || '.SS' when SecuMarket = '90' then 
@@ -499,11 +509,7 @@ class FinanceDataSource(AbstractFinanceData):
         LC_MainIndexNew A join SecuMain B on A.CompanyCode = B.CompanyCode left join LC_IncomeStatementAll C ON 
         C.CompanyCode = A.CompanyCode where B.SecuCategory IN ('1', '2') AND B.ListedSector IN ('1', '2', '6') and 
         B.SecuCode in ("""
-        for stock in security:
-            if stock != security[-1]:
-                sql_code += "'%s', " % stock
-                continue
-            sql_code += "'%s') " % stock
+        security
         if start_year == end_year or report_types == None:
             start_date, end_date = self.get_year_params(start_year, end_year, report_types)
             sql_code += f'\n            AND A.EndDate between to_date(\'{start_date!s}\', \'yyyy-mm-dd\') and to_date(\'{end_date!s}\', \'yyyy-mm-dd\') and C.EndDate = A.EndDate \n            and C.IfAdjusted IN (\'1\', \'2\')) WHERE row_index = 1 order by EndDate desc'
@@ -521,7 +527,7 @@ class FinanceDataSource(AbstractFinanceData):
         return (sql_code, fields_list)
     def get_financial_date_mode(self, security, table, date, report_types, column, list_base, date_type, merge_type):
         """
-        按日期获取财务数据模式接口
+        鎸夋棩鏈熻幏鍙栬储鍔℃暟鎹ā寮忔帴鍙?
         """
         if column == None:
             column_default = const.TABLE_FIELDS[table]
@@ -555,7 +561,7 @@ class FinanceDataSource(AbstractFinanceData):
         return financial_data
     def get_financial_year_mode(self, security, table, start_year, end_year, report_types, column, list_base, merge_type):
         """
-        按年份获取财务数据模式接口
+        鎸夊勾浠借幏鍙栬储鍔℃暟鎹ā寮忔帴鍙?
         """
         error_msg, financial_data_tmp = self.get_open_api_data(security=str(security), table=table, start_year=start_year, end_year=end_year, report_types=str(report_types), fields=str(column), merge_type=merge_type)
         if error_msg['error_no'] != '0':
@@ -587,7 +593,7 @@ class FinanceDataSource(AbstractFinanceData):
             return financial_data
     def get_financial_and_growth_factors(self, security, table, date=None, start_year=None, end_year=None, report_types=None, fields=None, date_type=None, merge_type=None):
         """
-        三大财报、六大成长指标数据获取接口
+        涓夊ぇ璐㈡姤銆佸叚澶ф垚闀挎寚鏍囨暟鎹幏鍙栨帴鍙?
         """
         error_msg, fields_tmp = self.convert_to_list(fields)
         if error_msg['error_no'] != 0:
@@ -613,7 +619,7 @@ class FinanceDataSource(AbstractFinanceData):
                 raise x
     def get_valuation(self, security, table, fields=None, date=None):
         """
-        股本信息、估值数据数据获取
+        鑲℃湰淇℃伅銆佷及鍊兼暟鎹暟鎹幏鍙?
         """
         error_msg, fields_tmp = self.convert_to_list(fields)
         if error_msg['error_no'] != 0:
@@ -652,17 +658,17 @@ class FinanceDataSource(AbstractFinanceData):
             raise x
     def get_fundamentals(self, security, table, fields=None, date=None, start_year=None, end_year=None, report_types=None, date_type=None, merge_type=None):
         """
-        财务数据获取接口：包括三大财报、六大成长指标、股本信息、估值数据
-        :param security：股票代码，str/list，非空
-        :param table：表名
-        :param fields：获取字段，str/list，非空
-        :param date：日期
-        :param start_year：开始年份
-        :param end_year：截止年份
-        :param report_types：季度
-        :param date_type：是否可以为未来数据
-        :param merge_type：更改前/更改后的数据
-        :return：DataFrame/Panel类型
+        璐㈠姟鏁版嵁鑾峰彇鎺ュ彛锛氬寘鎷笁澶ц储鎶ャ€佸叚澶ф垚闀挎寚鏍囥€佽偂鏈俊鎭€佷及鍊兼暟鎹?
+        :param security锛氳偂绁ㄤ唬鐮侊紝str/list锛岄潪绌?
+        :param table锛氳〃鍚?
+        :param fields锛氳幏鍙栧瓧娈碉紝str/list锛岄潪绌?
+        :param date锛氭棩鏈?
+        :param start_year锛氬紑濮嬪勾浠?
+        :param end_year锛氭埅姝㈠勾浠?
+        :param report_types锛氬搴?
+        :param date_type锛氭槸鍚﹀彲浠ヤ负鏈潵鏁版嵁
+        :param merge_type锛氭洿鏀瑰墠/鏇存敼鍚庣殑鏁版嵁
+        :return锛欴ataFrame/Panel绫诲瀷
         """
         if isinstance(security, str):
             security = [security]
@@ -675,5 +681,5 @@ class FinanceDataSource(AbstractFinanceData):
             else:
                 return self.get_valuation(security=security, table=table, fields=fields, date=date)
         else:
-            system_log.error('查询数据报错，错误原因：表名称%s不支持' % table)
+            system_log.error('鏌ヨ鏁版嵁鎶ラ敊锛岄敊璇師鍥狅細琛ㄥ悕绉?s涓嶆敮鎸? % table)
             return EMPTY_DF

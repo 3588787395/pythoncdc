@@ -15527,6 +15527,20 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                                 # 条件跳转，redirect 合法（R21-C1）。
                                 _merge_is_stmt_consumer = getattr(
                                     _tr_c1, 'merge_context', None) in ('store', 'return')
+                                if not _merge_is_stmt_consumer:
+                                    _ct = getattr(_tr_c1, 'container_type', None)
+                                    if _ct == 'call':
+                                        _merge_is_stmt_consumer = True
+                                    elif _ct is None:
+                                        _mb_instrs = _tr_c1_merge.instructions if _tr_c1_merge else []
+                                        _found_pop_top_before_cond = False
+                                        for _mi in _mb_instrs:
+                                            if _mi.opname == 'POP_TOP':
+                                                _found_pop_top_before_cond = True
+                                            elif _mi.opname in FORWARD_CONDITIONAL_JUMP_OPS:
+                                                if _found_pop_top_before_cond:
+                                                    _merge_is_stmt_consumer = True
+                                                break
                                 if (not _merge_is_other_ternary_entry
                                         and not _merge_is_stmt_consumer):
                                     _ternary_if_cond_redirect = _tr_c1_merge

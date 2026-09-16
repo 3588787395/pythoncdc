@@ -1,0 +1,9 @@
+﻿python : usage: pyc_batch_verify.py [-h] {single,batch,stats} ...
+所在位置 行:1 字符: 1
++ python scripts/pyc_batch_verify.py site-packages/IQCommon/util/replac ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (usage: pyc_batc...atch,stats} ...:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+pyc_batch_verify.py: error: argument command: invalid choice: 'site-packages/IQCommon/util/replace_utils.pyc' (choose f
+rom 'single', 'batch', 'stats')

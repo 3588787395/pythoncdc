@@ -4214,6 +4214,8 @@ AST 映射规则:
                 if for_iter_setup is not None and for_iter_setup not in self.generated_blocks:
                     self.generated_blocks.add(for_iter_setup)
                     self.generated_offsets.add(for_iter_setup.start_offset)
+                    for _fi_instr in for_iter_setup.instructions:
+                        self.generated_offsets.add(_fi_instr.offset)
 
         if iter_expr is None:
             iter_val = region.metadata.get('for_iter_value')
@@ -18845,6 +18847,7 @@ AST 映射规则:
         # appears in then/else blocks, it must be generated via _generate_region
         # rather than as a standalone block statement.
         _loop_entry_generate = {}
+        _fis_skip_blocks = set()
         for b in _block_set:
             if b in self.generated_blocks:
                 continue
@@ -18858,7 +18861,28 @@ AST 映射规则:
                     _lr_id = id(_lr)
                     if (_lr_id not in self._generated_regions
                             and _lr_id not in self._generating_regions):
-                        _loop_entry_generate[b] = _lr
+                        # [F-GET_ITER fix] Skip LoopRegion whose for_iter_setup
+                        # is the merge_block of an ancestor IfRegion currently
+                        # being generated. The LoopRegion should be generated
+                        # at the merge_block position (post-if code), not inside
+                        # any nested branch.
+                        _fis_is_ancestor_merge = False
+                        if _lr.parent is None and isinstance(region, IfRegion):
+                            _anc = region
+                            while _anc is not None:
+                                if (isinstance(_anc, IfRegion)
+                                        and getattr(_anc, 'merge_block', None) is b
+                                        and id(_anc) in self._generating_regions):
+                                    _fis_is_ancestor_merge = True
+                                    break
+                                _anc = getattr(_anc, 'parent', None)
+                        if not _fis_is_ancestor_merge:
+                            _loop_entry_generate[b] = _lr
+                        else:
+                            # Mark the for_iter_setup block so it's skipped
+                            # in the block iteration loop below, preventing
+                            # it from being processed inside the if branch.
+                            _fis_skip_blocks.add(b)
                     break
         _try_entry_generate = {}
         for b in _block_set:
@@ -18884,6 +18908,14 @@ AST 映射规则:
             if anchor_stmts and block.start_offset in anchor_stmts:
                 stmts.extend(anchor_stmts.pop(block.start_offset))
             if block in self.generated_blocks:
+                continue
+            # [F-GET_ITER fix] Skip blocks that are for_iter_setup of a
+            # top-level LoopRegion whose for_iter_setup is the merge_block
+            # of an ancestor IfRegion. These blocks belong to the post-if
+            # code (merge position), not to any inner branch. The entire
+            # block (pre_stmts + for loop) will be generated at the
+            # merge_block processing position.
+            if block in _fis_skip_blocks:
                 continue
             if block in _nested_if_skip:
                 # [Round 1 fix] 区域归约算法原则 3（嵌套即抽象节点）+ 原则 4
@@ -32038,6 +32070,65 @@ AST 映射规则:
 
                 i += 1
 
+            # [Round3 fix] When func_call_skip was reset to 0 due to a STORE
+            # before PUSH_NULL (line 31722-31729), the preload prefix
+            # (PUSH_NULL + LOAD_* + LOAD_ATTR + LOAD_CONST + LOAD_METHOD)
+            # remains in cond_instrs starting at cond_start_idx. The condition
+            # expression starts AFTER the preload prefix. Without this fix,
+            # filtered_cond includes the preload, causing reconstruct to fail
+            # (returning None or garbage) because the preload is not a valid
+            # condition expression. When func_call_info is set (ternary is
+            # inside a function call), scan forward from cond_start_idx to
+            # find the end of the preload prefix and advance cond_start_idx
+            # past it. The preload ends where the backward stack-effect scan
+            # from the conditional jump first reaches _needed <= 0 starting
+            # from the preload start.
+            _fci = getattr(region, 'func_call_info', None)
+            if func_call_skip == 0 and _fci is not None and cond_start_idx < len(cond_instrs):
+                _pn_idx = None
+                for _pni in range(cond_start_idx, len(cond_instrs)):
+                    if cond_instrs[_pni].opname == 'PUSH_NULL':
+                        _pn_idx = _pni
+                        break
+                if _pn_idx is not None and _pn_idx + 1 < len(cond_instrs):
+                    _next_after_pn = cond_instrs[_pn_idx + 1]
+                    if _next_after_pn.opname in ('LOAD_NAME', 'LOAD_GLOBAL', 'LOAD_FAST', 'LOAD_DEREF', 'LOAD_ATTR'):
+                        _preload_end = _pn_idx + 2
+                        while _preload_end < len(cond_instrs):
+                            _si = cond_instrs[_preload_end]
+                            if _si.opname == 'LOAD_ATTR':
+                                _preload_end += 1
+                                continue
+                            if _si.opname == 'LOAD_CONST' and _preload_end + 1 < len(cond_instrs):
+                                _sn = cond_instrs[_preload_end + 1]
+                                if _sn.opname == 'LOAD_METHOD':
+                                    _preload_end += 2
+                                    continue
+                            if _si.opname == 'LOAD_CONST':
+                                _preload_end += 1
+                                continue
+                            if _si.opname == 'LOAD_METHOD':
+                                _preload_end += 1
+                                continue
+                            break
+                        if _preload_end < len(cond_instrs):
+                            _has_cond_after = False
+                            for _fci_k in range(_preload_end, len(cond_instrs)):
+                                if cond_instrs[_fci_k] is last_cond_instr:
+                                    break
+                                if cond_instrs[_fci_k].opname not in ('PRECALL', 'CALL', 'NOP', 'CACHE', 'PUSH_NULL'):
+                                    _has_cond_after = True
+                                    break
+                            if _has_cond_after:
+                                _tcs_offset_candidate = None
+                                for _tcsi in range(cond_start_idx, _preload_end):
+                                    if cond_instrs[_tcsi].opname not in ('PUSH_NULL', 'NOP', 'CACHE', 'RESUME'):
+                                        _tcs_offset_candidate = cond_instrs[_tcsi].offset
+                                        break
+                                if _tcs_offset_candidate is not None:
+                                    region._ternary_cond_start_offset = _tcs_offset_candidate
+                                cond_start_idx = _preload_end
+
             filtered_cond = []
             for i in range(cond_start_idx, len(cond_instrs)):
                 instr = cond_instrs[i]
@@ -32063,11 +32154,37 @@ AST 映射规则:
             # from cond_instrs would trim the preload from
             # _compute_ternary_cond_preload_exprs, causing it to return
             # empty preload_exprs. Use the raw (un-skipped) offset instead.
+            #
+            # [Round3 fix] When func_call_skip > 0 and cond_start_idx == 0,
+            # the preload prefix (e.g. PUSH_NULL+LOAD_FAST+LOAD_ATTR+LOAD_CONST+
+            # LOAD_METHOD for `app_log.info('...'.format(ternary))`) is still
+            # needed by _compute_ternary_cond_preload_exprs to build the
+            # initial_stack for merge consumer reconstruction. Find the offset
+            # after the last STORE_* in cond_instrs_raw so that
+            # _compute_ternary_cond_preload_exprs scans from the preload start,
+            # not from the block start (which would hit the STORE and return []).
             if cond_start_idx < len(cond_instrs):
                 if func_call_skip > 0 and cond_start_idx == 0:
-                    pass
+                    _pre_store_ops = frozenset({
+                        'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+                    })
+                    _last_store_idx = -1
+                    for _rsi, _ri in enumerate(cond_instrs_raw):
+                        if _ri.opname in _pre_store_ops:
+                            _last_store_idx = _rsi
+                    _offset_candidate = None
+                    if _last_store_idx >= 0:
+                        for _oki in range(_last_store_idx + 1, len(cond_instrs_raw)):
+                            if cond_instrs_raw[_oki].opname not in ('PUSH_NULL', 'NOP', 'CACHE', 'RESUME'):
+                                _offset_candidate = cond_instrs_raw[_oki].offset
+                                break
+                    if _offset_candidate is not None:
+                        region._ternary_cond_start_offset = _offset_candidate
+                    elif func_call_skip < len(cond_instrs_raw):
+                        region._ternary_cond_start_offset = cond_instrs_raw[0].offset
                 else:
-                    region._ternary_cond_start_offset = cond_instrs[cond_start_idx].offset
+                    if getattr(region, '_ternary_cond_start_offset', None) is None:
+                        region._ternary_cond_start_offset = cond_instrs[cond_start_idx].offset
 
         # 仅当 _nested_* 未预构建时，从 innermost true/false block 重建。
         if true_expr is None:
@@ -39579,24 +39696,49 @@ AST 映射规则:
         if _meaningful and all(i.offset in self.generated_offsets for i in _meaningful):
             return []
         # [F-GET_ITER fix] Universal guard: if this block is a for_iter_setup
-        # of an ungenerated LoopRegion and ends with GET_ITER, extract only
-        # pre-assignment stmts (via _loop_extract_for_iter_pre_stmts), leaving
-        # LOAD_*+GET_ITER for _loop_generate_for to use as iter_expr.
-        # This prevents GET_ITER from being emitted as Expr(Iter(x)) in any
-        # code path (post-if merge, try body, with body, if-then, etc.).
+        # of any LoopRegion and ends with GET_ITER, generate the LoopRegion
+        # at this position (pre_stmts + for loop). This prevents GET_ITER
+        # from being emitted as Expr(Iter(x)) in any code path (post-if
+        # merge, try body, with body, if-then, etc.).
+        # The guard must fire regardless of whether the LoopRegion has already
+        # been generated, because a merge_block discard can re-expose the block
+        # to sequential processing (e.g. IfRegion@0 merge_block=2094 discard
+        # at line 11955 re-allows _generate_block_statements_body processing).
+        # When the LoopRegion hasn't been generated yet (e.g. it was skipped
+        # by _loop_entry_generate because it's a top-level region whose
+        # for_iter_setup is a shared merge_block), we generate it here so
+        # the for loop appears at the correct structural position.
         _last_instr = block.instructions[-1] if block.instructions else None
         if _last_instr is not None and _last_instr.opname == 'GET_ITER':
             for _lr in self.region_analyzer.regions:
                 if isinstance(_lr, LoopRegion):
                     _fis = _lr.metadata.get('for_iter_setup')
-                    if _fis is block and id(_lr) not in self._generated_regions:
+                    if _fis is block:
                         if _lr.entry is not block and _lr.header_block is not block:
-                            _fis_instrs = [i for i in block.instructions
-                                           if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
-                            _fis_pre, _fis_iter = self._loop_extract_for_iter_pre_stmts(_fis_instrs, block)
-                            self.generated_blocks.add(block)
-                            self.generated_offsets.add(block.start_offset)
-                            return _fis_pre if _fis_pre else []
+                            _lr_id = id(_lr)
+                            _lr_already_generated = _lr_id in self._generated_regions
+                            if not _lr_already_generated:
+                                self.generated_blocks.add(block)
+                                self.generated_offsets.add(block.start_offset)
+                                for _fi_instr in block.instructions:
+                                    self.generated_offsets.add(_fi_instr.offset)
+                                _lr_ast = self._generate_region(_lr)
+                                for _lb in _lr.blocks:
+                                    self.generated_blocks.add(_lb)
+                                    self.generated_offsets.add(_lb.start_offset)
+                                self._generated_regions.add(_lr_id)
+                                if _lr_ast:
+                                    if isinstance(_lr_ast, list):
+                                        return _lr_ast
+                                    else:
+                                        return [_lr_ast]
+                                return []
+                            else:
+                                self.generated_blocks.add(block)
+                                self.generated_offsets.add(block.start_offset)
+                                for _fi_instr in block.instructions:
+                                    self.generated_offsets.add(_fi_instr.offset)
+                                return []
         if any(i.opname == 'BINARY_OP' for i in block.instructions):
             pass
         # [W22 修复·SWAP 弃顶返回（多语句块形态）] 块尾为 [.., SWAP,
