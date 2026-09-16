@@ -1,0 +1,360 @@
+﻿=== create_transactions_stats ===
+383           0 RESUME                   0
+
+386           2 LOAD_CONST               0 (None)
+
+387           4 LOAD_CONST               0 (None)
+
+388           6 LOAD_CONST               1 ('2116-02-20T23:53:38.427Z')
+
+389           8 LOAD_CONST               2 ('1970-01-01T00:00:00.000Z')
+
+390          10 LOAD_CONST               2 ('1970-01-01T00:00:00.000Z')
+
+385          12 LOAD_CONST               3 (('exchange', 'asset_name', 'security_end_date', 'start_date', 'security_start_date'))
+             14 BUILD_CONST_KEY_MAP      5
+
+392          16 LOAD_CONST               0 (None)
+
+393          18 LOAD_CONST               0 (None)
+
+394          20 LOAD_CONST               0 (None)
+
+395          22 LOAD_CONST               0 (None)
+
+396          24 LOAD_CONST               0 (None)
+
+397          26 LOAD_CONST               4 (0.0)
+
+398          28 LOAD_CONST               4 (0.0)
+
+399          30 LOAD_CONST               0 (None)
+
+400          32 LOAD_CONST               0 (None)
+
+401          34 LOAD_CONST               0 (None)
+
+402          36 LOAD_CONST               0 (None)
+
+403          38 LOAD_CONST               0 (None)
+
+384          40 LOAD_CONST               5 (('sid', 'price', 'amount', 'message', 'security', 'dt', 'exchange_fees', 'tax_cost', 'commission', 'symbol', 'order_id', 'income_ratio', 'create_position_type'))
+             42 BUILD_CONST_KEY_MAP     13
+             44 STORE_FAST               1 (base_transaction)
+
+405          46 BUILD_LIST               0
+             48 STORE_FAST               2 (_transactions)
+
+406          50 LOAD_FAST                0 (daily_result)
+             52 LOAD_CONST               6 ('trades')
+             54 BINARY_SUBSCR
+             64 STORE_FAST               3 (trades)
+
+407          66 BUILD_LIST               0
+             68 STORE_FAST               4 (future_positions)
+
+408          70 BUILD_LIST               0
+             72 STORE_FAST               5 (positions)
+
+409          74 LOAD_CONST               7 ('FUTURE_positions')
+             76 LOAD_FAST                0 (daily_result)
+             78 LOAD_METHOD              0 (keys)
+            100 PRECALL                  0
+            104 CALL                     0
+            114 CONTAINS_OP              0
+            116 POP_JUMP_FORWARD_IF_FALSE     8 (to 134)
+
+410         118 LOAD_FAST                0 (daily_result)
+            120 LOAD_CONST               7 ('FUTURE_positions')
+            122 BINARY_SUBSCR
+            132 STORE_FAST               5 (positions)
+
+411     >>  134 LOAD_CONST               8 ('OPTION_positions')
+            136 LOAD_FAST                0 (daily_result)
+            138 LOAD_METHOD              0 (keys)
+            160 PRECALL                  0
+            164 CALL                     0
+            174 CONTAINS_OP              0
+            176 POP_JUMP_FORWARD_IF_FALSE     8 (to 194)
+
+412         178 LOAD_FAST                0 (daily_result)
+            180 LOAD_CONST               8 ('OPTION_positions')
+            182 BINARY_SUBSCR
+            192 STORE_FAST               5 (positions)
+
+413     >>  194 LOAD_FAST                3 (trades)
+            196 GET_ITER
+        >>  198 EXTENDED_ARG             2
+            200 FOR_ITER               573 (to 1348)
+            202 STORE_FAST               6 (trade)
+
+414         204 LOAD_FAST                1 (base_transaction)
+            206 LOAD_METHOD              1 (copy)
+            228 PRECALL                  0
+            232 CALL                     0
+            242 STORE_FAST               7 (transaction)
+
+415         244 LOAD_FAST                6 (trade)
+            246 LOAD_CONST               9 ('order_id')
+            248 BINARY_SUBSCR
+            258 LOAD_FAST                7 (transaction)
+            260 LOAD_CONST               9 ('order_id')
+            262 STORE_SUBSCR
+
+416         266 LOAD_FAST                6 (trade)
+            268 LOAD_METHOD              2 (get)
+            290 LOAD_CONST              10 ('income_ratio')
+            292 LOAD_CONST               4 (0.0)
+            294 PRECALL                  2
+            298 CALL                     2
+            308 LOAD_FAST                7 (transaction)
+            310 LOAD_CONST              10 ('income_ratio')
+            312 STORE_SUBSCR
+
+417         316 LOAD_FAST                6 (trade)
+            318 LOAD_METHOD              2 (get)
+            340 LOAD_CONST              11 ('create_position_type')
+            342 PRECALL                  1
+            346 CALL                     1
+            356 LOAD_FAST                7 (transaction)
+            358 LOAD_CONST              11 ('create_position_type')
+            360 STORE_SUBSCR
+
+418         364 LOAD_FAST                6 (trade)
+            366 LOAD_METHOD              2 (get)
+            388 LOAD_CONST              12 ('name')
+            390 PRECALL                  1
+            394 CALL                     1
+            404 LOAD_FAST                7 (transaction)
+            406 LOAD_CONST              13 ('sid')
+            408 BINARY_SUBSCR
+            418 LOAD_CONST              14 ('asset_name')
+            420 STORE_SUBSCR
+
+419         424 LOAD_FAST                6 (trade)
+            426 LOAD_CONST              15 ('symbol')
+            428 BINARY_SUBSCR
+            438 LOAD_METHOD              3 (replace)
+            460 LOAD_CONST              16 ('.XSHG')
+            462 LOAD_CONST              17 ('.SS')
+            464 PRECALL                  2
+            468 CALL                     2
+            478 LOAD_METHOD              3 (replace)
+            500 LOAD_CONST              18 ('.XSHE')
+            502 LOAD_CONST              19 ('.SZ')
+            504 PRECALL                  2
+            508 CALL                     2
+            518 LOAD_FAST                7 (transaction)
+            520 LOAD_CONST              15 ('symbol')
+            522 STORE_SUBSCR
+
+420         526 LOAD_FAST                6 (trade)
+            528 LOAD_CONST              15 ('symbol')
+            530 BINARY_SUBSCR
+            540 LOAD_METHOD              3 (replace)
+            562 LOAD_CONST              16 ('.XSHG')
+            564 LOAD_CONST              17 ('.SS')
+            566 PRECALL                  2
+            570 CALL                     2
+            580 LOAD_METHOD              3 (replace)
+            602 LOAD_CONST              18 ('.XSHE')
+            604 LOAD_CONST              19 ('.SZ')
+            606 PRECALL                  2
+            610 CALL                     2
+            620 LOAD_FAST                7 (transaction)
+            622 LOAD_CONST              20 ('security')
+            624 STORE_SUBSCR
+
+421         628 LOAD_FAST                6 (trade)
+            630 LOAD_CONST              21 ('last_price')
+            632 BINARY_SUBSCR
+            642 LOAD_FAST                7 (transaction)
+            644 LOAD_CONST              22 ('price')
+            646 STORE_SUBSCR
+
+422         650 LOAD_FAST                6 (trade)
+            652 LOAD_CONST              23 ('entrust_direction')
+            654 BINARY_SUBSCR
+            664 LOAD_CONST              24 ('BUY')
+            666 COMPARE_OP               2 (==)
+            672 POP_JUMP_FORWARD_IF_FALSE     8 (to 690)
+            674 LOAD_FAST                6 (trade)
+            676 LOAD_CONST              25 ('last_amount')
+            678 BINARY_SUBSCR
+            688 JUMP_FORWARD             8 (to 706)
+        >>  690 LOAD_FAST                6 (trade)
+            692 LOAD_CONST              25 ('last_amount')
+            694 BINARY_SUBSCR
+            704 UNARY_NEGATIVE
+        >>  706 LOAD_FAST                7 (transaction)
+            708 LOAD_CONST              26 ('amount')
+            710 STORE_SUBSCR
+
+423         714 LOAD_FAST                6 (trade)
+            716 LOAD_CONST              27 ('commission')
+            718 BINARY_SUBSCR
+            728 LOAD_FAST                6 (trade)
+            730 LOAD_CONST              28 ('tax')
+            732 BINARY_SUBSCR
+            742 BINARY_OP                0 (+)
+            746 LOAD_FAST                7 (transaction)
+            748 LOAD_CONST              27 ('commission')
+            750 STORE_SUBSCR
+
+424         754 LOAD_GLOBAL              8 (datetime)
+            766 LOAD_ATTR                4 (datetime)
+            776 LOAD_METHOD              5 (strptime)
+            798 LOAD_FAST                6 (trade)
+            800 LOAD_CONST              29 ('trading_datetime')
+            802 BINARY_SUBSCR
+
+425         812 LOAD_CONST              30 ('%Y-%m-%d %H:%M:%S')
+
+424         814 PRECALL                  2
+            818 CALL                     2
+
+425         828 LOAD_METHOD              6 (strftime)
+            850 LOAD_CONST              31 ('%Y-%m-%dT%H:%M:%SZ')
+            852 PRECALL                  1
+            856 CALL                     1
+
+424         866 LOAD_FAST                7 (transaction)
+            868 LOAD_CONST              32 ('dt')
+            870 STORE_SUBSCR
+
+426         874 LOAD_GLOBAL             15 (NULL + len)
+            886 LOAD_FAST                5 (positions)
+            888 PRECALL                  1
+            892 CALL                     1
+            902 LOAD_CONST              33 (0)
+            904 COMPARE_OP               4 (>)
+            910 POP_JUMP_FORWARD_IF_FALSE   195 (to 1302)
+
+427         912 LOAD_FAST                5 (positions)
+            914 GET_ITER
+        >>  916 FOR_ITER               192 (to 1302)
+            918 STORE_FAST               8 (position)
+
+428         920 LOAD_FAST                6 (trade)
+            922 LOAD_CONST              15 ('symbol')
+            924 BINARY_SUBSCR
+            934 LOAD_FAST                8 (position)
+            936 LOAD_METHOD              8 (values)
+            958 PRECALL                  0
+            962 CALL                     0
+            972 CONTAINS_OP              0
+            974 POP_JUMP_FORWARD_IF_FALSE   162 (to 1300)
+
+429         976 LOAD_FAST                8 (position)
+            978 LOAD_METHOD              2 (get)
+           1000 LOAD_CONST              34 ('contract_multiplier')
+           1002 PRECALL                  1
+           1006 CALL                     1
+           1016 STORE_FAST               9 (contract_multiplier)
+
+430        1018 LOAD_FAST                9 (contract_multiplier)
+           1020 LOAD_FAST                7 (transaction)
+           1022 LOAD_CONST              34 ('contract_multiplier')
+           1024 STORE_SUBSCR
+
+431        1028 LOAD_FAST                6 (trade)
+           1030 LOAD_METHOD              2 (get)
+           1052 LOAD_CONST              35 ('futures_direction')
+           1054 PRECALL                  1
+           1058 CALL                     1
+           1068 LOAD_CONST              36 ('OPEN')
+           1070 COMPARE_OP               2 (==)
+           1076 POP_JUMP_FORWARD_IF_FALSE    18 (to 1114)
+
+432        1078 LOAD_FAST                6 (trade)
+           1080 LOAD_CONST              23 ('entrust_direction')
+           1082 BINARY_SUBSCR
+           1092 LOAD_CONST              24 ('BUY')
+           1094 COMPARE_OP               2 (==)
+           1100 POP_JUMP_FORWARD_IF_FALSE     3 (to 1108)
+
+433        1102 LOAD_CONST              37 ('long')
+           1104 STORE_FAST              10 (side)
+           1106 JUMP_FORWARD            20 (to 1148)
+
+435     >> 1108 LOAD_CONST              38 ('short')
+           1110 STORE_FAST              10 (side)
+           1112 JUMP_FORWARD            17 (to 1148)
+
+437     >> 1114 LOAD_FAST                6 (trade)
+           1116 LOAD_CONST              23 ('entrust_direction')
+           1118 BINARY_SUBSCR
+           1128 LOAD_CONST              39 ('SELL')
+           1130 COMPARE_OP               2 (==)
+           1136 POP_JUMP_FORWARD_IF_FALSE     3 (to 1144)
+
+438        1138 LOAD_CONST              37 ('long')
+           1140 STORE_FAST              10 (side)
+           1142 JUMP_FORWARD             2 (to 1148)
+
+440     >> 1144 LOAD_CONST              38 ('short')
+           1146 STORE_FAST              10 (side)
+
+441     >> 1148 LOAD_FAST               10 (side)
+           1150 LOAD_FAST                7 (transaction)
+           1152 LOAD_CONST              40 ('side')
+           1154 STORE_SUBSCR
+
+443        1158 LOAD_FAST               10 (side)
+           1160 LOAD_CONST              37 ('long')
+           1162 COMPARE_OP               2 (==)
+           1168 POP_JUMP_FORWARD_IF_FALSE    33 (to 1236)
+
+444        1170 LOAD_FAST                6 (trade)
+           1172 LOAD_CONST              35 ('futures_direction')
+           1174 BINARY_SUBSCR
+           1184 LOAD_CONST              36 ('OPEN')
+           1186 COMPARE_OP               2 (==)
+           1192 POP_JUMP_FORWARD_IF_FALSE     8 (to 1210)
+           1194 LOAD_FAST                6 (trade)
+           1196 LOAD_CONST              25 ('last_amount')
+           1198 BINARY_SUBSCR
+           1208 JUMP_FORWARD             8 (to 1226)
+
+445     >> 1210 LOAD_FAST                6 (trade)
+           1212 LOAD_CONST              25 ('last_amount')
+           1214 BINARY_SUBSCR
+           1224 UNARY_NEGATIVE
+
+444     >> 1226 LOAD_FAST                7 (transaction)
+           1228 LOAD_CONST              26 ('amount')
+           1230 STORE_SUBSCR
+           1234 JUMP_BACKWARD          160 (to 916)
+
+447     >> 1236 LOAD_FAST                6 (trade)
+           1238 LOAD_CONST              35 ('futures_direction')
+           1240 BINARY_SUBSCR
+           1250 LOAD_CONST              36 ('OPEN')
+           1252 COMPARE_OP               2 (==)
+           1258 POP_JUMP_FORWARD_IF_FALSE     9 (to 1278)
+           1260 LOAD_FAST                6 (trade)
+           1262 LOAD_CONST              25 ('last_amount')
+           1264 BINARY_SUBSCR
+           1274 UNARY_NEGATIVE
+           1276 JUMP_FORWARD             7 (to 1292)
+
+448     >> 1278 LOAD_FAST                6 (trade)
+           1280 LOAD_CONST              25 ('last_amount')
+           1282 BINARY_SUBSCR
+
+447     >> 1292 LOAD_FAST                7 (transaction)
+           1294 LOAD_CONST              26 ('amount')
+           1296 STORE_SUBSCR
+        >> 1300 JUMP_BACKWARD          193 (to 916)
+
+449     >> 1302 LOAD_FAST                2 (_transactions)
+           1304 LOAD_METHOD              9 (append)
+           1326 LOAD_FAST                7 (transaction)
+           1328 PRECALL                  1
+           1332 CALL                     1
+           1342 POP_TOP
+           1344 EXTENDED_ARG             2
+           1346 JUMP_BACKWARD          575 (to 198)
+
+450     >> 1348 LOAD_FAST                2 (_transactions)
+           1350 RETURN_VALUE

@@ -1,0 +1,394 @@
+﻿=== create_orders_stats ===
+311           0 RESUME                   0
+
+312           2 BUILD_MAP                0
+
+313           4 LOAD_CONST               1 ('priceGear')
+              6 LOAD_CONST               2 (0)
+
+312           8 MAP_ADD                  1
+
+314          10 LOAD_CONST               3 ('created')
+             12 LOAD_CONST               0 (None)
+
+312          14 MAP_ADD                  1
+
+315          16 LOAD_CONST               4 ('amount')
+             18 LOAD_CONST               2 (0)
+
+312          20 MAP_ADD                  1
+
+316          22 LOAD_CONST               5 ('commission')
+             24 LOAD_CONST               2 (0)
+
+312          26 MAP_ADD                  1
+
+317          28 LOAD_CONST               6 ('id')
+             30 LOAD_CONST               0 (None)
+
+312          32 MAP_ADD                  1
+
+318          34 LOAD_CONST               7 ('status')
+             36 LOAD_CONST               0 (None)
+
+312          38 MAP_ADD                  1
+
+319          40 LOAD_CONST               8 ('cancel_amount')
+             42 LOAD_CONST               2 (0)
+
+312          44 MAP_ADD                  1
+
+320          46 LOAD_CONST               9 ('stop')
+             48 LOAD_CONST               0 (None)
+
+312          50 MAP_ADD                  1
+
+321          52 LOAD_CONST              10 ('clear')
+             54 LOAD_CONST              11 (True)
+
+312          56 MAP_ADD                  1
+
+322          58 LOAD_CONST              12 ('child_mother')
+             60 LOAD_CONST               0 (None)
+
+312          62 MAP_ADD                  1
+
+323          64 LOAD_CONST              13 ('filled')
+             66 LOAD_CONST               2 (0)
+
+312          68 MAP_ADD                  1
+
+324          70 LOAD_CONST              14 ('reason')
+             72 LOAD_CONST               0 (None)
+
+312          74 MAP_ADD                  1
+
+325          76 LOAD_CONST              15 ('limit')
+             78 LOAD_CONST               0 (None)
+
+312          80 MAP_ADD                  1
+
+326          82 LOAD_CONST              16 ('stop_reached')
+             84 LOAD_CONST              17 (False)
+
+312          86 MAP_ADD                  1
+
+327          88 LOAD_CONST              18 ('dt')
+             90 LOAD_CONST               0 (None)
+
+312          92 MAP_ADD                  1
+
+328          94 LOAD_CONST              19 ('sid')
+
+329          96 LOAD_CONST              20 ('2116-02-20T23:53:38.427Z')
+
+330          98 LOAD_CONST              21 ('1970-01-01T00:00:00.000Z')
+
+331         100 LOAD_CONST               0 (None)
+
+332         102 LOAD_CONST              21 ('1970-01-01T00:00:00.000Z')
+
+333         104 LOAD_CONST               0 (None)
+
+328         106 LOAD_CONST              22 (('security_end_date', 'security_start_date', 'exchange', 'start_date', 'asset_name'))
+            108 BUILD_CONST_KEY_MAP      5
+
+312         110 MAP_ADD                  1
+
+335         112 LOAD_CONST              23 ('limit_reached')
+            114 LOAD_CONST              17 (False)
+
+312         116 MAP_ADD                  1
+            118 STORE_FAST               1 (base_order)
+
+337         120 BUILD_LIST               0
+            122 STORE_FAST               2 (_orders)
+
+338         124 LOAD_FAST                0 (daily_result)
+            126 LOAD_CONST              24 ('summary')
+            128 BINARY_SUBSCR
+            138 LOAD_CONST              25 ('daily_orders')
+            140 BINARY_SUBSCR
+            150 STORE_FAST               3 (orders)
+
+339         152 BUILD_LIST               0
+            154 STORE_FAST               4 (future_positions)
+
+340         156 LOAD_CONST              26 ('FUTURE_positions')
+            158 LOAD_FAST                0 (daily_result)
+            160 LOAD_METHOD              0 (keys)
+            182 PRECALL                  0
+            186 CALL                     0
+            196 CONTAINS_OP              0
+            198 POP_JUMP_FORWARD_IF_FALSE     8 (to 216)
+
+341         200 LOAD_FAST                0 (daily_result)
+            202 LOAD_CONST              26 ('FUTURE_positions')
+            204 BINARY_SUBSCR
+            214 STORE_FAST               4 (future_positions)
+
+342     >>  216 LOAD_FAST                3 (orders)
+            218 GET_ITER
+        >>  220 EXTENDED_ARG             2
+            222 FOR_ITER               615 (to 1454)
+            224 STORE_FAST               5 (_order)
+
+343         226 LOAD_FAST                1 (base_order)
+            228 LOAD_METHOD              1 (copy)
+            250 PRECALL                  0
+            254 CALL                     0
+            264 STORE_FAST               6 (order)
+
+344         266 LOAD_FAST                5 (_order)
+            268 LOAD_ATTR                2 (order_id)
+            278 LOAD_FAST                6 (order)
+            280 LOAD_CONST               6 ('id')
+            282 STORE_SUBSCR
+
+345         286 LOAD_FAST                5 (_order)
+            288 LOAD_ATTR                3 (symbol)
+            298 LOAD_METHOD              4 (replace)
+            320 LOAD_CONST              27 ('.XSHG')
+            322 LOAD_CONST              28 ('.SS')
+            324 PRECALL                  2
+            328 CALL                     2
+            338 LOAD_METHOD              4 (replace)
+            360 LOAD_CONST              29 ('.XSHE')
+            362 LOAD_CONST              30 ('.SZ')
+            364 PRECALL                  2
+            368 CALL                     2
+            378 LOAD_FAST                6 (order)
+            380 LOAD_CONST              31 ('symbol')
+            382 STORE_SUBSCR
+
+346         386 LOAD_FAST                5 (_order)
+            388 LOAD_ATTR                3 (symbol)
+            398 LOAD_METHOD              4 (replace)
+            420 LOAD_CONST              27 ('.XSHG')
+            422 LOAD_CONST              28 ('.SS')
+            424 PRECALL                  2
+            428 CALL                     2
+            438 LOAD_METHOD              4 (replace)
+            460 LOAD_CONST              29 ('.XSHE')
+            462 LOAD_CONST              30 ('.SZ')
+            464 PRECALL                  2
+            468 CALL                     2
+            478 LOAD_FAST                6 (order)
+            480 LOAD_CONST              32 ('security')
+            482 STORE_SUBSCR
+
+347         486 LOAD_FAST                5 (_order)
+            488 LOAD_ATTR                5 (entrust_direction)
+            498 LOAD_GLOBAL             12 (EntrustDirection)
+            510 LOAD_ATTR                7 (BUY)
+            520 COMPARE_OP               2 (==)
+            526 POP_JUMP_FORWARD_IF_FALSE     7 (to 542)
+            528 LOAD_FAST                5 (_order)
+            530 LOAD_ATTR                8 (amount)
+            540 JUMP_FORWARD             7 (to 556)
+        >>  542 LOAD_FAST                5 (_order)
+            544 LOAD_ATTR                8 (amount)
+            554 UNARY_NEGATIVE
+        >>  556 LOAD_FAST                6 (order)
+            558 LOAD_CONST               4 ('amount')
+            560 STORE_SUBSCR
+
+348         564 LOAD_FAST                5 (_order)
+            566 LOAD_ATTR                9 (status)
+            576 LOAD_FAST                6 (order)
+            578 LOAD_CONST               7 ('status')
+            580 STORE_SUBSCR
+
+349         584 LOAD_FAST                5 (_order)
+            586 LOAD_ATTR               10 (transaction_cost)
+            596 LOAD_FAST                6 (order)
+            598 LOAD_CONST               5 ('commission')
+            600 STORE_SUBSCR
+
+352         604 LOAD_GLOBAL             23 (NULL + str)
+            616 LOAD_FAST                5 (_order)
+            618 LOAD_ATTR               12 (datetime)
+            628 LOAD_METHOD             13 (date)
+            650 PRECALL                  0
+            654 CALL                     0
+            664 PRECALL                  1
+            668 CALL                     1
+            678 LOAD_FAST                6 (order)
+            680 LOAD_CONST               3 ('created')
+            682 STORE_SUBSCR
+
+353         686 LOAD_GLOBAL             24 (datetime)
+            698 LOAD_ATTR               12 (datetime)
+            708 LOAD_METHOD             14 (now)
+            730 PRECALL                  0
+            734 CALL                     0
+            744 LOAD_METHOD             15 (strftime)
+            766 LOAD_CONST              33 ('%Y-%m-%dT%H:%M:%SZ')
+            768 PRECALL                  1
+            772 CALL                     1
+            782 LOAD_FAST                6 (order)
+            784 LOAD_CONST              18 ('dt')
+            786 STORE_SUBSCR
+
+354         790 LOAD_FAST                5 (_order)
+            792 LOAD_ATTR                5 (entrust_direction)
+            802 LOAD_GLOBAL             12 (EntrustDirection)
+            814 LOAD_ATTR                7 (BUY)
+            824 COMPARE_OP               2 (==)
+            830 POP_JUMP_FORWARD_IF_FALSE     7 (to 846)
+            832 LOAD_FAST                5 (_order)
+            834 LOAD_ATTR                8 (amount)
+            844 JUMP_FORWARD             7 (to 860)
+        >>  846 LOAD_FAST                5 (_order)
+            848 LOAD_ATTR                8 (amount)
+            858 UNARY_NEGATIVE
+        >>  860 LOAD_FAST                6 (order)
+            862 LOAD_CONST               8 ('cancel_amount')
+            864 STORE_SUBSCR
+
+355         868 LOAD_FAST                5 (_order)
+            870 LOAD_ATTR                5 (entrust_direction)
+            880 LOAD_GLOBAL             12 (EntrustDirection)
+            892 LOAD_ATTR                7 (BUY)
+            902 COMPARE_OP               2 (==)
+            908 POP_JUMP_FORWARD_IF_FALSE     7 (to 924)
+            910 LOAD_FAST                5 (_order)
+            912 LOAD_ATTR               16 (filled_amount)
+            922 JUMP_FORWARD             7 (to 938)
+
+356     >>  924 LOAD_FAST                5 (_order)
+            926 LOAD_ATTR               16 (filled_amount)
+            936 UNARY_NEGATIVE
+
+355     >>  938 LOAD_FAST                6 (order)
+            940 LOAD_CONST              13 ('filled')
+            942 STORE_SUBSCR
+
+357         946 LOAD_GLOBAL             35 (NULL + len)
+            958 LOAD_FAST                4 (future_positions)
+            960 PRECALL                  1
+            964 CALL                     1
+            974 LOAD_CONST               2 (0)
+            976 COMPARE_OP               4 (>)
+            982 POP_JUMP_FORWARD_IF_FALSE   212 (to 1408)
+
+358         984 LOAD_FAST                4 (future_positions)
+            986 GET_ITER
+        >>  988 FOR_ITER               209 (to 1408)
+            990 STORE_FAST               7 (position)
+
+359         992 LOAD_FAST                5 (_order)
+            994 LOAD_ATTR                3 (symbol)
+           1004 LOAD_FAST                7 (position)
+           1006 LOAD_METHOD             18 (values)
+           1028 PRECALL                  0
+           1032 CALL                     0
+           1042 CONTAINS_OP              0
+           1044 POP_JUMP_FORWARD_IF_FALSE   180 (to 1406)
+
+360        1046 LOAD_FAST                7 (position)
+           1048 LOAD_METHOD             19 (get)
+           1070 LOAD_CONST              34 ('contract_multiplier')
+           1072 PRECALL                  1
+           1076 CALL                     1
+           1086 STORE_FAST               8 (contract_multiplier)
+
+361        1088 LOAD_FAST                8 (contract_multiplier)
+           1090 LOAD_FAST                6 (order)
+           1092 LOAD_CONST              34 ('contract_multiplier')
+           1094 STORE_SUBSCR
+
+362        1098 LOAD_FAST                5 (_order)
+           1100 LOAD_ATTR               20 (futures_direction)
+           1110 LOAD_CONST              35 ('OPEN')
+           1112 COMPARE_OP               2 (==)
+           1118 POP_JUMP_FORWARD_IF_FALSE    27 (to 1174)
+
+363        1120 LOAD_FAST                5 (_order)
+           1122 LOAD_ATTR                5 (entrust_direction)
+           1132 LOAD_GLOBAL             12 (EntrustDirection)
+           1144 LOAD_ATTR                7 (BUY)
+           1154 COMPARE_OP               2 (==)
+           1160 POP_JUMP_FORWARD_IF_FALSE     3 (to 1168)
+
+364        1162 LOAD_CONST              36 ('long')
+           1164 STORE_FAST               9 (side)
+           1166 JUMP_FORWARD            29 (to 1226)
+
+366     >> 1168 LOAD_CONST              37 ('short')
+           1170 STORE_FAST               9 (side)
+           1172 JUMP_FORWARD            26 (to 1226)
+
+368     >> 1174 LOAD_FAST                5 (_order)
+           1176 LOAD_ATTR                5 (entrust_direction)
+           1186 LOAD_GLOBAL             12 (EntrustDirection)
+           1198 LOAD_ATTR                7 (BUY)
+           1208 COMPARE_OP               2 (==)
+           1214 POP_JUMP_FORWARD_IF_FALSE     3 (to 1222)
+
+369        1216 LOAD_CONST              37 ('short')
+           1218 STORE_FAST               9 (side)
+           1220 JUMP_FORWARD             2 (to 1226)
+
+371     >> 1222 LOAD_CONST              36 ('long')
+           1224 STORE_FAST               9 (side)
+
+372     >> 1226 LOAD_FAST                9 (side)
+           1228 LOAD_FAST                6 (order)
+           1230 LOAD_CONST              38 ('side')
+           1232 STORE_SUBSCR
+
+373        1236 LOAD_FAST                9 (side)
+           1238 LOAD_CONST              36 ('long')
+           1240 COMPARE_OP               2 (==)
+           1246 POP_JUMP_FORWARD_IF_FALSE    40 (to 1328)
+
+374        1248 LOAD_FAST                5 (_order)
+           1250 LOAD_ATTR                5 (entrust_direction)
+           1260 LOAD_GLOBAL             12 (EntrustDirection)
+           1272 LOAD_ATTR                7 (BUY)
+           1282 COMPARE_OP               2 (==)
+           1288 POP_JUMP_FORWARD_IF_FALSE     7 (to 1304)
+           1290 LOAD_FAST                5 (_order)
+           1292 LOAD_ATTR                8 (amount)
+           1302 JUMP_FORWARD             7 (to 1318)
+
+375     >> 1304 LOAD_FAST                5 (_order)
+           1306 LOAD_ATTR                8 (amount)
+           1316 UNARY_NEGATIVE
+
+374     >> 1318 LOAD_FAST                6 (order)
+           1320 LOAD_CONST               4 ('amount')
+           1322 STORE_SUBSCR
+           1326 JUMP_BACKWARD          170 (to 988)
+
+377     >> 1328 LOAD_FAST                5 (_order)
+           1330 LOAD_ATTR                5 (entrust_direction)
+           1340 LOAD_GLOBAL             12 (EntrustDirection)
+           1352 LOAD_ATTR                7 (BUY)
+           1362 COMPARE_OP               2 (==)
+           1368 POP_JUMP_FORWARD_IF_FALSE     8 (to 1386)
+           1370 LOAD_FAST                5 (_order)
+           1372 LOAD_ATTR                8 (amount)
+           1382 UNARY_NEGATIVE
+           1384 JUMP_FORWARD             6 (to 1398)
+
+378     >> 1386 LOAD_FAST                5 (_order)
+           1388 LOAD_ATTR                8 (amount)
+
+377     >> 1398 LOAD_FAST                6 (order)
+           1400 LOAD_CONST               4 ('amount')
+           1402 STORE_SUBSCR
+        >> 1406 JUMP_BACKWARD          210 (to 988)
+
+379     >> 1408 LOAD_FAST                2 (_orders)
+           1410 LOAD_METHOD             21 (append)
+           1432 LOAD_FAST                6 (order)
+           1434 PRECALL                  1
+           1438 CALL                     1
+           1448 POP_TOP
+           1450 EXTENDED_ARG             2
+           1452 JUMP_BACKWARD          617 (to 220)
+
+380     >> 1454 LOAD_FAST                2 (_orders)
+           1456 RETURN_VALUE

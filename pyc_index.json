@@ -3112,7 +3112,7 @@
     "size": 34863,
     "function_count": 15,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.7333333333333333,
+    "bytecode_match_rate": 0.9333333333333333,
     "ok_py_generated": true,
     "last_tested_round": 1,
     "mismatch_count": 6,

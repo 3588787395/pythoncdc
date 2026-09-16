@@ -672,13 +672,12 @@ def _is_same_type_date(day1, day2, typet):
         a = day1.isocalendar()
         b = day2.isocalendar()
         if a[0] == b[0] and a[1] == b[1]:
-            return True
+            pass
         return False
     elif typet == 8:
         if day1.year == day2.year and day1.month == day2.month:
             return True
-        else:
-            return False
+        return False
     elif typet == 9:
         if day1.year == day2.year:
             return True
@@ -687,8 +686,7 @@ def _is_same_type_date(day1, day2, typet):
     elif typet == 15:
         if day1.year == day2.year and (day1.month - 1) // 3 == (day2.month - 1) // 3:
             return True
-        else:
-            return False
+        return False
 def change_his_to_forward(security, data, exrights_data, start, end, typet):
     if len(data) == 0:
         return data
@@ -719,12 +717,13 @@ def change_his_to_forward(security, data, exrights_data, start, end, typet):
                     return data
                 data = data * float(series.loc[n, 'exer_forward_a']) + float(series.loc[n, 'exer_forward_b'])
                 return round(data, 2)
-        preindex = None
-        tmpdata = None
-        if len(series[startDateIndex:].index) > 0:
-            tmpstartindex = series[startDateIndex:].index[0]
         else:
-            tmpstartindex = None
+            preindex = None
+            tmpdata = None
+            if len(series[startDateIndex:].index) > 0:
+                tmpstartindex = series[startDateIndex:].index[0]
+            else:
+                tmpstartindex = None
         if len(series[endDateIndex:].index) > 1:
             tmpendindex = series[endDateIndex:].index[1]
         else:
@@ -925,42 +924,43 @@ def get_price(security, start_date=None, end_date=None, frequency='daily', field
     if security is None or len(security) == 0:
         strategy_log.error('security不能为空')
         return None
-    elif isinstance(security, six.string_types):
-        is_string = True
-        security = [security]
-    if fq == 'dypre':
-        fq = 'pre'
-    frequency = FREQUENCYNAME_DICT.get(frequency, frequency)
-    if frequency not in ALL_FREQUENCY:
-        strategy_log.error('不支持查询频率周期为：%s 的数据，请输入正确的频率周期' % frequency)
-        return None
     else:
-        current_date = datetime.now().strftime('%Y%m%d')
-        if end_date is None:
-            from fly.common.tradingday_calendar import get_start_day
-            tmp_start_date, tmp_end_date = get_start_day(end_date=current_date, count=2, type='daily')
-            if current_date == tmp_end_date:
-                end_date = tmp_start_date
-            else:
-                end_date = tmp_end_date
+        if isinstance(security, six.string_types):
+            is_string = True
+            security = [security]
+        if fq == 'dypre':
+            fq = 'pre'
+        frequency = FREQUENCYNAME_DICT.get(frequency, frequency)
+        if frequency not in ALL_FREQUENCY:
+            strategy_log.error('不支持查询频率周期为：%s 的数据，请输入正确的频率周期' % frequency)
+            return None
         else:
-            end_date = check_datetime_common(end_date)
+            current_date = datetime.now().strftime('%Y%m%d')
             if end_date is None:
-                return None
-            elif end_date[0:8] == datetime.now().strftime('%Y%m%d'):
-                end_date = (datetime.now() + qdt.timedelta(-1)).strftime('%Y%m%d')
-        if start_date is not None:
-            start_date = check_datetime_common(start_date)
-            if start_date is None:
-                return None
-            elif start_date[0:8] >= current_date:
-                strategy_log.error('start_date大于等于当前日期，请检查')
-                return None
-            elif start_date[0:8] > end_date[0:8]:
-                strategy_log.error('start_date大于end_date，请检查')
-                return None
-        nd_array = get_price_common(security, start_date, end_date, frequency, fields, fq, count, is_string, is_dict)
-        return nd_array
+                from fly.common.tradingday_calendar import get_start_day
+                tmp_start_date, tmp_end_date = get_start_day(end_date=current_date, count=2, type='daily')
+                if current_date == tmp_end_date:
+                    end_date = tmp_start_date
+                else:
+                    end_date = tmp_end_date
+            else:
+                end_date = check_datetime_common(end_date)
+                if end_date is None:
+                    return None
+                elif end_date[0:8] == datetime.now().strftime('%Y%m%d'):
+                    end_date = (datetime.now() + qdt.timedelta(-1)).strftime('%Y%m%d')
+            if start_date is not None:
+                start_date = check_datetime_common(start_date)
+                if start_date is None:
+                    return None
+                elif start_date[0:8] >= current_date:
+                    strategy_log.error('start_date大于等于当前日期，请检查')
+                    return None
+                elif start_date[0:8] > end_date[0:8]:
+                    strategy_log.error('start_date大于end_date，请检查')
+                    return None
+            nd_array = get_price_common(security, start_date, end_date, frequency, fields, fq, count, is_string, is_dict)
+            return nd_array
 @check_arg
 def get_history(count, frequency='1d', field=None, security_list=None, fq=None, skip_suspended=False, include=False, query_date=None, fill='nan', is_dict=False):
     ClearAllCache()
@@ -972,25 +972,26 @@ def get_history(count, frequency='1d', field=None, security_list=None, fq=None, 
         if security_list is None:
             strategy_log.error('未传入security_list,股票不能为空')
             return None
-        elif isinstance(security_list, six.string_types):
-            is_string = True
-            security_list = [security_list]
-        frequency = FREQUENCYNAME_DICT.get(frequency, frequency)
-        execution_date = datetime.now()
-        execution_date = int(convert_dt_to_int(execution_date) / 1000000)
-        if frequency in OVER_WEEK_FREQUENCY:
-            if query_date is None:
-                now_dt = datetime.now()
-                query_date = now_dt
-            else:
-                query_date = datetime.strptime(query_date, '%Y%m%d')
-        elif query_date is None:
-            now_dt = datetime.now()
-            query_date = convert_dt_to_int(now_dt)
         else:
-            query_date = int(query_date) * 1000000
-        nd_array = get_history_common(security_list, count, query_date, frequency, field, fq, skip_suspended, include, fill, execution_date, is_string, is_dict)
-        return nd_array
+            if isinstance(security_list, six.string_types):
+                is_string = True
+                security_list = [security_list]
+            frequency = FREQUENCYNAME_DICT.get(frequency, frequency)
+            execution_date = datetime.now()
+            execution_date = int(convert_dt_to_int(execution_date) / 1000000)
+            if frequency in OVER_WEEK_FREQUENCY:
+                if query_date is None:
+                    now_dt = datetime.now()
+                    query_date = now_dt
+                else:
+                    query_date = datetime.strptime(query_date, '%Y%m%d')
+            elif query_date is None:
+                now_dt = datetime.now()
+                query_date = convert_dt_to_int(now_dt)
+            else:
+                query_date = int(query_date) * 1000000
+            nd_array = get_history_common(security_list, count, query_date, frequency, field, fq, skip_suspended, include, fill, execution_date, is_string, is_dict)
+            return nd_array
 def get_date_and_count(query_date, count, candle_period):
     from fly.common.tradingday_calendar import get_trade_days
     query_date = datetime.strptime(query_date, '%Y%m%d')
@@ -3268,19 +3269,20 @@ def get_stock_exrights(stock_code, date=None):
         exrights.rename(columns={'allottedCount': 'allotted_ps', 'rationedCount': 'rationed_ps', 'rationedPrice': 'rationed_px', 'bonusPrice': 'bonus_ps'}, inplace=True)
         if date is None:
             return exrights
-        elif isinstance(date, datetime) or isinstance(date, qdt.date):
-            date = str(date)
-        if isinstance(date, str):
-            date = date.replace('-', '')[:8]
-            if date.isdigit():
-                date = int(date)
-            else:
+        else:
+            if isinstance(date, datetime) or isinstance(date, qdt.date):
+                date = str(date)
+            if isinstance(date, str):
+                date = date.replace('-', '')[:8]
+                if date.isdigit():
+                    date = int(date)
+                else:
+                    return None
+            if isinstance(date, int):
+                right_list = exrights.index == date
+                if right_list.any():
+                    return exrights[right_list]
                 return None
-        if isinstance(date, int):
-            right_list = exrights.index == date
-            if right_list.any():
-                return exrights[right_list]
-            return None
 def get_valuation_info(count, date, stocks, filled=False):
     if isinstance(stocks, str):
         stock_list = [stocks]

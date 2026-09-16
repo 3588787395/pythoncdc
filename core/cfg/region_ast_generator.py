@@ -1408,6 +1408,31 @@ class RegionASTGenerator:
                 top_level_regions.append(_basic_region)
                 self.regions.append(_basic_region)
 
+        _exc_cleanup_opnames = frozenset({
+            'POP_EXCEPT', 'PUSH_EXC_INFO', 'RERAISE', 'COPY',
+            'LOAD_CONST', 'RETURN_VALUE', 'RETURN_CONST',
+            'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE',
+            'NOP', 'CACHE', 'RESUME', 'PUSH_NULL',
+            'SWAP', 'POP_TOP', 'END_SEND',
+        })
+        for _cl_region in top_level_regions:
+            if _cl_region.region_type != RegionType.BASIC:
+                continue
+            if isinstance(_cl_region, (IfRegion, LoopRegion, WithRegion, TernaryRegion, BoolOpRegion, MatchRegion, AssertRegion, TryExceptRegion)):
+                continue
+            _all_cleanup = True
+            for _cl_b in _cl_region.blocks:
+                for _cl_i in _cl_b.instructions:
+                    if _cl_i.opname not in _exc_cleanup_opnames:
+                        _all_cleanup = False
+                        break
+                if not _all_cleanup:
+                    break
+            if _all_cleanup:
+                for _cl_b in _cl_region.blocks:
+                    self.generated_blocks.add(_cl_b)
+                    self.generated_offsets.add(_cl_b.start_offset)
+
         for region in top_level_regions:
             if region.region_type != RegionType.BASIC and region.blocks:
                 if all(b in self.generated_blocks for b in region.blocks):
@@ -4483,6 +4508,69 @@ AST 映射规则:
                     if _bk_block and _bk_block not in self.generated_blocks:
                         self.generated_blocks.add(_bk_block)
                         self.generated_offsets.add(_bk_block.start_offset)
+            # [R102 for-else fix] 区域归约算法原则 4
+            # （父引用子入口）+ 原则 2（每块唯一归属）：
+            # break 目标块含非平凡代码（如 if 条件）时，
+            # 它是循环后的顺序代码入口（如 `if need_dataframe:`）。
+            # 旧逻辑仅处理 break→return 折叠，非 return
+            # 后继被遗漏 → _sequential_after_loop 为空 →
+            # 循环后代码不在循环节点后发射，而由 generate()
+            # 主循环线性处理，此时 break 目标块已被标记
+            # generated → IfRegion 入口被跳过 → 代码丢失
+            # （create_daily_stats: block 404 含
+            # LOAD_FAST need_dataframe 被漏掉 → if 分支
+            # 全部丢失，return daily_stats 后跟孤立赋值）。
+            # 修复：对非平凡 break 目标块，查找以其为 entry
+            # 的 IfRegion/LoopRegion/TryExceptRegion，生成
+            # 该子区域 AST 并追加到 _sequential_after_loop，
+            # 同时从 generated_blocks 移除该 entry 块（让
+            # 子区域处理它）。
+            _bb_processed_offsets = set()
+            for _bb in region.break_blocks:
+                if _bb in _body_set:
+                    continue
+                if _bb.start_offset in _bb_processed_offsets:
+                    continue
+                _bb_meaningful = [i for i in _bb.instructions
+                                  if i.opname not in NOISE_OPS
+                                  and i.opname not in PURE_JUMP_OPS
+                                  and i.opname not in CONDITIONAL_JUMP_OPS
+                                  and i.opname not in ('POP_TOP', 'EXTENDED_ARG')]
+                if not _bb_meaningful:
+                    continue
+                _bb_region = self.region_analyzer.get_entry_region_for_block(_bb) or self.region_analyzer.get_region_for_block(_bb)
+                if _bb_region and isinstance(_bb_region, (IfRegion, LoopRegion, TryExceptRegion)):
+                    _bb_rid = id(_bb_region)
+                    if _bb_rid not in self._generated_regions and _bb_rid not in self._generating_regions:
+                        self.generated_blocks.discard(_bb)
+                        self.generated_offsets.discard(_bb.start_offset)
+                        _bb_ast = self._generate_region(_bb_region)
+                        if _bb_ast:
+                            if isinstance(_bb_ast, list):
+                                _sequential_after_loop.extend(_bb_ast)
+                            else:
+                                _sequential_after_loop.append(_bb_ast)
+                        _bb_processed_offsets.add(_bb.start_offset)
+                        for _b in _bb_region.blocks:
+                            self.generated_blocks.add(_b)
+                            self.generated_offsets.add(_b.start_offset)
+                        self._generated_regions.add(_bb_rid)
+                elif _bb not in self.generated_blocks:
+                    _bb_stmts = self._generate_block_statements(_bb)
+                    if _bb_stmts:
+                        _sequential_after_loop.extend(_bb_stmts)
+                    self.generated_blocks.add(_bb)
+                    self.generated_offsets.add(_bb.start_offset)
+                    _bb_processed_offsets.add(_bb.start_offset)
+                    for _bsucc in _bb.successors:
+                        if _bsucc not in _body_set and _bsucc not in region.else_blocks and _bsucc not in self.generated_blocks:
+                            _succ_role = self.region_analyzer.get_block_role(_bsucc)
+                            if _succ_role not in (BlockRole.RETURN, BlockRole.RETURN_NONE):
+                                _succ_stmts = self._generate_block_statements(_bsucc)
+                                if _succ_stmts:
+                                    _sequential_after_loop.extend(_succ_stmts)
+                                self.generated_blocks.add(_bsucc)
+                                self.generated_offsets.add(_bsucc.start_offset)
         else:
             # 无 break 时，else_stmts 转为顺序语句（for 和 while 均适用）。
             # for 循环无 break 时 else 子句总是执行，与循环后顺序代码语义等价、
@@ -13144,6 +13232,11 @@ AST 映射规则:
             # STORE_FAST 时被 _build_store_statement 错误合并或在条件指令收集
             # 阶段丢失。镜像入口块 R10-N1 修复 (L447-467)。
             if instr.opname == 'STORE_SUBSCR':
+                if _cond_block_is_ternary_merge:
+                    pre_instrs = []
+                    pre_seen_store = True
+                    _cond_block_is_ternary_merge = False
+                    continue
                 pre_instrs.append(instr)
                 stmt = self._build_subscript_assign(pre_instrs)
                 if stmt:
@@ -13152,6 +13245,11 @@ AST 映射规则:
                 pre_instrs = []
                 continue
             if instr.opname == 'STORE_ATTR':
+                if _cond_block_is_ternary_merge:
+                    pre_instrs = []
+                    pre_seen_store = True
+                    _cond_block_is_ternary_merge = False
+                    continue
                 if pre_unpack_info is not None:
                     pre_instrs.append(instr)
                     attr_target = {
@@ -13255,7 +13353,7 @@ AST 映射规则:
         _cond_iter_source = _iter_instrs
         _last_store_in_iter = -1
         for _i, _instr in enumerate(_iter_instrs):
-            if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+            if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF', 'STORE_SUBSCR', 'STORE_ATTR'):
                 _last_store_in_iter = _i
         if _last_store_in_iter >= 0:
             _cond_iter_source = _iter_instrs[_last_store_in_iter + 1:]
@@ -21075,6 +21173,45 @@ AST 映射规则:
         if region.entry is not None and not region.try_blocks:
             self.generated_blocks.discard(region.entry)
             self.generated_offsets.discard(region.entry.start_offset)
+        # [F-TRY-BODY-RETURN fix] CPython inlines trivial return None
+        # (LOAD_CONST None + RETURN_VALUE) at the end of the try body
+        # rather than generating JUMP_FORWARD past the except handler.
+        # When a block in region.blocks (but not in try_blocks or
+        # handler blocks) is a trivial return successor of a try_block,
+        # include it in _try_blocks_eff so it's generated inside the
+        # try body. Without this, the return None ends up as a post-try
+        # statement, which compiles to JUMP_FORWARD instead of inline
+        # RETURN_VALUE — a bytecode mismatch in deeply nested try-except.
+        _handler_block_offsets = set()
+        for _heb in (region.handler_entry_blocks or []):
+            _handler_block_offsets.add(_heb.start_offset)
+        for _, _, _hbs in (region.except_handlers or []):
+            for _hb in _hbs:
+                _handler_block_offsets.add(_hb.start_offset)
+        _try_block_offsets = set(b.start_offset for b in _try_blocks_eff)
+        _already_in_eff = set(b.start_offset for b in _try_blocks_eff)
+        for _tb in list(_try_blocks_eff):
+            for _succ in _tb.successors:
+                if _succ.start_offset in _already_in_eff:
+                    continue
+                if _succ.start_offset in _handler_block_offsets:
+                    continue
+                if _succ not in set(region.blocks):
+                    continue
+                if _succ in self.generated_blocks:
+                    continue
+                _succ_meaningful = [i for i in _succ.instructions
+                                    if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                _is_trivial_ret = (
+                    len(_succ_meaningful) == 2
+                    and _succ_meaningful[0].opname == 'LOAD_CONST'
+                    and _succ_meaningful[0].argval is None
+                    and _succ_meaningful[1].opname in ('RETURN_VALUE', 'RETURN_CONST')
+                    and not _succ.successors
+                )
+                if _is_trivial_ret:
+                    _try_blocks_eff.append(_succ)
+                    _already_in_eff.add(_succ.start_offset)
         for block in sorted(_try_blocks_eff, key=lambda b: b.start_offset):
             if block in self.generated_blocks:
                 continue
@@ -21372,6 +21509,10 @@ AST 映射规则:
                                        '_explicit_return': True})
                 elif self._loop_depth > 0:
                     body_stmts.append({'type': 'Break'})
+                else:
+                    body_stmts.append({'type': 'Return',
+                                       'value': {'type': 'Constant', 'value': None},
+                                       '_explicit_return': True})
                 self.generated_blocks.add(block)
                 continue
 

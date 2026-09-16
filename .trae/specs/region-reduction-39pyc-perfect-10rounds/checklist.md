@@ -1,0 +1,9 @@
+- [ ] 39个partial pyc文件全部变为ok状态（bytecode_match_rate=1.0）
+- [ ] 累计匹配率从97.75%提升到100%
+- [ ] 每轮至少1个pyc从partial变为ok
+- [ ] 所有修改基于区域归约算法原则，无启发式补丁
+- [ ] quotation.pyc验证通过（不引入回归）
+- [ ] 每轮使用scripts/pyc_batch_verify.py验证
+- [ ] 每轮git commit并push到远程
+- [ ] 反编译生成的OK.py文件未被修改
+- [ ] 所有命令执行不超过300秒

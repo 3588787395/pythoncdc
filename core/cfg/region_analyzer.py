@@ -5598,6 +5598,22 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                         else:
                             if is_back_edge_condition:
                                 continue
+                            # [R102 for-else fix] 区域归约算法原则 4
+                            # （父引用子入口）：源块 b 末尾为无条件
+                            # JUMP_FORWARD/JUMP_ABSOLUTE 跳到循环体外的块 s
+                            # 时，s 是 break 目标——与 s 的内容无关。
+                            # 旧 R8 判据将含用户代码的 s 误判为「循环内
+                            # if 分支 fall-through」而跳过，导致 break 目标
+                            # 漏标、has_break=False、for-else 退化为顺序语句
+                            # （create_daily_stats: 196 JUMP_FORWARD→404,
+                            #  404 含 LOAD_FAST need_dataframe 被误判）。
+                            # 安全性：无条件跳转不可能是 fall-through，
+                            # 故目标一定是显式跳转目的地；循环内 if-then
+                            # 分支以条件跳转结尾，其 fall-through 不在此
+                            # 分支处理（走上面的 has_return/has_push_exc 分支）。
+                            if last and last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE'):
+                                break_blocks_set.add(s)
+                                continue
                             # Fix: 如果后继块是跳回循环头部或循环条件的 JUMP_BACKWARD 块
                             # （即 continue 语句），不应将其归类为 break 块。
                             # 这种情况发生在 try body 内的 continue 块未被纳入
@@ -5663,8 +5679,19 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                                 _r101_break_fused = False
                                 _s_preds_r101 = [p for p in s.predecessors]
                                 _all_preds_in_body = bool(_s_preds_r101) and all(
-                                    p in body_set for p in _s_preds_r101)
-                                if _all_preds_in_body and natural_exit is not None:
+                                    p in body_set or p in _else_only_set for p in _s_preds_r101)
+                                # [R102 for-else fix] 区域归约算法原则 4
+                                # （父引用子入口）：for-else 中 break 跳到循环后
+                                # 的 if 分支块（如 404: LOAD_FAST need_dataframe），
+                                # 该块也接受 for-else 块（400）的 fall-through。
+                                # 旧判据要求所有前驱 ∈ body_set，但 for-else 块
+                                # ∈ _else_only_set，导致 break 目标被漏标、
+                                # has_break=False → for-else 退化为顺序语句
+                                # （create_daily_stats 偏移 404 根因）。修复：
+                                # 前驱来自 body_set ∪ _else_only_set 即可——
+                                # 两者均为循环结构的合法入口。
+                                _any_pred_in_body = any(p in body_set for p in _s_preds_r101)
+                                if _all_preds_in_body and _any_pred_in_body and natural_exit is not None:
                                     _s_last_r101 = s.get_last_instruction()
                                     if (_s_last_r101 is not None
                                             and _s_last_r101.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
@@ -5867,6 +5894,15 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                     _cur, _depth = _r102_stack.pop()
                     if _cur in _r102_visited or _depth > 10:
                         continue
+                    # [R102 for-else fix] 区域归约算法原则 2
+                    # （每块唯一归属）：break 目标块（已在
+                    # break_blocks_set 中）是循环外代码，不应沿
+                    # 其后继继续 DFS——否则循环外 if/else 分支
+                    # （如 410/1148）被误加为 break 块
+                    # （create_daily_stats 偏移 410 根因）。
+                    if _cur in break_blocks_set:
+                        _r102_visited.add(_cur)
+                        continue
                     _r102_visited.add(_cur)
                     _cur_last = _cur.get_last_instruction()
                     if _cur_last and _cur_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE') and _cur_last.argval is not None:
@@ -5961,8 +5997,49 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                         if _bb_instr.opname in ('JUMP_FORWARD',) and _bb_instr.argval is not None:
                             _bt = self.cfg.get_block_by_offset(_bb_instr.argval)
                             if _bt and _bt is not header and _bt is not exit_block and _bt not in body:
-                                _break_targets.add(_bt)
-                _fwd_candidates -= _break_targets
+                                # [R102 for-else fix] 区域归约算法原则 2
+                                # （每块唯一归属）：break 目标必须是从
+                                # FOR_ITER 出口可达的块（_exit_reachable），
+                                # 即循环之后的代码。循环体内的 JUMP_FORWARD
+                                # 目标（如 if-then 跳到 merge 块 196）也在
+                                # _fwd_candidates 中但不在 _exit_reachable 中，
+                                # 不是 break 目标——误判会使 merge 块被排除
+                                # 出循环体（create_daily_stats 偏移 196 被误
+                                # 判为 break target 根因）。
+                                if _bt in _exit_reachable:
+                                    _break_targets.add(_bt)
+                                elif _bt not in _fwd_candidates:
+                                    _break_targets.add(_bt)
+                # [R102 for-else fix] 区域归约算法原则 2（每块唯一归属）：
+                # break 目标块是循环出口之后的代码（如 for-else 之后的 if-else
+                # 分支），不属于循环体。旧逻辑仅移除 break 目标本块，但 BFS
+                # 已沿 break 目标的后继扩展（如 404→410/1148），导致 break
+                # 目标之后的代码仍留在 _fwd_candidates，被 _return_reachable
+                # 误纳入循环体（410/1148 含 RETURN 后继）。修复：以 break_targets
+                # 为屏障重建 _fwd_candidates，BFS 不穿越 break 目标——
+                # 仅收集 fall_through 到 break 目标之前（不含）的可达块，
+                # break 目标之后的块自然排除（create_daily_stats 偏移
+                # 404-1918 被误纳入循环体根因）。
+                if _break_targets:
+                    _fwd_candidates = set()
+                    _fwd_visited = {fall_through}
+                    _fwd_queue = [fall_through]
+                    while _fwd_queue:
+                        current = _fwd_queue.pop(0)
+                        _fwd_candidates.add(current)
+                        for succ in current.successors:
+                            if succ == header or succ == exit_block:
+                                continue
+                            if succ in current.exception_successors:
+                                continue
+                            if succ in _fwd_visited:
+                                continue
+                            if succ in _break_targets:
+                                continue
+                            _fwd_visited.add(succ)
+                            _fwd_queue.append(succ)
+                else:
+                    _fwd_candidates -= _break_targets
                 _can_reach_back = set()
                 for _be_src in back_edge_sources:
                     if _be_src == header:
@@ -6005,7 +6082,17 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 for _cand in _fwd_candidates:
                     if _cand in body:
                         continue
-                    if _cand in _can_reach_back or _cand in _return_reachable or _cand is fall_through:
+                    # [R102 for-else fix] 区域归约算法原则 2（每块唯一归属）：
+                    # 当 break 目标存在时，_fwd_candidates 已以 break_targets
+                    # 为屏障重建（见上方重建逻辑），仅含 fall_through 到
+                    # break 目标之前的可达块——全部属于循环体，直接纳入。
+                    # 旧逻辑仅纳入 _can_reach_back / _return_reachable /
+                    # fall_through，遗漏了不直接可达回边但确在循环体内的
+                    # 块（如 if-then/else 分支体 66/70/140/196——
+                    # create_daily_stats 偏移 56-396 缺块根因）。
+                    if _break_targets:
+                        body.add(_cand)
+                    elif _cand in _can_reach_back or _cand in _return_reachable or _cand is fall_through:
                         body.add(_cand)
         elif len(body) == 1 and header in body:
             last_hdr = header.get_last_instruction()
@@ -7687,12 +7774,46 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                             continue
                         if succ.start_offset in excluded_offsets:
                             continue
-                        # 排除含异常处理指令的块
-                        if any(i.opname in ('PUSH_EXC_INFO', 'WITH_EXCEPT_START',
-                                             'CHECK_EXC_MATCH', 'CHECK_EG_MATCH',
-                                             'RERAISE', 'POP_EXCEPT')
-                               for i in succ.instructions):
+                        # 排除含异常处理指令的块（精化 POP_EXCEPT 判据）
+                        # [R112 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3
+                        # （嵌套即抽象节点）：当嵌套 try-except 的 try body 以
+                        # return 结尾时，CPython 编译器将 POP_EXCEPT（清理外层
+                        # except handler 的异常上下文）+ LOAD_CONST + RETURN_VALUE
+                        # 放在异常表 try_end 之后（RETURN_VALUE 不触发异常，故
+                        # 被裁剪出异常表范围）。该块语义上属于内层 try body 的
+                        # return 语句，若因含 POP_EXCEPT 而排除，该块会被外层
+                        # handler 的 _collect_body BFS 吞入，生成到错误的嵌套层级
+                        # （如 function.pyc::save_testds_to_json 的 `return None`
+                        # 被放在外层 except 末尾而非内层 try body 末尾，导致
+                        # JUMP_FORWARD 替代 POP_EXCEPT + RETURN_VALUE，121 条
+                        # true_diffs）。
+                        # 判据：块仅含 POP_EXCEPT（不含 PUSH_EXC_INFO/WITH_EXCEPT_START/
+                        # CHECK_EXC_MATCH/CHECK_EG_MATCH/RERAISE 等异常帧指令），
+                        # 且 POP_EXCEPT 后紧跟 LOAD_CONST/RETURN_CONST + RETURN_VALUE
+                        # → 属于 return-from-nested-try-body 清理模式，不排除。
+                        _has_exc_frame = any(i.opname in ('PUSH_EXC_INFO', 'WITH_EXCEPT_START',
+                                                          'CHECK_EXC_MATCH', 'CHECK_EG_MATCH',
+                                                          'RERAISE')
+                                             for i in succ.instructions)
+                        if _has_exc_frame:
                             continue
+                        _has_pop_except = any(i.opname == 'POP_EXCEPT' for i in succ.instructions)
+                        if _has_pop_except:
+                            _meaningful_succ = [i for i in succ.instructions
+                                                if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
+                            # 仅允许 POP_EXCEPT + LOAD_CONST/RETURN_CONST + RETURN_VALUE 模式
+                            _is_return_cleanup = False
+                            if len(_meaningful_succ) == 3:
+                                if (_meaningful_succ[0].opname == 'POP_EXCEPT'
+                                        and _meaningful_succ[1].opname in ('LOAD_CONST', 'RETURN_CONST')
+                                        and _meaningful_succ[2].opname == 'RETURN_VALUE'):
+                                    _is_return_cleanup = True
+                            elif len(_meaningful_succ) == 2:
+                                if (_meaningful_succ[0].opname == 'POP_EXCEPT'
+                                        and _meaningful_succ[1].opname in ('RETURN_VALUE', 'RETURN_CONST')):
+                                    _is_return_cleanup = True
+                            if not _is_return_cleanup:
+                                continue
                         # 必须以 RETURN_VALUE 或 RETURN_CONST 结尾
                         _last_i = succ.get_last_instruction()
                         if _last_i is None or _last_i.opname not in (
@@ -11023,6 +11144,27 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
             _owner = self.block_to_region.get(block)
             if _owner is not None and not isinstance(_owner, WithRegion):
                 continue
+            # [R113 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 3
+            # （嵌套即抽象节点）：当 with 语句嵌套在 try-except 的 except
+            # handler 体内时，except handler 的 return 语句（如 `return None`）
+            # 编译为 POP_EXCEPT + (POP_EXCEPT +) LOAD_CONST None + RETURN_VALUE。
+            # 这些 POP_EXCEPT 清理外层 except handler 的异常上下文，不属于
+            # WithRegion 的清理路径。若误收为 cleanup_blocks，return 块会被
+            # WithRegion 消费，导致外层 except handler 的 return 语句丢失，
+            # 重编译时 return 被合并到错误位置，产生 JUMP_FORWARD 替代
+            # POP_EXCEPT + RETURN_VALUE 的 true_diffs。
+            # 判据：含 POP_EXCEPT 的块若无任何前驱在 WithRegion 已收集块集
+            # （cleanup_visited = body + entry + exception + cleanup）中，
+            # 则该块从 WithRegion 外部可达（如从 TryExceptRegion 的 handler
+            # body），不属于 WithRegion 的清理路径。
+            _has_pop_except = any(i.opname == 'POP_EXCEPT' for i in block.instructions)
+            if _has_pop_except:
+                _any_pred_in_visited = any(
+                    pred in cleanup_visited or pred.start_offset in body_offsets
+                    for pred in block.predecessors
+                )
+                if not _any_pred_in_visited:
+                    continue
             if last and last.opname in ('RETURN_VALUE', 'RETURN_CONST'):
                 meaningful = [i for i in block.instructions
                               if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL', 'POP_TOP',

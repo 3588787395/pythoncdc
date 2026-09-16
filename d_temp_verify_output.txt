@@ -1,0 +1,20 @@
+﻿[SINGLE] F:\Downloads\pythoncdc-main\site-packages\IQEngine\plugins\plugin_system_risk_calculation\function.pyc
+  OK.py: F:\Downloads\pythoncdc-main\site-packages\IQEngine\plugins\plugin_system_risk_calculation\functionOK.py
+  source: 28285 chars
+
+瀛楄妭鐮?diff 鎶ュ憡:
+  decompile_status:   partial
+  total_functions:   15
+  matched_functions: 11
+  match_rate:        73.33%
+  missing_in_decomp: []
+  extra_in_decomp:   []
+  mismatches (4):
+    - create_daily_stats: orig=469 decomp=272 jump_diffs=5 true_diffs=393
+      first_diff: {'index': 72, 'orig_op': 'JUMP_BACKWARD', 'decomp_op': 'BUILD_LIST', 'orig_arg': 54, 'decomp_arg': 0}
+    - create_orders_stats: orig=295 decomp=299 jump_diffs=1 true_diffs=103
+      first_diff: {'index': 193, 'orig_op': 'LOAD_GLOBAL', 'decomp_op': 'LOAD_CONST', 'orig_arg': 'len', 'decomp_arg': None}
+    - create_transactions_stats: orig=275 decomp=279 jump_diffs=1 true_diffs=133
+      first_diff: {'index': 142, 'orig_op': 'LOAD_FAST', 'decomp_op': 'LOAD_CONST', 'orig_arg': 'trade', 'decomp_arg': None}
+    - save_testds_to_json: orig=314 decomp=311 jump_diffs=10 true_diffs=121
+      first_diff: {'index': 188, 'orig_op': 'POP_EXCEPT', 'decomp_op': 'JUMP_FORWARD', 'orig_arg': None, 'decomp_arg': 1984}

@@ -1,0 +1,441 @@
+﻿=== save_testds_to_json ===
+594           0 RESUME                   0
+
+595           2 LOAD_FAST                2 (testds_file_index)
+              4 LOAD_CONST               1 (0)
+              6 COMPARE_OP               2 (==)
+             12 POP_JUMP_FORWARD_IF_FALSE   130 (to 274)
+
+596          14 LOAD_CONST               1 (0)
+             16 STORE_FAST               4 (max_num)
+
+597          18 LOAD_GLOBAL              1 (NULL + os)
+             30 LOAD_ATTR                1 (listdir)
+             40 LOAD_GLOBAL              0 (os)
+             52 LOAD_ATTR                2 (path)
+             62 LOAD_METHOD              3 (join)
+             84 LOAD_FAST                0 (trade_dir_path)
+             86 LOAD_CONST               2 ('result')
+             88 LOAD_FAST                1 (trade_id)
+             90 PRECALL                  3
+             94 CALL                     3
+            104 PRECALL                  1
+            108 CALL                     1
+            118 GET_ITER
+        >>  120 FOR_ITER                74 (to 270)
+            122 STORE_FAST               5 (filename)
+
+598         124 LOAD_CONST               3 ('testds_to_json')
+            126 LOAD_FAST                5 (filename)
+            128 CONTAINS_OP              0
+            130 POP_JUMP_FORWARD_IF_FALSE    68 (to 268)
+
+599         132 LOAD_GLOBAL              9 (NULL + int)
+            144 LOAD_FAST                5 (filename)
+            146 LOAD_METHOD              5 (replace)
+            168 LOAD_CONST               3 ('testds_to_json')
+            170 LOAD_CONST               4 ('')
+            172 PRECALL                  2
+            176 CALL                     2
+            186 LOAD_METHOD              6 (split)
+            208 LOAD_CONST               5 ('.')
+            210 PRECALL                  1
+            214 CALL                     1
+            224 LOAD_CONST               1 (0)
+            226 BINARY_SUBSCR
+            236 PRECALL                  1
+            240 CALL                     1
+            250 STORE_FAST               6 (current_num)
+
+600         252 LOAD_FAST                6 (current_num)
+            254 LOAD_FAST                4 (max_num)
+            256 COMPARE_OP               4 (>)
+            262 POP_JUMP_FORWARD_IF_FALSE     2 (to 268)
+
+601         264 LOAD_FAST                6 (current_num)
+            266 STORE_FAST               4 (max_num)
+        >>  268 JUMP_BACKWARD           75 (to 120)
+
+602     >>  270 LOAD_FAST                4 (max_num)
+            272 STORE_FAST               2 (testds_file_index)
+
+603     >>  274 LOAD_GLOBAL              0 (os)
+            286 LOAD_ATTR                2 (path)
+            296 LOAD_METHOD              3 (join)
+            318 LOAD_FAST                0 (trade_dir_path)
+            320 LOAD_CONST               2 ('result')
+            322 LOAD_FAST                1 (trade_id)
+
+604         324 LOAD_CONST               3 ('testds_to_json')
+            326 LOAD_GLOBAL             15 (NULL + str)
+            338 LOAD_FAST                2 (testds_file_index)
+            340 PRECALL                  1
+            344 CALL                     1
+            354 BINARY_OP                0 (+)
+            358 LOAD_CONST               6 ('.json')
+            360 BINARY_OP                0 (+)
+
+603         364 PRECALL                  4
+            368 CALL                     4
+            378 STORE_FAST               7 (testds_file_path)
+
+606         380 LOAD_GLOBAL              0 (os)
+            392 LOAD_ATTR                2 (path)
+            402 LOAD_METHOD              8 (exists)
+            424 LOAD_FAST                7 (testds_file_path)
+            426 PRECALL                  1
+            430 CALL                     1
+            440 POP_JUMP_FORWARD_IF_TRUE    21 (to 484)
+
+607         442 LOAD_FAST                2 (testds_file_index)
+            444 LOAD_CONST               7 (1)
+            446 BINARY_OP               13 (+=)
+            450 STORE_FAST               2 (testds_file_index)
+
+608         452 LOAD_GLOBAL             19 (NULL + create_daily_stats)
+            464 LOAD_FAST                3 (daily_result)
+            466 PRECALL                  1
+            470 CALL                     1
+            480 STORE_FAST               8 (ds)
+            482 JUMP_FORWARD           208 (to 900)
+
+611     >>  484 LOAD_GLOBAL             21 (NULL + json)
+            496 LOAD_ATTR               11 (loads)
+            506 LOAD_GLOBAL             25 (NULL + open)
+            518 LOAD_FAST                7 (testds_file_path)
+            520 LOAD_CONST               8 ('r')
+            522 PRECALL                  2
+            526 CALL                     2
+            536 LOAD_METHOD             13 (readline)
+            558 PRECALL                  0
+            562 CALL                     0
+            572 PRECALL                  1
+            576 CALL                     1
+            586 STORE_FAST               9 (data)
+
+612         588 LOAD_GLOBAL             29 (NULL + pd)
+            600 LOAD_ATTR               15 (DataFrame)
+            610 LOAD_FAST                9 (data)
+            612 LOAD_METHOD             16 (get)
+            634 LOAD_CONST               9 ('data')
+            636 PRECALL                  1
+            640 CALL                     1
+            650 LOAD_FAST                9 (data)
+            652 LOAD_METHOD             16 (get)
+            674 LOAD_CONST              10 ('index')
+            676 PRECALL                  1
+            680 CALL                     1
+            690 LOAD_FAST                9 (data)
+            692 LOAD_METHOD             16 (get)
+            714 LOAD_CONST              11 ('columns')
+            716 PRECALL                  1
+            720 CALL                     1
+            730 KW_NAMES                12
+            732 PRECALL                  3
+            736 CALL                     3
+            746 STORE_FAST              10 (df)
+
+614         748 LOAD_GLOBAL             35 (NULL + len)
+            760 LOAD_FAST               10 (df)
+            762 PRECALL                  1
+            766 CALL                     1
+            776 LOAD_CONST              13 (50)
+            778 COMPARE_OP               5 (>=)
+            784 POP_JUMP_FORWARD_IF_FALSE    21 (to 828)
+
+615         786 LOAD_FAST                2 (testds_file_index)
+            788 LOAD_CONST               7 (1)
+            790 BINARY_OP               13 (+=)
+            794 STORE_FAST               2 (testds_file_index)
+
+616         796 LOAD_GLOBAL             19 (NULL + create_daily_stats)
+            808 LOAD_FAST                3 (daily_result)
+            810 PRECALL                  1
+            814 CALL                     1
+            824 STORE_FAST               8 (ds)
+            826 JUMP_FORWARD            36 (to 900)
+
+619     >>  828 LOAD_GLOBAL             19 (NULL + create_daily_stats)
+            840 LOAD_FAST                3 (daily_result)
+            842 PRECALL                  1
+            846 CALL                     1
+            856 STORE_FAST               8 (ds)
+
+620         858 LOAD_FAST               10 (df)
+            860 LOAD_METHOD             18 (append)
+            882 LOAD_FAST                8 (ds)
+            884 PRECALL                  1
+            888 CALL                     1
+            898 STORE_FAST               8 (ds)
+
+621     >>  900 LOAD_GLOBAL              0 (os)
+            912 LOAD_ATTR                2 (path)
+            922 LOAD_METHOD              3 (join)
+            944 LOAD_FAST                0 (trade_dir_path)
+            946 LOAD_CONST               2 ('result')
+            948 LOAD_FAST                1 (trade_id)
+
+622         950 LOAD_CONST               3 ('testds_to_json')
+            952 LOAD_GLOBAL             15 (NULL + str)
+            964 LOAD_FAST                2 (testds_file_index)
+            966 PRECALL                  1
+            970 CALL                     1
+            980 BINARY_OP                0 (+)
+            984 LOAD_CONST               6 ('.json')
+            986 BINARY_OP                0 (+)
+
+621         990 PRECALL                  4
+            994 CALL                     4
+           1004 STORE_FAST               7 (testds_file_path)
+
+623        1006 NOP
+
+624        1008 LOAD_FAST                8 (ds)
+           1010 LOAD_METHOD             19 (to_json)
+           1032 LOAD_FAST                7 (testds_file_path)
+           1034 LOAD_CONST              14 ('iso')
+           1036 LOAD_CONST              15 ('split')
+           1038 KW_NAMES                16
+           1040 PRECALL                  3
+           1044 CALL                     3
+           1054 POP_TOP
+           1056 LOAD_CONST               0 (None)
+           1058 RETURN_VALUE
+        >> 1060 PUSH_EXC_INFO
+
+625        1062 LOAD_GLOBAL             40 (BaseException)
+           1074 CHECK_EXC_MATCH
+           1076 EXTENDED_ARG             1
+           1078 POP_JUMP_FORWARD_IF_FALSE   456 (to 1992)
+           1080 POP_TOP
+
+626        1082 LOAD_GLOBAL             43 (NULL + strategy_log)
+           1094 LOAD_ATTR               22 (error)
+           1104 LOAD_CONST              17 ('更新{}文件失败')
+           1106 LOAD_METHOD             23 (format)
+           1128 LOAD_FAST                7 (testds_file_path)
+           1130 PRECALL                  1
+           1134 CALL                     1
+           1144 PRECALL                  1
+           1148 CALL                     1
+           1158 POP_TOP
+
+627        1160 NOP
+
+629        1162 LOAD_GLOBAL             29 (NULL + pd)
+           1174 LOAD_ATTR               24 (set_option)
+           1184 LOAD_CONST              18 ('display.max_columns')
+           1186 LOAD_CONST               0 (None)
+           1188 PRECALL                  2
+           1192 CALL                     2
+           1202 POP_TOP
+
+631        1204 LOAD_GLOBAL             29 (NULL + pd)
+           1216 LOAD_ATTR               24 (set_option)
+           1226 LOAD_CONST              19 ('display.max_rows')
+           1228 LOAD_CONST               0 (None)
+           1230 PRECALL                  2
+           1234 CALL                     2
+           1244 POP_TOP
+
+633        1246 LOAD_GLOBAL             29 (NULL + pd)
+           1258 LOAD_ATTR               24 (set_option)
+           1268 LOAD_CONST              20 ('display.width')
+           1270 LOAD_CONST              21 (5000)
+           1272 PRECALL                  2
+           1276 CALL                     2
+           1286 POP_TOP
+
+634        1288 LOAD_GLOBAL             43 (NULL + strategy_log)
+           1300 LOAD_ATTR               22 (error)
+           1310 LOAD_FAST                8 (ds)
+           1312 PRECALL                  1
+           1316 CALL                     1
+           1326 POP_TOP
+           1328 POP_EXCEPT
+           1330 LOAD_CONST               0 (None)
+           1332 RETURN_VALUE
+        >> 1334 PUSH_EXC_INFO
+
+635        1336 LOAD_GLOBAL             40 (BaseException)
+           1348 CHECK_EXC_MATCH
+           1350 EXTENDED_ARG             1
+           1352 POP_JUMP_FORWARD_IF_FALSE   315 (to 1984)
+           1354 POP_TOP
+
+636        1356 LOAD_GLOBAL             51 (NULL + system_log)
+           1368 LOAD_ATTR               22 (error)
+           1378 LOAD_CONST              22 ('打印ds失败')
+           1380 PRECALL                  1
+           1384 CALL                     1
+           1394 POP_TOP
+
+637        1396 NOP
+
+638        1398 LOAD_GLOBAL              0 (os)
+           1410 LOAD_ATTR                2 (path)
+           1420 LOAD_METHOD              3 (join)
+           1442 LOAD_FAST                0 (trade_dir_path)
+           1444 LOAD_CONST               2 ('result')
+           1446 LOAD_FAST                1 (trade_id)
+           1448 LOAD_CONST              23 ('testds_to_json.csv')
+           1450 PRECALL                  4
+           1454 CALL                     4
+           1464 STORE_FAST               7 (testds_file_path)
+
+639        1466 LOAD_FAST                8 (ds)
+           1468 LOAD_METHOD             26 (to_csv)
+           1490 LOAD_FAST                7 (testds_file_path)
+           1492 LOAD_CONST              24 (False)
+           1494 KW_NAMES                25
+           1496 PRECALL                  2
+           1500 CALL                     2
+           1510 POP_TOP
+           1512 JUMP_FORWARD           227 (to 1968)
+        >> 1514 PUSH_EXC_INFO
+
+640        1516 LOAD_GLOBAL             40 (BaseException)
+           1528 CHECK_EXC_MATCH
+           1530 POP_JUMP_FORWARD_IF_FALSE   214 (to 1960)
+           1532 POP_TOP
+
+641        1534 LOAD_GLOBAL             51 (NULL + system_log)
+           1546 LOAD_ATTR               22 (error)
+           1556 LOAD_CONST              26 ('保存{}文件失败')
+           1558 LOAD_METHOD             23 (format)
+           1580 LOAD_FAST                7 (testds_file_path)
+           1582 PRECALL                  1
+           1586 CALL                     1
+           1596 PRECALL                  1
+           1600 CALL                     1
+           1610 POP_TOP
+
+642        1612 NOP
+
+643        1614 LOAD_GLOBAL              0 (os)
+           1626 LOAD_ATTR                2 (path)
+           1636 LOAD_METHOD              3 (join)
+           1658 LOAD_FAST                0 (trade_dir_path)
+           1660 LOAD_CONST               2 ('result')
+           1662 LOAD_FAST                1 (trade_id)
+           1664 LOAD_CONST              27 ('testds_to_json.txt')
+           1666 PRECALL                  4
+           1670 CALL                     4
+           1680 STORE_FAST               7 (testds_file_path)
+
+644        1682 LOAD_GLOBAL             25 (NULL + open)
+           1694 LOAD_FAST                7 (testds_file_path)
+           1696 LOAD_CONST              28 ('w')
+           1698 PRECALL                  2
+           1702 CALL                     2
+           1712 BEFORE_WITH
+           1714 STORE_FAST              11 (fw)
+
+645        1716 LOAD_FAST               11 (fw)
+           1718 LOAD_METHOD             27 (write)
+           1740 LOAD_FAST                8 (ds)
+           1742 LOAD_METHOD             28 (to_string)
+           1764 LOAD_CONST              24 (False)
+           1766 KW_NAMES                25
+           1768 PRECALL                  1
+           1772 CALL                     1
+           1782 PRECALL                  1
+           1786 CALL                     1
+           1796 POP_TOP
+
+644        1798 LOAD_CONST               0 (None)
+           1800 LOAD_CONST               0 (None)
+           1802 LOAD_CONST               0 (None)
+           1804 PRECALL                  2
+           1808 CALL                     2
+           1818 POP_TOP
+           1820 JUMP_FORWARD            11 (to 1844)
+        >> 1822 PUSH_EXC_INFO
+           1824 WITH_EXCEPT_START
+           1826 POP_JUMP_FORWARD_IF_TRUE     4 (to 1836)
+           1828 RERAISE                  2
+        >> 1830 COPY                     3
+           1832 POP_EXCEPT
+           1834 RERAISE                  1
+        >> 1836 POP_TOP
+           1838 POP_EXCEPT
+           1840 POP_TOP
+           1842 POP_TOP
+        >> 1844 JUMP_FORWARD            55 (to 1956)
+        >> 1846 PUSH_EXC_INFO
+
+646        1848 LOAD_GLOBAL             40 (BaseException)
+           1860 CHECK_EXC_MATCH
+           1862 POP_JUMP_FORWARD_IF_FALSE    42 (to 1948)
+           1864 POP_TOP
+
+647        1866 LOAD_GLOBAL             51 (NULL + system_log)
+           1878 LOAD_ATTR               22 (error)
+           1888 LOAD_CONST              26 ('保存{}文件失败')
+           1890 LOAD_METHOD             23 (format)
+           1912 LOAD_FAST                7 (testds_file_path)
+           1914 PRECALL                  1
+           1918 CALL                     1
+           1928 PRECALL                  1
+           1932 CALL                     1
+           1942 POP_TOP
+           1944 POP_EXCEPT
+           1946 JUMP_FORWARD             4 (to 1956)
+
+646     >> 1948 RERAISE                  0
+        >> 1950 COPY                     3
+           1952 POP_EXCEPT
+           1954 RERAISE                  1
+        >> 1956 POP_EXCEPT
+           1958 JUMP_FORWARD             8 (to 1976)
+
+640     >> 1960 RERAISE                  0
+        >> 1962 COPY                     3
+           1964 POP_EXCEPT
+           1966 RERAISE                  1
+
+639     >> 1968 POP_EXCEPT
+           1970 POP_EXCEPT
+           1972 LOAD_CONST               0 (None)
+           1974 RETURN_VALUE
+        >> 1976 POP_EXCEPT
+           1978 POP_EXCEPT
+           1980 LOAD_CONST               0 (None)
+           1982 RETURN_VALUE
+
+635     >> 1984 RERAISE                  0
+        >> 1986 COPY                     3
+           1988 POP_EXCEPT
+           1990 RERAISE                  1
+
+625     >> 1992 RERAISE                  0
+        >> 1994 COPY                     3
+           1996 POP_EXCEPT
+           1998 RERAISE                  1
+ExceptionTable:
+  1008 to 1054 -> 1060 [0]
+  1060 to 1158 -> 1994 [1] lasti
+  1162 to 1326 -> 1334 [1]
+  1334 to 1394 -> 1986 [2] lasti
+  1398 to 1510 -> 1514 [2]
+  1512 to 1512 -> 1986 [2] lasti
+  1514 to 1610 -> 1962 [3] lasti
+  1614 to 1712 -> 1846 [3]
+  1714 to 1796 -> 1822 [4] lasti
+  1798 to 1820 -> 1846 [3]
+  1822 to 1828 -> 1830 [6] lasti
+  1830 to 1834 -> 1846 [3]
+  1836 to 1836 -> 1830 [6] lasti
+  1838 to 1842 -> 1846 [3]
+  1844 to 1844 -> 1962 [3] lasti
+  1846 to 1942 -> 1950 [4] lasti
+  1944 to 1946 -> 1962 [3] lasti
+  1948 to 1948 -> 1950 [4] lasti
+  1950 to 1954 -> 1962 [3] lasti
+  1956 to 1958 -> 1986 [2] lasti
+  1960 to 1960 -> 1962 [3] lasti
+  1962 to 1966 -> 1986 [2] lasti
+  1968 to 1968 -> 1994 [1] lasti
+  1976 to 1976 -> 1994 [1] lasti
+  1984 to 1984 -> 1986 [2] lasti
+  1986 to 1992 -> 1994 [1] lasti

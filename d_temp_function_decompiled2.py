@@ -1,4 +1,4 @@
-# Source Generated with Decompyle++ (Python version)
+﻿# Source Generated with Decompyle++ (Python version)
 # File: function.pyc (Python 3.11)
 
 global THREAD_STATUS
@@ -27,7 +27,7 @@ def local_to_utc(local_dt, utc_format='%Y-%m-%dT%H:%M:%S.000Z'):
     elif isinstance(local_dt, datetime.datetime):
         dt = local_dt
     else:
-        raise RuntimeError(_('不支持的时间类型'))
+        raise RuntimeError(_('涓嶆敮鎸佺殑鏃堕棿绫诲瀷'))
     local_dt = local_tz.localize(dt, is_dst=None)
     utc_dt = local_dt.astimezone(pytz.utc)
     return utc_dt.strftime(utc_format)
@@ -225,6 +225,7 @@ def create_orders_stats(daily_result):
         order['dt'] = datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%SZ')
         order['cancel_amount'] = _order.amount if _order.entrust_direction == EntrustDirection.BUY else -_order.amount
         order['filled'] = _order.filled_amount if _order.entrust_direction == EntrustDirection.BUY else -_order.filled_amount
+        order['filled'] = None
         if len(future_positions) > 0:
             for position in future_positions:
                 if _order.symbol in position.values():
@@ -266,6 +267,7 @@ def create_transactions_stats(daily_result):
         transaction['security'] = trade['symbol'].replace('.XSHG', '.SS').replace('.XSHE', '.SZ')
         transaction['price'] = trade['last_price']
         transaction['amount'] = trade['last_amount'] if trade['entrust_direction'] == 'BUY' else -trade['last_amount']
+        transaction['amount'] = None
         transaction['commission'] = trade['commission'] + trade['tax']
         transaction['dt'] = datetime.datetime.strptime(trade['trading_datetime'], '%Y-%m-%d %H:%M:%S').strftime('%Y-%m-%dT%H:%M:%SZ')
         if len(positions) > 0:
@@ -303,8 +305,7 @@ def create_daily_stats(daily_result, is_csv=False, need_dataframe=True):
             period_label = daily_result[account]['date'].strftime('%Y-%m')
             period_open = daily_result[account]['date'].strftime('%Y-%m-%dT01:31:00.000Z')
             break
-    else:
-        daily_dts = None
+    daily_dts = None
     if need_dataframe:
         orders = []
         positions = []
@@ -342,29 +343,28 @@ def save_testds_to_json(trade_dir_path, trade_id, testds_file_index, daily_resul
     testds_file_path = os.path.join(trade_dir_path, 'result', trade_id, 'testds_to_json' + str(testds_file_index) + '.json')
     try:
         ds.to_json(testds_file_path, date_format='iso', orient='split')
-        return None
     except BaseException:
-        strategy_log.error('更新{}文件失败'.format(testds_file_path))
+        strategy_log.error('鏇存柊{}鏂囦欢澶辫触'.format(testds_file_path))
         try:
             pd.set_option('display.max_columns', None)
             pd.set_option('display.max_rows', None)
             pd.set_option('display.width', 5000)
             strategy_log.error(ds)
-            return None
         except BaseException:
-            system_log.error('打印ds失败')
+            system_log.error('鎵撳嵃ds澶辫触')
             try:
                 testds_file_path = os.path.join(trade_dir_path, 'result', trade_id, 'testds_to_json.csv')
                 ds.to_csv(testds_file_path, index=False)
             except BaseException:
-                system_log.error('保存{}文件失败'.format(testds_file_path))
+                system_log.error('淇濆瓨{}鏂囦欢澶辫触'.format(testds_file_path))
                 try:
                     testds_file_path = os.path.join(trade_dir_path, 'result', trade_id, 'testds_to_json.txt')
                     with open(testds_file_path, 'w') as fw:
                         fw.write(ds.to_string(index=False))
                 except BaseException:
-                    system_log.error('保存{}文件失败'.format(testds_file_path))
+                    system_log.error('淇濆瓨{}鏂囦欢澶辫触'.format(testds_file_path))
             return None
+        return None
 def get_update_backtest_info_writer(backtest_dir_path, backtest_id, user_id):
     if SERVER_TYPE == '1':
         backtest_info_path = os.path.join(backtest_dir_path, user_id, BACKTEST_INFO_FILE)
