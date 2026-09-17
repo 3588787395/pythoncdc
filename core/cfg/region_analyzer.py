@@ -15631,7 +15631,20 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 if mr_owner and not isinstance(block_region, (MatchRegion, BoolOpRegion)):
                     continue
 
+            _owning_boolop = None
             if isinstance(block_region, BoolOpRegion) and block_region.entry != block:
+                _owning_boolop = block_region
+            else:
+                for _br in self._filter_regions(boolop_regions or [], BoolOpRegion):
+                    if block in _br.blocks and _br.entry != block and _br.merge_block is block:
+                        _owning_boolop = _br
+                        break
+                if _owning_boolop is None:
+                    for _br in self.regions:
+                        if isinstance(_br, BoolOpRegion) and block in _br.blocks and _br.entry != block and _br.merge_block is block:
+                            _owning_boolop = _br
+                            break
+            if _owning_boolop is not None:
                 # [Phase 3 adv14_boolop_result_compare] 双角色 merge_block
                 # 例外：值上下文 BoolOpRegion 的 merge_block 可能含
                 # COMPARE_OP + POP_JUMP_IF_FALSE（如 ``(a and b) == (c and d)``
@@ -15640,14 +15653,32 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 # if 条件入口。这是「每块唯一归属」原则的明确例外，类似
                 # loop_condition_blocks 例外，遵循同样的归约层次化原则。
                 _is_merge_if_condition = (
-                    block_region.merge_block is block
-                    and not getattr(block_region, 'is_condition_context', True)
+                    not getattr(_owning_boolop, 'is_condition_context', True)
                     and any(i.opname == 'COMPARE_OP' for i in block.instructions)
                     and last_instr is not None
                     and last_instr.opname in FORWARD_CONDITIONAL_JUMP_OPS
                 )
+                # 例外2：BoolOp merge_block 含 value_target STORE + 若干中间 STORE
+                # + 尾部 POP_JUMP_IF_*（如 ``x = a or b; y = f(); if not z: raise``）。
+                # 此时 merge_block 既是 BoolOp 值归并点又含独立的 guard clause if。
+                _is_merge_with_guard_clause = False
+                if (_owning_boolop.value_target is not None
+                        and last_instr is not None
+                        and last_instr.opname in FORWARD_CONDITIONAL_JUMP_OPS):
+                    _vt_store_idx = None
+                    _other_store_after_vt = False
+                    for _ii, _instr in enumerate(block.instructions):
+                        if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_ATTR', 'STORE_SUBSCR'):
+                            if _vt_store_idx is None and hasattr(_instr, 'argval') and _instr.argval == _owning_boolop.value_target:
+                                _vt_store_idx = _ii
+                            elif _vt_store_idx is not None and _ii < len(block.instructions) - 1:
+                                _other_store_after_vt = True
+                    if _vt_store_idx is not None and _other_store_after_vt:
+                        _is_merge_with_guard_clause = True
                 if _is_merge_if_condition:
                     pass  # 允许后续创建 IfRegion
+                elif _is_merge_with_guard_clause:
+                    pass
                 elif any(block in br.blocks and br.entry != block for br in self._filter_regions(boolop_regions or [], BoolOpRegion)):
                     continue
                 else:
@@ -15669,6 +15700,25 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
 
             condition_block = block
             chain_blocks = set()
+            _merge_boolop_guard_prefix_end = None
+            if _owning_boolop is not None and _is_merge_with_guard_clause:
+                _vt_store_idx2 = None
+                for _ii, _instr in enumerate(block.instructions):
+                    if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_ATTR', 'STORE_SUBSCR'):
+                        if hasattr(_instr, 'argval') and _instr.argval == _owning_boolop.value_target:
+                            _vt_store_idx2 = _ii
+                            break
+                if _vt_store_idx2 is not None:
+                    _last_store_after_vt = _vt_store_idx2
+                    for _ii in range(_vt_store_idx2 + 1, len(block.instructions) - 1):
+                        _instr = block.instructions[_ii]
+                        if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_ATTR', 'STORE_SUBSCR'):
+                            _last_store_after_vt = _ii
+                    _cond_start = _last_store_after_vt + 1
+                    while _cond_start < len(block.instructions) and block.instructions[_cond_start].opname in NOISE_OPS:
+                        _cond_start += 1
+                    if _cond_start < len(block.instructions):
+                        _merge_boolop_guard_prefix_end = block.instructions[_cond_start].offset
             # 当 TernaryRegion 处于 if 条件上下文时，将 condition_block
             # 重定向到 ternary 的 merge_block（实际 if 测试发生处，如
             # `if (a if c else d) and b: pass` 中的 `LOAD b; POP_JUMP_IF_FALSE`）。
@@ -16931,6 +16981,8 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             if region is not None and chained_compare_info:
                 region.chained_compare_blocks = list(chained_compare_info.get('extra_chain_blocks', []))
                 region.chained_compare_ops = chained_compare_info.get('compare_ops', [])
+            if region is not None and _merge_boolop_guard_prefix_end is not None:
+                region.guard_clause_prefix_end = _merge_boolop_guard_prefix_end
             if region is not None:
                 if os.environ.get('DBG_OR') and _main_inline_boolop_chain is not None:
                     print(f'[DBG_OR] region-built: type={type(region).__name__} '
@@ -17559,6 +17611,23 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                             if not _tb_meaningful:
                                 _then_has_loop_ctrl_exit = True
                                 break
+            _then_has_raise = False
+            for tb in then_blocks:
+                if not tb.successors:
+                    _tb_last = tb.get_last_instruction()
+                    if _tb_last and _tb_last.opname == 'RAISE_VARARGS':
+                        _then_has_raise = True
+                        break
+            if _then_has_raise:
+                _else_has_matching_raise = False
+                for eb in else_blocks_:
+                    if not eb.successors:
+                        _eb_last = eb.get_last_instruction()
+                        if _eb_last and _eb_last.opname == 'RAISE_VARARGS':
+                            _else_has_matching_raise = True
+                            break
+                if not _else_has_matching_raise:
+                    _then_has_ctrl_exit = True
             if _then_has_explicit_return:
                 _else_has_matching_exit = False
                 for eb in else_blocks_:
@@ -17589,7 +17658,8 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     if len(_first_else.conditional_successors) == 2:
                         _fe_last = _first_else.get_last_instruction()
                         if _fe_last and _fe_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS):
-                            _then_has_ctrl_exit = False
+                            if not _then_has_raise:
+                                _then_has_ctrl_exit = False
                         # 反编译逻辑推导（elif降级修复·模式1）：
                         # elif链中含return/raise的分支，其return已提供"退出"语义，
                         # 后续条件块仍属于同一个if-elif链。判定elif的关键不是前一个
@@ -19216,7 +19286,19 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     other = succs[1 - i]
                     jt = self.cfg.get_block_by_offset(s_last.argval)
                     if jt is not other:
-                        return False
+                        _allow_boolop_merge = False
+                        if s_last.opname in SHORT_CIRCUIT_JUMP_OPS and jt is not None:
+                            for _br in boolop_regions:
+                                if isinstance(_br, BoolOpRegion) and _br.merge_block is jt:
+                                    _allow_boolop_merge = True
+                                    break
+                            if not _allow_boolop_merge:
+                                for _br in self.regions:
+                                    if isinstance(_br, BoolOpRegion) and _br.merge_block is jt:
+                                        _allow_boolop_merge = True
+                                        break
+                        if not _allow_boolop_merge:
+                            return False
             if not (self._is_single_expression_block(succs[0]) and
                     self._is_single_expression_block(succs[1])):
                 return False
@@ -19925,12 +20007,35 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 # false_block，这是嵌套 if（如 `if a: if b: ...`），不是 ternary。
                 # BoolOp 链中条件块跳转目标 == false_block；嵌套 if 跳转目标不同。
                 _true_last_check = true_block.get_last_instruction()
+                _boolop_merge_to_ternary = False
                 if (_true_last_check and _true_last_check.argval is not None
                         and _true_last_check.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS)):
                     _jt_check = self.cfg.get_block_by_offset(_true_last_check.argval)
                     if _jt_check is not false_block:
-                        return None
+                        if _true_last_check.opname in SHORT_CIRCUIT_JUMP_OPS and _jt_check is not None:
+                            _boolop_for_merge = None
+                            for _br in boolop_regions:
+                                if isinstance(_br, BoolOpRegion) and _br.merge_block is _jt_check:
+                                    _boolop_for_merge = _br
+                                    break
+                            if _boolop_for_merge is None:
+                                for _br in self.regions:
+                                    if isinstance(_br, BoolOpRegion) and _br.merge_block is _jt_check:
+                                        _boolop_for_merge = _br
+                                        break
+                            if _boolop_for_merge is not None:
+                                _bm_last = _jt_check.get_last_instruction()
+                                if _bm_last and _bm_last.opname == 'JUMP_FORWARD' and _bm_last.argval is not None:
+                                    _bm_target = self.cfg.get_block_by_offset(_bm_last.argval)
+                                    if _bm_target is not None:
+                                        _fb_succs = list(false_block.successors)
+                                        if _bm_target in _fb_succs or _bm_target is false_block:
+                                            _boolop_merge_to_ternary = True
+                        if not _boolop_merge_to_ternary:
+                            return None
                 false_is_ternary = False
+                if _boolop_merge_to_ternary and self._is_single_expression_block(true_block) and self._is_single_expression_block(false_block):
+                    false_is_ternary = True
                 # Detect JUMP_FORWARD pattern: ternary in while-loop condition.
                 # When true_block ends with FORWARD_CONDITIONAL_JUMP (the while
                 # condition test) and its fallthrough successor ends with

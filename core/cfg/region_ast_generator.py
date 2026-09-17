@@ -11435,6 +11435,29 @@ AST 映射规则:
             _elif_boolop_merge_owner = _r
             break
         pre_stmts, cond_instrs = [], []
+        import os as _os_ebm
+        if _os_ebm.environ.get('EBM_DEBUG'):
+            import sys as _sys_ebm
+            print(f"[EBM] _elif_boolop_merge_owner={_elif_boolop_merge_owner is not None} cond_block=@{cond_block.start_offset}", file=_sys_ebm.stderr)
+            if _elif_boolop_merge_owner is None:
+                for _r in self.regions:
+                    if isinstance(_r, BoolOpRegion) and getattr(_r, 'merge_block', None) is not None:
+                        _skip_reason = []
+                        if getattr(_r, 'merge_block', None) is not cond_block:
+                            _skip_reason.append('merge!=cond')
+                        if _r is region:
+                            _skip_reason.append('is_region')
+                        if id(_r) in self._generated_regions:
+                            _skip_reason.append('generated')
+                        if id(_r) in self._generating_regions:
+                            _skip_reason.append('generating')
+                        if _r.entry is None:
+                            _skip_reason.append('entry_none')
+                        if _r.entry is cond_block:
+                            _skip_reason.append('entry_is_cond')
+                        if not _r.value_target:
+                            _skip_reason.append('no_value_target')
+                        print(f"[EBM] BoolOpRegion entry=@{_r.entry.start_offset} merge=@{_r.merge_block.start_offset} skip={_skip_reason}", file=_sys_ebm.stderr)
         if _elif_boolop_merge_owner is not None:
             _bo_result = self._generate_boolop(_elif_boolop_merge_owner)
             if _bo_result:
@@ -30292,7 +30315,24 @@ AST 映射规则:
                         # 丢失（quotation.pyc 回归 143→142）。此时完全跳过：
                         # 不派发、不标记 blocks、不提取 post-store，交由父区域
                         # 处理，保持 HEAD 行为。
-                        if (_downstream_r35 is not None
+                        # [guard_clause_prefix_end] 当下游 IfRegion 拥有
+                        # guard_clause_prefix_end 属性时，表明 merge_block 的
+                        # value_target STORE 之后含顺序代码 + guard clause if。
+                        # 此时不提取 post-store（由 IfRegion 的 _elif_boolop_merge_owner
+                        # 机制处理），也不提前派发（IfRegion 由顶层 containment 派发）。
+                        _guard_clause_skip = False
+                        if _downstream_r35 is None:
+                            for _gcr in self.regions:
+                                if (isinstance(_gcr, IfRegion)
+                                        and getattr(_gcr, 'entry', None) is region.merge_block
+                                        and hasattr(_gcr, 'guard_clause_prefix_end')
+                                        and id(_gcr) not in self._generating_regions
+                                        and id(_gcr) not in self._generated_regions):
+                                    _guard_clause_skip = True
+                                    break
+                        if _guard_clause_skip:
+                            return None
+                        elif (_downstream_r35 is not None
                                 and getattr(_downstream_r35, 'parent', None) is None):
                             _ds_ast_r35 = self._generate_region(_downstream_r35)
                             if _ds_ast_r35:
@@ -30312,7 +30352,7 @@ AST 映射规则:
                         # 之后的 elif 条件指令（POP_JUMP_FORWARD_IF_FALSE），
                         # 与 IfRegion 派发叠加导致 elif 条件丢失
                         # （quotation.pyc 回归 143→142）。
-                    if not _merge_is_other_entry_r10f3 or not _merge_has_structured_entry_r35:
+                    if not _merge_is_other_entry_r10f3 or not _merge_has_structured_entry_r35 or _guard_clause_skip:
                         # [Round 35b] 无双角色块、或全部认领者均为 BASIC 退化容器
                         # 区域（generate() 顶部为孤儿块建的普通 Region，仅含 merge
                         # 块本身、不向外延伸，如 blk@300 同时是 BoolOpRegion.merge
