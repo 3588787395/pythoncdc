@@ -244,45 +244,6 @@ def compare_bytecode(orig_code: types.CodeType, decomp_code: types.CodeType) -> 
     orig_instrs = _filter_noise_instrs(orig_instrs_raw)
     decomp_instrs = _filter_noise_instrs(decomp_instrs_raw)
 
-    # [R60] Normalize if-then-return vs if-then-jump-to-shared-return.
-    # Must run BEFORE all other normalizations to keep instruction indices aligned.
-    # Pattern: orig has JUMP_FORWARD (skipping else block to a shared return None
-    # at function end), while decomp has LOAD_CONST(None)+RETURN_VALUE directly
-    # in the then-block. Additionally, orig has a shared LOAD_CONST(None)+
-    # RETURN_VALUE at the JUMP_FORWARD target that decomp doesn't have separately.
-    # Strategy: Remove JUMP_FORWARD and shared return from orig, remove
-    # LOAD_CONST+RETURN_VALUE from decomp, so lengths align.
-    def _normalize_if_then_return_vs_jump(orig, decomp):
-        if len(orig) == len(decomp):
-            return orig, decomp
-        for i in range(min(len(orig), len(decomp))):
-            o = orig[i]
-            d = decomp[i]
-            if (o.opname == 'JUMP_FORWARD'
-                    and d.opname == 'LOAD_CONST' and d.argval is None
-                    and i + 1 < len(decomp)
-                    and decomp[i + 1].opname == 'RETURN_VALUE'):
-                target_offset = o.argval
-                target_idx = None
-                for k in range(len(orig)):
-                    if orig[k].offset == target_offset:
-                        target_idx = k
-                        break
-                if target_idx is not None and target_idx + 1 < len(orig):
-                    if (orig[target_idx].opname == 'LOAD_CONST'
-                            and orig[target_idx].argval is None
-                            and orig[target_idx + 1].opname == 'RETURN_VALUE'):
-                        new_orig = orig[:i] + orig[i + 1:target_idx] + orig[target_idx + 2:]
-                        new_decomp = decomp[:i] + decomp[i + 2:]
-                        if len(new_orig) == len(new_decomp):
-                            mc = sum(1 for k in range(len(new_orig))
-                                     if new_orig[k].opname == new_decomp[k].opname)
-                            if mc > len(new_orig) * 0.8:
-                                return new_orig, new_decomp
-        return orig, decomp
-
-    orig_instrs, decomp_instrs = _normalize_if_then_return_vs_jump(orig_instrs, decomp_instrs)
-
     # [R44] Trim trailing implicit "return None" from decompiled code.
     # Python functions implicitly return None. The compiler may or may not
     # emit an explicit LOAD_CONST None + RETURN_VALUE at the end depending
@@ -774,19 +735,7 @@ def compare_bytecode(orig_code: types.CodeType, decomp_code: types.CodeType) -> 
                         inlined_end = j
                         if inlined_end > inlined_start:
                             new_decomp = list(decomp[:i]) + list(decomp[inlined_end:])
-                            # Also trim the same block from orig if it has
-                            # the same pattern (POP_EXCEPT at position i,
-                            # LOAD_CONST+RETURN_VALUE at inlined_end)
-                            new_orig = orig
-                            if (i < len(orig)
-                                    and orig[i].opname == 'POP_EXCEPT'):
-                                for j2 in range(i + 1, min(i + 15, len(orig))):
-                                    if (orig[j2].opname == 'LOAD_CONST'
-                                            and j2 + 1 < len(orig)
-                                            and orig[j2 + 1].opname == 'RETURN_VALUE'):
-                                        new_orig = list(orig[:i]) + list(orig[j2:])
-                                        break
-                            return new_decomp, new_orig
+                            return new_decomp, orig
                         break
                 break
         return decomp, orig
@@ -873,83 +822,6 @@ def compare_bytecode(orig_code: types.CodeType, decomp_code: types.CodeType) -> 
         return orig, decomp
 
     orig_instrs, decomp_instrs = _normalize_if_elif_try_reorder(orig_instrs, decomp_instrs)
-
-    # [R105] Normalize exception handler cleanup differences. The compiler
-    # generates dead exception cleanup blocks that the decompiler may not
-    # reproduce exactly. When orig has extra instructions forming exception
-    # cleanup patterns, try removing them to align with decomp.
-    # Pattern A: Extra POP_EXCEPT + POP_EXCEPT + LOAD_CONST None + RETURN_VALUE
-    #   in nested try/except normal exit paths (risk_calc/function.pyc)
-    # Pattern B: Extra RERAISE + COPY + POP_EXCEPT + RERAISE
-    #   in exception handler re-raise paths (instance.pyc)
-    def _trim_extra_except_cleanup(orig, decomp):
-        if len(orig) <= len(decomp):
-            return orig, decomp
-        _exc_ops = frozenset({'POP_EXCEPT', 'RERAISE', 'COPY',
-                              'PUSH_EXC_INFO', 'LOAD_CONST', 'RETURN_VALUE',
-                              'RETURN_CONST', 'JUMP_FORWARD', 'CHECK_EXC_MATCH',
-                              'POP_TOP'})
-        for i in range(len(orig) - 3):
-            # Pattern A: POP_EXCEPT + POP_EXCEPT + LOAD_CONST(None) + RETURN_VALUE
-            if (orig[i].opname == 'POP_EXCEPT'
-                    and orig[i + 1].opname == 'POP_EXCEPT'
-                    and orig[i + 2].opname == 'LOAD_CONST'
-                    and orig[i + 2].argval is None
-                    and orig[i + 3].opname == 'RETURN_VALUE'):
-                if (i < len(decomp) - 3
-                        and decomp[i].opname == 'POP_EXCEPT'
-                        and decomp[i + 1].opname == 'POP_EXCEPT'
-                        and decomp[i + 2].opname == 'LOAD_CONST'
-                        and decomp[i + 2].argval is None
-                        and decomp[i + 3].opname == 'RETURN_VALUE'):
-                    continue
-                after_block = orig[i + 4:]
-                new_orig = orig[:i] + after_block
-                if len(new_orig) == len(decomp):
-                    match_count = sum(
-                        1 for k in range(len(new_orig))
-                        if new_orig[k].opname == decomp[k].opname
-                    )
-                    if match_count > len(new_orig) * 0.9:
-                        return new_orig, decomp
-            # Pattern B: RERAISE(n) + COPY(3) + POP_EXCEPT + RERAISE(1)
-            if (i + 3 < len(orig)
-                    and orig[i].opname == 'RERAISE'
-                    and orig[i + 1].opname == 'COPY'
-                    and orig[i + 1].arg == 3
-                    and orig[i + 2].opname == 'POP_EXCEPT'
-                    and orig[i + 3].opname == 'RERAISE'):
-                if (i < len(decomp) - 3
-                        and decomp[i].opname == 'RERAISE'
-                        and decomp[i + 1].opname == 'COPY'
-                        and decomp[i + 1].arg == 3
-                        and decomp[i + 2].opname == 'POP_EXCEPT'
-                        and decomp[i + 3].opname == 'RERAISE'):
-                    continue
-                after_block = orig[i + 4:]
-                new_orig = orig[:i] + after_block
-                if len(new_orig) == len(decomp):
-                    match_count = sum(
-                        1 for k in range(len(new_orig))
-                        if new_orig[k].opname == decomp[k].opname
-                    )
-                    if match_count > len(new_orig) * 0.9:
-                        return new_orig, decomp
-        return orig, decomp
-
-    orig_instrs, decomp_instrs = _trim_extra_except_cleanup(orig_instrs, decomp_instrs)
-
-    # Re-trim trailing return None after R103 may have changed instruction counts.
-    while (len(decomp_instrs) >= 2
-            and _ends_with_return_none(decomp_instrs)
-            and len(orig_instrs) < len(decomp_instrs)):
-        decomp_instrs = decomp_instrs[:-2]
-
-    # Re-trim trailing return None after R103 may have changed instruction counts.
-    while (len(decomp_instrs) >= 2
-            and _ends_with_return_none(decomp_instrs)
-            and len(orig_instrs) < len(decomp_instrs)):
-        decomp_instrs = decomp_instrs[:-2]
 
     # [R59] Normalize LOAD_GLOBAL -> LOAD_DEREF for closure variables.
     # The decompiler sometimes fails to recognize cell/free variables in
