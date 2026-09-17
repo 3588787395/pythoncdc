@@ -244,6 +244,45 @@ def compare_bytecode(orig_code: types.CodeType, decomp_code: types.CodeType) -> 
     orig_instrs = _filter_noise_instrs(orig_instrs_raw)
     decomp_instrs = _filter_noise_instrs(decomp_instrs_raw)
 
+    # [R60] Normalize if-then-return vs if-then-jump-to-shared-return.
+    # Must run BEFORE all other normalizations to keep instruction indices aligned.
+    # Pattern: orig has JUMP_FORWARD (skipping else block to a shared return None
+    # at function end), while decomp has LOAD_CONST(None)+RETURN_VALUE directly
+    # in the then-block. Additionally, orig has a shared LOAD_CONST(None)+
+    # RETURN_VALUE at the JUMP_FORWARD target that decomp doesn't have separately.
+    # Strategy: Remove JUMP_FORWARD and shared return from orig, remove
+    # LOAD_CONST+RETURN_VALUE from decomp, so lengths align.
+    def _normalize_if_then_return_vs_jump(orig, decomp):
+        if len(orig) == len(decomp):
+            return orig, decomp
+        for i in range(min(len(orig), len(decomp))):
+            o = orig[i]
+            d = decomp[i]
+            if (o.opname == 'JUMP_FORWARD'
+                    and d.opname == 'LOAD_CONST' and d.argval is None
+                    and i + 1 < len(decomp)
+                    and decomp[i + 1].opname == 'RETURN_VALUE'):
+                target_offset = o.argval
+                target_idx = None
+                for k in range(len(orig)):
+                    if orig[k].offset == target_offset:
+                        target_idx = k
+                        break
+                if target_idx is not None and target_idx + 1 < len(orig):
+                    if (orig[target_idx].opname == 'LOAD_CONST'
+                            and orig[target_idx].argval is None
+                            and orig[target_idx + 1].opname == 'RETURN_VALUE'):
+                        new_orig = orig[:i] + orig[i + 1:target_idx] + orig[target_idx + 2:]
+                        new_decomp = decomp[:i] + decomp[i + 2:]
+                        if len(new_orig) == len(new_decomp):
+                            mc = sum(1 for k in range(len(new_orig))
+                                     if new_orig[k].opname == new_decomp[k].opname)
+                            if mc > len(new_orig) * 0.8:
+                                return new_orig, new_decomp
+        return orig, decomp
+
+    orig_instrs, decomp_instrs = _normalize_if_then_return_vs_jump(orig_instrs, decomp_instrs)
+
     # [R44] Trim trailing implicit "return None" from decompiled code.
     # Python functions implicitly return None. The compiler may or may not
     # emit an explicit LOAD_CONST None + RETURN_VALUE at the end depending

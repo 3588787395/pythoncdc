@@ -24635,6 +24635,19 @@ AST 映射规则:
                                                    for i in succ.instructions)
                                     )
                                     if _is_exc_cleanup:
+                                        _cleanup_only_ops = frozenset({
+                                            'RERAISE', 'POP_EXCEPT', 'PUSH_EXC_INFO',
+                                            'COPY', 'SWAP', 'POP_TOP',
+                                            'RESUME', 'NOP', 'CACHE', 'PUSH_NULL',
+                                            'EXTENDED_ARG',
+                                        })
+                                        _has_user_code = any(
+                                            i.opname not in _cleanup_only_ops
+                                            for i in succ.instructions
+                                        )
+                                        if _has_user_code:
+                                            _is_exc_cleanup = False
+                                    if _is_exc_cleanup:
                                         continue
                                     _then_succ = succ
                                     then_stmts = self._generate_block_statements(succ)

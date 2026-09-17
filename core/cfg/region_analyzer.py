@@ -14800,6 +14800,9 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 chained_compare_regions.append(region)
                 self.regions.append(region)
                 claimed.update(region.blocks)
+                for b in region.blocks:
+                    if b not in self.block_to_region:
+                        self.block_to_region[b] = region
 
         return chained_compare_regions
 
@@ -15448,6 +15451,15 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             # 跳过链式比较的额外链块：这些块是链式比较条件的一部分，
             # 不应被当作独立的 if/elif 条件块处理
             if block in chained_compare_extra_blocks:
+                continue
+            # 区域归约算法原则 2（每块唯一归属）：当 block 已被链式比较
+            # IfRegion 归属（block_region 是带 chained_compare_ops 的
+            # IfRegion 且 entry == block），不应再创建独立 IfRegion。
+            # 否则会创建重叠的双 IfRegion（如 entry=952 同时有 IF 和
+            # IF_THEN_ELSE），导致 pass then-body 的链式比较被错误展开。
+            if (isinstance(block_region, IfRegion)
+                    and block_region.entry is block
+                    and getattr(block_region, 'chained_compare_ops', None)):
                 continue
 
             if any(instr.opname in ('PUSH_EXC_INFO', 'CHECK_EXC_MATCH', 'CHECK_EG_MATCH', 'PREP_RERAISE_STAR') for instr in block.instructions):
@@ -18753,8 +18765,12 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
         # When negated (if not a < b < c: body), the fallthrough
         # (real_then) is the if-body entry (e.g., raise block). The fallthrough
         # may be a pure JUMP_FORWARD connector — follow it to find the actual
-        # body block. When not negated, then_blocks=[] (body is after
-        # merge_block, handled by parent region).
+        # body block.
+        # When not negated and merge_block is a pure JUMP_FORWARD connector,
+        # follow it to find the actual then-body (e.g., return offline_login).
+        # This produces `if a < b < c: body else: else_body` instead of
+        # `if a < b < c: pass` + post-if statement, which better matches
+        # the original bytecode when the then-body is non-trivial.
         _blocks = []
         if _negated and real_then:
             _body = real_then
@@ -18766,10 +18782,35 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     _body = _jt
                     all_blocks.add(_body)
             _blocks = [_body]
+        elif not _negated and merge_block is not None:
+            _merge_last = merge_block.get_last_instruction()
+            if (_merge_last and _merge_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                    and _merge_last.argval is not None):
+                _merge_jt = self.cfg.get_block_by_offset(_merge_last.argval)
+                if _merge_jt is not None:
+                    _blocks = [_merge_jt]
+                    all_blocks.add(_merge_jt)
+                    all_blocks.discard(merge_block)
+                    merge_block = _merge_jt
+        # Follow JUMP_FORWARD connectors in else_blocks to find the actual else body
+        _resolved_else_blocks = []
+        for _eb in else_blocks:
+            _eb_last = _eb.get_last_instruction()
+            if (_eb_last and _eb_last.opname in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                    and _eb_last.argval is not None):
+                _eb_jt = self.cfg.get_block_by_offset(_eb_last.argval)
+                if _eb_jt is not None:
+                    _resolved_else_blocks.append(_eb_jt)
+                    all_blocks.add(_eb_jt)
+                else:
+                    _resolved_else_blocks.append(_eb)
+            else:
+                _resolved_else_blocks.append(_eb)
+        else_blocks = _resolved_else_blocks
         region = IfRegion(
             region_type=RegionType.IF, entry=header, blocks=all_blocks,
             condition_block=header, then_blocks=_blocks,
-            else_blocks=[real_else],
+            else_blocks=else_blocks,
             merge_block=merge_block, chained_compare_blocks=all_compare_blocks,
             chained_compare_ops=compare_ops,
         )
@@ -25675,6 +25716,7 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             region.merge_block is not None
         )
         region.metadata['is_empty_then_chained_compare'] = is_empty_then_with_merge
+        region.is_empty_then_chained_compare = is_empty_then_with_merge
 
         if region.merge_block:
             meaningful_instrs = [
