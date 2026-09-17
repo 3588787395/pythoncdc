@@ -14436,7 +14436,16 @@ AST 映射规则:
                 if not _fe_meaningful and len(_fe_block.successors) == 1:
                     _fe_succ = list(_fe_block.successors)[0]
                     if _fe_succ.start_offset not in _existing_offsets:
-                        if _fe_succ in region.else_blocks or _fe_succ.start_offset in _all_else_offsets:
+                        # [R64 fix] 当 cleanup 块的后续块是终止块（RETURN_VALUE）
+                        # 或属于本区域 else_blocks 时，应纳入 elif_final_else。
+                        # 原实现仅检查 _fe_succ in region.else_blocks，导致
+                        # `elif a<=b<=c: return True else: return False` 中
+                        # return False 块（外层 IfRegion 的 merge_block）不被
+                        # 纳入 elif_final_else，else 分支丢失。
+                        _fe_succ_last = _fe_succ.get_last_instruction()
+                        _is_terminal = (_fe_succ_last is not None
+                                        and _fe_succ_last.opname in ('RETURN_VALUE', 'RETURN_CONST'))
+                        if _fe_succ in region.else_blocks or _fe_succ.start_offset in _all_else_offsets or _is_terminal:
                             _expanded_final_else.append(_fe_succ)
                             _existing_offsets.add(_fe_succ.start_offset)
             if len(_expanded_final_else) > len(region.elif_final_else):
@@ -14496,9 +14505,19 @@ AST 映射规则:
                             self.generated_blocks.add(elif_cond_block)
                             for _ccb in (_r.chained_compare_blocks or []):
                                 self.generated_blocks.add(_ccb)
-                            # 标记子 IfRegion 的 merge_block（通常是 POP_TOP 块）
+                            # [R64 fix] 标记子 IfRegion 的 merge_block——仅当其为
+                            # 纯连接件（无有效语句）时标记；若 merge_block 含
+                            # 实际语句（如 LOAD_CONST True; RETURN_VALUE），
+                            # 它属于 elif then-body，交由 _process_if_blocks 生成，
+                            # 此处标记会导致 elif body 的 return True 丢失
+                            # （region_mean_desicion 的 `elif a<=b<=c: pass` 问题）。
                             if hasattr(_r, 'merge_block') and _r.merge_block:
-                                self.generated_blocks.add(_r.merge_block)
+                                _mb_meaningful = [i for i in _r.merge_block.instructions
+                                                  if i.opname not in ('RESUME', 'NOP', 'CACHE', 'POP_TOP',
+                                                                      'JUMP_FORWARD', 'JUMP_BACKWARD',
+                                                                      'JUMP_ABSOLUTE')]
+                                if not _mb_meaningful:
+                                    self.generated_blocks.add(_r.merge_block)
                             # 标记子 IfRegion 的 else_blocks（通常是 POP_TOP 跳转块）
                             for _eb in (_r.else_blocks or []):
                                 _eb_meaningful = [i for i in _eb.instructions
@@ -15431,6 +15450,14 @@ AST 映射规则:
                 if tb is not None:
                     false_targets.append(tb)
         # 有界前向遍历：从假出口出发是否可达 merge_block
+        # [R64 fix] 当 IfRegion 嵌套在 LoopRegion 内时，假出口沿
+        # JUMP_BACKWARD 回到循环头→重入循环体→经 then 路径到达 merge_block，
+        # 这条路径跨越了循环迭代边界，并非同一 IfRegion 调用的假→真路径。
+        # 修正：将 BFS 限制在 IfRegion 自身块集内——假出口逃出 IfRegion 后
+        # 不会在同一次条件求值中重新进入 then 臂到达 merge_block。
+        _region_block_ids = {id(b) for b in region.blocks}
+        if mb is not None:
+            _region_block_ids.add(id(mb))
         seen = set()
         stack = list(false_targets)
         steps = 0
@@ -15444,7 +15471,7 @@ AST 映射规则:
             if b is mb:
                 return False
             for s in getattr(b, 'successors', ()) or ():
-                if s is not None and id(s) not in seen:
+                if s is not None and id(s) not in seen and id(s) in _region_block_ids:
                     stack.append(s)
         return True
 
