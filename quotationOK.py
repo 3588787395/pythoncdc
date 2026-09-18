@@ -315,7 +315,8 @@ def fill_minute_or_day_blank(klines, nowstart, nowend, typet, stocks, forward='p
                     temp_value = numpy.array([numpy.nan] * len(dts))
                     klines_pre = pandas.DataFrame({'open': temp_value, 'close': temp_value, 'high': temp_value, 'low': temp_value, 'volume': temp_value, 'money': temp_value}, index=dts)
                     klines = pandas.concat([klines_pre, klines], sort=True)
-    return klines
+            else:
+                return klines
 def load_minute_or_day_kline(stocks, typet, start, end):
     if is_binary == '1':
         if len(start) > 8:
@@ -521,7 +522,7 @@ def load_bars_from_hundsun(stocks, typet, start, end):
                 dailypanel = dailypanel.ix[:, source_start:source_end]
                 retpanel = dailypanel.ix[stocks, :]
                 return retpanel
-            elif len(diffset) < len(stocks):
+            if len(diffset) < len(stocks):
                 sectionstocks = list(set(stocks).intersection(set(dailypanel.items)))
                 dailypanel = dailypanel.ix[:, source_start:source_end]
                 retpanel = dailypanel.ix[sectionstocks, :]

@@ -18901,6 +18901,19 @@ AST 映射规则:
         for b in _block_set:
             if b in self.generated_blocks:
                 continue
+            # [R1 fix] When a block is both a LoopRegion's for_iter_setup AND
+            # a TryExceptRegion's entry, the TryExceptRegion (enclosing wrapper)
+            # must take priority. Without this guard, _loop_entry_generate claims
+            # the block first (checked at line 19008), generating the inner loop
+            # without the try/except/finally wrapper. Example: for-loop inside
+            # try/finally where the for_iter_setup block is the TRY entry.
+            _is_try_entry = False
+            for _tr_check in self.region_analyzer.regions:
+                if isinstance(_tr_check, TryExceptRegion) and _tr_check.entry is b:
+                    _is_try_entry = True
+                    break
+            if _is_try_entry:
+                continue
             for _lr in self.region_analyzer.regions:
                 if not isinstance(_lr, LoopRegion):
                     continue
