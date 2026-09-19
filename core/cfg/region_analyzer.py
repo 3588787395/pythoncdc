@@ -10244,7 +10244,44 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 return []
 
         else_blocks = []
-        for block in self.cfg.get_blocks_in_order():
+        # [R3-I 修复] handler→merge 可达性守卫（try/except/else 的字节码证据）。
+        # 识别条件→归约方式→AST 映射：
+        #   识别条件：`try: A except: B else: C` 的字节码中，try 体正常出口
+        #     JUMP_FORWARD 跳过 handler 区间到达 else 入口 C，且至少一个
+        #     handler 的【正常完成路径】（POP_EXCEPT 后 JUMP_FORWARD/JUMP_ABSOLUTE
+        #     前向边，不经异常边、不经 try 体）到达 else 之后的公共汇合点。
+        #     当所有 handler 都以 return/raise/RERAISE 终止时，"else 体" 与
+        #     "try 语句之后的顺序代码" 字节码完全相同——按最简形式归约，
+        #     [precise_handler_end, merge_point) 区间的块是 try 之后的顺序
+        #     代码（归外层结构所有），不是 else 子句。
+        #   归约方式：BFS 自全部 handler 块沿正常后继扩展（排除异常后继与
+        #     try 体块），检测 merge_point 可达性；不可达则本分支不收集
+        #     else_blocks（各块交还原归属区域发射）。
+        #   AST 映射：有可达证据 → [区间块] 组成 ast.Try.orelse；无证据 →
+        #     try 语句无 orelse，顺序代码由父序列按入口引用语义生成。
+        def _r3i_handler_reaches_merge():
+            _visited = set()
+            _queue = []
+            for _, _, _hblocks in try_region.except_handlers:
+                for _hb in _hblocks:
+                    _queue.append(_hb)
+            while _queue:
+                _cur = _queue.pop()
+                if id(_cur) in _visited:
+                    continue
+                _visited.add(id(_cur))
+                if _cur is merge_point:
+                    return True
+                if _cur in set(try_region.try_blocks or []):
+                    continue
+                for _succ in _cur.successors:
+                    if _succ in _cur.exception_successors:
+                        continue
+                    if id(_succ) not in _visited:
+                        _queue.append(_succ)
+            return False
+        _handler_reaches_merge = _r3i_handler_reaches_merge()
+        for block in (self.cfg.get_blocks_in_order() if _handler_reaches_merge else []):
             if (block.start_offset > precise_handler_end and
                 block.start_offset < merge_point.start_offset and
                 block not in all_handler_blocks and
@@ -17256,7 +17293,35 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                                     for b in else_blocks):
                                     _then_jumps_over_else = True
                     if not _then_jumps_over_else:
-                        else_blocks = []
+                        # [R3-I 修复] merge=None + else 全为终结 return 块时，
+                        # else 是显式 else 体（`if c: X else: return ...`）。
+                        # 识别条件→归约方式→AST 映射：
+                        #   识别条件：merge=None（then 分支与 else 目标无公共
+                        #     后必经节点——then 分支的控制流不流入 else 目标块，
+                        #     else 目标块也不在 then_blocks 中），且 else_blocks
+                        #     全部是无后继、以 RETURN_VALUE/RETURN_CONST 终结
+                        #     的块（显式 return 体，非 fall-through 续流）。
+                        #     对照失效形态：`if c: return X` 无 else 且 if 后
+                        #     还有后继代码 Y 时，false 边目标是 Y（非终结块），
+                        #     不会命中本判据；if 为函数末语句时 false 边目标
+                        #     是隐式 return 块，两种形式字节等价，保留 else
+                        #     亦重编译一致。
+                        #   归约方式：保留 else_blocks 为真实 else 分支，不按
+                        #     trivial 清除（清除会使 else 体语句位移到 try 体
+                        #     尾/函数尾，破坏 if 的 false 边目标结构）。
+                        #   AST 映射：IfRegion.orelse = [Return(...)]，由
+                        #     _if_generate_branch_stmts 发射。
+                        def _r3i_else_terminal_return(_blk):
+                            _last = _blk.get_last_instruction()
+                            return (not _blk.successors
+                                    and _last is not None
+                                    and _last.opname in ('RETURN_VALUE', 'RETURN_CONST'))
+                        _r3i_else_terminal = (
+                            merge is None
+                            and else_blocks
+                            and all(_r3i_else_terminal_return(_b) for _b in else_blocks))
+                        if not _r3i_else_terminal:
+                            else_blocks = []
         if else_blocks:
             then_terminates_with_raise = False
             if then_blocks:
@@ -22308,9 +22373,35 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 pred_jump_target = self.cfg.get_block_by_offset(pred_last.argval) if pred_last.argval is not None else None
                 pred_ft = next((s for s in pred_succs if s != pred_jump_target), None)
                 if pred_ft and pred_jump_target:
-                    cond_in_loop = (pred_ft in loop.blocks or pred_ft == loop.entry or
+                    # [R3-L 修复] 循环「体语义」集合：body_blocks + header/entry/
+                    # condition_block。LoopRegion.blocks 还包含 _find_loop_else
+                    # 并入的 else_blocks（循环自然出口 = 循环后的顺序续流块），
+                    # 用 blocks 判定「跳转目标在循环外」会把【跳到自然出口】的
+                    # 合法条件链前驱误判为「仍在循环内」。
+                    # 识别条件→归约方式→AST 映射：
+                    #   识别条件：`while A and B:` 的旋转 while 形态中，CPython
+                    #     把 A、B 两个测试的短路出口编译到【同一个】自然出口块
+                    #     （未触发 peephole 出口复制时）；A 测试块是 cond_block
+                    #     （B 测试块）的前驱，其条件跳转目标 == 循环自然出口。
+                    #   归约方式：回溯游标自 cond_block 逐前驱吸收条件链操作数，
+                    #     跳转目标落在体语义集合之外（= 循环出口）即视为合法
+                    #     短路出口前驱，吸收进链首（配合下方 op_type 反转守卫
+                    #     处理 `not X` 操作数）。
+                    #   AST 映射：链块序列交由 _create_boolop_region_from_chain
+                    #     生成 BoolOpRegion（while 条件子区域），_loop_generate_
+                    #     while 经 boolop_for_while 重建 ast.While.test =
+                    #     BoolOp(and, [A', B])，链块内的前导 STORE 由 op_chain
+                    #     分段器提取为 While 前置语句（原则 2 每块唯一归属）。
+                    _loop_body_semantic = set(loop.body_blocks or [])
+                    if loop.header_block is not None:
+                        _loop_body_semantic.add(loop.header_block)
+                    if loop.entry is not None:
+                        _loop_body_semantic.add(loop.entry)
+                    if loop.condition_block is not None:
+                        _loop_body_semantic.add(loop.condition_block)
+                    cond_in_loop = (pred_ft in _loop_body_semantic or pred_ft == loop.entry or
                                     pred_ft == loop.condition_block or pred_ft == loop.header_block)
-                    else_outside = (pred_jump_target not in loop.blocks and
+                    else_outside = (pred_jump_target not in _loop_body_semantic and
                                      pred_jump_target != loop.entry and
                                      pred_jump_target != loop.condition_block)
                     # 区域归约算法原则 2（每块唯一归属）+ 原则 3
@@ -23863,6 +23954,85 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                             and _w14_cand_t is not _w14_t0
                             and not self._is_equivalent_exit_block(_w14_t0, _w14_cand_t)):
                         break
+                # [R3-K 修复·IF_TRUE 候选出口一致性校验] 首成员为 IF_FALSE
+                # （and 链）时，IF_TRUE 族候选块只有两种合法身份：
+                #   (a) 负极性 and 操作数（`... and not X`）：真 = 失败路径，
+                #       其真目标必须与链共同出口 T0（首成员跳转目标）为同一块
+                #       或等价平凡出口——失败路径汇聚原则；
+                #   (b) and→or 段转换的 or 成员：真 = 成功路径 → 体（body），
+                #       假（fallthrough）→ 下一 or 成员或链出口。此读法要求：
+                #       从候选沿 fallthrough 走到的每个 IF_TRUE 成员的真目标
+                #       都等于候选的真目标（唯一成功汇聚点），且段尾
+                #       fallthrough 等于 T0，或段尾为以下一个 and 段成员
+                #       （其假目标 = T0）。
+                # 两种读法都不成立时，候选块是嵌套 if 的条件块（如
+                # `if A and B: { if not C: X else: Y }` 的内层条件块：真出口
+                # 指向内层 else 体、fallthrough 指向内层 then 体，二者均不是
+                # 外层链的出口或体入口）——立即断链，把该块交还 IfRegion
+                # 层级重建嵌套结构。若照旧吸收，内层 if 的 else 体会被提升为
+                # 无条件语句、外层条件被整体取反（语义反转）。
+                elif (_w14_first_li is not None
+                        and _w14_first_li.argval is not None
+                        and _w14_first_li.opname in ('POP_JUMP_FORWARD_IF_FALSE',
+                                                     'POP_JUMP_IF_FALSE')
+                        and last.opname in ('POP_JUMP_FORWARD_IF_TRUE',
+                                            'POP_JUMP_IF_TRUE')):
+                    _r3k_t0 = self.cfg.get_block_by_offset(_w14_first_li.argval)
+                    _r3k_cand_t = (self.cfg.get_block_by_offset(last.argval)
+                                   if last.argval is not None else None)
+                    # 读法 (a)：负极性 and 操作数——真目标 ≡ 链共同出口
+                    _r3k_neg_polarity = (
+                        _r3k_cand_t is not None and _r3k_t0 is not None
+                        and (_r3k_cand_t is _r3k_t0
+                             or self._is_equivalent_exit_block(_r3k_t0, _r3k_cand_t)))
+                    if not _r3k_neg_polarity:
+                        # 读法 (b)：or 段成员——真目标 = 全段唯一成功汇聚点，
+                        # 段尾 fallthrough 回到共同出口 T0 或衔接下一 and 段
+                        _r3k_or_member = False
+                        _r3k_walk = current
+                        _r3k_seen = set()
+                        _r3k_body_t = _r3k_cand_t
+                        _r3k_steps = 0
+                        while (_r3k_walk is not None
+                               and _r3k_walk.start_offset not in _r3k_seen
+                               and _r3k_steps < 8):
+                            _r3k_seen.add(_r3k_walk.start_offset)
+                            _r3k_steps += 1
+                            _r3k_li = _r3k_walk.get_last_instruction()
+                            if (_r3k_li is None or _r3k_li.argval is None
+                                    or _r3k_li.opname not in ('POP_JUMP_FORWARD_IF_TRUE',
+                                                              'POP_JUMP_IF_TRUE')):
+                                break
+                            _r3k_t = self.cfg.get_block_by_offset(_r3k_li.argval)
+                            if _r3k_t is not _r3k_body_t:
+                                break
+                            _r3k_ft = next((s for s in _r3k_walk.conditional_successors
+                                            if s.start_offset != _r3k_li.argval), None)
+                            if _r3k_ft is None:
+                                break
+                            if (_r3k_t0 is not None
+                                    and (_r3k_ft is _r3k_t0
+                                         or self._is_equivalent_exit_block(_r3k_t0, _r3k_ft))):
+                                _r3k_or_member = True
+                                break
+                            _r3k_ft_li = _r3k_ft.get_last_instruction()
+                            if (_r3k_ft_li is not None and _r3k_ft_li.argval is not None
+                                    and _r3k_ft_li.opname in ('POP_JUMP_FORWARD_IF_FALSE',
+                                                              'POP_JUMP_IF_FALSE')):
+                                # 段尾衔接下一 and 段成员：其假目标必须 = T0
+                                _r3k_next_t = self.cfg.get_block_by_offset(_r3k_ft_li.argval)
+                                if (_r3k_next_t is not None
+                                        and (_r3k_next_t is _r3k_t0
+                                             or self._is_equivalent_exit_block(_r3k_t0, _r3k_next_t))):
+                                    _r3k_or_member = True
+                                break
+                            if (_r3k_ft_li is None
+                                    or _r3k_ft_li.opname not in ('POP_JUMP_FORWARD_IF_TRUE',
+                                                                 'POP_JUMP_IF_TRUE')):
+                                break
+                            _r3k_walk = _r3k_ft
+                        if not _r3k_or_member:
+                            break
             # 区域归约算法原则 1（归约顺序）+ 原则 2（每块唯一
             # 归属）：IF_NONE/IF_NOT_NONE 的 op_type 需要根据跳转目标判断。
             # IF_NONE 语义："TOS is None -> jump"，既可能是 or 短路（条件

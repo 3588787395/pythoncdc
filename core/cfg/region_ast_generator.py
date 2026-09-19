@@ -4285,6 +4285,31 @@ AST 映射规则:
                         _bp2 = getattr(_bp2, 'parent', None)
                     if not _inside_current_loop:
                         _boolop_for_iter = None
+                # [R3-L 修复] while 复合条件 BoolOpRegion 的 merge_block（while
+                # 自然出口）可能同时是后续 for 循环的 for_iter_setup 块。此时该
+                # BoolOpRegion 是【其他 while 循环】的条件子区域（parent 为那个
+                # LoopRegion 且 op_chain 覆盖其 condition_block），不是本 for
+                # 循环的迭代表达式——误用会把 while 条件渲染为
+                # `for x in not a and b:`（迭代器丢失）。
+                # 识别条件→归约方式→AST 映射：
+                #   识别条件：BoolOpRegion.parent 是非当前 region 的 LoopRegion
+                #     L，且 L.condition_block 属于本 BoolOpRegion 的 op_chain 块
+                #     集合（即该 BoolOpRegion 由 _detect_while_condition_boolop_
+                #     chain 挂载为 L 的 while 条件子区域）。
+                #   归约方式：结构判据直接排除该候选（_boolop_for_iter=None），
+                #     迭代表达式交由下方 for_iter_setup 指令级重建路径
+                #     （LOAD_FAST + GET_ITER）提取，两区域各自归属（原则 2）。
+                #   AST 映射：while 条件仍由 _loop_generate_while 的
+                #     boolop_for_while 路径生成 ast.While.test；本 for 循环的
+                #     iter 由 setup 块指令重建 ast.For.iter，互不侵占。
+                if (_boolop_for_iter is not None
+                        and isinstance(getattr(_boolop_for_iter, 'parent', None), LoopRegion)
+                        and _boolop_for_iter.parent is not region):
+                    _bp_loop = _boolop_for_iter.parent
+                    _chain_blocks_bfi = {b for b, _ in (_boolop_for_iter.op_chain or [])}
+                    if (_bp_loop.condition_block is not None
+                            and _bp_loop.condition_block in _chain_blocks_bfi):
+                        _boolop_for_iter = None
             if _boolop_for_iter is not None:
                 # _generate_boolop 的 iter-context 分支可能已写入 condition_expr
                 # 并标记块已生成；优先复用，否则现场重建。
@@ -5632,8 +5657,21 @@ AST 映射规则:
                                     else:
                                         segments.append(current_segment)
                                         current_segment = []
+                                # [R3-M 修复] POP_TOP 表达式语句终结（见上方
+                                # 回边重检分段器同款修复）：while 复合条件链块的
+                                # 前导语句段可能含 `f(); ...` 纯表达式语句，仅按
+                                # STORE 分段会把 POP_TOP 段并入后续赋值段，
+                                # reconstruct 非 Assign 返回时被丢弃 → 语句丢失。
+                                # 在 POP_TOP 处切分，段级 fallback
+                                # （reconstruct/Assign 判定）产出 ast.Expr。
+                                elif (i.opname == 'POP_TOP'
+                                        and _unpack_remaining == 0
+                                        and len(current_segment) > 1):
+                                    segments.append(current_segment)
+                                    current_segment = []
                         if current_segment:
                             segments.append(current_segment)
+                            current_segment = []
                         for segment in segments:
                             if segment:
                                 _has_unpack = any(i.opname in ('UNPACK_SEQUENCE', 'UNPACK_EX') for i in segment)
@@ -5704,6 +5742,27 @@ AST 映射规则:
                                 else:
                                     _store_segs.append(_cur_seg)
                                     _cur_seg = []
+                            # [R3-M 修复] POP_TOP 是「表达式语句终结指令」（CPython
+                            # 以 POP_TOP 丢弃表达式求值结果）。回边重检块常融合
+                            # 多条语句（如 `self.sleep(3); redata, flag = f();
+                            # count += 1` 后随条件重检），若仅按 STORE 分段，
+                            # POP_TOP 结尾的纯表达式语句会被并入下一段的
+                            # UNPACK 赋值重建（_build_unpack_assign_from_segment
+                            # 只回溯 UNPACK 前的求值指令），语句整体丢失。
+                            # 识别条件→归约方式→AST 映射：
+                            #   识别条件：栈深为 0 处的 POP_TOP（无未消费 UNPACK
+                            #     目标）且当前段非空。
+                            #   归约方式：在 POP_TOP 处切分语句段，每段独立走
+                            #     下方 _has_unpack / _build_store_statement /
+                            #     _build_statement 三级重建（POP_TOP 段由
+                            #     _build_statement 产出 ast.Expr 调用语句）。
+                            #   AST 映射：每段一条语句，顺序保持原指令顺序，
+                            #     归还循环体语句流（原则 2 每块唯一归属）。
+                            elif (_si.opname == 'POP_TOP'
+                                    and _unpack_remaining == 0
+                                    and len(_cur_seg) > 1):
+                                _store_segs.append(_cur_seg)
+                                _cur_seg = []
                         if _cur_seg:
                             _store_segs.append(_cur_seg)
                         for _seg in _store_segs:
@@ -7344,12 +7403,34 @@ AST 映射规则:
                                 and (_hdr_jt_r08 is _cond_exit_r08
                                      or self._is_equivalent_exit_block(
                                          _hdr_jt_r08, _cond_exit_r08))):
+                            # [R3-L 修复] 极性判定覆盖 NONE_CHECK 跳转：
+                            # POP_JUMP_FORWARD_IF_FALSE / IF_NOT_NONE 都是
+                            # 「操作数为假时跳出口」（and 链正向操作数）；
+                            # POP_JUMP_FORWARD_IF_TRUE / IF_NONE 都是
+                            # 「操作数为真时跳出口」（取反操作数 `not X`，
+                            # CPython 以反转跳转方向实现）。原判据只查
+                            # 'FALSE'/'TRUE' 子串，`while a is None and b:`
+                            # 的首操作数块（POP_JUMP_FORWARD_IF_NOT_NONE
+                            # 跳出口）被误判极性不符 → header 重检尾未被
+                            # 抑制，渲染成体内伪 if + return 折叠。
+                            def _r3l_jump_on_true(_opname: str):
+                                # True: 操作数为真时跳转；False: 为假时跳转
+                                if 'IF_FALSE' in _opname or 'IF_NOT_NONE' in _opname:
+                                    return False
+                                if 'IF_TRUE' in _opname or 'IF_NONE' in _opname:
+                                    return True
+                                return None
+                            _hdr_jot_r08 = _r3l_jump_on_true(_hdr_last_r08.opname)
+                            _chain_has_neg_r08 = False
+                            for _cb_r08b, _ in boolop_for_while.op_chain:
+                                _cb_last_r08b = _cb_r08b.get_last_instruction()
+                                if (_cb_last_r08b is not None
+                                        and _r3l_jump_on_true(_cb_last_r08b.opname) is True):
+                                    _chain_has_neg_r08 = True
+                                    break
                             _polarity_ok_r08 = (
-                                'FALSE' in _hdr_last_r08.opname
-                                or any(
-                                    (cb.get_last_instruction() is not None
-                                     and 'TRUE' in cb.get_last_instruction().opname)
-                                    for cb, _ in boolop_for_while.op_chain))
+                                _hdr_jot_r08 is False
+                                or (_hdr_jot_r08 is True and _chain_has_neg_r08))
                             _be_r08 = region.back_edge_block
                             if _polarity_ok_r08 and _be_r08 is not None:
                                 # [W44 修复] fall-through 排除异常边（原则 2：
@@ -16074,6 +16155,34 @@ AST 映射规则:
             for b in _elif_exclude:
                 self.generated_blocks.add(b)
             then_stmts = self._if_generate_then_branch(region)
+            # [R3-Continue] 分支终结边 continue 发射：merge_block 与当前循环
+            # 头重合、且 then 分支终结边 JUMP_BACKWARD 直达循环头时，该分支
+            # 是 `continue` 终结分支，必须在 then 体末尾发射显式 Continue。
+            # 「back_edge_block 的 JUMP_BACKWARD 隐式 continue」旧约定只适用
+            # 于循环共享回边块本身；当 if/elif 链后还有后续语句（如
+            # is_ST_stock_real 的 result[i]=False）时，直达循环头的分支终结
+            # 边若不发射 Continue，重编译会 fall-through 进 elif/后续语句
+            # （result[i]=True 分支丢 continue，True 被覆盖为 False）。
+            if (then_stmts
+                    and self._current_loop is not None
+                    and getattr(region, 'merge_block', None) is not None
+                    and region.merge_block is getattr(self._current_loop, 'header_block', None)):
+                _r3t_blocks = sorted((region.then_blocks or []),
+                                     key=lambda b: b.start_offset)
+                if _r3t_blocks:
+                    _r3t_last = _r3t_blocks[-1].get_last_instruction()
+                    if (_r3t_last is not None
+                            and _r3t_last.opname in ('JUMP_BACKWARD',
+                                                     'JUMP_BACKWARD_NO_INTERRUPT')
+                            and _r3t_last.argval is not None
+                            and _r3t_last.argval == region.merge_block.start_offset):
+                        _has_terminal = any(
+                            isinstance(_ts, dict)
+                            and _ts.get('type') in ('Continue', 'Break',
+                                                    'Return', 'Raise')
+                            for _ts in then_stmts)
+                        if not _has_terminal:
+                            then_stmts.append({'type': 'Continue'})
             if then_stmts:
                 _terminal_idx = None
                 for _ti, _ts in enumerate(then_stmts):

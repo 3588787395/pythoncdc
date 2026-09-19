@@ -709,6 +709,27 @@ def compare_bytecode(orig_code: types.CodeType, decomp_code: types.CodeType) -> 
     # Detect: find POP_EXCEPT in decomp after an except handler's POP_TOP.
     # The instructions between POP_EXCEPT and the next LOAD_CONST+RETURN_VALUE
     # are the inlined finally. Remove them.
+    #
+    # Symmetry guards (R104b fix): pruning is one-sided by nature, so it must
+    # only fire when the two sides genuinely disagree at this position, i.e.
+    # ALL of the following hold:
+    #   1. orig at the POP_EXCEPT index is NOT another POP_EXCEPT. If orig also
+    #      has POP_EXCEPT there, both sides share the same except-tail layout
+    #      (handler exit + dead RERAISE cleanup + loop back-edge + implicit
+    #      return-None) — that window is original control plumbing present on
+    #      BOTH sides, not a decomp-only inlined finally. Pruning it would
+    #      fabricate 11+ phantom diffs (e.g. check_and_update_trade, whose
+    #      recompiled output is byte-identical to orig).
+    #   2. orig goes straight to the return at this position
+    #      (LOAD_CONST+RETURN_VALUE immediately at index i) — the signature of
+    #      "orig lacks the inlined finally that decomp has". If orig has any
+    #      other body in that span, the sides differ structurally and the diff
+    #      must be preserved, not normalized away.
+    #   3. The decomp window [POP_EXCEPT, LOAD_CONST) is pure straight-line
+    #      code (no jump instructions). A real inlined finally cleanup here is
+    #      straight-line; a window containing JUMP_*/POP_JUMP_* is loop/branch
+    #      plumbing (rotated-while bottom test, back edges), never an inlined
+    #      finally.
     def _remove_inlined_finally_in_except(decomp, orig):
         found_pop_top = False
         pop_top_idx = None
@@ -727,17 +748,32 @@ def compare_bytecode(orig_code: types.CodeType, decomp_code: types.CodeType) -> 
                         pop_top_idx = i
                         continue
             if found_pop_top and d.opname == 'POP_EXCEPT':
+                # Guard 1: orig has the same POP_EXCEPT tail -> both sides
+                # agree; nothing to normalize.
+                if i < len(orig) and orig[i].opname == 'POP_EXCEPT':
+                    break
                 inlined_start = i + 1
+                inlined_end = None
                 for j in range(i + 1, min(i + 15, len(decomp))):
                     if (decomp[j].opname == 'LOAD_CONST'
                             and j + 1 < len(decomp)
                             and decomp[j + 1].opname == 'RETURN_VALUE'):
                         inlined_end = j
-                        if inlined_end > inlined_start:
-                            new_decomp = list(decomp[:i]) + list(decomp[inlined_end:])
-                            return new_decomp, orig
                         break
-                break
+                if inlined_end is None or inlined_end <= inlined_start:
+                    break
+                # Guard 2: orig must go straight to the return here (it lacks
+                # the inlined finally); otherwise keep the real diff.
+                if not (orig[i].opname == 'LOAD_CONST'
+                        and i + 1 < len(orig)
+                        and orig[i + 1].opname == 'RETURN_VALUE'):
+                    break
+                # Guard 3: decomp window must be pure straight-line (no jumps).
+                if any(decomp[k].opname.startswith(('JUMP_', 'POP_JUMP_'))
+                       for k in range(inlined_start, inlined_end)):
+                    break
+                new_decomp = list(decomp[:i]) + list(decomp[inlined_end:])
+                return new_decomp, orig
         return decomp, orig
 
     decomp_instrs, orig_instrs = _remove_inlined_finally_in_except(decomp_instrs, orig_instrs)
