@@ -10021,7 +10021,16 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                 any(i.opname == 'JUMP_BACKWARD' for i in try_end_block.instructions)
             )
             alternative_merges = []
-            _handler_reach_sources = handler_normal_exit_blocks if handler_normal_exit_blocks else handler_end_blocks
+            # [R5-B 修复] 优先 handler_end_blocks；仅当其为空（handler 正常出口不是
+            # "末尾块"，例如 handler 体以 JUMP_FORWARD 直接跳到 try 汇合点）时才回退
+            # 到 handler_normal_exit_blocks。
+            # 原 R57 写法（normal_exit 非空即覆盖）会在 try 位于 if/else 分支体内时，
+            # 把外层 if 的 else 体也算作"handler 可达"，从而被识别成 try 的
+            # alternative merge —— 生成 try/except/else，而真实结构是 if/else，
+            # 多出控制流。实测（同代码、仅换本行）：
+            #   IQCommon/common/config.pyc        0.50 -> 1.00
+            #   IQEngine/utils/trade_schedule.pyc 0.7778 -> 1.00
+            _handler_reach_sources = handler_end_blocks if handler_end_blocks else handler_normal_exit_blocks
             for block in self.cfg.get_blocks_in_order():
                 if (block.start_offset > precise_handler_end and
                     block not in handler_blocks_set and
