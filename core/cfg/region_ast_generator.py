@@ -21900,6 +21900,9 @@ AST 映射规则:
                 _handler_block_offsets.add(_hb.start_offset)
         _try_block_offsets = set(b.start_offset for b in _try_blocks_eff)
         _already_in_eff = set(b.start_offset for b in _try_blocks_eff)
+        # [R7 fix] 记录"由本 pass 判定为内联到 try 体末尾的隐式 return"的块。
+        # 下方「隐式 return」分支只允许发射这些块（见该处 [R7 fix] 注释）。
+        _inlined_ret_offsets = set()
         for _tb in list(_try_blocks_eff):
             for _succ in _tb.successors:
                 if _succ.start_offset in _already_in_eff:
@@ -21922,6 +21925,7 @@ AST 映射规则:
                 if _is_trivial_ret:
                     _try_blocks_eff.append(_succ)
                     _already_in_eff.add(_succ.start_offset)
+                    _inlined_ret_offsets.add(_succ.start_offset)
         for block in sorted(_try_blocks_eff, key=lambda b: b.start_offset):
             if block in self.generated_blocks:
                 continue
@@ -22228,13 +22232,37 @@ AST 映射规则:
                 _is_other_region_merge = any(
                     getattr(_r, 'merge_block', None) is block and _r is not region
                     for _r in self.region_analyzer.regions)
+                # [R7 fix] 只发射「由上方 [F-TRY-BODY-RETURN] pass 判定为
+                # 内联到 try 体末尾」的隐式 return。
+                #
+                # 依据（原则 2 每块唯一归属 + 原则 4 父引用子入口）：位于
+                # region.try_blocks 中的平凡 return 块并不等于"源码在 try 体末尾
+                # 写了一条 return"——它同样可能只是**外层代码对象/外层分支的
+                # 隐式 return 收尾块**（fall-through 落进 try 保护跨度内）。
+                # 后者由外层序列（函数体 / if 分支）收尾，try 体若再发射一条
+                # `return None`，源码凭空多出语句，且使原本 fall-through 的
+                # 收尾被迫改成跳转，字节码失配。
+                #
+                # 判据用「本 pass 的结构性判定」而非位置猜测：该 pass 要求
+                # 平凡 return 是 try 块的**后继**、不在 handler 内、属于
+                # region.blocks、且**无后继**——即确为 try 体正常流出的收尾。
+                # 因此发射集合 = {条件跳转目标} ∪ {该 pass 收纳的块}，
+                # 与 R53 之前的行为相比只多出后者，恰好是 R53 想修的那一类，
+                # 不再波及 try_blocks 里本就存在的收尾块。
+                # 实例：IQEngine/core/strategy/strategy.pyc（R53 起 1.0 -> 0.6316，
+                # on_handle_auction / on_handle_data / on_handle_tick /
+                # on_order_response / on_trade_response /
+                # on_strategy_signal_response / on_finalized 七个函数各多一条
+                # `return None`；其中 on_finalized 无外层 if，故不能靠
+                # "被其它区域声明" 判据识别）。
+                _is_inlined_ret = block.start_offset in _inlined_ret_offsets
                 if _is_cond_jump_target:
                     body_stmts.append({'type': 'Return',
                                        'value': {'type': 'Constant', 'value': None},
                                        '_explicit_return': True})
                 elif self._loop_depth > 0:
                     body_stmts.append({'type': 'Break'})
-                elif not _is_other_region_merge:
+                elif _is_inlined_ret and not _is_other_region_merge:
                     body_stmts.append({'type': 'Return',
                                        'value': {'type': 'Constant', 'value': None},
                                        '_explicit_return': True})
