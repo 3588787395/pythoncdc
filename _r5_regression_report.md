@@ -19,9 +19,24 @@
 | Round 6 | `26b643c7` (+`2eb85006`) | `resource_utils.pyc` 0.5000 → **1.0000** | 340 → **341 ok** |
 | Round 6 | `ce254791` | `trade_schedule.pyc` 0.7778 → **1.0000** |  |
 | Round 6 收尾 | `0ebfe9c4` | 全量复验回填真实索引 | **342 ok/60 partial（97.37%）** |
-| Round 7 | `bf49f0f8` | `strategy(IQEngine/core)` 0.6316 → **1.0000**<br>+ `strategy(fly_data)` 0.8333 → **0.9583** |（Round 7 全量复验中）|
+| Round 7 | `bf49f0f8` | `strategy(IQEngine/core)` 0.6316 → **1.0000**<br>+ `strategy(fly_data)` 0.8333 → **0.9583** |  |
+| Round 7 收尾 | `ad945ba6` + 本轮索引 | 全量复验（402/402） | **343 ok/59 partial（97.55%）** |
 
-三轮均已提交并 push 到远程（`origin/main` = `0ebfe9c4`）。
+三轮均已提交并 push 到远程（`origin/main` = `ad945ba6`）。
+
+Round 7 收尾全量复验**逐项核对 402 个文件**，只有 **6 个**数值发生变化，
+且**"旧 ok → 新 partial" 为 0 个**（即**零回归**）：
+
+| 文件 | 复验前 | 复验后 | 性质 |
+|---|---|---|---|
+| `IQEngine/core/strategy/strategy.pyc` | 0.6316 (12/19) | **1.0000 ok (19/19)** | Round 7 修复 |
+| `.../plugin_fly_data/strategy/strategy.pyc` | 0.8333 (20/24) | **0.9583 (23/24)** | Round 7 连带（回到历史基线）|
+| `IQEngine/utils/trade_schedule.pyc` | 0.7778 (7/9) | **1.0000 ok (9/9)** | Round 6 修复回填 |
+| `IQCommon/common/main.pyc` | 0.8485 (28/33) | 0.8788 (29/33) | Round 5 修复回填 |
+| `.../plugin_system_realquote/real_quote.pyc` | 0.8182 (36/44) | 0.8409 (37/44) | Round 5 修复回填 |
+| `fly/data/quotation.pyc` | 0.993000 | 0.993007 | 浮点精度（142/143 未变）|
+
+累计字节码匹配 **97.37% → 97.55%**（匹配函数 5595 → **5605**，共 5746）。
 
 > 索引口径：`batch --all` 每轮收尾全量复验。Round 6 收尾实测
 > **虚标 0 个、低估 1 个**（`trade_schedule.pyc` 已补正），说明前几轮修正后的索引是诚实的。
@@ -236,14 +251,14 @@ if isinstance(child, IfRegion) and getattr(child, 'is_empty_then_chained_compare
 > 实测确认 `pyc_batch_verify.py` 的 `batch` 用 `_import_decompiler()` 做**进程内导入**，
 > 启动后再改 `core/` 不会影响该进程（但会影响其后新启的进程）。
 
-## 七、剩余回归（Round 7 复验前口径：342 ok / 60 partial）
+## 七、剩余回归（Round 7 收尾口径：343 ok / 59 partial）
 
-Round 6 收尾全量复验给出的 60 个 partial 中，本轮修复相关的是：
+Round 6 收尾全量复验给出的 60 个 partial 中，**与本迭代窗口回归相关**的是：
 
 | 文件 | 基线 | Round 6 收尾 | 责任提交 |
 |---|---|---|---|
-| `IQEngine/core/strategy/strategy.pyc` | 1.0000 | 0.6316 | **R53 → Round 7 已修** |
-| `.../plugin_fly_data/strategy/strategy.pyc` | 0.9583 | 0.8333 | **R53 → Round 7 已修（回 0.9583）** |
+| `IQEngine/core/strategy/strategy.pyc` | 1.0000 | 0.6316 | **R53 → Round 7 `bf49f0f8` 已修回 1.0000** |
+| `.../plugin_fly_data/strategy/strategy.pyc` | 0.9583 | 0.8333 | **R53 → Round 7 已修回 0.9583** |
 | `.../plugin_system_risk_control/position_validator.pyc` | 1.0000 | 0.8000 | 待定 |
 | `fly/common/user_error.pyc` | ? | 0.5000 | 待定（**新发现，跌幅最大**）|
 | `IQEngine/plugins/plugin_system_log/__init__.pyc` | ? | 0.8000 | 待定 |
