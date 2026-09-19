@@ -122,6 +122,10 @@ class CFGBuilder:
         self._parse_exception_table()
         self._split_blocks_at_exception_boundaries()
         self._connect_blocks()
+        # [R4-G 修复] 连接完成后、出口块识别之前做短路归并点切分：
+        # 需要 predecessors/successors 已建立以便重连，且切分可能改变
+        # is_exit 归属，故必须在 _identify_exit_blocks 之前。
+        self._split_blocks_at_short_circuit_merges()
         self._identify_exit_blocks()
 
         return self.cfg
@@ -377,6 +381,185 @@ class CFGBuilder:
                 self.cfg.exit_blocks.discard(block_to_split)
 
         self.cfg.add_block(new_block)
+
+    # ==================================================================
+    # [R4-G 修复] 短路归并点块切分（区域归约算法前置归一化）
+    # ==================================================================
+    # 识别条件（纯结构判据，无函数名/文件名/常量特判）：
+    #   设基本块 B 以短路跳转 JUMP_IF_TRUE_OR_POP / JUMP_IF_FALSE_OR_POP
+    #   跳向块 T。无论从哪条边进入 T，栈顶恰好承载「短路归并值」这一个
+    #   逻辑值。沿 T 的指令前向累积栈效应（push-pop），首个使累积量转负的
+    #   指令 C 即消费该归并值的指令。若 C 属于值消费指令
+    #   （STORE_FAST/STORE_NAME/STORE_GLOBAL/STORE_DEREF/STORE_ATTR/
+    #   STORE_SUBSCR/POP_TOP/RETURN_*/YIELD_VALUE）且 C 之后 T 内仍有指令，
+    #   则 T 在同一块内跨越了语句边界。
+    # 归约方式：
+    #   在 C 之后（即 C 的下一条指令偏移）切分 T：T 只保留到 C，新块 S 承载
+    #   其余指令并继承 T 的全部后继。切分后 BoolOpRegion 的 merge_block 恰
+    #   好止于归并值消费点，「每块唯一归属」原则（区域归约原则 2）得以恢复：
+    #   归并点之后的语句与其后的 IfRegion 各自独占新的入口块，不再被
+    #   BoolOpRegion 连带吞并。
+    # 若不切分（修复前）：
+    #   `op = self.a() or self.b(); user = g(); if user is None: ...`
+    #   中归并块 T 同时含 STORE_FAST op / STORE_FAST user / if 条件，
+    #   BoolOpRegion 把整块纳入 region.blocks 并在生成时标记整块已生成，
+    #   随后以 T 为入口的 IfRegion 被静默跳过，语句整体丢失——反编译输出
+    #   只到 `op = ... or ...` 为止（或塌成 pass）。
+    # AST 映射：
+    #   `x = a or b` 恒映射为 ast.Assign(value=ast.BoolOp)，其余语句映射为
+    #   紧随其后的同级语句；两者的归属由「归并值消费点」唯一确定。
+    _R4G_SHORT_CIRCUIT_JUMPS = frozenset({
+        'JUMP_IF_TRUE_OR_POP', 'JUMP_IF_FALSE_OR_POP',
+    })
+    _R4G_VALUE_CONSUMERS = frozenset({
+        'STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+        'STORE_ATTR', 'STORE_SUBSCR', 'POP_TOP',
+        'RETURN_VALUE', 'RETURN_CONST', 'YIELD_VALUE',
+    })
+
+    def _r4g_stack_delta(self, instr) -> Tuple[int, int]:
+        """[R4-G] 归并值消费点定位专用栈效应，返回 (push, pop)。
+
+        覆盖面刻意收窄到「短路归并点之后可能出现的指令」，未列出的指令
+        返回 (0, 0)。与 region_analyzer._stack_effect 的关键差别：
+        POP_TOP 记为 (0, 1)——本 pass 正是要用「累积栈深首次转负」定位
+        归并值的消费指令。
+        """
+        op = instr.opname
+        arg = instr.arg or 0
+        if op == 'SWAP':
+            return 0, 0
+        if op in ('NOP', 'CACHE', 'EXTENDED_ARG', 'RESUME', 'PRECALL'):
+            return 0, 0
+        if op == 'POP_TOP':
+            return 0, 1
+        if op == 'COPY':
+            return 1, 0
+        if op in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF'):
+            return 0, 1
+        if op == 'STORE_ATTR':
+            return 0, 2
+        if op == 'STORE_SUBSCR':
+            return 0, 3
+        if op in ('RETURN_VALUE', 'YIELD_VALUE'):
+            return 0, 1
+        if op == 'RETURN_CONST':
+            return 0, 0
+        if op == 'LOAD_ATTR':
+            return 1, 1
+        if op == 'LOAD_METHOD':
+            return 2, 1
+        if op.startswith('LOAD_'):
+            return 1, 0
+        if op == 'BINARY_SUBSCR':
+            return 1, 2
+        if op in ('COMPARE_OP', 'IS_OP', 'CONTAINS_OP', 'BINARY_OP'):
+            return 1, 2
+        if op.startswith('UNARY_'):
+            return 1, 1
+        if op == 'BUILD_STRING':
+            return 1, arg
+        if op == 'BUILD_MAP':
+            return 1, 2 * arg
+        if op.startswith('BUILD_'):
+            return 1, arg
+        if op == 'CALL':
+            return 1, arg + 2
+        if op == 'FORMAT_VALUE':
+            return 1, 1 if arg < 2 else 2
+        if op in ('POP_JUMP_FORWARD_IF_FALSE', 'POP_JUMP_FORWARD_IF_TRUE',
+                  'POP_JUMP_BACKWARD_IF_FALSE', 'POP_JUMP_BACKWARD_IF_TRUE',
+                  'POP_JUMP_FORWARD_IF_NONE', 'POP_JUMP_FORWARD_IF_NOT_NONE',
+                  'POP_JUMP_BACKWARD_IF_NONE', 'POP_JUMP_BACKWARD_IF_NOT_NONE',
+                  'JUMP_IF_TRUE_OR_POP', 'JUMP_IF_FALSE_OR_POP'):
+            return 0, 1
+        return 0, 0
+
+    def _r4g_split_merge_target(self, target: BasicBlock) -> None:
+        """[R4-G] 在归并值消费点之后切分短路归并目标块。"""
+        instrs = [i for i in target.instructions
+                  if i.opname not in ('CACHE', 'EXTENDED_ARG')]
+        if len(instrs) < 2:
+            return
+        depth = 0
+        consume_idx = None
+        for k, instr in enumerate(instrs):
+            push, pop = self._r4g_stack_delta(instr)
+            depth += push - pop
+            if depth < 0:
+                consume_idx = k
+                break
+        if consume_idx is None:
+            return
+        consumer = instrs[consume_idx]
+        if consumer.opname not in self._R4G_VALUE_CONSUMERS:
+            return
+        if consume_idx + 1 >= len(instrs):
+            return
+        # [R4-G 修复·语句边界必要性守卫] 仅当消费点之后**确实还有新语句**
+        # 时才切分。若余下部分只是外层 if/while 的条件（取值 + 条件跳转，
+        # 无任何语句级指令），则该块形态是「赋值 + 条件」，由既有 IfRegion
+        # 机制按「前序语句 + 条件」正确处理，切分反而把 BoolOpRegion 的
+        # merge 块与 IfRegion 的 condition_block 拆开（实测
+        # arg_checker._is_valid_quarter：`valid = isinstance(value, ...) and
+        # value[-2] == 'q'` 紧跟 `if valid:`，切分后生成多余 `else` 并使
+        # 匹配函数数下降）。语句级指令判据（纯结构）：STORE_*/DELETE_*，
+        # 或 CALL 后紧跟 POP_TOP（表达式语句），或 RETURN_*/RAISE_VARARGS。
+        _tail = instrs[consume_idx + 1:]
+        _has_stmt = False
+        for _k, _ti in enumerate(_tail):
+            _n = _ti.opname
+            if _n in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+                      'STORE_ATTR', 'STORE_SUBSCR') or _n.startswith('DELETE_'):
+                _has_stmt = True
+                break
+            if _n in ('RETURN_VALUE', 'RETURN_CONST', 'YIELD_VALUE', 'RAISE_VARARGS'):
+                _has_stmt = True
+                break
+            if _n == 'POP_TOP' and _k > 0 and _tail[_k - 1].opname == 'CALL':
+                _has_stmt = True
+                break
+        if not _has_stmt:
+            return
+        split_offset = instrs[consume_idx + 1].offset
+        if split_offset <= target.start_offset:
+            return
+        # [R4-G 修复·异常保护区间守卫] 若切分点落在异常表任一保护区间
+        # [start, end) 内，则禁止切分：该块是 try 体的首块/内部块，
+        # 切分会把它从 try 体中割裂出去，使 TryExceptRegion 的块跨度被
+        # 破坏（实测 arg_checker._is_valid_frequency / _is_valid_quarter：
+        # 在 try 体首块 80 切分后，内层 if 的 else 体被错挂到 try 上，
+        # 生成多余 `else:` 与 2 条指令）。异常保护区间是结构性边界，
+        # 短路归并切分不得跨越或落在其中。
+        for _entry in (self.cfg.exception_table or []):
+            _s = _entry.get('start')
+            _e = _entry.get('end')
+            if _s is None or _e is None:
+                continue
+            if _s <= split_offset < _e:
+                return
+        self._split_block_at_offset(split_offset)
+
+    def _split_blocks_at_short_circuit_merges(self) -> None:
+        """[R4-G 修复] 对所有短路归并目标块执行消费点切分（见上方说明）。"""
+        if self.cfg is None:
+            return
+        targets: List[BasicBlock] = []
+        seen_ids = set()
+        for block in list(self.cfg.blocks.values()):
+            last = block.get_last_instruction()
+            if last is None or last.opname not in self._R4G_SHORT_CIRCUIT_JUMPS:
+                continue
+            if not isinstance(last.argval, int):
+                continue
+            target = self.cfg.get_block_by_offset(last.argval)
+            if target is None or id(target) in seen_ids:
+                continue
+            seen_ids.add(id(target))
+            targets.append(target)
+        # 由后往前切分：切分只新增更靠后的块，不影响尚未处理的更早目标块。
+        for target in sorted(targets, key=lambda b: b.start_offset, reverse=True):
+            self._r4g_split_merge_target(target)
 
     def _parse_exception_table(self) -> None:
         if hasattr(self.code_obj, 'co_exceptiontable'):

@@ -28,5 +28,4 @@ def fill_minute_or_day_blank(self, klines, nowstart, nowend, typet, stocks, forw
                     temp_value = numpy.array([0] * len(dts))
                     klines_pre = pandas.DataFrame({'open': temp_value, 'close': temp_value}, index=dts)
                     klines = pandas.concat([klines_pre, klines])
-            else:
-                return klines
+    return klines

@@ -19832,7 +19832,40 @@ AST 映射规则:
                 # 使 FOR_ITER 退出目标偏移 +2（check_strategy 双层循环形态）。
                 # 源码级显式 continue 的块不会成为任何循环的 for_iter_exit
                 # （continue 位于体内，FOR_ITER 目标位于体后）。
-                if not self._block_is_structural_for_iter_exit(block):
+                #
+                # [R4-H 修复] 嵌套 for 的 for_iter_exit 与源码级显式 continue
+                # 重合时，Round 07 的抑制判据会把 continue 整条丢弃。
+                # 识别条件：本块（纯 CONTINUE 角色、唯一跳转指令为 JUMP_BACKWARD）
+                #   同时满足——(a) 是某个嵌套 LoopRegion 的 for_iter_exit
+                #   （_block_is_structural_for_iter_exit 为真）；(b) 跳转目标为
+                #   当前（外层）循环 header；(c) 本块所属 IfRegion 的 merge_block
+                #   不是该 header，即 if 语句之后循环体内仍有后继代码（下一
+                #   判定/语句）需要本回边跳过。此时 CPython 把「内层 for 耗尽
+                #   出口」与「外层 continue 回边」编译进同一块（内层 for 恰为
+                #   if 体末语句、continue 紧随其后），该回边不是循环体自然收尾
+                #   ——自然收尾形态中 IfRegion.merge_block 即循环 header、if 后
+                #   无代码（t4/t6 形态），仍走上行抑制，二者结构可判别。
+                # 归约方式：覆盖 for_iter_exit 抑制，继续执行下方的显式 Continue
+                #   发射流程（其后 _r100_suppress / _is_loop_tail_convergence_block
+                #   仍可对真正的自然回边做二次抑制），不做任何名称/常量特判。
+                # AST 映射：本块 → ast.Continue，作为外层 For.body 中 if 体末尾
+                #   的显式 continue 语句（p1 / s3 / s5 / s9 / check_python_code
+                #   形态：`if ...: for ...: ...; continue`）。
+                _r4h_struct_iter_exit = self._block_is_structural_for_iter_exit(block)
+                _r4h_explicit_continue = False
+                if _r4h_struct_iter_exit and isinstance(region, IfRegion):
+                    _r4h_hdr = (getattr(self._current_loop, 'header_block', None)
+                                if self._current_loop else None)
+                    _r4h_last = block.get_last_instruction()
+                    if (_r4h_hdr is not None
+                            and _r4h_last is not None
+                            and _r4h_last.opname in ('JUMP_BACKWARD', 'JUMP_BACKWARD_NO_INTERRUPT')
+                            and _r4h_last.argval is not None
+                            and self.cfg.get_block_by_offset(_r4h_last.argval) is _r4h_hdr
+                            and getattr(region, 'merge_block', None) is not None
+                            and region.merge_block is not _r4h_hdr):
+                        _r4h_explicit_continue = True
+                if not _r4h_struct_iter_exit or _r4h_explicit_continue:
                     # [R100 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4
                     # （入口引用语义）：纯连接 continue 块的冗余抑制。当以下
                     # 结构性判据同时成立时，本块的 JUMP_BACKWARD 回边已由
@@ -19946,7 +19979,23 @@ AST 映射规则:
                                             _rc3_merge = getattr(_rc3_enclosing, 'merge_block', None)
                                             if _rc3_merge is not None and _rc3_merge is _cur_hdr:
                                                 _r100_suppress = True
-                    if not _r100_suppress and not self._is_loop_tail_convergence_block(block):
+                    # [R4-H 修复] 显式 continue 优先于 R100 冗余抑制。
+                    # 识别条件：_r4h_explicit_continue 为真——本块被上方结构判据
+                    #   （嵌套 for 的 for_iter_exit + 跳转外层 header + 所属
+                    #   IfRegion.merge_block 非该 header）确认为源码级显式
+                    #   continue。此时 R100 判据 2 的「merge 末指令 JUMP_BACKWARD
+                    #   →header ⇒ merge 即迭代终止符」不成立：merge（u1/u4 形态
+                    #   中为 if 假出口的循环尾回边块）与本块是两个不同的终止符，
+                    #   本块的回边是显式 continue 跳过 merge 之后的循环体代码，
+                    #   不是可省略的自然收尾。_is_loop_tail_convergence_block
+                    #   （≥2 前驱汇合）仍保留为二次判据：真显式 continue 块只有
+                    #   FOR_ITER 单前驱，不会被它误伤。
+                    # 归约方式：R100 抑制对 _r4h_explicit_continue 失效，继续走
+                    #   下方 Continue 发射；其余抑制判据不变。
+                    # AST 映射：本块 → ast.Continue（与 p1/u1/u4/check_python_code
+                    #   源码中 if 体末尾的显式 continue 语句一一对应）。
+                    if ((not _r100_suppress or _r4h_explicit_continue)
+                            and not self._is_loop_tail_convergence_block(block)):
                         stmts.append({'type': 'Continue'})
                 self.generated_blocks.add(block)
                 self.generated_offsets.add(block.start_offset)
@@ -30195,6 +30244,62 @@ AST 映射规则:
             }
         return None
 
+    def _r4e_else_target_is_join(self, then_block, else_block, boundary_block) -> bool:
+        """[R4-E 修复] 判定「内联 if 的 else 目标块」是否实为 then 分支的汇合(join)块。
+
+        背景（R3-E：共享函数尾 return 被误挂为内层 else）：
+          BoolOp/Ternary 的 merge 块在值写入(STORE_*)之后若仍残留一条条件
+          跳转（如 `len(dts) > 0` 假跳函数尾 `return klines`），R89 内联 if
+          提取会把该跳转的目标块直接当作 else 体生成。但当目标块同时是 then
+          分支的汇合点时，源码中并不存在 else——真分支自然落到汇合块，假分支
+          也跳到同一块。把它生成 `else:` 会多出一条提前 return，并吞掉汇合块
+          本应作为 if 兄弟语句发射的尾部语句（函数级 `return klines` 丢失）。
+        识别条件（纯结构判据，无函数名/文件名/常量特判）：
+          从 then 分支入口块出发，沿 CFG 后继做前向可达搜索；搜索不跨越
+          boundary_block 及其之前的块（避免穿越回边/循环，把无关的汇合点
+          误判进来）。若能到达 else 目标块，则它是汇合块 ⇒ 不存在 else。
+          附加必要条件「else 目标块入度 ≥ 2」：汇合(join)块按定义有多条
+          入边；而真正的 else 体块只有条件块这一个前驱（条件跳转直达）。
+          该条件把「then 分支内部的嵌套条件恰好跳到真实 else 体」这类
+          边缘形态排除在外，进一步收紧判据，避免误判为汇合。
+        归约方式：
+          返回 True 时调用方把 else 目标块置空——不生成 orelse，也不标记该块
+          为已生成。语句归属回到「每块唯一归属」：汇合块由其 canonical owner
+          （父序列 / merge 发射点）作为 if 的兄弟语句发射恰好一次。
+        AST 映射：
+          内联 if 节点 orelse 保持空（ast.If.orelse == []）；汇合块的语句映射
+          为 if 之后的同级 ast.Return / ast.Assign 等。
+        """
+        if then_block is None or else_block is None:
+            return False
+        if then_block is else_block:
+            return True
+        # 汇合点必要条件：入度 ≥ 2（真 else 体只有条件块一个前驱）。
+        _preds = getattr(else_block, 'predecessors', None)
+        if _preds is None or len(_preds) < 2:
+            return False
+        boundary = boundary_block.start_offset if boundary_block is not None else None
+        seen = set()
+        queue = [then_block]
+        while queue:
+            cur = queue.pop()
+            if cur in seen:
+                continue
+            seen.add(cur)
+            for succ in getattr(cur, 'successors', None) or ():
+                if succ is None:
+                    continue
+                if succ is else_block:
+                    return True
+                if succ in seen:
+                    continue
+                # 不跨越 boundary 之前的块：这些是回边/外层代码，
+                # 穿越会把 else 误判为汇合点（或陷入环）。
+                if boundary is not None and succ.start_offset <= boundary:
+                    continue
+                queue.append(succ)
+        return False
+
     def _generate_boolop(self, region: BoolOpRegion, skip_store_targets: Set[str] = None) -> Optional[List[Dict[str, Any]]]:
         """生成 BoolOpRegion 的 AST 节点列表
 
@@ -31123,6 +31228,18 @@ AST 映射规则:
                                         else:
                                             _then_blk_r89 = self.cfg.get_block_by_offset(_fall_through_r89)
                                             _else_blk_r89 = self.cfg.get_block_by_offset(_jump_tgt_r89)
+                                        # [R4-E 修复] 汇合块不得被当作单条内联 if 的 else 体。
+                                        # 识别条件：else 目标块（跳转目标）从 then 分支入口块
+                                        #   沿前向 CFG 可达（即它是 then 的汇合点，而非独立分支）。
+                                        # 归约方式：置空 else 目标块，不生成 orelse、不标记已生成；
+                                        #   汇合块交回「每块唯一归属」，由其 canonical owner 作为
+                                        #   if 的兄弟语句发射一次（避免函数尾 return 被吞进 else）。
+                                        # AST 映射：内联 ast.If.orelse=[]，汇合块语句映射为其后的
+                                        #   同级 ast.Return/ast.Assign。
+                                        if self._r4e_else_target_is_join(
+                                                _then_blk_r89, _else_blk_r89,
+                                                region.merge_block):
+                                            _else_blk_r89 = None
                                         _then_body_r89 = []
                                         _then_blk_is_ifregion_entry = False
                                         if _then_blk_r89:
