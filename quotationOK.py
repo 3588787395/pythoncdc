@@ -922,46 +922,45 @@ def get_trade_days(start_date=None, end_date=None, count=None):
 def get_price(security, start_date=None, end_date=None, frequency='daily', fields=None, fq=None, count=None, is_dict=False):
     ClearAllCache()
     is_string = False
-    if security is None or len(security) == 0:
+    if security is not None and len(security) == 0:
         strategy_log.error('security不能为空')
         return None
+    if isinstance(security, six.string_types):
+        is_string = True
+        security = [security]
+    if fq == 'dypre':
+        fq = 'pre'
+    frequency = FREQUENCYNAME_DICT.get(frequency, frequency)
+    if frequency not in ALL_FREQUENCY:
+        strategy_log.error('不支持查询频率周期为：%s 的数据，请输入正确的频率周期' % frequency)
+        return None
     else:
-        if isinstance(security, six.string_types):
-            is_string = True
-            security = [security]
-        if fq == 'dypre':
-            fq = 'pre'
-        frequency = FREQUENCYNAME_DICT.get(frequency, frequency)
-        if frequency not in ALL_FREQUENCY:
-            strategy_log.error('不支持查询频率周期为：%s 的数据，请输入正确的频率周期' % frequency)
-            return None
-        else:
-            current_date = datetime.now().strftime('%Y%m%d')
-            if end_date is None:
-                from fly.common.tradingday_calendar import get_start_day
-                tmp_start_date, tmp_end_date = get_start_day(end_date=current_date, count=2, type='daily')
-                if current_date == tmp_end_date:
-                    end_date = tmp_start_date
-                else:
-                    end_date = tmp_end_date
+        current_date = datetime.now().strftime('%Y%m%d')
+        if end_date is None:
+            from fly.common.tradingday_calendar import get_start_day
+            tmp_start_date, tmp_end_date = get_start_day(end_date=current_date, count=2, type='daily')
+            if current_date == tmp_end_date:
+                end_date = tmp_start_date
             else:
-                end_date = check_datetime_common(end_date)
-                if end_date is None:
-                    return None
-                elif end_date[0:8] == datetime.now().strftime('%Y%m%d'):
-                    end_date = (datetime.now() + qdt.timedelta(-1)).strftime('%Y%m%d')
-            if start_date is not None:
-                start_date = check_datetime_common(start_date)
-                if start_date is None:
-                    return None
-                elif start_date[0:8] >= current_date:
-                    strategy_log.error('start_date大于等于当前日期，请检查')
-                    return None
-                elif start_date[0:8] > end_date[0:8]:
-                    strategy_log.error('start_date大于end_date，请检查')
-                    return None
-            nd_array = get_price_common(security, start_date, end_date, frequency, fields, fq, count, is_string, is_dict)
-            return nd_array
+                end_date = tmp_end_date
+        else:
+            end_date = check_datetime_common(end_date)
+            if end_date is None:
+                return None
+            elif end_date[0:8] == datetime.now().strftime('%Y%m%d'):
+                end_date = (datetime.now() + qdt.timedelta(-1)).strftime('%Y%m%d')
+        if start_date is not None:
+            start_date = check_datetime_common(start_date)
+            if start_date is None:
+                return None
+            elif start_date[0:8] >= current_date:
+                strategy_log.error('start_date大于等于当前日期，请检查')
+                return None
+            elif start_date[0:8] > end_date[0:8]:
+                strategy_log.error('start_date大于end_date，请检查')
+                return None
+        nd_array = get_price_common(security, start_date, end_date, frequency, fields, fq, count, is_string, is_dict)
+        return nd_array
 @check_arg
 def get_history(count, frequency='1d', field=None, security_list=None, fq=None, skip_suspended=False, include=False, query_date=None, fill='nan', is_dict=False):
     ClearAllCache()
@@ -1165,6 +1164,7 @@ def valuation_new(security, date=None, fields=None):
                 return code
             returnDf['secu_code'] = returnDf.apply(lambda x: get_IQE_code(x['secu_code']), axis=1)
             return ({'error_no': 0, 'error_info': ''}, returnDf)
+            return None
         else:
             return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
     except BaseException as x:
@@ -1219,6 +1219,7 @@ def valuation(security, date=None, fields=None):
                 data_out.append(i)
             returnDf = pandas.DataFrame(data_out)
             return ({'error_no': 0, 'error_info': ''}, returnDf)
+            return None
         else:
             return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
     except BaseException as x:
@@ -1297,6 +1298,7 @@ def balance_statement(security, report_types=None, start_year=None, end_year=Non
                 data_out.append(copy.deepcopy(dict1))
             returnDf = pandas.DataFrame(data_out)
             return ({'error_no': 0, 'error_info': ''}, returnDf)
+            return None
         else:
             return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
     except BaseException as x:
@@ -1376,6 +1378,7 @@ def income_statement(security, report_types=None, start_year=None, end_year=None
                 data_out.append(copy.deepcopy(dict1))
             returnDf = pandas.DataFrame(data_out)
             return ({'error_no': 0, 'error_info': ''}, returnDf)
+            return None
         else:
             return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
     except BaseException as x:
@@ -1455,6 +1458,7 @@ def cashflow_statement(security, report_types=None, start_year=None, end_year=No
                 data_out.append(copy.deepcopy(dict1))
             returnDf = pandas.DataFrame(data_out)
             return ({'error_no': 0, 'error_info': ''}, returnDf)
+            return None
         else:
             return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
     except BaseException as x:
@@ -1523,6 +1527,7 @@ def growth_ability(security, report_types=None, start_year=None, end_year=None, 
                 data_out.append(i)
             returnDf = pandas.DataFrame(data_out)
             return ({'error_no': 0, 'error_info': ''}, returnDf)
+            return None
         else:
             return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
     except BaseException as x:
@@ -1591,6 +1596,7 @@ def profit_ability(security, report_types=None, start_year=None, end_year=None, 
                 data_out.append(i)
             returnDf = pandas.DataFrame(data_out)
             return ({'error_no': 0, 'error_info': ''}, returnDf)
+            return None
         else:
             return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
     except BaseException as x:
@@ -1659,6 +1665,7 @@ def eps(security, report_types=None, start_year=None, end_year=None, fields=None
                 data_out.append(i)
             returnDf = pandas.DataFrame(data_out)
             return ({'error_no': 0, 'error_info': ''}, returnDf)
+            return None
         else:
             return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
     except BaseException as x:
@@ -1727,6 +1734,7 @@ def cash_collection_ability(security, report_types=None, start_year=None, end_ye
                 data_out.append(i)
             returnDf = pandas.DataFrame(data_out)
             return ({'error_no': 0, 'error_info': ''}, returnDf)
+            return None
         else:
             return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
     except BaseException as x:
@@ -1795,6 +1803,7 @@ def operating_ability(security, report_types=None, start_year=None, end_year=Non
                 data_out.append(i)
             returnDf = pandas.DataFrame(data_out)
             return ({'error_no': 0, 'error_info': ''}, returnDf)
+            return None
         else:
             return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
     except BaseException as x:
@@ -1863,6 +1872,7 @@ def debt_paying_ability(security, report_types=None, start_year=None, end_year=N
                 data_out.append(i)
             returnDf = pandas.DataFrame(data_out)
             return ({'error_no': 0, 'error_info': ''}, returnDf)
+            return None
         else:
             return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
     except BaseException as x:
@@ -1919,6 +1929,7 @@ def share_change(security, start_year=None, end_year=None, fields=None):
                 data_out.append(i)
             returnDf = pandas.DataFrame(data_out)
             return ({'error_no': 0, 'error_info': ''}, returnDf)
+            return None
         else:
             return ({'error_no': 0, 'error_info': ''}, pandas.DataFrame())
     except BaseException as x:
@@ -3510,6 +3521,7 @@ def get_option_info():
                     continue
                 data_out.append(copy.deepcopy(dict1))
             return data_out
+            return None
         else:
             return []
     except BaseException:
@@ -3631,6 +3643,7 @@ def get_cb_time_info():
                 continue
             df_all = pandas.concat(all_df_info)
             return df_all
+            return None
         else:
             return pandas.DataFrame()
     except BaseException as x:

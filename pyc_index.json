@@ -660,13 +660,13 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc",
     "size": 83014,
     "function_count": 40,
-    "decompile_status": "partial",
-    "bytecode_match_rate": 0.925,
+    "decompile_status": "ok",
+    "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
     "last_tested_round": 2,
     "mismatch_count": 16,
     "status": "pending",
-    "matched_functions": 37
+    "matched_functions": 39
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/tradingday_info_utils.pyc",

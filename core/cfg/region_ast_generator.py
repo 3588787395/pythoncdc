@@ -31918,6 +31918,111 @@ AST 映射规则:
         self._generated_regions.add(id(region))
         return statements
 
+    def _try_build_andor_boolop_from_ternary(
+            self, region: TernaryRegion, cond_expr, true_block, false_block):
+        """混合布尔链识别：`cond and X or Y` 的 CFG 不应重建为 IfExp 三元。
+
+        【反编译逻辑】
+        识别条件（全部基于 CFG 结构，无目标特定启发式）：
+          1. TernaryRegion 条件块末指令是 IF_FALSE 族条件跳转（and 极性：
+             操作数为假时跳走求值后续操作数），其跳转目标 == 本三元的
+             false_value_block；
+          2. true_value_block 是某个 BoolOpRegion 的 entry，且该 BoolOpRegion
+             是纯 or 链（op_chain 全为 'or'，or 短路：操作数为真时携带值
+             跳向 merge），其 merge_block 与本三元的 merge_block 一致；
+          3. true_value_block 末指令（JUMP_IF_TRUE_OR_POP）的 fall-through
+             后继 == false_value_block，即 or 链第二个操作数块就是三元
+             的 false 值块（共享块）。
+
+        归约方式：
+          该 CFG 是 CPython 对 `cond and X or Y` 的确定性编译形态：
+            cond: <cond>; POP_JUMP_FORWARD_IF_FALSE → Y块
+            X块:  <X>; JUMP_IF_TRUE_OR_POP → merge
+            Y块:  <Y>（既是 or 链右操作数，又是 and 失败路径的落点）
+            merge: 消费
+          条件为假时 and 短路结果（假值）被 or 直接丢弃并求值 Y——
+          编译器据此用弹栈式 POP_JUMP_FORWARD_IF_FALSE 而非留值的
+          JUMP_IF_FALSE_OR_POP。而真正的三元 `（X or Y）if cond else Y`
+          经 3.11 编译必然产生【独立的 else 块 + JUMP_FORWARD】，false
+          值块不会与 or 链右操作数共享同一块。因此满足上述共享块签名时，
+          唯一能重编译出该字节码布局的源码形态是混合布尔链。
+
+        AST 映射：
+          IfExp(test=cond, body=BoolOp(or,[X,Y]), orelse=Y)
+              → BoolOp(op='or', values=[
+                    BoolOp(op='and', values=[cond, X]),
+                    Y])
+          语义恒等（c 真→Or([X,Y])；c 假→Y），但只有右侧形态重编译后
+          复现共享块布局。or 链超过两个操作数时不折叠（保守回退三元）。
+
+        返回 None 表示签名不匹配，调用方按普通三元 IfExp 继续生成。
+        """
+        cond_block = region.condition_block
+        if cond_block is None or true_block is None or false_block is None:
+            return None
+        # 混合链条件必须是 and 极性（IF_FALSE 族）单块条件；带条件链
+        # （`x if a and b else y`，chain_blocks 含多个链块）的三元另有
+        # BoolOp 条件重建路径，不适用。注意单元素 chain_blocks（仅含
+        # 条件块自身）是普通单块条件，不在此列。
+        if len(getattr(region, 'condition_chain_blocks', None) or []) > 1:
+            return None
+        cond_last = cond_block.get_last_instruction()
+        if (cond_last is None
+                or 'FALSE' not in cond_last.opname
+                or cond_last.opname not in (FORWARD_CONDITIONAL_JUMP_OPS
+                                            | BACKWARD_CONDITIONAL_JUMP_OPS)
+                or cond_last.argval is None):
+            return None
+        cond_target = self.cfg.get_block_by_offset(cond_last.argval)
+        if cond_target is None or cond_target is not false_block:
+            return None
+        # true 值块必须是纯 or 链 BoolOpRegion 的入口。
+        boolop_region = None
+        for r in self.regions:
+            if (isinstance(r, BoolOpRegion) and r.entry is true_block
+                    and r.op_chain):
+                boolop_region = r
+                break
+        if boolop_region is None:
+            return None
+        if any(op != 'or' for _, op in boolop_region.op_chain):
+            return None
+        if boolop_region.merge_block is None or region.merge_block is None:
+            return None
+        if boolop_region.merge_block is not region.merge_block:
+            return None
+        # or 链首块的 fall-through 后继（第二个操作数块）必须是本三元
+        # 的 false 值块——共享块签名。
+        tv_last = true_block.get_last_instruction()
+        if (tv_last is None or 'TRUE' not in tv_last.opname
+                or tv_last.opname not in SHORT_CIRCUIT_JUMP_OPS
+                or tv_last.argval is None):
+            return None
+        ft_succs = sorted(true_block.conditional_successors,
+                          key=lambda s: s.start_offset)
+        ft_block = next((s for s in ft_succs
+                         if s.start_offset != tv_last.argval), None)
+        if ft_block is None or ft_block is not false_block:
+            return None
+        # 重建完整 or 链表达式；仅折叠两操作数 or 链（X or Y）。
+        full_or_expr = self._build_boolop_expression(boolop_region)
+        if (not isinstance(full_or_expr, dict)
+                or full_or_expr.get('type') != 'BoolOp'
+                or full_or_expr.get('op') != 'or'
+                or len(full_or_expr.get('values') or []) != 2):
+            return None
+        or_left, or_right = full_or_expr['values']
+        if or_left is None or or_right is None:
+            return None
+        return {
+            'type': 'BoolOp',
+            'op': 'or',
+            'values': [
+                {'type': 'BoolOp', 'op': 'and', 'values': [cond_expr, or_left]},
+                or_right,
+            ],
+        }
+
     def _generate_ternary(self, region: TernaryRegion, skip_store_targets: Set[str] = None) -> Optional[List[Dict[str, Any]]]:
         """生成 TernaryRegion 的 AST 语句列表
 
@@ -32890,8 +32995,19 @@ AST 映射规则:
                 'operand': cond_expr,
             }
 
+        # [P1-2 混合布尔链] `cond and X or Y` 形态的 CFG 在上面已被识别为
+        # TernaryRegion（cond 块 + or 链 BoolOpRegion + 共享 false 值块），
+        # 但按 IfExp 重建会掺入伪三元（重编译多出独立 else 块 + JUMP_FORWARD）。
+        # 满足共享块签名时改用混合布尔链 BoolOp(Or,[BoolOp(And,[cond,X]),Y])
+        # 重建，使重编译字节码与原始布局逐指令一致。
+        _andor_expr = None
+        if cond_expr is not None:
+            _andor_expr = self._try_build_andor_boolop_from_ternary(
+                region, cond_expr, region.true_value_block,
+                region.false_value_block)
+
         if cond_expr and true_expr and false_expr:
-            ternary_expr = {
+            ternary_expr = _andor_expr if _andor_expr is not None else {
                 'type': 'IfExp',
                 'test': cond_expr,
                 'body': true_expr,

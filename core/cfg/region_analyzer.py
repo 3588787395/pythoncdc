@@ -16425,7 +16425,41 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                                     and _then_last2.argval is not None):
                                 _jf_target = self.cfg.get_block_by_offset(_then_last2.argval)
                                 if _jf_target is not None and _jf_target != else_succ:
-                                    merge = else_succ
+                                    # [P1-1d else 分支内容 + 循环内汇合判据]
+                                    # else_succ 是 bare continue sink（块内除回边
+                                    # 跳转外无实质指令，即 `else: pass` 的回边形态）
+                                    # 时，维持 merge=else_succ（else_blocks 为空，
+                                    # then 收全）。
+                                    # 若 else 块含实质代码（`else: <code>; continue`）
+                                    # 且 then 分支的 JUMP_FORWARD 目标仍在【本循环
+                                    # 体内】（汇合块的后继回到循环），则这是真实的
+                                    # if-else + 循环提前退出结构：merge 应取 then
+                                    # 分支的 JUMP_FORWARD 目标（then 出口与 else
+                                    # continue 之后的循环内汇合点），else 块归
+                                    # else_blocks，其后循环体内语句作为 post-if
+                                    # 兄弟语句。否则后继语句被吸入 then 体，
+                                    # `if c: X else: Y; continue` 退化为
+                                    # `if c: X+Y continue`，重编译多出/缺失分支体
+                                    # 出口 JUMP_FORWARD（布局漂移，kill_trade_process
+                                    # 循环尾）。
+                                    # JUMP_FORWARD 目标不在循环体内时（目标是循环
+                                    # 出口，如 `for c: if d: break; body` 的 break
+                                    # 跳向 loop exit），维持 merge=else_succ：then
+                                    # 是 break 分支，else 块是循环体延续，不是
+                                    # else 语义（TestL02_ForBreak / N01_ForIfBreak /
+                                    # N05_WhileIfBreak / adv19 / r25 形态）。
+                                    _else_meaningful = [
+                                        i for i in else_succ.instructions
+                                        if i.opname not in NOISE_OPS
+                                        and i.opname not in ('JUMP_BACKWARD',
+                                                             'JUMP_BACKWARD_NO_INTERRUPT',
+                                                             'EXTENDED_ARG')
+                                    ]
+                                    _jf_in_loop = _jf_target in _loop.blocks
+                                    if _else_meaningful and _jf_in_loop:
+                                        merge = _jf_target
+                                    else:
+                                        merge = else_succ
 
 
             if merge is None:
@@ -17645,6 +17679,33 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     if _tb_last and _tb_last.opname == 'RAISE_VARARGS':
                         _then_has_raise = True
                         break
+            # [P1-1b raise 终端性精化] then 体中的 raise 仅当它是分支的
+            # 【终端出口】时才构成控制退出（raise 后分支再无正常出路）。
+            # 若 raise 位于内层 if/else 的一支（如 `if err is not None:
+            # {if isinstance(err, str): log(err) else: raise err}`），另一支
+            # 以 JUMP_FORWARD 正常离开分支体，则 raise 是内部早退而非终端——
+            # `if A: <body> elif B: <body2>` 与 `if A: <body>; if B: <body2>`
+            # 的字节码差异恰在分支体末尾是否存在跳出 elif 链的 JUMP_FORWARD。
+            # 内部 raise 时分支体仍有正常出口，应保留 elif 链解释，使重编译
+            # 复现分支体出口跳转（create_user_code_iqe）。
+            # 判据（结构性）：then 体中存在某块以无条件 JUMP_FORWARD 结尾且
+            # 目标不在候选链块集（then/else 体块）内——即存在绕开 raise 的
+            # 正常出口路径。
+            if _then_has_raise:
+                _chain_body_blocks = set(then_blocks) | set(else_blocks_ or [])
+                for tb in then_blocks:
+                    if not tb.successors:
+                        continue
+                    _tb_last = tb.get_last_instruction()
+                    if (_tb_last is None
+                            or _tb_last.opname not in ('JUMP_FORWARD', 'JUMP_ABSOLUTE')
+                            or _tb_last.argval is None):
+                        continue
+                    _tb_succ = self.cfg.get_block_by_offset(_tb_last.argval)
+                    if _tb_succ is not None and _tb_succ not in _chain_body_blocks:
+                        # 存在正常出口 → raise 非终端，不构成控制退出
+                        _then_has_raise = False
+                        break
             if _then_has_raise:
                 _else_has_matching_raise = False
                 for eb in else_blocks_:
@@ -18478,11 +18539,37 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                             if _sb_first_cond and _sb_first_cond.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS):
                                 _sb_then_falls_through = True
                 if _sb_then_falls_through:
-                    return None
-                if merge_ is None or _shared_block != merge_:
-                    result['final_else'] = [_shared_block]
-                result['shared_block_info'] = {
-                    'shared_block': _shared_block,
+                    # [P1-1c 链自然汇合豁免] 当共享块（inner_else_succ）本身是
+                    # 某个已识别下游 IfRegion 的条件入口块（它将被作为独立的
+                    # if 语句渲染）时，内层 then 体 fall-through 汇入它只是
+                    # elif 链到链尾合并点的自然汇聚（`if A: body1 elif B: body2`
+                    # 的链尾合并恰为后续独立 if 的条件块），不是「分支体延伸为
+                    # 共享内容」。此时放弃 shared-block 双角色语义（不注入
+                    # final_else / shared_block_info），elif 链正常收尾，共享块
+                    # 留给其自身 IfRegion 渲染（原则 2：每块唯一归属；原则 4：
+                    # 父引用子入口）。典型场景 create_user_code_iqe：
+                    # `if bm is None or bm == B2 or reloads: ... elif bm == B1
+                    # and not reloads: ...` 的链尾合并 4438 即后续
+                    # `if not reloads:` 的条件块。否则整链识别失败退化为
+                    # 独立 if，分支体出口 JUMP_FORWARD 消失，重编译多一条
+                    # 布局差（first_diff 于链尾）。
+                    _sb_downstream_if = None
+                    # 识别进行中：新建 IfRegion 先落在 _current_if_regions
+                    #（本方法局部列表的镜像），尚未合并进 self.regions /
+                    # block_to_region，故此处扫描进行中列表。
+                    for _r in (getattr(self, '_current_if_regions', None) or []):
+                        if (isinstance(_r, IfRegion)
+                                and _r.condition_block is _shared_block):
+                            _sb_downstream_if = _r
+                            break
+                    if _sb_downstream_if is None:
+                        return None
+                    _shared_block = None
+                if _shared_block is not None:
+                    if merge_ is None or _shared_block != merge_:
+                        result['final_else'] = [_shared_block]
+                    result['shared_block_info'] = {
+                        'shared_block': _shared_block,
                     'inner_then_succ': inner_then_succ,
                     'new_merge': _sb_new_merge,
                 }
