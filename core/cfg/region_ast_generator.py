@@ -22202,13 +22202,28 @@ AST 映射规则:
                             and _pred in set(region.try_blocks)):
                         _is_cond_jump_target = True
                         break
+                # [R6 fix] 若该隐式 return None 块同时是某个嵌套区域的
+                # merge_block（汇合点），它属于该区域的结构组成部分，已由
+                # 该区域自身的生成路径消费——典型：`if/elif/else` 位于 try
+                # 体末尾时，「then 臂的隐式返回」块即 IfRegion.merge_block。
+                # 依原则 2（每块唯一归属）与原则 4（父引用子入口）：父序列
+                # 不得把它再发射为独立语句。否则源码凭空多出一条
+                # `return None`，编译结果由「then 臂 fall-through 直接内联
+                # 隐式返回（LOAD_CONST None; RETURN_VALUE）」变为
+                # 「JUMP_FORWARD 到句尾的 LOAD_CONST None; RETURN_VALUE」，
+                # 多一条跳转，字节码失配。
+                # 实例：IQCommon/util/resource_utils.pyc（R53 起 1.0 -> 0.5，
+                # release_memory_with_measurement 的 try 体尾部）。
+                _is_other_region_merge = any(
+                    getattr(_r, 'merge_block', None) is block and _r is not region
+                    for _r in self.region_analyzer.regions)
                 if _is_cond_jump_target:
                     body_stmts.append({'type': 'Return',
                                        'value': {'type': 'Constant', 'value': None},
                                        '_explicit_return': True})
                 elif self._loop_depth > 0:
                     body_stmts.append({'type': 'Break'})
-                else:
+                elif not _is_other_region_merge:
                     body_stmts.append({'type': 'Return',
                                        'value': {'type': 'Constant', 'value': None},
                                        '_explicit_return': True})
