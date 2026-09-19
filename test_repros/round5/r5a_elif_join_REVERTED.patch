@@ -1,0 +1,94 @@
+--- core/cfg/region_analyzer.py	2026-09-20 01:28:00.539106000 +0800
++++ /tmp/ra_r5a.py	2026-09-20 01:27:56.227756400 +0800
+@@ -18056,6 +18056,9 @@
+             conditions = [first_else]
+             bodies = []
+             final_else = []
++            # [R5-A 修复] 链尾汇合块（见本方法末尾 R5-A 注释），由内层识别后
++            # 逐层向上传播至最外层 IfRegion 构造点，用于从链结构中剔除。
++            _r5a_join_block = None
+ 
+             inner_condition_block = first_else
+             inner_br = self.block_to_region.get(first_else)
+@@ -18548,6 +18551,11 @@
+                 conditions.extend(deeper_elif['conditions'])
+                 bodies.extend(deeper_elif['bodies'])
+                 final_else = deeper_elif.get('final_else', [])
++                # [R5-A 修复] 把内层识别出的链尾汇合块向上传播，供最外层
++                # 构造 IfRegion 时从 else_blocks / all_blocks 中剔除（原则 2
++                # 「每块唯一归属」：汇合块归下游 IfRegion 所有）。
++                if deeper_elif.get('r5a_join_block') is not None:
++                    _r5a_join_block = deeper_elif['r5a_join_block']
+                 if deeper_elif.get('shared_block_info') and _shared_block is None:
+                     _shared_block = deeper_elif['shared_block_info'].get('shared_block')
+                     _sb_new_merge = deeper_elif['shared_block_info'].get('new_merge')
+@@ -18588,6 +18596,8 @@
+                                 final_else = [else_succ]
+ 
+             result = {'conditions': conditions, 'bodies': bodies, 'final_else': final_else}
++            if _r5a_join_block is not None:
++                result['r5a_join_block'] = _r5a_join_block
+ 
+             if _shared_block is not None:
+                 _sb_then_falls_through = False
+@@ -18630,6 +18640,46 @@
+                     if _sb_downstream_if is None:
+                         return None
+                     _shared_block = None
++                # [R5-A 修复] 链尾汇合点识别（不依赖 _sb_then_falls_through）
++                # ────────────────────────────────────────────────────────────
++                # 识别条件（纯结构判据，无函数名/文件名/常量特判）：
++                #   共享块（= inner_else_succ，即链内最后一个条件块的假边目标）
++                #   同时是某个已识别下游 IfRegion 的 condition_block。
++                #   此时该块必被下游 IfRegion 当作独立语句渲染，而 else 体的语义
++                #   要求它「只被本链条件块的假边到达」；汇合点却被链内多个条件块
++                #   （含分支体内的嵌套 if）的假边同时到达 —— 二者互斥。
++                #   上面 P1-1c 只覆盖了「内层 then 体 fall-through 汇入汇合点」
++                #   的形态；当内层 then 体以 RETURN_VALUE 终结（本例：
++                #   `return round(data, 2)`）时 _sb_then_falls_through 为 False，
++                #   旧代码于是把汇合块当成 else 体，生成
++                #   `elif ...: return X` + `else: <汇合块语句>`，并被迫补一条
++                #   JUMP_FORWARD 跳过 else —— 重编译多出一条指令。
++                #   典型场景 fly/data/quotation.change_his_to_forward：
++                #   `elif startDateIndex == endDateIndex:` 的假边(606→978)与分支
++                #   体内 `if n == startDateIndex:` 的假边(686→978)同指 978，
++                #   且 978 是后续 `if len(series[...]):` 的条件块。
++                # 归约方式：
++                #   放弃 shared-block 的 else 双角色语义——不注入 final_else，
++                #   并从 else_blocks / final_else 中剔除该汇合块；汇合块不被本链
++                #   占有（原则 2「每块唯一归属」），留给下游 IfRegion 在链后作为
++                #   兄弟语句渲染（原则 4「父引用子入口」：本链以汇合块条件块为
++                #   收尾，不拥有其内部块）。
++                # AST 映射：
++                #   链生成 if/elif/…（orelse 为空）；汇合块条件块的前导语句
++                #   （本例 `preindex = None` / `tmpdata = None`）与条件本身由下游
++                #   ast.If 在链之后作为同级语句发射 —— 与源语义一致。
++                if _shared_block is not None and not _sb_then_falls_through:
++                    _r5a_join = None
++                    for _r in (getattr(self, '_current_if_regions', None) or []):
++                        if (isinstance(_r, IfRegion)
++                                and _r.condition_block is _shared_block):
++                            _r5a_join = _shared_block
++                            break
++                    if _r5a_join is not None:
++                        _shared_block = None
++                        final_else = [b for b in (final_else or []) if b is not _r5a_join]
++                        result['final_else'] = final_else
++                        result['r5a_join_block'] = _r5a_join
+                 if _shared_block is not None:
+                     if merge_ is None or _shared_block != merge_:
+                         result['final_else'] = [_shared_block]
+@@ -18806,6 +18856,13 @@
+                 filtered_then.append(tb)
+             if len(filtered_then) >= 1:
+                 then_blocks = filtered_then
++        # [R5-A 修复] 链尾汇合块（elif_info['r5a_join_block']）是链后下游
++        # IfRegion 的条件块，不属于本链：从 else_blocks 中剔除，使其不进入
++        # all_blocks（原则 2「每块唯一归属」），从而由下游 IfRegion 在链后
++        # 作为兄弟语句渲染。否则本链占有该块却不发射，其语句整体丢失。
++        if elif_info.get('r5a_join_block') is not None:
++            _r5a_jb = elif_info['r5a_join_block']
++            else_blocks = [b for b in else_blocks if b is not _r5a_jb]
+         all_blocks = all_condition_blocks | set(then_blocks) | set(else_blocks)
+         for cond in elif_info["conditions"]:
+             all_blocks.add(cond)

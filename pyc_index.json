@@ -105,8 +105,8 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/common/config.pyc",
     "size": 35787,
     "function_count": 1,
-    "decompile_status": "ok",
-    "bytecode_match_rate": 1.0,
+    "decompile_status": "partial",
+    "bytecode_match_rate": 0.5,
     "ok_py_generated": true,
     "last_tested_round": 35,
     "status": "pending"
@@ -115,12 +115,14 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/common/main.pyc",
     "size": 34261,
     "function_count": 33,
-    "decompile_status": "ok",
-    "bytecode_match_rate": 1.0,
+    "decompile_status": "partial",
+    "bytecode_match_rate": 0.8484848484848485,
     "ok_py_generated": true,
-    "last_tested_round": 1,
+    "last_tested_round": 4,
     "mismatch_count": 4,
-    "status": "pending"
+    "status": "pending",
+    "matched_functions": 28,
+    "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/const.pyc",
@@ -146,12 +148,14 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/api_data.pyc",
     "size": 19180,
     "function_count": 14,
-    "decompile_status": "ok",
-    "bytecode_match_rate": 1.0,
+    "decompile_status": "partial",
+    "bytecode_match_rate": 0.9285714285714286,
     "ok_py_generated": true,
-    "last_tested_round": 1,
+    "last_tested_round": 4,
     "mismatch_count": 4,
-    "status": "pending"
+    "status": "pending",
+    "matched_functions": 13,
+    "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/asset_storage.pyc",
@@ -290,12 +294,14 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/graph.pyc",
     "size": 23827,
     "function_count": 31,
-    "decompile_status": "ok",
-    "bytecode_match_rate": 1.0,
+    "decompile_status": "partial",
+    "bytecode_match_rate": 0.9354838709677419,
     "ok_py_generated": true,
-    "last_tested_round": 1,
+    "last_tested_round": 4,
     "mismatch_count": 1,
-    "status": "pending"
+    "status": "pending",
+    "matched_functions": 29,
+    "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/i18n.pyc",
@@ -321,12 +327,14 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/logger/handlers.pyc",
     "size": 15042,
     "function_count": 18,
-    "decompile_status": "ok",
-    "bytecode_match_rate": 1.0,
+    "decompile_status": "partial",
+    "bytecode_match_rate": 0.8888888888888888,
     "ok_py_generated": true,
-    "last_tested_round": 82,
+    "last_tested_round": 4,
     "mismatch_count": 1,
-    "status": "pending"
+    "status": "pending",
+    "matched_functions": 16,
+    "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/manager/__init__.pyc",
@@ -477,13 +485,15 @@
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/backtest_info_utils.pyc",
     "size": 41284,
-    "function_count": 8,
-    "decompile_status": "ok",
-    "bytecode_match_rate": 1.0,
+    "function_count": 10,
+    "decompile_status": "partial",
+    "bytecode_match_rate": 0.9,
     "ok_py_generated": true,
-    "last_tested_round": 40,
+    "last_tested_round": 4,
     "mismatch_count": 3,
-    "status": "pending"
+    "status": "pending",
+    "matched_functions": 9,
+    "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/cgroup_utils.pyc",
@@ -618,8 +628,8 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/resource_utils.pyc",
     "size": 2446,
     "function_count": 1,
-    "decompile_status": "ok",
-    "bytecode_match_rate": 1.0,
+    "decompile_status": "partial",
+    "bytecode_match_rate": 0.5,
     "ok_py_generated": true,
     "last_tested_round": 35,
     "status": "pending"
@@ -681,13 +691,15 @@
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/user_info_utils.pyc",
     "size": 11872,
-    "function_count": 8,
-    "decompile_status": "ok",
-    "bytecode_match_rate": 1.0,
+    "function_count": 9,
+    "decompile_status": "partial",
+    "bytecode_match_rate": 0.8888888888888888,
     "ok_py_generated": true,
-    "last_tested_round": 35,
+    "last_tested_round": 4,
     "mismatch_count": 2,
-    "status": "pending"
+    "status": "pending",
+    "matched_functions": 8,
+    "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/wrapper_utils.pyc",
@@ -976,12 +988,14 @@
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/data/merger_storage.pyc",
     "size": 5207,
-    "function_count": 7,
-    "decompile_status": "ok",
-    "bytecode_match_rate": 1.0,
+    "function_count": 9,
+    "decompile_status": "partial",
+    "bytecode_match_rate": 0.8888888888888888,
     "ok_py_generated": true,
-    "last_tested_round": 35,
-    "status": "pending"
+    "last_tested_round": 4,
+    "status": "pending",
+    "matched_functions": 8,
+    "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/data/stock_industry_storage.pyc",
@@ -1087,13 +1101,15 @@
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/manager/plugin_manager.pyc",
     "size": 7477,
-    "function_count": 7,
-    "decompile_status": "ok",
-    "bytecode_match_rate": 1.0,
+    "function_count": 10,
+    "decompile_status": "partial",
+    "bytecode_match_rate": 0.9,
     "ok_py_generated": true,
-    "last_tested_round": 40,
+    "last_tested_round": 4,
     "mismatch_count": 1,
-    "status": "pending"
+    "status": "pending",
+    "matched_functions": 9,
+    "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/manager/trading_day_manager.pyc",
@@ -1659,11 +1675,13 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/arg_checker.pyc",
     "size": 22155,
     "function_count": 39,
-    "decompile_status": "ok",
-    "bytecode_match_rate": 1.0,
+    "decompile_status": "partial",
+    "bytecode_match_rate": 0.9743589743589743,
     "ok_py_generated": true,
-    "last_tested_round": 35,
-    "status": "pending"
+    "last_tested_round": 4,
+    "status": "pending",
+    "matched_functions": 38,
+    "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/base_http_client.pyc",
@@ -1914,13 +1932,15 @@
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/api/api_base.pyc",
     "size": 46403,
-    "function_count": 45,
-    "decompile_status": "ok",
-    "bytecode_match_rate": 1.0,
+    "function_count": 48,
+    "decompile_status": "partial",
+    "bytecode_match_rate": 0.9791666666666666,
     "ok_py_generated": true,
-    "last_tested_round": 39,
+    "last_tested_round": 4,
     "mismatch_count": 0,
-    "status": "pending"
+    "status": "pending",
+    "matched_functions": 47,
+    "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/api/api_extra.pyc",
@@ -1965,12 +1985,14 @@
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/config/config.pyc",
     "size": 10779,
-    "function_count": 9,
-    "decompile_status": "ok",
-    "bytecode_match_rate": 1.0,
+    "function_count": 11,
+    "decompile_status": "partial",
+    "bytecode_match_rate": 0.9090909090909091,
     "ok_py_generated": true,
-    "last_tested_round": 35,
-    "status": "pending"
+    "last_tested_round": 4,
+    "status": "pending",
+    "matched_functions": 10,
+    "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/const.pyc",
@@ -2107,12 +2129,14 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/executor.pyc",
     "size": 10189,
     "function_count": 10,
-    "decompile_status": "ok",
-    "bytecode_match_rate": 1.0,
+    "decompile_status": "partial",
+    "bytecode_match_rate": 0.9,
     "ok_py_generated": true,
-    "last_tested_round": 1,
+    "last_tested_round": 4,
     "mismatch_count": 1,
-    "status": "pending"
+    "status": "pending",
+    "matched_functions": 9,
+    "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/manager/__init__.pyc",
@@ -2137,13 +2161,15 @@
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/plugin_manager.pyc",
     "size": 7548,
-    "function_count": 6,
-    "decompile_status": "ok",
-    "bytecode_match_rate": 1.0,
+    "function_count": 9,
+    "decompile_status": "partial",
+    "bytecode_match_rate": 0.8888888888888888,
     "ok_py_generated": true,
-    "last_tested_round": 40,
+    "last_tested_round": 4,
     "mismatch_count": 1,
-    "status": "pending"
+    "status": "pending",
+    "matched_functions": 8,
+    "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/slippage.pyc",
@@ -2169,11 +2195,13 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy.pyc",
     "size": 23046,
     "function_count": 19,
-    "decompile_status": "ok",
-    "bytecode_match_rate": 1.0,
+    "decompile_status": "partial",
+    "bytecode_match_rate": 0.631578947368421,
     "ok_py_generated": true,
-    "last_tested_round": 35,
-    "status": "pending"
+    "last_tested_round": 4,
+    "status": "pending",
+    "matched_functions": 12,
+    "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy_context.pyc",
@@ -2251,12 +2279,14 @@
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/data_proxy.pyc",
     "size": 5062,
-    "function_count": 8,
-    "decompile_status": "ok",
-    "bytecode_match_rate": 1.0,
+    "function_count": 9,
+    "decompile_status": "partial",
+    "bytecode_match_rate": 0.8888888888888888,
     "ok_py_generated": true,
-    "last_tested_round": 35,
-    "status": "pending"
+    "last_tested_round": 4,
+    "status": "pending",
+    "matched_functions": 8,
+    "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/default_info.pyc",
@@ -2281,12 +2311,14 @@
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/merger_storage.pyc",
     "size": 3814,
-    "function_count": 5,
-    "decompile_status": "ok",
-    "bytecode_match_rate": 1.0,
+    "function_count": 7,
+    "decompile_status": "partial",
+    "bytecode_match_rate": 0.8571428571428571,
     "ok_py_generated": true,
-    "last_tested_round": 35,
-    "status": "pending"
+    "last_tested_round": 4,
+    "status": "pending",
+    "matched_functions": 6,
+    "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/trading_dates_mixin.pyc",
@@ -2382,13 +2414,15 @@
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/__init__.pyc",
     "size": 14079,
-    "function_count": 18,
-    "decompile_status": "ok",
-    "bytecode_match_rate": 1.0,
+    "function_count": 20,
+    "decompile_status": "partial",
+    "bytecode_match_rate": 0.95,
     "ok_py_generated": true,
-    "last_tested_round": 45,
+    "last_tested_round": 4,
     "mismatch_count": 1,
-    "status": "pending"
+    "status": "pending",
+    "matched_functions": 19,
+    "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/const.pyc",
@@ -2413,12 +2447,14 @@
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/base.pyc",
     "size": 30588,
-    "function_count": 38,
-    "decompile_status": "ok",
-    "bytecode_match_rate": 1.0,
+    "function_count": 41,
+    "decompile_status": "partial",
+    "bytecode_match_rate": 0.9512195121951219,
     "ok_py_generated": true,
-    "last_tested_round": 35,
-    "status": "pending"
+    "last_tested_round": 4,
+    "status": "pending",
+    "matched_functions": 39,
+    "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/history_api.pyc",
@@ -2538,12 +2574,14 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/setting_api.pyc",
     "size": 19179,
     "function_count": 15,
-    "decompile_status": "ok",
-    "bytecode_match_rate": 1.0,
+    "decompile_status": "partial",
+    "bytecode_match_rate": 0.9333333333333333,
     "ok_py_generated": true,
-    "last_tested_round": 1,
+    "last_tested_round": 4,
     "mismatch_count": 2,
-    "status": "pending"
+    "status": "pending",
+    "matched_functions": 14,
+    "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/local_variables/__init__.pyc",
@@ -2883,12 +2921,14 @@
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_control/__init__.pyc",
     "size": 4730,
-    "function_count": 12,
-    "decompile_status": "ok",
-    "bytecode_match_rate": 1.0,
+    "function_count": 13,
+    "decompile_status": "partial",
+    "bytecode_match_rate": 0.9230769230769231,
     "ok_py_generated": true,
-    "last_tested_round": 35,
-    "status": "pending"
+    "last_tested_round": 4,
+    "status": "pending",
+    "matched_functions": 12,
+    "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_debug/__init__.pyc",
@@ -3163,8 +3203,8 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_control/position_validator.pyc",
     "size": 4265,
     "function_count": 4,
-    "decompile_status": "ok",
-    "bytecode_match_rate": 1.0,
+    "decompile_status": "partial",
+    "bytecode_match_rate": 0.8,
     "ok_py_generated": true,
     "last_tested_round": 35,
     "status": "pending"
@@ -3202,22 +3242,26 @@
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_simulation/broker.pyc",
     "size": 19255,
-    "function_count": 22,
-    "decompile_status": "ok",
-    "bytecode_match_rate": 1.0,
+    "function_count": 24,
+    "decompile_status": "partial",
+    "bytecode_match_rate": 0.9583333333333334,
     "ok_py_generated": true,
-    "last_tested_round": 35,
-    "status": "pending"
+    "last_tested_round": 4,
+    "status": "pending",
+    "matched_functions": 23,
+    "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_simulation/live.pyc",
     "size": 21828,
-    "function_count": 24,
-    "decompile_status": "ok",
-    "bytecode_match_rate": 1.0,
+    "function_count": 26,
+    "decompile_status": "partial",
+    "bytecode_match_rate": 0.9615384615384616,
     "ok_py_generated": true,
-    "last_tested_round": 35,
-    "status": "pending"
+    "last_tested_round": 4,
+    "status": "pending",
+    "matched_functions": 25,
+    "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/__init__.pyc",
@@ -3275,45 +3319,53 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/ptrade_broker.pyc",
     "size": 26297,
     "function_count": 11,
-    "decompile_status": "ok",
-    "bytecode_match_rate": 1.0,
+    "decompile_status": "partial",
+    "bytecode_match_rate": 0.9090909090909091,
     "ok_py_generated": true,
-    "last_tested_round": 1,
+    "last_tested_round": 4,
     "mismatch_count": 2,
-    "status": "pending"
+    "status": "pending",
+    "matched_functions": 10,
+    "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/ptrade_future_broker.pyc",
     "size": 21754,
     "function_count": 10,
-    "decompile_status": "ok",
-    "bytecode_match_rate": 1.0,
+    "decompile_status": "partial",
+    "bytecode_match_rate": 0.9,
     "ok_py_generated": true,
-    "last_tested_round": 1,
+    "last_tested_round": 4,
     "mismatch_count": 2,
-    "status": "pending"
+    "status": "pending",
+    "matched_functions": 9,
+    "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/ptrade_hks_broker.pyc",
     "size": 17231,
     "function_count": 9,
-    "decompile_status": "ok",
-    "bytecode_match_rate": 1.0,
+    "decompile_status": "partial",
+    "bytecode_match_rate": 0.8888888888888888,
     "ok_py_generated": true,
-    "last_tested_round": 1,
+    "last_tested_round": 4,
     "mismatch_count": 3,
-    "status": "pending"
+    "status": "pending",
+    "matched_functions": 8,
+    "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/ptrade_option_broker.pyc",
     "size": 21607,
     "function_count": 10,
-    "decompile_status": "ok",
-    "bytecode_match_rate": 1.0,
+    "decompile_status": "partial",
+    "bytecode_match_rate": 0.9,
     "ok_py_generated": true,
-    "last_tested_round": 1,
+    "last_tested_round": 4,
     "mismatch_count": 2,
-    "status": "pending"
+    "status": "pending",
+    "matched_functions": 9,
+    "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/send_message_api.pyc",
@@ -3383,11 +3435,13 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/arg_checker.pyc",
     "size": 24239,
     "function_count": 43,
-    "decompile_status": "ok",
-    "bytecode_match_rate": 1.0,
+    "decompile_status": "partial",
+    "bytecode_match_rate": 0.9767441860465116,
     "ok_py_generated": true,
-    "last_tested_round": 35,
-    "status": "pending"
+    "last_tested_round": 4,
+    "status": "pending",
+    "matched_functions": 42,
+    "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/bcolz_help.pyc",
@@ -3493,12 +3547,14 @@
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/logger/handlers.pyc",
     "size": 8737,
-    "function_count": 13,
-    "decompile_status": "ok",
-    "bytecode_match_rate": 1.0,
+    "function_count": 14,
+    "decompile_status": "partial",
+    "bytecode_match_rate": 0.9285714285714286,
     "ok_py_generated": true,
-    "last_tested_round": 35,
-    "status": "pending"
+    "last_tested_round": 4,
+    "status": "pending",
+    "matched_functions": 13,
+    "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/option.pyc",
@@ -3566,12 +3622,14 @@
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/trade_schedule.pyc",
     "size": 14260,
-    "function_count": 7,
-    "decompile_status": "ok",
-    "bytecode_match_rate": 1.0,
+    "function_count": 9,
+    "decompile_status": "partial",
+    "bytecode_match_rate": 0.7777777777777778,
     "ok_py_generated": true,
-    "last_tested_round": 35,
-    "status": "pending"
+    "last_tested_round": 4,
+    "status": "pending",
+    "matched_functions": 7,
+    "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/version.pyc",
@@ -3618,12 +3676,14 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/common.pyc",
     "size": 7011,
     "function_count": 6,
-    "decompile_status": "ok",
-    "bytecode_match_rate": 1.0,
+    "decompile_status": "partial",
+    "bytecode_match_rate": 0.8333333333333334,
     "ok_py_generated": true,
-    "last_tested_round": 1,
+    "last_tested_round": 4,
     "mismatch_count": 1,
-    "status": "pending"
+    "status": "pending",
+    "matched_functions": 5,
+    "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/const.pyc",
@@ -3710,8 +3770,8 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/flytools.pyc",
     "size": 53107,
     "function_count": 65,
-    "decompile_status": "ok",
-    "bytecode_match_rate": 1.0,
+    "decompile_status": "partial",
+    "bytecode_match_rate": 0.9692307692307692,
     "ok_py_generated": true,
     "last_tested_round": 1,
     "mismatch_count": 3,
@@ -3838,13 +3898,15 @@
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/user_error.pyc",
     "size": 5669,
-    "function_count": 3,
-    "decompile_status": "ok",
-    "bytecode_match_rate": 1.0,
+    "function_count": 4,
+    "decompile_status": "partial",
+    "bytecode_match_rate": 0.5,
     "ok_py_generated": true,
-    "last_tested_round": 1,
+    "last_tested_round": 4,
     "mismatch_count": 1,
-    "status": "pending"
+    "status": "pending",
+    "matched_functions": 2,
+    "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/fly/data/__init__.pyc",
@@ -3861,11 +3923,12 @@
     "size": 209494,
     "function_count": 143,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.993006993006993,
+    "bytecode_match_rate": 0.993,
     "ok_py_generated": true,
-    "last_tested_round": 4,
+    "last_tested_round": 5,
     "status": "pending",
-    "matched_functions": 142
+    "matched_functions": 142,
+    "note": "R5-A change reverted: gained 1 func here but crashed 2 other files"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quote.pyc",
@@ -3967,12 +4030,14 @@
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/fly/event/event_engine.pyc",
     "size": 7927,
-    "function_count": 16,
-    "decompile_status": "ok",
-    "bytecode_match_rate": 1.0,
+    "function_count": 19,
+    "decompile_status": "partial",
+    "bytecode_match_rate": 0.9473684210526315,
     "ok_py_generated": true,
-    "last_tested_round": 35,
-    "status": "pending"
+    "last_tested_round": 4,
+    "status": "pending",
+    "matched_functions": 18,
+    "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/fly/event/event_priority.pyc",

@@ -345,7 +345,8 @@ def bytecode_diff(pyc_path: str, ok_py_path: str) -> dict:
 # 3. 批量模式
 # ════════════════════════════════════════════════════════════════════
 
-def batch_verify(index_path: str = None, max_count: int = None, round_num: int = 1) -> dict:
+def batch_verify(index_path: str = None, max_count: int = None, round_num: int = 1,
+                 include_ok: bool = False) -> dict:
     """批量验证 pyc_index.json 中的条目。
 
     对每个 decompile_status != 'ok' 的 pyc 执行：
@@ -353,6 +354,11 @@ def batch_verify(index_path: str = None, max_count: int = None, round_num: int =
       2. 字节码 diff
       3. 更新 pyc_index.json 条目
       4. 打印进度
+
+    include_ok=True 时**连已标记 ok 的条目一起重跑**（全量复验）。
+    这是必要的：默认模式跳过 ok 条目，一旦某文件被标成 ok 就永不复验，
+    后续改动使其退化也不会被发现，索引会长期虚高（本项目曾因此把
+    334 ok 的真实状态记成 370 ok）。每轮收尾应用 include_ok=True 复核。
 
     单个 pyc 失败不中断流程。返回累计统计 dict。
     """
@@ -367,14 +373,18 @@ def batch_verify(index_path: str = None, max_count: int = None, round_num: int =
     with open(index_file, 'r', encoding='utf-8') as f:
         entries = json.load(f)
 
-    # 筛选待验证条目（decompile_status != 'ok'）
-    pending = [e for e in entries if e.get('decompile_status') != 'ok']
+    # 筛选待验证条目（默认 decompile_status != 'ok'；include_ok 时全部）
+    if include_ok:
+        pending = list(entries)
+    else:
+        pending = [e for e in entries if e.get('decompile_status') != 'ok']
     if max_count is not None:
         pending = pending[:max_count]
 
     total_pyc = len(entries)
     print(f'[BATCH] index={index_path}')
-    print(f'[BATCH] total={total_pyc}, pending={len(pending)}, round={round_num}')
+    print(f'[BATCH] total={total_pyc}, pending={len(pending)}, round={round_num}, '
+          f'include_ok={include_ok}')
     print('-' * 70)
 
     for idx, entry in enumerate(pending, start=1):
@@ -630,11 +640,12 @@ def _cmd_single(pyc_path: str, ok_py_path: str) -> int:
     return 0
 
 
-def _cmd_batch(index_path: str, max_count: int, round_num: int) -> int:
+def _cmd_batch(index_path: str, max_count: int, round_num: int,
+               include_ok: bool = False) -> int:
     """batch 子命令：批量验证模式。"""
     print(f'[BATCH] index={index_path or DEFAULT_INDEX_PATH}, '
-          f'max_count={max_count}, round={round_num}')
-    stats = batch_verify(index_path, max_count, round_num)
+          f'max_count={max_count}, round={round_num}, include_ok={include_ok}')
+    stats = batch_verify(index_path, max_count, round_num, include_ok=include_ok)
     print()
     _print_stats(stats)
     return 0
@@ -680,6 +691,8 @@ def main():
                           help='限制处理数量（用于单轮测试）')
     p_batch.add_argument('--round', type=int, default=1,
                           help='当前轮次标记（写入 last_tested_round）')
+    p_batch.add_argument('--all', dest='include_ok', action='store_true',
+                          help='全量复验：连已标记 ok 的条目也重跑（防止 ok 标记长期虚高）')
 
     # stats 子命令
     p_stats = sub.add_parser('stats', help='仅打印累计统计')
@@ -691,7 +704,8 @@ def main():
     if args.command == 'single':
         return _cmd_single(args.pyc_path, args.ok_py)
     elif args.command == 'batch':
-        return _cmd_batch(args.index, args.max_count, args.round)
+        return _cmd_batch(args.index, args.max_count, args.round,
+                          include_ok=getattr(args, 'include_ok', False))
     elif args.command == 'stats':
         return _cmd_stats(args.index)
 
