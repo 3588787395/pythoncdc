@@ -16004,8 +16004,12 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                         _or_ft_last = _or_ft.get_last_instruction()
                         if _or_ft_last is None or _or_ft_last.opname not in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS):
                             break
+                        # [P1-1a 链成员纯净性] 与 and 链同理：or 短路链成员块
+                        # 不得含 STORE_*/POP_TOP（用户语句痕迹），否则折叠会把
+                        # 语句提升出条件、改变副作用语义。
                         if any(i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
                                             'STORE_DEREF', 'STORE_SUBSCR', 'STORE_ATTR')
+                               or i.opname == 'POP_TOP'
                                for i in _or_ft.instructions):
                             break
                         if 'IF_TRUE' in _or_ft_last.opname:
@@ -16091,8 +16095,19 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                                 break
                             if 'IF_TRUE' in _main_ft_last.opname:
                                 break
+                            # [P1-1a 链成员纯净性] and 短路链的每个后续成员块必须
+                            # 是纯条件求值块：真实 `if A and B:` 的操作数求值指令
+                            # 连续且其值由条件跳转直接消费——成员块内不可能出现
+                            # STORE_*（赋值/walrus）或 POP_TOP（被丢弃的表达式语
+                            # 句）。成员块夹有这类指令说明它是嵌套 if 的条件块，
+                            # 前缀语句是外层 if 体的用户语句（`if A: {S; if B: X}`
+                            # 的 S）；折叠成 `A and B` 会把 S 提升出条件，副作用
+                            # 变为无条件执行（kill_trade_process 的 log+rm 提升
+                            # 即此缺陷）。首块例外：其前置语句位于整个 if 之前，
+                            # 提升为 pre_stmts 是程序序保真的。
                             if any(i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
                                                 'STORE_DEREF', 'STORE_SUBSCR', 'STORE_ATTR')
+                                   or i.opname == 'POP_TOP'
                                    for i in _main_ft_next.instructions):
                                 break
                             if _main_ft_last.argval != _main_merge_offset:
@@ -22900,11 +22915,43 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 jt = self.cfg.get_block_by_offset(ci.argval)
                 if jt is not None:
                     if jt == then_body:
-                        jt_id = id(jt)
-                        if jt_shared_count.get(jt_id, 0) >= 2:
-                            op_type = 'and'
-                        else:
+                        # [P1-1 fix 极性感知收敛判定] 旧判据「目标被 ≥2 个链
+                        # 成员共享 → and 链 exit 汇合」忽略了 or 链的成功跳转
+                        # 同样收敛到 then_body：`bm is None or bm == B2 or
+                        # reloads:` 中 IF_NONE(→body) 与 IF_TRUE(→body) 共享
+                        # 同一目标，是典型 or 链（create_user_code_iqe 被反
+                        # 演成 `is not None and ...` 的根因）。区分依据是共
+                        # 享成员的跳转极性：
+                        #   - IF_TRUE / NONE_CHECK 共享 → 成功极性（跳转=操
+                        #     作数为真短路进 body）→ or 链；
+                        #   - IF_FALSE 共享 → 失败极性（操作数为假跳 exit）
+                        #     → and 链。
+                        # NONE_CHECK 共享按成功极性处理：and 成员的失败跳转
+                        # 目标是链 exit，而 exit ≠ then_body（then_body 是
+                        # 末成员的 fall-through），不会进入本分支。
+                        _shared_success = False
+                        _shared_failure = False
+                        for _ob, _ in chain:
+                            if _ob is block:
+                                continue
+                            _oci = _ob.get_last_instruction()
+                            if (_oci is None or _oci.argval is None
+                                    or _oci.opname not in (SHORT_CIRCUIT_JUMP_OPS | FORWARD_CONDITIONAL_JUMP_OPS)):
+                                continue
+                            _ojt = self.cfg.get_block_by_offset(_oci.argval)
+                            if _ojt is not jt:
+                                continue
+                            if 'IF_FALSE' in _oci.opname:
+                                _shared_failure = True
+                            else:
+                                # IF_TRUE / IF_NONE / IF_NOT_NONE：跳转时操作
+                                # 数为「真」（NONE_CHECK 跳转时恰为 None/非
+                                # None 本身），与 then_body 收敛即成功短路。
+                                _shared_success = True
+                        if _shared_success and not _shared_failure:
                             op_type = 'or'
+                        else:
+                            op_type = 'and'
                     else:
                         op_type = 'and'
             fixed_chain.append((block, op_type))
@@ -23153,6 +23200,13 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             # 若不排除，下方值块扩展会把嵌套 if 条件块（下一 elif 条件等）
             # 吸进 region.blocks（违反每块唯一归属），导致分支体被吞、
             # 共享 return 错位。
+            # [P1-1 fix 收紧] 共享判据从「全体同一目标」收紧为「任两个成员
+            # 共享同一目标」：or 链的成功跳转收敛（`bm is None or bm == B2
+            # or reloads:` 的 IF_NONE 与 IF_TRUE 同指 then 入口 36）同样使
+            # 目标数 < 成员数——该共享目标是 body 入口，不是 false_value，
+            # 值块扩展会把 body 首块（嵌套 if 条件块）吞进 region.blocks，
+            # 内层 if/else 被拍平（create_user_code_iqe）。真三元链的各条件
+            # 块目标互不相同（各自独立的 false_value）。
             _w14_tt = set()
             for _cb, _ in chain:
                 _cb_li = _cb.get_last_instruction()
@@ -23164,7 +23218,7 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     _w14_tt.clear()
                     break
                 _w14_tt.add(id(_tb))
-            if len(_w14_tt) == 1:
+            if len(_w14_tt) < len(chain):
                 _all_ternary_cond_c = False
         if _all_ternary_cond_c:
             # [W14-A 修复·真/假出口目标对判据] 全体成员原始跳转目标同一块的
@@ -23173,11 +23227,13 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             # 若不排除，下面的值块扩展会把嵌套 if 条件块/下一 elif 条件块
             # 吸进 region.blocks（违反每块唯一归属），导致分支体被吞、
             # 共享尾 return 错位。
+            # [P1-1 fix 收紧] 同上：任两个成员共享目标（目标数 < 成员数）
+            # 即非三元链（or 成功跳转收敛 / and 失败跳转收敛）。
             _w14_tt = set()
             for _cb, _ in chain:
                 _cb_li = _cb.get_last_instruction()
                 _w14_tt.add(id(self.cfg.get_block_by_offset(_cb_li.argval)))
-            if len(_w14_tt) == 1:
+            if len(_w14_tt) < len(chain):
                 _all_ternary_cond_c = False
         if _all_ternary_cond_c:
             for _cb, _ in chain:

@@ -7,11 +7,13 @@
   - [ ] SubTask 1.4: Batch regression test on all 30 partial files
   - [ ] SubTask 1.5: Commit and push Round 1
 
-- [ ] Task 2: Round 2 — Fix next lowest-rate pyc (real_quote.pyc 79.6%)
-  - [ ] SubTask 2.1: Test engineer: decompile and analyze mismatches, create repro cases
-  - [ ] SubTask 2.2: Fix engineer: fix region analysis for identified patterns
-  - [ ] SubTask 2.3: Verify target pyc reaches 100%, batch regression
-  - [ ] SubTask 2.4: Commit and push Round 2
+- [x] Task 2: Round 2 — Deep analysis of trade_info_utils.pyc remaining 10 mismatching functions
+  - [x] SubTask 2.1: Test engineer: classified 10 mismatches into 2 categories
+    - Category A (4 functions, jump-only equivalence): query_strategy_id, query_trade_strategy_info, set_trade_status, check_and_update_trade — POP_EXCEPT vs LOAD_CONST first_diff, raw filtered instructions identical, only jump target layout differs
+    - Category B (6 functions, genuine structural bugs): create_user_code_iqe (279), get_last_stat (176), get_user_info (66), kill_trade_process (283), get_trade_unit_info (130), trade_operation (133)
+  - [x] SubTask 2.2: Analysis complete — Category A is comparator normalization limitation (not decompiler bug); Category B requires deep decompiler reconstruction fixes
+  - [x] SubTask 2.3: Fix Category B structural bugs one by one (P0-1 done: orelse None→[] + per-statement degradation → 5 funcs solved; R2-SWAP deferred return-in-loop → get_user_info solved; R2-With ternary-with overlap → trade_operation with solved; P1-1a boolop chain purity → r2_05 solved)
+  - [x] SubTask 2.4: Document findings (test_repros/round2/ANALYSIS.md + 11 repros, 7/11 now match)
 
 - [ ] Task 3: Round 3 — Fix plugin_system_log/__init__.pyc (80%)
   - [ ] SubTask 3.1: Test engineer: analyze and create repro cases
