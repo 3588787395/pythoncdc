@@ -14219,6 +14219,17 @@ AST 映射规则:
             # [关键修复] 跳过 is_empty_then_chained_compare 的子 IfRegion
             # 这种子区域是链式比较模式的内部结构，不是真正的 if 语句
             if isinstance(child, IfRegion) and getattr(child, 'is_empty_then_chained_compare', False):
+                # [R6 fix] 若该链式比较子区域位于**本 if 的 else 分支**内，
+                # 它是 else 体表达式（如 `else: return a <= b < c or d <= e < f`
+                # 中的两个链式比较）的归约来源，归 else 分支所有。
+                # then 分支不得预消费其块——否则 else 体坍缩为空语句，
+                # 尾部 `else: return ...` 整段丢失。
+                # 依原则 2（每块唯一归属）+ 原则 4（父引用子入口）：
+                # 块归属由条件跳转目标决定的 else 分支归约。
+                # 实例：trade_schedule.pyc 的 is_stock_trade_trigger /
+                # is_future_trade_trigger（R61 起 1.0 -> 0.7778）。
+                if region.else_blocks and child.entry in set(region.else_blocks):
+                    continue
                 for b in child.blocks:
                     self.generated_blocks.add(b)
                 continue
