@@ -16358,6 +16358,72 @@ AST 映射规则:
             else_stmts = _5_inner_orelse
             if _5_remaining:
                 _5_post_extra = _5_remaining
+        # [R2-Merge] merge 块归属修正（then 尾随 return 型 merge）：
+        # 当 IfRegion 有 else 分支、merge_block 存在、且 merge 的全部前驱
+        # 都在 then_blocks 内（else 分支以无条件 return/RERAISE 终止，不可
+        # 达 merge）时，merge 块的语句属于 then 体末尾——原始源码形如
+        # `if c: A; return X; else: B`，CPython 布局为
+        # [PJIF→else][A][return X][else: B]，return 后无 JUMP。
+        # 若把 merge 语句留给父序列作为 post-if 代码发射，源码会变成
+        # `if c: A else: B; return X`，重编译在 if 体末多出 JUMP_FORWARD
+        # （跳过 else 到尾部 return），字节码 +1 指令且排布错位
+        # （trade_operation 的 return None@1464 即此形态）。
+        # 依「每块唯一归属」：merge 的唯一可达前驱在 then 内，归属 then 体，
+        # 此处生成其语句并标记 generated，父序列不再重复发射。
+        if (else_stmts
+                and getattr(region, 'condition_block', None) is not None
+                and getattr(region, 'then_blocks', None)):
+            # [R2-Merge] then 尾随 return 块归属修正。
+            # 源码 `if c: A; return X; else: B` 的 CPython 布局为
+            # [PJIF→else][A][return X][else: B]：then 尾的显式 return 块
+            # 紧邻 else 首块之前、且 else 分支以无条件 return 终止
+            # （else 闭包不可达该块）。区域归约未把该块划入任何分支
+            # （merge_block=None）时，父序列会把它作为 post-if 语句发射，
+            # 源码变成 `if c: A else: B; return X`，重编译在 if 体末多出
+            # JUMP_FORWARD（trade_operation return None@1464 即此形态）。
+            # 依「每块唯一归属」（唯一可达前驱在 then 侧）：归约时把该块
+            # 生成到 then 体末尾并标记 generated。
+            _else_list2 = sorted(getattr(region, 'else_blocks', None) or [],
+                                 key=lambda b: b.start_offset)
+            _then_offsets2 = {b.start_offset for b in region.then_blocks}
+            if _else_list2:
+                _else_first2 = _else_list2[0]
+                _cand2 = None
+                for _b2 in self.cfg.blocks.values():
+                    if (_b2.start_offset < _else_first2.start_offset
+                            and (_cand2 is None
+                                 or _b2.start_offset > _cand2.start_offset)
+                            and _b2 not in (getattr(region, 'else_blocks', None) or set())
+                            and _b2 not in self.generated_blocks):
+                        _cand2 = _b2
+                if (_cand2 is not None
+                        and _cand2.start_offset > min(_then_offsets2)
+                        and _cand2.instructions
+                        and _cand2.get_last_instruction() is not None
+                        and _cand2.get_last_instruction().opname in ('RETURN_VALUE', 'RETURN_CONST')
+                        and getattr(region, 'merge_block', None) is None):
+                    # else 后继闭包不可达候选块
+                    _else_reach2 = set()
+                    _queue2 = list(_else_list2)
+                    _depth2 = 0
+                    while _queue2 and _depth2 < 32:
+                        _cur2 = _queue2.pop(0)
+                        _depth2 += 1
+                        if _cur2 in _else_reach2:
+                            continue
+                        _else_reach2.add(_cur2)
+                        for _s2 in (_cur2.successors or set()):
+                            if _s2 not in _else_reach2:
+                                _queue2.append(_s2)
+                    _preds_in_else2 = any(p in _else_reach2
+                                          for p in _cand2.predecessors)
+                    if not _preds_in_else2:
+                        _merge_stmts2 = self._generate_block_statements(_cand2)
+                        if _merge_stmts2:
+                            then_stmts = (then_stmts or []) + _merge_stmts2
+                            self.generated_blocks.add(_cand2)
+                            for _mi2 in _cand2.instructions:
+                                self.generated_offsets.add(_mi2.offset)
         result = {'type': 'If', 'test': condition, 'body': then_stmts, 'orelse': else_stmts if else_stmts else None}
         self._generating_regions.discard(region_id)
         self._generated_regions.add(region_id)

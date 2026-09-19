@@ -661,12 +661,12 @@
     "size": 83014,
     "function_count": 40,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.9,
+    "bytecode_match_rate": 0.925,
     "ok_py_generated": true,
     "last_tested_round": 2,
     "mismatch_count": 16,
     "status": "pending",
-    "matched_functions": 36
+    "matched_functions": 37
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/tradingday_info_utils.pyc",
