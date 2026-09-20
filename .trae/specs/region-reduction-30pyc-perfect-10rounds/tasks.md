@@ -121,7 +121,7 @@
         严格尺子复验，本轮至少 1 个 pyc 由 partial → 100%
   - [x] SubTask 12.4: quotation.pyc 单文件验证（核心侧 +1 函数劣化，产物门自动回滚，OK.py 仍 148/150 未劣化）
   - [x] SubTask 12.5: 批量回归：全量 402 严格尺子 + 官方口径双复验，零回归（产物门 CLEAN=320 FLIPPED-CLEAN=3 IMPROVED=1，11 个劣化自动回滚）
-  - [ ] SubTask 12.6: 提交并 push（仅 add 本轮实际改动文件，禁 git add -A / 禁回退用户脏工作区）
+  - [x] SubTask 12.6: 提交并 push（f89b85f2 → origin/main；仅 add 本轮实际改动文件，未用 git add -A）
 
 - [ ] Task 13: Round 14 — 区域归属层解决「前缀语句已发射」判据（A2 回退项的正解）
   - [ ] SubTask 13.1: 在**归属层**记录「块语句序列由哪个区域发射」：
@@ -141,9 +141,12 @@
         region_ast_generator 未提交簇 → base_validator._check_order /
         quotation.change_future_real_date；
         已丢失的上一会话改进（无快照）→ trade_live_broker +16 / quote +9
+        （Round 14 实测已完成归因：三个 core 文件同时退回提交态后，这 11 个文件的
+        严格尺子数字与缺陷集与本轮 hunks **完全相同** ⇒ 纯为 Round 13 提交遗留的
+        「产物优于核心」债，证据见 rounds/round14/OUTCOME.md §四）
   - [ ] SubTask 13.4: R13-C 链尾吸收（约 46 个函数字节差，收益面最大）：
         region_analyzer 链 merge 计算为 None 时的合流点归约
-  - [ ] SubTask 13.5: R13-D dict 两个推导式折叠（broker / live 两文件各翻正 1）
+  - [x] SubTask 13.5: R13-D dict 两个推导式折叠（broker 29/29、live 29/29，函数级 58/58，翻正 2 个 pyc）
   - [ ] SubTask 13.6: 全量 402 严格尺子 + 官方口径双复验，产物零回退
   - [ ] SubTask 13.7: 提交并 push
 
@@ -153,3 +156,24 @@
 - 教训（记录，避免再犯）：`baseline_strict_ok351.txt` 文件名中的 351 是
   **官方**口径数，文件内 `OK` 行实为 321 条（严格口径）；两把尺子的数字
   不得互相减法比较。
+
+- [x] Task 14: Round 14 — 值上下文表达式 merge 块的「双角色」归属（A-1）+ R14-D dict 推导式
+  - [x] SubTask 14.1: 测试工程师定位 `region_analyzer.py:15910` 无条件 `continue` 吞掉后继
+          语句的 if；证据与判据见 `test_repros/round14_join/ANALYSIS.md`
+          （16 复现：11 MISMATCH + 5 负对照 MATCH，全部实测）
+  - [x] SubTask 14.2: 修复工程师新增语言级判据 `_value_merge_hosts_next_if`（注释含
+          「识别条件→归约方式→AST 映射」），作为原则 2 的例外 3 接入 `_is_merge_next_stmt_if`，
+          与例外 1/2 共用 `guard_clause_prefix_end` 切分；三元路径判据统一委托，不再各维护一份
+  - [x] SubTask 14.3: 发射侧补齐归属层信息：抽出 `_boolop_merge_owner_for`（生成期丢弃路径
+          与 `_if_generate_normal` 双角色路径共用）+ `prefix_stmts_pending` 一次性延迟记录
+  - [x] SubTask 14.4: 窄化 `_conditional_value_producing_arms`：两条后继各自以「对同一目标的
+          STORE_*」结案 ⇒ 该测试属赋值表达式（三元），例外 3 拒绝；消除唯一劣化 `parse_db_url`
+  - [x] SubTask 14.5: 文件级 A/B 归因（14 文件集）：all_HEAD 530/589 → 本轮 534/589，
+          优势 4 个函数、劣势 0；11 处劣化证明为 Round 13 遗留债（SubTask 13.3）
+  - [x] SubTask 14.6: quotation.pyc 单验 148/150 → 147/150，产物门自动回滚（all_HEAD 同为 147）
+  - [x] SubTask 14.7: 全量产物门 406 targets：CLEAN=327 UNCHANGED=67 WORSENED(回滚)=9
+          REGRESSION(回滚)=2 NO-OKPY=1；翻正到 100% 的 pyc = IQCommon/profiler_func 16/16、
+          IQData/utils/profiler_func 14/14（满足「每轮至少解决一个 pyc」）
+  - [ ] SubTask 14.8: 本轮未完项移交：SubTask 13.1/13.2（`round14_join` 11 个 MISMATCH：
+          前缀重复 +13 与 then 区截断同族）、SubTask 13.4（R13-C 链尾吸收，含 A-2
+          `PluginManager.set_engine` ×2）、Task 5 遗留（`decrypt_database_url` +29、cgroup +2/+1）

@@ -15903,9 +15903,25 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                                 _other_store_after_vt = True
                     if _vt_store_idx is not None and _other_store_after_vt:
                         _is_merge_with_guard_clause = True
+                # 例外3 [Round14-A1]：值上下文 BoolOp 的 merge_block 在**语句边界**
+                # 之后承载下一条语句的 if 测试。典型字节码：
+                #   STORE_NAME PY35          <- BoolOp 值归并 + 语句终结
+                #   LOAD_NAME PY35           <- 下一条语句的条件操作数
+                #   POP_JUMP_IF_FALSE L      <- 真 if 测试
+                # 两语句被划进同一基本块，块既是 BoolOp 归并点又是 IfRegion 入口。
+                # 判据是语言级的（见 _value_merge_hosts_next_if），不是实例驱动的：
+                # 只有值已被语句边界消费掉、且分支体完全在表达式区域之外时，
+                # 块尾的条件跳转才可能属于**后继语句**而非该表达式。
+                _is_merge_next_stmt_if = (
+                    not _is_merge_if_condition
+                    and not _is_merge_with_guard_clause
+                    and self._value_merge_hosts_next_if(block, _owning_boolop)
+                )
                 if _is_merge_if_condition:
                     pass  # 允许后续创建 IfRegion
                 elif _is_merge_with_guard_clause:
+                    pass
+                elif _is_merge_next_stmt_if:
                     pass
                 elif any(block in br.blocks and br.entry != block for br in self._filter_regions(boolop_regions or [], BoolOpRegion)):
                     continue
@@ -15929,7 +15945,8 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             condition_block = block
             chain_blocks = set()
             _merge_boolop_guard_prefix_end = None
-            if _owning_boolop is not None and _is_merge_with_guard_clause:
+            if (_owning_boolop is not None
+                    and (_is_merge_with_guard_clause or _is_merge_next_stmt_if)):
                 _vt_store_idx2 = None
                 for _ii, _instr in enumerate(block.instructions):
                     if _instr.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_ATTR', 'STORE_SUBSCR'):
@@ -25395,6 +25412,88 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 return False
         return True
 
+    def _value_merge_hosts_next_if(self, block, expr_region) -> bool:
+        """识别条件（值表达式区域的归并块承载**下一条语句**的 if 测试）：
+        - block 恰为该表达式区域（BoolOpRegion / TernaryRegion）的 merge_block
+          且不是其 entry（即该块是值归并点）；
+        - 该区域处于**值上下文**（is_condition_context 不为 True）：条件上下文的
+          BoolOp 本身就是 if 测试，不存在「下一条语句」；
+        - 区域真/假值臂已在 block 内被语句级消费者终结：块末指令之前存在
+          POP_TOP（表达式语句丢弃栈值）或 STORE_*（赋值语句存值）——这是 CPython
+          语言级语句边界不变量；
+        - 该消费者之后、块末之前是一段完整的操作数构造指令（LOAD_*/COMPARE_OP/
+          CONTAINS_OP/IS_OP/UNARY_*/PUSH_NULL/CALL/GET_*/MAKE_*）；
+        - 块末指令是 POP_JUMP_FORWARD_IF_*（FORWARD_CONDITIONAL_JUMP_OPS）、恰有
+          两个条件后继，且二者均在 expr_region.blocks 之外（分支体不属于该表达式）。
+        此时块的尾部跳转在控制流上属于**后继语句**，块因此不再被该表达式区域的
+        「每块唯一归属」屏蔽规则跳过（原则 2 的显式例外，与 loop_condition_blocks
+        同源），可作为 IfRegion 的 entry 与 condition_block；表达式区域自身作为
+        抽象子节点由块前缀语句发射（原则 3/4）。
+
+        归约方式：表达式区域自底向上先归约完毕（原则 1），其值在本块已被消费；
+        AST 映射：If(test, then_body[, else_body])，前缀 Expr/Assign 语句在该 If 之前。
+        """
+        if expr_region is None or getattr(expr_region, 'merge_block', None) is not block:
+            return False
+        if expr_region.entry is block:
+            return False
+        # 仅值上下文表达式区域才有「值被消费后接下一条语句」这一形态
+        if getattr(expr_region, 'is_condition_context', False):
+            return False
+        _last = block.get_last_instruction()
+        if (_last is None or _last.opname not in FORWARD_CONDITIONAL_JUMP_OPS
+                or _last.argval is None):
+            return False
+        if len(list(block.conditional_successors)) != 2:
+            return False
+        _region_blocks = set(expr_region.blocks)
+        if any(_s in _region_blocks for _s in block.conditional_successors):
+            return False
+        _instrs = [i for i in block.instructions if i.opname not in NOISE_OPS]
+        if len(_instrs) < 3:
+            return False
+        _cons_idx = None
+        for _ii in range(len(_instrs) - 1):
+            _op = _instrs[_ii].opname
+            if _op == 'POP_TOP' or _op.startswith('STORE_'):
+                _cons_idx = _ii
+        if _cons_idx is None or _cons_idx >= len(_instrs) - 2:
+            return False
+        _tail_ops = ('LOAD_', 'COMPARE_OP', 'CONTAINS_OP', 'IS_OP', 'UNARY_',
+                     'BINARY_OP', 'PUSH_NULL', 'CALL', 'GET_', 'MAKE_',
+                     'LOAD_METHOD', 'LOAD_ATTR')
+        if not all(_i.opname.startswith(_tail_ops) for _i in _instrs[_cons_idx + 1:-1]):
+            return False
+        return not self._conditional_value_producing_arms(block)
+
+
+    def _conditional_value_producing_arms(self, block) -> bool:
+        """识别「块尾条件跳转的两条分支各以一次同目标 STORE 结束」= 三元赋值测试。
+
+        语言级判据（非实例驱动）：若一条条件跳转是**赋值表达式的测试**
+        （``x = a if c else b``），CPython 3.11 把两个值分支各编译成
+        「求值 a 或 b + STORE x」，较短的分支再补一条 JUMP_FORWARD 跳过另一分支；
+        于是两条后继在剥掉尾部无条件跳转后都以**同一目标**的 STORE_* 结束。
+        该测试的值就在其自身分支内产生并落库，块尾跳转属于**当前表达式**，
+        不是「下一条语句的 if 测试」——故 _value_merge_hosts_next_if 必须拒绝它，
+        让 merge_block 回到原有的单一归属路径（原则 2 的例外只留给真正的语句边界）。
+
+        归约方式：仅在**区域归属**层面读后继块的指令，不跨区域、不改块划分。
+        AST 映射：无（拒绝例外，由既有 IfRegion/三元路径发射 ``x = a if c else b``
+        的等价 if/else 语句形，字节码一致）。
+        """
+        _succs = list(block.conditional_successors)
+        if len(_succs) != 2:
+            return False
+        _targets = []
+        for _s in _succs:
+            _si = [i for i in _s.instructions if i.opname not in NOISE_OPS]
+            while _si and _si[-1].opname in ('JUMP_FORWARD', 'JUMP'):
+                _si = _si[:-1]
+            if not _si or not _si[-1].opname.startswith('STORE_'):
+                return False
+            _targets.append(getattr(_si[-1], 'argval', None))
+        return _targets[0] is not None and _targets[0] == _targets[1]
     def _ternary_merge_hosts_next_if(self, block, tr) -> bool:
         """识别条件（三元归并块承载下一条语句的 if 测试）：
         - block 恰为三元区域 tr 的 merge_block 且不是 tr.entry（值归并点）；
@@ -25417,33 +25516,9 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
         AST 映射：If(test, then_body[, else_body])；三元区域自身的
         Expr(value) 语句仍由块前缀指令发射，位于该 If 之前。
         """
-        if tr is None or getattr(tr, 'merge_block', None) is not block:
-            return False
-        if tr.entry is block:
-            return False
-        _last = block.get_last_instruction()
-        if (_last is None or _last.opname not in FORWARD_CONDITIONAL_JUMP_OPS
-                or _last.argval is None):
-            return False
-        if len(list(block.conditional_successors)) != 2:
-            return False
-        _tr_blocks = set(tr.blocks)
-        if any(_s in _tr_blocks for _s in block.conditional_successors):
-            return False
-        _instrs = [i for i in block.instructions if i.opname not in NOISE_OPS]
-        if len(_instrs) < 3:
-            return False
-        _cons_idx = None
-        for _ii in range(len(_instrs) - 1):
-            _op = _instrs[_ii].opname
-            if _op == 'POP_TOP' or _op.startswith('STORE_'):
-                _cons_idx = _ii
-        if _cons_idx is None or _cons_idx >= len(_instrs) - 2:
-            return False
-        _tail_ops = ('LOAD_', 'COMPARE_OP', 'CONTAINS_OP', 'IS_OP', 'UNARY_',
-                     'BINARY_OP', 'PUSH_NULL', 'CALL', 'GET_', 'MAKE_',
-                     'LOAD_METHOD', 'LOAD_ATTR')
-        return all(_i.opname.startswith(_tail_ops) for _i in _instrs[_cons_idx + 1:-1])
+        # 结构与值上下文 BoolOp 完全同型（值归并点 + 语句边界 + 后继 if 测试），
+        # 归约判据统一到 _value_merge_hosts_next_if，不再各自维护一份。
+        return self._value_merge_hosts_next_if(block, tr)
 
     def _collect_branch_blocks(self, entry, merge, stop_set=None):
         """收集从entry到merge的CFG路径上的所有块（纯CFG拓扑追踪）

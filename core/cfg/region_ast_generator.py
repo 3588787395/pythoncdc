@@ -11050,7 +11050,16 @@ AST 映射规则:
                             _c2_ternary_redirect = True
                             break
                 if not _c2_ternary_redirect:
-                    return []
+                    # [Round14-A1] 双角色块：本区域 entry 同时是某**未生成**的
+                    # 值上下文 BoolOp 的 merge_block（`PY35 = PY3 and ...` 紧跟
+                    # `if PY35:`，两条语句落在同一基本块）。该块被登记为 generated
+                    # 只是 BoolOp 的归并点记账——_generate_boolop 在 guard_clause_skip
+                    # 分支返回 None，把前缀赋值的发射权让给了本 IfRegion。此时丢弃
+                    # IfRegion 会同时吞掉赋值与 if（实测 seq_len 51→16）。正解：保留
+                    # 区域，交 _if_generate_normal 的 _boolop_merge_owner 路径发射
+                    # 「赋值前缀 + if」（原则 3/4：子节点抽象、父引用子入口）。
+                    if self._boolop_merge_owner_for(region) is None:
+                        return []
         for r in self.regions:
             if r is not region and isinstance(r, IfRegion) and hasattr(r, 'elif_conditions') and r.elif_conditions:
                 if region.entry in r.elif_conditions:
@@ -16288,30 +16297,28 @@ AST 映射规则:
             return None
         return {'blocks': chain, 'op': 'and'}
 
-    def _if_generate_normal(self, region: IfRegion) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
-        cond_block = region.condition_block
+    def _boolop_merge_owner_for(self, region: IfRegion, cond_block=None) -> 'BoolOpRegion':
+        """识别条件（双角色条件块的 BoolOp 赋值所有者）：
+        - cond_block（本 IfRegion 的实际条件块，默认 region.condition_block）同时是
+          某 BoolOpRegion 的 merge_block，且该区域 entry 不是 cond_block；
+        - 该 BoolOpRegion 尚未生成、不在生成中，且其 enclosing IfRegion 不是本区域
+          （否则属 outer condition，由 _generate_boolop 自身处理）；
+        - 它有 value_target，且 cond_block 内有 STORE_* 消费其表达式结果
+          （即 `x = a and b` 型独立赋值语句的语句边界就在本块内）。
+
+        归约方式（原则 3 嵌套即抽象节点 + 原则 4 父引用子入口）：该 BoolOpRegion 是
+        本 IfRegion 条件块**前缀**上的抽象子节点，其值已在本块被语句边界消费，
+        块尾的 POP_JUMP_IF_* 属于后继的 if 语句（识别侧判据见
+        RegionAnalyzer._value_merge_hosts_next_if）。因此赋值语句由本方法的所有者
+        先行调 _generate_boolop 发射，if 条件只取 STORE_* 之后的指令。
+
+        AST 映射：pre_stmts=[Assign(x, a and b)]，If.test 由块尾 LOAD/COMPARE 重建。
+        未找到时返回 None。
+        """
         if cond_block is None:
-            return {'type': 'Pass'}
-        if all(self.region_analyzer.get_block_role(b) in (BlockRole.WITH_HANDLER, BlockRole.WITH_EXIT_CLEANUP) for b in region.blocks):
-            for block in region.blocks:
-                self.generated_blocks.add(block)
-            return []
-        region_id = id(region)
-        self._generating_regions.add(region_id)
-        self._or_then_block = None
-        self._or_else_block = None
-        self._or_rhs_block = None
-        # 区域归约算法原则 3（嵌套即抽象节点）+ 原则 4（入口引用语义）：
-        # 当 IfRegion 的 cond_block 同时是某 BoolOpRegion 的 merge_block，且该
-        # BoolOpRegion 的 enclosing 不是本 IfRegion（即 BoolOpRegion 在本 IfRegion
-        # 之外，merge_block 是其赋值目标），cond_block 的前段属于 BoolOpRegion 的
-        # 赋值表达式（BINARY_OP/CALL/STORE_*），不应被 IfRegion 当作 pre_stmt 或
-        # cond_instrs 提取。先调用 _generate_boolop 生成完整赋值（如
-        # `y = g(b[:8] + (len(b[8:]) == 4 and b[8:] or '1530'), '%Y%m%d%H%M')`），
-        # 再从 cond_block 的 STORE_* 之后提取真正的 if 条件（如 `len(z) > 0`）。
-        # 否则 BoolOpRegion 的赋值表达式丢失（fill_minute_or_day_blank 的 source_end
-        # = strptime(... or '1530') 被吞），且 '1530' 错误归为 if 条件。
-        _boolop_merge_owner = None
+            cond_block = getattr(region, 'condition_block', None)
+        if cond_block is None:
+            return None
         for _r in self.regions:
             if (not isinstance(_r, BoolOpRegion)
                     or getattr(_r, 'merge_block', None) is not cond_block
@@ -16336,8 +16343,33 @@ AST 映射规则:
             )
             if not _has_store_in_merge:
                 continue
-            _boolop_merge_owner = _r
-            break
+            return _r
+        return None
+
+    def _if_generate_normal(self, region: IfRegion) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
+        cond_block = region.condition_block
+        if cond_block is None:
+            return {'type': 'Pass'}
+        if all(self.region_analyzer.get_block_role(b) in (BlockRole.WITH_HANDLER, BlockRole.WITH_EXIT_CLEANUP) for b in region.blocks):
+            for block in region.blocks:
+                self.generated_blocks.add(block)
+            return []
+        region_id = id(region)
+        self._generating_regions.add(region_id)
+        self._or_then_block = None
+        self._or_else_block = None
+        self._or_rhs_block = None
+        # 区域归约算法原则 3（嵌套即抽象节点）+ 原则 4（入口引用语义）：
+        # 当 IfRegion 的 cond_block 同时是某 BoolOpRegion 的 merge_block，且该
+        # BoolOpRegion 的 enclosing 不是本 IfRegion（即 BoolOpRegion 在本 IfRegion
+        # 之外，merge_block 是其赋值目标），cond_block 的前段属于 BoolOpRegion 的
+        # 赋值表达式（BINARY_OP/CALL/STORE_*），不应被 IfRegion 当作 pre_stmt 或
+        # cond_instrs 提取。先调用 _generate_boolop 生成完整赋值（如
+        # `y = g(b[:8] + (len(b[8:]) == 4 and b[8:] or '1530'), '%Y%m%d%H%M')`），
+        # 再从 cond_block 的 STORE_* 之后提取真正的 if 条件（如 `len(z) > 0`）。
+        # 否则 BoolOpRegion 的赋值表达式丢失（fill_minute_or_day_blank 的 source_end
+        # = strptime(... or '1530') 被吞），且 '1530' 错误归为 if 条件。
+        _boolop_merge_owner = self._boolop_merge_owner_for(region, cond_block)
         pre_stmts, cond_instrs = [], []
         if _boolop_merge_owner is not None:
             _bo_result = self._generate_boolop(_boolop_merge_owner)
@@ -31197,7 +31229,12 @@ AST 映射规则:
             # 生成期的标记集合上弥补；此项列为 Round 14 的区域归属任务。
             # 已知代价：generate() 入口 Ternary/BoolOp「被父消费」分支只标块不发射语句，
             # 此时链首块内的前缀赋值（repro_01 第二臂 `a2 = 2`）会被吞掉。
-            if first_chain_block in self.generated_blocks:
+            # [Round14-A1] 「已发射」的唯一权威来源是区域自身的归属记录：
+            # prefix_stmts_pending 表示本区域曾在 guard_clause_skip 分支让渡发射权
+            # 且**一字未发**，此时块级 generated 标记只是调度器的记账，不代表前缀
+            # 已产出（实测 IQCommon/profiler_func 的 `PY3 = ...` 因此被吞）。
+            if (first_chain_block in self.generated_blocks
+                    and not getattr(region, 'prefix_stmts_pending', False)):
                 pre_stmts = []
             else:
                 pre_instrs = self.region_analyzer.identify_block_prefix_instructions(first_chain_block)
@@ -31219,6 +31256,9 @@ AST 映射规则:
                     pre_stmts = self._build_prefix_stmt_list(filtered_pre_instrs, first_chain_block) if filtered_pre_instrs else []
                 else:
                     pre_stmts = []
+                # 前缀已在本方法内真正产出，让渡记录一次性清除，避免重复发射
+                if getattr(region, 'prefix_stmts_pending', False):
+                    region.prefix_stmts_pending = False
 
         results = list(pre_stmts)
         if skip_store_targets:
@@ -31740,6 +31780,12 @@ AST 映射规则:
                                     _guard_clause_skip = True
                                     break
                         if _guard_clause_skip:
+                            # [Round14-A1] 本次调用**没有发射任何语句**，但其 blocks
+                            # 会被 generate() 的调度器登记为 generated。前缀赋值发射权
+                            # 已让给下游 IfRegion（它会再次调用本方法取回完整赋值）。
+                            # 在区域归属层记下这一次让渡，供第二次调用的「前缀是否已
+                            # 发射」判据使用——不能靠块级标记集合推断（见 31216 R13 留档）。
+                            region.prefix_stmts_pending = True
                             return None
                         elif (_downstream_r35 is not None
                                 and getattr(_downstream_r35, 'parent', None) is None):

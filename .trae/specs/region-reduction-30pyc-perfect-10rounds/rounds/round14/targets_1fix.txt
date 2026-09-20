@@ -1,0 +1,35 @@
+# Round 14 基线 = Round 13 收口实测（commit f89b85f2）
+# 文件级：全部一致 325 / 402，有真缺陷 77；函数级：严格一致 5977 / 6204
+# 下面附「只差 1 个函数」的 30 个文件清单（Round 14 翻正候选）
+
+## 只差 1 个函数的文件（30 个）
+  IQCommon/data/api_data.pyc                                               <module>.check_limit_common
+  IQCommon/data/local_finance.pyc                                          <module>.get_local_financial_factors
+  IQCommon/profiler_func.pyc                                               <module>
+  IQCommon/util/email_utils.pyc                                            <module>.send_email
+  IQCommon/util/user_info_utils.pyc                                        <module>.remove_lock_files
+  IQData/manager/plugin_manager.pyc                                        <module>.PluginManager.set_engine
+  IQData/utils/profiler_func.pyc                                           <module>
+  IQEngine/core/executor.pyc                                               <module>.Executor.check_before_trading
+  IQEngine/core/plugin_manager.pyc                                         <module>.PluginManager.set_engine
+  IQEngine/core/strategy/strategy_universe.pyc                             <module>.StrategyUniverse._on_clear_de_listed
+  IQEngine/data/asset_mixin.pyc                                            <module>.AssetMixin.get_assets.<listcomp>
+  IQEngine/data/data_proxy.pyc                                             <module>.DataProxy.get_bar
+  IQEngine/data/trading_dates_mixin.pyc                                    <module>.TradingDatesMixin.trading_dates_reload
+  IQEngine/plugins/plugin_fly_data/__init__.pyc                            <module>.ApiMethodPlugin._on_before_trading_start_trading_thread
+  IQEngine/plugins/plugin_fly_data/fly_api/history_api.pyc                 <module>.get_price
+  IQEngine/plugins/plugin_system_accounts/position_model/stock_position.pyc <module>.StockPosition.make_trade
+  IQEngine/plugins/plugin_system_event_source/default_event_source.pyc     <module>.DefaultEventSource.events
+  IQEngine/plugins/plugin_system_matcher/matcher.pyc                       <module>.DefaultMatcher.match
+  IQEngine/plugins/plugin_system_persist/__init__.pyc                      <module>.ObjectPersistancePlugin.can_resume_strategy
+  IQEngine/plugins/plugin_system_risk_calculation/function.pyc             <module>.save_testds_to_json
+  IQEngine/plugins/plugin_system_simulation/broker.pyc                     <module>.SimulationBroker.save
+  IQEngine/plugins/plugin_system_simulation/live.pyc                       <module>.DefaultLiveBroker.save
+  IQEngine/plugins/plugin_system_trade/ptrade_broker.pyc                   <module>.PtradeBroker.create_portfolio
+  IQEngine/utils/logger/handlers.pyc                                       <module>.RotatingFileHandler.perform_rollover
+  fly/common/common.pyc                                                    <module>.api_get_from_zeromq
+  fly/common/custom_tools.pyc                                              <module>.memory_handler
+  fly/common/flytools.pyc                                                  <module>.FileLock.acquire
+  fly/common/market_time.pyc                                               <module>.MarketTime.is_open
+  fly/dockerspawner/dockerspawner.pyc                                      <module>.DockerSpawner.tls_client
+  fly/simtradding/pboxAccount_jupyterhub.pyc                               <module>.getVaildAccount

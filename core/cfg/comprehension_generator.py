@@ -113,22 +113,39 @@ class ComprehensionGenerator:
             for _cci in range(len(comp_indices) - 1):
                 _ci1, _cc1, _cf1 = comp_indices[_cci]
                 _ci2, _cc2, _cf2 = comp_indices[_cci + 1]
+                # 识别条件（一个 region 只归约成一种 AST 节点，判据必须是结构性的）：
+                # 相邻两个 MAKE_FUNCTION 对究竟该不该焊接，取决于「第二个 code 对象是不
+                # 是前一个推导式的 iterable 的一部分」，而这一点在字节码上是可判定的——
+                # 推导式的**可调用对象**先装载，其**可迭代对象**随后装载，两者之间不出
+                # 现该推导式自己的调用闭合。于是扫描 _ci1 之后的第一个 GET_ITER
+                # （= 该推导式 iterable 构造链的起点，记为 _first_get_iter）：
+                #   真嵌套  内层 code 的 MAKE_FUNCTION 索引 _ci2 < _first_get_iter，
+                #           即内层是在外层 iterable 构造**期间**装载的
+                #           （LOAD_CONST 外; MAKE_FUNCTION 外; LOAD_CONST 内;
+                #            MAKE_FUNCTION 内; LOAD_FAST it; GET_ITER; CALL; ...）；
+                #   兄弟    第二个 code 的装载出现在第一个推导式调用链开始之后
+                #           （_ci2 > _first_get_iter，实测更在其 CALL 之后），它属于另一
+                #           个表达式，绝不能塞进前一个推导式的 iter 槽。
+                # 旧实现只从 _ci1+1 找 _first_call_end，再对 instrs[_first_call_end:_ci2]
+                # 施加「是否只有闭包装载」弱检验，该检验双向失效：真嵌套时切片为空
+                # （all([]) 恒真），兄弟时切片恰含兄弟自己的 LOAD_CONST <code>，被
+                # LOAD_CONST+co_name 那个 disjunct 放过。故改为上面的装载次序判据。
                 _first_call_end = None
+                _first_get_iter = None
                 for _fci in range(_ci1 + 1, len(instrs)):
                     if instrs[_fci].opname == 'GET_ITER':
+                        _first_get_iter = _fci
                         for _fci2 in range(_fci + 1, min(_fci + 4, len(instrs))):
                             if instrs[_fci2].opname == 'CALL':
                                 _first_call_end = _fci2 + 1
                                 break
                         break
-                if _first_call_end is None:
+                if _first_call_end is None or _first_get_iter is None:
                     continue
-                _after_first = instrs[_first_call_end:_ci2]
-                _after_meaningful = [i for i in _after_first if i.opname not in SKIP_OPS]
-                _closure_setup_ops2 = frozenset({'MAKE_CELL', 'LOAD_CLOSURE', 'COPY_FREE_VARS'})
-                _all_closure = all(i.opname in _closure_setup_ops2 or (i.opname == 'BUILD_TUPLE') or (i.opname == 'LOAD_CONST' and hasattr(i.argval, 'co_name')) for i in _after_meaningful)
-                if not _all_closure:
+                if _ci2 >= _first_get_iter:
                     continue
+                # 通过装载次序判据后，原「闭包装载」检验恒真（_first_call_end 必然大于
+                # _first_get_iter，切片必为空），故删除，不改变可焊接集合的宽度。
                 _found_getiter = False
                 for _ai in instrs[_first_call_end:]:
                     if _ai.opname == 'GET_ITER':
@@ -194,7 +211,21 @@ class ComprehensionGenerator:
                         _ow_meaningful = [i for i in _ow_post if i.opname not in SKIP_OPS]
                         _ow_closure = frozenset({'LOAD_CLOSURE', 'COPY_FREE_VARS', 'MAKE_CELL'})
                         _ow_clean = [i for i in _ow_meaningful if i.opname not in _ow_closure and not (i.opname == 'BUILD_TUPLE' and any(j.opname in _ow_closure for j in _ow_meaningful[:_ow_meaningful.index(i)]))]
-                        _expr_build = frozenset({'BUILD_TUPLE', 'BUILD_LIST', 'BUILD_SET', 'BUILD_MAP', 'BINARY_OP', 'BINARY_SUBSCR'})
+                        # 归约方式 / 不变式：焊接只允许认领「推导式自身」的指令。_ow_clean
+                        # 里只要还剩任何**消费者** op——容器构建（BUILD_TUPLE/LIST/SET/MAP、
+                        # dict 字面量的 BUILD_CONST_KEY_MAP）、推导式累加（MAP_ADD/
+                        # LIST_APPEND/SET_ADD）、容器合并（LIST_EXTEND/SET_UPDATE/DICT_UPDATE/
+                        # DICT_MERGE）、调用（CALL/CALL_FUNCTION/CALL_METHOD/
+                        # CALL_FUNCTION_KW/CALL_FUNCTION_EX）、运算与下标（BINARY_OP/
+                        # BINARY_SUBSCR）——本块最外层表达式的**节点类型**就是那个消费者的
+                        # 类型（Dict/Call/…），而不是其中一个子推导式的 ListComp 类型；
+                        # 此时不得声明自己没翻译的指令（prev_end = len(instrs) 是「全吃了」
+                        # 的记账），必须 return None 放弃焊接、把整块交回通用
+                        # ExpressionReconstructor：它在 core/cfg/ast_generator_v2.py 的
+                        # BUILD_CONST_KEY_MAP 分支（弹键元组 + 弹 count 个值）与 CALL 分支
+                        # （推导式 Iter/ComprehensionObject 合并）里本来就能正确合成父节点。
+                        # 白名单成员即该不变式的机器可读形式，缺一个成员就漏一类宿主表达式。
+                        _expr_build = frozenset({'BUILD_TUPLE', 'BUILD_LIST', 'BUILD_SET', 'BUILD_MAP', 'BUILD_CONST_KEY_MAP', 'BINARY_OP', 'BINARY_SUBSCR', 'MAP_ADD', 'LIST_APPEND', 'SET_ADD', 'LIST_EXTEND', 'SET_UPDATE', 'DICT_UPDATE', 'DICT_MERGE', 'CALL', 'CALL_FUNCTION', 'CALL_METHOD', 'CALL_FUNCTION_KW', 'CALL_FUNCTION_EX'})
                         if any(i.opname in _expr_build for i in _ow_clean):
                             return None
                         _store_instr = None
