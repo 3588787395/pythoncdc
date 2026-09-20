@@ -19505,6 +19505,48 @@ AST 映射规则:
                             # it from being processed inside the if branch.
                             _fis_skip_blocks.add(b)
                     break
+        # [Round 10 fix] 区域归约算法原则 2（每块唯一归属）+ 原则 4（入口引用语义）：
+        # 函数末尾的隐式 return None 块（CPython 为「无显式 return 的出口」生成的
+        # `LOAD_CONST None; RETURN_VALUE`），当它同时是某个嵌套 IfRegion 的
+        # merge_block 时，不得再由父区域的 then/else 体发射成显式 Return ——
+        # 该块属于嵌套 IfRegion 的汇合位置（其假出口的落点），不属于父分支的
+        # 语句序列。
+        # 典型（IQCommon/exception.ModifyExceptionFromType.__exit__ 等 3 个副本）：
+        #     if exc_val is not None:
+        #         ...
+        #         if force or ...:
+        #             setattr(...)
+        #             return None        <- 内层 if 的 then 体自带 return（块 146）
+        #     else:
+        #         return None            <- 外层 else 体（块 214）
+        #     <块 218: LOAD_CONST None; RETURN_VALUE>   <- 内层 if 的 merge
+        # 旧实现把 218 当外层 then 体的收尾语句再发射一次 `return None`：
+        # 显式 return 由 3 组变 2 组（seq_len 少 2），且内层 if 假出口的落点
+        # 从「函数末尾」变成「该 return」——字节码与原始不一致（语义虽等价）。
+        # 判据：① 它是某个嵌套 IfRegion（entry 落在本区域块集内）的 merge_block；
+        #       ② 它是纯 `LOAD_CONST None; RETURN_VALUE`（跳过编译噪声）；
+        #       ③ 它是本区域 offset 最大的块 —— 即父分支之后确实没有别的代码，
+        #          它落在函数末尾。条件③ 保证「显式写在 then 体末尾的 return
+        #          None」（位于父 else 体之前、offset 非最大）仍会被正常发射。
+        _nested_merge_return_skip = set()
+        _region_all_blocks = list(getattr(region, 'blocks', None) or [])
+        if _region_all_blocks:
+            _last_block = max(_region_all_blocks, key=lambda _b: _b.start_offset)
+            _noise_ops = ('NOP', 'CACHE', 'EXTENDED_ARG', 'RESUME', 'PRECALL')
+            _mb_ops = [i.opname for i in _last_block.instructions if i.opname not in _noise_ops]
+            _is_implicit_ret_none = (
+                _mb_ops == ['LOAD_CONST', 'RETURN_VALUE']
+                and any(i.opname == 'LOAD_CONST' and i.argval is None
+                        for i in _last_block.instructions))
+            if _is_implicit_ret_none:
+                for _nr2 in self.region_analyzer.regions:
+                    if not isinstance(_nr2, IfRegion) or _nr2 is region:
+                        continue
+                    if _nr2.entry is None or _nr2.entry not in _block_set:
+                        continue
+                    if getattr(_nr2, 'merge_block', None) is _last_block:
+                        _nested_merge_return_skip.add(_last_block)
+                        break
         _try_entry_generate = {}
         for b in _block_set:
             if b in self.generated_blocks:
@@ -19537,6 +19579,13 @@ AST 映射规则:
             # block (pre_stmts + for loop) will be generated at the
             # merge_block processing position.
             if block in _fis_skip_blocks:
+                continue
+            if block in _nested_merge_return_skip:
+                # [Round 10 fix] 函数末尾隐式 return None（= 嵌套 IfRegion 的
+                # merge）不发射显式 Return。标记为已生成，确保不被本区域
+                # 后续流程或父区域二次发射。
+                self.generated_blocks.add(block)
+                self.generated_offsets.add(block.start_offset)
                 continue
             if block in _nested_if_skip:
                 # [Round 1 fix] 区域归约算法原则 3（嵌套即抽象节点）+ 原则 4
