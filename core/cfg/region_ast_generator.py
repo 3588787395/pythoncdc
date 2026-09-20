@@ -178,6 +178,11 @@ class RegionASTGenerator:
     _STRUCTURAL_REGION_TYPES = (IfRegion, LoopRegion, TryExceptRegion, WithRegion, MatchRegion)
     _NESTED_REGION_TYPES = (IfRegion, LoopRegion, TryExceptRegion, WithRegion, MatchRegion, BoolOpRegion, TernaryRegion)
     _EXPR_REGION_TYPES = (TernaryRegion, BoolOpRegion)
+    # [Round16-A] 「语句级」结构区域：本体是一条完整语句（try/for/with/match），
+    # 其入口块的指令段只能由它自己发射。不含 IfRegion —— 与表达式区域共享 entry 的
+    # IfRegion 是既有的链式比较 / elif 形状，由 [Round5-05] carve-out 处理。
+    _STMT_LEVEL_STRUCTURAL_REGION_TYPES = (
+        LoopRegion, TryExceptRegion, WithRegion, MatchRegion)
 
     """
     基于区域的AST生成器
@@ -13843,6 +13848,48 @@ AST 映射规则:
             self._register_prefix_emitted(cond_block, _iter_instrs[:_last_store_in_iter + 1])
         return pre_stmts, cond_instrs
 
+    def _expr_child_blocked_by_structural_sibling(self, expr_region, parent_region):
+        """[Round16-A] 同层结构兄弟的入口块占用判据（then 臂两处预生成共用）。
+
+        识别条件：expr_region（BoolOpRegion/TernaryRegion）的 blocks 含有
+          parent_region.children 中某个语句级结构兄弟 sib（Loop/TryExcept/With/
+          Match）的 entry，且 sib 尚未归约（不在 _generated_regions 也不在
+          _generating_regions）。只比较同层兄弟的 blocks/entry 包含关系。
+        归约方式：命中即 True —— 调用方必须既不发射该表达式、也不把它的 blocks
+          记入 generated_blocks，把它留在父区域臂的线性序列里，由 sib 作为单个
+          抽象节点自底向上归约（sib 内部再生成该表达式）。这是原则 2（每个块在
+          任何层级只属于一个区域：入口块的指令段归结构区域，不归越过它的表达式
+          区域）+ 原则 3（嵌套区域在父区域中以单抽象节点表示）+ 原则 4（父区域
+          只引用子区域入口）在生成层的同一条判据；单向数据流，不回改已发数据。
+        AST 映射：sib 生成 try/for/with/match 语句本体，该表达式是它体内的一条
+          Assign/Expr；父区域的臂列表引用 sib.entry 而非 sib 的全部块。
+        反例（必须为 False）：sib 已生成或在生成中 ⇒ 它自己的块集合已结案，
+          表达式照常预生成；expr_region 与 sib 同一对象 ⇒ 不适用。
+        代价（不做时实测）：IQCommon/arg_checker.ArgumentChecker._is_valid_quarter
+          的 BoolOpRegion@94 blocks 恰等于兄弟 TryExceptRegion@94.try_blocks，
+          全量标记后 _try_entry_generate 见入口已 generated 而空转 ⇒ 整个
+          try/except 外壳消失（严格尺子 90→74，缺 16 条）。else 臂的
+          _try_collect_c3 因先收结构子区域而免疫（r16a_09 差分证实）。
+        """
+        if expr_region is None or parent_region is None:
+            return False
+        _ec_blocks = getattr(expr_region, 'blocks', None)
+        if not _ec_blocks:
+            return False
+        for _ec_sib in (getattr(parent_region, 'children', None) or []):
+            if not isinstance(_ec_sib, self._STMT_LEVEL_STRUCTURAL_REGION_TYPES):
+                continue
+            if _ec_sib is expr_region or _ec_sib.entry is None:
+                continue
+            if _ec_sib.entry not in _ec_blocks:
+                continue
+            _ec_sid = id(_ec_sib)
+            if (_ec_sid in self._generated_regions
+                    or _ec_sid in self._generating_regions):
+                continue
+            return True
+        return False
+
     def _if_generate_then_branch(self, region: IfRegion) -> List[Dict[str, Any]]:
         """生成 then 分支的语句列表。
 
@@ -14049,6 +14096,9 @@ AST 映射规则:
                         self.generated_blocks.add(b)
                     self._generated_regions.add(child_id)
                     continue
+            # [Round16-A] 结构兄弟占用了本表达式区域的入口块 ⇒ 不越级消费。
+            if self._expr_child_blocked_by_structural_sibling(child, region):
+                continue
             if child_id not in self._generated_regions and child_id not in self._generating_regions:
                 if isinstance(child, BoolOpRegion):
                     child_ast = self._generate_boolop(child)
@@ -14210,6 +14260,9 @@ AST 映射规则:
                             self.generated_blocks.add(b)
                         self._generated_regions.add(r_id)
                         continue
+                # [Round16-A] 与 children 循环同一判据（第二轮同样全量标记 blocks）。
+                if self._expr_child_blocked_by_structural_sibling(r, region):
+                    continue
                 if isinstance(r, BoolOpRegion):
                     child_ast = self._generate_boolop(r)
                 else:

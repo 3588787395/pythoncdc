@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-"""Round 15-B 复现电池（测试工程师交付物）：父臂吸入嵌套区域的内部块 → 中间 if 丢失。
+"""Round 16-A 复现电池（测试工程师交付物）：if 臂的表达式子区域预生成抢走结构兄弟的入口块。
 
-对 test_repros/round15_arm/r15a_NN_*.py 每个最小复现源文件：
-  1. 复制到 D:/Temp/r15arm/build/ 并编译成 .pyc（绝不落在仓库里）；
-  2. 用本项目反编译器 decompile_pyc() 反编译该 .pyc，输出仍写到 D:/Temp/r15arm/build/；
+对 test_repros/round16_arm/r16a_NN_*.py 每个最小复现源文件：
+  1. 复制到 D:/Temp/r16arm/build/ 并编译成 .pyc（绝不落在仓库里）；
+  2. 用本项目反编译器 decompile_pyc() 反编译该 .pyc，输出仍写到 D:/Temp/r16arm/build/；
   3. 把反编译结果再编译成 .pyc；
   4. 用 **唯一真值尺子** _r10_strict_check.strict_compare 逐个限定名比较，
      报告 MATCH / MISMATCH。
@@ -11,29 +11,35 @@
 判定完全委托给 _r10_strict_check（仅 import，不复制、不修改）。
 
 用法：
-  PYTHONIOENCODING=utf-8 python test_repros/round15_arm/run_all.py
-  PYTHONIOENCODING=utf-8 python test_repros/round15_arm/run_all.py 01 07
-  PYTHONIOENCODING=utf-8 python test_repros/round15_arm/run_all.py --show-diff
-  PYTHONIOENCODING=utf-8 python test_repros/round15_arm/run_all.py --strict
+  PYTHONIOENCODING=utf-8 python test_repros/round16_arm/run_all.py
+  PYTHONIOENCODING=utf-8 python test_repros/round16_arm/run_all.py 01 07
+  PYTHONIOENCODING=utf-8 python test_repros/round16_arm/run_all.py --show-diff
+  PYTHONIOENCODING=utf-8 python test_repros/round16_arm/run_all.py --strict
 
-EXPECT 四态（沿用 round13/run_all.py 语义）：
+EXPECT 四态（沿用 round13/round15/run_all.py 语义）：
   MISMATCH   = 缺陷复现（实测必须 MISMATCH）
   MATCH      = 负对照（实测必须 MATCH，用于隔离触发成分）
   SENTINEL   = 曾复现、已被修复；实测必须 MATCH，否则记 REGRESSED
   UNCONFIRMED= 目标缺陷真实存在但该形状未复现；实测应为 MATCH，不计失败
-首轮实测（修复前）：9 MISMATCH / 3 MATCH；
-  06/08 两个「负对照」假设被否证（臂体含任意嵌套区域即触发，不限 Try）。
-Round 15-B H1+H2（else 臂双角色块豁免 + owner 发射权与识别解耦）落地后实测：
-  03/04/05/06/11 已翻为 SENTINEL（MATCH）。
-  01（61→45）/02（73→57）仍 MISMATCH —— if 已找回，但臂内嵌套的 TryExceptRegion
-    不是该 if 的 children（分析层未建父子），_if_generate_then_branch 先把块 84
-    当 BoolOp 归并点标记为 generated，_try_entry_generate 因此空转，try 丢失。
-  08（41→19）仍 MISMATCH —— region_ast_generator.py:10969 的 R36 否决仍生效：
-    分析层 guard_clause_prefix_end 只在「后继 if 条件是裸同名变量」时写下，
-    `if flag != 'q':` 这种比较式条件拿不到豁免（属分析层判据过窄）。
-  09（39 vs 48）仍 MISMATCH —— 顶层语句序列里的双角色块把赋值与 if 条件各发一遍，
-    与 else 臂路径无关（另一条发射链，H1/H2 未触及）。
-根因定位见 rounds/round15/elsearm-design.md。
+
+受害真源：site-packages/IQCommon/arg_checker.pyc
+`<module>.ArgumentChecker._is_valid_quarter`，实测 seq_len orig=90 decomp=74，
+丢的 16 条全部是 try 外壳 + except 处理块（`238 JUMP_FORWARD 290` 起、
+`240 PUSH_EXC_INFO` … `288 RERAISE 1`）；if / 守卫 / else 臂都在。
+
+机制（结构层已排除：区域树里 TryExceptRegion@94.parent **就是** IfRegion@86，
+IfRegion@86.children = [Region@92, TryExceptRegion@94, BoolOpRegion@94,
+TernaryRegion@94] —— round15 记录的「分析层未建父子」结论被否证）：
+`_if_generate_then_branch` 的表达式子区域预生成（region_ast_generator.py:13947 起、
+标记在 14070-14071）把 BoolOpRegion@94 的 blocks 全量写进 generated_blocks，
+而这批块恰好等于 TryExceptRegion@94.try_blocks；随后 `_process_if_blocks` 的
+`_try_entry_generate`（20153-20167，守卫 20154-20155）见入口已 generated 即空转，
+try/except 整块无人发射。else 臂的 `_try_collect_c3` 因为**先**收结构子区域
+（14665-14668 在 14677-14680 之前）而免疫 —— 见 r16a_09 差分。
+
+实测（裸核心）MISMATCH=10 / MATCH=6；Round 16-A 补丁后 MISMATCH=1（仅 r16a_05）。
+EXPECT 已按两轮实测回填：9 项 SENTINEL（补丁翻正），r16a_05 保持 MISMATCH（另一族）。
+docstring 里被否证的预测在 ANALYSIS.md「预测被否证清单」一节逐条记录。
 """
 import py_compile
 import shutil
@@ -50,23 +56,32 @@ from _r10_strict_check import _load_map, _compile_map, strict_compare, filtered 
 
 from pycdc import decompile_pyc  # noqa: E402
 
-BUILD = Path(r'D:/Temp/r15arm/build')
+BUILD = Path(r'D:/Temp/r16arm/build')
 BUILD.mkdir(parents=True, exist_ok=True)
 
+# EXPECT 由两轮实测回填（裸核心 vs D:/Temp/r16_arm/gen_R16.py 播种后落地）：
+#   裸核心 MISMATCH=10 / MATCH=6；补丁后 MISMATCH=1（仅 r16a_05）、MATCH=15。
+#   r16a_05/06/12 原判为负对照，实测均为真缺陷 —— 06/12 由 Round 16-A 补丁翻正改标
+#   SENTINEL；05 是 loop 入口的「重复发射」族（orig=31 / decomp=39），留 MISMATCH 作本轮残留。
 EXPECT = {
-    'r15a_01_anchor_is_valid_quarter': 'SENTINEL',
-    'r15a_02_anchor_module_scope': 'SENTINEL',
-    'r15a_03_anchor_or_boolop': 'SENTINEL',
-    'r15a_04_anchor_try_finally': 'SENTINEL',
-    'r15a_05_anchor_nested_for': 'SENTINEL',
-    'r15a_06_anchor_nested_if': 'SENTINEL',
-    'r15a_07_neg_no_boolop_prefix': 'MATCH',
-    'r15a_08_neg_if_condition_compare': 'MISMATCH',
-    'r15a_09_anchor_try_in_elif_arm': 'MISMATCH',
-    'r15a_10_anchor_nested_try_inside_try': 'UNCONFIRMED',
-    'r15a_11_anchor_two_nested_regions': 'SENTINEL',
-    'r15a_12_neg_no_inner_if': 'MATCH',
+    'r16a_01_anchor_real_shape_func': 'SENTINEL',
+    'r16a_02_anchor_min_entry_steal': 'SENTINEL',
+    'r16a_03_anchor_module_scope': 'SENTINEL',
+    'r16a_04_probe_ternary_body': 'SENTINEL',
+    'r16a_05_probe_while_boolop_entry': 'MISMATCH',
+    'r16a_06_neg_try_entry_offset': 'SENTINEL',
+    'r16a_07_neg_no_enclosing_if': 'MATCH',
+    'r16a_08_neg_if_inside_try': 'MATCH',
+    'r16a_09_diff_try_in_else_arm': 'MATCH',
+    'r16a_10_neg_with_in_then_arm': 'MATCH',
+    'r16a_11_probe_try_except_else': 'SENTINEL',
+    'r16a_12_probe_try_finally_boolop': 'SENTINEL',
+    'r16a_13_unconf_shape_inside_for': 'UNCONFIRMED',
+    'r16a_14_probe_or_boolop_body': 'SENTINEL',
+    'r16a_15_probe_two_sibling_tries': 'SENTINEL',
+    'r16a_16_neg_plain_try_body': 'MATCH',
 }
+
 
 def _compile(src_py: Path, out_pyc: Path):
     """编译 .py -> .pyc（写到指定位置，不产生 __pycache__ 残留）。"""
@@ -117,7 +132,7 @@ def main():
     sel = [x for x in sys.argv[1:] if x not in ('--show-diff', '--strict')]
     show = '--show-diff' in sys.argv
     strict = '--strict' in sys.argv
-    reps = sorted(HERE.glob('r15a_*.py'))
+    reps = sorted(HERE.glob('r16a_*.py'))
     if sel:
         reps = [r for r in reps if any(s in r.stem for s in sel)]
     n_bad = n_good = n_err = n_unexp = n_unconf = 0

@@ -51,10 +51,15 @@ quotation.pyc 单验          147/150，缺陷集合逐函数与基线相同 ⇒
 
 - **`IQCommon/arg_checker._is_valid_quarter` 缺陷变大**：同一条严格判据下缺口从 2 条指令
   增至 16 条（`orig=90 decomp=74`）。函数级计数不变（48/49），因此两把尺子都没反映成回退，
-  但复现 `r15a_01`／`r15a_02` 仍是 MISMATCH。根因是 H1+H2 复原了外层 `if` 之后，
-  其 then 臂里的 `TryExceptRegion@84` 在分析层不是 `IfRegion@76` 的子区域，
-  `_if_generate_then_branch` 先把块 84 记为已生成，`_try_entry_generate` 随后拿不到它。
-  **属结构层（analyzer）嵌套归属缺陷，列入 Round 16 第 1 项**，不用生成层补偿掩盖。
+  但复现 `r15a_01`／`r15a_02` 仍是 MISMATCH。
+  ~~根因是 H1+H2 复原了外层 `if` 之后，其 then 臂里的 `TryExceptRegion@84` 在分析层不是
+  `IfRegion@76` 的子区域~~ ⇒ **该猜想在 Round 16 被实测否证**：区域树里
+  `TryExceptRegion@94.parent` 正是 `IfRegion@86`（结构层没问题），真正的原因是
+  `_if_generate_then_branch` 的「表达式子区域预生成」把 `BoolOpRegion@94` 的 blocks 全量
+  写进 `generated_blocks`，而这批块恰等于 `TryExceptRegion@94.try_blocks`，随后
+  `_try_entry_generate` 见入口已 generated 即空转。证据与复现见
+  `test_repros/round16_arm/` 与 `rounds/round16/arm-design.md`。
+  **属生成层发射权缺陷，列入 Round 16 第 1 项**，不用别的补偿掩盖。
 - **`pyc_index.json`**：`IQCommon/arg_checker.pyc` 条目原记 `decompile_status=ok /
   bytecode_match_rate=1.0 / matched_functions=47`，实测为 46/47（且 HEAD 产物同样是 46/47，
   说明这是 Round 10 的未验证 stale 标记，不是本轮造成）。按既有 `index-corrected` 惯例

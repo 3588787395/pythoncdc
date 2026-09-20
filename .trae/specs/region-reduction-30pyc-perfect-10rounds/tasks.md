@@ -210,3 +210,37 @@
           FIXED=7 BROKEN=0）⇒ `plugin_manager` ×2 `set_engine`；③`guard_clause_prefix_end`
           只为裸名条件写入（`r15a_08`）；④body-sequence 重复发射（`r15a_09` +9）；
           ⑤SubTask 13.3 / 13.4 / Task 5 遗留照旧
+- [x] Task 16: Round 16 — 推翻 Round 15 移交的「分析层未建父子」猜想，改为生成层
+      「结构兄弟优先」约束（R16-A：if 臂表达式子区域预生成不得抢占结构兄弟入口块）
+  - [x] SubTask 16.1: 否证 Round 15 §四 猜想：`D:/Temp/r16_arm/tool_regions.py` 导出区域树，
+          实测 `TryExceptRegion@94.parent == IfRegion@86`、
+          `IfRegion@86.children = [Region@92, TryExceptRegion@94, BoolOpRegion@94, TernaryRegion@94]`
+          ⇒ 缺口在发射层，analyzer 无需改动（`rounds/round16/arm-design.md`）
+  - [x] SubTask 16.2: 定位抢占点：`_if_generate_then_branch` 两处表达式子区域预生成
+          （children 循环 `:14052`/标记 `:14070-14071`；回退循环 `:14213`/标记 `:14228-14229`）
+          把 `child.blocks` 整批写入 `generated_blocks`，令 `_try_entry_generate`
+          （`:20153-20167`，守卫 `:20154-20155`）空转 ⇒ try/except 16 条指令丢失；
+          else 臂 `_try_collect_c3` 因先结构后表达式的收集顺序免疫（差分复现 `r16a_09`）
+  - [x] SubTask 16.3: 测试工程师交付 16 个最小复现 `test_repros/round16_arm/` + `run_all.py`，
+          裸核心实测 MISMATCH=10 / MATCH=6；其报告「EXPECT 已 100% 回填」经复验为 3 项误标
+          （`r16a_05/06/12`），已在回填脚本内纠正并留注释
+  - [x] SubTask 16.4: 落地前副本播种验证（仓库零写入）：`r16a_patch.py` 4 hunks **+53/−0**
+          → `gen_R16.py`（目标 pyc 严格 48/49→49/49、官方 46/47→47/47；404 pyc 语料
+          FIXED=1 BROKEN=0 CHANGED=0；五套电池 round16_arm 10→1、round15_arm 4→2、
+          round14_join/round14/round13 不变；`quotation.pyc` 缺陷集合逐函数相同）
+  - [x] SubTask 16.5: mandate 门禁顺序全绿：单点 FLIPPED-CLEAN（arg_checker 48/49→49/49）→
+          quotation.pyc 单验（148/150→147/150，缺陷函数逐函数相同 ⇒ SubTask 13.3 产物漂移，非本轮回退）
+          → 406 targets 全量回归 `CLEAN=329→330 / UNCHANGED=65→64 / WORSENED=9 / REGRESSION=2`，
+          异常文件集合与 R14、R15 逐个相同（11 个）⇒ 零新增回退
+  - [x] SubTask 16.6: 落地字节级复核：`d07996aaa20d4665 → 0fc591a8433e7032`（48122→48175 行，
+          BOM/CRLF 不变，与已验证副本 sha256 全值相同）；六套电池 `--strict` 退出码 0
+          （round16_arm 1 / round15_arm 2 / round14_join 1 / round14 0 / round13 14 / round16_sink 8，
+          UNEXPECTED 全 0）；SENTINEL 回填 round16_arm 9 项 + `r15a_01/02`，`r16a_05` 纠正为 MISMATCH
+  - [x] SubTask 16.7: 双口径复验（同工具 pre/post，不跨口径相减）：官方 355→**356** ok /
+          50→49 partial、函数 5699→**5700**/5838；严格 6079→**6080**/6332 函数、满clean 329→**330** 文件；
+          `pyc_index.json` 纠正 `IQCommon/arg_checker` 为 ok / 1.0 / matched 47 / round 16
+  - [ ] SubTask 16.8: 本轮未完项移交：①`r16a_05` loop 入口重复发射（over-emit +8）；
+          ②R16-S sink 族 `plugin_manager` ×2（`_build_elif_region`/`_check_elif_chain` 归并判据，
+          与 R16-A 正交：15 复现在裸核心与播种下逐条一致；诊断 agent 耗尽 150 轮，电池完整但无 ANALYSIS.md）；
+          ③T1/T2 then 臂收集顺序整体重排（影响面未测）；④`r15a_08` `guard_clause_prefix_end`、
+          `r15a_09` body-sequence 重复发射；⑤SubTask 13.3/13.4 与 Task 5 遗留照旧
