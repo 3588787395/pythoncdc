@@ -47235,6 +47235,32 @@ AST 映射规则:
             if instr.opname == 'RETURN_CONST':
                 return {'type': 'Return', **_ret_flag, 'value': {'type': 'Constant', 'value': instr.argval}}
             if instr.opname == 'RETURN_VALUE':
+                # [Round 9 fix] 栈顶语义：RETURN_VALUE 返回的是栈顶元素。若紧邻其
+                # 前一条（跳过 EXTENDED_ARG 前缀）是 LOAD_CONST None，则返回的
+                # 必然是 None —— 它是唯一一次栈顶写入。此判据与上方
+                # `return_instr is not None` 分支（return_idx-1 为 LOAD_CONST
+                # None → Return(None)）同源，但兜底路径原先缺失，导致
+                # `<被丢弃的表达式> POP_TOP LOAD_CONST None RETURN_VALUE`
+                # 形状的块（如
+                #   `if ev in self.h: [g(x) for x in self.h[ev]]; return`
+                # 编译产物）把 POP_TOP 丢弃的那个表达式重建为返回值，生成
+                # `return [g(x) for x in ...]`（返回列表而非 None），并连带
+                # 让 else 分支与后续语句重排。POP_TOP 在 _skip_ops 中被跳过，
+                # 使重建器看不到「该表达式已被丢弃」这一事实。
+                _ri9 = None
+                for _ii9, _i9 in enumerate(block.instructions):
+                    if _i9 is instr or _i9 == instr:
+                        _ri9 = _ii9
+                        break
+                if _ri9 is not None:
+                    _pi9 = _ri9 - 1
+                    while _pi9 >= 0 and block.instructions[_pi9].opname == 'EXTENDED_ARG':
+                        _pi9 -= 1
+                    if (_pi9 >= 0
+                            and block.instructions[_pi9].opname == 'LOAD_CONST'
+                            and block.instructions[_pi9].argval is None):
+                        return {'type': 'Return', **_ret_flag,
+                                'value': {'type': 'Constant', 'value': None}}
                 value_instrs = []
                 is_in_gen_loop = (
                     self._current_loop is not None or

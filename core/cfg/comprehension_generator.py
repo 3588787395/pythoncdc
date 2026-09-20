@@ -466,8 +466,27 @@ class ComprehensionGenerator:
                         })
                 prev_end = store_idx + 1
             else:
+                # [Round 9 fix] 先判「推导式值被丢弃」：wrapper 之后若出现
+                # POP_TOP，说明推导式是语句级表达式（值随即丢弃），块末的
+                # LOAD_CONST None + RETURN_VALUE 才是该 return 的真实值（None）。
+                # 旧实现只看块末指令是否为 RETURN_VALUE 就认定「推导式就是返回
+                # 值」，于是
+                #   if ev in self.h:
+                #       [handler(ev) for handler in self.h[ev]]
+                #       return
+                # 形状的块被反演成 `return [handler(ev) for ...]`（返回列表而非
+                # None），并把真正的 return 与后续语句挤出结构之外
+                # （event_engine.__process 生成 `return [...]` + 伪造
+                # `else: return None` + 死代码重复一条推导式）。
+                # 依区域归约算法原则 3（嵌套即抽象节点）：POP_TOP 是语句终结符，
+                # 把 wrapper 段（表达式）与其后的语句段切开，两段各自归约。
+                _r9_pop_after_wrapper = any(
+                    i.opname == 'POP_TOP' for i in instrs[wrapper_end:])
                 last_instr = instrs[-1]
-                if last_instr.opname in ('RETURN_VALUE', 'RETURN_CONST'):
+                if _r9_pop_after_wrapper:
+                    all_stmts.append({'type': 'Expr', 'value': comp_value})
+                    prev_end = wrapper_end
+                elif last_instr.opname in ('RETURN_VALUE', 'RETURN_CONST'):
                     all_stmts.append({'type': 'Return', 'value': comp_value})
                 elif (region_ast_gen is not None and block.successors):
                     _ret_succ = None

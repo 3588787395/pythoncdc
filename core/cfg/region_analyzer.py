@@ -23135,10 +23135,23 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                                 # 数为「真」（NONE_CHECK 跳转时恰为 None/非
                                 # None 本身），与 then_body 收敛即成功短路。
                                 _shared_success = True
-                        if _shared_success and not _shared_failure:
-                            op_type = 'or'
-                        else:
-                            op_type = 'and'
+                        # [Round 9 fix] 单个成员跳向 then_body 本身就是
+                        # or 短路的充分证据：跳转发生即「该操作数为真」，
+                        # 直接进入 then body——这正是 `A or B` 的语义。
+                        # 旧判据要求「必须存在另一个成功极性的共享者」才
+                        # 判 'or'，在「只有一个 NONE_CHECK 成员跳向 then_body、
+                        # 其余成员是 IF_FALSE 跳向 exit」的常规 or 链（如
+                        # `p is None or p.strip()==''`，后段比较编译为
+                        # IF_FALSE→exit，不共享目标）上回退成 'and'，把条件
+                        # 反演成 `p is not None and p.strip()==''`——语义反转
+                        # （common_func.not_none_string 对 None 入参返回
+                        # True 而非 False），且因两版指令序列逐位相同、仅跳转
+                        # 目标偏移不同，被验证口径归入 jump_diffs 而漏判为
+                        # matched。
+                        # 共享目标时仍按成员极性判定：只有当存在失败极性
+                        # （IF_FALSE）共享者、且无成功极性共享者时才是 and
+                        # 链的失败汇合（then_body 恰为 exit 的退化形态）。
+                        op_type = 'and' if (_shared_failure and not _shared_success) else 'or'
                     else:
                         op_type = 'and'
             fixed_chain.append((block, op_type))
