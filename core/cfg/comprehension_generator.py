@@ -500,6 +500,33 @@ class ComprehensionGenerator:
                                 and _s_skip[0].opname in ('RETURN_VALUE', 'RETURN_CONST')):
                             _ret_succ = _s
                             break
+                    # [R12 fix] 宽指令 fall-through 落点修正（merger_storage
+                    # .get_merger_date_info：`return {dictcomp}` 的 try 体被
+                    # 异常表边界切成两块 —— wrapper CALL 在块末，RETURN_VALUE
+                    # 在唯一后继块）。旧判据用 _last_off + 2 计算 fall-through
+                    # 落点，对带 CACHE 的宽指令（3.11 的 CALL 宽 10 字节，
+                    # 下一块起点 = +10）必然失配 → 推导式被降级为裸 Expr +
+                    # 伪造 `return None`（orig=32 decomp=34, true_diffs=22）。
+                    # 识别条件：块末指令非跳转（值消费型指令如 CALL，控制流
+                    # 直落下一块），在前向 后继 中找平凡 return 块（异常表
+                    # 产生的 handler 边以 PUSH_EXC_INFO 开头、含多条指令，
+                    # 天然不满足平凡判据，故多后继无歧义）；
+                    # 归约方式：该后继即 fall-through 块，过滤噪声后仅含一条
+                    # RETURN_VALUE/RETURN_CONST 时，推导式值即 return 值；
+                    # AST 映射：Return(comp_value)，后继块标记 generated，
+                    # 由 try 体归约吞并（原则 3：嵌套即抽象节点，不重复发射）。
+                    if (_ret_succ is None
+                            and not last_instr.opname.startswith('JUMP')
+                            and not last_instr.opname.startswith('POP_JUMP')):
+                        for _s in block.successors:
+                            if _s.start_offset <= _last_off:
+                                continue
+                            _s_skip = [i for i in _s.instructions
+                                       if i.opname not in SKIP_OPS]
+                            if (len(_s_skip) == 1
+                                    and _s_skip[0].opname in ('RETURN_VALUE', 'RETURN_CONST')):
+                                _ret_succ = _s
+                                break
                     if _ret_succ is not None:
                         all_stmts.append({'type': 'Return', 'value': comp_value})
                         region_ast_gen.generated_blocks.add(_ret_succ)
