@@ -1,0 +1,25 @@
+diff --git a/core/cfg/region_ast_generator.py b/core/cfg/region_ast_generator.py
+index 1f1beb6d..9edb45fd 100644
+--- a/core/cfg/region_ast_generator.py
++++ b/core/cfg/region_ast_generator.py
+@@ -30716,7 +31179,20 @@ AST 映射规则:
+             # 入口块同时是 BoolOpRegion 的首个 chain block，generate() 的
+             # BoolOpRegion 入口分支已通过 _if_extract_cond_instructions
+             # 提取 a = None，若此处再次提取会导致重复输出。
++            # [A2 修复] 「已生成」的判据从块级细化为指令级：仅当块被标记且
++            # 其前缀语句指令的偏移均已入 generated_offsets（即前缀语句已被
++            # 某条路径真正发射）时才跳过提取。generate() 入口的
++            # TernaryRegion/BoolOpRegion「被父消费」分支只标块不标偏移——
++            # 此时链首块内的前缀语句（如 `a2 = 2; first = lo <= o.dt <= hi`
++            # 中首块内的 a2 赋值）尚未被任何路径发射，跳过提取会把该赋值
++            # 整体吞掉（repro_01 第二臂 a2 丢失）。判据纯结构（偏移集合
++            # 成员测试），无指令/文件特例。
++            _r46_skip_prefix = False
+             if first_chain_block in self.generated_blocks:
++                _r46_prefix = self.region_analyzer.identify_block_prefix_instructions(first_chain_block)
++                _r46_skip_prefix = (not _r46_prefix) or all(
++                    i.offset in self.generated_offsets for i in _r46_prefix)
++            if _r46_skip_prefix:
+                 pre_stmts = []
+             else:
+                 pre_instrs = self.region_analyzer.identify_block_prefix_instructions(first_chain_block)

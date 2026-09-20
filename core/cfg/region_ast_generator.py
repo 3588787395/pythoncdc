@@ -14821,6 +14821,63 @@ AST 映射规则:
         """
         if not getattr(region, 'elif_conditions', None):
             return [self._if_generate_normal(region)]
+        # [A1 修复·elif 条件 and 短路链前向发现预处理]
+        #
+        # 六要素：
+        # (算法依据) CPython 将 `elif A and B: body`（含 `and not B`）编译为
+        #   同目标汇合的 POP_JUMP 短路链。分析端 inline_boolop_chains 缺失时
+        #   （倒序扫描竞态等），链首之后的合取支会成为独立 IfRegion
+        #   （`and not X` 甚至被反转为 `if X:`，语义翻转）并吸收臂体/链后
+        #   语句。本预处理在臂体生成之前对每个 elif 条件块做前向链发现。
+        # (归约顺序) 先于任何 elif 臂体/嵌套区域生成执行：发现链 → 重建各
+        #   合取支（IF_TRUE 结尾取反）→ 记忆 BoolOp 条件 → 标记链成员块
+        #   generated，使后续嵌套 IfRegion 生成路径跳过被吸收的合取支块。
+        # (唯一归属判定) 链成员块（除链首）由本 IfRegion 唯一归属（标记
+        #   generated/generated_offsets），条件由本链臂唯一引用（记忆表）。
+        # (嵌套处理) or 链/嵌套 if/带前缀语句的块均不满足「同目标 +
+        #   fallthrough + 纯净」判据，不误伤；发现失败（重建 None）时放弃
+        #   该链，交回既有退化路径。
+        # (入口引用语义) 记忆的条件供 _extract_condition_for_elif_block 按
+        #   条件块身份取用，父 IfRegion.test 引用该 BoolOp 节点。
+        # (反编译流程) 修正后 `elif A and not B:` 还原为单一 elif + BoolOp
+        #   条件，合取支不下推、不取反，臂体/链后语句不再被合取支块吸收。
+        _disc_elif_conds = getattr(self, '_disc_elif_chain_conds', None)
+        if _disc_elif_conds is None:
+            _disc_elif_conds = {}
+            self._disc_elif_chain_conds = _disc_elif_conds
+        for _ec_idx, _ec in enumerate(region.elif_conditions):
+            if id(_ec) in _disc_elif_conds:
+                continue
+            try:
+                _fc = self._discover_predicate_and_chain_forward(_ec)
+            except Exception:
+                _fc = None
+            if _fc is None:
+                continue
+            _fp = []
+            _fok = True
+            for _fb in _fc['blocks']:
+                _fi = self._chain_block_condition_instrs(_fb)
+                if not _fi:
+                    _fok = False
+                    break
+                _fpart = self.expr_reconstructor.reconstruct(_fi)
+                if _fpart is None:
+                    _fok = False
+                    break
+                _flast = _fb.get_last_instruction()
+                if _flast is not None and 'IF_TRUE' in _flast.opname:
+                    _fpart = (_flip_contains_compare(_fpart)
+                              if (_fpart.get('type') == 'Compare'
+                                  and any((o.get('type') if isinstance(o, dict) else o) in ('In', 'NotIn', 'in', 'not in')
+                                          for o in (_fpart.get('ops') or [])))
+                              else _negate_expr(_fpart))
+                _fp.append(_fpart)
+            if _fok and len(_fp) >= 2:
+                _disc_elif_conds[id(_ec)] = {'type': 'BoolOp', 'op': 'and', 'values': _fp}
+                for _fb in _fc['blocks'][1:]:
+                    self.generated_blocks.add(_fb)
+                    self.generated_offsets.add(_fb.start_offset)
         # [R01 fix] 初始化 final_else_stmts，防止当 nested_elif_stmts=[]
         # 且 region.elif_final_else=[] 时访问未初始化变量导致
         # UnboundLocalError（函数体退化为 pass 的根因之一）
@@ -15170,6 +15227,52 @@ AST 映射规则:
                     elif_condition = {'type': 'BoolOp', 'op': _chain_op, 'values': _elif_parts}
                     for _cb in _chain_blocks[1:]:
                         self.generated_blocks.add(_cb)
+        # [A1 修复·elif 条件 and 短路链发现回退]
+        #
+        # 六要素：
+        # (算法依据) CPython 将 `elif A and B: body`（含 `and not B`）编译为
+        #   同目标汇合的 POP_JUMP 短路链（各操作数块跳向同一「跳过本臂」
+        #   目标、块间 fallthrough 串联）；分析端 ibc 缺失时链首之后的合取
+        #   支被当作嵌套 if（`and not X` 被反转为 `if X:`，语义翻转）。
+        #   判据与主条件回退同源，见 _discover_predicate_and_chain_forward。
+        # (归约顺序) 前向收集链块 → 链首合取支重建（IF_TRUE 结尾取反）→
+        #   成员合取支重建（IF_TRUE 结尾取反）→ 合成 BoolOp(and) 条件。
+        # (唯一归属判定) 链中除链首外的块由本 IfRegion 标记 generated，
+        #   不再作为嵌套 if 或臂体语句重复发射。
+        # (嵌套处理) or 链（成员跳臂体入口）与嵌套 if（目标不同一）天然
+        #   不命中；成员纯净性由 _chain_block_is_pure 保障。
+        # (入口引用语义) 父 IfRegion 的 elif 臂 test 引用重建的 BoolOp 节点，
+        #   链块归属本 IfRegion，不展开为独立语句。
+        # (反编译流程) 修正后 `elif A and B:` / `elif A and not B:` 还原为
+        #   单一 elif + BoolOp 条件，重编译指令序列与原始一致。
+        if elif_condition is None:
+            _fwd_chain = self._discover_predicate_and_chain_forward(elif_cond_block)
+            if _fwd_chain is not None:
+                _fwd_blocks = _fwd_chain['blocks']
+                _fwd_parts = []
+                _fwd_ok = True
+                for _f_cb in _fwd_blocks:
+                    _f_instrs = self._chain_block_condition_instrs(_f_cb)
+                    if not _f_instrs:
+                        _fwd_ok = False
+                        break
+                    _f_part = self.expr_reconstructor.reconstruct(_f_instrs)
+                    if _f_part is None:
+                        _fwd_ok = False
+                        break
+                    _f_last = _f_cb.get_last_instruction()
+                    if _f_last is not None and 'IF_TRUE' in _f_last.opname:
+                        _f_part = (_flip_contains_compare(_f_part)
+                                   if (_f_part.get('type') == 'Compare'
+                                       and any((o.get('type') if isinstance(o, dict) else o) in ('In', 'NotIn', 'in', 'not in')
+                                               for o in (_f_part.get('ops') or [])))
+                                   else _negate_expr(_f_part))
+                    _fwd_parts.append(_f_part)
+                if _fwd_ok and len(_fwd_parts) >= 2:
+                    elif_condition = {'type': 'BoolOp', 'op': 'and', 'values': _fwd_parts}
+                    for _f_cb in _fwd_blocks[1:]:
+                        self.generated_blocks.add(_f_cb)
+                        self.generated_offsets.add(_f_cb.start_offset)
         # [Phase 3 adv15_ternary_elif_test] 三元作为 elif 条件：
         # 当 elif_cond_block 是 TernaryRegion（merge_context='while_cond'）的 entry 时，
         # 整个三元表达式就是 elif 条件。从 TernaryRegion 重建 IfExp AST。
@@ -15653,11 +15756,25 @@ AST 映射规则:
         # 访问未初始化的 final_else_stmts 导致 UnboundLocalError，进而
         # 使整个函数体退化为 pass。修复：在函数入口初始化 final_else_stmts=[]。
         _elif_trailing_continue = False
+        # [A3 修复] 尾随 continue 提升的合法前提：elif 体末块与 merge_block
+        # 是同一块（R36 双角色块——该 JUMP_BACKWARD 既是 elif 体出口又是
+        # 链后公共循环收尾，属循环回边而非显式 continue），此时把 Continue
+        # 提升到链级才与源码等价（false 路径同样回边）。若 elif 体末块是
+        # 独立的纯 continue 块（体末块 is not merge_block），该 JUMP_BACKWARD
+        # 是源码级 `continue` 语句，必须保留在 elif 体内；无条件提升会把
+        # `elif c: continue` 错误改写为 `elif c: pass` + 链级 `continue`，
+        # 使链后 merge 块语句变为不可达（repro_03：elif 体 continue 被提升，
+        # c = b 被判死代码）。判据纯结构性（块同一性），符合区域归约算法
+        # 原则 2（每块唯一归属）。
+        _elif_shared_merge_tail = (
+            bool(region.elif_bodies) and bool(region.elif_bodies[0])
+            and region.elif_bodies[0][-1] is getattr(region, 'merge_block', None))
         if (elif_body_stmts
                 and isinstance(elif_body_stmts[-1], dict)
                 and elif_body_stmts[-1].get('type') == 'Continue'
                 and not elif_orelse
-                and self._current_loop is not None):
+                and self._current_loop is not None
+                and _elif_shared_merge_tail):
             _elif_trailing_continue = True
             elif_body_stmts.pop()
         _elif_if_stmt = {'type': 'If', '_is_elif': True, 'test': elif_condition if elif_condition else {'type': 'Constant', 'value': True}, 'body': elif_body_stmts if elif_body_stmts else [{'type': 'Pass'}], 'orelse': elif_orelse}
@@ -15672,6 +15789,12 @@ AST 映射规则:
         return _elif_result
 
     def _extract_condition_for_elif_block(self, cond_block, region: IfRegion = None):
+        # [A1 修复] 优先取用 _if_generate_elif_chain 预处理阶段前向发现并
+        # 记忆的复合 and 条件（inline_boolop_chains 缺失时的回退路径），
+        # 避免退化为仅取链首单块比较（首个合取支丢失/取反下推）。
+        _disc_conds = getattr(self, '_disc_elif_chain_conds', None)
+        if _disc_conds is not None and cond_block is not None and id(cond_block) in _disc_conds:
+            return _disc_conds[id(cond_block)]
         cond_instrs = []
         prev_was_copy = False
         for instr in cond_block.instructions:
@@ -15907,6 +16030,264 @@ AST 映射规则:
                 stack.append(s)
         return True
 
+    def _chain_block_condition_instrs(self, block: BasicBlock) -> List[Any]:
+        """提取条件求值块的合取支指令（去除噪声/跳转/前缀语句指令）。"""
+        out = []
+        for i in block.instructions:
+            if i.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                continue
+            if (i.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                    or i.opname in SHORT_CIRCUIT_JUMP_OPS
+                    or i.opname in BACKWARD_JUMP_OPS
+                    or i.opname in ('JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE')):
+                continue
+            out.append(i)
+        return out
+
+    def _chain_block_is_pure(self, block: BasicBlock) -> bool:
+        """and 短路链中段成员纯净性：真实操作数求值块内不得出现
+        STORE_*/STORE_SUBSCR/STORE_ATTR（赋值/walrus）或 POP_TOP（被丢弃的
+        表达式语句）——出现即说明该块夹带用户语句，折叠会改变副作用语义。"""
+        for i in block.instructions:
+            if i.opname in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL'):
+                continue
+            if (i.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                    or i.opname in SHORT_CIRCUIT_JUMP_OPS
+                    or i.opname in BACKWARD_JUMP_OPS
+                    or i.opname in ('JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE')):
+                break
+            if (i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
+                             'STORE_DEREF', 'STORE_SUBSCR', 'STORE_ATTR')
+                    or i.opname == 'POP_TOP'):
+                return False
+        return True
+
+    def _generate_chain_head_prefix_assign(self, head_block: BasicBlock) -> List[Dict[str, Any]]:
+        """链首前缀赋值生成：链首块（第一个合取支所在块）以 STORE_* 结尾的
+        前缀赋值（如 `first = lo <= o.dt <= hi; if first and o.buy: ...` 的
+        first 赋值），其值表达式由以链首块为 merge_block 的
+        BoolOpRegion/TernaryRegion（值上下文短路链）承载。依「父引用子入口」
+        调用该表达式区域自底向上生成完整赋值语句。
+
+        只保留结果中前导的非 If 语句（Assign/Expr/Return 等）：表达式区域
+        生成路径可能附带 merge_block 尾随条件跳转的内联 If（R89 路径），
+        该 If 的条件与分支体已由本 IfRegion 的完整 BoolOp 条件归约覆盖，
+        附带 If 在此必须丢弃，否则与主 If 重复发射。
+        """
+        out: List[Dict[str, Any]] = []
+        if head_block is None:
+            return out
+        # 防重入：同一链首块的前缀赋值生成不重复进入（_generate_boolop 内部
+        # 可能经 _generate_region 重入触发再次调用）。
+        _hpg = getattr(self, '_chain_head_active', None)
+        if _hpg is None:
+            _hpg = set()
+            self._chain_head_active = _hpg
+        _hkey = id(head_block)
+        if _hkey in _hpg:
+            return out
+        _has_store = any(i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
+                                      'STORE_DEREF', 'STORE_SUBSCR', 'STORE_ATTR')
+                         for i in head_block.instructions)
+        if not _has_store:
+            return out
+        _owner = None
+        for _r in self.regions:
+            if (not isinstance(_r, (BoolOpRegion, TernaryRegion))
+                    or getattr(_r, 'merge_block', None) is not head_block
+                    or id(_r) in self._generated_regions
+                    or id(_r) in self._generating_regions):
+                continue
+            if isinstance(_r, BoolOpRegion) and not _r.value_target:
+                continue
+            _owner = _r
+            break
+        if _owner is None:
+            return out
+        _hpg.add(_hkey)
+        _prev_suppress = getattr(self, '_suppress_boolop_merge_tail', False)
+        self._suppress_boolop_merge_tail = True
+        try:
+            if isinstance(_owner, BoolOpRegion):
+                _res = self._generate_boolop(_owner)
+            else:
+                _res = self._generate_ternary(_owner)
+        except Exception:
+            # 表达式区域生成失败（如深路径下的递归/重建异常）时保守放弃
+            # 前缀赋值，交回调用方继续链条件归约，不向上传播异常。
+            _res = None
+        finally:
+            _hpg.discard(_hkey)
+            self._suppress_boolop_merge_tail = _prev_suppress
+        self._generated_regions.add(id(_owner))
+        if not _res:
+            return out
+        _res_list = _res if isinstance(_res, list) else [_res]
+        for _s in _res_list:
+            if isinstance(_s, dict) and _s.get('type') == 'If':
+                break
+            out.append(_s)
+        return out
+
+    def _discover_predicate_and_chain(self, region: IfRegion,
+                                      cond_block: BasicBlock) -> Optional[Dict[str, Any]]:
+        """_discover_predicate_and_chain — 生成端 and 短路链发现回退。
+
+        **算法依据** CPython 对 ``if A and B: body``（含 ``and not B``）的编译
+        形态是「同目标汇合的 POP_JUMP 短路链」：每个操作数求值块以
+        POP_JUMP_IF_FALSE（``not X`` 操作数则为 POP_JUMP_IF_TRUE）跳向同一
+        else/elif/merge 目标，操作数求值块之间以 fallthrough 串联。当分析端
+        inline_boolop_chains 因扫描顺序竞态（链末块先于链首块建区）等原因
+        未记录该链时，首个合取支会被当作嵌套 if 或整体丢失；本方法按 CFG
+        拓扑（前驱条件块跳转目标 == 本条件块跳转目标，且其真路径
+        fallthrough 进入本条件块）反向重建完整操作数链。
+
+        **归约顺序** 自 cond_block 沿前驱反向收集链块（每步要求：前驱末指
+        令为 FORWARD 条件跳转、argval == cond_block 的汇合目标、真路径
+        fallthrough 是当前链尾块；多个候选取偏移最大者）；中段成员必须纯净
+        （无 STORE_*/POP_TOP 用户语句痕迹），链首（最深前驱）允许前缀语句
+        （其位于整个条件之前，提升为 pre_stmts 是程序序保真的），遇不纯块
+        即纳入并停止扩展。收集完成后逐块重建合取支，IF_TRUE 结尾成员取反
+        （``and not X`` 语义）。
+
+        **唯一归属判定** 链中除 cond_block 外的块由本 IfRegion 唯一归属
+        （调用方标记 generated），不再被父序列重复发射；链首前缀赋值由
+        _generate_chain_head_prefix_assign 经 BoolOpRegion/TernaryRegion
+        （merge_block == 链首）生成并标记该表达式区域。
+
+        **嵌套处理** 前驱候选若已归属某个以其为条件块的结构区域
+        （get_entry_region_for_block 命中且条件块即该前驱），说明该前驱是
+        嵌套 if 头，保守放弃整条链回退（返回 None），交由既有嵌套
+        IfRegion 路径；跨循环回边前驱因「跳转目标 == 汇合点」与
+        「fallthrough 进入链尾」双重约束天然排除。
+
+        **入口引用语义** 父 IfRegion.test 引用重建的 BoolOp 节点；链首前缀
+        语句作为 if 之前的独立语句（pre_stmts）发射；父区域通过链块
+        generated 标记引用子表达式区域，不展开其内部块。
+
+        **反编译流程** 修正后 ``if A and B:``（含 ``and not B``）无论分析端
+        是否记录 inline_boolop_chains，都能还原为单一 If + BoolOp 条件，
+        首合取支不再下推为嵌套 if 或丢失，重编译指令序列与原始一致。
+
+        :param region: 正在生成的 IfRegion
+        :param cond_block: region.condition_block（链末块，最后合取支）
+        :return: {'blocks': [首合取支块, ..., cond_block], 'op': 'and'}，无链则 None
+        """
+        if cond_block is None:
+            return None
+        last = cond_block.get_last_instruction()
+        if (last is None or last.argval is None
+                or last.opname not in FORWARD_CONDITIONAL_JUMP_OPS
+                or 'IF_FALSE' not in last.opname):
+            return None
+        merge_off = last.argval
+        chain = [cond_block]
+        seen = {cond_block.start_offset}
+        current = cond_block
+        while True:
+            best = None
+            for p in current.predecessors:
+                if (p.start_offset in seen
+                        or p.start_offset >= current.start_offset):
+                    continue
+                pl = p.get_last_instruction()
+                if (pl is None or pl.argval is None or pl.argval != merge_off
+                        or pl.opname not in FORWARD_CONDITIONAL_JUMP_OPS
+                        or ('IF_FALSE' not in pl.opname
+                            and 'IF_TRUE' not in pl.opname)):
+                    continue
+                ft = None
+                for s in p.successors:
+                    if s.start_offset != pl.argval:
+                        ft = s
+                        break
+                if ft is None or ft is not current:
+                    continue
+                _er = self.region_analyzer.get_entry_region_for_block(p)
+                if (_er is not None and _er is not region
+                        and getattr(_er, 'condition_block', None) is p):
+                    return None
+                if best is None or p.start_offset > best.start_offset:
+                    best = p
+            if best is None:
+                break
+            if len(chain) >= 2 and not self._chain_block_is_pure(chain[0]):
+                break
+            chain.insert(0, best)
+            seen.add(best.start_offset)
+            current = best
+        if len(chain) < 2:
+            return None
+        return {'blocks': chain, 'op': 'and'}
+
+    def _discover_predicate_and_chain_forward(self, cond_block: BasicBlock) -> Optional[Dict[str, Any]]:
+        """_discover_predicate_and_chain_forward — 前向 and 短路链发现（elif 条件回退）。
+
+        **算法依据** 与 _discover_predicate_and_chain 同源：CPython 将
+        ``elif A and B: body``（含 ``and not B``）编译为「同目标汇合的
+        POP_JUMP 短路链」——链首块从 elif 条件块开始，各操作数求值块以
+        POP_JUMP_IF_FALSE/IF_TRUE 跳向同一「跳过本臂」目标，操作数块之间以
+        fallthrough 串联。当分析端未记录 inline_boolop_chains 时，链首之后
+        的合取支会被当作嵌套 if（``and not X`` 甚至被反转为 ``if X:``）；
+        本方法沿 fallthrough 前向重建操作数链。
+
+        **归约顺序** 自链首块沿「非跳转目标后继」前向行走：后继块末指令为
+        FORWARD 条件跳转且 argval == 链首汇合目标时纳入链；中段成员必须
+        纯净（_chain_block_is_pure）；链尾块（fallthrough 进入臂体）纳入后
+        停止。逐块重建合取支，IF_TRUE 结尾成员取反（``and not X`` 语义）。
+
+        **唯一归属判定** 链中除链首外的块由调用方标记 generated，不再作嵌
+        套 if 或臂体语句重复发射。
+
+        **嵌套处理** or 短路链（各成员跳臂体入口，目标非同一天然排除）与
+        嵌套 if（内层条件块跳转目标 ≠ 链首汇合目标）均不命中；跨臂/跨循环
+        前向跳转因「目标同一性」约束排除。
+
+        **入口引用语义** 调用方以重建的 BoolOp 节点作为 elif 臂条件（父
+        IfRegion.test 引用），链块归属本 IfRegion，不展开为独立语句。
+
+        **反编译流程** 修正后 ``elif A and B:`` / ``elif A and not B:`` 还原
+        为单一 elif + BoolOp 条件，首合取支不下推、不取反丢失。
+
+        :param cond_block: elif 条件块（链首）
+        :return: {'blocks': [链首, ...成员], 'op': 'and'}，无链则 None
+        """
+        if cond_block is None:
+            return None
+        head_last = cond_block.get_last_instruction()
+        if (head_last is None or head_last.argval is None
+                or head_last.opname not in FORWARD_CONDITIONAL_JUMP_OPS
+                or ('IF_FALSE' not in head_last.opname
+                    and 'IF_TRUE' not in head_last.opname)):
+            return None
+        merge_off = head_last.argval
+        chain = [cond_block]
+        seen = {cond_block.start_offset}
+        current = cond_block
+        while True:
+            nxt = None
+            for s in current.successors:
+                if s.start_offset != merge_off and s.start_offset not in seen:
+                    nxt = s
+                    break
+            if nxt is None:
+                break
+            nxt_last = nxt.get_last_instruction()
+            if (nxt_last is None or nxt_last.argval is None
+                    or nxt_last.argval != merge_off
+                    or nxt_last.opname not in FORWARD_CONDITIONAL_JUMP_OPS
+                    or ('IF_FALSE' not in nxt_last.opname
+                        and 'IF_TRUE' not in nxt_last.opname)):
+                break
+            if not self._chain_block_is_pure(nxt):
+                break
+            chain.append(nxt)
+            seen.add(nxt.start_offset)
+            current = nxt
+        if len(chain) < 2:
+            return None
+        return {'blocks': chain, 'op': 'and'}
+
     def _if_generate_normal(self, region: IfRegion) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
         cond_block = region.condition_block
         if cond_block is None:
@@ -16048,6 +16429,88 @@ AST 映射规则:
                     condition = {'type': 'UnaryOp', 'op': 'not', 'operand': condition}
                 for _cb in _chain_blocks[1:]:
                     self.generated_blocks.add(_cb)
+        # [A1 修复·生成端 and 短路链发现回退]
+        #
+        # 六要素：
+        # (算法依据) CPython 对 `if A and B: body`（含 `and not B`）的编译形态
+        #   是「同目标汇合的 POP_JUMP 短路链」：每个操作数求值块以
+        #   POP_JUMP_IF_FALSE（`not X` 操作数为 POP_JUMP_IF_TRUE）跳向同一
+        #   else/elif/merge 目标，操作数块之间以 fallthrough 串联。分析端
+        #   inline_boolop_chains 因扫描顺序竞态（链末块先于链首块建区）等
+        #   原因未记录该链时，首个合取支会被整体丢失或下推为嵌套 if（本
+        #   IfRegion 条件退化为只剩末合取支）。本回退在生成端按 CFG 拓扑
+        #   重建完整操作数链（见 _discover_predicate_and_chain docstring）。
+        # (归约顺序) 反向收集链块 → 链首前缀赋值经表达式区域
+        #   （BoolOpRegion/TernaryRegion，merge_block == 链首）自底向上生成
+        #   → 逐块重建合取支 → IF_TRUE 结尾成员取反（`and not X`）→ 合成
+        #   BoolOp(and) 条件覆盖单支条件。
+        # (唯一归属判定) 链中除 cond_block 外的块由本 IfRegion 唯一归属
+        #   （标记 generated/generated_offsets），不再被父序列重复发射；
+        #   链首前缀赋值所属表达式区域同样标记已生成。
+        # (嵌套处理) 前驱候选已归属以其为条件块的结构区域时保守放弃整条
+        #   回退（交由既有嵌套 IfRegion 路径）；中段成员纯净性由
+        #   _chain_block_is_pure 保障（夹带用户语句的块只能作链首）。
+        # (入口引用语义) 父 IfRegion.test 引用重建的 BoolOp 节点；链首前缀
+        #   语句作为 if 之前的独立语句（pre_stmts）发射。
+        # (反编译流程) 修正后 `if A and B:` 在分析端 ibc 缺失时仍还原为
+        #   单一 If + BoolOp 条件，首合取支不下推、不丢失，重编译指令
+        #   序列与原始一致。
+        elif _main_ibc is None:
+            # 防重入守卫：链首前缀赋值生成（_generate_chain_head_prefix_assign
+            # → _generate_boolop 的 R89 路径）可能经 _generate_region 重入本
+            # IfRegion 的 _if_generate_normal，若无守卫将与本回退互相递归
+            # （RecursionError → 整个 if 区域降级丢失）。
+            _cpg = getattr(self, '_chain_prefix_generating', None)
+            if _cpg is None:
+                _cpg = set()
+                self._chain_prefix_generating = _cpg
+            if id(region) not in _cpg:
+                try:
+                    _disc_chain = self._discover_predicate_and_chain(region, cond_block)
+                except Exception:
+                    _disc_chain = None
+            else:
+                _disc_chain = None
+            if _disc_chain is not None:
+                _cpg.add(id(region))
+                try:
+                    _disc_blocks = _disc_chain['blocks']
+                    _disc_parts = []
+                    _disc_ok = True
+                    for _d_idx, _d_cb in enumerate(_disc_blocks):
+                        if _d_cb is cond_block:
+                            _d_instrs = list(cond_instrs)
+                        else:
+                            _d_instrs = self._chain_block_condition_instrs(_d_cb)
+                        if not _d_instrs:
+                            _disc_ok = False
+                            break
+                        _d_part = self.expr_reconstructor.reconstruct(_d_instrs)
+                        if _d_part is None:
+                            _disc_ok = False
+                            break
+                        if _d_cb is not cond_block:
+                            _d_last = _d_cb.get_last_instruction()
+                            if _d_last is not None and 'IF_TRUE' in _d_last.opname:
+                                _d_part = (_flip_contains_compare(_d_part)
+                                           if (_d_part.get('type') == 'Compare'
+                                               and any((o.get('type') if isinstance(o, dict) else o) in ('In', 'NotIn', 'in', 'not in')
+                                                       for o in (_d_part.get('ops') or [])))
+                                           else _negate_expr(_d_part))
+                        _disc_parts.append(_d_part)
+                        if _d_idx == 0 and _d_cb is not cond_block:
+                            # 链首前缀赋值（如 `first = lo <= o.dt <= hi; if first and o.buy: ...`）
+                            _disc_pre = self._generate_chain_head_prefix_assign(_d_cb)
+                            if _disc_pre:
+                                pre_stmts.extend(_disc_pre)
+                    if _disc_ok and len(_disc_parts) >= 2:
+                        condition = {'type': 'BoolOp', 'op': 'and', 'values': _disc_parts}
+                        for _d_cb in _disc_blocks:
+                            if _d_cb is not cond_block:
+                                self.generated_blocks.add(_d_cb)
+                                self.generated_offsets.add(_d_cb.start_offset)
+                finally:
+                    _cpg.discard(id(region))
         self.generated_blocks.add(cond_block)
         if hasattr(region, 'elif_conditions') and region.elif_conditions:
             for elif_cond in region.elif_conditions:
@@ -30716,6 +31179,24 @@ AST 映射规则:
             # 入口块同时是 BoolOpRegion 的首个 chain block，generate() 的
             # BoolOpRegion 入口分支已通过 _if_extract_cond_instructions
             # 提取 a = None，若此处再次提取会导致重复输出。
+            # [R46] 原则 2（每块唯一归属）：链首块若已被语句发射路径登记，其前缀
+            # 语句已经产出，不得再次提取，否则整段前缀重复发射。
+            # [R13 实测留档] 曾两次把该判据从块级细化，均因测不出「第一份语句由谁
+            # 产出」而回退：
+            #   (a) 按「每条前缀指令偏移都在 generated_offsets」判定——generated_offsets
+            #       只在个别路径零散登记 start_offset，对任何多指令块恒为假，于是凡块
+            #       被标记就重新提取整段前缀：order::create_order(orig=71 decomp=120)、
+            #       trade::create_trade、base_validator::_check_order、itn::authenticate、
+            #       json_persistance::persist、quotation::change_future_real_date 共 6 处
+            #       整块语句重复发射；
+            #   (b) 新增 statement_emitted_blocks 台账（在 _generate_block_statements
+            #       漏斗与 _generate_block_statements_body 入口处各登记一次）——6 处症状
+            #       一字不变，证明 create_order 的第一份语句并非经该漏斗产出，台账不覆盖
+            #       真实发射路径。
+            # 结论：前缀是否已发射必须在**区域归属**层面（谁拥有该块）决定，而不是在
+            # 生成期的标记集合上弥补；此项列为 Round 14 的区域归属任务。
+            # 已知代价：generate() 入口 Ternary/BoolOp「被父消费」分支只标块不发射语句，
+            # 此时链首块内的前缀赋值（repro_01 第二臂 `a2 = 2`）会被吞掉。
             if first_chain_block in self.generated_blocks:
                 pre_stmts = []
             else:
@@ -31180,7 +31661,12 @@ AST 映射规则:
                             'targets': [{'type': 'Name', 'id': region.value_target, 'ctx': 'Store'}],
                             'value': _full_rhs,
                         })
-                if region.merge_block:
+                if region.merge_block and not getattr(self, '_suppress_boolop_merge_tail', False):
+                    # [_suppress_boolop_merge_tail] 链首前缀赋值模式
+                    # （_generate_chain_head_prefix_assign）下，merge_block 的
+                    # 尾随内容（R89 内联 if / then-IfRegion 交接）由调用方的
+                    # 完整 BoolOp 条件归约覆盖，此处不得处理——否则会重入
+                    # 生成 then 侧 IfRegion 并吞掉其 else 侧块（elif 丢失）。
                     _merge_instrs = [i for i in region.merge_block.instructions
                                     if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL')]
                     _store_ops_set = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
@@ -40324,6 +40810,14 @@ AST 映射规则:
              NOP 之后一条指令（跳转「跨过」本 NOP）——该 NOP 是 ``if/while
              cond: pass`` 空体占位，由条件结构的空体 Pass 发射路径再生，
              额外构造会引入多余 const 并使 co_consts 错位；
+          V-M (条件汇合锚点)：CFG 中存在任何条件跳转（含短路跳转
+             JUMP_IF_*_OR_POP）以本 NOP 自身为目标（argval == nop_off）——
+             该 NOP 是条件结构 false/true 路径的汇合锚点（如 if/elif 阶梯
+             出口处 ``if cond: ...`` 的 false 出口直接落在语句边界 NOP
+             上），由外层条件结构的汇合语义在重编译时自动再生（NOP 为
+             比较噪声，recompile 后比较器按噪声过滤，无需显式还原语句）；
+             把它当作折叠残留发射 while False: pass 会在条件汇合点凭空
+             插入语句边界，截断后续公共尾部的归约；
           V-L (循环头锚点)：NOP 的后继指令偏移是循环回边目标（存在
              BACKWARD_JUMP_OPS 跳转指向 offset+2）——该 NOP 是 ``while``
              循环头锚点（循环头需真实指令承接回边），由循环语句本身再生；
@@ -40406,6 +40900,14 @@ AST 映射规则:
             for bi2 in blk.instructions:
                 if (bi2.opname in BACKWARD_CONDITIONAL_JUMP_OPS
                         and bi2.argval == _succ_target):
+                    return False
+                # [A4/V-M] 条件跳转以本 NOP 自身为汇合目标（argval == nop_off）：
+                # 该 NOP 是条件结构 false/true 路径的汇合锚点（语句边界），由
+                # 外层条件结构在重编译时自动再生，不是折叠残留。无条件前向
+                # 跳转指向 NOP 仍视为「结构连接跳转恰好指向折叠位置」（见
+                # 本方法 docstring 首段），保持原有 while False: pass 还原。
+                if (bi2.opname in CONDITIONAL_JUMP_OPS
+                        and getattr(bi2, 'argval', None) == nop_off):
                     return False
                 if bi2.offset == _prev_off:
                     if (bi2.opname in CONDITIONAL_JUMP_OPS
@@ -40594,13 +41096,16 @@ AST 映射规则:
         输入契约:
           - loop: LoopRegion 或 None（无循环上下文）。
 
-        AST 映射规则: 返回 bool。True 表示该循环的所有「离开区域的直接后继」
-        均为隐式 return None 块——此时 CPython 3.11 将 for 内 `break` 与
-        `return None` 编译为同一字节码 [POP_TOP, LOAD_CONST None,
-        RETURN_VALUE]，两种源码重建重编译等价（歧义成立，可按既有约定渲染
-        Break）。False 表示存在含实际代码的出口块：真 break 必为
-        [POP_TOP, JUMP_FORWARD→exit]，终态 RETURN 块只能是显式 return，
-        必须渲染 Return。
+        识别条件: 循环区域的内部集 = loop.blocks 减去该区域自己的出口节点
+        （else_blocks）与前置初始化（init_blocks）；出口节点集 = 内部集的
+        非异常后继中不属于内部集者。for 区域的 blocks 按构造已含其出口块，
+        故不减去 else_blocks 时出口集恒空、判据恒真。
+        归约方式: 出口节点集全为隐式 return None 块 ⇒ 循环区域归约到函数
+        汇点，`break` 与 `return None` 在 CPython 3.11 下编译为同一字节码
+        [POP_TOP, LOAD_CONST None, RETURN_VALUE]，歧义成立；出口节点集中
+        存在含实际代码的块 ⇒ 函数区域在循环之后仍有语句，此时终态 RETURN
+        块必须作为**函数级终止抽象节点**归约，不得并入循环 merge 节点。
+        AST 映射: 歧义成立 → 允许 Break；否则 → 只能 Return。
 
         子区域处理: 只读遍历 loop.blocks 的后继边，不修改任何归属。
 
@@ -40608,17 +41113,23 @@ AST 映射规则:
           - 歧义形态（全隐式 return None 出口）：Break/Return 两种发射的
             重编译逐指令一致；
           - 非歧义形态：Break 发射会丢失 RETURN_VALUE 并改变跳转拓扑
-            （指令数 -2），Return 发射与原字节码一致。
+            （指令数 -1~-2），Return 发射与原字节码一致。
         """
         if loop is None:
             return True
         _inner = set(getattr(loop, 'blocks', None) or [])
+        # 区域归约边界：else_blocks / init_blocks 不是回边集支配的循环内部，
+        # 而是被循环区域吸收的「循环之后的语句」与循环前置初始化。把它们留在
+        # 内部集中会使出口集恒空，判据退化为恒真（R13-W2-D 根因）。
+        for _attr in ('else_blocks', 'init_blocks'):
+            _inner -= set(getattr(loop, _attr, None) or [])
         if not _inner:
             return True
         _exits = []
         _seen = set()
         for _b in _inner:
-            for _s in getattr(_b, 'successors', None) or ():
+            # 异常边不是循环的归约出口（handler 独立成区），只取控制流后继。
+            for _s in getattr(_b, 'conditional_successors', None) or ():
                 if _s in _inner:
                     continue
                 _key = _s.start_offset
@@ -41303,6 +41814,35 @@ AST 映射规则:
 
         if block_role == BlockRole.PURE_CONTINUE:
             self.generated_blocks.add(block)
+            # [A3 修复·显式 continue 与自然回边的偏移序判别]
+            #
+            # 六要素：
+            # (算法依据) CPython 3.11 中循环体的「自然回边」（body 走完后的
+            #   隐式 JUMP_BACKWARD → 循环头）永远位于循环体末尾——它是 body
+            #   最后一条语句编译产物之后的收尾跳转；而源码级 `continue` 语句
+            #   出现在 body 内部某语句位置，其 JUMP_BACKWARD 块的偏移必然
+            #   严格小于自然回边块。二者指令形态完全相同（单条 JUMP_BACKWARD
+            #   指向循环头），唯一可靠的结构性判据是偏移序。
+            # (归约顺序) 先判块身份（block is back_edge_block → 自然回边，
+            #   静默消费）；再判后继拓扑（唯一后继 == 循环头/循环条件块 →
+            #   形态上像回边）；最后用偏移序做显式 continue 否决——若本块
+            #   偏移严格小于已记录的自然回边块偏移，则本块是 body 中途的
+            #   显式 continue，必须发射 Continue 语句，不得抑制。
+            # (唯一归属) 显式 continue 块由本方法发射一次 Continue 并标记
+            #   generated；自然回边块保持静默消费（由循环语句本身再生），
+            #   二者按块身份互斥，无双重归属。
+            # (嵌套处理) 偏移序仅在当前（最内层）_current_loop 的
+            #   back_edge_block 上判定；嵌套循环中内层 continue 块相对内层
+            #   自然回边同样满足「先于自然回边」，判据逐层独立成立。
+            # (入口引用语义) 判据只读取块身份/后继/偏移，不要求该块归属
+            #   任何 IfRegion（此前仅当块是某 IfRegion 的 else_blocks 成员
+            #   时才否决抑制，导致 if 未形成 IfRegion 的形态下显式 continue
+            #   被整体吞掉、调用方（如 R89 内联 if 的 then 体）拿到空语句
+            #   列表而退化为 Pass）。
+            # (反编译流程) 修正后 `if cond: continue`（无论是否归约为
+            #   IfRegion）在任何生成路径下都能取回 Continue 语句；自然回边
+            #   块（偏移最大）不受影响，循环收尾仍由 LoopRegion 生成路径
+            #   再生，重编译字节码保持一致。
             _is_natural_be_gbs = False
             if self._current_loop:
                 if block == self._current_loop.back_edge_block:
@@ -41313,6 +41853,12 @@ AST 映射规则:
                         _is_natural_be_gbs = True
                     elif len(_gbs_succs) == 1 and self._current_loop.condition_block and _gbs_succs[0] == self._current_loop.condition_block:
                         _is_natural_be_gbs = True
+                    # [A3] 显式 continue 否决：自然回边是 body 末块，任何
+                    # 严格先于它的纯 continue 块都是源码级 continue 语句。
+                    if (_is_natural_be_gbs
+                            and self._current_loop.back_edge_block is not None
+                            and block.start_offset < self._current_loop.back_edge_block.start_offset):
+                        _is_natural_be_gbs = False
                 if _is_natural_be_gbs:
                     _enc_if = self.region_analyzer._find_enclosing_region(block, (IfRegion,))
                     if _enc_if is not None and block in (_enc_if.else_blocks or []):

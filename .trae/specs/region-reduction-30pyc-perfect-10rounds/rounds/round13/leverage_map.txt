@@ -1,0 +1,67 @@
+# Round 13 杠杆图：同一 (函数, 缺陷类型) 出现在多个 pyc -> 一次修复可翻正多个文件
+
+x5  api_get_from_zeromq [target_diff]
+      IQCommon/common/main.pyc
+      IQData/plugins/plugin_system_realquote/real_quote.pyc
+      fly/common/common.pyc
+      fly/data/quote.pyc
+      fly/dumpload/load_daily.pyc
+
+x3  _is_valid_interval [target_diff]
+      IQCommon/arg_checker.pyc
+      IQData/utils/arg_checker.pyc
+      IQEngine/utils/arg_checker.pyc
+
+x3  _is_valid_quarter [target_diff]
+      IQCommon/arg_checker.pyc
+      IQData/utils/arg_checker.pyc
+      IQEngine/utils/arg_checker.pyc
+
+x3  <module> [target_diff]
+      IQCommon/profiler_func.pyc
+      IQData/utils/profiler_func.pyc
+      IQEngine/utils/profiler_func.pyc
+
+x3  change_his_to_backward [target_diff]
+      IQData/plugins/plugin_system_fly_basicdata/calexrights_func.pyc
+      IQData/utils/calexrights_func.pyc
+      fly/data/quote.pyc
+
+x3  change_his_to_forward [target_diff]
+      IQData/plugins/plugin_system_fly_basicdata/calexrights_func.pyc
+      IQData/utils/calexrights_func.pyc
+      fly/data/quote.pyc
+
+x3  get_price [seq_len]
+      IQData/plugins/plugin_system_fly_historyquote/history_data_source.pyc
+      IQEngine/plugins/plugin_fly_data/fly_api/history_api.pyc
+      fly/data/quote.pyc
+
+x2  check_limit [seq_len]
+      IQEngine/plugins/plugin_fly_data_source/fly_data_source.pyc
+      fly/data/quote.pyc
+
+x2  get_real_minute_kline [seq_len]
+      IQData/plugins/plugin_system_realquote/real_quote.pyc
+      IQEngine/plugins/plugin_fly_data_source/fly_data_source.pyc
+
+x2  perform_rollover [seq_len]
+      IQCommon/logger/handlers.pyc
+      IQEngine/utils/logger/handlers.pyc
+
+x2  fill_kline_data_by_pre [seq_len]
+      IQCommon/util/common_func.pyc
+      IQData/utils/common_func.pyc
+
+x2  acquire [seq_len]
+      IQCommon/util/fileio_utils.pyc
+      fly/common/flytools.pyc
+
+x2  set_engine [seq_len]
+      IQData/manager/plugin_manager.pyc
+      IQEngine/core/plugin_manager.pyc
+
+x2  save [seq_len]
+      IQEngine/plugins/plugin_system_simulation/broker.pyc
+      IQEngine/plugins/plugin_system_simulation/live.pyc
+

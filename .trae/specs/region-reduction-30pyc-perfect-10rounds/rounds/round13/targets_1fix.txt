@@ -1,0 +1,55 @@
+# Round 13 P0: pyc needing exactly 1 strictly-matching function to hit 100%  (count=18)
+
+DEFECT  9/10  IQCommon/util/backtest_info_utils.pyc
+  - <module>.creat_sheet1: [seq_diff] #958 orig=('<JUMP>', 'JUMP') decomp=("'row'", 'LOAD_FAST')
+
+DEFECT  8/9  IQCommon/util/user_info_utils.pyc
+  - <module>.remove_lock_files: [seq_len] orig=96 decomp=97
+
+DEFECT  9/10  IQData/manager/plugin_manager.pyc
+  - <module>.PluginManager.set_engine: [seq_len] orig=184 decomp=183
+
+DEFECT 10/11  IQEngine/config/config.pyc
+  - <module>.parse_config: [seq_len] orig=293 decomp=294
+
+DEFECT  9/10  IQEngine/core/executor.pyc
+  - <module>.Executor.check_before_trading: [seq_len] orig=243 decomp=254
+
+DEFECT  8/9  IQEngine/core/plugin_manager.pyc
+  - <module>.PluginManager.set_engine: [seq_len] orig=194 decomp=193
+
+DEFECT  8/9  IQEngine/data/data_proxy.pyc
+  - <module>.DataProxy.get_bar: [seq_len] orig=86 decomp=90
+
+DEFECT 20/21  IQEngine/plugins/plugin_fly_data/__init__.pyc
+  - <module>.ApiMethodPlugin._on_before_trading_start_trading_thread: [seq_len] orig=66 decomp=62
+
+DEFECT 15/16  IQEngine/plugins/plugin_fly_data/fly_api/setting_api.pyc
+  - <module>.set_parameters: [seq_diff] #111 orig=('<JUMP>', 'JUMP') decomp=("'str'", 'LOAD_GLOBAL')
+
+DEFECT 12/13  IQEngine/plugins/plugin_system_control/__init__.pyc
+  - <module>.AccountPlugin._terminate: [seq_len] orig=43 decomp=42
+
+DEFECT 13/14  IQEngine/plugins/plugin_system_event_source/default_event_source.pyc
+  - <module>.DefaultEventSource.events: [seq_len] orig=512 decomp=488
+
+DEFECT 16/17  IQEngine/plugins/plugin_system_matcher/matcher.pyc
+  - <module>.DefaultMatcher.match: [seq_len] orig=715 decomp=655
+
+DEFECT 14/15  IQEngine/plugins/plugin_system_persist/__init__.pyc
+  - <module>.ObjectPersistancePlugin.can_resume_strategy: [seq_len] orig=89 decomp=57
+
+DEFECT 14/15  IQEngine/plugins/plugin_system_risk_calculation/function.pyc
+  - <module>.save_testds_to_json: [seq_len] orig=314 decomp=310
+
+DEFECT 28/29  IQEngine/plugins/plugin_system_simulation/broker.pyc
+  - <module>.SimulationBroker.save: [seq_len] orig=22 decomp=15
+
+DEFECT 28/29  IQEngine/plugins/plugin_system_simulation/live.pyc
+  - <module>.DefaultLiveBroker.save: [seq_len] orig=16 decomp=12
+
+DEFECT 16/17  IQEngine/utils/logger/handlers.pyc
+  - <module>.RotatingFileHandler.perform_rollover: [seq_len] orig=127 decomp=125
+
+DEFECT 65/66  fly/common/flytools.pyc
+  - <module>.FileLock.acquire: [seq_len] orig=90 decomp=85

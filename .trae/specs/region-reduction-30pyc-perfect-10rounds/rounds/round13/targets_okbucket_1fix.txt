@@ -1,0 +1,49 @@
+# Round 13b: officially-ok pyc with exactly 1 strict defect (count=16)
+
+DEFECT 13/14  IQCommon/data/api_data.pyc
+  - <module>.check_limit_common: [target_diff] #154 POP_JUMP_IF_FALSE 终点 orig=('0', 'LOAD_CONST') decomp=(None, 'FOR_ITER')
+
+DEFECT 20/21  IQCommon/data/local_finance.pyc
+  - <module>.get_local_financial_factors: [target_diff] #4 POP_JUMP_IF_NOT_NONE 终点 orig=('None', 'LOAD_CONST') decomp=("'convert_to_list'", 'LOAD_GLOBAL')
+
+DEFECT 15/16  IQCommon/profiler_func.pyc
+  - <module>: [target_diff] #82 POP_JUMP_IF_FALSE 终点 orig=("'PY35'", 'LOAD_NAME') decomp=('0', 'LOAD_CONST')
+
+DEFECT  3/4  IQCommon/util/email_utils.pyc
+  - <module>.send_email: [seq_len] orig=194 decomp=196
+
+DEFECT 13/14  IQData/utils/profiler_func.pyc
+  - <module>: [target_diff] #64 POP_JUMP_IF_FALSE 终点 orig=("'PY35'", 'LOAD_NAME') decomp=('0', 'LOAD_CONST')
+
+DEFECT 10/11  IQEngine/core/strategy/strategy_universe.pyc
+  - <module>.StrategyUniverse._on_clear_de_listed: [target_diff] #17 POP_JUMP_IF_FALSE 终点 orig=("'de_listed'", 'LOAD_FAST') decomp=(None, 'FOR_ITER')
+
+DEFECT 19/20  IQEngine/data/asset_mixin.pyc
+  - <module>.AssetMixin.get_assets.<listcomp>: [seq_diff] #6 orig=('<JUMP>', 'POP_JUMP_IF_NONE') decomp=('<JUMP>', 'POP_JUMP_IF_FALSE')
+
+DEFECT 13/14  IQEngine/data/trading_dates_mixin.pyc
+  - <module>.TradingDatesMixin.trading_dates_reload: [seq_len] orig=23 decomp=21
+
+DEFECT 17/18  IQEngine/plugins/plugin_fly_data/fly_api/history_api.pyc
+  - <module>.get_price: [seq_len] orig=191 decomp=193
+
+DEFECT 36/37  IQEngine/plugins/plugin_system_accounts/position_model/stock_position.pyc
+  - <module>.StockPosition.make_trade: [seq_len] orig=166 decomp=162
+
+DEFECT 10/11  IQEngine/plugins/plugin_system_trade/ptrade_broker.pyc
+  - <module>.PtradeBroker.create_portfolio: [seq_len] orig=512 decomp=513
+
+DEFECT  5/6  fly/common/common.pyc
+  - <module>.api_get_from_zeromq: [target_diff] #144 JUMP 终点 orig=("'_connect'", 'LOAD_FAST') decomp=("'first_address'", 'LOAD_FAST')
+
+DEFECT  5/6  fly/common/custom_tools.pyc
+  - <module>.memory_handler: [seq_len] orig=65 decomp=67
+
+DEFECT  9/10  fly/common/market_time.pyc
+  - <module>.MarketTime.is_open: [target_diff] #27 POP_JUMP_IF_FALSE 终点 orig=("'current_dt'", 'LOAD_FAST') decomp=('False', 'LOAD_CONST')
+
+DEFECT 24/25  fly/dockerspawner/dockerspawner.pyc
+  - <module>.DockerSpawner.tls_client: [seq_len] orig=15 decomp=17
+
+DEFECT  3/4  fly/simtradding/pboxAccount_jupyterhub.pyc
+  - <module>.getVaildAccount: [seq_len] orig=423 decomp=427

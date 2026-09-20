@@ -1,0 +1,411 @@
+  OK      2/2  IQCommon/__init__.pyc
+  OK      1/1  IQCommon/api/__init__.pyc
+  OK      2/2  IQCommon/api/base_api.pyc
+  OK      2/2  IQCommon/api/check_strategy.pyc
+  OK      5/5  IQCommon/api/gtn_api.pyc
+  OK      4/4  IQCommon/api/wrapper.pyc
+  DEFECT 47/49  IQCommon/arg_checker.pyc
+           - <module>.ArgumentChecker._is_valid_interval: [target_diff] #14 POP_JUMP_IF_FALSE 终点 orig=("'valid'", 'LOAD_FAST') decomp=("'int'", 'LOAD_GLOBAL')
+           - <module>.ArgumentChecker._is_valid_quarter: [target_diff] #19 POP_JUMP_IF_FALSE 终点 orig=("'valid'", 'LOAD_FAST') decomp=('1990', 'LOAD_CONST')
+  OK      2/2  IQCommon/backtest/backtest.pyc
+  OK      1/1  IQCommon/common/__init__.pyc
+  OK      2/2  IQCommon/common/config.pyc
+  OK     44/44  IQCommon/const.pyc
+  OK      1/1  IQCommon/data/__init__.pyc
+  DEFECT 13/14  IQCommon/data/api_data.pyc
+           - <module>.check_limit_common: [target_diff] #154 POP_JUMP_IF_FALSE 终点 orig=('0', 'LOAD_CONST') decomp=(None, 'FOR_ITER')
+  OK      8/8  IQCommon/data/asset_storage.pyc
+  OK      5/5  IQCommon/data/base_storage.pyc
+  OK      8/8  IQCommon/data/basic_data_source.pyc
+  OK      1/1  IQCommon/data/const.pyc
+  OK      8/8  IQCommon/data/exrights_storage.pyc
+  OK      4/4  IQCommon/data/history_bar_storage.pyc
+  DEFECT 20/21  IQCommon/data/local_finance.pyc
+           - <module>.get_local_financial_factors: [target_diff] #4 POP_JUMP_IF_NOT_NONE 终点 orig=('None', 'LOAD_CONST') decomp=("'convert_to_list'", 'LOAD_GLOBAL')
+  OK      2/2  IQCommon/data/pandas.pyc
+  OK      6/6  IQCommon/data/trading_dates_storage.pyc
+  OK     19/19  IQCommon/enumerate.pyc
+  OK     34/34  IQCommon/exception.pyc
+  OK     11/11  IQCommon/generalconf.pyc
+  OK      5/5  IQCommon/i18n.pyc
+  OK     22/22  IQCommon/logger/__init__.pyc
+  OK      1/1  IQCommon/manager/__init__.pyc
+  OK     13/13  IQCommon/mq_connector.pyc
+  DEFECT 15/16  IQCommon/profiler_func.pyc
+           - <module>: [target_diff] #82 POP_JUMP_IF_FALSE 终点 orig=("'PY35'", 'LOAD_NAME') decomp=('0', 'LOAD_CONST')
+  OK      1/1  IQCommon/strategy/__init__.pyc
+  OK      3/3  IQCommon/strategy/common.pyc
+  OK      1/1  IQCommon/strategy/const.pyc
+  OK     11/11  IQCommon/strategy/hg_api.pyc
+  DEFECT 61/63  IQCommon/strategy/jq_trans_module.pyc
+           - <module>.func_attribute_history_convert_code.replace_args: [seq_len] orig=355 decomp=351
+           - <module>.func_get_bars_convert_code.replace_args: [seq_len] orig=653 decomp=649
+  OK      2/2  IQCommon/strategy/strategy.pyc
+  OK      4/4  IQCommon/strategy/zt_api.pyc
+  OK      6/6  IQCommon/tools.pyc
+  OK      6/6  IQCommon/trade_schedule.pyc
+  DEFECT  5/8  IQCommon/util/cgroup_utils.pyc
+           - <module>.add_process_to_cgroup: [seq_len] orig=291 decomp=293
+           - <module>.delete_cgroup_config: [seq_len] orig=154 decomp=156
+           - <module>.set_cgroup_config: [seq_len] orig=541 decomp=542
+  DEFECT  7/9  IQCommon/util/crypto_utils.pyc
+           - <module>.aes_decrypt: [target_diff] #9 POP_JUMP_IF_FALSE 终点 orig=("'isinstance'", 'LOAD_GLOBAL') decomp=("'AES'", 'LOAD_GLOBAL')
+           - <module>.aes_encrypt: [target_diff] #9 POP_JUMP_IF_FALSE 终点 orig=("'isinstance'", 'LOAD_GLOBAL') decomp=("'AES'", 'LOAD_GLOBAL')
+  OK     26/26  IQCommon/util/datetime_func.pyc
+  OK      7/7  IQCommon/util/docker_info_utils.pyc
+  DEFECT  3/4  IQCommon/util/email_utils.pyc
+           - <module>.send_email: [seq_len] orig=194 decomp=196
+  OK      4/4  IQCommon/util/file_delete.pyc
+  OK      1/1  IQCommon/util/profiler_utils.pyc
+  OK      6/6  IQCommon/util/pycompatibility.pyc
+  OK      4/4  IQCommon/util/request_utils.pyc
+  OK      2/2  IQCommon/util/resource_utils.pyc
+  OK      1/1  IQCommon/util/semaphore_utils.pyc
+  OK     29/29  IQCommon/util/strategy_info_utils.pyc
+  OK      2/2  IQCommon/util/t2_utils.pyc
+  DEFECT 35/41  IQCommon/util/trade_info_utils.pyc
+           - <module>.get_trade_list: [target_diff] #156 POP_JUMP_IF_FALSE 终点 orig=("'item'", 'LOAD_FAST') decomp=(None, 'FOR_ITER')
+           - <module>.get_trade_status: [target_diff] #70 FOR_ITER 终点 orig=("'return_trade_info'", 'LOAD_FAST') decomp=("'count'", 'LOAD_FAST')
+           - <module>.get_trade_unit_info: [seq_len] orig=240 decomp=241
+           - <module>.get_user_info: [seq_len] orig=96 decomp=99
+           - <module>.set_trade_status: [target_diff] #113 JUMP 终点 orig=("'count'", 'LOAD_FAST') decomp=("'exchange_flag'", 'LOAD_FAST')
+           - <module>.trade_operation: [target_diff] #94 POP_JUMP_IF_FALSE 终点 orig=("'write_info'", 'LOAD_FAST') decomp=(None, 'FOR_ITER')
+  OK      2/2  IQCommon/util/tradingday_info_utils.pyc
+  OK     18/18  IQCommon/util/wrapper_utils.pyc
+  OK      1/1  IQCommon/version.pyc
+  OK      1/1  IQData/__init__.pyc
+  OK      1/1  IQData/api/__init__.pyc
+  OK      4/4  IQData/api/api_extra.pyc
+  OK      4/4  IQData/api/api_helper.pyc
+  OK      2/2  IQData/api/get_block_stocks.pyc
+  OK      1/1  IQData/config/__init__.pyc
+  OK      4/4  IQData/config/config.pyc
+  OK      1/1  IQData/const.pyc
+  OK      1/1  IQData/core/__init__.pyc
+  OK     62/62  IQData/core/asset.pyc
+  OK      4/4  IQData/core/base.pyc
+  OK     20/20  IQData/core/data_cache.pyc
+  OK     11/11  IQData/core/data_manager.pyc
+  OK      6/6  IQData/data/Ashare_storage.pyc
+  OK      1/1  IQData/data/__init__.pyc
+  OK      5/5  IQData/data/base_storage.pyc
+  OK      1/1  IQData/data/component_stocks_storage.pyc
+  OK      7/7  IQData/data/date_set_storage.pyc
+  OK     14/14  IQData/data/default_basic_data.pyc
+  OK      4/4  IQData/data/default_history_quote.pyc
+  OK     11/11  IQData/data/default_real_quote.pyc
+  OK      8/8  IQData/data/exrights_storage.pyc
+  OK      1/1  IQData/data/future_info_cn.pyc
+  OK      7/7  IQData/data/market_storage.pyc
+  OK      9/9  IQData/data/merger_storage.pyc
+  OK      6/6  IQData/data/stock_industry_storage.pyc
+  OK      6/6  IQData/data/trading_dates_storage.pyc
+  OK      1/1  IQData/engine/__init__.pyc
+  OK     34/34  IQData/engine/engine.pyc
+  OK      5/5  IQData/entry.pyc
+  OK     14/14  IQData/enumerate.pyc
+  OK      1/1  IQData/fly_enum.pyc
+  OK     45/45  IQData/interface.pyc
+  OK      1/1  IQData/manager/__init__.pyc
+  OK     10/10  IQData/manager/data_info_manager.pyc
+  OK     19/19  IQData/manager/trading_day_manager.pyc
+  OK     11/11  IQData/modules/WEBCLIENT/gtn_client.pyc
+  OK      6/6  IQData/modules/WEBCLIENT/ibrain_client.pyc
+  OK      7/7  IQData/modules/WEBCLIENT/web_socket_client.pyc
+  OK      1/1  IQData/modules/__init__.pyc
+  OK      1/1  IQData/plugins/__init__.pyc
+  OK      6/6  IQData/plugins/plugin_history_data_source/__init__.pyc
+  OK      5/5  IQData/plugins/plugin_history_data_source/data_source_func.pyc
+  OK      5/5  IQData/plugins/plugin_history_data_source/history_bar_storage.pyc
+  OK     19/19  IQData/plugins/plugin_history_data_source/history_data_source.pyc
+  OK      1/1  IQData/plugins/plugin_system_basicdata/__init__.pyc
+  OK     25/25  IQData/plugins/plugin_system_basicdata/api_basicdata.pyc
+  OK      1/1  IQData/plugins/plugin_system_basicdata/basic_data_source.pyc
+  OK      6/6  IQData/plugins/plugin_system_client_db/__init__.pyc
+  OK      2/2  IQData/plugins/plugin_system_client_db/base_db_table.pyc
+  OK      9/9  IQData/plugins/plugin_system_client_db/client_db.pyc
+  OK      1/1  IQData/plugins/plugin_system_client_db/const.pyc
+  OK     18/18  IQData/plugins/plugin_system_client_db/dynamic_table.pyc
+  OK      6/6  IQData/plugins/plugin_system_db/__init__.pyc
+  OK      2/2  IQData/plugins/plugin_system_db/api_db.pyc
+  OK      4/4  IQData/plugins/plugin_system_db/db_utils.pyc
+  OK     27/27  IQData/plugins/plugin_system_db/iqdata_db_base.pyc
+  OK      6/6  IQData/plugins/plugin_system_db/iqdata_db_helper.pyc
+  OK      6/6  IQData/plugins/plugin_system_db_tools/__init__.pyc
+  OK      8/8  IQData/plugins/plugin_system_db_tools/api_db.pyc
+  OK     33/33  IQData/plugins/plugin_system_db_tools/db_base.pyc
+  OK      2/2  IQData/plugins/plugin_system_db_tools/db_utils.pyc
+  OK      1/1  IQData/plugins/plugin_system_fly_basicdata/FLYMODULE/__init__.pyc
+  OK      6/6  IQData/plugins/plugin_system_fly_basicdata/__init__.pyc
+  OK     33/33  IQData/plugins/plugin_system_fly_basicdata/api.pyc
+  OK     43/43  IQData/plugins/plugin_system_fly_basicdata/basic_data_source.pyc
+  DEFECT  6/8  IQData/plugins/plugin_system_fly_basicdata/calexrights_func.pyc
+           - <module>.change_his_to_backward: [target_diff] #214 JUMP 终点 orig=("'pre_index'", 'LOAD_FAST') decomp=("'tmp_data'", 'LOAD_FAST')
+           - <module>.change_his_to_forward: [target_diff] #184 POP_JUMP_IF_FALSE 终点 orig=("'pre_index'", 'LOAD_FAST') decomp=(None, 'FOR_ITER')
+  OK     24/24  IQData/plugins/plugin_system_fly_basicdata/data_source_func.pyc
+  OK      1/1  IQData/plugins/plugin_system_fly_basicdata/fly_enum.pyc
+  OK      6/6  IQData/plugins/plugin_system_fly_historyquote/__init__.pyc
+  OK     11/11  IQData/plugins/plugin_system_fly_historyquote/api.pyc
+  OK      3/3  IQData/plugins/plugin_system_fly_historyquote/data_source_func.pyc
+  OK      4/4  IQData/plugins/plugin_system_fly_historyquote/enumerate.pyc
+  OK      5/5  IQData/plugins/plugin_system_fly_historyquote/history_bar_storage.pyc
+  OK      4/4  IQData/plugins/plugin_system_fly_historyquote/history_quote.pyc
+  OK      6/6  IQData/plugins/plugin_system_gtn_request/__init__.pyc
+  OK      4/4  IQData/plugins/plugin_system_gtn_request/api.pyc
+  OK      6/6  IQData/plugins/plugin_system_gtn_request/gtn_request.pyc
+  OK      6/6  IQData/plugins/plugin_system_hqsdk_data_source/__init__.pyc
+  OK     15/15  IQData/plugins/plugin_system_hqsdk_data_source/hqsdk_data_source.pyc
+  OK      9/9  IQData/plugins/plugin_system_hqsdk_data_source/hqsdk_data_source_api.pyc
+  OK      6/6  IQData/plugins/plugin_system_local_finance/__init__.pyc
+  OK      2/2  IQData/plugins/plugin_system_local_finance/api.pyc
+  OK      1/1  IQData/plugins/plugin_system_local_finance/const.pyc
+  OK     19/19  IQData/plugins/plugin_system_local_finance/finance_data_source.pyc
+  OK      6/6  IQData/plugins/plugin_system_realquote/__init__.pyc
+  OK     13/13  IQData/plugins/plugin_system_realquote/api_realquote.pyc
+  OK     17/17  IQData/utils/__init__.pyc
+  DEFECT 37/39  IQData/utils/arg_checker.pyc
+           - <module>.ArgumentChecker._is_valid_interval: [target_diff] #14 POP_JUMP_IF_FALSE 终点 orig=("'valid'", 'LOAD_FAST') decomp=("'int'", 'LOAD_GLOBAL')
+           - <module>.ArgumentChecker._is_valid_quarter: [target_diff] #19 POP_JUMP_IF_FALSE 终点 orig=("'valid'", 'LOAD_FAST') decomp=('1990', 'LOAD_CONST')
+  OK      8/8  IQData/utils/base_http_client.pyc
+  DEFECT  6/8  IQData/utils/calexrights_func.pyc
+           - <module>.change_his_to_backward: [target_diff] #214 JUMP 终点 orig=("'pre_index'", 'LOAD_FAST') decomp=("'tmp_data'", 'LOAD_FAST')
+           - <module>.change_his_to_forward: [target_diff] #184 POP_JUMP_IF_FALSE 终点 orig=("'pre_index'", 'LOAD_FAST') decomp=(None, 'FOR_ITER')
+  OK     25/25  IQData/utils/datetime_func.pyc
+  OK     31/31  IQData/utils/exception.pyc
+  OK      3/3  IQData/utils/function_dict.pyc
+  OK      5/5  IQData/utils/i18n.pyc
+  OK      1/1  IQData/utils/logger/__init__.pyc
+  OK     28/28  IQData/utils/logger/logger.pyc
+  OK      6/6  IQData/utils/mysql_conn.pyc
+  OK      5/5  IQData/utils/path_func.pyc
+  DEFECT 13/14  IQData/utils/profiler_func.pyc
+           - <module>: [target_diff] #64 POP_JUMP_IF_FALSE 终点 orig=("'PY35'", 'LOAD_NAME') decomp=('0', 'LOAD_CONST')
+  OK      6/6  IQData/utils/pycompatibility.pyc
+  OK      4/4  IQData/utils/trade_schedule.pyc
+  OK      1/1  IQData/version.pyc
+  OK      1/1  IQEngine/__init__.pyc
+  OK      3/3  IQEngine/__main__.pyc
+  OK      1/1  IQEngine/account/__init__.pyc
+  OK     12/12  IQEngine/account/base_account.pyc
+  OK     19/19  IQEngine/account/base_position.pyc
+  OK     68/68  IQEngine/account/order.pyc
+  OK     58/58  IQEngine/account/portfolio.pyc
+  OK     23/23  IQEngine/account/trade.pyc
+  OK      1/1  IQEngine/api/__init__.pyc
+  OK      5/5  IQEngine/api/api_extra.pyc
+  OK      1/1  IQEngine/api/fields.pyc
+  OK      4/4  IQEngine/api/helper.pyc
+  OK      1/1  IQEngine/config/__init__.pyc
+  OK     38/38  IQEngine/const.pyc
+  OK      1/1  IQEngine/core/__init__.pyc
+  OK     75/75  IQEngine/core/asset.pyc
+  DEFECT 82/85  IQEngine/core/bar.pyc
+           - <module>.BarData._history_bars: [target_diff] #26 POP_JUMP_IF_FALSE 终点 orig=("'ExecutionContext'", 'LOAD_GLOBAL') decomp=("'engine'", 'LOAD_FAST')
+           - <module>.BarData.limit_down: [seq_diff] #11 orig=('<JUMP>', 'JUMP') decomp=('None', 'RETURN_VALUE')
+           - <module>.BarData.limit_up: [seq_diff] #11 orig=('<JUMP>', 'JUMP') decomp=('None', 'RETURN_VALUE')
+  OK      4/4  IQEngine/core/base.pyc
+  OK     10/10  IQEngine/core/commission.pyc
+  OK      9/9  IQEngine/core/data_pager.pyc
+  OK      1/1  IQEngine/core/engine/__init__.pyc
+  OK     67/67  IQEngine/core/engine/engine.pyc
+  OK      1/1  IQEngine/core/events/__init__.pyc
+  OK     11/11  IQEngine/core/events/event.pyc
+  OK      2/2  IQEngine/core/events/event_type.pyc
+  OK     18/18  IQEngine/core/execution_context.pyc
+  OK      1/1  IQEngine/core/manager/__init__.pyc
+  OK      9/9  IQEngine/core/persist_helper.pyc
+  OK      7/7  IQEngine/core/slippage.pyc
+  OK      1/1  IQEngine/core/strategy/__init__.pyc
+  OK     20/20  IQEngine/core/strategy/strategy.pyc
+  OK     31/31  IQEngine/core/strategy/strategy_context.pyc
+  OK     15/15  IQEngine/core/strategy/strategy_loader.pyc
+  DEFECT 10/11  IQEngine/core/strategy/strategy_universe.pyc
+           - <module>.StrategyUniverse._on_clear_de_listed: [target_diff] #17 POP_JUMP_IF_FALSE 终点 orig=("'de_listed'", 'LOAD_FAST') decomp=(None, 'FOR_ITER')
+  OK      6/6  IQEngine/core/user_variables.pyc
+  OK      1/1  IQEngine/data/__init__.pyc
+  DEFECT 19/20  IQEngine/data/asset_mixin.pyc
+           - <module>.AssetMixin.get_assets.<listcomp>: [seq_diff] #6 orig=('<JUMP>', 'POP_JUMP_IF_NONE') decomp=('<JUMP>', 'POP_JUMP_IF_FALSE')
+  OK     13/13  IQEngine/data/data_cache.pyc
+  OK      1/1  IQEngine/data/default_info.pyc
+  OK      6/6  IQEngine/data/exrights_storage.pyc
+  OK      7/7  IQEngine/data/merger_storage.pyc
+  DEFECT 13/14  IQEngine/data/trading_dates_mixin.pyc
+           - <module>.TradingDatesMixin.trading_dates_reload: [seq_len] orig=23 decomp=21
+  OK      4/4  IQEngine/data/trading_dates_storage.pyc
+  OK    119/119  IQEngine/interface.pyc
+  OK      3/3  IQEngine/main.pyc
+  OK      1/1  IQEngine/plugins/__init__.pyc
+  OK      7/7  IQEngine/plugins/plugin_fly_api/__init__.pyc
+  OK      6/6  IQEngine/plugins/plugin_fly_api/base_api.pyc
+  OK     62/62  IQEngine/plugins/plugin_fly_api/empty_api_backtest.pyc
+  OK     10/10  IQEngine/plugins/plugin_fly_api/empty_api_trade.pyc
+  OK      9/9  IQEngine/plugins/plugin_fly_data/const.pyc
+  OK      1/1  IQEngine/plugins/plugin_fly_data/fly_api/__init__.pyc
+  DEFECT 17/18  IQEngine/plugins/plugin_fly_data/fly_api/history_api.pyc
+           - <module>.get_price: [seq_len] orig=191 decomp=193
+  OK      3/3  IQEngine/plugins/plugin_fly_data/fly_api/individual_api_backtest.pyc
+  OK      4/4  IQEngine/plugins/plugin_fly_data/fly_api/individual_api_trade.pyc
+  OK     10/10  IQEngine/plugins/plugin_fly_data/fly_api/order_api_backtest.pyc
+  OK     24/24  IQEngine/plugins/plugin_fly_data/fly_api/order_api_trade.pyc
+  OK     12/12  IQEngine/plugins/plugin_fly_data/fly_api/other_api.pyc
+  OK      8/8  IQEngine/plugins/plugin_fly_data/fly_api/real_api.pyc
+  OK      2/2  IQEngine/plugins/plugin_fly_data/fly_api/real_api_backtest.pyc
+  OK      3/3  IQEngine/plugins/plugin_fly_data/fly_api/real_api_trade.pyc
+  OK     14/14  IQEngine/plugins/plugin_fly_data/fly_api/scheduler_api.pyc
+  OK      1/1  IQEngine/plugins/plugin_fly_data/local_variables/__init__.pyc
+  OK     22/22  IQEngine/plugins/plugin_fly_data/local_variables/bar.pyc
+  OK    127/127  IQEngine/plugins/plugin_fly_data/local_variables/finance.pyc
+  OK      1/1  IQEngine/plugins/plugin_fly_data/quote/__init__.pyc
+F:\Downloads\pythoncdc-main\site-packages\fly\oauthenticator\hsidOK.py:19: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if hsid_login_url is '':
+  OK      8/8  IQEngine/plugins/plugin_fly_data/quote/get_stock_status.pyc
+  OK     19/19  IQEngine/plugins/plugin_fly_data/quote/open_platform.pyc
+  OK      1/1  IQEngine/plugins/plugin_fly_data/strategy/__init__.pyc
+  OK      7/7  IQEngine/plugins/plugin_fly_data_source/__init__.pyc
+  OK      9/9  IQEngine/plugins/plugin_fly_data_source/fly_bar_storage.pyc
+  DEFECT 65/72  IQEngine/plugins/plugin_fly_data_source/fly_data_source.pyc
+           - <module>.FlyDataSource.check_limit: [seq_len] orig=17 decomp=19
+           - <module>.FlyDataSource.get_gear_price: [seq_len] orig=17 decomp=19
+           - <module>.FlyDataSource.get_order_data: [seq_len] orig=21 decomp=23
+           - <module>.FlyDataSource.get_real_daily_kline: [seq_len] orig=17 decomp=19
+           - <module>.FlyDataSource.get_real_minute_kline: [seq_len] orig=18 decomp=20
+           - <module>.FlyDataSource.get_snapshot: [seq_len] orig=17 decomp=19
+           - <module>.FlyDataSource.get_transaction_data: [seq_len] orig=21 decomp=23
+  OK      8/8  IQEngine/plugins/plugin_fly_data_source/fly_quotation_func.pyc
+  OK      6/6  IQEngine/plugins/plugin_system_accounts/__init__.pyc
+  OK      1/1  IQEngine/plugins/plugin_system_accounts/account_model/__init__.pyc
+  OK     20/20  IQEngine/plugins/plugin_system_accounts/account_model/benchmark_account.pyc
+  OK     35/35  IQEngine/plugins/plugin_system_accounts/account_model/future_account.pyc
+  OK     26/26  IQEngine/plugins/plugin_system_accounts/account_model/live_future_account.pyc
+  OK     23/23  IQEngine/plugins/plugin_system_accounts/account_model/live_hks_account.pyc
+  OK     26/26  IQEngine/plugins/plugin_system_accounts/account_model/live_option_account.pyc
+  OK     35/35  IQEngine/plugins/plugin_system_accounts/account_model/option_account.pyc
+  OK     25/25  IQEngine/plugins/plugin_system_accounts/account_model/stock_account.pyc
+  OK      1/1  IQEngine/plugins/plugin_system_accounts/api/__init__.pyc
+  OK      8/8  IQEngine/plugins/plugin_system_accounts/api/api_future.pyc
+  OK      4/4  IQEngine/plugins/plugin_system_accounts/api/api_option.pyc
+  OK     11/11  IQEngine/plugins/plugin_system_accounts/api/api_stock.pyc
+  OK      1/1  IQEngine/plugins/plugin_system_accounts/position_model/__init__.pyc
+  OK     83/83  IQEngine/plugins/plugin_system_accounts/position_model/future_position.pyc
+  OK     75/75  IQEngine/plugins/plugin_system_accounts/position_model/live_future_position.pyc
+  OK     16/16  IQEngine/plugins/plugin_system_accounts/position_model/live_hks_position.pyc
+  OK     53/53  IQEngine/plugins/plugin_system_accounts/position_model/live_option_position.pyc
+  OK     12/12  IQEngine/plugins/plugin_system_accounts/position_model/live_stock_position.pyc
+  OK     67/67  IQEngine/plugins/plugin_system_accounts/position_model/option_position.pyc
+  DEFECT 36/37  IQEngine/plugins/plugin_system_accounts/position_model/stock_position.pyc
+           - <module>.StockPosition.make_trade: [seq_len] orig=166 decomp=162
+  OK      6/6  IQEngine/plugins/plugin_system_debug/__init__.pyc
+  OK      6/6  IQEngine/plugins/plugin_system_event_source/__init__.pyc
+  OK      5/5  IQEngine/plugins/plugin_system_event_source/factor_event_source.pyc
+  OK      6/6  IQEngine/plugins/plugin_system_finance/__init__.pyc
+  OK      5/5  IQEngine/plugins/plugin_system_finance/api.pyc
+  OK     25/25  IQEngine/plugins/plugin_system_finance/commission.pyc
+  OK     19/19  IQEngine/plugins/plugin_system_finance/slippage.pyc
+  OK      7/7  IQEngine/plugins/plugin_system_finance/tax.pyc
+  OK     10/10  IQEngine/plugins/plugin_system_history_save/__init__.pyc
+  OK      6/6  IQEngine/plugins/plugin_system_matcher/__init__.pyc
+  OK      7/7  IQEngine/plugins/plugin_system_persist/json_persistance.pyc
+  OK     11/11  IQEngine/plugins/plugin_system_persist/recorder.pyc
+  OK      6/6  IQEngine/plugins/plugin_system_progress/__init__.pyc
+  OK     11/11  IQEngine/plugins/plugin_system_progress/system_progress.pyc
+  OK     29/29  IQEngine/plugins/plugin_system_risk_calculation/risk_calculation.pyc
+  OK      6/6  IQEngine/plugins/plugin_system_risk_control/__init__.pyc
+  OK      6/6  IQEngine/plugins/plugin_system_risk_control/base_validator.pyc
+  OK      8/8  IQEngine/plugins/plugin_system_risk_control/cash_validator.pyc
+  OK      5/5  IQEngine/plugins/plugin_system_risk_control/position_validator.pyc
+  OK      5/5  IQEngine/plugins/plugin_system_risk_control/price_validator.pyc
+  OK      5/5  IQEngine/plugins/plugin_system_risk_control/time_validator.pyc
+  OK      6/6  IQEngine/plugins/plugin_system_simulation/__init__.pyc
+  OK      6/6  IQEngine/plugins/plugin_system_trade/__init__.pyc
+  OK     57/57  IQEngine/plugins/plugin_system_trade/api.pyc
+  OK      3/3  IQEngine/plugins/plugin_system_trade/brokerFactory.pyc
+  OK     10/10  IQEngine/plugins/plugin_system_trade/enums.pyc
+  DEFECT 10/11  IQEngine/plugins/plugin_system_trade/ptrade_broker.pyc
+           - <module>.PtradeBroker.create_portfolio: [seq_len] orig=512 decomp=513
+  OK     10/10  IQEngine/plugins/plugin_system_trade/ptrade_future_broker.pyc
+  OK      9/9  IQEngine/plugins/plugin_system_trade/ptrade_hks_broker.pyc
+  OK     10/10  IQEngine/plugins/plugin_system_trade/ptrade_option_broker.pyc
+  OK      4/4  IQEngine/plugins/plugin_system_trade/send_message_api.pyc
+  OK      6/6  IQEngine/plugins/plugin_system_trade_account/__init__.pyc
+  OK     13/13  IQEngine/plugins/plugin_system_trade_account/trade_stock_account.pyc
+  OK      1/1  IQEngine/user_module.pyc
+  OK     33/33  IQEngine/utils/__init__.pyc
+  DEFECT 41/43  IQEngine/utils/arg_checker.pyc
+           - <module>.ArgumentChecker._is_valid_interval: [target_diff] #14 POP_JUMP_IF_FALSE 终点 orig=("'valid'", 'LOAD_FAST') decomp=("'int'", 'LOAD_GLOBAL')
+           - <module>.ArgumentChecker._is_valid_quarter: [target_diff] #19 POP_JUMP_IF_FALSE 终点 orig=("'valid'", 'LOAD_FAST') decomp=('1990', 'LOAD_CONST')
+  OK      5/5  IQEngine/utils/bcolz_help.pyc
+  OK     23/23  IQEngine/utils/cache_storage.pyc
+  OK      2/2  IQEngine/utils/compile_help.pyc
+  OK     17/17  IQEngine/utils/datetime_func.pyc
+  OK      3/3  IQEngine/utils/decorator.pyc
+  OK      9/9  IQEngine/utils/encrypt.pyc
+  OK     31/31  IQEngine/utils/exception.pyc
+  OK      8/8  IQEngine/utils/global_variable.pyc
+  OK      5/5  IQEngine/utils/i18n.pyc
+  OK      1/1  IQEngine/utils/logger/__init__.pyc
+  OK      1/1  IQEngine/utils/option.pyc
+  DEFECT 15/17  IQEngine/utils/profiler_func.pyc
+           - <module>: [target_diff] #82 POP_JUMP_IF_FALSE 终点 orig=("'PY35'", 'LOAD_NAME') decomp=('0', 'LOAD_CONST')
+           - <module>.ProfilerTool.show_func: [seq_len] orig=300 decomp=242
+  OK      6/6  IQEngine/utils/pycompatibility.pyc
+  OK      5/5  IQEngine/utils/record_store.pyc
+  OK      5/5  IQEngine/utils/report.pyc
+  OK      9/9  IQEngine/utils/trade_schedule.pyc
+  OK      1/1  IQEngine/version.pyc
+  OK      1/1  fly/__init__.pyc
+  OK      1/1  fly/common/__init__.pyc
+  OK      7/7  fly/common/aes_encrypt.pyc
+  DEFECT  5/6  fly/common/common.pyc
+           - <module>.api_get_from_zeromq: [target_diff] #144 JUMP 终点 orig=("'_connect'", 'LOAD_FAST') decomp=("'first_address'", 'LOAD_FAST')
+  OK      1/1  fly/common/const.pyc
+  OK      8/8  fly/common/convert.pyc
+  DEFECT  5/6  fly/common/custom_tools.pyc
+           - <module>.memory_handler: [seq_len] orig=65 decomp=67
+  OK      4/4  fly/common/enums.pyc
+  OK      1/1  fly/common/errors.pyc
+  OK      9/9  fly/common/fly_exception.pyc
+  OK      1/1  fly/common/flydefine.pyc
+  OK      7/7  fly/common/flyqueue.pyc
+  OK      4/4  fly/common/function.pyc
+  DEFECT 27/29  fly/common/future_contract_info.pyc
+           - <module>.FutureInfoCache.check_user: [seq_len] orig=149 decomp=154
+           - <module>.FutureInfoCache.info_conbine: [target_diff] #14 POP_JUMP_IF_TRUE 终点 orig=("'Exception'", 'LOAD_GLOBAL') decomp=("'future_code'", 'LOAD_FAST')
+  OK     16/16  fly/common/future_param.pyc
+  OK     10/10  fly/common/global_param.pyc
+  OK      4/4  fly/common/inform_info.pyc
+  OK      4/4  fly/common/login_time.pyc
+  DEFECT  9/10  fly/common/market_time.pyc
+           - <module>.MarketTime.is_open: [target_diff] #27 POP_JUMP_IF_FALSE 终点 orig=("'current_dt'", 'LOAD_FAST') decomp=('False', 'LOAD_CONST')
+  OK     35/35  fly/common/multiprocess_syn.pyc
+  OK     11/11  fly/common/op_station.pyc
+  OK      4/4  fly/common/trading_schedule.pyc
+  OK     30/30  fly/common/tradingday_calendar.pyc
+  OK      1/1  fly/data/__init__.pyc
+  OK      1/1  fly/dockerspawner/__init__.pyc
+  DEFECT 24/25  fly/dockerspawner/dockerspawner.pyc
+           - <module>.DockerSpawner.tls_client: [seq_len] orig=15 decomp=17
+  OK      1/1  fly/dumpload/__init__.pyc
+  OK      2/2  fly/dumpload/load_algo.pyc
+  OK      1/1  fly/event/__init__.pyc
+  OK      4/4  fly/event/event.pyc
+  OK     19/19  fly/event/event_engine.pyc
+  OK      1/1  fly/event/event_priority.pyc
+  OK      5/5  fly/event/event_type.pyc
+  OK      1/1  fly/g.pyc
+  OK      9/9  fly/generalconf.pyc
+  OK      1/1  fly/oauthenticator/__init__.pyc
+  OK      4/4  fly/oauthenticator/hsid.pyc
+  OK     14/14  fly/oauthenticator/itn.pyc
+  OK      1/1  fly/server_version.pyc
+  OK      3/3  fly/simtradding/accountFactory.pyc
+  DEFECT  3/4  fly/simtradding/pboxAccount_jupyterhub.pyc
+           - <module>.getVaildAccount: [seq_len] orig=423 decomp=427
+  DEFECT 135/137  fly/simtradding/ptradeAccount.pyc
+           - <module>.PtradeAccount.order_response_order_update: [seq_len] orig=99 decomp=98
+           - <module>.PtradeAccount.trade_response_order_update: [seq_len] orig=118 decomp=117
+  OK     38/38  fly/simtradding/ptradeFutureAccount.pyc
+  OK     38/38  fly/simtradding/ptradeOptionAccount.pyc
+  OK      2/2  fly/simtradding/request_data_transform.pyc
+
+文件级：全部一致 321 / 351，有真缺陷 30
+函数级：严格一致 4440 / 4495

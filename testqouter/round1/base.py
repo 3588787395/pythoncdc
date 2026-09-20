@@ -24,6 +24,30 @@ def get_bytecode_instructions(code: types.CodeType) -> List[dis.Instruction]:
     return list(dis.get_instructions(code))
 
 
+# Unconditional jumps are always taken; their direction (FORWARD vs BACKWARD
+# vs ABSOLUTE) is a pure compiler layout choice. Only the final landing offset
+# (after threading through any unconditional-jump stubs) carries semantics.
+_UNCOND_JUMPS = {'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE'}
+
+
+def _uncond_jump_landing(instrs, target):
+    """Follow an unconditional jump's target through any chain of
+    unconditional-jump stubs and return the final landing offset.
+
+    CPython may emit a FORWARD jump to a BACKWARD stub for loops whose back-edge
+    distance exceeds the FORWARD encoding range. Both encode the same control
+    flow, so two unconditional jumps are equivalent iff their landing offsets
+    are equal.
+    """
+    by_off = {i.offset: i for i in instrs}
+    cur = target
+    seen = set()
+    while cur in by_off and by_off[cur].opname in _UNCOND_JUMPS and cur not in seen:
+        seen.add(cur)
+        cur = by_off[cur].argval
+    return cur
+
+
 def _classify_instruction(opname: str) -> str:
     jump_ops = {
         'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE',

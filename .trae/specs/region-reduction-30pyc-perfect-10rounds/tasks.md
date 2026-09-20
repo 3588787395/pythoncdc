@@ -60,22 +60,36 @@
   - [ ] SubTask 5.7: 提交并 push
 
 
-- [ ] Task 5: Round 5 — R3-F 三元表达式在「表达式位置」降级
+- [x] Task 5: Round 5 — R3-F 三元表达式在「表达式位置」降级
   （`[1 if c else 0]` 下标赋值、链式比较三元 `x = A if C else B` → 伪 return）
-  - [ ] SubTask 5.1: 测试工程师建复现（已发现：`int(x) if 0 < int(x) <= 200 else 200` 生成伪 return）
-  - [ ] SubTask 5.2: 修复工程师按区域归约修语句跨度/伪三元合并
-  - [ ] SubTask 5.3: 验证 build_current_period_df / get_individual_data 转 OK
-  - [ ] SubTask 5.4: 批量回归 + 提交 push
+  - [x] SubTask 5.1: 测试工程师建复现（已发现：`int(x) if 0 < int(x) <= 200 else 200` 生成伪 return）
+  - [x] SubTask 5.2: 修复工程师按区域归约修语句跨度/伪三元合并
+  - [x] SubTask 5.3: 验证 build_current_period_df / get_individual_data 转 OK
+  - [x] SubTask 5.4: 批量回归 + 提交 push
 
-- [ ] Task 6: Round 6 — R3-A f-string 调用参数区域模板重建
+- [x] Task 6: Round 6 — R3-A f-string 调用参数区域模板重建
         （get_price / load_get_price / load_bars_from_hundsun）
-- [ ] Task 7: Round 7 — R3-L 旋转 while 循环体语句丢失
+- [x] Task 7: Round 7 — R3-L 旋转 while 循环体语句丢失
         （check_limit / get_real_from_zeromq / initImagedata）
-- [ ] Task 8: Round 8 — R3-I try/except 区域块归属错乱（灾难级）
+- [x] Task 8: Round 8 — R3-I try/except 区域块归属错乱（灾难级）
         （run_individual_transform / run_tick_socket）
-- [ ] Task 9: Round 9 — fly/oauthenticator/oauth2.pyc 生成器函数体整体丢失
+- [x] Task 9: Round 9 — fly/oauthenticator/oauth2.pyc 生成器函数体整体丢失
         （OAuthCallbackHandler.post，214 条指令 → 仅 `pass`）
-- [ ] Task 10: Round 10 — 剩余 partial 文件清零，全量 402 pyc 100%
+- [x] Task 10: Round 10 — 剩余 partial 文件清零，全量 402 pyc 100%
+
+- [x] Task 11: Round 11-12（本会话）— 推导式返回值宽指令 fall-through + 真值重确认
+  - [x] SubTask 11.1: 补推 Round 10 欠账提交 675ca714（网络恢复后 PUSH_OK）
+  - [x] SubTask 11.2: 严格尺子重确认真值 319/349、4424/4479、30 文件真缺陷，零回归
+  - [x] SubTask 11.3: cgroup_utils 定性：add_process_to_cgroup / set_cgroup_config
+        为编译器小版本差异（3.11.7 形态探针证实），反编译器正确；
+        delete_cgroup_config 为真缺陷（else 体过度吸收），留待下轮
+  - [x] SubTask 11.4: 测试工程师定位 merger_storage ×2 同签名根因
+        （`_last_off + 2` 对带 CACHE 宽指令失效 → 推导式 return 被降级）
+  - [x] SubTask 11.5: 修复 `comprehension_generator.try_generate_comprehension_assign`
+        （前向后继平凡 return 判据，含「识别条件→归约方式→AST 映射」注释）
+  - [x] SubTask 11.6: 形态探针 6/6 PASS；两个 merger_storage 100% ok
+        （官方 349 → 351）；严格尺子全量零回归
+  - [x] SubTask 11.7: 提交并 push（8a1b1def，origin/main）
 
 # 环境阻塞（须先解决）
 
@@ -87,3 +101,55 @@
 - Task 4 依赖 Task 3（同一文件的区域算法改动须在已验证基线上叠加）
 - SubTask N.3（验证）依赖 SubTask N.2（修复）
 - SubTask N.5（提交 push）依赖 SubTask N.4（批量回归无退化）
+
+- [ ] Task 12: Round 13 — 严格尺子真值基线 + 18 个「只差 1 函数」partial 文件归因
+  - [x] SubTask 12.0: 建立 Round 13 真值基线（已完成，见 rounds/round13/）
+        · 官方口径 351 ok / 51 partial（402 pyc）
+        · 严格尺子（_r10_strict_check）真值：ok 桶 321/351 全一致（30 文件 55 函数仍不符），
+          partial 桶 0/51 全一致（179 函数不符）
+        · 全语料真值：**321/402 文件 = 79.85%**，函数 **5970/6204 = 96.23%**
+        · partial 桶缺陷类型：seq_len 121 / target_diff 25 / seq_diff 8（结构性为主，非编译器噪声）
+  - [x] SubTask 12.1: 测试工程师：18 个「只差 1 函数」partial 文件逐个 dis 对照，
+        建 >=12 个最小复现（>=10 MISMATCH + 2~3 MATCH 负对照），
+        归类 R13-A…，产出 test_repros/round13/ANALYSIS.md + MAPPING.md
+  - [x] SubTask 12.2: 修复工程师：按区域归约算法修 R13-* 真缺陷
+        （识别条件→归约方式→AST 映射写入识别方法注释；禁止跨区域跨层次启发式规则）
+        R13-A（return 被降级为 break）已落地并验收；R13-C（链尾吸收）/
+        R13-D（dict 双推导式折叠）与本轮回退的 A2 前缀判据一并移交 Round 14
+        （根因判据见 rounds/round13/OUTCOME.md §四）
+  - [x] SubTask 12.3: 验证：重新生成受影响 OK.py（仅经 scripts/pyc_batch_verify.py single，禁手工改），
+        严格尺子复验，本轮至少 1 个 pyc 由 partial → 100%
+  - [x] SubTask 12.4: quotation.pyc 单文件验证（核心侧 +1 函数劣化，产物门自动回滚，OK.py 仍 148/150 未劣化）
+  - [x] SubTask 12.5: 批量回归：全量 402 严格尺子 + 官方口径双复验，零回归（产物门 CLEAN=320 FLIPPED-CLEAN=3 IMPROVED=1，11 个劣化自动回滚）
+  - [ ] SubTask 12.6: 提交并 push（仅 add 本轮实际改动文件，禁 git add -A / 禁回退用户脏工作区）
+
+- [ ] Task 13: Round 14 — 区域归属层解决「前缀语句已发射」判据（A2 回退项的正解）
+  - [ ] SubTask 13.1: 在**归属层**记录「块语句序列由哪个区域发射」：
+        为 BoolOp/三元链的 first_chain_block 判定「其前缀语句是否已随该块发射」
+        提供唯一权威来源。禁止再生成期标记集合上弥补
+        （实测：块级 generated_blocks 被表达式消费路径污染；
+        generated_offsets 只零散登记 start_offset；新增台账也覆盖不到 create_order
+        的第一份发射路径 —— 三种判据全部失败，见 OUTCOME.md §四）
+  - [ ] SubTask 13.2: 恢复 A2 想解决的问题且不复发重复发射：
+        repro_01 第二臂 `a2 = 2` 前缀不得被吞；
+        order/trade/base_validator/itn/json_persistance/quotation 六处
+        整块语句重复必须保持 0（验收命令见 OUTCOME.md §六）
+  - [ ] SubTask 13.3: 清核心侧劣化清单（产物已被回滚保护，核心仍需修）：
+        region_analyzer A3/R13c 簇 → klinedata / common_func / real_quote /
+        plugin_fly_data__init__ / history_api / flytools / market_time /
+        quote_handler / json_persistance；
+        region_ast_generator 未提交簇 → base_validator._check_order /
+        quotation.change_future_real_date；
+        已丢失的上一会话改进（无快照）→ trade_live_broker +16 / quote +9
+  - [ ] SubTask 13.4: R13-C 链尾吸收（约 46 个函数字节差，收益面最大）：
+        region_analyzer 链 merge 计算为 None 时的合流点归约
+  - [ ] SubTask 13.5: R13-D dict 两个推导式折叠（broker / live 两文件各翻正 1）
+  - [ ] SubTask 13.6: 全量 402 严格尺子 + 官方口径双复验，产物零回退
+  - [ ] SubTask 13.7: 提交并 push
+
+# Round 13 记录补充
+- 双口径数字、翻正清单、回退证据与工序：`rounds/round13/OUTCOME.md`
+- 被回退的 A2 原始 hunk 存档：`rounds/round13/r13_a2_reverted_hunk.diff`
+- 教训（记录，避免再犯）：`baseline_strict_ok351.txt` 文件名中的 351 是
+  **官方**口径数，文件内 `OK` 行实为 321 条（严格口径）；两把尺子的数字
+  不得互相减法比较。
