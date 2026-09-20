@@ -14828,7 +14828,20 @@ AST 映射规则:
         # [关键修复] 当 elif_final_else 只包含 cleanup 块(POP_TOP + JUMP)时，
         # 跟随跳转找到真正的 else body 块
         if region.elif_final_else:
-            _expanded_final_else = list(region.elif_final_else)
+            # [Round 8 fix] 区域归约算法原则 2（每块唯一归属）：
+            # region.merge_block 是本 if/elif 链的 **post-if 汇合点**，
+            # 按定义在整条链之后发射（由父区域或主循环处理），
+            # 绝不可能是链尾 else 的子句体。R64 的 `or _is_terminal`
+            # 扩张把「cleanup 块的后继终止块」纳入 final_else，但未排除
+            # 本区域自身的 merge_block —— 当 cleanup 块（如 JUMP_FORWARD）
+            # 恰好跳到 merge_block 时，共享尾块被吸收成 `else: return True`，
+            # 于是链尾多出一个虚假 else，函数末尾的共享 return 同时消失。
+            # 实测（同代码、仅本行差异）：
+            #   IQEngine/plugins/plugin_system_risk_control/position_validator.pyc 0.80 -> 1.00
+            #   IQEngine/plugins/plugin_system_trade/ptrade_broker.pyc              0.9091 -> 1.00
+            _own_merge = getattr(region, 'merge_block', None)
+            _expanded_final_else = [b for b in region.elif_final_else
+                                    if _own_merge is None or b is not _own_merge]
             _all_else_offsets = {b.start_offset for b in region.else_blocks}
             _existing_offsets = {b.start_offset for b in _expanded_final_else}
             for _fe_block in list(region.elif_final_else):
@@ -14837,6 +14850,9 @@ AST 映射规则:
                                                       'JUMP_FORWARD', 'JUMP_BACKWARD', 'JUMP_ABSOLUTE')]
                 if not _fe_meaningful and len(_fe_block.successors) == 1:
                     _fe_succ = list(_fe_block.successors)[0]
+                    if _fe_succ is _own_merge:
+                        # 后继即本链汇合点：不是 else 体，留给汇合点位置发射
+                        continue
                     if _fe_succ.start_offset not in _existing_offsets:
                         # [R64 fix] 当 cleanup 块的后续块是终止块（RETURN_VALUE）
                         # 或属于本区域 else_blocks 时，应纳入 elif_final_else。
@@ -14850,7 +14866,7 @@ AST 映射规则:
                         if _fe_succ in region.else_blocks or _fe_succ.start_offset in _all_else_offsets or _is_terminal:
                             _expanded_final_else.append(_fe_succ)
                             _existing_offsets.add(_fe_succ.start_offset)
-            if len(_expanded_final_else) > len(region.elif_final_else):
+            if len(_expanded_final_else) != len(region.elif_final_else):
                 region.elif_final_else = _expanded_final_else
         elif_cond_block = region.elif_conditions[0]
         self.generated_blocks.add(elif_cond_block)
@@ -15857,6 +15873,15 @@ AST 映射规则:
         # 这条路径跨越了循环迭代边界，并非同一 IfRegion 调用的假→真路径。
         # 修正：将 BFS 限制在 IfRegion 自身块集内——假出口逃出 IfRegion 后
         # 不会在同一次条件求值中重新进入 then 臂到达 merge_block。
+        #
+        # [Round 8 fix] 但「仅自身块集」过紧：假出口也可能沿**前向边**离开
+        # IfRegion 自身块集，经循环底部测试（POP_JUMP_BACKWARD_IF_TRUE 的
+        # 落空支）跳出循环，再到达循环后的 merge_block——这正是
+        # `while ...: if cond: break` 后接 `if x is None: raise` / `return x`
+        # 的常见形态。此时 merge_block 并非真臂专属；误判为 True 会把循环后
+        # 的语句整段吸进 then 体（多嵌套一层 + 函数尾 return 丢失）。
+        # 修正为「只剪后向边」：跨越迭代边界的只有后向边（后继偏移不大于
+        # 当前块），前向边属同一次求值，必须继续遍历。
         _region_block_ids = {id(b) for b in region.blocks}
         if mb is not None:
             _region_block_ids.add(id(mb))
@@ -15873,8 +15898,13 @@ AST 映射规则:
             if b is mb:
                 return False
             for s in getattr(b, 'successors', ()) or ():
-                if s is not None and id(s) not in seen and id(s) in _region_block_ids:
-                    stack.append(s)
+                if s is None or id(s) in seen:
+                    continue
+                if (id(s) not in _region_block_ids
+                        and s.start_offset <= b.start_offset):
+                    # 后向边（循环回边/自环）跨越迭代边界，不属同一次条件求值
+                    continue
+                stack.append(s)
         return True
 
     def _if_generate_normal(self, region: IfRegion) -> Union[Dict[str, Any], List[Dict[str, Any]]]:
