@@ -227,6 +227,17 @@ class RegionASTGenerator:
         # _generate_with 的 pre-BEFORE_WITH 前缀提取据此跳过，消除
         # `d = ...` / `x = compute()` 等前导赋值双份发射（每块唯一归属）。
         self._entry_prefix_emitted_blocks: Set[BasicBlock] = set()
+        # [Round15-A2] 前缀语句发射权登记表——**指令粒度**。
+        # 语义：{基本块: 该块内已作为「前置语句」发射掉的最后一条指令偏移}。
+        # 为什么必须是指令偏移而不是块：一个基本块是极大直线指令序列，块内可以
+        # 并存「若干条完整语句」+「下一条语句（if / BoolOp 链首）的前导」，于是
+        # 同一块的前缀会被两个区域分别认领（模块级 `__doc__`/`import sys`/
+        # `PY3 = ...` 既由 generate() 的 BoolOp 入口分支发射，又落在 PY35 的
+        # BoolOpRegion 链首块前缀里）。块级集合无法表达这种半认领，任何在其上
+        # 的细化都测不出真实发射者——Round 13 两次回退（generated_offsets 判据、
+        # statement_emitted_blocks 台账）的病根都是「登记的量」与「要判的量」
+        # 不是同一个量纲。单向数据流：本表只写不减、不回改。
+        self.prefix_emitted_upto: Dict[BasicBlock, int] = {}
         # [Round 02 修复 F4] AssertRegion 的 condition_block 是「最大直线块」，
         # 其指令流可分解为「若干条已完结语句 + 尾部条件表达式」两段（栈深判据，
         # 见 _split_block_condition_prefix）。前段语句不属于 assert 区域本身，
@@ -10968,6 +10979,19 @@ AST 映射规则:
                 # 条件重建（包括 BoolOpRegion 的 and/or 链）。
                 if not getattr(_entry_owner, 'value_target', None) and _entry_owner.parent is region:
                     pass  # Don't skip — let _if_generate_normal handle it
+                elif (getattr(region, 'guard_clause_prefix_end', None) is not None
+                      and getattr(_entry_owner, 'merge_block', None) is region.entry):
+                    # 识别条件：分析层已把本 IfRegion 的 entry 判为「前缀语句 + if 测试」的
+                    #   双角色块——证据是 region_analyzer 在例外 2/3 分支写下的
+                    #   guard_clause_prefix_end，且该 BoolOpRegion 的 merge_block 恰为本区域 entry。
+                    # 归约方式：此处不得跳过。R36 的跳过只适用于「整块内容都是 BoolOp
+                    #   操作数」的链式比较；双角色块里 BoolOp 的值已被语句边界（STORE）
+                    #   消费完，块尾剩余指令只可能属于后继语句的测试，因此本块对该
+                    #   BoolOp 的归属是原则 2 的显式例外（与上面 R59 分支同一层次），
+                    #   IfRegion 仍须作为独立区域归约。
+                    # AST 映射：交 _if_generate_normal 的 _boolop_merge_owner 路径，
+                    #   发射「<BoolOp 赋值语句> + If(test, then_body, else_body)」。
+                    pass
                 else:
                     # [R36] Don't mark blocks as generated — the BoolOpRegion will
                     # handle them. Just skip this IfRegion.
@@ -11058,7 +11082,20 @@ AST 映射规则:
                     # IfRegion 会同时吞掉赋值与 if（实测 seq_len 51→16）。正解：保留
                     # 区域，交 _if_generate_normal 的 _boolop_merge_owner 路径发射
                     # 「赋值前缀 + if」（原则 3/4：子节点抽象、父引用子入口）。
-                    if self._boolop_merge_owner_for(region) is None:
+                    # [Round15-A2b] include_generating=True：owner 可能正是**正在生成
+                    #   本 IfRegion 的那个祖先 BoolOp 区域**（merge_block 双向认领，
+                    #   见 _generate_boolop 包装）。此时赋值由祖先发射，
+                    # _if_generate_normal 只认领块尾的 if 条件，区域同样不得丢弃；
+                    # 若按默认判据返回 None 会把整个 if 吞掉（实测 seq_len 29→11）。
+                    # [Round15-B H2] 判据只问「cond_block 是不是双角色块」，
+                    # 不问赋值由谁发射：owner 可能是祖先帧里正在生成的 BoolOp
+                    # （A2b），也可能是父臂里**先于本区域发射完毕的兄弟单元**
+                    # （H1 让二者并列成两个 emit unit）。后者已在
+                    # _generated_regions 里，若因此返回 [] 会连同整条 if 及其
+                    # 嵌套区域一起吞掉（实测 seq_len 61→25）。
+                    if self._boolop_merge_owner_for(
+                            region, include_generating=True,
+                            include_generated=True) is None:
                         return []
         for r in self.regions:
             if r is not region and isinstance(r, IfRegion) and hasattr(r, 'elif_conditions') and r.elif_conditions:
@@ -13796,6 +13833,14 @@ AST 映射规则:
                 continue
             prev_was_copy = False
             cond_instrs.append(instr)
+        if pre_stmts and _last_store_in_iter >= 0:
+            # [Round15-A2] 本方法是「if/BoolOp 条件块前导语句」的另一个发射口
+            # （generate() 的 BoolOp 入口分支即经此产出模块级 __doc__/import/
+            # 赋值）。既然语句已在此产出，就必须在此认领其指令跨度，否则下游
+            # _generate_boolop 会对同一段前缀再发射一次（重复语句，seq_len 变大）。
+            # 边界取本次扫描中最后一条语句归约入口（STORE_*），与
+            # _build_prefix_stmt_list 的切分点同一量纲。
+            self._register_prefix_emitted(cond_block, _iter_instrs[:_last_store_in_iter + 1])
         return pre_stmts, cond_instrs
 
     def _if_generate_then_branch(self, region: IfRegion) -> List[Dict[str, Any]]:
@@ -14551,12 +14596,29 @@ AST 映射规则:
             # 镜像 then 分支 L8599 的 generated_blocks 检查（then 分支逐个即时
             # 生成并标记，else 分支两阶段收集需显式追踪 _claimed_blocks_c3）。
             _claimed_blocks_c3 = set()
+            # 双角色块登记（区域归约算法原则 2 的量纲限定）：
+            # 识别条件 —— 值上下文 BoolOpRegion/TernaryRegion 的 merge_block，
+            # 该块只贡献「短路求值收尾的一条 STORE_FAST」，它同时可以是下一条
+            # `if <同一名字>:` 语句的入口/条件块（analyzer 例外 3 明确允许）。
+            # 归约方式 —— 此类认领只是「块前缀指令的所有权」，不是「块整体的
+            # 入口所有权」；把它单独记账，供第三阶段 IfRegion 收集时豁免。
+            # AST 映射 —— BoolOp 的赋值语句先按单元顺序发射，if 语句在同一物理
+            # 块上从「前缀之后」的指令继续取条件（A2 prefix_emitted_upto 切片）。
+            _value_merge_blocks_c3 = set()
             def _try_collect_c3(child):
                 if not hasattr(child, 'entry') or child.entry is None:
                     return False
                 if child.entry in self.generated_blocks:
                     return False
-                if child.entry in _claimed_blocks_c3:
+                # 唯一归属约束的例外：entry 被别人认领为「值 merge 块」时，
+                # 认领方只拥有它的 store 前缀；若本 child 是控制流 IfRegion
+                # 且其 condition_block 就是该 entry，则它拥有的是这个块的
+                # 「条件后缀」，二者不冲突，不得否决。
+                _double_role_entry_c3 = (
+                    child.entry in _value_merge_blocks_c3
+                    and isinstance(child, IfRegion)
+                    and getattr(child, 'condition_block', None) is child.entry)
+                if child.entry in _claimed_blocks_c3 and not _double_role_entry_c3:
                     return False
                 # [R36 fix] Skip value-context chained compare IfRegions.
                 # These have chained_compare_ops, condition_block ending with
@@ -14591,6 +14653,10 @@ AST 映射规则:
                 if not _entry_in_else and not self._is_child_reachable_from_blocks(child, region.else_blocks):
                     return False
                 _reachable_children_c3.append(child)
+                if isinstance(child, (BoolOpRegion, TernaryRegion)):
+                    _vmb_c3 = getattr(child, 'merge_block', None)
+                    if _vmb_c3 is not None:
+                        _value_merge_blocks_c3.add(_vmb_c3)
                 for b in child.blocks:
                     _child_block_set_c3.add(b)
                     _claimed_blocks_c3.add(b)
@@ -16297,7 +16363,9 @@ AST 映射规则:
             return None
         return {'blocks': chain, 'op': 'and'}
 
-    def _boolop_merge_owner_for(self, region: IfRegion, cond_block=None) -> 'BoolOpRegion':
+    def _boolop_merge_owner_for(self, region: IfRegion, cond_block=None,
+                                  include_generating: bool = False,
+                                  include_generated: bool = False) -> 'BoolOpRegion':
         """识别条件（双角色条件块的 BoolOp 赋值所有者）：
         - cond_block（本 IfRegion 的实际条件块，默认 region.condition_block）同时是
           某 BoolOpRegion 的 merge_block，且该区域 entry 不是 cond_block；
@@ -16314,6 +16382,15 @@ AST 映射规则:
 
         AST 映射：pre_stmts=[Assign(x, a and b)]，If.test 由块尾 LOAD/COMPARE 重建。
         未找到时返回 None。
+        [Round15-B H2] include_generated=True 放宽「尚未生成」一条，用于**兄弟单元**
+        情形：本 IfRegion 与赋值 BoolOp 是同一父臂里按 offset 顺序排布的两个语句
+        单元，BoolOp 先发射完毕，owner 因而已在 _generated_regions 中。
+          识别条件 —— owner.merge_block is cond_block，与 owner 是否已发射无关；
+          归约方式 —— 已归约的 owner 是现成的抽象节点，不再展开，本区域只认领
+            块尾 POP_JUMP_* 之前的条件指令段；
+          AST 映射 —— 赋值语句发射权唯一（归先出现的单元），本区域仅用
+            owner.value_target 让 _if_extract_cond_instructions 跳过 store 段。
+        未找到时返回 None。
         """
         if cond_block is None:
             cond_block = getattr(region, 'condition_block', None)
@@ -16323,8 +16400,10 @@ AST 映射规则:
             if (not isinstance(_r, BoolOpRegion)
                     or getattr(_r, 'merge_block', None) is not cond_block
                     or _r is region
-                    or id(_r) in self._generated_regions
-                    or id(_r) in self._generating_regions
+                    or (not include_generated
+                        and id(_r) in self._generated_regions)
+                    or (not include_generating
+                        and id(_r) in self._generating_regions)
                     or _r.entry is None
                     or _r.entry is cond_block):
                 continue
@@ -16370,14 +16449,43 @@ AST 映射规则:
         # 否则 BoolOpRegion 的赋值表达式丢失（fill_minute_or_day_blank 的 source_end
         # = strptime(... or '1530') 被吞），且 '1530' 错误归为 if 条件。
         _boolop_merge_owner = self._boolop_merge_owner_for(region, cond_block)
+        # [Round15-A2b] 双角色块的双向认领：本 IfRegion 的条件块同时是某
+        # BoolOpRegion 的 merge_block 时，若该 BoolOp 区域**正在祖先帧里生成**
+        # （BoolOp 生成中派发了本 IfRegion），则它的赋值语句已由祖先发射，
+        # 本区域不得再次 _generate_boolop 取回——否则 `b = a and 2` 会发两份
+        # （原则 2 的违反，实测 seq_len +4）。此时仍要沿用 boolop_merge_target
+        # 让条件扫描跳过该赋值段，只从 STORE_* 之后认领 if 条件。
+        _boolop_owner_emitted_by_ancestor = False
+        if _boolop_merge_owner is None:
+            _bo_anc = self._boolop_merge_owner_for(region, cond_block, include_generating=True)
+            if _bo_anc is not None and id(_bo_anc) in self._generating_regions:
+                _boolop_merge_owner = _bo_anc
+                _boolop_owner_emitted_by_ancestor = True
+            else:
+                # [Round15-B H2] 兄弟单元情形：owner 是同一父臂里先于本区域发射
+                # 的独立语句单元（H1 之后二者并列）。赋值已由该单元发过一份，
+                # 本区域不得再次 _generate_boolop 取回（原则 2：一条语句只有一个
+                # 发射者），但仍须把 owner 当作 boolop_merge_target 交给
+                # _if_extract_cond_instructions —— 否则条件扫描从块首 STORE_FAST
+                # 起算，双角色块的条件段被错读成赋值段。
+                _bo_sib = self._boolop_merge_owner_for(region, cond_block,
+                                                       include_generated=True)
+                if _bo_sib is not None and id(_bo_sib) in self._generated_regions:
+                    _boolop_merge_owner = _bo_sib
+                    _boolop_owner_emitted_by_ancestor = True
         pre_stmts, cond_instrs = [], []
         if _boolop_merge_owner is not None:
-            _bo_result = self._generate_boolop(_boolop_merge_owner)
-            if _bo_result:
-                if isinstance(_bo_result, list):
-                    pre_stmts.extend(_bo_result)
-                else:
-                    pre_stmts.append(_bo_result)
+            if not _boolop_owner_emitted_by_ancestor:
+                _bo_result = self._generate_boolop(_boolop_merge_owner)
+                if _bo_result:
+                    if isinstance(_bo_result, list):
+                        pre_stmts.extend(_bo_result)
+                    else:
+                        pre_stmts.append(_bo_result)
+            # 无论赋值由本区域取回还是由祖先发射，该 BoolOp 区域的 AST 都已产出，
+            # 必须登记为已生成：否则 _if_extract_condition_from_instructions 会把
+            # cond_block 当成 BoolOp 的归并点去重建条件，输出 `if a and 2:` 而不是
+            # 块尾 LOAD 的 `if b:`（原则 2：一条语句只有一个发射者）。
             self._generated_regions.add(id(_boolop_merge_owner))
             # BoolOpRegion 已生成完整赋值（含 merge_block 内 BINARY_OP/CALL/
             # STORE_*）。让 _if_extract_cond_instructions 跳过该赋值段，
@@ -30929,6 +31037,37 @@ AST 映射规则:
         return False
 
     def _generate_boolop(self, region: BoolOpRegion, skip_store_targets: Set[str] = None) -> Optional[List[Dict[str, Any]]]:
+        """[Round15-A2b] 重入保护包装：生成期间把本区域登记进 _generating_regions。
+
+        识别条件：BoolOp 区域的 merge_block 常常同时是某个 IfRegion 的 entry/条件块
+          （双角色块），于是 BoolOpRegion 生成中会派发该 IfRegion，而 IfRegion 又会经
+          _boolop_merge_owner_for 回头取本 BoolOp 区域——形成双向认领。
+        归约方式：原则 2（每个块在任何层级只属于一个区域）在区域层要求「正在生成中
+          的区域」不得被自己的子节点再生成一次；子节点据此判定「本赋值已由祖先发射」，
+          只从语句边界 STORE_* 之后认领 if 条件。
+        AST 映射：包装本身不产出 AST。修复的是同一份 Assign 出现两次（实测 round14_join
+          r14j_11/r14j_12 的 `b = a and 2` 各多 4 条指令）。
+        """
+        _bo_rid = id(region)
+        self._generating_regions.add(_bo_rid)
+        # [Round15-A2f] 认领快照：prefix_emitted_upto 的语义是「该前缀语句已进入
+        # 输出」，而不是「曾被提取过」。本方法存在**提取后又整体丢弃**的路径
+        # （guard_clause_skip 把发射权让渡给下游 IfRegion 并 return None），此时
+        # 本次调用一条语句都没发，认领必须一并撤销；否则真正发射的那次调用会被
+        # 链首切片切掉同一条语句（实测 IQCommon/profiler_func 模块级
+        # `PY3 = sys.version_info[0] == 3` 整体丢失，16/16 → 15/16）。
+        # 这不是回改数据流：它与 _generating_regions 的进出栈同属一次调用的作用域
+        # 记账，方向仍是自底向上、一次正确。
+        _claim_snap = dict(self.prefix_emitted_upto)
+        try:
+            _bo_ast = self._generate_boolop_impl(region, skip_store_targets=skip_store_targets)
+            if not _bo_ast:
+                self.prefix_emitted_upto = _claim_snap
+            return _bo_ast
+        finally:
+            self._generating_regions.discard(_bo_rid)
+
+    def _generate_boolop_impl(self, region: BoolOpRegion, skip_store_targets: Set[str] = None) -> Optional[List[Dict[str, Any]]]:
         """生成 BoolOpRegion 的 AST 节点列表
 
         输入契约:
@@ -31238,6 +31377,21 @@ AST 映射规则:
                 pre_stmts = []
             else:
                 pre_instrs = self.region_analyzer.identify_block_prefix_instructions(first_chain_block)
+                # [Round15-A2e] 同量纲切片：只提取偏移严格大于「已发射前缀末指令
+                # 偏移」的那一段。前缀发射权记在 prefix_emitted_upto（指令粒度，
+                # 由真正产出语句的漏斗登记），因此链首块「前 k 条语句属于别人、
+                # 其余属于本区域」的半认领状态可被精确表达；剩余段为空时下面的
+                # 归约入口扫描自然找不到切点，本区域一条前缀语句都不发。
+                # 切片只能放在这个消费者上：块级集合（generated_blocks /
+                # _entry_prefix_emitted_blocks）分不清这两种半认领（Round 13 两次
+                # 回退的根因），而下沉到 _build_prefix_stmt_list 内部又会把别的请求方
+                # （prefix_block / post-store）仍需发射的语句一起切掉——实测
+                # profiler_func 模块级 import 丢失。
+                _pemu = self.prefix_emitted_upto.get(first_chain_block, -1)
+                if _pemu >= 0 and pre_instrs:
+                    pre_instrs = [i for i in pre_instrs
+                                  if getattr(i, 'offset', None) is None
+                                  or i.offset > _pemu]
                 # [Round 30] 切分点从「最后一条 STORE_FAST/NAME/GLOBAL/DEREF」
                 # 放宽为「最后一条语句归约入口」(_is_statement_reduction_entry)。
                 # 原判据漏掉 STORE_ATTR / STORE_SUBSCR：当 BoolOpRegion 的
@@ -46060,6 +46214,30 @@ AST 映射规则:
         target = {'type': 'Tuple', 'elts': targets, 'ctx': 'Store'}
         return {'type': 'Assign', 'targets': [target], 'value': val}
 
+    def _register_prefix_emitted(self, block: BasicBlock, instrs: List[Instruction]) -> None:
+        """登记「block 中 instrs 这一段已经作为前置语句发射」——只增不减。
+
+        4 节模板：
+        1. 算法依据：区域归约算法原则 2（每个块在任何层级只属于一个区域）在
+           **语句层**的落实。块级归属只说明「谁生成这条块」，不说明「块内前缀
+           语句由谁发射」；后者只能记在指令偏移上。
+        2. 归约顺序：自底向上——前缀语句是块内更低层的结构，先于该块的区域
+           表达式归约并被发射；登记发生在发射的那一刻，不在父区域里回补。
+        3. 唯一归属判定：消费者用 `instr.offset > prefix_emitted_upto[block]`
+           切掉已被认领的那一段，剩下的才是自己该发射的前缀。
+        4. AST 映射：本方法不产出 AST，只保证「一条语句只发射一次」——即
+           re-compile 后指令序列长度不变（重复发射会让 seq_len 变大，实测
+           round14_join 的 9 个复现各 +13 条指令）。
+        """
+        if block is None or not instrs:
+            return
+        _offs = [i.offset for i in instrs if getattr(i, 'offset', None) is not None]
+        if not _offs:
+            return
+        _last = max(_offs)
+        if _last > self.prefix_emitted_upto.get(block, -1):
+            self.prefix_emitted_upto[block] = _last
+
     def _build_prefix_stmt_list(self, pre_instrs: List[Instruction], block: BasicBlock) -> List[Dict[str, Any]]:
         """
         将前缀指令序列转换为AST语句节点列表。
@@ -46113,6 +46291,7 @@ AST 映射规则:
         # 前缀无产出时，才回退到下面的手动切分（保持既有兜底行为）。
         _delegated = self._build_statements_from_instructions(pre_instrs, block)
         if _delegated:
+            self._register_prefix_emitted(block, pre_instrs)
             return list(_delegated)
 
         stmts = []
@@ -46144,6 +46323,8 @@ AST 映射规则:
             if _stmt:
                 stmts.append(_stmt)
 
+        if stmts:
+            self._register_prefix_emitted(block, pre_instrs)
         return stmts
 
     def _reconstruct_raise_exc(self, pre_instrs):

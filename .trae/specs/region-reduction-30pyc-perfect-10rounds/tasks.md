@@ -124,13 +124,13 @@
   - [x] SubTask 12.6: 提交并 push（f89b85f2 → origin/main；仅 add 本轮实际改动文件，未用 git add -A）
 
 - [ ] Task 13: Round 14 — 区域归属层解决「前缀语句已发射」判据（A2 回退项的正解）
-  - [ ] SubTask 13.1: 在**归属层**记录「块语句序列由哪个区域发射」：
+  - [x] SubTask 13.1: 在**归属层**记录「块语句序列由哪个区域发射」：
         为 BoolOp/三元链的 first_chain_block 判定「其前缀语句是否已随该块发射」
         提供唯一权威来源。禁止再生成期标记集合上弥补
         （实测：块级 generated_blocks 被表达式消费路径污染；
         generated_offsets 只零散登记 start_offset；新增台账也覆盖不到 create_order
         的第一份发射路径 —— 三种判据全部失败，见 OUTCOME.md §四）
-  - [ ] SubTask 13.2: 恢复 A2 想解决的问题且不复发重复发射：
+  - [x] SubTask 13.2: 恢复 A2 想解决的问题且不复发重复发射：
         repro_01 第二臂 `a2 = 2` 前缀不得被吞；
         order/trade/base_validator/itn/json_persistance/quotation 六处
         整块语句重复必须保持 0（验收命令见 OUTCOME.md §六）
@@ -177,3 +177,36 @@
   - [ ] SubTask 14.8: 本轮未完项移交：SubTask 13.1/13.2（`round14_join` 11 个 MISMATCH：
           前缀重复 +13 与 then 区截断同族）、SubTask 13.4（R13-C 链尾吸收，含 A-2
           `PluginManager.set_engine` ×2）、Task 5 遗留（`decrypt_database_url` +29、cgroup +2/+1）
+- [x] Task 15: Round 15 — 前置语句发射权登记（A2 正解）+ else 臂「双角色块」收养（H1+H2）
+  - [x] SubTask 15.1: 测试工程师定位 15-A 根因：`BoolOpRegion ↔ IfRegion` 双向认领下
+          「前缀语句是否已随块发射」无权威来源 ⇒ 新增指令粒度台账
+          `prefix_emitted_upto`（`region_ast_generator.py:240`）+ 唯一登记点
+          `_register_prefix_emitted`（`:46165`），量纲 = 本次实际消费前缀的末指令偏移
+  - [x] SubTask 15.2: 重入保护与交接：`_generate_boolop` 包装层压栈 `_generating_regions`（`:30987`）、
+          `_boolop_merge_owner_for(include_generating=…)`（`:16337`/`:16418`/`:11090`）、
+          祖先发射情形同样登记 owner 为已生成（A2d），条件提取出口按指令粒度登记（`:13835`）
+  - [x] SubTask 15.3: 切片只放链首消费者（`:31328-31342`）+「提取后丢弃 ⇒ 撤销认领」快照回滚
+          （`:31001-31014`，A2f）。不做的代价实测：`IQCommon/profiler_func` 模块级
+          `PY3 = sys.version_info[0] == 3` 整体丢失 16/16 → 15/16
+  - [x] SubTask 15.4: 15-A 验收：`round14_join` 16 复现 MISMATCH=11 → **1**（10 项改标 SENTINEL），
+          14 文件严格 A/B 534/589 且缺陷集合与 A1b 逐函数相同 ⇒ 零回归
+  - [x] SubTask 15.5: 15-B 设计稿 → 落地前 dry-run（`rounds/round15/elsearm-design.md`）：
+          H1 单独不足（`_generate_if:11090` 仍 `return []`，r15a_01 seq_len 61→25）⇒
+          定稿 H2「owner 识别与发射权解耦」（`include_generated` 形参 + `:11090` carve-out +
+          `_if_generate_normal` 的 `_bo_sib` 兜底）
+  - [x] SubTask 15.6: H1+H2 以 6-hunk 断言式字节补丁落地（副本播种 dry-run，仓库零写入）：
+          `f8debe9af6b60b20 → d07996aaa20d4665`（BOM/CRLF 不变，48070 → 48122 行）
+  - [x] SubTask 15.7: 门禁顺序全绿：单点修到完全 OK（IQData/utils/arg_checker 39/39、
+          IQEngine/utils/arg_checker 43/43，两把尺子同时 100%）→ quotation.pyc 单验（147/150，
+          缺陷集合逐函数与基线相同）→ 全量产物门 406 targets：CLEAN=327→**329**、
+          UNCHANGED=67→**65**、WORSENED=9 / REGRESSION=2 与 Round 14 文件集合逐个相同 ⇒ 零新增回退
+  - [x] SubTask 15.8: 双口径复验：官方 353→**355** ok / 49→47 partial，函数 5617→**5619**/5746；
+          严格 329→**331**/405 文件，函数 6093→**6095**/6332；`pyc_index.json` 按
+          index-corrected 惯例纠正 `IQCommon/arg_checker`（实测 46/47，HEAD 产物同为 46/47
+          ⇒ Round 10 的未验证 stale 标记，非本轮造成）
+  - [ ] SubTask 15.9: 本轮未完项移交 Round 16：①analyzer 层 then 臂内 Try 的父链归属
+          （`IQCommon/arg_checker._is_valid_quarter` 缺口 2→16 条指令、`r15a_01/02`、`r14j_09`）；
+          ②R13c sink 塌陷 A/B 已就绪（`D:/Temp/r15_elsearm_diag/cmp3.txt`：257/79 → 250/77，
+          FIXED=7 BROKEN=0）⇒ `plugin_manager` ×2 `set_engine`；③`guard_clause_prefix_end`
+          只为裸名条件写入（`r15a_08`）；④body-sequence 重复发射（`r15a_09` +9）；
+          ⑤SubTask 13.3 / 13.4 / Task 5 遗留照旧

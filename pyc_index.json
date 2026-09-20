@@ -81,12 +81,14 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/arg_checker.pyc",
     "size": 24652,
     "function_count": 47,
-    "decompile_status": "ok",
-    "bytecode_match_rate": 1.0,
+    "decompile_status": "partial",
+    "bytecode_match_rate": 0.9787234042553191,
     "ok_py_generated": true,
     "last_tested_round": 10,
+    "mismatch_count": 1,
     "status": "pending",
-    "matched_functions": 47
+    "matched_functions": 46,
+    "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/backtest/backtest.pyc",
