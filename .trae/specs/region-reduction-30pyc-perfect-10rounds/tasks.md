@@ -295,7 +295,56 @@
           11 项每轮 WORSENED 回滚，根因在生成层）；④`r16a_05`、`r15a_08`、`r15a_09`、T1/T2
           then 臂收集顺序；⑤SubTask 13.4 与 Task 5 遗留照旧；⑥`pyc_batch_verify.py single` 对
           `fly/data/quotation.pyc` 必然 60 s 超时且超时会把该条目改写成 `failed`——需要么提高
-          超时、么禁用超时写回；⑦site-packages 内那 4 个由 `*OK.py`/校验脚本二次编译出的 pyc
+          超时、么禁用超时写回（Round 18 结案：`single` 实测 5.1 s 完成，写回字段与 HEAD 相同）；⑦site-packages 内那 4 个由 `*OK.py`/校验脚本二次编译出的 pyc
           是否清理由用户决定。
           另：全仓 `_find_enclosing_loop` 其余 5 处调用（`:2264`、`:16623`、`:16661`、`:17047`、
           `:18458`）经复核均为**正向**用途（循环内 merge 重算 / 回边继承），无同类「按循环豁免」残留
+
+- [x] Task 18: Round 18 — 移除 Round 13 `_discover_predicate_and_chain` 的跨层次吸收：外层
+      `elif` 的测试块被当成 and 短路链前驱，在外层条件之下又发射一遍，成为内层条件的第一个合取支
+  - [x] SubTask 18.1: 承接 SubTask 17.9③/13.3：quotation 产物/核漂移用镜像核（`git archive` 到
+          `D:/Temp/r18/mirror/<rev8>`，仓库零写入）二分定位——`393d9ff0`/`675ca714`/`8a1b1def`
+          三核再生成与磁盘产物一致，`f89b85f2` 起当前核比磁盘产物多一个缺陷函数
+          `<module>.change_future_real_date`（`rounds/round18/arm-design.md`）
+  - [x] SubTask 18.2: 根因判定为**跨层次唯一归属违例**（原则 2）：`elif X:` 的测试块不是任何区域的
+          entry（只是父 if 链区域的 `elif_conditions` 成员），既有「entry 且 condition_block 即该块」
+          守卫漏掉它；该块与内层条件块末指令跳同一汇合点、真路径 fallthrough 串联 ⇒ 被吸收为第一
+          合取支。复现要条件是 elif 臂体内有前置语句（裸 `elif d: if d < e:` 两世界都 MATCH）
+  - [x] SubTask 18.3: 测试工程师交付 20 个最小复现 `test_repros/round18_arm/`（11 锚点 +
+          8 负对照 + 1 UNCONFIRMED）+ `run_all.py` + `ANALYSIS.md`（双世界逐条实测表）
+  - [x] SubTask 18.4: 落地 `D:/Temp/r18/r18_fix_chain_owner.py`（字节级 assert：BOM / 锚点唯一 /
+          纯 CRLF / `ast.parse` / 拒绝二次应用）⇒ `region_ast_generator.py` LF 归一 sha
+          `a5e2f7e75fa69cca → a107457c5215daaf`（48175→48189 行，+15/−1；守卫 8 行，其余是判据
+          注释块与 docstring `**嵌套处理**` 段同步改写）；`region_analyzer.py` 本轮零改动
+  - [x] SubTask 18.5: mandate 门禁顺序全绿：单点 `change_future_real_date`
+          `[seq_len] orig=91 decomp=93 → OK` → `quotation.pyc` 重生成后缺陷集合与磁盘产物**逐名
+          相同**（SubTask 13.3 的 quotation 项结案）→ 全量产物门（402 条目分 8 片）
+          `CLEAN 334 / UNCHANGED 59 / WORSENED(rolled back) 8 / REGRESSION(rolled back) 1`，
+          9 项异常在补丁前镜像核上数值与缺陷函数名逐名相同 ⇒ 零新增回退
+  - [x] SubTask 18.6: 项目工具 A/B（本轮前 HEAD 产物 vs 落地后产物，只读 `bytecode_diff`，
+          唯一差别是产物文本）：`fly/simtradding/pboxAccount_jupyterhub` `getVaildAccount`
+          3/4 → **4/4**（`single` 报 `decompile_status: ok` / `100.00%`）、
+          `fly/data/quote` `change_future_real_date` 66 → 67、
+          `IQCommon/util/replace_utils` `log_request` 7 → 8；另 3 个产物同样去掉重复合取支而
+          官方计数不变（`data_proxy`、`realtime_event_source`、`quotation`）
+  - [x] SubTask 18.7: `pyc_index.json` 5 条目按工具实测更新。4 条 `partial → ok`
+          （`IQCommon/util/backtest_info_utils`、`IQEngine/config/config`、
+          `plugin_fly_data/fly_api/setting_api`、`plugin_system_control/__init__`）经全量门 CLEAN
+          证实**产物本就全匹配、条目停在 Round 10 旧值**——如实记为索引订正，不是本轮补丁效果；
+          第 5 条 `fly/data/quote` `matched 66 → 67` 才是 R18-A 效果。条目 402、每条
+          `function_count` 一律不变
+  - [x] SubTask 18.8: 电池与确定性收尾：`round18_arm` 20 项 `--strict` 退出码 0
+          （`MISMATCH=0 MATCH=20 ERROR=0 UNEXPECTED=0 NOT-REPRODUCED=1`）；既有 8 套
+          （round13 / 13b / 14 / 14_join / 15_arm / 16_arm / 16_sink / 17_arm）在新核上全部
+          退出码 0、UNEXPECTED=0、ERROR=0；6 个被改写产物用 `single` 重生成后与磁盘逐字节相同
+  - [ ] SubTask 18.9: 本轮未完项移交：①`IQCommon/util/user_info_utils.pyc` 唯一缺陷
+          `remove_lock_files` `[seq_len] orig=96 decomp=97`——`for file in files:` 里
+          `if ...: try/except` 末尾多发射一条 `continue`（多一个 `JUMP_BACKWARD to 420`），该处
+          已是 Round 07 / R4-H / R100 / RC3 四条抑制判据叠加之地，单列为下一轮目标；
+          ②`r18a_05`（for 循环内 elif 臂）补丁前后都 MATCH，新守卫未覆盖该形状；
+          ③9 文件既有漂移族（`to_pd_result`×3、`resist_api`、`flytools`、`quote_handler`、
+          `real_quote`、`market_time`、`json_persistance`）仍会在闸门每轮触发 WORSENED 回滚；
+          ④quotation 残留 `change_his_to_forward` seq_len +1、`get_trend` 跳转终点；
+          ⑤SubTask 17.9 其余项（`strategy`、`calexrights_func`、`handlers`、`trade_live_broker`、
+          `r16a_05`、`r15a_08`/`r15a_09`、`r17a_25`、T1/T2 then 臂顺序、SubTask 13.4、Task 5）照旧
+

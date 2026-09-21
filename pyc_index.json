@@ -525,13 +525,13 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/backtest_info_utils.pyc",
     "size": 41284,
     "function_count": 10,
-    "decompile_status": "partial",
-    "bytecode_match_rate": 0.9,
+    "decompile_status": "ok",
+    "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
     "last_tested_round": 10,
     "mismatch_count": 3,
     "status": "pending",
-    "matched_functions": 9,
+    "matched_functions": 10,
     "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
   },
   {
@@ -2154,12 +2154,12 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/config/config.pyc",
     "size": 10779,
     "function_count": 11,
-    "decompile_status": "partial",
-    "bytecode_match_rate": 0.9090909090909091,
+    "decompile_status": "ok",
+    "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
     "last_tested_round": 10,
     "status": "pending",
-    "matched_functions": 10,
+    "matched_functions": 11,
     "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
   },
   {
@@ -2787,13 +2787,13 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/setting_api.pyc",
     "size": 19179,
     "function_count": 15,
-    "decompile_status": "partial",
-    "bytecode_match_rate": 0.9333333333333333,
+    "decompile_status": "ok",
+    "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
     "last_tested_round": 10,
     "mismatch_count": 2,
     "status": "pending",
-    "matched_functions": 14,
+    "matched_functions": 15,
     "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
   },
   {
@@ -3167,12 +3167,12 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_control/__init__.pyc",
     "size": 4730,
     "function_count": 13,
-    "decompile_status": "partial",
-    "bytecode_match_rate": 0.9230769230769231,
+    "decompile_status": "ok",
+    "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
     "last_tested_round": 10,
     "status": "pending",
-    "matched_functions": 12,
+    "matched_functions": 13,
     "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
   },
   {
@@ -4247,12 +4247,12 @@
     "size": 127591,
     "function_count": 81,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.8148148148148148,
+    "bytecode_match_rate": 0.8271604938271605,
     "ok_py_generated": true,
     "last_tested_round": 10,
     "mismatch_count": 15,
     "status": "pending",
-    "matched_functions": 66
+    "matched_functions": 67
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/fly/data/quote_handler.pyc",

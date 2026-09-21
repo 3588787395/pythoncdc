@@ -16286,7 +16286,13 @@ AST 映射规则:
         **嵌套处理** 前驱候选若已归属某个以其为条件块的结构区域
         （get_entry_region_for_block 命中且条件块即该前驱），说明该前驱是
         嵌套 if 头，保守放弃整条链回退（返回 None），交由既有嵌套
-        IfRegion 路径；跨循环回边前驱因「跳转目标 == 汇合点」与
+        IfRegion 路径。同理，前驱候选若是任一其它 IfRegion 的 elif 条件块
+        （原则 2：每个块在任何场合只属于一个区域——该块已由外层 elif 链区域
+        认领为结构块），也放弃整条链：否则 `elif delivery_date:` 的测试块会被
+        当成内层 `if delivery_date < end[:8]:` 的首个合取支跨层次吸收，生成出
+        `if delivery_date and delivery_date < end[:8]:`（重复的外层条件）。两条
+        守卫都只删不增：回退不命中时交由既有单条件生成路径，不新增任何规则。
+        跨循环回边前驱因「跳转目标 == 汇合点」与
         「fallthrough 进入链尾」双重约束天然排除。
 
         **入口引用语义** 父 IfRegion.test 引用重建的 BoolOp 节点；链首前缀
@@ -16335,6 +16341,14 @@ AST 映射规则:
                 if (_er is not None and _er is not region
                         and getattr(_er, 'condition_block', None) is p):
                     return None
+                # [原则2 唯一归属] 前驱候选是任一其它 IfRegion 的 elif 条件块时，
+                # 它已被外层 elif 链区域认领为结构块，不可能同时是本区域条件的
+                # 合取支；跨层次吸收会把外层 `elif X:` 的测试重复发射成内层
+                # `if X and ...:`，故放弃整条链回退。
+                for _oth in self.region_analyzer.regions:
+                    if _oth is not region and any(
+                            _ec is p for _ec in (getattr(_oth, 'elif_conditions', None) or [])):
+                        return None
                 if best is None or p.start_offset > best.start_offset:
                     best = p
             if best is None:
