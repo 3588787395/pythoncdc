@@ -286,6 +286,19 @@ class RegionASTGenerator:
         任何一条指令的 stack effect 无法从 CPython 取得，或模拟中栈深出现非法
         值（<0）时，一律返回空列表——退化为切分前的行为，绝不臆造语句。
 
+        **消费者（谁在什么结构上调用本切分）**
+        1) AssertRegion.condition_block —— `_collect_assert_prefix_stmts` 切出前导
+           语句并暂存，父序列在 `ast.Assert` 之前发射（原则 3：assert 区域只暴露
+           一个抽象节点）。
+        2) LoopRegion.condition_block（R23-B）—— 旋转 while 把「循环体首语句 + 条件
+           求值」合进同一个极大直线块；当该块同时是祖先 LoopRegion 的 header_block
+           时，`_loop_generate_while` 的 `_cond_is_ancestor_header` 分支用本方法切出
+           前导段，归约为语句后放进 `pre_stmts`，随 While 节点一起返回父序列，位置在
+           While 之前（此前该段无人发射：祖先的 body 扫描在「直接子 LoopRegion 入口
+           块」分支处 continue，从不扫描该块指令）。
+        两处是同一条划界：块整体归子区域，块内前导语句归父序列，分界只由块内栈深给
+        出，不查任何其他区域/层的归属。
+
         返回: 前导语句的指令列表（可能为空）。
         """
         if block is None:
@@ -5494,6 +5507,32 @@ AST 映射规则:
             else:
                 if _cond_was_generated and not pre_stmts:
                     pre_stmts = []
+
+                # [R23-B] 区域归约算法符合度
+                # 1. 算法依据：基本块是极大直线块，条件块指令流 = 「已完结语句段
+                #    + 尾部条件表达式段」，切点由 _split_block_condition_prefix 的
+                #    块内栈深前向模拟给出（最后一次回到深 0 之后），与语法形式无关。
+                # 2. 归约顺序（原则 1 自底向上）：本区域此刻正在归约，前导段是块内
+                #    更低层结构，先于条件表达式归约；切点只看本块指令，不查任何其他
+                #    区域/层的归属。
+                # 3. 唯一归属（原则 2）：块的**条件语义**归本 LoopRegion，块的**前导
+                #    语句**归父序列 —— 二者以指令偏移划界，登记走 prefix_emitted_upto
+                #    （指令粒度，只增不减）。此前整块被登记为已生成而前导无人发射，
+                #    等于把那几条指令摊到「无人所有」。
+                # 4. 嵌套即抽象节点（原则 3）+ 父引用子入口（原则 4）：父序列得到
+                #    [pre_stmts..., While]，While 仍是单个抽象节点；前导不是子区域的
+                #    第二个节点，而是同块内不属于任何区域的语句，与 AssertRegion 的
+                #    _collect/_take_assert_prefix_stmts 契约同构（此处无需暂存：函数
+                #    尾部 `if pre_stmts: output = list(pre_stmts); output.append(result)`
+                #    已把前导发射在 While 之前）。
+                # 保守性：切点不存在（整块都是条件）时返回空 → 与修改前逐字节相同。
+                _r23_cond_prefix = self._split_block_condition_prefix(cond_block)
+                if _r23_cond_prefix:
+                    _r23_cond_stmts = self._build_statements_from_instructions(
+                        _r23_cond_prefix, cond_block)
+                    if _r23_cond_stmts:
+                        pre_stmts.extend(_r23_cond_stmts)
+                        self._register_prefix_emitted(cond_block, _r23_cond_prefix)
 
                 self.generated_blocks.add(cond_block)
                 self.generated_offsets.add(cond_block.start_offset)
@@ -16823,19 +16862,27 @@ AST 映射规则:
                             return True
             return False
         if _has_or_ext:
+            # [R23-A] or-extension 的三块臂状态属于"本区域的归约上下文"，是
+            # 本帧的局部量。下面两次 _process_if_blocks 会递归归约嵌套 IfRegion
+            # （_nested_if_entry_generate / _generate_region(child)），被调方在
+            # _if_generate_normal 开头无条件复位 self._or_* ⇒ 返回后父区域读到的是
+            # 子区域的（None）状态，else 臂被静默丢弃。原则 2（每块唯一归属）要求
+            # 本区域的臂由本区域的归约决定，与嵌套归约的先后无关。
+            _r23_or_then, _r23_or_else, _r23_or_rhs = (
+                self._or_then_block, self._or_else_block, self._or_rhs_block)
             _or_elif_ir = None
             for r in self.region_analyzer.regions:
                 if isinstance(r, IfRegion) and r.elif_conditions and r.then_blocks:
-                    if any(b.start_offset == self._or_then_block.start_offset for b in r.then_blocks):
+                    if any(b.start_offset == _r23_or_then.start_offset for b in r.then_blocks):
                         _or_elif_ir = r
                         break
             if _or_elif_ir is not None:
                 # [关键修复] 临时将 _or_then_block 添加到 then_blocks，
                 # 否则 _process_if_blocks 会因 block 有 RETURN_VALUE 且不在 then_blocks 中而跳过它
                 _saved_then_blocks = region.then_blocks
-                if self._or_then_block and self._or_then_block not in region.then_blocks:
-                    region.then_blocks = list(region.then_blocks) + [self._or_then_block]
-                then_stmts = self._process_if_blocks([self._or_then_block], region, branch='then')
+                if _r23_or_then and _r23_or_then not in region.then_blocks:
+                    region.then_blocks = list(region.then_blocks) + [_r23_or_then]
+                then_stmts = self._process_if_blocks([_r23_or_then], region, branch='then')
                 region.then_blocks = _saved_then_blocks
                 if not hasattr(region, 'elif_conditions') or not region.elif_conditions:
                     region.elif_conditions = _or_elif_ir.elif_conditions
@@ -16843,40 +16890,40 @@ AST 映射规则:
                     region.elif_final_else = getattr(_or_elif_ir, 'elif_final_else', None)
                 else_stmts = self._if_generate_elif_chain(region)
                 for b in region.then_blocks:
-                    if b is not self._or_then_block and b is not self._or_else_block and b is not self._or_rhs_block:
+                    if b is not _r23_or_then and b is not _r23_or_else and b is not _r23_or_rhs:
                         if b not in self.generated_blocks and b not in (region.chained_compare_blocks or []):
                             self.generated_blocks.add(b)
                 for b in region.else_blocks:
-                    if b is not self._or_then_block and b is not self._or_else_block and b is not self._or_rhs_block:
+                    if b is not _r23_or_then and b is not _r23_or_else and b is not _r23_or_rhs:
                         if b not in self.generated_blocks:
                             self.generated_blocks.add(b)
             else:
                 _saved_then_blocks = region.then_blocks
-                if self._or_then_block and self._or_then_block not in region.then_blocks:
-                    region.then_blocks = list(region.then_blocks) + [self._or_then_block]
-                _or_then_stmts = self._process_if_blocks([self._or_then_block], region, branch='then')
+                if _r23_or_then and _r23_or_then not in region.then_blocks:
+                    region.then_blocks = list(region.then_blocks) + [_r23_or_then]
+                _or_then_stmts = self._process_if_blocks([_r23_or_then], region, branch='then')
                 region.then_blocks = _saved_then_blocks
                 _saved_else_blocks = getattr(region, 'else_blocks', [])
-                if self._or_else_block and self._or_else_block not in _saved_else_blocks:
-                    region.else_blocks = list(_saved_else_blocks) + [self._or_else_block]
+                if _r23_or_else and _r23_or_else not in _saved_else_blocks:
+                    region.else_blocks = list(_saved_else_blocks) + [_r23_or_else]
                 # [W20 修复·塌陷防护] 短路 or 的 else 块可能不存在
                 # （_or_else_block=None，如 kline_datetime_list：or 右臂即函数
                 # 出口）。None 传入 _process_if_blocks 会在排序处抛
                 # AttributeError，整个函数体塌陷为空（1708→6 字节）。
                 # 无右块时 else 分支为空列表，直接跳过生成。
-                if self._or_else_block is not None:
-                    _or_else_stmts = self._process_if_blocks([self._or_else_block], region, branch='else')
+                if _r23_or_else is not None:
+                    _or_else_stmts = self._process_if_blocks([_r23_or_else], region, branch='else')
                 else:
                     _or_else_stmts = []
                 region.else_blocks = _saved_else_blocks
                 then_stmts = _or_then_stmts
                 else_stmts = _or_else_stmts
                 for b in region.then_blocks:
-                    if b is not self._or_then_block and b is not self._or_else_block and b is not self._or_rhs_block:
+                    if b is not _r23_or_then and b is not _r23_or_else and b is not _r23_or_rhs:
                         if b not in self.generated_blocks and b not in (region.chained_compare_blocks or []):
                             self.generated_blocks.add(b)
                 for b in region.else_blocks:
-                    if b is not self._or_then_block and b is not self._or_else_block and b is not self._or_rhs_block:
+                    if b is not _r23_or_then and b is not _r23_or_else and b is not _r23_or_rhs:
                         if b not in self.generated_blocks:
                             self.generated_blocks.add(b)
         else:

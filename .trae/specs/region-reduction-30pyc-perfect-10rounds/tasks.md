@@ -611,9 +611,11 @@
           序列数字与上一轮同为 5633，但本轮起它是**实测值**：落地前用旧核实测 5621、
           `ok_pyc` 实测 359 ⇒ 本轮真实净增 12 个函数一致、`ok_pyc` 359→362
   - [ ] SubTask 22.9: 本轮未完项移交：①`realtime_event_source.clock_worker` −197（Round 21 的
-          人工保全产物被本轮 `batch --all` 按当前核重写，官方读数不变 11/12；根因 = 截断 BoolOp
-          链后父臂双认领，`test_repros/round22_adoption/ANALYSIS.md` §1–4 + 探针
-          `D:/Temp/r22diag/probes/sp_c1.py,c2,c3`，门禁必须同时看 `Σ|orig−decomp|` 与电池）；
+          人工保全产物被本轮 `batch --all` 按当前核重写，官方读数不变 11/12；当时的根因假设
+          = 截断 BoolOp 链后父臂双认领，`test_repros/round22_adoption/ANALYSIS.md` §1–4 + 探针
+          `D:/Temp/r22diag/probes/sp_c1.py,c2,c3`，门禁必须同时看 `Σ|orig−decomp|` 与电池。
+          **→ Round 23 已实测否证该假设并改判为 `self._or_*` 跨帧被踩＋loop 条件块前导无人发射，
+          该假设列在 23.1；−197 现余 D2/D3 两层，见 23.9 ①**）；
           ②电池 5 项残留（`r22_23` `A and B or C`、`r22_24` `X or (A and B)` 括号形、
           `r22_25` `while A and B or C and D`、`r22_26` `or` 后接 `and` 臂、
           `r22_27` `persist` 在 while 内 73→65）；③过量发射族 4 项
@@ -622,3 +624,59 @@
           ④`f89b85f2` 遗留退化（`trade_info_utils` −2、`custom_tools` −1）；
           ⑤quotation `change_his_to_forward`、`handlers.pyc` `_target 192→190`、
           SubTask 21.10 其余项照旧
+
+- [x] Task 23: Round 23 — 落地 R23-A（or-extension 臂状态 callee-saved）＋ R23-B（loop 条件块
+      前导语句发射权归父序列），修掉 `realtime_event_source.clock_worker` −197 里唯一使产物
+      **语义错误**的那一层（Q1：`dt = datetime.datetime.now()` 整条被丢弃）
+  - [x] SubTask 23.0: 语料不新增条目——`pyc_index.json` 条目 402、每条 `function_count` 一律不变、
+          Σ=5746、added/removed=0（脚本复核）；本轮被改动的字段只有 `last_tested_round`
+          （402 条 22→23），**实质字段（`matched_functions`/`decompile_status`/
+          `bytecode_match_rate`）改动条目 0 条**
+  - [x] SubTask 23.1: 测试工程师线（任务 #28/#33）：**否证 22.9 ① 的旧根因**——按旧标题
+          「截断 BoolOp 链后父臂双认领」实现的候选核在 402 文件 A/B 里只动 1 个文件，且 6 个手写
+          or-extension 形状（含 ddmin 最小形）在两核上产物**逐字节相同** ⇒ 不是机制而是同文件巧合。
+          复核成立的归因：`self._or_then_block/_or_else_block/_or_rhs_block` 被**自己递归下去的
+          那一层**在 `_if_generate_normal` 开头无条件复位（`16526-16528`），父区域返回后读到
+          子区域的 `None` ⇒ 父 else 臂静默丢弃（`ANALYSIS.md` §1.1–1.2）
+  - [x] SubTask 23.2: 残余拆三层并证明只剩"顺序"可走（`ANALYSIS.md` §3.4）：D1 = loop 条件块前导
+          被丢弃（`dt` 未绑定，语义错误）；D2 = 过量发射 +16；D3 = 同形块换位。**严格尺
+          `_r10_strict_check.py:105-106` 在长度不等时立刻 `return 'seq_len'`** ⇒ D1 未消时
+          D2/D3 不被任何尺子计分，顺序必须 D1→D2→D3
+  - [x] SubTask 23.3: 测试工程师交付 16 个最小 case `test_repros/round23_clobber/`
+          （6 CONTROL ＋ 5 DIAG ＋ 5 DIAG_OR_EXT_NOEFFECT）+ `run_all.py`（每核全新子进程、
+          镜像核零仓库写入、`MUST_CONTAIN` 文本断言、语料锚点）+ `ANALYSIS.md`。
+          关键设计：**b07/b08/b11 各 −3 复现 Q1；b09（内层换成 `if`）是 loop/if 判别子；
+          b10/c12..c15 为负对照**
+  - [x] SubTask 23.4: 门禁指标先于实现被改写（`arm-design.md` §四）：R23-B 必然把
+          `clock_worker` 从 1287 推到 1292（\|Δ\| 11→17），**以 Σ\|orig−decomp\| 为门禁会直接
+          否决这个正确修复**（§7 连同测量否决该候选）⇒ 改用 (i) 产物含该语句 + (ii) 官方尺
+          `first_diff` 后移 + (iii) 其余 401 文件逐文件不回退；主门禁为电池
+          `b07/b08/b11 → OK` ＋ CONTROL/判别子零变化
+  - [x] SubTask 23.5: 落地 `D:/Temp/r23land/probes/{mk_spec23.py,sp_landed23.py,apply_spec.py}`：
+          spec 由 base(=mirr/head23，与工作树 sha256 相同)→实测候选 (mirr/r23b2) 的行级 hunk 派生
+          （analyzer 0 hunks、ast_generator 8 hunks），**内置自证 spec(base)==候选字节**；
+          白名单仅两文件、锚点 `count(old)==1`、按文件 EOL 约定还原 CRLF、内存 `compile()` 自检。
+          `region_ast_generator.py a203dd17fe82f824→a365c378e6a40fed`（BOM/纯 CRLF 保持），
+          `region_analyzer.py 59b70fa360d19ad0` 未动。写盘后由**工作树**重建 `mirr/landed23`
+          并逐文件哈希核对：core 33 + bytecode 8 + `pycdc.py` 全等 ⇒ 后续门禁都在落地字节上跑
+  - [x] SubTask 23.6: mandate 门禁顺序全绿：电池对落地核复跑 `fixed=3 / broken=0`、
+          `.py` 形状 `Σ|d| 21→12`、锚点 `198→17`、`G0/G2/G3=True → GATE: PASS`
+          （`G1=NOT EVALUATED`：R23-A 在 `.py` 层不可测，不谎报 True）→
+          靶子 `single`（官方尺 11/12、`first_diff 666→794`、`true_diffs 612→480`）→
+          `quotation.pyc` `partial 142/143 99.30%`、唯一缺陷 `change_his_to_forward orig=547
+          decomp=548` 与 Round 21/22 逐字相同且 `quotationOK.py` 未被改写 →
+          `batch --index pyc_index.json --all --round 23`（402/402、`failed_pyc 0`）→ `stats`
+  - [x] SubTask 23.7: 语料级严格 A/B（402×3 核镜像）：`Σn_ok 6004/6207` 三核同值、
+          `Σsad 1771→1585→1590`；**两候选各自触发面都是 1/402 文件**（按产物长度判定），
+          谓词前驱形状 39 文件出现、38 个逐字节不变、其中 14 个当时已完全匹配者全部零变化
+  - [x] SubTask 23.8: 对外序列（`stats --index pyc_index.json`）：
+          `402/362/5746/5633/98.03%` —— **本轮官方序列零增益**（翻不动 `realtime_event_source`
+          是设计里写下的预期），索引条目实质字段 0 改动，差别在于 5633 是用本轮落地核复验的实测值
+  - [ ] SubTask 23.9: 本轮未完项移交：①`clock_worker` 残余两层 D2 过量发射（+16，本轮起首次
+          可见可测 → Round 24 直接入口）、D3 同形块换位（`ANALYSIS.md` §3.3 token 级实测）；
+          ②R23-A 类（callee-saved 跨帧状态）在 `.py` 形状层不可测 ⇒ 验收只能靠语料锚点＋触发面，
+          `self` 上其余跨帧字段清点见 `ANALYSIS.md` §3.1；③Round 22 电池 5 项残留
+          （`r22_23`…`r22_27`）；④过量发射族其余 3 项（`check_before_trading 243→254`、
+          `get_bar 86→90`、`decrypt_database_url 295→324`）与 `get_one_event 19→20`；
+          ⑤`f89b85f2` 遗留退化（`trade_info_utils −2`、`custom_tools −1`）、quotation
+          `change_his_to_forward`、`handlers.pyc _target 192→190`、SubTask 21.10 其余项照旧
