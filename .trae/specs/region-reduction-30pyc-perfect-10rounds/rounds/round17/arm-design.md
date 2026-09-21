@@ -94,13 +94,13 @@ A/B 手段：`D:/Temp/r17/h.py`（就地方法替换：`inspect.getsource` → �
 在本项目不可用**——即使喂入逐字节相同的副本，逐函数比对也会改变结果
 （实测同一副本控制组 MISMATCH 8→13），因为 `isinstance`/类身份被打断；本轮所有 A/B 均走就地替换。
 
-## 4. 语料级 A/B（406 pyc 全量，`D:/Temp/r17/out/{base_1,D2all_1,D2all_2}.jsonl`）
+## 4. 全量产物 A/B（`D:/Temp/r17/out/{base_1,D2all_1,D2all_2}.jsonl`）
 
 | 结果 | 明细 |
 |---|---|
-| 变好 | 7 个文件 / 9 个缺陷函数消失，变坏 0 |
-| 完全转 100% | `IQData/manager/plugin_manager`（9/10→10/10）、`IQEngine/core/plugin_manager`（8/9→9/9）、`fly/common/user_error`（2/4→4/4） |
-| 部分改善 | `IQCommon/logger/handlers` 3→2、`IQData/utils/calexrights_func` 2→1、`.../plugin_system_fly_basicdata/calexrights_func` 2→1（同源孪生）、`IQEngine/plugins/plugin_system_trade/trade_live_broker` 28→26 |
+| 变好 | 7 个文件的缺陷函数消失，变坏 0 |
+| 完全转 100% | `IQData/manager/plugin_manager`、`IQEngine/core/plugin_manager`、`fly/common/user_error` |
+| 部分改善（缺陷函数减少，无一增加） | `IQCommon/logger/handlers`、`IQData/utils/calexrights_func`、`.../plugin_system_fly_basicdata/calexrights_func`（同源孪生）、`IQEngine/plugins/plugin_system_trade/trade_live_broker` |
 | 缺陷数不变、签名变化 | `IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc`：`tick_worker_thread` 由「序列错位」变「长度不等」（原本即缺陷，仍是缺陷） |
 
 `fly/data/quotation.pyc` 两臂的缺陷函数**同名同数**（3 个）——本轮改动对该文件中性。

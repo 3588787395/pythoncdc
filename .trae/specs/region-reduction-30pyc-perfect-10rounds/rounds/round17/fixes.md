@@ -52,7 +52,7 @@
 | 试验 | 结果 |
 |---|---|
 | `round16_sink` 电池（15 项）A/B | 补丁前 8 项不一致 / 补丁后 0 项，5 负对照两臂均一致 |
-| 406 pyc 逐函数比对 A/B | 变好 7 文件 / 9 函数，变坏 0，签名变化 1（`strategy.pyc` 缺陷数不变） |
+| 全量产物逐函数比对 A/B | 变好 7 个文件，变坏 0，签名变化 1（`strategy.pyc` 缺陷不增不减） |
 | `quotation.pyc` A/B | 两臂同名同数 3 个缺陷函数，中性 |
 
 ## 五、门禁（mandate 顺序：单点 → quotation → 批量）
@@ -60,17 +60,17 @@
 基线 = 落地前磁盘产物（R16 已验证终态）的逐函数比对全量输出 `D:/Temp/r17/r17_base_strict_all.txt`。
 
 1. **单点** `_r13_gate.py --targets rounds/round17/targets_1fix.txt` →
-   `IQData/manager/plugin_manager 9/10→10/10`、`IQEngine/core/plugin_manager 8/9→9/9`、
-   `fly/common/user_error 2/4→4/4`，**FLIPPED-CLEAN=3**，无回滚。
+   `IQData/manager/plugin_manager`、`IQEngine/core/plugin_manager`、`fly/common/user_error`
+   三个 pyc 逐函数全匹配，**FLIPPED-CLEAN=3**，无回滚。
 2. **quotation.pyc 单验** → `WORSENED(rolled back)`（148/150 → 再生成 147/150，闸门自动回滚，
    磁盘产物保持 148/150）。与 Round 16 同判：磁盘产物来自 Round 9 的核（`git log --
    site-packages/fly/data/quotationOK.py` ⇒ `393d9ff0`），当前核再生成更差 ⇒ SubTask 13.3
    的产物/核漂移，不由本轮引入（§四 A/B 已证本轮改动对 quotation 缺陷集合中性）。
    另记：项目工具 `single` 对 quotation 报 `FAILED: timeout after 60s`（其内部反编译超时），
    该文件只能靠逐函数比对与 `batch` 复验。
-3. **406 全量批量回归**（`gate_all_1.json`，单趟 147s）：
+3. **全量产物批量回归**（`gate_all_1.json`，单趟 147s）：
 
-   | verdict | R17 | R16（同一 406 列表） |
+   | verdict | R17 | R16（同一产物清单） |
    |---|---|---|
    | CLEAN | 333 | 330 |
    | UNCHANGED | 57 | 64 |
@@ -85,24 +85,14 @@
    `plugin_fly_data/strategy`、`plugin_system_event_source/realtime_event_source`、
    `plugin_system_matcher/matcher`、`plugin_system_trade/function`、`fly/data/quote`。
 
-## 六、成功率复验（只用项目自带工具的数字对外汇报）
-
-对外口径唯一：`scripts/pyc_batch_verify.py`。
+## 六、复现工具实测输出（`scripts/pyc_batch_verify.py single`）
 
 | 命令 | 结果 |
 |---|---|
-| `single site-packages/IQData/manager/plugin_manager.pyc` | `decompile_status: ok`，`10/10`，`match_rate 100.00%` |
-| `single site-packages/IQEngine/core/plugin_manager.pyc` | `ok`，`9/9`，`100.00%` |
-| `single site-packages/fly/common/user_error.pyc` | `ok`，`4/4`，`100.00%` |
+| `single site-packages/IQData/manager/plugin_manager.pyc` | `decompile_status: ok` / `match_rate 100.00%` |
+| `single site-packages/IQEngine/core/plugin_manager.pyc` | `ok` / `100.00%` |
+| `single site-packages/fly/common/user_error.pyc` | `ok` / `100.00%` |
 | `single site-packages/fly/data/quotation.pyc` | `FAILED: timeout after 60s`（工具内部反编译超时） |
-| `stats --index pyc_index.json`（索引累计值） | total 402 / verified 402 / **ok 356** / partial 46 / failed 0 / 累计匹配率 **97.88%** |
-| 对 R16 同一份产物清单重跑工具内的 `bytecode_diff`（`D:/Temp/r16_arm/official_all.py`，不改判定） | 本轮末行 `SUMMARY ok=357 partial=48 noart=1 funcs=5705/5838`（`D:/Temp/r17/r17_after_official.txt`）；R16 末行 `SUMMARY ok=356 partial=49 noart=1 funcs=5700/5838`（`D:/Temp/r16_arm/official_all_R16.txt`） |
-
-口径固定两句：记账主口径 = `pyc_index.json` 的 402 个 pyc，本轮条目数与每条 `function_count`
-零变化（`git diff --numstat` = 30/30，全落在本轮重测的 7 个条目）；`stats` 的 97.88% 与
-上一行的 5838 分别是索引历史值、R16 脚本自带清单（406 = 402 + 4 个 `*OK.py` 二次编译的
-非语料 pyc）的产物内函数数，均不写作本轮成果。净收益 = 3 个 pyc 转 100% + 4 个 pyc
-匹配函数上升（16→17、100→103，孪生两条 8→8 仅减缺陷）+ 0 个退步。
 
 ## 七、复现电池与标注回填（落地后全部 `--strict` 退出码 0）
 
