@@ -340,7 +340,7 @@
   - [ ] SubTask 18.9: 本轮未完项移交：①`IQCommon/util/user_info_utils.pyc` 唯一缺陷
           `remove_lock_files` `[seq_len] orig=96 decomp=97`——`for file in files:` 里
           `if ...: try/except` 末尾多发射一条 `continue`（多一个 `JUMP_BACKWARD to 420`），该处
-          已是 Round 07 / R4-H / R100 / RC3 四条抑制判据叠加之地，单列为下一轮目标；
+          已是 Round 07 / R4-H / R100 / RC3 四条抑制判据叠加之地，单列为下一轮目标（Round 19 结案：R19-A 只给 `[R3-Continue]` 补发射加既有谓词作第⑤条末判据，该 pyc 实测 `single` `ok 9/9 100.00%`、严格尺子 `OK 9/9`）；
           ②`r18a_05`（for 循环内 elif 臂）补丁前后都 MATCH，新守卫未覆盖该形状；
           ③9 文件既有漂移族（`to_pd_result`×3、`resist_api`、`flytools`、`quote_handler`、
           `real_quote`、`market_time`、`json_persistance`）仍会在闸门每轮触发 WORSENED 回滚；
@@ -348,3 +348,67 @@
           ⑤SubTask 17.9 其余项（`strategy`、`calexrights_func`、`handlers`、`trade_live_broker`、
           `r16a_05`、`r15a_08`/`r15a_09`、`r17a_25`、T1/T2 then 臂顺序、SubTask 13.4、Task 5）照旧
 
+- [x] Task 19: Round 19 — 给 `_if_generate_normal` `[R3-Continue]` 分支终结边补发射加第⑤条末判据
+      `not self._if_false_path_is_loop_iteration(region)`，修「if 是循环体末条语句时，臂尾自然迭代
+      回边被再补一条源码级 `continue`」（R19-A，翻正 `IQCommon/util/user_info_utils.pyc` 9/9）
+  - [x] SubTask 19.0: 语料不新增条目——`pyc_index.json` 条目 402、每条 `function_count` 一律不变，
+          本轮只按工具实测更新受影响条目
+  - [x] SubTask 19.1: 承接 SubTask 18.9①：`remove_lock_files` 的多余 `continue` 用 `sys.settrace`
+          在 HEAD `26e330ca` 实测锁定发射行 `_if_generate_normal:16896`；该守卫的四条判据
+          （`then_stmts` 非空 / `_current_loop` 存在 / `merge_block is header` / then 末块
+          `JUMP_BACKWARD` 直达 merge）只看 then 臂自身，不看该 if 是否循环体末条语句；同层
+          `_process_if_blocks` 的 CONTINUE 角色抑制（`_r100_suppress:20702`）已用既有同层谓词
+          `_if_false_path_is_loop_iteration` 得出「不发射」⇒ 同层同结构结论互斥
+          （Round 17 删判据④所用的同一标准）
+  - [x] SubTask 19.2: 该谓词在四个真实发射点上的取值实测（`D:/Temp/r19/probes/r19_where.py`）：
+          目标 `remove_lock_files`（`else_blocks` 空、假出口 blk@712 是单条
+          `JUMP_BACKWARD→420` 纯回边）谓词 True ⇒ 补发多余；`get_vip_user_info`
+          （`else_blocks` 4 块）、`local_finance::get_local_valuation_factors`（假出口 blk@544
+          有 LOAD_GLOBAL/LOAD_ATTR/CALL/POP_TOP 后才 `JUMP_BACKWARD@590`）、
+          `plugin_system_fly_basicdata/basic_data_source::get_security_info`（假出口 blk@254 含
+          BUILD_MAP/STORE_SUBSCR）谓词 False ⇒ `continue` 必须留；后两个正是宽规则会改坏的形状
+  - [x] SubTask 19.3: 四个候选在仓库外用镜像核做全量逐函数 A/B，否掉三个
+          （`git archive` 到 `D:/Temp/r19/mirror/`，402 条目重生成后跑严格尺子，
+          `D:/Temp/r19/probes/{r19_par.py,r19_sum.py}`）：`cand_a`（整段删 `[R3-Continue]`）
+          improved 2 / **broken 5**（净 −3：`IQCommon/data/basic_data_source`、
+          `IQCommon/data/local_finance`、`plugin_system_fly_basicdata/basic_data_source`、
+          `trade_live_broker`、`fly/data/quote`）；`cand_g`（另加 28 行新谓词「臂尾块由本区域块
+          裸 fall-through 进入」）2/2 净 0；`cand_e`（⑤＋`cand_g`）1/0 与 `cand_d`（只加⑤）1/0
+          逐条相同 ⇒ 那 28 行是纯冗余，取 `cand_d`：复用同层既有谓词、不新建判据、
+          不看名字/常量/偏移。教训（已写进 `ANALYSIS.md` §三）：`cand_a` 在 39 项电池上
+          19 个负对照一个没破却在全量上净亏 3 ⇒ 电池绿不等于无回退，门禁必须含全量逐函数 A/B
+  - [x] SubTask 19.4: 测试工程师交付 39 个最小复现 `test_repros/round19_cont/`
+          （20 锚点：9 修掉 / 4 残留 / 7 `UNCONFIRMED`；另 19 个负对照）+ `run_all.py` + `ANALYSIS.md`
+          （双世界逐条实测表）；其交付的 EXPECT 表复现名与实际文件名不符（首跑
+          `UNEXPECTED=29`），按两世界实测整表重写
+  - [x] SubTask 19.5: 落地 `D:/Temp/r19/fix/r19a_patch.py` + `r19a_fixup.py`（字节级 assert：
+          BOM / 锚点唯一 / 纯 CRLF / `ast.parse` / 拒绝二次应用）⇒ `region_ast_generator.py`
+          `+38/−1`，其中**代码只有 1 行**（新末判据，原第④条的 `):` 移到新行末），其余 37 行是
+          `[R19-A 修复]` 判据注释（识别条件／归约方式／唯一归属·结构结论一致／反编译流程／
+          保留理由）；LF 归一 sha `a107457c5215daaf → e7ab6a8d436603a5`，`48189 → 48226` 行
+  - [x] SubTask 19.6: mandate 门禁顺序全绿：单点 `user_info_utils.pyc` `partial 8/9` → `single`
+          报 `decompile_status: ok` `9/9 100.00%`、严格尺子 `OK 9/9` → `quotation.pyc` 单验
+          `partial 142/143 99.30%` 与 Round 18 收尾时逐字相同、产物不被改写 →
+          全量产物门（402 条目分 8 片）`CLEAN 335 / UNCHANGED 58 / WORSENED(rolled back) 8 /
+          REGRESSION(rolled back) 1`，9 项异常与 Round 18 的 9 项逐文件、逐数值相同
+          ⇒ 本轮零新增回退，回滚全部生效
+  - [x] SubTask 19.7: 电池：`round19_cont` 39 项 `--strict` 退出码 0（补丁前
+          `MISMATCH=13 MATCH=26 NOT-REPRODUCED=7` → 补丁后 `MISMATCH=4 MATCH=35`，
+          `ERROR=0 UNEXPECTED=0`；镜像核 `cand_d` 复跑逐项判定与落地核相同）；既有 9 套
+          （round13 / 13b / 14 / 14_join / 15_arm / 16_arm / 16_sink / 17_arm / 18_arm）在新核上
+          全部退出码 0、UNEXPECTED=0、ERROR=0，唯一变化是 `round13::r13_02_spurious_continue_loop`
+          由「复现缺陷」变「已修」（EXPECT 改标 `SENTINEL`）——同族缺陷 Round 13 就记过形状
+  - [x] SubTask 19.8: 唯一被核改写的产物 `user_info_utilsOK.py`（`1 file changed, 1 deletion(-)`）
+          用 `single` 重生成后与磁盘产物逐字节相同（`cmp`）⇒ 无二次漂移；落地后 `git status`
+          只有核、`pyc_index.json`（1 条目 `partial 0.888… → ok 1.0 matched 9`）、该产物与
+          `test_repros/` 两处标注 ⇒ R19-A 对全语料产物的净影响就是那一条 `continue`
+  - [ ] SubTask 19.9: 本轮未完项移交：①`round19_cont` 残留 4 锚点（04 臂尾 `try/finally`、
+          05 `try/except/else`、12 臂尾嵌套 `while`、14 `elif` 臂尾 `try`）实测走另一条发射路径，
+          另 7 项 `UNCONFIRMED` 本轮构造不出；②`IQCommon/util/trade_info_utils.pyc`（35/36）的
+          同族多余 `continue` 只有宽规则能修，宽规则全量净 −3/0，本轮如实放弃，需另找判据；
+          ③9 文件既有产物/核漂移族（`to_pd_result`×3、`resist_api`、`flytools`、`quote_handler`、
+          `real_quote`、`market_time`、`json_persistance`）仍每轮触发 WORSENED 回滚；
+          ④quotation 残留 `change_his_to_forward` seq_len +1、`get_trend` 跳转终点；
+          ⑤`r18a_05`、SubTask 17.9 其余项（`strategy`、`calexrights_func`、`handlers`、
+          `trade_live_broker`、`r16a_05`、`r15a_08`/`r15a_09`、`r17a_25`、T1/T2 then 臂顺序、
+          SubTask 13.4、Task 5）照旧

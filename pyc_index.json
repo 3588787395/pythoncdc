@@ -744,13 +744,13 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/user_info_utils.pyc",
     "size": 11872,
     "function_count": 9,
-    "decompile_status": "partial",
-    "bytecode_match_rate": 0.8888888888888888,
+    "decompile_status": "ok",
+    "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
     "last_tested_round": 10,
     "mismatch_count": 2,
     "status": "pending",
-    "matched_functions": 8,
+    "matched_functions": 9,
     "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
   },
   {

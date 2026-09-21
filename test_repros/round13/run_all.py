@@ -48,7 +48,7 @@ BUILD.mkdir(parents=True, exist_ok=True)
 #                实测必须为 MATCH，一旦回到 MISMATCH 即为回归。
 EXPECT = {
     'r13_01_return_becomes_break': 'SENTINEL',
-    'r13_02_spurious_continue_loop': 'MISMATCH',
+    'r13_02_spurious_continue_loop': 'SENTINEL',  # fixed by R19-A
     'r13_03_join_tail_sunk_after_loop': 'MISMATCH',
     'r13_04_join_tail_sunk_into_branch': 'MISMATCH',
     'r13_05_dict_two_comprehensions': 'SENTINEL',

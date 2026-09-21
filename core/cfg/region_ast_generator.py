@@ -16874,10 +16874,47 @@ AST 映射规则:
             # is_ST_stock_real 的 result[i]=False）时，直达循环头的分支终结
             # 边若不发射 Continue，重编译会 fall-through 进 elif/后续语句
             # （result[i]=True 分支丢 continue，True 被覆盖为 False）。
+            # [R19-A 修复] 同一结构的反向结论收口：当 if 的假出口本身就是循环
+            # 的自然迭代回边时，上述补发射必须跳过。
+            # 识别条件：原有四条判据（① then_stmts 非空；② _current_loop 存在；
+            #   ③ region.merge_block 非空且 is 当前循环 header；④ then 分支末块
+            #   以 JUMP_BACKWARD 直达 merge）全部成立，且新增第⑤条末判据
+            #   `not self._if_false_path_is_loop_iteration(region)`——即该 if 的
+            #   条件假出口**不是**指向循环 header 的纯回边。
+            # 归约方式：第⑤条不成立（谓词为真）时 if 是循环体末条语句——
+            #   else_blocks 为空、条件入口的非 then 后继是纯 JUMP_BACKWARD→
+            #   header 块——臂尾回边已由 `for` 语句重编译自然再生；再补一条
+            #   源码级 continue 会多编出一个 JUMP_BACKWARD ⇒ strict [seq_len] +1。
+            # 唯一归属/结构结论一致：本判据与 _process_if_blocks 中 CONTINUE
+            #   角色块抑制（_r100_suppress，本核 :20702）所用的是**同一个**同层
+            #   谓词 _if_false_path_is_loop_iteration（本核 :18789），不新建判据；
+            #   接进来后两条路径对同一结构不可能再给出相反结论（上层已按
+            #   「末条语句」抑制、本处却又按「终结边直达 header」补发）。
+            # 反编译流程（HEAD 26e330ca 未打补丁核实测，sys.settrace 抓本函数
+            #   发射行 :16933 真实命中）：
+            #   · IQCommon/util/user_info_utils.pyc::remove_lock_files——
+            #     entry@422、merge@420 is header@420、else_blocks 为空、then 末块
+            #     blk@572 仅 JUMP_BACKWARD→420、假出口 blk@712 亦为纯回边
+            #     （单条 JUMP_BACKWARD→420）⇒ 谓词 **True** ⇒ 本处补发的 continue
+            #     是多余的（唯一缺陷 [seq_len] orig=96 decomp=97，official 8/9→9/9）。
+            #   · 同文件 get_vip_user_info：else_blocks 有 4 块非空 ⇒ 谓词 **False**。
+            #   · IQCommon/data/local_finance.pyc::get_local_valuation_factors：
+            #     假出口 blk@544 为 LOAD_GLOBAL/LOAD_ATTR/CALL/POP_TOP 后才
+            #     JUMP_BACKWARD@590 的用户语句块 ⇒ 谓词 **False** ⇒ continue 必须留。
+            #   · IQData/plugins/plugin_system_fly_basicdata/basic_data_source.pyc
+            #     ::get_security_info：假出口 blk@254 含 BUILD_MAP/STORE_SUBSCR
+            #     后才 JUMP_BACKWARD@264 ⇒ 谓词 **False** ⇒ continue 必须留。
+            # 保留理由：本规则不可整体删除——is_ST_stock_real 那类「if/elif 链
+            #   后还有后续语句」的形状依赖本次补发；实测删掉整个 [R3-Continue]
+            #   块在 5 个真实文件上净 -3 函数（basic_data_source、local_finance、
+            #   plugin_system_fly_basicdata/basic_data_source、trade_live_broker、
+            #   fly/data/quote），再加 28 行同义「落空」判据净收益 0；只补第⑤条
+            #   判据净 +1 函数（全语料 402 项 improved=1、broken=0）。
             if (then_stmts
                     and self._current_loop is not None
                     and getattr(region, 'merge_block', None) is not None
-                    and region.merge_block is getattr(self._current_loop, 'header_block', None)):
+                    and region.merge_block is getattr(self._current_loop, 'header_block', None)
+                    and not self._if_false_path_is_loop_iteration(region)):
                 _r3t_blocks = sorted((region.then_blocks or []),
                                      key=lambda b: b.start_offset)
                 if _r3t_blocks:
