@@ -1,0 +1,3 @@
+site-packages/IQData/manager/plugin_manager.pyc
+site-packages/IQEngine/core/plugin_manager.pyc
+site-packages/fly/common/user_error.pyc

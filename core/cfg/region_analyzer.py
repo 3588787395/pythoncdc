@@ -17861,9 +17861,9 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
         尾随语句」结构，非 elif 链。返回 None 阻止 elif 链构建，调用方改用原
         else_blocks 构建 IF_THEN_ELSE（嵌套 if 作子 IfRegion、尾随语句作 else
         体内兄弟节点）。全部满足才返回 None：①inner_merge 非 None ②merge_ 非
-        None ③inner_merge ≠ merge_ ④外层 else 不在循环内（循环内 break/continue
-        经 R24-A 修正可合法不等）⑤inner_merge 非终态块（RETURN/RAISE/RERAISE，
-        终态汇聚属共享退出非尾随）。break 目标块（R21-C4）保留在 boundary_stop
+        None ③inner_merge ≠ merge_ ④inner_merge 非终态块（RETURN/RAISE/RERAISE，
+        终态汇聚属共享退出非尾随）。原判据「外层 else 不在循环内」由 Round 17-A
+        移除（循环归属非结构差异，真 elif 链已被③排除）。break 目标块（R21-C4）保留在 boundary_stop
         中不归 elif body；elif body 内 try/with handler 块（R25-12）过滤排除。
 
         **嵌套处理**
@@ -18736,16 +18736,24 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
             #      干净 elif 链中两路分支均跳/落到外层 merge，inner_merge==merge_；
             #      R29/R30-6/R30-7 修正亦将 inner_merge 置为 merge_ 或
             #      inner_else_succ(=merge_)，不会误触发）；
-            #   ④ 外层 else 不在循环内（循环内 break/continue 经 R24-A 修正，
-            #      inner_merge 可能合法地不等于 merge_，不予干预）；
+            #   ④（Round 17-A 移除）原「外层 else 不在循环内」豁免：循环归属不是
+            #      「elif 链」与「else 内嵌套 if + 尾随语句」的结构差异——真 elif 链的
+            #      两路分支必然汇聚于外层 merge（判据③ 已排除），故该豁免对合法
+            #      链是冗余的，对 loop 内的「嵌套 if + 尾随」结构却是漏检：else 臂
+            #      被建成 IF_ELIF_CHAIN 后，尾随语句被 _elif_struct_blocks 过滤剔出并
+            #      外提，then 臂末尾 JUMP_FORWARD 落点从外层 merge 偏移到尾随语句入口
+            #      （PluginManager.set_engine：IQData/manager 9/10、IQEngine/core 8/9）。
+            #      实测代价：406 pyc 语料 FIXED=7 文件/9 函数、BROKEN=0、CHANGED=0；
+            #      15 复现电池 8 MISMATCH→0、5 个负对照不误伤（含循环内的 break/continue
+            #      尾随形状 r16s_10/11）。保留判据⑤（inner_merge 非终态块）继续
+            #      排除共享退出场景。
             #   ⑤ inner_merge 非终态块（RETURN/RAISE/RERAISE）——终态汇聚属
             #      共享退出，非尾随语句。
             # 返回 None 后，调用方用原 else_blocks 构建 IF_THEN_ELSE：嵌套 if
             # 作为子 IfRegion、尾随语句作为 else 体内兄弟子节点（子 LoopRegion
             # 或 BASIC 块），每块唯一归属，符合原则 2/3。
             if (inner_merge is not None and merge_ is not None
-                    and inner_merge is not merge_
-                    and self._find_enclosing_loop(first_else) is None):
+                    and inner_merge is not merge_):
                 _d2_last = inner_merge.get_last_instruction()
                 _d2_terminal = (_d2_last is not None
                                     and _d2_last.opname in (

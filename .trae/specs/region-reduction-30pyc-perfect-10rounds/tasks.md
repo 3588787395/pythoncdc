@@ -244,3 +244,66 @@
           与 R16-A 正交：15 复现在裸核心与播种下逐条一致；诊断 agent 耗尽 150 轮，电池完整但无 ANALYSIS.md）；
           ③T1/T2 then 臂收集顺序整体重排（影响面未测）；④`r15a_08` `guard_clause_prefix_end`、
           `r15a_09` body-sequence 重复发射；⑤SubTask 13.3/13.4 与 Task 5 遗留照旧
+- [x] Task 17: Round 17 — 移除 `_build_elif_region` D2 守卫的第④判据（循环豁免），
+      修「loop 内 else 臂嵌套 if + 尾随语句被展平成 elif 链」（R17-A，翻转 plugin_manager 孪生对 + user_error）
+  - [x] SubTask 17.0: 记账口径固定为 `pyc_index.json` 的 **402 个 pyc**（与 `spec.md`
+          「当前402个pyc文件」一致）：只按条目字段记账，本轮条目数与每条 `function_count`
+          逐项零变化，允许变化的只有 `matched_functions` / `decompile_status`
+  - [x] SubTask 17.1: 承接 SubTask 16.8②：`round16_sink` 15 复现在补丁前实测 MISMATCH=8 / MATCH=7，
+          8 个 anchor 全部以 `target_diff`（then 臂 `JUMP_FORWARD` 落点漂移）复现；关键分界对照
+          `r16s_08`（循环外，VETO(d2)）与 `r16s_04`（循环内，被④豁免而展平）
+          ⇒ 判据④是唯一分界，缺陷签名与真源 `PluginManager.set_engine` 同族
+  - [x] SubTask 17.2: 根因判定为**跨层次启发式豁免**：真 elif 链的嵌套汇聚点必等于外层汇聚点，
+          已被判据③排除；④按「外层是否在循环内」对同一结构给出两套互斥结论，违反
+          「一次正确 / 同层同结构同结论」⇒ 修法为删除④（非新增规则），⑤继续排除终态共享退出
+          （`rounds/round17/arm-design.md` §1、`fixes.md` §二）
+  - [x] SubTask 17.3: 落地前仓库零写入 A/B（就地方法替换 harness `D:/Temp/r17/h.py`）：
+          `round16_sink` 电池 8 MISMATCH→0、5 负对照两臂均 MATCH；402 条语料逐函数比对
+          修复=7 文件/9 缺陷函数、破坏=0、签名变化仅 `strategy.pyc`（缺陷数 2→2）；
+          `quotation.pyc` 缺陷集合两臂逐名相同（中性）
+  - [x] SubTask 17.4: 工具链事实纠正：以 `importlib` 模块级替换播种 `core.cfg.region_analyzer`
+          会打断类身份（`isinstance` 失效）使产物整体塌缩，**连逐字节相同的 HEAD 副本**都把
+          `round16_sink` MISMATCH 从 8 扰动到 13 ⇒ 本轮所有变体测量改用
+          `inspect.getsource → 行级改写 → exec(compile(…), dict(RA.__dict__)) → setattr` 就地替换
+  - [x] SubTask 17.5: 落地 `D:/Temp/r17/r17a_patch.py`（3 hunk 纯 assert 字节级：锚点唯一 / 无 BOM /
+          纯 CRLF / `ast.parse` / 拒绝二次应用）⇒ `region_analyzer.py`
+          `110bf739bde62846 → 255d53d3c8707a07`（26643→26651 行，+9/−1；唯一代码改动为删④，
+          其余为判据注释块与 docstring 同步改写）；`region_ast_generator.py` 本轮零改动
+  - [x] SubTask 17.6: mandate 门禁顺序全绿：单点 **FLIPPED-CLEAN=3**
+          （`IQData/manager/plugin_manager` 9/10→10/10、`IQEngine/core/plugin_manager` 8/9→9/9、
+          `fly/common/user_error` 2/4→4/4）→ `quotation.pyc` 单验（`WORSENED(rolled back)`
+          148/150→再生成 147/150，自动回滚；与 R16 同判 ⇒ SubTask 13.3 产物/核漂移，非本轮引入）
+          → 全量产物门 `CLEAN 330→333 / UNCHANGED 64→57 / IMPROVED 0→4 / WORSENED 9 /
+          REGRESSION 2 / NO-OKPY 1`（该门扫的是我临时清单 406 项 = 索引 402 + 4 个非语料 pyc：
+          `IQCommon/api/klinedataOK.pyc`、`IQCommon/api/klinedataOK_check.pyc`、
+          `fly/dumpload/_load_algo_recomp.pyc`、`fly/simtradding/ptradeAccountOK_marker_test.pyc`，
+          均为 `*OK.py`/校验脚本二次编译的产物，不在索引内），异常文件集合与 R16 **逐个相同**
+          （11+1）⇒ 零新增回退
+  - [x] SubTask 17.7: 成果逐条目记账（`pyc_index.json`，改动全落在本轮重测的 7 条）：
+          `decompile_status` ok **353→356**、partial **49→46**；`matched_functions`
+          `IQData/manager/plugin_manager` 9→10、`IQEngine/core/plugin_manager` 8→9、
+          `fly/common/user_error` 2→4、`IQCommon/logger/handlers` 16→17、
+          `IQEngine/plugins/plugin_system_trade/trade_live_broker` 100→103、
+          `calexrights_func` 孪生两条 8→8（缺陷减少但匹配数不变）。
+          `scripts/pyc_batch_verify.py single` 对三个翻转文件报 `decompile_status: ok` /
+          `match_rate 100.00%`；其 `stats` 即读本索引，与上一行同源，不得再叠加别的分母
+  - [x] SubTask 17.8: 电池与索引收尾：七套电池 `--strict` 退出码 0（UNEXPECTED/ERROR 全 0）；
+          `round16_sink` 8 个 anchor 回填 `MISMATCH→SENTINEL`；本轮新增 `test_repros/round17_arm/`
+          （26 复现 + `run_all.py` + `ANALYSIS.md`：for/while × 赋值/调用/for/while/try/with/
+          return/break/continue 尾随、内层 elif 链、两层嵌套、module/class 作用域、BoolOp 变体、
+          6 个负对照）——补丁前 MISMATCH=19 → 补丁后 MISMATCH=1（残留 `r17a_25` 即判据⑤终态
+          共享退出场景），`--strict` 退出码 0；`pyc_index.json`
+          `e7c3724b7b007f01 → 8af93efb770d8db6`（30 行改动全落在上述 7 条：3 项转 ok、
+          2 项字段复算、2 项补 note；另将 `single` 因自身 60 s 超时把 `fly/data/quotation.pyc`
+          写成的 `failed`/`0.0`/`ok_py_generated:false`+`error` 按 HEAD 逐字节回滚——磁盘上
+          `quotationOK.py` 仍在，该写入反映的是工具超时而非产物状态）
+  - [ ] SubTask 17.9: 本轮未完项移交：①`strategy.pyc` `tick_worker_thread` 签名 `seq_diff→seq_len`
+          （268 vs 247，缺陷数不变）；②`calexrights_func` 孪生对残留 1 个 `target_diff`、
+          `handlers` 残留 2、`trade_live_broker` 残留 26；③SubTask 13.3 产物/核漂移（quotation 等
+          11 项每轮 WORSENED 回滚，根因在生成层）；④`r16a_05`、`r15a_08`、`r15a_09`、T1/T2
+          then 臂收集顺序；⑤SubTask 13.4 与 Task 5 遗留照旧；⑥Round 13–16 的 tasks.md 记账请
+          统一改回逐条目口径（分母混用见 SubTask 17.0）；⑦`pyc_batch_verify.py single` 对
+          `fly/data/quotation.pyc` 必然 60 s 超时且超时会把该条目改写成 `failed`——需要么提高
+          超时、么禁用超时写回；⑧site-packages 内那 4 个非语料 pyc 是否清理由用户决定。
+          另：全仓 `_find_enclosing_loop` 其余 5 处调用（`:2264`、`:16623`、`:16661`、`:17047`、
+          `:18458`）经复核均为**正向**用途（循环内 merge 重算 / 回边继承），无同类「按循环豁免」残留

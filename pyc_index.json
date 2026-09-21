@@ -355,13 +355,13 @@
     "size": 15042,
     "function_count": 18,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.8888888888888888,
+    "bytecode_match_rate": 0.9444444444444444,
     "ok_py_generated": true,
-    "last_tested_round": 10,
+    "last_tested_round": 17,
     "mismatch_count": 1,
     "status": "pending",
-    "matched_functions": 16,
-    "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
+    "matched_functions": 17,
+    "note": "R17-A improved matched_functions 16 -> 17 (bytecode_diff of the project tool). Index was stale at round 10 with bytecode_match_rate and mismatch_count mutually inconsistent; per-function recheck 27/30 -> 28/30"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/manager/__init__.pyc",
@@ -1190,14 +1190,13 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/manager/plugin_manager.pyc",
     "size": 7477,
     "function_count": 10,
-    "decompile_status": "partial",
-    "bytecode_match_rate": 0.9,
+    "decompile_status": "ok",
+    "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 10,
-    "mismatch_count": 1,
+    "last_tested_round": 17,
     "status": "pending",
-    "matched_functions": 9,
-    "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
+    "matched_functions": 10,
+    "note": "R17-A flip: pyc_batch_verify.py single => ok, 10/10, match_rate 100.00%. Root cause was criterion(4) (outer-else-not-in-loop exemption) of the D2 guard in _build_elif_region; per-function recheck also clean"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/manager/trading_day_manager.pyc",
@@ -1550,9 +1549,10 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 10,
+    "last_tested_round": 17,
     "status": "pending",
-    "matched_functions": 8
+    "matched_functions": 8,
+    "note": "R17-A improved: per-function recheck 6/8 -> 7/8, one jump-target-drift defect remains; bytecode_diff still reports 8/8, so decompile_status stays ok (the tool-verified number is unchanged, not a new claim)"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/data_source_func.pyc",
@@ -1841,9 +1841,10 @@
     "decompile_status": "ok",
     "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 10,
+    "last_tested_round": 17,
     "status": "pending",
-    "matched_functions": 8
+    "matched_functions": 8,
+    "note": "R17-A improved: per-function recheck 6/8 -> 7/8 (duplicate-source twin of IQData/plugins/plugin_system_fly_basicdata/calexrights_func.pyc); bytecode_diff still 8/8"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQData/utils/common_func.pyc",
@@ -2344,14 +2345,13 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/plugin_manager.pyc",
     "size": 7548,
     "function_count": 9,
-    "decompile_status": "partial",
-    "bytecode_match_rate": 0.8888888888888888,
+    "decompile_status": "ok",
+    "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 10,
-    "mismatch_count": 1,
+    "last_tested_round": 17,
     "status": "pending",
-    "matched_functions": 8,
-    "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
+    "matched_functions": 9,
+    "note": "R17-A flip: pyc_batch_verify.py single => ok, 9/9, match_rate 100.00%. Duplicate-source twin of IQData/manager/plugin_manager.pyc, same D2 criterion(4) removal"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/slippage.pyc",
@@ -3654,12 +3654,13 @@
     "size": 212327,
     "function_count": 119,
     "decompile_status": "partial",
-    "bytecode_match_rate": 0.8403361344537815,
+    "bytecode_match_rate": 0.865546218487395,
     "ok_py_generated": true,
-    "last_tested_round": 10,
-    "mismatch_count": 27,
+    "last_tested_round": 17,
+    "mismatch_count": 16,
     "status": "pending",
-    "matched_functions": 100
+    "matched_functions": 103,
+    "note": "R17-A improved matched_functions 100 -> 103 (bytecode_diff); mismatch_count recomputed as total-matched per schema (27 -> 16); per-function recheck 95/123 -> 97/123"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade_account/__init__.pyc",
@@ -4210,14 +4211,13 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/fly/common/user_error.pyc",
     "size": 5669,
     "function_count": 4,
-    "decompile_status": "partial",
-    "bytecode_match_rate": 0.5,
+    "decompile_status": "ok",
+    "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
-    "last_tested_round": 10,
-    "mismatch_count": 1,
+    "last_tested_round": 17,
     "status": "pending",
-    "matched_functions": 2,
-    "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
+    "matched_functions": 4,
+    "note": "R17-A flip: pyc_batch_verify.py single => ok, 4/4, match_rate 100.00%. Previously the same loop-nested else-arm flattening dropped/duplicated 8 instructions per function"
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/fly/data/__init__.pyc",

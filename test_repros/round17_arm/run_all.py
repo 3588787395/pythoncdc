@@ -1,9 +1,10 @@
 # -*- coding: utf-8 -*-
-"""Round 16-S 复现电池（测试工程师交付物）：elif 链展平吞掉「else 臂嵌套 if + 尾随语句」。
+"""Round 17-A 复现电池（测试工程师交付物）：D2 守卫判据④（「外层 else 不在循环内」豁免）
+被删除后，loop 内「else 臂 = 嵌套 if + 尾随语句」形状不再被误建成 IF_ELIF_CHAIN。
 
-对 test_repros/round16_sink/r16s_NN_*.py 每个最小复现源文件：
-  1. 复制到 D:/Temp/r16sink/build/ 并编译成 .pyc（绝不落在仓库里）；
-  2. 用本项目反编译器 decompile_pyc() 反编译该 .pyc，输出仍写到 D:/Temp/r16sink/build/；
+对 test_repros/round17_arm/r17a_NN_*.py 每个最小复现源文件：
+  1. 复制到 D:/Temp/r17arm/build/ 并编译成 .pyc（绝不落在仓库里）；
+  2. 用本项目反编译器 decompile_pyc() 反编译该 .pyc，输出仍写到 D:/Temp/r17arm/build/；
   3. 把反编译结果再编译成 .pyc；
   4. 用 **唯一真值尺子** _r10_strict_check.strict_compare 逐个限定名比较，
      报告 MATCH / MISMATCH。
@@ -11,34 +12,31 @@
 判定完全委托给 _r10_strict_check（仅 import，不复制、不修改）。
 
 用法：
-  PYTHONIOENCODING=utf-8 python test_repros/round16_sink/run_all.py
-  PYTHONIOENCODING=utf-8 python test_repros/round16_sink/run_all.py 01 08
-  PYTHONIOENCODING=utf-8 python test_repros/round16_sink/run_all.py --show-diff
-  PYTHONIOENCODING=utf-8 python test_repros/round16_sink/run_all.py --strict
+  PYTHONIOENCODING=utf-8 python test_repros/round17_arm/run_all.py
+  PYTHONIOENCODING=utf-8 python test_repros/round17_arm/run_all.py 01 08
+  PYTHONIOENCODING=utf-8 python test_repros/round17_arm/run_all.py --show-diff
+  PYTHONIOENCODING=utf-8 python test_repros/round17_arm/run_all.py --strict
 
 EXPECT 四态（沿用 round13/run_all.py 语义）：
   MISMATCH   = 缺陷复现（实测必须 MISMATCH）
   MATCH      = 负对照（实测必须 MATCH，用于隔离触发成分）
   SENTINEL   = 曾复现、已被修复；实测必须 MATCH，否则记 REGRESSED
   UNCONFIRMED= 目标缺陷真实存在但该形状未复现；实测应为 MATCH，不计失败
-首轮实测（当前核 region_analyzer=110bf739bde62846 / region_ast_generator=d07996aaa20d4665）：
-  repros=15  MISMATCH=8  MATCH=7  ERROR=0  UNEXPECTED=0  NOT-REPRODUCED=2
-  8 个 anchor（01/02/03/04/05/10/11/15）全部以 **target_diff｜JUMP 终点漂移** 复现，
-  与 IQData/IQEngine plugin_manager.PluginManager.set_engine 的缺陷签名同族。
-  5 个负对照（06/07/08/09/12）实测 MATCH，逐一隔离触发成分；其中 08 与 04 只差
-  「是否在循环内」，实测 08 走 VETO(d2)、04 走 FLATTEN-BY-LOOP-EXEMPTION(4)，
-  即判据④是唯一分界。
-  2 个 UNCONFIRMED：13（展平发生但两个终点指令签名逐字相同，尺子盲区）、
-  14（_if_arm_is_sink 目标形状，当前核上不产生任何缺陷）。
-  预测被否证 1 例：13 原预测 MISMATCH。
-交叉验证（同一批源文件、仅把 region_analyzer._build_elif_region 的判据④去掉，
-  在 D:/Temp/r16sink/batt_noD2loop 下重跑）：MISMATCH=0 / MATCH=15，
-  即 8 个 anchor 全部翻正、5 个负对照无一被误伤。
-落地后回填（Round 17-A，region_analyzer=255d53d3c8707a07）：
-  上述 8 个 anchor 的 EXPECT 由 MISMATCH 改为 SENTINEL——判据④已从
-  _build_elif_region 的 D2 守卫中移除，实测 MISMATCH=0 / MATCH=15 / UNEXPECTED=0，
-  5 个负对照（06/07/08/09/12）仍 MATCH，无一被误伤。
-根因定位见同目录 ANALYSIS.md。
+首轮实测（post-patch，当前核 region_analyzer=255d53d3c8707a07 /
+  region_ast_generator=0fc591a8433e7032）：
+  repros=26  MISMATCH=1  MATCH=25  ERROR=0  UNEXPECTED=0  NOT-REPRODUCED=1
+  唯一的 MISMATCH 是 25（判据⑤形状），它在**两个世界**里以同一签名
+  （seq_len orig=40 decomp=39，`return` 被并入臂内的另一族既有缺陷）失败，
+  与判据④无关 ⇒ 按「post-patch 仍缺陷」规则标 MISMATCH。
+交叉验证（同一批源文件、仅把判据④塞回
+  `region_analyzer._build_elif_region` 的 D2 守卫，**原地换方法**，
+  见 D:/Temp/r17arm/measure.py）：pre-patch MISMATCH=19 / MATCH=7，
+  即 18 个锚点（01-18）全部 MISMATCH→MATCH，其中 17 个以
+  **target_diff｜JUMP 终点漂移** 复现（then/elif 臂的 JUMP_FORWARD 从外层 merge
+  漂到被外提的尾随语句入口），15 号（else 臂内嵌套 if 无 else）以 seq_len 复现
+  （外提后多发射一条指令），
+  6 个负对照（20/21/22/23/24/26）与 1 个盲区探针（27）无一被误伤。
+逐形状的区域层数值（block/first_else/inner_merge/merge_/inloop/term）见 ANALYSIS.md。
 """
 import py_compile
 import shutil
@@ -55,25 +53,36 @@ from _r10_strict_check import _load_map, _compile_map, strict_compare, filtered 
 
 from pycdc import decompile_pyc  # noqa: E402
 
-BUILD = Path(r'D:/Temp/r16sink/build')
+BUILD = Path(r'D:/Temp/r17arm/build')
 BUILD.mkdir(parents=True, exist_ok=True)
 
 EXPECT = {
-    'r16s_01_anchor_plugin_manager_shape': 'SENTINEL',
-    'r16s_02_anchor_module_scope': 'SENTINEL',
-    'r16s_03_anchor_no_boolop': 'SENTINEL',
-    'r16s_04_anchor_minimal_two_arm_loop': 'SENTINEL',
-    'r16s_05_anchor_while_instead_of_for': 'SENTINEL',
-    'r16s_06_neg_nested_if_no_tail': 'MATCH',
-    'r16s_07_neg_tail_after_chain': 'MATCH',
-    'r16s_08_neg_no_enclosing_loop': 'MATCH',
-    'r16s_09_neg_nested_if_in_then_arm': 'MATCH',
-    'r16s_10_anchor_tail_with_control_exit': 'SENTINEL',
-    'r16s_11_anchor_deep_outer_chain': 'SENTINEL',
-    'r16s_12_neg_no_statement_after_chain': 'MATCH',
-    'r16s_13_probe_tail_with_try_except': 'UNCONFIRMED',
-    'r16s_14_unconf_sink_arm_then_return': 'UNCONFIRMED',
-    'r16s_15_anchor_class_method_scope': 'SENTINEL',
+    'r17a_01_anchor_for_assign_tail': 'SENTINEL',
+    'r17a_02_anchor_for_call_tail': 'SENTINEL',
+    'r17a_03_anchor_for_for_tail': 'SENTINEL',
+    'r17a_04_anchor_for_while_tail': 'SENTINEL',
+    'r17a_05_anchor_for_try_tail': 'SENTINEL',
+    'r17a_06_anchor_for_with_tail': 'SENTINEL',
+    'r17a_07_anchor_for_return_tail': 'SENTINEL',
+    'r17a_08_anchor_for_break_tail': 'SENTINEL',
+    'r17a_09_anchor_for_continue_tail': 'SENTINEL',
+    'r17a_10_anchor_while_boolop': 'SENTINEL',
+    'r17a_11_anchor_inner_elif_chain': 'SENTINEL',
+    'r17a_12_anchor_two_level_deep': 'SENTINEL',
+    'r17a_13_anchor_module_scope': 'SENTINEL',
+    'r17a_14_anchor_class_method_plugin': 'SENTINEL',
+    'r17a_15_anchor_nested_if_then_only': 'SENTINEL',
+    'r17a_16_anchor_outer_or_boolop': 'SENTINEL',
+    'r17a_17_anchor_while_plain_cond': 'SENTINEL',
+    'r17a_18_anchor_nested_for_inner': 'SENTINEL',
+    'r17a_20_neg_clean_chain_in_loop': 'MATCH',
+    'r17a_21_neg_nested_if_no_tail': 'MATCH',
+    'r17a_22_neg_nested_if_in_then_arm': 'MATCH',
+    'r17a_23_neg_tail_after_chain': 'MATCH',
+    'r17a_24_neg_no_enclosing_loop': 'MATCH',
+    'r17a_25_probe_terminal_inner_merge': 'MISMATCH',
+    'r17a_26_neg_shared_exit_no_outer_merge': 'MATCH',
+    'r17a_27_unconf_merge_signature_equal': 'UNCONFIRMED',
 }
 
 
@@ -126,7 +135,7 @@ def main():
     sel = [x for x in sys.argv[1:] if x not in ('--show-diff', '--strict')]
     show = '--show-diff' in sys.argv
     strict = '--strict' in sys.argv
-    reps = sorted(HERE.glob('r16s_*.py'))
+    reps = sorted(HERE.glob('r17a_*.py'))
     if sel:
         reps = [r for r in reps if any(s in r.stem for s in sel)]
     n_bad = n_good = n_err = n_unexp = n_unconf = 0
