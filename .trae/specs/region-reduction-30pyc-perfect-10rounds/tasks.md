@@ -680,3 +680,57 @@
           `get_bar 86→90`、`decrypt_database_url 295→324`）与 `get_one_event 19→20`；
           ⑤`f89b85f2` 遗留退化（`trade_info_utils −2`、`custom_tools −1`）、quotation
           `change_his_to_forward`、`handlers.pyc _target 192→190`、SubTask 21.10 其余项照旧
+  - [x] SubTask 24.1: 目标池实测（HEAD `3b6143c4`）：40 partial 文件 / 111 个官方不匹配函数 /
+          Σdeficit 113，其中 **16 个文件 deficit=1**；按官方 `true_diffs` 排出最便宜九锚并逐个
+          镜核复测（head-vs-head 对照 SAME=9、产物零变化）。族划分：纯换位（等长）10 函数/10 文件，
+          其中 3 个文件全部缺陷等长 ⇒ 单点即可翻转（`data_proxy.get_bar` t=8、
+          `plugin_fly_data/__init__` t=19、`load_daily.<module>` t=19）。
+          **否证 Round 23 移交清单的暗示**：`orig LOAD_* vs decomp LOAD_CONST None`
+          「过早收尾」签名只有 3 个函数且两个首差后还有更大破坏 ⇒ 不构成一族
+  - [x] SubTask 24.2: 线 A（多余无条件跳转/块次序）候选**否证**：以 `get_bar` 为最清晰见证
+          （orig 76-83 的 `else: return BarData(…)` 尾块与 84-85 的 `return None` 尾块整体换位，
+          3 个 jump_diffs 是随之重接的 `POP_JUMP_FORWARD_IF_NONE` 目标 574→582）。据此提出的
+          候选在全量触发面实测 better=2 / equal=8 / **worse=14，打坏 11 个当时已 ok 文件** ⇒ 不落地
+  - [x] SubTask 24.3: 线 C 根因（同层判据缺失）：分析端 `IfRegion.can_be_ternary_header`
+          在 `chained_compare_blocks` 非空时**一律**返回 False，而生成端 `_detect_ternary_pattern`
+          的 Phase-7-D 分支恰以 `region.entry is block` 为键支持该形状 —— 两边判据不同层。
+          被拒后的降级路径是致命一环：三元赋值被拆成 if/else 语句，两臂纯值块的栈顶值被丢弃，
+          **赋值语句整体消失**（`data_count` 从未重绑 = 语义缺陷，不只是指令错位）
+  - [x] SubTask 24.4: 电池 `test_repros/round24_cc_ternary/`（7 case ＋ `run_all.py` 五道闸
+          G0 锚点上升 / G1 FIX 形状 FAIL→OK / G2 CONTROL 全核 OK / G3 无 OK→FAIL /
+          **G4 CONTROL+STABLE 产物 sha256 逐字节相同**）。`PRED_R24A_STABLE` 只承诺字节相同、
+          不承诺 OK：b03/c04/c06 在 HEAD 上就因另一族既有缺陷 FAIL（实测写进每个 case 的
+          `ACTUAL-HEAD` 行），把「必须 OK」写进这类用例等于谎报。
+          配套负结果：从**产物源码**回推的 6 个形状在 HEAD 镜核下全部官方 2/2 matched
+          （回推源码重编译后块布局不同 ⇒ 换位不复现），换位族最小复现必须从**字节码布局**构造；
+          且 `t1/t3` 产物含明显死代码仍被判 matched ⇒ 「官方 ok」≠ 产物良构，电池不被官方臂替代
+  - [x] SubTask 24.5: 选型 patchA → patchA4。patchA（`entry or chained_compare_blocks[-1]`）
+          在 58 文件触发面上过量发射；patchA3 与 patchA4 在该触发面**逐字节相同**
+          ⇒ 取最小判据 `block is self.entry and self.entry is not analyzer.cfg.entry_block`
+          （R24-A）。触发面读数：**2 文件产物变化、0 个当时已 ok 文件变化、Σmatched 1905→1906**
+  - [x] SubTask 24.6: 全量 402 双尺 A/B（都在镜核上跑，官方臂按**产物 sha256** 计数）：
+          官方 `Σmatched 5633 → 5634`、**402 个产物里只有 2 个变化**、0 个当时已 ok 文件被改动、0 错误；
+          严格 sweep 402/402：按 `textlen` 判定产物变化同为 2/402（`real_quote` sad 10→9 且
+          n_ok 37→38、`quote` sad 224→223），`Σn_ok 6004→6005`、`Σsad 1590→1588`、
+          **0 文件变差、0 文件 n_ok 变少** ⇒ 本轮不存在 Round 23 那种 Σ|Δ| 否决冲突
+  - [x] SubTask 24.7: 落地 `region_analyzer.py 59b70fa360d19ad0 → 6df13cdaf815920c`
+          （13 增 1 删，纯 CRLF 26793 行不变、无裸 LF、无 BOM；`region_ast_generator.py`
+          `a365c378e6a40fed` **未动** —— 分析端单文件修复）。spec 由实测镜核派生并自证
+          `spec(base)==候选字节`；落地后由工作树重建 `mirr/landed24` 逐文件哈希核对，
+          后续门禁全在落地字节上跑。落地后又做过一次**纯注释**修正（注释残留 patchA 的
+          「最后一个比较块」说法），代码行逐字未变 ⇒ 最终读数对象是 `6df13cdaf815920c`
+  - [x] SubTask 24.8: 对外序列（`stats --index pyc_index.json`）：
+          `402/362/5746/5634/98.05%` —— 上一轮 `5633 / 98.03%` ⇒ **+1 函数、+0.02pp**。
+          索引 402 条里唯一实质变更 `real_quote.pyc matched_functions 37→38`
+          （`84.09%→86.36%`），其余 401 条只有 `last_tested_round 23→24`；
+          `batch --all --round 24` 只重写 2 个 OK.py（`real_quoteOK.py`、`fly/data/quoteOK.py`），
+          无产物漂移爆发
+  - [ ] SubTask 24.9: 本轮未完项移交：①R24-A 缺另外两半 —— 三元头位于**函数首块**
+          （`self.entry is cfg.entry_block`）时仍不放开，见证 `get_cache_l2_data` /
+          `get_cache_l2_data_by_one`（`337→335`、`321→319`，`first_diff index 18
+          JUMP_FORWARD vs POP_TOP`）与电池 `b03`（两核逐字节相同、都 FAIL），需生成端配合；
+          ②`for` 体内嵌套三元（电池 `c04`，两核相同）；③`quote.get_individual_data` 长度差
+          还剩 6；④`data_proxy.get_bar` 纯换位需"同形尾块唯一归属"级同层判据，线 A 第一版已否证；
+          ⑤未收口诊断线 B/D/E/F/G（任务 #39/#41/#42/#43/#44）—— 五路代理都在 150 轮上限终止且
+          未交 `ANALYSIS.md`，**下轮换协议：单线路径预算内先交 ANALYSIS.md 再交候选核**；
+          ⑥Round 23 移交项其余照旧。距 100% 还差 112 函数 / 40 partial 文件

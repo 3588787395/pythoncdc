@@ -456,7 +456,19 @@ class IfRegion(Region):
 
     def can_be_ternary_header(self, block, analyzer) -> bool:
         # if区域占用ternary header块时，若存在链式比较块则禁止创建ternary
-        return not bool(self.chained_compare_blocks)
+        if not self.chained_compare_blocks:
+            return True
+        # [R24-A] 链式比较 IfRegion 的入口块可以是三元表达式的条件头
+        # （`v = A if a < b <= c else B`），但该入口块不能同时是整个 CFG 的入口块：
+        # _detect_ternary_pattern 的 Phase-7-D 分支正是以 `region.entry is block` 为键沿
+        # chained_compare_blocks 走到末段比较块，取其 fallthrough（可经
+        # JUMP_FORWARD 连接块）为 true 值块、跳转目标为 false 值块。
+        # 中间比较块仍禁止。真正的钻石/值块/merge 消费判据仍由下游
+        # _detect_ternary_pattern + R39 值块纯度守卫裁决。
+        if (block is self.entry
+                and self.entry is not analyzer.cfg.entry_block):
+            return True
+        return False
 
     def get_if_body_blocks(self):
         # 返回if区域的(then_blocks, else_blocks)体块，已规范化为非None列表
