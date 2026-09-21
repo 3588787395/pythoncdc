@@ -82,7 +82,9 @@ fallthrough 进入本区域条件块时即入链，而既有守卫只排除「�
 5. `strategy.pyc`、`calexrights_func` 孪生、`handlers` 2、`trade_live_broker` 26、`r16a_05`、
    `r15a_08`/`r15a_09`、`r17a_25`、T1/T2 then 臂收集顺序、SubTask 13.4、Task 5 遗留
    （`decrypt_database_url` +29、`cgroup` +2/+1）。
-6. `git push origin main` 仍失败（`Recv failure: Connection was reset`），本轮提交留在本地。
+6. `git push origin main` 当时失败（`Recv failure: Connection was reset`）。
+   （Round 19 收尾订正：网络恢复后 `git push origin main` 成功，远程 `refs/heads/main` 现为
+   `b7c03065`，已含本轮 `26e330ca`；实测 `git rev-parse origin/main` 与 `git ls-remote` 一致。）
 
 ## 五、提交物
 
