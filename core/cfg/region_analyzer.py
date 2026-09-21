@@ -17129,7 +17129,23 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     len(else_succ.conditional_successors) == 2
                     and _25b_else_last is not None
                     and _25b_else_last.opname in FORWARD_CONDITIONAL_JUMP_OPS)
-                if not _25b_else_is_cond and self._if_arm_is_sink(then_blocks, then_stop):
+                # R13c 守卫细化（同层结构化判据，禁止跨区域启发式）：
+                # (a) 作用域分裂：then 臂入口与 else_succ 的最内层 enclosing
+                #     loop 不是同一个（含一内一外）——此时 else_succ 不可能是
+                #     本 if 的汇合点，禁止 merge := else_succ。
+                # (b) 共享隐式出口：臂内已有裸 `return None` 块，且 else_succ
+                #     的直接后继也是裸 `return None` 块——两臂其实汇聚到 merge
+                #     计算漏掉的函数级隐式 return None，臂的“汇点”性正是这个
+                #     出口，不是一次性掉出，禁止塌缩。
+                _25b_arm_loop = self._find_enclosing_loop(then_blocks[0])
+                _25b_else_loop = self._find_enclosing_loop(else_succ)
+                _25b_same_loop = _25b_arm_loop is _25b_else_loop
+                _25b_shared_rn = (
+                    any(self._is_return_none_block(b) for b in then_blocks)
+                    and any(self._is_return_none_block(s)
+                            for s in else_succ.successors))
+                if (not _25b_else_is_cond and _25b_same_loop and not _25b_shared_rn
+                        and self._if_arm_is_sink(then_blocks, then_stop)):
                     merge = else_succ
                     then_blocks = self._collect_branch_blocks(then_succ, merge, then_stop)
             # 区域归约算法原则 2（每块唯一归属）+ 原则 4（归约顺序）：

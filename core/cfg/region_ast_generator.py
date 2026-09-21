@@ -16291,7 +16291,12 @@ AST 映射规则:
         认领为结构块），也放弃整条链：否则 `elif delivery_date:` 的测试块会被
         当成内层 `if delivery_date < end[:8]:` 的首个合取支跨层次吸收，生成出
         `if delivery_date and delivery_date < end[:8]:`（重复的外层条件）。两条
-        守卫都只删不增：回退不命中时交由既有单条件生成路径，不新增任何规则。
+        第三条守卫（链首落点判据）：反向收集结束后，若**链首块**自身仍是
+        「另一个纯操作数块前向条件跳转的落点」（该前驱块不在链内、位于链首
+        之前，纯性复用既有 _chain_block_is_pure），则链首实为某个 `or` 的尾
+        析取入口——整条 test 是 `X or (A and B)` 形，以该链重建整个 test 会
+        整体丢弃左析取支 X，故同样放弃、回退既有路径。
+        三条守卫都只删不增：回退不命中时交由既有单条件生成路径，不新增任何规则。
         跨循环回边前驱因「跳转目标 == 汇合点」与
         「fallthrough 进入链尾」双重约束天然排除。
 
@@ -16360,6 +16365,22 @@ AST 映射规则:
             current = best
         if len(chain) < 2:
             return None
+        # [J2 守卫·同层结构判据] or 短路汇合点识别：链首块若是**另一个纯操
+        # 数求值块**（复用既有 _chain_block_is_pure）前向条件跳转的落点，则该
+        # 链首是 `X or <本 and 链>` 的右操作数入口，本 and 链只是末析取支；
+        # 以它重建整个 test 会整体丢弃左析取支 X（MarketTime.trade_is_open
+        # `>= '0915' and <= '1130' or >= '1300' and <= '1515'` 实测丢左半）。
+        # 只删不增：不命中即交由既有单条件/嵌套路径，与既有两条放弃守卫同源。
+        _head = chain[0]
+        for _pj in _head.predecessors:
+            if _pj in chain or _pj.start_offset >= _head.start_offset:
+                continue
+            _pl = _pj.get_last_instruction()
+            if (_pl is not None and _pl.argval is not None
+                    and _pl.argval == _head.start_offset
+                    and _pl.opname in FORWARD_CONDITIONAL_JUMP_OPS
+                    and self._chain_block_is_pure(_pj)):
+                return None
         return {'blocks': chain, 'op': 'and'}
 
     def _discover_predicate_and_chain_forward(self, cond_block: BasicBlock) -> Optional[Dict[str, Any]]:
@@ -41136,14 +41157,6 @@ AST 映射规则:
              NOP 之后一条指令（跳转「跨过」本 NOP）——该 NOP 是 ``if/while
              cond: pass`` 空体占位，由条件结构的空体 Pass 发射路径再生，
              额外构造会引入多余 const 并使 co_consts 错位；
-          V-M (条件汇合锚点)：CFG 中存在任何条件跳转（含短路跳转
-             JUMP_IF_*_OR_POP）以本 NOP 自身为目标（argval == nop_off）——
-             该 NOP 是条件结构 false/true 路径的汇合锚点（如 if/elif 阶梯
-             出口处 ``if cond: ...`` 的 false 出口直接落在语句边界 NOP
-             上），由外层条件结构的汇合语义在重编译时自动再生（NOP 为
-             比较噪声，recompile 后比较器按噪声过滤，无需显式还原语句）；
-             把它当作折叠残留发射 while False: pass 会在条件汇合点凭空
-             插入语句边界，截断后续公共尾部的归约；
           V-L (循环头锚点)：NOP 的后继指令偏移是循环回边目标（存在
              BACKWARD_JUMP_OPS 跳转指向 offset+2）——该 NOP 是 ``while``
              循环头锚点（循环头需真实指令承接回边），由循环语句本身再生；
@@ -41226,14 +41239,6 @@ AST 映射规则:
             for bi2 in blk.instructions:
                 if (bi2.opname in BACKWARD_CONDITIONAL_JUMP_OPS
                         and bi2.argval == _succ_target):
-                    return False
-                # [A4/V-M] 条件跳转以本 NOP 自身为汇合目标（argval == nop_off）：
-                # 该 NOP 是条件结构 false/true 路径的汇合锚点（语句边界），由
-                # 外层条件结构在重编译时自动再生，不是折叠残留。无条件前向
-                # 跳转指向 NOP 仍视为「结构连接跳转恰好指向折叠位置」（见
-                # 本方法 docstring 首段），保持原有 while False: pass 还原。
-                if (bi2.opname in CONDITIONAL_JUMP_OPS
-                        and getattr(bi2, 'argval', None) == nop_off):
                     return False
                 if bi2.offset == _prev_off:
                     if (bi2.opname in CONDITIONAL_JUMP_OPS

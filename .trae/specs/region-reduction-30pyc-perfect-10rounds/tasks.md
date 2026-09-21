@@ -558,3 +558,67 @@
           本轮逐字未动）；⑥SubTask 20.10 其余项（`round20_rollover` 7 项、~17156 splice、
           9 文件漂移族 J1/J2/J3 回退改造、quotation 2 项、SubTask 19.9 其余项、T1/T2 then
           臂顺序、SubTask 13.4、Task 5）照旧
+
+- [x] Task 22: Round 22 — 把漂移族三条同层判据（J1′ 汇点臂塌缩细化 / J2′ or-短路链首落点判据 /
+      J3′ 删跨区域 V-M 判据）收进区域归约框架并落地（R22-A），同时**首次以 `batch --all` 把
+      `pyc_index.json` 拉回实测**（Round 18–21 四周期无回写通道，392/402 条停在 Round 10）
+  - [x] SubTask 22.0: 语料不新增条目——`pyc_index.json` 条目 402、每条 `function_count` 一律
+          不变、Σ=5746（脚本复核），added/removed=0；被改动的字段只有
+          `matched_functions`/`decompile_status`/`bytecode_match_rate`/`last_tested_round`
+  - [x] SubTask 22.1: 靶子不是"某个 pyc 的某个函数"而是**索引本身**：官方尺在当前 HEAD 上逐文件
+          重测语料并与条目逐条对照 ⇒ 11 个文件背离（9 条索引虚高共 −14、2 条低估 +2；净 −12）。
+          其中 5 条标着 `ok` 而实测有函数不匹配。机制：`scripts/pyc_batch_verify.py:358-361`
+          写明 `batch` 默认跳过 `ok` 条目，而 Round 18–21 收尾无 batch 步骤；逐提交二分另指出
+          `trade_info_utils`+`custom_tools` 的 43/46 自 `f89b85f2`（Round 13）即存在
+  - [x] SubTask 22.2: 三条判据的逐补丁归属（严格尺子，镜像 `mirror/{base,j1g,j2p,j3}`，
+          11 个漂移文件，记录 `ab/attr2_*.jsonl`）：J1′ 12 个函数、J2′ 2 个、J3′ 1 个 = 15；
+          两条例外如实登记——`quote_handler.get_kline_local`（760→676）只有三补丁同场才回到
+          760→682（J1′ 先恢复臂结构，链判据才用得上），`api_base.get_history_df` 在 J2′ 下
+          1742→1722 退到 1742→1718
+  - [x] SubTask 22.3: 测试工程师交付 37 个最小复现 `test_repros/round22_drift/`（17 锚点 +
+          15 负对照 + 5 同族残留）+ `run_all.py`（before/after 双镜像核、真值表随 `--after`
+          选择、键集合双向自检 fail-closed、零仓库写入）+ `ANALYSIS.md`
+  - [x] SubTask 22.4: **加强版 J2r 落地后被电池判死并回退**（本轮方法论收获）：J2r 在语料级
+          严格优于 J2′（`n_ok` 同为 +15、`Σ|delta|` −85 对 −81、`worse=0` 对 `worse=1`、
+          `improved=10/broken=0` 相同），两把尺子都看不出问题；但电池锚点
+          `r22_16_j2_andor_three_disjuncts`（`if a and b or c and d or e and g:`）NOT-FIXED
+          `orig=17 decomp=9` —— 加强判据要求发跳转前驱块自身承载区域，而 `or` 的短路汇合点
+          不成区域 ⇒ 判据不触发 ⇒ 链重建丢掉左半析取支。语料 402 个 pyc 无此形状。
+          两种写法日志 `batt_j2r.txt`/`batt_r3.txt`（各 `FIX=16/17 FAIL=1 GATE: FAIL`）；
+          回退后落地 J2′，电池 `FIX=17/17 GUARD=15/15 RESIDUE=5/5 FAIL=0 GATE: PASS`
+          （`batt_landed.txt`）。纪律更新：候选规则必须先过本轮最小复现集，再谈语料级 A/B
+  - [x] SubTask 22.5: 零新判据核对：三条都只用既有同层构件（`_find_enclosing_loop`、
+          `_is_return_none_block`、`_chain_block_is_pure`、`FORWARD_CONDITIONAL_JUMP_OPS`），
+          不看函数名/字符串常量/原始字节码偏移；J1′ 只否定一次 merge 认定、J2′ 只放弃一次 test
+          重建、J3′ 只删一条跨区域全 CFG 扫描的否决分支 ⇒ 四条归约原则逐条复核未被触碰
+          （`arm-design.md` §三），且 J3′ 删掉的正是"禁止跨区域启发式"的违例本体
+  - [x] SubTask 22.6: 落地 `landing/spec_r22_v2.py`（`build_final2.py` 由 base↔实测候选
+          `mirror/j123` 的行级 hunk 自动生成 + 两处纯注释改动；`apply_spec.py` 白名单仅这两文件、
+          锚点 `count(old)==1`、按文件 EOL 约定还原 CRLF、内存 `compile()` 自检）：
+          `region_analyzer.py` `8529b7e8e36dc336→59b70fa360d19ad0`、
+          `region_ast_generator.py` `9dff8c0ea8ece556→a203dd17fe82f824`（BOM 保持）。
+          写盘后与工作树复验：与实测候选差 `+6/−9` 行、全部为注释/docstring，
+          **剥 docstring 后 AST dump 逐节点相同**（`proof_landed.txt`）
+  - [x] SubTask 22.7: mandate 门禁顺序全绿：电池 PASS → `single` 把两个靶子修到完全 OK
+          （`json_persistance 7/7 100.00%`、`market_time 10/10 100.00%`）→ `quotation.pyc`
+          `partial 142/143 99.30%`、唯一缺陷 `change_his_to_forward orig=547 decomp=548`
+          与 Round 21 逐字相同 → `batch --index pyc_index.json --all --round 22`（402/402、
+          `failed_pyc 0`）→ `stats`
+  - [x] SubTask 22.8: 对外序列（`stats --index pyc_index.json`）：
+          `402/362/5746/5633/98.03%`（收尾）；索引被这一步改动的条目 4 条
+          （`instance 29/32→31/32`、`trade_live_broker 103/119→104/119`、
+          `custom_tools 6/6→5/6` ok→partial、`trade_info_utils 40/40→38/40` ok→partial）。
+          序列数字与上一轮同为 5633，但本轮起它是**实测值**：落地前用旧核实测 5621、
+          `ok_pyc` 实测 359 ⇒ 本轮真实净增 12 个函数一致、`ok_pyc` 359→362
+  - [ ] SubTask 22.9: 本轮未完项移交：①`realtime_event_source.clock_worker` −197（Round 21 的
+          人工保全产物被本轮 `batch --all` 按当前核重写，官方读数不变 11/12；根因 = 截断 BoolOp
+          链后父臂双认领，`test_repros/round22_adoption/ANALYSIS.md` §1–4 + 探针
+          `D:/Temp/r22diag/probes/sp_c1.py,c2,c3`，门禁必须同时看 `Σ|orig−decomp|` 与电池）；
+          ②电池 5 项残留（`r22_23` `A and B or C`、`r22_24` `X or (A and B)` 括号形、
+          `r22_25` `while A and B or C and D`、`r22_26` `or` 后接 `and` 臂、
+          `r22_27` `persist` 在 while 内 73→65）；③过量发射族 4 项
+          （`executor.check_before_trading 243→254`、`data_proxy.get_bar 86→90`、
+          `replace_utils.decrypt_database_url 295→324`、`realtime_event_source.get_one_event 19→20`）；
+          ④`f89b85f2` 遗留退化（`trade_info_utils` −2、`custom_tools` −1）；
+          ⑤quotation `change_his_to_forward`、`handlers.pyc` `_target 192→190`、
+          SubTask 21.10 其余项照旧
