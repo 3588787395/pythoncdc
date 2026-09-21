@@ -354,13 +354,13 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQCommon/logger/handlers.pyc",
     "size": 15042,
     "function_count": 18,
-    "decompile_status": "partial",
-    "bytecode_match_rate": 0.9444444444444444,
+    "decompile_status": "ok",
+    "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
     "last_tested_round": 17,
     "mismatch_count": 1,
     "status": "pending",
-    "matched_functions": 17,
+    "matched_functions": 18,
     "note": "R17-A improved matched_functions 16 -> 17 (bytecode_diff of the project tool). Index was stale at round 10 with bytecode_match_rate and mismatch_count mutually inconsistent; per-function recheck 27/30 -> 28/30"
   },
   {
@@ -3834,12 +3834,12 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/logger/handlers.pyc",
     "size": 8737,
     "function_count": 14,
-    "decompile_status": "partial",
-    "bytecode_match_rate": 0.9285714285714286,
+    "decompile_status": "ok",
+    "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
     "last_tested_round": 10,
     "status": "pending",
-    "matched_functions": 13,
+    "matched_functions": 14,
     "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
   },
   {

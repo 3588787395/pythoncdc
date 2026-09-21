@@ -66,7 +66,7 @@ EXPECT = {
     'r13_16_neg_try_except_return': 'MATCH',
     'r13_18_join_tail_wide_chain': 'MISMATCH',
     'r13_19_spurious_continue_elif': 'UNCONFIRMED',
-    'r13_20_for_else_break_lost': 'MISMATCH',
+    'r13_20_for_else_break_lost': 'SENTINEL',  # fixed by R20-A
     'r13_21_chain_arm_try_rotation': 'MISMATCH',
     'r13_22_chain_arm_if_no_else': 'MISMATCH',
     'r13_23_neg_two_fallthrough_arms': 'MATCH',

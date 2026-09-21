@@ -16985,8 +16985,30 @@ AST 映射规则:
         # 结构判据：merge_block 存在、不在两臂列表中，且从条件链全部条件跳转
         # 的假出口沿 CFG 前向可达性检验不可达（即仅由 then 路径到达）——满足时
         # 该块是 then 臂专属延续，其语句必须归入 then 体发射，而非悬挂丢弃。
+        # [R20-A 修复] 臂尾已是终止语句 ⇒ 不得再把 merge 块并进这条臂。
+        # 识别条件：then_stmts 末条 dict 的 type ∈ ('Break','Continue','Return',
+        #   'Raise') —— **复用既有同层判据**，不新建谓词：同一函数 16934-16942 用
+        #   它做臂内终止截断，_process_if_blocks（打补丁前 20541）用它做「终止后
+        #   不再发射块」；三处同层同判据，只有 W15-C 这一处漏用（同层同结构必同
+        #   结论）。不看名字、不看常量、不看原始字节码偏移。
+        # 归约方式：跳过拼接后 merge 块不再被标 generated，由外层区域序列按既有
+        #   次序发射 ⇒ 内层→外层次序不变、嵌套区域在父层仍是一个抽象节点、父层
+        #   列表仍只引用子区域入口块。
+        # 唯一归属：merge 块回到它本来的父区域层级，一块一处归属；此前它既被拼进
+        #   then 臂尾部、又留在外层区域序列里。
+        # 反编译流程：分析器把 break 出口登记后（配套 hunk (a)），该出口块是本 if
+        #   的 then-专属汇合块；无条件拼接会把「循环之后的全部代码」缩进在 break
+        #   之后 ⇒ CPython 3.11 编译器死代码消除，实测 119 塌到 50。守此处后 break
+        #   与循环后代码各归其位（两孪生 119/119、127/127 逐条一致）。
+        # 保留理由：W15-C 本体必须保留——链式比较真臂的 return 值只能靠这条汇合块
+        #   归入 then 臂（`if a < b < c: return True` 形状）；本守卫只在臂尾已终止
+        #   时不拼，负对照 r20a_19/r20a_23 与全量 402 条目 A/B 两世界均不劣化。
         if (getattr(region, 'merge_block', None) is not None
-                and self._merge_block_is_then_exclusive(region)):
+                and self._merge_block_is_then_exclusive(region)
+                and not (then_stmts
+                         and isinstance(then_stmts[-1], dict)
+                         and then_stmts[-1].get('type') in
+                             ('Break', 'Continue', 'Return', 'Raise'))):
             _mb_effective = [
                 i for i in region.merge_block.instructions
                 if i.opname not in ('RESUME', 'NOP', 'CACHE', 'PUSH_NULL',

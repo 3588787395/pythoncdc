@@ -84,6 +84,46 @@ WITH_EXIT_INDICATOR_OPS = frozenset({
     'GET_AWAITABLE', 'SEND', 'YIELD_VALUE',
 })
 
+# [R20-A 修复] `for` 循环体内裸 `break` 块的结构识别（分析层，与生成层守卫配对）。
+# 识别条件：同一 basic block 去掉编译噪声（NOP/CACHE/EXTENDED_ARG/PRECALL/RESUME）
+#   之后 = **一条或多条 POP_TOP + 恰好一条无条件前向跳转**。POP_TOP 弹的是 CPython
+#   3.11 为 `for` 内 break 准备的循环迭代器（FOR_ITER 只在迭代器耗尽时弹自身，正常
+#   出口不弹），这是 break 桩与「只剩一条 JUMP_FORWARD 的 out-of-line 布局桩」
+#   （链式比较假臂、if-then 汇合跳）之间唯一的结构差别 —— 缺 POP_TOP 一律不认。
+# 归约方式：不新增区域、不改归约次序，只把该跳转的目标登记进 _break_targets，
+#   交给下面既有的 [R102] 「以 break_targets 为屏障重建 _fwd_candidates」路径。
+# 唯一归属：break 桩块本身仍属循环体，其跳转目标从此不属循环体 ⇒ 每块唯一归属。
+# 反编译流程：break 出口被正确识别后，for/else 的 else 臂与循环后代码回到父区域
+#   层级；识别失败时 _return_reachable（以循环体内的 RETURN_VALUE 为种子）会把
+#   该 RETURN 的全部前驱（实测 302/336/396/428/556）吞进 body_blocks，产物把
+#   循环后代码整体搬迁到循环体内（孪生 perform_rollover 丢 2 条跳转即此形状）。
+# 保留理由：既有两条判据（目标 ∈ _exit_reachable / 目标 ∉ _fwd_candidates）对本
+#   形状都判 False —— 6140 起的 BFS 从 fall_through 出发会**穿过 break 自身的无条件
+#   跳转**，把落点登记成循环内前向块 ⇒ _break_targets 恒空。历史反例
+#   create_daily_stats 偏移 196 是「then 臂裸跳转块」，不带 POP_TOP ⇒ 本判据不认它
+#   （电池 r20a_10 守卫，HEAD 与本轮两侧都 MATCH）；slippage.create_new_price.
+#   check_and_return 的链式比较块 124 = [JUMP_FORWARD 130] 同样不带 POP_TOP，
+#   放宽成「无 POP_TOP 也算」会把它误判成 break（实测该 pyc 19→18 回退）。
+_R20_NOISE_OPS = frozenset(('NOP', 'CACHE', 'EXTENDED_ARG', 'PRECALL', 'RESUME'))
+_R20_FWD_JUMPS = frozenset(('JUMP_FORWARD', 'JUMP_ABSOLUTE'))
+
+
+def _r20_is_break_stub_block(bb):
+    """R20-A structural predicate: `bb` is CPython 3.11 codegen for a `break`
+    inside a FOR loop.  After dropping compile noise the block is one or more
+    POP_TOPs -- the loop iterator that FOR_ITER only discards on exhaustion --
+    followed by exactly one unconditional forward jump.  A bare jump with no
+    POP_TOP is an out-of-line layout stub (e.g. a chain-comparison arm), not a
+    break, so the cleanup is required.
+    """
+    core = [i for i in bb.instructions if i.opname not in _R20_NOISE_OPS]
+    if len(core) < 2:
+        return False
+    if core[-1].opname not in _R20_FWD_JUMPS:
+        return False
+    return all(i.opname == 'POP_TOP' for i in core[:-1])
+
+
 class BlockRole(Enum):
     NORMAL = auto()
     LOOP_HEADER = auto()
@@ -6169,9 +6209,12 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                                 # 不是 break 目标——误判会使 merge 块被排除
                                 # 出循环体（create_daily_stats 偏移 196 被误
                                 # 判为 break target 根因）。
-                                if _bt in _exit_reachable:
-                                    _break_targets.add(_bt)
-                                elif _bt not in _fwd_candidates:
+                                # [R20-A 修复] ③是新增的同层结构析取项：跳转块
+                                # 自身就是 for-break 桩（去噪后 >=1 POP_TOP + 恰好
+                                # 一条无条件前向跳转）。①②仍在前，判据互不遮蔽。
+                                if (_bt in _exit_reachable
+                                        or _bt not in _fwd_candidates
+                                        or _r20_is_break_stub_block(_bb)):
                                     _break_targets.add(_bt)
                 # [R102 for-else fix] 区域归约算法原则 2（每块唯一归属）：
                 # break 目标块是循环出口之后的代码（如 for-else 之后的 if-else

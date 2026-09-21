@@ -407,8 +407,75 @@
           另 7 项 `UNCONFIRMED` 本轮构造不出；②`IQCommon/util/trade_info_utils.pyc`（35/36）的
           同族多余 `continue` 只有宽规则能修，宽规则全量净 −3/0，本轮如实放弃，需另找判据；
           ③9 文件既有产物/核漂移族（`to_pd_result`×3、`resist_api`、`flytools`、`quote_handler`、
-          `real_quote`、`market_time`、`json_persistance`）仍每轮触发 WORSENED 回滚；
+          `real_quote`、`market_time`、`json_persistance`）仍每轮触发 WORSENED 回滚（Round 20 结案归因：culprit 单提交 `f89b85f2`，其内三处独立回退判据 J1/J2/J3；整体回退实测 improved=8 broken=5 不可发货，见 `rounds/round20/OUTCOME.md` §四第 1 条）；
           ④quotation 残留 `change_his_to_forward` seq_len +1、`get_trend` 跳转终点；
-          ⑤`r18a_05`、SubTask 17.9 其余项（`strategy`、`calexrights_func`、`handlers`、
+          ⑤`r18a_05`、SubTask 17.9 其余项（`strategy`、`calexrights_func`、`handlers`（Round 20 结案：R20-A 修好两孪生 `perform_rollover` 119/127 逐条一致，同文件 `_target` 192→190 为独立残差照旧）、
           `trade_live_broker`、`r16a_05`、`r15a_08`/`r15a_09`、`r17a_25`、T1/T2 then 臂顺序、
+          SubTask 13.4、Task 5）照旧
+- [x] Task 20: Round 20 — 给 `_collect_natural_loop_body` 的 break-target 判别加第三条同层结构析取项
+      `_r20_is_break_stub_block(_bb)`，并给 `_if_generate_normal` 的 W15-C「then-独占 merge 块并入
+      then 臂」接上**既有**臂尾终止判据，修「`for …: if c: break` 的 break 跳转与循环回边整体丢失」
+      （R20-A，翻正 `IQCommon/logger/handlers.pyc` 28/30→29/30 与
+      `IQEngine/utils/logger/handlers.pyc` 16/17→17/17）
+  - [x] SubTask 20.0: 语料不新增条目——`pyc_index.json` 条目 402、每条 `function_count` 一律不变、
+          Σ=5746，本轮只按 `single` 工具实测更新受影响条目（2 条）
+  - [x] SubTask 20.1: 承接 SubTask 19.9⑤ 的 `handlers` 孪生对：两孪生唯一真缺陷同为
+          `<module>.RotatingFileHandler.perform_rollover`（orig=119 decomp=117 / orig=127
+          decomp=125）；`D:/Temp/r20/scratch/recon_A.py` 重编译逐条核对确认真实源码就是
+          `for … else …` ＋ 裸 `break`，多重集差里真丢的只有 break 的 `JUMP_FORWARD→302` 与
+          外层回边 `JUMP_BACKWARD→102`（`missA.txt`），其余 ± 全是同一指令在两世界的偏移改名
+  - [x] SubTask 20.2: 两层根因逐条实测（`D:/Temp/r20/logs/regA.txt`、`D:/Temp/r20b/logs/
+          callsite_ca1.txt`、`wherebrk_ca1.txt`）：①分析器 6172/6174 两条判据都判 False
+          （6140 的 BFS 穿过 break 自身的无条件跳转）⇒ `_break_targets=∅` ⇒ 6258
+          `_return_reachable` 把 302/336/396/428/556 吞进循环体、`has_break=False`；
+          ②生成器 16988 的 W15-C splice 在 16934-16942 已按终止语句截断臂之后仍无条件拼接
+          （`settrace` 命中 `_if_generate_normal:16999`）；HEAD 核下该函数 Break/Continue
+          发射点命中 0 次 ⇒ base 连 break 都没识别
+  - [x] SubTask 20.3: 推翻上一棒「`region_analyzer:6172` 已被证伪」的判断：只改分析器（`c_a1`）
+          区域层是对的（`body=[102,104,192,196]`、`break_blocks=[302]`），塌到 50/52 的原因是
+          `break` 后又被拼进同臂的代码成了不可达死代码、被 CPython 3.11 死代码消除；
+          只改生成器（`g1`）117/125 无效 ⇒ **两半缺一不可**（四候选表见 `arm-design.md` §三）
+  - [x] SubTask 20.4: 判据收窄实测：宽判据 `f1`（去噪后「恰好一条无条件前向跳转」即算）
+          两孪生过但全量 A/B **broken=1**（`slippage.create_new_price.check_and_return` 19→18，
+          其块 124 = `[JUMP_FORWARD 130]` 是链式比较 out-of-line 桩、无迭代器可弹）⇒
+          POP_TOP 是必需条件，不得简化；`g1b` broken=0 同时证明生成器守卫单独无害；
+          最终 `f3` = 本轮回落地核（improved=2 broken=0 signature-only=0）
+  - [x] SubTask 20.5: 测试工程师交付 26 个最小复现 `test_repros/round20_rollover/`
+          （16 锚点 + 10 负对照/守卫）+ `run_all.py`（双向自检、表随 `--core` 选择）+
+          `ANALYSIS.md`（双世界逐条实测）；落地后按其实测把 `EXPECT` 整表改写为落地真值
+          （11 锚点→`SENTINEL`、7 项同族别因→`MISMATCH`、8 项守卫→`MATCH`、`UNCONFIRMED` 为空）
+  - [x] SubTask 20.6: 落地 `D:/Temp/r20c/fix/r20a_patch.py`（字节级 assert：BOM／锚点唯一／
+          纯 CRLF／`ast.parse`／拒绝二次应用）⇒ `region_analyzer.py` `+46/−3`（判据代码
+          `+19/−3`）、`region_ast_generator.py` `+23/−1`（判据代码 `+5/−1`），其余是
+          `[R20-A 修复]` 判据注释（识别条件／归约方式／唯一归属／反编译流程／保留理由）；
+          sha16 raw `255d53d3c8707a07→eb378bd197e2efba`、`faf70dafbce09acf→9dff8c0ea8ece556`；
+          落地核与已实测候选 `f3` 做剥注释逐行等价核对（两文件 `code-only diff lines: 0`）
+  - [x] SubTask 20.7: mandate 门禁顺序全绿：单点两孪生 `single` `ok 14/14 100.00%`／
+          `ok 18/18 100.00%`、严格尺子 17/17／29/30（`_target` 192→190 原样）→ `quotation.pyc`
+          单验 `partial 142/143 99.30%` 与 Round 19 逐字相同、产物 sha256 未变 →
+          全量产物门（402 条目分 8 片）`CLEAN 336 / UNCHANGED 57 / WORSENED(rolled back) 8 /
+          REGRESSION(rolled back) 1`，9 项异常与 Round 19 逐文件逐数值相同 →
+          全量逐函数 A/B（`git archive 5c63ce6b` 重建落地前核镜像，与工作区逐字节相同）
+          improved=2（恰两孪生）broken=0、`sum(n_ok) 5985→5987`
+  - [x] SubTask 20.8: 电池：`round20_rollover` 26 项 `--strict` 退出码 0
+          （落地前核镜像 `MISMATCH=18 MATCH=8` → 落地核 `MISMATCH=7 MATCH=19`，
+          `ERROR=0 UNEXPECTED=0`）；既有 10 套（round13/13b/14/14_join/15_arm/16_arm/
+          16_sink/17_arm/18_arm/19_cont）在新核上全部退出码 0、UNEXPECTED=0、ERROR=0，
+          唯一变化是 `round13::r13_20_for_else_break_lost` 由「复现缺陷」变「已修」
+          （改标 `SENTINEL`）——同族缺陷 Round 13 就记过形状
+  - [x] SubTask 20.9: 9 文件产物/核漂移族归因收口（只记录不动手）：culprit 单提交
+          `f89b85f2`，三处独立回退判据 J1（analyzer「if-arm 是 sink ⇒ 抹掉 else 臂」，13/15 个
+          漂移函数）/J2（生成器 `_discover_predicate_and_chain*`，`market_time.trade_is_open`）/
+          J3（生成器 `[A4/V-M]`，`flytools.whitelist_filter`）；Round 14-19 全部排除。
+          整体回退实测 `improved=8 broken=5`（`nomerge`/`j1j3`）⇒ J1 是 load-bearing、不可发货；
+          这解释了每轮产物门同样 9 项 WORSENED 回滚的来历。回退改造（给 J1 找能清 5 个 BROKEN
+          反例的同层判据、J2 非破坏性中和）移交后续轮次
+  - [ ] SubTask 20.10: 本轮未完项移交：①`round20_rollover` 残留 7 项同族别因（07/11/17/18/21/23/26，
+          共同点是 break 出口块不止一个、或出口块落在 except/while 别的区域种类里、或链式比较与
+          循环出口共享 merge）；②`_if_generate_normal` elif 链返回路径 ~17156 还有一处同形状
+          splice，本轮不为其预先加守卫（两孪生＋26 项＋402 条目都不经过它）；③`handlers.pyc`
+          `TWHThreadController._target` 192→190 独立残差；④SubTask 20.9 的 J1/J2/J3 回退改造；
+          ⑤quotation 残留 `change_his_to_forward`/`get_trend`；⑥SubTask 19.9 其余项
+          （`trade_info_utils`、`strategy`、`calexrights_func`、`trade_live_broker`、`r16a_05`、
+          `r15a_08`/`r15a_09`、`r17a_25`、`r18a_05`、`round19_cont` 4 锚点、T1/T2 then 臂顺序、
           SubTask 13.4、Task 5）照旧
