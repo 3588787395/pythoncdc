@@ -19119,6 +19119,55 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                         if b not in _fe_set
                     ]
                     else_blocks = [b for b in else_blocks if b not in _fe_set]
+            # 区域归约算法原则 2（每块唯一归属）·R25-A 前驱侧对偶判据：
+            # 上面两条取证（_chain_merge_candidates 的臂末共同后继交集、
+            # _body_succs_to_fe）全部只在「臂末块的 successors」一侧取材，而
+            # 「链的每一臂都以 RETURN_VALUE 终结」形（get_bar / case_d / case_f）
+            # 臂末根本没有后继，交集为空、计数恒为 0，判据永不触发。同一事实的
+            # 对偶表述在 final_else 候选 F 的 predecessors 一侧：CPython 3.11 把
+            # if/elif/…/else 布局为「每个条件的假边指向下一个条件，最后一个条件的
+            # 假边指向 else 体」，故 else 体被链内进入的方式只有一种——末条件的
+            # 假边；任何位于【臂体内部】（then_blocks ∪ 各 elif body，且不是本链
+            # 的条件块）的块以条件跳转落入 F，都只能是该臂中嵌套条件的假分支
+            # 掉出整条链，而链的掉出口恒在 else 体【之后】，因此 F 是链之后的公共
+            # 语句（post-chain 语句，即链的汇合块），不属于任何臂。
+            # 典型场景（data_proxy.get_bar，原码 B526 即 `return self.BarData(
+            # self, asset, bar, dt)`）：链 `if frequency=='tick' / elif run_type==
+            # TRADING` 两臂皆 sink，B258（`now_time >= …` 假边）与 B418（`bar is
+            # not None` 假边）都以条件跳转落入 B526 ⇒ B526 是 post-chain 语句。
+            # 误认领为 else 体的后果不止多一条 `else: return None`：then 臂由此
+            # 失去真实末语句，其嵌套条件的掉出口退化为函数级隐式 return None，
+            # 产物多出 2 对 LOAD_CONST None/RETURN_VALUE（官方尺子因 R97
+            # _trim_spurious_intermediate_returns 静默剪枝而显示 86/86 等长）。
+            _r25_fe_set = set(elif_info.get("final_else", []))
+            if _r25_fe_set:
+                _r25_chain_blocks = set(then_blocks)
+                for _r25_body in elif_info.get("bodies", []):
+                    _r25_chain_blocks |= set(_r25_body)
+                _r25_cond_blocks = set(elif_info.get("conditions", []))
+                _r25_cond_blocks.add(block)
+                _r25_fe_merge = set()
+                for _r25_f in _r25_fe_set:
+                    for _r25_p in _r25_f.predecessors:
+                        if (_r25_p not in _r25_chain_blocks
+                                or _r25_p in _r25_cond_blocks):
+                            continue
+                        _r25_pl = _r25_p.get_last_instruction()
+                        if (_r25_pl is None
+                                or _r25_pl.opname
+                                not in FORWARD_CONDITIONAL_JUMP_OPS
+                                or _r25_pl.argval != _r25_f.start_offset):
+                            continue
+                        _r25_fe_merge.add(_r25_f)
+                        break
+                if _r25_fe_merge:
+                    _chain_merge_candidates |= _r25_fe_merge
+                    elif_info["final_else"] = [
+                        b for b in elif_info.get("final_else", [])
+                        if b not in _r25_fe_merge
+                    ]
+                    else_blocks = [b for b in else_blocks
+                                   if b not in _r25_fe_merge]
             _chain_merge_candidates -= set(elif_info.get("final_else", []))
             _chain_merge_candidates.discard(block)
             _chain_merge_candidates.discard(then_blocks[0])

@@ -734,3 +734,67 @@
           ⑤未收口诊断线 B/D/E/F/G（任务 #39/#41/#42/#43/#44）—— 五路代理都在 150 轮上限终止且
           未交 `ANALYSIS.md`，**下轮换协议：单线路径预算内先交 ANALYSIS.md 再交候选核**；
           ⑥Round 23 移交项其余照旧。距 100% 还差 112 函数 / 40 partial 文件
+  - [x] Task 25: Round 25 — 给 `_build_elif_region` 的 `final_else` 认领补上**前驱侧对偶判据**
+          （R25-A）：一臂也不能吞掉它结构上不能到达的块 ⇒ 全 sink 形 elif 链的 post-chain 汇合块
+          不再被误当成 `else` 臂。落地 `core/cfg/region_analyzer.py` 纯插入 49 行
+          （`6df13cdaf815920c → 7a88adcedf5249ef`），`region_ast_generator.py` 未动。
+          门禁：最小复现 3 例翻转 / 0 破，D3 语料锚点 `FIXED=4 BROKEN=0`，R24 锚点零回退，
+          全 402 文件 A/B `REGRESSION=0 ERR=0 IMPROVED=4`、产物变化 6/402、五个反例逐字节不变，
+          `single` 四靶全 `100.00%`（**`fly/data/quotation.pyc` 首次 143/143**）。
+          另案订正两条计量仪器缺陷（臂隔离失效 ＋ 产物同名碰撞），本轮数字均为订正后重测。
+          详见 `rounds/round25/OUTCOME.md`、`fixes.md`、`arm-design.md`、`logs/`。
+  - [x] SubTask 25.1: 目标池（对 landed 基线 `8a0c269a` 实测，镜像 `mirr/head25`）：40 个 partial 文件 /
+          16 个 deficit-1；D3「等长换位」族取 17+6 条语料锚点（`dump/wl25_d3all.txt`），并按代理 Q3
+          造 5 个最小复现（`D:/Temp/r25land/agent_d3/repro/d3case_{a,b,cd,efg,hi}.pyc`）。
+  - [x] SubTask 25.2: 根因（编排方独立取证与只读诊断代理 `r25-diag-d3` 两条线一致）：一条
+          `if/elif/…` 链的**所有臂都以 RETURN_VALUE 终结**时，链后唯一的直落续块被
+          `_check_elif_chain` 认领为 `final_else`（else 臂）⇒ 该语句被移进臂内、外层 `if` 的真实
+          末语句被抽走，其出口退化为函数级隐式 `return None`，产物多出成对
+          `LOAD_CONST None; RETURN_VALUE`；官方尺的 R97 `_trim_spurious_intermediate_returns`
+          在对齐位置静默剪掉这些对，于是读成 `86/86` 等长换位（严格尺同一函数
+          `orig=86 decomp=90`）。取证链见 `rounds/round25/fixes.md`、`arm-design.md`。
+  - [x] SubTask 25.3: 既有降级规则为何永不触发（同层判据必须换侧的依据）：
+          `_chain_merge_candidates` 的臂末共同后继交集与 `_body_succs_to_fe` 计数全部只在
+          「臂末块的 successors」一侧取材，本形臂末是 RETURN_VALUE 没有后继 ⇒ 交集恒空、计数恒 0。
+          ⇒ 缺陷在分析器的块归属，不在尺子，不得靠改 `_trim_spurious_intermediate_returns` 掩盖。
+  - [x] SubTask 25.4: 落地 R25-A（同层判据 · 前驱侧对偶 · `core/cfg/region_analyzer.py:19122` 起
+          纯插入 49 行、删改 0 行）：`final_else` 候选 F 若被任一「位于臂体内（`then_blocks` ∪ 各
+          elif body）且不是本链条件块」的前驱以条件跳转落入（该块末指令 ∈
+          `FORWARD_CONDITIONAL_JUMP_OPS` 且 `argval == F.start_offset`），则 F 只能是链的汇合块
+          ⇒ `_chain_merge_candidates |= F` 并从 `final_else` / `else_blocks` 同时摘除。
+          成立的依据是 3.11 布局事实：else 体被链内进入的方式唯一（末条件的假边），而臂内嵌套
+          条件的掉出口恒在 else 体之后。只读块集合与前驱末指令，不读偏移量次序、不读函数名。
+          `region_analyzer.py 6df13cdaf815920c → 7a88adcedf5249ef`；`region_ast_generator.py`
+          本轮未动（`a365c378e6a40fed`）。
+  - [x] SubTask 25.5: 门禁（严格串行，全部对**落地字节**；原始日志归档
+          `rounds/round25/logs/`）：由工作树重建 `mirr/landed25` 并 44 文件全树比对（
+          `diff -rq landed25 patchB25` 无差异 ⇒ 电池与 402 A/B 测同一份字节）→ 最小复现电池
+          `FIXED=3 BROKEN=0`，两个 CONTROL（`d3case_a/b`）保持 `2/2` → D3 语料锚点电池
+          `FIXED=4 BROKEN=0 MOVED=1 SAME=57` → R24 锚点电池 `FIXED=2 BROKEN=0`（上轮锚点零回退）→
+          全 402 文件 A/B `REGRESSION=0 ERR=0 IMPROVED=4 SAME=396 MOVED=2`，产物变化 6/402，
+          五个反例（`instance`、`cgroup_utils`、两个 `plugin_manager`、`trade_live_broker`）与
+          `arg_checker×3` / `profiler_func×3` 承重锚逐字节不变 → `single` 四靶
+          `api_base 48/48`、`executor 10/10`、`data_proxy 9/9`、**`fly/data/quotation.pyc
+          143/143`（本轮首次全绿）** → `batch --index pyc_index.json --round 25 --all` 后索引只动
+          `last_tested_round` 与这 4 条的 `matched_functions/decompile_status/bytecode_match_rate`，
+          文件仍纯 CRLF。
+  - [x] SubTask 25.6: 本轮另案订正两条**计量仪器**缺陷（不是 core 缺陷，但每条都足以伪造判决；
+          本轮引用的所有数字均为订正后重测）：① `batt25.py` 的 `sys.modules` 清理按 `'core.'`
+          前缀匹配，漏掉 `core` 包对象本身，残留 `core.__path__` 让 arm2 重新解析到 arm1 目录，
+          TALLY 读成 `SAME=45 / FIXED=0`；改为「凡 `__file__` 落在任一私有镜像下的模块全部清除」+
+          逐 arm 断言 `region_analyzer.__file__` 必须在本 arm 下。**同一缺陷在
+          `D:/Temp/r24land/probes/batt24.py:50-51`，因此 Round 24 及更早各轮仅由「电池」支撑的
+          证据须视为未证**（`single` / `batch` / `stats` 每进程只加载一个核，不受影响）。
+          ② `pool25.py` 的产物名只取 `<basename>OK.py`，语料里约 30 个不同的 `__init__.pyc` 在扁平
+          产物目录内互相覆盖，4 个并发 shard 还争用同一 `__pycache__` 条目，于是制造出一条假的
+          `plugin_system_debug/__init__ 6/6 → 0/6`「回退」和一条 `PermissionError`；改为按整条
+          相对路径改名（镜像外的复现文件还须把 `:`→`_`，否则 `py_compile` 报 `WinError 87` 而电池
+          只打印 `0/0`），并加硬断言：任一记录 `error` 非空或 `total_functions` 为 0 立即中止 ——
+          `0/0 -> 0/0` 是仪器坏了，不是没有缺陷。
+  - [ ] SubTask 25.7: 本轮未收口，移交 Round 26：① `custom_tools.memory_handler` 的虚构 else 已消，
+          但该函数仍差 4 条（`65` vs `69`，jump 1 / true 21），属链内语句次序的另一族，列为
+          Round 26 首选锚点；② `pboxAccount_jupyterhub` 产物次序改善但未翻转，与
+          `wizard_quant_api 48/53` 同列 D2 过量发射族（任务 #42）；③ 异常布局族 #39、整块丢失族
+          #41、`decrypt_database_url +29 / log.setup −67 / fly_api.base −21×2` #43、`+1` 翻转对 #44
+          仍未收口；④ `quotation.pyc` 自本轮起改为承重锚点（任何让它跌出 143 的候选直接否决），
+          「零副作用」金丝雀需另选。

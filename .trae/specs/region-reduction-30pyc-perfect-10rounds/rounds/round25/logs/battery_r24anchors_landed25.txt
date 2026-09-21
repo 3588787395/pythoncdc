@@ -1,0 +1,84 @@
+### arm head = D:/Temp/r25land/mirr/head25
+  [arm head] region_analyzer = D:\Temp\r25land\mirr\head25\core\cfg\region_analyzer.py
+<decompiled>:192: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:192: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:192: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:192: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:192: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:381: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:381: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:381: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:381: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:381: SyntaxWarning: "is" with a literal. Did you mean "=="?
+D:/Temp/r25land/batt\head_fly__dumpload__load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r25land/batt\head_fly__dumpload__load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r25land/batt\head_fly__dumpload__load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r25land/batt\head_fly__dumpload__load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r25land/batt\head_fly__dumpload__load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r25land/batt\head_fly__dumpload__load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r25land/batt\head_fly__dumpload__load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r25land/batt\head_fly__dumpload__load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r25land/batt\head_fly__dumpload__load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r25land/batt\head_fly__dumpload__load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+### arm cand = D:/Temp/r25land/mirr/landed25
+  [arm cand] region_analyzer = D:\Temp\r25land\mirr\landed25\core\cfg\region_analyzer.py
+<decompiled>:192: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:192: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:192: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:192: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:192: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:381: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:381: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:381: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:381: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:381: SyntaxWarning: "is" with a literal. Did you mean "=="?
+D:/Temp/r25land/batt\cand_fly__dumpload__load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r25land/batt\cand_fly__dumpload__load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r25land/batt\cand_fly__dumpload__load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r25land/batt\cand_fly__dumpload__load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r25land/batt\cand_fly__dumpload__load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r25land/batt\cand_fly__dumpload__load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r25land/batt\cand_fly__dumpload__load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r25land/batt\cand_fly__dumpload__load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r25land/batt\cand_fly__dumpload__load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r25land/batt\cand_fly__dumpload__load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+IQEngine/data/data_proxy.pyc  8/9 -> 9/9   [product CHANGED]   *** FLIPS TO OK ***
+    FIXED   get_bar                        [86, 86, 3, 8, 76]
+IQEngine/plugins/plugin_system_risk_calculation/function.pyc  14/15 -> 14/15
+    SAME    save_testds_to_json            [314, 310, 19, 8, 302]
+IQEngine/api/api_base.pyc  47/48 -> 48/48   [product CHANGED]   *** FLIPS TO OK ***
+    FIXED   cancel_order                   [60, 61, 1, 14, 47]
+fly/common/flytools.pyc  64/65 -> 64/65
+    SAME    acquire                        [88, 85, 2, 14, 45]
+IQEngine/plugins/plugin_fly_data/__init__.pyc  19/20 -> 19/20
+    SAME    _on_before_trading_start_trading_thread [62, 62, 2, 19, 43]
+fly/dumpload/load_daily.pyc  22/23 -> 22/23
+    SAME    <module>                       [913, 913, 1, 19, 596]
+fly/common/custom_tools.pyc  5/6 -> 5/6   [product CHANGED]
+    MOVED   memory_handler                 [65, 71, 1, 23, 45] -> [65, 69, 1, 21, 45]
+IQEngine/plugins/plugin_system_persist/__init__.pyc  14/15 -> 14/15
+    SAME    can_resume_strategy            [89, 57, 0, 34, 55]
+IQCommon/manager/instance.pyc  31/32 -> 31/32
+    SAME    _init_config                   [86, 84, 1, 37, 49]
+
+TALLY {"FIXED": 2, "BROKEN": 0, "MOVED": 1, "SAME": 6, "FLIPS": ["IQEngine/data/data_proxy.pyc", "IQEngine/api/api_base.pyc"]}

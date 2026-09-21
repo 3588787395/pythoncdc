@@ -1,0 +1,24 @@
+head 402  cand 402  common 402  head-only []  cand-only []
+
+### REGRESSION: 0
+
+### ERR: 0
+
+### IMPROVED: 4
+    ('IQEngine/api/api_base.pyc', '47/48 -> 48/48')
+    ('IQEngine/core/executor.pyc', '9/10 -> 10/10')
+    ('IQEngine/data/data_proxy.pyc', '8/9 -> 9/9')
+    ('fly/data/quotation.pyc', '142/143 -> 143/143')
+
+### SAME: 396
+
+### MOVED: 2
+
+### per-function mismatch-set deltas on MOVED/IMPROVED files
+ [IMPROVED] IQEngine/api/api_base.pyc  gained-ok=['cancel_order'] lost-ok=[]
+ [IMPROVED] IQEngine/core/executor.pyc  gained-ok=['check_before_trading'] lost-ok=[]
+ [IMPROVED] IQEngine/data/data_proxy.pyc  gained-ok=['get_bar'] lost-ok=[]
+ [IMPROVED] fly/data/quotation.pyc  gained-ok=['change_his_to_forward'] lost-ok=[]
+ [MOVED] fly/common/custom_tools.pyc  gained-ok=[] lost-ok=[]
+     ~ memory_handler                 [65, 71, 1, 23] -> [65, 69, 1, 21]
+ [MOVED] fly/simtradding/pboxAccount_jupyterhub.pyc  gained-ok=[] lost-ok=[]

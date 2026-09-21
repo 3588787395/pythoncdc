@@ -1,0 +1,150 @@
+### arm head = D:/Temp/r25land/mirr/head25
+  [arm head] region_analyzer = D:\Temp\r25land\mirr\head25\core\cfg\region_analyzer.py
+<decompiled>:192: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:192: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:192: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:192: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:192: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:381: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:381: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:381: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:381: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:381: SyntaxWarning: "is" with a literal. Did you mean "=="?
+D:/Temp/r25land/batt\head_fly__dumpload__load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r25land/batt\head_fly__dumpload__load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r25land/batt\head_fly__dumpload__load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r25land/batt\head_fly__dumpload__load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r25land/batt\head_fly__dumpload__load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r25land/batt\head_fly__dumpload__load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r25land/batt\head_fly__dumpload__load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r25land/batt\head_fly__dumpload__load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r25land/batt\head_fly__dumpload__load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r25land/batt\head_fly__dumpload__load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+### arm cand = D:/Temp/r25land/mirr/landed25
+  [arm cand] region_analyzer = D:\Temp\r25land\mirr\landed25\core\cfg\region_analyzer.py
+<decompiled>:192: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:192: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:192: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:192: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:192: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:381: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:381: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:381: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:381: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:381: SyntaxWarning: "is" with a literal. Did you mean "=="?
+D:/Temp/r25land/batt\cand_fly__dumpload__load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r25land/batt\cand_fly__dumpload__load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r25land/batt\cand_fly__dumpload__load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r25land/batt\cand_fly__dumpload__load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r25land/batt\cand_fly__dumpload__load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r25land/batt\cand_fly__dumpload__load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r25land/batt\cand_fly__dumpload__load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r25land/batt\cand_fly__dumpload__load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r25land/batt\cand_fly__dumpload__load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r25land/batt\cand_fly__dumpload__load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+IQCommon/graph.pyc  29/31 -> 29/31
+    SAME    _get_influence_task            [207, 195, 2, 124, 80]
+    SAME    _process_task_queue            [378, 378, 1, 118, 119]
+IQCommon/logger/handlers.pyc  18/18 -> 18/18
+IQCommon/strategy/wizard_quant_api.pyc  48/53 -> 48/53
+    SAME    calculate_di                   [75, 73, 0, 45, 29]
+    SAME    get_strategy_finance_factor_info [28, 18, 0, 18, 10]
+    SAME    params_analysis                [133, 126, 1, 117, 14]
+    SAME    region_mean_desicion           [50, 48, 2, 2, 48]
+    SAME    wizard_quant_check_limit       [91, 90, 2, 10, 81]
+IQCommon/util/fileio_utils.pyc  12/14 -> 12/14
+    SAME    acquire                        [96, 93, 3, 52, 40]
+    SAME    write                          [637, 637, 4, 519, 42]
+IQCommon/utils.pyc  20/22 -> 20/22
+    SAME    load_ini                       [18, 13, 0, 13, 5]
+    SAME    load_yaml                      [55, 55, 0, 32, 22]
+IQData/plugins/plugin_system_fly_historyquote/history_data_source.pyc  16/18 -> 16/18
+    SAME    get_kline_by_count             [854, 841, 3, 807, 19]
+    SAME    get_price                      [550, 544, 4, 475, 62]
+IQData/plugins/plugin_system_realquote/real_quote.pyc  38/44 -> 38/44
+    SAME    get_cache_l2_data              [337, 335, 2, 313, 18]
+    SAME    get_cache_l2_data_by_one       [321, 319, 2, 298, 18]
+    SAME    get_real_minute_kline          [253, 254, 3, 197, 56]
+    SAME    get_tick_direction             [259, 258, 3, 102, 149]
+    SAME    one_prod_to_dataframe          [432, 431, 7, 56, 374]
+    SAME    one_prod_to_ndarray            [605, 607, 5, 424, 136]
+IQEngine/api/api_base.pyc  47/48 -> 48/48   [product CHANGED]   *** FLIPS TO OK ***
+    FIXED   cancel_order                   [60, 61, 1, 14, 47]
+IQEngine/core/executor.pyc  9/10 -> 10/10   [product CHANGED]   *** FLIPS TO OK ***
+    FIXED   check_before_trading           [243, 254, 1, 200, 51]
+IQEngine/data/data_proxy.pyc  8/9 -> 9/9   [product CHANGED]   *** FLIPS TO OK ***
+    FIXED   get_bar                        [86, 86, 3, 8, 76]
+IQEngine/plugins/plugin_fly_data/__init__.pyc  19/20 -> 19/20
+    SAME    _on_before_trading_start_trading_thread [62, 62, 2, 19, 43]
+IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc  11/12 -> 11/12
+    SAME    clock_worker                   [1275, 1291, 15, 480, 794]
+IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc  104/119 -> 104/119
+    SAME    _process_cancel_order          [293, 292, 16, 43, 246]
+    SAME    _process_order                 [454, 396, 9, 349, 95]
+    SAME    _sync_worker                   [349, 323, 1, 286, 48]
+    SAME    _trade_status_handle           [114, 112, 0, 107, 6]
+    SAME    after_trading_cancel_order     [155, 155, 3, 122, 31]
+    SAME    etf_basket_order               [693, 692, 12, 431, 254]
+    SAME    etf_purchase_redemption        [377, 355, 2, 100, 274]
+    SAME    fund_transfer                  [123, 88, 1, 57, 66]
+    SAME    get_all_orders                 [79, 78, 2, 24, 55]
+    SAME    get_etf_stock_info             [144, 117, 1, 139, 5]
+    SAME    get_ipo_stocks                 [453, 451, 4, 296, 157]
+    SAME    get_max_amount                 [201, 213, 2, 18, 195]
+    SAME    get_trades                     [215, 216, 10, 19, 196]
+    SAME    ipo_stocks_order               [1075, 1074, 3, 804, 265]
+    SAME    market_fund_transfer           [94, 67, 1, 41, 53]
+IQEngine/utils/scheduler.pyc  42/45 -> 42/45
+    SAME    get_checked_time               [106, 106, 0, 43, 18]
+    SAME    is_run_interval_time_now       [225, 201, 2, 173, 51]
+    SAME    run_daily                      [77, 71, 0, 56, 21]
+fly/common/custom_tools.pyc  5/6 -> 5/6   [product CHANGED]
+    MOVED   memory_handler                 [65, 71, 1, 23, 45] -> [65, 69, 1, 21, 45]
+fly/common/flytools.pyc  64/65 -> 64/65
+    SAME    acquire                        [88, 85, 2, 14, 45]
+fly/data/quotation.pyc  142/143 -> 143/143   [product CHANGED]   *** FLIPS TO OK ***
+    FIXED   change_his_to_forward          [547, 548, 1, 377, 171]
+fly/data/quote.pyc  67/81 -> 67/81
+    SAME    build_current_period_df        [115, 108, 5, 12, 103]
+    SAME    check_frequency                [121, 120, 1, 21, 100]
+    SAME    check_limit                    [330, 311, 2, 248, 50]
+    SAME    check_stock                    [86, 87, 2, 46, 41]
+    SAME    get_individual_data            [312, 306, 2, 153, 155]
+    SAME    get_price                      [230, 188, 0, 227, 1]
+    SAME    get_real_from_zeromq           [703, 669, 0, 661, 33]
+    SAME    initImagedata                  [243, 225, 0, 190, 35]
+    SAME    is_delisting_stock_real        [107, 106, 2, 8, 99]
+    SAME    load_bars_from_hundsun         [477, 470, 0, 464, 1]
+    SAME    load_get_price                 [171, 136, 1, 167, 1]
+    SAME    one_prod_to_dataframe          [484, 483, 7, 56, 426]
+    SAME    run_individual_transform       [362, 321, 2, 263, 93]
+    SAME    run_tick_socket                [306, 307, 2, 228, 79]
+fly/dumpload/load_daily.pyc  22/23 -> 22/23
+    SAME    <module>                       [913, 913, 1, 19, 596]
+fly/logger.pyc  28/30 -> 28/30
+    SAME    logging_process                [99, 95, 2, 62, 36]
+    SAME    write_logging_thread           [113, 113, 1, 40, 71]
+fly/oauthenticator/oauth2.pyc  11/11 -> 11/11
+fly/simtradding/pboxAccount_jupyterhub.pyc  4/4 -> 4/4   [product CHANGED]
+
+TALLY {"FIXED": 4, "BROKEN": 0, "MOVED": 1, "SAME": 57, "FLIPS": ["IQEngine/api/api_base.pyc", "IQEngine/core/executor.pyc", "IQEngine/data/data_proxy.pyc", "fly/data/quotation.pyc"]}

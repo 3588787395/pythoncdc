@@ -1,0 +1,11 @@
+### arm head = D:/Temp/r25land/mirr/head25
+  [arm head] region_analyzer = D:\Temp\r25land\mirr\head25\core\cfg\region_analyzer.py
+### arm cand = D:/Temp/r25land/mirr/landed25
+  [arm cand] region_analyzer = D:\Temp\r25land\mirr\landed25\core\cfg\region_analyzer.py
+D:/Temp/r25land/agent_d3/repro/d3case_a.pyc  0/0 -> 0/0
+D:/Temp/r25land/agent_d3/repro/d3case_b.pyc  0/0 -> 0/0
+D:/Temp/r25land/agent_d3/repro/d3case_cd.pyc  0/0 -> 0/0   [product CHANGED]
+D:/Temp/r25land/agent_d3/repro/d3case_efg.pyc  0/0 -> 0/0   [product CHANGED]
+D:/Temp/r25land/agent_d3/repro/d3case_hi.pyc  0/0 -> 0/0   [product CHANGED]
+
+TALLY {"FIXED": 0, "BROKEN": 0, "MOVED": 0, "SAME": 0, "FLIPS": []}
