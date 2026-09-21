@@ -3514,7 +3514,7 @@
     "ok_py_generated": true,
     "last_tested_round": 10,
     "status": "pending",
-    "matched_functions": 23,
+    "matched_functions": 24,
     "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
   },
   {
@@ -3526,7 +3526,7 @@
     "ok_py_generated": true,
     "last_tested_round": 10,
     "status": "pending",
-    "matched_functions": 25,
+    "matched_functions": 26,
     "note": "index-corrected: previous ok mark was unverified-stale (batch skips ok entries)"
   },
   {
@@ -3583,7 +3583,7 @@
     "last_tested_round": 10,
     "mismatch_count": 5,
     "status": "pending",
-    "matched_functions": 68
+    "matched_functions": 69
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/ptrade_broker.pyc",

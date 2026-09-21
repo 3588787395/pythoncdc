@@ -632,6 +632,9 @@ def _cmd_single(pyc_path: str, ok_py_path: str) -> int:
             'decompile_status': status,
             'bytecode_match_rate': rate,
             'ok_py_generated': True,
+            # batch 步骤 3 一直回写这两字段，single 之前漏写会让条目停在旧值
+            'function_count': diff['total_functions'],
+            'matched_functions': diff['matched_functions'],
         }
         clear_keys = ['error']  # 清除之前可能的失败记录
 
