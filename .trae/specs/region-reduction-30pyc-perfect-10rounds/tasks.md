@@ -470,12 +470,91 @@
           整体回退实测 `improved=8 broken=5`（`nomerge`/`j1j3`）⇒ J1 是 load-bearing、不可发货；
           这解释了每轮产物门同样 9 项 WORSENED 回滚的来历。回退改造（给 J1 找能清 5 个 BROKEN
           反例的同层判据、J2 非破坏性中和）移交后续轮次
-  - [ ] SubTask 20.10: 本轮未完项移交：①`round20_rollover` 残留 7 项同族别因（07/11/17/18/21/23/26，
+  - [ ] SubTask 20.10: 本轮未完项移交：①`round20_rollover` 残留 7 项同族别因（07/11/17/18/21/23/26，Round 21 复核：落地核 `--strict` 仍 `MISMATCH=7 MATCH=19`、逐套计数与 Round 20 收尾时逐字相同
           共同点是 break 出口块不止一个、或出口块落在 except/while 别的区域种类里、或链式比较与
           循环出口共享 merge）；②`_if_generate_normal` elif 链返回路径 ~17156 还有一处同形状
           splice，本轮不为其预先加守卫（两孪生＋26 项＋402 条目都不经过它）；③`handlers.pyc`
           `TWHThreadController._target` 192→190 独立残差；④SubTask 20.9 的 J1/J2/J3 回退改造；
-          ⑤quotation 残留 `change_his_to_forward`/`get_trend`；⑥SubTask 19.9 其余项
+          ⑤quotation 残留 `change_his_to_forward`/`get_trend`（Round 21 复核：镜像核全量 A/B 两世界逐字段相同 `orig=548 decomp=549` 与 `target_diff #10`，产物门 `148/150 -> 148/150 UNCHANGED`）；⑥SubTask 19.9 其余项
           （`trade_info_utils`、`strategy`、`calexrights_func`、`trade_live_broker`、`r16a_05`、
           `r15a_08`/`r15a_09`、`r17a_25`、`r18a_05`、`round19_cont` 4 锚点、T1/T2 then 臂顺序、
           SubTask 13.4、Task 5）照旧
+- [x] Task 21: Round 21 — 把「协程语句前缀块是 body 块」这条同层判据在两个接线点各补全一半
+      （BoolOp 非首成员块守卫 ＋ elif 链 `_has_body_stmt` 过滤表），修
+      `fly/oauthenticator/oauth2.pyc` 两个同形孪生 `post` 各丢 9 条（R21-A，10/12→12/12）
+  - [x] SubTask 21.0: 语料不新增条目——`pyc_index.json` 条目 402、每条 `function_count` 一律不变、
+          Σ=5746（脚本 assert），本轮只按 `single` 工具实测更新受影响条目（1 条）
+  - [x] SubTask 21.1: 承接 Task 9（同一 pyc 第二次成为目标：Round 9 修的是「生成器函数体整体
+          丢失 214→`pass`」，本轮是另一族）。诊断实测：官方 `partial 10/11`、严格尺子
+          `DEFECT 10/12`，`HSIDOAuthCallbackHandler.post orig=175 decomp=166`、
+          `OAuthCallbackHandler.post orig=190 decomp=181`；`_r10_difflen.py` 给出**单一 delete
+          窗口** orig[116:125]、无配对 insert ⇒ 判决是 ABSENT 而非 relocated，opcode 多重集差
+          `CALL-1 LOAD_CONST-1 LOAD_FAST-2 LOAD_METHOD-1 POP_TOP-1 RESUME-1 RETURN_VALUE-1
+          YIELD_VALUE-1`、`spawn_single_user orig=2 decomp=1` ⇒ 排除「POP_TOP/PUSH_NULL 记账」假设
+  - [x] SubTask 21.2: 块 624 与块 734 完全同形（`yield f()` 语句前缀 ＋ 以条件跳转结尾），
+          一处 in then 臂、一处 in else 臂；`sys.settrace`（`r21_trace.py --off 566`）实锤
+          执行路径：成员块守卫 `_has_store=False` ⇒ 624 被 `chain.append` 收进链 →
+          返回 `[(566,'or'),(624,'and')]` → `BoolOpRegion` → 产物 `and` 合并、else 臂 return 消失；
+          `r21_cond.py` monkeypatch 实锤站点 B：`_build_basic_if_region([734,802,836])` 先建出
+          IfRegion，随后 `_build_elif_region([210,…,734,802,836])` 把 734 抢成「纯 elif 条件块」，
+          链三支全 return ⇒ 前缀语句退到链后被死代码消除。−2（A）＋ −7（B）= −9，逐条吻合
+  - [x] SubTask 21.3: 八候选实测表（`r21_mk.py` 表驱动镜像核 + `r21_twins.py` +
+          `run_all.py --measure` + 402 全量 A/B）：c1（站点 A 宽版 向前≤5）176/191 残留 B 错位
+          +1；c2（块内任意 POP_TOP）与 c1 同测值 ⇒ 宽判据无额外收益、风险更高，**丢弃**；
+          c3（只站点 B）173/188 ⇒ 证明两半缺一不可；c5 = c1+c3、**c6 = R21-A**（站点 A 用与
+          起始块/elif **同形**的判据文本）均 175/190 = 0 差、strict 12/12；
+          c8（c6 + 第三份拷贝也补间隙）目标上零增量、爆炸半径更大 ⇒ **不并入**
+  - [x] SubTask 21.4: 零新判据核对：规则文本 = 仓库里已写两遍的 `_sb_has_body` /
+          `_has_body_stmt` 的另一半（`CALL` → 只允许 `YIELD_VALUE`/`RESUME` 间隙 → `POP_TOP`，
+          遇其他指令立即停止）；不看函数名、不看字符串常量、不看原始字节码偏移
+          （`i.offset < 本块末条.offset` 是块内结构边界，与该站点既有判据同写法）；
+          四条归约原则逐条复核（自底向上不变、两处都**减少**块的多重认领、内层 if 仍是单个
+          抽象子节点、只读被判定块自身指令）见 `rounds/round21/arm-design.md` §四
+  - [x] SubTask 21.5: 测试工程师交付 16 个最小复现 `test_repros/round21_oauth2/`
+          （5 锚点 + 8 负对照 + 3 同族异因）+ `run_all.py`（三表随 `--core`/`--base` 选择、
+          键集合双向自检、留 None 即 fail-closed）+ `ANALYSIS.md`（四世界逐条实测：
+          5c63ce6b/15a8de06 两基线一致，c6 两候选一致）；其 `EXPECT` 交付时已是落地后真值，
+          落地核复跑逐项同值 ⇒ 本步零改写
+  - [x] SubTask 21.6: 落地 `D:/Temp/r21fix/fix/r21a_patch.py`（字节级 assert：无 BOM 保持／
+          纯 CRLF／两处锚点各唯一／拒绝二次应用／`ast.parse`／判据代码与候选 `c6` 逐行等价）
+          ⇒ `region_analyzer.py` `+74/−2`（判据代码净增 29 行：站点 A 22、站点 B 7；注释 43 行），
+          sha16 raw `eb378bd197e2efba→8529b7e8e36dc336`、LF 归一
+          `2311fcbbea5c166d→2b9c48a681a2cb23`，26694→26766 行
+  - [x] SubTask 21.7: mandate 门禁顺序全绿：单点 `oauth2.pyc` `single` 报 `ok 11/11 100.00%`、
+          严格尺子 `OK 12/12`（无 DEFECT 行）、产物 `ast.parse` 通过且逐行 diff 只有被恢复的
+          `yield`/`return`（154→162 行）→ `quotation.pyc` 单验 `partial 142/143 99.30%`
+          与 Round 20 逐字相同、产物 sha256 `c0d3c312…` 未变、`git status` 干净 →
+          全量产物门（402 条目分 8 片，基线 = 打补丁之前先跑的落地前磁盘产物严格比对）
+          `CLEAN 337 / UNCHANGED 56 / WORSENED(rolled back) 8 / REGRESSION(rolled back) 1`，
+          9 项异常与 Round 20 **逐文件、逐数值相同** ⇒ 零新增回退
+  - [x] SubTask 21.8: 全量逐函数 A/B 改在**真正的落地基** `15a8de06` 上重跑（诊断是在
+          `5c63ce6b` 上做的）：`git archive 15a8de06` 镜像与落地前工作区逐字节相同
+          （`eb378bd197e2efba`），cand 镜像只差本补丁（`8529b7e8e36dc336`）⇒
+          两侧 402/402 记录、0 异常，`improved=1 broken=0 signature-only=1`、
+          Σn_ok `5987→5989`；电池：新增 16 项 `--strict` 退出码 0
+          （`MISMATCH=3 MATCH=13 UNEXPECTED=0 ERROR=0`），既有 **11 套**全部退出码 0 且
+          逐套计数与 Round 20 收尾时逐字相同（本轮无锚点被顺带修好，无需改标 `SENTINEL`）；
+          对外序列 stats `402/363/5746/5632/98.02% → 402/364/5746/5633/98.03%`（只 +1 而非
+          预期 +2：官方尺子落地前只把两个 `post` 里的一个记成 mismatch，条目 `mismatch_count: 1`）
+  - [x] SubTask 21.9: **严格尺子的盲区（本轮新发现，如实登记）**：诊断记为 `signature-only` 的
+          `realtime_event_source.pyc` 并非中性——`clock_worker`（本已缺陷）产物由
+          `orig=1276 decomp=1251` 变 `decomp=1079`（丢 25 → 丢 197），bad **计数**不变 ⇒
+          产物门只裁 `UNCHANGED`、A/B 只记 signature-only。单开一半的归因实验：只站点 A ⇒
+          与全开逐字节相同（sha16 `3e367cad6833514f`），只站点 B ⇒ 与落地前逐字节相同
+          （`e5f216ab559526a1`）⇒ 恶化 100% 出自站点 A。全语料盲区扫描（逐函数
+          `Σ|orig−decomp|`，`r21_blind.py`）`worse=1 better=1` ⇒ 全语料只有这一个函数变差。
+          处置：按「不得变差」把该产物保全回落地前版本（内容未手写，`git checkout HEAD --`，
+          sha256 `125dc621…` 复原），`single` 已按要求重跑并复核索引逐字段一致
+          （`partial 11/12 0.9166666666666666`）。⇒ 第 10 个产物/核不一致文件（但非第 10 项
+          产物门异常）。纪律更新：此类截断 BoolOp 链的修复，门禁必须同时看
+          `Σ|orig−decomp|`，不能只看 `n_ok`
+  - [ ] SubTask 21.10: 本轮未完项移交：①SubTask 21.9 的站点 A 副作用根因（截断 BoolOp 链后
+          父臂对块的双认领，与 SubTask 20.9 的 J1 同族）；②`round21_oauth2` 残留 3 项
+          （12 `await`/`GET_AWAITABLE`/`SEND` 族 44→41、13 循环体内同族 −6→+1 仍未收口、
+          14 真 and/or 链过量发射 +2 = Round 22 目标）；③ANALYSIS §10 未闭依赖链（A 族触发
+          条件比「块含协程语句」更窄，上游为何走到成员块扩展仍依赖外层 IfRegion 的
+          `IF_FALSE` 同目标判据）；④`if (yield self.g(x)):` 产物丢外层括号 → SyntaxError；
+          ⑤`handlers.pyc` `TWHThreadController._target 192→190`（镜像核 A/B 两世界逐字段相同，
+          本轮逐字未动）；⑥SubTask 20.10 其余项（`round20_rollover` 7 项、~17156 splice、
+          9 文件漂移族 J1/J2/J3 回退改造、quotation 2 项、SubTask 19.9 其余项、T1/T2 then
+          臂顺序、SubTask 13.4、Task 5）照旧

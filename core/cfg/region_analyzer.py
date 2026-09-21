@@ -18277,11 +18277,37 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                         and i.opname not in NOISE_OPS
                         and i.opname not in ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG')
                     ]
+                    # [R21-A 修复] 补全本处已有判据 `_has_body_stmt` 的同层结构
+                    # 谓词（函数调用语句 `CALL` + `POP_TOP` 也是 body 语句）：原
+                    # 实现要求两条指令逐字邻接，看不到 CPython 3.11 协程语句在
+                    # `CALL` 与 `POP_TOP` 之间插入的 `YIELD_VALUE`(+`RESUME`)。
+                    # 识别条件：`first_else` 末条条件跳转之前，`CALL` →（间隙只
+                    #           允许 `YIELD_VALUE`/`RESUME`）→ `POP_TOP`；遇到其他
+                    #           指令立即停止。同上，不看名字／常量／原始偏移。
+                    # 归约方式：命中即走上方的 `return None` —— 放弃把这条 if 建
+                    #           造成 IF_ELIF_CHAIN，交回 `_build_basic_if_region`
+                    #           已经建好的 if/else 归约。
+                    # 唯一归属：else 臂首块回到 else 臂自身，不再被 elif 链当成
+                    #           「纯 elif 条件块」抢走（原则 2，这里是减少争抢）。
+                    # 反编译流程：块内 `yield f()` 语句前缀留在 else 臂原位；被当成
+                    #           elif 条件块时它会被推到整条 if/elif/else 链之后，
+                    #           而链上三支全部 return ⇒ 不可达，被 CPython 3.11 的
+                    #           死代码消除整块删除（实测 seq_len 少 7 条）。
+                    # 保留理由：只在既有判据上加「弹栈间隙」这一处容忍，过滤表
+                    #           `('RESUME','NOP','CACHE','EXTENDED_ARG')` 与其余判据
+                    #           一律不动；不引入跨区域、跨层次的启发式。
                     for _idx, _i in enumerate(_fe_instrs_before_jump):
-                        if _i.opname == 'CALL' and _idx + 1 < len(_fe_instrs_before_jump):
-                            if _fe_instrs_before_jump[_idx + 1].opname == 'POP_TOP':
+                        if _i.opname != 'CALL':
+                            continue
+                        for _j in range(_idx + 1, len(_fe_instrs_before_jump)):
+                            _fj = _fe_instrs_before_jump[_j].opname
+                            if _fj == 'POP_TOP':
                                 _has_body_stmt = True
                                 break
+                            if _fj not in ('YIELD_VALUE', 'RESUME'):
+                                break
+                        if _has_body_stmt:
+                            break
                 if _has_body_stmt:
                     return None
             if first_else in self.block_to_region:
@@ -24240,6 +24266,52 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     for i in current.instructions
                 )
                 if _has_store:
+                    break
+                # [R21-A 修复] 同层同结构必同结论：起始块在本函数上方的
+                # `_sb_has_body` 里用「STORE_*/BINARY_OP/DELETE_* 或 `CALL` 紧跟
+                # `POP_TOP`」判自己是 body 块，非首成员块的这道守卫却只抄了前
+                # 一半（仅 STORE_*）。下面是把同一谓词补全的后一半。
+                # 识别条件：本块末条（条件）跳转之前存在 `CALL` →（间隙只允许
+                #           `YIELD_VALUE`/`RESUME`）→ `POP_TOP`；间隙里遇到任何
+                #           其他指令立即停止。不看函数名、不看字符串常量、不看
+                #           原始字节码偏移，只看同层块内指令序列的结构。
+                # 归约方式：命中即 `break` —— 在这名成员之前截断 and/or 链，链
+                #           停在上一名成员，本块不再充当 BoolOp 的操作数。
+                # 唯一归属：本块回到它自己那条 if 臂（then/else）整块归约，臂内
+                #           的嵌套 if 仍作为单个抽象子节点挂在该臂下（原则 2／
+                #           原则 3），BoolOp 区域与 If 区域不争块。
+                # 反编译流程：值丢弃语句前缀随之留在臂内，被吞的那条 `return`
+                #           也回到自己的臂里；否则语句被提到 if/elif/else 链之后、
+                #           落在已 return 的控制流上，被 CPython 3.11 的死代码
+                #           消除整块删除（实测表现为 seq_len 少 2 条）。
+                # 保留理由：CPython 3.11 里合法的 and/or 操作数块不会中途弹栈
+                #           （压着的值要交给下一操作数或 merge 块消费），只有语句
+                #           （`f()` / `yield f()`）才 `CALL`…`POP_TOP`；协程语句在
+                #           两者之间多插 `YIELD_VALUE`(+`RESUME`)，所以只补这一处
+                #           间隙。放宽成「块内任意 POP_TOP 即 body」的候选实测与
+                #           本候选等值但爆炸半径更大（POP_TOP 也出现在 with/异常
+                #           记账里），故弃。
+                _r21_last = current.get_last_instruction()
+                _r21_mean = [
+                    i for i in current.instructions
+                    if (_r21_last is None or i.offset < _r21_last.offset)
+                    and i.opname not in NOISE_OPS
+                    and i.opname not in ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG')
+                ]
+                _r21_body_stmt = False
+                for _r21_idx, _r21_i in enumerate(_r21_mean):
+                    if _r21_i.opname != 'CALL':
+                        continue
+                    for _r21_j in range(_r21_idx + 1, len(_r21_mean)):
+                        _r21_jn = _r21_mean[_r21_j].opname
+                        if _r21_jn == 'POP_TOP':
+                            _r21_body_stmt = True
+                            break
+                        if _r21_jn not in ('YIELD_VALUE', 'RESUME'):
+                            break
+                    if _r21_body_stmt:
+                        break
+                if _r21_body_stmt:
                     break
             # IfExp arg → and + docstring: when examining a
             # NON-FIRST chain block, if its fall-through successor ends with

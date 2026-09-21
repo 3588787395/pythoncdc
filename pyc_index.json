@@ -4451,13 +4451,13 @@
     "path": "F:/Downloads/pythoncdc-main/site-packages/fly/oauthenticator/oauth2.pyc",
     "size": 10054,
     "function_count": 11,
-    "decompile_status": "partial",
-    "bytecode_match_rate": 0.9090909090909091,
+    "decompile_status": "ok",
+    "bytecode_match_rate": 1.0,
     "ok_py_generated": true,
     "last_tested_round": 10,
     "mismatch_count": 1,
     "status": "pending",
-    "matched_functions": 10
+    "matched_functions": 11
   },
   {
     "path": "F:/Downloads/pythoncdc-main/site-packages/fly/server_version.pyc",
