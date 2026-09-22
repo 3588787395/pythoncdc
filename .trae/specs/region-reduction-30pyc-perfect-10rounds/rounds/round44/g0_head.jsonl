@@ -1,0 +1,4 @@
+{"path": "D:/Temp/r43gate/g0pyc/nc_controls.pyc", "arm": "head", "sha": "50e99aebd296eb1b", "total_functions": 7, "matched_functions": 6, "mism": [["nc_f_two_guards_then_while", 37, 7, 0, 32]]}
+{"path": "D:/Temp/r43gate/g0pyc/nc_controls2.pyc", "arm": "head", "sha": "a2e906b983896652", "total_functions": 7, "matched_functions": 6, "mism": [["nc_j_three_guards_then_while", 47, 13, 0, 36]]}
+{"path": "D:/Temp/r43gate/g0pyc/r43d_01_guardchain_then_while.pyc", "arm": "head", "sha": "5fc54ca803e69216", "total_functions": 2, "matched_functions": 1, "mism": [["r43d_01_guardchain_then_while", 76, 48, 0, 74]]}
+{"path": "D:/Temp/r43gate/g0pyc/r43d_02_compound_cond_control.pyc", "arm": "head", "sha": "794cc41ec130bc75", "total_functions": 3, "matched_functions": 1, "mism": [["r43d_02_while_and_after_guard", 29, 19, 2, 11], ["r43d_03_while_or_after_guard", 33, 17, 1, 17]]}

@@ -10199,6 +10199,29 @@ AST 映射规则:
             self.generated_blocks.add(block)
             self.generated_offsets.add(block.start_offset)
             return True
+        # [R43-D2] 不变量 1（每块 = 前导语句 + 恰好一条终止指令）：回边块的终止指令
+        # 是后向条件跳转（旋转 while 在回边处复制的那一次条件重算）。若块内除终止
+        # 指令外不含任何「语句级」opcode 类——无绑定（STORE_*）、无丢弃（POP_TOP）、
+        # 无副作用（CALL/DELETE/RAISE/IMPORT/YIELD）——则该块没有任何可发射的语句，
+        # 整体就是条件表达式本身。此时不得按 _loop_find_cond_start_idx 的切点从块首
+        # 切出「前置语句」，否则条件的左操作数（`end - start`）会作为裸表达式语句
+        # 泄漏到循环体末尾（get_index 多 4 条，76->80）。只读 opcode 类，不读名字/
+        # 常量/偏移；不命中时逐字节不变。
+        _r43d_stmt_cls = ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL', 'STORE_DEREF',
+                          'STORE_ATTR', 'STORE_SUBSCR', 'STORE_ANNOTATION', 'POP_TOP',
+                          'DELETE_SUBSCR', 'DELETE_ATTR', 'DELETE_FAST', 'DELETE_NAME',
+                          'DELETE_GLOBAL', 'DELETE_DEREF', 'RAISE_VARARGS',
+                          'IMPORT_NAME', 'IMPORT_FROM', 'IMPORT_STAR',
+                          'YIELD_VALUE', 'YIELD_FROM', 'MAKE_FUNCTION',
+                          'BEFORE_WITH', 'SETUP_WITH', 'POP_EXCEPT', 'RERAISE',
+                          'PUSH_EXC_INFO', 'AWAIT', 'SEND', 'GET_AITER', 'GET_ANEXT',
+                          'CALL', 'CALL_FUNCTION', 'CALL_METHOD', 'CALL_FUNCTION_KW',
+                          'CALL_FUNCTION_EX')
+        if not any(_r43d_i.opname in _r43d_stmt_cls
+                   for _r43d_i in block.instructions[:-1]):
+            self.generated_blocks.add(block)
+            self.generated_offsets.add(block.start_offset)
+            return True
         _nbe_cond_start_idx = self._loop_find_cond_start_idx(block)
         if _nbe_cond_start_idx is None or _nbe_cond_start_idx <= 0:
             self.generated_blocks.add(block)

@@ -4029,6 +4029,34 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                                                 continue
                                             _p_other_succ = _s
                                             break
+                                        # [R43-D] 原则 2（每块唯一归属）+ CPython 条件
+                                        # lowering 结构事实：`and`/`or` 复合 while 条件的操作数链
+                                        # 只经 fall-through 边延续——短路一侧永远是条件跳转目标
+                                        # （'and' 跳循环出口、'or' 跳循环入口），链的下一段永远是
+                                        # 顺序落点。故候选前驱 p 的 fall-through 后继若既不是链头
+                                        # _cb、也不是 header、也不在循环体/已吸收链块内，p 就不是
+                                        # 本循环条件的操作数，而是外层守卫（if/elif）的条件块，其
+                                        # 另一分支恰好落入本循环（`if c: return X` 后接 while）。
+                                        # 把它并入 LoopRegion.blocks 会让外层 IfRegion 在生成阶段
+                                        # 「块数多者胜」的包含判定中被丢弃，守卫链与循环前置语句
+                                        # 一起无人发射（get_index 76->48）。只删不增；判据只读
+                                        # pred/succ 关系、fall-through 归属与块角色，不读名字、
+                                        # 常量、绝对偏移与条数。
+                                        _r43d_ft = None
+                                        for _r43d_s in p.successors:
+                                            if _r43d_s in p.exception_successors:
+                                                continue
+                                            if _r43d_s is p_target:
+                                                continue
+                                            _r43d_ft = _r43d_s
+                                            break
+                                        if (_r43d_ft is not None and _r43d_ft is not _cb
+                                                and _r43d_ft is not header
+                                                and _r43d_ft is not condition_block
+                                                and _r43d_ft not in body
+                                                and _r43d_ft not in region_blocks):
+                                            _next_cb = None
+                                            break
                                         _p_is_outer_elif = False
                                         if _p_other_succ is not None:
                                             _p_other_is_exit = (

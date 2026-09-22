@@ -1985,3 +1985,26 @@
 
           结转台账本轮未触碰。
 
+
+  - [x] SubTask 44.1: 承接 Round 43 线 D。在私有臂 + 私有 ROOT 下独立复测 p12 声称的两条官方增益
+          （quote_handler 50→51/57、trade_live_broker 104→105/119）；两文件复测逐位复现，
+          `get_index` 由 `orig=76 decomp=48` 转为逐指令 CLEAN。
+  - [x] SubTask 44.2: 隔离复测。仅 R44-A（region_analyzer 守卫块不得并入 LoopRegion）→ 与落地态逐位相同、零增益；
+          仅 R44-B（region_ast_generator 纯条件回边块无语句可发射）→ 29 文件面 SAME=29 IMPROVED=0，
+          且 `get_index` 官方计数不变而产物由 48 退到 44（⇒ 「REGRESSION=0」不等于「惰」，必须比逐函数长度）。
+          两条互为零增益，缺任一条测不到增益，故同轮落地。
+  - [x] SubTask 44.3: G0 合成见证（四支，`g0pyc`）：`r43d_01_guardchain_then_while` 落地态 1/2 → 候选 2/2；
+          真反例 `r43d_02_compound_cond_control` 两臂产物 sha 逐字节相同（判据不命中）；
+          线 D 标注的两支「反例」`nc_controls` 6/7→7/7、`nc_controls2` 6/7→7/7 实为额外见证。
+  - [x] SubTask 44.4: G2′ 电池 143 支 SAME=143 IMPROVED=0 REGRESSION=0；G3 锚点 109 支 same=108 lost=0
+          （`strategy.pyc` 系落地基线 jsonl 缺行，非候选缺陷）。
+  - [x] SubTask 44.5: G4 全 402 A/B（唯一发货判据）SAME=400 IMPROVED=2 REGRESSION=0；
+          G4′ strict 尺覆盖 sha 变化面（仅 6 支）affected=6 fixed=1 broken=0 changed=2，
+          strict 缺陷总数 48→47；两条 CHANGED 均为原本已失败函数换缺陷种类。
+  - [x] SubTask 44.6: 落地＝把 `mirr_r44p12` 两文件按字节复制回工作树并断言 sha 与镜像一致：
+          region_analyzer a66248d3b9a3e0a1545e→55a9f61b9b0703063d44（len 1 681 035，裸 LF 0），
+          region_ast_generator 11e2c67e2d7681735f9d→d4c430303a5d2b63753d（len 2 995 945，BOM 保留，裸 LF 0）。
+  - [x] SubTask 44.7: G5 single + G6 `batch --index pyc_index.json --all --round 44`（402/402 verified，0 failed）
+          + G7 stats 375 ok / 27 partial / 0 failed，5659/5746；写 rounds/round44/OUTCOME.md 并移交 Round 45
+          （等长块换位 `write_logging_thread` 127 vs 128；反转 if + 丢失出口跳 `init_connection` 45 vs 44；
+          线 C `c3` 不可发货但交出「生成器：兄弟块起于守卫 merge 块」线索）。
