@@ -1108,3 +1108,71 @@
           `load_daily.pyc` 23、`quotation.pyc` 143、`plugin_system_persist/__init__.pyc` 15、
           `custom_tools.pyc` 6 不变。重生成合成件时注意 `py_compile` 默认只写 `__pycache__`，
           电池读的是同名同级 `.pyc`，必须显式传 `cfile`。
+- [x] Task 31: 落地 R31-C —— 臂停止集里「没有正常后继、且全部前驱都在本臂内」的终止块是本臂的
+          终止语句块，不得充当本臂与兄弟臂的边界认领（原则 2 每块唯一归属，只 `discard` 不新增发射），
+          并在 elif 链 `_chain_merge` 重收集处复放同一判据；修 `fly/common/flytools.pyc ::
+          FileLock.acquire` 一处归属错位的三个症状（臂尾裸 `raise` 落到 if/else 之后、`except`
+          正常出口的 as-var 清理尾声 −4、循环回边 −1），靶子 `64/65 → 65/65`，严格尺
+          `90/85（3 个非相等块）→ 90/90（0 个）`，本轮净翻转 1 个文件。
+  - [x] SubTask 31.1: 目标池按落地字节（基线 `7b5f760c`）重建（`logs/pool31.txt` 首行直读回写的索引，
+          不转述）：`files 402 partial 32 sum_deficit 104 deficit1 8`。八个 deficit-1 文件在
+          落地核上逐个 `single` 一手复测（`logs/landed_d1.txt` 八条全在），靶子
+          `flytools.pyc 64/65 [['acquire', 88, 85, 2, 14]]`。
+  - [x] SubTask 31.2: 线 A 根因由**只诊断代理**在其私有镜像根给出、编排方在自己的镜像根独立复现
+          （`logs/diagA_ANALYSIS.md`、`logs/blockdump_head.txt`、落地核同形转储
+          `logs/blockdump_landed_regions.txt`）：`except OSError as e` 处理器臂是
+          `IfRegion@B200`（`then=[B242]`、`else=[B366,B508,B558]`、`merge=None`），臂内嵌套区域的
+          终止块 B364（`RAISE_VARARGS 0`，`successors == exception_successors == {B568}`，无正常
+          后继）被 `boundary_stop` 原样带进外层 if 的 `then_stop`/`else_stop` ⇒ 它既不被登记为臂尾、
+          又使 `_collect_branch_blocks` 停止扩张，遂由父区在整个 if/else 之后发射。一手 hunk 重建
+          （`logs/hunks_head_tracked.txt`）证明一处错位同时造出靶子全部三处 hunk，**订正 Round 30
+          把它误记成的「三族混合」**：多 hunk 之前先检验「一处错位能否解释全部 hunk」，别按 hunk 数开诊断线。
+  - [x] SubTask 31.3: 线 B／线 C 实测后不占本轮槽位。线 B＝R30-B3（汇合块两臂同时取消认领）门禁齐备
+          但官方尺中性、无可得 G0，继续随 #61 移交；线 C＝靶子 `events` 残余 −2 需**两条**判据
+          （R30-C2 就地渲染 ＋ 那两跳转槽），且 R30-C2 单用使官方尺 `jump_diffs 2→4` 变差。
+  - [x] SubTask 31.4: 语料外复现件入库 `test_repros/round31_arm_terminal_join/`：3 见证
+          （`w_a`/`w_b`/`w_c`）＋ 6 CONTROL。CONTROL 头注释按实测改写为 **sha 级不变性判据** ——
+          代理原稿称「全部 CONTROL 保持 matched」是错的，实测三把核同读 `5/7` 且失败对
+          恒为 `c2_arm_tail_is_break`／`c6_both_arms_end_in_raise`（与本判据无关的既有缺陷）。另：代理的一个块级转储探针是 0 字节的坏探针
+          输出（不是空结果），归档时已换成编排方在落地核上重跑的同形转储 ——
+          凡归档的探针日志都须断言非空。
+  - [x] SubTask 31.5: 落 R31-C（`core/cfg/region_analyzer.py:17137` 站点一 40 行 ＋ `:19310` 站点二
+          28 行，`git diff --numstat` = `68 0` 纯新增，核 sha `a66248d3b9a3e0a1`，与实测镜像
+          `mirr_c` 逐字节相同）。判据只读同层结构：块身份（本区汇合块／兄弟臂入口／臂入口）、
+          `successors - exception_successors` 是否为空（有无正常后继）、`predecessors` 与「臂内集∪
+          停止集」的包含关系；不读名字／常量／绝对偏移／条数／函数名。站点二必要性实测：只做站点一时
+          合成见证仍 `2/4`，因为 `_then_stop` 在链汇合重建处从 `boundary_stop` 重新组装、
+          覆盖掉站点一的成果；复放后 `3/4`。
+  - [x] SubTask 31.6: 门禁（严格串行，原始日志 `rounds/round31/logs/`）：G0 见证落地核 `1/4`
+          （w_a_handler_raise_after_nested_if 52/47 j4 t11、w_b_handler_raise_then_fall 48/44 j3 t14、w_c_handler_nested_raise_deep 64/63 j2 t51）
+          → 判据后 `3/4`（只剩前驱不满足判据③的第三形状 `w_c`）；
+          G0 CONTROL 两核产物 sha 相同；G1 靶子 `64/65 → 65/65 mism=[]`；
+          G2′ 前轮 38 复现电池 `SAME=38`、G3 承重锚点电池（本轮起并入 R30 两件合成锚）`SAME=98`，
+          两档 IMPROVED=REGRESSION=MOVED=ERR=0；G4 全量 A/B（**sha 优先**）
+          `SAME=400 IMPROVED=1 REGRESSION=0 MOVED=1 ERR=0`、完全匹配文件
+          `370 → 371`，唯一 IMPROVED 即靶子、唯一 MOVED 是 `gtn_api.pyc`（`gained=[]
+          lost=[]`）；计数尺同跑 `SAME=401 IMPROVED=1`；G4′ 逐个变化产物严格尺 `flytools`
+          `65/66 σ1 Σ|Δ|=5 → 66/66 σ0 Σ|Δ|=0`、`gtn_api` 两把核均
+          `5/5 σ0 Σ0`。
+  - [x] SubTask 31.7: `batch --index pyc_index.json --all --round 31` 全量复验把索引拉回实测
+          （`logs/batch_all31.txt`，`[402/402]` 跑完、索引回写标记恰 1 次、Traceback／
+          KeyboardInterrupt／MemoryError 0 行，完成性判据已附在日志末行），`stats` 读数存
+          `logs/stats31.txt`： `total_pyc 402 / verified_pyc 402 / ok_pyc 371 / partial_pyc 31 / failed_pyc 0 / total_functions 5746 / matched_functions 5643 / cumulative_match_rate 98.21%`；索引改动逐字段核对见 `logs/index_delta31.txt`（真实字段改动
+          恰 1 条 = 靶子 `partial -> ok`、`matched_functions 64 -> 65`、rate `-> 1.0`，其余 402 条只被
+          重打 round 戳 = `last_tested_round` 30 -> 31）。G5 `single` 靶子 `65/65 100.00%`，金丝雀 `quotation 143/143`、`load_daily 23/23`、
+          `plugin_system_persist/__init__ 15/15`、`custom_tools 6/6` 全保持，残余 `instance 31/32`、
+          `replace_utils 8/9` 逐条同形。受跟踪产物变化 2 份（`logs/products_sha.txt`）：靶子
+          `flytoolsOK.py`（sha16 `d1ddb72cf60efdfe`）与 `gtn_apiOK.py`（sha16 `f26e8a084eef60cc`），两者均与测量臂产物逐字节相同；
+          后者两尺皆判中性，差异是两处 `else: time.sleep(1)` 折叠成不缩进的顺序语句（产物 87→85 行，
+          `logs/g4prime_gtn_api_diff.txt`）⇒ 接受并登记为「ok 文件产物文本变化」在册观察项，不得视为已解释。
+  - [x] SubTask 31.8: 移交 Round 32：① 见证第三成员 `w_c_handler_nested_raise_deep 64/63 j2 t51`
+          （落单块前驱不满足判据③，另一形状）；② `default_event_source :: events 510/508`（需两条
+          判据）；③ #61 R30-B3；④ 发射侧两兄弟 `function.pyc :: save_testds_to_json 314/310`（缺
+          **重复**清理副本，需「增」）与 `replace_utils :: decrypt_database_url 295/324`（过量发射，
+          需放弃发射侧）；⑤ `instance :: _init_config 86/84`（R16 J1 在册反例，受保护勿再取）；
+          ⑥ `clock_worker 1275/1291`、`DefaultMatcher.match 713/689`、`tick_worker_thread 268/247`、
+          `quote.pyc 67/81`（含 `load_bars_from_hundsun 477/470`）、`r29x_01 <module> 142/138`；
+          ⑦ 代码内注释标签写作 `R31-B` 而本轮发货名 `R31-C` —— 改名会改动被测量字节，须整轮重测，
+          留作字面债。锚点新要求：落地核上 `r31a_witness.pyc` 必须 `3/4`、`r31a_control.pyc` 必须
+          `5/7` 且失败对只能是 `c2`/`c6`；Round 32 电池 = `anchors100.txt`（本轮 `anchors98.txt` ＋
+          这两个新件）。重生成合成件时 `py_compile` 必须显式传 `cfile`，电池读的是同名同级 `.pyc`。

@@ -1,0 +1,22 @@
+@@@ G2' 38-synthetic battery (head vs c)
+@@@ rc=0
+@@@ rc=0
+@@@ rc=0
+--- tally --- {"SAME": 38, "IMPROVED": 0, "REGRESSION": 0, "MOVED": 0, "other": 0}
+@@@ G3 98-anchor battery
+@@@ rc=0
+@@@ rc=0
+@@@ rc=0
+--- tally --- {"SAME": 98, "IMPROVED": 0, "REGRESSION": 0, "MOVED": 0, "other": 0}
+@@@ G4 full-402 A/B (head 4 shards, c 4 shards, sha-first)
+ab402_head.jsonl 402
+ab402_c.jsonl 402
+@@@ rc=0
+MOVED  F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/gtn_api.pyc  gained=[] lost=[]
+IMPROVED F:/Downloads/pythoncdc-main/site-packages/fly/common/flytools.pyc  64/65 -> 65/65
+TALLY SAME=400 IMPROVED=1 REGRESSION=0 MOVED=1 ERR=0  (unpaired lists=0)
+files fully matched: a=370 b=371
+@@@ rc=0
+IMPROVED   fly/common/flytools.pyc                                        a= 64/ 65 b= 65/ 65  a_mism=[['acquire', 88, 85, 2, 14]] b_mism=[]
+--- tally --- {"SAME": 401, "IMPROVED": 1, "REGRESSION": 0, "MOVED": 0, "other": 0}
+@@@ R31-C GATES DONE

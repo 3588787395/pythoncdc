@@ -1,0 +1,2 @@
+--- gtn_api.pyc  vs  F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/gtn_apiOK.py
+  strict clean 5/5  sigma-defect=0  sum_abs_delta=0

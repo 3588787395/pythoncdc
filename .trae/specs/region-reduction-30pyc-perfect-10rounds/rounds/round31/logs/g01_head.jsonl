@@ -1,0 +1,2 @@
+{"path": "D:/Temp/r31gate/c1/witness/r31a_witness.pyc", "arm": "head", "sha": "e6fd92b0d83dd545", "total_functions": 4, "matched_functions": 1, "mism": [["w_a_handler_raise_after_nested_if", 52, 47, 4, 11], ["w_b_handler_raise_then_fall", 48, 44, 3, 14], ["w_c_handler_nested_raise_deep", 64, 63, 2, 51]]}
+{"path": "D:/Temp/r31gate/c1/witness/r31a_control.pyc", "arm": "head", "sha": "f7b982ef9457f863", "total_functions": 7, "matched_functions": 5, "mism": [["c2_arm_tail_is_break", 51, 49, 1, 16], ["c6_both_arms_end_in_raise", 46, 52, 4, 19]]}

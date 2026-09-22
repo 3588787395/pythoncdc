@@ -1,0 +1,2 @@
+IMPROVED   fly/common/flytools.pyc                                        a= 64/ 65 b= 65/ 65  a_mism=[['acquire', 88, 85, 2, 14]] b_mism=[]
+--- tally --- {"SAME": 401, "IMPROVED": 1, "REGRESSION": 0, "MOVED": 0, "other": 0}

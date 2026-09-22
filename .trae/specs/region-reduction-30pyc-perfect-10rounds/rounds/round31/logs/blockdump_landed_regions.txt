@@ -1,0 +1,28 @@
+=== BLOCKS total=19 ===
+B0      n=7   pred=                                       succ=B42                      role=NORMAL              RESUME 0 | LOAD_GLOBAL time | LOAD_ATTR time | PRECALL 0 | CALL 0 | STORE_FAST start_time | NOP 
+B42     n=1   pred=B0,B584                                succ=B44                      role=LOOP_HEADER         NOP 
+B44     n=16  pred=B42                                    succ=B178,B180                role=LOOP_BODY           LOAD_GLOBAL os | LOAD_ATTR open | LOAD_FAST self | LOAD_ATTR lockfile | LOAD_GLOBAL os | LOAD_ATTR O_CREAT | LOAD_GLOBAL os | LOAD_ATTR O_EXCL | BINAR
+B178    n=1   pred=B44                                    succ=B588                     role=BREAK               JUMP_FORWARD 588
+B180    n=4   pred=B44                                    succ=B578,B576,B198           role=LOOP_BODY           PUSH_EXC_INFO  | LOAD_GLOBAL OSError | CHECK_EXC_MATCH  | POP_JUMP_FORWARD_IF_FALSE 576
+B198    n=1   pred=B180                                   succ=B200,B578                role=LOOP_BODY           STORE_FAST e
+B200    n=6   pred=B198                                   succ=B366,B568,B242           role=LOOP_BODY           LOAD_FAST e | LOAD_ATTR errno | LOAD_GLOBAL errno | LOAD_ATTR EEXIST | COMPARE_OP != | POP_JUMP_FORWARD_IF_FALSE 366
+B242    n=8   pred=B200                                   succ=B568,B314,B364           role=LOOP_ELSE           LOAD_GLOBAL os | LOAD_ATTR path | LOAD_METHOD exists | LOAD_FAST self | LOAD_ATTR lockfile | PRECALL 1 | CALL 1 | POP_JUMP_FORWARD_IF_FALSE 364
+B314    n=7   pred=B242                                   succ=B568,B364                role=LOOP_ELSE           LOAD_GLOBAL os | LOAD_ATTR unlink | LOAD_FAST self | LOAD_ATTR lockfile | PRECALL 1 | CALL 1 | POP_TOP 
+B364    n=1   pred=B242,B314                              succ=B568                     role=LOOP_ELSE           RAISE_VARARGS 0
+B366    n=10  pred=B200                                   succ=B428,B508,B568           role=LOOP_BODY           LOAD_GLOBAL time | LOAD_ATTR time | PRECALL 0 | CALL 0 | LOAD_FAST start_time | BINARY_OP 10 | LOAD_FAST self | LOAD_ATTR timeout | COMPARE_OP >= | PO
+B428    n=12  pred=B366                                   succ=B568                     role=EXCEPT_STORE        LOAD_GLOBAL os | LOAD_ATTR unlink | LOAD_FAST self | LOAD_ATTR lockfile | PRECALL 1 | CALL 1 | POP_TOP  | LOAD_GLOBAL FileLockException | LOAD_CONST T
+B508    n=7   pred=B366                                   succ=B568,B558                role=LOOP_BODY           LOAD_GLOBAL time | LOAD_ATTR sleep | LOAD_FAST self | LOAD_ATTR delay | PRECALL 1 | CALL 1 | POP_TOP 
+B558    n=5   pred=B508                                   succ=B584                     role=LOOP_BODY           POP_EXCEPT  | LOAD_CONST  | STORE_FAST e | DELETE_FAST e | JUMP_FORWARD 584
+B568    n=4   pred=B242,B314,B364,B366,B428,B508,B200     succ=B578                     role=LOOP_ELSE           LOAD_CONST  | STORE_FAST e | DELETE_FAST e | RERAISE 1
+B576    n=1   pred=B180                                   succ=B578                     role=PURE_JUMP           RERAISE 0
+B578    n=3   pred=B568,B180,B198,B576                    succ=                         role=RETURN              COPY 3 | POP_EXCEPT  | RERAISE 1
+B584    n=2   pred=B558                                   succ=B42                      role=LOOP_BACK_EDGE      EXTENDED_ARG 1 | JUMP_BACKWARD 42
+B588    n=5   pred=B178                                   succ=                         role=RETURN              LOAD_CONST True | LOAD_FAST self | STORE_ATTR is_locked | LOAD_CONST  | RETURN_VALUE 
+=== REGIONS ===
+LoopRegion entry=B42 nb=14 body=['B42', 'B44', 'B180', 'B198', 'B200', 'B366', 'B508', 'B558', 'B584'] exit=[]
+  TryExceptRegion entry=B44 nb=16 try=['B44'] handlers=[] hblocks=[] finally=?None else=['B178']
+    IfRegion entry=B200 nb=3 cond=B200 then=['B242', 'B364'] else=[] merge=?None
+    IfRegion entry=B242 nb=2 cond=B242 then=['B314'] else=[] merge=B364
+    IfRegion entry=B366 nb=2 cond=B366 then=['B428'] else=[] merge=?None
+Region entry=B0 nb=1
+Region entry=B588 nb=1

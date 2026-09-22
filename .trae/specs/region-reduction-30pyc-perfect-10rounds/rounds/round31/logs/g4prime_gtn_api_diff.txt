@@ -1,0 +1,20 @@
+--- head
++++ c
+@@ -59,8 +59,7 @@
+                     system_log.warning(msg)
+                     user_log.warning(msg)
+                     return ({'error_no': -1, 'error_info': msg}, {})
+-                else:
+-                    time.sleep(1)
++                time.sleep(1)
+ def send_by_post(url, params=None):
+     tokenValue = get_token()
+     if not tokenValue:
+@@ -83,6 +82,5 @@
+                     system_log.warning(msg)
+                     user_log.warning(msg)
+                     return ({'error_no': -1, 'error_info': msg}, {})
+-                else:
+-                    time.sleep(1)
++                time.sleep(1)
+ 

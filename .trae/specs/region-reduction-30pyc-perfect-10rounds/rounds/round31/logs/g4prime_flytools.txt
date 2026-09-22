@@ -1,0 +1,2 @@
+--- flytools.pyc  vs  F:/Downloads/pythoncdc-main/site-packages/fly/common/flytoolsOK.py
+  strict clean 66/66  sigma-defect=0  sum_abs_delta=0

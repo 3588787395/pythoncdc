@@ -17134,6 +17134,46 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                 chain_blocks |= _ternary_merge_protect_blocks
             then_stop = {else_succ} | (boundary_stop - {then_succ})
             else_stop = {then_succ} | (boundary_stop - {else_succ})
+            # [R31-B 同层判据 · 原则 2 每块唯一归属 · 臂内终止汇合块侧]
+            # 【识别条件】本臂停止集里的块 S 同时满足：① S 不是本 if 的汇合块
+            # merge、不是兄弟臂入口、不是臂入口自身；② S 没有正常后继（其后继
+            # 全在异常表边上）——S 是硬出口语句块（raise/return/reraise）；③ S 的
+            # 每个前驱都落在「臂内集 ∪ 停止集」中，且至少一个前驱已在臂内集里。
+            # 【归约方式】满足①②③的 S 是本臂自身的终点语句，不是臂与兄弟臂的
+            # 边界：从本臂停止集中取消这一认领（迭代至不动点，臂内集随之扩大），
+            # 令 _collect_branch_blocks 把它收进臂尾。
+            # 【危害形态】不取消时该终点块被留给父区（except handler / 循环体）
+            # 顺序尾部发射：臂尾语句错位到整个 if/else 之后，并连带使 except 正常
+            # 出口的 as-var 清理尾声与循环回边失去发射路径
+            # （flytools.pyc::<module>.FileLock.acquire 88/85, jump_diffs=2 形）。
+            # 【只删不增】命中时仅从本臂局部停止集取消成员认领，不新增任何发射、
+            # 语句或块；判据只读块身份、区域角色字段（臂入口/汇合块）与前驱/后继
+            # （含异常边）关系，不读名字、常量、绝对偏移、指令条数、函数名。
+            for _r31b_arm, _r31b_other, _r31b_merge, _r31b_stop in (
+                    (then_succ, else_succ, merge, then_stop),
+                    (else_succ, then_succ, merge, else_stop)):
+                if _r31b_arm is None:
+                    continue
+                _r31b_inner = {_r31b_arm}
+                _r31b_go = True
+                while _r31b_go:
+                    _r31b_go = False
+                    for _r31b_s in list(_r31b_stop):
+                        if (_r31b_s is _r31b_merge or _r31b_s is _r31b_other
+                            or _r31b_s is _r31b_arm):
+                            continue
+                        if (_r31b_s.successors
+                            - (getattr(_r31b_s, "exception_successors", None) or set())):
+                            continue
+                        _r31b_preds = set(_r31b_s.predecessors)
+                        if not _r31b_preds or not (_r31b_preds & _r31b_inner):
+                            continue
+                        if not _r31b_preds <= (_r31b_inner | _r31b_stop):
+                            continue
+                        _r31b_stop.discard(_r31b_s)
+                        _r31b_inner.add(_r31b_s)
+                        _r31b_go = True
+                        break
             then_blocks = self._collect_branch_blocks(then_succ, merge, then_stop)
             # 区域归约算法原则 2（每块唯一归属）+ 原则 4（入口引用语义）：
             # 【识别条件】所有 merge 计算失败（merge is None）且已收集的 then 臂
@@ -19267,6 +19307,34 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     _then_stop.add(else_blocks[0])
                 if boundary_stop:
                     _then_stop |= (set(boundary_stop) - {then_blocks[0]})
+                # [R31-B 同层判据 · 第二站点] 链汇合重建（_chain_merge）后重取 then 臂，
+                # 必须用同一判据重放，否则本判据在站点一的成果被此处覆盖。
+                for _r31b_arm, _r31b_other, _r31b_merge, _r31b_stop in (
+                        (then_blocks[0],
+                         (else_blocks[0] if else_blocks else None),
+                         _chain_merge, _then_stop),):
+                    if _r31b_arm is None:
+                        continue
+                    _r31b_inner = {_r31b_arm}
+                    _r31b_go = True
+                    while _r31b_go:
+                        _r31b_go = False
+                        for _r31b_s in list(_r31b_stop):
+                            if (_r31b_s is _r31b_merge or _r31b_s is _r31b_other
+                                or _r31b_s is _r31b_arm):
+                                continue
+                            if (_r31b_s.successors
+                                - (getattr(_r31b_s, "exception_successors", None) or set())):
+                                continue
+                            _r31b_preds = set(_r31b_s.predecessors)
+                            if not _r31b_preds or not (_r31b_preds & _r31b_inner):
+                                continue
+                            if not _r31b_preds <= (_r31b_inner | _r31b_stop):
+                                continue
+                            _r31b_stop.discard(_r31b_s)
+                            _r31b_inner.add(_r31b_s)
+                            _r31b_go = True
+                            break
                 then_blocks = self._collect_branch_blocks(
                     then_blocks[0], _chain_merge, stop_set=_then_stop)
         if merge is None and len(then_blocks) > 1:

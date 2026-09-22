@@ -1,0 +1,14 @@
+<module>.FileLock.acquire  acquire
+  filtered orig=90 decomp=85 delta=-5   non-equal blocks=3
+  H1 replace  orig[45:46] @364..364  ->  decomp[45:46] @364..364   n=1/1
+        o  @364   ('0', 'RAISE_VARARGS')
+        d  @364   ('<JUMP>', 'JUMP')
+  H2 replace  orig[71:76] @558..566  ->  decomp[71:72] @558..558   n=5/1
+        o  @558   ('None', 'POP_EXCEPT')
+        o  @560   ('None', 'LOAD_CONST')
+        o  @562   ("'e'", 'STORE_FAST')
+        o  @564   ("'e'", 'DELETE_FAST')
+        o  @566   ('<JUMP>', 'JUMP')
+        d  @558   ('0', 'RAISE_VARARGS')
+  H3 delete   orig[84:85] @586..586  ->  decomp[80:80] @576..574   n=1/0
+        o  @586   ('<JUMP>', 'JUMP')

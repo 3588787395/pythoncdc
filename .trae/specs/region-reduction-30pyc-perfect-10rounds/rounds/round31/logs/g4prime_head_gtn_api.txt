@@ -1,0 +1,2 @@
+--- gtn_api.pyc  vs  D:/Temp/r31gate/c1/build_head/IQCommon__api__gtn_apiOK.py
+  strict clean 5/5  sigma-defect=0  sum_abs_delta=0

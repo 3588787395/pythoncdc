@@ -1,0 +1,11 @@
+bytecode_match_rate          changed in 1 entries
+    fly/common/flytools.pyc                                                  0.9846153846153847 -> 1.0
+decompile_status             changed in 1 entries
+    fly/common/flytools.pyc                                                  partial -> ok
+last_tested_round            changed in 402 entries
+    (... all 402 entries re-stamped 30 -> 31, list elided)
+matched_functions            changed in 1 entries
+    fly/common/flytools.pyc                                                  64 -> 65
+total fields touched: ['bytecode_match_rate', 'decompile_status', 'last_tested_round', 'matched_functions']
+entries compared: 402, path list identical: True
+entries with real (non round-stamp) field changes: 1 -> ['fly/common/flytools.pyc']

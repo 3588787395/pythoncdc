@@ -1,0 +1,2 @@
+{"path": "D:/Temp/r31gate/c1/witness/r31a_witness.pyc", "arm": "c", "sha": "1cb37514629d5b19", "total_functions": 4, "matched_functions": 3, "mism": [["w_c_handler_nested_raise_deep", 64, 63, 2, 51]]}
+{"path": "D:/Temp/r31gate/c1/witness/r31a_control.pyc", "arm": "c", "sha": "f7b982ef9457f863", "total_functions": 7, "matched_functions": 5, "mism": [["c2_arm_tail_is_break", 51, 49, 1, 16], ["c6_both_arms_end_in_raise", 46, 52, 4, 19]]}

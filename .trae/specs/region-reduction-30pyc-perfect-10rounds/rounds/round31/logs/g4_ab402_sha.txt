@@ -1,0 +1,4 @@
+MOVED  F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/gtn_api.pyc  gained=[] lost=[]
+IMPROVED F:/Downloads/pythoncdc-main/site-packages/fly/common/flytools.pyc  64/65 -> 65/65
+TALLY SAME=400 IMPROVED=1 REGRESSION=0 MOVED=1 ERR=0  (unpaired lists=0)
+files fully matched: a=370 b=371
