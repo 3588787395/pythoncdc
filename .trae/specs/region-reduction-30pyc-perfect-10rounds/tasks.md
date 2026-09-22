@@ -845,5 +845,6 @@
   - [x] 26.7-c 零副作用金丝雀换成 `site-packages/fly/simtradding/request_data_transform.pyc`
     （官方 `2/2`，且 R26-A 的全量 A/B 把它留在未变动集合内），基线产物 sha `1d9eebd2932ec072`
     （`rounds/round26/logs/canary1.txt` + `canary_landed.jsonl`）；`quotation.pyc` 自 R25 起是承重锚点。
-  - [ ] 26.7-d push：github.com:443 间歇不可达（同时 `api.github.com` 可达、token 经 `/user` 校验为有效且未过期），
-    补证提交待网络恢复后 push，并断言 `refs/remotes/origin/main..HEAD` 为 0。
+  - [x] 26.7-d push：已 push（`481a8e84` → `c24681ce` → `e34fd403` → `a826af80`，
+    `git rev-list --count refs/remotes/origin/main..HEAD` 实测 0）；此前同一提交链上
+    github.com:443 间歇不可达（`api.github.com` 同期可达、token 未过期）。
