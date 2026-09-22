@@ -1,0 +1,4 @@
+R27FIRE hdr=168 hdr_succ=[172, 202] hdr_csucc=[172, 202] fe=202 fe_last=POP_JUMP_FORWARD_IF_FALSE fe_last_tgt=590 fe_succ=[214, 590] fe_csucc=[214, 590] else_blocks=[202, 214, 590, 218, 342, 594, 670, 346, 376, 486] then=[(172, [], 'RAISE_VARARGS')]
+R27FIRE hdr=202 hdr_succ=[214, 590] hdr_csucc=[214, 590] fe=590 fe_last=POP_JUMP_FORWARD_IF_NOT_NONE fe_last_tgt=670 fe_succ=[594, 670] fe_csucc=[594, 670] else_blocks=[590, 594, 670] then=[(172, [], 'RAISE_VARARGS')]
+R27FIRE hdr=198 hdr_succ=[244, 374] hdr_csucc=[244, 374] fe=374 fe_last=POP_JUMP_FORWARD_IF_FALSE fe_last_tgt=424 fe_succ=[420, 424] fe_csucc=[420, 424] else_blocks=[374, 420, 424, 544, 548] then=[(244, [], 'RAISE_VARARGS')]
+R27FIRE hdr=198 hdr_succ=[244, 374] hdr_csucc=[244, 374] fe=374 fe_last=POP_JUMP_FORWARD_IF_FALSE fe_last_tgt=424 fe_succ=[420, 424] fe_csucc=[420, 424] else_blocks=[374, 420, 424, 544, 548] then=[(48, [], 'RAISE_VARARGS')]

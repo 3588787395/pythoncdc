@@ -18016,6 +18016,46 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     _elif_with_handler_blocks.update(_r.cleanup_blocks)
                 if getattr(_r, 'exception_blocks', None):
                     _elif_with_handler_blocks.update(_r.exception_blocks)
+        def _r27_fe_carries_own_statements(blk_, last_):
+            # R27-A 同层结构谓词：一个块除了尾部跳转之外是否携带**自己可发射的
+            # 语句**。判据与本函数下方 L18289-18339 既有的 `_has_body_stmt` 逐字
+            # 相同（同一 opcode 集，含 R21-A 补全的 `CALL`→(`YIELD_VALUE`/`RESUME`)*
+            # →`POP_TOP` 弹栈间隙半），只是改为可调用形式，供 `_then_has_ctrl_exit`
+            # 的救援分支复用。只读块自身的指令与其末指令偏移，不读名字/常量/绝对偏移。
+            if any(_i.opname in ('STORE_FAST', 'STORE_NAME', 'STORE_GLOBAL',
+                                'STORE_DEREF', 'STORE_ATTR', 'STORE_SUBSCR',
+                                'BINARY_OP', 'DELETE_NAME', 'DELETE_FAST',
+                                'DELETE_GLOBAL', 'DELETE_ATTR', 'DELETE_SUBSCR')
+                   for _i in blk_.instructions if _i.offset < last_.offset):
+                return True
+            _instrs = [i for i in blk_.instructions
+                       if i.offset < last_.offset
+                       and i.opname not in NOISE_OPS
+                       and i.opname not in ('RESUME', 'NOP', 'CACHE', 'EXTENDED_ARG')]
+            for _idx, _i in enumerate(_instrs):
+                if _i.opname != 'CALL':
+                    continue
+                for _j in range(_idx + 1, len(_instrs)):
+                    _fj = _instrs[_j].opname
+                    if _fj == 'POP_TOP':
+                        return True
+                    if _fj not in ('YIELD_VALUE', 'RESUME'):
+                        break
+            return False
+        def _r27_tail_is_self_contained(tail_):
+            # R27-A 同层结构谓词（区域归约算法原则 4：入口引用语义）：候选链尾块集
+            # 在「后继」一侧是否闭合——集内任何块都不许跳到集外。闭合即意味着这批块
+            # 自成一条链：每臂要么无后继（RETURN/RAISE 汇流到函数级出口），要么落在
+            # 集内；不存在某个「绕开整条链」的汇合块。不闭合则集外那个目标是**外层**
+            # 结构的汇合点，`else_blocks_[0]` 是外层 else 体自己的头，不是本链的兄弟
+            # 条件。取材面与下方 `_chain_merge_candidates`／`_body_succs_to_fe` 相同
+            # （只看臂末块的 successors），不读偏移次序、不读函数名、不跨层。
+            _tset = set(tail_)
+            for _b in tail_:
+                for _s in (_b.successors or ()):
+                    if _s not in _tset:
+                        return False
+            return True
         def _check_elif_chain(header_, else_blocks_, merge_):
             if not else_blocks_:
                 return None
@@ -18142,6 +18182,25 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                         _fe_last = _first_else.get_last_instruction()
                         if _fe_last and _fe_last.opname in (FORWARD_CONDITIONAL_JUMP_OPS | SHORT_CIRCUIT_JUMP_OPS):
                             if not _then_has_raise:
+                                _then_has_ctrl_exit = False
+                            # R27-A 区域归约算法原则 1（块 = 前导语句 + 尾跳转）＋原则 2
+                            # （每块唯一归属）＋原则 4（入口引用语义）：`_then_has_raise` 读的
+                            # 是闭包变量 `then_blocks`，即本方法第 0 臂（最外层 if 的 then 体）
+                            # 的形状，而不是当前递归级前一臂的形状 ⇒ 同一入参 (header_,
+                            # else_blocks_) 会因链从哪一层发起而结论相反。臂以 raise 终结不构成
+                            # 「下一候选条件块属于 else 体」的证据。两条同层合取：
+                            # ① else 头块除尾跳转外不携带自己的语句 ⇒ 它没有语句化表示——实测把它
+                            #   塞进链尾扁平 `elif_final_else` 语句表时 `_generate_block_statements`
+                            #   对它发射 0 条（region_ast_generator.py:44175→44262），条件文本永久
+                            #   丢失，其 then 臂退化成 else 体里的无条件语句，后面的兄弟语句在重编译
+                            #   时被 CPython 3.11 当死代码整段消除（`can_resume_strategy` −32）；
+                            # ② 候选链尾块集在后继一侧闭合 ⇒ 这批块自成一条全汇流链。缺这条时
+                            #   `get_start_day` 实测被吞掉的是外层 else 体自己的头：`if type ==
+                            #   'daily'` 臂的出口 JUMP_FORWARD 目标从函数级汇合点 1294 改成 670，
+                            #   严格尺读成等长 target_diff（官方尺 28/28 看不见）。
+                            # 带前导语句的块仍由 L18340 同一判据终止扩展，不会被本放行吞掉。
+                            elif (not _r27_fe_carries_own_statements(_first_else, _fe_last)
+                                  and _r27_tail_is_self_contained(else_blocks_)):
                                 _then_has_ctrl_exit = False
                         # 反编译逻辑推导（elif降级修复·模式1）：
                         # elif链中含return/raise的分支，其return已提供"退出"语义，

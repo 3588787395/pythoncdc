@@ -1,0 +1,7 @@
+MOVED  F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/klinedata.pyc  gained=[] lost=[]
+MOVED  F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/history_api.pyc  gained=[] lost=[]
+IMPROVED F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_persist/__init__.pyc  14/15 -> 15/15
+MOVED  F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc  gained=[] lost=[]
+MOVED  F:/Downloads/pythoncdc-main/site-packages/fly/oauthenticator/oauth2.pyc  gained=[] lost=[]
+TALLY SAME=397 IMPROVED=1 REGRESSION=0 MOVED=4 ERR=0  (unpaired lists=0)
+files fully matched: a=367 b=368

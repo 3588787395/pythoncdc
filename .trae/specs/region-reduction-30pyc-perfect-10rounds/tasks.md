@@ -848,3 +848,48 @@
   - [x] 26.7-d push：已 push（`481a8e84` → `c24681ce` → `e34fd403` → `a826af80`，
     `git rev-list --count refs/remotes/origin/main..HEAD` 实测 0）；此前同一提交链上
     github.com:443 间歇不可达（`api.github.com` 同期可达、token 未过期）。
+
+- [x] Task 27: 落地 R27-A（`elif` 链的候选头块是**纯条件块**时，不得因「上一臂以控制流退出终结」而被链弃认）
+  - [x] SubTask 27.1: 整块丢失族 B1（#53）取证收口：`plugin_system_persist/__init__.pyc :: can_resume_strategy`
+          的 −32 不在发射器，而在归约期的弃认 —— 嵌套链第 4 级条件块是纯条件块（只有尾条件跳转、不携带自己的
+          前导语句），被 `region_analyzer.py` `_check_elif_chain` 的 `_then_has_ctrl_exit` 否决挡在链外；实测把它
+          塞进链尾扁平 `elif_final_else` 语句表时 `_generate_block_statements`（`region_ast_generator.py:44175→44262`）
+          对它发射 **0 条**，条件文本永久消失，其 then 臂退化为 else 体内的无条件语句、兄弟语句在重编译时被
+          CPython 3.11 当死代码消除（这就是 −32 的放大器）。取证 `rounds/round27/arm-design.md`。
+  - [x] SubTask 27.2: 站点身份戳实测否决现场与落点：先dump靶子函数的区域形状（`logs/insp_current.txt`：链
+          `elif_conditions=[B178,B198]`、`elif_final_else=[B374,B420,B424,B544,B548]`、**`merge=-`**），再在
+          `_check_elif_chain` 的否决现场打 stderr 戳跑镜像核（`logs/probe_fires_v1.txt`：读到的 hdr/fe/else_blocks/then
+          全集，确认 `_then_has_ctrl_exit` 确实在候选头上触发），第二版戳（`probe_fires_v2.txt`）补上 `merge` 与逐块后继：
+          BAD 例（`fly/common/tradingday_calendar.pyc :: get_start_day`）的 else 块集合含**指向集合外**（函数级 merge）
+          的后继，GOOD 例（靶子）块集合后继闭合，且**四条读数全部 `merge=None`** ⇒ 任何以「存在 merge 块」为条件的规则
+          都会同时杀掉修复，故第二判据取「后继闭合」而非「merge 身份」。
+  - [x] SubTask 27.3: 落 R27-A（`core/cfg/region_analyzer.py` 纯插入，`git diff --numstat` = 59 0，CRLF 26842→26901、
+          LF-only 0、无 BOM）：① `_r27_fe_carries_own_statements` 复用既有 `_has_body_stmt` 的同一 opcode 集与 R21-A 的
+          CALL/POP_TOP 半，判候选头块是否携带自己的前导语句（原则 1：块 = 前导语句 + 尾跳转）；② `_r27_tail_is_self_contained`
+          判 else 块集合的后继全在该集合内（臂无外部落点 ⇒ 上一臂以 `raise` 终结时，`if X:` 与 `elif X:` 在 CPython 3.11
+          下逐条同形）。新臂只接在 `if not _then_has_raise:` 之后，带前导语句的块（如本函数 B424）仍由 L18340 的同一判据
+          终止扩展，原则 2（每块唯一归属）不破。不读绝对偏移次序、不读函数名／常量、不引跨层启发。
+  - [x] SubTask 27.4: **严格尺否证裸放宽（本轮发货判据的补强）**：只含判据①的候选在官方 402 文件 A/B 上读
+          `SAME=394 IMPROVED=1 MOVED=7 REGRESSION=0 ERR=0`（靶子 `14/15→15/15`），完全过关；但对 7 个变化产物逐一跑严格尺，
+          `fly/common/tradingday_calendar.pyc :: get_start_day` 由严格干净变成 `target_diff`（`#79 JUMP_FORWARD` 终点
+          orig=`('start_date', LOAD_FAST)`（函数级 merge）→ cand=`('get_minite_time', LOAD_GLOBAL)`）—— 官方尺的计数／等长
+          判据对「跳转落点错位＋死代码消除」全盲。补判据②后 MOVED 7→4、该文件严格尺回到干净、靶子修复保留。被否证的裸变体
+          diff 存档 `logs/rejected_bare_relaxation_get_start_day.diff`。⇒ 结论：MOVED-only 的官方 A/B 不足以免除严格尺复验。
+  - [x] SubTask 27.5: 门禁（严格串行，全部对候选／落地字节实测，原始日志 `rounds/round27/logs/`）：G0 语料外最小复现
+          `test_repros/round27_elif_pure_head/r27a_01_elif_head_after_raise.pyc` 在落地前核 `3/4`、
+          `case_elif_head_after_raise orig=71 decomp=41` → 候选 `4/4`、`mism=[]`，两条 CONTROL（首臂 return 形、候选头自带语句）不翻转；
+          G1′ 靶子 `14/15→15/15`；G3 前轮 93 锚点电池 `SAME=93 IMPROVED=0 REGRESSION=0 MOVED=0 ERR=0`、空读数 0，且 head 臂与上轮
+          落地基线 `base_landed93.jsonl` 逐条相同（臂隔离未失效）；G3′ 基线／cand／landed 三臂差异 **0 条** ⇒ 电池测的字节即落地字节；
+          G4 全量 A/B `SAME=397 IMPROVED=1 MOVED=4 REGRESSION=0 ERR=0`；G4′ 5 个变化产物严格尺逐函数 `(orig, decomp, 缺陷类型)`
+          三元组全等（靶子 `clean 14/15→15/15`、`sigma 32→0`）；G5 `single` 靶子 `ok 15/15`、承重锚点 `fly/data/quotation.pyc`
+          仍 `ok 143/143`、`risk_calculation/function.pyc` `partial 14/15` 与 `flytools.pyc` `partial 64/65` 本轮未动。
+  - [x] SubTask 27.6: 以镜像把补丁逐字节落地（落地前断言工作树 ≡ pristine `mirr_head`、锚点唯一、CRLF 行数增量 = 插入行数、
+          写后与 `mirr_cand` 逐字节相同），再 `batch --index pyc_index.json --all --round 27` 把全部索引拉回实测（`logs/batch_all27.txt`，
+          索引仅 `last_tested_round` ×402 与翻转的 1 条目四字段，键集无增删、条目数不变），`stats` 读数存 `logs/stats27.txt`；
+          `site-packages` 下变化产物 5 个、全为 `*OK.py`（`git status --porcelain -- site-packages` 实测）。
+  - [ ] SubTask 27.7: 本轮未收口，移交 Round 28：① #54 异常尾声按出口路径内联复制丢失（B3 `save_testds_to_json −4`，与 #39 同族）
+          的两条诊断代理均耗尽轮次未交 `ANALYSIS.md`，须重新取证；② `region_ast_generator.py` L11156-11159「入口在他人
+          `elif_conditions` ⇒ 发射 `[]`」守卫本轮再次以戳否证（靶子函数命中 `RET 11017 ×2`、`RET 11163 ×1`，无 `RET 11159`），
+          不得在该站点落地；③ 残余清单不变：`DefaultMatcher.match` 大块换位、`events −19`、`memory_handler +4`、
+          `risk_calculation/function.pyc −1`、`flytools.pyc 64/65`、#42/#43/#44；④ 电池增至 94 例（名单 `D:/Temp/r27self/anchors94.txt`），
+          落地字节基线 `rounds/round27/logs/base_landed94.jsonl`（94 条记录、error 0、空读数 0；与上轮 93 条基线的共有 93 条 `sha`/`mism` **零漂移**，新增 1 条即本轮复现 `4/4`）；下一轮候选须以它为基线，且名单换用新文件名。

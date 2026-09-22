@@ -1,0 +1,72 @@
+{
+ "F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/klinedata.pyc": {
+  "head": {
+   "clean": 52,
+   "seqlen": 5,
+   "sigma": 5,
+   "funcs": 63
+  },
+  "cand": {
+   "clean": 52,
+   "seqlen": 5,
+   "sigma": 5,
+   "funcs": 63
+  }
+ },
+ "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/history_api.pyc": {
+  "head": {
+   "clean": 17,
+   "seqlen": 1,
+   "sigma": 2,
+   "funcs": 18
+  },
+  "cand": {
+   "clean": 17,
+   "seqlen": 1,
+   "sigma": 2,
+   "funcs": 18
+  }
+ },
+ "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_persist/__init__.pyc": {
+  "head": {
+   "clean": 14,
+   "seqlen": 1,
+   "sigma": 32,
+   "funcs": 15
+  },
+  "cand": {
+   "clean": 15,
+   "seqlen": 0,
+   "sigma": 0,
+   "funcs": 15
+  }
+ },
+ "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc": {
+  "head": {
+   "clean": 98,
+   "seqlen": 20,
+   "sigma": 227,
+   "funcs": 123
+  },
+  "cand": {
+   "clean": 98,
+   "seqlen": 20,
+   "sigma": 227,
+   "funcs": 123
+  }
+ },
+ "F:/Downloads/pythoncdc-main/site-packages/fly/oauthenticator/oauth2.pyc": {
+  "head": {
+   "clean": 12,
+   "seqlen": 0,
+   "sigma": 0,
+   "funcs": 12
+  },
+  "cand": {
+   "clean": 12,
+   "seqlen": 0,
+   "sigma": 0,
+   "funcs": 12
+  }
+ }
+}

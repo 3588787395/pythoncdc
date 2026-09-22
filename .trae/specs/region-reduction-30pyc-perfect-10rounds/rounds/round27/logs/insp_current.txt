@@ -1,0 +1,62 @@
+cfg blocks=11 regions=14 roots=1
+IfRegion entry=B0 blocks=11
+  cond=B0 then=['B48'] else=['B178', 'B194', 'B198', 'B244', 'B374', 'B420', 'B424', 'B544', 'B548'] merge=-
+  elif_conditions=['B178', 'B198']
+  elif_bodies=[['B194'], ['B244']]
+  elif_final_else=['B374', 'B420', 'B424', 'B544', 'B548']
+    [cond] B0 n=10 last=POP_JUMP_FORWARD_IF_FALSE ->178 pred= succ=B48,B178
+    [cond] B178 n=4 last=POP_JUMP_FORWARD_IF_NOT_NONE ->198 pred=B0:COND(FORWARD_IF_FALSE@178) succ=B194,B198
+    [cond] B198 n=9 last=POP_JUMP_FORWARD_IF_FALSE ->374 pred=B178:COND(FORWARD_IF_NOT_NONE@198) succ=B244,B374
+    [then] B48 n=18 last=RAISE_VARARGS                  pred=B0:COND(FORWARD_IF_FALSE@178) succ=
+    [else] B178 n=4 last=POP_JUMP_FORWARD_IF_NOT_NONE ->198 pred=B0:COND(FORWARD_IF_FALSE@178) succ=B194,B198
+    [else] B194 n=2 last=RETURN_VALUE                   pred=B178:COND(FORWARD_IF_NOT_NONE@198) succ=
+    [else] B198 n=9 last=POP_JUMP_FORWARD_IF_FALSE ->374 pred=B178:COND(FORWARD_IF_NOT_NONE@198) succ=B244,B374
+    [else] B244 n=18 last=RAISE_VARARGS                  pred=B198:COND(FORWARD_IF_FALSE@374) succ=
+    [else] B374 n=9 last=POP_JUMP_FORWARD_IF_FALSE ->424 pred=B198:COND(FORWARD_IF_FALSE@374) succ=B420,B424
+    [else] B420 n=2 last=RETURN_VALUE                   pred=B374:COND(FORWARD_IF_FALSE@424) succ=
+    [else] B424 n=21 last=POP_JUMP_FORWARD_IF_FALSE ->548 pred=B374:COND(FORWARD_IF_FALSE@424) succ=B544,B548
+    [else] B544 n=2 last=RETURN_VALUE                   pred=B424:COND(FORWARD_IF_FALSE@548) succ=
+    [else] B548 n=2 last=RETURN_VALUE                   pred=B424:COND(FORWARD_IF_FALSE@548) succ=
+    [else] B374 n=9 last=POP_JUMP_FORWARD_IF_FALSE ->424 pred=B198:COND(FORWARD_IF_FALSE@374) succ=B420,B424
+    [else] B420 n=2 last=RETURN_VALUE                   pred=B374:COND(FORWARD_IF_FALSE@424) succ=
+    [else] B424 n=21 last=POP_JUMP_FORWARD_IF_FALSE ->548 pred=B374:COND(FORWARD_IF_FALSE@424) succ=B544,B548
+    [else] B544 n=2 last=RETURN_VALUE                   pred=B424:COND(FORWARD_IF_FALSE@548) succ=
+    [else] B548 n=2 last=RETURN_VALUE                   pred=B424:COND(FORWARD_IF_FALSE@548) succ=
+  Region entry=B0 blocks=1
+  Region entry=B48 blocks=1
+  IfRegion entry=B178 blocks=9
+    cond=B178 then=['B194'] else=['B198', 'B244', 'B374', 'B420', 'B424', 'B544', 'B548'] merge=-
+    elif_conditions=['B198', 'B374']
+    elif_bodies=[['B244'], ['B420']]
+    elif_final_else=['B424', 'B544', 'B548']
+      [cond] B178 n=4 last=POP_JUMP_FORWARD_IF_NOT_NONE ->198 pred=B0:COND(FORWARD_IF_FALSE@178) succ=B194,B198
+      [cond] B198 n=9 last=POP_JUMP_FORWARD_IF_FALSE ->374 pred=B178:COND(FORWARD_IF_NOT_NONE@198) succ=B244,B374
+      [cond] B374 n=9 last=POP_JUMP_FORWARD_IF_FALSE ->424 pred=B198:COND(FORWARD_IF_FALSE@374) succ=B420,B424
+      [then] B194 n=2 last=RETURN_VALUE                   pred=B178:COND(FORWARD_IF_NOT_NONE@198) succ=
+      [else] B198 n=9 last=POP_JUMP_FORWARD_IF_FALSE ->374 pred=B178:COND(FORWARD_IF_NOT_NONE@198) succ=B244,B374
+      [else] B244 n=18 last=RAISE_VARARGS                  pred=B198:COND(FORWARD_IF_FALSE@374) succ=
+      [else] B374 n=9 last=POP_JUMP_FORWARD_IF_FALSE ->424 pred=B198:COND(FORWARD_IF_FALSE@374) succ=B420,B424
+      [else] B420 n=2 last=RETURN_VALUE                   pred=B374:COND(FORWARD_IF_FALSE@424) succ=
+      [else] B424 n=21 last=POP_JUMP_FORWARD_IF_FALSE ->548 pred=B374:COND(FORWARD_IF_FALSE@424) succ=B544,B548
+      [else] B544 n=2 last=RETURN_VALUE                   pred=B424:COND(FORWARD_IF_FALSE@548) succ=
+      [else] B548 n=2 last=RETURN_VALUE                   pred=B424:COND(FORWARD_IF_FALSE@548) succ=
+      [else] B424 n=21 last=POP_JUMP_FORWARD_IF_FALSE ->548 pred=B374:COND(FORWARD_IF_FALSE@424) succ=B544,B548
+      [else] B544 n=2 last=RETURN_VALUE                   pred=B424:COND(FORWARD_IF_FALSE@548) succ=
+      [else] B548 n=2 last=RETURN_VALUE                   pred=B424:COND(FORWARD_IF_FALSE@548) succ=
+    Region entry=B178 blocks=1
+    Region entry=B194 blocks=1
+    Region entry=B198 blocks=1
+    Region entry=B244 blocks=1
+    Region entry=B374 blocks=1
+    Region entry=B420 blocks=1
+    IfRegion entry=B424 blocks=3
+      cond=B424 then=['B544'] else=['B548'] merge=-
+      elif_conditions=[]
+      elif_bodies=[]
+      elif_final_else=[]
+        [cond] B424 n=21 last=POP_JUMP_FORWARD_IF_FALSE ->548 pred=B374:COND(FORWARD_IF_FALSE@424) succ=B544,B548
+        [then] B544 n=2 last=RETURN_VALUE                   pred=B424:COND(FORWARD_IF_FALSE@548) succ=
+        [else] B548 n=2 last=RETURN_VALUE                   pred=B424:COND(FORWARD_IF_FALSE@548) succ=
+      Region entry=B424 blocks=1
+      Region entry=B544 blocks=1
+      Region entry=B548 blocks=1

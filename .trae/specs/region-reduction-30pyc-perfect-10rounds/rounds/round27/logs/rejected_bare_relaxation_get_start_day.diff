@@ -1,0 +1,13 @@
+403c403
+<         if type == 'daily':
+---
+>         elif type == 'daily':
+414,417c414,416
+<         else:
+<             if end_date is None:
+<                 end_date = datetime.now().strftime('%Y%m%d%H%M')
+<             start_date, end_date = get_minite_time(end_date, count)
+---
+>         elif end_date is None:
+>             end_date = datetime.now().strftime('%Y%m%d%H%M')
+>         start_date, end_date = get_minite_time(end_date, count)

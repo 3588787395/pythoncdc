@@ -1,0 +1,2 @@
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round27_elif_pure_head/r27a_01_elif_head_after_raise.pyc", "arm": "head", "sha": "f7df2e08915337c5", "total_functions": 4, "matched_functions": 3, "mism": [["case_elif_head_after_raise", 71, 41, 0, 32]]}
+{"path": "F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_persist/__init__.pyc", "arm": "head", "sha": "ae9624863362f5e2", "total_functions": 15, "matched_functions": 14, "mism": [["can_resume_strategy", 89, 57, 0, 34]]}
