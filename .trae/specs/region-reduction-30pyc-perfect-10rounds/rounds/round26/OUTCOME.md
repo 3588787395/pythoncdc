@@ -102,8 +102,13 @@ time.sleep(min(order_time - now, ...))   # L242：假分支直落
 * 残余靶：`default_event_source.events` 仍 `−19`（jump 2 / true 157）、
   `fly/data/quotation` 之外的 `DefaultMatcher.match`（259 条指令整体错位，
   `D:/Temp/r26self/dl_DefaultMatcher.match.txt`）。
-* 金丝雀：`quotation.pyc` 自 R25 起是承重锚点（必须保持 `143/143`），不再是零副作用样本；
-  Round 27 需另选一个未被任何判据命中的语料外 pyc 作零副作用金丝雀。
+* 金丝雀：`quotation.pyc` 自 R25 起是承重锚点（必须保持 `143/143`），不再是零副作用样本。
+  替代者已选定并取基线：`site-packages/fly/simtradding/request_data_transform.pyc`
+  —— 官方 `ok 2/2`，且 R26-A 的全 402 A/B 未触碰其产物（属 `SAME=400`），
+  落地字节基线产物 sha `1d9eebd2932ec072`（`logs/canary1.txt` + `logs/canary_landed.jsonl`）；
+  R27 起任何候选都须对它复跑同一镜像臂，sha 不变才算零副作用。
+  同时本轮已把 R26-A 的合成复现并入前轮锚点电池，电池规模 92 → 93（名单 `logs/anchors93.txt`，
+  落地字节基线 `logs/base_landed93.jsonl`）。
 * 并行的诊断代理（任务 #50）交出的 `D:/Temp/r26diag/` 复现与本节 B1 区域树同源，
   其 `r26_a_break_prefix_nested` 候选与 R26-A 收敛到同一族；Round 27 任何新判据须先对
   **落地字节**复跑其复现，再谈落点。
