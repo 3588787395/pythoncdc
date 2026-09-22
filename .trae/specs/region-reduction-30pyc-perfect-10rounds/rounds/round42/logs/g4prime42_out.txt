@@ -1,0 +1,5 @@
+== IQData/utils/common_func.pyc  strict-defective a=1 b=1
+   CHANGED <module>.handle_exrights  a=[seq_len orig=276 decomp=268] b=[target_diff #2 POP_JUMP_IF_FALSE 终点 orig=("'fields'", 'LOAD_FAST') decomp=("'len'", 'LOAD_GLOBAL')]
+== IQData/api/api_base.pyc  strict-defective a=2 b=2
+   CHANGED <module>.get_history_df  a=[seq_len orig=1742 decomp=1718] b=[seq_len orig=1742 decomp=1739]
+G4-prime affected=2 fixed=0 broken=0

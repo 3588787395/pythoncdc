@@ -1908,3 +1908,30 @@
           为保证一轮一条判据本轮不采纳，采纳前须在新落地字节 `11e2c67e2d7681735f9d` 上重做锚点唯一性、
           见证改前失败与真实双臂 A/B，并把 witness 迁入 `test_repros/`。(b) 下一轮 G2′ = `reprobat61` ＋
           Round 40 电池 ＋ Round 41 电池，G3 = `anchors109`，G5 基线重导到 landed-41；(c) 结转台账本轮未触碰。
+  - [x] SubTask 42.1: 开工复测（落地字节 `11e2c67e2d7681735f9d`，即 Round 41 交付）—— 线 A 候选
+          `spec41a.json` 在新落地字节上重建双臂：锚点唯一（1 edit，`core/cfg/region_analyzer.py`，BOM=False，
+          CRLF，插入 9 行），head 镜像与工作区字节全等。
+  - [x] SubTask 42.2: 编排方自建正见证 `r42w_1_orchain_tail_fallthrough`（源 `if not dd or sym not in dd or len(dd[sym]) == 0:`）
+          —— 落地臂 `seq_len 43/35`（少发 8 条 ＋ 首操作数取反被吞、第三操作数被丢 ⇒ 产物语义错误）；
+          候选臂 43 条全恢复（Σ|Δ| 8→0）但残留 `target_diff #2 POP_JUMP_IF_FALSE 终点 orig=('flds', LOAD_FAST) decomp=('len', LOAD_GLOBAL)`
+          ⇒ **候选产物语义不等价**（`dd` 为假时源应 return，产物改求值 `len(dd[sym])` ⇒ KeyError）。
+          四支 or 链见证 `w1/w2/w3/r42w_1` 在候选臂上全部 Σ|Δ|→0 且全部残留 target_diff ⇒ G0「改后必须 CLEAN」**不满足**；
+          `nc1/nc3/nc4` 双臂均 CLEAN，`nc2` 双臂同为 `seq_+0`（未翻转）。⇒ 新电池 `test_repros/round42_orchain_fallthrough/`。
+  - [x] SubTask 42.3: G4′ 在语料真身上复现同一失效：`IQData/utils/common_func.pyc::handle_exrights`
+          落地 `seq_len 276/268` → 候选 `target_diff`，而**官方尺给出 23/24 → 24/24**；候选产物首行
+          `if tmp_dividends and symbol not in tmp_dividends or len(tmp_dividends[symbol]) == 0:`
+          vs 源 `if not tmp_dividends or … or …:` ⇒ 官方 ＋1 是假 ok（官方尺对跳转指令只比操作码、不比已解析跳转终点，
+          `_r10_strict_check.py:10` 已记录该失效模式）⇒ **R42-A 否证，本轮 core/ 零改动、不发货**。
+  - [x] SubTask 42.4: 其余门禁同向实测（不构成发货许可）：G1 池 17 行 `SAME=15 IMPROVED=1 REGRESSION=0 MOVED=1`；
+          G2′ `reprobat61` 63 条目 `SAME=63 MOVED=0 REGRESSION=0`（fully 52→52）；G3 `anchors109` 109 条目
+          `SAME=109 MOVED=0 REGRESSION=0`（fully 79→79）；G4 全 402 双臂 `SAME=400 IMPROVED=1 REGRESSION=0 MOVED=1 ERR=0`
+          （fully a=375 b=376），MOVED 行 `api_base::get_history_df` 官方计数不变、少发 24 条 → 少发 3 条（同族同一失效）；
+          G4′ `affected=2 fixed=0 broken=0`。工作区 `git status` 除本轮记录/电池外零跟踪改动，索引与产物未写回。
+  - [x] SubTask 42.5: 门禁规则更正（本轮的制度化产出）—— **G4′ 提升到与 G4 同级**：G4 的每个 IMPROVED 行必须在 G4′ 上
+          呈 strict-CLEAN，否则该 IMPROVED 记为假 ok 并 NO-GO（Round 41 先例为二者同向：G4 IMPROVED=2 且 G4′ fixed=2 broken=0）。
+          未来触及短路链族的判据必须要求「重建条件在跳转终点意义下与原 CFG 同构」，不得以「指令多重集相同」为正确性标准。
+  - [x] SubTask 42.6: 移交 —— 真缺陷层位在**条件重建侧**而非「是否断链」：短路链在条件语境下拼装时首操作数的隐式取反被并入连接词
+          （`not A or B or C` → `A and B or C`），落点为 `region_analyzer.py::_detect_boolop_conditional_chain` 的 BoolOp 拼装
+          或 `region_ast_generator` 的条件表达式生成处；`handle_exrights`（官方已可 24/24 但语义错）与
+          `api_base::get_history_df`（少发 3 条）同族。下一轮门禁输入：G2′ = `reprobat61` ＋ Round 40/41 电池 ＋
+          `round42_orchain_fallthrough`，G3 = `anchors109`，G5 金丝雀基线仍需以 landed-41 重导；结转台账本轮未触碰。

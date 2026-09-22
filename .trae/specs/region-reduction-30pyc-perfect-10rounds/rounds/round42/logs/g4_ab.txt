@@ -1,0 +1,5 @@
+MOVED  F:/Downloads/pythoncdc-main/site-packages/IQData/api/api_base.pyc  gained=["['get_history_df', 1742, 1739, 14, 1256]"] lost=["['get_history_df', 1742, 1718, 14, 1217]"]
+    ~ get_history_df [1742, 1718, 14, 1217] -> [1742, 1739, 14, 1256]
+IMPROVED F:/Downloads/pythoncdc-main/site-packages/IQData/utils/common_func.pyc  23/24 -> 24/24
+TALLY SAME=400 IMPROVED=1 REGRESSION=0 MOVED=1 ERR=0  (unpaired lists=0)
+files fully matched: a=375 b=376

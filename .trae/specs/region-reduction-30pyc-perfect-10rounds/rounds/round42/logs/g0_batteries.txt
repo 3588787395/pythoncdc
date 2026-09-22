@@ -1,0 +1,22 @@
+case               status                 nbad   sum|d| detail / probe
+nc1_nested_if      CLEAN                  0      0      
+nc2_two_member     DEFECT                 1      0      nc2:seq_+0
+nc3_and_chain      CLEAN                  0      0      
+nc4_or_names       CLEAN                  0      0      
+r42w_corpus_shape  DEFECT                 2      8      r42w_1_orchain_tail_fallthrough:seq_-8;r42w_2_guard_break:seq_+0
+w1_orchain_guard   DEFECT                 1      8      w1:seq_-8
+w2_orchain_plain   DEFECT                 1      4      w2:seq_+4
+w3_orchain_three   DEFECT                 1      6      w3:seq_+6
+CORE=D:\Temp\r41gate\mirr_head BAT=round42_orchain_fallthrough cases=8 CLEAN=3 DEFECT=5
+
+case               status                 nbad   sum|d| detail / probe
+nc1_nested_if      CLEAN                  0      0      
+nc2_two_member     DEFECT                 1      0      nc2:seq_+0
+nc3_and_chain      CLEAN                  0      0      
+nc4_or_names       CLEAN                  0      0      
+r42w_corpus_shape  DEFECT                 2      0      r42w_1_orchain_tail_fallthrough:targ+0;r42w_2_guard_break:seq_+0
+w1_orchain_guard   DEFECT                 1      0      w1:targ+0
+w2_orchain_plain   DEFECT                 1      0      w2:targ+0
+w3_orchain_three   DEFECT                 1      0      w3:targ+0
+CORE=D:\Temp\r41gate\mirr_r42a BAT=round42_orchain_fallthrough cases=8 CLEAN=3 DEFECT=5
+
