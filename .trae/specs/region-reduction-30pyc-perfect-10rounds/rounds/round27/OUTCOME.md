@@ -120,6 +120,12 @@ B178..B548 同时属于外层链（`elif_conditions=[B178,B198]`＋`elif_final_e
   代理在交付 `ANALYSIS.md` 之前耗尽轮次上限（Round 26 的代理同样如此），其私有目录
   `D:/Temp/r27diagA/` 的 `r27a.py`/`shape27.py`/`funnel_out.txt` 已列为 Round 28 起点。
   本轮只落地一条判据，故该族继续单线推进。
+* 「链双认领」第二诊断线（代理耗尽轮次）留下的合成复现对 `r27b_01_elif_midchain_condition_drop.pyc` /
+  `r27b_02_control_rejoin_keeps_veto.pyc` 已实测：两臂（落地前核 / 落地核）读数**逐条相同**
+  （`r27b_01 3/3 mism=[]`；`r27b_02 2/3`，其 `guard_rejoin orig=34 decomp=35`、2 处跳转差、11 处实差），
+  故该形状既不是 R27-A 修复的、也不是 R27-A 造成的 —— 是一条独立线。`guard_rejoin` 的 **+1 过量发射**
+  属 D2 族，列入 Round 28 候选靶子。因其标签与实测相反（名为 CONTROL 却带缺陷），这对文件已从
+  `test_repros/` 移到 `D:/Temp/r27self/quarantine/round27_elif_double/`（未进仓库，可逆）。
 * Round 28 电池基线：`logs/anchors94.txt`（93 条 + 本轮复现）已对**落地字节**跑完，
   `logs/base_landed94.jsonl` ＋ 原始读数 `logs/logs_landed94.txt`：94 条记录、error 0、空读数 0；
   与上轮 93 条基线的共有 93 条 `sha`/`mism` **零漂移**，新增的 1 条即本轮复现 `4/4`。

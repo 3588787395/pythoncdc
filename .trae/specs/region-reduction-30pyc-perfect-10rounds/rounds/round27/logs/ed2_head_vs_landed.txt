@@ -1,0 +1,2 @@
+SAME r27b_01_elif_midchain_condition_drop.pyc  head=3/3 []  landed=3/3 []
+SAME r27b_02_control_rejoin_keeps_veto.pyc  head=2/3 [['guard_rejoin', 34, 35, 2, 11]]  landed=2/3 [['guard_rejoin', 34, 35, 2, 11]]

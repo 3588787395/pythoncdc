@@ -1,0 +1,2 @@
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round27_elif_double/r27b_01_elif_midchain_condition_drop.pyc", "arm": "landed", "sha": "79ec5e7e90a68671", "total_functions": 3, "matched_functions": 3, "mism": []}
+{"path": "F:/Downloads/pythoncdc-main/test_repros/round27_elif_double/r27b_02_control_rejoin_keeps_veto.pyc", "arm": "landed", "sha": "cf3cfee9f0ea199f", "total_functions": 3, "matched_functions": 2, "mism": [["guard_rejoin", 34, 35, 2, 11]]}
