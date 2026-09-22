@@ -1935,3 +1935,53 @@
           或 `region_ast_generator` 的条件表达式生成处；`handle_exrights`（官方已可 24/24 但语义错）与
           `api_base::get_history_df`（少发 3 条）同族。下一轮门禁输入：G2′ = `reprobat61` ＋ Round 40/41 电池 ＋
           `round42_orchain_fallthrough`，G3 = `anchors109`，G5 金丝雀基线仍需以 landed-41 重导；结转台账本轮未触碰。
+  - [x] SubTask 43.1: 目标池对落地字节实测（核 `region_ast_generator.py` 2 994 079 B / `11e2c67e2d7681735f9d`，起点 `e52cb564`）：
+
+          partial 27 文件、Σdeficit 89、deficit≤2 的 G1 池 17 文件。新增**索引审计** `D:/Temp/r43gate/idxaudit43.py`：
+
+          402 条索引项与一次全新落地态全量复验逐项相等（overstated=0 understated=0 unmeasured=0）⇒ 本轮无需更正虚高。
+
+  - [x] SubTask 43.2: 线 C（代理，`region_analyzer.py:17062` 唯一锚点）候选「硬退出 then 臂无合流点 ⇒ 认领 else_succ 为 merge」否证：
+
+          其自建两文件 A/B 即 `order_api 30/34→32/34` 与 `trade_live_broker 104/119→101/119`，REGRESSION≠0，未进入 G4 即淘汰。
+
+  - [x] SubTask 43.3: 线 C1（编排方加严 `set(else_succ.predecessors) == {block}`，镜像臂 `D:/Temp/r43gate/mirr_r43c1`，
+
+          build 报告 1 edits / BOM=False / nl=CRLF / 插入 13 行）否证：两文件上增益完全消失（30/34→30/34、104/119→104/119），
+
+          G1 17 文件 `SAME=4 IMPROVED=0 REGRESSION=2 MOVED=13`（Σmatched 387→370，最坏 `plugin_system_trade/function.pyc 69/71→53/71`）。
+
+          **机制结论**：merge 补全是级联兜底（`:17014` R35 boolop 兜底 / `:17062` / `:17102` …），在单点拒绝认领会把该块改派给更后面的兜底，
+
+          故「加合取项」在这一族里不单调；攻此族前必须先建立「被拒认领的块落到哪里」的可观测性，`function.pyc` −16 为必测反例。
+
+  - [x] SubTask 43.4: 全 27 partial 文件逐函数操作码名对齐普查 `D:/Temp/r43gate/census43.py`：仅 4 行丢前导指令，其中 3 行
+
+          （`quote::load_bars_from_hundsun/get_price/load_get_price`）已钉为 F1 表达式层 ⇒ 「前导/尾部整块未发射」只剩
+
+          `quote_handler::get_index` 1 个语料见证，按既有纪律不足以支撑新判据。另排除两条大额线：F1 粘字面量族
+
+          （`trade_live_broker` 四行 + `quote` 两行）、`risk_calculation/__init__::get_TradeMode_trades` 
+
+          （14 处恰 3 指令 `COPY COPY BINARY_SUBSCR` + 4 处 7 + 1 处 21 = 3.11 链式下标栈纪律，非区域归属）。已写入项目记忆。
+
+  - [x] SubTask 43.5: Round 43 门禁资产建成且全部自测：一条命令 `python -X utf8 D:/Temp/r43gate/gate.py <arm> g123` 复跑
+
+          G1（`g1_files.txt` 17 行，身份检查 `SAME=17 MOVED=0`）/ G2′（`bat43.txt` 143 = reprobat61＋anchors109＋R41＋R42 电池，
+
+          落地基线 111 文件全匹配、Σ550/583）/ G3（`anchors109.txt`，沿用 `SAME=109`）；G4 侧 `all402.txt`＋`g4_head.jsonl`；
+
+          G4′ `g4prime43.py <changed> <arm>` 身份自检 `affected=1 fixed=0 broken=0 changed=0`；G5 金丝雀基线 9 条仍有效（本轮未动核）。
+
+  - [x] SubTask 43.6: 发货决定 —— 三条候选均否证 ⇒ 本轮 **core/ 零改动、不发货**（两文件字节与起点一致：
+
+          `region_ast_generator.py` 2 994 079 / `11e2c67e2d7681735f9d`，`region_analyzer.py` 1 678 535 / `a66248d3b9a3e0a1545e`；
+
+          `git status` 除本轮记录外零跟踪改动，索引未写回）。`stats` 逐字：total_pyc 402 / verified_pyc 402 / ok_pyc 375 /
+
+          partial_pyc 27 / failed_pyc 0 / total_functions 5746 / matched_functions 5657 / cumulative_match_rate 98.45%。
+
+          移交 R44：在跑的线 A/B/D 交付后先过 `gate.py`；勿再分诊 F1、`get_TradeMode_trades`、`quote_handler::get_index`；
+
+          结转台账本轮未触碰。
+
