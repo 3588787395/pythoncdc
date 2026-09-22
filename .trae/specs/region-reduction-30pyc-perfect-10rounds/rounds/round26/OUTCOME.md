@@ -64,8 +64,8 @@ time.sleep(min(order_time - now, ...))   # L242：假分支直落
 
 | # | 门禁 | 结果 |
 |---|---|---|
-| G0 | 非空判据（合成最小复现，语料无关） | `test_repros/round26_break_prefix/r26a_01_break_prefix_in_while.pyc`：head 读 `3/4`，缺陷函数 `drain orig=35 decomp=31`（与语料靶子同一 −4 签名）⇒ 判据修的确实是这个形状；产物 sha `3c8ae4f12cfaea32` |
-| G1/G2 | FIX 翻转 + CONTROL 不变 | 同一复现 cand 与 landed 均 `4/4`、`mism=[]`，其余 3 个函数（含 CONTROL）保持匹配；cand 与 landed 产物 sha 同为 `4a8af9aaacd6e0bd`（`logs/wr.jsonl`、`logs/wr2.jsonl`） |
+| G0 | 非空判据（合成最小复现，语料无关） | `test_repros/round26_break_prefix/r26a_01_break_prefix_in_while.pyc` 对**落地前字节**（`mirr_head` 镜像）读 `3/4`，缺陷函数 `drain orig=35 decomp=31`（与语料靶子同一 −4 签名），产物 sha `dc299cb3f669e084`（`logs/g0_head.jsonl`）⇒ 判据修的确实是这个形状 |
+| G1/G2 | FIX 翻转 + CONTROL 不变 | 同一复现对**落地字节**读 `4/4`、`mism=[]`（产物 sha `1e563e2eb45da044`，`logs/g0_landed.jsonl`）⇒ 该文件另 3 个函数（含 CONTROL）在两臂下均保持匹配；另一份同形孪生复现 `r26a_b2.pyc` head `3/4`（sha `3c8ae4f12cfaea32`）→ cand 与 landed 均 `4/4`（sha 同为 `4a8af9aaacd6e0bd`，`logs/wr.jsonl`、`logs/wr2.jsonl`）；该复现已并入锚点电池（93 例）并对落地字节取基线：93 条记录 `error=0`、空读数 0，其中 28 例带既存残余缺陷者作逐字节比对基线用（`logs/base_landed93.jsonl`（名单 `logs/anchors93.txt`），Round 27 起为 G3 电池） |
 | G3 | 前轮（R25 + R24 + 更早）锚点电池 92 例对**落地字节**复跑 | `logs/b92_landed_0.txt`、`logs/b92_landed_1.txt` + `logs/b92_landed.txt`：92 行、`error=0`、`total_functions=0` 的空读数 0；head/cand/landed 三臂 92 条记录逐条相同（差异 0 条）⇒ 承重锚点全部不动 |
 | G3′ | 同一电池 head vs cand | `logs/batt92_head_vs_cand.txt`：`SAME=92 IMPROVED=0 BROKEN=0 MOVED=0 ERR=0` |
 | G4 | 全 402 文件 A/B（head vs cand，同一 runner、独立产物目录，发货判据） | `logs/ab402_head_vs_cand.txt`：`SAME=400 IMPROVED=1 REGRESSION=0 MOVED=1 ERR=0` ⇒ 没有 ok→fail，爆炸半径 = **2/402 产物** |
