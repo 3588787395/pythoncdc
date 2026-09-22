@@ -1,0 +1,14 @@
+CORE=F:\Downloads\pythoncdc-main
+r35_01_witness_dup_epilogue_fallthrough        FAIL  official 1/2  strict seq_len lo=68 ld=64 delta-4  src_ret=2 emitted_ret=3 tail-choice=DETERMINED(+1) | store 68/64 jd3 td8
+      hunk delete@310 ['POP_EXCEPT', 'POP_EXCEPT', 'LOAD_CONST', 'RETURN_VALUE'] -> []
+      site {'caller': 24695, 'blk': 304, 'E': True, 'pops': 1, 'n_epi': 3, 'D1': True, 'epi': [(140, 1), (304, 1), (312, 1)]}
+r35_02_control_single_epilogue                 PASS  official 2/2  strict None lo=23 ld=23 delta+0  src_ret=1 emitted_ret=2 tail-choice=UNDERDETERMINED 
+      site {'caller': 24695, 'blk': 98, 'E': True, 'pops': 1, 'n_epi': 1, 'D1': False, 'epi': [(98, 1)]}
+r35_03_control_trailing_code                   PASS  official 2/2  strict None lo=49 ld=49 delta+0  src_ret=1 emitted_ret=1 tail-choice=DETERMINED(+2) 
+      site {'caller': 24695, 'blk': 192, 'E': True, 'pops': 1, 'n_epi': 1, 'D1': False, 'epi': [(192, 1)]}
+r35_04_control_depth2_fallout                  PASS  official 2/2  strict None lo=44 ld=44 delta+0  src_ret=1 emitted_ret=3 tail-choice=UNDERDETERMINED 
+      site {'caller': 24695, 'blk': 198, 'E': True, 'pops': 1, 'n_epi': 2, 'D1': True, 'epi': [(140, 1), (198, 1)]}
+r35_05_negative_real_return_at_depth3          PASS  official 2/2  strict None lo=67 ld=67 delta+0  src_ret=3 emitted_ret=4 tail-choice=DETERMINED(+-1) 
+      site {'caller': 24695, 'blk': 294, 'E': True, 'pops': 1, 'n_epi': 3, 'D1': True, 'epi': [(140, 1), (294, 1), (310, 1)]}
+      site {'caller': 24695, 'blk': 310, 'E': True, 'pops': 1, 'n_epi': 3, 'D1': True, 'epi': [(140, 1), (294, 1), (310, 1)]}
+PASS 4 / 5

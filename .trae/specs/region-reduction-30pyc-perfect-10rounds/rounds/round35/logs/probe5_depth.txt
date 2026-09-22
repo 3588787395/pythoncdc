@@ -1,0 +1,10 @@
+depth=1 trailing=False with= 26 without= 26 identical=True   
+depth=2 trailing=False with= 50 without= 50 identical=True   
+depth=3 trailing=False with= 76 without= 77 identical=False  ii with=[] without=['JUMP_FORWARD', 'RERAISE', 'COPY', 'POP_EXCEPT', 'RERAISE'] | delete with=['RERAISE', 'COPY', 'POP_EXCEPT', 'RERAISE'] without=[]
+depth=4 trailing=False with=104 without=100 identical=False  replace with=['POP_EXCEPT', 'POP_EXCEPT', 'POP_EXCEPT', 'LOAD_CONST', 'RETURN_VALUE'] without=['JUMP_FORWARD']
+depth=5 trailing=False with=128 without=123 identical=False  replace with=['POP_EXCEPT', 'POP_EXCEPT', 'POP_EXCEPT', 'POP_EXCEPT', 'LOAD_CONST', 'RETURN_VALUE'] without=['JUMP_FORWARD']
+depth=1 trailing=True  with= 32 without= 31 identical=False  replace with=['LOAD_CONST', 'RETURN_VALUE'] without=['JUMP_FORWARD']
+depth=2 trailing=True  with= 56 without= 54 identical=False  replace with=['POP_EXCEPT', 'LOAD_CONST', 'RETURN_VALUE'] without=['JUMP_FORWARD']
+depth=3 trailing=True  with= 80 without= 77 identical=False  replace with=['POP_EXCEPT', 'POP_EXCEPT', 'LOAD_CONST', 'RETURN_VALUE'] without=['JUMP_FORWARD']
+depth=4 trailing=True  with=104 without=100 identical=False  replace with=['POP_EXCEPT', 'POP_EXCEPT', 'POP_EXCEPT', 'LOAD_CONST', 'RETURN_VALUE'] without=['JUMP_FORWARD']
+depth=5 trailing=True  with=128 without=123 identical=False  replace with=['POP_EXCEPT', 'POP_EXCEPT', 'POP_EXCEPT', 'POP_EXCEPT', 'LOAD_CONST', 'RETURN_VALUE'] without=['JUMP_FORWARD']

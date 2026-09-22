@@ -1,0 +1,9 @@
+return-None lines (1-based): [345, 353, 367]
+drop nothing            official 14/15  target 314/310 jd19 td8 err=None
+drop [345]              official 14/15  target 314/310 jd19 td8 err=None
+drop [353]              official 14/15  target 314/310 jd19 td8 err=None
+drop [367]              official 15/15  target MATCH err=None
+drop [345, 353]         official 14/15  target 314/310 jd19 td8 err=None
+drop [345, 367]         official 15/15  target MATCH err=None
+drop [353, 367]         official 15/15  target MATCH err=None
+drop [345, 353, 367]    official 15/15  target MATCH err=None

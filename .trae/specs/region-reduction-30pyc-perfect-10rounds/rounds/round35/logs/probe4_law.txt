@@ -1,0 +1,8 @@
+S1_nested_handler_tail       with= 45  without= 45  identical=True
+S2_nested_then_tail_code     with= 51  without= 49  identical=False
+      replace with[31:34]=['POP_EXCEPT', 'LOAD_CONST', 'RETURN_VALUE']  without[31:32]=['JUMP_FORWARD']
+S3_one_handler_tail          with= 26  without= 26  identical=True
+S4_trybody_tail              with= 32  without= 31  identical=False
+      replace with[7:9]=['LOAD_CONST', 'RETURN_VALUE']  without[7:8]=['JUMP_FORWARD']
+S5_three_deep                with= 63  without= 67  identical=False
+      insert  with[55:55]=[]  without[55:59]=['POP_EXCEPT', 'POP_EXCEPT', 'LOAD_CONST', 'RETURN_VALUE']

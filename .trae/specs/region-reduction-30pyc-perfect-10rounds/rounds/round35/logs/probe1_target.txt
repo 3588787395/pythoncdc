@@ -1,0 +1,93 @@
+strict: kind='seq_len' defect=True  lo=314 ld=310
+
+== orig filtered tail (last 22) ==
+  @1956  POP_EXCEPT 
+  @1958  JUMP_FORWARD 
+  @1960  RERAISE 
+  @1962  COPY 
+  @1964  POP_EXCEPT 
+  @1966  RERAISE 
+  @1968  POP_EXCEPT 
+  @1970  POP_EXCEPT 
+  @1972  LOAD_CONST None
+  @1974  RETURN_VALUE 
+  @1976  POP_EXCEPT 
+  @1978  POP_EXCEPT 
+  @1980  LOAD_CONST None
+  @1982  RETURN_VALUE 
+  @1984  RERAISE 
+  @1986  COPY 
+  @1988  POP_EXCEPT 
+  @1990  RERAISE 
+  @1992  RERAISE 
+  @1994  COPY 
+  @1996  POP_EXCEPT 
+  @1998  RERAISE 
+== decomp filtered tail (last 14) ==
+  @1966  POP_EXCEPT 
+  @1968  RERAISE 
+  @1970  POP_EXCEPT 
+  @1972  POP_EXCEPT 
+  @1974  LOAD_CONST None
+  @1976  RETURN_VALUE 
+  @1978  RERAISE 
+  @1980  COPY 
+  @1982  POP_EXCEPT 
+  @1984  RERAISE 
+  @1986  RERAISE 
+  @1988  COPY 
+  @1990  POP_EXCEPT 
+  @1992  RERAISE 
+
+== opcodes (orig vs decomp), non-equal only ==
+  delete   orig[302:306] @1976..1982 -> decomp[302:302]  ['POP_EXCEPT', 'POP_EXCEPT', 'LOAD_CONST', 'RETURN_VALUE'] | []
+
+== product text save_testds_to_json : lines 320..367 (def indent 0) ==
+ 320|def save_testds_to_json(trade_dir_path, trade_id, testds_file_index, daily_result):
+ 321|    if testds_file_index == 0:
+ 322|        max_num = 0
+ 323|        for filename in os.listdir(os.path.join(trade_dir_path, 'result', trade_id)):
+ 324|            if 'testds_to_json' in filename:
+ 325|                current_num = int(filename.replace('testds_to_json', '').split('.')[0])
+ 326|                if current_num > max_num:
+ 327|                    max_num = current_num
+ 328|        testds_file_index = max_num
+ 329|        testds_file_path = os.path.join(trade_dir_path, 'result', trade_id, 'testds_to_json' + str(testds_file_index) + '.json')
+ 330|        if not os.path.exists(testds_file_path):
+ 331|            testds_file_index += 1
+ 332|            ds = create_daily_stats(daily_result)
+ 333|        else:
+ 334|            data = json.loads(open(testds_file_path, 'r').readline())
+ 335|            df = pd.DataFrame(data.get('data'), index=data.get('index'), columns=data.get('columns'))
+ 336|            if len(df) >= 50:
+ 337|                testds_file_index += 1
+ 338|                ds = create_daily_stats(daily_result)
+ 339|            else:
+ 340|                ds = create_daily_stats(daily_result)
+ 341|                ds = df.append(ds)
+ 342|    testds_file_path = os.path.join(trade_dir_path, 'result', trade_id, 'testds_to_json' + str(testds_file_index) + '.json')
+ 343|    try:
+ 344|        ds.to_json(testds_file_path, date_format='iso', orient='split')
+ 345|        return None
+ 346|    except BaseException:
+ 347|        strategy_log.error('更新{}文件失败'.format(testds_file_path))
+ 348|        try:
+ 349|            pd.set_option('display.max_columns', None)
+ 350|            pd.set_option('display.max_rows', None)
+ 351|            pd.set_option('display.width', 5000)
+ 352|            strategy_log.error(ds)
+ 353|            return None
+ 354|        except BaseException:
+ 355|            system_log.error('打印ds失败')
+ 356|            try:
+ 357|                testds_file_path = os.path.join(trade_dir_path, 'result', trade_id, 'testds_to_json.csv')
+ 358|                ds.to_csv(testds_file_path, index=False)
+ 359|            except BaseException:
+ 360|                system_log.error('保存{}文件失败'.format(testds_file_path))
+ 361|                try:
+ 362|                    testds_file_path = os.path.join(trade_dir_path, 'result', trade_id, 'testds_to_json.txt')
+ 363|                    with open(testds_file_path, 'w') as fw:
+ 364|                        fw.write(ds.to_string(index=False))
+ 365|                except BaseException:
+ 366|                    system_log.error('保存{}文件失败'.format(testds_file_path))
+ 367|            return None

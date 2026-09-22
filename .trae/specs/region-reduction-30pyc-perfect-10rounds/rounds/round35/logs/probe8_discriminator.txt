@@ -1,0 +1,23 @@
+== IQEngine/plugins/plugin_system_risk_calculation/function.pyc save_testds_to_json            IMPROVED  (emissions in file=1, in this fn=1)
+   caller=24695 blk@1970   E=True pops=1 n_epi=3 D1=True D2=False D3=False role=EXCEPT_STORE region=TryExceptRegion@1162 preds=[1968] succs=[] epi=[(1328, 1), (1970, 1), (1978, 1)]
+== IQData/data/date_set_storage.pyc                           get_date_set                   REGRESSED  (emissions in file=1, in this fn=1)
+   caller=24695 blk@170    E=True pops=1 n_epi=1 D1=False D2=False D3=False role=EXCEPT_STORE region=TryExceptRegion@44 preds=[90] succs=[] epi=[(170, 1)]
+== IQEngine/account/base_position.pyc                         __missing__                    REGRESSED  (emissions in file=1, in this fn=1)
+   caller=24695 blk@166    E=True pops=1 n_epi=1 D1=False D2=False D3=False role=EXCEPT_STORE region=TryExceptRegion@22 preds=[100] succs=[] epi=[(166, 1)]
+== IQEngine/plugins/plugin_fly_data/fly_api/base.pyc          cancel_order                   REGRESSED  (emissions in file=3, in this fn=1)
+   caller=24695 blk@184    E=True pops=1 n_epi=1 D1=False D2=False D3=False role=EXCEPT_STORE region=TryExceptRegion@4 preds=[76] succs=[] epi=[(184, 1)]
+== IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc     over_night_order               REGRESSED  (emissions in file=1, in this fn=1)
+   caller=24695 blk@344    E=True pops=1 n_epi=1 D1=False D2=False D3=False role=EXCEPT_STORE region=TryExceptRegion@108 preds=[236] succs=[] epi=[(344, 1)]
+== IQEngine/plugins/plugin_fly_data/fly_api/order_api_trade.pyc order_market                   REGRESSED  (emissions in file=1, in this fn=1)
+   caller=24695 blk@248    E=True pops=1 n_epi=1 D1=False D2=False D3=False role=EXCEPT_STORE region=TryExceptRegion@150 preds=[200] succs=[] epi=[(248, 1)]
+== IQEngine/plugins/plugin_system_simulation/live.pyc         _on_entrust_rsp                REGRESSED  (emissions in file=1, in this fn=1)
+   caller=24695 blk@162    E=True pops=1 n_epi=1 D1=False D2=False D3=False role=EXCEPT_STORE region=TryExceptRegion@4 preds=[96] succs=[] epi=[(162, 1)]
+== IQEngine/plugins/plugin_system_trade/send_message_api.pyc  send_qywx                      REGRESSED  (emissions in file=5, in this fn=3)
+   caller=24695 blk@938    E=False pops=0 n_epi=0 D1=False D2=False D3=False role=EXCEPT_STORE region=TryExceptRegion@346 preds=[742] succs=[] epi=[]
+   caller=24695 blk@1318   E=False pops=0 n_epi=0 D1=False D2=False D3=False role=EXCEPT_STORE region=TryExceptRegion@1004 preds=[1122] succs=[] epi=[]
+   caller=24695 blk@1846   E=False pops=0 n_epi=0 D1=False D2=False D3=False role=EXCEPT_STORE region=TryExceptRegion@1506 preds=[1650] succs=[] epi=[]
+== IQEngine/plugins/plugin_system_trade/send_message_api.pyc  send_email                     REGRESSED  (emissions in file=5, in this fn=2)
+   caller=24695 blk@1088   E=False pops=0 n_epi=0 D1=False D2=False D3=False role=EXCEPT_STORE region=TryExceptRegion@552 preds=[892] succs=[] epi=[]
+   caller=24695 blk@1738   E=False pops=0 n_epi=0 D1=False D2=False D3=False role=EXCEPT_STORE region=TryExceptRegion@1266 preds=[1542] succs=[] epi=[]
+== fly/common/future_param.pyc                                load_future_info_from_pbox     REGRESSED  (emissions in file=1, in this fn=1)
+   caller=24695 blk@158    E=True pops=1 n_epi=1 D1=False D2=False D3=False role=EXCEPT_STORE region=TryExceptRegion@4 preds=[92] succs=[] epi=[(158, 1)]

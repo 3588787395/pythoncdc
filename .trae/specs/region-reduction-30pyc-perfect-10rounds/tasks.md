@@ -1446,3 +1446,77 @@
           `match 713/689`）；④#61 R30-B3 ＋ 语料外见证 `r29x_01 <module> 142/138` 继续在册；
           ⑤`logs/list_anchors104.txt`／`logs/list_reprobat39.txt` 与本轮 `head` 臂 402 读数
           （`logs/g4_head.all.jsonl`）可直接复用为下轮 G4 的「改前」侧，只要开工前核 sha 未变。
+- [x] Task 35: 落地 R35-B —— `_generate_try` handler 循环的通用落出臂：重复清理尾声的**非终末副本**不得物化为 `return None`（记录 `rounds/round35/arm-design.md` ＋ `rounds/round35/OUTCOME.md`）
+  - [x] SubTask 35.1: 目标池按落地字节实测（工具 `logs/pool35.py`，输出 `logs/pool35.txt`）：
+          `baseline(landed round33 index, HEAD 9916a82e, core sha 2d3a5d51d114da77d3d4)`。索引由 Round 33
+          G6 回写（Round 34 是零改动轮、未回写），脚本对该轮次戳与落地核 raw sha == HEAD blob 正规化 sha
+          两项均有断言；deficit-1 池 7 个文件名单与读数与 Round 34 §一 逐条一致（`logs/landed_d1.jsonl`，
+          官方尺），deficit-2 池 12 个同尺留档（`logs/landed_d2.jsonl`）。G2′／G3 的「改前」侧沿用 Round 34
+          已建电池的落地臂读数（`b39_landed.jsonl`／`a104_landed.jsonl`，与 `round34/logs/` 同名文件字节
+          全等），G4 的「改前」侧沿用 Round 34 `head` 臂整批读数（`g4_head_r34.all.jsonl`，与
+          `g4_r35b.all.jsonl` 路径集全等）；沿用成立的前提本轮重新证明：`r35c.py build` 断言 `mirr_head`
+          与工作区核文件**字节全等**，且 `head` 臂对靶子重读仍给
+          `14/15 [['save_testds_to_json', 314, 310, 19, 8]]`。
+  - [x] SubTask 35.2: Round 34 交下来的候选 R35-A 被**一手测量否证，且否证的是方向**。对在册产物做五种
+          文本变体逐个 `py_compile`（显式 `cfile`）后两把尺读（`logs/probe2_variants.txt`）：V0 现状
+          `14/15 314/310`、**V1 只删 :367 那条 `return None` → 15/15 且严格尺等长 `lo=ld=314`**、
+          V2 换 `pass` 与 V3 换裸 `return` 均仍 310（`pass` ≠ 什么都没有）、V4 删 :367 再在函数级补
+          `return None` 得 312。探针 3 把三条 `return None` 的八个删除子集穷举一遍：只有含 :367 的子集
+          改变读数。⇒ 严格尺那个 delete hunk 的因果是「**多**发射一条语句，把编译器按异常作用域退出路径
+          复制的两份清理尾声并成了一条语句」，R35-A「沿清理链补发终止 return」的处方整体反向，不落地。
+  - [x] SubTask 35.3: 源码→字节码的规律一手量出（探针 4/5，`logs/probe4_law.txt`／`probe5_depth.txt`）：
+          handler 尾写 `return None` 与「不写、直接落出」在 handler 嵌套深度 1–2 时编译结果逐条相同，
+          深度 ≥3 才分岔，差集恰为 `POP_EXCEPT, POP_EXCEPT, LOAD_CONST(None), RETURN_VALUE`；且深度 4/5
+          时分岔**方向与本靶相反**。这条规律既是 G0 见证的设计图，也是 §六.1 残余风险的出处。
+  - [x] SubTask 35.4: 发射点归属校正（探针 6，`logs/probe6_site.txt`）：靶函数里这条 `Return(None)` 唯一
+          来自 `_generate_try` handler 循环的**通用落出臂** `region_ast_generator.py:24695`
+          （`blk@1970 ops=POP_EXCEPT LOAD_CONST RETURN_VALUE role=EXCEPT_STORE`），**不是** Round 34 §五.3
+          记的 `:24687-24694` RETURN-角色臂 ⇒ 该条记录在本轮文档内订正；同次探针顺带断言「新鲜产物 ==
+          在册产物」为 True。记错臂会把守卫加在永不命中的分支上。
+  - [x] SubTask 35.5: G0 电池**先于**任何 `core/` 改动建成（`test_repros/round35_epilogue_duplicate_return/`
+          五件：见证 `r35_01` ＋ 三件控制 ＋ 反例 `r35_05`；`g0_build35.py` 写盘并 `py_compile`，
+          `g0_run35.py` 同时读官方尺／严格尺 hunk／源码 src-alt 尾选择可判性／核内发射事实）。落地尺
+          （`logs/g0_landed.txt`）：`r35_01` **FAIL 1/2**，hunk `delete@310 [POP_EXCEPT, POP_EXCEPT,
+          LOAD_CONST, RETURN_VALUE]`（与靶同一形状）；`02/03/04/05` 全 PASS。尾选择一列把「编译器选落出
+          还是选 `return`」在每张形状上是否可判标出，是本轮唯一一次让合成件承担已知深度方向的证据。
+  - [x] SubTask 35.6: 判据两次否证。①**源码形状**（探针 7：402 份产物枚举 61 文件／123 站点／93 终末，
+          shard0 的 83 站点逐个「删行→重编译→严格尺」）实测 `IMPROVED=1 REGRESSED=10 SAME=72 SKIPPED=10`
+          ⇒ 直接否证，18 秒的 AST 扫描省下一次全量 A/B；②**`E ∧ D1`**（本块过滤后是纯清理尾声 ∧ 同
+          code object 另有同形尾声，探针 8）在 11 个已知站点上分得很干净，但反例 `r35_05` 的两个站点同
+          满足 `E ∧ D1` 却都必须发射 ⇒ 被 G0 否证。探针 9 另示「另一份尾声在发射瞬间是否已被认领」也恰好
+          分开两批，但它依赖区域遍历顺序 ⇒ 认领史不作判据。
+  - [x] SubTask 35.7: 决定性的静态结构事实（探针 10，`logs/probe10_topology.txt`）：把每个纯清理尾声块的
+          `block_role` 与所属区域列成表，两个 FAIL 案例（靶、`r35_01`）各有一份 `role=BlockRole.RETURN`
+          的终末尾声，四个 PASS 案例一份也没有 ⇒ 发货判据 **R35-B**：仅当 ①`hbs` 恰为一条
+          `Return(Constant(None))`、②本块过滤后操作码是纯清理尾声 `POP_EXCEPT*[LOAD_CONST]RETURN`、
+          ③同 code object 内另有一份同形块其 `block_role==RETURN`（函数终末出口，已由隐式返回认领）、
+          ④`handler_body` 非空（空 handler 抑制后只剩 `pass`，V2 实测 `pass` ≠ 落出）时**不**并入该语句，
+          `generated_blocks.add(hb)` 照旧。
+  - [x] SubTask 35.8: 门禁严格串行、逐条实测。G0 候选臂 `TALLY SAME=4 IMPROVED=1 REGRESSION=0`（见证
+          `1/2 -> 2/2`）；G1 deficit-1 池 `SAME=6 IMPROVED=1 REGRESSION=0 MOVED=0`，靶
+          `function.pyc 14/15 -> 15/15`；G2′ `TALLY SAME=39 ERR=0`；G3 `TALLY SAME=104 ERR=0`；
+          **G4 全 402 A/B（sha-first，唯一发货权威）`SAME=401 IMPROVED=1 REGRESSION=0 MOVED=0 ERR=0`**；
+          G4′ 严格尺读变更产物：靶 `strict clean 14/15 sigma-defect=1 sum_abs_delta=4` → 候选臂
+          `strict clean 15/15 sigma-defect=0 sum_abs_delta=0`。
+  - [x] SubTask 35.9: 落地即复测：`spec_r35b.json` 两处编辑（模块级 `_cleanup_epilogue_pops()` ＋
+          `_is_duplicated_cleanup_exit_return()`，站点 `:24695` 加守卫）插入 57 行，`land35.py` 以
+          「同一份 spec 重放 == 被测镜像字节」为准 → `applied: 2981305 -> 2984322 bytes, CRLF 48418
+          = LF 48418, BOM=True, equals measured mirror=True`，核身份 `raw 92c8c2aabdcd37b9f32b /
+          正规化 ed005632e450f81da09c`（`logs/core_identity35.txt`）。G5 `single`：靶 `15 / 15`，在册产物
+          == 候选臂产物（30128 字节），产物 diff 恰为 1 行删除（虚构的 :367 `return None`）；G6
+          `batch --index pyc_index.json --all --round 35` 逐文件复验、`failed_pyc 0`，索引逐条目差异只有
+          401 条 `last_tested_round` 与靶自身的 `partial→ok`；G7 见 `OUTCOME.md` §五。零副作用面：G6 之后
+          `git status --porcelain` 只有核／靶产物／索引三项在册文件被改。
+  - [x] SubTask 35.10: 方法论收获：①「产物里多一行」与「字节少四条」可以是同一件事，判方向最便宜的尺子
+          是**产物文本变体 A/B**（一次 `py_compile`）而不是再猜发射侧；②反例形状要自己造 —— 只在已知站点
+          上验证过的判据（`E ∧ D1`）在同形反例前一触即溃，G0 里必须放一件「满足候选判据却必须保持现状」的
+          负例；③「order-dependent 的认领史」与「code object 静态性质（块角色）」的区别就是本轮判据能否
+          算同层的分水岭；④发射点归属要一手量，上游轮次记录的站点号可能是另一条臂。
+  - [x] SubTask 35.11: 移交 Round 36：①本族更深（4–5 层）落出方向相反（探针 5 的深度阶梯），本轮判据在
+          更深嵌套上是否仍只抑制该抑制的那一份，需 deficit-2 池里下一个 `POP_EXCEPT×k` 族 hunk 实测；
+          ②deficit-1 剩 6 个未动：`_init_config 86/84`（R16 J1 在册反例，受保护勿再取）、
+          `decrypt_database_url 295/324`（+29 过量发射，#43）、`tick_worker_thread 268/247`、
+          `events 510/508`（Round 34 已判字节码层欠定，勿再从 else 归属侧进攻）、
+          `clock_worker 1275/1291`（R22/R23 移交 D2/D3）、`match 713/689`；③#61 R30-B3 ＋ 语料外见证
+          `r29x_01 <module> 142/138` 继续在册；④电池增量：G2′ 的 39 件应加本轮 5 件形状（尤其见证
+          `r35_01` 与反例 `r35_05`），G3 的 104 件应加已全匹配的靶 `plugin_system_risk_calculation/function.pyc`。

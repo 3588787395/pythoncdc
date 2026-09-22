@@ -1,0 +1,41 @@
+== shape01  cfgs=1
+   cfg=store blocks=26 regions=7 epi=[140, 304, 312]
+   epi@140    pops=1 ops=POP_EXCEPT LOAD_CONST RETURN_VALUE             role=TRY_BODY reg=TryExceptRegion@100 entry_of=None succs=[]
+        pred@100    npred=1 nsucc=2 epi=False ops=LOAD_METHOD PRECALL CALL POP_TOP
+            pred2@98     npred=1 nsucc=1 epi=False ops=
+   epi@304    pops=1 ops=POP_EXCEPT LOAD_CONST RETURN_VALUE             role=EXCEPT_STORE reg=TryExceptRegion@100 entry_of=None succs=[]
+        pred@302    npred=1 nsucc=2 epi=False ops=POP_EXCEPT
+            pred2@238    npred=1 nsucc=2 epi=False ops=JUMP_FORWARD
+   epi@312    pops=1 ops=POP_EXCEPT LOAD_CONST RETURN_VALUE             role=RETURN reg=Region@312 entry_of=None succs=[]
+        pred@310    npred=1 nsucc=2 epi=False ops=POP_EXCEPT
+            pred2@290    npred=1 nsucc=2 epi=False ops=POP_EXCEPT JUMP_FORWARD
+== shape04  cfgs=1
+   cfg=store blocks=16 regions=4 epi=[140, 198]
+   epi@140    pops=1 ops=POP_EXCEPT LOAD_CONST RETURN_VALUE             role=TRY_BODY reg=TryExceptRegion@100 entry_of=None succs=[]
+        pred@100    npred=1 nsucc=2 epi=False ops=LOAD_METHOD PRECALL CALL POP_TOP
+            pred2@98     npred=1 nsucc=1 epi=False ops=
+   epi@198    pops=1 ops=POP_EXCEPT LOAD_CONST RETURN_VALUE             role=EXCEPT_STORE reg=TryExceptRegion@100 entry_of=None succs=[]
+        pred@196    npred=1 nsucc=2 epi=False ops=POP_EXCEPT
+            pred2@164    npred=1 nsucc=2 epi=False ops=LOAD_CONST PRECALL CALL POP_TOP
+== shape05  cfgs=1
+   cfg=store blocks=26 regions=5 epi=[140, 294, 310]
+   epi@140    pops=1 ops=POP_EXCEPT LOAD_CONST RETURN_VALUE             role=TRY_BODY reg=TryExceptRegion@100 entry_of=None succs=[]
+        pred@100    npred=1 nsucc=2 epi=False ops=LOAD_METHOD PRECALL CALL POP_TOP
+            pred2@98     npred=1 nsucc=1 epi=False ops=
+   epi@294    pops=1 ops=POP_EXCEPT LOAD_CONST RETURN_VALUE             role=EXCEPT_STORE reg=TryExceptRegion@198 entry_of=None succs=[]
+        pred@292    npred=1 nsucc=2 epi=False ops=POP_EXCEPT
+            pred2@290    npred=1 nsucc=2 epi=False ops=POP_EXCEPT
+   epi@310    pops=1 ops=POP_EXCEPT LOAD_CONST RETURN_VALUE             role=EXCEPT_STORE reg=TryExceptRegion@100 entry_of=None succs=[]
+        pred@308    npred=1 nsucc=2 epi=False ops=POP_EXCEPT
+            pred2@238    npred=1 nsucc=2 epi=False ops=JUMP_FORWARD
+== target  cfgs=1
+   cfg=save_testds_to_json blocks=54 regions=21 epi=[1328, 1970, 1978]
+   epi@1328   pops=1 ops=POP_EXCEPT LOAD_CONST RETURN_VALUE             role=TRY_BODY reg=TryExceptRegion@1162 entry_of=None succs=[]
+        pred@1162   npred=1 nsucc=2 epi=False ops=LOAD_FAST PRECALL CALL POP_TOP
+            pred2@1160   npred=1 nsucc=1 epi=False ops=
+   epi@1970   pops=1 ops=POP_EXCEPT LOAD_CONST RETURN_VALUE             role=EXCEPT_STORE reg=TryExceptRegion@1162 entry_of=None succs=[]
+        pred@1968   npred=1 nsucc=2 epi=False ops=POP_EXCEPT
+            pred2@1512   npred=1 nsucc=2 epi=False ops=JUMP_FORWARD
+   epi@1978   pops=1 ops=POP_EXCEPT LOAD_CONST RETURN_VALUE             role=RETURN reg=Region@1978 entry_of=None succs=[]
+        pred@1976   npred=1 nsucc=2 epi=False ops=POP_EXCEPT
+            pred2@1956   npred=2 nsucc=2 epi=False ops=POP_EXCEPT JUMP_FORWARD

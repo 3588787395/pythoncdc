@@ -1,0 +1,39 @@
+   RAWROWS=10 errors=0 fns=['store']
+   raw {'cid': 2481627928144, 'fn': 'store', 'caller': 24572, 'blk': 48, 'E': False, 'stmts': (), 'role': 'EXCEPT_HANDLER', 'reg': 'TryExceptRegion@4', 'preds': [(4, ['PRECALL', 'CALL', 'POP_TOP'], False)], 'succs': [66, 326, 328], 'ops': ['PUSH_EXC_INFO', 'LOAD_GLOBAL', 'CHECK_EXC_MATCH', 'POP_JUMP_FORWAR
+   raw {'cid': 2481627928144, 'fn': 'store', 'caller': 24695, 'blk': 66, 'E': False, 'stmts': ('Expr',), 'role': 'EXCEPT_STORE', 'reg': 'TryExceptRegion@4', 'preds': [(48, ['LOAD_GLOBAL', 'CHECK_EXC_MATCH', 'POP_JUMP_FORWARD_IF_FALSE'], False)], 'succs': [98, 328], 'ops': ['POP_TOP', 'LOAD_GLOBAL', 'LOAD_C
+   raw {'cid': 2481627928144, 'fn': 'store', 'caller': 24572, 'blk': 146, 'E': False, 'stmts': (), 'role': 'EXCEPT_HANDLER', 'reg': 'TryExceptRegion@100', 'preds': [(100, ['PRECALL', 'CALL', 'POP_TOP'], False)], 'succs': [320, 318, 164], 'ops': ['PUSH_EXC_INFO', 'LOAD_GLOBAL', 'CHECK_EXC_MATCH', 'POP_JUMP_
+== shape01  official 1/2  calls=10 epilogue-return-sites=1
+   SITE caller=24695 blk@304    pops=1 role=EXCEPT_STORE reg=TryExceptRegion@100 ops=['POP_EXCEPT', 'LOAD_CONST', 'RETURN_VALUE']
+        preds=[(302, ['POP_EXCEPT'], False)]
+        succs=[] epi=[140, 304, 312] claimed={140: True, 304: False, 312: True}
+   epi-set store = [140, 304, 312] ; never passed to _generate_handler_body_statements: [140, 312]
+   RAWROWS=6 errors=0 fns=['store']
+   raw {'cid': 2481634609680, 'fn': 'store', 'caller': 24572, 'blk': 48, 'E': False, 'stmts': (), 'role': 'EXCEPT_HANDLER', 'reg': 'TryExceptRegion@4', 'preds': [(4, ['PRECALL', 'CALL', 'POP_TOP'], False)], 'succs': [212, 214, 66], 'ops': ['PUSH_EXC_INFO', 'LOAD_GLOBAL', 'CHECK_EXC_MATCH', 'POP_JUMP_FORWAR
+   raw {'cid': 2481634609680, 'fn': 'store', 'caller': 24695, 'blk': 66, 'E': False, 'stmts': ('Expr',), 'role': 'EXCEPT_STORE', 'reg': 'TryExceptRegion@4', 'preds': [(48, ['LOAD_GLOBAL', 'CHECK_EXC_MATCH', 'POP_JUMP_FORWARD_IF_FALSE'], False)], 'succs': [214, 98], 'ops': ['POP_TOP', 'LOAD_GLOBAL', 'LOAD_C
+   raw {'cid': 2481634609680, 'fn': 'store', 'caller': 24572, 'blk': 146, 'E': False, 'stmts': (), 'role': 'EXCEPT_HANDLER', 'reg': 'TryExceptRegion@100', 'preds': [(100, ['PRECALL', 'CALL', 'POP_TOP'], False)], 'succs': [164, 204, 206], 'ops': ['PUSH_EXC_INFO', 'LOAD_GLOBAL', 'CHECK_EXC_MATCH', 'POP_JUMP_
+== shape04  official 2/2  calls=6 epilogue-return-sites=1
+   SITE caller=24695 blk@198    pops=1 role=EXCEPT_STORE reg=TryExceptRegion@100 ops=['POP_EXCEPT', 'LOAD_CONST', 'RETURN_VALUE']
+        preds=[(196, ['POP_EXCEPT'], False)]
+        succs=[] epi=[140, 198] claimed={140: True, 198: False}
+   epi-set store = [140, 198] ; never passed to _generate_handler_body_statements: [140]
+   RAWROWS=12 errors=0 fns=['store']
+   raw {'cid': 2481634698384, 'fn': 'store', 'caller': 24572, 'blk': 48, 'E': False, 'stmts': (), 'role': 'EXCEPT_HANDLER', 'reg': 'TryExceptRegion@4', 'preds': [(4, ['PRECALL', 'CALL', 'POP_TOP'], False)], 'succs': [66, 324, 326], 'ops': ['PUSH_EXC_INFO', 'LOAD_GLOBAL', 'CHECK_EXC_MATCH', 'POP_JUMP_FORWAR
+   raw {'cid': 2481634698384, 'fn': 'store', 'caller': 24695, 'blk': 66, 'E': False, 'stmts': ('Expr',), 'role': 'EXCEPT_STORE', 'reg': 'TryExceptRegion@4', 'preds': [(48, ['LOAD_GLOBAL', 'CHECK_EXC_MATCH', 'POP_JUMP_FORWARD_IF_FALSE'], False)], 'succs': [98, 326], 'ops': ['POP_TOP', 'LOAD_GLOBAL', 'LOAD_C
+   raw {'cid': 2481634698384, 'fn': 'store', 'caller': 24572, 'blk': 146, 'E': False, 'stmts': (), 'role': 'EXCEPT_HANDLER', 'reg': 'TryExceptRegion@100', 'preds': [(100, ['PRECALL', 'CALL', 'POP_TOP'], False)], 'succs': [316, 318, 164], 'ops': ['PUSH_EXC_INFO', 'LOAD_GLOBAL', 'CHECK_EXC_MATCH', 'POP_JUMP_
+== shape05  official 2/2  calls=12 epilogue-return-sites=2
+   SITE caller=24695 blk@294    pops=1 role=EXCEPT_STORE reg=TryExceptRegion@198 ops=['POP_EXCEPT', 'LOAD_CONST', 'RETURN_VALUE']
+        preds=[(292, ['POP_EXCEPT'], False)]
+        succs=[] epi=[140, 294, 310] claimed={140: True, 294: False, 310: False}
+   SITE caller=24695 blk@310    pops=1 role=EXCEPT_STORE reg=TryExceptRegion@100 ops=['POP_EXCEPT', 'LOAD_CONST', 'RETURN_VALUE']
+        preds=[(308, ['POP_EXCEPT'], False)]
+        succs=[] epi=[140, 294, 310] claimed={140: True, 294: True, 310: False}
+   epi-set store = [140, 294, 310] ; never passed to _generate_handler_body_statements: [140]
+   RAWROWS=14 errors=0 fns=['save_testds_to_json']
+   raw {'cid': 2481634963408, 'fn': 'save_testds_to_json', 'caller': 24572, 'blk': 1060, 'E': False, 'stmts': (), 'role': 'EXCEPT_HANDLER', 'reg': 'TryExceptRegion@1008', 'preds': [(1008, ['PRECALL', 'CALL', 'POP_TOP'], False)], 'succs': [1080, 1992, 1994], 'ops': ['PUSH_EXC_INFO', 'LOAD_GLOBAL', 'CHECK_EX
+   raw {'cid': 2481634963408, 'fn': 'save_testds_to_json', 'caller': 24695, 'blk': 1080, 'E': False, 'stmts': ('Expr',), 'role': 'EXCEPT_STORE', 'reg': 'TryExceptRegion@1008', 'preds': [(1060, ['CHECK_EXC_MATCH', 'EXTENDED_ARG', 'POP_JUMP_FORWARD_IF_FALSE'], False)], 'succs': [1160, 1994], 'ops': ['POP_TOP
+   raw {'cid': 2481634963408, 'fn': 'save_testds_to_json', 'caller': 24572, 'blk': 1334, 'E': False, 'stmts': (), 'role': 'EXCEPT_HANDLER', 'reg': 'TryExceptRegion@1162', 'preds': [(1162, ['PRECALL', 'CALL', 'POP_TOP'], False)], 'succs': [1354, 1984, 1986], 'ops': ['PUSH_EXC_INFO', 'LOAD_GLOBAL', 'CHECK_EX
+== target   official 14/15  calls=14 epilogue-return-sites=1
+   SITE caller=24695 blk@1970   pops=1 role=EXCEPT_STORE reg=TryExceptRegion@1162 ops=['POP_EXCEPT', 'LOAD_CONST', 'RETURN_VALUE']
+        preds=[(1968, ['POP_EXCEPT'], False)]
+        succs=[] epi=[1328, 1970, 1978] claimed={1328: True, 1970: False, 1978: True}
+   epi-set save_testds_to_json = [1328, 1970, 1978] ; never passed to _generate_handler_body_statements: [1328, 1978]

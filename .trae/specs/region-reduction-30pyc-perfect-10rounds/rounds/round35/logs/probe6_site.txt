@@ -1,0 +1,4 @@
+decompile_single -> ['success', 'source', 'ok_py_path', 'error']
+fresh product == tracked product: True
+emitted Return(None) statements from _generate_handler_body_statements:
+block@1970   ops=POP_EXCEPT LOAD_CONST RETURN_VALUE             role=BlockRole.EXCEPT_STORE caller=(24695, 'hbs = self._generate_handler_body_statements(hb)')

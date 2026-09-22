@@ -1,0 +1,5 @@
+Round 35 core identity (landed R35-B)
+pre-land  HEAD blob sha256[:20] = 473193456cc137c62217  bytes=2932944
+post-land worktree  raw sha256[:20] = 92c8c2aabdcd37b9f32b  bytes=2984322  CRLF=48418  LF=48418  BOM=True
+post-land normalised(CRLF->LF) sha256[:20] = ed005632e450f81da09c
+uniform CRLF: True ; BOM kept: True
