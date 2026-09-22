@@ -1,0 +1,61 @@
+=== <module>.ApiMethodPlugin._on_before_trading_start_trading_thread   orig=66 decomp=62  (delta -4)
+--- replace  orig[10:11] decomp[10:11]
+    o4    LOAD_FAST                        self            L231
+    o5    LOAD_ATTR                        _engine         L231
+    o6    CALL                             1               L231
+    o7    POP_TOP                          None            L231
+    o8    LOAD_FAST                        self            L232
+    o9    LOAD_ATTR                        _will_be_ordered  L232
+  > o10   POP_JUMP_FORWARD_IF_FALSE        422             L232
+    o11   LOAD_FAST                        self            L233
+    o12   LOAD_ATTR                        _will_be_ordered  L233
+    o13   LOAD_METHOD                      pop             L233
+    o14   LOAD_CONST                       0               L233
+    o15   CALL                             1               L233
+    o16   STORE_FAST                       order           L233
+    d4    LOAD_FAST                        self            L111
+    d5    LOAD_ATTR                        _engine         L111
+    d6    CALL                             1               L111
+    d7    POP_TOP                          None            L111
+    d8    LOAD_FAST                        self            L112
+    d9    LOAD_ATTR                        _will_be_ordered  L112
+  > d10   POP_JUMP_FORWARD_IF_FALSE        382             L112
+    d11   LOAD_FAST                        self            L113
+    d12   LOAD_ATTR                        _will_be_ordered  L113
+    d13   LOAD_METHOD                      pop             L113
+    d14   LOAD_CONST                       0               L113
+    d15   CALL                             1               L113
+    d16   STORE_FAST                       order           L113
+--- replace  orig[42:48] decomp[42:44]
+    o36   BINARY_OP                        0               L237
+    o37   STORE_FAST                       now             L237
+    o38   LOAD_FAST                        now             L238
+    o39   LOAD_FAST                        order           L238
+    o40   LOAD_ATTR                        order_time      L238
+    o41   COMPARE_OP                       >=              L238
+  > o42   POP_JUMP_FORWARD_IF_FALSE        328             L238
+  > o43   LOAD_FAST                        order           L239
+  > o44   LOAD_METHOD                      commit          L239
+  > o45   CALL                             0               L239
+  > o46   POP_TOP                          None            L239
+  > o47   JUMP_FORWARD                     404             L240
+    o48   LOAD_GLOBAL                      time            L242
+    o49   LOAD_ATTR                        sleep           L242
+    o50   LOAD_GLOBAL                      min             L242
+    o51   LOAD_FAST                        order_time      L242
+    o52   LOAD_FAST                        now             L242
+    o53   BINARY_OP                        10              L242
+    d36   BINARY_OP                        0               L117
+    d37   STORE_FAST                       now             L117
+    d38   LOAD_FAST                        now             L118
+    d39   LOAD_FAST                        order           L118
+    d40   LOAD_ATTR                        order_time      L118
+    d41   COMPARE_OP                       >=              L118
+  > d42   POP_JUMP_FORWARD_IF_FALSE        288             L118
+  > d43   JUMP_FORWARD                     364             L119
+    d44   LOAD_GLOBAL                      time            L120
+    d45   LOAD_ATTR                        sleep           L120
+    d46   LOAD_GLOBAL                      min             L120
+    d47   LOAD_FAST                        order_time      L120
+    d48   LOAD_FAST                        now             L120
+    d49   BINARY_OP                        10              L120

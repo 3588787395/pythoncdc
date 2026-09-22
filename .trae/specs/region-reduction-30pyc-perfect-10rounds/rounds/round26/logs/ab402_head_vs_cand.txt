@@ -1,0 +1,5 @@
+IMPROVED F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/__init__.pyc  19/20 -> 20/20
+MOVED  F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/default_event_source.pyc  gained=[] lost=[]
+    ~ events [510, 486, 2, 156] -> [510, 491, 2, 157]
+TALLY SAME=400 IMPROVED=1 REGRESSION=0 MOVED=1 ERR=0
+files fully matched: head=366 cand=367

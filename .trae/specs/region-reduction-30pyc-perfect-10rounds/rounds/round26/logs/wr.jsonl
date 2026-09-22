@@ -1,0 +1,2 @@
+{"path": "D:/Temp/r26land26/repro/r26a_b2.pyc", "arm": "head", "sha": "3c8ae4f12cfaea32", "total_functions": 4, "matched_functions": 3, "mism": [["drain", 35, 31, 2, 16]]}
+{"path": "D:/Temp/r26land26/repro/r26a_b2.pyc", "arm": "cand", "sha": "4a8af9aaacd6e0bd", "total_functions": 4, "matched_functions": 4, "mism": []}

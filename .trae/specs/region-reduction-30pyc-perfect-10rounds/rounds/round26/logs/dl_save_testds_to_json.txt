@@ -1,0 +1,539 @@
+=== <module>.save_testds_to_json   orig=314 decomp=310  (delta -4)
+--- replace  orig[4:5] decomp[4:5]
+    o0    RESUME                           0               L594
+    o1    LOAD_FAST                        testds_file_index  L595
+    o2    LOAD_CONST                       0               L595
+    o3    COMPARE_OP                       ==              L595
+  > o4    POP_JUMP_FORWARD_IF_FALSE        274             L595
+    o5    LOAD_CONST                       0               L596
+    o6    STORE_FAST                       max_num         L596
+    o7    LOAD_GLOBAL                      os              L597
+    o8    LOAD_ATTR                        listdir         L597
+    o9    LOAD_GLOBAL                      os              L597
+    o10   LOAD_ATTR                        path            L597
+    d0    RESUME                           0               L320
+    d1    LOAD_FAST                        testds_file_index  L321
+    d2    LOAD_CONST                       0               L321
+    d3    COMPARE_OP                       ==              L321
+  > d4    POP_JUMP_FORWARD_IF_FALSE        902             L321
+    d5    LOAD_CONST                       0               L322
+    d6    STORE_FAST                       max_num         L322
+    d7    LOAD_GLOBAL                      os              L323
+    d8    LOAD_ATTR                        listdir         L323
+    d9    LOAD_GLOBAL                      os              L323
+    d10   LOAD_ATTR                        path            L323
+--- replace  orig[18:19] decomp[18:19]
+    o12   LOAD_FAST                        trade_dir_path  L597
+    o13   LOAD_CONST                       result          L597
+    o14   LOAD_FAST                        trade_id        L597
+    o15   CALL                             3               L597
+    o16   CALL                             1               L597
+    o17   GET_ITER                         None            L597
+  > o18   FOR_ITER                         270             L597
+    o19   STORE_FAST                       filename        L597
+    o20   LOAD_CONST                       testds_to_json  L598
+    o21   LOAD_FAST                        filename        L598
+    o22   CONTAINS_OP                      0               L598
+    o23   POP_JUMP_FORWARD_IF_FALSE        268             L598
+    o24   LOAD_GLOBAL                      int             L599
+    d12   LOAD_FAST                        trade_dir_path  L323
+    d13   LOAD_CONST                       result          L323
+    d14   LOAD_FAST                        trade_id        L323
+    d15   CALL                             3               L323
+    d16   CALL                             1               L323
+    d17   GET_ITER                         None            L323
+  > d18   FOR_ITER                         272             L323
+    d19   STORE_FAST                       filename        L323
+    d20   LOAD_CONST                       testds_to_json  L324
+    d21   LOAD_FAST                        filename        L324
+    d22   CONTAINS_OP                      0               L324
+    d23   POP_JUMP_FORWARD_IF_FALSE        270             L324
+    d24   LOAD_GLOBAL                      int             L325
+--- replace  orig[23:24] decomp[23:24]
+    o17   GET_ITER                         None            L597
+    o18   FOR_ITER                         270             L597
+    o19   STORE_FAST                       filename        L597
+    o20   LOAD_CONST                       testds_to_json  L598
+    o21   LOAD_FAST                        filename        L598
+    o22   CONTAINS_OP                      0               L598
+  > o23   POP_JUMP_FORWARD_IF_FALSE        268             L598
+    o24   LOAD_GLOBAL                      int             L599
+    o25   LOAD_FAST                        filename        L599
+    o26   LOAD_METHOD                      replace         L599
+    o27   LOAD_CONST                       testds_to_json  L599
+    o28   LOAD_CONST                                       L599
+    o29   CALL                             2               L599
+    d17   GET_ITER                         None            L323
+    d18   FOR_ITER                         272             L323
+    d19   STORE_FAST                       filename        L323
+    d20   LOAD_CONST                       testds_to_json  L324
+    d21   LOAD_FAST                        filename        L324
+    d22   CONTAINS_OP                      0               L324
+  > d23   POP_JUMP_FORWARD_IF_FALSE        270             L324
+    d24   LOAD_GLOBAL                      int             L325
+    d25   LOAD_FAST                        filename        L325
+    d26   LOAD_METHOD                      replace         L325
+    d27   LOAD_CONST                       testds_to_json  L325
+    d28   LOAD_CONST                                       L325
+    d29   CALL                             2               L325
+--- replace  orig[40:41] decomp[40:41]
+    o34   BINARY_SUBSCR                    None            L599
+    o35   CALL                             1               L599
+    o36   STORE_FAST                       current_num     L599
+    o37   LOAD_FAST                        current_num     L600
+    o38   LOAD_FAST                        max_num         L600
+    o39   COMPARE_OP                       >               L600
+  > o40   POP_JUMP_FORWARD_IF_FALSE        268             L600
+    o41   LOAD_FAST                        current_num     L601
+    o42   STORE_FAST                       max_num         L601
+    o43   JUMP_BACKWARD                    120             LNone
+    o44   LOAD_FAST                        max_num         L602
+    o45   STORE_FAST                       testds_file_index  L602
+    o46   LOAD_GLOBAL                      os              L603
+    d34   BINARY_SUBSCR                    None            L325
+    d35   CALL                             1               L325
+    d36   STORE_FAST                       current_num     L325
+    d37   LOAD_FAST                        current_num     L326
+    d38   LOAD_FAST                        max_num         L326
+    d39   COMPARE_OP                       >               L326
+  > d40   POP_JUMP_FORWARD_IF_FALSE        270             L326
+    d41   LOAD_FAST                        current_num     L327
+    d42   STORE_FAST                       max_num         L327
+    d43   JUMP_BACKWARD                    122             LNone
+    d44   LOAD_FAST                        max_num         L328
+    d45   STORE_FAST                       testds_file_index  L328
+    d46   LOAD_GLOBAL                      os              L329
+--- replace  orig[43:44] decomp[43:44]
+    o37   LOAD_FAST                        current_num     L600
+    o38   LOAD_FAST                        max_num         L600
+    o39   COMPARE_OP                       >               L600
+    o40   POP_JUMP_FORWARD_IF_FALSE        268             L600
+    o41   LOAD_FAST                        current_num     L601
+    o42   STORE_FAST                       max_num         L601
+  > o43   JUMP_BACKWARD                    120             LNone
+    o44   LOAD_FAST                        max_num         L602
+    o45   STORE_FAST                       testds_file_index  L602
+    o46   LOAD_GLOBAL                      os              L603
+    o47   LOAD_ATTR                        path            L603
+    o48   LOAD_METHOD                      join            L603
+    o49   LOAD_FAST                        trade_dir_path  L603
+    d37   LOAD_FAST                        current_num     L326
+    d38   LOAD_FAST                        max_num         L326
+    d39   COMPARE_OP                       >               L326
+    d40   POP_JUMP_FORWARD_IF_FALSE        270             L326
+    d41   LOAD_FAST                        current_num     L327
+    d42   STORE_FAST                       max_num         L327
+  > d43   JUMP_BACKWARD                    122             LNone
+    d44   LOAD_FAST                        max_num         L328
+    d45   STORE_FAST                       testds_file_index  L328
+    d46   LOAD_GLOBAL                      os              L329
+    d47   LOAD_ATTR                        path            L329
+    d48   LOAD_METHOD                      join            L329
+    d49   LOAD_FAST                        trade_dir_path  L329
+--- replace  orig[66:67] decomp[66:67]
+    o60   STORE_FAST                       testds_file_path  L603
+    o61   LOAD_GLOBAL                      os              L606
+    o62   LOAD_ATTR                        path            L606
+    o63   LOAD_METHOD                      exists          L606
+    o64   LOAD_FAST                        testds_file_path  L606
+    o65   CALL                             1               L606
+  > o66   POP_JUMP_FORWARD_IF_TRUE         484             L606
+    o67   LOAD_FAST                        testds_file_index  L607
+    o68   LOAD_CONST                       1               L607
+    o69   BINARY_OP                        13              L607
+    o70   STORE_FAST                       testds_file_index  L607
+    o71   LOAD_GLOBAL                      create_daily_stats  L608
+    o72   LOAD_FAST                        daily_result    L608
+    d60   STORE_FAST                       testds_file_path  L329
+    d61   LOAD_GLOBAL                      os              L330
+    d62   LOAD_ATTR                        path            L330
+    d63   LOAD_METHOD                      exists          L330
+    d64   LOAD_FAST                        testds_file_path  L330
+    d65   CALL                             1               L330
+  > d66   POP_JUMP_FORWARD_IF_TRUE         486             L330
+    d67   LOAD_FAST                        testds_file_index  L331
+    d68   LOAD_CONST                       1               L331
+    d69   BINARY_OP                        13              L331
+    d70   STORE_FAST                       testds_file_index  L331
+    d71   LOAD_GLOBAL                      create_daily_stats  L332
+    d72   LOAD_FAST                        daily_result    L332
+--- replace  orig[75:76] decomp[75:76]
+    o69   BINARY_OP                        13              L607
+    o70   STORE_FAST                       testds_file_index  L607
+    o71   LOAD_GLOBAL                      create_daily_stats  L608
+    o72   LOAD_FAST                        daily_result    L608
+    o73   CALL                             1               L608
+    o74   STORE_FAST                       ds              L608
+  > o75   JUMP_FORWARD                     900             L608
+    o76   LOAD_GLOBAL                      json            L611
+    o77   LOAD_ATTR                        loads           L611
+    o78   LOAD_GLOBAL                      open            L611
+    o79   LOAD_FAST                        testds_file_path  L611
+    o80   LOAD_CONST                       r               L611
+    o81   CALL                             2               L611
+    d69   BINARY_OP                        13              L331
+    d70   STORE_FAST                       testds_file_index  L331
+    d71   LOAD_GLOBAL                      create_daily_stats  L332
+    d72   LOAD_FAST                        daily_result    L332
+    d73   CALL                             1               L332
+    d74   STORE_FAST                       ds              L332
+  > d75   JUMP_FORWARD                     902             L332
+    d76   LOAD_GLOBAL                      json            L334
+    d77   LOAD_ATTR                        loads           L334
+    d78   LOAD_GLOBAL                      open            L334
+    d79   LOAD_FAST                        testds_file_path  L334
+    d80   LOAD_CONST                       r               L334
+    d81   CALL                             2               L334
+--- replace  orig[108:109] decomp[108:109]
+    o102  STORE_FAST                       df              L612
+    o103  LOAD_GLOBAL                      len             L614
+    o104  LOAD_FAST                        df              L614
+    o105  CALL                             1               L614
+    o106  LOAD_CONST                       50              L614
+    o107  COMPARE_OP                       >=              L614
+  > o108  POP_JUMP_FORWARD_IF_FALSE        828             L614
+    o109  LOAD_FAST                        testds_file_index  L615
+    o110  LOAD_CONST                       1               L615
+    o111  BINARY_OP                        13              L615
+    o112  STORE_FAST                       testds_file_index  L615
+    o113  LOAD_GLOBAL                      create_daily_stats  L616
+    o114  LOAD_FAST                        daily_result    L616
+    d102  STORE_FAST                       df              L335
+    d103  LOAD_GLOBAL                      len             L336
+    d104  LOAD_FAST                        df              L336
+    d105  CALL                             1               L336
+    d106  LOAD_CONST                       50              L336
+    d107  COMPARE_OP                       >=              L336
+  > d108  POP_JUMP_FORWARD_IF_FALSE        830             L336
+    d109  LOAD_FAST                        testds_file_index  L337
+    d110  LOAD_CONST                       1               L337
+    d111  BINARY_OP                        13              L337
+    d112  STORE_FAST                       testds_file_index  L337
+    d113  LOAD_GLOBAL                      create_daily_stats  L338
+    d114  LOAD_FAST                        daily_result    L338
+--- replace  orig[117:118] decomp[117:118]
+    o111  BINARY_OP                        13              L615
+    o112  STORE_FAST                       testds_file_index  L615
+    o113  LOAD_GLOBAL                      create_daily_stats  L616
+    o114  LOAD_FAST                        daily_result    L616
+    o115  CALL                             1               L616
+    o116  STORE_FAST                       ds              L616
+  > o117  JUMP_FORWARD                     900             L616
+    o118  LOAD_GLOBAL                      create_daily_stats  L619
+    o119  LOAD_FAST                        daily_result    L619
+    o120  CALL                             1               L619
+    o121  STORE_FAST                       ds              L619
+    o122  LOAD_FAST                        df              L620
+    o123  LOAD_METHOD                      append          L620
+    d111  BINARY_OP                        13              L337
+    d112  STORE_FAST                       testds_file_index  L337
+    d113  LOAD_GLOBAL                      create_daily_stats  L338
+    d114  LOAD_FAST                        daily_result    L338
+    d115  CALL                             1               L338
+    d116  STORE_FAST                       ds              L338
+  > d117  JUMP_FORWARD                     902             L338
+    d118  LOAD_GLOBAL                      create_daily_stats  L340
+    d119  LOAD_FAST                        daily_result    L340
+    d120  CALL                             1               L340
+    d121  STORE_FAST                       ds              L340
+    d122  LOAD_FAST                        df              L341
+    d123  LOAD_METHOD                      append          L341
+--- replace  orig[155:156] decomp[155:156]
+    o149  POP_TOP                          None            L624
+    o150  LOAD_CONST                       None            L624
+    o151  RETURN_VALUE                     None            L624
+    o152  PUSH_EXC_INFO                    None            LNone
+    o153  LOAD_GLOBAL                      BaseException   L625
+    o154  CHECK_EXC_MATCH                  None            L625
+  > o155  POP_JUMP_FORWARD_IF_FALSE        1992            L625
+    o156  POP_TOP                          None            L625
+    o157  LOAD_GLOBAL                      strategy_log    L626
+    o158  LOAD_ATTR                        error           L626
+    o159  LOAD_CONST                       更新{}文件失败        L626
+    o160  LOAD_METHOD                      format          L626
+    o161  LOAD_FAST                        testds_file_path  L626
+    d149  POP_TOP                          None            L344
+    d150  LOAD_CONST                       None            L345
+    d151  RETURN_VALUE                     None            L345
+    d152  PUSH_EXC_INFO                    None            LNone
+    d153  LOAD_GLOBAL                      BaseException   L346
+    d154  CHECK_EXC_MATCH                  None            L346
+  > d155  POP_JUMP_FORWARD_IF_FALSE        1986            L346
+    d156  POP_TOP                          None            L346
+    d157  LOAD_GLOBAL                      strategy_log    L347
+    d158  LOAD_ATTR                        error           L347
+    d159  LOAD_CONST                       更新{}文件失败        L347
+    d160  LOAD_METHOD                      format          L347
+    d161  LOAD_FAST                        testds_file_path  L347
+--- replace  orig[194:195] decomp[194:195]
+    o188  POP_EXCEPT                       None            L634
+    o189  LOAD_CONST                       None            L634
+    o190  RETURN_VALUE                     None            L634
+    o191  PUSH_EXC_INFO                    None            LNone
+    o192  LOAD_GLOBAL                      BaseException   L635
+    o193  CHECK_EXC_MATCH                  None            L635
+  > o194  POP_JUMP_FORWARD_IF_FALSE        1984            L635
+    o195  POP_TOP                          None            L635
+    o196  LOAD_GLOBAL                      system_log      L636
+    o197  LOAD_ATTR                        error           L636
+    o198  LOAD_CONST                       打印ds失败          L636
+    o199  CALL                             1               L636
+    o200  POP_TOP                          None            L636
+    d188  POP_EXCEPT                       None            L353
+    d189  LOAD_CONST                       None            L353
+    d190  RETURN_VALUE                     None            L353
+    d191  PUSH_EXC_INFO                    None            LNone
+    d192  LOAD_GLOBAL                      BaseException   L354
+    d193  CHECK_EXC_MATCH                  None            L354
+  > d194  POP_JUMP_FORWARD_IF_FALSE        1978            L354
+    d195  POP_TOP                          None            L354
+    d196  LOAD_GLOBAL                      system_log      L355
+    d197  LOAD_ATTR                        error           L355
+    d198  LOAD_CONST                       打印ds失败          L355
+    d199  CALL                             1               L355
+    d200  POP_TOP                          None            L355
+--- replace  orig[217:218] decomp[217:218]
+    o211  LOAD_METHOD                      to_csv          L639
+    o212  LOAD_FAST                        testds_file_path  L639
+    o213  LOAD_CONST                       False           L639
+    o214  KW_NAMES                         <unknown>       L639
+    o215  CALL                             2               L639
+    o216  POP_TOP                          None            L639
+  > o217  JUMP_FORWARD                     1968            L639
+    o218  PUSH_EXC_INFO                    None            LNone
+    o219  LOAD_GLOBAL                      BaseException   L640
+    o220  CHECK_EXC_MATCH                  None            L640
+    o221  POP_JUMP_FORWARD_IF_FALSE        1960            L640
+    o222  POP_TOP                          None            L640
+    o223  LOAD_GLOBAL                      system_log      L641
+    d211  LOAD_METHOD                      to_csv          L358
+    d212  LOAD_FAST                        testds_file_path  L358
+    d213  LOAD_CONST                       False           L358
+    d214  KW_NAMES                         <unknown>       L358
+    d215  CALL                             2               L358
+    d216  POP_TOP                          None            L358
+  > d217  JUMP_FORWARD                     1970            L358
+    d218  PUSH_EXC_INFO                    None            LNone
+    d219  LOAD_GLOBAL                      BaseException   L359
+    d220  CHECK_EXC_MATCH                  None            L359
+    d221  POP_JUMP_FORWARD_IF_FALSE        1962            L359
+    d222  POP_TOP                          None            L359
+    d223  LOAD_GLOBAL                      system_log      L360
+--- replace  orig[221:222] decomp[221:222]
+    o215  CALL                             2               L639
+    o216  POP_TOP                          None            L639
+    o217  JUMP_FORWARD                     1968            L639
+    o218  PUSH_EXC_INFO                    None            LNone
+    o219  LOAD_GLOBAL                      BaseException   L640
+    o220  CHECK_EXC_MATCH                  None            L640
+  > o221  POP_JUMP_FORWARD_IF_FALSE        1960            L640
+    o222  POP_TOP                          None            L640
+    o223  LOAD_GLOBAL                      system_log      L641
+    o224  LOAD_ATTR                        error           L641
+    o225  LOAD_CONST                       保存{}文件失败        L641
+    o226  LOAD_METHOD                      format          L641
+    o227  LOAD_FAST                        testds_file_path  L641
+    d215  CALL                             2               L358
+    d216  POP_TOP                          None            L358
+    d217  JUMP_FORWARD                     1970            L358
+    d218  PUSH_EXC_INFO                    None            LNone
+    d219  LOAD_GLOBAL                      BaseException   L359
+    d220  CHECK_EXC_MATCH                  None            L359
+  > d221  POP_JUMP_FORWARD_IF_FALSE        1962            L359
+    d222  POP_TOP                          None            L359
+    d223  LOAD_GLOBAL                      system_log      L360
+    d224  LOAD_ATTR                        error           L360
+    d225  LOAD_CONST                       保存{}文件失败        L360
+    d226  LOAD_METHOD                      format          L360
+    d227  LOAD_FAST                        testds_file_path  L360
+--- replace  orig[260:261] decomp[260:261]
+    o254  POP_TOP                          None            L645
+    o255  LOAD_CONST                       None            L644
+    o256  LOAD_CONST                       None            L644
+    o257  LOAD_CONST                       None            L644
+    o258  CALL                             2               L644
+    o259  POP_TOP                          None            L644
+  > o260  JUMP_FORWARD                     1844            L644
+    o261  PUSH_EXC_INFO                    None            L644
+    o262  WITH_EXCEPT_START                None            L644
+    o263  POP_JUMP_FORWARD_IF_TRUE         1836            L644
+    o264  RERAISE                          2               L644
+    o265  COPY                             3               LNone
+    o266  POP_EXCEPT                       None            LNone
+    d254  POP_TOP                          None            L364
+    d255  LOAD_CONST                       None            L363
+    d256  LOAD_CONST                       None            L363
+    d257  LOAD_CONST                       None            L363
+    d258  CALL                             2               L363
+    d259  POP_TOP                          None            L363
+  > d260  JUMP_FORWARD                     1846            L363
+    d261  PUSH_EXC_INFO                    None            L363
+    d262  WITH_EXCEPT_START                None            L363
+    d263  POP_JUMP_FORWARD_IF_TRUE         1838            L363
+    d264  RERAISE                          2               L363
+    d265  COPY                             3               LNone
+    d266  POP_EXCEPT                       None            LNone
+--- replace  orig[263:264] decomp[263:264]
+    o257  LOAD_CONST                       None            L644
+    o258  CALL                             2               L644
+    o259  POP_TOP                          None            L644
+    o260  JUMP_FORWARD                     1844            L644
+    o261  PUSH_EXC_INFO                    None            L644
+    o262  WITH_EXCEPT_START                None            L644
+  > o263  POP_JUMP_FORWARD_IF_TRUE         1836            L644
+    o264  RERAISE                          2               L644
+    o265  COPY                             3               LNone
+    o266  POP_EXCEPT                       None            LNone
+    o267  RERAISE                          1               LNone
+    o268  POP_TOP                          None            L644
+    o269  POP_EXCEPT                       None            L644
+    d257  LOAD_CONST                       None            L363
+    d258  CALL                             2               L363
+    d259  POP_TOP                          None            L363
+    d260  JUMP_FORWARD                     1846            L363
+    d261  PUSH_EXC_INFO                    None            L363
+    d262  WITH_EXCEPT_START                None            L363
+  > d263  POP_JUMP_FORWARD_IF_TRUE         1838            L363
+    d264  RERAISE                          2               L363
+    d265  COPY                             3               LNone
+    d266  POP_EXCEPT                       None            LNone
+    d267  RERAISE                          1               LNone
+    d268  POP_TOP                          None            L363
+    d269  POP_EXCEPT                       None            L363
+--- replace  orig[272:273] decomp[272:273]
+    o266  POP_EXCEPT                       None            LNone
+    o267  RERAISE                          1               LNone
+    o268  POP_TOP                          None            L644
+    o269  POP_EXCEPT                       None            L644
+    o270  POP_TOP                          None            L644
+    o271  POP_TOP                          None            L644
+  > o272  JUMP_FORWARD                     1956            LNone
+    o273  PUSH_EXC_INFO                    None            LNone
+    o274  LOAD_GLOBAL                      BaseException   L646
+    o275  CHECK_EXC_MATCH                  None            L646
+    o276  POP_JUMP_FORWARD_IF_FALSE        1948            L646
+    o277  POP_TOP                          None            L646
+    o278  LOAD_GLOBAL                      system_log      L647
+    d266  POP_EXCEPT                       None            LNone
+    d267  RERAISE                          1               LNone
+    d268  POP_TOP                          None            L363
+    d269  POP_EXCEPT                       None            L363
+    d270  POP_TOP                          None            L363
+    d271  POP_TOP                          None            L363
+  > d272  JUMP_FORWARD                     1958            LNone
+    d273  PUSH_EXC_INFO                    None            LNone
+    d274  LOAD_GLOBAL                      BaseException   L365
+    d275  CHECK_EXC_MATCH                  None            L365
+    d276  POP_JUMP_FORWARD_IF_FALSE        1950            L365
+    d277  POP_TOP                          None            L365
+    d278  LOAD_GLOBAL                      system_log      L366
+--- replace  orig[276:277] decomp[276:277]
+    o270  POP_TOP                          None            L644
+    o271  POP_TOP                          None            L644
+    o272  JUMP_FORWARD                     1956            LNone
+    o273  PUSH_EXC_INFO                    None            LNone
+    o274  LOAD_GLOBAL                      BaseException   L646
+    o275  CHECK_EXC_MATCH                  None            L646
+  > o276  POP_JUMP_FORWARD_IF_FALSE        1948            L646
+    o277  POP_TOP                          None            L646
+    o278  LOAD_GLOBAL                      system_log      L647
+    o279  LOAD_ATTR                        error           L647
+    o280  LOAD_CONST                       保存{}文件失败        L647
+    o281  LOAD_METHOD                      format          L647
+    o282  LOAD_FAST                        testds_file_path  L647
+    d270  POP_TOP                          None            L363
+    d271  POP_TOP                          None            L363
+    d272  JUMP_FORWARD                     1958            LNone
+    d273  PUSH_EXC_INFO                    None            LNone
+    d274  LOAD_GLOBAL                      BaseException   L365
+    d275  CHECK_EXC_MATCH                  None            L365
+  > d276  POP_JUMP_FORWARD_IF_FALSE        1950            L365
+    d277  POP_TOP                          None            L365
+    d278  LOAD_GLOBAL                      system_log      L366
+    d279  LOAD_ATTR                        error           L366
+    d280  LOAD_CONST                       保存{}文件失败        L366
+    d281  LOAD_METHOD                      format          L366
+    d282  LOAD_FAST                        testds_file_path  L366
+--- replace  orig[287:288] decomp[287:288]
+    o281  LOAD_METHOD                      format          L647
+    o282  LOAD_FAST                        testds_file_path  L647
+    o283  CALL                             1               L647
+    o284  CALL                             1               L647
+    o285  POP_TOP                          None            L647
+    o286  POP_EXCEPT                       None            L647
+  > o287  JUMP_FORWARD                     1956            L647
+    o288  RERAISE                          0               L646
+    o289  COPY                             3               LNone
+    o290  POP_EXCEPT                       None            LNone
+    o291  RERAISE                          1               LNone
+    o292  POP_EXCEPT                       None            LNone
+    o293  JUMP_FORWARD                     1976            LNone
+    d281  LOAD_METHOD                      format          L366
+    d282  LOAD_FAST                        testds_file_path  L366
+    d283  CALL                             1               L366
+    d284  CALL                             1               L366
+    d285  POP_TOP                          None            L366
+    d286  POP_EXCEPT                       None            L366
+  > d287  JUMP_FORWARD                     1958            L366
+    d288  RERAISE                          0               L365
+    d289  COPY                             3               LNone
+    d290  POP_EXCEPT                       None            LNone
+    d291  RERAISE                          1               LNone
+    d292  POP_EXCEPT                       None            LNone
+    d293  JUMP_FORWARD                     1970            LNone
+--- replace  orig[293:294] decomp[293:294]
+    o287  JUMP_FORWARD                     1956            L647
+    o288  RERAISE                          0               L646
+    o289  COPY                             3               LNone
+    o290  POP_EXCEPT                       None            LNone
+    o291  RERAISE                          1               LNone
+    o292  POP_EXCEPT                       None            LNone
+  > o293  JUMP_FORWARD                     1976            LNone
+    o294  RERAISE                          0               L640
+    o295  COPY                             3               LNone
+    o296  POP_EXCEPT                       None            LNone
+    o297  RERAISE                          1               LNone
+    o298  POP_EXCEPT                       None            L639
+    o299  POP_EXCEPT                       None            L639
+    d287  JUMP_FORWARD                     1958            L366
+    d288  RERAISE                          0               L365
+    d289  COPY                             3               LNone
+    d290  POP_EXCEPT                       None            LNone
+    d291  RERAISE                          1               LNone
+    d292  POP_EXCEPT                       None            LNone
+  > d293  JUMP_FORWARD                     1970            LNone
+    d294  RERAISE                          0               L359
+    d295  COPY                             3               LNone
+    d296  POP_EXCEPT                       None            LNone
+    d297  RERAISE                          1               LNone
+    d298  POP_EXCEPT                       None            L367
+    d299  POP_EXCEPT                       None            L367
+--- delete  orig[298:302] decomp[298:298]
+    o292  POP_EXCEPT                       None            LNone
+    o293  JUMP_FORWARD                     1976            LNone
+    o294  RERAISE                          0               L640
+    o295  COPY                             3               LNone
+    o296  POP_EXCEPT                       None            LNone
+    o297  RERAISE                          1               LNone
+  > o298  POP_EXCEPT                       None            L639
+  > o299  POP_EXCEPT                       None            L639
+  > o300  LOAD_CONST                       None            L639
+  > o301  RETURN_VALUE                     None            L639
+    o302  POP_EXCEPT                       None            L639
+    o303  POP_EXCEPT                       None            L639
+    o304  LOAD_CONST                       None            L639
+    o305  RETURN_VALUE                     None            L639
+    o306  RERAISE                          0               L635
+    o307  COPY                             3               LNone
+    d292  POP_EXCEPT                       None            LNone
+    d293  JUMP_FORWARD                     1970            LNone
+    d294  RERAISE                          0               L359
+    d295  COPY                             3               LNone
+    d296  POP_EXCEPT                       None            LNone
+    d297  RERAISE                          1               LNone
+    d298  POP_EXCEPT                       None            L367
+    d299  POP_EXCEPT                       None            L367
+    d300  LOAD_CONST                       None            L367
+    d301  RETURN_VALUE                     None            L367
+    d302  RERAISE                          0               L354
+    d303  COPY                             3               LNone

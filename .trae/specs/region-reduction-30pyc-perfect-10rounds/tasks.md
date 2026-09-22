@@ -798,3 +798,40 @@
           #41、`decrypt_database_url +29 / log.setup −67 / fly_api.base −21×2` #43、`+1` 翻转对 #44
           仍未收口；④ `quotation.pyc` 自本轮起改为承重锚点（任何让它跌出 143 的候选直接否决），
           「零副作用」金丝雀需另选。
+- [x] Task 26: 落地 R26-A（出环臂的裸 `Break` 不得吞掉该块自己的前导语句）
+  - [x] SubTask 26.1: 整块丢失族（#41）取证拆成三个互不同层的形状，记录 `rounds/round26/lineB-bulk-loss.md`
+          ＋ `logs/dump_*.txt`（带字节偏移的原始/产物码流）＋ `logs/dl_*.txt`（逐条对齐）：
+          B1 `can_resume_strategy −32`（嵌套 elif 链被展平后链尾条件消失、`return` 之后成死代码）、
+          B2 `_on_before_trading_start_trading_thread −4`（臂块自身前导语句被裸 `Break` 顶掉）、
+          B3 `save_testds_to_json −4`（`finally` 内联尾声按出口路径复制、产物只留一份 → 归 #39）；
+          另排除 `instance._init_config`（R16 在案反例，保护）与 `DefaultMatcher.match −26`（259 条大块换位）。
+  - [x] SubTask 26.2: 用「站点身份戳」实测而非推断定位发射现场：`region_ast_generator.py` 有 18 处赋裸
+          `[{'type': 'Break'}]`，逐处在镜像核加 stderr 戳跑靶子，唯一命中
+          **L10084 `_loop_build_if_with_exit_branches`（blocks=[286, 328]）**；同函数内紧邻的
+          `_block_succ_return` 分支已有「先看块角色再决定发射 return AST 还是整块语句」的分派，
+          else 侧的 `user_stmts + [Break]` 形状也已在 L8965-8974 落地 —— 本判据只把同一判据补到 break 侧。
+  - [x] SubTask 26.3: 落 R26-A：出环臂块属 `_block_succ_break` 时，仅当块角色为 `BlockRole.PURE_BREAK`
+          才发射裸 `Break`，否则先发射该块自己的语句（滤掉重复的 `Break/Continue`）再接 `Break`，
+          并登记 `generated_blocks`/`generated_offsets`。只读块角色、块内指令与后继集合成员关系，
+          不读偏移量比较、不读函数名、无跨层启发。`git diff --numstat` = 13 1。
+  - [x] SubTask 26.4: 门禁（严格串行，全部对候选/落地字节实测）：G0 语料外最小复现
+          `test_repros/round26_break_prefix/r26a_01_break_prefix_in_while.py :: drain`
+          在落地前核上 3/4（`35` vs `31`，同形 −4）；G1 复现 3/4 → 4/4、锚点文件
+          `IQEngine/plugins/plugin_fly_data/__init__.pyc 19/20 → 20/20`（mismatch 清空）；
+          G2 前轮 92 个 `test_repros/**.pyc` 电池 `SAME=92 BROKEN=0`；
+          G3/G4 全量 402 文件双臂 A/B：`REGRESSION=0 ERR=0`，400 个产物逐字节不变，
+          唯一 MOVED 是 `default_event_source.pyc :: events` 产物 486 → 491（orig 510，长度缺口收敛），
+          记为残余。日志 `rounds/round26/logs/ab402_head_vs_cand.txt`、`batt92_head_vs_cand.txt`。
+  - [x] SubTask 26.5: 落地字节与实测候选等价性：`core/cfg/region_ast_generator.py` 直接取候选镜像文件
+          （先断言落地前核 ≡ A/B 的 head 臂、UTF-8 BOM 保留、纯 CRLF、写后 sha 一致），
+          再以真核复跑：92 锚点产物 sha 与候选臂全等、复现 4/4、`single` 靶子
+          `decompile_status ok 20/20`、承重锚点 `fly/data/quotation.pyc` 仍 `ok 143/143`。
+  - [x] SubTask 26.6: `batch --index pyc_index.json --all --round 26` 把每条索引拉回实测，
+          `stats` 读数与逐文件 verdict 存 `rounds/round26/logs/stats26.txt`、`batch_all26.txt`。
+  - [ ] SubTask 26.7: 本轮未收口，移交 Round 27：① B1 `can_resume_strategy −32` 的发射现场仍未定位，
+          且 `region_ast_generator.py` L11145-11147「入口在他人 `elif_conditions` ⇒ 发射 `[]`」守卫
+          已用镜像 stderr 插桩**实测否证**（该函数一次未触发、产物逐字节不变），不得在那一站点落地；
+          ② 诊断线 A（12 个 deficit-1 文件的单缺陷聚类）在本轮落地时仍在运行，其候选复现
+          `r26_a_break_prefix_nested` 与 R26-A 同族，须以其 `ANALYSIS.md` 对已落地字节复测后再谈判据；
+          ③ B3/#39 异常尾声复制、`DefaultMatcher.match` 大块换位、#42/#43/#44 仍未收口；
+          ④ `events` 函数的残余缺口 19 条列 D2 过量发射族复测。

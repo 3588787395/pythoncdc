@@ -1,0 +1,21 @@
+bare-Break assignment sites: 18
+mirror patched, bom kept = True 3.11.7
+R26BRK line=10084 fn=_loop_build_if_with_exit_branches blocks=[286, 328]
+R26BRK line=8965 fn=_loop_extract_self_loop_stmts blocks=[16, 160, 254, 258]
+--- product source ---
+def _on_before_trading_start_trading_thread(self):
+        self._engine.set_engine(self._engine)
+        while self._will_be_ordered:
+            order = self._will_be_ordered.pop(0)
+            while True:
+                now = datetime.datetime.now()
+                order_time = order.order_time
+                now = (now.hour * 60 + now.minute) * 60 + now.second
+                if now >= order.order_time:
+                    break
+                time.sleep(min(order_time - now, 30))
+    def _on_handle_order(self, event):
+        while self._will_be_ordered:
+            order = self._will_be_ordered[0]
+            now = self._engine.calendar_dt
+            order_time = order.order_time

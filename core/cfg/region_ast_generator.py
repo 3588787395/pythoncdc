@@ -10081,7 +10081,19 @@ AST 映射规则:
         _else_stmts: List[Dict[str, Any]] = []
         if _then_succ in _exit_succs:
             if _then_succ in _block_succ_break:
-                _then_stmts = [{'type': 'Break'}]
+                # R26-A 区域归约算法原则 1（每块内部次序）：出环臂块若只在跳转之外还带
+                # 自己的前导语句（block role 非 PURE_BREAK），裸 `Break` 会把这些语句整段丢掉。
+                # 与下方 `_block_succ_return` 分支的 role 分派同构，也与 L8965-8974
+                # `_jt_user_stmts + [Break]` 已落地形状同构：先发射块内前导语句，再接 Break。
+                _r26_break_role = self.region_analyzer.get_block_role(_then_succ)
+                if _r26_break_role == BlockRole.PURE_BREAK:
+                    _then_stmts = [{'type': 'Break'}]
+                else:
+                    _r26_bs = self._generate_block_statements(_then_succ) or []
+                    _r26_user = [s for s in _r26_bs if s.get('type') not in ('Break', 'Continue')]
+                    _then_stmts = _r26_user + [{'type': 'Break'}]
+                    self.generated_blocks.add(_then_succ)
+                    self.generated_offsets.add(_then_succ.start_offset)
             elif _then_succ in _block_succ_return:
                 _then_role = self.region_analyzer.get_block_role(_then_succ)
                 if _then_role in (BlockRole.RETURN, BlockRole.RETURN_NONE):
