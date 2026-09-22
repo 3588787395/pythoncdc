@@ -1,0 +1,92 @@
+--- ORIGINAL <module>.ctl_two_cont (37 filtered instr) ---
+    1 @0    RESUME                     ''                      
+    2 @2    LOAD_FAST                  'ks'                    
+    3 @4    GET_ITER                   ''                      
+    4 @6    FOR_ITER                   'to 94'                  -> 94
+    5 @8    STORE_FAST                 'k'                     
+    6 @12   LOAD_FAST                  'k'                     
+    7 @14   LOAD_CONST                 '3'                     
+    8 @16   COMPARE_OP                 '>'                     
+    9 @22   POP_JUMP_FORWARD_IF_FALSE  'to 36'                  -> 36
+   10 @24   LOAD_CONST                 '1'                     
+   11 @26   LOAD_FAST                  'd'                     
+   12 @28   LOAD_FAST                  'k'                     
+   13 @30   STORE_SUBSCR               ''                      
+   14 @34   JUMP_BACKWARD              'to 6'                   -> 6
+   15 @36   LOAD_FAST                  'k'                     
+   16 @38   LOAD_CONST                 '0'                     
+   17 @40   COMPARE_OP                 '<'                     
+   18 @46   POP_JUMP_FORWARD_IF_FALSE  'to 60'                  -> 60
+   19 @48   LOAD_CONST                 '-1'                    
+   20 @50   LOAD_FAST                  'd'                     
+   21 @52   LOAD_FAST                  'k'                     
+   22 @54   STORE_SUBSCR               ''                      
+   23 @58   JUMP_BACKWARD              'to 6'                   -> 6
+   24 @60   JUMP_BACKWARD              'to 6'                   -> 6
+   25 @62   PUSH_EXC_INFO              ''                      
+   26 @64   LOAD_GLOBAL                'Exception'             
+   27 @76   CHECK_EXC_MATCH            ''                      
+   28 @78   POP_JUMP_FORWARD_IF_FALSE  'to 86'                  -> 86
+   29 @80   POP_TOP                    ''                      
+   30 @82   POP_EXCEPT                 ''                      
+   31 @84   JUMP_BACKWARD              'to 6'                   -> 6
+   32 @86   RERAISE                    ''                      
+   33 @88   COPY                       ''                      
+   34 @90   POP_EXCEPT                 ''                      
+   35 @92   RERAISE                    ''                      
+   36 @94   LOAD_FAST                  'd'                     
+   37 @96   RETURN_VALUE               ''                      
+--- PRODUCT <module>.ctl_two_cont (36 filtered instr) ---
+    1 @0    RESUME                     ''                      
+    2 @2    LOAD_FAST                  'ks'                    
+    3 @4    GET_ITER                   ''                      
+    4 @6    FOR_ITER                   'to 92'                  -> 92
+    5 @8    STORE_FAST                 'k'                     
+    6 @12   LOAD_FAST                  'k'                     
+    7 @14   LOAD_CONST                 '3'                     
+    8 @16   COMPARE_OP                 '>'                     
+    9 @22   POP_JUMP_FORWARD_IF_FALSE  'to 36'                  -> 36
+   10 @24   LOAD_CONST                 '1'                     
+   11 @26   LOAD_FAST                  'd'                     
+   12 @28   LOAD_FAST                  'k'                     
+   13 @30   STORE_SUBSCR               ''                      
+   14 @34   JUMP_BACKWARD              'to 6'                   -> 6
+   15 @36   LOAD_FAST                  'k'                     
+   16 @38   LOAD_CONST                 '0'                     
+   17 @40   COMPARE_OP                 '<'                     
+   18 @46   POP_JUMP_FORWARD_IF_FALSE  'to 58'                  -> 58
+   19 @48   LOAD_CONST                 '-1'                    
+   20 @50   LOAD_FAST                  'd'                     
+   21 @52   LOAD_FAST                  'k'                     
+   22 @54   STORE_SUBSCR               ''                      
+   23 @58   JUMP_BACKWARD              'to 6'                   -> 6
+   24 @60   PUSH_EXC_INFO              ''                      
+   25 @62   LOAD_GLOBAL                'Exception'             
+   26 @74   CHECK_EXC_MATCH            ''                      
+   27 @76   POP_JUMP_FORWARD_IF_FALSE  'to 84'                  -> 84
+   28 @78   POP_TOP                    ''                      
+   29 @80   POP_EXCEPT                 ''                      
+   30 @82   JUMP_BACKWARD              'to 6'                   -> 6
+   31 @84   RERAISE                    ''                      
+   32 @86   COPY                       ''                      
+   33 @88   POP_EXCEPT                 ''                      
+   34 @90   RERAISE                    ''                      
+   35 @92   LOAD_FAST                  'd'                     
+   36 @94   RETURN_VALUE               ''                      
+strict: ('seq_len', 'orig=37 decomp=36', True)
+--- product source ---
+  1| # Source Generated with Decompyle++ (Python version)
+  2| # File: orig.pyc (Python 3.11)
+  3| 
+  4| def ctl_two_cont(d, ks):
+  5|     for k in ks:
+  6|         try:
+  7|             if k > 3:
+  8|                 d[k] = 1
+  9|                 continue
+ 10|             elif k < 0:
+ 11|                 d[k] = -1
+ 12|             continue
+ 13|         except Exception:
+ 14|             pass
+ 15|     return d

@@ -1,0 +1,126 @@
+=== target ctl_two_cont offsets in code: FOR_ITER/JUMP ===
+   @6    FOR_ITER                   -> 94
+   @22   POP_JUMP_FORWARD_IF_FALSE  -> 36
+   @30   STORE_SUBSCR               -> 
+   @34   JUMP_BACKWARD              -> 6
+   @46   POP_JUMP_FORWARD_IF_FALSE  -> 60
+   @54   STORE_SUBSCR               -> 
+   @58   JUMP_BACKWARD              -> 6
+   @60   JUMP_BACKWARD              -> 6
+   @78   POP_JUMP_FORWARD_IF_FALSE  -> 86
+   @84   JUMP_BACKWARD              -> 6
+=== 17 Continue-constructing methods wrapped; 26 calls ===
+   1x  _generate_basic_region (def line 41417) region_entry=0
+   5x  _generate_block_statements_body (def line 41761) region_entry=None
+   2x  _generate_handler_body_statements (def line 25687) region_entry=None
+   1x  _generate_try (def line 24160) region_entry=12
+   1x  _generate_try_body (def line 22588) region_entry=12
+   1x  _if_generate_normal (def line 16638) region_entry=12
+   1x  _if_generate_normal (def line 16638) region_entry=36
+   1x  _if_generate_then_branch (def line 13997) region_entry=12
+   1x  _if_generate_then_branch (def line 13997) region_entry=36
+   6x  _process_if_blocks (def line 20147) region_entry=None
+   3x  _try_generate_conditional_break (def line 21566) region_entry=None
+   3x  _try_generate_conditional_break_or_continue (def line 21720) region_entry=None
+--- per-call detail (only those whose emission contains a Continue) ---
+{'def_line': 20147,
+ 'elif_bodies': [],
+ 'elif_conds': [],
+ 'elif_final_else': [],
+ 'else': [],
+ 'merge': None,
+ 'method': '_process_if_blocks',
+ 'region_entry': None,
+ 'region_type': 'NoneType',
+ 'then': []}
+   -> emitted: [{'targets': [{'ctx': 'Store', 'slice': {'ctx': 'Load', 'id': 'k', 'lineno': None, 'type': 'Name'}, 'type': 'Subscript', 'value': {'ctx': 'Load', 'id': 'd', 'lineno': None, 'type': 'Name'}}], |   'type': 'Assign', |   'value': {'lineno': 5, 'type': 'Constant', 'value': 1}}, |  {'type': 'Continue'}]
+
+{'def_line': 13997,
+ 'elif_bodies': [],
+ 'elif_conds': [],
+ 'elif_final_else': [],
+ 'else': [36, 48],
+ 'merge': 6,
+ 'method': '_if_generate_then_branch',
+ 'region_entry': 12,
+ 'region_type': 'IfRegion',
+ 'then': [24, 34]}
+   -> emitted: [{'targets': [{'ctx': 'Store', 'slice': {'ctx': 'Load', 'id': 'k', 'lineno': None, 'type': 'Name'}, 'type': 'Subscript', 'value': {'ctx': 'Load', 'id': 'd', 'lineno': None, 'type': 'Name'}}], |   'type': 'Assign', |   'value': {'lineno': 5, 'type': 'Constant', 'value': 1}}, |  {'type': 'Continue'}]
+
+{'def_line': 16638,
+ 'elif_bodies': [],
+ 'elif_conds': [],
+ 'elif_final_else': [],
+ 'else': [36, 48],
+ 'merge': 6,
+ 'method': '_if_generate_normal',
+ 'region_entry': 12,
+ 'region_type': 'IfRegion',
+ 'then': [24, 34]}
+   -> emitted: {'body': [{'targets': [{'ctx': 'Store', 'slice': {'ctx': 'Load', 'id': 'k', 'lineno': None, 'type': 'Name'}, 'type': 'Subscript', 'value': {'ctx': 'Load', 'id': 'd', 'lineno': None, 'type': 'Name'}}], |            'type': 'Assign', |            'value': {'lineno': 5, 'type': 'Constant', 'value': 1}}, |           {'type': 'Continue'}], |  'orelse': [{'body': [{'targets': [{'ctx': 'Store', |                                     'slice': {'ctx': 'Load', 'id': 'k', 'lineno': None, 'type': 'Name'}, |                                     'type': 'Subscript', |                                     'value': {'ctx': 'L
+
+{'def_line': 22588,
+ 'elif_bodies': [],
+ 'elif_conds': [],
+ 'elif_final_else': [],
+ 'else': [],
+ 'merge': None,
+ 'method': '_generate_try_body',
+ 'region_entry': 12,
+ 'region_type': 'TryExceptRegion',
+ 'then': []}
+   -> emitted: [{'body': [{'targets': [{'ctx': 'Store', |                          'slice': {'ctx': 'Load', 'id': 'k', 'lineno': None, 'type': 'Name'}, |                          'type': 'Subscript', |                          'value': {'ctx': 'Load', 'id': 'd', 'lineno': None, 'type': 'Name'}}], |             'type': 'Assign', |             'value': {'lineno': 5, 'type': 'Constant', 'value': 1}}, |            {'type': 'Continue'}], |   'orelse': [{'body': [{'targets': [{'ctx': 'Store', |                                      'slice': {'ctx': 'Load', 'id': 'k', 'lineno': None, 'type': 'Name'}, |                                
+
+{'def_line': 24160,
+ 'elif_bodies': [],
+ 'elif_conds': [],
+ 'elif_final_else': [],
+ 'else': [],
+ 'merge': None,
+ 'method': '_generate_try',
+ 'region_entry': 12,
+ 'region_type': 'TryExceptRegion',
+ 'then': []}
+   -> emitted: {'body': [{'body': [{'targets': [{'ctx': 'Store', |                                   'slice': {'ctx': 'Load', 'id': 'k', 'lineno': None, 'type': 'Name'}, |                                   'type': 'Subscript', |                                   'value': {'ctx': 'Load', 'id': 'd', 'lineno': None, 'type': 'Name'}}], |                      'type': 'Assign', |                      'value': {'lineno': 5, 'type': 'Constant', 'value': 1}}, |                     {'type': 'Continue'}], |            'orelse': [{'body': [{'targets': [{'ctx': 'Store', |                                               'slice': {'ctx': 'L
+
+{'def_line': 20147,
+ 'elif_bodies': [],
+ 'elif_conds': [],
+ 'elif_final_else': [],
+ 'else': [],
+ 'merge': None,
+ 'method': '_process_if_blocks',
+ 'region_entry': None,
+ 'region_type': 'NoneType',
+ 'then': []}
+   -> emitted: [{'type': 'Continue'}]
+
+{'def_line': 41761,
+ 'elif_bodies': [],
+ 'elif_conds': [],
+ 'elif_final_else': [],
+ 'else': [],
+ 'merge': None,
+ 'method': '_generate_block_statements_body',
+ 'region_entry': None,
+ 'region_type': 'NoneType',
+ 'then': []}
+   -> emitted: [{'args': {'args': [{'arg': 'd', 'type': 'arg'}, {'arg': 'ks', 'type': 'arg'}], |            'defaults': [], |            'kw_defaults': [], |            'kwarg': None, |            'kwonlyargs': [], |            'posonlyargs': [], |            'type': 'arguments', |            'vararg': None}, |   'body': [{'body': [{'body': [{'body': [{'targets': [{'ctx': 'Store', |                                                        'slice': {'ctx': 'Load', 'id': 'k', 'lineno': None, 'type': 'Name'}, |                                                        'type': 'Subscript', |                                                
+
+=== product ===
+# Source Generated with Decompyle++ (Python version)
+# File: orig.pyc (Python 3.11)
+
+def ctl_two_cont(d, ks):
+    for k in ks:
+        try:
+            if k > 3:
+                d[k] = 1
+                continue
+            elif k < 0:
+                d[k] = -1
+            continue
+        except Exception:
+            pass
+    return d
+
