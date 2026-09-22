@@ -17876,6 +17876,21 @@ condition_block 必须是 FIRST 块以符合入口引用语义；原 block（LAS
                     _merge_candidate = min(_overlap, key=lambda b: b.start_offset)
                     merge = _merge_candidate
                     then_blocks = [b for b in then_blocks if b is not merge]
+        # 区域归约算法原则 2（每块唯一归属）：两条臂是互斥的控制流路径，同一个块
+        # 不可能既是 then 体又是 else 体。被两臂同时认领的块只能是由两臂共同到达的
+        # 汇合点——它按定义位于两臂入口之后，两臂中任一臂把它当作自己的体内块都是
+        # 越界吸收。实测形状（fly/dumpload/load_daily.pyc :: <module>）：
+        # IfRegion(entry=740) 的 then=[…,2176,2478,2562] 与 else=[2456,2478,2562]
+        # 共享 2478/2562，而 `_process_if_blocks` 对每条臂按 start_offset 升序发射，
+        # 于是 then 臂先于 else 臂发射了 if/else 之后的语句块 2478，实测为指令数不变、
+        # 只有一个跳转槽错位的同形块换位（orig 的 `JUMP_FORWARD→2478` + 2456 臂体整体
+        # 后移，逐字重现在 2538）。判据只读块自身的归属状态（两臂列表的交），不读
+        # 偏移常量／名字／条数；all_blocks 是两臂之并，从 then 臂摘出不丢失任何块，
+        # 只是取消双重认领——只删不增，不命中时行为逐字节不变。
+        if then_blocks and else_blocks:
+            _arm_shared = set(then_blocks) & set(else_blocks)
+            if _arm_shared:
+                then_blocks = [b for b in then_blocks if b not in _arm_shared]
         region_type = RegionType.IF_THEN_ELSE if else_blocks else RegionType.IF_THEN
         all_blocks = all_condition_blocks | set(then_blocks) | set(else_blocks)
         # 主条件的 inline_boolop_chain 也存入 IF_THEN /

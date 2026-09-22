@@ -1,0 +1,21 @@
+# 打戳取证原始 stderr（只改镜像，未碰 core/）
+## arm stamp: 11 处 merge = else_succ
+[R29S] else=1116 then=1072 entry=? line=16973
+[R29S] else=2768 then=620 entry=? line=16973
+[R29S] else=960 then=850 entry=? line=17016
+[R29S] else=796 then=760 entry=? line=17161
+[R29S] else=686 then=666 entry=? line=16973
+[R29S] else=472 then=452 entry=? line=16973
+[R29S] else=472 then=424 entry=? line=16973
+[R29S] else=368 then=348 entry=? line=16973
+## arm p29c: region_analyzer:1847 append 站点（0 命中 ⇒ 否证）
+0
+[R29P1] sb=370 its=272 nm=?
+[R29P1] sb=390 its=160 nm=?
+[R29P1] sb=582 its=250 nm=?
+[R29P1] sb=288 its=202 nm=?
+## arm p29d: 三处 IfRegion 构造 + 生成端消费
+[R29D1] site=17888 cfg=<module> entry=740 merge=2626 else=[2456, 2478, 2562] then=[954, 1072, 1116, 1096, 1112, 1254, 1278, 1338, 1442, 1556, 1702, 2198, 1932, 2022, 2478, 2086, 2176, 2562]
+[R29D1] site=17888 cfg=<module> entry=104 merge=2768 else=[] then=[620, 622, 704, 740, 2562, 954, 2456, 2626, 1072, 1116, 2478, 2650, 2690, 1096, 1112, 1254, 1278, 1338, 1442, 1556, 1702, 2198, 1932, 2022, 2086, 2176]
+[R29D2] FINAL cfg=<module> entry=104 merge=2768 else=[] then=[620, 622, 704, 740, 2562, 954, 2456, 2626, 1072, 1116, 2478, 2650, 2690, 1096, 1112, 1254, 1278, 1338, 1442, 1556, 1702, 2198, 1932, 2022, 2086, 2176]
+[R29D2] FINAL cfg=<module> entry=740 merge=2626 else=[2456, 2478, 2562] then=[954, 1072, 1116, 1096, 1112, 1254, 1278, 1338, 1442, 1556, 1702, 2198, 1932, 2022, 2478, 2086, 2176, 2562]

@@ -1,0 +1,2 @@
+# G2-prime 前轮合成复现电池 38 个 (rb_landed96.jsonl vs rb_cand38.jsonl)
+--- tally --- {"SAME": 38, "IMPROVED": 0, "REGRESSION": 0, "MOVED": 0, "other": 0}

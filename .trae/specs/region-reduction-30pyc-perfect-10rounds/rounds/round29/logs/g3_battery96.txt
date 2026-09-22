@@ -1,0 +1,8 @@
+# G3 前轮 96 锚点电池 (base_landed96.jsonl vs base_cand96.jsonl)
+--- tally --- {"SAME": 96, "IMPROVED": 0, "REGRESSION": 0, "MOVED": 0, "other": 0}
+base_landed96.jsonl      records=96 err=0 Sumatched=280 Stotal=308
+base_cand96.jsonl        records=96 err=0 Sumatched=280 Stotal=308
+rb_landed96.jsonl        records=38 err=0 Sumatched=109 Stotal=120
+rb_cand38.jsonl          records=38 err=0 Sumatched=109 Stotal=120
+ab402_landed.jsonl       records=402 err=0 Sumatched=5641 Stotal=5746
+ab402_cand.jsonl         records=402 err=0 Sumatched=5642 Stotal=5746

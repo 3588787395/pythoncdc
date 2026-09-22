@@ -1,0 +1,44 @@
+D:/Temp/r29gate/build_head/fly__dumpload__load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r29gate/build_head/fly__dumpload__load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r29gate/build_head/fly__dumpload__load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r29gate/build_head/fly__dumpload__load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r29gate/build_head/fly__dumpload__load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r29gate/build_head/fly__dumpload__load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r29gate/build_head/fly__dumpload__load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r29gate/build_head/fly__dumpload__load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r29gate/build_head/fly__dumpload__load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r29gate/build_head/fly__dumpload__load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r29gate/build_cand/fly__dumpload__load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r29gate/build_cand/fly__dumpload__load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r29gate/build_cand/fly__dumpload__load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r29gate/build_cand/fly__dumpload__load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r29gate/build_cand/fly__dumpload__load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r29gate/build_cand/fly__dumpload__load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r29gate/build_cand/fly__dumpload__load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r29gate/build_cand/fly__dumpload__load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r29gate/build_cand/fly__dumpload__load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+D:/Temp/r29gate/build_cand/fly__dumpload__load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+STRICT-SAME    F:/Downloads/pythoncdc-main/site-packages/fly/dumpload/load_daily.pyc
+    head clean=22/25 seqlen=0 sigma=0   cand clean=22/25 seqlen=0 sigma=0
+    fn <module>                                 head 913/913 seq_diff   cand 913/913 target_diff
+TOTAL head sigma=0 clean=22  cand sigma=0 clean=22
