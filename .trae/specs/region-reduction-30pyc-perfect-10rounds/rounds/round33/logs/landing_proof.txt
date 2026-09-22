@@ -1,0 +1,3 @@
+landed core/cfg/region_ast_generator.py: worktree bytes == D:/Temp/r33gate/c33/mirr_cand bytes (sha256[:20] 2d3a5d51d114da77d3d4), 2981305 bytes, CRLF-only=True, BOM=True
+pre-land HEAD blob normalised sha256[:20] = 3781872bcc715f2fdb23 (== worktree before the patch)
+git diff --numstat core/cfg/region_ast_generator.py: 32 1 core/cfg/region_ast_generator.py

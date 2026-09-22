@@ -1,0 +1,132 @@
+--- ORIGINAL <module>.load_yaml  co_code len=318 ---
+  @0    RESUME                   ''                           line=57
+  @2    LOAD_GLOBAL              'NULL + codecs'              line=58
+  @14   LOAD_ATTR                'open'                      
+  @24   LOAD_FAST                'path'                      
+  @26   LOAD_CONST               "'utf-8'"                   
+  @28   KW_NAMES                 ''                          
+  @30   PRECALL                  ''                          
+  @34   CALL                     ''                          
+  @44   BEFORE_WITH              ''                          
+  @46   STORE_FAST               'f'                         
+  @48   LOAD_GLOBAL              'NULL + yaml'                line=59
+  @60   LOAD_ATTR                'Loader'                    
+  @70   LOAD_FAST                'f'                         
+  @72   PRECALL                  ''                          
+  @76   CALL                     ''                          
+  @86   STORE_FAST               'loader'                    
+  @88   LOAD_GLOBAL              'NULL + collections'         line=60
+  @100  LOAD_ATTR                'OrderedDict'               
+  @110  PRECALL                  ''                          
+  @114  CALL                     ''                          
+  @124  LOAD_FAST                'loader'                    
+  @126  STORE_ATTR               'anchors'                   
+  @136  NOP                      ''                           line=61
+  @138  LOAD_FAST                'loader'                     line=62
+  @140  LOAD_METHOD              'get_single_data'           
+  @162  PRECALL                  ''                          
+  @166  CALL                     ''                          
+  @176  LOAD_FAST                'loader'                     line=64
+  @178  LOAD_METHOD              'dispose'                   
+  @200  PRECALL                  ''                          
+  @204  CALL                     ''                          
+  @214  POP_TOP                  ''                          
+  @216  SWAP                     ''                           line=58
+  @218  LOAD_CONST               'None'                      
+  @220  LOAD_CONST               'None'                      
+  @222  LOAD_CONST               'None'                      
+  @224  PRECALL                  ''                          
+  @228  CALL                     ''                          
+  @238  POP_TOP                  ''                          
+  @240  RETURN_VALUE             ''                          
+  @242  PUSH_EXC_INFO            ''                          
+  @244  LOAD_FAST                'loader'                     line=64
+  @246  LOAD_METHOD              'dispose'                   
+  @268  PRECALL                  ''                          
+  @272  CALL                     ''                          
+  @282  POP_TOP                  ''                          
+  @284  RERAISE                  ''                          
+  @286  COPY                     ''                          
+  @288  POP_EXCEPT               ''                          
+  @290  RERAISE                  ''                          
+  @292  PUSH_EXC_INFO            ''                           line=58
+  @294  WITH_EXCEPT_START        ''                          
+  @296  POP_JUMP_FORWARD_IF_TRUE 'to 306'                     -> 306
+  @298  RERAISE                  ''                          
+  @300  COPY                     ''                          
+  @302  POP_EXCEPT               ''                          
+  @304  RERAISE                  ''                          
+  @306  POP_TOP                  ''                          
+  @308  POP_EXCEPT               ''                          
+  @310  POP_TOP                  ''                          
+  @312  POP_TOP                  ''                          
+  @314  LOAD_CONST               'None'                      
+  @316  RETURN_VALUE             ''                          
+--- DECOMPILED <module>.load_yaml  co_code len=324 ---
+  @0    RESUME                   ''                           line=38
+  @2    LOAD_GLOBAL              'NULL + codecs'              line=39
+  @14   LOAD_ATTR                'open'                      
+  @24   LOAD_FAST                'path'                      
+  @26   LOAD_CONST               "'utf-8'"                   
+  @28   KW_NAMES                 ''                          
+  @30   PRECALL                  ''                          
+  @34   CALL                     ''                          
+  @44   BEFORE_WITH              ''                          
+  @46   STORE_FAST               'f'                         
+  @48   LOAD_GLOBAL              'NULL + yaml'                line=40
+  @60   LOAD_ATTR                'Loader'                    
+  @70   LOAD_FAST                'f'                         
+  @72   PRECALL                  ''                          
+  @76   CALL                     ''                          
+  @86   STORE_FAST               'loader'                    
+  @88   LOAD_GLOBAL              'NULL + collections'         line=41
+  @100  LOAD_ATTR                'OrderedDict'               
+  @110  PRECALL                  ''                          
+  @114  CALL                     ''                          
+  @124  LOAD_FAST                'loader'                    
+  @126  STORE_ATTR               'anchors'                   
+  @136  NOP                      ''                           line=42
+  @138  LOAD_FAST                'loader'                     line=43
+  @140  LOAD_METHOD              'get_single_data'           
+  @162  PRECALL                  ''                          
+  @166  CALL                     ''                          
+  @176  POP_TOP                  ''                          
+  @178  LOAD_FAST                'loader'                     line=45
+  @180  LOAD_METHOD              'dispose'                   
+  @202  PRECALL                  ''                          
+  @206  CALL                     ''                          
+  @216  POP_TOP                  ''                          
+  @218  JUMP_FORWARD             'to 270'                     -> 270
+  @220  PUSH_EXC_INFO            ''                          
+  @222  LOAD_FAST                'loader'                    
+  @224  LOAD_METHOD              'dispose'                   
+  @246  PRECALL                  ''                          
+  @250  CALL                     ''                          
+  @260  POP_TOP                  ''                          
+  @262  RERAISE                  ''                          
+  @264  COPY                     ''                          
+  @266  POP_EXCEPT               ''                          
+  @268  RERAISE                  ''                          
+  @270  NOP                      ''                          
+  @272  LOAD_CONST               'None'                       line=39
+  @274  LOAD_CONST               'None'                      
+  @276  LOAD_CONST               'None'                      
+  @278  PRECALL                  ''                          
+  @282  CALL                     ''                          
+  @292  POP_TOP                  ''                          
+  @294  LOAD_CONST               'None'                      
+  @296  RETURN_VALUE             ''                          
+  @298  PUSH_EXC_INFO            ''                          
+  @300  WITH_EXCEPT_START        ''                          
+  @302  POP_JUMP_FORWARD_IF_TRUE 'to 312'                     -> 312
+  @304  RERAISE                  ''                          
+  @306  COPY                     ''                          
+  @308  POP_EXCEPT               ''                          
+  @310  RERAISE                  ''                          
+  @312  POP_TOP                  ''                          
+  @314  POP_EXCEPT               ''                          
+  @316  POP_TOP                  ''                          
+  @318  POP_TOP                  ''                          
+  @320  LOAD_CONST               'None'                      
+  @322  RETURN_VALUE             ''                          
+filtered orig=55 decomp=57

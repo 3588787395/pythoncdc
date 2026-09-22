@@ -1,0 +1,722 @@
+--- ORIGINAL <module>.save_testds_to_json  co_code len=2000 ---
+  @0    RESUME                   ''                           line=594
+  @2    LOAD_FAST                'testds_file_index'          line=595
+  @4    LOAD_CONST               '0'                         
+  @6    COMPARE_OP               '=='                        
+  @12   POP_JUMP_FORWARD_IF_FALSE 'to 274'                     -> 274
+  @14   LOAD_CONST               '0'                          line=596
+  @16   STORE_FAST               'max_num'                   
+  @18   LOAD_GLOBAL              'NULL + os'                  line=597
+  @30   LOAD_ATTR                'listdir'                   
+  @40   LOAD_GLOBAL              'os'                        
+  @52   LOAD_ATTR                'path'                      
+  @62   LOAD_METHOD              'join'                      
+  @84   LOAD_FAST                'trade_dir_path'            
+  @86   LOAD_CONST               "'result'"                  
+  @88   LOAD_FAST                'trade_id'                  
+  @90   PRECALL                  ''                          
+  @94   CALL                     ''                          
+  @104  PRECALL                  ''                          
+  @108  CALL                     ''                          
+  @118  GET_ITER                 ''                          
+  @120  FOR_ITER                 'to 270'                     -> 270
+  @122  STORE_FAST               'filename'                  
+  @124  LOAD_CONST               "'testds_to_json'"           line=598
+  @126  LOAD_FAST                'filename'                  
+  @128  CONTAINS_OP              ''                          
+  @130  POP_JUMP_FORWARD_IF_FALSE 'to 268'                     -> 268
+  @132  LOAD_GLOBAL              'NULL + int'                 line=599
+  @144  LOAD_FAST                'filename'                  
+  @146  LOAD_METHOD              'replace'                   
+  @168  LOAD_CONST               "'testds_to_json'"          
+  @170  LOAD_CONST               "''"                        
+  @172  PRECALL                  ''                          
+  @176  CALL                     ''                          
+  @186  LOAD_METHOD              'split'                     
+  @208  LOAD_CONST               "'.'"                       
+  @210  PRECALL                  ''                          
+  @214  CALL                     ''                          
+  @224  LOAD_CONST               '0'                         
+  @226  BINARY_SUBSCR            ''                          
+  @236  PRECALL                  ''                          
+  @240  CALL                     ''                          
+  @250  STORE_FAST               'current_num'               
+  @252  LOAD_FAST                'current_num'                line=600
+  @254  LOAD_FAST                'max_num'                   
+  @256  COMPARE_OP               '>'                         
+  @262  POP_JUMP_FORWARD_IF_FALSE 'to 268'                     -> 268
+  @264  LOAD_FAST                'current_num'                line=601
+  @266  STORE_FAST               'max_num'                   
+  @268  JUMP_BACKWARD            'to 120'                     -> 120
+  @270  LOAD_FAST                'max_num'                    line=602
+  @272  STORE_FAST               'testds_file_index'         
+  @274  LOAD_GLOBAL              'os'                         line=603
+  @286  LOAD_ATTR                'path'                      
+  @296  LOAD_METHOD              'join'                      
+  @318  LOAD_FAST                'trade_dir_path'            
+  @320  LOAD_CONST               "'result'"                  
+  @322  LOAD_FAST                'trade_id'                  
+  @324  LOAD_CONST               "'testds_to_json'"           line=604
+  @326  LOAD_GLOBAL              'NULL + str'                
+  @338  LOAD_FAST                'testds_file_index'         
+  @340  PRECALL                  ''                          
+  @344  CALL                     ''                          
+  @354  BINARY_OP                '+'                         
+  @358  LOAD_CONST               "'.json'"                   
+  @360  BINARY_OP                '+'                         
+  @364  PRECALL                  ''                           line=603
+  @368  CALL                     ''                          
+  @378  STORE_FAST               'testds_file_path'          
+  @380  LOAD_GLOBAL              'os'                         line=606
+  @392  LOAD_ATTR                'path'                      
+  @402  LOAD_METHOD              'exists'                    
+  @424  LOAD_FAST                'testds_file_path'          
+  @426  PRECALL                  ''                          
+  @430  CALL                     ''                          
+  @440  POP_JUMP_FORWARD_IF_TRUE 'to 484'                     -> 484
+  @442  LOAD_FAST                'testds_file_index'          line=607
+  @444  LOAD_CONST               '1'                         
+  @446  BINARY_OP                '+='                        
+  @450  STORE_FAST               'testds_file_index'         
+  @452  LOAD_GLOBAL              'NULL + create_daily_stats'  line=608
+  @464  LOAD_FAST                'daily_result'              
+  @466  PRECALL                  ''                          
+  @470  CALL                     ''                          
+  @480  STORE_FAST               'ds'                        
+  @482  JUMP_FORWARD             'to 900'                     -> 900
+  @484  LOAD_GLOBAL              'NULL + json'                line=611
+  @496  LOAD_ATTR                'loads'                     
+  @506  LOAD_GLOBAL              'NULL + open'               
+  @518  LOAD_FAST                'testds_file_path'          
+  @520  LOAD_CONST               "'r'"                       
+  @522  PRECALL                  ''                          
+  @526  CALL                     ''                          
+  @536  LOAD_METHOD              'readline'                  
+  @558  PRECALL                  ''                          
+  @562  CALL                     ''                          
+  @572  PRECALL                  ''                          
+  @576  CALL                     ''                          
+  @586  STORE_FAST               'data'                      
+  @588  LOAD_GLOBAL              'NULL + pd'                  line=612
+  @600  LOAD_ATTR                'DataFrame'                 
+  @610  LOAD_FAST                'data'                      
+  @612  LOAD_METHOD              'get'                       
+  @634  LOAD_CONST               "'data'"                    
+  @636  PRECALL                  ''                          
+  @640  CALL                     ''                          
+  @650  LOAD_FAST                'data'                      
+  @652  LOAD_METHOD              'get'                       
+  @674  LOAD_CONST               "'index'"                   
+  @676  PRECALL                  ''                          
+  @680  CALL                     ''                          
+  @690  LOAD_FAST                'data'                      
+  @692  LOAD_METHOD              'get'                       
+  @714  LOAD_CONST               "'columns'"                 
+  @716  PRECALL                  ''                          
+  @720  CALL                     ''                          
+  @730  KW_NAMES                 ''                          
+  @732  PRECALL                  ''                          
+  @736  CALL                     ''                          
+  @746  STORE_FAST               'df'                        
+  @748  LOAD_GLOBAL              'NULL + len'                 line=614
+  @760  LOAD_FAST                'df'                        
+  @762  PRECALL                  ''                          
+  @766  CALL                     ''                          
+  @776  LOAD_CONST               '50'                        
+  @778  COMPARE_OP               '>='                        
+  @784  POP_JUMP_FORWARD_IF_FALSE 'to 828'                     -> 828
+  @786  LOAD_FAST                'testds_file_index'          line=615
+  @788  LOAD_CONST               '1'                         
+  @790  BINARY_OP                '+='                        
+  @794  STORE_FAST               'testds_file_index'         
+  @796  LOAD_GLOBAL              'NULL + create_daily_stats'  line=616
+  @808  LOAD_FAST                'daily_result'              
+  @810  PRECALL                  ''                          
+  @814  CALL                     ''                          
+  @824  STORE_FAST               'ds'                        
+  @826  JUMP_FORWARD             'to 900'                     -> 900
+  @828  LOAD_GLOBAL              'NULL + create_daily_stats'  line=619
+  @840  LOAD_FAST                'daily_result'              
+  @842  PRECALL                  ''                          
+  @846  CALL                     ''                          
+  @856  STORE_FAST               'ds'                        
+  @858  LOAD_FAST                'df'                         line=620
+  @860  LOAD_METHOD              'append'                    
+  @882  LOAD_FAST                'ds'                        
+  @884  PRECALL                  ''                          
+  @888  CALL                     ''                          
+  @898  STORE_FAST               'ds'                        
+  @900  LOAD_GLOBAL              'os'                         line=621
+  @912  LOAD_ATTR                'path'                      
+  @922  LOAD_METHOD              'join'                      
+  @944  LOAD_FAST                'trade_dir_path'            
+  @946  LOAD_CONST               "'result'"                  
+  @948  LOAD_FAST                'trade_id'                  
+  @950  LOAD_CONST               "'testds_to_json'"           line=622
+  @952  LOAD_GLOBAL              'NULL + str'                
+  @964  LOAD_FAST                'testds_file_index'         
+  @966  PRECALL                  ''                          
+  @970  CALL                     ''                          
+  @980  BINARY_OP                '+'                         
+  @984  LOAD_CONST               "'.json'"                   
+  @986  BINARY_OP                '+'                         
+  @990  PRECALL                  ''                           line=621
+  @994  CALL                     ''                          
+  @1004 STORE_FAST               'testds_file_path'          
+  @1006 NOP                      ''                           line=623
+  @1008 LOAD_FAST                'ds'                         line=624
+  @1010 LOAD_METHOD              'to_json'                   
+  @1032 LOAD_FAST                'testds_file_path'          
+  @1034 LOAD_CONST               "'iso'"                     
+  @1036 LOAD_CONST               "'split'"                   
+  @1038 KW_NAMES                 ''                          
+  @1040 PRECALL                  ''                          
+  @1044 CALL                     ''                          
+  @1054 POP_TOP                  ''                          
+  @1056 LOAD_CONST               'None'                      
+  @1058 RETURN_VALUE             ''                          
+  @1060 PUSH_EXC_INFO            ''                          
+  @1062 LOAD_GLOBAL              'BaseException'              line=625
+  @1074 CHECK_EXC_MATCH          ''                          
+  @1076 EXTENDED_ARG             ''                          
+  @1078 POP_JUMP_FORWARD_IF_FALSE 'to 1992'                    -> 1992
+  @1080 POP_TOP                  ''                          
+  @1082 LOAD_GLOBAL              'NULL + strategy_log'        line=626
+  @1094 LOAD_ATTR                'error'                     
+  @1104 LOAD_CONST               "'更新{}文件失败'"                
+  @1106 LOAD_METHOD              'format'                    
+  @1128 LOAD_FAST                'testds_file_path'          
+  @1130 PRECALL                  ''                          
+  @1134 CALL                     ''                          
+  @1144 PRECALL                  ''                          
+  @1148 CALL                     ''                          
+  @1158 POP_TOP                  ''                          
+  @1160 NOP                      ''                           line=627
+  @1162 LOAD_GLOBAL              'NULL + pd'                  line=629
+  @1174 LOAD_ATTR                'set_option'                
+  @1184 LOAD_CONST               "'display.max_columns'"     
+  @1186 LOAD_CONST               'None'                      
+  @1188 PRECALL                  ''                          
+  @1192 CALL                     ''                          
+  @1202 POP_TOP                  ''                          
+  @1204 LOAD_GLOBAL              'NULL + pd'                  line=631
+  @1216 LOAD_ATTR                'set_option'                
+  @1226 LOAD_CONST               "'display.max_rows'"        
+  @1228 LOAD_CONST               'None'                      
+  @1230 PRECALL                  ''                          
+  @1234 CALL                     ''                          
+  @1244 POP_TOP                  ''                          
+  @1246 LOAD_GLOBAL              'NULL + pd'                  line=633
+  @1258 LOAD_ATTR                'set_option'                
+  @1268 LOAD_CONST               "'display.width'"           
+  @1270 LOAD_CONST               '5000'                      
+  @1272 PRECALL                  ''                          
+  @1276 CALL                     ''                          
+  @1286 POP_TOP                  ''                          
+  @1288 LOAD_GLOBAL              'NULL + strategy_log'        line=634
+  @1300 LOAD_ATTR                'error'                     
+  @1310 LOAD_FAST                'ds'                        
+  @1312 PRECALL                  ''                          
+  @1316 CALL                     ''                          
+  @1326 POP_TOP                  ''                          
+  @1328 POP_EXCEPT               ''                          
+  @1330 LOAD_CONST               'None'                      
+  @1332 RETURN_VALUE             ''                          
+  @1334 PUSH_EXC_INFO            ''                          
+  @1336 LOAD_GLOBAL              'BaseException'              line=635
+  @1348 CHECK_EXC_MATCH          ''                          
+  @1350 EXTENDED_ARG             ''                          
+  @1352 POP_JUMP_FORWARD_IF_FALSE 'to 1984'                    -> 1984
+  @1354 POP_TOP                  ''                          
+  @1356 LOAD_GLOBAL              'NULL + system_log'          line=636
+  @1368 LOAD_ATTR                'error'                     
+  @1378 LOAD_CONST               "'打印ds失败'"                  
+  @1380 PRECALL                  ''                          
+  @1384 CALL                     ''                          
+  @1394 POP_TOP                  ''                          
+  @1396 NOP                      ''                           line=637
+  @1398 LOAD_GLOBAL              'os'                         line=638
+  @1410 LOAD_ATTR                'path'                      
+  @1420 LOAD_METHOD              'join'                      
+  @1442 LOAD_FAST                'trade_dir_path'            
+  @1444 LOAD_CONST               "'result'"                  
+  @1446 LOAD_FAST                'trade_id'                  
+  @1448 LOAD_CONST               "'testds_to_json.csv'"      
+  @1450 PRECALL                  ''                          
+  @1454 CALL                     ''                          
+  @1464 STORE_FAST               'testds_file_path'          
+  @1466 LOAD_FAST                'ds'                         line=639
+  @1468 LOAD_METHOD              'to_csv'                    
+  @1490 LOAD_FAST                'testds_file_path'          
+  @1492 LOAD_CONST               'False'                     
+  @1494 KW_NAMES                 ''                          
+  @1496 PRECALL                  ''                          
+  @1500 CALL                     ''                          
+  @1510 POP_TOP                  ''                          
+  @1512 JUMP_FORWARD             'to 1968'                    -> 1968
+  @1514 PUSH_EXC_INFO            ''                          
+  @1516 LOAD_GLOBAL              'BaseException'              line=640
+  @1528 CHECK_EXC_MATCH          ''                          
+  @1530 POP_JUMP_FORWARD_IF_FALSE 'to 1960'                    -> 1960
+  @1532 POP_TOP                  ''                          
+  @1534 LOAD_GLOBAL              'NULL + system_log'          line=641
+  @1546 LOAD_ATTR                'error'                     
+  @1556 LOAD_CONST               "'保存{}文件失败'"                
+  @1558 LOAD_METHOD              'format'                    
+  @1580 LOAD_FAST                'testds_file_path'          
+  @1582 PRECALL                  ''                          
+  @1586 CALL                     ''                          
+  @1596 PRECALL                  ''                          
+  @1600 CALL                     ''                          
+  @1610 POP_TOP                  ''                          
+  @1612 NOP                      ''                           line=642
+  @1614 LOAD_GLOBAL              'os'                         line=643
+  @1626 LOAD_ATTR                'path'                      
+  @1636 LOAD_METHOD              'join'                      
+  @1658 LOAD_FAST                'trade_dir_path'            
+  @1660 LOAD_CONST               "'result'"                  
+  @1662 LOAD_FAST                'trade_id'                  
+  @1664 LOAD_CONST               "'testds_to_json.txt'"      
+  @1666 PRECALL                  ''                          
+  @1670 CALL                     ''                          
+  @1680 STORE_FAST               'testds_file_path'          
+  @1682 LOAD_GLOBAL              'NULL + open'                line=644
+  @1694 LOAD_FAST                'testds_file_path'          
+  @1696 LOAD_CONST               "'w'"                       
+  @1698 PRECALL                  ''                          
+  @1702 CALL                     ''                          
+  @1712 BEFORE_WITH              ''                          
+  @1714 STORE_FAST               'fw'                        
+  @1716 LOAD_FAST                'fw'                         line=645
+  @1718 LOAD_METHOD              'write'                     
+  @1740 LOAD_FAST                'ds'                        
+  @1742 LOAD_METHOD              'to_string'                 
+  @1764 LOAD_CONST               'False'                     
+  @1766 KW_NAMES                 ''                          
+  @1768 PRECALL                  ''                          
+  @1772 CALL                     ''                          
+  @1782 PRECALL                  ''                          
+  @1786 CALL                     ''                          
+  @1796 POP_TOP                  ''                          
+  @1798 LOAD_CONST               'None'                       line=644
+  @1800 LOAD_CONST               'None'                      
+  @1802 LOAD_CONST               'None'                      
+  @1804 PRECALL                  ''                          
+  @1808 CALL                     ''                          
+  @1818 POP_TOP                  ''                          
+  @1820 JUMP_FORWARD             'to 1844'                    -> 1844
+  @1822 PUSH_EXC_INFO            ''                          
+  @1824 WITH_EXCEPT_START        ''                          
+  @1826 POP_JUMP_FORWARD_IF_TRUE 'to 1836'                    -> 1836
+  @1828 RERAISE                  ''                          
+  @1830 COPY                     ''                          
+  @1832 POP_EXCEPT               ''                          
+  @1834 RERAISE                  ''                          
+  @1836 POP_TOP                  ''                          
+  @1838 POP_EXCEPT               ''                          
+  @1840 POP_TOP                  ''                          
+  @1842 POP_TOP                  ''                          
+  @1844 JUMP_FORWARD             'to 1956'                    -> 1956
+  @1846 PUSH_EXC_INFO            ''                          
+  @1848 LOAD_GLOBAL              'BaseException'              line=646
+  @1860 CHECK_EXC_MATCH          ''                          
+  @1862 POP_JUMP_FORWARD_IF_FALSE 'to 1948'                    -> 1948
+  @1864 POP_TOP                  ''                          
+  @1866 LOAD_GLOBAL              'NULL + system_log'          line=647
+  @1878 LOAD_ATTR                'error'                     
+  @1888 LOAD_CONST               "'保存{}文件失败'"                
+  @1890 LOAD_METHOD              'format'                    
+  @1912 LOAD_FAST                'testds_file_path'          
+  @1914 PRECALL                  ''                          
+  @1918 CALL                     ''                          
+  @1928 PRECALL                  ''                          
+  @1932 CALL                     ''                          
+  @1942 POP_TOP                  ''                          
+  @1944 POP_EXCEPT               ''                          
+  @1946 JUMP_FORWARD             'to 1956'                    -> 1956
+  @1948 RERAISE                  ''                           line=646
+  @1950 COPY                     ''                          
+  @1952 POP_EXCEPT               ''                          
+  @1954 RERAISE                  ''                          
+  @1956 POP_EXCEPT               ''                          
+  @1958 JUMP_FORWARD             'to 1976'                    -> 1976
+  @1960 RERAISE                  ''                           line=640
+  @1962 COPY                     ''                          
+  @1964 POP_EXCEPT               ''                          
+  @1966 RERAISE                  ''                          
+  @1968 POP_EXCEPT               ''                           line=639
+  @1970 POP_EXCEPT               ''                          
+  @1972 LOAD_CONST               'None'                      
+  @1974 RETURN_VALUE             ''                          
+  @1976 POP_EXCEPT               ''                          
+  @1978 POP_EXCEPT               ''                          
+  @1980 LOAD_CONST               'None'                      
+  @1982 RETURN_VALUE             ''                          
+  @1984 RERAISE                  ''                           line=635
+  @1986 COPY                     ''                          
+  @1988 POP_EXCEPT               ''                          
+  @1990 RERAISE                  ''                          
+  @1992 RERAISE                  ''                           line=625
+  @1994 COPY                     ''                          
+  @1996 POP_EXCEPT               ''                          
+  @1998 RERAISE                  ''                          
+--- DECOMPILED <module>.save_testds_to_json  co_code len=1994 ---
+  @0    RESUME                   ''                           line=320
+  @2    LOAD_FAST                'testds_file_index'          line=321
+  @4    LOAD_CONST               '0'                         
+  @6    COMPARE_OP               '=='                        
+  @12   EXTENDED_ARG             ''                          
+  @14   POP_JUMP_FORWARD_IF_FALSE 'to 902'                     -> 902
+  @16   LOAD_CONST               '0'                          line=322
+  @18   STORE_FAST               'max_num'                   
+  @20   LOAD_GLOBAL              'NULL + os'                  line=323
+  @32   LOAD_ATTR                'listdir'                   
+  @42   LOAD_GLOBAL              'os'                        
+  @54   LOAD_ATTR                'path'                      
+  @64   LOAD_METHOD              'join'                      
+  @86   LOAD_FAST                'trade_dir_path'            
+  @88   LOAD_CONST               "'result'"                  
+  @90   LOAD_FAST                'trade_id'                  
+  @92   PRECALL                  ''                          
+  @96   CALL                     ''                          
+  @106  PRECALL                  ''                          
+  @110  CALL                     ''                          
+  @120  GET_ITER                 ''                          
+  @122  FOR_ITER                 'to 272'                     -> 272
+  @124  STORE_FAST               'filename'                  
+  @126  LOAD_CONST               "'testds_to_json'"           line=324
+  @128  LOAD_FAST                'filename'                  
+  @130  CONTAINS_OP              ''                          
+  @132  POP_JUMP_FORWARD_IF_FALSE 'to 270'                     -> 270
+  @134  LOAD_GLOBAL              'NULL + int'                 line=325
+  @146  LOAD_FAST                'filename'                  
+  @148  LOAD_METHOD              'replace'                   
+  @170  LOAD_CONST               "'testds_to_json'"          
+  @172  LOAD_CONST               "''"                        
+  @174  PRECALL                  ''                          
+  @178  CALL                     ''                          
+  @188  LOAD_METHOD              'split'                     
+  @210  LOAD_CONST               "'.'"                       
+  @212  PRECALL                  ''                          
+  @216  CALL                     ''                          
+  @226  LOAD_CONST               '0'                         
+  @228  BINARY_SUBSCR            ''                          
+  @238  PRECALL                  ''                          
+  @242  CALL                     ''                          
+  @252  STORE_FAST               'current_num'               
+  @254  LOAD_FAST                'current_num'                line=326
+  @256  LOAD_FAST                'max_num'                   
+  @258  COMPARE_OP               '>'                         
+  @264  POP_JUMP_FORWARD_IF_FALSE 'to 270'                     -> 270
+  @266  LOAD_FAST                'current_num'                line=327
+  @268  STORE_FAST               'max_num'                   
+  @270  JUMP_BACKWARD            'to 122'                     -> 122
+  @272  LOAD_FAST                'max_num'                    line=328
+  @274  STORE_FAST               'testds_file_index'         
+  @276  LOAD_GLOBAL              'os'                         line=329
+  @288  LOAD_ATTR                'path'                      
+  @298  LOAD_METHOD              'join'                      
+  @320  LOAD_FAST                'trade_dir_path'            
+  @322  LOAD_CONST               "'result'"                  
+  @324  LOAD_FAST                'trade_id'                  
+  @326  LOAD_CONST               "'testds_to_json'"          
+  @328  LOAD_GLOBAL              'NULL + str'                
+  @340  LOAD_FAST                'testds_file_index'         
+  @342  PRECALL                  ''                          
+  @346  CALL                     ''                          
+  @356  BINARY_OP                '+'                         
+  @360  LOAD_CONST               "'.json'"                   
+  @362  BINARY_OP                '+'                         
+  @366  PRECALL                  ''                          
+  @370  CALL                     ''                          
+  @380  STORE_FAST               'testds_file_path'          
+  @382  LOAD_GLOBAL              'os'                         line=330
+  @394  LOAD_ATTR                'path'                      
+  @404  LOAD_METHOD              'exists'                    
+  @426  LOAD_FAST                'testds_file_path'          
+  @428  PRECALL                  ''                          
+  @432  CALL                     ''                          
+  @442  POP_JUMP_FORWARD_IF_TRUE 'to 486'                     -> 486
+  @444  LOAD_FAST                'testds_file_index'          line=331
+  @446  LOAD_CONST               '1'                         
+  @448  BINARY_OP                '+='                        
+  @452  STORE_FAST               'testds_file_index'         
+  @454  LOAD_GLOBAL              'NULL + create_daily_stats'  line=332
+  @466  LOAD_FAST                'daily_result'              
+  @468  PRECALL                  ''                          
+  @472  CALL                     ''                          
+  @482  STORE_FAST               'ds'                        
+  @484  JUMP_FORWARD             'to 902'                     -> 902
+  @486  LOAD_GLOBAL              'NULL + json'                line=334
+  @498  LOAD_ATTR                'loads'                     
+  @508  LOAD_GLOBAL              'NULL + open'               
+  @520  LOAD_FAST                'testds_file_path'          
+  @522  LOAD_CONST               "'r'"                       
+  @524  PRECALL                  ''                          
+  @528  CALL                     ''                          
+  @538  LOAD_METHOD              'readline'                  
+  @560  PRECALL                  ''                          
+  @564  CALL                     ''                          
+  @574  PRECALL                  ''                          
+  @578  CALL                     ''                          
+  @588  STORE_FAST               'data'                      
+  @590  LOAD_GLOBAL              'NULL + pd'                  line=335
+  @602  LOAD_ATTR                'DataFrame'                 
+  @612  LOAD_FAST                'data'                      
+  @614  LOAD_METHOD              'get'                       
+  @636  LOAD_CONST               "'data'"                    
+  @638  PRECALL                  ''                          
+  @642  CALL                     ''                          
+  @652  LOAD_FAST                'data'                      
+  @654  LOAD_METHOD              'get'                       
+  @676  LOAD_CONST               "'index'"                   
+  @678  PRECALL                  ''                          
+  @682  CALL                     ''                          
+  @692  LOAD_FAST                'data'                      
+  @694  LOAD_METHOD              'get'                       
+  @716  LOAD_CONST               "'columns'"                 
+  @718  PRECALL                  ''                          
+  @722  CALL                     ''                          
+  @732  KW_NAMES                 ''                          
+  @734  PRECALL                  ''                          
+  @738  CALL                     ''                          
+  @748  STORE_FAST               'df'                        
+  @750  LOAD_GLOBAL              'NULL + len'                 line=336
+  @762  LOAD_FAST                'df'                        
+  @764  PRECALL                  ''                          
+  @768  CALL                     ''                          
+  @778  LOAD_CONST               '50'                        
+  @780  COMPARE_OP               '>='                        
+  @786  POP_JUMP_FORWARD_IF_FALSE 'to 830'                     -> 830
+  @788  LOAD_FAST                'testds_file_index'          line=337
+  @790  LOAD_CONST               '1'                         
+  @792  BINARY_OP                '+='                        
+  @796  STORE_FAST               'testds_file_index'         
+  @798  LOAD_GLOBAL              'NULL + create_daily_stats'  line=338
+  @810  LOAD_FAST                'daily_result'              
+  @812  PRECALL                  ''                          
+  @816  CALL                     ''                          
+  @826  STORE_FAST               'ds'                        
+  @828  JUMP_FORWARD             'to 902'                     -> 902
+  @830  LOAD_GLOBAL              'NULL + create_daily_stats'  line=340
+  @842  LOAD_FAST                'daily_result'              
+  @844  PRECALL                  ''                          
+  @848  CALL                     ''                          
+  @858  STORE_FAST               'ds'                        
+  @860  LOAD_FAST                'df'                         line=341
+  @862  LOAD_METHOD              'append'                    
+  @884  LOAD_FAST                'ds'                        
+  @886  PRECALL                  ''                          
+  @890  CALL                     ''                          
+  @900  STORE_FAST               'ds'                        
+  @902  LOAD_GLOBAL              'os'                         line=342
+  @914  LOAD_ATTR                'path'                      
+  @924  LOAD_METHOD              'join'                      
+  @946  LOAD_FAST                'trade_dir_path'            
+  @948  LOAD_CONST               "'result'"                  
+  @950  LOAD_FAST                'trade_id'                  
+  @952  LOAD_CONST               "'testds_to_json'"          
+  @954  LOAD_GLOBAL              'NULL + str'                
+  @966  LOAD_FAST                'testds_file_index'         
+  @968  PRECALL                  ''                          
+  @972  CALL                     ''                          
+  @982  BINARY_OP                '+'                         
+  @986  LOAD_CONST               "'.json'"                   
+  @988  BINARY_OP                '+'                         
+  @992  PRECALL                  ''                          
+  @996  CALL                     ''                          
+  @1006 STORE_FAST               'testds_file_path'          
+  @1008 NOP                      ''                           line=343
+  @1010 LOAD_FAST                'ds'                         line=344
+  @1012 LOAD_METHOD              'to_json'                   
+  @1034 LOAD_FAST                'testds_file_path'          
+  @1036 LOAD_CONST               "'iso'"                     
+  @1038 LOAD_CONST               "'split'"                   
+  @1040 KW_NAMES                 ''                          
+  @1042 PRECALL                  ''                          
+  @1046 CALL                     ''                          
+  @1056 POP_TOP                  ''                          
+  @1058 LOAD_CONST               'None'                       line=345
+  @1060 RETURN_VALUE             ''                          
+  @1062 PUSH_EXC_INFO            ''                          
+  @1064 LOAD_GLOBAL              'BaseException'              line=346
+  @1076 CHECK_EXC_MATCH          ''                          
+  @1078 EXTENDED_ARG             ''                          
+  @1080 POP_JUMP_FORWARD_IF_FALSE 'to 1986'                    -> 1986
+  @1082 POP_TOP                  ''                          
+  @1084 LOAD_GLOBAL              'NULL + strategy_log'        line=347
+  @1096 LOAD_ATTR                'error'                     
+  @1106 LOAD_CONST               "'更新{}文件失败'"                
+  @1108 LOAD_METHOD              'format'                    
+  @1130 LOAD_FAST                'testds_file_path'          
+  @1132 PRECALL                  ''                          
+  @1136 CALL                     ''                          
+  @1146 PRECALL                  ''                          
+  @1150 CALL                     ''                          
+  @1160 POP_TOP                  ''                          
+  @1162 NOP                      ''                           line=348
+  @1164 LOAD_GLOBAL              'NULL + pd'                  line=349
+  @1176 LOAD_ATTR                'set_option'                
+  @1186 LOAD_CONST               "'display.max_columns'"     
+  @1188 LOAD_CONST               'None'                      
+  @1190 PRECALL                  ''                          
+  @1194 CALL                     ''                          
+  @1204 POP_TOP                  ''                          
+  @1206 LOAD_GLOBAL              'NULL + pd'                  line=350
+  @1218 LOAD_ATTR                'set_option'                
+  @1228 LOAD_CONST               "'display.max_rows'"        
+  @1230 LOAD_CONST               'None'                      
+  @1232 PRECALL                  ''                          
+  @1236 CALL                     ''                          
+  @1246 POP_TOP                  ''                          
+  @1248 LOAD_GLOBAL              'NULL + pd'                  line=351
+  @1260 LOAD_ATTR                'set_option'                
+  @1270 LOAD_CONST               "'display.width'"           
+  @1272 LOAD_CONST               '5000'                      
+  @1274 PRECALL                  ''                          
+  @1278 CALL                     ''                          
+  @1288 POP_TOP                  ''                          
+  @1290 LOAD_GLOBAL              'NULL + strategy_log'        line=352
+  @1302 LOAD_ATTR                'error'                     
+  @1312 LOAD_FAST                'ds'                        
+  @1314 PRECALL                  ''                          
+  @1318 CALL                     ''                          
+  @1328 POP_TOP                  ''                          
+  @1330 POP_EXCEPT               ''                           line=353
+  @1332 LOAD_CONST               'None'                      
+  @1334 RETURN_VALUE             ''                          
+  @1336 PUSH_EXC_INFO            ''                          
+  @1338 LOAD_GLOBAL              'BaseException'              line=354
+  @1350 CHECK_EXC_MATCH          ''                          
+  @1352 EXTENDED_ARG             ''                          
+  @1354 POP_JUMP_FORWARD_IF_FALSE 'to 1978'                    -> 1978
+  @1356 POP_TOP                  ''                          
+  @1358 LOAD_GLOBAL              'NULL + system_log'          line=355
+  @1370 LOAD_ATTR                'error'                     
+  @1380 LOAD_CONST               "'打印ds失败'"                  
+  @1382 PRECALL                  ''                          
+  @1386 CALL                     ''                          
+  @1396 POP_TOP                  ''                          
+  @1398 NOP                      ''                           line=356
+  @1400 LOAD_GLOBAL              'os'                         line=357
+  @1412 LOAD_ATTR                'path'                      
+  @1422 LOAD_METHOD              'join'                      
+  @1444 LOAD_FAST                'trade_dir_path'            
+  @1446 LOAD_CONST               "'result'"                  
+  @1448 LOAD_FAST                'trade_id'                  
+  @1450 LOAD_CONST               "'testds_to_json.csv'"      
+  @1452 PRECALL                  ''                          
+  @1456 CALL                     ''                          
+  @1466 STORE_FAST               'testds_file_path'          
+  @1468 LOAD_FAST                'ds'                         line=358
+  @1470 LOAD_METHOD              'to_csv'                    
+  @1492 LOAD_FAST                'testds_file_path'          
+  @1494 LOAD_CONST               'False'                     
+  @1496 KW_NAMES                 ''                          
+  @1498 PRECALL                  ''                          
+  @1502 CALL                     ''                          
+  @1512 POP_TOP                  ''                          
+  @1514 JUMP_FORWARD             'to 1970'                    -> 1970
+  @1516 PUSH_EXC_INFO            ''                          
+  @1518 LOAD_GLOBAL              'BaseException'              line=359
+  @1530 CHECK_EXC_MATCH          ''                          
+  @1532 POP_JUMP_FORWARD_IF_FALSE 'to 1962'                    -> 1962
+  @1534 POP_TOP                  ''                          
+  @1536 LOAD_GLOBAL              'NULL + system_log'          line=360
+  @1548 LOAD_ATTR                'error'                     
+  @1558 LOAD_CONST               "'保存{}文件失败'"                
+  @1560 LOAD_METHOD              'format'                    
+  @1582 LOAD_FAST                'testds_file_path'          
+  @1584 PRECALL                  ''                          
+  @1588 CALL                     ''                          
+  @1598 PRECALL                  ''                          
+  @1602 CALL                     ''                          
+  @1612 POP_TOP                  ''                          
+  @1614 NOP                      ''                           line=361
+  @1616 LOAD_GLOBAL              'os'                         line=362
+  @1628 LOAD_ATTR                'path'                      
+  @1638 LOAD_METHOD              'join'                      
+  @1660 LOAD_FAST                'trade_dir_path'            
+  @1662 LOAD_CONST               "'result'"                  
+  @1664 LOAD_FAST                'trade_id'                  
+  @1666 LOAD_CONST               "'testds_to_json.txt'"      
+  @1668 PRECALL                  ''                          
+  @1672 CALL                     ''                          
+  @1682 STORE_FAST               'testds_file_path'          
+  @1684 LOAD_GLOBAL              'NULL + open'                line=363
+  @1696 LOAD_FAST                'testds_file_path'          
+  @1698 LOAD_CONST               "'w'"                       
+  @1700 PRECALL                  ''                          
+  @1704 CALL                     ''                          
+  @1714 BEFORE_WITH              ''                          
+  @1716 STORE_FAST               'fw'                        
+  @1718 LOAD_FAST                'fw'                         line=364
+  @1720 LOAD_METHOD              'write'                     
+  @1742 LOAD_FAST                'ds'                        
+  @1744 LOAD_METHOD              'to_string'                 
+  @1766 LOAD_CONST               'False'                     
+  @1768 KW_NAMES                 ''                          
+  @1770 PRECALL                  ''                          
+  @1774 CALL                     ''                          
+  @1784 PRECALL                  ''                          
+  @1788 CALL                     ''                          
+  @1798 POP_TOP                  ''                          
+  @1800 LOAD_CONST               'None'                       line=363
+  @1802 LOAD_CONST               'None'                      
+  @1804 LOAD_CONST               'None'                      
+  @1806 PRECALL                  ''                          
+  @1810 CALL                     ''                          
+  @1820 POP_TOP                  ''                          
+  @1822 JUMP_FORWARD             'to 1846'                    -> 1846
+  @1824 PUSH_EXC_INFO            ''                          
+  @1826 WITH_EXCEPT_START        ''                          
+  @1828 POP_JUMP_FORWARD_IF_TRUE 'to 1838'                    -> 1838
+  @1830 RERAISE                  ''                          
+  @1832 COPY                     ''                          
+  @1834 POP_EXCEPT               ''                          
+  @1836 RERAISE                  ''                          
+  @1838 POP_TOP                  ''                          
+  @1840 POP_EXCEPT               ''                          
+  @1842 POP_TOP                  ''                          
+  @1844 POP_TOP                  ''                          
+  @1846 JUMP_FORWARD             'to 1958'                    -> 1958
+  @1848 PUSH_EXC_INFO            ''                          
+  @1850 LOAD_GLOBAL              'BaseException'              line=365
+  @1862 CHECK_EXC_MATCH          ''                          
+  @1864 POP_JUMP_FORWARD_IF_FALSE 'to 1950'                    -> 1950
+  @1866 POP_TOP                  ''                          
+  @1868 LOAD_GLOBAL              'NULL + system_log'          line=366
+  @1880 LOAD_ATTR                'error'                     
+  @1890 LOAD_CONST               "'保存{}文件失败'"                
+  @1892 LOAD_METHOD              'format'                    
+  @1914 LOAD_FAST                'testds_file_path'          
+  @1916 PRECALL                  ''                          
+  @1920 CALL                     ''                          
+  @1930 PRECALL                  ''                          
+  @1934 CALL                     ''                          
+  @1944 POP_TOP                  ''                          
+  @1946 POP_EXCEPT               ''                          
+  @1948 JUMP_FORWARD             'to 1958'                    -> 1958
+  @1950 RERAISE                  ''                           line=365
+  @1952 COPY                     ''                          
+  @1954 POP_EXCEPT               ''                          
+  @1956 RERAISE                  ''                          
+  @1958 POP_EXCEPT               ''                          
+  @1960 JUMP_FORWARD             'to 1970'                    -> 1970
+  @1962 RERAISE                  ''                           line=359
+  @1964 COPY                     ''                          
+  @1966 POP_EXCEPT               ''                          
+  @1968 RERAISE                  ''                          
+  @1970 POP_EXCEPT               ''                           line=367
+  @1972 POP_EXCEPT               ''                          
+  @1974 LOAD_CONST               'None'                      
+  @1976 RETURN_VALUE             ''                          
+  @1978 RERAISE                  ''                           line=354
+  @1980 COPY                     ''                          
+  @1982 POP_EXCEPT               ''                          
+  @1984 RERAISE                  ''                          
+  @1986 RERAISE                  ''                           line=346
+  @1988 COPY                     ''                          
+  @1990 POP_EXCEPT               ''                          
+  @1992 RERAISE                  ''                          
+filtered orig=314 decomp=310

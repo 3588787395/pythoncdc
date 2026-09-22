@@ -25500,7 +25500,38 @@ AST 映射规则:
                 return False
             if any(i.opname in ('RETURN_VALUE', 'RETURN_CONST') for i in instrs):
                 return False
-            return all(i.opname in _cleanup_only_ops for i in instrs)
+            if all(i.opname in _cleanup_only_ops for i in instrs):
+                return True
+            # [R33-A] 区域归约算法原则 1（块 = 前导语句 + 尾跳转/终止）：return 值除穿过
+            # 「白名单清理块」外，还可穿过一条**已完结的副作用语句块**。判据是 CPython 栈
+            # 纪律而非操作码模式表：① 整块净栈效应恰为 0 —— 块入口值栈（被持有的 return 值）
+            # 原样保留到块出口；② 块尾（跳过尾跳转后）是 POP_TOP —— 该块自压的值由该块自弃，
+            # 它是语句而不是值，不会与 return 值争抢栈顶；③ 块内不传播异常（RERAISE /
+            # PUSH_EXC_INFO / WITH_EXCEPT_START）、无任何跳转（含尾跳转）—— 穿过它之后控制流
+            # 仍是直线后继，return 链路不因该块改变分叉。
+            # 覆盖 try/finally + with 正常路径的清理语句 `loader.dispose()`
+            # （LOAD_FAST/LOAD_METHOD/PRECALL/CALL/POP_TOP）：其 LOAD_* 不在
+            # _cleanup_only_ops 白名单内，故旧判据在此返回 None，把 return 降级为 Expr。
+            if any(i.opname in ('RERAISE', 'PUSH_EXC_INFO', 'WITH_EXCEPT_START')
+                   for i in instrs):
+                return False
+            if any(i.opname.startswith('JUMP') or i.opname in ('FOR_ITER', 'SEND')
+                   for i in instrs):
+                return False
+            _r33a_core = instrs[:]
+            while _r33a_core and _r33a_core[-1].opname.startswith('JUMP'):
+                _r33a_core.pop()
+            if not _r33a_core or _r33a_core[-1].opname != 'POP_TOP':
+                return False
+            _r33a_delta = 0
+            for i in b.instructions:
+                if i.opname in ('RESUME', 'NOP', 'CACHE'):
+                    continue
+                _r33a_eff = self._instruction_stack_effect(i)
+                if _r33a_eff is None:
+                    return False
+                _r33a_delta += _r33a_eff
+            return _r33a_delta == 0
 
         def _is_cleanup_with_return(b):
             instrs = [i for i in b.instructions

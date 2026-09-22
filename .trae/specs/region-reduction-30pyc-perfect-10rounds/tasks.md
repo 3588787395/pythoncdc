@@ -1254,3 +1254,106 @@
           锚点新要求：Round 33 电池 = `anchors102.txt`（`anchors100` ＋ 本轮
           `r32c_witness.pyc`、`r32c_repro.pyc`，各自内嵌 CONTROL）；落地核上必须读
           `witness 10/10`、`repro 17/17`。重生成合成件时 `py_compile` 必须显式传 `cfile`。
+- [x] Task 33: 落地 R33-A —— `_find_return_chain_via_successors._is_cleanup_only_no_return` 在
+          opname 白名单臂之后补一条结构臂：被持有的返回值可以穿过一条**已完结的副作用语句块**
+          （①整块净栈效应恰为 0 ＋ ②跳过尾跳转后终止于 `POP_TOP` ＋ ③块内不传播异常
+          （`RERAISE`/`PUSH_EXC_INFO`/`WITH_EXCEPT_START`）且块内无任何跳转）抵达 `RETURN_VALUE`
+          —— 原则 1「块 = 前导语句 + 尾终止」在链穿透侧的落点；三条全是栈纪律／控制流形状，
+          不读名字、常量、绝对偏移、指令条数、函数名，白名单臂原样保留故旧命中路径逐字节不变。
+          修 `IQCommon/utils.pyc :: load_yaml`（`55/55 j0 t32` → matched，等长零跳转、只差一个
+          `return` 关键字），该文件 `21/22 → 22/22` 转 ok，函数级净收益 `+1`，全 402 A/B 只有这
+          一个产物变化且 `MOVED=0`。站点：`core/cfg/region_ast_generator.py:25496`（新臂
+          `:25505-25534`），`+32/-1` 行，落地核 sha256[:20] `2d3a5d51d114da77d3d4` 与实测镜像
+          `mirr_cand` 逐字节相同（2 979 267 → 2 981 305 B，CRLF-only，BOM 保留）。
+  - [x] SubTask 33.1: 目标池按落地字节实测（`logs/pool33.txt` 首行，直读 Round 32 G6 回写的索引）：
+          `baseline(landed round32 index, HEAD 910a8f74, core sha fa43dbc9e878eeacbfe0): files 402
+          partial 31 sum_deficit 101 deficit1 8 deficit2 12`。该首行的 `core sha` 一项经核对是
+          **上一轮落地文件** `core/cfg/comprehension_generator.py` 的工作树原始 CRLF 哈希，本轮
+          动手对象 `region_ast_generator.py` 改前正规化哈希 `3781872bcc715f2fdb23` 与
+          `git cat-file blob HEAD:…` 同值 ⇒ 起点纯净（两件事都写进记录，避免下轮再误读该标签）。
+          8 个 deficit-1 与 12 个 deficit-2 文件在落地核上逐个 `--arm=landed` 复测存档
+          （`logs/landed_d1.txt`、`logs/landed_d2.txt`）；池再由 G4 的 `head` 臂（改前镜像，逐文件
+          跑完 402）拉回实测：与 HEAD 发布索引 **0 处 `matched_functions`/`function_count` 冲突、
+          0 处 `decompile_status` 冲突**（`logs/index_vs_head_arm.txt`）。
+  - [x] SubTask 33.2: 线 A（编排方一手，未外包）靶子选定：deficit-1 里只有 `utils.pyc` 是「等长、
+          零跳转差、只差一条语句」的形状，正对应本轮假设「值被穿过清理块后按语句发射」。其余 7 个
+          deficit-1 与 12 个 deficit-2 只登记不取。
+  - [x] SubTask 33.3: 线 B（只诊断代理 `B2`，靶子 `risk_calculation/function.pyc ::
+          save_testds_to_json 314/310 j19 t8`）交付物经编排方逐条核对可用：hunk 与转储
+          （`logs/hunks_save_testds_to_json.txt`、`logs/dump_save_testds_to_json.txt`）与落地铁读
+          数一致，其引用的 `_is_other_region_merge`(`:23138`)、`_is_reraise_cleanup`(`:23093`)、
+          `_is_exc_cleanup`(`:23178`)、`_is_trivial_return`(`:23106`) 四个标识符 grep 全部命中且
+          行号相符；唯一失准处是它引用的 canonical-owner 注释实在 `:31258` 而非 `:31226`。**本轮
+          不落地**：该形状缺的是终块的第二次物化（发射侧），与本轮判据不同侧，移交 Round 34。
+  - [x] SubTask 33.4: 线 C（工具线）封死「臂读到别处缓存字节码」这条陷阱。`logs/pycache_probe33.txt`
+          实测：仓库 `core/` 自带 24 个 `__pycache__` pyc，**24/24 全是 valid-timestamp（会被
+          CPython 直接采用）、0 失效、0 unchecked-hash**，而 `shutil.copytree` 走 `copy2` 会保留
+          `.py` 的 mtime+size ⇒ 缓存随源文件拷进臂里仍然命中。故 `_mkmirror` 加
+          `ignore_patterns('__pycache__')` + 拷贝后断言；本轮两臂自产的 50 个 pyc 全部对**本臂**
+          源文件命中（head 臂的 `region_ast_generator.pyc` 键在 2 979 267 B 源、cand 臂键在
+          2 981 305 B 源）⇒ 门禁读数不可能来自别臂或仓库缓存。
+  - [x] SubTask 33.5: 一手根因链：①先开核内既有的 `R23N6_DEBUG` 自检开关（链失败时自己打印），
+          见证 `block@68` 与靶子 `block@138` 各打一行 `NO chain (last instrs: ['LOAD_METHOD',
+          'PRECALL', 'CALL'])`（`logs/dbg_w1.txt`、`logs/dbg_utils.txt`）；②`probe_chain.py` 用
+          `ast` 从出厂源码里读白名单本身（探针与核不可能漂移），把两处 BFS 前沿逐块量化列出
+          （`logs/probe_w1_68_pre.txt`/`_post.txt`、`logs/probe_utils_138_pre.txt`/`_post.txt`），
+          两个形状**完全同构**：持值 TRY_BODY → 正常路径清理语句块（净栈效应 0、终止 `POP_TOP`）
+          → `with __exit__` + `RETURN_VALUE` 终点；白名单无 `LOAD_FAST`/`LOAD_METHOD` 故在中间断开。
+  - [x] SubTask 33.6: 同一条表先**否证**了更诱人的候选判据「后继须属本区域的 `finally_blocks`
+          集」：正常路径清理块实测 `owned=[]`、`copy={}`，取之则靶子原地不动。也否证了「直接往
+          白名单里加 `LOAD_FAST`/`LOAD_METHOD`」——那会绕过 `:45534` 的 POP_TOP 教义（值被丢弃即
+          语句），把 `print(...); return None` 一类错提成 `return print(...)`。发货判据因此是
+          三条栈纪律/控制流形状的合取，且任一不满足即回落今日行为。
+  - [x] SubTask 33.7: G0 严格串行通过。合成见证
+          `test_repros/round33_return_through_statement/r33a_witness.py`（5 见证 w1..w5 ＋ 5
+          CONTROL c1..c5）在落地核读 `16/17`，唯一缺陷
+          `['w1_with_tryfinally', 47, 47, 0, 32]`（等长、零跳转、只差 `return`）→ 候选臂
+          `17/17 []` → 入册后落地臂复测仍 `17/17 []`、head 臂仍 `16/17` 同签名。**注意**：入册
+          前实测否证了草稿注记里「五个 w* 全部改前失败」的说法——只有 w1 会失败，其余 4 个见证
+          改前也已 matched（它们是无回归桩，不是失败证据），文件首注已按实测读数重写。
+  - [x] SubTask 33.8: G1 靶子＋deficit-1 全池（8 文件）候选臂读数：`utils 21/22 → 22/22`，其余 7
+          文件逐字段不变（`logs/g1_deficit1_candidate.txt`）。G2′ 上一轮 38 合成电池对候选
+          `TALLY SAME=38 IMPROVED=0 REGRESSION=0 MOVED=0 ERR=0`，落地后以 landed 臂复跑仍 `SAME=38`；
+          G3 承重锚点 102 对候选 `SAME=102`（含 Round 32 两锚 `r32c_witness 10/10`、
+          `r32c_repro 17/17`），落地后 landed vs cand 仍 `SAME=102`。第一次 G2′ 无读数是因为列表
+          文件在 `D:/Temp/r33gate/` 而非 `c33/`，且失败被 `grep -cv` 数到 traceback 行掩盖 ⇒ 改为
+          列表一律绝对路径、每臂单独落 jsonl＋log。
+  - [x] SubTask 33.9: G4 全 402 A/B（sha 优先，发货判据）
+          `TALLY SAME=401 IMPROVED=1 REGRESSION=0 MOVED=0 ERR=0  (unpaired lists=0)`、
+          `files fully matched: a=371 b=372`，唯一改变
+          `IMPROVED F:/Downloads/pythoncdc-main/site-packages/IQCommon/utils.pyc  21/22 -> 22/22`；
+          逐文件 sha 比对确认改动产物恰 1 个。G4′ 严格尺读该产物：head 臂
+          `strict clean 25/26  sigma-defect=1  sum_abs_delta=2` → cand 臂
+          `strict clean 26/26  sigma-defect=0  sum_abs_delta=0`（该文件转严格干净）。
+  - [x] SubTask 33.10: G5 `single`：靶子 `decompile_status: ok / 22 / 22`；金丝雀
+          `wizard_quant_api.pyc` 的 4 个既有 unmatched（`calculate_di`、`params_analysis`、
+          `region_mean_desicion`、`wizard_quant_check_limit`）与移交清单同形。G6
+          `batch --index pyc_index.json --all --round 33` 末条 `[402/402]`、索引回写标记恰 1 次；
+          `git diff --numstat pyc_index.json` = 405/405 = 402 条轮次重戳 ＋ 靶子 3 个真实字段
+          （`partial→ok`、`matched 21→22`、`rate→1.0`），别无他动（`logs/index_delta.txt`）。
+          G7 `stats` 原样行存 `logs/stats33.txt`：
+          `total_pyc 402 / verified_pyc 402 / ok_pyc 372 / partial_pyc 30 / failed_pyc 0 /
+          total_functions 5746 / matched_functions 5646 / cumulative_match_rate 98.26%`。受跟踪
+          产物变化 1 份：`site-packages/IQCommon/utilsOK.py`，与测量臂产物逐字节相同，差异恰一行
+          `loader.get_single_data()` → `return loader.get_single_data()`。
+  - [x] SubTask 33.11: 落地即复测：`land33.py` 以「同一份 spec 在内存重放 == 被测镜像字节」为
+          前提才 `--apply`，落地后 `worktree bytes == mirr_cand bytes` 且正规化前后哈希、CRLF-only、
+          BOM、`compile()` 可编译四项一并断言（`logs/landing_proof.txt`）；再以 `--arm=landed` 复跑
+          G0/G2′/G3，把「电池跑的是落地字节」变成事实而不是断言。
+  - [x] SubTask 33.12: 方法论收获：①审判据前先开核内自带的自检开关，一行 `NO chain` 直接指名
+          哪个块、以哪三条 op 失败，省掉整轮猜测；②`--arm` 隔离要打在探针上——探针第一次只
+          `sys.path.insert(0, CORE)` 而未 `append(REPO)`，`bytecode/` 包解析不到 ⇒ 整块输出为空，
+          修成「打印并断言 `pycdc.__file__` 属于当前臂」后四张表才可信（打不出字的探针是坏探针，
+          不是空结果）；③`core.autocrlf=true` 下工作树原始 CRLF 哈希与 HEAD blob 永不相等，
+          纯净性断言一律写成「正规化后 == `git cat-file blob HEAD:…`」；④见证文件的 docstring 主张
+          必须在入册前用落地字节复核，本轮据此改写了 4 个 w* 的定性。
+  - [x] SubTask 33.13: 移交 Round 34：①线 B 形状 `save_testds_to_json 314/310`——需终块第二次
+          物化的发射侧判据，须读「终块无后继 ＋ 跨臂前驱重数」，禁读内容同一性与指令条数，与
+          R31-C 的纯 `discard` 判据同教义反侧；②R33-A 扩大了 BFS 可达集，同一函数多条 return 链时
+          先找到哪一条依赖 `successors` 集合弹出序——本轮 402 文件 `MOVED=0` 是实测而非结构保证，
+          若出现同函数多链形状须先加「链择优」判据；③残余 deficit-1 六个：`_init_config 86/84`、
+          `decrypt_database_url 295/324`、`tick_worker_thread 268/247`、`events 510/508`、
+          `clock_worker 1275/1291`、`match 713/689`，另 `wizard_quant_api.pyc 49/53` 的 4 个函数；
+          ④锚点电池须扩为 104：在 102 之上加 `test_repros/round33_return_through_statement/
+          r33a_witness.pyc`（落地字节上须读 `17/17`）与本轮靶子 `IQCommon/utils.pyc`（`22/22`）；
+          ⑤旧移交未动：#61 R30-B3 ＋ 语料外合成见证 `r29x_01 <module> 142/138`。

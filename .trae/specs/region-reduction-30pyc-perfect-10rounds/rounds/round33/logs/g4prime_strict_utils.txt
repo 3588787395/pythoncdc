@@ -1,0 +1,5 @@
+--- utils.pyc  vs  build_head/IQCommon__utilsOK.py
+  DEFECT <module>.load_yaml                                         [seq_len] orig=55 decomp=57  orig=55 decomp=57 delta=+2
+  strict clean 25/26  sigma-defect=1  sum_abs_delta=2
+--- utils.pyc  vs  build_cand/IQCommon__utilsOK.py
+  strict clean 26/26  sigma-defect=0  sum_abs_delta=0

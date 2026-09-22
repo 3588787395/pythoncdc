@@ -1,0 +1,9 @@
+--- head-arm product
++++ landed product
+@@ -41,5 +41,5 @@
+         loader.anchors = collections.OrderedDict()
+         try:
+-            loader.get_single_data()
++            return loader.get_single_data()
+         finally:
+             loader.dispose()

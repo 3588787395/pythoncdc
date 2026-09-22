@@ -1,0 +1,5 @@
+pre-land(landed arm)  [{"path": "D:/Temp/r33gate/c33/r33a_witness.pyc", "arm": "landed", "sha": "90d3a41fa2be8b5e", "total_functions": 17, "matched_functions": 16, "mism": [["w1_with_tryfinally", 47, 47, 0, 32]]}]
+candidate arm         [{"path": "D:/Temp/r33gate/c33/r33a_witness.pyc", "arm": "cand", "sha": "df5a6cadde584922", "total_functions": 17, "matched_functions": 17, "mism": []}]
+post-land(landed arm) [{"path": "D:/Temp/r33gate/c33/r33a_witness.pyc", "arm": "landed", "sha": "df5a6cadde584922", "total_functions": 17, "matched_functions": 17, "mism": []}]
+tracked head arm      [{"path": "F:/Downloads/pythoncdc-main/test_repros/round33_return_through_statement/r33a_witness.pyc", "arm": "head", "sha": "892d7bb4b78417ef", "total_functions": 17, "matched_functions": 16, "mism": [["w1_with_tryfinally", 47, 47, 0, 32]]}]
+tracked landed arm    [{"path": "F:/Downloads/pythoncdc-main/test_repros/round33_return_through_statement/r33a_witness.pyc", "arm": "landed", "sha": "a3046b2a7b1513e6", "total_functions": 17, "matched_functions": 17, "mism": []}]

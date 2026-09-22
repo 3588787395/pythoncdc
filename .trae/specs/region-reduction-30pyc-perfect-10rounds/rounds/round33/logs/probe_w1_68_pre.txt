@@ -1,0 +1,13 @@
+core arm: D:/Temp/r33gate/c33/mirr_head
+=== start block@68  func=w1_with_tryfinally  role=TRY_BODY  ops=['LOAD_FAST', 'LOAD_METHOD', 'PRECALL', 'CALL']
+   enclosing try_finally: has_finally=True try=[68] finally=[172, 216] cleanup=[] copy={}
+   try_depth=1  result=None
+   d1 block@172   role=FINALLY_BODY       preds=[68] succs=[216] ret=False net=0 term=RERAISE      outside_wl=['LOAD_FAST', 'LOAD_METHOD'] owned=['finally_blocks'] ops=['PUSH_EXC_INFO', 'LOAD_FAST', 'LOAD_METHOD', 'PRECALL', 'CALL', 'POP_TOP', 'RERAISE']
+   d1 block@106   role=NORMAL             preds=[68] succs=[146, 222] ret=False net=0 term=POP_TOP      outside_wl=['LOAD_FAST', 'LOAD_METHOD'] owned=[] ops=['LOAD_FAST', 'LOAD_METHOD', 'PRECALL', 'CALL', 'POP_TOP']
+   d2 block@216   role=FINALLY_BODY       preds=[172] succs=[222] ret=False net=-1 term=RERAISE      outside_wl=[] owned=['finally_blocks'] ops=['COPY', 'POP_EXCEPT', 'RERAISE']
+   d2 block@146   role=RETURN             preds=[106] succs=[] ret=True  net=-2 term=RETURN_VALUE outside_wl=['RETURN_VALUE'] owned=[] ops=['SWAP', 'LOAD_CONST', 'LOAD_CONST', 'LOAD_CONST', 'PRECALL', 'CALL', 'POP_TOP', 'RETURN_VALUE']
+   d2 block@222   role=NORMAL             preds=[36, 106, 216] succs=[228, 230, 236] ret=False net=1 term=POP_JUMP_FORWARD_IF_TRUE outside_wl=['POP_JUMP_FORWARD_IF_TRUE'] owned=[] ops=['PUSH_EXC_INFO', 'WITH_EXCEPT_START', 'POP_JUMP_FORWARD_IF_TRUE']
+   d3 block@228   role=PURE_JUMP          preds=[222] succs=[230] ret=False net=-1 term=RERAISE      outside_wl=[] owned=[] ops=['RERAISE']
+   d3 block@230   role=RETURN             preds=[222, 228, 236] succs=[] ret=False net=-1 term=RERAISE      outside_wl=[] owned=[] ops=['COPY', 'POP_EXCEPT', 'RERAISE']
+   d3 block@236   role=PURE_JUMP          preds=[222] succs=[230, 238] ret=False net=-1 term=POP_TOP      outside_wl=[] owned=[] ops=['POP_TOP']
+product 2022 bytes (probe-local copy only)

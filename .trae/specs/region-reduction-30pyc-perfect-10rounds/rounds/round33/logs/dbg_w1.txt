@@ -1,0 +1,8 @@
+D:\Temp\r33gate\c33\r33c.py:114: ResourceWarning: unclosed file <_io.TextIOWrapper name='wlist33.txt' mode='r' encoding='utf-8'>
+  paths = [l.strip() for l in io.open(listfile, encoding='utf-8') if l.strip()]
+ResourceWarning: Enable tracemalloc to get the object allocation traceback
+ block@68 try_depth=1 NO chain (last instrs: ['LOAD_METHOD', 'PRECALL', 'CALL'])
+ block@70 try_depth=1 last_stmt is not Expr: {'type': 'Return', 'value': {'type': 'Constant', 'value': None}}
+D:\Temp\r33gate\c33\r33c.py:133: ResourceWarning: unclosed file <_io.TextIOWrapper name='D:/Temp/r33gate/c33/build_landed/D___Temp__r33gate__c33__r33a_witnessOK.py' mode='w' encoding='utf-8'>
+  io.open(dst, 'w', encoding='utf-8').write(text)
+ResourceWarning: Enable tracemalloc to get the object allocation traceback

@@ -1,0 +1,4 @@
+HEAD pyc_index.json vs the G4 head-arm (pre-patch) measurement, file by file:
+  matched_functions / function_count disagreements: 0
+  decompile_status disagreements: 0
+  => the published index is measurement-backed, not self-reported.

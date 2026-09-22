@@ -1,0 +1,13 @@
+core arm: F:/Downloads/pythoncdc-main
+=== start block@138  func=load_yaml  role=TRY_BODY  ops=['LOAD_FAST', 'LOAD_METHOD', 'PRECALL', 'CALL']
+   enclosing try_finally: has_finally=True try=[138] finally=[242, 286] cleanup=[] copy={}
+   try_depth=1  result=[176, 216]
+   d1 block@242   role=FINALLY_BODY       preds=[138] succs=[286] ret=False net=0 term=RERAISE      outside_wl=['LOAD_FAST', 'LOAD_METHOD'] owned=['finally_blocks'] ops=['PUSH_EXC_INFO', 'LOAD_FAST', 'LOAD_METHOD', 'PRECALL', 'CALL', 'POP_TOP', 'RERAISE']
+   d1 block@176   role=NORMAL             preds=[138] succs=[216, 292] ret=False net=0 term=POP_TOP      outside_wl=['LOAD_FAST', 'LOAD_METHOD'] owned=[] ops=['LOAD_FAST', 'LOAD_METHOD', 'PRECALL', 'CALL', 'POP_TOP']
+   d2 block@286   role=FINALLY_BODY       preds=[242] succs=[292] ret=False net=-1 term=RERAISE      outside_wl=[] owned=['finally_blocks'] ops=['COPY', 'POP_EXCEPT', 'RERAISE']
+   d2 block@216   role=RETURN             preds=[176] succs=[] ret=True  net=-2 term=RETURN_VALUE outside_wl=['RETURN_VALUE'] owned=[] ops=['SWAP', 'LOAD_CONST', 'LOAD_CONST', 'LOAD_CONST', 'PRECALL', 'CALL', 'POP_TOP', 'RETURN_VALUE']
+   d2 block@292   role=NORMAL             preds=[46, 176, 286] succs=[298, 300, 306] ret=False net=1 term=POP_JUMP_FORWARD_IF_TRUE outside_wl=['POP_JUMP_FORWARD_IF_TRUE'] owned=[] ops=['PUSH_EXC_INFO', 'WITH_EXCEPT_START', 'POP_JUMP_FORWARD_IF_TRUE']
+   d3 block@298   role=PURE_JUMP          preds=[292] succs=[300] ret=False net=-1 term=RERAISE      outside_wl=[] owned=[] ops=['RERAISE']
+   d3 block@300   role=RETURN             preds=[292, 298, 306] succs=[] ret=False net=-1 term=RERAISE      outside_wl=[] owned=[] ops=['COPY', 'POP_EXCEPT', 'RERAISE']
+   d3 block@306   role=PURE_JUMP          preds=[292] succs=[300, 308] ret=False net=-1 term=POP_TOP      outside_wl=[] owned=[] ops=['POP_TOP']
+product 7331 bytes (probe-local copy only)

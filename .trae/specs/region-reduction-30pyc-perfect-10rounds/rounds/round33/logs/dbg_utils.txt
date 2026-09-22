@@ -1,0 +1,5 @@
+ block@138 try_depth=1 NO chain (last instrs: ['LOAD_METHOD', 'PRECALL', 'CALL'])
+ block@4 try_depth=1 last_stmt is not Expr: {'type': 'Assign', 'targets': [{'type': 'Name', 'id': 'value', 'ctx': 'Store'}], 'value': {'type': 'Subscript', 'value': {'type': 'Attribute', 'value': {'type': 'Name', 'id': 'self', 'ctx': 'Load', 'lineno': 89}, 'attr': '_base', 'ctx': 'Load', 'lineno': None, 'is_method_form': False}, 'slice': {'type': 'Name', 'id': 'item', 'ctx': 'Load', 'lineno': None}, 'ctx': 'Load', 'lineno': None}}
+ block@228 try_depth=1 chain=[248]
+ block@36 try_depth=1 last_stmt is not Expr: {'type': 'Return', 'value': {'type': 'Constant', 'value': None}}
+ block@36 try_depth=1 last_stmt is not Expr: {'type': 'Return', 'value': {'type': 'Constant', 'value': None}}

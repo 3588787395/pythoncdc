@@ -1,0 +1,93 @@
+Line C (tooling) -- can an arm import cached bytecode that is not its own source?
+harness: python -X utf8 pycache_probe33.py <root>...   (reads the 4-byte pyc flags field;
+  bit0=hash-based, bit1=checked; timestamp pycs are ADOPTED iff source mtime AND size still match)
+
+[a] the repo core the mirrors are copied from: 24 pycs under core/**/__pycache__, valid-timestamp(adopted)=24, unchecked-hash=0, stale=0.
+    shutil.copytree uses copy2, which preserves a .py mtime+size -> a cache copied along with it stays
+    valid-timestamp in the arm and CPython imports the cached bytes instead of the patched .py.
+    Hence _mkmirror ignores __pycache__ and asserts the copied tree holds none.
+
+[b] the two arms actually used this round (self-generated caches):
+    50 pycs, ALL valid-timestamp against their OWN source, 0 unchecked-hash, 0 stale -> the head
+    arm's region_ast_generator.pyc is keyed to its 2979267-byte source and the candidate's to its
+    2981305-byte one, so no reading below can have come from the other arm or from the repo cache.
+
+--- [a] probe over F:/Downloads/pythoncdc-main/core ---
+VALID-TIMESTAMP F:/Downloads/pythoncdc-main/core\cfg\__pycache__\ast_converter.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP F:/Downloads/pythoncdc-main/core\cfg\__pycache__\ast_generator_v2.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP F:/Downloads/pythoncdc-main/core\cfg\__pycache__\basic_block.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP F:/Downloads/pythoncdc-main/core\cfg\__pycache__\cfg_builder.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP F:/Downloads/pythoncdc-main/core\cfg\__pycache__\cfg_optimizer.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP F:/Downloads/pythoncdc-main/core\cfg\__pycache__\cfg_visualizer.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP F:/Downloads/pythoncdc-main/core\cfg\__pycache__\code_generator.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP F:/Downloads/pythoncdc-main/core\cfg\__pycache__\comprehension_generator.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP F:/Downloads/pythoncdc-main/core\cfg\__pycache__\dominator_analyzer.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP F:/Downloads/pythoncdc-main/core\cfg\__pycache__\opcode_feature_detector.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP F:/Downloads/pythoncdc-main/core\cfg\__pycache__\pattern_parser.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP F:/Downloads/pythoncdc-main/core\cfg\__pycache__\peephole_patterns.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP F:/Downloads/pythoncdc-main/core\cfg\__pycache__\region_analyzer.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP F:/Downloads/pythoncdc-main/core\cfg\__pycache__\region_ast_generator.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP F:/Downloads/pythoncdc-main/core\cfg\__pycache__\structured_analyzer.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP F:/Downloads/pythoncdc-main/core\cfg\__pycache__\__init__.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP F:/Downloads/pythoncdc-main/core\__pycache__\ast_nodes.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP F:/Downloads/pythoncdc-main/core\__pycache__\cache_system.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP F:/Downloads/pythoncdc-main/core\__pycache__\control_flow.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP F:/Downloads/pythoncdc-main/core\__pycache__\object_pool.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP F:/Downloads/pythoncdc-main/core\__pycache__\pyc_loader_v2.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP F:/Downloads/pythoncdc-main/core\__pycache__\pyc_objects.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP F:/Downloads/pythoncdc-main/core\__pycache__\pyc_stream.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP F:/Downloads/pythoncdc-main/core\__pycache__\__init__.cpython-311.pyc  (source mtime+size match)
+SUMMARY roots=1 pyc_total=24 valid-timestamp(USED)=24 stale-recompiled=0 no-source-beside=0 unchecked-hash=0
+
+--- [b] probe over mirr_head + mirr_cand ---
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_head\core\cfg\__pycache__\ast_converter.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_head\core\cfg\__pycache__\ast_generator_v2.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_head\core\cfg\__pycache__\basic_block.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_head\core\cfg\__pycache__\cfg_builder.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_head\core\cfg\__pycache__\cfg_optimizer.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_head\core\cfg\__pycache__\cfg_visualizer.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_head\core\cfg\__pycache__\code_generator.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_head\core\cfg\__pycache__\comprehension_generator.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_head\core\cfg\__pycache__\dominator_analyzer.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_head\core\cfg\__pycache__\opcode_feature_detector.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_head\core\cfg\__pycache__\pattern_parser.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_head\core\cfg\__pycache__\peephole_patterns.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_head\core\cfg\__pycache__\region_analyzer.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_head\core\cfg\__pycache__\region_ast_generator.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_head\core\cfg\__pycache__\structured_analyzer.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_head\core\cfg\__pycache__\__init__.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_head\core\__pycache__\ast_nodes.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_head\core\__pycache__\cache_system.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_head\core\__pycache__\control_flow.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_head\core\__pycache__\object_pool.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_head\core\__pycache__\pyc_loader_v2.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_head\core\__pycache__\pyc_objects.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_head\core\__pycache__\pyc_stream.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_head\core\__pycache__\__init__.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_head\__pycache__\pycdc.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_cand\core\cfg\__pycache__\ast_converter.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_cand\core\cfg\__pycache__\ast_generator_v2.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_cand\core\cfg\__pycache__\basic_block.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_cand\core\cfg\__pycache__\cfg_builder.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_cand\core\cfg\__pycache__\cfg_optimizer.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_cand\core\cfg\__pycache__\cfg_visualizer.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_cand\core\cfg\__pycache__\code_generator.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_cand\core\cfg\__pycache__\comprehension_generator.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_cand\core\cfg\__pycache__\dominator_analyzer.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_cand\core\cfg\__pycache__\opcode_feature_detector.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_cand\core\cfg\__pycache__\pattern_parser.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_cand\core\cfg\__pycache__\peephole_patterns.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_cand\core\cfg\__pycache__\region_analyzer.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_cand\core\cfg\__pycache__\region_ast_generator.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_cand\core\cfg\__pycache__\structured_analyzer.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_cand\core\cfg\__pycache__\__init__.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_cand\core\__pycache__\ast_nodes.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_cand\core\__pycache__\cache_system.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_cand\core\__pycache__\control_flow.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_cand\core\__pycache__\object_pool.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_cand\core\__pycache__\pyc_loader_v2.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_cand\core\__pycache__\pyc_objects.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_cand\core\__pycache__\pyc_stream.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_cand\core\__pycache__\__init__.cpython-311.pyc  (source mtime+size match)
+VALID-TIMESTAMP D:/Temp/r33gate/c33/mirr_cand\__pycache__\pycdc.cpython-311.pyc  (source mtime+size match)
+SUMMARY roots=2 pyc_total=50 valid-timestamp(USED)=50 stale-recompiled=0 no-source-beside=0 unchecked-hash=0
