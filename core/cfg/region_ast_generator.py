@@ -16347,7 +16347,12 @@ AST 映射规则:
         之前，纯性复用既有 _chain_block_is_pure），则链首实为某个 `or` 的尾
         析取入口——整条 test 是 `X or (A and B)` 形，以该链重建整个 test 会
         整体丢弃左析取支 X，故同样放弃、回退既有路径。
-        三条守卫都只删不增：回退不命中时交由既有单条件生成路径，不新增任何规则。
+        第四条守卫（原则 2 唯一归属）：反向收集时的前驱候选若已登记在
+        generated_blocks **且**是纯操作数求值块，则其指令流已由先发射的外层结构
+        （实测为外层 `elif A or B:` 的 or 短路链 BoolOpRegion 成员块）认领，吸收它
+        会把末析取支重复发射成内层 `if B and C:` 的首合取支，故放弃整条链；候选带
+        前导语句（非纯）时不适用——链首前缀语句本就由本回经受 pre_stmts 归属。
+        四条守卫都只删不增：回退不命中时交由既有单条件生成路径，不新增任何规则。
         跨循环回边前驱因「跳转目标 == 汇合点」与
         「fallthrough 进入链尾」双重约束天然排除。
 
@@ -16405,6 +16410,19 @@ AST 映射规则:
                     if _oth is not region and any(
                             _ec is p for _ec in (getattr(_oth, 'elif_conditions', None) or [])):
                         return None
+                # [原则2 唯一归属·第四放弃守卫] 前驱候选**已登记为已生成块**且自身是
+                # 纯操作数求值块：它的指令流已由先发射的外层结构认领，不可能同时是本
+                # 区域 test 的合取支。实测形状——外层 `elif A or B:` 的 or 短路链在
+                # path (c) 把 BoolOpRegion 全部成员块（含末析取块 B）加入
+                # generated_blocks，B 以 fallthrough 进入臂体，其跳转目标又恰与臂体内
+                # 那个无 else 单支 `if C:` 的汇合点同一，本回退便把 B 当成 C 的首合取支
+                # 吸收，发射成 `elif A or B:` 体内的 `if B and C:`（B 的四条指令重复）。
+                # 纯性是这条守卫的同层边界：链首允许自带前导语句（见 docstring），该块
+                # 即便已登记仍由本回经受 pre_stmts 归属，放弃会连语句一起丢（实测
+                # fly/data/quote.load_bars_from_hundsun 无纯性合取项时 470→446）。
+                # 只删不增：与既有三条放弃守卫同源，不命中即交由既有单条件生成路径。
+                if p in self.generated_blocks and self._chain_block_is_pure(p):
+                    return None
                 if best is None or p.start_offset > best.start_offset:
                     best = p
             if best is None:

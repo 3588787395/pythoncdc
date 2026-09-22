@@ -887,9 +887,73 @@
           写后与 `mirr_cand` 逐字节相同），再 `batch --index pyc_index.json --all --round 27` 把全部索引拉回实测（`logs/batch_all27.txt`，
           索引仅 `last_tested_round` ×402 与翻转的 1 条目四字段，键集无增删、条目数不变），`stats` 读数存 `logs/stats27.txt`；
           `site-packages` 下变化产物 5 个、全为 `*OK.py`（`git status --porcelain -- site-packages` 实测）。
-  - [ ] SubTask 27.7: 本轮未收口，移交 Round 28：① #54 异常尾声按出口路径内联复制丢失（B3 `save_testds_to_json −4`，与 #39 同族）
+  - [x] SubTask 27.7: 本轮未收口，移交 Round 28：① #54 异常尾声按出口路径内联复制丢失（B3 `save_testds_to_json −4`，与 #39 同族）
           的两条诊断代理均耗尽轮次未交 `ANALYSIS.md`，须重新取证；② `region_ast_generator.py` L11156-11159「入口在他人
           `elif_conditions` ⇒ 发射 `[]`」守卫本轮再次以戳否证（靶子函数命中 `RET 11017 ×2`、`RET 11163 ×1`，无 `RET 11159`），
           不得在该站点落地；③ 残余清单不变：`DefaultMatcher.match` 大块换位、`events −19`、`memory_handler +4`、
           `risk_calculation/function.pyc −1`、`flytools.pyc 64/65`、#42/#43/#44；④ 电池增至 94 例（名单 `D:/Temp/r27self/anchors94.txt`），
           落地字节基线 `rounds/round27/logs/base_landed94.jsonl`（94 条记录、error 0、空读数 0；与上轮 93 条基线的共有 93 条 `sha`/`mism` **零漂移**，新增 1 条即本轮复现 `4/4`）；下一轮候选须以它为基线，且名单换用新文件名。
+
+- [x] Task 28: 落地 R28-A —— or 短路链的末析取块被生成端 and 链回退二次认领（原则 2 唯一归属
+      的第四条放弃守卫），修 `fly/common/custom_tools.pyc :: memory_handler` 的 +4 过量发射，
+      该文件翻转为 ok
+  - [x] SubTask 28.1: 目标池按落地字节（基线 `de2fd999`）重建：索引口径 deficit==1 的文件 11 个，
+          两条诊断线并行取证。线 A（异常尾声复制，`save_testds_to_json 314/310`）取 Round 27 代理
+          留在 `D:/Temp/r28diagA/` 的三份候选（`spec_r28a/b/c.json`）实测：都能把靶子抬到 `15/15`、
+          合成复现 `6/7→7/7`，但 17 文件金丝雀窗与全量各**回退 12 个文件**
+          （`files fully matched a=10 b=4`）⇒ 抑制方向否证；真实形状是**缺一份内联副本**
+          `POP_EXCEPT; POP_EXCEPT; LOAD_CONST None; RETURN_VALUE`（orig[302:305]，产物侧 0 条）
+          ⇒ 该族要的是发射侧判据，移交后续轮次。
+  - [x] SubTask 28.2: 线 B 靶子定位（`dumphunk28.py` 读首处严格分歧）：唯一 hunk
+          `replace orig[44:45]→decomp[44:49]`，产物 `elif 'GB' in um or 'GiB' in um:` 体内又出现
+          `if 'GiB' in um and float(...) <= ...:`，而同文件同函数的孪生首臂
+          `if ('GB' in um or 'GiB' in um) and ...:` 正确 ⇒ 末析取成员块被重复发射。
+          根因由**打戳探针**（`probe28_spec.json`，只改镜像）确定，不靠读码：
+          `[R28P1] p=254 cur=262 gen=True pure=True elifcond=[] own=[BoolOpRegion(246/420,[254,246]),
+          Region([254])]` —— 块 254 已登记在 `self.generated_blocks`（`_if_generate_elif_chain`
+          path (c) 把 `elif_boolop.blocks` 全数入账），却被 `_discover_predicate_and_chain`
+          的反向收集当成嵌套 if 的首合取支吸收。既有三条放弃守卫逐条实测不命中：254 不是任何区域的
+          `condition_block`；or 链成员登记在 `BoolOpRegion.blocks` 而非 `elif_conditions`
+          （第二条守卫的认领集合只覆盖 elif 链第一级）；块 246 的 `POP_JUMP_IF_TRUE` 落点是臂体入口
+          262 而非 254（第三条 J2 的落点判据看不到靠 fallthrough 进臂体的末析取支）。
+  - [x] SubTask 28.3: 落 R28-A（`core/cfg/region_ast_generator.py`，`git diff --numstat` = 19 1，
+          CRLF 与 UTF-8 BOM 保持，落地后与工作镜像 `mirr_cand` **sha256 逐字节相同**
+          `a2bdd31e…`）：`if p in self.generated_blocks and self._chain_block_is_pure(p): return None`。
+          两个合取项都只读块自身属性（登记状态、块内指令纯净性），不读偏移次序／函数名／常量，
+          命中即放弃整条链交由既有单条件路径 —— 与既有三条守卫同为「只删不增」。
+          纯性合取项是被反证逼出来的（见 28.4），不是保守装饰。
+  - [x] SubTask 28.4: **严格尺否决第一版判据**：无纯性合取项的宽版（`p in generated_blocks`）与窄版
+          （p 属另一区域的 `blocks`）在 402 全量上读数完全相同
+          `SAME=400 IMPROVED=1 REGRESSION=0 MOVED=1`，官方尺看是干净的；唯一 MOVED 是
+          `fly/data/quote.pyc :: load_bars_from_hundsun`，`matched_functions` 两侧都不匹配故不变，
+          但产物 `477/470 → 477/446`（严格尺 σ 7→31，多丢 24 条，连函数体里那条日志 f-string
+          一起丢）⇒ 若只按官方尺发货即重犯 Round 27 的 G4′ 教训，且证明 MOVED 不等于中性重排。
+          收紧后打戳版在 quote.pyc 上恰好打印一次 `[R28C] suppressed p=144 cur=332 pure=False`
+          （链首自带前导语句，其语句本就由本回经受 `pre_stmts` 归属），470 逐字节恢复。
+  - [x] SubTask 28.5: 门禁（严格串行，原始日志 `rounds/round28/logs/`）：G0 语料外最小复现
+          `test_repros/round28_or_tail_conjunct/r28a_01_or_tail_as_nested_conjunct.pyc` 在落地前核
+          `3/4`、缺陷函数 `case_or_tail_operand_reused orig=33 decomp=37`（与语料靶子同一
+          `[name, o, o+4, 1, 21]` 签名），两条 CONTROL（臂体内真 and 链、or 链＋带 else 的嵌套 if）
+          在 head 已匹配；G1/G2 靶子 `4/4`、`mism=[]`；G2′ 前轮合成复现电池（本地现存 38 个
+          `test_repros/**.pyc`）`SAME=37 IMPROVED=1 REGRESSION=0 MOVED=0 ERR=0`；
+          G1′ 语料靶子 `custom_tools.pyc 5/6→6/6`；G3 前轮 94 锚点电池对 cand
+          `SAME=94 IMPROVED=0 REGRESSION=0 MOVED=0 ERR=0`、空读数 0（Σmatched 270／Σtotal 298）；
+          G4 全量 A/B（head vs 落地字节同形镜像）`SAME=401 IMPROVED=1 REGRESSION=0 MOVED=0 ERR=0`，
+          且带注释的正式镜像与测量用的无注释变体在 402 个产物上 `sha` 差异 **0 条**；
+          G4′ 唯一变化产物严格尺 `STRICT-BETTER`（`memory_handler 65/69 seq_len → 65/65`、
+          clean 5/6→6/6、σ 4→0）；G5 `single` 靶子 `ok 6/6`、金丝雀 `fly/data/quotation.pyc`
+          仍 `ok 143/143`、`plugin_system_persist/__init__.pyc` 仍 `ok 15/15`。
+  - [x] SubTask 28.6: `batch --index pyc_index.json --all --round 28` 全量复验把索引拉回实测
+          （`logs/batch_all28.txt`，`[402/402]`、rc=0），`stats` 读数存 `logs/stats28.txt`： `total_pyc 402 / verified_pyc 402 / ok_pyc 369 / partial_pyc 33 / failed_pyc 0 / total_functions 5746 / matched_functions 5641 / cumulative_match_rate 98.17%`；
+          索引改动逐字段核对见 `logs/index_delta28.txt`（键集合无增删、条目数 402）。
+  - [x] SubTask 28.7: 移交 Round 29：① 异常尾声族改为**发射侧**判据（按 except 退出路径补内联副本），
+          靶子 `risk_calculation/function.pyc 14/15`、`flytools.pyc 64/65`（混形：5 指令 raise 尾声
+          被简化 ＋ 环尾 `JUMP_BACKWARD 42` 丢失）；② 本轮以反证暴露的新线索
+          `fly/data/quote.pyc :: load_bars_from_hundsun 477/470` —— 缺口正落在
+          `p=144` 这个「已在 `generated_blocks` 又自带前导语句」的双重认领块上，是与 R28-A
+          反方向的同一归属问题；③ 残余不变：`DefaultMatcher.match −26`、`events −19`、
+          `clock_worker +16`、`decrypt_database_url +29`、`instance._init_config −1`／`datetime +6`、
+          `plugin_fly_data/strategy.pyc` 两条、`fly/dumpload/load_daily.pyc` 三条；④ 电池基线
+          `anchors94.txt` ＋ 落地字节记录 `base_landed94.jsonl` 继续承重，承重锚点新增
+          `custom_tools.pyc`（必须 6/6），`quotation.pyc` 143/143、`plugin_system_persist/__init__.pyc`
+          15/15 不变。

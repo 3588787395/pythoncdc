@@ -1,0 +1,3 @@
+IMPROVED F:/Downloads/pythoncdc-main/test_repros/round28_or_tail_conjunct/r28a_01_or_tail_as_nested_conjunct.pyc  3/4 -> 4/4
+TALLY SAME=37 IMPROVED=1 REGRESSION=0 MOVED=0 ERR=0  (unpaired lists=0)
+files fully matched: a=26 b=27

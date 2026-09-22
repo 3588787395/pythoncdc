@@ -1,0 +1,16 @@
+{
+ "F:\\Downloads\\pythoncdc-main\\site-packages\\fly\\common\\custom_tools.pyc": {
+  "head": {
+   "clean": 5,
+   "seqlen": 1,
+   "sigma": 4,
+   "funcs": 6
+  },
+  "cand": {
+   "clean": 6,
+   "seqlen": 0,
+   "sigma": 0,
+   "funcs": 6
+  }
+ }
+}

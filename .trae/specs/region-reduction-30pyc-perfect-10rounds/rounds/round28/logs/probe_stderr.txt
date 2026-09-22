@@ -1,0 +1,3 @@
+[R28P1] p=254 cur=262 curcond=None gen=True pure=True elifcond=[] own=[('BoolOpRegion', None, [246, 420], [254, 246]), ('Region', None, [254, None], [254])]
+[R28P2] chain=[254, 262] gen=[False, False] pure=[True, True]
+[R28P2b] tail=262 head=254
