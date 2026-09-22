@@ -71,3 +71,9 @@ MOVED=3`、fully matched `375 → 366`，16 处回退全是「产物比原始多
 4. 台账未动项照旧：8 条布局等价行、`matcher :: match 713/689`、`clock_worker +6`、
    `decrypt_database_url 295/324`、`events 510/508`、`_init_config 86/84`、`OverNightOrder.__init__ 172/148`、
    `#61` ＋ `r29x_01 <module> 142/138`。
+
+## 六、push 状态
+
+提交 `065633a8` 三次 push 均未成功（前两次 `Failed to connect`，第三次 `Authentication failed`），
+本地 `ahead(refs/remotes/origin/main)=1` ⇒ **本轮发货已提交、尚未推送**，下一轮开工先补交
+（同 Round 36 情形，`Task 36` 亦曾补交）。
