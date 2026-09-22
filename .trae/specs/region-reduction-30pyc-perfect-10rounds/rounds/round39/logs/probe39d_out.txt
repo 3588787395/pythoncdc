@@ -1,0 +1,84 @@
+=== 1 R100-candidate branch calls ===
+{'blocks_jumping_to_header': [],
+ 'branch_blocks': [24, 34],
+ 'else': [36, 48],
+ 'loop_attrs': ['_is_fused_ternary_loop_header',
+                'add_child',
+                'annotate_cond_recheck',
+                'annotate_structural_roles',
+                'back_edge_block',
+                'back_edge_blocks',
+                'blocks',
+                'body_blocks',
+                'break_blocks',
+                'can_be_ternary_header',
+                'children',
+                'condition_block',
+                'condition_chain_blocks',
+                'condition_chain_expr',
+                'condition_recheck_blocks',
+                'contains_block',
+                'continue_map',
+                'else_block_conflict',
+                'else_blocks',
+                'else_is_follow',
+                'entry',
+                'exit',
+                'find_descendant_region_for_block',
+                'find_enclosing_parent',
+                'get_compactness_successors',
+                'get_content_blocks',
+                'get_else_blocks_for_merge',
+                'get_if_body_blocks',
+                'get_if_branch_boundary_stop',
+                'get_offset_range',
+                'get_score_merge_block',
+                'get_with_body_orphan_instructions',
+                'has_break',
+                'has_trailing_return_none',
+                'header_block',
+                'init_blocks',
+                'interrupts_boolop_forward_chain',
+                'is_async',
+                'is_block_entry',
+                'is_block_in_body',
+                'is_while_true',
+                'is_yield_from',
+                'iter_descendants',
+                'mark_trailing_return_none',
+                'metadata',
+                'parent',
+                'pre_condition_blocks',
+                'precompute_analysis',
+                'preserves_against_nested_match',
+                'region_type',
+                'should_merge_with',
+                'try_except_absorb_split_from'],
+ 'loop_entry': [6],
+ 'loop_header': [6],
+ 'loop_merge_is_header': True,
+ 'loop_type': 'LoopRegion',
+ 'merge': [6],
+ 'region_entry': [12],
+ 'region_type': 'IfRegion',
+ 'tail_jump_blocks': [(34, ('JUMP_BACKWARD', 6))],
+ 'then': [24, 34]}
+
+=== emission ===
+{'branch': [24, 34], 'emitted_has_continue': True}
+# Source Generated with Decompyle++ (Python version)
+# File: orig.pyc (Python 3.11)
+
+def ctl_two_cont(d, ks):
+    for k in ks:
+        try:
+            if k > 3:
+                d[k] = 1
+                continue
+            elif k < 0:
+                d[k] = -1
+            continue
+        except Exception:
+            pass
+    return d
+

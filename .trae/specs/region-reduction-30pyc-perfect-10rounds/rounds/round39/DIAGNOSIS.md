@@ -74,3 +74,37 @@ _if_generate_normal (def 16638)  region=IfRegion entry=12
 本轮**未发货**：`core/` 零改动、无候选 spec，G0–G7 无对象。语料基线与 Round 38 §七 的
 `logs/g4_head.all.jsonl`（402 行 / 0 error / 与索引 0 冲突）同源同字节，仍然有效，
 Round 39 落地时可直接复用为 G4 的「改前」侧。
+
+## 六、已把删除动作定位到一条在册抑制规则（下一手就改这里）
+
+`_process_if_blocks`（def 20147）内的 **[R100 fix]「纯连接 continue 块的冗余抑制」**：
+文档串在 `:20183-20188`，实现在 `:20842-20954`，判据形状是
+「分支末块是 PURE_CONTINUE 回边块，且 `region.merge_block` 的末指令也是
+`JUMP_BACKWARD → 当前 loop 的 header`（`_r100_mtgt is _r100_hdr`，`:20868-20875`）
+⇒ 抑制该臂尾块的 `Continue`」。另有两处同族判定：`:15665-15674`（elif 体内版本）与
+`:20876-20879`（`merge_block is header` 变体），以及一条**已存在的反向豁免**
+`[R4-H 修复] 显式 continue 优先于 R100 冗余抑制`（`:20955-20970`，`_r4h_explicit_continue`）。
+
+对照本形状：臂尾 @58 与 merge @60 是**两个不同的物理块**、各自跳回 loop header，
+R100 认为「merge 已带这条回边」于是吞掉臂尾那条 —— 而产物源码里 merge 的 `continue`
+确实单独发射了（链级那条），所以两条被并成一条。⇒ 候选判据应加在 R100 这一层：
+*被抑制的臂尾回边不得与 merge 的回边合并，当且仅当 merge 块自身会被单独物化*
+（同层事实：臂尾块 `is not` merge 块、merge 块在发射序里位于链之后）。
+下一手先测 `_r4h_explicit_continue` 为何没兜住这一形状（它在 `:20970` 与
+`_r100_suppress` 同判据里已经OR进来），再决定是扩这条豁免还是收紧 R100 本体。
+
+## 七、§六 的 R100 线索**已被下一步实测否证**（勿再沿此路走）
+
+把 `_process_if_blocks` 包一层，只观察「臂块列表里以 `JUMP_BACKWARD` 结尾」的调用：
+整个 `ctl_two_cont` 反编译过程中**只有 1 次**命中，且是 then 臂 `[24, 34]`（它正确地发出了
+`Continue`）。出问题的 else 臂 `[36, 48]` **不在命中之列**，因为按 `bytecode` 的分块，
+@48 块以 `STORE_SUBSCR@54` 结束（** fall-through **），那条 `JUMP_BACKWARD@58` 属于
+**另一个独立块 @58，而 @58 根本不在 `else_blocks` 里**。
+
+⇒ 缺口不在发射侧的任何 continue 抑制（R100 / RC3 / R4-H 都到不了），而在**更上一层的块归属**：
+臂尾那条回边块没有被认给这条臂，于是被当成链后公共汇合块发射了一次。
+下一轮（或本轮下一手）要测的是：**块 @58 的 owner 是谁、由哪一步决定**
+（`region_analyzer` 的 `else_blocks` / merge 归属，与 Round 37 落地的 R37-A 同一层），
+而不是再在 `region_ast_generator.py` 的发射判据里找。
+
+
