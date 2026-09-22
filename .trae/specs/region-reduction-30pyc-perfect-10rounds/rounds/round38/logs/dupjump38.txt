@@ -1,0 +1,80 @@
+=== IQCommon/api/klinedata.pyc :: get_all_real_daily_kline   orig=188 decomp=187   delete-hunks=[(162, 163)]
+    #159 @888   LOAD_FAST                      'symbol'               
+    #160 @890   STORE_SUBSCR                   ''                     
+    #161 @896   JUMP_BACKWARD                  'to 86'                 -> 86(kept)
+    #162 @900   JUMP_BACKWARD                  'to 86'                 -> 86  <<DELETED
+    #163 @902   PUSH_EXC_INFO                  ''                     (kept)
+    #164 @904   LOAD_GLOBAL                    'BaseException'        L1598
+    #165 @916   CHECK_EXC_MATCH                ''                     
+    deleted opname=JUMP_BACKWARD target=86 | prev-instr identical token=True same-target-jump=True | next-instr identical token=False
+    PRODUCT tail: LOAD_FAST@888 / STORE_SUBSCR@890 / JUMP_BACKWARD@896 / PUSH_EXC_INFO@898 / LOAD_GLOBAL@900
+=== IQCommon/strategy/wizard_quant_api.pyc :: wizard_quant_check_limit   orig=91 decomp=90   delete-hunks=[(81, 82)]
+    #78  @334   LOAD_FAST                      'stock'                
+    #79  @336   STORE_SUBSCR                   ''                     
+    #80  @340   JUMP_BACKWARD                  'to 92'                L1067 -> 92(kept)
+    #81  @342   JUMP_BACKWARD                  'to 92'                L1065 -> 92  <<DELETED
+    #82  @344   PUSH_EXC_INFO                  ''                     (kept)
+    #83  @346   POP_TOP                        ''                     L1068
+    #84  @348   POP_EXCEPT                     ''                     L1069
+    deleted opname=JUMP_BACKWARD target=92 | prev-instr identical token=True same-target-jump=True | next-instr identical token=False
+    PRODUCT tail: LOAD_FAST@334 / STORE_SUBSCR@336 / JUMP_BACKWARD@340 / PUSH_EXC_INFO@342 / POP_TOP@344
+=== IQCommon/util/common_func.pyc :: fill_kline_data   orig=60 decomp=59   delete-hunks=[(44, 45)]
+    #41  @172   BINARY_SUBSCR                  ''                     
+    #42  @182   LOAD_FAST                      'name'                 
+    #43  @184   STORE_SUBSCR                   ''                     (kept)
+    #44  @188   JUMP_BACKWARD                  'to 138'                -> 138  <<DELETED
+    #45  @190   LOAD_FAST                      'result_data'          L291(kept)
+    #46  @192   LOAD_FAST                      '_index'               
+    #47  @194   LOAD_CONST                     '1'                    
+    deleted opname=JUMP_BACKWARD target=138 | prev-instr identical token=False same-target-jump=False | next-instr identical token=False
+    PRODUCT tail: BINARY_SUBSCR@172 / LOAD_FAST@182 / STORE_SUBSCR@184 / LOAD_FAST@188 / LOAD_FAST@190
+=== IQCommon/util/common_func.pyc :: fill_kline_data_by_pre   orig=82 decomp=81   delete-hunks=[(58, 59)]
+    #55  @268   BINARY_SUBSCR                  ''                     
+    #56  @278   LOAD_FAST                      'name'                 
+    #57  @280   STORE_SUBSCR                   ''                     (kept)
+    #58  @284   JUMP_BACKWARD                  'to 234'                -> 234  <<DELETED
+    #59  @286   LOAD_FAST                      'nan_data'             L278(kept)
+    #60  @288   LOAD_FAST                      'start_pos'            
+    #61  @290   LOAD_CONST                     '1'                    
+    deleted opname=JUMP_BACKWARD target=234 | prev-instr identical token=False same-target-jump=False | next-instr identical token=False
+    PRODUCT tail: BINARY_SUBSCR@268 / LOAD_FAST@278 / STORE_SUBSCR@280 / LOAD_FAST@284 / LOAD_FAST@286
+=== IQData/plugins/plugin_system_realquote/real_quote.pyc :: one_prod_to_dataframe   orig=433 decomp=432   delete-hunks=[(375, 376)]
+    #372 @1488  LOAD_FAST                      'temp_time'            
+    #373 @1494  CALL                           ''                     
+    #374 @1504  POP_TOP                        ''                     (kept)
+    #375 @1508  JUMP_BACKWARD                  'to 388'                -> 388  <<DELETED
+    #376 @1510  LOAD_FAST                      'df'                   L486(kept)
+    #377 @1512  LOAD_FAST                      'self'                 
+    #378 @1514  LOAD_METHOD                    'get_real_param'       
+    deleted opname=JUMP_BACKWARD target=388 | prev-instr identical token=False same-target-jump=False | next-instr identical token=False
+    PRODUCT tail: LOAD_FAST@1488 / CALL@1494 / POP_TOP@1504 / LOAD_FAST@1506 / LOAD_FAST@1508
+=== IQData/utils/common_func.pyc :: fill_kline_data_by_pre   orig=82 decomp=81   delete-hunks=[(58, 59)]
+    #55  @268   BINARY_SUBSCR                  ''                     
+    #56  @278   LOAD_FAST                      'name'                 
+    #57  @280   STORE_SUBSCR                   ''                     (kept)
+    #58  @284   JUMP_BACKWARD                  'to 234'                -> 234  <<DELETED
+    #59  @286   LOAD_FAST                      'nan_data'             L449(kept)
+    #60  @288   LOAD_FAST                      'start_pos'            
+    #61  @290   LOAD_CONST                     '1'                    
+    deleted opname=JUMP_BACKWARD target=234 | prev-instr identical token=False same-target-jump=False | next-instr identical token=False
+    PRODUCT tail: BINARY_SUBSCR@268 / LOAD_FAST@278 / STORE_SUBSCR@280 / LOAD_FAST@284 / LOAD_FAST@286
+=== fly/data/quote.pyc :: is_delisting_stock_real   orig=107 decomp=106   delete-hunks=[(99, 100)]
+    #96  @584   LOAD_FAST                      'result'               
+    #97  @586   LOAD_FAST                      'i'                    
+    #98  @588   STORE_SUBSCR                   ''                     (kept)
+    #99  @592   JUMP_BACKWARD                  'to 278'                -> 278  <<DELETED
+    #100 @594   LOAD_CONST                     'False'                L1131(kept)
+    #101 @596   LOAD_FAST                      'result'               
+    #102 @598   LOAD_FAST                      'i'                    
+    deleted opname=JUMP_BACKWARD target=278 | prev-instr identical token=False same-target-jump=False | next-instr identical token=False
+    PRODUCT tail: LOAD_FAST@584 / LOAD_FAST@586 / STORE_SUBSCR@588 / LOAD_CONST@592 / LOAD_FAST@594
+=== fly/data/quote.pyc :: one_prod_to_dataframe   orig=485 decomp=484   delete-hunks=[(427, 428)]
+    #424 @1842  LOAD_FAST                      'temp_time'            
+    #425 @1848  CALL                           ''                     
+    #426 @1858  POP_TOP                        ''                     (kept)
+    #427 @1862  JUMP_BACKWARD                  'to 742'                -> 742  <<DELETED
+    #428 @1864  LOAD_FAST                      'df'                   L272(kept)
+    #429 @1866  LOAD_FAST                      'self'                 
+    #430 @1868  LOAD_METHOD                    'get_real_param'       
+    deleted opname=JUMP_BACKWARD target=742 | prev-instr identical token=False same-target-jump=False | next-instr identical token=False
+    PRODUCT tail: LOAD_FAST@1842 / CALL@1848 / POP_TOP@1858 / LOAD_FAST@1860 / LOAD_FAST@1862

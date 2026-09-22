@@ -1,0 +1,1 @@
+{"file": "core/cfg/region_ast_generator.py", "edits": [{"anchor": "                            _body = s.get('body', [])\n                            _orelse = s.get('orelse') or []\n", "repl": "                            _body = s.get('body', [])\n                            _orelse = s.get('orelse', [])\n"}]}

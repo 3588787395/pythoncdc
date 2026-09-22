@@ -1,0 +1,118 @@
+partial files 27   mismatching functions 94   sum|deficit| 1107   sum(deficit>0) 1045
+
+=== every mismatching function, sorted by |delta| ===
+  fly/data/quote_handler.pyc                                           get_index_stocks_local             149/54    delta   -95  j5   t97
+  IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc         get_TradeMode_trades              1839/1753  delta   -86  j4   t1620
+  fly/data/quote_handler.pyc                                           get_kline_local                    760/682   delta   -78  j12  t547
+  IQEngine/plugins/plugin_system_log/__init__.pyc                      setup                              320/253   delta   -67  j1   t293
+  IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc           _process_order                     454/396   delta   -58  j9   t349
+  fly/data/quote.pyc                                                   get_price                          230/188   delta   -42  j0   t227
+  fly/data/quote.pyc                                                   run_individual_transform           362/321   delta   -41  j2   t263
+  IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc           fund_transfer                      123/88    delta   -35  j1   t57
+  fly/data/quote.pyc                                                   load_get_price                     171/136   delta   -35  j1   t167
+  fly/data/quote.pyc                                                   get_real_from_zeromq               703/669   delta   -34  j0   t661
+  IQCommon/util/replace_utils.pyc                                      decrypt_database_url               295/324   delta   +29  j1   t250
+  IQCommon/common/main.pyc                                             get_server_ip_info                 194/166   delta   -28  j9   t71
+  fly/data/quote_handler.pyc                                           get_index                           76/48    delta   -28  j0   t74
+  IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc           get_etf_stock_info                 144/117   delta   -27  j1   t139
+  IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc           market_fund_transfer                94/67    delta   -27  j1   t41
+  IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc           _sync_worker                       349/323   delta   -26  j1   t286
+  IQData/api/api_base.pyc                                              get_history_df                    1742/1718  delta   -24  j14  t1217
+  IQEngine/plugins/plugin_system_matcher/matcher.pyc                   match                              713/689   delta   -24  j9   t524
+  IQEngine/utils/scheduler.pyc                                         is_run_interval_time_now           225/201   delta   -24  j2   t173
+  IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc           etf_purchase_redemption            377/355   delta   -22  j2   t100
+  IQCommon/common/main.pyc                                             get_same_shard_server_ip_info      192/173   delta   -19  j11  t62
+  fly/data/quote.pyc                                                   check_limit                        330/311   delta   -19  j2   t248
+  fly/data/quote.pyc                                                   initImagedata                      243/225   delta   -18  j0   t190
+  IQCommon/util/trade_info_utils.pyc                                   get_trade_list                     339/323   delta   -16  j14  t148
+  IQData/api/api_base.pyc                                              get_future_history_df              973/957   delta   -16  j3   t229
+  fly/data/quote_handler.pyc                                           <dictcomp>                          38/24    delta   -14  j2   t18
+  IQData/plugins/plugin_system_fly_historyquote/history_data_source.pyc get_kline_by_count                 854/841   delta   -13  j3   t807
+  IQCommon/graph.pyc                                                   _get_influence_task                207/195   delta   -12  j2   t124
+  IQCommon/util/common_func.pyc                                        get_crontab_execute_time            93/81    delta   -12  j2   t48
+  IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc           get_max_amount                     201/213   delta   +12  j2   t18
+  IQCommon/data/finance.pyc                                            get_fields                         159/149   delta   -10  j16  t47
+  IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc               option_order                        83/73    delta   -10  j3   t39
+  IQCommon/data/finance.pyc                                            financial_statements               113/104   delta    -9  j1   t36
+  IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc               future_order                       101/92    delta    -9  j2   t36
+  IQData/utils/common_func.pyc                                         handle_exrights                    276/268   delta    -8  j1   t263
+  IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc               buy_close                          122/114   delta    -8  j2   t56
+  IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc               sell_close                         122/114   delta    -8  j2   t56
+  IQCommon/strategy/wizard_quant_api.pyc                               params_analysis                    133/126   delta    -7  j1   t117
+  fly/data/quote.pyc                                                   build_current_period_df            115/108   delta    -7  j5   t12
+  fly/data/quote.pyc                                                   load_bars_from_hundsun             477/470   delta    -7  j0   t464
+  fly/simtradding/flyAccount.pyc                                       _do_request                        436/429   delta    -7  j2   t379
+  IQData/plugins/plugin_system_fly_historyquote/history_data_source.pyc get_price                          550/544   delta    -6  j4   t475
+  IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc clock_worker                      1275/1281  delta    +6  j10  t478
+  IQEngine/utils/scheduler.pyc                                         run_daily                           77/71    delta    -6  j0   t56
+  fly/data/quote.pyc                                                   get_individual_data                312/306   delta    -6  j2   t153
+  IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc         _on_publish_after_trading_end      486/481   delta    -5  j3   t33
+  IQEngine/plugins/plugin_system_trade/function.pyc                    get_entrust_item_info              535/531   delta    -4  j5   t139
+  IQEngine/plugins/plugin_system_trade/function.pyc                    order_entrust_info_handle          220/224   delta    +4  j8   t149
+  fly/logger.pyc                                                       logging_process                     99/95    delta    -4  j2   t62
+  IQCommon/util/common_func.pyc                                        get_kline_time_by_frequency_array   231/228   delta    -3  j0   t45
+  IQCommon/util/fileio_utils.pyc                                       acquire                             96/93    delta    -3  j3   t52
+  IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc         _save_testds_to_csv                 71/68    delta    -3  j7   t19
+  IQCommon/manager/instance.pyc                                        _init_config                        86/84    delta    -2  j1   t37
+  IQCommon/strategy/wizard_quant_api.pyc                               calculate_di                        75/73    delta    -2  j0   t45
+  IQCommon/strategy/wizard_quant_api.pyc                               region_mean_desicion                50/48    delta    -2  j2   t2
+  IQCommon/util/trade_info_utils.pyc                                   trade_operation                    304/302   delta    -2  j2   t40
+  IQData/plugins/plugin_system_realquote/real_quote.pyc                get_cache_l2_data                  337/335   delta    -2  j2   t313
+  IQData/plugins/plugin_system_realquote/real_quote.pyc                get_cache_l2_data_by_one           321/319   delta    -2  j2   t298
+  IQData/plugins/plugin_system_realquote/real_quote.pyc                one_prod_to_ndarray                605/607   delta    +2  j5   t424
+  IQEngine/plugins/plugin_system_event_source/default_event_source.pyc events                             510/508   delta    -2  j2   t157
+  IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc           _trade_status_handle               114/112   delta    -2  j0   t107
+  IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc           get_ipo_stocks                     453/451   delta    -2  j4   t296
+  fly/data/quote_handler.pyc                                           get_Ashares_local                   75/77    delta    +2  j0   t24
+  IQCommon/api/klinedata.pyc                                           _all_bars_of_cache                 229/230   delta    +1  j3   t176
+  IQCommon/api/klinedata.pyc                                           get_all_real_daily_kline           188/187   delta    -1  j3   t26
+  IQCommon/api/klinedata.pyc                                           get_history_new                    322/321   delta    -1  j3   t37
+  IQCommon/api/klinedata.pyc                                           get_multiminute_his_data           479/478   delta    -1  j7   t16
+  IQCommon/api/klinedata.pyc                                           kline_datetime_list                389/390   delta    +1  j8   t235
+  IQCommon/strategy/wizard_quant_api.pyc                               wizard_quant_check_limit            91/90    delta    -1  j2   t10
+  IQCommon/util/common_func.pyc                                        fill_kline_data                     60/59    delta    -1  j4   t16
+  IQCommon/util/common_func.pyc                                        fill_kline_data_by_pre              82/81    delta    -1  j4   t24
+  IQData/plugins/plugin_system_realquote/real_quote.pyc                get_real_minute_kline              253/254   delta    +1  j3   t197
+  IQData/plugins/plugin_system_realquote/real_quote.pyc                get_tick_direction                 259/258   delta    -1  j3   t102
+  IQData/plugins/plugin_system_realquote/real_quote.pyc                one_prod_to_dataframe              432/431   delta    -1  j7   t56
+  IQData/utils/common_func.pyc                                         fill_kline_data_by_pre              82/81    delta    -1  j4   t24
+  IQEngine/plugins/plugin_system_log/__init__.pyc                      trade_logs_control                 189/190   delta    +1  j1   t144
+  IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc           _process_cancel_order              293/292   delta    -1  j16  t43
+  IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc           etf_basket_order                   693/692   delta    -1  j12  t431
+  IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc           get_all_orders                      79/78    delta    -1  j2   t24
+  IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc           get_trades                         215/216   delta    +1  j10  t19
+  IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc           ipo_stocks_order                  1075/1074  delta    -1  j3   t804
+  fly/data/quote.pyc                                                   check_frequency                    121/120   delta    -1  j1   t21
+  fly/data/quote.pyc                                                   check_stock                         86/87    delta    +1  j2   t46
+  fly/data/quote.pyc                                                   is_delisting_stock_real            107/106   delta    -1  j2   t8
+  fly/data/quote.pyc                                                   one_prod_to_dataframe              484/483   delta    -1  j7   t56
+  fly/data/quote.pyc                                                   run_tick_socket                    306/307   delta    +1  j2   t228
+  fly/data/quote_handler.pyc                                           get_kline_binary                   129/128   delta    -1  j3   t58
+  fly/data/quote_handler.pyc                                           is_delisting_stock_local            95/94    delta    -1  j1   t33
+  fly/simtradding/flyAccount.pyc                                       init_connection                     42/41    delta    -1  j0   t25
+  IQCommon/graph.pyc                                                   _process_task_queue                378/378   delta    +0  j1   t118
+  IQCommon/util/fileio_utils.pyc                                       write                              637/637   delta    +0  j4   t519
+  IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc           after_trading_cancel_order         155/155   delta    +0  j3   t122
+  IQEngine/utils/scheduler.pyc                                         get_checked_time                   106/106   delta    +0  j0   t43
+  fly/logger.pyc                                                       write_logging_thread               113/113   delta    +0  j1   t40
+
+=== deficit-amount clusters (same |missing instructions|) ===
+  delta  +35 : 2 functions  trade_live_broker::fund_transfer, quote::load_get_price
+  delta  +28 : 2 functions  main::get_server_ip_info, quote_handler::get_index
+  delta  +27 : 2 functions  trade_live_broker::get_etf_stock_info, trade_live_broker::market_fund_transfer
+  delta  +24 : 3 functions  api_base::get_history_df, matcher::match, scheduler::is_run_interval_time_now
+  delta  +19 : 2 functions  main::get_same_shard_server_ip_info, quote::check_limit
+  delta  +16 : 2 functions  trade_info_utils::get_trade_list, api_base::get_future_history_df
+  delta  +12 : 2 functions  graph::_get_influence_task, common_func::get_crontab_execute_time
+  delta  +10 : 2 functions  finance::get_fields, order_api::option_order
+  delta   +9 : 2 functions  finance::financial_statements, order_api::future_order
+  delta   +8 : 3 functions  common_func::handle_exrights, order_api::buy_close, order_api::sell_close
+  delta   +7 : 4 functions  wizard_quant_api::params_analysis, quote::build_current_period_df, quote::load_bars_from_hundsun, flyAccount::_do_request
+  delta   +6 : 3 functions  history_data_source::get_price, scheduler::run_daily, quote::get_individual_data
+  delta   +4 : 2 functions  function::get_entrust_item_info, logger::logging_process
+  delta   +3 : 3 functions  common_func::get_kline_time_by_frequency_array, fileio_utils::acquire, __init__::_save_testds_to_csv
+  delta   +2 : 9 functions  instance::_init_config, wizard_quant_api::calculate_di, wizard_quant_api::region_mean_desicion, trade_info_utils::trade_operation, real_quote::get_cache_l2_data, real_quote::get_cache_l2_data_by_one, default_event_source::events, trade_live_broker::_trade_status_handle, trade_live_broker::get_ipo_stocks
+  delta   -2 : 2 functions  real_quote::one_prod_to_ndarray, quote_handler::get_Ashares_local
+  delta   -1 : 7 functions  klinedata::_all_bars_of_cache, klinedata::kline_datetime_list, real_quote::get_real_minute_kline, __init__::trade_logs_control, trade_live_broker::get_trades, quote::check_stock, quote::run_tick_socket
+  delta   +1 : 19 functions  klinedata::get_all_real_daily_kline, klinedata::get_history_new, klinedata::get_multiminute_his_data, wizard_quant_api::wizard_quant_check_limit, common_func::fill_kline_data, common_func::fill_kline_data_by_pre, real_quote::get_tick_direction, real_quote::one_prod_to_dataframe, common_func::fill_kline_data_by_pre, trade_live_broker::_process_cancel_order, trade_live_broker::etf_basket_order, trade_live_broker::get_all_orders, trade_live_broker::ipo_stocks_order, quote::check_frequency, quote::is_delisting_stock_real, quote::one_prod_to_dataframe, quote_handler::get_kline_binary, quote_handler::is_delisting_stock_local, flyAccount::init_connection
+  delta   +0 : 5 functions  graph::_process_task_queue, fileio_utils::write, trade_live_broker::after_trading_cancel_order, scheduler::get_checked_time, logger::write_logging_thread

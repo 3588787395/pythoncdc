@@ -1,0 +1,276 @@
+
+########## group extra-jump (3 rows)
+
+=== IQCommon/api/klinedata.pyc :: _all_bars_of_cache  orig=230 decomp=231 delta=+1  (('seq_len', 'orig=230 decomp=231'))
+--- insert orig[54:54] decomp[54:55]
+    O#52  246  LOAD_CONST                     "'20050101'"           L277
+    O#53  248  STORE_FAST                     'start_date'           
+    O#54  250  LOAD_GLOBAL                    'history_cache'        L279
+    O#55  262  LOAD_CONST                     '1'                    
+    D#52  246  LOAD_CONST                     "'20050101'"           L169
+    D#53  248  STORE_FAST                     'start_date'           
+    D#54  250  JUMP_FORWARD                   'to 498'                -> 498   <<PRODUCT-ONLY
+    D#55  252  LOAD_GLOBAL                    'history_cache'        L170
+    D#56  264  LOAD_CONST                     '1'                    
+
+=== IQEngine/plugins/plugin_system_log/__init__.pyc :: trade_logs_control  orig=193 decomp=194 delta=+1  (('seq_len', 'orig=193 decomp=194'))
+--- insert orig[43:43] decomp[43:44]
+    O#41  282  CALL                           ''                     
+    O#42  292  STORE_FAST                     'norm_log_size'        
+    O#43  294  LOAD_GLOBAL                    'os'                   L184
+    O#44  306  LOAD_ATTR                      'path'                 
+    D#41  282  CALL                           ''                     
+    D#42  292  STORE_FAST                     'norm_log_size'        
+    D#43  294  JUMP_FORWARD                   'to 420'                -> 420   <<PRODUCT-ONLY
+    D#44  296  LOAD_GLOBAL                    'os'                   L85
+    D#45  308  LOAD_ATTR                      'path'                 
+
+=== fly/data/quote.pyc :: check_stock  orig=88 decomp=89 delta=+1  (('seq_len', 'orig=88 decomp=89'))
+--- insert orig[41:41] decomp[41:42]
+    O#39  256  CALL                           ''                     
+    O#40  266  POP_TOP                        ''                     
+    O#41  268  LOAD_CONST                     '11'                   L1244
+    O#42  270  LOAD_GLOBAL                    'NULL + len'           
+    D#39  256  CALL                           ''                     
+    D#40  266  POP_TOP                        ''                     
+    D#41  268  JUMP_FORWARD                   'to 346'                -> 346   <<PRODUCT-ONLY
+    D#42  270  LOAD_CONST                     '11'                   L907
+    D#43  272  LOAD_GLOBAL                    'NULL + len'           
+
+########## group klinedata-return (2 rows)
+
+=== IQCommon/api/klinedata.pyc :: get_history_new  orig=322 decomp=323 delta=+1  (('seq_len', 'orig=322 decomp=323'))
+--- replace orig[285:286] decomp[285:287]
+    O#283 1550 LOAD_FAST                      'real_data_dict'       L213
+    O#284 1552 STORE_FAST                     'kline_data_dict'      
+    O#285 1554 JUMP_FORWARD                   'to 1678'               -> 1678   <<ORIG-ONLY
+    O#286 1556 LOAD_FAST                      'frequency'            L216
+    O#287 1558 LOAD_GLOBAL                    'Multi_Minute_Frequency' 
+    D#283 1550 LOAD_FAST                      'real_data_dict'       L116
+    D#284 1552 STORE_FAST                     'kline_data_dict'      
+    D#285 1554 LOAD_FAST                      'kline_data_dict'      L117   <<PRODUCT-ONLY
+    D#286 1556 RETURN_VALUE                   ''                        <<PRODUCT-ONLY
+    D#287 1558 LOAD_FAST                      'frequency'            L118
+    D#288 1560 LOAD_GLOBAL                    'Multi_Minute_Frequency' 
+--- replace orig[320:321] decomp[321:322]
+    O#318 1674 LOAD_FAST                      'his_data_dict'        L223
+    O#319 1676 STORE_FAST                     'kline_data_dict'      
+    O#320 1678 LOAD_FAST                      'kline_data_dict'      L224   <<ORIG-ONLY
+    O#321 1680 RETURN_VALUE                   ''                     
+    D#319 1676 LOAD_FAST                      'his_data_dict'        L122
+    D#320 1678 STORE_FAST                     'kline_data_dict'      
+    D#321 1680 LOAD_CONST                     'None'                    <<PRODUCT-ONLY
+    D#322 1682 RETURN_VALUE                   ''                     
+
+=== IQCommon/api/klinedata.pyc :: get_multiminute_his_data  orig=481 decomp=482 delta=+1  (('seq_len', 'orig=481 decomp=482'))
+--- replace orig[465:466] decomp[465:467]
+    O#463 2700 STORE_SUBSCR                   ''                     
+    O#464 2706 JUMP_BACKWARD                  'to 1468'               -> 1468
+    O#465 2708 JUMP_FORWARD                   'to 2758'              L1052 -> 2758   <<ORIG-ONLY
+    O#466 2710 LOAD_GLOBAL                    'NULL + get_kline_by_count_new' L1093
+    O#467 2722 LOAD_FAST                      'symbols'              
+    D#463 2700 STORE_SUBSCR                   ''                     
+    D#464 2706 JUMP_BACKWARD                  'to 1468'               -> 1468
+    D#465 2708 LOAD_FAST                      'his_data_dict'        L789   <<PRODUCT-ONLY
+    D#466 2710 RETURN_VALUE                   ''                        <<PRODUCT-ONLY
+    D#467 2712 LOAD_GLOBAL                    'NULL + get_kline_by_count_new' L790
+    D#468 2724 LOAD_FAST                      'symbols'              
+--- replace orig[479:480] decomp[480:481]
+    O#477 2746 CALL                           ''                     
+    O#478 2756 STORE_FAST                     'his_data_dict'        
+    O#479 2758 LOAD_FAST                      'his_data_dict'        L1095   <<ORIG-ONLY
+    O#480 2760 RETURN_VALUE                   ''                     
+    D#478 2748 CALL                           ''                     
+    D#479 2758 STORE_FAST                     'his_data_dict'        
+    D#480 2760 LOAD_CONST                     'None'                    <<PRODUCT-ONLY
+    D#481 2762 RETURN_VALUE                   ''                     
+
+########## group equal-length-transposition (5 rows)
+
+=== IQCommon/graph.pyc :: _process_task_queue  orig=378 decomp=378 delta=+0  (('seq_diff', "#119 orig=('None', 'LOAD_CONST') decomp=('<JUMP>', 'JUMP')"))
+--- replace orig[119:121] decomp[119:120]
+    O#117 562  POP_EXCEPT                     ''                     
+    O#118 564  RERAISE                        ''                     
+    O#119 566  LOAD_CONST                     'None'                 L530   <<ORIG-ONLY
+    O#120 568  RETURN_VALUE                   ''                        <<ORIG-ONLY
+    O#121 570  PUSH_EXC_INFO                  ''                     
+    O#122 572  LOAD_GLOBAL                    'KeyError'             L531
+    D#117 562  POP_EXCEPT                     ''                     
+    D#118 564  RERAISE                        ''                     
+    D#119 566  JUMP_FORWARD                   'to 842'               L390 -> 842   <<PRODUCT-ONLY
+    D#120 568  PUSH_EXC_INFO                  ''                     
+    D#121 570  LOAD_GLOBAL                    'KeyError'             L391
+--- insert orig[177:177] decomp[176:178]
+    O#175 840  POP_EXCEPT                     ''                     
+    O#176 842  RERAISE                        ''                     
+    O#177 844  LOAD_FAST                      'level'                L544
+    O#178 846  LOAD_GLOBAL                    'NULL + len'           
+    D#174 838  POP_EXCEPT                     ''                     
+    D#175 840  RERAISE                        ''                     
+    D#176 842  LOAD_CONST                     'None'                 L401   <<PRODUCT-ONLY
+    D#177 844  RETURN_VALUE                   ''                        <<PRODUCT-ONLY
+    D#178 846  LOAD_FAST                      'level'                L403
+    D#179 848  LOAD_GLOBAL                    'NULL + len'           
+--- replace orig[236:238] decomp[237:238]
+    O#234 1110 POP_EXCEPT                     ''                     
+    O#235 1112 RERAISE                        ''                     
+    O#236 1114 LOAD_CONST                     'None'                 L555   <<ORIG-ONLY
+    O#237 1116 RETURN_VALUE                   ''                        <<ORIG-ONLY
+    O#238 1118 PUSH_EXC_INFO                  ''                     
+    O#239 1120 LOAD_GLOBAL                    'KeyError'             L556
+    D#235 1112 POP_EXCEPT                     ''                     
+    D#236 1114 RERAISE                        ''                     
+    D#237 1116 JUMP_FORWARD                   'to 1272'              L415 -> 1272   <<PRODUCT-ONLY
+    D#238 1118 PUSH_EXC_INFO                  ''                     
+    D#239 1120 LOAD_GLOBAL                    'KeyError'             L416
+
+=== IQCommon/util/fileio_utils.pyc :: write  orig=637 decomp=637 delta=+0  (('seq_diff', "#42 orig=('None', 'LOAD_CONST') decomp=('<JUMP>', 'JUMP')"))
+--- replace orig[42:49] decomp[42:43]
+    O#40  202  CALL_FUNCTION_EX               ''                     
+    O#41  204  POP_TOP                        ''                     
+    O#42  208  LOAD_CONST                     'None'                 L330   <<ORIG-ONLY
+    O#43  210  LOAD_CONST                     'None'                    <<ORIG-ONLY
+    O#44  212  LOAD_CONST                     'None'                    <<ORIG-ONLY
+    O#45  218  CALL                           ''                        <<ORIG-ONLY
+    O#46  228  POP_TOP                        ''                        <<ORIG-ONLY
+    O#47  230  LOAD_CONST                     'True'                    <<ORIG-ONLY
+    O#48  232  RETURN_VALUE                   ''                        <<ORIG-ONLY
+    O#49  234  LOAD_FAST                      'data_type'            L336
+    O#50  236  LOAD_CONST                     "'dict'"               
+    D#40  202  CALL_FUNCTION_EX               ''                     
+    D#41  204  POP_TOP                        ''                     
+    D#42  208  JUMP_FORWARD                   'to 778'                -> 778   <<PRODUCT-ONLY
+    D#43  210  LOAD_FAST                      'data_type'            L285
+    D#44  212  LOAD_CONST                     "'dict'"               
+--- insert orig[153:153] decomp[147:154]
+    O#151 796  POP_TOP                        ''                     
+    O#152 798  LOAD_CONST                     'False'                
+    O#153 800  RETURN_VALUE                   ''                     
+    O#154 802  LOAD_FAST                      'self'                 L356
+    D#145 772  POP_TOP                        ''                     
+    D#146 774  LOAD_CONST                     'False'                
+    D#147 776  RETURN_VALUE                   ''                        <<PRODUCT-ONLY
+    D#148 780  LOAD_CONST                     'None'                 L280   <<PRODUCT-ONLY
+    D#149 782  LOAD_CONST                     'None'                    <<PRODUCT-ONLY
+    D#150 784  LOAD_CONST                     'None'                    <<PRODUCT-ONLY
+    D#151 790  CALL                           ''                        <<PRODUCT-ONLY
+    D#152 800  POP_TOP                        ''                        <<PRODUCT-ONLY
+    D#153 802  LOAD_CONST                     'True'                    <<PRODUCT-ONLY
+    D#154 804  RETURN_VALUE                   ''                     
+    D#155 806  LOAD_FAST                      'self'                 L305
+--- replace orig[598:600] decomp[599:600]
+    O#596 2896 CALL                           ''                     
+    O#597 2906 POP_TOP                        ''                     
+    O#598 2908 LOAD_CONST                     'False'                   <<ORIG-ONLY
+    O#599 2910 RETURN_VALUE                   ''                        <<ORIG-ONLY
+    O#600 2912 PUSH_EXC_INFO                  ''                     
+    O#601 2914 WITH_EXCEPT_START              ''                     
+    D#597 2900 CALL                           ''                     
+    D#598 2910 POP_TOP                        ''                     
+    D#599 2912 JUMP_FORWARD                   'to 2936'               -> 2936   <<PRODUCT-ONLY
+    D#600 2914 PUSH_EXC_INFO                  ''                     
+    D#601 2916 WITH_EXCEPT_START              ''                     
+--- replace orig[611:612] decomp[611:612]
+    O#609 2930 POP_TOP                        ''                     
+    O#610 2932 POP_TOP                        ''                     
+    O#611 2934 LOAD_CONST                     'None'                    <<ORIG-ONLY
+    O#612 2936 RETURN_VALUE                   ''                     
+    O#613 2938 PUSH_EXC_INFO                  ''                     
+    D#609 2932 POP_TOP                        ''                     
+    D#610 2934 POP_TOP                        ''                     
+    D#611 2936 LOAD_CONST                     'False'                L367   <<PRODUCT-ONLY
+    D#612 2938 RETURN_VALUE                   ''                     
+    D#613 2940 PUSH_EXC_INFO                  ''                     
+
+=== IQEngine/utils/scheduler.pyc :: get_checked_time  orig=106 decomp=106 delta=+0  (('seq_diff', '#18 orig=("\'divmod\'", \'LOAD_GLOBAL\') decomp=(\'<JUMP>\', \'JUMP\')'))
+--- delete orig[18:25] decomp[18:18]
+    O#16  118  CALL                           ''                     
+    O#17  128  STORE_FAST                     'minute_time'          
+    O#18  130  LOAD_GLOBAL                    'NULL + divmod'        L241   <<ORIG-ONLY
+    O#19  142  LOAD_FAST                      'minute_time'             <<ORIG-ONLY
+    O#20  144  LOAD_CONST                     '100'                     <<ORIG-ONLY
+    O#21  150  CALL                           ''                        <<ORIG-ONLY
+    O#22  160  UNPACK_SEQUENCE                ''                        <<ORIG-ONLY
+    O#23  164  STORE_FAST                     'hour'                    <<ORIG-ONLY
+    O#24  166  STORE_FAST                     'minute'                  <<ORIG-ONLY
+    O#25  168  JUMP_FORWARD                   'to 390'                -> 390
+    O#26  170  PUSH_EXC_INFO                  ''                     
+    D#16  118  CALL                           ''                     
+    D#17  128  STORE_FAST                     'minute_time'          
+    D#18  130  JUMP_FORWARD                   'to 352'                -> 352
+    D#19  132  PUSH_EXC_INFO                  ''                     
+--- insert orig[61:61] decomp[54:61]
+    O#59  386  POP_EXCEPT                     ''                     
+    O#60  388  RERAISE                        ''                     
+    O#61  390  LOAD_FAST                      'self'                 L243
+    O#62  392  LOAD_METHOD                    '_day_minutes'         
+    D#52  348  POP_EXCEPT                     ''                     
+    D#53  350  RERAISE                        ''                     
+    D#54  352  LOAD_GLOBAL                    'NULL + divmod'        L156   <<PRODUCT-ONLY
+    D#55  364  LOAD_FAST                      'minute_time'             <<PRODUCT-ONLY
+    D#56  366  LOAD_CONST                     '100'                     <<PRODUCT-ONLY
+    D#57  372  CALL                           ''                        <<PRODUCT-ONLY
+    D#58  382  UNPACK_SEQUENCE                ''                        <<PRODUCT-ONLY
+    D#59  386  STORE_FAST                     'hour'                    <<PRODUCT-ONLY
+    D#60  388  STORE_FAST                     'minute'                  <<PRODUCT-ONLY
+    D#61  390  LOAD_FAST                      'self'                 L157
+    D#62  392  LOAD_METHOD                    '_day_minutes'         
+
+=== fly/logger.pyc :: write_logging_thread  orig=113 decomp=113 delta=+0  (('seq_diff', '#71 orig=("\'msgs\'", \'LOAD_FAST\') decomp=(\'<JUMP>\', \'JUMP\')'))
+--- delete orig[71:79] decomp[71:71]
+    O#69  360  COMPARE_OP                     '>'                    
+    O#70  366  POP_JUMP_BACKWARD_IF_TRUE      'to 64'                 -> 64
+    O#71  368  LOAD_FAST                      'msgs'                 L113   <<ORIG-ONLY
+    O#72  370  POP_JUMP_FORWARD_IF_FALSE      'to 424'                -> 424   <<ORIG-ONLY
+    O#73  372  LOAD_FAST                      'self'                 L114   <<ORIG-ONLY
+    O#74  374  LOAD_ATTR                      'logger_bt'               <<ORIG-ONLY
+    O#75  384  LOAD_METHOD                    'info'                    <<ORIG-ONLY
+    O#76  406  LOAD_FAST                      'msgs'                    <<ORIG-ONLY
+    O#77  412  CALL                           ''                        <<ORIG-ONLY
+    O#78  422  POP_TOP                        ''                        <<ORIG-ONLY
+    O#79  424  JUMP_FORWARD                   'to 666'                -> 666
+    O#80  426  LOAD_FAST                      'self'                 L116
+    D#69  360  COMPARE_OP                     '>'                    
+    D#70  366  POP_JUMP_BACKWARD_IF_TRUE      'to 64'                 -> 64
+    D#71  368  JUMP_FORWARD                   'to 612'                -> 612
+    D#72  370  LOAD_FAST                      'self'                 L90
+--- insert orig[112:112] decomp[104:112]
+    O#110 662  LOAD_CONST                     'None'                 L124
+    O#111 664  RETURN_VALUE                   ''                     
+    O#112 668  JUMP_BACKWARD                  'to 4'                  -> 4
+    D#102 608  LOAD_CONST                     'None'                 L98
+    D#103 610  RETURN_VALUE                   ''                     
+    D#104 612  LOAD_FAST                      'msgs'                 L99   <<PRODUCT-ONLY
+    D#105 614  POP_JUMP_FORWARD_IF_FALSE      'to 668'                -> 668   <<PRODUCT-ONLY
+    D#106 616  LOAD_FAST                      'self'                 L100   <<PRODUCT-ONLY
+    D#107 618  LOAD_ATTR                      'logger_bt'               <<PRODUCT-ONLY
+    D#108 628  LOAD_METHOD                    'info'                    <<PRODUCT-ONLY
+    D#109 650  LOAD_FAST                      'msgs'                    <<PRODUCT-ONLY
+    D#110 656  CALL                           ''                        <<PRODUCT-ONLY
+    D#111 666  POP_TOP                        ''                        <<PRODUCT-ONLY
+    D#112 670  JUMP_BACKWARD                  'to 4'                  -> 4
+
+=== IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc :: after_trading_cancel_order  orig=156 decomp=159 delta=+3  (('seq_len', 'orig=156 decomp=159'))
+--- insert orig[30:30] decomp[30:32]
+    O#28  160  STORE_FAST                     'order_param'          
+    O#29  162  POP_TOP                        ''                     L3718
+    O#30  164  JUMP_FORWARD                   'to 168'                -> 168
+    O#31  166  JUMP_BACKWARD                  'to 132'               L3716 -> 132
+    D#28  160  STORE_FAST                     'order_param'          
+    D#29  162  POP_TOP                        ''                     L2495
+    D#30  164  LOAD_CONST                     'None'                    <<PRODUCT-ONLY
+    D#31  166  RETURN_VALUE                   ''                        <<PRODUCT-ONLY
+    D#32  168  JUMP_BACKWARD                  'to 132'               L2493 -> 132
+    D#33  170  LOAD_CONST                     'None'                 L2492
+--- replace orig[31:32] decomp[33:35]
+    O#29  162  POP_TOP                        ''                     L3718
+    O#30  164  JUMP_FORWARD                   'to 168'                -> 168
+    O#31  166  JUMP_BACKWARD                  'to 132'               L3716 -> 132   <<ORIG-ONLY
+    O#32  168  LOAD_GLOBAL                    'NULL + isinstance'    L3719
+    O#33  180  LOAD_FAST                      'order_param'          
+    D#31  166  RETURN_VALUE                   ''                     
+    D#32  168  JUMP_BACKWARD                  'to 132'               L2493 -> 132
+    D#33  170  LOAD_CONST                     'None'                 L2492   <<PRODUCT-ONLY
+    D#34  172  RETURN_VALUE                   ''                        <<PRODUCT-ONLY
+    D#35  174  LOAD_GLOBAL                    'NULL + isinstance'    L2496
+    D#36  186  LOAD_FAST                      'order_param'          
