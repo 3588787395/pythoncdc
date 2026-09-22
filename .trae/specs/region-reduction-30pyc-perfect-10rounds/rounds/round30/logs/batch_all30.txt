@@ -1,0 +1,857 @@
+[BATCH] index=pyc_index.json, max_count=None, round=30, include_ok=True
+[BATCH] index=pyc_index.json
+[BATCH] total=402, pending=402, round=30, include_ok=True
+----------------------------------------------------------------------
+[1/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/__init__.pyc
+    OK: 2 funcs, 2 matched, rate=100.00%
+[2/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[3/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/base_api.pyc
+    OK: 2 funcs, 2 matched, rate=100.00%
+[4/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/check_strategy.pyc
+    OK: 2 funcs, 2 matched, rate=100.00%
+[5/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/gtn_api.pyc
+    OK: 5 funcs, 5 matched, rate=100.00%
+[6/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/klinedata.pyc
+    PARTIAL: 45 funcs, 40 matched, rate=88.89%
+[7/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/api/wrapper.pyc
+    OK: 4 funcs, 4 matched, rate=100.00%
+[8/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/arg_checker.pyc
+    OK: 47 funcs, 47 matched, rate=100.00%
+[9/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/backtest/backtest.pyc
+    OK: 2 funcs, 2 matched, rate=100.00%
+[10/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/common/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[11/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/common/config.pyc
+    OK: 2 funcs, 2 matched, rate=100.00%
+[12/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/common/main.pyc
+    PARTIAL: 33 funcs, 29 matched, rate=87.88%
+[13/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/const.pyc
+    OK: 44 funcs, 44 matched, rate=100.00%
+[14/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[15/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/api_data.pyc
+    OK: 14 funcs, 14 matched, rate=100.00%
+[16/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/asset_storage.pyc
+    OK: 8 funcs, 8 matched, rate=100.00%
+[17/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/base_storage.pyc
+    OK: 5 funcs, 5 matched, rate=100.00%
+[18/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/basic_data_source.pyc
+    OK: 8 funcs, 8 matched, rate=100.00%
+[19/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/const.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[20/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/exrights_storage.pyc
+    OK: 8 funcs, 8 matched, rate=100.00%
+[21/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/finance.pyc
+    PARTIAL: 24 funcs, 22 matched, rate=91.67%
+[22/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/history_bar_storage.pyc
+    OK: 4 funcs, 4 matched, rate=100.00%
+[23/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/local_finance.pyc
+    OK: 19 funcs, 19 matched, rate=100.00%
+[24/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/pandas.pyc
+    OK: 2 funcs, 2 matched, rate=100.00%
+[25/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/data/trading_dates_storage.pyc
+    OK: 6 funcs, 6 matched, rate=100.00%
+[26/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/enumerate.pyc
+    OK: 18 funcs, 18 matched, rate=100.00%
+[27/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/exception.pyc
+    OK: 32 funcs, 32 matched, rate=100.00%
+[28/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/generalconf.pyc
+    OK: 11 funcs, 11 matched, rate=100.00%
+[29/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/graph.pyc
+    PARTIAL: 31 funcs, 29 matched, rate=93.55%
+[30/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/i18n.pyc
+    OK: 5 funcs, 5 matched, rate=100.00%
+[31/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/logger/__init__.pyc
+    OK: 22 funcs, 22 matched, rate=100.00%
+[32/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/logger/handlers.pyc
+    OK: 18 funcs, 18 matched, rate=100.00%
+[33/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/manager/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[34/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/manager/instance.pyc
+    PARTIAL: 32 funcs, 31 matched, rate=96.88%
+[35/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/mq_connector.pyc
+    OK: 9 funcs, 9 matched, rate=100.00%
+[36/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/profiler_func.pyc
+    OK: 14 funcs, 14 matched, rate=100.00%
+[37/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[38/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/common.pyc
+    OK: 3 funcs, 3 matched, rate=100.00%
+[39/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/const.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[40/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/hg_api.pyc
+    OK: 11 funcs, 11 matched, rate=100.00%
+[41/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/jq_trans_module.pyc
+    OK: 35 funcs, 35 matched, rate=100.00%
+[42/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/strategy.pyc
+    OK: 2 funcs, 2 matched, rate=100.00%
+[43/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/wizard_quant_api.pyc
+    PARTIAL: 53 funcs, 48 matched, rate=90.57%
+[44/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/strategy/zt_api.pyc
+    OK: 4 funcs, 4 matched, rate=100.00%
+[45/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/tools.pyc
+    OK: 6 funcs, 6 matched, rate=100.00%
+[46/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/trade_schedule.pyc
+    OK: 6 funcs, 6 matched, rate=100.00%
+[47/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/backtest_info_utils.pyc
+    OK: 10 funcs, 10 matched, rate=100.00%
+[48/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/cgroup_utils.pyc
+    OK: 8 funcs, 8 matched, rate=100.00%
+[49/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/common_func.pyc
+    PARTIAL: 21 funcs, 17 matched, rate=80.95%
+[50/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/crypto_utils.pyc
+    OK: 9 funcs, 9 matched, rate=100.00%
+[51/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/datetime_func.pyc
+    OK: 26 funcs, 26 matched, rate=100.00%
+[52/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/docker_info_utils.pyc
+    OK: 7 funcs, 7 matched, rate=100.00%
+[53/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/email_utils.pyc
+    OK: 4 funcs, 4 matched, rate=100.00%
+[54/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/file_delete.pyc
+    OK: 4 funcs, 4 matched, rate=100.00%
+[55/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/fileio_utils.pyc
+    PARTIAL: 14 funcs, 12 matched, rate=85.71%
+[56/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/profiler_utils.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[57/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/pycompatibility.pyc
+    OK: 6 funcs, 6 matched, rate=100.00%
+[58/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/replace_utils.pyc
+    PARTIAL: 9 funcs, 8 matched, rate=88.89%
+[59/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/request_utils.pyc
+    OK: 4 funcs, 4 matched, rate=100.00%
+[60/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/resource_utils.pyc
+    OK: 2 funcs, 2 matched, rate=100.00%
+[61/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/semaphore_utils.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[62/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/strategy_info_utils.pyc
+    OK: 28 funcs, 28 matched, rate=100.00%
+[63/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/t2_utils.pyc
+    OK: 2 funcs, 2 matched, rate=100.00%
+[64/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/trade_info_utils.pyc
+    PARTIAL: 40 funcs, 38 matched, rate=95.00%
+[65/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/tradingday_info_utils.pyc
+    OK: 2 funcs, 2 matched, rate=100.00%
+[66/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/user_info_utils.pyc
+    OK: 9 funcs, 9 matched, rate=100.00%
+[67/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/wrapper_utils.pyc
+    OK: 14 funcs, 14 matched, rate=100.00%
+[68/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/utils.pyc
+    PARTIAL: 22 funcs, 20 matched, rate=90.91%
+[69/402] F:/Downloads/pythoncdc-main/site-packages/IQCommon/version.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[70/402] F:/Downloads/pythoncdc-main/site-packages/IQData/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[71/402] F:/Downloads/pythoncdc-main/site-packages/IQData/api/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[72/402] F:/Downloads/pythoncdc-main/site-packages/IQData/api/api_base.pyc
+    PARTIAL: 25 funcs, 23 matched, rate=92.00%
+[73/402] F:/Downloads/pythoncdc-main/site-packages/IQData/api/api_extra.pyc
+    OK: 4 funcs, 4 matched, rate=100.00%
+[74/402] F:/Downloads/pythoncdc-main/site-packages/IQData/api/api_helper.pyc
+    OK: 4 funcs, 4 matched, rate=100.00%
+[75/402] F:/Downloads/pythoncdc-main/site-packages/IQData/api/get_block_stocks.pyc
+    OK: 2 funcs, 2 matched, rate=100.00%
+[76/402] F:/Downloads/pythoncdc-main/site-packages/IQData/config/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[77/402] F:/Downloads/pythoncdc-main/site-packages/IQData/config/config.pyc
+    OK: 4 funcs, 4 matched, rate=100.00%
+[78/402] F:/Downloads/pythoncdc-main/site-packages/IQData/const.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[79/402] F:/Downloads/pythoncdc-main/site-packages/IQData/core/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[80/402] F:/Downloads/pythoncdc-main/site-packages/IQData/core/asset.pyc
+    OK: 51 funcs, 51 matched, rate=100.00%
+[81/402] F:/Downloads/pythoncdc-main/site-packages/IQData/core/base.pyc
+    OK: 4 funcs, 4 matched, rate=100.00%
+[82/402] F:/Downloads/pythoncdc-main/site-packages/IQData/core/data_cache.pyc
+    OK: 20 funcs, 20 matched, rate=100.00%
+[83/402] F:/Downloads/pythoncdc-main/site-packages/IQData/core/data_manager.pyc
+    OK: 10 funcs, 10 matched, rate=100.00%
+[84/402] F:/Downloads/pythoncdc-main/site-packages/IQData/data/Ashare_storage.pyc
+    OK: 6 funcs, 6 matched, rate=100.00%
+[85/402] F:/Downloads/pythoncdc-main/site-packages/IQData/data/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[86/402] F:/Downloads/pythoncdc-main/site-packages/IQData/data/base_storage.pyc
+    OK: 5 funcs, 5 matched, rate=100.00%
+[87/402] F:/Downloads/pythoncdc-main/site-packages/IQData/data/component_stocks_storage.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[88/402] F:/Downloads/pythoncdc-main/site-packages/IQData/data/date_set_storage.pyc
+    OK: 7 funcs, 7 matched, rate=100.00%
+[89/402] F:/Downloads/pythoncdc-main/site-packages/IQData/data/default_basic_data.pyc
+    OK: 14 funcs, 14 matched, rate=100.00%
+[90/402] F:/Downloads/pythoncdc-main/site-packages/IQData/data/default_history_quote.pyc
+    OK: 4 funcs, 4 matched, rate=100.00%
+[91/402] F:/Downloads/pythoncdc-main/site-packages/IQData/data/default_real_quote.pyc
+    OK: 11 funcs, 11 matched, rate=100.00%
+[92/402] F:/Downloads/pythoncdc-main/site-packages/IQData/data/exrights_storage.pyc
+    OK: 8 funcs, 8 matched, rate=100.00%
+[93/402] F:/Downloads/pythoncdc-main/site-packages/IQData/data/future_info_cn.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[94/402] F:/Downloads/pythoncdc-main/site-packages/IQData/data/market_storage.pyc
+    OK: 7 funcs, 7 matched, rate=100.00%
+[95/402] F:/Downloads/pythoncdc-main/site-packages/IQData/data/merger_storage.pyc
+    OK: 9 funcs, 9 matched, rate=100.00%
+[96/402] F:/Downloads/pythoncdc-main/site-packages/IQData/data/stock_industry_storage.pyc
+    OK: 6 funcs, 6 matched, rate=100.00%
+[97/402] F:/Downloads/pythoncdc-main/site-packages/IQData/data/trading_dates_storage.pyc
+    OK: 6 funcs, 6 matched, rate=100.00%
+[98/402] F:/Downloads/pythoncdc-main/site-packages/IQData/engine/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[99/402] F:/Downloads/pythoncdc-main/site-packages/IQData/engine/engine.pyc
+    OK: 34 funcs, 34 matched, rate=100.00%
+[100/402] F:/Downloads/pythoncdc-main/site-packages/IQData/entry.pyc
+    OK: 5 funcs, 5 matched, rate=100.00%
+[101/402] F:/Downloads/pythoncdc-main/site-packages/IQData/enumerate.pyc
+    OK: 14 funcs, 14 matched, rate=100.00%
+[102/402] F:/Downloads/pythoncdc-main/site-packages/IQData/fly_enum.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[103/402] F:/Downloads/pythoncdc-main/site-packages/IQData/interface.pyc
+    OK: 42 funcs, 42 matched, rate=100.00%
+[104/402] F:/Downloads/pythoncdc-main/site-packages/IQData/manager/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[105/402] F:/Downloads/pythoncdc-main/site-packages/IQData/manager/data_info_manager.pyc
+    OK: 9 funcs, 9 matched, rate=100.00%
+[106/402] F:/Downloads/pythoncdc-main/site-packages/IQData/manager/plugin_manager.pyc
+    OK: 10 funcs, 10 matched, rate=100.00%
+[107/402] F:/Downloads/pythoncdc-main/site-packages/IQData/manager/trading_day_manager.pyc
+    OK: 17 funcs, 17 matched, rate=100.00%
+[108/402] F:/Downloads/pythoncdc-main/site-packages/IQData/modules/WEBCLIENT/gtn_client.pyc
+    OK: 11 funcs, 11 matched, rate=100.00%
+[109/402] F:/Downloads/pythoncdc-main/site-packages/IQData/modules/WEBCLIENT/ibrain_client.pyc
+    OK: 6 funcs, 6 matched, rate=100.00%
+[110/402] F:/Downloads/pythoncdc-main/site-packages/IQData/modules/WEBCLIENT/web_socket_client.pyc
+    OK: 7 funcs, 7 matched, rate=100.00%
+[111/402] F:/Downloads/pythoncdc-main/site-packages/IQData/modules/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[112/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[113/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_history_data_source/__init__.pyc
+    OK: 6 funcs, 6 matched, rate=100.00%
+[114/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_history_data_source/data_source_func.pyc
+    OK: 5 funcs, 5 matched, rate=100.00%
+[115/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_history_data_source/history_bar_storage.pyc
+    OK: 5 funcs, 5 matched, rate=100.00%
+[116/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_history_data_source/history_data_source.pyc
+    OK: 18 funcs, 18 matched, rate=100.00%
+[117/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_basicdata/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[118/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_basicdata/api_basicdata.pyc
+    OK: 25 funcs, 25 matched, rate=100.00%
+[119/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_basicdata/basic_data_source.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[120/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_client_db/__init__.pyc
+    OK: 6 funcs, 6 matched, rate=100.00%
+[121/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_client_db/base_db_table.pyc
+    OK: 2 funcs, 2 matched, rate=100.00%
+[122/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_client_db/client_db.pyc
+    OK: 9 funcs, 9 matched, rate=100.00%
+[123/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_client_db/const.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[124/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_client_db/dynamic_table.pyc
+    OK: 16 funcs, 16 matched, rate=100.00%
+[125/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db/__init__.pyc
+    OK: 6 funcs, 6 matched, rate=100.00%
+[126/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db/api_db.pyc
+    OK: 2 funcs, 2 matched, rate=100.00%
+[127/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db/db_utils.pyc
+    OK: 4 funcs, 4 matched, rate=100.00%
+[128/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db/iqdata_db_base.pyc
+    OK: 21 funcs, 21 matched, rate=100.00%
+[129/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db/iqdata_db_helper.pyc
+    OK: 6 funcs, 6 matched, rate=100.00%
+[130/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db_tools/__init__.pyc
+    OK: 6 funcs, 6 matched, rate=100.00%
+[131/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db_tools/api_db.pyc
+    OK: 8 funcs, 8 matched, rate=100.00%
+[132/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db_tools/db_base.pyc
+    OK: 30 funcs, 30 matched, rate=100.00%
+[133/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_db_tools/db_utils.pyc
+    OK: 2 funcs, 2 matched, rate=100.00%
+[134/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/FLYMODULE/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[135/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/__init__.pyc
+    OK: 6 funcs, 6 matched, rate=100.00%
+[136/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/api.pyc
+    OK: 33 funcs, 33 matched, rate=100.00%
+[137/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/basic_data_source.pyc
+    OK: 41 funcs, 41 matched, rate=100.00%
+[138/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/calexrights_func.pyc
+    OK: 8 funcs, 8 matched, rate=100.00%
+[139/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/data_source_func.pyc
+    OK: 24 funcs, 24 matched, rate=100.00%
+[140/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_basicdata/fly_enum.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[141/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/__init__.pyc
+    OK: 6 funcs, 6 matched, rate=100.00%
+[142/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/api.pyc
+    OK: 11 funcs, 11 matched, rate=100.00%
+[143/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/data_source_func.pyc
+    OK: 3 funcs, 3 matched, rate=100.00%
+[144/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/enumerate.pyc
+    OK: 4 funcs, 4 matched, rate=100.00%
+[145/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/history_bar_storage.pyc
+    OK: 5 funcs, 5 matched, rate=100.00%
+[146/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/history_data_source.pyc
+    PARTIAL: 18 funcs, 16 matched, rate=88.89%
+[147/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_fly_historyquote/history_quote.pyc
+    OK: 4 funcs, 4 matched, rate=100.00%
+[148/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_gtn_request/__init__.pyc
+    OK: 6 funcs, 6 matched, rate=100.00%
+[149/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_gtn_request/api.pyc
+    OK: 4 funcs, 4 matched, rate=100.00%
+[150/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_gtn_request/gtn_request.pyc
+    OK: 6 funcs, 6 matched, rate=100.00%
+[151/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_hqsdk_data_source/__init__.pyc
+    OK: 6 funcs, 6 matched, rate=100.00%
+[152/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_hqsdk_data_source/hqsdk_data_source.pyc
+    OK: 15 funcs, 15 matched, rate=100.00%
+[153/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_hqsdk_data_source/hqsdk_data_source_api.pyc
+    OK: 9 funcs, 9 matched, rate=100.00%
+[154/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_local_finance/__init__.pyc
+    OK: 6 funcs, 6 matched, rate=100.00%
+[155/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_local_finance/api.pyc
+    OK: 2 funcs, 2 matched, rate=100.00%
+[156/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_local_finance/const.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[157/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_local_finance/finance_data_source.pyc
+    OK: 18 funcs, 18 matched, rate=100.00%
+[158/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/__init__.pyc
+    OK: 6 funcs, 6 matched, rate=100.00%
+[159/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/api_realquote.pyc
+    OK: 13 funcs, 13 matched, rate=100.00%
+[160/402] F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/real_quote.pyc
+    PARTIAL: 44 funcs, 38 matched, rate=86.36%
+[161/402] F:/Downloads/pythoncdc-main/site-packages/IQData/utils/__init__.pyc
+    OK: 17 funcs, 17 matched, rate=100.00%
+[162/402] F:/Downloads/pythoncdc-main/site-packages/IQData/utils/arg_checker.pyc
+    OK: 39 funcs, 39 matched, rate=100.00%
+[163/402] F:/Downloads/pythoncdc-main/site-packages/IQData/utils/base_http_client.pyc
+    OK: 7 funcs, 7 matched, rate=100.00%
+[164/402] F:/Downloads/pythoncdc-main/site-packages/IQData/utils/calexrights_func.pyc
+    OK: 8 funcs, 8 matched, rate=100.00%
+[165/402] F:/Downloads/pythoncdc-main/site-packages/IQData/utils/common_func.pyc
+    PARTIAL: 24 funcs, 22 matched, rate=91.67%
+[166/402] F:/Downloads/pythoncdc-main/site-packages/IQData/utils/datetime_func.pyc
+    OK: 25 funcs, 25 matched, rate=100.00%
+[167/402] F:/Downloads/pythoncdc-main/site-packages/IQData/utils/exception.pyc
+    OK: 29 funcs, 29 matched, rate=100.00%
+[168/402] F:/Downloads/pythoncdc-main/site-packages/IQData/utils/function_dict.pyc
+    OK: 3 funcs, 3 matched, rate=100.00%
+[169/402] F:/Downloads/pythoncdc-main/site-packages/IQData/utils/i18n.pyc
+    OK: 5 funcs, 5 matched, rate=100.00%
+[170/402] F:/Downloads/pythoncdc-main/site-packages/IQData/utils/logger/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[171/402] F:/Downloads/pythoncdc-main/site-packages/IQData/utils/logger/logger.pyc
+    OK: 26 funcs, 26 matched, rate=100.00%
+[172/402] F:/Downloads/pythoncdc-main/site-packages/IQData/utils/mysql_conn.pyc
+    OK: 6 funcs, 6 matched, rate=100.00%
+[173/402] F:/Downloads/pythoncdc-main/site-packages/IQData/utils/path_func.pyc
+    OK: 5 funcs, 5 matched, rate=100.00%
+[174/402] F:/Downloads/pythoncdc-main/site-packages/IQData/utils/profiler_func.pyc
+    OK: 13 funcs, 13 matched, rate=100.00%
+[175/402] F:/Downloads/pythoncdc-main/site-packages/IQData/utils/pycompatibility.pyc
+    OK: 6 funcs, 6 matched, rate=100.00%
+[176/402] F:/Downloads/pythoncdc-main/site-packages/IQData/utils/trade_schedule.pyc
+    OK: 4 funcs, 4 matched, rate=100.00%
+[177/402] F:/Downloads/pythoncdc-main/site-packages/IQData/version.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[178/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[179/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/__main__.pyc
+    OK: 3 funcs, 3 matched, rate=100.00%
+[180/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/account/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[181/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/account/base_account.pyc
+    OK: 12 funcs, 12 matched, rate=100.00%
+[182/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/account/base_position.pyc
+    OK: 18 funcs, 18 matched, rate=100.00%
+[183/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/account/order.pyc
+    OK: 52 funcs, 52 matched, rate=100.00%
+[184/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/account/portfolio.pyc
+    OK: 50 funcs, 50 matched, rate=100.00%
+[185/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/account/trade.pyc
+    OK: 23 funcs, 23 matched, rate=100.00%
+[186/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/api/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[187/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/api/api_base.pyc
+    OK: 48 funcs, 48 matched, rate=100.00%
+[188/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/api/api_extra.pyc
+    OK: 5 funcs, 5 matched, rate=100.00%
+[189/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/api/fields.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[190/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/api/helper.pyc
+    OK: 4 funcs, 4 matched, rate=100.00%
+[191/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/config/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[192/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/config/config.pyc
+    OK: 11 funcs, 11 matched, rate=100.00%
+[193/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/const.pyc
+    OK: 38 funcs, 38 matched, rate=100.00%
+[194/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[195/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/asset.pyc
+    OK: 58 funcs, 58 matched, rate=100.00%
+[196/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/bar.pyc
+    OK: 58 funcs, 58 matched, rate=100.00%
+[197/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/base.pyc
+    OK: 4 funcs, 4 matched, rate=100.00%
+[198/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/commission.pyc
+    OK: 10 funcs, 10 matched, rate=100.00%
+[199/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/data_pager.pyc
+    OK: 9 funcs, 9 matched, rate=100.00%
+[200/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/engine/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[201/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/engine/engine.pyc
+    OK: 67 funcs, 67 matched, rate=100.00%
+[202/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/events/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[203/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/events/event.pyc
+    OK: 10 funcs, 10 matched, rate=100.00%
+[204/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/events/event_type.pyc
+    OK: 2 funcs, 2 matched, rate=100.00%
+[205/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/execution_context.pyc
+    OK: 17 funcs, 17 matched, rate=100.00%
+[206/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/executor.pyc
+    OK: 10 funcs, 10 matched, rate=100.00%
+[207/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/manager/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[208/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/persist_helper.pyc
+    OK: 9 funcs, 9 matched, rate=100.00%
+[209/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/plugin_manager.pyc
+    OK: 9 funcs, 9 matched, rate=100.00%
+[210/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/slippage.pyc
+    OK: 7 funcs, 7 matched, rate=100.00%
+[211/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/strategy/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[212/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy.pyc
+    OK: 19 funcs, 19 matched, rate=100.00%
+[213/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy_context.pyc
+    OK: 31 funcs, 31 matched, rate=100.00%
+[214/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy_loader.pyc
+    OK: 9 funcs, 9 matched, rate=100.00%
+[215/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/strategy/strategy_universe.pyc
+    OK: 11 funcs, 11 matched, rate=100.00%
+[216/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/core/user_variables.pyc
+    OK: 6 funcs, 6 matched, rate=100.00%
+[217/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[218/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/asset_mixin.pyc
+    OK: 16 funcs, 16 matched, rate=100.00%
+[219/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/data_cache.pyc
+    OK: 13 funcs, 13 matched, rate=100.00%
+[220/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/data_proxy.pyc
+    OK: 9 funcs, 9 matched, rate=100.00%
+[221/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/default_info.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[222/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/exrights_storage.pyc
+    OK: 6 funcs, 6 matched, rate=100.00%
+[223/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/merger_storage.pyc
+    OK: 7 funcs, 7 matched, rate=100.00%
+[224/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/trading_dates_mixin.pyc
+    OK: 14 funcs, 14 matched, rate=100.00%
+[225/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/data/trading_dates_storage.pyc
+    OK: 4 funcs, 4 matched, rate=100.00%
+[226/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/interface.pyc
+    OK: 105 funcs, 105 matched, rate=100.00%
+[227/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/main.pyc
+    OK: 3 funcs, 3 matched, rate=100.00%
+[228/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[229/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_api/__init__.pyc
+    OK: 7 funcs, 7 matched, rate=100.00%
+[230/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_api/base_api.pyc
+    OK: 6 funcs, 6 matched, rate=100.00%
+[231/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_api/empty_api_backtest.pyc
+    OK: 62 funcs, 62 matched, rate=100.00%
+[232/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_api/empty_api_trade.pyc
+    OK: 10 funcs, 10 matched, rate=100.00%
+[233/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/__init__.pyc
+    OK: 20 funcs, 20 matched, rate=100.00%
+[234/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/const.pyc
+    OK: 9 funcs, 9 matched, rate=100.00%
+[235/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[236/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/base.pyc
+    PARTIAL: 41 funcs, 39 matched, rate=95.12%
+[237/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/history_api.pyc
+    OK: 18 funcs, 18 matched, rate=100.00%
+[238/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/individual_api_backtest.pyc
+    OK: 3 funcs, 3 matched, rate=100.00%
+[239/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/individual_api_trade.pyc
+    OK: 4 funcs, 4 matched, rate=100.00%
+[240/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api.pyc
+    PARTIAL: 34 funcs, 30 matched, rate=88.24%
+[241/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api_backtest.pyc
+    OK: 10 funcs, 10 matched, rate=100.00%
+[242/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/order_api_trade.pyc
+    OK: 24 funcs, 24 matched, rate=100.00%
+[243/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/other_api.pyc
+    OK: 12 funcs, 12 matched, rate=100.00%
+[244/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/real_api.pyc
+    OK: 8 funcs, 8 matched, rate=100.00%
+[245/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/real_api_backtest.pyc
+    OK: 2 funcs, 2 matched, rate=100.00%
+[246/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/real_api_trade.pyc
+    OK: 3 funcs, 3 matched, rate=100.00%
+[247/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/scheduler_api.pyc
+    OK: 13 funcs, 13 matched, rate=100.00%
+[248/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/fly_api/setting_api.pyc
+    OK: 15 funcs, 15 matched, rate=100.00%
+[249/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/local_variables/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[250/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/local_variables/bar.pyc
+    OK: 22 funcs, 22 matched, rate=100.00%
+[251/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/local_variables/finance.pyc
+    OK: 108 funcs, 108 matched, rate=100.00%
+[252/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/quote/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[253/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/quote/get_stock_status.pyc
+    OK: 8 funcs, 8 matched, rate=100.00%
+[254/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/quote/open_platform.pyc
+    OK: 19 funcs, 19 matched, rate=100.00%
+[255/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/strategy/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[256/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc
+    PARTIAL: 24 funcs, 23 matched, rate=95.83%
+[257/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data_source/__init__.pyc
+    OK: 7 funcs, 7 matched, rate=100.00%
+[258/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data_source/fly_bar_storage.pyc
+    OK: 9 funcs, 9 matched, rate=100.00%
+[259/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data_source/fly_data_source.pyc
+    OK: 70 funcs, 70 matched, rate=100.00%
+[260/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data_source/fly_quotation_func.pyc
+    OK: 8 funcs, 8 matched, rate=100.00%
+[261/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/__init__.pyc
+    OK: 6 funcs, 6 matched, rate=100.00%
+[262/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[263/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/benchmark_account.pyc
+    OK: 20 funcs, 20 matched, rate=100.00%
+[264/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/future_account.pyc
+    OK: 30 funcs, 30 matched, rate=100.00%
+[265/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/live_future_account.pyc
+    OK: 22 funcs, 22 matched, rate=100.00%
+[266/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/live_hks_account.pyc
+    OK: 21 funcs, 21 matched, rate=100.00%
+[267/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/live_option_account.pyc
+    OK: 23 funcs, 23 matched, rate=100.00%
+[268/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/option_account.pyc
+    OK: 31 funcs, 31 matched, rate=100.00%
+[269/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/account_model/stock_account.pyc
+    OK: 25 funcs, 25 matched, rate=100.00%
+[270/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/api/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[271/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/api/api_future.pyc
+    OK: 8 funcs, 8 matched, rate=100.00%
+[272/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/api/api_option.pyc
+    OK: 4 funcs, 4 matched, rate=100.00%
+[273/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/api/api_stock.pyc
+    OK: 11 funcs, 11 matched, rate=100.00%
+[274/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[275/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/future_position.pyc
+    OK: 72 funcs, 72 matched, rate=100.00%
+[276/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/live_future_position.pyc
+    OK: 64 funcs, 64 matched, rate=100.00%
+[277/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/live_hks_position.pyc
+    OK: 16 funcs, 16 matched, rate=100.00%
+[278/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/live_option_position.pyc
+    OK: 51 funcs, 51 matched, rate=100.00%
+[279/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/live_stock_position.pyc
+    OK: 12 funcs, 12 matched, rate=100.00%
+[280/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/option_position.pyc
+    OK: 60 funcs, 60 matched, rate=100.00%
+[281/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_accounts/position_model/stock_position.pyc
+    OK: 37 funcs, 37 matched, rate=100.00%
+[282/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_control/__init__.pyc
+    OK: 13 funcs, 13 matched, rate=100.00%
+[283/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_debug/__init__.pyc
+    OK: 6 funcs, 6 matched, rate=100.00%
+[284/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/__init__.pyc
+    OK: 6 funcs, 6 matched, rate=100.00%
+[285/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/default_event_source.pyc
+    PARTIAL: 14 funcs, 13 matched, rate=92.86%
+[286/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/factor_event_source.pyc
+    OK: 5 funcs, 5 matched, rate=100.00%
+[287/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc
+    PARTIAL: 12 funcs, 11 matched, rate=91.67%
+[288/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/__init__.pyc
+    OK: 6 funcs, 6 matched, rate=100.00%
+[289/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/api.pyc
+    OK: 5 funcs, 5 matched, rate=100.00%
+[290/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/commission.pyc
+    OK: 18 funcs, 18 matched, rate=100.00%
+[291/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/slippage.pyc
+    OK: 14 funcs, 14 matched, rate=100.00%
+[292/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_finance/tax.pyc
+    OK: 7 funcs, 7 matched, rate=100.00%
+[293/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_history_save/__init__.pyc
+    OK: 10 funcs, 10 matched, rate=100.00%
+[294/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_log/__init__.pyc
+    PARTIAL: 10 funcs, 8 matched, rate=80.00%
+[295/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_matcher/__init__.pyc
+    OK: 6 funcs, 6 matched, rate=100.00%
+[296/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_matcher/matcher.pyc
+    PARTIAL: 17 funcs, 16 matched, rate=94.12%
+[297/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_persist/__init__.pyc
+    OK: 15 funcs, 15 matched, rate=100.00%
+[298/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_persist/json_persistance.pyc
+    OK: 7 funcs, 7 matched, rate=100.00%
+[299/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_persist/recorder.pyc
+    OK: 10 funcs, 10 matched, rate=100.00%
+[300/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_progress/__init__.pyc
+    OK: 6 funcs, 6 matched, rate=100.00%
+[301/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_progress/system_progress.pyc
+    OK: 11 funcs, 11 matched, rate=100.00%
+[302/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/__init__.pyc
+    PARTIAL: 35 funcs, 32 matched, rate=91.43%
+[303/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/function.pyc
+    PARTIAL: 15 funcs, 14 matched, rate=93.33%
+[304/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/risk_calculation.pyc
+    OK: 29 funcs, 29 matched, rate=100.00%
+[305/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_control/__init__.pyc
+    OK: 6 funcs, 6 matched, rate=100.00%
+[306/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_control/base_validator.pyc
+    OK: 6 funcs, 6 matched, rate=100.00%
+[307/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_control/cash_validator.pyc
+    OK: 8 funcs, 8 matched, rate=100.00%
+[308/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_control/position_validator.pyc
+    OK: 5 funcs, 5 matched, rate=100.00%
+[309/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_control/price_validator.pyc
+    OK: 5 funcs, 5 matched, rate=100.00%
+[310/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_control/time_validator.pyc
+    OK: 5 funcs, 5 matched, rate=100.00%
+[311/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_simulation/__init__.pyc
+    OK: 6 funcs, 6 matched, rate=100.00%
+[312/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_simulation/broker.pyc
+    OK: 24 funcs, 24 matched, rate=100.00%
+[313/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_simulation/live.pyc
+    OK: 26 funcs, 26 matched, rate=100.00%
+[314/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/__init__.pyc
+    OK: 6 funcs, 6 matched, rate=100.00%
+[315/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/api.pyc
+    OK: 57 funcs, 57 matched, rate=100.00%
+[316/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/brokerFactory.pyc
+    OK: 3 funcs, 3 matched, rate=100.00%
+[317/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/enums.pyc
+    OK: 10 funcs, 10 matched, rate=100.00%
+[318/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/function.pyc
+    PARTIAL: 71 funcs, 69 matched, rate=97.18%
+[319/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/ptrade_broker.pyc
+    OK: 11 funcs, 11 matched, rate=100.00%
+[320/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/ptrade_future_broker.pyc
+    OK: 10 funcs, 10 matched, rate=100.00%
+[321/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/ptrade_hks_broker.pyc
+    OK: 9 funcs, 9 matched, rate=100.00%
+[322/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/ptrade_option_broker.pyc
+    OK: 10 funcs, 10 matched, rate=100.00%
+[323/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/send_message_api.pyc
+    OK: 4 funcs, 4 matched, rate=100.00%
+[324/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade/trade_live_broker.pyc
+    PARTIAL: 119 funcs, 104 matched, rate=87.39%
+[325/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade_account/__init__.pyc
+    OK: 6 funcs, 6 matched, rate=100.00%
+[326/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_trade_account/trade_stock_account.pyc
+    OK: 13 funcs, 13 matched, rate=100.00%
+[327/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/user_module.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[328/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/__init__.pyc
+    OK: 32 funcs, 32 matched, rate=100.00%
+[329/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/arg_checker.pyc
+    OK: 43 funcs, 43 matched, rate=100.00%
+[330/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/bcolz_help.pyc
+    OK: 5 funcs, 5 matched, rate=100.00%
+[331/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/cache_storage.pyc
+    OK: 21 funcs, 21 matched, rate=100.00%
+[332/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/compile_help.pyc
+    OK: 2 funcs, 2 matched, rate=100.00%
+[333/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/datetime_func.pyc
+    OK: 17 funcs, 17 matched, rate=100.00%
+[334/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/decorator.pyc
+    OK: 3 funcs, 3 matched, rate=100.00%
+[335/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/encrypt.pyc
+    OK: 6 funcs, 6 matched, rate=100.00%
+[336/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/exception.pyc
+    OK: 29 funcs, 29 matched, rate=100.00%
+[337/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/global_variable.pyc
+    OK: 8 funcs, 8 matched, rate=100.00%
+[338/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/i18n.pyc
+    OK: 5 funcs, 5 matched, rate=100.00%
+[339/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/logger/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[340/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/logger/handlers.pyc
+    OK: 14 funcs, 14 matched, rate=100.00%
+[341/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/option.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[342/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/profiler_func.pyc
+    OK: 15 funcs, 15 matched, rate=100.00%
+[343/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/pycompatibility.pyc
+    OK: 6 funcs, 6 matched, rate=100.00%
+[344/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/record_store.pyc
+    OK: 5 funcs, 5 matched, rate=100.00%
+[345/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/report.pyc
+    OK: 5 funcs, 5 matched, rate=100.00%
+[346/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/scheduler.pyc
+    PARTIAL: 45 funcs, 42 matched, rate=93.33%
+[347/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/utils/trade_schedule.pyc
+    OK: 9 funcs, 9 matched, rate=100.00%
+[348/402] F:/Downloads/pythoncdc-main/site-packages/IQEngine/version.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[349/402] F:/Downloads/pythoncdc-main/site-packages/fly/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[350/402] F:/Downloads/pythoncdc-main/site-packages/fly/common/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[351/402] F:/Downloads/pythoncdc-main/site-packages/fly/common/aes_encrypt.pyc
+    OK: 7 funcs, 7 matched, rate=100.00%
+[352/402] F:/Downloads/pythoncdc-main/site-packages/fly/common/common.pyc
+    OK: 6 funcs, 6 matched, rate=100.00%
+[353/402] F:/Downloads/pythoncdc-main/site-packages/fly/common/const.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[354/402] F:/Downloads/pythoncdc-main/site-packages/fly/common/convert.pyc
+    OK: 8 funcs, 8 matched, rate=100.00%
+[355/402] F:/Downloads/pythoncdc-main/site-packages/fly/common/custom_tools.pyc
+    OK: 6 funcs, 6 matched, rate=100.00%
+[356/402] F:/Downloads/pythoncdc-main/site-packages/fly/common/enums.pyc
+    OK: 4 funcs, 4 matched, rate=100.00%
+[357/402] F:/Downloads/pythoncdc-main/site-packages/fly/common/errors.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[358/402] F:/Downloads/pythoncdc-main/site-packages/fly/common/fly_exception.pyc
+    OK: 8 funcs, 8 matched, rate=100.00%
+[359/402] F:/Downloads/pythoncdc-main/site-packages/fly/common/flydefine.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[360/402] F:/Downloads/pythoncdc-main/site-packages/fly/common/flyqueue.pyc
+    OK: 7 funcs, 7 matched, rate=100.00%
+[361/402] F:/Downloads/pythoncdc-main/site-packages/fly/common/flytools.pyc
+    PARTIAL: 65 funcs, 64 matched, rate=98.46%
+[362/402] F:/Downloads/pythoncdc-main/site-packages/fly/common/function.pyc
+    OK: 4 funcs, 4 matched, rate=100.00%
+[363/402] F:/Downloads/pythoncdc-main/site-packages/fly/common/future_contract_info.pyc
+    OK: 29 funcs, 29 matched, rate=100.00%
+[364/402] F:/Downloads/pythoncdc-main/site-packages/fly/common/future_param.pyc
+    OK: 16 funcs, 16 matched, rate=100.00%
+[365/402] F:/Downloads/pythoncdc-main/site-packages/fly/common/global_param.pyc
+    OK: 10 funcs, 10 matched, rate=100.00%
+[366/402] F:/Downloads/pythoncdc-main/site-packages/fly/common/inform_info.pyc
+    OK: 4 funcs, 4 matched, rate=100.00%
+[367/402] F:/Downloads/pythoncdc-main/site-packages/fly/common/login_time.pyc
+    OK: 4 funcs, 4 matched, rate=100.00%
+[368/402] F:/Downloads/pythoncdc-main/site-packages/fly/common/market_time.pyc
+    OK: 10 funcs, 10 matched, rate=100.00%
+[369/402] F:/Downloads/pythoncdc-main/site-packages/fly/common/multiprocess_syn.pyc
+    OK: 35 funcs, 35 matched, rate=100.00%
+[370/402] F:/Downloads/pythoncdc-main/site-packages/fly/common/op_station.pyc
+    OK: 11 funcs, 11 matched, rate=100.00%
+[371/402] F:/Downloads/pythoncdc-main/site-packages/fly/common/trading_schedule.pyc
+    OK: 4 funcs, 4 matched, rate=100.00%
+[372/402] F:/Downloads/pythoncdc-main/site-packages/fly/common/tradingday_calendar.pyc
+    OK: 28 funcs, 28 matched, rate=100.00%
+[373/402] F:/Downloads/pythoncdc-main/site-packages/fly/common/user_error.pyc
+    OK: 4 funcs, 4 matched, rate=100.00%
+[374/402] F:/Downloads/pythoncdc-main/site-packages/fly/data/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[375/402] F:/Downloads/pythoncdc-main/site-packages/fly/data/quotation.pyc
+    OK: 143 funcs, 143 matched, rate=100.00%
+[376/402] F:/Downloads/pythoncdc-main/site-packages/fly/data/quote.pyc
+    PARTIAL: 81 funcs, 67 matched, rate=82.72%
+[377/402] F:/Downloads/pythoncdc-main/site-packages/fly/data/quote_handler.pyc
+    PARTIAL: 57 funcs, 50 matched, rate=87.72%
+[378/402] F:/Downloads/pythoncdc-main/site-packages/fly/dockerspawner/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[379/402] F:/Downloads/pythoncdc-main/site-packages/fly/dockerspawner/dockerspawner.pyc
+    OK: 25 funcs, 25 matched, rate=100.00%
+[380/402] F:/Downloads/pythoncdc-main/site-packages/fly/dumpload/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[381/402] F:/Downloads/pythoncdc-main/site-packages/fly/dumpload/load_algo.pyc
+    OK: 2 funcs, 2 matched, rate=100.00%
+[382/402] F:/Downloads/pythoncdc-main/site-packages/fly/dumpload/load_daily.pyc
+<decompiled>:192: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:192: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:192: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:192: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:192: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:381: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:381: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:381: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:381: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:381: SyntaxWarning: "is" with a literal. Did you mean "=="?
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+    OK: 23 funcs, 23 matched, rate=100.00%
+[383/402] F:/Downloads/pythoncdc-main/site-packages/fly/event/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[384/402] F:/Downloads/pythoncdc-main/site-packages/fly/event/event.pyc
+    OK: 4 funcs, 4 matched, rate=100.00%
+[385/402] F:/Downloads/pythoncdc-main/site-packages/fly/event/event_engine.pyc
+    OK: 19 funcs, 19 matched, rate=100.00%
+[386/402] F:/Downloads/pythoncdc-main/site-packages/fly/event/event_priority.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[387/402] F:/Downloads/pythoncdc-main/site-packages/fly/event/event_type.pyc
+    OK: 5 funcs, 5 matched, rate=100.00%
+[388/402] F:/Downloads/pythoncdc-main/site-packages/fly/g.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[389/402] F:/Downloads/pythoncdc-main/site-packages/fly/generalconf.pyc
+    OK: 9 funcs, 9 matched, rate=100.00%
+[390/402] F:/Downloads/pythoncdc-main/site-packages/fly/logger.pyc
+    PARTIAL: 30 funcs, 28 matched, rate=93.33%
+[391/402] F:/Downloads/pythoncdc-main/site-packages/fly/oauthenticator/__init__.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[392/402] F:/Downloads/pythoncdc-main/site-packages/fly/oauthenticator/hsid.pyc
+<decompiled>:16: SyntaxWarning: "is" with a literal. Did you mean "=="?
+F:\Downloads\pythoncdc-main\site-packages\fly\oauthenticator\hsidOK.py:19: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if hsid_login_url is '':
+    OK: 4 funcs, 4 matched, rate=100.00%
+[393/402] F:/Downloads/pythoncdc-main/site-packages/fly/oauthenticator/itn.pyc
+    OK: 14 funcs, 14 matched, rate=100.00%
+[394/402] F:/Downloads/pythoncdc-main/site-packages/fly/oauthenticator/oauth2.pyc
+    OK: 11 funcs, 11 matched, rate=100.00%
+[395/402] F:/Downloads/pythoncdc-main/site-packages/fly/server_version.pyc
+    OK: 1 funcs, 1 matched, rate=100.00%
+[396/402] F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/accountFactory.pyc
+    OK: 3 funcs, 3 matched, rate=100.00%
+[397/402] F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/flyAccount.pyc
+    PARTIAL: 23 funcs, 21 matched, rate=91.30%
+[398/402] F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/pboxAccount_jupyterhub.pyc
+    OK: 4 funcs, 4 matched, rate=100.00%
+[399/402] F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/ptradeAccount.pyc
+    OK: 137 funcs, 137 matched, rate=100.00%
+[400/402] F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/ptradeFutureAccount.pyc
+    OK: 38 funcs, 38 matched, rate=100.00%
+[401/402] F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/ptradeOptionAccount.pyc
+    OK: 38 funcs, 38 matched, rate=100.00%
+[402/402] F:/Downloads/pythoncdc-main/site-packages/fly/simtradding/request_data_transform.pyc
+    OK: 2 funcs, 2 matched, rate=100.00%
+----------------------------------------------------------------------
+[BATCH] index written back: pyc_index.json
+
+======================================================================
+累计统计:
+  total_pyc:             402
+  verified_pyc:          402
+  ok_pyc:                370
+  partial_pyc:           32
+  failed_pyc:            0
+  total_functions:       5746
+  matched_functions:     5642
+  cumulative_match_rate: 98.19%
+======================================================================
+
+G6 完成判据：进程在后台分离运行，shell 退出码不写进日志，故完成性只由日志自身证据确立 —— 末条进度标记 [402/402]、"[BATCH] index written back: pyc_index.json" 恰出现 1 次、Traceback/KeyboardInterrupt/MemoryError 共 0 行、结尾统计块完整打印。

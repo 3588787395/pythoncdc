@@ -4097,6 +4097,17 @@ back_edge_block 随 while/for 隐式表达（"底部闩锁"），不应作为独
                     _r102_worklist.append(_rs)
             if break_blocks:
                 for break_block in break_blocks:
+                    # R30-C1（原则 2 每块唯一归属 · break 角色侧）：候选 break 块是离开本区域的
+                    # 块，若它的终止指令属于向后跳转类而落点又不是本区域的头部，那条边就是**外层**
+                    # loop 的回边而不是本 loop 的 break 出口 —— 不核验、不并入区域块集，它也就不被
+                    # 内层渲染的批量入账变成无人发射的块。只读块自身（终止指令的 opname 类＋落点与
+                    # 头部的同一性），不读偏移常量／名字／条数；只删不增，不命中时逐字节不变。
+                    _r30c1_last = (break_block.get_last_instruction()
+                                   if break_block.instructions else None)
+                    if (_r30c1_last is not None
+                            and _r30c1_last.opname in BACKWARD_JUMP_OPS
+                            and _r30c1_last.argval != header.start_offset):
+                        continue
                     if any(pred in _r102_reachable for pred in break_block.predecessors):
                         verified_break_blocks.add(break_block)
                         if break_block in body:

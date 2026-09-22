@@ -1,0 +1,50 @@
+=== HEAD (landed core) ===
+<module>.DefaultEventSource.events  events
+  filtered orig=512 decomp=493 delta=-19   non-equal blocks=4
+  H1 delete   orig[352:367] @2380..2472  ->  decomp[352:352] @2382..2378   n=15/0
+        o  @2380  ("'day'", 'LOAD_FAST')
+        o  @2382  ("'to_pydatetime'", 'LOAD_METHOD')
+        o  @2408  ('0', 'CALL')
+        o  @2418  ("'date'", 'STORE_FAST')
+        o  @2420  ('None', 'LOAD_CONST')
+        o  @2422  ("'last_tick'", 'STORE_FAST')
+  H2 replace  orig[481:483] @3208..3212  ->  decomp[466:474] @3116..3162   n=2/8
+        o  @3208  ('<JUMP>', 'JUMP')
+        o  @3212  ('<JUMP>', 'JUMP')
+        d  @3116  ("'day'", 'LOAD_FAST')
+        d  @3118  ("'to_pydatetime'", 'LOAD_METHOD')
+        d  @3144  ('0', 'CALL')
+        d  @3154  ("'date'", 'STORE_FAST')
+        d  @3156  ('None', 'LOAD_CONST')
+        d  @3158  ("'last_tick'", 'STORE_FAST')
+  H3 replace  orig[485:486] @3238..3238  ->  decomp[476:477] @3188..3188   n=1/1
+        o  @3238  ('15', 'LOAD_CONST')
+        d  @3188  ('8', 'LOAD_CONST')
+  H4 replace  orig[489:500] @3258..3318  ->  decomp[480:481] @3208..3208   n=11/1
+        o  @3258  ("'dt'", 'STORE_FAST')
+        o  @3260  ("'Event'", 'LOAD_GLOBAL')
+        o  @3272  ("'EventEnum'", 'LOAD_GLOBAL')
+        o  @3284  ("'AFTER_TRADING_END'", 'LOAD_ATTR')
+        o  @3294  ("'dt'", 'LOAD_FAST')
+        o  @3296  ("'dt'", 'LOAD_FAST')
+        d  @3208  ("'dt_before_day_trading'", 'STORE_FAST')
+
+=== C1 (landed this round) ===
+<module>.DefaultEventSource.events  events
+  filtered orig=512 decomp=510 delta=-2   non-equal blocks=2
+  H1 delete   orig[352:367] @2380..2472  ->  decomp[352:352] @2382..2378   n=15/0
+        o  @2380  ("'day'", 'LOAD_FAST')
+        o  @2382  ("'to_pydatetime'", 'LOAD_METHOD')
+        o  @2408  ('0', 'CALL')
+        o  @2418  ("'date'", 'STORE_FAST')
+        o  @2420  ('None', 'LOAD_CONST')
+        o  @2422  ("'last_tick'", 'STORE_FAST')
+  H2 replace  orig[481:483] @3208..3212  ->  decomp[466:481] @3116..3208   n=2/15
+        o  @3208  ('<JUMP>', 'JUMP')
+        o  @3212  ('<JUMP>', 'JUMP')
+        d  @3116  ("'day'", 'LOAD_FAST')
+        d  @3118  ("'to_pydatetime'", 'LOAD_METHOD')
+        d  @3144  ('0', 'CALL')
+        d  @3154  ("'date'", 'STORE_FAST')
+        d  @3156  ('None', 'LOAD_CONST')
+        d  @3158  ("'last_tick'", 'STORE_FAST')

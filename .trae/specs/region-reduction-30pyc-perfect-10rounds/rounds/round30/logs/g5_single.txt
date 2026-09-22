@@ -1,0 +1,93 @@
+### site-packages/IQEngine/plugins/plugin_system_event_source/default_event_source.pyc
+[SINGLE] F:\Downloads\pythoncdc-main\site-packages\IQEngine\plugins\plugin_system_event_source\default_event_source.pyc
+  OK.py: F:\Downloads\pythoncdc-main\site-packages\IQEngine\plugins\plugin_system_event_source\default_event_sourceOK.py
+  source: 10261 chars
+
+字节码 diff 报告:
+  decompile_status:   partial
+  total_functions:   14
+  matched_functions: 13
+  match_rate:        92.86%
+  missing_in_decomp: []
+  extra_in_decomp:   []
+  mismatches (1):
+    - events: orig=510 decomp=508 jump_diffs=2 true_diffs=157
+      first_diff: {'index': 352, 'orig_op': 'LOAD_FAST', 'decomp_op': 'LOAD_FAST', 'orig_arg': 'day', 'decomp_arg': 'self'}
+### site-packages/fly/dumpload/load_daily.pyc
+[SINGLE] F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_daily.pyc
+<decompiled>:192: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:192: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:192: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:192: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:192: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:381: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:381: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:381: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:381: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:381: SyntaxWarning: "is" with a literal. Did you mean "=="?
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:195: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py:384: SyntaxWarning: "is" with a literal. Did you mean "=="?
+  if typet is 1 or typet is 2 or typet is 3 or typet is 4 or typet is 5:
+  OK.py: F:\Downloads\pythoncdc-main\site-packages\fly\dumpload\load_dailyOK.py
+  source: 24545 chars
+
+字节码 diff 报告:
+  decompile_status:   ok
+  total_functions:   23
+  matched_functions: 23
+  match_rate:        100.00%
+  missing_in_decomp: []
+  extra_in_decomp:   []
+### site-packages/fly/data/quotation.pyc
+[SINGLE] F:\Downloads\pythoncdc-main\site-packages\fly\data\quotation.pyc
+  OK.py: F:\Downloads\pythoncdc-main\site-packages\fly\data\quotationOK.py
+  source: 176734 chars
+
+字节码 diff 报告:
+  decompile_status:   ok
+  total_functions:   143
+  matched_functions: 143
+  match_rate:        100.00%
+  missing_in_decomp: []
+  extra_in_decomp:   []
+### site-packages/IQEngine/plugins/plugin_system_persist/__init__.pyc
+[SINGLE] F:\Downloads\pythoncdc-main\site-packages\IQEngine\plugins\plugin_system_persist\__init__.pyc
+  OK.py: F:\Downloads\pythoncdc-main\site-packages\IQEngine\plugins\plugin_system_persist\__init__OK.py
+  source: 7667 chars
+
+字节码 diff 报告:
+  decompile_status:   ok
+  total_functions:   15
+  matched_functions: 15
+  match_rate:        100.00%
+  missing_in_decomp: []
+  extra_in_decomp:   []
+### site-packages/fly/common/custom_tools.pyc
+[SINGLE] F:\Downloads\pythoncdc-main\site-packages\fly\common\custom_tools.pyc
+  OK.py: F:\Downloads\pythoncdc-main\site-packages\fly\common\custom_toolsOK.py
+  source: 4534 chars
+
+字节码 diff 报告:
+  decompile_status:   ok
+  total_functions:   6
+  matched_functions: 6
+  match_rate:        100.00%
+  missing_in_decomp: []
+  extra_in_decomp:   []

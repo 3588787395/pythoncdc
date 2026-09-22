@@ -1,0 +1,9 @@
+baseline(landed round29 index): files 402 partial 32 sum_deficit 104 deficit1 8
+  F:/Downloads/pythoncdc-main/site-packages/IQCommon/manager/instance.pyc 31/32
+  F:/Downloads/pythoncdc-main/site-packages/IQCommon/util/replace_utils.pyc 8/9
+  F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc 23/24
+  F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/default_event_source.pyc 13/14
+  F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc 11/12
+  F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_matcher/matcher.pyc 16/17
+  F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_risk_calculation/function.pyc 14/15
+  F:/Downloads/pythoncdc-main/site-packages/fly/common/flytools.pyc      64/65

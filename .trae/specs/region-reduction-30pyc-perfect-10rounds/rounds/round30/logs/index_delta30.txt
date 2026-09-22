@@ -1,0 +1,5 @@
+last_tested_round            changed in 402 entries
+    (... all 402 entries re-stamped 29 -> 30, list elided)
+total fields touched: ['last_tested_round']
+entries compared: 402, path list identical: True
+entries with real (non round-stamp) field changes: 0 -> []

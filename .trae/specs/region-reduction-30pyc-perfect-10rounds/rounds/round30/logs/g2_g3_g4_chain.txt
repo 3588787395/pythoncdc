@@ -1,0 +1,22 @@
+@@@ G2' 38-synthetic battery (head vs c1)
+rc=0
+rc=0
+rc=0
+--- tally --- {"SAME": 38, "IMPROVED": 0, "REGRESSION": 0, "MOVED": 0, "other": 0}
+@@@ G3 96-anchor battery
+rc=0
+rc=0
+rc=0
+--- tally --- {"SAME": 96, "IMPROVED": 0, "REGRESSION": 0, "MOVED": 0, "other": 0}
+@@@ G4 full-402 A/B (head reused, c1 4 shards)
+ab402_head.jsonl 402
+ab402_c1.jsonl 402
+rc=0
+MOVED  F:/Downloads/pythoncdc-main/site-packages/IQEngine/plugins/plugin_system_event_source/default_event_source.pyc  gained=["['events', 510, 508, 2, 157]"] lost=["['events', 510, 491, 2, 157]"]
+    ~ events [510, 491, 2, 157] -> [510, 508, 2, 157]
+TALLY SAME=401 IMPROVED=0 REGRESSION=0 MOVED=1 ERR=0  (unpaired lists=0)
+files fully matched: a=370 b=370
+rc=0
+MOVED      IQEngine/plugins/plugin_system_event_source/default_event_source.pyc a= 13/ 14 b= 13/ 14  a_mism=[['events', 510, 491, 2, 157]] b_mism=[['events', 510, 508, 2, 157]]
+--- tally --- {"SAME": 401, "IMPROVED": 0, "REGRESSION": 0, "MOVED": 1, "other": 0}
+@@@ C1 GATES DONE

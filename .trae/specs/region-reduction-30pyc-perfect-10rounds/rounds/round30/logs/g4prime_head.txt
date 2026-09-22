@@ -1,0 +1,2 @@
+DEFECT <module>.DefaultEventSource.events         [seq_len] orig=512 decomp=493  orig=512 decomp=493 delta=-19
+strict clean 13/14  sigma-defect=1

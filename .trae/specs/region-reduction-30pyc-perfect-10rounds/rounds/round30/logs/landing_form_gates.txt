@@ -1,0 +1,14 @@
+@@@ G2'e 38-synthetic battery on landing arm
+rc=0
+rc=0
+--- tally --- {"SAME": 38, "IMPROVED": 0, "REGRESSION": 0, "MOVED": 0, "other": 0}
+@@@ G3e 96-anchor battery on landing arm
+rc=0
+rc=0
+--- tally --- {"SAME": 96, "IMPROVED": 0, "REGRESSION": 0, "MOVED": 0, "other": 0}
+@@@ G4e full-402 on landing arm vs measured arm c1
+ab402_c1c.jsonl 402
+rc=0
+TALLY SAME=402 IMPROVED=0 REGRESSION=0 MOVED=0 ERR=0  (unpaired lists=0)
+files fully matched: a=370 b=370
+@@@ LANDING-FORM GATES DONE
