@@ -1,0 +1,5 @@
+== fly/data/quote.pyc  strict-defective a=19 b=18
+   FIXED   <module>.Quote.one_prod_to_dataframe   [seq_len orig=485 decomp=484]
+== IQData/plugins/plugin_system_realquote/real_quote.pyc  strict-defective a=7 b=6
+   FIXED   <module>.RealQuoteData.one_prod_to_dataframe   [seq_len orig=433 decomp=432]
+G4-prime affected=2 fixed=2 broken=0

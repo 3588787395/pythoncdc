@@ -1,0 +1,11 @@
+IQCommon/arg_checker.pyc                   want=47/47     head= 47/47  cand= 47/47  ratio-hold=True  sha ea683077e11f68b5 -> ea683077e11f68b5  UNCHANGED
+IQData/utils/arg_checker.pyc               want=39/39     head= 39/39  cand= 39/39  ratio-hold=True  sha 0f0fd58f894a821a -> 0f0fd58f894a821a  UNCHANGED
+IQEngine/utils/arg_checker.pyc             want=43/43     head= 43/43  cand= 43/43  ratio-hold=True  sha e01b5a5057c9fbf5 -> e01b5a5057c9fbf5  UNCHANGED
+IQCommon/profiler_func.pyc                 want=14/14     head= 14/14  cand= 14/14  ratio-hold=True  sha 9fbe0789ac58bba7 -> 9fbe0789ac58bba7  UNCHANGED
+IQData/manager/plugin_manager.pyc          want=10/10     head= 10/10  cand= 10/10  ratio-hold=True  sha cb3d2ceed08a81db -> cb3d2ceed08a81db  UNCHANGED
+IQEngine/core/plugin_manager.pyc           want=9/9       head=  9/9   cand=  9/9   ratio-hold=True  sha 6b95f3f1d57f2901 -> 6b95f3f1d57f2901  UNCHANGED
+IQCommon/util/cgroup_utils.pyc             want=8/8       head=  8/8   cand=  8/8   ratio-hold=True  sha 949fb07da9851338 -> 949fb07da9851338  UNCHANGED
+fly/data/quotation.pyc                     want=143/143   head=143/143 cand=143/143 ratio-hold=True  sha 857956e7f8d9e97c -> 857956e7f8d9e97c  UNCHANGED
+IQEngine/plugins/plugin_system_persist/__init__.pyc want=15/15     head= 15/15  cand= 15/15  ratio-hold=True  sha 0c49fe5d27d6f6a2 -> 0c49fe5d27d6f6a2  UNCHANGED
+
+canaries=9  baseline-sha mismatches vs the landed arm=0  text-moved=0  lost-official-function=0

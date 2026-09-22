@@ -1,0 +1,4 @@
+case           status                 nbad   sum|d| detail / probe
+r40c_controls  CLEAN                  0      0      
+r40w_witness   CLEAN                  0      0      
+CORE=F:\Downloads\pythoncdc-main BAT=bat40landed cases=2 CLEAN=2 DEFECT=0

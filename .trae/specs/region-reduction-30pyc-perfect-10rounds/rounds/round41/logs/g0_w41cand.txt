@@ -1,0 +1,6 @@
+case                status                 nbad   sum|d| detail / probe
+r41c_controls       CLEAN                  0      0      
+r41w2_merge_escape  CLEAN                  0      0      
+r41w7_corpus_shape  CLEAN                  0      0      
+r41w_witness        CLEAN                  0      0      
+CORE=D:\Temp\r41gate\mirr_r41b2 BAT=round41_mid_arm_continue cases=4 CLEAN=4 DEFECT=0

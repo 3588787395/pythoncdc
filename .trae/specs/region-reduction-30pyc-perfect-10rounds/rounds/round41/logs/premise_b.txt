@@ -1,0 +1,32 @@
+==============================================================================
+fly/data/quote.pyc
+  <module>.Quote.one_prod_to_dataframe                 orig=485 decomp=484 defect=True
+    instr sequences: orig=529 decomp=527  differing blocks=8
+    replace  orig[131:132]=['700 POP_JUMP_FORWARD_IF_FALSE 1976']  decomp[131:132]=['700 POP_JUMP_FORWARD_IF_FALSE 1972']
+      context before: ['694 STORE_FAST prod', '696 LOAD_FAST prod', '698 EXTENDED_ARG 2']
+      context after : ['708 FOR_ITER 1976', '710 STORE_FAST item', '712 LOAD_GLOBAL NULL + enumerate']
+    replace  orig[135:136]=['708 FOR_ITER 1976']  decomp[135:136]=['708 FOR_ITER 1972']
+      context before: ['702 LOAD_FAST prod', '704 GET_ITER None', '706 EXTENDED_ARG 2']
+      context after : ['726 PRECALL 1', '730 CALL 1', '740 GET_ITER None']
+    replace  orig[143:144]=['744 FOR_ITER 1972']  decomp[143:144]=['744 FOR_ITER 1968']
+      context before: ['730 CALL 1', '740 GET_ITER None', '742 EXTENDED_ARG 2']
+      context after : ['754 LOAD_FAST i', '756 LOAD_FAST time_index', '758 COMPARE_OP ==']
+    replace  orig[151:152]=['766 POP_JUMP_FORWARD_IF_FALSE 1864']  decomp[151:152]=['766 POP_JUMP_FORWARD_IF_FALSE 1860']
+      context before: ['756 LOAD_FAST time_index', '758 COMPARE_OP ==', '764 EXTENDED_ARG 2']
+      context after : ['786 CALL 1', '796 STORE_FAST v', '798 LOAD_GLOBAL NULL + len']
+==============================================================================
+IQData/plugins/plugin_system_realquote/real_quote.pyc
+  <module>.RealQuoteData.one_prod_to_dataframe         orig=433 decomp=432 defect=True
+    instr sequences: orig=468 decomp=466  differing blocks=8
+    replace  orig[70:71]=['346 POP_JUMP_FORWARD_IF_FALSE 1622']  decomp[70:71]=['346 POP_JUMP_FORWARD_IF_FALSE 1618']
+      context before: ['340 STORE_FAST prod', '342 LOAD_FAST prod', '344 EXTENDED_ARG 2']
+      context after : ['354 FOR_ITER 1622', '356 STORE_FAST item', '358 LOAD_GLOBAL NULL + enumerate']
+    replace  orig[74:75]=['354 FOR_ITER 1622']  decomp[74:75]=['354 FOR_ITER 1618']
+      context before: ['348 LOAD_FAST prod', '350 GET_ITER None', '352 EXTENDED_ARG 2']
+      context after : ['372 PRECALL 1', '376 CALL 1', '386 GET_ITER None']
+    replace  orig[82:83]=['390 FOR_ITER 1618']  decomp[82:83]=['390 FOR_ITER 1614']
+      context before: ['376 CALL 1', '386 GET_ITER None', '388 EXTENDED_ARG 2']
+      context after : ['400 LOAD_FAST i', '402 LOAD_FAST time_index', '404 COMPARE_OP ==']
+    replace  orig[90:91]=['412 POP_JUMP_FORWARD_IF_FALSE 1510']  decomp[90:91]=['412 POP_JUMP_FORWARD_IF_FALSE 1506']
+      context before: ['402 LOAD_FAST time_index', '404 COMPARE_OP ==', '410 EXTENDED_ARG 2']
+      context after : ['432 CALL 1', '442 STORE_FAST v', '444 LOAD_GLOBAL NULL + len']

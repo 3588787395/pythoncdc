@@ -1,0 +1,5 @@
+case                status                 nbad   sum|d| detail / probe
+r41c_controls       CLEAN                  0      0      
+r41w2_merge_escape  DEFECT                 1      5      r41w5_break_then_merge_escape:seq_-5
+r41w_witness        DEFECT                 1      6      r41w_2_guard_break:seq_-6
+CORE=D:\Temp\r41gate\mirr_r41b BAT=round41_mid_arm_continue cases=3 CLEAN=1 DEFECT=2

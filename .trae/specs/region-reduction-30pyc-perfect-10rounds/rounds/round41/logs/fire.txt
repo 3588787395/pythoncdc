@@ -1,0 +1,11 @@
+FIRE blk=1818 reg_entry=746 reg_merge=1972 hdr=742 nblocks=17 idx=3 is_merge=False is_last=False stmts_len=3
+FIRE blk=356 reg_entry=284 reg_merge=422 hdr=282 nblocks=1 idx=0 is_merge=False is_last=True stmts_len=2
+FIRE blk=180 reg_entry=168 reg_merge=192 hdr=92 nblocks=1 idx=0 is_merge=False is_last=True stmts_len=2
+FIRE blk=324 reg_entry=312 reg_merge=336 hdr=112 nblocks=1 idx=0 is_merge=False is_last=True stmts_len=2
+FIRE blk=582 reg_entry=558 reg_merge=594 hdr=278 nblocks=1 idx=0 is_merge=False is_last=True stmts_len=1
+FIRE blk=1552 reg_entry=1514 reg_merge=1690 hdr=1492 nblocks=1 idx=0 is_merge=False is_last=True stmts_len=3
+FIRE blk=2836 reg_entry=2798 reg_merge=2974 hdr=2776 nblocks=1 idx=0 is_merge=False is_last=True stmts_len=3
+FIRE blk=44 reg_entry=8 reg_merge=132 hdr=6 nblocks=3 idx=2 is_merge=False is_last=True stmts_len=3
+FIRE blk=28 reg_entry=8 reg_merge=72 hdr=6 nblocks=1 idx=0 is_merge=False is_last=True stmts_len=2
+FIRE blk=44 reg_entry=8 reg_merge=134 hdr=6 nblocks=3 idx=2 is_merge=False is_last=True stmts_len=3
+FIRE blk=34 reg_entry=8 reg_merge=78 hdr=6 nblocks=1 idx=0 is_merge=False is_last=True stmts_len=1

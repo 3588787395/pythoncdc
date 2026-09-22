@@ -1,0 +1,2 @@
+F:/Downloads/pythoncdc-main/site-packages/fly/data/quote.pyc
+F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/real_quote.pyc

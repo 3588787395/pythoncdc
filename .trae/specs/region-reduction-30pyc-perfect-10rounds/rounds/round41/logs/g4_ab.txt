@@ -1,0 +1,4 @@
+IMPROVED F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/real_quote.pyc  38/44 -> 39/44
+IMPROVED F:/Downloads/pythoncdc-main/site-packages/fly/data/quote.pyc  68/81 -> 69/81
+TALLY SAME=400 IMPROVED=2 REGRESSION=0 MOVED=0 ERR=0  (unpaired lists=0)
+files fully matched: a=375 b=375

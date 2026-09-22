@@ -1865,3 +1865,46 @@
           `continue`：缺块 `B@1818→742` 既非该区域 then 尾、`merge=1972` 也不等于 `back_edge_block=1864`）
           R40-A2 正确地不去碰它，需另立一条「臂内逃逸块归属」判据；下一轮 G2′ = `reprobat61`（63 条目）、
           G3 = `anchors109`（109 条目）；结转台账本轮未触碰。
+  - [x] SubTask 41.1: 目标池实测（落地 `f1cde2536f9fa2c9033b`，即 Round 40 交付字节）：`partial_pyc 27`、
+          deficit-1 池 6 支、deficit-2 池 11 支；对全 402 条先跑一次落地 head 臂
+          （`landed41.jsonl`，Σmatched=5655 与索引同值 ⇒ 双臂基线自洽），后续门禁全部以该臂为 a 侧。
+  - [x] SubTask 41.2: 根因（只读运行时插桩，不碰 core/）—— 承接 Round 40 移交的第二子形状：
+          `_process_if_blocks` 的 `role in (CONTINUE, PURE_CONTINUE)` 早退路径发射语句后直接 `continue`，
+          把该块的逃逸终止符（回边到当前循环头）静默丢弃；逃逸仅当「块是区域最后一块（R100/R4-H）」
+          或「`region.merge_block` 就是循环头（自然尾）」时才能再生。两支孪生 `one_prod_to_dataframe`
+          的缺块 `B@1818→742` 位于 17 块 then 臂中段（`is_last=False`、`merge=1972 ≠ hdr=742`），两条皆不成立。
+  - [x] SubTask 41.3: 触发分布测量（`fire.txt`，11 次触发）—— 只有语料那次 `idx != nblocks-1`，
+          其余 10 次全为最后块 ⇒ 判据 ③「非最后块」由测量而非叙事导出。
+  - [x] SubTask 41.4: G0 合成见证（与语料无关，先对落地字节跑）—— head 臂
+          `r41w7_corpus_shape DEFECT 1 one_prod_to_dataframe:seq_-1`、另 3 支 CLEAN（见证确实改前失败）；
+          v1（缺 ③）翻坏 `r41w_2_guard_break:seq_-6`、`r41w5_break_then_merge_escape:seq_-5` ⇒ **G0 否决 v1**；
+          R41-B2 `cases=4 CLEAN=4 DEFECT=0`，`r41c_*` 六支负对照双臂均 CLEAN ⇒ PASS。
+          新电池 `test_repros/round41_mid_arm_continue/`（4 支 .py）落地为承重资产。
+  - [x] SubTask 41.5: 判据（唯一一条，同层）—— 该块终止符为 `JUMP_BACKWARD(_NO_INTERRUPT)` 且目标块**即**
+          `self._current_loop.header_block`（块身份比较）＋ 承载区域是 `IfRegion` 且 `merge_block` 存在且 ≠ 该循环头
+          ＋ 该块存在且不是 `blocks` 的最后一个 ⇒ 在 `stmts.extend(bs)` 之后补一条 `Continue`。
+          原则 1 保持（其余语句＋补出的终止符恰一），不读名字/常量/绝对偏移/指令计数/历史。
+  - [x] SubTask 41.6: G1 deficit-1＋deficit-2 池 17 行 `SAME=17 IMPROVED=0 REGRESSION=0 MOVED=0`；
+          2 支靶点 `quote.pyc 68/81→69/81`、`real_quote.pyc 38/44→39/44`。
+  - [x] SubTask 41.7: G2′ `reprobat61`＋Round 40 电池 63 条目 `SAME=63 REGRESSION=0 MOVED=0 ERR=0`；
+          G3 `anchors109` 109 条目 `SAME=109 REGRESSION=0 MOVED=0 ERR=0`。
+  - [x] SubTask 41.8: G4 全 402 双臂 A/B（唯一发货判据）：`SAME=400 IMPROVED=2 REGRESSION=0 MOVED=0 ERR=0`，
+          head 侧 Σmatched=5655 与索引同值（内部一致性）、候选侧 5657；`files fully matched a=375 b=375`。
+          本轮整个语料零附带产物文本移动（MOVED=0），故 G4′ 只需覆盖 2 个受影响产物。
+  - [x] SubTask 41.9: 落地为字节精确重放（`land38.py land --spec=spec41b2.json --mirror=mirr_r41b2 --apply`，
+          断言「重放 == 被测镜像字节」为 True）：2 991 175 → 2 994 079 字节、CRLF 48 506 → 48 540、BOM 在位、
+          sha256[:20] `f1cde2536f9fa2c9033b` → `11e2c67e2d7681735f9d`、diff +34/−0。
+          G4′ 用落地字节对 2 个受影响产物重做严格尺：`affected=2 fixed=2 broken=0`
+          （`RealQuoteData.one_prod_to_dataframe` 两支，产物各仅增 1 行 `continue`）。
+          G5 `single` 靶：`quote.pyc matched_functions 69 / rate 85.19%`、`real_quote.pyc 39 / 88.64%`；
+          承重金丝雀 `canaries=9 baseline-sha mismatches=0 text-moved=0 lost-official-function=0`
+          （`logs/g5_canary_audit.txt`）⇒ 判据「不得掉官方函数」满足；基线 `canary_shas_landed40.txt` 仍对
+          9 支有效（本轮改动的 2 支不在其内），下一轮以 landed-41 重导。
+  - [x] SubTask 41.10: G6 `batch --all --round 41` 读完 402 条、`failed_pyc 0`；索引差异 =
+          402 条 `last_tested_round → 41` 加 仅 2 支文件的字段变化：IQData/plugins/plugin_system_realquote/real_quote.pyc ['bytecode_match_rate 0.8636363636363636->0.8863636363636364', 'matched_functions 38->39']；fly/data/quote.pyc ['bytecode_match_rate 0.8395061728395061->0.8518518518518519', 'matched_functions 68->69']；G7 `stats` 原样见 OUTCOME §五。
+  - [x] SubTask 41.11: 移交 —— (a) 线 A 已交付但**未发货**的第二条同层候选：`core/cfg/region_analyzer.py:24631-24637`
+          W14-A break，靶 `handle_exrights`（`IQData/utils/common_func.pyc`），spec `D:/Temp/r41diagA/spec41a.json`
+          （+9 行，BOM=False），见证 `D:/Temp/r41diagA/witness/`，代理自测 `SAME=400 IMPROVED=1 MOVED=1 REGRESSION=0`；
+          为保证一轮一条判据本轮不采纳，采纳前须在新落地字节 `11e2c67e2d7681735f9d` 上重做锚点唯一性、
+          见证改前失败与真实双臂 A/B，并把 witness 迁入 `test_repros/`。(b) 下一轮 G2′ = `reprobat61` ＋
+          Round 40 电池 ＋ Round 41 电池，G3 = `anchors109`，G5 基线重导到 landed-41；(c) 结转台账本轮未触碰。

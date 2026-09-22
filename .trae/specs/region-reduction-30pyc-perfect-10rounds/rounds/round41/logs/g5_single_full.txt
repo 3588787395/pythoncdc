@@ -1,0 +1,57 @@
+$ python -X utf8 scripts/pyc_batch_verify.py single site-packages/fly/data/quote.pyc
+[SINGLE] F:\Downloads\pythoncdc-main\site-packages\fly\data\quote.pyc
+  OK.py: F:\Downloads\pythoncdc-main\site-packages\fly\data\quoteOK.py
+  source: 87698 chars
+
+字节码 diff 报告:
+  decompile_status:   partial
+  total_functions:   81
+  matched_functions: 69
+  match_rate:        85.19%
+  missing_in_decomp: []
+  extra_in_decomp:   []
+  mismatches (12):
+    - build_current_period_df: orig=115 decomp=108 jump_diffs=5 true_diffs=12
+      first_diff: {'index': 103, 'orig_op': 'LOAD_FAST', 'decomp_op': 'POP_TOP', 'orig_arg': 'tempdict', 'decomp_arg': None}
+    - check_frequency: orig=121 decomp=120 jump_diffs=1 true_diffs=21
+      first_diff: {'index': 100, 'orig_op': 'LOAD_CONST', 'decomp_op': 'JUMP_FORWARD', 'orig_arg': None, 'decomp_arg': 558}
+    - check_limit: orig=330 decomp=311 jump_diffs=2 true_diffs=248
+      first_diff: {'index': 50, 'orig_op': 'LOAD_ATTR', 'decomp_op': 'LOAD_METHOD', 'orig_arg': 'log', 'decomp_arg': 'api_get_from_zeromq'}
+    - check_stock: orig=86 decomp=87 jump_diffs=2 true_diffs=46
+      first_diff: {'index': 41, 'orig_op': 'LOAD_CONST', 'decomp_op': 'JUMP_FORWARD', 'orig_arg': 11, 'decomp_arg': 346}
+    - get_individual_data: orig=312 decomp=306 jump_diffs=2 true_diffs=153
+      first_diff: {'index': 155, 'orig_op': 'JUMP_FORWARD', 'decomp_op': 'LOAD_FAST', 'orig_arg': 1124, 'decomp_arg': 'redata'}
+    - get_price: orig=230 decomp=188 jump_diffs=0 true_diffs=227
+      first_diff: {'index': 1, 'orig_op': 'LOAD_FAST', 'decomp_op': 'LOAD_CONST', 'orig_arg': 'self', 'decomp_arg': 'self调用函数get_price，参数为：stocks=securityNone'}
+    - get_real_from_zeromq: orig=703 decomp=669 jump_diffs=0 true_diffs=661
+      first_diff: {'index': 33, 'orig_op': 'LOAD_ATTR', 'decomp_op': 'LOAD_METHOD', 'orig_arg': 'log', 'decomp_arg': 'api_get_from_multi_zeromq'}
+    - initImagedata: orig=243 decomp=225 jump_diffs=0 true_diffs=190
+      first_diff: {'index': 35, 'orig_op': 'LOAD_ATTR', 'decomp_op': 'LOAD_METHOD', 'orig_arg': 'log', 'decomp_arg': 'api_get_from_multi_zeromq'}
+    - load_bars_from_hundsun: orig=477 decomp=470 jump_diffs=0 true_diffs=464
+      first_diff: {'index': 1, 'orig_op': 'LOAD_FAST', 'decomp_op': 'LOAD_CONST', 'orig_arg': 'self', 'decomp_arg': 'self调用函数load_bars_from_hundsun，参数为：stocks=stocksNone'}
+    - load_get_price: orig=171 decomp=136 jump_diffs=1 true_diffs=167
+      first_diff: {'index': 1, 'orig_op': 'LOAD_FAST', 'decomp_op': 'LOAD_CONST', 'orig_arg': 'self', 'decomp_arg': 'self调用函数load_get_price，参数为：stocks=stocksNone'}
+
+$ python -X utf8 scripts/pyc_batch_verify.py single site-packages/IQData/plugins/plugin_system_realquote/real_quote.pyc
+[SINGLE] F:\Downloads\pythoncdc-main\site-packages\IQData\plugins\plugin_system_realquote\real_quote.pyc
+  OK.py: F:\Downloads\pythoncdc-main\site-packages\IQData\plugins\plugin_system_realquote\real_quoteOK.py
+  source: 50885 chars
+
+字节码 diff 报告:
+  decompile_status:   partial
+  total_functions:   44
+  matched_functions: 39
+  match_rate:        88.64%
+  missing_in_decomp: []
+  extra_in_decomp:   []
+  mismatches (5):
+    - get_cache_l2_data: orig=337 decomp=335 jump_diffs=2 true_diffs=313
+      first_diff: {'index': 18, 'orig_op': 'JUMP_FORWARD', 'decomp_op': 'POP_TOP', 'orig_arg': 92, 'decomp_arg': None}
+    - get_cache_l2_data_by_one: orig=321 decomp=320 jump_diffs=2 true_diffs=300
+      first_diff: {'index': 18, 'orig_op': 'JUMP_FORWARD', 'decomp_op': 'POP_TOP', 'orig_arg': 92, 'decomp_arg': None}
+    - get_real_minute_kline: orig=253 decomp=254 jump_diffs=3 true_diffs=197
+      first_diff: {'index': 56, 'orig_op': 'JUMP_FORWARD', 'decomp_op': 'LOAD_FAST', 'orig_arg': 570, 'decomp_arg': 'fq'}
+    - get_tick_direction: orig=259 decomp=258 jump_diffs=3 true_diffs=102
+      first_diff: {'index': 149, 'orig_op': 'JUMP_FORWARD', 'decomp_op': 'LOAD_FAST', 'orig_arg': 1106, 'decomp_arg': 'redata'}
+    - one_prod_to_ndarray: orig=605 decomp=607 jump_diffs=5 true_diffs=424
+      first_diff: {'index': 136, 'orig_op': 'JUMP_FORWARD', 'decomp_op': 'LOAD_FAST', 'orig_arg': 1530, 'decomp_arg': 'data_dict'}

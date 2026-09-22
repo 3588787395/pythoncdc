@@ -1,0 +1,3 @@
+rows-changed=402  non-round-field rows=2
+F:/Downloads/pythoncdc-main/site-packages/IQData/plugins/plugin_system_realquote/real_quote.pyc [('bytecode_match_rate', ['0.8636363636363636', '0.8863636363636364']), ('last_tested_round', ['40', '41']), ('matched_functions', ['38', '39'])]
+F:/Downloads/pythoncdc-main/site-packages/fly/data/quote.pyc [('bytecode_match_rate', ['0.8395061728395061', '0.8518518518518519']), ('last_tested_round', ['40', '41']), ('matched_functions', ['68', '69'])]

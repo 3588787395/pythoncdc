@@ -595,6 +595,7 @@ class Quote:
                 continue
             tmpExrightsData[sec] = series
             continue
+            continue
         return tmpExrightsData
     def load_get_exrights(self, stocks):
         def choose_data_from_dict(exrightdict, stocks):
@@ -745,12 +746,12 @@ class Quote:
                     if 'ST' in stock_name or 'PT' in stock_name:
                         result[i] = True
                         continue
-                    elif stock_name == '':
+                    if stock_name == '':
                         result[i] = None
                         continue
-                    else:
-                        result[i] = False
-                        continue
+                    result[i] = False
+                    continue
+                    continue
             else:
                 for i in stocks:
                     result[i] = None
@@ -774,12 +775,12 @@ class Quote:
             if stock_status in ('HALT', 'SUSP', 'STOPT'):
                 result[i] = True
                 continue
-            elif stock_status == '':
+            if stock_status == '':
                 result[i] = None
                 continue
-            else:
-                result[i] = False
-                continue
+            result[i] = False
+            continue
+            continue
         return result
     def is_halt_stock(self, stocks, date=None):
         is_halt_stocks = data_proxy().is_halt_stock_local(stocks, date)
@@ -806,6 +807,7 @@ class Quote:
                 continue
             elif stock_status == '' or stock_status == 'DELISTED':
                 result[i] = True
+                continue
             else:
                 result[i] = False
                 continue
