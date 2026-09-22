@@ -1,0 +1,20 @@
+=== G0 wit LANDED (mirr_head) ===
+case                                status                 nbad   sum|d| detail / probe
+c1_loop_no_ancestor_elif            DEFECT                 1      46     tick:seq_+46
+c2_no_loop_ancestor_2arms           DEFECT                 1      13     tick:seq_+13
+c3_loop_ancestor_plain_chain        DEFECT                 1      1      tick:seq_-1
+c4_loop_ancestor_single_arm         DEFECT                 1      5      tick:seq_+5
+w1_loop_ancestor_2arms              DEFECT                 1      46     tick:seq_+46
+w2_loop_ancestor_withelse_continue  DEFECT                 1      155    tick:seq_+155
+w3_loop_ancestor_3arms              DEFECT                 1      64     tick:seq_+64
+CORE=D:\Temp\r37gate\r37\mirr_head BAT=wit cases=7 CLEAN=0 DEFECT=7
+=== G0 wit R37A (mirr_r37a) ===
+case                                status                 nbad   sum|d| detail / probe
+c1_loop_no_ancestor_elif            DEFECT                 1      46     tick:seq_+46
+c2_no_loop_ancestor_2arms           DEFECT                 1      13     tick:seq_+13
+c3_loop_ancestor_plain_chain        DEFECT                 1      1      tick:seq_-1
+c4_loop_ancestor_single_arm         CLEAN                  0      0      
+w1_loop_ancestor_2arms              DEFECT                 1      46     tick:seq_+46
+w2_loop_ancestor_withelse_continue  DEFECT                 1      155    tick:seq_+155
+w3_loop_ancestor_3arms              DEFECT                 1      64     tick:seq_+64
+CORE=D:\Temp\r37gate\r37\mirr_r37a BAT=wit cases=7 CLEAN=1 DEFECT=6

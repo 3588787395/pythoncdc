@@ -1,0 +1,25 @@
+scan rows 402   sum-secs 109
+files with a file-level FATAL: 0
+files with a swallowed exception / degradation entry: 0
+
+slowest 5 files: quotation.pyc 9.0s, trade_live_broker.pyc 8.6s, klinedata.pyc 4.4s, real_quote.pyc 3.8s, function.pyc 3.3s
+=== deficit-1 pool (landed_d1.jsonl) ===
+  IQCommon/manager/instance.pyc                                  31/32  [['_init_config', 86, 84, 1, 37]]
+  IQCommon/util/replace_utils.pyc                                8/9  [['decrypt_database_url', 295, 324, 1, 250]]
+  IQEngine/plugins/plugin_fly_data/strategy/strategy.pyc         23/24  [['tick_worker_thread', 268, 247, 32, 113]]
+  IQEngine/plugins/plugin_system_event_source/default_event_source.pyc 13/14  [['events', 510, 508, 2, 157]]
+  IQEngine/plugins/plugin_system_event_source/realtime_event_source.pyc 11/12  [['clock_worker', 1275, 1291, 15, 480]]
+  IQEngine/plugins/plugin_system_matcher/matcher.pyc             16/17  [['match', 713, 689, 9, 524]]
+=== deficit-2 pool (landed_d2.jsonl) ===
+  IQCommon/data/finance.pyc                                      22/24  [['financial_statements', 113, 104, 1, 36], ['get_fields', 159, 149, 16, 47]]
+  IQCommon/graph.pyc                                             29/31  [['_get_influence_task', 207, 195, 2, 124], ['_process_task_queue', 378, 378, 1, 118]]
+  IQCommon/util/fileio_utils.pyc                                 12/14  [['acquire', 96, 93, 3, 52], ['write', 637, 637, 4, 519]]
+  IQCommon/util/trade_info_utils.pyc                             38/40  [['get_trade_list', 339, 323, 14, 148], ['trade_operation', 304, 302, 2, 40]]
+  IQData/api/api_base.pyc                                        23/25  [['get_future_history_df', 973, 957, 3, 229], ['get_history_df', 1742, 1718, 14, 1217]]
+  IQData/plugins/plugin_system_fly_historyquote/history_data_source.pyc 16/18  [['get_kline_by_count', 854, 841, 3, 807], ['get_price', 550, 544, 4, 475]]
+  IQData/utils/common_func.pyc                                   22/24  [['fill_kline_data_by_pre', 82, 81, 4, 24], ['handle_exrights', 276, 268, 1, 263]]
+  IQEngine/plugins/plugin_fly_data/fly_api/base.pyc              39/41  [['get_close_position_type', 30, 9, 0, 29], ['has_close_position_type', 27, 6, 0, 26]]
+  IQEngine/plugins/plugin_system_log/__init__.pyc                8/10  [['setup', 320, 253, 1, 293], ['trade_logs_control', 189, 190, 1, 144]]
+  IQEngine/plugins/plugin_system_trade/function.pyc              69/71  [['get_entrust_item_info', 535, 531, 5, 139], ['order_entrust_info_handle', 220, 224, 8, 149]]
+  fly/logger.pyc                                                 28/30  [['logging_process', 99, 95, 2, 62], ['write_logging_thread', 113, 113, 1, 40]]
+  fly/simtradding/flyAccount.pyc                                 21/23  [['_do_request', 436, 429, 2, 379], ['init_connection', 42, 41, 0, 25]]

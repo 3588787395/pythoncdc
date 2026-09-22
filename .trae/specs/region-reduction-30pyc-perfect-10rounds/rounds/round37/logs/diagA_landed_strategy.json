@@ -1,0 +1,29 @@
+{
+ "tag": "landed_strategy",
+ "file": "F:/Downloads/pythoncdc-main\\site-packages\\IQEngine\\plugins\\plugin_fly_data\\strategy\\strategy.pyc",
+ "funcs": 27,
+ "ok": 25,
+ "bad": [
+  [
+   "<module>.Strategy.tick_publish_thread",
+   "target_diff",
+   "#44 POP_JUMP_IF_TRUE 终点 orig=(\"'system_log'\", 'LOAD_GLOBAL') decomp=(\"'current_dt'\", 'LOAD_FAST')",
+   0
+  ],
+  [
+   "<module>.Strategy.tick_worker_thread",
+   "seq_len",
+   "orig=268 decomp=247",
+   21
+  ]
+ ],
+ "official_gen": "23/24",
+ "mismatches": [
+  [
+   "tick_worker_thread",
+   268,
+   247
+  ]
+ ],
+ "official_tracked": "23/24"
+}

@@ -1,0 +1,5 @@
+core/cfg/region_ast_generator.py                                         2984567  6b0759b1a0a566a4eb8f  BOM=True
+
+--- tracked products BEFORE G5 single ---
+site-packages/IQEngine/plugins/plugin_fly_data/strategy/strategyOK.py      13253  99f268e4fbd4faf18ca6  BOM=False
+site-packages/fly/data/quotationOK.py                                     183261  3f2242e73d7fd56a0096  BOM=False

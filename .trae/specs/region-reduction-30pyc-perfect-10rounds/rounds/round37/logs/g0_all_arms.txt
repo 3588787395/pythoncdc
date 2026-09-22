@@ -1,0 +1,90 @@
+########## wit LANDED
+Error loading file D:\Temp\r37gate\r37\wit\pyc\c1_no_ancestor_elif.pyc: [Errno 2] No such file or directory: 'D:\\Temp\\r37gate\\r37\\wit\\pyc\\c1_no_ancestor_elif.pyc'
+case                                status                 nbad   sum|d| detail / probe
+c1_loop_no_ancestor_elif            DEFECT                 1      46     tick:seq_+46
+c1_no_ancestor_elif                 DECOMPILE-FAIL RuntimeError('Failed to load D:\\Temp\\r37gate\\r37\\wit\\py 0      0      
+c2_no_loop_ancestor_2arms           DEFECT                 1      13     tick:seq_+13
+c3_loop_ancestor_plain_chain        DEFECT                 1      1      tick:seq_-1
+c4_loop_ancestor_single_arm         DEFECT                 1      5      tick:seq_+5
+w1_loop_ancestor_2arms              DEFECT                 1      46     tick:seq_+46
+w2_loop_ancestor_withelse_continue  DEFECT                 1      155    tick:seq_+155
+w3_loop_ancestor_3arms              DEFECT                 1      64     tick:seq_+64
+CORE=D:\Temp\r37gate\r37\mirr_head BAT=wit cases=8 CLEAN=0 DEFECT=8
+########## wit R37A
+Error loading file D:\Temp\r37gate\r37\wit\pyc\c1_no_ancestor_elif.pyc: [Errno 2] No such file or directory: 'D:\\Temp\\r37gate\\r37\\wit\\pyc\\c1_no_ancestor_elif.pyc'
+case                                status                 nbad   sum|d| detail / probe
+c1_loop_no_ancestor_elif            DEFECT                 1      46     tick:seq_+46
+c1_no_ancestor_elif                 DECOMPILE-FAIL RuntimeError('Failed to load D:\\Temp\\r37gate\\r37\\wit\\py 0      0      
+c2_no_loop_ancestor_2arms           DEFECT                 1      13     tick:seq_+13
+c3_loop_ancestor_plain_chain        DEFECT                 1      1      tick:seq_-1
+c4_loop_ancestor_single_arm         CLEAN                  0      0      
+w1_loop_ancestor_2arms              DEFECT                 1      46     tick:seq_+46
+w2_loop_ancestor_withelse_continue  DEFECT                 1      155    tick:seq_+155
+w3_loop_ancestor_3arms              DEFECT                 1      64     tick:seq_+64
+CORE=D:\Temp\r37gate\r37\mirr_r37a BAT=wit cases=8 CLEAN=1 DEFECT=7
+########## battery LANDED
+case                        status                 nbad   sum|d| detail / probe
+c1_outer_no_elif            DEFECT                 1      7      tick:seq_+7
+c2_nested_orarm_no_sibling  DEFECT                 1      15     tick:seq_+15
+c3_nested_orchain_in_else   DEFECT                 1      20     tick:seq_-20
+c4_nested_chain_no_or       DEFECT                 1      8      tick:seq_+8
+c5_orchain_in_last_arm      DEFECT                 1      14     tick:seq_+14
+w1_nested_orchain_in_then   DEFECT                 1      12     tick:seq_+12
+w2_outer_three_arms         DEFECT                 1      14     tick:seq_+14
+CORE=D:\Temp\r37gate\r37\mirr_head BAT=battery cases=7 CLEAN=0 DEFECT=7
+########## battery R37A
+case                        status                 nbad   sum|d| detail / probe
+c1_outer_no_elif            DEFECT                 1      7      tick:seq_+7
+c2_nested_orarm_no_sibling  DEFECT                 1      6      tick:seq_+6
+c3_nested_orchain_in_else   DEFECT                 1      20     tick:seq_-20
+c4_nested_chain_no_or       DEFECT                 1      8      tick:seq_+8
+c5_orchain_in_last_arm      DEFECT                 1      14     tick:seq_+14
+w1_nested_orchain_in_then   DEFECT                 1      12     tick:seq_+12
+w2_outer_three_arms         DEFECT                 1      14     tick:seq_+14
+CORE=D:\Temp\r37gate\r37\mirr_r37a BAT=battery cases=7 CLEAN=0 DEFECT=7
+########## ladder LANDED
+l0_plain_elif                 DEFECT                 1      3      f:seq_+3
+l0b_plain_elif_tail           CLEAN                  0      0      
+l1_nested_chain_in_first_arm  CLEAN                  0      0      
+l2_nested_orarm               DEFECT                 1      5      f:seq_+5
+l3_orarm_plus_sibling         DEFECT                 1      6      f:seq_+6
+l4_two_or_arms                DEFECT                 1      12     f:seq_+12
+m1_orarm_plain_sibling        CLEAN                  0      0      
+m2_orarm_two_siblings         CLEAN                  0      0      
+m3_orarm_else_sibling         CLEAN                  0      0      
+m3_two_or_arms_simple         CLEAN                  0      0      
+CORE=D:\Temp\r37gate\r37\mirr_head BAT=ladder cases=10 CLEAN=6 DEFECT=4
+########## ladder R37A
+l0_plain_elif                 DEFECT                 1      3      f:seq_+3
+l0b_plain_elif_tail           CLEAN                  0      0      
+l1_nested_chain_in_first_arm  CLEAN                  0      0      
+l2_nested_orarm               CLEAN                  0      0      
+l3_orarm_plus_sibling         DEFECT                 1      6      f:seq_+6
+l4_two_or_arms                DEFECT                 1      12     f:seq_+12
+m1_orarm_plain_sibling        CLEAN                  0      0      
+m2_orarm_two_siblings         CLEAN                  0      0      
+m3_orarm_else_sibling         CLEAN                  0      0      
+m3_two_or_arms_simple         CLEAN                  0      0      
+CORE=D:\Temp\r37gate\r37\mirr_r37a BAT=ladder cases=10 CLEAN=7 DEFECT=3
+########## ladder2 LANDED
+case                     status                 nbad   sum|d| detail / probe
+n1_two_or_arms_body2     DEFECT                 1      12     f:seq_+12
+n2_three_or_arms         DEFECT                 1      11     f:seq_+11
+n3_outer_three_arms      DEFECT                 1      13     f:seq_+13
+n4_nested_in_second_arm  DEFECT                 1      9      f:seq_+9
+n5_outer_chained         DEFECT                 1      4      f:seq_+4
+n6_orarm_else_sibling    DEFECT                 1      4      f:seq_+4
+n7_plain_or_arms         CLEAN                  0      0      
+n8_orarm_then_plain_arm  DEFECT                 1      4      f:seq_+4
+CORE=D:\Temp\r37gate\r37\mirr_head BAT=ladder2 cases=8 CLEAN=1 DEFECT=7
+########## ladder2 R37A
+case                     status                 nbad   sum|d| detail / probe
+n1_two_or_arms_body2     DEFECT                 1      12     f:seq_+12
+n2_three_or_arms         DEFECT                 1      11     f:seq_+11
+n3_outer_three_arms      DEFECT                 1      13     f:seq_+13
+n4_nested_in_second_arm  DEFECT                 1      9      f:seq_+9
+n5_outer_chained         DEFECT                 1      4      f:seq_+4
+n6_orarm_else_sibling    CLEAN                  0      0      
+n7_plain_or_arms         CLEAN                  0      0      
+n8_orarm_then_plain_arm  CLEAN                  0      0      
+CORE=D:\Temp\r37gate\r37\mirr_r37a BAT=ladder2 cases=8 CLEAN=3 DEFECT=5

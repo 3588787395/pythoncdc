@@ -1,0 +1,16 @@
+--- BEFORE (pre-landing landed core bbfe1a414032436921ab)  IQEngine__plugins__plugin_fly_data__strategy__strategyOK.py
+  DEFECT <module>.Strategy.tick_publish_thread                      [target_diff] #44 POP_JUMP_IF_TRUE 终点 orig=("'system_log'", 'LOAD_GLOBAL') decomp=("'current_dt'", 'LOAD_FAST')  orig=199 decomp=199 delta=+0
+  DEFECT <module>.Strategy.tick_worker_thread                       [seq_len] orig=268 decomp=247  orig=268 decomp=247 delta=-21  strict clean 25/27  sigma-defect=2  sum_abs_delta=21
+
+--- AFTER  (landed core 6b0759b1a0a566a4eb8f)  strategyOK.py
+  DEFECT <module>.Strategy.tick_publish_thread                      [target_diff] #44 POP_JUMP_IF_TRUE 终点 orig=("'system_log'", 'LOAD_GLOBAL') decomp=("'current_dt'", 'LOAD_FAST')  orig=199 decomp=199 delta=+0
+  DEFECT <module>.Strategy.tick_worker_thread                       [target_diff] #62 POP_JUMP_IF_TRUE 终点 orig=("'time'", 'LOAD_GLOBAL') decomp=("'self'", 'LOAD_FAST')  orig=268 decomp=268 delta=+0  strict clean 25/27  sigma-defect=2  sum_abs_delta=0
+
+--- BEFORE (pre-landing landed core bbfe1a414032436921ab)  IQEngine__plugins__plugin_system_event_source__realtime_event_sourceOK.py
+  DEFECT <module>.RealtimeEventSource.clock_worker                  [seq_len] orig=1276 decomp=1292  orig=1276 decomp=1292 delta=+16
+  DEFECT <module>.RealtimeEventSource.get_one_event                 [seq_len] orig=19 decomp=20  orig=19 decomp=20 delta=+1  strict clean 10/12  sigma-defect=2  sum_abs_delta=17
+
+--- AFTER  (landed core 6b0759b1a0a566a4eb8f)  realtime_event_sourceOK.py
+  DEFECT <module>.RealtimeEventSource.clock_worker                  [seq_len] orig=1276 decomp=1282  orig=1276 decomp=1282 delta=+6
+  DEFECT <module>.RealtimeEventSource.get_one_event                 [seq_len] orig=19 decomp=20  orig=19 decomp=20 delta=+1  strict clean 10/12  sigma-defect=2  sum_abs_delta=7
+

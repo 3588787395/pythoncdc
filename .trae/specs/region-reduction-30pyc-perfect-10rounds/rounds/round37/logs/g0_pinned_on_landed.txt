@@ -1,0 +1,10 @@
+case                                        status                 nbad   sum|d| detail / probe
+r37_control_nested_chain_in_first_arm       CLEAN                  0      0      
+r37_control_orarm_plain_sibling             CLEAN                  0      0      
+r37_control_plain_elif_tail                 CLEAN                  0      0      
+r37_control_plain_or_arms                   CLEAN                  0      0      
+r37_witness_loop_ancestor_single_arm_chain  CLEAN                  0      0      
+r37_witness_or_arm_in_ancestor_elif_chain   CLEAN                  0      0      
+r37_witness_or_arm_with_else_sibling        CLEAN                  0      0      
+r37_witness_or_arm_with_plain_then_sibling  CLEAN                  0      0      
+CORE=D:\Temp\r37gate\r37\mirr_r37a BAT=round37_ancestor_elif_or_arm cases=8 CLEAN=8 DEFECT=0

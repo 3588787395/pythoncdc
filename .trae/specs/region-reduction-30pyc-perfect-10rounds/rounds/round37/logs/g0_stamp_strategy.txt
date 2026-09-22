@@ -1,0 +1,3 @@
+[STAMP37] REJECT donor entry=210 donor_blocks=56 cur_entry=612 would_have_been_accepted=True
+[STAMP37] REJECT donor entry=210 donor_blocks=56 cur_entry=718 would_have_been_accepted=True
+product bytes 12896

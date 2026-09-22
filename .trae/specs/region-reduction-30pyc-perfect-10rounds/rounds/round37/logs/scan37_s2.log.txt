@@ -1,0 +1,3 @@
+core tree F:\Downloads\pythoncdc-main  sha256[:20] bbfe1a414032436921ab  bytes 2984324
+shard 2/3: 134 files in 52s -> D:\Temp\r37gate\r37\scan37_s2.txt
+=== shard totals ===

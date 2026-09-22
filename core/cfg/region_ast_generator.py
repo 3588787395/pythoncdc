@@ -16956,6 +16956,9 @@ AST 映射规则:
             _or_elif_ir = None
             for r in self.region_analyzer.regions:
                 if isinstance(r, IfRegion) and r.elif_conditions and r.then_blocks:
+                    _r37_rb = set(getattr(r, 'blocks', None) or [])
+                    if region.entry is not None and region.entry in _r37_rb:
+                        continue        # [R37-A] an ancestor chain may not lend its elif arms
                     if any(b.start_offset == _r23_or_then.start_offset for b in r.then_blocks):
                         _or_elif_ir = r
                         break

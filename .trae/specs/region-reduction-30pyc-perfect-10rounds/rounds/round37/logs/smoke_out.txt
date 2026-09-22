@@ -1,0 +1,3 @@
+IQCommon/manager/instance.pyc	0.5		-
+IQEngine/plugins/plugin_fly_data/fly_api/base.pyc	0.4		-
+IQEngine/plugins/plugin_system_trade/function.pyc	1.7		-

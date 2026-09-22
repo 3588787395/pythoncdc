@@ -1,0 +1,13 @@
+core tree F:\Downloads\pythoncdc-main  sha256[:20] bbfe1a414032436921ab  bytes 2984324
+<decompiled>:192: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:192: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:192: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:192: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:192: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:381: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:381: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:381: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:381: SyntaxWarning: "is" with a literal. Did you mean "=="?
+<decompiled>:381: SyntaxWarning: "is" with a literal. Did you mean "=="?
+shard 0/3: 134 files in 30s -> D:\Temp\r37gate\r37\scan37_s0.txt
+=== shard totals ===
